@@ -334,7 +334,7 @@ function applyLookback(rows, venueCode, stage) {
     if (row.title && row.title.startsWith('[')) { kept.push(row); continue; }  // diagnostic placeholder
     if (!row.end_date) {
       undated++;
-      row.notes = addNote(row.notes, 'No closing date found anywhere on the venue\'s pages. Kept anyway, because an unknown date is not proof the show closed before 1 Jul 2024 — but it has not been checked against the lookback.');
+      row.notes = addNote(row.notes, 'No closing date found anywhere on the venue\'s pages.');
     }
     if (afterLookback(row.end_date)) kept.push(row);
     else dropped++;
@@ -695,10 +695,12 @@ function normalizeUrl(u) {
  * Notes are written for her, not for a log file.
  *
  * Whatever lands in this column is shown verbatim on the approval card in the
- * app, so each note is a plain sentence saying what happened and whether it
- * needs her attention. The app already reports empty fields on its own ("No
- * end date."); the scraper's job here is to say WHY a field is empty and how
- * much to trust what is there.
+ * app, and she reads these one card at a time — so keep them SHORT. State the
+ * fact and stop. No advice ("worth a glance"), no instructions ("needs filling
+ * in by hand"): she can see the empty field and decide for herself.
+ *
+ * The app already reports empty fields on its own ("No end date."). The
+ * scraper's job here is only to say WHY.
  */
 function sourceNote(ctx) {
   return `Found on the venue's "${ctx}" listing page.`;
@@ -759,7 +761,7 @@ async function collectFromListing(page, opts) {
     if (!title || title.length < 3) {
       c.noTitle++;
       const guess = slugToWords(fullUrl);
-      titleNote = `No exhibition name could be read from this link${guess ? `. Its web address suggests: "${guess}"` : ''}. The title needs filling in by hand before this can be added.`;
+      titleNote = `No exhibition name could be read from this link${guess ? `. Web address suggests: "${guess}"` : ''}.`;
       title = '';
     }
 
@@ -946,7 +948,7 @@ async function scrapeBorghese(page) {
       log(`  FAILED ${ctx} — ${r.reason}`);
       rows.push({
         venue_code: venueCode, title: `[${ctx} page]`, start_date: '', end_date: '',
-        summary: '', url, notes: `The venue's "${ctx}" listing page did not load (${r.reason}), so nothing could be collected from it. This row is a marker, not an exhibition.`,
+        summary: '', url, notes: `The venue's "${ctx}" listing page did not load (${r.reason}). Marker row, not an exhibition.`,
       });
       continue;
     }
@@ -956,7 +958,7 @@ async function scrapeBorghese(page) {
       log(`  EMPTY_PAGE ${ctx}: page loaded but body has <200 chars`);
       rows.push({
         venue_code: venueCode, title: `[${ctx} page]`, start_date: '', end_date: '',
-        summary: '', url, notes: `The venue's "${ctx}" listing page loaded but returned no usable content. This row is a marker, not an exhibition.`,
+        summary: '', url, notes: `The venue's "${ctx}" listing page loaded but was empty. Marker row, not an exhibition.`,
       });
       continue;
     }
@@ -998,7 +1000,7 @@ async function scrapeMorgan(page) {
       log(`  FAILED ${ctx} — ${r.reason}`);
       rows.push({
         venue_code: venueCode, title: `[${ctx} page]`, start_date: '', end_date: '',
-        summary: '', url, notes: `The venue's "${ctx}" listing page did not load (${r.reason}), so nothing could be collected from it. This row is a marker, not an exhibition.`,
+        summary: '', url, notes: `The venue's "${ctx}" listing page did not load (${r.reason}). Marker row, not an exhibition.`,
       });
       continue;
     }
@@ -1030,7 +1032,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
     try {
       const r = await safeGoto(page, row.url, venueCode, 'individual');
       if (!r.ok) {
-        row.notes = addNote(row.notes, `This exhibition's own page did not load (${r.reason}), so no description or dates could be read from it.`);
+        row.notes = addNote(row.notes, `This exhibition's own page did not load (${r.reason}).`);
         failed++;
         continue;
       }
@@ -1053,7 +1055,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
         if (p.end) {
           row.end_date = p.end;
           if (!row.start_date && p.start) row.start_date = p.start;
-          row.notes = addNote(row.notes, `Dates were read from a sentence on the exhibition's own page rather than from a date field: "${p.raw}". Worth a glance to confirm they are right.`);
+          row.notes = addNote(row.notes, `Dates read from a sentence, not a date field: "${p.raw}".`);
         }
       }
 
@@ -1067,7 +1069,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
             if (dates.start) row.start_date = dates.start;
             if (dates.end) row.end_date = dates.end;
             if (raw && !dates.start && !dates.end) {
-              row.notes = addNote(row.notes, `Found text that looks like dates but could not be read: "${raw.slice(0,60)}". The dates may need filling in by hand.`);
+              row.notes = addNote(row.notes, `Date-like text could not be read: "${raw.slice(0,60)}".`);
             }
           }
         } catch {}
