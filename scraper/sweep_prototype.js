@@ -197,6 +197,78 @@ function findDateRange(raw) {
   return { start: '', end: '', raw: s };
 }
 
+/**
+ * Find an exhibition's run inside ordinary prose.
+ *
+ * Some venues never print dates in a field of their own. Borghese writes them
+ * into the opening sentence: "From June 10 to September 14, 2025, Galleria
+ * Borghese presents...", "On March 17, and running until May 10, 2026...".
+ *
+ * This is pattern-matching, not comprehension — but a date has a shape, and
+ * that is enough. The danger is grabbing the WRONG date: these pages are full
+ * of art-historical years ("Caravaggio (1571-1610)", "stayed in Italy in
+ * 1629"). Two guards prevent that:
+ *
+ *   1. A month NAME must sit next to the number. Bare years never match.
+ *   2. The year must be a plausible exhibition year, not a birth or a
+ *      painting date.
+ *
+ * hintYear supplies the year when the sentence omits it entirely — Borghese's
+ * Velazquez page says only "From March 26 to June 23", and the listing page
+ * for that show says "March / 2024".
+ *
+ * Returns the matched sentence too, so a wrong grab is visible in the notes
+ * rather than silently becoming an exhibition's dates.
+ */
+const PLAUSIBLE_YEAR_MIN = 2015;
+const PLAUSIBLE_YEAR_MAX = 2035;
+
+function plausibleYear(y) {
+  const n = parseInt(y, 10);
+  return n >= PLAUSIBLE_YEAR_MIN && n <= PLAUSIBLE_YEAR_MAX;
+}
+
+function findDateRangeInProse(text, hintYear) {
+  if (!text) return { start: '', end: '', raw: '' };
+  const s = String(text).replace(/[–—]/g, '-').replace(/\s+/g, ' ');
+  const M = '(?:January|February|March|April|May|June|July|August|September|October|November|December)';
+  const SEP = '(?:\\s*(?:-|to|until|through|till)\\s*(?:running\\s+)?)';
+
+  // "From June 10 to September 14, 2025"  /  "March 17 ... until May 10, 2026"
+  let m = s.match(new RegExp(
+    `(${M})\\s+(\\d{1,2})(?:,\\s*(\\d{4}))?[^.]{0,40}?${SEP}(${M})\\s+(\\d{1,2}),?\\s*(\\d{4})`, 'i'));
+  if (m && plausibleYear(m[6])) {
+    const endYr = parseInt(m[6], 10);
+    const startYr = m[3] && plausibleYear(m[3]) ? parseInt(m[3], 10) : endYr;
+    const sMo = MONTHS[m[1].toLowerCase()], eMo = MONTHS[m[4].toLowerCase()];
+    if (sMo && eMo) return {
+      start: `${startYr}-${String(sMo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`,
+      end:   `${endYr}-${String(eMo).padStart(2,'0')}-${String(m[5]).padStart(2,'0')}`,
+      raw: m[0].slice(0, 120),
+    };
+  }
+
+  // Same shape but no year anywhere: "From March 26 to June 23".
+  // Only usable when the listing page told us which year this show belongs to.
+  if (hintYear && plausibleYear(hintYear)) {
+    m = s.match(new RegExp(`(${M})\\s+(\\d{1,2})[^.]{0,40}?${SEP}(${M})\\s+(\\d{1,2})(?!\\s*,?\\s*\\d{4})`, 'i'));
+    if (m) {
+      const sMo = MONTHS[m[1].toLowerCase()], eMo = MONTHS[m[3].toLowerCase()];
+      if (sMo && eMo) {
+        // A run that crosses new year ends in the following year.
+        const endYr = eMo < sMo ? Number(hintYear) + 1 : Number(hintYear);
+        return {
+          start: `${hintYear}-${String(sMo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`,
+          end:   `${endYr}-${String(eMo).padStart(2,'0')}-${String(m[4]).padStart(2,'0')}`,
+          raw: m[0].slice(0, 120) + ' (year taken from listing page)',
+        };
+      }
+    }
+  }
+
+  return { start: '', end: '', raw: '' };
+}
+
 function titleCase(str) {
   return str.replace(/([A-Za-z]+)/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase());
 }
@@ -488,6 +560,21 @@ async function extractTitle(link, venueCode) {
   return squash(t.replace(TITLE_NOISE, ' '));
 }
 
+/**
+ * Last-resort hint at what an untitled row is, taken from its own address:
+ * ".../exhibitions/ed-van-der-elsken" -> "Ed Van Der Elsken".
+ *
+ * Goes in the notes, never in the title column — it is the site's URL slug,
+ * not the exhibition's name, and guessing a name into the title field would
+ * let a made-up title reach the ledger.
+ */
+function slugToWords(url) {
+  try {
+    const seg = new URL(url).pathname.replace(/\/+$/, '').split('/').pop() || '';
+    return seg.replace(/[-_]+/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase()).trim();
+  } catch { return ''; }
+}
+
 // ── URL identity ──────────────────────────────────────────────────────────────
 /**
  * The ONLY de-duplication this scraper performs: never read the same page
@@ -553,14 +640,24 @@ async function collectFromListing(page, opts) {
       continue;
     }
 
-    const title = await extractTitle(link, venueCode);
-    if (!title || title.length < 3) { c.noTitle++; continue; }
+    // A link with no readable title is still an exhibition we found. Record it
+    // with a blank title and say so: the app shows it as "Couldn't be filed"
+    // with the note attached, which is visible and fixable. Dropping it here
+    // would lose an exhibition she never learns existed.
+    let title = await extractTitle(link, venueCode);
+    let titleNote = '';
+    if (!title || title.length < 3) {
+      c.noTitle++;
+      titleNote = `NO_TITLE: no exhibition name could be read from this link. URL suggests: "${slugToWords(fullUrl)}"`;
+      title = '';
+    }
 
     const dates = await datesNearLink(link);
     const row = {
       venue_code: venueCode, title,
       start_date: dates.start, end_date: dates.end,
-      summary: '', url: fullUrl, notes: `source: ${ctx}`,
+      summary: '', url: fullUrl,
+      notes: titleNote ? `source: ${ctx}; ${titleNote}` : `source: ${ctx}`,
     };
     seenUrls.add(key);
     urlToRow.set(key, row);
@@ -569,7 +666,7 @@ async function collectFromListing(page, opts) {
   }
 
   COUNTS.push(c);
-  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL, ${c.noTitle} no usable title -> ${c.kept} collected`);
+  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
   return c;
 }
 
@@ -833,6 +930,20 @@ async function fetchIndividualPages(page, rows, venueCode) {
       } else {
         row.notes = (row.notes ? row.notes + '; ' : '') + 'NO_CURATORIAL_TEXT on individual page';
         noText++;
+      }
+
+      // Venues that print no date field at all (Borghese) write the run into
+      // the opening sentence. Scan the page's text for it, using the year the
+      // listing page gave us when the sentence omits one.
+      if (!row.end_date) {
+        const bodyText = await page.innerText('body').catch(() => '');
+        const hintYear = row.start_date ? row.start_date.slice(0, 4) : '';
+        const p = findDateRangeInProse(bodyText, hintYear);
+        if (p.end) {
+          row.end_date = p.end;
+          if (!row.start_date && p.start) row.start_date = p.start;
+          row.notes = addNote(row.notes, `dates read from page text: "${p.raw}"`);
+        }
       }
 
       // Also try to grab dates from the individual page if we don't have them
