@@ -584,9 +584,7 @@ function dedup(rows) {
   log(`Venues: met, ng, rijks, acq, borghese, morgan`);
 
   const browser = await chromium.launch({
-    executablePath: process.env.PLAYWRIGHT_BROWSERS_PATH
-      ? undefined                        // let Playwright find it via env
-      : '/opt/pw-browsers/chromium',
+    executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
