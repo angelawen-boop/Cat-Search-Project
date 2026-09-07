@@ -158,7 +158,15 @@ Handover v11 Section 12 listed four options. This repo is **Shape B**: the headl
 
 ### Scope
 
-**All 21 venues eventually; the current 6 are a prototype.** The final set will be smaller than 21, because some venues block automated access outright regardless of what browser is used — that's being discovered as the scraper is built, not assumed. See Section 6.
+**Wire in all 21, including the ones known to refuse us.** The current 6 are a prototype.
+
+A blocked venue costs almost nothing: the site answers "get lost", the scraper logs the code and moves on without ever opening a detail page. Measured in the 7 Sep sweep — Met's two refused pages took 1.5 seconds, Morgan's three took 1.3 seconds.
+
+Leaving them wired in buys a **standing monitor**. Blocks are not permanent facts; IP reputation changes, Cloudflare rules get retuned, institutions change policy. If access ever becomes possible, the next sweep says so. Dropping a venue from the list means never finding out.
+
+Two conditions keep this honest, and both are cheap:
+- **Never retry a blocked venue inside a run.** One attempt per page, log the code, move on. Repeatedly hammering a site that has said no is the thing to avoid; a single polite check per sweep is not.
+- **Record the block code and the date** in the log, so "has anything changed?" is answered by evidence rather than memory.
 
 ---
 
@@ -240,7 +248,9 @@ This is the only part that describes how the *scraper* reaches sites. It is shor
 | `acq` | **Works.** One page carries current, upcoming and past together. Dates are in the link text itself ("… NEW YORK OCTOBER 16 - DECEMBER 5, 2025"). Its archive has year-range filter links (`/exhibitions/past/all/2023-2021`) which are navigation, not exhibitions — following them dragged in the whole catalogue back to 1999. | Full sweep |
 | `borghese` | **Reaches the site**, contradicting the old "robots-blocked" note in 6b. Returns only 1 row per page though; not yet explained. | Full sweep |
 
-**Two of six venues are blocked at the door.** For those, the headless browser doesn't help — the refusal happens before any page is served. Options are running from an ordinary home connection instead of a datacenter, or asking the institution directly. Engineering around a deliberate block is not on the table.
+**Two of six venues are blocked at the door.** For those, the headless browser doesn't help — the refusal happens before any page is served. Options are running from an ordinary home connection instead of a datacenter, asking the institution directly, or falling back to the Chat Claude route (different network, behaves like a person browsing). Engineering around a deliberate block is not on the table.
+
+They stay wired in regardless — see Section 4. A refusal costs about half a second and tells us whether anything has changed since last time.
 
 ### 6b. Legacy — how *Chat Claude's fetch tool* saw these sites
 
@@ -308,10 +318,11 @@ Tate is deliberately two venues; merging them was rejected. Order reflects the a
 
 ## 8. Open decisions
 
+**Settled 7 Sep 2026:** all 21 venues get wired in, blocked ones included, for the standing-monitor reason in Section 4. The final *working* set will be smaller than 21; the *wired* set is all of them.
+
 - **Where summary compression happens.** Three candidates, none chosen: Chat Claude does it; Claude Code does it inside the sweep run after the raw text is pulled; Claude Code does it as a separate pass outside the scrape script. The scraper writes raw text either way, so this can be decided later without rework.
 - **Haiku vs Sonnet for the in-app catalogue lookup.** Haiku passed the easy cases cheaply and correctly but hasn't been tested on hard ones — touring shows, foreign-language catalogues, ambiguous or retitled shows — where a lighter model may return the wrong book or a wrong ISBN. Decide with one side-by-side session on known-tricky catalogues; failures are visible on click. Not weeks of live use.
-- **Final venue set.** Fewer than 21. Met and Morgan are already blocked at the network door.
-- **Sweeper brief v3** — the Chat-Claude-era instruction document still needs its URL corrections and a two-attempt URL-unlock rule. Whether it survives at all depends on how far the scraper goes.
+- **Sweeper brief v3** — the Chat-Claude-era instruction document still needs its URL corrections and a two-attempt URL-unlock rule. Its scope shrinks as the scraper covers more venues, but it does **not** disappear: the venues the scraper cannot reach are precisely the ones where a human-driven Chat Claude route still has a chance, because it comes from a different network and behaves like a person browsing. Expect the brief to end up as the fallback procedure for blocked and novel-problem venues rather than the main sweep.
 
 ### Parked, not accepted
 
