@@ -7,12 +7,38 @@
  *   scraper/output/sweep_log.txt      — diagnostic log (what worked, what failed, why)
  *
  * Run: node scraper/sweep_prototype.js
- * Requires: npm install playwright (Playwright + Chromium already in this environment)
+ * Requires: npm install  (playwright, node-fetch@2, https-proxy-agent)
+ *
+ * NETWORK NOTE — why this script routes traffic through Node:
+ *   In this container all egress goes through the agent proxy at $HTTPS_PROXY.
+ *   Chromium cannot use that proxy directly: the CONNECT tunnel opens, Chromium
+ *   sends its ~1.8 KB padded ClientHello, and the egress relay drops the tunnel,
+ *   surfacing as net::ERR_CONNECTION_RESET on every https navigation. Setting
+ *   `proxy: { server: HTTPS_PROXY }` on chromium.launch() does NOT fix it, and
+ *   neither does ignoring certificate errors — it is not a trust failure.
+ *   curl and openssl to the same hosts succeed (their ClientHellos are small).
+ *
+ *   So: Chromium performs no network I/O at all. installNetworkBridge() below
+ *   intercepts every request and fulfils it from Node's node-fetch +
+ *   HttpsProxyAgent, which traverses the proxy cleanly. Chromium still parses,
+ *   renders and executes JavaScript exactly as before, so the venue scrapers
+ *   below are unchanged and still receive a normal Playwright `page`.
  */
 
 const { chromium } = require('playwright');
+const fetch = require('node-fetch');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 const fs = require('fs');
 const path = require('path');
+
+// ── Proxy setup ───────────────────────────────────────────────────────────────
+const PROXY_URL = process.env.HTTPS_PROXY || process.env.https_proxy;
+const proxyAgent = PROXY_URL ? new HttpsProxyAgent(PROXY_URL) : undefined;
+
+const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
+// Resource types Chromium may request that contribute nothing to text scraping.
+const SKIP_RESOURCE_TYPES = new Set(['image', 'media', 'font']);
 
 // ── Output setup ──────────────────────────────────────────────────────────────
 const OUT_DIR = path.join(__dirname, 'output');
@@ -121,6 +147,65 @@ function afterLookback(endDateStr) {
 }
 
 // ── Page helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * Make Chromium stop touching the network.
+ *
+ * Every request the browser makes is intercepted and satisfied by Node, which
+ * reaches the internet through the agent proxy. Chromium receives a normal
+ * response and behaves normally — including running the page's JavaScript.
+ */
+async function installNetworkBridge(context) {
+  const stats = { fulfilled: 0, skipped: 0, failed: 0 };
+
+  await context.route('**/*', async (route) => {
+    const request = route.request();
+
+    if (SKIP_RESOURCE_TYPES.has(request.resourceType())) {
+      stats.skipped++;
+      return route.abort();
+    }
+
+    const method = request.method();
+    const headers = { ...request.headers() };
+    // Let node-fetch negotiate its own encoding and connection handling.
+    delete headers['accept-encoding'];
+    delete headers['connection'];
+
+    try {
+      const response = await fetch(request.url(), {
+        method,
+        headers,
+        body: method === 'GET' || method === 'HEAD' ? undefined : request.postData(),
+        agent: proxyAgent,
+        redirect: 'follow',
+        timeout: 30000,
+        compress: true,
+      });
+
+      const body = await response.buffer();
+
+      // node-fetch has already decompressed and re-framed the body, so the
+      // upstream length/encoding headers no longer describe what we hand back.
+      const raw = response.headers.raw();
+      const out = {};
+      for (const [name, values] of Object.entries(raw)) {
+        const key = name.toLowerCase();
+        if (key === 'content-encoding' || key === 'content-length' || key === 'transfer-encoding') continue;
+        out[name] = key === 'set-cookie' ? values.join('\n') : values.join(', ');
+      }
+
+      stats.fulfilled++;
+      await route.fulfill({ status: response.status, headers: out, body });
+    } catch (e) {
+      stats.failed++;
+      await route.abort();
+    }
+  });
+
+  return stats;
+}
+
 async function safeGoto(page, url, venue, context) {
   try {
     const resp = await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
@@ -583,6 +668,12 @@ function dedup(rows) {
   log(`Lookback floor: ${LOOKBACK.toISOString().slice(0,10)}`);
   log(`Venues: met, ng, rijks, acq, borghese, morgan`);
 
+  log(`Proxy: ${PROXY_URL || '(none — direct egress assumed)'}`);
+  if (!PROXY_URL) {
+    log('  WARNING: HTTPS_PROXY is unset. If this container requires the agent');
+    log('  proxy for egress, every venue will fail to load.');
+  }
+
   const browser = await chromium.launch({
     executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
     headless: true,
@@ -590,9 +681,14 @@ function dedup(rows) {
   });
 
   const context = await browser.newContext({
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    userAgent: USER_AGENT,
     viewport: { width: 1280, height: 800 },
   });
+
+  // Chromium does no network I/O of its own — see NETWORK NOTE at top of file.
+  const netStats = await installNetworkBridge(context);
+  log('Network bridge installed: Chromium requests are served by Node via the proxy');
+
   const page = await context.newPage();
 
   const allRows = [];
@@ -644,6 +740,8 @@ function dedup(rows) {
       log(`  ${code.toUpperCase()}: ${s.real} exhibitions | ${s.withSummary} with text${blocked}`);
     }
   }
+  log('');
+  log(`Network bridge: ${netStats.fulfilled} requests served, ${netStats.skipped} skipped (image/media/font), ${netStats.failed} failed`);
   log('');
   log(`CSV written to:  ${CSV_PATH}`);
   log(`Log written to:  ${LOG_PATH}`);
