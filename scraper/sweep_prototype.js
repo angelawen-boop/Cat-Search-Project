@@ -220,12 +220,29 @@ function findDateRange(raw) {
  * Returns the matched sentence too, so a wrong grab is visible in the notes
  * rather than silently becoming an exhibition's dates.
  */
-const PLAUSIBLE_YEAR_MIN = 2015;
+// Wide enough to cover any exhibition a venue still lists in its archive
+// (Borghese's goes back to 2013, Acquavella's to 1999), narrow enough that an
+// artist's lifespan or a painting's date can never be mistaken for a run:
+// "Caravaggio (1571-1610)", "confiscated on 4 May 1607", "in 1629".
+const PLAUSIBLE_YEAR_MIN = 1990;
 const PLAUSIBLE_YEAR_MAX = 2035;
 
 function plausibleYear(y) {
   const n = parseInt(y, 10);
   return n >= PLAUSIBLE_YEAR_MIN && n <= PLAUSIBLE_YEAR_MAX;
+}
+
+/**
+ * Refuse a range that runs backwards.
+ *
+ * Without this, "From 8 October 2014 to 11 January 2015" produced a start of
+ * 2015-10-08 — after its own end — because the start year had been rejected
+ * and quietly replaced with the end year. Better to report the end date alone
+ * than an impossible range: the lookback only tests the end date anyway.
+ */
+function sane(start, end, raw) {
+  if (start && end && start > end) return { start: '', end, raw };
+  return { start, end, raw };
 }
 
 function findDateRangeInProse(text, hintYear) {
@@ -234,6 +251,23 @@ function findDateRangeInProse(text, hintYear) {
   const M = '(?:January|February|March|April|May|June|July|August|September|October|November|December)';
   const SEP = '(?:\\s*(?:-|to|until|through|till)\\s*(?:running\\s+)?)';
 
+  // Day-first, the form Borghese actually uses in its prose:
+  //   "From 20 January to 22 February 2026, the Galleria Borghese..."
+  //   "from 25 October 2022 to 29 January 2023, curated by..."
+  //   "will open to the public on 1 November 2017 and will last until 20 February 2018"
+  // The year may sit on the end side only, or on both.
+  let dm = s.match(new RegExp(
+    `(\\d{1,2})\\s+(${M})(?:\\s+(\\d{4}))?[^.]{0,40}?${SEP}(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  if (dm && plausibleYear(dm[6])) {
+    const endYr = parseInt(dm[6], 10);
+    const startYr = dm[3] && plausibleYear(dm[3]) ? parseInt(dm[3], 10) : endYr;
+    const sMo = MONTHS[dm[2].toLowerCase()], eMo = MONTHS[dm[5].toLowerCase()];
+    if (sMo && eMo) return sane(
+      `${startYr}-${String(sMo).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`,
+      `${endYr}-${String(eMo).padStart(2,'0')}-${String(dm[4]).padStart(2,'0')}`,
+      dm[0].slice(0, 120));
+  }
+
   // "From June 10 to September 14, 2025"  /  "March 17 ... until May 10, 2026"
   let m = s.match(new RegExp(
     `(${M})\\s+(\\d{1,2})(?:,\\s*(\\d{4}))?[^.]{0,40}?${SEP}(${M})\\s+(\\d{1,2}),?\\s*(\\d{4})`, 'i'));
@@ -241,11 +275,10 @@ function findDateRangeInProse(text, hintYear) {
     const endYr = parseInt(m[6], 10);
     const startYr = m[3] && plausibleYear(m[3]) ? parseInt(m[3], 10) : endYr;
     const sMo = MONTHS[m[1].toLowerCase()], eMo = MONTHS[m[4].toLowerCase()];
-    if (sMo && eMo) return {
-      start: `${startYr}-${String(sMo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`,
-      end:   `${endYr}-${String(eMo).padStart(2,'0')}-${String(m[5]).padStart(2,'0')}`,
-      raw: m[0].slice(0, 120),
-    };
+    if (sMo && eMo) return sane(
+      `${startYr}-${String(sMo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`,
+      `${endYr}-${String(eMo).padStart(2,'0')}-${String(m[5]).padStart(2,'0')}`,
+      m[0].slice(0, 120));
   }
 
   // Same shape but no year anywhere: "From March 26 to June 23".
@@ -458,42 +491,101 @@ async function getText(el) {
 // ── Curatorial text extraction ────────────────────────────────────────────────
 // On individual exhibition pages, look for the main descriptive paragraph(s).
 // We target the most common patterns across museum sites.
+/**
+ * Read the museum's own description of the exhibition.
+ *
+ * Two things have to be got right, and the first one bit us badly.
+ *
+ * 1. Cookie banners. Borghese runs the Complianz plugin, whose blocks are
+ *    named "cmplz-description" — so a search for a class containing
+ *    "description" found the consent notice ("The technical storage or access
+ *    is strictly necessary for the legitimate purpose...") and stored that as
+ *    the curatorial text on most of its exhibitions. Anything sitting inside a
+ *    consent/cookie/privacy container is now skipped outright, and the known
+ *    boilerplate sentences are rejected by content as a second net, because
+ *    the next site will name its banner something else.
+ *
+ * 2. Order. Specific exhibition containers are tried first, then the page's
+ *    main content, and only then anything resembling a description. The
+ *    generic patterns are last precisely because they are the ones that match
+ *    furniture.
+ *
+ * Runs entirely inside the page in one call rather than fetching elements one
+ * at a time — faster, and it can inspect ancestors while it goes.
+ */
+const NOISE_CONTAINER = 'cmplz|cookie|consent|gdpr|privacy|onetrust|cky-|truste|usercentrics|didomi|banner|newsletter|subscribe|footer|nav';
+
+const BOILERPLATE = [
+  'technical storage or access',
+  'legitimate purpose of storing preferences',
+  'subscriber or user',
+  'consent to the use of cookies',
+  'we use cookies',
+  'this website uses cookies',
+  'accept all cookies',
+  'privacy policy',
+  'sign up to our newsletter',
+];
+
+const CURATORIAL_SELECTORS = [
+  '.exhibition-detail__description',
+  '.exhibition__description',
+  '.exhibition-intro',
+  '.intro-text',
+  'main article p',
+  'article p',
+  'main p',
+  '.content p',
+  '[class*="description"] p',
+  '[class*="intro"] p',
+  '[class*="about"] p',
+  'p',
+];
+
 async function getCuratorialText(page) {
-  // Try common selectors for the exhibition description/intro block
-  const selectors = [
-    '.exhibition-detail__description',
-    '.exhibition__description',
-    '.exhibition-intro',
-    '.intro-text',
-    '[class*="description"]',
-    '[class*="intro"]',
-    '[class*="about"]',
-    'article p',
-    '.content p',
-    'main p',
-  ];
-  for (const sel of selectors) {
-    try {
-      const els = await page.$$(sel);
-      const texts = [];
-      for (const el of els.slice(0, 4)) {
-        const t = await getText(el);
-        if (t.length > 60) texts.push(t); // ignore short nav/label text
-      }
-      if (texts.length) return texts.join(' ').slice(0, 2000);
-    } catch {}
-  }
-  // Fallback: grab first few substantial paragraphs from body
   try {
-    const paras = await page.$$('p');
-    const texts = [];
-    for (const p of paras.slice(0, 20)) {
-      const t = await getText(p);
-      if (t.length > 80 && texts.length < 3) texts.push(t);
-    }
-    if (texts.length) return texts.join(' ').slice(0, 2000);
-  } catch {}
-  return '';
+    return await page.evaluate(({ noiseRe, boilerplate, selectors }) => {
+      const NOISE = new RegExp(noiseRe, 'i');
+
+      // Walk up to, but never including, BODY and HTML.
+      //
+      // WordPress plus the Complianz plugin put a "cmplz-..." class on the
+      // <body> element itself. Including body in this walk meant every
+      // paragraph on every Borghese page counted as being inside a cookie
+      // banner, and the summary column came back empty for all 41 rows.
+      // A consent banner is a container within the page, never the page.
+      const insideNoise = (el) => {
+        for (let n = el; n && n.tagName !== 'BODY' && n.tagName !== 'HTML'; n = n.parentElement) {
+          const cls = typeof n.className === 'string' ? n.className : '';
+          if (NOISE.test(cls + ' ' + (n.id || ''))) return true;
+        }
+        return false;
+      };
+
+      const isBoilerplate = (t) => {
+        const low = t.toLowerCase();
+        return boilerplate.some(b => low.includes(b));
+      };
+
+      const clean = (t) => String(t || '').replace(/\s+/g, ' ').trim();
+
+      for (const sel of selectors) {
+        let els;
+        try { els = Array.from(document.querySelectorAll(sel)); } catch { continue; }
+        const out = [];
+        for (const el of els) {
+          if (out.length >= 4) break;
+          if (insideNoise(el)) continue;
+          const t = clean(el.innerText);
+          if (t.length > 60 && !isBoilerplate(t)) out.push(t);
+        }
+        if (out.length) return out.join(' ').slice(0, 2000);
+      }
+      return '';
+    }, { noiseRe: NOISE_CONTAINER, boilerplate: BOILERPLATE, selectors: CURATORIAL_SELECTORS });
+  } catch {
+    return '';
+  }
 }
 
 // ── Venue scrapers ────────────────────────────────────────────────────────────
