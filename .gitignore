@@ -1,2 +1,4 @@
 node_modules/
 scraper/output/
+audit/out/
+audit/out_live.txt
