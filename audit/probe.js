@@ -107,6 +107,15 @@ function classifyReach(res, html) {
   return { reach: 'plain', detail: `${text.length} chars, ${links} links` };
 }
 
+// A URL is exhibition-ish only if a whole path SEGMENT is an exhibition word.
+// Substring matching pulled in unrelated pages (a painting's title, a news item).
+function hasExhibitionSegment(url) {
+  let segs;
+  try { segs = new URL(url).pathname.toLowerCase().split('/').filter(Boolean); }
+  catch { return false; }
+  return segs.some(s => EXHIB_TOKENS.includes(s));
+}
+
 // ── Check 2: embedded structured data (JSON-LD) ───────────────────────────────
 const EVENT_TYPES = ['event', 'exhibitionevent', 'visualartsevent', 'socialevent', 'eventseries'];
 
@@ -186,7 +195,7 @@ async function checkSitemap(origin) {
     }
   }
 
-  const exhib = allUrls.filter(u => EXHIB_TOKENS.some(t => u.toLowerCase().includes(t)));
+  const exhib = allUrls.filter(u => hasExhibitionSegment(u));
   out.exhibitionUrls = exhib.length;
   out.totalUrls = allUrls.length;
   out.sampleUrls = exhib.slice(0, 5);
@@ -268,6 +277,36 @@ function findListingCandidates(html, baseUrl) {
     if (!prev || score > prev.score) seen.set(url, { url, text, score, bucket: bucketOf(url, text) });
   }
   return [...seen.values()].sort((a, b) => b.score - a.score);
+}
+
+// Individual exhibition pages linked from a listing page. An item sits deeper
+// than the listing and either lives under the listing's own path or carries an
+// exhibition word as a path segment. Bucket pages (past/current/upcoming) are
+// listings, not items, so they are excluded.
+function findItemLinks(html, listingUrl) {
+  if (!html) return [];
+  const origin = new URL(listingUrl).origin;
+  const listingSegs = new URL(listingUrl).pathname.split('/').filter(Boolean);
+  const out = new Map();
+  for (const a of html.querySelectorAll('a[href]')) {
+    const raw = a.getAttribute('href');
+    if (!raw || raw.startsWith('#') || raw.startsWith('mailto:') || raw.startsWith('tel:')) continue;
+    let u;
+    try { u = new URL(raw, listingUrl); } catch { continue; }
+    if (u.origin !== origin) continue;
+    const url = (u.origin + u.pathname).replace(/\/$/, '') || u.origin;
+    const segs = u.pathname.split('/').filter(Boolean);
+    if (segs.length <= listingSegs.length) continue;
+    const underListing = listingSegs.every((s, i) => segs[i] === s);
+    if (!underListing && !hasExhibitionSegment(url)) continue;
+    // The last segment must be a specific thing, not another bucket label.
+    const last = (segs[segs.length - 1] || '').toLowerCase();
+    if (Object.values(BUCKET_TOKENS).flat().includes(last)) continue;
+    if (EXHIB_TOKENS.includes(last)) continue;
+    const text = a.text.replace(/\s+/g, ' ').trim().slice(0, 90);
+    if (!out.has(url)) out.set(url, { url, text });
+  }
+  return [...out.values()];
 }
 
 // ── Date detection in text ────────────────────────────────────────────────────
@@ -408,8 +447,37 @@ async function auditVenue(venue, ctx, opts) {
     V.homepage.foundVia = 'plain';
   }
 
+  // Second hop. Venues put "past exhibitions" on the exhibitions page, not the
+  // homepage, so stopping at the homepage reports an archive as missing when it
+  // is simply one click further in. Take the shallowest exhibition hub and look
+  // again from there.
+  const homeBuckets = ['current','upcoming','past'].filter(b => candidates.some(c => c.bucket === b));
+  const hub = candidates
+    .filter(c => hasExhibitionSegment(c.url))
+    .sort((a, b) => new URL(a.url).pathname.length - new URL(b.url).pathname.length)[0];
+
+  let hubItems = [];
+  if (hub && homeBuckets.length < 3) {
+    await sleep(POLITE_MS);
+    const hres = await httpGet(hub.url);
+    let hhtml = hres.body ? parseHtml(hres.body) : null;
+    if (ctx && classifyReach(hres, hhtml).reach === 'needs-browser') {
+      const b = await browserProbe(ctx, hub.url);
+      if (b.html) hhtml = parseHtml(b.html);
+    }
+    if (hhtml) {
+      const deeper = findListingCandidates(hhtml, hub.url);
+      const known = new Set(candidates.map(c => c.url));
+      for (const d of deeper) if (!known.has(d.url)) candidates.push(d);
+      hubItems = findItemLinks(hhtml, hub.url);
+    }
+    V.steps.hub = { url: hub.url, itemsSeen: hubItems.length };
+    log(`   hub: ${hub.url.replace(/^https?:\/\/[^/]+/, '')} -> ${hubItems.length} item links`);
+  }
+
   V.steps.discovery = {
     candidatesFound: candidates.length,
+    hubUsed: hub ? hub.url : null,
     buckets: Object.fromEntries(['current','upcoming','past'].map(b =>
       [b, candidates.filter(c => c.bucket === b).length])),
     unbucketed: candidates.filter(c => !c.bucket).length,
@@ -418,17 +486,15 @@ async function auditVenue(venue, ctx, opts) {
   log(`   discovery: ${candidates.length} candidate listing links ` +
       `(current ${V.steps.discovery.buckets.current}, upcoming ${V.steps.discovery.buckets.upcoming}, past ${V.steps.discovery.buckets.past})`);
 
-  // Pick one page per bucket, plus the best unbucketed hub as a fallback.
+  // Pick one page per bucket, plus the hub itself so a single-page venue is covered.
   const chosen = [];
   for (const b of ['current', 'upcoming', 'past']) {
     const pick = candidates.find(c => c.bucket === b);
     if (pick) chosen.push({ ...pick, bucket: b });
   }
-  if (chosen.length < 3) {
-    const hub = candidates.find(c => !c.bucket && !chosen.some(x => x.url === c.url));
-    if (hub) chosen.push({ ...hub, bucket: 'unlabelled' });
-  }
+  if (hub && !chosen.some(x => x.url === hub.url)) chosen.push({ ...hub, bucket: 'hub' });
   if (!chosen.length && candidates.length) chosen.push({ ...candidates[0], bucket: 'unlabelled' });
+  V.itemPool = hubItems;
 
   // Step 1 — per listing page.
   const origin = new URL(homeRes.finalUrl || venue.home).origin;
@@ -456,21 +522,22 @@ async function auditVenue(venue, ctx, opts) {
         rec.paging = findPagingAffordances(bh);
         const t = (bh.querySelector('body')?.text || '').replace(/\s+/g, ' ');
         rec.datesInListing = findDatesInText(t);
-        rec.itemLinks = findListingCandidates(bh, c.url).filter(x => {
-          const segs = new URL(x.url).pathname.split('/').filter(Boolean);
-          return segs.length >= 2;
-        }).length;
+        rec.items = findItemLinks(bh, c.url);
+        rec.itemCount = rec.items.length;
       }
     } else if (html) {
       rec.paging = findPagingAffordances(html);
       const t = (html.querySelector('body')?.text || '').replace(/\s+/g, ' ');
       rec.datesInListing = findDatesInText(t);
+      rec.items = findItemLinks(html, c.url);
+      rec.itemCount = rec.items.length;
     }
 
     V.pages.push(rec);
     log(`   ${c.bucket.padEnd(10)} ${rec.reach.padEnd(14)} ` +
         `jsonld:${rec.jsonLd.eventItems} xhr:${rec.browser?.xhrEndpoints?.length ?? '-'} ` +
-        `dates:${rec.datesInListing?.any ? 'yes' : 'no'}`);
+        `items:${rec.itemCount ?? 0} dates:${rec.datesInListing?.any ? 'yes' : 'no'} ` +
+        `${(rec.paging?.kinds || []).join('+') || ''}`);
   }
 
   // Checks 4, 5, 6 — site-wide.
@@ -481,34 +548,51 @@ async function auditVenue(venue, ctx, opts) {
   V.steps.feeds = await checkFeeds(homeHtml, origin);
   V.steps.robots = await checkRobots(origin);
 
-  // Step 2 — detail-page shape. Only meaningful if we can reach a detail page.
-  const detailUrl = V.steps.sitemap.sampleUrls[0] ||
-    (candidates.find(c => new URL(c.url).pathname.split('/').filter(Boolean).length >= 2)?.url) || null;
-  if (detailUrl && !opts.quick) {
+  // Step 2 — individual exhibition pages. Sample several, not one: a venue's
+  // date availability cannot be judged from a single page. Structured data is
+  // checked HERE as well as on the listings, because that is where venues
+  // usually put it.
+  const pool = [];
+  const poolSeen = new Set();
+  for (const src of [V.itemPool || [], ...V.pages.map(p => p.items || [])]) {
+    for (const it of src) {
+      if (!poolSeen.has(it.url)) { poolSeen.add(it.url); pool.push(it); }
+    }
+  }
+  for (const u of (V.steps.sitemap.sampleUrls || [])) {
+    if (!poolSeen.has(u) && hasExhibitionSegment(u)) { poolSeen.add(u); pool.push({ url: u, text: '' }); }
+  }
+
+  V.details = [];
+  const sample = pool.slice(0, opts.quick ? 1 : 3);
+  for (const it of sample) {
     await sleep(POLITE_MS);
-    let dHtml = null, dStatus = 0, via = 'plain';
-    const dRes = await httpGet(detailUrl);
-    dStatus = dRes.status;
+    let dHtml = null, via = 'plain';
+    const dRes = await httpGet(it.url);
     if (dRes.body) dHtml = parseHtml(dRes.body);
     const dReach = classifyReach(dRes, dHtml);
     if (dReach.reach === 'needs-browser' && ctx) {
-      const b = await browserProbe(ctx, detailUrl);
-      if (b.html) { dHtml = parseHtml(b.html); dStatus = b.status; via = 'browser'; }
+      const b = await browserProbe(ctx, it.url);
+      if (b.html) { dHtml = parseHtml(b.html); via = 'browser'; }
     }
     const text = dHtml ? (dHtml.querySelector('body')?.text || '').replace(/\s+/g, ' ') : '';
     const dates = findDatesInText(text);
     const imgs = dHtml ? dHtml.querySelectorAll('img').length : 0;
-    V.detail = {
-      url: detailUrl, status: dStatus, via, reach: dReach.reach,
+    const jsonLd = checkJsonLd(dHtml);
+    V.details.push({
+      url: it.url, linkText: it.text, status: dRes.status, via, reach: dReach.reach,
+      jsonLd,
       datesAsText: dates.any, dateSignals: dates,
       description: extractDescription(dHtml),
       images: imgs,
-      // Honest limit: we cannot read pixels. If there is no date in the text but
-      // the page is image-heavy, the date may be inside a picture.
+      // Honest limit: we cannot read pixels. No date in the text on an
+      // image-bearing page means the date may be printed inside a picture.
       datesMayBeInImages: !dates.any && imgs >= 1,
-    };
-    log(`   detail: ${dReach.reach} dates-as-text:${dates.any} desc:${V.detail.description.chars}c imgs:${imgs}`);
+    });
+    log(`   detail ${dReach.reach.padEnd(13)} jsonld:${jsonLd.complete}/${jsonLd.eventItems} ` +
+        `dates:${dates.any} desc:${extractDescription(dHtml).chars}c  ${it.url.replace(/^https?:\/\/[^/]+/, '').slice(0, 52)}`);
   }
+  if (!V.details.length) log('   detail: no individual exhibition page could be reached');
 
   return V;
 }
@@ -516,44 +600,81 @@ async function auditVenue(venue, ctx, opts) {
 // ── Verdict ───────────────────────────────────────────────────────────────────
 function verdictFor(V) {
   const pages = V.pages || [];
+  const details = V.details || [];
   const reasons = [];
 
+  // 1. Refused at the door. Nothing downstream can be judged.
   const doorRefusals = [V.homepage, ...pages].filter(p => p && p.atDoor);
-  if (doorRefusals.length && !pages.some(p => p.reach === 'plain' || p.browserReach === 'plain')) {
+  const anythingServed = pages.some(p => p.reach === 'plain' || p.browserReach === 'plain') || details.length;
+  if (doorRefusals.length && !anythingServed) {
     return { verdict: 'RED', kind: 'Locked out',
-      why: `Refused before any page was served (${[...new Set(doorRefusals.map(p => p.detail))].join(', ')}). A browser does not help.`,
+      why: `Refused before any page was served (${[...new Set(doorRefusals.map(p => p.detail))].join(', ')}). A browser does not help; the refusal is at the network.`,
       reasons };
   }
 
-  const bestJsonLd = Math.max(0, ...pages.map(p => p.jsonLd?.complete || 0));
-  const anyJsonLdEvents = Math.max(0, ...pages.map(p => p.jsonLd?.eventItems || 0));
+  // 2. Gather every positive signal before judging anything missing.
+  const ldComplete = Math.max(0, ...pages.map(p => p.jsonLd?.complete || 0),
+                                 ...details.map(d => d.jsonLd?.complete || 0));
+  const ldEvents = Math.max(0, ...pages.map(p => p.jsonLd?.eventItems || 0),
+                               ...details.map(d => d.jsonLd?.eventItems || 0));
+  const ldWhere = details.some(d => (d.jsonLd?.complete || 0) > 0) ? 'exhibition pages'
+                : pages.some(p => (p.jsonLd?.complete || 0) > 0) ? 'listing pages' : null;
   const xhr = pages.flatMap(p => p.browser?.xhrEndpoints || []);
-  if (bestJsonLd > 0) reasons.push(`structured data with all five fields on ${bestJsonLd} item(s)`);
-  else if (anyJsonLdEvents > 0) reasons.push(`structured data present but incomplete (${anyJsonLdEvents} event item(s))`);
+  const smExhib = V.steps.sitemap?.exhibitionUrls || 0;
+  const feeds = V.steps.feeds?.reachable?.length || 0;
+  const items = Math.max(0, ...pages.map(p => p.itemCount || 0), (V.steps.hub?.itemsSeen || 0));
+
+  if (ldComplete) reasons.push(`structured data with all five fields on ${ldWhere} (${ldComplete} sampled)`);
+  else if (ldEvents) reasons.push(`structured data present but incomplete (${ldEvents} event item(s))`);
   if (xhr.length) reasons.push(`${xhr.length} data endpoint(s) behind the page`);
-  if (V.steps.sitemap?.exhibitionUrls) reasons.push(`${V.steps.sitemap.exhibitionUrls} exhibition URLs in the site index`);
-  if (V.steps.feeds?.reachable?.length) reasons.push(`${V.steps.feeds.reachable.length} feed(s)`);
+  if (smExhib) reasons.push(`${smExhib} exhibition URLs in the site index`);
+  if (feeds) reasons.push(`${feeds} feed(s)`);
+  if (items) reasons.push(`${items} exhibition links found on listings`);
 
-  if (bestJsonLd > 0) {
-    return { verdict: 'GREEN', kind: 'Feed', why: 'Structured data carries all five fields.', reasons };
+  // 3. A clean machine-readable source covering all five fields.
+  if (ldComplete > 0) {
+    return { verdict: 'GREEN', kind: 'Feed',
+      why: `Structured data on the ${ldWhere} carries title, start, end, URL and description.`, reasons };
   }
 
+  // 4. Is the past archive reachable at all? Only a real absence counts:
+  //    no past listing AND no way to enumerate old exhibitions.
   const pastPage = pages.find(p => p.bucket === 'past');
-  if (!pastPage && V.steps.discovery?.buckets?.past === 0) {
+  const canEnumerate = smExhib > 0 || feeds > 0 || xhr.length > 0;
+  if (!pastPage && !canEnumerate) {
     return { verdict: 'RED', kind: 'Not there',
-      why: `No past-exhibitions listing found from the homepage, so ${V.cutoff} may be unreachable.`, reasons };
+      why: `No past-exhibitions listing was found and there is no site index or feed to enumerate old shows, so ${V.cutoff} looks unreachable.`,
+      reasons };
+  }
+  if (!pastPage && canEnumerate) {
+    reasons.push('no past listing found, but old exhibitions are enumerable another way');
   }
 
-  if (V.detail && !V.detail.datesAsText) {
-    return { verdict: 'RED', kind: 'There but not as text',
-      why: V.detail.datesMayBeInImages
-        ? `No date in the page text; ${V.detail.images} image(s) present, so dates may be printed inside pictures. No text scraper reaches those.`
-        : 'No date found in the page text.',
-      reasons };
+  // 5. Dates. Judge on the sample, not on one page, and separate
+  //    "no date anywhere" from "date exists but not as text".
+  if (details.length) {
+    const withDates = details.filter(d => d.datesAsText).length;
+    if (withDates === 0) {
+      const imagey = details.filter(d => d.datesMayBeInImages).length;
+      return { verdict: 'RED', kind: 'There but not as text',
+        why: imagey === details.length
+          ? `No date in the text of any of the ${details.length} exhibition pages sampled; all carry images, so dates may be printed inside pictures. No text scraper reaches those.`
+          : `No date found in the text of any of the ${details.length} exhibition pages sampled.`,
+        reasons };
+    }
+    reasons.push(`dates readable as text on ${withDates} of ${details.length} sampled exhibition pages`);
+    if (withDates < details.length) {
+      reasons.push(`${details.length - withDates} sampled page(s) had no date in the text`);
+    }
+    const desc = details.filter(d => (d.description?.chars || 0) > 200).length;
+    reasons.push(`descriptive text on ${desc} of ${details.length} sampled pages`);
+  } else {
+    reasons.push('no individual exhibition page could be sampled');
   }
 
   return { verdict: 'AMBER', kind: 'Recipe',
-    why: 'Reachable, but the five fields must be assembled by hand from the page layout.', reasons };
+    why: 'Reachable and the data is present, but the five fields must be assembled by hand from the page layout.',
+    reasons };
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
