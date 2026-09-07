@@ -125,6 +125,21 @@ venue_code, title, start_date, end_date, summary, url, notes
 - `venue_code` must be one of the known codes in Section 7. Unknown codes land in "Couldn't be filed".
 - **Sweep lookback is 1 July 2024, permanently.**
 
+### The scraper must never de-duplicate — a standing rule
+
+**The scraper records everything it finds. It makes no judgement about duplicates, ever.**
+
+Deciding whether two rows are the same exhibition happens in the app, at Import Refresh, where she sees each proposal and approves it. A scraper that silently drops rows it *thinks* are duplicates is making that decision unseen — and when its judgement is wrong the loss is invisible. That is exactly what happened: titles were extracted badly, so 32 real National Gallery exhibitions looked like 3 and 29 were destroyed on the way to the file.
+
+Duplicates in the CSV are cheap. Deleted exhibitions are not.
+
+**But know precisely what the app does and doesn't absorb**, because it is not a catch-all:
+
+- **Across sweeps — handled.** A CSV row matching something already in the ledger becomes a fill/change proposal, not a second entry. Re-feeding the same file is safe; already-applied rows stay silent.
+- **Within one file — NOT handled.** `analyzeProForma` compares each CSV row against the ledger only, never against the other rows in the same file. The same exhibition twice in one CSV produces **two "Add" cards**, and `applyRefresh` deliberately keeps both — it sees the id is taken and appends `-2` rather than merging.
+
+So scraper-side duplicates are not silently absorbed; they surface as extra cards she has to reject by hand. That is the reason to keep the scraper's collection logic accurate — not tidiness, but avoiding duplicate ledger entries and manual work. Fix the cause of a duplicate; never paper over it by deleting rows.
+
 ### What the lookback actually means
 
 Keep an exhibition if it was **open at any point on or after 1 July 2024**.
@@ -216,8 +231,10 @@ No exhibition ending before 2024-07-01 reached the output. Earliest kept end dat
 
 ### Known bugs — open
 
-1. **Titles are wrong, and dedup then deletes real rows.** Title extraction takes only the *first line* of the link text. On NG that first line is a badge — "Past exhibition", "Free" — not the exhibition name. So 32 NG rows carry 3 distinct "titles", `dedup()` keys on venue+title, and 29 rows are silently discarded. Borghese collapses 3 rows to 1 ("Exhibitions"). **95 rows collected, 63 written.** This is the top priority: it destroys correctly-fetched data at the output stage.
-2. **Coverage is unverified.** Nothing yet checks whether the scraper reached everything each venue publishes. Planned fix is a found/kept/dropped report per venue per page, so this is a number to read rather than 95 pages to open by hand. Specific unknowns: whether NG and Rijks publish upcoming shows on a third page we don't visit; why Borghese yields exactly one row per page.
+1. **Titles are wrong.** Title extraction takes only the *first line* of the link text. On NG that first line is a badge — "Past exhibition", "Free" — not the exhibition name. Every venue except Acquavella is affected. Until this is fixed the CSV's title column is unusable, and because the app matches on venue + normalised title, wrong titles also break its ability to recognise an exhibition it already holds.
+   *(De-duplication used to compound this by deleting 32 rows down to 3. That was removed 7 Sep 2026 — see the standing rule in Section 3.)*
+2. **Coverage is unverified, and nothing counts.** There is no counter at any stage, so "the scraper found 32" and "the CSV has 3" measure different things and the gap can't be explained. Two silent losses exist that nothing records: any link whose extracted title is under 3 characters is dropped with no log line, and the `seen` list preventing the same link being read twice resets **per page**, not per venue — so an exhibition on both a current and a past page is collected twice and inflates the count.
+   Planned fix: a found → skipped as navigation → skipped as too short → dropped by lookback → written report, per venue per page, so every row is accounted for by a line rather than vanishing. Specific unknowns: whether NG and Rijks publish upcoming shows on a page we don't visit.
 3. **35 of 41 Rijks rows have no readable end date**, so the lookback is unenforced for most of that venue. They're kept and flagged `NO_END_DATE`.
 4. **Filtered runs overwrite the full CSV** (see above).
 5. **Summary column holds curatorial text but is not yet the raw-dump-then-compress design** described in Section 4.

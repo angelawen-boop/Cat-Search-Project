@@ -828,14 +828,24 @@ async function fetchIndividualPages(page, rows, venueCode) {
 }
 
 // ── Deduplication ─────────────────────────────────────────────────────────────
-function dedup(rows) {
-  const seen = new Set();
-  return rows.filter(r => {
-    const key = `${r.venue_code}|${r.title.toLowerCase().trim()}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+/**
+ * De-duplication is NOT this script's job, and must never be added back.
+ *
+ * The scraper records everything it finds. Deciding whether two rows are the
+ * same exhibition happens in the app, at the Import Refresh stage, where she
+ * sees each proposal and approves it. A scraper that silently drops rows it
+ * judges to be duplicates is making that decision for her, unseen — and when
+ * its judgement is wrong (as it was here: titles were extracted badly, so 32
+ * real National Gallery exhibitions collapsed to 3 and 29 were destroyed)
+ * the loss is invisible in the output.
+ *
+ * Duplicates in the CSV are cheap. Deleted exhibitions are not.
+ *
+ * This is kept as an identity function so the call site still reads clearly,
+ * and so anyone reaching for "we should dedupe here" finds this note first.
+ */
+function passThrough(rows) {
+  return rows;
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -910,9 +920,9 @@ function dedup(rows) {
   await browser.close();
 
   // Write CSV
-  const deduped = dedup(allRows);
+  const written = passThrough(allRows);
   const csvLines = ['venue_code,title,start_date,end_date,summary,url,notes'];
-  for (const r of deduped) csvLines.push(csvRow(r));
+  for (const r of written) csvLines.push(csvRow(r));
   fs.writeFileSync(CSV_PATH, csvLines.join('\n') + '\n', 'utf8');
 
   // Final summary in log
@@ -930,7 +940,7 @@ function dedup(rows) {
   log('');
   log(`CSV written to:  ${CSV_PATH}`);
   log(`Log written to:  ${LOG_PATH}`);
-  log(`Total rows (inc. placeholders): ${deduped.length}`);
+  log(`Total rows written (no de-duplication — see passThrough): ${written.length}`);
 
   writeLog();
 })();
