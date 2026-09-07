@@ -18,6 +18,9 @@
   },
   "homepage": "https://github.com/angelawen-boop/Cat-Search-Project#readme",
   "dependencies": {
+    "https-proxy-agent": "^9.1.0",
+    "node-fetch": "^2.7.0",
+    "node-html-parser": "^9.0.4",
     "playwright": "^1.63.0"
   }
 }
