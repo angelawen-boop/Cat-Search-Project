@@ -186,8 +186,9 @@ function findDateRange(raw) {
   m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
   if (m) return { start: '', end: parseMonthDay(titleCase(m[1]), null) || '', raw: s };
 
-  // "Month YYYY" with no day — a start month, end unknown (usually upcoming)
-  m = s.match(new RegExp(`(${M})\\s+(\\d{4})`, 'i'));
+  // "Month YYYY" or "Month / YYYY" with no day — a start month, end unknown.
+  // Borghese's archive prints "March / 2026" and nothing else.
+  m = s.match(new RegExp(`(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
   if (m) {
     const mo = MONTHS[m[1].toLowerCase()];
     if (mo) return { start: `${m[2]}-${String(mo).padStart(2,'0')}-01`, end: '', raw: s };
@@ -426,225 +427,284 @@ async function getCuratorialText(page) {
 // ── Venue scrapers ────────────────────────────────────────────────────────────
 
 // THE MET ─────────────────────────────────────────────────────────────────────
+// ── Title extraction ──────────────────────────────────────────────────────────
+/**
+ * Where each venue keeps the exhibition's name.
+ *
+ * Established by reading the actual pages, not guessed. Two shapes exist:
+ *
+ *  - A heading element sits inside the link (National Gallery, Rijksmuseum).
+ *    Read it directly. The old code took the first LINE of the link's text,
+ *    which on the National Gallery is a badge — "Past exhibition", "Free" —
+ *    so 32 exhibitions ended up sharing 3 "titles".
+ *
+ *  - No heading, but a predictable wrapper around the name (Acquavella,
+ *    Borghese). Take the link's whole text and strip the wrapper.
+ *
+ * Never read a heading from the link's PARENT: on Borghese's archive the
+ * parent returns the first card's heading for every card, so every row would
+ * be named after the same exhibition.
+ */
+const TITLE_RULES = {
+  ng:       { heading: true },
+  rijks:    { heading: true },
+  met:      { heading: true },
+  morgan:   { heading: true },
+  // "March / 2026 WANGECHI MUTU - BLACK SOIL POEMS DISCOVER THE EXHIBITION"
+  // The heading here holds only the first sentence, so use the full text.
+  borghese: { heading: false,
+              stripLeading:  /^(Current exhibition|Past exhibition|Upcoming exhibition)?\s*([A-Za-z]+\s*\/\s*\d{4})?\s*/i,
+              stripTrailing: /\s*DISCOVER THE EXHIBITION\s*$/i },
+  // "NICOLE WITTENBERG ALL THE WAY NEW YORK OCTOBER 16 - DECEMBER 5, 2025"
+  // Everything from the gallery location onwards is location plus dates.
+  acq:      { heading: false,
+              stripTrailing: /\s*\b(NEW YORK|PALM BEACH)\b.*$/i },
+};
+
+// Listing furniture that is never part of an exhibition's name.
+const TITLE_NOISE = /\b(Past exhibition|Free entry|Free|EXHIBITION|DISPLAY|Book (now|tickets?)|Members? only)\b|£|€/gi;
+
+const squash = t => String(t || '').replace(/\s+/g, ' ').trim();
+
+async function extractTitle(link, venueCode) {
+  const rule = TITLE_RULES[venueCode] || { heading: true };
+
+  if (rule.heading) {
+    try {
+      const h = await link.$('h1,h2,h3,h4,h5');
+      if (h) {
+        const t = squash(await getText(h));
+        if (t.length >= 3) return t;
+      }
+    } catch {}
+  }
+
+  let t = squash(await getText(link));
+  if (rule.stripLeading)  t = t.replace(rule.stripLeading, '');
+  if (rule.stripTrailing) t = t.replace(rule.stripTrailing, '');
+  if (!rule.heading) return squash(t);
+
+  // Fallback path only: no heading was found, so scrub the listing furniture.
+  return squash(t.replace(TITLE_NOISE, ' '));
+}
+
+// ── URL identity ──────────────────────────────────────────────────────────────
+/**
+ * The ONLY de-duplication this scraper performs: never read the same page
+ * twice. Two rows with the same address are the same exhibition, always,
+ * with no interpretation involved — so collapsing them cannot be wrong.
+ *
+ * Anything cleverer (same title, similar dates) is a judgement and belongs in
+ * the app, where she sees it. See the standing rule in CLAUDE.md Section 3.
+ *
+ * Comparing raw href attributes is not enough: the same Acquavella page is
+ * linked both as "exhibitions/matisse2" and "/exhibitions/matisse2", and
+ * trailing slashes vary. Compare the finished address instead.
+ */
+function normalizeUrl(u) {
+  try {
+    const x = new URL(String(u).trim());
+    x.hash = '';
+    const path = x.pathname.replace(/\/+$/, '');
+    return (x.origin + (path || '/') + x.search).toLowerCase();
+  } catch {
+    return String(u || '').trim().replace(/\/+$/, '').toLowerCase();
+  }
+}
+
+function addNote(existing, note) {
+  return existing ? existing + '; ' + note : note;
+}
+
+// ── Counters ──────────────────────────────────────────────────────────────────
+// Every link is accounted for by one of these buckets. Nothing disappears
+// without a number attached to it.
+const COUNTS = [];
+
+/**
+ * Read one listing page and turn its links into rows.
+ *
+ * Shared by every venue so the counting, the URL guard and the title rules
+ * behave identically everywhere, rather than each scraper doing its own thing.
+ */
+async function collectFromListing(page, opts) {
+  const { venueCode, ctx, selector, base, isNav, rows, seenUrls, urlToRow } = opts;
+  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, dupUrl: 0, noTitle: 0, kept: 0 };
+
+  const links = await page.$$(selector);
+  c.seen = links.length;
+
+  for (const link of links) {
+    const href = await link.getAttribute('href');
+    if (!href) { c.nav++; continue; }
+
+    const fullUrl = href.startsWith('http')
+      ? href
+      : base + (href.startsWith('/') ? href : '/' + href);
+
+    if (isNav(href, fullUrl)) { c.nav++; continue; }
+
+    const key = normalizeUrl(fullUrl);
+    if (seenUrls.has(key)) {
+      c.dupUrl++;
+      const prev = urlToRow.get(key);
+      // Not a loss — record where else it appeared, so the count explains itself.
+      if (prev) prev.notes = addNote(prev.notes, `also listed on: ${ctx}`);
+      continue;
+    }
+
+    const title = await extractTitle(link, venueCode);
+    if (!title || title.length < 3) { c.noTitle++; continue; }
+
+    const dates = await datesNearLink(link);
+    const row = {
+      venue_code: venueCode, title,
+      start_date: dates.start, end_date: dates.end,
+      summary: '', url: fullUrl, notes: `source: ${ctx}`,
+    };
+    seenUrls.add(key);
+    urlToRow.set(key, row);
+    rows.push(row);
+    c.kept++;
+  }
+
+  COUNTS.push(c);
+  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL, ${c.noTitle} no usable title -> ${c.kept} collected`);
+  return c;
+}
+
 async function scrapeMet(page) {
   logSection('MET — The Metropolitan Museum of Art');
-  const rows = [];
+  const rows = [], seenUrls = new Set(), urlToRow = new Map();
   const venueCode = 'met';
+  const base = 'https://www.metmuseum.org';
 
-  // Current + upcoming
-  log('  Fetching current/upcoming: https://www.metmuseum.org/exhibitions');
-  const r1 = await safeGoto(page, 'https://www.metmuseum.org/exhibitions', venueCode, 'current');
+  const listingOpts = ctx => ({
+    venueCode, ctx, base, rows, seenUrls, urlToRow,
+    selector: 'a[href*="/exhibitions/"]',
+    isNav: href => /^\/exhibitions\/?$/.test(href) || /^\/exhibitions\/past\/?$/.test(href),
+  });
+
+  log(`  Fetching current/upcoming: ${base}/exhibitions`);
+  const r1 = await safeGoto(page, base + '/exhibitions', venueCode, 'current/upcoming');
   if (!r1.ok) {
     log(`  FAILED current/upcoming — ${r1.reason}`);
   } else {
-    const found = await metExtractListing(page, venueCode, 'current/upcoming');
-    rows.push(...found);
-    log(`  current/upcoming: ${found.length} exhibitions found`);
+    try { await collectFromListing(page, listingOpts('current/upcoming')); }
+    catch (e) { log(`  ERROR extracting Met listing: ${e.message.slice(0,120)}`); }
   }
 
-  // Past — iterate years 2026, 2025, 2024
-  log('  Fetching past: https://www.metmuseum.org/exhibitions/past');
-  const r2 = await safeGoto(page, 'https://www.metmuseum.org/exhibitions/past', venueCode, 'past');
+  log(`  Fetching past: ${base}/exhibitions/past`);
+  const r2 = await safeGoto(page, base + '/exhibitions/past', venueCode, 'past');
   if (!r2.ok) {
     log(`  FAILED past listing — ${r2.reason}`);
   } else {
+    // The Met's past page filters by year through a dropdown. Walk it back to
+    // the lookback floor year; the URL guard means a show appearing under two
+    // years is recorded once, with a note saying where else it was listed.
     for (const year of [CURRENT_YEAR, CURRENT_YEAR - 1, 2024]) {
       try {
         log(`  Selecting year ${year}...`);
-        // The Met uses a <select> dropdown with year values
         await page.selectOption('select', String(year));
-        await page.waitForLoadState('networkidle', { timeout: 15000 });
-        const found = await metExtractListing(page, venueCode, `past-${year}`);
-        // Filter by lookback
-        const inWindow = found.filter(r => afterLookback(r.end_date));
-        rows.push(...inWindow);
-        log(`  past ${year}: ${found.length} found, ${inWindow.length} within lookback`);
-        if (year === 2024) break; // 2024 is the floor year — stop here
+        await page.waitForFunction(
+          (min) => document.body && document.body.innerText.trim().length > min,
+          MIN_BODY_CHARS, { timeout: CONTENT_TIMEOUT }
+        ).catch(() => {});
+        await collectFromListing(page, listingOpts(`past-${year}`));
+        if (year === 2024) break;
       } catch (e) {
         log(`  ERROR selecting year ${year}: ${e.message.slice(0, 120)}`);
       }
     }
   }
 
-  // Fetch individual pages for summaries
-  await fetchIndividualPages(page, rows, venueCode);
-  return rows;
+  const inWindow = applyLookback(rows, venueCode, 'listing');
+  await fetchIndividualPages(page, inWindow, venueCode);
+  return inWindow;
 }
 
-async function metExtractListing(page, venueCode, context) {
-  const rows = [];
-  try {
-    // Met listing: each exhibition is an article or div with a link, title, and date
-    const items = await page.$$('[class*="exhibition-listing"] a, .exhibition-card a, article a[href*="/exhibitions/"]');
-    // Fallback: look for any link into /exhibitions/ path
-    const links = await page.$$('a[href*="/exhibitions/"]');
-    const seen = new Set();
-    for (const link of links) {
-      const href = await link.getAttribute('href');
-      if (!href || seen.has(href)) continue;
-      // Skip the top-level /exhibitions and /exhibitions/past pages themselves
-      if (/^\/exhibitions\/?$/.test(href) || /^\/exhibitions\/past\/?$/.test(href)) continue;
-      seen.add(href);
-      const fullUrl = href.startsWith('http') ? href : 'https://www.metmuseum.org' + href;
-      // Try to get title from link text or nearby heading
-      let title = (await getText(link)).replace(/\n.*/s, '').trim();
-      if (!title || title.length < 3) continue;
-      const dates = await datesNearLink(link);
-      rows.push({
-        venue_code: venueCode,
-        title,
-        start_date: dates.start,
-        end_date: dates.end,
-        summary: '',
-        url: fullUrl,
-        notes: `source: ${context}`,
-        _needsDates: !dates.start && !dates.end,
-      });
-    }
-  } catch (e) {
-    log(`  ERROR extracting Met listing (${context}): ${e.message.slice(0, 120)}`);
-  }
-  return rows;
-}
-
-// NATIONAL GALLERY ─────────────────────────────────────────────────────────────
 async function scrapeNG(page) {
   logSection('NG — National Gallery, London');
-  const rows = [];
+  const rows = [], seenUrls = new Set(), urlToRow = new Map();
   const venueCode = 'ng';
+  const base = 'https://www.nationalgallery.org.uk';
 
   const urls = [
-    { url: 'https://www.nationalgallery.org.uk/exhibitions', ctx: 'current/upcoming' },
-    { url: 'https://www.nationalgallery.org.uk/exhibitions/past', ctx: 'past' },
+    { url: base + '/exhibitions',      ctx: 'current/upcoming' },
+    { url: base + '/exhibitions/past', ctx: 'past' },
   ];
 
   for (const { url, ctx } of urls) {
     log(`  Fetching ${ctx}: ${url}`);
     const r = await safeGoto(page, url, venueCode, ctx);
     if (!r.ok) { log(`  FAILED ${ctx} — ${r.reason}`); continue; }
-
     try {
-      // NG listing: exhibition cards with links, titles, dates
-      const links = await page.$$('a[href*="/exhibitions/"]');
-      const seen = new Set();
-      for (const link of links) {
-        const href = await link.getAttribute('href');
-        if (!href || seen.has(href)) continue;
-        if (/\/exhibitions\/?$/.test(href) || /\/exhibitions\/past\/?$/.test(href)) continue;
-        seen.add(href);
-        const fullUrl = href.startsWith('http') ? href : 'https://www.nationalgallery.org.uk' + href;
-        const title = (await getText(link)).replace(/\n.*/s, '').trim();
-        if (!title || title.length < 3) continue;
-
-        const dates = await datesNearLink(link);
-
-        if (!afterLookback(dates.end)) continue;
-
-        rows.push({
-          venue_code: venueCode,
-          title,
-          start_date: dates.start,
-          end_date: dates.end,
-          summary: '',
-          url: fullUrl,
-          notes: dates.raw && !dates.start && !dates.end ? `date text: "${dates.raw.slice(0,80)}"` : '',
-        });
-      }
-      log(`  ${ctx}: ${rows.filter(r=>r.venue_code===venueCode).length} total so far`);
+      await collectFromListing(page, {
+        venueCode, ctx, base, rows, seenUrls, urlToRow,
+        selector: 'a[href*="/exhibitions/"]',
+        isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/past\/?$/.test(href),
+      });
     } catch (e) {
       log(`  ERROR extracting NG listing (${ctx}): ${e.message.slice(0,120)}`);
     }
   }
 
-  await fetchIndividualPages(page, rows, venueCode);
-  return rows;
+  const inWindow = applyLookback(rows, venueCode, 'listing');
+  await fetchIndividualPages(page, inWindow, venueCode);
+  return inWindow;
 }
 
-// RIJKSMUSEUM ─────────────────────────────────────────────────────────────────
 async function scrapeRijks(page) {
   logSection('RIJKS — Rijksmuseum, Amsterdam');
-  const rows = [];
+  const rows = [], seenUrls = new Set(), urlToRow = new Map();
   const venueCode = 'rijks';
+  const base = 'https://www.rijksmuseum.nl';
 
   const urls = [
-    { url: 'https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view', ctx: 'current/upcoming' },
-    { url: 'https://www.rijksmuseum.nl/en/whats-on/exhibitions/past', ctx: 'past' },
+    { url: base + '/en/whats-on/exhibitions/now-on-view', ctx: 'current/upcoming' },
+    { url: base + '/en/whats-on/exhibitions/past',        ctx: 'past' },
   ];
 
   for (const { url, ctx } of urls) {
     log(`  Fetching ${ctx}: ${url}`);
     const r = await safeGoto(page, url, venueCode, ctx);
     if (!r.ok) { log(`  FAILED ${ctx} — ${r.reason}`); continue; }
-
     try {
-      const links = await page.$$('a[href*="/whats-on/exhibitions/"]');
-      const seen = new Set();
-      for (const link of links) {
-        const href = await link.getAttribute('href');
-        if (!href || seen.has(href)) continue;
-        if (/exhibitions\/?$/.test(href) || /now-on-view\/?$/.test(href) || /past\/?$/.test(href)) continue;
-        seen.add(href);
-        const fullUrl = href.startsWith('http') ? href : 'https://www.rijksmuseum.nl' + href;
-        const title = (await getText(link)).replace(/\n.*/s, '').trim();
-        if (!title || title.length < 3) continue;
-        const dates = await datesNearLink(link);
-        rows.push({
-          venue_code: venueCode, title,
-          start_date: dates.start, end_date: dates.end,
-          summary: '', url: fullUrl, notes: `source: ${ctx}`,
-        });
-      }
-      log(`  ${ctx}: extracted links`);
+      await collectFromListing(page, {
+        venueCode, ctx, base, rows, seenUrls, urlToRow,
+        selector: 'a[href*="exhibitions/"]',
+        isNav: href => /exhibitions\/?$/.test(href) || /now-on-view\/?$/.test(href) || /past\/?$/.test(href),
+      });
     } catch (e) {
       log(`  ERROR extracting Rijks listing (${ctx}): ${e.message.slice(0,120)}`);
     }
   }
 
-  await fetchIndividualPages(page, rows, venueCode);
-  return rows;
+  const inWindow = applyLookback(rows, venueCode, 'listing');
+  await fetchIndividualPages(page, inWindow, venueCode);
+  return inWindow;
 }
 
-// ACQUAVELLA ──────────────────────────────────────────────────────────────────
 async function scrapeAcq(page) {
   logSection('ACQ — Acquavella Galleries, New York');
-  const rows = [];
+  const rows = [], seenUrls = new Set(), urlToRow = new Map();
   const venueCode = 'acq';
+  const base = 'https://www.acquavellagalleries.com';
+  const url = base + '/exhibitions';
 
-  log('  Fetching: https://www.acquavellagalleries.com/exhibitions');
-  const r = await safeGoto(page, 'https://www.acquavellagalleries.com/exhibitions', venueCode, 'all');
+  log(`  Fetching: ${url}`);
+  const r = await safeGoto(page, url, venueCode, 'all');
   if (!r.ok) { log(`  FAILED — ${r.reason}`); return rows; }
 
   try {
-    const links = await page.$$('a[href*="/exhibitions/"]');
-    const seen = new Set();
-    let navSkipped = 0;
-    for (const link of links) {
-      const href = await link.getAttribute('href');
-      if (!href || seen.has(href)) continue;
-      if (/\/exhibitions\/?$/.test(href)) continue;
-      // The archive's own filter controls live under /exhibitions/past/ —
-      // "VIEW ALL", "2023-2021", "1999" and so on. They are navigation, not
-      // exhibitions, and following them dragged in the whole back catalogue.
-      if (/\/exhibitions\/past\//.test(href)) { navSkipped++; continue; }
-      seen.add(href);
-      const fullUrl = href.startsWith('http') ? href : 'https://www.acquavellagalleries.com' + href;
-
-      const linkText = (await getText(link)).replace(/\s+/g, ' ').trim();
-      const title = linkText.replace(/\n.*/s, '').trim();
-      if (!title || title.length < 3) continue;
-
-      // Acquavella prints the run in the link itself, e.g.
-      // "MIQUEL BARCELO NEW YORK APRIL 24 - MAY 30, 2025". Reading it here
-      // means the lookback can be applied before any detail page is opened.
-      const dates = findDateRange(linkText);
-
-      rows.push({
-        venue_code: venueCode, title,
-        start_date: dates.start, end_date: dates.end,
-        summary: '', url: fullUrl, notes: '',
-      });
-    }
-    log(`  found ${rows.length} exhibition links (${navSkipped} archive-nav links ignored)`);
+    await collectFromListing(page, {
+      venueCode, ctx: 'all (current/upcoming/past)', base, rows, seenUrls, urlToRow,
+      selector: 'a[href*="/exhibitions/"]',
+      // The archive's own year-range filters ("VIEW ALL", "2023-2021", "1999")
+      // live under /exhibitions/past/. They are navigation, not exhibitions;
+      // following them dragged in the whole back catalogue to 1999.
+      isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/past\//.test(href),
+    });
   } catch (e) {
     log(`  ERROR extracting Acq listing: ${e.message.slice(0,120)}`);
   }
@@ -654,24 +714,28 @@ async function scrapeAcq(page) {
   return inWindow;
 }
 
-// BORGHESE ────────────────────────────────────────────────────────────────────
 async function scrapeBorghese(page) {
   logSection('BORGHESE — Galleria Borghese, Rome');
-  const rows = [];
+  const rows = [], seenUrls = new Set(), urlToRow = new Map();
   const venueCode = 'borghese';
+  const base = 'https://galleriaborghese.cultura.gov.it';
 
-  // Three separate URLs (tabs are separate paths on this domain)
+  // Its exhibitions do NOT live under /mostre/ — those three pages are the
+  // listings themselves, and the only /mostre/ links on them are the site's
+  // own navigation (ITA, Exhibitions, Current, Past, Upcoming). Individual
+  // exhibitions live under /en/exhibition/. Looking for /mostre/ was why this
+  // venue returned exactly one row per page: it was collecting the menu bar.
   const urls = [
-    { url: 'https://galleriaborghese.cultura.gov.it/en/mostre/presenti/', ctx: 'current' },
-    { url: 'https://galleriaborghese.cultura.gov.it/en/mostre/future/',   ctx: 'upcoming' },
-    { url: 'https://galleriaborghese.cultura.gov.it/en/mostre/passate/',  ctx: 'past' },
+    { url: base + '/en/mostre/presenti/', ctx: 'current' },
+    { url: base + '/en/mostre/future/',   ctx: 'upcoming' },
+    { url: base + '/en/mostre/passate/',  ctx: 'past' },
   ];
 
   for (const { url, ctx } of urls) {
     log(`  Fetching ${ctx}: ${url}`);
     const r = await safeGoto(page, url, venueCode, ctx);
     if (!r.ok) {
-      log(`  FAILED ${ctx} — ${r.reason} (expected if robots-blocked)`);
+      log(`  FAILED ${ctx} — ${r.reason}`);
       rows.push({
         venue_code: venueCode, title: `[${ctx} page]`, start_date: '', end_date: '',
         summary: '', url, notes: `BLOCKED: ${r.reason} — page did not load`,
@@ -679,106 +743,73 @@ async function scrapeBorghese(page) {
       continue;
     }
 
-    // Check for robots block or empty page
     const bodyText = await page.innerText('body').catch(() => '');
     if (bodyText.length < 200) {
-      log(`  EMPTY_PAGE ${ctx}: page loaded but body has <200 chars — likely shell or block`);
+      log(`  EMPTY_PAGE ${ctx}: page loaded but body has <200 chars`);
       rows.push({
         venue_code: venueCode, title: `[${ctx} page]`, start_date: '', end_date: '',
-        summary: '', url, notes: `EMPTY_PAGE: page loaded but returned no usable content`,
+        summary: '', url, notes: 'EMPTY_PAGE: page loaded but returned no usable content',
       });
       continue;
     }
 
     try {
-      const links = await page.$$('a[href*="/mostre/"]');
-      const seen = new Set();
-      for (const link of links) {
-        const href = await link.getAttribute('href');
-        if (!href || seen.has(href)) continue;
-        if (/\/(presenti|future|passate)\/?$/.test(href)) continue;
-        seen.add(href);
-        const fullUrl = href.startsWith('http') ? href : 'https://galleriaborghese.cultura.gov.it' + href;
-        const title = (await getText(link)).replace(/\n.*/s, '').trim();
-        if (!title || title.length < 3) continue;
-        const dates = await datesNearLink(link);
-        rows.push({
-          venue_code: venueCode, title,
-          start_date: dates.start, end_date: dates.end,
-          summary: '', url: fullUrl, notes: `source: ${ctx}`,
-        });
-      }
-      log(`  ${ctx}: ${rows.filter(r=>r.notes?.includes(ctx)).length} links found`);
+      await collectFromListing(page, {
+        venueCode, ctx, base, rows, seenUrls, urlToRow,
+        selector: 'a[href*="/exhibition/"]',
+        isNav: href => /\/exhibition\/?$/.test(href),
+      });
     } catch (e) {
       log(`  ERROR extracting Borghese listing (${ctx}): ${e.message.slice(0,120)}`);
     }
   }
 
-  // Only fetch individual pages if we actually got links (not just placeholder rows)
-  const real = rows.filter(r => !r.title.startsWith('['));
-  if (real.length) await fetchIndividualPages(page, real, venueCode);
+  // Borghese listings carry only a start month ("March / 2026") and no end
+  // date at all, so the lookback cannot be decided here — the detail pages
+  // have to supply the end date first.
+  await fetchIndividualPages(page, rows, venueCode);
   return rows;
 }
 
-// MORGAN ──────────────────────────────────────────────────────────────────────
 async function scrapeMorgan(page) {
   logSection('MORGAN — Morgan Library & Museum, New York');
-  const rows = [];
+  const rows = [], seenUrls = new Set(), urlToRow = new Map();
   const venueCode = 'morgan';
+  const base = 'https://www.themorgan.org';
 
   const urls = [
-    { url: 'https://www.themorgan.org/exhibitions/current',  ctx: 'current' },
-    { url: 'https://www.themorgan.org/exhibitions/upcoming', ctx: 'upcoming' },
-    { url: 'https://www.themorgan.org/exhibitions/past',     ctx: 'past' },
+    { url: base + '/exhibitions/current',  ctx: 'current' },
+    { url: base + '/exhibitions/upcoming', ctx: 'upcoming' },
+    { url: base + '/exhibitions/past',     ctx: 'past' },
   ];
 
   for (const { url, ctx } of urls) {
     log(`  Fetching ${ctx}: ${url}`);
     const r = await safeGoto(page, url, venueCode, ctx);
-    if (!r.ok) { log(`  FAILED ${ctx} — ${r.reason}`); continue; }
-
-    // Morgan is a known JS shell — check if we got real content
-    const bodyText = await page.innerText('body').catch(() => '');
-    const titleCount = await page.$$('h2, h3').then(els => els.length).catch(() => 0);
-    if (titleCount === 0 || bodyText.length < 300) {
-      log(`  JS_SHELL ${ctx}: page loaded but no headings found — shell-plus-database failure`);
+    if (!r.ok) {
+      log(`  FAILED ${ctx} — ${r.reason}`);
       rows.push({
         venue_code: venueCode, title: `[${ctx} page]`, start_date: '', end_date: '',
-        summary: '', url, notes: `JS_SHELL: page rendered no exhibition content — JavaScript database injection failed`,
+        summary: '', url, notes: `BLOCKED: ${r.reason} — page did not load`,
       });
       continue;
     }
-
     try {
-      const links = await page.$$('a[href*="/exhibitions/"]');
-      const seen = new Set();
-      for (const link of links) {
-        const href = await link.getAttribute('href');
-        if (!href || seen.has(href)) continue;
-        if (/\/exhibitions\/(current|upcoming|past)\/?$/.test(href)) continue;
-        seen.add(href);
-        const fullUrl = href.startsWith('http') ? href : 'https://www.themorgan.org' + href;
-        const title = (await getText(link)).replace(/\n.*/s, '').trim();
-        if (!title || title.length < 3) continue;
-        const dates = await datesNearLink(link);
-        rows.push({
-          venue_code: venueCode, title,
-          start_date: dates.start, end_date: dates.end,
-          summary: '', url: fullUrl, notes: `source: ${ctx}`,
-        });
-      }
-      log(`  ${ctx}: links found — Morgan shell did NOT fail (headless browser fixed it)`);
+      await collectFromListing(page, {
+        venueCode, ctx, base, rows, seenUrls, urlToRow,
+        selector: 'a[href*="/exhibitions/"]',
+        isNav: href => /\/exhibitions\/(current|upcoming|past)\/?$/.test(href) || /\/exhibitions\/?$/.test(href),
+      });
     } catch (e) {
       log(`  ERROR extracting Morgan listing (${ctx}): ${e.message.slice(0,120)}`);
     }
   }
 
-  const real = rows.filter(r => !r.title.startsWith('['));
-  if (real.length) await fetchIndividualPages(page, real, venueCode);
-  return rows;
+  const inWindow = applyLookback(rows, venueCode, 'listing');
+  await fetchIndividualPages(page, inWindow, venueCode);
+  return inWindow;
 }
 
-// ── Individual page fetcher ───────────────────────────────────────────────────
 async function fetchIndividualPages(page, rows, venueCode) {
   let fetched = 0, failed = 0, noText = 0;
   // Skip anything already known to have closed before the lookback floor —
@@ -935,6 +966,26 @@ function passThrough(rows) {
       log(`  ${code.toUpperCase()}: ${s.real} exhibitions | ${s.withSummary} with text${blocked}`);
     }
   }
+  // ── Coverage report ─────────────────────────────────────────────────────────
+  // Every link the scraper saw is accounted for by one of these columns.
+  // If a venue's total looks wrong, this says which stage lost the rows.
+  logSection('COVERAGE — every link accounted for');
+  log('  venue      page                          seen   nav   dup  noTitle  collected');
+  log('  ' + '-'.repeat(76));
+  const pad = (v, n) => String(v).padEnd(n);
+  const num = (v, n) => String(v).padStart(n);
+  for (const c of COUNTS) {
+    log('  ' + pad(c.venue, 10) + ' ' + pad(String(c.page).slice(0, 28), 28) +
+        num(c.seen, 6) + num(c.nav, 6) + num(c.dupUrl, 6) + num(c.noTitle, 9) + num(c.kept, 11));
+  }
+  if (!COUNTS.length) log('  (no listing pages were read)');
+  log('');
+  log('  seen      = links matching the venue\'s selector on that page');
+  log('  nav       = site navigation and filter links, not exhibitions');
+  log('  dup       = an address already collected; noted on the existing row, never dropped silently');
+  log('  noTitle   = no usable exhibition name could be read from the link');
+  log('  collected = rows handed on to the lookback filter and detail-page fetch');
+
   log('');
   log(`Network bridge: ${netStats.fulfilled} requests served, ${netStats.skipped} skipped (image/media/font), ${netStats.failed} failed`);
   log('');
