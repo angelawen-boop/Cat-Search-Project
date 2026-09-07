@@ -18,6 +18,8 @@
   },
   "homepage": "https://github.com/angelawen-boop/Cat-Search-Project#readme",
   "dependencies": {
-    "playwright": "^1.63.0"
+    "playwright": "^1.63.0",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   }
 }
