@@ -334,7 +334,7 @@ function applyLookback(rows, venueCode, stage) {
     if (row.title && row.title.startsWith('[')) { kept.push(row); continue; }  // diagnostic placeholder
     if (!row.end_date) {
       undated++;
-      row.notes = (row.notes ? row.notes + '; ' : '') + 'NO_END_DATE: kept, lookback unverified';
+      row.notes = addNote(row.notes, 'No closing date found anywhere on the venue\'s pages. Kept anyway, because an unknown date is not proof the show closed before 1 Jul 2024 — but it has not been checked against the lookback.');
     }
     if (afterLookback(row.end_date)) kept.push(row);
     else dropped++;
@@ -691,8 +691,26 @@ function normalizeUrl(u) {
   }
 }
 
+/**
+ * Notes are written for her, not for a log file.
+ *
+ * Whatever lands in this column is shown verbatim on the approval card in the
+ * app, so each note is a plain sentence saying what happened and whether it
+ * needs her attention. The app already reports empty fields on its own ("No
+ * end date."); the scraper's job here is to say WHY a field is empty and how
+ * much to trust what is there.
+ */
+function sourceNote(ctx) {
+  return `Found on the venue's "${ctx}" listing page.`;
+}
+
 function addNote(existing, note) {
-  return existing ? existing + '; ' + note : note;
+  if (!existing) return note;
+  // Notes are whole sentences now, so join them as sentences. Only fall back
+  // to a semicolon for older fragments that do not end in punctuation.
+  return /[.!?]$/.test(existing.trim())
+    ? existing.trim() + ' ' + note
+    : existing.trim() + '; ' + note;
 }
 
 // ── Counters ──────────────────────────────────────────────────────────────────
@@ -728,7 +746,7 @@ async function collectFromListing(page, opts) {
       c.dupUrl++;
       const prev = urlToRow.get(key);
       // Not a loss — record where else it appeared, so the count explains itself.
-      if (prev) prev.notes = addNote(prev.notes, `also listed on: ${ctx}`);
+      if (prev) prev.notes = addNote(prev.notes, `Also listed on the venue's "${ctx}" page.`);
       continue;
     }
 
@@ -740,7 +758,8 @@ async function collectFromListing(page, opts) {
     let titleNote = '';
     if (!title || title.length < 3) {
       c.noTitle++;
-      titleNote = `NO_TITLE: no exhibition name could be read from this link. URL suggests: "${slugToWords(fullUrl)}"`;
+      const guess = slugToWords(fullUrl);
+      titleNote = `No exhibition name could be read from this link${guess ? `. Its web address suggests: "${guess}"` : ''}. The title needs filling in by hand before this can be added.`;
       title = '';
     }
 
@@ -749,7 +768,7 @@ async function collectFromListing(page, opts) {
       venue_code: venueCode, title,
       start_date: dates.start, end_date: dates.end,
       summary: '', url: fullUrl,
-      notes: titleNote ? `source: ${ctx}; ${titleNote}` : `source: ${ctx}`,
+      notes: titleNote ? `${sourceNote(ctx)} ${titleNote}` : sourceNote(ctx),
     };
     seenUrls.add(key);
     urlToRow.set(key, row);
@@ -927,7 +946,7 @@ async function scrapeBorghese(page) {
       log(`  FAILED ${ctx} — ${r.reason}`);
       rows.push({
         venue_code: venueCode, title: `[${ctx} page]`, start_date: '', end_date: '',
-        summary: '', url, notes: `BLOCKED: ${r.reason} — page did not load`,
+        summary: '', url, notes: `The venue's "${ctx}" listing page did not load (${r.reason}), so nothing could be collected from it. This row is a marker, not an exhibition.`,
       });
       continue;
     }
@@ -937,7 +956,7 @@ async function scrapeBorghese(page) {
       log(`  EMPTY_PAGE ${ctx}: page loaded but body has <200 chars`);
       rows.push({
         venue_code: venueCode, title: `[${ctx} page]`, start_date: '', end_date: '',
-        summary: '', url, notes: 'EMPTY_PAGE: page loaded but returned no usable content',
+        summary: '', url, notes: `The venue's "${ctx}" listing page loaded but returned no usable content. This row is a marker, not an exhibition.`,
       });
       continue;
     }
@@ -979,7 +998,7 @@ async function scrapeMorgan(page) {
       log(`  FAILED ${ctx} — ${r.reason}`);
       rows.push({
         venue_code: venueCode, title: `[${ctx} page]`, start_date: '', end_date: '',
-        summary: '', url, notes: `BLOCKED: ${r.reason} — page did not load`,
+        summary: '', url, notes: `The venue's "${ctx}" listing page did not load (${r.reason}), so nothing could be collected from it. This row is a marker, not an exhibition.`,
       });
       continue;
     }
@@ -1011,7 +1030,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
     try {
       const r = await safeGoto(page, row.url, venueCode, 'individual');
       if (!r.ok) {
-        row.notes = (row.notes ? row.notes + '; ' : '') + `individual page: ${r.reason}`;
+        row.notes = addNote(row.notes, `This exhibition's own page did not load (${r.reason}), so no description or dates could be read from it.`);
         failed++;
         continue;
       }
@@ -1020,7 +1039,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
         row.summary = text;
         fetched++;
       } else {
-        row.notes = (row.notes ? row.notes + '; ' : '') + 'NO_CURATORIAL_TEXT on individual page';
+        row.notes = addNote(row.notes, 'No description could be found on this exhibition\'s own page.');
         noText++;
       }
 
@@ -1034,7 +1053,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
         if (p.end) {
           row.end_date = p.end;
           if (!row.start_date && p.start) row.start_date = p.start;
-          row.notes = addNote(row.notes, `dates read from page text: "${p.raw}"`);
+          row.notes = addNote(row.notes, `Dates were read from a sentence on the exhibition's own page rather than from a date field: "${p.raw}". Worth a glance to confirm they are right.`);
         }
       }
 
@@ -1048,13 +1067,13 @@ async function fetchIndividualPages(page, rows, venueCode) {
             if (dates.start) row.start_date = dates.start;
             if (dates.end) row.end_date = dates.end;
             if (raw && !dates.start && !dates.end) {
-              row.notes = (row.notes ? row.notes + '; ' : '') + `date text unparsed: "${raw.slice(0,60)}"`;
+              row.notes = addNote(row.notes, `Found text that looks like dates but could not be read: "${raw.slice(0,60)}". The dates may need filling in by hand.`);
             }
           }
         } catch {}
       }
     } catch (e) {
-      row.notes = (row.notes ? row.notes + '; ' : '') + `individual page error: ${e.message.slice(0,80)}`;
+      row.notes = addNote(row.notes, `Something went wrong while reading this exhibition's own page: ${e.message.slice(0,80)}`);
       failed++;
     }
   }
