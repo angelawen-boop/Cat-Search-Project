@@ -694,7 +694,7 @@ function dedup(rows) {
   const allRows = [];
   const summary = {};
 
-  const scrapers = [
+  const allScrapers = [
     { code: 'met',      fn: scrapeMet },
     { code: 'ng',       fn: scrapeNG },
     { code: 'rijks',    fn: scrapeRijks },
@@ -702,6 +702,13 @@ function dedup(rows) {
     { code: 'borghese', fn: scrapeBorghese },
     { code: 'morgan',   fn: scrapeMorgan },
   ];
+
+  // Optional venue filter: node scraper/sweep_prototype.js borghese morgan
+  const wanted = process.argv.slice(2).map(a => a.toLowerCase());
+  const scrapers = wanted.length
+    ? allScrapers.filter(s => wanted.includes(s.code))
+    : allScrapers;
+  if (wanted.length) log(`Venue filter: ${scrapers.map(s => s.code).join(', ') || '(none matched)'}`);
 
   for (const { code, fn } of scrapers) {
     try {
