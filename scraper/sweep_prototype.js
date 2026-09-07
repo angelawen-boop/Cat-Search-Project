@@ -48,6 +48,11 @@ const CSV_PATH = path.join(OUT_DIR, 'sweep_raw.csv');
 const LOG_PATH = path.join(OUT_DIR, 'sweep_log.txt');
 
 const LOOKBACK = new Date('2024-07-01');
+
+// Navigation timing. See safeGoto() for why 'networkidle' is not used.
+const NAV_TIMEOUT = 20000;      // ceiling for the HTML itself to arrive
+const CONTENT_TIMEOUT = 8000;   // extra grace for client-rendered body text
+const MIN_BODY_CHARS = 200;     // below this a page is a shell, not content
 const CURRENT_YEAR = new Date().getFullYear();
 
 // ── Logging ───────────────────────────────────────────────────────────────────
@@ -138,6 +143,63 @@ function parseDateRange(raw) {
   return { start: '', end: '', raw: s };
 }
 
+/**
+ * Scan a blob of text for a date range appearing anywhere inside it.
+ *
+ * parseDateRange() is anchored (^...$) and only matches a string that is
+ * nothing but a date. Listing pages rarely oblige — Acquavella renders
+ * "NICOLE WITTENBERG ALL THE WAY NEW YORK OCTOBER 16 - DECEMBER 5, 2025",
+ * where the date is buried after the title and the city. This searches
+ * instead of matching, so those dates are recovered.
+ */
+function findDateRange(raw) {
+  if (!raw) return { start: '', end: '', raw: '' };
+  const s = String(raw).replace(/[\u2013\u2014]/g, '-').replace(/\s+/g, ' ').trim();
+  const M = '(?:January|February|March|April|May|June|July|August|September|October|November|December)';
+
+  // Day-first European form, as used by Borghese and the National Gallery:
+  // "1 November 2025 to 11 January 2026", "19 June till 13 September 2026".
+  let dm = s.match(new RegExp(`(\\d{1,2})\\s+(${M})\\s*(\\d{4})?\\s*(?:to|till|until|-)\\s*(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  if (dm) {
+    const endYr = parseInt(dm[6], 10);
+    const startYr = dm[3] ? parseInt(dm[3], 10) : endYr;
+    const sMo = MONTHS[dm[2].toLowerCase()], eMo = MONTHS[dm[5].toLowerCase()];
+    if (sMo && eMo) return {
+      start: `${startYr}-${String(sMo).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`,
+      end:   `${endYr}-${String(eMo).padStart(2,'0')}-${String(dm[4]).padStart(2,'0')}`,
+      raw: s,
+    };
+  }
+
+  // "Month D, YYYY - Month D, YYYY" — year on both sides
+  let m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})\\s*-\\s*(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
+  if (m) return { start: parseMonthDay(titleCase(m[1]), null) || '', end: parseMonthDay(titleCase(m[2]), null) || '', raw: s };
+
+  // "Month D - Month D, YYYY" — year only on the end side
+  m = s.match(new RegExp(`(${M}\\s+\\d{1,2})\\s*-\\s*(${M}\\s+\\d{1,2},\\s*(\\d{4}))`, 'i'));
+  if (m) {
+    const yr = parseInt(m[3], 10);
+    return { start: parseMonthDay(titleCase(m[1]), yr) || '', end: parseMonthDay(titleCase(m[2]), null) || '', raw: s };
+  }
+
+  // Single "Month D, YYYY" — treat as the end date (open until)
+  m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
+  if (m) return { start: '', end: parseMonthDay(titleCase(m[1]), null) || '', raw: s };
+
+  // "Month YYYY" with no day — a start month, end unknown (usually upcoming)
+  m = s.match(new RegExp(`(${M})\\s+(\\d{4})`, 'i'));
+  if (m) {
+    const mo = MONTHS[m[1].toLowerCase()];
+    if (mo) return { start: `${m[2]}-${String(mo).padStart(2,'0')}-01`, end: '', raw: s };
+  }
+
+  return { start: '', end: '', raw: s };
+}
+
+function titleCase(str) {
+  return str.replace(/([A-Za-z]+)/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase());
+}
+
 function afterLookback(endDateStr) {
   // If no end date, include (we don't know when it ended)
   if (!endDateStr) return true;
@@ -146,7 +208,50 @@ function afterLookback(endDateStr) {
   return d >= LOOKBACK;
 }
 
+/**
+ * Drop exhibitions that had already closed before the lookback floor.
+ *
+ * The rule: keep an exhibition if it was open at any point on or after
+ * 1 July 2024. An exhibition that opened in March 2024 and closed in
+ * September 2024 is KEPT — it was still running inside the window. Only a
+ * confirmed end date earlier than the floor excludes it, so the test is on
+ * end_date, never start_date.
+ *
+ * Rows whose end date could not be parsed are kept and flagged, because an
+ * unknown date is not evidence of being too old. Every venue passes through
+ * here, both before individual pages are fetched and again at the end.
+ */
+function applyLookback(rows, venueCode, stage) {
+  const kept = [];
+  let dropped = 0, undated = 0;
+  for (const row of rows) {
+    if (row.title && row.title.startsWith('[')) { kept.push(row); continue; }  // diagnostic placeholder
+    if (!row.end_date) {
+      undated++;
+      row.notes = (row.notes ? row.notes + '; ' : '') + 'NO_END_DATE: kept, lookback unverified';
+    }
+    if (afterLookback(row.end_date)) kept.push(row);
+    else dropped++;
+  }
+  if (dropped || undated) {
+    log(`  lookback (${stage}): kept ${kept.length}, dropped ${dropped} closed before ${LOOKBACK.toISOString().slice(0,10)}, ${undated} undated`);
+  }
+  return kept;
+}
+
 // ── Page helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * Fulfilling or aborting a route throws if the frame that asked for it has
+ * already gone away — which happens constantly now that we stop waiting for
+ * the network to fall silent and navigate on while subresources are still in
+ * flight. An unhandled rejection here poisons the page for the NEXT
+ * navigation, which surfaced as a cascade of
+ * "interrupted by another navigation" errors across every venue.
+ */
+async function safeRouteCall(fn) {
+  try { await fn(); } catch { /* frame gone — nothing to answer */ }
+}
 
 /**
  * Make Chromium stop touching the network.
@@ -163,7 +268,7 @@ async function installNetworkBridge(context) {
 
     if (SKIP_RESOURCE_TYPES.has(request.resourceType())) {
       stats.skipped++;
-      return route.abort();
+      return safeRouteCall(() => route.abort());
     }
 
     const method = request.method();
@@ -196,26 +301,76 @@ async function installNetworkBridge(context) {
       }
 
       stats.fulfilled++;
-      await route.fulfill({ status: response.status, headers: out, body });
+      await safeRouteCall(() => route.fulfill({ status: response.status, headers: out, body }));
     } catch (e) {
       stats.failed++;
-      await route.abort();
+      await safeRouteCall(() => route.abort());
     }
   });
 
   return stats;
 }
 
-async function safeGoto(page, url, venue, context) {
+/**
+ * Read an exhibition's run dates from a listing page.
+ *
+ * Listings put the dates either inside the link itself (Acquavella) or in the
+ * card wrapping it (the National Gallery: "7 November 2025 - 10 May 2026").
+ * We look at the link, then its immediate parent, and stop there — going
+ * further up starts picking up the NEXT card's dates and mislabels rows.
+ *
+ * Getting dates here rather than on the detail page is what lets the lookback
+ * filter cut the list BEFORE we spend a page load on each entry.
+ */
+async function datesNearLink(link) {
+  let linkText = '';
+  try { linkText = await getText(link); } catch {}
+  let d = findDateRange(linkText);
+  if (d.start || d.end) return d;
+
   try {
-    const resp = await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    const parent = await link.$('xpath=..');
+    if (parent) {
+      const parentText = await getText(parent);
+      d = findDateRange(parentText);
+      if (d.start || d.end) return d;
+    }
+  } catch {}
+  return { start: '', end: '', raw: linkText };
+}
+
+async function safeGoto(page, url, venue, context, attempt = 0) {
+  try {
+    // Deliberately NOT 'networkidle'. That waits for the page to make no
+    // requests for 500ms, and these sites never fall silent — analytics,
+    // chat widgets and lazy media keep chattering indefinitely, so the wait
+    // expired at 30s on pages whose text had been readable for seconds.
+    // Instead: wait for the HTML, then for the body to actually contain
+    // content, and ignore whatever background noise continues after that.
+    const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT });
     const status = resp ? resp.status() : null;
     if (status && (status === 403 || status === 418 || status === 429)) {
       log(`  BLOCKED (HTTP ${status}): ${url}`);
       return { ok: false, reason: `BLOCKED_HTTP_${status}` };
     }
+
+    // Client-rendered pages arrive with an empty body and fill in a moment
+    // later. Give them that moment, but never treat it as fatal: a genuinely
+    // short page is still worth reading.
+    await page.waitForFunction(
+      (min) => document.body && document.body.innerText.trim().length > min,
+      MIN_BODY_CHARS,
+      { timeout: CONTENT_TIMEOUT }
+    ).catch(() => {});
+
     return { ok: true, status };
   } catch (e) {
+    // A navigation left over from the previous page can land on top of this
+    // one. It is transient: settle, then try this URL once more.
+    if (attempt === 0 && /interrupted by another navigation|ERR_ABORTED/.test(e.message)) {
+      await page.waitForTimeout(1500);
+      return safeGoto(page, url, venue, context, 1);
+    }
     const reason = e.message.includes('timeout') ? 'TIMEOUT' : 'LOAD_ERROR';
     log(`  ${reason}: ${url} — ${e.message.slice(0, 120)}`);
     return { ok: false, reason };
@@ -334,15 +489,16 @@ async function metExtractListing(page, venueCode, context) {
       // Try to get title from link text or nearby heading
       let title = (await getText(link)).replace(/\n.*/s, '').trim();
       if (!title || title.length < 3) continue;
+      const dates = await datesNearLink(link);
       rows.push({
         venue_code: venueCode,
         title,
-        start_date: '',
-        end_date: '',
+        start_date: dates.start,
+        end_date: dates.end,
         summary: '',
         url: fullUrl,
         notes: `source: ${context}`,
-        _needsDates: true,
+        _needsDates: !dates.start && !dates.end,
       });
     }
   } catch (e) {
@@ -380,13 +536,7 @@ async function scrapeNG(page) {
         const title = (await getText(link)).replace(/\n.*/s, '').trim();
         if (!title || title.length < 3) continue;
 
-        // Try to find date text near the link
-        let dateText = '';
-        try {
-          const parent = await link.$('xpath=..');
-          if (parent) dateText = await getText(parent);
-        } catch {}
-        const dates = parseDateRange(dateText);
+        const dates = await datesNearLink(link);
 
         if (!afterLookback(dates.end)) continue;
 
@@ -437,8 +587,10 @@ async function scrapeRijks(page) {
         const fullUrl = href.startsWith('http') ? href : 'https://www.rijksmuseum.nl' + href;
         const title = (await getText(link)).replace(/\n.*/s, '').trim();
         if (!title || title.length < 3) continue;
+        const dates = await datesNearLink(link);
         rows.push({
-          venue_code: venueCode, title, start_date: '', end_date: '',
+          venue_code: venueCode, title,
+          start_date: dates.start, end_date: dates.end,
           summary: '', url: fullUrl, notes: `source: ${ctx}`,
         });
       }
@@ -465,26 +617,41 @@ async function scrapeAcq(page) {
   try {
     const links = await page.$$('a[href*="/exhibitions/"]');
     const seen = new Set();
+    let navSkipped = 0;
     for (const link of links) {
       const href = await link.getAttribute('href');
       if (!href || seen.has(href)) continue;
       if (/\/exhibitions\/?$/.test(href)) continue;
+      // The archive's own filter controls live under /exhibitions/past/ —
+      // "VIEW ALL", "2023-2021", "1999" and so on. They are navigation, not
+      // exhibitions, and following them dragged in the whole back catalogue.
+      if (/\/exhibitions\/past\//.test(href)) { navSkipped++; continue; }
       seen.add(href);
       const fullUrl = href.startsWith('http') ? href : 'https://www.acquavellagalleries.com' + href;
-      const title = (await getText(link)).replace(/\n.*/s, '').trim();
+
+      const linkText = (await getText(link)).replace(/\s+/g, ' ').trim();
+      const title = linkText.replace(/\n.*/s, '').trim();
       if (!title || title.length < 3) continue;
+
+      // Acquavella prints the run in the link itself, e.g.
+      // "MIQUEL BARCELO NEW YORK APRIL 24 - MAY 30, 2025". Reading it here
+      // means the lookback can be applied before any detail page is opened.
+      const dates = findDateRange(linkText);
+
       rows.push({
-        venue_code: venueCode, title, start_date: '', end_date: '',
+        venue_code: venueCode, title,
+        start_date: dates.start, end_date: dates.end,
         summary: '', url: fullUrl, notes: '',
       });
     }
-    log(`  found ${rows.length} exhibition links`);
+    log(`  found ${rows.length} exhibition links (${navSkipped} archive-nav links ignored)`);
   } catch (e) {
     log(`  ERROR extracting Acq listing: ${e.message.slice(0,120)}`);
   }
 
-  await fetchIndividualPages(page, rows, venueCode);
-  return rows;
+  const inWindow = applyLookback(rows, venueCode, 'listing');
+  await fetchIndividualPages(page, inWindow, venueCode);
+  return inWindow;
 }
 
 // BORGHESE ────────────────────────────────────────────────────────────────────
@@ -534,8 +701,10 @@ async function scrapeBorghese(page) {
         const fullUrl = href.startsWith('http') ? href : 'https://galleriaborghese.cultura.gov.it' + href;
         const title = (await getText(link)).replace(/\n.*/s, '').trim();
         if (!title || title.length < 3) continue;
+        const dates = await datesNearLink(link);
         rows.push({
-          venue_code: venueCode, title, start_date: '', end_date: '',
+          venue_code: venueCode, title,
+          start_date: dates.start, end_date: dates.end,
           summary: '', url: fullUrl, notes: `source: ${ctx}`,
         });
       }
@@ -591,8 +760,10 @@ async function scrapeMorgan(page) {
         const fullUrl = href.startsWith('http') ? href : 'https://www.themorgan.org' + href;
         const title = (await getText(link)).replace(/\n.*/s, '').trim();
         if (!title || title.length < 3) continue;
+        const dates = await datesNearLink(link);
         rows.push({
-          venue_code: venueCode, title, start_date: '', end_date: '',
+          venue_code: venueCode, title,
+          start_date: dates.start, end_date: dates.end,
           summary: '', url: fullUrl, notes: `source: ${ctx}`,
         });
       }
@@ -610,7 +781,12 @@ async function scrapeMorgan(page) {
 // ── Individual page fetcher ───────────────────────────────────────────────────
 async function fetchIndividualPages(page, rows, venueCode) {
   let fetched = 0, failed = 0, noText = 0;
+  // Skip anything already known to have closed before the lookback floor —
+  // no point spending a page load on an exhibition we will discard.
+  const skip = new Set(rows.filter(r => r.end_date && !afterLookback(r.end_date)));
+  if (skip.size) log(`  skipping ${skip.size} individual page(s): closed before lookback`);
   for (const row of rows) {
+    if (skip.has(row)) continue;
     if (!row.url || row.url.startsWith('[')) continue;
     try {
       const r = await safeGoto(page, row.url, venueCode, 'individual');
@@ -634,7 +810,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
           const dateEl = await page.$('[class*="date"], [class*="Date"], time');
           if (dateEl) {
             const raw = await getText(dateEl);
-            const dates = parseDateRange(raw);
+            const dates = findDateRange(raw);
             if (dates.start) row.start_date = dates.start;
             if (dates.end) row.end_date = dates.end;
             if (raw && !dates.start && !dates.end) {
@@ -712,7 +888,9 @@ function dedup(rows) {
 
   for (const { code, fn } of scrapers) {
     try {
-      const rows = await fn(page);
+      // Final lookback pass — applies to every venue without exception, after
+      // individual pages have had a chance to fill in missing dates.
+      const rows = applyLookback(await fn(page), code, 'final');
       const real = rows.filter(r => !r.title.startsWith('['));
       const placeholders = rows.filter(r => r.title.startsWith('['));
       allRows.push(...rows);
