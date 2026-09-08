@@ -507,8 +507,10 @@ match costs one misleading sentence, never a row. A venue opts in by listing its
    to; **Tate is known to list everything on one "what's on" page, though it does
    tag each item by type**, so that tag is the hook when we get there. A venue
    that dumps everything *and* tags nothing will need a different answer.
-3. **Filtered runs overwrite the whole CSV** with only those venues' rows. Known,
-   unfixed; she has confirmed the output is hypothetical for now.
+3. **Output filenames are stamped in UTC, not Sydney time.** She is on Sydney
+   time, so a run at 6pm on the 8th is filed as `2026-09-08_0800`. The date can
+   also be a day out either side of midnight. Cosmetic but confusing when
+   several runs are being compared. Not yet fixed — raised 8 Sep.
 4. **The summary column is not yet the raw-dump-then-compress design** in
    Section 4. It currently holds up to 2000 characters of curatorial text.
 5. **Title casing is inconsistent** — some venues apply capitalisation in CSS, so
@@ -531,6 +533,11 @@ match costs one misleading sentence, never a row. A venue opts in by listing its
 - The plausible-year guard missing from one branch, so "confiscated on 4 May
   1607" became a start date of 1607.
 - Six near-identical venue scraper functions (see the recipes, above).
+- A single fixed `sweep_raw.csv`, which let a one-venue diagnostic run silently
+  replace a full sweep's output while the file still looked complete. Each run
+  now writes its own dated, venue-labelled pair of files.
+- A hardcoded Chromium path, one image update away from failing at launch with
+  an unhelpful error.
 - Keeping the FIRST link to an address and ignoring the rest, which cost Renoir
   and Love its title and its dates — the National Gallery's first link to a
   card is the image.
@@ -774,7 +781,27 @@ copies even if title and dates are identical. Same-venue travelling runs (both
 Acquavella locations) *can* match each other, because the scraper's title rule
 strips the city — see the open Acquavella question in Section 5.
 
-- **Where summary compression happens.** Three candidates, none chosen: Chat Claude does it; Claude Code does it inside the sweep run after the raw text is pulled; Claude Code does it as a separate pass outside the scrape script. The scraper writes raw text either way, so this can be decided later without rework.
+**Settled 8 Sep 2026 — finish the 6-venue prototype end to end before wiring the
+other 15.** Her call. The six wired venues now produce a pro forma CSV, but the
+chain from sweep to ledger has never been run all the way through: the summary
+column still holds raw curatorial text, and no sweep output has yet been fed
+into Import Refresh. Wiring 15 more venues first would multiply the row count
+before anyone has confirmed a single row survives the trip. So: get one complete
+sweep imported and accepted, then expand.
+
+The two things standing between here and end-to-end are the compression step
+below and her own test import.
+
+- **Where summary compression happens — the next decision to make.** Three
+  candidates, none chosen: Chat Claude does it; Claude Code does it inside the
+  sweep run after the raw text is pulled; Claude Code does it as a separate pass
+  over the finished CSV. The scraper writes raw text either way, so nothing
+  built so far has to change whichever wins. Worth knowing before deciding: the
+  raw text is up to 2000 characters a row and the target is a 12-word summary,
+  and keeping the raw text is what makes fabrication structurally impossible —
+  the compressor can only compress what is actually in the record. A separate
+  pass over the CSV is the only one of the three that can be re-run on an
+  existing file without re-scraping.
 - **Haiku vs Sonnet for the in-app catalogue lookup.** Haiku passed the easy cases cheaply and correctly but hasn't been tested on hard ones — touring shows, foreign-language catalogues, ambiguous or retitled shows — where a lighter model may return the wrong book or a wrong ISBN. Decide with one side-by-side session on known-tricky catalogues; failures are visible on click. Not weeks of live use.
 - **Running the scraper on her own machine, for Met and Morgan.** Parked, not
   scheduled — she may do a manual Chat Claude sweep for those two instead. The
@@ -790,12 +817,21 @@ strips the city — see the open Acquavella question in Section 5.
     the dates sit — all copied from venues that do work, none tested. Expect a
     first run that needs diagnosing, like Borghese's first run returning the
     navigation menu. Met's year dropdown is written and never once clicked.
-  - **Two things are wired for this container.** The Chromium path is hardcoded
-    to `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`, and there is no
-    written setup step. Both are small fixes: fall back to whatever Playwright
-    installed locally, and write down the two commands. The network bridge is
-    already fine — with no proxy set, `proxyAgent` is undefined and Node
-    connects directly.
+  - **Both container-specific blockers are now cleared** (8 Sep). The hardcoded
+    Chromium path is gone — `resolveChromium()` tries Playwright's own answer
+    first, then whatever is actually installed, newest first. Both halves are
+    needed: this container has `chromium-1194` while Playwright's default points
+    at `chromium-1243`, so either value alone is wrong somewhere. The network
+    bridge was already fine — with no proxy set, `proxyAgent` is undefined and
+    Node connects directly.
+  - **Setup on a local machine, three commands:** `npm install`, then
+    `npx playwright install chromium`, then `node scraper/sweep_prototype.js`.
+    The middle one is needed on a laptop but **not** in this container, where
+    Chromium is pre-installed and that download is blocked.
+  - Verified by inspection, not by running: the script imports only playwright,
+    node-fetch, https-proxy-agent and Node's own `fs`/`path`, writes beside
+    itself via `__dirname`, and reads nothing else from the repo. It is one file
+    plus `package.json`. Nobody has actually run it off this container yet.
 
 - **Sweeper brief v3** — the Chat-Claude-era instruction document still needs its URL corrections and a two-attempt URL-unlock rule. Its scope shrinks as the scraper covers more venues, but it does **not** disappear: the venues the scraper cannot reach are precisely the ones where a human-driven Chat Claude route still has a chance, because it comes from a different network and behaves like a person browsing. Expect the brief to end up as the fallback procedure for blocked and novel-problem venues rather than the main sweep.
 
