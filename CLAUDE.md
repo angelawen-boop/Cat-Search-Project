@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 8 Sep 2026 (Rijksmuseum, plus the two structural changes)
+**Last updated:** 8 Sep 2026 (Acquavella done; travelling exhibitions)
 **Source:** built from Cat Watch Handover v11 plus what this repo's own scraper work has since proven.
 
 This repo now holds **two** things, and will hold both going forward:
@@ -237,6 +237,13 @@ Keep an exhibition if it was **open at any point on or after 1 July 2024**.
 - A show that ran January 2024 → June 2024 is **dropped**. It had already closed.
 - The test is on the **end date, never the start date**.
 - A show whose end date can't be read is **kept and flagged**, not dropped — an unknown date is not evidence of being too old.
+- **One exception, added 8 Sep 2026: a year with no day.** Acquavella's archive
+  prints "Summer 2022" and nothing else; Borghese's prints "March / 2026". That
+  is not an unknown date, it is a known but imprecise one, and no reading of
+  "Summer 2022" reaches July 2024. So the scraper takes the **latest possible
+  day of that year** as an upper bound and drops the row if even that is before
+  the floor. The bound is used for the lookback test only — **nothing is written
+  into the date columns**, because the venue never published a day.
 
 ---
 
@@ -383,6 +390,8 @@ From June 10 to September 14, 2025   month-first, word separator
 Till 29 November                     no year, no opening date
 WORN till 21 March 2027              single date with a preposition
 March / 2026                         month and year only
+December 9 - 31, 2023                one month, day only on the closing side
+Summer 2022                          season and year — a bound, not a date
 ```
 
 **Two guards stop art history being read as exhibition dates**, and both are
@@ -406,23 +415,39 @@ to both. There is also one shared `MONTH_PATTERN`; it previously existed as two
 copies listing only full month names, which is why `12 SEP 2025` parsed to
 nothing.
 
+### Travelling exhibitions — a note, never a merge
+
+A venue with more than one address runs the same show in both. Acquavella lists
+*Portraiture: From Cassatt to Warhol* in New York and *Portraiture From Cassatt
+to Warhol* in Palm Beach — one exhibition, two runs, normally one catalogue.
+
+Both rows are always kept, and the **city stays in the title** so the two read
+as different entries on the approval cards. `noteTravellingRuns()` then adds
+"The same exhibition is also shown at Palm Beach." to each. Matching ignores the
+city and all punctuation, so the colon that is the only other difference between
+those two titles does not defeat it.
+
+This is a note and nothing more. It must never become de-duplication: a wrong
+match costs one misleading sentence, never a row. A venue opts in by listing its
+`locations` in its recipe.
+
 ### Last full-sweep result (8 Sep 2026)
 
 | Venue | Rows | Notes |
 |---|---|---|
 | `ng` | 28 | no rows left without a closing date; 4 dated from structured data |
 | `rijks` | 37 | **10 current/upcoming + 14 past, both matching her count of the live page** |
-| `acq` | 17 | 108 listed, 89 pre-floor cut, 11 archive-nav links ignored |
+| `acq` | 14 | **matches her count of the live page: 1 upcoming + 13 past.** 119 listed, 11 archive-nav links ignored, 94 cut by the lookback |
 | `borghese` | — | **unreachable** on 8 Sep, see 6a |
 | `met` | 0 | HTTP 429, blocked |
 | `morgan` | 0 | HTTP 403, blocked |
 
 ### Known bugs — open
 
-1. **Coverage against the venues' real totals is verified only for Rijksmuseum
-   and Borghese.** Those were checked against her own count of the live pages.
-   National Gallery and Acquavella have plausible numbers but nobody has counted
-   the sites by hand.
+1. **Coverage against the venues' real totals is verified for Rijksmuseum,
+   Borghese and Acquavella.** Each was checked against her own count of the live
+   pages. The National Gallery's 28 rows are plausible but nobody has counted
+   that site by hand.
 2. **Nothing filters out non-exhibitions.** The only test is the URL shape — if a
    venue files talks, tours, opening events or permanent displays under its
    exhibitions path, they are collected as exhibitions. Rijksmuseum happens not
@@ -437,14 +462,6 @@ nothing.
    innerText returns caps for some cards and title case for others. **Her
    decision: live with it.** Genuinely all-caps exhibition titles exist, and
    telling them apart is not worth the logic.
-6. **Acquavella's title rule erases the location, so its own travelling shows
-   collide.** The recipe strips `NEW YORK|PALM BEACH` and everything after it
-   (`title: { heading: false, stripTrailing: /\s*\b(NEW YORK|PALM BEACH)\b.*$/i }`),
-   because the location and dates are jammed into the link text with the title.
-   A show that runs in both galleries therefore produces two rows with the same
-   title under the same venue code — which is exactly what `sameExhibition`
-   matches on. Unconfirmed whether it actually bites; awaiting her count of the
-   live page. Fix would be keeping the location in the title, not dropping rows.
 
 ### Fixed — do not reintroduce
 
@@ -461,6 +478,10 @@ nothing.
 - The plausible-year guard missing from one branch, so "confiscated on 4 May
   1607" became a start date of 1607.
 - Six near-identical venue scraper functions (see the recipes, above).
+- Acquavella's title rule stripping `NEW YORK` / `PALM BEACH`, which made its
+  two runs of one show read as the same exhibition. It now strips only the date
+  tail — a month or season followed by a digit, so "April in Paris" survives —
+  and the city stays in the title.
 
 ### Working order agreed with her
 
@@ -659,6 +680,7 @@ Tate is deliberately two venues; merging them was rejected. Order reflects the a
 - **Borghese is done** to the limit of what the site publishes (but see the 8 Sep
   outage in 6a).
 - **Rijksmuseum is done**, verified against her count: 10 current/upcoming, 14 past.
+- **Acquavella is done** (8 Sep), verified against her count: 1 upcoming, 13 past.
 - **The two structural changes are built**: structured-data-first as universal
   logic, and the engine/recipe split.
 - Date parsing stays **shared across all venues** — every venue contains several

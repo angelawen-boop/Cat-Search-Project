@@ -208,6 +208,24 @@ function findDateRange(raw) {
     return { start: parseMonthDay(titleCase(m[1]), yr) || '', end: parseMonthDay(titleCase(m[2]), null) || '', raw: s };
   }
 
+  // "Month D - D, YYYY" — one month, day only on the closing side.
+  // Acquavella's archive prints "December 9 - 31, 2023" and
+  // "August 12 - 20, 2020". Without this the row came out undated, was kept by
+  // the lookback (an unknown date is never evidence of being too old) and
+  // arrived as a stray on the approval pile.
+  m = s.match(new RegExp(`(${M})\\s+(\\d{1,2})${RANGE_SEP}(\\d{1,2}),\\s*(\\d{4})`, 'i'));
+  if (m && plausibleYear(m[4])) {
+    const mo = monthNum(m[1]);
+    if (mo) {
+      const mm = String(mo).padStart(2, '0');
+      return {
+        start: `${m[4]}-${mm}-${String(m[2]).padStart(2, '0')}`,
+        end:   `${m[4]}-${mm}-${String(m[3]).padStart(2, '0')}`,
+        raw: s,
+      };
+    }
+  }
+
   // Single "Month D, YYYY" — treat as the end date (open until)
   m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
   if (m) return { start: '', end: parseMonthDay(titleCase(m[1]), null) || '', raw: s };
@@ -234,8 +252,16 @@ function findDateRange(raw) {
   m = s.match(new RegExp(`(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
   if (m && plausibleYear(m[2])) {
     const mo = monthNum(m[1]);
-    if (mo) return { start: `${m[2]}-${String(mo).padStart(2,'0')}-01`, end: '', raw: s };
+    if (mo) return { start: `${m[2]}-${String(mo).padStart(2,'0')}-01`, end: '', latestYear: +m[2], raw: s };
   }
+
+  // A season and a year, no day at all: Acquavella's archive prints
+  // "Summer 2022". That is not a date and never becomes one — nothing is
+  // written to the date columns. But it IS a published bound: a show the
+  // gallery itself labels "Summer 2022" cannot still have been open in
+  // July 2024. See latestYear, below.
+  m = s.match(/\b(?:spring|summer|autumn|fall|winter)\s+(\d{4})\b/i);
+  if (m && plausibleYear(m[1])) return { start: '', end: '', latestYear: +m[1], raw: s };
 
   return { start: '', end: '', raw: s };
 }
@@ -418,6 +444,15 @@ function applyLookback(rows, venueCode, stage) {
   let dropped = 0, undated = 0, noStart = 0;
   for (const row of rows) {
     if (row.title && row.title.startsWith('[')) { kept.push(row); continue; }  // diagnostic placeholder
+    // No closing date, but the venue published a year and that whole year is
+    // already behind the floor — "Summer 2022" on Acquavella's archive. This
+    // is NOT the "unknown date" case the keep-and-flag rule protects: the date
+    // is known, just imprecise, and no reading of it reaches 1 July 2024.
+    if (!row.end_date && row.latest_year && row.latest_year < LOOKBACK.getUTCFullYear()) {
+      dropped++;
+      continue;
+    }
+
     if (!row.end_date) {
       undated++;
       // Only on the final pass. On the listing pass the detail pages have not
@@ -530,7 +565,7 @@ async function datesNearLink(link) {
   let linkText = '';
   try { linkText = await getText(link); } catch {}
   let d = findDateRange(linkText);
-  if (d.start || d.end) return d;
+  if (d.start || d.end || d.latestYear) return d;
 
   // Walk up a strictly limited distance. The dates often live in the same
   // card container as the title (Rijksmuseum: "WORN till 21 March 2027"), but
@@ -544,7 +579,7 @@ async function datesNearLink(link) {
       const text = squash(await getText(node));
       if (!text || text.length > CARD_MAX_CHARS) continue;
       d = findDateRange(text);
-      if (d.start || d.end) return d;
+      if (d.start || d.end || d.latestYear) return d;
     } catch { break; }
   }
   return { start: '', end: '', raw: linkText };
@@ -965,6 +1000,9 @@ async function collectFromListing(page, opts) {
     const row = {
       venue_code: venueCode, title,
       start_date: dates.start, end_date: dates.end,
+      // Not a CSV column. An upper bound on the closing date for venues that
+      // publish only a year ("Summer 2022"). See applyLookback.
+      latest_year: dates.latestYear || 0,
       summary: '', url: fullUrl,
       notes: titleNote ? `${sourceNote(ctx)} ${titleNote}` : sourceNote(ctx),
     };
@@ -1063,10 +1101,21 @@ const VENUES = {
     // live under /exhibitions/past/. They are navigation, not exhibitions;
     // following them dragged in the whole back catalogue to 1999.
     isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/past\//.test(href),
-    // No headings. "NICOLE WITTENBERG ALL THE WAY NEW YORK OCTOBER 16 -
-    // DECEMBER 5, 2025" — everything from the gallery location onwards is
-    // location plus dates.
-    title: { heading: false, stripTrailing: /\s*\b(NEW YORK|PALM BEACH)\b.*$/i },
+    // No headings. The card reads
+    // "NICOLE WITTENBERG ALL THE WAY NEW YORK OCTOBER 16 - DECEMBER 5, 2025":
+    // name, then gallery location, then dates.
+    //
+    // The location STAYS IN THE TITLE. Acquavella runs the same show in both
+    // its galleries, and without the city the two runs read as one exhibition
+    // on the approval cards. So strip only the date tail — matched as a month
+    // or season followed by a digit, so a title like "April in Paris" is left
+    // alone.
+    title: {
+      heading: false,
+      stripTrailing: new RegExp(`\\s*\\b(?:${MONTH_PATTERN}|SPRING|SUMMER|AUTUMN|FALL|WINTER)\\b\\.?\\s*\\d.*$`, 'i'),
+    },
+    // Its two galleries. Used to cross-reference a show that ran in both.
+    locations: ['New York', 'Palm Beach'],
   },
 
   borghese: {
@@ -1296,6 +1345,50 @@ async function fetchIndividualPages(page, rows, venueCode) {
  * This is kept as an identity function so the call site still reads clearly,
  * and so anyone reaching for "we should dedupe here" finds this note first.
  */
+/**
+ * Cross-reference a show that ran in more than one of a venue's own galleries.
+ *
+ * Acquavella lists "Portraiture: From Cassatt to Warhol" in New York and
+ * "Portraiture From Cassatt to Warhol" in Palm Beach — one exhibition, two
+ * runs, and normally one catalogue between them.
+ *
+ * Both rows are always kept. This ONLY adds a note, so the pair is
+ * recognisable on the approval cards and she can accept both and dismiss one
+ * in the ledger. It is not de-duplication and must never become it: a wrong
+ * match here costs a misleading sentence in the notes, never a row.
+ *
+ * Matching ignores the location and all punctuation, so the colon that is the
+ * only difference between the two spellings above does not defeat it.
+ */
+function noteTravellingRuns(rows, venueCode) {
+  const locations = (VENUES[venueCode] && VENUES[venueCode].locations) || [];
+  if (locations.length < 2) return;
+
+  const groups = new Map();
+  for (const row of rows) {
+    if (!row.title) continue;
+    const loc = locations.find(l => new RegExp(`\\b${l}\\b`, 'i').test(row.title));
+    if (!loc) continue;
+    const key = row.title
+      .replace(new RegExp(`\\b${loc}\\b`, 'ig'), ' ')
+      .replace(/[^\p{L}\p{N}]+/gu, ' ')
+      .trim()
+      .toUpperCase();
+    if (!key) continue;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push({ row, loc });
+  }
+
+  for (const entries of groups.values()) {
+    const locs = [...new Set(entries.map(e => e.loc))];
+    if (locs.length < 2) continue;
+    for (const { row, loc } of entries) {
+      const others = locs.filter(l => l !== loc);
+      row.notes = addNote(row.notes, `The same exhibition is also shown at ${others.join(' and ')}.`);
+    }
+  }
+}
+
 function passThrough(rows) {
   return rows;
 }
@@ -1348,6 +1441,7 @@ function passThrough(rows) {
       // Final lookback pass — applies to every venue without exception, after
       // individual pages have had a chance to fill in missing dates.
       const rows = applyLookback(await fn(page), code, 'final');
+      noteTravellingRuns(rows, code);
       const real = rows.filter(r => !r.title.startsWith('['));
       const placeholders = rows.filter(r => r.title.startsWith('['));
       allRows.push(...rows);
