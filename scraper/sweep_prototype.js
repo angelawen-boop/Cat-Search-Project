@@ -44,8 +44,24 @@ const SKIP_RESOURCE_TYPES = new Set(['image', 'media', 'font']);
 const OUT_DIR = path.join(__dirname, 'output');
 if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 
-const CSV_PATH = path.join(OUT_DIR, 'sweep_raw.csv');
-const LOG_PATH = path.join(OUT_DIR, 'sweep_log.txt');
+// Every venue this script knows how to scrape, in log order.
+const VENUE_ORDER = ['met', 'ng', 'rijks', 'acq', 'borghese', 'morgan'];
+
+// Which venues this run was asked for: `node sweep_prototype.js ng rijks`.
+const WANTED = process.argv.slice(2).map(a => a.toLowerCase()).filter(Boolean);
+const RUN_VENUES = WANTED.length ? VENUE_ORDER.filter(c => WANTED.includes(c)) : VENUE_ORDER;
+
+// Each run writes its OWN pair of files and never touches an earlier run's.
+//
+// A filtered run used to overwrite sweep_raw.csv with only the venues it was
+// given, so a one-venue diagnostic quietly replaced a full sweep's output and
+// the file still looked complete. The name now carries the date, the time and
+// exactly which venues are inside, so a partial run cannot be mistaken for a
+// full one and no earlier result is ever lost.
+const RUN_STAMP = new Date().toISOString().slice(0, 16).replace('T', '_').replace(':', '');
+const RUN_LABEL = WANTED.length ? (RUN_VENUES.join('-') || 'none') : 'all';
+const CSV_PATH = path.join(OUT_DIR, `sweep_${RUN_STAMP}_${RUN_LABEL}.csv`);
+const LOG_PATH = path.join(OUT_DIR, `sweep_${RUN_STAMP}_${RUN_LABEL}.log.txt`);
 
 const LOOKBACK = new Date('2024-07-01');
 
@@ -1463,11 +1479,38 @@ function passThrough(rows) {
   return rows;
 }
 
+// Chromium sits in a different place in this container, in a fresh container
+// and on a laptop, and a wrong path fails at launch with an unhelpful error.
+// Playwright's own answer is tried first but is not trusted: it reports the
+// version it shipped with, which is not necessarily the one installed here.
+// Whatever is actually on disk wins, newest first.
+function resolveChromium() {
+  const candidates = [];
+  try { candidates.push(chromium.executablePath()); } catch { /* not installed */ }
+  const root = process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/pw-browsers';
+  try {
+    const dirs = fs.readdirSync(root).filter(n => /^chromium-\d+$/.test(n)).sort().reverse();
+    for (const d of dirs) {
+      candidates.push(path.join(root, d, 'chrome-linux', 'chrome'));
+      candidates.push(path.join(root, d, 'chrome-linux64', 'chrome'));
+    }
+  } catch { /* no such directory */ }
+  for (const c of candidates) if (c && fs.existsSync(c)) return c;
+  return undefined;  // let Playwright raise its own error
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 (async () => {
   log('Cat Watch Sweep Prototype — starting');
   log(`Lookback floor: ${LOOKBACK.toISOString().slice(0,10)}`);
-  log(`Venues: met, ng, rijks, acq, borghese, morgan`);
+  log(`Venues this run: ${RUN_VENUES.join(', ') || '(none matched)'}`);
+  log(`Writing: ${path.basename(CSV_PATH)}`);
+
+  if (WANTED.length && !RUN_VENUES.length) {
+    log(`Nothing matched "${WANTED.join(' ')}". Known venues: ${VENUE_ORDER.join(', ')}`);
+    writeLog();
+    process.exit(1);
+  }
 
   log(`Proxy: ${PROXY_URL || '(none — direct egress assumed)'}`);
   if (!PROXY_URL) {
@@ -1475,8 +1518,11 @@ function passThrough(rows) {
     log('  proxy for egress, every venue will fail to load.');
   }
 
+  const chromePath = resolveChromium();
+  log(`Chromium: ${chromePath || '(Playwright default)'}`);
+
   const browser = await chromium.launch({
-    executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+    executablePath: chromePath,
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
@@ -1496,15 +1542,8 @@ function passThrough(rows) {
   const summary = {};
 
   // Order matters only for readability of the log; each venue is independent.
-  const allScrapers = ['met', 'ng', 'rijks', 'acq', 'borghese', 'morgan']
-    .map(code => ({ code, fn: p => scrapeVenue(p, code) }));
-
   // Optional venue filter: node scraper/sweep_prototype.js borghese morgan
-  const wanted = process.argv.slice(2).map(a => a.toLowerCase());
-  const scrapers = wanted.length
-    ? allScrapers.filter(s => wanted.includes(s.code))
-    : allScrapers;
-  if (wanted.length) log(`Venue filter: ${scrapers.map(s => s.code).join(', ') || '(none matched)'}`);
+  const scrapers = RUN_VENUES.map(code => ({ code, fn: p => scrapeVenue(p, code) }));
 
   for (const { code, fn } of scrapers) {
     try {
@@ -1569,7 +1608,7 @@ function passThrough(rows) {
   log('');
   log(`Network bridge: ${netStats.fulfilled} requests served, ${netStats.skipped} skipped (image/media/font), ${netStats.failed} failed`);
   log('');
-  log(`CSV written to:  ${CSV_PATH}`);
+  log(`CSV written to:  ${CSV_PATH}  (${written.length} rows, venues: ${RUN_VENUES.join(', ')})`);
   log(`Log written to:  ${LOG_PATH}`);
   log(`Total rows written (no de-duplication — see passThrough): ${written.length}`);
 
