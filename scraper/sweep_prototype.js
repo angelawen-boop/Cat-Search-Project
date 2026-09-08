@@ -773,29 +773,11 @@ function isoDay(v) {
  * parent returns the first card's heading for every card, so every row would
  * be named after the same exhibition.
  */
-const TITLE_RULES = {
-  ng:       { heading: true },
-  // Rijksmuseum uses two different card layouts on different pages.
-  // Its PAST page puts a heading inside the link ("METAMORPHOSES", "FAKE!").
-  // Its now-on-view page wraps only the IMAGE in the link, with the title and
-  // date sitting two levels up: "LAST CHANCE ED VAN DER ELSKEN. UP CLOSE till
-  // 13 September 2026". So heading first, card as the fallback.
-  rijks:    { heading: true,
-              card: { depth: 2,
-                      stripLeading:  /^(LAST CHANCE|OPENING SOON|SOON|NEW)\b\s*/i,
-                      stripTrailing: /\s+(till|until|from)\s+.*$/i } },
-  met:      { heading: true },
-  morgan:   { heading: true },
-  // "March / 2026 WANGECHI MUTU - BLACK SOIL POEMS DISCOVER THE EXHIBITION"
-  // The heading here holds only the first sentence, so use the full text.
-  borghese: { heading: false,
-              stripLeading:  /^(Current exhibition|Past exhibition|Upcoming exhibition)?\s*([A-Za-z]+\s*\/\s*\d{4})?\s*/i,
-              stripTrailing: /\s*DISCOVER THE EXHIBITION\s*$/i },
-  // "NICOLE WITTENBERG ALL THE WAY NEW YORK OCTOBER 16 - DECEMBER 5, 2025"
-  // Everything from the gallery location onwards is location plus dates.
-  acq:      { heading: false,
-              stripTrailing: /\s*\b(NEW YORK|PALM BEACH)\b.*$/i },
-};
+// Title rules live in each venue's recipe (see VENUES, below). This reads
+// them from there so extractTitle has one place to ask.
+function titleRule(venueCode) {
+  return (VENUES[venueCode] && VENUES[venueCode].title) || { heading: true };
+}
 
 // Listing furniture that is never part of an exhibition's name.
 const TITLE_NOISE = /\b(Past exhibition|Free entry|Free|EXHIBITION|DISPLAY|Book (now|tickets?)|Members? only)\b|£|€/gi;
@@ -803,7 +785,7 @@ const TITLE_NOISE = /\b(Past exhibition|Free entry|Free|EXHIBITION|DISPLAY|Book 
 const squash = t => String(t || '').replace(/\s+/g, ' ').trim();
 
 async function extractTitle(link, venueCode) {
-  const rule = TITLE_RULES[venueCode] || { heading: true };
+  const rule = titleRule(venueCode);
 
   if (rule.heading) {
     try {
@@ -997,250 +979,211 @@ async function collectFromListing(page, opts) {
   return c;
 }
 
-async function scrapeMet(page) {
-  logSection('MET — The Metropolitan Museum of Art');
-  const rows = [], seenUrls = new Set(), urlToRow = new Map();
-  const venueCode = 'met';
-  const base = 'https://www.metmuseum.org';
-
-  const listingOpts = ctx => ({
-    venueCode, ctx, base, rows, seenUrls, urlToRow,
+// ── Venue recipes ────────────────────────────────────────────────────────────
+/**
+ * One recipe per venue, each readable top to bottom.
+ *
+ * The split is not "shared versus not" — it follows what the logic is ABOUT:
+ *
+ *   Universal (the engine, above): fetching and waiting, the counters, the
+ *   URL-identity guard, the lookback rule, structured-data-first, parsing a
+ *   date string once you have it, writing the CSV. A fix here helps all 21.
+ *
+ *   Per venue (here): which pages to visit, which links are exhibitions
+ *   rather than navigation, where the title sits, where the dates sit, what
+ *   boilerplate to strip. There is no clever general rule for these, and
+ *   every attempt at one has cost us — a rule learned at Borghese ("never
+ *   read the title from above the link") was already wrong at Rijksmuseum.
+ *
+ * So a venue writes down only what differs from the default. If you are
+ * debugging one museum, everything peculiar to it is in one block here.
+ */
+const VENUES = {
+  met: {
+    name: 'The Metropolitan Museum of Art',
+    base: 'https://www.metmuseum.org',
+    pages: [
+      { path: '/exhibitions',      ctx: 'current/upcoming' },
+      { path: '/exhibitions/past', ctx: 'past', yearDropdown: true },
+    ],
     selector: 'a[href*="/exhibitions/"]',
     isNav: href => /^\/exhibitions\/?$/.test(href) || /^\/exhibitions\/past\/?$/.test(href),
-  });
+    title: { heading: true },
+  },
 
-  log(`  Fetching current/upcoming: ${base}/exhibitions`);
-  const r1 = await safeGoto(page, base + '/exhibitions', venueCode, 'current/upcoming');
-  if (!r1.ok) {
-    log(`  FAILED current/upcoming — ${r1.reason}`);
-  } else {
-    try { await collectFromListing(page, listingOpts('current/upcoming')); }
-    catch (e) { log(`  ERROR extracting Met listing: ${e.message.slice(0,120)}`); }
-  }
+  ng: {
+    name: 'National Gallery, London',
+    base: 'https://www.nationalgallery.org.uk',
+    pages: [
+      { path: '/exhibitions',      ctx: 'current/upcoming' },
+      { path: '/exhibitions/past', ctx: 'past' },
+    ],
+    selector: 'a[href*="/exhibitions/"]',
+    isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/past\/?$/.test(href),
+    // Publishes schema.org Event data on detail pages — the only venue wired
+    // so far that does. Picked up automatically; nothing needed here.
+    title: { heading: true },
+  },
 
-  log(`  Fetching past: ${base}/exhibitions/past`);
-  const r2 = await safeGoto(page, base + '/exhibitions/past', venueCode, 'past');
-  if (!r2.ok) {
-    log(`  FAILED past listing — ${r2.reason}`);
-  } else {
-    // The Met's past page filters by year through a dropdown. Walk it back to
-    // the lookback floor year; the URL guard means a show appearing under two
-    // years is recorded once, with a note saying where else it was listed.
-    for (const year of [CURRENT_YEAR, CURRENT_YEAR - 1, 2024]) {
-      try {
-        log(`  Selecting year ${year}...`);
-        await page.selectOption('select', String(year));
-        await page.waitForFunction(
-          (min) => document.body && document.body.innerText.trim().length > min,
-          MIN_BODY_CHARS, { timeout: CONTENT_TIMEOUT }
-        ).catch(() => {});
-        await collectFromListing(page, listingOpts(`past-${year}`));
-        if (year === 2024) break;
-      } catch (e) {
-        log(`  ERROR selecting year ${year}: ${e.message.slice(0, 120)}`);
+  rijks: {
+    name: 'Rijksmuseum, Amsterdam',
+    base: 'https://www.rijksmuseum.nl',
+    pages: [
+      { path: '/en/whats-on/exhibitions/now-on-view', ctx: 'current/upcoming' },
+      { path: '/en/whats-on/exhibitions/past',        ctx: 'past' },
+    ],
+    // Some entries are linked to the DUTCH site even from the English
+    // listing — "tentoonstellingen" rather than "exhibitions". Stop Motion is
+    // one, and looking only for the English path missed it entirely.
+    selector: 'a[href*="exhibitions/"], a[href*="tentoonstellingen/"]',
+    isNav: href => /exhibitions\/?$/.test(href)
+                || /now-on-view\/?$/.test(href)
+                || /past\/?$/.test(href)
+                || /tentoonstellingen\/(afgelopen|nu-te-zien)?\/?$/.test(href),
+    // Two card layouts. The PAST page puts a heading inside the link
+    // ("METAMORPHOSES"). The now-on-view page wraps only the IMAGE, leaving
+    // the title two levels up: "LAST CHANCE ED VAN DER ELSKEN. UP CLOSE till
+    // 13 September 2026". Heading first, card as the fallback.
+    title: {
+      heading: true,
+      card: { depth: 2,
+              stripLeading:  /^(LAST CHANCE|OPENING SOON|SOON|NEW)\b\s*/i,
+              stripTrailing: /\s+(till|until|from)\s+.*$/i },
+    },
+  },
+
+  acq: {
+    name: 'Acquavella Galleries, New York',
+    base: 'https://www.acquavellagalleries.com',
+    pages: [
+      { path: '/exhibitions', ctx: 'all (current/upcoming/past)' },
+    ],
+    selector: 'a[href*="/exhibitions/"]',
+    // The archive's own year-range filters ("VIEW ALL", "2023-2021", "1999")
+    // live under /exhibitions/past/. They are navigation, not exhibitions;
+    // following them dragged in the whole back catalogue to 1999.
+    isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/past\//.test(href),
+    // No headings. "NICOLE WITTENBERG ALL THE WAY NEW YORK OCTOBER 16 -
+    // DECEMBER 5, 2025" — everything from the gallery location onwards is
+    // location plus dates.
+    title: { heading: false, stripTrailing: /\s*\b(NEW YORK|PALM BEACH)\b.*$/i },
+  },
+
+  borghese: {
+    name: 'Galleria Borghese, Rome',
+    base: 'https://galleriaborghese.cultura.gov.it',
+    pages: [
+      { path: '/en/mostre/presenti/', ctx: 'current' },
+      { path: '/en/mostre/future/',   ctx: 'upcoming' },
+      { path: '/en/mostre/passate/',  ctx: 'past' },
+    ],
+    // Its exhibitions do NOT live under /mostre/ — those three pages are the
+    // listings, and their only /mostre/ links are the site's own menu (ITA,
+    // Exhibitions, Current, Past, Upcoming). Looking for /mostre/ was why this
+    // venue returned exactly one row per page: it collected the menu bar.
+    selector: 'a[href*="/exhibition/"]',
+    isNav: href => /\/exhibition\/?$/.test(href),
+    // The heading holds only the first sentence, so use the full link text.
+    title: { heading: false,
+             stripLeading:  /^(Current exhibition|Past exhibition|Upcoming exhibition)?\s*([A-Za-z]+\s*\/\s*\d{4})?\s*/i,
+             stripTrailing: /\s*DISCOVER THE EXHIBITION\s*$/i },
+    markEmptyPages: true,
+    // Listings carry only a start month ("March / 2026") and no closing date,
+    // so the lookback cannot be decided before the detail pages are read.
+    lookbackAfterDetail: true,
+  },
+
+  morgan: {
+    name: 'Morgan Library & Museum, New York',
+    base: 'https://www.themorgan.org',
+    pages: [
+      { path: '/exhibitions/current',  ctx: 'current' },
+      { path: '/exhibitions/upcoming', ctx: 'upcoming' },
+      { path: '/exhibitions/past',     ctx: 'past' },
+    ],
+    selector: 'a[href*="/exhibitions/"]',
+    isNav: href => /\/exhibitions\/(current|upcoming|past)\/?$/.test(href) || /\/exhibitions\/?$/.test(href),
+    title: { heading: true },
+    markEmptyPages: true,
+  },
+};
+
+/**
+ * The engine. Every venue goes through this; none has its own copy.
+ */
+async function scrapeVenue(page, code) {
+  const v = VENUES[code];
+  if (!v) { log(`  no recipe for venue "${code}"`); return []; }
+
+  logSection(`${code.toUpperCase()} — ${v.name}`);
+  const rows = [], seenUrls = new Set(), urlToRow = new Map();
+
+  for (const pg of v.pages) {
+    const url = v.base + pg.path;
+    log(`  Fetching ${pg.ctx}: ${url}`);
+    const r = await safeGoto(page, url, code, pg.ctx);
+
+    if (!r.ok) {
+      log(`  FAILED ${pg.ctx} — ${r.reason}`);
+      if (v.markEmptyPages) {
+        rows.push({
+          venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
+          summary: '', url,
+          notes: `The venue's "${pg.ctx}" listing page did not load (${r.reason}). Marker row, not an exhibition.`,
+        });
+      }
+      continue;
+    }
+
+    if (v.markEmptyPages) {
+      const bodyText = await page.innerText('body').catch(() => '');
+      if (bodyText.length < MIN_BODY_CHARS) {
+        log(`  EMPTY_PAGE ${pg.ctx}: loaded but body has <${MIN_BODY_CHARS} chars`);
+        rows.push({
+          venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
+          summary: '', url,
+          notes: `The venue's "${pg.ctx}" listing page loaded but was empty. Marker row, not an exhibition.`,
+        });
+        continue;
       }
     }
-  }
 
-  const inWindow = applyLookback(rows, venueCode, 'listing');
-  await fetchIndividualPages(page, inWindow, venueCode);
-  return inWindow;
-}
-
-async function scrapeNG(page) {
-  logSection('NG — National Gallery, London');
-  const rows = [], seenUrls = new Set(), urlToRow = new Map();
-  const venueCode = 'ng';
-  const base = 'https://www.nationalgallery.org.uk';
-
-  const urls = [
-    { url: base + '/exhibitions',      ctx: 'current/upcoming' },
-    { url: base + '/exhibitions/past', ctx: 'past' },
-  ];
-
-  for (const { url, ctx } of urls) {
-    log(`  Fetching ${ctx}: ${url}`);
-    const r = await safeGoto(page, url, venueCode, ctx);
-    if (!r.ok) { log(`  FAILED ${ctx} — ${r.reason}`); continue; }
-    try {
-      await collectFromListing(page, {
-        venueCode, ctx, base, rows, seenUrls, urlToRow,
-        selector: 'a[href*="/exhibitions/"]',
-        isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/past\/?$/.test(href),
-      });
-    } catch (e) {
-      log(`  ERROR extracting NG listing (${ctx}): ${e.message.slice(0,120)}`);
-    }
-  }
-
-  const inWindow = applyLookback(rows, venueCode, 'listing');
-  await fetchIndividualPages(page, inWindow, venueCode);
-  return inWindow;
-}
-
-async function scrapeRijks(page) {
-  logSection('RIJKS — Rijksmuseum, Amsterdam');
-  const rows = [], seenUrls = new Set(), urlToRow = new Map();
-  const venueCode = 'rijks';
-  const base = 'https://www.rijksmuseum.nl';
-
-  const urls = [
-    { url: base + '/en/whats-on/exhibitions/now-on-view', ctx: 'current/upcoming' },
-    { url: base + '/en/whats-on/exhibitions/past',        ctx: 'past' },
-  ];
-
-  for (const { url, ctx } of urls) {
-    log(`  Fetching ${ctx}: ${url}`);
-    const r = await safeGoto(page, url, venueCode, ctx);
-    if (!r.ok) { log(`  FAILED ${ctx} — ${r.reason}`); continue; }
-    try {
-      await collectFromListing(page, {
-        venueCode, ctx, base, rows, seenUrls, urlToRow,
-        // A handful of Rijksmuseum entries are linked to the DUTCH site even
-        // from the English listing — "tentoonstellingen" rather than
-        // "exhibitions". Stop Motion is one, and looking only for the English
-        // path missed it entirely. Its own listing card still carries the
-        // dates, so it is worth collecting; the page it opens is in Dutch.
-        selector: 'a[href*="exhibitions/"], a[href*="tentoonstellingen/"]',
-        isNav: href => /exhibitions\/?$/.test(href)
-                    || /now-on-view\/?$/.test(href)
-                    || /past\/?$/.test(href)
-                    // the "Nederlands (Dutch)" language switcher
-                    || /tentoonstellingen\/(afgelopen|nu-te-zien)?\/?$/.test(href),
-      });
-    } catch (e) {
-      log(`  ERROR extracting Rijks listing (${ctx}): ${e.message.slice(0,120)}`);
-    }
-  }
-
-  const inWindow = applyLookback(rows, venueCode, 'listing');
-  await fetchIndividualPages(page, inWindow, venueCode);
-  return inWindow;
-}
-
-async function scrapeAcq(page) {
-  logSection('ACQ — Acquavella Galleries, New York');
-  const rows = [], seenUrls = new Set(), urlToRow = new Map();
-  const venueCode = 'acq';
-  const base = 'https://www.acquavellagalleries.com';
-  const url = base + '/exhibitions';
-
-  log(`  Fetching: ${url}`);
-  const r = await safeGoto(page, url, venueCode, 'all');
-  if (!r.ok) { log(`  FAILED — ${r.reason}`); return rows; }
-
-  try {
-    await collectFromListing(page, {
-      venueCode, ctx: 'all (current/upcoming/past)', base, rows, seenUrls, urlToRow,
-      selector: 'a[href*="/exhibitions/"]',
-      // The archive's own year-range filters ("VIEW ALL", "2023-2021", "1999")
-      // live under /exhibitions/past/. They are navigation, not exhibitions;
-      // following them dragged in the whole back catalogue to 1999.
-      isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/past\//.test(href),
-    });
-  } catch (e) {
-    log(`  ERROR extracting Acq listing: ${e.message.slice(0,120)}`);
-  }
-
-  const inWindow = applyLookback(rows, venueCode, 'listing');
-  await fetchIndividualPages(page, inWindow, venueCode);
-  return inWindow;
-}
-
-async function scrapeBorghese(page) {
-  logSection('BORGHESE — Galleria Borghese, Rome');
-  const rows = [], seenUrls = new Set(), urlToRow = new Map();
-  const venueCode = 'borghese';
-  const base = 'https://galleriaborghese.cultura.gov.it';
-
-  // Its exhibitions do NOT live under /mostre/ — those three pages are the
-  // listings themselves, and the only /mostre/ links on them are the site's
-  // own navigation (ITA, Exhibitions, Current, Past, Upcoming). Individual
-  // exhibitions live under /en/exhibition/. Looking for /mostre/ was why this
-  // venue returned exactly one row per page: it was collecting the menu bar.
-  const urls = [
-    { url: base + '/en/mostre/presenti/', ctx: 'current' },
-    { url: base + '/en/mostre/future/',   ctx: 'upcoming' },
-    { url: base + '/en/mostre/passate/',  ctx: 'past' },
-  ];
-
-  for (const { url, ctx } of urls) {
-    log(`  Fetching ${ctx}: ${url}`);
-    const r = await safeGoto(page, url, venueCode, ctx);
-    if (!r.ok) {
-      log(`  FAILED ${ctx} — ${r.reason}`);
-      rows.push({
-        venue_code: venueCode, title: `[${ctx} page]`, start_date: '', end_date: '',
-        summary: '', url, notes: `The venue's "${ctx}" listing page did not load (${r.reason}). Marker row, not an exhibition.`,
-      });
-      continue;
-    }
-
-    const bodyText = await page.innerText('body').catch(() => '');
-    if (bodyText.length < 200) {
-      log(`  EMPTY_PAGE ${ctx}: page loaded but body has <200 chars`);
-      rows.push({
-        venue_code: venueCode, title: `[${ctx} page]`, start_date: '', end_date: '',
-        summary: '', url, notes: `The venue's "${ctx}" listing page loaded but was empty. Marker row, not an exhibition.`,
-      });
-      continue;
-    }
+    const opts = {
+      venueCode: code, ctx: pg.ctx, base: v.base, rows, seenUrls, urlToRow,
+      selector: v.selector, isNav: v.isNav,
+    };
 
     try {
-      await collectFromListing(page, {
-        venueCode, ctx, base, rows, seenUrls, urlToRow,
-        selector: 'a[href*="/exhibition/"]',
-        isNav: href => /\/exhibition\/?$/.test(href),
-      });
+      await collectFromListing(page, opts);
+
+      // The Met's past page filters by year through a dropdown rather than
+      // separate URLs. Walk it back to the lookback floor; the URL guard means
+      // a show listed under two years is recorded once, with a note.
+      if (pg.yearDropdown) {
+        for (const year of [CURRENT_YEAR, CURRENT_YEAR - 1, 2024]) {
+          try {
+            log(`  Selecting year ${year}...`);
+            await page.selectOption('select', String(year));
+            await page.waitForFunction(
+              (min) => document.body && document.body.innerText.trim().length > min,
+              MIN_BODY_CHARS, { timeout: CONTENT_TIMEOUT }
+            ).catch(() => {});
+            await collectFromListing(page, { ...opts, ctx: `${pg.ctx}-${year}` });
+            if (year === 2024) break;
+          } catch (e) {
+            log(`  ERROR selecting year ${year}: ${e.message.slice(0, 120)}`);
+          }
+        }
+      }
     } catch (e) {
-      log(`  ERROR extracting Borghese listing (${ctx}): ${e.message.slice(0,120)}`);
+      log(`  ERROR extracting ${code} listing (${pg.ctx}): ${e.message.slice(0, 120)}`);
     }
   }
 
-  // Borghese listings carry only a start month ("March / 2026") and no end
-  // date at all, so the lookback cannot be decided here — the detail pages
-  // have to supply the end date first.
-  await fetchIndividualPages(page, rows, venueCode);
-  return rows;
-}
-
-async function scrapeMorgan(page) {
-  logSection('MORGAN — Morgan Library & Museum, New York');
-  const rows = [], seenUrls = new Set(), urlToRow = new Map();
-  const venueCode = 'morgan';
-  const base = 'https://www.themorgan.org';
-
-  const urls = [
-    { url: base + '/exhibitions/current',  ctx: 'current' },
-    { url: base + '/exhibitions/upcoming', ctx: 'upcoming' },
-    { url: base + '/exhibitions/past',     ctx: 'past' },
-  ];
-
-  for (const { url, ctx } of urls) {
-    log(`  Fetching ${ctx}: ${url}`);
-    const r = await safeGoto(page, url, venueCode, ctx);
-    if (!r.ok) {
-      log(`  FAILED ${ctx} — ${r.reason}`);
-      rows.push({
-        venue_code: venueCode, title: `[${ctx} page]`, start_date: '', end_date: '',
-        summary: '', url, notes: `The venue's "${ctx}" listing page did not load (${r.reason}). Marker row, not an exhibition.`,
-      });
-      continue;
-    }
-    try {
-      await collectFromListing(page, {
-        venueCode, ctx, base, rows, seenUrls, urlToRow,
-        selector: 'a[href*="/exhibitions/"]',
-        isNav: href => /\/exhibitions\/(current|upcoming|past)\/?$/.test(href) || /\/exhibitions\/?$/.test(href),
-      });
-    } catch (e) {
-      log(`  ERROR extracting Morgan listing (${ctx}): ${e.message.slice(0,120)}`);
-    }
-  }
-
-  const inWindow = applyLookback(rows, venueCode, 'listing');
-  await fetchIndividualPages(page, inWindow, venueCode);
-  return inWindow;
+  // Cut before opening detail pages where the listing gave us enough to judge.
+  const toFetch = v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing');
+  await fetchIndividualPages(page, toFetch, code);
+  return toFetch;
 }
 
 async function fetchIndividualPages(page, rows, venueCode) {
@@ -1251,7 +1194,11 @@ async function fetchIndividualPages(page, rows, venueCode) {
   if (skip.size) log(`  skipping ${skip.size} individual page(s): closed before lookback`);
   for (const row of rows) {
     if (skip.has(row)) continue;
+    // Marker rows record a listing page that failed or was empty. Their url is
+    // that listing page, so without this they get fetched all over again and
+    // the failure is logged twice.
     if (!row.url || row.url.startsWith('[')) continue;
+    if (row.title && row.title.startsWith('[')) continue;
     try {
       const r = await safeGoto(page, row.url, venueCode, 'individual');
       if (!r.ok) {
@@ -1385,14 +1332,9 @@ function passThrough(rows) {
   const allRows = [];
   const summary = {};
 
-  const allScrapers = [
-    { code: 'met',      fn: scrapeMet },
-    { code: 'ng',       fn: scrapeNG },
-    { code: 'rijks',    fn: scrapeRijks },
-    { code: 'acq',      fn: scrapeAcq },
-    { code: 'borghese', fn: scrapeBorghese },
-    { code: 'morgan',   fn: scrapeMorgan },
-  ];
+  // Order matters only for readability of the log; each venue is independent.
+  const allScrapers = ['met', 'ng', 'rijks', 'acq', 'borghese', 'morgan']
+    .map(code => ({ code, fn: p => scrapeVenue(p, code) }));
 
   // Optional venue filter: node scraper/sweep_prototype.js borghese morgan
   const wanted = process.argv.slice(2).map(a => a.toLowerCase());
