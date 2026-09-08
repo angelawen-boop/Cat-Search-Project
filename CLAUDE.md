@@ -61,13 +61,8 @@ The owner does not read code and does not want to. Explain the logic, the trade-
 ### Carried over from the app project (still apply here)
 
 - **Be concise.** She is optimising for decisions-per-minute. Cut hard after thinking. Short bullets over paragraphs.
-- **No hedging, no manufactured uncertainty.** If you know it, say it. Don't bolt "but I can't be sure" onto things you do know — she has correctly called that lying. Name real unknowns once, briefly, then stop.
-- **Never fish for "go."** No "ready when you are", "want me to start", "shall I proceed". She says go. Wait.
-- **Read the code before speaking about it.** Claims about the JSX or the scraper come from having read the file this session, not from memory or general patterns. Breaking this has produced confident, invented "bugs" before.
-- **"Proven working" and "looks right in the code" are different things.** Say which one you have.
 - **Never propose dropping a feature or accepting reduced functionality as the fix.** The tool exists to do more automatically. When something breaks, make it work.
 - **No undiscussed changes, no silent workarounds, no shortcut fixes.** Fix the real problem and say what you did.
-- **Don't editorialise or classify things into problem-piles unless asked.** A factual question gets a factual answer.
 - **She will not manually enter exhibition data.** Treat that as a fixed constraint, not an open question.
 
 ### Specific to Claude Code
@@ -442,6 +437,14 @@ nothing.
    innerText returns caps for some cards and title case for others. **Her
    decision: live with it.** Genuinely all-caps exhibition titles exist, and
    telling them apart is not worth the logic.
+6. **Acquavella's title rule erases the location, so its own travelling shows
+   collide.** The recipe strips `NEW YORK|PALM BEACH` and everything after it
+   (`title: { heading: false, stripTrailing: /\s*\b(NEW YORK|PALM BEACH)\b.*$/i }`),
+   because the location and dates are jammed into the link text with the title.
+   A show that runs in both galleries therefore produces two rows with the same
+   title under the same venue code — which is exactly what `sameExhibition`
+   matches on. Unconfirmed whether it actually bites; awaiting her count of the
+   live page. Fix would be keeping the location in the title, not dropping rows.
 
 ### Fixed — do not reintroduce
 
@@ -661,6 +664,30 @@ Tate is deliberately two venues; merging them was rejected. Order reflects the a
 - Date parsing stays **shared across all venues** — every venue contains several
   venues' worth of formats.
 - Title casing is left inconsistent on purpose (Section 5, known bugs).
+
+**Settled 8 Sep 2026 — travelling exhibitions stay as separate entries.**
+A show that moves between venues (Acquavella New York → Palm Beach, or
+*Metamorphoses* from the Rijksmuseum to Borghese) is imported as one entry per
+venue. There is normally one catalogue, tracked against whichever entry she keeps;
+the others she puts to one side.
+
+Two mechanics of the app decide how that is done, and they are not
+interchangeable:
+- **Rejecting the Add card is not remembered.** `applyRefresh` skips a rejected
+  add and stores nothing, so the same row proposes itself again on every future
+  sweep, forever.
+- **Dismissing in the ledger is remembered.** `dismiss` writes `interested:false`
+  onto the row, so the entry exists, stays out of the way, and later sweeps match
+  it as a fill/change rather than proposing it fresh.
+
+So the workflow is **accept both, then dismiss the one she doesn't want** — not
+reject the duplicate card.
+
+Cross-venue shows never merge on their own: `sameExhibition` returns false the
+moment `museumId` differs, so the app cannot collapse the Rijksmuseum and Borghese
+copies even if title and dates are identical. Same-venue travelling runs (both
+Acquavella locations) *can* match each other, because the scraper's title rule
+strips the city — see the open Acquavella question in Section 5.
 
 - **Where summary compression happens.** Three candidates, none chosen: Chat Claude does it; Claude Code does it inside the sweep run after the raw text is pulled; Claude Code does it as a separate pass outside the scrape script. The scraper writes raw text either way, so this can be decided later without rework.
 - **Haiku vs Sonnet for the in-app catalogue lookup.** Haiku passed the easy cases cheaply and correctly but hasn't been tested on hard ones — touring shows, foreign-language catalogues, ambiguous or retitled shows — where a lighter model may return the wrong book or a wrong ISBN. Decide with one side-by-side session on known-tricky catalogues; failures are visible on click. Not weeks of live use.
