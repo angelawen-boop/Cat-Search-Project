@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 7 Sep 2026 (end of the Borghese session)
+**Last updated:** 8 Sep 2026 (Rijksmuseum, plus the two structural changes)
 **Source:** built from Cat Watch Handover v11 plus what this repo's own scraper work has since proven.
 
 This repo now holds **two** things, and will hold both going forward:
@@ -212,6 +212,28 @@ Bad:  `NO_END_DATE: kept, lookback unverified`
 Every row carries at least its source page, so a card always says where the entry came
 from.
 
+### Prefer structured data over guessing — everywhere
+
+Some venues embed a **schema.org Event** block for search engines: title,
+opening date, closing date and description as actual fields. Where it exists it
+removes exactly the part that keeps breaking — every scraper bug so far has been
+title-or-date extraction.
+
+**This is universal logic, not a per-venue opt-in**, and deliberately so:
+- a venue that *adds* structured data later is picked up with **no code change**
+- a venue that *removes* it falls back to reading the page, silently
+- it costs one failed lookup in HTML that is already loaded
+
+It is a **bonus source, never a replacement**. Measured 8 Sep 2026: of the six
+venues wired, only the National Gallery publishes it, and only on exhibition
+detail pages — never listings. The listing still has to be walked to discover
+which exhibitions exist, so the browser is always needed. This is not "skip the
+browser for tidy sites"; there is one transport and one code path.
+
+Treat it as helpful, not authoritative — it is published for Google and
+sometimes goes unmaintained. Rows that use it say so in their notes, and its
+dates still pass the plausible-year guard.
+
 ### What the lookback actually means
 
 Keep an exhibition if it was **open at any point on or after 1 July 2024**.
@@ -288,91 +310,140 @@ It now waits for the HTML, then for the body to actually contain text, and ignor
 
 Leaving a page early has a knock-on: requests from the previous page are still in flight when the next navigation starts, and answering a request whose page has gone throws. Unhandled, that poisoned the *next* navigation and produced a cascade of "interrupted by another navigation" across every venue — a run where all six returned zero. Route calls are now wrapped and `safeGoto` retries once. **Don't unwrap them.**
 
+### How the scraper is organised
+
+**One engine, one recipe per venue.** The split follows what the logic is *about*,
+not whether it happens to be shared:
+
+**Universal — in the engine, and a fix here helps all 21 venues:**
+fetching and waiting, the counters, the URL-identity guard, the lookback rule,
+structured-data-first, **parsing a date string once you have it**, writing the CSV.
+
+**Per venue — in `VENUES`, one readable block each:**
+which pages to visit, which links are exhibitions rather than navigation, where
+the title sits, where the dates sit, what boilerplate to strip.
+
+There is no clever general rule for the second list, and **every attempt at one
+has cost us.** A rule learned at Borghese — "never read the title from above the
+link", because its archive returned the first card's heading for every card —
+was already wrong at Rijksmuseum a day later, where the title lives exactly
+there. A venue writes down only what differs from the default.
+
+Debugging one museum means reading one recipe. Adding a venue means writing one,
+not adding another branch to shared code.
+
+Recipe options so far: `selector`, `isNav`, `title` (heading / card / strip
+rules), `markEmptyPages` for venues that get blocked, `lookbackAfterDetail` for
+venues whose listings carry no closing date, and `yearDropdown` for the Met's
+year filter.
+
 ### How a listing page is read
 
-All six venues go through one shared function, `collectFromListing()`, so counting, the
-URL guard and the title rules behave identically everywhere. Per page it reports:
+Every venue goes through `collectFromListing()`. Per page it reports:
 
 ```
 seen -> navigation / already-seen URL -> collected (n of them with no readable title)
 ```
 
-and the run ends with a coverage table. **Every link is accounted for by a number.**
-Nothing disappears silently.
+and the run ends with a coverage table. **Every link is accounted for by a
+number.** Nothing disappears silently.
 
-**Titles come from the page's own heading, not the first line of link text.** That was
-the old approach and it captured badges — "Past exhibition", "Free" — so 32 National
-Gallery exhibitions shared 3 "titles". `TITLE_RULES` records which shape each venue
-uses: a heading inside the link (NG, Rijksmuseum), or no heading plus a predictable
-wrapper to strip (Acquavella's trailing "NEW YORK APRIL 9 - MAY 22, 2026", Borghese's
-"March / 2026 ... DISCOVER THE EXHIBITION"). **Never read a heading from the link's
-parent** — on Borghese's archive that returns the first card's heading for every card.
+**Titles come from the page's own heading where there is one**, never from the
+first line of link text — that captured badges ("Past exhibition", "Free") and
+made 32 National Gallery exhibitions share 3 titles. Where a venue wraps only
+the *image* in the link (Rijksmuseum's now-on-view page), the title is read from
+the card container above it, guarded: at most 2 levels up, and nothing over 220
+characters, since a container that has bled into its neighbours is far longer
+than one title plus a date.
 
-**A link with no readable title is never dropped.** It gets a row with a blank title and
-a note saying what the URL slug suggests. The app shows it as "Couldn't be filed" — 
-visible and fixable. The slug guess stays in the notes and never enters the title
-column: it is the site's URL, not the exhibition's name.
+**A link with no readable title is never dropped.** It gets a row with a blank
+title and a note saying what the URL slug suggests. The app shows it as
+"Couldn't be filed" — visible and fixable. The slug guess stays in the notes and
+never enters the title column.
 
 ### Reading dates
 
-Three sources, tried in order:
+**All date parsing is shared, on purpose.** Every venue turns out to contain
+several venues' worth of formats — the Rijksmuseum alone uses at least six — so
+a pattern learned at one is worth having at all of them.
 
-1. **The listing page** — `datesNearLink()` reads the link and its immediate parent (not
-   higher; that picks up the next card's dates). Getting dates here is what lets the
-   lookback cut the list *before* spending a page load on each entry.
-2. **Prose on the exhibition's own page** — `findDateRangeInProse()`. Some venues print
-   no date field at all and write the run into the opening sentence. This is
-   pattern-matching, not comprehension, but a date has a shape and that is enough.
-3. **A date-ish element** on the detail page, as a last resort.
+Sources, in order: **structured data** (Section 3), then the **listing card**
+(`datesNearLink`, walking at most 2 levels), then **prose on the exhibition's own
+page** (`findDateRangeInProse`), then a date-ish element as a last resort. The
+detail-page scan runs whenever *either* date is missing, and **fills only empty
+fields — the listing wins on disagreement**, so nothing collected is silently
+rewritten.
 
-Handles month-first ("June 10 to September 14, 2025") and day-first ("From 20 January to
-22 February 2026", "on 1 November 2017 and will last until 20 February 2018"). Where a
-sentence omits the year entirely ("From March 26 to June 23"), the year comes from the
-listing page.
+Formats handled, all found in the wild:
 
-**Two guards stop it grabbing the wrong date**, and both are load-bearing on pages full
-of art history:
+```
+6 FEBRUARY TILL 25 MAY 2026          day-first, year on the end
+22 MARCH 2025 TO 15 MARCH 2026       day-first, year on both
+12 SEP 2025 TO 25 JAN 2026           abbreviated months
+21 Sept. 2024 to 12 Jan. 2025        abbreviated with a full stop
+11 Oct. 2019 t/m 19 Jan. 2020        Dutch "t/m" (tot en met)
+December 13, 2025 - February 2, 2026 month-first
+From June 10 to September 14, 2025   month-first, word separator
+5 June to 25 October                 no year — borrowed from the listing
+Till 29 November                     no year, no opening date
+WORN till 21 March 2027              single date with a preposition
+March / 2026                         month and year only
+```
+
+**Two guards stop art history being read as exhibition dates**, and both are
+load-bearing on museum pages:
 - A month **name** must sit beside the number, so bare years never match.
-- The year must be plausible (**1990–2035**) — low enough for archives going back to
-  2013, far above any artist lifespan.
+- The year must be plausible (**1990–2035**) — low enough for archives going back
+  to 2013, far above any artist lifespan.
 
-Verified against `Caravaggio (1571-1610)`, `stayed in Italy in 1629` and `confiscated on
-4 May 1607`: all correctly ignored.
+Verified against `Caravaggio (1571-1610)`, `stayed in Italy in 1629`,
+`confiscated on 4 May 1607` and `August 17 1945`: all correctly ignored.
 
-`sane()` drops a start date that falls after its own end rather than emitting an
-impossible range. This caught a real bug: with the year floor at 2015, "From 8 October
-2014 to 11 January 2015" produced a start of 2015-10-08.
+`sane()` drops a start date falling after its own end rather than emitting an
+impossible range.
 
-### Last full-sweep result (7 Sep 2026, 4m05s)
+**The two parsers must not diverge.** `findDateRange` (listings) and
+`findDateRangeInProse` (page text) drifted apart twice, and each time a venue
+silently lost dates — once because only the prose parser knew word separators,
+once because only the listing parser knew "Until 15 Jan. 2023". The prose parser
+now falls through to the listing parser, so any format either knows is available
+to both. There is also one shared `MONTH_PATTERN`; it previously existed as two
+copies listing only full month names, which is why `12 SEP 2025` parsed to
+nothing.
 
-| Venue | Collected | Notes |
+### Last full-sweep result (8 Sep 2026)
+
+| Venue | Rows | Notes |
 |---|---|---|
-| `ng` | 34 | 183 listed on the past page, 151 pre-July-2024 correctly cut |
-| `rijks` | 41 | only 2 of 15 current-page links kept — **suspected under-collection** |
-| `acq` | 19 | 108 listed, 89 pre-floor cut, 11 archive-nav links ignored |
-| `borghese` | 30 | see 6a — the site publishes almost no dates |
+| `ng` | 28 | no rows left without a closing date; 4 dated from structured data |
+| `rijks` | 37 | **10 current/upcoming + 14 past, both matching her count of the live page** |
+| `acq` | 17 | 108 listed, 89 pre-floor cut, 11 archive-nav links ignored |
+| `borghese` | — | **unreachable** on 8 Sep, see 6a |
 | `met` | 0 | HTTP 429, blocked |
 | `morgan` | 0 | HTTP 403, blocked |
 
 ### Known bugs — open
 
-1. **Rijksmuseum's current/upcoming page keeps only 2 of 15 links**, with 8 rejected for
-   having no readable title. Missing *current* exhibitions is worse than over-collecting
-   old ones. **This is the next thing to look at.**
-2. **Coverage against the venues' real totals is still unverified.** The counters now
-   explain where rows go, but nothing confirms the scraper reached everything each venue
-   publishes. Open question: whether NG and Rijksmuseum list upcoming shows on a page
-   not in 6c.
-3. **Two National Gallery rows carry a badge as a title** (`Across the UK`,
-   `Find out more` — the latter is really the Renoir and Love exhibition). Two
-   Rijksmuseum rows are both titled `LAST CHANCE` (Ed van der Elsken, Fiep Westendorp).
-   The heading rule works except where a site puts a badge in the heading slot.
-4. **Filtered runs overwrite the whole CSV** with only those venues' rows. Known,
+1. **Coverage against the venues' real totals is verified only for Rijksmuseum
+   and Borghese.** Those were checked against her own count of the live pages.
+   National Gallery and Acquavella have plausible numbers but nobody has counted
+   the sites by hand.
+2. **Nothing filters out non-exhibitions.** The only test is the URL shape — if a
+   venue files talks, tours, opening events or permanent displays under its
+   exhibitions path, they are collected as exhibitions. Rijksmuseum happens not
+   to; **Tate is known to list everything on one "what's on" page, though it does
+   tag each item by type**, so that tag is the hook when we get there. A venue
+   that dumps everything *and* tags nothing will need a different answer.
+3. **Filtered runs overwrite the whole CSV** with only those venues' rows. Known,
    unfixed; she has confirmed the output is hypothetical for now.
-5. **The summary column is not yet the raw-dump-then-compress design** in Section 4. It
-   currently holds up to 2000 characters of curatorial text.
+4. **The summary column is not yet the raw-dump-then-compress design** in
+   Section 4. It currently holds up to 2000 characters of curatorial text.
+5. **Title casing is inconsistent** — some venues apply capitalisation in CSS, so
+   innerText returns caps for some cards and title case for others. **Her
+   decision: live with it.** Genuinely all-caps exhibition titles exist, and
+   telling them apart is not worth the logic.
 
-### Fixed this session — do not reintroduce
+### Fixed — do not reintroduce
 
 - `networkidle` waits (30s timeouts on pages that had loaded in 3).
 - Unwrapped `route.fulfill`/`abort` calls (a cascade of "interrupted by another
@@ -380,15 +451,33 @@ impossible range. This caught a real bug: with the year floor at 2015, "From 8 O
 - Title-based de-duplication (deleted 29 NG exhibitions).
 - Borghese's `/mostre/` selector (collected the navigation menu).
 - Dropping links with unreadable titles.
-- A cookie-banner filter that walked up to `<body>` and therefore excluded every
-  paragraph on every page (see 6a).
+- A cookie-banner filter that walked up to `<body>` and so excluded every
+  paragraph on every page.
+- Two copies of the month pattern, listing only full month names, so
+  `12 SEP 2025 TO 25 JAN 2026` parsed to nothing.
+- The plausible-year guard missing from one branch, so "confiscated on 4 May
+  1607" became a start date of 1607.
+- Six near-identical venue scraper functions (see the recipes, above).
 
 ### Working order agreed with her
 
-Diagnose in this order and don't jump ahead:
-1. **Is it getting data at all?** — solved for 4 of 6 venues.
-2. **Is it getting the right data?** — current stage. Lookback is done; coverage and titles are not.
-3. **Is it recording and outputting properly?** — the title/dedup bug lives here.
+Two rules, both hers, both learned the hard way.
+
+**Diagnose one VENUE at a time, not one ISSUE at a time.** Venues fail for
+different reasons and jumping between them obscures more than it reveals. Tallying
+by issue across six museums produced a headache and no decisions.
+
+**Within a venue, work in this order:**
+1. **Is it getting data at all?** — solved for 4 of 6; Met and Morgan are refused
+   at the network door.
+2. **Is it getting the right data?** — the current stage.
+3. **Is it recording and outputting properly?**
+
+**Ask her for the ground truth.** For both Borghese and Rijksmuseum she counted
+the live pages herself, and each time that number found something the scraper's
+own output could not have revealed — a missing venue path, a whole category of
+unread titles. A count from the person who knows what the answer should be is
+worth more than any amount of internal consistency.
 
 ---
 
@@ -405,13 +494,44 @@ This is the only part that describes how the *scraper* reaches sites. It is shor
 | `met` | **Hard blocked.** HTTP 429 on every page including `robots.txt`, on the very first request, with plain curl and no browser. This is an IP-reputation block on the whole datacenter range, not us going too fast. Delays won't help. `collectionapi.metmuseum.org` is unblocked from the same IP but covers collection objects, not exhibitions. | Verified repeatedly, 7 Sep 2026 |
 | `morgan` | **Hard blocked.** HTTP 403 on all three listing pages and on `sitemap.xml`, from Cloudflare. Their `robots.txt` permits general crawling (`User-agent: *  Allow: /`) and permits AI "reference" use, but name-blocks a list of AI crawlers, and Cloudflare is refusing this network before any of that applies. | Verified 7 Sep 2026 |
 | `ng` | **Works well.** Past archive loads 183 entries in one page. Dates live in the card wrapping each link, day-first format ("7 November 2025 – 10 May 2026"). | Full sweep |
-| `rijks` | **Works.** 41 exhibitions, all with curatorial text. Dates mostly not readable from listing or detail pages. | Full sweep |
+| `rijks` | **Works, fully worked through.** See below. | Full sweep + her count of the live pages |
 | `acq` | **Works.** One page carries current, upcoming and past together. Dates are in the link text itself ("… NEW YORK OCTOBER 16 - DECEMBER 5, 2025"). Its archive has year-range filter links (`/exhibitions/past/all/2023-2021`) which are navigation, not exhibitions — following them dragged in the whole catalogue back to 1999. | Full sweep |
 | `borghese` | **Reaches the site**, contradicting the old "robots-blocked" note in 6b. Fully worked through — see below. | Full sweep + 40 detail pages |
 
 **Two of six venues are blocked at the door.** For those, the headless browser doesn't help — the refusal happens before any page is served. Options are running from an ordinary home connection instead of a datacenter, asking the institution directly, or falling back to the Chat Claude route (different network, behaves like a person browsing). Engineering around a deliberate block is not on the table.
 
 They stay wired in regardless — see Section 4. A refusal costs about half a second and tells us whether anything has changed since last time.
+
+#### Rijksmuseum — worked through in full, 8 Sep 2026
+
+Verified against her count of the live pages: **10 current/upcoming, 14 past
+inside the lookback.** Both exact.
+
+**Two different card layouts on different pages.** The past page puts a heading
+inside the link ("METAMORPHOSES"). The now-on-view page wraps only the IMAGE, so
+the link contains nothing but a "LAST CHANCE" badge where one exists — which is
+why the scraper once reported 10 exhibitions found and 0 titles read, and the
+two it appeared to get were badges. Title now falls through to the card
+container, guarded (see Section 5).
+
+**Some entries are linked to the DUTCH site from the English listing** —
+`/nl/zien-en-doen/tentoonstellingen/...` rather than `/en/whats-on/exhibitions/`.
+Stop Motion is one, and a selector looking only for the English path missed it
+entirely — an invisibility, not a date failure. The recipe accepts both paths and
+filters the "Nederlands (Dutch)" language switcher as navigation. Expect other
+multilingual venues to do the same.
+
+**At least six date formats across its own pages**, apparently hand-assembled
+one exhibition at a time — see the list in Section 5. Its older archive entries
+use Dutch `t/m`.
+
+**13 past rows still have no closing date, and that is a site limit.** Checked
+individually: Ellsworth Kelly says "Until 24 October" with no year anywhere to
+borrow; Slavery and Richard Long publish no dates at all; REVOLUSI!'s only
+date-shaped text is "August 17 1945" in its article body, which the year guard
+correctly refuses.
+
+**No structured data**, before or after JavaScript — checked both.
 
 #### Borghese — worked through in full, 7 Sep 2026
 
@@ -449,7 +569,16 @@ excluded the entire page and all 41 summaries came back empty. **The ancestor wa
 stop before `<body>` and `<html>`** — a consent banner is a container within the page,
 never the page itself. Expect other WordPress venues to do the same.
 
-Borghese now: 29 of 30 rows carry real curatorial text, 0 contain consent boilerplate.
+Borghese as of 7 Sep: 29 of 30 rows carry real curatorial text, 0 contain
+consent boilerplate.
+
+**8 Sep — the site became unreachable from this container.** Every page returns
+`net::ERR_FAILED` in the browser, and plain curl fails with a connection reset;
+the proxy logs the same tunnel-drop signature as the original Chromium TLS
+problem (bytes sent, 39 received, tunnel closed). It worked an hour earlier the
+same day. Cause unknown — site-side, network-side, or a new block. **Its numbers
+are therefore unverified against the current engine.** Re-check before trusting
+anything in this section.
 
 ### 6b. Legacy — how *Chat Claude's fetch tool* saw these sites
 
@@ -524,7 +653,14 @@ Tate is deliberately two venues; merging them was rejected. Order reflects the a
   judgement (Section 3).
 - Diagnosis proceeds **one venue at a time**, not one issue at a time. Venues fail for
   different reasons and jumping between them obscures more than it reveals.
-- **Borghese is done** to the limit of what the site publishes. Rijksmuseum is next.
+- **Borghese is done** to the limit of what the site publishes (but see the 8 Sep
+  outage in 6a).
+- **Rijksmuseum is done**, verified against her count: 10 current/upcoming, 14 past.
+- **The two structural changes are built**: structured-data-first as universal
+  logic, and the engine/recipe split.
+- Date parsing stays **shared across all venues** — every venue contains several
+  venues' worth of formats.
+- Title casing is left inconsistent on purpose (Section 5, known bugs).
 
 - **Where summary compression happens.** Three candidates, none chosen: Chat Claude does it; Claude Code does it inside the sweep run after the raw text is pulled; Claude Code does it as a separate pass outside the scrape script. The scraper writes raw text either way, so this can be decided later without rework.
 - **Haiku vs Sonnet for the in-app catalogue lookup.** Haiku passed the easy cases cheaply and correctly but hasn't been tested on hard ones — touring shows, foreign-language catalogues, ambiguous or retitled shows — where a lighter model may return the wrong book or a wrong ISBN. Decide with one side-by-side session on known-tricky catalogues; failures are visible on click. Not weeks of live use.
