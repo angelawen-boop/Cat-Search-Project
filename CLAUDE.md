@@ -455,6 +455,15 @@ exhibition is broken (HTTP 404)." The scraper does **not** guess at a working
 address: `ed-van-der-elsken` happens to exist with the `/past/` segment
 removed, but inventing URLs is a judgement that could land on a different show.
 
+**A dead link stays in the URL column.** The note goes in `notes`, never in
+`url` — so the app still gets a real address. On the approval card she reads
+both. In the ledger the arrow renders and points at the venue's own dead page:
+click it today and the museum tells her the page is gone; click it after they
+fix it and it works. Blanking the URL would be worse, since `applyRefresh`
+falls back to the venue's generic listing page when `exUrl` is empty, and an
+arrow that silently goes somewhere else is harder to understand than one that
+goes nowhere honestly.
+
 **Verified 8 Sep 2026 across all 78 rows** of ng, rijks and acq: 75 URLs return
 200, the three above are the venue's dead links, no summary is empty, none is
 under 94 characters, none contains consent or navigation boilerplate, and no
@@ -767,6 +776,27 @@ strips the city — see the open Acquavella question in Section 5.
 
 - **Where summary compression happens.** Three candidates, none chosen: Chat Claude does it; Claude Code does it inside the sweep run after the raw text is pulled; Claude Code does it as a separate pass outside the scrape script. The scraper writes raw text either way, so this can be decided later without rework.
 - **Haiku vs Sonnet for the in-app catalogue lookup.** Haiku passed the easy cases cheaply and correctly but hasn't been tested on hard ones — touring shows, foreign-language catalogues, ambiguous or retitled shows — where a lighter model may return the wrong book or a wrong ISBN. Decide with one side-by-side session on known-tricky catalogues; failures are visible on click. Not weeks of live use.
+- **Running the scraper on her own machine, for Met and Morgan.** Parked, not
+  scheduled — she may do a manual Chat Claude sweep for those two instead. The
+  point of raising it was to stop the blocked venues quietly falling out of
+  view now that the other four work.
+
+  What is actually true about it:
+  - **The blocks would very likely lift.** Met's 429 and Morgan's 403 are aimed
+    at this datacentre's IP address, not at anything the scraper does. From a
+    home connection neither site sees what it is objecting to.
+  - **Neither recipe has ever been exercised.** All we have established is that
+    the door is shut. Which links are exhibitions, where the title sits, where
+    the dates sit — all copied from venues that do work, none tested. Expect a
+    first run that needs diagnosing, like Borghese's first run returning the
+    navigation menu. Met's year dropdown is written and never once clicked.
+  - **Two things are wired for this container.** The Chromium path is hardcoded
+    to `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`, and there is no
+    written setup step. Both are small fixes: fall back to whatever Playwright
+    installed locally, and write down the two commands. The network bridge is
+    already fine — with no proxy set, `proxyAgent` is undefined and Node
+    connects directly.
+
 - **Sweeper brief v3** — the Chat-Claude-era instruction document still needs its URL corrections and a two-attempt URL-unlock rule. Its scope shrinks as the scraper covers more venues, but it does **not** disappear: the venues the scraper cannot reach are precisely the ones where a human-driven Chat Claude route still has a chance, because it comes from a different network and behaves like a person browsing. Expect the brief to end up as the fallback procedure for blocked and novel-problem venues rather than the main sweep.
 
 ### Parked, not accepted
