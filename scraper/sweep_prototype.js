@@ -180,7 +180,11 @@ const RANGE_SEP = '\\s*(?:-|t/m|to|till|until|through)\\s*';
 
 function findDateRange(raw) {
   if (!raw) return { start: '', end: '', raw: '' };
-  const s = String(raw).replace(/[\u2013\u2014]/g, '-').replace(/\s+/g, ' ').trim();
+  // Normalise every dash a museum's typesetter might reach for. The National
+  // Gallery uses U+2012 FIGURE DASH on some cards and U+2013 EN DASH on
+  // others; with only the en dash normalised, "15 October 2026 - 7 February
+  // 2027" fell through the range patterns and came out as 1 October 2026.
+  const s = String(raw).replace(/[\u2010-\u2015\u2212\u2043]/g, '-').replace(/\s+/g, ' ').trim();
   const M = MONTH_PATTERN;
 
   // Day-first European form, as used by Borghese and the National Gallery:
@@ -817,7 +821,52 @@ function titleRule(venueCode) {
 // Listing furniture that is never part of an exhibition's name.
 const TITLE_NOISE = /\b(Past exhibition|Free entry|Free|EXHIBITION|DISPLAY|Book (now|tickets?)|Members? only)\b|£|€/gi;
 
+// A venue links the same exhibition several times on one card — the image, the
+// name, and a button. The button's words are not a name: no exhibition is
+// called "Find out more". Matched whole, so a real title merely CONTAINING one
+// of these words is untouched.
+const CTA_ONLY = /^(find out more|read more|learn more|see more|discover( more)?|more info(rmation)?|view( exhibition)?|explore|book( now| tickets?)?)$/i;
+
 const squash = t => String(t || '').replace(/\s+/g, ' ').trim();
+
+/**
+ * Fill a kept row's blanks from another link to the SAME address.
+ *
+ * A venue commonly links one exhibition three times on a card: the image, the
+ * name, and a button. The URL guard keeps the first of them — and on the
+ * National Gallery the first is the image, which carries no text at all.
+ * "Renoir and Love" arrived with no title and no dates while the very next
+ * link on the same page spelled both out.
+ *
+ * This is NOT de-duplication and cannot lose anything: the links were already
+ * one row, collapsed by the address rule, which is the only collapsing this
+ * scraper does. All this adds is a better reading of that one page. Empty
+ * fields only — anything already read wins, so nothing is silently rewritten.
+ */
+async function fillBlanksFromRepeatLink(row, link, venueCode, ctx) {
+  if (!row.title) {
+    const t = await extractTitle(link, venueCode);
+    if (t && t.length >= 3) {
+      row.title = t;
+      // Withdraw the "no name could be read" note — it is no longer true.
+      if (row._titleNote) {
+        row.notes = squash(String(row.notes || '').replace(row._titleNote, ''));
+        row._titleNote = '';
+      }
+    }
+  }
+
+  if (!row.start_date || !row.end_date) {
+    const d = await datesNearLink(link);
+    if (!row.start_date && d.start) row.start_date = d.start;
+    if (!row.end_date && d.end) row.end_date = d.end;
+    if (!row.latest_year && d.latestYear) row.latest_year = d.latestYear;
+  }
+
+  // Only worth saying when it appeared on a DIFFERENT listing page. Three
+  // links inside one card are a page-building habit, not information.
+  if (ctx !== row._ctx) row.notes = addNote(row.notes, `Also listed on the venue's "${ctx}" page.`);
+}
 
 async function extractTitle(link, venueCode) {
   const rule = titleRule(venueCode);
@@ -835,6 +884,7 @@ async function extractTitle(link, venueCode) {
   let t = squash(await getText(link));
   if (rule.stripLeading)  t = t.replace(rule.stripLeading, '');
   if (rule.stripTrailing) t = t.replace(rule.stripTrailing, '');
+  if (CTA_ONLY.test(squash(t))) t = '';
   if (!rule.heading) return squash(t);
 
   // Strip the venue's own badges from the link text before judging whether it
@@ -843,7 +893,7 @@ async function extractTitle(link, venueCode) {
   // name — which lives in the card above — is never reached.
   if (rule.card && rule.card.stripLeading) t = squash(t.replace(rule.card.stripLeading, ''));
 
-  if (t.length >= 3) return squash(t.replace(TITLE_NOISE, ' '));
+  if (t.length >= 3 && !CTA_ONLY.test(squash(t))) return squash(t.replace(TITLE_NOISE, ' '));
 
   // Nothing readable inside the link. Some venues wrap only the IMAGE in the
   // link and leave the title as a sibling, so the name lives in the card
@@ -978,8 +1028,7 @@ async function collectFromListing(page, opts) {
     if (seenUrls.has(key)) {
       c.dupUrl++;
       const prev = urlToRow.get(key);
-      // Not a loss — record where else it appeared, so the count explains itself.
-      if (prev) prev.notes = addNote(prev.notes, `Also listed on the venue's "${ctx}" page.`);
+      if (prev) await fillBlanksFromRepeatLink(prev, link, venueCode, ctx);
       continue;
     }
 
@@ -999,6 +1048,9 @@ async function collectFromListing(page, opts) {
     const dates = await datesNearLink(link);
     const row = {
       venue_code: venueCode, title,
+      // Internal, never a CSV column: which listing page this row came from,
+      // and the note to withdraw if a later link supplies the missing name.
+      _ctx: ctx, _titleNote: titleNote,
       start_date: dates.start, end_date: dates.end,
       // Not a CSV column. An upper bound on the closing date for venues that
       // publish only a year ("Summer 2022"). See applyLookback.
@@ -1057,7 +1109,11 @@ const VENUES = {
       { path: '/exhibitions/past', ctx: 'past' },
     ],
     selector: 'a[href*="/exhibitions/"]',
-    isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/past\/?$/.test(href),
+    // "Across the UK" is a tab on the listing, not an exhibition — it opens a
+    // different part of the same page.
+    isNav: href => /\/exhibitions\/?$/.test(href)
+                || /\/exhibitions\/past\/?$/.test(href)
+                || /\/exhibitions\/across-the-uk\/?$/.test(href),
     // Publishes schema.org Event data on detail pages — the only venue wired
     // so far that does. Picked up automatically; nothing needed here.
     title: { heading: true },

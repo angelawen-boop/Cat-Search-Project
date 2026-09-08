@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 8 Sep 2026 (Acquavella done; travelling exhibitions)
+**Last updated:** 8 Sep 2026 (Acquavella and National Gallery both verified)
 **Source:** built from Cat Watch Handover v11 plus what this repo's own scraper work has since proven.
 
 This repo now holds **two** things, and will hold both going forward:
@@ -394,6 +394,12 @@ December 9 - 31, 2023                one month, day only on the closing side
 Summer 2022                          season and year — a bound, not a date
 ```
 
+**Every dash is normalised first** — U+2010 to U+2015, the minus sign and the
+Hebrew maqaf. The National Gallery uses a figure dash on some cards and an en
+dash on others; with only the en dash handled, "15 October 2026 ‒ 7 February
+2027" missed every range pattern and fell through to the month-and-year branch,
+which read it as 1 October 2026.
+
 **Two guards stop art history being read as exhibition dates**, and both are
 load-bearing on museum pages:
 - A month **name** must sit beside the number, so bare years never match.
@@ -415,6 +421,27 @@ to both. There is also one shared `MONTH_PATTERN`; it previously existed as two
 copies listing only full month names, which is why `12 SEP 2025` parsed to
 nothing.
 
+### The same exhibition linked three times on one card
+
+A venue commonly links one exhibition several times in a single card: the
+image, the name, and a "Find out more" button. The URL guard keeps the first —
+and on the National Gallery the first is the **image**, which carries no text
+at all. Renoir and Love arrived with no title and no dates while the very next
+link on the same page spelled out both.
+
+`fillBlanksFromRepeatLink()` fills the kept row's **empty fields only** from
+the other links to that same address. This is not de-duplication and cannot
+lose anything: those links were already one row, collapsed by the address rule.
+Anything already read wins, so nothing is rewritten.
+
+Button text is not a name — no exhibition is called "Find out more". `CTA_ONLY`
+rejects a link whose whole text is one of those phrases, matched **whole**, so
+a real title merely containing the word "Explore" survives.
+
+"Also listed on the venue's 'past' page." is now added only when the repeat is
+on a **different** listing page. Three links inside one card are a
+page-building habit, not information.
+
 ### Travelling exhibitions — a note, never a merge
 
 A venue with more than one address runs the same show in both. Acquavella lists
@@ -435,7 +462,7 @@ match costs one misleading sentence, never a row. A venue opts in by listing its
 
 | Venue | Rows | Notes |
 |---|---|---|
-| `ng` | 28 | no rows left without a closing date; 4 dated from structured data |
+| `ng` | 27 | **matches her count of the live pages: 2 on now + 5 coming soon + 20 past.** No rows without a closing date |
 | `rijks` | 37 | **10 current/upcoming + 14 past, both matching her count of the live page** |
 | `acq` | 14 | **matches her count of the live page: 1 upcoming + 13 past.** 119 listed, 11 archive-nav links ignored, 94 cut by the lookback |
 | `borghese` | — | **unreachable** on 8 Sep, see 6a |
@@ -444,10 +471,9 @@ match costs one misleading sentence, never a row. A venue opts in by listing its
 
 ### Known bugs — open
 
-1. **Coverage against the venues' real totals is verified for Rijksmuseum,
-   Borghese and Acquavella.** Each was checked against her own count of the live
-   pages. The National Gallery's 28 rows are plausible but nobody has counted
-   that site by hand.
+1. **Coverage against the venues' real totals is verified for all four working
+   venues** — Rijksmuseum, Borghese, Acquavella and the National Gallery — each
+   against her own count of the live pages.
 2. **Nothing filters out non-exhibitions.** The only test is the URL shape — if a
    venue files talks, tours, opening events or permanent displays under its
    exhibitions path, they are collected as exhibitions. Rijksmuseum happens not
@@ -478,6 +504,11 @@ match costs one misleading sentence, never a row. A venue opts in by listing its
 - The plausible-year guard missing from one branch, so "confiscated on 4 May
   1607" became a start date of 1607.
 - Six near-identical venue scraper functions (see the recipes, above).
+- Keeping the FIRST link to an address and ignoring the rest, which cost Renoir
+  and Love its title and its dates — the National Gallery's first link to a
+  card is the image.
+- Only the en and em dash being normalised, so a figure dash in a National
+  Gallery date turned "15 October 2026" into 1 October 2026.
 - Acquavella's title rule stripping `NEW YORK` / `PALM BEACH`, which made its
   two runs of one show read as the same exhibition. It now strips only the date
   tail — a month or season followed by a digit, so "April in Paris" survives —
@@ -681,6 +712,9 @@ Tate is deliberately two venues; merging them was rejected. Order reflects the a
   outage in 6a).
 - **Rijksmuseum is done**, verified against her count: 10 current/upcoming, 14 past.
 - **Acquavella is done** (8 Sep), verified against her count: 1 upcoming, 13 past.
+- **The National Gallery is done** (8 Sep), verified against her count:
+  2 on now, 5 coming soon, 20 past. Its "Events" live on a separate page, so
+  everything under `/exhibitions` is a temporary exhibition.
 - **The two structural changes are built**: structured-data-first as universal
   logic, and the engine/recipe split.
 - Date parsing stays **shared across all venues** — every venue contains several
