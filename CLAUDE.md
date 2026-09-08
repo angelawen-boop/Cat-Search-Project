@@ -442,6 +442,24 @@ a real title merely containing the word "Explore" survives.
 on a **different** listing page. Three links inside one card are a
 page-building habit, not information.
 
+### A page that loads is not a page that exists
+
+`safeGoto` now refuses any HTTP status of 400 or more, not just the block
+codes. A 404 still **serves a readable page**, and the Rijksmuseum's own past
+listing links to three exhibitions whose pages are dead — so "This page does
+not exist. The page you were looking for was not found." was stored as three
+exhibitions' curatorial summaries, and nothing in the run said so.
+
+Those rows are kept, as always, and carry "The venue's own link to this
+exhibition is broken (HTTP 404)." The scraper does **not** guess at a working
+address: `ed-van-der-elsken` happens to exist with the `/past/` segment
+removed, but inventing URLs is a judgement that could land on a different show.
+
+**Verified 8 Sep 2026 across all 78 rows** of ng, rijks and acq: 75 URLs return
+200, the three above are the venue's dead links, no summary is empty, none is
+under 94 characters, none contains consent or navigation boilerplate, and no
+two rows share an opening line.
+
 ### Travelling exhibitions — a note, never a merge
 
 A venue with more than one address runs the same show in both. Acquavella lists
@@ -463,7 +481,7 @@ match costs one misleading sentence, never a row. A venue opts in by listing its
 | Venue | Rows | Notes |
 |---|---|---|
 | `ng` | 27 | **matches her count of the live pages: 2 on now + 5 coming soon + 20 past.** No rows without a closing date |
-| `rijks` | 37 | **10 current/upcoming + 14 past, both matching her count of the live page** |
+| `rijks` | 37 | **10 current/upcoming + 14 past, both matching her count of the live page.** 3 rows are the venue's own dead links |
 | `acq` | 14 | **matches her count of the live page: 1 upcoming + 13 past.** 119 listed, 11 archive-nav links ignored, 94 cut by the lookback |
 | `borghese` | — | **unreachable** on 8 Sep, see 6a |
 | `met` | 0 | HTTP 429, blocked |
@@ -509,6 +527,8 @@ match costs one misleading sentence, never a row. A venue opts in by listing its
   card is the image.
 - Only the en and em dash being normalised, so a figure dash in a National
   Gallery date turned "15 October 2026" into 1 October 2026.
+- Treating a 404 as a page that loaded, which stored "This page does not exist"
+  as three Rijksmuseum exhibitions' summaries.
 - Acquavella's title rule stripping `NEW YORK` / `PALM BEACH`, which made its
   two runs of one show read as the same exhibition. It now strips only the date
   tail — a month or season followed by a digit, so "April in Paris" survives —

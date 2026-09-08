@@ -604,6 +604,16 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
       return { ok: false, reason: `BLOCKED_HTTP_${status}` };
     }
 
+    // Any other error status is not this exhibition's page, so nothing on it
+    // may be read. A 404 still SERVES a page, and its body is perfectly
+    // readable text — the Rijksmuseum's own past listing links to three dead
+    // pages, and their "This page does not exist." was stored as three
+    // exhibitions' curatorial summaries.
+    if (status && status >= 400) {
+      log(`  HTTP ${status}: ${url}`);
+      return { ok: false, reason: `HTTP_${status}` };
+    }
+
     // Client-rendered pages arrive with an empty body and fill in a moment
     // later. Give them that moment, but never treat it as fatal: a genuinely
     // short page is still worth reading.
@@ -1307,7 +1317,11 @@ async function fetchIndividualPages(page, rows, venueCode) {
     try {
       const r = await safeGoto(page, row.url, venueCode, 'individual');
       if (!r.ok) {
-        row.notes = addNote(row.notes, `This exhibition's own page did not load (${r.reason}).`);
+        // Say which kind of failure: a dead link is the venue's own broken
+        // page, not a network problem, and she can see that from the note.
+        row.notes = addNote(row.notes, /^HTTP_4/.test(r.reason)
+          ? `The venue's own link to this exhibition is broken (${r.reason.replace('HTTP_', 'HTTP ')}).`
+          : `This exhibition's own page did not load (${r.reason}).`);
         failed++;
         continue;
       }
