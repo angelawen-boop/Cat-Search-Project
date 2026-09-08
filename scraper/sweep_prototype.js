@@ -93,13 +93,31 @@ function csvRow(r) {
 // Returns { start: 'YYYY-MM-DD'|'', end: 'YYYY-MM-DD'|'', raw: original }
 const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
   july:7,august:8,september:9,october:10,november:11,december:12,
-  jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12 };
+  jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12 };
+
+/**
+ * One month pattern, shared by every date parser.
+ *
+ * It previously existed as two separate copies that listed only the FULL month
+ * names, so Rijksmuseum's past listing — "12 SEP 2025 TO 25 JAN 2026" — parsed
+ * to nothing at all. Long names come first in the alternation so "September"
+ * is not matched as "Sep" followed by stray letters, and a trailing full stop
+ * is allowed for venues that write "Sept.".
+ */
+const MONTH_PATTERN =
+  '(?:January|February|March|April|May|June|July|August|September|October|November|December' +
+  '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\.?';
+
+// Month name to number, tolerating the trailing full stop the pattern allows.
+function monthNum(name) {
+  return MONTHS[String(name || '').toLowerCase().replace(/\.$/, '')];
+}
 
 function parseMonthDay(str, fallbackYear) {
   // e.g. "March 2" or "July 26, 2026"
   const m = str.trim().match(/^([A-Za-z]+)\s+(\d{1,2})(?:,\s*(\d{4}))?$/);
   if (!m) return null;
-  const mo = MONTHS[m[1].toLowerCase()];
+  const mo = monthNum(m[1]);
   if (!mo) return null;
   const day = parseInt(m[2], 10);
   const yr = m[3] ? parseInt(m[3], 10) : fallbackYear;
@@ -156,12 +174,14 @@ function parseDateRange(raw) {
 // (page text) must agree on these — they had drifted, so the listing parser
 // read "From June 10 to September 14, 2025" as a closing date only, silently
 // losing the opening date.
-const RANGE_SEP = '\\s*(?:-|to|till|until|through)\\s*';
+// "t/m" is Dutch — "tot en met", up to and including. The Rijksmuseum writes
+// its older runs that way: "11 Oct. 2019 t/m 19 Jan. 2020".
+const RANGE_SEP = '\\s*(?:-|t/m|to|till|until|through)\\s*';
 
 function findDateRange(raw) {
   if (!raw) return { start: '', end: '', raw: '' };
   const s = String(raw).replace(/[\u2013\u2014]/g, '-').replace(/\s+/g, ' ').trim();
-  const M = '(?:January|February|March|April|May|June|July|August|September|October|November|December)';
+  const M = MONTH_PATTERN;
 
   // Day-first European form, as used by Borghese and the National Gallery:
   // "1 November 2025 to 11 January 2026", "19 June till 13 September 2026".
@@ -169,7 +189,7 @@ function findDateRange(raw) {
   if (dm) {
     const endYr = parseInt(dm[6], 10);
     const startYr = dm[3] ? parseInt(dm[3], 10) : endYr;
-    const sMo = MONTHS[dm[2].toLowerCase()], eMo = MONTHS[dm[5].toLowerCase()];
+    const sMo = monthNum(dm[2]), eMo = monthNum(dm[5]);
     if (sMo && eMo) return {
       start: `${startYr}-${String(sMo).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`,
       end:   `${endYr}-${String(eMo).padStart(2,'0')}-${String(dm[4]).padStart(2,'0')}`,
@@ -199,13 +219,13 @@ function findDateRange(raw) {
   // 2023" is still read as a range rather than just its opening date.
   m = s.match(new RegExp(`\\b(till|until|through|to)\\s+(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
-    const mo = MONTHS[m[3].toLowerCase()];
+    const mo = monthNum(m[3]);
     if (mo) return { start: '', end: `${m[4]}-${String(mo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`, raw: s };
   }
 
   m = s.match(new RegExp(`\\b(from|opens?|opening)\\s+(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
-    const mo = MONTHS[m[3].toLowerCase()];
+    const mo = monthNum(m[3]);
     if (mo) return { start: `${m[4]}-${String(mo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`, end: '', raw: s };
   }
 
@@ -213,7 +233,7 @@ function findDateRange(raw) {
   // Borghese's archive prints "March / 2026" and nothing else.
   m = s.match(new RegExp(`(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
   if (m && plausibleYear(m[2])) {
-    const mo = MONTHS[m[1].toLowerCase()];
+    const mo = monthNum(m[1]);
     if (mo) return { start: `${m[2]}-${String(mo).padStart(2,'0')}-01`, end: '', raw: s };
   }
 
@@ -271,8 +291,8 @@ function sane(start, end, raw) {
 function findDateRangeInProse(text, hintYear) {
   if (!text) return { start: '', end: '', raw: '' };
   const s = String(text).replace(/[–—]/g, '-').replace(/\s+/g, ' ');
-  const M = '(?:January|February|March|April|May|June|July|August|September|October|November|December)';
-  const SEP = '(?:\\s*(?:-|to|until|through|till)\\s*(?:running\\s+)?)';
+  const M = MONTH_PATTERN;
+  const SEP = '(?:\\s*(?:-|t/m|to|until|through|till)\\s*(?:running\\s+)?)';
 
   // Day-first, the form Borghese actually uses in its prose:
   //   "From 20 January to 22 February 2026, the Galleria Borghese..."
@@ -284,7 +304,7 @@ function findDateRangeInProse(text, hintYear) {
   if (dm && plausibleYear(dm[6])) {
     const endYr = parseInt(dm[6], 10);
     const startYr = dm[3] && plausibleYear(dm[3]) ? parseInt(dm[3], 10) : endYr;
-    const sMo = MONTHS[dm[2].toLowerCase()], eMo = MONTHS[dm[5].toLowerCase()];
+    const sMo = monthNum(dm[2]), eMo = monthNum(dm[5]);
     if (sMo && eMo) return sane(
       `${startYr}-${String(sMo).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`,
       `${endYr}-${String(eMo).padStart(2,'0')}-${String(dm[4]).padStart(2,'0')}`,
@@ -297,7 +317,7 @@ function findDateRangeInProse(text, hintYear) {
   if (m && plausibleYear(m[6])) {
     const endYr = parseInt(m[6], 10);
     const startYr = m[3] && plausibleYear(m[3]) ? parseInt(m[3], 10) : endYr;
-    const sMo = MONTHS[m[1].toLowerCase()], eMo = MONTHS[m[4].toLowerCase()];
+    const sMo = monthNum(m[1]), eMo = monthNum(m[4]);
     if (sMo && eMo) return sane(
       `${startYr}-${String(sMo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`,
       `${endYr}-${String(eMo).padStart(2,'0')}-${String(m[5]).padStart(2,'0')}`,
@@ -310,7 +330,7 @@ function findDateRangeInProse(text, hintYear) {
   if (hintYear && plausibleYear(hintYear)) {
     dm = s.match(new RegExp(`(\\d{1,2})\\s+(${M})[^.]{0,40}?${SEP}(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
     if (dm) {
-      const sMo = MONTHS[dm[2].toLowerCase()], eMo = MONTHS[dm[4].toLowerCase()];
+      const sMo = monthNum(dm[2]), eMo = monthNum(dm[4]);
       if (sMo && eMo) {
         // A run that crosses new year ends in the following year.
         const endYr = eMo < sMo ? Number(hintYear) + 1 : Number(hintYear);
@@ -324,7 +344,7 @@ function findDateRangeInProse(text, hintYear) {
     // A lone closing date with no year: "Till 29 November".
     let one = s.match(new RegExp(`\\b(till|until|through)\\s+(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
     if (one) {
-      const mo = MONTHS[one[3].toLowerCase()];
+      const mo = monthNum(one[3]);
       if (mo) return { start: '',
         end: `${hintYear}-${String(mo).padStart(2,'0')}-${String(one[2]).padStart(2,'0')}`,
         raw: one[0].slice(0, 120) + ' (year taken from the listing page)' };
@@ -333,7 +353,7 @@ function findDateRangeInProse(text, hintYear) {
     // A lone opening date with no year: "From 5 June".
     one = s.match(new RegExp(`\\b(from|opens?|opening)\\s+(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
     if (one) {
-      const mo = MONTHS[one[3].toLowerCase()];
+      const mo = monthNum(one[3]);
       if (mo) return {
         start: `${hintYear}-${String(mo).padStart(2,'0')}-${String(one[2]).padStart(2,'0')}`,
         end: '', raw: one[0].slice(0, 120) + ' (year taken from the listing page)' };
@@ -345,7 +365,7 @@ function findDateRangeInProse(text, hintYear) {
   if (hintYear && plausibleYear(hintYear)) {
     m = s.match(new RegExp(`(${M})\\s+(\\d{1,2})[^.]{0,40}?${SEP}(${M})\\s+(\\d{1,2})(?!\\s*,?\\s*\\d{4})`, 'i'));
     if (m) {
-      const sMo = MONTHS[m[1].toLowerCase()], eMo = MONTHS[m[3].toLowerCase()];
+      const sMo = monthNum(m[1]), eMo = monthNum(m[3]);
       if (sMo && eMo) {
         // A run that crosses new year ends in the following year.
         const endYr = eMo < sMo ? Number(hintYear) + 1 : Number(hintYear);
@@ -357,6 +377,13 @@ function findDateRangeInProse(text, hintYear) {
       }
     }
   }
+
+  // Last resort: hand it to the listing-page parser. The two have repeatedly
+  // drifted apart — one learned a format the other did not, and a venue whose
+  // dates lived on the detail page silently lost them. Falling through means
+  // any pattern either parser knows is available to both.
+  const viaListing = findDateRange(s);
+  if (viaListing.start || viaListing.end) return viaListing;
 
   return { start: '', end: '', raw: '' };
 }
@@ -388,7 +415,7 @@ function afterLookback(endDateStr) {
  */
 function applyLookback(rows, venueCode, stage) {
   const kept = [];
-  let dropped = 0, undated = 0;
+  let dropped = 0, undated = 0, noStart = 0;
   for (const row of rows) {
     if (row.title && row.title.startsWith('[')) { kept.push(row); continue; }  // diagnostic placeholder
     if (!row.end_date) {
@@ -400,12 +427,18 @@ function applyLookback(rows, venueCode, stage) {
       if (stage === 'final') {
         row.notes = addNote(row.notes, 'No closing date found anywhere on the venue\'s pages.');
       }
+    } else if (!row.start_date && stage === 'final') {
+      // A closing date but no opening one. Common: venues print only
+      // "until 20 December" while a show is running, and fill the opening date
+      // in later, once it moves to their past listing.
+      noStart++;
+      row.notes = addNote(row.notes, 'No opening date published while this exhibition is running.');
     }
     if (afterLookback(row.end_date)) kept.push(row);
     else dropped++;
   }
-  if (dropped || undated) {
-    log(`  lookback (${stage}): kept ${kept.length}, dropped ${dropped} closed before ${LOOKBACK.toISOString().slice(0,10)}, ${undated} undated`);
+  if (dropped || undated || noStart) {
+    log(`  lookback (${stage}): kept ${kept.length}, dropped ${dropped} closed before ${LOOKBACK.toISOString().slice(0,10)}, ${undated} with no closing date, ${noStart} with no opening date`);
   }
   return kept;
 }
