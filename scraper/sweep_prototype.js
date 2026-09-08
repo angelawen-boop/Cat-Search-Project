@@ -304,6 +304,42 @@ function findDateRangeInProse(text, hintYear) {
       m[0].slice(0, 120));
   }
 
+  // Day-first with NO year anywhere: "5 June to 25 October".
+  // Rijksmuseum writes its current shows this way. Only usable when the
+  // listing page already told us which year this exhibition belongs to.
+  if (hintYear && plausibleYear(hintYear)) {
+    dm = s.match(new RegExp(`(\\d{1,2})\\s+(${M})[^.]{0,40}?${SEP}(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
+    if (dm) {
+      const sMo = MONTHS[dm[2].toLowerCase()], eMo = MONTHS[dm[4].toLowerCase()];
+      if (sMo && eMo) {
+        // A run that crosses new year ends in the following year.
+        const endYr = eMo < sMo ? Number(hintYear) + 1 : Number(hintYear);
+        return sane(
+          `${hintYear}-${String(sMo).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`,
+          `${endYr}-${String(eMo).padStart(2,'0')}-${String(dm[3]).padStart(2,'0')}`,
+          dm[0].slice(0, 120) + ' (year taken from the listing page)');
+      }
+    }
+
+    // A lone closing date with no year: "Till 29 November".
+    let one = s.match(new RegExp(`\\b(till|until|through)\\s+(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
+    if (one) {
+      const mo = MONTHS[one[3].toLowerCase()];
+      if (mo) return { start: '',
+        end: `${hintYear}-${String(mo).padStart(2,'0')}-${String(one[2]).padStart(2,'0')}`,
+        raw: one[0].slice(0, 120) + ' (year taken from the listing page)' };
+    }
+
+    // A lone opening date with no year: "From 5 June".
+    one = s.match(new RegExp(`\\b(from|opens?|opening)\\s+(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
+    if (one) {
+      const mo = MONTHS[one[3].toLowerCase()];
+      if (mo) return {
+        start: `${hintYear}-${String(mo).padStart(2,'0')}-${String(one[2]).padStart(2,'0')}`,
+        end: '', raw: one[0].slice(0, 120) + ' (year taken from the listing page)' };
+    }
+  }
+
   // Same shape but no year anywhere: "From March 26 to June 23".
   // Only usable when the listing page told us which year this show belongs to.
   if (hintYear && plausibleYear(hintYear)) {
@@ -1134,14 +1170,22 @@ async function fetchIndividualPages(page, rows, venueCode) {
       // Venues that print no date field at all (Borghese) write the run into
       // the opening sentence. Scan the page's text for it, using the year the
       // listing page gave us when the sentence omits one.
-      if (!row.end_date) {
+      if (!row.start_date || !row.end_date) {
         const bodyText = await page.innerText('body').catch(() => '');
-        const hintYear = row.start_date ? row.start_date.slice(0, 4) : '';
+        // Borrow the year from whichever date we already hold. Venues often
+        // print a bare "5 June to 25 October" on the exhibition's own page
+        // while the listing card carried the year.
+        const hintYear = (row.start_date || row.end_date || '').slice(0, 4);
         const p = findDateRangeInProse(bodyText, hintYear);
-        if (p.end) {
-          row.end_date = p.end;
-          if (!row.start_date && p.start) row.start_date = p.start;
-          row.notes = addNote(row.notes, `Dates read from a sentence, not a date field: "${p.raw}".`);
+
+        // Fill only what is missing. If the page disagrees with the listing,
+        // the listing wins — nothing already collected is silently rewritten.
+        const filled = [];
+        if (!row.start_date && p.start) { row.start_date = p.start; filled.push('opening'); }
+        if (!row.end_date   && p.end)   { row.end_date   = p.end;   filled.push('closing'); }
+        if (filled.length) {
+          row.notes = addNote(row.notes,
+            `${filled.join(' and ')} date read from a sentence, not a date field: "${p.raw}".`);
         }
       }
 
