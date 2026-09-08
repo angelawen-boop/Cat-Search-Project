@@ -11,21 +11,45 @@ This repo now holds **two** things, and will hold both going forward:
 
 Neither exists for its own sake. The scraper feeds the app. Don't build either in isolation.
 
-## Which branch to work on — read this first
+## Branching policy — read this first
 
-**`main` is the trunk.** It holds this file and the current scraper. Work there, or
-branch from there.
+**`main` is the trunk and the source of truth for the whole project — app and scraper
+both.** Work there by default. This document lives there and nowhere else; there is one
+copy of it, on `main`.
 
-`claude/personal-tracking-ledgers-z49s2h` is **dead**. It is an old session branch that
-was, for a while, the repository's *default* branch on GitHub — which meant new sessions
-opened it, found no CLAUDE.md and an ancient copy of the scraper, and reported the
-project as barely started. If a session tells you the scraper has no date handling and
-no project guide, it is on that branch. Ignore what it says and check out `main`.
+The scraper and the app are **coupled**: they agree on the pro forma CSV columns
+(Section 3). If the scraper changes what it writes, the app has to agree in the same
+breath. On one branch that is a single consistent commit. Split across branches, they
+drift, and it surfaces at import time. That coupling — not tidiness — is why they live
+together.
 
-`claude/headless-chromium-claude-code-wl94l0` is the branch all of this was developed on
-and is identical to `main`.
+**Branches are for separating in-progress work from known-good work, not for separating
+components.** Use one only for a side quest or experiment that might be thrown away and
+never merged. Merge or abandon it quickly; a branch left to age becomes a merge conflict.
+A previous session's stealth-plugin attempt is the model: exploratory, didn't work,
+correctly stayed on a branch, correctly abandoned.
 
----
+Everything routine goes straight to `main`.
+
+### Branches that exist and what they are
+
+- **`main`** — the trunk. Everything.
+- **`claude/personal-tracking-ledgers-z49s2h`** — **dead**. An old session branch that
+  was for a while the repository's *default* branch on GitHub, so new sessions opened it,
+  found no CLAUDE.md and a pre-date-handling scraper, and reported the project as barely
+  started. If a session tells you the scraper has no date handling and no project guide,
+  it is on that branch: ignore it and check out `main`.
+- **`claude/headless-chromium-claude-code-wl94l0`** — where the 7 Sep scraper work was
+  developed. Merged into `main`; nothing unique on it.
+- **`claude/playwright-scraper-prototype-z68iko`** — a parallel session's experiment with
+  routing Chromium through the proxy and a stealth plugin. Its own commit message records
+  the result: "both insufficient". Forked before the current scraper work, so **do not
+  merge it** — its `sweep_prototype.js` would undo everything. It holds one standalone
+  file, `scraper/tls_fingerprint_test.js`, that could be cherry-picked if ever wanted.
+
+**Note on session branches:** Claude Code web sessions are each handed their own branch
+name automatically at startup. That is the tool's habit, not a decision. Such a branch is
+a working copy to merge back and abandon, never a candidate for the truth.
 
 ## 1. House rules for this repo
 
