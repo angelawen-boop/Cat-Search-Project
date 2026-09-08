@@ -152,6 +152,12 @@ function parseDateRange(raw) {
  * where the date is buried after the title and the city. This searches
  * instead of matching, so those dates are recovered.
  */
+// Range separators. findDateRange (listing pages) and findDateRangeInProse
+// (page text) must agree on these — they had drifted, so the listing parser
+// read "From June 10 to September 14, 2025" as a closing date only, silently
+// losing the opening date.
+const RANGE_SEP = '\\s*(?:-|to|till|until|through)\\s*';
+
 function findDateRange(raw) {
   if (!raw) return { start: '', end: '', raw: '' };
   const s = String(raw).replace(/[\u2013\u2014]/g, '-').replace(/\s+/g, ' ').trim();
@@ -159,7 +165,7 @@ function findDateRange(raw) {
 
   // Day-first European form, as used by Borghese and the National Gallery:
   // "1 November 2025 to 11 January 2026", "19 June till 13 September 2026".
-  let dm = s.match(new RegExp(`(\\d{1,2})\\s+(${M})\\s*(\\d{4})?\\s*(?:to|till|until|-)\\s*(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  let dm = s.match(new RegExp(`(\\d{1,2})\\s+(${M})\\s*(\\d{4})?${RANGE_SEP}(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (dm) {
     const endYr = parseInt(dm[6], 10);
     const startYr = dm[3] ? parseInt(dm[3], 10) : endYr;
@@ -172,11 +178,11 @@ function findDateRange(raw) {
   }
 
   // "Month D, YYYY - Month D, YYYY" — year on both sides
-  let m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})\\s*-\\s*(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
+  let m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})${RANGE_SEP}(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
   if (m) return { start: parseMonthDay(titleCase(m[1]), null) || '', end: parseMonthDay(titleCase(m[2]), null) || '', raw: s };
 
   // "Month D - Month D, YYYY" — year only on the end side
-  m = s.match(new RegExp(`(${M}\\s+\\d{1,2})\\s*-\\s*(${M}\\s+\\d{1,2},\\s*(\\d{4}))`, 'i'));
+  m = s.match(new RegExp(`(${M}\\s+\\d{1,2})${RANGE_SEP}(${M}\\s+\\d{1,2},\\s*(\\d{4}))`, 'i'));
   if (m) {
     const yr = parseInt(m[3], 10);
     return { start: parseMonthDay(titleCase(m[1]), yr) || '', end: parseMonthDay(titleCase(m[2]), null) || '', raw: s };
@@ -186,10 +192,27 @@ function findDateRange(raw) {
   m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
   if (m) return { start: '', end: parseMonthDay(titleCase(m[1]), null) || '', raw: s };
 
+  // A single day-first date carrying a preposition, as Rijksmuseum's cards do:
+  //   "WORN till 21 March 2027"          -> a closing date
+  //   "WILLEM DE KOONING from 9 October 2026" -> an opening date
+  // Placed after the range patterns so "from 25 October 2022 to 29 January
+  // 2023" is still read as a range rather than just its opening date.
+  m = s.match(new RegExp(`\\b(till|until|through|to)\\s+(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  if (m && plausibleYear(m[4])) {
+    const mo = MONTHS[m[3].toLowerCase()];
+    if (mo) return { start: '', end: `${m[4]}-${String(mo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`, raw: s };
+  }
+
+  m = s.match(new RegExp(`\\b(from|opens?|opening)\\s+(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  if (m && plausibleYear(m[4])) {
+    const mo = MONTHS[m[3].toLowerCase()];
+    if (mo) return { start: `${m[4]}-${String(mo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`, end: '', raw: s };
+  }
+
   // "Month YYYY" or "Month / YYYY" with no day — a start month, end unknown.
   // Borghese's archive prints "March / 2026" and nothing else.
   m = s.match(new RegExp(`(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
-  if (m) {
+  if (m && plausibleYear(m[2])) {
     const mo = MONTHS[m[1].toLowerCase()];
     if (mo) return { start: `${m[2]}-${String(mo).padStart(2,'0')}-01`, end: '', raw: s };
   }
@@ -334,7 +357,13 @@ function applyLookback(rows, venueCode, stage) {
     if (row.title && row.title.startsWith('[')) { kept.push(row); continue; }  // diagnostic placeholder
     if (!row.end_date) {
       undated++;
-      row.notes = addNote(row.notes, 'No closing date found anywhere on the venue\'s pages.');
+      // Only on the final pass. On the listing pass the detail pages have not
+      // been read yet, and stamping it early left rows carrying both "No
+      // closing date found anywhere" and "Dates read from a sentence" — which
+      // contradict each other on the approval card.
+      if (stage === 'final') {
+        row.notes = addNote(row.notes, 'No closing date found anywhere on the venue\'s pages.');
+      }
     }
     if (afterLookback(row.end_date)) kept.push(row);
     else dropped++;
@@ -434,14 +463,21 @@ async function datesNearLink(link) {
   let d = findDateRange(linkText);
   if (d.start || d.end) return d;
 
-  try {
-    const parent = await link.$('xpath=..');
-    if (parent) {
-      const parentText = await getText(parent);
-      d = findDateRange(parentText);
+  // Walk up a strictly limited distance. The dates often live in the same
+  // card container as the title (Rijksmuseum: "WORN till 21 March 2027"), but
+  // going further picks up the NEXT card's dates and mislabels the row.
+  let node = link;
+  for (let i = 0; i < 2; i++) {
+    try {
+      const parent = await node.$('xpath=..');
+      if (!parent) break;
+      node = parent;
+      const text = squash(await getText(node));
+      if (!text || text.length > CARD_MAX_CHARS) continue;
+      d = findDateRange(text);
       if (d.start || d.end) return d;
-    }
-  } catch {}
+    } catch { break; }
+  }
   return { start: '', end: '', raw: linkText };
 }
 
@@ -611,7 +647,15 @@ async function getCuratorialText(page) {
  */
 const TITLE_RULES = {
   ng:       { heading: true },
-  rijks:    { heading: true },
+  // Rijksmuseum uses two different card layouts on different pages.
+  // Its PAST page puts a heading inside the link ("METAMORPHOSES", "FAKE!").
+  // Its now-on-view page wraps only the IMAGE in the link, with the title and
+  // date sitting two levels up: "LAST CHANCE ED VAN DER ELSKEN. UP CLOSE till
+  // 13 September 2026". So heading first, card as the fallback.
+  rijks:    { heading: true,
+              card: { depth: 2,
+                      stripLeading:  /^(LAST CHANCE|OPENING SOON|SOON|NEW)\b\s*/i,
+                      stripTrailing: /\s+(till|until|from)\s+.*$/i } },
   met:      { heading: true },
   morgan:   { heading: true },
   // "March / 2026 WANGECHI MUTU - BLACK SOIL POEMS DISCOVER THE EXHIBITION"
@@ -648,8 +692,50 @@ async function extractTitle(link, venueCode) {
   if (rule.stripTrailing) t = t.replace(rule.stripTrailing, '');
   if (!rule.heading) return squash(t);
 
-  // Fallback path only: no heading was found, so scrub the listing furniture.
-  return squash(t.replace(TITLE_NOISE, ' '));
+  // Strip the venue's own badges from the link text before judging whether it
+  // is a usable title. Rijksmuseum puts "LAST CHANCE" INSIDE the image link,
+  // so without this the badge is long enough to pass as a title and the real
+  // name — which lives in the card above — is never reached.
+  if (rule.card && rule.card.stripLeading) t = squash(t.replace(rule.card.stripLeading, ''));
+
+  if (t.length >= 3) return squash(t.replace(TITLE_NOISE, ' '));
+
+  // Nothing readable inside the link. Some venues wrap only the IMAGE in the
+  // link and leave the title as a sibling, so the name lives in the card
+  // container above it.
+  //
+  // This is the exact opposite of the Borghese lesson, and the guards are why
+  // it is safe: on Borghese's archive, reading upwards returned the FIRST
+  // card's heading for every card. So walk a strictly limited distance, and
+  // reject anything too long to be one card — a container that has bled into
+  // its neighbours is far longer than a single title plus a date.
+  if (rule.card) {
+    const t2 = await readCardText(link, rule.card);
+    if (t2) return t2;
+  }
+  return '';
+}
+
+const CARD_MAX_CHARS = 220;
+
+async function readCardText(link, card) {
+  let node = link;
+  for (let i = 0; i < (card.depth || 2); i++) {
+    let parent;
+    try { parent = await node.$('xpath=..'); } catch { return ''; }
+    if (!parent) return '';
+    node = parent;
+
+    const raw = squash(await getText(node).catch(() => ''));
+    if (!raw || raw.length > CARD_MAX_CHARS) continue;
+
+    let t = raw;
+    if (card.stripLeading)  t = t.replace(card.stripLeading, '');
+    if (card.stripTrailing) t = t.replace(card.stripTrailing, '');
+    t = squash(t.replace(TITLE_NOISE, ' '));
+    if (t.length >= 3) return t;
+  }
+  return '';
 }
 
 /**
