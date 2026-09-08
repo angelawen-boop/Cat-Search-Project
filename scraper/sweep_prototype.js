@@ -696,6 +696,65 @@ async function getCuratorialText(page) {
 // ── Venue scrapers ────────────────────────────────────────────────────────────
 
 // THE MET ─────────────────────────────────────────────────────────────────────
+// ── Structured data ──────────────────────────────────────────────────────────
+/**
+ * Prefer what the venue publishes as data over what we can guess from its HTML.
+ *
+ * Some sites embed a schema.org Event block for Google's benefit — title,
+ * opening date, closing date and description as actual fields. Where that
+ * exists it removes exactly the part that keeps breaking: every bug in this
+ * scraper so far has been title-or-date extraction. Badges read as titles,
+ * dates locked inside poster images, dates buried in prose.
+ *
+ * This is deliberately UNIVERSAL rather than switched on per venue:
+ *   - a venue that adds structured data later is picked up with no code change
+ *   - a venue that removes it falls back to reading the page, silently
+ *   - it costs one failed lookup in HTML that is already loaded
+ *
+ * Measured 8 Sep 2026: of the venues wired so far only the National Gallery
+ * publishes it, and only on exhibition detail pages, not listings. So this is
+ * a bonus source, never a replacement — the listing still has to be walked to
+ * discover which exhibitions exist.
+ *
+ * Treat it as helpful, not authoritative. It is published for search engines
+ * and is sometimes left unmaintained, so rows that use it say so in the notes.
+ */
+async function readStructuredData(page) {
+  try {
+    return await page.evaluate(() => {
+      const out = [];
+      const blocks = Array.from(document.querySelectorAll('script'))
+        .filter(el => /ld\+json/i.test(el.type || ''));
+      const walk = (o) => {
+        if (Array.isArray(o)) return o.forEach(walk);
+        if (!o || typeof o !== 'object') return;
+        if (o.name && (o.startDate || o.endDate)) {
+          out.push({
+            name: String(o.name),
+            start: o.startDate ? String(o.startDate) : '',
+            end: o.endDate ? String(o.endDate) : '',
+            description: o.description ? String(o.description) : '',
+          });
+        }
+        Object.values(o).forEach(walk);
+      };
+      for (const b of blocks) {
+        try { walk(JSON.parse(b.textContent)); } catch {}
+      }
+      return out;
+    });
+  } catch {
+    return [];
+  }
+}
+
+// schema.org dates are ISO ("2026-05-02T00:00:00"); keep just the day part,
+// and only if it is a plausible exhibition year.
+function isoDay(v) {
+  const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m && plausibleYear(m[1]) ? `${m[1]}-${m[2]}-${m[3]}` : '';
+}
+
 // ── Title extraction ──────────────────────────────────────────────────────────
 /**
  * Where each venue keeps the exhibition's name.
@@ -1037,8 +1096,17 @@ async function scrapeRijks(page) {
     try {
       await collectFromListing(page, {
         venueCode, ctx, base, rows, seenUrls, urlToRow,
-        selector: 'a[href*="exhibitions/"]',
-        isNav: href => /exhibitions\/?$/.test(href) || /now-on-view\/?$/.test(href) || /past\/?$/.test(href),
+        // A handful of Rijksmuseum entries are linked to the DUTCH site even
+        // from the English listing — "tentoonstellingen" rather than
+        // "exhibitions". Stop Motion is one, and looking only for the English
+        // path missed it entirely. Its own listing card still carries the
+        // dates, so it is worth collecting; the page it opens is in Dutch.
+        selector: 'a[href*="exhibitions/"], a[href*="tentoonstellingen/"]',
+        isNav: href => /exhibitions\/?$/.test(href)
+                    || /now-on-view\/?$/.test(href)
+                    || /past\/?$/.test(href)
+                    // the "Nederlands (Dutch)" language switcher
+                    || /tentoonstellingen\/(afgelopen|nu-te-zien)?\/?$/.test(href),
       });
     } catch (e) {
       log(`  ERROR extracting Rijks listing (${ctx}): ${e.message.slice(0,120)}`);
@@ -1203,6 +1271,25 @@ async function fetchIndividualPages(page, rows, venueCode) {
       // Venues that print no date field at all (Borghese) write the run into
       // the opening sentence. Scan the page's text for it, using the year the
       // listing page gave us when the sentence omits one.
+      // Structured data first, where the venue publishes any.
+      if (!row.start_date || !row.end_date) {
+        const events = await readStructuredData(page);
+        if (events.length) {
+          const ev = events[0];
+          const sd = isoDay(ev.start), ed = isoDay(ev.end);
+          const filled = [];
+          if (!row.start_date && sd) { row.start_date = sd; filled.push('opening'); }
+          if (!row.end_date && ed)   { row.end_date   = ed; filled.push('closing'); }
+          if (filled.length) {
+            row.notes = addNote(row.notes,
+              `${filled.join(' and ')} date taken from the site's structured data, not its visible page.`);
+          }
+          if (!row.summary && ev.description && ev.description.length > 60) {
+            row.summary = ev.description.slice(0, 2000);
+          }
+        }
+      }
+
       if (!row.start_date || !row.end_date) {
         const bodyText = await page.innerText('body').catch(() => '');
         // Borrow the year from whichever date we already hold. Venues often
