@@ -622,6 +622,79 @@ the correct answer — the venue never published a usable one.
 extractor has the same exposure to reading the wrong region of a page. Treat
 this as evidence that the concern is real rather than theoretical.
 
+### A date must be proved to belong to this exhibition — three sources, three guards
+
+The 9 Sep review raised this against **structured data** only (IR-09): the code
+took the first embedded event on a page without checking it was this
+exhibition. That recommendation was implemented exactly as narrowly as it was
+written, and the underlying principle — *prove a date belongs to this
+exhibition before using it* — was not carried across to the other two sources.
+Both then failed the same way within a day. **Read the principle, not the
+finding.**
+
+**1. Structured data → match the event's name.** `pickStructuredEvent()`. Fixed
+10 Sep, IR-09 as written.
+
+**2. Page text → refuse a sentence that contradicts what is already known.**
+NG exhibition pages carry a list of related courses and talks. Waldmüller's page
+advertises a course running "7 September - 28 September 2026", while its listing
+card says the exhibition runs "Until 20 September 2026". The old rule was "fill
+only what is empty", so it took the course's OPENING date and discarded its
+closing date — the very thing proving the sentence belonged to something else.
+
+No date-*shape* rule can catch this: `7 September - 28 September 2026` is a
+complete range with a year, identical in shape to a real run. The only evidence
+available is the contradiction, so **if either end of a prose range disagrees
+with a date already collected, the whole range is discarded** — not merely the
+conflicting half.
+
+**3. Listing cards → stop at the edge of the card.** `datesNearLink()` walked a
+fixed **two steps** outward looking for a date near the link, because the date
+usually sits just outside the clickable area. A step count is not a boundary.
+On the Rijksmuseum's past listing, one step up gave Farifteh's own
+"1 NOVEMBER TO 11 JANUARY" — correct but with no year, so unusable — and two
+steps up sat a box holding that card *and the next one*, "ISAMU NOGUCHI … 28 MAY
+TO 26 OCT 2025". Those had a year, so they won.
+
+The walk now stops as soon as a box contains **more than one exhibition
+address** (`coversMoreThanOneExhibition()`), whatever its size or step count.
+Verified live 10 Sep: Farifteh returns nothing from the listing where it
+previously returned Noguchi's dates, while Metamorphoses and Ellsworth Kelly are
+unchanged.
+
+**Why losing that date is the right outcome**, and worth understanding: the row
+is then incomplete, and an incomplete row is exactly what sends the scraper to
+the exhibition's own page — which states "1 November 2025 to 11 January 2026"
+plainly. The bad grab had cost the correct answer twice over, because a row that
+looks complete is never followed up, and "the listing wins" would have blocked
+the correction even if it had been.
+
+### The half of this that is NOT solved
+
+**There is no general way to tell an exhibition's dates from any other date on
+its page.** All three guards above need something to check against — a name, a
+contradiction, a card boundary. Where a venue's listing carries no dates at all
+and its page carries a related event, the scraper has nothing to compare and
+will take the wrong dates silently.
+
+**This is the same problem as known bug 2** (nothing filters out
+non-exhibitions), one scale up. Within a page: which of these dates is the
+exhibition's? Across a listing: which of these entries is an exhibition rather
+than a talk or a workshop? Both are "what is this content actually about", and
+both become guesswork the moment a venue stops labelling things.
+
+The answer follows the same ladder each time, and **Tate will exercise all
+three**:
+1. **The site says so** — Tate tags each item by type. Use the tag, exactly as
+   structured data is used for dates.
+2. **Structure implies it** — URL path shape, which block the text sits in, a
+   "Category: Course" label beside it. Mechanical, so this is code's job.
+3. **Neither** — the scraper genuinely cannot know, and the standing answer
+   applies: collect it, flag it, let her decide. Never guess, never drop.
+
+A venue that dumps everything on one page *and* tags nothing needs a different
+answer, and we will not know whether one exists until we meet it.
+
 **Every dash is normalised first** — U+2010 to U+2015, the minus sign and the
 Hebrew maqaf. The National Gallery uses a figure dash on some cards and an en
 dash on others; with only the en dash handled, "15 October 2026 ‒ 7 February
@@ -1244,6 +1317,7 @@ verification rather than by the reviewers.
 | IR-07 | `normalizeUrl` lowercased path and query, so two exhibitions differing only in capitalisation collapsed into one | Implement | **Fixed 10 Sep** |
 | IR-08 | Links were joined onto the venue base by hand: no `../`, no protocol-relative, no check the result was still on the venue's site | Implement | **Fixed 10 Sep** |
 | IR-09 | Structured data used `events[0]` without checking the event was this exhibition | Implement | **Fixed 10 Sep** |
+| IR-09a | **Widening of IR-09, not a new finding.** The same mis-attribution through the other two date sources: page text took a related course's range (NG Waldmüller), and the listing walk took the neighbouring card's dates (Rijksmuseum Farifteh). The reviewer wrote the recommendation against structured data only; it was implemented that narrowly, and the principle — prove a date belongs to this exhibition before using it — was not carried across | Implement | **Fixed 10 Sep** — contradiction check on prose, card-boundary guard on the listing walk. See Section 5. **The general case remains unsolved**; recorded there and linked to known bug 2 |
 | IR-10 | Output filenames collided within one minute, so a retry could overwrite an earlier run | Implement | **Fixed 10 Sep** — superseded by the run directory |
 | IR-11 | No automated tests of any kind | Implement | **Fixed 10 Sep** — `scraper/date.test.js`, `npm test` |
 | IR-12 | The CSV was written once at the very end, so a run that died lost everything | Implement | **Fixed 10 Sep** — run directory |

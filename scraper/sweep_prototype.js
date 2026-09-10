@@ -771,7 +771,7 @@ async function installNetworkBridge(context) {
  * Getting dates here rather than on the detail page is what lets the lookback
  * filter cut the list BEFORE we spend a page load on each entry.
  */
-async function datesNearLink(link) {
+async function datesNearLink(link, selector) {
   let linkText = '';
   try { linkText = await getText(link); } catch {}
   let d = findDateRange(linkText);
@@ -780,12 +780,28 @@ async function datesNearLink(link) {
   // Walk up a strictly limited distance. The dates often live in the same
   // card container as the title (Rijksmuseum: "WORN till 21 March 2027"), but
   // going further picks up the NEXT card's dates and mislabels the row.
+  //
+  // A step count is not a boundary. The Rijksmuseum's past listing put
+  // "DOCUMENT NEDERLAND … 1 NOVEMBER TO 11 JANUARY" one step up — correct, but
+  // with no year, so unusable — and two steps up sat a box holding that card
+  // AND the next one, "ISAMU NOGUCHI … 28 MAY TO 26 OCT 2025". Those dates had
+  // a year, so they won, and Farifteh was filed under Noguchi's run.
+  //
+  // Worse, the row then looked complete, so its own page was never opened —
+  // and that page states the real dates plainly. One bad grab cost the correct
+  // answer twice over.
+  //
+  // So stop the moment a box covers more than ONE exhibition: that is no longer
+  // this card's box, whatever its size or how few steps away it is. Losing a
+  // date here is safe — the row is simply incomplete, which is precisely what
+  // sends the scraper to the exhibition's own page.
   let node = link;
   for (let i = 0; i < 2; i++) {
     try {
       const parent = await node.$('xpath=..');
       if (!parent) break;
       node = parent;
+      if (selector && await coversMoreThanOneExhibition(node, selector)) break;
       const text = squash(await getText(node));
       if (!text || text.length > CARD_MAX_CHARS) continue;
       d = findDateRange(text);
@@ -793,6 +809,23 @@ async function datesNearLink(link) {
     } catch { break; }
   }
   return { start: '', end: '', raw: linkText };
+}
+
+// Distinct exhibition addresses inside this box. One means we are still within
+// a single card; more means the box has bled into its neighbours.
+async function coversMoreThanOneExhibition(node, selector) {
+  try {
+    return await node.evaluate((el, sel) => {
+      const hrefs = new Set();
+      for (const a of el.querySelectorAll(sel)) {
+        const h = a.getAttribute('href');
+        if (h) hrefs.add(h.replace(/[?#].*$/, '').replace(/\/+$/, ''));
+      }
+      return hrefs.size > 1;
+    }, selector);
+  } catch {
+    return false;   // cannot tell — fall back to the length guard
+  }
 }
 
 async function safeGoto(page, url, venue, context, attempt = 0) {
@@ -1179,7 +1212,7 @@ const squash = t => String(t || '').replace(/\s+/g, ' ').trim();
  * scraper does. All this adds is a better reading of that one page. Empty
  * fields only — anything already read wins, so nothing is silently rewritten.
  */
-async function fillBlanksFromRepeatLink(row, link, venueCode, ctx) {
+async function fillBlanksFromRepeatLink(row, link, venueCode, ctx, selector) {
   if (!row.title) {
     const t = await extractTitle(link, venueCode);
     if (t && t.length >= 3) {
@@ -1193,7 +1226,7 @@ async function fillBlanksFromRepeatLink(row, link, venueCode, ctx) {
   }
 
   if (!row.start_date || !row.end_date) {
-    const d = await datesNearLink(link);
+    const d = await datesNearLink(link, selector);
     if (!row.start_date && d.start) row.start_date = d.start;
     if (!row.end_date && d.end) row.end_date = d.end;
     if (!row.latest_year && d.latestYear) row.latest_year = d.latestYear;
@@ -1410,7 +1443,7 @@ async function collectFromListing(page, opts) {
     if (seenUrls.has(key)) {
       c.dupUrl++;
       const prev = urlToRow.get(key);
-      if (prev) await fillBlanksFromRepeatLink(prev, link, venueCode, ctx);
+      if (prev) await fillBlanksFromRepeatLink(prev, link, venueCode, ctx, selector);
       continue;
     }
 
@@ -1427,7 +1460,7 @@ async function collectFromListing(page, opts) {
       title = '';
     }
 
-    const dates = await datesNearLink(link);
+    const dates = await datesNearLink(link, selector);
     const row = {
       venue_code: venueCode, title,
       // Internal, never a CSV column: which listing page this row came from,
@@ -2049,5 +2082,5 @@ module.exports = {
   pickStructuredEvent, isoDay, runStamp, unusableDateText,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
-  installNetworkBridge, resolveChromium, safeGoto, classifyLoadError,
+  installNetworkBridge, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
 };
