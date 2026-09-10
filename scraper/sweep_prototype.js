@@ -665,7 +665,10 @@ function applyLookback(rows, venueCode, stage) {
       if (stage === 'final') {
         // Say which of the two it is. "Nothing published" and "published, but
         // with no year" are different facts, and she acts on them differently.
-        row.notes = addNote(row.notes, row._shownDateText
+        // "Shows only X" is a claim about the whole page, so it may only be made
+        // when NEITHER date was read. With an opening date already in the row,
+        // the honest statement is the narrower one about the closing date.
+        row.notes = addNote(row.notes, (row._shownDateText && !row.start_date)
           ? `The venue's page shows only "${row._shownDateText}" for this exhibition's dates — ${row._shownDateWhy || 'no year is published anywhere'}.`
           : 'No closing date found anywhere on the venue\'s pages.');
       }
@@ -1749,8 +1752,11 @@ async function fetchIndividualPages(page, rows, venueCode) {
 
         // Still no closing date. Record what the page DOES print, if anything,
         // so the note can quote it rather than claim the page is blank.
-        // Only if the listing has not already told us what it printed.
-        if (!row.end_date && !row._shownDateText) {
+        // Only when the page gave us NOTHING. If a date was read, quoting some
+        // other fragment as what the page "shows only" contradicts the very
+        // columns beside it — the Rosenquist row carried an opening date of
+        // 2012-01-26 while its note claimed the page showed only "30 JUNE".
+        if (!row.start_date && !row.end_date && !row._shownDateText) {
           const shown = unusableDateText(bodyText);
           if (shown) {
             row._shownDateText = shown;

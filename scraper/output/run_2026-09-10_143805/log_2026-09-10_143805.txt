@@ -1,0 +1,45 @@
+[2026-09-10T04:38:05.240Z] Cat Watch Sweep Prototype — starting
+[2026-09-10T04:38:05.240Z] Lookback floor: 2024-07-01
+[2026-09-10T04:38:05.241Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_143805
+[2026-09-10T04:38:05.241Z] Venues this run: acq
+[2026-09-10T04:38:05.241Z] Proxy: http://127.0.0.1:40961
+[2026-09-10T04:38:05.242Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-10T04:38:05.951Z] Network bridge installed: Chromium requests are served by Node via the proxy
+[2026-09-10T04:38:06.190Z] 
+[2026-09-10T04:38:06.191Z] ────────────────────────────────────────────────────────────
+[2026-09-10T04:38:06.191Z]   ACQ — Acquavella Galleries, New York
+[2026-09-10T04:38:06.191Z] ────────────────────────────────────────────────────────────
+[2026-09-10T04:38:06.191Z]   Fetching all (current/upcoming/past): https://www.acquavellagalleries.com/exhibitions
+[2026-09-10T04:38:10.830Z]   all (current/upcoming/past): 119 links seen -> 11 navigation, 0 already-seen URL -> 108 collected (0 of them with no readable title)
+[2026-09-10T04:38:10.831Z]   lookback (listing): kept 16, dropped 92 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-10T04:38:42.845Z]   Individual pages: 16 got text, 0 no curatorial text, 0 failed
+[2026-09-10T04:38:42.845Z]   lookback (final): kept 15, dropped 1 closed before 2024-07-01, 2 with no closing date, 0 with no opening date
+[2026-09-10T04:38:42.847Z]   → acq: 15 exhibitions, 15 with curatorial text → acq.csv
+[2026-09-10T04:38:42.934Z] 
+[2026-09-10T04:38:42.934Z] ────────────────────────────────────────────────────────────
+[2026-09-10T04:38:42.934Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-10T04:38:42.934Z] ────────────────────────────────────────────────────────────
+[2026-09-10T04:38:42.934Z]   ACQ: 15 exhibitions | 15 with text
+[2026-09-10T04:38:42.934Z] 
+[2026-09-10T04:38:42.934Z] ────────────────────────────────────────────────────────────
+[2026-09-10T04:38:42.934Z]   COVERAGE — every link accounted for
+[2026-09-10T04:38:42.934Z] ────────────────────────────────────────────────────────────
+[2026-09-10T04:38:42.934Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-10T04:38:42.934Z]   --------------------------------------------------------------------------------------
+[2026-09-10T04:38:42.935Z]   acq        all (current/upcoming/past)    119    11       0     0        0        108
+[2026-09-10T04:38:42.935Z] 
+[2026-09-10T04:38:42.935Z]   seen      = links matching the venue's selector on that page
+[2026-09-10T04:38:42.935Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-10T04:38:42.935Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-10T04:38:42.935Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-10T04:38:42.935Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-10T04:38:42.935Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-10T04:38:42.935Z] 
+[2026-09-10T04:38:42.935Z] Network bridge: 394 requests served, 757 skipped (image/media/font), 0 failed
+[2026-09-10T04:38:42.935Z] 
+[2026-09-10T04:38:42.935Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_143805
+[2026-09-10T04:38:42.935Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_143805/sweep.csv  (15 rows — acq:15)
+[2026-09-10T04:38:42.935Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_143805/log_2026-09-10_143805.txt
+[2026-09-10T04:38:42.935Z] Not yet in this run: met, ng, rijks, borghese, morgan
+[2026-09-10T04:38:42.935Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-10T04:38:42.935Z] No de-duplication is applied — see passThrough.
