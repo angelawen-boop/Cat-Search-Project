@@ -50,6 +50,18 @@
  * (or later, a script calling the API) fills in `compress_answers.json`.
  * `--apply` then writes `sweep_compressed.csv`, which is the file she imports.
  *
+ * ── WHAT THE MODEL IS ACTUALLY TOLD ─────────────────────────────────────────
+ *
+ * Nothing, by this file. See `compress_prompt.md`, which holds both prompts and
+ * the measured reason for the model split: SONNET writes fresh summaries,
+ * HAIKU judges whether an existing one went stale. Tested 10 Sep on 27 National
+ * Gallery rows with the National Gallery examples removed — Haiku learned the
+ * form perfectly and could not find the point ("Renoir capturing emotion and
+ * connection" for an exhibition called Renoir and Love); Sonnet found the point
+ * AND fabricated less. Do not assume specificity must be traded for safety;
+ * that appeared true only while the model was too small to find a real
+ * specific.
+ *
  * If planning finds nothing pending, it writes the compressed CSV immediately
  * and there is no second step.
  */
