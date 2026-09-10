@@ -387,7 +387,17 @@ function findDateRange(raw, opts = {}) {
     m = s.match(new RegExp(`(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
     if (m && plausibleYear(m[2])) {
       const mo = monthNum(m[1]);
-      if (mo) return { start: ymd(m[2], mo, 1), end: '', latestYear: +m[2], raw: s };
+      // NO DATE IS WRITTEN. This used to return the 1st of that month, which
+      // invented a day the venue never published — Acquavella's "SEPTEMBER
+      // 2026" became an opening date of 2026-09-01. Her rule: where the code
+      // has no applicable logic the column stays blank and the note says why.
+      // The year is still kept as a lookback bound, which is a real fact.
+      if (mo) return {
+        start: '', end: '', latestYear: +m[2],
+        shownText: m[0].trim(),
+        shownWhy: 'no day is published, only the month and year',
+        raw: s,
+      };
     }
   }
 
@@ -398,7 +408,12 @@ function findDateRange(raw, opts = {}) {
   // July 2024. See latestYear, below.
   if (looseSingles) {
     m = s.match(/\b(?:spring|summer|autumn|fall|winter)\s+(\d{4})\b/i);
-    if (m && plausibleYear(m[1])) return { start: '', end: '', latestYear: +m[1], raw: s };
+    if (m && plausibleYear(m[1])) return {
+      start: '', end: '', latestYear: +m[1],
+      shownText: m[0].trim(),
+      shownWhy: 'only a season and a year are published',
+      raw: s,
+    };
   }
 
   return { start: '', end: '', raw: s };
@@ -651,7 +666,7 @@ function applyLookback(rows, venueCode, stage) {
         // Say which of the two it is. "Nothing published" and "published, but
         // with no year" are different facts, and she acts on them differently.
         row.notes = addNote(row.notes, row._shownDateText
-          ? `The venue's page shows only "${row._shownDateText}" for this exhibition's dates — no year is published anywhere.`
+          ? `The venue's page shows only "${row._shownDateText}" for this exhibition's dates — ${row._shownDateWhy || 'no year is published anywhere'}.`
           : 'No closing date found anywhere on the venue\'s pages.');
       }
     } else if (!row.start_date && stage === 'final') {
@@ -1419,6 +1434,10 @@ async function collectFromListing(page, opts) {
       // Not a CSV column. An upper bound on the closing date for venues that
       // publish only a year ("Summer 2022"). See applyLookback.
       latest_year: dates.latestYear || 0,
+      // Not CSV columns. Date text the venue DID print but that cannot become a
+      // date, so the note can quote it instead of claiming nothing was found.
+      _shownDateText: dates.shownText || '',
+      _shownDateWhy: dates.shownWhy || '',
       summary: '', url: fullUrl,
       notes: titleNote ? `${sourceNote(ctx)} ${titleNote}` : sourceNote(ctx),
     };
@@ -1730,9 +1749,13 @@ async function fetchIndividualPages(page, rows, venueCode) {
 
         // Still no closing date. Record what the page DOES print, if anything,
         // so the note can quote it rather than claim the page is blank.
-        if (!row.end_date) {
+        // Only if the listing has not already told us what it printed.
+        if (!row.end_date && !row._shownDateText) {
           const shown = unusableDateText(bodyText);
-          if (shown) row._shownDateText = shown;
+          if (shown) {
+            row._shownDateText = shown;
+            row._shownDateWhy = 'no year is published anywhere';
+          }
         }
       }
 

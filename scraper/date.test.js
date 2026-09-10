@@ -46,11 +46,16 @@ test('the documented date formats, all found in the wild', () => {
   }
 });
 
-test('month and year only yields a start and a lookback bound, never a fake day', () => {
-  const r = findDateRange('March / 2026');
-  assert.strictEqual(r.start, '2026-03-01');
-  assert.strictEqual(r.end, '');
-  assert.strictEqual(r.latestYear, 2026);
+test('month and year only yields a lookback bound and a quote, never a fake day', () => {
+  // This used to return the 1st of the month. Acquavella's "SEPTEMBER 2026"
+  // became an opening date of 2026-09-01 — a day the venue never published.
+  for (const text of ['March / 2026', 'SEPTEMBER 2026']) {
+    const r = findDateRange(text);
+    assert.strictEqual(r.start, '', `${text} must not invent a day`);
+    assert.strictEqual(r.end, '');
+    assert.strictEqual(r.latestYear, +text.match(/\d{4}/)[0]);
+    assert.ok(r.shownText, 'the text must be quoted back for the note');
+  }
 });
 
 test('a season and year is a bound, not a date — nothing is written to the columns', () => {
@@ -167,10 +172,14 @@ test('a photo caption is not the exhibition\'s opening date', () => {
   assert.strictEqual(r.end, '');
 });
 
-test('the loose single-date rules still work on a listing card', () => {
+test('the loose single-date rules still fire on a listing card', () => {
   // Short string, one exhibition: Borghese's archive really does print this.
-  assert.strictEqual(findDateRange('March / 2026').start, '2026-03-01');
+  // They no longer produce a date, but they still produce the lookback bound
+  // and the quoted text — which is what the card is for.
+  assert.strictEqual(findDateRange('March / 2026').latestYear, 2026);
   assert.strictEqual(findDateRange('Summer 2022').latestYear, 2022);
+  // ...and are still refused entirely on page text.
+  assert.strictEqual(findDateRangeInProse('a caption reading March 2026').start, '');
 });
 
 test('a real range inside page text is still read', () => {
