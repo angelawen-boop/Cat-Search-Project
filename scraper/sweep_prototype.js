@@ -1947,4 +1947,7 @@ module.exports = {
   findDateRange, findDateRangeInProse, parseMonthDay, ymd, startYearFor,
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp,
+  // Not pure — exported so a one-off diagnostic can reach a venue the same way
+  // the sweep does, rather than reimplementing the bridge and drifting from it.
+  installNetworkBridge, resolveChromium, safeGoto, classifyLoadError,
 };
