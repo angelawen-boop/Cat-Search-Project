@@ -1740,6 +1740,24 @@ async function fetchIndividualPages(page, rows, venueCode) {
         const hintYear = (row.start_date || row.end_date || '').slice(0, 4);
         const p = findDateRangeInProse(bodyText, hintYear);
 
+        // A sentence that CONTRADICTS what the listing already told us is not
+        // about this exhibition, so none of it may be used — not even the half
+        // that happens to fill a gap.
+        //
+        // NG's exhibition pages carry a list of related events. Waldmüller's
+        // page advertises a course running "7 September - 28 September 2026",
+        // while the listing card says the exhibition runs "Until 20 September
+        // 2026". Filling only empty fields took the course's OPENING date and
+        // silently ignored its conflicting closing date — the very evidence
+        // that the sentence belonged to something else.
+        const clashes =
+          (row.start_date && p.start && p.start !== row.start_date) ||
+          (row.end_date   && p.end   && p.end   !== row.end_date);
+        if (clashes) {
+          log(`    prose dates ignored, they contradict the listing: "${(p.raw || '').slice(0, 70)}"`);
+          p.start = ''; p.end = '';
+        }
+
         // Fill only what is missing. If the page disagrees with the listing,
         // the listing wins — nothing already collected is silently rewritten.
         const filled = [];

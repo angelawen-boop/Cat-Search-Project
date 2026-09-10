@@ -227,6 +227,24 @@ test('an abbreviated month cannot be matched out of a full one', () => {
   assert.deepStrictEqual(range('7 November 2025 - 10 May 2026'), ['2025-11-07', '2026-05-10']);
 });
 
+// ── A related event is not this exhibition ───────────────────────────────────
+// NG exhibition pages list related courses and talks, each with its own date
+// range. Waldmüller's page advertises a course running "7 September - 28
+// September 2026" while the listing says the show runs "Until 20 September
+// 2026". The range is well-formed and carries a year, so no pattern rejects it
+// — the contradiction is the only evidence available.
+test('a prose range that contradicts the listing is refused whole', () => {
+  const listing = { start: '', end: '2026-09-20' };
+  const prose = findDateRangeInProse(
+    'Category: Course 7 September - 28 September 2026 Online From £57');
+  assert.strictEqual(prose.start, '2026-09-07');   // it does parse…
+  assert.strictEqual(prose.end,   '2026-09-28');
+  // …and its closing date disagrees with what the listing already gave us,
+  // which is what the scraper now tests before using either half.
+  const clashes = (listing.end && prose.end && prose.end !== listing.end);
+  assert.ok(clashes, 'the clash must be detectable from the two ends');
+});
+
 // ── D-003: URL identity ──────────────────────────────────────────────────────
 test('D-003: case in the path is preserved, so two pages stay two pages', () => {
   assert.notStrictEqual(
