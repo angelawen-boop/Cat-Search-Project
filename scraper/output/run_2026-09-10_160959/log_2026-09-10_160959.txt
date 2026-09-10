@@ -1,0 +1,53 @@
+[2026-09-10T06:09:59.981Z] Cat Watch Sweep Prototype — starting
+[2026-09-10T06:09:59.982Z] Lookback floor: 2024-07-01
+[2026-09-10T06:09:59.982Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_160959
+[2026-09-10T06:09:59.982Z] Venues this run: ng
+[2026-09-10T06:09:59.982Z] Proxy: http://127.0.0.1:33141
+[2026-09-10T06:09:59.982Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-10T06:10:00.157Z] Network bridge installed: Chromium requests are served by Node via the proxy
+[2026-09-10T06:10:00.249Z] 
+[2026-09-10T06:10:00.249Z] ────────────────────────────────────────────────────────────
+[2026-09-10T06:10:00.249Z]   NG — National Gallery, London
+[2026-09-10T06:10:00.249Z] ────────────────────────────────────────────────────────────
+[2026-09-10T06:10:00.249Z]   Fetching current/upcoming: https://www.nationalgallery.org.uk/exhibitions
+[2026-09-10T06:10:03.472Z]   current/upcoming: 12 links seen -> 2 navigation, 3 already-seen URL -> 7 collected (1 of them with no readable title)
+[2026-09-10T06:10:03.472Z]   Fetching past: https://www.nationalgallery.org.uk/exhibitions/past
+[2026-09-10T06:10:08.205Z]   past: 179 links seen -> 2 navigation, 0 already-seen URL -> 177 collected (0 of them with no readable title)
+[2026-09-10T06:10:08.206Z]   lookback (listing): kept 28, dropped 156 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-10T06:10:13.243Z]     prose dates ignored, they contradict the listing: "7 September - 28 September 2026"
+[2026-09-10T06:11:07.768Z]   TIMEOUT on https://www.nationalgallery.org.uk/exhibitions/past/take-one-picture-2024 — retrying once
+[2026-09-10T06:11:29.781Z]   TIMEOUT: https://www.nationalgallery.org.uk/exhibitions/past/take-one-picture-2024 — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.nationalgallery.org.uk/exhibitions/pas
+[2026-09-10T06:11:32.727Z]   Individual pages: 27 got text, 0 no curatorial text, 1 failed
+[2026-09-10T06:11:32.728Z]   lookback (final): kept 27, dropped 1 closed before 2024-07-01, 0 with no closing date, 1 with no opening date
+[2026-09-10T06:11:32.729Z]   → ng: 27 exhibitions, 26 with curatorial text → ng.csv
+[2026-09-10T06:11:32.842Z] 
+[2026-09-10T06:11:32.842Z] ────────────────────────────────────────────────────────────
+[2026-09-10T06:11:32.842Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-10T06:11:32.842Z] ────────────────────────────────────────────────────────────
+[2026-09-10T06:11:32.842Z]   NG: 27 exhibitions | 26 with text
+[2026-09-10T06:11:32.842Z] 
+[2026-09-10T06:11:32.842Z] ────────────────────────────────────────────────────────────
+[2026-09-10T06:11:32.842Z]   COVERAGE — every link accounted for
+[2026-09-10T06:11:32.842Z] ────────────────────────────────────────────────────────────
+[2026-09-10T06:11:32.842Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-10T06:11:32.842Z]   --------------------------------------------------------------------------------------
+[2026-09-10T06:11:32.842Z]   ng         current/upcoming                12     2       0     3        1          7
+[2026-09-10T06:11:32.842Z]   ng         past                           179     2       0     0        0        177
+[2026-09-10T06:11:32.842Z] 
+[2026-09-10T06:11:32.842Z]   seen      = links matching the venue's selector on that page
+[2026-09-10T06:11:32.842Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-10T06:11:32.842Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-10T06:11:32.842Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-10T06:11:32.842Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-10T06:11:32.842Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-10T06:11:32.842Z] 
+[2026-09-10T06:11:32.842Z] Network bridge: 871 requests served, 1237 skipped (image/media/font), 0 failed
+[2026-09-10T06:11:32.842Z] 
+[2026-09-10T06:11:32.842Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_160959
+[2026-09-10T06:11:32.842Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_160959/sweep.csv  (27 rows — ng:27)
+[2026-09-10T06:11:32.842Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_160959/log_2026-09-10_160959.txt
+[2026-09-10T06:11:32.842Z] Not yet in this run: met, rijks, acq, borghese, morgan
+[2026-09-10T06:11:32.842Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-10T06:11:32.842Z] No de-duplication is applied — see passThrough.
