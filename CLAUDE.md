@@ -1393,13 +1393,43 @@ Everything above maps onto distinctions the app already computes: `fill` vs
 `change` at `analyzeProForma`, and open-vs-closed from the end date. The only
 new behaviour is dropping summary *changes* on closed shows.
 
-**Where the words come from: a Claude Code session first, an API script
-later.** Both are safe — a script owns the CSV and the model only ever supplies
-a string. The wording will take two or three goes to get right, and that is a
-conversation; a script is the worse place to have it. Move to the API once the
-wording has settled and unattended runs are wanted. Nothing is wasted: the
-script that owns the file is the same either way, only the source of the string
-changes.
+### Which model, and how it is reached — settled 10 Sep 2026
+
+**Sonnet writes fresh summaries. Haiku judges whether an existing one went
+stale.** Measured on 27 National Gallery rows with the NG examples removed, both
+models given the identical prompt and the identical 14 Rijksmuseum examples, so
+the model was the only variable.
+
+Haiku learned the FORM in 14 examples and never lost it — length, noun phrase,
+full stop, no colons, no fabrication. What it could not do is find the *point*:
+for an exhibition called *Renoir and Love* it wrote "Renoir capturing emotion
+and connection", walking past the word in the title. Her verdict: *"reads like a
+cereal box ingredients list."* Sonnet found the point AND fabricated less,
+naming real specifics the page carried — Scrub the racehorse, Die Brücke and Der
+Blaue Reiter — and reproducing her Wright of Derby wording exactly. Haiku scored
+**14 of 14** on the judgement cases, which is constrained work and suits it.
+
+**So the specificity-versus-safety trade-off does not exist.** It looked real
+when asking Haiku for concrete detail made it invent an artist and report two
+wrong counts — but that was a capability limit wearing the costume of a
+trade-off. It invented a specific because it could not find a real one.
+
+**Reached by subagent, not by the session itself.** A session writing the
+summaries uses whatever model it happens to be, which silently discards the
+measurement above. Spawning a subagent is what pins the model. One subagent per
+JOB, never per row — each spawn pays its own start-up cost.
+
+**The prompts live in `scraper/compress_prompt.md`**, with the evidence for the
+split and what three rounds of tuning taught. A prompt that exists only in a
+chat is lost when the chat closes, and quality changes then become
+undiagnosable.
+
+**Still a session, not the API.** Sub-30 rows a sweep deleted the cost argument,
+and a session runs a stronger model for free. The API's one remaining advantage
+is that it could run unattended — and it is the only version where "exactly two
+model calls" is a fact rather than a request. Revisit if scheduled sweeps ever
+become the goal; the prompt file is what makes that a transport change and
+nothing more.
 
 ### Built 10 Sep 2026 — `scraper/compress.js`
 
@@ -1467,6 +1497,48 @@ were written **by hand, in the session, by Opus** — not by a model reading the
 29 example pairs. The examples are built and unused. Nothing yet shows that a
 smaller model given those examples writes summaries she would accept, or that
 it correctly answers *is the old summary now false?*
+
+### Travelling exhibitions — solved in code, not in the prompt
+
+Acquavella runs one show in New York and Palm Beach. Both rows are kept, but
+they must not carry different summaries or they read as unrelated exhibitions.
+
+**The first attempt told the MODEL to spot the pair and match its own wording,
+and it failed instructively.** It matched the words and carried Palm Beach's
+artist count (21) onto the New York row, which lists 17 — both rows confidently
+wrong. Two instructions had collided: "make them identical" and "keep concrete
+numbers".
+
+**Now the pair is found in code before anything is asked**
+(`groupTravellingRuns()`), using the same title-minus-city rule the scraper
+already uses for its "also shown at" note. One question goes out carrying both
+cities' text; the single answer is written to both rows. Disagreement is
+impossible rather than discouraged, and it costs one call instead of two.
+
+The city list is **mirrored** in `compress.js` rather than imported — requiring
+the scraper would drag Playwright into a pure-text step — and fixture **L-008**
+asserts the two copies still agree. Without it they could drift and the only
+symptom would be a travelling pair quietly getting two summaries again.
+
+Verified: 15 fresh Acquavella rows collapse to 14 questions, and one answer
+lands on both Portraiture rows.
+
+### What a script can and cannot make a session do
+
+**A script cannot bind a session.** It prints text; the session decides. So the
+handoff naming SONNET and HAIKU is a request, not a limit — a session could
+spawn one subagent per row, or write the summaries itself.
+
+**The OUTPUT is enforced anyway.** `--apply` refuses an answer that is missing,
+over the word cap, or malformed, and refuses the whole batch rather than writing
+half a file. A session that ignores the handoff entirely still cannot produce a
+bad CSV; it can only produce weak wording, which is visible on the approval card.
+
+**Only a hook can enforce PROCESS**, because the harness runs it rather than the
+model. `.claude/hooks/confirm-subagent.sh` asks before any subagent spawns and
+names the task, model and agent type, so a horde announces itself as a horde. It
+matches both `Task` and `Agent` — the tool carries either name depending on
+harness version, and matching one alone would silently do nothing.
 
 ### Testing the judgement — `scraper/compress_eval.js`
 
