@@ -1456,6 +1456,63 @@ description at all.
 sweep: 15 asked, 14 written, 1 skipped. Second sweep of the same venue:
 **14 reused, 1 remembered skip, zero model calls.**
 
+**The plumbing for a CHANGED blurb is proven too.** One sentence was appended
+by hand to Acquavella's Tom Sachs text and the run re-scored: 13 reused, 1
+remembered skip, **exactly one row asked** — and that question carried the old
+wording, `"Tom Sachs remaking Picasso in bronze."`, beside the new text, which
+is what makes review-not-rewrite possible.
+
+**Be precise about what has NOT been tested.** The 15 summaries in that run
+were written **by hand, in the session, by Opus** — not by a model reading the
+29 example pairs. The examples are built and unused. Nothing yet shows that a
+smaller model given those examples writes summaries she would accept, or that
+it correctly answers *is the old summary now false?*
+
+### Testing the judgement — `scraper/compress_eval.js`
+
+```
+node scraper/compress_eval.js            write the questions
+node scraper/compress_eval.js --score    score the answers
+```
+
+**Why the cases are authored rather than collected.** Waiting for venues to
+rewrite their pages does not work: three sweeps across one day produced exactly
+zero genuine rewordings, and the changes that looked like rewordings turned out
+to be the shutdown bug. Real material would take months and would still miss
+the cases that matter.
+
+`compress_eval.json` holds 14 hand-written before-and-after pairs, each with the
+summary we already have and the verdict expected. They cover the changes
+actually seen on these venues: promotional copy rewritten into past tense,
+opening hours appended, a related-events list appended, a blurb cut to a
+fraction of its length, a language switch — all of which must **keep** the
+summary — against a changed medium, a changed count, a named artist dropped
+from a group show, a second artist added to a solo show, and an address reused
+for a different exhibition entirely, which must **rewrite**. Two more must be
+**refused**: a curator biography, and consent boilerplate (the Borghese
+cookie-banner failure, in summary form).
+
+**The verdict is read straight off the answer** — identical to the previous
+summary means keep, a different string means rewrite, `null` means refuse. That
+is the same interface the compressor uses, so nothing here is a mock. Wording
+quality is not scored; it is printed for her to read.
+
+**Two cases are marked `arguable` and cannot fail a run:** a travelling show
+changing city when the summary names no city, and a show postponed
+indefinitely. Neither has a single right answer, and the second decides whether
+the summary column ever carries status. A disagreement there is a conversation,
+not a defect.
+
+**The harness itself was checked against three answer sets**, because an eval
+that cannot fail is worthless: answering "keep" to everything — the likeliest
+lazy failure — scores **7 of 14 and exits non-zero**; correct verdicts score 14
+of 14; correct verdicts with over-long rewrites are caught as invalid. Wrong,
+invalid and unanswered all fail the run; disputed does not.
+
+**This is aimed at whichever model does the work in production**, expected to be
+Haiku through the API. It is deliberately not a test of a session writing
+summaries by hand, which proves nothing about what runs unattended.
+
 **Rejected along the way, with reasons, so they are not re-proposed:**
 - **Give the compressor her ledger** so it can skip rows she already has. Puts a
   ledger decision inside the scraper chain, needs the ledger file present on

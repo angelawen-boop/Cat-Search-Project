@@ -1,0 +1,122 @@
+{
+  "what": "Hand-written cases for the ONE judgement the compressor asks a model to make: given the summary we already have and the venue's new blurb, is that summary now false?",
+  "why": "The reuse path is code and is proven — identical text is never re-asked. This is the other half, and it cannot be tested by waiting for venues to rewrite their pages: it took three sweeps in one day to find zero real rewrites. So the cases are authored, based on the kinds of change actually seen on acq / ng / rijks pages.",
+  "howScored": "The model answers in exactly the format the compressor uses: a string, or null. That means the verdict is readable from the answer with no extra machinery — an answer identical to previousSummary means KEEP, a different string means REWRITE, null means SKIP. Wording quality is not scored; it is printed for her to read.",
+  "arguable": "Cases marked arguable have no single right answer. They are here to surface a decision, not to fail a model. A disagreement on one of those is a conversation, not a bug.",
+  "cases": [
+    {
+      "id": "EV-01",
+      "note": "The commonest real change by far: a show closes and the venue rewrites promotional copy into past tense. Nothing about the exhibition changed.",
+      "expect": "keep",
+      "previousSummary": "Miquel Barceló's fourth solo with the gallery.",
+      "oldRaw": "Acquavella Galleries is pleased to present Miquel Barceló, the renowned Spanish artist's fourth solo exhibition with the gallery. The exhibition will feature recent paintings and ceramics.",
+      "newRaw": "Acquavella Galleries presented Miquel Barceló, the renowned Spanish artist's fourth solo exhibition with the gallery. The exhibition featured recent paintings and ceramics."
+    },
+    {
+      "id": "EV-02",
+      "note": "The case that justifies the whole design. One word changes the medium, so the summary is now simply wrong.",
+      "expect": "rewrite",
+      "previousSummary": "Monet's sculptures from private collections.",
+      "oldRaw": "An exhibition of sculptures by Claude Monet, drawn from private collections across Europe and rarely shown in public.",
+      "newRaw": "An exhibition of paintings by Claude Monet, drawn from private collections across Europe and rarely shown in public."
+    },
+    {
+      "id": "EV-03",
+      "note": "Venues append practical information constantly. It is not about the art and must not move the summary.",
+      "expect": "keep",
+      "previousSummary": "Fifty years of obsessive pen-and-ink drawing.",
+      "oldRaw": "An exhibition of new and recent works by Jacob El Hanani. Constructing abstract pen and ink drawings that involve applying thousands of marks by hand, El Hanani has honed this craft over the past 50 years.",
+      "newRaw": "An exhibition of new and recent works by Jacob El Hanani. Constructing abstract pen and ink drawings that involve applying thousands of marks by hand, El Hanani has honed this craft over the past 50 years. The exhibition is open to the public free of charge and tickets are not required. Gallery hours are Monday to Saturday, 10am to 5pm. For accessibility information please contact the front desk."
+    },
+    {
+      "id": "EV-04",
+      "note": "A group show whose named end-points define the summary. One of them is gone, so the summary names an artist who is no longer in it.",
+      "expect": "rewrite",
+      "previousSummary": "Modernist works from Gauguin to Warhol.",
+      "oldRaw": "Works on view by Pierre Bonnard, Georges Braque, Paul Cezanne, Paul Gauguin, Alberto Giacometti, Fernand Leger, Henri Matisse, Joan Miro, Andy Warhol, and Zao Wou-Ki.",
+      "newRaw": "Works on view by Pierre Bonnard, Georges Braque, Paul Cezanne, Alberto Giacometti, Fernand Leger, Henri Matisse, and Joan Miro. Gauguin and Warhol are no longer included in this presentation."
+    },
+    {
+      "id": "EV-05",
+      "note": "A number carried into the summary is now wrong. Small, factual, and exactly the sort of thing a reader would trust.",
+      "expect": "rewrite",
+      "previousSummary": "Fifteen primeval landscapes by Yuka Kashihara.",
+      "oldRaw": "Acquavella Galleries is pleased to present Stardust, a solo exhibition of fifteen paintings by the Japanese artist Yuka Kashihara. The primeval landscapes she paints trace back, she says, to stardust.",
+      "newRaw": "Acquavella Galleries is pleased to present Stardust, a solo exhibition of twenty-eight paintings by the Japanese artist Yuka Kashihara. The primeval landscapes she paints trace back, she says, to stardust."
+    },
+    {
+      "id": "EV-06",
+      "note": "A redesign cuts the blurb to a fraction of its length without changing what the show is. Length is not meaning.",
+      "expect": "keep",
+      "previousSummary": "First UK exhibition of Zurbaran.",
+      "oldRaw": "Enter the spellbinding world of visionary Spanish painter Francisco de Zurbaran. Spend time with his paintings, celebrated for their vivid naturalism and deep emotional power. Move between soaring altarpieces and exquisite still lifes in the first major UK exhibition of this great artist from Baroque Seville. A peer of Murillo and Velazquez, Zurbaran stands out for his drama, mystery and vision.",
+      "newRaw": "The first major UK exhibition of Francisco de Zurbaran."
+    },
+    {
+      "id": "EV-07",
+      "note": "NG pages carry a list of related courses and talks. The same trap that cost Waldmuller its dates, in summary form: it is a big change in text and no change at all in what the exhibition is.",
+      "expect": "keep",
+      "previousSummary": "The subjects that made Millet famous.",
+      "oldRaw": "Discover the rural subjects that made Jean-Francois Millet famous: gleaners, sowers, shepherds and the everyday labour of the fields.",
+      "newRaw": "Discover the rural subjects that made Jean-Francois Millet famous: gleaners, sowers, shepherds and the everyday labour of the fields. Related events: Drawing the Rural Landscape, a six-week evening course, 7 September to 28 September. Curator's tour, 14 September, 2pm. Family workshop, every Saturday. Book tickets for all related events online."
+    },
+    {
+      "id": "EV-08",
+      "note": "DEF-03 in its purest form. The page now carries a curator biography and nothing about the exhibition. The honest answer is to refuse, not to summarise the curator.",
+      "expect": "skip",
+      "previousSummary": "Sculpture of wild animals and untamed nature.",
+      "oldRaw": "Acquavella Galleries Palm Beach is pleased to present Harumi Klossowska de Rola: Sacred Woods, sculptures of wild animals and untamed nature.",
+      "newRaw": "Harumi Klossowska de Rola was born in Geneva and studied at the Beaux-Arts. She is the daughter of the painter Balthus and Setsuko Klossowska de Rola. She has collaborated with Goossens and with Chopard, and divides her time between Paris and Rome. She is represented by galleries in Europe and the United States."
+    },
+    {
+      "id": "EV-09",
+      "note": "The venue has reused the address for a completely different exhibition. Nothing about the old summary survives.",
+      "expect": "rewrite",
+      "previousSummary": "Tom Sachs remaking Picasso in bronze.",
+      "oldRaw": "Acquavella Galleries is pleased to present our fifth solo exhibition with Tom Sachs, in which the artist takes Picasso apart and rebuilds him in bronze.",
+      "newRaw": "Acquavella Galleries is pleased to present Wayne Thiebaud: Cakes and Counters, a survey of the artist's confectionery still lifes painted between 1962 and 1975."
+    },
+    {
+      "id": "EV-10",
+      "note": "Consent boilerplate captured instead of curatorial text — the Borghese cookie-banner failure, which happened twice. There is no description here to work from.",
+      "expect": "skip",
+      "previousSummary": "Four thousand years of Asian bronze.",
+      "oldRaw": "Asian Bronze spans four thousand years of bronze casting across Asia, from ritual vessels to devotional figures.",
+      "newRaw": "We use cookies to give you the best experience on our website. Functional cookies are necessary for the site to work. Statistics cookies help us understand how visitors interact with the site by collecting information anonymously. Marketing cookies are used to track visitors across websites. You can change your preferences at any time."
+    },
+    {
+      "id": "EV-11",
+      "note": "The blurb is now in another language. The exhibition has not changed and the summary is still true, so there is nothing to fix — but a model may be tempted to rewrite simply because the text looks different.",
+      "expect": "keep",
+      "previousSummary": "Unfiltered street energy across decades.",
+      "oldRaw": "Ed van der Elsken photographed the street with unfiltered energy across four decades, in Amsterdam, Paris and Tokyo.",
+      "newRaw": "Ed van der Elsken fotografeerde de straat met ongefilterde energie gedurende vier decennia, in Amsterdam, Parijs en Tokio."
+    },
+    {
+      "id": "EV-12",
+      "note": "A travelling show moves city. The summary never named a city, so nothing in it has become false. ARGUABLE: she may prefer the city named, which would make this a rewrite.",
+      "arguable": true,
+      "expect": "keep",
+      "previousSummary": "A century of portraiture, Impressionism to today.",
+      "oldRaw": "New York, NY - Acquavella Galleries is pleased to present Portraiture: From Cassatt to Warhol, a group exhibition spanning over a century of representation, from Impressionism to today.",
+      "newRaw": "Palm Beach, FL - Acquavella Galleries is pleased to present Portraiture: From Cassatt to Warhol, a group exhibition spanning over a century of representation, from Impressionism to today."
+    },
+    {
+      "id": "EV-13",
+      "note": "The show is postponed indefinitely. What it IS has not changed, so the summary is arguably still true — but she may want that visible. ARGUABLE, and the answer decides whether the summary column is ever used to carry status.",
+      "arguable": true,
+      "expect": "keep",
+      "previousSummary": "All of Van Eyck's portraits together.",
+      "oldRaw": "For the first time, all of Van Eyck's surviving portraits are brought together in one room.",
+      "newRaw": "This exhibition has been postponed. For the first time, all of Van Eyck's surviving portraits were to be brought together in one room. New dates will be announced in due course."
+    },
+    {
+      "id": "EV-14",
+      "note": "The venue has added a second artist to a solo show. The summary names only the original, so it is now incomplete rather than merely reworded.",
+      "expect": "rewrite",
+      "previousSummary": "Landscapes built from places never visited.",
+      "oldRaw": "Joani Tremblay's paintings assemble landscapes from places she has never been - false memories of Arizona rock, Niagara, Californian light.",
+      "newRaw": "Joani Tremblay and Sarah Miska share this exhibition. Tremblay's paintings assemble landscapes from places she has never been, while Miska's equestrian close-ups examine the same borrowed imagery from another angle."
+    }
+  ]
+}
