@@ -203,6 +203,11 @@ function plan(dir, { recompress = false } = {}) {
   if (needsReview) say('       Prompt B — is the old summary now false?  → subagent model: HAIKU');
   say('     Batch ALL rows for a job into ONE subagent. One per row pays its');
   say('     start-up cost every time.');
+  // The approval dialog shows ONLY the subagent's description field — not the
+  // model, not the prompt. "Compress acq run with Prompt A" is unanswerable at
+  // the moment someone is being asked to approve it.
+  say('     Describe the subagent in plain words — say what it will WRITE, not');
+  say('     which prompt it uses. The approval dialog shows only that line.');
   say('');
   say(`Then write ${ANSWERS_JSON} beside the pending file — {"<index>": "the summary.", ...},`);
   say('  a string to write it, the previous summary verbatim to keep it, null to refuse.');

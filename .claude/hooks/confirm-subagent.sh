@@ -1,33 +1,42 @@
 #!/bin/bash
-# Ask before ANY subagent is spawned.
+# Ask before ANY subagent is spawned, and make the question answerable.
 #
-# WHY THIS EXISTS: the compressor's handoff tells a session to spawn one Sonnet
-# subagent and one Haiku subagent, batching every row into each. That is an
-# instruction printed by a script, and a script cannot bind a session — it could
-# spawn one per venue, one per row, or retry and double up. Nothing in the repo
-# can prevent that, because the repo only prints text.
+# WHY: the compressor's handoff asks for one Sonnet subagent and one Haiku
+# subagent, batching every row into each. That is text printed by a script, and
+# a script cannot bind a session. Only a hook can, because the harness runs it.
 #
-# A hook can, because the HARNESS runs it rather than the model. This is the
-# only enforcement point that exists.
+# WHY IT REWRITES THE DESCRIPTION: the approval dialog shows the `description`
+# field and nothing else — not the model, not the reason string this hook
+# returns. A session that writes "Compress acq run with Prompt A" produces a
+# prompt nobody can act on, because "Prompt A" means nothing at the moment you
+# are being asked. So the description is rewritten to lead with the MODEL, which
+# is the thing actually being decided, and internal prompt names are expanded
+# into what they do.
 #
-# It does not block; it asks, and shows what is being spawned so the answer is
-# informed rather than reflexive. Declining costs nothing — the pending file is
-# still there and the work can be done differently.
+# Every other field of tool_input is passed through untouched.
 
 set -euo pipefail
 
 payload="$(cat)"
 
-# Both names exist depending on harness version; the matcher covers both, and
-# this only reads fields, so it is safe either way.
-desc="$(printf '%s' "$payload" | jq -r '.tool_input.description // "(no description)"' 2>/dev/null || echo '(unreadable)')"
-model="$(printf '%s' "$payload" | jq -r '.tool_input.model // "(inherits this session'"'"'s model)"' 2>/dev/null || echo '(unreadable)')"
-agent="$(printf '%s' "$payload" | jq -r '.tool_input.subagent_type // "general-purpose"' 2>/dev/null || echo '?')"
-
-jq -nc \
-  --arg d "$desc" --arg m "$model" --arg a "$agent" \
-  '{hookSpecificOutput:{
-      hookEventName:"PreToolUse",
-      permissionDecision:"ask",
-      permissionDecisionReason:("Subagent spawn — task: \($d) | model: \($m) | type: \($a). Approve one per JOB, not one per row.")
-   }}'
+jq -c '
+  .tool_input as $in
+  | ($in.model // "SESSION DEFAULT" | ascii_upcase) as $model
+  | ($in.description // "no description given") as $desc
+  # Expand the internal prompt names — they are meaningless in a dialog.
+  # Strip the internal prompt name out of the sentence, then say plainly what
+  # that prompt does. Substituting it inline reads as gibberish
+  # ("Compress acq run with write new summaries").
+  | (if ($desc | test("[Pp]rompt A")) then " — writing new summaries"
+     elif ($desc | test("[Pp]rompt B")) then " — checking old summaries are still true"
+     else "" end) as $job
+  | (($desc | gsub("\\s*(with|using)?\\s*[Pp]rompt [AB]"; "") | gsub("^\\s+|\\s+$"; "")) + $job) as $plain
+  | {
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "ask",
+        permissionDecisionReason: ("Spawning a \($model) subagent. Approve one per JOB, never one per row."),
+        updatedInput: ($in + { description: "\($model) subagent — \($plain)" })
+      }
+    }
+' <<< "$payload"
