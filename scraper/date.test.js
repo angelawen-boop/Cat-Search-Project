@@ -18,7 +18,7 @@ const assert = require('node:assert');
 
 const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
-  normalizeUrl, resolveHref, pickStructuredEvent, isoDay,
+  normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
 } = require('./sweep_prototype.js');
 
 const range = (s, hint) => {
@@ -184,6 +184,38 @@ test('a real range inside page text is still read', () => {
 test('a preposition-anchored single date in page text is still read', () => {
   const r = findDateRangeInProse('The show will run until 20 February 2026 in the main hall.');
   assert.strictEqual(r.end, '2026-02-20');
+});
+
+// ── Quoting a date the venue published but nobody can use ────────────────────
+// The Rijksmuseum's past pages print "Until 24 October" with no year anywhere.
+// The columns stay blank, correctly — but the note used to claim nothing was
+// found, which is false and sends her to a page that plainly shows a date.
+test('a day and month with no year is quoted back', () => {
+  for (const [text, want] of [
+    ['Until 24 October',    'Until 24 October'],
+    ['18 November - 6 Mar', '18 November - 6 Mar'],
+    ['16 Feb - 9 June',     '16 Feb - 9 June'],
+    ['15 December',         '15 December'],
+  ]) assert.strictEqual(unusableDateText(text), want);
+});
+
+test('anything carrying a year is never quoted — that is the caption trap', () => {
+  for (const text of [
+    'Gerard Wessel, RoXY, Amsterdam, April 1994',
+    'August 17 1945',
+    '7 November 2025 - 10 May 2026',
+    '21 Sept. 2024 to 12 Jan. 2025',
+    '11 Oct. 2019 t/m 19 Jan. 2020',
+    'December 13, 2025 - February 2, 2026',
+    'Open daily 9 to 17h Museumstraat 1',
+  ]) assert.strictEqual(unusableDateText(text), '', `should be ignored: ${text}`);
+});
+
+test('an abbreviated month cannot be matched out of a full one', () => {
+  // "7 November 2025" once matched as "7 Nov", leaving "ember 2025" — which
+  // silently defeated the no-year lookahead. MONTH_PATTERN now forbids it.
+  assert.strictEqual(unusableDateText('7 November 2025'), '');
+  assert.deepStrictEqual(range('7 November 2025 - 10 May 2026'), ['2025-11-07', '2026-05-10']);
 });
 
 // ── D-003: URL identity ──────────────────────────────────────────────────────

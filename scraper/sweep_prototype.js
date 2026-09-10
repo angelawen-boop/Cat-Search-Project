@@ -203,9 +203,13 @@ const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
  * is not matched as "Sep" followed by stray letters, and a trailing full stop
  * is allowed for venues that write "Sept.".
  */
+// The trailing (?![A-Za-z]) is load-bearing, not tidiness. Without it the
+// alternation backtracks into the abbreviation: "7 November 2025" can match as
+// "7 Nov" with "ember 2025" left over, which silently defeats any lookahead
+// that follows — a no-year test then passes on a date that plainly has one.
 const MONTH_PATTERN =
   '(?:January|February|March|April|May|June|July|August|September|October|November|December' +
-  '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\.?';
+  '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\.?(?![A-Za-z])';
 
 // Month name to number, tolerating the trailing full stop the pattern allows.
 function monthNum(name) {
@@ -448,6 +452,44 @@ function sane(start, end, raw) {
   return { start, end, raw };
 }
 
+/**
+ * A date the venue printed that nobody can use: a day and month with NO YEAR.
+ *
+ * The Rijksmuseum's past pages do this systematically — "Until 24 October",
+ * "18 November - 6 March" — and there is nowhere to borrow a year from: the
+ * listing card does not carry one and the site publishes no structured data.
+ * So the date columns stay blank, which is right. But the note then said "No
+ * closing date found anywhere on the venue's pages", which is simply FALSE:
+ * she would open the page expecting nothing and find a date sitting there.
+ *
+ * Requiring the year to be ABSENT is what makes quoting this safe. A photo
+ * caption reads "Amsterdam, April 1994" — month AND year — so it can never be
+ * picked up here. That is the exact trap that once put a 1994 opening date on a
+ * 2024 exhibition.
+ */
+function unusableDateText(text) {
+  if (!text) return '';
+  const s = String(text).replace(/[‐-―−⁃]/g, '-').replace(/\s+/g, ' ');
+  const M = MONTH_PATTERN;
+  // The leading \.? matters: an abbreviated month can match without its full
+  // stop ("Sept" out of "Sept."), and the year test would then be looking at
+  // ". 2024" and conclude there was no year.
+  const NO_YEAR = '(?!\\.?\\s*,?\\s*\\d{4})';
+  // A range is more use to her than one end of it, so look for those first.
+  const patterns = [
+    new RegExp(`\\d{1,2}\\s+${M}${RANGE_SEP}\\d{1,2}\\s+${M}${NO_YEAR}`, 'i'),
+    new RegExp(`${M}\\s+\\d{1,2}${RANGE_SEP}${M}\\s+\\d{1,2}${NO_YEAR}`, 'i'),
+    new RegExp(`\\b(?:until|till|through|from)\\s+\\d{1,2}\\s+${M}${NO_YEAR}`, 'i'),
+    new RegExp(`\\b(?:until|till|through|from)\\s+${M}\\s+\\d{1,2}${NO_YEAR}`, 'i'),
+    new RegExp(`\\d{1,2}\\s+${M}${NO_YEAR}`, 'i'),
+  ];
+  for (const re of patterns) {
+    const m = s.match(re);
+    if (m) return m[0].trim();
+  }
+  return '';
+}
+
 function findDateRangeInProse(text, hintYear) {
   if (!text) return { start: '', end: '', raw: '' };
   const s = String(text).replace(/[–—]/g, '-').replace(/\s+/g, ' ');
@@ -606,7 +648,11 @@ function applyLookback(rows, venueCode, stage) {
       // closing date found anywhere" and "Dates read from a sentence" — which
       // contradict each other on the approval card.
       if (stage === 'final') {
-        row.notes = addNote(row.notes, 'No closing date found anywhere on the venue\'s pages.');
+        // Say which of the two it is. "Nothing published" and "published, but
+        // with no year" are different facts, and she acts on them differently.
+        row.notes = addNote(row.notes, row._shownDateText
+          ? `The venue's page shows only "${row._shownDateText}" for this exhibition's dates — no year is published anywhere.`
+          : 'No closing date found anywhere on the venue\'s pages.');
       }
     } else if (!row.start_date && stage === 'final') {
       // A closing date but no opening one. Common: venues print only
@@ -1681,6 +1727,13 @@ async function fetchIndividualPages(page, rows, venueCode) {
           row.notes = addNote(row.notes,
             `${filled.join(' and ')} date read from a sentence, not a date field: "${p.raw}".`);
         }
+
+        // Still no closing date. Record what the page DOES print, if anything,
+        // so the note can quote it rather than claim the page is blank.
+        if (!row.end_date) {
+          const shown = unusableDateText(bodyText);
+          if (shown) row._shownDateText = shown;
+        }
       }
 
       // Also try to grab dates from the individual page if we don't have them
@@ -1946,7 +1999,7 @@ if (require.main === module) {
 module.exports = {
   findDateRange, findDateRangeInProse, parseMonthDay, ymd, startYearFor,
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
-  pickStructuredEvent, isoDay, runStamp,
+  pickStructuredEvent, isoDay, runStamp, unusableDateText,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
   installNetworkBridge, resolveChromium, safeGoto, classifyLoadError,
