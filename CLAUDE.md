@@ -1060,6 +1060,51 @@ interchangeable:
 So the workflow is **accept both, then dismiss the one she doesn't want** — not
 reject the duplicate card.
 
+**That workflow is only right for two entries that are both REAL.** See the
+quarantine list below for everything else.
+
+### Quarantine — "never add this", not yet built (agreed 10 Sep 2026)
+
+**Dismiss is not a rubbish chute.** Her rule, and it governs the design: the only
+things she dismisses are exhibitions that are **real**, **not duplicates**, and
+that she has looked at and simply isn't interested in. Junk must never enter the
+ledger at all.
+
+Today the app offers only two outcomes, and neither fits a junk row:
+- **Reject** — `applyRefresh` stores nothing, so the row proposes itself again on
+  every future sweep, forever.
+- **Accept, then dismiss** — it is in the ledger permanently, which is exactly the
+  pollution the rule forbids.
+
+There is no third option and there needs to be. Confirmed by reading the JSX:
+`dismiss` only writes `interested:false`, and no "seen and refused" list exists
+anywhere.
+
+**The design, keyed on URL:**
+- The ledger gains an `ignored` list alongside `rows` — the addresses she has
+  turned away. The file is `{rows, lastRun, savedAt}` and import reads only
+  `d.rows` and `d.lastRun`, so adding this **breaks no existing ledger**.
+- `analyzeProForma` skips any CSV row whose URL is on that list, so it never
+  becomes a card again.
+- Add cards gain a third button — "Never add this" — beside accept and reject.
+- **Keyed on the normalised URL**, the same identity the scraper uses: stable,
+  and no judgement involved. Rows with no URL fall back to venue + title.
+
+Three clean outcomes: **Accept** (real, goes in), **Never add** (junk,
+remembered, never enters), **Dismiss** (real, in the ledger, not interested).
+
+What it is for: dead links, non-exhibitions the scraper cannot filter (known bug
+2), and genuine duplicates.
+
+**Note what is NOT a problem.** A real exhibition with no published dates is
+fine: accept it, and every later sweep matches it in the ledger and stays
+silent. The forever-return only affects rows she **rejects**. So undated shows
+need no quarantine — junk does.
+
+**This is a JSX change and is deliberately deferred** until the venue-by-venue
+review is done. It must exist before her first real import, or that import
+creates precisely the mess described above.
+
 Cross-venue shows never merge on their own: `sameExhibition` returns false the
 moment `museumId` differs, so the app cannot collapse the Rijksmuseum and Borghese
 copies even if title and dates are identical. Same-venue travelling runs (both
