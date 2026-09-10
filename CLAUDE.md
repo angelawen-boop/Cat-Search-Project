@@ -1164,10 +1164,11 @@ Her sequence, with three adjustments made in the same conversation. This superse
 written when no import had been tested. **One has since been run successfully against
 scraper output**, so the join between scraper and app is no longer the unproven part.
 
-1. **Compression step — decide and build.** A separate pass over a finished CSV, so it
-   is re-runnable without re-scraping. A script owns the file; the model only ever
-   supplies a string. Two things still open: session vs a script calling the API, and
-   which file she imports (raw sweep or compressed).
+1. **Compression step — decided 10 Sep, ready to build.** A separate pass over a
+   finished CSV, re-runnable without re-scraping. The design is written up under
+   "Settled 10 Sep 2026 — how compression works" below: it reads the previous run's
+   compressed CSV, reuses wording where the raw text is unchanged, and asks the model
+   only where something actually changed. She imports the **compressed** file.
 2. **Wire all 21 venues with default recipes and run once.** This replaces what were two
    steps — "re-check Borghese and probe the rest" and "expand to the accessible ones".
    Marker rows became universal on 10 Sep, so **the run itself is the reconnaissance**:
@@ -1304,7 +1305,114 @@ wiring all 21 is step 2 and doubles as the reconnaissance.
 What remains of the original point: the summary column still holds raw curatorial
 text, so **compression is step 1** and still comes first.
 
-- **Where summary compression happens — the next decision to make.** The scraper
+### Settled 10 Sep 2026 — how compression works
+
+**The design principle, and it is hers:** *the model is the only part of this
+pipeline that thinks. Do not make it do dumb work for code to be clever on top
+of.*
+
+That sentence reversed the design. The first proposal had the compressor run
+**blind** — no memory of anything — which forced it to rewrite all ~350 rows
+every sweep so that code could then discard the ~340 that had not meaningfully
+changed. Her objection: *"it feels upside down, to make the model dead lift 500
+times so code can take the 3 bench presses that matter."* She is right, and the
+cause was mine: insisting on statelessness is what created the waste.
+
+**Give the compressor one piece of memory and it turns the right way up.**
+
+It reads **the previous run's compressed CSV** — already committed in
+`scraper/output/`. Not her ledger: none of the ledger objections apply, the
+file is always present, and it is scraper output matched against scraper
+output rather than against a ledger months old.
+
+Then, per row:
+
+| Raw text vs last run | What happens | Model calls |
+|---|---|---|
+| Identical | Reuse last run's 12 words | **none** — code, cannot be wrong |
+| Changed | Model gets the OLD 12 words *and* the new raw text, and answers one question: **is the old summary now false?** No → return it unchanged. Yes → rewrite | one |
+| Never seen | Write fresh | one |
+
+Measured on the three committed sweeps of 10 Sep: **79 of 80 rows matched
+across runs**, and **genuine venue rewording was zero**. So the reuse rate is
+near total and the model makes a handful of real decisions per sweep instead of
+350 mechanical ones.
+
+**"Is the old summary now false?" is the right test, and it is hers.** A blurb
+can differ in infinite trivial ways; the only one that matters is whether what
+the ledger says has stopped being true. *"Monet's sculptures"* becoming
+*"Monet's paintings"* is a rewrite. Promotional copy becoming past tense is
+not. That is judgement about the outside world, so it belongs to a model
+(Section 1) — and **review-and-edit beats write-from-scratch**, which is why
+the old wording is handed over rather than withheld.
+
+**Model non-determinism cannot cause drift**, and this is by construction, not
+by hope. Where the blurb is unchanged the model is never asked, so it cannot
+answer differently tomorrow. An earlier proposal leaned on temperature zero and
+a content-focused prompt to achieve this; **that was overstated** — temperature
+zero only stabilises *identical* input, and nothing forces a reworded blurb to
+produce the same words. Reuse-by-code is the guarantee; prompt choices are not.
+
+**Matching rows between runs:** venue + URL, falling back to venue + title.
+URLs do change — current-to-past path moves, and venues renaming for no reason
+— which is why the fallback exists. The failure is soft in both directions: a
+miss means writing fresh, which is merely today's behaviour; a false match
+means the model is handed the wrong old summary, but it is also handed the new
+raw text and asked whether it is still true, so it rewrites.
+
+**A reuse caused by a failed page must say so in `notes`.** If a detail page
+did not load, the summary column is empty and reuse would silently paper over a
+scraper failure — the exact class of invisible breakage the 10 Sep shutdown bug
+belonged to. Reuse is honest; hiding why is not.
+
+**Which rows get compressed: all of them.** The compressor cannot tell "closed
+and already in her ledger" from "closed and new to her" — only the app knows
+that, and only after the CSV exists. Her delta includes past exhibitions the
+August seed missed, and those arrive as Add cards that must carry a
+description. With reuse doing the work this costs almost nothing anyway.
+
+**What the app does with them — her table, 10 Sep:**
+
+| Ledger state | Sweep says | App |
+|---|---|---|
+| Not in ledger at all | anything | **Add**, always carries the summary |
+| Closed, has a summary | different summary | **no card** — what the show WAS has not changed |
+| Closed, no summary | has one | **fill** |
+| Open or upcoming, no summary | has one | **fill** |
+| Open or upcoming, has a summary | different | **edit card** |
+| Any | summary blank | nothing — `consider()` already returns early on an empty value |
+
+Everything above maps onto distinctions the app already computes: `fill` vs
+`change` at `analyzeProForma`, and open-vs-closed from the end date. The only
+new behaviour is dropping summary *changes* on closed shows.
+
+**Where the 12 words come from: a Claude Code session first, an API script
+later.** Both are safe — a script owns the CSV and the model only ever supplies
+a string. The wording will take two or three goes to get right, and that is a
+conversation; a script is the worse place to have it. Move to the API once the
+wording has settled and unattended runs are wanted. Nothing is wasted: the
+script that owns the file is the same either way, only the source of the string
+changes.
+
+**Rejected along the way, with reasons, so they are not re-proposed:**
+- **Give the compressor her ledger** so it can skip rows she already has. Puts a
+  ledger decision inside the scraper chain, needs the ledger file present on
+  whatever machine runs it, and is *wrong*: an entry already in the ledger with
+  a blank summary should still be filled.
+- **Reuse the app's `sameExhibition` as the cache key.** It asks the right
+  question for the ledger — *is this the same exhibition?* — and the wrong one
+  here, which is *will the same 12 words still be correct?* A past-tense
+  rewrite is the same exhibition and a stale summary.
+- **Fingerprint the raw text as the cache key.** Correct about identity, exactly
+  backwards on cost: it recompresses on every trivial rewording, which is the
+  noise the whole design exists to prevent.
+- **A word-overlap similarity threshold in code** deciding whether a change is
+  meaningful. This is the "upside down" case in its purest form — code making
+  the judgement call the model should make.
+
+### Superseded — the earlier framing of this decision
+
+- **Where summary compression happens.** The scraper
   writes raw text either way, so nothing built so far has to change whichever
   wins. Three things are already settled about it:
   - **A script owns the CSV; the model only ever supplies a string** (Section 1).
