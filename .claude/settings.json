@@ -9,6 +9,18 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Task|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/confirm-subagent.sh",
+            "statusMessage": "Waiting for approval to spawn a subagent"
+          }
+        ]
+      }
     ]
   }
 }
