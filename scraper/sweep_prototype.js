@@ -41,27 +41,77 @@ const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 const SKIP_RESOURCE_TYPES = new Set(['image', 'media', 'font']);
 
 // ── Output setup ──────────────────────────────────────────────────────────────
+//
+// A RUN IS A DIRECTORY, NOT A FILE. This is what removes a whole family of
+// problems rather than managing them:
+//
+//   scraper/output/run_2026-09-10_183045/
+//       ng.csv  rijks.csv  acq.csv     one file per venue
+//       sweep.csv                      all of them, rebuilt after every run
+//       log_<stamp>.txt                one per invocation
+//
+//   - A venue file is written ONLY once that venue finishes, so a file existing
+//     means that venue completed. A run that dies mid-venue leaves no half
+//     venue behind, and there is no ambiguity to resolve later.
+//   - Re-running a venue OVERWRITES ITS OWN FILE, so the same exhibition can
+//     never appear twice in one sweep. Duplicates within a single file are the
+//     one case the app does not absorb — each becomes a second "Add" card — so
+//     making them impossible matters more than detecting them.
+//   - "Which venues still need doing" is just "which have no file here yet",
+//     which is why --continue needs no stored state and no judgement.
+//   - sweep.csv is rebuilt from whatever venue files exist, every time. It is
+//     the cumulative record of one run date, and rebuilding is idempotent.
+//
+// The previous scheme wrote one flat file per run, which meant a partial run
+// could silently replace a full one, and stapling runs back together was left
+// to a person following prose rules. Both are now structurally impossible.
 const OUT_DIR = path.join(__dirname, 'output');
-if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 
 // Every venue this script knows how to scrape, in log order.
 const VENUE_ORDER = ['met', 'ng', 'rijks', 'acq', 'borghese', 'morgan'];
 
-// Which venues this run was asked for: `node sweep_prototype.js ng rijks`.
-const WANTED = process.argv.slice(2).map(a => a.toLowerCase()).filter(Boolean);
-const RUN_VENUES = WANTED.length ? VENUE_ORDER.filter(c => WANTED.includes(c)) : VENUE_ORDER;
+const ARGS = process.argv.slice(2).map(a => a.toLowerCase()).filter(Boolean);
+const CONTINUE = ARGS.includes('--continue');
+const WANTED = ARGS.filter(a => !a.startsWith('--'));
 
-// Each run writes its OWN pair of files and never touches an earlier run's.
-//
-// A filtered run used to overwrite sweep_raw.csv with only the venues it was
-// given, so a one-venue diagnostic quietly replaced a full sweep's output and
-// the file still looked complete. The name now carries the date, the time and
-// exactly which venues are inside, so a partial run cannot be mistaken for a
-// full one and no earlier result is ever lost.
-const RUN_STAMP = new Date().toISOString().slice(0, 16).replace('T', '_').replace(':', '');
-const RUN_LABEL = WANTED.length ? (RUN_VENUES.join('-') || 'none') : 'all';
-const CSV_PATH = path.join(OUT_DIR, `sweep_${RUN_STAMP}_${RUN_LABEL}.csv`);
-const LOG_PATH = path.join(OUT_DIR, `sweep_${RUN_STAMP}_${RUN_LABEL}.log.txt`);
+// Her clock, not the server's. Fixed to her zone rather than the machine's, so
+// a run from this container and a run from her laptop stamp the same way and
+// sort together — otherwise a 6pm Sydney run files itself as 08:00, on what can
+// be the wrong date either side of midnight.
+const RUN_TZ = 'Australia/Sydney';
+function runStamp(d = new Date()) {
+  const p = new Intl.DateTimeFormat('en-CA', {
+    timeZone: RUN_TZ, hourCycle: 'h23',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(d).reduce((o, x) => (o[x.type] = x.value, o), {});
+  return `${p.year}-${p.month}-${p.day}_${p.hour}${p.minute}${p.second}`;
+}
+
+function newestRunDir() {
+  try {
+    const dirs = fs.readdirSync(OUT_DIR)
+      .filter(n => /^run_/.test(n) && fs.statSync(path.join(OUT_DIR, n)).isDirectory())
+      .sort();
+    return dirs.length ? path.join(OUT_DIR, dirs[dirs.length - 1]) : null;
+  } catch { return null; }
+}
+
+// --continue resumes the newest run directory; anything else starts a new one.
+const RUN_DIR = (CONTINUE && newestRunDir()) || path.join(OUT_DIR, `run_${runStamp()}`);
+const CSV_PATH = path.join(RUN_DIR, 'sweep.csv');
+const LOG_PATH = path.join(RUN_DIR, `log_${runStamp()}.txt`);
+
+const venueCsvPath = code => path.join(RUN_DIR, `${code}.csv`);
+const venueIsDone = code => fs.existsSync(venueCsvPath(code));
+
+// Venues this invocation will actually scrape. Naming venues always wins; a
+// bare --continue means "finish this run", which is exactly the venues with no
+// file yet. No stored state, no staleness, nothing to get wrong.
+function venuesForThisRun() {
+  const asked = WANTED.length ? VENUE_ORDER.filter(c => WANTED.includes(c)) : VENUE_ORDER;
+  return (CONTINUE && !WANTED.length) ? asked.filter(c => !venueIsDone(c)) : asked;
+}
 
 const LOOKBACK = new Date('2024-07-01');
 
@@ -104,6 +154,39 @@ function csvRow(r) {
     .map(csvCell).join(',');
 }
 
+const CSV_HEADER = 'venue_code,title,start_date,end_date,summary,url,notes';
+
+// Called only after a venue has finished. Its existence is the record that the
+// venue completed, so it must never be written part-way through one.
+function writeVenueCsv(code, rows) {
+  const lines = [CSV_HEADER, ...rows.map(csvRow)];
+  fs.writeFileSync(venueCsvPath(code), lines.join('\n') + '\n', 'utf8');
+}
+
+/**
+ * Rebuild the run's cumulative CSV from whatever venue files exist.
+ *
+ * Runs at the end of EVERY invocation, including a --continue, so sweep.csv is
+ * always the complete record of this run date and nobody has to staple files
+ * together afterwards. Rebuilding from scratch rather than appending is what
+ * makes it idempotent: run it twice and the answer is the same.
+ */
+function rebuildSweepCsv() {
+  const lines = [CSV_HEADER];
+  const included = [];
+  for (const code of VENUE_ORDER) {
+    if (!venueIsDone(code)) continue;
+    const body = fs.readFileSync(venueCsvPath(code), 'utf8')
+      .split('\n')
+      .slice(1)                    // drop that file's header
+      .filter(l => l.trim() !== '');
+    lines.push(...body);
+    included.push(`${code}:${body.length}`);
+  }
+  fs.writeFileSync(CSV_PATH, lines.join('\n') + '\n', 'utf8');
+  return { rows: lines.length - 1, included };
+}
+
 // ── Date helpers ──────────────────────────────────────────────────────────────
 // Parse date strings like "March 2–July 26, 2026" or "April 16–July 19, 2026" or "July 2, 2022–June 28, 2026"
 // Returns { start: 'YYYY-MM-DD'|'', end: 'YYYY-MM-DD'|'', raw: original }
@@ -129,52 +212,55 @@ function monthNum(name) {
   return MONTHS[String(name || '').toLowerCase().replace(/\.$/, '')];
 }
 
+/**
+ * Build YYYY-MM-DD only when the calendar agrees the day exists.
+ *
+ * Returning '' rather than an impossible string is the whole point. JavaScript
+ * rolls 2026-02-31 silently forward to 3 March, so an impossible date does not
+ * announce itself — it becomes a plausible WRONG date further downstream, and
+ * can then decide whether an exhibition passes the lookback. Her rule: where
+ * the code has applicable logic it uses it, and where it does not the column
+ * stays blank and the notes say why.
+ */
+function ymd(y, m, d) {
+  const yy = parseInt(y, 10), mm = parseInt(m, 10), dd = parseInt(d, 10);
+  if (!plausibleYear(yy)) return '';
+  if (!(mm >= 1 && mm <= 12) || !(dd >= 1 && dd <= 31)) return '';
+  const dt = new Date(Date.UTC(yy, mm - 1, dd));
+  if (dt.getUTCFullYear() !== yy || dt.getUTCMonth() !== mm - 1 || dt.getUTCDate() !== dd) return '';
+  return `${yy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+}
+
+/**
+ * Which year does the opening date belong to, when the venue printed the year
+ * only once, on the closing side?
+ *
+ * "December 5 - January 20, 2026" opened in December 2025. A range that runs
+ * backwards inside a single year is a run that crosses new year, and there is
+ * exactly ONE reading of it — so this is logic, not a guess, and the row keeps
+ * its dates instead of being blanked.
+ *
+ * Before this, the start simply inherited the end's year, producing
+ * 2026-12-05 → 2026-01-20: an exhibition ending seven weeks before it opened.
+ * Museums run winter shows constantly, so this was not an edge case.
+ */
+function startYearFor(startMo, startDay, endMo, endDay, endYear) {
+  const backwards = startMo > endMo || (startMo === endMo && startDay > endDay);
+  return backwards ? endYear - 1 : endYear;
+}
+
 function parseMonthDay(str, fallbackYear) {
-  // e.g. "March 2" or "July 26, 2026"
-  const m = str.trim().match(/^([A-Za-z]+)\s+(\d{1,2})(?:,\s*(\d{4}))?$/);
+  // e.g. "March 2", "July 26, 2026", "Sept. 21, 2024".
+  // The trailing full stop is allowed because MONTH_PATTERN allows it: without
+  // it here, "Sept. 21, 2024 - Oct. 12, 2024" matched the range pattern and
+  // then produced no dates at all, silently.
+  const m = str.trim().match(/^([A-Za-z]+\.?)\s+(\d{1,2})(?:,\s*(\d{4}))?$/);
   if (!m) return null;
   const mo = monthNum(m[1]);
   if (!mo) return null;
-  const day = parseInt(m[2], 10);
   const yr = m[3] ? parseInt(m[3], 10) : fallbackYear;
   if (!yr) return null;
-  return `${yr}-${String(mo).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-}
-
-function parseDateRange(raw) {
-  if (!raw) return { start: '', end: '', raw: '' };
-  const s = raw.trim()
-    .replace(/–|—/g, '–')   // normalise dashes
-    .replace(/\s+/g, ' ');
-
-  // Pattern: "Month D, YYYY–Month D, YYYY"  (both sides have year)
-  const full = s.match(/^([A-Za-z]+ \d{1,2},\s*\d{4})\s*[–-]\s*([A-Za-z]+ \d{1,2},\s*\d{4})$/);
-  if (full) {
-    return {
-      start: parseMonthDay(full[1], null) || '',
-      end:   parseMonthDay(full[2], null) || '',
-      raw:   s
-    };
-  }
-
-  // Pattern: "Month D–Month D, YYYY"  (year only on end side)
-  const shared = s.match(/^([A-Za-z]+ \d{1,2})\s*[–-]\s*([A-Za-z]+ \d{1,2},\s*(\d{4}))$/);
-  if (shared) {
-    const yr = parseInt(shared[3], 10);
-    return {
-      start: parseMonthDay(shared[1], yr) || '',
-      end:   parseMonthDay(shared[2], null) || '',
-      raw:   s
-    };
-  }
-
-  // Single date "Month D, YYYY" — treat as end date (open until)
-  const single = s.match(/^([A-Za-z]+ \d{1,2},\s*\d{4})$/);
-  if (single) {
-    return { start: '', end: parseMonthDay(single[1], null) || '', raw: s };
-  }
-
-  return { start: '', end: '', raw: s };
+  return ymd(yr, mo, m[2]) || null;
 }
 
 /**
@@ -206,26 +292,34 @@ function findDateRange(raw) {
   // Day-first European form, as used by Borghese and the National Gallery:
   // "1 November 2025 to 11 January 2026", "19 June till 13 September 2026".
   let dm = s.match(new RegExp(`(\\d{1,2})\\s+(${M})\\s*(\\d{4})?${RANGE_SEP}(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
-  if (dm) {
+  if (dm && plausibleYear(dm[6])) {
     const endYr = parseInt(dm[6], 10);
-    const startYr = dm[3] ? parseInt(dm[3], 10) : endYr;
     const sMo = monthNum(dm[2]), eMo = monthNum(dm[5]);
-    if (sMo && eMo) return {
-      start: `${startYr}-${String(sMo).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`,
-      end:   `${endYr}-${String(eMo).padStart(2,'0')}-${String(dm[4]).padStart(2,'0')}`,
-      raw: s,
-    };
+    if (sMo && eMo) {
+      const sDay = parseInt(dm[1], 10), eDay = parseInt(dm[4], 10);
+      const startYr = dm[3] && plausibleYear(dm[3])
+        ? parseInt(dm[3], 10)
+        : startYearFor(sMo, sDay, eMo, eDay, endYr);
+      return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), s);
+    }
   }
 
   // "Month D, YYYY - Month D, YYYY" — year on both sides
   let m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})${RANGE_SEP}(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
-  if (m) return { start: parseMonthDay(titleCase(m[1]), null) || '', end: parseMonthDay(titleCase(m[2]), null) || '', raw: s };
+  if (m) return sane(parseMonthDay(titleCase(m[1]), null) || '', parseMonthDay(titleCase(m[2]), null) || '', s);
 
-  // "Month D - Month D, YYYY" — year only on the end side
-  m = s.match(new RegExp(`(${M}\\s+\\d{1,2})${RANGE_SEP}(${M}\\s+\\d{1,2},\\s*(\\d{4}))`, 'i'));
-  if (m) {
-    const yr = parseInt(m[3], 10);
-    return { start: parseMonthDay(titleCase(m[1]), yr) || '', end: parseMonthDay(titleCase(m[2]), null) || '', raw: s };
+  // "Month D - Month D, YYYY" — year only on the end side.
+  // The opening year is worked out, not assumed: "December 5 - January 20,
+  // 2026" opened in December 2025. See startYearFor().
+  m = s.match(new RegExp(`(${M})\\s+(\\d{1,2})${RANGE_SEP}(${M})\\s+(\\d{1,2}),\\s*(\\d{4})`, 'i'));
+  if (m && plausibleYear(m[5])) {
+    const endYr = parseInt(m[5], 10);
+    const sMo = monthNum(m[1]), eMo = monthNum(m[3]);
+    if (sMo && eMo) {
+      const sDay = parseInt(m[2], 10), eDay = parseInt(m[4], 10);
+      const startYr = startYearFor(sMo, sDay, eMo, eDay, endYr);
+      return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), s);
+    }
   }
 
   // "Month D - D, YYYY" — one month, day only on the closing side.
@@ -236,14 +330,7 @@ function findDateRange(raw) {
   m = s.match(new RegExp(`(${M})\\s+(\\d{1,2})${RANGE_SEP}(\\d{1,2}),\\s*(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
     const mo = monthNum(m[1]);
-    if (mo) {
-      const mm = String(mo).padStart(2, '0');
-      return {
-        start: `${m[4]}-${mm}-${String(m[2]).padStart(2, '0')}`,
-        end:   `${m[4]}-${mm}-${String(m[3]).padStart(2, '0')}`,
-        raw: s,
-      };
-    }
+    if (mo) return sane(ymd(m[4], mo, m[2]), ymd(m[4], mo, m[3]), s);
   }
 
   // Single "Month D, YYYY" — treat as the end date (open until)
@@ -258,13 +345,13 @@ function findDateRange(raw) {
   m = s.match(new RegExp(`\\b(till|until|through|to)\\s+(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
     const mo = monthNum(m[3]);
-    if (mo) return { start: '', end: `${m[4]}-${String(mo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`, raw: s };
+    if (mo) return { start: '', end: ymd(m[4], mo, m[2]), raw: s };
   }
 
   m = s.match(new RegExp(`\\b(from|opens?|opening)\\s+(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
     const mo = monthNum(m[3]);
-    if (mo) return { start: `${m[4]}-${String(mo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`, end: '', raw: s };
+    if (mo) return { start: ymd(m[4], mo, m[2]), end: '', raw: s };
   }
 
   // "Month YYYY" or "Month / YYYY" with no day — a start month, end unknown.
@@ -272,7 +359,7 @@ function findDateRange(raw) {
   m = s.match(new RegExp(`(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
   if (m && plausibleYear(m[2])) {
     const mo = monthNum(m[1]);
-    if (mo) return { start: `${m[2]}-${String(mo).padStart(2,'0')}-01`, end: '', latestYear: +m[2], raw: s };
+    if (mo) return { start: ymd(m[2], mo, 1), end: '', latestYear: +m[2], raw: s };
   }
 
   // A season and a year, no day at all: Acquavella's archive prints
@@ -349,12 +436,14 @@ function findDateRangeInProse(text, hintYear) {
     `(\\d{1,2})\\s+(${M})(?:\\s+(\\d{4}))?[^.]{0,40}?${SEP}(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (dm && plausibleYear(dm[6])) {
     const endYr = parseInt(dm[6], 10);
-    const startYr = dm[3] && plausibleYear(dm[3]) ? parseInt(dm[3], 10) : endYr;
     const sMo = monthNum(dm[2]), eMo = monthNum(dm[5]);
-    if (sMo && eMo) return sane(
-      `${startYr}-${String(sMo).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`,
-      `${endYr}-${String(eMo).padStart(2,'0')}-${String(dm[4]).padStart(2,'0')}`,
-      dm[0].slice(0, 120));
+    if (sMo && eMo) {
+      const sDay = parseInt(dm[1], 10), eDay = parseInt(dm[4], 10);
+      const startYr = dm[3] && plausibleYear(dm[3])
+        ? parseInt(dm[3], 10)
+        : startYearFor(sMo, sDay, eMo, eDay, endYr);
+      return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), dm[0].slice(0, 120));
+    }
   }
 
   // "From June 10 to September 14, 2025"  /  "March 17 ... until May 10, 2026"
@@ -362,12 +451,14 @@ function findDateRangeInProse(text, hintYear) {
     `(${M})\\s+(\\d{1,2})(?:,\\s*(\\d{4}))?[^.]{0,40}?${SEP}(${M})\\s+(\\d{1,2}),?\\s*(\\d{4})`, 'i'));
   if (m && plausibleYear(m[6])) {
     const endYr = parseInt(m[6], 10);
-    const startYr = m[3] && plausibleYear(m[3]) ? parseInt(m[3], 10) : endYr;
     const sMo = monthNum(m[1]), eMo = monthNum(m[4]);
-    if (sMo && eMo) return sane(
-      `${startYr}-${String(sMo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`,
-      `${endYr}-${String(eMo).padStart(2,'0')}-${String(m[5]).padStart(2,'0')}`,
-      m[0].slice(0, 120));
+    if (sMo && eMo) {
+      const sDay = parseInt(m[2], 10), eDay = parseInt(m[5], 10);
+      const startYr = m[3] && plausibleYear(m[3])
+        ? parseInt(m[3], 10)
+        : startYearFor(sMo, sDay, eMo, eDay, endYr);
+      return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), m[0].slice(0, 120));
+    }
   }
 
   // Day-first with NO year anywhere: "5 June to 25 October".
@@ -378,11 +469,15 @@ function findDateRangeInProse(text, hintYear) {
     if (dm) {
       const sMo = monthNum(dm[2]), eMo = monthNum(dm[4]);
       if (sMo && eMo) {
-        // A run that crosses new year ends in the following year.
-        const endYr = eMo < sMo ? Number(hintYear) + 1 : Number(hintYear);
+        // A run that crosses new year ends in the following year. Same test as
+        // startYearFor, read from the other end: the year we hold is the start's.
+        const sDay = parseInt(dm[1], 10), eDay = parseInt(dm[3], 10);
+        const endYr = startYearFor(sMo, sDay, eMo, eDay, Number(hintYear)) === Number(hintYear)
+          ? Number(hintYear)
+          : Number(hintYear) + 1;
         return sane(
-          `${hintYear}-${String(sMo).padStart(2,'0')}-${String(dm[1]).padStart(2,'0')}`,
-          `${endYr}-${String(eMo).padStart(2,'0')}-${String(dm[3]).padStart(2,'0')}`,
+          ymd(hintYear, sMo, sDay),
+          ymd(endYr, eMo, eDay),
           dm[0].slice(0, 120) + ' (year taken from the listing page)');
       }
     }
@@ -392,7 +487,7 @@ function findDateRangeInProse(text, hintYear) {
     if (one) {
       const mo = monthNum(one[3]);
       if (mo) return { start: '',
-        end: `${hintYear}-${String(mo).padStart(2,'0')}-${String(one[2]).padStart(2,'0')}`,
+        end: ymd(hintYear, mo, one[2]),
         raw: one[0].slice(0, 120) + ' (year taken from the listing page)' };
     }
 
@@ -401,7 +496,7 @@ function findDateRangeInProse(text, hintYear) {
     if (one) {
       const mo = monthNum(one[3]);
       if (mo) return {
-        start: `${hintYear}-${String(mo).padStart(2,'0')}-${String(one[2]).padStart(2,'0')}`,
+        start: ymd(hintYear, mo, one[2]),
         end: '', raw: one[0].slice(0, 120) + ' (year taken from the listing page)' };
     }
   }
@@ -414,12 +509,14 @@ function findDateRangeInProse(text, hintYear) {
       const sMo = monthNum(m[1]), eMo = monthNum(m[3]);
       if (sMo && eMo) {
         // A run that crosses new year ends in the following year.
-        const endYr = eMo < sMo ? Number(hintYear) + 1 : Number(hintYear);
-        return {
-          start: `${hintYear}-${String(sMo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`,
-          end:   `${endYr}-${String(eMo).padStart(2,'0')}-${String(m[4]).padStart(2,'0')}`,
-          raw: m[0].slice(0, 120) + ' (year taken from listing page)',
-        };
+        const sDay = parseInt(m[2], 10), eDay = parseInt(m[4], 10);
+        const endYr = startYearFor(sMo, sDay, eMo, eDay, Number(hintYear)) === Number(hintYear)
+          ? Number(hintYear)
+          : Number(hintYear) + 1;
+        return sane(
+          ymd(hintYear, sMo, sDay),
+          ymd(endYr, eMo, eDay),
+          m[0].slice(0, 120) + ' (year taken from listing page)');
       }
     }
   }
@@ -784,6 +881,45 @@ async function getCuratorialText(page) {
  * Treat it as helpful, not authoritative. It is published for search engines
  * and is sometimes left unmaintained, so rows that use it say so in the notes.
  */
+/**
+ * Choose the structured-data event that belongs to THIS exhibition, or none.
+ *
+ * A page can carry several event-like blocks: the exhibition, a related talk,
+ * a members' preview, a site-wide listing, stale metadata. Taking the first one
+ * because it happens to be first is how another event's dates end up on this
+ * exhibition — and a wrong date that says "taken from the site's structured
+ * data" reads more authoritative than a blank one, so it is worse than nothing.
+ *
+ * Only a confident name match is accepted. If nothing matches, or more than one
+ * does, structured data is skipped entirely and the ordinary prose fallback
+ * takes over: this is a bonus source, never a replacement, so declining to use
+ * it costs nothing.
+ *
+ * Comparison is on a flattened form, because casing and punctuation differ
+ * routinely between a page's heading and its JSON-LD (Section 5: some venues
+ * capitalise in CSS). The values written to the row are never changed.
+ */
+function pickStructuredEvent(events, rowTitle) {
+  if (!Array.isArray(events) || !events.length) return null;
+  const flat = s => String(s || '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
+  const want = flat(rowTitle);
+  if (!want) return null;                       // nothing to match against
+  const exact = events.filter(e => flat(e.name) === want);
+  if (exact.length === 1) return exact[0];
+  if (exact.length > 1) return null;            // ambiguous — decline
+  // One side sometimes carries a subtitle the other omits ("Renoir and Love"
+  // vs "Renoir and Love | Exhibition"). Accept containment only when exactly
+  // one event qualifies, and only for titles long enough to be distinctive.
+  if (want.length >= 12) {
+    const near = events.filter(e => {
+      const n = flat(e.name);
+      return n && (n.includes(want) || want.includes(n)) && Math.min(n.length, want.length) >= 12;
+    });
+    if (near.length === 1) return near[0];
+  }
+  return null;
+}
+
 async function readStructuredData(page) {
   try {
     return await page.evaluate(() => {
@@ -817,7 +953,10 @@ async function readStructuredData(page) {
 // and only if it is a plausible exhibition year.
 function isoDay(v) {
   const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return m && plausibleYear(m[1]) ? `${m[1]}-${m[2]}-${m[3]}` : '';
+  // Through the same calendar validator as every other date. Structured data is
+  // published for search engines and is sometimes left unmaintained, so it gets
+  // no more trust than text scraped off the page.
+  return m ? ymd(m[1], m[2], m[3]) : '';
 }
 
 // ── Title extraction ──────────────────────────────────────────────────────────
@@ -990,12 +1129,46 @@ function slugToWords(url) {
 function normalizeUrl(u) {
   try {
     const x = new URL(String(u).trim());
-    x.hash = '';
-    const path = x.pathname.replace(/\/+$/, '');
-    return (x.origin + (path || '/') + x.search).toLowerCase();
+    const p = x.pathname.replace(/\/+$/, '');
+    // Lowercase the SCHEME AND HOST ONLY. Host names are case-insensitive by
+    // spec; paths and query values are not. Folding the whole address meant two
+    // exhibitions whose slugs differed only in capitalisation were treated as
+    // one, and the second vanished — counted as a "duplicate" in the coverage
+    // table, so it looked accounted for rather than lost.
+    return `${x.protocol.toLowerCase()}//${x.host.toLowerCase()}${p || '/'}${x.search}`;
   } catch {
-    return String(u || '').trim().replace(/\/+$/, '').toLowerCase();
+    return String(u || '').trim().replace(/\/+$/, '');
   }
+}
+
+/**
+ * Turn a link's href into a full address, the way a browser would.
+ *
+ * Joining the venue's base URL onto the href by hand only covers the simplest
+ * relative link. Real sites also use "../", protocol-relative "//host/path",
+ * and query-only hrefs; joining those by hand produces an address that either
+ * fails outright or — worse — resolves to something real but wrong.
+ *
+ * Resolution is against the LISTING PAGE rather than the site root, because
+ * that is what a relative link is actually relative to.
+ *
+ * A link resolving off the venue's own host is refused: a museum page can link
+ * anywhere, and an external link that happened to match the venue's selector
+ * would pull another institution's exhibition into this venue's rows. Those are
+ * counted separately rather than lumped in with navigation, so a venue that
+ * legitimately uses a second host shows up in the coverage table on the first
+ * run instead of quietly returning fewer exhibitions.
+ */
+function resolveHref(href, pageUrl, base) {
+  let url;
+  try { url = new URL(href, pageUrl || base); } catch { return { url: null, reason: 'unparseable' }; }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return { url: null, reason: 'not-web' };
+  let baseHost;
+  try { baseHost = new URL(base).host.toLowerCase(); } catch { return { url: null, reason: 'bad-base' }; }
+  const bare = h => h.replace(/^www\./, '');
+  if (bare(url.host.toLowerCase()) !== bare(baseHost)) return { url: null, reason: 'offsite' };
+  url.hash = '';
+  return { url: url.href, reason: '' };
 }
 
 /**
@@ -1035,18 +1208,30 @@ const COUNTS = [];
  */
 async function collectFromListing(page, opts) {
   const { venueCode, ctx, selector, base, isNav, rows, seenUrls, urlToRow } = opts;
-  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, dupUrl: 0, noTitle: 0, kept: 0 };
+  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, kept: 0 };
 
   const links = await page.$$(selector);
   c.seen = links.length;
+
+  // Relative links resolve against the page they were found on, not the site
+  // root. See resolveHref().
+  const pageUrl = (typeof page.url === 'function' ? page.url() : '') || base;
 
   for (const link of links) {
     const href = await link.getAttribute('href');
     if (!href) { c.nav++; continue; }
 
-    const fullUrl = href.startsWith('http')
-      ? href
-      : base + (href.startsWith('/') ? href : '/' + href);
+    const resolved = resolveHref(href, pageUrl, base);
+    if (!resolved.url) {
+      if (resolved.reason === 'offsite') {
+        c.offsite++;
+        log(`    off-site link ignored (${href})`);
+      } else {
+        c.nav++;
+      }
+      continue;
+    }
+    const fullUrl = resolved.url;
 
     if (isNav(href, fullUrl)) { c.nav++; continue; }
 
@@ -1356,8 +1541,8 @@ async function fetchIndividualPages(page, rows, venueCode) {
       // Structured data first, where the venue publishes any.
       if (!row.start_date || !row.end_date) {
         const events = await readStructuredData(page);
-        if (events.length) {
-          const ev = events[0];
+        const ev = pickStructuredEvent(events, row.title);
+        if (ev) {
           const sd = isoDay(ev.start), ed = isoDay(ev.end);
           const filled = [];
           if (!row.start_date && sd) { row.start_date = sd; filled.push('opening'); }
@@ -1500,16 +1685,31 @@ function resolveChromium() {
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-(async () => {
+async function main() {
+  const RUN_VENUES = venuesForThisRun();
+
+  fs.mkdirSync(RUN_DIR, { recursive: true });
+
   log('Cat Watch Sweep Prototype — starting');
   log(`Lookback floor: ${LOOKBACK.toISOString().slice(0,10)}`);
-  log(`Venues this run: ${RUN_VENUES.join(', ') || '(none matched)'}`);
-  log(`Writing: ${path.basename(CSV_PATH)}`);
+  log(`Run directory: ${RUN_DIR}${CONTINUE ? ' (continuing)' : ''}`);
+  log(`Venues this run: ${RUN_VENUES.join(', ') || '(none)'}`);
+  const already = VENUE_ORDER.filter(venueIsDone);
+  if (already.length) log(`Already complete in this run: ${already.join(', ')}`);
 
   if (WANTED.length && !RUN_VENUES.length) {
     log(`Nothing matched "${WANTED.join(' ')}". Known venues: ${VENUE_ORDER.join(', ')}`);
     writeLog();
     process.exit(1);
+  }
+
+  // A --continue with nothing left to do still rebuilds the cumulative file,
+  // so the run always ends with a complete sweep.csv.
+  if (!RUN_VENUES.length) {
+    const built = rebuildSweepCsv();
+    log(`Nothing left to scrape. sweep.csv rebuilt: ${built.rows} rows (${built.included.join(', ')})`);
+    writeLog();
+    return;
   }
 
   log(`Proxy: ${PROXY_URL || '(none — direct egress assumed)'}`);
@@ -1538,7 +1738,6 @@ function resolveChromium() {
 
   const page = await context.newPage();
 
-  const allRows = [];
   const summary = {};
 
   // Order matters only for readability of the log; each venue is independent.
@@ -1553,14 +1752,19 @@ function resolveChromium() {
       noteTravellingRuns(rows, code);
       const real = rows.filter(r => !r.title.startsWith('['));
       const placeholders = rows.filter(r => r.title.startsWith('['));
-      allRows.push(...rows);
+
+      // Written only now, once this venue is finished. If the process dies at
+      // any point before this line, the venue simply has no file and is picked
+      // up by the next --continue. There is never a half-scraped venue on disk.
+      writeVenueCsv(code, rows);
+
       summary[code] = {
         total: rows.length,
         real: real.length,
         withSummary: real.filter(r => r.summary).length,
         placeholders: placeholders.length,
       };
-      log(`  → ${code}: ${real.length} exhibitions, ${real.filter(r=>r.summary).length} with curatorial text`);
+      log(`  → ${code}: ${real.length} exhibitions, ${real.filter(r=>r.summary).length} with curatorial text → ${code}.csv`);
     } catch (e) {
       log(`  FATAL ERROR in ${code} scraper: ${e.message}`);
       summary[code] = { error: e.message };
@@ -1569,11 +1773,7 @@ function resolveChromium() {
 
   await browser.close();
 
-  // Write CSV
-  const written = passThrough(allRows);
-  const csvLines = ['venue_code,title,start_date,end_date,summary,url,notes'];
-  for (const r of written) csvLines.push(csvRow(r));
-  fs.writeFileSync(CSV_PATH, csvLines.join('\n') + '\n', 'utf8');
+  const built = rebuildSweepCsv();
 
   // Final summary in log
   logSection('SWEEP COMPLETE — SUMMARY');
@@ -1589,18 +1789,20 @@ function resolveChromium() {
   // Every link the scraper saw is accounted for by one of these columns.
   // If a venue's total looks wrong, this says which stage lost the rows.
   logSection('COVERAGE — every link accounted for');
-  log('  venue      page                          seen   nav   dup  noTitle  collected');
-  log('  ' + '-'.repeat(76));
+  log('  venue      page                          seen   nav offsite   dup  noTitle  collected');
+  log('  ' + '-'.repeat(86));
   const pad = (v, n) => String(v).padEnd(n);
   const num = (v, n) => String(v).padStart(n);
   for (const c of COUNTS) {
     log('  ' + pad(c.venue, 10) + ' ' + pad(String(c.page).slice(0, 28), 28) +
-        num(c.seen, 6) + num(c.nav, 6) + num(c.dupUrl, 6) + num(c.noTitle, 9) + num(c.kept, 11));
+        num(c.seen, 6) + num(c.nav, 6) + num(c.offsite || 0, 8) +
+        num(c.dupUrl, 6) + num(c.noTitle, 9) + num(c.kept, 11));
   }
   if (!COUNTS.length) log('  (no listing pages were read)');
   log('');
   log('  seen      = links matching the venue\'s selector on that page');
   log('  nav       = site navigation and filter links, not exhibitions');
+  log('  offsite   = resolved to another host and was not followed; each one is logged above');
   log('  dup       = an address already collected; noted on the existing row, never dropped silently');
   log('  noTitle   = no usable exhibition name could be read from the link');
   log('  collected = rows handed on to the lookback filter and detail-page fetch');
@@ -1608,9 +1810,34 @@ function resolveChromium() {
   log('');
   log(`Network bridge: ${netStats.fulfilled} requests served, ${netStats.skipped} skipped (image/media/font), ${netStats.failed} failed`);
   log('');
-  log(`CSV written to:  ${CSV_PATH}  (${written.length} rows, venues: ${RUN_VENUES.join(', ')})`);
+  const outstanding = VENUE_ORDER.filter(c => !venueIsDone(c));
+  log(`Run directory:   ${RUN_DIR}`);
+  log(`Cumulative CSV:  ${CSV_PATH}  (${built.rows} rows — ${built.included.join(', ')})`);
   log(`Log written to:  ${LOG_PATH}`);
-  log(`Total rows written (no de-duplication — see passThrough): ${written.length}`);
+  if (outstanding.length) {
+    log(`Not yet in this run: ${outstanding.join(', ')}`);
+    log(`  Finish it with:  node scraper/sweep_prototype.js --continue`);
+  } else {
+    log('Every known venue has a file in this run.');
+  }
+  log('No de-duplication is applied — see passThrough.');
 
   writeLog();
-})();
+}
+
+// Requiring this file (the fixture tests do) must not start a sweep.
+if (require.main === module) {
+  main().catch(e => {
+    log(`FATAL: ${e && e.stack ? e.stack : e}`);
+    try { writeLog(); } catch { /* nothing more we can do */ }
+    process.exit(1);
+  });
+}
+
+// Exported for scraper/date.test.js. Only pure functions — nothing here touches
+// the network, the browser or the filesystem.
+module.exports = {
+  findDateRange, findDateRangeInProse, parseMonthDay, ymd, startYearFor,
+  monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
+  pickStructuredEvent, isoDay, runStamp,
+};

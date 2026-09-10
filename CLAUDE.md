@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 8 Sep 2026 (Acquavella and National Gallery both verified)
+**Last updated:** 10 Sep 2026 (independent review acted on — see Section 11)
 **Source:** built from Cat Watch Handover v11 plus what this repo's own scraper work has since proven.
 
 This repo now holds **two** things, and will hold both going forward:
@@ -64,6 +64,35 @@ The owner does not read code and does not want to. Explain the logic, the trade-
 - **Never propose dropping a feature or accepting reduced functionality as the fix.** The tool exists to do more automatically. When something breaks, make it work.
 - **No undiscussed changes, no silent workarounds, no shortcut fixes.** Fix the real problem and say what you did.
 - **She will not manually enter exhibition data.** Treat that as a fixed constraint, not an open question.
+
+### Put it in code — her rule, 10 Sep 2026
+
+**Hard code beats a Claude Code session, and a Claude Code session beats Chat
+Claude.** Push every job as far up that order as it will go.
+
+The test for where something belongs:
+
+> **Does the task have exactly one correct answer, derivable from the inputs?**
+
+- **One correct answer → code.** Merging files, choosing which venues still need
+  running, validating a date, resolving a link. These must never be prose rules
+  that a session re-derives each time, because that is precisely how a CSV gets
+  mangled — and when it does, the damage is invisible until it reaches her.
+- **Many acceptable answers, or judgement about the outside world → a model.**
+  Compressing curatorial prose into 12 words. Reading a page nobody has taught
+  the scraper about.
+- **Even then, a model touches strings, never files.** A script owns the CSV and
+  asks for a value; the model never sees a comma or a column. The only thing it
+  can then get wrong is wording, which is visible on the approval card anyway.
+
+This rule has already reversed one decision. Reconciling part-finished runs was
+going to be a written procedure for a session to follow; applying the test moved
+it into the scraper as the run-directory design, which deleted the problem
+outright instead of documenting it.
+
+Chat Claude has no project context and cannot read this guide. Prefer Claude
+Code for anything it can reach; Chat Claude only where the network genuinely
+blocks us (Section 6a).
 
 ### Specific to Claude Code
 
@@ -179,12 +208,24 @@ collapsing them cannot be wrong. Nothing cleverer qualifies. Same title, similar
 "looks like the same show" are all judgements, and the last one cost 29 National Gallery
 exhibitions.
 
-Two details make it actually work, both learned the hard way:
+Three details make it actually work, all learned the hard way:
 - Compare the **finished address**, not the raw link text. The same Acquavella page is
   linked both as `exhibitions/matisse2` and `/exhibitions/matisse2`, and trailing slashes
-  vary. `normalizeUrl()` handles this.
+  vary. `normalizeUrl()` handles this, resolving each href against the page it was
+  found on so `../` and protocol-relative links come out right.
 - The guard spans a **whole venue**, not one page. It used to reset between a venue's
   current and past pages.
+- **Only the scheme and host are lowercased.** Host names are case-insensitive by
+  spec; paths and query values are not. Folding the whole address meant two
+  exhibitions whose slugs differed only in capitalisation became one, and the
+  second was counted as a duplicate rather than reported as lost — the exact
+  failure this rule exists to prevent.
+
+A link resolving to **another host** is refused and counted in its own `offsite`
+column, each one logged. A venue page can link anywhere, and an external link
+matching the venue's selector would pull another institution's exhibition into
+these rows. Counting rather than discarding means a venue that legitimately uses
+a second host shows up on the first run instead of quietly returning less.
 
 When a link does appear twice, the surviving row gains an "Also listed on the venue's
 'past' page." note. Information, never a silent drop.
@@ -227,7 +268,16 @@ browser for tidy sites"; there is one transport and one code path.
 
 Treat it as helpful, not authoritative — it is published for Google and
 sometimes goes unmaintained. Rows that use it say so in their notes, and its
-dates still pass the plausible-year guard.
+dates go through the same calendar validator as everything else.
+
+**It must be proved to belong to this exhibition before it is used.** A page can
+carry several event blocks — the exhibition, a members' preview, a curator's
+tour, a site-wide listing, stale metadata. `pickStructuredEvent()` accepts one
+only on a confident name match; no match, or two equally good ones, and
+structured data is skipped entirely and the prose fallback takes over. Taking
+whichever came first is how another event's dates end up on this exhibition, and
+a wrong date labelled "taken from the site's structured data" reads more
+authoritative than a blank one — worse than nothing.
 
 ### What the lookback actually means
 
@@ -265,6 +315,9 @@ Handover v11 Section 12 listed four options. This repo is **Shape B**: the headl
 
 **Target output:** a CSV in exact pro forma format, with the **summary column carrying the raw curatorial text dump** rather than a finished 12-word summary. A later compression step turns raw text into the 12-word summary. Keeping the raw text is what makes fabrication structurally impossible — the compressor can only compress what's actually in the record.
 
+The 6-venue prototype is finished end to end before the other 15 are wired —
+see Section 8.
+
 **Final goal:** she feeds the compressed CSV straight into Import Refresh without checking it by hand.
 
 ### Scope
@@ -287,12 +340,47 @@ Two conditions keep this honest, and both are cheap:
 
 - `scraper/sweep_prototype.js` — the real scraper. Playwright + headless Chromium. **This is the one being developed.**
 - `scraper/sweep_fetch.js` — an older diagnostic copy using plain `node-fetch` and no browser. Kept as a fallback and a comparison point. Not being developed.
-- `scraper/output/sweep_raw.csv` — the pro forma output.
-- `scraper/output/sweep_log.txt` — per-venue diagnostics: what worked, what failed, why.
+- `scraper/date.test.js` — fixture tests for the pure logic. `npm test`.
+- `scraper/output/run_<date>_<time>/` — one directory per run (see below).
 
-Run: `node scraper/sweep_prototype.js` for everything, or `node scraper/sweep_prototype.js ng rijks` for named venues only.
+Run:
+```
+node scraper/sweep_prototype.js              everything
+node scraper/sweep_prototype.js ng rijks     named venues only
+node scraper/sweep_prototype.js --continue   finish the newest run
+npm test                                     the date/URL fixtures, ~1 second
+```
 
-**Warning:** a filtered run still overwrites `sweep_raw.csv` with only those venues' rows. Not yet fixed.
+### A run is a directory, not a file
+
+```
+scraper/output/run_2026-09-10_183045/
+    ng.csv  rijks.csv  acq.csv     one file per venue
+    sweep.csv                      all of them — this is the file she imports
+    log_<stamp>.txt                one per invocation
+```
+
+This shape is doing real work, not filing:
+
+- **A venue file is written only once that venue finishes.** So a file existing
+  means that venue completed, and a run that dies mid-venue leaves no half venue
+  behind. There is no "did it finish?" question to answer later.
+- **Re-running a venue overwrites its own file**, so one exhibition can never
+  appear twice in a sweep. Duplicates *within a single file* are the one case
+  the app does not absorb (Section 3) — each becomes a second "Add" card — so
+  making them impossible beats detecting them.
+- **`--continue` needs no stored state**: "what still needs doing" is "which
+  venues have no file here yet". Nothing to go stale, no flag to misread.
+- **`sweep.csv` is rebuilt from the venue files at the end of every run**,
+  including a `--continue`. It is the cumulative record of one run date, so a
+  sweep that took three invocations still produces one file. Rebuilding rather
+  than appending makes it idempotent.
+
+Timestamps are **Sydney time**, fixed to that zone rather than the machine's, so
+a run from this container and a run from her laptop stamp the same way.
+
+**Nothing is left for a person to reconcile afterwards.** That was deliberate:
+prose rules that a session re-derives each time are how CSVs get mangled.
 
 ### The network bridge — don't remove it
 
@@ -338,6 +426,16 @@ Recipe options so far: `selector`, `isNav`, `title` (heading / card / strip
 rules), `markEmptyPages` for venues that get blocked, `lookbackAfterDetail` for
 venues whose listings carry no closing date, and `yearDropdown` for the Met's
 year filter.
+
+**The pure logic is covered by fixture tests** (`scraper/date.test.js`, run with
+`npm test`): every date format in this guide, the four art-history traps,
+cross-year ranges, impossible dates, URL identity and resolution, and
+structured-data matching. No network, no browser, about a second.
+
+Two of the defects the 9 Sep review found would have been caught here before
+they ever reached a CSV, which is why the tests exist. **What they cannot do is
+tell you a venue redesigned its pages** — they test the logic, not the
+assumptions about the outside world. Only a live run does that.
 
 ### How a listing page is read
 
@@ -391,8 +489,29 @@ Till 29 November                     no year, no opening date
 WORN till 21 March 2027              single date with a preposition
 March / 2026                         month and year only
 December 9 - 31, 2023                one month, day only on the closing side
+December 5 - January 20, 2026        crosses new year — opens in 2025
 Summer 2022                          season and year — a bound, not a date
 ```
+
+**A range that runs backwards crosses the new year, and the opening year is
+worked out rather than assumed.** "December 5 – January 20, 2026" opened in
+December **2025**. Until 10 Sep the start simply inherited the closing year, so
+that show came out ending seven weeks before it opened — and `sane()` was only
+wired into the prose parser, never the listing parser, so the impossible range
+went straight into the CSV. Museums run winter shows constantly; this was not an
+edge case. There is exactly one reading of a backwards range, so this is logic,
+not a guess, and the row keeps its dates instead of being blanked.
+
+**Every date is checked against the calendar before it is stored.** `ymd()` is
+the single gate — the parsers, and structured data via `isoDay()`, all go
+through it. A day that does not exist in its month returns empty rather than a
+string: JavaScript rolls `2026-02-31` silently forward to 3 March, so an
+impossible date never announces itself, it just becomes a plausible **wrong**
+one and can then decide whether a show passes the lookback.
+
+**Her standing rule for dates, 10 Sep 2026:** where the code has applicable
+logic it uses it; where it has none the date columns stay blank and the notes
+explain why. Never a guess.
 
 **Every dash is normalised first** — U+2010 to U+2015, the minus sign and the
 Hebrew maqaf. The National Gallery uses a figure dash on some cards and an en
@@ -465,9 +584,18 @@ arrow that silently goes somewhere else is harder to understand than one that
 goes nowhere honestly.
 
 **Verified 8 Sep 2026 across all 78 rows** of ng, rijks and acq: 75 URLs return
-200, the three above are the venue's dead links, no summary is empty, none is
-under 94 characters, none contains consent or navigation boilerplate, and no
-two rows share an opening line.
+200, the three above are the venue's dead links, none contains consent or
+navigation boilerplate, and no two rows share an opening line.
+
+**Correction, 10 Sep:** that check also recorded "no summary is empty", which
+was wrong — it was measured before the 404 fix landed, when those three rows
+still held "This page does not exist…" as their curatorial text. **The three
+dead-link rows necessarily have an empty summary**, because there is no page to
+read one from. Empty is the honest answer; the note says why. A fourth row can
+appear on any given run when a page simply fails to load — the 10 Sep run had
+one, `hockney-and-piero-a-longer-look`, carrying "This exhibition's own page did
+not load (LOAD_ERROR)". That is transient, not a defect, and a re-run usually
+clears it.
 
 ### Travelling exhibitions — a note, never a merge
 
@@ -485,17 +613,38 @@ This is a note and nothing more. It must never become de-duplication: a wrong
 match costs one misleading sentence, never a row. A venue opts in by listing its
 `locations` in its recipe.
 
-### Last full-sweep result (8 Sep 2026)
+### Last full-sweep result (10 Sep 2026, after the review fixes)
 
 | Venue | Rows | Notes |
 |---|---|---|
-| `ng` | 27 | **matches her count of the live pages: 2 on now + 5 coming soon + 20 past.** No rows without a closing date |
+| `ng` | 27 | **matches her count of the live pages: 2 on now + 5 coming soon + 20 past.** No rows without a closing date. 10 of the 27 cross the new year and are now dated correctly |
 | `rijks` | 37 | **10 current/upcoming + 14 past, both matching her count of the live page.** 3 rows are the venue's own dead links |
-| `acq` | 14 | **matches her count of the live page: 1 upcoming + 13 past.** 119 listed, 11 archive-nav links ignored, 94 cut by the lookback |
-| `borghese` | — | **unreachable** on 8 Sep, see 6a |
+| `acq` | 15 | 14 are the rows verified on 8 Sep, unchanged. One extra — see below |
+| `borghese` | — | **unreachable** on 8 Sep, not retried since, see 6a |
 | `met` | 0 | HTTP 429, blocked |
 | `morgan` | 0 | HTTP 403, blocked |
 
+**Acquavella's extra row, and why it is probably right.** Coverage is identical
+to the 8 Sep run down to the number — 119 seen, 11 nav, 0 off-site, 0 duplicate,
+108 collected — so nothing new was found and nothing was lost. The difference is
+in the lookback: the listing stage kept 15 rows on 8 Sep and 16 now, because one
+row that previously received a closing date now receives none.
+
+That row is `james-rosenquist-at-moma`: a 2012 announcement that a work by an
+artist the gallery represents is on view **at MoMA**, opening 2012-01-26 with no
+closing date published. Under the standing rule — an unknown end date is never
+evidence of being too old — it is kept and flagged, which is what now happens.
+
+**It was previously dropped, which means it was previously given a closing date
+the venue never published.** The new plausible-year guard and calendar
+validation refuse that parse. So the 8 Sep count of 14 matched her count partly
+by luck: a row was being removed by a date bug rather than by the lookback.
+**Not fully proven** — the offending string was consumed by the title strip and
+is not recoverable from the output — so treat this as the best explanation
+rather than a finished diagnosis.
+
+It is also a non-exhibition, which the scraper does not filter (known bug 2). It
+will appear as one card to reject.
 ### Known bugs — open
 
 1. **Coverage against the venues' real totals is verified for all four working
@@ -507,16 +656,19 @@ match costs one misleading sentence, never a row. A venue opts in by listing its
    to; **Tate is known to list everything on one "what's on" page, though it does
    tag each item by type**, so that tag is the hook when we get there. A venue
    that dumps everything *and* tags nothing will need a different answer.
-3. **Output filenames are stamped in UTC, not Sydney time.** She is on Sydney
-   time, so a run at 6pm on the 8th is filed as `2026-09-08_0800`. The date can
-   also be a day out either side of midnight. Cosmetic but confusing when
-   several runs are being compared. Not yet fixed — raised 8 Sep.
-4. **The summary column is not yet the raw-dump-then-compress design** in
+3. **The summary column is not yet the raw-dump-then-compress design** in
    Section 4. It currently holds up to 2000 characters of curatorial text.
-5. **Title casing is inconsistent** — some venues apply capitalisation in CSS, so
+4. **Title casing is inconsistent** — some venues apply capitalisation in CSS, so
    innerText returns caps for some cards and title case for others. **Her
    decision: live with it.** Genuinely all-caps exhibition titles exist, and
    telling them apart is not worth the logic.
+5. **Nothing bounds a venue that hangs.** A *block* costs about a second — the
+   site refuses and the run moves on. A *hang* costs the full 20s navigation
+   timeout plus one retry on every page, so Borghese on 8 Sep could have added
+   25+ minutes on its own. Deferred, not fixed: the run-directory design already
+   limits the damage, since completed venues are safe on disk and a venue that
+   times out is simply picked up by the next `--continue`. Revisit alongside
+   parallelism (Section 11, DEF-01).
 
 ### Fixed — do not reintroduce
 
@@ -534,10 +686,30 @@ match costs one misleading sentence, never a row. A venue opts in by listing its
   1607" became a start date of 1607.
 - Six near-identical venue scraper functions (see the recipes, above).
 - A single fixed `sweep_raw.csv`, which let a one-venue diagnostic run silently
-  replace a full sweep's output while the file still looked complete. Each run
-  now writes its own dated, venue-labelled pair of files.
+  replace a full sweep's output while the file still looked complete. A run is
+  now a directory.
 - A hardcoded Chromium path, one image update away from failing at launch with
   an unhelpful error.
+- A range with the year on the closing side giving the OPENING date that same
+  year, so "December 5 – January 20, 2026" ended before it began — and no
+  impossible-range guard on the listing parser to catch it.
+- Building date strings by hand with `padStart`, with nothing checking the day
+  exists. Everything goes through `ymd()` now.
+- `parseMonthDay` matching the month as `[A-Za-z]+`, which stopped at the full
+  stop `MONTH_PATTERN` allows — so `Sept. 21, 2024 - Oct. 12, 2024` matched the
+  range pattern and then produced no dates at all, silently.
+- The plausible-year guard missing from the day-first range branch — the busiest
+  path in the parser — while every other branch had it.
+- `normalizeUrl` lowercasing the whole address. Hosts are case-insensitive;
+  paths are not, so two exhibitions differing only in capitalisation collapsed
+  into one and the second was counted as a duplicate rather than lost.
+- Joining hrefs onto the venue base by hand, which cannot resolve `../`,
+  protocol-relative `//host`, or query-only links, and never checked the result
+  was still on the venue's own site.
+- Taking `events[0]` from a page's structured data without checking the event
+  was this exhibition — a members' preview or a tour could supply the dates.
+- `parseDateRange`, a second anchored date parser that nothing called. Dead code
+  shaped like live code is a trap for whoever debugs dates next.
 - Keeping the FIRST link to an address and ignoring the rest, which cost Renoir
   and Love its title and its dates — the National Gallery's first link to a
   card is the image.
@@ -792,21 +964,35 @@ sweep imported and accepted, then expand.
 The two things standing between here and end-to-end are the compression step
 below and her own test import.
 
-- **Where summary compression happens — the next decision to make.** Three
-  candidates, none chosen: Chat Claude does it; Claude Code does it inside the
-  sweep run after the raw text is pulled; Claude Code does it as a separate pass
-  over the finished CSV. The scraper writes raw text either way, so nothing
-  built so far has to change whichever wins. Worth knowing before deciding: the
-  raw text is up to 2000 characters a row and the target is a 12-word summary,
-  and keeping the raw text is what makes fabrication structurally impossible —
-  the compressor can only compress what is actually in the record. A separate
-  pass over the CSV is the only one of the three that can be re-run on an
-  existing file without re-scraping.
+- **Where summary compression happens — the next decision to make.** The scraper
+  writes raw text either way, so nothing built so far has to change whichever
+  wins. Three things are already settled about it:
+  - **A script owns the CSV; the model only ever supplies a string** (Section 1).
+    It never edits the file, so it cannot drop or reorder a row.
+  - **A separate pass over the finished CSV** is the only candidate that can be
+    re-run without re-scraping. Since the 12-word wording will take two or three
+    attempts to get right, that difference probably decides it.
+  - Keeping the raw text is what makes fabrication structurally impossible — the
+    compressor can only compress what is in the record.
+
+  Still open: whether the 12 words come from a session or a script calling the
+  API. Same safety either way; different cost and setup.
+
+  **It must also detect text it should not be compressing** — a summary that is
+  actually ticketing copy or a curator biography (DEF-03). It flags and stops
+  rather than compressing nonsense. But that is a second net, not the first one:
+  bad text must not be let through on the assumption this stage will catch it.
 - **Haiku vs Sonnet for the in-app catalogue lookup.** Haiku passed the easy cases cheaply and correctly but hasn't been tested on hard ones — touring shows, foreign-language catalogues, ambiguous or retitled shows — where a lighter model may return the wrong book or a wrong ISBN. Decide with one side-by-side session on known-tricky catalogues; failures are visible on click. Not weeks of live use.
-- **Running the scraper on her own machine, for Met and Morgan.** Parked, not
-  scheduled — she may do a manual Chat Claude sweep for those two instead. The
-  point of raising it was to stop the blocked venues quietly falling out of
-  view now that the other four work.
+- **Running the scraper on her own machine — which is also the answer for Met
+  and Morgan.** Parked, not scheduled. These were tracked as two items until
+  10 Sep; they are **one**. The blocks are aimed at this datacentre's IP, so a
+  Claude Code session on her laptop clears them and gives local runs at the same
+  time. Nothing else has to change.
+
+  This supersedes "do a manual Chat Claude sweep for those two". Chat Claude
+  cannot read this guide and has no project context, so it is the last resort,
+  not the plan (Section 1). Whatever gathers those rows writes them into the pro
+  forma **through a script**, never by hand.
 
   What is actually true about it:
   - **The blocks would very likely lift.** Met's 429 and Morgan's 403 are aimed
@@ -861,3 +1047,54 @@ Consequences that should hold:
 - The app already built is what she keeps. No data-gathering solution forces a rebuild of the portal.
 - **The data-gathering layer is swappable underneath.** Future work sits *under* the current app, never replacing it.
 - Whenever a session drifts toward "let's rebuild the app around a new backend" or "let's downgrade the app to fit the tools" — neither.
+
+---
+
+## 11. Independent review log
+
+Outside reviews get commissioned deliberately, with **no project knowledge**, to
+get a reader who has not absorbed our assumptions. This table is where their
+findings live, so that:
+
+- a raised issue is never quietly lost, and
+- a **rejected** suggestion stays rejected on the record. Without this, the next
+  reviewer proposes the same thing and the reasoning is argued from scratch.
+
+**Two rules for this section.**
+1. A **Reject** is not revisited without new evidence. Point the next reviewer at
+   the row rather than re-running the argument.
+2. A **Defer** must name its **trigger**. "Later" is indistinguishable from a
+   reject and rots into one.
+
+A finding is judged against the code, not against this guide. Where the two
+disagreed, the guide was wrong twice (see IR-02 and IR-04).
+
+### 9 Sep 2026 — Codex diagnostic review
+
+Two documents, reviewed against commit `2d083d5`. Verified line by line before
+any decision was taken; IR-05, IR-06 and DEF-04 were found during that
+verification rather than by the reviewers.
+
+| Ref | Finding | Decision | Status |
+|---|---|---|---|
+| IR-01 | A range with the year only on the closing side gave the **opening** date that same year, so "December 5 – January 20, 2026" ended before it opened | Implement | **Fixed 10 Sep** |
+| IR-02 | `Sept. 21, 2024 - Oct. 12, 2024` matched the range pattern then produced no dates at all — the guide claimed this format worked | Implement | **Fixed 10 Sep** |
+| IR-03 | Impossible calendar dates (`2026-02-31`) were emitted as if real | Implement | **Fixed 10 Sep** |
+| IR-04 | `sane()` guarded only the prose parser, never the listing parser — so IR-01's impossible range reached the CSV unchecked | Implement | **Fixed 10 Sep** |
+| IR-05 | The plausible-year guard was missing from the day-first range branch, the busiest path in the parser | Implement | **Fixed 10 Sep** |
+| IR-06 | `parseDateRange` was a second date parser that nothing called — dead code shaped like live code | Implement | **Fixed 10 Sep** |
+| IR-07 | `normalizeUrl` lowercased path and query, so two exhibitions differing only in capitalisation collapsed into one | Implement | **Fixed 10 Sep** |
+| IR-08 | Links were joined onto the venue base by hand: no `../`, no protocol-relative, no check the result was still on the venue's site | Implement | **Fixed 10 Sep** |
+| IR-09 | Structured data used `events[0]` without checking the event was this exhibition | Implement | **Fixed 10 Sep** |
+| IR-10 | Output filenames collided within one minute, so a retry could overwrite an earlier run | Implement | **Fixed 10 Sep** — superseded by the run directory |
+| IR-11 | No automated tests of any kind | Implement | **Fixed 10 Sep** — `scraper/date.test.js`, `npm test` |
+| IR-12 | The CSV was written once at the very end, so a run that died lost everything | Implement | **Fixed 10 Sep** — run directory |
+| IR-13 | Block scripts and tracker origins in the network bridge | **Reject** | Running JavaScript is the entire reason a browser is used. Blocking trackers is a marginal speed gain against breaking a venue that waits on its own CDN |
+| IR-14 | Split the file into separate modules | **Reject** | One engine plus recipes stands. The real complaint — date logic could not be tested in isolation — is answered by IR-11 without the regression risk |
+| IR-15 | Fetch several pages at once **within** a venue | **Reject** | That is the hammering case: five simultaneous requests to one museum is five times the load on their server. Never, at any scale |
+| IR-16 | Marker rows (`[current page]`) for blocked or empty listings are exported | Accepted, no repair | Intentional: it proves the venue was checked and visibly reports the failure |
+| IR-17 | Reviewer could not launch Chromium | No action | Their environment. Ours was fixed 8 Sep — `resolveChromium()` |
+| DEF-01 | Run venues **in parallel with each other** (never within one venue) | **Defer** | **Trigger:** more than ~8 working venues, or a run over 15 minutes. Measured 8 Sep: ~2.9s per detail page, so 21 venues projects to ~20 min. Agreed in principle 10 Sep; she has withdrawn the log-readability objection, since she reads the session's summary rather than the log — so the log may be interleaved provided it stays machine-parseable |
+| DEF-02 | After changing a **JavaScript** filter, wait for proof the list changed, not merely that the page has text | **Defer** | **Trigger:** wiring any non-blocked venue that filters by JavaScript. Moot for the Met (HTTP 429; its dropdown has never been clicked). A **server-side** filter loading a different URL per year — the Louvre's — is not exposed to this and needs nothing |
+| DEF-03 | The summary extractor falls through to generic paragraph selectors, so a layout change could capture ticketing or biography text | **Defer** | **Trigger:** observe the next handful of venues as they are wired; fix if it actually surfaces. **Her ruling, and the reasoning matters:** it must not be deferred to "the compression step will catch it". Letting bad text through on the assumption a later stage notices is a bad habit, and it must never reach an approval card for her to be the one asking why the description is nonsense |
+| DEF-04 | Nothing bounds a venue that **hangs** — a block costs a second, a hang costs 20s plus a retry per page | **Defer** | **Trigger:** with DEF-01. The run directory already limits the damage: completed venues are safe on disk and a timed-out venue is picked up by the next `--continue` |
