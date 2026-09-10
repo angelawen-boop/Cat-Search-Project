@@ -15,6 +15,7 @@ const assert = require('node:assert');
 const {
   parseCsv, urlKey, titleKey, indexPrevious, findPrevious,
   decide, validateAnswer, normalizeRaw, addNote, MAX_WORDS, SKIP_NOTE,
+  TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns,
 } = require('./compress.js');
 
 const row = (o = {}) => ({
@@ -231,4 +232,71 @@ test('K-006: a blank previous summary WITHOUT the skip note is not a skip', () =
   const raw = 'Renoir gathered works around the theme of love.';
   const d = decide(row({ summary: raw }), { raw, summary: '', skipped: false });
   assert.strictEqual(d.action, 'fresh');
+});
+
+// ── L: one exhibition, two cities ────────────────────────────────────────────
+// Acquavella runs the same show in New York and Palm Beach. Both rows are kept
+// — the scraper never de-duplicates — but if they end up with DIFFERENT
+// summaries they read as two unrelated exhibitions on the approval cards.
+//
+// The first fix told the MODEL to notice the pair and match its own wording. It
+// matched the words and carried Palm Beach's artist count (21) onto the New
+// York row (17), so both rows became confidently wrong. Detecting the pair in
+// code and asking once is what makes disagreement impossible.
+
+const acq = (title) => ({ venue_code: 'acq', title });
+
+test('L-001: the same show in two cities shares one identity', () => {
+  assert.strictEqual(
+    travellingKey(acq('PORTRAITURE: FROM CASSATT TO WARHOL NEW YORK')),
+    travellingKey(acq('PORTRAITURE FROM CASSATT TO WARHOL PALM BEACH')));
+});
+
+test('L-002: punctuation between the two titles does not defeat it', () => {
+  // The colon is the only difference besides the city, and it cost us before.
+  assert.ok(travellingKey(acq('A B: C NEW YORK')));
+  assert.strictEqual(travellingKey(acq('A B: C NEW YORK')), travellingKey(acq('A B C PALM BEACH')));
+});
+
+test('L-003: two different shows in the same city are not a pair', () => {
+  assert.notStrictEqual(
+    travellingKey(acq('TOM SACHS BRONZE NEW YORK')),
+    travellingKey(acq('MATISSE THE PURSUIT OF HARMONY NEW YORK')));
+});
+
+test('L-004: a venue with one address is never grouped', () => {
+  const rows = [{ venue_code: 'ng', title: 'Renoir and Love' },
+                { venue_code: 'ng', title: 'Renoir and Love' }];
+  assert.strictEqual(travellingKey(rows[0]), null);
+  assert.strictEqual(groupTravellingRuns(rows).size, 0);
+});
+
+test('L-005: a title that is ONLY a city name is not an exhibition identity', () => {
+  assert.strictEqual(travellingKey(acq('NEW YORK')), null);
+});
+
+test('L-006: a lone city run is not a group — it needs a second city', () => {
+  assert.strictEqual(groupTravellingRuns([acq('PORTRAITURE NEW YORK')]).size, 0);
+});
+
+test('L-007: grouping finds the pair and leaves everything else alone', () => {
+  const rows = [acq('PORTRAITURE: FROM CASSATT TO WARHOL NEW YORK'),
+                acq('TOM SACHS BRONZE NEW YORK'),
+                acq('PORTRAITURE FROM CASSATT TO WARHOL PALM BEACH'),
+                { venue_code: 'ng', title: 'Renoir and Love' }];
+  const g = groupTravellingRuns(rows);
+  assert.strictEqual(g.size, 1);
+  assert.strictEqual([...g.values()][0].length, 2);
+});
+
+test('L-008: the location list has not drifted from the scraper', () => {
+  // compress.js deliberately does NOT require the scraper — that would drag
+  // Playwright into a pure-text step — so the list is mirrored. This is the
+  // only thing keeping the two honest: if they disagree, a travelling pair
+  // gets two different summaries and nothing else notices.
+  const { VENUES } = require('./sweep_prototype.js');
+  for (const [code, locs] of Object.entries(TRAVELLING_LOCATIONS)) {
+    assert.deepStrictEqual(locs, VENUES[code].locations,
+      `compress.js TRAVELLING_LOCATIONS.${code} disagrees with the scraper`);
+  }
 });

@@ -98,6 +98,13 @@ hunt for significance would make it manufacture that phrasing everywhere.
 > knows. Full names, honorifics and formal titles read stiff and waste words that
 > could carry meaning instead.
 >
+> A FEW ROWS CARRY AN "alsoAt" FIELD. That row is the same exhibition running at
+> another of the venue's addresses, and "alsoAt" holds the other city's title and
+> its own text, which will differ — the two cities often show different artists.
+> Write ONE summary that is true of both, and it will be recorded against both
+> rows. So describe what the exhibition IS, not who is in it: a roster named in
+> one city may be wrong in the other. Do not mention either city.
+>
 > THE RULE THAT MATTERS MOST: every word of your summary must be traceable to a
 > phrase in that row's own raw text. If you cannot point to where something came
 > from, leave it out. In particular:
@@ -165,13 +172,21 @@ hunt for significance would make it manufacture that phrasing everywhere.
 
 ---
 
-## Known gap, not solved
+## Travelling exhibitions — solved in code, not in the prompt
 
-**Travelling exhibitions.** Acquavella runs one show in New York and Palm Beach, and
-the two rows should carry the same summary or they read as unrelated shows on the
-approval cards. An instruction to make them identical was tried and **withdrawn**: it
-collided with the instruction to keep concrete numbers, and the Palm Beach artist
-count (21) was carried onto the New York row (17 artists). Both rows became
-confidently wrong.
+Acquavella runs one show in New York and Palm Beach. Both rows are always kept, but
+they must not carry different summaries or they read as unrelated exhibitions.
 
-This needs solving somewhere other than the prompt. Not attempted yet.
+**The first attempt told the MODEL to spot the pair and match its own wording, and
+it failed instructively.** It matched the words and carried Palm Beach's artist count
+(21) onto the New York row (17 artists) — both rows confidently wrong. Two
+instructions collided: "make them identical" and "keep concrete numbers".
+
+**Now the pair is detected in code before anything is asked**
+(`groupTravellingRuns()`), the question is asked **once** with both cities' text
+attached as `alsoAt`, and the one answer is written to both rows. Disagreement is
+impossible rather than discouraged, and it costs one call instead of two.
+
+The prompt's only remaining job is to say what kind of summary survives that: one
+describing the exhibition rather than its checklist, since the rosters genuinely
+differ between cities.

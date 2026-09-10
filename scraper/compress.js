@@ -91,6 +91,64 @@ const MAX_WORDS = 10;
  */
 const SKIP_NOTE = 'The text on this page is not a description of the exhibition, so no summary was written.';
 
+/**
+ * Venues that run the same exhibition at more than one address.
+ *
+ * MIRRORS `VENUES[code].locations` in sweep_prototype.js, and a fixture asserts
+ * the two agree — compress.js must not require the scraper, which would drag
+ * Playwright into a step that is pure text.
+ *
+ * Acquavella shows Portraiture: From Cassatt to Warhol in New York AND Palm
+ * Beach. Both rows are kept, always (Section 3: the scraper never
+ * de-duplicates), but they must not end up carrying DIFFERENT summaries or
+ * they read as two unrelated exhibitions on the approval cards.
+ */
+const TRAVELLING_LOCATIONS = { acq: ['New York', 'Palm Beach'] };
+
+/**
+ * The identity of an exhibition ignoring which city it is in.
+ *
+ * Same rule the scraper uses for its "also shown at" note, so the two agree on
+ * what counts as one exhibition. Returns null when the title names no known
+ * location — most venues, most rows.
+ */
+function travellingKey(row) {
+  const locs = TRAVELLING_LOCATIONS[row.venue_code] || [];
+  const title = String(row.title || '');
+  const loc = locs.find(l => new RegExp(`\\b${l}\\b`, 'i').test(title));
+  if (!loc) return null;
+  const bare = title
+    .replace(new RegExp(`\\b${loc}\\b`, 'ig'), ' ')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .toUpperCase();
+  return bare ? `${row.venue_code}|${bare}` : null;
+}
+
+/**
+ * Group rows that are the same exhibition in different cities.
+ *
+ * Only groups of two or more are returned, keyed by that shared identity.
+ *
+ * WHY THIS IS DONE IN CODE, before anything is asked: an earlier attempt told
+ * the MODEL to spot the pair and match its own wording. It matched the words
+ * and carried Palm Beach's artist count (21) onto the New York row (17), so
+ * both rows became confidently wrong. Asking once and writing the answer to
+ * both makes disagreement impossible rather than discouraged, and costs one
+ * call instead of two.
+ */
+function groupTravellingRuns(rows) {
+  const groups = new Map();
+  for (const row of rows) {
+    const key = travellingKey(row);
+    if (!key) continue;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(row);
+  }
+  for (const [k, v] of groups) if (v.length < 2) groups.delete(k);
+  return groups;
+}
+
 // ── CSV ──────────────────────────────────────────────────────────────────────
 // The scraper only ever WRITES csv, so it has no parser. This one has to
 // handle quoted cells containing commas and newlines, because curatorial text
@@ -356,6 +414,7 @@ module.exports = {
   parseCsv, readProForma, writeCsv, urlKey, titleKey, indexPrevious,
   findPrevious, decide, validateAnswer, normalizeRaw, wordCount, addNote,
   previousCompletedRun, MAX_WORDS, SKIP_NOTE,
+  TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns,
 };
 
 // The CLI lives in compress_cli.js so this file stays importable by the tests

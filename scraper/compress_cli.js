@@ -150,29 +150,59 @@ function plan(dir, { recompress = false } = {}) {
     return;
   }
 
+  // One exhibition running in two cities is asked about ONCE. The pair is
+  // detected here, in code, rather than left to the model to notice — see
+  // groupTravellingRuns() for why that failed. The surviving question carries
+  // BOTH cities' text, because the two pages differ (Acquavella's New York
+  // Portraiture lists 17 artists, Palm Beach 21), so a summary true of both
+  // has to describe the exhibition rather than its checklist.
+  const byIndex = new Map(pending.map(p => [p.index, p]));
+  let paired = 0;
+  for (const group of C.groupTravellingRuns(pending).values()) {
+    const [keep, ...rest] = group;
+    keep.appliesAlsoTo = rest.map(r => r.index);
+    keep.alsoAt = rest.map(r => ({ title: r.title, raw: r.raw }));
+    for (const r of rest) { byIndex.delete(r.index); paired++; }
+  }
+  const asked = pending.filter(p => byIndex.has(p.index));
+
+  const needsFresh = asked.some(p => p.action === 'fresh');
+  const needsReview = asked.some(p => p.action === 'review');
+
   fs.writeFileSync(
     path.join(runPath, PENDING_JSON),
-    JSON.stringify({ run: dir, previous: prevDir, maxWords: C.MAX_WORDS, rows: pending }, null, 2),
+    JSON.stringify({ run: dir, previous: prevDir, maxWords: C.MAX_WORDS, rows: asked }, null, 2),
     'utf8');
   fs.writeFileSync(
     path.join(runPath, '.compress_done.json'),
     JSON.stringify(done, null, 2), 'utf8');
 
-  const needsFresh = pending.some(p => p.action === 'fresh');
-  const needsReview = pending.some(p => p.action === 'review');
 
-  say(`${pending.length} rows need a summary. Written to:`);
+  if (paired) {
+    say(`  travelling  ${String(paired).padStart(2)}   same exhibition in another city — asked once, answer used for both`);
+    say('');
+  }
+  say(`${asked.length} rows need a summary. Written to:`);
   say(`  ${path.join(runPath, PENDING_JSON)}`);
   say('');
   // Point explicitly at the prompt. Without this a session sees a file of rows
   // and no instruction, and either invents its own house style or never does
   // the step at all — the prompts, the model split and the reasoning behind
   // both are the product of this stage, and they live in one place.
-  say('HOW TO ANSWER THEM — do not improvise:');
-  say(`  Read  ${path.relative(process.cwd(), path.join(__dirname, 'compress_prompt.md'))}`);
-  if (needsFresh)  say('  Use Prompt A (write a fresh summary)  — SONNET');
-  if (needsReview) say('  Use Prompt B (is the old summary now false?)  — HAIKU');
-  say(`  Examples for the prompt:  node scraper/compress.js --examples`);
+  say('HOW TO ANSWER THEM — do not improvise, and do not write them yourself:');
+  say(`  1. Read  ${path.relative(process.cwd(), path.join(__dirname, 'compress_prompt.md'))}`);
+  say('  2. Save the examples to a file:  node scraper/compress.js --examples');
+  // The model matters and it is NOT whichever one this session happens to be.
+  // Measured 10 Sep: Haiku learned the form and could not find the point;
+  // Sonnet found the point and fabricated less. Spawning a subagent is what
+  // pins the model — naming it in prose does not.
+  say('  3. SPAWN A SUBAGENT for each job below and give it the prompt verbatim.');
+  say('     A subagent is what actually pins the model; a session writing these');
+  say('     itself uses whatever model it happens to be, and the choice is lost.');
+  if (needsFresh)  say('       Prompt A — write a fresh summary          → subagent model: SONNET');
+  if (needsReview) say('       Prompt B — is the old summary now false?  → subagent model: HAIKU');
+  say('     Batch ALL rows for a job into ONE subagent. One per row pays its');
+  say('     start-up cost every time.');
   say('');
   say(`Then write ${ANSWERS_JSON} beside the pending file — {"<index>": "the summary.", ...},`);
   say('  a string to write it, the previous summary verbatim to keep it, null to refuse.');
@@ -229,14 +259,14 @@ function apply(dir) {
     if (!v.ok) { bad.push({ index: p.index, title: p.title, reason: v.reason }); continue; }
     if (v.skip) {
       skipped++;
-      filled.push({
-        ...rows[p.index],
-        summary: '',
-        notes: C.addNote(rows[p.index].notes, C.SKIP_NOTE),
-      });
+      for (const idx of [p.index, ...(p.appliesAlsoTo || [])]) {
+        filled.push({ ...rows[idx], summary: '', notes: C.addNote(rows[idx].notes, C.SKIP_NOTE) });
+      }
       continue;
     }
-    filled.push({ ...rows[p.index], summary: v.text });
+    for (const idx of [p.index, ...(p.appliesAlsoTo || [])]) {
+      filled.push({ ...rows[idx], summary: v.text });
+    }
   }
 
   if (bad.length) {

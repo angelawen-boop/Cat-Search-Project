@@ -2168,4 +2168,9 @@ module.exports = {
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
   installNetworkBridge, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
+  // Exported so compress.js's mirrored location list can be checked against the
+  // real one by a fixture. compress.js must not require THIS file at runtime —
+  // that would pull Playwright into a step that is pure text — so a test is the
+  // only thing standing between the two copies and silent drift.
+  VENUES,
 };
