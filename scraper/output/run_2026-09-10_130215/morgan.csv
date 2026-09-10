@@ -1,0 +1,4 @@
+venue_code,title,start_date,end_date,summary,url,notes
+morgan,[current page],,,,https://www.themorgan.org/exhibitions/current,"The venue's ""current"" listing page did not load (BLOCKED_HTTP_403). Marker row, not an exhibition."
+morgan,[upcoming page],,,,https://www.themorgan.org/exhibitions/upcoming,"The venue's ""upcoming"" listing page did not load (BLOCKED_HTTP_403). Marker row, not an exhibition."
+morgan,[past page],,,,https://www.themorgan.org/exhibitions/past,"The venue's ""past"" listing page did not load (BLOCKED_HTTP_403). Marker row, not an exhibition."

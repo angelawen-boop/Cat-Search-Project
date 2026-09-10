@@ -1,2 +1,15 @@
 node_modules/
-scraper/output/
+
+# scraper/output/ is deliberately NOT ignored.
+#
+# The container these runs happen in is temporary: when a session ends, anything
+# not pushed is gone. That meant a finished sweep could be lost simply because
+# nobody asked for the file before the session closed — the run wasted, not
+# because it failed, but because it was never collected.
+#
+# Committing runs also means a future session can read an earlier sweep to
+# diagnose a change, rather than her having to find and re-upload "the CSV from
+# that date" by hand.
+#
+# Size is not a reason to reconsider: a 21-venue run is ~500 KB of text today
+# and ~120 KB once summaries are compressed, and git stores text well.

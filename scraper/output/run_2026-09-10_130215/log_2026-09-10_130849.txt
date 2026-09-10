@@ -1,0 +1,96 @@
+[2026-09-10T03:08:49.753Z] Cat Watch Sweep Prototype — starting
+[2026-09-10T03:08:49.754Z] Lookback floor: 2024-07-01
+[2026-09-10T03:08:49.754Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_130215 (continuing)
+[2026-09-10T03:08:49.754Z] Venues this run: met, acq, borghese, morgan
+[2026-09-10T03:08:49.754Z] Already complete in this run: ng, rijks
+[2026-09-10T03:08:49.754Z] Proxy: http://127.0.0.1:42345
+[2026-09-10T03:08:49.754Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-10T03:08:49.928Z] Network bridge installed: Chromium requests are served by Node via the proxy
+[2026-09-10T03:08:50.009Z] 
+[2026-09-10T03:08:50.009Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:08:50.009Z]   MET — The Metropolitan Museum of Art
+[2026-09-10T03:08:50.009Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:08:50.009Z]   Fetching current/upcoming: https://www.metmuseum.org/exhibitions
+[2026-09-10T03:08:50.433Z]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions
+[2026-09-10T03:08:50.434Z]   FAILED current/upcoming — BLOCKED_HTTP_429
+[2026-09-10T03:08:50.434Z]   Fetching past: https://www.metmuseum.org/exhibitions/past
+[2026-09-10T03:08:50.873Z]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions/past
+[2026-09-10T03:08:50.873Z]   FAILED past — BLOCKED_HTTP_429
+[2026-09-10T03:08:50.873Z]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-10T03:08:50.873Z]   → met: 0 exhibitions, 0 with curatorial text → met.csv
+[2026-09-10T03:08:50.874Z] 
+[2026-09-10T03:08:50.874Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:08:50.874Z]   ACQ — Acquavella Galleries, New York
+[2026-09-10T03:08:50.874Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:08:50.874Z]   Fetching all (current/upcoming/past): https://www.acquavellagalleries.com/exhibitions
+[2026-09-10T03:08:54.732Z]   all (current/upcoming/past): 119 links seen -> 11 navigation, 0 already-seen URL -> 108 collected (0 of them with no readable title)
+[2026-09-10T03:08:54.733Z]   lookback (listing): kept 16, dropped 92 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-10T03:09:21.786Z]   Individual pages: 16 got text, 0 no curatorial text, 0 failed
+[2026-09-10T03:09:21.786Z]   lookback (final): kept 15, dropped 1 closed before 2024-07-01, 2 with no closing date, 0 with no opening date
+[2026-09-10T03:09:21.788Z]   → acq: 15 exhibitions, 15 with curatorial text → acq.csv
+[2026-09-10T03:09:21.788Z] 
+[2026-09-10T03:09:21.788Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:09:21.788Z]   BORGHESE — Galleria Borghese, Rome
+[2026-09-10T03:09:21.788Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:09:21.788Z]   Fetching current: https://galleriaborghese.cultura.gov.it/en/mostre/presenti/
+[2026-09-10T03:09:33.320Z]   LOAD_ERROR: https://galleriaborghese.cultura.gov.it/en/mostre/presenti/ — page.goto: net::ERR_FAILED at https://galleriaborghese.cultura.gov.it/en/mostre/presenti/
+Call log:
+[2m  - navigating t
+[2026-09-10T03:09:33.320Z]   FAILED current — LOAD_ERROR
+[2026-09-10T03:09:33.320Z]   Fetching upcoming: https://galleriaborghese.cultura.gov.it/en/mostre/future/
+[2026-09-10T03:09:44.722Z]   LOAD_ERROR: https://galleriaborghese.cultura.gov.it/en/mostre/future/ — page.goto: net::ERR_FAILED at https://galleriaborghese.cultura.gov.it/en/mostre/future/
+Call log:
+[2m  - navigating to 
+[2026-09-10T03:09:44.722Z]   FAILED upcoming — LOAD_ERROR
+[2026-09-10T03:09:44.722Z]   Fetching past: https://galleriaborghese.cultura.gov.it/en/mostre/passate/
+[2026-09-10T03:09:56.497Z]   LOAD_ERROR: https://galleriaborghese.cultura.gov.it/en/mostre/passate/ — page.goto: net::ERR_FAILED at https://galleriaborghese.cultura.gov.it/en/mostre/passate/
+Call log:
+[2m  - navigating to
+[2026-09-10T03:09:56.497Z]   FAILED past — LOAD_ERROR
+[2026-09-10T03:09:56.497Z]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-10T03:09:56.498Z]   → borghese: 0 exhibitions, 0 with curatorial text → borghese.csv
+[2026-09-10T03:09:56.498Z] 
+[2026-09-10T03:09:56.498Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:09:56.498Z]   MORGAN — Morgan Library & Museum, New York
+[2026-09-10T03:09:56.498Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:09:56.498Z]   Fetching current: https://www.themorgan.org/exhibitions/current
+[2026-09-10T03:09:59.169Z]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/current
+[2026-09-10T03:09:59.170Z]   FAILED current — BLOCKED_HTTP_403
+[2026-09-10T03:09:59.170Z]   Fetching upcoming: https://www.themorgan.org/exhibitions/upcoming
+[2026-09-10T03:09:59.895Z]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/upcoming
+[2026-09-10T03:09:59.895Z]   FAILED upcoming — BLOCKED_HTTP_403
+[2026-09-10T03:09:59.895Z]   Fetching past: https://www.themorgan.org/exhibitions/past
+[2026-09-10T03:10:00.471Z]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/past
+[2026-09-10T03:10:00.471Z]   FAILED past — BLOCKED_HTTP_403
+[2026-09-10T03:10:00.472Z]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-10T03:10:00.472Z]   → morgan: 0 exhibitions, 0 with curatorial text → morgan.csv
+[2026-09-10T03:10:00.556Z] 
+[2026-09-10T03:10:00.556Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:10:00.556Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-10T03:10:00.556Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:10:00.556Z]   MET: 0 exhibitions | 0 with text
+[2026-09-10T03:10:00.556Z]   ACQ: 15 exhibitions | 15 with text
+[2026-09-10T03:10:00.556Z]   BORGHESE: 0 exhibitions | 0 with text | 3 page(s) blocked/empty
+[2026-09-10T03:10:00.556Z]   MORGAN: 0 exhibitions | 0 with text | 3 page(s) blocked/empty
+[2026-09-10T03:10:00.556Z] 
+[2026-09-10T03:10:00.556Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:10:00.556Z]   COVERAGE — every link accounted for
+[2026-09-10T03:10:00.556Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:10:00.556Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-10T03:10:00.556Z]   --------------------------------------------------------------------------------------
+[2026-09-10T03:10:00.557Z]   acq        all (current/upcoming/past)    119    11       0     0        0        108
+[2026-09-10T03:10:00.557Z] 
+[2026-09-10T03:10:00.557Z]   seen      = links matching the venue's selector on that page
+[2026-09-10T03:10:00.557Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-10T03:10:00.557Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-10T03:10:00.557Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-10T03:10:00.557Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-10T03:10:00.557Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-10T03:10:00.557Z] 
+[2026-09-10T03:10:00.557Z] Network bridge: 415 requests served, 756 skipped (image/media/font), 3 failed
+[2026-09-10T03:10:00.557Z] 
+[2026-09-10T03:10:00.557Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_130215
+[2026-09-10T03:10:00.557Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_130215/sweep.csv  (85 rows — met:0, ng:27, rijks:37, acq:15, borghese:3, morgan:3)
+[2026-09-10T03:10:00.557Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_130215/log_2026-09-10_130849.txt
+[2026-09-10T03:10:00.557Z] Every known venue has a file in this run.
+[2026-09-10T03:10:00.557Z] No de-duplication is applied — see passThrough.

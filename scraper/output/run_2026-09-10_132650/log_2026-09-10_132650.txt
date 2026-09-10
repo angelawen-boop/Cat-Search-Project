@@ -1,0 +1,85 @@
+[2026-09-10T03:26:50.593Z] Cat Watch Sweep Prototype — starting
+[2026-09-10T03:26:50.594Z] Lookback floor: 2024-07-01
+[2026-09-10T03:26:50.594Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_132650
+[2026-09-10T03:26:50.594Z] Venues this run: met, borghese, morgan
+[2026-09-10T03:26:50.594Z] Proxy: http://127.0.0.1:42345
+[2026-09-10T03:26:50.595Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-10T03:26:51.454Z] Network bridge installed: Chromium requests are served by Node via the proxy
+[2026-09-10T03:26:51.711Z] 
+[2026-09-10T03:26:51.711Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:26:51.711Z]   MET — The Metropolitan Museum of Art
+[2026-09-10T03:26:51.711Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:26:51.711Z]   Fetching current/upcoming: https://www.metmuseum.org/exhibitions
+[2026-09-10T03:26:52.273Z]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions
+[2026-09-10T03:26:52.273Z]   FAILED current/upcoming — BLOCKED_HTTP_429
+[2026-09-10T03:26:52.273Z]   Fetching past: https://www.metmuseum.org/exhibitions/past
+[2026-09-10T03:26:52.739Z]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions/past
+[2026-09-10T03:26:52.740Z]   FAILED past — BLOCKED_HTTP_429
+[2026-09-10T03:26:52.740Z]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-10T03:26:52.741Z]   → met: 0 exhibitions, 0 with curatorial text → met.csv
+[2026-09-10T03:26:52.741Z] 
+[2026-09-10T03:26:52.741Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:26:52.741Z]   BORGHESE — Galleria Borghese, Rome
+[2026-09-10T03:26:52.741Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:26:52.741Z]   Fetching current: https://galleriaborghese.cultura.gov.it/en/mostre/presenti/
+[2026-09-10T03:27:04.482Z]   NO_RESPONSE: https://galleriaborghese.cultura.gov.it/en/mostre/presenti/ — page.goto: net::ERR_FAILED at https://galleriaborghese.cultura.gov.it/en/mostre/presenti/
+Call log:
+[2m  - navigating t
+[2026-09-10T03:27:04.482Z]   FAILED current — NO_RESPONSE
+[2026-09-10T03:27:04.482Z]   Fetching upcoming: https://galleriaborghese.cultura.gov.it/en/mostre/future/
+[2026-09-10T03:27:16.505Z]   NO_RESPONSE: https://galleriaborghese.cultura.gov.it/en/mostre/future/ — page.goto: net::ERR_FAILED at https://galleriaborghese.cultura.gov.it/en/mostre/future/
+Call log:
+[2m  - navigating to 
+[2026-09-10T03:27:16.505Z]   FAILED upcoming — NO_RESPONSE
+[2026-09-10T03:27:16.505Z]   Fetching past: https://galleriaborghese.cultura.gov.it/en/mostre/passate/
+[2026-09-10T03:27:28.342Z]   NO_RESPONSE: https://galleriaborghese.cultura.gov.it/en/mostre/passate/ — page.goto: net::ERR_FAILED at https://galleriaborghese.cultura.gov.it/en/mostre/passate/
+Call log:
+[2m  - navigating to
+[2026-09-10T03:27:28.342Z]   FAILED past — NO_RESPONSE
+[2026-09-10T03:27:28.342Z]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-10T03:27:28.343Z]   → borghese: 0 exhibitions, 0 with curatorial text → borghese.csv
+[2026-09-10T03:27:28.343Z] 
+[2026-09-10T03:27:28.343Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:27:28.343Z]   MORGAN — Morgan Library & Museum, New York
+[2026-09-10T03:27:28.343Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:27:28.343Z]   Fetching current: https://www.themorgan.org/exhibitions/current
+[2026-09-10T03:27:30.808Z]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/current
+[2026-09-10T03:27:30.808Z]   FAILED current — BLOCKED_HTTP_403
+[2026-09-10T03:27:30.808Z]   Fetching upcoming: https://www.themorgan.org/exhibitions/upcoming
+[2026-09-10T03:27:31.242Z]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/upcoming
+[2026-09-10T03:27:31.243Z]   FAILED upcoming — BLOCKED_HTTP_403
+[2026-09-10T03:27:31.243Z]   Fetching past: https://www.themorgan.org/exhibitions/past
+[2026-09-10T03:27:31.770Z]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/past
+[2026-09-10T03:27:31.771Z]   FAILED past — BLOCKED_HTTP_403
+[2026-09-10T03:27:31.771Z]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-10T03:27:31.771Z]   → morgan: 0 exhibitions, 0 with curatorial text → morgan.csv
+[2026-09-10T03:27:31.861Z] 
+[2026-09-10T03:27:31.861Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:27:31.861Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-10T03:27:31.861Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:27:31.861Z]   MET: 0 exhibitions | 0 with text | 2 page(s) blocked/empty
+[2026-09-10T03:27:31.861Z]   BORGHESE: 0 exhibitions | 0 with text | 3 page(s) blocked/empty
+[2026-09-10T03:27:31.861Z]   MORGAN: 0 exhibitions | 0 with text | 3 page(s) blocked/empty
+[2026-09-10T03:27:31.861Z] 
+[2026-09-10T03:27:31.861Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:27:31.861Z]   COVERAGE — every link accounted for
+[2026-09-10T03:27:31.861Z] ────────────────────────────────────────────────────────────
+[2026-09-10T03:27:31.861Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-10T03:27:31.861Z]   --------------------------------------------------------------------------------------
+[2026-09-10T03:27:31.861Z]   (no listing pages were read)
+[2026-09-10T03:27:31.861Z] 
+[2026-09-10T03:27:31.861Z]   seen      = links matching the venue's selector on that page
+[2026-09-10T03:27:31.861Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-10T03:27:31.861Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-10T03:27:31.861Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-10T03:27:31.861Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-10T03:27:31.861Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-10T03:27:31.861Z] 
+[2026-09-10T03:27:31.861Z] Network bridge: 24 requests served, 8 skipped (image/media/font), 3 failed
+[2026-09-10T03:27:31.861Z] 
+[2026-09-10T03:27:31.861Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_132650
+[2026-09-10T03:27:31.861Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_132650/sweep.csv  (8 rows — met:2, borghese:3, morgan:3)
+[2026-09-10T03:27:31.861Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-10_132650/log_2026-09-10_132650.txt
+[2026-09-10T03:27:31.861Z] Not yet in this run: ng, rijks, acq
+[2026-09-10T03:27:31.861Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-10T03:27:31.861Z] No de-duplication is applied — see passThrough.

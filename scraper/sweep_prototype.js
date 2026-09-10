@@ -744,10 +744,65 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
       await page.waitForTimeout(1500);
       return safeGoto(page, url, venue, context, 1);
     }
-    const reason = e.message.includes('timeout') ? 'TIMEOUT' : 'LOAD_ERROR';
+    const reason = classifyLoadError(e.message);
     log(`  ${reason}: ${url} — ${e.message.slice(0, 120)}`);
     return { ok: false, reason };
   }
+}
+
+/**
+ * Say WHICH kind of failure, not just that there was one.
+ *
+ * Everything that was not a timeout used to come back as "LOAD_ERROR", which
+ * told her nothing: a venue that had blocked us, one that had moved, and one
+ * that was simply down all produced the same word. Borghese's outage is the
+ * case in point — its three pages reported LOAD_ERROR and the note could not
+ * say whether the site was refusing us or broken.
+ *
+ * These strings are Chromium's own network error names, so a new one appearing
+ * is worth adding rather than guessing at.
+ */
+function classifyLoadError(message) {
+  const m = String(message || '');
+  if (/ERR_NAME_NOT_RESOLVED/.test(m))    return 'DNS_UNKNOWN';
+  if (/ERR_CONNECTION_REFUSED/.test(m))   return 'CONNECTION_REFUSED';
+  if (/ERR_CONNECTION_RESET/.test(m))     return 'CONNECTION_RESET';
+  if (/ERR_CONNECTION_CLOSED/.test(m))    return 'CONNECTION_CLOSED';
+  if (/ERR_CONNECTION_TIMED_OUT/.test(m)) return 'CONNECTION_TIMEOUT';
+  if (/ERR_(CERT|SSL)/.test(m))           return 'SSL_ERROR';
+  if (/ERR_EMPTY_RESPONSE/.test(m))       return 'EMPTY_RESPONSE';
+  if (/ERR_ADDRESS_UNREACHABLE|ERR_INTERNET_DISCONNECTED/.test(m)) return 'UNREACHABLE';
+  if (/ERR_TOO_MANY_REDIRECTS/.test(m))   return 'REDIRECT_LOOP';
+  if (/ERR_ABORTED/.test(m))              return 'ABORTED';
+  if (/ERR_FAILED/.test(m))               return 'NO_RESPONSE';
+  if (/timeout/i.test(m))                 return 'TIMEOUT';
+  return 'LOAD_ERROR';
+}
+
+// The same failure, in words she can act on. These go verbatim onto the
+// approval card, so they state the fact and stop — no advice, no instructions.
+const FAILURE_PROSE = {
+  TIMEOUT:            'the page did not finish loading in time',
+  CONNECTION_TIMEOUT: 'the venue’s server did not answer in time',
+  DNS_UNKNOWN:        'the venue’s web address could not be found',
+  CONNECTION_REFUSED: 'the venue’s server refused the connection',
+  CONNECTION_RESET:   'the venue’s server dropped the connection part-way',
+  CONNECTION_CLOSED:  'the venue’s server closed the connection',
+  SSL_ERROR:          'the venue’s security certificate could not be verified',
+  EMPTY_RESPONSE:     'the venue’s server answered with nothing at all',
+  UNREACHABLE:        'the venue’s server could not be reached',
+  REDIRECT_LOOP:      'the venue’s site redirected in a loop',
+  ABORTED:            'the request was cut short',
+  NO_RESPONSE:        'the venue’s site did not respond',
+  LOAD_ERROR:         'the page could not be loaded, cause unknown',
+};
+
+function failureProse(reason) {
+  const blocked = /^BLOCKED_HTTP_(\d+)$/.exec(reason);
+  if (blocked) return `the venue’s site refused us (HTTP ${blocked[1]})`;
+  const http = /^HTTP_(\d+)$/.exec(reason);
+  if (http) return `the venue’s server answered HTTP ${http[1]}`;
+  return FAILURE_PROSE[reason] || 'the page could not be loaded, cause unknown';
 }
 
 // Extract visible text from an element, trimmed
@@ -1403,7 +1458,6 @@ const VENUES = {
     title: { heading: false,
              stripLeading:  /^(Current exhibition|Past exhibition|Upcoming exhibition)?\s*([A-Za-z]+\s*\/\s*\d{4})?\s*/i,
              stripTrailing: /\s*DISCOVER THE EXHIBITION\s*$/i },
-    markEmptyPages: true,
     // Listings carry only a start month ("March / 2026") and no closing date,
     // so the lookback cannot be decided before the detail pages are read.
     lookbackAfterDetail: true,
@@ -1420,7 +1474,6 @@ const VENUES = {
     selector: 'a[href*="/exhibitions/"]',
     isNav: href => /\/exhibitions\/(current|upcoming|past)\/?$/.test(href) || /\/exhibitions\/?$/.test(href),
     title: { heading: true },
-    markEmptyPages: true,
   },
 };
 
@@ -1439,29 +1492,31 @@ async function scrapeVenue(page, code) {
     log(`  Fetching ${pg.ctx}: ${url}`);
     const r = await safeGoto(page, url, code, pg.ctx);
 
+    // A listing page that could not be read ALWAYS leaves a marker row, for
+    // every venue. This was a per-venue opt-in until 10 Sep, set only on
+    // borghese and morgan — so the Met, blocked on every page, contributed
+    // nothing at all to the CSV and its refusal was invisible unless someone
+    // read the log. A venue that was checked and refused must say so where she
+    // looks, which is the approval pile.
     if (!r.ok) {
       log(`  FAILED ${pg.ctx} — ${r.reason}`);
-      if (v.markEmptyPages) {
-        rows.push({
-          venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
-          summary: '', url,
-          notes: `The venue's "${pg.ctx}" listing page did not load (${r.reason}). Marker row, not an exhibition.`,
-        });
-      }
+      rows.push({
+        venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
+        summary: '', url,
+        notes: `The venue's "${pg.ctx}" listing page could not be read: ${failureProse(r.reason)}. Marker row, not an exhibition.`,
+      });
       continue;
     }
 
-    if (v.markEmptyPages) {
-      const bodyText = await page.innerText('body').catch(() => '');
-      if (bodyText.length < MIN_BODY_CHARS) {
-        log(`  EMPTY_PAGE ${pg.ctx}: loaded but body has <${MIN_BODY_CHARS} chars`);
-        rows.push({
-          venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
-          summary: '', url,
-          notes: `The venue's "${pg.ctx}" listing page loaded but was empty. Marker row, not an exhibition.`,
-        });
-        continue;
-      }
+    const bodyText = await page.innerText('body').catch(() => '');
+    if (bodyText.length < MIN_BODY_CHARS) {
+      log(`  EMPTY_PAGE ${pg.ctx}: loaded but body has <${MIN_BODY_CHARS} chars`);
+      rows.push({
+        venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
+        summary: '', url,
+        notes: `The venue's "${pg.ctx}" listing page loaded but was empty. Marker row, not an exhibition.`,
+      });
+      continue;
     }
 
     const opts = {
@@ -1522,7 +1577,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
         // page, not a network problem, and she can see that from the note.
         row.notes = addNote(row.notes, /^HTTP_4/.test(r.reason)
           ? `The venue's own link to this exhibition is broken (${r.reason.replace('HTTP_', 'HTTP ')}).`
-          : `This exhibition's own page did not load (${r.reason}).`);
+          : `This exhibition's own page could not be read: ${failureProse(r.reason)}.`);
         failed++;
         continue;
       }

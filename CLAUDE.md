@@ -382,6 +382,28 @@ a run from this container and a run from her laptop stamp the same way.
 **Nothing is left for a person to reconcile afterwards.** That was deliberate:
 prose rules that a session re-derives each time are how CSVs get mangled.
 
+### Runs are committed, not thrown away
+
+`scraper/output/` is **deliberately not gitignored** (10 Sep). The container is
+temporary: when a session ends, anything unpushed is gone — so a finished sweep
+could be lost simply because nobody asked for the file before the session
+closed. The run was wasted not by failing but by never being collected.
+
+Committing runs also means **a later session can read an earlier sweep** to
+diagnose a change, instead of her having to find and re-upload "the CSV from
+that date".
+
+**Commit the run directory when a run finishes.** Size is not a reason to
+hesitate: a 21-venue run is ~500 KB of text today and ~120 KB once summaries are
+compressed. Keep old runs; they are the only record of what a venue looked like
+before it changed.
+
+One gap remains, honestly: if the container dies **mid-run**, before anything is
+committed, that run's completed venues are still lost with it. Committing per
+venue as files appear closes it. Git is deliberately not built into the scraper
+— credentials and push targets differ between this container and her laptop, and
+that is exactly the kind of thing that fails silently.
+
 ### The network bridge — don't remove it
 
 In this Claude Code container, all outbound traffic goes through an agent proxy. **Chromium cannot use that proxy.** The connection tunnel opens, Chromium sends its (unusually large, ~1.8 KB) TLS greeting, and the proxy drops the tunnel — surfacing as `net::ERR_CONNECTION_RESET` on every single https page. Setting a proxy on `chromium.launch()` does not fix it, and neither does ignoring certificate errors, because it is not a certificate problem. `curl` and `openssl` to the same sites work fine; their greetings are small.
@@ -460,6 +482,40 @@ than one title plus a date.
 title and a note saying what the URL slug suggests. The app shows it as
 "Couldn't be filed" — visible and fixable. The slug guess stays in the notes and
 never enters the title column.
+
+### A venue that could not be read still says so, in the CSV
+
+**Every venue leaves marker rows for listing pages it could not read** — one per
+page, titled `[past page]` and so on, carrying the reason.
+
+This was a per-venue opt-in (`markEmptyPages`) until 10 Sep, set only on
+Borghese and Morgan. So **the Met, refused on every page, contributed nothing at
+all** and its refusal was invisible unless somebody read the log. That defeats
+the point of leaving blocked venues wired in (Section 4): a standing monitor
+that reports nothing is not a monitor. It is now universal and the option is
+gone.
+
+**The reason says which kind of failure it was.** Everything that was not a
+timeout used to come back as `LOAD_ERROR`, which could not distinguish a site
+refusing us from one that had moved or was simply down — Borghese's outage was
+exactly that ambiguity. `classifyLoadError()` reads Chromium's own network error
+name, and `failureProse()` turns it into the sentence she sees on the card:
+
+| What happened | On the card |
+|---|---|
+| HTTP 403 / 418 / 429 | the venue's site refused us (HTTP 429) |
+| `ERR_FAILED` | the venue's site did not respond |
+| `ERR_CONNECTION_RESET` | the venue's server dropped the connection part-way |
+| `ERR_CONNECTION_REFUSED` | the venue's server refused the connection |
+| `ERR_NAME_NOT_RESOLVED` | the venue's web address could not be found |
+| `ERR_CERT_*` / `ERR_SSL_*` | the venue's security certificate could not be verified |
+| navigation timeout | the page did not finish loading in time |
+
+Measured 10 Sep: Met reports HTTP 429, Morgan HTTP 403, and Borghese
+`NO_RESPONSE` — its server accepts nothing at all, rather than refusing us,
+which is a site fault and not a block. A reason falling through to
+`LOAD_ERROR, cause unknown` means a network error we have not seen before;
+add it rather than guess at it.
 
 ### Reading dates
 

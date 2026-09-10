@@ -1,0 +1,46 @@
+[2026-09-08T04:02:35.730Z] Cat Watch Sweep Prototype — starting
+[2026-09-08T04:02:35.731Z] Lookback floor: 2024-07-01
+[2026-09-08T04:02:35.731Z] Venues: met, ng, rijks, acq, borghese, morgan
+[2026-09-08T04:02:35.731Z] Proxy: http://127.0.0.1:43751
+[2026-09-08T04:02:35.888Z] Network bridge installed: Chromium requests are served by Node via the proxy
+[2026-09-08T04:02:35.988Z] Venue filter: rijks
+[2026-09-08T04:02:35.988Z] 
+[2026-09-08T04:02:35.988Z] ────────────────────────────────────────────────────────────
+[2026-09-08T04:02:35.988Z]   RIJKS — Rijksmuseum, Amsterdam
+[2026-09-08T04:02:35.988Z] ────────────────────────────────────────────────────────────
+[2026-09-08T04:02:35.988Z]   Fetching current/upcoming: https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view
+[2026-09-08T04:02:37.995Z]   current/upcoming: 17 links seen -> 7 navigation, 0 already-seen URL -> 10 collected (0 of them with no readable title)
+[2026-09-08T04:02:37.995Z]   Fetching past: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past
+[2026-09-08T04:02:40.198Z]   past: 46 links seen -> 6 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-08T04:02:40.199Z]   lookback (listing): kept 49, dropped 1 closed before 2024-07-01, 28 with no closing date, 0 with no opening date
+[2026-09-08T04:03:05.521Z]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/mission-masterpiece
+[2026-09-08T04:03:17.075Z]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/henk-wildschut
+[2026-09-08T04:03:20.965Z]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/ed-van-der-elsken
+[2026-09-08T04:03:25.481Z]   Individual pages: 46 got text, 0 no curatorial text, 3 failed
+[2026-09-08T04:03:25.481Z]   lookback (final): kept 37, dropped 12 closed before 2024-07-01, 13 with no closing date, 8 with no opening date
+[2026-09-08T04:03:25.481Z]   → rijks: 37 exhibitions, 34 with curatorial text
+[2026-09-08T04:03:25.606Z] 
+[2026-09-08T04:03:25.606Z] ────────────────────────────────────────────────────────────
+[2026-09-08T04:03:25.606Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-08T04:03:25.606Z] ────────────────────────────────────────────────────────────
+[2026-09-08T04:03:25.606Z]   RIJKS: 37 exhibitions | 34 with text
+[2026-09-08T04:03:25.606Z] 
+[2026-09-08T04:03:25.606Z] ────────────────────────────────────────────────────────────
+[2026-09-08T04:03:25.606Z]   COVERAGE — every link accounted for
+[2026-09-08T04:03:25.606Z] ────────────────────────────────────────────────────────────
+[2026-09-08T04:03:25.606Z]   venue      page                          seen   nav   dup  noTitle  collected
+[2026-09-08T04:03:25.606Z]   ----------------------------------------------------------------------------
+[2026-09-08T04:03:25.606Z]   rijks      current/upcoming                17     7     0        0         10
+[2026-09-08T04:03:25.606Z]   rijks      past                            46     6     0        0         40
+[2026-09-08T04:03:25.606Z] 
+[2026-09-08T04:03:25.606Z]   seen      = links matching the venue's selector on that page
+[2026-09-08T04:03:25.606Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-08T04:03:25.606Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-08T04:03:25.606Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-08T04:03:25.606Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-08T04:03:25.606Z] 
+[2026-09-08T04:03:25.606Z] Network bridge: 1046 requests served, 2013 skipped (image/media/font), 0 failed
+[2026-09-08T04:03:25.606Z] 
+[2026-09-08T04:03:25.606Z] CSV written to:  /home/user/Cat-Search-Project/scraper/output/sweep_raw.csv
+[2026-09-08T04:03:25.606Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/sweep_log.txt
+[2026-09-08T04:03:25.606Z] Total rows written (no de-duplication — see passThrough): 37
