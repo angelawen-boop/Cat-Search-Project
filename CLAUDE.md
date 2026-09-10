@@ -1095,6 +1095,52 @@ Tate is deliberately two venues; merging them was rejected. Order reflects the a
 
 ## 8. Open decisions
 
+### The order of work from here — agreed 10 Sep 2026
+
+Her sequence, with three adjustments made in the same conversation. This supersedes
+"finish the 6-venue prototype end to end before wiring the other 15" below, which was
+written when no import had been tested. **One has since been run successfully against
+scraper output**, so the join between scraper and app is no longer the unproven part.
+
+1. **Compression step — decide and build.** A separate pass over a finished CSV, so it
+   is re-runnable without re-scraping. A script owns the file; the model only ever
+   supplies a string. Two things still open: session vs a script calling the API, and
+   which file she imports (raw sweep or compressed).
+2. **Wire all 21 venues with default recipes and run once.** This replaces what were two
+   steps — "re-check Borghese and probe the rest" and "expand to the accessible ones".
+   Marker rows became universal on 10 Sep, so **the run itself is the reconnaissance**:
+   the coverage table reports blocked, dead and working venues with no separate probe,
+   and Borghese's re-check falls out of it. **The laptop run belongs here too**, not
+   later — Met's and Morgan's recipes have never once executed, and finding them broken
+   during this pass folds into the venue-by-venue work instead of surfacing as a late
+   surprise. She will want step-by-step instructions when that happens.
+3. **Parallelism and the hang bound** (DEF-01 + DEF-04). Before the diagnosis pass, not
+   after: step 4 is a repeated re-run loop and a 20-minute serial sweep makes it painful.
+   Parallel across venues only, never within one — IR-15 stands.
+4. **Venue-by-venue diagnosis of the working set.** The slow part, and it needs her own
+   count of the live pages. Order within a venue as in Section 5. **Tate is the known
+   hard case.**
+5. **Decide what to do about sites the scraper still cannot reach** — only meaningful
+   once step 2 has said which those are.
+6. **JSX work** — "Never add this", plus whatever else steps 2–4 turn up.
+7. **Catalogue lookup tuning** — Haiku vs Sonnet. Independent of all of the above.
+
+**Where the deferred items die.** Her requirement, 10 Sep: a Defer must be absorbed by
+this workflow and end as fixed or permanently rejected — never left standing.
+
+| Ref | Resolved in |
+|---|---|
+| DEF-01 parallelism | Step 3 |
+| DEF-04 hang bound | Step 3 |
+| DEF-02 JS filter proof | Step 4, at the first venue that filters by JavaScript |
+| DEF-03 summary extractor | Step 4, per venue |
+
+**The ledger is not being protected during development.** Her ruling, 10 Sep: she is
+not keeping a real ledger until the JSX and scraper are both finished, so she can import
+freely and roll back to nothing. Quarantine ("Never add this") is therefore **not a
+blocker on anything** — it is ordinary step-6 work. Do not raise ledger pollution as a
+reason to reorder this list.
+
 **Settled 7 Sep 2026:**
 - All 21 venues get wired in, blocked ones included, for the standing-monitor reason in
   Section 4. The final *working* set will be smaller than 21; the *wired* set is all of them.
@@ -1174,9 +1220,11 @@ fine: accept it, and every later sweep matches it in the ledger and stays
 silent. The forever-return only affects rows she **rejects**. So undated shows
 need no quarantine — junk does.
 
-**This is a JSX change and is deliberately deferred** until the venue-by-venue
-review is done. It must exist before her first real import, or that import
-creates precisely the mess described above.
+**This is a JSX change and is deliberately deferred** to step 6 of the order at the
+top of this section. It was previously written as "must exist before her first real
+import" — **that is no longer a constraint**: she is keeping no ledger during
+development and can roll back to nothing, so a polluted test import costs her only a
+reset. Build it before the ledger becomes real, not before the next import.
 
 Cross-venue shows never merge on their own: `sameExhibition` returns false the
 moment `museumId` differs, so the app cannot collapse the Rijksmuseum and Borghese
@@ -1184,16 +1232,15 @@ copies even if title and dates are identical. Same-venue travelling runs (both
 Acquavella locations) *can* match each other, because the scraper's title rule
 strips the city — see the open Acquavella question in Section 5.
 
-**Settled 8 Sep 2026 — finish the 6-venue prototype end to end before wiring the
-other 15.** Her call. The six wired venues now produce a pro forma CSV, but the
-chain from sweep to ledger has never been run all the way through: the summary
-column still holds raw curatorial text, and no sweep output has yet been fed
-into Import Refresh. Wiring 15 more venues first would multiply the row count
-before anyone has confirmed a single row survives the trip. So: get one complete
-sweep imported and accepted, then expand.
+**Superseded 10 Sep 2026 — "finish the 6-venue prototype end to end before wiring
+the other 15".** That was set on 8 Sep because nothing had confirmed a single
+scraper row survived the trip into the app. **She has since run an import against a
+scraper-produced CSV and it worked well.** The join is proven, so the reason for
+holding the other 15 back is gone — see the order at the top of this section, where
+wiring all 21 is step 2 and doubles as the reconnaissance.
 
-The two things standing between here and end-to-end are the compression step
-below and her own test import.
+What remains of the original point: the summary column still holds raw curatorial
+text, so **compression is step 1** and still comes first.
 
 - **Where summary compression happens — the next decision to make.** The scraper
   writes raw text either way, so nothing built so far has to change whichever
