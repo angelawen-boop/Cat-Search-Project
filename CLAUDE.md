@@ -544,6 +544,57 @@ fault: `TIMEOUT`, `CONNECTION_*`, `EMPTY_RESPONSE`, `NO_RESPONSE`, `LOAD_ERROR`.
 standing rule forbids (Section 4). The retry exists for the case where we never
 got an answer at all.
 
+### A dying run is not a page failure — fixed 10 Sep 2026
+
+**The run directory rests on one guarantee: a venue file on disk means that
+venue finished.** That is what lets `--continue` work with no stored state.
+It was not true.
+
+Found while diffing three committed sweeps to measure how often venues reword
+their blurbs. Acquavella appeared to have rewritten 9 of 16 descriptions in
+three hours. It had not: **she stopped that run by hand mid-venue**, and the
+scraper recorded the browser being torn down as nine ordinary page failures —
+nine `LOAD_ERROR`s inside 19 milliseconds, each dutifully *retried* against a
+browser that no longer existed, the venue then declared complete, and
+`acq.csv` written with 10 of its 16 summaries missing. Nothing said so.
+`--continue` would have skipped it, and the loss would have been permanent and
+invisible.
+
+**An interrupt only exposed it. A browser crash does the same with nobody
+touching anything.**
+
+Three parts, all needed — the first alone was tested and did not work:
+
+1. **`classifyLoadError` knows a shutdown.** `Target closed`,
+   `Browser has been closed`, `Execution context was destroyed`,
+   `Target crashed` return `SHUTDOWN`, which is deliberately **not** in
+   `TRANSIENT_FAILURES`, so it is never retried.
+2. **`safeGoto` throws `ScrapeAborted` rather than returning `{ok:false}`.**
+   A returned failure looks like a page that would not load, so the venue
+   carries on and finishes; throwing aborts it, so `writeVenueCsv` is never
+   reached and the next `--continue` redoes it intact.
+3. **`rethrowIfAborted()` in every catch that continues past a failure.** This
+   is the part that was missed first time and the reason the fix has to be
+   stated as a principle rather than a patch: **a dying browser raises the same
+   error from ANY Playwright call, not only from navigation.** The listing
+   extractor's catch and the detail-page loop's catch each turned "there is no
+   browser" into "this one page had a problem" and marched on. Every catch in a
+   scraper is written for the page in front of it; that is right, and it is
+   exactly why each one needs this guard.
+
+Also added: a `SIGINT`/`SIGTERM` handler that sets `STOPPING`, so the venue in
+progress stops at its next navigation instead of grinding through its remaining
+pages as failures. A second Ctrl-C exits immediately.
+
+**Verified 10 Sep by doing it**: an interrupted `acq` run now logs
+`STOPPED mid-venue — nothing written` and leaves no file; an uninterrupted run
+returns 15 rows, all 15 with curatorial text, Rosenquist included. Fixture
+tests E-001 to E-006 cover the classification.
+
+**Consequence for the compressor** (Section 8): when it reuses a previous
+run's wording because a page did not load, **the row must say so**. Reuse that
+silently papers over a scraper failure is worse than the failure.
+
 ### Reading dates
 
 **All date parsing is shared, on purpose.** Every venue turns out to contain
@@ -910,6 +961,10 @@ will appear as one card to reject.
   Gallery date turned "15 October 2026" into 1 October 2026.
 - Treating a 404 as a page that loaded, which stored "This page does not exist"
   as three Rijksmuseum exhibitions' summaries.
+- Treating a torn-down browser as a page failure, so a run stopped mid-venue
+  retried nine dead pages and then wrote the venue to disk as COMPLETE with 10
+  of 16 summaries missing — breaking the one guarantee the run directory
+  exists to give.
 - Acquavella's title rule stripping `NEW YORK` / `PALM BEACH`, which made its
   two runs of one show read as the same exhibition. It now strips only the date
   tail — a month or season followed by a digit, so "April in Paris" survives —

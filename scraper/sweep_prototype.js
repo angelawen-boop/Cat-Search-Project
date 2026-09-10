@@ -828,7 +828,43 @@ async function coversMoreThanOneExhibition(node, selector) {
   }
 }
 
+/**
+ * The run is ending mid-venue — interrupted by hand, or the browser died.
+ * Distinct from every page-level failure precisely so the venue loop can tell
+ * "this page did not load" from "there is no browser any more".
+ */
+class ScrapeAborted extends Error {
+  constructor(url) {
+    super(`run aborted while loading ${url}`);
+    this.name = 'ScrapeAborted';
+    this.aborted = true;
+  }
+}
+
+/**
+ * Re-throw anything that means the run is over.
+ *
+ * Every `catch` in a scraper is written for the page in front of it — a bad
+ * selector, a missing element, one dead link — and swallowing those is right.
+ * But a dying browser raises the SAME kind of error from any Playwright call,
+ * not only from navigation, so those same catches quietly turn "there is no
+ * browser" into "this one page had a problem" and the venue marches on to
+ * completion. That is exactly how a hand-stopped run wrote Acquavella to disk
+ * as finished with 10 of 16 summaries missing.
+ *
+ * So: every catch that continues past a failure calls this first.
+ */
+function rethrowIfAborted(e) {
+  if (e && (e.aborted || classifyLoadError(e.message) === 'SHUTDOWN')) {
+    throw e.aborted ? e : new ScrapeAborted('(browser closed)');
+  }
+}
+
 async function safeGoto(page, url, venue, context, attempt = 0) {
+  // Ctrl-C already seen: stop before opening anything else, rather than
+  // letting the rest of the venue fail one page at a time.
+  if (STOPPING) throw new ScrapeAborted(url);
+
   try {
     // Deliberately NOT 'networkidle'. That waits for the page to make no
     // requests for 500ms, and these sites never fall silent — analytics,
@@ -872,6 +908,14 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
     }
     const reason = classifyLoadError(e.message);
 
+    // The browser is gone: the run is over, this is not this page's failure,
+    // and there is nothing to retry. Throwing rather than returning is the
+    // whole point — a returned {ok:false} looks like a page that would not
+    // load, so the venue carries on, "finishes", and gets written to disk
+    // missing everything the shutdown ate. Throwing aborts the venue, so no
+    // file is written and --continue picks it up intact next time.
+    if (reason === 'SHUTDOWN') throw new ScrapeAborted(url);
+
     // Retry a TRANSIENT network failure once. A page that times out or never
     // answers costs more than an empty summary: on 9 Sep an NG page failed to
     // load, so its row had no dates, so the lookback could not drop it, and a
@@ -913,6 +957,19 @@ const TRANSIENT_FAILURES = new Set([
  */
 function classifyLoadError(message) {
   const m = String(message || '');
+  // The run itself is ending — the browser, context or page is gone. This is
+  // NOT a page failure and must never be recorded as one. Proven 10 Sep: a
+  // sweep stopped by hand mid-venue produced nine "LOAD_ERROR"s inside 19ms,
+  // each dutifully retried against a browser that no longer existed, and
+  // Acquavella was then written to disk as a COMPLETE venue with 10 of its 16
+  // summaries missing. That silently breaks the one guarantee the run
+  // directory exists to give — a venue file on disk means that venue finished
+  // — so --continue would have skipped it and the loss would have been
+  // permanent and invisible. A browser crash does the same with nobody
+  // touching anything.
+  if (/Target (page, context or browser has been )?closed|Browser has been closed|browser has disconnected|Protocol error.*(closed|disconnected)|Execution context was destroyed|Target crashed/i.test(m)) {
+    return 'SHUTDOWN';
+  }
   if (/ERR_NAME_NOT_RESOLVED/.test(m))    return 'DNS_UNKNOWN';
   if (/ERR_CONNECTION_REFUSED/.test(m))   return 'CONNECTION_REFUSED';
   if (/ERR_CONNECTION_RESET/.test(m))     return 'CONNECTION_RESET';
@@ -1695,11 +1752,13 @@ async function scrapeVenue(page, code) {
             await collectFromListing(page, { ...opts, ctx: `${pg.ctx}-${year}` });
             if (year === 2024) break;
           } catch (e) {
+            rethrowIfAborted(e);
             log(`  ERROR selecting year ${year}: ${e.message.slice(0, 120)}`);
           }
         }
       }
     } catch (e) {
+      rethrowIfAborted(e);
       log(`  ERROR extracting ${code} listing (${pg.ctx}): ${e.message.slice(0, 120)}`);
     }
   }
@@ -1832,6 +1891,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
         } catch {}
       }
     } catch (e) {
+      rethrowIfAborted(e);
       row.notes = addNote(row.notes, `Something went wrong while reading this exhibition's own page: ${e.message.slice(0,80)}`);
       failed++;
     }
@@ -1925,8 +1985,25 @@ function resolveChromium() {
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
+// Set by Ctrl-C. Read by safeGoto so the venue in progress stops at its next
+// navigation instead of grinding through its remaining pages as failures.
+let STOPPING = false;
+
 async function main() {
   const RUN_VENUES = venuesForThisRun();
+
+  // An interrupted venue must leave NO file behind, so that a file on disk
+  // still means "this venue finished". Without this, stopping a run by hand
+  // wrote a complete-looking venue that was missing whatever the shutdown ate.
+  for (const sig of ['SIGINT', 'SIGTERM']) {
+    process.on(sig, () => {
+      if (STOPPING) process.exit(130);   // second Ctrl-C: go now
+      STOPPING = true;
+      log(`\n${sig} received — finishing the current page, then stopping.`);
+      log('The venue in progress will NOT be written; run --continue to redo it.');
+    });
+  }
+
 
   fs.mkdirSync(RUN_DIR, { recursive: true });
 
@@ -2006,12 +2083,20 @@ async function main() {
       };
       log(`  → ${code}: ${real.length} exhibitions, ${real.filter(r=>r.summary).length} with curatorial text → ${code}.csv`);
     } catch (e) {
+      // An abort is not this venue's failure and not something the next venue
+      // can survive either — the browser is gone. Stop the run, write no file
+      // for this venue, and leave it for --continue.
+      if (e.aborted) {
+        log(`  ${code}: STOPPED mid-venue — nothing written, --continue will redo it.`);
+        summary[code] = { aborted: true };
+        break;
+      }
       log(`  FATAL ERROR in ${code} scraper: ${e.message}`);
       summary[code] = { error: e.message };
     }
   }
 
-  await browser.close();
+  await browser.close().catch(() => {});
 
   const built = rebuildSweepCsv();
 

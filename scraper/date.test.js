@@ -19,6 +19,7 @@ const assert = require('node:assert');
 const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
+  classifyLoadError,
 } = require('./sweep_prototype.js');
 
 const range = (s, hint) => {
@@ -312,4 +313,42 @@ test('D-004: two equally good matches are ambiguous, so neither is used', () => 
 
 test('D-004: a row with no title never matches anything', () => {
   assert.strictEqual(pickStructuredEvent([EV('Anything', '2026-03-01')], ''), null);
+});
+
+// ── E: a dying run is not a page failure ─────────────────────────────────────
+// Ten Sep: a sweep stopped by hand mid-venue produced nine "LOAD_ERROR"s in
+// 19ms, each retried against a browser that was already gone, and Acquavella
+// was written to disk as COMPLETE while missing 10 of its 16 summaries. That
+// breaks the guarantee the whole run-directory design rests on: a venue file
+// existing means that venue finished. These strings must classify as SHUTDOWN
+// so the venue aborts and writes nothing.
+
+test('E-001: Playwright target-closed is a shutdown, not a load error', () => {
+  assert.strictEqual(
+    classifyLoadError('Target page, context or browser has been closed'),
+    'SHUTDOWN');
+});
+
+test('E-002: a closed browser is a shutdown', () => {
+  assert.strictEqual(classifyLoadError('Browser has been closed'), 'SHUTDOWN');
+});
+
+test('E-003: a destroyed execution context is a shutdown', () => {
+  assert.strictEqual(
+    classifyLoadError('Execution context was destroyed, most likely because of a navigation'),
+    'SHUTDOWN');
+});
+
+test('E-004: a crashed target is a shutdown', () => {
+  assert.strictEqual(classifyLoadError('Target crashed'), 'SHUTDOWN');
+});
+
+test('E-005: a real network fault is still classified as itself', () => {
+  assert.strictEqual(classifyLoadError('net::ERR_CONNECTION_RESET at https://x'), 'CONNECTION_RESET');
+  assert.strictEqual(classifyLoadError('net::ERR_FAILED at https://x'), 'NO_RESPONSE');
+  assert.strictEqual(classifyLoadError('Navigation timeout of 20000 ms exceeded'), 'TIMEOUT');
+});
+
+test('E-006: an unrecognised message is still LOAD_ERROR, not SHUTDOWN', () => {
+  assert.strictEqual(classifyLoadError('something nobody has seen before'), 'LOAD_ERROR');
 });
