@@ -1546,6 +1546,15 @@ names the task, model and agent type, so a horde announces itself as a horde. It
 matches both `Task` and `Agent` — the tool carries either name depending on
 harness version, and matching one alone would silently do nothing.
 
+**It also rewrites the subagent's description before the dialog is drawn**, and
+that is not cosmetic: the approval prompt shows the description field and
+nothing else — not the model, not the reason the hook returns. "Compress acq run
+with Prompt A" reached her phone as the whole question, and the prompt name
+means nothing at the moment of deciding. The description now leads with the
+MODEL, which is the thing actually being decided, and internal prompt names are
+replaced by what they do. A spawn with no model set reads "SESSION DEFAULT",
+which is itself the warning that the model choice was lost.
+
 ### Testing the judgement — `scraper/compress_eval.js`
 
 ```
