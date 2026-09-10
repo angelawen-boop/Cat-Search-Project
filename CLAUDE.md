@@ -1409,10 +1409,16 @@ naming real specifics the page carried — Scrub the racehorse, Die Brücke and 
 Blaue Reiter — and reproducing her Wright of Derby wording exactly. Haiku scored
 **14 of 14** on the judgement cases, which is constrained work and suits it.
 
-**So the specificity-versus-safety trade-off does not exist.** It looked real
-when asking Haiku for concrete detail made it invent an artist and report two
-wrong counts — but that was a capability limit wearing the costume of a
-trade-off. It invented a specific because it could not find a real one.
+**So the specificity-versus-safety trade-off does not exist.** Sonnet, asked for
+the specificity that made Haiku stumble, found real specifics instead of
+reaching past what the page supported.
+
+**Correction, same day:** Haiku was also reported as inventing an artist,
+"Brâncuși". It did not — the Acquavella page names him, and the check searched
+for the ASCII spelling and missed the diacritics. **Any traceability check must
+normalise diacritics first**, or it manufactures fabrications out of ordinary
+European names. Haiku's real round-2 errors were two counting mistakes, and the
+split rests on comprehension rather than on the withdrawn claim.
 
 **Reached by subagent, not by the session itself.** A session writing the
 summaries uses whatever model it happens to be, which silently discards the

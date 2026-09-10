@@ -38,21 +38,36 @@ being far more specific: "Stubbs's portrait of racehorse Scrub", "Die Brücke an
 Der Blaue Reiter", "Shonibare reimagines Gainsborough's famous painting". On
 *Wright of Derby* it produced her wording word for word.
 
-**So the specificity-versus-safety trade-off does not exist.** It looked real in
-round 2, when asking Haiku for concrete detail made it invent an artist (Brancusi,
-in a Tom Sachs show that never mentions him) and report two wrong counts. That was
-a capability limit wearing the costume of a trade-off: Haiku invented a specific
-because it could not find a real one. Sonnet, asked for the same specificity, simply
-found real ones.
+**So the specificity-versus-safety trade-off does not exist.** Sonnet, asked for
+the same specificity that made Haiku stumble, simply found real specifics.
+
+**CORRECTION, 10 Sep — one of the three round-2 failures was mine, not the
+model's.** Haiku was reported as inventing an artist, "Brâncuși", in a Tom Sachs
+show. The Acquavella page says *"Pablo Picasso and Constantin Brâncuși"* — the
+name is right there. The fabrication check searched for the ASCII spelling
+"Brancusi" and missed the diacritics, and the miss was reported as an invention.
+**Any check for whether a word came from the source must normalise diacritics
+first**, or it manufactures fabrications out of ordinary European names — which
+is most artists.
+
+Haiku's other two round-2 errors were real: it answered "Nine postwar
+abstractionists" by counting a list where the page states "The ten featured
+artists", and it carried Palm Beach's artist count (21) onto the New York row
+(17). Both are counting errors, not inventions. The case for the model split
+does not rest on the withdrawn claim — it rests on comprehension, which the
+National Gallery test measured directly.
 
 ---
 
 ## What three rounds of tuning taught, before the prompts themselves
 
-**Pressure for specificity makes a small model invent specifics.** Round 1 was
-vague; round 2 added four numbered rules demanding concrete facts and numbers, and
-produced three confident falsehoods. Vagueness is the safe failure — a thin summary
-costs nothing, a fabricated one is believed.
+**Pressure for specificity makes a small model reach past what it can support.**
+Round 1 was vague; round 2 added four numbered rules demanding concrete facts and
+numbers, and produced two confident falsehoods — both counting errors, where the
+model counted a list instead of reading the figure the page stated. (A third was
+reported at the time and has since been withdrawn; see the correction above.)
+Vagueness is still the safe failure: a thin summary costs nothing, a confident
+wrong number is believed.
 
 **Rules compete for a budget.** Adding the surname instruction visibly displaced
 other things: rows that had opened "First UK exhibition of…" moved onto describing
