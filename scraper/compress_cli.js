@@ -158,11 +158,25 @@ function plan(dir, { recompress = false } = {}) {
     path.join(runPath, '.compress_done.json'),
     JSON.stringify(done, null, 2), 'utf8');
 
+  const needsFresh = pending.some(p => p.action === 'fresh');
+  const needsReview = pending.some(p => p.action === 'review');
+
   say(`${pending.length} rows need a summary. Written to:`);
   say(`  ${path.join(runPath, PENDING_JSON)}`);
   say('');
-  say(`Next: write ${ANSWERS_JSON} beside it — {"<index>": "the summary.", ...} —`);
-  say(`then:  node scraper/compress.js ${dir} --apply`);
+  // Point explicitly at the prompt. Without this a session sees a file of rows
+  // and no instruction, and either invents its own house style or never does
+  // the step at all — the prompts, the model split and the reasoning behind
+  // both are the product of this stage, and they live in one place.
+  say('HOW TO ANSWER THEM — do not improvise:');
+  say(`  Read  ${path.relative(process.cwd(), path.join(__dirname, 'compress_prompt.md'))}`);
+  if (needsFresh)  say('  Use Prompt A (write a fresh summary)  — SONNET');
+  if (needsReview) say('  Use Prompt B (is the old summary now false?)  — HAIKU');
+  say(`  Examples for the prompt:  node scraper/compress.js --examples`);
+  say('');
+  say(`Then write ${ANSWERS_JSON} beside the pending file — {"<index>": "the summary.", ...},`);
+  say('  a string to write it, the previous summary verbatim to keep it, null to refuse.');
+  say(`Finally:  node scraper/compress.js ${dir} --apply`);
 }
 
 function loadMemory(dir) {
