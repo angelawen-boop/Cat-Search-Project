@@ -86,7 +86,7 @@ The test for where something belongs:
   that a session re-derives each time, because that is precisely how a CSV gets
   mangled — and when it does, the damage is invisible until it reaches her.
 - **Many acceptable answers, or judgement about the outside world → a model.**
-  Compressing curatorial prose into 12 words. Reading a page nobody has taught
+  Compressing curatorial prose into a six-word teaser. Reading a page nobody has taught
   the scraper about.
 - **Even then, a model touches strings, never files.** A script owns the CSV and
   asks for a value; the model never sees a comma or a column. The only thing it
@@ -320,7 +320,7 @@ On top of that, the Chat-Claude sweep is manual, slow, costly in tokens, and req
 
 Handover v11 Section 12 listed four options. This repo is **Shape B**: the headless-browser script lives in Claude Code's environment, and Claude Code runs it. Decision on where summary compression happens is still open (Section 8).
 
-**Target output:** a CSV in exact pro forma format, with the **summary column carrying the raw curatorial text dump** rather than a finished 12-word summary. A later compression step turns raw text into the 12-word summary. Keeping the raw text is what makes fabrication structurally impossible — the compressor can only compress what's actually in the record.
+**Target output:** a CSV in exact pro forma format, with the **summary column carrying the raw curatorial text dump** rather than a finished short summary. A later compression step turns raw text into the teaser she reads (about six words — see Section 8). Keeping the raw text is what makes fabrication structurally impossible — the compressor can only compress what's actually in the record.
 
 The 6-venue prototype is finished end to end before the other 15 are wired —
 see Section 8.
@@ -347,7 +347,10 @@ Two conditions keep this honest, and both are cheap:
 
 - `scraper/sweep_prototype.js` — the real scraper. Playwright + headless Chromium. **This is the one being developed.**
 - `scraper/sweep_fetch.js` — an older diagnostic copy using plain `node-fetch` and no browser. Kept as a fallback and a comparison point. Not being developed.
-- `scraper/date.test.js` — fixture tests for the pure logic. `npm test`.
+- `scraper/compress.js` — turns the raw curatorial dump into the short summary
+  she reads. Pure logic; `scraper/compress_cli.js` is its command line.
+- `scraper/date.test.js`, `scraper/compress.test.js` — fixture tests for the
+  pure logic of each. `npm test` runs both.
 - `scraper/output/run_<date>_<time>/` — one directory per run (see below).
 
 Run:
@@ -355,7 +358,9 @@ Run:
 node scraper/sweep_prototype.js              everything
 node scraper/sweep_prototype.js ng rijks     named venues only
 node scraper/sweep_prototype.js --continue   finish the newest run
-npm test                                     the date/URL fixtures, ~1 second
+node scraper/compress.js                     plan compression of the newest run
+node scraper/compress.js <run> --apply       write sweep_compressed.csv
+npm test                                     all fixtures, ~1 second
 ```
 
 ### A run is a directory, not a file
@@ -896,8 +901,10 @@ will appear as one card to reject.
    to; **Tate is known to list everything on one "what's on" page, though it does
    tag each item by type**, so that tag is the hook when we get there. A venue
    that dumps everything *and* tags nothing will need a different answer.
-3. **The summary column is not yet the raw-dump-then-compress design** in
-   Section 4. It currently holds up to 2000 characters of curatorial text.
+3. ~~The summary column is not yet the raw-dump-then-compress design.~~
+   **Built 10 Sep** — `scraper/compress.js`, see Section 8. The scraper still
+   writes the raw dump, deliberately; `sweep_compressed.csv` is the file she
+   imports.
 4. **Title casing is inconsistent** — some venues apply capitalisation in CSS, so
    innerText returns caps for some cards and title case for others. **Her
    decision: live with it.** Genuinely all-caps exhibition titles exist, and
@@ -1329,8 +1336,8 @@ Then, per row:
 
 | Raw text vs last run | What happens | Model calls |
 |---|---|---|
-| Identical | Reuse last run's 12 words | **none** — code, cannot be wrong |
-| Changed | Model gets the OLD 12 words *and* the new raw text, and answers one question: **is the old summary now false?** No → return it unchanged. Yes → rewrite | one |
+| Identical | Reuse last run's wording | **none** — code, cannot be wrong |
+| Changed | Model gets the OLD wording *and* the new raw text, and answers one question: **is the old summary now false?** No → return it unchanged. Yes → rewrite | one |
 | Never seen | Write fresh | one |
 
 Measured on the three committed sweeps of 10 Sep: **79 of 80 rows matched
@@ -1386,13 +1393,68 @@ Everything above maps onto distinctions the app already computes: `fill` vs
 `change` at `analyzeProForma`, and open-vs-closed from the end date. The only
 new behaviour is dropping summary *changes* on closed shows.
 
-**Where the 12 words come from: a Claude Code session first, an API script
+**Where the words come from: a Claude Code session first, an API script
 later.** Both are safe — a script owns the CSV and the model only ever supplies
 a string. The wording will take two or three goes to get right, and that is a
 conversation; a script is the worse place to have it. Move to the API once the
 wording has settled and unattended runs are wanted. Nothing is wasted: the
 script that owns the file is the same either way, only the source of the string
 changes.
+
+### Built 10 Sep 2026 — `scraper/compress.js`
+
+```
+node scraper/compress.js                  plan the newest run
+node scraper/compress.js run_2026-...     plan a named run
+node scraper/compress.js <run> --apply    write sweep_compressed.csv
+node scraper/compress.js --examples       print the few-shot pairs
+node scraper/compress.js --recompress     ignore memory, ask for everything
+```
+
+Planning writes `compress_pending.json` — only the rows that need words. A
+session writes `compress_answers.json` beside it. `--apply` writes
+`sweep_compressed.csv`, **which is the file she imports**. If nothing is
+pending, planning writes the file outright and there is no second step.
+
+`compress_cli.js` holds the command line so `compress.js` stays importable by
+the fixtures. `compress.test.js` covers the decision logic, matching, CSV
+quoting and validation — 30 fixtures, no network, no model.
+
+**The target length came from her data, not from us.** The guide said "12
+words" for a long time. Measured across all 110 seed summaries: **minimum 3,
+median 6, maximum 10, and every single one ends with a full stop.** So the cap
+is ten words and the shape is a noun phrase. Anything longer is refused rather
+than truncated.
+
+**The prompt is examples, not rules.** `--examples` builds 29 pairs of (raw
+curatorial text → the summary she approved) by matching the app's seed set to
+exhibitions the scraper has since collected text for. That teaches brevity,
+noun phrases, naming the artist and the hook, and no promotional language far
+better than any list of instructions. Nothing in it is written by hand, and it
+rebuilds itself as the seed set changes. The Met's 51 seed entries are
+unusable — it is blocked, so there is no raw text to pair them with.
+
+Only two rules stay written down, because examples cannot demonstrate them:
+never state anything not in the raw text, and refuse text that is not a
+description at all.
+
+**Two flaws surfaced by running it, both fixed:**
+
+1. **There was no way to say "this is not a description".** Acquavella's James
+   Rosenquist row is a bare link and nothing else. The script offered a valid
+   string or a hard failure, so the only way past it was to invent a summary —
+   the exact thing keeping raw text in the record exists to prevent. An answer
+   of `null` is now a recorded decision: the summary stays empty and the row
+   says why. A *missing* answer still stops everything, because that is an
+   oversight rather than a decision, and the two must not look alike.
+2. **A skip was forgotten immediately.** On the very next sweep that row came
+   back as "never seen before" and was asked again — forever, every run. The
+   skip is now remembered by its note, and re-asked only if the venue writes
+   something real. This is the same forever-return trap as a rejected Add card.
+
+**Verified end to end, 10 Sep.** First compression of a 15-row Acquavella
+sweep: 15 asked, 14 written, 1 skipped. Second sweep of the same venue:
+**14 reused, 1 remembered skip, zero model calls.**
 
 **Rejected along the way, with reasons, so they are not re-proposed:**
 - **Give the compressor her ledger** so it can skip rows she already has. Puts a
@@ -1401,7 +1463,7 @@ changes.
   a blank summary should still be filled.
 - **Reuse the app's `sameExhibition` as the cache key.** It asks the right
   question for the ledger — *is this the same exhibition?* — and the wrong one
-  here, which is *will the same 12 words still be correct?* A past-tense
+  here, which is *will the same wording still be correct?* A past-tense
   rewrite is the same exhibition and a stale summary.
 - **Fingerprint the raw text as the cache key.** Correct about identity, exactly
   backwards on cost: it recompresses on every trivial rewording, which is the
@@ -1418,12 +1480,12 @@ changes.
   - **A script owns the CSV; the model only ever supplies a string** (Section 1).
     It never edits the file, so it cannot drop or reorder a row.
   - **A separate pass over the finished CSV** is the only candidate that can be
-    re-run without re-scraping. Since the 12-word wording will take two or three
+    re-run without re-scraping. Since the wording will take two or three
     attempts to get right, that difference probably decides it.
   - Keeping the raw text is what makes fabrication structurally impossible — the
     compressor can only compress what is in the record.
 
-  Still open: whether the 12 words come from a session or a script calling the
+  Still open: whether the words come from a session or a script calling the
   API. Same safety either way; different cost and setup.
 
   **It must also detect text it should not be compressing** — a summary that is

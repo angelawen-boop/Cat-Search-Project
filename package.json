@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --test scraper/date.test.js"
+    "test": "node --test scraper/date.test.js scraper/compress.test.js"
   },
   "repository": {
     "type": "git",
