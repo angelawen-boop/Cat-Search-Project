@@ -51,6 +51,13 @@ Everything routine goes straight to `main`.
 name automatically at startup. That is the tool's habit, not a decision. Such a branch is
 a working copy to merge back and abandon, never a candidate for the truth.
 
+**This is now enforced, not just written down** (10 Sep 2026). The startup instruction
+the web tool injects — "develop on branch X" — outranks this document, so the policy was
+being ignored despite being the first thing in the guide. `.claude/hooks/session-start.sh`
+switches the session to `main` before work begins. It refuses to move if the working tree
+is dirty or the branch already carries its own commits, so it cannot discard anything. It
+also runs `npm install`, so `npm test` works with no manual step.
+
 ## 1. House rules for this repo
 
 These are the rules for Claude Code sessions. They will grow over time; right now there is one, and it is not negotiable.
