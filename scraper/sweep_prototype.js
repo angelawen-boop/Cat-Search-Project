@@ -280,7 +280,23 @@ function parseMonthDay(str, fallbackYear) {
 // its older runs that way: "11 Oct. 2019 t/m 19 Jan. 2020".
 const RANGE_SEP = '\\s*(?:-|t/m|to|till|until|through)\\s*';
 
-function findDateRange(raw) {
+/**
+ * @param raw    the text to search
+ * @param opts   { looseSingles }. A LISTING CARD is a short string about one
+ *   exhibition, so a bare "March / 2026" in it is almost certainly that show's
+ *   date. A whole PAGE is not: it carries navigation, photo captions, a footer
+ *   and the museum's opening hours, and the loosest patterns then become a
+ *   lottery. Pass looseSingles:false when scanning page text.
+ *
+ *   This is not hypothetical. The Rijksmuseum's "Express yourself" page prints
+ *   its real run as "16 Feb - 9 June" with no year anywhere, so no pattern
+ *   could use it — and the scan fell through to the bare month-and-year rule,
+ *   which matched a PHOTO CAPTION: "Gerard Wessel, RoXY, Amsterdam, April
+ *   1994". A 2024 exhibition was given a 1994 opening date, which would have
+ *   ranked it as thirty years closed.
+ */
+function findDateRange(raw, opts = {}) {
+  const looseSingles = opts.looseSingles !== false;
   if (!raw) return { start: '', end: '', raw: '' };
   // Normalise every dash a museum's typesetter might reach for. The National
   // Gallery uses U+2012 FIGURE DASH on some cards and U+2013 EN DASH on
@@ -333,9 +349,12 @@ function findDateRange(raw) {
     if (mo) return sane(ymd(m[4], mo, m[2]), ymd(m[4], mo, m[3]), s);
   }
 
-  // Single "Month D, YYYY" — treat as the end date (open until)
-  m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
-  if (m) return { start: '', end: parseMonthDay(titleCase(m[1]), null) || '', raw: s };
+  // Single "Month D, YYYY" — treat as the end date (open until).
+  // Bare, with no preposition to anchor it, so it is a listing-card rule only.
+  if (looseSingles) {
+    m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
+    if (m) return { start: '', end: parseMonthDay(titleCase(m[1]), null) || '', raw: s };
+  }
 
   // A single day-first date carrying a preposition, as Rijksmuseum's cards do:
   //   "WORN till 21 March 2027"          -> a closing date
@@ -356,10 +375,16 @@ function findDateRange(raw) {
 
   // "Month YYYY" or "Month / YYYY" with no day — a start month, end unknown.
   // Borghese's archive prints "March / 2026" and nothing else.
-  m = s.match(new RegExp(`(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
-  if (m && plausibleYear(m[2])) {
-    const mo = monthNum(m[1]);
-    if (mo) return { start: ymd(m[2], mo, 1), end: '', latestYear: +m[2], raw: s };
+  //
+  // The loosest rule in the file: one month name beside one year, anywhere.
+  // Safe on a listing card, which is a short string about a single show.
+  // Never applied to page text — see the header comment.
+  if (looseSingles) {
+    m = s.match(new RegExp(`(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
+    if (m && plausibleYear(m[2])) {
+      const mo = monthNum(m[1]);
+      if (mo) return { start: ymd(m[2], mo, 1), end: '', latestYear: +m[2], raw: s };
+    }
   }
 
   // A season and a year, no day at all: Acquavella's archive prints
@@ -367,8 +392,10 @@ function findDateRange(raw) {
   // written to the date columns. But it IS a published bound: a show the
   // gallery itself labels "Summer 2022" cannot still have been open in
   // July 2024. See latestYear, below.
-  m = s.match(/\b(?:spring|summer|autumn|fall|winter)\s+(\d{4})\b/i);
-  if (m && plausibleYear(m[1])) return { start: '', end: '', latestYear: +m[1], raw: s };
+  if (looseSingles) {
+    m = s.match(/\b(?:spring|summer|autumn|fall|winter)\s+(\d{4})\b/i);
+    if (m && plausibleYear(m[1])) return { start: '', end: '', latestYear: +m[1], raw: s };
+  }
 
   return { start: '', end: '', raw: s };
 }
@@ -525,7 +552,9 @@ function findDateRangeInProse(text, hintYear) {
   // drifted apart — one learned a format the other did not, and a venue whose
   // dates lived on the detail page silently lost them. Falling through means
   // any pattern either parser knows is available to both.
-  const viaListing = findDateRange(s);
+  // Ranges and preposition-anchored dates only. The bare single-date rules are
+  // listing-card rules and would match a photo caption or a footer here.
+  const viaListing = findDateRange(s, { looseSingles: false });
   if (viaListing.start || viaListing.end) return viaListing;
 
   return { start: '', end: '', raw: '' };
@@ -745,10 +774,33 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
       return safeGoto(page, url, venue, context, 1);
     }
     const reason = classifyLoadError(e.message);
+
+    // Retry a TRANSIENT network failure once. A page that times out or never
+    // answers costs more than an empty summary: on 9 Sep an NG page failed to
+    // load, so its row had no dates, so the lookback could not drop it, and a
+    // 2019 exhibition arrived on the approval pile as a rogue undated card.
+    // The same run lost Hockney's summary the same way.
+    //
+    // Only genuine network faults are retried. A venue that ANSWERED — 403,
+    // 429, 404 — is never asked twice: it has told us its answer, and asking
+    // again is exactly the hammering the standing rule forbids (Section 4).
+    if (attempt === 0 && TRANSIENT_FAILURES.has(reason)) {
+      log(`  ${reason} on ${url} — retrying once`);
+      await page.waitForTimeout(2000);
+      return safeGoto(page, url, venue, context, 1);
+    }
+
     log(`  ${reason}: ${url} — ${e.message.slice(0, 120)}`);
     return { ok: false, reason };
   }
 }
+
+// Network faults worth one second attempt. Deliberately excludes every HTTP
+// status: a refusal is an answer, not a failure to get one.
+const TRANSIENT_FAILURES = new Set([
+  'TIMEOUT', 'CONNECTION_TIMEOUT', 'CONNECTION_RESET', 'CONNECTION_CLOSED',
+  'EMPTY_RESPONSE', 'NO_RESPONSE', 'LOAD_ERROR',
+]);
 
 /**
  * Say WHICH kind of failure, not just that there was one.

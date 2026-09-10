@@ -145,6 +145,47 @@ test('a day-first RANGE of implausible years is refused too', () => {
   assert.deepStrictEqual(range('4 May 1607 to 12 June 1610'), ['', '']);
 });
 
+// ── Page text is not a listing card ──────────────────────────────────────────
+// The Rijksmuseum's "Express yourself" page prints its run as "16 Feb - 9 June"
+// with no year, so no pattern could use it — and the scan fell through to the
+// bare month-and-year rule, which matched a PHOTO CAPTION further down the
+// page. A 2024 exhibition was given a 1994 opening date.
+const EXPRESS_YOURSELF_PAGE = [
+  'Skip to main content Past exhibitions Language Login Giftshop EXPRESS YOURSELF',
+  'Photography exhibition Discover youth culture as seen through the lenses of',
+  'Gerard Wessel and André Bogaerts. Read more about Express yourself',
+  '16 Feb - 9 June More practical info',
+  'Gerard Wessel, RoXY, Amsterdam, April 1994 1 | 5',
+  'Gerard Wessel, The Flavor, Escape, Amsterdam 1995, September 1995 1 | 5',
+  'Open daily 9 to 17h Museumstraat 1, Amsterdam Terms and conditions Privacy',
+  'Cookie Policy Right of withdrawal Accessibility Statement',
+].join(' ');
+
+test('a photo caption is not the exhibition\'s opening date', () => {
+  const r = findDateRangeInProse(EXPRESS_YOURSELF_PAGE);
+  assert.strictEqual(r.start, '', 'April 1994 came from a photo caption');
+  assert.strictEqual(r.end, '');
+});
+
+test('the loose single-date rules still work on a listing card', () => {
+  // Short string, one exhibition: Borghese's archive really does print this.
+  assert.strictEqual(findDateRange('March / 2026').start, '2026-03-01');
+  assert.strictEqual(findDateRange('Summer 2022').latestYear, 2022);
+});
+
+test('a real range inside page text is still read', () => {
+  // Ranges are safe anywhere — two dates joined by a separator are not a caption.
+  assert.deepStrictEqual(
+    range('From June 10 to September 14, 2025, the Galleria Borghese presents…'),
+    ['2025-06-10', '2025-09-14'],
+  );
+});
+
+test('a preposition-anchored single date in page text is still read', () => {
+  const r = findDateRangeInProse('The show will run until 20 February 2026 in the main hall.');
+  assert.strictEqual(r.end, '2026-02-20');
+});
+
 // ── D-003: URL identity ──────────────────────────────────────────────────────
 test('D-003: case in the path is preserved, so two pages stay two pages', () => {
   assert.notStrictEqual(

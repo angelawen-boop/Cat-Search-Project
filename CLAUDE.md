@@ -517,6 +517,26 @@ which is a site fault and not a block. A reason falling through to
 `LOAD_ERROR, cause unknown` means a network error we have not seen before;
 add it rather than guess at it.
 
+### A transient failure is retried once — a refusal never is
+
+**A page that fails to load costs more than an empty summary.** It costs the
+row's dates, and a row with no end date cannot be dropped by the lookback — so
+it arrives on the approval pile as a rogue undated card.
+
+Proven across two runs: NG's *Impressionist Decorations* appears in the 9 Sep
+run and is absent from 10 Sep. On 9 Sep its page failed to load, so it had no
+dates and survived the lookback; on 10 Sep the page loaded, the dates were read,
+and it was correctly dropped as pre-July-2024. The same run lost *Hockney and
+Piero*'s summary the same way.
+
+So `safeGoto` retries **once**, after two seconds, and only on a genuine network
+fault: `TIMEOUT`, `CONNECTION_*`, `EMPTY_RESPONSE`, `NO_RESPONSE`, `LOAD_ERROR`.
+
+**Every HTTP status is excluded, deliberately.** A venue answering 403, 429 or
+404 has told us its answer; asking again is exactly the hammering the
+standing rule forbids (Section 4). The retry exists for the case where we never
+got an answer at all.
+
 ### Reading dates
 
 **All date parsing is shared, on purpose.** Every venue turns out to contain
@@ -568,6 +588,39 @@ one and can then decide whether a show passes the lookback.
 **Her standing rule for dates, 10 Sep 2026:** where the code has applicable
 logic it uses it; where it has none the date columns stay blank and the notes
 explain why. Never a guess.
+
+### A listing card is not a page — the loose rules apply to one, not the other
+
+**The single most dangerous rule in the file is "one month name beside one
+year".** On a listing card that is almost certainly the exhibition's date, and
+it is the only thing Borghese's archive publishes ("March / 2026"). On a whole
+page it is a lottery, because a page also carries navigation, photo captions, a
+footer and the museum's opening hours.
+
+Found in her 9 Sep test run: the Rijksmuseum's **Express yourself** page prints
+its real run as `16 Feb - 9 June` with **no year anywhere**, so no pattern could
+use it. The scan fell through to the bare month-and-year rule, which matched a
+photo caption further down the page — *"Gerard Wessel, RoXY, Amsterdam, April
+1994"* — and a 2024 exhibition was given a **1994** opening date. Not cosmetic:
+that ranks it as thirty years closed, at the bottom of the urgency ladder.
+
+So `findDateRange` takes `{ looseSingles }`, and `findDateRangeInProse` passes
+**false**. Refused on page text:
+- bare `Month YYYY` / `Month / YYYY`
+- bare `Season YYYY`
+- bare `Month D, YYYY` with no preposition
+
+Still allowed everywhere, because two dates joined by a separator are not a
+caption, and a preposition anchors a single one:
+- every range pattern
+- `until 20 February 2026`, `from 5 June 2025`
+
+Express yourself now returns **no dates at all**, with a note saying so. That is
+the correct answer — the venue never published a usable one.
+
+**This is the date-shaped version of DEF-03** (Section 11): the summary
+extractor has the same exposure to reading the wrong region of a page. Treat
+this as evidence that the concern is real rather than theoretical.
 
 **Every dash is normalised first** — U+2010 to U+2015, the minus sign and the
 Hebrew maqaf. The National Gallery uses a figure dash on some cards and an en
@@ -766,6 +819,10 @@ will appear as one card to reject.
   was this exhibition — a members' preview or a tour could supply the dates.
 - `parseDateRange`, a second anchored date parser that nothing called. Dead code
   shaped like live code is a trap for whoever debugs dates next.
+- Applying the bare month-and-year rule to whole page text, which read a photo
+  caption ("Amsterdam, April 1994") as a 2024 exhibition's opening date.
+- Giving up on a detail page after one transient network failure, which cost a
+  summary AND let an out-of-range row survive the lookback undated.
 - Keeping the FIRST link to an address and ignoring the rest, which cost Renoir
   and Love its title and its dates — the National Gallery's first link to a
   card is the image.
