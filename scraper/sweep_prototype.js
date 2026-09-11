@@ -74,6 +74,37 @@ const ARGS = process.argv.slice(2).map(a => a.toLowerCase()).filter(Boolean);
 const CONTINUE = ARGS.includes('--continue');
 const WANTED = ARGS.filter(a => !a.startsWith('--'));
 
+// How many venues run at once. ACROSS venues only — never several pages within
+// one venue, which is the hammering case IR-15 rejects at any scale. Each venue
+// still visits its own pages strictly one at a time, so no museum sees more
+// than one request from us at a time no matter what this is set to.
+//
+// Default 4: a 21-venue serial run projects to ~20 minutes, and step 4 of the
+// work order is a repeated re-run loop where that hurts. Raising it does not
+// increase load on any single venue; it increases the number of DIFFERENT
+// venues in flight, and the ceiling is this container's memory, since each
+// worker holds its own browser context.
+const JOBS_ARG = ARGS.find(a => a.startsWith('--jobs='));
+const CONCURRENCY = Math.max(1, Math.min(8, parseInt(JOBS_ARG?.split('=')[1] ?? '4', 10) || 4));
+
+// DEF-04, the hang bound. A BLOCKED venue costs about a second — the site
+// refuses and we move on. A HANGING one costs NAV_TIMEOUT plus a retry on every
+// page it has, so a venue with 40 pages could hold a run for 25 minutes on its
+// own while returning nothing.
+//
+// A venue that exceeds this is abandoned, NOT written, and picked up by the
+// next --continue. That is the same outcome as any other incomplete venue, and
+// it relies on the same guarantee: a file on disk means that venue finished.
+// Overridable with --budget-mins=N so the abandon path can actually be
+// exercised. A guard nobody has ever seen fire is a guard nobody knows works:
+// this one was proved with --budget-mins=0.05 against a live venue before it
+// was trusted at ten minutes.
+const BUDGET_ARG = ARGS.find(a => a.startsWith('--budget-mins='));
+const VENUE_BUDGET_MS = Math.max(
+  1000,
+  Math.round((parseFloat(BUDGET_ARG?.split('=')[1] ?? '10') || 10) * 60 * 1000),
+);
+
 // Her clock, not the server's. Fixed to her zone rather than the machine's, so
 // a run from this container and a run from her laptop stamp the same way and
 // sort together — otherwise a 6pm Sydney run files itself as 08:00, on what can
@@ -123,8 +154,22 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 // ── Logging ───────────────────────────────────────────────────────────────────
 const logLines = [];
+// Which venue the current async call chain belongs to. With venues running
+// concurrently the log is interleaved, so a line that says only "3 collected"
+// belongs to nobody. AsyncLocalStorage carries the venue code down through every
+// await without threading it through ~40 call sites by hand, so log() can stamp
+// it on automatically and each line stays attributable.
+//
+// She reads the session's summary rather than the log, so interleaving itself is
+// fine (DEF-01) — the requirement is that the log stays machine-parseable, and a
+// per-line venue tag is what delivers that.
+const { AsyncLocalStorage } = require('node:async_hooks');
+const VENUE_CONTEXT = new AsyncLocalStorage();
+
 function log(msg) {
-  const line = `[${new Date().toISOString()}] ${msg}`;
+  const code = VENUE_CONTEXT.getStore();
+  const tag = code ? `[${code}] ` : '';
+  const line = `[${new Date().toISOString()}] ${tag}${msg}`;
   console.log(line);
   logLines.push(line);
 }
@@ -2044,58 +2089,114 @@ async function main() {
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 
-  const context = await browser.newContext({
-    userAgent: USER_AGENT,
-    viewport: { width: 1280, height: 800 },
-  });
-
-  // Chromium does no network I/O of its own — see NETWORK NOTE at top of file.
-  const netStats = await installNetworkBridge(context);
-  log('Network bridge installed: Chromium requests are served by Node via the proxy');
-
-  const page = await context.newPage();
-
   const summary = {};
+  const netTotals = { fulfilled: 0, skipped: 0, failed: 0 };
 
-  // Order matters only for readability of the log; each venue is independent.
-  // Optional venue filter: node scraper/sweep_prototype.js borghese morgan
-  const scrapers = RUN_VENUES.map(code => ({ code, fn: p => scrapeVenue(p, code) }));
+  // Each worker gets its OWN browser context, and therefore its own cookie jar,
+  // its own network bridge and its own page. Sharing one page across concurrent
+  // venues is impossible — a page is a single sheet of glass, and two venues
+  // navigating it would each destroy the other's work.
+  async function runOneVenue(code, page) {
+    // Final lookback pass — applies to every venue without exception, after
+    // individual pages have had a chance to fill in missing dates.
+    const rows = applyLookback(await scrapeVenue(page, code), code, 'final');
+    noteTravellingRuns(rows, code);
+    const real = rows.filter(r => !r.title.startsWith('['));
+    const placeholders = rows.filter(r => r.title.startsWith('['));
 
-  for (const { code, fn } of scrapers) {
+    // Written only now, once this venue is finished. If the process dies at
+    // any point before this line, the venue simply has no file and is picked
+    // up by the next --continue. There is never a half-scraped venue on disk.
+    writeVenueCsv(code, rows);
+
+    summary[code] = {
+      total: rows.length,
+      real: real.length,
+      withSummary: real.filter(r => r.summary).length,
+      placeholders: placeholders.length,
+    };
+    log(`  → ${real.length} exhibitions, ${real.filter(r=>r.summary).length} with curatorial text → ${code}.csv`);
+  }
+
+  // The queue. Workers pull from a shared index rather than being handed a
+  // fixed slice, so one slow venue cannot leave a worker idle while another
+  // still has five to do.
+  const queue = [...RUN_VENUES];
+  let next = 0;
+
+  async function worker(n) {
+    const context = await browser.newContext({
+      userAgent: USER_AGENT,
+      viewport: { width: 1280, height: 800 },
+    });
+    // Chromium does no network I/O of its own — see NETWORK NOTE at top of file.
+    const stats = await installNetworkBridge(context);
+
     try {
-      // Final lookback pass — applies to every venue without exception, after
-      // individual pages have had a chance to fill in missing dates.
-      const rows = applyLookback(await fn(page), code, 'final');
-      noteTravellingRuns(rows, code);
-      const real = rows.filter(r => !r.title.startsWith('['));
-      const placeholders = rows.filter(r => r.title.startsWith('['));
+      while (true) {
+        // STOPPING is checked HERE as well as in safeGoto: a Ctrl-C should not
+        // start a venue it has no intention of finishing, since an abandoned
+        // venue writes nothing and the work is simply thrown away.
+        if (STOPPING) break;
+        const i = next++;
+        if (i >= queue.length) break;
+        const code = queue[i];
 
-      // Written only now, once this venue is finished. If the process dies at
-      // any point before this line, the venue simply has no file and is picked
-      // up by the next --continue. There is never a half-scraped venue on disk.
-      writeVenueCsv(code, rows);
-
-      summary[code] = {
-        total: rows.length,
-        real: real.length,
-        withSummary: real.filter(r => r.summary).length,
-        placeholders: placeholders.length,
-      };
-      log(`  → ${code}: ${real.length} exhibitions, ${real.filter(r=>r.summary).length} with curatorial text → ${code}.csv`);
-    } catch (e) {
-      // An abort is not this venue's failure and not something the next venue
-      // can survive either — the browser is gone. Stop the run, write no file
-      // for this venue, and leave it for --continue.
-      if (e.aborted) {
-        log(`  ${code}: STOPPED mid-venue — nothing written, --continue will redo it.`);
-        summary[code] = { aborted: true };
-        break;
+        const page = await context.newPage();
+        let timer;
+        try {
+          await VENUE_CONTEXT.run(code, () =>
+            Promise.race([
+              runOneVenue(code, page),
+              // DEF-04. Losing the race does not cancel the venue's work —
+              // nothing in Playwright can — which is why the page is closed in
+              // the finally below. That makes the abandoned venue's next call
+              // throw, so it unwinds instead of running on invisibly.
+              new Promise((_, reject) => {
+                timer = setTimeout(() => reject(Object.assign(
+                  new Error(`venue exceeded its ${(VENUE_BUDGET_MS/60000).toFixed(2)} minute budget`),
+                  { budgetExceeded: true },
+                )), VENUE_BUDGET_MS);
+              }),
+            ]));
+        } catch (e) {
+          if (e.budgetExceeded) {
+            // Deliberately not fatal to the run: the other venues are fine and
+            // this one behaves exactly like any other unfinished venue.
+            log(`  ${code}: ABANDONED — ${e.message}. Nothing written; --continue will redo it.`);
+            summary[code] = { hung: true };
+          } else if (e.aborted) {
+            // The browser is gone, so no worker can continue. Write no file for
+            // this venue and let every other worker notice STOPPING and stop.
+            log(`  ${code}: STOPPED mid-venue — nothing written, --continue will redo it.`);
+            summary[code] = { aborted: true };
+            STOPPING = true;
+            break;
+          } else {
+            log(`  FATAL ERROR in ${code} scraper: ${e.message}`);
+            summary[code] = { error: e.message };
+          }
+        } finally {
+          clearTimeout(timer);
+          // Always close the page, never reuse it. A venue that was abandoned
+          // may still have work in flight against it, and a fresh page for the
+          // next venue costs almost nothing.
+          await page.close().catch(() => {});
+        }
       }
-      log(`  FATAL ERROR in ${code} scraper: ${e.message}`);
-      summary[code] = { error: e.message };
+    } finally {
+      netTotals.fulfilled += stats.fulfilled;
+      netTotals.skipped   += stats.skipped;
+      netTotals.failed    += stats.failed;
+      await context.close().catch(() => {});
     }
   }
 
+  const workerCount = Math.min(CONCURRENCY, queue.length);
+  log(`Running ${queue.length} venue(s) ${workerCount} at a time (one page at a time within each venue)`);
+  await Promise.all(Array.from({ length: workerCount }, (_, n) => worker(n)));
+
+  const netStats = netTotals;
   await browser.close().catch(() => {});
 
   const built = rebuildSweepCsv();

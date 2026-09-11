@@ -1,0 +1,114 @@
+[2026-09-11T05:50:56.566Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T05:50:56.566Z] Lookback floor: 2024-07-01
+[2026-09-11T05:50:56.567Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_155056
+[2026-09-11T05:50:56.567Z] Venues this run: met, ng, rijks, acq, morgan
+[2026-09-11T05:50:56.567Z] Proxy: http://127.0.0.1:35439
+[2026-09-11T05:50:56.570Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T05:50:57.787Z] Running 5 venue(s) 4 at a time (one page at a time within each venue)
+[2026-09-11T05:50:58.251Z] [met] 
+[2026-09-11T05:50:58.254Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-11T05:50:58.255Z] [met]   MET — The Metropolitan Museum of Art
+[2026-09-11T05:50:58.255Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-11T05:50:58.255Z] [met]   Fetching current/upcoming: https://www.metmuseum.org/exhibitions
+[2026-09-11T05:50:58.264Z] [rijks] 
+[2026-09-11T05:50:58.264Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-11T05:50:58.264Z] [rijks]   RIJKS — Rijksmuseum, Amsterdam
+[2026-09-11T05:50:58.264Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-11T05:50:58.264Z] [rijks]   Fetching current/upcoming: https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view
+[2026-09-11T05:50:58.265Z] [acq] 
+[2026-09-11T05:50:58.265Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T05:50:58.265Z] [acq]   ACQ — Acquavella Galleries, New York
+[2026-09-11T05:50:58.265Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T05:50:58.265Z] [acq]   Fetching all (current/upcoming/past): https://www.acquavellagalleries.com/exhibitions
+[2026-09-11T05:50:58.266Z] [ng] 
+[2026-09-11T05:50:58.266Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T05:50:58.266Z] [ng]   NG — National Gallery, London
+[2026-09-11T05:50:58.266Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T05:50:58.266Z] [ng]   Fetching current/upcoming: https://www.nationalgallery.org.uk/exhibitions
+[2026-09-11T05:50:58.890Z] [met]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions
+[2026-09-11T05:50:58.891Z] [met]   FAILED current/upcoming — BLOCKED_HTTP_429
+[2026-09-11T05:50:58.891Z] [met]   Fetching past: https://www.metmuseum.org/exhibitions/past
+[2026-09-11T05:50:59.380Z] [met]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions/past
+[2026-09-11T05:50:59.380Z] [met]   FAILED past — BLOCKED_HTTP_429
+[2026-09-11T05:50:59.380Z] [met]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T05:50:59.381Z] [met]   → 0 exhibitions, 0 with curatorial text → met.csv
+[2026-09-11T05:50:59.476Z] [morgan] 
+[2026-09-11T05:50:59.476Z] [morgan] ────────────────────────────────────────────────────────────
+[2026-09-11T05:50:59.476Z] [morgan]   MORGAN — Morgan Library & Museum, New York
+[2026-09-11T05:50:59.476Z] [morgan] ────────────────────────────────────────────────────────────
+[2026-09-11T05:50:59.477Z] [morgan]   Fetching current: https://www.themorgan.org/exhibitions/current
+[2026-09-11T05:51:00.449Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/current
+[2026-09-11T05:51:00.449Z] [morgan]   FAILED current — BLOCKED_HTTP_403
+[2026-09-11T05:51:00.449Z] [morgan]   Fetching upcoming: https://www.themorgan.org/exhibitions/upcoming
+[2026-09-11T05:51:03.519Z] [rijks]   current/upcoming: 16 links seen -> 7 navigation, 0 already-seen URL -> 9 collected (0 of them with no readable title)
+[2026-09-11T05:51:03.519Z] [rijks]   Fetching past: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past
+[2026-09-11T05:51:03.839Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/upcoming
+[2026-09-11T05:51:03.839Z] [morgan]   FAILED upcoming — BLOCKED_HTTP_403
+[2026-09-11T05:51:03.839Z] [morgan]   Fetching past: https://www.themorgan.org/exhibitions/past
+[2026-09-11T05:51:04.250Z] [ng]   current/upcoming: 12 links seen -> 2 navigation, 3 already-seen URL -> 7 collected (1 of them with no readable title)
+[2026-09-11T05:51:04.250Z] [ng]   Fetching past: https://www.nationalgallery.org.uk/exhibitions/past
+[2026-09-11T05:51:05.028Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/past
+[2026-09-11T05:51:05.028Z] [morgan]   FAILED past — BLOCKED_HTTP_403
+[2026-09-11T05:51:05.028Z] [morgan]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T05:51:05.029Z] [morgan]   → 0 exhibitions, 0 with curatorial text → morgan.csv
+[2026-09-11T05:51:06.921Z] [acq]   all (current/upcoming/past): 119 links seen -> 11 navigation, 0 already-seen URL -> 108 collected (0 of them with no readable title)
+[2026-09-11T05:51:06.921Z] [acq]   lookback (listing): kept 16, dropped 92 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-11T05:51:10.299Z] [rijks]   past: 46 links seen -> 6 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-11T05:51:10.300Z] [rijks]   lookback (listing): kept 48, dropped 1 closed before 2024-07-01, 29 with no closing date, 0 with no opening date
+[2026-09-11T05:51:12.808Z] [ng]   past: 179 links seen -> 2 navigation, 0 already-seen URL -> 177 collected (0 of them with no readable title)
+[2026-09-11T05:51:12.808Z] [ng]   lookback (listing): kept 28, dropped 156 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T05:51:26.924Z] [acq]   TIMEOUT on https://www.acquavellagalleries.com/exhibitions/joan-miro-jean-paul-riopelle — retrying once
+[2026-09-11T05:51:32.810Z] [ng]   TIMEOUT on https://www.nationalgallery.org.uk/exhibitions/renoir-and-love — retrying once
+[2026-09-11T05:51:50.011Z] [ng]     prose dates ignored, they contradict the listing: "7 September - 28 September 2026"
+[2026-09-11T05:52:09.634Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/mission-masterpiece
+[2026-09-11T05:52:31.457Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/henk-wildschut
+[2026-09-11T05:52:36.717Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/ed-van-der-elsken
+[2026-09-11T05:52:37.576Z] [acq]   TIMEOUT on https://www.acquavellagalleries.com/exhibitions/yuka-kashihara2 — retrying once
+[2026-09-11T05:52:47.505Z] [rijks]   Individual pages: 45 got text, 0 no curatorial text, 3 failed
+[2026-09-11T05:52:47.505Z] [rijks]   lookback (final): kept 36, dropped 12 closed before 2024-07-01, 13 with no closing date, 7 with no opening date
+[2026-09-11T05:52:47.506Z] [rijks]   → 36 exhibitions, 33 with curatorial text → rijks.csv
+[2026-09-11T05:53:05.986Z] [ng]   TIMEOUT on https://www.nationalgallery.org.uk/exhibitions/past/wright-of-derby-from-the-shadows — retrying once
+[2026-09-11T05:53:26.454Z] [acq]   Individual pages: 16 got text, 0 no curatorial text, 0 failed
+[2026-09-11T05:53:26.454Z] [acq]   lookback (final): kept 15, dropped 1 closed before 2024-07-01, 2 with no closing date, 0 with no opening date
+[2026-09-11T05:53:26.456Z] [acq]   → 15 exhibitions, 15 with curatorial text → acq.csv
+[2026-09-11T05:54:36.908Z] [ng]   TIMEOUT on https://www.nationalgallery.org.uk/exhibitions/past/hockney-and-piero-a-longer-look — retrying once
+[2026-09-11T05:55:05.541Z] [ng]   TIMEOUT on https://www.nationalgallery.org.uk/exhibitions/past/discover-degas-and-miss-la-la — retrying once
+[2026-09-11T05:55:42.439Z] [ng]   Individual pages: 28 got text, 0 no curatorial text, 0 failed
+[2026-09-11T05:55:42.439Z] [ng]   lookback (final): kept 27, dropped 1 closed before 2024-07-01, 0 with no closing date, 1 with no opening date
+[2026-09-11T05:55:42.440Z] [ng]   → 27 exhibitions, 27 with curatorial text → ng.csv
+[2026-09-11T05:55:42.565Z] 
+[2026-09-11T05:55:42.565Z] ────────────────────────────────────────────────────────────
+[2026-09-11T05:55:42.565Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T05:55:42.565Z] ────────────────────────────────────────────────────────────
+[2026-09-11T05:55:42.565Z]   MET: 0 exhibitions | 0 with text | 2 page(s) blocked/empty
+[2026-09-11T05:55:42.565Z]   MORGAN: 0 exhibitions | 0 with text | 3 page(s) blocked/empty
+[2026-09-11T05:55:42.565Z]   RIJKS: 36 exhibitions | 33 with text
+[2026-09-11T05:55:42.565Z]   ACQ: 15 exhibitions | 15 with text
+[2026-09-11T05:55:42.565Z]   NG: 27 exhibitions | 27 with text
+[2026-09-11T05:55:42.565Z] 
+[2026-09-11T05:55:42.565Z] ────────────────────────────────────────────────────────────
+[2026-09-11T05:55:42.565Z]   COVERAGE — every link accounted for
+[2026-09-11T05:55:42.565Z] ────────────────────────────────────────────────────────────
+[2026-09-11T05:55:42.565Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-11T05:55:42.565Z]   --------------------------------------------------------------------------------------
+[2026-09-11T05:55:42.565Z]   rijks      current/upcoming                16     7       0     0        0          9
+[2026-09-11T05:55:42.565Z]   ng         current/upcoming                12     2       0     3        1          7
+[2026-09-11T05:55:42.565Z]   acq        all (current/upcoming/past)    119    11       0     0        0        108
+[2026-09-11T05:55:42.565Z]   rijks      past                            46     6       0     0        0         40
+[2026-09-11T05:55:42.566Z]   ng         past                           179     2       0     0        0        177
+[2026-09-11T05:55:42.566Z] 
+[2026-09-11T05:55:42.566Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T05:55:42.566Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T05:55:42.566Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T05:55:42.566Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T05:55:42.566Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-11T05:55:42.566Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T05:55:42.566Z] 
+[2026-09-11T05:55:42.566Z] Network bridge: 3322 requests served, 4509 skipped (image/media/font), 6 failed
+[2026-09-11T05:55:42.566Z] 
+[2026-09-11T05:55:42.566Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_155056
+[2026-09-11T05:55:42.566Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_155056/sweep.csv  (83 rows — met:2, ng:27, rijks:36, acq:15, morgan:3)
+[2026-09-11T05:55:42.566Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_155056/log_2026-09-11_155056.txt
+[2026-09-11T05:55:42.566Z] Not yet in this run: borghese
+[2026-09-11T05:55:42.566Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T05:55:42.566Z] No de-duplication is applied — see passThrough.

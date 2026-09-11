@@ -1,0 +1,136 @@
+[2026-09-11T05:57:57.037Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T05:57:57.037Z] Lookback floor: 2024-07-01
+[2026-09-11T05:57:57.037Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_155743 (continuing)
+[2026-09-11T05:57:57.037Z] Venues this run: met, ng, rijks, acq, borghese, morgan
+[2026-09-11T05:57:57.037Z] Proxy: http://127.0.0.1:35439
+[2026-09-11T05:57:57.038Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T05:57:57.166Z] Running 6 venue(s) 4 at a time (one page at a time within each venue)
+[2026-09-11T05:57:57.407Z] [rijks] 
+[2026-09-11T05:57:57.407Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:57.407Z] [rijks]   RIJKS — Rijksmuseum, Amsterdam
+[2026-09-11T05:57:57.407Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:57.407Z] [rijks]   Fetching current/upcoming: https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view
+[2026-09-11T05:57:57.408Z] [ng] 
+[2026-09-11T05:57:57.408Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:57.408Z] [ng]   NG — National Gallery, London
+[2026-09-11T05:57:57.408Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:57.408Z] [ng]   Fetching current/upcoming: https://www.nationalgallery.org.uk/exhibitions
+[2026-09-11T05:57:57.414Z] [acq] 
+[2026-09-11T05:57:57.415Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:57.415Z] [acq]   ACQ — Acquavella Galleries, New York
+[2026-09-11T05:57:57.415Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:57.415Z] [acq]   Fetching all (current/upcoming/past): https://www.acquavellagalleries.com/exhibitions
+[2026-09-11T05:57:57.451Z] [met] 
+[2026-09-11T05:57:57.451Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:57.451Z] [met]   MET — The Metropolitan Museum of Art
+[2026-09-11T05:57:57.451Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:57.451Z] [met]   Fetching current/upcoming: https://www.metmuseum.org/exhibitions
+[2026-09-11T05:57:57.762Z] [met]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions
+[2026-09-11T05:57:57.762Z] [met]   FAILED current/upcoming — BLOCKED_HTTP_429
+[2026-09-11T05:57:57.762Z] [met]   Fetching past: https://www.metmuseum.org/exhibitions/past
+[2026-09-11T05:57:58.065Z] [met]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions/past
+[2026-09-11T05:57:58.065Z] [met]   FAILED past — BLOCKED_HTTP_429
+[2026-09-11T05:57:58.066Z] [met]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T05:57:58.066Z] [met]   → 0 exhibitions, 0 with curatorial text → met.csv
+[2026-09-11T05:57:58.116Z] [borghese] 
+[2026-09-11T05:57:58.117Z] [borghese] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:58.117Z] [borghese]   BORGHESE — Galleria Borghese, Rome
+[2026-09-11T05:57:58.117Z] [borghese] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:58.117Z] [borghese]   Fetching current: https://galleriaborghese.cultura.gov.it/en/mostre/presenti/
+[2026-09-11T05:57:59.724Z] [rijks]   current/upcoming: 16 links seen -> 7 navigation, 0 already-seen URL -> 9 collected (0 of them with no readable title)
+[2026-09-11T05:57:59.724Z] [rijks]   Fetching past: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past
+[2026-09-11T05:58:02.922Z] [rijks]   past: 46 links seen -> 6 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-11T05:58:02.922Z] [rijks]   lookback (listing): kept 48, dropped 1 closed before 2024-07-01, 29 with no closing date, 0 with no opening date
+[2026-09-11T05:58:03.574Z] [borghese]   current: 1 links seen -> 0 navigation, 0 already-seen URL -> 1 collected (0 of them with no readable title)
+[2026-09-11T05:58:03.574Z] [borghese]   Fetching upcoming: https://galleriaborghese.cultura.gov.it/en/mostre/future/
+[2026-09-11T05:58:03.784Z] [ng]   current/upcoming: 12 links seen -> 2 navigation, 3 already-seen URL -> 7 collected (1 of them with no readable title)
+[2026-09-11T05:58:03.784Z] [ng]   Fetching past: https://www.nationalgallery.org.uk/exhibitions/past
+[2026-09-11T05:58:06.283Z] [acq]   all (current/upcoming/past): 119 links seen -> 11 navigation, 0 already-seen URL -> 108 collected (0 of them with no readable title)
+[2026-09-11T05:58:06.283Z] [acq]   lookback (listing): kept 16, dropped 92 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-11T05:58:08.817Z] [borghese]   upcoming: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T05:58:08.817Z] [borghese]   Fetching past: https://galleriaborghese.cultura.gov.it/en/mostre/passate/
+[2026-09-11T05:58:14.161Z] [borghese]   past: 40 links seen -> 0 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-11T05:58:15.899Z] [ng]   past: 179 links seen -> 2 navigation, 0 already-seen URL -> 177 collected (0 of them with no readable title)
+[2026-09-11T05:58:15.899Z] [ng]   lookback (listing): kept 28, dropped 156 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T05:58:29.018Z] [ng]     prose dates ignored, they contradict the listing: "7 September - 28 September 2026"
+[2026-09-11T05:58:32.402Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/mission-masterpiece
+[2026-09-11T05:58:50.937Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/henk-wildschut
+[2026-09-11T05:58:57.035Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/ed-van-der-elsken
+[2026-09-11T05:59:01.559Z] [borghese]   TIMEOUT on https://galleriaborghese.cultura.gov.it/en/exhibition/a-velazquez-in-the-museum/ — retrying once
+[2026-09-11T05:59:13.670Z] [rijks]   Individual pages: 45 got text, 0 no curatorial text, 3 failed
+[2026-09-11T05:59:13.670Z] [rijks]   lookback (final): kept 36, dropped 12 closed before 2024-07-01, 13 with no closing date, 7 with no opening date
+[2026-09-11T05:59:13.672Z] [rijks]   → 36 exhibitions, 33 with curatorial text → rijks.csv
+[2026-09-11T05:59:13.783Z] [morgan] 
+[2026-09-11T05:59:13.783Z] [morgan] ────────────────────────────────────────────────────────────
+[2026-09-11T05:59:13.783Z] [morgan]   MORGAN — Morgan Library & Museum, New York
+[2026-09-11T05:59:13.783Z] [morgan] ────────────────────────────────────────────────────────────
+[2026-09-11T05:59:13.783Z] [morgan]   Fetching current: https://www.themorgan.org/exhibitions/current
+[2026-09-11T05:59:15.156Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/current
+[2026-09-11T05:59:15.156Z] [morgan]   FAILED current — BLOCKED_HTTP_403
+[2026-09-11T05:59:15.156Z] [morgan]   Fetching upcoming: https://www.themorgan.org/exhibitions/upcoming
+[2026-09-11T05:59:18.295Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/upcoming
+[2026-09-11T05:59:18.295Z] [morgan]   FAILED upcoming — BLOCKED_HTTP_403
+[2026-09-11T05:59:18.295Z] [morgan]   Fetching past: https://www.themorgan.org/exhibitions/past
+[2026-09-11T05:59:19.153Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/past
+[2026-09-11T05:59:19.153Z] [morgan]   FAILED past — BLOCKED_HTTP_403
+[2026-09-11T05:59:19.153Z] [morgan]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T05:59:19.154Z] [morgan]   → 0 exhibitions, 0 with curatorial text → morgan.csv
+[2026-09-11T05:59:23.561Z] [borghese]   TIMEOUT: https://galleriaborghese.cultura.gov.it/en/exhibition/a-velazquez-in-the-museum/ — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://galleriaborghese.cultura.gov.it/en/exhibit
+[2026-09-11T05:59:41.388Z] [acq]   TIMEOUT on https://www.acquavellagalleries.com/exhibitions/portraiture — retrying once
+[2026-09-11T06:00:03.392Z] [acq]   TIMEOUT: https://www.acquavellagalleries.com/exhibitions/portraiture — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.acquavellagalleries.com/exhibitions/po
+[2026-09-11T06:00:30.077Z] [acq]   TIMEOUT on https://www.acquavellagalleries.com/exhibitions/unnatural-nature-post-pop-landscapes — retrying once
+[2026-09-11T06:00:42.445Z] [ng]   TIMEOUT on https://www.nationalgallery.org.uk/exhibitions/past/siena-the-rise-of-painting — retrying once
+[2026-09-11T06:00:45.788Z] [acq]   Individual pages: 15 got text, 0 no curatorial text, 1 failed
+[2026-09-11T06:00:45.788Z] [acq]   lookback (final): kept 15, dropped 1 closed before 2024-07-01, 2 with no closing date, 0 with no opening date
+[2026-09-11T06:00:45.790Z] [acq]   → 15 exhibitions, 14 with curatorial text → acq.csv
+[2026-09-11T06:00:54.151Z] [borghese]   TIMEOUT on https://galleriaborghese.cultura.gov.it/en/exhibition/thomas-houseago-striding-figure-standing-figure/ — retrying once
+[2026-09-11T06:01:14.362Z] [ng]   NO_RESPONSE on https://www.nationalgallery.org.uk/exhibitions/past/discover-constable-and-the-hay-wain — retrying once
+[2026-09-11T06:01:47.457Z] [borghese]   Individual pages: 40 got text, 0 no curatorial text, 1 failed
+[2026-09-11T06:01:47.457Z] [borghese]   lookback (final): kept 8, dropped 33 closed before 2024-07-01, 2 with no closing date, 0 with no opening date
+[2026-09-11T06:01:47.459Z] [borghese]   → 8 exhibitions, 7 with curatorial text → borghese.csv
+[2026-09-11T06:02:08.414Z] [ng]   Individual pages: 28 got text, 0 no curatorial text, 0 failed
+[2026-09-11T06:02:08.414Z] [ng]   lookback (final): kept 27, dropped 1 closed before 2024-07-01, 0 with no closing date, 1 with no opening date
+[2026-09-11T06:02:08.415Z] [ng]   → 27 exhibitions, 27 with curatorial text → ng.csv
+[2026-09-11T06:02:08.539Z] 
+[2026-09-11T06:02:08.539Z] ────────────────────────────────────────────────────────────
+[2026-09-11T06:02:08.539Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T06:02:08.539Z] ────────────────────────────────────────────────────────────
+[2026-09-11T06:02:08.539Z]   MET: 0 exhibitions | 0 with text | 2 page(s) blocked/empty
+[2026-09-11T06:02:08.539Z]   RIJKS: 36 exhibitions | 33 with text
+[2026-09-11T06:02:08.539Z]   MORGAN: 0 exhibitions | 0 with text | 3 page(s) blocked/empty
+[2026-09-11T06:02:08.539Z]   ACQ: 15 exhibitions | 14 with text
+[2026-09-11T06:02:08.539Z]   BORGHESE: 8 exhibitions | 7 with text
+[2026-09-11T06:02:08.539Z]   NG: 27 exhibitions | 27 with text
+[2026-09-11T06:02:08.539Z] 
+[2026-09-11T06:02:08.539Z] ────────────────────────────────────────────────────────────
+[2026-09-11T06:02:08.539Z]   COVERAGE — every link accounted for
+[2026-09-11T06:02:08.539Z] ────────────────────────────────────────────────────────────
+[2026-09-11T06:02:08.539Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-11T06:02:08.539Z]   --------------------------------------------------------------------------------------
+[2026-09-11T06:02:08.540Z]   rijks      current/upcoming                16     7       0     0        0          9
+[2026-09-11T06:02:08.540Z]   rijks      past                            46     6       0     0        0         40
+[2026-09-11T06:02:08.540Z]   borghese   current                          1     0       0     0        0          1
+[2026-09-11T06:02:08.540Z]   ng         current/upcoming                12     2       0     3        1          7
+[2026-09-11T06:02:08.540Z]   acq        all (current/upcoming/past)    119    11       0     0        0        108
+[2026-09-11T06:02:08.540Z]   borghese   upcoming                         0     0       0     0        0          0
+[2026-09-11T06:02:08.540Z]   borghese   past                            40     0       0     0        0         40
+[2026-09-11T06:02:08.540Z]   ng         past                           179     2       0     0        0        177
+[2026-09-11T06:02:08.540Z] 
+[2026-09-11T06:02:08.540Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T06:02:08.540Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T06:02:08.540Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T06:02:08.540Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T06:02:08.540Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-11T06:02:08.540Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T06:02:08.540Z] 
+[2026-09-11T06:02:08.540Z] Network bridge: 3486 requests served, 5247 skipped (image/media/font), 7 failed
+[2026-09-11T06:02:08.540Z] 
+[2026-09-11T06:02:08.540Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_155743
+[2026-09-11T06:02:08.540Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_155743/sweep.csv  (91 rows — met:2, ng:27, rijks:36, acq:15, borghese:8, morgan:3)
+[2026-09-11T06:02:08.540Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_155743/log_2026-09-11_155757.txt
+[2026-09-11T06:02:08.540Z] Every known venue has a file in this run.
+[2026-09-11T06:02:08.540Z] No de-duplication is applied — see passThrough.

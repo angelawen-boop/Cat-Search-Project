@@ -1,0 +1,43 @@
+[2026-09-11T05:57:43.957Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T05:57:43.958Z] Lookback floor: 2024-07-01
+[2026-09-11T05:57:43.958Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_155743
+[2026-09-11T05:57:43.958Z] Venues this run: ng
+[2026-09-11T05:57:43.958Z] Proxy: http://127.0.0.1:35439
+[2026-09-11T05:57:43.959Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T05:57:44.091Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-11T05:57:44.179Z] [ng] 
+[2026-09-11T05:57:44.180Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:44.180Z] [ng]   NG — National Gallery, London
+[2026-09-11T05:57:44.180Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:44.180Z] [ng]   Fetching current/upcoming: https://www.nationalgallery.org.uk/exhibitions
+[2026-09-11T05:57:51.754Z] [ng]   current/upcoming: 12 links seen -> 2 navigation, 3 already-seen URL -> 7 collected (1 of them with no readable title)
+[2026-09-11T05:57:51.755Z] [ng]   Fetching past: https://www.nationalgallery.org.uk/exhibitions/past
+[2026-09-11T05:57:53.181Z]   ng: ABANDONED — venue exceeded its 0.15 minute budget. Nothing written; --continue will redo it.
+[2026-09-11T05:57:53.276Z] 
+[2026-09-11T05:57:53.276Z] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:53.276Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T05:57:53.276Z] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:53.276Z]   NG: undefined exhibitions | undefined with text
+[2026-09-11T05:57:53.276Z] 
+[2026-09-11T05:57:53.276Z] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:53.276Z]   COVERAGE — every link accounted for
+[2026-09-11T05:57:53.276Z] ────────────────────────────────────────────────────────────
+[2026-09-11T05:57:53.276Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-11T05:57:53.276Z]   --------------------------------------------------------------------------------------
+[2026-09-11T05:57:53.276Z]   ng         current/upcoming                12     2       0     3        1          7
+[2026-09-11T05:57:53.276Z] 
+[2026-09-11T05:57:53.276Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T05:57:53.276Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T05:57:53.276Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T05:57:53.276Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T05:57:53.276Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-11T05:57:53.276Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T05:57:53.276Z] 
+[2026-09-11T05:57:53.276Z] Network bridge: 24 requests served, 30 skipped (image/media/font), 0 failed
+[2026-09-11T05:57:53.276Z] 
+[2026-09-11T05:57:53.276Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_155743
+[2026-09-11T05:57:53.276Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_155743/sweep.csv  (0 rows — )
+[2026-09-11T05:57:53.276Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_155743/log_2026-09-11_155743.txt
+[2026-09-11T05:57:53.276Z] Not yet in this run: met, ng, rijks, acq, borghese, morgan
+[2026-09-11T05:57:53.276Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T05:57:53.276Z] No de-duplication is applied — see passThrough.
