@@ -1,0 +1,52 @@
+[2026-09-11T16:21:55.222Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T16:21:55.223Z] Lookback floor: 2024-07-01
+[2026-09-11T16:21:55.223Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_022155
+[2026-09-11T16:21:55.223Z] Venues this run: va
+[2026-09-11T16:21:55.223Z] Proxy: http://127.0.0.1:40485
+[2026-09-11T16:21:55.223Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T16:21:55.372Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-11T16:21:55.477Z] [va] 
+[2026-09-11T16:21:55.478Z] [va] ────────────────────────────────────────────────────────────
+[2026-09-11T16:21:55.478Z] [va]   VA — Victoria and Albert Museum, London
+[2026-09-11T16:21:55.478Z] [va] ────────────────────────────────────────────────────────────
+[2026-09-11T16:21:55.478Z] [va]   Fetching current/upcoming: https://www.vam.ac.uk/whatson?type=exhibition
+[2026-09-11T16:21:57.084Z] [va]     another V&A/branch site, excluded: Inside Aardman: Wallace & Gromit and Friends
+[2026-09-11T16:21:57.208Z] [va]     another V&A/branch site, excluded: The Music is Black: A British Story
+[2026-09-11T16:21:57.283Z] [va]     another V&A/branch site, excluded: South Asia Now: Fashion. Art. Design.
+[2026-09-11T16:21:57.380Z] [va]     another V&A/branch site, excluded: David Bowie Centre
+[2026-09-11T16:21:57.612Z] [va]   current/upcoming: 19 links seen -> 0 navigation, 0 already-seen URL, 4 at another site of the same venue -> 15 collected (0 of them with no readable title)
+[2026-09-11T16:21:57.613Z] [va]   lookback (listing): kept 15, dropped 0 closed before 2024-07-01, 15 with no closing date, 0 with no opening date
+[2026-09-11T16:21:57.613Z] [va]   reading 15 individual page(s)…
+[2026-09-11T16:21:57.613Z] [va]     page 1 of 15
+[2026-09-11T16:22:10.309Z] [va]     page 10 of 15
+[2026-09-11T16:22:18.169Z] [va]   Individual pages: 15 got text, 0 no curatorial text, 0 failed
+[2026-09-11T16:22:18.170Z] [va]   → 15 exhibitions, 15 with curatorial text → va.csv
+[2026-09-11T16:22:18.238Z] 
+[2026-09-11T16:22:18.238Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:22:18.238Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T16:22:18.238Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:22:18.238Z]   VA: 15 exhibitions | 15 with text
+[2026-09-11T16:22:18.238Z] 
+[2026-09-11T16:22:18.238Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:22:18.238Z]   COVERAGE — every link accounted for
+[2026-09-11T16:22:18.238Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:22:18.238Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T16:22:18.238Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T16:22:18.239Z]   va         current/upcoming                19     0       0     0        0        0         15
+[2026-09-11T16:22:18.239Z] 
+[2026-09-11T16:22:18.239Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T16:22:18.239Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T16:22:18.239Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T16:22:18.239Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T16:22:18.239Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T16:22:18.239Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T16:22:18.239Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T16:22:18.239Z] 
+[2026-09-11T16:22:18.239Z] Network bridge: 231 requests served, 196 skipped (image/media/font), 0 failed
+[2026-09-11T16:22:18.239Z] 
+[2026-09-11T16:22:18.239Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_022155
+[2026-09-11T16:22:18.239Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_022155/sweep.csv  (15 rows — va:15)
+[2026-09-11T16:22:18.239Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_022155/log_2026-09-12_022155.txt
+[2026-09-11T16:22:18.239Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, wallace
+[2026-09-11T16:22:18.239Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T16:22:18.239Z] No de-duplication is applied — see passThrough.

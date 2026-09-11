@@ -1847,7 +1847,7 @@ async function collectFromListing(page, opts) {
   // it cannot swallow an exhibition.
 
   // (LANG_PREFIX and isOwnListingPage are defined at module scope, below.)
-  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, kept: 0 };
+  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, branch: 0, kept: 0 };
   // The rows this page contributed, so unreadable titles can be counted once
   // the page is finished rather than as each link is read.
   const fromThisPage = [];
@@ -1919,6 +1919,24 @@ async function collectFromListing(page, opts) {
       continue;
     }
 
+    // ANOTHER SITE OF THE SAME INSTITUTION, which she does not track.
+    //
+    // The V&A runs four: South Kensington, V&A East Museum, V&A East Storehouse
+    // and Young V&A, and its listing mixes all four on one page. Her venue list
+    // (CLAUDE.md §7) says South Kensington only, so the other three are hers to
+    // exclude, already ruled, and the card states which site it is.
+    //
+    // Same footing as excludeOngoing and permitted for the same reason: the
+    // site says so, so this is rung 1 of the ladder rather than our judgement.
+    // Named in the log and counted in the coverage table, so an exclusion is
+    // something you can read and check rather than a silent disappearance.
+    if (opts.otherBranch && opts.otherBranch.test(dates.raw || '')) {
+      c.branch++;
+      log(`    another V&A/branch site, excluded: ${title || slugToWords(fullUrl)}`);
+      seenUrls.add(key);
+      continue;
+    }
+
     const row = {
       venue_code: venueCode, title,
       // Internal, never a CSV column: which listing page this row came from,
@@ -1948,7 +1966,7 @@ async function collectFromListing(page, opts) {
   c.noTitle = fromThisPage.filter(r => !r.title).length;
 
   COUNTS.push(c);
-  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
+  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''}${c.branch ? `, ${c.branch} at another site of the same venue` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
   return c;
 }
 
@@ -2204,6 +2222,36 @@ const VENUES = {
     },
   },
 
+  va: {
+    name: 'Victoria and Albert Museum, London',
+    base: 'https://www.vam.ac.uk',
+    // ONE page, and it carries current and upcoming together. /exhibitions
+    // shows only 5 items; the what's-on listing filtered to exhibitions shows
+    // 19, and its "type=exhibition" ALREADY INCLUDES DISPLAYS, which her venue
+    // list requires — both are temporary shows.
+    //
+    // The venue publishes NO past archive. That is a site limit, not a gap in
+    // this recipe: the V&A contributes current and upcoming only.
+    pages: [
+      { path: '/whatson?type=exhibition', ctx: 'current/upcoming' },
+    ],
+    selector: 'a[href*="/exhibitions/"]',
+    isNav: href => /\/exhibitions\/?$/.test(href),
+    // Every card wraps a heading holding exactly the title, so the type badge
+    // ("Exhibition", "Upcoming Exhibition", "Display") and the trailing date,
+    // site and ticket price never reach the title column without a single
+    // strip rule.
+    title: { heading: true },
+    // FOUR SITES ON ONE LISTING. Her venue list is South Kensington only, so
+    // the other three are excluded — each named in the log. Measured 12 Sep:
+    // 19 items, 15 of them South Kensington.
+    otherBranch: /V&A East|Young V&A/i,
+    // Cards carry ONE date each, "Closes Sunday, 15 November 2026" or "Opens
+    // Saturday, 7 November 2026", never a range. The other end comes from the
+    // exhibition's own page, which the engine already fetches whenever either
+    // date is missing.
+  },
+
   wallace: {
     name: 'The Wallace Collection, London',
     base: 'https://www.wallacecollection.org',
@@ -2306,6 +2354,7 @@ async function scrapeVenue(page, code) {
       // recognised as navigation whatever language prefix it carries.
       listingPaths: listingPages(v).map(p => p.path),
       excludeOngoing: !!v.excludeOngoing,
+      otherBranch: v.otherBranch || null,
     };
 
     try {
