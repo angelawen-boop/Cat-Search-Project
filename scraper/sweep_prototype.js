@@ -1725,6 +1725,9 @@ async function collectFromListing(page, opts) {
 
   // (LANG_PREFIX and isOwnListingPage are defined at module scope, below.)
   const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, kept: 0 };
+  // The rows this page contributed, so unreadable titles can be counted once
+  // the page is finished rather than as each link is read.
+  const fromThisPage = [];
 
   const links = await page.$$(selector);
   c.seen = links.length;
@@ -1766,7 +1769,14 @@ async function collectFromListing(page, opts) {
     let title = await extractTitle(link, venueCode);
     let titleNote = '';
     if (!title || title.length < 3) {
-      c.noTitle++;
+      // NOT counted here. A venue commonly links one exhibition several times
+      // in a card — image, name, "Find out more" — and on several venues the
+      // FIRST is the image, which carries no text. The name arrives on a later
+      // link and fillBlanksFromRepeatLink() writes it in. Counting at this
+      // moment tallies a title that is about to be found: the Met reported 43
+      // unreadable titles on a page whose finished rows all had one, and that
+      // number was read as a defect and acted on. A counter that cannot come
+      // back down does not describe the file.
       const guess = slugToWords(fullUrl);
       titleNote = `No exhibition name could be read from this link${guess ? `. Web address suggests: "${guess}"` : ''}.`;
       title = '';
@@ -1805,8 +1815,14 @@ async function collectFromListing(page, opts) {
     seenUrls.add(key);
     urlToRow.set(key, row);
     rows.push(row);
+    fromThisPage.push(row);
     c.kept++;
   }
+
+  // Count unreadable titles NOW, over the rows as they actually stand, after
+  // every repeat link has had its chance to supply one. This is the number that
+  // reaches the CSV and the approval pile.
+  c.noTitle = fromThisPage.filter(r => !r.title).length;
 
   COUNTS.push(c);
   log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
@@ -2534,7 +2550,7 @@ async function main() {
   log('  offsite   = resolved to another host and was not followed; each one is logged above');
   log('  dup       = an address already collected; noted on the existing row, never dropped silently');
   log('  ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above');
-  log('  noTitle   = no usable exhibition name could be read from the link');
+  log('  noTitle   = rows that still have no exhibition name once the page is fully read');
   log('  collected = rows handed on to the lookback filter and detail-page fetch');
 
   log('');

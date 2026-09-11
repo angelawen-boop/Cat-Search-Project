@@ -571,6 +571,17 @@ title and a note saying what the URL slug suggests. The app shows it as
 "Couldn't be filed" — visible and fixable. The slug guess stays in the notes and
 never enters the title column.
 
+**`noTitle` is counted when the page is FINISHED, not as each link is read**
+(fixed 11 Sep 2026). A venue links one exhibition several times in a card —
+image, name, "Find out more" — and on the Met and the National Gallery the first
+is the image, which carries no text. `fillBlanksFromRepeatLink()` supplies the
+name a moment later, but the counter had already fired and could not come back
+down. The Met's coverage table reported **43 unreadable titles on a page whose
+finished rows every one had a title**, and that number was read as a defect and
+reported to her as one. A count of work-in-progress is not a count of the file:
+report the state that reaches her, or the diagnosis is of something that no
+longer exists.
+
 ### A venue that could not be read still says so, in the CSV
 
 **Every venue leaves marker rows for listing pages it could not read** — one per
