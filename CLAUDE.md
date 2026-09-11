@@ -1151,6 +1151,62 @@ which are a different kind of problem entirely.
   a DNS problem, and Borghese's outage looked exactly like this for three days
   before clearing on its own. Retry before concluding anything.
 
+#### Exactly what each refusal IS — read 11 Sep 2026, not inferred
+
+Her question, and it deserved evidence rather than a guess. The body and headers
+of each refusal were read. **There are two mechanisms, and they are not the same
+thing.**
+
+| Venue | HTTP | `cf-mitigated` | Page says | Mechanism |
+|---|---|---|---|---|
+| `artic` | 403 | `challenge` | "Just a moment…" | Cloudflare **managed challenge** |
+| `moma` | 403 | `challenge` | "Just a moment…" | Cloudflare **managed challenge** |
+| `brit` past | 403 | `challenge` | "Just a moment…" | Cloudflare **managed challenge** |
+| `morgan` | 403 | **absent** | "Attention Required!" | Cloudflare **firewall rule — a flat block** |
+| `met` | 429 | — | "Vercel Security Checkpoint" | Vercel bot protection — a challenge |
+
+**A challenge is a gate, not a wall.** It says *prove you are a real browser*: run
+this JavaScript, accept a cookie, and the real page follows. A human never sees
+it. `artic`'s carries `cType: 'managed'`, and it challenges **even `/robots.txt`**
+— so, exactly as with the Met, we cannot read the institution's own stated policy
+because the gate sits in front of it.
+
+**Morgan is the different one.** No `cf-mitigated` header at all and a different
+page: this is a Cloudflare firewall rule refusing the request outright, with no
+gate offered and nothing to pass. That is why every honest variation failed on
+it — an empty user-agent, Chromium's own TLS, her own machine. There is no door.
+
+**So the three new venues are the MET's situation, not Morgan's**, and that
+matters because the Met's answer — run it locally — worked for `artic` (66 links
+from her laptop). It did not work for `moma`, which still returned 403 there.
+The likeliest reading, and it is a reading rather than a measurement: the
+challenge fires on how the connection looks, her home address clears `artic`'s
+threshold, and `moma`'s is tighter or reacts to headless markers her ordinary
+Chrome does not carry. Confirming it would mean reading `cf-mitigated` on her
+machine, which the probe does not currently record.
+
+**`brit`'s split is now explained.** Its current page returns 200 with
+`cf-cache-status: HIT` — served from Cloudflare's edge cache, so the request
+never reaches the origin and the challenge never runs. The past archive is not
+cached, so it goes to origin and is challenged. The museum's **own `robots.txt`
+explicitly permits the page we are refused**:
+
+```
+Allow: /exhibitions-events/past-exhibitions/
+Disallow: /exhibitions-events/*
+```
+
+Tested with and without the trailing slash — both 403. So this is bot protection
+acting before the institution's stated policy applies, not the museum declining
+us. Worth knowing, and it changes nothing about what we do.
+
+**What we do NOT do about any of it.** Passing a challenge means satisfying a
+check designed to stop automation, and the standing rule (Section 4) is that
+engineering around a deliberate block is not on the table. The Met's checkpoint
+was put to her as a genuine question and she answered it by moving the Met to a
+local run rather than by defeating the gate. The same answer applies here.
+`artic` is a local venue. `moma` and `brit`'s archive have no route yet.
+
 **Several Italian venues have migrated during this project** — Borghese moved
 hosts, and now Gallerie dell'Accademia. Treat an Italian 404 as "find the new
 site" before "the venue is unreachable".
