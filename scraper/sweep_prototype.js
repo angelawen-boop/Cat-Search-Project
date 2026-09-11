@@ -849,6 +849,33 @@ async function installNetworkBridge(context) {
 }
 
 /**
+ * Some venues LABEL their permanent displays rather than dating them. The Met
+ * prints "Ongoing" in the card's date slot — where every temporary show prints
+ * a closing date — and groups them under an "Ongoing" heading on its listing.
+ *
+ * That label is the site saying so, which is rung one of the ladder: use the
+ * venue's own tag, exactly as structured data is used for dates. It is NOT the
+ * shape IR-18 rejected — nothing here reasons from "no end date plus an old
+ * opening date", which is a judgement about how old a show looks. This reads a
+ * word the museum published on purpose.
+ *
+ * Matched ONLY as a whole line, or on the closing side of a range
+ * ("July 25, 2026–Ongoing"). A card also carries the exhibition's name, and a
+ * loose search would drop a show whose TITLE happens to contain the word — an
+ * exhibition deleted on a false match is invisible, which is the one failure
+ * this whole file is built to avoid.
+ */
+const ONGOING_LINE = /^ongoing$/i;
+const ONGOING_RANGE = /[-–—]\s*ongoing$/i;
+function saysOngoing(text) {
+  if (!text) return false;
+  return String(text).split('\n').some(line => {
+    const l = squash(line);
+    return ONGOING_LINE.test(l) || ONGOING_RANGE.test(l);
+  });
+}
+
+/**
  * Read an exhibition's run dates from a listing page.
  *
  * Listings put the dates either inside the link itself (Acquavella) or in the
@@ -862,8 +889,9 @@ async function installNetworkBridge(context) {
 async function datesNearLink(link, selector) {
   let linkText = '';
   try { linkText = await getText(link); } catch {}
+  let ongoing = saysOngoing(linkText);
   let d = findDateRange(linkText);
-  if (d.start || d.end || d.latestYear) return d;
+  if (d.start || d.end || d.latestYear) return { ...d, ongoing };
 
   // Walk up a strictly limited distance. The dates often live in the same
   // card container as the title (Rijksmuseum: "WORN till 21 March 2027"), but
@@ -890,13 +918,18 @@ async function datesNearLink(link, selector) {
       if (!parent) break;
       node = parent;
       if (selector && await coversMoreThanOneExhibition(node, selector)) break;
-      const text = squash(await getText(node));
+      const raw = await getText(node);
+      const text = squash(raw);
       if (!text || text.length > CARD_MAX_CHARS) continue;
+      // The box we are standing in covers this exhibition and no other — the
+      // boundary check above guarantees it — so a label found here belongs to
+      // this row, the same reasoning that lets us read its dates here.
+      if (!ongoing) ongoing = saysOngoing(raw);
       d = findDateRange(text);
-      if (d.start || d.end || d.latestYear) return d;
+      if (d.start || d.end || d.latestYear) return { ...d, ongoing };
     } catch { break; }
   }
-  return { start: '', end: '', raw: linkText };
+  return { start: '', end: '', raw: linkText, ongoing };
 }
 
 // Distinct exhibition addresses inside this box. One means we are still within
@@ -1641,7 +1674,7 @@ async function collectFromListing(page, opts) {
   // it cannot swallow an exhibition.
 
   // (LANG_PREFIX and isOwnListingPage are defined at module scope, below.)
-  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, kept: 0 };
+  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, kept: 0 };
 
   const links = await page.$$(selector);
   c.seen = links.length;
@@ -1690,6 +1723,19 @@ async function collectFromListing(page, opts) {
     }
 
     const dates = await datesNearLink(link, selector);
+
+    // A permanent display, said so by the venue itself. She tracks temporary
+    // exhibitions and their catalogues; a gallery reinstallation that has been
+    // open since 2011 has no closing window to buy before. Each one is named in
+    // the log, so an exclusion is something you can read and check rather than
+    // a silent disappearance.
+    if (opts.excludeOngoing && dates.ongoing) {
+      c.ongoing++;
+      log(`    ongoing (permanent), excluded: ${title || slugToWords(fullUrl)}`);
+      seenUrls.add(key);
+      continue;
+    }
+
     const row = {
       venue_code: venueCode, title,
       // Internal, never a CSV column: which listing page this row came from,
@@ -1713,7 +1759,7 @@ async function collectFromListing(page, opts) {
   }
 
   COUNTS.push(c);
-  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
+  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
   return c;
 }
 
@@ -1776,6 +1822,22 @@ const VENUES = {
     // recorded this gap as accepted for the fetch tool; this is the same gap,
     // confirmed against a real browser.
     lookbackFrom: '2026-01-01',
+
+    // HER RULING, 11 Sep 2026: collect temporary exhibitions only.
+    //
+    // The Met's own listing groups its permanent displays under an "Ongoing"
+    // heading and prints "Ongoing" in each card's date slot — sometimes alone,
+    // sometimes as the closing side of a range ("July 25, 2026–Ongoing"). Those
+    // 19 rows are why the 82-row local run had no closing date: The British
+    // Galleries, Cycladic Art, Art of Native America, Fabergé, and the Oceania /
+    // Africa / Ancient Americas reinstallations.
+    //
+    // Opt-in per venue rather than universal, because "Ongoing" is this site's
+    // wording and reading another venue's cards by the Met's habits is the
+    // mistake that has cost us most often (Borghese's title rule was wrong at
+    // the Rijksmuseum a day later). A venue that labels its permanent displays
+    // the same way turns this on in its own recipe.
+    excludeOngoing: true,
   },
 
   ng: {
@@ -1936,6 +1998,7 @@ async function scrapeVenue(page, code) {
       // Every listing page this venue has, so a link back to any of them is
       // recognised as navigation whatever language prefix it carries.
       listingPaths: v.pages.map(p => p.path),
+      excludeOngoing: !!v.excludeOngoing,
     };
 
     try {
@@ -2417,14 +2480,14 @@ async function main() {
   // Every link the scraper saw is accounted for by one of these columns.
   // If a venue's total looks wrong, this says which stage lost the rows.
   logSection('COVERAGE — every link accounted for');
-  log('  venue      page                          seen   nav offsite   dup  noTitle  collected');
-  log('  ' + '-'.repeat(86));
+  log('  venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected');
+  log('  ' + '-'.repeat(95));
   const pad = (v, n) => String(v).padEnd(n);
   const num = (v, n) => String(v).padStart(n);
   for (const c of COUNTS) {
     log('  ' + pad(c.venue, 10) + ' ' + pad(String(c.page).slice(0, 28), 28) +
         num(c.seen, 6) + num(c.nav, 6) + num(c.offsite || 0, 8) +
-        num(c.dupUrl, 6) + num(c.noTitle, 9) + num(c.kept, 11));
+        num(c.dupUrl, 6) + num(c.ongoing || 0, 9) + num(c.noTitle, 9) + num(c.kept, 11));
   }
   if (!COUNTS.length) log('  (no listing pages were read)');
   log('');
@@ -2432,6 +2495,7 @@ async function main() {
   log('  nav       = site navigation and filter links, not exhibitions');
   log('  offsite   = resolved to another host and was not followed; each one is logged above');
   log('  dup       = an address already collected; noted on the existing row, never dropped silently');
+  log('  ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above');
   log('  noTitle   = no usable exhibition name could be read from the link');
   log('  collected = rows handed on to the lookback filter and detail-page fetch');
 
@@ -2468,6 +2532,7 @@ module.exports = {
   findDateRange, findDateRangeInProse, parseMonthDay, ymd, startYearFor,
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
+  saysOngoing,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
   installNetworkBridge, resolveChromium, safeGoto, classifyLoadError, datesNearLink,

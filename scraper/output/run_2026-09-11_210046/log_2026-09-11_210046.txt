@@ -1,0 +1,49 @@
+[2026-09-11T11:00:46.850Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T11:00:46.851Z] Lookback floor: 2024-07-01
+[2026-09-11T11:00:46.851Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_210046
+[2026-09-11T11:00:46.851Z] Venues this run: acq
+[2026-09-11T11:00:46.851Z] Proxy: http://127.0.0.1:33327
+[2026-09-11T11:00:46.852Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T11:00:47.855Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-11T11:00:48.154Z] [acq] 
+[2026-09-11T11:00:48.154Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T11:00:48.154Z] [acq]   ACQ — Acquavella Galleries, New York
+[2026-09-11T11:00:48.154Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T11:00:48.154Z] [acq]   Fetching all (current/upcoming/past): https://www.acquavellagalleries.com/exhibitions
+[2026-09-11T11:00:52.614Z] [acq]   all (current/upcoming/past): 119 links seen -> 11 navigation, 0 already-seen URL -> 108 collected (0 of them with no readable title)
+[2026-09-11T11:00:52.615Z] [acq]   lookback (listing): kept 16, dropped 92 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-11T11:00:52.615Z] [acq]   reading 16 individual page(s)…
+[2026-09-11T11:00:52.615Z] [acq]     page 1 of 16
+[2026-09-11T11:01:09.112Z] [acq]     page 10 of 16
+[2026-09-11T11:01:20.274Z] [acq]   Individual pages: 16 got text, 0 no curatorial text, 0 failed
+[2026-09-11T11:01:20.274Z] [acq]   lookback (final): kept 15, dropped 1 closed before 2024-07-01, 2 with no closing date, 0 with no opening date
+[2026-09-11T11:01:20.276Z] [acq]   → 15 exhibitions, 15 with curatorial text → acq.csv
+[2026-09-11T11:01:20.377Z] 
+[2026-09-11T11:01:20.377Z] ────────────────────────────────────────────────────────────
+[2026-09-11T11:01:20.377Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T11:01:20.377Z] ────────────────────────────────────────────────────────────
+[2026-09-11T11:01:20.377Z]   ACQ: 15 exhibitions | 15 with text
+[2026-09-11T11:01:20.377Z] 
+[2026-09-11T11:01:20.377Z] ────────────────────────────────────────────────────────────
+[2026-09-11T11:01:20.377Z]   COVERAGE — every link accounted for
+[2026-09-11T11:01:20.377Z] ────────────────────────────────────────────────────────────
+[2026-09-11T11:01:20.377Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T11:01:20.377Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T11:01:20.377Z]   acq        all (current/upcoming/past)    119    11       0     0        0        0        108
+[2026-09-11T11:01:20.377Z] 
+[2026-09-11T11:01:20.377Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T11:01:20.377Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T11:01:20.377Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T11:01:20.377Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T11:01:20.377Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T11:01:20.377Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-11T11:01:20.377Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T11:01:20.377Z] 
+[2026-09-11T11:01:20.377Z] Network bridge: 387 requests served, 748 skipped (image/media/font), 0 failed
+[2026-09-11T11:01:20.377Z] 
+[2026-09-11T11:01:20.377Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_210046
+[2026-09-11T11:01:20.377Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_210046/sweep.csv  (15 rows — acq:15)
+[2026-09-11T11:01:20.377Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_210046/log_2026-09-11_210046.txt
+[2026-09-11T11:01:20.377Z] Not yet in this run: met, ng, rijks, borghese, morgan
+[2026-09-11T11:01:20.377Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T11:01:20.377Z] No de-duplication is applied — see passThrough.

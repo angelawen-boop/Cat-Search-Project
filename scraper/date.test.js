@@ -19,7 +19,7 @@ const assert = require('node:assert');
 const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
-  classifyLoadError, isOwnListingPage,
+  classifyLoadError, isOwnListingPage, saysOngoing,
 } = require('./sweep_prototype.js');
 
 const range = (s, hint) => {
@@ -404,4 +404,44 @@ test('N-006: a region-suffixed language prefix is handled', () => {
 
 test('N-007: no listing paths means nothing is rejected', () => {
   assert.equal(isOwnListingPage('https://www.metmuseum.org/exhibitions/past', []), false);
+});
+
+// ── O-series: the venue's own "Ongoing" label (permanent displays) ────────────
+// These rows are EXCLUDED, so a false positive deletes a real exhibition and
+// nothing says so. The O-0 cases are the ones that must never match: they are
+// all real exhibition titles containing the word.
+
+test('O-001: a card whose date slot says only "Ongoing"', () => {
+  assert.equal(saysOngoing('The British Galleries\nOngoing'), true);
+});
+
+test('O-002: an opening date with "Ongoing" as the closing side', () => {
+  assert.equal(saysOngoing('Fabergé\nJuly 25, 2026–Ongoing'), true);
+  assert.equal(saysOngoing('Fabergé\nJuly 25, 2026 - Ongoing'), true);
+  assert.equal(saysOngoing('Fabergé\nJuly 25, 2026—Ongoing'), true);
+});
+
+test('O-003: case and surrounding whitespace do not matter', () => {
+  assert.equal(saysOngoing('Cycladic Art\n  ONGOING  '), true);
+});
+
+test('O-004: the word inside a TITLE is not the label', () => {
+  // A real risk, not a hypothetical: exhibitions are named this way.
+  assert.equal(saysOngoing('The Ongoing Moment\nMarch 3 – June 8, 2026'), false);
+  assert.equal(saysOngoing('An Ongoing Conversation\nOngoing Voices of the Delta'), false);
+});
+
+test('O-005: prose mentioning ongoing work is not the label', () => {
+  assert.equal(saysOngoing('Conservation is ongoing'), false);
+  assert.equal(saysOngoing('Ongoing research supports this display'), false);
+});
+
+test('O-006: an ordinary dated card is untouched', () => {
+  assert.equal(saysOngoing('Renoir and Love\nOctober 16 – December 5, 2025'), false);
+});
+
+test('O-007: empty and missing text', () => {
+  assert.equal(saysOngoing(''), false);
+  assert.equal(saysOngoing(null), false);
+  assert.equal(saysOngoing(undefined), false);
 });
