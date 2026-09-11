@@ -1,0 +1,70 @@
+[2026-09-11T16:34:45.130Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T16:34:45.130Z] Lookback floor: 2024-07-01
+[2026-09-11T16:34:45.130Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_023445
+[2026-09-11T16:34:45.130Z] Venues this run: moma, brit, dellav
+[2026-09-11T16:34:45.131Z] Proxy: http://127.0.0.1:40485
+[2026-09-11T16:34:45.131Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T16:34:45.260Z] Running 3 venue(s) 3 at a time (one page at a time within each venue)
+[2026-09-11T16:34:45.434Z] [moma] 
+[2026-09-11T16:34:45.435Z] [moma] ────────────────────────────────────────────────────────────
+[2026-09-11T16:34:45.435Z] [moma]   MOMA — Museum of Modern Art, New York
+[2026-09-11T16:34:45.435Z] [moma] ────────────────────────────────────────────────────────────
+[2026-09-11T16:34:45.435Z] [moma]   Fetching current/upcoming: https://www.moma.org/calendar/exhibitions
+[2026-09-11T16:34:45.438Z] [brit] 
+[2026-09-11T16:34:45.439Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-11T16:34:45.439Z] [brit]   BRIT — British Museum, London
+[2026-09-11T16:34:45.439Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-11T16:34:45.439Z] [brit]   Fetching current/upcoming: https://www.britishmuseum.org/exhibitions-events
+[2026-09-11T16:34:45.442Z] [dellav] 
+[2026-09-11T16:34:45.442Z] [dellav] ────────────────────────────────────────────────────────────
+[2026-09-11T16:34:45.442Z] [dellav]   DELLAV — Gallerie dell'Accademia, Venice
+[2026-09-11T16:34:45.442Z] [dellav] ────────────────────────────────────────────────────────────
+[2026-09-11T16:34:45.442Z] [dellav]   Fetching current: https://www.gallerieaccademia.it/en/node?page=1
+[2026-09-11T16:34:46.212Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions
+[2026-09-11T16:34:46.212Z] [moma]   FAILED current/upcoming — BLOCKED_HTTP_403
+[2026-09-11T16:34:46.212Z] [moma]   Fetching past: https://www.moma.org/calendar/exhibitions/history
+[2026-09-11T16:34:46.716Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/history
+[2026-09-11T16:34:46.716Z] [moma]   FAILED past — BLOCKED_HTTP_403
+[2026-09-11T16:34:46.716Z] [moma]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T16:34:46.718Z] [moma]   → 0 exhibitions, 0 with curatorial text → moma.csv
+[2026-09-11T16:34:46.976Z] [brit]   current/upcoming: 1 links seen -> 1 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T16:34:46.976Z] [brit]   Fetching past: https://www.britishmuseum.org/exhibitions-events/past-exhibitions
+[2026-09-11T16:34:47.256Z] [brit]   BLOCKED (HTTP 403): https://www.britishmuseum.org/exhibitions-events/past-exhibitions
+[2026-09-11T16:34:47.256Z] [brit]   FAILED past — BLOCKED_HTTP_403
+[2026-09-11T16:34:47.256Z] [brit]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T16:34:47.256Z] [brit]   → 0 exhibitions, 0 with curatorial text → brit.csv
+[2026-09-11T16:34:50.182Z] [dellav]   HTTP 404: https://www.gallerieaccademia.it/en/node?page=1
+[2026-09-11T16:34:50.182Z] [dellav]   FAILED current — HTTP_404
+[2026-09-11T16:34:50.183Z] [dellav]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T16:34:50.183Z] [dellav]   → 0 exhibitions, 0 with curatorial text → dellav.csv
+[2026-09-11T16:34:50.278Z] 
+[2026-09-11T16:34:50.278Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:34:50.278Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T16:34:50.278Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:34:50.278Z]   MOMA: 0 exhibitions | 0 with text | 2 page(s) blocked/empty
+[2026-09-11T16:34:50.278Z]   BRIT: 0 exhibitions | 0 with text | 1 page(s) blocked/empty
+[2026-09-11T16:34:50.278Z]   DELLAV: 0 exhibitions | 0 with text | 1 page(s) blocked/empty
+[2026-09-11T16:34:50.278Z] 
+[2026-09-11T16:34:50.278Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:34:50.278Z]   COVERAGE — every link accounted for
+[2026-09-11T16:34:50.279Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:34:50.279Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T16:34:50.279Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T16:34:50.279Z]   brit       current/upcoming                 1     1       0     0        0        0          0
+[2026-09-11T16:34:50.279Z] 
+[2026-09-11T16:34:50.279Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T16:34:50.279Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T16:34:50.279Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T16:34:50.279Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T16:34:50.279Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T16:34:50.279Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T16:34:50.279Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T16:34:50.279Z] 
+[2026-09-11T16:34:50.279Z] Network bridge: 86 requests served, 21 skipped (image/media/font), 0 failed
+[2026-09-11T16:34:50.279Z] 
+[2026-09-11T16:34:50.279Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_023445
+[2026-09-11T16:34:50.279Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_023445/sweep.csv  (4 rows — moma:2, brit:1, dellav:1)
+[2026-09-11T16:34:50.279Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_023445/log_2026-09-12_023445.txt
+[2026-09-11T16:34:50.279Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, tate-modern, tate-britain, wallace
+[2026-09-11T16:34:50.279Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T16:34:50.279Z] No de-duplication is applied — see passThrough.

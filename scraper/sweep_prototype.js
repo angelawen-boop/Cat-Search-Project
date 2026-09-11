@@ -2298,6 +2298,89 @@ const VENUES = {
   // opened" rather than "has closed". Both are fetched anyway and the URL guard
   // collapses the overlap, which is exactly what that guard is for. Tate
   // publishes no past archive; that is a site limit, not a gap here.
+  // ── VENUES NOTHING CAN REACH ────────────────────────────────────────────────
+  //
+  // Wired deliberately, and every recipe below is an UNTESTED GUESS. Nothing
+  // here has ever collected a row, because the door has never opened: the link
+  // shapes, title positions and date positions are copied from venues that do
+  // work. Expect a first run that needs diagnosing, the way Borghese's first
+  // run returned the navigation menu. Do not mistake an unexercised recipe for
+  // a working one.
+  //
+  // They earn their place anyway: a refusal costs about half a second, leaves
+  // marker rows in the CSV saying the venue was checked and refused, and turns
+  // each sweep into a standing monitor. Blocks are not permanent facts — in the
+  // five days to 11 Sep, Borghese went down and came back, the Met's archive
+  // turned out to be reachable after all, and artic went from "reliable" to
+  // refused. A venue not wired in is a venue we would never learn about.
+  //
+  // ONE ATTEMPT PER PAGE, NEVER A RETRY. safeGoto already excludes every HTTP
+  // status from its retry for exactly this reason: a site answering 403 has
+  // given its answer, and asking again is the hammering the standing rule
+  // forbids.
+  moma: {
+    name: 'Museum of Modern Art, New York',
+    base: 'https://www.moma.org',
+    // Main MoMA only, never PS1.
+    pages: [
+      { path: '/calendar/exhibitions',         ctx: 'current/upcoming' },
+      { path: '/calendar/exhibitions/history', ctx: 'past' },
+    ],
+    selector: 'a[href*="/calendar/exhibitions/"]',
+    isNav: href => /\/calendar\/exhibitions\/?$/.test(href)
+                || /\/calendar\/exhibitions\/history\/?$/.test(href),
+    title: { heading: true },
+    // Refuses with a Cloudflare MANAGED CHALLENGE — 403 carrying
+    // cf-mitigated: challenge and a "Just a moment…" body. Refused from her own
+    // machine too, so unlike artic the local route does not rescue it.
+  },
+
+  brit: {
+    name: 'British Museum, London',
+    base: 'https://www.britishmuseum.org',
+    pages: [
+      { path: '/exhibitions-events',                 ctx: 'current/upcoming' },
+      { path: '/exhibitions-events/past-exhibitions', ctx: 'past' },
+    ],
+    selector: 'a[href*="/exhibitions-events/"]',
+    isNav: href => /\/exhibitions-events\/?$/.test(href)
+                || /\/exhibitions-events\/past-exhibitions\/?$/.test(href),
+    title: { heading: true },
+    // Its current page once read 200 and was reported as "works". That was a
+    // Cloudflare EDGE CACHE with a lifetime, not a property of the site: once
+    // the cache expired the same page returned 403 with cf-mitigated:challenge,
+    // like the archive. Treat the whole venue as blocked.
+    //
+    // Worth knowing and changing nothing: the museum's own robots.txt
+    // explicitly ALLOWS the archive path we are refused. Bot protection is
+    // acting before the institution's stated policy applies.
+  },
+
+  dellav: {
+    name: "Gallerie dell'Accademia, Venice",
+    base: 'https://www.gallerieaccademia.it',
+    // ADDRESS IN DOUBT — read this before changing it.
+    //
+    // The brief's address 404s, and this guide recorded the venue as having
+    // migrated to galleriaaccademiafirenze.it. That is very probably WRONG:
+    // `dellav` is the Gallerie dell'Accademia in VENICE, while
+    // galleriaaccademiafirenze is the Galleria dell'Accademia in FLORENCE — a
+    // different museum, the one with Michelangelo's David. Pointing the scraper
+    // there would import another institution's exhibitions under this code, and
+    // nothing downstream could tell.
+    //
+    // So the brief's own host is kept and the doubt is recorded rather than
+    // resolved by guessing. The venue refuses every automated connection from
+    // both this container and her machine, so it cannot be settled by trying.
+    // Settling it needs her to open both sites in an ordinary browser.
+    pages: [
+      { path: '/en/node?page=1', ctx: 'current' },
+    ],
+    selector: 'a[href*="/en/"]',
+    isNav: href => /\/en\/?$/.test(href) || /\/en\/node/.test(href),
+    title: { heading: true },
+  },
+
   'tate-modern': {
     name: 'Tate Modern, London',
     base: 'https://www.tate.org.uk',
