@@ -1,0 +1,74 @@
+[2026-09-11T13:47:03.524Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T13:47:03.525Z] Lookback floor: 2024-07-01
+[2026-09-11T13:47:03.525Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_234703
+[2026-09-11T13:47:03.525Z] Venues this run: frick, menil
+[2026-09-11T13:47:03.525Z] Proxy: http://127.0.0.1:38477
+[2026-09-11T13:47:03.526Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T13:47:03.707Z] Running 2 venue(s) 2 at a time (one page at a time within each venue)
+[2026-09-11T13:47:03.899Z] [frick] 
+[2026-09-11T13:47:03.899Z] [frick] ────────────────────────────────────────────────────────────
+[2026-09-11T13:47:03.899Z] [frick]   FRICK — The Frick Collection, New York
+[2026-09-11T13:47:03.899Z] [frick] ────────────────────────────────────────────────────────────
+[2026-09-11T13:47:03.899Z] [frick]   Fetching current/upcoming: https://www.frick.org/exhibitions
+[2026-09-11T13:47:03.925Z] [menil] 
+[2026-09-11T13:47:03.925Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-11T13:47:03.925Z] [menil]   MENIL — The Menil Collection, Houston
+[2026-09-11T13:47:03.925Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-11T13:47:03.926Z] [menil]   Fetching current: https://www.menil.org/exhibitions
+[2026-09-11T13:47:07.105Z] [menil]   current: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-09-11T13:47:07.105Z] [menil]   Fetching upcoming: https://www.menil.org/exhibitions/upcoming
+[2026-09-11T13:47:07.528Z] [frick]   current/upcoming: 15 links seen -> 3 navigation, 5 already-seen URL -> 7 collected (1 of them with no readable title)
+[2026-09-11T13:47:07.528Z] [frick]   Fetching past: https://www.frick.org/exhibitions/past
+[2026-09-11T13:47:08.625Z] [menil]   upcoming: 4 links seen -> 0 navigation, 0 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-11T13:47:08.625Z] [menil]   Fetching past: https://www.menil.org/exhibitions/past
+[2026-09-11T13:47:10.751Z] [menil]   past: 12 links seen -> 0 navigation, 1 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-11T13:47:10.752Z] [menil]   lookback (listing): kept 27, dropped 0 closed before 2024-07-01, 7 with no closing date, 0 with no opening date
+[2026-09-11T13:47:10.752Z] [menil]   reading 27 individual page(s)…
+[2026-09-11T13:47:10.752Z] [menil]     page 1 of 27
+[2026-09-11T13:47:10.923Z] [frick]   past: 25 links seen -> 2 navigation, 16 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-11T13:47:10.923Z] [frick]   lookback (listing): kept 14, dropped 0 closed before 2024-07-01, 11 with no closing date, 0 with no opening date
+[2026-09-11T13:47:10.923Z] [frick]   reading 14 individual page(s)…
+[2026-09-11T13:47:10.923Z] [frick]     page 1 of 14
+[2026-09-11T13:47:24.630Z] [menil]     page 10 of 27
+[2026-09-11T13:47:32.042Z] [frick]     page 10 of 14
+[2026-09-11T13:47:40.204Z] [menil]     page 20 of 27
+[2026-09-11T13:47:44.646Z] [frick]   Individual pages: 14 got text, 0 no curatorial text, 0 failed
+[2026-09-11T13:47:44.646Z] [frick]   lookback (final): kept 11, dropped 3 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T13:47:44.648Z] [frick]   → 11 exhibitions, 11 with curatorial text → frick.csv
+[2026-09-11T13:47:51.023Z] [menil]   Individual pages: 27 got text, 0 no curatorial text, 0 failed
+[2026-09-11T13:47:51.023Z] [menil]   lookback (final): kept 27, dropped 0 closed before 2024-07-01, 7 with no closing date, 0 with no opening date
+[2026-09-11T13:47:51.024Z] [menil]   → 27 exhibitions, 27 with curatorial text → menil.csv
+[2026-09-11T13:47:51.210Z] 
+[2026-09-11T13:47:51.210Z] ────────────────────────────────────────────────────────────
+[2026-09-11T13:47:51.210Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T13:47:51.210Z] ────────────────────────────────────────────────────────────
+[2026-09-11T13:47:51.210Z]   FRICK: 11 exhibitions | 11 with text
+[2026-09-11T13:47:51.210Z]   MENIL: 27 exhibitions | 27 with text
+[2026-09-11T13:47:51.210Z] 
+[2026-09-11T13:47:51.210Z] ────────────────────────────────────────────────────────────
+[2026-09-11T13:47:51.210Z]   COVERAGE — every link accounted for
+[2026-09-11T13:47:51.210Z] ────────────────────────────────────────────────────────────
+[2026-09-11T13:47:51.210Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T13:47:51.210Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T13:47:51.210Z]   menil      current                         12     0       0     0        0        0         12
+[2026-09-11T13:47:51.210Z]   frick      current/upcoming                15     3       0     5        0        1          7
+[2026-09-11T13:47:51.210Z]   menil      upcoming                         4     0       0     0        0        0          4
+[2026-09-11T13:47:51.210Z]   menil      past                            12     0       0     1        0        0         11
+[2026-09-11T13:47:51.210Z]   frick      past                            25     2       0    16        0        0          7
+[2026-09-11T13:47:51.210Z] 
+[2026-09-11T13:47:51.210Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T13:47:51.210Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T13:47:51.210Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T13:47:51.210Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T13:47:51.210Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T13:47:51.210Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T13:47:51.210Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T13:47:51.210Z] 
+[2026-09-11T13:47:51.210Z] Network bridge: 871 requests served, 875 skipped (image/media/font), 0 failed
+[2026-09-11T13:47:51.211Z] 
+[2026-09-11T13:47:51.211Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_234703
+[2026-09-11T13:47:51.211Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_234703/sweep.csv  (38 rows — frick:11, menil:27)
+[2026-09-11T13:47:51.211Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_234703/log_2026-09-11_234703.txt
+[2026-09-11T13:47:51.211Z] Not yet in this run: met, ng, rijks, acq, borghese, morgan
+[2026-09-11T13:47:51.211Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T13:47:51.211Z] No de-duplication is applied — see passThrough.

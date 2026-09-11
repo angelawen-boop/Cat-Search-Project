@@ -95,8 +95,9 @@ const SKIP_RESOURCE_TYPES = new Set(['image', 'media', 'font']);
 // to a person following prose rules. Both are now structurally impossible.
 const OUT_DIR = path.join(__dirname, 'output');
 
-// Every venue this script knows how to scrape, in log order.
-const VENUE_ORDER = ['met', 'ng', 'rijks', 'acq', 'borghese', 'morgan'];
+// VENUE_ORDER is derived from VENUES itself, further down — see the note
+// beside it. It is declared there rather than here because it cannot be
+// written down twice without going wrong.
 
 const ARGS = process.argv.slice(2).map(a => a.toLowerCase()).filter(Boolean);
 const CONTINUE = ARGS.includes('--continue');
@@ -1450,7 +1451,25 @@ function titleRule(venueCode) {
 }
 
 // Listing furniture that is never part of an exhibition's name.
-const TITLE_NOISE = /\b(Past exhibition|Free entry|Free|EXHIBITION|DISPLAY|Book (now|tickets?)|Members? only)\b|£|€/gi;
+//
+// TWO patterns, and the split is the whole point. The badges a venue prints on
+// a card — EXHIBITION, DISPLAY, FREE — are also ordinary English words, so
+// matching them case-insensitively deletes them out of real titles. It did:
+// the Menil's "How to Make an Exhibition: The Story of Jermayne MacAgy" was
+// stored as "How to Make an : The Story of Jermayne MacAgy", with nothing in
+// the run saying a word had been removed. A venue shouting a badge in capitals
+// is the signal; the word itself is not.
+//
+// So single words that could be part of a title are matched ONLY in capitals,
+// and the multi-word phrases, which no exhibition is called, stay
+// case-insensitive.
+const TITLE_NOISE_PHRASES = /\b(Past exhibition|Free entry|Book (now|tickets?)|Members? only)\b|£|€/gi;
+const TITLE_NOISE_BADGES  = /\b(EXHIBITION|DISPLAY|FREE)\b/g;
+
+/** Remove listing furniture from a title. Badges only in capitals — see above. */
+function stripTitleNoise(t) {
+  return t.replace(TITLE_NOISE_PHRASES, ' ').replace(TITLE_NOISE_BADGES, ' ');
+}
 
 // A venue links the same exhibition several times on one card — the image, the
 // name, and a button. The button's words are not a name: no exhibition is
@@ -1524,7 +1543,7 @@ async function extractTitle(link, venueCode) {
   // name — which lives in the card above — is never reached.
   if (rule.card && rule.card.stripLeading) t = squash(t.replace(rule.card.stripLeading, ''));
 
-  if (t.length >= 3 && !CTA_ONLY.test(squash(t))) return squash(t.replace(TITLE_NOISE, ' '));
+  if (t.length >= 3 && !CTA_ONLY.test(squash(t))) return squash(stripTitleNoise(t));
 
   // Nothing readable inside the link. Some venues wrap only the IMAGE in the
   // link and leave the title as a sibling, so the name lives in the card
@@ -1558,7 +1577,7 @@ async function readCardText(link, card) {
     let t = raw;
     if (card.stripLeading)  t = t.replace(card.stripLeading, '');
     if (card.stripTrailing) t = t.replace(card.stripTrailing, '');
-    t = squash(t.replace(TITLE_NOISE, ' '));
+    t = squash(stripTitleNoise(t));
     if (t.length >= 3) return t;
   }
   return '';
@@ -1990,6 +2009,21 @@ const VENUES = {
     lookbackAfterDetail: true,
   },
 
+  frick: {
+    name: 'The Frick Collection, New York',
+    base: 'https://www.frick.org',
+    // Two pages, and the archive is the bigger half: read 11 Sep 2026,
+    // /exhibitions carries 8 exhibition addresses and /exhibitions/past
+    // carries 12.
+    pages: [
+      { path: '/exhibitions',      ctx: 'current/upcoming' },
+      { path: '/exhibitions/past', ctx: 'past' },
+    ],
+    selector: 'a[href*="/exhibitions/"]',
+    isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/past\/?$/.test(href),
+    title: { heading: true },
+  },
+
   morgan: {
     name: 'Morgan Library & Museum, New York',
     base: 'https://www.themorgan.org',
@@ -2002,7 +2036,54 @@ const VENUES = {
     isNav: href => /\/exhibitions\/(current|upcoming|past)\/?$/.test(href) || /\/exhibitions\/?$/.test(href),
     title: { heading: true },
   },
+
+  menil: {
+    name: 'The Menil Collection, Houston',
+    base: 'https://www.menil.org',
+    // The brief's /exhibitions/current 302s to /exhibitions, which is the
+    // live address for what is on now.
+    pages: [
+      { path: '/exhibitions',          ctx: 'current' },
+      { path: '/exhibitions/upcoming', ctx: 'upcoming' },
+      { path: '/exhibitions/past',     ctx: 'past' },
+    ],
+    // SINGULAR, and this is the whole trap at this venue. Exhibitions live at
+    // /exhibition/<slug>; the PLURAL /exhibitions/<slug> addresses are the
+    // three listing tabs themselves ("ON VIEW", "UPCOMING", "PAST"), which
+    // appear on all three pages. Matching "/exhibition/" with the trailing
+    // slash excludes the plural cleanly, because "/exhibitions/" has an "s"
+    // where this pattern wants the slash.
+    selector: 'a[href*="/exhibition/"]',
+    isNav: href => /\/exhibition\/?$/.test(href),
+    // Its cards wrap only the IMAGE in the link, so the link itself carries no
+    // text at all — the same layout as the Rijksmuseum's now-on-view page, and
+    // the reason that one once reported 10 exhibitions and 0 titles. The name
+    // is read from the card above, under the depth and length guards in
+    // readCardText().
+    title: { heading: true, card: { depth: 2 } },
+  },
 };
+
+/**
+ * Every venue this script knows how to scrape, in log order — READ OFF
+ * `VENUES`, never typed out.
+ *
+ * This was a second hand-maintained list, and it behaved exactly as a
+ * duplicated list does: `frick` and `menil` were added to `VENUES` with full
+ * recipes, and the run answered "Nothing matched" and named six venues,
+ * because the only thing that had changed was the half nobody thought to
+ * update. A recipe that exists but cannot be selected is invisible, and
+ * nothing in the output says why.
+ *
+ * Declared here rather than at the top of the file because it reads `VENUES`,
+ * which is defined above this line. Every use of it runs inside a function
+ * called from main(), so the order is safe.
+ *
+ * Object key order in JavaScript is insertion order for string keys, so the
+ * log order is the order the recipes are written in — which is the app's
+ * button order (CLAUDE.md Section 7).
+ */
+const VENUE_ORDER = Object.keys(VENUES);
 
 /**
  * The engine. Every venue goes through this; none has its own copy.

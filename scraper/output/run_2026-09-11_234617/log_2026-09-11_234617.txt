@@ -1,0 +1,5 @@
+[2026-09-11T13:46:17.933Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T13:46:17.934Z] Lookback floor: 2024-07-01
+[2026-09-11T13:46:17.934Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_234617
+[2026-09-11T13:46:17.934Z] Venues this run: (none)
+[2026-09-11T13:46:17.934Z] Nothing matched "frick menil". Known venues: met, ng, rijks, acq, borghese, morgan
