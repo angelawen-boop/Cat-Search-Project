@@ -1,0 +1,76 @@
+[2026-09-11T17:19:03.553Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T17:19:03.554Z] Lookback floor: 2024-07-01
+[2026-09-11T17:19:03.554Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_031903
+[2026-09-11T17:19:03.554Z] Venues this run: capo, uffizi
+[2026-09-11T17:19:03.555Z] Proxy: http://127.0.0.1:43047
+[2026-09-11T17:19:03.555Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T17:19:03.704Z] Running 2 venue(s) 2 at a time (one page at a time within each venue)
+[2026-09-11T17:19:03.840Z] [capo] 
+[2026-09-11T17:19:03.840Z] [capo] ────────────────────────────────────────────────────────────
+[2026-09-11T17:19:03.840Z] [capo]   CAPO — Capodimonte, Naples
+[2026-09-11T17:19:03.840Z] [capo] ────────────────────────────────────────────────────────────
+[2026-09-11T17:19:03.840Z] [capo]   Fetching all (current/upcoming/past): https://capodimonte.cultura.gov.it/mostre/
+[2026-09-11T17:19:03.841Z] [uffizi] 
+[2026-09-11T17:19:03.841Z] [uffizi] ────────────────────────────────────────────────────────────
+[2026-09-11T17:19:03.841Z] [uffizi]   UFFIZI — Uffizi Galleries, Florence
+[2026-09-11T17:19:03.841Z] [uffizi] ────────────────────────────────────────────────────────────
+[2026-09-11T17:19:03.841Z] [uffizi]   Fetching current: https://www.uffizi.it/en/event-category/exhibitions
+[2026-09-11T17:19:06.177Z] [uffizi]   current: 4 links seen -> 1 navigation, 0 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-09-11T17:19:06.177Z] [uffizi]   Fetching upcoming: https://www.uffizi.it/en/event-category/exhibitions/upcoming
+[2026-09-11T17:19:07.347Z] [uffizi]   upcoming: 1 links seen -> 0 navigation, 0 already-seen URL -> 1 collected (0 of them with no readable title)
+[2026-09-11T17:19:07.347Z] [uffizi]   Fetching past 2025: https://www.uffizi.it/en/event-category/exhibitions/years/2025
+[2026-09-11T17:19:08.782Z] [uffizi]   past 2025: 7 links seen -> 1 navigation, 2 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-11T17:19:08.782Z] [uffizi]   Fetching past 2024: https://www.uffizi.it/en/event-category/exhibitions/years/2024
+[2026-09-11T17:19:10.249Z] [uffizi]   past 2024: 12 links seen -> 1 navigation, 0 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-11T17:19:10.249Z] [uffizi]   lookback (listing): kept 14, dropped 5 closed before 2024-07-01, 8 with no closing date, 0 with no opening date
+[2026-09-11T17:19:10.250Z] [uffizi]   reading 14 individual page(s)…
+[2026-09-11T17:19:10.250Z] [uffizi]     page 1 of 14
+[2026-09-11T17:19:10.655Z] [capo]   all (current/upcoming/past): 50 links seen -> 0 navigation, 0 already-seen URL -> 50 collected (2 of them with no readable title)
+[2026-09-11T17:19:10.655Z] [capo]   lookback (listing): kept 44, dropped 6 closed before 2024-07-01, 44 with no closing date, 0 with no opening date
+[2026-09-11T17:19:10.655Z] [capo]   reading 44 individual page(s)…
+[2026-09-11T17:19:10.655Z] [capo]     page 1 of 44
+[2026-09-11T17:19:24.333Z] [uffizi]     page 10 of 14
+[2026-09-11T17:19:31.772Z] [uffizi]   Individual pages: 14 got text, 0 no curatorial text, 0 failed
+[2026-09-11T17:19:31.772Z] [uffizi]   lookback (final): kept 14, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T17:19:31.773Z] [uffizi]   → 14 exhibitions, 14 with curatorial text → uffizi.csv
+[2026-09-11T17:19:54.702Z] [capo]     page 10 of 44
+[2026-09-11T17:20:38.713Z] [capo]     page 20 of 44
+[2026-09-11T17:21:24.828Z] [capo]     page 30 of 44
+[2026-09-11T17:22:12.290Z] [capo]     page 40 of 44
+[2026-09-11T17:22:34.434Z] [capo]   Individual pages: 44 got text, 0 no curatorial text, 0 failed
+[2026-09-11T17:22:34.434Z] [capo]   lookback (final): kept 17, dropped 27 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-11T17:22:34.436Z] [capo]   → 17 exhibitions, 17 with curatorial text → capo.csv
+[2026-09-11T17:22:34.551Z] 
+[2026-09-11T17:22:34.551Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:22:34.551Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T17:22:34.551Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:22:34.551Z]   UFFIZI: 14 exhibitions | 14 with text
+[2026-09-11T17:22:34.551Z]   CAPO: 17 exhibitions | 17 with text
+[2026-09-11T17:22:34.551Z] 
+[2026-09-11T17:22:34.551Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:22:34.551Z]   COVERAGE — every link accounted for
+[2026-09-11T17:22:34.551Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:22:34.551Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T17:22:34.551Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T17:22:34.551Z]   uffizi     current                          4     1       0     0        0        0          3
+[2026-09-11T17:22:34.551Z]   uffizi     upcoming                         1     0       0     0        0        0          1
+[2026-09-11T17:22:34.551Z]   uffizi     past 2025                        7     1       0     2        0        0          4
+[2026-09-11T17:22:34.551Z]   uffizi     past 2024                       12     1       0     0        0        0         11
+[2026-09-11T17:22:34.551Z]   capo       all (current/upcoming/past)     50     0       0     0        0        2         50
+[2026-09-11T17:22:34.551Z] 
+[2026-09-11T17:22:34.551Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T17:22:34.551Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T17:22:34.551Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T17:22:34.551Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T17:22:34.551Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T17:22:34.551Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T17:22:34.551Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T17:22:34.551Z] 
+[2026-09-11T17:22:34.551Z] Network bridge: 1766 requests served, 4693 skipped (image/media/font), 23 failed
+[2026-09-11T17:22:34.551Z] 
+[2026-09-11T17:22:34.551Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_031903
+[2026-09-11T17:22:34.551Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_031903/sweep.csv  (31 rows — capo:17, uffizi:14)
+[2026-09-11T17:22:34.551Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_031903/log_2026-09-12_031903.txt
+[2026-09-11T17:22:34.551Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, brera, khm, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-11T17:22:34.551Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T17:22:34.551Z] No de-duplication is applied — see passThrough.

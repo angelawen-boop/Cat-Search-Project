@@ -423,7 +423,21 @@ function parseMonthDay(str, fallbackYear) {
 // losing the opening date.
 // "t/m" is Dutch — "tot en met", up to and including. The Rijksmuseum writes
 // its older runs that way: "11 Oct. 2019 t/m 19 Jan. 2020".
-const RANGE_SEP = '\\s*(?:-|t/m|to|till|until|through)\\s*';
+//
+// ITALIAN, added 12 Sep 2026. Capodimonte publishes its runs only on the
+// exhibition's own page and only as a sentence: "Dal 16 ottobre 2025 al 6
+// gennaio 2026". Without "al" as a separator no pattern matched, all 50 rows
+// came out undated, and undated rows cannot be excluded by the lookback — so
+// the museum's entire history survived and she spotted the count was far too
+// high for the institution.
+//
+// "al" ELIDES before a vowel — "Dal 16 aprile all'8 settembre 2026" — in both
+// the typographic apostrophe and the plain one, so both are accepted. "alle"
+// and "allo" appear in the same position. This is spelling, not judgement.
+// LONGEST ALTERNATIVE FIRST: regex alternation takes the first that matches, so
+// a bare "al" listed before "all'" would match the first two letters of
+// "all'8 settembre" and leave "l'8", which is not a day.
+const RANGE_SEP = "\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]|al)\\s*";
 
 /**
  * @param raw    the text to search
@@ -449,6 +463,46 @@ function findDateRange(raw, opts = {}) {
   // 2027" fell through the range patterns and came out as 1 October 2026.
   const s = String(raw).replace(/[\u2010-\u2015\u2212\u2043]/g, '-').replace(/\s+/g, ' ').trim();
   const M = MONTH_PATTERN;
+
+  // ALL-NUMERIC RANGE — and the order is PROVED from the numbers, never assumed.
+  //
+  // The Uffizi publishes "From 21/03/2024 to 28/04/2024" and nothing else, so
+  // 9 of its 16 rows had no closing date. The objection to reading these is
+  // that 03/04 could be 3 April or March 4th — but that objection does not
+  // apply to a string that answers the question itself: 21 cannot be a month,
+  // so THAT range is day-first, and the other end inherits the same order
+  // because one venue does not switch conventions mid-sentence.
+  //
+  // So: if either end has a first component above 12, the range is day-first.
+  // If either has a SECOND component above 12, it is month-first. If neither
+  // end proves anything, the range is genuinely ambiguous and is REFUSED
+  // rather than guessed — a wrong date here would be plausible, silent, and
+  // able to decide whether a show passes the lookback. Her standing rule: use
+  // the logic where it applies, leave the column blank where it does not.
+  //
+  // LISTING CARDS ONLY — and this was learned by breaking it. On a card the
+  // numbers are about the one exhibition; on a whole PAGE they are a lottery,
+  // exactly as the bare month-and-year rule is. Run unguarded, this branch gave
+  // two Uffizi exhibitions the run of "Vasari Corridor. Friday evening opening"
+  // — a related item in the page's sidebar — because it was simply the first
+  // numeric range in the text. That is the Waldmüller failure again, and the
+  // contradiction guard could not catch it because the listing had supplied no
+  // date to contradict. So it obeys looseSingles like every other loose rule,
+  // and a page that publishes its dates only in a sidebar now yields a blank
+  // column and a note, which is the honest answer.
+  const num = looseSingles && s.match(new RegExp(
+    `\\b(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})${RANGE_SEP}(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})\\b`));
+  if (num) {
+    const [a1, b1, y1, a2, b2, y2] = [1,2,3,4,5,6].map(i => Number(num[i]));
+    const dayFirst   = a1 > 12 || a2 > 12;
+    const monthFirst = b1 > 12 || b2 > 12;
+    if (dayFirst !== monthFirst && plausibleYear(y1) && plausibleYear(y2)) {
+      const start = dayFirst ? ymd(y1, b1, a1) : ymd(y1, a1, b1);
+      const end   = dayFirst ? ymd(y2, b2, a2) : ymd(y2, a2, b2);
+      const r = sane(start, end, raw);
+      if (r.start || r.end) return r;
+    }
+  }
 
   // Day-first European form, as used by Borghese and the National Gallery:
   // "1 November 2025 to 11 January 2026", "19 June till 13 September 2026".
@@ -512,7 +566,7 @@ function findDateRange(raw, opts = {}) {
     if (mo) return { start: '', end: ymd(m[4], mo, m[2]), raw: s };
   }
 
-  m = s.match(new RegExp(`\\b(from|opens?|opening)\\s+(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  m = s.match(new RegExp(`\\b(from|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
     const mo = monthNum(m[3]);
     if (mo) return { start: ymd(m[4], mo, m[2]), end: '', raw: s };
@@ -717,7 +771,7 @@ function findDateRangeInProse(text, hintYear) {
     }
 
     // A lone opening date with no year: "From 5 June".
-    one = s.match(new RegExp(`\\b(from|opens?|opening)\\s+(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
+    one = s.match(new RegExp(`\\b(from|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
     if (one) {
       const mo = monthNum(one[3]);
       if (mo) return {
@@ -2750,6 +2804,34 @@ async function fetchIndividualPages(page, rows, venueCode) {
         failed++;
         continue;
       }
+      // NO NAME FROM THE LISTING? ASK THE EXHIBITION'S OWN PAGE.
+      //
+      // Capodimonte links half its exhibitions by image alone, with no text in
+      // the link and none in the card either, and its listing carries no
+      // repeat link to fill the blank from — so two real exhibitions reached
+      // the CSV with an empty title and would have arrived as "Couldn't be
+      // filed". Their own pages head themselves plainly: "Emilio Isgrò. Canto
+      // Napoli".
+      //
+      // FILLS A BLANK ONLY, never overwrites. A title the listing supplied is
+      // the one the venue chose for its own index and stays; this runs only
+      // where the alternative is no name at all, so it cannot lose anything.
+      // The page's first heading is used, not its <title> tag, which carries
+      // the museum's name and section furniture.
+      if (!row.title) {
+        const h = await page.evaluate(() => {
+          for (const el of document.querySelectorAll('h1, h2')) {
+            const t = (el.innerText || '').replace(/\s+/g, ' ').trim();
+            if (t.length >= 3 && t.length <= 200) return t;
+          }
+          return '';
+        }).catch(() => '');
+        if (h) {
+          row.title = h;
+          row.notes = addNote(row.notes, 'Name read from the exhibition\'s own page; the listing linked it by image only.');
+        }
+      }
+
       const text = await getCuratorialText(page);
       if (text) {
         row.summary = text;
