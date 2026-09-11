@@ -1,7 +1,8 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 10 Sep 2026 (independent review acted on — see Section 11)
+**Last updated:** 11 Sep 2026 (compression recorded as DONE — a stale paragraph had
+it as outstanding and cost a session's work re-deriving it; see Section 8)
 **Source:** built from Cat Watch Handover v11 plus what this repo's own scraper work has since proven.
 
 This repo now holds **two** things, and will hold both going forward:
@@ -80,6 +81,12 @@ The owner does not read code and does not want to. Explain the logic, the trade-
 ### Carried over from the app project (still apply here)
 
 - **Be concise.** She is optimising for decisions-per-minute. Cut hard after thinking. Short bullets over paragraphs.
+- **Cut the length of every reply by roughly 60%** against what comes naturally. Her
+  standing instruction, 11 Sep 2026. This is on top of "be concise", not a restatement
+  of it — sessions keep reading that bullet and still writing five paragraphs.
+- **Suppress most visible thinking output.** Two reasons, both hers: it burns her
+  usage allowance, and it is written in a register she cannot read, so it is cost
+  with no benefit. Think as hard as needed; show almost none of it.
 - **Never propose dropping a feature or accepting reduced functionality as the fix.** The tool exists to do more automatically. When something breaks, make it work.
 - **No undiscussed changes, no silent workarounds, no shortcut fixes.** Fix the real problem and say what you did.
 - **She will not manually enter exhibition data.** Treat that as a fixed constraint, not an open question.
@@ -374,6 +381,47 @@ node scraper/compress.js                     plan compression of the newest run
 node scraper/compress.js <run> --apply       write sweep_compressed.csv
 npm test                                     all fixtures, ~1 second
 ```
+
+### Running a test sweep yourself, from a cold session
+
+Written out because she will be the one doing it, and a session that has just
+started knows none of this until it reads the guide.
+
+**What to say first.** Open a new Claude Code session on this repo and say:
+
+> Read CLAUDE.md, then run a test sweep and compression on acq.
+
+That one line is enough. The session reads the guide, and the startup hook has
+already put it on `main` and installed the dependencies.
+
+**The three commands, in order:**
+
+1. `node scraper/sweep_prototype.js acq` — scrapes one venue. About a minute.
+   Creates a new `scraper/output/run_<date>_<time>/` directory. Use one venue for
+   a test; leave the venue name off only when you want all of them.
+2. `node scraper/compress.js` — does **not** write the file yet. It works out
+   which rows still need words and writes `compress_pending.json`. If every row
+   is reused from a previous run it says so and writes the final file outright,
+   and you are finished.
+3. `node scraper/compress.js <run> --apply` — writes `sweep_compressed.csv`.
+   **That is the file to import into the app.**
+
+**The bit in the middle, between 2 and 3.** Step 2 prints a handoff asking for
+subagents. You will be shown an approval box for each one — that is the hook, and
+it names the model first so you can see what you are approving. Approve one per
+job. If the box says **SESSION DEFAULT** instead of a model name, say no: the
+model choice has been lost, and the measured split is the whole point.
+
+Nothing to approve means nothing needed writing, which is the normal result on a
+re-run.
+
+**If it stops and complains**, that is by design — `--apply` refuses a batch with
+a missing, over-long or malformed answer rather than writing half a file. Tell the
+session what it printed.
+
+**To check the words before importing:** open `sweep_compressed.csv` and read the
+summary column. Wrong wording is the one failure the script cannot catch, and it
+is visible on the approval cards in the app anyway.
 
 ### A run is a directory, not a file
 
@@ -1183,11 +1231,33 @@ Her sequence, with three adjustments made in the same conversation. This superse
 written when no import had been tested. **One has since been run successfully against
 scraper output**, so the join between scraper and app is no longer the unproven part.
 
-1. **Compression step — decided 10 Sep, ready to build.** A separate pass over a
-   finished CSV, re-runnable without re-scraping. The design is written up under
-   "Settled 10 Sep 2026 — how compression works" below: it reads the previous run's
-   compressed CSV, reuses wording where the raw text is unchanged, and asks the model
-   only where something actually changed. She imports the **compressed** file.
+1. ~~**Compression step.**~~ **DONE — built and tested 10 Sep 2026. Do not re-plan
+   it.** A separate pass over a finished CSV, re-runnable without re-scraping. It
+   reads the previous run's compressed CSV, reuses wording where the raw text is
+   unchanged, and asks a model only where something actually changed. She imports
+   the **compressed** file.
+
+   What is finished, so a session does not report it as outstanding again:
+   - `compress.js` + `compress_cli.js`, 30 fixtures in `compress.test.js`.
+   - Reuse-by-memory proven live: second sweep of the same venue made **zero model
+     calls**; a hand-edited blurb produced **exactly one** question, carrying the old
+     wording.
+   - Travelling pairs grouped **in code** before anything is asked, one answer to
+     both rows.
+   - The model split **measured, not assumed** — Sonnet writes fresh, Haiku judges
+     staleness, on 27 National Gallery rows with the model as the only variable.
+     Haiku scored **14 of 14** on the judgement cases. Evidence in
+     `scraper/compress_prompt.md`.
+   - The subagent handoff is **printed by the script** (`compress_cli.js`), naming
+     the prompt, the model and one subagent per job.
+   - `.claude/hooks/confirm-subagent.sh` asks before any spawn and rewrites the
+     description so the model is the first thing she reads.
+
+   **The one gap, stated plainly:** no production sweep has yet had its summaries
+   written by a Sonnet subagent reading the 29 example pairs. The 15 Acquavella
+   summaries in the 10 Sep run were written **by hand, in-session, by Opus**. That
+   is a first-real-use step inside step 2, not a build step — do not turn it back
+   into one.
 2. **Wire all 21 venues with default recipes and run once.** This replaces what were two
    steps — "re-check Borghese and probe the rest" and "expand to the accessible ones".
    Marker rows became universal on 10 Sep, so **the run itself is the reconnaissance**:
@@ -1510,11 +1580,18 @@ remembered skip, **exactly one row asked** — and that question carried the old
 wording, `"Tom Sachs remaking Picasso in bronze."`, beside the new text, which
 is what makes review-not-rewrite possible.
 
-**Be precise about what has NOT been tested.** The 15 summaries in that run
-were written **by hand, in the session, by Opus** — not by a model reading the
-29 example pairs. The examples are built and unused. Nothing yet shows that a
-smaller model given those examples writes summaries she would accept, or that
-it correctly answers *is the old summary now false?*
+**Be precise about what has NOT been tested — corrected 11 Sep 2026.** This
+paragraph previously said nothing showed a smaller model could answer *is the old
+summary now false?*. **That was already false when written**: Haiku scored 14 of
+14 on exactly that question, recorded in the section above and in
+`compress_prompt.md`. A stale line here sent a later session off to re-do finished
+work, which is the specific damage this guide exists to prevent.
+
+What is genuinely untested is narrower: **the 29 example pairs have never been
+handed to a model in a real sweep.** The 15 summaries in that run were written by
+hand, in the session, by Opus. So nothing yet shows that Sonnet, given those
+examples, writes summaries she would accept — the *writing* half is unproven in
+production, the *judging* half is measured. The first venue of step 2 settles it.
 
 ### Travelling exhibitions — solved in code, not in the prompt
 
@@ -1611,6 +1688,13 @@ invalid and unanswered all fail the run; disputed does not.
 **This is aimed at whichever model does the work in production**, expected to be
 Haiku through the API. It is deliberately not a test of a session writing
 summaries by hand, which proves nothing about what runs unattended.
+
+**Small gap, noted 11 Sep: the answers are not committed.** The 14-of-14 score was
+produced in-session and the answer file was never written to the repo, so the
+result survives only as prose here. A later session cannot re-score it without
+re-answering all 14 cases. Not a defect — the eval itself is committed and
+re-runnable — but the next run of it should commit its answer file beside
+`compress_eval.json` so the score becomes evidence rather than memory.
 
 **Rejected along the way, with reasons, so they are not re-proposed:**
 - **Give the compressor her ledger** so it can skip rows she already has. Puts a
