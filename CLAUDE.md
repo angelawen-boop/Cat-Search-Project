@@ -58,6 +58,18 @@ switches the session to `main` before work begins. It refuses to move if the wor
 is dirty or the branch already carries its own commits, so it cannot discard anything. It
 also runs `npm install`, so `npm test` works with no manual step.
 
+**"Its own commits" means commits not on `origin/main`, and the hook fetches before it
+decides** (fixed 11 Sep 2026). It previously compared against the **local** `main`
+pointer, which only moves when something moves it — so the moment any session pushed, the
+local copy went stale and every following session was told its branch carried unmerged
+work. On 11 Sep that was 30 commits that were all already on the trunk, and the hook stood
+down on a false alarm. Two things changed: the `git fetch` moved above the decision
+instead of sitting inside the branch that had already taken it, and the comparison became
+`origin/main..HEAD`. The guard is unchanged in strength — genuinely unpushed work still
+stops the move, and a failed fetch errs toward standing down. The hook now also
+fast-forwards `main` when a session already starts there, since leaving it behind is how
+the stale pointer was created in the first place.
+
 ## 1. House rules for this repo
 
 These are the rules for Claude Code sessions. They will grow over time; right now there is one, and it is not negotiable.
