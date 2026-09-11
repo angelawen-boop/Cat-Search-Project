@@ -1,8 +1,9 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 11 Sep 2026 (compression recorded as DONE — a stale paragraph had
-it as outstanding and cost a session's work re-deriving it; see Section 8)
+**Last updated:** 12 Sep 2026 (six recipes written — frick, menil, wallace, va and
+both Tates; Tate's query filters unlocked; dellav's recorded migration is probably
+the wrong museum)
 **Source:** built from Cat Watch Handover v11 plus what this repo's own scraper work has since proven.
 
 This repo now holds **two** things, and will hold both going forward:
@@ -517,7 +518,28 @@ rules), `markEmptyPages` for venues that get blocked, `lookbackAfterDetail` for
 venues whose listings carry no closing date, `excludeOngoing` for a venue that
 labels its permanent displays, `yearArchive` for an archive served one year per
 address, and `lookbackFrom` for a venue whose own archive genuinely cannot reach
-the project floor. **Nothing uses `lookbackFrom` now** — the Met did, and the
+the project floor.
+
+Added 12 Sep, each by a venue that needed it:
+- **`card: { firstLine: true }`** — the Frick writes the name as the card's first
+  line, in an `<em>`, with the dates and a full blurb beneath and only a "READ
+  MORE" button linked. No heading anywhere and the card runs to hundreds of
+  characters, so both existing routes missed it. Guarded twice: the walk stops
+  at the edge of the card using the same boundary the date walk uses, and it
+  keeps walking while a container says no more than the link does — the first
+  box above a button is the button's own wrapper, whose first line is literally
+  "READ MORE".
+- **`otherBranch`** — one institution, several sites, one listing. The V&A mixes
+  South Kensington, V&A East Museum, V&A East Storehouse and Young V&A; her list
+  is South Kensington only. Same footing as `excludeOngoing`: the card states
+  which site it is, so this is the site saying so rather than our judgement, and
+  each exclusion is named in the log and counted in the coverage table.
+- **`notATitle`** — a label the venue prints where a name belongs. Tate's hero
+  cards head the card with the GALLERY, so "TATE BRITAIN" won the address as the
+  first link and Whistler never appeared under its own name. **Checked wherever
+  `CTA_ONLY` is checked, INCLUDING the heading branch** — the heading is trusted
+  first and returned before any check ran, which was the entire bug on the first
+  attempt. **Nothing uses `lookbackFrom` now** — the Met did, and the
 real answer turned out to be a page it was not visiting.
 
 **`yearDropdown` is gone** (11 Sep 2026), and clicking a year menu is not how
@@ -1235,9 +1257,17 @@ which are a different kind of problem entirely.
 - **`brit` is blocked. An earlier claim that it was "split" is withdrawn** — see
   the paragraph below; the "19 links" was a broken counter and the working
   current page was a Cloudflare cache with a lifetime.
-- **`dellav` is blocked, settled 11 Sep.** The brief's address
-  (`gallerieaccademia.it/en/node?page=1`) 404s: **the venue has migrated** to
-  `galleriaaccademiafirenze.it/en/exhibitions-events/`. The new address and its
+- **`dellav` is blocked, settled 11 Sep — but its NEW ADDRESS IS PROBABLY THE
+  WRONG MUSEUM, flagged 12 Sep.** The brief's address
+  (`gallerieaccademia.it/en/node?page=1`) 404s, and this guide recorded the
+  venue as having migrated to `galleriaaccademiafirenze.it/en/exhibitions-events/`.
+  **`dellav` is the Gallerie dell'Accademia in VENICE; `galleriaaccademiafirenze`
+  is the Galleria dell'Accademia in FLORENCE** — a different museum, the one with
+  Michelangelo's David. Scraping it would file another institution's exhibitions
+  under this code, and nothing downstream could tell. The recipe keeps the
+  brief's host and records the doubt. This cannot be settled by trying, because
+  the venue refuses every automated connection from both machines: **she needs to
+  open both sites in an ordinary browser and say which is hers.** The new address and its
   home page both return `NO_RESPONSE` from **both** the container and her
   machine, while loading in her ordinary browser. Earlier this was recorded as
   possibly a transient outage like Borghese's; two machines refusing while a
@@ -1664,7 +1694,7 @@ read as an outage, not as a venue with no exhibitions.
 - **Not reliably fetchable — shell-plus-database (3):** morgan (current has titles/dates but no URLs; upcoming has titles but no dates), khm (total shell failure on listings, individual pages fine), artic (dates missing on listings, past page entirely empty).
 - **Italian venues, deferred (4):** capo (robots blocked), borghese (`/mostre/` subpages robots-blocked — **already contradicted by 6a**), uffizi (JavaScript-rendered empty shell), dellav (returns broken/stale content mixing 2022 announcements with old shows; the site is genuinely a mess even in a normal browser).
 - **met past page:** JS year-filter unclickable via fetch, defaults to latest year only.
-- **tate:** venue-filtered query-param URLs couldn't be unlocked; the brief uses the main `tate.org.uk/whats-on` URL for both Tates.
+- ~~**tate:** venue-filtered query-param URLs couldn't be unlocked~~ — **WRONG, corrected 12 Sep 2026. They are in Tate's own navigation menu**, and they are server-side, so each combination is simply another page: `?date_range=from_now&gallery_group=tate-modern&event_type=display&event_type=exhibition`. `gallery_group` separates the two Tates and drops St Ives and Liverpool; `event_type` asks the site for exhibitions and displays only. **That is the answer to known bug 2 at the venue the guide named as its hard case** — Tate lists talks, tours, workshops, films and private views on the same page, and its own tag does the filtering, which is rung 1 of the ladder rather than our guess. `date_range=past` is NOT an archive despite the name: everything it returns also appears under `from_now`, so it means "has already opened". Tate publishes no past archive.
 - **Cache inconsistency:** Menil `/exhibitions` returned 3 clean current shows once, then empty minutes later. Single-fetch reliability tests can mislead.
 - **The pattern of who failed:** reliable venues bake data into HTML server-side. Broken ones inject it with JavaScript. Failures cluster around mid-tier museums with 2020s design-agency redesigns — big enough to afford the new site, not big enough to test what happens when JavaScript doesn't run. The Frick's old-school 2012-era site just works.
 
@@ -1807,11 +1837,50 @@ scraper output**, so the join between scraper and app is no longer the unproven 
    venue. Their recipes are untested guesses until a door opens — which is stated
    in each one, so nobody mistakes an unexercised recipe for a working one.
 
-   **STATE AT THE END OF 11 SEP: no recipe has been written.** The 11 unwired,
-   reachable venues — `louvre` `uffizi` `brera` `capo` `khm` `frick` `menil`
-   `wallace` `va` `tate-modern` `tate-britain` — have their listing pages opening
-   and their exhibition path shapes mapped (below), and **nothing further**. No
-   row has been extracted from any of them.
+   **STATE AT THE END OF 12 SEP: six recipes written, and every one produced
+   rows.** Each was verified the same way — count the live listing pages FIRST,
+   then write the recipe, then check the sweep returns that number.
+
+   | Venue | Rows | Against her order |
+   |---|---|---|
+   | `frick` | 10 | American |
+   | `menil` | 27 | American |
+   | `wallace` | 11 | UK |
+   | `va` | 15 | UK |
+   | `tate-modern` | 13 | UK |
+   | `tate-britain` | 10 | UK |
+
+   Also wired, all refusing and all leaving marker rows: `moma` (403 both
+   pages), `brit` (403 on the archive), `dellav` (404). Five pages, five
+   seconds — the standing-monitor case working.
+
+   **Still unwired, and hers to release:** `louvre` `uffizi` `brera` `capo`
+   `khm` (Euro, deliberately held until she reviews the American and UK sets)
+   and `artic` (local-only; she must run it).
+
+   **Her rules for this work, agreed 12 Sep.** Two rounds of fixing and
+   sweeping per venue, then stop. **If a session cannot tell "the venue does
+   not publish this" from "my recipe is wrong", it stops and asks rather than
+   trying a third time** — that ambiguity is the only failure mode that burns
+   a night and produces nothing. At most ~15 diagnostic page reads per venue.
+   An engine change is re-verified against the signed-off venues in the same
+   sitting, and the signed-off venues are re-swept ONLY after an engine change,
+   never after a recipe tweak. Commit each venue before starting the next. A
+   venue that is not solved is committed anyway, with the open question in the
+   commit message, and the session moves on — it does not wait.
+
+   **What is hers and what is the session's**, settled the same day. How the
+   scraper mechanically finds the right thing on a page is the session's, and
+   she has no input to give. Whether a thing is an exhibition at all is HERS —
+   the session uses its judgement, proceeds, and surfaces it for confirmation.
+   And a third category that belongs to the session but must be VERIFIED rather
+   than assumed: checkable facts about the outside world, such as whether a
+   documented listing address is really the listing. **That is the only one of
+   the three that fails silently** — a bad extraction rule shows up as visible
+   junk and a wrong category call shows up as unwanted cards, but a listing
+   page never found shows up as nothing at all. Wallace proved the point: the
+   brief's address is a two-tile hub, and trusting it would have returned 4
+   rows that looked perfectly healthy.
 
    **What `inspect_listing.js` established, and it is worth keeping** — every
    shape read off the site, three of them counter-intuitive enough that guessing
