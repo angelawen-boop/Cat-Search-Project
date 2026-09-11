@@ -1,0 +1,49 @@
+[2026-09-11T07:53:44.923Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T07:53:44.924Z] Lookback floor: 2024-07-01
+[2026-09-11T07:53:44.924Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_175344
+[2026-09-11T07:53:44.924Z] Venues this run: met
+[2026-09-11T07:53:44.924Z] Proxy: http://127.0.0.1:43049
+[2026-09-11T07:53:44.924Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T07:53:45.581Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-11T07:53:45.875Z] [met] 
+[2026-09-11T07:53:45.875Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-11T07:53:45.875Z] [met]   MET — The Metropolitan Museum of Art
+[2026-09-11T07:53:45.875Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-11T07:53:45.875Z] [met]   Fetching current/upcoming: https://www.metmuseum.org/exhibitions
+[2026-09-11T07:53:46.395Z] [met]   challenge page (HTTP 429) — waiting for it to clear: https://www.metmuseum.org/exhibitions
+[2026-09-11T07:54:01.521Z] [met]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions
+[2026-09-11T07:54:01.522Z] [met]   FAILED current/upcoming — BLOCKED_HTTP_429
+[2026-09-11T07:54:01.522Z] [met]   Fetching past: https://www.metmuseum.org/exhibitions/past
+[2026-09-11T07:54:01.981Z] [met]   challenge page (HTTP 429) — waiting for it to clear: https://www.metmuseum.org/exhibitions/past
+[2026-09-11T07:54:17.149Z] [met]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions/past
+[2026-09-11T07:54:17.149Z] [met]   FAILED past — BLOCKED_HTTP_429
+[2026-09-11T07:54:17.150Z] [met]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T07:54:17.150Z] [met]   → 0 exhibitions, 0 with curatorial text → met.csv
+[2026-09-11T07:54:17.244Z] 
+[2026-09-11T07:54:17.244Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:54:17.244Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T07:54:17.244Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:54:17.244Z]   MET: 0 exhibitions | 0 with text | 2 page(s) blocked/empty
+[2026-09-11T07:54:17.244Z] 
+[2026-09-11T07:54:17.244Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:54:17.244Z]   COVERAGE — every link accounted for
+[2026-09-11T07:54:17.244Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:54:17.244Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-11T07:54:17.244Z]   --------------------------------------------------------------------------------------
+[2026-09-11T07:54:17.244Z]   (no listing pages were read)
+[2026-09-11T07:54:17.244Z] 
+[2026-09-11T07:54:17.244Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T07:54:17.244Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T07:54:17.244Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T07:54:17.244Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T07:54:17.244Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-11T07:54:17.244Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T07:54:17.244Z] 
+[2026-09-11T07:54:17.244Z] Network bridge: 8 requests served, 0 skipped (image/media/font), 0 failed
+[2026-09-11T07:54:17.244Z] 
+[2026-09-11T07:54:17.244Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_175344
+[2026-09-11T07:54:17.244Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_175344/sweep.csv  (2 rows — met:2)
+[2026-09-11T07:54:17.244Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_175344/log_2026-09-11_175344.txt
+[2026-09-11T07:54:17.244Z] Not yet in this run: ng, rijks, acq, borghese, morgan
+[2026-09-11T07:54:17.244Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T07:54:17.244Z] No de-duplication is applied — see passThrough.

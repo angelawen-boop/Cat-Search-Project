@@ -1,0 +1,67 @@
+[2026-09-11T07:54:44.687Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T07:54:44.687Z] Lookback floor: 2024-07-01
+[2026-09-11T07:54:44.687Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_175444
+[2026-09-11T07:54:44.687Z] Venues this run: met, morgan
+[2026-09-11T07:54:44.688Z] Proxy: http://127.0.0.1:43049
+[2026-09-11T07:54:44.688Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T07:54:44.823Z] Running 2 venue(s) 2 at a time (one page at a time within each venue)
+[2026-09-11T07:54:44.973Z] [met] 
+[2026-09-11T07:54:44.973Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-11T07:54:44.973Z] [met]   MET — The Metropolitan Museum of Art
+[2026-09-11T07:54:44.973Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-11T07:54:44.973Z] [met]   Fetching current/upcoming: https://www.metmuseum.org/exhibitions
+[2026-09-11T07:54:44.977Z] [morgan] 
+[2026-09-11T07:54:44.977Z] [morgan] ────────────────────────────────────────────────────────────
+[2026-09-11T07:54:44.977Z] [morgan]   MORGAN — Morgan Library & Museum, New York
+[2026-09-11T07:54:44.977Z] [morgan] ────────────────────────────────────────────────────────────
+[2026-09-11T07:54:44.977Z] [morgan]   Fetching current: https://www.themorgan.org/exhibitions/current
+[2026-09-11T07:54:45.533Z] [met]   challenge page (HTTP 429) — waiting for it to clear: https://www.metmuseum.org/exhibitions
+[2026-09-11T07:54:45.924Z] [morgan]   challenge page (HTTP 403) — waiting for it to clear: https://www.themorgan.org/exhibitions/current
+[2026-09-11T07:55:00.683Z] [met]   challenge did not clear; taking the refusal at face value for met this run
+[2026-09-11T07:55:00.683Z] [met]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions
+[2026-09-11T07:55:00.683Z] [met]   FAILED current/upcoming — BLOCKED_HTTP_429
+[2026-09-11T07:55:00.684Z] [met]   Fetching past: https://www.metmuseum.org/exhibitions/past
+[2026-09-11T07:55:01.102Z] [morgan]   challenge did not clear; taking the refusal at face value for morgan this run
+[2026-09-11T07:55:01.102Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/current
+[2026-09-11T07:55:01.102Z] [morgan]   FAILED current — BLOCKED_HTTP_403
+[2026-09-11T07:55:01.102Z] [morgan]   Fetching upcoming: https://www.themorgan.org/exhibitions/upcoming
+[2026-09-11T07:55:01.132Z] [met]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions/past
+[2026-09-11T07:55:01.132Z] [met]   FAILED past — BLOCKED_HTTP_429
+[2026-09-11T07:55:01.133Z] [met]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T07:55:01.134Z] [met]   → 0 exhibitions, 0 with curatorial text → met.csv
+[2026-09-11T07:55:01.943Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/upcoming
+[2026-09-11T07:55:01.943Z] [morgan]   FAILED upcoming — BLOCKED_HTTP_403
+[2026-09-11T07:55:01.943Z] [morgan]   Fetching past: https://www.themorgan.org/exhibitions/past
+[2026-09-11T07:55:02.567Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/past
+[2026-09-11T07:55:02.567Z] [morgan]   FAILED past — BLOCKED_HTTP_403
+[2026-09-11T07:55:02.567Z] [morgan]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T07:55:02.567Z] [morgan]   → 0 exhibitions, 0 with curatorial text → morgan.csv
+[2026-09-11T07:55:02.654Z] 
+[2026-09-11T07:55:02.654Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:55:02.654Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T07:55:02.654Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:55:02.654Z]   MET: 0 exhibitions | 0 with text | 2 page(s) blocked/empty
+[2026-09-11T07:55:02.654Z]   MORGAN: 0 exhibitions | 0 with text | 3 page(s) blocked/empty
+[2026-09-11T07:55:02.654Z] 
+[2026-09-11T07:55:02.654Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:55:02.654Z]   COVERAGE — every link accounted for
+[2026-09-11T07:55:02.654Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:55:02.654Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-11T07:55:02.654Z]   --------------------------------------------------------------------------------------
+[2026-09-11T07:55:02.654Z]   (no listing pages were read)
+[2026-09-11T07:55:02.654Z] 
+[2026-09-11T07:55:02.654Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T07:55:02.654Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T07:55:02.654Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T07:55:02.654Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T07:55:02.654Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-11T07:55:02.654Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T07:55:02.654Z] 
+[2026-09-11T07:55:02.654Z] Network bridge: 19 requests served, 6 skipped (image/media/font), 0 failed
+[2026-09-11T07:55:02.654Z] 
+[2026-09-11T07:55:02.654Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_175444
+[2026-09-11T07:55:02.654Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_175444/sweep.csv  (5 rows — met:2, morgan:3)
+[2026-09-11T07:55:02.654Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_175444/log_2026-09-11_175444.txt
+[2026-09-11T07:55:02.654Z] Not yet in this run: ng, rijks, acq, borghese
+[2026-09-11T07:55:02.655Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T07:55:02.655Z] No de-duplication is applied — see passThrough.

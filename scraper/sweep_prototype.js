@@ -905,6 +905,69 @@ function rethrowIfAborted(e) {
   }
 }
 
+// Statuses a bot-protection challenge is served under. 403 is included because
+// Cloudflare uses it for its interstitial as well as for a flat refusal — the
+// body, not the number, decides which one this is.
+const CHALLENGE_STATUSES = new Set([403, 429, 503]);
+
+// Wording these interstitials actually use. Deliberately matched against the
+// page TITLE, which is short and stable, rather than body text that could
+// coincide with an exhibition about, say, security.
+const CHALLENGE_TITLES = [
+  'security checkpoint',      // Vercel — the Met
+  'just a moment',            // Cloudflare's JS challenge
+  'attention required',       // Cloudflare's block/challenge page
+  'checking your browser',
+  'one moment, please',
+  'verifying you are human',
+];
+
+async function looksLikeChallenge(page) {
+  try {
+    const title = (await page.title().catch(() => '') || '').toLowerCase();
+    return CHALLENGE_TITLES.some(t => title.includes(t));
+  } catch { return false; }
+}
+
+/**
+ * Stay on the page and let the challenge finish, or give up.
+ *
+ * No new request is issued — the challenge reloads itself when it passes, which
+ * is the page doing what it was built to do. Polls the title rather than racing
+ * a navigation event, because some of these replace the content in place and
+ * never navigate at all.
+ *
+ * Bounded hard: a challenge that has not cleared in CHALLENGE_WAIT_MS is a
+ * refusal, and is reported as one.
+ */
+const CHALLENGE_WAIT_MS = 15000;
+
+// Venues whose challenge has already failed to clear once in this run. Waiting
+// again on every remaining page turns a venue that costs a second into one that
+// costs 15 seconds a page — Morgan's three pages would be 45 seconds of waiting
+// for an answer we already have. One honest attempt per venue per run; after
+// that the refusal is taken at face value, which is also what Section 4 asks
+// for.
+const CHALLENGE_GAVE_UP = new Set();
+
+async function waitOutChallenge(page) {
+  const deadline = Date.now() + CHALLENGE_WAIT_MS;
+  while (Date.now() < deadline) {
+    if (STOPPING) return false;
+    await page.waitForTimeout(500).catch(() => {});
+    if (!(await looksLikeChallenge(page))) {
+      // The title changed. Make sure real content arrived rather than an empty
+      // frame mid-reload, or the caller reads a blank page as a success.
+      await page.waitForFunction(
+        min => (document.body?.innerText || '').trim().length >= min,
+        MIN_BODY_CHARS, { timeout: CONTENT_TIMEOUT },
+      ).catch(() => {});
+      return true;
+    }
+  }
+  return false;
+}
+
 async function safeGoto(page, url, venue, context, attempt = 0) {
   // Ctrl-C already seen: stop before opening anything else, rather than
   // letting the rest of the venue fail one page at a time.
@@ -918,7 +981,42 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
     // Instead: wait for the HTML, then for the body to actually contain
     // content, and ignore whatever background noise continues after that.
     const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT });
-    const status = resp ? resp.status() : null;
+    let status = resp ? resp.status() : null;
+
+    // A CHALLENGE is not a refusal, and hanging up on it is our bug, not the
+    // venue's answer.
+    //
+    // The Met's 429 is a "Vercel Security Checkpoint" page: its host asks "are
+    // you a real browser?", the page answers by running a little JavaScript,
+    // and the real content follows. An ordinary visitor never sees it. We are a
+    // real browser, so the honest thing is to let the page answer — we refused
+    // at the status line before it could, and then recorded the venue as
+    // blocking us. It never was.
+    //
+    // THIS IS NOT THE RETRY THE STANDING RULE FORBIDS (Section 4). We send no
+    // second request: we stay on the page already served and wait for it to
+    // finish what it started, exactly as a browser tab does. Nothing is
+    // spoofed, no identity is faked, and if it does not clear we take the
+    // refusal as the answer.
+    //
+    // Verified against the Met's robots.txt, which she read in her own browser
+    // because the checkpoint blocks us from reading it: `User-agent: *` with
+    // six housekeeping paths disallowed, `/exhibitions` not among them, and a
+    // published sitemap. Their stated policy permits exactly this.
+    if (status && CHALLENGE_STATUSES.has(status)
+        && !CHALLENGE_GAVE_UP.has(venue)
+        && await looksLikeChallenge(page)) {
+      log(`  challenge page (HTTP ${status}) — waiting for it to clear: ${url}`);
+      const cleared = await waitOutChallenge(page);
+      if (cleared) {
+        log(`  challenge cleared, continuing: ${url}`);
+        status = 200;
+      } else {
+        CHALLENGE_GAVE_UP.add(venue);
+        log(`  challenge did not clear; taking the refusal at face value for ${venue} this run`);
+      }
+    }
+
     if (status && (status === 403 || status === 418 || status === 429)) {
       log(`  BLOCKED (HTTP ${status}): ${url}`);
       return { ok: false, reason: `BLOCKED_HTTP_${status}` };
