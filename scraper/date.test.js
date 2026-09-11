@@ -20,6 +20,7 @@ const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
   classifyLoadError, isOwnListingPage, saysOngoing,
+  expandYearArchive, listingPages, VENUES,
 } = require('./sweep_prototype.js');
 
 const range = (s, hint) => {
@@ -466,4 +467,65 @@ test('O-007: empty and missing text', () => {
   assert.equal(saysOngoing(''), false);
   assert.equal(saysOngoing(null), false);
   assert.equal(saysOngoing(undefined), false);
+});
+
+
+// ---------------------------------------------------------------------------
+// Y — a year-filtered archive expands to real years, at RUN time
+//
+// Her catch, 11 Sep 2026: the Met's archive years were written into the recipe
+// by hand, which is correct the day it is typed and wrong every year after. A
+// run in 2028 with "2025, 2024" in the file completes, reports no error, and is
+// simply missing two years — and no coverage table can show a page nobody asked
+// for. These fixtures exist because that failure is invisible.
+// ---------------------------------------------------------------------------
+
+const FLOOR = new Date('2024-07-01');
+const YEAR_ENTRY = { path: '/exhibitions/past', ctx: 'past', param: 'year' };
+const years = at => expandYearArchive(YEAR_ENTRY, FLOOR, new Date(at))
+  .map(p => Number(p.path.split('=')[1]));
+
+test('Y-001: today, the floor year through last year, newest first', () => {
+  assert.deepEqual(years('2026-09-11'), [2025, 2024]);
+});
+
+test('Y-002: it grows on its own as years pass — the whole point', () => {
+  assert.deepEqual(years('2028-03-01'), [2027, 2026, 2025, 2024]);
+  assert.deepEqual(years('2031-01-01'), [2030, 2029, 2028, 2027, 2026, 2025, 2024]);
+});
+
+test('Y-003: the CURRENT year is never requested', () => {
+  // The venue's bare `past` page already serves it. Asking again costs a page
+  // load and stamps "Also listed on the venue's 'past 2026' page." onto her
+  // approval cards — one page recorded twice, the exact misleading note the
+  // dead yearDropdown produced.
+  for (const at of ['2026-01-01', '2026-09-11', '2026-12-31']) {
+    assert.equal(years(at).includes(2026), false, `${at} must not request 2026`);
+  }
+});
+
+test('Y-004: nothing is requested before the lookback floor', () => {
+  assert.equal(Math.min(...years('2031-01-01')), 2024);
+  // A floor moved forward moves the oldest year with it.
+  const later = expandYearArchive(YEAR_ENTRY, new Date('2027-07-01'), new Date('2029-01-01'));
+  assert.deepEqual(later.map(p => Number(p.path.split('=')[1])), [2028, 2027]);
+});
+
+test('Y-005: the Met resolves to real addresses, and its years are navigation', () => {
+  const pages = listingPages(VENUES.met);
+  const paths = pages.map(p => p.path);
+  assert.ok(paths.includes('/exhibitions'));
+  assert.ok(paths.includes('/exhibitions/past'));
+  assert.ok(paths.some(p => /\/exhibitions\/past\?year=\d{4}$/.test(p)),
+    'at least one year page must be produced');
+  // No recipe may carry a hand-written year again.
+  assert.equal(VENUES.met.pages.some(p => /year=\d/.test(p.path)), false,
+    'years must be derived, never written into the recipe');
+  // Every expanded year page must read as the venue's own listing, or the
+  // scraper collects its own archive filter as an exhibition.
+  for (const p of paths) {
+    assert.equal(
+      isOwnListingPage('https://www.metmuseum.org' + p, paths), true,
+      p + ' should be navigation');
+  }
 });

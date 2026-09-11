@@ -174,6 +174,47 @@ function venuesForThisRun() {
 
 const LOOKBACK = new Date('2024-07-01');
 
+/**
+ * Expand a venue's year-filtered archive into one page per year.
+ *
+ * Some archives serve ONE YEAR PER ADDRESS — the Met's is
+ * `/exhibitions/past?year=2025`. Those years must NOT be written into a recipe
+ * by hand. A hardcoded list is correct on the day it is typed and silently
+ * wrong afterwards: run this in 2028 with `2025, 2024` in the file and the
+ * sweep completes, reports no error, and is simply missing two years. Nothing
+ * in the coverage table can show a page that was never requested.
+ *
+ * So the years are DERIVED, which is code's job — there is exactly one correct
+ * answer and it follows from the inputs (Section 1 of the project guide).
+ *
+ *   from  the lookback floor's year, because a show open across the floor is
+ *         filed under the year it CLOSES, so that year is the oldest that can
+ *         hold a keeper
+ *   to    last year, NOT this one: the venue's bare `past` page already serves
+ *         the current year, and requesting it twice costs a page load and
+ *         stamps "Also listed on the venue's 'past 2026' page." onto her
+ *         approval cards — one page recorded twice, which is the exact
+ *         misleading note the dead `yearDropdown` used to produce
+ *
+ * Newest first, so the years she is most likely to care about are read first
+ * if a run is cut short.
+ */
+function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
+  const first = floor.getUTCFullYear();
+  const last = today.getUTCFullYear() - 1;
+  const pages = [];
+  for (let y = last; y >= first; y--) {
+    pages.push({ path: `${entry.path}?${entry.param}=${y}`, ctx: `${entry.ctx} ${y}` });
+  }
+  return pages;
+}
+
+/** A venue's pages, with any year-filtered archive expanded to real years. */
+function listingPages(v) {
+  const floor = v.lookbackFrom ? new Date(v.lookbackFrom) : LOOKBACK;
+  return v.pages.flatMap(pg => pg.yearArchive ? expandYearArchive(pg, floor) : [pg]);
+}
+
 // Navigation timing. See safeGoto() for why 'networkidle' is not used.
 const NAV_TIMEOUT = 20000;      // ceiling for the HTML itself to arrive
 const CONTENT_TIMEOUT = 8000;   // extra grace for client-rendered body text
@@ -706,10 +747,14 @@ function afterLookback(endDateStr, floor = LOOKBACK) {
  * venue's site cannot reach back that far and pretending otherwise is a lie.
  *
  * `lookbackFrom` is NOT a preference and must never be used to trim a venue for
- * convenience. It exists for the single case where the SITE stops: the Met's
- * past listing shows only the most recent year behind a JavaScript menu we
- * cannot operate, so its archive genuinely begins in January 2026 and asking
- * for July 2024 produces nothing but the same page read three times.
+ * convenience. It exists for the single case where the SITE itself stops before
+ * the project floor.
+ *
+ * NO VENUE USES IT. The Met did, on the belief that its archive began in 2026
+ * behind a menu we could not operate. That was wrong — the menu changes the
+ * ADDRESS, so every year was one fetch away. Before setting this on a venue,
+ * satisfy yourself the site truly cannot serve the older years, because the
+ * cost of being wrong is a sweep that looks complete and silently is not.
  */
 function lookbackFor(venueCode) {
   const v = VENUES[venueCode];
@@ -1802,14 +1847,14 @@ const VENUES = {
     // navigates, and the scraper read the page it was already on before the new
     // one arrived. Asking for the address directly removes the race entirely.
     //
-    // The years listed reach the project's 1 July 2024 floor and no further. A
-    // show open across the floor is filed under the year it CLOSES, so 2024 is
-    // the oldest year that can hold a keeper.
+    // The years are NOT written down here. `yearArchive` expands to one page per
+    // year between the lookback floor and last year, worked out at run time —
+    // see expandYearArchive(). A hardcoded list is right the day it is typed and
+    // quietly wrong every year after.
     pages: [
-      { path: '/exhibitions',                ctx: 'current/upcoming' },
-      { path: '/exhibitions/past',           ctx: 'past' },
-      { path: '/exhibitions/past?year=2025', ctx: 'past 2025' },
-      { path: '/exhibitions/past?year=2024', ctx: 'past 2024' },
+      { path: '/exhibitions',      ctx: 'current/upcoming' },
+      { path: '/exhibitions/past', ctx: 'past' },
+      { path: '/exhibitions/past', ctx: 'past', param: 'year', yearArchive: true },
     ],
     selector: 'a[href*="/exhibitions/"]',
     isNav: href => /^\/exhibitions\/?$/.test(href) || /^\/exhibitions\/past\/?$/.test(href),
@@ -1953,7 +1998,7 @@ async function scrapeVenue(page, code) {
   logSection(`${code.toUpperCase()} — ${v.name}`);
   const rows = [], seenUrls = new Set(), urlToRow = new Map();
 
-  for (const pg of v.pages) {
+  for (const pg of listingPages(v)) {
     const url = v.base + pg.path;
     log(`  Fetching ${pg.ctx}: ${url}`);
     const r = await safeGoto(page, url, code, pg.ctx);
@@ -1990,7 +2035,7 @@ async function scrapeVenue(page, code) {
       selector: v.selector, isNav: v.isNav,
       // Every listing page this venue has, so a link back to any of them is
       // recognised as navigation whatever language prefix it carries.
-      listingPaths: v.pages.map(p => p.path),
+      listingPaths: listingPages(v).map(p => p.path),
       excludeOngoing: !!v.excludeOngoing,
     };
 
@@ -2525,7 +2570,7 @@ module.exports = {
   findDateRange, findDateRangeInProse, parseMonthDay, ymd, startYearFor,
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
-  saysOngoing,
+  saysOngoing, expandYearArchive, listingPages,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
   installNetworkBridge, resolveChromium, safeGoto, classifyLoadError, datesNearLink,

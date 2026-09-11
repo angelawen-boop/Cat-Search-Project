@@ -501,16 +501,33 @@ not adding another branch to shared code.
 Recipe options so far: `selector`, `isNav`, `title` (heading / card / strip
 rules), `markEmptyPages` for venues that get blocked, `lookbackAfterDetail` for
 venues whose listings carry no closing date, `excludeOngoing` for a venue that
-labels its permanent displays, and `lookbackFrom` for a venue whose own archive
-genuinely cannot reach the project floor. **Nothing uses `lookbackFrom` now** —
-the Met did, and the real answer turned out to be a page it was not visiting.
+labels its permanent displays, `yearArchive` for an archive served one year per
+address, and `lookbackFrom` for a venue whose own archive genuinely cannot reach
+the project floor. **Nothing uses `lookbackFrom` now** — the Met did, and the
+real answer turned out to be a page it was not visiting.
 
 **`yearDropdown` is gone** (11 Sep 2026), and clicking a year menu is not how
 this is solved. It drove the Met's menu and got the same 68 links three times.
 **The menu changes the ADDRESS** — `/exhibitions/past?year=2025` — so the archive
-is a server-side filter and each year is simply another page in `pages`. Clicking
-raced the navigation; asking for the address cannot. Check the address bar before
-ever reaching for a click: if it changes, there is no interaction to automate.
+is a server-side filter and each year is simply another page. Clicking raced the
+navigation; asking for the address cannot. Check the address bar before ever
+reaching for a click: if it changes, there is no interaction to automate.
+
+**`yearArchive` — and the years are never written down.** Her catch, the same
+day the year pages went in: a recipe listing `2025, 2024` by hand is correct
+that afternoon and wrong every year afterwards. Run it in 2028 and the sweep
+**completes, reports no error, and is quietly missing two years** — the coverage
+table cannot show a page nobody requested. So a recipe declares the shape
+(`{ path, ctx, param: 'year', yearArchive: true }`) and `expandYearArchive()`
+derives the years at run time: the lookback floor's year through **last** year,
+newest first. The current year is deliberately excluded, because the venue's
+bare `past` page already serves it and asking twice stamps "Also listed on the
+venue's 'past 2026' page." onto her approval cards.
+
+This is the "put it in code" rule (Section 1) catching a defect that had just
+been introduced: one correct answer, derivable from the inputs, so it must never
+be a value a human keeps up to date. Fixtures Y-001 to Y-005 include an
+assertion that no recipe carries a hand-written year again.
 
 **A link back to the venue's own listing page is navigation — universal, in the
 engine.** `isOwnListingPage()` compares with any language prefix stripped, so
