@@ -1,0 +1,52 @@
+[2026-09-11T17:32:28.634Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T17:32:28.634Z] Lookback floor: 2024-07-01
+[2026-09-11T17:32:28.634Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_033228
+[2026-09-11T17:32:28.634Z] Venues this run: khm
+[2026-09-11T17:32:28.635Z] Proxy: http://127.0.0.1:43047
+[2026-09-11T17:32:28.635Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T17:32:28.768Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-11T17:32:28.862Z] [khm] 
+[2026-09-11T17:32:28.862Z] [khm] ────────────────────────────────────────────────────────────
+[2026-09-11T17:32:28.862Z] [khm]   KHM — Kunsthistorisches Museum, Vienna
+[2026-09-11T17:32:28.862Z] [khm] ────────────────────────────────────────────────────────────
+[2026-09-11T17:32:28.862Z] [khm]   Fetching current: https://www.khm.at/en/exhibitions
+[2026-09-11T17:32:32.412Z] [khm]   current: 5 links seen -> 3 navigation, 1 already-seen URL -> 1 collected (0 of them with no readable title)
+[2026-09-11T17:32:32.412Z] [khm]   Fetching upcoming: https://www.khm.at/en/exhibitions/upcoming
+[2026-09-11T17:32:35.336Z] [khm]   upcoming: 4 links seen -> 4 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T17:32:35.336Z] [khm]   NO EXHIBITIONS upcoming: page loaded and was read, but nothing matched
+[2026-09-11T17:32:35.336Z] [khm]   lookback (listing): kept 2, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T17:32:35.337Z] [khm]   reading 1 individual page(s)…
+[2026-09-11T17:32:35.337Z] [khm]     page 1 of 1
+[2026-09-11T17:32:38.210Z] [khm]   Individual pages: 1 got text, 0 no curatorial text, 0 failed
+[2026-09-11T17:32:38.210Z] [khm]   lookback (final): kept 2, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T17:32:38.211Z] [khm]   → 1 exhibitions, 1 with curatorial text → khm.csv
+[2026-09-11T17:32:38.319Z] 
+[2026-09-11T17:32:38.319Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:32:38.319Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T17:32:38.319Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:32:38.319Z]   KHM: 1 exhibitions | 1 with text | 1 page(s) blocked/empty
+[2026-09-11T17:32:38.319Z] 
+[2026-09-11T17:32:38.319Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:32:38.319Z]   COVERAGE — every link accounted for
+[2026-09-11T17:32:38.319Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:32:38.319Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T17:32:38.319Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T17:32:38.319Z]   khm        current                          5     3       0     1        0        0          1
+[2026-09-11T17:32:38.319Z]   khm        upcoming                         4     4       0     0        0        0          0
+[2026-09-11T17:32:38.319Z] 
+[2026-09-11T17:32:38.319Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T17:32:38.319Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T17:32:38.319Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T17:32:38.319Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T17:32:38.319Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T17:32:38.319Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T17:32:38.319Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T17:32:38.319Z] 
+[2026-09-11T17:32:38.319Z] Network bridge: 108 requests served, 71 skipped (image/media/font), 0 failed
+[2026-09-11T17:32:38.319Z] 
+[2026-09-11T17:32:38.320Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_033228
+[2026-09-11T17:32:38.320Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_033228/sweep.csv  (2 rows — khm:2)
+[2026-09-11T17:32:38.320Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_033228/log_2026-09-12_033228.txt
+[2026-09-11T17:32:38.320Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-11T17:32:38.320Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T17:32:38.320Z] No de-duplication is applied — see passThrough.

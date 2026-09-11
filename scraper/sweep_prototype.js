@@ -2468,27 +2468,24 @@ const VENUES = {
   khm: {
     name: 'Kunsthistorisches Museum, Vienna',
     base: 'https://www.khm.at',
-    // UNRESOLVED, 12 Sep 2026 — wired so it is visible, not because it works.
+    // RESOLVED 12 Sep 2026 — and it was never the venue's fault.
     //
-    // /en/exhibitions is a LANDING PAGE, not a listing: its "Special
-    // exhibitions" and "Permanent exhibitions" are anchors (#special-
-    // exhibitions) on that same page, and the only real exhibition address it
-    // exposes is /en/exhibitions/theseus-temple. /en/exhibitions/upcoming
-    // exposes none at all. Two links for an entire museum's programme.
+    // This was recorded as "two links for an entire museum's programme" and
+    // marked unresolved under the stop rule. Both halves were wrong, and for
+    // the same reason: the page BUILDS ITS CARDS AS YOU SCROLL. Read at the
+    // fold it exposes two links; scrolled, it exposes every exhibition. The
+    // stop rule fired on a limit that did not exist, and the fix — scrolling a
+    // listing before reading it — is now universal in the engine.
     //
-    // THE STOP RULE APPLIES HERE. There is no way to tell from this end whether
-    // the special exhibitions are published at an address not yet found, or
-    // loaded behind those anchors by JavaScript, or whether the landing page
-    // genuinely is all there is — and guessing a third address is how days get
-    // spent. Recorded for her rather than attempted again.
-    //
-    // Worth knowing when it IS picked up: the KHM is one of six museums sharing
-    // this organisation, and the others (Imperial Treasury, Weltmuseum,
-    // Theatermuseum, Ambras Castle, Imperial Carriage Museum) are on separate
-    // hosts. Only this one is in her 21, so the separate hosts help rather than
-    // hinder — but a future listing may well mix them.
+    // Its /en/exhibitions is then still not a plain listing: four sections,
+    // two of them the museum's PERMANENT collections (Kunstkammer, Coin
+    // Cabinet, Picture Gallery, Imperial Armoury and the rest). Scoped with
+    // `within` to the two sections the venue itself labels as shows.
     pages: [
-      { path: '/en/exhibitions',          ctx: 'current' },
+      // Only the current page needs scoping — /upcoming lists nothing but
+      // upcoming shows.
+      { path: '/en/exhibitions', ctx: 'current',
+        within: ['#special-exhibitions', '#the-great-summer-exhibition'] },
       { path: '/en/exhibitions/upcoming', ctx: 'upcoming' },
     ],
     selector: 'a[href*="/en/exhibitions/"]',
@@ -2703,6 +2700,22 @@ async function scrapeVenue(page, code) {
       continue;
     }
 
+    // SCROLL THE LISTING BEFORE READING IT.
+    //
+    // The KHM builds its exhibition cards as you scroll. Read without
+    // scrolling, its whole programme is TWO links — and that was reported to
+    // her as "two links for an entire museum's programme", with the recipe
+    // marked unresolved and the stop rule invoked. Scrolled, the same page
+    // yields 20. The venue was never the problem; the reader stopped at the
+    // fold, and the stop rule fired on a limit that did not exist.
+    //
+    // LISTING PAGES ONLY. Detail pages are read for their text, which is there
+    // from the start, and there are hundreds of them — three seconds each would
+    // cost far more than it could return. A listing is a handful of pages per
+    // venue. It also stops as soon as the page stops growing, so a site that
+    // does not lazy load pays one step rather than twelve.
+    await autoScroll(page);
+
     const bodyText = await page.innerText('body').catch(() => '');
     if (bodyText.length < MIN_BODY_CHARS) {
       log(`  EMPTY_PAGE ${pg.ctx}: loaded but body has <${MIN_BODY_CHARS} chars`);
@@ -2716,7 +2729,24 @@ async function scrapeVenue(page, code) {
 
     const opts = {
       venueCode: code, ctx: pg.ctx, base: v.base, rows, seenUrls, urlToRow,
-      selector: v.selector, isNav: v.isNav,
+      // SOME LISTINGS MIX TEMPORARY AND PERMANENT, in named sections.
+      //
+      // The KHM's /en/exhibitions carries four: the great summer exhibition,
+      // permanent exhibitions, special exhibitions, and permanent exhibitions
+      // at the Neue Hofburg. Read whole it returns 14 rows, ten of which are
+      // the museum's standing collections — Kunstkammer, Coin Cabinet, the
+      // Picture Gallery. Scoped to the two sections the VENUE ITSELF labels as
+      // shows, it returns the right ones.
+      //
+      // This is the site saying so, the same footing as excludeOngoing and
+      // otherBranch, not our judgement about what a thing is.
+      // Declared PER PAGE, because a venue rarely sections them all the same
+      // way: the KHM's /en/exhibitions has four sections while its /upcoming
+      // has none, and scoping both to the same container emptied the second.
+      selector: (pg.within || v.within)
+        ? (pg.within || v.within).map(w => `${w} ${v.selector}`).join(', ')
+        : v.selector,
+      isNav: v.isNav,
       // Every listing page this venue has, so a link back to any of them is
       // recognised as navigation whatever language prefix it carries.
       listingPaths: listingPages(v).map(p => p.path),
@@ -2762,6 +2792,32 @@ async function scrapeVenue(page, code) {
   const toFetch = v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing');
   await fetchIndividualPages(page, toFetch, code);
   return toFetch;
+}
+
+/**
+ * Scroll to the bottom in steps, pausing after each, so a listing that builds
+ * its cards on scroll has the chance to build them. Stops early once the page
+ * stops getting taller.
+ */
+async function autoScroll(page, maxSteps = 12) {
+  try {
+    let last = 0, settled = 0;
+    for (let i = 0; i < maxSteps; i++) {
+      await page.evaluate(() => window.scrollBy(0, window.innerHeight));
+      // MEASURE AFTER THE WAIT, NOT BEFORE IT. Measuring first reads the height
+      // the page had before the new cards arrived, so two steps look identical
+      // and the loop stops at the fold — which is exactly how the KHM's three
+      // upcoming exhibitions stayed invisible even with scrolling switched on.
+      await page.waitForTimeout(450);
+      const h = await page.evaluate(() => document.body.scrollHeight);
+      // One unchanged step is not proof: a slow fetch can land between two
+      // measurements. Stop after two in a row.
+      settled = (h === last) ? settled + 1 : 0;
+      if (settled >= 2) break;
+      last = h;
+    }
+    await page.evaluate(() => window.scrollTo(0, 0));
+  } catch { /* a page that will not scroll is read as it is */ }
 }
 
 async function fetchIndividualPages(page, rows, venueCode) {
