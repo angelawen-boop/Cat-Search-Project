@@ -1132,6 +1132,19 @@ same day. Cause unknown — site-side, network-side, or a new block. **Its numbe
 are therefore unverified against the current engine.** Re-check before trusting
 anything in this section.
 
+**Resolved 11 Sep 2026 — it was the site, not us.** She confirmed Borghese was
+down for her too, from her own machine, over the same couple of days. So this was
+never a block or a proxy problem, and no scraper change would have helped.
+
+**Her observation, and it matters for planning:** that site does not stay up
+reliably, and **she suspects some of the other Italian venues are the same** —
+Uffizi is already marked UNVERIFIED in the brief because it was down when the
+brief was written, and Capodimonte is flagged as possibly refusing automated
+access. Treat an Italian venue returning nothing as **probably transient**, and
+confirm across separate days before concluding anything about it. This is exactly
+why a venue that cannot be read still leaves marker rows: a one-day outage should
+read as an outage, not as a venue with no exhibitions.
+
 ### 6b. Legacy — how *Chat Claude's fetch tool* saw these sites
 
 **This half is being replaced, not maintained.** Every claim in it was produced by the old web-fetch route, which sees pre-JavaScript shells. A venue marked "not fetchable" here may well be fine for the scraper — that's the entire point of using a real browser. Treat it as a starting hypothesis to test, never as a fact about the scraper. Move rows up to 6a as they're proven, and delete them from here.
@@ -1159,6 +1172,27 @@ Supplied by her, not discovered. Changing these is her call.
 | `morgan` | `/exhibitions/current`, `/exhibitions/upcoming`, `/exhibitions/past` |
 
 Known URL corrections from Sep 2026 testing, for venues not yet wired: Louvre current+upcoming is `louvre.fr/en/exhibitions-and-events/exhibitions`; Louvre past needs four URLs (base plus `?date=2024`, `?date=2025`, `?date=2026`, and its year filter is server-side so it actually works); Menil current is `menil.org/exhibitions` not `/exhibitions/current`; Borghese has migrated to `galleriaborghese.cultura.gov.it` from `.beniculturali.it`.
+
+**All 21 venues' addresses are now in the repo — `docs/venue_urls.md`** (added
+11 Sep 2026). They come from the **Sweeper Brief v2**, stored beside it as
+`docs/Cat_Watch_Sweeper_Brief_v2.docx`.
+
+**That document had never been committed, on any branch**, so the addresses for the
+15 unwired venues lived only inside a Claude chat — recoverable only by asking her
+to find and re-upload it, which is precisely what happened. Anything the project
+depends on belongs in the repo.
+
+`docs/venue_urls.md` also carries the per-venue traps the brief records (the Met's
+unreachable past years, Uffizi never tested, Capodimonte possibly blocking, the
+venues with no past archive at all, and the Tate venue tag), and flags **three
+addresses where the brief and the corrections above disagree** — Louvre current,
+Louvre past, and Menil current. Nobody has retested those, so try the brief's
+address first and the correction second before calling a venue unreachable.
+
+**Most of the brief does not apply to the scraper** and is marked as such in that
+file — it was written for Chat Claude driving a fetch tool. Its hand-brake rule is
+the *opposite* of what this scraper must do, and its 12-word summary cap was
+superseded by the measured ten.
 
 ---
 
