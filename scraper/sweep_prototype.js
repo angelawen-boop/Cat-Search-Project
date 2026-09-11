@@ -1584,6 +1584,14 @@ async function fillBlanksFromRepeatLink(row, link, venueCode, ctx, selector) {
   if (ctx !== row._ctx) row.notes = addNote(row.notes, `Also listed on the venue's "${ctx}" page.`);
 }
 
+/** Text that is never an exhibition's name: a call to action, or a label this
+ *  venue prints in the title's place. */
+function isNotATitle(t, rule) {
+  const v = squash(t);
+  if (CTA_ONLY.test(v)) return true;
+  return !!(rule && rule.notATitle && rule.notATitle.test(v));
+}
+
 async function extractTitle(link, venueCode) {
   const rule = titleRule(venueCode);
 
@@ -1592,7 +1600,10 @@ async function extractTitle(link, venueCode) {
       const h = await link.$('h1,h2,h3,h4,h5');
       if (h) {
         const t = squash(await getText(h));
-        if (t.length >= 3) return t;
+        // The heading is trusted FIRST but not blindly: Tate's hero cards head
+        // the card with the gallery's name, and returning here was why the
+        // notATitle rule never fired.
+        if (t.length >= 3 && !isNotATitle(t, rule)) return t;
       }
     } catch {}
   }
@@ -1600,7 +1611,19 @@ async function extractTitle(link, venueCode) {
   let t = squash(await getText(link));
   if (rule.stripLeading)  t = t.replace(rule.stripLeading, '');
   if (rule.stripTrailing) t = t.replace(rule.stripTrailing, '');
-  if (CTA_ONLY.test(squash(t))) t = '';
+  // NOT A TITLE, per this venue — a label the site prints where a name belongs.
+  //
+  // Tate's promotional cards put the GALLERY in the heading: the first link to
+  // Whistler is a hero card whose heading reads "TATE BRITAIN", and the first
+  // link to Frida reads "TATE MODERN". Being first they win the address under
+  // the URL guard, and being non-empty they survive fillBlanksFromRepeatLink,
+  // which fills only blanks — so both exhibitions lost their names to the name
+  // of the building. This is the National Gallery's Renoir failure with a label
+  // in place of an empty string.
+  //
+  // Emptying it hands the row back to fillBlanksFromRepeatLink, which takes the
+  // real name from the ordinary card linking the same address.
+  if (isNotATitle(t, rule)) t = '';
   if (!rule.heading) return squash(t);
 
   // Strip the venue's own badges from the link text before judging whether it
@@ -1609,7 +1632,7 @@ async function extractTitle(link, venueCode) {
   // name — which lives in the card above — is never reached.
   if (rule.card && rule.card.stripLeading) t = squash(t.replace(rule.card.stripLeading, ''));
 
-  if (t.length >= 3 && !CTA_ONLY.test(squash(t))) return squash(stripTitleNoise(t));
+  if (t.length >= 3 && !isNotATitle(t, rule)) return squash(stripTitleNoise(t));
 
   // Nothing readable inside the link. Some venues wrap only the IMAGE in the
   // link and leave the title as a sibling, so the name lives in the card
@@ -2250,6 +2273,72 @@ const VENUES = {
     // Saturday, 7 November 2026", never a range. The other end comes from the
     // exhibition's own page, which the engine already fetches whenever either
     // date is missing.
+  },
+
+  // TATE — two venues in her list, one website, and the URL is what separates
+  // them. Kept as two recipes rather than one shared block because they are two
+  // entries in her ledger; merging them was rejected (CLAUDE.md §7).
+  //
+  // THE QUERY FILTERS ARE THE UNLOCK, and they were hiding in Tate's own
+  // navigation menu. The guide recorded that "venue-filtered query-param URLs
+  // couldn't be unlocked" and that the brief therefore used the bare what's-on
+  // address for both Tates. The menu links spell them out:
+  //   ?date_range=from_now&gallery_group=tate-modern&event_type=display&event_type=exhibition
+  // They are SERVER-SIDE, so each combination is simply a different page and
+  // there is no control to operate.
+  //
+  // event_type does the job known bug 2 has been waiting for. Tate lists talks,
+  // tours, workshops, films, courses and private views on the same page as its
+  // exhibitions; asking the site for display+exhibition only is rung 1 of the
+  // ladder — the venue's own tagging — rather than our guess about what a thing
+  // is.
+  //
+  // date_range=past is NOT an archive, despite its name. Every item it returns
+  // for Tate Britain also appears under from_now, so it means "has already
+  // opened" rather than "has closed". Both are fetched anyway and the URL guard
+  // collapses the overlap, which is exactly what that guard is for. Tate
+  // publishes no past archive; that is a site limit, not a gap here.
+  'tate-modern': {
+    name: 'Tate Modern, London',
+    base: 'https://www.tate.org.uk',
+    pages: [
+      { path: '/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=display&event_type=exhibition', ctx: 'current/upcoming' },
+      { path: '/whats-on?date_range=past&gallery_group=tate-modern&event_type=display&event_type=exhibition',     ctx: 'recently opened' },
+    ],
+    // The path carries the gallery, so this also excludes Tate St Ives and Tate
+    // Liverpool — neither is one of her 21 — with no text matching at all. They
+    // appear on every page as cross-promotion.
+    selector: 'a[href*="/whats-on/tate-modern/"]',
+    isNav: href => /\/whats-on\/tate-modern\/?$/.test(href),
+    // Its promotional hero cards head the card with the GALLERY, not the show.
+    title: {
+      heading: true,
+      notATitle: /^TATE MODERN$/i,
+      // Once the gallery heading is refused, the link's own text still reads
+      // "TATE MODERN <NAME> More info" — the prefix and the button text come off.
+      stripLeading: /^TATE MODERN\s+/i,
+      stripTrailing: /\s*More info\s*$/i,
+    },
+  },
+
+  'tate-britain': {
+    name: 'Tate Britain, London',
+    base: 'https://www.tate.org.uk',
+    pages: [
+      { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=display&event_type=exhibition', ctx: 'current/upcoming' },
+      { path: '/whats-on?date_range=past&gallery_group=tate-britain&event_type=display&event_type=exhibition',     ctx: 'recently opened' },
+    ],
+    selector: 'a[href*="/whats-on/tate-britain/"]',
+    isNav: href => /\/whats-on\/tate-britain\/?$/.test(href),
+    // Its promotional hero cards head the card with the GALLERY, not the show.
+    title: {
+      heading: true,
+      notATitle: /^TATE BRITAIN$/i,
+      // Once the gallery heading is refused, the link's own text still reads
+      // "TATE BRITAIN <NAME> More info" — the prefix and the button text come off.
+      stripLeading: /^TATE BRITAIN\s+/i,
+      stripTrailing: /\s*More info\s*$/i,
+    },
   },
 
   wallace: {
