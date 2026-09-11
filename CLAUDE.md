@@ -1,9 +1,10 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 12 Sep 2026 (six recipes written — frick, menil, wallace, va and
-both Tates; Tate's query filters unlocked; dellav's recorded migration is probably
-the wrong museum)
+**Last updated:** 12 Sep 2026 (ALL 21 VENUES NOW HAVE A RECIPE. 14 produce rows;
+artic waits on her local run. Three findings in this document were overturned the
+same day — KHM was never unreadable, dellav was never blocked, and Tate's filters
+were never locked.)
 **Source:** built from Cat Watch Handover v11 plus what this repo's own scraper work has since proven.
 
 This repo now holds **two** things, and will hold both going forward:
@@ -534,6 +535,18 @@ Added 12 Sep, each by a venue that needed it:
   is South Kensington only. Same footing as `excludeOngoing`: the card states
   which site it is, so this is the site saying so rather than our judgement, and
   each exclusion is named in the log and counted in the coverage table.
+- **`within`** (per PAGE, not per venue) — scopes the scan to named sections.
+  The KHM's /en/exhibitions has four: the great summer exhibition, permanent
+  exhibitions, special exhibitions, and permanent exhibitions at the Neue
+  Hofburg. Read whole it gives 14 rows, ten of them standing collections.
+  Per-page because its /upcoming has no sections at all, and scoping both to
+  the same container emptied the second and lost all three upcoming shows.
+- **`excludeUndated`** — her Menil ruling; see Section 8. Opt-in to ONE venue,
+  because generally an unknown end date is never evidence about a show.
+- **`suffix`** and **`includeCurrentYear`** on a year archive — the Art
+  Institute paginates twice over, one page per year AND more than one page
+  within a year, and has no bare "past" page so the current year is a real
+  address rather than a duplicate.
 - **`notATitle`** — a label the venue prints where a name belongs. Tate's hero
   cards head the card with the GALLERY, so "TATE BRITAIN" won the address as the
   first link and Whistler never appeared under its own name. **Checked wherever
@@ -582,6 +595,36 @@ Two of the defects the 9 Sep review found would have been caught here before
 they ever reached a CSV, which is why the tests exist. **What they cannot do is
 tell you a venue redesigned its pages** — they test the logic, not the
 assumptions about the outside world. Only a live run does that.
+
+### Three universal behaviours added 12 Sep 2026
+
+**A listing page is SCROLLED before it is read.** The KHM builds its exhibition
+cards as you scroll; read at the fold its whole programme is two links, and that
+was written into this guide as a fact about the venue, with the stop rule
+invoked. Scrolled, the same page yields everything. Listing pages only — detail
+pages are read for text that is present from the start and there are hundreds of
+them — and the loop stops as soon as the page stops growing, so a static site
+pays almost nothing.
+
+**Measure the page height AFTER the wait, not before.** The first version of the
+scroll still missed all three of the KHM's upcoming shows, because it read the
+height the page had before the new cards arrived, so two steps looked identical
+and the loop stopped at the fold. It now requires two unchanged steps, since a
+slow fetch can land between measurements.
+
+**A page that loads and yields nothing leaves a marker row.** Only a refusal or
+an empty body did before, so a listing that served real content but produced no
+exhibitions vanished from the CSV entirely and was readable only in the log. The
+British Museum does exactly this — its current page is still served from
+Cloudflare's edge cache, returns one link, and that link is navigation. The
+check sits AFTER the de-duplication guard, so a page whose every link was already
+collected from another of the venue's pages does not report itself as empty:
+Tate's two "already opened" pages are exactly that and are working correctly.
+
+**A title can come from the exhibition's own page when the listing gives none.**
+Capodimonte links half its exhibitions by image alone, with no text in the link,
+none in the card, and no repeat link to fill the blank from. Fills a BLANK only,
+never overwrites, so it cannot lose a name the venue chose for its own index.
 
 ### How a listing page is read
 
@@ -753,7 +796,35 @@ March / 2026                         month and year only
 December 9 - 31, 2023                one month, day only on the closing side
 December 5 - January 20, 2026        crosses new year — opens in 2025
 Summer 2022                          season and year — a bound, not a date
+Dal 16 ottobre 2025 al 6 gennaio 2026   Italian, "from ... to ..."
+Dal 16 aprile all'8 settembre 2026      Italian, "al" elided before a vowel
+From 21/03/2024 to 28/04/2024           all numeric — see below
 ```
+
+**Italian is in the SHARED month map, not a per-venue rule**, like every other
+format: five wired venues are Italian (capo, brera, borghese, dellav, uffizi).
+Without it Capodimonte's 50 rows were ALL undated, and undated rows cannot be
+excluded by the lookback, so its entire history survived — which she spotted as
+far too many for the museum. Note the elision: "al" becomes "all'" before a
+vowel, in both apostrophes, and the longest alternative must come first in the
+alternation or a bare "al" matches the first two letters of "all'8".
+
+**An ALL-NUMERIC range is read only when the numbers PROVE their own order.**
+The objection to 03/04 is that it could be 3 April or March 4th. That objection
+does not apply to a string that answers the question itself: in "From 21/03/2024
+to 28/04/2024", 21 cannot be a month, so that range is day-first and the other
+end inherits it because a venue does not switch convention mid-sentence. If
+either end has a first component over 12 it is day-first; if either has a second
+component over 12 it is month-first; if NEITHER end proves anything the range is
+refused rather than guessed.
+
+**And it is a LISTING-CARD rule, which was learned by breaking it.** Run against
+whole page text it gave two Uffizi exhibitions the run of "Vasari Corridor.
+Friday evening opening" — a related item in the sidebar — because that was
+simply the first numeric range on the page. That is the Waldmüller failure
+again, and the contradiction guard could not catch it because the listing had
+supplied no date to contradict. It obeys `looseSingles` like every other loose
+rule.
 
 **A range that runs backwards crosses the new year, and the opening year is
 worked out rather than assumed.** "December 5 – January 20, 2026" opened in
@@ -1095,6 +1166,24 @@ will appear as one card to reject.
   retried nine dead pages and then wrote the venue to disk as COMPLETE with 10
   of 16 summaries missing — breaking the one guarantee the run directory
   exists to give.
+- Reading a listing page without SCROLLING it, so the KHM's whole programme read
+  as two links and was written down as a fact about the venue.
+- Measuring a scrolled page's height BEFORE waiting for the new cards, so the
+  scroll stopped at the fold anyway.
+- A listing that loads and yields nothing leaving no trace in the CSV.
+- `TITLE_NOISE` stripping EXHIBITION / DISPLAY / FREE case-insensitively, which
+  deleted those words out of real titles — "How to Make an Exhibition" was
+  stored as "How to Make an ".
+- `VENUE_ORDER` as a second hand-typed list of venue codes, so two finished
+  recipes existed in `VENUES` and could not be selected, with nothing in the
+  output saying why.
+- A noise-class match believed on a container holding most of the page, so the
+  Wallace Collection's `section--footer-spacer` LAYOUT class excluded every
+  curatorial paragraph and the image-licence notice became all 11 summaries.
+- Trusting the heading FIRST and returning before any check ran, so Tate's hero
+  cards named two exhibitions after the building.
+- Reading an all-numeric date range from whole page text, which gave two Uffizi
+  exhibitions the run of a lecture in the sidebar.
 - Acquavella's title rule stripping `NEW YORK` / `PALM BEACH`, which made its
   two runs of one show read as the same exhibition. It now strips only the date
   tail — a month or season followed by a digit, so "April in Paris" survives —
@@ -1178,13 +1267,16 @@ one or two pages per venue and reported the VENUE as reachable.
 | `moma` | 403 | 403 | 403 | blocked on every page |
 | `artic` | 403 | 403 | 403 | blocked on every page |
 | `brit` | opens, **1 link** | opens, 1 link | 403 | see below |
-| `dellav` | no response | — | — | server accepts nothing |
+| `dellav` | ~~no response~~ | — | — | **WRONG — wrong address. It works; see below** |
 
 | Route | Venues | Count |
 |---|---|---|
-| **Claude-run scrape** | `ng` `rijks` `acq` `louvre` `uffizi` `brera` `capo` `khm` `frick` `menil` `wallace` `va` `tate-modern` `tate-britain`, plus `borghese` when its site is up | 15 |
+| **Claude-run scrape** | `ng` `rijks` `acq` `louvre` `uffizi` `brera` `capo` `khm` `frick` `menil` `wallace` `va` `tate-modern` `tate-britain` `dellav`, plus `borghese` when its site is up | 16 |
 | **Local scrape** (her machine) | `met`, `artic` | 2 |
-| **No route yet** | `morgan`, `moma`, `brit`, `dellav` | 4 |
+| **No route yet** | `morgan`, `moma`, `brit` | 3 |
+
+**Corrected 12 Sep: `dellav` moved out of "no route" — it was never blocked.**
+See below. The four-venue figure above the line is superseded.
 
 **Her own machine, same six venues, every page — 11 Sep, `probe_2026-09-11_231704.md`:**
 
@@ -1257,8 +1349,22 @@ which are a different kind of problem entirely.
 - **`brit` is blocked. An earlier claim that it was "split" is withdrawn** — see
   the paragraph below; the "19 links" was a broken counter and the working
   current page was a Cloudflare cache with a lifetime.
-- **`dellav` is blocked, settled 11 Sep — but its NEW ADDRESS IS PROBABLY THE
-  WRONG MUSEUM, flagged 12 Sep.** The brief's address
+- **`dellav` IS NOT BLOCKED AND NEVER WAS — corrected 12 Sep 2026.**
+  `gallerieaccademia.it/en/` serves us normally; she supplied the address. It
+  has no listing page at all ("Events & Exhibitions" in the menu is a dropdown),
+  so the home page carries its 1-2 current shows, matching the brief. No
+  upcoming and no archive.
+
+  **The clue was in our own output the whole time.** The brief's address
+  returned HTTP 404, which means the SERVER ANSWERED — and it was filed beside
+  genuine 403s and NO_RESPONSEs without anyone reading the difference. On top of
+  that, the recorded migration to `galleriaaccademiafirenze.it` is the Galleria
+  dell'Accademia in FLORENCE, a different museum from the Venice one this code
+  means; scraping it would have filed another institution's exhibitions under
+  this code invisibly. Everything below this line about dellav is superseded.
+
+- ~~**`dellav` is blocked, settled 11 Sep — but its NEW ADDRESS IS PROBABLY THE
+  WRONG MUSEUM, flagged 12 Sep.**~~ (superseded, kept for the record) The brief's address
   (`gallerieaccademia.it/en/node?page=1`) 404s, and this guide recorded the
   venue as having migrated to `galleriaaccademiafirenze.it/en/exhibitions-events/`.
   **`dellav` is the Gallerie dell'Accademia in VENICE; `galleriaaccademiafirenze`
@@ -1711,6 +1817,26 @@ Supplied by her, not discovered. Changing these is her call.
 | `borghese` | `/en/mostre/presenti/`, `/en/mostre/future/`, `/en/mostre/passate/` — exhibitions themselves are at `/en/exhibition/<slug>/` |
 | `morgan` | `/exhibitions/current`, `/exhibitions/upcoming`, `/exhibitions/past` |
 
+**Added 12 Sep 2026 — the 15 wired that day.** Several differ from the brief,
+and each difference was read off the live site rather than assumed:
+
+| Venue | Pages | What the brief got wrong |
+|---|---|---|
+| `frick` | `/exhibitions`, `/exhibitions/past` | — (but any `?` returns 403 here) |
+| `menil` | `/exhibitions`, `/exhibitions/upcoming`, `/exhibitions/past` | exhibitions are `/exhibition/<slug>`, SINGULAR |
+| `wallace` | `/whats-on/exhibitions-displays/`, `/explore/past-exhibitions/` | **`/whats-on/` is a two-tile hub, not a listing** |
+| `va` | `/whatson?type=exhibition` | — (that filter already includes displays) |
+| `tate-modern` / `tate-britain` | `/whats-on?date_range=from_now\|past&gallery_group=…&event_type=display&event_type=exhibition` | **the filters were recorded as impossible to unlock** |
+| `louvre` | `/en/exhibitions-and-events/exhibitions`, `…/past-exhibitions` + `?date=YYYY` | selector must be the full `/exhibitions/` path or the tabs come in as shows |
+| `uffizi` | `/en/event-category/exhibitions`, `…/upcoming`, `…/years/YYYY` | the year sits in the PATH, not a query parameter |
+| `brera` | `/en/exhibitions-and-events/exhibitions/?current_page=1&date=in-progress\|scheduled\|archive` | exhibitions are filed under `/en/news/mostra/` |
+| `capo` | `/mostre/` | exhibitions are `/mostra/<slug>`, SINGULAR |
+| `khm` | `/en/exhibitions` (scoped), `/en/exhibitions/upcoming` | **lazy-loads; also mixes permanent collections in** |
+| `dellav` | `/en/` | **not blocked; the brief's address 404s and there is no listing page** |
+| `artic` | `/exhibitions`, `/exhibitions/upcoming`, `/exhibitions/history?year=YYYY[&page=2]` | **archive is `history?year=`, and it paginates twice over** |
+| `moma` | `/calendar/exhibitions`, `…/history` | untested — refused |
+| `brit` | `/exhibitions-events`, `…/past-exhibitions` | untested — refused |
+
 Known URL corrections from Sep 2026 testing, for venues not yet wired: Louvre current+upcoming is `louvre.fr/en/exhibitions-and-events/exhibitions`; Louvre past needs four URLs (base plus `?date=2024`, `?date=2025`, `?date=2026`, and its year filter is server-side so it actually works); Menil current is `menil.org/exhibitions` not `/exhibitions/current`; Borghese has migrated to `galleriaborghese.cultura.gov.it` from `.beniculturali.it`.
 
 **All 21 venues' addresses are now in the repo — `docs/venue_urls.md`** (added
@@ -1837,37 +1963,76 @@ scraper output**, so the join between scraper and app is no longer the unproven 
    venue. Their recipes are untested guesses until a door opens — which is stated
    in each one, so nobody mistakes an unexercised recipe for a working one.
 
-   **STATE AT THE END OF 12 SEP: six recipes written, and every one produced
-   rows.** Each was verified the same way — count the live listing pages FIRST,
-   then write the recipe, then check the sweep returns that number.
+   **STATE AT THE END OF 12 SEP: EVERY ONE OF THE 21 HAS A RECIPE.** Fourteen
+   produce rows; `artic` is written and waits on her machine. Each was verified
+   the same way — count the live listing pages FIRST, then write the recipe,
+   then check the sweep returns that number.
 
-   | Venue | Rows | Against her order |
-   |---|---|---|
-   | `frick` | 10 | American |
-   | `menil` | 27 | American |
-   | `wallace` | 11 | UK |
-   | `va` | 15 | UK |
-   | `tate-modern` | 13 | UK |
-   | `tate-britain` | 10 | UK |
+   | Venue | Rows | Markers | Undated | Note |
+   |---|---|---|---|---|
+   | `frick` | 10 | — | 0 | archive beyond page 1 unreachable, and out of range anyway |
+   | `menil` | 20 | — | 0 | 7 permanent galleries excluded, her ruling |
+   | `wallace` | 11 | — | 1 | displays and trails kept, her ruling |
+   | `va` | 15 | — | 0 | South Kensington only; no past archive |
+   | `tate-modern` | 13 | — | 1 | no past archive |
+   | `tate-britain` | 10 | — | 1 | no past archive |
+   | `louvre` | 18 | — | 0 | year pages may be truncated — UNRESOLVED |
+   | `uffizi` | 14 | — | 5 | writes headlines, not titles |
+   | `brera` | 7 | 1 | 2 | filed under /news/mostra/ |
+   | `capo` | 18 | — | 4 | Italian dates, on detail pages only |
+   | `khm` | 6 | — | 1 | lazy-loaded; scoped to its show sections |
+   | `dellav` | 2 | — | 1 | never blocked; no listing page |
+   | `moma` `brit` `morgan` | 0 | 7 | — | refused, marker rows only |
+   | `met` | 82 | — | — | local only, hers |
+   | `artic` | ? | — | — | local only, recipe written, never run |
 
-   Also wired, all refusing and all leaving marker rows: `moma` (403 both
-   pages), `brit` (403 on the archive), `dellav` (404). Five pages, five
-   seconds — the standing-monitor case working.
+   **THREE CLAIMS IN THIS DOCUMENT WERE OVERTURNED IN ONE DAY, and the pattern
+   matters more than any of them.** Each was a confident conclusion drawn from
+   a result rather than from an investigation, and each would have shipped:
 
-   **Still unwired, and hers to release:** `louvre` `uffizi` `brera` `capo`
-   `khm` (Euro, deliberately held until she reviews the American and UK sets)
-   and `artic` (local-only; she must run it).
+   - **`khm` "two links for an entire museum's programme", wired unresolved
+     with the stop rule invoked.** The page BUILDS ITS CARDS AS YOU SCROLL.
+     Scrolled, it exposes everything. The stop rule fired on a limit that did
+     not exist — which is worse than not having the rule, because it dressed
+     giving up as discipline. Her screenshots settled it.
+   - **`dellav` "refuses every automated connection from both machines".** It
+     was never blocked. The record came from the brief's dead address plus a
+     migration to `galleriaaccademiafirenze.it`, which is the FLORENCE
+     Accademia, a different museum. The clue was in our own output all along: a
+     404 means the server answered, and it had been filed beside genuine
+     refusals without anyone reading the difference.
+   - **`tate` "venue-filtered query-param URLs couldn't be unlocked".** They
+     are in Tate's own navigation menu.
+
+   **She caught two more from the counts alone** — the Louvre looked too small
+   (my selector was collecting its navigation tabs as exhibitions) and
+   Capodimonte too large (nothing could be dated, so the lookback excluded
+   nothing). **Both were caught because she asked for the number and I had not.**
+
+   **The count step is not optional and was skipped.** For the American and UK
+   venues every recipe was written only after counting the live pages by hand
+   and predicting the row total. For the European ones a session went straight
+   from "what link shapes are on this page" to writing the recipe and sweeping,
+   because it was batching three venues at a time to move faster. The
+   independent count is the ONLY check that can say "your number is wrong"
+   rather than "your rows look tidy". Dropping it is why she found these and
+   the run did not.
+
+   **ALL 21 GET A RECIPE, INCLUDING THE ONES NOTHING CAN REACH** — confirmed by
+   her twice. A refused venue costs about half a second, leaves marker rows so
+   it is visible on the approval pile, and keeps the standing monitor honest.
+   Their recipes are untested guesses and each says so in its own text.
 
    **Her rules for this work, agreed 12 Sep.** Two rounds of fixing and
    sweeping per venue, then stop. **If a session cannot tell "the venue does
    not publish this" from "my recipe is wrong", it stops and asks rather than
-   trying a third time** — that ambiguity is the only failure mode that burns
-   a night and produces nothing. At most ~15 diagnostic page reads per venue.
-   An engine change is re-verified against the signed-off venues in the same
-   sitting, and the signed-off venues are re-swept ONLY after an engine change,
-   never after a recipe tweak. Commit each venue before starting the next. A
-   venue that is not solved is committed anyway, with the open question in the
-   commit message, and the session moves on — it does not wait.
+   trying a third time** — but see the KHM failure above: check that the limit
+   is real before invoking it. At most ~15 diagnostic page reads per venue. An
+   engine change is re-verified against the signed-off venues in the same
+   sitting, and they are re-swept ONLY after an engine change, never after a
+   recipe tweak. Commit each venue before starting the next. A venue that is
+   not solved is committed anyway, with the open question in the commit
+   message, and the session moves on — it does not wait.
 
    **What is hers and what is the session's**, settled the same day. How the
    scraper mechanically finds the right thing on a page is the session's, and
@@ -1882,29 +2047,25 @@ scraper output**, so the join between scraper and app is no longer the unproven 
    brief's address is a two-tile hub, and trusting it would have returned 4
    rows that looked perfectly healthy.
 
-   **What `inspect_listing.js` established, and it is worth keeping** — every
-   shape read off the site, three of them counter-intuitive enough that guessing
-   would have failed:
+   **Her rulings, made 12 Sep and already applied:**
+   - **Menil's 7 permanent collection galleries are OUT.** Same decision as the
+     Met's "Ongoing". Text matching could not do it — only two of the seven
+     pages say "permanent" or "ongoing" — so the rule is that Menil publishes a
+     run for every temporary show and none for any gallery, true across all 27
+     rows. `excludeUndated`, opt-in to this venue and nowhere else, because
+     generally an unknown end date is never evidence about a show.
+   - **Wallace's displays and trails are IN.**
+   - **V&A: South Kensington only**, its other three sites excluded.
 
-   | Venue | Exhibitions live at |
-   |---|---|
-   | `capo` | `/mostra/<slug>` — **singular**, while the listing is `/mostre/` |
-   | `menil` | `/exhibition/<slug>` — singular again |
-   | `brera` | `/en/news/mostra/<slug>` — filed under news |
-   | `uffizi` | `/en/events/<slug>`; its `/event-category/exhibitions/years/…` links are year filters, not exhibitions |
-   | `louvre` | `/en/exhibitions-and-events/exhibitions/<slug>` |
-   | `frick`, `va` | `/exhibitions/<slug>` |
-   | `wallace` | `/explore/past-exhibitions/<slug>` and `/whats-on/<slug>` |
-   | `tate-modern` / `tate-britain` | `/whats-on/tate-modern/<slug>` and `/whats-on/tate-britain/<slug>` |
+   **Open for her:**
+   - `khm` — Canaletto & Bellotto, one row beyond her count of 5. A real
+     temporary show that closed 6 Sep; kept.
+   - `uffizi` — it writes news-style HEADLINES rather than exhibition names.
+     That is what the venue publishes.
+   - `louvre` — whether its possibly-truncated year pages matter.
 
-   Two bonuses fall out of that table. **Tate puts the venue in the address**, so
-   the two Tates separate mechanically rather than by reading a tag — and Tate St
-   Ives appears too, which is not one of her 21 and must be excluded. **V&A and
-   Tate both prefix the link text with the item type** ("Display", "Festival",
-   "Season", "EXHIBITION"), which is the first real hook for known bug 2.
-
-   `khm` is the one shape still unclear: only two links matched `/en/exhibitions/`,
-   which is too few for a museum's programme. It needs its own look.
+   ~~`khm` is the one shape still unclear~~ — **RESOLVED 12 Sep: it lazy-loads.**
+   The two links were what the page shows at the fold.
 3. **Parallelism and the hang bound** (DEF-01 + DEF-04). Before the diagnosis pass, not
    after: step 4 is a repeated re-run loop and a 20-minute serial sweep makes it painful.
    Parallel across venues only, never within one — IR-15 stands.
