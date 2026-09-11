@@ -437,6 +437,45 @@ a run from this container and a run from her laptop stamp the same way.
 **Nothing is left for a person to reconcile afterwards.** That was deliberate:
 prose rules that a session re-derives each time are how CSVs get mangled.
 
+### How long a full sweep takes — measured 12 Sep 2026
+
+**Measured from the run logs, not estimated**: the longest observed wall time
+per venue, across every run committed to `scraper/output/`.
+
+| | Time |
+|---|---|
+| **All 21, one venue at a time** | **33 min** |
+| Slowest single venue — `capo` | 6.0 min |
+| Then `ng` 4.7, `borghese` 3.8, `artic` 3.2, `acq` 2.8 | |
+| Blocked venues — `moma`, `brit`, `morgan` | 1-18 SECONDS each |
+
+**Parallelism is across venues only, never within one** (IR-15), so the floor is
+the slowest single venue rather than the average.
+
+- **`--jobs=4`, the default: ~9-11 minutes.** The arithmetic floor is 8¼, and
+  the tail never packs perfectly.
+- **`--jobs=6`: ~7-8 minutes**, at which point Capodimonte alone is the bound
+  and going wider buys almost nothing.
+
+**It splits across two machines.** The Met and `artic` run only from her laptop,
+so in practice it is 19 venues here (~8-10 min) and 2 on hers (~4 min), and the
+two can run at the same time.
+
+**A hang is bounded.** A venue over its budget (default 10 min, `--budget-mins`)
+is abandoned, writes no file and is redone by `--continue`. So the worst case is
+roughly 10-12 minutes, not an hour.
+
+**This supersedes the "~20 min" projection in DEF-01**, which extrapolated 2.9
+seconds per detail page across 21 venues before most of them existed. The real
+serial figure is 33 minutes and the real parallel figure is about ten — still
+inside the 15-minute threshold that was set as the trigger for caring about
+parallelism at all.
+
+Two caveats: these are CONTAINER timings, and her laptop has no network bridge
+so it may be quicker; and the listing scroll added on 12 Sep costs a few seconds
+per listing page, which is inside the KHM figure but not inside the venues
+measured before it landed.
+
 ### Runs are committed, not thrown away
 
 `scraper/output/` is **deliberately not gitignored** (10 Sep). The container is
@@ -2715,7 +2754,7 @@ verification rather than by the reviewers.
 | IR-15 | Fetch several pages at once **within** a venue | **Reject** | That is the hammering case: five simultaneous requests to one museum is five times the load on their server. Never, at any scale |
 | IR-16 | Marker rows (`[current page]`) for blocked or empty listings are exported | Accepted, no repair | Intentional: it proves the venue was checked and visibly reports the failure |
 | IR-17 | Reviewer could not launch Chromium | No action | Their environment. Ours was fixed 8 Sep — `resolveChromium()` |
-| DEF-01 | Run venues **in parallel with each other** (never within one venue) | **Fixed 11 Sep** — `--jobs=N`, default 4. Five venues in 4m46s, bounded by the slowest venue instead of the sum. Proved lossless against the serial baseline before being trusted. ~~Defer~~ | **Trigger:** more than ~8 working venues, or a run over 15 minutes. Measured 8 Sep: ~2.9s per detail page, so 21 venues projects to ~20 min. Agreed in principle 10 Sep; she has withdrawn the log-readability objection, since she reads the session's summary rather than the log — so the log may be interleaved provided it stays machine-parseable |
+| DEF-01 | Run venues **in parallel with each other** (never within one venue) | **Fixed 11 Sep** — `--jobs=N`, default 4. Five venues in 4m46s, bounded by the slowest venue instead of the sum. Proved lossless against the serial baseline before being trusted. ~~Defer~~ | **Trigger:** more than ~8 working venues, or a run over 15 minutes. ~~Measured 8 Sep: ~2.9s per detail page, so 21 venues projects to ~20 min.~~ **Re-measured 12 Sep from the logs of every committed run: 33 min serial, ~9-11 min at the default --jobs=4, bounded by Capodimonte's 6 minutes. See Section 5.** Agreed in principle 10 Sep; she has withdrawn the log-readability objection, since she reads the session's summary rather than the log — so the log may be interleaved provided it stays machine-parseable |
 | DEF-02 | After changing a **JavaScript** filter, wait for proof the list changed, not merely that the page has text | **Defer** | **Trigger:** wiring any non-blocked venue that filters by JavaScript. Moot for the Met (HTTP 429; its dropdown has never been clicked). A **server-side** filter loading a different URL per year — the Louvre's — is not exposed to this and needs nothing |
 | DEF-03 | The summary extractor falls through to generic paragraph selectors, so a layout change could capture ticketing or biography text | **Defer** | **Trigger:** observe the next handful of venues as they are wired; fix if it actually surfaces. **Her ruling, and the reasoning matters:** it must not be deferred to "the compression step will catch it". Letting bad text through on the assumption a later stage notices is a bad habit, and it must never reach an approval card for her to be the one asking why the description is nonsense |
 | IR-18 | Drop a row with no end date when its **start** date is long before the lookback floor (proposed 10 Sep, after the 2012 Rosenquist row) | **Reject** | Her call: more granularity than it is worth. Measured first — across all 87 distinct rows ever collected it would have caught **one**. It would also add a new kind of judgement, since the lookback tests only the end date and an unknown end date is never treated as evidence of age. Any threshold at the floor itself would delete a show that opened just before 1 July 2024 and ran past it, which the guide names as a keeper |
