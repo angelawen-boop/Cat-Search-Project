@@ -500,8 +500,21 @@ not adding another branch to shared code.
 
 Recipe options so far: `selector`, `isNav`, `title` (heading / card / strip
 rules), `markEmptyPages` for venues that get blocked, `lookbackAfterDetail` for
-venues whose listings carry no closing date, and `yearDropdown` for the Met's
-year filter.
+venues whose listings carry no closing date, and `lookbackFrom` for a venue
+whose own archive cannot reach the project floor (the Met — see 6a).
+
+**`yearDropdown` is gone** (11 Sep 2026). It clicked the Met's year menu and was
+removed once the Met could finally be reached and it was seen not to work — the
+same 68 links three times over. A dead option invites someone to switch it back
+on.
+
+**A link back to the venue's own listing page is navigation — universal, in the
+engine.** `isOwnListingPage()` compares with any language prefix stripped, so
+`/es/exhibitions/past` and `/en/exhibitions/past` both match `/exhibitions/past`.
+This is mechanical rather than a judgement: we already know which pages are
+listings, because we are visiting them. **It cannot swallow a real exhibition** —
+Rijksmuseum's Dutch links (`/nl/zien-en-doen/tentoonstellingen/<slug>`) are not
+listing pages and survive, which fixture N-004 exists to guarantee.
 
 **The pure logic is covered by fixture tests** (`scraper/date.test.js`, run with
 `npm test`): every date format in this guide, the four art-history traps,
@@ -1132,6 +1145,48 @@ In her words, and it is the summary to keep:
 It stays wired in, so the container keeps reporting the checkpoint on every
 sweep and we find out if anything changes. It yields **82 rows** whenever she
 runs it from her laptop.
+
+##### The Met's data, diagnosed 11 Sep 2026 — 82 rows from her laptop
+
+Four separate issues, which a first pass wrongly reported as one. **Her
+correction: they are not the same problem and each needed checking.**
+
+**1. Ten rows were not exhibitions. FIXED.** Nine were the **language switcher**
+— `/es/exhibitions/past`, `/fr/...`, `/ja/...`, one row each titled "Español",
+"Français", "日本語" — and the tenth was "Browse the archives". Met's own `isNav`
+rejected `/exhibitions/past` but every one of these carries a language prefix,
+so none matched. Now handled universally by `isOwnListingPage()` (Section 5).
+
+Worse than clutter: **"Browse the archives" had been given dates from a
+neighbouring card**, so it would have reached an approval card looking like a
+real exhibition with a real run.
+
+**2. Summaries are good — the reported "10 missing" was an artefact.** All ten
+were those junk rows. **Every one of the 72 real exhibitions has curatorial
+text**, 612–2000 characters, median 1571, with no ticketing or promotional
+boilerplate. One row leads with "This exhibition is temporarily closed due to
+gallery maintenance" — the venue's own opening sentence, so a judgement for the
+compressor rather than a scraper fault.
+
+**3. One row lacks an opening date**, not ten: *Defensive: Shields from The Met
+Collection*. Unverified against the live page.
+
+**4. Nineteen real rows lack a closing date, and the pattern is PERMANENT
+DISPLAYS** — *The British Galleries* (opened 2020), *Cycladic Art*, *Art of
+Native America*, *Before Yesterday We Could Fly* (2021), *Fabergé* (2011), the
+*Arts of Oceania / Africa / Ancient Americas* reinstallations. **Her ruling: the
+scraper must collect temporary exhibitions only.** This is known bug 2 in its
+sharpest form so far and is NOT yet fixed — no end date plus an opening years
+back is a strong signal, but acting on it is the shape IR-18 rejected, so it
+needs her decision rather than a quiet rule.
+
+**5. The year menu does not work, and the Met is now pinned to 2026.** See the
+`lookbackFrom` note in its recipe. The run drove the menu through 2026, 2025 and
+2024 and got the same 68 links each time, collecting nothing; the oldest closing
+date across all 82 rows is January 2026. The dropdown code is removed rather
+than disabled, and the floor now matches what the site actually serves — a run
+that claims to look back to July 2024 and silently returns nothing before 2026
+reads as "the Met held no exhibitions in 2025" rather than "we cannot see them".
 
 ##### What was tried, and why nothing is left in the code
 

@@ -1,0 +1,92 @@
+[2026-09-11T10:45:07.116Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T10:45:07.117Z] Lookback floor: 2024-07-01
+[2026-09-11T10:45:07.117Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_204507
+[2026-09-11T10:45:07.117Z] Venues this run: ng, rijks, acq
+[2026-09-11T10:45:07.117Z] Proxy: http://127.0.0.1:42943
+[2026-09-11T10:45:07.118Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T10:45:08.134Z] Running 3 venue(s) 3 at a time (one page at a time within each venue)
+[2026-09-11T10:45:08.559Z] [acq] 
+[2026-09-11T10:45:08.559Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T10:45:08.559Z] [acq]   ACQ — Acquavella Galleries, New York
+[2026-09-11T10:45:08.559Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T10:45:08.559Z] [acq]   Fetching all (current/upcoming/past): https://www.acquavellagalleries.com/exhibitions
+[2026-09-11T10:45:08.561Z] [rijks] 
+[2026-09-11T10:45:08.561Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-11T10:45:08.561Z] [rijks]   RIJKS — Rijksmuseum, Amsterdam
+[2026-09-11T10:45:08.561Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-11T10:45:08.561Z] [rijks]   Fetching current/upcoming: https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view
+[2026-09-11T10:45:08.576Z] [ng] 
+[2026-09-11T10:45:08.576Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T10:45:08.576Z] [ng]   NG — National Gallery, London
+[2026-09-11T10:45:08.576Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T10:45:08.576Z] [ng]   Fetching current/upcoming: https://www.nationalgallery.org.uk/exhibitions
+[2026-09-11T10:45:12.091Z] [ng]   current/upcoming: 12 links seen -> 2 navigation, 3 already-seen URL -> 7 collected (1 of them with no readable title)
+[2026-09-11T10:45:12.091Z] [ng]   Fetching past: https://www.nationalgallery.org.uk/exhibitions/past
+[2026-09-11T10:45:14.020Z] [rijks]   current/upcoming: 16 links seen -> 7 navigation, 0 already-seen URL -> 9 collected (0 of them with no readable title)
+[2026-09-11T10:45:14.020Z] [rijks]   Fetching past: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past
+[2026-09-11T10:45:14.541Z] [acq]   all (current/upcoming/past): 119 links seen -> 11 navigation, 0 already-seen URL -> 108 collected (0 of them with no readable title)
+[2026-09-11T10:45:14.541Z] [acq]   lookback (listing): kept 16, dropped 92 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-11T10:45:14.544Z] [acq]   reading 16 individual page(s)…
+[2026-09-11T10:45:14.544Z] [acq]     page 1 of 16
+[2026-09-11T10:45:16.940Z] [ng]   past: 179 links seen -> 2 navigation, 0 already-seen URL -> 177 collected (0 of them with no readable title)
+[2026-09-11T10:45:16.941Z] [ng]   lookback (listing): kept 28, dropped 156 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T10:45:16.941Z] [ng]   reading 28 individual page(s)…
+[2026-09-11T10:45:16.941Z] [ng]     page 1 of 28
+[2026-09-11T10:45:20.402Z] [rijks]   past: 46 links seen -> 6 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-11T10:45:20.402Z] [rijks]   lookback (listing): kept 48, dropped 1 closed before 2024-07-01, 29 with no closing date, 0 with no opening date
+[2026-09-11T10:45:20.402Z] [rijks]   reading 48 individual page(s)…
+[2026-09-11T10:45:20.402Z] [rijks]     page 1 of 48
+[2026-09-11T10:45:21.526Z] [ng]     prose dates ignored, they contradict the listing: "7 September - 28 September 2026"
+[2026-09-11T10:45:31.969Z] [acq]     page 10 of 16
+[2026-09-11T10:45:34.725Z] [ng]     page 10 of 28
+[2026-09-11T10:45:45.886Z] [acq]   Individual pages: 16 got text, 0 no curatorial text, 0 failed
+[2026-09-11T10:45:45.887Z] [acq]   lookback (final): kept 15, dropped 1 closed before 2024-07-01, 2 with no closing date, 0 with no opening date
+[2026-09-11T10:45:45.889Z] [acq]   → 15 exhibitions, 15 with curatorial text → acq.csv
+[2026-09-11T10:45:50.458Z] [rijks]     page 10 of 48
+[2026-09-11T10:45:50.548Z] [ng]     page 20 of 28
+[2026-09-11T10:46:03.601Z] [ng]   Individual pages: 28 got text, 0 no curatorial text, 0 failed
+[2026-09-11T10:46:03.601Z] [ng]   lookback (final): kept 27, dropped 1 closed before 2024-07-01, 0 with no closing date, 1 with no opening date
+[2026-09-11T10:46:03.602Z] [ng]   → 27 exhibitions, 27 with curatorial text → ng.csv
+[2026-09-11T10:46:14.871Z] [rijks]     page 20 of 48
+[2026-09-11T10:46:33.555Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/mission-masterpiece
+[2026-09-11T10:46:35.106Z] [rijks]     page 30 of 48
+[2026-09-11T10:46:55.983Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/henk-wildschut
+[2026-09-11T10:46:55.984Z] [rijks]     page 40 of 48
+[2026-09-11T10:47:01.735Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/ed-van-der-elsken
+[2026-09-11T10:47:12.877Z] [rijks]   Individual pages: 45 got text, 0 no curatorial text, 3 failed
+[2026-09-11T10:47:12.877Z] [rijks]   lookback (final): kept 36, dropped 12 closed before 2024-07-01, 13 with no closing date, 7 with no opening date
+[2026-09-11T10:47:12.878Z] [rijks]   → 36 exhibitions, 33 with curatorial text → rijks.csv
+[2026-09-11T10:47:13.033Z] 
+[2026-09-11T10:47:13.033Z] ────────────────────────────────────────────────────────────
+[2026-09-11T10:47:13.033Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T10:47:13.033Z] ────────────────────────────────────────────────────────────
+[2026-09-11T10:47:13.033Z]   ACQ: 15 exhibitions | 15 with text
+[2026-09-11T10:47:13.033Z]   NG: 27 exhibitions | 27 with text
+[2026-09-11T10:47:13.033Z]   RIJKS: 36 exhibitions | 33 with text
+[2026-09-11T10:47:13.033Z] 
+[2026-09-11T10:47:13.033Z] ────────────────────────────────────────────────────────────
+[2026-09-11T10:47:13.033Z]   COVERAGE — every link accounted for
+[2026-09-11T10:47:13.033Z] ────────────────────────────────────────────────────────────
+[2026-09-11T10:47:13.033Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-11T10:47:13.033Z]   --------------------------------------------------------------------------------------
+[2026-09-11T10:47:13.033Z]   ng         current/upcoming                12     2       0     3        1          7
+[2026-09-11T10:47:13.033Z]   rijks      current/upcoming                16     7       0     0        0          9
+[2026-09-11T10:47:13.033Z]   acq        all (current/upcoming/past)    119    11       0     0        0        108
+[2026-09-11T10:47:13.033Z]   ng         past                           179     2       0     0        0        177
+[2026-09-11T10:47:13.033Z]   rijks      past                            46     6       0     0        0         40
+[2026-09-11T10:47:13.033Z] 
+[2026-09-11T10:47:13.033Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T10:47:13.033Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T10:47:13.033Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T10:47:13.034Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T10:47:13.034Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-11T10:47:13.034Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T10:47:13.034Z] 
+[2026-09-11T10:47:13.034Z] Network bridge: 2980 requests served, 4300 skipped (image/media/font), 0 failed
+[2026-09-11T10:47:13.034Z] 
+[2026-09-11T10:47:13.034Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_204507
+[2026-09-11T10:47:13.034Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_204507/sweep.csv  (78 rows — ng:27, rijks:36, acq:15)
+[2026-09-11T10:47:13.034Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_204507/log_2026-09-11_204507.txt
+[2026-09-11T10:47:13.034Z] Not yet in this run: met, borghese, morgan
+[2026-09-11T10:47:13.034Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T10:47:13.034Z] No de-duplication is applied — see passThrough.

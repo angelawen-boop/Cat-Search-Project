@@ -19,7 +19,7 @@ const assert = require('node:assert');
 const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
-  classifyLoadError,
+  classifyLoadError, isOwnListingPage,
 } = require('./sweep_prototype.js');
 
 const range = (s, hint) => {
@@ -351,4 +351,57 @@ test('E-005: a real network fault is still classified as itself', () => {
 
 test('E-006: an unrecognised message is still LOAD_ERROR, not SHUTDOWN', () => {
   assert.strictEqual(classifyLoadError('something nobody has seen before'), 'LOAD_ERROR');
+});
+
+
+// ── A link back to the venue's own listing page is navigation ────────────────
+//
+// The Met's first real run collected TEN junk rows out of 82: nine were its
+// language switcher (/es/exhibitions/past, /fr/..., /ja/... — titled "Español",
+// "Français", "日本語") and one was "Browse the archives" at
+// /en/exhibitions/past. Met's own isNav already rejected /exhibitions/past, but
+// every one of these carries a language prefix, so none matched.
+//
+// N-004 is the one that matters most: Rijksmuseum links REAL exhibitions
+// through its Dutch site, and those must survive. The rule only rejects links
+// to a listing page we are already reading.
+const MET_PAGES = ['/exhibitions', '/exhibitions/past'];
+
+test('N-001: the venue\'s own past listing is navigation', () => {
+  assert.equal(isOwnListingPage('https://www.metmuseum.org/exhibitions/past', MET_PAGES), true);
+});
+
+test('N-002: a language-prefixed listing page is still navigation', () => {
+  for (const lang of ['es', 'pt', 'fr', 'it', 'de', 'ja', 'ko', 'zh', 'ru', 'en']) {
+    assert.equal(
+      isOwnListingPage(`https://www.metmuseum.org/${lang}/exhibitions/past`, MET_PAGES),
+      true, `${lang} should be navigation`);
+  }
+});
+
+test('N-003: a trailing slash does not change the answer', () => {
+  assert.equal(isOwnListingPage('https://www.metmuseum.org/fr/exhibitions/past/', MET_PAGES), true);
+});
+
+test('N-004: a real exhibition on a venue\'s foreign-language site is KEPT', () => {
+  // Rijksmuseum's Dutch links are real shows, not listings. Losing these was
+  // a named bug (Stop Motion), so this must never regress.
+  const rijksPages = ['/en/whats-on/exhibitions/now-on-view', '/en/whats-on/exhibitions/past'];
+  assert.equal(
+    isOwnListingPage('https://www.rijksmuseum.nl/nl/zien-en-doen/tentoonstellingen/stop-motion', rijksPages),
+    false);
+});
+
+test('N-005: an exhibition UNDER a listing path is kept', () => {
+  assert.equal(
+    isOwnListingPage('https://www.metmuseum.org/exhibitions/past/some-real-show', MET_PAGES),
+    false);
+});
+
+test('N-006: a region-suffixed language prefix is handled', () => {
+  assert.equal(isOwnListingPage('https://www.metmuseum.org/pt-br/exhibitions', MET_PAGES), true);
+});
+
+test('N-007: no listing paths means nothing is rejected', () => {
+  assert.equal(isOwnListingPage('https://www.metmuseum.org/exhibitions/past', []), false);
 });

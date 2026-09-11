@@ -178,7 +178,6 @@ const LOOKBACK = new Date('2024-07-01');
 const NAV_TIMEOUT = 20000;      // ceiling for the HTML itself to arrive
 const CONTENT_TIMEOUT = 8000;   // extra grace for client-rendered body text
 const MIN_BODY_CHARS = 200;     // below this a page is a shell, not content
-const CURRENT_YEAR = new Date().getFullYear();
 
 // ── Logging ───────────────────────────────────────────────────────────────────
 const logLines = [];
@@ -694,12 +693,27 @@ function titleCase(str) {
   return str.replace(/([A-Za-z]+)/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase());
 }
 
-function afterLookback(endDateStr) {
+function afterLookback(endDateStr, floor = LOOKBACK) {
   // If no end date, include (we don't know when it ended)
   if (!endDateStr) return true;
   const d = new Date(endDateStr + 'T00:00:00');
   if (isNaN(d)) return true;
-  return d >= LOOKBACK;
+  return d >= floor;
+}
+
+/**
+ * The lookback floor for one venue: the project's 1 July 2024, unless that
+ * venue's site cannot reach back that far and pretending otherwise is a lie.
+ *
+ * `lookbackFrom` is NOT a preference and must never be used to trim a venue for
+ * convenience. It exists for the single case where the SITE stops: the Met's
+ * past listing shows only the most recent year behind a JavaScript menu we
+ * cannot operate, so its archive genuinely begins in January 2026 and asking
+ * for July 2024 produces nothing but the same page read three times.
+ */
+function lookbackFor(venueCode) {
+  const v = VENUES[venueCode];
+  return (v && v.lookbackFrom) ? new Date(v.lookbackFrom) : LOOKBACK;
 }
 
 /**
@@ -716,6 +730,7 @@ function afterLookback(endDateStr) {
  * here, both before individual pages are fetched and again at the end.
  */
 function applyLookback(rows, venueCode, stage) {
+  const floor = lookbackFor(venueCode);
   const kept = [];
   let dropped = 0, undated = 0, noStart = 0;
   for (const row of rows) {
@@ -724,7 +739,7 @@ function applyLookback(rows, venueCode, stage) {
     // already behind the floor — "Summer 2022" on Acquavella's archive. This
     // is NOT the "unknown date" case the keep-and-flag rule protects: the date
     // is known, just imprecise, and no reading of it reaches 1 July 2024.
-    if (!row.end_date && row.latest_year && row.latest_year < LOOKBACK.getUTCFullYear()) {
+    if (!row.end_date && row.latest_year && row.latest_year < floor.getUTCFullYear()) {
       dropped++;
       continue;
     }
@@ -752,11 +767,11 @@ function applyLookback(rows, venueCode, stage) {
       noStart++;
       row.notes = addNote(row.notes, 'No opening date published while this exhibition is running.');
     }
-    if (afterLookback(row.end_date)) kept.push(row);
+    if (afterLookback(row.end_date, floor)) kept.push(row);
     else dropped++;
   }
   if (dropped || undated || noStart) {
-    log(`  lookback (${stage}): kept ${kept.length}, dropped ${dropped} closed before ${LOOKBACK.toISOString().slice(0,10)}, ${undated} with no closing date, ${noStart} with no opening date`);
+    log(`  lookback (${stage}): kept ${kept.length}, dropped ${dropped} closed before ${floor.toISOString().slice(0,10)}, ${undated} with no closing date, ${noStart} with no opening date`);
   }
   return kept;
 }
@@ -1579,8 +1594,53 @@ const COUNTS = [];
  * Shared by every venue so the counting, the URL guard and the title rules
  * behave identically everywhere, rather than each scraper doing its own thing.
  */
+// Language prefixes seen in the wild: two letters, optionally with a region
+// ("pt-br"), and only at the START of the path.
+const LANG_PREFIX = /^\/[a-z]{2}(?:-[a-z]{2})?(?=\/)/i;
+
+/**
+ * Is this link pointing at one of the venue's own listing pages?
+ *
+ * Compared with any language prefix stripped and trailing slashes ignored, so
+ * `/es/exhibitions/past` and `/en/exhibitions/past` both match the venue's
+ * `/exhibitions/past`.
+ */
+function isOwnListingPage(fullUrl, listingPaths) {
+  if (!listingPaths || !listingPaths.length) return false;
+  let path;
+  try { path = new URL(fullUrl).pathname; } catch { return false; }
+  const strip = p => p.replace(LANG_PREFIX, '').replace(/\/+$/, '') || '/';
+  const target = strip(path);
+  return listingPaths.some(p => strip(p) === target);
+}
+
 async function collectFromListing(page, opts) {
   const { venueCode, ctx, selector, base, isNav, rows, seenUrls, urlToRow } = opts;
+
+  // A link back to one of the venue's OWN listing pages is navigation, never an
+  // exhibition — and a language prefix does not change that. Universal, because
+  // it is mechanical: we already know which pages are listings, since we are
+  // visiting them.
+  //
+  // Added 11 Sep 2026 after the Met's first real run. Ten of its 82 rows were
+  // junk: nine were the LANGUAGE SWITCHER — /es/exhibitions/past,
+  // /fr/exhibitions/past, /ja/exhibitions/past and so on, one row each titled
+  // "Español", "Français", "日本語" — and the tenth was "Browse the archives"
+  // at /en/exhibitions/past. Met's own isNav already rejected
+  // `/exhibitions/past`, but every one of these carries a language prefix, so
+  // none of them matched.
+  //
+  // Worse than clutter: "Browse the archives" was handed dates from a
+  // neighbouring card, so it would have reached an approval card looking like a
+  // real exhibition with a real run.
+  //
+  // WHY THIS IS SAFE where a general "reject /xx/ paths" rule would not be:
+  // Rijksmuseum links REAL exhibitions through its Dutch site
+  // (/nl/zien-en-doen/tentoonstellingen/<slug>) and those must be kept. This
+  // only rejects a link pointing at a listing page we are already reading, so
+  // it cannot swallow an exhibition.
+
+  // (LANG_PREFIX and isOwnListingPage are defined at module scope, below.)
   const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, kept: 0 };
 
   const links = await page.$$(selector);
@@ -1606,7 +1666,7 @@ async function collectFromListing(page, opts) {
     }
     const fullUrl = resolved.url;
 
-    if (isNav(href, fullUrl)) { c.nav++; continue; }
+    if (isNav(href, fullUrl) || isOwnListingPage(fullUrl, opts.listingPaths)) { c.nav++; continue; }
 
     const key = normalizeUrl(fullUrl);
     if (seenUrls.has(key)) {
@@ -1682,11 +1742,40 @@ const VENUES = {
     base: 'https://www.metmuseum.org',
     pages: [
       { path: '/exhibitions',      ctx: 'current/upcoming' },
-      { path: '/exhibitions/past', ctx: 'past', yearDropdown: true },
+      { path: '/exhibitions/past', ctx: 'past' },
     ],
     selector: 'a[href*="/exhibitions/"]',
     isNav: href => /^\/exhibitions\/?$/.test(href) || /^\/exhibitions\/past\/?$/.test(href),
     title: { heading: true },
+
+    // HER DECISION, 11 Sep 2026: pin the Met to 2026 and stop trying to go
+    // further back.
+    //
+    // Its past listing shows only the most recent year, behind a JavaScript
+    // year menu. The first real run drove that menu — `Selecting year 2026`,
+    // `2025`, `2024` — and each time got **the same 68 links and collected
+    // nothing**. The page never changed. The oldest closing date in all 82 rows
+    // is January 2026.
+    //
+    // So the `yearDropdown` option is GONE rather than left switched off. It
+    // was written before the Met could be reached at all, has now been
+    // exercised once, and did not work. Keeping a dead option invites someone
+    // to switch it back on and get three identical page reads, which is exactly
+    // what produced rows carrying "also listed on the past-2026 page", "…
+    // past-2025 page" and "… past-2024 page" — one page recorded three times,
+    // as misleading notes on her approval cards.
+    //
+    // The floor is set to match what the site actually offers. Without it the
+    // run claims to look back to July 2024 and silently returns nothing before
+    // 2026, which reads as "the Met had no exhibitions in 2025" rather than
+    // "we cannot see them". A floor that matches reality is honest; a floor
+    // that cannot be met is not.
+    //
+    // NOT a permanent verdict. If the Met ever serves its older years to us,
+    // remove this line and the archive reappears. Her own Sweeper Brief already
+    // recorded this gap as accepted for the fetch tool; this is the same gap,
+    // confirmed against a real browser.
+    lookbackFrom: '2026-01-01',
   },
 
   ng: {
@@ -1844,31 +1933,14 @@ async function scrapeVenue(page, code) {
     const opts = {
       venueCode: code, ctx: pg.ctx, base: v.base, rows, seenUrls, urlToRow,
       selector: v.selector, isNav: v.isNav,
+      // Every listing page this venue has, so a link back to any of them is
+      // recognised as navigation whatever language prefix it carries.
+      listingPaths: v.pages.map(p => p.path),
     };
 
     try {
       await collectFromListing(page, opts);
 
-      // The Met's past page filters by year through a dropdown rather than
-      // separate URLs. Walk it back to the lookback floor; the URL guard means
-      // a show listed under two years is recorded once, with a note.
-      if (pg.yearDropdown) {
-        for (const year of [CURRENT_YEAR, CURRENT_YEAR - 1, 2024]) {
-          try {
-            log(`  Selecting year ${year}...`);
-            await page.selectOption('select', String(year));
-            await page.waitForFunction(
-              (min) => document.body && document.body.innerText.trim().length > min,
-              MIN_BODY_CHARS, { timeout: CONTENT_TIMEOUT }
-            ).catch(() => {});
-            await collectFromListing(page, { ...opts, ctx: `${pg.ctx}-${year}` });
-            if (year === 2024) break;
-          } catch (e) {
-            rethrowIfAborted(e);
-            log(`  ERROR selecting year ${year}: ${e.message.slice(0, 120)}`);
-          }
-        }
-      }
     } catch (e) {
       rethrowIfAborted(e);
       log(`  ERROR extracting ${code} listing (${pg.ctx}): ${e.message.slice(0, 120)}`);
@@ -1885,7 +1957,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
   let fetched = 0, failed = 0, noText = 0;
   // Skip anything already known to have closed before the lookback floor —
   // no point spending a page load on an exhibition we will discard.
-  const skip = new Set(rows.filter(r => r.end_date && !afterLookback(r.end_date)));
+  const skip = new Set(rows.filter(r => r.end_date && !afterLookback(r.end_date, lookbackFor(venueCode))));
   if (skip.size) log(`  skipping ${skip.size} individual page(s): closed before lookback`);
 
   // Progress, because this is the LONGEST phase and it used to print nothing at
@@ -2395,7 +2467,7 @@ if (require.main === module) {
 module.exports = {
   findDateRange, findDateRangeInProse, parseMonthDay, ymd, startYearFor,
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
-  pickStructuredEvent, isoDay, runStamp, unusableDateText,
+  pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
   installNetworkBridge, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
