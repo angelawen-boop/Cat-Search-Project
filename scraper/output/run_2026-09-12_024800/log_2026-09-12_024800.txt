@@ -1,0 +1,82 @@
+[2026-09-11T16:48:00.306Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T16:48:00.306Z] Lookback floor: 2024-07-01
+[2026-09-11T16:48:00.306Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_024800
+[2026-09-11T16:48:00.306Z] Venues this run: uffizi, brera
+[2026-09-11T16:48:00.306Z] Proxy: http://127.0.0.1:40485
+[2026-09-11T16:48:00.307Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T16:48:00.487Z] Running 2 venue(s) 2 at a time (one page at a time within each venue)
+[2026-09-11T16:48:00.652Z] [uffizi] 
+[2026-09-11T16:48:00.653Z] [uffizi] ────────────────────────────────────────────────────────────
+[2026-09-11T16:48:00.653Z] [uffizi]   UFFIZI — Uffizi Galleries, Florence
+[2026-09-11T16:48:00.653Z] [uffizi] ────────────────────────────────────────────────────────────
+[2026-09-11T16:48:00.653Z] [uffizi]   Fetching current: https://www.uffizi.it/en/event-category/exhibitions
+[2026-09-11T16:48:00.671Z] [brera] 
+[2026-09-11T16:48:00.671Z] [brera] ────────────────────────────────────────────────────────────
+[2026-09-11T16:48:00.671Z] [brera]   BRERA — Pinacoteca di Brera, Milan
+[2026-09-11T16:48:00.671Z] [brera] ────────────────────────────────────────────────────────────
+[2026-09-11T16:48:00.671Z] [brera]   Fetching current: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=in-progress
+[2026-09-11T16:48:02.856Z] [uffizi]   current: 4 links seen -> 0 navigation, 0 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-11T16:48:02.856Z] [uffizi]   Fetching upcoming: https://www.uffizi.it/en/event-category/exhibitions/upcoming
+[2026-09-11T16:48:03.276Z] [brera]   current: 8 links seen -> 0 navigation, 4 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-11T16:48:03.276Z] [brera]   Fetching upcoming: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=scheduled
+[2026-09-11T16:48:04.513Z] [uffizi]   upcoming: 1 links seen -> 0 navigation, 0 already-seen URL -> 1 collected (0 of them with no readable title)
+[2026-09-11T16:48:04.513Z] [uffizi]   Fetching past 2025: https://www.uffizi.it/en/event-category/exhibitions/years/2025
+[2026-09-11T16:48:04.937Z] [brera]   upcoming: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T16:48:04.937Z] [brera]   NO EXHIBITIONS upcoming: page loaded and was read, but nothing matched
+[2026-09-11T16:48:04.937Z] [brera]   Fetching past: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=archive
+[2026-09-11T16:48:06.211Z] [uffizi]   past 2025: 7 links seen -> 0 navigation, 3 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-11T16:48:06.211Z] [uffizi]   Fetching past 2024: https://www.uffizi.it/en/event-category/exhibitions/years/2024
+[2026-09-11T16:48:07.033Z] [brera]   past: 18 links seen -> 0 navigation, 13 already-seen URL -> 5 collected (0 of them with no readable title)
+[2026-09-11T16:48:07.033Z] [brera]   lookback (listing): kept 8, dropped 2 closed before 2024-07-01, 2 with no closing date, 0 with no opening date
+[2026-09-11T16:48:07.034Z] [brera]   reading 7 individual page(s)…
+[2026-09-11T16:48:07.034Z] [brera]     page 1 of 7
+[2026-09-11T16:48:07.866Z] [uffizi]   past 2024: 12 links seen -> 0 navigation, 1 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-11T16:48:07.866Z] [uffizi]   lookback (listing): kept 20, dropped 0 closed before 2024-07-01, 20 with no closing date, 0 with no opening date
+[2026-09-11T16:48:07.866Z] [uffizi]   reading 20 individual page(s)…
+[2026-09-11T16:48:07.866Z] [uffizi]     page 1 of 20
+[2026-09-11T16:48:09.518Z] [brera]     prose dates ignored, they contradict the listing: "May 16, 2025, to May 17, 2027"
+[2026-09-11T16:48:14.056Z] [brera]     prose dates ignored, they contradict the listing: "September 24, 2025, to January 11, 2026"
+[2026-09-11T16:48:17.571Z] [brera]   Individual pages: 7 got text, 0 no curatorial text, 0 failed
+[2026-09-11T16:48:17.571Z] [brera]   lookback (final): kept 8, dropped 0 closed before 2024-07-01, 2 with no closing date, 2 with no opening date
+[2026-09-11T16:48:17.572Z] [brera]   → 7 exhibitions, 7 with curatorial text → brera.csv
+[2026-09-11T16:48:21.479Z] [uffizi]     page 10 of 20
+[2026-09-11T16:48:36.257Z] [uffizi]     page 20 of 20
+[2026-09-11T16:48:37.463Z] [uffizi]   Individual pages: 19 got text, 1 no curatorial text, 0 failed
+[2026-09-11T16:48:37.463Z] [uffizi]   lookback (final): kept 17, dropped 3 closed before 2024-07-01, 10 with no closing date, 0 with no opening date
+[2026-09-11T16:48:37.464Z] [uffizi]   → 17 exhibitions, 16 with curatorial text → uffizi.csv
+[2026-09-11T16:48:37.571Z] 
+[2026-09-11T16:48:37.571Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:48:37.571Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T16:48:37.571Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:48:37.571Z]   BRERA: 7 exhibitions | 7 with text | 1 page(s) blocked/empty
+[2026-09-11T16:48:37.571Z]   UFFIZI: 17 exhibitions | 16 with text
+[2026-09-11T16:48:37.571Z] 
+[2026-09-11T16:48:37.571Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:48:37.571Z]   COVERAGE — every link accounted for
+[2026-09-11T16:48:37.571Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:48:37.571Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T16:48:37.571Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T16:48:37.571Z]   uffizi     current                          4     0       0     0        0        0          4
+[2026-09-11T16:48:37.571Z]   brera      current                          8     0       0     4        0        0          4
+[2026-09-11T16:48:37.571Z]   uffizi     upcoming                         1     0       0     0        0        0          1
+[2026-09-11T16:48:37.571Z]   brera      upcoming                         0     0       0     0        0        0          0
+[2026-09-11T16:48:37.571Z]   uffizi     past 2025                        7     0       0     3        0        0          4
+[2026-09-11T16:48:37.571Z]   brera      past                            18     0       0    13        0        0          5
+[2026-09-11T16:48:37.571Z]   uffizi     past 2024                       12     0       0     1        0        0         11
+[2026-09-11T16:48:37.571Z] 
+[2026-09-11T16:48:37.571Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T16:48:37.571Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T16:48:37.571Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T16:48:37.571Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T16:48:37.571Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T16:48:37.571Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T16:48:37.571Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T16:48:37.571Z] 
+[2026-09-11T16:48:37.571Z] Network bridge: 729 requests served, 841 skipped (image/media/font), 1 failed
+[2026-09-11T16:48:37.571Z] 
+[2026-09-11T16:48:37.571Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_024800
+[2026-09-11T16:48:37.571Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_024800/sweep.csv  (25 rows — uffizi:17, brera:8)
+[2026-09-11T16:48:37.571Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_024800/log_2026-09-12_024800.txt
+[2026-09-11T16:48:37.571Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-11T16:48:37.571Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T16:48:37.571Z] No de-duplication is applied — see passThrough.

@@ -1,0 +1,77 @@
+[2026-09-11T16:53:24.660Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T16:53:24.660Z] Lookback floor: 2024-07-01
+[2026-09-11T16:53:24.660Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_025324
+[2026-09-11T16:53:24.660Z] Venues this run: louvre, capo
+[2026-09-11T16:53:24.660Z] Proxy: http://127.0.0.1:40485
+[2026-09-11T16:53:24.661Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T16:53:24.802Z] Running 2 venue(s) 2 at a time (one page at a time within each venue)
+[2026-09-11T16:53:24.939Z] [louvre] 
+[2026-09-11T16:53:24.939Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-09-11T16:53:24.939Z] [louvre]   LOUVRE — Louvre, Paris
+[2026-09-11T16:53:24.939Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-09-11T16:53:24.939Z] [louvre]   Fetching current/upcoming: https://www.louvre.fr/en/exhibitions-and-events/exhibitions
+[2026-09-11T16:53:24.942Z] [capo] 
+[2026-09-11T16:53:24.942Z] [capo] ────────────────────────────────────────────────────────────
+[2026-09-11T16:53:24.942Z] [capo]   CAPO — Capodimonte, Naples
+[2026-09-11T16:53:24.942Z] [capo] ────────────────────────────────────────────────────────────
+[2026-09-11T16:53:24.942Z] [capo]   Fetching all (current/upcoming/past): https://capodimonte.cultura.gov.it/mostre/
+[2026-09-11T16:53:27.233Z] [louvre]   current/upcoming: 7 links seen -> 0 navigation, 0 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-11T16:53:27.233Z] [louvre]   Fetching past: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions
+[2026-09-11T16:53:28.552Z] [louvre]   past: 6 links seen -> 0 navigation, 0 already-seen URL -> 6 collected (0 of them with no readable title)
+[2026-09-11T16:53:28.552Z] [louvre]   Fetching past 2025: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2025
+[2026-09-11T16:53:29.567Z] [louvre]   past 2025: 6 links seen -> 0 navigation, 2 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-11T16:53:29.567Z] [louvre]   Fetching past 2024: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2024
+[2026-09-11T16:53:30.854Z] [louvre]   past 2024: 4 links seen -> 0 navigation, 0 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-11T16:53:30.855Z] [louvre]   lookback (listing): kept 18, dropped 3 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-11T16:53:30.855Z] [louvre]   reading 18 individual page(s)…
+[2026-09-11T16:53:30.855Z] [louvre]     page 1 of 18
+[2026-09-11T16:53:31.623Z] [capo]   all (current/upcoming/past): 50 links seen -> 0 navigation, 0 already-seen URL -> 50 collected (2 of them with no readable title)
+[2026-09-11T16:53:31.623Z] [capo]   lookback (listing): kept 44, dropped 6 closed before 2024-07-01, 44 with no closing date, 0 with no opening date
+[2026-09-11T16:53:31.623Z] [capo]   reading 44 individual page(s)…
+[2026-09-11T16:53:31.623Z] [capo]     page 1 of 44
+[2026-09-11T16:53:38.906Z] [louvre]   BLOCKED (HTTP 429): https://www.louvre.fr/en/exhibitions-and-events/exhibitions/hosts-at-the-louvre
+[2026-09-11T16:53:42.857Z] [louvre]     page 10 of 18
+[2026-09-11T16:53:46.508Z] [louvre]   BLOCKED (HTTP 429): https://www.louvre.fr/en/exhibitions-and-events/exhibitions/a-passion-for-china
+[2026-09-11T16:53:52.561Z] [louvre]   Individual pages: 16 got text, 0 no curatorial text, 2 failed
+[2026-09-11T16:53:52.563Z] [louvre]   → 18 exhibitions, 16 with curatorial text → louvre.csv
+[2026-09-11T16:54:11.850Z] [capo]     page 10 of 44
+[2026-09-11T16:54:55.120Z] [capo]     page 20 of 44
+[2026-09-11T16:55:41.743Z] [capo]     page 30 of 44
+[2026-09-11T16:56:24.766Z] [capo]     page 40 of 44
+[2026-09-11T16:56:47.461Z] [capo]   Individual pages: 44 got text, 0 no curatorial text, 0 failed
+[2026-09-11T16:56:47.461Z] [capo]   lookback (final): kept 20, dropped 24 closed before 2024-07-01, 16 with no closing date, 0 with no opening date
+[2026-09-11T16:56:47.462Z] [capo]   → 20 exhibitions, 20 with curatorial text → capo.csv
+[2026-09-11T16:56:47.591Z] 
+[2026-09-11T16:56:47.592Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:56:47.592Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T16:56:47.592Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:56:47.592Z]   LOUVRE: 18 exhibitions | 16 with text
+[2026-09-11T16:56:47.592Z]   CAPO: 20 exhibitions | 20 with text
+[2026-09-11T16:56:47.592Z] 
+[2026-09-11T16:56:47.592Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:56:47.592Z]   COVERAGE — every link accounted for
+[2026-09-11T16:56:47.592Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:56:47.592Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T16:56:47.592Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T16:56:47.592Z]   louvre     current/upcoming                 7     0       0     0        0        0          7
+[2026-09-11T16:56:47.592Z]   louvre     past                             6     0       0     0        0        0          6
+[2026-09-11T16:56:47.592Z]   louvre     past 2025                        6     0       0     2        0        0          4
+[2026-09-11T16:56:47.592Z]   louvre     past 2024                        4     0       0     0        0        0          4
+[2026-09-11T16:56:47.592Z]   capo       all (current/upcoming/past)     50     0       0     0        0        2         50
+[2026-09-11T16:56:47.592Z] 
+[2026-09-11T16:56:47.592Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T16:56:47.592Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T16:56:47.592Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T16:56:47.592Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T16:56:47.592Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T16:56:47.592Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T16:56:47.592Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T16:56:47.592Z] 
+[2026-09-11T16:56:47.592Z] Network bridge: 2050 requests served, 4233 skipped (image/media/font), 25 failed
+[2026-09-11T16:56:47.592Z] 
+[2026-09-11T16:56:47.592Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_025324
+[2026-09-11T16:56:47.592Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_025324/sweep.csv  (38 rows — louvre:18, capo:20)
+[2026-09-11T16:56:47.592Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_025324/log_2026-09-12_025324.txt
+[2026-09-11T16:56:47.592Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, uffizi, brera, khm, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-11T16:56:47.592Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T16:56:47.592Z] No de-duplication is applied — see passThrough.

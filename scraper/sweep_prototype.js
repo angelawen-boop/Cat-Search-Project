@@ -205,7 +205,16 @@ function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
   const last = today.getUTCFullYear() - 1;
   const pages = [];
   for (let y = last; y >= first; y--) {
-    pages.push({ path: `${entry.path}?${entry.param}=${y}`, ctx: `${entry.ctx} ${y}` });
+    // Two shapes of the same thing. Most venues filter with a query parameter
+    // (the Met, the Louvre); the Uffizi puts the year in the PATH instead,
+    // /en/event-category/exhibitions/years/2026. Both are server-side, so both
+    // are simply another address, and either way the years are DERIVED here
+    // rather than written into a recipe — a hand-typed list is right the day it
+    // is typed and quietly wrong every year after.
+    const path = entry.param
+      ? `${entry.path}?${entry.param}=${y}`
+      : `${entry.path}${entry.yearPath}${y}`;
+    pages.push({ path, ctx: `${entry.ctx} ${y}` });
   }
   return pages;
 }
@@ -306,7 +315,23 @@ function rebuildSweepCsv() {
 // Returns { start: 'YYYY-MM-DD'|'', end: 'YYYY-MM-DD'|'', raw: original }
 const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
   july:7,august:8,september:9,october:10,november:11,december:12,
-  jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12 };
+  jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12,
+
+  // ITALIAN. Five of the wired venues are Italian — capo, brera, borghese,
+  // dellav and uffizi — and their listings print dates in their own language:
+  // Capodimonte's read "(11 maggio-12 giugno 2025)". Without these the parser
+  // saw no month name at all, the plausible-year guard refused every bare
+  // number, and all 50 Capodimonte rows came out undated. Undated rows cannot
+  // be excluded by the lookback, so its entire history back to 2013 survived
+  // and she correctly spotted that 50 was too many for the museum.
+  //
+  // Deliberately in the SHARED map rather than a per-venue rule, like every
+  // other format: a month name learned at one venue is worth having at all of
+  // them. Note gennaio/giugno and marzo/maggio differ only late in the word,
+  // which is why abbreviations below stay long enough to stay unambiguous.
+  gennaio:1, febbraio:2, marzo:3, aprile:4, maggio:5, giugno:6,
+  luglio:7, agosto:8, settembre:9, ottobre:10, novembre:11, dicembre:12,
+  genn:1, febbr:2, magg:5, giu:6, lug:7, ago:8, sett:9, ott:10, dic:12 };
 
 /**
  * One month pattern, shared by every date parser.
@@ -323,7 +348,9 @@ const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
 // that follows — a no-year test then passes on a date that plainly has one.
 const MONTH_PATTERN =
   '(?:January|February|March|April|May|June|July|August|September|October|November|December' +
-  '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\.?(?![A-Za-z])';
+  '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre' +
+  '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec' +
+  '|genn|febbr|magg|giu|lug|ago|sett|ott|dic)\\.?(?![A-Za-z])';
 
 // Month name to number, tolerating the trailing full stop the pattern allows.
 function monthNum(name) {
@@ -2308,10 +2335,23 @@ const VENUES = {
       { path: '/en/exhibitions-and-events/past-exhibitions', ctx: 'past' },
       { path: '/en/exhibitions-and-events/past-exhibitions', ctx: 'past', param: 'date', yearArchive: true },
     ],
-    selector: 'a[href*="/exhibitions-and-events/"]',
-    isNav: href => /\/exhibitions-and-events\/?$/.test(href)
-                || /\/exhibitions-and-events\/(exhibitions|past-exhibitions)\/?$/.test(href),
+    // NARROW, and the wide version cost real rows. "a[href*=/exhibitions-and-events/]"
+    // also matched the section's own tabs — /events-activities and
+    // /guided-tours — which arrived as two exhibitions called "Events &
+    // activities" and "Guided tours". Counted against the live page first:
+    // its current listing holds SEVEN exhibitions and four navigation links.
+    // Past exhibitions use this same /exhibitions/<slug> path, so one selector
+    // serves both.
+    selector: 'a[href*="/exhibitions-and-events/exhibitions/"]',
+    isNav: href => /\/exhibitions-and-events\/exhibitions\/?$/.test(href),
     title: { heading: true },
+    // OPEN — its year pages may be truncated and this could not be settled.
+    // Each carries a "load more" control (/component/load-more/expositions?
+    // archive=true&date=2025). Fetching that address returns 404, and clicking
+    // the control leaves the count at 6 for 2025. So either the Louvre really
+    // published six past exhibitions that year, or there are more behind a
+    // loader that neither route reaches. The stop rule applies: recorded rather
+    // than attempted a third way.
   },
 
   capo: {
@@ -2329,6 +2369,72 @@ const VENUES = {
     // the end. Stripped from the title; see the note in the sweep report about
     // ITALIAN month names, which the shared date parser does not yet know.
     title: { heading: true, stripTrailing: /\s*\([^()]*\d[^()]*\)\s*$/ },
+  },
+
+  uffizi: {
+    name: 'Uffizi Galleries, Florence',
+    base: 'https://www.uffizi.it',
+    // Its archive puts the year in the PATH, not a query parameter, and is
+    // server-side either way. The years are derived at run time.
+    pages: [
+      { path: '/en/event-category/exhibitions',          ctx: 'current' },
+      { path: '/en/event-category/exhibitions/upcoming',  ctx: 'upcoming' },
+      { path: '/en/event-category/exhibitions', ctx: 'past', yearPath: '/years/', yearArchive: true },
+    ],
+    // Exhibitions are /en/events/<slug>. The /years/ links on every page are
+    // the archive's own filters, not exhibitions.
+    selector: 'a[href*="/en/events/"]',
+    isNav: href => /\/en\/events\/?$/.test(href),
+    title: { heading: true },
+  },
+
+  brera: {
+    name: 'Pinacoteca di Brera, Milan',
+    base: 'https://pinacotecabrera.org',
+    // One address, three states, chosen by a server-side query — so all three
+    // are simply pages.
+    pages: [
+      { path: '/en/exhibitions-and-events/exhibitions/?current_page=1&date=in-progress', ctx: 'current' },
+      { path: '/en/exhibitions-and-events/exhibitions/?current_page=1&date=scheduled',   ctx: 'upcoming' },
+      { path: '/en/exhibitions-and-events/exhibitions/?current_page=1&date=archive',     ctx: 'past' },
+    ],
+    // Filed under NEWS — /en/news/mostra/<slug> — which no amount of guessing
+    // would have produced.
+    selector: 'a[href*="/news/mostra/"]',
+    isNav: href => /\/news\/mostra\/?$/.test(href),
+    title: { heading: true },
+  },
+
+  khm: {
+    name: 'Kunsthistorisches Museum, Vienna',
+    base: 'https://www.khm.at',
+    // UNRESOLVED, 12 Sep 2026 — wired so it is visible, not because it works.
+    //
+    // /en/exhibitions is a LANDING PAGE, not a listing: its "Special
+    // exhibitions" and "Permanent exhibitions" are anchors (#special-
+    // exhibitions) on that same page, and the only real exhibition address it
+    // exposes is /en/exhibitions/theseus-temple. /en/exhibitions/upcoming
+    // exposes none at all. Two links for an entire museum's programme.
+    //
+    // THE STOP RULE APPLIES HERE. There is no way to tell from this end whether
+    // the special exhibitions are published at an address not yet found, or
+    // loaded behind those anchors by JavaScript, or whether the landing page
+    // genuinely is all there is — and guessing a third address is how days get
+    // spent. Recorded for her rather than attempted again.
+    //
+    // Worth knowing when it IS picked up: the KHM is one of six museums sharing
+    // this organisation, and the others (Imperial Treasury, Weltmuseum,
+    // Theatermuseum, Ambras Castle, Imperial Carriage Museum) are on separate
+    // hosts. Only this one is in her 21, so the separate hosts help rather than
+    // hinder — but a future listing may well mix them.
+    pages: [
+      { path: '/en/exhibitions',          ctx: 'current' },
+      { path: '/en/exhibitions/upcoming', ctx: 'upcoming' },
+    ],
+    selector: 'a[href*="/en/exhibitions/"]',
+    isNav: href => /\/en\/exhibitions\/?$/.test(href)
+                || /\/en\/exhibitions\/upcoming\/?$/.test(href),
+    title: { heading: true },
   },
 
   // ── VENUES NOTHING CAN REACH ────────────────────────────────────────────────
