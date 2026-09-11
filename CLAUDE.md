@@ -1690,14 +1690,30 @@ scraper output**, so the join between scraper and app is no longer the unproven 
    authored eval, which scored 14 of 14 — run, but with its answers never saved.
    **She has declined to re-run it for the sake of the file. Do not raise it
    again**; it waits for a venue to actually reword something.
-2. **Wire all 21 venues with default recipes and run once.** This replaces what were two
-   steps — "re-check Borghese and probe the rest" and "expand to the accessible ones".
-   Marker rows became universal on 10 Sep, so **the run itself is the reconnaissance**:
-   the coverage table reports blocked, dead and working venues with no separate probe,
-   and Borghese's re-check falls out of it. **The laptop run belongs here too**, not
-   later — Met's and Morgan's recipes have never once executed, and finding them broken
-   during this pass folds into the venue-by-venue work instead of surfacing as a late
-   surprise. She will want step-by-step instructions when that happens.
+2. **Wire all 21 venues with default recipes and run once.** **The reachability half
+   is DONE — 11 Sep**, by `scraper/reach_probe.js` rather than by a full sweep, which
+   was cheaper and answered the same question: 15 venues open from this container, one
+   more from her laptop, and the split is recorded in the scoreboard (Section 6a).
+   Writing 15 recipes before knowing which doors open would have spent the expensive
+   effort on venues that may never answer. **What remains of this step is the recipes
+   themselves.**
+
+   **ALL 21 GET A RECIPE, INCLUDING THE ONES NOTHING CAN REACH.** Confirmed by her
+   again on 11 Sep after the probe. This is not tidiness and not optimism:
+   - A refused venue costs **about half a second** — the site says no, the code is
+     logged, no detail page is ever opened.
+   - It leaves **marker rows in the CSV** saying it was checked and refused, so a
+     blocked venue is visible on the approval pile rather than silently absent.
+   - Blocks are **not permanent facts**. Cloudflare rules get retuned, addresses
+     change reputation, institutions change policy, sites migrate. Four things
+     already moved under us in five days: Borghese went down and came back, Gallerie
+     dell'Accademia migrated hosts, the Met's archive turned out to be reachable
+     after all, and `artic` went from "reliable" to refused. **A venue not wired in
+     is a venue we would never learn about.**
+
+   So `morgan`, `moma`, `dellav` and `brit`'s archive are written exactly like any
+   other venue. Their recipes are untested guesses until a door opens — which is
+   stated in each one, so nobody mistakes an unexercised recipe for a working one.
 3. **Parallelism and the hang bound** (DEF-01 + DEF-04). Before the diagnosis pass, not
    after: step 4 is a repeated re-run loop and a 20-minute serial sweep makes it painful.
    Parallel across venues only, never within one — IR-15 stands.
