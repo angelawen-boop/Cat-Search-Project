@@ -1124,6 +1124,36 @@ one or two pages per venue and reported the VENUE as reachable.
 | **Local scrape** (her machine) | `met`, `artic` | 2 |
 | **No route yet** | `morgan`, `moma`, `brit`, `dellav` | 4 |
 
+**Her own machine, same six venues, every page — 11 Sep, `probe_2026-09-11_231704.md`:**
+
+| Venue | Result from her laptop |
+|---|---|
+| `met` | **429 on all three pages** — see below, this is new |
+| `morgan` | 403 on all three |
+| `moma` | 403 on all three |
+| `artic` | current **opened, 21 links**; upcoming and past read 0 (a flaw in the counter, see below) |
+| `brit` | current opens with 1 link; past and see-everything 403 |
+| `dellav` | old address 404; new address and its home page both NO_RESPONSE |
+
+**The Met refused her laptop, hours after giving her 106 rows from it.** 429 is
+"too many requests", and she had run Met sweeps repeatedly that day, so the most
+likely reading is ordinary rate-limiting rather than a policy change — but it is
+a reading, not a measurement. **Re-test before concluding the local route is
+lost**, and do not rewrite the Met's section on this alone.
+
+**`dellav` is settled: refused from both machines**, while loading in her
+ordinary browser. Not an outage and not an address error — the site accepts no
+automated connection from either network.
+
+**The "links below the listing" counter under-reports, and artic proves it.**
+It counts addresses that sit beneath the listing's own path. Artic's exhibitions
+live at `/exhibitions/<slug>`, which is not beneath `/exhibitions/past`, so a
+full archive scores **zero**. It is still far better than the word-matching
+counter it replaced — that counted the site's own menu on every page — but any
+venue whose archive links sideways rather than downward will read as empty.
+**Treat a zero as "look closer", never as "nothing there."** The real answer for
+these venues comes from a recipe and a sweep, not from another counter.
+
 **`brit` was reported as "current works, archive blocked". That was wrong**, and
 twice over:
 - Its current page yields **one** link below the listing, not the 19 first
