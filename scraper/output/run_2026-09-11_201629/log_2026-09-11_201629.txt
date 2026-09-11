@@ -1,0 +1,48 @@
+[2026-09-11T10:16:29.544Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T10:16:29.546Z] Lookback floor: 2024-07-01
+[2026-09-11T10:16:29.546Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_201629
+[2026-09-11T10:16:29.546Z] Venues this run: acq
+[2026-09-11T10:16:29.546Z] Proxy: http://127.0.0.1:43833
+[2026-09-11T10:16:29.547Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T10:16:30.405Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-11T10:16:30.852Z] [acq] 
+[2026-09-11T10:16:30.852Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T10:16:30.853Z] [acq]   ACQ — Acquavella Galleries, New York
+[2026-09-11T10:16:30.853Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T10:16:30.853Z] [acq]   Fetching all (current/upcoming/past): https://www.acquavellagalleries.com/exhibitions
+[2026-09-11T10:16:36.689Z] [acq]   all (current/upcoming/past): 119 links seen -> 11 navigation, 0 already-seen URL -> 108 collected (0 of them with no readable title)
+[2026-09-11T10:16:36.690Z] [acq]   lookback (listing): kept 16, dropped 92 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-11T10:16:36.690Z] [acq]   reading 16 individual page(s)…
+[2026-09-11T10:16:36.690Z] [acq]     page 1 of 16
+[2026-09-11T10:16:55.979Z] [acq]     page 10 of 16
+[2026-09-11T10:17:11.666Z] [acq]   Individual pages: 16 got text, 0 no curatorial text, 0 failed
+[2026-09-11T10:17:11.666Z] [acq]   lookback (final): kept 15, dropped 1 closed before 2024-07-01, 2 with no closing date, 0 with no opening date
+[2026-09-11T10:17:11.668Z] [acq]   → 15 exhibitions, 15 with curatorial text → acq.csv
+[2026-09-11T10:17:11.778Z] 
+[2026-09-11T10:17:11.778Z] ────────────────────────────────────────────────────────────
+[2026-09-11T10:17:11.778Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T10:17:11.778Z] ────────────────────────────────────────────────────────────
+[2026-09-11T10:17:11.778Z]   ACQ: 15 exhibitions | 15 with text
+[2026-09-11T10:17:11.778Z] 
+[2026-09-11T10:17:11.778Z] ────────────────────────────────────────────────────────────
+[2026-09-11T10:17:11.778Z]   COVERAGE — every link accounted for
+[2026-09-11T10:17:11.778Z] ────────────────────────────────────────────────────────────
+[2026-09-11T10:17:11.778Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-11T10:17:11.778Z]   --------------------------------------------------------------------------------------
+[2026-09-11T10:17:11.778Z]   acq        all (current/upcoming/past)    119    11       0     0        0        108
+[2026-09-11T10:17:11.778Z] 
+[2026-09-11T10:17:11.778Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T10:17:11.778Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T10:17:11.778Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T10:17:11.778Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T10:17:11.778Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-11T10:17:11.778Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T10:17:11.778Z] 
+[2026-09-11T10:17:11.778Z] Network bridge: 389 requests served, 751 skipped (image/media/font), 0 failed
+[2026-09-11T10:17:11.778Z] 
+[2026-09-11T10:17:11.778Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_201629
+[2026-09-11T10:17:11.778Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_201629/sweep.csv  (15 rows — acq:15)
+[2026-09-11T10:17:11.778Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_201629/log_2026-09-11_201629.txt
+[2026-09-11T10:17:11.778Z] Not yet in this run: met, ng, rijks, borghese, morgan
+[2026-09-11T10:17:11.778Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T10:17:11.778Z] No de-duplication is applied — see passThrough.

@@ -1049,6 +1049,30 @@ worth more than any amount of internal consistency.
 
 This is the only part that describes how the *scraper* reaches sites. It is short because it is new, and it will grow to replace 6b.
 
+#### THE SCOREBOARD — hers, 11 Sep 2026, and the settled answer for these six
+
+Which route reaches which venue. **These are conclusions, not hypotheses** — each
+was tested from both this container and her own machine on 11 Sep.
+
+| Venue | Access | Route |
+|---|---|---|
+| `rijks`, `ng`, `acq` | scraper works in Claude Code | **Claude-run scrape** |
+| `met` | denied in Claude (a transport problem, ours), works locally | **local scrape** |
+| `borghese` | works in both when the site is up; the site itself is unreliable | **Claude-run scrape**, or the site is simply dead that day |
+| `morgan` | denied in Claude AND locally; Code Claude cannot fetch its pages either | **Chat Claude reads it by hand** — confirmed working by her |
+
+**Read "denied" precisely, because the two are not the same failure:**
+- **Met** is not refusing Claude. It dislikes the *type of connection* the
+  container forces on us, and no permitted alternative exists. Locally there is
+  no such constraint, so it works.
+- **Morgan** refuses every automated route, from every address tried, however
+  honestly the scraper identifies itself.
+
+**This supersedes the older "met and morgan are blocked" framing throughout this
+document.** Where an earlier paragraph says the blocks are about this
+datacentre's IP address, that paragraph is wrong and superseded — see the two
+venue sections below.
+
 | Venue | Finding | Evidence |
 |---|---|---|
 | `met` | **A bot checkpoint, NOT an IP block — corrected 11 Sep 2026.** The 429 is a **"Vercel Security Checkpoint"** page: the Met's site is hosted on Vercel, and Vercel serves this challenge instead of the content. See below — the data-centre theory was wrong for four days. `collectionapi.metmuseum.org` is unaffected but covers collection objects, not exhibitions. | Disproved from her home connection, 11 Sep 2026 |
@@ -1178,31 +1202,51 @@ the proxy (report, do not work around)"**. So the remaining route is to
 **report it** — to Anthropic support or a workspace admin — rather than to
 engineer past it. Nobody has done that yet.
 
-#### Morgan — blocked everywhere, and not because of Claude
+#### Morgan — every automated route is closed. Chat Claude is the one that works.
 
-**Retested from her Chromebook, 11 Sep: HTTP 403 on all three pages**, with the
-bridge off and Chromium's own TLS. So it is not an address block and not the
-bridge mismatch that explained the Met.
+**Worked through exhaustively on 11 Sep. Do not re-litigate this; re-test only if
+something outside changes.**
 
-**It is also not about Claude, and the scraper never says otherwise** — it sends
-a plain Chrome user-agent and identifies itself as nothing else. Their
-`robots.txt` does name-block `ClaudeBot` (alongside GPTBot, CCBot,
-Google-Extended and others) and sets `ai-train=no`, but it also gives
-`User-agent: *` an outright `Allow: /` with `Content-Signal: search=yes,
-use=reference`. **Her use is reference**, and she is not ClaudeBot any more than
-she is Googlebot when she opens a page in Chrome.
+| Route | Result |
+|---|---|
+| Scraper in this container | **403** |
+| Scraper on her Chromebook, bridge off, Chromium's own TLS | **403** |
+| Scraper with the honest user-agent (`HeadlessChrome/141`) | **403** |
+| Scraper with an **empty** user-agent (`--no-ua`) | **403** |
+| `curl` from this container | **403** |
+| `WebFetch`, this session's own fetch tool | **403** |
+| **Her own browser** | **works**, after a Cloudflare check that passes |
+| **Chat Claude** | **works** — confirmed by her, 11 Sep |
 
-**What actually differs is how we are refused.** Her browser gets a Cloudflare
-challenge — "Performing security verification" — which runs, passes, and lets
-her in. The scraper gets a flat 403 immediately, with no challenge to pass. So
+**Only `robots.txt` is served to us.** Checked individually: `/`, `/about`,
+`/sitemap.xml`, `/exhibitions/current` and a named exhibition page all return
+403. So **feeding a session individual exhibition URLs does not help** — the
+refusal covers the whole site for this address, not just the listings.
+
+**It is not about Claude, and the scraper never says otherwise.** Their
+`robots.txt` does name-block `ClaudeBot` (with GPTBot, CCBot, Google-Extended
+and others) and sets `ai-train=no`, but it also gives `User-agent: *` an outright
+`Allow: /` with `Content-Signal: search=yes, use=reference`. **Her use is
+reference**, and she is not ClaudeBot any more than she is Googlebot when she
+opens a page in Chrome.
+
+**What differs is the stage at which we are refused.** Her browser gets a
+Cloudflare challenge — "Performing security verification" — which runs, passes
+and lets her in. The scraper gets a flat 403 with no challenge offered. So
 Cloudflare classifies us *before* the challenge stage, and since the TLS was
-genuinely Chromium's, it is reacting to something else — almost certainly
-headless and automation markers.
+genuinely Chromium's and the user-agent honest, it is reacting to something else
+— most likely headless and automation markers, which is behaviour rather than
+anything we could say about ourselves.
 
-**Untried and legitimate: run with a visible window.** `headless: false` is not a
-disguise, it *is* a real browser drawn on her screen. Only possible on her laptop,
-and it may still fail if Cloudflare keys on automation flags rather than
-headlessness. **Not yet built or tested.**
+**Two things were considered and REJECTED, so neither is quietly revived:**
+
+- **Running headed** (`headless: false`). Legitimate — a visible browser genuinely
+  is one — but **her call: no.** It only works with her sitting watching a browser
+  drive itself, and for Morgan's three pages that is slower than clicking them
+  herself. In her words, it would make her "seem like I'm HANDSLESS".
+- **Staying headless while masking it.** That is the disguise line. Saying
+  "Chrome" when we are HeadlessChrome is a lie; `--no-ua` (declining to state)
+  was the honest version of the same test, and it failed too.
 
 #### Rijksmuseum — worked through in full, 8 Sep 2026
 
@@ -1945,8 +1989,9 @@ it solely to fill this gap, and do not list it as a blocker on anything.
   - ~~**The blocks would very likely lift** from a home connection.~~ **Tested
     11 Sep and FALSE for the Met** — same 429 from her Chromebook on her home
     internet. It is a Vercel bot checkpoint, not an address block (see 6a).
-    **Morgan has still not been retested from her machine**, so its 403 remains
-    genuinely unknown rather than disproved.
+    **Morgan WAS retested from her machine** and returned the same 403 — so the
+    local route does not rescue it either. See the scoreboard in Section 6a:
+    Morgan is a Chat Claude venue.
   - **Neither recipe has ever been exercised.** All we have established is that
     the door is shut. Which links are exhibitions, where the title sits, where
     the dates sit — all copied from venues that do work, none tested. Expect a
@@ -1974,6 +2019,52 @@ it solely to fill this gap, and do not list it as a blocker on anything.
     plus `package.json`. Nobody has actually run it off this container yet.
 
 - **Sweeper brief v3** — the Chat-Claude-era instruction document still needs its URL corrections and a two-attempt URL-unlock rule. Its scope shrinks as the scraper covers more venues, but it does **not** disappear: the venues the scraper cannot reach are precisely the ones where a human-driven Chat Claude route still has a chance, because it comes from a different network and behaves like a person browsing. Expect the brief to end up as the fallback procedure for blocked and novel-problem venues rather than the main sweep.
+
+### PARKED until the 21-venue run — how the three collection routes join up
+
+**Her decision, 11 Sep 2026, and the reasoning is the point.**
+
+Six venues now need **three different routes** (see the scoreboard, Section 6a):
+Claude-run scrape, her local scrape, and Chat Claude reading a site by hand.
+Each produces its own file, and joining them into one importable CSV is a real
+design job.
+
+**She has parked it deliberately, and this is not procrastination:**
+
+> It doesn't make sense to split the task three ways and produce numerous
+> documents. If I was solving world hunger I could finesse a beautiful sequence
+> for it all. But practically — once I have gone through all 21 venues and know
+> how many Claude scrape can do, how many need my local machine, and how many
+> the scraper can't do at all, then I can make a more reasonable overall design.
+
+**So: do not design this pipeline before step 2 of the work order has run.** The
+shape of the answer depends entirely on the split, and right now the split is
+known for six venues out of twenty-one. Designing it now means designing for
+proportions we are about to discover are wrong.
+
+**What was worked out before parking, so it is not re-derived:**
+
+The flow would be: Chat Claude reads the site and writes the values into a
+document → a script in `scraper/` turns that into pro-forma rows → those join a
+normal run directory → compression runs as usual → she imports the compressed
+file.
+
+**A script does the CSV writing, not Chat Claude — but be accurate about why.**
+Chat Claude is demonstrably *capable* of writing a correct pro forma; that is
+the entire origin of the Sweeper Brief, and those CSVs imported fine. The
+argument for a script is narrower: Morgan's rows would then be built by **the
+same code** as every other venue, so they cannot drift as the pro forma changes,
+and the rules only have to be right in one place rather than re-followed
+correctly every time. **An earlier draft of this section overstated it as a
+correctness risk on Chat Claude's part. That was wrong and she corrected it.**
+
+Two sub-decisions left open:
+- **What the intermediate document looks like** — JSON (strictly checkable) or a
+  labelled text block (`Title:`, `Opens:`, `Closes:`, `URL:`, `Description:`),
+  which she can eyeball before the script touches it. The labelled form is the
+  better instinct: it puts a human check at the cheapest point to catch an error.
+- **Whether hand-collected rows land in the same run directory** as that day's
+  scrape, so everything compresses and imports as one file, or stay separate.
 
 ### Parked, not accepted
 

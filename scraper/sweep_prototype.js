@@ -65,26 +65,6 @@ const proxyAgent = PROXY_URL ? new HttpsProxyAgent(PROXY_URL) : undefined;
 // rather than typed in — a literal goes stale the next time Chromium updates,
 // which is how this one became wrong.
 
-// --no-ua: send an EMPTY user-agent instead of Chromium's own. Her test,
-// 11 Sep 2026, and it is opt-in rather than default because it is unproven.
-//
-// The distinction that makes this acceptable, and it is a narrow one:
-//
-//   - Saying "Chrome" when we are HeadlessChrome would be a LIE. Refused.
-//   - Sending nothing is DECLINING TO STATE. Nothing false is asserted.
-//
-// Measured before building it: the word "Headless" appears in exactly ONE
-// place, the user-agent line. Chromium's own client hints already say only
-//   sec-ch-ua: "Chromium";v="141"   sec-ch-ua-platform: "Linux"
-// with no mention of it. So with the line empty the site still receives a
-// complete and TRUE description of the browser from the browser itself — this
-// withholds one sentence, it does not substitute a different one.
-//
-// Expect little. An empty user-agent is unusual in its own right, no real
-// browser omits it, and headlessness is detectable by behaviour regardless of
-// any header. This tests one hypothesis cheaply; it is not a disguise and will
-// not become one.
-
 // Resource types Chromium may request that contribute nothing to text scraping.
 const SKIP_RESOURCE_TYPES = new Set(['image', 'media', 'font']);
 
@@ -121,10 +101,6 @@ const VENUE_ORDER = ['met', 'ng', 'rijks', 'acq', 'borghese', 'morgan'];
 const ARGS = process.argv.slice(2).map(a => a.toLowerCase()).filter(Boolean);
 const CONTINUE = ARGS.includes('--continue');
 const WANTED = ARGS.filter(a => !a.startsWith('--'));
-
-// Her one-off test — see the user-agent note above for why this is declining to
-// state rather than stating something false.
-const NO_UA = ARGS.includes('--no-ua');
 
 // How many venues run at once. ACROSS venues only — never several pages within
 // one venue, which is the hammering case IR-15 rejects at any scale. Each venue
@@ -2259,10 +2235,8 @@ async function main() {
   async function worker(n) {
     // No userAgent override — see the note where USER_AGENT used to be defined.
     // Chromium sends its own, which is true and agrees with its client hints.
-    // --no-ua empties that one header instead; nothing else is altered.
     const context = await browser.newContext({
       viewport: { width: 1280, height: 800 },
-      ...(NO_UA ? { extraHTTPHeaders: { 'User-Agent': '' } } : {}),
     });
     // The bridge exists ONLY because Chromium cannot use this container's agent
     // proxy (see NETWORK NOTE at top of file). Where there is no proxy — her
