@@ -1621,7 +1621,7 @@ async function extractTitle(link, venueCode) {
   // reject anything too long to be one card — a container that has bled into
   // its neighbours is far longer than a single title plus a date.
   if (rule.card) {
-    const t2 = await readCardText(link, rule.card);
+    const t2 = await readCardText(link, rule.card, (VENUES[venueCode] || {}).selector);
     if (t2) return t2;
   }
   return '';
@@ -1629,13 +1629,51 @@ async function extractTitle(link, venueCode) {
 
 const CARD_MAX_CHARS = 220;
 
-async function readCardText(link, card) {
+async function readCardText(link, card, selector) {
+  const linkText = squash(await getText(link).catch(() => ''));
   let node = link;
   for (let i = 0; i < (card.depth || 2); i++) {
     let parent;
     try { parent = await node.$('xpath=..'); } catch { return ''; }
     if (!parent) return '';
     node = parent;
+
+    // THE TITLE IS THE CARD'S FIRST LINE — opt-in, for a venue that writes the
+    // name as ordinary text rather than a heading.
+    //
+    // The Frick's current listing does exactly that: the name sits in an <em>
+    // inside a paragraph, with the dates and a full curatorial blurb beneath
+    // it and a "READ MORE" link at the end. There is no heading anywhere in
+    // the card, and the card runs to several hundred characters, so both of
+    // the existing routes miss it — the three UPCOMING exhibitions, the rows
+    // she most needs, arrived with no title at all.
+    //
+    // Guarded twice, because reading text above a link is the mistake that
+    // cost Borghese every row: the walk stops at the edge of the card, using
+    // the same boundary the date walk uses, so a grid holding two exhibitions
+    // is never read; and the LINE itself must still be title-length, which a
+    // run-together container never is.
+    if (card.firstLine) {
+      if (selector && await coversMoreThanOneExhibition(node, selector)) return '';
+      const block = await getText(node).catch(() => '');
+      const first = String(block || '').split('\n').map(x => x.trim()).filter(Boolean)[0] || '';
+      // KEEP WALKING while the container says no more than the link does.
+      //
+      // The first box above a "READ MORE" button is the button's own wrapper,
+      // so its first line IS "READ MORE" — long enough to pass every length
+      // test and win before the walk ever reaches the card holding the name.
+      // The link's text was already rejected as a title one step earlier; the
+      // same text one level up is not a better answer.
+      if (!first || first === linkText || CTA_ONLY.test(first)) continue;
+      if (first.length <= CARD_MAX_CHARS) {
+        let t = first;
+        if (card.stripLeading)  t = t.replace(card.stripLeading, '');
+        if (card.stripTrailing) t = t.replace(card.stripTrailing, '');
+        t = squash(stripTitleNoise(t));
+        if (t.length >= 3) return t;
+      }
+      continue;
+    }
 
     const raw = squash(await getText(node).catch(() => ''));
     if (!raw || raw.length > CARD_MAX_CHARS) continue;
@@ -2086,8 +2124,25 @@ const VENUES = {
       { path: '/exhibitions/past', ctx: 'past' },
     ],
     selector: 'a[href*="/exhibitions/"]',
-    isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/past\/?$/.test(href),
-    title: { heading: true },
+    // /exhibitions/virtual is a CATEGORY page — two exhibitions rebuilt in 3D,
+    // not an exhibition — and it is linked from both listings.
+    isNav: href => /\/exhibitions\/?$/.test(href)
+                || /\/exhibitions\/past\/?$/.test(href)
+                || /\/exhibitions\/virtual\/?$/.test(href),
+    // Two layouts on the two pages, and they need opposite handling.
+    //
+    // The PAST cards put the name in the link text, so it is read directly.
+    // The CURRENT cards link only a "READ MORE" button — sometimes spelled
+    // "READ MORE ABOUT THE KENT MONKMAN EXHIBITION" — and write the name as
+    // the card's first line, in an <em> rather than a heading. So the button
+    // text is discarded whole (a partial strip would leave "KENT MONKMAN",
+    // which is not the exhibition's name), and the first line is taken from
+    // the card instead.
+    title: {
+      heading: true,
+      stripLeading: /^READ MORE\b.*$/i,
+      card: { firstLine: true, depth: 3 },
+    },
   },
 
   morgan: {
@@ -2126,7 +2181,27 @@ const VENUES = {
     // the reason that one once reported 10 exhibitions and 0 titles. The name
     // is read from the card above, under the depth and length guards in
     // readCardText().
-    title: { heading: true, card: { depth: 2 } },
+    // Its cards wrap only the IMAGE, so the link carries no text and the name
+    // comes from the card above — the Rijksmuseum's layout. The card reads
+    // NAME, then the run dates, then the building in capitals:
+    //   "Fragility September 10, 2026-January 24, 2027 MENIL DRAWING INSTITUTE"
+    // so the tail is cut at whichever comes first.
+    //
+    // CASE-SENSITIVE, deliberately, and that is what makes one rule do both
+    // jobs: MONTH_PATTERN is written in title case, which is how the Menil
+    // prints its dates, while the building is shouted in capitals. A dated row
+    // is cut at the month; an undated one — the permanent collection galleries,
+    // "Modern and Contemporary MAIN BUILDING" — is cut at the capitals. Two
+    // capitalised words are required, so a title ending in a single acronym
+    // survives.
+    title: {
+      heading: true,
+      card: {
+        depth: 2,
+        stripTrailing: new RegExp(
+          `\\s*(?:\\b${MONTH_PATTERN}\\s*\\d.*$|(?:[A-Z][A-Z\u2019'&-]+(?:\\s+|$)){2,}$)`),
+      },
+    },
   },
 
   wallace: {

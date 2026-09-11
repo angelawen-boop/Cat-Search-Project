@@ -1,0 +1,52 @@
+[2026-09-11T16:12:09.273Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T16:12:09.273Z] Lookback floor: 2024-07-01
+[2026-09-11T16:12:09.274Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_021209
+[2026-09-11T16:12:09.274Z] Venues this run: frick
+[2026-09-11T16:12:09.274Z] Proxy: http://127.0.0.1:40485
+[2026-09-11T16:12:09.274Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T16:12:09.423Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-11T16:12:09.530Z] [frick] 
+[2026-09-11T16:12:09.530Z] [frick] ────────────────────────────────────────────────────────────
+[2026-09-11T16:12:09.530Z] [frick]   FRICK — The Frick Collection, New York
+[2026-09-11T16:12:09.530Z] [frick] ────────────────────────────────────────────────────────────
+[2026-09-11T16:12:09.530Z] [frick]   Fetching current/upcoming: https://www.frick.org/exhibitions
+[2026-09-11T16:12:13.014Z] [frick]   current/upcoming: 15 links seen -> 6 navigation, 3 already-seen URL -> 6 collected (0 of them with no readable title)
+[2026-09-11T16:12:13.014Z] [frick]   Fetching past: https://www.frick.org/exhibitions/past
+[2026-09-11T16:12:14.781Z] [frick]   past: 25 links seen -> 4 navigation, 14 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-11T16:12:14.781Z] [frick]   lookback (listing): kept 13, dropped 0 closed before 2024-07-01, 10 with no closing date, 0 with no opening date
+[2026-09-11T16:12:14.782Z] [frick]   reading 13 individual page(s)…
+[2026-09-11T16:12:14.782Z] [frick]     page 1 of 13
+[2026-09-11T16:12:28.467Z] [frick]     page 10 of 13
+[2026-09-11T16:12:34.308Z] [frick]   Individual pages: 13 got text, 0 no curatorial text, 0 failed
+[2026-09-11T16:12:34.309Z] [frick]   lookback (final): kept 10, dropped 3 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-11T16:12:34.309Z] [frick]   → 10 exhibitions, 10 with curatorial text → frick.csv
+[2026-09-11T16:12:34.404Z] 
+[2026-09-11T16:12:34.404Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:12:34.404Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T16:12:34.404Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:12:34.404Z]   FRICK: 10 exhibitions | 10 with text
+[2026-09-11T16:12:34.404Z] 
+[2026-09-11T16:12:34.404Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:12:34.404Z]   COVERAGE — every link accounted for
+[2026-09-11T16:12:34.404Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:12:34.404Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T16:12:34.404Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T16:12:34.404Z]   frick      current/upcoming                15     6       0     3        0        0          6
+[2026-09-11T16:12:34.404Z]   frick      past                            25     4       0    14        0        0          7
+[2026-09-11T16:12:34.404Z] 
+[2026-09-11T16:12:34.404Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T16:12:34.404Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T16:12:34.404Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T16:12:34.404Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T16:12:34.404Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T16:12:34.404Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T16:12:34.404Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T16:12:34.404Z] 
+[2026-09-11T16:12:34.404Z] Network bridge: 355 requests served, 171 skipped (image/media/font), 0 failed
+[2026-09-11T16:12:34.404Z] 
+[2026-09-11T16:12:34.404Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_021209
+[2026-09-11T16:12:34.404Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_021209/sweep.csv  (10 rows — frick:10)
+[2026-09-11T16:12:34.404Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_021209/log_2026-09-12_021209.txt
+[2026-09-11T16:12:34.404Z] Not yet in this run: met, ng, rijks, acq, borghese, morgan, menil, wallace
+[2026-09-11T16:12:34.404Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T16:12:34.404Z] No de-duplication is applied — see passThrough.

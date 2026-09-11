@@ -1,0 +1,120 @@
+[2026-09-11T16:14:18.378Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T16:14:18.379Z] Lookback floor: 2024-07-01
+[2026-09-11T16:14:18.379Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_021418
+[2026-09-11T16:14:18.379Z] Venues this run: ng, rijks, menil, wallace
+[2026-09-11T16:14:18.379Z] Proxy: http://127.0.0.1:40485
+[2026-09-11T16:14:18.379Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T16:14:18.612Z] Running 4 venue(s) 4 at a time (one page at a time within each venue)
+[2026-09-11T16:14:18.900Z] [wallace] 
+[2026-09-11T16:14:18.900Z] [wallace] ────────────────────────────────────────────────────────────
+[2026-09-11T16:14:18.900Z] [wallace]   WALLACE — The Wallace Collection, London
+[2026-09-11T16:14:18.900Z] [wallace] ────────────────────────────────────────────────────────────
+[2026-09-11T16:14:18.901Z] [wallace]   Fetching current/upcoming: https://www.wallacecollection.org/whats-on/exhibitions-displays/
+[2026-09-11T16:14:18.926Z] [menil] 
+[2026-09-11T16:14:18.926Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-11T16:14:18.926Z] [menil]   MENIL — The Menil Collection, Houston
+[2026-09-11T16:14:18.926Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-11T16:14:18.926Z] [menil]   Fetching current: https://www.menil.org/exhibitions
+[2026-09-11T16:14:18.931Z] [ng] 
+[2026-09-11T16:14:18.931Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T16:14:18.931Z] [ng]   NG — National Gallery, London
+[2026-09-11T16:14:18.931Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T16:14:18.931Z] [ng]   Fetching current/upcoming: https://www.nationalgallery.org.uk/exhibitions
+[2026-09-11T16:14:18.932Z] [rijks] 
+[2026-09-11T16:14:18.932Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-11T16:14:18.932Z] [rijks]   RIJKS — Rijksmuseum, Amsterdam
+[2026-09-11T16:14:18.932Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-11T16:14:18.932Z] [rijks]   Fetching current/upcoming: https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view
+[2026-09-11T16:14:24.584Z] [wallace]   current/upcoming: 12 links seen -> 4 navigation, 0 already-seen URL -> 8 collected (0 of them with no readable title)
+[2026-09-11T16:14:24.584Z] [wallace]   Fetching past: https://www.wallacecollection.org/explore/past-exhibitions/
+[2026-09-11T16:14:24.639Z] [ng]   current/upcoming: 12 links seen -> 2 navigation, 3 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-11T16:14:24.639Z] [ng]   Fetching past: https://www.nationalgallery.org.uk/exhibitions/past
+[2026-09-11T16:14:24.891Z] [menil]   current: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-09-11T16:14:24.891Z] [menil]   Fetching upcoming: https://www.menil.org/exhibitions/upcoming
+[2026-09-11T16:14:25.621Z] [rijks]   current/upcoming: 15 links seen -> 5 navigation, 0 already-seen URL -> 10 collected (0 of them with no readable title)
+[2026-09-11T16:14:25.621Z] [rijks]   Fetching past: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past
+[2026-09-11T16:14:27.484Z] [menil]   upcoming: 4 links seen -> 0 navigation, 0 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-11T16:14:27.484Z] [menil]   Fetching past: https://www.menil.org/exhibitions/past
+[2026-09-11T16:14:30.125Z] [wallace]   past: 28 links seen -> 4 navigation, 7 already-seen URL -> 17 collected (0 of them with no readable title)
+[2026-09-11T16:14:30.126Z] [wallace]   lookback (listing): kept 11, dropped 14 closed before 2024-07-01, 4 with no closing date, 0 with no opening date
+[2026-09-11T16:14:30.126Z] [wallace]   reading 11 individual page(s)…
+[2026-09-11T16:14:30.126Z] [wallace]     page 1 of 11
+[2026-09-11T16:14:30.514Z] [menil]   past: 12 links seen -> 0 navigation, 1 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-11T16:14:30.514Z] [menil]   lookback (listing): kept 27, dropped 0 closed before 2024-07-01, 7 with no closing date, 0 with no opening date
+[2026-09-11T16:14:30.515Z] [menil]   reading 27 individual page(s)…
+[2026-09-11T16:14:30.515Z] [menil]     page 1 of 27
+[2026-09-11T16:14:32.499Z] [rijks]   past: 46 links seen -> 6 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-11T16:14:32.504Z] [rijks]   lookback (listing): kept 49, dropped 1 closed before 2024-07-01, 30 with no closing date, 0 with no opening date
+[2026-09-11T16:14:32.505Z] [rijks]   reading 49 individual page(s)…
+[2026-09-11T16:14:32.505Z] [rijks]     page 1 of 49
+[2026-09-11T16:14:42.623Z] [rijks]     page 10 of 49
+[2026-09-11T16:14:43.223Z] [ng]   past: 179 links seen -> 2 navigation, 0 already-seen URL -> 177 collected (0 of them with no readable title)
+[2026-09-11T16:14:43.223Z] [ng]   lookback (listing): kept 28, dropped 156 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T16:14:43.223Z] [ng]   reading 28 individual page(s)…
+[2026-09-11T16:14:43.223Z] [ng]     page 1 of 28
+[2026-09-11T16:14:48.368Z] [ng]     prose dates ignored, they contradict the listing: "7 September - 28 September 2026"
+[2026-09-11T16:14:50.653Z] [menil]     page 10 of 27
+[2026-09-11T16:14:51.038Z] [wallace]     page 10 of 11
+[2026-09-11T16:14:53.213Z] [rijks]     page 20 of 49
+[2026-09-11T16:14:55.508Z] [wallace]   Individual pages: 11 got text, 0 no curatorial text, 0 failed
+[2026-09-11T16:14:55.508Z] [wallace]   lookback (final): kept 11, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T16:14:55.509Z] [wallace]   → 11 exhibitions, 11 with curatorial text → wallace.csv
+[2026-09-11T16:15:04.628Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/mission-masterpiece
+[2026-09-11T16:15:04.628Z] [rijks]     page 30 of 49
+[2026-09-11T16:15:05.488Z] [ng]     page 10 of 28
+[2026-09-11T16:15:14.452Z] [rijks]     page 40 of 49
+[2026-09-11T16:15:15.896Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/henk-wildschut
+[2026-09-11T16:15:16.659Z] [menil]     page 20 of 27
+[2026-09-11T16:15:19.118Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/ed-van-der-elsken
+[2026-09-11T16:15:25.017Z] [rijks]   Individual pages: 46 got text, 0 no curatorial text, 3 failed
+[2026-09-11T16:15:25.017Z] [rijks]   lookback (final): kept 37, dropped 12 closed before 2024-07-01, 14 with no closing date, 7 with no opening date
+[2026-09-11T16:15:25.018Z] [rijks]   → 37 exhibitions, 34 with curatorial text → rijks.csv
+[2026-09-11T16:15:39.415Z] [ng]   TIMEOUT on https://www.nationalgallery.org.uk/exhibitions/past/velasco — retrying once
+[2026-09-11T16:15:41.193Z] [menil]   TIMEOUT on https://www.menil.org/exhibition/the-space-between-looking-and-loving-francesca-fuchs-and-the-de-menil-house — retrying once
+[2026-09-11T16:15:46.991Z] [menil]   Individual pages: 27 got text, 0 no curatorial text, 0 failed
+[2026-09-11T16:15:46.991Z] [menil]   lookback (final): kept 27, dropped 0 closed before 2024-07-01, 7 with no closing date, 0 with no opening date
+[2026-09-11T16:15:46.993Z] [menil]   → 27 exhibitions, 27 with curatorial text → menil.csv
+[2026-09-11T16:15:47.544Z] [ng]     page 20 of 28
+[2026-09-11T16:16:03.131Z] [ng]   Individual pages: 28 got text, 0 no curatorial text, 0 failed
+[2026-09-11T16:16:03.132Z] [ng]   lookback (final): kept 27, dropped 1 closed before 2024-07-01, 0 with no closing date, 1 with no opening date
+[2026-09-11T16:16:03.132Z] [ng]   → 27 exhibitions, 27 with curatorial text → ng.csv
+[2026-09-11T16:16:03.244Z] 
+[2026-09-11T16:16:03.244Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:16:03.244Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T16:16:03.244Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:16:03.244Z]   WALLACE: 11 exhibitions | 11 with text
+[2026-09-11T16:16:03.244Z]   RIJKS: 37 exhibitions | 34 with text
+[2026-09-11T16:16:03.244Z]   MENIL: 27 exhibitions | 27 with text
+[2026-09-11T16:16:03.244Z]   NG: 27 exhibitions | 27 with text
+[2026-09-11T16:16:03.244Z] 
+[2026-09-11T16:16:03.244Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:16:03.244Z]   COVERAGE — every link accounted for
+[2026-09-11T16:16:03.244Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:16:03.244Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T16:16:03.244Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T16:16:03.244Z]   wallace    current/upcoming                12     4       0     0        0        0          8
+[2026-09-11T16:16:03.244Z]   ng         current/upcoming                12     2       0     3        0        0          7
+[2026-09-11T16:16:03.244Z]   menil      current                         12     0       0     0        0        0         12
+[2026-09-11T16:16:03.244Z]   rijks      current/upcoming                15     5       0     0        0        0         10
+[2026-09-11T16:16:03.244Z]   menil      upcoming                         4     0       0     0        0        0          4
+[2026-09-11T16:16:03.244Z]   wallace    past                            28     4       0     7        0        0         17
+[2026-09-11T16:16:03.244Z]   menil      past                            12     0       0     1        0        0         11
+[2026-09-11T16:16:03.244Z]   rijks      past                            46     6       0     0        0        0         40
+[2026-09-11T16:16:03.244Z]   ng         past                           179     2       0     0        0        0        177
+[2026-09-11T16:16:03.244Z] 
+[2026-09-11T16:16:03.244Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T16:16:03.244Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T16:16:03.244Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T16:16:03.244Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T16:16:03.244Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T16:16:03.244Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T16:16:03.244Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T16:16:03.244Z] 
+[2026-09-11T16:16:03.244Z] Network bridge: 2344 requests served, 3802 skipped (image/media/font), 1 failed
+[2026-09-11T16:16:03.244Z] 
+[2026-09-11T16:16:03.244Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_021418
+[2026-09-11T16:16:03.244Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_021418/sweep.csv  (102 rows — ng:27, rijks:37, menil:27, wallace:11)
+[2026-09-11T16:16:03.244Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_021418/log_2026-09-12_021418.txt
+[2026-09-11T16:16:03.244Z] Not yet in this run: met, acq, borghese, frick, morgan
+[2026-09-11T16:16:03.244Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T16:16:03.244Z] No de-duplication is applied — see passThrough.
