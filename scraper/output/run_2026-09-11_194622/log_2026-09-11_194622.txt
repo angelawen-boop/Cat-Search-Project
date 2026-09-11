@@ -1,0 +1,53 @@
+[2026-09-11T09:46:22.155Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T09:46:22.157Z] Lookback floor: 2024-07-01
+[2026-09-11T09:46:22.157Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-11_194622
+[2026-09-11T09:46:22.158Z] Venues this run: morgan
+[2026-09-11T09:46:22.158Z] Proxy: (none — direct egress assumed)
+[2026-09-11T09:46:22.158Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-11T09:46:22.158Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-11T09:46:22.160Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-11T09:46:22.449Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-11T09:46:22.504Z] No proxy set — Chromium is making its own requests (network bridge off)
+[2026-09-11T09:46:22.714Z] [morgan] 
+[2026-09-11T09:46:22.715Z] [morgan] ────────────────────────────────────────────────────────────
+[2026-09-11T09:46:22.715Z] [morgan]   MORGAN — Morgan Library & Museum, New York
+[2026-09-11T09:46:22.716Z] [morgan] ────────────────────────────────────────────────────────────
+[2026-09-11T09:46:22.716Z] [morgan]   Fetching current: https://www.themorgan.org/exhibitions/current
+[2026-09-11T09:46:22.860Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/current
+[2026-09-11T09:46:22.861Z] [morgan]   FAILED current — BLOCKED_HTTP_403
+[2026-09-11T09:46:22.862Z] [morgan]   Fetching upcoming: https://www.themorgan.org/exhibitions/upcoming
+[2026-09-11T09:46:23.023Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/upcoming
+[2026-09-11T09:46:23.024Z] [morgan]   FAILED upcoming — BLOCKED_HTTP_403
+[2026-09-11T09:46:23.025Z] [morgan]   Fetching past: https://www.themorgan.org/exhibitions/past
+[2026-09-11T09:46:23.146Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/past
+[2026-09-11T09:46:23.146Z] [morgan]   FAILED past — BLOCKED_HTTP_403
+[2026-09-11T09:46:23.149Z] [morgan]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T09:46:23.153Z] [morgan]   → 0 exhibitions, 0 with curatorial text → morgan.csv
+[2026-09-11T09:46:23.279Z] 
+[2026-09-11T09:46:23.280Z] ────────────────────────────────────────────────────────────
+[2026-09-11T09:46:23.280Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T09:46:23.280Z] ────────────────────────────────────────────────────────────
+[2026-09-11T09:46:23.281Z]   MORGAN: 0 exhibitions | 0 with text | 3 page(s) blocked/empty
+[2026-09-11T09:46:23.281Z] 
+[2026-09-11T09:46:23.281Z] ────────────────────────────────────────────────────────────
+[2026-09-11T09:46:23.282Z]   COVERAGE — every link accounted for
+[2026-09-11T09:46:23.282Z] ────────────────────────────────────────────────────────────
+[2026-09-11T09:46:23.282Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-11T09:46:23.283Z]   --------------------------------------------------------------------------------------
+[2026-09-11T09:46:23.283Z]   (no listing pages were read)
+[2026-09-11T09:46:23.283Z] 
+[2026-09-11T09:46:23.283Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T09:46:23.284Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T09:46:23.284Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T09:46:23.284Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T09:46:23.284Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-11T09:46:23.284Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T09:46:23.284Z] 
+[2026-09-11T09:46:23.284Z] Network bridge: 0 requests served, 0 skipped (image/media/font), 0 failed
+[2026-09-11T09:46:23.284Z] 
+[2026-09-11T09:46:23.285Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-11_194622
+[2026-09-11T09:46:23.285Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-11_194622/sweep.csv  (3 rows — morgan:3)
+[2026-09-11T09:46:23.285Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-11_194622/log_2026-09-11_194622.txt
+[2026-09-11T09:46:23.285Z] Not yet in this run: met, ng, rijks, acq, borghese
+[2026-09-11T09:46:23.285Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T09:46:23.285Z] No de-duplication is applied — see passThrough.

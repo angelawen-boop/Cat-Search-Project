@@ -1,0 +1,87 @@
+[2026-09-11T07:49:21.737Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T07:49:21.740Z] Lookback floor: 2024-07-01
+[2026-09-11T07:49:21.740Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-11_174921
+[2026-09-11T07:49:21.741Z] Venues this run: met, morgan
+[2026-09-11T07:49:21.741Z] Proxy: (none — direct egress assumed)
+[2026-09-11T07:49:21.741Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-11T07:49:21.741Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-11T07:49:21.743Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-11T07:49:22.051Z] Running 2 venue(s) 2 at a time (one page at a time within each venue)
+[2026-09-11T07:49:22.102Z] No proxy set — Chromium is making its own requests (network bridge off)
+[2026-09-11T07:49:22.479Z] [met] 
+[2026-09-11T07:49:22.480Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-11T07:49:22.483Z] [met]   MET — The Metropolitan Museum of Art
+[2026-09-11T07:49:22.485Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-11T07:49:22.486Z] [met]   Fetching current/upcoming: https://www.metmuseum.org/exhibitions
+[2026-09-11T07:49:22.567Z] [morgan] 
+[2026-09-11T07:49:22.567Z] [morgan] ────────────────────────────────────────────────────────────
+[2026-09-11T07:49:22.569Z] [morgan]   MORGAN — Morgan Library & Museum, New York
+[2026-09-11T07:49:22.571Z] [morgan] ────────────────────────────────────────────────────────────
+[2026-09-11T07:49:22.572Z] [morgan]   Fetching current: https://www.themorgan.org/exhibitions/current
+[2026-09-11T07:49:22.928Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/current
+[2026-09-11T07:49:22.928Z] [morgan]   FAILED current — BLOCKED_HTTP_403
+[2026-09-11T07:49:22.930Z] [morgan]   Fetching upcoming: https://www.themorgan.org/exhibitions/upcoming
+[2026-09-11T07:49:23.132Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/upcoming
+[2026-09-11T07:49:23.132Z] [morgan]   FAILED upcoming — BLOCKED_HTTP_403
+[2026-09-11T07:49:23.133Z] [morgan]   Fetching past: https://www.themorgan.org/exhibitions/past
+[2026-09-11T07:49:23.303Z] [morgan]   BLOCKED (HTTP 403): https://www.themorgan.org/exhibitions/past
+[2026-09-11T07:49:23.303Z] [morgan]   FAILED past — BLOCKED_HTTP_403
+[2026-09-11T07:49:23.306Z] [morgan]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T07:49:23.309Z] [morgan]   → 0 exhibitions, 0 with curatorial text → morgan.csv
+[2026-09-11T07:49:30.519Z] [met]   current/upcoming: 92 links seen -> 1 navigation, 47 already-seen URL -> 44 collected (43 of them with no readable title)
+[2026-09-11T07:49:30.519Z] [met]   Fetching past: https://www.metmuseum.org/exhibitions/past
+[2026-09-11T07:49:36.000Z] [met]   past: 68 links seen -> 0 navigation, 30 already-seen URL -> 38 collected (29 of them with no readable title)
+[2026-09-11T07:49:36.000Z] [met]   Selecting year 2026...
+[2026-09-11T07:49:37.086Z] [met]   past-2026: 68 links seen -> 0 navigation, 68 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T07:49:37.087Z] [met]   Selecting year 2025...
+[2026-09-11T07:49:38.027Z] [met]   past-2025: 68 links seen -> 0 navigation, 68 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T07:49:38.027Z] [met]   Selecting year 2024...
+[2026-09-11T07:49:39.909Z] [met]   past-2024: 68 links seen -> 0 navigation, 68 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T07:49:39.910Z] [met]   lookback (listing): kept 82, dropped 0 closed before 2024-07-01, 34 with no closing date, 0 with no opening date
+[2026-09-11T07:49:39.911Z] [met]   reading 82 individual page(s)…
+[2026-09-11T07:49:39.911Z] [met]     page 1 of 82
+[2026-09-11T07:49:42.574Z] [met]     page 10 of 82
+[2026-09-11T07:49:45.051Z] [met]     page 20 of 82
+[2026-09-11T07:49:48.097Z] [met]     page 30 of 82
+[2026-09-11T07:49:48.418Z] [met]     prose dates ignored, they contradict the listing: "December 3, 2018, through May 13, 2019"
+[2026-09-11T07:49:50.819Z] [met]     page 40 of 82
+[2026-09-11T07:49:55.157Z] [met]     page 50 of 82
+[2026-09-11T07:50:00.914Z] [met]     page 60 of 82
+[2026-09-11T07:50:05.968Z] [met]     page 70 of 82
+[2026-09-11T07:50:13.798Z] [met]     page 80 of 82
+[2026-09-11T07:50:16.919Z] [met]   Individual pages: 72 got text, 10 no curatorial text, 0 failed
+[2026-09-11T07:50:16.923Z] [met]   lookback (final): kept 82, dropped 0 closed before 2024-07-01, 28 with no closing date, 0 with no opening date
+[2026-09-11T07:50:16.928Z] [met]   → 82 exhibitions, 72 with curatorial text → met.csv
+[2026-09-11T07:50:17.223Z] 
+[2026-09-11T07:50:17.224Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:50:17.224Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T07:50:17.224Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:50:17.224Z]   MORGAN: 0 exhibitions | 0 with text | 3 page(s) blocked/empty
+[2026-09-11T07:50:17.224Z]   MET: 82 exhibitions | 72 with text
+[2026-09-11T07:50:17.224Z] 
+[2026-09-11T07:50:17.224Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:50:17.224Z]   COVERAGE — every link accounted for
+[2026-09-11T07:50:17.224Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:50:17.224Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-11T07:50:17.224Z]   --------------------------------------------------------------------------------------
+[2026-09-11T07:50:17.225Z]   met        current/upcoming                92     1       0    47       43         44
+[2026-09-11T07:50:17.225Z]   met        past                            68     0       0    30       29         38
+[2026-09-11T07:50:17.225Z]   met        past-2026                       68     0       0    68        0          0
+[2026-09-11T07:50:17.225Z]   met        past-2025                       68     0       0    68        0          0
+[2026-09-11T07:50:17.225Z]   met        past-2024                       68     0       0    68        0          0
+[2026-09-11T07:50:17.226Z] 
+[2026-09-11T07:50:17.226Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T07:50:17.226Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T07:50:17.226Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T07:50:17.226Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T07:50:17.226Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-11T07:50:17.226Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T07:50:17.226Z] 
+[2026-09-11T07:50:17.226Z] Network bridge: 0 requests served, 0 skipped (image/media/font), 0 failed
+[2026-09-11T07:50:17.226Z] 
+[2026-09-11T07:50:17.227Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-11_174921
+[2026-09-11T07:50:17.227Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-11_174921/sweep.csv  (85 rows — met:82, morgan:3)
+[2026-09-11T07:50:17.227Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-11_174921/log_2026-09-11_174921.txt
+[2026-09-11T07:50:17.227Z] Not yet in this run: ng, rijks, acq, borghese
+[2026-09-11T07:50:17.227Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T07:50:17.227Z] No de-duplication is applied — see passThrough.
