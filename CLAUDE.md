@@ -1094,24 +1094,66 @@ worth more than any amount of internal consistency.
 
 This is the only part that describes how the *scraper* reaches sites. It is short because it is new, and it will grow to replace 6b.
 
-#### THE SCOREBOARD — hers, 11 Sep 2026, and the settled answer for these six
+#### THE SCOREBOARD — all 21 venues, 11 Sep 2026
 
-Which route reaches which venue. **These are conclusions, not hypotheses** — each
-was tested from both this container and her own machine on 11 Sep.
+Which route reaches which venue. **These are conclusions, not hypotheses** —
+every venue was opened from this container, and every venue that failed here was
+then retried from her own machine on the same evening.
 
-| Venue | Access | Route |
+**How it was measured:** `scraper/reach_probe.js`, which opens each venue's
+listing addresses using the same Chromium, the same network bridge and the same
+`safeGoto()` as a real sweep. Testing with curl instead would have been faster
+and worthless — that is exactly how the Met was misdiagnosed for four days.
+
+| Route | Venues | Count |
 |---|---|---|
-| `rijks`, `ng`, `acq` | scraper works in Claude Code | **Claude-run scrape** |
-| `met` | denied in Claude (a transport problem, ours), works locally | **local scrape** |
-| `borghese` | works in both when the site is up; the site itself is unreliable | **Claude-run scrape**, or the site is simply dead that day |
-| `morgan` | denied in Claude AND locally; Code Claude cannot fetch its pages either | **Chat Claude reads it by hand** — confirmed working by her |
+| **Claude-run scrape** | `ng` `rijks` `acq` `louvre` `uffizi` `brera` `capo` `khm` `frick` `menil` `wallace` `va` `tate-modern` `tate-britain`, plus `borghese` when its site is up, plus `brit` current only | 16 |
+| **Local scrape** (her machine) | `met`, `artic` | 2 |
+| **Neither — automated access refused everywhere** | `morgan`, `moma`, and `brit`'s past page | 2½ |
+| **Unresolved — the site answers nothing, anywhere** | `dellav` | 1 |
 
-**Read "denied" precisely, because the two are not the same failure:**
-- **Met** is not refusing Claude. It dislikes the *type of connection* the
-  container forces on us, and no permitted alternative exists. Locally there is
-  no such constraint, so it works.
-- **Morgan** refuses every automated route, from every address tried, however
-  honestly the scraper identifies itself.
+**What the probe overturned.** Four claims in this document came from the old
+fetch tool and were wrong about the scraper:
+
+- **`uffizi`** was marked UNVERIFIED, never tested — it works, 31 links.
+- **`capo`** was recorded as robots-blocked — it works, though thin at 7 links.
+- **`moma` and `artic`** were both listed as *reliable* — both refuse the scraper
+  outright with a flat 403. The fetch tool reached them because it comes from a
+  different network, which is the whole reason 6b is legacy.
+- **`borghese`** is reachable again after its three-day outage.
+
+**No venue returned an empty JavaScript shell.** Every page that opened had real
+content on it. That was the failure the headless browser was adopted to beat, and
+it is beaten across all 21 — the remaining problems are all refusals or outages,
+which are a different kind of problem entirely.
+
+**Read "denied" precisely, because these are four different failures:**
+
+- **`met`** is not refusing Claude. It dislikes the *type of connection* the
+  container forces on us (a Vercel bot checkpoint), and no permitted alternative
+  exists. Locally there is no such constraint, so it works — 106 rows.
+- **`artic`** is the same shape and was found the same way: a flat 403 here in
+  0.3 seconds, and **66 links from her laptop**. Address-based, so the local
+  route clears it.
+- **`morgan` and `moma`** refuse every automated route from every address tried,
+  however honestly the scraper identifies itself. Her machine gets the identical
+  403 in 0.1 seconds. These are the Chat Claude venues.
+- **`brit` is split, and the split is stable across both networks.** Its current
+  page opens fine (19 links); `/exhibitions-events/past-exhibitions` returns 403
+  from the container AND from her laptop. So this is a **page-level** refusal,
+  not a venue-level one — the British Museum is a working venue with an
+  unreachable archive, and should be wired as such rather than written off.
+- **`dellav` is the one genuinely unresolved case.** The brief's address
+  (`gallerieaccademia.it/en/node?page=1`) now 404s: **the venue has migrated** to
+  `galleriaaccademiafirenze.it/en/exhibitions-events/`. That new address returns
+  `NO_RESPONSE` — the server accepts nothing at all — from **both** the container
+  and her machine. A refusal would be a 403; accepting nothing is a site fault or
+  a DNS problem, and Borghese's outage looked exactly like this for three days
+  before clearing on its own. Retry before concluding anything.
+
+**Several Italian venues have migrated during this project** — Borghese moved
+hosts, and now Gallerie dell'Accademia. Treat an Italian 404 as "find the new
+site" before "the venue is unreachable".
 
 **This supersedes the older "met and morgan are blocked" framing throughout this
 document.** Where an earlier paragraph says the blocks are about this
