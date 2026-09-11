@@ -46,7 +46,11 @@ const TARGETS = {
   brera:          ['https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=in-progress',
                    'https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=archive'],
   capo:           ['https://capodimonte.cultura.gov.it/mostre/'],
-  dellav:         ['https://www.gallerieaccademia.it/en/node?page=1'],
+  // Migrated. The brief's gallerieaccademia.it/en/node?page=1 now 404s; she
+  // found the new home on 11 Sep. Several Italian venues have moved during this
+  // project (Borghese too), so treat an Italian 404 as "look for the new site"
+  // before "the venue is unreachable".
+  dellav:         ['https://www.galleriaaccademiafirenze.it/en/exhibitions-events/'],
   khm:            ['https://www.khm.at/en/exhibitions', 'https://www.khm.at/en/exhibitions/upcoming'],
   moma:           ['https://www.moma.org/calendar/exhibitions', 'https://www.moma.org/calendar/exhibitions/history/'],
   frick:          ['https://www.frick.org/exhibitions'],
