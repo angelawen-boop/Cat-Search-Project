@@ -1172,8 +1172,12 @@ boilerplate. One row leads with "This exhibition is temporarily closed due to
 gallery maintenance" — the venue's own opening sentence, so a judgement for the
 compressor rather than a scraper fault.
 
-**3. One row lacks an opening date**, not ten: *Defensive: Shields from The Met
-Collection*. Unverified against the live page.
+**3. One row lacks a CLOSING date, and the scraper is right — checked 11 Sep.**
+*Baseball Cards from the Collection of Jefferson R. Burdick* is shut for gallery
+maintenance and its page says only that it reopens in spring 2027. The Met's
+structured data carries that reopening as the opening date; there is no closing
+date anywhere, so the column is blank and the note says why. **She checked the
+live page and confirmed it.** Nothing to fix — do not go looking again.
 
 **4. Nineteen rows had no closing date because they are PERMANENT DISPLAYS —
 fixed, and they are deliberately invisible.** *The British Galleries*, *Cycladic
