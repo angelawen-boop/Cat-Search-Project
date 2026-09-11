@@ -2298,6 +2298,39 @@ const VENUES = {
   // opened" rather than "has closed". Both are fetched anyway and the URL guard
   // collapses the overlap, which is exactly what that guard is for. Tate
   // publishes no past archive; that is a site limit, not a gap here.
+  louvre: {
+    name: 'Louvre, Paris',
+    base: 'https://www.louvre.fr',
+    // Its year filter is SERVER-SIDE — a different address per year, not a
+    // control to operate — so the archive is simply more pages.
+    pages: [
+      { path: '/en/exhibitions-and-events/exhibitions',      ctx: 'current/upcoming' },
+      { path: '/en/exhibitions-and-events/past-exhibitions', ctx: 'past' },
+      { path: '/en/exhibitions-and-events/past-exhibitions', ctx: 'past', param: 'date', yearArchive: true },
+    ],
+    selector: 'a[href*="/exhibitions-and-events/"]',
+    isNav: href => /\/exhibitions-and-events\/?$/.test(href)
+                || /\/exhibitions-and-events\/(exhibitions|past-exhibitions)\/?$/.test(href),
+    title: { heading: true },
+  },
+
+  capo: {
+    name: 'Capodimonte, Naples',
+    base: 'https://capodimonte.cultura.gov.it',
+    // One page carries everything — 50 exhibitions read 12 Sep.
+    pages: [
+      { path: '/mostre/', ctx: 'all (current/upcoming/past)' },
+    ],
+    // SINGULAR /mostra/ for an exhibition while the listing is /mostre/ — the
+    // same trap as the Menil, read off the site rather than guessed.
+    selector: 'a[href*="/mostra/"]',
+    isNav: href => /\/mostre\/?$/.test(href) || /\/mostra\/?$/.test(href),
+    // Cards read "Title (11 maggio-12 giugno 2025)" — the run in brackets on
+    // the end. Stripped from the title; see the note in the sweep report about
+    // ITALIAN month names, which the shared date parser does not yet know.
+    title: { heading: true, stripTrailing: /\s*\([^()]*\d[^()]*\)\s*$/ },
+  },
+
   // ── VENUES NOTHING CAN REACH ────────────────────────────────────────────────
   //
   // Wired deliberately, and every recipe below is an UNTESTED GUESS. Nothing
@@ -2359,25 +2392,21 @@ const VENUES = {
   dellav: {
     name: "Gallerie dell'Accademia, Venice",
     base: 'https://www.gallerieaccademia.it',
-    // ADDRESS IN DOUBT — read this before changing it.
+    // NOT BLOCKED. It never was — the record saying every automated connection
+    // is refused came from the brief's dead address (/en/node?page=1, a 404)
+    // and from a "migration" to galleriaaccademiafirenze.it, which is the
+    // Galleria dell'Accademia in FLORENCE, a different museum. She supplied the
+    // real one, 12 Sep: gallerieaccademia.it/en/. A 404 was always the clue —
+    // the server was answering.
     //
-    // The brief's address 404s, and this guide recorded the venue as having
-    // migrated to galleriaaccademiafirenze.it. That is very probably WRONG:
-    // `dellav` is the Gallerie dell'Accademia in VENICE, while
-    // galleriaaccademiafirenze is the Galleria dell'Accademia in FLORENCE — a
-    // different museum, the one with Michelangelo's David. Pointing the scraper
-    // there would import another institution's exhibitions under this code, and
-    // nothing downstream could tell.
-    //
-    // So the brief's own host is kept and the doubt is recorded rather than
-    // resolved by guessing. The venue refuses every automated connection from
-    // both this container and her machine, so it cannot be settled by trying.
-    // Settling it needs her to open both sites in an ordinary browser.
+    // There is NO listing page. "Events & Exhibitions" in the menu is a
+    // dropdown (href="#"), and the home page itself carries the current shows —
+    // 1 to 2 at a time, as the brief says. No upcoming or past archive exists.
     pages: [
-      { path: '/en/node?page=1', ctx: 'current' },
+      { path: '/en/', ctx: 'current' },
     ],
-    selector: 'a[href*="/en/"]',
-    isNav: href => /\/en\/?$/.test(href) || /\/en\/node/.test(href),
+    selector: 'a[href*="/en/exhibition/"]',
+    isNav: href => /\/en\/exhibition\/?$/.test(href),
     title: { heading: true },
   },
 
@@ -2529,8 +2558,33 @@ async function scrapeVenue(page, code) {
       otherBranch: v.otherBranch || null,
     };
 
+    const rowsBefore = rows.length;
+
     try {
-      await collectFromListing(page, opts);
+      const cov = await collectFromListing(page, opts);
+
+      // A PAGE THAT LOADS AND YIELDS NOTHING MUST SAY SO TOO.
+      //
+      // Until now only a refusal or an empty body left a marker, so a listing
+      // that served real content but produced no exhibitions vanished from the
+      // CSV entirely — readable in the log and nowhere she looks. The British
+      // Museum does exactly this: its current page is still served from
+      // Cloudflare's edge cache, returns one link, and that link is navigation.
+      // Zero rows and zero explanation, indistinguishable from a venue with
+      // nothing on.
+      //
+      // Deliberately AFTER the de-duplication guard, so a page whose every link
+      // was already collected from another of this venue's pages does not
+      // report itself as empty — Tate's two "past" pages are exactly that, and
+      // they are working correctly.
+      if (rows.length === rowsBefore && !(cov && cov.dupUrl)) {
+        log(`  NO EXHIBITIONS ${pg.ctx}: page loaded and was read, but nothing matched`);
+        rows.push({
+          venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
+          summary: '', url,
+          notes: `The venue's "${pg.ctx}" listing page loaded but no exhibitions could be read from it. Marker row, not an exhibition.`,
+        });
+      }
 
     } catch (e) {
       rethrowIfAborted(e);

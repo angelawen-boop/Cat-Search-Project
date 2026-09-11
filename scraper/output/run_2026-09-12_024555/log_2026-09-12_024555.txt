@@ -1,0 +1,66 @@
+[2026-09-11T16:45:55.859Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T16:45:55.860Z] Lookback floor: 2024-07-01
+[2026-09-11T16:45:55.861Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_024555
+[2026-09-11T16:45:55.861Z] Venues this run: brit, tate-britain
+[2026-09-11T16:45:55.861Z] Proxy: http://127.0.0.1:40485
+[2026-09-11T16:45:55.861Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T16:45:56.018Z] Running 2 venue(s) 2 at a time (one page at a time within each venue)
+[2026-09-11T16:45:56.160Z] [tate-britain] 
+[2026-09-11T16:45:56.161Z] [tate-britain] ────────────────────────────────────────────────────────────
+[2026-09-11T16:45:56.161Z] [tate-britain]   TATE-BRITAIN — Tate Britain, London
+[2026-09-11T16:45:56.161Z] [tate-britain] ────────────────────────────────────────────────────────────
+[2026-09-11T16:45:56.161Z] [tate-britain]   Fetching current/upcoming: https://www.tate.org.uk/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=display&event_type=exhibition
+[2026-09-11T16:45:56.162Z] [brit] 
+[2026-09-11T16:45:56.162Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-11T16:45:56.162Z] [brit]   BRIT — British Museum, London
+[2026-09-11T16:45:56.162Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-11T16:45:56.162Z] [brit]   Fetching current/upcoming: https://www.britishmuseum.org/exhibitions-events
+[2026-09-11T16:45:57.788Z] [brit]   current/upcoming: 1 links seen -> 1 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T16:45:57.788Z] [brit]   NO EXHIBITIONS current/upcoming: page loaded and was read, but nothing matched
+[2026-09-11T16:45:57.788Z] [brit]   Fetching past: https://www.britishmuseum.org/exhibitions-events/past-exhibitions
+[2026-09-11T16:45:58.029Z] [brit]   BLOCKED (HTTP 403): https://www.britishmuseum.org/exhibitions-events/past-exhibitions
+[2026-09-11T16:45:58.029Z] [brit]   FAILED past — BLOCKED_HTTP_403
+[2026-09-11T16:45:58.030Z] [brit]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T16:45:58.031Z] [brit]   → 0 exhibitions, 0 with curatorial text → brit.csv
+[2026-09-11T16:45:58.859Z] [tate-britain]   current/upcoming: 11 links seen -> 0 navigation, 1 already-seen URL -> 10 collected (0 of them with no readable title)
+[2026-09-11T16:45:58.859Z] [tate-britain]   Fetching recently opened: https://www.tate.org.uk/whats-on?date_range=past&gallery_group=tate-britain&event_type=display&event_type=exhibition
+[2026-09-11T16:46:02.135Z] [tate-britain]   recently opened: 5 links seen -> 0 navigation, 5 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T16:46:02.135Z] [tate-britain]   lookback (listing): kept 10, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T16:46:02.135Z] [tate-britain]   reading 10 individual page(s)…
+[2026-09-11T16:46:02.135Z] [tate-britain]     page 1 of 10
+[2026-09-11T16:46:11.182Z] [tate-britain]     page 10 of 10
+[2026-09-11T16:46:12.541Z] [tate-britain]   Individual pages: 10 got text, 0 no curatorial text, 0 failed
+[2026-09-11T16:46:12.541Z] [tate-britain]   lookback (final): kept 10, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T16:46:12.542Z] [tate-britain]   → 10 exhibitions, 10 with curatorial text → tate-britain.csv
+[2026-09-11T16:46:12.630Z] 
+[2026-09-11T16:46:12.630Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:46:12.630Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T16:46:12.630Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:46:12.630Z]   BRIT: 0 exhibitions | 0 with text | 2 page(s) blocked/empty
+[2026-09-11T16:46:12.630Z]   TATE-BRITAIN: 10 exhibitions | 10 with text
+[2026-09-11T16:46:12.631Z] 
+[2026-09-11T16:46:12.631Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:46:12.631Z]   COVERAGE — every link accounted for
+[2026-09-11T16:46:12.631Z] ────────────────────────────────────────────────────────────
+[2026-09-11T16:46:12.631Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T16:46:12.631Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T16:46:12.631Z]   brit       current/upcoming                 1     1       0     0        0        0          0
+[2026-09-11T16:46:12.631Z]   tate-britain current/upcoming                11     0       0     1        0        0         10
+[2026-09-11T16:46:12.631Z]   tate-britain recently opened                  5     0       0     5        0        0          0
+[2026-09-11T16:46:12.631Z] 
+[2026-09-11T16:46:12.631Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T16:46:12.631Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T16:46:12.631Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T16:46:12.631Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T16:46:12.631Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T16:46:12.631Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T16:46:12.631Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T16:46:12.631Z] 
+[2026-09-11T16:46:12.631Z] Network bridge: 305 requests served, 254 skipped (image/media/font), 0 failed
+[2026-09-11T16:46:12.631Z] 
+[2026-09-11T16:46:12.631Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_024555
+[2026-09-11T16:46:12.631Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_024555/sweep.csv  (12 rows — brit:2, tate-britain:10)
+[2026-09-11T16:46:12.631Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_024555/log_2026-09-12_024555.txt
+[2026-09-11T16:46:12.631Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, moma, dellav, tate-modern, wallace
+[2026-09-11T16:46:12.631Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T16:46:12.631Z] No de-duplication is applied — see passThrough.
