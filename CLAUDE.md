@@ -1233,10 +1233,11 @@ scraper output**, so the join between scraper and app is no longer the unproven 
      good**. The whole chain — scrape, reuse, forced rewrite, file handed over —
      has now run end to end with her driving it.
 
-   **The one gap left:** the *judging* half has never fired on real data. No
-   venue reworded a blurb, so Haiku has not been asked *is the old summary now
-   false?* outside the authored eval — and that eval's answers are still not
-   committed. Running `compress_eval.js` closes it and needs no scraping.
+   **The one gap left, and it is not a blocker:** the *judging* half has never
+   fired on real data, because no venue has yet reworded a blurb. It rests on the
+   authored eval, which scored 14 of 14 — run, but with its answers never saved.
+   **She has declined to re-run it for the sake of the file. Do not raise it
+   again**; it waits for a venue to actually reword something.
 2. **Wire all 21 venues with default recipes and run once.** This replaces what were two
    steps — "re-check Borghese and probe the rest" and "expand to the accessible ones".
    Marker rows became universal on 10 Sep, so **the run itself is the reconnaissance**:
@@ -1682,8 +1683,14 @@ summaries by hand, which proves nothing about what runs unattended.
 produced in-session and the answer file was never written to the repo, so the
 result survives only as prose here. A later session cannot re-score it without
 re-answering all 14 cases. Not a defect — the eval itself is committed and
-re-runnable — but the next run of it should commit its answer file beside
-`compress_eval.json` so the score becomes evidence rather than memory.
+re-runnable.
+
+**She has declined to re-run it, 11 Sep, and that is settled — do not raise it
+again.** The eval was run and scored 14 of 14; only the saving of the answers was
+missed, and re-answering 14 cases to produce a file is not worth her session time
+against work that is actually outstanding. If the eval is run again for some other
+reason, commit the answer file beside `compress_eval.json` that time. Do not run
+it solely to fill this gap, and do not list it as a blocker on anything.
 
 **Rejected along the way, with reasons, so they are not re-proposed:**
 - **Give the compressor her ledger** so it can skip rows she already has. Puts a
