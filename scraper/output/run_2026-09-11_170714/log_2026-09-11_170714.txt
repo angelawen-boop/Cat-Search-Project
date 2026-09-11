@@ -1,0 +1,58 @@
+[2026-09-11T07:07:14.156Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T07:07:14.157Z] Lookback floor: 2024-07-01
+[2026-09-11T07:07:14.157Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_170714
+[2026-09-11T07:07:14.157Z] Venues this run: borghese
+[2026-09-11T07:07:14.158Z] Proxy: http://127.0.0.1:42649
+[2026-09-11T07:07:14.159Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T07:07:14.835Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-11T07:07:15.080Z] [borghese] 
+[2026-09-11T07:07:15.080Z] [borghese] ────────────────────────────────────────────────────────────
+[2026-09-11T07:07:15.080Z] [borghese]   BORGHESE — Galleria Borghese, Rome
+[2026-09-11T07:07:15.080Z] [borghese] ────────────────────────────────────────────────────────────
+[2026-09-11T07:07:15.080Z] [borghese]   Fetching current: https://galleriaborghese.cultura.gov.it/en/mostre/presenti/
+[2026-09-11T07:07:20.473Z] [borghese]   current: 1 links seen -> 0 navigation, 0 already-seen URL -> 1 collected (0 of them with no readable title)
+[2026-09-11T07:07:20.473Z] [borghese]   Fetching upcoming: https://galleriaborghese.cultura.gov.it/en/mostre/future/
+[2026-09-11T07:07:24.755Z] [borghese]   upcoming: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T07:07:24.755Z] [borghese]   Fetching past: https://galleriaborghese.cultura.gov.it/en/mostre/passate/
+[2026-09-11T07:07:29.583Z] [borghese]   past: 40 links seen -> 0 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-11T07:07:29.583Z] [borghese]   reading 41 individual page(s)…
+[2026-09-11T07:07:29.583Z] [borghese]     page 1 of 41
+[2026-09-11T07:08:15.142Z] [borghese]     page 10 of 41
+[2026-09-11T07:08:43.106Z] [borghese]   TIMEOUT on https://galleriaborghese.cultura.gov.it/en/exhibition/a-timeless-wonder-painting-on-stone-in-rome-in-the-seventeenth-century/ — retrying once
+[2026-09-11T07:09:09.632Z] [borghese]   TIMEOUT on https://galleriaborghese.cultura.gov.it/en/exhibition/titian-dialogues-of-nature-and-love/ — retrying once
+[2026-09-11T07:09:39.099Z] [borghese]     page 20 of 41
+[2026-09-11T07:10:16.388Z] [borghese]     page 30 of 41
+[2026-09-11T07:10:53.341Z] [borghese]     page 40 of 41
+[2026-09-11T07:11:00.311Z] [borghese]   Individual pages: 41 got text, 0 no curatorial text, 0 failed
+[2026-09-11T07:11:00.311Z] [borghese]   lookback (final): kept 7, dropped 34 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T07:11:00.312Z] [borghese]   → 7 exhibitions, 7 with curatorial text → borghese.csv
+[2026-09-11T07:11:00.420Z] 
+[2026-09-11T07:11:00.421Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:11:00.421Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T07:11:00.421Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:11:00.421Z]   BORGHESE: 7 exhibitions | 7 with text
+[2026-09-11T07:11:00.421Z] 
+[2026-09-11T07:11:00.421Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:11:00.421Z]   COVERAGE — every link accounted for
+[2026-09-11T07:11:00.421Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:11:00.421Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-11T07:11:00.421Z]   --------------------------------------------------------------------------------------
+[2026-09-11T07:11:00.421Z]   borghese   current                          1     0       0     0        0          1
+[2026-09-11T07:11:00.421Z]   borghese   upcoming                         0     0       0     0        0          0
+[2026-09-11T07:11:00.421Z]   borghese   past                            40     0       0     0        0         40
+[2026-09-11T07:11:00.421Z] 
+[2026-09-11T07:11:00.421Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T07:11:00.421Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T07:11:00.421Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T07:11:00.421Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T07:11:00.421Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-11T07:11:00.421Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T07:11:00.421Z] 
+[2026-09-11T07:11:00.421Z] Network bridge: 700 requests served, 1231 skipped (image/media/font), 0 failed
+[2026-09-11T07:11:00.421Z] 
+[2026-09-11T07:11:00.421Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_170714
+[2026-09-11T07:11:00.421Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_170714/sweep.csv  (7 rows — borghese:7)
+[2026-09-11T07:11:00.421Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_170714/log_2026-09-11_170714.txt
+[2026-09-11T07:11:00.421Z] Not yet in this run: met, ng, rijks, acq, morgan
+[2026-09-11T07:11:00.421Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T07:11:00.421Z] No de-duplication is applied — see passThrough.

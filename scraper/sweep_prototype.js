@@ -1086,7 +1086,12 @@ async function getText(el) {
  * Runs entirely inside the page in one call rather than fetching elements one
  * at a time — faster, and it can inspect ancestors while it goes.
  */
-const NOISE_CONTAINER = 'cmplz|cookie|consent|gdpr|privacy|onetrust|cky-|truste|usercentrics|didomi|banner|newsletter|subscribe|footer|nav';
+// Containers whose contents are never curatorial. Structure is a better signal
+// than wording where it is available, so this is the first line and BOILERPLATE
+// the second: a venue can word its ticket copy any way it likes, but it almost
+// always puts it in a block that says so. Added 11 Sep after Borghese's ticket
+// discount became an exhibition's description (see BOILERPLATE, DEF-03).
+const NOISE_CONTAINER = 'cmplz|cookie|consent|gdpr|privacy|onetrust|cky-|truste|usercentrics|didomi|banner|newsletter|subscribe|footer|nav|ticket|visit-info|visitor-info|contact|address|opening-hours|practical';
 
 const BOILERPLATE = [
   'technical storage or access',
@@ -1098,6 +1103,39 @@ const BOILERPLATE = [
   'accept all cookies',
   'privacy policy',
   'sign up to our newsletter',
+
+  // DEF-03, and it surfaced for real on 11 Sep 2026 rather than in theory.
+  //
+  // Borghese's Louise Bourgeois page has NO curatorial paragraph at all. Its
+  // only substantial text is a ticket discount, a newsletter pitch and the
+  // footer address — so the extractor took the discount and that sentence became
+  // the exhibition's description, bound for an approval card:
+  //
+  //   "During the exhibition, those who present the Galleria Borghese ticket at
+  //    the Villa Medici ticket office will be entitled to a discount, 8€
+  //    instead of 10€."
+  //
+  // The right answer for that page is an EMPTY summary plus the note that
+  // already exists ("No description could be found…"). Empty is honest; wrong
+  // is not, and she would be the one asking why the description is nonsense.
+  //
+  // Be clear about what this is: a blacklist, which is a weak instrument. It
+  // catches the visitor-information text these venues actually print, and the
+  // next venue will print something it does not know. The real test — "is this
+  // prose ABOUT the exhibition?" — is judgement about the outside world, so it
+  // belongs to a model, and the compressor already refuses text that is not a
+  // description. That remains the SECOND net. Her ruling stands: bad text must
+  // not be let through here on the assumption a later stage catches it.
+  'entitled to a discount',
+  'ticket office',
+  'ticket purchase',
+  'subscribe to',
+  'to stay updated',
+  'opening hours',
+  'admission is free',
+  'book your visit',
+  'buy tickets',
+  'for visit info',
 ];
 
 const CURATORIAL_SELECTORS = [
@@ -1890,8 +1928,26 @@ async function fetchIndividualPages(page, rows, venueCode) {
         // Borrow the year from whichever date we already hold. Venues often
         // print a bare "5 June to 25 October" on the exhibition's own page
         // while the listing card carried the year.
-        const hintYear = (row.start_date || row.end_date || '').slice(0, 4);
+        //
+        // Falling back to latest_year is what rescues a whole class of Borghese
+        // rows. Its archive prints "March / 2024" on the listing — a real
+        // published year, but no day, so NOTHING is written to the date columns
+        // and both are empty here. Meanwhile the exhibition's own page says
+        // "From March 26 to June 23" — real days, no year. Each half is useless
+        // alone and they never met, so a fully-dated show came out blank.
+        //
+        // Putting them together is logic, not a guess: the venue published the
+        // year for this exhibition and the days for this exhibition, and both
+        // agree on the month. Her rule is that the columns stay blank where the
+        // code has no applicable logic — here it has some.
+        const hintYear = (row.start_date || row.end_date || '').slice(0, 4)
+          || (row.latest_year ? String(row.latest_year) : '');
         const p = findDateRangeInProse(bodyText, hintYear);
+        // Whether the year was borrowed rather than printed beside the days —
+        // used below so the note can say so instead of implying the page stated
+        // a full date.
+        const yearBorrowed = !row.start_date && !row.end_date && !!row.latest_year
+          && !/\d{4}/.test(p.raw || '');
 
         // A sentence that CONTRADICTS what the listing already told us is not
         // about this exhibition, so none of it may be used — not even the half
@@ -1919,6 +1975,13 @@ async function fetchIndividualPages(page, rows, venueCode) {
         if (filled.length) {
           row.notes = addNote(row.notes,
             `${filled.join(' and ')} date read from a sentence, not a date field: "${p.raw}".`);
+          // Say so when the year came from somewhere else. The sentence quoted
+          // above carries no year, so without this the note reads as though the
+          // page stated a full date and she has no way to see the join.
+          if (yearBorrowed) {
+            row.notes = addNote(row.notes,
+              `The year ${hintYear} comes from the listing, which published only a month and year.`);
+          }
         }
 
         // Still no closing date. Record what the page DOES print, if anything,

@@ -1,0 +1,56 @@
+[2026-09-11T07:12:08.500Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T07:12:08.501Z] Lookback floor: 2024-07-01
+[2026-09-11T07:12:08.501Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_171208
+[2026-09-11T07:12:08.501Z] Venues this run: borghese
+[2026-09-11T07:12:08.501Z] Proxy: http://127.0.0.1:42649
+[2026-09-11T07:12:08.501Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T07:12:08.625Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-11T07:12:08.725Z] [borghese] 
+[2026-09-11T07:12:08.725Z] [borghese] ────────────────────────────────────────────────────────────
+[2026-09-11T07:12:08.725Z] [borghese]   BORGHESE — Galleria Borghese, Rome
+[2026-09-11T07:12:08.725Z] [borghese] ────────────────────────────────────────────────────────────
+[2026-09-11T07:12:08.725Z] [borghese]   Fetching current: https://galleriaborghese.cultura.gov.it/en/mostre/presenti/
+[2026-09-11T07:12:13.065Z] [borghese]   current: 1 links seen -> 0 navigation, 0 already-seen URL -> 1 collected (0 of them with no readable title)
+[2026-09-11T07:12:13.065Z] [borghese]   Fetching upcoming: https://galleriaborghese.cultura.gov.it/en/mostre/future/
+[2026-09-11T07:12:16.554Z] [borghese]   upcoming: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T07:12:16.554Z] [borghese]   Fetching past: https://galleriaborghese.cultura.gov.it/en/mostre/passate/
+[2026-09-11T07:12:20.965Z] [borghese]   past: 40 links seen -> 0 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-11T07:12:20.965Z] [borghese]   reading 41 individual page(s)…
+[2026-09-11T07:12:20.965Z] [borghese]     page 1 of 41
+[2026-09-11T07:12:54.330Z] [borghese]     page 10 of 41
+[2026-09-11T07:13:31.701Z] [borghese]     page 20 of 41
+[2026-09-11T07:14:09.091Z] [borghese]     page 30 of 41
+[2026-09-11T07:14:47.127Z] [borghese]     page 40 of 41
+[2026-09-11T07:14:54.596Z] [borghese]   Individual pages: 40 got text, 1 no curatorial text, 0 failed
+[2026-09-11T07:14:54.596Z] [borghese]   lookback (final): kept 7, dropped 34 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T07:14:54.597Z] [borghese]   → 7 exhibitions, 6 with curatorial text → borghese.csv
+[2026-09-11T07:14:54.695Z] 
+[2026-09-11T07:14:54.695Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:14:54.695Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T07:14:54.695Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:14:54.695Z]   BORGHESE: 7 exhibitions | 6 with text
+[2026-09-11T07:14:54.695Z] 
+[2026-09-11T07:14:54.695Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:14:54.695Z]   COVERAGE — every link accounted for
+[2026-09-11T07:14:54.695Z] ────────────────────────────────────────────────────────────
+[2026-09-11T07:14:54.695Z]   venue      page                          seen   nav offsite   dup  noTitle  collected
+[2026-09-11T07:14:54.695Z]   --------------------------------------------------------------------------------------
+[2026-09-11T07:14:54.695Z]   borghese   current                          1     0       0     0        0          1
+[2026-09-11T07:14:54.695Z]   borghese   upcoming                         0     0       0     0        0          0
+[2026-09-11T07:14:54.695Z]   borghese   past                            40     0       0     0        0         40
+[2026-09-11T07:14:54.695Z] 
+[2026-09-11T07:14:54.695Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T07:14:54.695Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T07:14:54.695Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T07:14:54.695Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T07:14:54.695Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-11T07:14:54.695Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T07:14:54.695Z] 
+[2026-09-11T07:14:54.695Z] Network bridge: 671 requests served, 1198 skipped (image/media/font), 0 failed
+[2026-09-11T07:14:54.695Z] 
+[2026-09-11T07:14:54.695Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_171208
+[2026-09-11T07:14:54.695Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_171208/sweep.csv  (7 rows — borghese:7)
+[2026-09-11T07:14:54.695Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-11_171208/log_2026-09-11_171208.txt
+[2026-09-11T07:14:54.695Z] Not yet in this run: met, ng, rijks, acq, morgan
+[2026-09-11T07:14:54.695Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T07:14:54.695Z] No de-duplication is applied — see passThrough.
