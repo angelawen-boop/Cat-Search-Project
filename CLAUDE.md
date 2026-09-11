@@ -382,47 +382,6 @@ node scraper/compress.js <run> --apply       write sweep_compressed.csv
 npm test                                     all fixtures, ~1 second
 ```
 
-### Running a test sweep yourself, from a cold session
-
-Written out because she will be the one doing it, and a session that has just
-started knows none of this until it reads the guide.
-
-**What to say first.** Open a new Claude Code session on this repo and say:
-
-> Read CLAUDE.md, then run a test sweep and compression on acq.
-
-That one line is enough. The session reads the guide, and the startup hook has
-already put it on `main` and installed the dependencies.
-
-**The three commands, in order:**
-
-1. `node scraper/sweep_prototype.js acq` — scrapes one venue. About a minute.
-   Creates a new `scraper/output/run_<date>_<time>/` directory. Use one venue for
-   a test; leave the venue name off only when you want all of them.
-2. `node scraper/compress.js` — does **not** write the file yet. It works out
-   which rows still need words and writes `compress_pending.json`. If every row
-   is reused from a previous run it says so and writes the final file outright,
-   and you are finished.
-3. `node scraper/compress.js <run> --apply` — writes `sweep_compressed.csv`.
-   **That is the file to import into the app.**
-
-**The bit in the middle, between 2 and 3.** Step 2 prints a handoff asking for
-subagents. You will be shown an approval box for each one — that is the hook, and
-it names the model first so you can see what you are approving. Approve one per
-job. If the box says **SESSION DEFAULT** instead of a model name, say no: the
-model choice has been lost, and the measured split is the whole point.
-
-Nothing to approve means nothing needed writing, which is the normal result on a
-re-run.
-
-**If it stops and complains**, that is by design — `--apply` refuses a batch with
-a missing, over-long or malformed answer rather than writing half a file. Tell the
-session what it printed.
-
-**To check the words before importing:** open `sweep_compressed.csv` and read the
-summary column. Wrong wording is the one failure the script cannot catch, and it
-is visible on the approval cards in the app anyway.
-
 ### A run is a directory, not a file
 
 ```
