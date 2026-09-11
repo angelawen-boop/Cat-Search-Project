@@ -33,36 +33,115 @@ const {
 // Addresses are HERS, from docs/venue_urls.md — never constructed from a
 // pattern. Where the brief and CLAUDE.md Section 6c disagree, BOTH are listed
 // and both are probed, so the run settles the conflict instead of guessing.
+// Every listing page of every venue, LABELLED by which state it serves.
+//
+// An earlier version listed one or two addresses for several venues and the
+// probe then reported the VENUE as reachable. That is not a claim the test
+// supports: brit serves its current listing and refuses its archive, and
+// nothing in a one-page ping would ever show it. A venue's three states are
+// three separate questions and each is asked here.
+//
+// Where the brief and CLAUDE.md Section 6c disagree on an address, BOTH are
+// listed, so a run settles the conflict instead of a session picking one.
 const TARGETS = {
-  met:            ['https://www.metmuseum.org/exhibitions', 'https://www.metmuseum.org/exhibitions/past'],
-  ng:             ['https://www.nationalgallery.org.uk/exhibitions', 'https://www.nationalgallery.org.uk/exhibitions/past'],
-  rijks:          ['https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view', 'https://www.rijksmuseum.nl/en/whats-on/exhibitions/past'],
-  acq:            ['https://www.acquavellagalleries.com/exhibitions'],
-  louvre:         ['https://www.louvre.fr/en/explore/exhibitions',
-                   'https://www.louvre.fr/en/exhibitions-and-events/exhibitions',
-                   'https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions'],
-  uffizi:         ['https://www.uffizi.it/en/event-category/exhibitions'],
-  borghese:       ['https://galleriaborghese.cultura.gov.it/en/mostre/presenti/', 'https://galleriaborghese.cultura.gov.it/en/mostre/passate/'],
-  brera:          ['https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=in-progress',
-                   'https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=archive'],
-  capo:           ['https://capodimonte.cultura.gov.it/mostre/'],
-  // Migrated. The brief's gallerieaccademia.it/en/node?page=1 now 404s; she
-  // found the new home on 11 Sep. Several Italian venues have moved during this
-  // project (Borghese too), so treat an Italian 404 as "look for the new site"
+  met: [
+    ['current+upcoming', 'https://www.metmuseum.org/exhibitions'],
+    ['past',             'https://www.metmuseum.org/exhibitions/past'],
+    ['past year',        'https://www.metmuseum.org/exhibitions/past?year=2025'],
+  ],
+  ng: [
+    ['current+upcoming', 'https://www.nationalgallery.org.uk/exhibitions'],
+    ['past',             'https://www.nationalgallery.org.uk/exhibitions/past'],
+  ],
+  rijks: [
+    ['current+upcoming', 'https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view'],
+    ['past',             'https://www.rijksmuseum.nl/en/whats-on/exhibitions/past'],
+  ],
+  acq: [
+    ['all three states',  'https://www.acquavellagalleries.com/exhibitions'],
+  ],
+  louvre: [
+    ['current (brief)',      'https://www.louvre.fr/en/explore/exhibitions'],
+    ['current (correction)', 'https://www.louvre.fr/en/exhibitions-and-events/exhibitions'],
+    ['past',                 'https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions'],
+  ],
+  uffizi: [
+    ['all states',  'https://www.uffizi.it/en/event-category/exhibitions'],
+    ['upcoming',    'https://www.uffizi.it/en/event-category/exhibitions/upcoming-exhibitions'],
+  ],
+  borghese: [
+    ['current',  'https://galleriaborghese.cultura.gov.it/en/mostre/presenti/'],
+    ['upcoming', 'https://galleriaborghese.cultura.gov.it/en/mostre/future/'],
+    ['past',     'https://galleriaborghese.cultura.gov.it/en/mostre/passate/'],
+  ],
+  brera: [
+    ['current',  'https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=in-progress'],
+    ['upcoming', 'https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=scheduled'],
+    ['past',     'https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=archive'],
+  ],
+  capo: [
+    ['all states', 'https://capodimonte.cultura.gov.it/mostre/'],
+  ],
+  // MIGRATED. The brief's gallerieaccademia.it/en/node?page=1 now 404s; she
+  // found the new home on 11 Sep. Both are probed: the old one proves the move,
+  // the new one is the live question. Several Italian venues have moved during
+  // this project (Borghese too), so treat an Italian 404 as "find the new site"
   // before "the venue is unreachable".
-  dellav:         ['https://www.galleriaaccademiafirenze.it/en/exhibitions-events/'],
-  khm:            ['https://www.khm.at/en/exhibitions', 'https://www.khm.at/en/exhibitions/upcoming'],
-  moma:           ['https://www.moma.org/calendar/exhibitions', 'https://www.moma.org/calendar/exhibitions/history/'],
-  frick:          ['https://www.frick.org/exhibitions'],
-  morgan:         ['https://www.themorgan.org/exhibitions/current', 'https://www.themorgan.org/exhibitions/past'],
-  menil:          ['https://www.menil.org/exhibitions/current', 'https://www.menil.org/exhibitions'],
-  artic:          ['https://www.artic.edu/exhibitions', 'https://www.artic.edu/exhibitions/past'],
-  brit:           ['https://www.britishmuseum.org/exhibitions-events', 'https://www.britishmuseum.org/exhibitions-events/past-exhibitions'],
-  wallace:        ['https://www.wallacecollection.org/whats-on/', 'https://www.wallacecollection.org/explore/past-exhibitions/'],
-  va:             ['https://www.vam.ac.uk/whatson/?type=exhibition'],
-  'tate-modern':  ['https://www.tate.org.uk/whats-on'],
-  'tate-britain': ['https://www.tate.org.uk/whats-on'],
+  dellav: [
+    ['old address', 'https://www.gallerieaccademia.it/en/node?page=1'],
+    ['current',     'https://www.galleriaaccademiafirenze.it/en/exhibitions-events/'],
+    ['home',        'https://www.galleriaaccademiafirenze.it/en/'],
+  ],
+  khm: [
+    ['current',  'https://www.khm.at/en/exhibitions'],
+    ['upcoming', 'https://www.khm.at/en/exhibitions/upcoming'],
+  ],
+  moma: [
+    ['current+upcoming', 'https://www.moma.org/calendar/exhibitions'],
+    ['upcoming',         'https://www.moma.org/calendar/exhibitions/upcoming'],
+    ['past',             'https://www.moma.org/calendar/exhibitions/history/'],
+  ],
+  frick: [
+    ['all states', 'https://www.frick.org/exhibitions'],
+  ],
+  morgan: [
+    ['current',  'https://www.themorgan.org/exhibitions/current'],
+    ['upcoming', 'https://www.themorgan.org/exhibitions/upcoming'],
+    ['past',     'https://www.themorgan.org/exhibitions/past'],
+  ],
+  menil: [
+    ['current (correction)', 'https://www.menil.org/exhibitions'],
+    ['current (brief)',      'https://www.menil.org/exhibitions/current'],
+    ['upcoming',             'https://www.menil.org/exhibitions/upcoming'],
+    ['past',                 'https://www.menil.org/exhibitions/past'],
+  ],
+  artic: [
+    ['current',  'https://www.artic.edu/exhibitions'],
+    ['upcoming', 'https://www.artic.edu/exhibitions/upcoming'],
+    ['past',     'https://www.artic.edu/exhibitions/past'],
+  ],
+  brit: [
+    ['current+upcoming', 'https://www.britishmuseum.org/exhibitions-events'],
+    ['past',             'https://www.britishmuseum.org/exhibitions-events/past-exhibitions'],
+    ['see everything',   'https://www.britishmuseum.org/exhibitions-events/see-everything'],
+  ],
+  wallace: [
+    ['current+upcoming', 'https://www.wallacecollection.org/whats-on/'],
+    ['past',             'https://www.wallacecollection.org/explore/past-exhibitions/'],
+  ],
+  // The brief records no past archive for these three. An empty past is the
+  // correct answer there, not a failure.
+  va: [
+    ['current+upcoming', 'https://www.vam.ac.uk/whatson/?type=exhibition'],
+  ],
+  'tate-modern': [
+    ['shared whats-on', 'https://www.tate.org.uk/whats-on'],
+  ],
+  'tate-britain': [
+    ['shared whats-on', 'https://www.tate.org.uk/whats-on'],
+  ],
 };
+
 
 // A page can open and still be empty — that is the shell-plus-database failure
 // this whole scraper exists to beat, and it looks identical to success until you
@@ -78,15 +157,26 @@ async function probePage(page, code, url) {
 
   let chars = 0, links = 0, title = '';
   try {
-    const m = await page.evaluate((re) => {
-      const rx = new RegExp(re, 'i');
-      const as = Array.from(document.querySelectorAll('a[href]'));
+    // Count links that go BELOW this listing page, which is what an exhibition
+    // link is and what navigation is not. The earlier version counted any
+    // address containing an exhibition-ish WORD, which counted the site's own
+    // menu on every page and reported venues as rich when they were not --
+    // brit scored 19 and actually has one.
+    const m = await page.evaluate(() => {
+      const base = location.pathname.replace(/\/+$/, '');
+      const deeper = new Set();
+      for (const a of document.querySelectorAll('a[href]')) {
+        let u; try { u = new URL(a.href, location.href); } catch { continue; }
+        if (u.host !== location.host) continue;
+        const path = u.pathname.replace(/\/+$/, '');
+        if (path && path !== base && path.startsWith(base + '/')) deeper.add(path);
+      }
       return {
         chars: (document.body && document.body.innerText || '').length,
-        links: as.filter(a => rx.test(a.getAttribute('href') || '')).length,
+        links: deeper.size,
         title: document.title || '',
       };
-    }, LINKISH.source);
+    });
     ({ chars, links, title } = m);
   } catch { /* page died; reported as zero */ }
   return { url, ok: true, reason: '', ms, chars, links, title };
@@ -133,13 +223,14 @@ function verdict(results) {
   const out = [];
   for (const code of codes) {
     const results = [];
-    for (const url of TARGETS[code]) {
+    for (const [label, url] of TARGETS[code]) {
       let r;
       try { r = await probePage(page, code, url); }
       catch (e) { r = { url, ok: false, reason: 'ABORTED: ' + e.message, ms: 0 }; }
+      r.label = label;
       results.push(r);
-      const tag = r.ok ? `OK   ${String(r.links).padStart(4)} links, ${String(r.chars).padStart(6)} chars` : `FAIL ${r.reason}`;
-      console.log(`  ${code.padEnd(13)} ${tag}  (${(r.ms / 1000).toFixed(1)}s)  ${r.url}`);
+      const tag = r.ok ? `OK   ${String(r.links).padStart(4)} below` : `FAIL ${r.reason}`;
+      console.log(`  ${code.padEnd(13)} ${label.padEnd(20)} ${tag}  (${(r.ms / 1000).toFixed(1)}s)`);
     }
     const v = verdict(results);
     out.push({ code, ...v, results });
@@ -156,9 +247,9 @@ function verdict(results) {
     'exhibition-ish — a crude proxy for "is there a listing here at all".', '',
     '| Venue | Verdict | Detail |', '|---|---|---|',
     ...out.map(o => `| \`${o.code}\` | **${o.mark}** | ${o.detail} |`),
-    '', '## Every page', '', '| Venue | Result | Links | Chars | URL |', '|---|---|---|---|---|',
+    '', '## Every page', '', '| Venue | Page | Result | Links below | URL |', '|---|---|---|---|---|',
     ...out.flatMap(o => o.results.map(r =>
-      `| \`${o.code}\` | ${r.ok ? 'opened' : r.reason} | ${r.ok ? r.links : ''} | ${r.ok ? r.chars : ''} | ${r.url} |`)),
+      `| \`${o.code}\` | ${r.label} | ${r.ok ? 'opened' : r.reason} | ${r.ok ? r.links : ''} | ${r.url} |`)),
     '',
   ];
   const file = path.join(__dirname, 'output', `probe_${stamp}.md`);

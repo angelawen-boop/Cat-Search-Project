@@ -1105,12 +1105,36 @@ listing addresses using the same Chromium, the same network bridge and the same
 `safeGoto()` as a real sweep. Testing with curl instead would have been faster
 and worthless — that is exactly how the Met was misdiagnosed for four days.
 
+**Confirmed 11 Sep, every listing page of every blocked venue tested separately
+— current, upcoming and past.** Her instruction, after an earlier probe pinged
+one or two pages per venue and reported the VENUE as reachable.
+
+| Venue | Current | Upcoming | Past | Verdict |
+|---|---|---|---|---|
+| `met` | 429 | 429 | 429 | blocked on every page |
+| `morgan` | 403 | 403 | 403 | blocked on every page |
+| `moma` | 403 | 403 | 403 | blocked on every page |
+| `artic` | 403 | 403 | 403 | blocked on every page |
+| `brit` | opens, **1 link** | opens, 1 link | 403 | see below |
+| `dellav` | no response | — | — | server accepts nothing |
+
 | Route | Venues | Count |
 |---|---|---|
-| **Claude-run scrape** | `ng` `rijks` `acq` `louvre` `uffizi` `brera` `capo` `khm` `frick` `menil` `wallace` `va` `tate-modern` `tate-britain`, plus `borghese` when its site is up, plus `brit` current only | 16 |
+| **Claude-run scrape** | `ng` `rijks` `acq` `louvre` `uffizi` `brera` `capo` `khm` `frick` `menil` `wallace` `va` `tate-modern` `tate-britain`, plus `borghese` when its site is up | 15 |
 | **Local scrape** (her machine) | `met`, `artic` | 2 |
-| **Neither — automated access refused everywhere** | `morgan`, `moma`, and `brit`'s past page | 2½ |
-| **Unresolved — the site answers nothing, anywhere** | `dellav` | 1 |
+| **No route yet** | `morgan`, `moma`, `brit`, `dellav` | 4 |
+
+**`brit` was reported as "current works, archive blocked". That was wrong**, and
+twice over:
+- Its current page yields **one** link below the listing, not the 19 first
+  reported. The 19 was the broken link-counting described below.
+- It returns 200 only while Cloudflare holds a cached copy. Once that expired the
+  same page returned **403 with `cf-mitigated: challenge`**, like its archive. So
+  the "working" half was a cache artefact with a lifetime, not a property of the
+  site.
+
+Treat the British Museum as blocked. `brit` and `dellav` have **not** been tested
+from her machine; `morgan` and `moma` have, and were refused there too.
 
 **What the probe overturned.** Four claims in this document came from the old
 fetch tool and were wrong about the scraper:
