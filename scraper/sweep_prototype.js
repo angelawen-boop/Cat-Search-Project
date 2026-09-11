@@ -1963,7 +1963,7 @@ async function collectFromListing(page, opts) {
   // it cannot swallow an exhibition.
 
   // (LANG_PREFIX and isOwnListingPage are defined at module scope, below.)
-  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, branch: 0, kept: 0 };
+  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, branch: 0, labelled: 0, kept: 0 };
   // The rows this page contributed, so unreadable titles can be counted once
   // the page is finished rather than as each link is read.
   const fromThisPage = [];
@@ -2053,6 +2053,19 @@ async function collectFromListing(page, opts) {
       continue;
     }
 
+    // A PERMANENT DISPLAY THE VENUE LABELS AS ONE. The Art Institute prints
+    // "COLLECTION INSTALLATION" on the card of every standing hang — its new
+    // European galleries, the Deering Family Galleries, the 20th-century
+    // rehang — and nothing else. Same footing as excludeOngoing: the site says
+    // so, rung 1 of the ladder, not our judgement about what a thing is. Named
+    // in the log, one by one.
+    if (opts.excludeLabelled && opts.excludeLabelled.test(dates.raw || '')) {
+      c.labelled++;
+      log(`    the venue labels this a permanent installation, excluded: ${title || slugToWords(fullUrl)}`);
+      seenUrls.add(key);
+      continue;
+    }
+
     const row = {
       venue_code: venueCode, title,
       // Internal, never a CSV column: which listing page this row came from,
@@ -2082,7 +2095,7 @@ async function collectFromListing(page, opts) {
   c.noTitle = fromThisPage.filter(r => !r.title).length;
 
   COUNTS.push(c);
-  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''}${c.branch ? `, ${c.branch} at another site of the same venue` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
+  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''}${c.branch ? `, ${c.branch} at another site of the same venue` : ''}${c.labelled ? `, ${c.labelled} labelled permanent by the venue` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
   return c;
 }
 
@@ -2551,7 +2564,22 @@ const VENUES = {
     isNav: href => /\/exhibitions\/?$/.test(href)
                 || /\/exhibitions\/(upcoming|history)\/?$/.test(href)
                 || /\/exhibitions\/history\?/.test(href),
-    title: { heading: true },
+    // Its cards read BADGE(S), then the name, then the run:
+    //   "TICKETED EXHIBITION NOW OPEN Mary Cassatt: After Impressionism
+    //    Sep 6, 2026-Jan 3, 2027"
+    // Badges stack, so the leading strip repeats. The date tail is cut at the
+    // first month name followed by a digit, the same rule Acquavella uses, so
+    // a title like "April in Paris" survives.
+    title: {
+      heading: true,
+      stripLeading: /^(?:(?:TICKETED(?: EXHIBITION)?|NOW OPEN|OPENING SOON|CLOSING SOON|SPECIAL LOAN INSTALLATION|COLLECTION INSTALLATION|MEMBERS ONLY|FREE)\s*)+/,
+      stripTrailing: new RegExp(`\\s*\\b(?:${MONTH_PATTERN})\\s*\\d.*$`, 'i'),
+    },
+    // HER RULING ELSEWHERE, APPLIED HERE: temporary exhibitions only. The Art
+    // Institute labels its standing hangs "COLLECTION INSTALLATION" and nothing
+    // else does — six of the seven undated rows in her first local run. The
+    // venue says so, so this is the site's label rather than our judgement.
+    excludeLabelled: /COLLECTION INSTALLATION/i,
   },
 
   // ── VENUES NOTHING CAN REACH ────────────────────────────────────────────────
@@ -2812,6 +2840,7 @@ async function scrapeVenue(page, code) {
       listingPaths: listingPages(v).map(p => p.path),
       excludeOngoing: !!v.excludeOngoing,
       otherBranch: v.otherBranch || null,
+      excludeLabelled: v.excludeLabelled || null,
     };
 
     const rowsBefore = rows.length;
