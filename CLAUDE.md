@@ -376,6 +376,20 @@ Two conditions keep this honest, and both are cheap:
   she reads. Pure logic; `scraper/compress_cli.js` is its command line.
 - `scraper/date.test.js`, `scraper/compress.test.js` — fixture tests for the
   pure logic of each. `npm test` runs both.
+- `scraper/reach_probe.js` — opens a venue's listing pages and reports whether
+  each one is served or refused, on the sweep's own transport. **Reachability
+  only**; it says nothing about whether a usable row can be built.
+- `scraper/inspect_listing.js` — asks a listing page what link shapes it
+  contains, so a venue's exhibition path is read from the site rather than
+  guessed. This is how `capo`'s `/mostra/` and `menil`'s `/exhibition/` were
+  found; guessing would have collected navigation, as it did at Borghese.
+- `scraper/data_probe.js` — opens real exhibition pages behind a listing and
+  extracts title, dates and curatorial text, printing the values. **The only
+  probe that asks the project's actual question.** Two known limits, both live:
+  it lacks the engine's navigation filter, so a venue's own listing pages can
+  come back as false passes (it read "Past exhibitions" as an exhibition with a
+  cookie notice for a description), and it still defaults to all 15 venues
+  including the four already wired, which is waste.
 - `scraper/output/run_<date>_<time>/` — one directory per run (see below).
 
 Run:
@@ -1100,10 +1114,36 @@ Which route reaches which venue. **These are conclusions, not hypotheses** —
 every venue was opened from this container, and every venue that failed here was
 then retried from her own machine on the same evening.
 
-**How it was measured:** `scraper/reach_probe.js`, which opens each venue's
-listing addresses using the same Chromium, the same network bridge and the same
-`safeGoto()` as a real sweep. Testing with curl instead would have been faster
-and worthless — that is exactly how the Met was misdiagnosed for four days.
+**How it was measured, and what that does NOT establish.**
+`scraper/reach_probe.js` opens a venue's listing addresses using the same
+Chromium, the same network bridge and the same `safeGoto()` as a real sweep, so
+a refusal here is a refusal a sweep would meet. Using curl instead would have
+been faster and worthless — that is how the Met was misdiagnosed for four days.
+
+**But reachability is not the project's question.** Her correction, 11 Sep:
+*"this is not a project in can you map me an internet directory"*. A row needs a
+title, an opening date, a closing date and curatorial text. **A venue listed as
+reachable below has NOT been shown to yield a single usable row** — only that its
+listing pages open. The venues with proven rows are the wired ones, and they were
+proven by sweeps against her own counts, never by a probe.
+
+**Three measurement failures in one afternoon, all the same mistake**, recorded
+because the pattern matters more than any of them:
+1. The probe counted anchors whose address merely *looked* exhibition-ish, which
+   counted the site's own menu on every page. It reported `brit` at 19 links; the
+   real figure is 1.
+2. The listing inspector grouped links by address shape and printed the commonest
+   shapes — so navigation, repeated in every header and footer, crowded out the
+   exhibitions, each of which is unique and scores one. Six venues were reported
+   as empty JavaScript shells. They were not; the tool was.
+3. The replacement counted addresses *below* the listing path, which reads zero
+   for any venue filing exhibitions outside its archive's path — `artic` does
+   exactly that.
+
+Each measured something cheap to obtain instead of the thing that mattered, and
+each produced a confident claim that had to be withdrawn. **Count rows, not
+links.** The only instrument that answers the real question is a recipe plus a
+sweep.
 
 **Confirmed 11 Sep, every listing page of every blocked venue tested separately
 — current, upcoming and past.** Her instruction, after an earlier probe pinged
@@ -1192,18 +1232,16 @@ which are a different kind of problem entirely.
 - **`morgan` and `moma`** refuse every automated route from every address tried,
   however honestly the scraper identifies itself. Her machine gets the identical
   403 in 0.1 seconds. These are the Chat Claude venues.
-- **`brit` is split, and the split is stable across both networks.** Its current
-  page opens fine (19 links); `/exhibitions-events/past-exhibitions` returns 403
-  from the container AND from her laptop. So this is a **page-level** refusal,
-  not a venue-level one — the British Museum is a working venue with an
-  unreachable archive, and should be wired as such rather than written off.
-- **`dellav` is the one genuinely unresolved case.** The brief's address
-  (`gallerieaccademia.it/en/node?page=1`) now 404s: **the venue has migrated** to
-  `galleriaaccademiafirenze.it/en/exhibitions-events/`. That new address returns
-  `NO_RESPONSE` — the server accepts nothing at all — from **both** the container
-  and her machine. A refusal would be a 403; accepting nothing is a site fault or
-  a DNS problem, and Borghese's outage looked exactly like this for three days
-  before clearing on its own. Retry before concluding anything.
+- **`brit` is blocked. An earlier claim that it was "split" is withdrawn** — see
+  the paragraph below; the "19 links" was a broken counter and the working
+  current page was a Cloudflare cache with a lifetime.
+- **`dellav` is blocked, settled 11 Sep.** The brief's address
+  (`gallerieaccademia.it/en/node?page=1`) 404s: **the venue has migrated** to
+  `galleriaaccademiafirenze.it/en/exhibitions-events/`. The new address and its
+  home page both return `NO_RESPONSE` from **both** the container and her
+  machine, while loading in her ordinary browser. Earlier this was recorded as
+  possibly a transient outage like Borghese's; two machines refusing while a
+  browser succeeds rules that out.
 
 #### Exactly what each refusal IS — read 11 Sep 2026, not inferred
 
@@ -1765,9 +1803,39 @@ scraper output**, so the join between scraper and app is no longer the unproven 
      after all, and `artic` went from "reliable" to refused. **A venue not wired in
      is a venue we would never learn about.**
 
-   So `morgan`, `moma`, `dellav` and `brit`'s archive are written exactly like any
-   other venue. Their recipes are untested guesses until a door opens — which is
-   stated in each one, so nobody mistakes an unexercised recipe for a working one.
+   So `morgan`, `moma`, `dellav` and `brit` are written exactly like any other
+   venue. Their recipes are untested guesses until a door opens — which is stated
+   in each one, so nobody mistakes an unexercised recipe for a working one.
+
+   **STATE AT THE END OF 11 SEP: no recipe has been written.** The 11 unwired,
+   reachable venues — `louvre` `uffizi` `brera` `capo` `khm` `frick` `menil`
+   `wallace` `va` `tate-modern` `tate-britain` — have their listing pages opening
+   and their exhibition path shapes mapped (below), and **nothing further**. No
+   row has been extracted from any of them.
+
+   **What `inspect_listing.js` established, and it is worth keeping** — every
+   shape read off the site, three of them counter-intuitive enough that guessing
+   would have failed:
+
+   | Venue | Exhibitions live at |
+   |---|---|
+   | `capo` | `/mostra/<slug>` — **singular**, while the listing is `/mostre/` |
+   | `menil` | `/exhibition/<slug>` — singular again |
+   | `brera` | `/en/news/mostra/<slug>` — filed under news |
+   | `uffizi` | `/en/events/<slug>`; its `/event-category/exhibitions/years/…` links are year filters, not exhibitions |
+   | `louvre` | `/en/exhibitions-and-events/exhibitions/<slug>` |
+   | `frick`, `va` | `/exhibitions/<slug>` |
+   | `wallace` | `/explore/past-exhibitions/<slug>` and `/whats-on/<slug>` |
+   | `tate-modern` / `tate-britain` | `/whats-on/tate-modern/<slug>` and `/whats-on/tate-britain/<slug>` |
+
+   Two bonuses fall out of that table. **Tate puts the venue in the address**, so
+   the two Tates separate mechanically rather than by reading a tag — and Tate St
+   Ives appears too, which is not one of her 21 and must be excluded. **V&A and
+   Tate both prefix the link text with the item type** ("Display", "Festival",
+   "Season", "EXHIBITION"), which is the first real hook for known bug 2.
+
+   `khm` is the one shape still unclear: only two links matched `/en/exhibitions/`,
+   which is too few for a museum's programme. It needs its own look.
 3. **Parallelism and the hang bound** (DEF-01 + DEF-04). Before the diagnosis pass, not
    after: step 4 is a repeated re-run loop and a 20-minute serial sweep makes it painful.
    Parallel across venues only, never within one — IR-15 stands.
