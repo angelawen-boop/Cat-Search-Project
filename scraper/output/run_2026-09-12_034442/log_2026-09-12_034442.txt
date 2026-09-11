@@ -1,0 +1,60 @@
+[2026-09-11T17:44:42.194Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T17:44:42.195Z] Lookback floor: 2024-07-01
+[2026-09-11T17:44:42.195Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_034442
+[2026-09-11T17:44:42.195Z] Venues this run: artic
+[2026-09-11T17:44:42.195Z] Proxy: http://127.0.0.1:43047
+[2026-09-11T17:44:42.195Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T17:44:42.326Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-11T17:44:42.429Z] [artic] 
+[2026-09-11T17:44:42.430Z] [artic] ────────────────────────────────────────────────────────────
+[2026-09-11T17:44:42.430Z] [artic]   ARTIC — Art Institute of Chicago
+[2026-09-11T17:44:42.430Z] [artic] ────────────────────────────────────────────────────────────
+[2026-09-11T17:44:42.430Z] [artic]   Fetching current: https://www.artic.edu/exhibitions
+[2026-09-11T17:44:42.873Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions
+[2026-09-11T17:44:42.873Z] [artic]   FAILED current — BLOCKED_HTTP_403
+[2026-09-11T17:44:42.873Z] [artic]   Fetching upcoming: https://www.artic.edu/exhibitions/upcoming
+[2026-09-11T17:44:43.317Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/upcoming
+[2026-09-11T17:44:43.317Z] [artic]   FAILED upcoming — BLOCKED_HTTP_403
+[2026-09-11T17:44:43.317Z] [artic]   Fetching past 2025: https://www.artic.edu/exhibitions/history?year=2025
+[2026-09-11T17:44:43.784Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2025
+[2026-09-11T17:44:43.784Z] [artic]   FAILED past 2025 — BLOCKED_HTTP_403
+[2026-09-11T17:44:43.784Z] [artic]   Fetching past 2024: https://www.artic.edu/exhibitions/history?year=2024
+[2026-09-11T17:44:44.020Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2024
+[2026-09-11T17:44:44.020Z] [artic]   FAILED past 2024 — BLOCKED_HTTP_403
+[2026-09-11T17:44:44.020Z] [artic]   Fetching past p2 2025: https://www.artic.edu/exhibitions/history?year=2025&page=2
+[2026-09-11T17:44:44.234Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2025&page=2
+[2026-09-11T17:44:44.234Z] [artic]   FAILED past p2 2025 — BLOCKED_HTTP_403
+[2026-09-11T17:44:44.234Z] [artic]   Fetching past p2 2024: https://www.artic.edu/exhibitions/history?year=2024&page=2
+[2026-09-11T17:44:44.428Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2024&page=2
+[2026-09-11T17:44:44.428Z] [artic]   FAILED past p2 2024 — BLOCKED_HTTP_403
+[2026-09-11T17:44:44.429Z] [artic]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T17:44:44.429Z] [artic]   → 0 exhibitions, 0 with curatorial text → artic.csv
+[2026-09-11T17:44:44.502Z] 
+[2026-09-11T17:44:44.502Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:44:44.502Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T17:44:44.502Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:44:44.502Z]   ARTIC: 0 exhibitions | 0 with text | 6 page(s) blocked/empty
+[2026-09-11T17:44:44.502Z] 
+[2026-09-11T17:44:44.502Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:44:44.502Z]   COVERAGE — every link accounted for
+[2026-09-11T17:44:44.502Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:44:44.502Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T17:44:44.502Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T17:44:44.502Z]   (no listing pages were read)
+[2026-09-11T17:44:44.502Z] 
+[2026-09-11T17:44:44.502Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T17:44:44.502Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T17:44:44.502Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T17:44:44.502Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T17:44:44.502Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T17:44:44.502Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T17:44:44.502Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T17:44:44.502Z] 
+[2026-09-11T17:44:44.502Z] Network bridge: 13 requests served, 0 skipped (image/media/font), 0 failed
+[2026-09-11T17:44:44.502Z] 
+[2026-09-11T17:44:44.502Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_034442
+[2026-09-11T17:44:44.502Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_034442/sweep.csv  (6 rows — artic:6)
+[2026-09-11T17:44:44.502Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_034442/log_2026-09-12_034442.txt
+[2026-09-11T17:44:44.502Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, khm, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-11T17:44:44.502Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T17:44:44.502Z] No de-duplication is applied — see passThrough.

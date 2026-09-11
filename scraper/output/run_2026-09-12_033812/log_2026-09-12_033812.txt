@@ -1,0 +1,147 @@
+[2026-09-11T17:38:12.107Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T17:38:12.108Z] Lookback floor: 2024-07-01
+[2026-09-11T17:38:12.108Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_033812
+[2026-09-11T17:38:12.108Z] Venues this run: ng, rijks, acq, frick, va, wallace
+[2026-09-11T17:38:12.108Z] Proxy: http://127.0.0.1:43047
+[2026-09-11T17:38:12.108Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T17:38:12.236Z] Running 6 venue(s) 4 at a time (one page at a time within each venue)
+[2026-09-11T17:38:12.433Z] [acq] 
+[2026-09-11T17:38:12.433Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T17:38:12.433Z] [acq]   ACQ — Acquavella Galleries, New York
+[2026-09-11T17:38:12.433Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T17:38:12.433Z] [acq]   Fetching all (current/upcoming/past): https://www.acquavellagalleries.com/exhibitions
+[2026-09-11T17:38:12.445Z] [rijks] 
+[2026-09-11T17:38:12.445Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-11T17:38:12.445Z] [rijks]   RIJKS — Rijksmuseum, Amsterdam
+[2026-09-11T17:38:12.445Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-11T17:38:12.445Z] [rijks]   Fetching current/upcoming: https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view
+[2026-09-11T17:38:12.449Z] [frick] 
+[2026-09-11T17:38:12.449Z] [frick] ────────────────────────────────────────────────────────────
+[2026-09-11T17:38:12.449Z] [frick]   FRICK — The Frick Collection, New York
+[2026-09-11T17:38:12.449Z] [frick] ────────────────────────────────────────────────────────────
+[2026-09-11T17:38:12.449Z] [frick]   Fetching current/upcoming: https://www.frick.org/exhibitions
+[2026-09-11T17:38:12.464Z] [ng] 
+[2026-09-11T17:38:12.464Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T17:38:12.464Z] [ng]   NG — National Gallery, London
+[2026-09-11T17:38:12.464Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T17:38:12.464Z] [ng]   Fetching current/upcoming: https://www.nationalgallery.org.uk/exhibitions
+[2026-09-11T17:38:16.923Z] [ng]   current/upcoming: 12 links seen -> 2 navigation, 3 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-11T17:38:16.923Z] [ng]   Fetching past: https://www.nationalgallery.org.uk/exhibitions/past
+[2026-09-11T17:38:17.975Z] [frick]   current/upcoming: 15 links seen -> 6 navigation, 3 already-seen URL -> 6 collected (0 of them with no readable title)
+[2026-09-11T17:38:17.975Z] [frick]   Fetching past: https://www.frick.org/exhibitions/past
+[2026-09-11T17:38:19.432Z] [acq]   all (current/upcoming/past): 119 links seen -> 11 navigation, 0 already-seen URL -> 108 collected (0 of them with no readable title)
+[2026-09-11T17:38:19.433Z] [acq]   lookback (listing): kept 16, dropped 92 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-11T17:38:19.433Z] [acq]   reading 16 individual page(s)…
+[2026-09-11T17:38:19.433Z] [acq]     page 1 of 16
+[2026-09-11T17:38:20.493Z] [rijks]   current/upcoming: 15 links seen -> 5 navigation, 0 already-seen URL -> 10 collected (0 of them with no readable title)
+[2026-09-11T17:38:20.493Z] [rijks]   Fetching past: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past
+[2026-09-11T17:38:23.152Z] [frick]   past: 25 links seen -> 4 navigation, 14 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-11T17:38:23.152Z] [frick]   lookback (listing): kept 13, dropped 0 closed before 2024-07-01, 10 with no closing date, 0 with no opening date
+[2026-09-11T17:38:23.152Z] [frick]   reading 13 individual page(s)…
+[2026-09-11T17:38:23.152Z] [frick]     page 1 of 13
+[2026-09-11T17:38:27.081Z] [ng]   past: 179 links seen -> 2 navigation, 0 already-seen URL -> 177 collected (0 of them with no readable title)
+[2026-09-11T17:38:27.081Z] [ng]   lookback (listing): kept 28, dropped 156 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T17:38:27.081Z] [ng]   reading 28 individual page(s)…
+[2026-09-11T17:38:27.081Z] [ng]     page 1 of 28
+[2026-09-11T17:38:27.669Z] [rijks]   past: 44 links seen -> 4 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-11T17:38:27.670Z] [rijks]   lookback (listing): kept 49, dropped 1 closed before 2024-07-01, 30 with no closing date, 0 with no opening date
+[2026-09-11T17:38:27.670Z] [rijks]   reading 49 individual page(s)…
+[2026-09-11T17:38:27.670Z] [rijks]     page 1 of 49
+[2026-09-11T17:38:32.323Z] [ng]     prose dates ignored, they contradict the listing: "7 September - 28 September 2026"
+[2026-09-11T17:38:37.878Z] [acq]     page 10 of 16
+[2026-09-11T17:38:38.060Z] [frick]     page 10 of 13
+[2026-09-11T17:38:44.963Z] [frick]   Individual pages: 13 got text, 0 no curatorial text, 0 failed
+[2026-09-11T17:38:44.963Z] [frick]   lookback (final): kept 10, dropped 3 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-11T17:38:44.964Z] [frick]   → 10 exhibitions, 10 with curatorial text → frick.csv
+[2026-09-11T17:38:45.249Z] [va] 
+[2026-09-11T17:38:45.249Z] [va] ────────────────────────────────────────────────────────────
+[2026-09-11T17:38:45.249Z] [va]   VA — Victoria and Albert Museum, London
+[2026-09-11T17:38:45.249Z] [va] ────────────────────────────────────────────────────────────
+[2026-09-11T17:38:45.249Z] [va]   Fetching current/upcoming: https://www.vam.ac.uk/whatson?type=exhibition
+[2026-09-11T17:38:47.343Z] [rijks]     page 10 of 49
+[2026-09-11T17:38:49.471Z] [va]     another V&A/branch site, excluded: Inside Aardman: Wallace & Gromit and Friends
+[2026-09-11T17:38:49.555Z] [va]     another V&A/branch site, excluded: The Music is Black: A British Story
+[2026-09-11T17:38:49.676Z] [va]     another V&A/branch site, excluded: South Asia Now: Fashion. Art. Design.
+[2026-09-11T17:38:49.871Z] [va]     another V&A/branch site, excluded: David Bowie Centre
+[2026-09-11T17:38:50.171Z] [va]   current/upcoming: 19 links seen -> 0 navigation, 0 already-seen URL, 4 at another site of the same venue -> 15 collected (0 of them with no readable title)
+[2026-09-11T17:38:50.171Z] [va]   lookback (listing): kept 15, dropped 0 closed before 2024-07-01, 15 with no closing date, 0 with no opening date
+[2026-09-11T17:38:50.171Z] [va]   reading 15 individual page(s)…
+[2026-09-11T17:38:50.171Z] [va]     page 1 of 15
+[2026-09-11T17:38:52.512Z] [ng]     page 10 of 28
+[2026-09-11T17:38:54.762Z] [acq]   Individual pages: 16 got text, 0 no curatorial text, 0 failed
+[2026-09-11T17:38:54.762Z] [acq]   lookback (final): kept 15, dropped 1 closed before 2024-07-01, 2 with no closing date, 0 with no opening date
+[2026-09-11T17:38:54.764Z] [acq]   → 15 exhibitions, 15 with curatorial text → acq.csv
+[2026-09-11T17:38:54.929Z] [wallace] 
+[2026-09-11T17:38:54.929Z] [wallace] ────────────────────────────────────────────────────────────
+[2026-09-11T17:38:54.929Z] [wallace]   WALLACE — The Wallace Collection, London
+[2026-09-11T17:38:54.929Z] [wallace] ────────────────────────────────────────────────────────────
+[2026-09-11T17:38:54.929Z] [wallace]   Fetching current/upcoming: https://www.wallacecollection.org/whats-on/exhibitions-displays/
+[2026-09-11T17:39:01.545Z] [wallace]   current/upcoming: 12 links seen -> 4 navigation, 0 already-seen URL -> 8 collected (0 of them with no readable title)
+[2026-09-11T17:39:01.545Z] [wallace]   Fetching past: https://www.wallacecollection.org/explore/past-exhibitions/
+[2026-09-11T17:39:01.802Z] [va]     page 10 of 15
+[2026-09-11T17:39:06.758Z] [wallace]   past: 28 links seen -> 4 navigation, 7 already-seen URL -> 17 collected (0 of them with no readable title)
+[2026-09-11T17:39:06.758Z] [wallace]   lookback (listing): kept 11, dropped 14 closed before 2024-07-01, 4 with no closing date, 0 with no opening date
+[2026-09-11T17:39:06.758Z] [wallace]   reading 11 individual page(s)…
+[2026-09-11T17:39:06.758Z] [wallace]     page 1 of 11
+[2026-09-11T17:39:08.907Z] [va]   Individual pages: 15 got text, 0 no curatorial text, 0 failed
+[2026-09-11T17:39:08.907Z] [va]   → 15 exhibitions, 15 with curatorial text → va.csv
+[2026-09-11T17:39:10.186Z] [rijks]     page 20 of 49
+[2026-09-11T17:39:13.618Z] [ng]     page 20 of 28
+[2026-09-11T17:39:29.617Z] [wallace]     page 10 of 11
+[2026-09-11T17:39:30.157Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/mission-masterpiece
+[2026-09-11T17:39:30.158Z] [rijks]     page 30 of 49
+[2026-09-11T17:39:34.422Z] [wallace]   Individual pages: 11 got text, 0 no curatorial text, 0 failed
+[2026-09-11T17:39:34.422Z] [wallace]   lookback (final): kept 11, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T17:39:34.423Z] [wallace]   → 11 exhibitions, 11 with curatorial text → wallace.csv
+[2026-09-11T17:39:34.538Z] [ng]   Individual pages: 28 got text, 0 no curatorial text, 0 failed
+[2026-09-11T17:39:34.538Z] [ng]   lookback (final): kept 27, dropped 1 closed before 2024-07-01, 0 with no closing date, 1 with no opening date
+[2026-09-11T17:39:34.539Z] [ng]   → 27 exhibitions, 27 with curatorial text → ng.csv
+[2026-09-11T17:39:52.176Z] [rijks]     page 40 of 49
+[2026-09-11T17:39:53.519Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/henk-wildschut
+[2026-09-11T17:39:58.399Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/ed-van-der-elsken
+[2026-09-11T17:40:10.332Z] [rijks]   Individual pages: 46 got text, 0 no curatorial text, 3 failed
+[2026-09-11T17:40:10.333Z] [rijks]   lookback (final): kept 37, dropped 12 closed before 2024-07-01, 14 with no closing date, 7 with no opening date
+[2026-09-11T17:40:10.333Z] [rijks]   → 37 exhibitions, 34 with curatorial text → rijks.csv
+[2026-09-11T17:40:10.462Z] 
+[2026-09-11T17:40:10.462Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:40:10.462Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T17:40:10.462Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:40:10.462Z]   FRICK: 10 exhibitions | 10 with text
+[2026-09-11T17:40:10.462Z]   ACQ: 15 exhibitions | 15 with text
+[2026-09-11T17:40:10.462Z]   VA: 15 exhibitions | 15 with text
+[2026-09-11T17:40:10.462Z]   WALLACE: 11 exhibitions | 11 with text
+[2026-09-11T17:40:10.462Z]   NG: 27 exhibitions | 27 with text
+[2026-09-11T17:40:10.462Z]   RIJKS: 37 exhibitions | 34 with text
+[2026-09-11T17:40:10.462Z] 
+[2026-09-11T17:40:10.462Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:40:10.462Z]   COVERAGE — every link accounted for
+[2026-09-11T17:40:10.462Z] ────────────────────────────────────────────────────────────
+[2026-09-11T17:40:10.462Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T17:40:10.462Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T17:40:10.462Z]   ng         current/upcoming                12     2       0     3        0        0          7
+[2026-09-11T17:40:10.462Z]   frick      current/upcoming                15     6       0     3        0        0          6
+[2026-09-11T17:40:10.462Z]   acq        all (current/upcoming/past)    119    11       0     0        0        0        108
+[2026-09-11T17:40:10.462Z]   rijks      current/upcoming                15     5       0     0        0        0         10
+[2026-09-11T17:40:10.462Z]   frick      past                            25     4       0    14        0        0          7
+[2026-09-11T17:40:10.462Z]   ng         past                           179     2       0     0        0        0        177
+[2026-09-11T17:40:10.462Z]   rijks      past                            44     4       0     0        0        0         40
+[2026-09-11T17:40:10.462Z]   va         current/upcoming                19     0       0     0        0        0         15
+[2026-09-11T17:40:10.462Z]   wallace    current/upcoming                12     4       0     0        0        0          8
+[2026-09-11T17:40:10.462Z]   wallace    past                            28     4       0     7        0        0         17
+[2026-09-11T17:40:10.462Z] 
+[2026-09-11T17:40:10.462Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T17:40:10.462Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T17:40:10.462Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T17:40:10.462Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T17:40:10.462Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T17:40:10.462Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T17:40:10.462Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T17:40:10.462Z] 
+[2026-09-11T17:40:10.462Z] Network bridge: 3628 requests served, 4737 skipped (image/media/font), 0 failed
+[2026-09-11T17:40:10.462Z] 
+[2026-09-11T17:40:10.463Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_033812
+[2026-09-11T17:40:10.463Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_033812/sweep.csv  (115 rows — ng:27, rijks:37, acq:15, frick:10, va:15, wallace:11)
+[2026-09-11T17:40:10.463Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_033812/log_2026-09-12_033812.txt
+[2026-09-11T17:40:10.463Z] Not yet in this run: met, borghese, morgan, menil, louvre, capo, uffizi, brera, khm, moma, brit, dellav, tate-modern, tate-britain
+[2026-09-11T17:40:10.463Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T17:40:10.463Z] No de-duplication is applied — see passThrough.

@@ -202,7 +202,15 @@ const LOOKBACK = new Date('2024-07-01');
  */
 function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
   const first = floor.getUTCFullYear();
-  const last = today.getUTCFullYear() - 1;
+  // THE CURRENT YEAR IS NORMALLY EXCLUDED, because a venue's bare "past" page
+  // already serves it, and asking twice stamps "Also listed on the venue's
+  // 'past 2026' page." onto her approval cards.
+  //
+  // The Art Institute has NO bare past page — its archive is nothing but year
+  // addresses, and her screenshot shows year=2026 holding 11 exhibitions. So a
+  // venue whose archive is year-only opts in, and the current year becomes
+  // another page rather than a duplicate of one.
+  const last = today.getUTCFullYear() - (entry.includeCurrentYear ? 0 : 1);
   const pages = [];
   for (let y = last; y >= first; y--) {
     // Two shapes of the same thing. Most venues filter with a query parameter
@@ -211,9 +219,13 @@ function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
     // are simply another address, and either way the years are DERIVED here
     // rather than written into a recipe — a hand-typed list is right the day it
     // is typed and quietly wrong every year after.
+    // `suffix` carries a SECOND filter that sits after the year — the Art
+    // Institute's archive paginates inside each year as well as by year
+    // ("Showing 20 out of 25 Exhibitions"), and both are ordinary query
+    // parameters, so page 2 of a year is simply another address.
     const path = entry.param
-      ? `${entry.path}?${entry.param}=${y}`
-      : `${entry.path}${entry.yearPath}${y}`;
+      ? `${entry.path}?${entry.param}=${y}${entry.suffix || ''}`
+      : `${entry.path}${entry.yearPath}${y}${entry.suffix || ''}`;
     pages.push({ path, ctx: `${entry.ctx} ${y}` });
   }
   return pages;
@@ -2282,6 +2294,8 @@ const VENUES = {
 
   menil: {
     name: 'The Menil Collection, Houston',
+    // See excludeUndated in scrapeVenue — her ruling on its permanent galleries.
+    excludeUndated: true,
     base: 'https://www.menil.org',
     // The brief's /exhibitions/current 302s to /exhibitions, which is the
     // live address for what is on now.
@@ -2491,6 +2505,52 @@ const VENUES = {
     selector: 'a[href*="/en/exhibitions/"]',
     isNav: href => /\/en\/exhibitions\/?$/.test(href)
                 || /\/en\/exhibitions\/upcoming\/?$/.test(href),
+    title: { heading: true },
+  },
+
+  artic: {
+    name: 'Art Institute of Chicago',
+    base: 'https://www.artic.edu',
+    // BLOCKED FROM THIS CONTAINER, WORKS FROM HERS. A Cloudflare managed
+    // challenge — 403 with cf-mitigated:challenge — which her home connection
+    // clears. So this recipe exists to be RUN LOCALLY and has never been
+    // exercised here; expect a first run that needs diagnosing.
+    //
+    //   node scraper/sweep_prototype.js artic
+    //   then commit the run directory and hand the output over.
+    //
+    // STRUCTURE READ FROM HER SCREENSHOTS, 12 Sep 2026, not guessed:
+    //
+    // - /exhibitions carries Current and Upcoming as tabs in the same card
+    //   style, with an Archive link to the right. Both paths are listed below;
+    //   if the tabs turn out to be client-side, the current page will already
+    //   hold both and /exhibitions/upcoming simply leaves a marker row.
+    //
+    // - The archive is /exhibitions/history?year=YYYY and it paginates TWICE
+    //   OVER: one page per year, and more than one page within a year. Each
+    //   page states its own totals — 2026 "Showing 11 out of 11", 2025
+    //   "Showing 20 out of 25", 2024 "Showing 6 out of 26" on page 2. So a
+    //   year holds up to 20 per page and needs a second page above that.
+    //
+    //   Both are plain query parameters, so neither is a control to operate —
+    //   each is just another address. Years stay DERIVED by expandYearArchive;
+    //   only the page number is written down, and only as "there is a second
+    //   page", which is a property of the site's page size rather than of any
+    //   particular year. A year with no second page loads empty and leaves a
+    //   marker row saying so, which is visible rather than silent.
+    pages: [
+      { path: '/exhibitions',          ctx: 'current' },
+      { path: '/exhibitions/upcoming', ctx: 'upcoming' },
+      { path: '/exhibitions/history', ctx: 'past', param: 'year', yearArchive: true, includeCurrentYear: true },
+      { path: '/exhibitions/history', ctx: 'past p2', param: 'year', yearArchive: true, includeCurrentYear: true, suffix: '&page=2' },
+    ],
+    // Exhibitions sit at /exhibitions/<slug>, which is NOT beneath
+    // /exhibitions/history — that is why the old "links below the listing"
+    // counter scored this venue zero and it was briefly read as empty.
+    selector: 'a[href*="/exhibitions/"]',
+    isNav: href => /\/exhibitions\/?$/.test(href)
+                || /\/exhibitions\/(upcoming|history)\/?$/.test(href)
+                || /\/exhibitions\/history\?/.test(href),
     title: { heading: true },
   },
 
@@ -2791,6 +2851,40 @@ async function scrapeVenue(page, code) {
   // Cut before opening detail pages where the listing gave us enough to judge.
   const toFetch = v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing');
   await fetchIndividualPages(page, toFetch, code);
+
+  // HER RULING FOR THE MENIL, 12 Sep 2026: drop its permanent collection
+  // galleries. Same decision she made for the Met's "Ongoing" label — she
+  // tracks temporary exhibitions and their catalogues, and a gallery that has
+  // been hung since the building opened has no closing window to buy before.
+  //
+  // The Met could be filtered on the word "Ongoing" because the Met prints it.
+  // The Menil prints nothing: only two of its seven permanent pages say
+  // "permanent collection galleries" or "ongoing" at all, so text matching
+  // catches two and silently leaves five. What DOES separate them, exactly, is
+  // that the Menil publishes a run for every temporary show and none for any
+  // permanent gallery — verified across all 27 rows, where the seven with no
+  // date are precisely the seven galleries.
+  //
+  // So this is opt-in per venue and NOWHERE ELSE, because generally an unknown
+  // end date is never evidence about a show (the standing lookback rule), and
+  // at most venues a missing date means a site that publishes badly. It runs
+  // AFTER the detail pages, so a date found on the exhibition's own page
+  // rescues the row, and every exclusion is named in the log.
+  if (v.excludeUndated) {
+    const kept = [];
+    for (const r of toFetch) {
+      if (!r.start_date && !r.end_date && !String(r.title).startsWith('[')) {
+        log(`    no dates published — treated as a permanent display, excluded: ${r.title || r.url}`);
+        continue;
+      }
+      kept.push(r);
+    }
+    if (kept.length !== toFetch.length) {
+      log(`  ${toFetch.length - kept.length} undated row(s) excluded as permanent displays (venue rule)`);
+    }
+    return kept;
+  }
+
   return toFetch;
 }
 
