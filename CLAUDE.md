@@ -429,6 +429,21 @@ hesitate: a 21-venue run is ~500 KB of text today and ~120 KB once summaries are
 compressed. Keep old runs; they are the only record of what a venue looked like
 before it changed.
 
+**Then hand her `sweep_compressed.csv` — she must never have to ask for it.**
+Added 11 Sep 2026, because nothing said so and she did have to ask. Committing
+the run preserves it for future sessions; it does **not** put the file in her
+hands, and the file is the entire point of the run. Send it with the harness's
+file-sending tool as soon as compression finishes, and say in one line how many
+rows it holds and how many summaries were reused versus written.
+
+**One file, and only one: `sweep_compressed.csv`.** Not `sweep.csv`, which still
+holds the raw curatorial dumps, and not the per-venue files. Those live in the
+repo for diagnosis. Handing her several files makes her choose between them, and
+choosing wrong means importing raw text into the app.
+
+If compression has not been run, the run is not finished. Do not hand over
+`sweep.csv` as a substitute.
+
 One gap remains, honestly: if the container dies **mid-run**, before anything is
 committed, that run's completed venues are still lost with it. Committing per
 venue as files appear closes it. Git is deliberately not built into the scraper
