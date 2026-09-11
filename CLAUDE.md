@@ -1227,11 +1227,16 @@ scraper output**, so the join between scraper and app is no longer the unproven 
    - `.claude/hooks/confirm-subagent.sh` asks before any spawn and rewrites the
      description so the model is the first thing she reads.
 
-   **The one gap, stated plainly:** no production sweep has yet had its summaries
-   written by a Sonnet subagent reading the 29 example pairs. The 15 Acquavella
-   summaries in the 10 Sep run were written **by hand, in-session, by Opus**. That
-   is a first-real-use step inside step 2, not a build step — do not turn it back
-   into one.
+   - **Proven in production 11 Sep 2026.** A fresh `acq` sweep reused every
+     summary with zero model calls; re-run with `--recompress`, a **Sonnet
+     subagent wrote all 15 from the example pairs and she judged them very
+     good**. The whole chain — scrape, reuse, forced rewrite, file handed over —
+     has now run end to end with her driving it.
+
+   **The one gap left:** the *judging* half has never fired on real data. No
+   venue reworded a blurb, so Haiku has not been asked *is the old summary now
+   false?* outside the authored eval — and that eval's answers are still not
+   committed. Running `compress_eval.js` closes it and needs no scraping.
 2. **Wire all 21 venues with default recipes and run once.** This replaces what were two
    steps — "re-check Borghese and probe the rest" and "expand to the accessible ones".
    Marker rows became universal on 10 Sep, so **the run itself is the reconnaissance**:
@@ -1561,11 +1566,21 @@ summary now false?*. **That was already false when written**: Haiku scored 14 of
 `compress_prompt.md`. A stale line here sent a later session off to re-do finished
 work, which is the specific damage this guide exists to prevent.
 
-What is genuinely untested is narrower: **the 29 example pairs have never been
-handed to a model in a real sweep.** The 15 summaries in that run were written by
-hand, in the session, by Opus. So nothing yet shows that Sonnet, given those
-examples, writes summaries she would accept — the *writing* half is unproven in
-production, the *judging* half is measured. The first venue of step 2 settles it.
+**Closed 11 Sep 2026 — the writing half is now proven in production.** She ran a
+fresh `acq` sweep (`run_2026-09-11_150556`). The first pass found no changed
+blurbs and reused every summary with **zero model calls**, which is the design
+working. She then re-ran with `--recompress` deliberately, to force every row to
+count as new and make a **Sonnet subagent write all 15 summaries from the 29
+example pairs** — the exact path that had never executed. **Her verdict: very
+good.** So the examples teach what they were built to teach, and a subagent —
+not a session writing by hand — produced the file she would import.
+
+**What that run did NOT test, and it is the other half:** nothing was ever
+judged. The first pass found no reworded blurbs, so Haiku was never asked *is
+the old summary now false?*, and `--recompress` skips the comparison entirely by
+design. That half rests on the 14-case eval, whose answers are still not
+committed (see below). Running `compress_eval.js` closes it, and needs no
+scraping at all.
 
 ### Travelling exhibitions — solved in code, not in the prompt
 
