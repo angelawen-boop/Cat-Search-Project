@@ -377,6 +377,8 @@ Run:
 node scraper/sweep_prototype.js              everything
 node scraper/sweep_prototype.js ng rijks     named venues only
 node scraper/sweep_prototype.js --continue   finish the newest run
+node scraper/sweep_prototype.js --jobs=6     venues at once (default 4)
+node scraper/sweep_prototype.js --budget-mins=3   abandon a venue after N min
 node scraper/compress.js                     plan compression of the newest run
 node scraper/compress.js <run> --apply       write sweep_compressed.csv
 npm test                                     all fixtures, ~1 second
@@ -1085,6 +1087,17 @@ correctly refuses.
 
 **No structured data**, before or after JavaScript — checked both.
 
+**37 rows became 36 on 11 Sep, and that is the venue, not us.** *Asian Pavilion*
+stopped appearing. Checked three ways before accepting it: it is absent from the
+log entirely rather than failing, a deliberately **serial** re-run returned the
+same 36, and **she looked it up — the Rijksmuseum lists it as "temporarily
+closed"**, so it has been pulled out of the exhibitions section.
+
+Worth keeping because the next session diffing sweeps will see a row vanish and
+go hunting. **A disappearing row is not automatically a bug** — but it must be
+proved, not assumed, and the cheap proof is a serial re-run plus a look at the
+live page.
+
 #### Borghese — worked through in full, 7 Sep 2026
 
 **Its exhibitions do not live under `/mostre/`.** Those three pages are the listings
@@ -1135,6 +1148,12 @@ anything in this section.
 **Resolved 11 Sep 2026 — it was the site, not us.** She confirmed Borghese was
 down for her too, from her own machine, over the same couple of days. So this was
 never a block or a proxy problem, and no scraper change would have helped.
+
+**Back up on 11 Sep**, and its first successful run since 7 Sep: 8 rows, with
+real dates and curatorial text, current and past both reading. So the outage
+lasted roughly three days and cleared on its own. **Its 7 Sep numbers are
+therefore still the reference** — nobody has re-counted it against the live
+pages since the engine changed.
 
 **Her observation, and it matters for planning:** that site does not stay up
 reliably, and **she suspects some of the other Italian venues are the same** —
@@ -1875,8 +1894,8 @@ verification rather than by the reviewers.
 | IR-15 | Fetch several pages at once **within** a venue | **Reject** | That is the hammering case: five simultaneous requests to one museum is five times the load on their server. Never, at any scale |
 | IR-16 | Marker rows (`[current page]`) for blocked or empty listings are exported | Accepted, no repair | Intentional: it proves the venue was checked and visibly reports the failure |
 | IR-17 | Reviewer could not launch Chromium | No action | Their environment. Ours was fixed 8 Sep — `resolveChromium()` |
-| DEF-01 | Run venues **in parallel with each other** (never within one venue) | **Defer** | **Trigger:** more than ~8 working venues, or a run over 15 minutes. Measured 8 Sep: ~2.9s per detail page, so 21 venues projects to ~20 min. Agreed in principle 10 Sep; she has withdrawn the log-readability objection, since she reads the session's summary rather than the log — so the log may be interleaved provided it stays machine-parseable |
+| DEF-01 | Run venues **in parallel with each other** (never within one venue) | **Fixed 11 Sep** — `--jobs=N`, default 4. Five venues in 4m46s, bounded by the slowest venue instead of the sum. Proved lossless against the serial baseline before being trusted. ~~Defer~~ | **Trigger:** more than ~8 working venues, or a run over 15 minutes. Measured 8 Sep: ~2.9s per detail page, so 21 venues projects to ~20 min. Agreed in principle 10 Sep; she has withdrawn the log-readability objection, since she reads the session's summary rather than the log — so the log may be interleaved provided it stays machine-parseable |
 | DEF-02 | After changing a **JavaScript** filter, wait for proof the list changed, not merely that the page has text | **Defer** | **Trigger:** wiring any non-blocked venue that filters by JavaScript. Moot for the Met (HTTP 429; its dropdown has never been clicked). A **server-side** filter loading a different URL per year — the Louvre's — is not exposed to this and needs nothing |
 | DEF-03 | The summary extractor falls through to generic paragraph selectors, so a layout change could capture ticketing or biography text | **Defer** | **Trigger:** observe the next handful of venues as they are wired; fix if it actually surfaces. **Her ruling, and the reasoning matters:** it must not be deferred to "the compression step will catch it". Letting bad text through on the assumption a later stage notices is a bad habit, and it must never reach an approval card for her to be the one asking why the description is nonsense |
 | IR-18 | Drop a row with no end date when its **start** date is long before the lookback floor (proposed 10 Sep, after the 2012 Rosenquist row) | **Reject** | Her call: more granularity than it is worth. Measured first — across all 87 distinct rows ever collected it would have caught **one**. It would also add a new kind of judgement, since the lookback tests only the end date and an unknown end date is never treated as evidence of age. Any threshold at the floor itself would delete a show that opened just before 1 July 2024 and ran past it, which the guide names as a keeper |
-| DEF-04 | Nothing bounds a venue that **hangs** — a block costs a second, a hang costs 20s plus a retry per page | **Defer** | **Trigger:** with DEF-01. The run directory already limits the damage: completed venues are safe on disk and a timed-out venue is picked up by the next `--continue` |
+| DEF-04 | Nothing bounds a venue that **hangs** — a block costs a second, a hang costs 20s plus a retry per page | **Fixed 11 Sep** — a venue over its budget (default 10 min, `--budget-mins=N`) is abandoned, writes no file and is redone by `--continue`. Fired on purpose at a 9-second budget to prove it, since a guard nobody has seen fire is a guard nobody knows works. ~~Defer~~ | **Trigger:** with DEF-01. The run directory already limits the damage: completed venues are safe on disk and a timed-out venue is picked up by the next `--continue` |
