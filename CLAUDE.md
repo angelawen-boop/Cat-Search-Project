@@ -1045,16 +1045,53 @@ This is the only part that describes how the *scraper* reaches sites. It is shor
 
 | Venue | Finding | Evidence |
 |---|---|---|
-| `met` | **Hard blocked.** HTTP 429 on every page including `robots.txt`, on the very first request, with plain curl and no browser. This is an IP-reputation block on the whole datacenter range, not us going too fast. Delays won't help. `collectionapi.metmuseum.org` is unblocked from the same IP but covers collection objects, not exhibitions. | Verified repeatedly, 7 Sep 2026 |
+| `met` | **A bot checkpoint, NOT an IP block — corrected 11 Sep 2026.** The 429 is a **"Vercel Security Checkpoint"** page: the Met's site is hosted on Vercel, and Vercel serves this challenge instead of the content. See below — the data-centre theory was wrong for four days. `collectionapi.metmuseum.org` is unaffected but covers collection objects, not exhibitions. | Disproved from her home connection, 11 Sep 2026 |
 | `morgan` | **Hard blocked.** HTTP 403 on all three listing pages and on `sitemap.xml`, from Cloudflare. Their `robots.txt` permits general crawling (`User-agent: *  Allow: /`) and permits AI "reference" use, but name-blocks a list of AI crawlers, and Cloudflare is refusing this network before any of that applies. | Verified 7 Sep 2026 |
 | `ng` | **Works well.** Past archive loads 183 entries in one page. Dates live in the card wrapping each link, day-first format ("7 November 2025 – 10 May 2026"). | Full sweep |
 | `rijks` | **Works, fully worked through.** See below. | Full sweep + her count of the live pages |
 | `acq` | **Works.** One page carries current, upcoming and past together. Dates are in the link text itself ("… NEW YORK OCTOBER 16 - DECEMBER 5, 2025"). Its archive has year-range filter links (`/exhibitions/past/all/2023-2021`) which are navigation, not exhibitions — following them dragged in the whole catalogue back to 1999. | Full sweep |
 | `borghese` | **Reaches the site**, contradicting the old "robots-blocked" note in 6b. Fully worked through — see below. | Full sweep + 40 detail pages |
 
-**Two of six venues are blocked at the door.** For those, the headless browser doesn't help — the refusal happens before any page is served. Options are running from an ordinary home connection instead of a datacenter, asking the institution directly, or falling back to the Chat Claude route (different network, behaves like a person browsing). Engineering around a deliberate block is not on the table.
+**Two of six venues are blocked at the door.** They stay wired in regardless — see
+Section 4. A refusal costs about half a second and tells us whether anything has
+changed since last time. **Engineering around a deliberate block is not on the
+table**, and that rule is unchanged by what follows.
 
-They stay wired in regardless — see Section 4. A refusal costs about half a second and tells us whether anything has changed since last time.
+#### The Met — the data-centre theory was wrong, disproved 11 Sep 2026
+
+**She ran the scraper on her own Chromebook, on her home internet, and the Met
+returned the same HTTP 429.** Meanwhile `metmuseum.org` loaded normally in her
+ordinary Chrome browser, on that same connection, at that same moment.
+
+That kills the explanation this guide carried from 7 to 11 September — "an
+IP-reputation block on the whole datacenter range, delays won't help". Two
+different networks, same refusal, while a human browser on one of them sails
+through. **It was never about where the request comes from.**
+
+**What it actually is:** the 429 body is a **"Vercel Security Checkpoint"** page.
+The Met's site runs on Vercel, whose bot protection serves this challenge instead
+of the content. A normal browser passes it invisibly — a little JavaScript runs, a
+cookie is set, and the real page appears. Our scraper never gets that far:
+`safeGoto` refuses any status of 400 or more, so it hangs up on the challenge
+before the page can do anything.
+
+**Worth sitting with, because it is the more useful lesson:** for four days the
+guide stated a confident mechanism, backed by repeated testing, that was wrong.
+The tests were real — 429 every time — but they only ever measured the *symptom*.
+Nobody read the body of the refusal. **A status code is not a diagnosis**, and the
+cheap check that settled it was a person opening the site in a normal browser.
+
+**Undecided, and it is hers to decide:** whether letting the browser answer that
+checkpoint is legitimate. One reading is that it asks "are you a real browser?"
+and we genuinely are one, so passing is compliance. The other is that it exists to
+stop automated access, which is exactly what the standing rule refuses to engineer
+around. **The Met's `robots.txt` would settle it — and we cannot read it, because
+the checkpoint blocks that too.** She can, in her browser. Do not implement
+anything here until she has read it and ruled.
+
+**Morgan is a different thing and must not be lumped in with this.** Its 403 comes
+from Cloudflare and has not been retested from her machine. Assume nothing; the
+same cheap check applies.
 
 #### Rijksmuseum — worked through in full, 8 Sep 2026
 
@@ -1794,14 +1831,21 @@ it solely to fill this gap, and do not list it as a blocker on anything.
   forma **through a script**, never by hand.
 
   What is actually true about it:
-  - **The blocks would very likely lift.** Met's 429 and Morgan's 403 are aimed
-    at this datacentre's IP address, not at anything the scraper does. From a
-    home connection neither site sees what it is objecting to.
+  - ~~**The blocks would very likely lift** from a home connection.~~ **Tested
+    11 Sep and FALSE for the Met** — same 429 from her Chromebook on her home
+    internet. It is a Vercel bot checkpoint, not an address block (see 6a).
+    **Morgan has still not been retested from her machine**, so its 403 remains
+    genuinely unknown rather than disproved.
   - **Neither recipe has ever been exercised.** All we have established is that
     the door is shut. Which links are exhibitions, where the title sits, where
     the dates sit — all copied from venues that do work, none tested. Expect a
     first run that needs diagnosing, like Borghese's first run returning the
     navigation menu. Met's year dropdown is written and never once clicked.
+  - **The laptop route itself is proven** (11 Sep). She set up Linux on a
+    Chromebook, installed Node, cloned the repo, installed Chromium through
+    Playwright and ran a two-venue sweep that produced correct output and pushed
+    back. So "run it locally" is a real option now rather than a theory — it just
+    is not the answer for the Met.
   - **Both container-specific blockers are now cleared** (8 Sep). The hardcoded
     Chromium path is gone — `resolveChromium()` tries Playwright's own answer
     first, then whatever is actually installed, newest first. Both halves are

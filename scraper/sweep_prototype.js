@@ -1820,6 +1820,20 @@ async function fetchIndividualPages(page, rows, venueCode) {
   // no point spending a page load on an exhibition we will discard.
   const skip = new Set(rows.filter(r => r.end_date && !afterLookback(r.end_date)));
   if (skip.size) log(`  skipping ${skip.size} individual page(s): closed before lookback`);
+
+  // Progress, because this is the LONGEST phase and it used to print nothing at
+  // all. Borghese reads 41 pages here: two to four minutes of total silence,
+  // which reads as a dead run rather than a working one — she watched it happen
+  // and asked whether it had stopped. The house rule "long runs need progress"
+  // was written for backgrounded commands; it applies just as much inside one.
+  //
+  // Every tenth page and the first, so a long venue reports without a 200-line
+  // log. The count is of pages we will actually open, not of all rows.
+  const due = rows.filter(r =>
+    !skip.has(r) && r.url && !r.url.startsWith('[') && !(r.title || '').startsWith('['));
+  if (due.length) log(`  reading ${due.length} individual page(s)…`);
+  let seen = 0;
+
   for (const row of rows) {
     if (skip.has(row)) continue;
     // Marker rows record a listing page that failed or was empty. Their url is
@@ -1827,6 +1841,8 @@ async function fetchIndividualPages(page, rows, venueCode) {
     // the failure is logged twice.
     if (!row.url || row.url.startsWith('[')) continue;
     if (row.title && row.title.startsWith('[')) continue;
+    seen++;
+    if (seen === 1 || seen % 10 === 0) log(`    page ${seen} of ${due.length}`);
     try {
       const r = await safeGoto(page, row.url, venueCode, 'individual');
       if (!r.ok) {
