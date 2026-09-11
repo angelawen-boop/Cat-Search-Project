@@ -500,13 +500,17 @@ not adding another branch to shared code.
 
 Recipe options so far: `selector`, `isNav`, `title` (heading / card / strip
 rules), `markEmptyPages` for venues that get blocked, `lookbackAfterDetail` for
-venues whose listings carry no closing date, and `lookbackFrom` for a venue
-whose own archive cannot reach the project floor (the Met — see 6a).
+venues whose listings carry no closing date, `excludeOngoing` for a venue that
+labels its permanent displays, and `lookbackFrom` for a venue whose own archive
+genuinely cannot reach the project floor. **Nothing uses `lookbackFrom` now** —
+the Met did, and the real answer turned out to be a page it was not visiting.
 
-**`yearDropdown` is gone** (11 Sep 2026). It clicked the Met's year menu and was
-removed once the Met could finally be reached and it was seen not to work — the
-same 68 links three times over. A dead option invites someone to switch it back
-on.
+**`yearDropdown` is gone** (11 Sep 2026), and clicking a year menu is not how
+this is solved. It drove the Met's menu and got the same 68 links three times.
+**The menu changes the ADDRESS** — `/exhibitions/past?year=2025` — so the archive
+is a server-side filter and each year is simply another page in `pages`. Clicking
+raced the navigation; asking for the address cannot. Check the address bar before
+ever reaching for a click: if it changes, there is no interaction to automate.
 
 **A link back to the venue's own listing page is navigation — universal, in the
 engine.** `isOwnListingPage()` compares with any language prefix stripped, so
@@ -1171,22 +1175,40 @@ compressor rather than a scraper fault.
 **3. One row lacks an opening date**, not ten: *Defensive: Shields from The Met
 Collection*. Unverified against the live page.
 
-**4. Nineteen real rows lack a closing date, and the pattern is PERMANENT
-DISPLAYS** — *The British Galleries* (opened 2020), *Cycladic Art*, *Art of
-Native America*, *Before Yesterday We Could Fly* (2021), *Fabergé* (2011), the
-*Arts of Oceania / Africa / Ancient Americas* reinstallations. **Her ruling: the
-scraper must collect temporary exhibitions only.** This is known bug 2 in its
-sharpest form so far and is NOT yet fixed — no end date plus an opening years
-back is a strong signal, but acting on it is the shape IR-18 rejected, so it
-needs her decision rather than a quiet rule.
+**4. Nineteen rows had no closing date because they are PERMANENT DISPLAYS —
+fixed, and they are deliberately invisible.** *The British Galleries*, *Cycladic
+Art*, *Art of Native America*, *Fabergé*, the *Arts of Oceania / Africa / Ancient
+Americas* reinstallations and twelve more. **Her ruling: the scraper collects
+temporary exhibitions only.**
 
-**5. The year menu does not work, and the Met is now pinned to 2026.** See the
-`lookbackFrom` note in its recipe. The run drove the menu through 2026, 2025 and
-2024 and got the same 68 links each time, collecting nothing; the oldest closing
-date across all 82 rows is January 2026. The dropdown code is removed rather
-than disabled, and the floor now matches what the site actually serves — a run
-that claims to look back to July 2024 and silently returns nothing before 2026
-reads as "the Met held no exhibitions in 2025" rather than "we cannot see them".
+`excludeOngoing` reads **the Met's own "Ongoing" label** in the card's date slot,
+matched as a whole line or as the closing side of a range ("July 25, 2026–Ongoing")
+— never as a loose search, since an exhibition whose title contains the word would
+then be deleted on a false match.
+
+**This is the one place the scraper drops a row silently, and she asked for that
+explicitly** (11 Sep): if the Met itself calls it Ongoing, she does not want it on
+an approval card at all. It is permitted here because it is rung 1 of the ladder —
+**the site says so** — not our judgement. The exclusions are named one by one in
+the log. Do not "fix" this into marker rows; do not copy it to a venue that has not
+been checked for the same wording.
+
+**5. The archive reaches every year after all — the menu was never the way in.**
+Driving the dropdown through 2026, 2025 and 2024 returned the same 68 links each
+time, so the guide recorded the Met as a one-year archive and pinned its floor to
+2026-01-01. **She checked the live site and the address bar changes**:
+`/exhibitions/past?year=2025`. That makes it a **server-side** filter, like the
+Louvre's — the year is a different page, not a different state of one page. The
+years are now listed in `pages`, the pin is removed, and the project's July 2024
+floor applies to the Met like everywhere else.
+
+**The lesson is the same one the 429 taught four days earlier.** Both times a
+confident mechanism was written down from repeated testing that only ever
+measured the symptom, and both times the cheap check that settled it was a person
+opening the site in an ordinary browser. **Before automating an interaction, look
+at what the address bar does.** A click that changes the URL is a page to fetch,
+not a control to operate — and operating it races the navigation it triggers,
+which is exactly the 68-links-three-times result.
 
 ##### What was tried, and why nothing is left in the code
 

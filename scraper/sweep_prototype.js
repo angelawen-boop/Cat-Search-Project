@@ -1642,7 +1642,12 @@ function isOwnListingPage(fullUrl, listingPaths) {
   if (!listingPaths || !listingPaths.length) return false;
   let path;
   try { path = new URL(fullUrl).pathname; } catch { return false; }
-  const strip = p => p.replace(LANG_PREFIX, '').replace(/\/+$/, '') || '/';
+  // A listing path may carry a query — the Met's archive serves one year per
+  // address (`/exhibitions/past?year=2025`). The query selects WHICH listing,
+  // never a different kind of page, so compare on the path alone: every year of
+  // the Met's archive is the same listing page and all of them are navigation.
+  const strip = p => String(p).split(/[?#]/)[0]
+    .replace(LANG_PREFIX, '').replace(/\/+$/, '') || '/';
   const target = strip(path);
   return listingPaths.some(p => strip(p) === target);
 }
@@ -1786,42 +1791,30 @@ const VENUES = {
   met: {
     name: 'The Metropolitan Museum of Art',
     base: 'https://www.metmuseum.org',
+    // The past archive serves ONE YEAR PER ADDRESS, so each year is its own page.
+    //
+    // She checked the live site on 11 Sep: picking a year from the menu changes
+    // the address bar to `/exhibitions/past?year=2025`. That makes it a
+    // SERVER-SIDE filter — the same shape as the Louvre's — and a server-side
+    // filter is simply a different URL, which needs no menu clicking at all.
+    //
+    // This is why driving the menu got the same 68 links three times: the click
+    // navigates, and the scraper read the page it was already on before the new
+    // one arrived. Asking for the address directly removes the race entirely.
+    //
+    // The years listed reach the project's 1 July 2024 floor and no further. A
+    // show open across the floor is filed under the year it CLOSES, so 2024 is
+    // the oldest year that can hold a keeper.
     pages: [
-      { path: '/exhibitions',      ctx: 'current/upcoming' },
-      { path: '/exhibitions/past', ctx: 'past' },
+      { path: '/exhibitions',                ctx: 'current/upcoming' },
+      { path: '/exhibitions/past',           ctx: 'past' },
+      { path: '/exhibitions/past?year=2025', ctx: 'past 2025' },
+      { path: '/exhibitions/past?year=2024', ctx: 'past 2024' },
     ],
     selector: 'a[href*="/exhibitions/"]',
     isNav: href => /^\/exhibitions\/?$/.test(href) || /^\/exhibitions\/past\/?$/.test(href),
     title: { heading: true },
 
-    // HER DECISION, 11 Sep 2026: pin the Met to 2026 and stop trying to go
-    // further back.
-    //
-    // Its past listing shows only the most recent year, behind a JavaScript
-    // year menu. The first real run drove that menu — `Selecting year 2026`,
-    // `2025`, `2024` — and each time got **the same 68 links and collected
-    // nothing**. The page never changed. The oldest closing date in all 82 rows
-    // is January 2026.
-    //
-    // So the `yearDropdown` option is GONE rather than left switched off. It
-    // was written before the Met could be reached at all, has now been
-    // exercised once, and did not work. Keeping a dead option invites someone
-    // to switch it back on and get three identical page reads, which is exactly
-    // what produced rows carrying "also listed on the past-2026 page", "…
-    // past-2025 page" and "… past-2024 page" — one page recorded three times,
-    // as misleading notes on her approval cards.
-    //
-    // The floor is set to match what the site actually offers. Without it the
-    // run claims to look back to July 2024 and silently returns nothing before
-    // 2026, which reads as "the Met had no exhibitions in 2025" rather than
-    // "we cannot see them". A floor that matches reality is honest; a floor
-    // that cannot be met is not.
-    //
-    // NOT a permanent verdict. If the Met ever serves its older years to us,
-    // remove this line and the archive reappears. Her own Sweeper Brief already
-    // recorded this gap as accepted for the fetch tool; this is the same gap,
-    // confirmed against a real browser.
-    lookbackFrom: '2026-01-01',
 
     // HER RULING, 11 Sep 2026: collect temporary exhibitions only.
     //

@@ -392,6 +392,28 @@ test('N-004: a real exhibition on a venue\'s foreign-language site is KEPT', () 
     false);
 });
 
+test('N-006: a year-filtered archive address is navigation, both directions', () => {
+  // The Met's past archive serves one year per address. Those year links appear
+  // ON the pages we read, and the year pages are themselves pages we visit — so
+  // the query must be ignored on BOTH sides of the comparison, or the scraper
+  // collects its own archive filter as if it were an exhibition.
+  const metYears = ['/exhibitions', '/exhibitions/past',
+                    '/exhibitions/past?year=2025', '/exhibitions/past?year=2024'];
+  for (const y of ['2024', '2025', '2026']) {
+    assert.equal(
+      isOwnListingPage(`https://www.metmuseum.org/exhibitions/past?year=${y}`, metYears),
+      true, `year=${y} should be navigation`);
+  }
+  // Still navigation even when only the bare listing is declared.
+  assert.equal(
+    isOwnListingPage('https://www.metmuseum.org/exhibitions/past?year=2025', MET_PAGES),
+    true);
+  // And a real exhibition carrying a query is still a real exhibition.
+  assert.equal(
+    isOwnListingPage('https://www.metmuseum.org/exhibitions/raphael?from=past', metYears),
+    false);
+});
+
 test('N-005: an exhibition UNDER a listing path is kept', () => {
   assert.equal(
     isOwnListingPage('https://www.metmuseum.org/exhibitions/past/some-real-show', MET_PAGES),
