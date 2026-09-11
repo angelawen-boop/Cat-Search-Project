@@ -1692,10 +1692,17 @@ async function extractTitle(link, venueCode) {
     try {
       const h = await link.$('h1,h2,h3,h4,h5');
       if (h) {
-        const t = squash(await getText(h));
-        // The heading is trusted FIRST but not blindly: Tate's hero cards head
-        // the card with the gallery's name, and returning here was why the
-        // notATitle rule never fired.
+        // The heading is trusted FIRST but not blindly, and THE RECIPE'S STRIP
+        // RULES APPLY TO IT TOO. Returning the heading raw was why Tate's
+        // notATitle rule never fired, and why three Art Institute rows kept
+        // their "NOW OPEN" and "CLOSING SOON" badges while the rest lost
+        // theirs: a venue that badges its cards badges its headings as well,
+        // and whether a given card has a heading at all is a layout detail,
+        // not a decision about what the title is.
+        let t = squash(await getText(h));
+        if (rule.stripLeading)  t = t.replace(rule.stripLeading, '');
+        if (rule.stripTrailing) t = t.replace(rule.stripTrailing, '');
+        t = squash(t);
         if (t.length >= 3 && !isNotATitle(t, rule)) return t;
       }
     } catch {}

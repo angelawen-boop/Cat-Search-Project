@@ -1,0 +1,213 @@
+[2026-09-11T18:03:23.292Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T18:03:23.292Z] Lookback floor: 2024-07-01
+[2026-09-11T18:03:23.292Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_040323
+[2026-09-11T18:03:23.292Z] Venues this run: ng, rijks, acq, frick, menil, va, tate-modern, tate-britain, wallace
+[2026-09-11T18:03:23.292Z] Proxy: http://127.0.0.1:43047
+[2026-09-11T18:03:23.293Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T18:03:24.083Z] Running 9 venue(s) 4 at a time (one page at a time within each venue)
+[2026-09-11T18:03:24.478Z] [acq] 
+[2026-09-11T18:03:24.478Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T18:03:24.478Z] [acq]   ACQ — Acquavella Galleries, New York
+[2026-09-11T18:03:24.478Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-11T18:03:24.478Z] [acq]   Fetching all (current/upcoming/past): https://www.acquavellagalleries.com/exhibitions
+[2026-09-11T18:03:24.486Z] [rijks] 
+[2026-09-11T18:03:24.487Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-11T18:03:24.487Z] [rijks]   RIJKS — Rijksmuseum, Amsterdam
+[2026-09-11T18:03:24.487Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-11T18:03:24.487Z] [rijks]   Fetching current/upcoming: https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view
+[2026-09-11T18:03:24.489Z] [ng] 
+[2026-09-11T18:03:24.489Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T18:03:24.489Z] [ng]   NG — National Gallery, London
+[2026-09-11T18:03:24.489Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T18:03:24.489Z] [ng]   Fetching current/upcoming: https://www.nationalgallery.org.uk/exhibitions
+[2026-09-11T18:03:24.517Z] [frick] 
+[2026-09-11T18:03:24.517Z] [frick] ────────────────────────────────────────────────────────────
+[2026-09-11T18:03:24.517Z] [frick]   FRICK — The Frick Collection, New York
+[2026-09-11T18:03:24.517Z] [frick] ────────────────────────────────────────────────────────────
+[2026-09-11T18:03:24.517Z] [frick]   Fetching current/upcoming: https://www.frick.org/exhibitions
+[2026-09-11T18:03:30.287Z] [frick]   current/upcoming: 15 links seen -> 6 navigation, 3 already-seen URL -> 6 collected (0 of them with no readable title)
+[2026-09-11T18:03:30.287Z] [frick]   Fetching past: https://www.frick.org/exhibitions/past
+[2026-09-11T18:03:30.491Z] [ng]   current/upcoming: 12 links seen -> 2 navigation, 3 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-11T18:03:30.491Z] [ng]   Fetching past: https://www.nationalgallery.org.uk/exhibitions/past
+[2026-09-11T18:03:31.136Z] [rijks]   current/upcoming: 15 links seen -> 5 navigation, 0 already-seen URL -> 10 collected (0 of them with no readable title)
+[2026-09-11T18:03:31.136Z] [rijks]   Fetching past: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past
+[2026-09-11T18:03:32.054Z] [acq]   all (current/upcoming/past): 119 links seen -> 11 navigation, 0 already-seen URL -> 108 collected (0 of them with no readable title)
+[2026-09-11T18:03:32.055Z] [acq]   lookback (listing): kept 16, dropped 92 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-11T18:03:32.056Z] [acq]   reading 16 individual page(s)…
+[2026-09-11T18:03:32.056Z] [acq]     page 1 of 16
+[2026-09-11T18:03:35.621Z] [frick]   past: 25 links seen -> 4 navigation, 14 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-11T18:03:35.621Z] [frick]   lookback (listing): kept 13, dropped 0 closed before 2024-07-01, 10 with no closing date, 0 with no opening date
+[2026-09-11T18:03:35.621Z] [frick]   reading 13 individual page(s)…
+[2026-09-11T18:03:35.621Z] [frick]     page 1 of 13
+[2026-09-11T18:03:38.334Z] [rijks]   past: 44 links seen -> 4 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-11T18:03:38.335Z] [rijks]   lookback (listing): kept 49, dropped 1 closed before 2024-07-01, 30 with no closing date, 0 with no opening date
+[2026-09-11T18:03:38.335Z] [rijks]   reading 49 individual page(s)…
+[2026-09-11T18:03:38.335Z] [rijks]     page 1 of 49
+[2026-09-11T18:03:42.184Z] [ng]   past: 179 links seen -> 2 navigation, 0 already-seen URL -> 177 collected (0 of them with no readable title)
+[2026-09-11T18:03:42.184Z] [ng]   lookback (listing): kept 28, dropped 156 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T18:03:42.184Z] [ng]   reading 28 individual page(s)…
+[2026-09-11T18:03:42.184Z] [ng]     page 1 of 28
+[2026-09-11T18:03:47.945Z] [ng]     prose dates ignored, they contradict the listing: "7 September - 28 September 2026"
+[2026-09-11T18:03:51.079Z] [frick]     page 10 of 13
+[2026-09-11T18:03:51.974Z] [acq]     page 10 of 16
+[2026-09-11T18:03:56.836Z] [frick]   Individual pages: 13 got text, 0 no curatorial text, 0 failed
+[2026-09-11T18:03:56.836Z] [frick]   lookback (final): kept 10, dropped 3 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-11T18:03:56.840Z] [frick]   → 10 exhibitions, 10 with curatorial text → frick.csv
+[2026-09-11T18:03:57.043Z] [menil] 
+[2026-09-11T18:03:57.043Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-11T18:03:57.043Z] [menil]   MENIL — The Menil Collection, Houston
+[2026-09-11T18:03:57.043Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-11T18:03:57.043Z] [menil]   Fetching current: https://www.menil.org/exhibitions
+[2026-09-11T18:03:59.943Z] [rijks]     page 10 of 49
+[2026-09-11T18:04:01.429Z] [menil]   current: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-09-11T18:04:01.429Z] [menil]   Fetching upcoming: https://www.menil.org/exhibitions/upcoming
+[2026-09-11T18:04:03.732Z] [ng]     page 10 of 28
+[2026-09-11T18:04:04.519Z] [menil]   upcoming: 4 links seen -> 0 navigation, 0 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-11T18:04:04.519Z] [menil]   Fetching past: https://www.menil.org/exhibitions/past
+[2026-09-11T18:04:07.485Z] [acq]   Individual pages: 16 got text, 0 no curatorial text, 0 failed
+[2026-09-11T18:04:07.485Z] [acq]   lookback (final): kept 15, dropped 1 closed before 2024-07-01, 2 with no closing date, 0 with no opening date
+[2026-09-11T18:04:07.487Z] [acq]   → 15 exhibitions, 15 with curatorial text → acq.csv
+[2026-09-11T18:04:07.614Z] [va] 
+[2026-09-11T18:04:07.614Z] [va] ────────────────────────────────────────────────────────────
+[2026-09-11T18:04:07.614Z] [va]   VA — Victoria and Albert Museum, London
+[2026-09-11T18:04:07.614Z] [va] ────────────────────────────────────────────────────────────
+[2026-09-11T18:04:07.614Z] [va]   Fetching current/upcoming: https://www.vam.ac.uk/whatson?type=exhibition
+[2026-09-11T18:04:08.207Z] [menil]   past: 12 links seen -> 0 navigation, 1 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-11T18:04:08.207Z] [menil]   lookback (listing): kept 27, dropped 0 closed before 2024-07-01, 7 with no closing date, 0 with no opening date
+[2026-09-11T18:04:08.207Z] [menil]   reading 27 individual page(s)…
+[2026-09-11T18:04:08.207Z] [menil]     page 1 of 27
+[2026-09-11T18:04:10.849Z] [va]     another V&A/branch site, excluded: Inside Aardman: Wallace & Gromit and Friends
+[2026-09-11T18:04:10.922Z] [va]     another V&A/branch site, excluded: The Music is Black: A British Story
+[2026-09-11T18:04:11.060Z] [va]     another V&A/branch site, excluded: South Asia Now: Fashion. Art. Design.
+[2026-09-11T18:04:11.415Z] [va]     another V&A/branch site, excluded: David Bowie Centre
+[2026-09-11T18:04:11.727Z] [va]   current/upcoming: 19 links seen -> 0 navigation, 0 already-seen URL, 4 at another site of the same venue -> 15 collected (0 of them with no readable title)
+[2026-09-11T18:04:11.727Z] [va]   lookback (listing): kept 15, dropped 0 closed before 2024-07-01, 15 with no closing date, 0 with no opening date
+[2026-09-11T18:04:11.727Z] [va]   reading 15 individual page(s)…
+[2026-09-11T18:04:11.727Z] [va]     page 1 of 15
+[2026-09-11T18:04:21.164Z] [menil]     page 10 of 27
+[2026-09-11T18:04:22.451Z] [rijks]     page 20 of 49
+[2026-09-11T18:04:24.292Z] [va]     page 10 of 15
+[2026-09-11T18:04:31.803Z] [va]   Individual pages: 15 got text, 0 no curatorial text, 0 failed
+[2026-09-11T18:04:31.804Z] [va]   → 15 exhibitions, 15 with curatorial text → va.csv
+[2026-09-11T18:04:31.901Z] [tate-modern] 
+[2026-09-11T18:04:31.901Z] [tate-modern] ────────────────────────────────────────────────────────────
+[2026-09-11T18:04:31.901Z] [tate-modern]   TATE-MODERN — Tate Modern, London
+[2026-09-11T18:04:31.901Z] [tate-modern] ────────────────────────────────────────────────────────────
+[2026-09-11T18:04:31.901Z] [tate-modern]   Fetching current/upcoming: https://www.tate.org.uk/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=display&event_type=exhibition
+[2026-09-11T18:04:34.814Z] [menil]     page 20 of 27
+[2026-09-11T18:04:38.099Z] [tate-modern]   current/upcoming: 16 links seen -> 0 navigation, 3 already-seen URL -> 13 collected (0 of them with no readable title)
+[2026-09-11T18:04:38.100Z] [tate-modern]   Fetching recently opened: https://www.tate.org.uk/whats-on?date_range=past&gallery_group=tate-modern&event_type=display&event_type=exhibition
+[2026-09-11T18:04:42.357Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/mission-masterpiece
+[2026-09-11T18:04:42.357Z] [rijks]     page 30 of 49
+[2026-09-11T18:04:42.852Z] [tate-modern]   recently opened: 14 links seen -> 0 navigation, 14 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T18:04:42.852Z] [tate-modern]   lookback (listing): kept 13, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T18:04:42.852Z] [tate-modern]   reading 13 individual page(s)…
+[2026-09-11T18:04:42.852Z] [tate-modern]     page 1 of 13
+[2026-09-11T18:04:43.578Z] [ng]   TIMEOUT on https://www.nationalgallery.org.uk/exhibitions/past/velasco — retrying once
+[2026-09-11T18:04:45.696Z] [menil]   Individual pages: 27 got text, 0 no curatorial text, 0 failed
+[2026-09-11T18:04:45.696Z] [menil]     no dates published — treated as a permanent display, excluded: Modern and Contemporary
+[2026-09-11T18:04:45.696Z] [menil]     no dates published — treated as a permanent display, excluded: Surrealism
+[2026-09-11T18:04:45.696Z] [menil]     no dates published — treated as a permanent display, excluded: Africa
+[2026-09-11T18:04:45.696Z] [menil]     no dates published — treated as a permanent display, excluded: 4th–18th Century Europe
+[2026-09-11T18:04:45.696Z] [menil]     no dates published — treated as a permanent display, excluded: Pacific Islands
+[2026-09-11T18:04:45.696Z] [menil]     no dates published — treated as a permanent display, excluded: A Surrealist Wunderkammer
+[2026-09-11T18:04:45.696Z] [menil]     no dates published — treated as a permanent display, excluded: Outdoor Sculpture
+[2026-09-11T18:04:45.696Z] [menil]   7 undated row(s) excluded as permanent displays (venue rule)
+[2026-09-11T18:04:45.696Z] [menil]   → 20 exhibitions, 20 with curatorial text → menil.csv
+[2026-09-11T18:04:45.920Z] [tate-britain] 
+[2026-09-11T18:04:45.920Z] [tate-britain] ────────────────────────────────────────────────────────────
+[2026-09-11T18:04:45.920Z] [tate-britain]   TATE-BRITAIN — Tate Britain, London
+[2026-09-11T18:04:45.920Z] [tate-britain] ────────────────────────────────────────────────────────────
+[2026-09-11T18:04:45.920Z] [tate-britain]   Fetching current/upcoming: https://www.tate.org.uk/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=display&event_type=exhibition
+[2026-09-11T18:04:52.082Z] [tate-britain]   current/upcoming: 11 links seen -> 0 navigation, 1 already-seen URL -> 10 collected (0 of them with no readable title)
+[2026-09-11T18:04:52.083Z] [tate-britain]   Fetching recently opened: https://www.tate.org.uk/whats-on?date_range=past&gallery_group=tate-britain&event_type=display&event_type=exhibition
+[2026-09-11T18:04:53.861Z] [ng]     page 20 of 28
+[2026-09-11T18:04:55.629Z] [tate-britain]   recently opened: 5 links seen -> 0 navigation, 5 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T18:04:55.629Z] [tate-britain]   lookback (listing): kept 10, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T18:04:55.629Z] [tate-britain]   reading 10 individual page(s)…
+[2026-09-11T18:04:55.629Z] [tate-britain]     page 1 of 10
+[2026-09-11T18:04:57.170Z] [tate-modern]     page 10 of 13
+[2026-09-11T18:05:03.570Z] [tate-modern]   Individual pages: 13 got text, 0 no curatorial text, 0 failed
+[2026-09-11T18:05:03.570Z] [tate-modern]   lookback (final): kept 13, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T18:05:03.571Z] [tate-modern]   → 13 exhibitions, 13 with curatorial text → tate-modern.csv
+[2026-09-11T18:05:03.868Z] [wallace] 
+[2026-09-11T18:05:03.868Z] [wallace] ────────────────────────────────────────────────────────────
+[2026-09-11T18:05:03.868Z] [wallace]   WALLACE — The Wallace Collection, London
+[2026-09-11T18:05:03.868Z] [wallace] ────────────────────────────────────────────────────────────
+[2026-09-11T18:05:03.869Z] [wallace]   Fetching current/upcoming: https://www.wallacecollection.org/whats-on/exhibitions-displays/
+[2026-09-11T18:05:04.929Z] [rijks]     page 40 of 49
+[2026-09-11T18:05:06.507Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/henk-wildschut
+[2026-09-11T18:05:10.100Z] [wallace]   current/upcoming: 11 links seen -> 4 navigation, 0 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-11T18:05:10.100Z] [wallace]   Fetching past: https://www.wallacecollection.org/explore/past-exhibitions/
+[2026-09-11T18:05:10.703Z] [tate-britain]     page 10 of 10
+[2026-09-11T18:05:11.731Z] [tate-britain]   Individual pages: 10 got text, 0 no curatorial text, 0 failed
+[2026-09-11T18:05:11.731Z] [tate-britain]   lookback (final): kept 10, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T18:05:11.731Z] [tate-britain]   → 10 exhibitions, 10 with curatorial text → tate-britain.csv
+[2026-09-11T18:05:11.848Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/ed-van-der-elsken
+[2026-09-11T18:05:14.587Z] [wallace]   past: 28 links seen -> 4 navigation, 6 already-seen URL -> 18 collected (0 of them with no readable title)
+[2026-09-11T18:05:14.587Z] [wallace]   lookback (listing): kept 11, dropped 14 closed before 2024-07-01, 4 with no closing date, 0 with no opening date
+[2026-09-11T18:05:14.587Z] [wallace]   reading 11 individual page(s)…
+[2026-09-11T18:05:14.587Z] [wallace]     page 1 of 11
+[2026-09-11T18:05:23.293Z] [rijks]   Individual pages: 46 got text, 0 no curatorial text, 3 failed
+[2026-09-11T18:05:23.294Z] [rijks]   lookback (final): kept 37, dropped 12 closed before 2024-07-01, 14 with no closing date, 7 with no opening date
+[2026-09-11T18:05:23.294Z] [rijks]   → 37 exhibitions, 34 with curatorial text → rijks.csv
+[2026-09-11T18:05:26.906Z] [ng]   Individual pages: 28 got text, 0 no curatorial text, 0 failed
+[2026-09-11T18:05:26.906Z] [ng]   lookback (final): kept 27, dropped 1 closed before 2024-07-01, 0 with no closing date, 1 with no opening date
+[2026-09-11T18:05:26.907Z] [ng]   → 27 exhibitions, 27 with curatorial text → ng.csv
+[2026-09-11T18:05:35.227Z] [wallace]     page 10 of 11
+[2026-09-11T18:05:39.455Z] [wallace]   Individual pages: 11 got text, 0 no curatorial text, 0 failed
+[2026-09-11T18:05:39.455Z] [wallace]   lookback (final): kept 11, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T18:05:39.456Z] [wallace]   → 11 exhibitions, 11 with curatorial text → wallace.csv
+[2026-09-11T18:05:39.595Z] 
+[2026-09-11T18:05:39.595Z] ────────────────────────────────────────────────────────────
+[2026-09-11T18:05:39.595Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T18:05:39.595Z] ────────────────────────────────────────────────────────────
+[2026-09-11T18:05:39.595Z]   FRICK: 10 exhibitions | 10 with text
+[2026-09-11T18:05:39.595Z]   ACQ: 15 exhibitions | 15 with text
+[2026-09-11T18:05:39.595Z]   VA: 15 exhibitions | 15 with text
+[2026-09-11T18:05:39.595Z]   MENIL: 20 exhibitions | 20 with text
+[2026-09-11T18:05:39.595Z]   TATE-MODERN: 13 exhibitions | 13 with text
+[2026-09-11T18:05:39.595Z]   TATE-BRITAIN: 10 exhibitions | 10 with text
+[2026-09-11T18:05:39.595Z]   RIJKS: 37 exhibitions | 34 with text
+[2026-09-11T18:05:39.595Z]   NG: 27 exhibitions | 27 with text
+[2026-09-11T18:05:39.595Z]   WALLACE: 11 exhibitions | 11 with text
+[2026-09-11T18:05:39.595Z] 
+[2026-09-11T18:05:39.595Z] ────────────────────────────────────────────────────────────
+[2026-09-11T18:05:39.595Z]   COVERAGE — every link accounted for
+[2026-09-11T18:05:39.595Z] ────────────────────────────────────────────────────────────
+[2026-09-11T18:05:39.595Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T18:05:39.595Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T18:05:39.595Z]   frick      current/upcoming                15     6       0     3        0        0          6
+[2026-09-11T18:05:39.596Z]   ng         current/upcoming                12     2       0     3        0        0          7
+[2026-09-11T18:05:39.596Z]   rijks      current/upcoming                15     5       0     0        0        0         10
+[2026-09-11T18:05:39.596Z]   acq        all (current/upcoming/past)    119    11       0     0        0        0        108
+[2026-09-11T18:05:39.596Z]   frick      past                            25     4       0    14        0        0          7
+[2026-09-11T18:05:39.596Z]   rijks      past                            44     4       0     0        0        0         40
+[2026-09-11T18:05:39.596Z]   ng         past                           179     2       0     0        0        0        177
+[2026-09-11T18:05:39.596Z]   menil      current                         12     0       0     0        0        0         12
+[2026-09-11T18:05:39.596Z]   menil      upcoming                         4     0       0     0        0        0          4
+[2026-09-11T18:05:39.596Z]   menil      past                            12     0       0     1        0        0         11
+[2026-09-11T18:05:39.596Z]   va         current/upcoming                19     0       0     0        0        0         15
+[2026-09-11T18:05:39.596Z]   tate-modern current/upcoming                16     0       0     3        0        0         13
+[2026-09-11T18:05:39.596Z]   tate-modern recently opened                 14     0       0    14        0        0          0
+[2026-09-11T18:05:39.596Z]   tate-britain current/upcoming                11     0       0     1        0        0         10
+[2026-09-11T18:05:39.596Z]   tate-britain recently opened                  5     0       0     5        0        0          0
+[2026-09-11T18:05:39.596Z]   wallace    current/upcoming                11     4       0     0        0        0          7
+[2026-09-11T18:05:39.596Z]   wallace    past                            28     4       0     6        0        0         18
+[2026-09-11T18:05:39.596Z] 
+[2026-09-11T18:05:39.596Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T18:05:39.596Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T18:05:39.596Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T18:05:39.596Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T18:05:39.596Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T18:05:39.596Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T18:05:39.596Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T18:05:39.596Z] 
+[2026-09-11T18:05:39.596Z] Network bridge: 5229 requests served, 6039 skipped (image/media/font), 3 failed
+[2026-09-11T18:05:39.596Z] 
+[2026-09-11T18:05:39.596Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_040323
+[2026-09-11T18:05:39.596Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_040323/sweep.csv  (158 rows — ng:27, rijks:37, acq:15, frick:10, menil:20, va:15, tate-modern:13, tate-britain:10, wallace:11)
+[2026-09-11T18:05:39.596Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_040323/log_2026-09-12_040323.txt
+[2026-09-11T18:05:39.596Z] Not yet in this run: met, borghese, morgan, louvre, capo, uffizi, brera, khm, artic, moma, brit, dellav
+[2026-09-11T18:05:39.596Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T18:05:39.596Z] No de-duplication is applied — see passThrough.
