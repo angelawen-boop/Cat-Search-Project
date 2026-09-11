@@ -1,0 +1,86 @@
+[2026-09-11T18:00:00.704Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T18:00:00.707Z] Lookback floor: 2024-07-01
+[2026-09-11T18:00:00.707Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-12_040000
+[2026-09-11T18:00:00.707Z] Venues this run: artic
+[2026-09-11T18:00:00.708Z] Proxy: (none — direct egress assumed)
+[2026-09-11T18:00:00.708Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-11T18:00:00.709Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-11T18:00:00.710Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-11T18:00:01.000Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-11T18:00:01.058Z] No proxy set — Chromium is making its own requests (network bridge off)
+[2026-09-11T18:00:01.266Z] [artic] 
+[2026-09-11T18:00:01.267Z] [artic] ────────────────────────────────────────────────────────────
+[2026-09-11T18:00:01.267Z] [artic]   ARTIC — Art Institute of Chicago
+[2026-09-11T18:00:01.267Z] [artic] ────────────────────────────────────────────────────────────
+[2026-09-11T18:00:01.269Z] [artic]   Fetching current: https://www.artic.edu/exhibitions
+[2026-09-11T18:00:05.183Z] [artic]     the venue labels this a permanent installation, excluded: New Galleries for European Design
+[2026-09-11T18:00:05.363Z] [artic]     the venue labels this a permanent installation, excluded: New Gallery for the Arts of Korea
+[2026-09-11T18:00:05.421Z] [artic]     the venue labels this a permanent installation, excluded: A New View of 20th- and 21st-Century Architecture and Design
+[2026-09-11T18:00:05.482Z] [artic]     the venue labels this a permanent installation, excluded: Double Feature with Short Subject Ongoing
+[2026-09-11T18:00:05.539Z] [artic]     the venue labels this a permanent installation, excluded: Architectural Fragments from Chicago Ongoing
+[2026-09-11T18:00:05.602Z] [artic]     the venue labels this a permanent installation, excluded: Life and Afterlife in Ancient Egypt Ongoing
+[2026-09-11T18:00:05.662Z] [artic]     the venue labels this a permanent installation, excluded: Landscape in Light: The Tiffany Window at the Art Institute of Chicago
+[2026-09-11T18:00:05.784Z] [artic]     the venue labels this a permanent installation, excluded: The Deering Family Galleries of Medieval and Renaissance Art, Arms, and Armor
+[2026-09-11T18:00:05.812Z] [artic]   current: 27 links seen -> 7 navigation, 1 already-seen URL, 8 labelled permanent by the venue -> 11 collected (0 of them with no readable title)
+[2026-09-11T18:00:05.812Z] [artic]   Fetching upcoming: https://www.artic.edu/exhibitions/upcoming
+[2026-09-11T18:00:09.195Z] [artic]   upcoming: 14 links seen -> 6 navigation, 1 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-11T18:00:09.196Z] [artic]   Fetching past 2026: https://www.artic.edu/exhibitions/history?year=2026
+[2026-09-11T18:00:12.621Z] [artic]   past 2026: 39 links seen -> 27 navigation, 1 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-11T18:00:12.621Z] [artic]   Fetching past 2025: https://www.artic.edu/exhibitions/history?year=2025
+[2026-09-11T18:00:16.493Z] [artic]   past 2025: 51 links seen -> 30 navigation, 1 already-seen URL -> 20 collected (0 of them with no readable title)
+[2026-09-11T18:00:16.493Z] [artic]   Fetching past 2024: https://www.artic.edu/exhibitions/history?year=2024
+[2026-09-11T18:00:20.562Z] [artic]   past 2024: 51 links seen -> 30 navigation, 1 already-seen URL -> 20 collected (0 of them with no readable title)
+[2026-09-11T18:00:20.562Z] [artic]   Fetching past p2 2026: https://www.artic.edu/exhibitions/history?year=2026&page=2
+[2026-09-11T18:00:23.321Z] [artic]   past p2 2026: 30 links seen -> 29 navigation, 1 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-11T18:00:23.321Z] [artic]   Fetching past p2 2025: https://www.artic.edu/exhibitions/history?year=2025&page=2
+[2026-09-11T18:00:26.233Z] [artic]   past p2 2025: 36 links seen -> 30 navigation, 1 already-seen URL -> 5 collected (0 of them with no readable title)
+[2026-09-11T18:00:26.233Z] [artic]   Fetching past p2 2024: https://www.artic.edu/exhibitions/history?year=2024&page=2
+[2026-09-11T18:00:29.353Z] [artic]   past p2 2024: 37 links seen -> 30 navigation, 1 already-seen URL -> 6 collected (0 of them with no readable title)
+[2026-09-11T18:00:29.355Z] [artic]   lookback (listing): kept 78, dropped 2 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-11T18:00:29.356Z] [artic]   reading 78 individual page(s)…
+[2026-09-11T18:00:29.357Z] [artic]     page 1 of 78
+[2026-09-11T18:00:42.787Z] [artic]     page 10 of 78
+[2026-09-11T18:00:55.455Z] [artic]     page 20 of 78
+[2026-09-11T18:01:12.050Z] [artic]     page 30 of 78
+[2026-09-11T18:01:31.296Z] [artic]     page 40 of 78
+[2026-09-11T18:01:50.852Z] [artic]     page 50 of 78
+[2026-09-11T18:02:09.166Z] [artic]     page 60 of 78
+[2026-09-11T18:02:27.687Z] [artic]     page 70 of 78
+[2026-09-11T18:02:43.657Z] [artic]   Individual pages: 78 got text, 0 no curatorial text, 0 failed
+[2026-09-11T18:02:43.662Z] [artic]   → 78 exhibitions, 78 with curatorial text → artic.csv
+[2026-09-11T18:02:43.845Z] 
+[2026-09-11T18:02:43.845Z] ────────────────────────────────────────────────────────────
+[2026-09-11T18:02:43.845Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T18:02:43.845Z] ────────────────────────────────────────────────────────────
+[2026-09-11T18:02:43.845Z]   ARTIC: 78 exhibitions | 78 with text
+[2026-09-11T18:02:43.845Z] 
+[2026-09-11T18:02:43.845Z] ────────────────────────────────────────────────────────────
+[2026-09-11T18:02:43.845Z]   COVERAGE — every link accounted for
+[2026-09-11T18:02:43.845Z] ────────────────────────────────────────────────────────────
+[2026-09-11T18:02:43.845Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T18:02:43.845Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T18:02:43.845Z]   artic      current                         27     7       0     1        0        0         11
+[2026-09-11T18:02:43.845Z]   artic      upcoming                        14     6       0     1        0        0          7
+[2026-09-11T18:02:43.845Z]   artic      past 2026                       39    27       0     1        0        0         11
+[2026-09-11T18:02:43.845Z]   artic      past 2025                       51    30       0     1        0        0         20
+[2026-09-11T18:02:43.845Z]   artic      past 2024                       51    30       0     1        0        0         20
+[2026-09-11T18:02:43.845Z]   artic      past p2 2026                    30    29       0     1        0        0          0
+[2026-09-11T18:02:43.845Z]   artic      past p2 2025                    36    30       0     1        0        0          5
+[2026-09-11T18:02:43.845Z]   artic      past p2 2024                    37    30       0     1        0        0          6
+[2026-09-11T18:02:43.846Z] 
+[2026-09-11T18:02:43.846Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T18:02:43.846Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T18:02:43.846Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T18:02:43.846Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T18:02:43.846Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T18:02:43.846Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T18:02:43.846Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T18:02:43.846Z] 
+[2026-09-11T18:02:43.846Z] Network bridge: 0 requests served, 0 skipped (image/media/font), 0 failed
+[2026-09-11T18:02:43.846Z] 
+[2026-09-11T18:02:43.846Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-12_040000
+[2026-09-11T18:02:43.846Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-12_040000/sweep.csv  (78 rows — artic:78)
+[2026-09-11T18:02:43.846Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-12_040000/log_2026-09-12_040000.txt
+[2026-09-11T18:02:43.846Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, khm, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-11T18:02:43.847Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T18:02:43.847Z] No de-duplication is applied — see passThrough.
