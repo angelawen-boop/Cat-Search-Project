@@ -2155,8 +2155,8 @@ async function main() {
 
   log(`Proxy: ${PROXY_URL || '(none — direct egress assumed)'}`);
   if (!PROXY_URL) {
-    log('  WARNING: HTTPS_PROXY is unset. If this container requires the agent');
-    log('  proxy for egress, every venue will fail to load.');
+    log('  Expected on an ordinary machine; Chromium will connect directly.');
+    log('  In a Claude Code container this means every venue will fail to load.');
   }
 
   const chromePath = resolveChromium();
@@ -2208,8 +2208,29 @@ async function main() {
       userAgent: USER_AGENT,
       viewport: { width: 1280, height: 800 },
     });
-    // Chromium does no network I/O of its own — see NETWORK NOTE at top of file.
-    const stats = await installNetworkBridge(context);
+    // The bridge exists ONLY because Chromium cannot use this container's agent
+    // proxy (see NETWORK NOTE at top of file). Where there is no proxy — her
+    // laptop, or any ordinary machine — Chromium can reach the internet itself,
+    // and making Node do it instead is both pointless and actively harmful.
+    //
+    // Harmful because of the mismatch the NETWORK NOTE already warned about and
+    // nobody connected to the blocks: with the bridge on, every request claims
+    // "I am Chrome 124" in its user-agent while the actual connection is made by
+    // Node and carries Node's signature. Bot protection checks precisely that —
+    // something asserting it is a browser without being one at the network
+    // level is the exact profile it exists to stop. The Met (Vercel) and Morgan
+    // (Cloudflare) both refuse us from her home connection, where a normal
+    // browser on the same connection is served without complaint.
+    //
+    // So turning it off where it is not needed REMOVES a misrepresentation
+    // rather than adding one: Chromium doing its own requests means the
+    // user-agent is simply true.
+    const stats = PROXY_URL
+      ? await installNetworkBridge(context)
+      : { fulfilled: 0, skipped: 0, failed: 0, disabled: true };
+    if (!PROXY_URL && n === 0) {
+      log('No proxy set — Chromium is making its own requests (network bridge off)');
+    }
 
     try {
       while (true) {
