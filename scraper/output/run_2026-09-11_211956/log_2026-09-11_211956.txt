@@ -1,0 +1,89 @@
+[2026-09-11T11:19:56.937Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T11:19:56.940Z] Lookback floor: 2024-07-01
+[2026-09-11T11:19:56.940Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-11_211956
+[2026-09-11T11:19:56.940Z] Venues this run: met
+[2026-09-11T11:19:56.940Z] Proxy: (none — direct egress assumed)
+[2026-09-11T11:19:56.941Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-11T11:19:56.941Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-11T11:19:56.942Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-11T11:19:57.285Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-11T11:19:57.351Z] No proxy set — Chromium is making its own requests (network bridge off)
+[2026-09-11T11:19:57.732Z] [met] 
+[2026-09-11T11:19:57.733Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-11T11:19:57.733Z] [met]   MET — The Metropolitan Museum of Art
+[2026-09-11T11:19:57.734Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-11T11:19:57.734Z] [met]   Fetching current/upcoming: https://www.metmuseum.org/exhibitions
+[2026-09-11T11:19:59.275Z] [met]     ongoing (permanent), excluded: The Face Of Life Modern Portraits At The Met
+[2026-09-11T11:20:02.468Z] [met]     ongoing (permanent), excluded: Decorative Arts In China 1000 To The Present
+[2026-09-11T11:20:02.526Z] [met]     ongoing (permanent), excluded: A Lasting Legacy Chinese Jades From New York Collections
+[2026-09-11T11:20:02.597Z] [met]     ongoing (permanent), excluded: Wedding Attire Three Cultures One Celebration
+[2026-09-11T11:20:02.663Z] [met]     ongoing (permanent), excluded: Arts Of Oceania
+[2026-09-11T11:20:02.744Z] [met]     ongoing (permanent), excluded: Arts Of The Ancient Americas
+[2026-09-11T11:20:02.806Z] [met]     ongoing (permanent), excluded: Arts Of Africa
+[2026-09-11T11:20:02.870Z] [met]     ongoing (permanent), excluded: Defensive Display Shields From The Met Collection
+[2026-09-11T11:20:02.962Z] [met]     ongoing (permanent), excluded: The American Wing At 100
+[2026-09-11T11:20:03.023Z] [met]     ongoing (permanent), excluded: The Calculated Curve Eighteenth Century American Furniture
+[2026-09-11T11:20:03.092Z] [met]     ongoing (permanent), excluded: Cycladic Art
+[2026-09-11T11:20:03.159Z] [met]     ongoing (permanent), excluded: Look Again European Paintings 1300 1800
+[2026-09-11T11:20:03.218Z] [met]     ongoing (permanent), excluded: Layered Narratives The Northern Renaissance Gallery
+[2026-09-11T11:20:03.292Z] [met]     ongoing (permanent), excluded: Art Of Native America Diker Collection
+[2026-09-11T11:20:03.353Z] [met]     ongoing (permanent), excluded: Renaissance Masterpieces
+[2026-09-11T11:20:03.418Z] [met]     ongoing (permanent), excluded: Michael Lin Pentachrome
+[2026-09-11T11:20:03.477Z] [met]     ongoing (permanent), excluded: Afrofuturist Period Room
+[2026-09-11T11:20:03.537Z] [met]     ongoing (permanent), excluded: British Galleries
+[2026-09-11T11:20:03.592Z] [met]     ongoing (permanent), excluded: Faberge
+[2026-09-11T11:20:04.226Z] [met]   current/upcoming: 92 links seen -> 2 navigation, 47 already-seen URL, 19 ongoing/permanent -> 24 collected (43 of them with no readable title)
+[2026-09-11T11:20:04.226Z] [met]   Fetching past: https://www.metmuseum.org/exhibitions/past
+[2026-09-11T11:20:08.783Z] [met]   past: 68 links seen -> 10 navigation, 29 already-seen URL -> 29 collected (29 of them with no readable title)
+[2026-09-11T11:20:08.784Z] [met]   Fetching past 2025: https://www.metmuseum.org/exhibitions/past?year=2025
+[2026-09-11T11:20:14.181Z] [met]   past 2025: 128 links seen -> 10 navigation, 81 already-seen URL -> 37 collected (37 of them with no readable title)
+[2026-09-11T11:20:14.182Z] [met]   Fetching past 2024: https://www.metmuseum.org/exhibitions/past?year=2024
+[2026-09-11T11:20:19.383Z] [met]   past 2024: 144 links seen -> 10 navigation, 93 already-seen URL -> 41 collected (41 of them with no readable title)
+[2026-09-11T11:20:19.384Z] [met]   lookback (listing): kept 106, dropped 25 closed before 2024-07-01, 6 with no closing date, 0 with no opening date
+[2026-09-11T11:20:19.385Z] [met]   reading 106 individual page(s)…
+[2026-09-11T11:20:19.386Z] [met]     page 1 of 106
+[2026-09-11T11:20:21.890Z] [met]     page 10 of 106
+[2026-09-11T11:20:24.353Z] [met]     page 20 of 106
+[2026-09-11T11:20:26.480Z] [met]     page 30 of 106
+[2026-09-11T11:20:28.583Z] [met]     page 40 of 106
+[2026-09-11T11:20:30.819Z] [met]     page 50 of 106
+[2026-09-11T11:20:34.628Z] [met]     page 60 of 106
+[2026-09-11T11:20:39.551Z] [met]     page 70 of 106
+[2026-09-11T11:20:44.630Z] [met]     page 80 of 106
+[2026-09-11T11:20:50.000Z] [met]     page 90 of 106
+[2026-09-11T11:20:55.463Z] [met]     page 100 of 106
+[2026-09-11T11:21:00.253Z] [met]   Individual pages: 106 got text, 0 no curatorial text, 0 failed
+[2026-09-11T11:21:00.254Z] [met]   lookback (final): kept 106, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T11:21:00.259Z] [met]   → 106 exhibitions, 106 with curatorial text → met.csv
+[2026-09-11T11:21:00.430Z] 
+[2026-09-11T11:21:00.431Z] ────────────────────────────────────────────────────────────
+[2026-09-11T11:21:00.431Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T11:21:00.431Z] ────────────────────────────────────────────────────────────
+[2026-09-11T11:21:00.431Z]   MET: 106 exhibitions | 106 with text
+[2026-09-11T11:21:00.431Z] 
+[2026-09-11T11:21:00.431Z] ────────────────────────────────────────────────────────────
+[2026-09-11T11:21:00.431Z]   COVERAGE — every link accounted for
+[2026-09-11T11:21:00.431Z] ────────────────────────────────────────────────────────────
+[2026-09-11T11:21:00.431Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T11:21:00.431Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T11:21:00.431Z]   met        current/upcoming                92     2       0    47       19       43         24
+[2026-09-11T11:21:00.432Z]   met        past                            68    10       0    29        0       29         29
+[2026-09-11T11:21:00.432Z]   met        past 2025                      128    10       0    81        0       37         37
+[2026-09-11T11:21:00.432Z]   met        past 2024                      144    10       0    93        0       41         41
+[2026-09-11T11:21:00.432Z] 
+[2026-09-11T11:21:00.432Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T11:21:00.432Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T11:21:00.432Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T11:21:00.432Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T11:21:00.433Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T11:21:00.433Z]   noTitle   = no usable exhibition name could be read from the link
+[2026-09-11T11:21:00.433Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T11:21:00.433Z] 
+[2026-09-11T11:21:00.433Z] Network bridge: 0 requests served, 0 skipped (image/media/font), 0 failed
+[2026-09-11T11:21:00.433Z] 
+[2026-09-11T11:21:00.434Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-11_211956
+[2026-09-11T11:21:00.434Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-11_211956/sweep.csv  (106 rows — met:106)
+[2026-09-11T11:21:00.434Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-11_211956/log_2026-09-11_211956.txt
+[2026-09-11T11:21:00.434Z] Not yet in this run: ng, rijks, acq, borghese, morgan
+[2026-09-11T11:21:00.434Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T11:21:00.434Z] No de-duplication is applied — see passThrough.
