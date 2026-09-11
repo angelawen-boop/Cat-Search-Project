@@ -3013,8 +3013,20 @@ async function fetchIndividualPages(page, rows, venueCode) {
           return '';
         }).catch(() => '');
         if (h) {
-          row.title = h;
-          row.notes = addNote(row.notes, 'Name read from the exhibition\'s own page; the listing linked it by image only.');
+          // THE RECIPE'S STRIPS APPLY HERE TOO. This is the third place a title
+          // can come from — heading, link text, and now the exhibition's own
+          // page — and the third to need saying so. The Art Institute heads its
+          // pages "NOW OPEN Lee Miller: Fearless", so three rows kept badges
+          // that every other row had lost, twice over across two fixes.
+          const rule = titleRule(venueCode);
+          let ht = h;
+          if (rule.stripLeading)  ht = ht.replace(rule.stripLeading, '');
+          if (rule.stripTrailing) ht = ht.replace(rule.stripTrailing, '');
+          ht = squash(stripTitleNoise(ht));
+          if (ht.length >= 3 && !isNotATitle(ht, rule)) {
+            row.title = ht;
+            row.notes = addNote(row.notes, 'Name read from the exhibition\'s own page; the listing linked it by image only.');
+          }
         }
       }
 

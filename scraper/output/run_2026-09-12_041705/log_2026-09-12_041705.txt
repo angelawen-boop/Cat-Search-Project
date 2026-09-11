@@ -1,0 +1,85 @@
+[2026-09-11T18:17:05.870Z] Cat Watch Sweep Prototype — starting
+[2026-09-11T18:17:05.871Z] Lookback floor: 2024-07-01
+[2026-09-11T18:17:05.871Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_041705
+[2026-09-11T18:17:05.871Z] Venues this run: ng, frick, capo
+[2026-09-11T18:17:05.872Z] Proxy: http://127.0.0.1:43047
+[2026-09-11T18:17:05.872Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-11T18:17:06.445Z] Running 3 venue(s) 3 at a time (one page at a time within each venue)
+[2026-09-11T18:17:06.827Z] [capo] 
+[2026-09-11T18:17:06.827Z] [capo] ────────────────────────────────────────────────────────────
+[2026-09-11T18:17:06.829Z] [capo]   CAPO — Capodimonte, Naples
+[2026-09-11T18:17:06.829Z] [capo] ────────────────────────────────────────────────────────────
+[2026-09-11T18:17:06.829Z] [capo]   Fetching all (current/upcoming/past): https://capodimonte.cultura.gov.it/mostre/
+[2026-09-11T18:17:06.848Z] [ng] 
+[2026-09-11T18:17:06.848Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T18:17:06.848Z] [ng]   NG — National Gallery, London
+[2026-09-11T18:17:06.848Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-11T18:17:06.848Z] [ng]   Fetching current/upcoming: https://www.nationalgallery.org.uk/exhibitions
+[2026-09-11T18:17:06.849Z] [frick] 
+[2026-09-11T18:17:06.849Z] [frick] ────────────────────────────────────────────────────────────
+[2026-09-11T18:17:06.849Z] [frick]   FRICK — The Frick Collection, New York
+[2026-09-11T18:17:06.849Z] [frick] ────────────────────────────────────────────────────────────
+[2026-09-11T18:17:06.849Z] [frick]   Fetching current/upcoming: https://www.frick.org/exhibitions
+[2026-09-11T18:17:11.503Z] [frick]   current/upcoming: 15 links seen -> 6 navigation, 3 already-seen URL -> 6 collected (0 of them with no readable title)
+[2026-09-11T18:17:11.503Z] [frick]   Fetching past: https://www.frick.org/exhibitions/past
+[2026-09-11T18:17:13.046Z] [ng]   current/upcoming: 12 links seen -> 2 navigation, 3 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-11T18:17:13.046Z] [ng]   Fetching past: https://www.nationalgallery.org.uk/exhibitions/past
+[2026-09-11T18:17:15.942Z] [frick]   past: 25 links seen -> 4 navigation, 14 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-11T18:17:15.942Z] [frick]   lookback (listing): kept 13, dropped 0 closed before 2024-07-01, 10 with no closing date, 0 with no opening date
+[2026-09-11T18:17:15.943Z] [frick]   reading 13 individual page(s)…
+[2026-09-11T18:17:15.943Z] [frick]     page 1 of 13
+[2026-09-11T18:17:18.393Z] [capo]   NO_RESPONSE on https://capodimonte.cultura.gov.it/mostre/ — retrying once
+[2026-09-11T18:17:21.297Z] [ng]   past: 179 links seen -> 2 navigation, 0 already-seen URL -> 177 collected (0 of them with no readable title)
+[2026-09-11T18:17:21.298Z] [ng]   lookback (listing): kept 28, dropped 156 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-11T18:17:21.298Z] [ng]   reading 28 individual page(s)…
+[2026-09-11T18:17:21.298Z] [ng]     page 1 of 28
+[2026-09-11T18:17:26.312Z] [ng]     prose dates ignored, they contradict the listing: "7 September - 28 September 2026"
+[2026-09-11T18:17:31.997Z] [capo]   NO_RESPONSE: https://capodimonte.cultura.gov.it/mostre/ — page.goto: net::ERR_FAILED at https://capodimonte.cultura.gov.it/mostre/
+Call log:
+[2m  - navigating to "https://capodi
+[2026-09-11T18:17:31.998Z] [capo]   FAILED all (current/upcoming/past) — NO_RESPONSE
+[2026-09-11T18:17:31.998Z] [capo]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-11T18:17:31.998Z] [capo]   → 0 exhibitions, 0 with curatorial text → capo.csv
+[2026-09-11T18:17:34.661Z] [frick]     page 10 of 13
+[2026-09-11T18:17:41.964Z] [ng]     page 10 of 28
+[2026-09-11T18:17:42.954Z] [frick]   Individual pages: 13 got text, 0 no curatorial text, 0 failed
+[2026-09-11T18:17:42.954Z] [frick]   lookback (final): kept 10, dropped 3 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-11T18:17:42.955Z] [frick]   → 10 exhibitions, 10 with curatorial text → frick.csv
+[2026-09-11T18:18:00.937Z] [ng]     page 20 of 28
+[2026-09-11T18:18:18.957Z] [ng]   Individual pages: 28 got text, 0 no curatorial text, 0 failed
+[2026-09-11T18:18:18.957Z] [ng]   lookback (final): kept 27, dropped 1 closed before 2024-07-01, 0 with no closing date, 1 with no opening date
+[2026-09-11T18:18:18.958Z] [ng]   → 27 exhibitions, 27 with curatorial text → ng.csv
+[2026-09-11T18:18:19.049Z] 
+[2026-09-11T18:18:19.049Z] ────────────────────────────────────────────────────────────
+[2026-09-11T18:18:19.049Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-11T18:18:19.049Z] ────────────────────────────────────────────────────────────
+[2026-09-11T18:18:19.049Z]   CAPO: 0 exhibitions | 0 with text | 1 page(s) blocked/empty
+[2026-09-11T18:18:19.049Z]   FRICK: 10 exhibitions | 10 with text
+[2026-09-11T18:18:19.049Z]   NG: 27 exhibitions | 27 with text
+[2026-09-11T18:18:19.049Z] 
+[2026-09-11T18:18:19.049Z] ────────────────────────────────────────────────────────────
+[2026-09-11T18:18:19.049Z]   COVERAGE — every link accounted for
+[2026-09-11T18:18:19.049Z] ────────────────────────────────────────────────────────────
+[2026-09-11T18:18:19.049Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-11T18:18:19.049Z]   -----------------------------------------------------------------------------------------------
+[2026-09-11T18:18:19.049Z]   frick      current/upcoming                15     6       0     3        0        0          6
+[2026-09-11T18:18:19.049Z]   ng         current/upcoming                12     2       0     3        0        0          7
+[2026-09-11T18:18:19.049Z]   frick      past                            25     4       0    14        0        0          7
+[2026-09-11T18:18:19.049Z]   ng         past                           179     2       0     0        0        0        177
+[2026-09-11T18:18:19.049Z] 
+[2026-09-11T18:18:19.049Z]   seen      = links matching the venue's selector on that page
+[2026-09-11T18:18:19.049Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-11T18:18:19.049Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-11T18:18:19.049Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-11T18:18:19.049Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-11T18:18:19.049Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-11T18:18:19.049Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-11T18:18:19.049Z] 
+[2026-09-11T18:18:19.049Z] Network bridge: 1251 requests served, 1405 skipped (image/media/font), 3 failed
+[2026-09-11T18:18:19.049Z] 
+[2026-09-11T18:18:19.049Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_041705
+[2026-09-11T18:18:19.049Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_041705/sweep.csv  (38 rows — ng:27, frick:10, capo:1)
+[2026-09-11T18:18:19.050Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_041705/log_2026-09-12_041705.txt
+[2026-09-11T18:18:19.050Z] Not yet in this run: met, rijks, acq, borghese, morgan, menil, va, louvre, uffizi, brera, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-11T18:18:19.050Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-11T18:18:19.050Z] No de-duplication is applied — see passThrough.
