@@ -1259,7 +1259,25 @@ const BOILERPLATE = [
   'book your visit',
   'buy tickets',
   'for visit info',
+  // Image rights notices. Wallace prints three of these at the foot of every
+  // exhibition page; they are a description of the PHOTOGRAPH's licence, never
+  // of the exhibition, and with the content wrapper wrongly excluded they were
+  // what the extractor fell through to.
+  'download of this image is authorised',
+  'higher image resolution',
+  'image licensing policies',
 ];
+
+// A container holding fewer than this many of the page's real paragraphs is
+// judged a banner on its class alone — see isLayoutWrapper().
+//
+// TWO is the number, and both sides are pinned by a real page. Below it, the
+// National Gallery's listing carries exactly ONE substantial paragraph, its
+// "address-and-signup" blurb, which is 100% of the page yet plainly a banner;
+// at two or more, Wallace's Marie-Antoinette page has a content wrapper holding
+// 2 of its 3 real paragraphs, which is plainly the page. A banner does not
+// carry two paragraphs AND most of the page's prose.
+const MIN_WRAPPER_PARAS = 2;
 
 const CURATORIAL_SELECTORS = [
   '.exhibition-detail__description',
@@ -1278,8 +1296,14 @@ const CURATORIAL_SELECTORS = [
 
 async function getCuratorialText(page) {
   try {
-    return await page.evaluate(({ noiseRe, boilerplate, selectors }) => {
+    return await page.evaluate(({ noiseRe, boilerplate, selectors, MIN_WRAPPER_PARAS }) => {
       const NOISE = new RegExp(noiseRe, 'i');
+      const clean = (t) => String(t || '').replace(/\s+/g, ' ').trim();
+
+      const isBoilerplate = (t) => {
+        const low = t.toLowerCase();
+        return boilerplate.some(b => low.includes(b));
+      };
 
       // Walk up to, but never including, BODY and HTML.
       //
@@ -1288,20 +1312,61 @@ async function getCuratorialText(page) {
       // paragraph on every Borghese page counted as being inside a cookie
       // banner, and the summary column came back empty for all 41 rows.
       // A consent banner is a container within the page, never the page.
+      // A CONTAINER HOLDING MOST OF THE PAGE IS A LAYOUT WRAPPER, NOT A BANNER.
+      //
+      // Stopping at BODY was not enough. The Wallace Collection wraps every
+      // exhibition's text in a div classed
+      //   "section-content section--footer-spacer section--hero-spacer"
+      // where "footer-spacer" is a LAYOUT class meaning "leave room above the
+      // footer". The class merely CONTAINS the word footer, so the substring
+      // match read the whole page as being inside the footer, excluded all ten
+      // curatorial paragraphs, fell through the entire selector ladder to bare
+      // <p>, and stored the image-licensing notice as the description — the
+      // same 391 characters on all 11 Wallace rows.
+      //
+      // That is the Borghese cmplz- failure in a new costume, and the same
+      // principle answers it: a consent banner, a footer or a newsletter block
+      // is a SMALL PART of the page. One that holds most of the page's prose is
+      // the page. So the class match is only believed when the container is
+      // actually small.
+      //
+      // Both halves of the test are needed, and the National Gallery is why.
+      // Its listing page carries exactly ONE substantial paragraph, the
+      // "address-and-signup" blurb — 100% of the page by share, yet plainly a
+      // banner. A share test alone would have let that through. Measured
+      // 11 Sep across four venues: Wallace's wrapper holds 10 of 14 (71%),
+      // while Rijksmuseum's cookie bar holds 1 of 6, Borghese's footer and
+      // newsletter 1 of 3 each, and the National Gallery's signup 1 of 1.
+      // Boilerplate is NOT page content and must not count here. Wallace ends
+      // every exhibition page with three image-rights paragraphs, and counting
+      // them was enough on its own to defeat the share test on its shorter
+      // pages: Marie-Antoinette's content wrapper held 2 of 6 paragraphs and
+      // Keeping Time's held 3 of 6, so neither cleared "more than half", the
+      // wrapper was believed to be the footer, and both rows came back with the
+      // licensing notice as their description. Measured against real prose
+      // instead, they hold 2 of 3 and 3 of 4.
+      const substantial = Array.from(document.querySelectorAll('p'))
+        .map(e => ({ el: e, t: clean(e.innerText) }))
+        .filter(x => x.t.length > 60 && !isBoilerplate(x.t))
+        .map(x => x.el);
+
+      const isLayoutWrapper = (n) => {
+        const held = substantial.filter(x => n.contains(x)).length;
+        return held >= MIN_WRAPPER_PARAS && held > substantial.length / 2;
+      };
+
       const insideNoise = (el) => {
         for (let n = el; n && n.tagName !== 'BODY' && n.tagName !== 'HTML'; n = n.parentElement) {
           const cls = typeof n.className === 'string' ? n.className : '';
-          if (NOISE.test(cls + ' ' + (n.id || ''))) return true;
+          if (NOISE.test(cls + ' ' + (n.id || ''))) {
+            if (isLayoutWrapper(n)) continue;   // a wrapper, not a banner — keep looking up
+            return true;
+          }
         }
         return false;
       };
 
-      const isBoilerplate = (t) => {
-        const low = t.toLowerCase();
-        return boilerplate.some(b => low.includes(b));
-      };
 
-      const clean = (t) => String(t || '').replace(/\s+/g, ' ').trim();
 
       for (const sel of selectors) {
         let els;
@@ -1316,7 +1381,8 @@ async function getCuratorialText(page) {
         if (out.length) return out.join(' ').slice(0, 2000);
       }
       return '';
-    }, { noiseRe: NOISE_CONTAINER, boilerplate: BOILERPLATE, selectors: CURATORIAL_SELECTORS });
+    }, { noiseRe: NOISE_CONTAINER, boilerplate: BOILERPLATE, selectors: CURATORIAL_SELECTORS,
+         MIN_WRAPPER_PARAS });
   } catch {
     return '';
   }
@@ -2061,6 +2127,37 @@ const VENUES = {
     // is read from the card above, under the depth and length guards in
     // readCardText().
     title: { heading: true, card: { depth: 2 } },
+  },
+
+  wallace: {
+    name: 'The Wallace Collection, London',
+    base: 'https://www.wallacecollection.org',
+    // The brief's current address, /whats-on/, is a HUB and not a listing: it
+    // holds two tiles, "Exhibitions and Displays" and "Events", and no
+    // exhibition at all. Inspecting it returned four exhibition-shaped links
+    // for the whole venue. The real listing is one level down — and the split
+    // is useful, because Wallace files its talks and concerts under
+    // /whats-on/events/, so nothing but exhibitions reaches us here.
+    pages: [
+      { path: '/whats-on/exhibitions-displays/', ctx: 'current/upcoming' },
+      { path: '/explore/past-exhibitions/',      ctx: 'past' },
+    ],
+    // Two different paths for the same kind of thing: a show moves from
+    // /whats-on/exhibitions-displays/<slug> to /explore/past-exhibitions/<slug>
+    // when it closes.
+    selector: 'a[href*="/whats-on/exhibitions-displays/"], a[href*="/explore/past-exhibitions/"]',
+    isNav: href => /\/whats-on\/exhibitions-displays\/?$/.test(href)
+                || /\/explore\/past-exhibitions\/?$/.test(href),
+    // Every card wraps a real heading holding exactly the title, on both pages.
+    // That matters more than it looks: the past cards print the venue's own
+    // type badge in front of the title ("EXHIBITION", "DISPLAY", "TRAIL") and
+    // the run dates behind it, and reading the heading skips both without a
+    // single strip rule.
+    title: { heading: true },
+    // Wallace TAGS each past item by type, which is the first venue wired that
+    // does — the hook known bug 2 has been waiting for. Not used yet: whether
+    // a DISPLAY or a TRAIL belongs in her ledger is her ruling, not the
+    // scraper's, and until she makes it everything is collected.
   },
 };
 
