@@ -2384,8 +2384,14 @@ const VENUES = {
     // Exhibitions are /en/events/<slug>. The /years/ links on every page are
     // the archive's own filters, not exhibitions.
     selector: 'a[href*="/en/events/"]',
-    isNav: href => /\/en\/events\/?$/.test(href),
-    title: { heading: true },
+    // "Upcoming events" sits under the same /en/events/ path as the
+    // exhibitions and appeared on EVERY page as a row of its own. Counted
+    // against the live pages 12 Sep: 3 current, 6 in 2025, 11 in 2024, each
+    // page also carrying this one link.
+    isNav: href => /\/en\/events\/?$/.test(href)
+                || /\/en\/events\/upcoming\/?$/.test(href)
+                || /\/en\/events\/?#/.test(href),
+    title: { heading: true, notATitle: /^Upcoming events$/i },
   },
 
   brera: {
