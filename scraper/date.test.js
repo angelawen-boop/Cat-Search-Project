@@ -627,3 +627,26 @@ test('A-008: VIDEO INSTALLATION is a card type, and the show underneath it survi
   assert.equal(strip('VIDEO INSTALLATION Karimah Ashadu: Machine Boys'),
     'Karimah Ashadu: Machine Boys');
 });
+
+test('A-009: a title broken after a colon is rejoined, and a blurb still is not', () => {
+  // Both from the first live run of the linkLines rule, which truncated them.
+  assert.equal(
+    articTitle('Georgia O’Keeffe:\n“My New Yorks”\nJun 2–Sep 22, 2024'),
+    'Georgia O’Keeffe: “My New Yorks”');
+  assert.equal(
+    articTitle('En el principio / In the beginning:\nJuliana Góngora Rojas, Matías Quintero Sepúlveda, Juven Piranga Valencia and Yinela Piranga Valencia\nMar 29–Jul 28, 2025'),
+    'En el principio / In the beginning: Juliana Góngora Rojas, Matías Quintero Sepúlveda, Juven Piranga Valencia and Yinela Piranga Valencia');
+  // A title WITHOUT a trailing colon must not absorb the line beneath it —
+  // this is the archive card, and the line beneath is the description.
+  assert.equal(
+    articTitle('Japanese Prints from the Collection of Bruce Goff\nBringing together 35 of the more than 800 Japanese prints that were given to the museum from Goff’s estate in 1990.\nJan 7–Apr 6, 2026'),
+    'Japanese Prints from the Collection of Bruce Goff');
+  // A colon title whose next line is a full description is refused by length,
+  // so the worst case is today's truncation rather than a welded blurb.
+  const longNext = 'x'.repeat(200);
+  assert.equal(articTitle('Some Show:\n' + longNext), 'Some Show:');
+  // And one that arrives whole on a single line is untouched.
+  assert.equal(
+    articTitle('Four Chicago Artists: Theodore Halkin, Evelyn Statsinger, Barbara Rossi, and Christina Ramberg\nMay 11–Aug 26, 2024'),
+    'Four Chicago Artists: Theodore Halkin, Evelyn Statsinger, Barbara Rossi, and Christina Ramberg');
+});
