@@ -1,5 +1,5 @@
-RUN: scraper/output/run_2026-09-12_171234 | ROWS: 77 (expected 77)
-badge titles: 0 | blank titles: 0 | rotations still present: 0
+RUN: scraper/output/run_2026-09-12_171816 | ROWS: 77 (expected 77)
+truncated / blank / badge titles: 0
 
 --- all titles ---
   Mary Cassatt: After Impressionism
@@ -7,7 +7,7 @@ badge titles: 0 | blank titles: 0 | rotations still present: 0
   Lee Miller: Fearless
   Karimah Ashadu: Machine Boys
   Beyond Form: Abstraction at Midcentury
-  Self, Made: Fourteen Modern Artists from the Richard and Ellen Sandor Family Collecti
+  Self, Made: Fourteen Modern Artists from the Richard and Ellen Sandor Family Collection
   Abigail Lucien: Blood of the Earth
   Embroidered Traditions from Morocco to Afghanistan
   Raqib Shaw: Paradise Lost
@@ -34,7 +34,7 @@ badge titles: 0 | blank titles: 0 | rotations still present: 0
   Myth and Marble: Ancient Roman Sculpture from the Torlonia Collection
   Lines of Connection: Drawing and Printmaking
   Coco Fusco: Your Eyes Will Be an Empty Word
-  En el principio / In the beginning:
+  En el principio / In the beginning: Juliana Góngora Rojas, Matías Quintero Sepúlveda, Juven Pir
   Frida Kahlo’s Month in Paris: A Friendship with Mary Reynolds
   Japan’s Great Female Poets
   Iman Issa: A Game, or So You May Think
@@ -56,8 +56,8 @@ badge titles: 0 | blank titles: 0 | rotations still present: 0
   Christina Ramberg: A Retrospective
   Foreign Exchange: Photography between Chicago, Japan, and Germany, 1920–1960
   John Knight: A work in situ
-  Four Chicago Artists: Theodore Halkin, Evelyn Statsinger, Barbara Rossi, and Christin
-  Georgia O’Keeffe:
+  Four Chicago Artists: Theodore Halkin, Evelyn Statsinger, Barbara Rossi, and Christina Ramberg
+  Georgia O’Keeffe: “My New Yorks”
   Ellsworth Kelly: Spectrum Colors Arranged by Chance
   Bruce Nauman: Clown Torture
   Kabuki-Actor Portraits by Tōshūsai Sharaku
