@@ -134,7 +134,7 @@ Until it is, check it against the newest run directory before trusting it.
 | Capodimonte | `capo` | 18 | **partly — see below** | yes, fixes applied | **NOT count-verified and never will be**, her decision |
 | Uffizi | `uffizi` | 13 | **yes — 12 Sep** | yes | headlines kept as titles and undated rows kept, **both her rulings** |
 | Brera | `brera` | 8 | **yes — 12 Sep** | yes | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
-| Galleria Borghese | `borghese` | 8 | **yes — 12 Sep, from the CSV; no count given** | yes | 7 exhibitions + 1 marker row. See note below |
+| Galleria Borghese | `borghese` | 8 | **yes — 12 Sep, her count** | yes | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
 | MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | n/a | n/a | refused; marker rows only |
 
 **Read the two middle columns separately.** "Her substantive review" means she went
@@ -143,14 +143,22 @@ through that venue against the live site herself and her findings are recorded.
 A venue can have the first without the second — that is exactly the state `uffizi`
 and `brera` are in, and the state all thirteen were in at the start of 12 Sep.
 
-**All thirteen venues from her 12 Sep review are fixed and verified, and so is
-`borghese`.** She reviewed its CSV on 12 Sep and found two defects — a missed
-extension and a summary that was empty on a page full of text — both fixed.
+**ALL SIXTEEN REACHABLE VENUES ARE REVIEWED BY HER, FIXED, AND VERIFIED AGAINST HER
+OWN COUNT.** Capodimonte is the one exception and a deliberate one — see below.
 
-**The one thing `borghese` lacks is her COUNT.** Every other venue has a number she
-worked out from the live site, which is the only check that can say "your number is
-wrong" rather than "your rows look tidy". Borghese returns 7 exhibitions and nothing
-independent confirms that is all of them. Not a defect, a gap in verification.
+Final counts, 12 Sep 2026:
+
+| | | | |
+|---|---|---|---|
+| ng 27 | rijks 37 | acq 15 | va 6 |
+| tate-modern 13 | tate-britain 9 | frick 10 | menil 32 |
+| wallace 11 | louvre 22 | dellav 2 | khm 6 |
+| uffizi 13 | brera 8 | capo 18 | borghese 8 |
+
+No row at any venue carries a credit line, star rating, ticket price, funder list,
+opening hours, breadcrumb or cookie notice. The only empty summaries are the three
+Rijksmuseum rows whose own pages return HTTP 404, plus the occasional transient page
+timeout — which always says so on the row.
 
 Her 12 Sep review and every fix made against it are written up in
 **`docs/review-2026-09-12.md`**, venue by venue, with what was wrong, what
@@ -202,9 +210,9 @@ runs THAT way.** Tested from both machines within minutes of each other on
 12 Sep: the container returned 18 rows cleanly; her laptop timed out, retried,
 got the 50 links, then hit HTTP 429 on individual detail pages. So the two
 machines cover different gaps rather than one being strictly better — do not
-assume a venue she cannot reach is unreachable. **How they join into
-one importable CSV is PARKED until all 21 are done** — her decision, because the
-shape of the answer depends on the split and the split is still moving.
+assume a venue she cannot reach is unreachable. **How they join into one importable
+CSV was parked until all 21 were done. They now are**, so it is live — see §7 step 6.
+Her decision to make, and the shape depends on what happens to the three refusals.
 
 ### artic — closed 12 Sep 2026, and how
 
@@ -1103,13 +1111,16 @@ Each entry cost a real failure. Before changing the area, read the line.
    It rests on an authored eval that scored 14 of 14. **Do not raise it again.**
 2. ~~**Wire all 21 venues**~~ — **DONE.** All 21 have a recipe; see §2 for state.
 3. ~~**Parallelism and the hang bound**~~ — **DONE** (`--jobs=N`, `--budget-mins=N`).
-4. **Venue-by-venue diagnosis of the working set.** The current stage, and mostly
-   done: 15 venues finished. **`uffizi` and `brera` are the two left from her review**,
-   plus `borghese`, which she has not re-reviewed. Her findings and every fix are in
-   `docs/review-2026-09-12.md`.
+4. ~~**Venue-by-venue diagnosis of the working set**~~ — **DONE, 12 Sep 2026.** All
+   sixteen reachable venues reviewed by her, fixed and verified against her counts.
+   Her findings and every fix, venue by venue: `docs/review-2026-09-12.md`.
 5. **Decide what to do about venues still unreachable** — `moma`, `brit`, `morgan`.
-6. **JSX work** — quarantine ("Never add this"), plus whatever steps 4–5 turn up.
-7. **Catalogue lookup tuning** — Haiku vs Sonnet, on known-tricky catalogues.
+   **The current stage.**
+6. **Decide how the two machines' output joins into one importable CSV.** Parked
+   until all 21 were done, which they now are — 16 here, 2 on her laptop, 3 with no
+   route. Her decision to make; the shape depends on what happens to step 5.
+7. **JSX work** — quarantine ("Never add this"), plus whatever steps 5–6 turn up.
+8. **Catalogue lookup tuning** — Haiku vs Sonnet, on known-tricky catalogues.
    Independent of everything above.
 
 **The ledger is not being protected during development.** Her ruling: she keeps no real
