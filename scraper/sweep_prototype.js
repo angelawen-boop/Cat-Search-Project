@@ -644,7 +644,57 @@ const RANGE_SEP = "\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]|al)\\
  */
 const WEEKDAY_PREFIX = new RegExp(WEEKDAY_PREFIX_SRC + '(?=\\d|' + MONTH_PATTERN + ')', 'gi');
 
+/**
+ * A run that was EXTENDED after it was announced.
+ *
+ * The Uffizi's card for 1925-1955 Fashion in the Spotlight reads
+ *   "From 18/06/2025 to 28/09/2025, extended to02/11/2025"
+ * — note the missing space, which is theirs. Read as an ordinary range it closes
+ * on 28 September and the extension is lost, so an exhibition she could still
+ * have bought a catalogue for reads as five weeks more closed than it was. She
+ * caught it on the listing page.
+ *
+ * NOT A UFFIZI RULE. Capodimonte writes the same thing in Italian — "prorogata
+ * al 9 giugno 2026", "prorogata all'8 settembre 2026" — and its Samori row has
+ * exactly this defect today. A venue that extends a show is a general fact
+ * about museums, so it belongs in the shared parser like every other format.
+ *
+ * THE EXTENSION ONLY EVER MOVES THE CLOSING DATE LATER. If the phrase yields a
+ * date that is not after the one already read, it is ignored rather than
+ * trusted — that way a stray match cannot shorten a run or rewrite an opening.
+ */
+const EXTENDED_TO = new RegExp(
+  // "extended to", "extended until", "prorogata al", "prorogato all'" — and the
+  // elision trap from the Italian date formats: the longest alternative first,
+  // or a bare "al" matches the first two letters of "all'8".
+  '(?:extended|prorogat[ao])\\s*(?:until|to|all[\'\u2019]|alla|al)\\s*' +
+  // The date itself, in either of the shapes these venues use.
+  '(\\d{1,2}\\s*[/.]\\s*\\d{1,2}\\s*[/.]\\s*\\d{4}|\\d{1,2}\\s+' + MONTH_PATTERN + '\\s+\\d{4})', 'i');
+
+function applyExtension(range, text) {
+  if (!range || !range.end || !text) return range;
+  const m = String(text).match(EXTENDED_TO);
+  if (!m) return range;
+
+  let iso = '';
+  const numeric = m[1].match(/^(\d{1,2})\s*[/.]\s*(\d{1,2})\s*[/.]\s*(\d{4})$/);
+  if (numeric) {
+    // Day-first: every venue seen writing this writes dd/mm/yyyy, and a value
+    // over 12 in the first position would prove it anyway.
+    iso = ymd(numeric[3], numeric[2], numeric[1]);
+  } else {
+    const worded = m[1].match(new RegExp(`^(\\d{1,2})\\s+(${MONTH_PATTERN})\\s+(\\d{4})$`, 'i'));
+    if (worded) iso = ymd(worded[3], monthNum(worded[2]), worded[1]);
+  }
+  if (!iso || iso <= range.end) return range;
+  return { ...range, end: iso, extendedFrom: range.end };
+}
+
 function findDateRange(raw, opts = {}) {
+  return applyExtension(findDateRangeCore(raw, opts), raw);
+}
+
+function findDateRangeCore(raw, opts = {}) {
   const looseSingles = opts.looseSingles !== false;
   if (!raw) return { start: '', end: '', raw: '' };
   // Normalise every dash a museum's typesetter might reach for. The National
@@ -2505,6 +2555,13 @@ async function collectFromListing(page, opts) {
       summary: '', url: fullUrl,
       notes: titleNote ? `${sourceNote(ctx)} ${titleNote}` : sourceNote(ctx),
     };
+    // SAY SO WHERE A RUN WAS EXTENDED. The closing date then differs from the
+    // one the venue first announced, and she should see that on the card rather
+    // than wonder why it disagrees with something she remembers.
+    if (dates.extendedFrom) {
+      row.notes = addNote(row.notes,
+        `The venue extended this exhibition; it first announced ${dates.extendedFrom} as the closing date.`);
+    }
     seenUrls.add(key);
     urlToRow.set(key, row);
     rows.push(row);
@@ -2972,6 +3029,19 @@ const VENUES = {
                 || /\/en\/events\/upcoming\/?$/.test(href)
                 || /\/en\/events\/?#/.test(href),
     title: { heading: true, notATitle: /^Upcoming events$/i },
+    // A ONE-DAY EVENT IS NOT AN EXHIBITION, and at this venue the card says so
+    // by its shape. Every exhibition card carries either "From dd/mm/yyyy to
+    // dd/mm/yyyy" or no dates at all; "European Heritage Days 2026. Evening
+    // special opening to the Uffizi for €1 26/09/2026" carries ONE date and no
+    // range. Her review: upcoming should be empty and this row is the only
+    // thing in it.
+    //
+    // The lookbehind is what keeps the real exhibitions: their cards also END
+    // on a date, but that date follows "to". Undated cards do not match at all,
+    // which matters because she has ruled that this venue's undated rows are
+    // KEPT — the Uffizi is sloppy enough that undated cannot be read as
+    // permanent here.
+    excludeLabelled: /(?<!to\s?)\b\d{1,2}\/\d{1,2}\/\d{4}\s*$/,
   },
 
   brera: {

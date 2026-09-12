@@ -512,6 +512,55 @@ test('Y-004: nothing is requested before the lookback floor', () => {
 });
 
 // ---------------------------------------------------------------------------
+// EX-001 to EX-005 — A RUN THAT WAS EXTENDED AFTER IT WAS ANNOUNCED.
+//
+// The Uffizi's card reads "From 18/06/2025 to 28/09/2025, extended to02/11/2025"
+// — the missing space is theirs. Read as an ordinary range the extension is lost
+// and an exhibition closes five weeks earlier than it did, which moves it down
+// her urgency ladder. Capodimonte writes the same thing in Italian, so this is a
+// shared rule, not a Uffizi one.
+
+test('EX-001: an English extension moves the closing date', () => {
+  const r = findDateRange('From 18/06/2025 to 28/09/2025, extended to02/11/2025');
+  assert.equal(r.start, '2025-06-18');
+  assert.equal(r.end, '2025-11-02');
+  assert.equal(r.extendedFrom, '2025-09-28');
+});
+
+test('EX-002: and the Italian forms, including the elided "all\'"', () => {
+  const a = findDateRange('Dal 28 novembre 2025 al 10 marzo 2026 - prorogata al 9 giugno 2026');
+  assert.equal(a.end, '2026-06-09');
+  const b = findDateRange("Dal 16 aprile al 14 luglio 2026, prorogata all'8 settembre 2026");
+  assert.equal(b.end, '2026-09-08');
+});
+
+test('EX-003: an extension may only move the closing date LATER', () => {
+  // A stray match must never shorten a run or rewrite an opening date.
+  const r = findDateRange('From 18/06/2025 to 28/09/2025, extended to 01/07/2025');
+  assert.equal(r.end, '2025-09-28');
+  assert.equal(r.extendedFrom, undefined);
+});
+
+test('EX-004: an ordinary range is untouched', () => {
+  for (const s of ['From 18/06/2026 to 31/12/2026', '1 November 2025 to 11 January 2026',
+                   'Dal 16 ottobre 2025 al 6 gennaio 2026']) {
+    assert.equal(findDateRange(s).extendedFrom, undefined, s);
+  }
+});
+
+test('EX-005: the Uffizi keeps its exhibitions and drops its one-day events', () => {
+  // Every exhibition card carries "From ... to ..." or no dates at all; the
+  // European Heritage Days card carries ONE date and no range. The lookbehind
+  // is what keeps the real ones, whose cards also end on a date — but after
+  // "to". Undated cards must not match: her ruling is that this venue's undated
+  // rows are KEPT.
+  const re = VENUES.uffizi.excludeLabelled;
+  assert.equal(re.test('THE UFFIZI European Heritage Days 2026. Evening special opening for \u20ac1 26/09/2026'), true);
+  assert.equal(re.test('PITTI PALACE Sarmi Genius. From 18/06/2026 to 31/12/2026'), false);
+  assert.equal(re.test('PITTI PALACE 1925-1955 Fashion From 18/06/2025 to 28/09/2025, extended to02/11/2025'), false);
+  assert.equal(re.test('PITTI PALACE At the Pitti Palace, the very best of the king\u2019s furniture'), false);
+});
+
 // IT-001 to IT-003 — THREE-LETTER ITALIAN MONTHS.
 //
 // The Gallerie dell'Accademia prints its run in abbreviated Italian on its
