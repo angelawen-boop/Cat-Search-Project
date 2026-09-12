@@ -115,27 +115,32 @@ merge either**; the second would undo the current scraper.
 `scraper/output/` and should be printed by a script — see "Editing this guide".
 Until it is, check it against the newest run directory before trusting it.
 
-| Venue | Code | Rows | Notes |
-|---|---|---|---|
-| National Gallery, London | `ng` | 27 | verified against her count |
-| Rijksmuseum | `rijks` | 36 | verified; *Asian Pavilion* pulled by the venue |
-| Acquavella | `acq` | 15 | verified |
-| Galleria Borghese | `borghese` | 8 | 7 Sep numbers are the reference; site unreliable |
-| The Frick | `frick` | 10 | archive past page 1 unreachable, out of range anyway |
-| The Menil | `menil` | 20 | 7 permanent galleries excluded, her ruling |
-| Wallace Collection | `wallace` | 11 | displays and trails kept, her ruling |
-| V&A | `va` | 15 | South Kensington only; no past archive |
-| Tate Modern | `tate-modern` | 13 | no past archive |
-| Tate Britain | `tate-britain` | 10 | no past archive |
-| Louvre | `louvre` | 18 | year pages may be truncated — **open** |
-| Uffizi | `uffizi` | 14 | writes headlines, not titles — **open** |
-| Brera | `brera` | 7 | filed under `/news/mostra/` |
-| Capodimonte | `capo` | 18 | Italian dates, detail pages only |
-| Kunsthistorisches | `khm` | 6 | lazy-loaded; scoped to its show sections |
-| Gallerie dell'Accademia, Venice | `dellav` | 2 | never blocked; no listing page |
-| The Met | `met` | 82 | **local runs only** — Vercel checkpoint here |
-| Art Institute of Chicago | `artic` | 77 | **local runs only**; verified against her count of the live pages |
-| MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | refused; marker rows only |
+| Venue | Code | Rows | Checked against the live site? | Notes |
+|---|---|---|---|---|
+| National Gallery, London | `ng` | 27 | **yes** — her count | |
+| Rijksmuseum | `rijks` | 36 | **yes** — her count | *Asian Pavilion* pulled by the venue |
+| Acquavella | `acq` | 15 | **yes** — her count | |
+| Art Institute of Chicago | `artic` | 77 | **yes** — her count + all 77 titles read | **local only** |
+| The Met | `met` | 106 | **yes** — diagnosed row by row, 11 Sep | **local only**; see `docs/venues.md` |
+| Galleria Borghese | `borghese` | 7 | **stale** — verified 7 Sep, engine has changed since | site goes down periodically |
+| The Frick | `frick` | 10 | no | archive past page 1 unreachable, out of range anyway |
+| The Menil | `menil` | 20 | no | 7 permanent galleries excluded, her ruling |
+| Wallace Collection | `wallace` | 11 | no | displays and trails kept, her ruling |
+| V&A | `va` | 15 | no | South Kensington only; no past archive |
+| Tate Modern | `tate-modern` | 13 | no | **the known hard case** — see known bug 1 |
+| Tate Britain | `tate-britain` | 10 | no | **the known hard case** |
+| Louvre | `louvre` | 18 | no | year pages may be truncated — **open** |
+| Uffizi | `uffizi` | 14 | no | writes headlines, not titles — **open** |
+| Brera | `brera` | 7 | no | filed under `/news/mostra/` |
+| Capodimonte | `capo` | 18 | no | Italian dates, detail pages only |
+| Kunsthistorisches | `khm` | 6 | no | Canaletto & Bellotto is one over her count — **open** |
+| Gallerie dell'Accademia, Venice | `dellav` | 2 | no | never blocked; no listing page |
+| MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | n/a | refused; marker rows only |
+
+**Substance review stands at 5 of 18 reachable venues.** Plumbing being in is
+not the same as the rows being right: artic passed every count it was given and
+still had three defects, two of them invisible to any number. The 13 marked "no"
+have never been checked against the live pages.
 
 **All 21 have a recipe.** Blocked venues stay wired in deliberately: a refusal
 costs about half a second, leaves marker rows in the CSV so it is visible on the
@@ -144,8 +149,20 @@ permanent facts — in five days Borghese went down and came back, dellav turned
 never to have been blocked, the Met's archive turned out to be reachable, and
 `artic` went from "reliable" to refused.
 
-**Three routes now exist** — Claude-run scrape (16 venues), her local machine
-(`met`, `artic`), and nothing yet (`moma`, `brit`, `morgan`). **How they join into
+**Three routes, and the split is now settled — 12 Sep 2026:**
+
+| Route | Count | Venues |
+|---|---|---|
+| **Claude scrapes** | **16** | `ng` `rijks` `acq` `louvre` `uffizi` `brera` `capo` `dellav` `khm` `frick` `menil` `wallace` `va` `tate-modern` `tate-britain` `borghese` |
+| **Her laptop** | **2** | `met`, `artic` |
+| **No route** | **3** | `moma`, `brit`, `morgan` — retested by her 12 Sep, still refused |
+
+**`capo` belongs to the container, and it is the first venue where the asymmetry
+runs THAT way.** Tested from both machines within minutes of each other on
+12 Sep: the container returned 18 rows cleanly; her laptop timed out, retried,
+got the 50 links, then hit HTTP 429 on individual detail pages. So the two
+machines cover different gaps rather than one being strictly better — do not
+assume a venue she cannot reach is unreachable. **How they join into
 one importable CSV is PARKED until all 21 are done** — her decision, because the
 shape of the answer depends on the split and the split is still moving.
 
