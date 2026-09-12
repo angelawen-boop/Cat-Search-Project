@@ -3139,6 +3139,21 @@ async function scrapeVenue(page, code) {
   if (v.excludeUndated) {
     const kept = [];
     for (const r of toFetch) {
+      // A ROW WHOSE OWN PAGE FAILED TO LOAD IS NEVER EXCLUDED HERE.
+      //
+      // The rule reads an empty pair of date columns as "the venue published no
+      // run for this, so it is a permanent gallery". That inference needs the
+      // page to have been READ and found to say nothing. When the page timed
+      // out we know nothing at all, and the row would be dropped on the
+      // strength of a network failure — invisibly, because the CSV cannot show
+      // a row that is not in it. It happened on the 12 Sep verification run:
+      // one of the Menil's detail pages timed out twice and its exhibition was
+      // filed as a permanent display.
+      //
+      // Such a row is kept with the note safeGoto already wrote, which is the
+      // standing rule everywhere else in the scraper: an unreadable date is
+      // kept and flagged, never treated as evidence.
+      if (r.detailFailed) { kept.push(r); continue; }
       if (!r.start_date && !r.end_date && !String(r.title).startsWith('[')) {
         log(`    no dates published — treated as a permanent display, excluded: ${r.title || r.url}`);
         continue;
@@ -3217,6 +3232,12 @@ async function fetchIndividualPages(page, rows, venueCode) {
         row.notes = addNote(row.notes, /^HTTP_4/.test(r.reason)
           ? `The venue's own link to this exhibition is broken (${r.reason.replace('HTTP_', 'HTTP ')}).`
           : `This exhibition's own page could not be read: ${failureProse(r.reason)}.`);
+        // A PAGE WE COULD NOT READ IS NOT EVIDENCE ABOUT THE EXHIBITION.
+        // Marked because excludeUndated would otherwise read this row's empty
+        // date columns as the venue having published no run, and file a show
+        // whose page merely timed out as a permanent display. Internal only —
+        // csvRow() writes a fixed seven columns, so it never reaches the CSV.
+        row.detailFailed = true;
         failed++;
         continue;
       }
