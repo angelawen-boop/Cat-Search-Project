@@ -255,13 +255,28 @@ function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
  *     every address on it has already been seen and the URL-identity guard
  *     collects none of them
  *
- * NO ORDERING ASSUMPTION, DELIBERATELY. The tempting cheaper rule is "stop once
- * a page holds nothing inside the lookback" — Menil's archive runs newest
- * first, so that would stop within a page or two of the floor. It is refused
- * because it is only true while the venue sorts its archive that way, and a
- * venue that re-sorts would silently lose everything past the first old page.
- * Walking to the true end costs a few page loads of rows the lookback then
- * drops before any detail page is opened, which is cheap; a silent loss is not.
+ * IT ALSO STOPS AT THE LOOKBACK FLOOR, and that is not an optimisation — it is
+ * the difference between the fix working and the fix making things worse.
+ *
+ * The first version walked every archive page to the true end, on the grounds
+ * that stopping at the floor assumes the archive is sorted newest-first and a
+ * venue might one day re-sort. What that caution actually bought at the Menil:
+ * eleven pages instead of three, ninety seconds of extra page loads per sweep,
+ * and THIRTEEN rows of rubbish on her approval pile — decades-old exhibitions
+ * the venue publishes no dates for, which nothing downstream could drop because
+ * an unknown date is never evidence of being too old. The guard against a
+ * hypothetical re-sort created a certain mess.
+ *
+ * THE ORDERING IS NOT ASSUMED, IT IS CHECKED. Every page carries the closing
+ * date of its newest exhibition to the next one. While each page is older than
+ * the one before it, the archive is demonstrably in descending date order and
+ * "nothing here reaches the floor" really does mean "nothing after here can
+ * either". The first page that breaks that pattern says so in the log and the
+ * walk reverts to reading to the end for the rest of that venue. So the
+ * hypothetical is handled by noticing it, not by paying for it every sweep.
+ *
+ * A page with no readable dates at all proves nothing either way, so the walk
+ * simply carries on past it.
  *
  * MAX_ARCHIVE_PAGES IS A RUNAWAY GUARD, NOT THE STOP. A site that serves a
  * plausible page for any number at all would otherwise loop forever. Reaching
@@ -278,14 +293,43 @@ function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
  * disagree about whether the first page is 0 or 1 and only the site can say.
  * The Menil's bare /exhibitions/past is page 0, so its second page is ?page=1.
  */
-function followPagination(queue, pg, added, rows, code, v) {
+function followPagination(queue, pg, newRows, rows, code, v) {
   const spec = pg.paginate;
   if (!spec) return;
 
   // The site has told us there is nothing after this page.
-  if (added <= 0) {
+  if (newRows.length === 0) {
     if (pg.discovered) log(`  PAGINATION end: ${pg.ctx} added no new exhibitions`);
     return;
+  }
+
+  // STOP AT THE LOOKBACK FLOOR. See the note above on why this is evidence
+  // rather than an assumption.
+  const floorDate = v.lookbackFrom ? new Date(v.lookbackFrom) : LOOKBACK;
+  const floor = floorDate.toISOString().slice(0, 10);
+  // DATED ROWS ONLY. afterLookback() deliberately keeps an undated row, which
+  // is right when deciding a ROW's fate and wrong when deciding where we are in
+  // the archive: one undated straggler on an otherwise 2019 page would restart
+  // the walk and drag the whole archive back in. What places a page is the
+  // dates it does publish.
+  const ends = newRows.map(r => r.end_date).filter(Boolean).sort();
+  const newest = ends[ends.length - 1];
+  if (newest) {
+    // THE ORDERING CHECK. Each page must be older than the one before it. While
+    // that holds, the archive is demonstrably in descending date order and the
+    // floor rule below is sound. The first time it does not hold, the venue has
+    // re-sorted or mixed its archive, the rule loses its footing, and the walk
+    // reverts to reading every page to the end — slow, and correct, which is
+    // the right way round.
+    if (pg.prevNewest && newest > pg.prevNewest) {
+      log(`  PAGINATION: ${pg.ctx} is NEWER than the page before it (${newest} > ${pg.prevNewest}) — archive is not in date order, reading it all`);
+      pg.unordered = true;
+    }
+    const ordered = !(pg.unordered);
+    if (ordered && new Date(newest + 'T00:00:00') < floorDate) {
+      log(`  PAGINATION end: ${pg.ctx} — its newest exhibition closed ${newest}, before the ${floor} floor, so every later page is older still`);
+      return;
+    }
   }
 
   const next = (pg.pageNum === undefined ? spec.from : pg.pageNum + 1);
@@ -313,6 +357,11 @@ function followPagination(queue, pg, added, rows, code, v) {
     basePath,
     paginate: spec,
     pageNum: next,
+    // Carried so the next page can check it is older than this one, and so a
+    // venue once found to be out of order stays that way for the rest of the
+    // walk rather than re-deciding page by page.
+    prevNewest: newest || pg.prevNewest,
+    unordered: !!pg.unordered,
     // Marks this page as one the loop asked for rather than one the recipe
     // named, which is what suppresses the "loaded but nothing matched" marker
     // when the archive ends.
@@ -3106,7 +3155,7 @@ async function scrapeVenue(page, code) {
         });
       }
 
-      followPagination(queue, pg, rows.length - rowsBefore, rows, code, v);
+      followPagination(queue, pg, rows.slice(rowsBefore), rows, code, v);
 
     } catch (e) {
       rethrowIfAborted(e);

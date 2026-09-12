@@ -522,27 +522,29 @@ test('Y-004: nothing is requested before the lookback floor', () => {
 // ---------------------------------------------------------------------------
 
 const SPEC = { param: 'page', from: 2 };
-// A stand-in for the real loop: follow until the site stops handing over new
-// exhibitions. `yield_` says how many NEW addresses each page produced.
-const walk = (yield_, start = { path: '/exhibitions/past', ctx: 'past', paginate: SPEC }) => {
+// A row as the walk sees it: only its closing date matters here.
+const row = end => ({ end_date: end, title: 't', url: 'u' });
+// A stand-in for the real loop. `pageRows(i)` is what page i handed over.
+const walk = (pageRows, start = { path: '/exhibitions/past', ctx: 'past', paginate: SPEC }) => {
   const queue = [start], rows = [];
   for (let i = 0; i < queue.length && i < 200; i++) {
-    followPagination(queue, queue[i], yield_(i), rows, 'menil', VENUES.menil);
+    followPagination(queue, queue[i], pageRows(i), rows, 'menil', VENUES.menil);
   }
   return { paths: queue.map(q => q.path), rows };
 };
+// Twelve exhibitions closing in the given year — an ordinary archive page.
+const pageOf = year => Array.from({ length: 12 }, (_, k) => row(`${year}-0${(k % 9) + 1}-15`));
 
 test('P-001: it keeps asking while the venue keeps answering', () => {
-  // 11 on the bare address, 12 on ?page=1, nothing on ?page=2.
-  const { paths } = walk(i => [11, 12, 0][i] ?? 0);
+  const { paths } = walk(i => [pageOf(2026), pageOf(2025), []][i] ?? []);
   assert.deepEqual(paths, ['/exhibitions/past', '/exhibitions/past?page=2', '/exhibitions/past?page=3']);
 });
 
 test('P-002: every page is built from the BARE address, never the current one', () => {
-  // Appending to the page we are standing on gives ?page=1&page=2, which most
-  // sites answer with page one again — so every address reads as already seen,
-  // the stop rule fires, and the archive quietly ends one page in.
-  const { paths } = walk(i => (i < 4 ? 5 : 0));
+  // Appending to the page we are standing on gives ?page=2&page=3, which most
+  // sites answer with the first page again — so every address reads as already
+  // seen, the stop rule fires, and the archive quietly ends one page in.
+  const { paths } = walk(i => (i < 4 ? pageOf(2026) : []));
   assert.deepEqual(paths, [
     '/exhibitions/past',
     '/exhibitions/past?page=2',
@@ -558,7 +560,7 @@ test('P-003: a page that adds nothing new ends the archive', () => {
   // Both ways an archive ends look the same from here: an empty page, and a
   // site that clamps an over-large page number back to the last real one so
   // every address on it has already been collected.
-  assert.deepEqual(walk(i => (i === 0 ? 11 : 0)).paths,
+  assert.deepEqual(walk(i => (i === 0 ? pageOf(2026) : [])).paths,
     ['/exhibitions/past', '/exhibitions/past?page=2']);
 });
 
@@ -567,7 +569,7 @@ test('P-004: a page the recipe did not name is marked as discovered', () => {
   // when the archive ends — otherwise the page we ask for in order to be told
   // there is nothing there would land on her approval pile on every sweep.
   const queue = [{ path: '/exhibitions/past', ctx: 'past', paginate: SPEC }];
-  followPagination(queue, queue[0], 11, [], 'menil', VENUES.menil);
+  followPagination(queue, queue[0], pageOf(2026), [], 'menil', VENUES.menil);
   assert.equal(queue[0].discovered, undefined);
   assert.equal(queue[1].discovered, true);
 });
@@ -576,7 +578,7 @@ test('P-005: the runaway guard leaves a marker row, it does not trim silently', 
   // Reaching it means the real stop never fired. That is a defect, and a venue
   // cut short without saying so is exactly the failure this project keeps
   // paying for.
-  const { paths, rows } = walk(() => 5);
+  const { paths, rows } = walk(() => pageOf(2026));
   assert.equal(paths.length, 60);
   assert.equal(rows.length, 1);
   assert.match(rows[0].title, /page\]$/);
@@ -585,7 +587,7 @@ test('P-005: the runaway guard leaves a marker row, it does not trim silently', 
 
 test('P-006: a page with no paginate option is left alone', () => {
   const queue = [{ path: '/exhibitions/upcoming', ctx: 'upcoming' }];
-  followPagination(queue, queue[0], 4, [], 'menil', VENUES.menil);
+  followPagination(queue, queue[0], pageOf(2026), [], 'menil', VENUES.menil);
   assert.equal(queue.length, 1);
 });
 
@@ -597,6 +599,62 @@ test('P-007: the Menil opts in on its past archive and nowhere else', () => {
   // No page count may be written into a recipe — the same trap as a
   // hand-written year, one step worse, because only the site knows the answer.
   assert.equal(VENUES.menil.pages.some(p => /page=\d/.test(p.path)), false);
+});
+
+// P-008 to P-012 — STOPPING AT THE LOOKBACK FLOOR.
+//
+// Walking every archive page to its true end was the first version, and it made
+// things worse than the bug it fixed: eleven Menil pages instead of three, and
+// thirteen decades-old undated exhibitions on her approval pile that nothing
+// downstream could drop, because an unknown date is never evidence of being too
+// old. These fixtures hold the floor stop AND the ordering check that makes it
+// evidence rather than an assumption.
+
+test('P-008: an archive page entirely older than the floor ends the walk', () => {
+  // Page two closes in 2023, well before 1 July 2024. Everything after it in a
+  // descending archive is older still, so there is nothing left to find.
+  const { paths } = walk(i => [pageOf(2026), pageOf(2023)][i] ?? []);
+  assert.deepEqual(paths, ['/exhibitions/past', '/exhibitions/past?page=2']);
+});
+
+test('P-009: one exhibition reaching past the floor keeps the walk going', () => {
+  // A page is only finished with if its NEWEST closing date is before the
+  // floor. A single straggler still inside the lookback means real rows here.
+  const straddle = [...pageOf(2023), row('2024-07-21')];   // Ruth Asawa's shape
+  const { paths } = walk(i => [pageOf(2026), straddle, pageOf(2022)][i] ?? []);
+  assert.deepEqual(paths,
+    ['/exhibitions/past', '/exhibitions/past?page=2', '/exhibitions/past?page=3']);
+});
+
+test('P-010: the floor is the lookback floor itself, to the day', () => {
+  // 30 June 2024 is outside; 1 July 2024 is the first day inside.
+  assert.equal(walk(i => [pageOf(2026), [row('2024-06-30')]][i] ?? []).paths.length, 2);
+  assert.equal(walk(i => [pageOf(2026), [row('2024-07-01')], []][i] ?? []).paths.length, 3);
+});
+
+test('P-011: an archive NOT in date order is read to the end instead', () => {
+  // The ordering is checked, never assumed. A page newer than the one before it
+  // means the venue has re-sorted or mixed its archive, so "nothing here
+  // reaches the floor" stops meaning "nothing after here can either" — and the
+  // walk pays the slow, correct price rather than losing rows.
+  const { paths } = walk(i => [
+    pageOf(2026),
+    pageOf(2025),
+    pageOf(2026),          // NEWER than the page before — the order is broken
+    pageOf(2020),          // would have ended the walk if the order were trusted
+    pageOf(2019),          // and so would this
+    [],                    // only the real end of the archive stops it now
+  ][i] ?? []);
+  assert.equal(paths.length, 6, 'it must keep reading once the order is broken');
+});
+
+test('P-012: a page with no readable dates proves nothing and is walked past', () => {
+  // Undated rows are not evidence in either direction, so the walk carries on
+  // rather than either stopping or treating them as recent.
+  const undated = [row(''), row('')];
+  const { paths } = walk(i => [pageOf(2026), undated, pageOf(2023)][i] ?? []);
+  assert.deepEqual(paths,
+    ['/exhibitions/past', '/exhibitions/past?page=2', '/exhibitions/past?page=3']);
 });
 
 test('Y-005: the Met resolves to real addresses, and its years are navigation', () => {
