@@ -3683,10 +3683,14 @@ async function scrapeVenue(page, code) {
     // and a venue with `loadMore` presses its control, so both are handled and
     // finding their own next-page links would be noise on every sweep.
     if (!pg.paginate && !v.loadMore) {
-      const more = await detectUnwiredPagination(page);
+      const more = await detectUnwiredPagination(page, recipeDrivenParams(v));
       if (more) {
         log(`  UNWIRED PAGINATION ${pg.ctx}: this page links another page and no recipe follows it — ${more.join(' | ')}`);
-        UNWIRED.push({ venue: code, page: pg.ctx, url, hints: more });
+        // ONE ENTRY PER VENUE AND FINDING. artic's eight archive pages all
+        // carry the same links, so the summary listed the same finding eight
+        // times over and buried everything else.
+        const sig = code + '|' + more.join('|');
+        if (!UNWIRED.some(u => u.sig === sig)) UNWIRED.push({ sig, venue: code, page: pg.ctx, url, hints: more });
       }
     }
 
@@ -3951,9 +3955,41 @@ async function dismissConsent(page, alwaysRe = ALWAYS_NOISE) {
  * fetching addresses it guessed at would be exactly the clever general rule
  * above. It reports, she and the recipe decide.
  */
-async function detectUnwiredPagination(page) {
+/**
+ * The query parameters a recipe DRIVES ITSELF, which therefore cannot be a
+ * second page of anything.
+ *
+ * The Art Institute's archive is one address, /exhibitions/history, filtered by
+ * ?year=. Its pages also carry decade jump-links — year=2020, 2010, 2000, 1990
+ * — and to the check below those are indistinguishable from a page number:
+ * same path, same parameter, a different number. It reported all four on every
+ * one of artic's eight archive pages, eight times over, for a venue that was
+ * returning her exact count with nothing missing.
+ *
+ * A FALSE ALARM IS WORSE THAN NO ALARM. This check exists to be believed on the
+ * day it fires for real; a venue that cries wolf every sweep teaches her to
+ * scroll past it, and then it finds nothing at all.
+ *
+ * The fix is not a list of parameter names to ignore — "year", "date", "decade"
+ * is the phrase list all over again. The recipe already says which parameter it
+ * drives, because it is written into the addresses the recipe asks for. So any
+ * parameter this venue steers is skipped, and everything else still reports.
+ * At artic that silences `year` and nothing else; at Tate `page` is untouched
+ * because no Tate recipe sets it.
+ */
+function recipeDrivenParams(v) {
+  const names = new Set();
+  for (const pg of v.pages) {
+    if (pg.param) names.add(pg.param);
+    const q = (pg.path || '').split('?')[1];
+    if (q) for (const kv of q.split('&')) names.add(kv.split('=')[0]);
+  }
+  return [...names].filter(Boolean);
+}
+
+async function detectUnwiredPagination(page, driven = []) {
   try {
-    return await page.evaluate(() => {
+    return await page.evaluate((driven) => {
       const here = new URL(location.href);
       const base = here.pathname.replace(/\/$/, '');
       const found = [];
@@ -3972,6 +4008,9 @@ async function detectUnwiredPagination(page) {
         if (q.pathname.replace(/\/$/, '') === base) {
           for (const [k, val] of [...q.searchParams]) {
             if (!/^\d+$/.test(val) || here.searchParams.get(k) === val) continue;
+            // A parameter the recipe steers is a filter it already asks for,
+            // never another page of this one. See recipeDrivenParams().
+            if (driven.includes(k)) continue;
             found.push(`${k}=${val} -> ${a.getAttribute('href')}`);
           }
           continue;
@@ -3986,7 +4025,7 @@ async function detectUnwiredPagination(page) {
         }
       }
       return found.length ? [...new Set(found)].slice(0, 4) : null;
-    });
+    }, driven);
   } catch { return null; }
 }
 
@@ -4735,7 +4774,7 @@ module.exports = {
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
   saysOngoing, expandYearArchive, listingPages, followPagination,
-  detectUnwiredPagination,
+  detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
   installNetworkBridge, resolveChromium, safeGoto, classifyLoadError, datesNearLink,

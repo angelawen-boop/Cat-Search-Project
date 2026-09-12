@@ -1,0 +1,3 @@
+venue_code,title,start_date,end_date,summary,url,notes
+moma,[current/upcoming page],,,,https://www.moma.org/calendar/exhibitions,"The venue's ""current/upcoming"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition."
+moma,[past page],,,,https://www.moma.org/calendar/exhibitions/history,"The venue's ""past"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition."

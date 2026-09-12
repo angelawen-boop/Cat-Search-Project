@@ -17,6 +17,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 const {
+  recipeDrivenParams,
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
   classifyLoadError, isOwnListingPage, saysOngoing,
@@ -816,6 +817,27 @@ test('P-006: a page with no paginate option is left alone', () => {
   const queue = [{ path: '/exhibitions/upcoming', ctx: 'upcoming' }];
   followPagination(queue, queue[0], pageOf(2026), [], 'menil', VENUES.menil);
   assert.equal(queue.length, 1);
+});
+
+test('P-013: a recipe-driven filter is not mistaken for a second page', () => {
+  // artic's archive is one address filtered by ?year=, and its pages carry
+  // decade jump-links — year=2020, 2010, 2000, 1990. To a check looking for
+  // "same path, same parameter, a different number" those are indistinguishable
+  // from a page number, and it reported all four on all eight of artic's
+  // archive pages while the venue was returning her exact count.
+  //
+  // A FALSE ALARM IS WORSE THAN NO ALARM: a check that cries wolf every sweep
+  // teaches her to scroll past it, and then it finds nothing at all. artic
+  // cannot be reached from the container, so this is asserted here rather than
+  // against the live site.
+  assert.ok(recipeDrivenParams(VENUES.artic).includes('year'),
+    'artic steers ?year= itself, so a different year is a filter, not a page');
+  // The cure must not be broader than the disease: nothing may silence `page`
+  // at a venue whose recipe does not set it, or the check stops working.
+  for (const code of ['tate-modern', 'tate-britain', 'frick', 'menil', 'uffizi']) {
+    assert.equal(recipeDrivenParams(VENUES[code]).includes('page'), false,
+      `${code} does not steer ?page=, so the check must still report it`);
+  }
 });
 
 test('P-007: the Menil opts in on its current and past listings, not upcoming', () => {
