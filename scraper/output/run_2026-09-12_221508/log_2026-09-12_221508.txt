@@ -1,0 +1,60 @@
+[2026-09-12T12:15:08.232Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T12:15:08.233Z] Lookback floor: 2024-07-01
+[2026-09-12T12:15:08.233Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_221508
+[2026-09-12T12:15:08.233Z] Venues this run: uffizi
+[2026-09-12T12:15:08.233Z] Proxy: http://127.0.0.1:33723
+[2026-09-12T12:15:08.234Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-12T12:15:08.370Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-12T12:15:08.449Z] [uffizi] 
+[2026-09-12T12:15:08.449Z] [uffizi] ────────────────────────────────────────────────────────────
+[2026-09-12T12:15:08.449Z] [uffizi]   UFFIZI — Uffizi Galleries, Florence
+[2026-09-12T12:15:08.449Z] [uffizi] ────────────────────────────────────────────────────────────
+[2026-09-12T12:15:08.450Z] [uffizi]   Fetching current: https://www.uffizi.it/en/event-category/exhibitions
+[2026-09-12T12:15:11.400Z] [uffizi]   current: 4 links seen -> 1 navigation, 0 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-09-12T12:15:11.400Z] [uffizi]   Fetching upcoming: https://www.uffizi.it/en/event-category/exhibitions/upcoming
+[2026-09-12T12:15:13.599Z] [uffizi]     the venue labels this a permanent installation, excluded: European Heritage Days 2026. Evening special opening to the Uffizi for €1
+[2026-09-12T12:15:13.599Z] [uffizi]   upcoming: 1 links seen -> 0 navigation, 0 already-seen URL, 1 labelled permanent by the venue -> 0 collected (0 of them with no readable title)
+[2026-09-12T12:15:13.599Z] [uffizi]   NO EXHIBITIONS upcoming: page loaded and was read, but nothing matched
+[2026-09-12T12:15:13.599Z] [uffizi]   Fetching past 2025: https://www.uffizi.it/en/event-category/exhibitions/years/2025
+[2026-09-12T12:15:16.062Z] [uffizi]   past 2025: 7 links seen -> 1 navigation, 2 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T12:15:16.063Z] [uffizi]   Fetching past 2024: https://www.uffizi.it/en/event-category/exhibitions/years/2024
+[2026-09-12T12:15:18.570Z] [uffizi]   past 2024: 12 links seen -> 1 navigation, 0 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-12T12:15:18.571Z] [uffizi]   lookback (listing): kept 14, dropped 5 closed before 2024-07-01, 7 with no closing date, 0 with no opening date
+[2026-09-12T12:15:18.571Z] [uffizi]   reading 13 individual page(s)…
+[2026-09-12T12:15:18.571Z] [uffizi]     page 1 of 13
+[2026-09-12T12:15:27.644Z] [uffizi]     page 10 of 13
+[2026-09-12T12:15:31.645Z] [uffizi]   Individual pages: 13 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:15:31.645Z] [uffizi]   lookback (final): kept 14, dropped 0 closed before 2024-07-01, 4 with no closing date, 0 with no opening date
+[2026-09-12T12:15:31.646Z] [uffizi]   → 13 exhibitions, 13 with curatorial text → uffizi.csv
+[2026-09-12T12:15:31.732Z] 
+[2026-09-12T12:15:31.732Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:15:31.732Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T12:15:31.732Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:15:31.732Z]   UFFIZI: 13 exhibitions | 13 with text | 1 page(s) blocked/empty
+[2026-09-12T12:15:31.732Z] 
+[2026-09-12T12:15:31.732Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:15:31.732Z]   COVERAGE — every link accounted for
+[2026-09-12T12:15:31.732Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:15:31.732Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T12:15:31.732Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T12:15:31.732Z]   uffizi     current                          4     1       0     0        0        0          3
+[2026-09-12T12:15:31.732Z]   uffizi     upcoming                         1     0       0     0        0        0          0
+[2026-09-12T12:15:31.732Z]   uffizi     past 2025                        7     1       0     2        0        0          4
+[2026-09-12T12:15:31.732Z]   uffizi     past 2024                       12     1       0     0        0        0         11
+[2026-09-12T12:15:31.732Z] 
+[2026-09-12T12:15:31.732Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T12:15:31.732Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T12:15:31.732Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T12:15:31.732Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T12:15:31.732Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T12:15:31.732Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T12:15:31.732Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T12:15:31.732Z] 
+[2026-09-12T12:15:31.732Z] Network bridge: 389 requests served, 452 skipped (image/media/font), 0 failed
+[2026-09-12T12:15:31.732Z] 
+[2026-09-12T12:15:31.732Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_221508
+[2026-09-12T12:15:31.732Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_221508/sweep.csv  (14 rows — uffizi:14)
+[2026-09-12T12:15:31.732Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_221508/log_2026-09-12_221508.txt
+[2026-09-12T12:15:31.732Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, brera, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-12T12:15:31.732Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T12:15:31.732Z] No de-duplication is applied — see passThrough.

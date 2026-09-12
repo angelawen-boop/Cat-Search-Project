@@ -3511,7 +3511,22 @@ async function scrapeVenue(page, code) {
       // a marker row for it would appear on her approval pile on every single
       // sweep forever. A page that FAILED to load still leaves its marker
       // above, because that is a real refusal and she should see it.
-      if (rows.length === rowsBefore && !(cov && cov.dupUrl) && !pg.discovered) {
+      // A PAGE WHOSE LINKS WERE ALL DELIBERATELY EXCLUDED IS NOT AN EMPTY PAGE.
+      //
+      // The marker means "this listing gave us nothing and you should know".
+      // A page whose every link was a duplicate, a permanent display, another
+      // branch's show or a one-day event was read perfectly well and answered
+      // the question — the answer was simply "none of these". Saying otherwise
+      // puts a card on her approval pile on every sweep for a venue that is
+      // working exactly as intended.
+      //
+      // Found the moment the Uffizi's one-day event was excluded: its upcoming
+      // page holds that single item, so the page emptied and immediately
+      // started claiming it could not be read.
+      const excluded = cov
+        ? (cov.dupUrl || 0) + (cov.ongoing || 0) + (cov.branch || 0) + (cov.labelled || 0) + (cov.offsite || 0)
+        : 0;
+      if (rows.length === rowsBefore && !excluded && !pg.discovered) {
         log(`  NO EXHIBITIONS ${pg.ctx}: page loaded and was read, but nothing matched`);
         rows.push({
           venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
