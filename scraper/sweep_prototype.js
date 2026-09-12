@@ -1684,6 +1684,20 @@ const BOILERPLATE = [
   // this one; it sat in the same summaries as the junk she did name.
   '★★',
 
+  // THE COPYRIGHT SIGN, from the Gallerie dell'Accademia, 12 Sep 2026. Its
+  // TransLucent summary opened on an image credit:
+  //   "Leiko Ikemura, Yellow Figure with Hummingbird, 2020, vetro colato / cast
+  //    glass, 32 x 33 x 13 cm © Leiko Ikemura. Photo: Jörg von Bruchhausen"
+  // The site is built with Divi, so there is no caption or credit class to key
+  // on and the container rules cannot reach it. A © never appears in a venue's
+  // description of its own exhibition, and since boilerplate is now stripped by
+  // the SENTENCE this removes the credit without touching the prose beside it.
+  //
+  // This is the junk she singled out as the dangerous kind: an artist and a
+  // work named in a credit read exactly like an artist and a work named in the
+  // blurb, so compression cannot tell them apart.
+  '©',
+
   // ADMISSION WORDING, from the Wallace Collection, 12 Sep 2026.
   //
   // Its details line is usually bold and caught by boldOnly(), but Winston

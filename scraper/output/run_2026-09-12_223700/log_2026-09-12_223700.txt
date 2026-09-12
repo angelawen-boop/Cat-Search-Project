@@ -1,0 +1,378 @@
+[2026-09-12T12:37:00.193Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T12:37:00.193Z] Lookback floor: 2024-07-01
+[2026-09-12T12:37:00.193Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_223700
+[2026-09-12T12:37:00.193Z] Venues this run: ng, rijks, acq, borghese, frick, menil, va, louvre, capo, uffizi, brera, khm, dellav, tate-modern, tate-britain, wallace
+[2026-09-12T12:37:00.194Z] Proxy: http://127.0.0.1:33723
+[2026-09-12T12:37:00.194Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-12T12:37:00.334Z] Running 16 venue(s) 5 at a time (one page at a time within each venue)
+[2026-09-12T12:37:00.604Z] [frick] 
+[2026-09-12T12:37:00.604Z] [frick] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:00.604Z] [frick]   FRICK — The Frick Collection, New York
+[2026-09-12T12:37:00.604Z] [frick] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:00.604Z] [frick]   Fetching current/upcoming: https://www.frick.org/exhibitions
+[2026-09-12T12:37:00.605Z] [rijks] 
+[2026-09-12T12:37:00.605Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:00.605Z] [rijks]   RIJKS — Rijksmuseum, Amsterdam
+[2026-09-12T12:37:00.605Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:00.605Z] [rijks]   Fetching current/upcoming: https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view
+[2026-09-12T12:37:00.606Z] [acq] 
+[2026-09-12T12:37:00.606Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:00.606Z] [acq]   ACQ — Acquavella Galleries, New York
+[2026-09-12T12:37:00.606Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:00.606Z] [acq]   Fetching all (current/upcoming/past): https://www.acquavellagalleries.com/exhibitions
+[2026-09-12T12:37:00.606Z] [borghese] 
+[2026-09-12T12:37:00.606Z] [borghese] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:00.606Z] [borghese]   BORGHESE — Galleria Borghese, Rome
+[2026-09-12T12:37:00.606Z] [borghese] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:00.606Z] [borghese]   Fetching current: https://galleriaborghese.cultura.gov.it/en/mostre/presenti/
+[2026-09-12T12:37:00.618Z] [ng] 
+[2026-09-12T12:37:00.618Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:00.618Z] [ng]   NG — National Gallery, London
+[2026-09-12T12:37:00.618Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:00.618Z] [ng]   Fetching current/upcoming: https://www.nationalgallery.org.uk/exhibitions
+[2026-09-12T12:37:03.230Z] [rijks]   consent banner dismissed ("Accept")
+[2026-09-12T12:37:03.959Z] [ng]   consent banner dismissed ("Reject all")
+[2026-09-12T12:37:04.533Z] [borghese]   consent banner dismissed ("Accept")
+[2026-09-12T12:37:05.187Z] [frick]   current/upcoming: 15 links seen -> 6 navigation, 3 already-seen URL -> 6 collected (0 of them with no readable title)
+[2026-09-12T12:37:05.188Z] [frick]   Fetching past: https://www.frick.org/exhibitions/past
+[2026-09-12T12:37:05.832Z] [ng]   current/upcoming: 12 links seen -> 2 navigation, 3 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-12T12:37:05.832Z] [ng]   Fetching past: https://www.nationalgallery.org.uk/exhibitions/past
+[2026-09-12T12:37:06.049Z] [borghese]   current: 1 links seen -> 0 navigation, 0 already-seen URL -> 1 collected (0 of them with no readable title)
+[2026-09-12T12:37:06.049Z] [borghese]   Fetching upcoming: https://galleriaborghese.cultura.gov.it/en/mostre/future/
+[2026-09-12T12:37:06.321Z] [rijks]   current/upcoming: 15 links seen -> 5 navigation, 0 already-seen URL -> 10 collected (0 of them with no readable title)
+[2026-09-12T12:37:06.321Z] [rijks]   Fetching past: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past
+[2026-09-12T12:37:07.342Z] [acq]   all (current/upcoming/past): 119 links seen -> 11 navigation, 0 already-seen URL -> 108 collected (0 of them with no readable title)
+[2026-09-12T12:37:07.343Z] [acq]   lookback (listing): kept 16, dropped 92 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-12T12:37:07.343Z] [acq]   reading 16 individual page(s)…
+[2026-09-12T12:37:07.343Z] [acq]     page 1 of 16
+[2026-09-12T12:37:08.794Z] [frick]   past: 25 links seen -> 4 navigation, 14 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-12T12:37:08.794Z] [frick]   lookback (listing): kept 13, dropped 0 closed before 2024-07-01, 10 with no closing date, 0 with no opening date
+[2026-09-12T12:37:08.795Z] [frick]   reading 13 individual page(s)…
+[2026-09-12T12:37:08.795Z] [frick]     page 1 of 13
+[2026-09-12T12:37:09.595Z] [rijks]   consent banner dismissed ("Accept")
+[2026-09-12T12:37:09.599Z] [borghese]   consent banner dismissed ("Accept")
+[2026-09-12T12:37:11.070Z] [borghese]   upcoming: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T12:37:11.070Z] [borghese]   NO EXHIBITIONS upcoming: page loaded and was read, but nothing matched
+[2026-09-12T12:37:11.070Z] [borghese]   Fetching past: https://galleriaborghese.cultura.gov.it/en/mostre/passate/
+[2026-09-12T12:37:13.701Z] [rijks]   past: 44 links seen -> 4 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-12T12:37:13.701Z] [rijks]   lookback (listing): kept 49, dropped 1 closed before 2024-07-01, 30 with no closing date, 0 with no opening date
+[2026-09-12T12:37:13.701Z] [rijks]   reading 49 individual page(s)…
+[2026-09-12T12:37:13.701Z] [rijks]     page 1 of 49
+[2026-09-12T12:37:14.991Z] [borghese]   consent banner dismissed ("Accept")
+[2026-09-12T12:37:15.699Z] [ng]   past: 179 links seen -> 2 navigation, 0 already-seen URL -> 177 collected (0 of them with no readable title)
+[2026-09-12T12:37:15.699Z] [ng]   lookback (listing): kept 28, dropped 156 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T12:37:15.699Z] [ng]   reading 28 individual page(s)…
+[2026-09-12T12:37:15.699Z] [ng]     page 1 of 28
+[2026-09-12T12:37:18.939Z] [borghese]   past: 40 links seen -> 0 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-12T12:37:18.939Z] [borghese]   reading 41 individual page(s)…
+[2026-09-12T12:37:18.939Z] [borghese]     page 1 of 41
+[2026-09-12T12:37:19.049Z] [ng]     prose dates ignored, they contradict the listing: "7 September - 28 September 2026"
+[2026-09-12T12:37:21.183Z] [frick]     page 10 of 13
+[2026-09-12T12:37:23.879Z] [acq]     page 10 of 16
+[2026-09-12T12:37:26.920Z] [frick]   Individual pages: 13 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:37:26.920Z] [frick]   lookback (final): kept 10, dropped 3 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-12T12:37:26.922Z] [frick]   → 10 exhibitions, 10 with curatorial text → frick.csv
+[2026-09-12T12:37:27.068Z] [menil] 
+[2026-09-12T12:37:27.068Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:27.068Z] [menil]   MENIL — The Menil Collection, Houston
+[2026-09-12T12:37:27.068Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:27.068Z] [menil]   Fetching current: https://www.menil.org/exhibitions
+[2026-09-12T12:37:30.545Z] [ng]     page 10 of 28
+[2026-09-12T12:37:32.287Z] [menil]   current: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-09-12T12:37:32.288Z] [menil]   Fetching upcoming: https://www.menil.org/exhibitions/upcoming
+[2026-09-12T12:37:33.306Z] [rijks]     page 10 of 49
+[2026-09-12T12:37:35.723Z] [menil]   upcoming: 4 links seen -> 0 navigation, 0 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T12:37:35.723Z] [menil]   Fetching past: https://www.menil.org/exhibitions/past
+[2026-09-12T12:37:37.401Z] [acq]   Individual pages: 16 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:37:37.401Z] [acq]   lookback (final): kept 15, dropped 1 closed before 2024-07-01, 2 with no closing date, 0 with no opening date
+[2026-09-12T12:37:37.402Z] [acq]   → 15 exhibitions, 15 with curatorial text → acq.csv
+[2026-09-12T12:37:37.483Z] [va] 
+[2026-09-12T12:37:37.483Z] [va] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:37.483Z] [va]   VA — Victoria and Albert Museum, London
+[2026-09-12T12:37:37.483Z] [va] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:37.483Z] [va]   Fetching current/upcoming: https://www.vam.ac.uk/whatson?type=exhibition
+[2026-09-12T12:37:39.864Z] [menil]   past: 12 links seen -> 0 navigation, 1 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-12T12:37:39.864Z] [menil]   Fetching past p2: https://www.menil.org/exhibitions/past?page=2
+[2026-09-12T12:37:41.385Z] [va]     another V&A/branch site, excluded: Inside Aardman: Wallace & Gromit and Friends
+[2026-09-12T12:37:41.599Z] [va]     another V&A/branch site, excluded: The Music is Black: A British Story
+[2026-09-12T12:37:42.067Z] [va]     another V&A/branch site, excluded: South Asia Now: Fashion. Art. Design.
+[2026-09-12T12:37:42.233Z] [va]     another V&A/branch site, excluded: David Bowie Centre
+[2026-09-12T12:37:42.275Z] [va]     the venue labels this a permanent installation, excluded: Lasting Impressions: Women Printmakers 1900 – Now
+[2026-09-12T12:37:42.319Z] [va]     the venue labels this a permanent installation, excluded: Adobe Creative Residents On Display
+[2026-09-12T12:37:42.342Z] [va]     the venue labels this a permanent installation, excluded: Urushi Now: Contemporary Japanese Lacquer
+[2026-09-12T12:37:42.357Z] [va]     the venue labels this a permanent installation, excluded: Lost Music Venues
+[2026-09-12T12:37:42.379Z] [va]     the venue labels this a permanent installation, excluded: American Photographs
+[2026-09-12T12:37:42.392Z] [va]     the venue labels this a permanent installation, excluded: Dimensions: Contemporary Chinese Studio Crafts
+[2026-09-12T12:37:42.414Z] [va]     the venue labels this a permanent installation, excluded: Bharti Kher at the V&A
+[2026-09-12T12:37:42.432Z] [va]     the venue labels this a permanent installation, excluded: Sacred Treasures from Kyiv
+[2026-09-12T12:37:42.467Z] [va]     the venue labels this a permanent installation, excluded: Photopoetry
+[2026-09-12T12:37:42.467Z] [va]   current/upcoming: 19 links seen -> 0 navigation, 0 already-seen URL, 4 at another site of the same venue, 9 labelled permanent by the venue -> 6 collected (0 of them with no readable title)
+[2026-09-12T12:37:42.467Z] [va]   lookback (listing): kept 6, dropped 0 closed before 2024-07-01, 6 with no closing date, 0 with no opening date
+[2026-09-12T12:37:42.467Z] [va]   reading 6 individual page(s)…
+[2026-09-12T12:37:42.467Z] [va]     page 1 of 6
+[2026-09-12T12:37:43.595Z] [menil]   past p2: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-09-12T12:37:43.595Z] [menil]   Fetching past p3: https://www.menil.org/exhibitions/past?page=3
+[2026-09-12T12:37:46.416Z] [ng]     page 20 of 28
+[2026-09-12T12:37:47.859Z] [menil]   past p3: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-09-12T12:37:47.859Z] [menil]   PAGINATION end: past p3 — its newest exhibition closed 2024-03-10, before the 2024-07-01 floor, so every later page is older still
+[2026-09-12T12:37:47.859Z] [menil]   lookback (listing): kept 39, dropped 12 closed before 2024-07-01, 7 with no closing date, 0 with no opening date
+[2026-09-12T12:37:47.859Z] [menil]   reading 39 individual page(s)…
+[2026-09-12T12:37:47.859Z] [menil]     page 1 of 39
+[2026-09-12T12:37:50.686Z] [va]   Individual pages: 6 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:37:50.686Z] [va]   → 6 exhibitions, 6 with curatorial text → va.csv
+[2026-09-12T12:37:50.807Z] [louvre] 
+[2026-09-12T12:37:50.808Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:50.808Z] [louvre]   LOUVRE — Louvre, Paris
+[2026-09-12T12:37:50.808Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-09-12T12:37:50.808Z] [louvre]   Fetching current/upcoming: https://www.louvre.fr/en/exhibitions-and-events/exhibitions
+[2026-09-12T12:37:53.775Z] [borghese]     page 10 of 41
+[2026-09-12T12:37:55.780Z] [louvre]   current/upcoming: 8 links seen -> 0 navigation, 1 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-12T12:37:55.781Z] [louvre]   Fetching past: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions
+[2026-09-12T12:37:55.879Z] [rijks]     page 20 of 49
+[2026-09-12T12:37:59.756Z] [menil]     page 10 of 39
+[2026-09-12T12:38:10.147Z] [menil]     page 20 of 39
+[2026-09-12T12:38:15.481Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/mission-masterpiece
+[2026-09-12T12:38:15.481Z] [rijks]     page 30 of 49
+[2026-09-12T12:38:18.368Z] [ng]   TIMEOUT on https://www.nationalgallery.org.uk/exhibitions/past/the-last-caravaggio — retrying once
+[2026-09-12T12:38:19.867Z] [louvre]   "load more" pressed 7x on past
+[2026-09-12T12:38:20.660Z] [menil]     page 30 of 39
+[2026-09-12T12:38:23.839Z] [ng]   Individual pages: 28 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:38:23.839Z] [ng]   lookback (final): kept 27, dropped 1 closed before 2024-07-01, 0 with no closing date, 1 with no opening date
+[2026-09-12T12:38:23.840Z] [ng]   → 27 exhibitions, 27 with curatorial text → ng.csv
+[2026-09-12T12:38:23.983Z] [capo] 
+[2026-09-12T12:38:23.983Z] [capo] ────────────────────────────────────────────────────────────
+[2026-09-12T12:38:23.983Z] [capo]   CAPO — Capodimonte, Naples
+[2026-09-12T12:38:23.983Z] [capo] ────────────────────────────────────────────────────────────
+[2026-09-12T12:38:23.983Z] [capo]   Fetching all (current/upcoming/past): https://capodimonte.cultura.gov.it/mostre/
+[2026-09-12T12:38:24.258Z] [louvre]   past: 43 links seen -> 0 navigation, 1 already-seen URL -> 42 collected (0 of them with no readable title)
+[2026-09-12T12:38:24.259Z] [louvre]   Fetching past 2025: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2025
+[2026-09-12T12:38:30.020Z] [borghese]     page 20 of 41
+[2026-09-12T12:38:31.324Z] [louvre]   "load more" pressed 1x on past 2025
+[2026-09-12T12:38:31.409Z] [menil]   Individual pages: 39 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:38:31.409Z] [menil]     no dates published — treated as a permanent display, excluded: Modern and Contemporary
+[2026-09-12T12:38:31.409Z] [menil]     no dates published — treated as a permanent display, excluded: Surrealism
+[2026-09-12T12:38:31.409Z] [menil]     no dates published — treated as a permanent display, excluded: Africa
+[2026-09-12T12:38:31.409Z] [menil]     no dates published — treated as a permanent display, excluded: 4th–18th Century Europe
+[2026-09-12T12:38:31.409Z] [menil]     no dates published — treated as a permanent display, excluded: Pacific Islands
+[2026-09-12T12:38:31.409Z] [menil]     no dates published — treated as a permanent display, excluded: A Surrealist Wunderkammer
+[2026-09-12T12:38:31.409Z] [menil]     no dates published — treated as a permanent display, excluded: Outdoor Sculpture
+[2026-09-12T12:38:31.409Z] [menil]   7 undated row(s) excluded as permanent displays (venue rule)
+[2026-09-12T12:38:31.410Z] [menil]   → 32 exhibitions, 32 with curatorial text → menil.csv
+[2026-09-12T12:38:31.474Z] [louvre]   past 2025: 11 links seen -> 0 navigation, 11 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T12:38:31.474Z] [louvre]   Fetching past 2024: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2024
+[2026-09-12T12:38:31.503Z] [uffizi] 
+[2026-09-12T12:38:31.503Z] [uffizi] ────────────────────────────────────────────────────────────
+[2026-09-12T12:38:31.503Z] [uffizi]   UFFIZI — Uffizi Galleries, Florence
+[2026-09-12T12:38:31.503Z] [uffizi] ────────────────────────────────────────────────────────────
+[2026-09-12T12:38:31.503Z] [uffizi]   Fetching current: https://www.uffizi.it/en/event-category/exhibitions
+[2026-09-12T12:38:33.427Z] [capo]   all (current/upcoming/past): 50 links seen -> 0 navigation, 0 already-seen URL -> 50 collected (2 of them with no readable title)
+[2026-09-12T12:38:33.427Z] [capo]   lookback (listing): kept 44, dropped 6 closed before 2024-07-01, 44 with no closing date, 0 with no opening date
+[2026-09-12T12:38:33.427Z] [capo]   reading 44 individual page(s)…
+[2026-09-12T12:38:33.427Z] [capo]     page 1 of 44
+[2026-09-12T12:38:34.569Z] [uffizi]   current: 4 links seen -> 1 navigation, 0 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-09-12T12:38:34.569Z] [uffizi]   Fetching upcoming: https://www.uffizi.it/en/event-category/exhibitions/upcoming
+[2026-09-12T12:38:35.771Z] [louvre]   past 2024: 5 links seen -> 0 navigation, 5 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T12:38:35.771Z] [louvre]   lookback (listing): kept 22, dropped 27 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-12T12:38:35.771Z] [louvre]   reading 22 individual page(s)…
+[2026-09-12T12:38:35.771Z] [louvre]     page 1 of 22
+[2026-09-12T12:38:37.096Z] [uffizi]     the venue labels this a permanent installation, excluded: European Heritage Days 2026. Evening special opening to the Uffizi for €1
+[2026-09-12T12:38:37.096Z] [uffizi]   upcoming: 1 links seen -> 0 navigation, 0 already-seen URL, 1 labelled permanent by the venue -> 0 collected (0 of them with no readable title)
+[2026-09-12T12:38:37.096Z] [uffizi]   Fetching past 2025: https://www.uffizi.it/en/event-category/exhibitions/years/2025
+[2026-09-12T12:38:37.229Z] [rijks]     page 40 of 49
+[2026-09-12T12:38:38.771Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/henk-wildschut
+[2026-09-12T12:38:39.794Z] [uffizi]   past 2025: 7 links seen -> 1 navigation, 2 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T12:38:39.794Z] [uffizi]   Fetching past 2024: https://www.uffizi.it/en/event-category/exhibitions/years/2024
+[2026-09-12T12:38:42.705Z] [uffizi]   past 2024: 12 links seen -> 1 navigation, 0 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-12T12:38:42.705Z] [uffizi]   lookback (listing): kept 13, dropped 5 closed before 2024-07-01, 7 with no closing date, 0 with no opening date
+[2026-09-12T12:38:42.705Z] [uffizi]   reading 13 individual page(s)…
+[2026-09-12T12:38:42.705Z] [uffizi]     page 1 of 13
+[2026-09-12T12:38:44.441Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/ed-van-der-elsken
+[2026-09-12T12:38:52.524Z] [uffizi]     page 10 of 13
+[2026-09-12T12:38:54.920Z] [louvre]     page 10 of 22
+[2026-09-12T12:38:56.953Z] [uffizi]   Individual pages: 13 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:38:56.953Z] [uffizi]   lookback (final): kept 13, dropped 0 closed before 2024-07-01, 4 with no closing date, 0 with no opening date
+[2026-09-12T12:38:56.954Z] [uffizi]   → 13 exhibitions, 13 with curatorial text → uffizi.csv
+[2026-09-12T12:38:57.029Z] [brera] 
+[2026-09-12T12:38:57.029Z] [brera] ────────────────────────────────────────────────────────────
+[2026-09-12T12:38:57.029Z] [brera]   BRERA — Pinacoteca di Brera, Milan
+[2026-09-12T12:38:57.029Z] [brera] ────────────────────────────────────────────────────────────
+[2026-09-12T12:38:57.029Z] [brera]   Fetching current: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=in-progress
+[2026-09-12T12:38:57.068Z] [louvre]   BLOCKED (HTTP 429): https://www.louvre.fr/en/exhibitions-and-events/exhibitions/jacques-louis-david
+[2026-09-12T12:39:00.067Z] [rijks]   Individual pages: 46 got text, 0 no curatorial text, 3 failed
+[2026-09-12T12:39:00.067Z] [rijks]   lookback (final): kept 37, dropped 12 closed before 2024-07-01, 14 with no closing date, 7 with no opening date
+[2026-09-12T12:39:00.068Z] [rijks]   → 37 exhibitions, 34 with curatorial text → rijks.csv
+[2026-09-12T12:39:00.203Z] [khm] 
+[2026-09-12T12:39:00.203Z] [khm] ────────────────────────────────────────────────────────────
+[2026-09-12T12:39:00.203Z] [khm]   KHM — Kunsthistorisches Museum, Vienna
+[2026-09-12T12:39:00.203Z] [khm] ────────────────────────────────────────────────────────────
+[2026-09-12T12:39:00.203Z] [khm]   Fetching current: https://www.khm.at/en/exhibitions
+[2026-09-12T12:39:00.385Z] [brera]   current: 8 links seen -> 0 navigation, 4 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T12:39:00.385Z] [brera]   Fetching upcoming: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=scheduled
+[2026-09-12T12:39:02.926Z] [khm]   consent banner dismissed ("refuse the use of cookies completely")
+[2026-09-12T12:39:03.524Z] [brera]   upcoming: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T12:39:03.524Z] [brera]   NO EXHIBITIONS upcoming: page loaded and was read, but nothing matched
+[2026-09-12T12:39:03.524Z] [brera]   Fetching past: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=archive
+[2026-09-12T12:39:06.419Z] [khm]   current: 3 links seen -> 0 navigation, 0 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-09-12T12:39:06.419Z] [khm]   Fetching upcoming: https://www.khm.at/en/exhibitions/upcoming
+[2026-09-12T12:39:06.714Z] [borghese]     page 30 of 41
+[2026-09-12T12:39:06.900Z] [brera]   past: 18 links seen -> 0 navigation, 13 already-seen URL -> 5 collected (0 of them with no readable title)
+[2026-09-12T12:39:06.900Z] [brera]   lookback (listing): kept 8, dropped 2 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-12T12:39:06.900Z] [brera]   reading 7 individual page(s)…
+[2026-09-12T12:39:06.900Z] [brera]     page 1 of 7
+[2026-09-12T12:39:09.010Z] [khm]   consent banner dismissed ("refuse the use of cookies completely")
+[2026-09-12T12:39:11.795Z] [khm]   upcoming: 9 links seen -> 4 navigation, 2 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-09-12T12:39:11.795Z] [khm]   lookback (listing): kept 6, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T12:39:11.795Z] [khm]   reading 6 individual page(s)…
+[2026-09-12T12:39:11.795Z] [khm]     page 1 of 6
+[2026-09-12T12:39:12.557Z] [capo]     page 10 of 44
+[2026-09-12T12:39:17.509Z] [louvre]     page 20 of 22
+[2026-09-12T12:39:26.395Z] [louvre]   Individual pages: 21 got text, 0 no curatorial text, 1 failed
+[2026-09-12T12:39:26.396Z] [louvre]   → 22 exhibitions, 21 with curatorial text → louvre.csv
+[2026-09-12T12:39:26.481Z] [dellav] 
+[2026-09-12T12:39:26.481Z] [dellav] ────────────────────────────────────────────────────────────
+[2026-09-12T12:39:26.481Z] [dellav]   DELLAV — Gallerie dell'Accademia, Venice
+[2026-09-12T12:39:26.481Z] [dellav] ────────────────────────────────────────────────────────────
+[2026-09-12T12:39:26.481Z] [dellav]   Fetching current: https://www.gallerieaccademia.it/en/
+[2026-09-12T12:39:27.266Z] [khm]   Individual pages: 6 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:39:27.266Z] [khm]   lookback (final): kept 6, dropped 0 closed before 2024-07-01, 1 with no closing date, 1 with no opening date
+[2026-09-12T12:39:27.266Z] [khm]   → 6 exhibitions, 6 with curatorial text → khm.csv
+[2026-09-12T12:39:27.559Z] [tate-modern] 
+[2026-09-12T12:39:27.559Z] [tate-modern] ────────────────────────────────────────────────────────────
+[2026-09-12T12:39:27.559Z] [tate-modern]   TATE-MODERN — Tate Modern, London
+[2026-09-12T12:39:27.559Z] [tate-modern] ────────────────────────────────────────────────────────────
+[2026-09-12T12:39:27.559Z] [tate-modern]   Fetching current/upcoming: https://www.tate.org.uk/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=display&event_type=exhibition
+[2026-09-12T12:39:31.508Z] [dellav]   current: 10 links seen -> 0 navigation, 8 already-seen URL -> 2 collected (0 of them with no readable title)
+[2026-09-12T12:39:31.509Z] [dellav]   lookback (listing): kept 2, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T12:39:31.509Z] [dellav]   reading 2 individual page(s)…
+[2026-09-12T12:39:31.509Z] [dellav]     page 1 of 2
+[2026-09-12T12:39:31.553Z] [tate-modern]   current/upcoming: 16 links seen -> 0 navigation, 3 already-seen URL -> 13 collected (0 of them with no readable title)
+[2026-09-12T12:39:31.553Z] [tate-modern]   Fetching recently opened: https://www.tate.org.uk/whats-on?date_range=past&gallery_group=tate-modern&event_type=display&event_type=exhibition
+[2026-09-12T12:39:35.366Z] [tate-modern]   recently opened: 14 links seen -> 0 navigation, 14 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T12:39:35.366Z] [tate-modern]   lookback (listing): kept 13, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T12:39:35.366Z] [tate-modern]   reading 13 individual page(s)…
+[2026-09-12T12:39:35.366Z] [tate-modern]     page 1 of 13
+[2026-09-12T12:39:42.256Z] [borghese]     page 40 of 41
+[2026-09-12T12:39:43.555Z] [tate-modern]     page 10 of 13
+[2026-09-12T12:39:45.590Z] [brera]   Individual pages: 7 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:39:45.592Z] [brera]   → 7 exhibitions, 7 with curatorial text → brera.csv
+[2026-09-12T12:39:45.757Z] [tate-britain] 
+[2026-09-12T12:39:45.757Z] [tate-britain] ────────────────────────────────────────────────────────────
+[2026-09-12T12:39:45.757Z] [tate-britain]   TATE-BRITAIN — Tate Britain, London
+[2026-09-12T12:39:45.757Z] [tate-britain] ────────────────────────────────────────────────────────────
+[2026-09-12T12:39:45.757Z] [tate-britain]   Fetching current/upcoming: https://www.tate.org.uk/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=display&event_type=exhibition
+[2026-09-12T12:39:47.078Z] [tate-modern]   Individual pages: 13 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:39:47.078Z] [tate-modern]   lookback (final): kept 13, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T12:39:47.079Z] [tate-modern]   → 13 exhibitions, 13 with curatorial text → tate-modern.csv
+[2026-09-12T12:39:47.247Z] [wallace] 
+[2026-09-12T12:39:47.247Z] [wallace] ────────────────────────────────────────────────────────────
+[2026-09-12T12:39:47.247Z] [wallace]   WALLACE — The Wallace Collection, London
+[2026-09-12T12:39:47.247Z] [wallace] ────────────────────────────────────────────────────────────
+[2026-09-12T12:39:47.247Z] [wallace]   Fetching current/upcoming: https://www.wallacecollection.org/whats-on/exhibitions-displays/
+[2026-09-12T12:39:47.347Z] [dellav]   Individual pages: 2 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:39:47.347Z] [dellav]   → 2 exhibitions, 2 with curatorial text → dellav.csv
+[2026-09-12T12:39:48.546Z] [tate-britain]     ongoing (permanent), excluded: Commission: Chris Ofili: Requiem
+[2026-09-12T12:39:49.484Z] [tate-britain]   current/upcoming: 11 links seen -> 0 navigation, 1 already-seen URL, 1 ongoing/permanent -> 9 collected (0 of them with no readable title)
+[2026-09-12T12:39:49.484Z] [tate-britain]   Fetching recently opened: https://www.tate.org.uk/whats-on?date_range=past&gallery_group=tate-britain&event_type=display&event_type=exhibition
+[2026-09-12T12:39:49.959Z] [borghese]   Individual pages: 41 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:39:49.959Z] [borghese]   lookback (final): kept 8, dropped 34 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T12:39:49.959Z] [borghese]   → 7 exhibitions, 7 with curatorial text → borghese.csv
+[2026-09-12T12:39:52.301Z] [tate-britain]   recently opened: 5 links seen -> 0 navigation, 5 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T12:39:52.302Z] [tate-britain]   reading 9 individual page(s)…
+[2026-09-12T12:39:52.302Z] [tate-britain]     page 1 of 9
+[2026-09-12T12:39:52.608Z] [wallace]   current/upcoming: 11 links seen -> 4 navigation, 0 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-12T12:39:52.608Z] [wallace]   Fetching past: https://www.wallacecollection.org/explore/past-exhibitions/
+[2026-09-12T12:39:53.375Z] [capo]     page 20 of 44
+[2026-09-12T12:39:57.278Z] [wallace]   past: 28 links seen -> 4 navigation, 6 already-seen URL -> 18 collected (0 of them with no readable title)
+[2026-09-12T12:39:57.278Z] [wallace]   lookback (listing): kept 11, dropped 14 closed before 2024-07-01, 4 with no closing date, 0 with no opening date
+[2026-09-12T12:39:57.278Z] [wallace]   reading 11 individual page(s)…
+[2026-09-12T12:39:57.278Z] [wallace]     page 1 of 11
+[2026-09-12T12:39:58.418Z] [tate-britain]   Individual pages: 9 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:39:58.418Z] [tate-britain]   → 9 exhibitions, 9 with curatorial text → tate-britain.csv
+[2026-09-12T12:40:15.934Z] [wallace]     page 10 of 11
+[2026-09-12T12:40:20.357Z] [wallace]   Individual pages: 11 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:40:20.358Z] [wallace]   → 11 exhibitions, 11 with curatorial text → wallace.csv
+[2026-09-12T12:40:37.068Z] [capo]     page 30 of 44
+[2026-09-12T12:41:18.602Z] [capo]     page 40 of 44
+[2026-09-12T12:41:39.940Z] [capo]   Individual pages: 44 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:41:39.941Z] [capo]   lookback (final): kept 18, dropped 26 closed before 2024-07-01, 5 with no closing date, 0 with no opening date
+[2026-09-12T12:41:39.942Z] [capo]   → 18 exhibitions, 18 with curatorial text → capo.csv
+[2026-09-12T12:41:40.090Z] 
+[2026-09-12T12:41:40.090Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:41:40.090Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T12:41:40.090Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:41:40.090Z]   FRICK: 10 exhibitions | 10 with text
+[2026-09-12T12:41:40.090Z]   ACQ: 15 exhibitions | 15 with text
+[2026-09-12T12:41:40.090Z]   VA: 6 exhibitions | 6 with text
+[2026-09-12T12:41:40.090Z]   NG: 27 exhibitions | 27 with text
+[2026-09-12T12:41:40.090Z]   MENIL: 32 exhibitions | 32 with text
+[2026-09-12T12:41:40.090Z]   UFFIZI: 13 exhibitions | 13 with text
+[2026-09-12T12:41:40.090Z]   RIJKS: 37 exhibitions | 34 with text
+[2026-09-12T12:41:40.090Z]   LOUVRE: 22 exhibitions | 21 with text
+[2026-09-12T12:41:40.090Z]   KHM: 6 exhibitions | 6 with text
+[2026-09-12T12:41:40.090Z]   BRERA: 7 exhibitions | 7 with text | 1 page(s) blocked/empty
+[2026-09-12T12:41:40.090Z]   TATE-MODERN: 13 exhibitions | 13 with text
+[2026-09-12T12:41:40.090Z]   DELLAV: 2 exhibitions | 2 with text
+[2026-09-12T12:41:40.091Z]   BORGHESE: 7 exhibitions | 7 with text | 1 page(s) blocked/empty
+[2026-09-12T12:41:40.091Z]   TATE-BRITAIN: 9 exhibitions | 9 with text
+[2026-09-12T12:41:40.091Z]   WALLACE: 11 exhibitions | 11 with text
+[2026-09-12T12:41:40.091Z]   CAPO: 18 exhibitions | 18 with text
+[2026-09-12T12:41:40.091Z] 
+[2026-09-12T12:41:40.091Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:41:40.091Z]   COVERAGE — every link accounted for
+[2026-09-12T12:41:40.091Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:41:40.091Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T12:41:40.091Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T12:41:40.091Z]   frick      current/upcoming                15     6       0     3        0        0          6
+[2026-09-12T12:41:40.091Z]   ng         current/upcoming                12     2       0     3        0        0          7
+[2026-09-12T12:41:40.091Z]   borghese   current                          1     0       0     0        0        0          1
+[2026-09-12T12:41:40.091Z]   rijks      current/upcoming                15     5       0     0        0        0         10
+[2026-09-12T12:41:40.091Z]   acq        all (current/upcoming/past)    119    11       0     0        0        0        108
+[2026-09-12T12:41:40.091Z]   frick      past                            25     4       0    14        0        0          7
+[2026-09-12T12:41:40.091Z]   borghese   upcoming                         0     0       0     0        0        0          0
+[2026-09-12T12:41:40.091Z]   rijks      past                            44     4       0     0        0        0         40
+[2026-09-12T12:41:40.091Z]   ng         past                           179     2       0     0        0        0        177
+[2026-09-12T12:41:40.091Z]   borghese   past                            40     0       0     0        0        0         40
+[2026-09-12T12:41:40.091Z]   menil      current                         12     0       0     0        0        0         12
+[2026-09-12T12:41:40.091Z]   menil      upcoming                         4     0       0     0        0        0          4
+[2026-09-12T12:41:40.091Z]   menil      past                            12     0       0     1        0        0         11
+[2026-09-12T12:41:40.091Z]   va         current/upcoming                19     0       0     0        0        0          6
+[2026-09-12T12:41:40.091Z]   menil      past p2                         12     0       0     0        0        0         12
+[2026-09-12T12:41:40.091Z]   menil      past p3                         12     0       0     0        0        0         12
+[2026-09-12T12:41:40.091Z]   louvre     current/upcoming                 8     0       0     1        0        0          7
+[2026-09-12T12:41:40.091Z]   louvre     past                            43     0       0     1        0        0         42
+[2026-09-12T12:41:40.091Z]   louvre     past 2025                       11     0       0    11        0        0          0
+[2026-09-12T12:41:40.091Z]   capo       all (current/upcoming/past)     50     0       0     0        0        2         50
+[2026-09-12T12:41:40.091Z]   uffizi     current                          4     1       0     0        0        0          3
+[2026-09-12T12:41:40.091Z]   louvre     past 2024                        5     0       0     5        0        0          0
+[2026-09-12T12:41:40.091Z]   uffizi     upcoming                         1     0       0     0        0        0          0
+[2026-09-12T12:41:40.091Z]   uffizi     past 2025                        7     1       0     2        0        0          4
+[2026-09-12T12:41:40.091Z]   uffizi     past 2024                       12     1       0     0        0        0         11
+[2026-09-12T12:41:40.091Z]   brera      current                          8     0       0     4        0        0          4
+[2026-09-12T12:41:40.091Z]   brera      upcoming                         0     0       0     0        0        0          0
+[2026-09-12T12:41:40.091Z]   khm        current                          3     0       0     0        0        0          3
+[2026-09-12T12:41:40.091Z]   brera      past                            18     0       0    13        0        0          5
+[2026-09-12T12:41:40.091Z]   khm        upcoming                         9     4       0     2        0        0          3
+[2026-09-12T12:41:40.091Z]   dellav     current                         10     0       0     8        0        0          2
+[2026-09-12T12:41:40.091Z]   tate-modern current/upcoming                16     0       0     3        0        0         13
+[2026-09-12T12:41:40.091Z]   tate-modern recently opened                 14     0       0    14        0        0          0
+[2026-09-12T12:41:40.091Z]   tate-britain current/upcoming                11     0       0     1        1        0          9
+[2026-09-12T12:41:40.091Z]   tate-britain recently opened                  5     0       0     5        0        0          0
+[2026-09-12T12:41:40.091Z]   wallace    current/upcoming                11     4       0     0        0        0          7
+[2026-09-12T12:41:40.091Z]   wallace    past                            28     4       0     6        0        0         18
+[2026-09-12T12:41:40.091Z] 
+[2026-09-12T12:41:40.091Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T12:41:40.091Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T12:41:40.091Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T12:41:40.091Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T12:41:40.091Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T12:41:40.091Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T12:41:40.091Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T12:41:40.091Z] 
+[2026-09-12T12:41:40.091Z] Network bridge: 9316 requests served, 13034 skipped (image/media/font), 45 failed
+[2026-09-12T12:41:40.091Z] 
+[2026-09-12T12:41:40.091Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_223700
+[2026-09-12T12:41:40.091Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_223700/sweep.csv  (237 rows — ng:27, rijks:37, acq:15, borghese:8, frick:10, menil:32, va:6, louvre:22, capo:18, uffizi:13, brera:8, khm:6, dellav:2, tate-modern:13, tate-britain:9, wallace:11)
+[2026-09-12T12:41:40.091Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_223700/log_2026-09-12_223700.txt
+[2026-09-12T12:41:40.091Z] Not yet in this run: met, morgan, artic, moma, brit
+[2026-09-12T12:41:40.091Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T12:41:40.091Z] No de-duplication is applied — see passThrough.
