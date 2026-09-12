@@ -2651,14 +2651,26 @@ const VENUES = {
       // CASE-SENSITIVE, DELIBERATELY — no /i flag. "EXHIBITION" as a strip
       // token is exactly what once turned "How to Make an Exhibition" into
       // "How to Make an ". Caps are the badge; a real title is title-case.
-      stripLeading: /^(?:(?:TICKETED EXHIBITION|SPECIAL LOAN INSTALLATION|COLLECTION INSTALLATION|COLLECTION ROTATION|MEMBERS ONLY|OPENING SOON|CLOSING SOON|NOW OPEN|TICKETED|EXHIBITION|FREE)\s*)+/,
+      // VIDEO INSTALLATION added 12 Sep after she looked at the card: it is a
+      // card TYPE like EXHIBITION, not a status, and underneath it sits a real
+      // temporary show — "Karimah Ashadu: Machine Boys", opening 11 Sep 2026.
+      // She read every label on both listing pages in one pass and confirmed
+      // there are no others, which ends the one-label-per-run discovery loop.
+      stripLeading: /^(?:(?:TICKETED EXHIBITION|SPECIAL LOAN INSTALLATION|COLLECTION INSTALLATION|COLLECTION ROTATION|VIDEO INSTALLATION|MEMBERS ONLY|OPENING SOON|CLOSING SOON|NOW OPEN|TICKETED|EXHIBITION|FREE)\s*)+/,
       stripTrailing: new RegExp(`\\s*\\b(?:${MONTH_PATTERN})\\s*\\d.*$`, 'i'),
     },
     // HER RULING ELSEWHERE, APPLIED HERE: temporary exhibitions only. The Art
     // Institute labels its standing hangs "COLLECTION INSTALLATION" and nothing
     // else does — six of the seven undated rows in her first local run. The
     // venue says so, so this is the site's label rather than our judgement.
-    excludeLabelled: /COLLECTION INSTALLATION/i,
+    // HER RULING, 12 Sep 2026, and it REVERSES a call this session made the
+    // wrong way. A COLLECTION ROTATION is a permanent display and is out, the
+    // same as a COLLECTION INSTALLATION. The session had kept rotations on the
+    // reasoning that both publish a real closing date — but whether a thing is
+    // an exhibition at all is hers, not the session's, and a rotating hang of
+    // the permanent collection is not a temporary exhibition however it is
+    // dated. Drops Utamaro and Body and Being in African Art.
+    excludeLabelled: /COLLECTION (INSTALLATION|ROTATION)/i,
   },
 
   // ── VENUES NOTHING CAN REACH ────────────────────────────────────────────────

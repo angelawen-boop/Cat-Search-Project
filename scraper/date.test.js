@@ -551,10 +551,15 @@ test('A-002: COLLECTION ROTATION is a badge too, and is not the same label as IN
   assert.equal(strip('COLLECTION ROTATION Utamaro: Elements of Beauty'),
     'Utamaro: Elements of Beauty');
   assert.equal(strip('COLLECTION INSTALLATION Fabergé'), 'Fabergé');
-  // Only the venue's INSTALLATION label means a standing hang. A ROTATION is a
-  // dated temporary show and must survive the lookback as one.
-  assert.equal(VENUES.artic.excludeLabelled.test('COLLECTION ROTATION'), false,
-    'a rotation must not be excluded as a permanent display');
+  // HER RULING, 12 Sep: BOTH collection labels are permanent displays and are
+  // out. This assertion previously demanded the opposite, on the session's own
+  // reasoning that a rotation publishes a closing date — which was the wrong
+  // call to be making. Whether a thing is an exhibition at all is hers.
+  assert.equal(VENUES.artic.excludeLabelled.test('COLLECTION ROTATION'), true,
+    'a collection rotation is a permanent display and must be excluded');
+  assert.equal(VENUES.artic.excludeLabelled.test('COLLECTION INSTALLATION'), true);
+  assert.equal(VENUES.artic.excludeLabelled.test('VIDEO INSTALLATION'), false,
+    'a video installation is a real temporary show and must NOT be excluded');
 });
 
 test('A-003: the longest alternative must come first, or a badge is stranded', () => {
@@ -610,4 +615,15 @@ test('A-007: a card with nothing but badges and dates yields NO title, never a b
   // would have produced a title with the description welded on — the defect.
   assert.equal(articTitle('EXHIBITION NOW OPEN\nSep 6, 2026–Jan 3, 2027'), '');
   assert.equal(articTitle(''), '');
+});
+
+test('A-008: VIDEO INSTALLATION is a card type, and the show underneath it survives', () => {
+  // Read off the live card 12 Sep: the label is its own line and the real name
+  // sits below it, exactly like EXHIBITION. Taking the label as the title is
+  // what put the literal string "VIDEO INSTALLATION" in the CSV.
+  assert.equal(
+    articTitle('VIDEO INSTALLATION\nKarimah Ashadu: Machine Boys\nOpening September 11, 2026'),
+    'Karimah Ashadu: Machine Boys');
+  assert.equal(strip('VIDEO INSTALLATION Karimah Ashadu: Machine Boys'),
+    'Karimah Ashadu: Machine Boys');
 });
