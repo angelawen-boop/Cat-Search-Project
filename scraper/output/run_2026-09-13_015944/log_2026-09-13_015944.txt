@@ -1,0 +1,104 @@
+[2026-09-12T15:59:44.523Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T15:59:44.524Z] Lookback floor: 2024-07-01
+[2026-09-12T15:59:44.524Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-13_015944
+[2026-09-12T15:59:44.524Z] Venues this run: ng, menil, louvre, uffizi
+[2026-09-12T15:59:44.524Z] Proxy: http://127.0.0.1:42127
+[2026-09-12T15:59:44.524Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-12T15:59:44.677Z] Running 4 venue(s) 4 at a time (one page at a time within each venue)
+[2026-09-12T15:59:44.896Z] [ng] 
+[2026-09-12T15:59:44.896Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-12T15:59:44.896Z] [ng]   NG — National Gallery, London
+[2026-09-12T15:59:44.896Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-12T15:59:44.896Z] [ng]   Fetching current/upcoming: https://www.nationalgallery.org.uk/exhibitions
+[2026-09-12T15:59:44.905Z] [louvre] 
+[2026-09-12T15:59:44.905Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-09-12T15:59:44.905Z] [louvre]   LOUVRE — Louvre, Paris
+[2026-09-12T15:59:44.905Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-09-12T15:59:44.905Z] [louvre]   Fetching current/upcoming: https://www.louvre.fr/en/exhibitions-and-events/exhibitions
+[2026-09-12T15:59:44.906Z] [menil] 
+[2026-09-12T15:59:44.906Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-12T15:59:44.906Z] [menil]   MENIL — The Menil Collection, Houston
+[2026-09-12T15:59:44.906Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-12T15:59:44.906Z] [menil]   Fetching current: https://www.menil.org/exhibitions
+[2026-09-12T15:59:44.922Z] [uffizi] 
+[2026-09-12T15:59:44.922Z] [uffizi] ────────────────────────────────────────────────────────────
+[2026-09-12T15:59:44.922Z] [uffizi]   UFFIZI — Uffizi Galleries, Florence
+[2026-09-12T15:59:44.922Z] [uffizi] ────────────────────────────────────────────────────────────
+[2026-09-12T15:59:44.922Z] [uffizi]   Fetching current: https://www.uffizi.it/en/event-category/exhibitions
+[2026-09-12T15:59:48.292Z] [menil]   current: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-09-12T15:59:48.293Z] [menil]   Fetching upcoming: https://www.menil.org/exhibitions/upcoming
+[2026-09-12T15:59:48.377Z] [uffizi]   current: 4 links seen -> 1 navigation, 0 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-09-12T15:59:48.377Z] [uffizi]   Fetching upcoming: https://www.uffizi.it/en/event-category/exhibitions/upcoming
+[2026-09-12T15:59:49.171Z] [ng]   current/upcoming: 12 links seen -> 2 navigation, 3 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-12T15:59:49.171Z] [ng]   Fetching past: https://www.nationalgallery.org.uk/exhibitions/past
+[2026-09-12T15:59:49.936Z] [louvre]   current/upcoming: 8 links seen -> 0 navigation, 1 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-12T15:59:49.936Z] [louvre]   Fetching past: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions
+[2026-09-12T15:59:50.858Z] [menil]   upcoming: 4 links seen -> 0 navigation, 0 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T15:59:50.858Z] [menil]   Fetching past: https://www.menil.org/exhibitions/past
+[2026-09-12T15:59:51.153Z] [uffizi]     the venue labels this a permanent installation, excluded: European Heritage Days 2026. Evening special opening to the Uffizi for €1
+[2026-09-12T15:59:51.154Z] [uffizi]   upcoming: 1 links seen -> 0 navigation, 0 already-seen URL, 1 labelled permanent by the venue -> 0 collected (0 of them with no readable title)
+[2026-09-12T15:59:51.154Z] [uffizi]   Fetching past 2025: https://www.uffizi.it/en/event-category/exhibitions/years/2025
+[2026-09-12T15:59:51.178Z] [ng]   consent banner dismissed ("Reject all")
+[2026-09-12T15:59:54.037Z] [uffizi]   past 2025: 7 links seen -> 1 navigation, 2 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T15:59:54.038Z] [uffizi]   Fetching past 2024: https://www.uffizi.it/en/event-category/exhibitions/years/2024
+[2026-09-12T15:59:54.038Z] [menil]   past: 12 links seen -> 0 navigation, 1 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-12T15:59:54.039Z] [menil]   Fetching current p2: https://www.menil.org/exhibitions?page=2
+[2026-09-12T15:59:56.300Z] [menil]   current p2: 2 links seen -> 0 navigation, 0 already-seen URL -> 2 collected (0 of them with no readable title)
+[2026-09-12T15:59:56.301Z] [menil]   Fetching past p2: https://www.menil.org/exhibitions/past?page=2
+[2026-09-12T15:59:56.842Z] [ng]   past: 179 links seen -> 2 navigation, 0 already-seen URL -> 177 collected (0 of them with no readable title)
+[2026-09-12T15:59:56.842Z] [ng]   lookback (listing): kept 28, dropped 156 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T15:59:56.843Z] [ng]   reading 28 individual page(s)…
+[2026-09-12T15:59:56.843Z] [ng]     page 1 of 28
+[2026-09-12T15:59:57.153Z] [uffizi]   past 2024: 12 links seen -> 1 navigation, 0 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-12T15:59:57.153Z] [uffizi]   lookback (listing): kept 13, dropped 5 closed before 2024-07-01, 7 with no closing date, 0 with no opening date
+[2026-09-12T15:59:57.153Z] [uffizi]   reading 13 individual page(s)…
+[2026-09-12T15:59:57.153Z] [uffizi]     page 1 of 13
+[2026-09-12T15:59:58.837Z] 
+SIGTERM received — finishing the current page, then stopping.
+[2026-09-12T15:59:58.837Z] The venue in progress will NOT be written; run --continue to redo it.
+[2026-09-12T15:59:58.924Z]   louvre: STOPPED mid-venue — nothing written, --continue will redo it.
+[2026-09-12T15:59:58.925Z]   ng: STOPPED mid-venue — nothing written, --continue will redo it.
+[2026-09-12T15:59:58.925Z]   uffizi: STOPPED mid-venue — nothing written, --continue will redo it.
+[2026-09-12T15:59:58.928Z]   menil: STOPPED mid-venue — nothing written, --continue will redo it.
+[2026-09-12T15:59:58.931Z] 
+[2026-09-12T15:59:58.931Z] ────────────────────────────────────────────────────────────
+[2026-09-12T15:59:58.931Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T15:59:58.931Z] ────────────────────────────────────────────────────────────
+[2026-09-12T15:59:58.931Z]   LOUVRE: undefined exhibitions | undefined with text
+[2026-09-12T15:59:58.931Z]   NG: undefined exhibitions | undefined with text
+[2026-09-12T15:59:58.931Z]   UFFIZI: undefined exhibitions | undefined with text
+[2026-09-12T15:59:58.931Z]   MENIL: undefined exhibitions | undefined with text
+[2026-09-12T15:59:58.931Z] 
+[2026-09-12T15:59:58.931Z] ────────────────────────────────────────────────────────────
+[2026-09-12T15:59:58.931Z]   COVERAGE — every link accounted for
+[2026-09-12T15:59:58.931Z] ────────────────────────────────────────────────────────────
+[2026-09-12T15:59:58.931Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T15:59:58.931Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T15:59:58.932Z]   menil      current                         12     0       0     0        0        0         12
+[2026-09-12T15:59:58.932Z]   uffizi     current                          4     1       0     0        0        0          3
+[2026-09-12T15:59:58.932Z]   ng         current/upcoming                12     2       0     3        0        0          7
+[2026-09-12T15:59:58.932Z]   louvre     current/upcoming                 8     0       0     1        0        0          7
+[2026-09-12T15:59:58.932Z]   menil      upcoming                         4     0       0     0        0        0          4
+[2026-09-12T15:59:58.932Z]   uffizi     upcoming                         1     0       0     0        0        0          0
+[2026-09-12T15:59:58.932Z]   uffizi     past 2025                        7     1       0     2        0        0          4
+[2026-09-12T15:59:58.932Z]   menil      past                            12     0       0     1        0        0         11
+[2026-09-12T15:59:58.932Z]   menil      current p2                       2     0       0     0        0        0          2
+[2026-09-12T15:59:58.932Z]   ng         past                           179     2       0     0        0        0        177
+[2026-09-12T15:59:58.932Z]   uffizi     past 2024                       12     1       0     0        0        0         11
+[2026-09-12T15:59:58.932Z] 
+[2026-09-12T15:59:58.932Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T15:59:58.932Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T15:59:58.932Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T15:59:58.932Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T15:59:58.932Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T15:59:58.932Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T15:59:58.932Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T15:59:58.932Z] 
+[2026-09-12T15:59:58.932Z] Network bridge: 419 requests served, 624 skipped (image/media/font), 0 failed
+[2026-09-12T15:59:58.932Z] 
+[2026-09-12T15:59:58.932Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-13_015944
+[2026-09-12T15:59:58.932Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-13_015944/sweep.csv  (0 rows — )
+[2026-09-12T15:59:58.932Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-13_015944/log_2026-09-13_015944.txt
+[2026-09-12T15:59:58.932Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-12T15:59:58.932Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T15:59:58.932Z] No de-duplication is applied — see passThrough.
