@@ -1,0 +1,35 @@
+RUN: scraper/output/run_2026-09-12_164309
+ROWS: 79
+titles over 90 chars (blurb welded on): 1
+titles starting with a badge          : 1
+blank titles                          : 0
+
+LONG  : Four Chicago Artists: Theodore Halkin, Evelyn Statsinger, Barbara Rossi, and Christina Ramberg
+BADGE : VIDEO INSTALLATION
+
+--- first 25 titles ---
+  Mary Cassatt: After Impressionism
+  Willem de Kooning Drawing
+  Lee Miller: Fearless
+  VIDEO INSTALLATION
+  Beyond Form: Abstraction at Midcentury
+  Self, Made: Fourteen Modern Artists from the Richard and Ellen Sandor Family Collecti
+  Abigail Lucien: Blood of the Earth
+  Embroidered Traditions from Morocco to Afghanistan
+  Raqib Shaw: Paradise Lost
+  Saint-Porchaire Ceramics: Rediscovered Treasures of the French Renaissance
+  Edgar Calel: Corn Mountain of Life (Ixim Juyu K’aslem)
+  Jitish Kallat: Public Notice 3
+  Jill Mulleady: The Passenger
+  Utamaro: Elements of Beauty
+  Tony Cokes: On Boredom
+  Body and Being in African Art
+  Beatriz González: In Series and Full Color
+  Zurbarán: Divine Light
+  Vilhelm Hammershøi: Pictures from Home
+  Janna Ireland: A Goff House in Los Angeles
+  Japanese Prints from the Collection of Bruce Goff
+  New Affiliates on Goff’s Domestic Matter
+  Carroll Dunham: Drawings, 1974–2024
+  Lucas Samaras: Sitting, Standing, Walking, Looking
+  Barbara Hammer: Sanctus
