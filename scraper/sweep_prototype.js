@@ -1552,6 +1552,22 @@ const BOILERPLATE = [
   'free for members',
   'tickets bookable',
 
+  // FUNDING ACKNOWLEDGEMENTS, found 12 Sep 2026 while checking that the caption
+  // fix had not cost anything. It had not — but clearing the credit line freed
+  // a slot, and what moved up into it at the Menil was the donor list:
+  //   "Major funding for this exhibition is generously provided by Sheila Noeth
+  //    and Ted Dohmen. Additional support comes from Kathy and George Britton…"
+  // The Frick was already shedding these while the Menil was taking them on, so
+  // the treatment was inconsistent as well as wrong. A list of funders never
+  // describes an exhibition, whoever publishes it.
+  'generously provided by',
+  'generously supported by',
+  'major funding',
+  'leadership support',
+  'additional support',
+  'support is provided by',
+  'supported in part by',
+
   // DEF-03, and it surfaced for real on 11 Sep 2026 rather than in theory.
   //
   // Borghese's Louise Bourgeois page has NO curatorial paragraph at all. Its
