@@ -1517,7 +1517,12 @@ const ALWAYS_NOISE = 'cmplz|cookie|consent|gdpr|onetrust|optanon|\\bot-(sdk|acc|
 // be trusted to ignore, but an artist and a work named in a caption read
 // exactly like an artist and a work named in the blurb, so it cannot tell them
 // apart and can state something false about the exhibition with no way to know.
-const NOISE_CONTAINER = 'privacy|banner|newsletter|subscribe|promo|caption|credit|footer|nav|ticket|visit-info|visitor-info|contact|address|opening-hours|practical';
+// `alert` is the Louvre's, 12 Sep 2026. It wraps its visitor notices —
+// "To ensure proper maintenance and collection care, the following rooms may
+// close…" — in div.Alert, on the exhibition's own page and above the blurb. A
+// site notice is never a description of an exhibition, and naming the container
+// beats listing its wordings: the notice text changes weekly.
+const NOISE_CONTAINER = 'privacy|banner|newsletter|subscribe|promo|caption|credit|alert|footer|nav|ticket|visit-info|visitor-info|contact|address|opening-hours|practical';
 
 const BOILERPLATE = [
   'technical storage or access',
