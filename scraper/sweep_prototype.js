@@ -3302,7 +3302,22 @@ const VENUES = {
     // an exhibition at all is hers, not the session's, and a rotating hang of
     // the permanent collection is not a temporary exhibition however it is
     // dated. Drops Utamaro and Body and Being in African Art.
-    excludeLabelled: /COLLECTION (INSTALLATION|ROTATION)/i,
+    // HER RULING, 12 Sep 2026: at this venue she wants ONLY the two types the
+    // Art Institute itself calls an exhibition — EXHIBITION and TICKETED
+    // EXHIBITION. Everything else it badges is a different kind of thing and
+    // should never reach the CSV at all.
+    //
+    // Stripping these badges off the TITLE was the wrong fix and is the mistake
+    // worth remembering: the badge stuck to the name was the visible symptom,
+    // and unglueing it left the row in place looking like an exhibition. She
+    // asked why we had unglued the tag instead of dropping the row.
+    //
+    // Applies to every page. The current listing labels 8 of its 28 links this
+    // way and the archive labels none — because a permanent gallery never
+    // closes, so it cannot appear in a list of past exhibitions. A COLLECTION
+    // ROTATION does end, though, so one can reach the archive later; this rule
+    // catches it there too if artic prints the badge on those cards.
+    excludeLabelled: /\b(?:COLLECTION (?:INSTALLATION|ROTATION)|VIDEO INSTALLATION|SPECIAL LOAN INSTALLATION)\b/i,
   },
 
   // ── VENUES NOTHING CAN REACH ────────────────────────────────────────────────

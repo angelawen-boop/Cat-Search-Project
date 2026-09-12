@@ -924,15 +924,29 @@ test('A-002: COLLECTION ROTATION is a badge too, and is not the same label as IN
   assert.equal(strip('COLLECTION ROTATION Utamaro: Elements of Beauty'),
     'Utamaro: Elements of Beauty');
   assert.equal(strip('COLLECTION INSTALLATION Fabergé'), 'Fabergé');
-  // HER RULING, 12 Sep: BOTH collection labels are permanent displays and are
-  // out. This assertion previously demanded the opposite, on the session's own
-  // reasoning that a rotation publishes a closing date — which was the wrong
-  // call to be making. Whether a thing is an exhibition at all is hers.
-  assert.equal(VENUES.artic.excludeLabelled.test('COLLECTION ROTATION'), true,
-    'a collection rotation is a permanent display and must be excluded');
-  assert.equal(VENUES.artic.excludeLabelled.test('COLLECTION INSTALLATION'), true);
-  assert.equal(VENUES.artic.excludeLabelled.test('VIDEO INSTALLATION'), false,
-    'a video installation is a real temporary show and must NOT be excluded');
+  // HER RULING, 12 Sep, and it has been through TWO wrong versions before this
+  // one — both times a session deciding something that is hers. She wants ONLY
+  // the two types the Art Institute itself calls an exhibition; every other
+  // badge is a different kind of thing and the row should never reach the CSV.
+  //
+  // The second wrong version is the instructive one: VIDEO INSTALLATION was
+  // merely STRIPPED OFF THE TITLE, because the badge stuck to the name was the
+  // visible symptom. Unglueing it left the row in place looking like an
+  // exhibition. Her words: "I don't know why we simply unglued the tags,
+  // instead of filtering out those exhibitions completely."
+  for (const out of ['COLLECTION ROTATION', 'COLLECTION INSTALLATION',
+                     'VIDEO INSTALLATION', 'SPECIAL LOAN INSTALLATION']) {
+    assert.equal(VENUES.artic.excludeLabelled.test(out), true, out + ' must be excluded');
+  }
+  // The two she keeps, and they must survive alongside the status and price
+  // badges that stack in front of the name.
+  for (const keep of ['EXHIBITION NOW OPEN Lee Miller: Fearless',
+                      'TICKETED EXHIBITION NOW OPEN Mary Cassatt: After Impressionism',
+                      'EXHIBITION FREE Japanese Prints']) {
+    assert.equal(VENUES.artic.excludeLabelled.test(keep), false, keep);
+  }
+  // And the title that made TITLE_NOISE dangerous in the first place.
+  assert.equal(VENUES.artic.excludeLabelled.test('EXHIBITION How to Make an Exhibition'), false);
 });
 
 test('A-003: the longest alternative must come first, or a badge is stranded', () => {
