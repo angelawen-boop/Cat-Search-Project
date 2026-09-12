@@ -134,7 +134,7 @@ Until it is, check it against the newest run directory before trusting it.
 | Capodimonte | `capo` | 18 | **partly — see below** | yes, fixes applied | **NOT count-verified and never will be**, her decision |
 | Uffizi | `uffizi` | 13 | **yes — 12 Sep** | yes | headlines kept as titles and undated rows kept, **both her rulings** |
 | Brera | `brera` | 8 | **yes — 12 Sep** | yes | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
-| Galleria Borghese | `borghese` | 8 | **NO — never substantively reviewed** | fixes applied from her reading of the sent CSV | 7 exhibitions + 1 marker row |
+| Galleria Borghese | `borghese` | 8 | **yes — 12 Sep, from the CSV; no count given** | yes | 7 exhibitions + 1 marker row. See note below |
 | MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | n/a | n/a | refused; marker rows only |
 
 **Read the two middle columns separately.** "Her substantive review" means she went
@@ -143,10 +143,14 @@ through that venue against the live site herself and her findings are recorded.
 A venue can have the first without the second — that is exactly the state `uffizi`
 and `brera` are in, and the state all thirteen were in at the start of 12 Sep.
 
-**All thirteen venues from her 12 Sep review are fixed and verified.** The only
-venue left is `borghese`, which she has never substantively reviewed — two defects
-she spotted in the CSV sent to her are fixed, but the venue has not been checked
-against the live site the way the other fifteen have.
+**All thirteen venues from her 12 Sep review are fixed and verified, and so is
+`borghese`.** She reviewed its CSV on 12 Sep and found two defects — a missed
+extension and a summary that was empty on a page full of text — both fixed.
+
+**The one thing `borghese` lacks is her COUNT.** Every other venue has a number she
+worked out from the live site, which is the only check that can say "your number is
+wrong" rather than "your rows look tidy". Borghese returns 7 exhibitions and nothing
+independent confirms that is all of them. Not a defect, a gap in verification.
 
 Her 12 Sep review and every fix made against it are written up in
 **`docs/review-2026-09-12.md`**, venue by venue, with what was wrong, what
