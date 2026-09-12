@@ -2904,7 +2904,20 @@ const VENUES = {
     // carries 12.
     pages: [
       { path: '/exhibitions',      ctx: 'current/upcoming' },
-      { path: '/exhibitions/past', ctx: 'past' },
+      // ITS PAST ARCHIVE PAGINATES, and only page one was ever read. Found
+      // 13 Sep by the standing unwired-pagination check — the page publishes
+      // rel="next" outright — and confirmed with probe_pagination.js: page two
+      // holds 10 exhibitions this venue has never contributed.
+      //
+      // `from: 1` because THIS SITE IS 0-INDEXED: the bare address is page 0
+      // and its own next link points at ?page=1. The Menil is 1-indexed and
+      // starts at 2. Only the site can say which, so it is read off that next
+      // link rather than assumed.
+      //
+      // Her count of 10 was of page one, which is why it matched and why
+      // nothing caught this: a first page that reads perfectly looks identical
+      // to a complete archive.
+      { path: '/exhibitions/past', ctx: 'past', paginate: { param: 'page', from: 1 } },
     ],
     selector: 'a[href*="/exhibitions/"]',
     // /exhibitions/virtual is a CATEGORY page — two exhibitions rebuilt in 3D,

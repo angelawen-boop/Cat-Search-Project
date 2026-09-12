@@ -819,6 +819,17 @@ test('P-006: a page with no paginate option is left alone', () => {
   assert.equal(queue.length, 1);
 });
 
+test('P-014: the Frick follows its past archive, and the index base is the SITE\'s', () => {
+  // Its past page publishes rel="next" -> ?page=1, so the bare address is page
+  // ZERO here. The Menil's bare past page is page 1 and its next is ?page=2.
+  // Two venues, two answers, and only the site can give either — which is why
+  // `from` is read off the venue's own next link and never assumed.
+  const frick = VENUES.frick.pages.find(p => p.ctx === 'past');
+  assert.deepEqual(frick.paginate, { param: 'page', from: 1 }, 'the Frick is 0-indexed');
+  const menil = VENUES.menil.pages.find(p => p.ctx === 'past');
+  assert.deepEqual(menil.paginate, { param: 'page', from: 2 }, 'the Menil is 1-indexed');
+});
+
 test('P-013: a recipe-driven filter is not mistaken for a second page', () => {
   // artic's archive is one address filtered by ?year=, and its pages carry
   // decade jump-links — year=2020, 2010, 2000, 1990. To a check looking for
