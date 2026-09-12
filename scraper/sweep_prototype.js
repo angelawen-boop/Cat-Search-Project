@@ -2853,13 +2853,22 @@ const VENUES = {
     selector: 'a[href*="/exhibitions-and-events/exhibitions/"]',
     isNav: href => /\/exhibitions-and-events\/exhibitions\/?$/.test(href),
     title: { heading: true },
-    // OPEN — its year pages may be truncated and this could not be settled.
-    // Each carries a "load more" control (/component/load-more/expositions?
-    // archive=true&date=2025). Fetching that address returns 404, and clicking
-    // the control leaves the count at 6 for 2025. So either the Louvre really
-    // published six past exhibitions that year, or there are more behind a
-    // loader that neither route reaches. The stop rule applies: recorded rather
-    // than attempted a third way.
+    // SETTLED 12 Sep 2026, and the previous note here was wrong.
+    //
+    // It said the "load more" control did nothing when clicked. It had never
+    // been clicked: the Louvre's cookie popin sits over the page and swallowed
+    // it. Dismiss the banner first — dismissConsent() now does that on every
+    // listing page at every venue — and one press takes the 2025 archive from
+    // 7 links to 11, which is her count of 10 plus one repeat. 2024 holds only
+    // 4 and offers no control at all, which matches her reading of the site.
+    //
+    // CLICKING IS RIGHT HERE, and that is not in tension with the Met rule. The
+    // test is whether the address changes: the Met's year menu changes it, so
+    // each year was simply another page and clicking raced the navigation. This
+    // loader changes nothing in the address bar and has no address of its own
+    // that answers — /component/load-more/expositions 404s on both www and the
+    // API host — so there is no page to fetch instead.
+    loadMore: 'a.LoadMoreList_button',
   },
 
   capo: {
@@ -3280,7 +3289,28 @@ async function scrapeVenue(page, code) {
     // cost far more than it could return. A listing is a handful of pages per
     // venue. It also stops as soon as the page stops growing, so a site that
     // does not lazy load pays one step rather than twelve.
+    // THE BANNER COMES DOWN FIRST. A consent popin that covers the page makes
+    // every later interaction a lie — see dismissConsent(), and the Louvre
+    // loader that was recorded as broken because the click never landed.
+    const consent = await dismissConsent(page);
+    if (consent) log(`  consent banner dismissed ("${consent}")`);
+
     await autoScroll(page);
+
+    // SOME LISTINGS HIDE THE REST BEHIND A BUTTON rather than behind an
+    // address. Only where the venue names the control; see clickLoadMore().
+    if (v.loadMore) {
+      const lm = await clickLoadMore(page, v.loadMore, v.selector);
+      if (lm.clicks) log(`  "load more" pressed ${lm.clicks}x on ${pg.ctx}`);
+      if (lm.hitCap) {
+        log(`  LOAD MORE RUNAWAY on ${pg.ctx}: still adding after 30 presses`);
+        rows.push({
+          venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
+          summary: '', url,
+          notes: `The venue's "${pg.ctx}" listing was still revealing more exhibitions after 30 presses of its "load more" button, so reading it was stopped. Older exhibitions may be missing. Marker row, not an exhibition.`,
+        });
+      }
+    }
 
     const bodyText = await page.innerText('body').catch(() => '');
     if (bodyText.length < MIN_BODY_CHARS) {
@@ -3425,6 +3455,86 @@ async function scrapeVenue(page, code) {
  * its cards on scroll has the chance to build them. Stops early once the page
  * stops getting taller.
  */
+/**
+ * Get the consent banner out of the way before touching the page.
+ *
+ * THE LOUVRE'S "SEE MORE EXHIBITIONS" CONTROL WAS WRITTEN OFF AS BROKEN because
+ * clicking it changed nothing — and it was never actually clicked. Its cookie
+ * popin sits over the page and swallowed the click. Dismiss the popin first and
+ * one click takes its 2025 archive from 7 links to 11, which is her count.
+ *
+ * That mistake is worth naming: "I clicked it and nothing happened" is only
+ * evidence if the click reached the thing. The recipe carried the wrong
+ * conclusion as a fact for two days.
+ *
+ * SCOPED TO A CONSENT CONTAINER, never the whole page. The button is only
+ * pressed if it sits inside something ALWAYS_NOISE already recognises as a
+ * consent manager, so this cannot wander off and press "Book tickets".
+ * Refusal is preferred where a site offers it, and accept is the fallback for
+ * banners that only offer that.
+ */
+async function dismissConsent(page, alwaysRe = ALWAYS_NOISE) {
+  try {
+    return await page.evaluate((reSrc) => {
+      const RE = new RegExp(reSrc, 'i');
+      const inConsent = (el) => {
+        for (let n = el; n && n.tagName !== 'BODY' && n.tagName !== 'HTML'; n = n.parentElement) {
+          const cls = typeof n.className === 'string' ? n.className : '';
+          if (RE.test(cls + ' ' + (n.id || ''))) return true;
+        }
+        return false;
+      };
+      // Refuse where refusing is offered; otherwise accept. Either dismisses it.
+      const words = [/reject|refuse|decline|continue without|only necessary|technical cook/i,
+                     /accept|agree|tout accepter|allow/i];
+      for (const w of words) {
+        for (const el of document.querySelectorAll('button, a, [role="button"]')) {
+          const t = (el.innerText || '').trim();
+          if (!t || t.length > 80 || !w.test(t) || !inConsent(el)) continue;
+          el.click();
+          return t.slice(0, 60);
+        }
+      }
+      return null;
+    }, alwaysRe);
+  } catch { return null; }
+}
+
+/**
+ * Press a listing's "load more" control until it runs out.
+ *
+ * THE ADDRESS DOES NOT CHANGE, which is precisely why clicking is right here.
+ * The standing rule is to check the address bar first: the Met's year menu
+ * changes it, so each year is simply another page and clicking was a mistake.
+ * The Louvre's loader changes nothing in the bar and has no address of its own
+ * that answers — /component/load-more/expositions 404s on both the site and its
+ * API host — so there is no page to fetch instead and the control IS the route.
+ *
+ * A venue names its own control in its recipe. There is no general rule for
+ * what a "load more" button looks like, and guessing from button text across
+ * five languages is exactly the sort of clever rule that has cost this project
+ * before.
+ *
+ * Stops when the control goes away, when a press adds no links, or at the cap —
+ * and the cap leaves a marker row, because reaching it means rows are missing.
+ */
+async function clickLoadMore(page, selector, countSelector, maxClicks = 30) {
+  let clicks = 0;
+  try {
+    for (; clicks < maxClicks; clicks++) {
+      const before = await page.$$eval(countSelector, as => new Set(as.map(a => a.getAttribute('href'))).size).catch(() => 0);
+      const el = await page.$(selector);
+      if (!el) break;
+      await el.scrollIntoViewIfNeeded().catch(() => {});
+      await el.click().catch(() => {});
+      await page.waitForTimeout(2500);
+      const after = await page.$$eval(countSelector, as => new Set(as.map(a => a.getAttribute('href'))).size).catch(() => 0);
+      if (after <= before) { clicks++; break; }
+    }
+  } catch (e) { rethrowIfAborted(e); }
+  return { clicks, hitCap: clicks >= maxClicks };
+}
+
 async function autoScroll(page, maxSteps = 12) {
   try {
     let last = 0, settled = 0;

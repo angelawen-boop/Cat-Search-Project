@@ -1,0 +1,52 @@
+[2026-09-12T11:00:18.479Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T11:00:18.479Z] Lookback floor: 2024-07-01
+[2026-09-12T11:00:18.479Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_210018
+[2026-09-12T11:00:18.479Z] Venues this run: capo
+[2026-09-12T11:00:18.479Z] Proxy: http://127.0.0.1:33723
+[2026-09-12T11:00:18.480Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-12T11:00:18.609Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-12T11:00:18.702Z] [capo] 
+[2026-09-12T11:00:18.702Z] [capo] ────────────────────────────────────────────────────────────
+[2026-09-12T11:00:18.702Z] [capo]   CAPO — Capodimonte, Naples
+[2026-09-12T11:00:18.702Z] [capo] ────────────────────────────────────────────────────────────
+[2026-09-12T11:00:18.702Z] [capo]   Fetching all (current/upcoming/past): https://capodimonte.cultura.gov.it/mostre/
+[2026-09-12T11:00:27.391Z] [capo]   all (current/upcoming/past): 50 links seen -> 0 navigation, 0 already-seen URL -> 50 collected (2 of them with no readable title)
+[2026-09-12T11:00:27.392Z] [capo]   lookback (listing): kept 44, dropped 6 closed before 2024-07-01, 44 with no closing date, 0 with no opening date
+[2026-09-12T11:00:27.392Z] [capo]   reading 44 individual page(s)…
+[2026-09-12T11:00:27.392Z] [capo]     page 1 of 44
+[2026-09-12T11:01:13.309Z] [capo]     page 10 of 44
+[2026-09-12T11:02:02.933Z] [capo]     page 20 of 44
+[2026-09-12T11:02:57.231Z] [capo]     page 30 of 44
+[2026-09-12T11:03:47.859Z] [capo]     page 40 of 44
+[2026-09-12T11:04:12.500Z] [capo]   Individual pages: 44 got text, 0 no curatorial text, 0 failed
+[2026-09-12T11:04:12.500Z] [capo]   lookback (final): kept 18, dropped 26 closed before 2024-07-01, 4 with no closing date, 0 with no opening date
+[2026-09-12T11:04:12.502Z] [capo]   → 18 exhibitions, 18 with curatorial text → capo.csv
+[2026-09-12T11:04:12.622Z] 
+[2026-09-12T11:04:12.622Z] ────────────────────────────────────────────────────────────
+[2026-09-12T11:04:12.622Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T11:04:12.622Z] ────────────────────────────────────────────────────────────
+[2026-09-12T11:04:12.622Z]   CAPO: 18 exhibitions | 18 with text
+[2026-09-12T11:04:12.622Z] 
+[2026-09-12T11:04:12.622Z] ────────────────────────────────────────────────────────────
+[2026-09-12T11:04:12.622Z]   COVERAGE — every link accounted for
+[2026-09-12T11:04:12.622Z] ────────────────────────────────────────────────────────────
+[2026-09-12T11:04:12.622Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T11:04:12.622Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T11:04:12.622Z]   capo       all (current/upcoming/past)     50     0       0     0        0        2         50
+[2026-09-12T11:04:12.622Z] 
+[2026-09-12T11:04:12.622Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T11:04:12.622Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T11:04:12.622Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T11:04:12.622Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T11:04:12.622Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T11:04:12.622Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T11:04:12.622Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T11:04:12.622Z] 
+[2026-09-12T11:04:12.622Z] Network bridge: 1395 requests served, 5174 skipped (image/media/font), 17 failed
+[2026-09-12T11:04:12.622Z] 
+[2026-09-12T11:04:12.622Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_210018
+[2026-09-12T11:04:12.622Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_210018/sweep.csv  (18 rows — capo:18)
+[2026-09-12T11:04:12.622Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_210018/log_2026-09-12_210018.txt
+[2026-09-12T11:04:12.622Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, uffizi, brera, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-12T11:04:12.622Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T11:04:12.622Z] No de-duplication is applied — see passThrough.
