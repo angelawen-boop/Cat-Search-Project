@@ -148,6 +148,70 @@ function runStamp(d = new Date()) {
   return `${p.year}-${p.month}-${p.day}_${p.hour}${p.minute}${p.second}`;
 }
 
+/**
+ * Move old run directories into output/archive/ so the live folder stays small.
+ *
+ * RUN FOLDERS ACCUMULATE AND THE NEWEST ONE IS LOAD-BEARING. `--continue`
+ * resumes whichever is newest by name, and diagnosing one venue means running
+ * real sweeps, each leaving a folder. By 13 Sep there were 135, the newest
+ * three being one- and two-venue probes — so `--continue` would have tried to
+ * finish a Frick-only folder by sweeping twenty venues into it.
+ *
+ * MOVED, NEVER DELETED. Archived runs stay on disk and in git; the filter in
+ * newestRunDir() only looks one level down for `run_*`, so they simply stop
+ * being visible. Moving one back restores it exactly.
+ *
+ * THREE THINGS ARE NEVER ARCHIVED, and each is a rule rather than a judgement:
+ *
+ *  - the newest KEEP_RECENT runs, because recent work is what gets referred to;
+ *  - any run holding a compressed CSV, because compression's memory is the most
+ *    recent previously-compressed run and archiving those silently recompresses
+ *    every row from scratch — which is exactly what happened on the first
+ *    manual tidy-up, and the reuse half is what makes that step cheap;
+ *  - any run with FULL_SWEEP_VENUES or more venue files, because a full sweep is
+ *    evidence and is never litter.
+ *
+ * It runs before the sweep starts and says what it moved. Silent housekeeping
+ * that relocates her files would be worse than the litter.
+ */
+const KEEP_RECENT = 10;
+const FULL_SWEEP_VENUES = 16;
+
+// What the tidy did, held until logging exists. It has to run BEFORE the run
+// directory is chosen — that is the whole point, since `--continue` picks the
+// newest — and at that moment there is no log file to write to yet.
+const TIDY_NOTES = [];
+
+function archiveOldRuns() {
+  try {
+    const dirs = fs.readdirSync(OUT_DIR)
+      .filter(n => /^run_/.test(n) && fs.statSync(path.join(OUT_DIR, n)).isDirectory())
+      .sort();
+    if (dirs.length <= KEEP_RECENT) return;
+
+    const recent = new Set(dirs.slice(-KEEP_RECENT));
+    const moved = [];
+    for (const n of dirs) {
+      if (recent.has(n)) continue;
+      const dir = path.join(OUT_DIR, n);
+      const files = fs.readdirSync(dir);
+      if (files.includes('sweep_compressed.csv')) continue;
+      if (files.filter(f => f.endsWith('.csv') && f !== 'sweep.csv').length >= FULL_SWEEP_VENUES) continue;
+      const dest = path.join(OUT_DIR, 'archive', n);
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.renameSync(dir, dest);
+      moved.push(n);
+    }
+    if (moved.length) {
+      TIDY_NOTES.push(`Tidied ${moved.length} old run director${moved.length === 1 ? 'y' : 'ies'} into output/archive/ — moved, not deleted.`);
+      TIDY_NOTES.push(`  ${moved[0]} .. ${moved[moved.length - 1]}`);
+    }
+  } catch (e) {
+    // Housekeeping must never stop a sweep.
+    TIDY_NOTES.push(`Could not tidy old runs (${e.message.slice(0, 80)}) — carrying on.`);
+  }
+}
+
 function newestRunDir() {
   try {
     const dirs = fs.readdirSync(OUT_DIR)
@@ -158,6 +222,9 @@ function newestRunDir() {
 }
 
 // --continue resumes the newest run directory; anything else starts a new one.
+// TIDY FIRST, then choose the directory — `--continue` resumes the newest, so
+// the newest must not be a stale one-venue probe. See archiveOldRuns().
+archiveOldRuns();
 const RUN_DIR = (CONTINUE && newestRunDir()) || path.join(OUT_DIR, `run_${runStamp()}`);
 const CSV_PATH = path.join(RUN_DIR, 'sweep.csv');
 const LOG_PATH = path.join(RUN_DIR, `log_${runStamp()}.txt`);
@@ -4515,6 +4582,10 @@ function resolveChromium() {
 let STOPPING = false;
 
 async function main() {
+  // Said here rather than where it happened: the tidy runs before the run
+  // directory exists, so there was nowhere to write it at the time.
+  for (const line of TIDY_NOTES) log(line);
+
   const RUN_VENUES = venuesForThisRun();
 
   // An interrupted venue must leave NO file behind, so that a file on disk
