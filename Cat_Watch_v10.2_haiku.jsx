@@ -32,6 +32,20 @@ const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 // ---- v9 pro forma helpers (pure) ----
 const KNOWN_VENUES = new Set(MUSEUMS.map(m=>m.id));
 function isValidYMD(s){ if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false; const d=new Date(s+"T00:00:00"); return !isNaN(d.getTime()); }
+// SAME ADDRESS MEANS SAME EXHIBITION — the one identity test with no
+// judgement in it, and the scraper's own settled rule. Scheme and host are
+// lowercased because hosts are case-insensitive by spec; THE PATH IS NOT
+// TOUCHED, because folding it merged two exhibitions that differed only in
+// capitalisation. A trailing slash and a #fragment are not part of identity.
+function normalizeUrlKey(u){
+  try{
+    const x=new URL(String(u||"").trim());
+    x.hash="";
+    const path=x.pathname.replace(/\/+$/,"");
+    return x.protocol.toLowerCase()+"//"+x.host.toLowerCase()+path+x.search;
+  }catch{ return ""; }
+}
+
 function urlLooksValid(u){ if(!u)return false; try{ const url=new URL(String(u).trim()); if(!/^https?:$/.test(url.protocol))return false; if(!/^[a-z0-9.-]+$/i.test(url.hostname))return false; if(!url.hostname.includes("."))return false; return true; }catch{ return false; } }
 function csvParse(text){
   const out=[]; let i=0,field="",row=[],inQ=false; text=String(text).replace(/\r\n?/g,"\n");
@@ -308,6 +322,8 @@ export default function App(){
   const refreshFileRef=useRef(null);
   const searchRef=useRef(null);
   const[proposals,setProposals]=useState(null); // null = not in refresh review; array = reviewing
+  // Listing pages the sweep could not read. NOT proposals — see isMarkerRow().
+  const[coverage,setCoverage]=useState([]);
   const[decisions,setDecisions]=useState({}); // proposal index -> "accept"|"reject"|"addnew"
   const[refreshDone,setRefreshDone]=useState(null); // {added,filled,changed} after applying
   const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
@@ -417,6 +433,74 @@ export default function App(){
   // and produces a list of proposals to review one at a time. Nothing is applied
   // until "Go ahead and update the ledger". Anything the app can't use is not
   // dropped silently — it becomes a plain note on the proposal card.
+  // The sentence the scraper stamps on every marker row, verbatim. A marker
+  // reports a LISTING PAGE it could not read — it is not an exhibition and was
+  // never a proposal. Until now the app had no idea, so each one became an
+  // ordinary Add card titled "[past page]"; rejecting is not remembered, so the
+  // same junk returned on every future sweep forever.
+  //
+  // Matched on the NOTES SENTINEL rather than the bracketed title. The scraper
+  // writes this sentence at every marker site, so this is the producer saying
+  // so — the strongest rung. A bracketed title is a guess about formatting, and
+  // a real exhibition could carry brackets.
+  const MARKER_SENTINEL = "Marker row, not an exhibition.";
+  const isMarkerRow = note => String(note||"").trim().endsWith(MARKER_SENTINEL);
+
+  // Which of two values to offer first when a stitched file disagrees with
+  // itself. Her ruling: the FULLER one, clearly marked as a guess, with both
+  // shown and one click to switch. Never silent, never irreversible.
+  const fuller = (a,b) => (String(b||"").trim().length > String(a||"").trim().length) ? b : a;
+
+  /**
+   * Fold rows that are the same exhibition BEFORE anything is compared to the
+   * ledger.
+   *
+   * One stitched file now carries every machine's output, so a venue swept in
+   * two places appears twice — one copy with dates and no summary because its
+   * detail page timed out, the other the reverse. analyzeProForma compares each
+   * row against the LEDGER only, never against the row beside it, so both would
+   * become separate Add cards for one exhibition.
+   *
+   * KEYED ON VENUE + URL, AND NOTHING ELSE. Same address is the same
+   * exhibition, always, with no interpretation — the scraper's own rule.
+   *
+   * ROWS WITH NO URL ARE NEVER FOLDED. The only other key is the title, and
+   * sameExhibition() matches on normalised title plus date overlap and returns
+   * true whenever EITHER side lacks dates. That is fine against the ledger,
+   * where she sees every proposal before it lands; here it would fire before
+   * she sees anything, and a title collision would silently fuse two different
+   * shows. That is the judgement that destroyed 29 National Gallery
+   * exhibitions. An unfolded duplicate costs one extra card she can see.
+   *
+   * Nothing is invented and nothing is dropped: a group yields exactly one row,
+   * built only from values that were in the file, and a genuine disagreement is
+   * carried forward as a CHOICE rather than resolved here.
+   */
+  function foldDuplicateRows(raws){
+    const byKey=new Map(), out=[];
+    for(const row of raws){
+      const key=row.url?(row.venueCode+"|"+normalizeUrlKey(row.url)):"";
+      if(!key){ out.push(row); continue; }
+      const seen=byKey.get(key);
+      if(!seen){ byKey.set(key,row); out.push(row); continue; }
+      seen.mergedFrom=(seen.mergedFrom||[seen.line]).concat(row.line);
+      for(const f of ["title","startDate","endDate","summary"]){
+        const a=seen[f], b=row[f];
+        if(!b) continue;                       // nothing to add
+        if(!a){ seen[f]=b; continue; }         // fill a gap — no judgement at all
+        if(a===b) continue;                    // agreement
+        // A REAL DISAGREEMENT. Keep both; the card offers the fuller one first.
+        seen.conflicts=seen.conflicts||{};
+        if(!seen.conflicts[f]) seen.conflicts[f]=[a];
+        if(!seen.conflicts[f].includes(b)) seen.conflicts[f].push(b);
+        seen[f]=fuller(a,b);
+      }
+      // Notes are additive: two runs can each explain something different.
+      for(const n of row.rowNotes||[]) if(!(seen.rowNotes||[]).includes(n)) (seen.rowNotes=seen.rowNotes||[]).push(n);
+    }
+    return out;
+  }
+
   function analyzeProForma(text){
     const table=csvParse(text);
     if(!table.length) return {error:"That file was empty."};
@@ -425,10 +509,27 @@ export default function App(){
     if(idx("venue_code")<0||idx("title")<0) return {error:"That file doesn't look like a pro forma (no venue_code / title columns)."};
     const get=(r,n)=>{const j=idx(n);return j>=0?String(r[j]||"").trim():"";};
     const props=[];
+    const coverage=[];   // marker rows: listing pages that could not be read
+    const parsed=[];
+
+    // ── PASS ONE: read the file. No comparison to anything yet. ──────────────
+    // Split out because one stitched file now holds every machine's output, so
+    // rows have to be reconciled against EACH OTHER before the ledger is
+    // consulted at all.
     for(let k=1;k<table.length;k++){
       const r=table[k], line=k+1;
       const vc=get(r,"venue_code").toLowerCase();
       const title=get(r,"title");
+      const rowNote=get(r,"notes");
+
+      // A LISTING PAGE THAT COULD NOT BE READ IS NOT A PROPOSAL. It goes to the
+      // coverage panel, where "we tried and were refused" is what it actually
+      // says — rather than becoming an exhibition she rejects on every sweep.
+      if(isMarkerRow(rowNote)){
+        coverage.push({venueId:KNOWN_VENUES.has(vc)?vc:null,venueShort:KNOWN_VENUES.has(vc)?MU[vc].short:(vc||"(blank)"),what:title||"(a listing page)",why:rowNote,url:get(r,"url"),line});
+        continue;
+      }
+
       const notes=[];
       if(!vc||!KNOWN_VENUES.has(vc)){ props.push({type:"problem",venueId:null,venueShort:vc||"(blank)",title:title||"(no title)",problem:"Venue code "+(vc?("\u201c"+vc+"\u201d"):"(blank)")+" isn't a known venue \u2014 this row can't be filed.",notes:[],line}); continue; }
       if(!title){ props.push({type:"problem",venueId:vc,venueShort:MU[vc].short,title:"(no title)",problem:"This row has no exhibition title \u2014 it can't be added.",notes:[],line}); continue; }
@@ -436,27 +537,52 @@ export default function App(){
       if(sd&&!isValidYMD(sd)){notes.push("Start date \u201c"+sd+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");sd="";}
       if(ed&&!isValidYMD(ed)){notes.push("End date \u201c"+ed+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");ed="";}
       if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
-      const summary=get(r,"summary"), rowNote=get(r,"notes");
+      parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,
+                   rowNotes:rowNote?["Sweeper note: "+rowNote]:[],parseNotes:notes,line});
+    }
+
+    // ── PASS TWO: fold rows that are the same exhibition. ────────────────────
+    const folded=foldDuplicateRows(parsed);
+
+    // ── PASS THREE: compare each surviving row to the ledger, as before. ─────
+    for(const p of folded){
+      const vc=p.venueCode, title=p.title, sd=p.startDate, ed=p.endDate, summary=p.summary, url=p.url;
+      const notes=p.parseNotes.slice();
       if(!sd)notes.push("No start date.");
       if(!ed)notes.push("No end date.");
       if(!summary)notes.push("No description.");
       if(!url)notes.push("No exhibition link.");
-      if(rowNote)notes.push("Sweeper note: "+rowNote);
+      for(const n of p.rowNotes) notes.push(n);
+      // SAY WHEN ROWS WERE FOLDED. She is being shown one card for what was
+      // several lines in the file, and that has to be visible or the count on
+      // her approval pile will not match the file she fed in.
+      if(p.mergedFrom) notes.push("Rows "+p.mergedFrom.join(", ")+" of the file describe this same exhibition \u2014 combined into one.");
+
       const cand={museumId:vc,title,startDate:sd||null,endDate:ed||null,summary,exUrl:url};
       const exact=url?rows.find(x=>x.museumId===vc&&x.exUrl&&x.exUrl===url):null;
       const match=exact||rows.find(x=>sameExhibition(x,cand));
-      if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line}); continue; }
+
+      // WHERE THE FILE DISAGREED WITH ITSELF, offer the choice on the card.
+      // The fuller value is ticked, and marked as a guess; both are shown.
+      const choices=p.conflicts?Object.keys(p.conflicts).map(f=>({
+        field:f,
+        label:{title:"Title",startDate:"Start date",endDate:"End date",summary:"Description"}[f]||f,
+        options:p.conflicts[f],
+        picked:p[f],
+      })):null;
+
+      if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line:p.line,choices}); continue; }
       const upd=[];
       const consider=(field,label,oldV,newV)=>{ const o=(oldV==null?"":String(oldV)), n=(newV==null?"":String(newV)); if(!n)return; if(!o)upd.push({field,label,oldVal:"",newVal:n,kind:"fill"}); else if(o!==n)upd.push({field,label,oldVal:o,newVal:n,kind:"change"}); };
       consider("startDate","Start date",match.startDate,sd);
       consider("endDate","End date",match.endDate,ed);
       consider("summary","Description",match.summary,summary);
       consider("exUrl","Exhibition link",match.exUrl,url);
-      if(!upd.length) continue; // identical — nothing to propose
+      if(!upd.length&&!choices) continue; // identical — nothing to propose
       const hasChange=upd.some(u=>u.kind==="change");
-      props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].short,title,cand,matchId:match.id,upd,notes,line});
+      props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].short,title,cand,matchId:match.id,upd,notes,line:p.line,choices});
     }
-    return {props};
+    return {props,coverage};
   }
 
   function handleRefreshFile(e){
@@ -465,8 +591,12 @@ export default function App(){
     reader.onload=()=>{
       const res=analyzeProForma(String(reader.result||""));
       if(res.error){setError(res.error);return;}
-      if(!res.props.length){setError("Read the refresh file, but nothing new to propose \u2014 your ledger already matches it.");return;}
-      setError(null); setProposals(res.props); setDecisions({});
+      if(!res.props.length){
+        setCoverage(res.coverage||[]);
+        setError("Read the refresh file, but nothing new to propose \u2014 your ledger already matches it."+((res.coverage||[]).length?" ("+res.coverage.length+" listing page"+(res.coverage.length===1?"":"s")+" couldn\u2019t be read \u2014 see below.)":""));
+        return;
+      }
+      setError(null); setProposals(res.props); setCoverage(res.coverage||[]); setDecisions({});
     };
     reader.readAsText(file); e.target.value="";
   }
@@ -474,12 +604,31 @@ export default function App(){
   // Decision model. Each card holds: {mode} for add/problem ("accept"/"reject"),
   // or {fields:{j:"accept"|"reject"}, mode:"addnew"?} for fill/change.
   const setCardMode=(i,v)=>setDecisions(d=>{const cur=d[i]||{};return{...d,[i]:{...cur,mode:cur.mode===v?undefined:v}};});
+  // Which value she picked where the file disagreed with itself. Per card, per
+  // field; absent means "still on the pre-picked fuller one".
+  const setChoice=(i,field,val)=>setDecisions(d=>{const cur=d[i]||{};return{...d,[i]:{...cur,choices:{...(cur.choices||{}),[field]:val}}};});
   const setFieldDec=(i,j,v)=>setDecisions(d=>{const cur=d[i]||{};const f={...(cur.fields||{})};f[j]=f[j]===v?undefined:v;return{...d,[i]:{...cur,fields:f,mode:undefined}};});
 
   function makeLedgerRow(c,now){
     const base=c.museumId+"-"+normalizeTitle(c.title).replace(/[^a-z0-9]+/g,"").slice(0,50);
     return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,shopUrl:null,shopState:null,addedAt:now,editedAt:null};
   }
+
+  // Apply whatever she picked where the stitched file disagreed with itself.
+  // Untouched fields keep the pre-selected fuller value, which is what the card
+  // was already showing — so doing nothing gives her exactly what she saw.
+  const withChoices=(cand,dec)=>{
+    const c=(dec||{}).choices; if(!c)return cand;
+    const out={...cand};
+    for(const f of Object.keys(c)){
+      const v=c[f];
+      if(f==="title")out.title=v;
+      else if(f==="startDate")out.startDate=v||null;
+      else if(f==="endDate")out.endDate=v||null;
+      else if(f==="summary")out.summary=v;
+    }
+    return out;
+  };
 
   function applyRefresh(){
     const byId=new Map(rows.map(r=>[r.id,r]));
@@ -491,11 +640,11 @@ export default function App(){
       if(p.type==="problem")return;
       if(p.type==="add"){
         if(dec.mode!=="accept")return;
-        const nrow=makeLedgerRow(p.cand,now); let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; return;
+        const nrow=makeLedgerRow(withChoices(p.cand,dec),now); let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; return;
       }
       // fill / change
       if(dec.mode==="addnew"){
-        const nrow=makeLedgerRow(p.cand,now); let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; return;
+        const nrow=makeLedgerRow(withChoices(p.cand,dec),now); let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; return;
       }
       const m=byId.get(p.matchId); if(!m)return; const patch={...m}; let hit=false;
       p.upd.forEach((u,j)=>{ if((dec.fields||{})[j]==="accept"){ patch[u.field]=u.newVal; if(u.kind==="fill")filled++; else changed++; hit=true; } });
@@ -508,7 +657,7 @@ export default function App(){
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqNoCat(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
-  function cancelRefresh(){ setProposals(null); setDecisions({}); }
+  function cancelRefresh(){ setProposals(null); setDecisions({}); setCoverage([]); }
   const pickSort=k=>{setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
   async function refreshVenues(ids){
@@ -759,6 +908,29 @@ export default function App(){
                   <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject","#8A6D3B")}>Reject</button>
                 </div>
               );})}
+        </div>}
+
+        {/* THE FILE DISAGREED WITH ITSELF about this exhibition — two rows, same
+            address, different values. Nothing is resolved silently: both are
+            shown, the fuller one is ticked as a starting point, one tap
+            switches. Her ruling, 13 Sep. */}
+        {p.choices&&p.choices.length>0&&<div style={{marginTop:7,paddingTop:6,borderTop:"1px dotted "+C.rule}}>
+          <div style={{fontSize:10.5,color:C.soft,lineHeight:1.5,marginBottom:5}}>The sweep file gave two different answers here. The longer one is picked for you {"\u2014"} change it if it{"\u2019"}s wrong.</div>
+          {p.choices.map((ch,j)=>(
+            <div key={j} style={{marginBottom:6}}>
+              <div style={{fontSize:11,fontWeight:700,color:C.ink,marginBottom:3}}>{ch.label}</div>
+              {ch.options.map((opt,k)=>{
+                const picked=(dec.choices||{})[ch.field];
+                const chosen=(picked===undefined?ch.picked:picked)===opt;
+                return(
+                  <button key={k} onClick={()=>setChoice(i,ch.field,opt)}
+                    style={{...decBtn(chosen,"#2D6B5A"),display:"block",width:"100%",textAlign:"left",marginBottom:3,whiteSpace:"normal",lineHeight:1.4}}>
+                    {chosen?"\u2713 ":"\u00a0\u00a0"}{opt&&String(opt).trim()?opt:"(blank)"}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </div>}
 
         {p.notes&&p.notes.length>0&&<div style={{marginTop:6,fontSize:10.5,color:C.soft,lineHeight:1.5,borderTop:"1px dotted "+C.rule,paddingTop:5}}>{p.notes.map((n,j)=><div key={j}>{"\u00b7 "}{n}</div>)}</div>}
@@ -1015,6 +1187,23 @@ export default function App(){
                   {grp.map(({p,i})=>renderProposalCard(p,i))}
                 </div>
               );})}
+              {coverage.length>0&&(
+                /* PAGES THAT COULD NOT BE READ — a report, not a decision.
+                   These were Add cards until 13 Sep, so a refused venue put
+                   junk on this pile that came back on every future sweep,
+                   because rejecting is not remembered. Shown last, below the
+                   real work, because nothing here needs answering. */
+                <div style={{marginBottom:14,marginTop:6,paddingTop:12,borderTop:"1px solid "+C.rule}}>
+                  <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>Pages that couldn{"\u2019"}t be read {"\u00b7"} nothing to decide</div>
+                  <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55,marginBottom:8}}>The sweep tried these and was turned away. No exhibitions were collected from them, so nothing is missing from your ledger that was ever offered.</div>
+                  {coverage.map((cv,i)=>(
+                    <div key={i} style={{border:"1px solid "+C.rule,borderRadius:6,padding:"8px 10px",marginBottom:6,background:C.card}}>
+                      <div style={{fontSize:12,color:C.ink}}><strong>{cv.venueShort}</strong> {"\u2014"} {cv.what}</div>
+                      <div style={{fontSize:11.5,color:C.soft,marginTop:2,lineHeight:1.5}}>{cv.why}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
               {(()=>{const grp=proposals.map((p,i)=>({p,i})).filter(x=>x.p.venueId===null);if(!grp.length)return null;return(
                 <div style={{marginBottom:14}}>
                   <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.accent,marginBottom:6,fontWeight:600}}>Couldn{"\u2019"}t be filed</div>
