@@ -700,9 +700,24 @@ function findDateRange(raw, opts = {}) {
     const sMo = monthNum(dm[2]), eMo = monthNum(dm[5]);
     if (sMo && eMo) {
       const sDay = parseInt(dm[1], 10), eDay = parseInt(dm[4], 10);
-      const startYr = dm[3] && plausibleYear(dm[3])
-        ? parseInt(dm[3], 10)
-        : startYearFor(sMo, sDay, eMo, eDay, endYr);
+      // A PUBLISHED OPENING YEAR THAT FAILS THE PLAUSIBILITY CHECK REFUSES THE
+      // WHOLE RANGE — it is never quietly swapped for the closing year.
+      //
+      // Capodimonte's page for its Mimmo Jodice memorial room says
+      //   "Mimmo Jodice ( Napoli 29 marzo 1934 - 27 ottobre 2025)"
+      // — the photographer's birth and death. 1934 is outside 1990-2035 and was
+      // therefore DISCARDED, after which the opening year was worked out from
+      // the closing one, and an artist's lifespan was stored as the
+      // exhibition's run: 29 Mar 2025 to 27 Oct 2025. The row looked perfectly
+      // healthy; only reading it against the site could show it.
+      //
+      // The old line treated "no year published" and "a year published that
+      // cannot be an exhibition year" as the same thing. They are opposites:
+      // the first is a gap to fill, the second is proof this sentence is not
+      // about an exhibition's run at all.
+      if (dm[3] && !plausibleYear(dm[3])) return { start: '', end: '', raw: s };
+      const startYr = dm[3] ? parseInt(dm[3], 10)
+                            : startYearFor(sMo, sDay, eMo, eDay, endYr);
       return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), s);
     }
   }
@@ -906,9 +921,11 @@ function findDateRangeInProse(text, hintYear) {
     const sMo = monthNum(dm[2]), eMo = monthNum(dm[5]);
     if (sMo && eMo) {
       const sDay = parseInt(dm[1], 10), eDay = parseInt(dm[4], 10);
-      const startYr = dm[3] && plausibleYear(dm[3])
-        ? parseInt(dm[3], 10)
-        : startYearFor(sMo, sDay, eMo, eDay, endYr);
+      // See the note in findDateRange: a published-but-implausible opening year
+      // refuses the range rather than being replaced by the closing year.
+      if (dm[3] && !plausibleYear(dm[3])) return { start: '', end: '', raw: '' };
+      const startYr = dm[3] ? parseInt(dm[3], 10)
+                            : startYearFor(sMo, sDay, eMo, eDay, endYr);
       return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), dm[0].slice(0, 120));
     }
   }
@@ -921,9 +938,11 @@ function findDateRangeInProse(text, hintYear) {
     const sMo = monthNum(m[1]), eMo = monthNum(m[4]);
     if (sMo && eMo) {
       const sDay = parseInt(m[2], 10), eDay = parseInt(m[5], 10);
-      const startYr = m[3] && plausibleYear(m[3])
-        ? parseInt(m[3], 10)
-        : startYearFor(sMo, sDay, eMo, eDay, endYr);
+      // Same rule for the month-first form: "Mimmo Jodice (March 29, 1934 -
+      // October 27, 2025)" must refuse, not borrow the closing year.
+      if (m[3] && !plausibleYear(m[3])) return { start: '', end: '', raw: '' };
+      const startYr = m[3] ? parseInt(m[3], 10)
+                           : startYearFor(sMo, sDay, eMo, eDay, endYr);
       return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), m[0].slice(0, 120));
     }
   }

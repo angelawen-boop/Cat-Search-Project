@@ -512,6 +512,48 @@ test('Y-004: nothing is requested before the lookback floor', () => {
 });
 
 // ---------------------------------------------------------------------------
+// PY-001 to PY-003 — A PUBLISHED OPENING YEAR THAT CANNOT BE AN EXHIBITION YEAR.
+//
+// Capodimonte's Mimmo Jodice memorial page says "Mimmo Jodice ( Napoli 29 marzo
+// 1934 - 27 ottobre 2025)" — the photographer's birth and death. 1934 failed the
+// 1990-2035 guard and was DISCARDED, after which the opening year was worked out
+// from the closing one, and a lifespan was stored as the exhibition's run:
+// 29 Mar 2025 to 27 Oct 2025. The row looked perfectly healthy.
+//
+// "No year published" and "a year published that cannot be an exhibition year"
+// are opposites: the first is a gap to fill, the second is proof the sentence is
+// not about a run at all.
+
+test('PY-001: an implausible opening year refuses the range, Italian day-first', () => {
+  const r = findDateRange('Mimmo Jodice ( Napoli 29 marzo 1934 - 27 ottobre 2025)');
+  assert.equal(r.start, '');
+  assert.equal(r.end, '');
+});
+
+test('PY-002: and in page prose, in both the day-first and month-first forms', () => {
+  for (const s of ['Mimmo Jodice ( Napoli 29 marzo 1934 - 27 ottobre 2025)',
+                   'Mimmo Jodice (March 29, 1934 - October 27, 2025)',
+                   'Gustave Courbet (10 June 1819 - 31 December 1877)']) {
+    const r = findDateRangeInProse(s);
+    assert.equal(r.start, '', s);
+    assert.equal(r.end, '', s);
+  }
+});
+
+test('PY-003: a MISSING opening year is still filled from the closing one', () => {
+  // The guard must not break the case it sits next to. "December 5 - January 20,
+  // 2026" opens in December 2025, and a range with no opening year at all is a
+  // gap to fill, not evidence of anything.
+  const a = findDateRange('December 5 - January 20, 2026');
+  assert.equal(a.start, '2025-12-05');
+  assert.equal(a.end, '2026-01-20');
+  const b = findDateRange('5 December - 20 January 2026');
+  assert.equal(b.start, '2025-12-05');
+  assert.equal(b.end, '2026-01-20');
+  const c = findDateRange('1 November 2025 to 11 January 2026');
+  assert.equal(c.start, '2025-11-01');
+});
+
 // W-001 to W-005 — WEEKDAY NAMES IN FRONT OF A DATE.
 //
 // The Wallace Collection prints "Saturday 23 May - Sunday 29 November 2026".
