@@ -1695,12 +1695,34 @@ function isNotATitle(t, rule) {
  */
 function pickTitleLine(raw, rule) {
   const lines = String(raw || '').split('\n').map(squash).filter(Boolean);
-  for (const line of lines) {
-    let c = line;
+  for (let i = 0; i < lines.length; i++) {
+    let c = lines[i];
     if (rule.stripLeading)  c = c.replace(rule.stripLeading, '');
     if (rule.stripTrailing) c = c.replace(rule.stripTrailing, '');
     c = squash(stripTitleNoise(c));
-    if (c.length >= 3 && !isNotATitle(c, rule)) return c;
+    if (c.length < 3 || isNotATitle(c, rule)) continue;
+
+    // A TITLE ENDING IN A COLON IS UNFINISHED, so the next line is the rest of
+    // it, not the blurb. Found by this rule's own first live run: the card
+    // breaks a line after the colon on some titles but not others, so
+    // "Georgia O'Keeffe: \"My New Yorks\"" arrived as "Georgia O'Keeffe:" and
+    // the bilingual "En el principio / In the beginning:" lost its whole
+    // artist list — while "Four Chicago Artists: Theodore Halkin, ..." came
+    // through whole on one line.
+    //
+    // The colon is the evidence, not the layout: it is a promise about what
+    // follows, so there is exactly one reading and no judgement involved. The
+    // guards keep it from eating a description — a continuation is title
+    // length, and the whole must still fit inside one card.
+    while (/:$/.test(c) && i + 1 < lines.length) {
+      const next = squash(lines[i + 1]);
+      if (!next || next.length > 120) break;
+      const joined = squash(c + ' ' + next);
+      if (joined.length > CARD_MAX_CHARS) break;
+      c = joined;
+      i++;
+    }
+    return c;
   }
   return '';
 }
