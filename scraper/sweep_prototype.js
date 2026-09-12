@@ -2497,6 +2497,12 @@ function addNote(existing, note) {
 // without a number attached to it.
 const COUNTS = [];
 
+// Listing pages that offered another page no recipe is wired to follow. See
+// detectUnwiredPagination(). Reported in the run summary, because a standing
+// check whose findings sit only in the middle of a 4,000-line log is a monitor
+// that reports nothing.
+const UNWIRED = [];
+
 /**
  * Read one listing page and turn its links into rows.
  *
@@ -3653,6 +3659,18 @@ async function scrapeVenue(page, code) {
       // same line whether the list was genuinely one batch long or the batch
       // was merely slow and the loop gave up on it — see clickLoadMore().
       if (lm.clicks) log(`  "load more" pressed ${lm.clicks}x on ${pg.ctx} — stopped: ${lm.reason}`);
+    }
+
+    // DOES THIS PAGE OFFER MORE THAN WE ARE TAKING? Only asked where nothing is
+    // already wired — a page with `paginate` is followed by followPagination()
+    // and a venue with `loadMore` presses its control, so both are handled and
+    // finding their own next-page links would be noise on every sweep.
+    if (!pg.paginate && !v.loadMore) {
+      const more = await detectUnwiredPagination(page);
+      if (more) {
+        log(`  UNWIRED PAGINATION ${pg.ctx}: this page links another page and no recipe follows it — ${more.join(' | ')}`);
+        UNWIRED.push({ venue: code, page: pg.ctx, url, hints: more });
+      }
       if (lm.hitCap) {
         log(`  LOAD MORE RUNAWAY on ${pg.ctx}: still adding after 30 presses`);
         rows.push({
@@ -3891,6 +3909,75 @@ async function dismissConsent(page, alwaysRe = ALWAYS_NOISE) {
       }
       return null;
     }, alwaysRe);
+  } catch { return null; }
+}
+
+/**
+ * ASK EVERY LISTING PAGE WHETHER IT HAS MORE BELOW THAT WE ARE NOT READING.
+ *
+ * Two faults found on 12-13 Sep were the same fault: a listing page offered
+ * more and the recipe did not take it. The Menil lost 12 exhibitions to an
+ * unread second page; the Louvre lost rows to a control the loop gave up on;
+ * artic hand-typed `&page=2` and would have lost anything past page two. Every
+ * one of them COMPLETED, reported no error, and produced a file that looked
+ * exactly like a full archive. That is the shape of the failure — it is never
+ * visible in the output, so something has to go looking for it.
+ *
+ * A recipe noticing is not good enough. A recipe is written once, against the
+ * venue as it stood that afternoon, and a quiet year that grows past the site's
+ * page size years later breaks it silently. So the SITE is asked, every sweep.
+ *
+ * IT IS STRUCTURAL, NOT A PHRASE LIST. Guessing from button text across five
+ * languages is the clever general rule this project keeps paying for — "Forward"
+ * at the Uffizi, "Suivant", "Weiter", "Volgende". Instead: an anchor counts only
+ * if its address is THIS page's address differing by one number — a `?page=2`
+ * style parameter, or a `/page/2` style segment. That is the site declaring a
+ * second page in a form that cannot be mistaken for prose.
+ *
+ * rel="next" is taken as well, because a page that publishes it is telling us
+ * outright and it costs nothing to believe.
+ *
+ * IT ONLY WARNS. It never follows anything by itself: which control is real and
+ * what shape it takes is the recipe's business, and a detector that started
+ * fetching addresses it guessed at would be exactly the clever general rule
+ * above. It reports, she and the recipe decide.
+ */
+async function detectUnwiredPagination(page) {
+  try {
+    return await page.evaluate(() => {
+      const here = new URL(location.href);
+      const base = here.pathname.replace(/\/$/, '');
+      const found = [];
+      for (const a of document.querySelectorAll('a[href]')) {
+        let q; try { q = new URL(a.href, location.href); } catch { continue; }
+        if (q.origin !== here.origin) continue;
+        if (a.rel === 'next') { found.push(`rel="next" -> ${a.getAttribute('href')}`); continue; }
+
+        // SHAPE ONE: the SAME path, one extra or different NUMERIC parameter.
+        // This is the Uffizi's, read off its 2023 page rather than guessed:
+        // /en/event-category/exhibitions/years/2023?page=2. Requiring the path
+        // to match exactly is what keeps the YEAR MENU out — /years/2024 is a
+        // different filter, not another page of this one, and an earlier rule
+        // that neutralised "any number in the address" reported all four year
+        // links and missed the real page 2 entirely.
+        if (q.pathname.replace(/\/$/, '') === base) {
+          for (const [k, val] of [...q.searchParams]) {
+            if (!/^\d+$/.test(val) || here.searchParams.get(k) === val) continue;
+            found.push(`${k}=${val} -> ${a.getAttribute('href')}`);
+          }
+          continue;
+        }
+
+        // SHAPE TWO: this path with a numeric segment added on the end —
+        // /past/page/2 and /past/2. An ADDITION only, never a different
+        // number in the middle, for the same reason as above.
+        const m = q.pathname.replace(/\/$/, '').match(/^(.*?)(?:\/page)?\/(\d+)$/);
+        if (m && m[1] === base && q.search === here.search) {
+          found.push(`page ${m[2]} -> ${a.getAttribute('href')}`);
+        }
+      }
+      return found.length ? [...new Set(found)].slice(0, 4) : null;
+    });
   } catch { return null; }
 }
 
@@ -4579,6 +4666,23 @@ async function main() {
         num(c.dupUrl, 6) + num(c.ongoing || 0, 9) + num(c.noTitle, 9) + num(c.kept, 11));
   }
   if (!COUNTS.length) log('  (no listing pages were read)');
+
+  // ── Pages offering more than we took ────────────────────────────────────────
+  // Printed HERE, in the summary, not only where it happened. This is the only
+  // warning in the run that describes rows which are missing and cannot be seen
+  // to be missing: the CSV looks complete either way.
+  if (UNWIRED.length) {
+    log('');
+    logSection('MORE PAGES OFFERED THAN TAKEN — CHECK THESE');
+    log('  Each page below links to another page of itself, and no recipe follows it.');
+    log('  Exhibitions may be missing from the CSV with nothing else to show it.');
+    log('');
+    for (const u of UNWIRED) {
+      log(`  ${u.venue} / ${u.page}`);
+      log(`    ${u.url}`);
+      for (const h of u.hints) log(`    offers: ${h}`);
+    }
+  }
   log('');
   log('  seen      = links matching the venue\'s selector on that page');
   log('  nav       = site navigation and filter links, not exhibitions');
@@ -4622,6 +4726,7 @@ module.exports = {
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
   saysOngoing, expandYearArchive, listingPages, followPagination,
+  detectUnwiredPagination,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
   installNetworkBridge, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
