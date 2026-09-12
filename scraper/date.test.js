@@ -561,6 +561,46 @@ test('EX-005: the Uffizi keeps its exhibitions and drops its one-day events', ()
   assert.equal(re.test('PITTI PALACE At the Pitti Palace, the very best of the king\u2019s furniture'), false);
 });
 
+// EX-006 to EX-008 — the extension rule as Borghese and Brera actually write it.
+
+test('EX-006: the NOUN form, "through", month-first, and no year at all', () => {
+  // Borghese: "From June 23 to September 20, 2026, with an extraordinary
+  // extension through October 11". The year is not guessed — an extension is by
+  // definition later than the date it replaces, so the closing year is tried
+  // first and only a result that would not be later moves into the next one.
+  const r = findDateRange('From June 23 to September 20, 2026, with an extraordinary extension through October 11');
+  assert.equal(r.start, '2026-06-23');
+  assert.equal(r.end, '2026-10-11');
+  assert.equal(r.extendedFrom, '2026-09-20');
+});
+
+test('EX-007: an extension that crosses into the next year', () => {
+  const r = findDateRange('From December 5 to December 20, 2025, extended through January 18');
+  assert.equal(r.end, '2026-01-18');
+});
+
+test('EX-008: the PROSE parser applies it too, or a row loses a real date', () => {
+  // Brera's Armani page: "From September 24, 2025, to January 11, 2026 Extended
+  // until May 3, 2026". The listing had already supplied the extended closing
+  // date, so a prose range ending 11 January contradicted it — and the guard
+  // that discards a contradictory range threw away the OPENING date with it.
+  // One parser knowing about extensions and the other not is exactly the drift
+  // that has silently cost dates twice before.
+  const r = findDateRangeInProse('When From September 24, 2025, to January 11, 2026 Extended until May 3, 2026');
+  assert.equal(r.start, '2025-09-24');
+  assert.equal(r.end, '2026-05-03');
+});
+
+// BR-001 — a comma in front of the range separator.
+
+test('BR-001: "From May 16, 2025, to May 17, 2027" is one range, not one date', () => {
+  // Without the comma allowed, this fell through to a single date and Brera's
+  // Pinacoteca viaggiante was stored as ENDING on its opening day.
+  const r = findDateRange('From May 16, 2025, to May 17, 2027');
+  assert.equal(r.start, '2025-05-16');
+  assert.equal(r.end, '2027-05-17');
+});
+
 // IT-001 to IT-003 — THREE-LETTER ITALIAN MONTHS.
 //
 // The Gallerie dell'Accademia prints its run in abbreviated Italian on its

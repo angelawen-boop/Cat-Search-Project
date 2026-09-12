@@ -1012,6 +1012,20 @@ function unusableDateText(text) {
 }
 
 function findDateRangeInProse(text, hintYear) {
+  // THE TWO PARSERS MUST NOT DIVERGE — they have drifted twice before and each
+  // time silently lost dates. The extension rule is applied here as well, and
+  // Giorgio Armani is why it matters beyond tidiness.
+  //
+  // His page reads "From September 24, 2025, to January 11, 2026 Extended until
+  // May 3, 2026". The listing had already given the extended closing date, so a
+  // prose range ending 11 January CONTRADICTED it — and the guard that discards
+  // a contradictory range threw away the opening date with it. The row lost a
+  // date the page states plainly, because one parser knew about extensions and
+  // the other did not.
+  return applyExtension(findDateRangeInProseCore(text, hintYear), text);
+}
+
+function findDateRangeInProseCore(text, hintYear) {
   if (!text) return { start: '', end: '', raw: '' };
   const s = String(text).replace(/[–—]/g, '-').replace(/\s+/g, ' ');
   const M = MONTH_PATTERN;
@@ -2782,7 +2796,13 @@ const VENUES = {
     lookbackAfterDetail: true,
     // See the note above capo: this venue's curatorial text is in divs, not
     // paragraphs, so the shared ladder cannot reach it.
-    description: '.section .limit',
+    //
+    // `.entry` IS THE WHOLE POINT and a first attempt without it regressed four
+    // rows. Borghese wraps several blocks in the same `.limit` class — the
+    // breadcrumb ("HomeExhibitionsPast"), the in-page jump menu ("INTRO DISCOVER
+    // BIOGRAPHY"), the newsletter — and only the curatorial block also carries
+    // `entry`. Checked on two pages before trusting it.
+    description: '.section .limit.entry',
   },
 
   frick: {

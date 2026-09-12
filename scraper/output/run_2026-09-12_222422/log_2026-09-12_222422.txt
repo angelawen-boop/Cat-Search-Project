@@ -1,0 +1,81 @@
+[2026-09-12T12:24:22.886Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T12:24:22.886Z] Lookback floor: 2024-07-01
+[2026-09-12T12:24:22.886Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_222422
+[2026-09-12T12:24:22.886Z] Venues this run: borghese, brera
+[2026-09-12T12:24:22.886Z] Proxy: http://127.0.0.1:33723
+[2026-09-12T12:24:22.887Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-12T12:24:23.023Z] Running 2 venue(s) 2 at a time (one page at a time within each venue)
+[2026-09-12T12:24:23.143Z] [borghese] 
+[2026-09-12T12:24:23.143Z] [borghese] ────────────────────────────────────────────────────────────
+[2026-09-12T12:24:23.143Z] [borghese]   BORGHESE — Galleria Borghese, Rome
+[2026-09-12T12:24:23.143Z] [borghese] ────────────────────────────────────────────────────────────
+[2026-09-12T12:24:23.143Z] [borghese]   Fetching current: https://galleriaborghese.cultura.gov.it/en/mostre/presenti/
+[2026-09-12T12:24:23.146Z] [brera] 
+[2026-09-12T12:24:23.147Z] [brera] ────────────────────────────────────────────────────────────
+[2026-09-12T12:24:23.147Z] [brera]   BRERA — Pinacoteca di Brera, Milan
+[2026-09-12T12:24:23.147Z] [brera] ────────────────────────────────────────────────────────────
+[2026-09-12T12:24:23.147Z] [brera]   Fetching current: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=in-progress
+[2026-09-12T12:24:26.291Z] [brera]   current: 8 links seen -> 0 navigation, 4 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T12:24:26.291Z] [brera]   Fetching upcoming: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=scheduled
+[2026-09-12T12:24:26.666Z] [borghese]   consent banner dismissed ("Accept")
+[2026-09-12T12:24:28.105Z] [borghese]   current: 1 links seen -> 0 navigation, 0 already-seen URL -> 1 collected (0 of them with no readable title)
+[2026-09-12T12:24:28.105Z] [borghese]   Fetching upcoming: https://galleriaborghese.cultura.gov.it/en/mostre/future/
+[2026-09-12T12:24:29.052Z] [brera]   upcoming: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T12:24:29.052Z] [brera]   NO EXHIBITIONS upcoming: page loaded and was read, but nothing matched
+[2026-09-12T12:24:29.052Z] [brera]   Fetching past: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=archive
+[2026-09-12T12:24:31.561Z] [borghese]   consent banner dismissed ("Accept")
+[2026-09-12T12:24:31.823Z] [brera]   past: 18 links seen -> 0 navigation, 13 already-seen URL -> 5 collected (0 of them with no readable title)
+[2026-09-12T12:24:31.823Z] [brera]   lookback (listing): kept 8, dropped 2 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-12T12:24:31.823Z] [brera]   reading 7 individual page(s)…
+[2026-09-12T12:24:31.823Z] [brera]     page 1 of 7
+[2026-09-12T12:24:32.958Z] [borghese]   upcoming: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T12:24:32.958Z] [borghese]   NO EXHIBITIONS upcoming: page loaded and was read, but nothing matched
+[2026-09-12T12:24:32.958Z] [borghese]   Fetching past: https://galleriaborghese.cultura.gov.it/en/mostre/passate/
+[2026-09-12T12:24:36.731Z] [borghese]   consent banner dismissed ("Accept")
+[2026-09-12T12:24:38.502Z] [borghese]   past: 40 links seen -> 0 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-12T12:24:38.503Z] [borghese]   reading 41 individual page(s)…
+[2026-09-12T12:24:38.503Z] [borghese]     page 1 of 41
+[2026-09-12T12:24:47.891Z] [brera]   Individual pages: 7 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:24:47.892Z] [brera]   → 7 exhibitions, 7 with curatorial text → brera.csv
+[2026-09-12T12:25:10.746Z] [borghese]     page 10 of 41
+[2026-09-12T12:25:46.531Z] [borghese]     page 20 of 41
+[2026-09-12T12:26:21.482Z] [borghese]     page 30 of 41
+[2026-09-12T12:26:55.999Z] [borghese]     page 40 of 41
+[2026-09-12T12:27:02.799Z] [borghese]   Individual pages: 41 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:27:02.799Z] [borghese]   lookback (final): kept 8, dropped 34 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T12:27:02.800Z] [borghese]   → 7 exhibitions, 7 with curatorial text → borghese.csv
+[2026-09-12T12:27:02.893Z] 
+[2026-09-12T12:27:02.893Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:27:02.893Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T12:27:02.893Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:27:02.893Z]   BRERA: 7 exhibitions | 7 with text | 1 page(s) blocked/empty
+[2026-09-12T12:27:02.893Z]   BORGHESE: 7 exhibitions | 7 with text | 1 page(s) blocked/empty
+[2026-09-12T12:27:02.893Z] 
+[2026-09-12T12:27:02.893Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:27:02.893Z]   COVERAGE — every link accounted for
+[2026-09-12T12:27:02.893Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:27:02.893Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T12:27:02.893Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T12:27:02.893Z]   brera      current                          8     0       0     4        0        0          4
+[2026-09-12T12:27:02.893Z]   borghese   current                          1     0       0     0        0        0          1
+[2026-09-12T12:27:02.893Z]   brera      upcoming                         0     0       0     0        0        0          0
+[2026-09-12T12:27:02.893Z]   brera      past                            18     0       0    13        0        0          5
+[2026-09-12T12:27:02.893Z]   borghese   upcoming                         0     0       0     0        0        0          0
+[2026-09-12T12:27:02.893Z]   borghese   past                            40     0       0     0        0        0         40
+[2026-09-12T12:27:02.893Z] 
+[2026-09-12T12:27:02.893Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T12:27:02.893Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T12:27:02.893Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T12:27:02.893Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T12:27:02.893Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T12:27:02.893Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T12:27:02.893Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T12:27:02.893Z] 
+[2026-09-12T12:27:02.893Z] Network bridge: 849 requests served, 1425 skipped (image/media/font), 2 failed
+[2026-09-12T12:27:02.893Z] 
+[2026-09-12T12:27:02.893Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_222422
+[2026-09-12T12:27:02.893Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_222422/sweep.csv  (16 rows — borghese:8, brera:8)
+[2026-09-12T12:27:02.893Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_222422/log_2026-09-12_222422.txt
+[2026-09-12T12:27:02.893Z] Not yet in this run: met, ng, rijks, acq, frick, morgan, menil, va, louvre, capo, uffizi, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-12T12:27:02.893Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T12:27:02.893Z] No de-duplication is applied — see passThrough.
