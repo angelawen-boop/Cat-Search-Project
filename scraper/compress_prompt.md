@@ -87,6 +87,15 @@ hunt for significance would make it manufacture that phrasing everywhere.
 
 ## Prompt A — write a fresh summary
 
+**Added 12 Sep 2026: the output language was never stated.** The prompt is written
+in English and its examples are English, so a model would most likely answer in
+English — but nothing required it, and five of the wired venues publish only in
+Italian. Her plan for Capodimonte, 12 Sep, rests on exactly this: she will import
+every row and judge it from the title, the English summary and the URL button,
+because the site itself is too slow to check exhibition by exhibition. A summary
+that came back in Italian would quietly break that.
+
+
 > You are writing very short exhibition summaries for a personal art-catalogue
 > tracker. Your ONLY output is text. Do not write or edit any file.
 >
@@ -119,6 +128,13 @@ hunt for significance would make it manufacture that phrasing everywhere.
 > Write ONE summary that is true of both, and it will be recorded against both
 > rows. So describe what the exhibition IS, not who is in it: a roster named in
 > one city may be wrong in the other. Do not mention either city.
+>
+> ALWAYS WRITE IN ENGLISH, whatever language the raw text is in. Several venues
+> publish only in Italian and one only in French; she reads the summaries in
+> English. Translating a phrase does not break the traceability rule below — a
+> translated phrase is still traceable to the text it came from. Keep the
+> exhibition's own title in its original language if that is how it is written;
+> translate the description around it.
 >
 > THE RULE THAT MATTERS MOST: every word of your summary must be traceable to a
 > phrase in that row's own raw text. If you cannot point to where something came
