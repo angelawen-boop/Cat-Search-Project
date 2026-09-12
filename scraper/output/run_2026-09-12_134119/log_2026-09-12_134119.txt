@@ -1,0 +1,55 @@
+[2026-09-12T03:41:19.616Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T03:41:19.618Z] Lookback floor: 2024-07-01
+[2026-09-12T03:41:19.619Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-12_134119
+[2026-09-12T03:41:19.619Z] Venues this run: tate-britain
+[2026-09-12T03:41:19.619Z] Proxy: (none — direct egress assumed)
+[2026-09-12T03:41:19.619Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-12T03:41:19.620Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-12T03:41:19.621Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-12T03:41:19.876Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-12T03:41:19.919Z] No proxy set — Chromium is making its own requests (network bridge off)
+[2026-09-12T03:41:20.124Z] [tate-britain] 
+[2026-09-12T03:41:20.125Z] [tate-britain] ────────────────────────────────────────────────────────────
+[2026-09-12T03:41:20.125Z] [tate-britain]   TATE-BRITAIN — Tate Britain, London
+[2026-09-12T03:41:20.126Z] [tate-britain] ────────────────────────────────────────────────────────────
+[2026-09-12T03:41:20.127Z] [tate-britain]   Fetching current/upcoming: https://www.tate.org.uk/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=display&event_type=exhibition
+[2026-09-12T03:41:26.653Z] [tate-britain]   current/upcoming: 11 links seen -> 0 navigation, 1 already-seen URL -> 10 collected (0 of them with no readable title)
+[2026-09-12T03:41:26.654Z] [tate-britain]   Fetching recently opened: https://www.tate.org.uk/whats-on?date_range=past&gallery_group=tate-britain&event_type=display&event_type=exhibition
+[2026-09-12T03:41:31.941Z] [tate-britain]   recently opened: 5 links seen -> 0 navigation, 5 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T03:41:31.942Z] [tate-britain]   lookback (listing): kept 10, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T03:41:31.943Z] [tate-britain]   reading 10 individual page(s)…
+[2026-09-12T03:41:31.943Z] [tate-britain]     page 1 of 10
+[2026-09-12T03:41:53.347Z] [tate-britain]     page 10 of 10
+[2026-09-12T03:41:55.802Z] [tate-britain]   Individual pages: 10 got text, 0 no curatorial text, 0 failed
+[2026-09-12T03:41:55.803Z] [tate-britain]   lookback (final): kept 10, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T03:41:55.806Z] [tate-britain]   → 10 exhibitions, 10 with curatorial text → tate-britain.csv
+[2026-09-12T03:41:55.986Z] 
+[2026-09-12T03:41:55.987Z] ────────────────────────────────────────────────────────────
+[2026-09-12T03:41:55.988Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T03:41:55.988Z] ────────────────────────────────────────────────────────────
+[2026-09-12T03:41:55.988Z]   TATE-BRITAIN: 10 exhibitions | 10 with text
+[2026-09-12T03:41:55.989Z] 
+[2026-09-12T03:41:55.990Z] ────────────────────────────────────────────────────────────
+[2026-09-12T03:41:55.990Z]   COVERAGE — every link accounted for
+[2026-09-12T03:41:55.991Z] ────────────────────────────────────────────────────────────
+[2026-09-12T03:41:55.991Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T03:41:55.991Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T03:41:55.992Z]   tate-britain current/upcoming                11     0       0     1        0        0         10
+[2026-09-12T03:41:55.993Z]   tate-britain recently opened                  5     0       0     5        0        0          0
+[2026-09-12T03:41:55.993Z] 
+[2026-09-12T03:41:55.993Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T03:41:55.993Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T03:41:55.993Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T03:41:55.994Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T03:41:55.994Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T03:41:55.994Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T03:41:55.994Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T03:41:55.995Z] 
+[2026-09-12T03:41:55.995Z] Network bridge: 0 requests served, 0 skipped (image/media/font), 0 failed
+[2026-09-12T03:41:55.995Z] 
+[2026-09-12T03:41:55.997Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-12_134119
+[2026-09-12T03:41:55.997Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-12_134119/sweep.csv  (10 rows — tate-britain:10)
+[2026-09-12T03:41:55.997Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-12_134119/log_2026-09-12_134119.txt
+[2026-09-12T03:41:55.998Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, khm, artic, moma, brit, dellav, tate-modern, wallace
+[2026-09-12T03:41:55.998Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T03:41:55.998Z] No de-duplication is applied — see passThrough.
