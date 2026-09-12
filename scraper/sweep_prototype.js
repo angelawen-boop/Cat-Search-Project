@@ -2579,7 +2579,21 @@ const VENUES = {
     // a title like "April in Paris" survives.
     title: {
       heading: true,
-      stripLeading: /^(?:(?:TICKETED(?: EXHIBITION)?|NOW OPEN|OPENING SOON|CLOSING SOON|SPECIAL LOAN INSTALLATION|COLLECTION INSTALLATION|MEMBERS ONLY|FREE)\s*)+/,
+      // TWO TRAPS, both paid for:
+      //
+      // LONGEST ALTERNATIVE FIRST. The badge is a bare "EXHIBITION", read off
+      // her machine 12 Sep: "EXHIBITION NOW OPEN Lee Miller: Fearless". The
+      // list knew TICKETED EXHIBITION but not EXHIBITION alone, and being
+      // anchored it then matched NOTHING AT ALL and left the whole run in
+      // place — five rows kept a badge across three attempted fixes. With both
+      // present, "TICKETED" first would eat the word and strand "EXHIBITION",
+      // so the long forms must precede the short ones. Same rule as the
+      // Italian al / all' elision.
+      //
+      // CASE-SENSITIVE, DELIBERATELY — no /i flag. "EXHIBITION" as a strip
+      // token is exactly what once turned "How to Make an Exhibition" into
+      // "How to Make an ". Caps are the badge; a real title is title-case.
+      stripLeading: /^(?:(?:TICKETED EXHIBITION|SPECIAL LOAN INSTALLATION|COLLECTION INSTALLATION|COLLECTION ROTATION|MEMBERS ONLY|OPENING SOON|CLOSING SOON|NOW OPEN|TICKETED|EXHIBITION|FREE)\s*)+/,
       stripTrailing: new RegExp(`\\s*\\b(?:${MONTH_PATTERN})\\s*\\d.*$`, 'i'),
     },
     // HER RULING ELSEWHERE, APPLIED HERE: temporary exhibitions only. The Art

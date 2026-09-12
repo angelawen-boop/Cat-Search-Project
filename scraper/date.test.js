@@ -529,3 +529,46 @@ test('Y-005: the Met resolves to real addresses, and its years are navigation', 
       p + ' should be navigation');
   }
 });
+
+// ── artic's badge strip ───────────────────────────────────────────────────────
+// Five rows kept a badge across THREE attempted fixes, because the diagnosis
+// was guessed from the CSV rather than read off the page. The card reads
+// "EXHIBITION NOW OPEN Lee Miller: Fearless" — a bare EXHIBITION, which the
+// list did not know. Anchored, it then matched nothing at all.
+
+const strip = s => s.replace(VENUES.artic.title.stripLeading, '');
+
+test('A-001: a bare EXHIBITION badge is stripped, alone or stacked', () => {
+  assert.equal(strip('EXHIBITION NOW OPEN Lee Miller: Fearless'),
+    'Lee Miller: Fearless');
+  assert.equal(strip('EXHIBITION CLOSING SOON Jitish Kallat: Public Notice 3'),
+    'Jitish Kallat: Public Notice 3');
+  assert.equal(strip('TICKETED EXHIBITION NOW OPEN Mary Cassatt: After Impressionism'),
+    'Mary Cassatt: After Impressionism');
+});
+
+test('A-002: COLLECTION ROTATION is a badge too, and is not the same label as INSTALLATION', () => {
+  assert.equal(strip('COLLECTION ROTATION Utamaro: Elements of Beauty'),
+    'Utamaro: Elements of Beauty');
+  assert.equal(strip('COLLECTION INSTALLATION Fabergé'), 'Fabergé');
+  // Only the venue's INSTALLATION label means a standing hang. A ROTATION is a
+  // dated temporary show and must survive the lookback as one.
+  assert.equal(VENUES.artic.excludeLabelled.test('COLLECTION ROTATION'), false,
+    'a rotation must not be excluded as a permanent display');
+});
+
+test('A-003: the longest alternative must come first, or a badge is stranded', () => {
+  // "TICKETED" first would eat the word and leave "EXHIBITION" behind.
+  assert.equal(/^TICKETED EXHIBITION/.test(
+    VENUES.artic.title.stripLeading.source.replace(/^\^\(\?:\(\?:/, '')), true,
+    'TICKETED EXHIBITION must precede TICKETED and EXHIBITION in the alternation');
+});
+
+test('A-004: it is case-sensitive, so a real title keeping the word survives', () => {
+  // The regression this guards: TITLE_NOISE once stripped EXHIBITION case
+  // -insensitively and stored "How to Make an Exhibition" as "How to Make an ".
+  assert.equal(strip('How to Make an Exhibition'), 'How to Make an Exhibition');
+  assert.equal(strip('Exhibitionism: The Rolling Stones'), 'Exhibitionism: The Rolling Stones');
+  assert.equal(strip('Free Spirits: American Modernism'), 'Free Spirits: American Modernism');
+  assert.equal(strip('Willem de Kooning Drawing'), 'Willem de Kooning Drawing');
+});
