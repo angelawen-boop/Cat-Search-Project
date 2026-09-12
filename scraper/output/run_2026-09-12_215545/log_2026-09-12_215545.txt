@@ -1,0 +1,66 @@
+[2026-09-12T11:55:45.891Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T11:55:45.891Z] Lookback floor: 2024-07-01
+[2026-09-12T11:55:45.891Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_215545
+[2026-09-12T11:55:45.891Z] Venues this run: khm, dellav
+[2026-09-12T11:55:45.891Z] Proxy: http://127.0.0.1:33723
+[2026-09-12T11:55:45.891Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-12T11:55:46.012Z] Running 2 venue(s) 2 at a time (one page at a time within each venue)
+[2026-09-12T11:55:46.130Z] [khm] 
+[2026-09-12T11:55:46.131Z] [khm] ────────────────────────────────────────────────────────────
+[2026-09-12T11:55:46.131Z] [khm]   KHM — Kunsthistorisches Museum, Vienna
+[2026-09-12T11:55:46.131Z] [khm] ────────────────────────────────────────────────────────────
+[2026-09-12T11:55:46.131Z] [khm]   Fetching current: https://www.khm.at/en/exhibitions
+[2026-09-12T11:55:46.143Z] [dellav] 
+[2026-09-12T11:55:46.143Z] [dellav] ────────────────────────────────────────────────────────────
+[2026-09-12T11:55:46.143Z] [dellav]   DELLAV — Gallerie dell'Accademia, Venice
+[2026-09-12T11:55:46.143Z] [dellav] ────────────────────────────────────────────────────────────
+[2026-09-12T11:55:46.143Z] [dellav]   Fetching current: https://www.gallerieaccademia.it/en/
+[2026-09-12T11:55:49.295Z] [khm]   consent banner dismissed ("refuse the use of cookies completely")
+[2026-09-12T11:55:50.797Z] [dellav]   current: 10 links seen -> 0 navigation, 8 already-seen URL -> 2 collected (0 of them with no readable title)
+[2026-09-12T11:55:50.797Z] [dellav]   lookback (listing): kept 2, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T11:55:50.798Z] [dellav]   reading 2 individual page(s)…
+[2026-09-12T11:55:50.798Z] [dellav]     page 1 of 2
+[2026-09-12T11:55:52.682Z] [khm]   current: 3 links seen -> 0 navigation, 0 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-09-12T11:55:52.683Z] [khm]   Fetching upcoming: https://www.khm.at/en/exhibitions/upcoming
+[2026-09-12T11:55:55.337Z] [khm]   consent banner dismissed ("refuse the use of cookies completely")
+[2026-09-12T11:55:56.086Z] [dellav]   Individual pages: 2 got text, 0 no curatorial text, 0 failed
+[2026-09-12T11:55:56.087Z] [dellav]   → 2 exhibitions, 2 with curatorial text → dellav.csv
+[2026-09-12T11:55:57.790Z] [khm]   upcoming: 9 links seen -> 4 navigation, 2 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-09-12T11:55:57.790Z] [khm]   lookback (listing): kept 6, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T11:55:57.791Z] [khm]   reading 6 individual page(s)…
+[2026-09-12T11:55:57.791Z] [khm]     page 1 of 6
+[2026-09-12T11:56:13.055Z] [khm]   Individual pages: 6 got text, 0 no curatorial text, 0 failed
+[2026-09-12T11:56:13.055Z] [khm]   lookback (final): kept 6, dropped 0 closed before 2024-07-01, 1 with no closing date, 1 with no opening date
+[2026-09-12T11:56:13.056Z] [khm]   → 6 exhibitions, 6 with curatorial text → khm.csv
+[2026-09-12T11:56:13.153Z] 
+[2026-09-12T11:56:13.153Z] ────────────────────────────────────────────────────────────
+[2026-09-12T11:56:13.153Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T11:56:13.153Z] ────────────────────────────────────────────────────────────
+[2026-09-12T11:56:13.153Z]   DELLAV: 2 exhibitions | 2 with text
+[2026-09-12T11:56:13.153Z]   KHM: 6 exhibitions | 6 with text
+[2026-09-12T11:56:13.153Z] 
+[2026-09-12T11:56:13.153Z] ────────────────────────────────────────────────────────────
+[2026-09-12T11:56:13.153Z]   COVERAGE — every link accounted for
+[2026-09-12T11:56:13.153Z] ────────────────────────────────────────────────────────────
+[2026-09-12T11:56:13.153Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T11:56:13.153Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T11:56:13.153Z]   dellav     current                         10     0       0     8        0        0          2
+[2026-09-12T11:56:13.153Z]   khm        current                          3     0       0     0        0        0          3
+[2026-09-12T11:56:13.153Z]   khm        upcoming                         9     4       0     2        0        0          3
+[2026-09-12T11:56:13.153Z] 
+[2026-09-12T11:56:13.153Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T11:56:13.153Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T11:56:13.153Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T11:56:13.153Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T11:56:13.153Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T11:56:13.153Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T11:56:13.153Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T11:56:13.153Z] 
+[2026-09-12T11:56:13.153Z] Network bridge: 514 requests served, 350 skipped (image/media/font), 0 failed
+[2026-09-12T11:56:13.153Z] 
+[2026-09-12T11:56:13.153Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_215545
+[2026-09-12T11:56:13.153Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_215545/sweep.csv  (8 rows — khm:6, dellav:2)
+[2026-09-12T11:56:13.153Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_215545/log_2026-09-12_215545.txt
+[2026-09-12T11:56:13.153Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, artic, moma, brit, tate-modern, tate-britain, wallace
+[2026-09-12T11:56:13.153Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T11:56:13.153Z] No de-duplication is applied — see passThrough.
