@@ -1810,6 +1810,29 @@ async function getCuratorialText(page, descSelector, noiseExtra) {
         return boilerplate.some(b => low.includes(b));
       };
 
+      // DROP THE BOILERPLATE SENTENCE, NOT THE WHOLE BLOCK IT SITS IN.
+      //
+      // The phrase list identifies boilerplate SENTENCES, and rejecting the
+      // element that contains one is right only while elements are paragraphs —
+      // there the sentence more or less is the paragraph. A venue that names its
+      // own description container hands over the whole article as ONE element,
+      // and then a single ticket sentence buried in it throws away everything.
+      //
+      // Borghese's Louise Bourgeois page is exactly that: 4,000 characters of
+      // curatorial text with "those who present the Galleria Borghese ticket at
+      // the Villa Medici ticket office will be entitled to a discount" in the
+      // middle of it. The row reached her with an empty summary, and this guide
+      // had written the page off as having no curatorial text at all. She saw
+      // that it plainly does.
+      //
+      // On a paragraph this behaves as before: a paragraph that IS a ticket
+      // notice is one matching sentence and disappears entirely.
+      const stripBoilerplate = (t) => {
+        if (!isBoilerplate(t)) return t;
+        const kept = t.split(/(?<=[.!?])\s+/).filter(x => !isBoilerplate(x));
+        return kept.join(' ').trim();
+      };
+
       // Walk up to, but never including, BODY and HTML.
       //
       // WordPress plus the Complianz plugin put a "cmplz-..." class on the
@@ -1913,8 +1936,8 @@ async function getCuratorialText(page, descSelector, noiseExtra) {
           if (out.length >= 4) break;
           if (insideNoise(el)) continue;
           if (hasPlainProse && boldOnly(el)) continue;
-          const t = clean(el.innerText);
-          if (t.length > 60 && !isBoilerplate(t)) out.push(t);
+          const t = stripBoilerplate(clean(el.innerText));
+          if (t.length > 60) out.push(t);
         }
         if (out.length) return out.join(' ').slice(0, 2000);
       }
@@ -4393,6 +4416,9 @@ module.exports = {
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
   installNetworkBridge, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
+  // Exported for the same reason as safeGoto: so a diagnostic can run the REAL
+  // extractor against a page instead of reimplementing it and drifting from it.
+  getCuratorialText,
   // Pure — the line-by-line title pick, so a venue reachable only from her
   // laptop can still be covered by a fixture here.
   pickTitleLine,
