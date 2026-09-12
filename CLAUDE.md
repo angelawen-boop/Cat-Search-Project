@@ -172,72 +172,45 @@ Her 12 Sep review and every fix made against it are written up in
 changed and what each venue now returns. Read that before touching a venue
 listed as DONE.
 
-### Getting past page one — the standing blind spot, 13 Sep 2026
+### Getting past page one — 13 Sep 2026
 
-**Three venues in two days were missing a second listing page, and none of it
-was a decision.** Each recipe was written by reading a venue's first listing
-page and stopping. Nobody asked whether there was a page two. The same unasked
-question, repeated across 21 recipes, surviving because **a first page always
-looks exactly like a complete list** — and her count cannot catch it either,
-because she counts what the site shows her, which is also page one.
+**Three venues were reading only page one of a listing, and none of it was a
+decision** — each recipe was written by looking at a first page and stopping.
+Her count cannot catch it: she counts what the site shows her, which is also
+page one. `menil` past lost 12 exhibitions; `menil` current and `frick` past
+both have a page two (~10 at the Frick).
 
-- `menil` **past** — 12 exhibitions lost. Caught by her count, 12 Sep.
-- `menil` **current** — page two exists. Nothing lost today (both items are
-  permanent galleries she excludes), but the day a thirteenth show opens it
-  lands there.
-- `frick` **past** — page two holds ~10 exhibitions never collected. The page
-  publishes `rel="next"` outright.
+`detectUnwiredPagination()` now asks every listing page, every sweep, whether it
+links a page no recipe follows, and reports it in the run summary. **Structural,
+never a phrase list** — same address, one number different. **It warns, never
+fetches.** A filter the recipe drives itself is not a page: artic's `?year=`
+decade links tripped it 32 times for a venue with nothing missing, so
+`recipeDrivenParams()` excludes them. **A false alarm teaches her to scroll past
+the real one.**
 
-**So the question is now asked by code, every sweep, at every venue.**
-`detectUnwiredPagination()` asks each listing page whether it links another page
-of itself that no recipe follows, and reports it in the run summary. It is
-**structural, never a phrase list** — same address, one number different, or an
-added numeric segment — because guessing from button text across five languages
-("Forward", "Suivant", "Weiter") is the clever general rule this project keeps
-paying for. **It only warns and never fetches**: which control is real is the
-recipe's business.
+**The index base is the site's to state.** The Menil's bare page IS page 1
+(`from: 2`); the Frick's is page 0 (`from: 1`). Fixture P-014 holds both.
 
-**A filter the recipe drives itself is not a page.** artic's archive is one
-address filtered by `?year=`, and its pages carry decade jump-links — 2020, 2010,
-2000, 1990 — which are indistinguishable from a page number by shape alone. It
-reported all four on all eight archive pages for a venue returning her exact
-count. **A false alarm is worse than no alarm**: a check that cries wolf every
-sweep teaches her to scroll past it. The cure is not a list of names to ignore —
-that is the phrase list again — but `recipeDrivenParams()`, which reads back the
-parameters the recipe itself sets.
+`scraper/probe_pagination.js` asks whether a given page holds anything.
+Read-only; reads the venue's own selector so it cannot drift from the engine.
 
-**THE INDEX BASE IS THE SITE'S TO STATE, NEVER ASSUMED.** The Menil's bare past
-page IS page 1, so its next is `?page=2`. The Frick's bare page is page 0 and its
-own next link says `?page=1`. Two venues, two answers. Fixture P-014 holds both
-so neither is copied onto the other.
+### What is NOT confirmed — 13 Sep 2026
 
-`scraper/probe_pagination.js` answers the next question — is there anything ON
-that page — for one venue, read-only, writing nothing. It reads the venue's own
-selector from the recipe so it cannot drift from the engine.
+Diagnosing the Louvre took repeated sweeps of the same pages, and by the end the
+Frick was 403 on a page it had just served and the Met was 429 on everything.
+**Her instruction: no probes or sweeps for hypothetical problems.** These are
+open, to be confirmed only as a by-product of a sweep that was happening anyway:
 
-### What is NOT confirmed, and why — 13 Sep 2026
-
-**Several venues are now refusing us because of how much we asked them in one
-afternoon.** Diagnosing the Louvre took repeated sweeps of the same pages, and
-by the end the Frick was returning 403 on a page it had served minutes earlier,
-the Met was 429 on everything, and the Louvre was dropping summaries. **Her
-instruction, 13 Sep: no more probes or sweeps for hypothetical problems.** The
-traffic is the cost, it is real, and it creates blocks that did not exist before.
-
-So these are open and are to be confirmed **only as a by-product of a sweep that
-was going to happen anyway**:
-
-| Open | Why it is not confirmed |
+| Open | Why |
 |---|---|
-| `frick` page two — ~10 exhibitions | Wired 13 Sep, refused 403 on every attempt since. The venue still reads 10. |
-| `artic` — does any year need a page **three**? | The recipe asks for pages 1 and 2 of each year. No year holds 40+ today. Blocked from the container; **not worth a probe on her machine** — the standing check reports it the day it happens. |
-| `louvre` — 2 summaries short in the full 21-venue run | HTTP 429 on 2 detail pages. Those rows carry the reason on the card. |
-| `tate-modern` / `tate-britain` "recently opened" | The check reports pages 1-4. **Her ruling 13 Sep: the page structure grows as needed and is not currently triggered — nothing to do.** |
-| The load-more fix at any venue but the Louvre | It is in the shared engine, but the Louvre is the only venue with such a control today. |
+| `frick` page two, ~10 exhibitions | Wired 13 Sep, 403 on every attempt since |
+| `artic` — any year needing page **three**? | Recipe asks pages 1-2; no year holds 40+ today. The standing check reports it if it happens |
+| `louvre` — 2 summaries short | HTTP 429; those rows carry the reason |
+| The load-more fix beyond the Louvre | No other venue has such a control today |
 
-**`met` needs nothing.** Her check, 13 Sep: its year pages load whole with
-nothing to click. It was proposed for a probe anyway and that was a question she
-had already answered — do not repeat it.
+**`met` needs nothing** — her check: its year pages load whole, nothing to click.
+`tate-modern`/`tate-britain` "recently opened" pages 1-4: **her ruling, the
+structure grows as needed and is not triggered — nothing to do.**
 
 ### Capodimonte is closed differently, and the difference matters — her ruling 12 Sep
 
@@ -823,26 +796,16 @@ Three things make it work, and each cost a failure:
   the last real one**, so a single-click probe cannot show it — mine reported success
   immediately before the live sweep lost 8 rows. **A control tested once is tested in
   its easy case.**
-- **THE PRESS IS FOLLOWED BY A WATCH, NOT A SLEEP — 13 Sep.** The loop waited a
-  fixed 2.5 seconds, counted the links once, and read "no more than before" as the
-  end of the list. **That one number was answering two unrelated questions** — has
-  the next batch arrived, and is there no next batch — and it cannot tell them
-  apart. Under load the batch had not landed, so the loop declared the archive
-  finished and the page was read half-loaded. It cost the Louvre 4 exhibitions in
-  the 21-venue run of 12 Sep: its "past 2025" page handed over 6 links under
-  `--jobs=4` and 11 running alone, **the same code on the same day, both runs
-  reporting success**. The count is now polled until it grows, and only a full 12
-  seconds of nothing is accepted as the end. **22 was never a verified ceiling
-  either** — the old loop quit early even on its good days, reading 43 links from
-  the past page where it now reads 60; 22 matched her count because the year pages
-  happened to cover the gap.
+- **THE PRESS IS FOLLOWED BY A WATCH, NOT A SLEEP — 13 Sep.** A fixed 2.5s pause
+  then one count was answering two questions at once — has the batch arrived, and
+  is there no batch — and cannot tell them apart. Under load it read a slow batch
+  as the end of the list: the Louvre's "past 2025" gave 6 links at `--jobs=4` and
+  11 alone, same code, same day, both reporting success. Now polled until it grows;
+  only 12s of nothing means the end. **22 was never a verified ceiling** — the old
+  loop read 43 links from the past page where it now reads 60.
 - **The stop REASON is logged, not just the press count.** "pressed 1x" was printed
-  whether the control vanished, the click missed, or the batch was merely slow —
-  three different stories behind one line, and the line named none of them. **A log
+  whether the control vanished, the click missed, or the batch was slow. **A log
   that cannot tell a working mechanism from a broken one is why this sat unnoticed.**
-- **A count agreeing is not proof a mechanism works.** With the press failing, the
-  Louvre still returned her 18, because its plain past page covered what the year page
-  was hiding. Only fixing the press revealed the true count was 22.
 
 ### Three universal behaviours added 12 Sep 2026
 
@@ -1210,20 +1173,15 @@ Each entry cost a real failure. Before changing the area, read the line.
 - A load-more click following the anchor's href once the list is complete, replacing
   the listing with a 404 and costing 8 Louvre rows.
 - A FIXED PAUSE after a load-more press, counted once, deciding both "has it
-  arrived" and "is there any more" — 4 Louvre exhibitions, invisible in output and
-  in the log, and a venue whose row count varied with how busy the machine was.
-- Reading only page one of a listing because nobody asked whether there was a page
-  two — the Menil twice and the Frick once, none of them a decision.
-- Assuming a site's pages start at 0, or at 1. The Menil's bare page IS page 1; the
-  Frick's is page 0. Only the site can say, and it says so in its own next link.
-- A next-page check that treated a recipe's OWN filter as a page — artic's decade
-  links reported on all eight archive pages for a venue with nothing missing.
-  **A false alarm is worse than no alarm.**
-- Inserting a new check into the middle of an existing block, splitting it: the
-  unwired-pagination check landed between a load-more log line and the runaway
-  guard that followed it, and every venue without a load-more control died before
-  reading a page. **The unit suite passed 148/148 — it has no browser, so the
-  listing loop is never executed. The live run caught it on its first venue.**
+  arrived" and "is there any more" — 4 Louvre exhibitions, invisible in the output
+  AND the log, and a row count that varied with how busy the machine was.
+- Reading only page one of a listing because nobody asked whether there was a two.
+- Assuming a site numbers pages from 0, or from 1. Only its own next link says.
+- A next-page check treating a recipe's OWN filter as a page — 32 false alarms at
+  artic for a venue with nothing missing.
+- Inserting a check into the middle of an existing block, splitting it: every venue
+  without a load-more control died before reading a page, while the unit suite
+  passed 148/148. **It has no browser, so the listing loop never runs in it.**
 - Concluding a control is broken without checking the click reached it; the Louvre's
   cookie popin swallowed it and the wrong conclusion sat in the recipe for two days.
 - The layout-wrapper escape applied to a NAMED consent manager — the V&A's cookie
