@@ -1497,6 +1497,14 @@ const BOILERPLATE = [
   'privacy policy',
   'sign up to our newsletter',
 
+  // A PRESS PULL-QUOTE, found on the Wallace's Ranjit Singh page 12 Sep 2026
+  // alongside the details line she flagged:
+  //   "★★★★ 'a glorious show' - The Evening Standard ★★★★ - The Times"
+  // Star ratings belong to reviews, never to a venue's own description of its
+  // exhibition, so the character itself is the whole test. She did not name
+  // this one; it sat in the same summaries as the junk she did name.
+  '★★',
+
   // DEF-03, and it surfaced for real on 11 Sep 2026 rather than in theory.
   //
   // Borghese's Louise Bourgeois page has NO curatorial paragraph at all. Its
@@ -1633,6 +1641,30 @@ async function getCuratorialText(page, descSelector) {
       // wrapper was believed to be the footer, and both rows came back with the
       // licensing notice as their description. Measured against real prose
       // instead, they hold 2 of 3 and 3 of 4.
+      // A PARAGRAPH THAT IS ENTIRELY BOLD IS A LABEL, NOT PROSE.
+      //
+      // The Wallace Collection puts its details line — run, admission, gallery
+      // — in an ordinary <p> inside the SAME div.rich-text as the curatorial
+      // text, with no class of its own to key on. The one thing separating the
+      // two is that the label is wholly bold:
+      //   "28 March-26 October 2025 Admission charge; tickets bookable online
+      //    only. Members go free."
+      // It led every one of her eleven summaries. There is no container to
+      // exclude here, so the shape of the markup is the only mechanical signal
+      // available — and it is a real one: prose is not set in bold end to end.
+      //
+      // GUARDED, because a venue might set its opening standfirst in bold. The
+      // rule only applies where the page HAS other prose to fall back on, so
+      // the worst case is a page that keeps its bold paragraph rather than one
+      // that loses its only description.
+      const boldOnly = (el) => {
+        const whole = clean(el.innerText).length;
+        if (!whole) return false;
+        let bold = 0;
+        for (const bEl of el.querySelectorAll('b, strong')) bold += clean(bEl.innerText).length;
+        return bold >= whole * 0.9;
+      };
+
       const substantial = Array.from(document.querySelectorAll('p'))
         .map(e => ({ el: e, t: clean(e.innerText) }))
         .filter(x => x.t.length > 60 && !isBoilerplate(x.t))
@@ -1660,6 +1692,10 @@ async function getCuratorialText(page, descSelector) {
 
 
 
+      // Does this page have prose that is NOT set entirely in bold? Only then
+      // is it safe to discard the bold paragraphs — see boldOnly() above.
+      const hasPlainProse = substantial.some(el => !boldOnly(el));
+
       for (const sel of selectors) {
         let els;
         try { els = Array.from(document.querySelectorAll(sel)); } catch { continue; }
@@ -1667,6 +1703,7 @@ async function getCuratorialText(page, descSelector) {
         for (const el of els) {
           if (out.length >= 4) break;
           if (insideNoise(el)) continue;
+          if (hasPlainProse && boldOnly(el)) continue;
           const t = clean(el.innerText);
           if (t.length > 60 && !isBoilerplate(t)) out.push(t);
         }
