@@ -501,6 +501,23 @@ const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
 // alternation backtracks into the abbreviation: "7 November 2025" can match as
 // "7 Nov" with "ember 2025" left over, which silently defeats any lookahead
 // that follows — a no-year test then passes on a date that plainly has one.
+/**
+ * A weekday name sitting in front of a date, which every range pattern trips on.
+ *
+ * LONGEST ALTERNATIVE FIRST, the same trap as the Italian "al" / "all'": with
+ * `sat` ahead of `saturday` the match stops after three letters, leaves "urday"
+ * behind, and the strip silently does nothing. The first version of this had
+ * exactly that bug and removed "Sunday" while leaving "Saturday" untouched.
+ *
+ * ANCHORED ON WHAT FOLLOWS, so it only fires where a date really comes next —
+ * a day number or a month name. Without that, a bare "Sun " would be stripped
+ * out of ordinary prose ("the Sun King, Louis XIV") whenever a page's text was
+ * scanned for dates.
+ */
+const WEEKDAY_PREFIX_SRC =
+  '\\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday' +
+  '|thurs|thur|tues|weds|mon|tue|wed|thu|fri|sat|sun)\\.?,?\\s+';
+
 const MONTH_PATTERN =
   '(?:January|February|March|April|May|June|July|August|September|October|November|December' +
   '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre' +
@@ -609,6 +626,8 @@ const RANGE_SEP = "\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]|al)\\
  *   1994". A 2024 exhibition was given a 1994 opening date, which would have
  *   ranked it as thirty years closed.
  */
+const WEEKDAY_PREFIX = new RegExp(WEEKDAY_PREFIX_SRC + '(?=\\d|' + MONTH_PATTERN + ')', 'gi');
+
 function findDateRange(raw, opts = {}) {
   const looseSingles = opts.looseSingles !== false;
   if (!raw) return { start: '', end: '', raw: '' };
@@ -616,7 +635,21 @@ function findDateRange(raw, opts = {}) {
   // Gallery uses U+2012 FIGURE DASH on some cards and U+2013 EN DASH on
   // others; with only the en dash normalised, "15 October 2026 - 7 February
   // 2027" fell through the range patterns and came out as 1 October 2026.
-  const s = String(raw).replace(/[\u2010-\u2015\u2212\u2043]/g, '-').replace(/\s+/g, ' ').trim();
+  const s = String(raw).replace(/[\u2010-\u2015\u2212\u2043]/g, '-')
+    // WEEKDAY NAMES CARRY NO DATE AND BREAK EVERY RANGE PATTERN.
+    //
+    // The Wallace Collection prints "Saturday 23 May - Sunday 29 November
+    // 2026". Strip the two weekdays and that is an ordinary day-first range
+    // this parser reads correctly; leave them in and every pattern misses,
+    // the scan falls through to the bare month-and-year rule, and the row
+    // arrives with NO DATES and a note saying the venue published none — which
+    // was a lie about the venue, since it had published the run in full.
+    //
+    // Safe to remove universally: a weekday is derivable from the date, so it
+    // can never be the only source of anything. Abbreviations included, with
+    // the optional full stop and comma that follow them in the wild.
+    .replace(WEEKDAY_PREFIX, '')
+    .replace(/\s+/g, ' ').trim();
   const M = MONTH_PATTERN;
 
   // ALL-NUMERIC RANGE — and the order is PROVED from the numbers, never assumed.
@@ -1504,6 +1537,20 @@ const BOILERPLATE = [
   // exhibition, so the character itself is the whole test. She did not name
   // this one; it sat in the same summaries as the junk she did name.
   '★★',
+
+  // ADMISSION WORDING, from the Wallace Collection, 12 Sep 2026.
+  //
+  // Its details line is usually bold and caught by boldOnly(), but Winston
+  // Churchill: The Painter prints the same thing in plain text:
+  //   "Saturday 23 May - Sunday 29 November 2026 Exhibition Galleries
+  //    Admission charge, members go free"
+  // so the markup offers nothing to key on there. What it does carry is
+  // wording that belongs to the ticket desk and never to a description of an
+  // exhibition — the same footing as the Borghese ticket discount above.
+  'admission charge',
+  'members go free',
+  'free for members',
+  'tickets bookable',
 
   // DEF-03, and it surfaced for real on 11 Sep 2026 rather than in theory.
   //

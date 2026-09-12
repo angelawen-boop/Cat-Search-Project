@@ -512,6 +512,64 @@ test('Y-004: nothing is requested before the lookback floor', () => {
 });
 
 // ---------------------------------------------------------------------------
+// W-001 to W-005 — WEEKDAY NAMES IN FRONT OF A DATE.
+//
+// The Wallace Collection prints "Saturday 23 May - Sunday 29 November 2026".
+// Every range pattern missed it, the scan fell through to the bare
+// month-and-year rule, and Winston Churchill: The Painter arrived with no dates
+// and a note saying the venue published none — a statement about the venue that
+// was simply untrue, since it had published the run in full.
+
+test('W-001: full weekday names are stripped and the range reads normally', () => {
+  const r = findDateRange('Saturday 23 May - Sunday 29 November 2026');
+  assert.equal(r.start, '2026-05-23');
+  assert.equal(r.end, '2026-11-29');
+});
+
+test('W-002: abbreviations too, and SATURDAY is the one that catches you out', () => {
+  // Longest alternative first, the same trap as the Italian "al" before "all'".
+  // With `sat` ahead of `saturday` the match stops after three letters, leaves
+  // "urday" behind and the strip silently does nothing — the first version of
+  // this removed "Sunday" and left "Saturday" sitting there.
+  for (const s of ['Sat 23 May - Sun 29 November 2026',
+                   'Saturday 23 May - Sunday 29 November 2026',
+                   'Tues 23 May - Thurs 29 November 2026',
+                   'Weds 23 May - Mon 29 November 2026']) {
+    const r = findDateRange(s);
+    assert.equal(r.start, '2026-05-23', s);
+    assert.equal(r.end, '2026-11-29', s);
+  }
+});
+
+test('W-003: month-first venues, where the weekday is followed by a comma', () => {
+  const r = findDateRange('Sunday, December 13, 2025 - Sunday, February 2, 2026');
+  assert.equal(r.start, '2025-12-13');
+  assert.equal(r.end, '2026-02-02');
+});
+
+test('W-004: a weekday word in PROSE is left alone', () => {
+  // The strip only fires where a day number or a month name follows. Without
+  // that anchor a bare "Sun " would be cut out of ordinary page text — "the Sun
+  // King, Louis XIV" — every time a page was scanned for dates.
+  const r = findDateRange('the Sun King, Louis XIV, until 20 February 2026');
+  assert.equal(r.end, '2026-02-20');
+  assert.match(r.raw, /Sun King/);
+});
+
+test('W-005: the formats already handled are untouched', () => {
+  const cases = [
+    ['December 13, 2025 - February 2, 2026', '2025-12-13', '2026-02-02'],
+    ['Dal 16 ottobre 2025 al 6 gennaio 2026', '2025-10-16', '2026-01-06'],
+    ['11 Oct. 2019 t/m 19 Jan. 2020', '2019-10-11', '2020-01-19'],
+    ['22 MARCH 2025 TO 15 MARCH 2026', '2025-03-22', '2026-03-15'],
+  ];
+  for (const [s, a, b] of cases) {
+    const r = findDateRange(s);
+    assert.equal(r.start, a, s);
+    assert.equal(r.end, b, s);
+  }
+});
+
 // P-001 to P-007 — NUMBERED ARCHIVE PAGINATION.
 //
 // The Menil's past archive is paginated; only page one was being read and 12
