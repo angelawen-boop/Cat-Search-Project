@@ -1,0 +1,61 @@
+[2026-09-12T11:05:02.234Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T11:05:02.235Z] Lookback floor: 2024-07-01
+[2026-09-12T11:05:02.235Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_210502
+[2026-09-12T11:05:02.235Z] Venues this run: louvre
+[2026-09-12T11:05:02.235Z] Proxy: http://127.0.0.1:33723
+[2026-09-12T11:05:02.235Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-12T11:05:02.382Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-12T11:05:02.475Z] [louvre] 
+[2026-09-12T11:05:02.475Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-09-12T11:05:02.475Z] [louvre]   LOUVRE — Louvre, Paris
+[2026-09-12T11:05:02.475Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-09-12T11:05:02.475Z] [louvre]   Fetching current/upcoming: https://www.louvre.fr/en/exhibitions-and-events/exhibitions
+[2026-09-12T11:05:06.033Z] [louvre]   current/upcoming: 7 links seen -> 0 navigation, 0 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-12T11:05:06.033Z] [louvre]   Fetching past: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions
+[2026-09-12T11:05:13.270Z] [louvre]   "load more" pressed 1x on past
+[2026-09-12T11:05:13.292Z] [louvre]   past: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T11:05:13.292Z] [louvre]   NO EXHIBITIONS past: page loaded and was read, but nothing matched
+[2026-09-12T11:05:13.292Z] [louvre]   Fetching past 2025: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2025
+[2026-09-12T11:05:20.031Z] [louvre]   "load more" pressed 1x on past 2025
+[2026-09-12T11:05:20.051Z] [louvre]   past 2025: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T11:05:20.051Z] [louvre]   NO EXHIBITIONS past 2025: page loaded and was read, but nothing matched
+[2026-09-12T11:05:20.052Z] [louvre]   Fetching past 2024: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2024
+[2026-09-12T11:05:23.177Z] [louvre]   past 2024: 4 links seen -> 0 navigation, 0 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T11:05:23.177Z] [louvre]   lookback (listing): kept 10, dropped 3 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-12T11:05:23.177Z] [louvre]   reading 8 individual page(s)…
+[2026-09-12T11:05:23.177Z] [louvre]     page 1 of 8
+[2026-09-12T11:05:29.996Z] [louvre]   BLOCKED (HTTP 429): https://www.louvre.fr/en/exhibitions-and-events/exhibitions/louvre-photo
+[2026-09-12T11:05:42.290Z] [louvre]   Individual pages: 7 got text, 0 no curatorial text, 1 failed
+[2026-09-12T11:05:42.291Z] [louvre]   → 8 exhibitions, 7 with curatorial text → louvre.csv
+[2026-09-12T11:05:42.367Z] 
+[2026-09-12T11:05:42.367Z] ────────────────────────────────────────────────────────────
+[2026-09-12T11:05:42.367Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T11:05:42.367Z] ────────────────────────────────────────────────────────────
+[2026-09-12T11:05:42.367Z]   LOUVRE: 8 exhibitions | 7 with text | 2 page(s) blocked/empty
+[2026-09-12T11:05:42.367Z] 
+[2026-09-12T11:05:42.367Z] ────────────────────────────────────────────────────────────
+[2026-09-12T11:05:42.367Z]   COVERAGE — every link accounted for
+[2026-09-12T11:05:42.367Z] ────────────────────────────────────────────────────────────
+[2026-09-12T11:05:42.367Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T11:05:42.367Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T11:05:42.367Z]   louvre     current/upcoming                 7     0       0     0        0        0          7
+[2026-09-12T11:05:42.367Z]   louvre     past                             0     0       0     0        0        0          0
+[2026-09-12T11:05:42.367Z]   louvre     past 2025                        0     0       0     0        0        0          0
+[2026-09-12T11:05:42.367Z]   louvre     past 2024                        4     0       0     0        0        0          4
+[2026-09-12T11:05:42.367Z] 
+[2026-09-12T11:05:42.367Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T11:05:42.367Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T11:05:42.367Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T11:05:42.367Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T11:05:42.367Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T11:05:42.367Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T11:05:42.367Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T11:05:42.367Z] 
+[2026-09-12T11:05:42.367Z] Network bridge: 445 requests served, 148 skipped (image/media/font), 0 failed
+[2026-09-12T11:05:42.367Z] 
+[2026-09-12T11:05:42.367Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_210502
+[2026-09-12T11:05:42.367Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_210502/sweep.csv  (10 rows — louvre:10)
+[2026-09-12T11:05:42.367Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_210502/log_2026-09-12_210502.txt
+[2026-09-12T11:05:42.367Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, capo, uffizi, brera, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-12T11:05:42.367Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T11:05:42.367Z] No de-duplication is applied — see passThrough.

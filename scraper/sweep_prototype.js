@@ -3520,15 +3520,52 @@ async function dismissConsent(page, alwaysRe = ALWAYS_NOISE) {
  */
 async function clickLoadMore(page, selector, countSelector, maxClicks = 30) {
   let clicks = 0;
+  const listingUrl = page.url();
   try {
     for (; clicks < maxClicks; clicks++) {
-      const before = await page.$$eval(countSelector, as => new Set(as.map(a => a.getAttribute('href'))).size).catch(() => 0);
-      const el = await page.$(selector);
-      if (!el) break;
-      await el.scrollIntoViewIfNeeded().catch(() => {});
-      await el.click().catch(() => {});
+      const count = () => page.$$eval(countSelector,
+        as => new Set(as.map(a => a.getAttribute('href'))).size).catch(() => 0);
+      const before = await count();
+      if (!(await page.$(selector))) break;
+
+      // THE CONTROL IS AN ANCHOR, AND ITS href IS A DEAD END.
+      //
+      // The Louvre's button is <a href="/component/load-more/expositions?…">,
+      // an address that 404s. While the site's own handler is listening it
+      // intercepts the click and loads the next batch in place. Once there is
+      // nothing left to load it stops intercepting, the browser follows the
+      // href, and the listing page is replaced by a 404 — which is exactly what
+      // happened on the first live run: "load more pressed 1x", then ZERO links
+      // on both past pages and the venue fell from 18 rows to 10.
+      //
+      // A single click in a probe never shows this, because the failure needs
+      // the press that comes AFTER the last real one. Looping is what found it.
+      //
+      // So the default action is cancelled before the click, in the capture
+      // phase. The site's own listener still runs — it is on the same event and
+      // preventDefault does not stop other handlers — so the batch still loads;
+      // only the browser's navigation is refused.
+      const navigated = await page.evaluate((sel) => {
+        const el = document.querySelector(sel);
+        if (!el) return false;
+        el.addEventListener('click', e => e.preventDefault(), { capture: true, once: true });
+        el.scrollIntoView({ block: 'center' });
+        el.click();
+        return true;
+      }, selector).catch(() => false);
+      if (!navigated) break;
       await page.waitForTimeout(2500);
-      const after = await page.$$eval(countSelector, as => new Set(as.map(a => a.getAttribute('href'))).size).catch(() => 0);
+
+      // Belt and braces: if the page moved anyway, put it back and stop rather
+      // than carry on reading whatever we landed on.
+      if (page.url() !== listingUrl) {
+        log(`    "load more" navigated away; returning to the listing`);
+        await page.goto(listingUrl, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT }).catch(() => {});
+        await page.waitForTimeout(1500);
+        break;
+      }
+
+      const after = await count();
       if (after <= before) { clicks++; break; }
     }
   } catch (e) { rethrowIfAborted(e); }
