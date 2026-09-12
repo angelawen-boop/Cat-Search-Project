@@ -20,7 +20,7 @@ const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
   classifyLoadError, isOwnListingPage, saysOngoing,
-  expandYearArchive, listingPages, VENUES,
+  expandYearArchive, listingPages, VENUES, pickTitleLine,
 } = require('./sweep_prototype.js');
 
 const range = (s, hint) => {
@@ -571,4 +571,43 @@ test('A-004: it is case-sensitive, so a real title keeping the word survives', (
   assert.equal(strip('Exhibitionism: The Rolling Stones'), 'Exhibitionism: The Rolling Stones');
   assert.equal(strip('Free Spirits: American Modernism'), 'Free Spirits: American Modernism');
   assert.equal(strip('Willem de Kooning Drawing'), 'Willem de Kooning Drawing');
+});
+
+// ── artic: the title is a LINE of the card, not the whole card ────────────────
+// Card text below is verbatim from her machine, 12 Sep 2026. Every artic card
+// has headingTag: null on BOTH page types, so the name must come from the
+// link's own lines. Squashed, current cards keep a badge and archive cards
+// keep the entire blurb — 65 of 78 rows.
+
+const articTitle = raw => pickTitleLine(raw, VENUES.artic.title);
+
+test('A-005: a current card — the badge line is skipped, the dates are never reached', () => {
+  assert.equal(
+    articTitle('TICKETED EXHIBITION NOW OPEN\nMary Cassatt: After Impressionism\nSep 6, 2026–Jan 3, 2027'),
+    'Mary Cassatt: After Impressionism');
+  assert.equal(
+    articTitle('EXHIBITION\nLee Miller: Fearless\nAug 29–Dec 7, 2026'),
+    'Lee Miller: Fearless');
+  assert.equal(
+    articTitle('TICKETED EXHIBITION CLOSING SOON\nWillem de Kooning Drawing\nJun 14–Sep 20, 2026'),
+    'Willem de Kooning Drawing');
+});
+
+test('A-006: an archive card — the blurb does NOT come back welded to the title', () => {
+  assert.equal(
+    articTitle('Janna Ireland: A Goff House in Los Angeles\nIreland’s 2024 photographs of the Goff-designed Al Struckus House (commissioned in 1979, completed in 1988) describe the house’s open volume and its dizzying interior space, as well as the diverse materials that define the experience of living in the house.\nJan 7–May 18, 2026'),
+    'Janna Ireland: A Goff House in Los Angeles');
+  assert.equal(
+    articTitle('Japanese Prints from the Collection of Bruce Goff\nBringing together 35 of the more than 800 Japanese prints that were given to the museum from Goff’s estate in 1990, this exhibition complements Bruce Goff: Material Worlds, Illuminating one of Goff’s many influences and inspirations.\nJan 7–Apr 6, 2026'),
+    'Japanese Prints from the Collection of Bruce Goff');
+  assert.equal(
+    articTitle('New Affiliates on Goff’s Domestic Matter\nArchitects Ivi Diamantopoulou and Jaffer Kolb of the firm New Affiliates took on the forms and materialities of three of Bruce Goff’s house and created large-scale drawings in a visual style that borrows from sources from Stanley Tigerman’s 1970s Architoons to recent graphic novels.\nJan 7–May 18, 2026'),
+    'New Affiliates on Goff’s Domestic Matter');
+});
+
+test('A-007: a card with nothing but badges and dates yields NO title, never a blurb', () => {
+  // Blank becomes a visible "Couldn't be filed" card. The squashed fallback
+  // would have produced a title with the description welded on — the defect.
+  assert.equal(articTitle('EXHIBITION NOW OPEN\nSep 6, 2026–Jan 3, 2027'), '');
+  assert.equal(articTitle(''), '');
 });

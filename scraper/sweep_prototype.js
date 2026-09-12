@@ -1685,6 +1685,26 @@ function isNotATitle(t, rule) {
   return !!(rule && rule.notATitle && rule.notATitle.test(v));
 }
 
+/**
+ * Pick the exhibition's name out of a card's text, LINE BY LINE.
+ *
+ * Pure on purpose: this is the half of the Art Institute fix that can be
+ * proved without a browser, and the venue is only reachable from her laptop —
+ * so a fixture against its real card text is the only test this venue can
+ * ever have here. Takes the raw multi-line string, never a squashed one.
+ */
+function pickTitleLine(raw, rule) {
+  const lines = String(raw || '').split('\n').map(squash).filter(Boolean);
+  for (const line of lines) {
+    let c = line;
+    if (rule.stripLeading)  c = c.replace(rule.stripLeading, '');
+    if (rule.stripTrailing) c = c.replace(rule.stripTrailing, '');
+    c = squash(stripTitleNoise(c));
+    if (c.length >= 3 && !isNotATitle(c, rule)) return c;
+  }
+  return '';
+}
+
 async function extractTitle(link, venueCode) {
   const rule = titleRule(venueCode);
 
@@ -1706,6 +1726,38 @@ async function extractTitle(link, venueCode) {
         if (t.length >= 3 && !isNotATitle(t, rule)) return t;
       }
     } catch {}
+  }
+
+  // THE TITLE IS A LINE OF THE LINK'S OWN TEXT — opt-in, for a venue that puts
+  // the whole card inside the anchor and uses no heading anywhere.
+  //
+  // The Art Institute does exactly that, and SQUASHING ITS TEXT DESTROYS THE
+  // ONE THING THAT DISTINGUISHES THE PARTS. Read as one string its two page
+  // types fail differently and neither is recoverable afterwards:
+  //
+  //   current  "EXHIBITION NOW OPEN Lee Miller: Fearless Aug 29-Dec 7, 2026"
+  //   archive  "Janna Ireland: A Goff House in Los Angeles Ireland's 2024
+  //            photographs of the Goff-designed Al Struckus House ..."
+  //
+  // — the first keeps a badge, the second keeps the ENTIRE blurb. That was 65
+  // of its 78 rows, and three fixes guessed at it from the CSV before anyone
+  // looked at the page.
+  //
+  // Read as LINES both are the same shape, and one rule covers both:
+  //
+  //   current  ["EXHIBITION NOW OPEN", "Lee Miller: Fearless", "Aug 29-..."]
+  //   archive  ["Janna Ireland: A Goff...", "Ireland's 2024 photo...", "Jan 7-..."]
+  //
+  // THE TITLE IS THE FIRST LINE THAT IS NOT ENTIRELY A BADGE. A badge line
+  // strips to nothing, which is the signal to move down — the blurb and the
+  // dates sit on later lines and are never reached.
+  //
+  // Returns empty rather than falling through on failure, deliberately: the
+  // fallback below is the squashed string, which is the defect itself. A blank
+  // title becomes a visible "Couldn't be filed" card, which is the honest
+  // outcome and is fixable; a title with a blurb welded on is neither.
+  if (rule.linkLines) {
+    return pickTitleLine(await getText(link).catch(() => ''), rule);
   }
 
   let t = squash(await getText(link));
@@ -2579,6 +2631,12 @@ const VENUES = {
     // a title like "April in Paris" survives.
     title: {
       heading: true,
+      // Read off the live page 12 Sep: EVERY artic card, on both the current
+      // pages and the archive, has headingTag: null. The whole card sits
+      // inside the anchor, so the name has to come from the link's own lines.
+      // `heading` stays true so the venue is picked up free if they ever add
+      // one; it simply never fires today.
+      linkLines: true,
       // TWO TRAPS, both paid for:
       //
       // LONGEST ALTERNATIVE FIRST. The badge is a bare "EXHIBITION", read off
@@ -3524,6 +3582,9 @@ module.exports = {
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
   installNetworkBridge, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
+  // Pure — the line-by-line title pick, so a venue reachable only from her
+  // laptop can still be covered by a fixture here.
+  pickTitleLine,
   // Exported so compress.js's mirrored location list can be checked against the
   // real one by a fixture. compress.js must not require THIS file at runtime —
   // that would pull Playwright into a step that is pure text — so a test is the
