@@ -1,0 +1,81 @@
+[2026-09-12T15:56:22.609Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T15:56:22.610Z] Lookback floor: 2024-07-01
+[2026-09-12T15:56:22.610Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-13_015622
+[2026-09-12T15:56:22.610Z] Venues this run: menil
+[2026-09-12T15:56:22.610Z] Proxy: http://127.0.0.1:42127
+[2026-09-12T15:56:22.610Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-12T15:56:22.765Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-12T15:56:22.861Z] [menil] 
+[2026-09-12T15:56:22.861Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-12T15:56:22.861Z] [menil]   MENIL — The Menil Collection, Houston
+[2026-09-12T15:56:22.861Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-12T15:56:22.861Z] [menil]   Fetching current: https://www.menil.org/exhibitions
+[2026-09-12T15:56:25.741Z] [menil]   current: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-09-12T15:56:25.742Z] [menil]   Fetching upcoming: https://www.menil.org/exhibitions/upcoming
+[2026-09-12T15:56:27.945Z] [menil]   upcoming: 4 links seen -> 0 navigation, 0 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T15:56:27.945Z] [menil]   Fetching past: https://www.menil.org/exhibitions/past
+[2026-09-12T15:56:30.544Z] [menil]   past: 12 links seen -> 0 navigation, 1 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-12T15:56:30.544Z] [menil]   Fetching current p2: https://www.menil.org/exhibitions?page=2
+[2026-09-12T15:56:32.947Z] [menil]   current p2: 2 links seen -> 0 navigation, 0 already-seen URL -> 2 collected (0 of them with no readable title)
+[2026-09-12T15:56:32.947Z] [menil]   Fetching past p2: https://www.menil.org/exhibitions/past?page=2
+[2026-09-12T15:56:35.577Z] [menil]   past p2: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-09-12T15:56:35.577Z] [menil]   Fetching current p3: https://www.menil.org/exhibitions?page=3
+[2026-09-12T15:56:39.633Z] [menil]   current p3: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T15:56:39.634Z] [menil]   PAGINATION end: current p3 added no new exhibitions
+[2026-09-12T15:56:39.634Z] [menil]   Fetching past p3: https://www.menil.org/exhibitions/past?page=3
+[2026-09-12T15:56:42.179Z] [menil]   past p3: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-09-12T15:56:42.179Z] [menil]   PAGINATION end: past p3 — its newest exhibition closed 2024-03-10, before the 2024-07-01 floor, so every later page is older still
+[2026-09-12T15:56:42.179Z] [menil]   lookback (listing): kept 41, dropped 12 closed before 2024-07-01, 9 with no closing date, 0 with no opening date
+[2026-09-12T15:56:42.180Z] [menil]   reading 41 individual page(s)…
+[2026-09-12T15:56:42.180Z] [menil]     page 1 of 41
+[2026-09-12T15:56:48.587Z] [menil]     page 10 of 41
+[2026-09-12T15:56:55.269Z] [menil]     page 20 of 41
+[2026-09-12T15:57:03.139Z] [menil]     page 30 of 41
+[2026-09-12T15:57:10.121Z] [menil]     page 40 of 41
+[2026-09-12T15:57:11.484Z] [menil]   Individual pages: 41 got text, 0 no curatorial text, 0 failed
+[2026-09-12T15:57:11.484Z] [menil]     no dates published — treated as a permanent display, excluded: Modern and Contemporary
+[2026-09-12T15:57:11.484Z] [menil]     no dates published — treated as a permanent display, excluded: Surrealism
+[2026-09-12T15:57:11.484Z] [menil]     no dates published — treated as a permanent display, excluded: Africa
+[2026-09-12T15:57:11.484Z] [menil]     no dates published — treated as a permanent display, excluded: 4th–18th Century Europe
+[2026-09-12T15:57:11.484Z] [menil]     no dates published — treated as a permanent display, excluded: Pacific Islands
+[2026-09-12T15:57:11.484Z] [menil]     no dates published — treated as a permanent display, excluded: A Surrealist Wunderkammer
+[2026-09-12T15:57:11.484Z] [menil]     no dates published — treated as a permanent display, excluded: Outdoor Sculpture
+[2026-09-12T15:57:11.484Z] [menil]     no dates published — treated as a permanent display, excluded: Indigenous Americas
+[2026-09-12T15:57:11.484Z] [menil]     no dates published — treated as a permanent display, excluded: Ancient Mediterranean
+[2026-09-12T15:57:11.484Z] [menil]   9 undated row(s) excluded as permanent displays (venue rule)
+[2026-09-12T15:57:11.485Z] [menil]   → 32 exhibitions, 32 with curatorial text → menil.csv
+[2026-09-12T15:57:11.595Z] 
+[2026-09-12T15:57:11.595Z] ────────────────────────────────────────────────────────────
+[2026-09-12T15:57:11.595Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T15:57:11.595Z] ────────────────────────────────────────────────────────────
+[2026-09-12T15:57:11.595Z]   MENIL: 32 exhibitions | 32 with text
+[2026-09-12T15:57:11.595Z] 
+[2026-09-12T15:57:11.595Z] ────────────────────────────────────────────────────────────
+[2026-09-12T15:57:11.595Z]   COVERAGE — every link accounted for
+[2026-09-12T15:57:11.595Z] ────────────────────────────────────────────────────────────
+[2026-09-12T15:57:11.595Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T15:57:11.595Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T15:57:11.595Z]   menil      current                         12     0       0     0        0        0         12
+[2026-09-12T15:57:11.595Z]   menil      upcoming                         4     0       0     0        0        0          4
+[2026-09-12T15:57:11.595Z]   menil      past                            12     0       0     1        0        0         11
+[2026-09-12T15:57:11.595Z]   menil      current p2                       2     0       0     0        0        0          2
+[2026-09-12T15:57:11.595Z]   menil      past p2                         12     0       0     0        0        0         12
+[2026-09-12T15:57:11.595Z]   menil      current p3                       0     0       0     0        0        0          0
+[2026-09-12T15:57:11.595Z]   menil      past p3                         12     0       0     0        0        0         12
+[2026-09-12T15:57:11.596Z] 
+[2026-09-12T15:57:11.596Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T15:57:11.596Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T15:57:11.596Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T15:57:11.596Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T15:57:11.596Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T15:57:11.596Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T15:57:11.596Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T15:57:11.596Z] 
+[2026-09-12T15:57:11.596Z] Network bridge: 513 requests served, 1039 skipped (image/media/font), 0 failed
+[2026-09-12T15:57:11.596Z] 
+[2026-09-12T15:57:11.596Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-13_015622
+[2026-09-12T15:57:11.596Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-13_015622/sweep.csv  (32 rows — menil:32)
+[2026-09-12T15:57:11.596Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-13_015622/log_2026-09-13_015622.txt
+[2026-09-12T15:57:11.596Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, va, louvre, capo, uffizi, brera, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-12T15:57:11.596Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T15:57:11.596Z] No de-duplication is applied — see passThrough.

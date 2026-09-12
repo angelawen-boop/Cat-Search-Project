@@ -818,11 +818,19 @@ test('P-006: a page with no paginate option is left alone', () => {
   assert.equal(queue.length, 1);
 });
 
-test('P-007: the Menil opts in on its past archive and nowhere else', () => {
+test('P-007: the Menil opts in on its current and past listings, not upcoming', () => {
+  // Its CURRENT listing paginates as well — found 13 Sep by the standing
+  // unwired-pagination check and confirmed by her. Every current exhibition
+  // sits on page one today, which is why her count matched and why nothing
+  // caught it; the day a thirteenth opens it lands on page two.
+  // `upcoming` is deliberately left out: no second page has ever been seen
+  // there, and the standing check reports it the day one appears.
   const paged = VENUES.menil.pages.filter(p => p.paginate);
-  assert.deepEqual(paged.map(p => p.path), ['/exhibitions/past']);
-  assert.equal(paged[0].paginate.from, 2,
-    'this site is 1-indexed: its bare past page IS page 1, so the next is 2');
+  assert.deepEqual(paged.map(p => p.path), ['/exhibitions', '/exhibitions/past']);
+  for (const p of paged) {
+    assert.equal(p.paginate.from, 2,
+      'this site is 1-indexed: the bare address IS page 1, so the next is 2');
+  }
   // No page count may be written into a recipe — the same trap as a
   // hand-written year, one step worse, because only the site knows the answer.
   assert.equal(VENUES.menil.pages.some(p => /page=\d/.test(p.path)), false);

@@ -2949,7 +2949,17 @@ const VENUES = {
     // The brief's /exhibitions/current 302s to /exhibitions, which is the
     // live address for what is on now.
     pages: [
-      { path: '/exhibitions',          ctx: 'current' },
+      // ITS CURRENT LISTING PAGINATES TOO. Found 13 Sep by the standing
+      // unwired-pagination check and confirmed by her: page two exists.
+      // Every current exhibition happens to sit on page one TODAY, which is
+      // why her count matched and why this was never caught — the threat is
+      // that the day a thirteenth opens it lands on page two and the sweep
+      // reports no error. The same shape as the 12 exhibitions this venue's
+      // PAST archive lost, and the same one-line answer.
+      { path: '/exhibitions',          ctx: 'current', paginate: { param: 'page', from: 2 } },
+      // NOT given to `upcoming`, on purpose: no second page has ever been seen
+      // there, and the standing check reports it the day one appears. A
+      // speculative extra request every sweep is not evidence.
       { path: '/exhibitions/upcoming', ctx: 'upcoming' },
       // ITS PAST ARCHIVE IS PAGINATED and only this first page was being read,
       // losing 12 exhibitions outright — her count caught it, nothing in the
