@@ -2904,6 +2904,16 @@ const VENUES = {
     // PER VENUE, not shared: `has-custom-color` is a generic WordPress class
     // and means nothing in particular anywhere else.
     noise: 'has-custom-color',
+    // ITS ARTICLE LIVES IN A TABBED PANEL, and its paragraphs are divs. The
+    // shared ladder wants a <p> at every rung, so on the Mariani page it took
+    // a NESTED fragment — "Mariani avesse predeterminato e predestinato il suo
+    // approdo finale a Napoli e Capodimonte”" — the tail of a pull-quote whose
+    // full sentence sits in the div around it. Several summaries began
+    // mid-sentence for this reason.
+    //
+    // Naming the panel takes the article's own text in order, opening where
+    // the page opens. Same shape of problem as the V&A, same answer.
+    description: '.vc_tta-panel-body',
   },
 
   uffizi: {
