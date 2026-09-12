@@ -115,30 +115,37 @@ merge either**; the second would undo the current scraper.
 `scraper/output/` and should be printed by a script — see "Editing this guide".
 Until it is, check it against the newest run directory before trusting it.
 
-| Venue | Code | Rows | Checked against the live site? | Notes |
-|---|---|---|---|---|
-| National Gallery, London | `ng` | 27 | **yes** — her count | |
-| Rijksmuseum | `rijks` | 37 | **yes** — her count (36); 37 since, not chased, her call | *Asian Pavilion* pulled by the venue |
-| Acquavella | `acq` | 15 | **yes** — her count | |
-| Art Institute of Chicago | `artic` | 77 | **yes** — her count + all 77 titles read | **local only** |
-| The Met | `met` | 106 | **yes** — diagnosed row by row, 11 Sep | **local only**; see `docs/venues.md` |
-| The Frick | `frick` | 10 | **DONE 12 Sep** — her count, no defect | her 0/3/7 is our 10; it leaves closed shows on page one |
-| The Menil | `menil` | 32 | **DONE 12 Sep** — her count | past archive paginates; 7 permanent galleries excluded, her ruling |
-| V&A | `va` | 6 | **DONE 12 Sep** — her count | Displays excluded, **her ruling for THIS venue only** |
-| Tate Modern | `tate-modern` | 13 | **DONE 12 Sep** — her count | |
-| Tate Britain | `tate-britain` | 9 | **DONE 12 Sep** — her count | Ofili excluded on the venue's own ONGOING label |
-| Wallace Collection | `wallace` | 11 | **DONE 12 Sep** — her count | displays and trails kept, **her ruling for THIS venue** |
-| Louvre | `louvre` | 22 | **DONE 12 Sep** — her count, corrected from 18 | its year pages need a "load more" press |
-| Gallerie dell'Accademia, Venice | `dellav` | 2 | **DONE 12 Sep** — her count | no listing page; prints Italian dates on its English page |
-| Kunsthistorisches | `khm` | 6 | **DONE 12 Sep** — her count, no change needed | two rows half-dated because the venue says "since"/"until" |
-| Capodimonte | `capo` | 18 | **DONE 12 Sep — on her terms, NOT verified row by row** | see below |
-| Galleria Borghese | `borghese` | 7 | **not re-reviewed** — verified 7 Sep, engine has changed a lot since | site goes down periodically; Italian only |
-| Uffizi | `uffizi` | 14 | **reviewed by her 12 Sep — fixes pending** | writes headlines, not titles — **open** |
-| Brera | `brera` | 7 | **reviewed by her 12 Sep — fixes pending** | filed under `/news/mostra/` |
-| MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | n/a | refused; marker rows only |
+| Venue | Code | Rows | **Her substantive review** | Fixed & re-verified | Notes |
+|---|---|---|---|---|---|
+| National Gallery, London | `ng` | 27 | yes — her count | yes | |
+| Rijksmuseum | `rijks` | 37 | yes — her count (36) | yes | 37 since; not chased, her call. *Asian Pavilion* pulled by the venue |
+| Acquavella | `acq` | 15 | yes — her count | yes | |
+| Art Institute of Chicago | `artic` | 77 | yes — her count + all 77 titles read | yes | **local only** |
+| The Met | `met` | 106 | yes — row by row, 11 Sep | yes | **local only**; see `docs/venues.md` |
+| The Frick | `frick` | 10 | **yes — 12 Sep** | yes — no defect found | her 0/3/7 is our 10; it leaves closed shows on page one |
+| The Menil | `menil` | 32 | **yes — 12 Sep** | yes | past archive paginates; 7 permanent galleries excluded, her ruling |
+| V&A | `va` | 6 | **yes — 12 Sep** | yes | Displays excluded, **her ruling for THIS venue only** |
+| Tate Modern | `tate-modern` | 13 | **yes — 12 Sep** | yes | |
+| Tate Britain | `tate-britain` | 9 | **yes — 12 Sep** | yes | Ofili excluded on the venue's own ONGOING label |
+| Wallace Collection | `wallace` | 11 | **yes — 12 Sep** | yes | displays and trails kept, **her ruling for THIS venue** |
+| Louvre | `louvre` | 22 | **yes — 12 Sep** | yes | count corrected 18 → 22; year pages need a "load more" press |
+| Gallerie dell'Accademia | `dellav` | 2 | **yes — 12 Sep** | yes | prints Italian dates on its English page |
+| Kunsthistorisches | `khm` | 6 | **yes — 12 Sep** | yes — no change needed | two rows half-dated because the venue says "since"/"until" |
+| Capodimonte | `capo` | 18 | **partly — see below** | yes, fixes applied | **NOT count-verified and never will be**, her decision |
+| Uffizi | `uffizi` | 14 | **yes — 12 Sep** | **NO — fixes pending** | writes headlines, not titles — **open** |
+| Brera | `brera` | 7 | **yes — 12 Sep** | **NO — fixes pending** | filed under `/news/mostra/` |
+| Galleria Borghese | `borghese` | 8 | **NO — never re-reviewed since 7 Sep** | n/a | CSV sent to her 12 Sep, awaiting her review. 7 exhibitions + 1 marker row |
+| MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | n/a | n/a | refused; marker rows only |
 
-**Fifteen venues are finished. Two remain from her review — `uffizi` and
-`brera` — plus `borghese`, which she has not re-reviewed.**
+**Read the two middle columns separately.** "Her substantive review" means she went
+through that venue against the live site herself and her findings are recorded.
+"Fixed" means those findings have been acted on and the venue re-swept and checked.
+A venue can have the first without the second — that is exactly the state `uffizi`
+and `brera` are in, and the state all thirteen were in at the start of 12 Sep.
+
+**Fifteen venues are finished. Two remain from her review — `uffizi` and `brera`,
+both reviewed by her but not yet fixed — plus `borghese`, the only venue she has
+not substantively reviewed at all.**
 
 Her 12 Sep review and every fix made against it are written up in
 **`docs/review-2026-09-12.md`**, venue by venue, with what was wrong, what
