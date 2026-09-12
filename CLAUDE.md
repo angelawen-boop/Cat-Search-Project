@@ -118,39 +118,57 @@ Until it is, check it against the newest run directory before trusting it.
 | Venue | Code | Rows | Checked against the live site? | Notes |
 |---|---|---|---|---|
 | National Gallery, London | `ng` | 27 | **yes** — her count | |
-| Rijksmuseum | `rijks` | 36 | **yes** — her count | *Asian Pavilion* pulled by the venue |
+| Rijksmuseum | `rijks` | 37 | **yes** — her count (36); 37 since, not chased, her call | *Asian Pavilion* pulled by the venue |
 | Acquavella | `acq` | 15 | **yes** — her count | |
 | Art Institute of Chicago | `artic` | 77 | **yes** — her count + all 77 titles read | **local only** |
 | The Met | `met` | 106 | **yes** — diagnosed row by row, 11 Sep | **local only**; see `docs/venues.md` |
-| Galleria Borghese | `borghese` | 7 | **stale** — verified 7 Sep, engine has changed since | site goes down periodically |
-| The Frick | `frick` | 10 | **reviewed by her 12 Sep — fixes pending** | archive past page 1 unreachable, out of range anyway |
-| The Menil | `menil` | 20 | **reviewed by her 12 Sep — fixes pending** | 7 permanent galleries excluded, her ruling |
-| Wallace Collection | `wallace` | 11 | **reviewed by her 12 Sep — fixes pending** | displays and trails kept, her ruling |
-| V&A | `va` | 15 | **reviewed by her 12 Sep — fixes pending** | South Kensington only; no past archive |
-| Tate Modern | `tate-modern` | 13 | **reviewed by her 12 Sep — fixes pending** | **the known hard case** — see known bug 1 |
-| Tate Britain | `tate-britain` | 10 | **reviewed by her 12 Sep — fixes pending** | **the known hard case** |
-| Louvre | `louvre` | 18 | **reviewed by her 12 Sep — fixes pending** | year pages may be truncated — **open** |
+| The Frick | `frick` | 10 | **DONE 12 Sep** — her count, no defect | her 0/3/7 is our 10; it leaves closed shows on page one |
+| The Menil | `menil` | 32 | **DONE 12 Sep** — her count | past archive paginates; 7 permanent galleries excluded, her ruling |
+| V&A | `va` | 6 | **DONE 12 Sep** — her count | Displays excluded, **her ruling for THIS venue only** |
+| Tate Modern | `tate-modern` | 13 | **DONE 12 Sep** — her count | |
+| Tate Britain | `tate-britain` | 9 | **DONE 12 Sep** — her count | Ofili excluded on the venue's own ONGOING label |
+| Wallace Collection | `wallace` | 11 | **DONE 12 Sep** — her count | displays and trails kept, **her ruling for THIS venue** |
+| Louvre | `louvre` | 22 | **DONE 12 Sep** — her count, corrected from 18 | its year pages need a "load more" press |
+| Gallerie dell'Accademia, Venice | `dellav` | 2 | **DONE 12 Sep** — her count | no listing page; prints Italian dates on its English page |
+| Kunsthistorisches | `khm` | 6 | **DONE 12 Sep** — her count, no change needed | two rows half-dated because the venue says "since"/"until" |
+| Capodimonte | `capo` | 18 | **DONE 12 Sep — on her terms, NOT verified row by row** | see below |
+| Galleria Borghese | `borghese` | 7 | **not re-reviewed** — verified 7 Sep, engine has changed a lot since | site goes down periodically; Italian only |
 | Uffizi | `uffizi` | 14 | **reviewed by her 12 Sep — fixes pending** | writes headlines, not titles — **open** |
 | Brera | `brera` | 7 | **reviewed by her 12 Sep — fixes pending** | filed under `/news/mostra/` |
-| Capodimonte | `capo` | 18 | **reviewed by her 12 Sep — fixes pending** | Italian dates, detail pages only |
-| Kunsthistorisches | `khm` | 6 | **reviewed by her 12 Sep — fixes pending** | Canaletto & Bellotto is one over her count — **open** |
-| Gallerie dell'Accademia, Venice | `dellav` | 2 | **reviewed by her 12 Sep — fixes pending** | never blocked; no listing page |
 | MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | n/a | refused; marker rows only |
 
-**Five venues are finished. The other 13 have been REVIEWED but not FIXED** —
-she went through them against the live sites herself on 12 Sep, working from a
-run and summary produced that morning. **Her findings are the input to the next
-piece of work; do not ask her to re-review these.**
+**Fifteen venues are finished. Two remain from her review — `uffizi` and
+`brera` — plus `borghese`, which she has not re-reviewed.**
 
-**Those findings are not in this repo yet.** They exist in her notes and the
-session that produced them. Whoever picks this up should get them written down
-here FIRST — the same failure has now cost this project twice: the artic badge
-answer died with a session, and a stale "artic never run" line sent a later
-session hunting a state that did not exist.
+Her 12 Sep review and every fix made against it are written up in
+**`docs/review-2026-09-12.md`**, venue by venue, with what was wrong, what
+changed and what each venue now returns. Read that before touching a venue
+listed as DONE.
 
-Plumbing being in is not the same as the rows being right: artic passed every
-count it was given and still had three defects, two of them invisible to any
-number.
+### Capodimonte is closed differently, and the difference matters — her ruling 12 Sep
+
+She could confirm the CSV holds no *visible* defects — no nonsensical titles, no
+mangled summaries. She could **not** verify it against the site: Capodimonte
+publishes in Italian only, and taking a CSV row and finding that exhibition on the
+site is slow to the point of uselessness.
+
+**So this venue is not count-verified and will not be.** Her decision instead:
+import every row unless it is visibly mangled, then use the app's URL button —
+Chrome translates the page for her, and the link is already attached to the card.
+
+Two consequences:
+
+- **The `url` column is the load-bearing field at this venue, not the dates.** All
+  18 rows carry the venue's own exhibition address and none was dead on the 12 Sep
+  run. Five rows have no closing date; she has accepted that.
+- **The summary must arrive in English.** Her whole approach rests on it. Prompt A
+  never stated an output language — English prompt, English examples, so a model
+  would most likely comply, but nothing required it. Now it does; see
+  `scraper/compress_prompt.md`.
+
+**Whether displays count is HERS, and it varies by venue** — different museums mean
+different things by the word. Not wanted at the V&A, wanted at the Wallace. Two
+venues disagreeing is the expected state, not a contradiction to tidy up.
 
 **All 21 have a recipe.** Blocked venues stay wired in deliberately: a refusal
 costs about half a second, leaves marker rows in the CSV so it is visible on the
@@ -529,7 +547,10 @@ at the same time. **A hang is bounded** — a venue over budget (default 10 min)
 abandoned, writes no file, and is redone by `--continue`.
 
 Caveats: these are container timings, and the listing scroll added 12 Sep costs a
-few seconds per listing page.
+few seconds per listing page. Two additions of 12 Sep cost a page load each where
+they apply: following a numbered archive to the lookback floor (the Menil now
+reads 3 pages of past instead of 1) and pressing a "load more" control (the
+Louvre, once per year page).
 
 ### The network bridge — don't remove it
 
@@ -572,7 +593,20 @@ was wrong at Rijksmuseum a day later. A venue writes down only what differs.
 Recipe options: `selector`, `isNav`, `title` (heading / card / strip rules),
 `lookbackAfterDetail`, `excludeOngoing`, `yearArchive`, `lookbackFrom` (unused),
 `card: { firstLine }`, `otherBranch`, `within` (per **page**, not per venue),
-`excludeUndated`, `suffix`, `includeCurrentYear`, `notATitle`, `excludeLabelled`.
+`excludeUndated`, `suffix`, `includeCurrentYear`, `notATitle`, `excludeLabelled`,
+`paginate` (per **page**), `loadMore`, `description`, `noise`.
+
+The last two are about where the BLURB is, and they exist because the shared
+extraction ladder expects a paragraph at every rung:
+
+- **`description`** names the element holding the curatorial text, read whatever its
+  tag. The V&A writes its blurb into a `div` with no paragraph in it at all, so the
+  ladder fell to the bottom rung and stored the membership offer on all 15 rows.
+  Capodimonte keeps its article in a tabbed panel whose paragraphs are divs, so the
+  ladder took a nested fragment and several summaries began mid-sentence.
+- **`noise`** names extra containers to exclude at one venue only — Capodimonte's
+  practical-info box is styled `has-custom-color`, a generic WordPress class that
+  means nothing anywhere else.
 
 Two that carry a trap:
 
@@ -624,6 +658,50 @@ de-duplication, and it cannot lose anything. Button text is not a name: `CTA_ONL
 rejects a link whose **whole** text is one of those phrases, so a title containing
 "Explore" survives.
 
+### Getting past a listing's first page — added 12 Sep 2026
+
+Two shapes of "there is more below", and which one a venue uses decides everything.
+
+**A NUMBERED ARCHIVE is just more addresses.** The Menil's past listing paginates,
+`?page=2`, and only page one was being read — 12 exhibitions lost outright, invisible
+in the output because a first page that reads perfectly looks exactly like a complete
+archive. `followPagination()` asks for the next page and lets the site's answer decide
+whether there is another, stopping when a page hands over no address not already seen.
+**How many pages there are is never written into a recipe** — the same trap as a
+hand-written year, one step worse, because only the site knows.
+
+**It stops at the lookback floor, and that is not an optimisation.** The first version
+walked to the true end, on the grounds that stopping early assumes a newest-first
+archive. That caution cost eleven Menil pages instead of three and put 13 decades-old
+undated exhibitions on her approval pile that nothing downstream could drop. **The
+ordering is not assumed, it is checked**: each page carries its newest closing date to
+the next, and the first page that comes back newer says so in the log and reverts that
+venue to reading to the end.
+
+**A "LOAD MORE" BUTTON IS A CONTROL, and pressing it is correct here.** The test is
+whether the address changes — the Met's year menu changes it, so each year was simply
+another page and clicking raced the navigation; the Louvre's loader changes nothing in
+the address bar and has no address of its own that answers. A venue names its own
+control (`loadMore`); there is no general rule for what such a button looks like.
+
+Three things make it work, and each cost a failure:
+
+- **The consent banner comes down first** (`dismissConsent()`, universal). The Louvre's
+  control was recorded as broken for two days because the cookie popin swallowed the
+  click. **"I clicked it and nothing happened" is only evidence if the click reached
+  the thing.** The banner is not shown on every visit, which is how one unlucky test
+  became a written fact.
+- **The anchor's default action is cancelled before every press.** The button is a
+  disguised link to a page that 404s. While there is more to load the site intercepts
+  the click; once the list is complete it stops intercepting, the browser follows the
+  href, and the listing is replaced by the 404. **The failure needs the press AFTER
+  the last real one**, so a single-click probe cannot show it — mine reported success
+  immediately before the live sweep lost 8 rows. **A control tested once is tested in
+  its easy case.**
+- **A count agreeing is not proof a mechanism works.** With the press failing, the
+  Louvre still returned her 18, because its plain past page covered what the year page
+  was hiding. Only fixing the press revealed the true count was 22.
+
 ### Three universal behaviours added 12 Sep 2026
 
 - **A listing page is SCROLLED before it is read.** The KHM builds cards as you
@@ -637,6 +715,41 @@ rejects a link whose **whole** text is one of those phrases, so a title containi
   not report itself as empty.
 - **A title can come from the exhibition's own page when the listing gives none.**
   Fills a BLANK only, never overwrites.
+
+### Keeping junk out of the summary — her biggest issue, 12 Sep
+
+Her verdict across the twelve venues she reviewed: **the biggest problem is junk text
+in the summaries** — photo captions, "join us for the opening talk", ticketing. And
+the reason it matters is hers, not a restatement: some litter the compression step can
+be trusted to ignore, but **an artist and a work named in a caption read exactly like
+an artist and a work named in the blurb**, so the model cannot tell them apart and can
+state something false with no way to know.
+
+Three kinds of rule, in descending order of trust. Reach for the next one only when
+the one above gives nothing:
+
+1. **The page names the block itself** — `image-caption` at Tate, `Alert` at the
+   Louvre, `onetrust` anywhere, `has-custom-color` at Capodimonte. Strongest, because
+   it survives the wording inside changing, and the Louvre's visitor notices change
+   weekly.
+2. **The shape of the markup** — a paragraph that is bold end to end is a label, not
+   prose. The Wallace's details line sits in the same `div.rich-text` as its blurb,
+   same class, same parent; the bold is the only difference. Guarded to fire only
+   where the page has non-bold prose to fall back on.
+3. **A phrase list** (`BOILERPLATE`) — "admission charge", "generously provided by",
+   a star rating. **Weakest, and it does not generalise**: it catches only the
+   phrasings we have seen, and a venue writing "entry is chargeable" slips through.
+   Only add a phrase that could never appear in a real blurb — a donor list, a ticket
+   price — never a word that might turn up in curatorial prose.
+
+**Junk in a summary is visible on her approval card, unlike a dropped row.** That is
+why a phrase list is an acceptable last resort here and would not be acceptable for
+deciding what to collect.
+
+**Clearing one kind of junk can pull in another.** Removing Tate's caption freed a slot
+and what moved up at the Menil was the funder list — and the Frick was already shedding
+those while the Menil was taking them on. Re-check the closed venues after every change
+to this area, which is her standing rule for an engine change anyway.
 
 ### Failure handling
 
@@ -728,7 +841,21 @@ Summer 2022                          season and year — a bound, not a date
 Dal 16 ottobre 2025 al 6 gennaio 2026   Italian, "from ... to ..."
 Dal 16 aprile all'8 settembre 2026      Italian, "al" elided before a vowel
 From 21/03/2024 to 28/04/2024           all numeric — see below
+10 set 2026 - 22 nov 2026               Italian month abbreviated to three letters
+Saturday 23 May - Sunday 29 Nov 2026    a weekday in front of each date
 ```
+
+**A WEEKDAY NAME BREAKS EVERY RANGE PATTERN**, so it is stripped first. The Wallace
+prints "Saturday 23 May - Sunday 29 November 2026" and its Churchill row reached her
+with NO dates and a note saying the venue published none — untrue, and the same shape
+of failure as dellav below: **the scraper blamed the site for its own gap.** The strip
+is anchored on what follows (a day number or a month name) so a bare "Sun" is not cut
+out of prose. Longest alternative first, or it removes "Sunday" and silently leaves
+"Saturday" — which is what the first attempt did.
+
+**THREE-LETTER ITALIAN MONTHS.** The Gallerie dell'Accademia prints "10 set 2026 -
+22 nov 2026" on its ENGLISH page. `nov` matched as English, `set` did not, because the
+map held `sett`. Both dates came back blank.
 
 **Italian is in the SHARED month map**, like every other format: five wired venues
 are Italian. Without it Capodimonte's 50 rows were ALL undated, and undated rows
@@ -760,6 +887,15 @@ only the en dash handled, a figure dash made "15 October 2026" read as 1 October
 sit beside the number, and the year must be plausible (**1990–2035**). Verified
 against `Caravaggio (1571-1610)`, `stayed in Italy in 1629`, `confiscated on 4 May
 1607`, `August 17 1945` — all correctly ignored.
+
+**A PUBLISHED OPENING YEAR THAT FAILS THAT GUARD REFUSES THE WHOLE RANGE** — it is
+never quietly swapped for the closing year. Capodimonte's Mimmo Jodice page says
+"Mimmo Jodice ( Napoli 29 marzo 1934 – 27 ottobre 2025)", the photographer's birth and
+death. 1934 was rejected, the opening year was then worked out from the closing one,
+and **a lifespan was stored as the exhibition's run** in a row that looked healthy in
+every other respect. The flaw was treating "no year published" and "a year published
+that cannot be an exhibition year" as the same case. They are opposites: the first is
+a gap to fill, the second is proof the sentence is not about a run at all.
 
 **The two parsers must not diverge.** `findDateRange` (listings) and
 `findDateRangeInProse` (page text) drifted twice, each time silently losing dates.
@@ -855,10 +991,12 @@ It is finished and signed off — do not re-plan it.
 
 ### Known bugs — open
 
-1. **Nothing filters out non-exhibitions.** The only test is URL shape, so talks,
-   tours and opening events filed under an exhibitions path are collected. Tate tags
-   each item by type, and that tag is the hook. A venue that dumps everything *and*
-   tags nothing needs a different answer.
+1. **Nothing filters out non-exhibitions, generally.** The only test is URL shape, so
+   talks, tours and opening events filed under an exhibitions path are collected. A
+   venue that dumps everything *and* tags nothing still needs a different answer.
+   **Where a venue DOES tag, the tag is now used** — Tate's `event_type` query filter,
+   the V&A's `Display` badge, Tate Britain's `ONGOING`, the Art Institute's
+   `COLLECTION INSTALLATION`. That is rung 1 of the ladder, the site saying so.
 2. **Title casing is inconsistent** — some venues apply capitalisation in CSS.
    **Her decision: live with it.** Genuinely all-caps titles exist.
 3. **artic's two title defects** — see §2.
@@ -923,6 +1061,25 @@ Each entry cost a real failure. Before changing the area, read the line.
 - Reading an all-numeric range from whole page text.
 - Acquavella's title rule stripping `NEW YORK` / `PALM BEACH`, making its two runs of
   one show read as the same exhibition. It now strips only the date tail.
+- Reading only the FIRST page of a paginated archive — 12 Menil exhibitions lost, and
+  a first page that reads perfectly looks exactly like a complete archive.
+- Walking a paginated archive past the lookback floor "to be safe" — eleven pages
+  instead of three and 13 undated decades-old rows on her approval pile.
+- A load-more click following the anchor's href once the list is complete, replacing
+  the listing with a 404 and costing 8 Louvre rows.
+- Concluding a control is broken without checking the click reached it; the Louvre's
+  cookie popin swallowed it and the wrong conclusion sat in the recipe for two days.
+- The layout-wrapper escape applied to a NAMED consent manager — the V&A's cookie
+  panel held 24 of 27 paragraphs, passed itself off as the layout, and its text became
+  the description on all 15 rows.
+- An extraction ladder that expects a paragraph at every rung, with no way for a venue
+  to name a blurb that lives in a div.
+- A weekday name in front of a date, which defeats every range pattern.
+- Discarding an implausible published opening year and deriving one from the closing
+  year — an artist's lifespan stored as an exhibition run.
+- Italian months abbreviated to three letters (`set`), where the map held only `sett`.
+- Checking output for junk with an ENGLISH-only word list, then reporting an Italian
+  venue as clean.
 
 ---
 
@@ -934,8 +1091,10 @@ Each entry cost a real failure. Before changing the area, read the line.
    It rests on an authored eval that scored 14 of 14. **Do not raise it again.**
 2. ~~**Wire all 21 venues**~~ — **DONE.** All 21 have a recipe; see §2 for state.
 3. ~~**Parallelism and the hang bound**~~ — **DONE** (`--jobs=N`, `--budget-mins=N`).
-4. **Venue-by-venue diagnosis of the working set.** The current stage. Needs her count
-   of the live pages. **Tate is the known hard case** (known bug 1).
+4. **Venue-by-venue diagnosis of the working set.** The current stage, and mostly
+   done: 15 venues finished. **`uffizi` and `brera` are the two left from her review**,
+   plus `borghese`, which she has not re-reviewed. Her findings and every fix are in
+   `docs/review-2026-09-12.md`.
 5. **Decide what to do about venues still unreachable** — `moma`, `brit`, `morgan`.
 6. **JSX work** — quarantine ("Never add this"), plus whatever steps 4–5 turn up.
 7. **Catalogue lookup tuning** — Haiku vs Sonnet, on known-tricky catalogues.
@@ -1010,6 +1169,7 @@ findings, in `docs/review-log.md`.
 | `docs/venues.md` | Per-venue forensics: the scoreboard, exactly what each refusal is, the Met, Morgan, Rijksmuseum, Borghese, the legacy fetch-tool notes, listing URLs | Working one specific venue |
 | `docs/venue_urls.md` | All 21 venues' addresses from the Sweeper Brief, plus its per-venue traps | Wiring or re-checking a venue's pages |
 | `docs/compression.md` | The compression design, the model split and its evidence, the eval, the rejected alternatives | Changing compression — otherwise don't |
+| `docs/review-2026-09-12.md` | **Her 12 Sep review of the 13 unchecked venues**, venue by venue: what she found, what was wrong, what changed, what each returns now | Before touching any venue marked DONE in §2 |
 | `docs/review-log.md` | Independent review findings and what was decided | A reviewer raises something |
 | `docs/Cat_Watch_Sweeper_Brief_v2.docx` | The original Chat-Claude brief | Rarely; most of it does not apply to the scraper |
 | `scraper/compress_prompt.md` | The compression prompts and three rounds of tuning | Changing summary wording |
