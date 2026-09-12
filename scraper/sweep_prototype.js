@@ -201,7 +201,6 @@ const LOOKBACK = new Date('2024-07-01');
  * if a run is cut short.
  */
 function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
-  const first = floor.getUTCFullYear();
   // THE CURRENT YEAR IS NORMALLY EXCLUDED, because a venue's bare "past" page
   // already serves it, and asking twice stamps "Also listed on the venue's
   // 'past 2026' page." onto her approval cards.
@@ -211,6 +210,17 @@ function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
   // venue whose archive is year-only opts in, and the current year becomes
   // another page rather than a duplicate of one.
   const last = today.getUTCFullYear() - (entry.includeCurrentYear ? 0 : 1);
+
+  // AN ARCHIVE FILED BY OPENING DATE NEEDS ONE YEAR MORE.
+  //
+  // Her observation, 12 Sep: the Art Institute's year pages group by STARTING
+  // date, not closing date. The lookback keeps anything that closed on or after
+  // 1 July 2024 — so a show that opened in December 2023 and closed in August
+  // 2024 is squarely in range and sits on the 2023 page, which the floor's year
+  // alone never asks for. One year earlier is enough to reach any show still
+  // open on the floor date, because a run long enough to start two years before
+  // it and still be open is a permanent installation, which she excludes anyway.
+  const first = entry.yearByStartDate ? floor.getUTCFullYear() - 1 : floor.getUTCFullYear();
   const pages = [];
   for (let y = last; y >= first; y--) {
     // Two shapes of the same thing. Most venues filter with a query parameter
@@ -3265,8 +3275,10 @@ const VENUES = {
     pages: [
       { path: '/exhibitions',          ctx: 'current' },
       { path: '/exhibitions/upcoming', ctx: 'upcoming' },
-      { path: '/exhibitions/history', ctx: 'past', param: 'year', yearArchive: true, includeCurrentYear: true },
-      { path: '/exhibitions/history', ctx: 'past p2', param: 'year', yearArchive: true, includeCurrentYear: true, suffix: '&page=2' },
+      // yearByStartDate: its year pages group by OPENING date, her observation
+      // 12 Sep, so the year before the lookback floor has to be asked for too.
+      { path: '/exhibitions/history', ctx: 'past', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true },
+      { path: '/exhibitions/history', ctx: 'past p2', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true, suffix: '&page=2' },
     ],
     // Exhibitions sit at /exhibitions/<slug>, which is NOT beneath
     // /exhibitions/history — that is why the old "links below the listing"

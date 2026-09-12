@@ -884,6 +884,20 @@ test('P-012: a page with no readable dates proves nothing and is walked past', (
     ['/exhibitions/past', '/exhibitions/past?page=2', '/exhibitions/past?page=3']);
 });
 
+test('Y-006: an archive filed by OPENING date asks for one year earlier', () => {
+  // Her observation, 12 Sep: artic's year pages group by starting date. A show
+  // that opened in December 2023 and closed in August 2024 is inside the
+  // lookback and sits on the 2023 page, which the floor's year alone never
+  // requests. The Met files by closing date and must be unaffected.
+  const byStart = expandYearArchive(
+    { path: '/exhibitions/history', ctx: 'past', param: 'year', yearArchive: true,
+      includeCurrentYear: true, yearByStartDate: true }, FLOOR, new Date('2026-09-12'));
+  assert.deepEqual(byStart.map(p => Number(p.path.split('=')[1])), [2026, 2025, 2024, 2023]);
+  assert.deepEqual(years('2026-09-11'), [2025, 2024], 'a closing-date archive is unchanged');
+  assert.equal(VENUES.artic.pages.every(p => !p.yearArchive || p.yearByStartDate), true);
+  assert.equal(VENUES.met.pages.some(p => p.yearByStartDate), false);
+});
+
 test('Y-005: the Met resolves to real addresses, and its years are navigation', () => {
   const pages = listingPages(VENUES.met);
   const paths = pages.map(p => p.path);
