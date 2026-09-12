@@ -976,6 +976,18 @@ test('A-002b: HOLIDAY INSTALLATION too, and the same list guards the detail page
     'the card rule and the page rule must be the one list');
 });
 
+test('A-002c: a gallery-number rotation is out, a real title with Rotation stays', () => {
+  // "G239 Rotation - July 2023" is a gallery rotation named after the gallery,
+  // with no description on its page — and artic labels it EXHIBITION, so no
+  // badge rule can reach it. She found it on the 2023 archive page.
+  const re = VENUES.artic.excludeLabelled;
+  assert.equal(re.test('EXHIBITION G239 Rotation - July 2023'), true);
+  assert.equal(re.test('EXHIBITION G106 Rotation - March 2025'), true);
+  // Narrow on purpose: only a gallery code followed by the word.
+  assert.equal(re.test('EXHIBITION Rotation and Revolution in Modern Sculpture'), false);
+  assert.equal(re.test('TICKETED EXHIBITION Matisse\u2019s Jazz: Rhythms in Color'), false);
+});
+
 test('A-003: the longest alternative must come first, or a badge is stranded', () => {
   // "TICKETED" first would eat the word and leave "EXHIBITION" behind.
   assert.equal(/^TICKETED EXHIBITION/.test(

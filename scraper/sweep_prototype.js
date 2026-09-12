@@ -2718,8 +2718,23 @@ async function collectFromListing(page, opts) {
  * FREE, MEMBERS ONLY — say nothing about what a thing is and are not here; they
  * only ever affected the title.
  */
-const ARTIC_NOT_AN_EXHIBITION =
-  /\b(?:COLLECTION (?:INSTALLATION|ROTATION)|VIDEO INSTALLATION|SPECIAL LOAN INSTALLATION|HOLIDAY INSTALLATION)\b/i;
+const ARTIC_NOT_AN_EXHIBITION = new RegExp([
+  // The venue's own type badges.
+  '\\b(?:COLLECTION (?:INSTALLATION|ROTATION)|VIDEO INSTALLATION' +
+    '|SPECIAL LOAN INSTALLATION|HOLIDAY INSTALLATION)\\b',
+
+  // ONE ENTRY THAT IS NOT A BADGE, and it has to be here because the venue
+  // tagged it wrongly. "G239 Rotation - July 2023" is a gallery rotation named
+  // after the gallery it happened in, with no description on its page at all —
+  // and artic labels it EXHIBITION, so no badge rule can reach it. She found it
+  // on the 2023 archive page and asked for it out.
+  //
+  // Matched on the SHAPE of the name, which is unambiguous: a gallery code,
+  // then the word Rotation. Nothing a museum would call an exhibition looks
+  // like that, and the guard is narrow enough that a show with "Rotation" in
+  // its title survives — only "G<number> Rotation" matches.
+  '\\bG\\d+\\s+Rotation\\b',
+].join('|'), 'i');
 
 const VENUES = {
   met: {
