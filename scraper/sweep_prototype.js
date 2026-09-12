@@ -229,14 +229,30 @@ function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
     // are simply another address, and either way the years are DERIVED here
     // rather than written into a recipe — a hand-typed list is right the day it
     // is typed and quietly wrong every year after.
-    // `suffix` carries a SECOND filter that sits after the year — the Art
-    // Institute's archive paginates inside each year as well as by year
-    // ("Showing 20 out of 25 Exhibitions"), and both are ordinary query
-    // parameters, so page 2 of a year is simply another address.
     const path = entry.param
-      ? `${entry.path}?${entry.param}=${y}${entry.suffix || ''}`
-      : `${entry.path}${entry.yearPath}${y}${entry.suffix || ''}`;
-    pages.push({ path, ctx: `${entry.ctx} ${y}` });
+      ? `${entry.path}?${entry.param}=${y}`
+      : `${entry.path}${entry.yearPath}${y}`;
+
+    // A YEAR CAN ITSELF BE MORE THAN ONE PAGE, and how many is the site's to
+    // say. The Art Institute's archive paginates twice over — one page per
+    // year, and up to 20 exhibitions per page inside a year ("Showing 20 out
+    // of 25 Exhibitions"). That second axis was briefly written into the
+    // recipe as a hand-typed `&page=2`, which is the hand-typed-year trap one
+    // step worse: a year that grows past 40 exhibitions loses the rest with
+    // the sweep reporting no error, and a year with only one page leaves an
+    // empty-page marker on her approval pile on every sweep forever.
+    //
+    // So `paginate` is CARRIED THROUGH to each year and followPagination()
+    // asks the site for the next page until the site stops offering new
+    // addresses — the same mechanism the Menil's archive uses, and the same
+    // reason: only the site knows how many pages there are.
+    //
+    // `basePath` is the year's own address, so page 2 is built as
+    // `?year=2025&page=2` rather than by appending to whatever page we are
+    // standing on. followPagination() explains why that distinction matters.
+    pages.push(entry.paginate
+      ? { path, ctx: `${entry.ctx} ${y}`, paginate: entry.paginate, basePath: path }
+      : { path, ctx: `${entry.ctx} ${y}` });
   }
   return pages;
 }
@@ -3282,18 +3298,20 @@ const VENUES = {
     //   year holds up to 20 per page and needs a second page above that.
     //
     //   Both are plain query parameters, so neither is a control to operate —
-    //   each is just another address. Years stay DERIVED by expandYearArchive;
-    //   only the page number is written down, and only as "there is a second
-    //   page", which is a property of the site's page size rather than of any
-    //   particular year. A year with no second page loads empty and leaves a
-    //   marker row saying so, which is visible rather than silent.
+    //   each is just another address. NEITHER IS WRITTEN DOWN: the years are
+    //   derived by expandYearArchive() and the page number inside a year is
+    //   asked of the site by followPagination(), which stops when a page
+    //   offers no address it has not already seen. A year that is one page
+    //   long simply never gets a second request.
     pages: [
       { path: '/exhibitions',          ctx: 'current' },
       { path: '/exhibitions/upcoming', ctx: 'upcoming' },
       // yearByStartDate: its year pages group by OPENING date, her observation
       // 12 Sep, so the year before the lookback floor has to be asked for too.
-      { path: '/exhibitions/history', ctx: 'past', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true },
-      { path: '/exhibitions/history', ctx: 'past p2', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true, suffix: '&page=2' },
+      // The page number inside a year is NOT written down — `paginate` hands
+      // that to the site, exactly as `yearArchive` hands it the years. See
+      // expandYearArchive() for what the hand-typed `&page=2` here cost.
+      { path: '/exhibitions/history', ctx: 'past', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true, paginate: { param: 'page', from: 2 } },
     ],
     // Exhibitions sit at /exhibitions/<slug>, which is NOT beneath
     // /exhibitions/history — that is why the old "links below the listing"
@@ -3631,7 +3649,10 @@ async function scrapeVenue(page, code) {
     // address. Only where the venue names the control; see clickLoadMore().
     if (v.loadMore) {
       const lm = await clickLoadMore(page, v.loadMore, v.selector);
-      if (lm.clicks) log(`  "load more" pressed ${lm.clicks}x on ${pg.ctx}`);
+      // THE REASON IS LOGGED, NOT JUST THE COUNT. "pressed 1x" alone is the
+      // same line whether the list was genuinely one batch long or the batch
+      // was merely slow and the loop gave up on it — see clickLoadMore().
+      if (lm.clicks) log(`  "load more" pressed ${lm.clicks}x on ${pg.ctx} — stopped: ${lm.reason}`);
       if (lm.hitCap) {
         log(`  LOAD MORE RUNAWAY on ${pg.ctx}: still adding after 30 presses`);
         rows.push({
@@ -3890,16 +3911,50 @@ async function dismissConsent(page, alwaysRe = ALWAYS_NOISE) {
  *
  * Stops when the control goes away, when a press adds no links, or at the cap —
  * and the cap leaves a marker row, because reaching it means rows are missing.
+ *
+ * A FIXED PAUSE AFTER THE PRESS CANNOT DECIDE ANYTHING, and for a day it was
+ * asked to decide everything. The old loop waited 2500ms, counted the links
+ * once, and treated "no more links than before" as the end of the list. That
+ * single number is answering two unrelated questions at the same time — HAS
+ * THE NEXT BATCH ARRIVED YET, and IS THERE NO NEXT BATCH — and it cannot tell
+ * them apart. Under load the batch simply had not landed, so the loop declared
+ * the archive finished and the page was read half-loaded.
+ *
+ * It cost the Louvre four exhibitions in the 21-venue run of 12 Sep and was
+ * invisible: its "past 2025" page handed over 6 links under --jobs=4 and 11
+ * running alone, the same code on the same day, and both runs reported success.
+ * A slow batch and an exhausted list looked identical in the output AND in the
+ * log. That is the whole danger — testing this control alone tests it in its
+ * easy case, where the batch always beats the clock.
+ *
+ * So the press is followed by a WATCH, not a sleep: the link count is checked
+ * every POLL_MS until it grows, and only a full GROWTH_TIMEOUT with no growth
+ * at all is accepted as the end. Slow is then slow, not empty. It is also
+ * faster in the ordinary case, because a batch that lands in 400ms no longer
+ * costs 2500.
+ *
+ * The reason it stopped is RETURNED AND LOGGED. "pressed 1x" was printed
+ * whether the control vanished, the click missed, or the batch was merely
+ * slow — three different stories behind one line, and the line named none of
+ * them. A log that cannot distinguish a working mechanism from a broken one is
+ * why this sat unnoticed.
  */
+const LOADMORE_POLL_MS = 300;      // how often to look for the new batch
+const LOADMORE_GROWTH_MS = 12000;  // how long "nothing yet" has to hold to mean "nothing left"
+
 async function clickLoadMore(page, selector, countSelector, maxClicks = 30) {
   let clicks = 0;
+  let reason = 'the control was never there';
   const listingUrl = page.url();
   try {
     for (; clicks < maxClicks; clicks++) {
       const count = () => page.$$eval(countSelector,
         as => new Set(as.map(a => a.getAttribute('href'))).size).catch(() => 0);
       const before = await count();
-      if (!(await page.$(selector))) break;
+      if (!(await page.$(selector))) {
+        reason = clicks ? 'the control went away' : 'the control was never there';
+        break;
+      }
 
       // THE CONTROL IS AN ANCHOR, AND ITS href IS A DEAD END.
       //
@@ -3926,23 +3981,43 @@ async function clickLoadMore(page, selector, countSelector, maxClicks = 30) {
         el.click();
         return true;
       }, selector).catch(() => false);
-      if (!navigated) break;
-      await page.waitForTimeout(2500);
+      if (!navigated) { reason = 'the press did not reach the control'; break; }
+
+      // WATCH FOR THE BATCH, do not sleep through it. See the note above.
+      let after = before, movedAway = false;
+      const deadline = Date.now() + LOADMORE_GROWTH_MS;
+      while (Date.now() < deadline) {
+        await page.waitForTimeout(LOADMORE_POLL_MS);
+        // Checked inside the loop, not after it: once the browser has followed
+        // the anchor there is no listing left to grow and waiting out the rest
+        // of the window would only delay putting it back.
+        if (page.url() !== listingUrl) { movedAway = true; break; }
+        after = await count();
+        if (after > before) break;
+      }
 
       // Belt and braces: if the page moved anyway, put it back and stop rather
       // than carry on reading whatever we landed on.
-      if (page.url() !== listingUrl) {
+      if (movedAway) {
         log(`    "load more" navigated away; returning to the listing`);
         await page.goto(listingUrl, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT }).catch(() => {});
         await page.waitForTimeout(1500);
+        reason = 'the control navigated away, so the list was already complete';
         break;
       }
 
-      const after = await count();
-      if (after <= before) { clicks++; break; }
+      if (after <= before) {
+        // A FULL WINDOW WITH NO GROWTH. This is the only reading of "the list
+        // is finished" the loop accepts, and the press that proved it is
+        // counted so the number matches what actually happened.
+        clicks++;
+        reason = `no new links in ${LOADMORE_GROWTH_MS / 1000}s, so the list is complete`;
+        break;
+      }
     }
-  } catch (e) { rethrowIfAborted(e); }
-  return { clicks, hitCap: clicks >= maxClicks };
+  } catch (e) { rethrowIfAborted(e); reason = `stopped by an error: ${e.message.slice(0, 80)}`; }
+  if (clicks >= maxClicks) reason = `hit the ${maxClicks}-press cap — rows may be missing`;
+  return { clicks, hitCap: clicks >= maxClicks, reason };
 }
 
 async function autoScroll(page, maxSteps = 12) {

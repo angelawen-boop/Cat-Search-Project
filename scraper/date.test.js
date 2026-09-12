@@ -898,6 +898,40 @@ test('Y-006: an archive filed by OPENING date asks for one year earlier', () => 
   assert.equal(VENUES.met.pages.some(p => p.yearByStartDate), false);
 });
 
+test('Y-007: NO RECIPE WRITES DOWN A PAGE NUMBER, the same rule as a year', () => {
+  // artic briefly carried a hand-typed `&page=2` on its year archive. That is
+  // the hand-written-year trap one step worse: a year growing past 40 shows
+  // loses the rest with the sweep reporting no error, and a year that is only
+  // one page long leaves an empty-page marker on her pile on every sweep.
+  // The site is asked instead — `paginate` — so nothing here goes stale.
+  for (const [code, v] of Object.entries(VENUES)) {
+    for (const pg of v.pages) {
+      assert.equal(/[?&]page=\d/.test(pg.path), false,
+        `${code}/${pg.ctx} writes a page number into its path`);
+      assert.equal('suffix' in pg, false,
+        `${code}/${pg.ctx} uses suffix, which was only ever the hand-typed page 2`);
+    }
+  }
+});
+
+test('Y-008: a paginated year archive carries paginate onto EVERY year', () => {
+  // expandYearArchive() used to return { path, ctx } and nothing else, so a
+  // `paginate` on a yearArchive page was accepted by the recipe and silently
+  // dropped by the engine — the failure would have been a venue quietly
+  // missing its second pages, with no error anywhere.
+  const pages = listingPages(VENUES.artic);
+  const yearPages = pages.filter(p => /year=\d{4}/.test(p.path));
+  assert.ok(yearPages.length >= 4, 'artic asks for the floor year minus one through this year');
+  for (const pg of yearPages) {
+    assert.deepEqual(pg.paginate, { param: 'page', from: 2 }, `${pg.ctx} lost its paginate`);
+    // basePath must be the YEAR's address, so page 2 is ?year=2025&page=2 and
+    // not the previous page with another parameter bolted on.
+    assert.equal(pg.basePath, pg.path, `${pg.ctx} lost its basePath`);
+  }
+  // A year archive with no paginate stays exactly as it was.
+  assert.equal(listingPages(VENUES.met).every(p => !p.paginate), true);
+});
+
 test('Y-005: the Met resolves to real addresses, and its years are navigation', () => {
   const pages = listingPages(VENUES.met);
   const paths = pages.map(p => p.path);
