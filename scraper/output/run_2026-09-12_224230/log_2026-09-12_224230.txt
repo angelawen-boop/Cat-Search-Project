@@ -1,0 +1,121 @@
+[2026-09-12T12:42:30.483Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T12:42:30.484Z] Lookback floor: 2024-07-01
+[2026-09-12T12:42:30.484Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_224230
+[2026-09-12T12:42:30.484Z] Venues this run: ng, acq, dellav, tate-modern, wallace
+[2026-09-12T12:42:30.484Z] Proxy: http://127.0.0.1:33723
+[2026-09-12T12:42:30.484Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-12T12:42:30.607Z] Running 5 venue(s) 3 at a time (one page at a time within each venue)
+[2026-09-12T12:42:30.779Z] [ng] 
+[2026-09-12T12:42:30.779Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-12T12:42:30.779Z] [ng]   NG — National Gallery, London
+[2026-09-12T12:42:30.779Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-12T12:42:30.779Z] [ng]   Fetching current/upcoming: https://www.nationalgallery.org.uk/exhibitions
+[2026-09-12T12:42:30.783Z] [dellav] 
+[2026-09-12T12:42:30.783Z] [dellav] ────────────────────────────────────────────────────────────
+[2026-09-12T12:42:30.783Z] [dellav]   DELLAV — Gallerie dell'Accademia, Venice
+[2026-09-12T12:42:30.784Z] [dellav] ────────────────────────────────────────────────────────────
+[2026-09-12T12:42:30.784Z] [dellav]   Fetching current: https://www.gallerieaccademia.it/en/
+[2026-09-12T12:42:30.785Z] [acq] 
+[2026-09-12T12:42:30.785Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-12T12:42:30.785Z] [acq]   ACQ — Acquavella Galleries, New York
+[2026-09-12T12:42:30.785Z] [acq] ────────────────────────────────────────────────────────────
+[2026-09-12T12:42:30.785Z] [acq]   Fetching all (current/upcoming/past): https://www.acquavellagalleries.com/exhibitions
+[2026-09-12T12:42:34.464Z] [ng]   current/upcoming: 12 links seen -> 2 navigation, 3 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-12T12:42:34.464Z] [ng]   Fetching past: https://www.nationalgallery.org.uk/exhibitions/past
+[2026-09-12T12:42:35.776Z] [dellav]   current: 10 links seen -> 0 navigation, 8 already-seen URL -> 2 collected (0 of them with no readable title)
+[2026-09-12T12:42:35.777Z] [dellav]   lookback (listing): kept 2, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T12:42:35.777Z] [dellav]   reading 2 individual page(s)…
+[2026-09-12T12:42:35.777Z] [dellav]     page 1 of 2
+[2026-09-12T12:42:37.383Z] [acq]   all (current/upcoming/past): 119 links seen -> 11 navigation, 0 already-seen URL -> 108 collected (0 of them with no readable title)
+[2026-09-12T12:42:37.383Z] [acq]   lookback (listing): kept 16, dropped 92 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-12T12:42:37.383Z] [acq]   reading 16 individual page(s)…
+[2026-09-12T12:42:37.383Z] [acq]     page 1 of 16
+[2026-09-12T12:42:41.395Z] [ng]   past: 179 links seen -> 2 navigation, 0 already-seen URL -> 177 collected (0 of them with no readable title)
+[2026-09-12T12:42:41.395Z] [ng]   lookback (listing): kept 28, dropped 156 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T12:42:41.395Z] [ng]   reading 28 individual page(s)…
+[2026-09-12T12:42:41.395Z] [ng]     page 1 of 28
+[2026-09-12T12:42:41.454Z] [dellav]   Individual pages: 2 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:42:41.454Z] [dellav]   → 2 exhibitions, 2 with curatorial text → dellav.csv
+[2026-09-12T12:42:41.522Z] [tate-modern] 
+[2026-09-12T12:42:41.522Z] [tate-modern] ────────────────────────────────────────────────────────────
+[2026-09-12T12:42:41.522Z] [tate-modern]   TATE-MODERN — Tate Modern, London
+[2026-09-12T12:42:41.522Z] [tate-modern] ────────────────────────────────────────────────────────────
+[2026-09-12T12:42:41.522Z] [tate-modern]   Fetching current/upcoming: https://www.tate.org.uk/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=display&event_type=exhibition
+[2026-09-12T12:42:45.215Z] [ng]     prose dates ignored, they contradict the listing: "7 September - 28 September 2026"
+[2026-09-12T12:42:45.715Z] [tate-modern]   current/upcoming: 16 links seen -> 0 navigation, 3 already-seen URL -> 13 collected (0 of them with no readable title)
+[2026-09-12T12:42:45.715Z] [tate-modern]   Fetching recently opened: https://www.tate.org.uk/whats-on?date_range=past&gallery_group=tate-modern&event_type=display&event_type=exhibition
+[2026-09-12T12:42:48.994Z] [tate-modern]   recently opened: 14 links seen -> 0 navigation, 14 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T12:42:48.994Z] [tate-modern]   lookback (listing): kept 13, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T12:42:48.994Z] [tate-modern]   reading 13 individual page(s)…
+[2026-09-12T12:42:48.994Z] [tate-modern]     page 1 of 13
+[2026-09-12T12:42:54.825Z] [acq]     page 10 of 16
+[2026-09-12T12:42:56.415Z] [ng]     page 10 of 28
+[2026-09-12T12:42:56.613Z] [tate-modern]     page 10 of 13
+[2026-09-12T12:42:59.854Z] [tate-modern]   Individual pages: 13 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:42:59.854Z] [tate-modern]   lookback (final): kept 13, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T12:42:59.856Z] [tate-modern]   → 13 exhibitions, 13 with curatorial text → tate-modern.csv
+[2026-09-12T12:43:00.005Z] [wallace] 
+[2026-09-12T12:43:00.005Z] [wallace] ────────────────────────────────────────────────────────────
+[2026-09-12T12:43:00.005Z] [wallace]   WALLACE — The Wallace Collection, London
+[2026-09-12T12:43:00.005Z] [wallace] ────────────────────────────────────────────────────────────
+[2026-09-12T12:43:00.005Z] [wallace]   Fetching current/upcoming: https://www.wallacecollection.org/whats-on/exhibitions-displays/
+[2026-09-12T12:43:03.898Z] [wallace]   current/upcoming: 11 links seen -> 4 navigation, 0 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-12T12:43:03.898Z] [wallace]   Fetching past: https://www.wallacecollection.org/explore/past-exhibitions/
+[2026-09-12T12:43:07.287Z] [acq]   Individual pages: 16 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:43:07.287Z] [acq]   lookback (final): kept 15, dropped 1 closed before 2024-07-01, 2 with no closing date, 0 with no opening date
+[2026-09-12T12:43:07.289Z] [acq]   → 15 exhibitions, 15 with curatorial text → acq.csv
+[2026-09-12T12:43:08.153Z] [wallace]   past: 28 links seen -> 4 navigation, 6 already-seen URL -> 18 collected (0 of them with no readable title)
+[2026-09-12T12:43:08.153Z] [wallace]   lookback (listing): kept 11, dropped 14 closed before 2024-07-01, 4 with no closing date, 0 with no opening date
+[2026-09-12T12:43:08.153Z] [wallace]   reading 11 individual page(s)…
+[2026-09-12T12:43:08.153Z] [wallace]     page 1 of 11
+[2026-09-12T12:43:25.006Z] [wallace]     page 10 of 11
+[2026-09-12T12:43:28.733Z] [wallace]   Individual pages: 11 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:43:28.734Z] [wallace]   → 11 exhibitions, 11 with curatorial text → wallace.csv
+[2026-09-12T12:43:28.833Z] [ng]   TIMEOUT on https://www.nationalgallery.org.uk/exhibitions/past/the-carracci-cartoons-myths-in-the-making — retrying once
+[2026-09-12T12:43:50.842Z] [ng]   TIMEOUT: https://www.nationalgallery.org.uk/exhibitions/past/the-carracci-cartoons-myths-in-the-making — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.nationalgallery.org.uk/exhibitions/pas
+[2026-09-12T12:43:52.466Z] [ng]     page 20 of 28
+[2026-09-12T12:44:05.481Z] [ng]   Individual pages: 27 got text, 0 no curatorial text, 1 failed
+[2026-09-12T12:44:05.482Z] [ng]   lookback (final): kept 27, dropped 1 closed before 2024-07-01, 0 with no closing date, 1 with no opening date
+[2026-09-12T12:44:05.482Z] [ng]   → 27 exhibitions, 26 with curatorial text → ng.csv
+[2026-09-12T12:44:05.588Z] 
+[2026-09-12T12:44:05.588Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:44:05.588Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T12:44:05.588Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:44:05.588Z]   DELLAV: 2 exhibitions | 2 with text
+[2026-09-12T12:44:05.588Z]   TATE-MODERN: 13 exhibitions | 13 with text
+[2026-09-12T12:44:05.588Z]   ACQ: 15 exhibitions | 15 with text
+[2026-09-12T12:44:05.588Z]   WALLACE: 11 exhibitions | 11 with text
+[2026-09-12T12:44:05.588Z]   NG: 27 exhibitions | 26 with text
+[2026-09-12T12:44:05.588Z] 
+[2026-09-12T12:44:05.588Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:44:05.588Z]   COVERAGE — every link accounted for
+[2026-09-12T12:44:05.588Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:44:05.588Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T12:44:05.588Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T12:44:05.588Z]   ng         current/upcoming                12     2       0     3        0        0          7
+[2026-09-12T12:44:05.588Z]   dellav     current                         10     0       0     8        0        0          2
+[2026-09-12T12:44:05.588Z]   acq        all (current/upcoming/past)    119    11       0     0        0        0        108
+[2026-09-12T12:44:05.588Z]   ng         past                           179     2       0     0        0        0        177
+[2026-09-12T12:44:05.588Z]   tate-modern current/upcoming                16     0       0     3        0        0         13
+[2026-09-12T12:44:05.588Z]   tate-modern recently opened                 14     0       0    14        0        0          0
+[2026-09-12T12:44:05.588Z]   wallace    current/upcoming                11     4       0     0        0        0          7
+[2026-09-12T12:44:05.588Z]   wallace    past                            28     4       0     6        0        0         18
+[2026-09-12T12:44:05.588Z] 
+[2026-09-12T12:44:05.588Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T12:44:05.588Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T12:44:05.588Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T12:44:05.588Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T12:44:05.588Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T12:44:05.588Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T12:44:05.588Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T12:44:05.588Z] 
+[2026-09-12T12:44:05.588Z] Network bridge: 2250 requests served, 2461 skipped (image/media/font), 2 failed
+[2026-09-12T12:44:05.588Z] 
+[2026-09-12T12:44:05.588Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_224230
+[2026-09-12T12:44:05.588Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_224230/sweep.csv  (68 rows — ng:27, acq:15, dellav:2, tate-modern:13, wallace:11)
+[2026-09-12T12:44:05.588Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_224230/log_2026-09-12_224230.txt
+[2026-09-12T12:44:05.588Z] Not yet in this run: met, rijks, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, khm, artic, moma, brit, tate-britain
+[2026-09-12T12:44:05.588Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T12:44:05.588Z] No de-duplication is applied — see passThrough.

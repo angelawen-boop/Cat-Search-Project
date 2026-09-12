@@ -132,9 +132,9 @@ Until it is, check it against the newest run directory before trusting it.
 | Gallerie dell'Accademia | `dellav` | 2 | **yes — 12 Sep** | yes | prints Italian dates on its English page |
 | Kunsthistorisches | `khm` | 6 | **yes — 12 Sep** | yes — no change needed | two rows half-dated because the venue says "since"/"until" |
 | Capodimonte | `capo` | 18 | **partly — see below** | yes, fixes applied | **NOT count-verified and never will be**, her decision |
-| Uffizi | `uffizi` | 14 | **yes — 12 Sep** | **NO — fixes pending** | writes headlines, not titles — **open** |
-| Brera | `brera` | 7 | **yes — 12 Sep** | **NO — fixes pending** | filed under `/news/mostra/` |
-| Galleria Borghese | `borghese` | 8 | **NO — never re-reviewed since 7 Sep** | n/a | CSV sent to her 12 Sep, awaiting her review. 7 exhibitions + 1 marker row |
+| Uffizi | `uffizi` | 13 | **yes — 12 Sep** | yes | headlines kept as titles and undated rows kept, **both her rulings** |
+| Brera | `brera` | 8 | **yes — 12 Sep** | yes | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
+| Galleria Borghese | `borghese` | 8 | **NO — never substantively reviewed** | fixes applied from her reading of the sent CSV | 7 exhibitions + 1 marker row |
 | MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | n/a | n/a | refused; marker rows only |
 
 **Read the two middle columns separately.** "Her substantive review" means she went
@@ -143,9 +143,10 @@ through that venue against the live site herself and her findings are recorded.
 A venue can have the first without the second — that is exactly the state `uffizi`
 and `brera` are in, and the state all thirteen were in at the start of 12 Sep.
 
-**Fifteen venues are finished. Two remain from her review — `uffizi` and `brera`,
-both reviewed by her but not yet fixed — plus `borghese`, the only venue she has
-not substantively reviewed at all.**
+**All thirteen venues from her 12 Sep review are fixed and verified.** The only
+venue left is `borghese`, which she has never substantively reviewed — two defects
+she spotted in the CSV sent to her are fixed, but the venue has not been checked
+against the live site the way the other fifteen have.
 
 Her 12 Sep review and every fix made against it are written up in
 **`docs/review-2026-09-12.md`**, venue by venue, with what was wrong, what
