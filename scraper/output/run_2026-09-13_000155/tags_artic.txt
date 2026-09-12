@@ -1,0 +1,65 @@
+TICKETED EXHIBITION        | 2026-09-06 2027-01-03 | Mary Cassatt: After Impressionism
+TICKETED EXHIBITION        | 2026-06-14 2026-09-20 | Willem de Kooning Drawing
+EXHIBITION                 | 2026-08-29 2026-12-07 | Lee Miller: Fearless
+EXHIBITION                 | 2026-06-27 2026-10-19 | Beyond Form: Abstraction at Midcentury
+EXHIBITION                 | 2026-06-25 2026-11-09 | Self, Made: Fourteen Modern Artists from the Richard and Ellen Sandor Family Collection
+EXHIBITION                 | 2026-06-18 2027-01-25 | Abigail Lucien: Blood of the Earth
+EXHIBITION                 | 2026-05-02 2027-01-25 | Embroidered Traditions from Morocco to Afghanistan
+EXHIBITION                 | 2025-06-07 2026-11-15 | Raqib Shaw: Paradise Lost
+EXHIBITION                 | 2026-05-02 2026-09-13 | Edgar Calel: Corn Mountain of Life (Ixim Juyu K’aslem)
+EXHIBITION                 | 2024-09-09 2026-09-14 | Jitish Kallat: Public Notice 3
+EXHIBITION                 | 2026-09-19 2027-01-18 | Jill Mulleady: The Passenger
+EXHIBITION                 | 2026-10-03 2027-03-14 | Tony Cokes: On Boredom
+EXHIBITION                 | 2026-11-15 2027-03-01 | Beatriz González: In Series and Full Color
+EXHIBITION                 | 2027-02-28 2027-06-20 | Zurbarán: Divine Light
+EXHIBITION                 | 2027-06-19 2027-10-03 | Vilhelm Hammershøi: Pictures from Home
+EXHIBITION                 | 2026-01-31 2026-06-01 | Carroll Dunham: Drawings, 1974–2024
+EXHIBITION                 | 2026-01-31 2026-07-20 | Lucas Samaras: Sitting, Standing, Walking, Looking
+TICKETED EXHIBITION        | 2026-03-07 2026-06-01 | Matisse’s Jazz: Rhythms in Color
+EXHIBITION                 | 2026-03-07 2026-07-05 | Korean National Treasures: 2,000 Years of Art
+EXHIBITION                 | 2025-01-23 2025-04-14 | Modern Japanese Portraits in Print
+EXHIBITION                 | 2025-03-15 2025-06-29 | Myth and Marble: Ancient Roman Sculpture from the Torlonia Collection
+EXHIBITION                 | 2025-03-15 2025-06-01 | Lines of Connection: Drawing and Printmaking
+EXHIBITION                 | 2025-03-29 2025-07-28 | En el principio / In the beginning: Juliana Góngora Rojas, Matías Quintero Sepúlveda, Juven Piranga Valencia, and Yinela Piranga Valencia
+EXHIBITION                 | 2025-03-29 2025-07-13 | Frida Kahlo’s Month in Paris: A Friendship with Mary Reynolds
+EXHIBITION                 | 2025-04-15 2025-07-14 | Japan’s Great Female Poets
+EXHIBITION                 | 2025-05-03 2025-09-21 | Iman Issa: A Game, or So You May Think
+EXHIBITION                 | 2025-05-17 2026-05-11 | H. C. Westermann: Anchor Clanker
+EXHIBITION                 | 2025-06-28 2025-09-15 | Contemporary Drawings from the Stenn Family Collection
+TICKETED EXHIBITION        | 2025-06-29 2025-10-05 | Gustave Caillebotte: Painting His World
+EXHIBITION                 | 2025-07-15 2025-10-13 | The Dawn of Modernity: Japanese Prints, 1850–1900
+EXHIBITION                 | 2025-07-26 2025-12-08 | Pixy Liao: Relationship Material
+EXHIBITION                 | 2025-08-16 2026-02-01 | Charles Gaines: Night/Crimes
+EXHIBITION                 | 2025-08-23 2026-01-11 | Leslie Thornton: Jennifer, Where Are You?
+EXHIBITION                 | 2025-08-30 2026-01-04 | Elizabeth Catlett: “A Black Revolutionary Artist and All That It Implies”
+EXHIBITION                 | 2025-09-05 2026-03-08 | Tuan Andrew Nguyen: We Were Lost in Our Country
+EXHIBITION                 | 2025-09-06 2026-03-15 | On Loss and Absence: Textiles of Mourning and Survival
+EXHIBITION                 | 2025-10-04 2026-04-19 | Diane Simpson: “Good for Future”
+EXHIBITION                 | 2025-10-04 2026-01-05 | Strange Realities: The Symbolist Imagination
+EXHIBITION                 | 2024-02-03 2024-07-08 | János Megyik Photograms
+EXHIBITION                 | 2024-02-24 2024-08-26 | Threaded Visions: Contemporary Weavings from the Collection
+EXHIBITION                 | 2024-04-18 2024-07-15 | A Sign of Things to Come: Prints by Japanese Women Artists after 1950
+EXHIBITION                 | 2024-04-20 2024-08-11 | Christina Ramberg: A Retrospective
+EXHIBITION                 | 2024-05-04 2024-09-09 | Foreign Exchange: Photography between Chicago, Japan, and Germany, 1920–1960
+EXHIBITION                 | 2024-05-04 2024-09-22 | John Knight: A work in situ
+EXHIBITION                 | 2024-05-11 2024-08-26 | Four Chicago Artists: Theodore Halkin, Evelyn Statsinger, Barbara Rossi, and Christina Ramberg
+EXHIBITION                 | 2024-06-02 2024-09-22 | Georgia O’Keeffe: “My New Yorks”
+EXHIBITION                 | 2024-06-22 2024-09-09 | Ellsworth Kelly: Spectrum Colors Arranged by Chance
+EXHIBITION                 | 2024-06-22 2024-12-02 | Bruce Nauman: Clown Torture
+EXHIBITION                 | 2024-07-18 2024-10-14 | Kabuki-Actor Portraits by Tōshūsai Sharaku
+EXHIBITION                 | 2024-08-10 2025-01-06 | Screens: A Panafrica Film Series
+EXHIBITION                 | 2024-09-21 2025-01-27 | Germane Barnes: Columnar Disorder
+EXHIBITION                 | 2024-09-26 2025-03-17 | Mascon: A Massive Concentration of Black Interscalar Energy
+EXHIBITION                 | 2024-10-05 2025-04-20 | Nancy Holt: Seeing in the Round
+EXHIBITION                 | 2024-10-12 2025-01-12 | Paula Modersohn-Becker: I Am Me
+EXHIBITION                 | 2024-10-17 2025-01-20 | Transitory Beauty: Japanese Fan Prints
+EXHIBITION                 | 2024-10-19 2025-01-06 | French Neoclassical Paintings from The Horvitz Collection
+EXHIBITION                 | 2025-10-15 2026-01-05 | One Hundred Famous Views of Edo
+EXHIBITION                 | 2025-11-15 2026-01-12 | Jane Alexander: Infantry with beast
+EXHIBITION                 | 2025-12-20 2026-03-29 | Bruce Goff: Material Worlds
+EXHIBITION                 | 2024-10-26 2025-02-10 | Jeremy Frey: Woven
+EXHIBITION                 | 2024-10-26 2025-01-06 | Revolution to Restoration: French Drawings from The Horvitz Collection
+EXHIBITION                 | 2024-11-02 2025-04-21 | After the End of the World: Pictures from Panafrica
+EXHIBITION                 | 2024-11-21 2025-01-06 | Neapolitan Crèche
+EXHIBITION                 | 2024-12-14 2025-03-08 | Beatriz Santiago Muñoz: The Crow, the Trench, and the Mare
+EXHIBITION                 | 2024-12-15 2025-03-30 | Project a Black Planet: The Art and Culture of Panafrica
