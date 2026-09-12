@@ -949,6 +949,19 @@ test('A-002: COLLECTION ROTATION is a badge too, and is not the same label as IN
   assert.equal(VENUES.artic.excludeLabelled.test('EXHIBITION How to Make an Exhibition'), false);
 });
 
+test('A-002b: HOLIDAY INSTALLATION too, and the same list guards the detail page', () => {
+  // Her screenshots, 12 Sep: artic prints the type beside the title on the
+  // exhibition's OWN page — "TICKETED EXHIBITION" over Matisse's Jazz,
+  // "COLLECTION INSTALLATION" over Janna Ireland. Its current cards carry the
+  // badge, its ARCHIVE cards do not, which is why the card rule caught eight on
+  // the current page and nothing at all across six history pages.
+  assert.equal(VENUES.artic.excludeLabelled.test('HOLIDAY INSTALLATION Wreathing the Halls'), true);
+  // The same list must guard both, or the two drift apart the way the date
+  // parsers did.
+  assert.equal(VENUES.artic.excludeLabelledOnPage, VENUES.artic.excludeLabelled,
+    'the card rule and the page rule must be the one list');
+});
+
 test('A-003: the longest alternative must come first, or a badge is stranded', () => {
   // "TICKETED" first would eat the word and leave "EXHIBITION" behind.
   assert.equal(/^TICKETED EXHIBITION/.test(

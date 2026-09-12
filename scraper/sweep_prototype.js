@@ -2691,6 +2691,26 @@ async function collectFromListing(page, opts) {
  * So a venue writes down only what differs from the default. If you are
  * debugging one museum, everything peculiar to it is in one block here.
  */
+/**
+ * The artic badges that mean "this is not an exhibition".
+ *
+ * HER RULING, 12 Sep 2026: she wants ONLY the two types the Art Institute
+ * itself calls an exhibition — EXHIBITION and TICKETED EXHIBITION. Everything
+ * else it badges is a different kind of thing and the row should never reach
+ * the CSV at all.
+ *
+ * The mistake worth remembering: these badges were first treated as a TITLE
+ * problem, because the badge stuck to the exhibition's name was the visible
+ * symptom. Stripping it left the row in place looking like an exhibition. A tag
+ * that says what a thing IS belongs to the collect-or-not decision.
+ *
+ * Status and price badges — NOW OPEN, OPENING SOON, CLOSING SOON, TICKETED,
+ * FREE, MEMBERS ONLY — say nothing about what a thing is and are not here; they
+ * only ever affected the title.
+ */
+const ARTIC_NOT_AN_EXHIBITION =
+  /\b(?:COLLECTION (?:INSTALLATION|ROTATION)|VIDEO INSTALLATION|SPECIAL LOAN INSTALLATION|HOLIDAY INSTALLATION)\b/i;
+
 const VENUES = {
   met: {
     name: 'The Metropolitan Museum of Art',
@@ -3317,7 +3337,20 @@ const VENUES = {
     // closes, so it cannot appear in a list of past exhibitions. A COLLECTION
     // ROTATION does end, though, so one can reach the archive later; this rule
     // catches it there too if artic prints the badge on those cards.
-    excludeLabelled: /\b(?:COLLECTION (?:INSTALLATION|ROTATION)|VIDEO INSTALLATION|SPECIAL LOAN INSTALLATION)\b/i,
+    excludeLabelled: ARTIC_NOT_AN_EXHIBITION,
+    // THE TAG IS ON THE EXHIBITION'S OWN PAGE, NOT ON THE ARCHIVE CARD.
+    //
+    // Her screenshots, 12 Sep: every artic detail page prints its type beside
+    // the title — "TICKETED EXHIBITION" over Matisse's Jazz, "COLLECTION
+    // INSTALLATION" over Janna Ireland: A Goff House in Los Angeles. The
+    // current and upcoming CARDS carry it too, which is why excludeLabelled
+    // caught 8 there; the archive cards do NOT, which is why it caught nothing
+    // across all six history pages and closed installations came through.
+    //
+    // So the same list is checked a second time, against the page. It runs
+    // after the detail fetch, like the Menil's undated rule, and each drop is
+    // named in the log.
+    excludeLabelledOnPage: ARTIC_NOT_AN_EXHIBITION,
   },
 
   // ── VENUES NOTHING CAN REACH ────────────────────────────────────────────────
@@ -3684,6 +3717,22 @@ async function scrapeVenue(page, code) {
   const toFetch = v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing');
   await fetchIndividualPages(page, toFetch, code);
 
+  // ROWS THE VENUE'S OWN PAGE LABELLED AS SOMETHING OTHER THAN AN EXHIBITION.
+  // Marked during the detail fetch, dropped here, and each one named — an
+  // exclusion she can read and check, never a silent disappearance.
+  const labelled = rows.filter(r => r._dropByPageLabel);
+  if (labelled.length) {
+    for (const r of labelled) {
+      log(`    the venue's own page labels this a ${r._dropByPageLabel}, excluded: ${r.title || r.url}`);
+    }
+    // Removed IN PLACE: `rows` is a const here and is also the array the
+    // collection step has been pushing into, so rebinding it would throw.
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (rows[i]._dropByPageLabel) rows.splice(i, 1);
+    }
+    log(`  ${labelled.length} row(s) excluded on the type printed on their own page`);
+  }
+
   // HER RULING FOR THE MENIL, 12 Sep 2026: drop its permanent collection
   // galleries. Same decision she made for the Met's "Ongoing" label — she
   // tracks temporary exhibitions and their catalogues, and a gallery that has
@@ -3965,6 +4014,23 @@ async function fetchIndividualPages(page, rows, venueCode) {
       }
 
       const vrec = VENUES[venueCode] || {};
+
+      // THE VENUE'S TYPE TAG, READ FROM THE EXHIBITION'S OWN PAGE.
+      //
+      // Some venues print what a thing IS on the detail page but not on every
+      // listing card — artic labels its current cards and its archive cards
+      // not at all, so a closed collection installation sailed through. The tag
+      // sits beside the title, so only the START of the page is examined: far
+      // enough in to catch the label, not so far that the phrase turning up in
+      // curatorial prose could drop a real exhibition.
+      if (vrec.excludeLabelledOnPage) {
+        const head = (await page.innerText('body').catch(() => '')).slice(0, 400);
+        if (vrec.excludeLabelledOnPage.test(head)) {
+          row._dropByPageLabel = (head.match(vrec.excludeLabelledOnPage) || [''])[0];
+          continue;
+        }
+      }
+
       const text = await getCuratorialText(page, vrec.description, vrec.noise);
       if (text) {
         row.summary = text;
