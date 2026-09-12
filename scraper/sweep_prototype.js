@@ -1473,7 +1473,18 @@ async function getText(el) {
 // one: a cookie panel that IS most of the page is still a cookie panel. It
 // means the page has no prose, and the honest answer is an empty summary.
 const ALWAYS_NOISE = 'cmplz|cookie|consent|gdpr|onetrust|optanon|\\bot-(sdk|acc|cat|subgrp|dpd|pc|fl)|cky-|truste|usercentrics|didomi';
-const NOISE_CONTAINER = 'privacy|banner|newsletter|subscribe|promo|footer|nav|ticket|visit-info|visitor-info|contact|address|opening-hours|practical';
+// `caption` and `credit` earn their place here from both Tates, 12 Sep 2026.
+// Tate heads every exhibition page with a hero image whose credit line sits in
+// div.splash-header__image-caption — INSIDE the same <article> as the real text
+// and before it in document order, so the ladder reached it first and glued it
+// to the front of the blurb:
+//   "Mohammed Z Rahman, The Spaghetti House 2024. Tate. © reserved. A new body
+//    of paintings exploring notions of home and love…"
+// Her note on this is the important half: some junk the compression model can
+// be trusted to ignore, but an artist and a work named in a caption read
+// exactly like an artist and a work named in the blurb, so it cannot tell them
+// apart and can state something false about the exhibition with no way to know.
+const NOISE_CONTAINER = 'privacy|banner|newsletter|subscribe|promo|caption|credit|footer|nav|ticket|visit-info|visitor-info|contact|address|opening-hours|practical';
 
 const BOILERPLATE = [
   'technical storage or access',
@@ -3012,6 +3023,13 @@ const VENUES = {
   'tate-modern': {
     name: 'Tate Modern, London',
     base: 'https://www.tate.org.uk',
+    // NO excludeOngoing HERE, and that asymmetry with Tate Britain is
+    // deliberate. Her count of 12 Sep is 4 current and 9 upcoming and this
+    // venue returned exactly those 13, so nothing on it is being labelled
+    // ongoing and wrongly kept. Switching the filter on to match its sibling
+    // could only put a verified count at risk for the sake of the two recipes
+    // looking alike. If a Tate Modern row ever arrives labelled ONGOING, the
+    // line above is one to add — on that evidence, not for symmetry.
     pages: [
       { path: '/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=display&event_type=exhibition', ctx: 'current/upcoming' },
       { path: '/whats-on?date_range=past&gallery_group=tate-modern&event_type=display&event_type=exhibition',     ctx: 'recently opened' },
@@ -3035,6 +3053,14 @@ const VENUES = {
   'tate-britain': {
     name: 'Tate Britain, London',
     base: 'https://www.tate.org.uk',
+    // TATE PRINTS "ONGOING" WHERE A RUN WOULD GO, on its own line in the card:
+    //   EXHIBITION / Commission: Chris Ofili: Requiem / … / TATE BRITAIN /
+    //   ONGOING / FREE
+    // Her count of 12 Sep is 3 current and 6 upcoming and the sweep returned
+    // ten, the extra being exactly that row — she flagged it as already saying
+    // ongoing on the listing. The switch existed and this venue simply never
+    // set it. Rung 1 of the ladder: the venue's own word, named in the log.
+    excludeOngoing: true,
     pages: [
       { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=display&event_type=exhibition', ctx: 'current/upcoming' },
       { path: '/whats-on?date_range=past&gallery_group=tate-britain&event_type=display&event_type=exhibition',     ctx: 'recently opened' },
