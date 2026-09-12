@@ -149,6 +149,40 @@ function groupTravellingRuns(rows) {
   return groups;
 }
 
+/**
+ * Group rows whose curatorial text is IDENTICAL, so the model is asked once.
+ *
+ * Stitching the two machines' output into one file means a venue swept on both
+ * appears twice, and every one of its rows carries the same raw text. decide()
+ * already refuses to pay twice for identical text — "reuse, no model call" — but
+ * its memory is the PREVIOUS run only, so two copies inside ONE file are two
+ * separate questions. On a double sweep that is most of the file.
+ *
+ * Asking twice is not merely wasteful, it is worse: each row is one isolated
+ * question, so the model re-derives the answer with no knowledge it has just
+ * written one, and can word the same text differently. Two summaries for one
+ * exhibition then arrive as a conflict she has to resolve by hand.
+ *
+ * IT CANNOT BE WRONG, for the same reason the previous-run reuse cannot: the
+ * input is character-identical after normalisation. It is not a judgement about
+ * two exhibitions being the same — they may well be different exhibitions, and
+ * it does not matter, because the question being answered is only "what do these
+ * words say". A venue that reprints one blurb across a series answers once.
+ *
+ * Empty text is never grouped: those rows never reach the model anyway.
+ */
+function groupIdenticalRaw(rows) {
+  const groups = new Map();
+  for (const row of rows) {
+    const key = normalizeRaw(row.raw !== undefined ? row.raw : row.summary);
+    if (!key) continue;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(row);
+  }
+  for (const [k, v] of groups) if (v.length < 2) groups.delete(k);
+  return groups;
+}
+
 // ── CSV ──────────────────────────────────────────────────────────────────────
 // The scraper only ever WRITES csv, so it has no parser. This one has to
 // handle quoted cells containing commas and newlines, because curatorial text
@@ -414,7 +448,7 @@ module.exports = {
   parseCsv, readProForma, writeCsv, urlKey, titleKey, indexPrevious,
   findPrevious, decide, validateAnswer, normalizeRaw, wordCount, addNote,
   previousCompletedRun, MAX_WORDS, SKIP_NOTE,
-  TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns,
+  TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns, groupIdenticalRaw,
 };
 
 // The CLI lives in compress_cli.js so this file stays importable by the tests

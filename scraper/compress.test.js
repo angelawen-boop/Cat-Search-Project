@@ -14,7 +14,7 @@ const assert = require('node:assert');
 
 const {
   parseCsv, urlKey, titleKey, indexPrevious, findPrevious,
-  decide, validateAnswer, normalizeRaw, addNote, MAX_WORDS, SKIP_NOTE,
+  decide, validateAnswer, normalizeRaw, addNote, MAX_WORDS, SKIP_NOTE, groupIdenticalRaw,
   TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns,
 } = require('./compress.js');
 
@@ -299,4 +299,57 @@ test('L-008: the location list has not drifted from the scraper', () => {
     assert.deepStrictEqual(locs, VENUES[code].locations,
       `compress.js TRAVELLING_LOCATIONS.${code} disagrees with the scraper`);
   }
+});
+
+// ---------------------------------------------------------------------------
+// ID-001 to ID-005 — IDENTICAL CURATORIAL TEXT IS ONE QUESTION.
+//
+// Stitching two machines' output into one file means a venue swept on both
+// appears twice, carrying the same raw text. decide() already refuses to pay
+// twice for identical text, but its memory is the PREVIOUS run, so it cannot
+// see the copy beside it. On a double sweep that is most of the file.
+//
+// Asking twice is worse than wasteful: each row is one isolated question, so
+// the model re-derives the answer knowing nothing of the one it just wrote and
+// can word it differently — which then reaches her as a conflict to resolve.
+
+const rawRow = (index, raw) => ({ index, raw, title: 't' + index, venue_code: 'louvre' });
+
+test('ID-001: two rows with the same text are one group', () => {
+  const g = groupIdenticalRaw([rawRow(1, 'Renoir gathered works on love.'),
+                               rawRow(2, 'Renoir gathered works on love.')]);
+  assert.equal(g.size, 1);
+  assert.deepEqual([...g.values()][0].map(r => r.index), [1, 2]);
+});
+
+test('ID-002: a row with no twin is not a group', () => {
+  const g = groupIdenticalRaw([rawRow(1, 'One.'), rawRow(2, 'Two.')]);
+  assert.equal(g.size, 0);
+});
+
+test('ID-003: grouping survives whitespace, as reuse does', () => {
+  // normalizeRaw is the same gate decide() uses, so the two cannot disagree
+  // about whether a text has changed.
+  const g = groupIdenticalRaw([rawRow(1, 'Renoir gathered works on love.'),
+                               rawRow(2, '  Renoir gathered works\n  on love.  ')]);
+  assert.equal(g.size, 1);
+});
+
+test('ID-004: empty text is never grouped', () => {
+  // Those rows never reach the model, so grouping them would fold unrelated
+  // rows together for no saving at all.
+  const g = groupIdenticalRaw([rawRow(1, ''), rawRow(2, ''), rawRow(3, '   ')]);
+  assert.equal(g.size, 0);
+});
+
+test('ID-005: it groups on TEXT, never on which exhibition it is', () => {
+  // Deliberately different venues and titles. The question being answered is
+  // only "what do these words say", so the answer is the same either way —
+  // and this is what makes it safe: it is not a claim that two rows are the
+  // same exhibition, which is the judgement that cost 29 NG exhibitions.
+  const g = groupIdenticalRaw([
+    { index: 1, raw: 'Same blurb.', title: 'A', venue_code: 'ng' },
+    { index: 2, raw: 'Same blurb.', title: 'B', venue_code: 'met' },
+  ]);
+  assert.equal(g.size, 1);
 });

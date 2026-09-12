@@ -157,11 +157,30 @@ function plan(dir, { recompress = false } = {}) {
   // Portraiture lists 17 artists, Palm Beach 21), so a summary true of both
   // has to describe the exhibition rather than its checklist.
   const byIndex = new Map(pending.map(p => [p.index, p]));
+
+  // IDENTICAL TEXT IS ONE QUESTION. Stitching two machines' output means a
+  // venue swept on both appears twice with the same raw text, and decide()'s
+  // memory is the previous RUN, so it cannot see the copy beside it. Collapsed
+  // here, before travelling runs, because it is the stricter test: exact text
+  // rather than a matching title. See groupIdenticalRaw().
+  let sameText = 0;
+  for (const group of C.groupIdenticalRaw(pending).values()) {
+    const [keep, ...rest] = group.filter(r => byIndex.has(r.index));
+    if (!keep || !rest.length) continue;
+    keep.appliesAlsoTo = [...(keep.appliesAlsoTo || []), ...rest.map(r => r.index)];
+    for (const r of rest) { byIndex.delete(r.index); sameText++; }
+  }
+
   let paired = 0;
   for (const group of C.groupTravellingRuns(pending).values()) {
-    const [keep, ...rest] = group;
-    keep.appliesAlsoTo = rest.map(r => r.index);
-    keep.alsoAt = rest.map(r => ({ title: r.title, raw: r.raw }));
+    // ONLY ROWS STILL BEING ASKED. A row already folded into an identical-text
+    // group above is answered, and re-listing it here would hand its index to
+    // two owners — the second overwriting the first, so one of them silently
+    // never receives an answer.
+    const [keep, ...rest] = group.filter(r => byIndex.has(r.index));
+    if (!keep || !rest.length) continue;
+    keep.appliesAlsoTo = [...(keep.appliesAlsoTo || []), ...rest.map(r => r.index)];
+    keep.alsoAt = [...(keep.alsoAt || []), ...rest.map(r => ({ title: r.title, raw: r.raw }))];
     for (const r of rest) { byIndex.delete(r.index); paired++; }
   }
   const asked = pending.filter(p => byIndex.has(p.index));
@@ -178,6 +197,10 @@ function plan(dir, { recompress = false } = {}) {
     JSON.stringify(done, null, 2), 'utf8');
 
 
+  if (sameText) {
+    say(`  same text ${String(sameText).padStart(3)}   identical curatorial text elsewhere in this file — asked once`);
+    say('');
+  }
   if (paired) {
     say(`  travelling  ${String(paired).padStart(2)}   same exhibition in another city — asked once, answer used for both`);
     say('');
