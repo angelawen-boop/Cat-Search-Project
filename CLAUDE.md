@@ -158,6 +158,10 @@ genuinely empty upcoming page):
 | uffizi 13 | brera 8 | capo 18 | borghese 8 |
 | **container total 237** | **met 106** | **artic 65** | |
 
+**406 is the eighteen REACHABLE venues.** `moma`, `brit` and `morgan` return no
+exhibitions at all — marker rows only — so nothing they do changes that figure.
+What to do about them is still open; see §7 step 6.
+
 No row at any venue carries a credit line, star rating, ticket price, funder list,
 opening hours, breadcrumb or cookie notice. The only empty summaries are the three
 Rijksmuseum rows whose own pages return HTTP 404, plus the occasional transient page
@@ -1152,11 +1156,30 @@ Each entry cost a real failure. Before changing the area, read the line.
 4. ~~**Venue-by-venue diagnosis of the working set**~~ — **DONE, 12 Sep 2026.** All
    sixteen reachable venues reviewed by her, fixed and verified against her counts.
    Her findings and every fix, venue by venue: `docs/review-2026-09-12.md`.
-5. **Decide what to do about venues still unreachable** — `moma`, `brit`, `morgan`.
-   **The current stage.**
-6. **Decide how the two machines' output joins into one importable CSV.** Parked
-   until all 21 were done, which they now are — 16 here, 2 on her laptop, 3 with no
-   route. Her decision to make; the shape depends on what happens to step 5.
+5. **Produce one importable CSV — THE CURRENT STAGE.** Agreed with her 12 Sep, in
+   this order, and the order matters:
+
+   1. **A full 21-venue run from the container.** All 21, not just the 16 that
+      work — deliberately. It is the only way to see the refusal marker rows for
+      `met`, `artic`, `moma`, `brit` and `morgan` in a real file, and those markers
+      are exactly what the join in step 3 has to resolve.
+   2. **She runs `artic` and `met` on her laptop.** Both refuse the container.
+   3. **Decide how the two machines' output joins.** Hers must REPLACE the
+      container's marker rows for those two venues, not sit beside them. Her
+      decision; parked until all 21 were done, which they now are.
+   4. **Compress the combined file.** Never yet run at scale: the largest
+      compression to date is 15 rows from one venue, against roughly 400 now. The
+      reuse half is pure code and cannot be wrong; the writing half has not been
+      asked for hundreds of summaries before, so cost and batching are untested.
+   5. **Hand her `sweep_compressed.csv`** — one file, never the raw sweep.
+
+   **A run is not finished until compression has run.** A full sweep that stops at
+   raw CSVs is not a deliverable.
+
+6. **Decide what to do about venues still unreachable** — `moma`, `brit`, `morgan`.
+   They contribute no exhibitions at all, only marker rows, so the 406 figure above
+   is unaffected by them. Every sweep re-tests them, so the day one starts answering
+   it shows up on the approval pile by itself.
 7. **JSX work** — quarantine ("Never add this"), plus whatever steps 5–6 turn up.
 8. **Catalogue lookup tuning** — Haiku vs Sonnet, on known-tricky catalogues.
    Independent of everything above.
