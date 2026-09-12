@@ -3659,6 +3659,14 @@ async function scrapeVenue(page, code) {
       // same line whether the list was genuinely one batch long or the batch
       // was merely slow and the loop gave up on it — see clickLoadMore().
       if (lm.clicks) log(`  "load more" pressed ${lm.clicks}x on ${pg.ctx} — stopped: ${lm.reason}`);
+      if (lm.hitCap) {
+        log(`  LOAD MORE RUNAWAY on ${pg.ctx}: still adding after 30 presses`);
+        rows.push({
+          venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
+          summary: '', url,
+          notes: `The venue's "${pg.ctx}" listing was still revealing more exhibitions after 30 presses of its "load more" button, so reading it was stopped. Older exhibitions may be missing. Marker row, not an exhibition.`,
+        });
+      }
     }
 
     // DOES THIS PAGE OFFER MORE THAN WE ARE TAKING? Only asked where nothing is
@@ -3670,14 +3678,6 @@ async function scrapeVenue(page, code) {
       if (more) {
         log(`  UNWIRED PAGINATION ${pg.ctx}: this page links another page and no recipe follows it — ${more.join(' | ')}`);
         UNWIRED.push({ venue: code, page: pg.ctx, url, hints: more });
-      }
-      if (lm.hitCap) {
-        log(`  LOAD MORE RUNAWAY on ${pg.ctx}: still adding after 30 presses`);
-        rows.push({
-          venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
-          summary: '', url,
-          notes: `The venue's "${pg.ctx}" listing was still revealing more exhibitions after 30 presses of its "load more" button, so reading it was stopped. Older exhibitions may be missing. Marker row, not an exhibition.`,
-        });
       }
     }
 
