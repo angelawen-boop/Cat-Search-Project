@@ -1,0 +1,151 @@
+[2026-09-12T04:31:27.886Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T04:31:27.891Z] Lookback floor: 2024-07-01
+[2026-09-12T04:31:27.891Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-12_143127
+[2026-09-12T04:31:27.892Z] Venues this run: louvre, capo, uffizi, brera, khm, dellav
+[2026-09-12T04:31:27.893Z] Proxy: (none — direct egress assumed)
+[2026-09-12T04:31:27.894Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-12T04:31:27.894Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-12T04:31:27.896Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-12T04:31:28.393Z] Running 6 venue(s) 4 at a time (one page at a time within each venue)
+[2026-09-12T04:31:28.448Z] No proxy set — Chromium is making its own requests (network bridge off)
+[2026-09-12T04:31:28.940Z] [louvre] 
+[2026-09-12T04:31:28.941Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-09-12T04:31:28.941Z] [louvre]   LOUVRE — Louvre, Paris
+[2026-09-12T04:31:28.941Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-09-12T04:31:28.942Z] [louvre]   Fetching current/upcoming: https://www.louvre.fr/en/exhibitions-and-events/exhibitions
+[2026-09-12T04:31:29.004Z] [capo] 
+[2026-09-12T04:31:29.004Z] [capo] ────────────────────────────────────────────────────────────
+[2026-09-12T04:31:29.005Z] [capo]   CAPO — Capodimonte, Naples
+[2026-09-12T04:31:29.005Z] [capo] ────────────────────────────────────────────────────────────
+[2026-09-12T04:31:29.005Z] [capo]   Fetching all (current/upcoming/past): https://capodimonte.cultura.gov.it/mostre/
+[2026-09-12T04:31:29.024Z] [uffizi] 
+[2026-09-12T04:31:29.025Z] [uffizi] ────────────────────────────────────────────────────────────
+[2026-09-12T04:31:29.025Z] [uffizi]   UFFIZI — Uffizi Galleries, Florence
+[2026-09-12T04:31:29.026Z] [uffizi] ────────────────────────────────────────────────────────────
+[2026-09-12T04:31:29.027Z] [uffizi]   Fetching current: https://www.uffizi.it/en/event-category/exhibitions
+[2026-09-12T04:31:29.030Z] [brera] 
+[2026-09-12T04:31:29.030Z] [brera] ────────────────────────────────────────────────────────────
+[2026-09-12T04:31:29.030Z] [brera]   BRERA — Pinacoteca di Brera, Milan
+[2026-09-12T04:31:29.030Z] [brera] ────────────────────────────────────────────────────────────
+[2026-09-12T04:31:29.030Z] [brera]   Fetching current: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=in-progress
+[2026-09-12T04:31:34.159Z] [brera]   current: 8 links seen -> 0 navigation, 4 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T04:31:34.159Z] [brera]   Fetching upcoming: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=scheduled
+[2026-09-12T04:31:34.920Z] [louvre]   current/upcoming: 8 links seen -> 0 navigation, 1 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-12T04:31:34.921Z] [louvre]   Fetching past: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions
+[2026-09-12T04:31:35.642Z] [uffizi]   current: 4 links seen -> 1 navigation, 0 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-09-12T04:31:35.642Z] [uffizi]   Fetching upcoming: https://www.uffizi.it/en/event-category/exhibitions/upcoming
+[2026-09-12T04:31:36.934Z] [brera]   upcoming: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T04:31:36.935Z] [brera]   NO EXHIBITIONS upcoming: page loaded and was read, but nothing matched
+[2026-09-12T04:31:36.936Z] [brera]   Fetching past: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=archive
+[2026-09-12T04:31:40.239Z] [louvre]   past: 7 links seen -> 0 navigation, 1 already-seen URL -> 6 collected (0 of them with no readable title)
+[2026-09-12T04:31:40.240Z] [louvre]   Fetching past 2025: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2025
+[2026-09-12T04:31:40.318Z] [brera]   past: 18 links seen -> 0 navigation, 13 already-seen URL -> 5 collected (0 of them with no readable title)
+[2026-09-12T04:31:40.319Z] [brera]   lookback (listing): kept 8, dropped 2 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-12T04:31:40.320Z] [brera]   reading 7 individual page(s)…
+[2026-09-12T04:31:40.321Z] [brera]     page 1 of 7
+[2026-09-12T04:31:40.545Z] [uffizi]   upcoming: 1 links seen -> 0 navigation, 0 already-seen URL -> 1 collected (0 of them with no readable title)
+[2026-09-12T04:31:40.545Z] [uffizi]   Fetching past 2025: https://www.uffizi.it/en/event-category/exhibitions/years/2025
+[2026-09-12T04:31:42.311Z] [brera]     prose dates ignored, they contradict the listing: "May 16, 2025, to May 17, 2027"
+[2026-09-12T04:31:44.849Z] [louvre]   past 2025: 7 links seen -> 0 navigation, 3 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T04:31:44.849Z] [louvre]   Fetching past 2024: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2024
+[2026-09-12T04:31:45.190Z] [brera]     prose dates ignored, they contradict the listing: "September 24, 2025, to January 11, 2026"
+[2026-09-12T04:31:46.775Z] [uffizi]   past 2025: 7 links seen -> 1 navigation, 2 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T04:31:46.775Z] [uffizi]   Fetching past 2024: https://www.uffizi.it/en/event-category/exhibitions/years/2024
+[2026-09-12T04:31:47.982Z] [brera]   Individual pages: 7 got text, 0 no curatorial text, 0 failed
+[2026-09-12T04:31:47.983Z] [brera]   lookback (final): kept 8, dropped 0 closed before 2024-07-01, 0 with no closing date, 2 with no opening date
+[2026-09-12T04:31:47.986Z] [brera]   → 7 exhibitions, 7 with curatorial text → brera.csv
+[2026-09-12T04:31:48.248Z] [khm] 
+[2026-09-12T04:31:48.248Z] [khm] ────────────────────────────────────────────────────────────
+[2026-09-12T04:31:48.249Z] [khm]   KHM — Kunsthistorisches Museum, Vienna
+[2026-09-12T04:31:48.249Z] [khm] ────────────────────────────────────────────────────────────
+[2026-09-12T04:31:48.249Z] [khm]   Fetching current: https://www.khm.at/en/exhibitions
+[2026-09-12T04:31:49.026Z] [capo]   TIMEOUT on https://capodimonte.cultura.gov.it/mostre/ — retrying once
+[2026-09-12T04:31:50.031Z] [louvre]   past 2024: 5 links seen -> 0 navigation, 1 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T04:31:50.031Z] [louvre]   lookback (listing): kept 18, dropped 3 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-12T04:31:50.032Z] [louvre]   reading 18 individual page(s)…
+[2026-09-12T04:31:50.032Z] [louvre]     page 1 of 18
+[2026-09-12T04:31:54.127Z] [uffizi]   past 2024: 12 links seen -> 1 navigation, 0 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-12T04:31:54.129Z] [uffizi]   lookback (listing): kept 14, dropped 5 closed before 2024-07-01, 8 with no closing date, 0 with no opening date
+[2026-09-12T04:31:54.129Z] [uffizi]   reading 14 individual page(s)…
+[2026-09-12T04:31:54.129Z] [uffizi]     page 1 of 14
+[2026-09-12T04:31:57.810Z] [khm]   current: 3 links seen -> 0 navigation, 0 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-09-12T04:31:57.810Z] [khm]   Fetching upcoming: https://www.khm.at/en/exhibitions/upcoming
+[2026-09-12T04:32:03.621Z] [khm]   upcoming: 9 links seen -> 4 navigation, 2 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-09-12T04:32:03.621Z] [khm]   lookback (listing): kept 6, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T04:32:03.621Z] [khm]   reading 6 individual page(s)…
+[2026-09-12T04:32:03.621Z] [khm]     page 1 of 6
+[2026-09-12T04:32:10.539Z] [louvre]     page 10 of 18
+[2026-09-12T04:32:11.032Z] [capo]   TIMEOUT: https://capodimonte.cultura.gov.it/mostre/ — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://capodimonte.cultura.gov.it/mostre/", waiti
+[2026-09-12T04:32:11.033Z] [capo]   FAILED all (current/upcoming/past) — TIMEOUT
+[2026-09-12T04:32:11.034Z] [capo]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-12T04:32:11.036Z] [capo]   → 0 exhibitions, 0 with curatorial text → capo.csv
+[2026-09-12T04:32:11.267Z] [dellav] 
+[2026-09-12T04:32:11.267Z] [dellav] ────────────────────────────────────────────────────────────
+[2026-09-12T04:32:11.267Z] [dellav]   DELLAV — Gallerie dell'Accademia, Venice
+[2026-09-12T04:32:11.267Z] [dellav] ────────────────────────────────────────────────────────────
+[2026-09-12T04:32:11.267Z] [dellav]   Fetching current: https://www.gallerieaccademia.it/en/
+[2026-09-12T04:32:15.713Z] [uffizi]     page 10 of 14
+[2026-09-12T04:32:18.315Z] [dellav]   current: 10 links seen -> 0 navigation, 8 already-seen URL -> 2 collected (0 of them with no readable title)
+[2026-09-12T04:32:18.315Z] [dellav]   lookback (listing): kept 2, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T04:32:18.315Z] [dellav]   reading 2 individual page(s)…
+[2026-09-12T04:32:18.315Z] [dellav]     page 1 of 2
+[2026-09-12T04:32:23.873Z] [dellav]   Individual pages: 2 got text, 0 no curatorial text, 0 failed
+[2026-09-12T04:32:23.873Z] [dellav]   lookback (final): kept 2, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T04:32:23.874Z] [dellav]   → 2 exhibitions, 2 with curatorial text → dellav.csv
+[2026-09-12T04:32:25.432Z] [khm]   Individual pages: 6 got text, 0 no curatorial text, 0 failed
+[2026-09-12T04:32:25.432Z] [khm]   lookback (final): kept 6, dropped 0 closed before 2024-07-01, 1 with no closing date, 1 with no opening date
+[2026-09-12T04:32:25.433Z] [khm]   → 6 exhibitions, 6 with curatorial text → khm.csv
+[2026-09-12T04:32:26.999Z] [uffizi]   Individual pages: 14 got text, 0 no curatorial text, 0 failed
+[2026-09-12T04:32:27.000Z] [uffizi]   lookback (final): kept 14, dropped 0 closed before 2024-07-01, 5 with no closing date, 0 with no opening date
+[2026-09-12T04:32:27.001Z] [uffizi]   → 14 exhibitions, 14 with curatorial text → uffizi.csv
+[2026-09-12T04:32:28.546Z] [louvre]   Individual pages: 18 got text, 0 no curatorial text, 0 failed
+[2026-09-12T04:32:28.547Z] [louvre]   → 18 exhibitions, 18 with curatorial text → louvre.csv
+[2026-09-12T04:32:28.720Z] 
+[2026-09-12T04:32:28.720Z] ────────────────────────────────────────────────────────────
+[2026-09-12T04:32:28.720Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T04:32:28.720Z] ────────────────────────────────────────────────────────────
+[2026-09-12T04:32:28.720Z]   BRERA: 7 exhibitions | 7 with text | 1 page(s) blocked/empty
+[2026-09-12T04:32:28.720Z]   CAPO: 0 exhibitions | 0 with text | 1 page(s) blocked/empty
+[2026-09-12T04:32:28.720Z]   DELLAV: 2 exhibitions | 2 with text
+[2026-09-12T04:32:28.720Z]   KHM: 6 exhibitions | 6 with text
+[2026-09-12T04:32:28.720Z]   UFFIZI: 14 exhibitions | 14 with text
+[2026-09-12T04:32:28.721Z]   LOUVRE: 18 exhibitions | 18 with text
+[2026-09-12T04:32:28.721Z] 
+[2026-09-12T04:32:28.721Z] ────────────────────────────────────────────────────────────
+[2026-09-12T04:32:28.721Z]   COVERAGE — every link accounted for
+[2026-09-12T04:32:28.721Z] ────────────────────────────────────────────────────────────
+[2026-09-12T04:32:28.721Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T04:32:28.721Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T04:32:28.721Z]   brera      current                          8     0       0     4        0        0          4
+[2026-09-12T04:32:28.721Z]   louvre     current/upcoming                 8     0       0     1        0        0          7
+[2026-09-12T04:32:28.721Z]   uffizi     current                          4     1       0     0        0        0          3
+[2026-09-12T04:32:28.721Z]   brera      upcoming                         0     0       0     0        0        0          0
+[2026-09-12T04:32:28.721Z]   louvre     past                             7     0       0     1        0        0          6
+[2026-09-12T04:32:28.721Z]   brera      past                            18     0       0    13        0        0          5
+[2026-09-12T04:32:28.722Z]   uffizi     upcoming                         1     0       0     0        0        0          1
+[2026-09-12T04:32:28.722Z]   louvre     past 2025                        7     0       0     3        0        0          4
+[2026-09-12T04:32:28.722Z]   uffizi     past 2025                        7     1       0     2        0        0          4
+[2026-09-12T04:32:28.722Z]   louvre     past 2024                        5     0       0     1        0        0          4
+[2026-09-12T04:32:28.722Z]   uffizi     past 2024                       12     1       0     0        0        0         11
+[2026-09-12T04:32:28.722Z]   khm        current                          3     0       0     0        0        0          3
+[2026-09-12T04:32:28.722Z]   khm        upcoming                         9     4       0     2        0        0          3
+[2026-09-12T04:32:28.722Z]   dellav     current                         10     0       0     8        0        0          2
+[2026-09-12T04:32:28.722Z] 
+[2026-09-12T04:32:28.722Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T04:32:28.722Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T04:32:28.722Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T04:32:28.722Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T04:32:28.722Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T04:32:28.722Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T04:32:28.722Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T04:32:28.722Z] 
+[2026-09-12T04:32:28.723Z] Network bridge: 0 requests served, 0 skipped (image/media/font), 0 failed
+[2026-09-12T04:32:28.723Z] 
+[2026-09-12T04:32:28.723Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-12_143127
+[2026-09-12T04:32:28.723Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-12_143127/sweep.csv  (49 rows — louvre:18, capo:1, uffizi:14, brera:8, khm:6, dellav:2)
+[2026-09-12T04:32:28.723Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-12_143127/log_2026-09-12_143127.txt
+[2026-09-12T04:32:28.723Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, artic, moma, brit, tate-modern, tate-britain, wallace
+[2026-09-12T04:32:28.723Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T04:32:28.723Z] No de-duplication is applied — see passThrough.
