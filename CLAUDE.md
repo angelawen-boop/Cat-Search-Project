@@ -123,24 +123,34 @@ Until it is, check it against the newest run directory before trusting it.
 | Art Institute of Chicago | `artic` | 77 | **yes** — her count + all 77 titles read | **local only** |
 | The Met | `met` | 106 | **yes** — diagnosed row by row, 11 Sep | **local only**; see `docs/venues.md` |
 | Galleria Borghese | `borghese` | 7 | **stale** — verified 7 Sep, engine has changed since | site goes down periodically |
-| The Frick | `frick` | 10 | no | archive past page 1 unreachable, out of range anyway |
-| The Menil | `menil` | 20 | no | 7 permanent galleries excluded, her ruling |
-| Wallace Collection | `wallace` | 11 | no | displays and trails kept, her ruling |
-| V&A | `va` | 15 | no | South Kensington only; no past archive |
-| Tate Modern | `tate-modern` | 13 | no | **the known hard case** — see known bug 1 |
-| Tate Britain | `tate-britain` | 10 | no | **the known hard case** |
-| Louvre | `louvre` | 18 | no | year pages may be truncated — **open** |
-| Uffizi | `uffizi` | 14 | no | writes headlines, not titles — **open** |
-| Brera | `brera` | 7 | no | filed under `/news/mostra/` |
-| Capodimonte | `capo` | 18 | no | Italian dates, detail pages only |
-| Kunsthistorisches | `khm` | 6 | no | Canaletto & Bellotto is one over her count — **open** |
-| Gallerie dell'Accademia, Venice | `dellav` | 2 | no | never blocked; no listing page |
+| The Frick | `frick` | 10 | **reviewed by her 12 Sep — fixes pending** | archive past page 1 unreachable, out of range anyway |
+| The Menil | `menil` | 20 | **reviewed by her 12 Sep — fixes pending** | 7 permanent galleries excluded, her ruling |
+| Wallace Collection | `wallace` | 11 | **reviewed by her 12 Sep — fixes pending** | displays and trails kept, her ruling |
+| V&A | `va` | 15 | **reviewed by her 12 Sep — fixes pending** | South Kensington only; no past archive |
+| Tate Modern | `tate-modern` | 13 | **reviewed by her 12 Sep — fixes pending** | **the known hard case** — see known bug 1 |
+| Tate Britain | `tate-britain` | 10 | **reviewed by her 12 Sep — fixes pending** | **the known hard case** |
+| Louvre | `louvre` | 18 | **reviewed by her 12 Sep — fixes pending** | year pages may be truncated — **open** |
+| Uffizi | `uffizi` | 14 | **reviewed by her 12 Sep — fixes pending** | writes headlines, not titles — **open** |
+| Brera | `brera` | 7 | **reviewed by her 12 Sep — fixes pending** | filed under `/news/mostra/` |
+| Capodimonte | `capo` | 18 | **reviewed by her 12 Sep — fixes pending** | Italian dates, detail pages only |
+| Kunsthistorisches | `khm` | 6 | **reviewed by her 12 Sep — fixes pending** | Canaletto & Bellotto is one over her count — **open** |
+| Gallerie dell'Accademia, Venice | `dellav` | 2 | **reviewed by her 12 Sep — fixes pending** | never blocked; no listing page |
 | MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | n/a | refused; marker rows only |
 
-**Substance review stands at 5 of 18 reachable venues.** Plumbing being in is
-not the same as the rows being right: artic passed every count it was given and
-still had three defects, two of them invisible to any number. The 13 marked "no"
-have never been checked against the live pages.
+**Five venues are finished. The other 13 have been REVIEWED but not FIXED** —
+she went through them against the live sites herself on 12 Sep, working from a
+run and summary produced that morning. **Her findings are the input to the next
+piece of work; do not ask her to re-review these.**
+
+**Those findings are not in this repo yet.** They exist in her notes and the
+session that produced them. Whoever picks this up should get them written down
+here FIRST — the same failure has now cost this project twice: the artic badge
+answer died with a session, and a stale "artic never run" line sent a later
+session hunting a state that did not exist.
+
+Plumbing being in is not the same as the rows being right: artic passed every
+count it was given and still had three defects, two of them invisible to any
+number.
 
 **All 21 have a recipe.** Blocked venues stay wired in deliberately: a refusal
 costs about half a second, leaves marker rows in the CSV so it is visible on the
