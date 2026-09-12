@@ -1657,7 +1657,7 @@ const CURATORIAL_SELECTORS = [
   'p',
 ];
 
-async function getCuratorialText(page, descSelector) {
+async function getCuratorialText(page, descSelector, noiseExtra) {
   try {
     return await page.evaluate(({ alwaysRe, noiseRe, boilerplate, selectors, MIN_WRAPPER_PARAS }) => {
       const ALWAYS = new RegExp(alwaysRe, 'i');
@@ -1778,7 +1778,9 @@ async function getCuratorialText(page, descSelector) {
         if (out.length) return out.join(' ').slice(0, 2000);
       }
       return '';
-    }, { alwaysRe: ALWAYS_NOISE, noiseRe: NOISE_CONTAINER, boilerplate: BOILERPLATE,
+    }, { alwaysRe: ALWAYS_NOISE,
+         noiseRe: noiseExtra ? `${NOISE_CONTAINER}|${noiseExtra}` : NOISE_CONTAINER,
+         boilerplate: BOILERPLATE,
          selectors: descSelector ? [descSelector, ...CURATORIAL_SELECTORS] : CURATORIAL_SELECTORS,
          MIN_WRAPPER_PARAS });
   } catch {
@@ -2891,6 +2893,17 @@ const VENUES = {
     // the end. Stripped from the title; see the note in the sweep report about
     // ITALIAN month names, which the shared date parser does not yet know.
     title: { heading: true, stripTrailing: /\s*\([^()]*\d[^()]*\)\s*$/ },
+    // ITS PRACTICAL-INFO BOX, which led 11 of its 18 summaries:
+    //   "Apertura tutti i giorni tranne il mercoledì, la domenica e i festivi
+    //    dalle ore 8.30 alle 19.30 (ultimo ingresso alle 18.30)"
+    // Capodimonte styles that box with `has-custom-color` while its curatorial
+    // paragraphs sit in plain wpb_content_element blocks — checked across
+    // several exhibition pages. Naming the container beats listing Italian
+    // opening-hours wordings, which differ per exhibition.
+    //
+    // PER VENUE, not shared: `has-custom-color` is a generic WordPress class
+    // and means nothing in particular anywhere else.
+    noise: 'has-custom-color',
   },
 
   uffizi: {
@@ -3684,7 +3697,8 @@ async function fetchIndividualPages(page, rows, venueCode) {
         }
       }
 
-      const text = await getCuratorialText(page, (VENUES[venueCode] || {}).description);
+      const vrec = VENUES[venueCode] || {};
+      const text = await getCuratorialText(page, vrec.description, vrec.noise);
       if (text) {
         row.summary = text;
         fetched++;
