@@ -659,3 +659,78 @@ superseded by the measured ten.
 
 ---
 
+
+---
+
+## `artic` — Art Institute of Chicago, closed 12 Sep 2026
+
+**77 rows, local runs only.** Refused from the container (Cloudflare managed
+challenge, HTTP 403, re-probed 12 Sep) and served normally from her laptop.
+
+### Verified against the live site, by her
+
+| Page | Site says | Run collected |
+|---|---|---|
+| current | 8 cards | 12 links → rows after filtering |
+| upcoming | 7 cards | 7 |
+| `history?year=2026` | "Showing 11 out of 11" | 11 + 0 on page 2 |
+| `history?year=2025` | "Showing 20 out of 25" | 20 + 5 on page 2 |
+| `history?year=2024` | "Showing 20 out of 26" | 20 + 6 on page 2 |
+
+**The archive is not truncating** — an earlier reading of "20 out of 25" as a
+miss was wrong. Twenty is the page size and `&page=2` collects the remainder;
+all three years match exactly.
+
+**Its year pages run ASCENDING, January first.** So on 2024 it is **page two**
+that holds the months late enough to pass the 1 July 2024 floor. A broken second
+page would therefore have lost precisely the rows we want and kept only the ones
+the lookback discards — a quieter failure than it sounds.
+
+**Year 2023 checked and ruled out** (her, 12 Sep): she scrolled the 2023 archive
+and nothing there runs late enough to reach the floor. So deriving 2024 onward
+is correct and the floor does not need to go back.
+
+### What its cards actually are
+
+**No card on any artic page has a heading** — `headingTag: null` throughout, on
+both the current pages and the archive. The whole card sits inside the anchor, so
+the name comes from the link's own text, which is why `linkLines` exists.
+
+Read as lines the two page types are the same shape:
+
+```
+current  ["EXHIBITION NOW OPEN", "Lee Miller: Fearless",       "Aug 29-Dec 7, 2026"]
+archive  ["Janna Ireland: A Goff...", "Ireland's 2024 photo...", "Jan 7-May 18, 2026"]
+```
+
+The title is the first line that is not entirely a badge.
+
+**Every label it uses**, read off both listing pages by her in one pass so the
+list is complete rather than discovered one per run: `EXHIBITION`,
+`TICKETED EXHIBITION`, `VIDEO INSTALLATION`, `COLLECTION INSTALLATION`,
+`COLLECTION ROTATION`, `SPECIAL LOAN INSTALLATION`, `NOW OPEN`, `CLOSING SOON`,
+`OPENING SOON`, `MEMBERS ONLY`, `FREE`.
+
+**Her ruling:** both `COLLECTION` labels are permanent displays and are excluded.
+A `VIDEO INSTALLATION` is a real temporary show and is kept — the session had
+these the wrong way round on the rotations and she corrected it.
+
+### Three defects, and what each cost
+
+1. **A bare `EXHIBITION` badge** survived three fixes. The list knew
+   `TICKETED EXHIBITION` only, and being anchored it then matched *nothing*
+   rather than matching partially. What removed the word afterwards was
+   `stripTitleNoise`, which left the rest of the badge run in place and made the
+   failure look like a different bug.
+2. **The description welded to the title**, 60 of 78 rows, every archive row.
+   Invisible in the CSV, which stores the squashed string.
+3. **A title broken after a colon**, introduced by the fix for (2) and caught
+   only by reading all 77 titles — `Georgia O'Keeffe:` had lost `"My New Yorks"`.
+   A colon is a promise about what follows, so the continuation is rejoined.
+
+### Still open, and hers
+
+- **`Screens: A Panafrica Film Series`** is in the output. A film series may or
+  may not be an exhibition — known bug 1, and her call.
+- Artic has a separate **EVENTS** tab and an "Upcoming events" strip below the
+  exhibition listings. Nothing from either reaches the output today.

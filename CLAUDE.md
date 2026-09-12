@@ -134,7 +134,7 @@ Until it is, check it against the newest run directory before trusting it.
 | Kunsthistorisches | `khm` | 6 | lazy-loaded; scoped to its show sections |
 | Gallerie dell'Accademia, Venice | `dellav` | 2 | never blocked; no listing page |
 | The Met | `met` | 82 | **local runs only** — Vercel checkpoint here |
-| Art Institute of Chicago | `artic` | 78 | **local runs only**; two title defects open, below |
+| Art Institute of Chicago | `artic` | 77 | **local runs only**; verified against her count of the live pages |
 | MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | refused; marker rows only |
 
 **All 21 have a recipe.** Blocked venues stay wired in deliberately: a refusal
@@ -149,22 +149,23 @@ never to have been blocked, the Met's archive turned out to be reachable, and
 one importable CSV is PARKED until all 21 are done** — her decision, because the
 shape of the answer depends on the split and the split is still moving.
 
-### artic — the one venue with open defects
+### artic — closed 12 Sep 2026, and how
 
-Four local runs committed, newest `run_2026-09-12_042601`, 78 rows. Dates, URLs
-and summaries are correct throughout. Two title defects:
+**77 rows, every title clean, verified against her own count and her reading of
+all 77.** The last of the 21. Detail in `docs/venues.md`.
 
-1. **5 rows keep a badge.** The card reads `EXHIBITION NOW OPEN Lee Miller:
-   Fearless`; the recipe's `stripLeading` knows `TICKETED EXHIBITION` but not a
-   bare `EXHIBITION`, and being anchored it then matched nothing at all. Two more
-   rows carry `COLLECTION ROTATION`, also absent from the list. Confirmed on her
-   machine — the cards have **no heading**, so the title comes from link text.
-2. **60 rows carry the description glued to the title** — every row from
-   `/exhibitions/history`. Same cause: no heading, so the whole card text becomes
-   the title. Verified: for 48 of the 60 the URL slug is an exact prefix of the
-   title and the remainder is the blurb. **The fix needs one command run on her
-   machine first** to see whether title and blurb are separate lines inside the
-   link; guessing at it has already failed three times.
+The lesson is worth more than the venue. **Three fixes in a row were guessed at
+from the CSV and all three were wrong**, because the CSV stores the title
+*squashed to one line* and the defect was made of line breaks — the evidence had
+been destroyed before it reached the file being read. One diagnostic on her
+machine printing the card's text **as lines** settled it in a single pass.
+
+**When the artefact cannot contain the evidence, stop reading the artefact.**
+And the CSV is not the only thing that flattens: a count does too. The run before
+last scored perfectly — 0 badges, 0 blanks, 0 wrong rows, exactly the predicted
+77 — while two titles had quietly lost half their names. **Only reading the 77
+titles found it.** Numbers confirm what you already suspect; they do not tell you
+what you failed to imagine.
 
 ### Her rules for wiring a venue
 
