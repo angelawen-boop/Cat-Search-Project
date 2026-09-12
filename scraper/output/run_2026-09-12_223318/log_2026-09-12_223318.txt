@@ -1,0 +1,63 @@
+[2026-09-12T12:33:18.249Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T12:33:18.250Z] Lookback floor: 2024-07-01
+[2026-09-12T12:33:18.250Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_223318
+[2026-09-12T12:33:18.250Z] Venues this run: borghese
+[2026-09-12T12:33:18.250Z] Proxy: http://127.0.0.1:33723
+[2026-09-12T12:33:18.250Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-12T12:33:18.374Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-12T12:33:18.459Z] [borghese] 
+[2026-09-12T12:33:18.459Z] [borghese] ────────────────────────────────────────────────────────────
+[2026-09-12T12:33:18.459Z] [borghese]   BORGHESE — Galleria Borghese, Rome
+[2026-09-12T12:33:18.459Z] [borghese] ────────────────────────────────────────────────────────────
+[2026-09-12T12:33:18.459Z] [borghese]   Fetching current: https://galleriaborghese.cultura.gov.it/en/mostre/presenti/
+[2026-09-12T12:33:22.022Z] [borghese]   consent banner dismissed ("Accept")
+[2026-09-12T12:33:23.476Z] [borghese]   current: 1 links seen -> 0 navigation, 0 already-seen URL -> 1 collected (0 of them with no readable title)
+[2026-09-12T12:33:23.476Z] [borghese]   Fetching upcoming: https://galleriaborghese.cultura.gov.it/en/mostre/future/
+[2026-09-12T12:33:26.743Z] [borghese]   consent banner dismissed ("Accept")
+[2026-09-12T12:33:28.137Z] [borghese]   upcoming: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T12:33:28.137Z] [borghese]   NO EXHIBITIONS upcoming: page loaded and was read, but nothing matched
+[2026-09-12T12:33:28.137Z] [borghese]   Fetching past: https://galleriaborghese.cultura.gov.it/en/mostre/passate/
+[2026-09-12T12:33:31.770Z] [borghese]   consent banner dismissed ("Accept")
+[2026-09-12T12:33:33.583Z] [borghese]   past: 40 links seen -> 0 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-12T12:33:33.583Z] [borghese]   reading 41 individual page(s)…
+[2026-09-12T12:33:33.583Z] [borghese]     page 1 of 41
+[2026-09-12T12:34:04.866Z] [borghese]     page 10 of 41
+[2026-09-12T12:34:40.341Z] [borghese]     page 20 of 41
+[2026-09-12T12:35:14.470Z] [borghese]     page 30 of 41
+[2026-09-12T12:35:55.142Z] [borghese]   TIMEOUT on https://galleriaborghese.cultura.gov.it/en/exhibition/correggio-e-lantico/ — retrying once
+[2026-09-12T12:36:20.889Z] [borghese]   TIMEOUT on https://galleriaborghese.cultura.gov.it/en/exhibition/giulio-paolini-three-by-three-everyone-is-the-other-or-nobody/ — retrying once
+[2026-09-12T12:36:33.423Z] [borghese]     page 40 of 41
+[2026-09-12T12:36:40.292Z] [borghese]   Individual pages: 41 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:36:40.292Z] [borghese]   lookback (final): kept 8, dropped 34 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T12:36:40.293Z] [borghese]   → 7 exhibitions, 7 with curatorial text → borghese.csv
+[2026-09-12T12:36:40.383Z] 
+[2026-09-12T12:36:40.383Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:36:40.383Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T12:36:40.383Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:36:40.383Z]   BORGHESE: 7 exhibitions | 7 with text | 1 page(s) blocked/empty
+[2026-09-12T12:36:40.383Z] 
+[2026-09-12T12:36:40.383Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:36:40.383Z]   COVERAGE — every link accounted for
+[2026-09-12T12:36:40.383Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:36:40.383Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T12:36:40.383Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T12:36:40.383Z]   borghese   current                          1     0       0     0        0        0          1
+[2026-09-12T12:36:40.383Z]   borghese   upcoming                         0     0       0     0        0        0          0
+[2026-09-12T12:36:40.383Z]   borghese   past                            40     0       0     0        0        0         40
+[2026-09-12T12:36:40.383Z] 
+[2026-09-12T12:36:40.383Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T12:36:40.383Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T12:36:40.383Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T12:36:40.383Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T12:36:40.383Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T12:36:40.383Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T12:36:40.383Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T12:36:40.383Z] 
+[2026-09-12T12:36:40.383Z] Network bridge: 699 requests served, 1240 skipped (image/media/font), 1 failed
+[2026-09-12T12:36:40.383Z] 
+[2026-09-12T12:36:40.383Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_223318
+[2026-09-12T12:36:40.383Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_223318/sweep.csv  (8 rows — borghese:8)
+[2026-09-12T12:36:40.383Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_223318/log_2026-09-12_223318.txt
+[2026-09-12T12:36:40.383Z] Not yet in this run: met, ng, rijks, acq, frick, morgan, menil, va, louvre, capo, uffizi, brera, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-12T12:36:40.383Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T12:36:40.383Z] No de-duplication is applied — see passThrough.
