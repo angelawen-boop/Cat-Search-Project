@@ -486,7 +486,19 @@ const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
   // which is why abbreviations below stay long enough to stay unambiguous.
   gennaio:1, febbraio:2, marzo:3, aprile:4, maggio:5, giugno:6,
   luglio:7, agosto:8, settembre:9, ottobre:10, novembre:11, dicembre:12,
-  genn:1, febbr:2, magg:5, giu:6, lug:7, ago:8, sett:9, ott:10, dic:12 };
+  genn:1, febbr:2, magg:5, giu:6, lug:7, ago:8, sett:9, ott:10, dic:12,
+
+  // THE THREE-LETTER ITALIAN FORMS, added 12 Sep 2026 from the Gallerie
+  // dell'Accademia. Its ENGLISH exhibition page prints the run in abbreviated
+  // Italian — "10 set 2026 - 22 nov 2026" — so a row she could see dated on the
+  // site arrived with both columns blank and a note blaming the venue for
+  // publishing only "10 September". `nov` already matched as English, `set` did
+  // not: the map held `sett` but the site writes three letters.
+  //
+  // `gen` and `mag` are added with it rather than waiting to be caught by
+  // another venue's review. The rest of the three-letter forms — feb, mar, apr,
+  // giu, lug, ago, ott, dic — are already here or already English.
+  set:9, gen:1, mag:5 };
 
 /**
  * One month pattern, shared by every date parser.
@@ -522,7 +534,11 @@ const MONTH_PATTERN =
   '(?:January|February|March|April|May|June|July|August|September|October|November|December' +
   '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre' +
   '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec' +
-  '|genn|febbr|magg|giu|lug|ago|sett|ott|dic)\\.?(?![A-Za-z])';
+  // LONGEST FIRST WITHIN EACH LANGUAGE: `sett` must precede `set`, `genn`
+  // precede `gen` and `magg` precede `mag`, or the match stops three letters in
+  // and leaves a stray "t" behind — the same trap as the Italian "al" before
+  // "all'" and as `sat` before `saturday`.
+  '|genn|febbr|magg|giu|lug|ago|sett|ott|dic|set|gen|mag)\\.?(?![A-Za-z])';
 
 // Month name to number, tolerating the trailing full stop the pattern allows.
 function monthNum(name) {

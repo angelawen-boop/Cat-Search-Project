@@ -512,6 +512,44 @@ test('Y-004: nothing is requested before the lookback floor', () => {
 });
 
 // ---------------------------------------------------------------------------
+// IT-001 to IT-003 — THREE-LETTER ITALIAN MONTHS.
+//
+// The Gallerie dell'Accademia prints its run in abbreviated Italian on its
+// ENGLISH exhibition page: "10 set 2026 - 22 nov 2026". `nov` already matched as
+// English; `set` did not, because the map held `sett` and the site writes three
+// letters. The row reached her with both date columns blank and a note blaming
+// the venue for publishing only "10 September" — untrue, and she caught it.
+
+test('IT-001: "10 set 2026 - 22 nov 2026" reads as a full range', () => {
+  const r = findDateRange('10 set 2026 - 22 nov 2026');
+  assert.equal(r.start, '2026-09-10');
+  assert.equal(r.end, '2026-11-22');
+});
+
+test('IT-002: gen and mag too, and the longer forms still win', () => {
+  // sett must beat set, genn beat gen, magg beat mag — otherwise the match
+  // stops three letters in and leaves a stray letter behind, the same trap as
+  // the Italian "al" before "all\'".
+  assert.equal(findDateRange('5 gen 2026 - 3 mag 2026').start, '2026-01-05');
+  assert.equal(findDateRange('5 gen 2026 - 3 mag 2026').end, '2026-05-03');
+  const long = findDateRange('11 sett 2025 - 2 ott 2025');
+  assert.equal(long.start, '2025-09-11');
+  assert.equal(long.end, '2025-10-02');
+});
+
+test('IT-003: the formats already handled are untouched', () => {
+  const cases = [
+    ['Dal 16 ottobre 2025 al 6 gennaio 2026', '2025-10-16', '2026-01-06'],
+    ['12 SEP 2025 TO 25 JAN 2026', '2025-09-12', '2026-01-25'],
+    ['21 Sept. 2024 to 12 Jan. 2025', '2024-09-21', '2025-01-12'],
+  ];
+  for (const [s, a, b] of cases) {
+    const r = findDateRange(s);
+    assert.equal(r.start, a, s);
+    assert.equal(r.end, b, s);
+  }
+});
+
 // PY-001 to PY-003 — A PUBLISHED OPENING YEAR THAT CANNOT BE AN EXHIBITION YEAR.
 //
 // Capodimonte's Mimmo Jodice memorial page says "Mimmo Jodice ( Napoli 29 marzo
