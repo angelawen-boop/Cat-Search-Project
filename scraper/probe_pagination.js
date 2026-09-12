@@ -69,8 +69,22 @@ if (!code || !m.VENUES[code]) {
     console.log(`   ${fresh.length} NEW exhibition link(s), ${repeat.length} already seen on an earlier page`);
     for (const [abs, t] of fresh) console.log(`     ${t || '(no link text)'}  ->  ${abs.replace(v.base, '')}`);
     console.log('');
-    // The site's own answer for where the list ends: a page that hands over
-    // nothing new is the end, exactly as followPagination() treats it.
+    // WHERE THE LIST ENDS — but page 1 is the exception, and missing it made
+    // this probe report artic's 2023 archive as one page long when it has two.
+    //
+    // Sites disagree about whether the bare address is page 0 or page 1. Where
+    // it is page 1, asking for ?page=1 returns THE SAME PAGE AGAIN — which
+    // looks exactly like an exhausted list, because nothing is new. It is not:
+    // it is the site telling us its index base, and the real second page is
+    // ?page=2. The Frick is the other way round and its ?page=1 is genuinely
+    // the second page.
+    //
+    // So a duplicate at n=1 reports the index base and carries on; a duplicate
+    // anywhere after that is the end.
+    if (n === 1 && fresh.length === 0 && repeat.length) {
+      console.log(`   (identical to the bare address, so this site numbers from 1 — its real second page is ?page=2)\n`);
+      continue;
+    }
     if (n > 0 && fresh.length === 0) { console.log(`STOP: page ${n} added nothing new — the list ends at page ${n - 1}.`); break; }
   }
   console.log(`TOTAL across all pages read: ${seen.size} distinct exhibition addresses.`);
