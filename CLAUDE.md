@@ -120,7 +120,7 @@ Until it is, check it against the newest run directory before trusting it.
 | National Gallery, London | `ng` | 27 | yes — her count | yes | |
 | Rijksmuseum | `rijks` | 37 | yes — her count (36) | yes | 37 since; not chased, her call. *Asian Pavilion* pulled by the venue |
 | Acquavella | `acq` | 15 | yes — her count | yes | |
-| Art Institute of Chicago | `artic` | 77 | yes — her count + all 77 titles read | yes | **local only** |
+| Art Institute of Chicago | `artic` | 65 | yes — her count + every row's type tag read | yes | **local only**; only EXHIBITION and TICKETED EXHIBITION kept, her ruling |
 | The Met | `met` | 106 | yes — row by row, 11 Sep | yes | **local only**; see `docs/venues.md` |
 | The Frick | `frick` | 10 | **yes — 12 Sep** | yes — no defect found | her 0/3/7 is our 10; it leaves closed shows on page one |
 | The Menil | `menil` | 32 | **yes — 12 Sep** | yes | past archive paginates; 7 permanent galleries excluded, her ruling |
@@ -146,7 +146,9 @@ and `brera` are in, and the state all thirteen were in at the start of 12 Sep.
 **ALL SIXTEEN REACHABLE VENUES ARE REVIEWED BY HER, FIXED, AND VERIFIED AGAINST HER
 OWN COUNT.** Capodimonte is the one exception and a deliberate one — see below.
 
-Final counts, 12 Sep 2026:
+Final counts, 12 Sep 2026 — **408 rows across the 18 reachable venues**, of which
+406 are exhibitions and 2 are marker rows (brera and borghese each have one for a
+genuinely empty upcoming page):
 
 | | | | |
 |---|---|---|---|
@@ -154,6 +156,7 @@ Final counts, 12 Sep 2026:
 | tate-modern 13 | tate-britain 9 | frick 10 | menil 32 |
 | wallace 11 | louvre 22 | dellav 2 | khm 6 |
 | uffizi 13 | brera 8 | capo 18 | borghese 8 |
+| **container total 237** | **met 106** | **artic 65** | |
 
 No row at any venue carries a credit line, star rating, ticket price, funder list,
 opening hours, breadcrumb or cookie notice. The only empty summaries are the three
@@ -214,7 +217,38 @@ assume a venue she cannot reach is unreachable. **How they join into one importa
 CSV was parked until all 21 were done. They now are**, so it is live — see §7 step 6.
 Her decision to make, and the shape depends on what happens to the three refusals.
 
-### artic — closed 12 Sep 2026, and how
+### artic — only the two types the venue calls an exhibition, her ruling 12 Sep
+
+**65 rows, down from 77.** She wants ONLY `EXHIBITION` and `TICKETED EXHIBITION`;
+`COLLECTION INSTALLATION`, `COLLECTION ROTATION`, `VIDEO INSTALLATION`,
+`SPECIAL LOAN INSTALLATION` and `HOLIDAY INSTALLATION` are all out. Her question was
+the right one: *"I don't know why we simply unglued the tags, instead of filtering
+out those exhibitions completely."* The badge stuck to the title was the visible
+symptom, so it had been treated as a title problem, and stripping it left the row
+in place looking like an exhibition.
+
+**The tag is on the exhibition's own page, not on every listing card.** Its current
+and upcoming cards carry it; its archive cards do not, which is why the card rule
+caught eight on the current page and nothing at all across six history pages.
+
+**Its year pages group by OPENING date**, so the year before the lookback floor has
+to be requested too — a show that opened in December 2023 and closed in August 2024
+is in range and sits on the 2023 page.
+
+**THE VENUE CONTRADICTS ITS OWN TAGGING.** The Neapolitan Crèche runs every year:
+one instance is labelled `HOLIDAY INSTALLATION` and excluded, the 2024 instance is
+labelled `EXHIBITION` and kept. **Her ruling: leave it.** Trusting the venue's tag is
+still right — the alternative is us deciding what things are — but it cannot survive
+the venue disagreeing with itself, and that is a known, accepted hole rather than a
+bug to chase.
+
+**`scraper/show_tags.js` prints every row's tag** and writes `tags_<venue>.txt` into
+the run directory. It exists because reconciling her count meant opening dozens of
+pages by hand to read one word off each — work with exactly one correct answer per
+row, which makes it code's job. It reads the same 400-character window as the
+scraper's own exclusion, so the two cannot disagree about where a tag lives.
+
+### artic — the earlier title lesson, still worth reading
 
 **77 rows, every title clean, verified against her own count and her reading of
 all 77.** The last of the 21. Detail in `docs/venues.md`.
