@@ -1100,6 +1100,10 @@ Each entry cost a real failure. Before changing the area, read the line.
 - Italian months abbreviated to three letters (`set`), where the map held only `sett`.
 - Checking output for junk with an ENGLISH-only word list, then reporting an Italian
   venue as clean.
+- Filtering `rows` after `applyLookback` has already copied it into `toFetch` — the
+  log announced ten exclusions while all ten sat in the CSV with empty summaries.
+  **A log line describing something that did not happen is worse than no log line**,
+  so counts are taken from the array AFTER the change, never from the list of marks.
 
 ---
 

@@ -3747,17 +3747,29 @@ async function scrapeVenue(page, code) {
   // ROWS THE VENUE'S OWN PAGE LABELLED AS SOMETHING OTHER THAN AN EXHIBITION.
   // Marked during the detail fetch, dropped here, and each one named — an
   // exclusion she can read and check, never a silent disappearance.
-  const labelled = rows.filter(r => r._dropByPageLabel);
-  if (labelled.length) {
-    for (const r of labelled) {
-      log(`    the venue's own page labels this a ${r._dropByPageLabel}, excluded: ${r.title || r.url}`);
-    }
-    // Removed IN PLACE: `rows` is a const here and is also the array the
-    // collection step has been pushing into, so rebinding it would throw.
-    for (let i = rows.length - 1; i >= 0; i--) {
-      if (rows[i]._dropByPageLabel) rows.splice(i, 1);
-    }
-    log(`  ${labelled.length} row(s) excluded on the type printed on their own page`);
+  // REMOVE FROM `toFetch`, NOT FROM `rows`, and this cost a run to learn.
+  //
+  // applyLookback() returns a COPY, so from here on `toFetch` is what every
+  // later step reads and what is written to the CSV; `rows` is no longer
+  // connected to the output. The first version spliced `rows`, so the log
+  // announced "10 row(s) excluded on the type printed on their own page" while
+  // all ten sat in the file — with empty summaries, because the fetch had
+  // skipped them.
+  //
+  // A LOG LINE THAT DESCRIBES SOMETHING THAT DID NOT HAPPEN IS WORSE THAN NO
+  // LOG LINE. So the count is taken from the array AFTER the removal rather
+  // than from the list of marks, and cannot claim a drop that did not land.
+  //
+  // When lookbackAfterDetail is set, toFetch IS rows, so this covers both.
+  const before = toFetch.length;
+  for (let i = toFetch.length - 1; i >= 0; i--) {
+    const r = toFetch[i];
+    if (!r._dropByPageLabel) continue;
+    log(`    the venue's own page labels this a ${r._dropByPageLabel}, excluded: ${r.title || r.url}`);
+    toFetch.splice(i, 1);
+  }
+  if (toFetch.length !== before) {
+    log(`  ${before - toFetch.length} row(s) excluded on the type printed on their own page`);
   }
 
   // HER RULING FOR THE MENIL, 12 Sep 2026: drop its permanent collection
