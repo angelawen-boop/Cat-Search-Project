@@ -231,6 +231,95 @@ function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
   return pages;
 }
 
+/**
+ * Follow a numbered archive onto its next page, if there is one.
+ *
+ * THE MENIL'S PAST ARCHIVE IS PAGINATED and only its first page was being read:
+ * 11 exhibitions on `/exhibitions/past` and 12 more on `?page=1`, all 12 lost.
+ * Her count caught it; nothing in the output could have, because a first page
+ * that reads perfectly looks exactly like a complete archive.
+ *
+ * WHY THE PAGES ARE NOT WRITTEN INTO THE RECIPE. This is the same trap as the
+ * year archive, one step worse. A recipe saying "past has 2 pages" is correct
+ * the afternoon it is typed and wrong the moment the venue closes one more
+ * show: the sweep completes, reports no error, and is missing a page. But
+ * unlike years, the count cannot be derived up front either — only the site
+ * knows how deep its archive goes. So it is derived AT RUN TIME by asking:
+ * the loop requests the next page, and the site's answer decides whether there
+ * is another.
+ *
+ * THE STOP RULE IS "THIS PAGE ADDED NO NEW EXHIBITION ADDRESS". Both ways an
+ * archive can end are the same answer:
+ *   - the page is empty, or 404s, or serves a bare "no results" shell
+ *   - the site CLAMPS an over-large page number back to the last real page, so
+ *     every address on it has already been seen and the URL-identity guard
+ *     collects none of them
+ *
+ * NO ORDERING ASSUMPTION, DELIBERATELY. The tempting cheaper rule is "stop once
+ * a page holds nothing inside the lookback" — Menil's archive runs newest
+ * first, so that would stop within a page or two of the floor. It is refused
+ * because it is only true while the venue sorts its archive that way, and a
+ * venue that re-sorts would silently lose everything past the first old page.
+ * Walking to the true end costs a few page loads of rows the lookback then
+ * drops before any detail page is opened, which is cheap; a silent loss is not.
+ *
+ * MAX_ARCHIVE_PAGES IS A RUNAWAY GUARD, NOT THE STOP. A site that serves a
+ * plausible page for any number at all would otherwise loop forever. Reaching
+ * it means the real stop never fired, which is a defect in this function or a
+ * change at the venue — so it leaves a marker row on her approval pile rather
+ * than trimming the venue and saying nothing.
+ *
+ * A venue opts in by putting `paginate` on the PAGE, not the venue: the Menil
+ * paginates its past archive and neither of its other two listings.
+ *
+ *   paginate: { param: 'page', from: 1 }   ->  ?page=1, ?page=2, ...
+ *
+ * `from` is the number of the page AFTER the bare address, because sites
+ * disagree about whether the first page is 0 or 1 and only the site can say.
+ * The Menil's bare /exhibitions/past is page 0, so its second page is ?page=1.
+ */
+function followPagination(queue, pg, added, rows, code, v) {
+  const spec = pg.paginate;
+  if (!spec) return;
+
+  // The site has told us there is nothing after this page.
+  if (added <= 0) {
+    if (pg.discovered) log(`  PAGINATION end: ${pg.ctx} added no new exhibitions`);
+    return;
+  }
+
+  const next = (pg.pageNum === undefined ? spec.from : pg.pageNum + 1);
+  const count = queue.filter(q => q.paginate === spec).length;
+  if (count >= MAX_ARCHIVE_PAGES) {
+    log(`  PAGINATION RUNAWAY ${pg.ctx}: hit the ${MAX_ARCHIVE_PAGES}-page guard`);
+    rows.push({
+      venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
+      summary: '', url: v.base + pg.path,
+      notes: `The venue's "${pg.ctx}" archive was still returning new exhibitions after ${MAX_ARCHIVE_PAGES} pages, so reading it was stopped. Older exhibitions may be missing. Marker row, not an exhibition.`,
+    });
+    return;
+  }
+
+  // BUILD FROM THE BARE ADDRESS, never from the page we are standing on.
+  // Appending to the current path gives `?page=1&page=2` on the second hop —
+  // which most sites answer with page 1 again, so the URL guard finds every
+  // address already seen, the stop rule fires, and the archive silently ends
+  // one page in. The bare address is carried along for exactly this reason.
+  const basePath = pg.basePath || pg.path;
+  const sep = basePath.includes('?') ? '&' : '?';
+  queue.push({
+    path: `${basePath}${sep}${spec.param}=${next}`,
+    ctx: `${pg.ctx.replace(/ p\d+$/, '')} p${next}`,
+    basePath,
+    paginate: spec,
+    pageNum: next,
+    // Marks this page as one the loop asked for rather than one the recipe
+    // named, which is what suppresses the "loaded but nothing matched" marker
+    // when the archive ends.
+    discovered: true,
+  });
+}
+
 /** A venue's pages, with any year-filtered archive expanded to real years. */
 function listingPages(v) {
   const floor = v.lookbackFrom ? new Date(v.lookbackFrom) : LOOKBACK;
@@ -241,6 +330,11 @@ function listingPages(v) {
 const NAV_TIMEOUT = 20000;      // ceiling for the HTML itself to arrive
 const CONTENT_TIMEOUT = 8000;   // extra grace for client-rendered body text
 const MIN_BODY_CHARS = 200;     // below this a page is a shell, not content
+
+// How many pages of a numbered archive to follow before giving up. See
+// followPagination() — this is a runaway guard, never the intended stop, so
+// hitting it leaves a marker row rather than quietly truncating the venue.
+const MAX_ARCHIVE_PAGES = 60;
 
 // ── Logging ───────────────────────────────────────────────────────────────────
 const logLines = [];
@@ -2396,7 +2490,23 @@ const VENUES = {
     pages: [
       { path: '/exhibitions',          ctx: 'current' },
       { path: '/exhibitions/upcoming', ctx: 'upcoming' },
-      { path: '/exhibitions/past',     ctx: 'past' },
+      // ITS PAST ARCHIVE IS PAGINATED and only this first page was being read,
+      // losing 12 exhibitions outright — her count caught it, nothing in the
+      // output could have.
+      //
+      // `from: 2` because THIS SITE IS 1-INDEXED: probed 12 Sep, the bare
+      // address and ?page=1 return the identical 12 addresses, and ?page=2 is
+      // the first page with new ones. Sites disagree about this and only the
+      // site can settle it, so it is a stated fact like any other recipe line.
+      // Getting it wrong is not silent — a `from` one too low reads the first
+      // page twice and stops, which shows up as a short venue against her
+      // count; one too high would skip a page, which is why it was PROBED
+      // rather than assumed.
+      //
+      // HOW MANY PAGES THERE ARE IS NOT WRITTEN DOWN. followPagination() keeps
+      // asking until the venue stops answering with new exhibitions, so the
+      // archive growing costs no edit here.
+      { path: '/exhibitions/past',     ctx: 'past', paginate: { param: 'page', from: 2 } },
     ],
     // SINGULAR, and this is the whole trap at this venue. Exhibitions live at
     // /exhibition/<slug>; the PLURAL /exhibitions/<slug> addresses are the
@@ -2880,7 +2990,11 @@ async function scrapeVenue(page, code) {
   logSection(`${code.toUpperCase()} — ${v.name}`);
   const rows = [], seenUrls = new Set(), urlToRow = new Map();
 
-  for (const pg of listingPages(v)) {
+  // A QUEUE, NOT A FIXED LIST, because numbered archives cannot be counted in
+  // advance. See followPagination() at the bottom of this loop.
+  const queue = listingPages(v);
+  for (let qi = 0; qi < queue.length; qi++) {
+    const pg = queue[qi];
     const url = v.base + pg.path;
     log(`  Fetching ${pg.ctx}: ${url}`);
     const r = await safeGoto(page, url, code, pg.ctx);
@@ -2975,7 +3089,15 @@ async function scrapeVenue(page, code) {
       // was already collected from another of this venue's pages does not
       // report itself as empty — Tate's two "past" pages are exactly that, and
       // they are working correctly.
-      if (rows.length === rowsBefore && !(cov && cov.dupUrl)) {
+      //
+      // ONE EXCEPTION: a page this loop DISCOVERED by following pagination.
+      // An empty page is how the end of a numbered archive announces itself —
+      // we ask for the page after the last one precisely to be told there is
+      // nothing there. That is the mechanism working, not a venue failing, and
+      // a marker row for it would appear on her approval pile on every single
+      // sweep forever. A page that FAILED to load still leaves its marker
+      // above, because that is a real refusal and she should see it.
+      if (rows.length === rowsBefore && !(cov && cov.dupUrl) && !pg.discovered) {
         log(`  NO EXHIBITIONS ${pg.ctx}: page loaded and was read, but nothing matched`);
         rows.push({
           venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
@@ -2983,6 +3105,8 @@ async function scrapeVenue(page, code) {
           notes: `The venue's "${pg.ctx}" listing page loaded but no exhibitions could be read from it. Marker row, not an exhibition.`,
         });
       }
+
+      followPagination(queue, pg, rows.length - rowsBefore, rows, code, v);
 
     } catch (e) {
       rethrowIfAborted(e);
@@ -3612,7 +3736,7 @@ module.exports = {
   findDateRange, findDateRangeInProse, parseMonthDay, ymd, startYearFor,
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
-  saysOngoing, expandYearArchive, listingPages,
+  saysOngoing, expandYearArchive, listingPages, followPagination,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
   installNetworkBridge, resolveChromium, safeGoto, classifyLoadError, datesNearLink,

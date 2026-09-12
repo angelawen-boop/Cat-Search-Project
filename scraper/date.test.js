@@ -20,7 +20,7 @@ const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
   classifyLoadError, isOwnListingPage, saysOngoing,
-  expandYearArchive, listingPages, VENUES, pickTitleLine,
+  expandYearArchive, listingPages, followPagination, VENUES, pickTitleLine,
 } = require('./sweep_prototype.js');
 
 const range = (s, hint) => {
@@ -509,6 +509,94 @@ test('Y-004: nothing is requested before the lookback floor', () => {
   // A floor moved forward moves the oldest year with it.
   const later = expandYearArchive(YEAR_ENTRY, new Date('2027-07-01'), new Date('2029-01-01'));
   assert.deepEqual(later.map(p => Number(p.path.split('=')[1])), [2028, 2027]);
+});
+
+// ---------------------------------------------------------------------------
+// P-001 to P-007 — NUMBERED ARCHIVE PAGINATION.
+//
+// The Menil's past archive is paginated; only page one was being read and 12
+// exhibitions were lost. Nothing in the output could show it — a first page
+// that reads perfectly looks exactly like a complete archive — so her count was
+// the only thing that could catch it, and these fixtures exist so it never has
+// to again.
+// ---------------------------------------------------------------------------
+
+const SPEC = { param: 'page', from: 2 };
+// A stand-in for the real loop: follow until the site stops handing over new
+// exhibitions. `yield_` says how many NEW addresses each page produced.
+const walk = (yield_, start = { path: '/exhibitions/past', ctx: 'past', paginate: SPEC }) => {
+  const queue = [start], rows = [];
+  for (let i = 0; i < queue.length && i < 200; i++) {
+    followPagination(queue, queue[i], yield_(i), rows, 'menil', VENUES.menil);
+  }
+  return { paths: queue.map(q => q.path), rows };
+};
+
+test('P-001: it keeps asking while the venue keeps answering', () => {
+  // 11 on the bare address, 12 on ?page=1, nothing on ?page=2.
+  const { paths } = walk(i => [11, 12, 0][i] ?? 0);
+  assert.deepEqual(paths, ['/exhibitions/past', '/exhibitions/past?page=2', '/exhibitions/past?page=3']);
+});
+
+test('P-002: every page is built from the BARE address, never the current one', () => {
+  // Appending to the page we are standing on gives ?page=1&page=2, which most
+  // sites answer with page one again — so every address reads as already seen,
+  // the stop rule fires, and the archive quietly ends one page in.
+  const { paths } = walk(i => (i < 4 ? 5 : 0));
+  assert.deepEqual(paths, [
+    '/exhibitions/past',
+    '/exhibitions/past?page=2',
+    '/exhibitions/past?page=3',
+    '/exhibitions/past?page=4',
+    '/exhibitions/past?page=5',
+  ]);
+  assert.equal(paths.some(p => (p.match(/page=/g) || []).length > 1), false,
+    'a page number must never be appended twice');
+});
+
+test('P-003: a page that adds nothing new ends the archive', () => {
+  // Both ways an archive ends look the same from here: an empty page, and a
+  // site that clamps an over-large page number back to the last real one so
+  // every address on it has already been collected.
+  assert.deepEqual(walk(i => (i === 0 ? 11 : 0)).paths,
+    ['/exhibitions/past', '/exhibitions/past?page=2']);
+});
+
+test('P-004: a page the recipe did not name is marked as discovered', () => {
+  // That mark is what suppresses the "loaded but nothing matched" marker row
+  // when the archive ends — otherwise the page we ask for in order to be told
+  // there is nothing there would land on her approval pile on every sweep.
+  const queue = [{ path: '/exhibitions/past', ctx: 'past', paginate: SPEC }];
+  followPagination(queue, queue[0], 11, [], 'menil', VENUES.menil);
+  assert.equal(queue[0].discovered, undefined);
+  assert.equal(queue[1].discovered, true);
+});
+
+test('P-005: the runaway guard leaves a marker row, it does not trim silently', () => {
+  // Reaching it means the real stop never fired. That is a defect, and a venue
+  // cut short without saying so is exactly the failure this project keeps
+  // paying for.
+  const { paths, rows } = walk(() => 5);
+  assert.equal(paths.length, 60);
+  assert.equal(rows.length, 1);
+  assert.match(rows[0].title, /page\]$/);
+  assert.match(rows[0].notes, /Older exhibitions may be missing/);
+});
+
+test('P-006: a page with no paginate option is left alone', () => {
+  const queue = [{ path: '/exhibitions/upcoming', ctx: 'upcoming' }];
+  followPagination(queue, queue[0], 4, [], 'menil', VENUES.menil);
+  assert.equal(queue.length, 1);
+});
+
+test('P-007: the Menil opts in on its past archive and nowhere else', () => {
+  const paged = VENUES.menil.pages.filter(p => p.paginate);
+  assert.deepEqual(paged.map(p => p.path), ['/exhibitions/past']);
+  assert.equal(paged[0].paginate.from, 2,
+    'this site is 1-indexed: its bare past page IS page 1, so the next is 2');
+  // No page count may be written into a recipe — the same trap as a
+  // hand-written year, one step worse, because only the site knows the answer.
+  assert.equal(VENUES.menil.pages.some(p => /page=\d/.test(p.path)), false);
 });
 
 test('Y-005: the Met resolves to real addresses, and its years are navigation', () => {
