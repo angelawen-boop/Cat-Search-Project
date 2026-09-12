@@ -1450,7 +1450,30 @@ async function getText(el) {
 // the second: a venue can word its ticket copy any way it likes, but it almost
 // always puts it in a block that says so. Added 11 Sep after Borghese's ticket
 // discount became an exhibition's description (see BOILERPLATE, DEF-03).
-const NOISE_CONTAINER = 'cmplz|cookie|consent|gdpr|privacy|onetrust|cky-|truste|usercentrics|didomi|banner|newsletter|subscribe|footer|nav|ticket|visit-info|visitor-info|contact|address|opening-hours|practical';
+// NOISE COMES IN TWO KINDS, AND THE DIFFERENCE IS LOAD-BEARING.
+//
+// ALWAYS_NOISE names a consent manager or says "cookies" outright. No page
+// layout is ever called onetrust or cmplz, so a match is certain and the
+// layout-wrapper escape below must NOT apply to it.
+//
+// NOISE_CONTAINER names something a page merely tends to have — a footer, a
+// banner, a nav, a promo. Those words also turn up in innocent LAYOUT classes,
+// which is what the Wallace Collection's "section--footer-spacer" was, so a
+// match there is only believed when the container is small (see isLayoutWrapper).
+//
+// THE SPLIT EXISTS BECAUSE THE V&A INVERTED THE WALLACE FIX. Its exhibition
+// pages carry no curatorial paragraph at all — every substantial <p> on them
+// belongs to the OneTrust consent panel, a newsletter form or a membership
+// promo. So the consent panel held 24 of the page's 27 paragraphs, cleared
+// "more than half", was read as a layout wrapper rather than a banner, and its
+// text was kept. Constantinople to Istanbul was handed to her described as
+// "Use precise geolocation data. Actively scan device characteristics…".
+//
+// The share test is right for an ambiguous word and wrong for an unambiguous
+// one: a cookie panel that IS most of the page is still a cookie panel. It
+// means the page has no prose, and the honest answer is an empty summary.
+const ALWAYS_NOISE = 'cmplz|cookie|consent|gdpr|onetrust|optanon|\\bot-(sdk|acc|cat|subgrp|dpd|pc|fl)|cky-|truste|usercentrics|didomi';
+const NOISE_CONTAINER = 'privacy|banner|newsletter|subscribe|promo|footer|nav|ticket|visit-info|visitor-info|contact|address|opening-hours|practical';
 
 const BOILERPLATE = [
   'technical storage or access',
@@ -1515,6 +1538,23 @@ const BOILERPLATE = [
 // carry two paragraphs AND most of the page's prose.
 const MIN_WRAPPER_PARAS = 2;
 
+/**
+ * Where the blurb sits, in order of preference.
+ *
+ * EVERY ENTRY BELOW EXPECTS A PARAGRAPH, and that is the ladder's blind spot. A
+ * venue that writes its description into a DIV falls straight through all of it
+ * to the bare `p` at the bottom and picks up whatever marketing the page has.
+ * The V&A does exactly that: its text lives in
+ * `div.introblock__headline.qa-exhibition-description`, contains no <p> at all,
+ * and all 15 of its rows came back describing membership offers or cookies.
+ *
+ * A venue may therefore name its own description container with `description`
+ * in its recipe, which is tried FIRST and takes the element's own text whatever
+ * its tag. That is the recipe's job by the engine/recipe split — where the
+ * title sits and where the dates sit are already per-venue, and where the blurb
+ * sits is the same kind of fact. Adding these classes to the shared ladder
+ * instead would change what every signed-off venue extracts, to fix one.
+ */
 const CURATORIAL_SELECTORS = [
   '.exhibition-detail__description',
   '.exhibition__description',
@@ -1530,9 +1570,10 @@ const CURATORIAL_SELECTORS = [
   'p',
 ];
 
-async function getCuratorialText(page) {
+async function getCuratorialText(page, descSelector) {
   try {
-    return await page.evaluate(({ noiseRe, boilerplate, selectors, MIN_WRAPPER_PARAS }) => {
+    return await page.evaluate(({ alwaysRe, noiseRe, boilerplate, selectors, MIN_WRAPPER_PARAS }) => {
+      const ALWAYS = new RegExp(alwaysRe, 'i');
       const NOISE = new RegExp(noiseRe, 'i');
       const clean = (t) => String(t || '').replace(/\s+/g, ' ').trim();
 
@@ -1594,7 +1635,11 @@ async function getCuratorialText(page) {
       const insideNoise = (el) => {
         for (let n = el; n && n.tagName !== 'BODY' && n.tagName !== 'HTML'; n = n.parentElement) {
           const cls = typeof n.className === 'string' ? n.className : '';
-          if (NOISE.test(cls + ' ' + (n.id || ''))) {
+          const sig = cls + ' ' + (n.id || '');
+          // A consent manager, named as itself. Never a layout class, so the
+          // size of the thing is irrelevant — see ALWAYS_NOISE.
+          if (ALWAYS.test(sig)) return true;
+          if (NOISE.test(sig)) {
             if (isLayoutWrapper(n)) continue;   // a wrapper, not a banner — keep looking up
             return true;
           }
@@ -1617,7 +1662,8 @@ async function getCuratorialText(page) {
         if (out.length) return out.join(' ').slice(0, 2000);
       }
       return '';
-    }, { noiseRe: NOISE_CONTAINER, boilerplate: BOILERPLATE, selectors: CURATORIAL_SELECTORS,
+    }, { alwaysRe: ALWAYS_NOISE, noiseRe: NOISE_CONTAINER, boilerplate: BOILERPLATE,
+         selectors: descSelector ? [descSelector, ...CURATORIAL_SELECTORS] : CURATORIAL_SELECTORS,
          MIN_WRAPPER_PARAS });
   } catch {
     return '';
@@ -2621,6 +2667,24 @@ const VENUES = {
     // Saturday, 7 November 2026", never a range. The other end comes from the
     // exhibition's own page, which the engine already fetches whenever either
     // date is missing.
+    //
+    // ITS BLURB IS IN A DIV, NOT A PARAGRAPH. `qa-exhibition-description` is
+    // the site's own test hook on the element holding the curatorial text, and
+    // nothing else on the page carries it. Without this the shared ladder finds
+    // no paragraph worth having — the V&A's pages genuinely contain none — and
+    // falls to the bottom rung, which is how all 15 rows came back describing
+    // the membership scheme or the cookie policy.
+    description: '.qa-exhibition-description',
+    // THE VENUE SORTS ITS OWN LISTING: every card opens "Exhibition",
+    // "Upcoming Exhibition" or "Display". Her count of 12 Sep is 2 current and
+    // 4 upcoming, which is exactly the South Kensington cards labelled one of
+    // the first two; the other nine are Displays. Rung 1 of the ladder — the
+    // site's own tag — not our judgement about what a thing is.
+    //
+    // ANCHORED AT THE START, because "Display" also occurs inside a title:
+    // "Adobe Creative Residents On Display". The badge is the first thing on
+    // the card, so only a leading match is the label.
+    excludeLabelled: /^\s*Display\b/i,
   },
 
   // TATE — two venues in her list, one website, and the URL is what separates
@@ -3330,7 +3394,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
         }
       }
 
-      const text = await getCuratorialText(page);
+      const text = await getCuratorialText(page, (VENUES[venueCode] || {}).description);
       if (text) {
         row.summary = text;
         fetched++;

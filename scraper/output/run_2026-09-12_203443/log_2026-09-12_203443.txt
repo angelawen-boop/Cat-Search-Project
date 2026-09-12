@@ -1,0 +1,60 @@
+[2026-09-12T10:34:43.686Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T10:34:43.686Z] Lookback floor: 2024-07-01
+[2026-09-12T10:34:43.686Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_203443
+[2026-09-12T10:34:43.686Z] Venues this run: va
+[2026-09-12T10:34:43.687Z] Proxy: http://127.0.0.1:33723
+[2026-09-12T10:34:43.687Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-12T10:34:43.833Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-12T10:34:43.933Z] [va] 
+[2026-09-12T10:34:43.933Z] [va] ────────────────────────────────────────────────────────────
+[2026-09-12T10:34:43.933Z] [va]   VA — Victoria and Albert Museum, London
+[2026-09-12T10:34:43.933Z] [va] ────────────────────────────────────────────────────────────
+[2026-09-12T10:34:43.933Z] [va]   Fetching current/upcoming: https://www.vam.ac.uk/whatson?type=exhibition
+[2026-09-12T10:34:47.682Z] [va]     another V&A/branch site, excluded: Inside Aardman: Wallace & Gromit and Friends
+[2026-09-12T10:34:47.718Z] [va]     another V&A/branch site, excluded: The Music is Black: A British Story
+[2026-09-12T10:34:47.770Z] [va]     another V&A/branch site, excluded: South Asia Now: Fashion. Art. Design.
+[2026-09-12T10:34:47.838Z] [va]     another V&A/branch site, excluded: David Bowie Centre
+[2026-09-12T10:34:47.859Z] [va]     the venue labels this a permanent installation, excluded: Lasting Impressions: Women Printmakers 1900 – Now
+[2026-09-12T10:34:47.872Z] [va]     the venue labels this a permanent installation, excluded: Adobe Creative Residents On Display
+[2026-09-12T10:34:47.886Z] [va]     the venue labels this a permanent installation, excluded: Urushi Now: Contemporary Japanese Lacquer
+[2026-09-12T10:34:47.901Z] [va]     the venue labels this a permanent installation, excluded: Lost Music Venues
+[2026-09-12T10:34:47.912Z] [va]     the venue labels this a permanent installation, excluded: American Photographs
+[2026-09-12T10:34:47.922Z] [va]     the venue labels this a permanent installation, excluded: Dimensions: Contemporary Chinese Studio Crafts
+[2026-09-12T10:34:47.934Z] [va]     the venue labels this a permanent installation, excluded: Bharti Kher at the V&A
+[2026-09-12T10:34:47.948Z] [va]     the venue labels this a permanent installation, excluded: Sacred Treasures from Kyiv
+[2026-09-12T10:34:47.962Z] [va]     the venue labels this a permanent installation, excluded: Photopoetry
+[2026-09-12T10:34:47.963Z] [va]   current/upcoming: 19 links seen -> 0 navigation, 0 already-seen URL, 4 at another site of the same venue, 9 labelled permanent by the venue -> 6 collected (0 of them with no readable title)
+[2026-09-12T10:34:47.963Z] [va]   lookback (listing): kept 6, dropped 0 closed before 2024-07-01, 6 with no closing date, 0 with no opening date
+[2026-09-12T10:34:47.963Z] [va]   reading 6 individual page(s)…
+[2026-09-12T10:34:47.963Z] [va]     page 1 of 6
+[2026-09-12T10:34:54.948Z] [va]   Individual pages: 6 got text, 0 no curatorial text, 0 failed
+[2026-09-12T10:34:54.949Z] [va]   → 6 exhibitions, 6 with curatorial text → va.csv
+[2026-09-12T10:34:55.028Z] 
+[2026-09-12T10:34:55.028Z] ────────────────────────────────────────────────────────────
+[2026-09-12T10:34:55.028Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T10:34:55.028Z] ────────────────────────────────────────────────────────────
+[2026-09-12T10:34:55.028Z]   VA: 6 exhibitions | 6 with text
+[2026-09-12T10:34:55.028Z] 
+[2026-09-12T10:34:55.028Z] ────────────────────────────────────────────────────────────
+[2026-09-12T10:34:55.028Z]   COVERAGE — every link accounted for
+[2026-09-12T10:34:55.028Z] ────────────────────────────────────────────────────────────
+[2026-09-12T10:34:55.028Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T10:34:55.028Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T10:34:55.029Z]   va         current/upcoming                19     0       0     0        0        0          6
+[2026-09-12T10:34:55.029Z] 
+[2026-09-12T10:34:55.029Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T10:34:55.029Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T10:34:55.029Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T10:34:55.029Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T10:34:55.029Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T10:34:55.029Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T10:34:55.029Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T10:34:55.029Z] 
+[2026-09-12T10:34:55.029Z] Network bridge: 89 requests served, 89 skipped (image/media/font), 0 failed
+[2026-09-12T10:34:55.029Z] 
+[2026-09-12T10:34:55.029Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_203443
+[2026-09-12T10:34:55.029Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_203443/sweep.csv  (6 rows — va:6)
+[2026-09-12T10:34:55.029Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_203443/log_2026-09-12_203443.txt
+[2026-09-12T10:34:55.029Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, louvre, capo, uffizi, brera, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-12T10:34:55.029Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T10:34:55.029Z] No de-duplication is applied — see passThrough.
