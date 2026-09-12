@@ -898,38 +898,31 @@ test('Y-006: an archive filed by OPENING date asks for one year earlier', () => 
   assert.equal(VENUES.met.pages.some(p => p.yearByStartDate), false);
 });
 
-test('Y-007: NO RECIPE WRITES DOWN A PAGE NUMBER, the same rule as a year', () => {
-  // artic briefly carried a hand-typed `&page=2` on its year archive. That is
-  // the hand-written-year trap one step worse: a year growing past 40 shows
-  // loses the rest with the sweep reporting no error, and a year that is only
-  // one page long leaves an empty-page marker on her pile on every sweep.
-  // The site is asked instead — `paginate` — so nothing here goes stale.
+test('Y-007: artic still asks for the second page of every year, unconditionally', () => {
+  // Y-007 and Y-008 previously asserted the OPPOSITE — that no recipe writes a
+  // page number down and that artic hands the page count to followPagination().
+  // Her call, 13 Sep, reverted that: followPagination() stops as soon as a
+  // page's newest CLOSING date is older than the floor, and this archive files
+  // by OPENING date, so the walk would stop on 2023 page one and lose the 13
+  // exhibitions page two returns. Asking unconditionally cannot lose them.
+  // A year needing a THIRD page is the hole this leaves, and it is covered by
+  // detectUnwiredPagination() reporting it in the run summary instead.
+  const pages = listingPages(VENUES.artic);
+  const p2 = pages.filter(p => /page=2/.test(p.path));
+  const p1 = pages.filter(p => /year=\d{4}$/.test(p.path));
+  assert.equal(p1.length, p2.length, 'every year page has a matching second page');
+  assert.ok(p1.length >= 4, 'the floor year minus one through this year');
+  for (const y of p1.map(p => p.path.match(/year=(\d{4})/)[1])) {
+    assert.ok(p2.some(p => p.path.includes(`year=${y}&page=2`)), `${y} has no second page`);
+  }
+  // No venue may go FURTHER and hand-write a third page: that is the point at
+  // which a written-down number starts hiding rows rather than fetching them.
   for (const [code, v] of Object.entries(VENUES)) {
     for (const pg of v.pages) {
-      assert.equal(/[?&]page=\d/.test(pg.path), false,
-        `${code}/${pg.ctx} writes a page number into its path`);
-      assert.equal('suffix' in pg, false,
-        `${code}/${pg.ctx} uses suffix, which was only ever the hand-typed page 2`);
+      assert.equal(/page=[3-9]/.test(pg.path || '') || /page=[3-9]/.test(pg.suffix || ''), false,
+        `${code}/${pg.ctx} hand-writes a page number past 2`);
     }
   }
-});
-
-test('Y-008: a paginated year archive carries paginate onto EVERY year', () => {
-  // expandYearArchive() used to return { path, ctx } and nothing else, so a
-  // `paginate` on a yearArchive page was accepted by the recipe and silently
-  // dropped by the engine — the failure would have been a venue quietly
-  // missing its second pages, with no error anywhere.
-  const pages = listingPages(VENUES.artic);
-  const yearPages = pages.filter(p => /year=\d{4}/.test(p.path));
-  assert.ok(yearPages.length >= 4, 'artic asks for the floor year minus one through this year');
-  for (const pg of yearPages) {
-    assert.deepEqual(pg.paginate, { param: 'page', from: 2 }, `${pg.ctx} lost its paginate`);
-    // basePath must be the YEAR's address, so page 2 is ?year=2025&page=2 and
-    // not the previous page with another parameter bolted on.
-    assert.equal(pg.basePath, pg.path, `${pg.ctx} lost its basePath`);
-  }
-  // A year archive with no paginate stays exactly as it was.
-  assert.equal(listingPages(VENUES.met).every(p => !p.paginate), true);
 });
 
 test('Y-005: the Met resolves to real addresses, and its years are navigation', () => {

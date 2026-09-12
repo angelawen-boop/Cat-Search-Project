@@ -229,30 +229,17 @@ function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
     // are simply another address, and either way the years are DERIVED here
     // rather than written into a recipe — a hand-typed list is right the day it
     // is typed and quietly wrong every year after.
+    // `suffix` carries a SECOND filter that sits after the year — the Art
+    // Institute's archive paginates inside each year as well as by year
+    // ("Showing 20 out of 25 Exhibitions"), and both are ordinary query
+    // parameters, so page 2 of a year is simply another address. See the
+    // artic recipe for why that page number is written down here and not
+    // handed to followPagination() like the years are.
     const path = entry.param
-      ? `${entry.path}?${entry.param}=${y}`
-      : `${entry.path}${entry.yearPath}${y}`;
+      ? `${entry.path}?${entry.param}=${y}${entry.suffix || ''}`
+      : `${entry.path}${entry.yearPath}${y}${entry.suffix || ''}`;
 
-    // A YEAR CAN ITSELF BE MORE THAN ONE PAGE, and how many is the site's to
-    // say. The Art Institute's archive paginates twice over — one page per
-    // year, and up to 20 exhibitions per page inside a year ("Showing 20 out
-    // of 25 Exhibitions"). That second axis was briefly written into the
-    // recipe as a hand-typed `&page=2`, which is the hand-typed-year trap one
-    // step worse: a year that grows past 40 exhibitions loses the rest with
-    // the sweep reporting no error, and a year with only one page leaves an
-    // empty-page marker on her approval pile on every sweep forever.
-    //
-    // So `paginate` is CARRIED THROUGH to each year and followPagination()
-    // asks the site for the next page until the site stops offering new
-    // addresses — the same mechanism the Menil's archive uses, and the same
-    // reason: only the site knows how many pages there are.
-    //
-    // `basePath` is the year's own address, so page 2 is built as
-    // `?year=2025&page=2` rather than by appending to whatever page we are
-    // standing on. followPagination() explains why that distinction matters.
-    pages.push(entry.paginate
-      ? { path, ctx: `${entry.ctx} ${y}`, paginate: entry.paginate, basePath: path }
-      : { path, ctx: `${entry.ctx} ${y}` });
+    pages.push({ path, ctx: `${entry.ctx} ${y}` });
   }
   return pages;
 }
@@ -3304,20 +3291,32 @@ const VENUES = {
     //   year holds up to 20 per page and needs a second page above that.
     //
     //   Both are plain query parameters, so neither is a control to operate —
-    //   each is just another address. NEITHER IS WRITTEN DOWN: the years are
-    //   derived by expandYearArchive() and the page number inside a year is
-    //   asked of the site by followPagination(), which stops when a page
-    //   offers no address it has not already seen. A year that is one page
-    //   long simply never gets a second request.
+    //   each is just another address. Years stay DERIVED by expandYearArchive;
+    //   only the page number is written down, and only as "there is a second
+    //   page", which is a property of the site's page size rather than of any
+    //   particular year. A year with no second page collects nothing from it
+    //   and leaves no marker, because the page still carries a duplicate link
+    //   — verified against her 13 Sep run, where 2026 page two collected 0.
     pages: [
       { path: '/exhibitions',          ctx: 'current' },
       { path: '/exhibitions/upcoming', ctx: 'upcoming' },
       // yearByStartDate: its year pages group by OPENING date, her observation
       // 12 Sep, so the year before the lookback floor has to be asked for too.
-      // The page number inside a year is NOT written down — `paginate` hands
-      // that to the site, exactly as `yearArchive` hands it the years. See
-      // expandYearArchive() for what the hand-typed `&page=2` here cost.
-      { path: '/exhibitions/history', ctx: 'past', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true, paginate: { param: 'page', from: 2 } },
+      // THE SECOND PAGE IS ASKED FOR UNCONDITIONALLY, AND THAT IS DELIBERATE.
+      // It was briefly changed to `paginate`, so the site would decide how many
+      // pages a year has — the same rule that governs the years themselves.
+      // REVERTED, her call 13 Sep, because followPagination() stops walking as
+      // soon as a page's newest CLOSING date is older than the lookback floor,
+      // and this archive files by OPENING date. Its 2023 page one is shows that
+      // opened in 2023, most of which closed before the July 2024 floor — so
+      // the walk would stop there and lose the 13 exhibitions page two of 2023
+      // actually returns. Asking unconditionally cannot lose them.
+      //
+      // What that leaves open is a year needing a THIRD page: 40+ exhibitions
+      // in one year, which no year currently has. detectUnwiredPagination()
+      // covers it — the day a year grows one, the run summary says so.
+      { path: '/exhibitions/history', ctx: 'past', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true },
+      { path: '/exhibitions/history', ctx: 'past p2', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true, suffix: '&page=2' },
     ],
     // Exhibitions sit at /exhibitions/<slug>, which is NOT beneath
     // /exhibitions/history — that is why the old "links below the listing"
