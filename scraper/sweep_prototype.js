@@ -2644,8 +2644,12 @@ const VENUES = {
     base: 'https://www.vam.ac.uk',
     // ONE page, and it carries current and upcoming together. /exhibitions
     // shows only 5 items; the what's-on listing filtered to exhibitions shows
-    // 19, and its "type=exhibition" ALREADY INCLUDES DISPLAYS, which her venue
-    // list requires — both are temporary shows.
+    // 19, because its "type=exhibition" also returns the venue's Displays.
+    //
+    // THOSE DISPLAYS ARE NOT WANTED HERE — see excludeLabelled below. An
+    // earlier version of this comment said her venue list required them, which
+    // was wrong and is exactly the sort of line that gets a working filter
+    // removed by a later session.
     //
     // The venue publishes NO past archive. That is a site limit, not a gap in
     // this recipe: the V&A contributes current and upcoming only.
@@ -2678,8 +2682,16 @@ const VENUES = {
     // THE VENUE SORTS ITS OWN LISTING: every card opens "Exhibition",
     // "Upcoming Exhibition" or "Display". Her count of 12 Sep is 2 current and
     // 4 upcoming, which is exactly the South Kensington cards labelled one of
-    // the first two; the other nine are Displays. Rung 1 of the ladder — the
-    // site's own tag — not our judgement about what a thing is.
+    // the first two; the other nine are Displays. Reading the tag is rung 1 of
+    // the ladder — the site's own label, not our judgement about what a thing
+    // is.
+    //
+    // WHETHER DISPLAYS ARE WANTED IS HERS, AND IT VARIES BY VENUE. Her ruling,
+    // 12 Sep 2026: different museums mean different things by the word, so it
+    // is her judgement each time and there is no rule for the scraper to work
+    // out. She does NOT want them at the V&A; she DOES want them at the Wallace
+    // Collection. Two venues differing here is the expected state, not a
+    // contradiction to tidy up — ask her rather than making them agree.
     //
     // ANCHORED AT THE START, because "Display" also occurs inside a title:
     // "Adobe Creative Residents On Display". The badge is the first thing on
