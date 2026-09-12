@@ -1,0 +1,56 @@
+[2026-09-12T12:23:02.745Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T12:23:02.746Z] Lookback floor: 2024-07-01
+[2026-09-12T12:23:02.746Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_222302
+[2026-09-12T12:23:02.746Z] Venues this run: brera
+[2026-09-12T12:23:02.746Z] Proxy: http://127.0.0.1:33723
+[2026-09-12T12:23:02.746Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-12T12:23:02.881Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-12T12:23:02.975Z] [brera] 
+[2026-09-12T12:23:02.975Z] [brera] ────────────────────────────────────────────────────────────
+[2026-09-12T12:23:02.975Z] [brera]   BRERA — Pinacoteca di Brera, Milan
+[2026-09-12T12:23:02.975Z] [brera] ────────────────────────────────────────────────────────────
+[2026-09-12T12:23:02.975Z] [brera]   Fetching current: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=in-progress
+[2026-09-12T12:23:06.087Z] [brera]   current: 8 links seen -> 0 navigation, 4 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T12:23:06.087Z] [brera]   Fetching upcoming: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=scheduled
+[2026-09-12T12:23:08.757Z] [brera]   upcoming: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T12:23:08.757Z] [brera]   NO EXHIBITIONS upcoming: page loaded and was read, but nothing matched
+[2026-09-12T12:23:08.757Z] [brera]   Fetching past: https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=archive
+[2026-09-12T12:23:11.877Z] [brera]   past: 18 links seen -> 0 navigation, 13 already-seen URL -> 5 collected (0 of them with no readable title)
+[2026-09-12T12:23:11.877Z] [brera]   lookback (listing): kept 8, dropped 2 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-12T12:23:11.878Z] [brera]   reading 7 individual page(s)…
+[2026-09-12T12:23:11.878Z] [brera]     page 1 of 7
+[2026-09-12T12:23:15.950Z] [brera]     prose dates ignored, they contradict the listing: "September 24, 2025, to January 11, 2026"
+[2026-09-12T12:23:17.604Z] [brera]   Individual pages: 7 got text, 0 no curatorial text, 0 failed
+[2026-09-12T12:23:17.604Z] [brera]   lookback (final): kept 8, dropped 0 closed before 2024-07-01, 0 with no closing date, 1 with no opening date
+[2026-09-12T12:23:17.605Z] [brera]   → 7 exhibitions, 7 with curatorial text → brera.csv
+[2026-09-12T12:23:17.676Z] 
+[2026-09-12T12:23:17.676Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:23:17.676Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T12:23:17.676Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:23:17.676Z]   BRERA: 7 exhibitions | 7 with text | 1 page(s) blocked/empty
+[2026-09-12T12:23:17.676Z] 
+[2026-09-12T12:23:17.676Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:23:17.676Z]   COVERAGE — every link accounted for
+[2026-09-12T12:23:17.676Z] ────────────────────────────────────────────────────────────
+[2026-09-12T12:23:17.676Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T12:23:17.676Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T12:23:17.676Z]   brera      current                          8     0       0     4        0        0          4
+[2026-09-12T12:23:17.676Z]   brera      upcoming                         0     0       0     0        0        0          0
+[2026-09-12T12:23:17.676Z]   brera      past                            18     0       0    13        0        0          5
+[2026-09-12T12:23:17.676Z] 
+[2026-09-12T12:23:17.676Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T12:23:17.676Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T12:23:17.676Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T12:23:17.676Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T12:23:17.676Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T12:23:17.676Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T12:23:17.676Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T12:23:17.676Z] 
+[2026-09-12T12:23:17.676Z] Network bridge: 172 requests served, 225 skipped (image/media/font), 1 failed
+[2026-09-12T12:23:17.676Z] 
+[2026-09-12T12:23:17.676Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_222302
+[2026-09-12T12:23:17.676Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_222302/sweep.csv  (8 rows — brera:8)
+[2026-09-12T12:23:17.676Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-12_222302/log_2026-09-12_222302.txt
+[2026-09-12T12:23:17.676Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, uffizi, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-12T12:23:17.676Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T12:23:17.676Z] No de-duplication is applied — see passThrough.

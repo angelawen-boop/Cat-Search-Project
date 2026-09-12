@@ -625,7 +625,13 @@ function parseMonthDay(str, fallbackYear) {
 // LONGEST ALTERNATIVE FIRST: regex alternation takes the first that matches, so
 // a bare "al" listed before "all'" would match the first two letters of
 // "all'8 settembre" and leave "l'8", which is not a day.
-const RANGE_SEP = "\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]|al)\\s*";
+// A COMMA MAY SIT IN FRONT OF THE SEPARATOR, and leaving it out cost Brera two
+// rows. It writes "From May 16, 2025, to May 17, 2027" — the comma after the
+// opening year, before "to". Without this the range failed, the scan fell
+// through to a single date, and Pinacoteca viaggiante was stored as ENDING on
+// its opening day. The same break hid Giorgio Armani's opening date, whose page
+// reads "From September 24, 2025, to January 11, 2026".
+const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]|al)\\s*";
 
 /**
  * @param raw    the text to search
@@ -664,28 +670,64 @@ const WEEKDAY_PREFIX = new RegExp(WEEKDAY_PREFIX_SRC + '(?=\\d|' + MONTH_PATTERN
  * trusted — that way a stray match cannot shorten a run or rewrite an opening.
  */
 const EXTENDED_TO = new RegExp(
-  // "extended to", "extended until", "prorogata al", "prorogato all'" — and the
-  // elision trap from the Italian date formats: the longest alternative first,
-  // or a bare "al" matches the first two letters of "all'8".
-  '(?:extended|prorogat[ao])\\s*(?:until|to|all[\'\u2019]|alla|al)\\s*' +
-  // The date itself, in either of the shapes these venues use.
-  '(\\d{1,2}\\s*[/.]\\s*\\d{1,2}\\s*[/.]\\s*\\d{4}|\\d{1,2}\\s+' + MONTH_PATTERN + '\\s+\\d{4})', 'i');
+  // The trigger is the WORD, verb or noun: "extended", "extension",
+  // "prorogata". Borghese writes "with an extraordinary extension through
+  // October 11", so a few words are allowed between the trigger and the
+  // separator — but not a full stop, which would let it reach into the next
+  // sentence and pick up an unrelated date.
+  '(?:extend(?:ed|ing)?|extension|prorogat[ao])[^.]{0,30}?' +
+  // Longest alternative first, or a bare "al" matches the first two letters of
+  // "all\'8" — the elision trap from the Italian date formats.
+  '(?:through|until|to|all[\'\u2019]|alla|al)\\s*' +
+  '(' +
+    '\\d{1,2}\\s*[/.]\\s*\\d{1,2}\\s*[/.]\\s*\\d{4}' +      // 02/11/2025
+    '|\\d{1,2}\\s+' + MONTH_PATTERN + '(?:\\s+\\d{4})?' +          // 9 giugno 2026
+    '|' + MONTH_PATTERN + '\\s+\\d{1,2}(?:,?\\s*\\d{4})?' +        // October 11
+  ')', 'i');
 
+/**
+ * Apply an extension to a run that already has a closing date.
+ *
+ * THE EXTENSION ONLY EVER MOVES THE CLOSING DATE LATER. If the phrase yields a
+ * date that is not after the one already read, it is ignored rather than
+ * trusted — a stray match cannot shorten a run or rewrite an opening.
+ */
 function applyExtension(range, text) {
   if (!range || !range.end || !text) return range;
   const m = String(text).match(EXTENDED_TO);
   if (!m) return range;
 
-  let iso = '';
+  const endYear = Number(range.end.slice(0, 4));
+  const M = MONTH_PATTERN;
+  let day = 0, mon = 0, year = 0;
+
   const numeric = m[1].match(/^(\d{1,2})\s*[/.]\s*(\d{1,2})\s*[/.]\s*(\d{4})$/);
+  const dayFirst = m[1].match(new RegExp(`^(\\d{1,2})\\s+(${M})(?:\\s+(\\d{4}))?$`, 'i'));
+  const monthFirst = m[1].match(new RegExp(`^(${M})\\s+(\\d{1,2})(?:,?\\s*(\\d{4}))?$`, 'i'));
+
   if (numeric) {
-    // Day-first: every venue seen writing this writes dd/mm/yyyy, and a value
-    // over 12 in the first position would prove it anyway.
-    iso = ymd(numeric[3], numeric[2], numeric[1]);
+    // Day-first: every venue seen writing this writes dd/mm/yyyy.
+    [day, mon, year] = [+numeric[1], +numeric[2], +numeric[3]];
+  } else if (dayFirst) {
+    [day, mon, year] = [+dayFirst[1], monthNum(dayFirst[2]), dayFirst[3] ? +dayFirst[3] : 0];
+  } else if (monthFirst) {
+    [day, mon, year] = [+monthFirst[2], monthNum(monthFirst[1]), monthFirst[3] ? +monthFirst[3] : 0];
   } else {
-    const worded = m[1].match(new RegExp(`^(\\d{1,2})\\s+(${MONTH_PATTERN})\\s+(\\d{4})$`, 'i'));
-    if (worded) iso = ymd(worded[3], monthNum(worded[2]), worded[1]);
+    return range;
   }
+  if (!mon || !day) return range;
+
+  // NO YEAR PUBLISHED ON THE EXTENSION, which is the usual case in prose:
+  // Borghese writes "extension through October 11" and nothing more. The year
+  // is not guessed — it is DERIVED from the fact that an extension is later
+  // than the date it replaces. Try the closing date's own year first, and only
+  // if that lands on or before the original closing date does the run cross
+  // into the next one.
+  if (!year) {
+    year = endYear;
+    if (ymd(year, mon, day) <= range.end) year = endYear + 1;
+  }
+  const iso = ymd(year, mon, day);
   if (!iso || iso <= range.end) return range;
   return { ...range, end: iso, extendedFrom: range.end };
 }
@@ -2738,6 +2780,9 @@ const VENUES = {
     // Listings carry only a start month ("March / 2026") and no closing date,
     // so the lookback cannot be decided before the detail pages are read.
     lookbackAfterDetail: true,
+    // See the note above capo: this venue's curatorial text is in divs, not
+    // paragraphs, so the shared ladder cannot reach it.
+    description: '.section .limit',
   },
 
   frick: {
@@ -2970,6 +3015,15 @@ const VENUES = {
     loadMore: 'a.LoadMoreList_button',
   },
 
+  // BORGHESE'S BLURB IS IN DIVS. Its Louise Bourgeois page carries the full
+  // curatorial text — six substantial passages — and not one <p> among them, so
+  // the shared ladder found nothing and the row reached her with an empty
+  // summary. Worse, this guide recorded that as a fact about the page ("no
+  // curatorial paragraph at all, only a ticket discount"), which was true of
+  // paragraphs and false of the page. She spotted the text was there.
+  //
+  // Same shape as the V&A and Capodimonte: where a venue writes its description
+  // into a div, the recipe has to name it.
   capo: {
     name: 'Capodimonte, Naples',
     base: 'https://capodimonte.cultura.gov.it',
@@ -3059,6 +3113,17 @@ const VENUES = {
     selector: 'a[href*="/news/mostra/"]',
     isNav: href => /\/news\/mostra\/?$/.test(href),
     title: { heading: true },
+    // ITS LEAD-IN IS A HEADING, NOT A PARAGRAPH. Brera opens every exhibition
+    // with an h4 — "To celebrate fifty years of creativity, the Pinacoteca di
+    // Brera presents its first-ever exhibition dedicated to the stylist" — and
+    // the shared ladder only ever looks at <p>, so every summary began one
+    // passage in. She spotted the lead-ins were missing.
+    //
+    // Scoped to the column blocks, which is where the curatorial text sits. The
+    // venue's "Info utili / Quando / Dove / Hours" block is a sibling group and
+    // is therefore left out — that block was the ENTIRE summary on the Oman row.
+    // Both tags in one selector so they arrive in the page's own order.
+    description: 'div.wp-block-columns h4.wp-block-heading, div.wp-block-columns p.wp-block-paragraph',
   },
 
   khm: {
