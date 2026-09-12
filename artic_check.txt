@@ -1,17 +1,11 @@
-RUN: scraper/output/run_2026-09-12_164309
-ROWS: 79
-titles over 90 chars (blurb welded on): 1
-titles starting with a badge          : 1
-blank titles                          : 0
+RUN: scraper/output/run_2026-09-12_171234 | ROWS: 77 (expected 77)
+badge titles: 0 | blank titles: 0 | rotations still present: 0
 
-LONG  : Four Chicago Artists: Theodore Halkin, Evelyn Statsinger, Barbara Rossi, and Christina Ramberg
-BADGE : VIDEO INSTALLATION
-
---- first 25 titles ---
+--- all titles ---
   Mary Cassatt: After Impressionism
   Willem de Kooning Drawing
   Lee Miller: Fearless
-  VIDEO INSTALLATION
+  Karimah Ashadu: Machine Boys
   Beyond Form: Abstraction at Midcentury
   Self, Made: Fourteen Modern Artists from the Richard and Ellen Sandor Family Collecti
   Abigail Lucien: Blood of the Earth
@@ -21,9 +15,7 @@ BADGE : VIDEO INSTALLATION
   Edgar Calel: Corn Mountain of Life (Ixim Juyu K’aslem)
   Jitish Kallat: Public Notice 3
   Jill Mulleady: The Passenger
-  Utamaro: Elements of Beauty
   Tony Cokes: On Boredom
-  Body and Being in African Art
   Beatriz González: In Series and Full Color
   Zurbarán: Divine Light
   Vilhelm Hammershøi: Pictures from Home
@@ -33,3 +25,57 @@ BADGE : VIDEO INSTALLATION
   Carroll Dunham: Drawings, 1974–2024
   Lucas Samaras: Sitting, Standing, Walking, Looking
   Barbara Hammer: Sanctus
+  Korean National Treasures: 2,000 Years of Art
+  Matisse’s Jazz: Rhythms in Color
+  Emerging from Darkness: Prints by Hamanishi Katsunori
+  Nora Turato: I hear you, I hear you.
+  The Floating World Emerges: Japanese Prints from the Clarence Buckingham Collection
+  Modern Japanese Portraits in Print
+  Myth and Marble: Ancient Roman Sculpture from the Torlonia Collection
+  Lines of Connection: Drawing and Printmaking
+  Coco Fusco: Your Eyes Will Be an Empty Word
+  En el principio / In the beginning:
+  Frida Kahlo’s Month in Paris: A Friendship with Mary Reynolds
+  Japan’s Great Female Poets
+  Iman Issa: A Game, or So You May Think
+  H. C. Westermann: Anchor Clanker
+  Contemporary Drawings from the Stenn Family Collection
+  Gustave Caillebotte: Painting His World
+  The Dawn of Modernity: Japanese Prints, 1850–1900
+  Pixy Liao: Relationship Material
+  Charles Gaines: Night/Crimes
+  Leslie Thornton: Jennifer, Where Are You?
+  Elizabeth Catlett: “A Black Revolutionary Artist and All That It Implies”
+  Tuan Andrew Nguyen: We Were Lost in Our Country
+  On Loss and Absence: Textiles of Mourning and Survival
+  Diane Simpson: “Good for Future”
+  Strange Realities: The Symbolist Imagination
+  János Megyik Photograms
+  Threaded Visions: Contemporary Weavings from the Collection
+  A Sign of Things to Come: Prints by Japanese Women Artists after 1950
+  Christina Ramberg: A Retrospective
+  Foreign Exchange: Photography between Chicago, Japan, and Germany, 1920–1960
+  John Knight: A work in situ
+  Four Chicago Artists: Theodore Halkin, Evelyn Statsinger, Barbara Rossi, and Christin
+  Georgia O’Keeffe:
+  Ellsworth Kelly: Spectrum Colors Arranged by Chance
+  Bruce Nauman: Clown Torture
+  Kabuki-Actor Portraits by Tōshūsai Sharaku
+  Screens: A Panafrica Film Series
+  Germane Barnes: Columnar Disorder
+  Mascon: A Massive Concentration of Black Interscalar Energy
+  Nancy Holt: Seeing in the Round
+  Paula Modersohn-Becker: I Am Me
+  Transitory Beauty: Japanese Fan Prints
+  French Neoclassical Paintings from The Horvitz Collection
+  Critical Fabulation
+  One Hundred Famous Views of Edo
+  Jane Alexander: Infantry with beast
+  Neapolitan Crèche
+  Bruce Goff: Material Worlds
+  Jeremy Frey: Woven
+  Revolution to Restoration: French Drawings from The Horvitz Collection
+  After the End of the World: Pictures from Panafrica
+  Neapolitan Crèche
+  Beatriz Santiago Muñoz: The Crow, the Trench, and the Mare
+  Project a Black Planet: The Art and Culture of Panafrica
