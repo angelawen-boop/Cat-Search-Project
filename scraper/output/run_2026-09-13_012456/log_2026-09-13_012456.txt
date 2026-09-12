@@ -1,0 +1,152 @@
+[2026-09-12T15:24:56.509Z] Cat Watch Sweep Prototype — starting
+[2026-09-12T15:24:56.510Z] Lookback floor: 2024-07-01
+[2026-09-12T15:24:56.510Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-13_012456
+[2026-09-12T15:24:56.510Z] Venues this run: ng, rijks, menil, louvre
+[2026-09-12T15:24:56.510Z] Proxy: http://127.0.0.1:42127
+[2026-09-12T15:24:56.511Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-12T15:24:56.659Z] Running 4 venue(s) 4 at a time (one page at a time within each venue)
+[2026-09-12T15:24:56.886Z] [rijks] 
+[2026-09-12T15:24:56.887Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-12T15:24:56.887Z] [rijks]   RIJKS — Rijksmuseum, Amsterdam
+[2026-09-12T15:24:56.887Z] [rijks] ────────────────────────────────────────────────────────────
+[2026-09-12T15:24:56.887Z] [rijks]   Fetching current/upcoming: https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view
+[2026-09-12T15:24:56.889Z] [louvre] 
+[2026-09-12T15:24:56.889Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-09-12T15:24:56.889Z] [louvre]   LOUVRE — Louvre, Paris
+[2026-09-12T15:24:56.889Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-09-12T15:24:56.889Z] [louvre]   Fetching current/upcoming: https://www.louvre.fr/en/exhibitions-and-events/exhibitions
+[2026-09-12T15:24:56.895Z] [menil] 
+[2026-09-12T15:24:56.895Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-12T15:24:56.895Z] [menil]   MENIL — The Menil Collection, Houston
+[2026-09-12T15:24:56.895Z] [menil] ────────────────────────────────────────────────────────────
+[2026-09-12T15:24:56.895Z] [menil]   Fetching current: https://www.menil.org/exhibitions
+[2026-09-12T15:24:56.941Z] [ng] 
+[2026-09-12T15:24:56.941Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-12T15:24:56.941Z] [ng]   NG — National Gallery, London
+[2026-09-12T15:24:56.941Z] [ng] ────────────────────────────────────────────────────────────
+[2026-09-12T15:24:56.941Z] [ng]   Fetching current/upcoming: https://www.nationalgallery.org.uk/exhibitions
+[2026-09-12T15:24:59.499Z] [rijks]   consent banner dismissed ("Accept")
+[2026-09-12T15:24:59.511Z] [ng]   consent banner dismissed ("Reject all")
+[2026-09-12T15:25:01.484Z] [menil]   current: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-09-12T15:25:01.484Z] [menil]   Fetching upcoming: https://www.menil.org/exhibitions/upcoming
+[2026-09-12T15:25:01.830Z] [ng]   current/upcoming: 12 links seen -> 2 navigation, 3 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-12T15:25:01.831Z] [ng]   Fetching past: https://www.nationalgallery.org.uk/exhibitions/past
+[2026-09-12T15:25:03.004Z] [rijks]   current/upcoming: 15 links seen -> 5 navigation, 0 already-seen URL -> 10 collected (0 of them with no readable title)
+[2026-09-12T15:25:03.004Z] [rijks]   Fetching past: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past
+[2026-09-12T15:25:04.238Z] [louvre]   current/upcoming: 8 links seen -> 0 navigation, 1 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-12T15:25:04.238Z] [louvre]   Fetching past: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions
+[2026-09-12T15:25:04.707Z] [menil]   upcoming: 4 links seen -> 0 navigation, 0 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-12T15:25:04.707Z] [menil]   Fetching past: https://www.menil.org/exhibitions/past
+[2026-09-12T15:25:06.244Z] [rijks]   consent banner dismissed ("Accept")
+[2026-09-12T15:25:08.314Z] [menil]   past: 12 links seen -> 0 navigation, 1 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-09-12T15:25:08.314Z] [menil]   Fetching past p2: https://www.menil.org/exhibitions/past?page=2
+[2026-09-12T15:25:09.510Z] [rijks]   past: 44 links seen -> 4 navigation, 0 already-seen URL -> 40 collected (0 of them with no readable title)
+[2026-09-12T15:25:09.511Z] [rijks]   lookback (listing): kept 49, dropped 1 closed before 2024-07-01, 30 with no closing date, 0 with no opening date
+[2026-09-12T15:25:09.511Z] [rijks]   reading 49 individual page(s)…
+[2026-09-12T15:25:09.512Z] [rijks]     page 1 of 49
+[2026-09-12T15:25:10.145Z] [ng]   past: 179 links seen -> 2 navigation, 0 already-seen URL -> 177 collected (0 of them with no readable title)
+[2026-09-12T15:25:10.145Z] [ng]   lookback (listing): kept 28, dropped 156 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-12T15:25:10.145Z] [ng]   reading 28 individual page(s)…
+[2026-09-12T15:25:10.145Z] [ng]     page 1 of 28
+[2026-09-12T15:25:11.527Z] [menil]   past p2: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-09-12T15:25:11.527Z] [menil]   Fetching past p3: https://www.menil.org/exhibitions/past?page=3
+[2026-09-12T15:25:14.923Z] [ng]     prose dates ignored, they contradict the listing: "7 September - 28 September 2026"
+[2026-09-12T15:25:15.527Z] [menil]   past p3: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-09-12T15:25:15.527Z] [menil]   PAGINATION end: past p3 — its newest exhibition closed 2024-03-10, before the 2024-07-01 floor, so every later page is older still
+[2026-09-12T15:25:15.527Z] [menil]   lookback (listing): kept 39, dropped 12 closed before 2024-07-01, 7 with no closing date, 0 with no opening date
+[2026-09-12T15:25:15.527Z] [menil]   reading 39 individual page(s)…
+[2026-09-12T15:25:15.527Z] [menil]     page 1 of 39
+[2026-09-12T15:25:16.492Z] [louvre]   "load more" pressed 9x on past — stopped: the control went away
+[2026-09-12T15:25:23.311Z] [louvre]   past: 60 links seen -> 0 navigation, 1 already-seen URL -> 59 collected (0 of them with no readable title)
+[2026-09-12T15:25:23.311Z] [louvre]   Fetching past 2025: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2025
+[2026-09-12T15:25:28.789Z] [ng]     page 10 of 28
+[2026-09-12T15:25:28.841Z] [louvre]   "load more" pressed 1x on past 2025 — stopped: the control went away
+[2026-09-12T15:25:29.047Z] [louvre]   past 2025: 11 links seen -> 0 navigation, 11 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T15:25:29.047Z] [louvre]   Fetching past 2024: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2024
+[2026-09-12T15:25:30.383Z] [menil]     page 10 of 39
+[2026-09-12T15:25:30.695Z] [rijks]     page 10 of 49
+[2026-09-12T15:25:33.308Z] [louvre]   past 2024: 5 links seen -> 0 navigation, 5 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-12T15:25:33.309Z] [louvre]   lookback (listing): kept 22, dropped 44 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-12T15:25:33.309Z] [louvre]   reading 22 individual page(s)…
+[2026-09-12T15:25:33.309Z] [louvre]     page 1 of 22
+[2026-09-12T15:25:48.575Z] [menil]     page 20 of 39
+[2026-09-12T15:25:50.180Z] [ng]     page 20 of 28
+[2026-09-12T15:25:55.842Z] [rijks]     page 20 of 49
+[2026-09-12T15:26:03.503Z] [louvre]     page 10 of 22
+[2026-09-12T15:26:04.129Z] [menil]     page 30 of 39
+[2026-09-12T15:26:08.080Z] [louvre]   BLOCKED (HTTP 429): https://www.louvre.fr/en/exhibitions-and-events/exhibitions/jacques-louis-david
+[2026-09-12T15:26:08.277Z] [louvre]   BLOCKED (HTTP 429): https://www.louvre.fr/en/exhibitions-and-events/exhibitions/the-met-at-the-louvre
+[2026-09-12T15:26:08.483Z] [louvre]   BLOCKED (HTTP 429): https://www.louvre.fr/en/exhibitions-and-events/exhibitions/a-passion-for-china
+[2026-09-12T15:26:08.652Z] [louvre]   BLOCKED (HTTP 429): https://www.louvre.fr/en/exhibitions-and-events/exhibitions/louvre-couture
+[2026-09-12T15:26:08.893Z] [louvre]   BLOCKED (HTTP 429): https://www.louvre.fr/en/exhibitions-and-events/exhibitions/mamluks
+[2026-09-12T15:26:09.151Z] [louvre]   BLOCKED (HTTP 429): https://www.louvre.fr/en/exhibitions-and-events/exhibitions/the-experience-of-nature
+[2026-09-12T15:26:15.924Z] [louvre]     page 20 of 22
+[2026-09-12T15:26:16.070Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/mission-masterpiece
+[2026-09-12T15:26:16.070Z] [rijks]     page 30 of 49
+[2026-09-12T15:26:16.868Z] [menil]   Individual pages: 39 got text, 0 no curatorial text, 0 failed
+[2026-09-12T15:26:16.868Z] [menil]     no dates published — treated as a permanent display, excluded: Modern and Contemporary
+[2026-09-12T15:26:16.868Z] [menil]     no dates published — treated as a permanent display, excluded: Surrealism
+[2026-09-12T15:26:16.868Z] [menil]     no dates published — treated as a permanent display, excluded: Africa
+[2026-09-12T15:26:16.868Z] [menil]     no dates published — treated as a permanent display, excluded: 4th–18th Century Europe
+[2026-09-12T15:26:16.868Z] [menil]     no dates published — treated as a permanent display, excluded: Pacific Islands
+[2026-09-12T15:26:16.868Z] [menil]     no dates published — treated as a permanent display, excluded: A Surrealist Wunderkammer
+[2026-09-12T15:26:16.868Z] [menil]     no dates published — treated as a permanent display, excluded: Outdoor Sculpture
+[2026-09-12T15:26:16.868Z] [menil]   7 undated row(s) excluded as permanent displays (venue rule)
+[2026-09-12T15:26:16.870Z] [menil]   → 32 exhibitions, 32 with curatorial text → menil.csv
+[2026-09-12T15:26:19.620Z] [louvre]   BLOCKED (HTTP 429): https://www.louvre.fr/en/exhibitions-and-events/exhibitions/olympism
+[2026-09-12T15:26:19.621Z] [louvre]   Individual pages: 15 got text, 0 no curatorial text, 7 failed
+[2026-09-12T15:26:19.621Z] [louvre]   → 22 exhibitions, 15 with curatorial text → louvre.csv
+[2026-09-12T15:26:22.776Z] [ng]   TIMEOUT on https://www.nationalgallery.org.uk/exhibitions/past/discover-degas-and-miss-la-la — retrying once
+[2026-09-12T15:26:31.041Z] [ng]   Individual pages: 28 got text, 0 no curatorial text, 0 failed
+[2026-09-12T15:26:31.042Z] [ng]   lookback (final): kept 27, dropped 1 closed before 2024-07-01, 0 with no closing date, 1 with no opening date
+[2026-09-12T15:26:31.042Z] [ng]   → 27 exhibitions, 27 with curatorial text → ng.csv
+[2026-09-12T15:26:35.524Z] [rijks]     page 40 of 49
+[2026-09-12T15:26:36.939Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/henk-wildschut
+[2026-09-12T15:26:42.152Z] [rijks]   HTTP 404: https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/ed-van-der-elsken
+[2026-09-12T15:26:53.454Z] [rijks]   Individual pages: 46 got text, 0 no curatorial text, 3 failed
+[2026-09-12T15:26:53.454Z] [rijks]   lookback (final): kept 37, dropped 12 closed before 2024-07-01, 14 with no closing date, 7 with no opening date
+[2026-09-12T15:26:53.455Z] [rijks]   → 37 exhibitions, 34 with curatorial text → rijks.csv
+[2026-09-12T15:26:53.612Z] 
+[2026-09-12T15:26:53.612Z] ────────────────────────────────────────────────────────────
+[2026-09-12T15:26:53.612Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-12T15:26:53.612Z] ────────────────────────────────────────────────────────────
+[2026-09-12T15:26:53.612Z]   MENIL: 32 exhibitions | 32 with text
+[2026-09-12T15:26:53.612Z]   LOUVRE: 22 exhibitions | 15 with text
+[2026-09-12T15:26:53.612Z]   NG: 27 exhibitions | 27 with text
+[2026-09-12T15:26:53.612Z]   RIJKS: 37 exhibitions | 34 with text
+[2026-09-12T15:26:53.612Z] 
+[2026-09-12T15:26:53.612Z] ────────────────────────────────────────────────────────────
+[2026-09-12T15:26:53.612Z]   COVERAGE — every link accounted for
+[2026-09-12T15:26:53.612Z] ────────────────────────────────────────────────────────────
+[2026-09-12T15:26:53.612Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-12T15:26:53.612Z]   -----------------------------------------------------------------------------------------------
+[2026-09-12T15:26:53.612Z]   menil      current                         12     0       0     0        0        0         12
+[2026-09-12T15:26:53.612Z]   ng         current/upcoming                12     2       0     3        0        0          7
+[2026-09-12T15:26:53.612Z]   rijks      current/upcoming                15     5       0     0        0        0         10
+[2026-09-12T15:26:53.612Z]   louvre     current/upcoming                 8     0       0     1        0        0          7
+[2026-09-12T15:26:53.612Z]   menil      upcoming                         4     0       0     0        0        0          4
+[2026-09-12T15:26:53.612Z]   menil      past                            12     0       0     1        0        0         11
+[2026-09-12T15:26:53.612Z]   rijks      past                            44     4       0     0        0        0         40
+[2026-09-12T15:26:53.612Z]   ng         past                           179     2       0     0        0        0        177
+[2026-09-12T15:26:53.612Z]   menil      past p2                         12     0       0     0        0        0         12
+[2026-09-12T15:26:53.612Z]   menil      past p3                         12     0       0     0        0        0         12
+[2026-09-12T15:26:53.612Z]   louvre     past                            60     0       0     1        0        0         59
+[2026-09-12T15:26:53.612Z]   louvre     past 2025                       11     0       0    11        0        0          0
+[2026-09-12T15:26:53.612Z]   louvre     past 2024                        5     0       0     5        0        0          0
+[2026-09-12T15:26:53.612Z] 
+[2026-09-12T15:26:53.612Z]   seen      = links matching the venue's selector on that page
+[2026-09-12T15:26:53.612Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-12T15:26:53.612Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-12T15:26:53.612Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-12T15:26:53.612Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-12T15:26:53.612Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-12T15:26:53.612Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-12T15:26:53.612Z] 
+[2026-09-12T15:26:53.612Z] Network bridge: 3989 requests served, 4860 skipped (image/media/font), 0 failed
+[2026-09-12T15:26:53.612Z] 
+[2026-09-12T15:26:53.613Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-13_012456
+[2026-09-12T15:26:53.613Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-13_012456/sweep.csv  (118 rows — ng:27, rijks:37, menil:32, louvre:22)
+[2026-09-12T15:26:53.613Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-13_012456/log_2026-09-13_012456.txt
+[2026-09-12T15:26:53.613Z] Not yet in this run: met, acq, borghese, frick, morgan, va, capo, uffizi, brera, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-12T15:26:53.613Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-12T15:26:53.613Z] No de-duplication is applied — see passThrough.
