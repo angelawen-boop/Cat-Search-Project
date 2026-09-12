@@ -122,13 +122,13 @@ Until it is, check it against the newest run directory before trusting it.
 | Acquavella | `acq` | 15 | yes — her count | yes | |
 | Art Institute of Chicago | `artic` | 65 | yes — her count + every row's type tag read | yes | **local only**; only EXHIBITION and TICKETED EXHIBITION kept, her ruling |
 | The Met | `met` | 106 | yes — row by row, 11 Sep | yes | **local only**; see `docs/venues.md` |
-| The Frick | `frick` | 10 | **yes — 12 Sep** | yes — no defect found | her 0/3/7 is our 10; it leaves closed shows on page one |
-| The Menil | `menil` | 32 | **yes — 12 Sep** | yes | past archive paginates; 7 permanent galleries excluded, her ruling |
+| The Frick | `frick` | 10 | **yes — 12 Sep** | **no — page two never read** | its past archive paginates and page two holds ~10 more; wired 13 Sep, refused on every attempt since |
+| The Menil | `menil` | 32 | **yes — 12 Sep** | yes | past AND current archives paginate; 7 permanent galleries excluded, her ruling |
 | V&A | `va` | 6 | **yes — 12 Sep** | yes | Displays excluded, **her ruling for THIS venue only** |
 | Tate Modern | `tate-modern` | 13 | **yes — 12 Sep** | yes | |
 | Tate Britain | `tate-britain` | 9 | **yes — 12 Sep** | yes | Ofili excluded on the venue's own ONGOING label |
 | Wallace Collection | `wallace` | 11 | **yes — 12 Sep** | yes | displays and trails kept, **her ruling for THIS venue** |
-| Louvre | `louvre` | 22 | **yes — 12 Sep** | yes | count corrected 18 → 22; year pages need a "load more" press |
+| Louvre | `louvre` | 22 | **yes — 12 Sep** | yes | 22 was never a ceiling — see §5; "load more" pressed until it runs out |
 | Gallerie dell'Accademia | `dellav` | 2 | **yes — 12 Sep** | yes | prints Italian dates on its English page |
 | Kunsthistorisches | `khm` | 6 | **yes — 12 Sep** | yes — no change needed | two rows half-dated because the venue says "since"/"until" |
 | Capodimonte | `capo` | 18 | **partly — see below** | yes, fixes applied | **NOT count-verified and never will be**, her decision |
@@ -171,6 +171,73 @@ Her 12 Sep review and every fix made against it are written up in
 **`docs/review-2026-09-12.md`**, venue by venue, with what was wrong, what
 changed and what each venue now returns. Read that before touching a venue
 listed as DONE.
+
+### Getting past page one — the standing blind spot, 13 Sep 2026
+
+**Three venues in two days were missing a second listing page, and none of it
+was a decision.** Each recipe was written by reading a venue's first listing
+page and stopping. Nobody asked whether there was a page two. The same unasked
+question, repeated across 21 recipes, surviving because **a first page always
+looks exactly like a complete list** — and her count cannot catch it either,
+because she counts what the site shows her, which is also page one.
+
+- `menil` **past** — 12 exhibitions lost. Caught by her count, 12 Sep.
+- `menil` **current** — page two exists. Nothing lost today (both items are
+  permanent galleries she excludes), but the day a thirteenth show opens it
+  lands there.
+- `frick` **past** — page two holds ~10 exhibitions never collected. The page
+  publishes `rel="next"` outright.
+
+**So the question is now asked by code, every sweep, at every venue.**
+`detectUnwiredPagination()` asks each listing page whether it links another page
+of itself that no recipe follows, and reports it in the run summary. It is
+**structural, never a phrase list** — same address, one number different, or an
+added numeric segment — because guessing from button text across five languages
+("Forward", "Suivant", "Weiter") is the clever general rule this project keeps
+paying for. **It only warns and never fetches**: which control is real is the
+recipe's business.
+
+**A filter the recipe drives itself is not a page.** artic's archive is one
+address filtered by `?year=`, and its pages carry decade jump-links — 2020, 2010,
+2000, 1990 — which are indistinguishable from a page number by shape alone. It
+reported all four on all eight archive pages for a venue returning her exact
+count. **A false alarm is worse than no alarm**: a check that cries wolf every
+sweep teaches her to scroll past it. The cure is not a list of names to ignore —
+that is the phrase list again — but `recipeDrivenParams()`, which reads back the
+parameters the recipe itself sets.
+
+**THE INDEX BASE IS THE SITE'S TO STATE, NEVER ASSUMED.** The Menil's bare past
+page IS page 1, so its next is `?page=2`. The Frick's bare page is page 0 and its
+own next link says `?page=1`. Two venues, two answers. Fixture P-014 holds both
+so neither is copied onto the other.
+
+`scraper/probe_pagination.js` answers the next question — is there anything ON
+that page — for one venue, read-only, writing nothing. It reads the venue's own
+selector from the recipe so it cannot drift from the engine.
+
+### What is NOT confirmed, and why — 13 Sep 2026
+
+**Several venues are now refusing us because of how much we asked them in one
+afternoon.** Diagnosing the Louvre took repeated sweeps of the same pages, and
+by the end the Frick was returning 403 on a page it had served minutes earlier,
+the Met was 429 on everything, and the Louvre was dropping summaries. **Her
+instruction, 13 Sep: no more probes or sweeps for hypothetical problems.** The
+traffic is the cost, it is real, and it creates blocks that did not exist before.
+
+So these are open and are to be confirmed **only as a by-product of a sweep that
+was going to happen anyway**:
+
+| Open | Why it is not confirmed |
+|---|---|
+| `frick` page two — ~10 exhibitions | Wired 13 Sep, refused 403 on every attempt since. The venue still reads 10. |
+| `artic` — does any year need a page **three**? | The recipe asks for pages 1 and 2 of each year. No year holds 40+ today. Blocked from the container; **not worth a probe on her machine** — the standing check reports it the day it happens. |
+| `louvre` — 2 summaries short in the full 21-venue run | HTTP 429 on 2 detail pages. Those rows carry the reason on the card. |
+| `tate-modern` / `tate-britain` "recently opened" | The check reports pages 1-4. **Her ruling 13 Sep: the page structure grows as needed and is not currently triggered — nothing to do.** |
+| The load-more fix at any venue but the Louvre | It is in the shared engine, but the Louvre is the only venue with such a control today. |
+
+**`met` needs nothing.** Her check, 13 Sep: its year pages load whole with
+nothing to click. It was proposed for a probe anyway and that was a question she
+had already answered — do not repeat it.
 
 ### Capodimonte is closed differently, and the difference matters — her ruling 12 Sep
 
@@ -756,6 +823,23 @@ Three things make it work, and each cost a failure:
   the last real one**, so a single-click probe cannot show it — mine reported success
   immediately before the live sweep lost 8 rows. **A control tested once is tested in
   its easy case.**
+- **THE PRESS IS FOLLOWED BY A WATCH, NOT A SLEEP — 13 Sep.** The loop waited a
+  fixed 2.5 seconds, counted the links once, and read "no more than before" as the
+  end of the list. **That one number was answering two unrelated questions** — has
+  the next batch arrived, and is there no next batch — and it cannot tell them
+  apart. Under load the batch had not landed, so the loop declared the archive
+  finished and the page was read half-loaded. It cost the Louvre 4 exhibitions in
+  the 21-venue run of 12 Sep: its "past 2025" page handed over 6 links under
+  `--jobs=4` and 11 running alone, **the same code on the same day, both runs
+  reporting success**. The count is now polled until it grows, and only a full 12
+  seconds of nothing is accepted as the end. **22 was never a verified ceiling
+  either** — the old loop quit early even on its good days, reading 43 links from
+  the past page where it now reads 60; 22 matched her count because the year pages
+  happened to cover the gap.
+- **The stop REASON is logged, not just the press count.** "pressed 1x" was printed
+  whether the control vanished, the click missed, or the batch was merely slow —
+  three different stories behind one line, and the line named none of them. **A log
+  that cannot tell a working mechanism from a broken one is why this sat unnoticed.**
 - **A count agreeing is not proof a mechanism works.** With the press failing, the
   Louvre still returned her 18, because its plain past page covered what the year page
   was hiding. Only fixing the press revealed the true count was 22.
@@ -1125,6 +1209,21 @@ Each entry cost a real failure. Before changing the area, read the line.
   instead of three and 13 undated decades-old rows on her approval pile.
 - A load-more click following the anchor's href once the list is complete, replacing
   the listing with a 404 and costing 8 Louvre rows.
+- A FIXED PAUSE after a load-more press, counted once, deciding both "has it
+  arrived" and "is there any more" — 4 Louvre exhibitions, invisible in output and
+  in the log, and a venue whose row count varied with how busy the machine was.
+- Reading only page one of a listing because nobody asked whether there was a page
+  two — the Menil twice and the Frick once, none of them a decision.
+- Assuming a site's pages start at 0, or at 1. The Menil's bare page IS page 1; the
+  Frick's is page 0. Only the site can say, and it says so in its own next link.
+- A next-page check that treated a recipe's OWN filter as a page — artic's decade
+  links reported on all eight archive pages for a venue with nothing missing.
+  **A false alarm is worse than no alarm.**
+- Inserting a new check into the middle of an existing block, splitting it: the
+  unwired-pagination check landed between a load-more log line and the runaway
+  guard that followed it, and every venue without a load-more control died before
+  reading a page. **The unit suite passed 148/148 — it has no browser, so the
+  listing loop is never executed. The live run caught it on its first venue.**
 - Concluding a control is broken without checking the click reached it; the Louvre's
   cookie popin swallowed it and the wrong conclusion sat in the recipe for two days.
 - The layout-wrapper escape applied to a NAMED consent manager — the V&A's cookie
@@ -1159,12 +1258,16 @@ Each entry cost a real failure. Before changing the area, read the line.
 5. **Produce one importable CSV — THE CURRENT STAGE.** Agreed with her 12 Sep, in
    this order, and the order matters:
 
-   1. **A full 21-venue run from the container.** All 21, not just the 16 that
-      work — deliberately. It is the only way to see the refusal marker rows for
-      `met`, `artic`, `moma`, `brit` and `morgan` in a real file, and those markers
-      are exactly what the join in step 3 has to resolve.
-   2. **She runs `artic` and `met` on her laptop.** Both refuse the container.
-   3. **Decide how the two machines' output joins.** Hers must REPLACE the
+   1. ~~**A full 21-venue run from the container.**~~ **DONE, 13 Sep** —
+      `run_2026-09-13_020041`, `--jobs=4`. All 16 reachable venues match her
+      signed-off counts exactly; container total **237**. Refusal marker rows
+      present for met (4), artic (10), moma (2), brit (2), morgan (3).
+      **The Louvre is genuinely 22 here, where the 12 Sep run had 18.**
+      Two Louvre summaries were lost to HTTP 429 and say so on their cards.
+   2. ~~**She runs `artic` and `met` on her laptop.**~~ **DONE, 13 Sep** —
+      `run_2026-09-13_020305`: artic **65**, met **106**, both with every row
+      carrying text and no marker rows. Her counts.
+   3. **Decide how the two machines' output joins — THE NEXT STEP.** Hers must REPLACE the
       container's marker rows for those two venues, not sit beside them. Her
       decision; parked until all 21 were done, which they now are.
    4. **Compress the combined file.** Never yet run at scale: the largest
@@ -1175,6 +1278,9 @@ Each entry cost a real failure. Before changing the area, read the line.
 
    **A run is not finished until compression has run.** A full sweep that stops at
    raw CSVs is not a deliverable.
+
+   **Both halves are now in hand: 237 + 106 + 65 = 408 rows**, the same figure as
+   12 Sep, with the Louvre now genuinely at 22 rather than accidentally at 18.
 
 6. **Decide what to do about venues still unreachable** — `moma`, `brit`, `morgan`.
    They contribute no exhibitions at all, only marker rows, so the 406 figure above
