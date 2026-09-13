@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 12 Sep 2026
+**Last updated:** 13 Sep 2026
 
 Cassili collects art-exhibition catalogues. They go out of print fast once a show
 closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 21
@@ -101,6 +101,10 @@ before work begins. It refuses to move if the working tree is dirty or the branc
 carries commits not on `origin/main`, and it fetches before deciding, so it cannot
 discard anything.
 
+**LIVE BRANCH, 13 Sep 2026: `claude/jsx-stitched-intake`.** The app's new intake —
+marker rows rejected, duplicate rows folded (§4). **Not merged, not yet tested by
+her.** A session that works only on `main` will not find it and will re-derive it.
+
 **Branches that exist:** `claude/personal-tracking-ledgers-z49s2h` is **dead** (an
 old default branch with no CLAUDE.md — if a session reports the scraper as having
 no date handling, it is on that branch). `claude/met-connection-experiments` and
@@ -122,7 +126,7 @@ Until it is, check it against the newest run directory before trusting it.
 | Acquavella | `acq` | 15 | yes — her count | yes | |
 | Art Institute of Chicago | `artic` | 65 | yes — her count + every row's type tag read | yes | **local only**; only EXHIBITION and TICKETED EXHIBITION kept, her ruling |
 | The Met | `met` | 106 | yes — row by row, 11 Sep | yes | **local only**; see `docs/venues.md` |
-| The Frick | `frick` | 10 | **yes — 12 Sep** | **no — page two never read** | its past archive paginates and page two holds ~10 more; wired 13 Sep, refused on every attempt since |
+| The Frick | `frick` | 10 | **yes — 12 Sep** | **no — page two never read** | past archive paginates; `paginate` wired 13 Sep but the venue answered 403 on every verifying attempt, so the ~10 rows on page two are still uncollected |
 | The Menil | `menil` | 32 | **yes — 12 Sep** | yes | past AND current archives paginate; 7 permanent galleries excluded, her ruling |
 | V&A | `va` | 6 | **yes — 12 Sep** | yes | Displays excluded, **her ruling for THIS venue only** |
 | Tate Modern | `tate-modern` | 13 | **yes — 12 Sep** | yes | |
@@ -380,12 +384,14 @@ Know precisely what the app absorbs:
 
 - **Across sweeps — handled.** A row matching the ledger becomes a fill/change
   proposal. Re-feeding the same file is safe.
-- **Within one file — NOT handled.** `analyzeProForma` compares each row against
-  the ledger only, never against other rows in the same file. The same exhibition
-  twice in one CSV produces **two Add cards**, and `applyRefresh` keeps both.
+- **Within one file — handled on `claude/jsx-stitched-intake` ONLY, not on `main`.**
+  On `main`, `analyzeProForma` compares each row against the ledger and never
+  against the rows beside it, so the same exhibition twice in one CSV produces
+  **two Add cards** and `applyRefresh` keeps both. On the branch it folds them
+  first — §4.
 
-So scraper-side duplicates surface as extra cards she rejects by hand. Fix the
-cause; never paper over it by deleting rows.
+**This does not license the scraper to de-duplicate.** The app folds on URL where
+she can see it happen; a scraper that drops rows makes the same call unseen.
 
 **The one permitted exception: never read the same address twice.** Two rows with
 the same URL are the same exhibition, always, with no interpretation. Nothing
@@ -513,6 +519,31 @@ nothing. Results are tagged shop / web / none. Reseller links (Amazon AU,
 AbeBooks, Alibris) are built by the app from ISBN or title. It is one function
 (`askClaude`); swapping the model is a one-line change.
 
+### Reading a stitched file — `claude/jsx-stitched-intake`, 13 Sep, NOT YET TESTED BY HER
+
+One CSV now carries every machine's output, so the app reconciles rows against
+**each other** before the ledger. Her design: the stitch stays dumb, all judgement
+lives here where she sees it.
+
+- **Marker rows are not proposals.** Matched on the sentence the scraper stamps
+  verbatim — `Marker row, not an exhibition.` — not on the bracketed title, which
+  is a guess about formatting. They become a coverage panel. Previously each was
+  an Add card, and rejecting is not remembered, so a refused venue put the same
+  junk on her pile **on every future sweep forever**.
+- **Duplicate rows fold on venue + URL, and nothing else.** Gaps fill silently;
+  a genuine disagreement is carried to the card as a CHOICE, fuller value ticked
+  and marked as a guess, both shown. Folds are disclosed in the notes so the card
+  count still reconciles with the file.
+- **Rows with no URL never fold.** The only other key is the title, and
+  `sameExhibition()` returns true whenever either side lacks dates — fine against
+  the ledger where she sees each proposal, fatal here where it fires first. An
+  unfolded duplicate costs one visible card; a wrong fold costs an exhibition.
+
+`scraper/fixtures/intake_cases.js` — 14 cases, including the two that must NOT
+merge. `scraper/fixtures/intake_sample.csv` — 76 rows, 8 venues, built from real
+sweeps: a venue with both marker and real rows, two with markers only, four with
+real rows only, and a Louvre block covering every conflict shape.
+
 **Deliberately not built:** bulk-approve, in-app field editing, and the mirror
 case where the app proposes Add but it is really an update.
 
@@ -612,6 +643,14 @@ scraper/output/run_2026-09-10_183045/
   appending makes it idempotent.
 
 Timestamps are **Sydney time**, fixed to that zone rather than the machine's.
+
+**The sweep archives old runs at start-up** (`archiveOldRuns`, 13 Sep). Diagnosing
+one venue means running real sweeps, each leaving a folder, and `--continue` resumes
+whichever is NEWEST — by 13 Sep there were 135 and the newest three were one-venue
+probes. **Moved into `output/archive/`, never deleted**, and three things are never
+moved: the newest 10, anything holding a compressed CSV (that is compression's
+memory — archiving it silently recompresses everything), and any run with 16+ venue
+files. It runs before the run directory is chosen, and says what it moved.
 
 **Runs are committed, not gitignored.** The container is temporary: a finished
 sweep could otherwise be lost because nobody asked for the file before the session
@@ -1083,6 +1122,11 @@ the ~6-word teaser she reads, and `sweep_compressed.csv` is **the file she impor
 - **Reuse is by code and cannot be wrong.** It reads the previous run's compressed
   CSV; identical raw text reuses the wording with **no model call**. Changed text asks
   one question — *is the old summary now false?* — handing over the old wording.
+- **Identical text INSIDE one file is also asked once** (`groupIdenticalRaw`, 13 Sep).
+  A stitched file repeats any venue swept on both machines, and the previous-run
+  memory cannot see the copy beside it. Asking twice is worse than wasteful: each row
+  is an isolated question, so the model can word the same text differently and the
+  difference reaches her as a conflict.
 - **Sonnet writes fresh, Haiku judges staleness.** Measured, not assumed.
 - **Reached by subagent, not the session itself** — a session uses whatever model it
   happens to be, which discards the measurement. One subagent per **job**, never per row.
@@ -1182,6 +1226,11 @@ Each entry cost a real failure. Before changing the area, read the line.
 - Inserting a check into the middle of an existing block, splitting it: every venue
   without a load-more control died before reading a page, while the unit suite
   passed 148/148. **It has no browser, so the listing loop never runs in it.**
+- Archiving old run folders without checking which ones compression needs — its
+  memory is the newest previously-compressed run, and moving those recompresses
+  every row from scratch while reporting nothing.
+- Two groupings both claiming a pending row by assignment, so the second silently
+  dropped the first and that row never received an answer.
 - Concluding a control is broken without checking the click reached it; the Louvre's
   cookie popin swallowed it and the wrong conclusion sat in the recipe for two days.
 - The layout-wrapper escape applied to a NAMED consent manager — the V&A's cookie
@@ -1225,9 +1274,20 @@ Each entry cost a real failure. Before changing the area, read the line.
    2. ~~**She runs `artic` and `met` on her laptop.**~~ **DONE, 13 Sep** —
       `run_2026-09-13_020305`: artic **65**, met **106**, both with every row
       carrying text and no marker rows. Her counts.
-   3. **Decide how the two machines' output joins — THE NEXT STEP.** Hers must REPLACE the
-      container's marker rows for those two venues, not sit beside them. Her
-      decision; parked until all 21 were done, which they now are.
+   3. ~~**Decide how the two machines' output joins.**~~ **DECIDED, 13 Sep — hers.**
+      **The stitch is dumb concatenation with no logic in it at all**, and every
+      judgement moves into the app, which is where this project already puts
+      judgement and where she sees each decision before it lands. No merge tool,
+      no precedence rule, no folder ordering to remember — order cannot change the
+      result because nothing is chosen. Marker rows and duplicate rows are then
+      handled at intake (§4).
+
+      Rejected on the way: a merge tool picking which venue file wins (order
+      becomes a thing to remember), and redefining `venueIsDone` as "has real
+      rows" — **her call**, because the three permanently-refused venues would
+      then never count as done and the standing monitor breaks for no gain.
+
+      **The stitch script itself is NOT written yet.**
    4. **Compress the combined file.** Never yet run at scale: the largest
       compression to date is 15 rows from one venue, against roughly 400 now. The
       reuse half is pure code and cannot be wrong; the writing half has not been
@@ -1239,6 +1299,24 @@ Each entry cost a real failure. Before changing the area, read the line.
 
    **Both halves are now in hand: 237 + 106 + 65 = 408 rows**, the same figure as
    12 Sep, with the Louvre now genuinely at 22 rather than accidentally at 18.
+
+   **WHERE THIS ACTUALLY STANDS, 13 Sep — read before assuming anything works.**
+
+   The intake logic is written and passes 14 authored cases, but **she has not run
+   it yet**. She is testing it now, by hand, against `intake_sample.csv` in the
+   forked JSX. Those results are not in yet and nothing should be merged before
+   they are.
+
+   **The end-to-end chain has NEVER been run**, and no part of it should be
+   described as working:
+
+   > real sweeps on both machines → their venue CSVs in one folder → stitch →
+   > compress the stitched file → the app reads it
+
+   Each link is built and unit-tested in isolation. The chain is not. The two
+   places it is most likely to break are the ones never exercised at scale:
+   compression against ~400 rows rather than 15, and the app folding real
+   duplicates rather than authored ones.
 
 6. **Decide what to do about venues still unreachable** — `moma`, `brit`, `morgan`.
    They contribute no exhibitions at all, only marker rows, so the 406 figure above
