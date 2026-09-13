@@ -101,8 +101,26 @@ function plan(dir, { recompress = false } = {}) {
   const prevDir = recompress ? null : C.previousCompletedRun(dir);
   const memory = recompress ? new Map() : loadMemory(prevDir);
 
+  // HER 110 SEED SUMMARIES JOIN THE MEMORY, behind the previous run rather than
+  // in front of it: a real compressed run carries raw text and can grant a free
+  // reuse, while the seed can only ever ask Haiku to check. Where both know an
+  // exhibition the better memory should win. See seedMemory().
+  let seedAdded = 0;
+  if (!recompress) {
+    try {
+      for (const r of C.seedMemory(path.join(__dirname, '..', 'Cat_Watch_v10.2_haiku.jsx'))) {
+        for (const k of [C.urlKey(r), C.titleKey(r)]) {
+          if (k && !memory.has(k)) { memory.set(k, r); seedAdded++; break; }
+        }
+      }
+    } catch (e) {
+      say(`Could not read the seed set (${e.message.slice(0, 60)}) — carrying on without it.`);
+    }
+  }
+
   say(`Run:      ${dir}  (${rows.length} rows)`);
   say(`Memory:   ${prevDir ? prevDir : recompress ? '(ignored — --recompress)' : '(none — first compression)'}`);
+  if (seedAdded) say(`          + ${seedAdded} of her own seed summaries, so her wording is kept unless the venue has changed what it says`);
 
   const done = [];
   const pending = [];

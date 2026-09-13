@@ -261,6 +261,17 @@ function readProForma(file) {
  *     MATCH    handed this row's raw text and asked whether that wording is
  *              still true. It is not, so it rewrites. Bounded.
  */
+// Path segments that say WHERE a venue is listing a show, not WHICH show it is.
+// An exhibition moving from the current listing to the archive gains one of
+// these and nothing else — /exhibitions/zurbaran became /exhibitions/past/
+// zurbaran between her seed and the 13 Sep sweep, and the match was lost for a
+// reason that has nothing to do with the exhibition. Mechanical rather than a
+// judgement: these are the words the recipes themselves use for listing pages.
+const LISTING_SEGMENTS = new Set([
+  'past', 'current', 'upcoming', 'future', 'archive', 'history',
+  'present', 'presenti', 'future', 'passate', 'mostre', 'now-on', 'on-now',
+]);
+
 function urlKey(row) {
   const u = String(row.url || '').trim();
   if (!u) return null;
@@ -269,8 +280,16 @@ function urlKey(row) {
     // Scheme and host only — paths are case-sensitive by spec, and folding
     // them once collapsed two different exhibitions into one (IR-07).
     const host = p.host.toLowerCase();
-    const pathname = p.pathname.replace(/\/+$/, '');
-    return `${row.venue_code}|url|${p.protocol.toLowerCase()}//${host}${pathname}${p.search}`;
+    // DECODE BEFORE COMPARING. The same address written two ways is not two
+    // addresses: the National Gallery served `waldmuller-landscapes` in August
+    // and `waldm%C3%BCller-landscapes` in September, and the match was lost.
+    let pathname;
+    try { pathname = decodeURI(p.pathname); } catch { pathname = p.pathname; }
+    pathname = pathname
+      .split('/')
+      .filter(seg => seg && !LISTING_SEGMENTS.has(seg.toLowerCase()))
+      .join('/');
+    return `${row.venue_code}|url|${p.protocol.toLowerCase()}//${host}/${pathname}${p.search}`;
   } catch {
     return `${row.venue_code}|url|${u}`;
   }
@@ -292,11 +311,42 @@ function indexPrevious(rows) {
   return index;
 }
 
+/**
+ * Do two rows' runs overlap, or are they a year apart?
+ *
+ * A VENUE CAN RECYCLE AN ADDRESS. The Rijksmuseum's Document Nederland is an
+ * annual commission: /past/document-nederland pointed at one edition in August
+ * and a different one in September, with the newer edition given a suffixed
+ * address. artic's Neapolitan Crèche does the same under one title. So neither
+ * key proves identity on its own, and where the dates are known they are the
+ * tiebreaker: runs that do not overlap and sit about a year apart are two
+ * editions, not one exhibition.
+ *
+ * UNKNOWN DATES NEVER BREAK A MATCH. A blank date is not evidence of anything,
+ * which is the same rule the lookback follows.
+ */
+function looksLikeADifferentEdition(a, b) {
+  const ms = d => (/^\d{4}-\d{2}-\d{2}$/.test(String(d || '')) ? Date.parse(d + 'T00:00:00') : null);
+  const as = ms(a.start_date), ae = ms(a.end_date);
+  const bs = ms(b.start_date), be = ms(b.end_date);
+  if (as === null || ae === null || bs === null || be === null) return false;
+  if (as <= be && bs <= ae) return false;                 // they overlap — one run
+  const gap = Math.abs(bs - as) / 86400000;
+  return gap > 180;                                       // half a year apart or more
+}
+
 function findPrevious(index, row) {
   const byUrl = urlKey(row);
-  if (byUrl && index.has(byUrl)) return index.get(byUrl);
+  if (byUrl && index.has(byUrl)) {
+    const hit = index.get(byUrl);
+    // Same address, but a run that cannot be the same one. See above.
+    if (!looksLikeADifferentEdition(row, hit)) return hit;
+  }
   const byTitle = titleKey(row);
-  if (byTitle && index.has(byTitle)) return index.get(byTitle);
+  if (byTitle && index.has(byTitle)) {
+    const hit = index.get(byTitle);
+    if (!looksLikeADifferentEdition(row, hit)) return hit;
+  }
   return null;
 }
 
@@ -444,10 +494,78 @@ function loadMemory(dir) {
   return indexPrevious(memory);
 }
 
+/**
+ * HER 110 SEED SUMMARIES, AS MEMORY.
+ *
+ * The seed is the one body of summaries that predates this compressor: she
+ * wrote them herself on 20 Aug, for met / ng / rijks / acq. Nothing had ever
+ * shown them to it, so on the first real compression every one of those
+ * exhibitions came back as "never seen" and would have been rewritten — landing
+ * on her approval pile as ~100 cards proposing to replace her own wording with
+ * a machine's.
+ *
+ * Feeding them in is not an exception to the design, it IS the design: reuse
+ * what we already have, ask only for what is new.
+ *
+ * IT CARRIES NO RAW TEXT, and that is the whole difference from ordinary
+ * memory. Nobody recorded the blurbs she read in August, so the free
+ * "identical text → reuse" rule cannot apply. Each match becomes a REVIEW
+ * instead: Haiku is handed the venue's current blurb and her summary and asked
+ * the one question it exists to answer — is this still true? No, and her
+ * wording stands; yes, and it is rewritten and she sees why.
+ *
+ * IT RETIRES ITSELF AFTER ONE RUN. Once this compression writes its output,
+ * those rows exist in a compressed CSV paired with the raw text they came from,
+ * so from the next sweep they are ordinary memory rows and cost nothing.
+ *
+ * MATCHED THROUGH THE SAME KEYS AS EVERYTHING ELSE. The seed stores a URL SLUG
+ * rather than an address, which is why the older code matched it by title and
+ * found 56 of 110 where 103 were there — Acquavella scored zero, because the
+ * scraper deliberately keeps the city in its titles and her seed does not.
+ */
+function seedMemory(jsxPath) {
+  const src = fs.readFileSync(jsxPath, 'utf8');
+  const slice = (marker) => {
+    const at = src.indexOf(marker);
+    if (at === -1) throw new Error(`${marker} not found in the JSX`);
+    let i = src.indexOf('[', at), depth = 0, quote = null;
+    for (let j = i; j < src.length; j++) {
+      const c = src[j];
+      if (quote) { if (c === '\\') { j++; continue; } if (c === quote) quote = null; continue; }
+      if (c === '"' || c === "'" || c === '`') { quote = c; continue; }
+      if (c === '[') depth++;
+      else if (c === ']') { depth--; if (depth === 0) return src.slice(i, j + 1); }
+    }
+    throw new Error(`${marker} array never closed`);
+  };
+  // eslint-disable-next-line no-eval
+  const seed = eval(slice('const S=['));
+  // eslint-disable-next-line no-eval
+  const museums = eval(slice('const MUSEUMS'));
+  const base = Object.fromEntries(museums.map(m => [m.id, m.exBase || '']));
+
+  const rows = [];
+  for (const [venue, title, start, end, summary, slug] of seed) {
+    if (!summary) continue;
+    rows.push({
+      venue_code: venue,
+      title,
+      start_date: start || '',
+      end_date: end || '',
+      url: slug && base[venue] ? base[venue] + slug : '',
+      // NO raw text — that is what makes these review rather than reuse.
+      raw: '',
+      summary,
+      fromSeed: true,
+    });
+  }
+  return rows;
+}
+
 module.exports = {
-  parseCsv, readProForma, writeCsv, urlKey, titleKey, indexPrevious,
+  parseCsv, readProForma, writeCsv, urlKey, titleKey, indexPrevious, looksLikeADifferentEdition,
   findPrevious, decide, validateAnswer, normalizeRaw, wordCount, addNote,
-  previousCompletedRun, MAX_WORDS, SKIP_NOTE,
+  previousCompletedRun, seedMemory, MAX_WORDS, SKIP_NOTE,
   TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns, groupIdenticalRaw,
 };
 
