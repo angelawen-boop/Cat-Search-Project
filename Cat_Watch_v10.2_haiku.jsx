@@ -1205,6 +1205,22 @@ export default function App(){
                 const mergedConf = byVenue(real.filter(x=>isMerged(x)&&hasChoice(x)));
                 const confOnly   = byVenue(real.filter(x=>!isMerged(x)&&hasChoice(x)));
                 const ordinary   = real.filter(x=>!isMerged(x)&&!hasChoice(x));
+                // VENUE SUBHEADINGS INSIDE EACH BAND. Batching by kind removed
+                // the venue grouping, so a band read as one undifferentiated
+                // run of cards and the only way to tell which museum a show was
+                // at was to read its link. Same heading style and same venue
+                // order as the ordinary list below, so both halves of the
+                // screen read the same way round.
+                const byVenueBlocks=list=>MUSEUMS.map(m=>{
+                  const grp=list.filter(x=>x.p.venueId===m.id);
+                  if(!grp.length)return null;
+                  return(
+                    <div key={m.id} style={{marginBottom:10}}>
+                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
+                      {grp.map(({p,i})=>renderProposalCard(p,i))}
+                    </div>
+                  );
+                }).filter(Boolean);
                 const band=(title,blurb,tone)=>(
                   <div style={{marginBottom:6}}>
                     <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:tone||C.soft,marginBottom:4,fontWeight:600}}>{title}</div>
@@ -1220,37 +1236,54 @@ export default function App(){
 
                       {coverage.length>0&&(<>
                         {band("1 \u00b7 Pages that couldn\u2019t be read \u00b7 nothing to do","The sweep tried these and was turned away. No exhibitions came from them, so nothing is missing that was ever offered.")}
-                        {coverage.map((cv,i)=>(
-                          <div key={"cv"+i} style={{border:"1px solid "+C.rule,borderRadius:6,padding:"8px 10px",marginBottom:6,background:C.card}}>
-                            <div style={{fontSize:12,color:C.ink}}><strong>{cv.venueShort}</strong> {"\u2014"} {cv.what}</div>
-                            <div style={{fontSize:11.5,color:C.soft,marginTop:2,lineHeight:1.5}}>{cv.why}</div>
-                          </div>
-                        ))}
+                        {MUSEUMS.map(m=>{
+                          const grp=coverage.filter(cv=>cv.venueId===m.id);
+                          if(!grp.length)return null;
+                          return(
+                            <div key={"cvg"+m.id} style={{marginBottom:10}}>
+                              <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
+                              {grp.map((cv,i)=>(
+                                <div key={"cv"+i} style={{border:"1px solid "+C.rule,borderRadius:6,padding:"8px 10px",marginBottom:6,background:C.card}}>
+                                  <div style={{fontSize:12,color:C.ink}}>{cv.what}</div>
+                                  <div style={{fontSize:11.5,color:C.soft,marginTop:2,lineHeight:1.5}}>{cv.why}</div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })}
                       </>)}
 
                       {scrap.length>0&&(<>
                         {band("2 \u00b7 Unusable rows \u00b7 needs a redo","No venue code or no title, so these can\u2019t be filed at all. Fix them in the sweep file and feed it again.",C.accent)}
-                        {byVenue(scrap).map(({p,i})=>renderProposalCard(p,i))}
+                        {byVenueBlocks(scrap)}
                       </>)}
 
                       {mergedOnly.length>0&&(<>
                         {band("3 \u00b7 Combined for you \u00b7 nothing to decide","The file described these more than once and the copies agreed, so they were filled in from each other. You\u2019re seeing the finished result.")}
-                        {mergedOnly.map(({p,i})=>renderProposalCard(p,i))}
+                        {byVenueBlocks(mergedOnly)}
                       </>)}
 
                       {mergedConf.length>0&&(<>
                         {band("4 \u00b7 Combined, but one field disagrees \u00b7 needs a choice","Same as above, except the copies didn\u2019t match on one field. Both values are shown; the longer one is picked for you.",C.accent)}
-                        {mergedConf.map(({p,i})=>renderProposalCard(p,i))}
+                        {byVenueBlocks(mergedConf)}
                       </>)}
 
                       {confOnly.length>0&&(<>
                         {band("5 \u00b7 Two different answers \u00b7 needs a choice","The file gave two values for the same field. Both are shown; the longer one is picked for you.",C.accent)}
-                        {confOnly.map(({p,i})=>renderProposalCard(p,i))}
+                        {byVenueBlocks(confOnly)}
                       </>)}
                     </div>
                   )}
 
-                  {/* THE ORDINARY WORK, still grouped by venue as it always was. */}
+                  {/* THE ORDINARY WORK, still grouped by venue as it always was.
+                      Headed in the same style as the triage block: a rule alone
+                      reads as a gap, not as a change of subject. */}
+                  {ordinary.length>0&&(
+                    <div style={{marginBottom:12}}>
+                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Normal cases</div>
+                      <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing. Accept or reject each.</div>
+                    </div>
+                  )}
                   {MUSEUMS.map(m=>{const grp=ordinary.filter(x=>x.p.venueId===m.id);if(!grp.length)return null;return(
                     <div key={m.id} style={{marginBottom:14}}>
                       <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
