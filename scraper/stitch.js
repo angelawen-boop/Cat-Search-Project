@@ -2,7 +2,19 @@
  * Concatenate venue CSVs into one importable file. NO LOGIC.
  *
  *   node scraper/stitch.js run_2026-09-13_020041 run_2026-09-13_020305
- *   node scraper/stitch.js <run> <run> --out=/tmp/stitched.csv
+ *   then:  node scraper/compress.js stitch_2026-09-13_1432
+ *
+ * IT WRITES A DIRECTORY, NOT A LOOSE FILE, and that is not tidiness. compress.js
+ * takes a run directory and reads sweep.csv from inside it; handed a loose file
+ * it silently compressed the newest SWEEP instead — 652 stitched rows in, 172
+ * compressed out, no error anywhere. Writing output/stitch_<stamp>/sweep.csv
+ * means the existing compressor works unchanged.
+ *
+ * NAMED stitch_, NEVER run_. The sweeper resumes the newest directory called
+ * run_* and archives old ones by the same prefix. A stitched folder holds one
+ * combined sweep.csv and no venue files, so `--continue` would read it as a run
+ * where NO venue has finished and scrape all 21 into it. The prefix is what
+ * keeps it invisible to both.
  *
  * HER DESIGN, 13 Sep. This step chooses nothing. It does not pick which copy
  * of a venue wins, does not drop marker rows, does not notice duplicates. Every
@@ -102,9 +114,16 @@ if (problems.length) {
 }
 
 const q = v => /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
-const out = outArg ? outArg.split('=').slice(1).join('=')
-                   : path.join(OUT_DIR, `stitched_${new Date().toISOString().slice(0, 10)}.csv`);
+const stamp = new Date().toISOString().slice(0, 16).replace(/[-:]/g, '').replace('T', '_');
+const dirName = `stitch_${stamp}`;
+const outDir = path.join(OUT_DIR, dirName);
+fs.mkdirSync(outDir, { recursive: true });
+const out = outArg ? outArg.split('=').slice(1).join('=') : path.join(outDir, 'sweep.csv');
 fs.writeFileSync(out, [COLS.join(','), ...rows.map(r => r.map(q).join(','))].join('\n') + '\n', 'utf8');
+
+// What went into it, so the file can be traced back months from now.
+fs.writeFileSync(path.join(outDir, 'sources.txt'),
+  names.join('\n') + '\n', 'utf8');
 
 const pad = (s, n) => String(s).padEnd(n);
 console.log(`\nStitched ${rows.length} rows from ${names.length} folder${names.length === 1 ? '' : 's'}.\n`);
@@ -121,4 +140,6 @@ if (dupVenues) {
   console.log('  more than once. That is intended — the app folds them and shows you each decision.');
 }
 console.log(`\nWrote ${out}`);
-console.log('This is the RAW file. Compress it before importing:  node scraper/compress.js\n');
+console.log(`\nThis is the RAW file. Compress it before importing:`);
+console.log(`  node scraper/compress.js ${dirName}`);
+console.log(`  node scraper/compress.js ${dirName} --apply     (after the summaries are answered)\n`);
