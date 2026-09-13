@@ -519,7 +519,7 @@ nothing. Results are tagged shop / web / none. Reseller links (Amazon AU,
 AbeBooks, Alibris) are built by the app from ISBN or title. It is one function
 (`askClaude`); swapping the model is a one-line change.
 
-### Reading a stitched file — `claude/jsx-stitched-intake`, 13 Sep, NOT YET TESTED BY HER
+### Reading a stitched file — `claude/jsx-stitched-intake`, 13 Sep, SIGNED OFF BY HER ON TEST DATA
 
 One CSV now carries every machine's output, so the app reconciles rows against
 **each other** before the ledger. Her design: the stitch stays dumb, all judgement
@@ -538,6 +538,15 @@ lives here where she sees it.
   `sameExhibition()` returns true whenever either side lacks dates — fine against
   the ledger where she sees each proposal, fatal here where it fires first. An
   unfolded duplicate costs one visible card; a wrong fold costs an exhibition.
+
+**Odd cases come FIRST, batched by kind, in six numbered bands** — her ruling
+after seeing it: markers, unusable rows, combined-for-you, combined-with-a-
+disagreement, disagreements, then rows with no link at all. Easiest first and
+hardest last, which is not the order an engine would pick: she is spending
+attention rather than compute, and clearing what needs nothing leaves more of it
+for what does. Batched by kind means a venue can appear twice on the screen; she
+would rather finish one kind of thinking than keep switching. Venue headings sit
+inside every band, in the same order as the ordinary list below.
 
 `scraper/fixtures/intake_cases.js` — 14 cases, including the two that must NOT
 merge. `scraper/fixtures/intake_sample.csv` — 76 rows, 8 venues, built from real
@@ -612,10 +621,19 @@ node scraper/sweep_prototype.js ng rijks     named venues only
 node scraper/sweep_prototype.js --continue   finish the newest run
 node scraper/sweep_prototype.js --jobs=6     venues at once (default 4)
 node scraper/sweep_prototype.js --budget-mins=3   abandon a venue after N min
+node scraper/stitch.js <run> <run> ...        combine runs into one importable file
 node scraper/compress.js                     plan compression of the newest run
 node scraper/compress.js <run> --apply       write sweep_compressed.csv
 npm test                                     all fixtures
 ```
+
+**`stitch.js` chooses NOTHING** — her design. It does not pick which copy of a
+venue wins, drop marker rows or notice duplicates; every row from every named
+folder goes in. Order therefore cannot change the result. A venue swept on both
+machines arriving twice is the POINT: the app folds the copies where she can see
+it. It writes `output/stitch_<stamp>/sweep.csv` — a directory, because compress
+reads directories, and named `stitch_` not `run_` so `--continue` and the
+archiver both ignore it.
 
 **Reachability is not the project's question.** Her correction: *"this is not a
 project in can you map me an internet directory."* A row needs a title, two dates
@@ -1138,6 +1156,39 @@ the ~6-word teaser she reads, and `sweep_compressed.csv` is **the file she impor
 **Full design, evidence and the rejected alternatives: `docs/compression.md`.**
 It is finished and signed off — do not re-plan it.
 
+### No single key identifies an exhibition over time — 13 Sep 2026
+
+Found while matching her 110 seed summaries against a real sweep. Title matching
+found 56; URL matching found 103 of the same 110. Four cases where they
+disagreed, and they had four different causes:
+
+| What happened | Example |
+|---|---|
+| Same address, written differently | `waldmuller` vs `waldm%C3%BCller` |
+| The show moved to the archive | `/exhibitions/zurbaran` → `/exhibitions/**past**/zurbaran` |
+| The venue renamed its own slug | `ng-stories-making-a-national-gallery` → `ng-stories` |
+| **The venue RECYCLED an address** | Rijksmuseum's *Document Nederland* is annual; `/past/document-nederland` now points at the 2024 edition and the 2025 one has a suffix |
+
+The first two are code gaps, not changes: decode before comparing, and strip a
+known listing segment. The last is the important one — **a URL is not permanent
+either.** It is the address-shaped version of artic's Crèche problem.
+
+**So neither key works alone, and DATES are the tiebreaker.** Same address with
+date ranges a year apart is a recycled address, not one exhibition.
+
+**THE RIGHT ANSWER DIFFERS BY WHERE IT IS USED, because the cost of being wrong
+differs.** This is the part to carry across:
+
+- **The app's folding — strict, same URL only.** A wrong fold loses an
+  exhibition permanently and silently. Everything else becomes two cards she
+  can see and reject.
+- **Compression memory — loose is safe.** Both failures are soft: a miss costs
+  one model call, and a false match hands the model the wrong old wording
+  **together with the real blurb**, so it rewrites. URL, then title, then dates.
+
+Applying the app's rule to compression wastes calls; applying compression's rule
+to the app loses rows.
+
 ### Known bugs — open
 
 1. **Nothing filters out non-exhibitions, generally.** The only test is URL shape, so
@@ -1231,6 +1282,12 @@ Each entry cost a real failure. Before changing the area, read the line.
   every row from scratch while reporting nothing.
 - Two groupings both claiming a pending row by assignment, so the second silently
   dropped the first and that row never received an answer.
+- Writing a stitched file as a loose CSV when compress reads DIRECTORIES — it
+  compressed the newest sweep instead, 652 rows in and 172 out, no error. Each
+  half was correct; the join between them had never been run.
+- Matching her seed summaries by TITLE when the seed carries a URL slug — 56
+  matches where there were 103, and Acquavella scored zero because the scraper
+  deliberately keeps the city in its titles and her seed does not.
 - Concluding a control is broken without checking the click reached it; the Louvre's
   cookie popin swallowed it and the wrong conclusion sat in the recipe for two days.
 - The layout-wrapper escape applied to a NAMED consent manager — the V&A's cookie
@@ -1302,21 +1359,23 @@ Each entry cost a real failure. Before changing the area, read the line.
 
    **WHERE THIS ACTUALLY STANDS, 13 Sep — read before assuming anything works.**
 
-   The intake logic is written and passes 14 authored cases, but **she has not run
-   it yet**. She is testing it now, by hand, against `intake_sample.csv` in the
-   forked JSX. Those results are not in yet and nothing should be merged before
-   they are.
+   **The intake is signed off by her.** Tested by hand against
+   `intake_sample.csv` and corrected twice on her findings: odd cases moved to
+   the top and batched by kind (§4), then venue headings inside each band. Still
+   on the branch; it merges once the real import passes.
 
-   **The end-to-end chain has NEVER been run**, and no part of it should be
-   described as working:
+   **The chain has now been run as far as compression.** Both machines swept,
+   three run folders stitched into `stitch_20260913_0442` — 652 rows, 402
+   distinct exhibitions, 206 duplicate copies. Borghese was dead from every
+   machine that day (`cultura.gov.it` unreachable, not a refusal); capo answered
+   neither of us; moma, brit and morgan refused as always. Everything else
+   matched her signed-off counts.
 
-   > real sweeps on both machines → their venue CSVs in one folder → stitch →
-   > compress the stitched file → the app reads it
-
-   Each link is built and unit-tested in isolation. The chain is not. The two
-   places it is most likely to break are the ones never exercised at scale:
-   compression against ~400 rows rather than 15, and the app folding real
-   duplicates rather than authored ones.
+   **STILL NOT RUN: the compression itself, and the import.** Measured, not
+   guessed: 390 rows need a summary and the Sonnet half alone is ~126,000 tokens
+   of raw text. That is too much for one subagent, so the job splits into
+   several — the guide's "cost and batching are untested" line, now with a
+   number against it.
 
 6. **Decide what to do about venues still unreachable** — `moma`, `brit`, `morgan`.
    They contribute no exhibitions at all, only marker rows, so the 406 figure above
