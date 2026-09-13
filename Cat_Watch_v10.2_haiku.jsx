@@ -1204,7 +1204,21 @@ export default function App(){
                 const mergedOnly = byVenue(real.filter(x=>isMerged(x)&&!hasChoice(x)));
                 const mergedConf = byVenue(real.filter(x=>isMerged(x)&&hasChoice(x)));
                 const confOnly   = byVenue(real.filter(x=>!isMerged(x)&&hasChoice(x)));
-                const ordinary   = real.filter(x=>!isMerged(x)&&!hasChoice(x));
+                const plain      = real.filter(x=>!isMerged(x)&&!hasChoice(x));
+                // NO LINK AT ALL — band 6, her ruling 13 Sep. These rows are
+                // perfectly usable: a title, dates and a description, and the
+                // card's arrow falls back to the venue's own listing. So they
+                // are NOT scrap and do not belong in band 2.
+                //
+                // They are shown together because of what the missing link
+                // costs LATER, invisibly: it is the only key that can fold two
+                // copies of one exhibition, and the only key quarantine can use,
+                // so a no-link row arrives fresh on every future sweep. Her
+                // reason for grouping them: once she reaches the ordinary list
+                // she is no longer in "what is wrong with this one" mode, and
+                // these are the last rows that need that mode.
+                const noLink     = byVenue(plain.filter(x=>!x.p.cand||!x.p.cand.exUrl));
+                const ordinary   = plain.filter(x=>x.p.cand&&x.p.cand.exUrl);
                 // VENUE SUBHEADINGS INSIDE EACH BAND. Batching by kind removed
                 // the venue grouping, so a band read as one undifferentiated
                 // run of cards and the only way to tell which museum a show was
@@ -1227,7 +1241,7 @@ export default function App(){
                     {blurb&&<div style={{fontSize:11.5,color:C.soft,lineHeight:1.55,marginBottom:8}}>{blurb}</div>}
                   </div>
                 );
-                const anyTriage = coverage.length||scrap.length||mergedOnly.length||mergedConf.length||confOnly.length;
+                const anyTriage = coverage.length||scrap.length||mergedOnly.length||mergedConf.length||confOnly.length||noLink.length;
                 return(<>
                   {anyTriage>0&&(
                     <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
@@ -1271,6 +1285,10 @@ export default function App(){
                       {confOnly.length>0&&(<>
                         {band("5 \u00b7 Two different answers \u00b7 needs a choice","The file gave two values for the same field. Both are shown; the longer one is picked for you.",C.accent)}
                         {byVenueBlocks(confOnly)}
+                      </>)}
+                      {noLink.length>0&&(<>
+                        {band("6 \u00b7 No link to the exhibition \u00b7 usable, but worth a look","Everything else is here, so these can be accepted as they are and the arrow will open the venue\u2019s own listing. The missing link only costs later: it is what lets a future sweep recognise the same show, so these will keep arriving as new.")}
+                        {byVenueBlocks(noLink)}
                       </>)}
                     </div>
                   )}
