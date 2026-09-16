@@ -56,14 +56,48 @@ const proxyAgent = PROXY_URL ? new HttpsProxyAgent(PROXY_URL) : undefined;
 // was advertising the opposite: something hand-editing its identity.
 //
 // Leaving it unset means the user-agent is simply TRUE — including the fact
-// that it is headless, which we are and have no business hiding. Same reasoning
-// as the network bridge: the fix was to stop misrepresenting ourselves, not to
-// misrepresent ourselves more convincingly.
+// that it is headless. Same reasoning as the network bridge: the fix was to
+// stop misrepresenting ourselves, not to misrepresent ourselves more
+// convincingly.
 //
 // Do not re-add a hard-coded user-agent. If one is ever genuinely needed, it
 // must match the browser actually running, and it has to be derived at runtime
 // rather than typed in — a literal goes stale the next time Chromium updates,
 // which is how this one became wrong.
+//
+// ── AND ONE WAS NEEDED — 16 Sep 2026 ─────────────────────────────────────────
+//
+// Chromium's own user-agent says "HeadlessChrome". MoMA and the British
+// Museum's past page were refusing THAT WORD, not us: loaded twice within
+// seconds, identical in every other respect, they answered 403 while it was
+// present and 200 with 26 and 4 exhibition links once it was gone. Two venues
+// sat written off as unreachable for days over it.
+//
+// This had been tested before and recorded as "stay silent, let the site
+// decide". It was not that. It stopped INVENTING a user-agent and let the true
+// one through — which still announces. A user-agent that simply does not
+// mention it had never been tried. Name a test by what the code does.
+//
+// quietUserAgent() is the exception the paragraph above allows, and meets its
+// condition exactly: the string is the running browser's own, read from the
+// browser at run time, with one word removed. Platform and version stay true
+// and go on agreeing with the client hints, so nothing contradicts anything —
+// which is what made the old hard-coded line detectable.
+//
+// It does NOT get us into the Morgan: that venue refused Chromium and Chrome,
+// hidden and on screen, with the word gone and with a human clicking the
+// challenge, while opening instantly in an ordinary browser. It detects
+// automation itself. Do not re-probe it — see probe_morgan.js.
+async function quietUserAgent(browser) {
+  const context = await browser.newContext();
+  try {
+    const page = await context.newPage();
+    const real = await page.evaluate(() => navigator.userAgent);
+    return real.replace(/Headless/gi, '');
+  } finally {
+    await context.close().catch(() => {});
+  }
+}
 
 // Resource types Chromium may request that contribute nothing to text scraping.
 const SKIP_RESOURCE_TYPES = new Set(['image', 'media', 'font']);
@@ -4640,6 +4674,10 @@ async function main() {
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 
+  // Read once from the browser we just launched, then shared by every worker.
+  const QUIET_UA = await quietUserAgent(browser);
+  log(`Identifying as: ${QUIET_UA}`);
+
   const summary = {};
   const netTotals = { fulfilled: 0, skipped: 0, failed: 0 };
 
@@ -4676,10 +4714,11 @@ async function main() {
   let next = 0;
 
   async function worker(n) {
-    // No userAgent override — see the note where USER_AGENT used to be defined.
-    // Chromium sends its own, which is true and agrees with its client hints.
+    // The browser's own user-agent with the word "Headless" removed — derived
+    // at run time, never typed. See quietUserAgent() and the note above it.
     const context = await browser.newContext({
       viewport: { width: 1280, height: 800 },
+      userAgent: QUIET_UA,
     });
     // The bridge exists ONLY because Chromium cannot use this container's agent
     // proxy (see NETWORK NOTE at top of file). Where there is no proxy — her

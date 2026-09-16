@@ -285,6 +285,27 @@ of `sweep_prototype.js`. A typed literal goes stale on the next Chromium update
 and starts contradicting the browser it claims to be. That is the failure that
 note was written about.
 
+**THE FIX WORKS ONLY WHERE CHROMIUM DOES ITS OWN FETCHING — 16 Sep.** Wired
+into the sweep (`quietUserAgent()`) and run in the container against moma, brit,
+met and artic: **all four still 403**, with the log confirming the user-agent
+went out as plain `Chrome/141`. The container answers requests through the
+network bridge, so Node makes every connection and the connection fingerprint is
+Node's, not a browser's — the second consequence the NETWORK NOTE already lists.
+(Its address may also simply be known.) `brit`'s current page is the exception
+and loads in both places, because it was never blocked.
+
+**So these four are HERS, and the split stays two-way:**
+
+| Route | Venues |
+|---|---|
+| **Container** | the 16 it already sweeps |
+| **Her machine** | `met` `artic` `moma` `brit` |
+| **By hand** | `morgan` |
+
+Chat Claude is no longer needed for anything. **Do not chase the container's
+block** — it is the proxy the environment requires, and IR-13 and the raw-egress
+rule both stand.
+
 **THE MORGAN IS GENUINELY BLOCKED — settled 16 Sep, do not re-probe.**
 `scraper/probe_morgan.js` tried all four combinations: Chromium and Chrome,
 hidden and on screen, every one with the word removed, and the on-screen ones

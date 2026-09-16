@@ -1,0 +1,118 @@
+[2026-09-16T02:54:50.983Z] Cat Watch Sweep Prototype — starting
+[2026-09-16T02:54:50.983Z] Lookback floor: 2024-07-01
+[2026-09-16T02:54:50.984Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-16_125450
+[2026-09-16T02:54:50.984Z] Venues this run: met, artic, moma, brit
+[2026-09-16T02:54:50.984Z] Proxy: http://127.0.0.1:34435
+[2026-09-16T02:54:50.985Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-16T02:54:51.748Z] Identifying as: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+[2026-09-16T02:54:51.748Z] Running 4 venue(s) 4 at a time (one page at a time within each venue)
+[2026-09-16T02:54:51.873Z] [met] 
+[2026-09-16T02:54:51.873Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-16T02:54:51.873Z] [met]   MET — The Metropolitan Museum of Art
+[2026-09-16T02:54:51.873Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-16T02:54:51.873Z] [met]   Fetching current/upcoming: https://www.metmuseum.org/exhibitions
+[2026-09-16T02:54:51.876Z] [artic] 
+[2026-09-16T02:54:51.876Z] [artic] ────────────────────────────────────────────────────────────
+[2026-09-16T02:54:51.876Z] [artic]   ARTIC — Art Institute of Chicago
+[2026-09-16T02:54:51.876Z] [artic] ────────────────────────────────────────────────────────────
+[2026-09-16T02:54:51.876Z] [artic]   Fetching current: https://www.artic.edu/exhibitions
+[2026-09-16T02:54:51.885Z] [moma] 
+[2026-09-16T02:54:51.885Z] [moma] ────────────────────────────────────────────────────────────
+[2026-09-16T02:54:51.885Z] [moma]   MOMA — Museum of Modern Art, New York
+[2026-09-16T02:54:51.885Z] [moma] ────────────────────────────────────────────────────────────
+[2026-09-16T02:54:51.885Z] [moma]   Fetching current/upcoming: https://www.moma.org/calendar/exhibitions
+[2026-09-16T02:54:51.892Z] [brit] 
+[2026-09-16T02:54:51.892Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-16T02:54:51.892Z] [brit]   BRIT — British Museum, London
+[2026-09-16T02:54:51.892Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-16T02:54:51.892Z] [brit]   Fetching current/upcoming: https://www.britishmuseum.org/exhibitions-events
+[2026-09-16T02:54:52.519Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions
+[2026-09-16T02:54:52.520Z] [moma]   FAILED current/upcoming — BLOCKED_HTTP_403
+[2026-09-16T02:54:52.520Z] [moma]   Fetching past: https://www.moma.org/calendar/exhibitions/history
+[2026-09-16T02:54:52.551Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions
+[2026-09-16T02:54:52.551Z] [artic]   FAILED current — BLOCKED_HTTP_403
+[2026-09-16T02:54:52.551Z] [artic]   Fetching upcoming: https://www.artic.edu/exhibitions/upcoming
+[2026-09-16T02:54:53.100Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/history
+[2026-09-16T02:54:53.101Z] [moma]   FAILED past — BLOCKED_HTTP_403
+[2026-09-16T02:54:53.101Z] [moma]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-16T02:54:53.101Z] [moma]   → 0 exhibitions, 0 with curatorial text → moma.csv
+[2026-09-16T02:54:53.175Z] [met]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions
+[2026-09-16T02:54:53.175Z] [met]   FAILED current/upcoming — BLOCKED_HTTP_429
+[2026-09-16T02:54:53.175Z] [met]   Fetching past: https://www.metmuseum.org/exhibitions/past
+[2026-09-16T02:54:53.217Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/upcoming
+[2026-09-16T02:54:53.217Z] [artic]   FAILED upcoming — BLOCKED_HTTP_403
+[2026-09-16T02:54:53.217Z] [artic]   Fetching past 2026: https://www.artic.edu/exhibitions/history?year=2026
+[2026-09-16T02:54:53.462Z] [met]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions/past
+[2026-09-16T02:54:53.462Z] [met]   FAILED past — BLOCKED_HTTP_429
+[2026-09-16T02:54:53.462Z] [met]   Fetching past 2025: https://www.metmuseum.org/exhibitions/past?year=2025
+[2026-09-16T02:54:53.856Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2026
+[2026-09-16T02:54:53.856Z] [artic]   FAILED past 2026 — BLOCKED_HTTP_403
+[2026-09-16T02:54:53.856Z] [artic]   Fetching past 2025: https://www.artic.edu/exhibitions/history?year=2025
+[2026-09-16T02:54:54.134Z] [met]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions/past?year=2025
+[2026-09-16T02:54:54.134Z] [met]   FAILED past 2025 — BLOCKED_HTTP_429
+[2026-09-16T02:54:54.134Z] [met]   Fetching past 2024: https://www.metmuseum.org/exhibitions/past?year=2024
+[2026-09-16T02:54:54.246Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2025
+[2026-09-16T02:54:54.246Z] [artic]   FAILED past 2025 — BLOCKED_HTTP_403
+[2026-09-16T02:54:54.246Z] [artic]   Fetching past 2024: https://www.artic.edu/exhibitions/history?year=2024
+[2026-09-16T02:54:54.495Z] [met]   BLOCKED (HTTP 429): https://www.metmuseum.org/exhibitions/past?year=2024
+[2026-09-16T02:54:54.495Z] [met]   FAILED past 2024 — BLOCKED_HTTP_429
+[2026-09-16T02:54:54.495Z] [met]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-16T02:54:54.495Z] [met]   → 0 exhibitions, 0 with curatorial text → met.csv
+[2026-09-16T02:54:54.617Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2024
+[2026-09-16T02:54:54.617Z] [artic]   FAILED past 2024 — BLOCKED_HTTP_403
+[2026-09-16T02:54:54.617Z] [artic]   Fetching past 2023: https://www.artic.edu/exhibitions/history?year=2023
+[2026-09-16T02:54:55.315Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2023
+[2026-09-16T02:54:55.315Z] [artic]   FAILED past 2023 — BLOCKED_HTTP_403
+[2026-09-16T02:54:55.315Z] [artic]   Fetching past p2 2026: https://www.artic.edu/exhibitions/history?year=2026&page=2
+[2026-09-16T02:54:55.622Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2026&page=2
+[2026-09-16T02:54:55.622Z] [artic]   FAILED past p2 2026 — BLOCKED_HTTP_403
+[2026-09-16T02:54:55.622Z] [artic]   Fetching past p2 2025: https://www.artic.edu/exhibitions/history?year=2025&page=2
+[2026-09-16T02:54:56.103Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2025&page=2
+[2026-09-16T02:54:56.103Z] [artic]   FAILED past p2 2025 — BLOCKED_HTTP_403
+[2026-09-16T02:54:56.103Z] [artic]   Fetching past p2 2024: https://www.artic.edu/exhibitions/history?year=2024&page=2
+[2026-09-16T02:54:56.336Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2024&page=2
+[2026-09-16T02:54:56.336Z] [artic]   FAILED past p2 2024 — BLOCKED_HTTP_403
+[2026-09-16T02:54:56.336Z] [artic]   Fetching past p2 2023: https://www.artic.edu/exhibitions/history?year=2023&page=2
+[2026-09-16T02:54:56.577Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2023&page=2
+[2026-09-16T02:54:56.577Z] [artic]   FAILED past p2 2023 — BLOCKED_HTTP_403
+[2026-09-16T02:54:56.578Z] [artic]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-16T02:54:56.578Z] [artic]   → 0 exhibitions, 0 with curatorial text → artic.csv
+[2026-09-16T02:54:56.766Z] [brit]   current/upcoming: 1 links seen -> 1 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-16T02:54:56.766Z] [brit]   NO EXHIBITIONS current/upcoming: page loaded and was read, but nothing matched
+[2026-09-16T02:54:56.766Z] [brit]   Fetching past: https://www.britishmuseum.org/exhibitions-events/past-exhibitions
+[2026-09-16T02:54:57.294Z] [brit]   BLOCKED (HTTP 403): https://www.britishmuseum.org/exhibitions-events/past-exhibitions
+[2026-09-16T02:54:57.294Z] [brit]   FAILED past — BLOCKED_HTTP_403
+[2026-09-16T02:54:57.294Z] [brit]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-16T02:54:57.294Z] [brit]   → 0 exhibitions, 0 with curatorial text → brit.csv
+[2026-09-16T02:54:57.366Z] 
+[2026-09-16T02:54:57.366Z] ────────────────────────────────────────────────────────────
+[2026-09-16T02:54:57.366Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-16T02:54:57.366Z] ────────────────────────────────────────────────────────────
+[2026-09-16T02:54:57.366Z]   MOMA: 0 exhibitions | 0 with text | 2 page(s) blocked/empty
+[2026-09-16T02:54:57.366Z]   MET: 0 exhibitions | 0 with text | 4 page(s) blocked/empty
+[2026-09-16T02:54:57.366Z]   ARTIC: 0 exhibitions | 0 with text | 10 page(s) blocked/empty
+[2026-09-16T02:54:57.366Z]   BRIT: 0 exhibitions | 0 with text | 2 page(s) blocked/empty
+[2026-09-16T02:54:57.366Z] 
+[2026-09-16T02:54:57.366Z] ────────────────────────────────────────────────────────────
+[2026-09-16T02:54:57.366Z]   COVERAGE — every link accounted for
+[2026-09-16T02:54:57.366Z] ────────────────────────────────────────────────────────────
+[2026-09-16T02:54:57.366Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-16T02:54:57.366Z]   -----------------------------------------------------------------------------------------------
+[2026-09-16T02:54:57.366Z]   brit       current/upcoming                 1     1       0     0        0        0          0
+[2026-09-16T02:54:57.366Z] 
+[2026-09-16T02:54:57.366Z]   seen      = links matching the venue's selector on that page
+[2026-09-16T02:54:57.366Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-16T02:54:57.366Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-16T02:54:57.366Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-16T02:54:57.366Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-16T02:54:57.366Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-16T02:54:57.366Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-16T02:54:57.366Z] 
+[2026-09-16T02:54:57.366Z] Network bridge: 64 requests served, 22 skipped (image/media/font), 0 failed
+[2026-09-16T02:54:57.366Z] 
+[2026-09-16T02:54:57.367Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-16_125450
+[2026-09-16T02:54:57.367Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-16_125450/sweep.csv  (18 rows — met:4, artic:10, moma:2, brit:2)
+[2026-09-16T02:54:57.367Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-16_125450/log_2026-09-16_125450.txt
+[2026-09-16T02:54:57.367Z] Not yet in this run: ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, khm, dellav, tate-modern, tate-britain, wallace
+[2026-09-16T02:54:57.367Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-16T02:54:57.367Z] No de-duplication is applied — see passThrough.
