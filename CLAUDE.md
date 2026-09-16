@@ -124,8 +124,8 @@ Until it is, check it against the newest run directory before trusting it.
 | National Gallery, London | `ng` | 27 | yes — her count | yes | |
 | Rijksmuseum | `rijks` | 37 | yes — her count (36) | yes | 37 since; not chased, her call. *Asian Pavilion* pulled by the venue |
 | Acquavella | `acq` | 15 | yes — her count | yes | |
-| Art Institute of Chicago | `artic` | 65 | yes — her count + every row's type tag read | yes | **local only**; only EXHIBITION and TICKETED EXHIBITION kept, her ruling |
-| The Met | `met` | 106 | yes — row by row, 11 Sep | yes | **local only**; see `docs/venues.md` |
+| Art Institute of Chicago | `artic` | 65 | yes — her count + every row's type tag read | yes | was **local only**; **REFUSES HER MACHINE TOO since 16 Sep — every page 403, cause unknown.** Only EXHIBITION and TICKETED EXHIBITION kept, her ruling |
+| The Met | `met` | 106 | yes — row by row, 11 Sep | yes | **local only**; 107 on 16 Sep, unaffected by any of the day's changes; see `docs/venues.md` |
 | The Frick | `frick` | 10 | **yes — 12 Sep** | **no — page two never read** | past archive paginates; `paginate` wired 13 Sep but the venue answered 403 on every verifying attempt, so the ~10 rows on page two are still uncollected |
 | The Menil | `menil` | 32 | **yes — 12 Sep** | yes | past AND current archives paginate; 7 permanent galleries excluded, her ruling |
 | V&A | `va` | 6 | **yes — 12 Sep** | yes | Displays excluded, **her ruling for THIS venue only** |
@@ -139,9 +139,9 @@ Until it is, check it against the newest run directory before trusting it.
 | Uffizi | `uffizi` | 13 | **yes — 12 Sep** | yes | headlines kept as titles and undated rows kept, **both her rulings** |
 | Brera | `brera` | 8 | **yes — 12 Sep** | yes | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
 | Galleria Borghese | `borghese` | 8 | **yes — 12 Sep, her count** | yes | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
-| MoMA | `moma` | 0 | n/a | n/a | **refusal solved 16 Sep — the user-agent, not the venue.** Never yet swept for real |
-| British Museum | `brit` | 0 | n/a | n/a | **past page solved 16 Sep.** Its current page was never blocked and returns 1 link, which is navigation — a RECIPE problem, untouched |
-| Morgan | `morgan` | 0 | n/a | n/a | **genuinely blocked, settled 16 Sep.** Marker rows only |
+| MoMA | `moma` | 0 | n/a | n/a | Listing opens on `claude/quiet-user-agent`; **all 24 detail pages refuse, so no row has text.** Still no usable route |
+| British Museum | `brit` | 0 | n/a | n/a | Past page refuses. Current page opens and returns 1 link, which is navigation — a RECIPE problem, untouched |
+| Morgan | `morgan` | 0 | n/a | n/a | **Genuinely blocked, settled 16 Sep.** Marker rows only |
 
 **Read the two middle columns separately.** "Her substantive review" means she went
 through that venue against the live site herself and her findings are recorded.
@@ -258,53 +258,57 @@ never to have been blocked, the Met's archive turned out to be reachable, and
 | **Her laptop** | **2** | `met`, `artic` |
 | **No route** | **3** | `moma`, `brit`, `morgan` |
 
-### ONE WORD WAS THE BLOCK — 16 Sep 2026
+### The `Headless` user-agent — a real finding, NOT a solved venue — 16 Sep 2026
 
-**MoMA and the British Museum were never refusing us. They were refusing the
-word `Headless` in Chromium's own user-agent.** Proven on her machine with
-`scraper/probe_access.js`, which loads each listing page twice — once exactly as
-the sweep does, once with only that word removed — and changes nothing else:
+**What is proven.** Chromium's own user-agent says `HeadlessChrome`. Removing
+that one word — everything else identical, same machine, minutes apart — changes
+MoMA's answer on its **listing** page from 403 to 200 with 26 links, and it is
+the reason MoMA produced its **first 24 rows in the project's history**.
 
-| | Announcing headless | Word removed |
-|---|---|---|
-| `moma` | 403 | **200, 26 links** |
-| `brit` past | 403 | **200, 4 links** |
-| `brit` current | 200 | 200 (never blocked) |
-| `morgan` | 403 | 403 |
+**What is NOT proven, and was wrongly written here for part of 16 Sep: that this
+opened MoMA, the British Museum, the Met or the Art Institute.** It did not.
+The full sweep with the fix, from her machine, `run_2026-09-16_130316`:
 
-**Why this sat undiscovered:** an earlier test was recorded as "stay silent and
-let the site decide". It was not. It stopped *inventing* a user-agent and let
-Chromium send its own — which says `HeadlessChrome`. That is still announcing.
-A user-agent that simply does not mention it had never been tried. **"Silent"
-and "truthful" are not the same thing, and the label hid the gap for days.**
+| | With the word removed, real sweep |
+|---|---|
+| `moma` listing | **200 — 24 exhibitions** |
+| `moma` every one of 24 detail pages | **403 — 0 rows have any text, so all 24 are unusable** |
+| `moma` past | 403 |
+| `brit` past | 403 — though a single-page probe had got 200 and 4 links an hour earlier |
+| `brit` current | 200, 1 link, and that link is navigation — a recipe gap, not a block |
+| `artic` all 10 pages | 403 — it returned 65 rows on 13 Sep |
+| `met` | 107 rows, all with text — unaffected either way |
 
-**The fix must be DERIVED AT RUN TIME**, never typed in — take the browser's own
-user-agent and remove that one word. Everything else stays true and keeps
-agreeing with the client hints, which is the whole point of the note at the top
-of `sweep_prototype.js`. A typed literal goes stale on the next Chromium update
-and starts contradicting the browser it claims to be. That is the failure that
-note was written about.
+**In the container all four refuse with or without the fix.** One plausible
+reason is the network bridge: Node makes every connection there, so the
+connection is not a browser's whatever the user-agent says. **That is a
+hypothesis, not a finding.**
 
-**THE FIX WORKS ONLY WHERE CHROMIUM DOES ITS OWN FETCHING — 16 Sep.** Wired
-into the sweep (`quietUserAgent()`) and run in the container against moma, brit,
-met and artic: **all four still 403**, with the log confirming the user-agent
-went out as plain `Chrome/141`. The container answers requests through the
-network bridge, so Node makes every connection and the connection fingerprint is
-Node's, not a browser's — the second consequence the NETWORK NOTE already lists.
-(Its address may also simply be known.) `brit`'s current page is the exception
-and loads in both places, because it was never blocked.
+**WHY THESE VENUES REFUSE US IS UNKNOWN.** Rate limiting, volume, her address,
+detail pages being protected differently from listings — all guessed at during
+the session, none tested. **Do not repeat any of them as fact.** Telling them
+apart needs ONE cold request to a single MoMA detail page, not another sweep.
 
-**So these four are HERS, and the split stays two-way:**
+**How this went wrong, because the shape will recur.** A probe read one listing
+page, that was read as "the venue is open", the scraper was changed on the
+strength of it, and when the real sweep failed, causes were invented to explain
+it. **A probe that does not do what the sweep does — its volume, its detail
+pages, its concurrency — cannot tell you a venue works.** It can only tell you a
+venue refused one specific request.
+
+**The change is NOT on main.** It lives on **`claude/quiet-user-agent`** and
+`main` is reverted to the 13 Sep behaviour. It is worth keeping — the MoMA
+listing result is real — but it buys one listing page and costs a divergence
+from a signed-off scraper, so it merges only once a venue actually completes
+with it.
+
+**The routes are UNCHANGED from 12 Sep, and `artic` is now worse:**
 
 | Route | Venues |
 |---|---|
 | **Container** | the 16 it already sweeps |
-| **Her machine** | `met` `artic` `moma` `brit` |
-| **By hand** | `morgan` |
-
-Chat Claude is no longer needed for anything. **Do not chase the container's
-block** — it is the proxy the environment requires, and IR-13 and the raw-egress
-rule both stand.
+| **Her machine** | `met` — and `artic` until 16 Sep, when it began refusing her too |
+| **No route** | `moma` `brit` `morgan` |
 
 **THE MORGAN IS GENUINELY BLOCKED — settled 16 Sep, do not re-probe.**
 `scraper/probe_morgan.js` tried all four combinations: Chromium and Chrome,
@@ -1319,8 +1323,14 @@ Each entry cost a real failure. Before changing the area, read the line.
 - A listing that loads and yields nothing leaving no trace in the CSV.
 - Recording a test as "we stayed silent and let the site decide" when the code
   had only stopped overriding the user-agent, so Chromium went on announcing
-  `HeadlessChrome`. Two venues were written off as unreachable for days.
-  **Name a test by what the code does, never by what it was meant to achieve.**
+  `HeadlessChrome`. **Name a test by what the code does, never by what it was
+  meant to achieve.**
+- Reading one listing page in a probe, calling the venue open, changing the real
+  scraper on that basis, and then — when the real sweep failed — inventing
+  causes (rate limiting, volume, her address) with nothing in any log to support
+  them. Two hours and a day's usage allowance for one listing page. **A probe
+  answers the one request it made. Everything else is a guess and must be
+  written as one.**
 - `TITLE_NOISE` stripping EXHIBITION / DISPLAY / FREE case-insensitively — "How to Make
   an Exhibition" was stored as "How to Make an ".
 - `VENUE_ORDER` as a second hand-typed list of venue codes, so two finished recipes
@@ -1469,11 +1479,15 @@ Each entry cost a real failure. Before changing the area, read the line.
    run that scored 0 badges / 0 blanks / exactly 77 rows had two titles missing
    half their names.
 
-6. **Sweep `moma` and `brit` for real, with the user-agent fix** — never yet
-   done; both have only ever produced marker rows. Also retest `met` and `artic`
-   from the container in the same run: their refusals may be the same word, and
-   if they are, gathering collapses from three machines to one. `morgan` is
-   settled and stays a marker-row venue.
+6. **`artic` refuses her machine as of 16 Sep and that is the live problem** —
+   it is a signed-off 65-row venue with no route at all today. Diagnose it before
+   anything else here. `moma` and `brit` remain unreachable in any usable form;
+   `morgan` is settled and stays a marker-row venue.
+
+   **The rule this stage now runs under, after 16 Sep:** one request, then stop
+   and read it. No sweep to test a hypothesis, no probe that does less than the
+   sweep and is then read as if it did more. Anything not visible in a log is
+   a guess and is labelled one.
 7. **JSX work** — quarantine ("Never add this"), plus whatever steps 5–6 turn up.
 8. **Catalogue lookup tuning** — Haiku vs Sonnet, on known-tricky catalogues.
    Independent of everything above.
