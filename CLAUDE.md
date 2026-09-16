@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 13 Sep 2026
+**Last updated:** 16 Sep 2026
 
 Cassili collects art-exhibition catalogues. They go out of print fast once a show
 closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 21
@@ -139,7 +139,9 @@ Until it is, check it against the newest run directory before trusting it.
 | Uffizi | `uffizi` | 13 | **yes — 12 Sep** | yes | headlines kept as titles and undated rows kept, **both her rulings** |
 | Brera | `brera` | 8 | **yes — 12 Sep** | yes | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
 | Galleria Borghese | `borghese` | 8 | **yes — 12 Sep, her count** | yes | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
-| MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | n/a | n/a | refused; marker rows only |
+| MoMA | `moma` | 0 | n/a | n/a | **refusal solved 16 Sep — the user-agent, not the venue.** Never yet swept for real |
+| British Museum | `brit` | 0 | n/a | n/a | **past page solved 16 Sep.** Its current page was never blocked and returns 1 link, which is navigation — a RECIPE problem, untouched |
+| Morgan | `morgan` | 0 | n/a | n/a | **genuinely blocked, settled 16 Sep.** Marker rows only |
 
 **Read the two middle columns separately.** "Her substantive review" means she went
 through that venue against the live site herself and her findings are recorded.
@@ -248,13 +250,50 @@ permanent facts — in five days Borghese went down and came back, dellav turned
 never to have been blocked, the Met's archive turned out to be reachable, and
 `artic` went from "reliable" to refused.
 
-**Three routes, and the split is now settled — 12 Sep 2026:**
+**Three routes, 12 Sep 2026 — NOW PARTLY OVERTURNED, see the next section:**
 
 | Route | Count | Venues |
 |---|---|---|
 | **Claude scrapes** | **16** | `ng` `rijks` `acq` `louvre` `uffizi` `brera` `capo` `dellav` `khm` `frick` `menil` `wallace` `va` `tate-modern` `tate-britain` `borghese` |
 | **Her laptop** | **2** | `met`, `artic` |
-| **No route** | **3** | `moma`, `brit`, `morgan` — retested by her 12 Sep, still refused |
+| **No route** | **3** | `moma`, `brit`, `morgan` |
+
+### ONE WORD WAS THE BLOCK — 16 Sep 2026
+
+**MoMA and the British Museum were never refusing us. They were refusing the
+word `Headless` in Chromium's own user-agent.** Proven on her machine with
+`scraper/probe_access.js`, which loads each listing page twice — once exactly as
+the sweep does, once with only that word removed — and changes nothing else:
+
+| | Announcing headless | Word removed |
+|---|---|---|
+| `moma` | 403 | **200, 26 links** |
+| `brit` past | 403 | **200, 4 links** |
+| `brit` current | 200 | 200 (never blocked) |
+| `morgan` | 403 | 403 |
+
+**Why this sat undiscovered:** an earlier test was recorded as "stay silent and
+let the site decide". It was not. It stopped *inventing* a user-agent and let
+Chromium send its own — which says `HeadlessChrome`. That is still announcing.
+A user-agent that simply does not mention it had never been tried. **"Silent"
+and "truthful" are not the same thing, and the label hid the gap for days.**
+
+**The fix must be DERIVED AT RUN TIME**, never typed in — take the browser's own
+user-agent and remove that one word. Everything else stays true and keeps
+agreeing with the client hints, which is the whole point of the note at the top
+of `sweep_prototype.js`. A typed literal goes stale on the next Chromium update
+and starts contradicting the browser it claims to be. That is the failure that
+note was written about.
+
+**THE MORGAN IS GENUINELY BLOCKED — settled 16 Sep, do not re-probe.**
+`scraper/probe_morgan.js` tried all four combinations: Chromium and Chrome,
+hidden and on screen, every one with the word removed, and the on-screen ones
+held open for her to answer the challenge by hand. **All four refused (403,
+Cloudflare "Just a moment").** The same page opens instantly in her ordinary
+browser, so it is not her address or region — the venue detects that a script is
+driving the browser at all, which every automated route shares. **Her ruling:
+one small venue, she will inspect it by hand.** Chat Claude or an agentic
+browser remain the only routes and neither is required.
 
 **`capo` belongs to the container, and it is the first venue where the asymmetry
 runs THAT way.** Tested from both machines within minutes of each other on
@@ -610,6 +649,10 @@ impossible.
 - `scraper/date.test.js`, `compress.test.js` — fixtures. `npm test`, ~1 second.
 - `scraper/reach_probe.js` — **reachability only**; says nothing about usable rows.
 - `scraper/inspect_listing.js` — asks a listing page what link shapes it contains.
+- `scraper/probe_access.js` — loads a listing page twice, announcing headless and
+  not, changing nothing else. Answers "is the user-agent the block?"
+- `scraper/probe_morgan.js` — the Morgan's four combinations. **Already answered;
+  keep it as the record, do not re-run it.**
 - `scraper/data_probe.js` — **the only probe that asks the project's real question**:
   opens real exhibition pages and extracts title, dates and text. Two live limits:
   it lacks the engine's navigation filter, so listing pages can read as false
@@ -1253,6 +1296,10 @@ Each entry cost a real failure. Before changing the area, read the line.
   about the venue.
 - Measuring a scrolled page's height BEFORE waiting for the new cards.
 - A listing that loads and yields nothing leaving no trace in the CSV.
+- Recording a test as "we stayed silent and let the site decide" when the code
+  had only stopped overriding the user-agent, so Chromium went on announcing
+  `HeadlessChrome`. Two venues were written off as unreachable for days.
+  **Name a test by what the code does, never by what it was meant to achieve.**
 - `TITLE_NOISE` stripping EXHIBITION / DISPLAY / FREE case-insensitively — "How to Make
   an Exhibition" was stored as "How to Make an ".
 - `VENUE_ORDER` as a second hand-typed list of venue codes, so two finished recipes
@@ -1377,10 +1424,35 @@ Each entry cost a real failure. Before changing the area, read the line.
    several — the guide's "cost and batching are untested" line, now with a
    number against it.
 
-6. **Decide what to do about venues still unreachable** — `moma`, `brit`, `morgan`.
-   They contribute no exhibitions at all, only marker rows, so the 406 figure above
-   is unaffected by them. Every sweep re-tests them, so the day one starts answering
-   it shows up on the approval pile by itself.
+   **A QA PASS GOES IN BEFORE THE STITCH — her decision, 16 Sep.** Not after,
+   because a faulty venue file should be re-swept rather than carried through
+   compression and onto her approval pile. Two halves, and they are different
+   jobs:
+
+   - **Did each run finish and is it complete?** One correct answer, so a
+     script: per-venue row counts diffed against **that venue's previous run**,
+     empty summaries, blank dates, marker rows, format compliance. Not against
+     her signed-off counts — those are a snapshot of a date and exhibitions
+     legitimately come and go. The signal is a **drop**: the lookback floor is
+     fixed and past archives accumulate, so counts should generally rise.
+   - **Does this row look mangled?** Judgement, so a model — but it reads only
+     what the counts flag, never all 400 rows.
+
+   **The fix is always re-running the venue, never editing a CSV by hand.** A
+   hand-edited file cannot be reproduced by re-running and makes the next
+   sweep's comparison lie. Runs are for diagnosing the scraper, not for
+   patching output.
+
+   **It can flag; it can never clear.** The CSV cannot hold every defect —
+   artic's title damage was made of line breaks the CSV squashes away, and the
+   run that scored 0 badges / 0 blanks / exactly 77 rows had two titles missing
+   half their names.
+
+6. **Sweep `moma` and `brit` for real, with the user-agent fix** — never yet
+   done; both have only ever produced marker rows. Also retest `met` and `artic`
+   from the container in the same run: their refusals may be the same word, and
+   if they are, gathering collapses from three machines to one. `morgan` is
+   settled and stays a marker-row venue.
 7. **JSX work** — quarantine ("Never add this"), plus whatever steps 5–6 turn up.
 8. **Catalogue lookup tuning** — Haiku vs Sonnet, on known-tricky catalogues.
    Independent of everything above.
