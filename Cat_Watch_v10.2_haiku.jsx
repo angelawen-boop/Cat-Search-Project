@@ -324,6 +324,7 @@ export default function App(){
   const[proposals,setProposals]=useState(null); // null = not in refresh review; array = reviewing
   // Listing pages the sweep could not read. NOT proposals — see isMarkerRow().
   const[coverage,setCoverage]=useState([]);
+  const[tally,setTally]=useState(null);
   const[decisions,setDecisions]=useState({}); // proposal index -> "accept"|"reject"|"addnew"
   const[refreshDone,setRefreshDone]=useState(null); // {added,filled,changed} after applying
   const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
@@ -511,6 +512,12 @@ export default function App(){
     const props=[];
     const coverage=[];   // marker rows: listing pages that could not be read
     const parsed=[];
+    // COUNTS SHE CAN RECONCILE AGAINST THE FILE. A card total alone cannot be
+    // checked against anything: rows vanish for three innocent reasons — a
+    // marker row, a fold, an entry that already matches the ledger — and with
+    // 652 rows arriving as 319 cards there is no way to tell those apart from
+    // a row silently lost. Every row read is accounted for by one of these.
+    let silent=0;
 
     // ── PASS ONE: read the file. No comparison to anything yet. ──────────────
     // Split out because one stitched file now holds every machine's output, so
@@ -578,11 +585,21 @@ export default function App(){
       consider("endDate","End date",match.endDate,ed);
       consider("summary","Description",match.summary,summary);
       consider("exUrl","Exhibition link",match.exUrl,url);
-      if(!upd.length&&!choices) continue; // identical — nothing to propose
+      if(!upd.length&&!choices){ silent++; continue; }  // identical — nothing to propose
       const hasChange=upd.some(u=>u.kind==="change");
       props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].short,title,cand,matchId:match.id,upd,notes,line:p.line,choices});
     }
-    return {props,coverage};
+    const tally={
+      fileRows:  table.length-1,
+      markers:   coverage.length,
+      folded:    parsed.length-folded.length,
+      unusable:  props.filter(p=>p.type==="problem").length,
+      add:       props.filter(p=>p.type==="add").length,
+      fill:      props.filter(p=>p.type==="fill").length,
+      change:    props.filter(p=>p.type==="change").length,
+      silent,
+    };
+    return {props,coverage,tally};
   }
 
   function handleRefreshFile(e){
@@ -592,11 +609,11 @@ export default function App(){
       const res=analyzeProForma(String(reader.result||""));
       if(res.error){setError(res.error);return;}
       if(!res.props.length){
-        setCoverage(res.coverage||[]);
+        setCoverage(res.coverage||[]); setTally(res.tally||null);
         setError("Read the refresh file, but nothing new to propose \u2014 your ledger already matches it."+((res.coverage||[]).length?" ("+res.coverage.length+" listing page"+(res.coverage.length===1?"":"s")+" couldn\u2019t be read \u2014 see below.)":""));
         return;
       }
-      setError(null); setProposals(res.props); setCoverage(res.coverage||[]); setDecisions({});
+      setError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setDecisions({});
     };
     reader.readAsText(file); e.target.value="";
   }
@@ -657,7 +674,7 @@ export default function App(){
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqNoCat(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
-  function cancelRefresh(){ setProposals(null); setDecisions({}); setCoverage([]); }
+  function cancelRefresh(){ setProposals(null); setDecisions({}); setCoverage([]); setTally(null); }
   const pickSort=k=>{setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
   async function refreshVenues(ids){
@@ -1178,7 +1195,30 @@ export default function App(){
           <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
             <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
               <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>{proposals.length} proposed change{proposals.length===1?"":"s"} found</div>
-              <div style={{fontSize:11.5,color:C.soft,marginTop:3,lineHeight:1.5}}>Review each one below. Nothing changes in your ledger until you tap {"\u201c"}Go ahead and update the ledger{"\u201d"}.</div>
+              {/* THE COUNTS, AND WHY THEY EARN THEIR SPACE. A card total on its
+                  own cannot be checked against anything: rows leave the pile
+                  for three innocent reasons — a marker row, a fold, an entry
+                  that already matches — and 652 rows arriving as 319 cards is
+                  indistinguishable from 652 rows arriving as 319 cards with
+                  eleven quietly lost. The second line accounts for every row
+                  read, so the arithmetic either closes or it does not. */}
+              {tally&&(
+                <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.6}}>
+                  <div>
+                    <b style={{color:C.ink}}>{tally.add}</b> new
+                    {" \u00b7 "}<b style={{color:C.ink}}>{tally.fill}</b> filling a gap
+                    {" \u00b7 "}<b style={{color:C.ink}}>{tally.change}</b> changing something you have
+                    {tally.unusable>0&&<>{" \u00b7 "}<b style={{color:C.accent}}>{tally.unusable}</b> couldn{"\u2019"}t be filed</>}
+                  </div>
+                  <div style={{marginTop:2}}>
+                    From <b style={{color:C.ink}}>{tally.fileRows}</b> row{tally.fileRows===1?"":"s"} in the file
+                    {tally.markers>0&&<>{", "}{tally.markers} unreadable listing page{tally.markers===1?"":"s"}</>}
+                    {tally.folded>0&&<>{", "}{tally.folded} duplicate cop{tally.folded===1?"y":"ies"} combined</>}
+                    {tally.silent>0&&<>{", "}{tally.silent} already match{tally.silent===1?"es":""} your ledger</>}.
+                  </div>
+                </div>
+              )}
+              <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.5}}>Review each one below. Nothing changes in your ledger until you tap {"\u201c"}Go ahead and update the ledger{"\u201d"}.</div>
             </div>
             <div style={{overflow:"auto",padding:"12px 18px",flex:1}}>
               {/* TRIAGE FIRST, THEN THE ORDINARY WORK — her ruling, 13 Sep.
@@ -1235,9 +1275,13 @@ export default function App(){
                     </div>
                   );
                 }).filter(Boolean);
-                const band=(title,blurb,tone)=>(
+                // EVERY BAND CARRIES ITS OWN COUNT. Without one a band is an
+                // unbounded pile: there is no way to tell "two of these" from
+                // "eighty of these" before scrolling through them, and no way
+                // to check the bands add up to the total in the header.
+                const band=(title,blurb,tone,n)=>(
                   <div style={{marginBottom:6}}>
-                    <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:tone||C.soft,marginBottom:4,fontWeight:600}}>{title}</div>
+                    <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:tone||C.soft,marginBottom:4,fontWeight:600}}>{title}{n!==undefined&&" \u00b7 "+n}</div>
                     {blurb&&<div style={{fontSize:11.5,color:C.soft,lineHeight:1.55,marginBottom:8}}>{blurb}</div>}
                   </div>
                 );
@@ -1245,11 +1289,11 @@ export default function App(){
                 return(<>
                   {anyTriage>0&&(
                     <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
-                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Odd cases first</div>
+                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Odd cases first {"\u00b7"} {scrap.length+mergedOnly.length+mergedConf.length+confOnly.length+noLink.length}</div>
                       <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55,marginBottom:12}}>Everything that isn{"\u2019"}t a straightforward entry, grouped by what it needs from you {"\u2014"} nothing, then a look, then a decision. The ordinary entries follow underneath.</div>
 
                       {coverage.length>0&&(<>
-                        {band("1 \u00b7 Pages that couldn\u2019t be read \u00b7 nothing to do","The sweep tried these and was turned away. No exhibitions came from them, so nothing is missing that was ever offered.")}
+                        {band("1 \u00b7 Pages that couldn\u2019t be read \u00b7 nothing to do","The sweep tried these and was turned away. No exhibitions came from them, so nothing is missing that was ever offered.",undefined,coverage.length)}
                         {MUSEUMS.map(m=>{
                           const grp=coverage.filter(cv=>cv.venueId===m.id);
                           if(!grp.length)return null;
@@ -1268,26 +1312,26 @@ export default function App(){
                       </>)}
 
                       {scrap.length>0&&(<>
-                        {band("2 \u00b7 Unusable rows \u00b7 needs a redo","No venue code or no title, so these can\u2019t be filed at all. Fix them in the sweep file and feed it again.",C.accent)}
+                        {band("2 \u00b7 Unusable rows \u00b7 needs a redo","No venue code or no title, so these can\u2019t be filed at all. Fix them in the sweep file and feed it again.",C.accent,scrap.length)}
                         {byVenueBlocks(scrap)}
                       </>)}
 
                       {mergedOnly.length>0&&(<>
-                        {band("3 \u00b7 Combined for you \u00b7 nothing to decide","The file described these more than once and the copies agreed, so they were filled in from each other. You\u2019re seeing the finished result.")}
+                        {band("3 \u00b7 Combined for you \u00b7 nothing to decide","The file described these more than once and the copies agreed, so they were filled in from each other. You\u2019re seeing the finished result.",undefined,mergedOnly.length)}
                         {byVenueBlocks(mergedOnly)}
                       </>)}
 
                       {mergedConf.length>0&&(<>
-                        {band("4 \u00b7 Combined, but one field disagrees \u00b7 needs a choice","Same as above, except the copies didn\u2019t match on one field. Both values are shown; the longer one is picked for you.",C.accent)}
+                        {band("4 \u00b7 Combined, but one field disagrees \u00b7 needs a choice","Same as above, except the copies didn\u2019t match on one field. Both values are shown; the longer one is picked for you.",C.accent,mergedConf.length)}
                         {byVenueBlocks(mergedConf)}
                       </>)}
 
                       {confOnly.length>0&&(<>
-                        {band("5 \u00b7 Two different answers \u00b7 needs a choice","The file gave two values for the same field. Both are shown; the longer one is picked for you.",C.accent)}
+                        {band("5 \u00b7 Two different answers \u00b7 needs a choice","The file gave two values for the same field. Both are shown; the longer one is picked for you.",C.accent,confOnly.length)}
                         {byVenueBlocks(confOnly)}
                       </>)}
                       {noLink.length>0&&(<>
-                        {band("6 \u00b7 No link to the exhibition \u00b7 usable, but worth a look","Everything else is here, so these can be accepted as they are and the arrow will open the venue\u2019s own listing. The missing link only costs later: it is what lets a future sweep recognise the same show, so these will keep arriving as new.")}
+                        {band("6 \u00b7 No link to the exhibition \u00b7 usable, but worth a look","Everything else is here, so these can be accepted as they are and the arrow will open the venue\u2019s own listing. The missing link only costs later: it is what lets a future sweep recognise the same show, so these will keep arriving as new.",undefined,noLink.length)}
                         {byVenueBlocks(noLink)}
                       </>)}
                     </div>
@@ -1298,7 +1342,7 @@ export default function App(){
                       reads as a gap, not as a change of subject. */}
                   {ordinary.length>0&&(
                     <div style={{marginBottom:12}}>
-                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Normal cases</div>
+                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Normal cases {"\u00b7"} {ordinary.length}</div>
                       <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing. Accept or reject each.</div>
                     </div>
                   )}
