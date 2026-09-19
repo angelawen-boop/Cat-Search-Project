@@ -1397,10 +1397,13 @@ Each entry cost a real failure. Before changing the area, read the line.
      signed-off counts), `_142632` (a second container run), `_142846` (hers:
      met 106, artic 65, capo refused). Borghese was dead from every machine that
      day — `cultura.gov.it` unreachable, not a refusal.
-   - **Stitch** → `stitch_20260913_0442`, 652 rows, 402 distinct exhibitions and
-     206 duplicate copies, because every venue but met and artic was swept twice.
-     That duplication is deliberate: it is what gives the app's folding real
-     pairs to work on rather than authored ones.
+   - **Stitch** → `stitch_20260913_0442`, 652 rows: 36 markers + 616 exhibition
+     rows, which fold to **405 distinct exhibitions** with 211 second copies.
+     The doubling is TWO CONTAINER RUNS of the same 19 venues (`_020041` and
+     `_142632`) both going into the stitch; her machine contributed only
+     met/artic/capo. It was not needed for coverage. What it bought is real:
+     209 live duplicate pairs for the app's folding to work on rather than
+     authored ones, and **all 209 fold with no conflict at all**.
    - **Compress, 19 Sep** → `sweep_compressed.csv`. 616 exhibitions, 610 with a
      summary, 36 marker rows. 390 rows went to a model in five jobs; 262 were
      answered free. Length min 3, median 7, max 10 against her own median of 6.
