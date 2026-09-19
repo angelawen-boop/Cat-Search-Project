@@ -66,4 +66,65 @@ let r9=H.analyzeProForma(hdr
 check('marker ignored, two rows folded', r9.props.length===1 && r9.coverage.length===1 && r9.props[0].cand.summary==='Sienese painting, 1300-1350.', {p:r9.props.length,c:r9.coverage.length});
 check('  fold is disclosed in the notes', r9.props[0].notes.some(n=>n.includes('same exhibition')), r9.props[0].notes);
 
+// ── 10. QUARANTINE — "this should never have been an entry" ─────────────────
+// The third outcome. Reject remembers nothing and the row returns on every
+// future sweep; accept-then-dismiss puts junk in the ledger permanently.
+H.setRows([]);
+const junk=hdr+row(['louvre','Curator\u2019s tour','2025-01-01','2025-02-01','A tour.','https://louvre.fr/tour','']);
+let r10=H.analyzeProForma(junk);
+check('not quarantined -> an ordinary Add', r10.props.length===1 && r10.tally.blocked===0, r10.tally);
+const k10=H.ignoreKeyFor('louvre','https://louvre.fr/tour','Curator\u2019s tour');
+r10=H.analyzeProForma(junk,new Set([k10]));
+check('quarantined -> no card at all', r10.props.length===0, r10.props);
+check('  and it is COUNTED, never silent', r10.tally.blocked===1, r10.tally);
+
+// 11. the key is the URL where there is one, so a retitled row stays blocked.
+// A venue rewording its own listing must not undo her decision.
+r10=H.analyzeProForma(
+  hdr+row(['louvre','Curator tour (rescheduled)','2025-01-01','2025-02-01','A tour.','https://louvre.fr/tour','']),
+  new Set([k10]));
+check('same URL, new title -> still blocked', r10.props.length===0, r10.props);
+
+// 12. no URL falls back to venue + title, and does NOT block another venue.
+H.setRows([]);
+const kNoUrl=H.ignoreKeyFor('louvre','','Some Junk');
+let r12=H.analyzeProForma(
+  hdr+row(['louvre','Some Junk','','','','',''])
+     +row(['ng','Some Junk','','','','','']),
+  new Set([kNoUrl]));
+check('no-URL quarantine blocks its own venue only', r12.props.length===1 && r12.props[0].venueId==='ng', r12.props.map(p=>p.venueId));
+
+// 13. quarantine is keyed on the row, not on the ledger: an entry she already
+// tracks is untouched by it. Blocking is about what gets OFFERED.
+H.setRows([{id:'x',museumId:'louvre',title:'Curator\u2019s tour',startDate:'2025-01-01',endDate:'2025-02-01',summary:'A tour.',exUrl:'https://louvre.fr/tour',interested:true}]);
+r10=H.analyzeProForma(junk,new Set([k10]));
+check('a quarantined row proposes nothing even when the ledger has it', r10.props.length===0, r10.props);
+
+// ── 14. THE ROW IDENTITY. Every row read leaves by exactly one route, so this
+// either closes or something was lost. It is the only check on the card total.
+H.setRows([]);
+const mixed=hdr
+ +row(['louvre','[past page]','','','','https://louvre.fr/past','Refused. Marker row, not an exhibition.'])
+ +row(['louvre','A','2025-01-01','','','https://louvre.fr/a',''])
+ +row(['louvre','A','','2025-02-01','Blurb.','https://louvre.fr/a',''])
+ +row(['louvre','B','2025-03-01','2025-04-01','Another.','https://louvre.fr/b',''])
+ +row(['louvre','Junk','','','','https://louvre.fr/junk','']);
+const t=H.analyzeProForma(mixed,new Set([H.ignoreKeyFor('louvre','https://louvre.fr/junk','Junk')])).tally;
+const cards=t.add+t.fill+t.change+t.unusable;
+check('file rows = markers + never-add + folds + already-matching + cards',
+      t.fileRows===t.markers+t.blocked+t.folded+t.silent+cards,
+      {...t,cards});
+
+// 15. FRESHNESS IS TWO FACTS. A venue that answered with nothing but a marker
+// row was reached and refused, which is not the same as never being tried.
+H.setRows([]);
+const seenFile=hdr
+ +row(['moma','[past page]','','','','https://moma.org/past','Refused. Marker row, not an exhibition.'])
+ +row(['louvre','A','2025-01-01','2025-02-01','Blurb.','https://louvre.fr/a','']);
+const seen=H.analyzeProForma(seenFile).seen;
+check('a refused venue counts as ATTEMPTED', seen.attempted.includes('moma'), seen);
+check('  but NOT as having returned rows', !seen.returned.includes('moma'), seen);
+check('a venue with real rows counts as both', seen.attempted.includes('louvre')&&seen.returned.includes('louvre'), seen);
+check('a venue not in the file is in neither', !seen.attempted.includes('met')&&!seen.returned.includes('met'), seen);
+
 process.exit(fails?1:0);

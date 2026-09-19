@@ -291,6 +291,21 @@ export default function App(){
   const[debug,setDebug]=useState(null);
   const[showDebug,setShowDebug]=useState(false);
   const[lastRun,setLastRun]=useState(null);
+  // QUARANTINE — "this should never have been an entry". Not the same as
+  // dismiss, which is for a REAL exhibition she has looked at and passed on.
+  // Rejecting an Add card stores nothing, so junk returns on every future
+  // sweep forever; accepting then dismissing puts junk in the ledger
+  // permanently. This is the third outcome, and it is the only one that keeps
+  // the ledger clean. Entries: {key, venueId, title, at}.
+  const[ignored,setIgnored]=useState([]);
+  const[showIgnored,setShowIgnored]=useState(false);
+  // PER-VENUE FRESHNESS, and it has to be TWO facts. One global lastRun cannot
+  // say "artic was tried today and last gave us rows on 13 Sep", which is the
+  // line that decides whether a solo re-run is worth it. Shape:
+  //   { [venueId]: { attempted: iso, returned: iso|null } }
+  const[venueSeen,setVenueSeen]=useState({});
+  const[showFresh,setShowFresh]=useState(false);
+  const[seenInFile,setSeenInFile]=useState(null);
   const[lastSaved,setLastSaved]=useState(null);
   const[saveState,setSaveState]=useState("idle");
   const[firstTime,setFirstTime]=useState(false);
@@ -356,9 +371,11 @@ export default function App(){
   // LOADS (Import, Reset) are NOT unsaved work. Freshly loaded data matches its
   // source, so there's nothing to lose yet. The unsaved warning only appears once
   // you actually change something.
-  const loadLedger=useCallback((next,lr,info)=>{
+  const loadLedger=useCallback((next,lr,info,extra)=>{
     setRows(next);
     setLastRun(lr!==undefined?lr:null);
+    setIgnored((extra&&extra.ignored)||[]);
+    setVenueSeen((extra&&extra.venueSeen)||{});
     setFirstTime(false);
     setDirty(false);
     
@@ -374,7 +391,7 @@ export default function App(){
     if(driveState==="saving")return;
     setDriveState("saving");setError(null);
     const fname=LEDGER_PREFIX+localStamp()+".json";
-    const payload=JSON.stringify({rows,lastRun,savedAt:new Date().toISOString(),savedLocal:localReadable()});
+    const payload=JSON.stringify({rows,ignored,venueSeen,lastRun,savedAt:new Date().toISOString(),savedLocal:localReadable()});
     const prompt=
       "Using Google Drive, create a NEW file named \""+fname+"\" whose entire text content is exactly this JSON:\n"+
       payload+"\n"+
@@ -390,9 +407,18 @@ export default function App(){
       setError("Save to Drive FAILED \u2014 your recent changes are NOT backed up. Try again, or use Export ledger to keep a local copy right now.");
       setDebug("Save to Drive FAILED.\n"+r.detail);
     }
-  },[rows,lastRun,driveState]);
+  },[rows,ignored,venueSeen,lastRun,driveState]);
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
   const clearFilters=()=>{setVenueF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqNoCat(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setSearch("");setShowSearch(false);};
+
+  // WHAT A QUARANTINE REMEMBERS. The URL where there is one, because that is
+  // the only key that cannot be wrong; venue + title where there is not,
+  // accepting that a venue reusing a title would suppress the wrong row. The
+  // cost of that is bounded and visible — the list is on screen and every
+  // entry can be put back — whereas keying junk loosely and getting it wrong
+  // silently is not.
+  const ignoreKeyFor=(venueId,url,title)=>
+    venueId+"|"+(url?normalizeUrlKey(url):"t:"+normalizeTitle(title));
 
   // Conservative duplicate matching for incoming refresh results.
   const normalizeTitle = v => String(v||"")
@@ -502,7 +528,7 @@ export default function App(){
     return out;
   }
 
-  function analyzeProForma(text){
+  function analyzeProForma(text,ignoredKeys){
     const table=csvParse(text);
     if(!table.length) return {error:"That file was empty."};
     const header=table[0].map(h=>String(h).trim().toLowerCase());
@@ -512,12 +538,17 @@ export default function App(){
     const props=[];
     const coverage=[];   // marker rows: listing pages that could not be read
     const parsed=[];
+    // WHICH VENUES THIS FILE TOUCHED, and whether they gave anything. Two
+    // different facts: a venue can be in the sweep and hand back nothing but
+    // marker rows, which is a refusal, not an absence. Read off the FILE, not
+    // off her decisions — a row she rejects was still collected.
+    const attempted=new Set(), returned=new Set();
     // COUNTS SHE CAN RECONCILE AGAINST THE FILE. A card total alone cannot be
     // checked against anything: rows vanish for three innocent reasons — a
     // marker row, a fold, an entry that already matches the ledger — and with
     // 652 rows arriving as 319 cards there is no way to tell those apart from
     // a row silently lost. Every row read is accounted for by one of these.
-    let silent=0;
+    let silent=0, blocked=0;
 
     // ── PASS ONE: read the file. No comparison to anything yet. ──────────────
     // Split out because one stitched file now holds every machine's output, so
@@ -532,10 +563,12 @@ export default function App(){
       // A LISTING PAGE THAT COULD NOT BE READ IS NOT A PROPOSAL. It goes to the
       // coverage panel, where "we tried and were refused" is what it actually
       // says — rather than becoming an exhibition she rejects on every sweep.
+      if(KNOWN_VENUES.has(vc)) attempted.add(vc);
       if(isMarkerRow(rowNote)){
         coverage.push({venueId:KNOWN_VENUES.has(vc)?vc:null,venueShort:KNOWN_VENUES.has(vc)?MU[vc].short:(vc||"(blank)"),what:title||"(a listing page)",why:rowNote,url:get(r,"url"),line});
         continue;
       }
+      if(KNOWN_VENUES.has(vc)&&title) returned.add(vc);
 
       const notes=[];
       if(!vc||!KNOWN_VENUES.has(vc)){ props.push({type:"problem",venueId:null,venueShort:vc||"(blank)",title:title||"(no title)",problem:"Venue code "+(vc?("\u201c"+vc+"\u201d"):"(blank)")+" isn't a known venue \u2014 this row can't be filed.",notes:[],line}); continue; }
@@ -544,6 +577,10 @@ export default function App(){
       if(sd&&!isValidYMD(sd)){notes.push("Start date \u201c"+sd+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");sd="";}
       if(ed&&!isValidYMD(ed)){notes.push("End date \u201c"+ed+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");ed="";}
       if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
+      // QUARANTINED — she has already said this should never be an entry.
+      // Dropped here, before anything else looks at it, so it cannot fold with
+      // a real row or reach the ledger comparison. Counted, never silent.
+      if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
       parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,
                    rowNotes:rowNote?["Sweeper note: "+rowNote]:[],parseNotes:notes,line});
     }
@@ -598,22 +635,24 @@ export default function App(){
       fill:      props.filter(p=>p.type==="fill").length,
       change:    props.filter(p=>p.type==="change").length,
       silent,
+      blocked,
     };
-    return {props,coverage,tally};
+    return {props,coverage,tally,
+            seen:{attempted:[...attempted],returned:[...returned]}};
   }
 
   function handleRefreshFile(e){
     const file=e.target.files[0]; if(!file)return;
     const reader=new FileReader();
     reader.onload=()=>{
-      const res=analyzeProForma(String(reader.result||""));
+      const res=analyzeProForma(String(reader.result||""),new Set(ignored.map(x=>x.key)));
       if(res.error){setError(res.error);return;}
       if(!res.props.length){
-        setCoverage(res.coverage||[]); setTally(res.tally||null);
+        setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null);
         setError("Read the refresh file, but nothing new to propose \u2014 your ledger already matches it."+((res.coverage||[]).length?" ("+res.coverage.length+" listing page"+(res.coverage.length===1?"":"s")+" couldn\u2019t be read \u2014 see below.)":""));
         return;
       }
-      setError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setDecisions({});
+      setError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions({});
     };
     reader.readAsText(file); e.target.value="";
   }
@@ -651,11 +690,17 @@ export default function App(){
     const byId=new Map(rows.map(r=>[r.id,r]));
     const now=new Date().toISOString();
     const touched=[];
+    const newlyIgnored=[];
     let added=0,filled=0,changed=0;
     proposals.forEach((p,i)=>{
       const dec=decisions[i]||{};
       if(p.type==="problem")return;
       if(p.type==="add"){
+        if(dec.mode==="never"){
+          const c=p.cand;
+          newlyIgnored.push({key:ignoreKeyFor(c.museumId,c.exUrl,c.title),venueId:c.museumId,title:c.title,at:now});
+          return;
+        }
         if(dec.mode!=="accept")return;
         const nrow=makeLedgerRow(withChoices(p.cand,dec),now); let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; return;
       }
@@ -667,14 +712,30 @@ export default function App(){
       p.upd.forEach((u,j)=>{ if((dec.fields||{})[j]==="accept"){ patch[u.field]=u.newVal; if(u.kind==="fill")filled++; else changed++; hit=true; } });
       if(hit){ patch.editedAt=now; byId.set(p.matchId,patch); touched.push(p.matchId); }
     });
+    // FRESHNESS IS A FACT ABOUT THE FILE, NOT ABOUT HER DECISIONS. A row she
+    // rejected was still collected, so the venue was still reached. Stamped
+    // here rather than at import because this is the moment the ledger changes
+    // and gets saved; cancelling the review should leave no trace.
+    if(seenInFile){
+      const vs={...venueSeen};
+      for(const v of seenInFile.attempted){
+        const prev=vs[v]||{};
+        vs[v]={attempted:now,returned:seenInFile.returned.includes(v)?now:(prev.returned||null)};
+      }
+      setVenueSeen(vs);
+    }
+    if(newlyIgnored.length){
+      const have=new Set(ignored.map(x=>x.key));
+      setIgnored([...ignored,...newlyIgnored.filter(x=>!have.has(x.key))]);
+    }
     commit(Array.from(byId.values()),new Date().toISOString());
-    setProposals(null); setDecisions({}); setRefreshDone({added,filled,changed});
+    setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length});
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
     setVenueF(new Set()); setTimeF(new Set()); setWatchedF(false);
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqNoCat(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
-  function cancelRefresh(){ setProposals(null); setDecisions({}); setCoverage([]); setTally(null); }
+  function cancelRefresh(){ setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   const pickSort=k=>{setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
   async function refreshVenues(ids){
@@ -818,7 +879,7 @@ export default function App(){
   const toggleWatch=id=>commit(rows.map(r=>r.id===id?{...r,watching:!r.watching}:r));
   const setAcq=(id,v)=>commit(rows.map(r=>r.id===id?{...r,acquiring:r.acquiring===v?null:v}:r));
 
-  function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);if(d&&Array.isArray(d.rows)){loadLedger(d.rows.map(r=>({...r,watching:r.watching||false})),d.lastRun||null,"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.");setDebug("Imported "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");}else{setError("That file didn't contain a ledger (no entries found).");}}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");}};reader.readAsText(file);e.target.value="";}
+  function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);if(d&&Array.isArray(d.rows)){loadLedger(d.rows.map(r=>({...r,watching:r.watching||false})),d.lastRun||null,"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",{ignored:Array.isArray(d.ignored)?d.ignored:[],venueSeen:(d.venueSeen&&typeof d.venueSeen==="object")?d.venueSeen:{}});setDebug("Imported "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");}else{setError("That file didn't contain a ledger (no entries found).");}}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");}};reader.readAsText(file);e.target.value="";}
 
   // Confirm-before-replace: Import and Reset can wipe the screen in one tap, so
   // they ask first WHENEVER there is unsaved work showing.
@@ -835,7 +896,7 @@ export default function App(){
 
   function handleExport(){
     try{
-      const data=JSON.stringify({rows,lastRun,exportedAt:new Date().toISOString(),exportedLocal:localReadable()},null,2);
+      const data=JSON.stringify({rows,ignored,venueSeen,lastRun,exportedAt:new Date().toISOString(),exportedLocal:localReadable()},null,2);
       const blob=new Blob([data],{type:"application/json"});
       const url=URL.createObjectURL(blob);
       const stamp=localStamp();
@@ -952,9 +1013,20 @@ export default function App(){
 
         {p.notes&&p.notes.length>0&&<div style={{marginTop:6,fontSize:10.5,color:C.soft,lineHeight:1.5,borderTop:"1px dotted "+C.rule,paddingTop:5}}>{p.notes.map((n,j)=><div key={j}>{"\u00b7 "}{n}</div>)}</div>}
 
-        {p.type==="add"&&<div style={{marginTop:8,display:"flex",gap:6}}>
+        {/* THREE OUTCOMES, AND THE THIRD IS NOT A STRONGER REJECT. Reject
+            means "not now" and remembers nothing, so the row returns on every
+            future sweep. Never add this means the row should not be an entry
+            at all — a talk filed under an exhibitions address, a duplicate that
+            could not fold, a dead link. It is NOT for an exhibition she simply
+            is not interested in: that one is accepted and then dismissed, and
+            dismiss is not a rubbish chute. */}
+        {p.type==="add"&&<div style={{marginTop:8,display:"flex",gap:6,flexWrap:"wrap"}}>
           <button onClick={()=>setCardMode(i,"accept")} style={decBtn(dec.mode==="accept","#2D6B5A")}>{dec.mode==="accept"?"\u2713 ":""}Add new entry</button>
           <button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject","#8A6D3B")}>{dec.mode==="reject"?"\u2713 ":""}Reject</button>
+          <button onClick={()=>setCardMode(i,"never")} style={decBtn(dec.mode==="never","#7A4A4A")}>{dec.mode==="never"?"\u2713 ":""}{"Never add this"}</button>
+        </div>}
+        {p.type==="add"&&dec.mode==="never"&&<div style={{marginTop:5,fontSize:10.5,color:C.soft,lineHeight:1.45}}>
+          {"Won\u2019t be offered again on any future sweep. It won\u2019t enter your ledger. You can undo this from \u201cNever added\u201d at the top."}
         </div>}
 
         {p.type==="change"&&<div style={{marginTop:8}}>
@@ -1008,7 +1080,7 @@ export default function App(){
         {savedText&&<div style={{marginTop:6,fontSize:11,color:savedCol,fontWeight:savedWeight}}>{savedText}</div>}
         {showUnsavedBanner&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:"#D8EAE4",border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:"#1F4C40",lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u21BB"}</span>
-          <span>{"Refresh applied \u2014 "+refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated. Not saved yet \u2014 tap \u201cExport / Save\u201d now."}</span>
+          <span>{"Refresh applied \u2014 "+refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated"+(refreshDone.never?", "+refreshDone.never+" never to be offered again":"")+". Not saved yet \u2014 tap \u201cExport / Save\u201d now."}</span>
         </div>}
         {showUnsavedBanner&&!refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:"#F7E4C4",border:"2px solid #B5791A",borderRadius:5,fontSize:12.5,fontWeight:700,color:"#6B4A1E",lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u26A0"}</span>
@@ -1017,7 +1089,51 @@ export default function App(){
         {busy&&prog.total>0&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
         {error&&<div style={{marginTop:8,padding:"7px 11px",background:TIERS.urgent.wash,border:"1px solid "+TIERS.urgent.ink,borderRadius:4,fontSize:11.5,color:"#6B2E2E"}}>{error}</div>}
         {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>{showDebug&&<pre style={{marginTop:4,padding:7,background:"#DDD8D0",border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>}</div>}
-        {hasLedger&&<div style={{marginTop:6,fontSize:10.5,color:C.soft}}>Last refreshed: {fmtRefresh(lastRun)}</div>}
+        {hasLedger&&<div style={{marginTop:6,fontSize:10.5,color:C.soft,display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}>
+          <span>Last refreshed: {fmtRefresh(lastRun)}</span>
+          {/* PER-VENUE FRESHNESS lives here because this is where she already
+              looks for "when was this last touched", next to the save state.
+              Collapsed by default: 21 venues is a wall, and the question is
+              occasional. */}
+          {Object.keys(venueSeen).length>0&&<button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide venues":"By venue"}</button>}
+          {ignored.length>0&&<button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide never-added":ignored.length+" never added"}</button>}
+        </div>}
+
+        {hasLedger&&showFresh&&<div style={{marginTop:6,padding:"8px 10px",background:"#DDD8D0",border:"1px solid "+C.rule,borderRadius:4}}>
+          <div style={{fontSize:10,color:C.soft,marginBottom:6,lineHeight:1.5}}>
+            {"When each venue was last swept, and when it last actually gave us exhibitions. A venue tried recently but with no rows since an older date is being refused \u2014 worth a solo re-run."}
+          </div>
+          {MUSEUMS.map(m=>{
+            const v=venueSeen[m.id]; if(!v)return null;
+            const stale=v.returned&&v.attempted&&v.returned!==v.attempted;
+            return(
+              <div key={m.id} style={{display:"flex",gap:8,fontSize:10.5,color:C.soft,padding:"2px 0",alignItems:"baseline"}}>
+                <span style={{minWidth:130,color:C.ink}}>{m.short}</span>
+                <span style={{minWidth:150}}>tried {fmtRefresh(v.attempted)}</span>
+                <span style={{color:v.returned?(stale?TIERS.urgent.ink:C.soft):TIERS.urgent.ink,fontWeight:stale||!v.returned?600:400}}>
+                  {v.returned?("rows "+fmtRefresh(v.returned)):"never returned any rows"}
+                </span>
+              </div>
+            );
+          })}
+          {MUSEUMS.filter(m=>!venueSeen[m.id]).length>0&&
+            <div style={{fontSize:10.5,color:C.soft,marginTop:6,paddingTop:5,borderTop:"1px solid "+C.rule}}>
+              {"Not in any sweep yet: "+MUSEUMS.filter(m=>!venueSeen[m.id]).map(m=>m.short).join(", ")+"."}
+            </div>}
+        </div>}
+
+        {hasLedger&&showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:"#DDD8D0",border:"1px solid "+C.rule,borderRadius:4}}>
+          <div style={{fontSize:10,color:C.soft,marginBottom:6,lineHeight:1.5}}>
+            {"Rows you said should never be entries. They are skipped on every import. Putting one back only makes it offer itself again on the next sweep \u2014 it does not add anything to your ledger."}
+          </div>
+          {ignored.map(x=>(
+            <div key={x.key} style={{display:"flex",gap:8,fontSize:10.5,color:C.soft,padding:"3px 0",alignItems:"baseline"}}>
+              <span style={{minWidth:130,color:C.ink}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
+              <span style={{flex:1}}>{x.title||"(no title)"}</span>
+              <button onClick={()=>{setIgnored(ignored.filter(y=>y.key!==x.key));setDirty(true);}} style={{background:"none",border:"none",color:C.action,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>Put back</button>
+            </div>
+          ))}
+        </div>}
         <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",alignItems:"center"}}>
           <span><b style={{color:C.ink}}>{counts.total}</b> Tracked</span>
           <span><b style={{color:C.ink}}>{counts.wanted}</b> Wanted</span>
@@ -1213,6 +1329,7 @@ export default function App(){
                   <div style={{marginTop:2}}>
                     From <b style={{color:C.ink}}>{tally.fileRows}</b> row{tally.fileRows===1?"":"s"} in the file
                     {tally.markers>0&&<>{", "}{tally.markers} unreadable listing page{tally.markers===1?"":"s"}</>}
+                    {tally.blocked>0&&<>{", "}{tally.blocked} you{"\u2019"}d said never to add</>}
                     {tally.folded>0&&<>{", "}{tally.folded} duplicate cop{tally.folded===1?"y":"ies"} combined</>}
                     {tally.silent>0&&<>{", "}{tally.silent} already match{tally.silent===1?"es":""} your ledger</>}.
                   </div>
