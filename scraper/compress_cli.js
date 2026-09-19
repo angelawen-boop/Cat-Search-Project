@@ -223,8 +223,54 @@ function plan(dir, { recompress = false } = {}) {
     say(`  travelling  ${String(paired).padStart(2)}   same exhibition in another city — asked once, answer used for both`);
     say('');
   }
-  say(`${asked.length} rows need a summary. Written to:`);
-  say(`  ${path.join(runPath, PENDING_JSON)}`);
+  // ── WRITE THE JOB FILES ────────────────────────────────────────────────────
+  //
+  // Measured 19 Sep, first real compression: ONE subagent cannot take 296 rows.
+  // It has to hold every row's raw text AND write every answer, and the input
+  // alone was ~98,000 tokens. So the work is split here, in code, because how
+  // many chunks N rows need is arithmetic — her rule: one correct answer
+  // derivable from the inputs belongs in a script, not in a session's head.
+  //
+  // THE FILE SHAPE IS NOT COSMETIC, IT IS MOST OF THE COST. The first chunk was
+  // handed pretty-printed JSON carrying four fields the model never reads, plus
+  // a separate examples file: 173KB, 178k tokens. The same 75 rows flattened to
+  // one compact line each, examples folded in, came to 112KB and 100k tokens —
+  // 44% less for identical work. Chunks 3 and 4 then cost 98k and 97k, so it is
+  // predictable rather than lucky.
+  //
+  // Each job file is self-contained: examples first, then one JSON object per
+  // line. A subagent reads exactly one file and answers.
+  const CHUNK_ROWS = 75;          // ~100k tokens per job, measured three times
+  const examples = buildExamples()
+    .map(p => `RAW: ${p.raw}\n  →  ${p.summary}\n`).join('\n');
+  const jobs = [];
+  const writeJob = (name, rows) => {
+    const lines = [
+      '=== EXAMPLES: raw curatorial text, and the summary that was accepted ===',
+      '', examples, '',
+      '=== ROWS: one JSON object per line ===', '',
+    ];
+    for (const r of rows) {
+      const row = { i: r.index, title: r.title, raw: String(r.raw || '').split(/\s+/).join(' ') };
+      // previousSummary only matters to Prompt B, and it is dead weight in A.
+      if (r.action === 'review') row.previousSummary = r.previousSummary;
+      if (r.alsoAt) row.alsoAt = r.alsoAt;
+      lines.push(JSON.stringify(row));
+    }
+    const file = path.join(runPath, name);
+    fs.writeFileSync(file, lines.join('\n'), 'utf8');
+    jobs.push({ name, rows: rows.length, kb: Math.round(fs.statSync(file).size / 1024) });
+  };
+
+  const reviewRows = asked.filter(p => p.action === 'review');
+  const freshRows  = asked.filter(p => p.action !== 'review');
+  if (reviewRows.length) writeJob('job_haiku.txt', reviewRows);
+  for (let i = 0; i < freshRows.length; i += CHUNK_ROWS) {
+    writeJob(`job_sonnet_${i / CHUNK_ROWS + 1}.txt`, freshRows.slice(i, i + CHUNK_ROWS));
+  }
+
+  say(`${asked.length} rows need a summary, split into ${jobs.length} job${jobs.length === 1 ? '' : 's'}:`);
+  for (const j of jobs) say(`  ${j.name.padEnd(20)} ${String(j.rows).padStart(3)} rows   ${j.kb} KB`);
   say('');
   // Point explicitly at the prompt. Without this a session sees a file of rows
   // and no instruction, and either invents its own house style or never does
@@ -237,22 +283,37 @@ function plan(dir, { recompress = false } = {}) {
   // Measured 10 Sep: Haiku learned the form and could not find the point;
   // Sonnet found the point and fabricated less. Spawning a subagent is what
   // pins the model — naming it in prose does not.
-  say('  3. SPAWN A SUBAGENT for each job below and give it the prompt verbatim.');
-  say('     A subagent is what actually pins the model; a session writing these');
-  say('     itself uses whatever model it happens to be, and the choice is lost.');
-  if (needsFresh)  say('       Prompt A — write a fresh summary          → subagent model: SONNET');
-  if (needsReview) say('       Prompt B — is the old summary now false?  → subagent model: HAIKU');
-  say('     Batch ALL rows for a job into ONE subagent. One per row pays its');
-  say('     start-up cost every time.');
+  say('  2. SPAWN ONE READ-ONLY SUBAGENT PER JOB FILE, prompt verbatim, pointing');
+  say('     it at that one file. A subagent is what pins the model; a session');
+  say('     writing these itself uses whatever model it happens to be.');
+  if (needsReview) say('       job_haiku.txt      Prompt B — is the old summary now false?  → HAIKU');
+  if (needsFresh)  say('       job_sonnet_N.txt   Prompt A — write a fresh summary          → SONNET');
+  say('');
+  say('     READ-ONLY MATTERS. Told not to write files, a subagent wrote one');
+  say('     anyway — 35k tokens to copy its own input. Told to read once, two');
+  say('     of four ignored it. Told not to use a code fence, one used it, and');
+  say('     twice an HTML entity came through despite an explicit rule. The');
+  say('     prompt is advisory. Remove the tool, or check the answer in code.');
+  say('');
+  say('     Run ONE Sonnet chunk first and look at it before spending the rest.');
+  say('     The first run wrote a median of 9 words where her own sit at 6 —');
+  say('     it heard the ten-word ceiling as a target. One prompt change fixed');
+  say('     it; finding that out cost one chunk instead of four.');
   // The approval dialog shows ONLY the subagent's description field — not the
   // model, not the prompt. "Compress acq run with Prompt A" is unanswerable at
   // the moment someone is being asked to approve it.
   say('     Describe the subagent in plain words — say what it will WRITE, not');
   say('     which prompt it uses. The approval dialog shows only that line.');
   say('');
-  say(`Then write ${ANSWERS_JSON} beside the pending file — {"<index>": "the summary.", ...},`);
-  say('  a string to write it, the previous summary verbatim to keep it, null to refuse.');
-  say(`Finally:  node scraper/compress.js ${dir} --apply`);
+  say('');
+  say(`  3. Merge every job's answers into ${ANSWERS_JSON} beside the pending file —`);
+  say('     {"<index>": "the summary.", ...}, a string to write it, the previous');
+  say('     summary verbatim to keep it, null to refuse. Then check before applying:');
+  say(`         node scraper/compress.js ${dir} --check`);
+  say('     It reports any index missing, unexpected, over the word cap, or still');
+  say('     carrying an HTML fragment. --apply refuses to run until it passes.');
+  say('');
+  say(`  4. node scraper/compress.js ${dir} --apply`);
 }
 
 function loadMemory(dir) {
@@ -275,6 +336,52 @@ function loadMemory(dir) {
 }
 
 // ── Apply ────────────────────────────────────────────────────────────────────
+
+/**
+ * Check the answers BEFORE they can reach the CSV.
+ *
+ * Every rule here was broken by a subagent on 19 Sep despite the prompt saying
+ * otherwise: an index missing, a code fence wrapped round the JSON, and twice
+ * an HTML entity carried straight through ("Art &amp; Writing"). The prompt is
+ * advisory; this is not. --apply refuses to run until this passes.
+ *
+ * It checks SHAPE, never quality — whether a summary is good is hers to judge,
+ * and no script can stand in for that.
+ */
+function check(dir) {
+  const runPath = path.join(OUTPUT_DIR, dir);
+  const pending = JSON.parse(fs.readFileSync(path.join(runPath, PENDING_JSON), 'utf8'));
+  const answersPath = path.join(runPath, ANSWERS_JSON);
+  if (!fs.existsSync(answersPath)) { say(`No ${ANSWERS_JSON} in ${dir} yet.`); return false; }
+  const answers = JSON.parse(fs.readFileSync(answersPath, 'utf8'));
+
+  const want = new Set(pending.rows.map(r => String(r.index)));
+  const got  = new Set(Object.keys(answers));
+  const problems = [];
+
+  for (const k of want) if (!got.has(k)) problems.push(`row ${k}: no answer`);
+  for (const k of got) if (!want.has(k)) problems.push(`row ${k}: answered but was never asked`);
+
+  for (const [k, v] of Object.entries(answers)) {
+    if (v === null) continue;
+    if (typeof v !== 'string') { problems.push(`row ${k}: not a string`); continue; }
+    const words = v.trim().split(/\s+/).filter(Boolean).length;
+    if (words > C.MAX_WORDS) problems.push(`row ${k}: ${words} words, cap is ${C.MAX_WORDS} — "${v}"`);
+    if (!v.trim().endsWith('.')) problems.push(`row ${k}: does not end in a full stop — "${v}"`);
+    if (/&[a-z]+;|&#\d+;|<[a-z/]/i.test(v)) problems.push(`row ${k}: carries an HTML fragment — "${v}"`);
+    if (/^\s*```/.test(v)) problems.push(`row ${k}: carries a code fence — "${v}"`);
+  }
+
+  if (problems.length) {
+    say(`\n${problems.length} problem${problems.length === 1 ? '' : 's'} — nothing was written.\n`);
+    for (const p of problems.slice(0, 40)) say('  ' + p);
+    if (problems.length > 40) say(`  ... and ${problems.length - 40} more`);
+    say('\nFix them in the answers file and check again.');
+    return false;
+  }
+  say(`All ${got.size} answers pass: every index present, none over ${C.MAX_WORDS} words, no HTML, all ending in a full stop.`);
+  return true;
+}
 
 function apply(dir) {
   const runPath = path.join(OUTPUT_DIR, dir);
@@ -357,8 +464,12 @@ function main(argv) {
   const dir = named || newestRun();
   if (!dir) { say('No run directory found. Run the sweep first.'); process.exit(1); }
 
-  if (flags.has('--apply')) apply(dir);
-  else plan(dir, { recompress: flags.has('--recompress') });
+  if (flags.has('--check')) { check(dir); return; }
+  if (flags.has('--apply')) {
+    // The gate, not a suggestion. See check().
+    if (!check(dir)) process.exit(1);
+    apply(dir);
+  } else plan(dir, { recompress: flags.has('--recompress') });
 }
 
-module.exports = { main, buildExamples, newestRun };
+module.exports = { main, buildExamples, newestRun, check };

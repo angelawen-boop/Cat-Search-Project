@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 16 Sep 2026
+**Last updated:** 19 Sep 2026
 
 Cassili collects art-exhibition catalogues. They go out of print fast once a show
 closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 21
@@ -101,9 +101,13 @@ before work begins. It refuses to move if the working tree is dirty or the branc
 carries commits not on `origin/main`, and it fetches before deciding, so it cannot
 discard anything.
 
-**LIVE BRANCH, 13 Sep 2026: `claude/jsx-stitched-intake`.** The app's new intake —
-marker rows rejected, duplicate rows folded (§4). **Not merged, not yet tested by
-her.** A session that works only on `main` will not find it and will re-derive it.
+**LIVE BRANCH: `claude/jsx-stitched-intake`.** The app's new intake — marker rows
+rejected, duplicate rows folded (§4). Signed off by her on test data, **not merged**;
+it merges once the real import passes. A session working only on `main` will not
+find it and will re-derive it.
+
+**PARKED BRANCH: `claude/quiet-user-agent`** — everything from 16 Sep. Her ruling
+19 Sep: do not merge, do not re-open. See §2.
 
 **Branches that exist:** `claude/personal-tracking-ledgers-z49s2h` is **dead** (an
 old default branch with no CLAUDE.md — if a session reports the scraper as having
@@ -139,9 +143,7 @@ Until it is, check it against the newest run directory before trusting it.
 | Uffizi | `uffizi` | 13 | **yes — 12 Sep** | yes | headlines kept as titles and undated rows kept, **both her rulings** |
 | Brera | `brera` | 8 | **yes — 12 Sep** | yes | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
 | Galleria Borghese | `borghese` | 8 | **yes — 12 Sep, her count** | yes | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
-| MoMA | `moma` | 0 | n/a | n/a | Listing opens on `claude/quiet-user-agent`; **all 24 detail pages refuse, so no row has text.** Still no usable route |
-| British Museum | `brit` | 0 | n/a | n/a | Past page refuses. Current page opens and returns 1 link, which is navigation — a RECIPE problem, untouched |
-| Morgan | `morgan` | 0 | n/a | n/a | **Genuinely blocked, settled 16 Sep.** Marker rows only |
+| MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | n/a | n/a | No route; marker rows only. See the parked section below |
 
 **Read the two middle columns separately.** "Her substantive review" means she went
 through that venue against the live site herself and her findings are recorded.
@@ -250,84 +252,43 @@ permanent facts — in five days Borghese went down and came back, dellav turned
 never to have been blocked, the Met's archive turned out to be reachable, and
 `artic` went from "reliable" to refused.
 
-**Three routes, 12 Sep 2026 — NOW PARTLY OVERTURNED, see the next section:**
+### The `Headless` user-agent — parked, her ruling 19 Sep
 
-| Route | Count | Venues |
-|---|---|---|
-| **Claude scrapes** | **16** | `ng` `rijks` `acq` `louvre` `uffizi` `brera` `capo` `dellav` `khm` `frick` `menil` `wallace` `va` `tate-modern` `tate-britain` `borghese` |
-| **Her laptop** | **2** | `met`, `artic` |
-| **No route** | **3** | `moma`, `brit`, `morgan` |
+**PARKED ON `claude/quiet-user-agent`. `main`'s scraper is byte-identical to
+13 Sep and stays that way.** Her verdict on the session that produced it: theories
+were spun up, sweeps were run to test them, the sweeps caused rate limiting, and
+then the limiting was read as fresh evidence. Nothing usable came out that is worth
+the divergence. **Do not merge it and do not re-open it.**
 
-### The `Headless` user-agent — a real finding, NOT a solved venue — 16 Sep 2026
+**The one proven fact, kept because it is real:** Chromium announces
+`HeadlessChrome`, and removing that word changes MoMA's LISTING page from 403 to
+200 with 24 exhibitions. **It opens nothing else.** All 24 MoMA detail pages still
+refuse, so no row has text; `brit`, `artic` and the Met were unaffected. In the
+container all of them refuse either way.
 
-**What is proven.** Chromium's own user-agent says `HeadlessChrome`. Removing
-that one word — everything else identical, same machine, minutes apart — changes
-MoMA's answer on its **listing** page from 403 to 200 with 26 links, and it is
-the reason MoMA produced its **first 24 rows in the project's history**.
+**WHY THESE VENUES REFUSE IS UNKNOWN.** Rate limiting, volume, her address,
+Cloudflare profiling her across sites — all guessed at, none tested. Do not repeat
+any as fact.
 
-**What is NOT proven, and was wrongly written here for part of 16 Sep: that this
-opened MoMA, the British Museum, the Met or the Art Institute.** It did not.
-The full sweep with the fix, from her machine, `run_2026-09-16_130316`:
+**The shape of the failure, which is the part worth keeping:** a probe read one
+listing page, that was read as "the venue is open", the scraper was changed on it,
+and when the real sweep failed, causes were invented to explain it. **A probe that
+does not do what the sweep does — its volume, its detail pages, its concurrency —
+cannot tell you a venue works. It tells you one request was answered.**
 
-| | With the word removed, real sweep |
-|---|---|
-| `moma` listing | **200 — 24 exhibitions** |
-| `moma` every one of 24 detail pages | **403 — 0 rows have any text, so all 24 are unusable** |
-| `moma` past | 403 |
-| `brit` past | 403 — though a single-page probe had got 200 and 4 links an hour earlier |
-| `brit` current | 200, 1 link, and that link is navigation — a recipe gap, not a block |
-| `artic` all 10 pages | 403 — it returned 65 rows on 13 Sep |
-| `met` | 107 rows, all with text — unaffected either way |
+**THE MORGAN IS GENUINELY BLOCKED — settled, do not re-probe.** All four
+combinations of Chromium/Chrome and hidden/on-screen were refused by Cloudflare,
+including with her answering the challenge by hand. The page opens instantly in her
+ordinary browser, so it is not her address: the venue detects that a script is
+driving at all. **Her ruling: one small venue, she will check it herself.**
 
-**In the container all four refuse with or without the fix.** One plausible
-reason is the network bridge: Node makes every connection there, so the
-connection is not a browser's whatever the user-agent says. **That is a
-hypothesis, not a finding.**
+**`artic` has refused HER MACHINE since 16 Sep**, having returned 65 rows on
+13 Sep. Whether that is the changed scraper, rate limiting from that day's sweeps,
+or the venue is unknown and **not being chased** — its 65 rows are already captured
+and the way to find out costs exactly the traffic that may have caused it.
 
-**WHY THESE VENUES REFUSE US IS UNKNOWN.** Rate limiting, volume, her address,
-detail pages being protected differently from listings — all guessed at during
-the session, none tested. **Do not repeat any of them as fact.** Telling them
-apart needs ONE cold request to a single MoMA detail page, not another sweep.
-
-**How this went wrong, because the shape will recur.** A probe read one listing
-page, that was read as "the venue is open", the scraper was changed on the
-strength of it, and when the real sweep failed, causes were invented to explain
-it. **A probe that does not do what the sweep does — its volume, its detail
-pages, its concurrency — cannot tell you a venue works.** It can only tell you a
-venue refused one specific request.
-
-**The change is NOT on main.** It lives on **`claude/quiet-user-agent`** and
-`main` is reverted to the 13 Sep behaviour. It is worth keeping — the MoMA
-listing result is real — but it buys one listing page and costs a divergence
-from a signed-off scraper, so it merges only once a venue actually completes
-with it.
-
-**The routes are UNCHANGED from 12 Sep, and `artic` is now worse:**
-
-| Route | Venues |
-|---|---|
-| **Container** | the 16 it already sweeps |
-| **Her machine** | `met` — and `artic` until 16 Sep, when it began refusing her too |
-| **No route** | `moma` `brit` `morgan` |
-
-**THE MORGAN IS GENUINELY BLOCKED — settled 16 Sep, do not re-probe.**
-`scraper/probe_morgan.js` tried all four combinations: Chromium and Chrome,
-hidden and on screen, every one with the word removed, and the on-screen ones
-held open for her to answer the challenge by hand. **All four refused (403,
-Cloudflare "Just a moment").** The same page opens instantly in her ordinary
-browser, so it is not her address or region — the venue detects that a script is
-driving the browser at all, which every automated route shares. **Her ruling:
-one small venue, she will inspect it by hand.** Chat Claude or an agentic
-browser remain the only routes and neither is required.
-
-**`capo` belongs to the container, and it is the first venue where the asymmetry
-runs THAT way.** Tested from both machines within minutes of each other on
-12 Sep: the container returned 18 rows cleanly; her laptop timed out, retried,
-got the 50 links, then hit HTTP 429 on individual detail pages. So the two
-machines cover different gaps rather than one being strictly better — do not
-assume a venue she cannot reach is unreachable. **How they join into one importable
-CSV was parked until all 21 were done. They now are**, so it is live — see §7 step 6.
-Her decision to make, and the shape depends on what happens to the three refusals.
+**Routes are unchanged from 12 Sep:** the container sweeps its 16; her machine has
+`met`; `moma`, `brit` and `morgan` have no route.
 
 ### artic — only the two types the venue calls an exhibition, her ruling 12 Sep
 
@@ -448,11 +409,9 @@ Know precisely what the app absorbs:
 
 - **Across sweeps — handled.** A row matching the ledger becomes a fill/change
   proposal. Re-feeding the same file is safe.
-- **Within one file — handled on `claude/jsx-stitched-intake` ONLY, not on `main`.**
-  On `main`, `analyzeProForma` compares each row against the ledger and never
-  against the rows beside it, so the same exhibition twice in one CSV produces
-  **two Add cards** and `applyRefresh` keeps both. On the branch it folds them
-  first — §4.
+- **Within one file — on the branch only.** `main` compares each row against the
+  ledger and never against the rows beside it, so one exhibition twice makes two
+  Add cards. The branch folds them first — §4.
 
 **This does not license the scraper to de-duplicate.** The app folds on URL where
 she can see it happen; a scraper that drops rows makes the same call unseen.
@@ -690,7 +649,8 @@ node scraper/sweep_prototype.js --continue   finish the newest run
 node scraper/sweep_prototype.js --jobs=6     venues at once (default 4)
 node scraper/sweep_prototype.js --budget-mins=3   abandon a venue after N min
 node scraper/stitch.js <run> <run> ...        combine runs into one importable file
-node scraper/compress.js                     plan compression of the newest run
+node scraper/compress.js <run>               plan, and write the subagent job files
+node scraper/compress.js <run> --check       verify the answers before they land
 node scraper/compress.js <run> --apply       write sweep_compressed.csv
 npm test                                     all fixtures
 ```
@@ -1213,13 +1173,39 @@ the ~6-word teaser she reads, and `sweep_compressed.csv` is **the file she impor
   memory cannot see the copy beside it. Asking twice is worse than wasteful: each row
   is an isolated question, so the model can word the same text differently and the
   difference reaches her as a conflict.
+- **Her 110 seed summaries are memory too** (`seedMemory`). They predate the
+  compressor, so every one read as "never seen" and would have been rewritten —
+  ~100 cards proposing to replace her own wording. They carry no raw text, so each
+  becomes a REVIEW rather than a free reuse, and the case retires itself after one
+  run. Matched through the same keys as everything else: the seed stores a URL
+  SLUG, and matching it by title found 56 of 110 where 103 were there.
 - **Sonnet writes fresh, Haiku judges staleness.** Measured, not assumed.
 - **Reached by subagent, not the session itself** — a session uses whatever model it
-  happens to be, which discards the measurement. One subagent per **job**, never per row.
+  happens to be, which discards the measurement.
 - **A reuse caused by a failed page must say so in `notes`.** Silent reuse papers over
   a scraper failure.
 - Cap is **ten words**, ending in a full stop, a noun phrase — measured from her 110
-  seed summaries, not chosen.
+  seed summaries, not chosen. Their MEDIAN is 6, and that distinction cost a chunk:
+  told "maximum 10, examples average six", the model heard the ceiling and wrote a
+  median of 9 with nothing under 7. Told to aim for six, with her three-word
+  summaries quoted as exemplary, it came back at a median of 6.
+
+**Running it — measured 19 Sep on 652 rows, the first time at scale.** The mechanics
+are in `compress_cli.js`, which writes the job files and prints the steps; this is
+only what a session cannot see from there:
+
+- **ONE subagent cannot take 296 rows.** It must hold every row's raw text and write
+  every answer. Chunks of 75 cost ~100k tokens each, three times running.
+- **The file shape is most of the cost.** Pretty-printed JSON with unused fields plus
+  a separate examples file: 173KB, 178k tokens. The same rows flattened to one
+  compact line, examples folded in: 112KB, 100k. Identical work, 44% less.
+- **Run one chunk and look at it before spending the rest.**
+- **THE PROMPT IS ADVISORY.** In five jobs a subagent wrote a file it was told not to
+  (35k tokens to copy its own input), ignored "read once" twice, wrapped its answer
+  in a code fence, and twice carried an HTML entity through an explicit rule.
+  Anything that must not happen is removed from its tools — read-only subagents — or
+  checked in code coming back: `--check` gates `--apply` and refuses on a missing
+  index, an over-length summary, a fence or an HTML fragment.
 
 **Full design, evidence and the rejected alternatives: `docs/compression.md`.**
 It is finished and signed off — do not re-plan it.
@@ -1366,6 +1352,11 @@ Each entry cost a real failure. Before changing the area, read the line.
 - Matching her seed summaries by TITLE when the seed carries a URL slug — 56
   matches where there were 103, and Acquavella scored zero because the scraper
   deliberately keeps the city in its titles and her seed does not.
+- Handing a compression subagent pretty-printed JSON with fields it never reads,
+  plus a second file for the examples — 178k tokens where 100k did the same work.
+- Telling a subagent what not to do and believing it. Five jobs, four disobeyed:
+  a file written, "read once" ignored twice, a code fence, two HTML entities.
+  **Remove the tool or check the answer. Wording is not a control.**
 - Concluding a control is broken without checking the click reached it; the Louvre's
   cookie popin swallowed it and the wrong conclusion sat in the recipe for two days.
 - The layout-wrapper escape applied to a NAMED consent manager — the V&A's cookie
@@ -1397,97 +1388,41 @@ Each entry cost a real failure. Before changing the area, read the line.
 4. ~~**Venue-by-venue diagnosis of the working set**~~ — **DONE, 12 Sep 2026.** All
    sixteen reachable venues reviewed by her, fixed and verified against her counts.
    Her findings and every fix, venue by venue: `docs/review-2026-09-12.md`.
-5. **Produce one importable CSV — THE CURRENT STAGE.** Agreed with her 12 Sep, in
-   this order, and the order matters:
+5. **Produce one importable CSV — DONE as far as the file, 19 Sep.** The chain
+   has now been run end to end except the last step:
 
-   1. ~~**A full 21-venue run from the container.**~~ **DONE, 13 Sep** —
-      `run_2026-09-13_020041`, `--jobs=4`. All 16 reachable venues match her
-      signed-off counts exactly; container total **237**. Refusal marker rows
-      present for met (4), artic (10), moma (2), brit (2), morgan (3).
-      **The Louvre is genuinely 22 here, where the 12 Sep run had 18.**
-      Two Louvre summaries were lost to HTTP 429 and say so on their cards.
-   2. ~~**She runs `artic` and `met` on her laptop.**~~ **DONE, 13 Sep** —
-      `run_2026-09-13_020305`: artic **65**, met **106**, both with every row
-      carrying text and no marker rows. Her counts.
-   3. ~~**Decide how the two machines' output joins.**~~ **DECIDED, 13 Sep — hers.**
-      **The stitch is dumb concatenation with no logic in it at all**, and every
-      judgement moves into the app, which is where this project already puts
-      judgement and where she sees each decision before it lands. No merge tool,
-      no precedence rule, no folder ordering to remember — order cannot change the
-      result because nothing is chosen. Marker rows and duplicate rows are then
-      handled at intake (§4).
+   > sweep both machines → stitch the run folders → compress → import
 
-      Rejected on the way: a merge tool picking which venue file wins (order
-      becomes a thing to remember), and redefining `venueIsDone` as "has real
-      rows" — **her call**, because the three permanently-refused venues would
-      then never count as done and the standing monitor breaks for no gain.
+   - **Sweeps, 13 Sep.** `run_2026-09-13_020041` (container, 16 venues at her
+     signed-off counts), `_142632` (a second container run), `_142846` (hers:
+     met 106, artic 65, capo refused). Borghese was dead from every machine that
+     day — `cultura.gov.it` unreachable, not a refusal.
+   - **Stitch** → `stitch_20260913_0442`, 652 rows, 402 distinct exhibitions and
+     206 duplicate copies, because every venue but met and artic was swept twice.
+     That duplication is deliberate: it is what gives the app's folding real
+     pairs to work on rather than authored ones.
+   - **Compress, 19 Sep** → `sweep_compressed.csv`. 616 exhibitions, 610 with a
+     summary, 36 marker rows. 390 rows went to a model in five jobs; 262 were
+     answered free. Length min 3, median 7, max 10 against her own median of 6.
+     Cost ~580k tokens, most of it in the first chunk before the packaging was
+     fixed — see §5.
+   - **IMPORT: NOT DONE.** The app has only ever read the 76-row test file.
 
-      **The stitch script itself is NOT written yet.**
-   4. **Compress the combined file.** Never yet run at scale: the largest
-      compression to date is 15 rows from one venue, against roughly 400 now. The
-      reuse half is pure code and cannot be wrong; the writing half has not been
-      asked for hundreds of summaries before, so cost and batching are untested.
-   5. **Hand her `sweep_compressed.csv`** — one file, never the raw sweep.
+   **Two things found by running it that no unit test could have.** `stitch.js`
+   wrote a loose CSV while `compress.js` reads DIRECTORIES, so it silently
+   compressed the wrong file — 652 rows in, 172 out, no error; each half was
+   correct and the join between them had never been run. And the Haiku half,
+   which the guide had recorded as never having fired on real data, kept all 94
+   of her summaries character for character.
 
-   **A run is not finished until compression has run.** A full sweep that stops at
-   raw CSVs is not a deliverable.
+   **A QA PASS BEFORE THE STITCH IS PARKED — her ruling 19 Sep**, along with
+   everything else from 16 Sep. It may be a good idea; it came out of a session
+   whose reasoning she does not trust, so it is not being built on that basis.
 
-   **Both halves are now in hand: 237 + 106 + 65 = 408 rows**, the same figure as
-   12 Sep, with the Louvre now genuinely at 22 rather than accidentally at 18.
+6. **Venues with no route** — `moma`, `brit`, `morgan`, and now `artic` from her
+   machine too. Not being chased; see the parked section in §2. Every sweep
+   re-tests them, so the day one answers it appears on the approval pile by itself.
 
-   **WHERE THIS ACTUALLY STANDS, 13 Sep — read before assuming anything works.**
-
-   **The intake is signed off by her.** Tested by hand against
-   `intake_sample.csv` and corrected twice on her findings: odd cases moved to
-   the top and batched by kind (§4), then venue headings inside each band. Still
-   on the branch; it merges once the real import passes.
-
-   **The chain has now been run as far as compression.** Both machines swept,
-   three run folders stitched into `stitch_20260913_0442` — 652 rows, 402
-   distinct exhibitions, 206 duplicate copies. Borghese was dead from every
-   machine that day (`cultura.gov.it` unreachable, not a refusal); capo answered
-   neither of us; moma, brit and morgan refused as always. Everything else
-   matched her signed-off counts.
-
-   **STILL NOT RUN: the compression itself, and the import.** Measured, not
-   guessed: 390 rows need a summary and the Sonnet half alone is ~126,000 tokens
-   of raw text. That is too much for one subagent, so the job splits into
-   several — the guide's "cost and batching are untested" line, now with a
-   number against it.
-
-   **A QA PASS GOES IN BEFORE THE STITCH — her decision, 16 Sep.** Not after,
-   because a faulty venue file should be re-swept rather than carried through
-   compression and onto her approval pile. Two halves, and they are different
-   jobs:
-
-   - **Did each run finish and is it complete?** One correct answer, so a
-     script: per-venue row counts diffed against **that venue's previous run**,
-     empty summaries, blank dates, marker rows, format compliance. Not against
-     her signed-off counts — those are a snapshot of a date and exhibitions
-     legitimately come and go. The signal is a **drop**: the lookback floor is
-     fixed and past archives accumulate, so counts should generally rise.
-   - **Does this row look mangled?** Judgement, so a model — but it reads only
-     what the counts flag, never all 400 rows.
-
-   **The fix is always re-running the venue, never editing a CSV by hand.** A
-   hand-edited file cannot be reproduced by re-running and makes the next
-   sweep's comparison lie. Runs are for diagnosing the scraper, not for
-   patching output.
-
-   **It can flag; it can never clear.** The CSV cannot hold every defect —
-   artic's title damage was made of line breaks the CSV squashes away, and the
-   run that scored 0 badges / 0 blanks / exactly 77 rows had two titles missing
-   half their names.
-
-6. **`artic` refuses her machine as of 16 Sep and that is the live problem** —
-   it is a signed-off 65-row venue with no route at all today. Diagnose it before
-   anything else here. `moma` and `brit` remain unreachable in any usable form;
-   `morgan` is settled and stays a marker-row venue.
-
-   **The rule this stage now runs under, after 16 Sep:** one request, then stop
-   and read it. No sweep to test a hypothesis, no probe that does less than the
-   sweep and is then read as if it did more. Anything not visible in a log is
-   a guess and is labelled one.
 7. **JSX work** — quarantine ("Never add this"), plus whatever steps 5–6 turn up.
 8. **Catalogue lookup tuning** — Haiku vs Sonnet, on known-tricky catalogues.
    Independent of everything above.
