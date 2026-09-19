@@ -355,9 +355,10 @@ test('ID-005: it groups on TEXT, never on which exhibition it is', () => {
 });
 
 // ── Her seed wording versus a previous run's ────────────────────────────────
-// These pin down the failure found on 19 Sep: 13 Acquavella summaries she had
-// written herself came back as proposed rewrites, because the previous
-// compressed run was consulted first and the seed only filled gaps.
+// These pin down the failure found on 19 Sep — 13 Acquavella summaries she had
+// written herself came back as proposed rewrites — AND the shape of the repair:
+// hers replaces the compressor's only under --seed-wins, never as the standing
+// rule, because a standing rule would revert every legitimate update forever.
 
 const seedRow = (o = {}) => ({
   venue_code: 'acq', title: 'Tom Sachs: Bronze (New York)',
@@ -375,7 +376,7 @@ const runRow = (o = {}) => ({
 
 test('SM-001: her wording replaces a previous run\'s for the same exhibition', () => {
   const memory = indexPrevious([runRow()]);
-  const res = mergeSeedMemory(memory, [seedRow()]);
+  const res = mergeSeedMemory(memory, [seedRow()], { seedWins: true });
   assert.equal(res.overrode, 1);
   assert.equal(res.added, 0);
   assert.equal(findPrevious(memory, runRow()).summary, 'New York. Bricolage in bronze.');
@@ -386,7 +387,7 @@ test('SM-002: the RUN\'s raw text survives, so unchanged text is still a FREE re
   // and turn every seeded row into a model call; taking the run wholesale
   // loses her wording. One field from each.
   const memory = indexPrevious([runRow()]);
-  mergeSeedMemory(memory, [seedRow()]);
+  mergeSeedMemory(memory, [seedRow()], { seedWins: true });
   const row = { ...runRow(), summary: runRow().raw };   // a sweep row: raw in `summary`
   const d = decide(row, findPrevious(memory, row));
   assert.equal(d.action, 'reuse');
@@ -395,7 +396,7 @@ test('SM-002: the RUN\'s raw text survives, so unchanged text is still a FREE re
 
 test('SM-003: changed text sends HER wording to be checked, not a model\'s', () => {
   const memory = indexPrevious([runRow()]);
-  mergeSeedMemory(memory, [seedRow()]);
+  mergeSeedMemory(memory, [seedRow()], { seedWins: true });
   const row = { ...runRow(), summary: 'The venue has rewritten this page entirely.' };
   const d = decide(row, findPrevious(memory, row));
   assert.equal(d.action, 'review');
@@ -406,7 +407,7 @@ test('SM-004: a skip is cleared — she wrote a description, so there is one', (
   // `skipped` records a model deciding the page text was not a description.
   // Her having written one settles that question the other way.
   const memory = indexPrevious([runRow({ summary: '', skipped: true })]);
-  mergeSeedMemory(memory, [seedRow()]);
+  mergeSeedMemory(memory, [seedRow()], { seedWins: true });
   const hit = findPrevious(memory, runRow());
   assert.equal(hit.skipped, false);
   assert.equal(hit.summary, 'New York. Bricolage in bronze.');
@@ -426,11 +427,28 @@ test('SM-006: a RECYCLED address does not hand one edition the other\'s words', 
   // to protect this path too.
   const memory = indexPrevious([runRow({ start_date: '2024-05-01', end_date: '2024-06-20',
                                          title: 'SOMETHING ELSE ENTIRELY' })]);
-  const res = mergeSeedMemory(memory, [seedRow()]);
+  const res = mergeSeedMemory(memory, [seedRow()], { seedWins: true });
   assert.equal(res.overrode, 0);
 });
 
 test('SM-007: identical wording is not counted as a restore', () => {
   const memory = indexPrevious([runRow({ summary: 'New York. Bricolage in bronze.' })]);
-  assert.equal(mergeSeedMemory(memory, [seedRow()]).overrode, 0);
+  assert.equal(mergeSeedMemory(memory, [seedRow()], { seedWins: true }).overrode, 0);
+});
+
+test('SM-008: BY DEFAULT the seed does NOT overrule the previous run', () => {
+  // The standing behaviour, and the reason for it: where a venue rewords its
+  // page the review half updates the summary, and a standing override would
+  // reset the memory to her seed wording on the very next run and propose
+  // changing it straight back — forever.
+  const memory = indexPrevious([runRow()]);
+  const res = mergeSeedMemory(memory, [seedRow()]);
+  assert.equal(res.overrode, 0);
+  assert.equal(findPrevious(memory, runRow()).summary,
+               'Sachs recasts Picasso and Brâncuși sculptures in bronze.');
+});
+
+test('SM-009: by default the seed still FILLS A GAP the run knows nothing about', () => {
+  const memory = indexPrevious([]);
+  assert.equal(mergeSeedMemory(memory, [seedRow()]).added, 1);
 });

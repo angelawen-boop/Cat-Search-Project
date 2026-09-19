@@ -565,36 +565,43 @@ function seedMemory(jsxPath) {
 /**
  * Fold her seed summaries into the memory built from the previous run.
  *
- * HER WORDING OUTRANKS ANY WORDING A MODEL WROTE. That is the whole point of
- * carrying the seed at all, and the first version got it backwards: the seed
- * was added only where the previous run knew nothing, on the reasoning that a
- * real run carries raw text and can therefore grant a FREE reuse while the
- * seed can only ask for a check. That optimised for cost and silently traded
- * away the thing being protected — Acquavella had already been compressed on
- * 11 Sep, so every one of her acq summaries lost to the compressor's own
- * earlier attempt and arrived back on her approval pile as 13 proposed
- * rewrites. Worse at that venue than most: her summaries name the city, and
- * Acquavella runs the same show in New York and Palm Beach.
+ * TWO MODES, and the difference is the whole point.
  *
- * The two memories hold different things and both are wanted:
+ * DEFAULT — the seed FILLS GAPS. It is consulted only where the previous run
+ * knows nothing about an exhibition. This is the standing behaviour and it is
+ * what every ordinary run does.
  *
- *   - the previous run has the RAW TEXT, which is what proves the venue has
- *     not touched a word and so grants the reuse with no model call;
- *   - the seed has HER WORDING.
+ * `seedWins` — HER WORDING REPLACES the previous run's. A ONE-TIME REPAIR,
+ * never the standing rule, and the reason it must not become one is a loop:
+ * where a venue rewords its page, the review half is supposed to update the
+ * summary — and a standing override would reset the memory to her seed wording
+ * on the very next run and propose changing it straight back, forever.
  *
- * So take one from each. Unchanged text now reuses HER summary and still costs
- * nothing; changed text sends HER summary to be checked rather than a model's.
- * A `skipped` mark is cleared with it: that mark says a model found no
- * description, and her having written one is the answer to that.
+ * THE DAMAGE IT REPAIRS IS HISTORICAL AND CANNOT RECUR. Acquavella was
+ * compressed on 11 Sep, BEFORE seedMemory existed. So its rows found the
+ * compressor's own first attempt in memory, her summaries were never consulted,
+ * and 13 of them came back on her approval pile as proposed rewrites. Worse at
+ * that venue than most: her summaries name the city, and Acquavella runs the
+ * same show in New York and Palm Beach. Every run since consults the seed, so
+ * no venue can be in that state again.
  *
- * Mutates the entries in place, which is deliberate — one row sits in the map
+ * What makes the repair free is that the two memories hold different things:
+ * the run has the RAW TEXT, which is what proves the venue has not touched a
+ * word and grants the reuse with no model call; the seed has HER WORDING. The
+ * repair takes one from each, so unchanged text reuses her summary at no cost
+ * and changed text sends her summary to be checked. A `skipped` mark is
+ * cleared with it — that mark records a model finding no description, and her
+ * having written one answers that.
+ *
+ * Mutates the entries in place, which is deliberate: one row sits in the map
  * under both its URL key and its title key, and both must move together.
  */
-function mergeSeedMemory(memory, seedRows) {
+function mergeSeedMemory(memory, seedRows, { seedWins = false } = {}) {
   let overrode = 0, added = 0;
   for (const r of seedRows) {
     const hit = findPrevious(memory, r);
     if (hit) {
+      if (!seedWins) continue;
       if (String(hit.summary || '') !== String(r.summary || '') || hit.skipped) {
         hit.summary = r.summary;
         hit.skipped = false;

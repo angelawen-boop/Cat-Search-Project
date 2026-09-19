@@ -89,7 +89,7 @@ function buildExamples() {
 
 // ── Plan ─────────────────────────────────────────────────────────────────────
 
-function plan(dir, { recompress = false } = {}) {
+function plan(dir, { recompress = false, seedWins = false } = {}) {
   const runPath = path.join(OUTPUT_DIR, dir);
   const rawPath = path.join(runPath, RAW_CSV);
   if (!fs.existsSync(rawPath)) {
@@ -101,14 +101,16 @@ function plan(dir, { recompress = false } = {}) {
   const prevDir = recompress ? null : C.previousCompletedRun(dir);
   const memory = recompress ? new Map() : loadMemory(prevDir);
 
-  // HER 110 SEED SUMMARIES JOIN THE MEMORY, and where both know an exhibition
-  // HERS IS THE WORDING while the run supplies the raw text. See
-  // mergeSeedMemory() for why the first version had this backwards.
+  // HER 110 SEED SUMMARIES JOIN THE MEMORY. Normally they only fill gaps —
+  // exhibitions the previous run knows nothing about. --seed-wins is the
+  // one-time repair that lets hers REPLACE a summary the compressor wrote;
+  // mergeSeedMemory() says why that must never be the standing behaviour.
   let seedAdded = 0, seedKept = 0;
   if (!recompress) {
     try {
       const merged = C.mergeSeedMemory(
-        memory, C.seedMemory(path.join(__dirname, '..', 'Cat_Watch_v10.2_haiku.jsx')));
+        memory, C.seedMemory(path.join(__dirname, '..', 'Cat_Watch_v10.2_haiku.jsx')),
+        { seedWins });
       seedAdded = merged.added;
       seedKept = merged.overrode;
     } catch (e) {
@@ -119,7 +121,7 @@ function plan(dir, { recompress = false } = {}) {
   say(`Run:      ${dir}  (${rows.length} rows)`);
   say(`Memory:   ${prevDir ? prevDir : recompress ? '(ignored — --recompress)' : '(none — first compression)'}`);
   if (seedAdded) say(`          + ${seedAdded} of her own seed summaries, so her wording is kept unless the venue has changed what it says`);
-  if (seedKept) say(`          + ${seedKept} more where a previous run had overwritten her wording — hers restored`);
+  if (seedKept) say(`          + ${seedKept} RESTORED to her wording (--seed-wins, a one-time repair)`);
 
   const done = [];
   const pending = [];
@@ -468,7 +470,7 @@ function main(argv) {
     // The gate, not a suggestion. See check().
     if (!check(dir)) process.exit(1);
     apply(dir);
-  } else plan(dir, { recompress: flags.has('--recompress') });
+  } else plan(dir, { recompress: flags.has('--recompress'), seedWins: flags.has('--seed-wins') });
 }
 
 module.exports = { main, buildExamples, newestRun, check };
