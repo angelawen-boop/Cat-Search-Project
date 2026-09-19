@@ -15,7 +15,7 @@ const assert = require('node:assert');
 const {
   parseCsv, urlKey, titleKey, indexPrevious, findPrevious,
   decide, validateAnswer, normalizeRaw, addNote, MAX_WORDS, SKIP_NOTE, groupIdenticalRaw,
-  TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns,
+  TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns, mergeSeedMemory,
 } = require('./compress.js');
 
 const row = (o = {}) => ({
@@ -352,4 +352,85 @@ test('ID-005: it groups on TEXT, never on which exhibition it is', () => {
     { index: 2, raw: 'Same blurb.', title: 'B', venue_code: 'met' },
   ]);
   assert.equal(g.size, 1);
+});
+
+// ── Her seed wording versus a previous run's ────────────────────────────────
+// These pin down the failure found on 19 Sep: 13 Acquavella summaries she had
+// written herself came back as proposed rewrites, because the previous
+// compressed run was consulted first and the seed only filled gaps.
+
+const seedRow = (o = {}) => ({
+  venue_code: 'acq', title: 'Tom Sachs: Bronze (New York)',
+  start_date: '2025-05-01', end_date: '2025-06-20',
+  url: 'https://www.acquavellagalleries.com/exhibitions/tom-sachs-bronze',
+  raw: '', summary: 'New York. Bricolage in bronze.', fromSeed: true, ...o,
+});
+const runRow = (o = {}) => ({
+  venue_code: 'acq', title: 'TOM SACHS BRONZE NEW YORK',
+  start_date: '2025-05-01', end_date: '2025-06-20',
+  url: 'https://www.acquavellagalleries.com/exhibitions/tom-sachs-bronze',
+  raw: 'Sachs recasts canonical modern sculpture in bronze.',
+  summary: 'Sachs recasts Picasso and Brâncuși sculptures in bronze.', ...o,
+});
+
+test('SM-001: her wording replaces a previous run\'s for the same exhibition', () => {
+  const memory = indexPrevious([runRow()]);
+  const res = mergeSeedMemory(memory, [seedRow()]);
+  assert.equal(res.overrode, 1);
+  assert.equal(res.added, 0);
+  assert.equal(findPrevious(memory, runRow()).summary, 'New York. Bricolage in bronze.');
+});
+
+test('SM-002: the RUN\'s raw text survives, so unchanged text is still a FREE reuse', () => {
+  // This is the whole trick. Taking the seed wholesale would lose the raw text
+  // and turn every seeded row into a model call; taking the run wholesale
+  // loses her wording. One field from each.
+  const memory = indexPrevious([runRow()]);
+  mergeSeedMemory(memory, [seedRow()]);
+  const row = { ...runRow(), summary: runRow().raw };   // a sweep row: raw in `summary`
+  const d = decide(row, findPrevious(memory, row));
+  assert.equal(d.action, 'reuse');
+  assert.equal(d.summary, 'New York. Bricolage in bronze.');
+});
+
+test('SM-003: changed text sends HER wording to be checked, not a model\'s', () => {
+  const memory = indexPrevious([runRow()]);
+  mergeSeedMemory(memory, [seedRow()]);
+  const row = { ...runRow(), summary: 'The venue has rewritten this page entirely.' };
+  const d = decide(row, findPrevious(memory, row));
+  assert.equal(d.action, 'review');
+  assert.equal(d.previousSummary, 'New York. Bricolage in bronze.');
+});
+
+test('SM-004: a skip is cleared — she wrote a description, so there is one', () => {
+  // `skipped` records a model deciding the page text was not a description.
+  // Her having written one settles that question the other way.
+  const memory = indexPrevious([runRow({ summary: '', skipped: true })]);
+  mergeSeedMemory(memory, [seedRow()]);
+  const hit = findPrevious(memory, runRow());
+  assert.equal(hit.skipped, false);
+  assert.equal(hit.summary, 'New York. Bricolage in bronze.');
+});
+
+test('SM-005: an exhibition the run never saw is still ADDED, as before', () => {
+  const memory = indexPrevious([]);
+  const res = mergeSeedMemory(memory, [seedRow()]);
+  assert.equal(res.added, 1);
+  assert.equal(res.overrode, 0);
+  assert.equal(findPrevious(memory, runRow()).summary, 'New York. Bricolage in bronze.');
+});
+
+test('SM-006: a RECYCLED address does not hand one edition the other\'s words', () => {
+  // Same URL, runs a year apart. findPrevious refuses the match, so the seed
+  // must not overwrite it — the guard that protects the rest of the memory has
+  // to protect this path too.
+  const memory = indexPrevious([runRow({ start_date: '2024-05-01', end_date: '2024-06-20',
+                                         title: 'SOMETHING ELSE ENTIRELY' })]);
+  const res = mergeSeedMemory(memory, [seedRow()]);
+  assert.equal(res.overrode, 0);
+});
+
+test('SM-007: identical wording is not counted as a restore', () => {
+  const memory = indexPrevious([runRow({ summary: 'New York. Bricolage in bronze.' })]);
+  assert.equal(mergeSeedMemory(memory, [seedRow()]).overrode, 0);
 });

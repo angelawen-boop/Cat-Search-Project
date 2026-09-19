@@ -562,8 +562,57 @@ function seedMemory(jsxPath) {
   return rows;
 }
 
+/**
+ * Fold her seed summaries into the memory built from the previous run.
+ *
+ * HER WORDING OUTRANKS ANY WORDING A MODEL WROTE. That is the whole point of
+ * carrying the seed at all, and the first version got it backwards: the seed
+ * was added only where the previous run knew nothing, on the reasoning that a
+ * real run carries raw text and can therefore grant a FREE reuse while the
+ * seed can only ask for a check. That optimised for cost and silently traded
+ * away the thing being protected — Acquavella had already been compressed on
+ * 11 Sep, so every one of her acq summaries lost to the compressor's own
+ * earlier attempt and arrived back on her approval pile as 13 proposed
+ * rewrites. Worse at that venue than most: her summaries name the city, and
+ * Acquavella runs the same show in New York and Palm Beach.
+ *
+ * The two memories hold different things and both are wanted:
+ *
+ *   - the previous run has the RAW TEXT, which is what proves the venue has
+ *     not touched a word and so grants the reuse with no model call;
+ *   - the seed has HER WORDING.
+ *
+ * So take one from each. Unchanged text now reuses HER summary and still costs
+ * nothing; changed text sends HER summary to be checked rather than a model's.
+ * A `skipped` mark is cleared with it: that mark says a model found no
+ * description, and her having written one is the answer to that.
+ *
+ * Mutates the entries in place, which is deliberate — one row sits in the map
+ * under both its URL key and its title key, and both must move together.
+ */
+function mergeSeedMemory(memory, seedRows) {
+  let overrode = 0, added = 0;
+  for (const r of seedRows) {
+    const hit = findPrevious(memory, r);
+    if (hit) {
+      if (String(hit.summary || '') !== String(r.summary || '') || hit.skipped) {
+        hit.summary = r.summary;
+        hit.skipped = false;
+        hit.fromSeed = true;
+        overrode++;
+      }
+      continue;
+    }
+    for (const k of [urlKey(r), titleKey(r)]) {
+      if (k && !memory.has(k)) { memory.set(k, r); added++; break; }
+    }
+  }
+  return { overrode, added };
+}
+
 module.exports = {
   parseCsv, readProForma, writeCsv, urlKey, titleKey, indexPrevious, looksLikeADifferentEdition,
+  mergeSeedMemory,
   findPrevious, decide, validateAnswer, normalizeRaw, wordCount, addNote,
   previousCompletedRun, seedMemory, MAX_WORDS, SKIP_NOTE,
   TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns, groupIdenticalRaw,

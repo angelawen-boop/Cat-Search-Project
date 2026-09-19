@@ -101,18 +101,16 @@ function plan(dir, { recompress = false } = {}) {
   const prevDir = recompress ? null : C.previousCompletedRun(dir);
   const memory = recompress ? new Map() : loadMemory(prevDir);
 
-  // HER 110 SEED SUMMARIES JOIN THE MEMORY, behind the previous run rather than
-  // in front of it: a real compressed run carries raw text and can grant a free
-  // reuse, while the seed can only ever ask Haiku to check. Where both know an
-  // exhibition the better memory should win. See seedMemory().
-  let seedAdded = 0;
+  // HER 110 SEED SUMMARIES JOIN THE MEMORY, and where both know an exhibition
+  // HERS IS THE WORDING while the run supplies the raw text. See
+  // mergeSeedMemory() for why the first version had this backwards.
+  let seedAdded = 0, seedKept = 0;
   if (!recompress) {
     try {
-      for (const r of C.seedMemory(path.join(__dirname, '..', 'Cat_Watch_v10.2_haiku.jsx'))) {
-        for (const k of [C.urlKey(r), C.titleKey(r)]) {
-          if (k && !memory.has(k)) { memory.set(k, r); seedAdded++; break; }
-        }
-      }
+      const merged = C.mergeSeedMemory(
+        memory, C.seedMemory(path.join(__dirname, '..', 'Cat_Watch_v10.2_haiku.jsx')));
+      seedAdded = merged.added;
+      seedKept = merged.overrode;
     } catch (e) {
       say(`Could not read the seed set (${e.message.slice(0, 60)}) — carrying on without it.`);
     }
@@ -121,6 +119,7 @@ function plan(dir, { recompress = false } = {}) {
   say(`Run:      ${dir}  (${rows.length} rows)`);
   say(`Memory:   ${prevDir ? prevDir : recompress ? '(ignored — --recompress)' : '(none — first compression)'}`);
   if (seedAdded) say(`          + ${seedAdded} of her own seed summaries, so her wording is kept unless the venue has changed what it says`);
+  if (seedKept) say(`          + ${seedKept} more where a previous run had overwritten her wording — hers restored`);
 
   const done = [];
   const pending = [];
