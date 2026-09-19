@@ -1,0 +1,11 @@
+venue_code,title,start_date,end_date,summary,url,notes
+artic,[current page],,,,https://www.artic.edu/exhibitions,"The venue's ""current"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition."
+artic,[upcoming page],,,,https://www.artic.edu/exhibitions/upcoming,"The venue's ""upcoming"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition."
+artic,[past 2026 page],,,,https://www.artic.edu/exhibitions/history?year=2026,"The venue's ""past 2026"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition."
+artic,[past 2025 page],,,,https://www.artic.edu/exhibitions/history?year=2025,"The venue's ""past 2025"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition."
+artic,[past 2024 page],,,,https://www.artic.edu/exhibitions/history?year=2024,"The venue's ""past 2024"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition."
+artic,[past 2023 page],,,,https://www.artic.edu/exhibitions/history?year=2023,"The venue's ""past 2023"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition."
+artic,[past p2 2026 page],,,,https://www.artic.edu/exhibitions/history?year=2026&page=2,"The venue's ""past p2 2026"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition."
+artic,[past p2 2025 page],,,,https://www.artic.edu/exhibitions/history?year=2025&page=2,"The venue's ""past p2 2025"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition."
+artic,[past p2 2024 page],,,,https://www.artic.edu/exhibitions/history?year=2024&page=2,"The venue's ""past p2 2024"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition."
+artic,[past p2 2023 page],,,,https://www.artic.edu/exhibitions/history?year=2023&page=2,"The venue's ""past p2 2023"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition."
