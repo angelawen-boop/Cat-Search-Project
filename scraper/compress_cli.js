@@ -131,7 +131,7 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
     // Marker rows report a listing page the scraper could not read. There is
     // no exhibition and no prose — compressing one would be inventing.
     if (String(row.title || '').startsWith('[')) {
-      done.push({ ...row, summary: '' });
+      done.push({ ...row, summary: '', _row: i });
       tally.empty++;
       return;
     }
@@ -140,7 +140,7 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
     tally[d.action] = (tally[d.action] || 0) + 1;
 
     if (d.summary !== null && d.summary !== undefined) {
-      done.push({ ...row, summary: d.summary, notes: C.addNote(row.notes, d.note) });
+      done.push({ ...row, summary: d.summary, notes: C.addNote(row.notes, d.note), _row: i });
     } else {
       pending.push({
         index: i,
@@ -414,12 +414,12 @@ function apply(dir) {
     if (v.skip) {
       skipped++;
       for (const idx of [p.index, ...(p.appliesAlsoTo || [])]) {
-        filled.push({ ...rows[idx], summary: '', notes: C.addNote(rows[idx].notes, C.SKIP_NOTE) });
+        filled.push({ ...rows[idx], summary: '', notes: C.addNote(rows[idx].notes, C.SKIP_NOTE), _row: idx });
       }
       continue;
     }
     for (const idx of [p.index, ...(p.appliesAlsoTo || [])]) {
-      filled.push({ ...rows[idx], summary: v.text });
+      filled.push({ ...rows[idx], summary: v.text, _row: idx });
     }
   }
 
@@ -431,12 +431,23 @@ function apply(dir) {
     process.exit(1);
   }
 
-  // Rebuild in the raw file's own order, so the compressed CSV is row-for-row
-  // the same sweep. A reordered file would read as a different set of changes
-  // at import.
-  const byKey = new Map();
-  for (const r of [...done, ...filled]) byKey.set(C.urlKey(r) || C.titleKey(r), r);
-  const out = rows.map(r => byKey.get(C.urlKey(r) || C.titleKey(r)) || { ...r, summary: '' });
+  // REBUILT BY ROW POSITION. It used to be rebuilt by a URL-or-title KEY, and
+  // that quietly destroyed rows: several rows can share one key, the map keeps
+  // only the last, and every position holding a colliding key then received
+  // that same row.
+  //
+  // It showed up on the marker rows, where it is most visible and least
+  // harmful. MoMA's two unreadable listing pages and the Morgan's three all
+  // report the venue's base address, so all five collapsed onto one and the
+  // coverage panel told her every page was the "past" page — the British
+  // Museum's two survived only because its pages happen to have separate
+  // addresses.
+  //
+  // The same collision reaches real exhibitions wherever two rows share a key:
+  // a venue that has RECYCLED an address (§5), or two rows with no address at
+  // all and the same title. Position cannot collide, so it is the only safe
+  // way to put a file back together.
+  const out = C.rebuildInOrder(rows, [...done, ...filled]);
 
   C.writeCsv(path.join(runPath, COMPRESSED_CSV), out);
   fs.unlinkSync(donePath);

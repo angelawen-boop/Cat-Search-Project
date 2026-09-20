@@ -617,7 +617,40 @@ function mergeSeedMemory(memory, seedRows, { seedWins = false } = {}) {
   return { overrode, added };
 }
 
+/**
+ * Put a compressed file back together in the raw file's own order.
+ *
+ * IT REBUILDS BY ROW POSITION, and the reason is a bug that destroyed rows.
+ * The first version keyed each finished row by its URL (falling back to its
+ * title) and looked every raw row up in that map. Several rows can share one
+ * key: the map keeps only the last, and every position holding a colliding key
+ * then received that same row.
+ *
+ * It surfaced on the marker rows, where it is most visible and least harmful.
+ * MoMA's two unreadable listing pages, and the Morgan's three, all report the
+ * venue's base address — so five rows collapsed onto one and the coverage panel
+ * told her every page was the "past" page. The British Museum's two survived
+ * only because its pages happen to have separate addresses.
+ *
+ * The same collision reaches real exhibitions wherever two rows share a key: a
+ * venue that has RECYCLED an address, or two rows with no address and the same
+ * title. A position cannot collide with another position.
+ *
+ * Anything with no `_row` is ignored rather than guessed at, and a raw row
+ * nobody finished comes back with an empty summary rather than vanishing — the
+ * row count out always equals the row count in.
+ */
+function rebuildInOrder(rows, parts) {
+  const out = rows.map(r => ({ ...r, summary: '' }));
+  for (const r of parts) {
+    if (typeof r._row === 'number' && Number.isInteger(r._row)
+        && r._row >= 0 && r._row < out.length) out[r._row] = r;
+  }
+  return out;
+}
+
 module.exports = {
+  rebuildInOrder,
   parseCsv, readProForma, writeCsv, urlKey, titleKey, indexPrevious, looksLikeADifferentEdition,
   mergeSeedMemory,
   findPrevious, decide, validateAnswer, normalizeRaw, wordCount, addNote,

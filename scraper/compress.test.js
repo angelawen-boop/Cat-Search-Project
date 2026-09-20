@@ -452,3 +452,62 @@ test('SM-009: by default the seed still FILLS A GAP the run knows nothing about'
   const memory = indexPrevious([]);
   assert.equal(mergeSeedMemory(memory, [seedRow()]).added, 1);
 });
+
+// ── Putting the file back together ──────────────────────────────────────────
+// The rebuild used to key finished rows by URL-or-title. Several rows can share
+// one key, so the map kept the last and every colliding position received it.
+
+const { rebuildInOrder } = require('./compress.js');
+const marker = (v, what, url) => ({
+  venue_code: v, title: '[' + what + ' page]', start_date: '', end_date: '',
+  summary: '', url, notes: 'Could not be read. ' + SKIP_NOTE,
+});
+
+test('RB-001: every row comes back in its own position', () => {
+  const raw = [row({ title: 'A' }), row({ title: 'B' }), row({ title: 'C' })];
+  const out = rebuildInOrder(raw, [
+    { ...raw[2], summary: 'third.', _row: 2 },
+    { ...raw[0], summary: 'first.', _row: 0 },
+  ]);
+  assert.deepStrictEqual(out.map(r => r.title), ['A', 'B', 'C']);
+  assert.deepStrictEqual(out.map(r => r.summary), ['first.', '', 'third.']);
+});
+
+test('RB-002: rows sharing ONE URL keep their own titles — the real bug', () => {
+  // The Morgan's three unreadable listing pages all report the venue's base
+  // address. Keyed by URL they collapsed to one and the coverage panel said
+  // every page was the "past" page.
+  const base = 'https://www.themorgan.org/exhibitions';
+  const raw = [marker('morgan', 'current', base),
+               marker('morgan', 'upcoming', base),
+               marker('morgan', 'past', base)];
+  const out = rebuildInOrder(raw, raw.map((r, i) => ({ ...r, _row: i })));
+  assert.deepStrictEqual(out.map(r => r.title),
+    ['[current page]', '[upcoming page]', '[past page]']);
+});
+
+test('RB-003: two rows with no URL and the same title stay separate', () => {
+  // The title fallback collided too, and this one would lose an exhibition.
+  const a = row({ title: 'Untitled', url: '', summary: 'one.' });
+  const b = row({ title: 'Untitled', url: '', summary: 'two.' });
+  const out = rebuildInOrder([a, b], [{ ...a, _row: 0 }, { ...b, _row: 1 }]);
+  assert.deepStrictEqual(out.map(r => r.summary), ['one.', 'two.']);
+});
+
+test('RB-004: the row count out always equals the row count in', () => {
+  const raw = [row({ title: 'A' }), row({ title: 'B' })];
+  assert.equal(rebuildInOrder(raw, []).length, 2);
+  assert.equal(rebuildInOrder(raw, [{ ...raw[0], _row: 0 }]).length, 2);
+});
+
+test('RB-005: a finished row with no position is ignored, never guessed at', () => {
+  const raw = [row({ title: 'A' })];
+  const out = rebuildInOrder(raw, [{ ...raw[0], summary: 'lost.' }]);
+  assert.equal(out[0].summary, '');
+});
+
+test('RB-006: a position outside the file cannot write into it', () => {
+  const raw = [row({ title: 'A' })];
+  assert.equal(rebuildInOrder(raw, [{ ...raw[0], summary: 'x.', _row: 9 }]).length, 1);
+  assert.equal(rebuildInOrder(raw, [{ ...raw[0], summary: 'x.', _row: -1 }])[0].summary, '');
+});
