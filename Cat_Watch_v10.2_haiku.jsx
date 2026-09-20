@@ -116,16 +116,51 @@ function mergeSweepLog(prev,seen){
   return out;
 }
 
-const TIERS = {
-  upcoming:{ label:"Announced", note:"Not open yet. Catalogue usually appears at opening.", ink:"#4A5A6B", wash:"#E1E5EB", time:"upcoming", ord:3 },
-  recent:  { label:"Recently opened", note:"Just opened. Catalogue should be available now.", ink:"#2D6B5A", wash:"#D4EDE4", time:"current", ord:0 },
-  current: { label:"On now", note:"In print. Cheapest it will ever be.", ink:"#2D4A3F", wash:"#DBE7E1", time:"current", ord:1 },
-  fresh:   { label:"Closed under 3 months", note:"Still stocked. Comfortable window.", ink:"#556B3E", wash:"#E3E8D8", time:"past", ord:4 },
-  closing: { label:"Closed 3\u20136 months", note:"Shop stock thinning. Buy now if you want it.", ink:"#9C7020", wash:"#F0E6CE", time:"past", ord:5 },
-  urgent:  { label:"Closed 6\u201312 months", note:"Final call. Reprints are rare.", ink:"#A13823", wash:"#F0DCD6", time:"past", ord:6 },
-  lapsed:  { label:"Closed over a year", note:"Assume out of print. Secondhand only.", ink:"#6B2E2E", wash:"#E5D6D4", time:"past", ord:7 },
-  unknown: { label:"Dates unclear", note:"No reliable end date found.", ink:"#6A6560", wash:"#E3DED7", time:"current", ord:2 },
+// URGENCY COLOURS, ONE SET PER THEME — dark added 20 Sep 2026 at her request.
+//
+// The washes are not the light ones dimmed. A pale badge on a dark ground
+// glares, so each dark wash is a DEEP tint of the same hue and the ink becomes
+// the light end of it — the ladder keeps its meaning (cool blue for announced
+// through to deep red for long closed) while the page stays dark.
+const TIER_SETS = {
+  light: {
+    upcoming: { ink: "#4A5A6B", wash: "#E1E5EB" },
+    recent:   { ink: C.okEdge, wash: "#D4EDE4" },
+    current:  { ink: "#2D4A3F", wash: "#DBE7E1" },
+    fresh:    { ink: "#556B3E", wash: "#E3E8D8" },
+    closing:  { ink: "#9C7020", wash: "#F0E6CE" },
+    urgent:   { ink: "#A13823", wash: "#F0DCD6" },
+    lapsed:   { ink: "#6B2E2E", wash: "#E5D6D4" },
+    unknown:  { ink: "#6A6560", wash: "#E3DED7" },
+  },
+  dark: {
+    upcoming: { ink: "#A8BDD4", wash: "#26313D" },
+    recent:   { ink: "#7FD6B8", wash: "#193328" },
+    current:  { ink: "#8FC4AE", wash: "#1B2B24" },
+    fresh:    { ink: "#B4C98C", wash: "#242B1A" },
+    closing:  { ink: "#E0B45C", wash: "#33280F" },
+    urgent:   { ink: "#F09079", wash: "#3A1E17" },
+    lapsed:   { ink: "#D9928F", wash: "#331C1C" },
+    unknown:  { ink: "#A8A29A", wash: "#2A2622" },
+  },
 };
+const TIER_TEXT = {
+    upcoming: { label: "Announced", note: "Not open yet. Catalogue usually appears at opening.", time: "upcoming", ord: 3 },
+    recent: { label: "Recently opened", note: "Just opened. Catalogue should be available now.", time: "current", ord: 0 },
+    current: { label: "On now", note: "In print. Cheapest it will ever be.", time: "current", ord: 1 },
+    fresh: { label: "Closed under 3 months", note: "Still stocked. Comfortable window.", time: "past", ord: 4 },
+    closing: { label: "Closed 3\u20136 months", note: "Shop stock thinning. Buy now if you want it.", time: "past", ord: 5 },
+    urgent: { label: "Closed 6\u201312 months", note: "Final call. Reprints are rare.", time: "past", ord: 6 },
+    lapsed: { label: "Closed over a year", note: "Assume out of print. Secondhand only.", time: "past", ord: 7 },
+    unknown: { label: "Dates unclear", note: "No reliable end date found.", time: "current", ord: 2 },
+};
+const tiersFor = mode => Object.fromEntries(Object.keys(TIER_TEXT).map(
+  k => [k, { ...TIER_TEXT[k], ...TIER_SETS[mode][k] }]));
+// TIERS stays a module-level constant for everything that reads a LABEL or an
+// `ord` outside the component (sorting, band names). Colour is read from the
+// component's themed copy; these values are the light ones and are never used
+// to paint anything in dark mode.
+const TIERS = tiersFor("light");
 
 function relTime(iso){if(!iso)return null;const d=new Date(iso);if(isNaN(d))return null;const s=Math.max(0,Math.floor((Date.now()-d.getTime())/1000));if(s<60)return"just now";const m=Math.floor(s/60);if(m<60)return m+" minute"+(m===1?"":"s")+" ago";const h=Math.floor(m/60);if(h<24)return h+" hour"+(h===1?"":"s")+" ago";const day=Math.floor(h/24);return day+" day"+(day===1?"":"s")+" ago";}
 function minsSinceIso(iso){if(!iso)return Infinity;const d=new Date(iso);if(isNaN(d))return Infinity;return(Date.now()-d.getTime())/60000;}
@@ -541,6 +576,38 @@ export default function App(){
   const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
   const[pinTouched,setPinTouched]=useState(false); // pin those ids to the top this session
   const[showTop,setShowTop]=useState(false); // show the return-to-top button once scrolled down
+  // LIGHT OR DARK. Her choice is remembered in the browser, not in the ledger
+  // and not in the page's store: it is a per-device convenience, and the right
+  // answer on her laptop at 9pm is not necessarily the right one on another
+  // screen. Browser storage can throw outright (private window, blocked site
+  // data), so every touch is wrapped and the page renders fine without it.
+  //
+  // FIRST VISIT FOLLOWS THE OPERATING SYSTEM. If her machine is already in
+  // dark mode the app opens dark, which is the whole point of asking at 9pm.
+  // Once she picks, her pick wins on that device forever.
+  const[theme,setTheme]=useState(()=>{
+    try{ const v=localStorage.getItem("cw-theme"); if(v==="dark"||v==="light")return v; }catch{}
+    try{ if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)return "dark"; }catch{}
+    return "light";
+  });
+  const toggleTheme=()=>setTheme(t=>{
+    const n=t==="dark"?"light":"dark";
+    try{ localStorage.setItem("cw-theme",n); }catch{}
+    return n;
+  });
+  // The page around the component paints its own background before React runs,
+  // so it has to be told too — otherwise the margins stay cream around a dark
+  // app. Also sets color-scheme, which is what makes scrollbars and form
+  // controls follow.
+  useEffect(()=>{
+    try{
+      const d=document.documentElement;
+      d.setAttribute("data-theme",theme);
+      d.style.colorScheme=theme;
+      document.body.style.background=theme==="dark"?"#1A1815":"#E8E4DE";
+      document.body.style.color=theme==="dark"?"#EDE8E0":"#1E1B18";
+    }catch{}
+  },[theme]);
   useEffect(()=>{const onScroll=()=>setShowTop(window.scrollY>400);window.addEventListener("scroll",onScroll,{passive:true});onScroll();return()=>window.removeEventListener("scroll",onScroll);},[]);
 
   useEffect(()=>{
@@ -1225,14 +1292,49 @@ export default function App(){
 
   const counts=useMemo(()=>{const c={total:rows.length,dismissed:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;const t=tierFor(r);if((t==="closing"||t==="urgent")&&r.acquiring!=="no"&&r.acquiring!=="acquired"&&r.hasCatalogue!=="no")c.pressing++;}return c;},[rows]);
 
-  const C={bg:"#E8E4DE",card:"#F5F2ED",ink:"#1E1B18",soft:"#78736C",rule:"#CBC5BB",action:"#2D4A3F",accent:"#A13823",owned:"#7B5EA7",muted:"#B5AFA6"};
-  const chip=on=>({padding:"4px 10px",borderRadius:999,border:"1px solid "+(on?C.ink:C.rule),background:on?C.ink:"transparent",color:on?"#fff":C.soft,fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap"});
+  // ── TWO PALETTES, ONE SET OF NAMES — dark added 20 Sep 2026, her request:
+  //    "it's 9pm and this cream background with light grey text is v difficult
+  //    to read."
+  //
+  // EVERY COLOUR THE APP PAINTS COMES FROM HERE OR FROM TIER_SETS. Hexes had
+  // been scattered through the render — drawer grounds, banner washes, one-off
+  // button inks — and each one left behind would have been a cream patch on a
+  // dark page. They are all named now, which is the only way a second theme
+  // can be trusted.
+  //
+  // THE DARK SET IS NOT THE LIGHT SET INVERTED. Pure white on pure black is
+  // harsh for long reading, and this is a screen she works down for an hour at
+  // a time, so the ground is a warm near-black and the text a warm off-white.
+  // `soft` is deliberately LIGHTER than a plain inversion would make it: her
+  // complaint was grey-on-cream, and the same mistake is easy to repeat in the
+  // other direction.
+  const PALETTES={
+    light:{bg:"#E8E4DE",card:"#F5F2ED",ink:"#1E1B18",soft:"#78736C",rule:"#CBC5BB",
+           action:"#2D4A3F",accent:"#A13823",owned:"#7B5EA7",muted:"#B5AFA6",
+           drawer:C.drawer,body:C.body,dim:C.dim,panel:C.panel,
+           warnBg:C.warnBg,warnEdge:C.warnEdge,warnInk:C.warnInk,
+           okBg:C.okBg,okEdge:C.okEdge,okInk:C.okInk,
+           holdBg:C.holdBg,ownedBg:C.ownedBg,
+           rejectInk:C.rejectInk,neverInk:C.neverInk,star:C.star,onAction:C.onAction,
+           scrim:C.scrim},
+    dark: {bg:"#1A1815",card:"#232019",ink:"#EDE8E0",soft:"#A8A29A",rule:"#3A352E",
+           action:"#5E9E85",accent:"#E2735A",owned:"#B79BE0",muted:"#6A645C",
+           drawer:"#2A2620",body:"#D6D0C6",dim:"#201D18",panel:"#262219",
+           warnBg:"#3A2E14",warnEdge:"#C79A3E",warnInk:"#F0D9A4",
+           okBg:"#16302A",okEdge:"#4E9B80",okInk:"#A6DCC6",
+           holdBg:"#32291C",ownedBg:"#2B2136",
+           rejectInk:"#D6B87A",neverInk:"#E0A3A3",star:"#E0B45C",onAction:"#12100E",
+           scrim:"rgba(0,0,0,0.6)"},
+  };
+  const C=PALETTES[theme];
+  const TH=tiersFor(theme);          // the tier colours for THIS theme
+  const chip=on=>({padding:"4px 10px",borderRadius:999,border:"1px solid "+(on?C.ink:C.rule),background:on?C.ink:"transparent",color:on?C.onAction:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap"});
   const sBtn={padding:"5px 12px",borderRadius:4,border:"1px solid "+C.rule,background:"transparent",color:C.soft,fontSize:11,fontWeight:500,cursor:"pointer"};
-  const pBtn={...sBtn,background:C.action,color:"#fff",border:"none",opacity:busy?0.5:1,cursor:busy?"wait":"pointer"};
+  const pBtn={...sBtn,background:C.action,color:C.onAction,border:"none",opacity:busy?0.5:1,cursor:busy?"wait":"pointer"};
   const lnk={fontSize:11,fontWeight:500,color:C.ink,background:C.card,border:"1px solid "+C.rule,borderRadius:3,padding:"4px 9px",textDecoration:"none",display:"inline-block",whiteSpace:"nowrap"};
 
   // ---- v9 approval-stage render helpers ----
-  const decBtn=(active,color)=>({padding:"3px 9px",borderRadius:4,border:"1px solid "+(active?color:C.rule),background:active?color:"transparent",color:active?"#fff":C.soft,fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"});
+  const decBtn=(active,color)=>({padding:"3px 9px",borderRadius:4,border:"1px solid "+(active?color:C.rule),background:active?color:"transparent",color:active?C.onAction:C.soft,fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"});
   const isUndecided=(p,i)=>isUndecidedCard(p,decisions[i]);
 
   const renderProposalCard=(p,i)=>{
@@ -1257,8 +1359,8 @@ export default function App(){
             : p.upd.map((u,j)=>{const fd=(dec.fields||{})[j];return(
                 <div key={j} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:5}}>
                   <div style={{flex:1,lineHeight:1.4}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?("add \u201c"+u.newVal+"\u201d"):("\u201c"+u.oldVal+"\u201d \u2192 \u201c"+u.newVal+"\u201d")}</span></div>
-                  <button onClick={()=>setFieldDec(i,j,"accept")} style={decBtn(fd==="accept","#2D6B5A")}>{fd==="accept"?"\u2713 ":""}Accept edit</button>
-                  <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject","#8A6D3B")}>Reject</button>
+                  <button onClick={()=>setFieldDec(i,j,"accept")} style={decBtn(fd==="accept",C.okEdge)}>{fd==="accept"?"\u2713 ":""}Accept edit</button>
+                  <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject",C.rejectInk)}>Reject</button>
                 </div>
               );})}
         </div>}
@@ -1277,7 +1379,7 @@ export default function App(){
                 const chosen=(picked===undefined?ch.picked:picked)===opt;
                 return(
                   <button key={k} onClick={()=>setChoice(i,ch.field,opt)}
-                    style={{...decBtn(chosen,"#2D6B5A"),display:"block",width:"100%",textAlign:"left",marginBottom:3,whiteSpace:"normal",lineHeight:1.4}}>
+                    style={{...decBtn(chosen,C.okEdge),display:"block",width:"100%",textAlign:"left",marginBottom:3,whiteSpace:"normal",lineHeight:1.4}}>
                     {chosen?"\u2713 ":"\u00a0\u00a0"}{opt&&String(opt).trim()?opt:"(blank)"}
                   </button>
                 );
@@ -1296,9 +1398,9 @@ export default function App(){
             is not interested in: that one is accepted and then dismissed, and
             dismiss is not a rubbish chute. */}
         {p.type==="add"&&<div style={{marginTop:8,display:"flex",gap:6,flexWrap:"wrap"}}>
-          <button onClick={()=>setCardMode(i,"accept")} style={decBtn(dec.mode==="accept","#2D6B5A")}>{dec.mode==="accept"?"\u2713 ":""}Add new entry</button>
-          <button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject","#8A6D3B")}>{dec.mode==="reject"?"\u2713 ":""}Reject</button>
-          <button onClick={()=>setCardMode(i,"never")} style={decBtn(dec.mode==="never","#7A4A4A")}>{dec.mode==="never"?"\u2713 ":""}{"Never add this"}</button>
+          <button onClick={()=>setCardMode(i,"accept")} style={decBtn(dec.mode==="accept",C.okEdge)}>{dec.mode==="accept"?"\u2713 ":""}Add new entry</button>
+          <button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject",C.rejectInk)}>{dec.mode==="reject"?"\u2713 ":""}Reject</button>
+          <button onClick={()=>setCardMode(i,"never")} style={decBtn(dec.mode==="never",C.neverInk)}>{dec.mode==="never"?"\u2713 ":""}{"Never add this"}</button>
         </div>}
         {p.type==="add"&&dec.mode==="never"&&<div style={{marginTop:5,fontSize:10.5,color:C.soft,lineHeight:1.45}}>
           {"Won\u2019t be offered again on any future sweep. It won\u2019t enter your ledger. You can undo this from \u201cNever added\u201d at the top."}
@@ -1321,7 +1423,7 @@ export default function App(){
   let savedText=null,savedCol=C.soft,savedWeight=500;
   if(!hasLedger){savedText="No ledger loaded \u2014 tap Import to begin.";}
   else if(dirty){savedText=null;} // the red banner below covers this
-  else if(savedFile){savedText="\u2713 Saved \u2014 safe to close  ("+savedFile+")";savedCol="#2D6B5A";savedWeight=600;}
+  else if(savedFile){savedText="\u2713 Saved \u2014 safe to close  ("+savedFile+")";savedCol=C.okEdge;savedWeight=600;}
   else{savedText=loadedInfo||"Loaded \u2014 no edits yet.";}
 
   if(!loaded)return(<div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.soft,minHeight:"100vh",display:"grid",placeItems:"center",fontSize:13}}>Opening the ledger{"\u2026"}</div>);
@@ -1338,25 +1440,29 @@ export default function App(){
           <button onClick={requestImport} style={sBtn}>Import</button>
           <button onClick={handleExport} disabled={!hasLedger} style={{...pBtn,opacity:hasLedger?1:0.4,cursor:hasLedger?"pointer":"not-allowed"}}>Export / Save</button>
           <input ref={fileRef} type="file" accept=".json" onChange={handleImport} style={{display:"none"}}/>
-          <button onClick={()=>refreshFileRef.current?.click()} style={{...sBtn,marginLeft:"auto"}}>Import Refresh</button>
+          {/* Small and out of the way: it is a comfort control, not part of the
+              work. Says what it will DO, not what is currently on. */}
+          <button onClick={toggleTheme} title={theme==="dark"?"Switch to light":"Switch to dark"}
+            style={{...sBtn,marginLeft:"auto",padding:"5px 9px"}}>{theme==="dark"?"\u2600 Light":"\u263D Dark"}</button>
+          <button onClick={()=>refreshFileRef.current?.click()} style={sBtn}>Import Refresh</button>
           <input ref={refreshFileRef} type="file" accept=".csv,text/csv" onChange={handleRefreshFile} style={{display:"none"}}/>
         </div>
         {savedText&&<div style={{marginTop:6,fontSize:11,color:savedCol,fontWeight:savedWeight}}>{savedText}</div>}
-        {showUnsavedBanner&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:"#D8EAE4",border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:"#1F4C40",lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
+        {showUnsavedBanner&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.okBg,border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.okInk,lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u21BB"}</span>
           <span>{"Refresh applied \u2014 "+refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated"+(refreshDone.never?", "+refreshDone.never+" never to be offered again":"")+". Not saved yet \u2014 tap \u201cExport / Save\u201d now."}</span>
         </div>}
-        {hasLedger&&unconfirmedSave&&<div style={{marginTop:8,padding:"9px 12px",background:"#E8E2D6",border:"2px solid "+C.soft,borderRadius:5,fontSize:12.5,color:C.ink,lineHeight:1.45,display:"flex",alignItems:"flex-start",gap:9}}>
+        {hasLedger&&unconfirmedSave&&<div style={{marginTop:8,padding:"9px 12px",background:C.holdBg,border:"2px solid "+C.soft,borderRadius:5,fontSize:12.5,color:C.ink,lineHeight:1.45,display:"flex",alignItems:"flex-start",gap:9}}>
           <span style={{fontSize:16,lineHeight:1.1}}>{"\u2193"}</span>
           <span>{"A download of "+unconfirmedSave+" was started. This viewer can\u2019t tell us whether it arrived, so your ledger is still marked unsaved \u2014 check your downloads folder. If the file is there, you\u2019re safe."}</span>
         </div>}
-        {showUnsavedBanner&&!refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:"#F7E4C4",border:"2px solid #B5791A",borderRadius:5,fontSize:12.5,fontWeight:700,color:"#6B4A1E",lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
+        {showUnsavedBanner&&!refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid #B5791A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u26A0"}</span>
           <span>{"UNSAVED CHANGES \u2014 what's on screen is not saved to a file. Tap \u201cExport / Save\u201d before you close this tab or your work is lost."}</span>
         </div>}
         {busy&&prog.total>0&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
-        {error&&<div style={{marginTop:8,padding:"7px 11px",background:TIERS.urgent.wash,border:"1px solid "+TIERS.urgent.ink,borderRadius:4,fontSize:11.5,color:"#6B2E2E"}}>{error}</div>}
-        {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>{showDebug&&<pre style={{marginTop:4,padding:7,background:"#DDD8D0",border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>}</div>}
+        {error&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
+        {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>{showDebug&&<pre style={{marginTop:4,padding:7,background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>}</div>}
         {hasLedger&&<div style={{marginTop:6,fontSize:10.5,color:C.soft,display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}>
           <span>Last refreshed: {fmtRefresh(lastRun)}</span>
           {/* PER-VENUE FRESHNESS lives here because this is where she already
@@ -1377,7 +1483,7 @@ export default function App(){
         {/* NOT GATED ON A LEDGER BEING OPEN. The sweep log is not part of her
             document — it is what this page knows about the world, so it is
             there on a fresh page and it survives Reset. */}
-        {showFresh&&<div style={{marginTop:6,padding:"8px 10px",background:"#DDD8D0",border:"1px solid "+C.rule,borderRadius:4}}>
+        {showFresh&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
           <div style={{fontSize:10,color:C.soft,marginBottom:6,lineHeight:1.5}}>
             {"When each venue was last swept, and when it last actually gave us exhibitions. A venue swept recently but with no rows since an older date is being refused \u2014 worth a solo re-run."}
           </div>
@@ -1393,7 +1499,7 @@ export default function App(){
               <div key={m.id} style={{display:"flex",gap:8,fontSize:10.5,color:C.soft,padding:"2px 0",alignItems:"baseline"}}>
                 <span style={{minWidth:130,color:C.ink}}>{m.short}</span>
                 <span style={{minWidth:150}}>swept {fmtRefresh(v.attempted)}</span>
-                <span style={{color:v.returned?(stale?TIERS.urgent.ink:C.soft):TIERS.urgent.ink,fontWeight:stale||!v.returned?600:400}}>
+                <span style={{color:v.returned?(stale?TH.urgent.ink:C.soft):TH.urgent.ink,fontWeight:stale||!v.returned?600:400}}>
                   {v.returned?("rows "+fmtRefresh(v.returned)):"no rows \u2014 refused"}
                 </span>
               </div>
@@ -1405,7 +1511,7 @@ export default function App(){
             </div>}
         </div>}
 
-        {hasLedger&&showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:"#DDD8D0",border:"1px solid "+C.rule,borderRadius:4}}>
+        {hasLedger&&showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
           {/* BIG ENOUGH TO READ — her finding, 20 Sep: "tiny AND faint". This
               is a list of decisions she may need to UNDO, so it cannot be the
               smallest, palest text on the screen. Set at or above the filter
@@ -1425,7 +1531,7 @@ export default function App(){
           <span><b style={{color:C.ink}}>{counts.total}</b> Tracked</span>
           <span><b style={{color:C.ink}}>{counts.wanted}</b> Wanted</span>
           <span><b style={{color:C.owned}}>{counts.owned}</b> Owned</span>
-          <span><b style={{color:TIERS.urgent.ink}}>{counts.pressing}</b> Closing Window</span>
+          <span><b style={{color:TH.urgent.ink}}>{counts.pressing}</b> Closing Window</span>
           {counts.dismissed>0&&<span><b>{counts.dismissed}</b> Dismissed</span>}
           <button onClick={()=>{setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);}} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Search">{"\uD83D\uDD0D"}</button>
         </div>
@@ -1483,11 +1589,11 @@ export default function App(){
           let header=null;
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
           const lead=brk||header;
-          const t=tierFor(r),tier=TIERS[t],mu=MU[r.museumId],mo=moSince(r.endDate),isOpen=openCards[r.id],noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested,isBusy=busyId===r.id;
+          const t=tierFor(r),tier=TH[t],mu=MU[r.museumId],mo=moSince(r.endDate),isOpen=openCards[r.id],noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested,isBusy=busyId===r.id;
           const searchingLabel=lookPhase==="shop"?"Searching venue shop\u2026":lookPhase==="web"?"Searching more broadly\u2026":"Searching\u2026";
           if(dismissed)return(
             <React.Fragment key={r.id}>{lead}
-            <article style={{background:"#ECEAE6",border:"1px solid "+C.rule,borderLeft:"4px solid "+C.muted,borderRadius:5,padding:"10px 14px",opacity:0.55}}>
+            <article style={{background:C.dim,border:"1px solid "+C.rule,borderLeft:"4px solid "+C.muted,borderRadius:5,padding:"10px 14px",opacity:0.55}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
                 <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft}}>{mu?.short}</span>
                 <button onClick={()=>restore(r.id)} style={{background:"none",border:"1px solid "+C.action,borderRadius:3,color:C.action,fontSize:10,fontWeight:500,cursor:"pointer",padding:"2px 8px"}}>Restore</button>
@@ -1504,7 +1610,7 @@ export default function App(){
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
                   <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginTop:2}}>{mu?.short}</span>
                   {noCat?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.muted,background:"#E3DED7",padding:"2px 7px",borderRadius:3}}>No catalogue</span>
-                  :isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:"#EDE5F5",padding:"2px 7px",borderRadius:3}}>Owned</span>
+                  :isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:C.ownedBg,padding:"2px 7px",borderRadius:3}}>Owned</span>
                   :<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:tier.ink,background:tier.wash,padding:"2px 7px",borderRadius:3}}>{tier.label}</span>}
                 </div>
                 <div style={{display:"flex",alignItems:"baseline",gap:0,marginTop:5}}>
@@ -1513,15 +1619,15 @@ export default function App(){
                     {r.exUrl&&<a href={r.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.action,textDecoration:"none",marginLeft:5,fontSize:13,fontWeight:400}}>{"\u2197"}</a>}
                   </h3>
                   <div style={{display:"flex",gap:8,alignItems:"center",marginLeft:8,flexShrink:0}}>
-                    <button onClick={()=>toggleWatch(r.id)} title={r.watching?"Unwatch":"Watch"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1,color:r.watching?"#B8860B":C.muted}}>{r.watching?"\u2605":"\u2606"}</button>
+                    <button onClick={()=>toggleWatch(r.id)} title={r.watching?"Unwatch":"Watch"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1,color:r.watching?C.star:C.muted}}>{r.watching?"\u2605":"\u2606"}</button>
                     {!isAcq&&<button onClick={()=>dismiss(r.id)} title="Not interested" style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:18,lineHeight:1,color:C.muted}}>{"\u00d7"}</button>}
                   </div>
                 </div>
                 <div style={{fontSize:11,color:C.soft,marginTop:3,marginBottom:6}}>{dateRange(r)}</div>
-                {r.summary&&<p style={{fontSize:12.5,lineHeight:1.5,margin:"0 0 8px",color:"#3D3730"}}>{r.summary}</p>}
+                {r.summary&&<p style={{fontSize:12.5,lineHeight:1.5,margin:"0 0 8px",color:C.body}}>{r.summary}</p>}
                 {!noCat&&!isAcq&&mo!==null&&mo>0&&(
                   <div style={{margin:"8px 0 6px"}}>
-                    <div style={{position:"relative",height:5,background:"#DDD8D0",borderRadius:3}}>
+                    <div style={{position:"relative",height:5,background:C.drawer,borderRadius:3}}>
                       <div style={{height:"100%",width:Math.min(100,(mo/12)*100)+"%",background:tier.ink,borderRadius:3}}/>
                       {[3,6].map(k=><span key={k} style={{position:"absolute",left:(k/12*100)+"%",top:-2,width:1,height:10,background:C.soft,opacity:0.5}}/>)}
                     </div>
@@ -1540,7 +1646,7 @@ export default function App(){
                 </div>
               </div>
               {isOpen&&(
-                <div style={{background:"#ECE8E1",borderTop:"1px solid "+C.rule,padding:"12px 14px"}}>
+                <div style={{background:C.panel,borderTop:"1px solid "+C.rule,padding:"12px 14px"}}>
                   {!r.looked?(
                     <div>
                       <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue search run yet.</p>
@@ -1588,9 +1694,9 @@ export default function App(){
           style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(-50%)",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>
       )}
       {undo&&(
-        <div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:C.ink,color:"#fff",borderRadius:4,padding:"7px 14px",fontSize:12,display:"flex",gap:10,alignItems:"center",zIndex:999,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
+        <div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.onAction,borderRadius:4,padding:"7px 14px",fontSize:12,display:"flex",gap:10,alignItems:"center",zIndex:999,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
           <span>Dismissed</span>
-          <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",padding:"3px 8px"}}>Restore</button>
+          <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:C.onAction,fontSize:11,fontWeight:600,cursor:"pointer",padding:"3px 8px"}}>Restore</button>
         </div>
       )}
       <div style={{maxWidth:760,margin:"18px auto 0",paddingTop:10,borderTop:"1px solid "+C.rule,fontSize:10,color:C.soft,lineHeight:1.6}}>
@@ -1889,10 +1995,10 @@ export default function App(){
         </div>
       )}
       {confirmBox&&(
-        <div style={{position:"fixed",inset:0,background:"rgba(20,18,16,0.45)",display:"grid",placeItems:"center",zIndex:1000,padding:16}}>
+        <div style={{position:"fixed",inset:0,background:C.scrim,display:"grid",placeItems:"center",zIndex:1000,padding:16}}>
           <div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:8,maxWidth:420,padding:"18px 20px",boxShadow:"0 6px 24px rgba(0,0,0,0.25)"}}>
             <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:8}}>Replace what's on screen?</div>
-            <div style={{fontSize:12.5,color:"#3D3730",lineHeight:1.5,marginBottom:16}}>{confirmBox.text}</div>
+            <div style={{fontSize:12.5,color:C.body,lineHeight:1.5,marginBottom:16}}>{confirmBox.text}</div>
             <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
               <button onClick={()=>setConfirmBox(null)} style={sBtn}>Cancel</button>
               <button onClick={()=>{const a=confirmBox.act;setConfirmBox(null);a&&a();}} style={{...pBtn,background:C.accent}}>Continue</button>

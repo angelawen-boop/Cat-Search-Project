@@ -38,7 +38,11 @@ const src = fs.readFileSync(JSX, 'utf8');
 
 // Module-level helpers: MUSEUMS, MU, KNOWN_VENUES, isValidYMD, normalizeUrlKey,
 // urlLooksValid, csvParse. Everything below TIERS is display or unrelated.
-const prelude = slice(src, 'const MUSEUMS = [', 'const TIERS = {');
+// The end anchor is the comment that opens the tier colours, not the TIERS
+// constant itself: TIERS stopped being a literal on 20 Sep when dark mode
+// made it theme-dependent, and the old anchor vanished with it. Anchor on
+// prose that describes a section, not on a line of code that can be rewritten.
+const prelude = slice(src, 'const MUSEUMS = [', '// URGENCY COLOURS, ONE SET PER THEME');
 
 // The intake itself, as one contiguous run of the component's body.
 const intake = slice(src,
