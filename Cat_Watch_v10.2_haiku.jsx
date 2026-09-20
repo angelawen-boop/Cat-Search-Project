@@ -1574,6 +1574,19 @@ export default function App(){
           <span style={{fontSize:17,lineHeight:1}}>{"\u26A0"}</span>
           <span>{"UNSAVED CHANGES \u2014 what's on screen is not saved to a file. Tap \u201cExport / Save\u201d before you close this tab or your work is lost."}</span>
         </div>}
+        {/* A QUARANTINE THAT ISN'T SAVING IS A BANNER, NOT A FOOTNOTE — her
+            ruling, 20 Sep. It used to print inside the quarantine panel, which
+            she would have to open to find: the rows sit on screen looking
+            normal while nothing is being written, and the one person who needs
+            to know is the one least likely to go looking. It borrows the
+            unsaved-changes banner because it means the same thing — a decision
+            you have made is not stored. NOT gated on a ledger being open: the
+            quarantine applies before any file is loaded, so its failures do
+            too. */}
+        {quarWhy&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
+          <span style={{fontSize:17,lineHeight:1.1}}>{"\u26A0"}</span>
+          <span>{"QUARANTINE \u2014 "+quarWhy}</span>
+        </div>}
         {busy&&prog.total>0&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
         {error&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
         {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>{showDebug&&<pre style={{marginTop:4,padding:7,background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>}</div>}
@@ -1590,7 +1603,7 @@ export default function App(){
             of refreshing. It is not: a quarantine is a standing decision about
             what may never enter the ledger, and it holds whether or not a
             sweep ever happens again. */}
-        {(ignored.length>0||quarWhy)&&<div style={{marginTop:6,fontSize:12,color:C.soft}}>
+        {ignored.length>0&&<div style={{marginTop:6,fontSize:12,color:C.soft}}>
           <button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:12,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>
         </div>}
 
@@ -1625,7 +1638,7 @@ export default function App(){
             </div>}
         </div>}
 
-        {showIgnored&&(ignored.length>0||quarWhy)&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
+        {showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
           {/* BIG ENOUGH TO READ — her finding, 20 Sep: "tiny AND faint". This
               is a list of decisions she may need to UNDO, so it cannot be the
               smallest, palest text on the screen. Set at or above the filter
@@ -1633,7 +1646,6 @@ export default function App(){
           <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
             {"Rows you said should never be entries. They are skipped on every import, whichever ledger is open, and a Reset does not clear them. They also ride along in your export as a backup. Taking one out of quarantine only makes it offer itself again on the next sweep \u2014 it does not add anything to your ledger."}
           </div>
-          {quarWhy&&<div style={{fontSize:12,color:C.accent,marginBottom:8,lineHeight:1.55}}>{quarWhy}</div>}
           {ignored.map(x=>(
             <div key={x.key} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
               <span style={{minWidth:130,fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
