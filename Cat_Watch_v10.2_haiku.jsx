@@ -1,31 +1,45 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 
+// THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
+// size — it is the order she wants to WORK in. The venues she reads most come
+// first; the three Italian sites she finds hardest to check sit together near
+// the end; the three that refuse us outright sit last, because nothing there is
+// ever hers to decide.
+//
+// IT IS ALSO THE ONLY ORDER IN THE APP. The freshness drawer, the venue filter
+// chips and every venue heading on the refresh screen all read this array, so
+// moving a venue here moves it everywhere and they cannot drift apart. Adding a
+// second hand-typed list of codes is how two finished recipes once became
+// unselectable with nothing to say why.
+//
+// Accademia (dellav) was not in her list; it sits with the other Italian venues
+// until she says otherwise.
 const MUSEUMS = [
   { id:"met", short:"The Met", name:"The Metropolitan Museum of Art", city:"New York",
     exBase:"https://www.metmuseum.org/exhibitions/", shopSearch:"https://store.metmuseum.org/search?q=", shopHome:"https://store.metmuseum.org/", listUrl:"https://www.metmuseum.org/exhibitions" },
-  { id:"ng", short:"National Gallery", name:"The National Gallery", city:"London",
-    exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/search?q=", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
   { id:"rijks", short:"Rijksmuseum", name:"Rijksmuseum", city:"Amsterdam",
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
+  { id:"ng", short:"National Gallery", name:"The National Gallery", city:"London",
+    exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/search?q=", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
   { id:"acq", short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
+  { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:null, shopHome:"https://shop.frick.org/", listUrl:null },
+  { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:null, shopHome:"https://bookstore.menil.org/", listUrl:null },
+  { id:"artic", short:"Art Institute", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:null, shopHome:"https://shop.artic.edu/", listUrl:null },
+  { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:null, shopHome:"https://wallacecollectionshop.org/", listUrl:null },
+  { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:null, shopHome:"https://shop.tate.org.uk/", listUrl:null },
+  { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:null, shopHome:"https://shop.tate.org.uk/", listUrl:null },
+  { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:null, shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
   { id:"louvre", short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:null, shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
+  { id:"khm", short:"KHM Vienna", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:null, shopHome:"https://shop.khm.at/en/", listUrl:null },
   { id:"uffizi", short:"Uffizi", name:"Uffizi Galleries", city:"Florence", exBase:null, shopSearch:null, shopHome:"https://shop.uffizi.it/en/", listUrl:null },
+  { id:"dellav", short:"Accademia", name:"Gallerie dell'Accademia", city:"Venice", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"borghese", short:"Borghese", name:"Galleria Borghese", city:"Rome", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"brera", short:"Brera", name:"Pinacoteca di Brera", city:"Milan", exBase:null, shopSearch:null, shopHome:"https://bottegabrera.org/en/", listUrl:null },
   { id:"capo", short:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
-  { id:"dellav", short:"Accademia", name:"Gallerie dell'Accademia", city:"Venice", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
-  { id:"khm", short:"KHM Vienna", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:null, shopHome:"https://shop.khm.at/en/", listUrl:null },
   { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:null, shopHome:"https://store.moma.org/", listUrl:null },
-  { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:null, shopHome:"https://shop.frick.org/", listUrl:null },
-  { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:null, shopHome:"https://shop.themorgan.org/", listUrl:null },
-  { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:null, shopHome:"https://bookstore.menil.org/", listUrl:null },
-  { id:"artic", short:"Art Institute", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:null, shopHome:"https://shop.artic.edu/", listUrl:null },
-  { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:null, shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
   { id:"brit", short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:null, shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
-  { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:null, shopHome:"https://wallacecollectionshop.org/", listUrl:null },
-  { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:null, shopHome:"https://shop.tate.org.uk/", listUrl:null },
-  { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:null, shopHome:"https://shop.tate.org.uk/", listUrl:null },
+  { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:null, shopHome:"https://shop.themorgan.org/", listUrl:null },
 ];
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 

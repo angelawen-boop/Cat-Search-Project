@@ -290,4 +290,18 @@ check('18f: the real sample file starts with every card undecided',
     g2.acceptedCount===3, g2);
 }
 
+// 19. THE VENUE ORDER IS HERS, and one array drives all three places it shows
+// (the freshness drawer, the filter chips, the venue headings on the refresh
+// screen). Written down here so a later session reshuffling the array for
+// tidiness has to answer to her list rather than to its own taste, and so a
+// venue cannot be dropped from it by an edit that looks harmless.
+{
+  const want=['met','rijks','ng','acq','frick','menil','artic','wallace',
+    'tate-britain','tate-modern','va','louvre','khm','uffizi','dellav',
+    'borghese','brera','capo','moma','brit','morgan'];
+  const got=H.MUSEUMS.map(m=>m.id);
+  check('19: the venues are in her order', got.join()===want.join(), {got});
+  check('19a: and all 21 are still there', got.length===21, {count:got.length});
+}
+
 process.exit(fails?1:0);
