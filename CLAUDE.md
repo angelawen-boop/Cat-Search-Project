@@ -892,7 +892,8 @@ should be written, and that has to be re-derived rather than carried over.**
 **MERGE, NEVER REPLACE.** A venue's line moves only when the incoming sweep is
 LATER, so importing an old file changes nothing — the same bug in a new place
 otherwise. The two halves move independently, which is what makes the drawer
-worth reading. Fixtures 15, 15a, 15b.
+worth reading. Fixtures 15, 15a, 15b, **and confirmed by her against several
+older sweep files on 20 Sep: the drawer did not move.**
 
 **DARK MODE — her request, 20 Sep: "it's 9pm and this cream background with
 light grey text is v difficult to read."** A **Dark / Light** button sits by
@@ -919,9 +920,12 @@ triangle, **sentence case** ("a bit aggressive" in caps). Every venue opens and
 closes, with one **Collapse all / Expand all** over the venues that actually
 have cards. The quarantine shelf is **12.5px in the body ink** — it was 10.5
 and muted, "tiny AND faint", and it is a list of decisions she may need to
-UNDO. "Put back" is **"Remove from quarantine"**; the toggle says **"3 in
-quarantine"**, on **its own row**, because a quarantine is a standing decision
-and not part of refreshing.
+UNDO. "Put back" is **"Remove from quarantine"**; the toggle says
+**"Quarantine - 3"**, on **its own row**, because a quarantine is a standing
+decision and not part of refreshing. **"n to decide" sits beside the venue's
+own count, not pushed to the right-hand edge** — her ruling on seeing it, and
+the same reasoning as the heading being the control: across a full-width row
+the eye has to cross the screen to pair a number with the venue it belongs to.
 
 **COUNTS, AND THE ONE THAT CAN FAIL — 19 Sep.** The screen said "319 proposed
 changes found" and nothing else, which cannot be checked against anything: rows
@@ -955,10 +959,10 @@ assembled from two duplicate rows is in the combined band, not in "Normal cases"
 because what the band is about is that she is seeing one card built from two
 lines.
 
-`scraper/fixtures/intake_cases.js` — **52 checks**, including the two that must
+`scraper/fixtures/intake_cases.js` — **62 checks**, including the two that must
 NOT merge, the quarantine rules, the freshness facts with their sweep dates, the
 row identity, the whole-file refusal, the phantom band, the ledger gate (18-18g)
-and the sweep-log merge (15a, 15b).
+the sweep-log merge (15a, 15b) and the quarantine's two homes (20-20g).
 
 **`scraper/fixtures/page_loads.js` asks whether the app LOADS**, and
 **`page_renders.js` asks whether it DRAWS** — added 20 Sep on her ruling, and
@@ -1925,6 +1929,12 @@ Each entry cost a real failure. Before changing the area, read the line.
   produce, and SHE had to type the whole history out again. **A one-off script
   that changes a file she USES is not a one-off: what it did belongs in §7 with
   the file, not only beside the code.**
+- Moving one thing out of the ledger and leaving the thing beside it in, in
+  the SAME session that established why the ledger was the wrong container.
+  Quarantine's whole promise is "never show me this again", and it depended on
+  which file happened to be open: a Reset brought every quarantined row back.
+  **A ruling about where a fact belongs applies to every fact of that kind in
+  front of you, not only the one that prompted it.**
 - Filtering `rows` after `applyLookback` has already copied it into `toFetch` — the
   log announced ten exclusions while all ten sat in the CSV with empty summaries.
   **A log line describing something that did not happen is worse than no log line**,
@@ -2034,9 +2044,11 @@ Each entry cost a real failure. Before changing the area, read the line.
 7. ~~**JSX — quarantine and per-venue freshness**~~ — **BUILT and the SAVE
    ROUND-TRIP PASSED, 20 Sep.** She imported the sample against the seed,
    quarantined three, applied, exported, reset to seed, reloaded the export:
-   the quarantine came back with the ledger. **The sweep log no longer rides in
-   that file at all** — it lives in the page's own store (§4), so it survived
-   the Reset too, which the ledger copy never could.
+   the quarantine came back with the ledger. **Neither the sweep log nor the
+   quarantine rides in that file as its working copy any more** — both live in
+   the page's own store (§4), so both survive a Reset, which the ledger copy
+   never could. The quarantine is still written into the export as a BACKUP;
+   the sweep log is not, because it is rebuilt by any sweep file.
    - **Quarantine ("never add this")** — design below. Without it, rejecting a
      card stores nothing, so every piece of junk returns on every future sweep.
      **Visible and undoable**: a quarantine she cannot see is a silent loss.
@@ -2081,7 +2093,7 @@ Each entry cost a real failure. Before changing the area, read the line.
 ledger until JSX and scraper are both finished, so she can import freely and roll back.
 **Do not raise ledger pollution as a reason to reorder this list.**
 
-### Quarantine — "never add this", BUILT 20 Sep
+### Quarantine — "never add this", BUILT 20 Sep, REHOUSED 20 Sep
 
 **Dismiss is not a rubbish chute.** She dismisses only exhibitions that are **real**,
 **not duplicates**, and that she has looked at and isn't interested in. Junk must never
@@ -2091,10 +2103,42 @@ Today there are two outcomes and neither fits junk: **Reject** stores nothing, s
 row proposes itself again on every future sweep forever; **Accept then dismiss** puts it
 in the ledger permanently. There is no third option and there needs to be.
 
-**Keyed on normalised URL**, venue + title where a row has none. The ledger
-carries an `ignored` list beside `rows`; `analyzeProForma` drops a matching row
-in pass one, before it can fold with anything; Add cards have a third button.
-Import still reads `d.rows` and `d.lastRun`, so an older ledger loads unchanged.
+**Keyed on normalised URL**, venue + title where a row has none.
+`analyzeProForma` drops a matching row in pass one, before it can fold with
+anything; Add cards have a third button.
+
+**IT LIVES IN THE PAGE'S STORE AND IN HER EXPORT, BOTH — her ruling, option C,
+20 Sep, and the correction matters: it was NOT built before the sweep log moved
+out of the ledger. Both were the same session.** She won the argument for a
+third place and the thing sitting beside it was left in the ledger anyway.
+
+**HER SCENARIO IS THE WHOLE CASE, and she found it by reasoning about the
+design rather than by hitting it:** quarantine two junk rows, Reset to the
+seed, feed the SAME sweep file again — and every piece of junk is back, because
+the only record went with the ledger she replaced. A feature whose promise is
+"never show me this again" cannot depend on which file happens to be open.
+
+**BUT IT IS NOT THE SWEEP LOG EITHER, and that is what forced two homes rather
+than a move.** The sweep log is safe living only in the store because it is
+DERIVABLE — every fact in it comes from a sweep file, so losing it costs one
+re-import. Quarantine is derivable from nothing. That is the same property that
+keeps the LEDGER out of the store, so putting quarantine there alone would have
+been the ledger's own mistake at smaller scale.
+
+**Her objection, kept because she was right to raise it:** *"it's messy and
+lazy to just loop in a bunch of redundancies."* It is not two hopeful copies.
+The store is the working copy that always applies, the export is the backup,
+and one rule settles every disagreement — the shape her ledger already has.
+
+**THE RULE IS LATEST DECISION WINS, WHICH NEEDS TOMBSTONES.** Releasing a row
+is RECORDED, not merely absent, or loading an older backup would silently
+re-block something she had released — the sweep log's own bug one door along.
+`mergeQuarantine` is the single rule; the ledger file keeps the plain `ignored`
+list it always had, so an older backup loads unchanged and a newer one stays
+readable to an older build. The panel shows with no ledger open, because it is
+in force before any file is loaded, and a store that cannot be written says so
+rather than silently blocking nothing. Fixtures 20 to 20g, verified by
+reversing the comparison and watching four of them fail.
 
 **It is COUNTED, never silent** — the row identity on the intake screen gains a
 "you'd said never to add" term, so a quarantine can never be mistaken for a lost
