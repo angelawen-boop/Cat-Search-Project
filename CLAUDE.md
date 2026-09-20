@@ -509,9 +509,22 @@ normal case, and the one that produces the app's combined bands.
 
 **HER QUESTION SETTLED THE SHAPE**, and the answer is the drawer's whole point:
 last TRIED is the latest sweep date for the venue, last BROUGHT ROWS the latest
-among its real rows. Borghese in her own file reads *tried 13 Sep 14:26 · rows
-13 Sep 02:04* — swept twice, the later run got only markers. That gap is the
+among its real rows. Borghese in her own file reads *tried 13 Sep 2:27pm · rows
+13 Sep 2:04am* — swept twice, the later run got only markers. That gap is the
 line that says re-run it alone.
+
+**IT ONLY READ THAT WAY AFTER A SECOND REPAIR, and the guide asserted it for a
+day while the file said otherwise — her catch, 20 Sep.** The rebuild described
+in §7 step 5 takes each venue's ROWS from one run, and for Borghese and
+Capodimonte that had to be the EARLIER run, because both had stopped answering
+by the afternoon. Dropping the later run dropped the only evidence it happened,
+so the drawer aged both venues back to 2am and lost the gap at the exact two
+venues that had earned it. **A repair that is right about the rows can still be
+wrong about the dates: they answer different questions of the same file.**
+`stitch_20260913_0442/fix_late_refusals.js` restores the later attempt's own
+marker rows, stamped from that run's log. It checks all 21 rather than the two
+we knew about, and throws rather than guess. Marker rows are not proposals, so
+her card count did not move.
 
 **Stamped when the venue FINISHES**, in `writeVenueCsv`, not at run start: a run
 takes ten minutes across nineteen venues and `--continue` can spread one across
@@ -1900,6 +1913,18 @@ Each entry cost a real failure. Before changing the area, read the line.
   rule directly, or the test moves when the rule does not.**
 - Deleting a whole line when asked to delete one sentence in it, taking with it a
   sentence she had not mentioned.
+- Rebuilding the import file to one sweep per venue and letting the DATES
+  follow the rows. Borghese and Capodimonte kept rows from the 2am run because
+  the afternoon run could not reach them, and dropping the afternoon run erased
+  the fact that it had been tried at all — so the freshness drawer aged both
+  back twelve hours and lost the tried-but-empty gap at the only two venues that
+  had one. **Right about the rows, wrong about the dates.**
+- Leaving the reasoning for a hand-rebuilt data file in a comment inside the
+  one-off script that built it. Three sessions later the guide still said the
+  file was a straight stitch, stated a Borghese reading the file could not
+  produce, and SHE had to type the whole history out again. **A one-off script
+  that changes a file she USES is not a one-off: what it did belongs in §7 with
+  the file, not only beside the code.**
 - Filtering `rows` after `applyLookback` has already copied it into `toFetch` — the
   log announced ten exclusions while all ten sat in the CSV with empty summaries.
   **A log line describing something that did not happen is worse than no log line**,
@@ -1929,15 +1954,33 @@ Each entry cost a real failure. Before changing the area, read the line.
 
    - **Sweeps, 13 Sep** — `run_2026-09-13_020041` (container, all 21, which is
      what the routing rule now prevents), `_142632` (container, 19), `_142846`
-     (hers: met 106, artic 65). Borghese was dead from every machine that day:
-     unreachable, not a refusal.
+     (hers: met 106, artic 65). Borghese answered the 2am run and was dead from
+     every machine by the afternoon: unreachable, not a refusal. Capodimonte did
+     the same, including from her laptop, where it timed out.
    - **Stitch** → `stitch_20260913_0442`, 652 rows folding to **405 distinct
      exhibitions**. Every venue but met and artic appears twice because two
      container runs went in — not needed for coverage, but it gave the app's
      folding 209 live pairs to work on rather than authored ones, and all 209
      fold with no conflict at all.
-   - **Compress, 19 Sep, repaired 20 Sep** → `sweep_compressed.csv`, the file
-     she imports. 390 rows went to a model in five jobs, 262 were answered
+   - **THEN REBUILT BY HAND TO ONE SWEEP PER VENUE, and this is the part every
+     later session needs and no session wrote down until she had to explain it
+     twice.** Two container runs covering the same venues meant two copies of
+     nearly everything, and at import that is hundreds of duplicate cards. So
+     `rebuild_one_run_per_venue.js` SELECTS rows already in the compressed file —
+     nothing re-swept, nothing re-compressed — one run per venue:
+
+     | Rows taken from | Venues |
+     |---|---|
+     | `_142632` (container, afternoon) | acq brera brit dellav frick khm louvre menil moma morgan ng rijks tate-britain tate-modern uffizi va wallace |
+     | `_020041` (container, 2am) | **borghese, capo** — the afternoon run reached neither |
+     | `_142846` (her laptop) | met, artic |
+
+     **So the venues in her file were NOT all swept at the same moment**, and
+     two of them carry rows from twelve hours before their last attempt. That is
+     what `fix_late_refusals.js` exists for; §3.
+   - **Compress, 19 Sep, repaired 20 Sep** → `sweep_compressed_clean.csv`, the
+     file she imports. **NOT `sweep_compressed.csv`, which is the unrebuilt
+     652-row original and would put hundreds of duplicate cards on her pile.** 390 rows went to a model in five jobs, 262 were answered
      free, ~580k tokens. Summary length min 3, median 7, max 10 against her own
      median of 6. Two repairs since: `--seed-wins` restored 13 Acquavella
      summaries to her wording, and the rebuild-by-key fix restored 13 rows the
@@ -1945,9 +1988,13 @@ Each entry cost a real failure. Before changing the area, read the line.
      `19sep_first_pass/`.
    - **IMPORT: SHAKEDOWN RUN 20 SEP.** Against her 110-row seed the file
      produces **320 cards** — 299 add, 14 fill, 7 change — with 86 rows matching
-     silently, **no card asking her to choose**, and a 36-page coverage panel.
-     The row identity closes: 652 = 36 markers + 210 folds + 86 matching + 320.
-     Bands 2, 4, 5 and 6 are all empty on this file.
+     silently, **no card asking her to choose**, and a coverage panel.
+     The row identity closes on the rebuilt file:
+     **419 = 13 markers + 0 folds + 86 matching + 320** (415 and 9 before
+     `fix_late_refusals.js` added Borghese's and Capodimonte's later refusals).
+     The folds are 0 BECAUSE of the rebuild — the 210 folds and 36 markers
+     quoted for this step before came from importing the unrebuilt 652-row
+     stitch, which is a different file. Both triage bands are empty here.
 
      **It was 319 until the rebuild-by-key bug was fixed** (§6). That bug had
      copied one Rijksmuseum row over another, accidentally making two rows
