@@ -876,12 +876,33 @@ export default function App(){
     return {props,coverage,tally,seen:{attempted,returned}};
   }
 
+  // THE SWEEP LOG IS WRITTEN AT IMPORT, NOT AT APPLY — corrected 20 Sep, and
+  // it is the half of her ruling I failed to carry through.
+  //
+  // It used to be written when she pressed "Go ahead and update the ledger",
+  // on the reasoning that cancelling a review should leave no trace. That
+  // reasoning was correct WHILE THE LOG LIVED IN THE LEDGER, where it was part
+  // of the document. It is not part of the document any more. It is what this
+  // page knows about the world, and reading a sweep file is the moment it
+  // learns the sweep happened — whether or not she then accepts a single card.
+  //
+  // It also had a cost she found immediately: with the ledger gated on deciding
+  // every card, seeing the drawer fill meant working 320 cards first. Now she
+  // can import, look, and cancel.
+  const recordSweep=(seen)=>{
+    if(!seen) return;
+    const vs=mergeSweepLog(venueSeen,seen);
+    setVenueSeen(vs);
+    writeSweepLog(vs).then(ok=>{ setFreshWhy(ok?null:"The sweep log couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload."); });
+  };
+
   function handleRefreshFile(e){
     const file=e.target.files[0]; if(!file)return;
     const reader=new FileReader();
     reader.onload=()=>{
       const res=analyzeProForma(String(reader.result||""),new Set(ignored.map(x=>x.key)));
       if(res.error){setError(res.error);return;}
+      recordSweep(res.seen);
       if(!res.props.length){
         setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null);
         setError("Read the refresh file, but nothing new to propose \u2014 your ledger already matches it."+((res.coverage||[]).length?" ("+res.coverage.length+" listing page"+(res.coverage.length===1?"":"s")+" couldn\u2019t be read \u2014 see below.)":""));
@@ -946,21 +967,9 @@ export default function App(){
       p.upd.forEach((u,j)=>{ if((dec.fields||{})[j]==="accept"){ patch[u.field]=u.newVal; if(u.kind==="fill")filled++; else changed++; hit=true; } });
       if(hit){ patch.editedAt=now; byId.set(p.matchId,patch); touched.push(p.matchId); }
     });
-    // FRESHNESS IS A FACT ABOUT THE FILE, NOT ABOUT HER DECISIONS. A row she
-    // rejected was still collected, so the venue was still reached. Written
-    // here rather than at import because this is the moment she commits to the
-    // file; cancelling the review should leave no trace.
-    //
-    // THE DATES COME FROM THE FILE'S swept_at, never from `now`. `now` was the
-    // bug: it recorded when she pressed the button, and called it "tried".
-    if(seenInFile){
-      const vs=mergeSweepLog(venueSeen,seenInFile);
-      setVenueSeen(vs);
-      // Fire and forget: the drawer already shows the merged answer, and a
-      // store that refuses is not a reason to fail her import. It is a cache —
-      // the next import of any sweep file rebuilds it.
-      writeSweepLog(vs).then(ok=>{ if(!ok)setFreshWhy("The sweep log couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload."); else setFreshWhy(null); });
-    }
+    // The sweep log is NOT touched here. It was written the moment the file was
+    // read — see recordSweep. Applying changes her ledger; it tells us nothing
+    // new about when a venue was swept.
     if(newlyIgnored.length){
       const have=new Set(ignored.map(x=>x.key));
       setIgnored([...ignored,...newlyIgnored.filter(x=>!have.has(x.key))]);
