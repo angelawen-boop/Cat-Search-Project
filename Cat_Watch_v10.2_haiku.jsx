@@ -125,7 +125,7 @@ function mergeSweepLog(prev,seen){
 const TIER_SETS = {
   light: {
     upcoming: { ink: "#4A5A6B", wash: "#E1E5EB" },
-    recent:   { ink: C.okEdge, wash: "#D4EDE4" },
+    recent:   { ink: "#2D6B5A", wash: "#D4EDE4" },
     current:  { ink: "#2D4A3F", wash: "#DBE7E1" },
     fresh:    { ink: "#556B3E", wash: "#E3E8D8" },
     closing:  { ink: "#9C7020", wash: "#F0E6CE" },
