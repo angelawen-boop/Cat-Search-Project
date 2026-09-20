@@ -704,10 +704,16 @@ brand-new exhibition assembled from two duplicate rows is in band 3, not in
 built from two lines.
 
 `scraper/fixtures/intake_cases.js` — **25 cases**, including the two that must
-NOT merge, the quarantine rules, the freshness facts and the row identity. They
-run under `npm test`, which they did not until 20 Sep: they required a
-`harness.js` that had never existed, and the test script did not name them
-either — two independent reasons for one silence. The harness lifts the intake
+NOT merge, the quarantine rules, the freshness facts and the row identity.
+
+**THEY LIVE ON THE LIVE BRANCH, WITH THE JSX THEY TEST, AND NOT ON `main`.** So
+`npm test` on `main` runs 173 and says nothing about the intake; on the branch
+it runs those 173 **and** the 25. A session on `main` that reads a green 173 as
+covering the app is reading it wrong. They merge when the branch does.
+
+They only started running at all on 20 Sep: they required a `harness.js` that
+had never existed, and the test script did not name them either — two
+independent reasons for one silence. The harness lifts the intake
 out of the JSX by ANCHORS rather than line numbers, because the app is one file
 with no build step and the only alternative is a second copy of the logic that
 drifts. `scraper/fixtures/intake_sample.csv` — 76 rows, 8 venues, built from real
