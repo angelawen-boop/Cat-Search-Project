@@ -477,6 +477,24 @@ Whatever lands in `notes` is shown **verbatim on the approval card**.
 Good: `No closing date found anywhere on the venue's pages.`
 Bad: `NO_END_DATE: kept, lookback unverified`
 
+**A NOTE THAT QUOTES THE PAGE QUOTES ITS MATCH, NEVER ITS INPUT — her finding,
+20 Sep.** Almost every Capodimonte row and the Wallace's Churchill row reached
+her carrying the whole page in `notes`: navigation, breadcrumbs and ticket
+prices, introduced by the words "read from a sentence". Capodimonte averaged
+**6,709 characters of notes per row** and one carried **17,734**.
+
+`findDateRange` returns `raw`, and `raw` is what the note quotes. It was written
+for a LISTING CARD, where the input is a line or two — so returning the input
+was indistinguishable from returning the match. `findDateRangeInProse` then
+began falling through to it with a WHOLE PAGE. **The fall-through is right and
+is not the fault**: it is there to stop the two parsers drifting, which has cost
+dates twice. The fault is that one parser's idea of `raw` only held while its
+input stayed small. Every branch now quotes its own match, capped — `frag()`.
+Fixtures Q-100 to Q-102.
+
+**A length cap alone would not have caught it.** The bug is quoting the wrong
+THING, and a capped whole page is still the wrong thing.
+
 ### Prefer structured data over guessing
 
 Some venues embed a **schema.org Event** block: title, dates and description as
@@ -1662,6 +1680,17 @@ Each entry cost a real failure. Before changing the area, read the line.
 - Italian months abbreviated to three letters (`set`), where the map held only `sett`.
 - Checking output for junk with an ENGLISH-only word list, then reporting an Italian
   venue as clean.
+- Returning a parser's INPUT as the text it matched, in a function written when
+  the input was always a listing card — then feeding it whole pages from a second
+  caller. 17,734 characters of navigation and ticket prices on one approval card.
+  **A field whose correctness rests on its input staying small has no guard at
+  all.**
+- A fixture proving its rule through a SIDE EFFECT: W-004 proved the weekday
+  strip leaves prose alone by looking for "Sun King" inside the parser's `raw`
+  field, so it broke on a change that had nothing to do with weekdays. **Ask the
+  rule directly, or the test moves when the rule does not.**
+- Deleting a whole line when asked to delete one sentence in it, taking with it a
+  sentence she had not mentioned.
 - Filtering `rows` after `applyLookback` has already copied it into `toFetch` — the
   log announced ten exclusions while all ten sat in the CSV with empty summaries.
   **A log line describing something that did not happen is worse than no log line**,
