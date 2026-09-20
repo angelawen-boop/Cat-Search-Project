@@ -173,4 +173,48 @@ const everyConflict=H.analyzeProForma(require('fs').readFileSync(__dirname+'/int
 check('the sample file produces conflicts at all', everyConflict.length>0, everyConflict.length);
 check('  and EVERY one of them came from a fold', everyConflict.every(p=>p.merged), everyConflict.map(p=>p.title));
 
+// ── 18. THE GATE ON THE LEDGER — her ruling, 20 Sep ─────────────────────────
+//
+// applyRefresh used to SKIP an undecided card: not applied, and not remembered
+// either, so it came back on the next sweep with nothing on screen to say it
+// had been passed over. With 320 cards that is a whole session's reading gone
+// on one tap — and she had believed the guard was already there. Her call was
+// a block rather than a warning: "otherwise I envision total chaos if I can
+// skip. this is SLOW mode at the moment."
+//
+// The button is disabled while undecidedCount > 0, so THIS COUNT IS THE GATE.
+// The half that would break it quietly is the second one: REJECTING IS
+// DECIDING. If a rejected card counted as undecided, the button would be
+// unreachable for anyone who turns anything down — most of a real sweep — and
+// it would look like a stuck button rather than a counting bug.
+
+const cd=(props,dec)=>H.countDecisions(props,dec);
+
+let g=cd([{type:'add'},{type:'change',upd:[{field:'endDate'}]}],{});
+check('18: a card she has not touched is undecided', g.undecidedCount===2&&g.acceptedCount===0, g);
+
+g=cd([{type:'add'}],{0:{mode:'reject'}});
+check('18a: rejecting an Add is deciding, and is not "to apply"', g.undecidedCount===0&&g.acceptedCount===0, g);
+
+g=cd([{type:'add'}],{0:{mode:'never'}});
+check('18b: quarantining an Add is deciding too', g.undecidedCount===0, g);
+
+g=cd([{type:'change',upd:[{field:'endDate'},{field:'summary'}]}],{0:{fields:{0:'reject',1:'reject'}}});
+check('18c: rejecting EVERY field of an edit is deciding', g.undecidedCount===0&&g.acceptedCount===0, g);
+
+g=cd([{type:'change',upd:[{field:'endDate'},{field:'summary'}]}],{0:{fields:{0:'accept'}}});
+check('18d: accepting one field of an edit decides the card', g.undecidedCount===0&&g.acceptedCount===1, g);
+
+g=cd([{type:'fill',upd:[{field:'endDate'}]}],{0:{mode:'addnew'}});
+check('18e: "this is a different show" decides the card', g.undecidedCount===0&&g.acceptedCount===1, g);
+
+// The gate has to hold on the pile she actually faces, not only on hand-built
+// cards.
+H.setRows([]);
+const gateFile=H.analyzeProForma(require('fs').readFileSync(__dirname+'/intake_sample.csv','utf8'));
+g=cd(gateFile.props,{});
+check('18f: the real sample file starts with every card undecided',
+  !gateFile.error&&gateFile.props.length>0&&g.undecidedCount===gateFile.props.length,
+  {rows:gateFile.props&&gateFile.props.length,undecided:g.undecidedCount});
+
 process.exit(fails?1:0);

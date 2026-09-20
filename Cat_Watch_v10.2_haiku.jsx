@@ -61,6 +61,32 @@ function csvParse(text){
   return out.filter(r=>r.some(c=>String(c).trim()!==""));
 }
 
+// HOW MANY CARDS ARE DECIDED — and it is the gate on the ledger, so it lives
+// out here where a fixture can reach it. It used to be eight lines inside the
+// component, which is where the counting for a LABEL belongs; it stopped being
+// a label on 20 Sep, when her ruling made the button refuse to fire while
+// anything is undecided.
+//
+// WHAT COUNTS AS DECIDED, and the subtlety is the second half: REJECTING is
+// deciding. An Add card she turned down, and a Fill/Change card whose every
+// field she turned down, are finished work — they must not hold the gate shut.
+// Only a card she has not touched at all is undecided. Getting that backwards
+// would make the button unreachable for anyone who rejects anything, which is
+// most of a real sweep.
+function countDecisions(proposals,decisions){
+  let acceptedCount=0,undecidedCount=0;
+  (proposals||[]).forEach((p,i)=>{
+    const dec=(decisions||{})[i]||{};
+    if(p.type==="add"){ if(dec.mode==="accept")acceptedCount++; else if(!dec.mode)undecidedCount++; return; }
+    // fill/change
+    if(dec.mode==="addnew"){acceptedCount++;return;}
+    const anyAccept=Object.values(dec.fields||{}).some(v=>v==="accept");
+    const anyDecided=dec.mode||Object.values(dec.fields||{}).some(v=>v);
+    if(anyAccept)acceptedCount++; else if(!anyDecided)undecidedCount++;
+  });
+  return {acceptedCount,undecidedCount};
+}
+
 const TIERS = {
   upcoming:{ label:"Announced", note:"Not open yet. Catalogue usually appears at opening.", ink:"#4A5A6B", wash:"#E1E5EB", time:"upcoming", ord:3 },
   recent:  { label:"Recently opened", note:"Just opened. Catalogue should be available now.", ink:"#2D6B5A", wash:"#D4EDE4", time:"current", ord:0 },
@@ -1175,16 +1201,7 @@ export default function App(){
       </div>
     );
   };
-  let acceptedCount=0,undecidedCount=0;
-  if(proposals)proposals.forEach((p,i)=>{
-    const dec=decisions[i]||{};
-    if(p.type==="add"){ if(dec.mode==="accept")acceptedCount++; else if(!dec.mode)undecidedCount++; return; }
-    // fill/change
-    if(dec.mode==="addnew"){acceptedCount++;return;}
-    const anyAccept=Object.values(dec.fields||{}).some(v=>v==="accept");
-    const anyDecided=dec.mode||Object.values(dec.fields||{}).some(v=>v);
-    if(anyAccept)acceptedCount++; else if(!anyDecided)undecidedCount++;
-  });
+  const{acceptedCount,undecidedCount}=countDecisions(proposals,decisions);
 
   // v8.3 status, file model. Three states: fresh load = neutral line; your edits
   // = loud red banner; after Export/Save = calm green line. Green only appears once
@@ -1493,6 +1510,7 @@ export default function App(){
                 </div>
                 );
               })()}
+              <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.5}}>Review each one below.</div>
             </div>
             <div style={{overflow:"auto",padding:"12px 18px",flex:1}}>
               {/* TRIAGE FIRST, THEN THE ORDINARY WORK — her ruling, 13 Sep.
@@ -1632,7 +1650,7 @@ export default function App(){
                     <div style={{marginBottom:12,display:"flex",alignItems:"flex-end",gap:12,flexWrap:"wrap"}}>
                       <div style={{flex:"1 1 260px",minWidth:0}}>
                         <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Normal cases {"\u00b7"} {ordinary.length}</div>
-                        <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing. Review each one below.</div>
+                        <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing. Accept or reject each.</div>
                       </div>
                       <button onClick={()=>{
                           const next={};
@@ -1677,7 +1695,7 @@ export default function App(){
                         style={{display:"flex",alignItems:"center",gap:8,width:"100%",textAlign:"left",background:"none",
                                 border:"none",borderBottom:"1px solid "+C.rule,padding:"6px 0",marginBottom:8,cursor:"pointer",color:C.accent}}>
                         <span style={{fontSize:10,lineHeight:1,width:10,display:"inline-block",transform:vOpen?"rotate(90deg)":"none",transition:"transform .12s"}}>{"\u25B6"}</span>
-                        <span style={{fontSize:13,letterSpacing:"0.1em",textTransform:"uppercase",fontWeight:700}}>{m.short}</span>
+                        <span style={{fontSize:14,letterSpacing:"0.01em",fontWeight:700}}>{m.short}</span>
                         <span style={{fontSize:12,fontWeight:700}}>{"\u00b7"} {grp.length}</span>
                       </button>
                       {vOpen&&grp.map(({p,i})=>renderProposalCard(p,i))}
@@ -1688,8 +1706,30 @@ export default function App(){
             </div>
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
               <button onClick={cancelRefresh} style={sBtn}>Cancel refresh</button>
-              <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>{acceptedCount} to apply {"\u00b7"} {undecidedCount} undecided</span>
-              <button onClick={applyRefresh} style={pBtn}>Go ahead and update the ledger</button>
+              <span style={{fontSize:11.5,color:undecidedCount>0?C.accent:C.soft,marginLeft:"auto"}}>
+                {acceptedCount} to apply {"\u00b7"} {undecidedCount} undecided</span>
+              {/* EVERY CARD MUST BE DECIDED BEFORE THE LEDGER MOVES — her ruling,
+                  20 Sep. applyRefresh SKIPPED an undecided card silently: not
+                  applied, and not remembered either, so it returned on the next
+                  sweep with nothing on screen to say it had been passed over.
+                  With 320 cards that is a whole session's reading thrown away by
+                  one tap, and she had believed the guard was already there.
+
+                  A BLOCK, not a warning — her call, and her reason: "otherwise I
+                  envision total chaos if I can skip. this is SLOW mode at the
+                  moment." A warning she can wave through is the same failure one
+                  dialogue later.
+
+                  The button says WHAT IS MISSING rather than going quietly grey.
+                  A dead control with no reason attached is the thing she would
+                  be left staring at, and the count is the only clue to where the
+                  work is. */}
+              <button onClick={applyRefresh} disabled={undecidedCount>0}
+                title={undecidedCount>0?"Decide every card first — "+undecidedCount+" still undecided.":""}
+                style={{...pBtn,...(undecidedCount>0?{background:C.muted,cursor:"not-allowed",opacity:1}:{})}}>
+                {undecidedCount>0
+                  ? undecidedCount+" still to decide"
+                  : "Go ahead and update the ledger"}</button>
             </div>
           </div>
         </div>

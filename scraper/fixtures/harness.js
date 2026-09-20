@@ -66,6 +66,7 @@ return {
   isMarkerRow,
   setRows: next => { rows = next; },
   getRows: () => rows,
+  countDecisions,
   MUSEUMS, MU, KNOWN_VENUES,
 };
 `;
