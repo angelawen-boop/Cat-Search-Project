@@ -1735,9 +1735,12 @@ export default function App(){
                             left but never WHERE, and a collapsed venue hides
                             its own. Printed on the heading, a closed venue
                             still declares what it is holding. */}
+                        {/* ONLY WHERE THERE IS WORK. A badge on every venue
+                            whatever its state is one more number to read past
+                            on a screen that already carries plenty — her
+                            warning. A venue with nothing left says nothing. */}
                         {(()=>{const u=grp.filter(({p,i})=>isUndecided(p,i)).length;
-                          return u>0?<span style={{fontSize:11,fontWeight:600,color:C.soft,marginLeft:"auto"}}>{u} to decide</span>:
-                            <span style={{fontSize:11,fontWeight:600,color:C.action,marginLeft:"auto"}}>all decided</span>;})()}
+                          return u>0?<span style={{fontSize:11,fontWeight:600,color:C.soft,marginLeft:"auto"}}>{u} to decide</span>:null;})()}
                       </button>
                       {vOpen&&grp.map(({p,i})=>renderProposalCard(p,i))}
                     </div>
