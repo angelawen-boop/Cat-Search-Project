@@ -1144,3 +1144,59 @@ test('A-009: a title broken after a colon is rejoined, and a blurb still is not'
     articTitle('Four Chicago Artists: Theodore Halkin, Evelyn Statsinger, Barbara Rossi, and Christina Ramberg\nMay 11–Aug 26, 2024'),
     'Four Chicago Artists: Theodore Halkin, Evelyn Statsinger, Barbara Rossi, and Christina Ramberg');
 });
+
+// ── R: which machine sweeps which venue ─────────────────────────────────────
+// Her rule, 20 Sep 2026: the two machines never sweep the same venue. It is in
+// code because remembering it failed — on 13 Sep the container swept all 21,
+// and its met and artic rows were nothing but refusals sitting in the stitched
+// file beside the 171 real rows her own machine had for the same two venues.
+
+const SWEEP_SRC = require('fs').readFileSync(
+  require('path').join(__dirname, 'sweep_prototype.js'), 'utf8');
+
+// A HYPHENATED KEY IS QUOTED, and the first version of this fixture did not
+// allow for that: it saw 19 recipes, not 21, and reported "tate-modern has no
+// recipe" for a venue that has one. A fixture that cannot see a venue cannot
+// check it — which is the same silence as no fixture at all.
+const RECIPE_KEY = /\n  '?([a-z-]+)'?: \{\n    name: /g;
+
+const routeOf = code => {
+  // Read the recipe's own text rather than importing the scraper, which would
+  // drag Playwright and a browser into a fixture that is pure bookkeeping.
+  const at = SWEEP_SRC.search(new RegExp("\\n  '?" + code + "'?: \\{"));
+  assert.ok(at > -1, code + ' has no recipe');
+  const rest = SWEEP_SRC.slice(at + 1);
+  const next = rest.search(/\n  '?[a-z-]+'?: \{\n    name: /);
+  const block = next > -1 ? rest.slice(0, next) : rest;
+  return /route:\s*'local'/.test(block) ? 'home' : 'container';
+};
+
+test('R-001: met and artic are HERS — the container must not touch them', () => {
+  assert.strictEqual(routeOf('met'), 'home');
+  assert.strictEqual(routeOf('artic'), 'home');
+});
+
+test('R-002: the three blocked venues are the CONTAINER\'s, deliberately', () => {
+  // They are swept BECAUSE they are blocked: a refusal costs half a second,
+  // proves the block is still real, and leaves the marker rows that make a
+  // sweep's record complete. She must not be pinging them from home.
+  for (const c of ['moma', 'brit', 'morgan']) assert.strictEqual(routeOf(c), 'container');
+});
+
+test('R-003: every other venue is the container\'s', () => {
+  for (const c of ['ng', 'rijks', 'acq', 'frick', 'menil', 'va', 'louvre', 'capo',
+                   'uffizi', 'brera', 'khm', 'dellav', 'wallace', 'borghese',
+                   'tate-modern', 'tate-britain']) {
+    assert.strictEqual(routeOf(c), 'container', c + ' should be the container\'s');
+  }
+});
+
+test('R-004: the two sets do not overlap and cover every venue', () => {
+  const codes = [...SWEEP_SRC.matchAll(RECIPE_KEY)].map(m => m[1]);
+  assert.strictEqual(codes.length, 21, 'expected 21 recipes, found ' + codes.length);
+  const home = codes.filter(c => routeOf(c) === 'home');
+  const container = codes.filter(c => routeOf(c) === 'container');
+  assert.deepStrictEqual(home.sort(), ['artic', 'met']);
+  assert.strictEqual(container.length, 19);
+  assert.strictEqual(home.length + container.length, codes.length);
+});

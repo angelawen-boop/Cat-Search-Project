@@ -103,6 +103,13 @@ const ARGS = process.argv.slice(2).map(a => a.toLowerCase()).filter(Boolean);
 const CONTINUE = ARGS.includes('--continue');
 const WANTED = ARGS.filter(a => !a.startsWith('--'));
 
+// WHICH MACHINE IS THIS, and therefore which venues are ITS job. Overridable
+// both ways; see machineVenues() for why this is code and not a habit.
+const MACHINE = ARGS.includes('--home') ? 'home'
+              : ARGS.includes('--container') ? 'container'
+              : (PROXY_URL ? 'container' : 'home');
+const MACHINE_FORCED = ARGS.includes('--home') || ARGS.includes('--container');
+
 // How many venues run at once. ACROSS venues only — never several pages within
 // one venue, which is the hammering case IR-15 rejects at any scale. Each venue
 // still visits its own pages strictly one at a time, so no museum sees more
@@ -235,8 +242,42 @@ const venueIsDone = code => fs.existsSync(venueCsvPath(code));
 // Venues this invocation will actually scrape. Naming venues always wins; a
 // bare --continue means "finish this run", which is exactly the venues with no
 // file yet. No stored state, no staleness, nothing to get wrong.
+/**
+ * The venues THIS MACHINE is responsible for.
+ *
+ * HER RULE, 20 SEP 2026: the two machines never sweep the same venue.
+ *
+ *   container  the 16 that work here, PLUS moma, brit and morgan — those three
+ *              are swept precisely because they are blocked: a refusal costs
+ *              half a second, proves the block is still real, and leaves the
+ *              marker rows that make a sweep's record complete.
+ *   her laptop met and artic, and nothing else.
+ *
+ * It is in code because it has exactly one correct answer per venue per machine
+ * and because remembering it FAILED. On 13 Sep the container swept all 21: its
+ * met and artic rows were nothing but refusals, and they landed in the stitched
+ * file beside the 171 real rows her own machine had collected for the same two
+ * venues. Reading the coverage panel afterwards she could not tell whether she
+ * had been blocked at home.
+ *
+ * The cost is not only confusion. Sweeping a venue from both machines doubles
+ * the requests it sees, and both of these rate-limit — the container is already
+ * answered 429 by the Met on every page. Duplicate effort here is what turns a
+ * working venue into a blocked one.
+ *
+ * NAMING VENUES BY HAND STILL WINS. A one-off diagnostic is exactly when the
+ * rule should be breakable — it just says so in the log rather than happening
+ * quietly.
+ */
+function machineVenues() {
+  return VENUE_ORDER.filter(c =>
+    (VENUES[c].route === 'local' ? 'home' : 'container') === MACHINE);
+}
+
 function venuesForThisRun() {
-  const asked = WANTED.length ? VENUE_ORDER.filter(c => WANTED.includes(c)) : VENUE_ORDER;
+  const asked = WANTED.length
+    ? VENUE_ORDER.filter(c => WANTED.includes(c))
+    : machineVenues();
   return (CONTINUE && !WANTED.length) ? asked.filter(c => !venueIsDone(c)) : asked;
 }
 
@@ -2816,6 +2857,11 @@ const VENUES = {
   met: {
     name: 'The Metropolitan Museum of Art',
     base: 'https://www.metmuseum.org',
+    // HER MACHINE ONLY — see machineVenues(). The container is answered 429 on
+    // every page here, so sweeping it from the container adds marker rows to a
+    // file where her own run already has all 106 real ones, and spends requests
+    // on a venue that rate-limits.
+    route: 'local',
     // The past archive serves ONE YEAR PER ADDRESS, so each year is its own page.
     //
     // She checked the live site on 11 Sep: picking a year from the menu changes
@@ -3359,6 +3405,8 @@ const VENUES = {
   artic: {
     name: 'Art Institute of Chicago',
     base: 'https://www.artic.edu',
+    // HER MACHINE ONLY — see machineVenues(). Same reasoning as met.
+    route: 'local',
     // BLOCKED FROM THIS CONTAINER, WORKS FROM HERS. A Cloudflare managed
     // challenge — 403 with cf-mitigated:challenge — which her home connection
     // clears. So this recipe exists to be RUN LOCALLY and has never been
@@ -4606,6 +4654,27 @@ async function main() {
   log('Cat Watch Sweep Prototype — starting');
   log(`Lookback floor: ${LOOKBACK.toISOString().slice(0,10)}`);
   log(`Run directory: ${RUN_DIR}${CONTINUE ? ' (continuing)' : ''}`);
+  // SAY WHICH MACHINE THIS IS BEFORE ANYTHING IS FETCHED. The guess is made from
+  // the proxy, which exists in the container and not on her laptop — good, but a
+  // guess. Announcing it means a wrong one is visible in the first lines rather
+  // than discovered afterwards in a file full of refusals.
+  log(`Machine: ${MACHINE}${MACHINE_FORCED ? ' (forced by flag)'
+        : PROXY_URL ? ' (proxy present, so this is the container)'
+                    : ' (no proxy, so this is not the container)'}`);
+  if (WANTED.length) {
+    const foreign = RUN_VENUES.filter(c =>
+      (VENUES[c].route === 'local' ? 'home' : 'container') !== MACHINE);
+    if (foreign.length) {
+      log(`NAMED BY HAND, and not this machine's job: ${foreign.join(', ')}.`);
+      log('Running them anyway — naming a venue always wins. Both machines');
+      log('sweeping one venue doubles what it sees, and met and artic both');
+      log('rate-limit, so do not make a habit of it.');
+    }
+  } else {
+    log(`Sweeping this machine's ${RUN_VENUES.length} venues. `
+      + `The other machine has: ${VENUE_ORDER.filter(c =>
+          (VENUES[c].route === 'local' ? 'home' : 'container') !== MACHINE).join(', ')}.`);
+  }
   log(`Venues this run: ${RUN_VENUES.join(', ') || '(none)'}`);
   const already = VENUE_ORDER.filter(venueIsDone);
   if (already.length) log(`Already complete in this run: ${already.join(', ')}`);
