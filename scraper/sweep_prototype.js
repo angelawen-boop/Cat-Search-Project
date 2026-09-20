@@ -549,15 +549,42 @@ function csvCell(val) {
   return s;
 }
 function csvRow(r) {
-  return [r.venue_code, r.title, r.start_date, r.end_date, r.summary, r.url, r.notes]
+  return [r.venue_code, r.title, r.start_date, r.end_date, r.summary, r.url, r.notes,
+          r.swept_at]
     .map(csvCell).join(',');
 }
 
-const CSV_HEADER = 'venue_code,title,start_date,end_date,summary,url,notes';
+// WHEN THIS ROW WAS COLLECTED — the eighth column, added 20 Sep 2026.
+//
+// HER FINDING. The app's freshness drawer dated every venue by the moment she
+// pressed Import, and said "tried" against it. The sweep may have run twenty
+// minutes or four days earlier. Worse, a stitched file mixes venues swept at
+// DIFFERENT times on two machines, so no single file-level date could be right
+// either. The file simply did not carry the fact, so the app could not show it.
+//
+// PER ROW, NOT PER FILE OR PER VENUE. A row is the smallest thing that has one
+// true answer: it carries the time ITS venue finished. Per file is wrong (two
+// machines); per venue is wrong too once a stitch holds two runs of one venue,
+// which is the normal case and the one that produces the app's combined bands.
+//
+// UTC, unlike the folder names. A run folder is named in Sydney time because a
+// human reads it and sorts by it. This column is machine-read — by the app, in
+// whatever timezone her browser is in — so it carries an unambiguous instant
+// and the app formats it for her. A local time with no zone would be a guess at
+// both ends.
+function sweptAtNow() { return new Date().toISOString(); }
+
+const CSV_HEADER = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at';
 
 // Called only after a venue has finished. Its existence is the record that the
 // venue completed, so it must never be written part-way through one.
 function writeVenueCsv(code, rows) {
+  // Stamped HERE, not at run start. A run takes ten minutes and `--continue`
+  // can spread one across invocations hours apart, so "when the run began" is
+  // not when this venue was read. This function is called once, the moment the
+  // venue finishes — the closest thing to a true answer we have.
+  const at = sweptAtNow();
+  for (const r of rows) if (!r.swept_at) r.swept_at = at;
   const lines = [CSV_HEADER, ...rows.map(csvRow)];
   fs.writeFileSync(venueCsvPath(code), lines.join('\n') + '\n', 'utf8');
 }

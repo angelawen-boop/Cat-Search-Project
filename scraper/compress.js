@@ -207,7 +207,13 @@ function parseCsv(text) {
   return rows;
 }
 
-const CSV_HEADER = 'venue_code,title,start_date,end_date,summary,url,notes';
+// swept_at — when the row's venue finished being read. Added 20 Sep 2026 so
+// the app can date its freshness drawer by the SWEEP rather than by the moment
+// she pressed Import. Compression never looks at it; it is carried so the fact
+// survives the step, which readProForma would otherwise drop on the floor —
+// the column list is what it keeps, and anything absent from it is discarded
+// silently.
+const CSV_HEADER = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at';
 const COLUMNS = CSV_HEADER.split(',');
 
 function csvCell(val) {

@@ -42,7 +42,12 @@ const fs = require('fs');
 const path = require('path');
 
 const OUT_DIR = path.join(__dirname, 'output');
-const COLS = ['venue_code', 'title', 'start_date', 'end_date', 'summary', 'url', 'notes'];
+// swept_at rides through untouched — and a stitch is exactly why it has to be
+// PER ROW. Two runs of one venue land side by side here with different sweep
+// times, which is the normal case, so no file-level or venue-level date could
+// carry the fact.
+const COLS = ['venue_code', 'title', 'start_date', 'end_date', 'summary', 'url', 'notes',
+              'swept_at'];
 
 const args = process.argv.slice(2);
 const outArg = args.find(a => a.startsWith('--out='));
