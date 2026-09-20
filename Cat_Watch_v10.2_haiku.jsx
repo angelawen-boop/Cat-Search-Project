@@ -306,6 +306,8 @@ export default function App(){
   const[venueSeen,setVenueSeen]=useState({});
   const[showFresh,setShowFresh]=useState(false);
   const[seenInFile,setSeenInFile]=useState(null);
+  // A download we started but cannot confirm arrived. Never clears `dirty`.
+  const[unconfirmedSave,setUnconfirmedSave]=useState(null);
   const[lastSaved,setLastSaved]=useState(null);
   const[saveState,setSaveState]=useState("idle");
   const[firstTime,setFirstTime]=useState(false);
@@ -380,6 +382,7 @@ export default function App(){
     setDirty(false);
     
     setSavedFile(null);
+    setUnconfirmedSave(null);
     setError(null);
     setLoadedInfo(info||null);
     setRefreshDone(null);
@@ -894,22 +897,71 @@ export default function App(){
     else doReset();
   }
 
-  function handleExport(){
+  // SAVING MUST NOT DEPEND ON THE SANDBOX ALLOWING A DOWNLOAD — 20 Sep 2026.
+  //
+  // It did, and the viewer withdrew the permission: "File downloads aren't
+  // available for this artifact." That took away THE ONLY ROUTE HER LEDGER HAD
+  // OUT OF THE APP, and the app said "Saved — safe to close" while it happened,
+  // because the old code treated clicking a link as evidence a file arrived.
+  //
+  // Two routes now, in order, and the difference between them is what is known:
+  //
+  //   1. The runtime's own file handoff. It asks her and then either SAVES or
+  //      REJECTS, so for the first time there is a real answer to hold the
+  //      green tick to.
+  //   2. An ordinary browser download, for a plain page or an older viewer.
+  //      This one cannot tell a finished download from a cancelled one from a
+  //      sandbox that refused silently — so it DOES NOT CLEAR THE UNSAVED
+  //      WARNING. Not knowing is reported as not knowing.
+  //
+  // The guide records her accepting a dishonest tick because Claude's download
+  // prompt had a Cancel the app could not see. That premise is gone on route 1.
+  async function handleExport(){
+    const stamp=localStamp();
+    const filename=LEDGER_PREFIX+stamp+".json";
+    let data;
     try{
-      const data=JSON.stringify({rows,ignored,venueSeen,lastRun,exportedAt:new Date().toISOString(),exportedLocal:localReadable()},null,2);
+      data=JSON.stringify({rows,ignored,venueSeen,lastRun,exportedAt:new Date().toISOString(),exportedLocal:localReadable()},null,2);
+    }catch(e){ setError("Export failed while building the file: "+String(e?.message||e)); return; }
+
+    // ── 1. the runtime's file handoff ───────────────────────────────────────
+    let dl=null;
+    try{
+      if(typeof window!=="undefined"&&window.claude&&typeof window.claude.use==="function"){
+        dl=await window.claude.use("downloads");
+      }
+    }catch{ dl=null; }   // unavailable is not a failure — fall through to 2.
+
+    if(dl&&typeof dl.save==="function"){
+      try{
+        await dl.save({filename,data});
+        setError(null); setDirty(false); setUnconfirmedSave(null);
+        setSavedFile(filename+"  \u00b7  "+localReadable());
+        setRefreshDone(null);
+        setDebug("Saved "+rows.length+" exhibitions as "+filename+" ("+localReadable()+"), confirmed by the viewer.");
+      }catch(e){
+        // A REJECTION IS REAL INFORMATION. She declined, or it failed. Either
+        // way nothing was written, so the ledger stays dirty and says so.
+        setSavedFile(null); setUnconfirmedSave(null);
+        setError("NOT SAVED \u2014 the save was refused or cancelled ("+String(e?.code||e?.message||e)+"). Your ledger is still on screen and still unsaved. Try Export / Save again.");
+        setDebug("downloads.save rejected: "+String(e?.code||"")+" "+String(e?.message||e));
+      }
+      return;
+    }
+
+    // ── 2. ordinary browser download, outcome unknowable ────────────────────
+    try{
       const blob=new Blob([data],{type:"application/json"});
       const url=URL.createObjectURL(blob);
-      const stamp=localStamp();
       const a=document.createElement("a");
-      a.href=url;a.download=LEDGER_PREFIX+stamp+".json";
+      a.href=url;a.download=filename;
       document.body.appendChild(a);a.click();a.remove();
       setTimeout(()=>URL.revokeObjectURL(url),1000);
-      setError(null);
-      setDirty(false);
-      setSavedFile(LEDGER_PREFIX+stamp+".json  \u00b7  "+localReadable());
-      setRefreshDone(null);
-      setDebug("Exported "+rows.length+" exhibitions. Check downloads for "+LEDGER_PREFIX+stamp+".json ("+localReadable()+"). File it back to your disk / Drive. On mobile the download may not appear \u2014 laptop is reliable.");
+      setError(null); setSavedFile(null);
+      setUnconfirmedSave(filename);   // dirty stays TRUE on purpose
+      setDebug("Started a browser download of "+filename+" ("+localReadable()+"). This route cannot confirm the file arrived, so the ledger is still marked unsaved. Check your downloads folder.");
     }catch(e){
+      setUnconfirmedSave(null);
       setError("Export failed: "+String(e?.message||e));
     }
   }
@@ -1081,6 +1133,10 @@ export default function App(){
         {showUnsavedBanner&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:"#D8EAE4",border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:"#1F4C40",lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u21BB"}</span>
           <span>{"Refresh applied \u2014 "+refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated"+(refreshDone.never?", "+refreshDone.never+" never to be offered again":"")+". Not saved yet \u2014 tap \u201cExport / Save\u201d now."}</span>
+        </div>}
+        {hasLedger&&unconfirmedSave&&<div style={{marginTop:8,padding:"9px 12px",background:"#E8E2D6",border:"2px solid "+C.soft,borderRadius:5,fontSize:12.5,color:C.ink,lineHeight:1.45,display:"flex",alignItems:"flex-start",gap:9}}>
+          <span style={{fontSize:16,lineHeight:1.1}}>{"\u2193"}</span>
+          <span>{"A download of "+unconfirmedSave+" was started. This viewer can\u2019t tell us whether it arrived, so your ledger is still marked unsaved \u2014 check your downloads folder. If the file is there, you\u2019re safe."}</span>
         </div>}
         {showUnsavedBanner&&!refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:"#F7E4C4",border:"2px solid #B5791A",borderRadius:5,fontSize:12.5,fontWeight:700,color:"#6B4A1E",lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u26A0"}</span>
