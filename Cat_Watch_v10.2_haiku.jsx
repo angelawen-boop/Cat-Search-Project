@@ -691,7 +691,7 @@ export default function App(){
         picked:p[f],
       })):null;
 
-      if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line:p.line,choices}); continue; }
+      if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line:p.line,choices,merged:!!p.mergedFrom}); continue; }
       const upd=[];
       const consider=(field,label,oldV,newV)=>{ const o=(oldV==null?"":String(oldV)), n=(newV==null?"":String(newV)); if(!n)return; if(!o)upd.push({field,label,oldVal:"",newVal:n,kind:"fill"}); else if(o!==n)upd.push({field,label,oldVal:o,newVal:n,kind:"change"}); };
       consider("startDate","Start date",match.startDate,sd);
@@ -700,7 +700,7 @@ export default function App(){
       consider("exUrl","Exhibition link",match.exUrl,url);
       if(!upd.length&&!choices){ silent++; continue; }  // identical — nothing to propose
       const hasChange=upd.some(u=>u.kind==="change");
-      props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].short,title,cand,matchId:match.id,upd,notes,line:p.line,choices});
+      props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].short,title,cand,matchId:match.id,upd,notes,line:p.line,choices,merged:!!p.mergedFrom});
     }
     const tally={
       fileRows:  table.length-1,
@@ -1469,7 +1469,16 @@ export default function App(){
                 const byVenue=a=>a.slice().sort((x,y)=>vOrder(x.p.venueId)-vOrder(y.p.venueId));
                 const scrap   = at.filter(x=>x.p.type==="problem");
                 const real    = at.filter(x=>x.p.type!=="problem");
-                const isMerged=x=>x.p.notes&&x.p.notes.some(n=>n.includes("same exhibition"));
+                // WAS THIS CARD BUILT FROM MORE THAN ONE ROW? Ask the fold
+                // itself, via the flag it sets. This used to search the notes
+                // for the words "same exhibition", and the sweeper writes those
+                // same words for a travelling show — "The same exhibition is
+                // also shown at Palm Beach." Acquavella's two runs of
+                // Portraiture were then filed under "combined for you" when
+                // nothing had been combined, under a heading that told her
+                // something untrue. A FACT THE CODE ALREADY KNOWS IS NEVER
+                // RE-DERIVED FROM PROSE WRITTEN FOR A HUMAN.
+                const isMerged=x=>!!x.p.merged;
                 const hasChoice=x=>!!x.p.choices;
                 const mergedOnly = byVenue(real.filter(x=>isMerged(x)&&!hasChoice(x)));
                 const mergedConf = byVenue(real.filter(x=>isMerged(x)&&hasChoice(x)));

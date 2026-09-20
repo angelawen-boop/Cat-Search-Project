@@ -127,4 +127,26 @@ check('  but NOT as having returned rows', !seen.returned.includes('moma'), seen
 check('a venue with real rows counts as both', seen.attempted.includes('louvre')&&seen.returned.includes('louvre'), seen);
 check('a venue not in the file is in neither', !seen.attempted.includes('met')&&!seen.returned.includes('met'), seen);
 
+// 16. A TRAVELLING SHOW IS NOT A FOLD. The sweeper notes a show running at a
+// venue's other address with the sentence "The same exhibition is also shown
+// at Palm Beach." The triage screen used to decide "was this combined?" by
+// searching the notes for the words "same exhibition", so Acquavella's two
+// runs of Portraiture — two real shows at two addresses, nothing combined —
+// were filed under "combined for you, nothing to decide". The heading then
+// told her something untrue about the cards beneath it.
+H.setRows([]);
+const trav=H.analyzeProForma(hdr
+ +row(['acq','PORTRAITURE NEW YORK','2025-01-21','2025-04-04','New York.','https://acquavellagalleries.com/exhibitions/portraiture-ny','The same exhibition is also shown at Palm Beach.'])
+ +row(['acq','PORTRAITURE PALM BEACH','2024-11-22','2025-01-05','Palm Beach.','https://acquavellagalleries.com/exhibitions/portraiture','The same exhibition is also shown at New York.']));
+check('travelling runs stay two cards', trav.props.length===2, trav.props.map(p=>p.title));
+check('  neither is flagged as combined', trav.props.every(p=>!p.merged), trav.props.map(p=>p.merged));
+check('  and the note still reaches her card', trav.props.every(p=>p.notes.some(n=>n.includes('also shown at'))), trav.props.map(p=>p.notes));
+
+// A genuine fold still sets the flag, so the band is not simply empty now.
+H.setRows([]);
+const realFold=H.analyzeProForma(hdr
+ +row(['acq','X','2025-01-01','','','https://acquavellagalleries.com/x',''])
+ +row(['acq','X','','2025-02-01','Blurb.','https://acquavellagalleries.com/x','']));
+check('a real fold is still flagged as combined', realFold.props.length===1 && realFold.props[0].merged===true, realFold.props);
+
 process.exit(fails?1:0);
