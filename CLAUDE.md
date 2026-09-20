@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 19 Sep 2026 (second pass)
+**Last updated:** 20 Sep 2026
 
 Cassili collects art-exhibition catalogues. They go out of print fast once a show
 closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 21
@@ -101,11 +101,12 @@ before work begins. It refuses to move if the working tree is dirty or the branc
 carries commits not on `origin/main`, and it fetches before deciding, so it cannot
 discard anything.
 
-**LIVE BRANCH: `claude/jsx-stitched-intake`.** The app's new intake — marker rows
-rejected, duplicate rows folded, counts on the screen (§4), and next the quarantine
-and per-venue freshness of §7 step 7. Signed off by her on test data, **not
-merged**; it merges once the real import passes. A session working only on `main`
-will not find it and will re-derive it.
+**LIVE BRANCH: `claude/jsx-stitched-intake`.** Everything the app has gained
+since 13 Sep and not yet merged: the stitched-file intake (marker rows rejected,
+duplicate rows folded, counts on screen), quarantine, per-venue freshness, the
+rebuilt save and the rebuilt catalogue lookup — §4 throughout. **The published
+page is built from THIS branch**, so `main`'s JSX is behind what she is using. It
+merges once the real import passes.
 
 **PARKED BRANCH: `claude/quiet-user-agent`** — everything from 16 Sep. Her ruling
 19 Sep: do not merge, do not re-open. See §2.
@@ -467,6 +468,20 @@ one, which is worse than nothing.
 
 ## 4. The app
 
+**WHERE IT LIVES — CHANGED 20 SEP 2026, AND THE PREVIOUS ANSWER WAS WRONG.** It
+is a **published page on her Claude account**, at one permanent private URL she
+bookmarks: open it in any browser, signed in to Claude, with no chat session and
+no Code session involved. A session republishes to the same URL; she reloads.
+
+This matters beyond convenience. For a month the app was a JSX file rendered
+afresh in a chat every time, because hosting had been called impossible. **It was
+not**, and nobody went back to check. A session reasoning from "the sandbox makes
+that impossible" should test the claim before a month of workarounds is built on
+it.
+
+**Her data is NOT hosted.** The page is; the ledger is still a file she imports
+and exports. Opening the link gives an empty portal exactly as before.
+
 **Core mental model (load-bearing):** the app is the *tool*; the ledger is the
 *document* — like a word processor and a file. Data lives in the ledger, never
 baked into the tool.
@@ -499,9 +514,27 @@ pick file. Status line has three states: calm neutral on fresh load, loud red
 **UNSAVED CHANGES** after any change, calm green **✓ Saved — safe to close** after
 Export. **Export IS Save.** Import and Reset ask before replacing unsaved work.
 
-> **Accepted limit (her decision):** the green tick cannot be fully honest —
-> Claude's download prompt has a Cancel the app cannot detect. She lives with it.
-> Do not re-add a confirm step and do not remove the green tick.
+**SAVING BROKE AND WAS REBUILT — 20 SEP 2026.** The viewer's sandbox now blocks
+any download a page starts for itself, `<a download>` included, and that was the
+only route her ledger had out of the app: *"File downloads aren't available for
+this artifact"*, a message from the host, not from us. **Her save function was
+never wrong** — the ground moved under it.
+
+Two routes now, and the difference is what is KNOWN:
+
+1. **The runtime's file handoff** (`downloads`, declared at publish — a chat
+   session rendering the file will NOT declare it, which is why no session could
+   give her a working Export). It asks her, then saves or **rejects**.
+2. **An ordinary browser download**, for a plain page. It cannot tell a finished
+   download from a cancelled one from a sandbox that refused, so it **does not
+   clear the unsaved warning**. Not knowing is reported as not knowing.
+
+> **The green tick is honest now, and the old accepted limit is retired.** It
+> used to fire on the CLICK, because Claude's download prompt had a Cancel the
+> app could not see; she lived with that. On route 1 the save resolves or throws,
+> so the tick means a save happened. On 20 Sep the old tick said "Saved — safe to
+> close" while nothing whatever was written, which is the worst thing this app
+> can do. **Never put a click-triggered tick back.**
 
 **Refreshing (v9.2).** The app does the thinking; she approves each change. A
 sweep CSV goes in via **Import Refresh**; the app compares it against the ledger
@@ -535,12 +568,46 @@ when it is working as designed.
 **Urgency tiers** are computed live from dates versus today (`tierFor`). No data
 written, no internet call.
 
-**Catalogue lookup (v10)** — the app's one live internet function and the only
-thing that spends tokens. Step 1 searches **only** the venue's shop domain (hard
-allow-list, cap of 1 search); step 2 runs one broad search **only if** step 1 found
-nothing. Results are tagged shop / web / none. Reseller links (Amazon AU,
-AbeBooks, Alibris) are built by the app from ISBN or title. It is one function
-(`askClaude`); swapping the model is a one-line change.
+**Catalogue lookup (v10, re-plumbed 20 Sep 2026).** Two stages, her design,
+unchanged in behaviour: stage one asks the venue's own shop and nothing else;
+stage two, only if the shop had nothing, looks wider; nothing in either means no
+catalogue. Results are tagged shop / web / none, and the reseller links (Amazon
+AU, AbeBooks, Alibris) are built from the ISBN when there is one, the title when
+there is not.
+
+**What changed underneath.** The page used to call the Anthropic API directly.
+The viewer's sandbox now blocks a page from reaching ANY outside address, so the
+request never left — the diagnostic read `Network: Failed to fetch`, which is the
+browser refusing, not a server answering. Nothing was wrong with the key, the
+account or the prompt.
+
+It now runs on **her own Parallel Search connector** (free, authless, connected on
+her claude.ai account), with `sample` reading the results. The split is
+deliberate: Claude cannot browse, so the connector finds pages and Claude only
+reads text handed to it — it can never report a shop page that was not found.
+
+**The one real loss: there is no domain LOCK any more.** The old search tool took
+`allowed_domains` and was unable to look elsewhere. The connector takes only a
+`site:` hint inside the query, which search engines treat as a strong suggestion.
+So the returned shop link is **checked** against the venue's shop domain, and a
+link that is not on it is never filed as `shopState: "shop"`. That guard is the
+substitute for the lock.
+
+**KNOWN FLAW, HER FINDING 20 SEP, NOT FIXED: the ISBN can be missed on a page that
+shows it.** The Met's *Musical Bodies* catalogue was found in the shop in one
+stage but came back with no ISBN — and the ISBN is printed on that very shop page.
+The cause is structural: the connector returns **excerpts**, not whole pages, so a
+detail below the fold is invisible. The old lookup had the model actually
+browsing, which is why this never happened before.
+
+It matters because of what happens next: with no ISBN the reseller links search by
+TITLE, and a title search misfires. *Musical Bodies* is unusual enough that Amazon
+and AbeBooks found it anyway; **Alibris returned the wrong book.**
+
+The fix is available and unbuilt: the same connector offers `web_fetch`, which
+reads a whole page. Fetching the shop product page once, when a catalogue is found
+but no ISBN came with it, would settle it. **Only `web_search` is declared
+today.**
 
 ### Reading a stitched file — `claude/jsx-stitched-intake`, 13 Sep, SIGNED OFF BY HER ON TEST DATA
 
@@ -1389,6 +1456,22 @@ Each entry cost a real failure. Before changing the area, read the line.
   reasoning in §5.
 - Reporting a card total with nothing to check it against. Rows vanish for three
   innocent reasons, so a total alone cannot tell a fold from a loss.
+- A status line saying "Saved — safe to close" because a button was CLICKED,
+  while the sandbox had silently refused the download and nothing was written.
+- Writing `\u2014` among the words of a page instead of inside quotes, so six
+  characters printed literally. It sat unseen for weeks because no row had ever
+  reached that state — the first catalogue found outside its venue's shop exposed
+  it. **A branch nothing has entered is untested however long it has shipped.**
+- Fourteen fixture cases committed, cited in this guide as covering the folding
+  rules, requiring a `harness.js` that did not exist — and not named by
+  `npm test` either. Two independent reasons for one silence. **A file of
+  assertions with nothing to run them reads exactly like a passing suite.**
+- Diagnosing a fault in WORKING code from a test that was not that code. One
+  hand-written search query, run in a session rather than through the app, found
+  a shop page full of tote bags; that was read as "the lookup is broken" and her
+  two-stage design was rewritten around it. Her stage two would have found the
+  book, as the very next search proved. **Run the thing itself before concluding
+  the thing is wrong.**
 - Handing a compression subagent pretty-printed JSON with fields it never reads,
   plus a second file for the examples — 178k tokens where 100k did the same work.
 - Telling a subagent what not to do and believing it. Five jobs, four disobeyed:
@@ -1499,8 +1582,13 @@ Each entry cost a real failure. Before changing the area, read the line.
    re-deriving "does 60 look wrong against last week's 80" gives a different
    answer depending on which session turned up, and that question has exactly
    one correct answer. **It is an input to the session's diagnosis, not a gate.**
-9. **Catalogue lookup tuning** — Haiku vs Sonnet, on known-tricky catalogues.
-   Independent of everything above.
+9. **Catalogue lookup — one known flaw, then tuning.** Its own session, her
+   ruling 20 Sep. First the ISBN gap: a catalogue found in a venue's shop can come
+   back without its ISBN even though the shop page prints it, because the
+   connector returns excerpts rather than whole pages — and with no ISBN the
+   reseller links search by title, which misfired on Alibris for the Met's
+   *Musical Bodies*. `web_fetch` on the same connector reads a whole page and is
+   not declared today. Then the old tuning question. Detail in §4.
 
 **The ledger is not being protected during development.** Her ruling: she keeps no real
 ledger until JSX and scraper are both finished, so she can import freely and roll back.
