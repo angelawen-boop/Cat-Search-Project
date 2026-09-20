@@ -1601,10 +1601,10 @@ export default function App(){
                     <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
                       <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>Odd cases {"\u00b7"} {oddCount}</div>
                       {coverage.length>0&&band("markers","1. Marker rows",undefined,coverage.length,false,markerBlocks)}
-                      {mergedOnly.length>0&&band("merged","3. Combined for you \u00b7 nothing to decide",undefined,mergedOnly.length,false,byVenueBlocks(mergedOnly))}
-                      {mergedConf.length>0&&band("mergedconf","4. Combined, but one field disagrees \u00b7 needs a choice",C.accent,mergedConf.length,true,byVenueBlocks(mergedConf))}
-                      {confOnly.length>0&&band("conf","5. Two different answers \u00b7 needs a choice",C.accent,confOnly.length,true,byVenueBlocks(confOnly))}
-                      {noLink.length>0&&band("nolink","6. No link to the exhibition \u00b7 usable, but worth a look",undefined,noLink.length,true,byVenueBlocks(noLink))}
+                      {mergedOnly.length>0&&band("merged","2. Combined rows \u00b7 identical rows were de-duped or reconciled",undefined,mergedOnly.length,false,byVenueBlocks(mergedOnly))}
+                      {mergedConf.length>0&&band("mergedconf","3. Combined rows \u00b7 identical rows produced conflicts \u2014 yours to choose",C.accent,mergedConf.length,true,byVenueBlocks(mergedConf))}
+                      {confOnly.length>0&&band("conf","4. Two different answers \u00b7 yours to choose",C.accent,confOnly.length,true,byVenueBlocks(confOnly))}
+                      {noLink.length>0&&band("nolink","5. No exhibition url \u00b7 link goes to venue\u2019s listing page",undefined,noLink.length,true,byVenueBlocks(noLink))}
                     </div>
                   )}
                 {ordinary.length>0&&(
