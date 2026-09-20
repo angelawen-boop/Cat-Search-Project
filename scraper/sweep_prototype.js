@@ -4889,6 +4889,30 @@ async function main() {
 
   const built = rebuildSweepCsv();
 
+  // ── QC: faulty rows and exceptions, in the run's own log ──────────────────
+  // §7 step 8, built 20 Sep 2026. It warns and never acts, like
+  // detectUnwiredPagination(). Her ruling: a row with no title or no venue code
+  // is the SESSION's problem, not something for her approval pile, so the run
+  // that produced it says so where the session is already looking. The hard
+  // gate is in compress --apply, which refuses to write the file she imports.
+  try {
+    const QC = require('./qc.js');
+    const q = QC.inspect(path.basename(RUN_DIR));
+    if (!q.error) {
+      logSection('QC — faulty rows and exceptions');
+      if (q.fatal.length) {
+        log(`  ${q.fatal.length} FAULTY ROW(S). These block compress --apply; re-run or fix the recipe.`);
+        for (const f of q.fatal) log(`    line ${f.line}  ${f.kind}  ${f.url || '(no url)'}`);
+      } else log('  No faulty rows: every row has a title and a known venue code.');
+      if (q.exceptions.length) {
+        log(`  ${q.exceptions.length} exception(s) against the last run that had each venue:`);
+        for (const e of q.exceptions) log(`    ${e.venue}: ${e.what}`);
+      } else log('  No exceptions: every venue looks like the last run that had it.');
+    }
+  } catch (e) {
+    log('  QC could not run: ' + (e && e.message ? e.message : String(e)));
+  }
+
   // Final summary in log
   logSection('SWEEP COMPLETE — SUMMARY');
   for (const [code, s] of Object.entries(summary)) {

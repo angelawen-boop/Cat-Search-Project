@@ -107,12 +107,14 @@ before work begins. It refuses to move if the working tree is dirty or the branc
 carries commits not on `origin/main`, and it fetches before deciding, so it cannot
 discard anything.
 
-**LIVE BRANCH: `claude/jsx-stitched-intake`.** Everything the app has gained
-since 13 Sep and not yet merged: the stitched-file intake (marker rows rejected,
-duplicate rows folded, counts on screen), quarantine, per-venue freshness, the
-rebuilt save and the rebuilt catalogue lookup — §4 throughout. **The published
-page is built from THIS branch**, so `main`'s JSX is behind what she is using. It
-merges once the real import passes.
+**THERE IS NO LIVE BRANCH ANY MORE — `claude/jsx-stitched-intake` MERGED INTO
+`main`, 20 Sep, on her instruction once she had signed off the intake against
+real files.** Everything the app gained since 13 Sep is on the trunk: the
+stitched-file intake, quarantine, per-venue freshness, the rebuilt save, the
+rebuilt catalogue lookup, `qc.js` and every fixture — §4 throughout. **`main`'s
+JSX is now what she is running**, and `npm test` on `main` finally covers the
+app rather than a fraction of it. The branch is kept as history; do not commit
+to it again.
 
 **PARKED BRANCH: `claude/quiet-user-agent`** — everything from 16 Sep. Her ruling
 19 Sep: do not merge, do not re-open. See §2.
@@ -578,9 +580,11 @@ no Code session involved. A session republishes to the same URL; she reloads.
 > restate all three; omitting the field entirely carries them forward, which is
 > the safer default.
 >
-> **It is built from the LIVE BRANCH, not from `main`.** Transpile the branch's
-> JSX to plain browser code, wrap it in the HTML shell, publish. `main`'s copy
-> of the JSX is behind what she is running.
+> **It is built from `main`.** Transpile the JSX to plain browser code, wrap it
+> in the HTML shell, publish. The shell is not in the repo: take it from the
+> published page, which `action: "read"` hands over — everything before the
+> script's first line and the two lines after its last. Rebuilding it from
+> memory is how a page loses its pre-paint background.
 >
 > **Never republish while she has it open** — house rule, §1.
 
@@ -720,7 +724,7 @@ reads a whole page. Fetching the shop product page once, when a catalogue is fou
 but no ISBN came with it, would settle it. **Only `web_search` is declared
 today.**
 
-### Reading a stitched file — `claude/jsx-stitched-intake`, 13 Sep, SIGNED OFF BY HER ON TEST DATA
+### Reading a stitched file — 13 Sep, SIGNED OFF BY HER ON REAL FILES 20 SEP
 
 One CSV now carries every machine's output, so the app reconciles rows against
 **each other** before the ledger. Her design: the stitch stays dumb, all judgement
@@ -985,10 +989,10 @@ wearing a different label. **Proved by putting the real fault back**: the load
 check still passes it, the render check fails both passes. **It does not click
 anything**; a button that throws when pressed is still uncovered.
 
-**THEY LIVE ON THE LIVE BRANCH, WITH THE JSX THEY TEST, AND NOT ON `main`.** So
-`npm test` on `main` runs 173 and says nothing about the intake; on the branch
-it runs those 173 **and** the 25. A session on `main` that reads a green 173 as
-covering the app is reading it wrong. They merge when the branch does.
+**THEY ARE ON `main` SINCE THE 20 SEP MERGE**, with the JSX they test. `npm
+test` runs 184 unit checks, then the 62 intake cases, then the load check, then
+the render check — and it is the exit code that says whether all four passed,
+not the first number to scroll past.
 
 They only started running at all on 20 Sep: they required a `harness.js` that
 had never existed, and the test script did not name them either — two
@@ -1078,10 +1082,8 @@ impossible.
 - `scraper/sweep_fetch.js` — older diagnostic copy, no browser. Not developed.
 - `scraper/compress.js` / `compress_cli.js` — raw dump → the summary she reads.
 - `scraper/date.test.js`, `compress.test.js` — fixtures. `npm test`, ~1 second.
-- `scraper/qc.js` — **ON THE LIVE BRANCH, NOT ON `main`** (with `qc.test.js`,
-  and `main`'s `npm test` does not name either — it runs 177 and says nothing
-  about them). It merges when the branch does. **The exceptions report AND the
-  gate in front of her import file** (§7 step 8, built 20 Sep; it had never existed). FATAL — no title, no or
+- `scraper/qc.js` — with `qc.test.js`, both on `main` since the 20 Sep merge.
+  **The exceptions report AND the gate in front of her import file** (§7 step 8, built 20 Sep; it had never existed). FATAL — no title, no or
   unknown venue code — blocks `compress --apply`, so a session cannot write the
   file she imports with one in it. EXCEPTIONS — a venue's count dropped against
   the last run that HAD it, a venue gone to markers only, descriptions lost —
@@ -2117,9 +2119,11 @@ Each entry cost a real failure. Before changing the area, read the line.
     shipped a blank page twice; §4. Still uncovered: it does not press
     anything.
 
-11. **`qc.js`, `qc.test.js` and the intake fixtures live on the LIVE BRANCH
-    only**, and `main`'s `npm test` names none of them. Resolved by the merge;
-    until then a green suite on `main` covers less than it looks like.
+11. ~~**`qc.js`, `qc.test.js` and the intake fixtures live on a branch only**~~
+    — **DONE, merged into `main` 20 Sep on her instruction, once she had signed
+    off the intake against real files.** `main` is the trunk and the source of
+    truth for the app, the scraper and this guide alike, and its `npm test` now
+    covers the app instead of a fraction of it.
 
 **The ledger is not being protected during development.** Her ruling: she keeps no real
 ledger until JSX and scraper are both finished, so she can import freely and roll back.

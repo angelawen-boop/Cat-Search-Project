@@ -1,37 +1,65 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 
+// THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
+// size — it is the order she wants to WORK in. The venues she reads most come
+// first; the three Italian sites she finds hardest to check sit together near
+// the end; the three that refuse us outright sit last, because nothing there is
+// ever hers to decide.
+//
+// IT IS ALSO THE ONLY ORDER IN THE APP. The freshness drawer, the venue filter
+// chips and every venue heading on the refresh screen all read this array, so
+// moving a venue here moves it everywhere and they cannot drift apart. Adding a
+// second hand-typed list of codes is how two finished recipes once became
+// unselectable with nothing to say why.
+//
+// Accademia (dellav) was not in her list; it sits with the other Italian venues
+// until she says otherwise.
 const MUSEUMS = [
   { id:"met", short:"The Met", name:"The Metropolitan Museum of Art", city:"New York",
     exBase:"https://www.metmuseum.org/exhibitions/", shopSearch:"https://store.metmuseum.org/search?q=", shopHome:"https://store.metmuseum.org/", listUrl:"https://www.metmuseum.org/exhibitions" },
-  { id:"ng", short:"National Gallery", name:"The National Gallery", city:"London",
-    exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/search?q=", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
   { id:"rijks", short:"Rijksmuseum", name:"Rijksmuseum", city:"Amsterdam",
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
+  { id:"ng", short:"National Gallery", name:"The National Gallery", city:"London",
+    exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/search?q=", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
   { id:"acq", short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
+  { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:null, shopHome:"https://shop.frick.org/", listUrl:null },
+  { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:null, shopHome:"https://bookstore.menil.org/", listUrl:null },
+  { id:"artic", short:"Art Institute", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:null, shopHome:"https://shop.artic.edu/", listUrl:null },
+  { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:null, shopHome:"https://wallacecollectionshop.org/", listUrl:null },
+  { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:null, shopHome:"https://shop.tate.org.uk/", listUrl:null },
+  { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:null, shopHome:"https://shop.tate.org.uk/", listUrl:null },
+  { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:null, shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
   { id:"louvre", short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:null, shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
+  { id:"khm", short:"KHM Vienna", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:null, shopHome:"https://shop.khm.at/en/", listUrl:null },
   { id:"uffizi", short:"Uffizi", name:"Uffizi Galleries", city:"Florence", exBase:null, shopSearch:null, shopHome:"https://shop.uffizi.it/en/", listUrl:null },
+  { id:"dellav", short:"Accademia", name:"Gallerie dell'Accademia", city:"Venice", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"borghese", short:"Borghese", name:"Galleria Borghese", city:"Rome", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"brera", short:"Brera", name:"Pinacoteca di Brera", city:"Milan", exBase:null, shopSearch:null, shopHome:"https://bottegabrera.org/en/", listUrl:null },
   { id:"capo", short:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
-  { id:"dellav", short:"Accademia", name:"Gallerie dell'Accademia", city:"Venice", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
-  { id:"khm", short:"KHM Vienna", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:null, shopHome:"https://shop.khm.at/en/", listUrl:null },
   { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:null, shopHome:"https://store.moma.org/", listUrl:null },
-  { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:null, shopHome:"https://shop.frick.org/", listUrl:null },
-  { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:null, shopHome:"https://shop.themorgan.org/", listUrl:null },
-  { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:null, shopHome:"https://bookstore.menil.org/", listUrl:null },
-  { id:"artic", short:"Art Institute", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:null, shopHome:"https://shop.artic.edu/", listUrl:null },
-  { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:null, shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
   { id:"brit", short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:null, shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
-  { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:null, shopHome:"https://wallacecollectionshop.org/", listUrl:null },
-  { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:null, shopHome:"https://shop.tate.org.uk/", listUrl:null },
-  { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:null, shopHome:"https://shop.tate.org.uk/", listUrl:null },
+  { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:null, shopHome:"https://shop.themorgan.org/", listUrl:null },
 ];
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 
 // ---- v9 pro forma helpers (pure) ----
 const KNOWN_VENUES = new Set(MUSEUMS.map(m=>m.id));
 function isValidYMD(s){ if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false; const d=new Date(s+"T00:00:00"); return !isNaN(d.getTime()); }
+// SAME ADDRESS MEANS SAME EXHIBITION — the one identity test with no
+// judgement in it, and the scraper's own settled rule. Scheme and host are
+// lowercased because hosts are case-insensitive by spec; THE PATH IS NOT
+// TOUCHED, because folding it merged two exhibitions that differed only in
+// capitalisation. A trailing slash and a #fragment are not part of identity.
+function normalizeUrlKey(u){
+  try{
+    const x=new URL(String(u||"").trim());
+    x.hash="";
+    const path=x.pathname.replace(/\/+$/,"");
+    return x.protocol.toLowerCase()+"//"+x.host.toLowerCase()+path+x.search;
+  }catch{ return ""; }
+}
+
 function urlLooksValid(u){ if(!u)return false; try{ const url=new URL(String(u).trim()); if(!/^https?:$/.test(url.protocol))return false; if(!/^[a-z0-9.-]+$/i.test(url.hostname))return false; if(!url.hostname.includes("."))return false; return true; }catch{ return false; } }
 function csvParse(text){
   const out=[]; let i=0,field="",row=[],inQ=false; text=String(text).replace(/\r\n?/g,"\n");
@@ -47,16 +75,163 @@ function csvParse(text){
   return out.filter(r=>r.some(c=>String(c).trim()!==""));
 }
 
-const TIERS = {
-  upcoming:{ label:"Announced", note:"Not open yet. Catalogue usually appears at opening.", ink:"#4A5A6B", wash:"#E1E5EB", time:"upcoming", ord:3 },
-  recent:  { label:"Recently opened", note:"Just opened. Catalogue should be available now.", ink:"#2D6B5A", wash:"#D4EDE4", time:"current", ord:0 },
-  current: { label:"On now", note:"In print. Cheapest it will ever be.", ink:"#2D4A3F", wash:"#DBE7E1", time:"current", ord:1 },
-  fresh:   { label:"Closed under 3 months", note:"Still stocked. Comfortable window.", ink:"#556B3E", wash:"#E3E8D8", time:"past", ord:4 },
-  closing: { label:"Closed 3\u20136 months", note:"Shop stock thinning. Buy now if you want it.", ink:"#9C7020", wash:"#F0E6CE", time:"past", ord:5 },
-  urgent:  { label:"Closed 6\u201312 months", note:"Final call. Reprints are rare.", ink:"#A13823", wash:"#F0DCD6", time:"past", ord:6 },
-  lapsed:  { label:"Closed over a year", note:"Assume out of print. Secondhand only.", ink:"#6B2E2E", wash:"#E5D6D4", time:"past", ord:7 },
-  unknown: { label:"Dates unclear", note:"No reliable end date found.", ink:"#6A6560", wash:"#E3DED7", time:"current", ord:2 },
+// HOW MANY CARDS ARE DECIDED — and it is the gate on the ledger, so it lives
+// out here where a fixture can reach it. It used to be eight lines inside the
+// component, which is where the counting for a LABEL belongs; it stopped being
+// a label on 20 Sep, when her ruling made the button refuse to fire while
+// anything is undecided.
+//
+// WHAT COUNTS AS DECIDED, and the subtlety is the second half: REJECTING is
+// deciding. An Add card she turned down, and a Fill/Change card whose every
+// field she turned down, are finished work — they must not hold the gate shut.
+// Only a card she has not touched at all is undecided. Getting that backwards
+// would make the button unreachable for anyone who rejects anything, which is
+// most of a real sweep.
+// IS THIS ONE CARD STILL UNTOUCHED. The gate counts these and the "jump to the
+// next undecided" button finds them, and THOSE TWO MUST NEVER DISAGREE — a
+// button refusing to fire while the jump says there is nothing left is a dead
+// end with no way out of it. So there is one function and both call it. It was
+// briefly two, which is exactly how that pair of copies begins.
+function isUndecidedCard(p,dec){
+  dec=dec||{};
+  if(p.type==="add")return !dec.mode;
+  if(dec.mode)return false;                       // reject, or "different show"
+  return !Object.values(dec.fields||{}).some(v=>v);
+}
+
+function countDecisions(proposals,decisions){
+  let acceptedCount=0,undecidedCount=0;
+  (proposals||[]).forEach((p,i)=>{
+    const dec=(decisions||{})[i]||{};
+    if(isUndecidedCard(p,dec)){undecidedCount++;return;}
+    if(p.type==="add"){ if(dec.mode==="accept")acceptedCount++; return; }
+    if(dec.mode==="addnew"){acceptedCount++;return;}
+    if(Object.values(dec.fields||{}).some(v=>v==="accept"))acceptedCount++;
+  });
+  return {acceptedCount,undecidedCount};
+}
+
+// MERGE, NEVER REPLACE — and this is the rule that stops the bug coming back
+// in a new place. Importing an OLD sweep file must not drag a venue's date
+// backwards, so a venue's line only moves when the incoming time is LATER.
+// The two halves move independently: a venue can be tried today and still show
+// an older date for its last real rows, which is the one line that says
+// "re-run this one on its own".
+function mergeSweepLog(prev,seen){
+  const out={...(prev||{})};
+  const later=(a,b)=>(!a||(b&&b>a))?b:a;
+  for(const v of Object.keys((seen&&seen.attempted)||{})){
+    const was=out[v]||{};
+    out[v]={
+      attempted: later(was.attempted, seen.attempted[v]),
+      returned:  later(was.returned,  (seen.returned||{})[v]||null),
+    };
+  }
+  return out;
+}
+
+// ── QUARANTINE — SAME THIRD PLACE AS THE SWEEP LOG, her ruling 20 Sep 2026 ──
+//
+// IT WAS IN THE LEDGER AND THAT WAS THE WRONG CONTAINER, decided in the same
+// session that moved the sweep log out and somehow not applied to the thing
+// sitting next to it. Her scenario is the whole argument: quarantine two junk
+// rows, Reset to the starter set, feed the SAME sweep file again — and every
+// piece of junk is back, because the only record of her decision went with the
+// ledger she just replaced. A feature whose entire promise is "never show me
+// this again" cannot depend on which file happens to be open.
+//
+// BUT IT IS NOT THE SWEEP LOG EITHER, and the difference decides the design.
+// The sweep log is safe living only here because it is DERIVABLE: every fact in
+// it comes from a sweep file, so losing it costs one re-import. Quarantine is
+// derivable from nothing — it is her judgement, and only she can rebuild it.
+// That is the same property that keeps her LEDGER out of this store.
+//
+// SO IT LIVES IN BOTH, WITH A RULE ABOUT WHICH WINS — her choice, C, taken over
+// her own objection that redundancy is lazy. It is not two hopeful copies: the
+// store is the working copy that always applies, the export is the backup, and
+// the rule below settles every disagreement between them. Her ledger already
+// has exactly this shape.
+//
+// THE RULE IS LATEST DECISION WINS, WHICH NEEDS TOMBSTONES. Taking a row out of
+// quarantine has to be RECORDED, not merely absent, or loading an older backup
+// would silently re-block something she released — the same bug the sweep log's
+// merge rule exists to prevent, one door along. So a released row stays in the
+// store as `released` with the time she released it.
+const QUARANTINE_DOC = "quarantine/rows";
+
+// Both sides are {key: {venueId, title, at, state}}. Nothing is dropped and
+// nothing is invented: for each key the entry with the LATER `at` survives,
+// whichever side it came from.
+function mergeQuarantine(prev, incoming){
+  const out={...(prev||{})};
+  for(const [k,v] of Object.entries(incoming||{})){
+    if(!v||!v.at) continue;
+    const was=out[k];
+    if(!was||!was.at||v.at>was.at) out[k]={...v};
+  }
+  return out;
+}
+// What she sees and what the export carries: the ones still blocked, newest
+// first. Tombstones never leave this file.
+function activeQuarantine(map){
+  return Object.entries(map||{})
+    .filter(([,v])=>v&&v.state!=="released")
+    .map(([key,v])=>({key,venueId:v.venueId,title:v.title,at:v.at}))
+    .sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));
+}
+// A ledger file stores the plain list it always did, so an older backup loads
+// unchanged and a newer one is readable by an older build.
+function quarantineFromList(list){
+  const out={};
+  for(const x of (list||[])) if(x&&x.key) out[x.key]={venueId:x.venueId,title:x.title,at:x.at||"",state:"blocked"};
+  return out;
+}
+
+// URGENCY COLOURS, ONE SET PER THEME — dark added 20 Sep 2026 at her request.
+//
+// The washes are not the light ones dimmed. A pale badge on a dark ground
+// glares, so each dark wash is a DEEP tint of the same hue and the ink becomes
+// the light end of it — the ladder keeps its meaning (cool blue for announced
+// through to deep red for long closed) while the page stays dark.
+const TIER_SETS = {
+  light: {
+    upcoming: { ink: "#4A5A6B", wash: "#E1E5EB" },
+    recent:   { ink: "#2D6B5A", wash: "#D4EDE4" },
+    current:  { ink: "#2D4A3F", wash: "#DBE7E1" },
+    fresh:    { ink: "#556B3E", wash: "#E3E8D8" },
+    closing:  { ink: "#9C7020", wash: "#F0E6CE" },
+    urgent:   { ink: "#A13823", wash: "#F0DCD6" },
+    lapsed:   { ink: "#6B2E2E", wash: "#E5D6D4" },
+    unknown:  { ink: "#6A6560", wash: "#E3DED7" },
+  },
+  dark: {
+    upcoming: { ink: "#A8BDD4", wash: "#26313D" },
+    recent:   { ink: "#7FD6B8", wash: "#193328" },
+    current:  { ink: "#8FC4AE", wash: "#1B2B24" },
+    fresh:    { ink: "#B4C98C", wash: "#242B1A" },
+    closing:  { ink: "#E0B45C", wash: "#33280F" },
+    urgent:   { ink: "#F09079", wash: "#3A1E17" },
+    lapsed:   { ink: "#D9928F", wash: "#331C1C" },
+    unknown:  { ink: "#A8A29A", wash: "#2A2622" },
+  },
 };
+const TIER_TEXT = {
+    upcoming: { label: "Announced", note: "Not open yet. Catalogue usually appears at opening.", time: "upcoming", ord: 3 },
+    recent: { label: "Recently opened", note: "Just opened. Catalogue should be available now.", time: "current", ord: 0 },
+    current: { label: "On now", note: "In print. Cheapest it will ever be.", time: "current", ord: 1 },
+    fresh: { label: "Closed under 3 months", note: "Still stocked. Comfortable window.", time: "past", ord: 4 },
+    closing: { label: "Closed 3\u20136 months", note: "Shop stock thinning. Buy now if you want it.", time: "past", ord: 5 },
+    urgent: { label: "Closed 6\u201312 months", note: "Final call. Reprints are rare.", time: "past", ord: 6 },
+    lapsed: { label: "Closed over a year", note: "Assume out of print. Secondhand only.", time: "past", ord: 7 },
+    unknown: { label: "Dates unclear", note: "No reliable end date found.", time: "current", ord: 2 },
+};
+const tiersFor = mode => Object.fromEntries(Object.keys(TIER_TEXT).map(
+  k => [k, { ...TIER_TEXT[k], ...TIER_SETS[mode][k] }]));
+// TIERS stays a module-level constant for everything that reads a LABEL or an
+// `ord` outside the component (sorting, band names). Colour is read from the
+// component's themed copy; these values are the light ones and are never used
+// to paint anything in dark mode.
+const TIERS = tiersFor("light");
 
 function relTime(iso){if(!iso)return null;const d=new Date(iso);if(isNaN(d))return null;const s=Math.max(0,Math.floor((Date.now()-d.getTime())/1000));if(s<60)return"just now";const m=Math.floor(s/60);if(m<60)return m+" minute"+(m===1?"":"s")+" ago";const h=Math.floor(m/60);if(h<24)return h+" hour"+(h===1?"":"s")+" ago";const day=Math.floor(h/24);return day+" day"+(day===1?"":"s")+" ago";}
 function minsSinceIso(iso){if(!iso)return Infinity;const d=new Date(iso);if(isNaN(d))return Infinity;return(Date.now()-d.getTime())/60000;}
@@ -198,28 +373,173 @@ function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)
 
 function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:"Museum shop",href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+tq});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:"Publisher",href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?kn="+(isbn||tq)+"&sts=t"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q});return out;}
 
-async function askClaude(prompt,opts){opts=opts||{};let res;const tool={type:"web_search_20250305",name:"web_search"};if(opts.maxUses)tool.max_uses=opts.maxUses;if(opts.allowedDomains&&opts.allowedDomains.length)tool.allowed_domains=opts.allowedDomains;try{res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:4096,messages:[{role:"user",content:prompt}],tools:[tool]})});}catch(e){return{ok:false,text:"",detail:"Network: "+e.message};}const raw=await res.text();if(!res.ok)return{ok:false,text:"",detail:"HTTP "+res.status};let data;try{data=JSON.parse(raw);}catch{return{ok:false,text:"",detail:"Not JSON"};}const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");return{ok:true,text,detail:"stop:"+data.stop_reason+"\n"+text.slice(0,500)};}
+// ── FINDING A CATALOGUE — rebuilt 20 Sep 2026 ────────────────────────────────
+//
+// WHAT BROKE. The old version called api.anthropic.com straight from the page.
+// The viewer's sandbox now blocks a page from reaching ANY outside address, so
+// the request never left: the diagnostic read "Network: Failed to fetch", which
+// is the browser refusing, not a server saying no. Nothing was wrong with the
+// key, the account or the prompt. The route closed.
+//
+// WHAT REPLACES IT, and why it is not the same mistake. A page may not reach
+// the internet, but it MAY call the viewer's own connectors, under the viewer's
+// credentials, with no key anywhere in this file. So:
+//
+//   1. SEARCH runs on her Parallel Search connector — free, no account, and
+//      the page never touches the network itself.
+//   2. READING the results is Claude's job, through `sample`. Claude cannot
+//      browse, which is exactly why the two halves are separate: the connector
+//      finds pages, Claude only reads text we hand it. It can never invent a
+//      shop it did not see.
+//
+// The division is the same as before — search, then a model reads what came
+// back. Only the plumbing changed.
+//
+// NAMED CONSTANTS, because a typo here fails at the viewer, not here.
+const SEARCH_SERVER = "Parallel Search";
+const SEARCH_TOOL   = "web_search";
 
-function extractObjects(text){if(!text)return[];const out=[];let depth=0,start=-1,inStr=false,esc=false;for(let i=0;i<text.length;i++){const c=text[i];if(inStr){if(esc)esc=false;else if(c==="\\")esc=true;else if(c==='"')inStr=false;continue;}if(c==='"')inStr=true;else if(c==="{"){if(depth===0)start=i;depth++;}else if(c==="}"){depth--;if(depth===0&&start!==-1){try{out.push(JSON.parse(text.slice(start,i+1)));}catch{}start=-1;}}}return out;}
+// The connector wants a stable id per conversation for its free-tier limits.
+// One per page load is the honest reading of "conversation" here.
+const SEARCH_SESSION = "catwatch" + Math.random().toString(16).slice(2).padEnd(16, "0")
+                                  + Date.now().toString(16);
+
+async function useCap(name){
+  try{
+    if(typeof window==="undefined"||!window.claude||typeof window.claude.use!=="function")return null;
+    return await window.claude.use(name);
+  }catch{ return null; }
+}
+
+// Every failure code that has its OWN fix gets its own sentence. The capability
+// notes name a single catch-all banner as the anti-pattern: it hides the one
+// action that would fix the page.
+function mcpTrouble(e){
+  const code=String((e&&e.code)||"");
+  if(code==="server_not_connected")return "Add the \u201cParallel Search\u201d connector in claude.ai \u2192 Settings \u2192 Connectors, then try again.";
+  if(code==="needs_reauth")       return "Reconnect \u201cParallel Search\u201d in claude.ai \u2192 Settings \u2192 Connectors \u2014 its access has lapsed.";
+  if(code==="not_in_manifest")    return "This page isn\u2019t allowed to use \u201cParallel Search\u201d \u2014 you may have turned it off for this artifact.";
+  if(code==="selection_required") return "You have more than one \u201cParallel Search\u201d connector. Pick one when Claude asks, then try again.";
+  if(code==="blocked_by_policy")  return "Your organisation blocks this connector.";
+  if(code==="server_unavailable") return "The search service didn\u2019t answer. Worth one more try in a moment.";
+  if(code==="rate_limited")       return "Too many searches just now. Leave it a minute.";
+  if(code==="cancelled")          return "Search stopped.";
+  return "Search failed ("+(code||"unknown")+").";
+}
+
+// Ask the connector. Returns {ok, results, detail} — never throws.
+async function searchWeb(objective,queries){
+  const mcp=await useCap("mcp");
+  if(!mcp)return{ok:false,results:[],detail:"No connector access in this viewer. The page must be opened from its claude.ai link."};
+  let res;
+  try{
+    res=await mcp.callTool(SEARCH_SERVER,SEARCH_TOOL,{
+      objective,
+      search_queries:queries,
+      session_id:SEARCH_SESSION,
+    });
+  }catch(e){
+    return{ok:false,results:[],detail:mcpTrouble(e)+"  ["+String((e&&e.code)||"")+" "+String((e&&e.message)||e)+"]"};
+  }
+  const p=res&&res.payload;
+  const results=(p&&Array.isArray(p.results))?p.results:[];
+  return{ok:true,results,detail:"search: "+results.length+" results for "+JSON.stringify(queries)};
+}
+
+// Hand the search results to Claude and ask it to read the catalogue off them.
+// It sees ONLY these excerpts, so it cannot report a shop page that was not
+// found. Returns {ok, data, detail}.
+async function readResults(prompt){
+  const sample=await useCap("sample");
+  if(!sample)return{ok:false,data:null,detail:"Claude isn\u2019t available to this page in this viewer."};
+  try{
+    const data=await sample.json(prompt,{modelTier:"default"});
+    return{ok:true,data,detail:"read the results"};
+  }catch(e){
+    const code=String((e&&e.code)||"");
+    let why="Couldn\u2019t read the search results ("+(code||"unknown")+").";
+    if(code==="not_granted")       why="You declined to let this page use Claude. Reload and allow it to search.";
+    else if(code==="rate_limited") why="Claude is rate-limited right now \u2014 leave it a minute.";
+    else if(code==="invalid_json") why="Claude\u2019s answer came back unreadable. Try again.";
+    return{ok:false,data:null,detail:why+"  ["+String((e&&e.message)||e)+"]"};
+  }
+}
+
+
+// ── THE SWEEP LOG — kept OUTSIDE the ledger, her ruling 20 Sep 2026 ─────────
+//
+// IT USED TO LIVE IN THE LEDGER AND THAT WAS WRONG. Her test settles it:
+// open a backup from two days ago and the drawer said "the Met last brought
+// rows 18 Sep"; open today's and it said 20 Sep. Same world, two answers. A
+// sweep either ran or it did not — opening an older file cannot un-run it.
+//
+// THE DISTINCTION, and it is hers: CONTENT rolls back with a backup and that
+// is correct (fewer exhibitions, her marks as they stood — the document
+// genuinely was smaller then). A FACT ABOUT THE WORLD must not. "The Met was
+// swept on 13 Sep" is true whichever backup she has open. The sweep log is the
+// second kind and it was sitting in the first kind's container.
+//
+// SO IT LIVES IN THIS PAGE'S OWN STORE — one document, one line per venue,
+// twenty-one lines, never growing. It survives Reset, it is there before any
+// ledger is loaded, and loading an old backup does not move it.
+//
+// IT IS A CACHE, NOT A MASTER RECORD, and that is what makes it safe to keep
+// somewhere she cannot export. Every fact in it comes from swept_at in a sweep
+// file, so any sweep file rebuilds it. Losing it costs one re-import, not her
+// work. Her LEDGER could never live here for exactly that reason — it is not
+// derivable from anything.
+const SWEEP_LOG_DOC = "sweeps/venues";
+
+// Returns {log, why} — `why` is null on success and a sentence otherwise. The
+// drawer prints it rather than showing an empty panel, because "no sweeps yet"
+// and "could not reach the store" look identical and mean opposite things.
+async function readSweepLog(){
+  const db=await useCap("db");
+  if(!db) return {log:{},why:"This page can\u2019t reach its sweep log in this viewer."};
+  try{
+    const snap=await db.doc(SWEEP_LOG_DOC).get();
+    if(!snap.exists) return {log:{},why:null};
+    const d=snap.data()||{};
+    const log=(d.venues&&typeof d.venues==="object")?d.venues:{};
+    return {log,why:null};
+  }catch(e){
+    const code=String((e&&e.code)||"");
+    if(code==="not_granted") return {log:{},why:"You declined this page access to its sweep log."};
+    return {log:{},why:"Couldn\u2019t read the sweep log ("+(code||"unknown")+")."};
+  }
+}
+
+async function writeSweepLog(next){
+  const db=await useCap("db");
+  if(!db) return false;
+  try{ await db.doc(SWEEP_LOG_DOC).set({venues:next,updatedAt:new Date().toISOString()}); return true; }
+  catch{ return false; }
+}
+
+async function readQuarantine(){
+  const db=await useCap("db");
+  if(!db) return {map:{},why:"This page can\u2019t reach its quarantine list in this viewer, so nothing is being blocked."};
+  try{
+    const snap=await db.doc(QUARANTINE_DOC).get();
+    if(!snap.exists) return {map:{},why:null};
+    const d=snap.data()||{};
+    return {map:(d.rows&&typeof d.rows==="object")?d.rows:{},why:null};
+  }catch(e){
+    const code=String((e&&e.code)||"");
+    if(code==="not_granted") return {map:{},why:"You declined this page access to its quarantine list."};
+    return {map:{},why:"Couldn\u2019t read the quarantine list ("+(code||"unknown")+")."};
+  }
+}
+
+async function writeQuarantine(next){
+  const db=await useCap("db");
+  if(!db) return false;
+  try{ await db.doc(QUARANTINE_DOC).set({rows:next,updatedAt:new Date().toISOString()}); return true; }
+  catch{ return false; }
+}
 
 const today=()=>new Date().toISOString().slice(0,10);
-function exPrompt(mu,p){
-  return `Read the museum's ${p} exhibition listing at ${mu.listUrl}.
-Extract EVERY exhibition shown on that listing. Do not open individual exhibition pages.
-For each exhibition return ONLY:
-- exact exhibition-page URL as linked from the listing
-- title
-- startDate
-- endDate
-- one-sentence description if the listing provides one
-Do not search for catalogues or catalogue information.
-Do not add commentary.
-Return JSON array only.
-[{"url":"","title":"","startDate":"YYYY-MM-DD","endDate":"YYYY-MM-DD","summary":""}]`;
-}
 function shopDomain(mu){if(!mu||!mu.shopHome)return null;try{return new URL(mu.shopHome).hostname;}catch{return null;}}
-function shopPrompt(r,mu){return'Search ONLY this museum shop for the printed exhibition catalogue (the book) for: "'+r.title+'" at '+(mu?mu.name:"")+'.\nLook for the catalogue\'s own product page in this shop. Return JSON only, no other text:\n{inShop: true or false, shopUrl: the product page URL in this shop or null, catalogueTitle, isbn13: 13 digits only, publisher, publisherUrl}\nIf you cannot find the catalogue in this shop, return inShop:false.';}
-function webPrompt(r,mu){return'Confirm whether a printed exhibition catalogue (a book) exists for: "'+r.title+'" at '+(mu?mu.name:"")+'.\nReturn JSON only, no other text:\n{hasCatalogue: "yes" or "no", catalogueTitle, isbn13: 13 digits only, publisher, publisherUrl}\nIf no catalogue was ever published, hasCatalogue:"no".';}
 
 const SKEY="cw-v3";
 // DORMANT in v8: Claude cloud save is kept in the file but nothing calls it.
@@ -277,6 +597,29 @@ export default function App(){
   const[debug,setDebug]=useState(null);
   const[showDebug,setShowDebug]=useState(false);
   const[lastRun,setLastRun]=useState(null);
+  // QUARANTINE — "this should never have been an entry". Not the same as
+  // dismiss, which is for a REAL exhibition she has looked at and passed on.
+  // Rejecting an Add card stores nothing, so junk returns on every future
+  // sweep forever; accepting then dismissing puts junk in the ledger
+  // permanently. This is the third outcome, and it is the only one that keeps
+  // the ledger clean. Entries: {key, venueId, title, at}.
+  // The MAP is what is stored (tombstones and all); the LIST is what she sees
+  // and what the export carries. Deriving one from the other means they cannot
+  // drift, which two pieces of state for one fact always eventually do.
+  const[quarantine,setQuarantine]=useState({});
+  const[quarWhy,setQuarWhy]=useState(null);
+  const ignored=useMemo(()=>activeQuarantine(quarantine),[quarantine]);
+  const[showIgnored,setShowIgnored]=useState(false);
+  // PER-VENUE FRESHNESS, and it has to be TWO facts. One global lastRun cannot
+  // say "artic was tried today and last gave us rows on 13 Sep", which is the
+  // line that decides whether a solo re-run is worth it. Shape:
+  //   { [venueId]: { attempted: iso, returned: iso|null } }
+  const[venueSeen,setVenueSeen]=useState({});
+  const[showFresh,setShowFresh]=useState(false);
+  const[freshWhy,setFreshWhy]=useState(null);   // why the sweep log is empty, when it is
+  const[seenInFile,setSeenInFile]=useState(null);
+  // A download we started but cannot confirm arrived. Never clears `dirty`.
+  const[unconfirmedSave,setUnconfirmedSave]=useState(null);
   const[lastSaved,setLastSaved]=useState(null);
   const[saveState,setSaveState]=useState("idle");
   const[firstTime,setFirstTime]=useState(false);
@@ -308,11 +651,61 @@ export default function App(){
   const refreshFileRef=useRef(null);
   const searchRef=useRef(null);
   const[proposals,setProposals]=useState(null); // null = not in refresh review; array = reviewing
+  // Listing pages the sweep could not read. NOT proposals — see isMarkerRow().
+  const[coverage,setCoverage]=useState([]);
+  const[tally,setTally]=useState(null);
+  // WHICH TRIAGE BANDS ARE OPEN. Most are empty on a healthy file, and the two
+  // that are not need nothing from her, so a permanently expanded band is a
+  // long scroll between her and the actual work. The default is set by WHAT A
+  // BAND ASKS OF HER, never by its size: one she cannot act on opens closed
+  // (markers, combined-for-you), one needing a look or a decision opens open.
+  // The count sits on the header either way, so collapsing hides the cards and
+  // never the fact that there are some.
+  const[openBands,setOpenBands]=useState({});
+  // WHICH VENUES ARE OPEN IN "NORMAL CASES". Same reasoning as the triage
+  // bands: 320 cards is a long scroll, and she works one venue at a time.
+  // Undefined means OPEN — the default is to show the work, not to hide it,
+  // so a venue can never go unnoticed because the app closed it on her.
+  // "Collapse all" writes false for every venue rather than flipping a single
+  // master flag, so opening one venue afterwards does not reopen the rest.
+  const[openVenues,setOpenVenues]=useState({});
   const[decisions,setDecisions]=useState({}); // proposal index -> "accept"|"reject"|"addnew"
   const[refreshDone,setRefreshDone]=useState(null); // {added,filled,changed} after applying
   const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
   const[pinTouched,setPinTouched]=useState(false); // pin those ids to the top this session
   const[showTop,setShowTop]=useState(false); // show the return-to-top button once scrolled down
+  // LIGHT OR DARK. Her choice is remembered in the browser, not in the ledger
+  // and not in the page's store: it is a per-device convenience, and the right
+  // answer on her laptop at 9pm is not necessarily the right one on another
+  // screen. Browser storage can throw outright (private window, blocked site
+  // data), so every touch is wrapped and the page renders fine without it.
+  //
+  // FIRST VISIT FOLLOWS THE OPERATING SYSTEM. If her machine is already in
+  // dark mode the app opens dark, which is the whole point of asking at 9pm.
+  // Once she picks, her pick wins on that device forever.
+  const[theme,setTheme]=useState(()=>{
+    try{ const v=localStorage.getItem("cw-theme"); if(v==="dark"||v==="light")return v; }catch{}
+    try{ if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)return "dark"; }catch{}
+    return "light";
+  });
+  const toggleTheme=()=>setTheme(t=>{
+    const n=t==="dark"?"light":"dark";
+    try{ localStorage.setItem("cw-theme",n); }catch{}
+    return n;
+  });
+  // The page around the component paints its own background before React runs,
+  // so it has to be told too — otherwise the margins stay cream around a dark
+  // app. Also sets color-scheme, which is what makes scrollbars and form
+  // controls follow.
+  useEffect(()=>{
+    try{
+      const d=document.documentElement;
+      d.setAttribute("data-theme",theme);
+      d.style.colorScheme=theme;
+      document.body.style.background=theme==="dark"?"#1A1815":"#E8E4DE";
+      document.body.style.color=theme==="dark"?"#EDE8E0":"#1E1B18";
+    }catch{}
+  },[theme]);
   useEffect(()=>{const onScroll=()=>setShowTop(window.scrollY>400);window.addEventListener("scroll",onScroll,{passive:true});onScroll();return()=>window.removeEventListener("scroll",onScroll);},[]);
 
   useEffect(()=>{
@@ -322,6 +715,14 @@ export default function App(){
     // routine is retired; its helper functions remain dormant below, uncalled.)
     setRows([]);
     setLoaded(true);
+    // The sweep log is NOT part of the ledger, so it loads here rather than on
+    // Import — it is there before any file is opened and it survives Reset.
+    // Read ONCE, not subscribed: she is the only viewer and the only writer,
+    // and a subscription in a component body is how a page ends up in a loop.
+    readSweepLog().then(({log,why})=>{ setVenueSeen(log); setFreshWhy(why); });
+    // Quarantine loads here too, and for the same reason: it is not part of the
+    // ledger any more, so it has to be in force before any file is opened.
+    readQuarantine().then(({map,why})=>{ setQuarantine(map); setQuarWhy(why); });
   },[]);
 
   // Keep the "Last saved ... ago" text and its colour current.
@@ -339,13 +740,26 @@ export default function App(){
   // LOADS (Import, Reset) are NOT unsaved work. Freshly loaded data matches its
   // source, so there's nothing to lose yet. The unsaved warning only appears once
   // you actually change something.
-  const loadLedger=useCallback((next,lr,info)=>{
+  const loadLedger=useCallback((next,lr,info,extra)=>{
     setRows(next);
     setLastRun(lr!==undefined?lr:null);
+    // A LEDGER'S QUARANTINE IS MERGED IN, NEVER SWITCHED TO. The file is the
+    // backup copy; the page holds the working one. Latest decision wins, so an
+    // old backup cannot re-block a row she has since released, and a backup
+    // from another machine adds what it knows.
+    const fromFile=quarantineFromList((extra&&extra.ignored)||[]);
+    if(Object.keys(fromFile).length){
+      setQuarantine(prev=>{ const merged=mergeQuarantine(prev,fromFile); writeQuarantine(merged); return merged; });
+    }
+    // venueSeen is DELIBERATELY not read from the file. It lives in the page's
+    // own store now — see the sweep log note. Reading it here is exactly the
+    // bug she found: loading a two-day-old backup dragged the sweep dates back
+    // with it, as though opening an older document un-ran a sweep.
     setFirstTime(false);
     setDirty(false);
     
     setSavedFile(null);
+    setUnconfirmedSave(null);
     setError(null);
     setLoadedInfo(info||null);
     setRefreshDone(null);
@@ -357,7 +771,7 @@ export default function App(){
     if(driveState==="saving")return;
     setDriveState("saving");setError(null);
     const fname=LEDGER_PREFIX+localStamp()+".json";
-    const payload=JSON.stringify({rows,lastRun,savedAt:new Date().toISOString(),savedLocal:localReadable()});
+    const payload=JSON.stringify({rows,ignored,lastRun,savedAt:new Date().toISOString(),savedLocal:localReadable()});
     const prompt=
       "Using Google Drive, create a NEW file named \""+fname+"\" whose entire text content is exactly this JSON:\n"+
       payload+"\n"+
@@ -373,9 +787,18 @@ export default function App(){
       setError("Save to Drive FAILED \u2014 your recent changes are NOT backed up. Try again, or use Export ledger to keep a local copy right now.");
       setDebug("Save to Drive FAILED.\n"+r.detail);
     }
-  },[rows,lastRun,driveState]);
+  },[rows,ignored,lastRun,driveState]);
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
   const clearFilters=()=>{setVenueF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqNoCat(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setSearch("");setShowSearch(false);};
+
+  // WHAT A QUARANTINE REMEMBERS. The URL where there is one, because that is
+  // the only key that cannot be wrong; venue + title where there is not,
+  // accepting that a venue reusing a title would suppress the wrong row. The
+  // cost of that is bounded and visible — the list is on screen and every
+  // entry can be put back — whereas keying junk loosely and getting it wrong
+  // silently is not.
+  const ignoreKeyFor=(venueId,url,title)=>
+    venueId+"|"+(url?normalizeUrlKey(url):"t:"+normalizeTitle(title));
 
   // Conservative duplicate matching for incoming refresh results.
   const normalizeTitle = v => String(v||"")
@@ -417,7 +840,75 @@ export default function App(){
   // and produces a list of proposals to review one at a time. Nothing is applied
   // until "Go ahead and update the ledger". Anything the app can't use is not
   // dropped silently — it becomes a plain note on the proposal card.
-  function analyzeProForma(text){
+  // The sentence the scraper stamps on every marker row, verbatim. A marker
+  // reports a LISTING PAGE it could not read — it is not an exhibition and was
+  // never a proposal. Until now the app had no idea, so each one became an
+  // ordinary Add card titled "[past page]"; rejecting is not remembered, so the
+  // same junk returned on every future sweep forever.
+  //
+  // Matched on the NOTES SENTINEL rather than the bracketed title. The scraper
+  // writes this sentence at every marker site, so this is the producer saying
+  // so — the strongest rung. A bracketed title is a guess about formatting, and
+  // a real exhibition could carry brackets.
+  const MARKER_SENTINEL = "Marker row, not an exhibition.";
+  const isMarkerRow = note => String(note||"").trim().endsWith(MARKER_SENTINEL);
+
+  // Which of two values to offer first when a stitched file disagrees with
+  // itself. Her ruling: the FULLER one, clearly marked as a guess, with both
+  // shown and one click to switch. Never silent, never irreversible.
+  const fuller = (a,b) => (String(b||"").trim().length > String(a||"").trim().length) ? b : a;
+
+  /**
+   * Fold rows that are the same exhibition BEFORE anything is compared to the
+   * ledger.
+   *
+   * One stitched file now carries every machine's output, so a venue swept in
+   * two places appears twice — one copy with dates and no summary because its
+   * detail page timed out, the other the reverse. analyzeProForma compares each
+   * row against the LEDGER only, never against the row beside it, so both would
+   * become separate Add cards for one exhibition.
+   *
+   * KEYED ON VENUE + URL, AND NOTHING ELSE. Same address is the same
+   * exhibition, always, with no interpretation — the scraper's own rule.
+   *
+   * ROWS WITH NO URL ARE NEVER FOLDED. The only other key is the title, and
+   * sameExhibition() matches on normalised title plus date overlap and returns
+   * true whenever EITHER side lacks dates. That is fine against the ledger,
+   * where she sees every proposal before it lands; here it would fire before
+   * she sees anything, and a title collision would silently fuse two different
+   * shows. That is the judgement that destroyed 29 National Gallery
+   * exhibitions. An unfolded duplicate costs one extra card she can see.
+   *
+   * Nothing is invented and nothing is dropped: a group yields exactly one row,
+   * built only from values that were in the file, and a genuine disagreement is
+   * carried forward as a CHOICE rather than resolved here.
+   */
+  function foldDuplicateRows(raws){
+    const byKey=new Map(), out=[];
+    for(const row of raws){
+      const key=row.url?(row.venueCode+"|"+normalizeUrlKey(row.url)):"";
+      if(!key){ out.push(row); continue; }
+      const seen=byKey.get(key);
+      if(!seen){ byKey.set(key,row); out.push(row); continue; }
+      seen.mergedFrom=(seen.mergedFrom||[seen.line]).concat(row.line);
+      for(const f of ["title","startDate","endDate","summary"]){
+        const a=seen[f], b=row[f];
+        if(!b) continue;                       // nothing to add
+        if(!a){ seen[f]=b; continue; }         // fill a gap — no judgement at all
+        if(a===b) continue;                    // agreement
+        // A REAL DISAGREEMENT. Keep both; the card offers the fuller one first.
+        seen.conflicts=seen.conflicts||{};
+        if(!seen.conflicts[f]) seen.conflicts[f]=[a];
+        if(!seen.conflicts[f].includes(b)) seen.conflicts[f].push(b);
+        seen[f]=fuller(a,b);
+      }
+      // Notes are additive: two runs can each explain something different.
+      for(const n of row.rowNotes||[]) if(!(seen.rowNotes||[]).includes(n)) (seen.rowNotes=seen.rowNotes||[]).push(n);
+    }
+    return out;
+  }
+
+  function analyzeProForma(text,ignoredKeys){
     const table=csvParse(text);
     if(!table.length) return {error:"That file was empty."};
     const header=table[0].map(h=>String(h).trim().toLowerCase());
@@ -425,55 +916,184 @@ export default function App(){
     if(idx("venue_code")<0||idx("title")<0) return {error:"That file doesn't look like a pro forma (no venue_code / title columns)."};
     const get=(r,n)=>{const j=idx(n);return j>=0?String(r[j]||"").trim():"";};
     const props=[];
+    const coverage=[];   // marker rows: listing pages that could not be read
+    const parsed=[];
+    // WHICH VENUES THIS FILE TOUCHED, and whether they gave anything. Two
+    // different facts: a venue can be in the sweep and hand back nothing but
+    // marker rows, which is a refusal, not an absence. Read off the FILE, not
+    // off her decisions — a row she rejects was still collected.
+    // DATED BY THE SWEEP, NOT BY THIS MOMENT — her finding, 20 Sep. These used
+    // to be bare sets, and applyRefresh stamped "now" against them, so the
+    // drawer said a venue was tried at the instant she pressed Import. The file
+    // now carries swept_at per ROW, so each venue keeps the LATEST time it was
+    // seen. Per row and not per venue because a stitched file routinely holds
+    // two runs of one venue — which is exactly the case the drawer is for: a
+    // venue tried at 14:26 whose last real rows came at 02:04 is being refused.
+    const attempted={}, returned={};
+    const later=(a,b)=>(!a||(b&&b>a))?b:a;
+    // COUNTS SHE CAN RECONCILE AGAINST THE FILE. A card total alone cannot be
+    // checked against anything: rows vanish for three innocent reasons — a
+    // marker row, a fold, an entry that already matches the ledger — and with
+    // 652 rows arriving as 319 cards there is no way to tell those apart from
+    // a row silently lost. Every row read is accounted for by one of these.
+    let silent=0, blocked=0;
+    // Rows the sweep should never have produced. Collected, then the whole file
+    // is refused — see the note at the check itself.
+    const faults=[];
+
+    // ── PASS ONE: read the file. No comparison to anything yet. ──────────────
+    // Split out because one stitched file now holds every machine's output, so
+    // rows have to be reconciled against EACH OTHER before the ledger is
+    // consulted at all.
     for(let k=1;k<table.length;k++){
       const r=table[k], line=k+1;
       const vc=get(r,"venue_code").toLowerCase();
       const title=get(r,"title");
+      const rowNote=get(r,"notes");
+
+      // A LISTING PAGE THAT COULD NOT BE READ IS NOT A PROPOSAL. It goes to the
+      // coverage panel, where "we tried and were refused" is what it actually
+      // says — rather than becoming an exhibition she rejects on every sweep.
+      const sweptAt=get(r,"swept_at");
+      if(KNOWN_VENUES.has(vc)) attempted[vc]=later(attempted[vc],sweptAt);
+      if(isMarkerRow(rowNote)){
+        coverage.push({venueId:KNOWN_VENUES.has(vc)?vc:null,venueShort:KNOWN_VENUES.has(vc)?MU[vc].short:(vc||"(blank)"),what:title||"(a listing page)",why:rowNote,url:get(r,"url"),line});
+        continue;
+      }
+      if(KNOWN_VENUES.has(vc)&&title) returned[vc]=later(returned[vc],sweptAt);
+
       const notes=[];
-      if(!vc||!KNOWN_VENUES.has(vc)){ props.push({type:"problem",venueId:null,venueShort:vc||"(blank)",title:title||"(no title)",problem:"Venue code "+(vc?("\u201c"+vc+"\u201d"):"(blank)")+" isn't a known venue \u2014 this row can't be filed.",notes:[],line}); continue; }
-      if(!title){ props.push({type:"problem",venueId:vc,venueShort:MU[vc].short,title:"(no title)",problem:"This row has no exhibition title \u2014 it can't be added.",notes:[],line}); continue; }
+      // A FAULTY ROW IS NOT HER PROBLEM — her ruling, 20 Sep 2026. A row with no
+      // title or no venue code is a DATA FAULT: there is no such thing as an
+      // exhibition with no name, and a row always came from somewhere, so a
+      // missing code means the file is malformed. Neither can be resolved by
+      // looking at a card, and the only outcome was ever "fix the sweep and
+      // feed it again" — a message to the session, printed on her screen.
+      //
+      // They used to be a band of their own. Now the file is REFUSED whole, so
+      // she never triages one, and `scraper/qc.js` stops it upstream: it runs
+      // at the end of every sweep and gates compress --apply, so the file she
+      // imports cannot contain one. This check stays as the last line, and it
+      // says WHICH LINES so the session can fix them without asking her.
+      if(!vc||!KNOWN_VENUES.has(vc)){ faults.push("line "+line+": venue code "+(vc?("\u201c"+vc+"\u201d"):"is blank")+(vc?" isn\u2019t one of the 21 venues":"")); continue; }
+      if(!title){ faults.push("line "+line+": no exhibition title"+(get(r,"url")?" \u2014 "+get(r,"url"):"")); continue; }
       let sd=get(r,"start_date"), ed=get(r,"end_date"), url=get(r,"url");
       if(sd&&!isValidYMD(sd)){notes.push("Start date \u201c"+sd+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");sd="";}
       if(ed&&!isValidYMD(ed)){notes.push("End date \u201c"+ed+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");ed="";}
       if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
-      const summary=get(r,"summary"), rowNote=get(r,"notes");
+      // QUARANTINED — she has already said this should never be an entry.
+      // Dropped here, before anything else looks at it, so it cannot fold with
+      // a real row or reach the ledger comparison. Counted, never silent.
+      if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
+      parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,
+                   rowNotes:rowNote?["Sweeper note: "+rowNote]:[],parseNotes:notes,line});
+    }
+
+    // THE FILE IS REFUSED WHOLE, not row by row. A sweep that produced a
+    // nameless row is a sweep to re-run, and importing the rest of it would
+    // quietly leave that exhibition out.
+    if(faults.length){
+      return { error:"This sweep file has "+faults.length+" faulty row"+(faults.length===1?"":"s")+
+        " and hasn\u2019t been imported. Nothing here is for you to fix \u2014 give these line numbers back to Claude:\n\n"+
+        faults.slice(0,12).join("\n")+(faults.length>12?"\n\u2026and "+(faults.length-12)+" more.":"") };
+    }
+    // ── PASS TWO: fold rows that are the same exhibition. ────────────────────
+    const folded=foldDuplicateRows(parsed);
+
+    // ── PASS THREE: compare each surviving row to the ledger, as before. ─────
+    for(const p of folded){
+      const vc=p.venueCode, title=p.title, sd=p.startDate, ed=p.endDate, summary=p.summary, url=p.url;
+      const notes=p.parseNotes.slice();
       if(!sd)notes.push("No start date.");
       if(!ed)notes.push("No end date.");
       if(!summary)notes.push("No description.");
       if(!url)notes.push("No exhibition link.");
-      if(rowNote)notes.push("Sweeper note: "+rowNote);
+      for(const n of p.rowNotes) notes.push(n);
+      // SAY WHEN ROWS WERE FOLDED. She is being shown one card for what was
+      // several lines in the file, and that has to be visible or the count on
+      // her approval pile will not match the file she fed in.
+      if(p.mergedFrom) notes.push("Rows "+p.mergedFrom.join(", ")+" of the file describe this same exhibition \u2014 combined into one.");
+
       const cand={museumId:vc,title,startDate:sd||null,endDate:ed||null,summary,exUrl:url};
       const exact=url?rows.find(x=>x.museumId===vc&&x.exUrl&&x.exUrl===url):null;
       const match=exact||rows.find(x=>sameExhibition(x,cand));
-      if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line}); continue; }
+
+      // WHERE THE FILE DISAGREED WITH ITSELF, offer the choice on the card.
+      // The fuller value is ticked, and marked as a guess; both are shown.
+      const choices=p.conflicts?Object.keys(p.conflicts).map(f=>({
+        field:f,
+        label:{title:"Title",startDate:"Start date",endDate:"End date",summary:"Description"}[f]||f,
+        options:p.conflicts[f],
+        picked:p[f],
+      })):null;
+
+      if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line:p.line,choices,merged:!!p.mergedFrom}); continue; }
       const upd=[];
       const consider=(field,label,oldV,newV)=>{ const o=(oldV==null?"":String(oldV)), n=(newV==null?"":String(newV)); if(!n)return; if(!o)upd.push({field,label,oldVal:"",newVal:n,kind:"fill"}); else if(o!==n)upd.push({field,label,oldVal:o,newVal:n,kind:"change"}); };
       consider("startDate","Start date",match.startDate,sd);
       consider("endDate","End date",match.endDate,ed);
       consider("summary","Description",match.summary,summary);
       consider("exUrl","Exhibition link",match.exUrl,url);
-      if(!upd.length) continue; // identical — nothing to propose
+      if(!upd.length&&!choices){ silent++; continue; }  // identical — nothing to propose
       const hasChange=upd.some(u=>u.kind==="change");
-      props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].short,title,cand,matchId:match.id,upd,notes,line});
+      props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].short,title,cand,matchId:match.id,upd,notes,line:p.line,choices,merged:!!p.mergedFrom});
     }
-    return {props};
+    const tally={
+      fileRows:  table.length-1,
+      markers:   coverage.length,
+      folded:    parsed.length-folded.length,
+      add:       props.filter(p=>p.type==="add").length,
+      fill:      props.filter(p=>p.type==="fill").length,
+      change:    props.filter(p=>p.type==="change").length,
+      silent,
+      blocked,
+    };
+    return {props,coverage,tally,seen:{attempted,returned}};
   }
+
+  // THE SWEEP LOG IS WRITTEN AT IMPORT, NOT AT APPLY — corrected 20 Sep, and
+  // it is the half of her ruling I failed to carry through.
+  //
+  // It used to be written when she pressed "Go ahead and update the ledger",
+  // on the reasoning that cancelling a review should leave no trace. That
+  // reasoning was correct WHILE THE LOG LIVED IN THE LEDGER, where it was part
+  // of the document. It is not part of the document any more. It is what this
+  // page knows about the world, and reading a sweep file is the moment it
+  // learns the sweep happened — whether or not she then accepts a single card.
+  //
+  // It also had a cost she found immediately: with the ledger gated on deciding
+  // every card, seeing the drawer fill meant working 320 cards first. Now she
+  // can import, look, and cancel.
+  const recordSweep=(seen)=>{
+    if(!seen) return;
+    const vs=mergeSweepLog(venueSeen,seen);
+    setVenueSeen(vs);
+    writeSweepLog(vs).then(ok=>{ setFreshWhy(ok?null:"The sweep log couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload."); });
+  };
 
   function handleRefreshFile(e){
     const file=e.target.files[0]; if(!file)return;
     const reader=new FileReader();
     reader.onload=()=>{
-      const res=analyzeProForma(String(reader.result||""));
+      const res=analyzeProForma(String(reader.result||""),new Set(ignored.map(x=>x.key)));
       if(res.error){setError(res.error);return;}
-      if(!res.props.length){setError("Read the refresh file, but nothing new to propose \u2014 your ledger already matches it.");return;}
-      setError(null); setProposals(res.props); setDecisions({});
+      recordSweep(res.seen);
+      if(!res.props.length){
+        setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null);
+        setError("Read the refresh file, but nothing new to propose \u2014 your ledger already matches it."+((res.coverage||[]).length?" ("+res.coverage.length+" listing page"+(res.coverage.length===1?"":"s")+" couldn\u2019t be read \u2014 see below.)":""));
+        return;
+      }
+      setError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions({});
     };
     reader.readAsText(file); e.target.value="";
   }
 
-  // Decision model. Each card holds: {mode} for add/problem ("accept"/"reject"),
+  // Decision model. Each card holds: {mode} for an add ("accept"/"reject"/"never"),
   // or {fields:{j:"accept"|"reject"}, mode:"addnew"?} for fill/change.
   const setCardMode=(i,v)=>setDecisions(d=>{const cur=d[i]||{};return{...d,[i]:{...cur,mode:cur.mode===v?undefined:v}};});
+  // Which value she picked where the file disagreed with itself. Per card, per
+  // field; absent means "still on the pre-picked fuller one".
+  const setChoice=(i,field,val)=>setDecisions(d=>{const cur=d[i]||{};return{...d,[i]:{...cur,choices:{...(cur.choices||{}),[field]:val}}};});
   const setFieldDec=(i,j,v)=>setDecisions(d=>{const cur=d[i]||{};const f={...(cur.fields||{})};f[j]=f[j]===v?undefined:v;return{...d,[i]:{...cur,fields:f,mode:undefined}};});
 
   function makeLedgerRow(c,now){
@@ -481,165 +1101,178 @@ export default function App(){
     return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,shopUrl:null,shopState:null,addedAt:now,editedAt:null};
   }
 
+  // Apply whatever she picked where the stitched file disagreed with itself.
+  // Untouched fields keep the pre-selected fuller value, which is what the card
+  // was already showing — so doing nothing gives her exactly what she saw.
+  const withChoices=(cand,dec)=>{
+    const c=(dec||{}).choices; if(!c)return cand;
+    const out={...cand};
+    for(const f of Object.keys(c)){
+      const v=c[f];
+      if(f==="title")out.title=v;
+      else if(f==="startDate")out.startDate=v||null;
+      else if(f==="endDate")out.endDate=v||null;
+      else if(f==="summary")out.summary=v;
+    }
+    return out;
+  };
+
   function applyRefresh(){
     const byId=new Map(rows.map(r=>[r.id,r]));
     const now=new Date().toISOString();
     const touched=[];
+    const newlyIgnored=[];
     let added=0,filled=0,changed=0;
     proposals.forEach((p,i)=>{
       const dec=decisions[i]||{};
-      if(p.type==="problem")return;
       if(p.type==="add"){
+        if(dec.mode==="never"){
+          const c=p.cand;
+          newlyIgnored.push({key:ignoreKeyFor(c.museumId,c.exUrl,c.title),venueId:c.museumId,title:c.title,at:now});
+          return;
+        }
         if(dec.mode!=="accept")return;
-        const nrow=makeLedgerRow(p.cand,now); let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; return;
+        const nrow=makeLedgerRow(withChoices(p.cand,dec),now); let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; return;
       }
       // fill / change
       if(dec.mode==="addnew"){
-        const nrow=makeLedgerRow(p.cand,now); let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; return;
+        const nrow=makeLedgerRow(withChoices(p.cand,dec),now); let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; return;
       }
       const m=byId.get(p.matchId); if(!m)return; const patch={...m}; let hit=false;
       p.upd.forEach((u,j)=>{ if((dec.fields||{})[j]==="accept"){ patch[u.field]=u.newVal; if(u.kind==="fill")filled++; else changed++; hit=true; } });
       if(hit){ patch.editedAt=now; byId.set(p.matchId,patch); touched.push(p.matchId); }
     });
+    // The sweep log is NOT touched here. It was written the moment the file was
+    // read — see recordSweep. Applying changes her ledger; it tells us nothing
+    // new about when a venue was swept.
+    // A NEW QUARANTINE GOES TO THE STORE, not into the ledger she is about to
+    // commit. Her export still carries the list, but the copy that does the
+    // blocking is the one that survives a Reset.
+    if(newlyIgnored.length){
+      const add={};
+      for(const x of newlyIgnored) add[x.key]={venueId:x.venueId,title:x.title,at:x.at,state:"blocked"};
+      setQuarantine(prev=>{ const merged=mergeQuarantine(prev,add);
+        writeQuarantine(merged).then(ok=>{ if(!ok) setQuarWhy("The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Export to keep it."); });
+        return merged; });
+    }
     commit(Array.from(byId.values()),new Date().toISOString());
-    setProposals(null); setDecisions({}); setRefreshDone({added,filled,changed});
+    setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length});
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
     setVenueF(new Set()); setTimeF(new Set()); setWatchedF(false);
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqNoCat(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
-  function cancelRefresh(){ setProposals(null); setDecisions({}); }
+  function cancelRefresh(){ setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   const pickSort=k=>{setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
-  async function refreshVenues(ids){
-    setBusy(true);setError(null);setDebug(null);
-    const periods=[
-      {id:"past",inst:"past exhibitions listing"},
-      {id:"current",inst:"current exhibitions listing"},
-      {id:"upcoming",inst:"upcoming/announced exhibitions listing"}
-    ];
-    const jobs=[];
-    for(const mid of ids){
-      const mu=MU[mid];
-      if(mu)for(const p of periods)jobs.push({mu,p});
+  // refreshVenues() REMOVED 20 Sep 2026. It had the app gathering its own
+  // exhibition data — rejected long ago and wired to no button since — and it
+  // called askClaude(), which no longer exists. Dead code shaped like live code
+  // is a trap for whoever debugs this next; git holds it.
+
+
+  // Turn the connector's results into the few lines Claude is asked to read.
+  // Trimmed hard: excerpts are long, and the prompt has a 64 KiB ceiling.
+  const resultsForPrompt=list=>list.slice(0,8).map((r,i)=>
+    (i+1)+". "+String(r.title||"(untitled)")+"\n   "+String(r.url||"")+"\n   "
+    +(Array.isArray(r.excerpts)?r.excerpts.join(" ").replace(/\s+/g," ").slice(0,700):"")
+  ).join("\n\n");
+
+  const READ_RULES=
+    "You are reading real web search results to find the PRINTED EXHIBITION CATALOGUE for one exhibition.\n"
+   +"Use ONLY what the results below actually say. Never use outside knowledge, never guess an ISBN, "
+   +"never invent a shop page.\n"
+   +"A catalogue is a BOOK about the exhibition. Tote bags, prints, postcards, mugs, notebooks and "
+   +"generic gift items are NOT catalogues, even on the exhibition's own shop page.\n"
+   +"THE ISBN IS OFTEN NOT IN THE SHOP. Museums routinely print the catalogue's title, publisher and "
+   +"ISBN in a PRESS RELEASE or on the exhibition's own page, while the shop lists only souvenirs. "
+   +"A press release stating the book counts as finding it.\n"
+   +"Beware of unrelated books that merely share the exhibition's title \u2014 a classical text, a novel, "
+   +"a textbook. The catalogue is the one tied to THIS exhibition at THIS venue.\n";
+
+  const READ_SHAPE=
+    "\nReply with ONLY this JSON object and nothing else:\n"
+   +'{"found": true|false, "catalogueTitle": string|null, "isbn13": string|null, '
+   +'"publisher": string|null, "shopUrl": string|null}\n'
+   +'Example: {"found":true,"catalogueTitle":"Metamorphoses: Ovid and the Arts","isbn13":"9789493416543",'
+   +'"publisher":"Hannibal Books","shopUrl":null}\n'
+   +'Set "found" false and every other field null when these results show no catalogue.';
+
+  // TWO STAGES, HER DESIGN, UNCHANGED SINCE IT WAS TESTED.
+  //
+  // Stage one asks the venue's own shop and nothing else. Stage two, only if
+  // the shop had nothing, looks wider. Nothing found in either means no
+  // catalogue. The reason for the order is not cost, which is gone: a shop hit
+  // is the only result that gives her a real "buy it here" link.
+  //
+  // THE ONE THING THAT CHANGED, AND IT IS NOT A CHOICE. The old search tool
+  // could be locked to one website — it was unable to look anywhere else.
+  // The connector has no lock, only a "look here" hint inside the query, so a
+  // stray result from another site can come back. That is why the shop link is
+  // CHECKED below: a link that is not on the venue's shop is never filed as
+  // being in the venue's shop.
+  const settle=(row,o,dom,detail,fromShopStage)=>{
+    const onShop=o.shopUrl&&dom&&String(o.shopUrl).toLowerCase().includes(String(dom).toLowerCase());
+    if(o.found&&(o.catalogueTitle||o.isbn13)){
+      return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"yes",
+        shopState:onShop?"shop":"web",
+        catalogueTitle:o.catalogueTitle||null,isbn13:cleanIsbn(o.isbn13),
+        publisher:o.publisher||null,publisherUrl:null,shopUrl:onShop?o.shopUrl:null}};
     }
-
-    const found=[];
-    let fails=0;
-    let firstD=null;
-
-    // Lightweight first pass: read only the museum listing pages.
-    // No catalogue research and no individual exhibition-page research here.
-    for(let i=0;i<jobs.length;i++){
-      const{mu,p}=jobs[i];
-      setProg({done:i,total:jobs.length,label:mu.short+" — "+p.id});
-      const res=await askClaude(exPrompt(mu,p.inst));
-      if(!firstD)firstD=mu.short+"/"+p.id+"\n"+res.detail;
-      const items=res.ok?extractObjects(res.text):[];
-      if(!items.length){fails++;continue;}
-
-      for(const it of items){
-        if(!it||!it.title)continue;
-        found.push({
-          id:mu.id+"-"+normalizeTitle(it.title).replace(/[^a-z0-9]+/g,"").slice(0,50),
-          museumId:mu.id,
-          title:String(it.title).trim(),
-          startDate:it.startDate||null,
-          endDate:it.endDate||null,
-          summary:it.summary||"",
-          exUrl:it.url||it.exUrl||"",
-          hasCatalogue:"unknown"
-        });
-      }
-    }
-
-    // Local merge: exact venue + exact exhibition URL is the first and strongest
-    // duplicate shortcut. Only unmatched URLs use the broader duplicate rules.
-    const byId=new Map(rows.map(r=>[r.id,r]));
-    for(const f of found){
-      const exactUrl=f.exUrl
-        ? Array.from(byId.values()).find(r=>r.museumId===f.museumId&&r.exUrl===f.exUrl)
-        : null;
-      // Do not use the title-derived ID as a duplicate shortcut: the same
-      // title can legitimately represent a separate run at the same venue.
-      const match=exactUrl||Array.from(byId.values()).find(r=>sameExhibition(r,f));
-
-      if(match){
-        byId.set(match.id,{
-          ...match,
-          startDate:f.startDate||match.startDate||null,
-          endDate:f.endDate||match.endDate||null,
-          summary:f.summary||match.summary,
-          exUrl:match.exUrl||f.exUrl||""
-        });
-      }else{
-        const mu=MU[f.museumId];
-        byId.set(f.id,{
-          ...f,
-          exUrl:f.exUrl||mu?.listUrl||"",
-          interested:true,
-          watching:false,
-          acquiring:null,
-          looked:false,
-          catalogueTitle:null,
-          isbn13:null,
-          publisher:null,
-          publisherUrl:null,
-          shopUrl:null
-        });
-      }
-    }
-
-    // Only genuinely new records lacking a usable description get a fallback
-    // individual-page lookup. Catalogue research remains completely separate.
-    let arr=Array.from(byId.values());
-    const existingIds=new Set(rows.map(r=>r.id));
-    const newItems=arr.filter(r=>!existingIds.has(r.id)&&!r.summary);
-    for(const r of newItems){
-      const mu=MU[r.museumId];
-      if(!mu||!r.exUrl)continue;
-      const prompt=`Open the exhibition page ${r.exUrl} only to obtain a concise one-sentence description for "${r.title}" at ${mu.name}. Return JSON array only with {"title":"...","summary":"..."}. Do not search for or report catalogue information.`;
-      const res=await askClaude(prompt);
-      const objs=res.ok?extractObjects(res.text):[];
-      if(objs.length&&objs[0].summary){
-        arr=arr.map(x=>x.id===r.id?{...x,summary:objs[0].summary}:x);
-      }
-    }
-
-    arr=Array.from(new Map(arr.map(r=>[r.id,r])).values());
-    await commit(arr,new Date().toISOString());
-    setProg({done:jobs.length,total:jobs.length,label:"Done"});
-    setBusy(false);
-    setDebug(firstD);
-    if(fails===jobs.length)setError("Every search came back empty.");
-    else if(fails>0)setError(fails+" of "+jobs.length+" returned nothing.");
-  }
+    if(fromShopStage)return null;          // not found in the shop — go wider
+    return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"no",shopState:"none",
+      catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,shopUrl:null}};
+  };
 
   async function lookupCat(row){
     const mu=MU[row.museumId];
     const dom=shopDomain(mu);
+    const title=String(row.title||"").trim();
+    const venue=mu?mu.name:"";
     let detail="";
-    // Step 1 — search the venue's own shop only, hard-capped.
+
+    // ── Stage one: the venue's own shop ─────────────────────────────────────
     if(dom){
       setLookPhase("shop");
-      const r1=await askClaude(shopPrompt(row,mu),{allowedDomains:[dom],maxUses:1});
-      detail=r1.detail||"";
-      const o1=r1.ok?extractObjects(r1.text)[0]:null;
-      if(o1&&o1.inShop&&(o1.shopUrl||o1.catalogueTitle)){
-        return {ok:true,detail,row:{...row,looked:true,hasCatalogue:"yes",shopState:"shop",catalogueTitle:o1.catalogueTitle||null,isbn13:cleanIsbn(o1.isbn13),publisher:o1.publisher||null,publisherUrl:o1.publisherUrl||null,shopUrl:o1.shopUrl||null}};
+      const s1=await searchWeb(
+        "Find the printed exhibition catalogue for \u201c"+title+"\u201d at "+venue
+          +" in the museum's own shop at "+dom+": its title, ISBN-13, publisher, and the shop page selling it.",
+        ["site:"+dom+" "+title+" catalogue",
+         "site:"+dom+" "+title+" book",
+         "site:"+dom+" "+title]);
+      detail=s1.detail;
+      if(!s1.ok)return{row,detail,ok:false};
+      if(s1.results.length){
+        const r1=await readResults(READ_RULES
+          +"\nExhibition: "+title+"\nVenue: "+venue
+          +"\nThese results are meant to be from the venue's own shop, "+dom
+          +". Ignore any result that is not on that website.\n\n"
+          +resultsForPrompt(s1.results)+READ_SHAPE);
+        detail=s1.detail+"\n"+r1.detail;
+        if(!r1.ok)return{row,detail,ok:false};
+        const hit=settle(row,r1.data||{},dom,detail,true);
+        if(hit)return hit;
       }
     }
-    // Step 2 — only if the shop had nothing: one broad search to confirm the catalogue exists at all.
+
+    // ── Stage two: wider, only because the shop had nothing ─────────────────
     setLookPhase("web");
-    const r2=await askClaude(webPrompt(row,mu),{maxUses:1});
-    detail=r2.detail||detail;
-    const o2=r2.ok?extractObjects(r2.text)[0]:null;
-    if(!r2.ok||!o2)return{row,detail,ok:false};
-    if(o2.hasCatalogue==="no"){
-      return {ok:true,detail,row:{...row,looked:true,hasCatalogue:"no",shopState:"none",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,shopUrl:null}};
-    }
-    // Exists on the wider web, but not in the venue's own shop.
-    return {ok:true,detail,row:{...row,looked:true,hasCatalogue:"yes",shopState:"web",catalogueTitle:o2.catalogueTitle||null,isbn13:cleanIsbn(o2.isbn13),publisher:o2.publisher||null,publisherUrl:o2.publisherUrl||null,shopUrl:null}};
+    const s2=await searchWeb(
+      "Confirm whether a printed catalogue was published for the exhibition \u201c"+title+"\u201d at "
+        +venue+", and give its exact title, ISBN-13 and publisher. Museums often state these in a "
+        +"press release; art-book publishers and booksellers list them too.",
+      [title+" exhibition catalogue ISBN publisher",
+       venue+" "+title+" catalogue book",
+       venue+" "+title+" press release catalogue"]);
+    detail=(detail?detail+"\n":"")+s2.detail;
+    if(!s2.ok)return{row,detail,ok:false};
+    if(!s2.results.length)return settle(row,{},dom,detail,false);
+    const r2=await readResults(READ_RULES
+      +"\nExhibition: "+title+"\nVenue: "+venue+(dom?"\nIts shop is at "+dom:"")+"\n\n"
+      +resultsForPrompt(s2.results)+READ_SHAPE);
+    detail=detail+"\n"+r2.detail;
+    if(!r2.ok)return{row,detail,ok:false};
+    return settle(row,r2.data||{},dom,detail,false);
   }
 
   async function findOneCat(id){setBusy(true);setBusyId(id);setError(null);const row=rows.find(r=>r.id===id);const out=await lookupCat(row);setDebug(out.detail);if(out.ok)await commit(rows.map(r=>r.id===id?out.row:r));else setError("Catalogue search failed for \u201c"+row.title+"\u201d.");setBusy(false);setBusyId(null);setLookPhase(null);}
@@ -652,7 +1285,7 @@ export default function App(){
   const toggleWatch=id=>commit(rows.map(r=>r.id===id?{...r,watching:!r.watching}:r));
   const setAcq=(id,v)=>commit(rows.map(r=>r.id===id?{...r,acquiring:r.acquiring===v?null:v}:r));
 
-  function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);if(d&&Array.isArray(d.rows)){loadLedger(d.rows.map(r=>({...r,watching:r.watching||false})),d.lastRun||null,"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.");setDebug("Imported "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");}else{setError("That file didn't contain a ledger (no entries found).");}}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");}};reader.readAsText(file);e.target.value="";}
+  function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);if(d&&Array.isArray(d.rows)){loadLedger(d.rows.map(r=>({...r,watching:r.watching||false})),d.lastRun||null,"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",{ignored:Array.isArray(d.ignored)?d.ignored:[]});setDebug("Imported "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");}else{setError("That file didn't contain a ledger (no entries found).");}}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");}};reader.readAsText(file);e.target.value="";}
 
   // Confirm-before-replace: Import and Reset can wipe the screen in one tap, so
   // they ask first WHENEVER there is unsaved work showing.
@@ -667,22 +1300,71 @@ export default function App(){
     else doReset();
   }
 
-  function handleExport(){
+  // SAVING MUST NOT DEPEND ON THE SANDBOX ALLOWING A DOWNLOAD — 20 Sep 2026.
+  //
+  // It did, and the viewer withdrew the permission: "File downloads aren't
+  // available for this artifact." That took away THE ONLY ROUTE HER LEDGER HAD
+  // OUT OF THE APP, and the app said "Saved — safe to close" while it happened,
+  // because the old code treated clicking a link as evidence a file arrived.
+  //
+  // Two routes now, in order, and the difference between them is what is known:
+  //
+  //   1. The runtime's own file handoff. It asks her and then either SAVES or
+  //      REJECTS, so for the first time there is a real answer to hold the
+  //      green tick to.
+  //   2. An ordinary browser download, for a plain page or an older viewer.
+  //      This one cannot tell a finished download from a cancelled one from a
+  //      sandbox that refused silently — so it DOES NOT CLEAR THE UNSAVED
+  //      WARNING. Not knowing is reported as not knowing.
+  //
+  // The guide records her accepting a dishonest tick because Claude's download
+  // prompt had a Cancel the app could not see. That premise is gone on route 1.
+  async function handleExport(){
+    const stamp=localStamp();
+    const filename=LEDGER_PREFIX+stamp+".json";
+    let data;
     try{
-      const data=JSON.stringify({rows,lastRun,exportedAt:new Date().toISOString(),exportedLocal:localReadable()},null,2);
+      data=JSON.stringify({rows,ignored,lastRun,exportedAt:new Date().toISOString(),exportedLocal:localReadable()},null,2);
+    }catch(e){ setError("Export failed while building the file: "+String(e?.message||e)); return; }
+
+    // ── 1. the runtime's file handoff ───────────────────────────────────────
+    let dl=null;
+    try{
+      if(typeof window!=="undefined"&&window.claude&&typeof window.claude.use==="function"){
+        dl=await window.claude.use("downloads");
+      }
+    }catch{ dl=null; }   // unavailable is not a failure — fall through to 2.
+
+    if(dl&&typeof dl.save==="function"){
+      try{
+        await dl.save({filename,data});
+        setError(null); setDirty(false); setUnconfirmedSave(null);
+        setSavedFile(filename+"  \u00b7  "+localReadable());
+        setRefreshDone(null);
+        setDebug("Saved "+rows.length+" exhibitions as "+filename+" ("+localReadable()+"), confirmed by the viewer.");
+      }catch(e){
+        // A REJECTION IS REAL INFORMATION. She declined, or it failed. Either
+        // way nothing was written, so the ledger stays dirty and says so.
+        setSavedFile(null); setUnconfirmedSave(null);
+        setError("NOT SAVED \u2014 the save was refused or cancelled ("+String(e?.code||e?.message||e)+"). Your ledger is still on screen and still unsaved. Try Export / Save again.");
+        setDebug("downloads.save rejected: "+String(e?.code||"")+" "+String(e?.message||e));
+      }
+      return;
+    }
+
+    // ── 2. ordinary browser download, outcome unknowable ────────────────────
+    try{
       const blob=new Blob([data],{type:"application/json"});
       const url=URL.createObjectURL(blob);
-      const stamp=localStamp();
       const a=document.createElement("a");
-      a.href=url;a.download=LEDGER_PREFIX+stamp+".json";
+      a.href=url;a.download=filename;
       document.body.appendChild(a);a.click();a.remove();
       setTimeout(()=>URL.revokeObjectURL(url),1000);
-      setError(null);
-      setDirty(false);
-      setSavedFile(LEDGER_PREFIX+stamp+".json  \u00b7  "+localReadable());
-      setRefreshDone(null);
-      setDebug("Exported "+rows.length+" exhibitions. Check downloads for "+LEDGER_PREFIX+stamp+".json ("+localReadable()+"). File it back to your disk / Drive. On mobile the download may not appear \u2014 laptop is reliable.");
+      setError(null); setSavedFile(null);
+      setUnconfirmedSave(filename);   // dirty stays TRUE on purpose
+      setDebug("Started a browser download of "+filename+" ("+localReadable()+"). This route cannot confirm the file arrived, so the ledger is still marked unsaved. Check your downloads folder.");
     }catch(e){
+      setUnconfirmedSave(null);
       setError("Export failed: "+String(e?.message||e));
     }
   }
@@ -724,22 +1406,58 @@ export default function App(){
 
   const counts=useMemo(()=>{const c={total:rows.length,dismissed:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;const t=tierFor(r);if((t==="closing"||t==="urgent")&&r.acquiring!=="no"&&r.acquiring!=="acquired"&&r.hasCatalogue!=="no")c.pressing++;}return c;},[rows]);
 
-  const C={bg:"#E8E4DE",card:"#F5F2ED",ink:"#1E1B18",soft:"#78736C",rule:"#CBC5BB",action:"#2D4A3F",accent:"#A13823",owned:"#7B5EA7",muted:"#B5AFA6"};
-  const chip=on=>({padding:"4px 10px",borderRadius:999,border:"1px solid "+(on?C.ink:C.rule),background:on?C.ink:"transparent",color:on?"#fff":C.soft,fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap"});
+  // ── TWO PALETTES, ONE SET OF NAMES — dark added 20 Sep 2026, her request:
+  //    "it's 9pm and this cream background with light grey text is v difficult
+  //    to read."
+  //
+  // EVERY COLOUR THE APP PAINTS COMES FROM HERE OR FROM TIER_SETS. Hexes had
+  // been scattered through the render — drawer grounds, banner washes, one-off
+  // button inks — and each one left behind would have been a cream patch on a
+  // dark page. They are all named now, which is the only way a second theme
+  // can be trusted.
+  //
+  // THE DARK SET IS NOT THE LIGHT SET INVERTED. Pure white on pure black is
+  // harsh for long reading, and this is a screen she works down for an hour at
+  // a time, so the ground is a warm near-black and the text a warm off-white.
+  // `soft` is deliberately LIGHTER than a plain inversion would make it: her
+  // complaint was grey-on-cream, and the same mistake is easy to repeat in the
+  // other direction.
+  const PALETTES={
+    light:{bg:"#E8E4DE",card:"#F5F2ED",ink:"#1E1B18",soft:"#78736C",rule:"#CBC5BB",
+           action:"#2D4A3F",accent:"#A13823",owned:"#7B5EA7",muted:"#B5AFA6",
+           drawer:"#DDD8D0",body:"#3D3730",dim:"#ECEAE6",panel:"#ECE8E1",
+           warnBg:"#F7E4C4",warnEdge:"#B5791A",warnInk:"#6B4A1E",
+           okBg:"#D8EAE4",okEdge:"#2D6B5A",okInk:"#1F4C40",
+           holdBg:"#E8E2D6",ownedBg:"#EDE5F5",
+           rejectInk:"#8A6D3B",neverInk:"#7A4A4A",star:"#B8860B",onAction:"#fff",
+           scrim:"rgba(20,18,16,0.45)"},
+    dark: {bg:"#1A1815",card:"#232019",ink:"#EDE8E0",soft:"#A8A29A",rule:"#3A352E",
+           action:"#5E9E85",accent:"#E2735A",owned:"#B79BE0",muted:"#6A645C",
+           drawer:"#2A2620",body:"#D6D0C6",dim:"#201D18",panel:"#262219",
+           warnBg:"#3A2E14",warnEdge:"#C79A3E",warnInk:"#F0D9A4",
+           okBg:"#16302A",okEdge:"#4E9B80",okInk:"#A6DCC6",
+           holdBg:"#32291C",ownedBg:"#2B2136",
+           rejectInk:"#D6B87A",neverInk:"#E0A3A3",star:"#E0B45C",onAction:"#12100E",
+           scrim:"rgba(0,0,0,0.6)"},
+  };
+  const C=PALETTES[theme];
+  const TH=tiersFor(theme);          // the tier colours for THIS theme
+  const chip=on=>({padding:"4px 10px",borderRadius:999,border:"1px solid "+(on?C.ink:C.rule),background:on?C.ink:"transparent",color:on?C.onAction:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap"});
   const sBtn={padding:"5px 12px",borderRadius:4,border:"1px solid "+C.rule,background:"transparent",color:C.soft,fontSize:11,fontWeight:500,cursor:"pointer"};
-  const pBtn={...sBtn,background:C.action,color:"#fff",border:"none",opacity:busy?0.5:1,cursor:busy?"wait":"pointer"};
+  const pBtn={...sBtn,background:C.action,color:C.onAction,border:"none",opacity:busy?0.5:1,cursor:busy?"wait":"pointer"};
   const lnk={fontSize:11,fontWeight:500,color:C.ink,background:C.card,border:"1px solid "+C.rule,borderRadius:3,padding:"4px 9px",textDecoration:"none",display:"inline-block",whiteSpace:"nowrap"};
 
   // ---- v9 approval-stage render helpers ----
-  const decBtn=(active,color)=>({padding:"3px 9px",borderRadius:4,border:"1px solid "+(active?color:C.rule),background:active?color:"transparent",color:active?"#fff":C.soft,fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"});
+  const decBtn=(active,color)=>({padding:"3px 9px",borderRadius:4,border:"1px solid "+(active?color:C.rule),background:active?color:"transparent",color:active?C.onAction:C.soft,fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"});
+  const isUndecided=(p,i)=>isUndecidedCard(p,decisions[i]);
+
   const renderProposalCard=(p,i)=>{
     const dec=decisions[i]||{};
     const infoRow=(label,val)=><div style={{marginBottom:2}}><b style={{color:C.ink}}>{label}:</b> {val&&String(val).trim()?val:<span style={{color:C.muted}}>{"\u2014"}</span>}</div>;
     return(
-      <div key={i} style={{border:"1px solid "+C.rule,borderRadius:6,background:C.card,padding:"10px 12px",marginBottom:8}}>
+      <div key={i} id={"prop-"+i} style={{border:"1px solid "+C.rule,borderRadius:6,background:C.card,padding:"10px 12px",marginBottom:8}}>
         <div style={{fontSize:13,fontWeight:600,color:C.ink,marginBottom:4}}>{p.title}</div>
 
-        {p.type==="problem"&&<div style={{fontSize:12,color:"#6B2E2E"}}>{p.problem}</div>}
 
         {p.type==="add"&&<div style={{fontSize:11.5,color:C.ink,lineHeight:1.5}}>
           <div style={{fontWeight:700,marginBottom:3}}>{"New show \u2014 not in your ledger yet."}</div>
@@ -755,38 +1473,61 @@ export default function App(){
             : p.upd.map((u,j)=>{const fd=(dec.fields||{})[j];return(
                 <div key={j} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:5}}>
                   <div style={{flex:1,lineHeight:1.4}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?("add \u201c"+u.newVal+"\u201d"):("\u201c"+u.oldVal+"\u201d \u2192 \u201c"+u.newVal+"\u201d")}</span></div>
-                  <button onClick={()=>setFieldDec(i,j,"accept")} style={decBtn(fd==="accept","#2D6B5A")}>{fd==="accept"?"\u2713 ":""}Accept edit</button>
-                  <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject","#8A6D3B")}>Reject</button>
+                  <button onClick={()=>setFieldDec(i,j,"accept")} style={decBtn(fd==="accept",C.okEdge)}>{fd==="accept"?"\u2713 ":""}Accept edit</button>
+                  <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject",C.rejectInk)}>Reject</button>
                 </div>
               );})}
         </div>}
 
+        {/* THE FILE DISAGREED WITH ITSELF about this exhibition — two rows, same
+            address, different values. Nothing is resolved silently: both are
+            shown, the fuller one is ticked as a starting point, one tap
+            switches. Her ruling, 13 Sep. */}
+        {p.choices&&p.choices.length>0&&<div style={{marginTop:7,paddingTop:6,borderTop:"1px dotted "+C.rule}}>
+          <div style={{fontSize:10.5,color:C.soft,lineHeight:1.5,marginBottom:5}}>The sweep file gave two different answers here. The longer one is picked for you {"\u2014"} change it if it{"\u2019"}s wrong.</div>
+          {p.choices.map((ch,j)=>(
+            <div key={j} style={{marginBottom:6}}>
+              <div style={{fontSize:11,fontWeight:700,color:C.ink,marginBottom:3}}>{ch.label}</div>
+              {ch.options.map((opt,k)=>{
+                const picked=(dec.choices||{})[ch.field];
+                const chosen=(picked===undefined?ch.picked:picked)===opt;
+                return(
+                  <button key={k} onClick={()=>setChoice(i,ch.field,opt)}
+                    style={{...decBtn(chosen,C.okEdge),display:"block",width:"100%",textAlign:"left",marginBottom:3,whiteSpace:"normal",lineHeight:1.4}}>
+                    {chosen?"\u2713 ":"\u00a0\u00a0"}{opt&&String(opt).trim()?opt:"(blank)"}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>}
+
         {p.notes&&p.notes.length>0&&<div style={{marginTop:6,fontSize:10.5,color:C.soft,lineHeight:1.5,borderTop:"1px dotted "+C.rule,paddingTop:5}}>{p.notes.map((n,j)=><div key={j}>{"\u00b7 "}{n}</div>)}</div>}
 
-        {p.type==="add"&&<div style={{marginTop:8,display:"flex",gap:6}}>
-          <button onClick={()=>setCardMode(i,"accept")} style={decBtn(dec.mode==="accept","#2D6B5A")}>{dec.mode==="accept"?"\u2713 ":""}Add new entry</button>
-          <button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject","#8A6D3B")}>{dec.mode==="reject"?"\u2713 ":""}Reject</button>
+        {/* THREE OUTCOMES, AND THE THIRD IS NOT A STRONGER REJECT. Reject
+            means "not now" and remembers nothing, so the row returns on every
+            future sweep. Never add this means the row should not be an entry
+            at all — a talk filed under an exhibitions address, a duplicate that
+            could not fold, a dead link. It is NOT for an exhibition she simply
+            is not interested in: that one is accepted and then dismissed, and
+            dismiss is not a rubbish chute. */}
+        {p.type==="add"&&<div style={{marginTop:8,display:"flex",gap:6,flexWrap:"wrap"}}>
+          <button onClick={()=>setCardMode(i,"accept")} style={decBtn(dec.mode==="accept",C.okEdge)}>{dec.mode==="accept"?"\u2713 ":""}Add new entry</button>
+          <button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject",C.rejectInk)}>{dec.mode==="reject"?"\u2713 ":""}Reject</button>
+          <button onClick={()=>setCardMode(i,"never")} style={decBtn(dec.mode==="never",C.neverInk)}>{dec.mode==="never"?"\u2713 ":""}{"Never add this"}</button>
+        </div>}
+        {p.type==="add"&&dec.mode==="never"&&<div style={{marginTop:5,fontSize:10.5,color:C.soft,lineHeight:1.45}}>
+          {"Won\u2019t be offered again on any future sweep. It won\u2019t enter your ledger. You can undo this from \u201cNever added\u201d at the top."}
         </div>}
 
         {p.type==="change"&&<div style={{marginTop:8}}>
           <button onClick={()=>setCardMode(i,"addnew")} style={decBtn(dec.mode==="addnew","#4A5A6B")}>{dec.mode==="addnew"?"\u2713 ":""}{"No \u2014 this is a different show, add as separate entry"}</button>
         </div>}
 
-        {p.type==="problem"&&<div style={{marginTop:8}}><button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject","#8A6D3B")}>{dec.mode==="reject"?"\u2713 ":""}Dismiss</button></div>}
       </div>
     );
   };
-  let acceptedCount=0,undecidedCount=0;
-  if(proposals)proposals.forEach((p,i)=>{
-    if(p.type==="problem")return;
-    const dec=decisions[i]||{};
-    if(p.type==="add"){ if(dec.mode==="accept")acceptedCount++; else if(!dec.mode)undecidedCount++; return; }
-    // fill/change
-    if(dec.mode==="addnew"){acceptedCount++;return;}
-    const anyAccept=Object.values(dec.fields||{}).some(v=>v==="accept");
-    const anyDecided=dec.mode||Object.values(dec.fields||{}).some(v=>v);
-    if(anyAccept)acceptedCount++; else if(!anyDecided)undecidedCount++;
-  });
+  const{acceptedCount,undecidedCount}=countDecisions(proposals,decisions);
 
   // v8.3 status, file model. Three states: fresh load = neutral line; your edits
   // = loud red banner; after Export/Save = calm green line. Green only appears once
@@ -796,7 +1537,7 @@ export default function App(){
   let savedText=null,savedCol=C.soft,savedWeight=500;
   if(!hasLedger){savedText="No ledger loaded \u2014 tap Import to begin.";}
   else if(dirty){savedText=null;} // the red banner below covers this
-  else if(savedFile){savedText="\u2713 Saved \u2014 safe to close  ("+savedFile+")";savedCol="#2D6B5A";savedWeight=600;}
+  else if(savedFile){savedText="\u2713 Saved \u2014 safe to close  ("+savedFile+")";savedCol=C.okEdge;savedWeight=600;}
   else{savedText=loadedInfo||"Loaded \u2014 no edits yet.";}
 
   if(!loaded)return(<div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.soft,minHeight:"100vh",display:"grid",placeItems:"center",fontSize:13}}>Opening the ledger{"\u2026"}</div>);
@@ -813,27 +1554,116 @@ export default function App(){
           <button onClick={requestImport} style={sBtn}>Import</button>
           <button onClick={handleExport} disabled={!hasLedger} style={{...pBtn,opacity:hasLedger?1:0.4,cursor:hasLedger?"pointer":"not-allowed"}}>Export / Save</button>
           <input ref={fileRef} type="file" accept=".json" onChange={handleImport} style={{display:"none"}}/>
-          <button onClick={()=>refreshFileRef.current?.click()} style={{...sBtn,marginLeft:"auto"}}>Import Refresh</button>
+          {/* Small and out of the way: it is a comfort control, not part of the
+              work. Says what it will DO, not what is currently on. */}
+          <button onClick={toggleTheme} title={theme==="dark"?"Switch to light":"Switch to dark"}
+            style={{...sBtn,marginLeft:"auto",padding:"5px 9px"}}>{theme==="dark"?"\u2600 Light":"\u263D Dark"}</button>
+          <button onClick={()=>refreshFileRef.current?.click()} style={sBtn}>Import Refresh</button>
           <input ref={refreshFileRef} type="file" accept=".csv,text/csv" onChange={handleRefreshFile} style={{display:"none"}}/>
         </div>
         {savedText&&<div style={{marginTop:6,fontSize:11,color:savedCol,fontWeight:savedWeight}}>{savedText}</div>}
-        {showUnsavedBanner&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:"#D8EAE4",border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:"#1F4C40",lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
+        {showUnsavedBanner&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.okBg,border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.okInk,lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u21BB"}</span>
-          <span>{"Refresh applied \u2014 "+refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated. Not saved yet \u2014 tap \u201cExport / Save\u201d now."}</span>
+          <span>{"Refresh applied \u2014 "+refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated"+(refreshDone.never?", "+refreshDone.never+" never to be offered again":"")+". Not saved yet \u2014 tap \u201cExport / Save\u201d now."}</span>
         </div>}
-        {showUnsavedBanner&&!refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:"#F7E4C4",border:"2px solid #B5791A",borderRadius:5,fontSize:12.5,fontWeight:700,color:"#6B4A1E",lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
+        {hasLedger&&unconfirmedSave&&<div style={{marginTop:8,padding:"9px 12px",background:C.holdBg,border:"2px solid "+C.soft,borderRadius:5,fontSize:12.5,color:C.ink,lineHeight:1.45,display:"flex",alignItems:"flex-start",gap:9}}>
+          <span style={{fontSize:16,lineHeight:1.1}}>{"\u2193"}</span>
+          <span>{"A download of "+unconfirmedSave+" was started. This viewer can\u2019t tell us whether it arrived, so your ledger is still marked unsaved \u2014 check your downloads folder. If the file is there, you\u2019re safe."}</span>
+        </div>}
+        {showUnsavedBanner&&!refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid #B5791A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u26A0"}</span>
           <span>{"UNSAVED CHANGES \u2014 what's on screen is not saved to a file. Tap \u201cExport / Save\u201d before you close this tab or your work is lost."}</span>
         </div>}
+        {/* A QUARANTINE THAT ISN'T SAVING IS A BANNER, NOT A FOOTNOTE — her
+            ruling, 20 Sep. It used to print inside the quarantine panel, which
+            she would have to open to find: the rows sit on screen looking
+            normal while nothing is being written, and the one person who needs
+            to know is the one least likely to go looking. It borrows the
+            unsaved-changes banner because it means the same thing — a decision
+            you have made is not stored. NOT gated on a ledger being open: the
+            quarantine applies before any file is loaded, so its failures do
+            too. */}
+        {quarWhy&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
+          <span style={{fontSize:17,lineHeight:1.1}}>{"\u26A0"}</span>
+          <span>{"QUARANTINE \u2014 "+quarWhy}</span>
+        </div>}
         {busy&&prog.total>0&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
-        {error&&<div style={{marginTop:8,padding:"7px 11px",background:TIERS.urgent.wash,border:"1px solid "+TIERS.urgent.ink,borderRadius:4,fontSize:11.5,color:"#6B2E2E"}}>{error}</div>}
-        {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>{showDebug&&<pre style={{marginTop:4,padding:7,background:"#DDD8D0",border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>}</div>}
-        {hasLedger&&<div style={{marginTop:6,fontSize:10.5,color:C.soft}}>Last refreshed: {fmtRefresh(lastRun)}</div>}
+        {error&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
+        {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>{showDebug&&<pre style={{marginTop:4,padding:7,background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>}</div>}
+        {hasLedger&&<div style={{marginTop:6,fontSize:10.5,color:C.soft,display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}>
+          <span>Last refreshed: {fmtRefresh(lastRun)}</span>
+          {/* PER-VENUE FRESHNESS lives here because this is where she already
+              looks for "when was this last touched", next to the save state.
+              Collapsed by default: 21 venues is a wall, and the question is
+              occasional. */}
+          {(Object.keys(venueSeen).length>0||freshWhy)&&<button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide venues":"By venue"}</button>}
+        </div>}
+        {/* QUARANTINE SITS ON ITS OWN ROW — her ruling, 20 Sep. It had been
+            tucked in beside the refresh line, which reads as though it is part
+            of refreshing. It is not: a quarantine is a standing decision about
+            what may never enter the ledger, and it holds whether or not a
+            sweep ever happens again. */}
+        {ignored.length>0&&<div style={{marginTop:6,fontSize:12,color:C.soft}}>
+          <button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:12,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>
+        </div>}
+
+        {/* NOT GATED ON A LEDGER BEING OPEN. The sweep log is not part of her
+            document — it is what this page knows about the world, so it is
+            there on a fresh page and it survives Reset. */}
+        {showFresh&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
+          <div style={{fontSize:10,color:C.soft,marginBottom:6,lineHeight:1.5}}>
+            {"When each venue was last swept, and when it last actually gave us exhibitions. A venue swept recently but with no rows since an older date is being refused \u2014 worth a solo re-run."}
+          </div>
+          {/* "NO SWEEPS YET" AND "COULDN'T READ THE STORE" LOOK IDENTICAL AND
+              MEAN OPPOSITE THINGS, so an empty panel always says which. */}
+          {freshWhy&&<div style={{fontSize:11,color:C.accent,marginBottom:6,lineHeight:1.5}}>{freshWhy}</div>}
+          {!freshWhy&&Object.keys(venueSeen).length===0&&
+            <div style={{fontSize:11,color:C.soft,marginBottom:6}}>{"No sweep imported yet."}</div>}
+          {MUSEUMS.map(m=>{
+            const v=venueSeen[m.id]; if(!v)return null;
+            const stale=v.returned&&v.attempted&&v.returned!==v.attempted;
+            return(
+              <div key={m.id} style={{display:"flex",gap:8,fontSize:10.5,color:C.soft,padding:"2px 0",alignItems:"baseline"}}>
+                <span style={{minWidth:130,color:C.ink}}>{m.short}</span>
+                <span style={{minWidth:150}}>swept {fmtRefresh(v.attempted)}</span>
+                <span style={{color:v.returned?(stale?TH.urgent.ink:C.soft):TH.urgent.ink,fontWeight:stale||!v.returned?600:400}}>
+                  {v.returned?("rows "+fmtRefresh(v.returned)):"no rows \u2014 refused"}
+                </span>
+              </div>
+            );
+          })}
+          {MUSEUMS.filter(m=>!venueSeen[m.id]).length>0&&
+            <div style={{fontSize:10.5,color:C.soft,marginTop:6,paddingTop:5,borderTop:"1px solid "+C.rule}}>
+              {"Not in any sweep yet: "+MUSEUMS.filter(m=>!venueSeen[m.id]).map(m=>m.short).join(", ")+"."}
+            </div>}
+        </div>}
+
+        {showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
+          {/* BIG ENOUGH TO READ — her finding, 20 Sep: "tiny AND faint". This
+              is a list of decisions she may need to UNDO, so it cannot be the
+              smallest, palest text on the screen. Set at or above the filter
+              chips below it, in the body ink rather than the muted grey. */}
+          <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
+            {"Rows you said should never be entries. They are skipped on every import, whichever ledger is open, and a Reset does not clear them. They also ride along in your export as a backup. Taking one out of quarantine only makes it offer itself again on the next sweep \u2014 it does not add anything to your ledger."}
+          </div>
+          {ignored.map(x=>(
+            <div key={x.key} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
+              <span style={{minWidth:130,fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
+              <span style={{flex:1}}>{x.title||"(no title)"}</span>
+              <button onClick={()=>{
+                const at=new Date().toISOString();
+                setQuarantine(prev=>{ const next=mergeQuarantine(prev,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}});
+                  writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy("That release couldn\u2019t be saved to this page\u2019s store, so it may come back when you reload."); });
+                  return next; });
+                setDirty(true);}} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Remove from quarantine</button>
+            </div>
+          ))}
+        </div>}
         <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",alignItems:"center"}}>
           <span><b style={{color:C.ink}}>{counts.total}</b> Tracked</span>
           <span><b style={{color:C.ink}}>{counts.wanted}</b> Wanted</span>
           <span><b style={{color:C.owned}}>{counts.owned}</b> Owned</span>
-          <span><b style={{color:TIERS.urgent.ink}}>{counts.pressing}</b> Closing Window</span>
+          <span><b style={{color:TH.urgent.ink}}>{counts.pressing}</b> Closing Window</span>
           {counts.dismissed>0&&<span><b>{counts.dismissed}</b> Dismissed</span>}
           <button onClick={()=>{setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);}} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Search">{"\uD83D\uDD0D"}</button>
         </div>
@@ -891,11 +1721,11 @@ export default function App(){
           let header=null;
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
           const lead=brk||header;
-          const t=tierFor(r),tier=TIERS[t],mu=MU[r.museumId],mo=moSince(r.endDate),isOpen=openCards[r.id],noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested,isBusy=busyId===r.id;
+          const t=tierFor(r),tier=TH[t],mu=MU[r.museumId],mo=moSince(r.endDate),isOpen=openCards[r.id],noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested,isBusy=busyId===r.id;
           const searchingLabel=lookPhase==="shop"?"Searching venue shop\u2026":lookPhase==="web"?"Searching more broadly\u2026":"Searching\u2026";
           if(dismissed)return(
             <React.Fragment key={r.id}>{lead}
-            <article style={{background:"#ECEAE6",border:"1px solid "+C.rule,borderLeft:"4px solid "+C.muted,borderRadius:5,padding:"10px 14px",opacity:0.55}}>
+            <article style={{background:C.dim,border:"1px solid "+C.rule,borderLeft:"4px solid "+C.muted,borderRadius:5,padding:"10px 14px",opacity:0.55}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
                 <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft}}>{mu?.short}</span>
                 <button onClick={()=>restore(r.id)} style={{background:"none",border:"1px solid "+C.action,borderRadius:3,color:C.action,fontSize:10,fontWeight:500,cursor:"pointer",padding:"2px 8px"}}>Restore</button>
@@ -912,7 +1742,7 @@ export default function App(){
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
                   <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginTop:2}}>{mu?.short}</span>
                   {noCat?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.muted,background:"#E3DED7",padding:"2px 7px",borderRadius:3}}>No catalogue</span>
-                  :isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:"#EDE5F5",padding:"2px 7px",borderRadius:3}}>Owned</span>
+                  :isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:C.ownedBg,padding:"2px 7px",borderRadius:3}}>Owned</span>
                   :<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:tier.ink,background:tier.wash,padding:"2px 7px",borderRadius:3}}>{tier.label}</span>}
                 </div>
                 <div style={{display:"flex",alignItems:"baseline",gap:0,marginTop:5}}>
@@ -921,15 +1751,15 @@ export default function App(){
                     {r.exUrl&&<a href={r.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.action,textDecoration:"none",marginLeft:5,fontSize:13,fontWeight:400}}>{"\u2197"}</a>}
                   </h3>
                   <div style={{display:"flex",gap:8,alignItems:"center",marginLeft:8,flexShrink:0}}>
-                    <button onClick={()=>toggleWatch(r.id)} title={r.watching?"Unwatch":"Watch"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1,color:r.watching?"#B8860B":C.muted}}>{r.watching?"\u2605":"\u2606"}</button>
+                    <button onClick={()=>toggleWatch(r.id)} title={r.watching?"Unwatch":"Watch"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1,color:r.watching?C.star:C.muted}}>{r.watching?"\u2605":"\u2606"}</button>
                     {!isAcq&&<button onClick={()=>dismiss(r.id)} title="Not interested" style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:18,lineHeight:1,color:C.muted}}>{"\u00d7"}</button>}
                   </div>
                 </div>
                 <div style={{fontSize:11,color:C.soft,marginTop:3,marginBottom:6}}>{dateRange(r)}</div>
-                {r.summary&&<p style={{fontSize:12.5,lineHeight:1.5,margin:"0 0 8px",color:"#3D3730"}}>{r.summary}</p>}
+                {r.summary&&<p style={{fontSize:12.5,lineHeight:1.5,margin:"0 0 8px",color:C.body}}>{r.summary}</p>}
                 {!noCat&&!isAcq&&mo!==null&&mo>0&&(
                   <div style={{margin:"8px 0 6px"}}>
-                    <div style={{position:"relative",height:5,background:"#DDD8D0",borderRadius:3}}>
+                    <div style={{position:"relative",height:5,background:C.drawer,borderRadius:3}}>
                       <div style={{height:"100%",width:Math.min(100,(mo/12)*100)+"%",background:tier.ink,borderRadius:3}}/>
                       {[3,6].map(k=><span key={k} style={{position:"absolute",left:(k/12*100)+"%",top:-2,width:1,height:10,background:C.soft,opacity:0.5}}/>)}
                     </div>
@@ -948,7 +1778,7 @@ export default function App(){
                 </div>
               </div>
               {isOpen&&(
-                <div style={{background:"#ECE8E1",borderTop:"1px solid "+C.rule,padding:"12px 14px"}}>
+                <div style={{background:C.panel,borderTop:"1px solid "+C.rule,padding:"12px 14px"}}>
                   {!r.looked?(
                     <div>
                       <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue search run yet.</p>
@@ -962,7 +1792,12 @@ export default function App(){
                   ):(
                     <div>
                       {r.shopState==="shop"&&<div style={{fontSize:11,color:C.action,fontWeight:600,marginBottom:6}}>In the museum shop.</div>}
-                      {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>Not in the museum shop \u2014 the shop link below opens the general store; other buy options shown too.</div>}
+                      {/* The dash is a STRING, not page text. Written as a bare
+                          \u2014 among the words it printed those six characters
+                          literally, and nothing caught it for weeks because no
+                          row had ever reached this state until a catalogue was
+                          found outside its venue's shop. */}
+                      {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>{"Not in the museum shop \u2014 the shop link below opens the general store; other buy options shown too."}</div>}
                       {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
                       {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
                       <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",marginBottom:10,color:r.isbn13?C.ink:C.soft}}>
@@ -991,9 +1826,9 @@ export default function App(){
           style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(-50%)",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>
       )}
       {undo&&(
-        <div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:C.ink,color:"#fff",borderRadius:4,padding:"7px 14px",fontSize:12,display:"flex",gap:10,alignItems:"center",zIndex:999,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
+        <div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.onAction,borderRadius:4,padding:"7px 14px",fontSize:12,display:"flex",gap:10,alignItems:"center",zIndex:999,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
           <span>Dismissed</span>
-          <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",padding:"3px 8px"}}>Restore</button>
+          <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:C.onAction,fontSize:11,fontWeight:600,cursor:"pointer",padding:"3px 8px"}}>Restore</button>
         </div>
       )}
       <div style={{maxWidth:760,margin:"18px auto 0",paddingTop:10,borderTop:"1px solid "+C.rule,fontSize:10,color:C.soft,lineHeight:1.6}}>
@@ -1006,35 +1841,296 @@ export default function App(){
           <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
             <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
               <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>{proposals.length} proposed change{proposals.length===1?"":"s"} found</div>
-              <div style={{fontSize:11.5,color:C.soft,marginTop:3,lineHeight:1.5}}>Review each one below. Nothing changes in your ledger until you tap {"\u201c"}Go ahead and update the ledger{"\u201d"}.</div>
+              {/* THE COUNTS, AND WHY THEY EARN THEIR SPACE. A card total on
+                  its own cannot be checked against anything: rows leave the
+                  pile for four innocent reasons — a marker row, a quarantine,
+                  a fold, an entry that already matches — so 652 rows arriving
+                  as 319 cards is indistinguishable from the same with eleven
+                  quietly lost.
+
+                  REWRITTEN TO HER WORDING, 20 Sep. Two sentences, each ending
+                  in the number the next one starts from: the file narrows to
+                  the pile, the pile splits by what it does to her ledger. The
+                  old version put the split FIRST and the reconciliation
+                  second, so the two lines shared no number and nothing led
+                  anywhere. Every term stays — drop one and the arithmetic
+                  stops closing, which is the only thing these lines are for. */}
+              {tally&&(()=>{
+                const cards=tally.add+tally.fill+tally.change;
+                const n=(v,tone)=><b style={{color:tone||C.ink}}>{v}</b>;
+                return (
+                <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.6}}>
+                  <div>
+                    From {n(tally.fileRows)} row{tally.fileRows===1?"":"s"} in the file
+                    {" \u2014 "}{n(tally.markers)} marker row{tally.markers===1?"":"s"}
+                    {tally.blocked>0&&<>{", "}{n(tally.blocked)} you{"\u2019"}d said never to add</>}
+                    {", "}{n(tally.folded)} duplicate row{tally.folded===1?"":"s"} reconciled/de-duped
+                    {", "}{n(tally.silent)} already matching ledger
+                    {" = "}{n(cards)} entries considered for import
+                  </div>
+                  <div style={{marginTop:2}}>
+                    From {n(cards)} entr{cards===1?"y":"ies"}
+                    {" \u2014 "}{n(tally.fill)} fill a gap
+                    {", "}{n(tally.change)} edit existing data
+                    {", "}{n(tally.add)} new exhibition{tally.add===1?"":"s"}
+                  </div>
+                </div>
+                );
+              })()}
+              <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.5}}>Review each one below.</div>
             </div>
             <div style={{overflow:"auto",padding:"12px 18px",flex:1}}>
-              {MUSEUMS.map(m=>{const grp=proposals.map((p,i)=>({p,i})).filter(x=>x.p.venueId===m.id);if(!grp.length)return null;return(
-                <div key={m.id} style={{marginBottom:14}}>
-                  <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
-                  {grp.map(({p,i})=>renderProposalCard(p,i))}
-                </div>
-              );})}
-              {(()=>{const grp=proposals.map((p,i)=>({p,i})).filter(x=>x.p.venueId===null);if(!grp.length)return null;return(
-                <div style={{marginBottom:14}}>
-                  <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.accent,marginBottom:6,fontWeight:600}}>Couldn{"\u2019"}t be filed</div>
-                  {grp.map(({p,i})=>renderProposalCard(p,i))}
-                </div>
-              );})()}
+              {/* TRIAGE FIRST, THEN THE ORDINARY WORK — her ruling, 13 Sep.
+                  Odd cases were sprinkled through the venue groups, so every
+                  few cards she switched from approving to investigating. Her
+                  reason for the order INSIDE triage is hers and it is not the
+                  one an engine would pick: easiest first, hardest last. She is
+                  spending attention, not compute, and clearing the cards that
+                  need nothing leaves more of it for the ones that do.
+
+                  Batched by KIND, not by venue, which means a venue can appear
+                  twice on this screen — once in triage, once below. That is the
+                  accepted cost: she would rather finish one kind of thinking
+                  than keep switching. */}
+              {(()=>{
+                const at=proposals.map((p,i)=>({p,i}));
+                const vOrder=m=>{const k=MUSEUMS.findIndex(x=>x.id===m);return k<0?999:k;};
+                const byVenue=a=>a.slice().sort((x,y)=>vOrder(x.p.venueId)-vOrder(y.p.venueId));
+                // NO "UNUSABLE" BAND — her ruling 20 Sep. A row with no title
+                // or no venue code never gets this far: analyzeProForma refuses
+                // the whole file and names the lines for the session, and
+                // scraper/qc.js stops it upstream. Nothing faulty is triage.
+                const real    = at;
+                // WAS THIS CARD BUILT FROM MORE THAN ONE ROW? Ask the fold
+                // itself, via the flag it sets. This used to search the notes
+                // for the words "same exhibition", and the sweeper writes those
+                // same words for a travelling show — "The same exhibition is
+                // also shown at Palm Beach." Acquavella's two runs of
+                // Portraiture were then filed under "combined for you" when
+                // nothing had been combined, under a heading that told her
+                // something untrue. A FACT THE CODE ALREADY KNOWS IS NEVER
+                // RE-DERIVED FROM PROSE WRITTEN FOR A HUMAN.
+                const isMerged=x=>!!x.p.merged;
+                const hasChoice=x=>!!x.p.choices;
+                const mergedOnly = byVenue(real.filter(x=>isMerged(x)&&!hasChoice(x)));
+                // A CONFLICT IS ALWAYS A FOLD, so there is no band for a
+                // disagreement that arrived on its own. There was one, and it
+                // was a PHANTOM: it never held a row and never could, because a
+                // disagreement is only ever found by holding two rows side by
+                // side, and foldDuplicateRows flags every card it builds. It
+                // shipped, this guide listed it as one of six bands, and nobody
+                // ran a file and asked why it was always empty. So the test is
+                // hasChoice alone — being a fold adds nothing to it.
+                const mergedConf = byVenue(real.filter(x=>hasChoice(x)));
+                const plain      = real.filter(x=>!isMerged(x)&&!hasChoice(x));
+                // NO LINK AT ALL — band 6, her ruling 13 Sep. These rows are
+                // perfectly usable: a title, dates and a description, and the
+                // card's arrow falls back to the venue's own listing. So they
+                // are NOT faulty: everything is present except the link.
+                //
+                // They are shown together because of what the missing link
+                // costs LATER, invisibly: it is the only key that can fold two
+                // copies of one exhibition, and the only key quarantine can use,
+                // so a no-link row arrives fresh on every future sweep. Her
+                // reason for grouping them: once she reaches the ordinary list
+                // she is no longer in "what is wrong with this one" mode, and
+                // these are the last rows that need that mode.
+                const noLink     = byVenue(plain.filter(x=>!x.p.cand||!x.p.cand.exUrl));
+                const ordinary   = plain.filter(x=>x.p.cand&&x.p.cand.exUrl);
+                // VENUE SUBHEADINGS INSIDE EACH BAND. Batching by kind removed
+                // the venue grouping, so a band read as one undifferentiated
+                // run of cards and the only way to tell which museum a show was
+                // at was to read its link. Same heading style and same venue
+                // order as the ordinary list below, so both halves of the
+                // screen read the same way round.
+                const byVenueBlocks=list=>MUSEUMS.map(m=>{
+                  const grp=list.filter(x=>x.p.venueId===m.id);
+                  if(!grp.length)return null;
+                  return(
+                    <div key={m.id} style={{marginBottom:10}}>
+                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
+                      {grp.map(({p,i})=>renderProposalCard(p,i))}
+                    </div>
+                  );
+                }).filter(Boolean);
+                // EVERY BAND CARRIES ITS OWN COUNT, AND ITS OWN DISCLOSURE.
+                // Without a count a band is an unbounded pile: no way to tell
+                // "two of these" from "eighty" before scrolling through them,
+                // and no way to check the bands add up to the header. The count
+                // lives ON the header, so collapsing can never hide it.
+                const bandOpen=(key,dflt)=>openBands[key]===undefined?dflt:openBands[key];
+                // A venue with no entry is OPEN. See the state declaration.
+                const venueOpen=id=>openVenues[id]!==false;
+                const band=(key,title,tone,n,dflt,body)=>{
+                  const open=bandOpen(key,dflt);
+                  return(
+                    <div key={key} style={{marginBottom:10}}>
+                      <button onClick={()=>setOpenBands(o=>({...o,[key]:!open}))}
+                        style={{display:"flex",alignItems:"center",gap:7,width:"100%",textAlign:"left",background:"none",
+                                border:"none",borderBottom:"1px solid "+C.rule,padding:"5px 0",cursor:"pointer",color:tone||C.soft}}>
+                        <span style={{fontSize:9,lineHeight:1,width:9,display:"inline-block",transform:open?"rotate(90deg)":"none",transition:"transform .12s"}}>{"\u25B6"}</span>
+                        <span style={{fontSize:11,letterSpacing:"0.07em",fontWeight:600}}>{title}</span>
+                        <span style={{fontSize:11,fontWeight:700,color:tone||C.ink}}>{"\u00b7"} {n}</span>
+                      </button>
+                      {open&&<div style={{marginTop:8}}>{body}</div>}
+                    </div>
+                  );
+                };
+                // ODD CASES COUNTS THE MARKERS TOO. It used to add up only the
+                // five card bands, so the heading read "Odd cases first \u00b7 0"
+                // directly above a band of its own saying 9 \u2014 a total that
+                // left out one of the things it was totalling.
+                const oddCount=coverage.length+mergedOnly.length+mergedConf.length+noLink.length;
+                const markerBlocks=MUSEUMS.map(m=>{
+                  const grp=coverage.filter(cv=>cv.venueId===m.id);
+                  if(!grp.length)return null;
+                  return(
+                    <div key={"cvg"+m.id} style={{marginBottom:10}}>
+                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
+                      {grp.map((cv,i)=>(
+                        <div key={"cv"+i} style={{border:"1px solid "+C.rule,borderRadius:6,padding:"8px 10px",marginBottom:6,background:C.card}}>
+                          <div style={{fontSize:12,color:C.ink}}>{cv.what}</div>
+                          <div style={{fontSize:11.5,color:C.soft,marginTop:2,lineHeight:1.5}}>{cv.why}</div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }).filter(Boolean);
+                return(<>
+                  {oddCount>0&&(
+                    <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
+                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>Odd cases {"\u00b7"} {oddCount}</div>
+                      {coverage.length>0&&band("markers","1. Marker rows",undefined,coverage.length,false,markerBlocks)}
+                      {mergedOnly.length>0&&band("merged","2. Combined rows \u00b7 identical rows were de-duped or reconciled",undefined,mergedOnly.length,false,byVenueBlocks(mergedOnly))}
+                      {mergedConf.length>0&&band("mergedconf","3. Combined rows \u00b7 identical rows produced conflicts \u2014 yours to choose",C.accent,mergedConf.length,true,byVenueBlocks(mergedConf))}
+                      {noLink.length>0&&band("nolink","4. No exhibition url \u00b7 link goes to venue\u2019s listing page",undefined,noLink.length,true,byVenueBlocks(noLink))}
+                    </div>
+                  )}
+                {ordinary.length>0&&(()=>{
+                    // Which venues actually have ordinary cards. The toggle must
+                    // act on THESE and not on all 21, or "collapse all" would
+                    // write keys for venues with nothing in them and the button
+                    // would read the wrong way on the next click.
+                    const venuesHere=MUSEUMS.filter(m=>ordinary.some(x=>x.p.venueId===m.id)).map(m=>m.id);
+                    const anyOpen=venuesHere.some(id=>venueOpen(id));
+                    return(
+                    <div style={{marginBottom:12,display:"flex",alignItems:"flex-end",gap:12,flexWrap:"wrap"}}>
+                      <div style={{flex:"1 1 260px",minWidth:0}}>
+                        <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Normal cases {"\u00b7"} {ordinary.length}</div>
+                        <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing. Accept or reject each.</div>
+                      </div>
+                      <button onClick={()=>{
+                          const next={};
+                          for(const id of venuesHere) next[id]=!anyOpen;
+                          setOpenVenues(o=>({...o,...next}));
+                        }} style={sBtn}>{anyOpen?"Collapse all venues":"Expand all venues"}</button>
+                    </div>
+                  );})()}
+                  {/* ORDER INSIDE A VENUE — her ruling 20 Sep. It was FILE
+                      ORDER, which is the order the scraper read the venue's
+                      pages, so an edit to something she owns sat between two
+                      brand-new shows and she switched between "is this change
+                      right?" and "do I want this?" every few cards. Same
+                      reasoning as batching the triage bands by kind.
+
+                      Fills, then edits, then new. Within each, NEWEST CLOSING
+                      DATE FIRST, because that is the field the whole app is
+                      about — how close the catalogue is to going out of print.
+                      A row with no closing date has nothing to sort on, so it
+                      sits at the BOTTOM of its group rather than being given a
+                      position it did not earn. */}
+                  {MUSEUMS.map(m=>{
+                    const rank={fill:0,change:1,add:2};
+                    const grp=ordinary.filter(x=>x.p.venueId===m.id).slice().sort((a,b)=>{
+                      const d=(rank[a.p.type]??9)-(rank[b.p.type]??9); if(d!==0)return d;
+                      const ae=a.p.cand&&a.p.cand.endDate, be=b.p.cand&&b.p.cand.endDate;
+                      if(!ae&&!be)return 0; if(!ae)return 1; if(!be)return -1;
+                      return be.localeCompare(ae);
+                    });
+                    if(!grp.length)return null;
+                    // THE VENUE HEADING IS THE CONTROL. It used to be small grey
+                    // uppercase text that read as a label and was lost between
+                    // the cards — her finding. Now it carries the accent red,
+                    // a larger size, its own count, and the same disclosure
+                    // triangle as a triage band, so the one thing that separates
+                    // one venue's work from the next is the most visible line on
+                    // the screen rather than the least.
+                    const vOpen=venueOpen(m.id);
+                    return(
+                    <div key={m.id} style={{marginBottom:14}}>
+                      <button onClick={()=>setOpenVenues(o=>({...o,[m.id]:!vOpen}))}
+                        style={{display:"flex",alignItems:"center",gap:8,width:"100%",textAlign:"left",background:"none",
+                                border:"none",borderBottom:"1px solid "+C.rule,padding:"6px 0",marginBottom:8,cursor:"pointer",color:C.accent}}>
+                        <span style={{fontSize:10,lineHeight:1,width:10,display:"inline-block",transform:vOpen?"rotate(90deg)":"none",transition:"transform .12s"}}>{"\u25B6"}</span>
+                        <span style={{fontSize:14,letterSpacing:"0.01em",fontWeight:700}}>{m.short}</span>
+                        <span style={{fontSize:12,fontWeight:700}}>{"\u00b7"} {grp.length}</span>
+                        {/* THE UNDECIDED COUNT PER VENUE. With a hard gate on
+                            the ledger, a number in the footer says how much is
+                            left but never WHERE, and a collapsed venue hides
+                            its own. Printed on the heading, a closed venue
+                            still declares what it is holding. */}
+                        {/* ONLY WHERE THERE IS WORK. A badge on every venue
+                            whatever its state is one more number to read past
+                            on a screen that already carries plenty — her
+                            warning. A venue with nothing left says nothing. */}
+                        {(()=>{const u=grp.filter(({p,i})=>isUndecided(p,i)).length;
+                          return u>0?<span style={{fontSize:11,fontWeight:600,color:C.soft}}>{"\u00b7 "+u+" to decide"}</span>:null;})()}
+                      </button>
+                      {vOpen&&grp.map(({p,i})=>renderProposalCard(p,i))}
+                    </div>
+                  );})}
+                </>);
+              })()}
             </div>
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
               <button onClick={cancelRefresh} style={sBtn}>Cancel refresh</button>
-              <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>{acceptedCount} to apply {"\u00b7"} {undecidedCount} undecided</span>
-              <button onClick={applyRefresh} style={pBtn}>Go ahead and update the ledger</button>
+              <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>{acceptedCount} to apply</span>
+              {/* THE COUNT IS THE WAY TO REACH ONE — raised as the gap the
+                  block leaves and built at her ask. A number she cannot act on
+                  is the thing that makes a hard gate feel arbitrary. It opens
+                  the venue holding the first undecided card, because a
+                  collapsed venue would otherwise scroll to nothing. */}
+              {undecidedCount>0&&<button onClick={()=>{
+                  const hit=proposals.findIndex((p,i)=>isUndecided(p,i));
+                  if(hit<0)return;
+                  const v=proposals[hit].venueId;
+                  if(v)setOpenVenues(o=>({...o,[v]:true}));
+                  setOpenBands(o=>({...o,merged:true,mergedconf:true,nolink:true}));
+                  setTimeout(()=>{const el=document.getElementById("prop-"+hit);
+                    if(el)el.scrollIntoView({behavior:"smooth",block:"center"});},60);
+                }} style={{...sBtn,color:C.accent,borderColor:C.accent,fontWeight:600}}>
+                {undecidedCount} undecided {"\u2192"}</button>}
+              {/* EVERY CARD MUST BE DECIDED BEFORE THE LEDGER MOVES — her ruling,
+                  20 Sep. applyRefresh SKIPPED an undecided card silently: not
+                  applied, and not remembered either, so it returned on the next
+                  sweep with nothing on screen to say it had been passed over.
+                  With 320 cards that is a whole session's reading thrown away by
+                  one tap, and she had believed the guard was already there.
+
+                  A BLOCK, not a warning — her call, and her reason: "otherwise I
+                  envision total chaos if I can skip. this is SLOW mode at the
+                  moment." A warning she can wave through is the same failure one
+                  dialogue later.
+
+                  The button says WHAT IS MISSING rather than going quietly grey.
+                  A dead control with no reason attached is the thing she would
+                  be left staring at, and the count is the only clue to where the
+                  work is. */}
+              <button onClick={applyRefresh} disabled={undecidedCount>0}
+                title={undecidedCount>0?"Decide every card first — "+undecidedCount+" still undecided.":""}
+                style={{...pBtn,...(undecidedCount>0?{background:C.muted,cursor:"not-allowed",opacity:1}:{})}}>
+                {undecidedCount>0
+                  ? undecidedCount+" still to decide"
+                  : "Go ahead and update the ledger"}</button>
             </div>
           </div>
         </div>
       )}
       {confirmBox&&(
-        <div style={{position:"fixed",inset:0,background:"rgba(20,18,16,0.45)",display:"grid",placeItems:"center",zIndex:1000,padding:16}}>
+        <div style={{position:"fixed",inset:0,background:C.scrim,display:"grid",placeItems:"center",zIndex:1000,padding:16}}>
           <div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:8,maxWidth:420,padding:"18px 20px",boxShadow:"0 6px 24px rgba(0,0,0,0.25)"}}>
             <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:8}}>Replace what's on screen?</div>
-            <div style={{fontSize:12.5,color:"#3D3730",lineHeight:1.5,marginBottom:16}}>{confirmBox.text}</div>
+            <div style={{fontSize:12.5,color:C.body,lineHeight:1.5,marginBottom:16}}>{confirmBox.text}</div>
             <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
               <button onClick={()=>setConfirmBox(null)} style={sBtn}>Cancel</button>
               <button onClick={()=>{const a=confirmBox.act;setConfirmBox(null);a&&a();}} style={{...pBtn,background:C.accent}}>Continue</button>
