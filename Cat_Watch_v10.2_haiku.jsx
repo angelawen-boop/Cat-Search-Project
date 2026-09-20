@@ -423,6 +423,13 @@ export default function App(){
   // The count sits on the header either way, so collapsing hides the cards and
   // never the fact that there are some.
   const[openBands,setOpenBands]=useState({});
+  // WHICH VENUES ARE OPEN IN "NORMAL CASES". Same reasoning as the triage
+  // bands: 320 cards is a long scroll, and she works one venue at a time.
+  // Undefined means OPEN — the default is to show the work, not to hide it,
+  // so a venue can never go unnoticed because the app closed it on her.
+  // "Collapse all" writes false for every venue rather than flipping a single
+  // master flag, so opening one venue afterwards does not reopen the rest.
+  const[openVenues,setOpenVenues]=useState({});
   const[decisions,setDecisions]=useState({}); // proposal index -> "accept"|"reject"|"addnew"
   const[refreshDone,setRefreshDone]=useState(null); // {added,filled,changed} after applying
   const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
@@ -1567,6 +1574,8 @@ export default function App(){
                 // and no way to check the bands add up to the header. The count
                 // lives ON the header, so collapsing can never hide it.
                 const bandOpen=(key,dflt)=>openBands[key]===undefined?dflt:openBands[key];
+                // A venue with no entry is OPEN. See the state declaration.
+                const venueOpen=id=>openVenues[id]!==false;
                 const band=(key,title,tone,n,dflt,body)=>{
                   const open=bandOpen(key,dflt);
                   return(
@@ -1612,12 +1621,26 @@ export default function App(){
                       {noLink.length>0&&band("nolink","4. No exhibition url \u00b7 link goes to venue\u2019s listing page",undefined,noLink.length,true,byVenueBlocks(noLink))}
                     </div>
                   )}
-                {ordinary.length>0&&(
-                    <div style={{marginBottom:12}}>
-                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Normal cases {"\u00b7"} {ordinary.length}</div>
-                      <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing. Accept or reject each.</div>
+                {ordinary.length>0&&(()=>{
+                    // Which venues actually have ordinary cards. The toggle must
+                    // act on THESE and not on all 21, or "collapse all" would
+                    // write keys for venues with nothing in them and the button
+                    // would read the wrong way on the next click.
+                    const venuesHere=MUSEUMS.filter(m=>ordinary.some(x=>x.p.venueId===m.id)).map(m=>m.id);
+                    const anyOpen=venuesHere.some(id=>venueOpen(id));
+                    return(
+                    <div style={{marginBottom:12,display:"flex",alignItems:"flex-end",gap:12,flexWrap:"wrap"}}>
+                      <div style={{flex:"1 1 260px",minWidth:0}}>
+                        <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Normal cases {"\u00b7"} {ordinary.length}</div>
+                        <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing. Review each one below.</div>
+                      </div>
+                      <button onClick={()=>{
+                          const next={};
+                          for(const id of venuesHere) next[id]=!anyOpen;
+                          setOpenVenues(o=>({...o,...next}));
+                        }} style={sBtn}>{anyOpen?"Collapse all venues":"Expand all venues"}</button>
                     </div>
-                  )}
+                  );})()}
                   {/* ORDER INSIDE A VENUE — her ruling 20 Sep. It was FILE
                       ORDER, which is the order the scraper read the venue's
                       pages, so an edit to something she owns sat between two
@@ -1639,10 +1662,25 @@ export default function App(){
                       if(!ae&&!be)return 0; if(!ae)return 1; if(!be)return -1;
                       return be.localeCompare(ae);
                     });
-                    if(!grp.length)return null;return(
+                    if(!grp.length)return null;
+                    // THE VENUE HEADING IS THE CONTROL. It used to be small grey
+                    // uppercase text that read as a label and was lost between
+                    // the cards — her finding. Now it carries the accent red,
+                    // a larger size, its own count, and the same disclosure
+                    // triangle as a triage band, so the one thing that separates
+                    // one venue's work from the next is the most visible line on
+                    // the screen rather than the least.
+                    const vOpen=venueOpen(m.id);
+                    return(
                     <div key={m.id} style={{marginBottom:14}}>
-                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
-                      {grp.map(({p,i})=>renderProposalCard(p,i))}
+                      <button onClick={()=>setOpenVenues(o=>({...o,[m.id]:!vOpen}))}
+                        style={{display:"flex",alignItems:"center",gap:8,width:"100%",textAlign:"left",background:"none",
+                                border:"none",borderBottom:"1px solid "+C.rule,padding:"6px 0",marginBottom:8,cursor:"pointer",color:C.accent}}>
+                        <span style={{fontSize:10,lineHeight:1,width:10,display:"inline-block",transform:vOpen?"rotate(90deg)":"none",transition:"transform .12s"}}>{"\u25B6"}</span>
+                        <span style={{fontSize:13,letterSpacing:"0.1em",textTransform:"uppercase",fontWeight:700}}>{m.short}</span>
+                        <span style={{fontSize:12,fontWeight:700}}>{"\u00b7"} {grp.length}</span>
+                      </button>
+                      {vOpen&&grp.map(({p,i})=>renderProposalCard(p,i))}
                     </div>
                   );})}
                 </>);
