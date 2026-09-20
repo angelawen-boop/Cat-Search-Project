@@ -676,31 +676,63 @@ lives here where she sees it.
   the ledger where she sees each proposal, fatal here where it fires first. An
   unfolded duplicate costs one visible card; a wrong fold costs an exhibition.
 
-**Odd cases come FIRST, batched by kind, in six numbered bands** — her ruling
-after seeing it: markers, unusable rows, combined-for-you, combined-with-a-
-disagreement, disagreements, then rows with no link at all. Easiest first and
-hardest last, which is not the order an engine would pick: she is spending
-attention rather than compute, and clearing what needs nothing leaves more of it
-for what does. Batched by kind means a venue can appear twice on the screen; she
-would rather finish one kind of thinking than keep switching. Venue headings sit
-inside every band, in the same order as the ordinary list below.
+**Odd cases come FIRST, batched by kind, in FOUR bands** — her ruling, cut from
+six on 20 Sep:
 
-**BAND 5 IS UNREACHABLE — 20 Sep, and it is a candidate to delete like band 2.**
-It was meant to hold a disagreement that did NOT come from combining two rows.
-There is no such thing: a disagreement is only ever recorded while folding, and
-a fold always flags the card, so every conflict is band 4. It stays on screen
-for now, empty, on her instruction — she wants a live case before removing it,
-and there cannot be one. Band 2 is in the same position for a different reason:
-the sweep log's exceptions report and the session's own review of the CSV are
-supposed to stop an unusable row ever reaching her. **Her call, not a session's.**
+1. **Marker rows**
+2. **Combined rows** · identical rows were de-duped or reconciled
+3. **Combined rows** · identical rows produced conflicts — yours to choose
+4. **No exhibition url** · link goes to venue's listing page
+
+Easiest first and hardest last, which is not the order an engine would pick: she
+is spending attention rather than compute, and clearing what needs nothing leaves
+more of it for what does. Batched by kind means a venue can appear twice on the
+screen; she would rather finish one kind of thinking than keep switching. Venue
+headings sit inside every band, in the same order as the ordinary list below.
+
+**EVERY BAND OPENS AND CLOSES, and the default is set by what the band ASKS OF
+HER, never by its size.** Markers and combined-and-agreed open closed, because
+she cannot act on either. The conflict and no-url bands open open. The count sits
+ON the header, so a collapsed band can never hide that it holds something.
+
+**THE TWO BANDS THAT WERE DELETED, and why each was a different kind of wrong:**
+
+- **"Two different answers" WAS A PHANTOM.** It was meant for a disagreement that
+  did not come from combining two rows. There is no such thing: a disagreement is
+  only ever found by holding two rows side by side, and `foldDuplicateRows` flags
+  every card it builds. **It never held a row in its life.** It shipped, this
+  guide listed it as one of six bands, and nobody ran a file and asked why it was
+  always empty — the same silence as the fourteen fixtures that sat uncalled.
+  **She found it by importing the sample file and looking.** Fixture 17 now runs
+  that file and asserts every conflict it produces came from a fold, so it cannot
+  come back by anyone forgetting.
+- **"Unusable rows" WAS THE WRONG END OF THE PIPE — her ruling.** A row with no
+  title or no venue code is a DATA FAULT: there is no such thing as an exhibition
+  with no name, and a row always came from somewhere, so a missing code means the
+  file is malformed. Its only possible outcome was ever "re-run the sweep", which
+  is a message to the session printed on her screen. **It belongs to the session,
+  never to her approval pile.** `scraper/qc.js` now stops it upstream (§5), and
+  the app refuses the whole file, naming the lines and saying they are not hers
+  to fix. Refused WHOLE, because importing the rest would quietly leave the
+  faulty row's exhibition out. A bad DATE is not in that class — the row is still
+  an exhibition, so it is blanked and noted on the card as before.
 
 **WHICH BAND A CARD IS IN IS THE FOLD'S OWN FLAG, never words in the notes.**
 It used to search the notes for "same exhibition" — and `noteTravellingRuns()`
 writes "The same exhibition is also shown at Palm Beach." Acquavella's two runs
 of *Portraiture*, two real shows at two addresses with nothing combined, were
-filed under "combined for you, nothing to decide" with a heading that stated
-something untrue about them. `analyzeProForma` now sets `merged` from
-`mergedFrom` and the band reads that. Fixture 16.
+filed under "combined for you" with a heading that stated something untrue about
+them. `analyzeProForma` sets `merged` from `mergedFrom` and the band reads that.
+Fixture 16. **A fact the code already knows is never re-derived from prose
+written for a human.**
+
+**THE PRE-PICK ON A CONFLICT CARD IS `fuller()` — LONGEST WINS — AND FOR A DATE
+THAT IS MEANINGLESS.** Two ten-character dates tie, so it keeps whichever row
+came first in the file and presents that as a choice made for her. It means
+something for a description (a stub versus the real text) and for a title. **Open,
+her call 20 Sep:** tick nothing on a date conflict and leave the card undecided.
+A wrong closing date moves a show into the wrong urgency tier, which is the whole
+point of the app.
 
 **COUNTS, AND THE ONE THAT CAN FAIL — 19 Sep.** The screen said "319 proposed
 changes found" and nothing else, which cannot be checked against anything: rows
@@ -714,14 +746,29 @@ read**:
 file rows = markers + never-add + folds + already-matching + cards
 ```
 
-The arithmetic either closes or it does not; §7 step 5 carries the figures for
-the current file. **The bands sort by SHAPE, the types cut across them** — a
-brand-new exhibition assembled from two duplicate rows is in band 3, not in
-"Normal cases", because what the band is about is that she is seeing one card
-built from two lines.
+**REWRITTEN TO HER WORDING, 20 Sep.** Two sentences, each ENDING in the number
+the next one starts from — the file narrows to the pile, then the pile splits by
+what it does to her ledger:
 
-`scraper/fixtures/intake_cases.js` — **25 cases**, including the two that must
-NOT merge, the quarantine rules, the freshness facts and the row identity.
+```
+From 415 rows in the file — 9 marker rows, 0 duplicate rows reconciled/de-duped,
+86 already matching ledger = 320 entries considered for import
+From 320 entries — 14 fill a gap, 7 edit existing data, 299 new exhibitions
+```
+
+The old pair put the split FIRST and the reconciliation second, so the two lines
+shared no number and neither led anywhere. A quarantine adds a "you'd said never
+to add" term. **Every term stays**: drop one and the arithmetic stops closing,
+which is the only thing these lines are for.
+
+**The bands sort by SHAPE, the types cut across them** — a brand-new exhibition
+assembled from two duplicate rows is in the combined band, not in "Normal cases",
+because what the band is about is that she is seeing one card built from two
+lines.
+
+`scraper/fixtures/intake_cases.js` — **cases 1 to 17**, including the two that
+must NOT merge, the quarantine rules, the freshness facts, the row identity, the
+whole-file refusal and the phantom band.
 
 **THEY LIVE ON THE LIVE BRANCH, WITH THE JSX THEY TEST, AND NOT ON `main`.** So
 `npm test` on `main` runs 173 and says nothing about the intake; on the branch
@@ -792,6 +839,13 @@ impossible.
 - `scraper/sweep_fetch.js` — older diagnostic copy, no browser. Not developed.
 - `scraper/compress.js` / `compress_cli.js` — raw dump → the summary she reads.
 - `scraper/date.test.js`, `compress.test.js` — fixtures. `npm test`, ~1 second.
+- `scraper/qc.js` — **the exceptions report AND the gate in front of her import
+  file** (§7 step 8, built 20 Sep; it had never existed). FATAL — no title, no or
+  unknown venue code — blocks `compress --apply`, so a session cannot write the
+  file she imports with one in it. EXCEPTIONS — a venue's count dropped against
+  the last run that HAD it, a venue gone to markers only, descriptions lost —
+  warn and never act. It runs at the end of every sweep into that run's log, and
+  in the compress plan step before any tokens are spent.
 - `scraper/reach_probe.js` — **reachability only**; says nothing about usable rows.
 - `scraper/inspect_listing.js` — asks a listing page what link shapes it contains.
 - `scraper/probe_access.js` — loads a listing page twice, announcing headless and
@@ -813,6 +867,7 @@ node scraper/stitch.js <run> <run> ...        combine runs into one importable f
 node scraper/compress.js <run>               plan, and write the subagent job files
 node scraper/compress.js <run> --check       verify the answers before they land
 node scraper/compress.js <run> --apply       write sweep_compressed.csv
+node scraper/qc.js <run|stitch>              faulty rows + exceptions; exit 1 on a fault
 npm test                                     all fixtures
 ```
 
@@ -1534,6 +1589,12 @@ Each entry cost a real failure. Before changing the area, read the line.
   words "same exhibition", which the sweeper also writes for a travelling show —
   two Acquavella cards filed as "combined for you" with nothing combined. **A
   fact the code already knows is never re-derived from prose written for a human.**
+- A band that never held a row, shipped and listed in this guide as one of six.
+  **She found it by importing the sample file and looking.** A band, a fixture
+  file or a check that is always silent reads exactly like one that is passing.
+- Putting a DATA FAULT on her approval pile. A row with no title or no venue code
+  can only ever mean "re-run the sweep", which is a message to the session, and
+  it sat in a band of its own for a week with no check upstream of it.
 - Reporting a card total with nothing to check it against. Rows vanish for three
   innocent reasons, so a total alone cannot tell a fold from a loss.
 - A status line saying "Saved — safe to close" because a button was CLICKED,
@@ -1671,15 +1732,19 @@ Each entry cost a real failure. Before changing the area, read the line.
      non-marker row). One global `lastRun` cannot say "artic was tried today and
      last had data on 13 Sep", which is the line that tells her to re-run it
      alone. It also makes the §2 status table derivable instead of hand-typed.
-8. **The sweep log flags exceptions** — mechanical checks only, comparing a
-   venue against the last run that had it: row count dropped, rows became
-   markers, a venue went to zero, summaries lost where there were some.
-   **It warns and never acts**, like `detectUnwiredPagination()`, and a false
-   alarm is the failure mode to fear — artic's 32 false page warnings taught
-   exactly the habit of scrolling past. It exists because a session
-   re-deriving "does 60 look wrong against last week's 80" gives a different
-   answer depending on which session turned up, and that question has exactly
-   one correct answer. **It is an input to the session's diagnosis, not a gate.**
+8. ~~**The sweep log flags exceptions**~~ — **BUILT 20 Sep, `scraper/qc.js`.**
+   It had been open since 13 Sep and nothing had been written. Two classes, split
+   by whether the answer is KNOWN: a faulty row (no title, no venue code) BLOCKS
+   `compress --apply`; an exception (count dropped, venue gone to markers,
+   descriptions lost) warns and never acts, like `detectUnwiredPagination()`.
+   **A false alarm is still the failure mode to fear** — artic's 32 false page
+   warnings taught exactly the habit of scrolling past — so each check compares
+   against the last run that ACTUALLY HAD that venue, not the run before.
+   **Ordered by the folder's own timestamp, and archived runs count**: the first
+   version used position in the live listing, so a run read out of `archive/`
+   counted every later run as "before" it and a 12 Sep folder was reported as
+   having lost rows against a 13 Sep one. **A comparison that can run backwards
+   in time is worse than none.**
 9. **Catalogue lookup — one known flaw, then tuning.** Its own session, her
    ruling 20 Sep. First the ISBN gap: a catalogue found in a venue's shop can come
    back without its ISBN even though the shop page prints it, because the
