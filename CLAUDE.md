@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 20 Sep 2026 (evening)
+**Last updated:** 20 Sep 2026 (late) (evening)
 
 Cassili collects art-exhibition catalogues. They go out of print fast once a show
 closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 21
@@ -818,9 +818,20 @@ which is most of a real sweep, and it would read as a stuck button rather than
 a counting bug. Fixtures 18 to 18f, verified by flipping the clause and
 watching 18c fail.
 
-**Still open, raised and not built:** with a hard block on 320 cards there is
-no way to FIND the undecided ones, and a collapsed venue hides them. The footer
-gives a number and no route to it.
+**FINDING THE UNDECIDED ONES — built at her ask once the block existed.** Two
+halves: every venue heading carries its own count, so a COLLAPSED venue still
+declares what it is holding, and the footer's count is a button that opens the
+venue holding the first undecided card and scrolls to it. A number she cannot
+act on is what makes a hard gate feel arbitrary.
+
+**The badge appears ONLY where work remains** — her warning that this screen
+"can easily become overengineered". A venue with nothing left says nothing.
+
+**THE GATE AND THE JUMP SHARE ONE RULE**, and for one commit they did not: the
+card-level test was written as a second copy. If those two disagree the app is
+a dead end — a button that will not fire beside a jump insisting nothing is
+left. `countDecisions` calls `isUndecidedCard`; fixture 18g asserts they agree
+across every decision shape.
 
 **THE SWEEP LOG LIVES OUTSIDE THE LEDGER — her ruling, 20 Sep, and she got
 there by refusing two bad answers from me.** Her test: open a backup from two
@@ -855,10 +866,49 @@ sweep file, so any sweep file rebuilds it; losing it costs one re-import. **Her
 ledger could never live there for exactly that reason: it is derivable from
 nothing.** Do not propose moving it.
 
+**WRITTEN WHEN THE FILE IS READ, NOT WHEN SHE APPLIES IT.** It was written at
+Apply, on the reasoning that cancelling a review should leave no trace — correct
+WHILE THE LOG LIVED IN THE LEDGER, and wrong the moment it moved out. It is not
+part of her document; reading a sweep file is when the page learns the sweep
+happened, whether or not she accepts a card. Her catch: *"I have to test this
+against the massive csv? how am I going to go thru 320 entries?"* — with the
+ledger gated on every card, seeing the drawer meant working 320 first. Now she
+imports, cancels, and looks. **Moving a thing between two homes changes when it
+should be written, and that has to be re-derived rather than carried over.**
+
 **MERGE, NEVER REPLACE.** A venue's line moves only when the incoming sweep is
 LATER, so importing an old file changes nothing — the same bug in a new place
 otherwise. The two halves move independently, which is what makes the drawer
 worth reading. Fixtures 15, 15a, 15b.
+
+**DARK MODE — her request, 20 Sep: "it's 9pm and this cream background with
+light grey text is v difficult to read."** A **Dark / Light** button sits by
+Import Refresh. First visit follows the machine's own setting; her explicit
+pick then wins on that device, remembered in browser storage — a per-device
+comfort, not ledger data and not sweep-log data, and every touch of that
+storage is wrapped because it can throw outright.
+
+**EVERY COLOUR IS NAMED** (`PALETTES`, `TIER_SETS`). That was most of the work:
+hexes were scattered through the render, and each one left behind would have
+been a cream patch on a dark page — a failure that looks fine in light mode
+forever. **The dark set is not the light set inverted**: warm near-black ground,
+warm off-white text, and `soft` deliberately lighter than an inversion would
+give, because her complaint was grey-on-cream and the same mistake is easy to
+repeat the other way. The urgency badges have their own dark set — a pale wash
+glares on a dark ground — keeping the ladder's meaning.
+
+**THE SHELL PAINTS A GROUND BEFORE REACT RUNS**, following the browser until the
+component sets `data-theme`, or a dark-mode machine flashes cream on the way in.
+
+**OTHER SCREEN RULINGS, 20 Sep.** Venue headings in "Normal cases" are the
+CONTROL, not a label: accent red, larger, their own count, a disclosure
+triangle, **sentence case** ("a bit aggressive" in caps). Every venue opens and
+closes, with one **Collapse all / Expand all** over the venues that actually
+have cards. The quarantine shelf is **12.5px in the body ink** — it was 10.5
+and muted, "tiny AND faint", and it is a list of decisions she may need to
+UNDO. "Put back" is **"Remove from quarantine"**; the toggle says **"3 in
+quarantine"**, on **its own row**, because a quarantine is a standing decision
+and not part of refreshing.
 
 **COUNTS, AND THE ONE THAT CAN FAIL — 19 Sep.** The screen said "319 proposed
 changes found" and nothing else, which cannot be checked against anything: rows
@@ -892,9 +942,17 @@ assembled from two duplicate rows is in the combined band, not in "Normal cases"
 because what the band is about is that she is seeing one card built from two
 lines.
 
-`scraper/fixtures/intake_cases.js` — **cases 1 to 17**, including the two that
-must NOT merge, the quarantine rules, the freshness facts, the row identity, the
-whole-file refusal and the phantom band.
+`scraper/fixtures/intake_cases.js` — **52 checks**, including the two that must
+NOT merge, the quarantine rules, the freshness facts with their sweep dates, the
+row identity, the whole-file refusal, the phantom band, the ledger gate (18-18g)
+and the sweep-log merge (15a, 15b).
+
+**`scraper/fixtures/page_loads.js` asks whether the app LOADS** — nothing else
+in the repo did, and a black screen is the answer to a question nobody was
+asking. **It is a floor, not a guarantee: it never renders the component**, and
+it passed while the published page was blank. Its own header says so. Making it
+real needs `react` + `react-dom` to render (that catches the exact fault), and
+`jsdom` on top for effects — dependencies this repo does not carry. See §7.
 
 **THEY LIVE ON THE LIVE BRANCH, WITH THE JSX THEY TEST, AND NOT ON `main`.** So
 `npm test` on `main` runs 173 and says nothing about the intake; on the branch
@@ -989,8 +1047,10 @@ impossible.
 - `scraper/sweep_fetch.js` — older diagnostic copy, no browser. Not developed.
 - `scraper/compress.js` / `compress_cli.js` — raw dump → the summary she reads.
 - `scraper/date.test.js`, `compress.test.js` — fixtures. `npm test`, ~1 second.
-- `scraper/qc.js` — **the exceptions report AND the gate in front of her import
-  file** (§7 step 8, built 20 Sep; it had never existed). FATAL — no title, no or
+- `scraper/qc.js` — **ON THE LIVE BRANCH, NOT ON `main`** (with `qc.test.js`,
+  and `main`'s `npm test` does not name either — it runs 177 and says nothing
+  about them). It merges when the branch does. **The exceptions report AND the
+  gate in front of her import file** (§7 step 8, built 20 Sep; it had never existed). FATAL — no title, no or
   unknown venue code — blocks `compress --apply`, so a session cannot write the
   file she imports with one in it. EXCEPTIONS — a venue's count dropped against
   the last run that HAD it, a venue gone to markers only, descriptions lost —
@@ -1765,6 +1825,24 @@ Each entry cost a real failure. Before changing the area, read the line.
 - Reading `npm test`'s FIRST half for a pass count while its second half
   crashed — a green 170 printed halfway through, exit code 1 the whole time.
   **Check the exit code.**
+- **Shipping a page that does not load.** A blanket colour rename for dark mode
+  ran AFTER the palette was written and rewrote the palette's own literals, so
+  it defined itself (`drawer: C.drawer`). Valid syntax; throws on first render;
+  BLACK SCREEN. She found it, twice — the first "fix" addressed a different
+  instance of the same rename and I told her it was fixed without rendering it.
+  **A blanket find-and-replace over a file you have just added definitions to
+  will eat those definitions.**
+- Believing a check that asks the wrong question. `tsc --noEmit` answers "does
+  this parse"; the unit suite tests functions LIFTED OUT of the file; grepping
+  the built page for expected strings found them all, because the broken line
+  was one of them. **None of them could have caught a blank page, and I read
+  three greens as proof.**
+- Reading `npm test`'s FIRST half for a pass count while its second half
+  crashed — a green 170 printed halfway through, exit code 1 throughout.
+  **Check the exit code.**
+- Anchoring a test harness on a LINE OF CODE (`const TIERS = {`) rather than on
+  prose describing the section. Dark mode made TIERS theme-dependent, the line
+  stopped existing, and every intake fixture died at once.
 - Reporting a card total with nothing to check it against. Rows vanish for three
   innocent reasons, so a total alone cannot tell a fold from a loss.
 - A status line saying "Saved — safe to close" because a button was CLICKED,
@@ -1896,23 +1974,21 @@ Each entry cost a real failure. Before changing the area, read the line.
    question is whether any row arrives WITH TEXT. Every ordinary sweep re-tests
    all four anyway, so the day one answers, it appears on the approval pile.
 
-7. ~~**JSX — quarantine and per-venue freshness**~~ — **BUILT 19–20 Sep, on the
-   live branch, and in the page she is using.** Both are described in §4. What
-   remains is her own work: the 320 decisions, and a SAVE ROUND-TRIP — export
-   after the import, re-import that file, and confirm the quarantine list and
-   the per-venue freshness both survive it. They are new fields in the save
-   file and nothing has yet proved they come back.
+7. ~~**JSX — quarantine and per-venue freshness**~~ — **BUILT and the SAVE
+   ROUND-TRIP PASSED, 20 Sep.** She imported the sample against the seed,
+   quarantined three, applied, exported, reset to seed, reloaded the export:
+   the quarantine came back with the ledger. **The sweep log no longer rides in
+   that file at all** — it lives in the page's own store (§4), so it survived
+   the Reset too, which the ledger copy never could.
    - **Quarantine ("never add this")** — design below. Without it, rejecting a
      card stores nothing, so every piece of junk returns on every future sweep.
-     It must be **visible and undoable**: a quarantine she cannot see is a
-     silent loss, because a mis-tap means an exhibition never appears again and
-     nothing ever says so.
-   - **Per-venue freshness** — derived at import from the CSV, stored in the
-     ledger, shown in a drawer. **TWO facts, not one:** last ATTEMPTED (the
-     venue was in the file at all) and last RETURNED REAL ROWS (at least one
-     non-marker row). One global `lastRun` cannot say "artic was tried today and
-     last had data on 13 Sep", which is the line that tells her to re-run it
-     alone. It also makes the §2 status table derivable instead of hand-typed.
+     **Visible and undoable**: a quarantine she cannot see is a silent loss.
+   - **Per-venue freshness** — **TWO facts**: last SWEPT and last RETURNED REAL
+     ROWS, both dated from the file's `swept_at`, both kept in the page's store.
+
+   **STILL HERS TO DO: the 320 decisions against the real file.** Everything
+   else on this list is finished.
+
 8. ~~**The sweep log flags exceptions**~~ — **BUILT 20 Sep, `scraper/qc.js`.**
    It had been open since 13 Sep and nothing had been written. Two classes, split
    by whether the answer is KNOWN: a faulty row (no title, no venue code) BLOCKS
@@ -1933,6 +2009,18 @@ Each entry cost a real failure. Before changing the area, read the line.
    reseller links search by title, which misfired on Alibris for the Met's
    *Musical Bodies*. `web_fetch` on the same connector reads a whole page and is
    not declared today. Then the old tuning question. Detail in §4.
+
+10. **The app is not really tested, and a black screen proved it — OPEN.**
+    `page_loads.js` asks whether the file evaluates; nothing renders the
+    component, and on 20 Sep that gap shipped a blank page twice. Rendering it
+    needs `react` + `react-dom` as dev dependencies (`renderToString` catches
+    exactly that fault), and `jsdom` on top if the effects should run — proved
+    in a scratch directory, not added here. **Her call, because it is the first
+    time this repo would carry dependencies for its own sake.**
+
+11. **`qc.js`, `qc.test.js` and the intake fixtures live on the LIVE BRANCH
+    only**, and `main`'s `npm test` names none of them. Resolved by the merge;
+    until then a green suite on `main` covers less than it looks like.
 
 **The ledger is not being protected during development.** Her ruling: she keeps no real
 ledger until JSX and scraper are both finished, so she can import freely and roll back.
