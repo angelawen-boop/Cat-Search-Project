@@ -822,6 +822,44 @@ watching 18c fail.
 no way to FIND the undecided ones, and a collapsed venue hides them. The footer
 gives a number and no route to it.
 
+**THE SWEEP LOG LIVES OUTSIDE THE LEDGER — her ruling, 20 Sep, and she got
+there by refusing two bad answers from me.** Her test: open a backup from two
+days ago and the drawer said "the Met last brought rows 18 Sep"; open today's
+and it said 20 Sep. Same world, two answers. A sweep either ran or it did not —
+opening an older file cannot un-run it.
+
+**THE DISTINCTION IS HERS, and it is the part to carry across.** CONTENT rolls
+back with a backup and that is correct: fewer exhibitions, her marks as they
+stood, because the document genuinely was smaller then. A FACT ABOUT THE WORLD
+must not. The sweep log is the second kind and it was in the first kind's
+container.
+
+**BOTH ARGUMENTS I MADE AGAINST IT WERE BAD, and the shape of each is worth
+more than the conclusion.** First: "a careless republish could destroy it" — a
+reason to be careful, not an architecture principle; her answer was that a
+careless republish can wipe the seed too. Second: "the app shell has nowhere to
+keep anything" — true of what had been BUILT, false of the platform, which
+offers the page a store of its own. **Neither was checked before it was
+asserted.** I also leaned twice on her keeping several ledgers. **She never said
+that and does not do it** — one ledger, versioned by her own backups. An
+invented constraint is worse than no argument at all.
+
+**WHAT IT IS:** one document in the page's own store, one line per venue,
+twenty-one lines, never growing. It survives Reset, it is there before any
+ledger is opened, and loading an old backup does not move it. `venueSeen` is no
+longer written to or read from the ledger file at all.
+
+**IT IS A CACHE, NOT A MASTER RECORD** — and that is precisely what makes it
+safe somewhere she cannot export. Every fact in it comes from `swept_at` in a
+sweep file, so any sweep file rebuilds it; losing it costs one re-import. **Her
+ledger could never live there for exactly that reason: it is derivable from
+nothing.** Do not propose moving it.
+
+**MERGE, NEVER REPLACE.** A venue's line moves only when the incoming sweep is
+LATER, so importing an old file changes nothing — the same bug in a new place
+otherwise. The two halves move independently, which is what makes the drawer
+worth reading. Fixtures 15, 15a, 15b.
+
 **COUNTS, AND THE ONE THAT CAN FAIL — 19 Sep.** The screen said "319 proposed
 changes found" and nothing else, which cannot be checked against anything: rows
 leave the pile for three innocent reasons — a marker row, a fold, an entry that
@@ -1716,6 +1754,17 @@ Each entry cost a real failure. Before changing the area, read the line.
   cannot tell you a case ran.**
 - Claiming to restore a deleted sentence and instead moving its words somewhere
   else, displacing a different sentence. She caught both.
+- Keeping a FACT ABOUT THE WORLD in the ledger, so that opening an older backup
+  reported an older sweep date — as though rolling back a document could un-run
+  a sweep.
+- Arguing an architecture question from what had been BUILT rather than from
+  what the platform offers, and never checking. "The shell has nowhere to keep
+  anything" was false; the page can hold a store of its own.
+- Inventing a constraint she never stated (that she keeps several ledgers) and
+  leaning on it twice. **A convenient hypothesis is worse than no argument.**
+- Reading `npm test`'s FIRST half for a pass count while its second half
+  crashed — a green 170 printed halfway through, exit code 1 the whole time.
+  **Check the exit code.**
 - Reporting a card total with nothing to check it against. Rows vanish for three
   innocent reasons, so a total alone cannot tell a fold from a loss.
 - A status line saying "Saved — safe to close" because a button was CLICKED,
