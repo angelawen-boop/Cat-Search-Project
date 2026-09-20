@@ -1541,10 +1541,25 @@ Each entry cost a real failure. Before changing the area, read the line.
      chunk before the packaging was fixed — see §5. The repair (`--seed-wins`)
      restored 13 Acquavella summaries to her own wording; the 19 Sep first pass
      is kept whole in `19sep_first_pass/`.
-   - **IMPORT: NOT DONE.** The app has only ever read the 76-row test file.
-     Simulated against her 110-row seed, the real file should produce **319
-     cards** — 298 add, 14 fill, 7 change — with 86 rows matching silently and
-     **no card asking her to choose**, plus a 36-page coverage panel.
+   - **IMPORT: SHAKEDOWN RUN 20 SEP.** Against her 110-row seed the file
+     produces **320 cards** — 299 add, 14 fill, 7 change — with 86 rows matching
+     silently, **no card asking her to choose**, and a 36-page coverage panel.
+     The row identity closes: 652 = 36 markers + 210 folds + 86 matching + 320.
+     Bands 2, 4, 5 and 6 are all empty on this file.
+
+     **It was 319 until the rebuild-by-key bug was fixed** (§6). That bug had
+     copied one Rijksmuseum row over another, accidentally making two rows
+     identical so the app folded them. They are two ADDRESSES for one show —
+     `/exhibitions/ed-van-der-elsken` (dated, from the current page) and
+     `/exhibitions/past/ed-van-der-elsken` (no dates, its page 404s) — and two
+     cards is the correct answer: the app folds only on an identical address,
+     because a wrong fold loses an exhibition silently while an unfolded
+     duplicate costs one visible card. The `/past/` one is a quarantine
+     candidate, being a dead link.
+
+     **Still to do:** the 320 individual decisions, and a save round-trip —
+     export after the import, re-import that file, and confirm the quarantine
+     list and the per-venue freshness both survive it.
 
    **Both faults found by running it were joins, not halves** — stitch writing a
    loose file where compress reads directories, and the seed sitting behind the
