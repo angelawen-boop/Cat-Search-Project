@@ -1375,7 +1375,12 @@ export default function App(){
                   ):(
                     <div>
                       {r.shopState==="shop"&&<div style={{fontSize:11,color:C.action,fontWeight:600,marginBottom:6}}>In the museum shop.</div>}
-                      {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>Not in the museum shop \u2014 the shop link below opens the general store; other buy options shown too.</div>}
+                      {/* The dash is a STRING, not page text. Written as a bare
+                          \u2014 among the words it printed those six characters
+                          literally, and nothing caught it for weeks because no
+                          row had ever reached this state until a catalogue was
+                          found outside its venue's shop. */}
+                      {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>{"Not in the museum shop \u2014 the shop link below opens the general store; other buy options shown too."}</div>}
                       {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
                       {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
                       <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",marginBottom:10,color:r.isbn13?C.ink:C.soft}}>
