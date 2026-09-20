@@ -304,4 +304,44 @@ check('18f: the real sample file starts with every card undecided',
   check('19a: and all 21 are still there', got.length===21, {count:got.length});
 }
 
+// 20. QUARANTINE LIVES IN TWO PLACES AND THE LATEST DECISION WINS — her choice
+// (option C), 20 Sep, taken over her own dislike of redundancy. The store is
+// the working copy, the export is the backup, and these cases are the rule
+// that settles every disagreement between them. Her scenario is 20c: the one
+// that used to lose every decision the moment she pressed Reset.
+{
+  const B=(at)=>({venueId:"louvre",title:"[past page]",at,state:"blocked"});
+  const R=(at)=>({venueId:"louvre",title:"[past page]",at,state:"released"});
+
+  check('20: a decision from a ledger file is added to what the page knows',
+    Object.keys(H.mergeQuarantine({a:B("2026-09-01T00:00:00Z")},{b:B("2026-09-02T00:00:00Z")})).length===2);
+
+  check('20a: an OLDER backup cannot re-block a row she has released',
+    H.mergeQuarantine({a:R("2026-09-20T00:00:00Z")},{a:B("2026-09-01T00:00:00Z")}).a.state==="released");
+
+  check('20b: but a release older than the block does not win either',
+    H.mergeQuarantine({a:B("2026-09-20T00:00:00Z")},{a:R("2026-09-01T00:00:00Z")}).a.state==="blocked");
+
+  // HER SCENARIO, and the whole reason this moved out of the ledger: quarantine
+  // two rows, Reset to the seed, feed the same file again. Reset replaces the
+  // ledger and touches nothing here, so both are still blocked.
+  const afterReset=H.mergeQuarantine({a:B("2026-09-20T01:00:00Z"),b:B("2026-09-20T01:00:00Z")},{});
+  check('20c: a Reset cannot clear the quarantine', H.activeQuarantine(afterReset).length===2);
+
+  // And releasing one leaves exactly one blocked, with the released row kept as
+  // a record rather than deleted — that record is what makes 20a work.
+  const afterRelease=H.mergeQuarantine(afterReset,{a:R("2026-09-20T02:00:00Z")});
+  check('20d: releasing one leaves one blocked', H.activeQuarantine(afterRelease).length===1);
+  check('20e:   and the released one is remembered, not forgotten',
+    Object.keys(afterRelease).length===2, Object.keys(afterRelease));
+
+  check('20f: an older ledger file still loads — its plain list converts',
+    H.activeQuarantine(H.quarantineFromList([{key:"a",venueId:"louvre",title:"x",at:"2026-09-01T00:00:00Z"}])).length===1);
+
+  // The export carries the list she can see, never the tombstones: a released
+  // row is not in quarantine, so it has no business in the backup of it.
+  check('20g: the export list holds only what is blocked',
+    H.activeQuarantine(afterRelease).every(x=>x.key!=="a"));
+}
+
 process.exit(fails?1:0);

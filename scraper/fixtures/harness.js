@@ -72,6 +72,9 @@ return {
   getRows: () => rows,
   countDecisions,
   mergeSweepLog,
+  mergeQuarantine,
+  activeQuarantine,
+  quarantineFromList,
   isUndecidedCard,
   MUSEUMS, MU, KNOWN_VENUES,
 };

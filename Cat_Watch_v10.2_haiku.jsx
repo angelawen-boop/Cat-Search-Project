@@ -130,6 +130,63 @@ function mergeSweepLog(prev,seen){
   return out;
 }
 
+// ── QUARANTINE — SAME THIRD PLACE AS THE SWEEP LOG, her ruling 20 Sep 2026 ──
+//
+// IT WAS IN THE LEDGER AND THAT WAS THE WRONG CONTAINER, decided in the same
+// session that moved the sweep log out and somehow not applied to the thing
+// sitting next to it. Her scenario is the whole argument: quarantine two junk
+// rows, Reset to the starter set, feed the SAME sweep file again — and every
+// piece of junk is back, because the only record of her decision went with the
+// ledger she just replaced. A feature whose entire promise is "never show me
+// this again" cannot depend on which file happens to be open.
+//
+// BUT IT IS NOT THE SWEEP LOG EITHER, and the difference decides the design.
+// The sweep log is safe living only here because it is DERIVABLE: every fact in
+// it comes from a sweep file, so losing it costs one re-import. Quarantine is
+// derivable from nothing — it is her judgement, and only she can rebuild it.
+// That is the same property that keeps her LEDGER out of this store.
+//
+// SO IT LIVES IN BOTH, WITH A RULE ABOUT WHICH WINS — her choice, C, taken over
+// her own objection that redundancy is lazy. It is not two hopeful copies: the
+// store is the working copy that always applies, the export is the backup, and
+// the rule below settles every disagreement between them. Her ledger already
+// has exactly this shape.
+//
+// THE RULE IS LATEST DECISION WINS, WHICH NEEDS TOMBSTONES. Taking a row out of
+// quarantine has to be RECORDED, not merely absent, or loading an older backup
+// would silently re-block something she released — the same bug the sweep log's
+// merge rule exists to prevent, one door along. So a released row stays in the
+// store as `released` with the time she released it.
+const QUARANTINE_DOC = "quarantine/rows";
+
+// Both sides are {key: {venueId, title, at, state}}. Nothing is dropped and
+// nothing is invented: for each key the entry with the LATER `at` survives,
+// whichever side it came from.
+function mergeQuarantine(prev, incoming){
+  const out={...(prev||{})};
+  for(const [k,v] of Object.entries(incoming||{})){
+    if(!v||!v.at) continue;
+    const was=out[k];
+    if(!was||!was.at||v.at>was.at) out[k]={...v};
+  }
+  return out;
+}
+// What she sees and what the export carries: the ones still blocked, newest
+// first. Tombstones never leave this file.
+function activeQuarantine(map){
+  return Object.entries(map||{})
+    .filter(([,v])=>v&&v.state!=="released")
+    .map(([key,v])=>({key,venueId:v.venueId,title:v.title,at:v.at}))
+    .sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));
+}
+// A ledger file stores the plain list it always did, so an older backup loads
+// unchanged and a newer one is readable by an older build.
+function quarantineFromList(list){
+  const out={};
+  for(const x of (list||[])) if(x&&x.key) out[x.key]={venueId:x.venueId,title:x.title,at:x.at||"",state:"blocked"};
+  return out;
+}
+
 // URGENCY COLOURS, ONE SET PER THEME — dark added 20 Sep 2026 at her request.
 //
 // The washes are not the light ones dimmed. A pale badge on a dark ground
@@ -459,6 +516,28 @@ async function writeSweepLog(next){
   catch{ return false; }
 }
 
+async function readQuarantine(){
+  const db=await useCap("db");
+  if(!db) return {map:{},why:"This page can\u2019t reach its quarantine list in this viewer, so nothing is being blocked."};
+  try{
+    const snap=await db.doc(QUARANTINE_DOC).get();
+    if(!snap.exists) return {map:{},why:null};
+    const d=snap.data()||{};
+    return {map:(d.rows&&typeof d.rows==="object")?d.rows:{},why:null};
+  }catch(e){
+    const code=String((e&&e.code)||"");
+    if(code==="not_granted") return {map:{},why:"You declined this page access to its quarantine list."};
+    return {map:{},why:"Couldn\u2019t read the quarantine list ("+(code||"unknown")+")."};
+  }
+}
+
+async function writeQuarantine(next){
+  const db=await useCap("db");
+  if(!db) return false;
+  try{ await db.doc(QUARANTINE_DOC).set({rows:next,updatedAt:new Date().toISOString()}); return true; }
+  catch{ return false; }
+}
+
 const today=()=>new Date().toISOString().slice(0,10);
 function shopDomain(mu){if(!mu||!mu.shopHome)return null;try{return new URL(mu.shopHome).hostname;}catch{return null;}}
 
@@ -524,7 +603,12 @@ export default function App(){
   // sweep forever; accepting then dismissing puts junk in the ledger
   // permanently. This is the third outcome, and it is the only one that keeps
   // the ledger clean. Entries: {key, venueId, title, at}.
-  const[ignored,setIgnored]=useState([]);
+  // The MAP is what is stored (tombstones and all); the LIST is what she sees
+  // and what the export carries. Deriving one from the other means they cannot
+  // drift, which two pieces of state for one fact always eventually do.
+  const[quarantine,setQuarantine]=useState({});
+  const[quarWhy,setQuarWhy]=useState(null);
+  const ignored=useMemo(()=>activeQuarantine(quarantine),[quarantine]);
   const[showIgnored,setShowIgnored]=useState(false);
   // PER-VENUE FRESHNESS, and it has to be TWO facts. One global lastRun cannot
   // say "artic was tried today and last gave us rows on 13 Sep", which is the
@@ -636,6 +720,9 @@ export default function App(){
     // Read ONCE, not subscribed: she is the only viewer and the only writer,
     // and a subscription in a component body is how a page ends up in a loop.
     readSweepLog().then(({log,why})=>{ setVenueSeen(log); setFreshWhy(why); });
+    // Quarantine loads here too, and for the same reason: it is not part of the
+    // ledger any more, so it has to be in force before any file is opened.
+    readQuarantine().then(({map,why})=>{ setQuarantine(map); setQuarWhy(why); });
   },[]);
 
   // Keep the "Last saved ... ago" text and its colour current.
@@ -656,7 +743,14 @@ export default function App(){
   const loadLedger=useCallback((next,lr,info,extra)=>{
     setRows(next);
     setLastRun(lr!==undefined?lr:null);
-    setIgnored((extra&&extra.ignored)||[]);
+    // A LEDGER'S QUARANTINE IS MERGED IN, NEVER SWITCHED TO. The file is the
+    // backup copy; the page holds the working one. Latest decision wins, so an
+    // old backup cannot re-block a row she has since released, and a backup
+    // from another machine adds what it knows.
+    const fromFile=quarantineFromList((extra&&extra.ignored)||[]);
+    if(Object.keys(fromFile).length){
+      setQuarantine(prev=>{ const merged=mergeQuarantine(prev,fromFile); writeQuarantine(merged); return merged; });
+    }
     // venueSeen is DELIBERATELY not read from the file. It lives in the page's
     // own store now — see the sweep log note. Reading it here is exactly the
     // bug she found: loading a two-day-old backup dragged the sweep dates back
@@ -1051,9 +1145,15 @@ export default function App(){
     // The sweep log is NOT touched here. It was written the moment the file was
     // read — see recordSweep. Applying changes her ledger; it tells us nothing
     // new about when a venue was swept.
+    // A NEW QUARANTINE GOES TO THE STORE, not into the ledger she is about to
+    // commit. Her export still carries the list, but the copy that does the
+    // blocking is the one that survives a Reset.
     if(newlyIgnored.length){
-      const have=new Set(ignored.map(x=>x.key));
-      setIgnored([...ignored,...newlyIgnored.filter(x=>!have.has(x.key))]);
+      const add={};
+      for(const x of newlyIgnored) add[x.key]={venueId:x.venueId,title:x.title,at:x.at,state:"blocked"};
+      setQuarantine(prev=>{ const merged=mergeQuarantine(prev,add);
+        writeQuarantine(merged).then(ok=>{ if(!ok) setQuarWhy("The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Export to keep it."); });
+        return merged; });
     }
     commit(Array.from(byId.values()),new Date().toISOString());
     setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length});
@@ -1490,7 +1590,7 @@ export default function App(){
             of refreshing. It is not: a quarantine is a standing decision about
             what may never enter the ledger, and it holds whether or not a
             sweep ever happens again. */}
-        {hasLedger&&ignored.length>0&&<div style={{marginTop:6,fontSize:12,color:C.soft}}>
+        {(ignored.length>0||quarWhy)&&<div style={{marginTop:6,fontSize:12,color:C.soft}}>
           <button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:12,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>
         </div>}
 
@@ -1525,19 +1625,25 @@ export default function App(){
             </div>}
         </div>}
 
-        {hasLedger&&showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
+        {showIgnored&&(ignored.length>0||quarWhy)&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
           {/* BIG ENOUGH TO READ — her finding, 20 Sep: "tiny AND faint". This
               is a list of decisions she may need to UNDO, so it cannot be the
               smallest, palest text on the screen. Set at or above the filter
               chips below it, in the body ink rather than the muted grey. */}
           <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
-            {"Rows you said should never be entries. They are skipped on every import. Taking one out of quarantine only makes it offer itself again on the next sweep \u2014 it does not add anything to your ledger."}
+            {"Rows you said should never be entries. They are skipped on every import, whichever ledger is open, and a Reset does not clear them. They also ride along in your export as a backup. Taking one out of quarantine only makes it offer itself again on the next sweep \u2014 it does not add anything to your ledger."}
           </div>
+          {quarWhy&&<div style={{fontSize:12,color:C.accent,marginBottom:8,lineHeight:1.55}}>{quarWhy}</div>}
           {ignored.map(x=>(
             <div key={x.key} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
               <span style={{minWidth:130,fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
               <span style={{flex:1}}>{x.title||"(no title)"}</span>
-              <button onClick={()=>{setIgnored(ignored.filter(y=>y.key!==x.key));setDirty(true);}} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Remove from quarantine</button>
+              <button onClick={()=>{
+                const at=new Date().toISOString();
+                setQuarantine(prev=>{ const next=mergeQuarantine(prev,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}});
+                  writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy("That release couldn\u2019t be saved to this page\u2019s store, so it may come back when you reload."); });
+                  return next; });
+                setDirty(true);}} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Remove from quarantine</button>
             </div>
           ))}
         </div>}
