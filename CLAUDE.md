@@ -495,6 +495,39 @@ Fixtures Q-100 to Q-102.
 **A length cap alone would not have caught it.** The bug is quoting the wrong
 THING, and a capped whole page is still the wrong thing.
 
+### swept_at — the eighth column, 20 Sep 2026
+
+**HER FINDING.** The app's freshness drawer dated every venue by the moment she
+pressed Import and called it "tried". The sweep may have run twenty minutes or
+four days earlier. The file carried no sweep time, so the app had nothing truer
+to show.
+
+**PER ROW, NOT PER FILE OR PER VENUE.** Per file is wrong: a stitch mixes two
+machines, met and artic off her laptop and the rest off the container. Per venue
+is wrong too, because a stitch routinely holds TWO runs of one venue — the
+normal case, and the one that produces the app's combined bands.
+
+**HER QUESTION SETTLED THE SHAPE**, and the answer is the drawer's whole point:
+last TRIED is the latest sweep date for the venue, last BROUGHT ROWS the latest
+among its real rows. Borghese in her own file reads *tried 13 Sep 14:26 · rows
+13 Sep 02:04* — swept twice, the later run got only markers. That gap is the
+line that says re-run it alone.
+
+**Stamped when the venue FINISHES**, in `writeVenueCsv`, not at run start: a run
+takes ten minutes across nineteen venues and `--continue` can spread one across
+invocations hours apart, so the run's own stamp would flatten every venue to one
+instant — the exact flattening the column undoes. **UTC**, unlike run folder
+names, which are Sydney because a human sorts by them; this column is read by
+code in her browser's timezone.
+
+`stitch` and `compress` carry it without looking at it. compress needed its
+column list extended or `readProForma` would have dropped it silently.
+
+**Her 13 Sep file is repaired, no re-sweep** —
+`stitch_20260913_0442/add_swept_at.js`. Times recovered from **the venue's last
+line in the run log**, which is timestamped and venue-tagged, never from the
+folder name. It throws rather than guessing when a venue has no log line.
+
 ### Prefer structured data over guessing
 
 Some venues embed a **schema.org Event** block: title, dates and description as
