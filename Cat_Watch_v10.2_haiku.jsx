@@ -842,88 +842,86 @@ export default function App(){
   const READ_SHAPE=
     "\nReply with ONLY this JSON object and nothing else:\n"
    +'{"found": true|false, "catalogueTitle": string|null, "isbn13": string|null, '
-   +'"publisher": string|null, "shopUrl": string|null, "saysNoCatalogue": true|false}\n'
+   +'"publisher": string|null, "shopUrl": string|null}\n'
    +'Example: {"found":true,"catalogueTitle":"Metamorphoses: Ovid and the Arts","isbn13":"9789493416543",'
-   +'"publisher":"Hannibal Books","shopUrl":null,"saysNoCatalogue":false}\n'
-   +'"saysNoCatalogue" is true ONLY when the results positively state no catalogue was published. '
-   +"Results that simply don't mention one leave it false \u2014 that is not evidence of absence.";
+   +'"publisher":"Hannibal Books","shopUrl":null}\n'
+   +'Set "found" false and every other field null when these results show no catalogue.';
 
-  // WHERE A CATALOGUE'S DETAILS ACTUALLY LIVE — corrected 20 Sep 2026 against a
-  // book she owns. Searching the venue's SHOP alone found its Metamorphoses
-  // page selling tote bags and notebooks, and that read as "no catalogue". The
-  // ISBN was on the museum's own PRESS RELEASE. So the first pass now covers
-  // the venue's whole site as well as its shop, and the shop is preferred for
-  // the LINK rather than relied on for the evidence.
-  const hostOf=u=>{ try{ return new URL(String(u)).hostname.replace(/^www\./,""); }catch{ return null; } };
-
-  // A "NO" MUST BE EARNED. The old code wrote hasCatalogue:"no" whenever a
-  // search came back thin, and marked the row looked-at, so it was never asked
-  // again. That is the most expensive mistake this app can make: the whole
-  // point is not missing a catalogue before it goes out of print. Now only a
-  // result that POSITIVELY says no catalogue exists records "no"; anything
-  // inconclusive records "unknown", which leaves Search again on the card.
-  const settle=(row,o,dom,detail)=>{
+  // TWO STAGES, HER DESIGN, UNCHANGED SINCE IT WAS TESTED.
+  //
+  // Stage one asks the venue's own shop and nothing else. Stage two, only if
+  // the shop had nothing, looks wider. Nothing found in either means no
+  // catalogue. The reason for the order is not cost, which is gone: a shop hit
+  // is the only result that gives her a real "buy it here" link.
+  //
+  // THE ONE THING THAT CHANGED, AND IT IS NOT A CHOICE. The old search tool
+  // could be locked to one website — it was unable to look anywhere else.
+  // The connector has no lock, only a "look here" hint inside the query, so a
+  // stray result from another site can come back. That is why the shop link is
+  // CHECKED below: a link that is not on the venue's shop is never filed as
+  // being in the venue's shop.
+  const settle=(row,o,dom,detail,fromShopStage)=>{
     const onShop=o.shopUrl&&dom&&String(o.shopUrl).toLowerCase().includes(String(dom).toLowerCase());
     if(o.found&&(o.catalogueTitle||o.isbn13)){
-      return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"yes",shopState:onShop?"shop":"web",
+      return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"yes",
+        shopState:onShop?"shop":"web",
         catalogueTitle:o.catalogueTitle||null,isbn13:cleanIsbn(o.isbn13),
         publisher:o.publisher||null,publisherUrl:null,shopUrl:onShop?o.shopUrl:null}};
     }
-    if(o.saysNoCatalogue){
-      return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"no",shopState:"none",
-        catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,shopUrl:null}};
-    }
-    return{ok:true,uncertain:true,detail,row:{...row,looked:true,hasCatalogue:"unknown",shopState:"none",
+    if(fromShopStage)return null;          // not found in the shop — go wider
+    return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"no",shopState:"none",
       catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,shopUrl:null}};
   };
 
   async function lookupCat(row){
     const mu=MU[row.museumId];
     const dom=shopDomain(mu);
-    const venueHost=hostOf(mu&&(mu.exBase||mu.listUrl));
     const title=String(row.title||"").trim();
     const venue=mu?mu.name:"";
+    let detail="";
 
-    // ── Pass one: the venue itself — its shop AND its own pages ─────────────
-    setLookPhase("shop");
-    const q1=[];
-    if(dom)      q1.push("site:"+dom+" "+title+" catalogue");
-    if(venueHost)q1.push("site:"+venueHost+" "+title+" catalogue ISBN");
-    q1.push(venue+" "+title+" exhibition catalogue ISBN");
-    const s1=await searchWeb(
-      "Find the printed exhibition catalogue for \u201c"+title+"\u201d at "+venue
-        +": its exact title, ISBN-13, publisher, and the museum shop page selling it if there is one. "
-        +"The ISBN is often given in the museum's own press release rather than in its shop.",
-      q1);
-    if(!s1.ok)return{row,detail:s1.detail,ok:false};
-
-    if(s1.results.length){
-      const r1=await readResults(READ_RULES
-        +"\nExhibition: "+title+"\nVenue: "+venue+(dom?"\nIts shop is at "+dom:"")+"\n\n"
-        +resultsForPrompt(s1.results)+READ_SHAPE);
-      if(!r1.ok)return{row,detail:s1.detail+"\n"+r1.detail,ok:false};
-      const o=r1.data||{};
-      if(o.found&&(o.catalogueTitle||o.isbn13)) return settle(row,o,dom,s1.detail+"\n"+r1.detail);
+    // ── Stage one: the venue's own shop ─────────────────────────────────────
+    if(dom){
+      setLookPhase("shop");
+      const s1=await searchWeb(
+        "Find the printed exhibition catalogue for \u201c"+title+"\u201d at "+venue
+          +" in the museum's own shop at "+dom+": its title, ISBN-13, publisher, and the shop page selling it.",
+        ["site:"+dom+" "+title+" catalogue",
+         "site:"+dom+" "+title+" book",
+         "site:"+dom+" "+title]);
+      detail=s1.detail;
+      if(!s1.ok)return{row,detail,ok:false};
+      if(s1.results.length){
+        const r1=await readResults(READ_RULES
+          +"\nExhibition: "+title+"\nVenue: "+venue
+          +"\nThese results are meant to be from the venue's own shop, "+dom
+          +". Ignore any result that is not on that website.\n\n"
+          +resultsForPrompt(s1.results)+READ_SHAPE);
+        detail=s1.detail+"\n"+r1.detail;
+        if(!r1.ok)return{row,detail,ok:false};
+        const hit=settle(row,r1.data||{},dom,detail,true);
+        if(hit)return hit;
+      }
     }
 
-    // ── Pass two: wider, and only because pass one found no book ───────────
+    // ── Stage two: wider, only because the shop had nothing ─────────────────
     setLookPhase("web");
     const s2=await searchWeb(
       "Confirm whether a printed catalogue was published for the exhibition \u201c"+title+"\u201d at "
-        +venue+", and give its title, ISBN-13 and publisher. Art-book publishers and booksellers "
-        +"list these; say plainly if no catalogue was published.",
+        +venue+", and give its exact title, ISBN-13 and publisher. Museums often state these in a "
+        +"press release; art-book publishers and booksellers list them too.",
       [title+" exhibition catalogue ISBN publisher",
        venue+" "+title+" catalogue book",
-       title+" "+venue+" press release catalogue"]);
-    const detail=s1.detail+"\n"+s2.detail;
+       venue+" "+title+" press release catalogue"]);
+    detail=(detail?detail+"\n":"")+s2.detail;
     if(!s2.ok)return{row,detail,ok:false};
-    if(!s2.results.length) return settle(row,{},dom,detail);
-
+    if(!s2.results.length)return settle(row,{},dom,detail,false);
     const r2=await readResults(READ_RULES
       +"\nExhibition: "+title+"\nVenue: "+venue+(dom?"\nIts shop is at "+dom:"")+"\n\n"
       +resultsForPrompt(s2.results)+READ_SHAPE);
-    if(!r2.ok)return{row,detail:detail+"\n"+r2.detail,ok:false};
-    return settle(row,r2.data||{},dom,detail+"\n"+r2.detail);
+    detail=detail+"\n"+r2.detail;
+    if(!r2.ok)return{row,detail,ok:false};
+    return settle(row,r2.data||{},dom,detail,false);
   }
 
   async function findOneCat(id){setBusy(true);setBusyId(id);setError(null);const row=rows.find(r=>r.id===id);const out=await lookupCat(row);setDebug(out.detail);if(out.ok)await commit(rows.map(r=>r.id===id?out.row:r));else setError("Catalogue search failed for \u201c"+row.title+"\u201d.");setBusy(false);setBusyId(null);setLookPhase(null);}
@@ -1306,7 +1304,7 @@ export default function App(){
           let header=null;
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
           const lead=brk||header;
-          const t=tierFor(r),tier=TIERS[t],mu=MU[r.museumId],mo=moSince(r.endDate),isOpen=openCards[r.id],noCat=r.looked&&r.hasCatalogue==="no",unsure=r.looked&&r.hasCatalogue==="unknown",isAcq=r.acquiring==="acquired",dismissed=!r.interested,isBusy=busyId===r.id;
+          const t=tierFor(r),tier=TIERS[t],mu=MU[r.museumId],mo=moSince(r.endDate),isOpen=openCards[r.id],noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested,isBusy=busyId===r.id;
           const searchingLabel=lookPhase==="shop"?"Searching venue shop\u2026":lookPhase==="web"?"Searching more broadly\u2026":"Searching\u2026";
           if(dismissed)return(
             <React.Fragment key={r.id}>{lead}
@@ -1373,18 +1371,6 @@ export default function App(){
                     <div>
                       <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>
                       <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{isBusy?searchingLabel:"Search again"}</button>
-                    </div>
-                  ):unsure?(
-                    /* SEARCHED, NOTHING CONCLUSIVE — deliberately its own state.
-                       It is not "no catalogue", and showing it as one is how a
-                       book gets missed: a museum's shop can list nothing but
-                       souvenirs while its press release carries the ISBN. */
-                    <div>
-                      <p style={{fontSize:12,color:C.soft,margin:"0 0 4px"}}>Searched, but nothing definite came back.</p>
-                      <p style={{fontSize:11,color:C.soft,margin:"0 0 8px",lineHeight:1.45}}>
-                        {"This is not the same as \u201cno catalogue\u201d \u2014 it means the search couldn\u2019t settle it. Worth trying again, or opening the exhibition\u2019s own page above."}
-                      </p>
-                      <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{...pBtn,padding:"6px 12px",fontSize:12}}>{isBusy?searchingLabel:"Search again"}</button>
                     </div>
                   ):(
                     <div>
