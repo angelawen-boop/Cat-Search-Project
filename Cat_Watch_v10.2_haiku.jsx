@@ -1491,7 +1491,7 @@ export default function App(){
             what may never enter the ledger, and it holds whether or not a
             sweep ever happens again. */}
         {hasLedger&&ignored.length>0&&<div style={{marginTop:6,fontSize:12,color:C.soft}}>
-          <button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:12,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide quarantine":ignored.length+" in quarantine"}</button>
+          <button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:12,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>
         </div>}
 
         {/* NOT GATED ON A LEDGER BEING OPEN. The sweep log is not part of her
@@ -1956,7 +1956,7 @@ export default function App(){
                             on a screen that already carries plenty — her
                             warning. A venue with nothing left says nothing. */}
                         {(()=>{const u=grp.filter(({p,i})=>isUndecided(p,i)).length;
-                          return u>0?<span style={{fontSize:11,fontWeight:600,color:C.soft,marginLeft:"auto"}}>{u} to decide</span>:null;})()}
+                          return u>0?<span style={{fontSize:11,fontWeight:600,color:C.soft}}>{"\u00b7 "+u+" to decide"}</span>:null;})()}
                       </button>
                       {vOpen&&grp.map(({p,i})=>renderProposalCard(p,i))}
                     </div>
