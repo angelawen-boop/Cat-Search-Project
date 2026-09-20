@@ -922,7 +922,11 @@ have cards. The quarantine shelf is **12.5px in the body ink** — it was 10.5
 and muted, "tiny AND faint", and it is a list of decisions she may need to
 UNDO. "Put back" is **"Remove from quarantine"**; the toggle says
 **"Quarantine - 3"**, on **its own row**, because a quarantine is a standing
-decision and not part of refreshing. **"n to decide" sits beside the venue's
+decision and not part of refreshing. **A QUARANTINE THAT CANNOT SAVE IS A
+BANNER, NOT A FOOTNOTE** — it printed inside the panel, which she would have to
+open to find, while the rows sat on screen looking normal and nothing was being
+written; it now borrows the unsaved-changes banner, because it means the same
+thing, and it is not gated on a ledger being open. **"n to decide" sits beside the venue's
 own count, not pushed to the right-hand edge** — her ruling on seeing it, and
 the same reasoning as the heading being the control: across a full-width row
 the eye has to cross the screen to pair a number with the venue it belongs to.
@@ -2055,6 +2059,34 @@ Each entry cost a real failure. Before changing the area, read the line.
    - **Per-venue freshness** — **TWO facts**: last SWEPT and last RETURNED REAL
      ROWS, both dated from the file's `swept_at`, both kept in the page's store.
 
+   **SIGNED OFF BY HER ON REAL FILES, 20 Sep — intake, refresh status and
+   quarantine are CLOSED.** What she confirmed herself, as opposed to what a
+   fixture asserts: the venue order in all three places it shows; the drawer
+   surviving a reload; the two dates differing at Borghese and Capodimonte and
+   NOT moving when several older sweep files were fed in; import-then-cancel
+   leaving the ledger alone; the ledger gate refusing to fire and the jump
+   finding the next undecided card; collapse/expand; and, on quarantine,
+   marking, the count, surviving Reset, junk staying hidden on a re-import,
+   releasing, the release being written the instant she clicks (she reloaded to
+   check), the backup inside her export, and an OLD export failing to undo a
+   release. Conflict cards and per-field edits were confirmed in earlier
+   sessions.
+
+   **ONE DRILL LEFT, HER CALL, NEXT SESSION: the page's store being wiped and
+   rebuilt from her export.** Nothing in the app can empty that store and
+   nothing she can do by accident will, so the drill needs the store cleared
+   from outside — `ArtifactData` can do it, no new control required. Order:
+   she exports, the store is read back to her, it is emptied, she reloads to
+   see the app know nothing, then loads her export. **Quarantine returns from
+   the export; the sweep dates do not and are not meant to** — they come back
+   from any sweep file, which is a step she takes anyway.
+
+   **THE EXPORT WILL NOT CARRY THE SWEEP LOG — her ruling, 20 Sep, asked and
+   declined.** It could be done safely with quarantine's own latest-wins rule,
+   and it buys one step she was taking regardless, at the cost of putting a
+   fact about the world back inside a document that rolls back — the exact
+   shape of the bug she caught. **Do not re-propose it.**
+
    **STILL HERS TO DO: the 320 decisions against the real file.** Everything
    else on this list is finished.
 
@@ -2172,7 +2204,10 @@ never merge on their own (`sameExhibition` returns false when `museumId` differs
 
 ## 8. Rejected — do not re-propose
 
-Ledger on Claude cloud storage. Google Drive auto-load on open. Saving the ledger to
+The sweep log inside her export (20 Sep — safe with quarantine's merge rule,
+but it returns a fact about the world to a document that rolls back, and one
+sweep file rebuilds it anyway). Ledger on Claude cloud storage. Google Drive
+auto-load on open. Saving the ledger to
 Drive from the app. The app gathering its own exhibition data. Auto-save on every change.
 A confirm-tap after download. Bulk-approve during refresh. In-app field editing. The
 separate readout doc. Excel as the sweep format. Merging the two Tates. Stripping the 110
