@@ -73,16 +73,26 @@ function csvParse(text){
 // Only a card she has not touched at all is undecided. Getting that backwards
 // would make the button unreachable for anyone who rejects anything, which is
 // most of a real sweep.
+// IS THIS ONE CARD STILL UNTOUCHED. The gate counts these and the "jump to the
+// next undecided" button finds them, and THOSE TWO MUST NEVER DISAGREE — a
+// button refusing to fire while the jump says there is nothing left is a dead
+// end with no way out of it. So there is one function and both call it. It was
+// briefly two, which is exactly how that pair of copies begins.
+function isUndecidedCard(p,dec){
+  dec=dec||{};
+  if(p.type==="add")return !dec.mode;
+  if(dec.mode)return false;                       // reject, or "different show"
+  return !Object.values(dec.fields||{}).some(v=>v);
+}
+
 function countDecisions(proposals,decisions){
   let acceptedCount=0,undecidedCount=0;
   (proposals||[]).forEach((p,i)=>{
     const dec=(decisions||{})[i]||{};
-    if(p.type==="add"){ if(dec.mode==="accept")acceptedCount++; else if(!dec.mode)undecidedCount++; return; }
-    // fill/change
+    if(isUndecidedCard(p,dec)){undecidedCount++;return;}
+    if(p.type==="add"){ if(dec.mode==="accept")acceptedCount++; return; }
     if(dec.mode==="addnew"){acceptedCount++;return;}
-    const anyAccept=Object.values(dec.fields||{}).some(v=>v==="accept");
-    const anyDecided=dec.mode||Object.values(dec.fields||{}).some(v=>v);
-    if(anyAccept)acceptedCount++; else if(!anyDecided)undecidedCount++;
+    if(Object.values(dec.fields||{}).some(v=>v==="accept"))acceptedCount++;
   });
   return {acceptedCount,undecidedCount};
 }
@@ -1125,11 +1135,13 @@ export default function App(){
 
   // ---- v9 approval-stage render helpers ----
   const decBtn=(active,color)=>({padding:"3px 9px",borderRadius:4,border:"1px solid "+(active?color:C.rule),background:active?color:"transparent",color:active?"#fff":C.soft,fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"});
+  const isUndecided=(p,i)=>isUndecidedCard(p,decisions[i]);
+
   const renderProposalCard=(p,i)=>{
     const dec=decisions[i]||{};
     const infoRow=(label,val)=><div style={{marginBottom:2}}><b style={{color:C.ink}}>{label}:</b> {val&&String(val).trim()?val:<span style={{color:C.muted}}>{"\u2014"}</span>}</div>;
     return(
-      <div key={i} style={{border:"1px solid "+C.rule,borderRadius:6,background:C.card,padding:"10px 12px",marginBottom:8}}>
+      <div key={i} id={"prop-"+i} style={{border:"1px solid "+C.rule,borderRadius:6,background:C.card,padding:"10px 12px",marginBottom:8}}>
         <div style={{fontSize:13,fontWeight:600,color:C.ink,marginBottom:4}}>{p.title}</div>
 
 
@@ -1254,12 +1266,29 @@ export default function App(){
               Collapsed by default: 21 venues is a wall, and the question is
               occasional. */}
           {Object.keys(venueSeen).length>0&&<button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide venues":"By venue"}</button>}
-          {ignored.length>0&&<button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide never-added":ignored.length+" never added"}</button>}
+        </div>}
+        {/* QUARANTINE SITS ON ITS OWN ROW — her ruling, 20 Sep. It had been
+            tucked in beside the refresh line, which reads as though it is part
+            of refreshing. It is not: a quarantine is a standing decision about
+            what may never enter the ledger, and it holds whether or not a
+            sweep ever happens again. */}
+        {hasLedger&&ignored.length>0&&<div style={{marginTop:6,fontSize:12,color:C.soft}}>
+          <button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:12,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide quarantine":ignored.length+" in quarantine"}</button>
         </div>}
 
         {hasLedger&&showFresh&&<div style={{marginTop:6,padding:"8px 10px",background:"#DDD8D0",border:"1px solid "+C.rule,borderRadius:4}}>
           <div style={{fontSize:10,color:C.soft,marginBottom:6,lineHeight:1.5}}>
-            {"When each venue was last swept, and when it last actually gave us exhibitions. A venue tried recently but with no rows since an older date is being refused \u2014 worth a solo re-run."}
+            {"When each venue last reached you, and whether it brought exhibitions. A venue appearing with no rows is being refused \u2014 worth a solo re-run."}
+          </div>
+          {/* THESE ARE IMPORT TIMES, NOT SWEEP TIMES, AND THE SCREEN MUST NOT
+              PRETEND OTHERWISE — her finding, 20 Sep. The column said "tried"
+              against the moment she pressed Import, while the sweep itself may
+              have run twenty minutes or four days earlier, and a stitched file
+              mixes venues swept at DIFFERENT times on two machines. The file
+              carries no sweep time to read, so until it does this says what it
+              actually knows. */}
+          <div style={{fontSize:10,color:C.accent,marginBottom:6,lineHeight:1.5}}>
+            {"Dated by when you imported the file, not by when the sweep ran \u2014 the file doesn\u2019t carry the sweep\u2019s own time yet."}
           </div>
           {MUSEUMS.map(m=>{
             const v=venueSeen[m.id]; if(!v)return null;
@@ -1267,9 +1296,9 @@ export default function App(){
             return(
               <div key={m.id} style={{display:"flex",gap:8,fontSize:10.5,color:C.soft,padding:"2px 0",alignItems:"baseline"}}>
                 <span style={{minWidth:130,color:C.ink}}>{m.short}</span>
-                <span style={{minWidth:150}}>tried {fmtRefresh(v.attempted)}</span>
+                <span style={{minWidth:150}}>imported {fmtRefresh(v.attempted)}</span>
                 <span style={{color:v.returned?(stale?TIERS.urgent.ink:C.soft):TIERS.urgent.ink,fontWeight:stale||!v.returned?600:400}}>
-                  {v.returned?("rows "+fmtRefresh(v.returned)):"never returned any rows"}
+                  {v.returned?("with rows "+fmtRefresh(v.returned)):"no rows \u2014 refused"}
                 </span>
               </div>
             );
@@ -1281,14 +1310,18 @@ export default function App(){
         </div>}
 
         {hasLedger&&showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:"#DDD8D0",border:"1px solid "+C.rule,borderRadius:4}}>
-          <div style={{fontSize:10,color:C.soft,marginBottom:6,lineHeight:1.5}}>
-            {"Rows you said should never be entries. They are skipped on every import. Putting one back only makes it offer itself again on the next sweep \u2014 it does not add anything to your ledger."}
+          {/* BIG ENOUGH TO READ — her finding, 20 Sep: "tiny AND faint". This
+              is a list of decisions she may need to UNDO, so it cannot be the
+              smallest, palest text on the screen. Set at or above the filter
+              chips below it, in the body ink rather than the muted grey. */}
+          <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
+            {"Rows you said should never be entries. They are skipped on every import. Taking one out of quarantine only makes it offer itself again on the next sweep \u2014 it does not add anything to your ledger."}
           </div>
           {ignored.map(x=>(
-            <div key={x.key} style={{display:"flex",gap:8,fontSize:10.5,color:C.soft,padding:"3px 0",alignItems:"baseline"}}>
-              <span style={{minWidth:130,color:C.ink}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
+            <div key={x.key} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
+              <span style={{minWidth:130,fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
               <span style={{flex:1}}>{x.title||"(no title)"}</span>
-              <button onClick={()=>{setIgnored(ignored.filter(y=>y.key!==x.key));setDirty(true);}} style={{background:"none",border:"none",color:C.action,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>Put back</button>
+              <button onClick={()=>{setIgnored(ignored.filter(y=>y.key!==x.key));setDirty(true);}} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Remove from quarantine</button>
             </div>
           ))}
         </div>}
@@ -1697,6 +1730,14 @@ export default function App(){
                         <span style={{fontSize:10,lineHeight:1,width:10,display:"inline-block",transform:vOpen?"rotate(90deg)":"none",transition:"transform .12s"}}>{"\u25B6"}</span>
                         <span style={{fontSize:14,letterSpacing:"0.01em",fontWeight:700}}>{m.short}</span>
                         <span style={{fontSize:12,fontWeight:700}}>{"\u00b7"} {grp.length}</span>
+                        {/* THE UNDECIDED COUNT PER VENUE. With a hard gate on
+                            the ledger, a number in the footer says how much is
+                            left but never WHERE, and a collapsed venue hides
+                            its own. Printed on the heading, a closed venue
+                            still declares what it is holding. */}
+                        {(()=>{const u=grp.filter(({p,i})=>isUndecided(p,i)).length;
+                          return u>0?<span style={{fontSize:11,fontWeight:600,color:C.soft,marginLeft:"auto"}}>{u} to decide</span>:
+                            <span style={{fontSize:11,fontWeight:600,color:C.action,marginLeft:"auto"}}>all decided</span>;})()}
                       </button>
                       {vOpen&&grp.map(({p,i})=>renderProposalCard(p,i))}
                     </div>
@@ -1706,8 +1747,22 @@ export default function App(){
             </div>
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
               <button onClick={cancelRefresh} style={sBtn}>Cancel refresh</button>
-              <span style={{fontSize:11.5,color:undecidedCount>0?C.accent:C.soft,marginLeft:"auto"}}>
-                {acceptedCount} to apply {"\u00b7"} {undecidedCount} undecided</span>
+              <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>{acceptedCount} to apply</span>
+              {/* THE COUNT IS THE WAY TO REACH ONE — raised as the gap the
+                  block leaves and built at her ask. A number she cannot act on
+                  is the thing that makes a hard gate feel arbitrary. It opens
+                  the venue holding the first undecided card, because a
+                  collapsed venue would otherwise scroll to nothing. */}
+              {undecidedCount>0&&<button onClick={()=>{
+                  const hit=proposals.findIndex((p,i)=>isUndecided(p,i));
+                  if(hit<0)return;
+                  const v=proposals[hit].venueId;
+                  if(v)setOpenVenues(o=>({...o,[v]:true}));
+                  setOpenBands(o=>({...o,merged:true,mergedconf:true,nolink:true}));
+                  setTimeout(()=>{const el=document.getElementById("prop-"+hit);
+                    if(el)el.scrollIntoView({behavior:"smooth",block:"center"});},60);
+                }} style={{...sBtn,color:C.accent,borderColor:C.accent,fontWeight:600}}>
+                {undecidedCount} undecided {"\u2192"}</button>}
               {/* EVERY CARD MUST BE DECIDED BEFORE THE LEDGER MOVES — her ruling,
                   20 Sep. applyRefresh SKIPPED an undecided card silently: not
                   applied, and not remembered either, so it returned on the next

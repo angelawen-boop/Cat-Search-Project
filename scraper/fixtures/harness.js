@@ -67,6 +67,7 @@ return {
   setRows: next => { rows = next; },
   getRows: () => rows,
   countDecisions,
+  isUndecidedCard,
   MUSEUMS, MU, KNOWN_VENUES,
 };
 `;

@@ -217,4 +217,34 @@ check('18f: the real sample file starts with every card undecided',
   !gateFile.error&&gateFile.props.length>0&&g.undecidedCount===gateFile.props.length,
   {rows:gateFile.props&&gateFile.props.length,undecided:g.undecidedCount});
 
+// 18g. THE GATE AND THE JUMP MUST AGREE. The footer refuses to fire while
+// undecidedCount > 0; the "n undecided" button finds the FIRST card
+// isUndecidedCard says is untouched and scrolls to it. If those two ever
+// disagree the app is a dead end: a button that will not fire, and a jump that
+// insists there is nothing left to do. They were briefly two copies of one
+// rule, which is how every such pair starts. Now countDecisions calls
+// isUndecidedCard, and this asserts the arithmetic across every decision shape.
+{
+  const props=[
+    {type:'add'},                                             // untouched
+    {type:'add'},                                             // accepted
+    {type:'add'},                                             // rejected
+    {type:'add'},                                             // quarantined
+    {type:'change',upd:[{field:'a'},{field:'b'}]},            // untouched
+    {type:'change',upd:[{field:'a'},{field:'b'}]},            // one field taken
+    {type:'change',upd:[{field:'a'},{field:'b'}]},            // both refused
+    {type:'fill',upd:[{field:'a'}]},                          // "different show"
+  ];
+  const dec={1:{mode:'accept'},2:{mode:'reject'},3:{mode:'never'},
+             5:{fields:{0:'accept'}},6:{fields:{0:'reject',1:'reject'}},
+             7:{mode:'addnew'}};
+  const byCard=props.filter((p,i)=>H.isUndecidedCard(p,dec[i])).length;
+  const g2=H.countDecisions(props,dec);
+  check('18g: the jump and the gate count the same cards', byCard===g2.undecidedCount,
+    {jump:byCard,gate:g2.undecidedCount});
+  check('18g1: and it is the two untouched ones', byCard===2, {byCard});
+  check('18g2: accepted, taken and "different show" are the three to apply',
+    g2.acceptedCount===3, g2);
+}
+
 process.exit(fails?1:0);
