@@ -759,6 +759,36 @@ two brand-new shows and she switched between "is this change right?" and "do I
 want this?" every few cards. Same reasoning as batching the triage bands by kind.
 Closing date because that is the field the whole app is about.
 
+**THE LEDGER WILL NOT MOVE UNTIL EVERY CARD IS DECIDED — her ruling, 20 Sep,
+and she found it by disbelieving a session.** Told she could accept a handful
+and press the button, she said that was not possible: the app made her finish
+first. IT DID NOT. `applyRefresh` skipped an undecided card — not applied, and
+not remembered either, so it returned on the next sweep with nothing on screen
+to say it had been passed over. With 320 cards that is a whole session's
+reading gone on one tap, and she had been relying on a guard nobody had built.
+
+**A BLOCK, NOT A WARNING** — her call, her words: *"otherwise I envision total
+chaos if I can skip. this is SLOW mode at the moment."* A warning she can wave
+through is the same failure one dialogue later. **Do not re-propose a
+confirm-and-continue.**
+
+The button says WHAT IS MISSING — "323 still to decide" — rather than going
+quietly grey, and the undecided figure turns accent red beside it. A dead
+control with no reason attached is what she would be left staring at.
+
+`countDecisions` therefore MOVED OUT OF THE COMPONENT to sit with the pure pro
+forma helpers: it stopped being a label and became the gate, so a fixture has
+to be able to reach it. **REJECTING IS DECIDING** — an Add she turned down, a
+quarantine, an edit whose every field she refused. Were those counted as
+undecided the button would be unreachable for anyone who rejects anything,
+which is most of a real sweep, and it would read as a stuck button rather than
+a counting bug. Fixtures 18 to 18f, verified by flipping the clause and
+watching 18c fail.
+
+**Still open, raised and not built:** with a hard block on 320 cards there is
+no way to FIND the undecided ones, and a collapsed venue hides them. The footer
+gives a number and no route to it.
+
 **COUNTS, AND THE ONE THAT CAN FAIL — 19 Sep.** The screen said "319 proposed
 changes found" and nothing else, which cannot be checked against anything: rows
 leave the pile for three innocent reasons — a marker row, a fold, an entry that
@@ -1644,6 +1674,15 @@ Each entry cost a real failure. Before changing the area, read the line.
 - Putting a DATA FAULT on her approval pile. A row with no title or no venue code
   can only ever mean "re-run the sweep", which is a message to the session, and
   it sat in a band of its own for a week with no check upstream of it.
+- Letting the ledger update run with cards undecided, skipping them silently —
+  not applied, not remembered, back on the next sweep. She believed the guard
+  existed; it never had.
+- Appending fixtures to `intake_cases.js` BELOW its `process.exit`, so they
+  never ran while `npm test` stayed green. The third time this guide has had to
+  record a silent suite. **Grep the output for the new test's own name; a total
+  cannot tell you a case ran.**
+- Claiming to restore a deleted sentence and instead moving its words somewhere
+  else, displacing a different sentence. She caught both.
 - Reporting a card total with nothing to check it against. Rows vanish for three
   innocent reasons, so a total alone cannot tell a fold from a loss.
 - A status line saying "Saved — safe to close" because a button was CLICKED,
