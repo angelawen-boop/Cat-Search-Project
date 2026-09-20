@@ -18,6 +18,18 @@
  * to: every failure of this kind so far has been a reference that does not
  * exist yet when the line runs.
  *
+ * WHAT IT DOES NOT DO, AND THIS MATTERS: IT NEVER RENDERS THE COMPONENT. It
+ * evaluates the module body and checks App exists. On 20 Sep it passed while
+ * the published page was a BLACK SCREEN — the palette had been rewritten to
+ * define itself (drawer: C.drawer), which throws on the first render and not
+ * on load. She found that one too, after I told her it was fixed.
+ *
+ * So this is a floor, not a guarantee, and a green line from it means only
+ * that the file evaluates. Making it real needs react + react-dom to render
+ * the component (renderToString catches exactly that fault), and jsdom on top
+ * if the effects should run. Those are dependencies this repo does not carry
+ * and nobody has agreed to add — see §7.
+ *
  *   node scraper/fixtures/page_loads.js            builds and checks
  */
 'use strict';
