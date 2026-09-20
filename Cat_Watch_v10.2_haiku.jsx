@@ -1486,7 +1486,6 @@ export default function App(){
                 </div>
                 );
               })()}
-              <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.5}}>Review each one below. Nothing changes in your ledger until you tap {"\u201c"}Go ahead and update the ledger{"\u201d"}.</div>
             </div>
             <div style={{overflow:"auto",padding:"12px 18px",flex:1}}>
               {/* TRIAGE FIRST, THEN THE ORDINARY WORK — her ruling, 13 Sep.
@@ -1619,7 +1618,28 @@ export default function App(){
                       <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing. Accept or reject each.</div>
                     </div>
                   )}
-                  {MUSEUMS.map(m=>{const grp=ordinary.filter(x=>x.p.venueId===m.id);if(!grp.length)return null;return(
+                  {/* ORDER INSIDE A VENUE — her ruling 20 Sep. It was FILE
+                      ORDER, which is the order the scraper read the venue's
+                      pages, so an edit to something she owns sat between two
+                      brand-new shows and she switched between "is this change
+                      right?" and "do I want this?" every few cards. Same
+                      reasoning as batching the triage bands by kind.
+
+                      Fills, then edits, then new. Within each, NEWEST CLOSING
+                      DATE FIRST, because that is the field the whole app is
+                      about — how close the catalogue is to going out of print.
+                      A row with no closing date has nothing to sort on, so it
+                      sits at the BOTTOM of its group rather than being given a
+                      position it did not earn. */}
+                  {MUSEUMS.map(m=>{
+                    const rank={fill:0,change:1,add:2};
+                    const grp=ordinary.filter(x=>x.p.venueId===m.id).slice().sort((a,b)=>{
+                      const d=(rank[a.p.type]??9)-(rank[b.p.type]??9); if(d!==0)return d;
+                      const ae=a.p.cand&&a.p.cand.endDate, be=b.p.cand&&b.p.cand.endDate;
+                      if(!ae&&!be)return 0; if(!ae)return 1; if(!be)return -1;
+                      return be.localeCompare(ae);
+                    });
+                    if(!grp.length)return null;return(
                     <div key={m.id} style={{marginBottom:14}}>
                       <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
                       {grp.map(({p,i})=>renderProposalCard(p,i))}
