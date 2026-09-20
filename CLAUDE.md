@@ -685,6 +685,23 @@ for what does. Batched by kind means a venue can appear twice on the screen; she
 would rather finish one kind of thinking than keep switching. Venue headings sit
 inside every band, in the same order as the ordinary list below.
 
+**BAND 5 IS UNREACHABLE — 20 Sep, and it is a candidate to delete like band 2.**
+It was meant to hold a disagreement that did NOT come from combining two rows.
+There is no such thing: a disagreement is only ever recorded while folding, and
+a fold always flags the card, so every conflict is band 4. It stays on screen
+for now, empty, on her instruction — she wants a live case before removing it,
+and there cannot be one. Band 2 is in the same position for a different reason:
+the sweep log's exceptions report and the session's own review of the CSV are
+supposed to stop an unusable row ever reaching her. **Her call, not a session's.**
+
+**WHICH BAND A CARD IS IN IS THE FOLD'S OWN FLAG, never words in the notes.**
+It used to search the notes for "same exhibition" — and `noteTravellingRuns()`
+writes "The same exhibition is also shown at Palm Beach." Acquavella's two runs
+of *Portraiture*, two real shows at two addresses with nothing combined, were
+filed under "combined for you, nothing to decide" with a heading that stated
+something untrue about them. `analyzeProForma` now sets `merged` from
+`mergedFrom` and the band reads that. Fixture 16.
+
 **COUNTS, AND THE ONE THAT CAN FAIL — 19 Sep.** The screen said "319 proposed
 changes found" and nothing else, which cannot be checked against anything: rows
 leave the pile for three innocent reasons — a marker row, a fold, an entry that
@@ -1513,6 +1530,10 @@ Each entry cost a real failure. Before changing the area, read the line.
   came back as proposed rewrites — and then fixing it by making her wording win on
   EVERY run, which is a revert machine. **The repair had to be a flag, not a rule**;
   reasoning in §5.
+- Deciding which triage band a card belongs in by searching its notes for the
+  words "same exhibition", which the sweeper also writes for a travelling show —
+  two Acquavella cards filed as "combined for you" with nothing combined. **A
+  fact the code already knows is never re-derived from prose written for a human.**
 - Reporting a card total with nothing to check it against. Rows vanish for three
   innocent reasons, so a total alone cannot tell a fold from a loss.
 - A status line saying "Saved — safe to close" because a button was CLICKED,
