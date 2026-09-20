@@ -30,12 +30,25 @@ r=H.analyzeProForma(hdr
  +row(['louvre','Mamluks','2025-01-01','2025-05-01','Two.','','']));
 check('no URL -> two separate cards', r.props.length===2, r.props.map(p=>p.type));
 
-// 5. bad venue / bad date
+// 5. A FAULTY ROW REFUSES THE WHOLE FILE — her ruling 20 Sep. No title and no
+// venue code are data faults, not triage: the only outcome was ever "re-run the
+// sweep", which is a message to the session. The file is refused, the LINE
+// NUMBERS are named, and she is told there is nothing here for her to fix.
+// A bad DATE is not in that class: the row is still an exhibition, so it is
+// blanked and noted on the card, exactly as before.
 r=H.analyzeProForma(hdr
- +row(['nosuch','X','','','','','' ])
- +row(['louvre','Y','not-a-date','','','https://louvre.fr/y','']));
-check('unknown venue -> problem card', r.props.filter(p=>p.type==='problem').length===1, r.props);
-check('bad date noted, not absorbed', r.props.some(p=>p.notes&&p.notes.some(n=>n.includes("couldn't be read"))), r.props);
+ +row(['nosuch','X','','','','',''])
+ +row(['louvre','Y','2025-01-01','','','https://louvre.fr/y','']));
+check('unknown venue -> whole file refused', !!r.error && !r.props, r);
+check('  the refusal names the line', !!r.error && r.error.includes('line 2'), r.error);
+check('  and tells her it is not hers to fix', !!r.error && /give these line numbers back to Claude/.test(r.error), r.error);
+
+r=H.analyzeProForma(hdr+row(['louvre','','','','','https://louvre.fr/z','']));
+check('no title -> whole file refused', !!r.error && r.error.includes('no exhibition title'), r.error);
+
+r=H.analyzeProForma(hdr+row(['louvre','Y','not-a-date','','','https://louvre.fr/y','']));
+check('a bad DATE is still an ordinary card', r.props.length===1 && r.props[0].type==='add', r.props);
+check('  blanked and noted, not absorbed', r.props[0].notes.some(n=>n.includes("couldn't be read")), r.props[0].notes);
 
 // 6. case-only URL difference must NOT merge (path is case-sensitive)
 r=H.analyzeProForma(hdr
@@ -110,7 +123,7 @@ const mixed=hdr
  +row(['louvre','B','2025-03-01','2025-04-01','Another.','https://louvre.fr/b',''])
  +row(['louvre','Junk','','','','https://louvre.fr/junk','']);
 const t=H.analyzeProForma(mixed,new Set([H.ignoreKeyFor('louvre','https://louvre.fr/junk','Junk')])).tally;
-const cards=t.add+t.fill+t.change+t.unusable;
+const cards=t.add+t.fill+t.change;   // no 'unusable' term: a faulty row refuses the file (case 5)
 check('file rows = markers + never-add + folds + already-matching + cards',
       t.fileRows===t.markers+t.blocked+t.folded+t.silent+cards,
       {...t,cards});

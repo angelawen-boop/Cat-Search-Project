@@ -15,6 +15,7 @@ const fs = require('fs');
 const path = require('path');
 
 const C = require('./compress.js');
+const QC = require('./qc.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const RAW_CSV = 'sweep.csv';
@@ -95,6 +96,17 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   if (!fs.existsSync(rawPath)) {
     say(`No ${RAW_CSV} in ${dir}. Run the sweep first.`);
     process.exit(1);
+  }
+  // SAY IT BEFORE THE TOKENS ARE SPENT, not after. --apply refuses on a faulty
+  // row, and finding that out only at the end means the whole compression was
+  // paid for against a file that could never be handed over.
+  {
+    const q = QC.inspect(dir);
+    if (!q.error && (q.fatal.length || q.exceptions.length)) { QC.report(q); say(''); }
+    if (!q.error && q.fatal.length) {
+      say('--apply WILL REFUSE while those rows are there. Re-run the venues named,');
+      say('or fix their recipes, before spending anything on compression.\n');
+    }
   }
 
   const rows = C.readProForma(rawPath);
@@ -467,7 +479,19 @@ function main(argv) {
 
   if (flags.has('--check')) { check(dir); return; }
   if (flags.has('--apply')) {
-    // The gate, not a suggestion. See check().
+    // TWO GATES, AND THEY GUARD DIFFERENT THINGS. check() reads the MODEL's
+    // answers — length, fences, HTML. qc reads the SWEEP's rows, and a row with
+    // no title or no venue code is a data fault that must never reach the file
+    // she imports. Her ruling 20 Sep: that belongs to the session, never to her
+    // approval pile, so it is refused here rather than shown to her there.
+    const q = QC.inspect(dir);
+    if (q.error) { say(q.error); process.exit(1); }
+    if (q.fatal.length) {
+      QC.report(q);
+      say(`\nNOT WRITING ${COMPRESSED_CSV}. Re-run the venues named above, or fix their`);
+      say('recipes, then sweep and compress again. Do not hand her this file.');
+      process.exit(1);
+    }
     if (!check(dir)) process.exit(1);
     apply(dir);
   } else plan(dir, { recompress: flags.has('--recompress'), seedWins: flags.has('--seed-wins') });

@@ -633,6 +633,9 @@ export default function App(){
     // 652 rows arriving as 319 cards there is no way to tell those apart from
     // a row silently lost. Every row read is accounted for by one of these.
     let silent=0, blocked=0;
+    // Rows the sweep should never have produced. Collected, then the whole file
+    // is refused — see the note at the check itself.
+    const faults=[];
 
     // ── PASS ONE: read the file. No comparison to anything yet. ──────────────
     // Split out because one stitched file now holds every machine's output, so
@@ -655,8 +658,20 @@ export default function App(){
       if(KNOWN_VENUES.has(vc)&&title) returned.add(vc);
 
       const notes=[];
-      if(!vc||!KNOWN_VENUES.has(vc)){ props.push({type:"problem",venueId:null,venueShort:vc||"(blank)",title:title||"(no title)",problem:"Venue code "+(vc?("\u201c"+vc+"\u201d"):"(blank)")+" isn't a known venue \u2014 this row can't be filed.",notes:[],line}); continue; }
-      if(!title){ props.push({type:"problem",venueId:vc,venueShort:MU[vc].short,title:"(no title)",problem:"This row has no exhibition title \u2014 it can't be added.",notes:[],line}); continue; }
+      // A FAULTY ROW IS NOT HER PROBLEM — her ruling, 20 Sep 2026. A row with no
+      // title or no venue code is a DATA FAULT: there is no such thing as an
+      // exhibition with no name, and a row always came from somewhere, so a
+      // missing code means the file is malformed. Neither can be resolved by
+      // looking at a card, and the only outcome was ever "fix the sweep and
+      // feed it again" — a message to the session, printed on her screen.
+      //
+      // They used to be a band of their own. Now the file is REFUSED whole, so
+      // she never triages one, and `scraper/qc.js` stops it upstream: it runs
+      // at the end of every sweep and gates compress --apply, so the file she
+      // imports cannot contain one. This check stays as the last line, and it
+      // says WHICH LINES so the session can fix them without asking her.
+      if(!vc||!KNOWN_VENUES.has(vc)){ faults.push("line "+line+": venue code "+(vc?("\u201c"+vc+"\u201d"):"is blank")+(vc?" isn\u2019t one of the 21 venues":"")); continue; }
+      if(!title){ faults.push("line "+line+": no exhibition title"+(get(r,"url")?" \u2014 "+get(r,"url"):"")); continue; }
       let sd=get(r,"start_date"), ed=get(r,"end_date"), url=get(r,"url");
       if(sd&&!isValidYMD(sd)){notes.push("Start date \u201c"+sd+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");sd="";}
       if(ed&&!isValidYMD(ed)){notes.push("End date \u201c"+ed+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");ed="";}
@@ -669,6 +684,14 @@ export default function App(){
                    rowNotes:rowNote?["Sweeper note: "+rowNote]:[],parseNotes:notes,line});
     }
 
+    // THE FILE IS REFUSED WHOLE, not row by row. A sweep that produced a
+    // nameless row is a sweep to re-run, and importing the rest of it would
+    // quietly leave that exhibition out.
+    if(faults.length){
+      return { error:"This sweep file has "+faults.length+" faulty row"+(faults.length===1?"":"s")+
+        " and hasn\u2019t been imported. Nothing here is for you to fix \u2014 give these line numbers back to Claude:\n\n"+
+        faults.slice(0,12).join("\n")+(faults.length>12?"\n\u2026and "+(faults.length-12)+" more.":"") };
+    }
     // ── PASS TWO: fold rows that are the same exhibition. ────────────────────
     const folded=foldDuplicateRows(parsed);
 
@@ -714,7 +737,6 @@ export default function App(){
       fileRows:  table.length-1,
       markers:   coverage.length,
       folded:    parsed.length-folded.length,
-      unusable:  props.filter(p=>p.type==="problem").length,
       add:       props.filter(p=>p.type==="add").length,
       fill:      props.filter(p=>p.type==="fill").length,
       change:    props.filter(p=>p.type==="change").length,
@@ -741,7 +763,7 @@ export default function App(){
     reader.readAsText(file); e.target.value="";
   }
 
-  // Decision model. Each card holds: {mode} for add/problem ("accept"/"reject"),
+  // Decision model. Each card holds: {mode} for an add ("accept"/"reject"/"never"),
   // or {fields:{j:"accept"|"reject"}, mode:"addnew"?} for fill/change.
   const setCardMode=(i,v)=>setDecisions(d=>{const cur=d[i]||{};return{...d,[i]:{...cur,mode:cur.mode===v?undefined:v}};});
   // Which value she picked where the file disagreed with itself. Per card, per
@@ -778,7 +800,6 @@ export default function App(){
     let added=0,filled=0,changed=0;
     proposals.forEach((p,i)=>{
       const dec=decisions[i]||{};
-      if(p.type==="problem")return;
       if(p.type==="add"){
         if(dec.mode==="never"){
           const c=p.cand;
@@ -1078,7 +1099,6 @@ export default function App(){
       <div key={i} style={{border:"1px solid "+C.rule,borderRadius:6,background:C.card,padding:"10px 12px",marginBottom:8}}>
         <div style={{fontSize:13,fontWeight:600,color:C.ink,marginBottom:4}}>{p.title}</div>
 
-        {p.type==="problem"&&<div style={{fontSize:12,color:"#6B2E2E"}}>{p.problem}</div>}
 
         {p.type==="add"&&<div style={{fontSize:11.5,color:C.ink,lineHeight:1.5}}>
           <div style={{fontWeight:700,marginBottom:3}}>{"New show \u2014 not in your ledger yet."}</div>
@@ -1145,13 +1165,11 @@ export default function App(){
           <button onClick={()=>setCardMode(i,"addnew")} style={decBtn(dec.mode==="addnew","#4A5A6B")}>{dec.mode==="addnew"?"\u2713 ":""}{"No \u2014 this is a different show, add as separate entry"}</button>
         </div>}
 
-        {p.type==="problem"&&<div style={{marginTop:8}}><button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject","#8A6D3B")}>{dec.mode==="reject"?"\u2713 ":""}Dismiss</button></div>}
       </div>
     );
   };
   let acceptedCount=0,undecidedCount=0;
   if(proposals)proposals.forEach((p,i)=>{
-    if(p.type==="problem")return;
     const dec=decisions[i]||{};
     if(p.type==="add"){ if(dec.mode==="accept")acceptedCount++; else if(!dec.mode)undecidedCount++; return; }
     // fill/change
@@ -1447,7 +1465,7 @@ export default function App(){
                   anywhere. Every term stays — drop one and the arithmetic
                   stops closing, which is the only thing these lines are for. */}
               {tally&&(()=>{
-                const cards=tally.add+tally.fill+tally.change+tally.unusable;
+                const cards=tally.add+tally.fill+tally.change;
                 const n=(v,tone)=><b style={{color:tone||C.ink}}>{v}</b>;
                 return (
                 <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.6}}>
@@ -1464,7 +1482,6 @@ export default function App(){
                     {" \u2014 "}{n(tally.fill)} fill a gap
                     {", "}{n(tally.change)} edit existing data
                     {", "}{n(tally.add)} new exhibition{tally.add===1?"":"s"}
-                    {tally.unusable>0&&<>{", "}{n(tally.unusable,C.accent)} couldn{"\u2019"}t be filed</>}
                   </div>
                 </div>
                 );
@@ -1488,8 +1505,11 @@ export default function App(){
                 const at=proposals.map((p,i)=>({p,i}));
                 const vOrder=m=>{const k=MUSEUMS.findIndex(x=>x.id===m);return k<0?999:k;};
                 const byVenue=a=>a.slice().sort((x,y)=>vOrder(x.p.venueId)-vOrder(y.p.venueId));
-                const scrap   = at.filter(x=>x.p.type==="problem");
-                const real    = at.filter(x=>x.p.type!=="problem");
+                // NO "UNUSABLE" BAND — her ruling 20 Sep. A row with no title
+                // or no venue code never gets this far: analyzeProForma refuses
+                // the whole file and names the lines for the session, and
+                // scraper/qc.js stops it upstream. Nothing faulty is triage.
+                const real    = at;
                 // WAS THIS CARD BUILT FROM MORE THAN ONE ROW? Ask the fold
                 // itself, via the flag it sets. This used to search the notes
                 // for the words "same exhibition", and the sweeper writes those
@@ -1508,7 +1528,7 @@ export default function App(){
                 // NO LINK AT ALL — band 6, her ruling 13 Sep. These rows are
                 // perfectly usable: a title, dates and a description, and the
                 // card's arrow falls back to the venue's own listing. So they
-                // are NOT scrap and do not belong in band 2.
+                // are NOT faulty: everything is present except the link.
                 //
                 // They are shown together because of what the missing link
                 // costs LATER, invisibly: it is the only key that can fold two
@@ -1560,7 +1580,7 @@ export default function App(){
                 // five card bands, so the heading read "Odd cases first \u00b7 0"
                 // directly above a band of its own saying 9 \u2014 a total that
                 // left out one of the things it was totalling.
-                const oddCount=coverage.length+scrap.length+mergedOnly.length+mergedConf.length+confOnly.length+noLink.length;
+                const oddCount=coverage.length+mergedOnly.length+mergedConf.length+confOnly.length+noLink.length;
                 const markerBlocks=MUSEUMS.map(m=>{
                   const grp=coverage.filter(cv=>cv.venueId===m.id);
                   if(!grp.length)return null;
@@ -1581,7 +1601,6 @@ export default function App(){
                     <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
                       <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>Odd cases {"\u00b7"} {oddCount}</div>
                       {coverage.length>0&&band("markers","1. Marker rows",undefined,coverage.length,false,markerBlocks)}
-                      {scrap.length>0&&band("scrap","2. Unusable rows \u00b7 needs a redo",C.accent,scrap.length,true,byVenueBlocks(scrap))}
                       {mergedOnly.length>0&&band("merged","3. Combined for you \u00b7 nothing to decide",undefined,mergedOnly.length,false,byVenueBlocks(mergedOnly))}
                       {mergedConf.length>0&&band("mergedconf","4. Combined, but one field disagrees \u00b7 needs a choice",C.accent,mergedConf.length,true,byVenueBlocks(mergedConf))}
                       {confOnly.length>0&&band("conf","5. Two different answers \u00b7 needs a choice",C.accent,confOnly.length,true,byVenueBlocks(confOnly))}
