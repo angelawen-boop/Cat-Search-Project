@@ -97,6 +97,25 @@ function countDecisions(proposals,decisions){
   return {acceptedCount,undecidedCount};
 }
 
+// MERGE, NEVER REPLACE — and this is the rule that stops the bug coming back
+// in a new place. Importing an OLD sweep file must not drag a venue's date
+// backwards, so a venue's line only moves when the incoming time is LATER.
+// The two halves move independently: a venue can be tried today and still show
+// an older date for its last real rows, which is the one line that says
+// "re-run this one on its own".
+function mergeSweepLog(prev,seen){
+  const out={...(prev||{})};
+  const later=(a,b)=>(!a||(b&&b>a))?b:a;
+  for(const v of Object.keys((seen&&seen.attempted)||{})){
+    const was=out[v]||{};
+    out[v]={
+      attempted: later(was.attempted, seen.attempted[v]),
+      returned:  later(was.returned,  (seen.returned||{})[v]||null),
+    };
+  }
+  return out;
+}
+
 const TIERS = {
   upcoming:{ label:"Announced", note:"Not open yet. Catalogue usually appears at opening.", ink:"#4A5A6B", wash:"#E1E5EB", time:"upcoming", ord:3 },
   recent:  { label:"Recently opened", note:"Just opened. Catalogue should be available now.", ink:"#2D6B5A", wash:"#D4EDE4", time:"current", ord:0 },
@@ -341,6 +360,56 @@ async function readResults(prompt){
 }
 
 
+// ── THE SWEEP LOG — kept OUTSIDE the ledger, her ruling 20 Sep 2026 ─────────
+//
+// IT USED TO LIVE IN THE LEDGER AND THAT WAS WRONG. Her test settles it:
+// open a backup from two days ago and the drawer said "the Met last brought
+// rows 18 Sep"; open today's and it said 20 Sep. Same world, two answers. A
+// sweep either ran or it did not — opening an older file cannot un-run it.
+//
+// THE DISTINCTION, and it is hers: CONTENT rolls back with a backup and that
+// is correct (fewer exhibitions, her marks as they stood — the document
+// genuinely was smaller then). A FACT ABOUT THE WORLD must not. "The Met was
+// swept on 13 Sep" is true whichever backup she has open. The sweep log is the
+// second kind and it was sitting in the first kind's container.
+//
+// SO IT LIVES IN THIS PAGE'S OWN STORE — one document, one line per venue,
+// twenty-one lines, never growing. It survives Reset, it is there before any
+// ledger is loaded, and loading an old backup does not move it.
+//
+// IT IS A CACHE, NOT A MASTER RECORD, and that is what makes it safe to keep
+// somewhere she cannot export. Every fact in it comes from swept_at in a sweep
+// file, so any sweep file rebuilds it. Losing it costs one re-import, not her
+// work. Her LEDGER could never live here for exactly that reason — it is not
+// derivable from anything.
+const SWEEP_LOG_DOC = "sweeps/venues";
+
+// Returns {log, why} — `why` is null on success and a sentence otherwise. The
+// drawer prints it rather than showing an empty panel, because "no sweeps yet"
+// and "could not reach the store" look identical and mean opposite things.
+async function readSweepLog(){
+  const db=await useCap("db");
+  if(!db) return {log:{},why:"This page can\u2019t reach its sweep log in this viewer."};
+  try{
+    const snap=await db.doc(SWEEP_LOG_DOC).get();
+    if(!snap.exists) return {log:{},why:null};
+    const d=snap.data()||{};
+    const log=(d.venues&&typeof d.venues==="object")?d.venues:{};
+    return {log,why:null};
+  }catch(e){
+    const code=String((e&&e.code)||"");
+    if(code==="not_granted") return {log:{},why:"You declined this page access to its sweep log."};
+    return {log:{},why:"Couldn\u2019t read the sweep log ("+(code||"unknown")+")."};
+  }
+}
+
+async function writeSweepLog(next){
+  const db=await useCap("db");
+  if(!db) return false;
+  try{ await db.doc(SWEEP_LOG_DOC).set({venues:next,updatedAt:new Date().toISOString()}); return true; }
+  catch{ return false; }
+}
+
 const today=()=>new Date().toISOString().slice(0,10);
 function shopDomain(mu){if(!mu||!mu.shopHome)return null;try{return new URL(mu.shopHome).hostname;}catch{return null;}}
 
@@ -414,6 +483,7 @@ export default function App(){
   //   { [venueId]: { attempted: iso, returned: iso|null } }
   const[venueSeen,setVenueSeen]=useState({});
   const[showFresh,setShowFresh]=useState(false);
+  const[freshWhy,setFreshWhy]=useState(null);   // why the sweep log is empty, when it is
   const[seenInFile,setSeenInFile]=useState(null);
   // A download we started but cannot confirm arrived. Never clears `dirty`.
   const[unconfirmedSave,setUnconfirmedSave]=useState(null);
@@ -480,6 +550,11 @@ export default function App(){
     // routine is retired; its helper functions remain dormant below, uncalled.)
     setRows([]);
     setLoaded(true);
+    // The sweep log is NOT part of the ledger, so it loads here rather than on
+    // Import — it is there before any file is opened and it survives Reset.
+    // Read ONCE, not subscribed: she is the only viewer and the only writer,
+    // and a subscription in a component body is how a page ends up in a loop.
+    readSweepLog().then(({log,why})=>{ setVenueSeen(log); setFreshWhy(why); });
   },[]);
 
   // Keep the "Last saved ... ago" text and its colour current.
@@ -501,7 +576,10 @@ export default function App(){
     setRows(next);
     setLastRun(lr!==undefined?lr:null);
     setIgnored((extra&&extra.ignored)||[]);
-    setVenueSeen((extra&&extra.venueSeen)||{});
+    // venueSeen is DELIBERATELY not read from the file. It lives in the page's
+    // own store now — see the sweep log note. Reading it here is exactly the
+    // bug she found: loading a two-day-old backup dragged the sweep dates back
+    // with it, as though opening an older document un-ran a sweep.
     setFirstTime(false);
     setDirty(false);
     
@@ -518,7 +596,7 @@ export default function App(){
     if(driveState==="saving")return;
     setDriveState("saving");setError(null);
     const fname=LEDGER_PREFIX+localStamp()+".json";
-    const payload=JSON.stringify({rows,ignored,venueSeen,lastRun,savedAt:new Date().toISOString(),savedLocal:localReadable()});
+    const payload=JSON.stringify({rows,ignored,lastRun,savedAt:new Date().toISOString(),savedLocal:localReadable()});
     const prompt=
       "Using Google Drive, create a NEW file named \""+fname+"\" whose entire text content is exactly this JSON:\n"+
       payload+"\n"+
@@ -534,7 +612,7 @@ export default function App(){
       setError("Save to Drive FAILED \u2014 your recent changes are NOT backed up. Try again, or use Export ledger to keep a local copy right now.");
       setDebug("Save to Drive FAILED.\n"+r.detail);
     }
-  },[rows,ignored,venueSeen,lastRun,driveState]);
+  },[rows,ignored,lastRun,driveState]);
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
   const clearFilters=()=>{setVenueF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqNoCat(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setSearch("");setShowSearch(false);};
 
@@ -669,7 +747,15 @@ export default function App(){
     // different facts: a venue can be in the sweep and hand back nothing but
     // marker rows, which is a refusal, not an absence. Read off the FILE, not
     // off her decisions — a row she rejects was still collected.
-    const attempted=new Set(), returned=new Set();
+    // DATED BY THE SWEEP, NOT BY THIS MOMENT — her finding, 20 Sep. These used
+    // to be bare sets, and applyRefresh stamped "now" against them, so the
+    // drawer said a venue was tried at the instant she pressed Import. The file
+    // now carries swept_at per ROW, so each venue keeps the LATEST time it was
+    // seen. Per row and not per venue because a stitched file routinely holds
+    // two runs of one venue — which is exactly the case the drawer is for: a
+    // venue tried at 14:26 whose last real rows came at 02:04 is being refused.
+    const attempted={}, returned={};
+    const later=(a,b)=>(!a||(b&&b>a))?b:a;
     // COUNTS SHE CAN RECONCILE AGAINST THE FILE. A card total alone cannot be
     // checked against anything: rows vanish for three innocent reasons — a
     // marker row, a fold, an entry that already matches the ledger — and with
@@ -693,12 +779,13 @@ export default function App(){
       // A LISTING PAGE THAT COULD NOT BE READ IS NOT A PROPOSAL. It goes to the
       // coverage panel, where "we tried and were refused" is what it actually
       // says — rather than becoming an exhibition she rejects on every sweep.
-      if(KNOWN_VENUES.has(vc)) attempted.add(vc);
+      const sweptAt=get(r,"swept_at");
+      if(KNOWN_VENUES.has(vc)) attempted[vc]=later(attempted[vc],sweptAt);
       if(isMarkerRow(rowNote)){
         coverage.push({venueId:KNOWN_VENUES.has(vc)?vc:null,venueShort:KNOWN_VENUES.has(vc)?MU[vc].short:(vc||"(blank)"),what:title||"(a listing page)",why:rowNote,url:get(r,"url"),line});
         continue;
       }
-      if(KNOWN_VENUES.has(vc)&&title) returned.add(vc);
+      if(KNOWN_VENUES.has(vc)&&title) returned[vc]=later(returned[vc],sweptAt);
 
       const notes=[];
       // A FAULTY ROW IS NOT HER PROBLEM — her ruling, 20 Sep 2026. A row with no
@@ -786,8 +873,7 @@ export default function App(){
       silent,
       blocked,
     };
-    return {props,coverage,tally,
-            seen:{attempted:[...attempted],returned:[...returned]}};
+    return {props,coverage,tally,seen:{attempted,returned}};
   }
 
   function handleRefreshFile(e){
@@ -861,16 +947,19 @@ export default function App(){
       if(hit){ patch.editedAt=now; byId.set(p.matchId,patch); touched.push(p.matchId); }
     });
     // FRESHNESS IS A FACT ABOUT THE FILE, NOT ABOUT HER DECISIONS. A row she
-    // rejected was still collected, so the venue was still reached. Stamped
-    // here rather than at import because this is the moment the ledger changes
-    // and gets saved; cancelling the review should leave no trace.
+    // rejected was still collected, so the venue was still reached. Written
+    // here rather than at import because this is the moment she commits to the
+    // file; cancelling the review should leave no trace.
+    //
+    // THE DATES COME FROM THE FILE'S swept_at, never from `now`. `now` was the
+    // bug: it recorded when she pressed the button, and called it "tried".
     if(seenInFile){
-      const vs={...venueSeen};
-      for(const v of seenInFile.attempted){
-        const prev=vs[v]||{};
-        vs[v]={attempted:now,returned:seenInFile.returned.includes(v)?now:(prev.returned||null)};
-      }
+      const vs=mergeSweepLog(venueSeen,seenInFile);
       setVenueSeen(vs);
+      // Fire and forget: the drawer already shows the merged answer, and a
+      // store that refuses is not a reason to fail her import. It is a cache —
+      // the next import of any sweep file rebuilds it.
+      writeSweepLog(vs).then(ok=>{ if(!ok)setFreshWhy("The sweep log couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload."); else setFreshWhy(null); });
     }
     if(newlyIgnored.length){
       const have=new Set(ignored.map(x=>x.key));
@@ -1006,7 +1095,7 @@ export default function App(){
   const toggleWatch=id=>commit(rows.map(r=>r.id===id?{...r,watching:!r.watching}:r));
   const setAcq=(id,v)=>commit(rows.map(r=>r.id===id?{...r,acquiring:r.acquiring===v?null:v}:r));
 
-  function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);if(d&&Array.isArray(d.rows)){loadLedger(d.rows.map(r=>({...r,watching:r.watching||false})),d.lastRun||null,"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",{ignored:Array.isArray(d.ignored)?d.ignored:[],venueSeen:(d.venueSeen&&typeof d.venueSeen==="object")?d.venueSeen:{}});setDebug("Imported "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");}else{setError("That file didn't contain a ledger (no entries found).");}}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");}};reader.readAsText(file);e.target.value="";}
+  function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);if(d&&Array.isArray(d.rows)){loadLedger(d.rows.map(r=>({...r,watching:r.watching||false})),d.lastRun||null,"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",{ignored:Array.isArray(d.ignored)?d.ignored:[]});setDebug("Imported "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");}else{setError("That file didn't contain a ledger (no entries found).");}}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");}};reader.readAsText(file);e.target.value="";}
 
   // Confirm-before-replace: Import and Reset can wipe the screen in one tap, so
   // they ask first WHENEVER there is unsaved work showing.
@@ -1045,7 +1134,7 @@ export default function App(){
     const filename=LEDGER_PREFIX+stamp+".json";
     let data;
     try{
-      data=JSON.stringify({rows,ignored,venueSeen,lastRun,exportedAt:new Date().toISOString(),exportedLocal:localReadable()},null,2);
+      data=JSON.stringify({rows,ignored,lastRun,exportedAt:new Date().toISOString(),exportedLocal:localReadable()},null,2);
     }catch(e){ setError("Export failed while building the file: "+String(e?.message||e)); return; }
 
     // ── 1. the runtime's file handoff ───────────────────────────────────────
@@ -1265,7 +1354,7 @@ export default function App(){
               looks for "when was this last touched", next to the save state.
               Collapsed by default: 21 venues is a wall, and the question is
               occasional. */}
-          {Object.keys(venueSeen).length>0&&<button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide venues":"By venue"}</button>}
+          {(Object.keys(venueSeen).length>0||freshWhy)&&<button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide venues":"By venue"}</button>}
         </div>}
         {/* QUARANTINE SITS ON ITS OWN ROW — her ruling, 20 Sep. It had been
             tucked in beside the refresh line, which reads as though it is part
@@ -1276,29 +1365,27 @@ export default function App(){
           <button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:12,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide quarantine":ignored.length+" in quarantine"}</button>
         </div>}
 
-        {hasLedger&&showFresh&&<div style={{marginTop:6,padding:"8px 10px",background:"#DDD8D0",border:"1px solid "+C.rule,borderRadius:4}}>
+        {/* NOT GATED ON A LEDGER BEING OPEN. The sweep log is not part of her
+            document — it is what this page knows about the world, so it is
+            there on a fresh page and it survives Reset. */}
+        {showFresh&&<div style={{marginTop:6,padding:"8px 10px",background:"#DDD8D0",border:"1px solid "+C.rule,borderRadius:4}}>
           <div style={{fontSize:10,color:C.soft,marginBottom:6,lineHeight:1.5}}>
-            {"When each venue last reached you, and whether it brought exhibitions. A venue appearing with no rows is being refused \u2014 worth a solo re-run."}
+            {"When each venue was last swept, and when it last actually gave us exhibitions. A venue swept recently but with no rows since an older date is being refused \u2014 worth a solo re-run."}
           </div>
-          {/* THESE ARE IMPORT TIMES, NOT SWEEP TIMES, AND THE SCREEN MUST NOT
-              PRETEND OTHERWISE — her finding, 20 Sep. The column said "tried"
-              against the moment she pressed Import, while the sweep itself may
-              have run twenty minutes or four days earlier, and a stitched file
-              mixes venues swept at DIFFERENT times on two machines. The file
-              carries no sweep time to read, so until it does this says what it
-              actually knows. */}
-          <div style={{fontSize:10,color:C.accent,marginBottom:6,lineHeight:1.5}}>
-            {"Dated by when you imported the file, not by when the sweep ran \u2014 the file doesn\u2019t carry the sweep\u2019s own time yet."}
-          </div>
+          {/* "NO SWEEPS YET" AND "COULDN'T READ THE STORE" LOOK IDENTICAL AND
+              MEAN OPPOSITE THINGS, so an empty panel always says which. */}
+          {freshWhy&&<div style={{fontSize:11,color:C.accent,marginBottom:6,lineHeight:1.5}}>{freshWhy}</div>}
+          {!freshWhy&&Object.keys(venueSeen).length===0&&
+            <div style={{fontSize:11,color:C.soft,marginBottom:6}}>{"No sweep imported yet."}</div>}
           {MUSEUMS.map(m=>{
             const v=venueSeen[m.id]; if(!v)return null;
             const stale=v.returned&&v.attempted&&v.returned!==v.attempted;
             return(
               <div key={m.id} style={{display:"flex",gap:8,fontSize:10.5,color:C.soft,padding:"2px 0",alignItems:"baseline"}}>
                 <span style={{minWidth:130,color:C.ink}}>{m.short}</span>
-                <span style={{minWidth:150}}>imported {fmtRefresh(v.attempted)}</span>
+                <span style={{minWidth:150}}>swept {fmtRefresh(v.attempted)}</span>
                 <span style={{color:v.returned?(stale?TIERS.urgent.ink:C.soft):TIERS.urgent.ink,fontWeight:stale||!v.returned?600:400}}>
-                  {v.returned?("with rows "+fmtRefresh(v.returned)):"no rows \u2014 refused"}
+                  {v.returned?("rows "+fmtRefresh(v.returned)):"no rows \u2014 refused"}
                 </span>
               </div>
             );

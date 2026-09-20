@@ -130,15 +130,58 @@ check('file rows = markers + never-add + folds + already-matching + cards',
 
 // 15. FRESHNESS IS TWO FACTS. A venue that answered with nothing but a marker
 // row was reached and refused, which is not the same as never being tried.
+//
+// AND EACH FACT NOW CARRIES A DATE, read from the file's swept_at column
+// (20 Sep). These used to be sets of venue codes and applyRefresh stamped
+// "now" against them — so the drawer dated every venue by the moment she
+// pressed Import and called it "tried". A venue's entry is the LATEST sweep
+// time seen for it in the file.
 H.setRows([]);
-const seenFile=hdr
- +row(['moma','[past page]','','','','https://moma.org/past','Refused. Marker row, not an exhibition.'])
- +row(['louvre','A','2025-01-01','2025-02-01','Blurb.','https://louvre.fr/a','']);
+const hdr8=hdr.trim()+',swept_at\n';
+const row8=a=>row(a).trim()+','+a[7]+'\n';
+const seenFile=hdr8
+ +row8(['moma','[past page]','','','','https://moma.org/past','Refused. Marker row, not an exhibition.','2026-09-13T04:29:05.306Z'])
+ +row8(['louvre','A','2025-01-01','2025-02-01','Blurb.','https://louvre.fr/a','','2026-09-13T04:30:10.364Z']);
 const seen=H.analyzeProForma(seenFile).seen;
-check('a refused venue counts as ATTEMPTED', seen.attempted.includes('moma'), seen);
-check('  but NOT as having returned rows', !seen.returned.includes('moma'), seen);
-check('a venue with real rows counts as both', seen.attempted.includes('louvre')&&seen.returned.includes('louvre'), seen);
-check('a venue not in the file is in neither', !seen.attempted.includes('met')&&!seen.returned.includes('met'), seen);
+check('a refused venue counts as ATTEMPTED', !!seen.attempted.moma, seen);
+check('  but NOT as having returned rows', !seen.returned.moma, seen);
+check('a venue with real rows counts as both', !!seen.attempted.louvre&&!!seen.returned.louvre, seen);
+check('a venue not in the file is in neither', !seen.attempted.met&&!seen.returned.met, seen);
+check('  and it is dated by the SWEEP, not by now',
+  seen.attempted.louvre==='2026-09-13T04:30:10.364Z', seen);
+
+// 15a. A VENUE SWEPT TWICE — her question, and the case the drawer exists for.
+// The later run got only markers, so it was TRIED later than it last BROUGHT
+// ROWS. That gap is the line that says re-run this one on its own.
+H.setRows([]);
+const twice=hdr8
+ +row8(['borghese','Real show','2026-01-01','2026-02-01','Blurb.','https://borghese.it/a','','2026-09-13T02:04:08.334Z'])
+ +row8(['borghese','[upcoming page]','','','','https://borghese.it/up','Empty. Marker row, not an exhibition.','2026-09-13T14:26:00.000Z']);
+const tw=H.analyzeProForma(twice).seen;
+check('15a: swept twice — tried takes the LATER run',
+  tw.attempted.borghese==='2026-09-13T14:26:00.000Z', tw);
+check('  and rows stays at the run that actually had them',
+  tw.returned.borghese==='2026-09-13T02:04:08.334Z', tw);
+
+// 15b. AN OLD FILE MUST NOT DRAG THE LOG BACKWARDS. Importing a two-day-old
+// sweep is the same shape as opening a two-day-old backup — the bug she found.
+// mergeSweepLog only ever moves a date forwards.
+{
+  const prev={met:{attempted:'2026-09-20T00:00:00.000Z',returned:'2026-09-20T00:00:00.000Z'}};
+  const old={attempted:{met:'2026-09-13T00:00:00.000Z'},returned:{met:'2026-09-13T00:00:00.000Z'}};
+  const after=H.mergeSweepLog(prev,old);
+  check('15b: importing an older sweep leaves the log alone',
+    after.met.attempted==='2026-09-20T00:00:00.000Z'&&after.met.returned==='2026-09-20T00:00:00.000Z', after);
+  const newer={attempted:{met:'2026-09-21T00:00:00.000Z'},returned:{}};
+  const after2=H.mergeSweepLog(prev,newer);
+  check('  a newer sweep moves TRIED forward',
+    after2.met.attempted==='2026-09-21T00:00:00.000Z', after2);
+  check('  and leaves ROWS where it was when the venue gave nothing',
+    after2.met.returned==='2026-09-20T00:00:00.000Z', after2);
+  const fresh=H.mergeSweepLog({},{attempted:{ng:'2026-09-21T00:00:00.000Z'},returned:{}});
+  check('  a venue never seen before is added with no rows date',
+    fresh.ng.attempted==='2026-09-21T00:00:00.000Z'&&!fresh.ng.returned, fresh);
+}
 
 // 16. A TRAVELLING SHOW IS NOT A FOLD. The sweeper notes a show running at a
 // venue's other address with the sentence "The same exhibition is also shown

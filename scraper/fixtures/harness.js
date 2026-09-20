@@ -67,6 +67,7 @@ return {
   setRows: next => { rows = next; },
   getRows: () => rows,
   countDecisions,
+  mergeSweepLog,
   isUndecidedCard,
   MUSEUMS, MU, KNOWN_VENUES,
 };
