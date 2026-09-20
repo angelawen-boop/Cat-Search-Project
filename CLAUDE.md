@@ -729,10 +729,17 @@ written for a human.**
 **THE PRE-PICK ON A CONFLICT CARD IS `fuller()` — LONGEST WINS — AND FOR A DATE
 THAT IS MEANINGLESS.** Two ten-character dates tie, so it keeps whichever row
 came first in the file and presents that as a choice made for her. It means
-something for a description (a stub versus the real text) and for a title. **Open,
-her call 20 Sep:** tick nothing on a date conflict and leave the card undecided.
-A wrong closing date moves a show into the wrong urgency tier, which is the whole
-point of the app.
+something for a description (a stub versus the real text) and for a title.
+**HER RULING 20 Sep: LEAVE IT.** The alternative — tick nothing on a date
+conflict — was offered and declined. Do not re-propose it.
+
+**ORDER INSIDE A VENUE IN "NORMAL CASES" — her ruling 20 Sep.** Fills, then
+edits, then new exhibitions; newest CLOSING date first within each; a row with no
+closing date at the bottom of its group. It was FILE ORDER, which is the order
+the scraper read that venue's pages, so an edit to something she owns sat between
+two brand-new shows and she switched between "is this change right?" and "do I
+want this?" every few cards. Same reasoning as batching the triage bands by kind.
+Closing date because that is the field the whole app is about.
 
 **COUNTS, AND THE ONE THAT CAN FAIL — 19 Sep.** The screen said "319 proposed
 changes found" and nothing else, which cannot be checked against anything: rows
@@ -800,6 +807,30 @@ artic `shop.artic.edu` · brit `britishmuseumshoponline.org` · wallace
 
 **Seed set:** ~110 exhibitions read 20 Aug 2026, covering met / ng / rijks / acq
 only. Baked into the JSX, shown via Reset. Stripping it has been rejected.
+
+**THE SEED IS THIN ON HISTORY AT TWO VENUES, AND IT IS NOT A MATCHING BUG —
+measured 20 Sep when she asked why so many "new" exhibitions were arriving at
+venues she had already seeded.**
+
+| | Seed | Sweep | New cards |
+|---|---|---|---|
+| met | 51 | 106 | **56** |
+| rijks | 20 | 37 | **18** |
+| ng | 25 | 27 | 2 |
+| acq | 14 | 15 | 2 |
+
+Of the 59 seed-venue Add cards for shows that had ALREADY CLOSED before the seed
+was built, **58 are genuinely absent from it** — checked loosely by title, not
+just by key. And of the 74 met+rijks Adds, **69 came from PAST listing pages**
+and 5 from current/upcoming.
+
+**The cause is §5's founding fact.** The seed was gathered by Chat Claude with a
+fetch tool that reads a page before its JavaScript runs, so it saw the current
+programme and almost none of the archive. ng and acq are behaving exactly as
+expected for a month's gap; met and rijks are the whole difference. Her lookback
+being ~mid-Aug 2024 rather than 1 July 2024 accounts for 7 rows of it.
+
+**Nothing to fix. Do not re-diagnose this as a matching failure.**
 
 ### The inversion — worth preserving
 
