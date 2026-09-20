@@ -1522,8 +1522,15 @@ export default function App(){
                 const isMerged=x=>!!x.p.merged;
                 const hasChoice=x=>!!x.p.choices;
                 const mergedOnly = byVenue(real.filter(x=>isMerged(x)&&!hasChoice(x)));
-                const mergedConf = byVenue(real.filter(x=>isMerged(x)&&hasChoice(x)));
-                const confOnly   = byVenue(real.filter(x=>!isMerged(x)&&hasChoice(x)));
+                // A CONFLICT IS ALWAYS A FOLD, so there is no band for a
+                // disagreement that arrived on its own. There was one, and it
+                // was a PHANTOM: it never held a row and never could, because a
+                // disagreement is only ever found by holding two rows side by
+                // side, and foldDuplicateRows flags every card it builds. It
+                // shipped, this guide listed it as one of six bands, and nobody
+                // ran a file and asked why it was always empty. So the test is
+                // hasChoice alone — being a fold adds nothing to it.
+                const mergedConf = byVenue(real.filter(x=>hasChoice(x)));
                 const plain      = real.filter(x=>!isMerged(x)&&!hasChoice(x));
                 // NO LINK AT ALL — band 6, her ruling 13 Sep. These rows are
                 // perfectly usable: a title, dates and a description, and the
@@ -1580,7 +1587,7 @@ export default function App(){
                 // five card bands, so the heading read "Odd cases first \u00b7 0"
                 // directly above a band of its own saying 9 \u2014 a total that
                 // left out one of the things it was totalling.
-                const oddCount=coverage.length+mergedOnly.length+mergedConf.length+confOnly.length+noLink.length;
+                const oddCount=coverage.length+mergedOnly.length+mergedConf.length+noLink.length;
                 const markerBlocks=MUSEUMS.map(m=>{
                   const grp=coverage.filter(cv=>cv.venueId===m.id);
                   if(!grp.length)return null;
@@ -1603,8 +1610,7 @@ export default function App(){
                       {coverage.length>0&&band("markers","1. Marker rows",undefined,coverage.length,false,markerBlocks)}
                       {mergedOnly.length>0&&band("merged","2. Combined rows \u00b7 identical rows were de-duped or reconciled",undefined,mergedOnly.length,false,byVenueBlocks(mergedOnly))}
                       {mergedConf.length>0&&band("mergedconf","3. Combined rows \u00b7 identical rows produced conflicts \u2014 yours to choose",C.accent,mergedConf.length,true,byVenueBlocks(mergedConf))}
-                      {confOnly.length>0&&band("conf","4. Two different answers \u00b7 yours to choose",C.accent,confOnly.length,true,byVenueBlocks(confOnly))}
-                      {noLink.length>0&&band("nolink","5. No exhibition url \u00b7 link goes to venue\u2019s listing page",undefined,noLink.length,true,byVenueBlocks(noLink))}
+                      {noLink.length>0&&band("nolink","4. No exhibition url \u00b7 link goes to venue\u2019s listing page",undefined,noLink.length,true,byVenueBlocks(noLink))}
                     </div>
                   )}
                 {ordinary.length>0&&(

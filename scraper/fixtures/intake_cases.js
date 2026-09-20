@@ -162,4 +162,15 @@ const realFold=H.analyzeProForma(hdr
  +row(['acq','X','','2025-02-01','Blurb.','https://acquavellagalleries.com/x','']));
 check('a real fold is still flagged as combined', realFold.props.length===1 && realFold.props[0].merged===true, realFold.props);
 
+// 17. A CONFLICT IS ALWAYS A FOLD. There used to be a band for "a disagreement
+// that did not come from combining two rows", and it was a phantom: it never
+// held a row in its life, because a disagreement is only ever found by holding
+// two rows side by side. It shipped, the guide listed it as one of six bands,
+// and nobody ran a file and asked why it was always empty.
+H.setRows([]);
+const everyConflict=H.analyzeProForma(require('fs').readFileSync(__dirname+'/intake_sample.csv','utf8'))
+  .props.filter(p=>p.choices);
+check('the sample file produces conflicts at all', everyConflict.length>0, everyConflict.length);
+check('  and EVERY one of them came from a fold', everyConflict.every(p=>p.merged), everyConflict.map(p=>p.title));
+
 process.exit(fails?1:0);
