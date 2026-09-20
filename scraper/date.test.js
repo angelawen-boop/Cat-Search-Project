@@ -22,6 +22,7 @@ const {
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
   classifyLoadError, isOwnListingPage, saysOngoing,
   expandYearArchive, listingPages, followPagination, VENUES, pickTitleLine,
+  stripWeekdays,
 } = require('./sweep_prototype.js');
 
 const range = (s, hint) => {
@@ -721,9 +722,20 @@ test('W-004: a weekday word in PROSE is left alone', () => {
   // The strip only fires where a day number or a month name follows. Without
   // that anchor a bare "Sun " would be cut out of ordinary page text — "the Sun
   // King, Louis XIV" — every time a page was scanned for dates.
+  //
+  // THIS ASKS THE STRIP DIRECTLY. It used to look for "Sun King" inside the
+  // parser's `raw` field, which held only while `raw` was the whole input —
+  // see frag(). The date assertion alone proves nothing here either: "the
+  // King, Louis XIV, until 20 February 2026" parses identically.
+  assert.equal(stripWeekdays('the Sun King, Louis XIV, until 20 February 2026'),
+                             'the Sun King, Louis XIV, until 20 February 2026');
   const r = findDateRange('the Sun King, Louis XIV, until 20 February 2026');
   assert.equal(r.end, '2026-02-20');
-  assert.match(r.raw, /Sun King/);
+});
+
+test('W-004b: and the strip still fires where a date follows', () => {
+  assert.equal(stripWeekdays('Saturday 23 May - Sunday 29 November 2026').trim(),
+                             '23 May - 29 November 2026');
 });
 
 test('W-005: the formats already handled are untouched', () => {
@@ -1199,4 +1211,52 @@ test('R-004: the two sets do not overlap and cover every venue', () => {
   assert.deepStrictEqual(home.sort(), ['artic', 'met']);
   assert.strictEqual(container.length, 19);
   assert.strictEqual(home.length + container.length, codes.length);
+});
+
+// ── THE NOTE QUOTES THE MATCH, NEVER THE WHOLE PAGE ─────────────────────────
+//
+// `raw` is written verbatim into the notes column, and the notes column is
+// shown verbatim on her approval card. findDateRange was built for a LISTING
+// CARD, where returning the input was indistinguishable from returning the
+// match; findDateRangeInProse then began falling through to it with a WHOLE
+// PAGE. Capodimonte's rows carried 6,709 characters of notes on average and
+// one carried 17,734 — the whole page, navigation and ticket prices included,
+// introduced by the words "read from a sentence".
+//
+// A length cap alone would not have caught this: the bug is quoting the wrong
+// THING, and a capped whole page is still the wrong thing. So these assert the
+// quote is short AND that it is the date text.
+
+const CAPO_PAGE = 'skip to Main Content MUSEO E REAL BOSCO ORGANIZZA LA TUA '
+  + 'VISITA COLLEZIONI MOSTRE SOSTIENICI NEWS I Segni dei Tempi A cura di '
+  + 'Antonio Martino sala 6, I piano Dal 16 aprile all’8 settembre 2026 '
+  + 'Mostra in occasione della donazione del dipinto '
+  + 'Ingresso gratuito compreso nel biglietto di ingresso al Museo. '.repeat(20);
+
+test('Q-100: a prose range quotes its own sentence, not the page', () => {
+  const r = findDateRangeInProse(CAPO_PAGE);
+  assert.equal(r.start, '2026-04-16');
+  assert.equal(r.end, '2026-09-08');
+  assert.ok(r.raw.length <= 120, 'quote was ' + r.raw.length + ' characters');
+  assert.match(r.raw, /16 aprile/);
+  assert.ok(!/Ingresso gratuito/.test(r.raw), 'the quote still carries page furniture');
+});
+
+test('Q-101: the Wallace Churchill row, via the fall-through', () => {
+  // Only a closing date, carrying a preposition — the branch that returned
+  // the whole input.
+  const page = 'Skip to main content Tickets Shop Search Visit What’s On '
+    + 'Winston Churchill: The Painter until 29 November 2026 Exhibition '
+    + 'Galleries Admission charge, members go free. Book tickets. '.repeat(30);
+  const r = findDateRangeInProse(page);
+  assert.equal(r.end, '2026-11-29');
+  assert.ok(r.raw.length <= 120, 'quote was ' + r.raw.length + ' characters');
+  assert.ok(!/Book tickets/.test(r.raw), 'the quote still carries page furniture');
+});
+
+test('Q-102: no dates means no quote, so no note can be written', () => {
+  const r = findDateRangeInProse('Nothing here resembles an exhibition run at all.');
+  assert.equal(r.start, '');
+  assert.equal(r.end, '');
+  assert.equal(r.raw, '');
 });

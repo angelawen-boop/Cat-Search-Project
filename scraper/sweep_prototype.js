@@ -770,6 +770,7 @@ const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]
  *   ranked it as thirty years closed.
  */
 const WEEKDAY_PREFIX = new RegExp(WEEKDAY_PREFIX_SRC + '(?=\\d|' + MONTH_PATTERN + ')', 'gi');
+const stripWeekdays = t => String(t || '').replace(WEEKDAY_PREFIX, '');
 
 /**
  * A run that was EXTENDED after it was announced.
@@ -916,7 +917,7 @@ function findDateRangeCore(raw, opts = {}) {
     if (dayFirst !== monthFirst && plausibleYear(y1) && plausibleYear(y2)) {
       const start = dayFirst ? ymd(y1, b1, a1) : ymd(y1, a1, b1);
       const end   = dayFirst ? ymd(y2, b2, a2) : ymd(y2, a2, b2);
-      const r = sane(start, end, raw);
+      const r = sane(start, end, frag(num));
       if (r.start || r.end) return r;
     }
   }
@@ -944,16 +945,16 @@ function findDateRangeCore(raw, opts = {}) {
       // cannot be an exhibition year" as the same thing. They are opposites:
       // the first is a gap to fill, the second is proof this sentence is not
       // about an exhibition's run at all.
-      if (dm[3] && !plausibleYear(dm[3])) return { start: '', end: '', raw: s };
+      if (dm[3] && !plausibleYear(dm[3])) return { start: '', end: '', raw: '' };
       const startYr = dm[3] ? parseInt(dm[3], 10)
                             : startYearFor(sMo, sDay, eMo, eDay, endYr);
-      return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), s);
+      return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), frag(dm));
     }
   }
 
   // "Month D, YYYY - Month D, YYYY" — year on both sides
   let m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})${RANGE_SEP}(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
-  if (m) return sane(parseMonthDay(titleCase(m[1]), null) || '', parseMonthDay(titleCase(m[2]), null) || '', s);
+  if (m) return sane(parseMonthDay(titleCase(m[1]), null) || '', parseMonthDay(titleCase(m[2]), null) || '', frag(m));
 
   // "Month D - Month D, YYYY" — year only on the end side.
   // The opening year is worked out, not assumed: "December 5 - January 20,
@@ -965,7 +966,7 @@ function findDateRangeCore(raw, opts = {}) {
     if (sMo && eMo) {
       const sDay = parseInt(m[2], 10), eDay = parseInt(m[4], 10);
       const startYr = startYearFor(sMo, sDay, eMo, eDay, endYr);
-      return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), s);
+      return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), frag(m));
     }
   }
 
@@ -977,14 +978,14 @@ function findDateRangeCore(raw, opts = {}) {
   m = s.match(new RegExp(`(${M})\\s+(\\d{1,2})${RANGE_SEP}(\\d{1,2}),\\s*(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
     const mo = monthNum(m[1]);
-    if (mo) return sane(ymd(m[4], mo, m[2]), ymd(m[4], mo, m[3]), s);
+    if (mo) return sane(ymd(m[4], mo, m[2]), ymd(m[4], mo, m[3]), frag(m));
   }
 
   // Single "Month D, YYYY" — treat as the end date (open until).
   // Bare, with no preposition to anchor it, so it is a listing-card rule only.
   if (looseSingles) {
     m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
-    if (m) return { start: '', end: parseMonthDay(titleCase(m[1]), null) || '', raw: s };
+    if (m) return { start: '', end: parseMonthDay(titleCase(m[1]), null) || '', raw: frag(m) };
   }
 
   // A single day-first date carrying a preposition, as Rijksmuseum's cards do:
@@ -995,13 +996,13 @@ function findDateRangeCore(raw, opts = {}) {
   m = s.match(new RegExp(`\\b(till|until|through|to)\\s+(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
     const mo = monthNum(m[3]);
-    if (mo) return { start: '', end: ymd(m[4], mo, m[2]), raw: s };
+    if (mo) return { start: '', end: ymd(m[4], mo, m[2]), raw: frag(m) };
   }
 
   m = s.match(new RegExp(`\\b(from|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
     const mo = monthNum(m[3]);
-    if (mo) return { start: ymd(m[4], mo, m[2]), end: '', raw: s };
+    if (mo) return { start: ymd(m[4], mo, m[2]), end: '', raw: frag(m) };
   }
 
   // "Month YYYY" or "Month / YYYY" with no day — a start month, end unknown.
@@ -1023,7 +1024,7 @@ function findDateRangeCore(raw, opts = {}) {
         start: '', end: '', latestYear: +m[2],
         shownText: m[0].trim(),
         shownWhy: 'no day is published, only the month and year',
-        raw: s,
+        raw: frag(m),
       };
     }
   }
@@ -1039,11 +1040,11 @@ function findDateRangeCore(raw, opts = {}) {
       start: '', end: '', latestYear: +m[1],
       shownText: m[0].trim(),
       shownWhy: 'only a season and a year are published',
-      raw: s,
+      raw: frag(m),
     };
   }
 
-  return { start: '', end: '', raw: s };
+  return { start: '', end: '', raw: '' };
 }
 
 /**
@@ -1089,6 +1090,24 @@ function plausibleYear(y) {
  * and quietly replaced with the end year. Better to report the end date alone
  * than an impossible range: the lookback only tests the end date anyway.
  */
+// THE QUOTE IN HER NOTE IS THE FRAGMENT THE DATES CAME FROM, never the whole
+// input. findDateRange was written for a LISTING CARD, where the input is a
+// line or two, so returning the input as `raw` was indistinguishable from
+// returning the match. Then findDateRangeInProse started falling through to it
+// with a WHOLE PAGE as the input — and `raw` is quoted verbatim into the notes
+// column, which is shown verbatim on her approval card. Capodimonte's rows
+// averaged 6,709 characters of notes and one carried 17,734: the entire page,
+// navigation and ticket prices included, under the words "read from a
+// sentence". The Wallace's Churchill row did the same.
+//
+// The fault was not the fall-through, which is right and is there to stop the
+// two parsers drifting. It was that one parser's idea of "raw" only held while
+// its input stayed small. So every branch now quotes ITS OWN MATCH, capped,
+// exactly as the prose parser already did — the size of the input stops
+// mattering. A branch that returns no dates returns no quote either; nothing
+// downstream writes a note without a date to explain.
+function frag(m) { return m && m[0] ? String(m[0]).replace(/\s+/g, ' ').trim().slice(0, 120) : ''; }
+
 function sane(start, end, raw) {
   if (start && end && start > end) return { start: '', end, raw };
   return { start, end, raw };
@@ -4924,6 +4943,11 @@ if (require.main === module) {
 // the network, the browser or the filesystem.
 module.exports = {
   findDateRange, findDateRangeInProse, parseMonthDay, ymd, startYearFor,
+  // Exported so the weekday strip can be tested for what it does rather than
+  // for a side effect of it. W-004 used to prove "a bare Sun is not cut out of
+  // prose" by reading the surviving text out of the parser's `raw` field, which
+  // only worked while `raw` was the whole input — see frag().
+  stripWeekdays,
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
   saysOngoing, expandYearArchive, listingPages, followPagination,
