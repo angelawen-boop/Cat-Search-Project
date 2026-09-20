@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 20 Sep 2026
+**Last updated:** 20 Sep 2026 (evening)
 
 Cassili collects art-exhibition catalogues. They go out of print fast once a show
 closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 21
@@ -294,8 +294,33 @@ or the venue is unknown. Its 65 rows are already captured, so nothing is lost wh
 it stays shut — but it is **open, not abandoned**, and is part of what her one
 further attempt at the 16 Sep question covers (§7 step 6).
 
-**Routes are unchanged from 12 Sep:** the container sweeps its 16; her machine has
-`met`; `moma`, `brit` and `morgan` have no route.
+### Who sweeps what — IN CODE since 20 Sep, not a habit
+
+**The two machines never sweep the same venue.** `machineVenues()` decides, the
+machine is worked out from the proxy (present in the container, absent on her
+laptop), `--home` / `--container` force it, and the run announces which it
+thinks it is before fetching anything.
+
+| | |
+|---|---|
+| **Container — 19** | its 16 working venues, **plus `moma`, `brit`, `morgan`** |
+| **Her laptop — 2** | `met`, `artic` (`route: 'local'` in their recipes) |
+
+**The blocked three are swept BECAUSE they are blocked.** A refusal costs half a
+second, proves the block is still real, and leaves the marker rows that make a
+sweep's record complete.
+
+**It is code because remembering it failed.** On 13 Sep the container swept all
+21: its met and artic rows were nothing but refusals, and they landed in the
+stitched file beside the 171 real rows her own machine had for the same two
+venues — reading the coverage panel a week later she could not tell whether she
+had been blocked at home. And the cost is not only confusion: sweeping a venue
+from both machines doubles what it sees, and both of these rate-limit, which is
+how a working venue becomes a blocked one.
+
+**Naming venues by hand still wins**, because a one-off diagnostic is exactly
+when the rule should be breakable. It says so in the log rather than happening
+quietly. Fixtures R-001 to R-004.
 
 ### artic — only the two types the venue calls an exhibition, her ruling 12 Sep
 
@@ -479,6 +504,22 @@ is a **published page on her Claude account**, at one permanent private URL she
 bookmarks: open it in any browser, signed in to Claude, with no chat session and
 no Code session involved. A session republishes to the same URL; she reloads.
 
+> ### https://claude.ai/artifact/E2WjpRgr4W5eSzYtxyfrt5
+>
+> **Republish to THAT url or a new page is created and hers stops updating.**
+> From a session that did not publish it, pass it as `url`. It carries three
+> capabilities, and losing any of them breaks a feature she uses: `downloads`
+> (Export — see below), `mcp` for her **Parallel Search** connector and
+> `sample` (the catalogue lookup). A publish that restates `capabilities` must
+> restate all three; omitting the field entirely carries them forward, which is
+> the safer default.
+>
+> **It is built from the LIVE BRANCH, not from `main`.** Transpile the branch's
+> JSX to plain browser code, wrap it in the HTML shell, publish. `main`'s copy
+> of the JSX is behind what she is running.
+>
+> **Never republish while she has it open** — house rule, §1.
+
 This matters beyond convenience. For a month the app was a JSX file rendered
 afresh in a chat every time, because hosting had been called impossible. **It was
 not**, and nobody went back to check. A session reasoning from "the sandbox makes
@@ -653,17 +694,23 @@ split by type, a count on every band, and one line that **accounts for every row
 read**:
 
 ```
-file rows = markers + folds + already-matching + cards
-      652 =      36 +   211 +              86 +   319
+file rows = markers + never-add + folds + already-matching + cards
 ```
 
-The arithmetic either closes or it does not. **The bands sort by SHAPE, the types
-cut across them** — a brand-new exhibition assembled from two duplicate rows is in
-band 3, not in "Normal cases", because what the band is about is that she is seeing
-one card built from two lines.
+The arithmetic either closes or it does not; §7 step 5 carries the figures for
+the current file. **The bands sort by SHAPE, the types cut across them** — a
+brand-new exhibition assembled from two duplicate rows is in band 3, not in
+"Normal cases", because what the band is about is that she is seeing one card
+built from two lines.
 
-`scraper/fixtures/intake_cases.js` — 14 cases, including the two that must NOT
-merge. `scraper/fixtures/intake_sample.csv` — 76 rows, 8 venues, built from real
+`scraper/fixtures/intake_cases.js` — **25 cases**, including the two that must
+NOT merge, the quarantine rules, the freshness facts and the row identity. They
+run under `npm test`, which they did not until 20 Sep: they required a
+`harness.js` that had never existed, and the test script did not name them
+either — two independent reasons for one silence. The harness lifts the intake
+out of the JSX by ANCHORS rather than line numbers, because the app is one file
+with no build step and the only alternative is a second copy of the logic that
+drifts. `scraper/fixtures/intake_sample.csv` — 76 rows, 8 venues, built from real
 sweeps: a venue with both marker and real rows, two with markers only, four with
 real rows only, and a Louvre block covering every conflict shape.
 
@@ -1523,24 +1570,22 @@ Each entry cost a real failure. Before changing the area, read the line.
 
    > sweep both machines → stitch the run folders → compress → import
 
-   - **Sweeps, 13 Sep.** `run_2026-09-13_020041` (container, 16 venues at her
-     signed-off counts), `_142632` (a second container run), `_142846` (hers:
-     met 106, artic 65, capo refused). Borghese was dead from every machine that
-     day — `cultura.gov.it` unreachable, not a refusal.
-   - **Stitch** → `stitch_20260913_0442`, 652 rows: 36 markers + 616 exhibition
-     rows, which fold to **405 distinct exhibitions** with 211 second copies.
-     The doubling is TWO CONTAINER RUNS of the same 19 venues (`_020041` and
-     `_142632`) both going into the stitch; her machine contributed only
-     met/artic/capo. It was not needed for coverage. What it bought is real:
-     209 live duplicate pairs for the app's folding to work on rather than
-     authored ones, and **all 209 fold with no conflict at all**.
-   - **Compress, 19 Sep, then repaired the same day** → `sweep_compressed.csv`.
-     616 exhibitions, 610 with a summary, 36 marker rows. 390 rows went to a
-     model in five jobs; 262 were answered free. Length min 3, median 7, max 10
-     against her own median of 6. Cost ~580k tokens, most of it in the first
-     chunk before the packaging was fixed — see §5. The repair (`--seed-wins`)
-     restored 13 Acquavella summaries to her own wording; the 19 Sep first pass
-     is kept whole in `19sep_first_pass/`.
+   - **Sweeps, 13 Sep** — `run_2026-09-13_020041` (container, all 21, which is
+     what the routing rule now prevents), `_142632` (container, 19), `_142846`
+     (hers: met 106, artic 65). Borghese was dead from every machine that day:
+     unreachable, not a refusal.
+   - **Stitch** → `stitch_20260913_0442`, 652 rows folding to **405 distinct
+     exhibitions**. Every venue but met and artic appears twice because two
+     container runs went in — not needed for coverage, but it gave the app's
+     folding 209 live pairs to work on rather than authored ones, and all 209
+     fold with no conflict at all.
+   - **Compress, 19 Sep, repaired 20 Sep** → `sweep_compressed.csv`, the file
+     she imports. 390 rows went to a model in five jobs, 262 were answered
+     free, ~580k tokens. Summary length min 3, median 7, max 10 against her own
+     median of 6. Two repairs since: `--seed-wins` restored 13 Acquavella
+     summaries to her wording, and the rebuild-by-key fix restored 13 rows the
+     compressor had overwritten (§6). The 19 Sep first pass is kept whole in
+     `19sep_first_pass/`.
    - **IMPORT: SHAKEDOWN RUN 20 SEP.** Against her 110-row seed the file
      produces **320 cards** — 299 add, 14 fill, 7 change — with 86 rows matching
      silently, **no card asking her to choose**, and a 36-page coverage panel.
@@ -1582,7 +1627,12 @@ Each entry cost a real failure. Before changing the area, read the line.
    question is whether any row arrives WITH TEXT. Every ordinary sweep re-tests
    all four anyway, so the day one answers, it appears on the approval pile.
 
-7. **JSX — quarantine and per-venue freshness. NEXT, before she works the 319.**
+7. ~~**JSX — quarantine and per-venue freshness**~~ — **BUILT 19–20 Sep, on the
+   live branch, and in the page she is using.** Both are described in §4. What
+   remains is her own work: the 320 decisions, and a SAVE ROUND-TRIP — export
+   after the import, re-import that file, and confirm the quarantine list and
+   the per-venue freshness both survive it. They are new fields in the save
+   file and nothing has yet proved they come back.
    - **Quarantine ("never add this")** — design below. Without it, rejecting a
      card stores nothing, so every piece of junk returns on every future sweep.
      It must be **visible and undoable**: a quarantine she cannot see is a
@@ -1615,7 +1665,7 @@ Each entry cost a real failure. Before changing the area, read the line.
 ledger until JSX and scraper are both finished, so she can import freely and roll back.
 **Do not raise ledger pollution as a reason to reorder this list.**
 
-### Quarantine — "never add this", not yet built
+### Quarantine — "never add this", BUILT 20 Sep
 
 **Dismiss is not a rubbish chute.** She dismisses only exhibitions that are **real**,
 **not duplicates**, and that she has looked at and isn't interested in. Junk must never
@@ -1625,10 +1675,19 @@ Today there are two outcomes and neither fits junk: **Reject** stores nothing, s
 row proposes itself again on every future sweep forever; **Accept then dismiss** puts it
 in the ledger permanently. There is no third option and there needs to be.
 
-**The design, keyed on normalised URL:** the ledger gains an `ignored` list alongside
-`rows`; `analyzeProForma` skips any row whose URL is on it; Add cards gain a third
-button. Rows with no URL fall back to venue + title. Import reads only `d.rows` and
-`d.lastRun`, so this **breaks no existing ledger**.
+**Keyed on normalised URL**, venue + title where a row has none. The ledger
+carries an `ignored` list beside `rows`; `analyzeProForma` drops a matching row
+in pass one, before it can fold with anything; Add cards have a third button.
+Import still reads `d.rows` and `d.lastRun`, so an older ledger loads unchanged.
+
+**It is COUNTED, never silent** — the row identity on the intake screen gains a
+"you'd said never to add" term, so a quarantine can never be mistaken for a lost
+row. And it is **listed at the top with Put back on every row**, because a
+quarantine she cannot see is a silent loss: one mis-tap and an exhibition never
+appears again with nothing to say so.
+
+**A venue retitling its own listing does not undo her decision** — same address,
+new title, still blocked. Fixtures 10 to 13.
 
 What it is for: dead links, non-exhibitions, genuine duplicates. **Not** undated shows —
 a real exhibition with no dates is fine to accept, and later sweeps match it silently.
