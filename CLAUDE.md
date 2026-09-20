@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 19 Sep 2026
+**Last updated:** 20 Sep 2026
 
 Cassili collects art-exhibition catalogues. They go out of print fast once a show
 closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 21
@@ -101,10 +101,12 @@ before work begins. It refuses to move if the working tree is dirty or the branc
 carries commits not on `origin/main`, and it fetches before deciding, so it cannot
 discard anything.
 
-**LIVE BRANCH: `claude/jsx-stitched-intake`.** The app's new intake — marker rows
-rejected, duplicate rows folded (§4). Signed off by her on test data, **not merged**;
-it merges once the real import passes. A session working only on `main` will not
-find it and will re-derive it.
+**LIVE BRANCH: `claude/jsx-stitched-intake`.** Everything the app has gained
+since 13 Sep and not yet merged: the stitched-file intake (marker rows rejected,
+duplicate rows folded, counts on screen), quarantine, per-venue freshness, the
+rebuilt save and the rebuilt catalogue lookup — §4 throughout. **The published
+page is built from THIS branch**, so `main`'s JSX is behind what she is using. It
+merges once the real import passes.
 
 **PARKED BRANCH: `claude/quiet-user-agent`** — everything from 16 Sep. Her ruling
 19 Sep: do not merge, do not re-open. See §2.
@@ -154,20 +156,11 @@ and `brera` are in, and the state all thirteen were in at the start of 12 Sep.
 **ALL SIXTEEN REACHABLE VENUES ARE REVIEWED BY HER, FIXED, AND VERIFIED AGAINST HER
 OWN COUNT.** Capodimonte is the one exception and a deliberate one — see below.
 
-Final counts, 12 Sep 2026 — **408 rows across the 18 reachable venues**, of which
-406 are exhibitions and 2 are marker rows (brera and borghese each have one for a
-genuinely empty upcoming page):
-
-| | | | |
-|---|---|---|---|
-| ng 27 | rijks 37 | acq 15 | va 6 |
-| tate-modern 13 | tate-britain 9 | frick 10 | menil 32 |
-| wallace 11 | louvre 22 | dellav 2 | khm 6 |
-| uffizi 13 | brera 8 | capo 18 | borghese 8 |
-| **container total 237** | **met 106** | **artic 65** | |
-
-**406 is the eighteen REACHABLE venues.** `moma`, `brit` and `morgan` return no
-exhibitions at all — marker rows only — so nothing they do changes that figure.
+Final counts, 12 Sep 2026 — **408 rows across the 18 reachable venues**: 406
+exhibitions and 2 marker rows (brera and borghese, each with a genuinely empty
+upcoming page). The per-venue figures are the Rows column above; container 237,
+met 106, artic 65. `moma`, `brit` and `morgan` return marker rows only, so nothing
+they do changes that figure.
 What to do about them is still open; see §7 step 6.
 
 No row at any venue carries a credit line, star rating, ticket price, funder list,
@@ -258,7 +251,14 @@ never to have been blocked, the Met's archive turned out to be reachable, and
 13 Sep and stays that way.** Her verdict on the session that produced it: theories
 were spun up, sweeps were run to test them, the sweeps caused rate limiting, and
 then the limiting was read as fresh evidence. Nothing usable came out that is worth
-the divergence. **Do not merge it and do not re-open it.**
+the divergence. **Do not merge it, and do not re-open it on a session's own
+initiative.**
+
+**WHAT IS PARKED IS THE BRANCH, NOT THE VENUES.** `moma`, `brit`, `morgan` and now
+`artic` are open work — §7 step 6. She is giving the question one more attempt, on
+her own machine, to either fix something or ditch the branch for good. **The
+deciding test is a real sweep, not a probe**, and the thing to look for is whether
+any row arrives WITH TEXT.
 
 **The one proven fact, kept because it is real:** Chromium announces
 `HeadlessChrome`, and removing that word changes MoMA's LISTING page from 403 to
@@ -284,8 +284,9 @@ driving at all. **Her ruling: one small venue, she will check it herself.**
 
 **`artic` has refused HER MACHINE since 16 Sep**, having returned 65 rows on
 13 Sep. Whether that is the changed scraper, rate limiting from that day's sweeps,
-or the venue is unknown and **not being chased** — its 65 rows are already captured
-and the way to find out costs exactly the traffic that may have caused it.
+or the venue is unknown. Its 65 rows are already captured, so nothing is lost while
+it stays shut — but it is **open, not abandoned**, and is part of what her one
+further attempt at the 16 Sep question covers (§7 step 6).
 
 **Routes are unchanged from 12 Sep:** the container sweeps its 16; her machine has
 `met`; `moma`, `brit` and `morgan` have no route.
@@ -467,6 +468,20 @@ one, which is worse than nothing.
 
 ## 4. The app
 
+**WHERE IT LIVES — CHANGED 20 SEP 2026, AND THE PREVIOUS ANSWER WAS WRONG.** It
+is a **published page on her Claude account**, at one permanent private URL she
+bookmarks: open it in any browser, signed in to Claude, with no chat session and
+no Code session involved. A session republishes to the same URL; she reloads.
+
+This matters beyond convenience. For a month the app was a JSX file rendered
+afresh in a chat every time, because hosting had been called impossible. **It was
+not**, and nobody went back to check. A session reasoning from "the sandbox makes
+that impossible" should test the claim before a month of workarounds is built on
+it.
+
+**Her data is NOT hosted.** The page is; the ledger is still a file she imports
+and exports. Opening the link gives an empty portal exactly as before.
+
 **Core mental model (load-bearing):** the app is the *tool*; the ledger is the
 *document* — like a word processor and a file. Data lives in the ledger, never
 baked into the tool.
@@ -499,9 +514,27 @@ pick file. Status line has three states: calm neutral on fresh load, loud red
 **UNSAVED CHANGES** after any change, calm green **✓ Saved — safe to close** after
 Export. **Export IS Save.** Import and Reset ask before replacing unsaved work.
 
-> **Accepted limit (her decision):** the green tick cannot be fully honest —
-> Claude's download prompt has a Cancel the app cannot detect. She lives with it.
-> Do not re-add a confirm step and do not remove the green tick.
+**SAVING BROKE AND WAS REBUILT — 20 SEP 2026.** The viewer's sandbox now blocks
+any download a page starts for itself, `<a download>` included, and that was the
+only route her ledger had out of the app: *"File downloads aren't available for
+this artifact"*, a message from the host, not from us. **Her save function was
+never wrong** — the ground moved under it.
+
+Two routes now, and the difference is what is KNOWN:
+
+1. **The runtime's file handoff** (`downloads`, declared at publish — a chat
+   session rendering the file will NOT declare it, which is why no session could
+   give her a working Export). It asks her, then saves or **rejects**.
+2. **An ordinary browser download**, for a plain page. It cannot tell a finished
+   download from a cancelled one from a sandbox that refused, so it **does not
+   clear the unsaved warning**. Not knowing is reported as not knowing.
+
+> **The green tick is honest now, and the old accepted limit is retired.** It
+> used to fire on the CLICK, because Claude's download prompt had a Cancel the
+> app could not see; she lived with that. On route 1 the save resolves or throws,
+> so the tick means a save happened. On 20 Sep the old tick said "Saved — safe to
+> close" while nothing whatever was written, which is the worst thing this app
+> can do. **Never put a click-triggered tick back.**
 
 **Refreshing (v9.2).** The app does the thinking; she approves each change. A
 sweep CSV goes in via **Import Refresh**; the app compares it against the ledger
@@ -535,12 +568,46 @@ when it is working as designed.
 **Urgency tiers** are computed live from dates versus today (`tierFor`). No data
 written, no internet call.
 
-**Catalogue lookup (v10)** — the app's one live internet function and the only
-thing that spends tokens. Step 1 searches **only** the venue's shop domain (hard
-allow-list, cap of 1 search); step 2 runs one broad search **only if** step 1 found
-nothing. Results are tagged shop / web / none. Reseller links (Amazon AU,
-AbeBooks, Alibris) are built by the app from ISBN or title. It is one function
-(`askClaude`); swapping the model is a one-line change.
+**Catalogue lookup (v10, re-plumbed 20 Sep 2026).** Two stages, her design,
+unchanged in behaviour: stage one asks the venue's own shop and nothing else;
+stage two, only if the shop had nothing, looks wider; nothing in either means no
+catalogue. Results are tagged shop / web / none, and the reseller links (Amazon
+AU, AbeBooks, Alibris) are built from the ISBN when there is one, the title when
+there is not.
+
+**What changed underneath.** The page used to call the Anthropic API directly.
+The viewer's sandbox now blocks a page from reaching ANY outside address, so the
+request never left — the diagnostic read `Network: Failed to fetch`, which is the
+browser refusing, not a server answering. Nothing was wrong with the key, the
+account or the prompt.
+
+It now runs on **her own Parallel Search connector** (free, authless, connected on
+her claude.ai account), with `sample` reading the results. The split is
+deliberate: Claude cannot browse, so the connector finds pages and Claude only
+reads text handed to it — it can never report a shop page that was not found.
+
+**The one real loss: there is no domain LOCK any more.** The old search tool took
+`allowed_domains` and was unable to look elsewhere. The connector takes only a
+`site:` hint inside the query, which search engines treat as a strong suggestion.
+So the returned shop link is **checked** against the venue's shop domain, and a
+link that is not on it is never filed as `shopState: "shop"`. That guard is the
+substitute for the lock.
+
+**KNOWN FLAW, HER FINDING 20 SEP, NOT FIXED: the ISBN can be missed on a page that
+shows it.** The Met's *Musical Bodies* catalogue was found in the shop in one
+stage but came back with no ISBN — and the ISBN is printed on that very shop page.
+The cause is structural: the connector returns **excerpts**, not whole pages, so a
+detail below the fold is invisible. The old lookup had the model actually
+browsing, which is why this never happened before.
+
+It matters because of what happens next: with no ISBN the reseller links search by
+TITLE, and a title search misfires. *Musical Bodies* is unusual enough that Amazon
+and AbeBooks found it anyway; **Alibris returned the wrong book.**
+
+The fix is available and unbuilt: the same connector offers `web_fetch`, which
+reads a whole page. Fetching the shop product page once, when a catalogue is found
+but no ISBN came with it, would settle it. **Only `web_search` is declared
+today.**
 
 ### Reading a stitched file — `claude/jsx-stitched-intake`, 13 Sep, SIGNED OFF BY HER ON TEST DATA
 
@@ -570,6 +637,24 @@ attention rather than compute, and clearing what needs nothing leaves more of it
 for what does. Batched by kind means a venue can appear twice on the screen; she
 would rather finish one kind of thinking than keep switching. Venue headings sit
 inside every band, in the same order as the ordinary list below.
+
+**COUNTS, AND THE ONE THAT CAN FAIL — 19 Sep.** The screen said "319 proposed
+changes found" and nothing else, which cannot be checked against anything: rows
+leave the pile for three innocent reasons — a marker row, a fold, an entry that
+already matches — so 652 rows arriving as 319 cards looks exactly like 652 rows
+arriving as 319 cards with eleven quietly lost. The header now also carries the
+split by type, a count on every band, and one line that **accounts for every row
+read**:
+
+```
+file rows = markers + folds + already-matching + cards
+      652 =      36 +   211 +              86 +   319
+```
+
+The arithmetic either closes or it does not. **The bands sort by SHAPE, the types
+cut across them** — a brand-new exhibition assembled from two duplicate rows is in
+band 3, not in "Normal cases", because what the band is about is that she is seeing
+one card built from two lines.
 
 `scraper/fixtures/intake_cases.js` — 14 cases, including the two that must NOT
 merge. `scraper/fixtures/intake_sample.csv` — 76 rows, 8 venues, built from real
@@ -1176,9 +1261,22 @@ the ~6-word teaser she reads, and `sweep_compressed.csv` is **the file she impor
 - **Her 110 seed summaries are memory too** (`seedMemory`). They predate the
   compressor, so every one read as "never seen" and would have been rewritten —
   ~100 cards proposing to replace her own wording. They carry no raw text, so each
-  becomes a REVIEW rather than a free reuse, and the case retires itself after one
-  run. Matched through the same keys as everything else: the seed stores a URL
-  SLUG, and matching it by title found 56 of 110 where 103 were there.
+  becomes a REVIEW rather than a free reuse. Matched through the same keys as
+  everything else: the seed stores a URL SLUG, and matching it by title found 56
+  of 110 where 103 were there. **It does not retire** — the seed is baked into the
+  JSX, so every run consults it.
+- **THE SEED FILLS GAPS; IT DOES NOT OVERRULE — and getting that backwards was a
+  one-day bug worth remembering.** `mergeSeedMemory()` normally adds her wording
+  only where the previous run knows nothing. `--seed-wins` lets hers REPLACE a
+  summary the compressor wrote, and that is a **one-time repair, never the standing
+  rule**: as a rule it is a revert machine, because a venue rewording its page is
+  supposed to produce an updated summary, and a standing override would reset the
+  memory on the very next run and propose changing it straight back, forever.
+  What it repaired, 19 Sep: Acquavella was compressed on **11 Sep, before
+  `seedMemory` existed**, so its rows found the compressor's own first attempt in
+  memory and 13 of her summaries came back as proposed rewrites. That condition
+  cannot recur. The repair cost **no model calls** for 10 of the 13 — the pending
+  set was byte-identical, so the stored answers still fitted.
 - **Sonnet writes fresh, Haiku judges staleness.** Measured, not assumed.
 - **Reached by subagent, not the session itself** — a session uses whatever model it
   happens to be, which discards the measurement.
@@ -1352,6 +1450,28 @@ Each entry cost a real failure. Before changing the area, read the line.
 - Matching her seed summaries by TITLE when the seed carries a URL slug — 56
   matches where there were 103, and Acquavella scored zero because the scraper
   deliberately keeps the city in its titles and her seed does not.
+- Consulting her seed BEHIND the previous compressed run — 13 of her own summaries
+  came back as proposed rewrites — and then fixing it by making her wording win on
+  EVERY run, which is a revert machine. **The repair had to be a flag, not a rule**;
+  reasoning in §5.
+- Reporting a card total with nothing to check it against. Rows vanish for three
+  innocent reasons, so a total alone cannot tell a fold from a loss.
+- A status line saying "Saved — safe to close" because a button was CLICKED,
+  while the sandbox had silently refused the download and nothing was written.
+- Writing `\u2014` among the words of a page instead of inside quotes, so six
+  characters printed literally. It sat unseen for weeks because no row had ever
+  reached that state — the first catalogue found outside its venue's shop exposed
+  it. **A branch nothing has entered is untested however long it has shipped.**
+- Fourteen fixture cases committed, cited in this guide as covering the folding
+  rules, requiring a `harness.js` that did not exist — and not named by
+  `npm test` either. Two independent reasons for one silence. **A file of
+  assertions with nothing to run them reads exactly like a passing suite.**
+- Diagnosing a fault in WORKING code from a test that was not that code. One
+  hand-written search query, run in a session rather than through the app, found
+  a shop page full of tote bags; that was read as "the lookup is broken" and her
+  two-stage design was rewritten around it. Her stage two would have found the
+  book, as the very next search proved. **Run the thing itself before concluding
+  the thing is wrong.**
 - Handing a compression subagent pretty-printed JSON with fields it never reads,
   plus a second file for the examples — 178k tokens where 100k did the same work.
 - Telling a subagent what not to do and believing it. Five jobs, four disobeyed:
@@ -1379,10 +1499,14 @@ Each entry cost a real failure. Before changing the area, read the line.
 
 ## 7. Open decisions and order of work
 
-1. ~~**Compression**~~ — **DONE, built and tested. Do not re-plan.** See
-   `docs/compression.md`. One gap remains and **she has declined to close it**: the
-   judging half has never fired on real data because no venue has yet reworded a blurb.
-   It rests on an authored eval that scored 14 of 14. **Do not raise it again.**
+1. ~~**Compression**~~ — **DONE, built, tested and now proven. Do not re-plan.**
+   See `docs/compression.md`. **The judging half has fired on real data and was
+   right**, which this guide recorded for a week as never having happened. On
+   19 Sep it kept 94 of her summaries character for character, and on the repair
+   run it changed two Acquavella summaries — both correctly, both verified against
+   the raw text: *Postwar Abstraction* is not "abstract painting" when the line-up
+   is Andre, Chamberlain and David Smith, and *Portraiture* is not "Impressionism
+   to Pop" when the page says "to today" and lists Chambers and Eisenman.
 2. ~~**Wire all 21 venues**~~ — **DONE.** All 21 have a recipe; see §2 for state.
 3. ~~**Parallelism and the hang bound**~~ — **DONE** (`--jobs=N`, `--budget-mins=N`).
 4. ~~**Venue-by-venue diagnosis of the working set**~~ — **DONE, 12 Sep 2026.** All
@@ -1404,31 +1528,67 @@ Each entry cost a real failure. Before changing the area, read the line.
      met/artic/capo. It was not needed for coverage. What it bought is real:
      209 live duplicate pairs for the app's folding to work on rather than
      authored ones, and **all 209 fold with no conflict at all**.
-   - **Compress, 19 Sep** → `sweep_compressed.csv`. 616 exhibitions, 610 with a
-     summary, 36 marker rows. 390 rows went to a model in five jobs; 262 were
-     answered free. Length min 3, median 7, max 10 against her own median of 6.
-     Cost ~580k tokens, most of it in the first chunk before the packaging was
-     fixed — see §5.
+   - **Compress, 19 Sep, then repaired the same day** → `sweep_compressed.csv`.
+     616 exhibitions, 610 with a summary, 36 marker rows. 390 rows went to a
+     model in five jobs; 262 were answered free. Length min 3, median 7, max 10
+     against her own median of 6. Cost ~580k tokens, most of it in the first
+     chunk before the packaging was fixed — see §5. The repair (`--seed-wins`)
+     restored 13 Acquavella summaries to her own wording; the 19 Sep first pass
+     is kept whole in `19sep_first_pass/`.
    - **IMPORT: NOT DONE.** The app has only ever read the 76-row test file.
+     Simulated against her 110-row seed, the real file should produce **319
+     cards** — 298 add, 14 fill, 7 change — with 86 rows matching silently and
+     **no card asking her to choose**, plus a 36-page coverage panel.
 
-   **Two things found by running it that no unit test could have.** `stitch.js`
-   wrote a loose CSV while `compress.js` reads DIRECTORIES, so it silently
-   compressed the wrong file — 652 rows in, 172 out, no error; each half was
-   correct and the join between them had never been run. And the Haiku half,
-   which the guide had recorded as never having fired on real data, kept all 94
-   of her summaries character for character.
+   **Both faults found by running it were joins, not halves** — stitch writing a
+   loose file where compress reads directories, and the seed sitting behind the
+   previous run in memory. Each side was unit-tested and correct; neither join
+   had ever been run. See §6.
 
    **A QA PASS BEFORE THE STITCH IS PARKED — her ruling 19 Sep**, along with
    everything else from 16 Sep. It may be a good idea; it came out of a session
    whose reasoning she does not trust, so it is not being built on that basis.
+   **The sweep log's own exceptions report (step 8) is NOT that pass** and does
+   not re-open it.
 
-6. **Venues with no route** — `moma`, `brit`, `morgan`, and now `artic` from her
-   machine too. Not being chased; see the parked section in §2. Every sweep
-   re-tests them, so the day one answers it appears on the approval pile by itself.
+6. **Venues with no route — OPEN, not closed.** `moma`, `brit`, `morgan`, and
+   `artic` from her machine since 16 Sep. **What is parked is the 16 Sep
+   BRANCH, not the venues** — an earlier version of this line said "not being
+   chased" and that was wrong. She is giving it one more attempt: either
+   something is fixed or `claude/quiet-user-agent` is ditched for good. The
+   deciding test is a **real sweep, not a probe** — dropping `HeadlessChrome`
+   opens MoMA's listing page but all 24 detail pages still refuse, so the
+   question is whether any row arrives WITH TEXT. Every ordinary sweep re-tests
+   all four anyway, so the day one answers, it appears on the approval pile.
 
-7. **JSX work** — quarantine ("Never add this"), plus whatever steps 5–6 turn up.
-8. **Catalogue lookup tuning** — Haiku vs Sonnet, on known-tricky catalogues.
-   Independent of everything above.
+7. **JSX — quarantine and per-venue freshness. NEXT, before she works the 319.**
+   - **Quarantine ("never add this")** — design below. Without it, rejecting a
+     card stores nothing, so every piece of junk returns on every future sweep.
+     It must be **visible and undoable**: a quarantine she cannot see is a
+     silent loss, because a mis-tap means an exhibition never appears again and
+     nothing ever says so.
+   - **Per-venue freshness** — derived at import from the CSV, stored in the
+     ledger, shown in a drawer. **TWO facts, not one:** last ATTEMPTED (the
+     venue was in the file at all) and last RETURNED REAL ROWS (at least one
+     non-marker row). One global `lastRun` cannot say "artic was tried today and
+     last had data on 13 Sep", which is the line that tells her to re-run it
+     alone. It also makes the §2 status table derivable instead of hand-typed.
+8. **The sweep log flags exceptions** — mechanical checks only, comparing a
+   venue against the last run that had it: row count dropped, rows became
+   markers, a venue went to zero, summaries lost where there were some.
+   **It warns and never acts**, like `detectUnwiredPagination()`, and a false
+   alarm is the failure mode to fear — artic's 32 false page warnings taught
+   exactly the habit of scrolling past. It exists because a session
+   re-deriving "does 60 look wrong against last week's 80" gives a different
+   answer depending on which session turned up, and that question has exactly
+   one correct answer. **It is an input to the session's diagnosis, not a gate.**
+9. **Catalogue lookup — one known flaw, then tuning.** Its own session, her
+   ruling 20 Sep. First the ISBN gap: a catalogue found in a venue's shop can come
+   back without its ISBN even though the shop page prints it, because the
+   connector returns excerpts rather than whole pages — and with no ISBN the
+   reseller links search by title, which misfired on Alibris for the Met's
+   *Musical Bodies*. `web_fetch` on the same connector reads a whole page and is
+   not declared today. Then the old tuning question. Detail in §4.
 
 **The ledger is not being protected during development.** Her ruling: she keeps no real
 ledger until JSX and scraper are both finished, so she can import freely and roll back.
