@@ -947,12 +947,22 @@ NOT merge, the quarantine rules, the freshness facts with their sweep dates, the
 row identity, the whole-file refusal, the phantom band, the ledger gate (18-18g)
 and the sweep-log merge (15a, 15b).
 
-**`scraper/fixtures/page_loads.js` asks whether the app LOADS** — nothing else
-in the repo did, and a black screen is the answer to a question nobody was
-asking. **It is a floor, not a guarantee: it never renders the component**, and
-it passed while the published page was blank. Its own header says so. Making it
-real needs `react` + `react-dom` to render (that catches the exact fault), and
-`jsdom` on top for effects — dependencies this repo does not carry. See §7.
+**`scraper/fixtures/page_loads.js` asks whether the app LOADS**, and
+**`page_renders.js` asks whether it DRAWS** — added 20 Sep on her ruling, and
+the first thing this repo carries dependencies for its own sake to do
+(`react`, `react-dom`, `jsdom`, dev only, never shipped to the page). The load
+check alone is a floor and says so in its own header: it never renders, and it
+passed twice while the published page was black, because a palette defining
+itself throws on the first RENDER and not on load.
+
+`page_renders.js` builds the page the way the build does, renders it into
+jsdom, runs the effects and reads the opening screen back out of the document.
+**It renders TWICE — plain page, then with the Claude runtime answering** — as
+a fault in a capability path is invisible without one, and pass two asserts the
+page really asked the runtime for its sweep-log store, or it is pass one
+wearing a different label. **Proved by putting the real fault back**: the load
+check still passes it, the render check fails both passes. **It does not click
+anything**; a button that throws when pressed is still uncovered.
 
 **THEY LIVE ON THE LIVE BRANCH, WITH THE JSX THEY TEST, AND NOT ON `main`.** So
 `npm test` on `main` runs 173 and says nothing about the intake; on the branch
@@ -2010,13 +2020,11 @@ Each entry cost a real failure. Before changing the area, read the line.
    *Musical Bodies*. `web_fetch` on the same connector reads a whole page and is
    not declared today. Then the old tuning question. Detail in §4.
 
-10. **The app is not really tested, and a black screen proved it — OPEN.**
-    `page_loads.js` asks whether the file evaluates; nothing renders the
-    component, and on 20 Sep that gap shipped a blank page twice. Rendering it
-    needs `react` + `react-dom` as dev dependencies (`renderToString` catches
-    exactly that fault), and `jsdom` on top if the effects should run — proved
-    in a scratch directory, not added here. **Her call, because it is the first
-    time this repo would carry dependencies for its own sake.**
+10. ~~**The app is not really tested**~~ — **DONE 20 Sep, her decision to let
+    the repo carry `react`, `react-dom` and `jsdom` as dev dependencies.**
+    `page_renders.js` renders the component and fails the exact fault that
+    shipped a blank page twice; §4. Still uncovered: it does not press
+    anything.
 
 11. **`qc.js`, `qc.test.js` and the intake fixtures live on the LIVE BRANCH
     only**, and `main`'s `npm test` names none of them. Resolved by the merge;
