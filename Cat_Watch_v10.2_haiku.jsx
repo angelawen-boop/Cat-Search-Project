@@ -212,28 +212,101 @@ function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)
 
 function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:"Museum shop",href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+tq});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:"Publisher",href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?kn="+(isbn||tq)+"&sts=t"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q});return out;}
 
-async function askClaude(prompt,opts){opts=opts||{};let res;const tool={type:"web_search_20250305",name:"web_search"};if(opts.maxUses)tool.max_uses=opts.maxUses;if(opts.allowedDomains&&opts.allowedDomains.length)tool.allowed_domains=opts.allowedDomains;try{res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:4096,messages:[{role:"user",content:prompt}],tools:[tool]})});}catch(e){return{ok:false,text:"",detail:"Network: "+e.message};}const raw=await res.text();if(!res.ok)return{ok:false,text:"",detail:"HTTP "+res.status};let data;try{data=JSON.parse(raw);}catch{return{ok:false,text:"",detail:"Not JSON"};}const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");return{ok:true,text,detail:"stop:"+data.stop_reason+"\n"+text.slice(0,500)};}
+// ── FINDING A CATALOGUE — rebuilt 20 Sep 2026 ────────────────────────────────
+//
+// WHAT BROKE. The old version called api.anthropic.com straight from the page.
+// The viewer's sandbox now blocks a page from reaching ANY outside address, so
+// the request never left: the diagnostic read "Network: Failed to fetch", which
+// is the browser refusing, not a server saying no. Nothing was wrong with the
+// key, the account or the prompt. The route closed.
+//
+// WHAT REPLACES IT, and why it is not the same mistake. A page may not reach
+// the internet, but it MAY call the viewer's own connectors, under the viewer's
+// credentials, with no key anywhere in this file. So:
+//
+//   1. SEARCH runs on her Parallel Search connector — free, no account, and
+//      the page never touches the network itself.
+//   2. READING the results is Claude's job, through `sample`. Claude cannot
+//      browse, which is exactly why the two halves are separate: the connector
+//      finds pages, Claude only reads text we hand it. It can never invent a
+//      shop it did not see.
+//
+// The division is the same as before — search, then a model reads what came
+// back. Only the plumbing changed.
+//
+// NAMED CONSTANTS, because a typo here fails at the viewer, not here.
+const SEARCH_SERVER = "Parallel Search";
+const SEARCH_TOOL   = "web_search";
 
-function extractObjects(text){if(!text)return[];const out=[];let depth=0,start=-1,inStr=false,esc=false;for(let i=0;i<text.length;i++){const c=text[i];if(inStr){if(esc)esc=false;else if(c==="\\")esc=true;else if(c==='"')inStr=false;continue;}if(c==='"')inStr=true;else if(c==="{"){if(depth===0)start=i;depth++;}else if(c==="}"){depth--;if(depth===0&&start!==-1){try{out.push(JSON.parse(text.slice(start,i+1)));}catch{}start=-1;}}}return out;}
+// The connector wants a stable id per conversation for its free-tier limits.
+// One per page load is the honest reading of "conversation" here.
+const SEARCH_SESSION = "catwatch" + Math.random().toString(16).slice(2).padEnd(16, "0")
+                                  + Date.now().toString(16);
+
+async function useCap(name){
+  try{
+    if(typeof window==="undefined"||!window.claude||typeof window.claude.use!=="function")return null;
+    return await window.claude.use(name);
+  }catch{ return null; }
+}
+
+// Every failure code that has its OWN fix gets its own sentence. The capability
+// notes name a single catch-all banner as the anti-pattern: it hides the one
+// action that would fix the page.
+function mcpTrouble(e){
+  const code=String((e&&e.code)||"");
+  if(code==="server_not_connected")return "Add the \u201cParallel Search\u201d connector in claude.ai \u2192 Settings \u2192 Connectors, then try again.";
+  if(code==="needs_reauth")       return "Reconnect \u201cParallel Search\u201d in claude.ai \u2192 Settings \u2192 Connectors \u2014 its access has lapsed.";
+  if(code==="not_in_manifest")    return "This page isn\u2019t allowed to use \u201cParallel Search\u201d \u2014 you may have turned it off for this artifact.";
+  if(code==="selection_required") return "You have more than one \u201cParallel Search\u201d connector. Pick one when Claude asks, then try again.";
+  if(code==="blocked_by_policy")  return "Your organisation blocks this connector.";
+  if(code==="server_unavailable") return "The search service didn\u2019t answer. Worth one more try in a moment.";
+  if(code==="rate_limited")       return "Too many searches just now. Leave it a minute.";
+  if(code==="cancelled")          return "Search stopped.";
+  return "Search failed ("+(code||"unknown")+").";
+}
+
+// Ask the connector. Returns {ok, results, detail} — never throws.
+async function searchWeb(objective,queries){
+  const mcp=await useCap("mcp");
+  if(!mcp)return{ok:false,results:[],detail:"No connector access in this viewer. The page must be opened from its claude.ai link."};
+  let res;
+  try{
+    res=await mcp.callTool(SEARCH_SERVER,SEARCH_TOOL,{
+      objective,
+      search_queries:queries,
+      session_id:SEARCH_SESSION,
+    });
+  }catch(e){
+    return{ok:false,results:[],detail:mcpTrouble(e)+"  ["+String((e&&e.code)||"")+" "+String((e&&e.message)||e)+"]"};
+  }
+  const p=res&&res.payload;
+  const results=(p&&Array.isArray(p.results))?p.results:[];
+  return{ok:true,results,detail:"search: "+results.length+" results for "+JSON.stringify(queries)};
+}
+
+// Hand the search results to Claude and ask it to read the catalogue off them.
+// It sees ONLY these excerpts, so it cannot report a shop page that was not
+// found. Returns {ok, data, detail}.
+async function readResults(prompt){
+  const sample=await useCap("sample");
+  if(!sample)return{ok:false,data:null,detail:"Claude isn\u2019t available to this page in this viewer."};
+  try{
+    const data=await sample.json(prompt,{modelTier:"default"});
+    return{ok:true,data,detail:"read the results"};
+  }catch(e){
+    const code=String((e&&e.code)||"");
+    let why="Couldn\u2019t read the search results ("+(code||"unknown")+").";
+    if(code==="not_granted")       why="You declined to let this page use Claude. Reload and allow it to search.";
+    else if(code==="rate_limited") why="Claude is rate-limited right now \u2014 leave it a minute.";
+    else if(code==="invalid_json") why="Claude\u2019s answer came back unreadable. Try again.";
+    return{ok:false,data:null,detail:why+"  ["+String((e&&e.message)||e)+"]"};
+  }
+}
+
 
 const today=()=>new Date().toISOString().slice(0,10);
-function exPrompt(mu,p){
-  return `Read the museum's ${p} exhibition listing at ${mu.listUrl}.
-Extract EVERY exhibition shown on that listing. Do not open individual exhibition pages.
-For each exhibition return ONLY:
-- exact exhibition-page URL as linked from the listing
-- title
-- startDate
-- endDate
-- one-sentence description if the listing provides one
-Do not search for catalogues or catalogue information.
-Do not add commentary.
-Return JSON array only.
-[{"url":"","title":"","startDate":"YYYY-MM-DD","endDate":"YYYY-MM-DD","summary":""}]`;
-}
 function shopDomain(mu){if(!mu||!mu.shopHome)return null;try{return new URL(mu.shopHome).hostname;}catch{return null;}}
-function shopPrompt(r,mu){return'Search ONLY this museum shop for the printed exhibition catalogue (the book) for: "'+r.title+'" at '+(mu?mu.name:"")+'.\nLook for the catalogue\'s own product page in this shop. Return JSON only, no other text:\n{inShop: true or false, shopUrl: the product page URL in this shop or null, catalogueTitle, isbn13: 13 digits only, publisher, publisherUrl}\nIf you cannot find the catalogue in this shop, return inShop:false.';}
-function webPrompt(r,mu){return'Confirm whether a printed exhibition catalogue (a book) exists for: "'+r.title+'" at '+(mu?mu.name:"")+'.\nReturn JSON only, no other text:\n{hasCatalogue: "yes" or "no", catalogueTitle, isbn13: 13 digits only, publisher, publisherUrl}\nIf no catalogue was ever published, hasCatalogue:"no".';}
 
 const SKEY="cw-v3";
 // DORMANT in v8: Claude cloud save is kept in the file but nothing calls it.
@@ -741,135 +814,116 @@ export default function App(){
   function cancelRefresh(){ setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   const pickSort=k=>{setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
-  async function refreshVenues(ids){
-    setBusy(true);setError(null);setDebug(null);
-    const periods=[
-      {id:"past",inst:"past exhibitions listing"},
-      {id:"current",inst:"current exhibitions listing"},
-      {id:"upcoming",inst:"upcoming/announced exhibitions listing"}
-    ];
-    const jobs=[];
-    for(const mid of ids){
-      const mu=MU[mid];
-      if(mu)for(const p of periods)jobs.push({mu,p});
+  // refreshVenues() REMOVED 20 Sep 2026. It had the app gathering its own
+  // exhibition data — rejected long ago and wired to no button since — and it
+  // called askClaude(), which no longer exists. Dead code shaped like live code
+  // is a trap for whoever debugs this next; git holds it.
+
+
+  // Turn the connector's results into the few lines Claude is asked to read.
+  // Trimmed hard: excerpts are long, and the prompt has a 64 KiB ceiling.
+  const resultsForPrompt=list=>list.slice(0,8).map((r,i)=>
+    (i+1)+". "+String(r.title||"(untitled)")+"\n   "+String(r.url||"")+"\n   "
+    +(Array.isArray(r.excerpts)?r.excerpts.join(" ").replace(/\s+/g," ").slice(0,700):"")
+  ).join("\n\n");
+
+  const READ_RULES=
+    "You are reading real web search results to find the PRINTED EXHIBITION CATALOGUE for one exhibition.\n"
+   +"Use ONLY what the results below actually say. Never use outside knowledge, never guess an ISBN, "
+   +"never invent a shop page.\n"
+   +"A catalogue is a BOOK about the exhibition. Tote bags, prints, postcards, mugs, notebooks and "
+   +"generic gift items are NOT catalogues, even on the exhibition's own shop page.\n"
+   +"THE ISBN IS OFTEN NOT IN THE SHOP. Museums routinely print the catalogue's title, publisher and "
+   +"ISBN in a PRESS RELEASE or on the exhibition's own page, while the shop lists only souvenirs. "
+   +"A press release stating the book counts as finding it.\n"
+   +"Beware of unrelated books that merely share the exhibition's title \u2014 a classical text, a novel, "
+   +"a textbook. The catalogue is the one tied to THIS exhibition at THIS venue.\n";
+
+  const READ_SHAPE=
+    "\nReply with ONLY this JSON object and nothing else:\n"
+   +'{"found": true|false, "catalogueTitle": string|null, "isbn13": string|null, '
+   +'"publisher": string|null, "shopUrl": string|null, "saysNoCatalogue": true|false}\n'
+   +'Example: {"found":true,"catalogueTitle":"Metamorphoses: Ovid and the Arts","isbn13":"9789493416543",'
+   +'"publisher":"Hannibal Books","shopUrl":null,"saysNoCatalogue":false}\n'
+   +'"saysNoCatalogue" is true ONLY when the results positively state no catalogue was published. '
+   +"Results that simply don't mention one leave it false \u2014 that is not evidence of absence.";
+
+  // WHERE A CATALOGUE'S DETAILS ACTUALLY LIVE — corrected 20 Sep 2026 against a
+  // book she owns. Searching the venue's SHOP alone found its Metamorphoses
+  // page selling tote bags and notebooks, and that read as "no catalogue". The
+  // ISBN was on the museum's own PRESS RELEASE. So the first pass now covers
+  // the venue's whole site as well as its shop, and the shop is preferred for
+  // the LINK rather than relied on for the evidence.
+  const hostOf=u=>{ try{ return new URL(String(u)).hostname.replace(/^www\./,""); }catch{ return null; } };
+
+  // A "NO" MUST BE EARNED. The old code wrote hasCatalogue:"no" whenever a
+  // search came back thin, and marked the row looked-at, so it was never asked
+  // again. That is the most expensive mistake this app can make: the whole
+  // point is not missing a catalogue before it goes out of print. Now only a
+  // result that POSITIVELY says no catalogue exists records "no"; anything
+  // inconclusive records "unknown", which leaves Search again on the card.
+  const settle=(row,o,dom,detail)=>{
+    const onShop=o.shopUrl&&dom&&String(o.shopUrl).toLowerCase().includes(String(dom).toLowerCase());
+    if(o.found&&(o.catalogueTitle||o.isbn13)){
+      return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"yes",shopState:onShop?"shop":"web",
+        catalogueTitle:o.catalogueTitle||null,isbn13:cleanIsbn(o.isbn13),
+        publisher:o.publisher||null,publisherUrl:null,shopUrl:onShop?o.shopUrl:null}};
     }
-
-    const found=[];
-    let fails=0;
-    let firstD=null;
-
-    // Lightweight first pass: read only the museum listing pages.
-    // No catalogue research and no individual exhibition-page research here.
-    for(let i=0;i<jobs.length;i++){
-      const{mu,p}=jobs[i];
-      setProg({done:i,total:jobs.length,label:mu.short+" — "+p.id});
-      const res=await askClaude(exPrompt(mu,p.inst));
-      if(!firstD)firstD=mu.short+"/"+p.id+"\n"+res.detail;
-      const items=res.ok?extractObjects(res.text):[];
-      if(!items.length){fails++;continue;}
-
-      for(const it of items){
-        if(!it||!it.title)continue;
-        found.push({
-          id:mu.id+"-"+normalizeTitle(it.title).replace(/[^a-z0-9]+/g,"").slice(0,50),
-          museumId:mu.id,
-          title:String(it.title).trim(),
-          startDate:it.startDate||null,
-          endDate:it.endDate||null,
-          summary:it.summary||"",
-          exUrl:it.url||it.exUrl||"",
-          hasCatalogue:"unknown"
-        });
-      }
+    if(o.saysNoCatalogue){
+      return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"no",shopState:"none",
+        catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,shopUrl:null}};
     }
-
-    // Local merge: exact venue + exact exhibition URL is the first and strongest
-    // duplicate shortcut. Only unmatched URLs use the broader duplicate rules.
-    const byId=new Map(rows.map(r=>[r.id,r]));
-    for(const f of found){
-      const exactUrl=f.exUrl
-        ? Array.from(byId.values()).find(r=>r.museumId===f.museumId&&r.exUrl===f.exUrl)
-        : null;
-      // Do not use the title-derived ID as a duplicate shortcut: the same
-      // title can legitimately represent a separate run at the same venue.
-      const match=exactUrl||Array.from(byId.values()).find(r=>sameExhibition(r,f));
-
-      if(match){
-        byId.set(match.id,{
-          ...match,
-          startDate:f.startDate||match.startDate||null,
-          endDate:f.endDate||match.endDate||null,
-          summary:f.summary||match.summary,
-          exUrl:match.exUrl||f.exUrl||""
-        });
-      }else{
-        const mu=MU[f.museumId];
-        byId.set(f.id,{
-          ...f,
-          exUrl:f.exUrl||mu?.listUrl||"",
-          interested:true,
-          watching:false,
-          acquiring:null,
-          looked:false,
-          catalogueTitle:null,
-          isbn13:null,
-          publisher:null,
-          publisherUrl:null,
-          shopUrl:null
-        });
-      }
-    }
-
-    // Only genuinely new records lacking a usable description get a fallback
-    // individual-page lookup. Catalogue research remains completely separate.
-    let arr=Array.from(byId.values());
-    const existingIds=new Set(rows.map(r=>r.id));
-    const newItems=arr.filter(r=>!existingIds.has(r.id)&&!r.summary);
-    for(const r of newItems){
-      const mu=MU[r.museumId];
-      if(!mu||!r.exUrl)continue;
-      const prompt=`Open the exhibition page ${r.exUrl} only to obtain a concise one-sentence description for "${r.title}" at ${mu.name}. Return JSON array only with {"title":"...","summary":"..."}. Do not search for or report catalogue information.`;
-      const res=await askClaude(prompt);
-      const objs=res.ok?extractObjects(res.text):[];
-      if(objs.length&&objs[0].summary){
-        arr=arr.map(x=>x.id===r.id?{...x,summary:objs[0].summary}:x);
-      }
-    }
-
-    arr=Array.from(new Map(arr.map(r=>[r.id,r])).values());
-    await commit(arr,new Date().toISOString());
-    setProg({done:jobs.length,total:jobs.length,label:"Done"});
-    setBusy(false);
-    setDebug(firstD);
-    if(fails===jobs.length)setError("Every search came back empty.");
-    else if(fails>0)setError(fails+" of "+jobs.length+" returned nothing.");
-  }
+    return{ok:true,uncertain:true,detail,row:{...row,looked:true,hasCatalogue:"unknown",shopState:"none",
+      catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,shopUrl:null}};
+  };
 
   async function lookupCat(row){
     const mu=MU[row.museumId];
     const dom=shopDomain(mu);
-    let detail="";
-    // Step 1 — search the venue's own shop only, hard-capped.
-    if(dom){
-      setLookPhase("shop");
-      const r1=await askClaude(shopPrompt(row,mu),{allowedDomains:[dom],maxUses:1});
-      detail=r1.detail||"";
-      const o1=r1.ok?extractObjects(r1.text)[0]:null;
-      if(o1&&o1.inShop&&(o1.shopUrl||o1.catalogueTitle)){
-        return {ok:true,detail,row:{...row,looked:true,hasCatalogue:"yes",shopState:"shop",catalogueTitle:o1.catalogueTitle||null,isbn13:cleanIsbn(o1.isbn13),publisher:o1.publisher||null,publisherUrl:o1.publisherUrl||null,shopUrl:o1.shopUrl||null}};
-      }
+    const venueHost=hostOf(mu&&(mu.exBase||mu.listUrl));
+    const title=String(row.title||"").trim();
+    const venue=mu?mu.name:"";
+
+    // ── Pass one: the venue itself — its shop AND its own pages ─────────────
+    setLookPhase("shop");
+    const q1=[];
+    if(dom)      q1.push("site:"+dom+" "+title+" catalogue");
+    if(venueHost)q1.push("site:"+venueHost+" "+title+" catalogue ISBN");
+    q1.push(venue+" "+title+" exhibition catalogue ISBN");
+    const s1=await searchWeb(
+      "Find the printed exhibition catalogue for \u201c"+title+"\u201d at "+venue
+        +": its exact title, ISBN-13, publisher, and the museum shop page selling it if there is one. "
+        +"The ISBN is often given in the museum's own press release rather than in its shop.",
+      q1);
+    if(!s1.ok)return{row,detail:s1.detail,ok:false};
+
+    if(s1.results.length){
+      const r1=await readResults(READ_RULES
+        +"\nExhibition: "+title+"\nVenue: "+venue+(dom?"\nIts shop is at "+dom:"")+"\n\n"
+        +resultsForPrompt(s1.results)+READ_SHAPE);
+      if(!r1.ok)return{row,detail:s1.detail+"\n"+r1.detail,ok:false};
+      const o=r1.data||{};
+      if(o.found&&(o.catalogueTitle||o.isbn13)) return settle(row,o,dom,s1.detail+"\n"+r1.detail);
     }
-    // Step 2 — only if the shop had nothing: one broad search to confirm the catalogue exists at all.
+
+    // ── Pass two: wider, and only because pass one found no book ───────────
     setLookPhase("web");
-    const r2=await askClaude(webPrompt(row,mu),{maxUses:1});
-    detail=r2.detail||detail;
-    const o2=r2.ok?extractObjects(r2.text)[0]:null;
-    if(!r2.ok||!o2)return{row,detail,ok:false};
-    if(o2.hasCatalogue==="no"){
-      return {ok:true,detail,row:{...row,looked:true,hasCatalogue:"no",shopState:"none",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,shopUrl:null}};
-    }
-    // Exists on the wider web, but not in the venue's own shop.
-    return {ok:true,detail,row:{...row,looked:true,hasCatalogue:"yes",shopState:"web",catalogueTitle:o2.catalogueTitle||null,isbn13:cleanIsbn(o2.isbn13),publisher:o2.publisher||null,publisherUrl:o2.publisherUrl||null,shopUrl:null}};
+    const s2=await searchWeb(
+      "Confirm whether a printed catalogue was published for the exhibition \u201c"+title+"\u201d at "
+        +venue+", and give its title, ISBN-13 and publisher. Art-book publishers and booksellers "
+        +"list these; say plainly if no catalogue was published.",
+      [title+" exhibition catalogue ISBN publisher",
+       venue+" "+title+" catalogue book",
+       title+" "+venue+" press release catalogue"]);
+    const detail=s1.detail+"\n"+s2.detail;
+    if(!s2.ok)return{row,detail,ok:false};
+    if(!s2.results.length) return settle(row,{},dom,detail);
+
+    const r2=await readResults(READ_RULES
+      +"\nExhibition: "+title+"\nVenue: "+venue+(dom?"\nIts shop is at "+dom:"")+"\n\n"
+      +resultsForPrompt(s2.results)+READ_SHAPE);
+    if(!r2.ok)return{row,detail:detail+"\n"+r2.detail,ok:false};
+    return settle(row,r2.data||{},dom,detail+"\n"+r2.detail);
   }
 
   async function findOneCat(id){setBusy(true);setBusyId(id);setError(null);const row=rows.find(r=>r.id===id);const out=await lookupCat(row);setDebug(out.detail);if(out.ok)await commit(rows.map(r=>r.id===id?out.row:r));else setError("Catalogue search failed for \u201c"+row.title+"\u201d.");setBusy(false);setBusyId(null);setLookPhase(null);}
@@ -1252,7 +1306,7 @@ export default function App(){
           let header=null;
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
           const lead=brk||header;
-          const t=tierFor(r),tier=TIERS[t],mu=MU[r.museumId],mo=moSince(r.endDate),isOpen=openCards[r.id],noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested,isBusy=busyId===r.id;
+          const t=tierFor(r),tier=TIERS[t],mu=MU[r.museumId],mo=moSince(r.endDate),isOpen=openCards[r.id],noCat=r.looked&&r.hasCatalogue==="no",unsure=r.looked&&r.hasCatalogue==="unknown",isAcq=r.acquiring==="acquired",dismissed=!r.interested,isBusy=busyId===r.id;
           const searchingLabel=lookPhase==="shop"?"Searching venue shop\u2026":lookPhase==="web"?"Searching more broadly\u2026":"Searching\u2026";
           if(dismissed)return(
             <React.Fragment key={r.id}>{lead}
@@ -1319,6 +1373,18 @@ export default function App(){
                     <div>
                       <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>
                       <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{isBusy?searchingLabel:"Search again"}</button>
+                    </div>
+                  ):unsure?(
+                    /* SEARCHED, NOTHING CONCLUSIVE — deliberately its own state.
+                       It is not "no catalogue", and showing it as one is how a
+                       book gets missed: a museum's shop can list nothing but
+                       souvenirs while its press release carries the ISBN. */
+                    <div>
+                      <p style={{fontSize:12,color:C.soft,margin:"0 0 4px"}}>Searched, but nothing definite came back.</p>
+                      <p style={{fontSize:11,color:C.soft,margin:"0 0 8px",lineHeight:1.45}}>
+                        {"This is not the same as \u201cno catalogue\u201d \u2014 it means the search couldn\u2019t settle it. Worth trying again, or opening the exhibition\u2019s own page above."}
+                      </p>
+                      <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{...pBtn,padding:"6px 12px",fontSize:12}}>{isBusy?searchingLabel:"Search again"}</button>
                     </div>
                   ):(
                     <div>
