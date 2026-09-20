@@ -40,6 +40,12 @@ is why they live in one repo, on one branch.
   real problem and say what you did.
 - **She will not manually enter exhibition data.** A fixed constraint.
 - **Destructive actions need a confirmed backup or an explicit yes.**
+- **NEVER REPUBLISH THE APP WHILE SHE HAS IT OPEN.** Her ruling, 20 Sep. The
+  published page updates under her, and her ledger lives IN that page until she
+  Exports — so a push landing mid-review can take unsaved work with it, not just
+  her scroll position. Ask, or wait until she says she is out. (A page can be
+  made to carry its state across an update; not built, and building it does not
+  retire this rule.)
 - **Long runs need progress.** A backgrounded command that shows nothing reads as
   a dead session.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
