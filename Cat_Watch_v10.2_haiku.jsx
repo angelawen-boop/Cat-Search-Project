@@ -415,6 +415,14 @@ export default function App(){
   // Listing pages the sweep could not read. NOT proposals — see isMarkerRow().
   const[coverage,setCoverage]=useState([]);
   const[tally,setTally]=useState(null);
+  // WHICH TRIAGE BANDS ARE OPEN. Most are empty on a healthy file, and the two
+  // that are not need nothing from her, so a permanently expanded band is a
+  // long scroll between her and the actual work. The default is set by WHAT A
+  // BAND ASKS OF HER, never by its size: one she cannot act on opens closed
+  // (markers, combined-for-you), one needing a look or a decision opens open.
+  // The count sits on the header either way, so collapsing hides the cards and
+  // never the fact that there are some.
+  const[openBands,setOpenBands]=useState({});
   const[decisions,setDecisions]=useState({}); // proposal index -> "accept"|"reject"|"addnew"
   const[refreshDone,setRefreshDone]=useState(null); // {added,filled,changed} after applying
   const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
@@ -1424,30 +1432,43 @@ export default function App(){
           <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
             <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
               <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>{proposals.length} proposed change{proposals.length===1?"":"s"} found</div>
-              {/* THE COUNTS, AND WHY THEY EARN THEIR SPACE. A card total on its
-                  own cannot be checked against anything: rows leave the pile
-                  for three innocent reasons — a marker row, a fold, an entry
-                  that already matches — and 652 rows arriving as 319 cards is
-                  indistinguishable from 652 rows arriving as 319 cards with
-                  eleven quietly lost. The second line accounts for every row
-                  read, so the arithmetic either closes or it does not. */}
-              {tally&&(
+              {/* THE COUNTS, AND WHY THEY EARN THEIR SPACE. A card total on
+                  its own cannot be checked against anything: rows leave the
+                  pile for four innocent reasons — a marker row, a quarantine,
+                  a fold, an entry that already matches — so 652 rows arriving
+                  as 319 cards is indistinguishable from the same with eleven
+                  quietly lost.
+
+                  REWRITTEN TO HER WORDING, 20 Sep. Two sentences, each ending
+                  in the number the next one starts from: the file narrows to
+                  the pile, the pile splits by what it does to her ledger. The
+                  old version put the split FIRST and the reconciliation
+                  second, so the two lines shared no number and nothing led
+                  anywhere. Every term stays — drop one and the arithmetic
+                  stops closing, which is the only thing these lines are for. */}
+              {tally&&(()=>{
+                const cards=tally.add+tally.fill+tally.change+tally.unusable;
+                const n=(v,tone)=><b style={{color:tone||C.ink}}>{v}</b>;
+                return (
                 <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.6}}>
                   <div>
-                    <b style={{color:C.ink}}>{tally.add}</b> new
-                    {" \u00b7 "}<b style={{color:C.ink}}>{tally.fill}</b> filling a gap
-                    {" \u00b7 "}<b style={{color:C.ink}}>{tally.change}</b> changing something you have
-                    {tally.unusable>0&&<>{" \u00b7 "}<b style={{color:C.accent}}>{tally.unusable}</b> couldn{"\u2019"}t be filed</>}
+                    From {n(tally.fileRows)} row{tally.fileRows===1?"":"s"} in the file
+                    {" \u2014 "}{n(tally.markers)} marker row{tally.markers===1?"":"s"}
+                    {tally.blocked>0&&<>{", "}{n(tally.blocked)} you{"\u2019"}d said never to add</>}
+                    {", "}{n(tally.folded)} duplicate row{tally.folded===1?"":"s"} reconciled/de-duped
+                    {", "}{n(tally.silent)} already matching ledger
+                    {" = "}{n(cards)} entries considered for import
                   </div>
                   <div style={{marginTop:2}}>
-                    From <b style={{color:C.ink}}>{tally.fileRows}</b> row{tally.fileRows===1?"":"s"} in the file
-                    {tally.markers>0&&<>{", "}{tally.markers} unreadable listing page{tally.markers===1?"":"s"}</>}
-                    {tally.blocked>0&&<>{", "}{tally.blocked} you{"\u2019"}d said never to add</>}
-                    {tally.folded>0&&<>{", "}{tally.folded} duplicate cop{tally.folded===1?"y":"ies"} combined</>}
-                    {tally.silent>0&&<>{", "}{tally.silent} already match{tally.silent===1?"es":""} your ledger</>}.
+                    From {n(cards)} entr{cards===1?"y":"ies"}
+                    {" \u2014 "}{n(tally.fill)} fill a gap
+                    {", "}{n(tally.change)} edit existing data
+                    {", "}{n(tally.add)} new exhibition{tally.add===1?"":"s"}
+                    {tally.unusable>0&&<>{", "}{n(tally.unusable,C.accent)} couldn{"\u2019"}t be filed</>}
                   </div>
                 </div>
-              )}
+                );
+              })()}
               <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.5}}>Review each one below. Nothing changes in your ledger until you tap {"\u201c"}Go ahead and update the ledger{"\u201d"}.</div>
             </div>
             <div style={{overflow:"auto",padding:"12px 18px",flex:1}}>
@@ -1514,72 +1535,60 @@ export default function App(){
                     </div>
                   );
                 }).filter(Boolean);
-                // EVERY BAND CARRIES ITS OWN COUNT. Without one a band is an
-                // unbounded pile: there is no way to tell "two of these" from
-                // "eighty of these" before scrolling through them, and no way
-                // to check the bands add up to the total in the header.
-                const band=(title,blurb,tone,n)=>(
-                  <div style={{marginBottom:6}}>
-                    <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:tone||C.soft,marginBottom:4,fontWeight:600}}>{title}{n!==undefined&&" \u00b7 "+n}</div>
-                    {blurb&&<div style={{fontSize:11.5,color:C.soft,lineHeight:1.55,marginBottom:8}}>{blurb}</div>}
-                  </div>
-                );
-                const anyTriage = coverage.length||scrap.length||mergedOnly.length||mergedConf.length||confOnly.length||noLink.length;
+                // EVERY BAND CARRIES ITS OWN COUNT, AND ITS OWN DISCLOSURE.
+                // Without a count a band is an unbounded pile: no way to tell
+                // "two of these" from "eighty" before scrolling through them,
+                // and no way to check the bands add up to the header. The count
+                // lives ON the header, so collapsing can never hide it.
+                const bandOpen=(key,dflt)=>openBands[key]===undefined?dflt:openBands[key];
+                const band=(key,title,tone,n,dflt,body)=>{
+                  const open=bandOpen(key,dflt);
+                  return(
+                    <div key={key} style={{marginBottom:10}}>
+                      <button onClick={()=>setOpenBands(o=>({...o,[key]:!open}))}
+                        style={{display:"flex",alignItems:"center",gap:7,width:"100%",textAlign:"left",background:"none",
+                                border:"none",borderBottom:"1px solid "+C.rule,padding:"5px 0",cursor:"pointer",color:tone||C.soft}}>
+                        <span style={{fontSize:9,lineHeight:1,width:9,display:"inline-block",transform:open?"rotate(90deg)":"none",transition:"transform .12s"}}>{"\u25B6"}</span>
+                        <span style={{fontSize:11,letterSpacing:"0.07em",fontWeight:600}}>{title}</span>
+                        <span style={{fontSize:11,fontWeight:700,color:tone||C.ink}}>{"\u00b7"} {n}</span>
+                      </button>
+                      {open&&<div style={{marginTop:8}}>{body}</div>}
+                    </div>
+                  );
+                };
+                // ODD CASES COUNTS THE MARKERS TOO. It used to add up only the
+                // five card bands, so the heading read "Odd cases first \u00b7 0"
+                // directly above a band of its own saying 9 \u2014 a total that
+                // left out one of the things it was totalling.
+                const oddCount=coverage.length+scrap.length+mergedOnly.length+mergedConf.length+confOnly.length+noLink.length;
+                const markerBlocks=MUSEUMS.map(m=>{
+                  const grp=coverage.filter(cv=>cv.venueId===m.id);
+                  if(!grp.length)return null;
+                  return(
+                    <div key={"cvg"+m.id} style={{marginBottom:10}}>
+                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
+                      {grp.map((cv,i)=>(
+                        <div key={"cv"+i} style={{border:"1px solid "+C.rule,borderRadius:6,padding:"8px 10px",marginBottom:6,background:C.card}}>
+                          <div style={{fontSize:12,color:C.ink}}>{cv.what}</div>
+                          <div style={{fontSize:11.5,color:C.soft,marginTop:2,lineHeight:1.5}}>{cv.why}</div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }).filter(Boolean);
                 return(<>
-                  {anyTriage>0&&(
+                  {oddCount>0&&(
                     <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
-                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Odd cases first {"\u00b7"} {scrap.length+mergedOnly.length+mergedConf.length+confOnly.length+noLink.length}</div>
-                      <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55,marginBottom:12}}>Everything that isn{"\u2019"}t a straightforward entry, grouped by what it needs from you {"\u2014"} nothing, then a look, then a decision. The ordinary entries follow underneath.</div>
-
-                      {coverage.length>0&&(<>
-                        {band("1 \u00b7 Pages that couldn\u2019t be read \u00b7 nothing to do","The sweep tried these and was turned away. No exhibitions came from them, so nothing is missing that was ever offered.",undefined,coverage.length)}
-                        {MUSEUMS.map(m=>{
-                          const grp=coverage.filter(cv=>cv.venueId===m.id);
-                          if(!grp.length)return null;
-                          return(
-                            <div key={"cvg"+m.id} style={{marginBottom:10}}>
-                              <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
-                              {grp.map((cv,i)=>(
-                                <div key={"cv"+i} style={{border:"1px solid "+C.rule,borderRadius:6,padding:"8px 10px",marginBottom:6,background:C.card}}>
-                                  <div style={{fontSize:12,color:C.ink}}>{cv.what}</div>
-                                  <div style={{fontSize:11.5,color:C.soft,marginTop:2,lineHeight:1.5}}>{cv.why}</div>
-                                </div>
-                              ))}
-                            </div>
-                          );
-                        })}
-                      </>)}
-
-                      {scrap.length>0&&(<>
-                        {band("2 \u00b7 Unusable rows \u00b7 needs a redo","No venue code or no title, so these can\u2019t be filed at all. Fix them in the sweep file and feed it again.",C.accent,scrap.length)}
-                        {byVenueBlocks(scrap)}
-                      </>)}
-
-                      {mergedOnly.length>0&&(<>
-                        {band("3 \u00b7 Combined for you \u00b7 nothing to decide","The file described these more than once and the copies agreed, so they were filled in from each other. You\u2019re seeing the finished result.",undefined,mergedOnly.length)}
-                        {byVenueBlocks(mergedOnly)}
-                      </>)}
-
-                      {mergedConf.length>0&&(<>
-                        {band("4 \u00b7 Combined, but one field disagrees \u00b7 needs a choice","Same as above, except the copies didn\u2019t match on one field. Both values are shown; the longer one is picked for you.",C.accent,mergedConf.length)}
-                        {byVenueBlocks(mergedConf)}
-                      </>)}
-
-                      {confOnly.length>0&&(<>
-                        {band("5 \u00b7 Two different answers \u00b7 needs a choice","The file gave two values for the same field. Both are shown; the longer one is picked for you.",C.accent,confOnly.length)}
-                        {byVenueBlocks(confOnly)}
-                      </>)}
-                      {noLink.length>0&&(<>
-                        {band("6 \u00b7 No link to the exhibition \u00b7 usable, but worth a look","Everything else is here, so these can be accepted as they are and the arrow will open the venue\u2019s own listing. The missing link only costs later: it is what lets a future sweep recognise the same show, so these will keep arriving as new.",undefined,noLink.length)}
-                        {byVenueBlocks(noLink)}
-                      </>)}
+                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>Odd cases {"\u00b7"} {oddCount}</div>
+                      {coverage.length>0&&band("markers","1. Marker rows",undefined,coverage.length,false,markerBlocks)}
+                      {scrap.length>0&&band("scrap","2. Unusable rows \u00b7 needs a redo",C.accent,scrap.length,true,byVenueBlocks(scrap))}
+                      {mergedOnly.length>0&&band("merged","3. Combined for you \u00b7 nothing to decide",undefined,mergedOnly.length,false,byVenueBlocks(mergedOnly))}
+                      {mergedConf.length>0&&band("mergedconf","4. Combined, but one field disagrees \u00b7 needs a choice",C.accent,mergedConf.length,true,byVenueBlocks(mergedConf))}
+                      {confOnly.length>0&&band("conf","5. Two different answers \u00b7 needs a choice",C.accent,confOnly.length,true,byVenueBlocks(confOnly))}
+                      {noLink.length>0&&band("nolink","6. No link to the exhibition \u00b7 usable, but worth a look",undefined,noLink.length,true,byVenueBlocks(noLink))}
                     </div>
                   )}
-
-                  {/* THE ORDINARY WORK, still grouped by venue as it always was.
-                      Headed in the same style as the triage block: a rule alone
-                      reads as a gap, not as a change of subject. */}
-                  {ordinary.length>0&&(
+                {ordinary.length>0&&(
                     <div style={{marginBottom:12}}>
                       <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Normal cases {"\u00b7"} {ordinary.length}</div>
                       <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing. Accept or reject each.</div>
