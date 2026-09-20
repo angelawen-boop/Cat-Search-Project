@@ -25,10 +25,10 @@
  * on load. She found that one too, after I told her it was fixed.
  *
  * So this is a floor, not a guarantee, and a green line from it means only
- * that the file evaluates. Making it real needs react + react-dom to render
- * the component (renderToString catches exactly that fault), and jsdom on top
- * if the effects should run. Those are dependencies this repo does not carry
- * and nobody has agreed to add — see §7.
+ * that the file evaluates. `page_renders.js` beside it is the real check —
+ * her call, 20 Sep, to let the repo carry react, react-dom and jsdom for it.
+ * This one is kept because it is the cheaper question and it still isolates
+ * a load-time fault from a render-time one.
  *
  *   node scraper/fixtures/page_loads.js            builds and checks
  */

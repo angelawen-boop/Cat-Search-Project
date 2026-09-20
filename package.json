@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --test scraper/date.test.js scraper/compress.test.js scraper/qc.test.js && node scraper/fixtures/intake_cases.js && node scraper/fixtures/page_loads.js"
+    "test": "node --test scraper/date.test.js scraper/compress.test.js scraper/qc.test.js && node scraper/fixtures/intake_cases.js && node scraper/fixtures/page_loads.js && node scraper/fixtures/page_renders.js"
   },
   "repository": {
     "type": "git",
@@ -22,5 +22,10 @@
     "node-fetch": "^2.7.0",
     "node-html-parser": "^9.0.4",
     "playwright": "^1.63.0"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   }
 }
