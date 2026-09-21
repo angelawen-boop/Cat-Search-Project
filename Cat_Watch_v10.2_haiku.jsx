@@ -1618,7 +1618,13 @@ export default function App(){
             not something her document tells it, so it is answerable before any
             file is opened. */}
         <div style={{marginTop:6,fontSize:10.5,color:C.soft,display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}>
-          <span>Last swept: {fmtRefresh(lastSweep)}</span>
+          {/* "UNKNOWN", NEVER "NEVER" — her ruling, 21 Sep. An empty store is
+              not evidence that no sweep ever ran: she can be looking at rows
+              she quarantined, which only ever come from a sweep. "Never" is a
+              claim about the world made from the absence of a record, which is
+              the same shape of error as dating a venue by the moment she
+              pressed a button. We know what we were told and nothing else. */}
+          <span>Last refreshed: {lastSweep?fmtRefresh(lastSweep):"Unknown"}</span>
           {/* PER-VENUE FRESHNESS lives here because this is where she already
               looks for "when was this last touched", next to the save state.
               Collapsed by default: 21 venues is a wall, and the question is
@@ -1650,8 +1656,15 @@ export default function App(){
           {/* "NO SWEEPS YET" AND "COULDN'T READ THE STORE" LOOK IDENTICAL AND
               MEAN OPPOSITE THINGS, so an empty panel always says which. */}
           {freshWhy&&<div style={{fontSize:11,color:C.accent,marginBottom:6,lineHeight:1.5}}>{freshWhy}</div>}
+          {/* IT SAID "No sweep imported yet.", WHICH ASSERTS SOMETHING WE
+              CANNOT KNOW — her ruling, 21 Sep, same reasoning as the headline.
+              The store holding nothing is a fact about the RECORD. Whether a
+              sweep ran is a fact about the world, and the two are not the same
+              claim. Note this is NOT the same case as freshWhy above, which is
+              the store failing to answer at all: here it answered, and what it
+              answered was nothing. */}
           {!freshWhy&&Object.keys(venueSeen).length===0&&
-            <div style={{fontSize:11,color:C.soft,marginBottom:6}}>{"No sweep imported yet."}</div>}
+            <div style={{fontSize:11,color:C.soft,marginBottom:6}}>{"The store holds no sweep dates, so when each venue was last swept is unknown."}</div>}
           {MUSEUMS.map(m=>{
             const v=venueSeen[m.id]; if(!v)return null;
             const stale=v.returned&&v.attempted&&v.returned!==v.attempted;
