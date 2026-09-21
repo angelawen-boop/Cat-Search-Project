@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 20 Sep 2026 (late) (evening)
+**Last updated:** 21 Sep 2026
 
 Cassili collects art-exhibition catalogues. They go out of print fast once a show
 closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 21
@@ -713,12 +713,40 @@ her claude.ai account), with `sample` reading the results. The split is
 deliberate: Claude cannot browse, so the connector finds pages and Claude only
 reads text handed to it — it can never report a shop page that was not found.
 
-**The one real loss: there is no domain LOCK any more.** The old search tool took
-`allowed_domains` and was unable to look elsewhere. The connector takes only a
-`site:` hint inside the query, which search engines treat as a strong suggestion.
-So the returned shop link is **checked** against the venue's shop domain, and a
-link that is not on it is never filed as `shopState: "shop"`. That guard is the
-substitute for the lock.
+**STAGE ONE NOW OPENS THE SHOP. IT DID NOT BETWEEN THE CONNECTOR SWITCH AND
+21 SEP, AND NOBODY SAID SO — her finding, and the whole of it is hers.** The old
+search tool took `allowed_domains` and was **unable** to look elsewhere, so
+"search the shop and nothing else" was literally true. The connector has no such
+lock — only a `site:` hint inside the query, which a search engine treats as a
+suggestion. **The rebuild kept the search and lost the lock**, so stage one
+became a general web search dragging the shop's address along with it. Her
+words for what that is: not how a human looks for a museum catalogue.
+
+**The design never changed; only the tool did. Substituting a tool is not
+licence to re-shape the route it runs on** — and when a capability is lost in
+the substitution, that is the thing to report, not to quietly absorb.
+
+**WHAT IT COST: the National Gallery's *Zurbarán*, her test row.** A general
+index ranks the shop's LIST of every catalogue above the one book's own page.
+The whole-page read then ran flawlessly on a list of 32 books, reported no
+ISBN, and filed the list as her "Museum shop" link. **The book's own page was
+in the same results, five places down**, printing `978-1857097399` in plain
+sight. Reproduced 21 Sep, both halves.
+
+**The correction to the first account of it:** the book's page was not
+overlooked by the search. It was inside the eight results handed to the model,
+which read them all and named the list anyway. **A choosing failure, not a
+search failure** — which is why the answer is to stop choosing from a general
+index at all, rather than to rank its results better.
+
+**THE CONNECTOR COULD ALWAYS DO IT.** `web_fetch` opens a page you name. It was
+declared on 21 Sep for reading a book's page and used for nothing else; stage
+one now uses it too. `web_search` is stage two only, where "does this book
+exist anywhere" really is a search.
+
+**The shop link is still checked** against the venue's shop domain, and stays
+checked: a shop page links outward to publishers and distributors, so a link
+read off a shop page is not automatically on it.
 
 **THE MISSED ISBN — HER FINDING 20 SEP, BUILT 21 SEP.** The Met's *Musical
 Bodies* catalogue was found in the shop in one stage and came back with no ISBN,
@@ -1105,16 +1133,52 @@ real rows only, and a Louvre block covering every conflict shape.
 **Deliberately not built:** bulk-approve, in-app field editing, and the mirror
 case where the app proposes Add but it is really an update.
 
-### Shop homepages (wired for the catalogue lookup's domain lock)
+### Shop addresses — CHECKED ONE BY ONE, 21 Sep 2026
 
-met `store.metmuseum.org` · ng `shop.nationalgallery.org.uk` · rijks
-`rijksmuseumshop.nl` · acq `acquavellagalleries.myshopify.com` · louvre
-`boutique.louvre.fr` · uffizi `shop.uffizi.it` · brera `bottegabrera.org` · khm
-`shop.khm.at` · both Tates `shop.tate.org.uk` · moma `store.moma.org` · frick
-`shop.frick.org` · morgan `shop.themorgan.org` · menil `bookstore.menil.org` ·
-artic `shop.artic.edu` · brit `britishmuseumshoponline.org` · wallace
-`wallacecollectionshop.org` · va `vam.ac.uk/shop`.
+**Stage one needs the shop's own SEARCH BOX, and for 17 of 18 venues it was
+never written down.** Before 21 Sep the app held a search address for four
+venues only — met, ng, rijks, acq — and the National Gallery's was a **dead
+page**. So nothing could have gone straight to a shop even in principle.
+**This was not lost in the connector switch**: the version immediately before
+it had exactly the same four. It was never built.
+
+Every address below was checked by opening it and reading the results back.
+`shopSearch` takes the exhibition title on the end. `shopCatalogues` is a
+shop's shelf of exhibition catalogues where it has one — all books, no
+trinkets, but **only what is in stock today**, which is why the search box
+still runs after it. Her instruction, 21 Sep, gave the National Gallery's.
+
+met `store.metmuseum.org/search?q=` · rijks `rijksmuseumshop.nl/en/search?q=` ·
+ng `shop.nationalgallery.org.uk/catalogsearch/result/?q=` **plus the
+catalogues shelf `/books/exhibition-catalogues.html`** · acq
+`acquavellagalleries.myshopify.com/search?q=` · frick
+`shop.frick.org/search.php?search_query=` · menil
+`bookstore.menil.org/search?q=` · artic `shop.artic.edu/search?q=` · wallace
+`wallacecollectionshop.org/search?q=` · both Tates
+`shop.tate.org.uk/search?q=` · va `vam.ac.uk/shop/search?q=` · louvre
+`boutique.louvre.fr/en/search/products/?q=` · uffizi `shop.uffizi.it/en/?s=` ·
+brera `bottegabrera.org/en/search?q=` · moma `store.moma.org/search?q=` ·
+brit `britishmuseumshoponline.org/catalogsearch/result/?q=` · morgan
+`shop.themorgan.org/search?q=`.
 **No shop:** borghese, capo, dellav — these skip to the broad web search.
+
+**THE SHOPS ARE NOT THE MUSEUM SITES, and five venues prove it.** `moma`,
+`brit` and `morgan` refuse the scraper outright and `met` and `artic` are
+swept from her laptop only — **yet all five shops answered the page reader
+first time.** The scraper's blocks are on the museums' own exhibition sites
+and are about a script driving a browser; the lookup is a different requester
+reading a different hostname. **A venue being blocked for sweeping says
+nothing about its shop.**
+
+**KHM is the one that did not answer.** Its shop sends every request to a
+waiting-room queue and the reader cannot follow that redirect. Wired in
+anyway, for the scraper's own reason: a refusal costs nothing, stays visible,
+and blocks are not permanent facts.
+
+**Only one venue needed a second look for a reason worth keeping.** The Met's
+results page reads as empty unless you ask it for the right thing — the
+products are in the page, the reader's first summary simply quoted the
+navigation. **A thin answer from a page is not proof the page is thin.**
 
 **Seed set:** ~110 exhibitions read 20 Aug 2026, covering met / ng / rijks / acq
 only. Baked into the JSX, shown via Reset. Stripping it has been rejected.
@@ -2066,6 +2130,20 @@ Each entry cost a real failure. Before changing the area, read the line.
   simply absent, and the lookup reported "no ISBN" for a book whose page
   prints one. **Declaring only half a connector's tools is the same shape of
   gap**: `web_fetch` had been there all along.
+- Swapping the search tool underneath a two-stage design and letting the
+  ROUTE change with it. The old tool could be locked to one website; the
+  connector cannot, so "ask the shop and nothing else" quietly became a
+  general web search with the shop's address in the query. It stayed that way
+  for days, and the screen went on labelling it "shop". **A capability lost in
+  a substitution is the thing to report, not to absorb.**
+- Reading ONE page because a model named it. The read then ran flawlessly on
+  the National Gallery shop's list of every catalogue and reported no ISBN,
+  while the book's own page sat five places lower in the same results.
+  **A link a model chose is a guess, and building the next step on exactly one
+  of them makes the guess load-bearing.**
+- Never writing down 17 of 18 shops' search addresses, and leaving the one
+  venue that had one pointing at a dead page. **A field that is empty for most
+  rows and wrong for one of the rest reads exactly like a field that works.**
 - Filtering `rows` after `applyLookback` has already copied it into `toFetch` — the
   log announced ten exclusions while all ten sat in the CSV with empty summaries.
   **A log line describing something that did not happen is worse than no log line**,

@@ -14,32 +14,44 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 //
 // Accademia (dellav) was not in her list; it sits with the other Italian venues
 // until she says otherwise.
+// SHOP ADDRESSES — the search box, not the front door. Checked one by one,
+// 21 Sep 2026, by opening each and reading the results back. Step one OPENS
+// these; it no longer searches the open web hoping to land on the shop.
+//
+// shopSearch is the shop's own search box with the exhibition title tacked on.
+// shopCatalogues, where a shop has one, is its shelf of exhibition catalogues:
+// all books, no trinkets, but only what is in stock today, so it is looked at
+// FIRST and the search box still runs after it.
+//
+// KHM is the one unverified line: its shop answers with a waiting-room
+// redirect that the reader cannot follow. Left wired so it is retried and
+// visible, exactly as the blocked venues are in the scraper.
 const MUSEUMS = [
   { id:"met", short:"The Met", name:"The Metropolitan Museum of Art", city:"New York",
     exBase:"https://www.metmuseum.org/exhibitions/", shopSearch:"https://store.metmuseum.org/search?q=", shopHome:"https://store.metmuseum.org/", listUrl:"https://www.metmuseum.org/exhibitions" },
   { id:"rijks", short:"Rijksmuseum", name:"Rijksmuseum", city:"Amsterdam",
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
   { id:"ng", short:"National Gallery", name:"The National Gallery", city:"London",
-    exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/search?q=", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
+    exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
   { id:"acq", short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
-  { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:null, shopHome:"https://shop.frick.org/", listUrl:null },
-  { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:null, shopHome:"https://bookstore.menil.org/", listUrl:null },
-  { id:"artic", short:"Art Institute", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:null, shopHome:"https://shop.artic.edu/", listUrl:null },
-  { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:null, shopHome:"https://wallacecollectionshop.org/", listUrl:null },
-  { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:null, shopHome:"https://shop.tate.org.uk/", listUrl:null },
-  { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:null, shopHome:"https://shop.tate.org.uk/", listUrl:null },
-  { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:null, shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
-  { id:"louvre", short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:null, shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
-  { id:"khm", short:"KHM Vienna", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:null, shopHome:"https://shop.khm.at/en/", listUrl:null },
-  { id:"uffizi", short:"Uffizi", name:"Uffizi Galleries", city:"Florence", exBase:null, shopSearch:null, shopHome:"https://shop.uffizi.it/en/", listUrl:null },
+  { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopHome:"https://shop.frick.org/", listUrl:null },
+  { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopHome:"https://bookstore.menil.org/", listUrl:null },
+  { id:"artic", short:"Art Institute", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopHome:"https://shop.artic.edu/", listUrl:null },
+  { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:"https://wallacecollectionshop.org/search?q=", shopHome:"https://wallacecollectionshop.org/", listUrl:null },
+  { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopHome:"https://shop.tate.org.uk/", listUrl:null },
+  { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopHome:"https://shop.tate.org.uk/", listUrl:null },
+  { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:"https://www.vam.ac.uk/shop/search?q=", shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
+  { id:"louvre", short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:"https://boutique.louvre.fr/en/search/products/?q=", shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
+  { id:"khm", short:"KHM Vienna", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:"https://shop.khm.at/en/search?q=", shopHome:"https://shop.khm.at/en/", listUrl:null },
+  { id:"uffizi", short:"Uffizi", name:"Uffizi Galleries", city:"Florence", exBase:null, shopSearch:"https://shop.uffizi.it/en/?s=", shopHome:"https://shop.uffizi.it/en/", listUrl:null },
   { id:"dellav", short:"Accademia", name:"Gallerie dell'Accademia", city:"Venice", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"borghese", short:"Borghese", name:"Galleria Borghese", city:"Rome", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
-  { id:"brera", short:"Brera", name:"Pinacoteca di Brera", city:"Milan", exBase:null, shopSearch:null, shopHome:"https://bottegabrera.org/en/", listUrl:null },
+  { id:"brera", short:"Brera", name:"Pinacoteca di Brera", city:"Milan", exBase:null, shopSearch:"https://bottegabrera.org/en/search?q=", shopHome:"https://bottegabrera.org/en/", listUrl:null },
   { id:"capo", short:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
-  { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:null, shopHome:"https://store.moma.org/", listUrl:null },
-  { id:"brit", short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:null, shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
-  { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:null, shopHome:"https://shop.themorgan.org/", listUrl:null },
+  { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/search?q=", shopHome:"https://store.moma.org/", listUrl:null },
+  { id:"brit", short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:"https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
+  { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:"https://shop.themorgan.org/search?q=", shopHome:"https://shop.themorgan.org/", listUrl:null },
 ];
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 
@@ -505,13 +517,19 @@ async function searchWeb(objective,queries){
 // so a full read sees it shut. Verified against that page, 21 Sep. A shop that
 // only goes and GETS those details when clicked would still come back empty
 // \u2014 no ISBN, noted, exactly as today. Never a wrong one.
+//
+// IT TAKES ONE PAGE OR SEVERAL. Step one opens a shop's catalogue shelf and
+// its search box together, in ONE call, because they answer the same question
+// and two calls would be two waits.
 async function fetchPage(url,objective,queries){
+  const urls=Array.isArray(url)?url.filter(Boolean):[url];
+  if(!urls.length)return{ok:false,results:[],detail:"No page to open."};
   const mcp=await useCap("mcp");
   if(!mcp)return{ok:false,results:[],detail:"No connector access in this viewer."};
   let res;
   try{
     res=await mcp.callTool(SEARCH_SERVER,FETCH_TOOL,{
-      urls:[url],
+      urls,
       objective,
       search_queries:queries,
       session_id:SEARCH_SESSION,
@@ -521,7 +539,18 @@ async function fetchPage(url,objective,queries){
   }
   const p=res&&res.payload;
   const results=(p&&Array.isArray(p.results))?p.results:[];
-  return{ok:true,results,detail:"fetched "+url+": "+results.length+" page(s)"};
+  return{ok:true,results,detail:"opened "+urls.join(" + ")+": "+results.length+" page(s)"};
+}
+
+// The shop pages step one opens for one exhibition: the catalogue shelf where
+// the shop has one, then its search box with the exhibition's title in it.
+// Nothing is guessed here \u2014 both addresses are the venue's own, written down
+// in MUSEUMS above.
+function shopPagesFor(mu,title){
+  const out=[];
+  if(mu&&mu.shopCatalogues)out.push(mu.shopCatalogues);
+  if(mu&&mu.shopSearch)out.push(mu.shopSearch+encodeURIComponent(title));
+  return out;
 }
 
 // Hand the search results to Claude and ask it to read the catalogue off them.
@@ -1300,9 +1329,13 @@ export default function App(){
 
   // Turn the connector's results into the few lines Claude is asked to read.
   // Trimmed hard: excerpts are long, and the prompt has a 64 KiB ceiling.
-  const resultsForPrompt=list=>list.slice(0,8).map((r,i)=>
+  // Trimmed hard for a SEARCH result, which is a headline and a line or two.
+  // A shop page opened whole is a different size of thing \u2014 its product list
+  // IS the answer \u2014 so step one raises the cap rather than cutting the list
+  // off after the first few books.
+  const resultsForPrompt=(list,cap)=>list.slice(0,8).map((r,i)=>
     (i+1)+". "+String(r.title||"(untitled)")+"\n   "+String(r.url||"")+"\n   "
-    +(Array.isArray(r.excerpts)?r.excerpts.join(" ").replace(/\s+/g," ").slice(0,700):"")
+    +(Array.isArray(r.excerpts)?r.excerpts.join(" ").replace(/\s+/g," ").slice(0,cap||700):"")
   ).join("\n\n");
 
   const READ_RULES=
@@ -1333,12 +1366,11 @@ export default function App(){
   // catalogue. The reason for the order is not cost, which is gone: a shop hit
   // is the only result that gives her a real "buy it here" link.
   //
-  // THE ONE THING THAT CHANGED, AND IT IS NOT A CHOICE. The old search tool
-  // could be locked to one website — it was unable to look anywhere else.
-  // The connector has no lock, only a "look here" hint inside the query, so a
-  // stray result from another site can come back. That is why the shop link is
-  // CHECKED below: a link that is not on the venue's shop is never filed as
-  // being in the venue's shop.
+  // THE SHOP LINK IS STILL CHECKED, and it stays checked now that step one
+  // opens the shop directly. A shop page links outward — to a publisher, to a
+  // distributor, to another shop — so a link read off a shop page is not
+  // automatically ON that shop. A link that is not on the venue's shop is
+  // never filed as being in the venue's shop.
   const settle=(row,o,dom,detail,fromShopStage)=>{
     const onShop=o.shopUrl&&dom&&String(o.shopUrl).toLowerCase().includes(String(dom).toLowerCase());
     if(o.found&&(o.catalogueTitle||o.isbn13)){
@@ -1418,23 +1450,43 @@ export default function App(){
     const venue=mu?mu.name:"";
     let detail="";
 
-    // ── Stage one: the venue's own shop ─────────────────────────────────────
-    if(dom){
+    // ── Stage one: GO TO THE SHOP ───────────────────────────────
+    //
+    // HER DESIGN, AND UNTIL 21 SEP 2026 IT WAS NOT WHAT THE CODE DID. The old
+    // tool took a locked list of websites and could not look anywhere else, so
+    // a search "at the shop" really was at the shop. The connector that
+    // replaced it has no lock — only a site: hint inside a query — and the
+    // rebuild kept the search and lost the lock. Step one became a general web
+    // search dragging the shop's address along with it.
+    //
+    // WHAT THAT COST, her finding: the National Gallery's Zurbaran. A general
+    // index ranks the shop's LIST of every catalogue above the one book's own
+    // page, so the read ran perfectly on a list, reported no ISBN, and filed
+    // the list as her "Museum shop" link. The book's own page was in the same
+    // results, five places down, printing the ISBN in plain sight.
+    //
+    // So step one OPENS the shop's own pages now. That is what she does by
+    // hand, and a shop's own search box knows what "catalogue" means at that
+    // shop, which no general index does. Only step two searches the open web,
+    // because "does this book exist anywhere" really is a search.
+    const shopPages=shopPagesFor(mu,title);
+    if(dom&&shopPages.length){
       setLookPhase("shop");
-      const s1=await searchWeb(
-        "Find the printed exhibition catalogue for \u201c"+title+"\u201d at "+venue
-          +" in the museum's own shop at "+dom+": its title, ISBN-13, publisher, and the shop page selling it.",
-        ["site:"+dom+" "+title+" catalogue",
-         "site:"+dom+" "+title+" book",
-         "site:"+dom+" "+title]);
+      const s1=await fetchPage(shopPages,
+        "The printed exhibition catalogue for \u201c"+title+"\u201d: the book\u2019s own product page "
+          +"on this shop, its full title and its price.",
+        [title+" exhibition catalogue book"]);
       detail=s1.detail;
       if(!s1.ok)return{row,detail,ok:false};
       if(s1.results.length){
         const r1=await readResults(READ_RULES
           +"\nExhibition: "+title+"\nVenue: "+venue
-          +"\nThese results are meant to be from the venue's own shop, "+dom
-          +". Ignore any result that is not on that website.\n\n"
-          +resultsForPrompt(s1.results)+READ_SHAPE);
+          +"\nBelow are the venue\u2019s OWN shop pages, opened directly at "+dom
+          +". THE LINK YOU RETURN MUST BE THE BOOK\u2019S OWN PRODUCT PAGE. A page listing many "
+          +"catalogues, a category page or a search-results page is NOT the book \u2014 take the "
+          +"one link on it that names this exhibition. If nothing on these pages is this "
+          +"exhibition\u2019s catalogue, answer found false.\n\n"
+          +resultsForPrompt(s1.results,6000)+READ_SHAPE);
         detail=s1.detail+"\n"+r1.detail;
         if(!r1.ok)return{row,detail,ok:false};
         const hit=settle(row,r1.data||{},dom,detail,true);
