@@ -366,6 +366,48 @@ function mergeSeedInto(existing){const byId=new Map(existing.map(r=>[r.id,r]));f
 
 const cleanIsbn=v=>{if(!v)return null;const d=String(v).replace(/[^0-9]/g,"");return d.length===13?d:null;};
 const fmtIsbn=v=>{const c=cleanIsbn(v);return c?c.slice(0,3)+"-"+c.slice(3):null;};
+
+// ── A 10-DIGIT ISBN IS TAKEN, NOT THROWN AWAY \u2014 her ruling, 21 Sep 2026 ──
+//
+// There is nothing wrong with an ISBN-10. Every book printed before 2007 has
+// one and plenty of shop pages still show only that. The first version of the
+// page read refused them, which was a limit I put in rather than a fact about
+// the number, and it cost the row its ISBN for no reason: with no ISBN the
+// reseller links fall back to searching by TITLE, which is the failure that
+// sent Alibris to the wrong book.
+//
+// THE CONVERSION IS NOT FOR SEARCHING. All three resellers find a book from
+// either form. It is for HER SCREEN: the ledger has one field and one format,
+// 3 digits and 10, so a 10-digit number cannot be stored or shown in it. One
+// input, one correct answer, no judgement \u2014 which makes it code's job.
+//
+// 978 on the front, the first nine digits, and a fresh check digit. THE OLD
+// CHECK DIGIT IS VERIFIED FIRST, so a mangled or mistyped number is refused
+// rather than converted into a plausible wrong one \u2014 the same reasoning as
+// ymd() checking a date exists before it is stored.
+function isbn10to13(v){
+  const t=String(v||"").replace(/[^0-9Xx]/g,"").toUpperCase();
+  if(t.length!==10)return null;
+  let sum=0;
+  for(let i=0;i<10;i++){
+    const ch=t[i];
+    const d=(ch==="X")?10:(ch>="0"&&ch<="9"?Number(ch):-1);
+    if(d<0||(ch==="X"&&i!==9))return null;   // X is only ever the check digit
+    sum+=d*(10-i);
+  }
+  if(sum%11!==0)return null;                 // the number does not check out
+  const core="978"+t.slice(0,9);
+  let s2=0;
+  for(let i=0;i<12;i++)s2+=Number(core[i])*(i%2?3:1);
+  return core+String((10-(s2%10))%10);
+}
+
+// WHAT THE LEDGER IS ALLOWED TO STORE. Thirteen digits if we were given
+// thirteen; a converted ten if we were given a valid ten; nothing otherwise.
+// Every place an ISBN ENTERS the app goes through here. cleanIsbn stays the
+// strict gate everything downstream reads, so nothing but a 13 can be
+// displayed or linked.
+const toIsbn13=v=>cleanIsbn(v)||isbn10to13(v);
 const MON3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const fmtDate=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");if(isNaN(x))return d;return x.getDate()+" "+MON3[x.getMonth()]+" "+x.getFullYear();};
 function fmtRefresh(iso){if(!iso)return"never";const d=new Date(iso);if(isNaN(d))return"never";const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
@@ -594,7 +636,7 @@ function needsIsbnFill(hit){
 // refused by cleanIsbn and the row keeps its blank. A page that yields nothing
 // must leave the row exactly as it was \u2014 the old answer, never a worse one.
 function applyIsbnFill(row,o){
-  const isbn=cleanIsbn(o&&o.isbn13);
+  const isbn=toIsbn13(o&&o.isbn13);
   const pub=(o&&o.publisher)?String(o.publisher).trim():"";
   if(!isbn&&!pub)return row;
   return{...row,
@@ -1267,6 +1309,7 @@ export default function App(){
     "You are reading real web search results to find the PRINTED EXHIBITION CATALOGUE for one exhibition.\n"
    +"Use ONLY what the results below actually say. Never use outside knowledge, never guess an ISBN, "
    +"never invent a shop page.\n"
+   +"Give the ISBN EXACTLY as printed \u2014 a 10-digit one is wanted as it stands, never converted.\n"
    +"A catalogue is a BOOK about the exhibition. Tote bags, prints, postcards, mugs, notebooks and "
    +"generic gift items are NOT catalogues, even on the exhibition's own shop page.\n"
    +"THE ISBN IS OFTEN NOT IN THE SHOP. Museums routinely print the catalogue's title, publisher and "
@@ -1305,7 +1348,7 @@ export default function App(){
       return{ok:true,detail,pageUrl:o.shopUrl||null,
         row:{...row,looked:true,hasCatalogue:"yes",
         shopState:onShop?"shop":"web",
-        catalogueTitle:o.catalogueTitle||null,isbn13:cleanIsbn(o.isbn13),
+        catalogueTitle:o.catalogueTitle||null,isbn13:toIsbn13(o.isbn13),
         publisher:o.publisher||null,publisherUrl:null,shopUrl:onShop?o.shopUrl:null}};
     }
     if(fromShopStage)return null;          // not found in the shop — go wider
@@ -1329,8 +1372,9 @@ export default function App(){
    +"Use ONLY what the page says. Never use outside knowledge and never guess an ISBN.\n"
    +"The number is usually in a details or specification list near the bottom, which on many shops "
    +"sits inside a collapsed panel \u2014 read it wherever it appears.\n"
-   +"An ISBN-13 has 13 digits and normally starts 978 or 979. If the page shows only a 10-digit "
-   +"ISBN, report null rather than converting it.\n"
+   +"REPORT THE ISBN EXACTLY AS THE PAGE PRINTS IT. A 13-digit one starts 978 or 979; an older "
+   +"book may show a 10-digit one instead, and that is wanted too \u2014 give it as it stands and "
+   +"never convert it yourself.\n"
    +"If this page is not about the book named below, set every field null.\n";
   const PAGE_SHAPE=
     "\nReply with ONLY this JSON object and nothing else:\n"

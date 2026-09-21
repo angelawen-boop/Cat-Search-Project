@@ -750,6 +750,27 @@ already in the page and the button only hides it, so a full read sees it shut �
 978-1588398130 with the panel collapsed.** A shop that only GOES AND GETS those
 details when clicked would still come back empty, noted, exactly as today.
 
+**A 10-DIGIT ISBN IS TAKEN AND CONVERTED — her ruling, 21 Sep, and she
+corrected me to get there.** The first build refused one, which was a limit I
+put in rather than a fact about the number: an ISBN-10 is perfectly real, every
+book printed before 2007 has one, and plenty of shop pages show only that.
+Refusing it cost the row its ISBN for nothing, which is exactly the fallback to
+a title search that misfired on Alibris.
+
+**HER SPLIT, AND IT IS THE RIGHT ONE: display and search are different
+questions.** All three resellers find a book from either form, so the
+conversion is NOT for searching — it is for her screen, where the ledger has
+one field and one format (3 digits and 10). One input, one correct answer, no
+judgement: `isbn10to13`. **The old check digit is verified before anything is
+converted**, so a mistyped number is refused rather than turned into a
+plausible wrong one — the same reasoning as `ymd()` proving a date exists.
+`toIsbn13` is the only door an ISBN enters by; `cleanIsbn` stays the strict
+13-digit gate everything downstream reads. Both prompts now ask for the ISBN
+**exactly as printed** and forbid the model converting it itself — that is
+code's job and a model's arithmetic is not checkable. Fixtures C-017, C-019 to
+C-025. **Linking straight to an Amazon product page from an ISBN-10 was
+offered and declined.**
+
 **Both decisions sit OUTSIDE the component**, for the reason `countDecisions`
 moved out: a rule a fixture cannot reach is a rule nobody checks. Fixtures C-001
 to C-018 in `scraper/fixtures/catalogue_lookup.js`, verified by overwriting a

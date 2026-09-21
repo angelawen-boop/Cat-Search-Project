@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, needsIsbnFill, applyIsbnFill };')(
+    code + '\n;return { fetchPage, needsIsbnFill, applyIsbnFill, isbn10to13 };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -155,12 +155,32 @@ function runtime(answer, log) {
     eq(b.publisher, 'Yale University Press',
        'C-016: a publisher we already had is not overwritten by the shop page');
 
-    const c = api.applyIsbnFill(row, { isbn13: '1588398137', publisher: null });
-    eq(c.isbn13, null,
-       'C-017: a 10-digit ISBN is refused — the row keeps its blank rather than a half number');
+    const c = api.applyIsbnFill(row, { isbn13: '1-58839-813-7', publisher: null });
+    eq(c.isbn13, '9781588398130',
+       'C-017: a 10-digit ISBN is TAKEN and converted — it is the same book, and her one field is 13');
 
     const d = api.applyIsbnFill(row, {});
     eq(d, row, 'C-018: a page with nothing on it leaves the row exactly as it was');
+
+    const e = api.applyIsbnFill(row, { isbn13: '1588398138' });
+    eq(e.isbn13, null,
+       'C-019: a 10-digit number that does not check out is refused, not converted into a plausible one');
+  }
+
+  // ── C-020 to C-025: the conversion itself ────────────────────────────────
+  // Her ruling, 21 Sep: a 10-digit ISBN is fine to SEARCH with, so this is not
+  // for searching. It is for the one field and the one format on her screen.
+  {
+    const api = lift({ document: {}, localStorage: {} });
+    eq(api.isbn10to13('1588398137'), '9781588398130',
+       'C-020: the Met\u2019s Musical Bodies, the row that found the fault');
+    eq(api.isbn10to13('0714848050'), '9780714848051', 'C-021: an ordinary art-book ISBN');
+    eq(api.isbn10to13('080442957X'), '9780804429573',
+       'C-022: an X check digit is a ten, not a fault');
+    eq(api.isbn10to13('0-7148-4805-0'), '9780714848051',
+       'C-023: hyphens are how a page prints it');
+    eq(api.isbn10to13('0714848051'), null, 'C-024: one digit wrong is refused');
+    eq(api.isbn10to13('97807148480'), null, 'C-025: a number of the wrong length is not an ISBN-10');
   }
 
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');
