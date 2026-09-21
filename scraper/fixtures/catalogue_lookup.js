@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead };')(
+    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -219,6 +219,42 @@ function runtime(answer, log) {
     eq(pages.length, 4, 'C-030: the shelf\u2019s pages and the search box go over together');
     eq(pages[pages.length - 1], 'https://x.test/find?q=Zurbar%C3%A1n',
        'C-031: the title is written into the search address, never guessed at');
+  }
+
+  // ── C-032 to C-038: the publisher's own page ───────────────────────
+  // Her finding, 21 Sep: the app has always had a Publisher button and the
+  // rebuild quietly stopped filling it, so the button could never appear.
+  {
+    const api = lift({ document: {}, localStorage: {} });
+    const dom = 'shop.nationalgallery.org.uk';
+
+    eq(api.cleanPublisherUrl('https://nationalgalleryglobal.com/zurbaran', dom),
+       'https://nationalgalleryglobal.com/zurbaran',
+       'C-032: a real publisher page is kept');
+    eq(api.cleanPublisherUrl('https://shop.nationalgallery.org.uk/zurbaran-1056951.html', dom), null,
+       'C-033: the shop wearing the publisher\u2019s label is refused \u2014 she already has that button');
+    eq(api.cleanPublisherUrl('not a link', dom), null, 'C-034: anything that is not an address is refused');
+    eq(api.cleanPublisherUrl(null, dom), null, 'C-035: nothing found, nothing stored');
+    // Borghese, Capodimonte and the Accademia have NO shop at all, so the
+    // publisher's page is the only real "buy it here" link they can ever get.
+    // There is no shop domain to compare against and that must not block it.
+    eq(api.cleanPublisherUrl('https://hannibalbooks.be/metamorphoses', null),
+       'https://hannibalbooks.be/metamorphoses',
+       'C-036: a venue with no shop still gets its publisher link');
+    eq(api.cleanPublisherUrl('javascript:alert(1)', null), null,
+       'C-036a: and it still has to be a real web address');
+
+    // The page read fills it, and like everything else it fills a BLANK only.
+    const row = { hasCatalogue: 'yes', isbn13: null, publisher: null, publisherUrl: null };
+    const out = api.applyIsbnFill(row,
+      { isbn13: '9781857097399', publisher: 'National Gallery Global',
+        publisherUrl: 'https://nationalgalleryglobal.com/zurbaran' }, dom);
+    eq(out.publisherUrl, 'https://nationalgalleryglobal.com/zurbaran',
+       'C-037: the book\u2019s page can supply it');
+    const had = api.applyIsbnFill({ ...row, publisherUrl: 'https://kept.example/book' },
+      { publisherUrl: 'https://other.example/book' }, dom);
+    eq(had.publisherUrl, 'https://kept.example/book',
+       'C-038: one we already had is never overwritten');
   }
 
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');

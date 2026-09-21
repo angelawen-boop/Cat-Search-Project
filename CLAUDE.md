@@ -780,6 +780,27 @@ read from the search results is never second-guessed, a publisher already
 known is never overwritten, and a page that yields nothing leaves the row
 exactly as it was — the old answer, never a worse one.
 
+**THE PUBLISHER'S OWN PAGE CAME BACK — her finding, 21 Sep, and it was the
+SAME rewrite that dropped the shop lock.** The app has always had a Publisher
+button and the ledger has always had a field for it. The 20 Sep rebuild asked
+neither prompt for it and wrote `null` into the row every time, so **the button
+could never appear** and nothing said so. Not a decision, not recorded.
+
+**It matters more than it looks, and most at the three venues with no shop.** A
+museum shop sells its catalogue while the show is on; the art-book house that
+printed it often lists the book long after the shop has sold out — which is the
+window this whole app is about. Borghese, Capodimonte and the Accademia have no
+shop at all, so the publisher's page is the only real "buy it here" link they
+can ever get.
+
+**CHECKED, NOT TRUSTED** (`cleanPublisherUrl`). It must be a real web address,
+and it is refused if it sits on the venue's own shop — that is the shop link
+wearing the wrong label, and she already has a button for it. There is no list
+of art publishers to check against and inventing one would be the phrase-list
+mistake again, so beyond those two tests it is hers to judge. Both prompts ask
+for it, the book's page can supply it, and like everything else it fills a
+blank and never overwrites. Fixtures C-032 to C-038.
+
 **A COLLAPSED SECTION IS REACHED, and that was her question.** The Met store
 prints the ISBN inside a "Details" panel that opens and shuts. The text is
 already in the page and the button only hides it, so a full read sees it shut —
@@ -2204,6 +2225,12 @@ Each entry cost a real failure. Before changing the area, read the line.
   lists what is in stock" sounded right and is false: sold-out books stay
   listed everywhere we looked. **She asked whether it actually happens, and
   it does not.** The real reasons were thinner and had to be found afterwards.
+- Rewriting a prompt and the row it fills in one go, and dropping a field
+  from both. The Publisher button and its ledger field survived; nothing
+  asked for the link any more and the row stored `null` every time, so the
+  button was unreachable for a day. **Same rewrite, same silence as the shop
+  lock** — and a button that never appears looks exactly like a book with no
+  publisher page.
 - Never writing down 17 of 18 shops' search addresses, and leaving the one
   venue that had one pointing at a dead page. **A field that is empty for most
   rows and wrong for one of the rest reads exactly like a field that works.**

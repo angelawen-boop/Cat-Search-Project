@@ -704,16 +704,44 @@ function needsPageRead(hit){
 // is not a real ISBN is refused, so the row keeps its blank. A page that
 // yields nothing must leave the row exactly as it was \u2014 the old answer,
 // never a worse one.
-function applyIsbnFill(row,o){
+function applyIsbnFill(row,o,dom){
   const isbn=toIsbn13(o&&o.isbn13);
   const pub=(o&&o.publisher)?String(o.publisher).trim():"";
-  if(!isbn&&!pub)return row;
+  const purl=cleanPublisherUrl(o&&o.publisherUrl,dom);
+  if(!isbn&&!pub&&!purl)return row;
   return{...row,
     isbn13:isbn||row.isbn13,
-    publisher:row.publisher||pub||null};
+    publisher:row.publisher||pub||null,
+    publisherUrl:row.publisherUrl||purl||null};
 }
 
 function shopDomain(mu){if(!mu||!mu.shopHome)return null;try{return new URL(mu.shopHome).hostname;}catch{return null;}}
+
+// THE PUBLISHER\u2019S OWN PAGE \u2014 restored 21 Sep 2026, her finding.
+//
+// The app has always had a Publisher button and the ledger has always had a
+// field for it. The 20 Sep rebuild asked neither prompt for it and wrote null
+// into the row every time, so the button became unreachable and nothing said
+// so \u2014 the same quiet loss in the same rewrite as the shop lock.
+//
+// IT MATTERS MORE THAN IT LOOKS. A museum shop sells its catalogue while the
+// show is on; the art-book house that printed it often still lists the book
+// long after the shop has sold out, which is the window this whole app is
+// about.
+//
+// CHECKED, NOT TRUSTED. A link is taken only if it is a real http address, and
+// never if it is on the venue\u2019s own shop \u2014 that is the shop link wearing the
+// wrong label, and it would send her to a page she already has a button for.
+// Everything else is left to her judgement, as it was before: there is no list
+// of art publishers to check against and inventing one would be the phrase-list
+// mistake again.
+function cleanPublisherUrl(u,dom){
+  if(!u)return null;
+  const t=String(u).trim();
+  if(!urlLooksValid(t))return null;
+  try{ if(dom&&new URL(t).hostname.toLowerCase().includes(String(dom).toLowerCase()))return null; }catch{ return null; }
+  return t;
+}
 
 const SKEY="cw-v3";
 // DORMANT in v8: Claude cloud save is kept in the file but nothing calls it.
@@ -1389,14 +1417,17 @@ export default function App(){
    +"ISBN in a PRESS RELEASE or on the exhibition's own page, while the shop lists only souvenirs. "
    +"A press release stating the book counts as finding it.\n"
    +"Beware of unrelated books that merely share the exhibition's title \u2014 a classical text, a novel, "
-   +"a textbook. The catalogue is the one tied to THIS exhibition at THIS venue.\n";
+   +"a textbook. The catalogue is the one tied to THIS exhibition at THIS venue.\n"
+   +"publisherUrl is the PUBLISHER'S OWN page for this book \u2014 the art-book house that printed it, "
+   +"not the museum shop, not a bookseller. Give it only if a result actually shows it; null otherwise.\n";
 
   const READ_SHAPE=
     "\nReply with ONLY this JSON object and nothing else:\n"
    +'{"found": true|false, "catalogueTitle": string|null, "isbn13": string|null, '
-   +'"publisher": string|null, "shopUrl": string|null}\n'
+   +'"publisher": string|null, "publisherUrl": string|null, "shopUrl": string|null}\n'
    +'Example: {"found":true,"catalogueTitle":"Metamorphoses: Ovid and the Arts","isbn13":"9789493416543",'
-   +'"publisher":"Hannibal Books","shopUrl":null}\n'
+   +'"publisher":"Hannibal Books","publisherUrl":"https://hannibalbooks.be/en/metamorphoses",'
+   +'"shopUrl":null}\n'
    +'Set "found" false and every other field null when these results show no catalogue.';
 
   // TWO STAGES, HER DESIGN, UNCHANGED SINCE IT WAS TESTED.
@@ -1421,7 +1452,8 @@ export default function App(){
         row:{...row,looked:true,hasCatalogue:"yes",
         shopState:onShop?"shop":"web",
         catalogueTitle:o.catalogueTitle||null,isbn13:toIsbn13(o.isbn13),
-        publisher:o.publisher||null,publisherUrl:null,shopUrl:onShop?o.shopUrl:null}};
+        publisher:o.publisher||null,publisherUrl:cleanPublisherUrl(o.publisherUrl,dom),
+        shopUrl:onShop?o.shopUrl:null}};
     }
     if(fromShopStage)return null;          // not found in the shop — go wider
     return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"no",shopState:"none",
@@ -1447,11 +1479,14 @@ export default function App(){
    +"REPORT THE ISBN EXACTLY AS THE PAGE PRINTS IT. A 13-digit one starts 978 or 979; an older "
    +"book may show a 10-digit one instead, and that is wanted too \u2014 give it as it stands and "
    +"never convert it yourself.\n"
+   +"publisherUrl is a link to the PUBLISHER'S OWN page for this book, if this page shows one. "
+   +"A link to this shop, to Amazon or to another bookseller is NOT it \u2014 answer null.\n"
    +"If this page is not about the book named below, set every field null.\n";
   const PAGE_SHAPE=
     "\nReply with ONLY this JSON object and nothing else:\n"
-   +'{"isbn13": string|null, "publisher": string|null}\n'
-   +'Example: {"isbn13":"9781588398130","publisher":"The Metropolitan Museum of Art"}';
+   +'{"isbn13": string|null, "publisher": string|null, "publisherUrl": string|null}\n'
+   +'Example: {"isbn13":"9781588398130","publisher":"The Metropolitan Museum of Art",'
+   +'"publisherUrl":null}';
 
   // The page arrives as excerpts chosen against our objective. Capped, because
   // the prompt has a ceiling and a product page can be very long.
@@ -1460,14 +1495,14 @@ export default function App(){
     +(Array.isArray(r.excerpts)?r.excerpts.join("\n").replace(/[ \t]+/g," "):String(r.full_content||""))
   ).join("\n\n").slice(0,6000);
 
-  const fillIsbn=async(hit,venue)=>{
+  const fillIsbn=async(hit,venue,dom)=>{
     if(!needsPageRead(hit))return hit;
     const r=hit.row;
     const book=r.catalogueTitle||r.title;
     setLookPhase("page");
     const f=await fetchPage(hit.pageUrl,
-      "The ISBN-13 and publisher of the book \u201c"+book+"\u201d, including any details or "
-        +"specification panel on the page.",
+      "The ISBN-13, the publisher, and any link to the publisher\u2019s own page for the book "
+        +"\u201c"+book+"\u201d, including any details or specification panel on the page.",
       [book+" ISBN publisher details"]);
     let detail=hit.detail+"\n"+f.detail;
     if(!f.ok||!f.results.length)return{...hit,detail};
@@ -1477,7 +1512,7 @@ export default function App(){
     detail=detail+"\n"+rd.detail;
     if(!rd.ok)return{...hit,detail};
     const o=rd.data||{};
-    const filled=applyIsbnFill(r,o);
+    const filled=applyIsbnFill(r,o,dom);
     detail=detail+(filled.isbn13?"\nISBN read off the page: "+filled.isbn13
                                 :"\nNo ISBN on that page either.");
     return{...hit,detail,row:filled};
@@ -1530,7 +1565,7 @@ export default function App(){
         detail=s1.detail+"\n"+r1.detail;
         if(!r1.ok)return{row,detail,ok:false};
         const hit=settle(row,r1.data||{},dom,detail,true);
-        if(hit)return await fillIsbn(hit,venue);
+        if(hit)return await fillIsbn(hit,venue,dom);
       }
     }
 
@@ -1551,7 +1586,7 @@ export default function App(){
       +resultsForPrompt(s2.results)+READ_SHAPE);
     detail=detail+"\n"+r2.detail;
     if(!r2.ok)return{row,detail,ok:false};
-    return await fillIsbn(settle(row,r2.data||{},dom,detail,false),venue);
+    return await fillIsbn(settle(row,r2.data||{},dom,detail,false),venue,dom);
   }
 
   async function findOneCat(id){setBusy(true);setBusyId(id);setError(null);const row=rows.find(r=>r.id===id);const out=await lookupCat(row);setDebug(out.detail);if(out.ok)await commit(rows.map(r=>r.id===id?out.row:r));else setError("Catalogue search failed for \u201c"+row.title+"\u201d.");setBusy(false);setBusyId(null);setLookPhase(null);}
