@@ -139,6 +139,32 @@ async function renderOnce(label, withRuntime) {
       pass(label + ': asked the runtime for ' + [...new Set(seen)].join(', '));
     }
 
+    // AN EMPTY SWEEP LOG MUST SAY SO ON SCREEN — her finding, 21 Sep, caught
+    // by emptying the page's store and reloading her export.
+    //
+    // Two faults, one silence. The headline read a date kept in her LEDGER and
+    // stamped when she last pressed Apply, so a wiped store still showed a
+    // confident time that no sweep had happened at; and the "By venue" control
+    // only appeared when there was something to list, so the wipe removed the
+    // control itself and nothing on the page said anything was missing.
+    //
+    // Both are asserted here rather than in a unit case because both are about
+    // what the OPENING SCREEN says with nothing loaded, which is the one thing
+    // a lifted-out function cannot answer. This render carries no sweep log.
+    if (!/Last swept:\s*never/i.test(text)) {
+      fail(label + ': with an empty sweep log the page does not say "Last swept: never" '
+           + '\u2014 it is asserting a date nothing swept at. Got: '
+           + (text.match(/Last swept:[^A-Z]{0,30}/i) || ['(the line is absent)'])[0]);
+    } else {
+      pass(label + ': empty sweep log reads "never" rather than a made-up date');
+    }
+    if (!/By venue/i.test(text)) {
+      fail(label + ': the "By venue" control is missing with an empty sweep log, '
+           + 'so nothing on screen can report that the store holds nothing');
+    } else {
+      pass(label + ': the "By venue" control is there to be opened when empty');
+    }
+
     // The ground has to be painted, or a dark-mode machine keeps a cream page.
     if (!win.document.documentElement.getAttribute('data-theme')) {
       fail(label + ': no theme was set on the page, so the shell keeps its own colours');

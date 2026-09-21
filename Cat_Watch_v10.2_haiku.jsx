@@ -615,6 +615,28 @@ export default function App(){
   // line that decides whether a solo re-run is worth it. Shape:
   //   { [venueId]: { attempted: iso, returned: iso|null } }
   const[venueSeen,setVenueSeen]=useState({});
+  // THE ONE-LINE "LAST REFRESHED" IS DERIVED FROM THE SWEEP LOG, NOT STORED —
+  // her finding, 21 Sep, caught by wiping the store and reloading her export.
+  //
+  // IT USED TO SHOW `lastRun`, WHICH WAS WRONG TWICE OVER. It was stamped at
+  // the moment she pressed Apply, so it reported when she had last worked
+  // rather than when a venue was last swept — the exact fault that produced
+  // swept_at and this whole drawer on 20 Sep, left behind one line above the
+  // thing built to replace it. And it rode inside the LEDGER, so loading an
+  // older backup rolled the date back with it: a fact about the world kept in
+  // a document that rolls back, which is the ruling this app already has.
+  //
+  // Taking the LATEST attempt across all venues keeps the headline honest and
+  // costs nothing: the same store that fills the drawer fills this, so an
+  // empty store reads "never" instead of asserting a time nothing swept at.
+  const lastSweep=useMemo(()=>{
+    let out=null;
+    for(const v of Object.values(venueSeen||{})){
+      const a=v&&v.attempted;
+      if(a&&(!out||a>out))out=a;
+    }
+    return out;
+  },[venueSeen]);
   const[showFresh,setShowFresh]=useState(false);
   const[freshWhy,setFreshWhy]=useState(null);   // why the sweep log is empty, when it is
   const[seenInFile,setSeenInFile]=useState(null);
@@ -1590,14 +1612,25 @@ export default function App(){
         {busy&&prog.total>0&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
         {error&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
         {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>{showDebug&&<pre style={{marginTop:4,padding:7,background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>}</div>}
-        {hasLedger&&<div style={{marginTop:6,fontSize:10.5,color:C.soft,display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}>
-          <span>Last refreshed: {fmtRefresh(lastRun)}</span>
+        {/* NOT GATED ON A LEDGER EITHER, matching the panel below, whose own
+            comment has said so since 20 Sep while this row quietly required
+            one. When a sweep last ran is what the PAGE knows about the world,
+            not something her document tells it, so it is answerable before any
+            file is opened. */}
+        <div style={{marginTop:6,fontSize:10.5,color:C.soft,display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}>
+          <span>Last swept: {fmtRefresh(lastSweep)}</span>
           {/* PER-VENUE FRESHNESS lives here because this is where she already
               looks for "when was this last touched", next to the save state.
               Collapsed by default: 21 venues is a wall, and the question is
               occasional. */}
-          {(Object.keys(venueSeen).length>0||freshWhy)&&<button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide venues":"By venue"}</button>}
-        </div>}
+          {/* ALWAYS SHOWN once a ledger is open, even with nothing in the
+              sweep log. It used to appear only when there was something to
+              list, so an emptied store removed the control itself and the
+              screen said nothing at all was wrong — which is precisely the
+              silence the panel's own "no sweeps yet" line exists to break.
+              A control that disappears cannot report anything. */}
+          <button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide venues":"By venue"}</button>
+        </div>
         {/* QUARANTINE SITS ON ITS OWN ROW — her ruling, 20 Sep. It had been
             tucked in beside the refresh line, which reads as though it is part
             of refreshing. It is not: a quarantine is a standing decision about
