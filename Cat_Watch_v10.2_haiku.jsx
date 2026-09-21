@@ -1563,6 +1563,58 @@ export default function App(){
     return{...hit,detail,row:filled};
   };
 
+  // \u2500\u2500 THE PUBLISHER\u2019S PAGE, LOOKED FOR PROPERLY \u2014 her ruling, 21 Sep \u2500\u2500\u2500\u2500
+  //
+  // The earlier steps find it only BY LUCK. When step two searches, the
+  // publisher is not known yet, so not one of its queries can name the
+  // publisher\u2019s website \u2014 Hannibal Books is stated all over the Rijksmuseum\u2019s
+  // press kit for Metamorphoses, and Hannibal\u2019s own site never appeared.
+  //
+  // So once the NAME is known, ask for the page by name. It fires only when a
+  // catalogue was found, its publisher is known, and no page came with it \u2014
+  // never to second-guess a link an earlier step already produced.
+  //
+  // WHY IT IS WORTH A SEARCH OF ITS OWN: the museum shop sells the book while
+  // the show is on, and the art-book house that printed it often lists it long
+  // after the shop has sold out. That is the window this whole app is about.
+  const fillPublisherPage=async(hit,venue,dom)=>{
+    const r=hit&&hit.row;
+    if(!r||!hit.ok||r.hasCatalogue!=="yes"||!r.publisher||r.publisherUrl)return hit;
+    const book=r.catalogueTitle||r.title;
+    setLookPhase("publisher");
+    const sp=await searchWeb(
+      "The publisher \u201c"+r.publisher+"\u201d\u2019s OWN page for the book \u201c"+book+"\u201d \u2014 the page on "
+        +"the publisher\u2019s website where they list or sell this title.",
+      // THE ISBN IS THE QUERY THAT WORKS, and the title often is not. Searching
+      // "Hannibal Books, Metamorphoses: Ovid and the Arts" returns Ovid \u2014 Penguin,
+      // Oxford, Gutenberg, Wikipedia \u2014 and not one page on Hannibal\u2019s site. The
+      // bare ISBN returns Hannibal\u2019s own page in the top ten. A number cannot be
+      // confused with a two-thousand-year-old poem; a title can. Checked both
+      // ways on that row, 21 Sep.
+      (cleanIsbn(r.isbn13)
+        ? [cleanIsbn(r.isbn13), r.publisher+" "+cleanIsbn(r.isbn13), r.publisher+" "+book]
+        : [r.publisher+" "+book, r.publisher+" publisher "+book+" book",
+           book+" "+r.publisher+" catalogue"]));
+    let detail=hit.detail+"\n"+sp.detail;
+    if(!sp.ok||!sp.results.length)return{...hit,detail};
+    const rd=await readResults(
+      "You are looking for ONE link: the page on the PUBLISHER\u2019S OWN WEBSITE for a book.\n"
+     +"Use ONLY what these results say. Never invent a link.\n"
+     +"The publisher is the art-book house that printed it. A BOOKSELLER is not the publisher \u2014 "
+     +"Amazon, AbeBooks, a distributor, a museum shop, a library catalogue: none of those count.\n"
+     +"If none of these results is on the publisher\u2019s own site, answer null.\n"
+     +"\nBook: "+book+"\nPublisher: "+r.publisher+"\nExhibition venue: "+venue+"\n\n"
+     +resultsForPrompt(sp.results)
+     +"\nReply with ONLY this JSON object and nothing else:\n"
+     +'{"publisherUrl": string|null}\n'
+     +'Example: {"publisherUrl":"https://hannibalbooks.be/en/metamorphoses"}');
+    detail=detail+"\n"+rd.detail;
+    if(!rd.ok)return{...hit,detail};
+    const url=cleanPublisherUrl((rd.data||{}).publisherUrl,dom);
+    detail=detail+(url?"\nPublisher\u2019s page: "+url:"\nNo page on the publisher\u2019s own site.");
+    return url?{...hit,detail,row:{...r,publisherUrl:url}}:{...hit,detail};
+  };
+
   async function lookupCat(row){
     const mu=MU[row.museumId];
     const dom=shopDomain(mu);
@@ -1610,7 +1662,7 @@ export default function App(){
         detail=s1.detail+"\n"+r1.detail;
         if(!r1.ok)return{row,detail,ok:false};
         const hit=settle(row,r1.data||{},dom,detail,true);
-        if(hit)return await fillFromWeb(await fillIsbn(hit,venue,dom),venue,dom);
+        if(hit)return await fillPublisherPage(await fillFromWeb(await fillIsbn(hit,venue,dom),venue,dom),venue,dom);
       }
     }
 
@@ -1631,7 +1683,7 @@ export default function App(){
       +resultsForPrompt(s2.results)+READ_SHAPE);
     detail=detail+"\n"+r2.detail;
     if(!r2.ok)return{row,detail,ok:false};
-    return await fillIsbn(settle(row,r2.data||{},dom,detail,false),venue,dom);
+    return await fillPublisherPage(await fillIsbn(settle(row,r2.data||{},dom,detail,false),venue,dom),venue,dom);
   }
 
   async function findOneCat(id){setBusy(true);setBusyId(id);setError(null);const row=rows.find(r=>r.id===id);const out=await lookupCat(row);setDebug(out.detail);if(out.ok)await commit(rows.map(r=>r.id===id?out.row:r));else setError("Catalogue search failed for \u201c"+row.title+"\u201d.");setBusy(false);setBusyId(null);setLookPhase(null);}
@@ -2105,7 +2157,7 @@ export default function App(){
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
           const lead=brk||header;
           const t=tierFor(r),tier=TH[t],mu=MU[r.museumId],mo=moSince(r.endDate),isOpen=openCards[r.id],noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested,isBusy=busyId===r.id;
-          const searchingLabel=lookPhase==="shop"?"Searching venue shop\u2026":lookPhase==="web"?"Searching more broadly\u2026":lookPhase==="page"?"Reading the book\u2019s page for its ISBN\u2026":"Searching\u2026";
+          const searchingLabel=lookPhase==="shop"?"Searching venue shop\u2026":lookPhase==="web"?"Searching more broadly\u2026":lookPhase==="page"?"Reading the book\u2019s page for its ISBN\u2026":lookPhase==="publisher"?"Looking for the publisher\u2019s page\u2026":"Searching\u2026";
           if(dismissed)return(
             <React.Fragment key={r.id}>{lead}
             <article style={{background:C.dim,border:"1px solid "+C.rule,borderLeft:"4px solid "+C.muted,borderRadius:5,padding:"10px 14px",opacity:0.55}}>

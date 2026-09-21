@@ -763,6 +763,26 @@ anything else** — the title, the shop link and the "in the museum shop" verdic
 were settled by the venue's own shop and a wide search must never be able to
 rename or relocate them. Fixtures C-039 to C-042.
 
+**THE PUBLISHER'S PAGE IS LOOKED FOR PROPERLY NOW — her ruling, 21 Sep, and
+she had to tell me twice that she wanted it.** The earlier steps find it only
+BY LUCK: when stage two searches, the publisher is not known yet, so not one of
+its queries can name the publisher's website. Hannibal Books is stated all over
+the Rijksmuseum's press kit for *Metamorphoses* — which is why the NAME came
+back — and Hannibal's own site was in none of the ten results.
+
+So once the name is known, `fillPublisherPage` asks for the page by name. It
+fires only on a catalogue found, with a publisher, and no page — never to
+second-guess a link an earlier step produced.
+
+**AND THE QUERY THAT WORKS IS THE ISBN, NOT THE TITLE — both tried on that
+row.** "Hannibal Books, Metamorphoses: Ovid and the Arts" returns Ovid: Penguin,
+Oxford, Gutenberg, Wikipedia, a bookseller, a distributor — **not one page on
+Hannibal's site.** The bare `9789493416543` returns
+`hannibalbooks.be/metamorfosen-ovidius-en-de-kunsten` in the top ten. **A number
+cannot be confused with a two-thousand-year-old poem; a title can.** Where a row
+has no ISBN it falls back to the publisher and title, which is better than
+nothing and worse than the number.
+
 **A MISSING BUTTON CANNOT REPORT ANYTHING — her ruling on the publisher line,
 and the third time this app has had to learn it.** The Publisher button is
 drawn only when a link was found, so its absence read identically whether the
