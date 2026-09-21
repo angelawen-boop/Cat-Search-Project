@@ -883,6 +883,20 @@ sweep file, so any sweep file rebuilds it; losing it costs one re-import. **Her
 ledger could never live there for exactly that reason: it is derivable from
 nothing.** Do not propose moving it.
 
+**REBUILDING IT IS CODE'S JOB AND NOT HERS — her ruling, 21 Sep, and she got
+there by refusing the answer she was given.** "Losing it costs one re-import"
+was told to her as a procedure SHE would carry out, and she asked the question
+that breaks it: with three sweep files on hand, how is she supposed to know
+which one holds the picture that was lost? She does not, and she should never
+have been asked — **sweep files come from a session in the first place**, and a
+session can write the store directly with `ArtifactData`. `scraper/sweep_log.js`
+reads every pro forma CSV under `output/` that carries `swept_at` and prints
+the document to write. **Order cannot change its answer**, because it applies
+the app's own latest-wins rule per venue and per fact, so "which file" has no
+bearing on the result — which is exactly why it is code and not a habit.
+Fixtures S-001 to S-006, S-004 holding it against the JSX's own
+`mergeSweepLog` so the two cannot drift.
+
 **WRITTEN WHEN THE FILE IS READ, NOT WHEN SHE APPLIES IT.** It was written at
 Apply, on the reasoning that cancelling a review should leave no trace — correct
 WHILE THE LOG LIVED IN THE LEDGER, and wrong the moment it moved out. It is not
@@ -990,7 +1004,7 @@ check still passes it, the render check fails both passes. **It does not click
 anything**; a button that throws when pressed is still uncovered.
 
 **THEY ARE ON `main` SINCE THE 20 SEP MERGE**, with the JSX they test. `npm
-test` runs 184 unit checks, then the 62 intake cases, then the load check, then
+test` runs 190 unit checks, then the 62 intake cases, then the load check, then
 the render check — and it is the exit code that says whether all four passed,
 not the first number to scroll past.
 
@@ -1089,6 +1103,10 @@ impossible.
   the last run that HAD it, a venue gone to markers only, descriptions lost —
   warn and never act. It runs at the end of every sweep into that run's log, and
   in the compress plan step before any tokens are spent.
+- `scraper/sweep_log.js` — with `sweep_log.test.js`. **Rebuilds the app's freshness
+  drawer from the sweep files on disk**, so nobody has to know which sweep file
+  carries the latest picture. Read-only; prints the document, writes nothing.
+  Her question, 21 Sep — see §7 step 7.
 - `scraper/reach_probe.js` — **reachability only**; says nothing about usable rows.
 - `scraper/inspect_listing.js` — asks a listing page what link shapes it contains.
 - `scraper/probe_access.js` — loads a listing page twice, announcing headless and
@@ -1111,6 +1129,7 @@ node scraper/compress.js <run>               plan, and write the subagent job fi
 node scraper/compress.js <run> --check       verify the answers before they land
 node scraper/compress.js <run> --apply       write sweep_compressed.csv
 node scraper/qc.js <run|stitch>              faulty rows + exceptions; exit 1 on a fault
+node scraper/sweep_log.js [--json]           rebuild the app's freshness dates from every sweep file
 npm test                                     all fixtures
 ```
 
@@ -2074,14 +2093,29 @@ Each entry cost a real failure. Before changing the area, read the line.
    release. Conflict cards and per-field edits were confirmed in earlier
    sessions.
 
-   **ONE DRILL LEFT, HER CALL, NEXT SESSION: the page's store being wiped and
-   rebuilt from her export.** Nothing in the app can empty that store and
-   nothing she can do by accident will, so the drill needs the store cleared
-   from outside — `ArtifactData` can do it, no new control required. Order:
-   she exports, the store is read back to her, it is emptied, she reloads to
-   see the app know nothing, then loads her export. **Quarantine returns from
-   the export; the sweep dates do not and are not meant to** — they come back
-   from any sweep file, which is a step she takes anyway.
+   **ONE DRILL LEFT: the page's store being wiped and restored.** Nothing in
+   the app can empty that store and nothing she can do by accident will, so the
+   drill needs it cleared from outside — `ArtifactData` does it, no new control
+   required. **The two halves are restored from different places and by
+   different people, and that split is the drill's whole content:**
+
+   | | Restored from | By |
+   |---|---|---|
+   | **Quarantine** | her export JSON, which is dated and timestamped | her |
+   | **Sweep dates** | the sweep files on disk, via `scraper/sweep_log.js` | the session |
+
+   **THE SECOND ROW WAS WRONG UNTIL SHE CORRECTED IT, 21 Sep.** This step used
+   to read "she re-imports a sweep file", and she rejected it on two grounds,
+   both right: she would have to know which of several files held the lost
+   picture, and **sweep files are handed to her by a session in the first
+   place**, so the job was never hers. Reasoning and the script in §4 and §5.
+
+   Order: she quarantines something real and exports, both documents are read
+   back and kept, the store is emptied, she reloads to see the app know
+   nothing, she loads her export, then the session writes the rebuilt sweep
+   dates back. **A quarantine entry marked `released` is a tombstone and blocks
+   nothing** — as of 21 Sep both Louvre entries in the store are released, so a
+   wipe today would prove nothing about quarantine until she blocks a row.
 
    **THE EXPORT WILL NOT CARRY THE SWEEP LOG — her ruling, 20 Sep, asked and
    declined.** It could be done safely with quarantine's own latest-wins rule,
