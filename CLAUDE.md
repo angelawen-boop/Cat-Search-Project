@@ -563,53 +563,40 @@ one, which is worse than nothing.
 
 ## 4. The app
 
-**WHERE IT LIVES — CHANGED 20 SEP 2026, AND THE PREVIOUS ANSWER WAS WRONG.** It
-is a **published page on her Claude account**, at one permanent private URL she
-bookmarks: open it in any browser, signed in to Claude, with no chat session and
-no Code session involved. A session republishes to the same URL; she reloads.
+**Where it lives (changed 20 Sep; the earlier "hosting is impossible" was never
+checked and was wrong — test a claim before building a month of workarounds on
+it).** The app is a **published page on her Claude account** at one permanent
+private URL she bookmarks: open it in any browser signed in to Claude, no chat or
+Code session involved. A session republishes to the same URL; she reloads.
 
 > ### https://claude.ai/artifact/E2WjpRgr4W5eSzYtxyfrt5
 >
-> **Republish to THAT url or a new page is created and hers stops updating.**
-> From a session that did not publish it, pass it as `url`. It carries FOUR
-> capabilities, and losing any breaks a feature she uses: `downloads` (Export —
-> see below), `mcp` for her **Parallel Search** connector, `sample` (Claude
-> reading what the connector found) and `db` (the sweep log and the quarantine
-> list). **The guide said three for a day; `db` was the one left out, and it
-> holds the two things that survive a Reset.** A publish that restates
-> `capabilities` must restate all four; omitting the field entirely carries
-> them forward, which is the safer default and what every publish has used.
+> **Republish to THAT url** or a new page is created and hers stops updating;
+> from a session that did not publish it, pass it as `url`. It carries **four
+> capabilities**, each load-bearing: `downloads` (Export), `mcp` (her **Parallel
+> Search** connector), `sample` (Claude reading what the connector found), `db`
+> (the sweep log and quarantine list — the two things that survive a Reset). A
+> publish that restates `capabilities` must restate all four; omitting the field
+> carries them forward, the default every publish has used.
 >
-> **Version 26, 21 Sep 2026**, is what she is running.
->
-> **It is built from `main`.** Transpile the JSX to plain browser code, wrap it
-> in the HTML shell, publish. The shell is not in the repo: take it from the
-> published page, which `action: "read"` hands over — everything before the
-> script's first line and the two lines after its last. Rebuilding it from
-> memory is how a page loses its pre-paint background.
+> **Version 26, 21 Sep 2026** is what she runs. **Built from `main`:** transpile
+> the JSX, wrap it in the HTML shell, publish. The shell is not in the repo —
+> take it from the published page (`action: "read"` hands it over: everything
+> before the script's first line and the two lines after its last). Rebuilding it
+> from memory loses the pre-paint background.
 >
 > **Never republish while she has it open** — house rule, §1.
 
-This matters beyond convenience. For a month the app was a JSX file rendered
-afresh in a chat every time, because hosting had been called impossible. **It was
-not**, and nobody went back to check. A session reasoning from "the sandbox makes
-that impossible" should test the claim before a month of workarounds is built on
-it.
+**Her data is NOT hosted** — the page is; the ledger is still a file she imports
+and exports, and opening the link gives an empty portal. **Core mental model
+(load-bearing):** the app is the *tool*, the ledger is the *document*, like a word
+processor and a file — data lives in the ledger, never baked into the tool.
+Losing or silently corrupting the ledger is the worst outcome the design guards
+against; it holds every tracked exhibition plus her marks (watching / dismissed /
+want-catalogue / acquired / catalogue details).
 
-**Her data is NOT hosted.** The page is; the ledger is still a file she imports
-and exports. Opening the link gives an empty portal exactly as before.
-
-**Core mental model (load-bearing):** the app is the *tool*; the ledger is the
-*document* — like a word processor and a file. Data lives in the ledger, never
-baked into the tool.
-
-**The ledger** holds every tracked exhibition plus her marks: watching / dismissed
-/ want-catalogue / acquired / catalogue details. Losing or silently corrupting it
-is the worst outcome the design guards against.
-
-Current build: `Cat_Watch_v10.2_haiku.jsx`. **A line count was typed here and went
-stale twice over** — it said 1047 while the file was 2143 — so it is not typed here
-again; `wc -l` answers it. An identical Sonnet copy exists on Claude chat,
+Current build: `Cat_Watch_v10.2_haiku.jsx` (line count went stale twice when
+typed — `wc -l` answers it). An identical Sonnet copy exists on Claude chat,
 differing in one model string.
 
 **Ledger row shape:**
@@ -627,43 +614,37 @@ Ledger backup is JSON; the sweep pro forma is CSV.
 
 ### What is built and passed testing
 
-**Loading and saving (v8.3).** She holds the only real copy of the ledger as a
-file; the app is the workspace. Open → empty portal, no auto-loading. Import →
-pick file. Status line has three states: calm neutral on fresh load, loud red
-**UNSAVED CHANGES** after any change, calm green **✓ Saved — safe to close** after
-Export. **Export IS Save.** Import and Reset ask before replacing unsaved work.
+**Loading and saving (v8.3).** She holds the only real copy of the ledger; the
+app is the workspace. Open → empty portal, no auto-loading; Import → pick file.
+Status line: calm neutral on fresh load, loud red **UNSAVED CHANGES** after any
+change, calm green **✓ Saved — safe to close** after Export. **Export IS Save.**
+Import and Reset ask before replacing unsaved work.
 
-**SAVING BROKE AND WAS REBUILT — 20 SEP 2026.** The viewer's sandbox now blocks
-any download a page starts for itself, `<a download>` included, and that was the
-only route her ledger had out of the app: *"File downloads aren't available for
-this artifact"*, a message from the host, not from us. **Her save function was
-never wrong** — the ground moved under it.
-
-Two routes now, and the difference is what is KNOWN:
+**Saving was rebuilt 20 Sep** because the viewer's sandbox now blocks any download
+a page starts for itself, `<a download>` included — *"File downloads aren't
+available for this artifact"*, from the host, not us. Her save function was never
+wrong; the ground moved. Two routes now, differing in what is KNOWN:
 
 1. **The runtime's file handoff** (`downloads`, declared at publish — a chat
    session rendering the file will NOT declare it, which is why no session could
-   give her a working Export). It asks her, then saves or **rejects**.
-2. **An ordinary browser download**, for a plain page. It cannot tell a finished
-   download from a cancelled one from a sandbox that refused, so it **does not
-   clear the unsaved warning**. Not knowing is reported as not knowing.
+   give her a working Export). Asks her, then saves or **rejects**.
+2. **An ordinary browser download** (plain page). Cannot tell a finished download
+   from a cancelled one from a refused one, so it **does not clear the unsaved
+   warning** — not knowing is reported as not knowing.
 
-> **The green tick is honest now, and the old accepted limit is retired.** It
-> used to fire on the CLICK, because Claude's download prompt had a Cancel the
-> app could not see; she lived with that. On route 1 the save resolves or throws,
-> so the tick means a save happened. On 20 Sep the old tick said "Saved — safe to
-> close" while nothing whatever was written, which is the worst thing this app
-> can do. **Never put a click-triggered tick back.**
+> **Never put back a click-triggered green tick.** It used to fire on the click
+> (Claude's download prompt had a Cancel the app couldn't see); on 20 Sep that
+> showed "Saved — safe to close" while nothing was written — the worst thing this
+> app can do. On route 1 the save resolves or throws, so the tick now means a
+> save happened.
 
 **Refreshing (v9.2).** The app does the thinking; she approves each change. A
 sweep CSV goes in via **Import Refresh**; the app compares it against the ledger
-with no internet access, shows proposals as cards grouped by venue, and applies
-only what she accepts. Proposal types: **Add**, **Fill/Change** (per-field
-accept/reject with an escape hatch "this is a different show"), and **Couldn't be
-filed**. Bad data is always surfaced with a note, never silently dropped.
-
-Refeed workflow: reject bad rows, fix only those cells, refeed the whole file.
-Already-applied rows stay silent.
+with no internet access and shows proposals as cards grouped by venue, applying
+only what she accepts. Types: **Add**, **Fill/Change** (per-field accept/reject,
+escape hatch "this is a different show"), **Couldn't be filed**. Bad data is
+always surfaced with a note, never dropped. Refeed workflow: reject bad rows, fix
+only those cells, refeed the whole file; already-applied rows stay silent.
 
 **Sorting, timestamps and dividers (v9.3)** — most likely to look "broken" later
 when it is working as designed.
@@ -937,275 +918,177 @@ the fill is read, not run.
 
 ### Reading a stitched file — 13 Sep, SIGNED OFF BY HER ON REAL FILES 20 SEP
 
-One CSV now carries every machine's output, so the app reconciles rows against
-**each other** before the ledger. Her design: the stitch stays dumb, all judgement
-lives here where she sees it.
+One CSV carries every machine's output, so the app reconciles rows against **each
+other** before the ledger. Her design: the stitch stays dumb, all judgement lives
+here where she sees it.
 
-- **Marker rows are not proposals.** Matched on the sentence the scraper stamps
-  verbatim — `Marker row, not an exhibition.` — not on the bracketed title, which
-  is a guess about formatting. They become a coverage panel. Previously each was
-  an Add card, and rejecting is not remembered, so a refused venue put the same
-  junk on her pile **on every future sweep forever**.
-- **Duplicate rows fold on venue + URL, and nothing else.** Gaps fill silently;
-  a genuine disagreement is carried to the card as a CHOICE, fuller value ticked
-  and marked as a guess, both shown. Folds are disclosed in the notes so the card
-  count still reconciles with the file.
+- **Marker rows are not proposals.** Matched on the verbatim sentence `Marker row,
+  not an exhibition.`, not the bracketed title (a formatting guess); they become a
+  coverage panel. As Add cards they returned on every future sweep forever,
+  because rejecting is not remembered.
+- **Duplicate rows fold on venue + URL, nothing else.** Gaps fill silently; a
+  genuine disagreement becomes a CHOICE card, fuller value ticked and marked a
+  guess, both shown. Folds are disclosed in the notes so the card count reconciles
+  with the file.
 - **Rows with no URL never fold.** The only other key is the title, and
   `sameExhibition()` returns true whenever either side lacks dates — fine against
-  the ledger where she sees each proposal, fatal here where it fires first. An
+  the ledger (she sees each proposal), fatal here where it fires first. An
   unfolded duplicate costs one visible card; a wrong fold costs an exhibition.
 
-**Odd cases come FIRST, batched by kind, in FOUR bands** — her ruling, cut from
-six on 20 Sep:
+**Odd cases come first, batched by kind, in four bands** (her ruling, cut from six):
 
 1. **Marker rows**
-2. **Combined rows** · identical rows were de-duped or reconciled
-3. **Combined rows** · identical rows produced conflicts — yours to choose
-4. **No exhibition url** · link goes to venue's listing page
+2. **Combined rows** · identical rows de-duped or reconciled
+3. **Combined rows** · identical rows conflicted — yours to choose
+4. **No exhibition url** · link goes to the venue's listing page
 
-Easiest first and hardest last, which is not the order an engine would pick: she
-is spending attention rather than compute, and clearing what needs nothing leaves
-more of it for what does. Batched by kind means a venue can appear twice on the
-screen; she would rather finish one kind of thinking than keep switching. Venue
-headings sit inside every band, in the same order as the ordinary list below.
+Easiest first: she is spending attention, not compute, so clearing what needs
+nothing leaves more for what does. Batched by kind (a venue can appear twice) so
+she finishes one kind of thinking before switching. Venue headings sit inside each
+band, in the ordinary-list order below. **Every band opens and closes; the default
+is what the band asks of her, never its size** — markers and combined-agreed open
+closed (she can't act on either), conflict and no-url open open. The count sits on
+the header, so a collapsed band can't hide that it holds something.
 
-**EVERY BAND OPENS AND CLOSES, and the default is set by what the band ASKS OF
-HER, never by its size.** Markers and combined-and-agreed open closed, because
-she cannot act on either. The conflict and no-url bands open open. The count sits
-ON the header, so a collapsed band can never hide that it holds something.
+**Two earlier bands were deleted, each wrong differently:**
 
-**THE TWO BANDS THAT WERE DELETED, and why each was a different kind of wrong:**
+- **"Two different answers" was a phantom.** A conflict is only ever found by
+  holding two rows side by side, and `foldDuplicateRows` flags every card it
+  builds, so a conflict that did not come from a fold cannot exist. It shipped
+  empty, was listed here as one of six, and nobody ran a file to notice. Fixture
+  17 now asserts every conflict it produces came from a fold.
+- **"Unusable rows" was the wrong end of the pipe** (her ruling). A row with no
+  title or no venue code is a DATA FAULT whose only outcome is "re-run the sweep"
+  — a message to the session, not to her pile. `scraper/qc.js` stops it upstream
+  (§5) and the app refuses the **whole** file, naming the lines (importing the
+  rest would silently drop the faulty row's exhibition). A bad DATE is different —
+  the row is still an exhibition, so it is blanked and noted as before.
 
-- **"Two different answers" WAS A PHANTOM.** It was meant for a disagreement that
-  did not come from combining two rows. There is no such thing: a disagreement is
-  only ever found by holding two rows side by side, and `foldDuplicateRows` flags
-  every card it builds. **It never held a row in its life.** It shipped, this
-  guide listed it as one of six bands, and nobody ran a file and asked why it was
-  always empty — the same silence as the fourteen fixtures that sat uncalled.
-  **She found it by importing the sample file and looking.** Fixture 17 now runs
-  that file and asserts every conflict it produces came from a fold, so it cannot
-  come back by anyone forgetting.
-- **"Unusable rows" WAS THE WRONG END OF THE PIPE — her ruling.** A row with no
-  title or no venue code is a DATA FAULT: there is no such thing as an exhibition
-  with no name, and a row always came from somewhere, so a missing code means the
-  file is malformed. Its only possible outcome was ever "re-run the sweep", which
-  is a message to the session printed on her screen. **It belongs to the session,
-  never to her approval pile.** `scraper/qc.js` now stops it upstream (§5), and
-  the app refuses the whole file, naming the lines and saying they are not hers
-  to fix. Refused WHOLE, because importing the rest would quietly leave the
-  faulty row's exhibition out. A bad DATE is not in that class — the row is still
-  an exhibition, so it is blanked and noted on the card as before.
+**Band membership is the fold's own flag, never words in the notes.** It used to
+search notes for "same exhibition" — which `noteTravellingRuns()` also writes — so
+Acquavella's two real *Portraiture* runs (two addresses, nothing combined) were
+filed as "combined for you". `analyzeProForma` sets `merged` from `mergedFrom` and
+the band reads that. Fixture 16. A fact the code already knows is never re-derived
+from prose written for a human.
 
-**WHICH BAND A CARD IS IN IS THE FOLD'S OWN FLAG, never words in the notes.**
-It used to search the notes for "same exhibition" — and `noteTravellingRuns()`
-writes "The same exhibition is also shown at Palm Beach." Acquavella's two runs
-of *Portraiture*, two real shows at two addresses with nothing combined, were
-filed under "combined for you" with a heading that stated something untrue about
-them. `analyzeProForma` sets `merged` from `mergedFrom` and the band reads that.
-Fixture 16. **A fact the code already knows is never re-derived from prose
-written for a human.**
+**The pre-pick on a conflict card is `fuller()` (longest wins), meaningless for a
+date** — two 10-char dates tie, so it keeps file order and presents that as a
+choice. Meaningful for a description (stub vs real text) or a title. **Her ruling:
+leave it**; ticking nothing on a date conflict was offered and declined, do not
+re-propose.
 
-**THE PRE-PICK ON A CONFLICT CARD IS `fuller()` — LONGEST WINS — AND FOR A DATE
-THAT IS MEANINGLESS.** Two ten-character dates tie, so it keeps whichever row
-came first in the file and presents that as a choice made for her. It means
-something for a description (a stub versus the real text) and for a title.
-**HER RULING 20 Sep: LEAVE IT.** The alternative — tick nothing on a date
-conflict — was offered and declined. Do not re-propose it.
+**Order inside a venue in "Normal cases"** (her ruling): fills, then edits, then
+new exhibitions; newest CLOSING date first within each; no-closing-date at the
+bottom of its group. It was file order (the order the scraper read the pages), so
+an edit to something she owns sat between two new shows and she switched between
+"is this change right?" and "do I want this?" every few cards. Closing date
+because that is the field the app is about.
 
-**ORDER INSIDE A VENUE IN "NORMAL CASES" — her ruling 20 Sep.** Fills, then
-edits, then new exhibitions; newest CLOSING date first within each; a row with no
-closing date at the bottom of its group. It was FILE ORDER, which is the order
-the scraper read that venue's pages, so an edit to something she owns sat between
-two brand-new shows and she switched between "is this change right?" and "do I
-want this?" every few cards. Same reasoning as batching the triage bands by kind.
-Closing date because that is the field the whole app is about.
+**The ledger will not move until every card is decided — a hard block, not a
+warning** (her ruling). `applyRefresh` used to skip an undecided card silently —
+not applied, not remembered, back on the next sweep; with 320 cards that is a
+session's reading gone on one tap. Her words: *"otherwise I envision total chaos
+if I can skip. this is SLOW mode at the moment."* A warning she can wave through
+is the same failure one dialogue later — do not re-propose confirm-and-continue.
+The button says what is missing ("323 still to decide"), the undecided figure
+accent-red beside it, rather than going quietly grey.
 
-**THE LEDGER WILL NOT MOVE UNTIL EVERY CARD IS DECIDED — her ruling, 20 Sep,
-and she found it by disbelieving a session.** Told she could accept a handful
-and press the button, she said that was not possible: the app made her finish
-first. IT DID NOT. `applyRefresh` skipped an undecided card — not applied, and
-not remembered either, so it returned on the next sweep with nothing on screen
-to say it had been passed over. With 320 cards that is a whole session's
-reading gone on one tap, and she had been relying on a guard nobody had built.
+`countDecisions` moved OUT of the component (a gate a fixture can't reach is a
+gate nobody checks). **Rejecting is deciding** — a turned-down Add, a quarantine,
+an edit whose every field she refused; counting those as undecided would make the
+button unreachable for anyone who rejects anything, which is most of a real sweep.
+Fixtures 18 to 18f. **Finding the undecided ones:** every venue heading carries
+its own count (a collapsed venue still declares what it holds) and the footer
+count is a button that opens the venue with the first undecided card and scrolls
+to it. The badge appears only where work remains (the screen "can easily become
+overengineered"). Gate and jump share one rule — `countDecisions` calls
+`isUndecidedCard`; fixture 18g asserts they agree, or the app is a dead end.
 
-**A BLOCK, NOT A WARNING** — her call, her words: *"otherwise I envision total
-chaos if I can skip. this is SLOW mode at the moment."* A warning she can wave
-through is the same failure one dialogue later. **Do not re-propose a
-confirm-and-continue.**
+**The sweep log lives OUTSIDE the ledger** (her ruling). Test: an older backup
+said "Met last brought rows 18 Sep", today's said 20 Sep — but a sweep either ran
+or it did not; opening an older file can't un-run it. The distinction: CONTENT
+rolls back with a backup (fewer exhibitions, her marks as they stood — correct), a
+FACT ABOUT THE WORLD must not, and the sweep log is the second kind sitting in the
+first kind's container. (Two rejected arguments for keeping it in the ledger: "a
+careless republish could destroy it" — that can wipe the seed too; "the shell has
+nowhere to keep anything" — false, the platform gives the page its own store. And
+she keeps one ledger, versioned by her backups, not several.)
 
-The button says WHAT IS MISSING — "323 still to decide" — rather than going
-quietly grey, and the undecided figure turns accent red beside it. A dead
-control with no reason attached is what she would be left staring at.
+**What it is:** one document in the page's own store, one line per venue, 21 lines,
+never growing; survives Reset, present before any ledger opens, unmoved by loading
+an old backup. `venueSeen` is no longer in the ledger file at all. **It is a cache,
+not a master record** — which is what makes it safe somewhere she cannot export:
+every fact comes from `swept_at` in a sweep file, so any sweep file rebuilds it and
+losing it costs one re-import. The ledger can never live there for that same reason
+— it is derivable from nothing. Do not propose moving either.
 
-`countDecisions` therefore MOVED OUT OF THE COMPONENT to sit with the pure pro
-forma helpers: it stopped being a label and became the gate, so a fixture has
-to be able to reach it. **REJECTING IS DECIDING** — an Add she turned down, a
-quarantine, an edit whose every field she refused. Were those counted as
-undecided the button would be unreachable for anyone who rejects anything,
-which is most of a real sweep, and it would read as a stuck button rather than
-a counting bug. Fixtures 18 to 18f, verified by flipping the clause and
-watching 18c fail.
+**Rebuilding the store is code's job, not hers** (her ruling). With three sweep
+files on hand she can't know which holds the lost picture — and sweep files come
+from a session anyway, which can write the store directly with `ArtifactData`.
+`scraper/sweep_log.js` reads every pro forma CSV under `output/` carrying
+`swept_at` and prints the document to write; order can't change its answer (it
+applies the app's own latest-wins rule per venue and per fact), which is why it is
+code and not a habit. Fixtures S-001 to S-006; S-004 holds it against the JSX's own
+`mergeSweepLog` so the two can't drift.
 
-**FINDING THE UNDECIDED ONES — built at her ask once the block existed.** Two
-halves: every venue heading carries its own count, so a COLLAPSED venue still
-declares what it is holding, and the footer's count is a button that opens the
-venue holding the first undecided card and scrolls to it. A number she cannot
-act on is what makes a hard gate feel arbitrary.
+**The headline "Last refreshed" line read the ledger, not the store** — it was
+`lastRun`, stamped at Apply and kept in the ledger, so a wiped store still printed
+a confident time and an older backup rolled it back. Fixed per venue on 20 Sep but
+never carried to the line on top; it now takes the latest attempt across all venues
+from the store. `lastRun` is still written to her export (so an older build reads
+the file) and drives nothing on screen. The "By venue" control used to render only
+when non-empty, so emptying the store removed the control itself; both the row and
+the panel are now ungated on a ledger being open.
 
-**The badge appears ONLY where work remains** — her warning that this screen
-"can easily become overengineered". A venue with nothing left says nothing.
+**"Unknown", never "never"** (her ruling — a correctness point). An empty store is
+not evidence no sweep ran: she may be looking at quarantined rows, which only ever
+come from a sweep. Her wording "cannot be read from store" was declined and the
+distinction kept — the store answered, and what it answered was nothing; a store
+that can't be reached prints its own separate sentence. `page_renders.js` asserts
+both lines on the opening screen in each of the page's two homes.
 
-**THE GATE AND THE JUMP SHARE ONE RULE**, and for one commit they did not: the
-card-level test was written as a second copy. If those two disagree the app is
-a dead end — a button that will not fire beside a jump insisting nothing is
-left. `countDecisions` calls `isUndecidedCard`; fixture 18g asserts they agree
-across every decision shape.
+**Written when the file is read, not when she Applies.** It was at Apply (so
+cancelling a review left no trace) — right while the log lived in the ledger, wrong
+once it moved out: reading a sweep file is when the page learns the sweep happened,
+accept or not. Her catch: *"I have to test this against the massive csv? how am I
+going to go thru 320 entries?"* — now she imports, cancels, and looks.
 
-**THE SWEEP LOG LIVES OUTSIDE THE LEDGER — her ruling, 20 Sep, and she got
-there by refusing two bad answers from me.** Her test: open a backup from two
-days ago and the drawer said "the Met last brought rows 18 Sep"; open today's
-and it said 20 Sep. Same world, two answers. A sweep either ran or it did not —
-opening an older file cannot un-run it.
+**Merge, never replace.** A venue's line moves only when the incoming sweep is
+LATER, so importing an old file changes nothing; the two halves (tried / brought
+rows) move independently. Fixtures 15, 15a, 15b, confirmed by her against several
+older sweep files.
 
-**THE DISTINCTION IS HERS, and it is the part to carry across.** CONTENT rolls
-back with a backup and that is correct: fewer exhibitions, her marks as they
-stood, because the document genuinely was smaller then. A FACT ABOUT THE WORLD
-must not. The sweep log is the second kind and it was in the first kind's
-container.
+**Dark mode** (her request: *"it's 9pm and this cream background with light grey
+text is v difficult to read."*) A **Dark / Light** button sits by Import Refresh;
+first visit follows the machine's setting, her explicit pick then wins on that
+device in browser storage (a per-device comfort, not ledger or sweep-log data;
+every touch wrapped because it can throw). **Every colour is named** (`PALETTES`,
+`TIER_SETS`) — the bulk of the work, since a stray hex left behind is a cream patch
+on a dark page that looks fine in light mode forever. The dark set is not the light
+set inverted: warm near-black ground, warm off-white text, `soft` deliberately
+lighter (her complaint was grey-on-cream and the reverse is as easy); urgency
+badges have their own dark set. **The shell paints a ground before React runs**,
+following the browser until the component sets `data-theme`, or a dark machine
+flashes cream on the way in.
 
-**BOTH ARGUMENTS I MADE AGAINST IT WERE BAD, and the shape of each is worth
-more than the conclusion.** First: "a careless republish could destroy it" — a
-reason to be careful, not an architecture principle; her answer was that a
-careless republish can wipe the seed too. Second: "the app shell has nowhere to
-keep anything" — true of what had been BUILT, false of the platform, which
-offers the page a store of its own. **Neither was checked before it was
-asserted.** I also leaned twice on her keeping several ledgers. **She never said
-that and does not do it** — one ledger, versioned by her own backups. An
-invented constraint is worse than no argument at all.
+**Other screen rulings.** Venue headings in "Normal cases" are the CONTROL, not a
+label: accent red, larger, own count, disclosure triangle, sentence case (caps "a
+bit aggressive"), with one **Collapse all / Expand all** over the venues that have
+cards. The quarantine shelf is **12.5px in the body ink** (was 10.5 and muted —
+"tiny AND faint" — and it is a list of decisions she may need to undo); "Put back"
+is **"Remove from quarantine"**; the toggle reads **"Quarantine - 3"** on its own
+row (a standing decision, not part of refreshing). A quarantine that can't save is
+a **banner, not a footnote** — it borrows the unsaved-changes banner and is ungated
+on a ledger being open. **"n to decide" sits beside the venue's own count, not at
+the right-hand edge**, so the eye doesn't cross the screen to pair a number with
+its venue.
 
-**WHAT IT IS:** one document in the page's own store, one line per venue,
-twenty-one lines, never growing. It survives Reset, it is there before any
-ledger is opened, and loading an old backup does not move it. `venueSeen` is no
-longer written to or read from the ledger file at all.
-
-**IT IS A CACHE, NOT A MASTER RECORD** — and that is precisely what makes it
-safe somewhere she cannot export. Every fact in it comes from `swept_at` in a
-sweep file, so any sweep file rebuilds it; losing it costs one re-import. **Her
-ledger could never live there for exactly that reason: it is derivable from
-nothing.** Do not propose moving it.
-
-**REBUILDING IT IS CODE'S JOB AND NOT HERS — her ruling, 21 Sep, and she got
-there by refusing the answer she was given.** "Losing it costs one re-import"
-was told to her as a procedure SHE would carry out, and she asked the question
-that breaks it: with three sweep files on hand, how is she supposed to know
-which one holds the picture that was lost? She does not, and she should never
-have been asked — **sweep files come from a session in the first place**, and a
-session can write the store directly with `ArtifactData`. `scraper/sweep_log.js`
-reads every pro forma CSV under `output/` that carries `swept_at` and prints
-the document to write. **Order cannot change its answer**, because it applies
-the app's own latest-wins rule per venue and per fact, so "which file" has no
-bearing on the result — which is exactly why it is code and not a habit.
-Fixtures S-001 to S-006, S-004 holding it against the JSX's own
-`mergeSweepLog` so the two cannot drift.
-
-**THE HEADLINE LINE READ THE LEDGER, NOT THE STORE — her finding, 21 Sep, and
-the wipe drill is what exposed it.** "Last refreshed" was `lastRun`: stamped
-at the moment she pressed Apply, and kept inside the LEDGER. So a wiped store
-still printed a confident time that nothing had swept at, and loading an older
-backup rolled that time back with it. **That is the 20 Sep fault still living
-one line above the drawer built to replace it** — fixed per venue, never
-carried across to the line on top. It now takes the LATEST attempt across all
-venues, out of the store. `lastRun` is still written into her export so an
-older build reads the file, and drives nothing on screen.
-
-**And the "By venue" control only rendered when there was something to list**,
-so emptying the store removed the control itself: the panel has said it holds
-nothing since the day it was built, and there was no way to open it and read
-that. Both the row and the panel are ungated on a ledger being open now, which
-the panel's own comment had claimed since 20 Sep while the row quietly
-required one.
-
-**"UNKNOWN", NEVER "NEVER" — her ruling on the wording, and it is a
-correctness point rather than a preference.** An empty store is not evidence
-that no sweep ever ran: she can be looking at rows she quarantined, and those
-only ever come from a sweep. "Never" is a claim about the WORLD made from the
-absence of a RECORD — the same shape of error as dating a venue by the moment
-she pressed a button. The panel's "No sweep imported yet." asserted the same
-thing and now states what is actually known. **Her proposed wording, "cannot
-be read from store", was declined and the distinction kept**: the store
-answered, and what it answered was nothing. A store that cannot be reached at
-all already prints its own sentence, and those two must never read alike.
-`page_renders.js` asserts both lines on the opening screen in each of the
-page's two homes, verified by restoring the old behaviour and watching them
-fail.
-
-**WRITTEN WHEN THE FILE IS READ, NOT WHEN SHE APPLIES IT.** It was written at
-Apply, on the reasoning that cancelling a review should leave no trace — correct
-WHILE THE LOG LIVED IN THE LEDGER, and wrong the moment it moved out. It is not
-part of her document; reading a sweep file is when the page learns the sweep
-happened, whether or not she accepts a card. Her catch: *"I have to test this
-against the massive csv? how am I going to go thru 320 entries?"* — with the
-ledger gated on every card, seeing the drawer meant working 320 first. Now she
-imports, cancels, and looks. **Moving a thing between two homes changes when it
-should be written, and that has to be re-derived rather than carried over.**
-
-**MERGE, NEVER REPLACE.** A venue's line moves only when the incoming sweep is
-LATER, so importing an old file changes nothing — the same bug in a new place
-otherwise. The two halves move independently, which is what makes the drawer
-worth reading. Fixtures 15, 15a, 15b, **and confirmed by her against several
-older sweep files on 20 Sep: the drawer did not move.**
-
-**DARK MODE — her request, 20 Sep: "it's 9pm and this cream background with
-light grey text is v difficult to read."** A **Dark / Light** button sits by
-Import Refresh. First visit follows the machine's own setting; her explicit
-pick then wins on that device, remembered in browser storage — a per-device
-comfort, not ledger data and not sweep-log data, and every touch of that
-storage is wrapped because it can throw outright.
-
-**EVERY COLOUR IS NAMED** (`PALETTES`, `TIER_SETS`). That was most of the work:
-hexes were scattered through the render, and each one left behind would have
-been a cream patch on a dark page — a failure that looks fine in light mode
-forever. **The dark set is not the light set inverted**: warm near-black ground,
-warm off-white text, and `soft` deliberately lighter than an inversion would
-give, because her complaint was grey-on-cream and the same mistake is easy to
-repeat the other way. The urgency badges have their own dark set — a pale wash
-glares on a dark ground — keeping the ladder's meaning.
-
-**THE SHELL PAINTS A GROUND BEFORE REACT RUNS**, following the browser until the
-component sets `data-theme`, or a dark-mode machine flashes cream on the way in.
-
-**OTHER SCREEN RULINGS, 20 Sep.** Venue headings in "Normal cases" are the
-CONTROL, not a label: accent red, larger, their own count, a disclosure
-triangle, **sentence case** ("a bit aggressive" in caps). Every venue opens and
-closes, with one **Collapse all / Expand all** over the venues that actually
-have cards. The quarantine shelf is **12.5px in the body ink** — it was 10.5
-and muted, "tiny AND faint", and it is a list of decisions she may need to
-UNDO. "Put back" is **"Remove from quarantine"**; the toggle says
-**"Quarantine - 3"**, on **its own row**, because a quarantine is a standing
-decision and not part of refreshing. **A QUARANTINE THAT CANNOT SAVE IS A
-BANNER, NOT A FOOTNOTE** — it printed inside the panel, which she would have to
-open to find, while the rows sat on screen looking normal and nothing was being
-written; it now borrows the unsaved-changes banner, because it means the same
-thing, and it is not gated on a ledger being open. **"n to decide" sits beside the venue's
-own count, not pushed to the right-hand edge** — her ruling on seeing it, and
-the same reasoning as the heading being the control: across a full-width row
-the eye has to cross the screen to pair a number with the venue it belongs to.
-
-**COUNTS, AND THE ONE THAT CAN FAIL — 19 Sep.** The screen said "319 proposed
-changes found" and nothing else, which cannot be checked against anything: rows
-leave the pile for three innocent reasons — a marker row, a fold, an entry that
-already matches — so 652 rows arriving as 319 cards looks exactly like 652 rows
-arriving as 319 cards with eleven quietly lost. The header now also carries the
-split by type, a count on every band, and one line that **accounts for every row
-read**:
-
-```
-file rows = markers + never-add + folds + already-matching + cards
-```
-
-**REWRITTEN TO HER WORDING, 20 Sep.** Two sentences, each ENDING in the number
-the next one starts from — the file narrows to the pile, then the pile splits by
-what it does to her ledger:
+**Counts, and the one that can fail.** "319 proposed changes found" is uncheckable,
+because rows leave the pile for three innocent reasons (marker, fold,
+already-matching), so a real loss looks identical. The header now carries the split
+by type, a count on every band, and one line that accounts for every row read —
+rewritten to her wording as two sentences, each ending in the number the next
+starts from:
 
 ```
 From 415 rows in the file — 9 marker rows, 0 duplicate rows reconciled/de-duped,
@@ -1213,54 +1096,40 @@ From 415 rows in the file — 9 marker rows, 0 duplicate rows reconciled/de-dupe
 From 320 entries — 14 fill a gap, 7 edit existing data, 299 new exhibitions
 ```
 
-The old pair put the split FIRST and the reconciliation second, so the two lines
-shared no number and neither led anywhere. A quarantine adds a "you'd said never
-to add" term. **Every term stays**: drop one and the arithmetic stops closing,
-which is the only thing these lines are for.
+A quarantine adds a "you'd said never to add" term. **Every term stays** — drop one
+and the arithmetic stops closing, which is the only thing these lines are for. The
+bands sort by SHAPE and the types cut across them: a new exhibition assembled from
+two duplicate rows is in the combined band, not "Normal cases".
 
-**The bands sort by SHAPE, the types cut across them** — a brand-new exhibition
-assembled from two duplicate rows is in the combined band, not in "Normal cases",
-because what the band is about is that she is seeing one card built from two
-lines.
+`scraper/fixtures/intake_cases.js` — **62 checks**: the two that must NOT merge,
+the quarantine rules, the freshness facts with their sweep dates, the row identity,
+the whole-file refusal, the phantom band, the ledger gate (18–18g), the sweep-log
+merge (15a, 15b), the quarantine's two homes (20–20g).
 
-`scraper/fixtures/intake_cases.js` — **62 checks**, including the two that must
-NOT merge, the quarantine rules, the freshness facts with their sweep dates, the
-row identity, the whole-file refusal, the phantom band, the ledger gate (18-18g)
-the sweep-log merge (15a, 15b) and the quarantine's two homes (20-20g).
+**`page_loads.js` asks whether the app LOADS; `page_renders.js` asks whether it
+DRAWS** (added 20 Sep — the first thing this repo carries dependencies for:
+`react`, `react-dom`, `jsdom`, dev only, never shipped). The load check is only a
+floor: it passed twice while the published page was black, because a palette
+defining itself throws on first RENDER, not on load. `page_renders.js` builds the
+page as the build does, renders into jsdom, runs effects, reads the opening screen
+back — twice, plain then with the Claude runtime answering, so a fault in a
+capability path (the page asking the runtime for its sweep-log store) is not
+invisible. Proved by putting the real fault back: the load check still passes it,
+render fails both passes. Neither clicks anything, so a button that throws when
+pressed is still uncovered.
 
-**`scraper/fixtures/page_loads.js` asks whether the app LOADS**, and
-**`page_renders.js` asks whether it DRAWS** — added 20 Sep on her ruling, and
-the first thing this repo carries dependencies for its own sake to do
-(`react`, `react-dom`, `jsdom`, dev only, never shipped to the page). The load
-check alone is a floor and says so in its own header: it never renders, and it
-passed twice while the published page was black, because a palette defining
-itself throws on the first RENDER and not on load.
-
-`page_renders.js` builds the page the way the build does, renders it into
-jsdom, runs the effects and reads the opening screen back out of the document.
-**It renders TWICE — plain page, then with the Claude runtime answering** — as
-a fault in a capability path is invisible without one, and pass two asserts the
-page really asked the runtime for its sweep-log store, or it is pass one
-wearing a different label. **Proved by putting the real fault back**: the load
-check still passes it, the render check fails both passes. **It does not click
-anything**; a button that throws when pressed is still uncovered.
-
-**THEY ARE ON `main` SINCE THE 20 SEP MERGE**, with the JSX they test. `npm
-test` runs 190 unit checks, then the 62 intake cases, then the load check, then
-the render check, then the catalogue-lookup cases (54 on 21 Sep) — and it is
-the exit code that says whether all five passed, not the first number to scroll
-past. **An early `return` anywhere in a fixture file exits the whole suite and
-the summary line just stops printing** — the fourth silent suite this guide has
-had to record. Await, never return.
-
-They only started running at all on 20 Sep: they required a `harness.js` that
-had never existed, and the test script did not name them either — two
-independent reasons for one silence. The harness lifts the intake
-out of the JSX by ANCHORS rather than line numbers, because the app is one file
-with no build step and the only alternative is a second copy of the logic that
-drifts. `scraper/fixtures/intake_sample.csv` — 76 rows, 8 venues, built from real
-sweeps: a venue with both marker and real rows, two with markers only, four with
-real rows only, and a Louvre block covering every conflict shape.
+**On `main` since the 20 Sep merge**, with the JSX they test. `npm test` runs 190
+unit checks, the 62 intake cases, the load check, the render check, then the
+catalogue-lookup cases (54 on 21 Sep) — and the **exit code** says whether all five
+passed, not the first number to scroll past. An early `return` in a fixture file
+exits the whole suite and the summary just stops printing (the fourth silent suite
+this guide has recorded) — await, never return. They only ran at all from 20 Sep:
+they needed a `harness.js` that didn't exist and the test script didn't name them.
+The harness lifts the intake out of the JSX by ANCHORS, not line numbers (one file,
+no build step; the alternative is a second copy that drifts).
+`scraper/fixtures/intake_sample.csv` — 76 rows, 8 venues from real sweeps: one
+venue with both marker and real rows, two markers-only, four real-only, and a
+Louvre block covering every conflict shape.
 
 **Deliberately not built:** bulk-approve, in-app field editing, and the mirror
 case where the app proposes Add but it is really an update.
@@ -1386,17 +1255,15 @@ being ~mid-Aug 2024 rather than 1 July 2024 accounts for 7 rows of it.
 
 ### The inversion — worth preserving
 
-The originally-easy problem and the originally-hard problem swapped places. She
-expected ingestion to be trivial and the portal to be hard. The reverse happened:
-the React portal was straightforward, and **data gathering is structurally hard
-because it depends on the outside world's current architecture**.
+The originally-easy and originally-hard problems swapped: she expected ingestion
+trivial and the portal hard, but the React portal was straightforward and **data
+gathering is structurally hard because it depends on the outside world's current
+architecture**. Consequences that hold:
 
-Consequences that should hold:
-
-- The app already built is what she keeps. No data-gathering solution forces a
-  rebuild of the portal.
+- The app already built is what she keeps — no data-gathering solution forces a
+  portal rebuild.
 - **The data-gathering layer is swappable underneath**, never replacing the app.
-- Whenever a session drifts toward "rebuild the app around a new backend" or
+- When a session drifts toward "rebuild the app around a new backend" or
   "downgrade the app to fit the tools" — neither.
 
 ---
@@ -1984,18 +1851,15 @@ the ~6-word teaser she reads, and `sweep_compressed.csv` is **the file she impor
   everything else: the seed stores a URL SLUG, and matching it by title found 56
   of 110 where 103 were there. **It does not retire** — the seed is baked into the
   JSX, so every run consults it.
-- **THE SEED FILLS GAPS; IT DOES NOT OVERRULE — and getting that backwards was a
-  one-day bug worth remembering.** `mergeSeedMemory()` normally adds her wording
-  only where the previous run knows nothing. `--seed-wins` lets hers REPLACE a
-  summary the compressor wrote, and that is a **one-time repair, never the standing
-  rule**: as a rule it is a revert machine, because a venue rewording its page is
-  supposed to produce an updated summary, and a standing override would reset the
-  memory on the very next run and propose changing it straight back, forever.
-  What it repaired, 19 Sep: Acquavella was compressed on **11 Sep, before
-  `seedMemory` existed**, so its rows found the compressor's own first attempt in
-  memory and 13 of her summaries came back as proposed rewrites. That condition
-  cannot recur. The repair cost **no model calls** for 10 of the 13 — the pending
-  set was byte-identical, so the stored answers still fitted.
+- **The seed fills gaps, it does not overrule.** `mergeSeedMemory()` adds her
+  wording only where the previous run knows nothing. `--seed-wins` lets hers
+  REPLACE a compressor-written summary, but that is a **one-time repair, never the
+  standing rule** — as a rule it is a revert machine, since a venue rewording its
+  page should produce an updated summary and a standing override would reset the
+  memory and propose changing it straight back forever. It repaired one
+  non-recurring condition (19 Sep): Acquavella was compressed 11 Sep, before
+  `seedMemory` existed, so 13 of her summaries came back as proposed rewrites; 10
+  of the 13 cost no model call, the pending set being byte-identical.
 - **Sonnet writes fresh, Haiku judges staleness.** Measured, not assumed.
 - **Reached by subagent, not the session itself** — a session uses whatever model it
   happens to be, which discards the measurement.
