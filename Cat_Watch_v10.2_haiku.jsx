@@ -1505,12 +1505,13 @@ export default function App(){
         +"\u201c"+book+"\u201d, including any details or specification panel on the page.",
       [book+" ISBN publisher details"]);
     let detail=hit.detail+"\n"+f.detail;
-    if(!f.ok||!f.results.length)return{...hit,detail};
+    if(!f.ok)return{...hit,detail,trouble:f.detail};
+    if(!f.results.length)return{...hit,detail};
     const rd=await readResults(PAGE_RULES
       +"\nBook: "+book+"\nExhibition venue: "+venue+"\n\n"
       +pageForPrompt(f.results)+PAGE_SHAPE);
     detail=detail+"\n"+rd.detail;
-    if(!rd.ok)return{...hit,detail};
+    if(!rd.ok)return{...hit,detail,trouble:rd.detail};
     const o=rd.data||{};
     const filled=applyIsbnFill(r,o,dom);
     detail=detail+(filled.isbn13?"\nISBN read off the page: "+filled.isbn13
@@ -1549,14 +1550,15 @@ export default function App(){
        book+" exhibition catalogue ISBN",
        book+" catalogue publisher"]);
     let detail=hit.detail+"\n"+s3.detail;
-    if(!s3.ok||!s3.results.length)return{...hit,detail};
+    if(!s3.ok)return{...hit,detail,trouble:s3.detail};
+    if(!s3.results.length)return{...hit,detail};
     const rd=await readResults(PAGE_RULES
       +"\nBook: "+book+"\nExhibition venue: "+venue
       +"\nThese are web search results about THIS book. Read its ISBN and publisher off them. "
       +"If they are about a different book, answer null.\n\n"
       +resultsForPrompt(s3.results)+PAGE_SHAPE);
     detail=detail+"\n"+rd.detail;
-    if(!rd.ok)return{...hit,detail};
+    if(!rd.ok)return{...hit,detail,trouble:rd.detail};
     const filled=applyIsbnFill(r,rd.data||{},dom);
     detail=detail+(filled.isbn13?"\nISBN found on the wider web: "+filled.isbn13
                                 :"\nNo ISBN anywhere for this one.");
@@ -1600,7 +1602,8 @@ export default function App(){
            r.publisher+" publisher "+book+" book",
            book+" "+r.publisher+" catalogue"]));
     let detail=hit.detail+"\n"+sp.detail;
-    if(!sp.ok||!sp.results.length)return{...hit,detail};
+    if(!sp.ok)return{...hit,detail,trouble:sp.detail};
+    if(!sp.results.length)return{...hit,detail};
     const rd=await readResults(
       "You are looking for ONE link: the page on the PUBLISHER\u2019S OWN WEBSITE for a book.\n"
      +"Use ONLY what these results say. Never invent a link.\n"
@@ -1613,7 +1616,7 @@ export default function App(){
      +'{"publisherUrl": string|null}\n'
      +'Example: {"publisherUrl":"https://hannibalbooks.be/en/metamorphoses"}');
     detail=detail+"\n"+rd.detail;
-    if(!rd.ok)return{...hit,detail};
+    if(!rd.ok)return{...hit,detail,trouble:rd.detail};
     const url=cleanPublisherUrl((rd.data||{}).publisherUrl,dom);
     detail=detail+(url?"\nPublisher\u2019s page: "+url:"\nNo page on the publisher\u2019s own site.");
     return url?{...hit,detail,row:{...r,publisherUrl:url}}:{...hit,detail};
@@ -1690,7 +1693,31 @@ export default function App(){
     return await fillPublisherPage(await fillIsbn(settle(row,r2.data||{},dom,detail,false),venue,dom),venue,dom);
   }
 
-  async function findOneCat(id){setBusy(true);setBusyId(id);setError(null);const row=rows.find(r=>r.id===id);const out=await lookupCat(row);setDebug(out.detail);if(out.ok)await commit(rows.map(r=>r.id===id?out.row:r));else setError("Catalogue search failed for \u201c"+row.title+"\u201d.");setBusy(false);setBusyId(null);setLookPhase(null);}
+  // A STEP THAT DIED IS NOT AN ANSWER \u2014 her question, 21 Sep, and the fault was
+  // mine. Steps one and two fail the whole lookup and say so. The three later
+  // steps \u2014 reading the book\u2019s page, filling a missing ISBN, finding the
+  // publisher\u2019s page \u2014 were written to give back the row UNCHANGED when they
+  // fail, which is right for the row and wrong for the screen: the card then
+  // printed "ISBN not confirmed" and "No separate publisher page." as though
+  // those were findings. The connector\u2019s free tier rate-limits, so this is not
+  // hypothetical.
+  //
+  // They now carry WHY, and it is shown the moment it happens. It is not stored
+  // in the ledger: it is a fact about one attempt, not about the book, and the
+  // remedy is simply to press Search again.
+  async function findOneCat(id){
+    setBusy(true);setBusyId(id);setError(null);
+    const row=rows.find(r=>r.id===id);
+    const out=await lookupCat(row);
+    setDebug(out.detail);
+    if(out.ok){
+      await commit(rows.map(r=>r.id===id?out.row:r));
+      if(out.trouble)setError("Found the catalogue for \u201c"+row.title+"\u201d, but the search "
+        +"stopped part-way, so the ISBN or the publisher\u2019s page may be missing when they "
+        +"exist. "+out.trouble.split("[")[0].trim()+" Press \u201cSearch again\u201d.");
+    } else setError("Catalogue search failed for \u201c"+row.title+"\u201d.");
+    setBusy(false);setBusyId(null);setLookPhase(null);
+  }
 
   async function findWantedCats(){const targets=rows.filter(r=>r.acquiring==="yes"&&!r.looked&&r.interested);if(!targets.length)return;setBusy(true);setError(null);let next=[...rows];for(let i=0;i<targets.length;i++){setProg({done:i,total:targets.length,label:targets[i].title});const out=await lookupCat(targets[i]);if(out.ok){next=next.map(r=>r.id===out.row.id?out.row:r);setRows(next);}if(i===0)setDebug(out.detail);}await commit(next);setProg({done:targets.length,total:targets.length,label:"Done"});setBusy(false);setLookPhase(null);}
 

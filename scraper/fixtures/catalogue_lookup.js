@@ -277,6 +277,27 @@ function runtime(answer, log) {
        'C-042: and so is the title \u2014 a wide search cannot rename the book');
   }
 
+  // ── C-043 to C-045: a step that died is not an answer ────────────────
+  // Her question, 21 Sep: how would she tell a rate-limited lookup from a book
+  // that genuinely has no ISBN and no publisher page? She could not. The later
+  // steps returned the row unchanged, so the card printed the two "none"
+  // sentences as findings.
+  //
+  // NO `return` IN HERE. An early return inside this file exits the whole suite
+  // and the summary line simply stops printing — the silent-suite failure this
+  // project has now recorded four times. Await, never return.
+  {
+    const limited = new Error('slow down');
+    limited.code = 'rate_limited';
+    const { window } = runtime(limited, []);
+    const api = lift(window);
+    const out = await api.fetchPage('https://shop.test/book', 'its ISBN', ['x']);
+    eq(out.ok, false, 'C-043: a refused read is reported, not swallowed');
+    eq(/many searches/i.test(out.detail), true,
+       'C-044: and it says the connector refused, in her words');
+    eq(out.results.length, 0, 'C-045: with nothing invented to fill the gap');
+  }
+
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');
   process.exit(failures ? 1 : 0);
 })();

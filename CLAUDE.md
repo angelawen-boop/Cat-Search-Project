@@ -787,6 +787,26 @@ narrower forms as fallbacks. **The combined query has not been run** — the
 connector hit its free-tier limit; the two halves above were each verified
 before it did.
 
+**A STEP THAT DIED IS NOT AN ANSWER — her question, 21 Sep, and the fault was
+introduced the same day.** She asked how she would tell a rate-limited lookup
+from a book that genuinely has no ISBN and no publisher page. **She could not.**
+Steps one and two fail the whole lookup and say so on screen; the three later
+steps — reading the book's page, filling a missing ISBN, finding the publisher's
+page — were written to hand the row back UNCHANGED when they fail. Right for the
+row, wrong for the screen: the card then printed "ISBN not confirmed" and "No
+separate publisher page." as though those were findings.
+
+**And the connector's free tier really does refuse.** It stopped this session
+after roughly a dozen searches in quick succession. **The limit for the keyless
+tier is not published anywhere** — Parallel documents 600 a minute for accounts
+with an API key, which is a different thing. It clears in a few minutes and the
+refusal itself names the remedy.
+
+Each later step now carries WHY it came back empty, and the screen says so the
+moment it happens: the catalogue was found, the search stopped part-way, press
+Search again. **It is not stored in the ledger** — it is a fact about one
+attempt, not about the book. Fixtures C-043 to C-045.
+
 **A MISSING BUTTON CANNOT REPORT ANYTHING — her ruling on the publisher line,
 and the third time this app has had to learn it.** The Publisher button is
 drawn only when a link was found, so its absence read identically whether the
@@ -2274,6 +2294,14 @@ Each entry cost a real failure. Before changing the area, read the line.
   lists what is in stock" sounded right and is false: sold-out books stay
   listed everywhere we looked. **She asked whether it actually happens, and
   it does not.** The real reasons were thinner and had to be found afterwards.
+- Adding steps that fail QUIETLY. The three later lookup steps handed the row
+  back untouched when the connector refused, which is correct for the row and
+  a lie on the screen: "ISBN not confirmed" and "No separate publisher page."
+  read as findings. **A negative has to be earned, and a step that never ran
+  has not earned one.**
+- An early `return` inside `catalogue_lookup.js`, which exits the whole suite
+  so the summary line stops printing. **The fourth silent suite this guide has
+  had to record.** Await, never return.
 - Sending stage one to the right place and letting it END there. The shop
   knows its own catalogue but Acquavella's page for it prints no ISBN at all,
   so a row that HAD its number lost it. **A better source is not a complete
