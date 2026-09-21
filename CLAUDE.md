@@ -1143,23 +1143,37 @@ page**. So nothing could have gone straight to a shop even in principle.
 it had exactly the same four. It was never built.
 
 Every address below was checked by opening it and reading the results back.
-`shopSearch` takes the exhibition title on the end. `shopCatalogues` is a
-shop's shelf of exhibition catalogues where it has one — all books, no
-trinkets, but **only what is in stock today**, which is why the search box
-still runs after it. Her instruction, 21 Sep, gave the National Gallery's.
+`shopSearch` takes the exhibition title on the end. `shopCatalogues` is the
+shop's own shelf of exhibition catalogues — all books, no trinkets — and it is
+opened FIRST, in the same call. **Its limit is that it lists what is in stock
+today**, so a catalogue for a show that closed two years ago will not be on it;
+that is why the search box still runs beside it and neither replaces the other.
 
-met `store.metmuseum.org/search?q=` · rijks `rijksmuseumshop.nl/en/search?q=` ·
-ng `shop.nationalgallery.org.uk/catalogsearch/result/?q=` **plus the
-catalogues shelf `/books/exhibition-catalogues.html`** · acq
-`acquavellagalleries.myshopify.com/search?q=` · frick
-`shop.frick.org/search.php?search_query=` · menil
-`bookstore.menil.org/search?q=` · artic `shop.artic.edu/search?q=` · wallace
-`wallacecollectionshop.org/search?q=` · both Tates
-`shop.tate.org.uk/search?q=` · va `vam.ac.uk/shop/search?q=` · louvre
-`boutique.louvre.fr/en/search/products/?q=` · uffizi `shop.uffizi.it/en/?s=` ·
-brera `bottegabrera.org/en/search?q=` · moma `store.moma.org/search?q=` ·
-brit `britishmuseumshoponline.org/catalogsearch/result/?q=` · morgan
-`shop.themorgan.org/search?q=`.
+**THE SHELF WAS NOT FOUND BY GUESSING A PATTERN.** Each shop's own navigation
+was read and the section it names itself was taken — "Exhibition Catalogues",
+"Exhibition books", "Menil Publications", "Guide e cataloghi". The same rung of
+the same ladder the scraper uses: the site says so.
+
+| Venue | Catalogue shelf | Search box |
+|---|---|---|
+| met | `store.metmuseum.org/books-toys-games/exhibition-catalogues` | `/search?q=` |
+| rijks | `rijksmuseumshop.nl/en/books/exhibition-books` | `/en/search?q=` |
+| ng | `shop.nationalgallery.org.uk/books/exhibition-catalogues.html` — **hers** | `/catalogsearch/result/?q=` |
+| acq | `acquavellagalleries.myshopify.com/collections/all` — its whole shop IS its catalogues | `/search?q=` |
+| frick | `shop.frick.org/publications/exhibition-catalogues/` | `/search.php?search_query=` |
+| menil | `bookstore.menil.org/collections/menil-publications` | `/search?q=` |
+| artic | `shop.artic.edu/collections/exhibition-catalogues` | `/search?q=` |
+| wallace | `wallacecollectionshop.org/collections/wallace-collection-publications` | `/search?q=` |
+| both Tates | `shop.tate.org.uk/books/exhibition-books` | `/search?q=` |
+| va | `vam.ac.uk/shop/books/exhibition-books.html` | `/shop/search?q=` |
+| louvre | `boutique.louvre.fr/en/products/400001-exhibition-catalogues/` | `/en/search/products/?q=` |
+| brera | `bottegabrera.org/en/collections/guide-e-cataloghi` | `/en/search?q=` |
+| moma | `store.moma.org/collections/books` — books, no catalogue section of its own | `/search?q=` |
+| brit | `britishmuseumshoponline.org/books/exhibition-books.html` | `/catalogsearch/result/?q=` |
+| morgan | `shop.themorgan.org/collections/exhibition-catalogs` | `/search?q=` |
+| uffizi | **none found** — its books section would not show its contents | `shop.uffizi.it/en/?s=` |
+| khm | **none** | `shop.khm.at/en/search?q=` — unverified, see below |
+
 **No shop:** borghese, capo, dellav — these skip to the broad web search.
 
 **THE SHOPS ARE NOT THE MUSEUM SITES, and five venues prove it.** `moma`,
