@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, needsIsbnFill, applyIsbnFill, isbn10to13 };')(
+    code + '\n;return { fetchPage, needsIsbnFill, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -181,6 +181,33 @@ function runtime(answer, log) {
        'C-023: hyphens are how a page prints it');
     eq(api.isbn10to13('0714848051'), null, 'C-024: one digit wrong is refused');
     eq(api.isbn10to13('97807148480'), null, 'C-025: a number of the wrong length is not an ISBN-10');
+  }
+
+  // ── C-026 to C-031: a shelf that scrolls or paginates ──────────────────
+  // Her question, 21 Sep. The Menil's shelf shows 16 of its 47 books on the
+  // page you land on; the Morgan's simply grows as you scroll. Both are more
+  // addresses, and reading only the first screen loses the rest.
+  {
+    const api = lift({ document: {}, localStorage: {} });
+    const menil = api.shelfPages('https://bookstore.menil.org/collections/menil-publications');
+    eq(menil.length, 3, 'C-026: a shelf is read past its first screen');
+    eq(menil[1], 'https://bookstore.menil.org/collections/menil-publications?page=2',
+       'C-027: the later pages are the shop\u2019s own addresses');
+
+    // A shelf that already serves the lot in one page is left alone \u2014 asking
+    // Tate for "page 2" of a list that has no pages is a wasted read.
+    eq(api.shelfPages('https://shop.tate.org.uk/books/exhibition-books?sz=96').length, 1,
+       'C-028: a shelf that serves everything in one page is not paged again');
+
+    eq(api.shelfPages(null).length, 0, 'C-029: a venue with no shelf asks for nothing');
+
+    // The shelf comes FIRST and the search box LAST, in one call.
+    const pages = api.shopPagesFor(
+      { shopCatalogues: 'https://x.test/shelf', shopSearch: 'https://x.test/find?q=' },
+      'Zurbar\u00e1n');
+    eq(pages.length, 4, 'C-030: the shelf\u2019s pages and the search box go over together');
+    eq(pages[pages.length - 1], 'https://x.test/find?q=Zurbar%C3%A1n',
+       'C-031: the title is written into the search address, never guessed at');
   }
 
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');

@@ -39,8 +39,8 @@ const MUSEUMS = [
   { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopCatalogues:"https://bookstore.menil.org/collections/menil-publications", shopHome:"https://bookstore.menil.org/", listUrl:null },
   { id:"artic", short:"Art Institute", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
   { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:"https://wallacecollectionshop.org/search?q=", shopCatalogues:"https://wallacecollectionshop.org/collections/wallace-collection-publications", shopHome:"https://wallacecollectionshop.org/", listUrl:null },
-  { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books", shopHome:"https://shop.tate.org.uk/", listUrl:null },
-  { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books", shopHome:"https://shop.tate.org.uk/", listUrl:null },
+  { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
+  { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
   { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:"https://www.vam.ac.uk/shop/search?q=", shopCatalogues:"https://www.vam.ac.uk/shop/books/exhibition-books.html", shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
   { id:"louvre", short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:"https://boutique.louvre.fr/en/search/products/?q=", shopCatalogues:"https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
   { id:"khm", short:"KHM Vienna", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:"https://shop.khm.at/en/search?q=", shopHome:"https://shop.khm.at/en/", listUrl:null },
@@ -49,7 +49,7 @@ const MUSEUMS = [
   { id:"borghese", short:"Borghese", name:"Galleria Borghese", city:"Rome", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"brera", short:"Brera", name:"Pinacoteca di Brera", city:"Milan", exBase:null, shopSearch:"https://bottegabrera.org/en/search?q=", shopCatalogues:"https://bottegabrera.org/en/collections/guide-e-cataloghi", shopHome:"https://bottegabrera.org/en/", listUrl:null },
   { id:"capo", short:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
-  { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/search?q=", shopCatalogues:"https://store.moma.org/collections/books", shopHome:"https://store.moma.org/", listUrl:null },
+  { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/search?q=", shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
   { id:"brit", short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:"https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", shopCatalogues:"https://www.britishmuseumshoponline.org/books/exhibition-books.html", shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
   { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:"https://shop.themorgan.org/search?q=", shopCatalogues:"https://shop.themorgan.org/collections/exhibition-catalogs", shopHome:"https://shop.themorgan.org/", listUrl:null },
 ];
@@ -546,9 +546,36 @@ async function fetchPage(url,objective,queries){
 // the shop has one, then its search box with the exhibition's title in it.
 // Nothing is guessed here \u2014 both addresses are the venue's own, written down
 // in MUSEUMS above.
+//
+// A SHELF THAT SCROLLS OR PAGINATES IS STILL JUST MORE ADDRESSES \u2014 her
+// question, 21 Sep, and the scraper learned the same thing at the Menil. The
+// Menil's shelf shows 16 books and has three numbered pages; the Morgan's
+// keeps growing as you scroll and has no buttons at all. Both answer
+// "?page=2" perfectly well, and Tate's endless scroll answers a size
+// parameter that is baked into its address above. Reading only what the
+// first screen shows would have taken 16 of the Menil's 47.
+//
+// THE DEPTH IS ONE NUMBER FOR EVERY SHOP, NEVER A COUNT PER VENUE \u2014 the
+// scraper's rule, and for the same reason: how many pages a shop has is the
+// shop's business and it changes. Asking for a page that does not exist costs
+// nothing and comes back empty, and all of them go in ONE call, so depth is
+// free. Today's largest shelf is the Menil's 47.
+const SHELF_DEPTH=3;
+
+// Shopify and most others take ?page=N. A shelf that already carries its own
+// size parameter (Tate) is left exactly as written \u2014 it serves the lot in one.
+function shelfPages(url){
+  if(!url)return[];
+  if(/[?&]sz=|[?&]product_list_limit=/.test(url))return[url];
+  const join=url.includes("?")?"&":"?";
+  const out=[url];
+  for(let n=2;n<=SHELF_DEPTH;n++)out.push(url+join+"page="+n);
+  return out;
+}
+
 function shopPagesFor(mu,title){
   const out=[];
-  if(mu&&mu.shopCatalogues)out.push(mu.shopCatalogues);
+  if(mu&&mu.shopCatalogues)out.push(...shelfPages(mu.shopCatalogues));
   if(mu&&mu.shopSearch)out.push(mu.shopSearch+encodeURIComponent(title));
   return out;
 }

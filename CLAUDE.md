@@ -1164,17 +1164,36 @@ the same ladder the scraper uses: the site says so.
 | menil | `bookstore.menil.org/collections/menil-publications` | `/search?q=` |
 | artic | `shop.artic.edu/collections/exhibition-catalogues` | `/search?q=` |
 | wallace | `wallacecollectionshop.org/collections/wallace-collection-publications` | `/search?q=` |
-| both Tates | `shop.tate.org.uk/books/exhibition-books` | `/search?q=` |
+| both Tates | `shop.tate.org.uk/books/exhibition-books?sz=96` — see below | `/search?q=` |
 | va | `vam.ac.uk/shop/books/exhibition-books.html` | `/shop/search?q=` |
 | louvre | `boutique.louvre.fr/en/products/400001-exhibition-catalogues/` | `/en/search/products/?q=` |
 | brera | `bottegabrera.org/en/collections/guide-e-cataloghi` | `/en/search?q=` |
-| moma | `store.moma.org/collections/books` — books, no catalogue section of its own | `/search?q=` |
+| moma | `store.moma.org/collections/exhibition-catalogues` — **hers** | `/search?q=` |
 | brit | `britishmuseumshoponline.org/books/exhibition-books.html` | `/catalogsearch/result/?q=` |
 | morgan | `shop.themorgan.org/collections/exhibition-catalogs` | `/search?q=` |
 | uffizi | **none found** — its books section would not show its contents | `shop.uffizi.it/en/?s=` |
 | khm | **none** | `shop.khm.at/en/search?q=` — unverified, see below |
 
 **No shop:** borghese, capo, dellav — these skip to the broad web search.
+
+**A SHELF THAT SCROLLS OR PAGINATES IS STILL JUST MORE ADDRESSES — her
+question, 21 Sep, and the scraper learned the same thing at the Menil.** The
+Menil's shelf shows **16 of its 47** books on the page you land on and offers
+three numbered pages; the Morgan's has no buttons at all and simply grows as
+you scroll. **Both answer `?page=2` perfectly well.** Tate's endless scroll
+answers a size parameter instead, so `?sz=96` is baked into its address and it
+serves the lot in one page — 40-odd titles where the plain address gave about
+fifteen. Verified on all three.
+
+**THE DEPTH IS ONE NUMBER FOR EVERY SHOP, NEVER A COUNT PER VENUE** — the same
+rule as `followPagination` and `expandYearArchive`, for the same reason: how
+many pages a shop has is the shop's business and it changes. Three pages, and
+they go over in the SAME call as the search box, so depth costs no extra wait;
+a page that does not exist comes back empty. **The stated limit:** a shelf
+longer than three pages is read only to page three, and the largest today is
+the Menil's 47. **The search box is unaffected** — it narrows to one title and
+has never needed a second page — so a title beyond the shelf's third page is
+still found. Fixtures C-026 to C-031.
 
 **THE SHOPS ARE NOT THE MUSEUM SITES, and five venues prove it.** `moma`,
 `brit` and `morgan` refuse the scraper outright and `met` and `artic` are
