@@ -690,6 +690,18 @@ catalogue. Results are tagged shop / web / none, and the reseller links (Amazon
 AU, AbeBooks, Alibris) are built from the ISBN when there is one, the title when
 there is not.
 
+**THE SEARCHING IS FREE, THE READING IS NOT — her question, 21 Sep.** The
+connector costs nothing and needs no account, but it is a free TIER: fire enough
+lookups back to back and it rate-limits rather than bills. Every lookup also
+asks Claude to read what came back, and that runs on her usage allowance — so a
+lookup reaching both stages is two searches (free) and two readings (not). **The
+old reason for asking the shop first is therefore dead**: searching wide is no
+longer the expensive half. The order survives on better grounds — a shop hit is
+the only result that gives her a real "buy it here" link, a narrow shop search
+cannot return a novel sharing the exhibition's name, and stopping at stage one
+saves the half that still costs. **Do not flip to searching wide first, and do
+not run both stages every time.**
+
 **What changed underneath.** The page used to call the Anthropic API directly.
 The viewer's sandbox now blocks a page from reaching ANY outside address, so the
 request never left — the diagnostic read `Network: Failed to fetch`, which is the
@@ -708,21 +720,42 @@ So the returned shop link is **checked** against the venue's shop domain, and a
 link that is not on it is never filed as `shopState: "shop"`. That guard is the
 substitute for the lock.
 
-**KNOWN FLAW, HER FINDING 20 SEP, NOT FIXED: the ISBN can be missed on a page that
-shows it.** The Met's *Musical Bodies* catalogue was found in the shop in one
-stage but came back with no ISBN — and the ISBN is printed on that very shop page.
-The cause is structural: the connector returns **excerpts**, not whole pages, so a
-detail below the fold is invisible. The old lookup had the model actually
-browsing, which is why this never happened before.
+**THE MISSED ISBN — HER FINDING 20 SEP, BUILT 21 SEP.** The Met's *Musical
+Bodies* catalogue was found in the shop in one stage and came back with no ISBN,
+which is printed on that very shop page. The cause was structural: the connector
+returns **excerpts**, not whole pages, so the small print below the fold was
+never in what Claude read. The old lookup had the model actually browsing, which
+is why this had never happened before.
 
-It matters because of what happens next: with no ISBN the reseller links search by
-TITLE, and a title search misfires. *Musical Bodies* is unusual enough that Amazon
-and AbeBooks found it anyway; **Alibris returned the wrong book.**
+It mattered because of what happens next: with no ISBN the reseller links search
+by TITLE, and a title search misfires. *Musical Bodies* is unusual enough that
+Amazon and AbeBooks found it anyway; **Alibris returned the wrong book.**
 
-The fix is available and unbuilt: the same connector offers `web_fetch`, which
-reads a whole page. Fetching the shop product page once, when a catalogue is found
-but no ISBN came with it, would settle it. **Only `web_search` is declared
-today.**
+**The same connector's `web_fetch` reads a whole page, and only `web_search` had
+ever been declared.** It now runs as a third step, on one condition and no
+other: a catalogue was found, a page link came with it, and the ISBN is the one
+thing missing. `needsIsbnFill` is that condition. It is not a third search — one
+page, read once.
+
+**IT FILLS A BLANK AND CANNOT DO ANYTHING ELSE** (`applyIsbnFill`). An ISBN read
+from the search results is never second-guessed, a publisher already known is
+never overwritten, and a 10-digit ISBN is refused by `cleanIsbn` rather than
+half-converted. A page that yields nothing leaves the row exactly as it was — the
+old answer, never a worse one.
+
+**A COLLAPSED SECTION IS REACHED, and that was her question.** The Met store
+prints the ISBN inside a "Details" panel that opens and shuts. The text is
+already in the page and the button only hides it, so a full read sees it shut —
+**verified against that page, 21 Sep: it returned the whole panel and ISBN
+978-1588398130 with the panel collapsed.** A shop that only GOES AND GETS those
+details when clicked would still come back empty, noted, exactly as today.
+
+**Both decisions sit OUTSIDE the component**, for the reason `countDecisions`
+moved out: a rule a fixture cannot reach is a rule nobody checks. Fixtures C-001
+to C-018 in `scraper/fixtures/catalogue_lookup.js`, verified by overwriting a
+known publisher and by accepting a 10-digit ISBN and watching C-016 and C-017
+fail. **It does not press the button**: the wiring from a finished lookup into
+the fill is read, not run.
 
 ### Reading a stitched file — 13 Sep, SIGNED OFF BY HER ON REAL FILES 20 SEP
 
@@ -1036,8 +1069,8 @@ anything**; a button that throws when pressed is still uncovered.
 
 **THEY ARE ON `main` SINCE THE 20 SEP MERGE**, with the JSX they test. `npm
 test` runs 190 unit checks, then the 62 intake cases, then the load check, then
-the render check — and it is the exit code that says whether all four passed,
-not the first number to scroll past.
+the render check, then the 19 catalogue-lookup cases — and it is the exit code
+that says whether all five passed, not the first number to scroll past.
 
 They only started running at all on 20 Sep: they required a `harness.js` that
 had never existed, and the test script did not name them either — two
@@ -2007,6 +2040,11 @@ Each entry cost a real failure. Before changing the area, read the line.
 - Printing "never" for an empty record. It is a claim about the world made
   from the absence of a note, and she was looking at quarantined rows that
   could only have come from a sweep. **Say what is unknown.**
+- Reading a search EXCERPT and treating it as the page. An excerpt is a
+  headline and a line or two, so anything in the small print — an ISBN — is
+  simply absent, and the lookup reported "no ISBN" for a book whose page
+  prints one. **Declaring only half a connector's tools is the same shape of
+  gap**: `web_fetch` had been there all along.
 - Filtering `rows` after `applyLookback` has already copied it into `toFetch` — the
   log announced ten exclusions while all ten sat in the CSV with empty summaries.
   **A log line describing something that did not happen is worse than no log line**,
@@ -2198,13 +2236,12 @@ Each entry cost a real failure. Before changing the area, read the line.
    counted every later run as "before" it and a 12 Sep folder was reported as
    having lost rows against a 13 Sep one. **A comparison that can run backwards
    in time is worse than none.**
-9. **Catalogue lookup — one known flaw, then tuning.** Its own session, her
-   ruling 20 Sep. First the ISBN gap: a catalogue found in a venue's shop can come
-   back without its ISBN even though the shop page prints it, because the
-   connector returns excerpts rather than whole pages — and with no ISBN the
-   reseller links search by title, which misfired on Alibris for the Met's
-   *Musical Bodies*. `web_fetch` on the same connector reads a whole page and is
-   not declared today. Then the old tuning question. Detail in §4.
+9. **Catalogue lookup — the ISBN gap is BUILT, 21 Sep; the tuning question is
+   still open.** `web_fetch` is declared and reads the book's own page when a
+   catalogue was found with no ISBN, collapsed panels included. Detail and its
+   limits in §4; fixtures C-001 to C-018. **Not yet run by her against real
+   rows** — the Met's *Musical Bodies* is the row to try first, being the one
+   that found the fault. Then the old tuning question.
 
 10. ~~**The app is not really tested**~~ — **DONE 20 Sep, her decision to let
     the repo carry `react`, `react-dom` and `jsdom` as dev dependencies.**

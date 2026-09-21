@@ -398,6 +398,9 @@ function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.ti
 // NAMED CONSTANTS, because a typo here fails at the viewer, not here.
 const SEARCH_SERVER = "Parallel Search";
 const SEARCH_TOOL   = "web_search";
+// READING A WHOLE PAGE, not a snippet. Declared 21 Sep 2026 for the ISBN gap
+// below; the connector has always offered it and only web_search was wired.
+const FETCH_TOOL    = "web_fetch";
 
 // The connector wants a stable id per conversation for its free-tier limits.
 // One per page load is the honest reading of "conversation" here.
@@ -444,6 +447,39 @@ async function searchWeb(objective,queries){
   const p=res&&res.payload;
   const results=(p&&Array.isArray(p.results))?p.results:[];
   return{ok:true,results,detail:"search: "+results.length+" results for "+JSON.stringify(queries)};
+}
+
+// Read ONE page in full. Same connector, same failure sentences as searchWeb.
+//
+// WHY THIS EXISTS — her finding, 20 Sep 2026. A search result is an EXCERPT:
+// a headline and a line or two. An ISBN is printed in the small print at the
+// bottom of a shop page, so it is almost never inside the excerpt, and the
+// lookup reported no ISBN for books whose page prints one. With no ISBN the
+// reseller links fall back to searching by TITLE, and a title search misfires
+// \u2014 Alibris returned the wrong book for the Met's Musical Bodies.
+//
+// It reaches a COLLAPSED section, which is the case she asked about: the Met
+// store's "Details" panel is already in the page and the button only hides it,
+// so a full read sees it shut. Verified against that page, 21 Sep. A shop that
+// only goes and GETS those details when clicked would still come back empty
+// \u2014 no ISBN, noted, exactly as today. Never a wrong one.
+async function fetchPage(url,objective,queries){
+  const mcp=await useCap("mcp");
+  if(!mcp)return{ok:false,results:[],detail:"No connector access in this viewer."};
+  let res;
+  try{
+    res=await mcp.callTool(SEARCH_SERVER,FETCH_TOOL,{
+      urls:[url],
+      objective,
+      search_queries:queries,
+      session_id:SEARCH_SESSION,
+    });
+  }catch(e){
+    return{ok:false,results:[],detail:mcpTrouble(e)+"  ["+String((e&&e.code)||"")+" "+String((e&&e.message)||e)+"]"};
+  }
+  const p=res&&res.payload;
+  const results=(p&&Array.isArray(p.results))?p.results:[];
+  return{ok:true,results,detail:"fetched "+url+": "+results.length+" page(s)"};
 }
 
 // Hand the search results to Claude and ask it to read the catalogue off them.
@@ -539,6 +575,33 @@ async function writeQuarantine(next){
 }
 
 const today=()=>new Date().toISOString().slice(0,10);
+// ── THE ISBN FILL \u2014 the two decisions, kept OUT of the component ───────────
+//
+// They sit here, not inside App, for the reason countDecisions was moved out:
+// a rule a fixture cannot reach is a rule nobody checks. The component keeps
+// the plumbing (which page, which prompt); these two hold what may change.
+
+// Ask the page only when a book was found, a page came with it, and the ISBN
+// is the one thing missing. Never for a row with no catalogue, and never to
+// second-guess an ISBN we already have.
+function needsIsbnFill(hit){
+  return !!(hit&&hit.ok&&hit.pageUrl&&hit.row
+            &&hit.row.hasCatalogue==="yes"&&!hit.row.isbn13);
+}
+
+// IT FILLS BLANKS AND NOTHING ELSE. A publisher already read from the search
+// results stands; a 10-digit ISBN, or anything that is not 13 digits, is
+// refused by cleanIsbn and the row keeps its blank. A page that yields nothing
+// must leave the row exactly as it was \u2014 the old answer, never a worse one.
+function applyIsbnFill(row,o){
+  const isbn=cleanIsbn(o&&o.isbn13);
+  const pub=(o&&o.publisher)?String(o.publisher).trim():"";
+  if(!isbn&&!pub)return row;
+  return{...row,
+    isbn13:isbn||row.isbn13,
+    publisher:row.publisher||pub||null};
+}
+
 function shopDomain(mu){if(!mu||!mu.shopHome)return null;try{return new URL(mu.shopHome).hostname;}catch{return null;}}
 
 const SKEY="cw-v3";
@@ -1236,7 +1299,11 @@ export default function App(){
   const settle=(row,o,dom,detail,fromShopStage)=>{
     const onShop=o.shopUrl&&dom&&String(o.shopUrl).toLowerCase().includes(String(dom).toLowerCase());
     if(o.found&&(o.catalogueTitle||o.isbn13)){
-      return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"yes",
+      // pageUrl is carried BESIDE the row, never in it: shopUrl is only filed
+      // when the link is really on the venue's shop, and the ISBN step may
+      // read a publisher's page too. Two different questions of one link.
+      return{ok:true,detail,pageUrl:o.shopUrl||null,
+        row:{...row,looked:true,hasCatalogue:"yes",
         shopState:onShop?"shop":"web",
         catalogueTitle:o.catalogueTitle||null,isbn13:cleanIsbn(o.isbn13),
         publisher:o.publisher||null,publisherUrl:null,shopUrl:onShop?o.shopUrl:null}};
@@ -1244,6 +1311,60 @@ export default function App(){
     if(fromShopStage)return null;          // not found in the shop — go wider
     return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"no",shopState:"none",
       catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,shopUrl:null}};
+  };
+
+  // ── FILLING A MISSING ISBN FROM THE PAGE ITSELF \u2014 her finding, 20 Sep 2026 ──
+  //
+  // Runs ONLY when a catalogue was found, a page link came with it, and no
+  // ISBN did. It is not a third search: one page, read whole, because the
+  // number is printed there and the search excerpt simply stopped short of it.
+  //
+  // IT CAN ONLY EVER FILL A BLANK. An ISBN already read from the search
+  // results is never overwritten, and neither is a publisher we already have.
+  // If the page yields nothing the row comes back exactly as it was \u2014 the
+  // old answer, not a worse one.
+  const PAGE_RULES=
+    "You are reading ONE web page in full: the page selling or describing a printed exhibition "
+   +"catalogue. Read the ISBN, publisher and author off THIS PAGE only.\n"
+   +"Use ONLY what the page says. Never use outside knowledge and never guess an ISBN.\n"
+   +"The number is usually in a details or specification list near the bottom, which on many shops "
+   +"sits inside a collapsed panel \u2014 read it wherever it appears.\n"
+   +"An ISBN-13 has 13 digits and normally starts 978 or 979. If the page shows only a 10-digit "
+   +"ISBN, report null rather than converting it.\n"
+   +"If this page is not about the book named below, set every field null.\n";
+  const PAGE_SHAPE=
+    "\nReply with ONLY this JSON object and nothing else:\n"
+   +'{"isbn13": string|null, "publisher": string|null}\n'
+   +'Example: {"isbn13":"9781588398130","publisher":"The Metropolitan Museum of Art"}';
+
+  // The page arrives as excerpts chosen against our objective. Capped, because
+  // the prompt has a ceiling and a product page can be very long.
+  const pageForPrompt=list=>list.slice(0,2).map(r=>
+    String(r.title||"")+"\n"+String(r.url||"")+"\n"
+    +(Array.isArray(r.excerpts)?r.excerpts.join("\n").replace(/[ \t]+/g," "):String(r.full_content||""))
+  ).join("\n\n").slice(0,6000);
+
+  const fillIsbn=async(hit,venue)=>{
+    if(!needsIsbnFill(hit))return hit;
+    const r=hit.row;
+    const book=r.catalogueTitle||r.title;
+    setLookPhase("page");
+    const f=await fetchPage(hit.pageUrl,
+      "The ISBN-13 and publisher of the book \u201c"+book+"\u201d, including any details or "
+        +"specification panel on the page.",
+      [book+" ISBN publisher details"]);
+    let detail=hit.detail+"\n"+f.detail;
+    if(!f.ok||!f.results.length)return{...hit,detail};
+    const rd=await readResults(PAGE_RULES
+      +"\nBook: "+book+"\nExhibition venue: "+venue+"\n\n"
+      +pageForPrompt(f.results)+PAGE_SHAPE);
+    detail=detail+"\n"+rd.detail;
+    if(!rd.ok)return{...hit,detail};
+    const o=rd.data||{};
+    const filled=applyIsbnFill(r,o);
+    detail=detail+(filled.isbn13?"\nISBN read off the page: "+filled.isbn13
+                                :"\nNo ISBN on that page either.");
+    return{...hit,detail,row:filled};
   };
 
   async function lookupCat(row){
@@ -1273,7 +1394,7 @@ export default function App(){
         detail=s1.detail+"\n"+r1.detail;
         if(!r1.ok)return{row,detail,ok:false};
         const hit=settle(row,r1.data||{},dom,detail,true);
-        if(hit)return hit;
+        if(hit)return await fillIsbn(hit,venue);
       }
     }
 
@@ -1294,7 +1415,7 @@ export default function App(){
       +resultsForPrompt(s2.results)+READ_SHAPE);
     detail=detail+"\n"+r2.detail;
     if(!r2.ok)return{row,detail,ok:false};
-    return settle(row,r2.data||{},dom,detail,false);
+    return await fillIsbn(settle(row,r2.data||{},dom,detail,false),venue);
   }
 
   async function findOneCat(id){setBusy(true);setBusyId(id);setError(null);const row=rows.find(r=>r.id===id);const out=await lookupCat(row);setDebug(out.detail);if(out.ok)await commit(rows.map(r=>r.id===id?out.row:r));else setError("Catalogue search failed for \u201c"+row.title+"\u201d.");setBusy(false);setBusyId(null);setLookPhase(null);}
@@ -1768,7 +1889,7 @@ export default function App(){
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
           const lead=brk||header;
           const t=tierFor(r),tier=TH[t],mu=MU[r.museumId],mo=moSince(r.endDate),isOpen=openCards[r.id],noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested,isBusy=busyId===r.id;
-          const searchingLabel=lookPhase==="shop"?"Searching venue shop\u2026":lookPhase==="web"?"Searching more broadly\u2026":"Searching\u2026";
+          const searchingLabel=lookPhase==="shop"?"Searching venue shop\u2026":lookPhase==="web"?"Searching more broadly\u2026":lookPhase==="page"?"Reading the book\u2019s page for its ISBN\u2026":"Searching\u2026";
           if(dismissed)return(
             <React.Fragment key={r.id}>{lead}
             <article style={{background:C.dim,border:"1px solid "+C.rule,borderLeft:"4px solid "+C.muted,borderRadius:5,padding:"10px 14px",opacity:0.55}}>
