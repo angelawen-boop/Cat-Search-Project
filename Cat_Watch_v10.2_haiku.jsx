@@ -573,45 +573,6 @@ function shelfPages(url){
   return out;
 }
 
-// \u2500\u2500 FINDING THE BOOK ON THE PUBLISHER'S SITE \u2014 21 Sep 2026 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-//
-// HER INSTRUCTION WAS TO OPEN THEIR OWN SEARCH BOX, as stage one opens the
-// shop's, and it was the right instruction. IT CANNOT BE BUILT HERE, and the
-// reason is measured, not argued: hannibalbooks.be/en/search?q=9789493416543
-// shows the right book in her browser and comes back to the page reader as an
-// empty shell \u2014 a newsletter form and a footer. Their results are drawn by
-// JavaScript after the page loads. That is §5's founding fact about this whole
-// project, met again in a shop rather than a museum. Tested with the ISBN,
-// the exact address from her screenshot.
-//
-// SO THE INDEX STAYS THE FINDER, because it is the thing that works: asked
-// site:hannibalbooks.be Metamorphoses it returns four pages, all on the
-// publisher's site, INCLUDING THE BOOK'S OWN. It had the right answer all
-// along \u2014 what threw it away was the reading, which is fixed below.
-//
-// BY TITLE ONLY, NEVER BY ISBN. site:hannibalbooks.be 9789493416543 returns
-// NINE UNRELATED HANNIBAL BOOKS: a general index has never indexed the
-// number. It was one of three queries here and could only ever dilute the
-// slate. Their own box does match an ISBN \u2014 which is exactly why that is
-// worth revisiting the day a publisher's box can be read.
-function publisherSiteQueries(host,title){
-  const t=String(title||"").trim();
-  if(!host||!t)return[];
-  const short=t.split(/[:\u2013\u2014-]/)[0].trim();
-  const out=["site:"+host+" "+t];
-  if(short&&short!==t)out.push("site:"+host+" "+short);
-  return out;
-}
-
-// A link is only the publisher's if it is ON the publisher's site. Compared
-// with any leading www. dropped from both sides: one search can answer
-// hannibalbooks.be and the next www.hannibalbooks.be, and an exact match
-// between two separate searches throws the right page away over four letters.
-function onPublisherHost(u,host){
-  const bare=h=>String(h||"").toLowerCase().replace(/^www\./,"");
-  try{ return !!host&&bare(new URL(String(u)).hostname)===bare(host); }catch{ return false; }
-}
-
 function shopPagesFor(mu,title){
   const out=[];
   if(mu&&mu.shopCatalogues)out.push(...shelfPages(mu.shopCatalogues));
@@ -1666,44 +1627,31 @@ export default function App(){
     const pubHost=publisherDomainFrom(d1.results,r.publisher);
     if(!pubHost)return{...hit,detail:detail+"\nCouldn\u2019t identify the publisher\u2019s own website."};
 
-    // \u2500\u2500 THEN SEARCH INSIDE THAT SITE, by title \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    // \u2500\u2500 THEN SEARCH INSIDE IT, exactly as step one searches inside the shop \u2500\u2500
     const sp=await searchWeb(
       "The page on "+pubHost+" for the book \u201c"+book+"\u201d"+(isbn?", ISBN "+isbn:"")+".",
-      publisherSiteQueries(pubHost,book));
+      isbn?["site:"+pubHost+" "+book,"site:"+pubHost+" "+isbn,"site:"+pubHost+" "+book.split(/[:\u2013\u2014-]/)[0].trim()]
+          :["site:"+pubHost+" "+book,"site:"+pubHost+" "+book.split(/[:\u2013\u2014-]/)[0].trim()]);
     detail=detail+"\n"+sp.detail;
     if(!sp.ok)return{...hit,detail,trouble:sp.detail};
-    const onSite=(sp.results||[]).filter(x=>onPublisherHost(x.url,pubHost));
+    const onSite=(sp.results||[]).filter(x=>{try{return new URL(x.url).hostname.toLowerCase()===pubHost;}catch{return false;}});
     if(!onSite.length)return{...hit,detail:detail+"\nNothing for this book on "+pubHost+"."};
 
-    // READ IT IN ENGLISH, AND A TRANSLATED TITLE IS THE SAME BOOK \u2014 her ruling.
-    // This is what lost Metamorphoses: handed "Metamorfosen \u2013 Ovidius en de
-    // kunsten" against a row reading "Metamorphoses: Ovid and the Arts", the
-    // model called it a different book and answered nothing.
     const rd=await readResults(
-      "These are pages from ONE publisher\u2019s own website. Give the link to the book\u2019s "
-     +"own page.\n"
-     +"READ THESE IN ENGLISH. This publisher may write in Dutch, French, German or Italian. "
-     +"A title in another language is the SAME BOOK when it is this book translated \u2014 "
-     +"\u201cMetamorfosen \u2013 Ovidius en de kunsten\u201d IS \u201cMetamorphoses: Ovid and the Arts\u201d. "
-     +"NEVER reject a page because its title is not in English.\n"
-     +"Prefer an English address (one with /en/ in it) when the results show both.\n"
-     +"A page listing many books is not the book. If nothing here is this book, answer null.\n"
+      "These are pages from ONE publisher\u2019s own website. Pick the page FOR THIS BOOK.\n"
+     +"Prefer the book\u2019s own page over a list of many books. If only a list mentions it, "
+     +"give the list. If none of them is about this book, answer null.\n"
      +"Use ONLY these results. Never invent a link.\n"
      +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+r.publisher
      +"\nExhibition venue: "+venue+"\n\n"
      +resultsForPrompt(onSite)
      +"\nReply with ONLY this JSON object and nothing else:\n"
      +'{"publisherUrl": string|null}\n'
-     +'Example: {"publisherUrl":"https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten"}');
+     +'Example: {"publisherUrl":"https://hannibalbooks.be/metamorfosen-ovidius-en-de-kunsten"}');
     detail=detail+"\n"+rd.detail;
     if(!rd.ok)return{...hit,detail,trouble:rd.detail};
-    const given=(rd.data||{}).publisherUrl;
-    // ON THEIR SITE, not merely somewhere. A search-results page carries
-    // outbound links too, and the www. is ignored on both sides.
-    const url=onPublisherHost(given,pubHost)?cleanPublisherUrl(given,dom):null;
-    detail=detail+(url?"\nPublisher\u2019s page: "+url
-                      :given?"\nThat link was not on "+pubHost+": "+given
-                            :"\nNo page for this book on "+pubHost+".");
+    const url=cleanPublisherUrl((rd.data||{}).publisherUrl,dom);
+    detail=detail+(url?"\nPublisher\u2019s page: "+url:"\nNo page for this book on "+pubHost+".");
     return url?{...hit,detail,row:{...r,publisherUrl:url}}:{...hit,detail};
   };
 
