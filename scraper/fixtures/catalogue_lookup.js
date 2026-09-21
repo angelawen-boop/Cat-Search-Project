@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, needsIsbnFill, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor };')(
+    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -124,20 +124,31 @@ function runtime(answer, log) {
     eq(out.ok, false, 'C-008: with no connector it reports that, rather than throwing');
   }
 
-  // ── C-009 to C-013: WHEN to read the page at all ──────────────────────────
+  // ── C-009 to C-013a: WHEN to read the book's own page ────────────────
+  // Her ruling, 21 Sep: a list of catalogues never prints an ISBN, so a gate
+  // that waits for a missing ISBN opens every single time and is decoration.
+  // What it must actually ask is whether anything is still blank.
   {
     const api = lift({ document: {}, localStorage: {} });
     const found = { ok: true, pageUrl: 'https://shop.test/book',
-                    row: { hasCatalogue: 'yes', isbn13: null } };
-    eq(api.needsIsbnFill(found), true,
-       'C-009: a book found with a page and no ISBN is the case this exists for');
-    eq(api.needsIsbnFill({ ...found, row: { hasCatalogue: 'yes', isbn13: '9781588398130' } }), false,
-       'C-010: an ISBN already found is never second-guessed');
-    eq(api.needsIsbnFill({ ...found, pageUrl: null }), false,
+                    row: { hasCatalogue: 'yes', isbn13: null, publisher: null } };
+    eq(api.needsPageRead(found), true,
+       'C-009: a book found with a page and nothing else is the case this exists for');
+    eq(api.needsPageRead({ ...found,
+        row: { hasCatalogue: 'yes', isbn13: '9781588398130', publisher: 'The Met' } }), false,
+       'C-010: a book already complete is not read again');
+    eq(api.needsPageRead({ ...found, pageUrl: null }), false,
        'C-011: no page link, nothing to read');
-    eq(api.needsIsbnFill({ ...found, row: { hasCatalogue: 'no', isbn13: null } }), false,
-       'C-012: no catalogue, no page read — the search already settled it');
-    eq(api.needsIsbnFill(null), false, 'C-013: a failed lookup asks for nothing');
+    eq(api.needsPageRead({ ...found, row: { hasCatalogue: 'no', isbn13: null } }), false,
+       'C-012: no catalogue, no page read \u2014 the lookup already settled it');
+    eq(api.needsPageRead(null), false, 'C-013: a failed lookup asks for nothing');
+
+    // HER CATCH, and the reason the old gate was not merely useless. It asked
+    // about the ISBN alone, so a result carrying an ISBN and no publisher
+    // never opened the page and lost the publisher for nothing.
+    eq(api.needsPageRead({ ...found,
+        row: { hasCatalogue: 'yes', isbn13: '9781588398130', publisher: null } }), true,
+       'C-013a: an ISBN without a publisher still opens the page');
   }
 
   // ── C-014 to C-018: what the page is allowed to change ────────────────────

@@ -679,18 +679,31 @@ const today=()=>new Date().toISOString().slice(0,10);
 // a rule a fixture cannot reach is a rule nobody checks. The component keeps
 // the plumbing (which page, which prompt); these two hold what may change.
 
-// Ask the page only when a book was found, a page came with it, and the ISBN
-// is the one thing missing. Never for a row with no catalogue, and never to
-// second-guess an ISBN we already have.
-function needsIsbnFill(hit){
-  return !!(hit&&hit.ok&&hit.pageUrl&&hit.row
-            &&hit.row.hasCatalogue==="yes"&&!hit.row.isbn13);
+// OPEN THE BOOK'S OWN PAGE WHENEVER ANYTHING IS STILL MISSING \u2014 her ruling,
+// 21 Sep, and she was right that the old rule was decoration.
+//
+// It used to open the page only when the ISBN was missing. That gate saved
+// nothing: a shop's list of catalogues prints a cover, a title and a price,
+// and NEVER an ISBN \u2014 so after a shop lookup the ISBN is always missing and
+// the gate always opened. Her question: what is it for?
+//
+// And in the one case it stayed shut it did harm. It asked about the ISBN
+// alone, so a web result that happened to carry an ISBN but no publisher
+// never opened the book's page, and the PUBLISHER was lost for nothing.
+//
+// Now: a catalogue was found, a page came with it, and either the ISBN or the
+// publisher is still blank. Reading that page is the normal step, not the
+// exception.
+function needsPageRead(hit){
+  return !!(hit&&hit.ok&&hit.pageUrl&&hit.row&&hit.row.hasCatalogue==="yes"
+            &&(!hit.row.isbn13||!hit.row.publisher));
 }
 
 // IT FILLS BLANKS AND NOTHING ELSE. A publisher already read from the search
-// results stands; a 10-digit ISBN, or anything that is not 13 digits, is
-// refused by cleanIsbn and the row keeps its blank. A page that yields nothing
-// must leave the row exactly as it was \u2014 the old answer, never a worse one.
+// results stands; a 10-digit ISBN is converted by toIsbn13 and anything that
+// is not a real ISBN is refused, so the row keeps its blank. A page that
+// yields nothing must leave the row exactly as it was \u2014 the old answer,
+// never a worse one.
 function applyIsbnFill(row,o){
   const isbn=toIsbn13(o&&o.isbn13);
   const pub=(o&&o.publisher)?String(o.publisher).trim():"";
@@ -1448,7 +1461,7 @@ export default function App(){
   ).join("\n\n").slice(0,6000);
 
   const fillIsbn=async(hit,venue)=>{
-    if(!needsIsbnFill(hit))return hit;
+    if(!needsPageRead(hit))return hit;
     const r=hit.row;
     const book=r.catalogueTitle||r.title;
     setLookPhase("page");

@@ -759,17 +759,26 @@ It mattered because of what happens next: with no ISBN the reseller links search
 by TITLE, and a title search misfires. *Musical Bodies* is unusual enough that
 Amazon and AbeBooks found it anyway; **Alibris returned the wrong book.**
 
-**The same connector's `web_fetch` reads a whole page, and only `web_search` had
-ever been declared.** It now runs as a third step, on one condition and no
-other: a catalogue was found, a page link came with it, and the ISBN is the one
-thing missing. `needsIsbnFill` is that condition. It is not a third search — one
-page, read once.
+**The same connector's `web_fetch` reads a whole page, and only `web_search`
+had ever been declared.** It reads the book's own page for the ISBN and the
+publisher, and it is not a third search — one page, read once.
 
-**IT FILLS A BLANK AND CANNOT DO ANYTHING ELSE** (`applyIsbnFill`). An ISBN read
-from the search results is never second-guessed, a publisher already known is
-never overwritten, and a 10-digit ISBN is refused by `cleanIsbn` rather than
-half-converted. A page that yields nothing leaves the row exactly as it was — the
-old answer, never a worse one.
+**THE GATE IN FRONT OF IT IS GONE — her ruling, 21 Sep, and she was right that
+it was decoration.** It used to open the page only when the ISBN was missing.
+**A shop's list of catalogues prints a cover, a title and a price and never an
+ISBN**, so after a shop lookup the ISBN is always missing and the gate always
+opened. Her question was simply what it was for.
+
+**And in the one case it stayed shut it did harm.** It asked about the ISBN
+alone, so a web result carrying an ISBN and no publisher never opened the
+book's page and **the publisher was lost for nothing**. `needsPageRead` now
+asks whether EITHER is blank. Fixtures C-009 to C-013a, verified by putting
+the old condition back and watching C-013a fail.
+
+**IT FILLS A BLANK AND CANNOT DO ANYTHING ELSE** (`applyIsbnFill`). An ISBN
+read from the search results is never second-guessed, a publisher already
+known is never overwritten, and a page that yields nothing leaves the row
+exactly as it was — the old answer, never a worse one.
 
 **A COLLAPSED SECTION IS REACHED, and that was her question.** The Met store
 prints the ISBN inside a "Details" panel that opens and shuts. The text is
@@ -1144,10 +1153,22 @@ it had exactly the same four. It was never built.
 
 Every address below was checked by opening it and reading the results back.
 `shopSearch` takes the exhibition title on the end. `shopCatalogues` is the
-shop's own shelf of exhibition catalogues — all books, no trinkets — and it is
-opened FIRST, in the same call. **Its limit is that it lists what is in stock
-today**, so a catalogue for a show that closed two years ago will not be on it;
-that is why the search box still runs beside it and neither replaces the other.
+shop's own page listing its exhibition catalogues — all books, no trinkets —
+and it is opened FIRST, in the same call.
+
+**WHY BOTH, CHECKED RATHER THAN ASSERTED — her challenge, 21 Sep.** The first
+answer given was that the catalogues page only lists what is IN STOCK, so an
+older catalogue would be missing. **That is wrong and is withdrawn.** A
+sold-out book stays listed: the Menil's page holds 47 and shows all 4 of its
+sold-out titles. The National Gallery's holds 36 going back to 2019, covering
+her whole lookback on its own.
+
+**The real reasons are thinner and they are these two.** `uffizi` and `khm`
+have no catalogues page at all, so the search box is their only route. And for
+everyone else it is **the cheap fallback INSIDE the shop** — a catalogue filed
+under some other section, or sitting past the third page, would otherwise send
+the lookup straight out to the open internet, which is the exact failure of
+§4. One more address in a call already being made.
 
 **THE SHELF WAS NOT FOUND BY GUESSING A PATTERN.** Each shop's own navigation
 was read and the section it names itself was taken — "Exhibition Catalogues",
@@ -2174,6 +2195,15 @@ Each entry cost a real failure. Before changing the area, read the line.
   while the book's own page sat five places lower in the same results.
   **A link a model chose is a guess, and building the next step on exactly one
   of them makes the guess load-bearing.**
+- A gate that could only ever open. The book's page was read "only when the
+  ISBN is missing", and a shop's list of catalogues never prints an ISBN, so
+  the condition was true every time. **She asked what it was for and there
+  was no answer.** Worse, the one case it stayed shut — an ISBN found with no
+  publisher — threw the publisher away.
+- Giving a reason that had never been checked. "The catalogues page only
+  lists what is in stock" sounded right and is false: sold-out books stay
+  listed everywhere we looked. **She asked whether it actually happens, and
+  it does not.** The real reasons were thinner and had to be found afterwards.
 - Never writing down 17 of 18 shops' search addresses, and leaving the one
   venue that had one pointing at a dead page. **A field that is empty for most
   rows and wrong for one of the rest reads exactly like a field that works.**
