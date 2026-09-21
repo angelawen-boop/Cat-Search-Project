@@ -1585,15 +1585,19 @@ export default function App(){
     const sp=await searchWeb(
       "The publisher \u201c"+r.publisher+"\u201d\u2019s OWN page for the book \u201c"+book+"\u201d \u2014 the page on "
         +"the publisher\u2019s website where they list or sell this title.",
-      // THE ISBN IS THE QUERY THAT WORKS, and the title often is not. Searching
-      // "Hannibal Books, Metamorphoses: Ovid and the Arts" returns Ovid \u2014 Penguin,
-      // Oxford, Gutenberg, Wikipedia \u2014 and not one page on Hannibal\u2019s site. The
-      // bare ISBN returns Hannibal\u2019s own page in the top ten. A number cannot be
-      // confused with a two-thousand-year-old poem; a title can. Checked both
-      // ways on that row, 21 Sep.
+      // THE ISBN IS WHAT SEPARATES THIS BOOK FROM EVERY OTHER \u2014 her point, and
+      // she is right that it belongs WITH the publisher and the title rather
+      // than instead of them. Searching the publisher and title alone returns
+      // Ovid \u2014 Penguin, Oxford, Gutenberg, Wikipedia \u2014 and not one page on
+      // Hannibal\u2019s site; the number returns Hannibal\u2019s own page. All three
+      // together name the thing exactly, and the narrower queries follow as
+      // fallbacks. A row with no ISBN has only the publisher and the title.
       (cleanIsbn(r.isbn13)
-        ? [cleanIsbn(r.isbn13), r.publisher+" "+cleanIsbn(r.isbn13), r.publisher+" "+book]
-        : [r.publisher+" "+book, r.publisher+" publisher "+book+" book",
+        ? [r.publisher+" "+book+" "+cleanIsbn(r.isbn13),
+           r.publisher+" "+cleanIsbn(r.isbn13),
+           cleanIsbn(r.isbn13)]
+        : [r.publisher+" "+book,
+           r.publisher+" publisher "+book+" book",
            book+" "+r.publisher+" catalogue"]));
     let detail=hit.detail+"\n"+sp.detail;
     if(!sp.ok||!sp.results.length)return{...hit,detail};

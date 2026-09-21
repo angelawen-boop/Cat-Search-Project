@@ -774,14 +774,18 @@ So once the name is known, `fillPublisherPage` asks for the page by name. It
 fires only on a catalogue found, with a publisher, and no page — never to
 second-guess a link an earlier step produced.
 
-**AND THE QUERY THAT WORKS IS THE ISBN, NOT THE TITLE — both tried on that
-row.** "Hannibal Books, Metamorphoses: Ovid and the Arts" returns Ovid: Penguin,
-Oxford, Gutenberg, Wikipedia, a bookseller, a distributor — **not one page on
-Hannibal's site.** The bare `9789493416543` returns
+**THE ISBN GOES IN THE QUERY, WITH the publisher and the title and not instead
+of them — her correction.** Both were tried on that row: "Hannibal Books,
+Metamorphoses: Ovid and the Arts" returns Ovid — Penguin, Oxford, Gutenberg,
+Wikipedia, a bookseller, a distributor — **not one page on Hannibal's site**,
+while the bare `9789493416543` returns
 `hannibalbooks.be/metamorfosen-ovidius-en-de-kunsten` in the top ten. **A number
-cannot be confused with a two-thousand-year-old poem; a title can.** Where a row
-has no ISBN it falls back to the publisher and title, which is better than
-nothing and worse than the number.
+cannot be confused with a two-thousand-year-old poem; a title can.** The first
+build then searched the number ALONE, which throws away the only two words that
+say which edition and whose page is wanted. All three go together now, with the
+narrower forms as fallbacks. **The combined query has not been run** — the
+connector hit its free-tier limit; the two halves above were each verified
+before it did.
 
 **A MISSING BUTTON CANNOT REPORT ANYTHING — her ruling on the publisher line,
 and the third time this app has had to learn it.** The Publisher button is
