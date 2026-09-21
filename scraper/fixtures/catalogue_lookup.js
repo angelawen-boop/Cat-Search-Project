@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl };')(
+    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -296,6 +296,29 @@ function runtime(answer, log) {
     eq(/many searches/i.test(out.detail), true,
        'C-044: and it says the connector refused, in her words');
     eq(out.results.length, 0, 'C-045: with nothing invented to fill the gap');
+  }
+
+  // ── C-046 to C-051: which result is the publisher's own site ──────────
+  // Her correction, 21 Sep: tuning search phrases to make a general index cough
+  // up hannibalbooks.be was the same mistake the whole session was about. Go to
+  // the publisher, the way step one goes to the shop — which means working out
+  // the publisher's address, and a name in a hostname has one correct answer.
+  {
+    const api = lift({ document: {}, localStorage: {} });
+    const d = (name, urls) => api.publisherDomainFrom(urls.map(u => ({ url: u })), name);
+
+    eq(d('Hannibal Books', ['https://en.wikipedia.org/wiki/Hannibal_(Harris_novel)',
+                            'https://hannibalbooks.be/en/about-us']), 'hannibalbooks.be',
+       'C-046: the novel about the cannibal is not the publisher');
+    eq(d('Thames & Hudson', ['https://www.amazon.com/x', 'https://thamesandhudson.com/book']),
+       'thamesandhudson.com', 'C-047: an ampersand in the name, an "and" in the host');
+    eq(d('Yale University Press', ['https://oup.com/x', 'https://yalebooks.yale.edu/book/9780300']),
+       'yalebooks.yale.edu', 'C-048: "university" and "press" are shared words and carry nothing');
+    eq(d('Rizzoli', ['https://www.abebooks.com/y', 'https://www.rizzoliusa.com/book/123']),
+       'www.rizzoliusa.com', 'C-049: a national arm of the same house still carries the name');
+    eq(d('Hannibal Books', ['https://www.amazon.com/x', 'https://www.abebooks.com/y']), null,
+       'C-050: booksellers are not the publisher, so nothing is returned');
+    eq(d('', ['https://hannibalbooks.be/']), null, 'C-051: no publisher name, no guess');
   }
 
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');

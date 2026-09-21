@@ -717,6 +717,36 @@ function applyIsbnFill(row,o,dom){
 
 function shopDomain(mu){if(!mu||!mu.shopHome)return null;try{return new URL(mu.shopHome).hostname;}catch{return null;}}
 
+// WHICH OF THESE RESULTS IS THE PUBLISHER\u2019S OWN SITE \u2014 answered in code.
+//
+// A publisher\u2019s name is in its hostname: Hannibal Books is hannibalbooks.be,
+// Thames & Hudson is thamesandhudson.com, Rizzoli is rizzoliusa.com. That is
+// one input with one correct answer, so it is code\u2019s job and not a model\u2019s.
+//
+// The words every publisher shares carry no information and are dropped, or
+// "Yale University Press" would match any university press. What is left must
+// ALL appear in the host, so "hannibal" finds hannibalbooks.be and does not
+// find hannibal-lecter fan sites, which are not publishers and have neither
+// the rest of the name nor a book on them.
+// "university" is dropped for the same reason as "press": Yale University
+// Press lives at yalebooks.yale.edu, which carries the distinctive word and
+// none of the shared ones. Checked against real publishers, not imagined ones.
+const PUBLISHER_WORDS=new Set(["books","book","press","publishing","publishers","publisher",
+  "editions","edition","verlag","publications","university","the","and","of","co","inc","ltd",
+  "llc","bv","nv"]);
+function publisherDomainFrom(results,name){
+  const words=String(name||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .split(/[^a-z0-9]+/).filter(w=>w.length>2&&!PUBLISHER_WORDS.has(w));
+  if(!words.length)return null;
+  for(const r of (results||[])){
+    let host;
+    try{ host=new URL(String(r&&r.url||"")).hostname.toLowerCase(); }catch{ continue; }
+    const flat=host.replace(/[^a-z0-9]/g,"");
+    if(words.every(w=>flat.includes(w)))return host;
+  }
+  return null;
+}
+
 // THE PUBLISHER\u2019S OWN PAGE \u2014 restored 21 Sep 2026, her finding.
 //
 // The app has always had a Publisher button and the ledger has always had a
@@ -1583,42 +1613,45 @@ export default function App(){
     const r=hit&&hit.row;
     if(!r||!hit.ok||r.hasCatalogue!=="yes"||!r.publisher||r.publisherUrl)return hit;
     const book=r.catalogueTitle||r.title;
+    const isbn=cleanIsbn(r.isbn13);
     setLookPhase("publisher");
+
+    // \u2500\u2500 FIRST, WHERE IS THE PUBLISHER \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    // One search for the NAME alone. A publisher\u2019s own site is the top answer
+    // for its own name, and the domain is then read off the results in code.
+    const d1=await searchWeb(
+      "The official website of the art-book publisher \u201c"+r.publisher+"\u201d.",
+      [r.publisher, r.publisher+" art book publisher"]);
+    let detail=hit.detail+"\n"+d1.detail;
+    if(!d1.ok)return{...hit,detail,trouble:d1.detail};
+    const pubHost=publisherDomainFrom(d1.results,r.publisher);
+    if(!pubHost)return{...hit,detail:detail+"\nCouldn\u2019t identify the publisher\u2019s own website."};
+
+    // \u2500\u2500 THEN SEARCH INSIDE IT, exactly as step one searches inside the shop \u2500\u2500
     const sp=await searchWeb(
-      "The publisher \u201c"+r.publisher+"\u201d\u2019s OWN page for the book \u201c"+book+"\u201d \u2014 the page on "
-        +"the publisher\u2019s website where they list or sell this title.",
-      // THE ISBN IS WHAT SEPARATES THIS BOOK FROM EVERY OTHER \u2014 her point, and
-      // she is right that it belongs WITH the publisher and the title rather
-      // than instead of them. Searching the publisher and title alone returns
-      // Ovid \u2014 Penguin, Oxford, Gutenberg, Wikipedia \u2014 and not one page on
-      // Hannibal\u2019s site; the number returns Hannibal\u2019s own page. All three
-      // together name the thing exactly, and the narrower queries follow as
-      // fallbacks. A row with no ISBN has only the publisher and the title.
-      (cleanIsbn(r.isbn13)
-        ? [r.publisher+" "+book+" "+cleanIsbn(r.isbn13),
-           r.publisher+" "+cleanIsbn(r.isbn13),
-           cleanIsbn(r.isbn13)]
-        : [r.publisher+" "+book,
-           r.publisher+" publisher "+book+" book",
-           book+" "+r.publisher+" catalogue"]));
-    let detail=hit.detail+"\n"+sp.detail;
+      "The page on "+pubHost+" for the book \u201c"+book+"\u201d"+(isbn?", ISBN "+isbn:"")+".",
+      isbn?["site:"+pubHost+" "+book,"site:"+pubHost+" "+isbn,"site:"+pubHost+" "+book.split(/[:\u2013\u2014-]/)[0].trim()]
+          :["site:"+pubHost+" "+book,"site:"+pubHost+" "+book.split(/[:\u2013\u2014-]/)[0].trim()]);
+    detail=detail+"\n"+sp.detail;
     if(!sp.ok)return{...hit,detail,trouble:sp.detail};
-    if(!sp.results.length)return{...hit,detail};
+    const onSite=(sp.results||[]).filter(x=>{try{return new URL(x.url).hostname.toLowerCase()===pubHost;}catch{return false;}});
+    if(!onSite.length)return{...hit,detail:detail+"\nNothing for this book on "+pubHost+"."};
+
     const rd=await readResults(
-      "You are looking for ONE link: the page on the PUBLISHER\u2019S OWN WEBSITE for a book.\n"
-     +"Use ONLY what these results say. Never invent a link.\n"
-     +"The publisher is the art-book house that printed it. A BOOKSELLER is not the publisher \u2014 "
-     +"Amazon, AbeBooks, a distributor, a museum shop, a library catalogue: none of those count.\n"
-     +"If none of these results is on the publisher\u2019s own site, answer null.\n"
-     +"\nBook: "+book+"\nPublisher: "+r.publisher+"\nExhibition venue: "+venue+"\n\n"
-     +resultsForPrompt(sp.results)
+      "These are pages from ONE publisher\u2019s own website. Pick the page FOR THIS BOOK.\n"
+     +"Prefer the book\u2019s own page over a list of many books. If only a list mentions it, "
+     +"give the list. If none of them is about this book, answer null.\n"
+     +"Use ONLY these results. Never invent a link.\n"
+     +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+r.publisher
+     +"\nExhibition venue: "+venue+"\n\n"
+     +resultsForPrompt(onSite)
      +"\nReply with ONLY this JSON object and nothing else:\n"
      +'{"publisherUrl": string|null}\n'
-     +'Example: {"publisherUrl":"https://hannibalbooks.be/en/metamorphoses"}');
+     +'Example: {"publisherUrl":"https://hannibalbooks.be/metamorfosen-ovidius-en-de-kunsten"}');
     detail=detail+"\n"+rd.detail;
     if(!rd.ok)return{...hit,detail,trouble:rd.detail};
     const url=cleanPublisherUrl((rd.data||{}).publisherUrl,dom);
-    detail=detail+(url?"\nPublisher\u2019s page: "+url:"\nNo page on the publisher\u2019s own site.");
+    detail=detail+(url?"\nPublisher\u2019s page: "+url:"\nNo page for this book on "+pubHost+".");
     return url?{...hit,detail,row:{...r,publisherUrl:url}}:{...hit,detail};
   };
 

@@ -774,18 +774,32 @@ So once the name is known, `fillPublisherPage` asks for the page by name. It
 fires only on a catalogue found, with a publisher, and no page — never to
 second-guess a link an earlier step produced.
 
-**THE ISBN GOES IN THE QUERY, WITH the publisher and the title and not instead
-of them — her correction.** Both were tried on that row: "Hannibal Books,
-Metamorphoses: Ovid and the Arts" returns Ovid — Penguin, Oxford, Gutenberg,
-Wikipedia, a bookseller, a distributor — **not one page on Hannibal's site**,
-while the bare `9789493416543` returns
-`hannibalbooks.be/metamorfosen-ovidius-en-de-kunsten` in the top ten. **A number
-cannot be confused with a two-thousand-year-old poem; a title can.** The first
-build then searched the number ALONE, which throws away the only two words that
-say which edition and whose page is wanted. All three go together now, with the
-narrower forms as fallbacks. **The combined query has not been run** — the
-connector hit its free-tier limit; the two halves above were each verified
-before it did.
+**GO TO THE PUBLISHER, DO NOT SEARCH FOR THEM — her correction, and it is the
+lesson of this entire session applied to the one place I failed to apply it.**
+Four query strings were tried in a row to make a general index surface
+`hannibalbooks.be`: publisher and title (returns Ovid — Penguin, Oxford,
+Gutenberg, Wikipedia), publisher and ISBN, the bare ISBN, all three together.
+**That is exactly the pattern §4 spent the day removing from stage one**, and
+tuning it further would have been guessing with more words.
+
+**Two steps, and the first one is code's.** One search for the publisher's NAME
+alone — a publisher's own site is the top answer for its own name — and the
+domain is then read off the results **mechanically**: a publisher's name is in
+its hostname. Hannibal Books is `hannibalbooks.be`, Thames & Hudson is
+`thamesandhudson.com`, Yale University Press is `yalebooks.yale.edu`. One
+input, one correct answer, no model. The words every publisher shares —
+books, press, publishing, editions, **university** — carry nothing and are
+dropped, or any university press would match any other. Fixtures C-046 to
+C-051.
+
+Then it searches INSIDE that domain for the title, the way stage one searches
+inside the shop, and **only results actually on that host are read**.
+`site:hannibalbooks.be Metamorphoses` returns four pages, all on the
+publisher's site, including the book's own. Verified 21 Sep.
+
+**A row with no ISBN loses nothing here**, unlike the query-tuning versions:
+the title is searched inside one small site rather than against the whole web,
+where *Metamorphoses* means Ovid.
 
 **A STEP THAT DIED IS NOT AN ANSWER — her question, 21 Sep, and the fault was
 introduced the same day.** She asked how she would tell a rate-limited lookup
@@ -2294,6 +2308,12 @@ Each entry cost a real failure. Before changing the area, read the line.
   lists what is in stock" sounded right and is false: sold-out books stay
   listed everywhere we looked. **She asked whether it actually happens, and
   it does not.** The real reasons were thinner and had to be found afterwards.
+- Tuning query strings to make a general web index surface a page we could
+  simply have gone to. Four attempts at finding one publisher's own site —
+  publisher and title, publisher and ISBN, the bare ISBN, all three — on the
+  same day the whole session was spent proving that searching-and-hoping is
+  the wrong shape. **When the answer is "go to the place", more words in the
+  query is never the fix.**
 - Adding steps that fail QUIETLY. The three later lookup steps handed the row
   back untouched when the connector refused, which is correct for the row and
   a lie on the screen: "ISBN not confirmed" and "No separate publisher page."
