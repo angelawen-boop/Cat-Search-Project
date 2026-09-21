@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, publisherSearchPages, onPublisherHost };')(
+    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, publisherSiteQueries, onPublisherHost };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -321,40 +321,41 @@ function runtime(answer, log) {
     eq(d('', ['https://hannibalbooks.be/']), null, 'C-051: no publisher name, no guess');
   }
 
-  // \u2500\u2500 C-052 to C-060: the publisher's own search box \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  // Her ruling, 21 Sep. The step used to ask a general index for
-  // "site:hannibalbooks.be <title>" and let a model choose between the links
-  // it returned. That is the pattern removed from stage one the same day,
-  // left standing one step down, and it lost Metamorphoses twice over: the
-  // index does not index the ISBN (nine unrelated Hannibal books came back),
-  // and the only book page it did return was the Dutch edition, which the
-  // model rejected as a different book.
+  // \u2500\u2500 C-052 to C-058: finding the book on the publisher's site \u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  //
+  // Her ruling was to open the publisher's OWN search box, as stage one opens
+  // the shop's. IT CANNOT BE BUILT: hannibalbooks.be/en/search?q=9789493416543
+  // shows the right book in her browser and comes back to the page reader as a
+  // newsletter form and a footer, because the results are drawn by JavaScript
+  // after load. Tested with the ISBN, at the exact address from her screenshot.
+  //
+  // So the index stays the finder, which is what actually worked \u2014 it returned
+  // the book's own page all along. BY TITLE ONLY: the same query with the ISBN
+  // returns nine unrelated Hannibal books, the number never having been
+  // indexed. What lost Metamorphoses was the READING, fixed in the prompt.
   {
     const api = lift({ document: {}, localStorage: {} });
-    const byIsbn = api.publisherSearchPages('hannibalbooks.be', '9789493416543');
+    const q = api.publisherSiteQueries('hannibalbooks.be', 'Metamorphoses: Ovid and the Arts');
 
-    eq(byIsbn[0], 'https://hannibalbooks.be/en/search?q=9789493416543',
-       'C-052: the English box is asked first \u2014 her page, her language');
-    eq(byIsbn.length, 4, 'C-053: four shapes, one call, an absent one costs nothing');
-    eq(byIsbn.includes('https://hannibalbooks.be/search?q=9789493416543'), true,
-       'C-054: a site with no /en/ is reached by the same call');
-    eq(byIsbn.includes('https://hannibalbooks.be/?s=9789493416543'), true,
-       'C-055: and so is a WordPress one');
-    eq(api.publisherSearchPages('hannibalbooks.be', 'Ovid & the Arts')[1],
-       'https://hannibalbooks.be/search?q=Ovid%20%26%20the%20Arts',
-       'C-056: a title with an ampersand survives the trip');
-    eq(api.publisherSearchPages('', '9789493416543').length, 0,
-       'C-057: no publisher site, no addresses invented');
-    eq(api.publisherSearchPages('hannibalbooks.be', '   ').length, 0,
-       'C-058: and nothing to search for is not a search');
+    eq(q[0], 'site:hannibalbooks.be Metamorphoses: Ovid and the Arts',
+       'C-052: the whole title, asked of the publisher\u2019s site');
+    eq(q[1], 'site:hannibalbooks.be Metamorphoses',
+       'C-053: and the title before its colon, for a site that files it short');
+    eq(q.length, 2, 'C-054: two queries \u2014 no ISBN query, which returns nine wrong books');
+    eq(q.some(x => /\d{13}/.test(x)), false,
+       'C-055: and nothing anywhere in them is an ISBN');
+    eq(api.publisherSiteQueries('hannibalbooks.be', 'Metamorphoses').length, 1,
+       'C-056: a title with nothing to shorten is asked once');
+    eq(api.publisherSiteQueries('', 'Metamorphoses').length, 0,
+       'C-057: no publisher site, no query invented');
 
     // www. ON ONE SIDE ONLY. The host is found by one search and the pages
     // come back from another, so an exact string match threw the right page
     // away over four letters.
     eq(api.onPublisherHost('https://www.hannibalbooks.be/en/x', 'hannibalbooks.be'), true,
-       'C-059: a www. on one side only is still the same site');
+       'C-058: a www. on one side only is still the same site');
     eq(api.onPublisherHost('https://www.amazon.com/x', 'hannibalbooks.be'), false,
-       'C-060: a bookseller linked from their page is not their page');
+       'C-058a: a bookseller linked from their page is not their page');
   }
 
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');

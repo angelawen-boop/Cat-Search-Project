@@ -573,42 +573,34 @@ function shelfPages(url){
   return out;
 }
 
-// \u2500\u2500 THE PUBLISHER'S OWN SEARCH BOX \u2014 her ruling, 21 Sep 2026 \u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// \u2500\u2500 FINDING THE BOOK ON THE PUBLISHER'S SITE \u2014 21 Sep 2026 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 //
-// GO TO THE SITE, DO NOT SEARCH ABOUT IT. The publisher step used to ask a
-// general web index for "site:hannibalbooks.be <title>" and hand the handful
-// of links it returned to a model to choose between. That is the very pattern
-// removed from stage one on 21 Sep, left standing one step further down.
+// HER INSTRUCTION WAS TO OPEN THEIR OWN SEARCH BOX, as stage one opens the
+// shop's, and it was the right instruction. IT CANNOT BE BUILT HERE, and the
+// reason is measured, not argued: hannibalbooks.be/en/search?q=9789493416543
+// shows the right book in her browser and comes back to the page reader as an
+// empty shell \u2014 a newsletter form and a footer. Their results are drawn by
+// JavaScript after the page loads. That is §5's founding fact about this whole
+// project, met again in a shop rather than a museum. Tested with the ISBN,
+// the exact address from her screenshot.
 //
-// WHAT IT COST, her finding: Metamorphoses. The index returned Hannibal's
-// homepage, two lists and the DUTCH edition's page, so the model was asked to
-// judge "Metamorfosen \u2013 Ovidius en de kunsten" against a row reading
-// "Metamorphoses: Ovid and the Arts", decided it was a different book, and
-// answered nothing. The book's page was in its hand.
+// SO THE INDEX STAYS THE FINDER, because it is the thing that works: asked
+// site:hannibalbooks.be Metamorphoses it returns four pages, all on the
+// publisher's site, INCLUDING THE BOOK'S OWN. It had the right answer all
+// along \u2014 what threw it away was the reading, which is fixed below.
 //
-// AND THE ISBN ONLY WORKS HERE. Asked of a general index, site:hannibalbooks.be
-// 9789493416543 returns nine unrelated Hannibal books \u2014 the number is not
-// indexed. Put into the publisher's OWN search box it returns exactly one
-// result, the right book, which is how she found it by hand.
-//
-// ENGLISH FIRST, because a Dutch publisher serves the same book in both and
-// the English page is the one she can read. Hannibal's is /en/search?q= and
-// its results link to /en/ pages, so asking the English box first means the
-// English address comes back with no rewriting of anyone's URL.
-//
-// FOUR SHAPES, ONE CALL. Nearly every site uses one of these, a shape that
-// does not exist comes back empty, and they all go over together \u2014 the same
-// reasoning as shelfPages, where depth is free because the call is already
-// being made. There is no list of publishers to write addresses down from, so
-// this is the honest substitute for one.
-function publisherSearchPages(host,term){
-  if(!host||!term)return[];
-  const q=encodeURIComponent(String(term).trim());
-  if(!q)return[];
-  return["https://"+host+"/en/search?q="+q,
-         "https://"+host+"/search?q="+q,
-         "https://"+host+"/en/?s="+q,
-         "https://"+host+"/?s="+q];
+// BY TITLE ONLY, NEVER BY ISBN. site:hannibalbooks.be 9789493416543 returns
+// NINE UNRELATED HANNIBAL BOOKS: a general index has never indexed the
+// number. It was one of three queries here and could only ever dilute the
+// slate. Their own box does match an ISBN \u2014 which is exactly why that is
+// worth revisiting the day a publisher's box can be read.
+function publisherSiteQueries(host,title){
+  const t=String(title||"").trim();
+  if(!host||!t)return[];
+  const short=t.split(/[:\u2013\u2014-]/)[0].trim();
+  const out=["site:"+host+" "+t];
+  if(short&&short!==t)out.push("site:"+host+" "+short);
+  return out;
 }
 
 // A link is only the publisher's if it is ON the publisher's site. Compared
@@ -1674,27 +1666,22 @@ export default function App(){
     const pubHost=publisherDomainFrom(d1.results,r.publisher);
     if(!pubHost)return{...hit,detail:detail+"\nCouldn\u2019t identify the publisher\u2019s own website."};
 
-    // \u2500\u2500 THEN USE THEIR OWN SEARCH BOX, exactly as step one uses the shop's \u2500\u2500
-    //
-    // BY ISBN WHERE WE HAVE ONE. It is the one term that cannot mean another
-    // book, and a publisher's own box matches it \u2014 which a general index does
-    // not, having never indexed the number. Title only when there is no ISBN.
-    const term=isbn||book;
-    const pages=publisherSearchPages(pubHost,term);
-    const sp=await fetchPage(pages,
-      "The publisher's own page for the book \u201c"+book+"\u201d"+(isbn?", ISBN "+isbn:"")+".",
-      [term]);
+    // \u2500\u2500 THEN SEARCH INSIDE THAT SITE, by title \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    const sp=await searchWeb(
+      "The page on "+pubHost+" for the book \u201c"+book+"\u201d"+(isbn?", ISBN "+isbn:"")+".",
+      publisherSiteQueries(pubHost,book));
     detail=detail+"\n"+sp.detail;
     if(!sp.ok)return{...hit,detail,trouble:sp.detail};
-    if(!sp.results.length)return{...hit,detail:detail+"\nTheir search box answered nothing for "+term+"."};
+    const onSite=(sp.results||[]).filter(x=>onPublisherHost(x.url,pubHost));
+    if(!onSite.length)return{...hit,detail:detail+"\nNothing for this book on "+pubHost+"."};
 
     // READ IT IN ENGLISH, AND A TRANSLATED TITLE IS THE SAME BOOK \u2014 her ruling.
     // This is what lost Metamorphoses: handed "Metamorfosen \u2013 Ovidius en de
     // kunsten" against a row reading "Metamorphoses: Ovid and the Arts", the
     // model called it a different book and answered nothing.
     const rd=await readResults(
-      "These are results from the publisher\u2019s OWN website search. Give the link to the "
-     +"book\u2019s own page.\n"
+      "These are pages from ONE publisher\u2019s own website. Give the link to the book\u2019s "
+     +"own page.\n"
      +"READ THESE IN ENGLISH. This publisher may write in Dutch, French, German or Italian. "
      +"A title in another language is the SAME BOOK when it is this book translated \u2014 "
      +"\u201cMetamorfosen \u2013 Ovidius en de kunsten\u201d IS \u201cMetamorphoses: Ovid and the Arts\u201d. "
@@ -1704,7 +1691,7 @@ export default function App(){
      +"Use ONLY these results. Never invent a link.\n"
      +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+r.publisher
      +"\nExhibition venue: "+venue+"\n\n"
-     +resultsForPrompt(sp.results,3000)
+     +resultsForPrompt(onSite)
      +"\nReply with ONLY this JSON object and nothing else:\n"
      +'{"publisherUrl": string|null}\n'
      +'Example: {"publisherUrl":"https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten"}');
