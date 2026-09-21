@@ -133,33 +133,31 @@ merge either**; the second would undo the current scraper.
 `scraper/output/` and should be printed by a script — see "Editing this guide".
 Until it is, check it against the newest run directory before trusting it.
 
-| Venue | Code | Rows | **Her substantive review** | Fixed & re-verified | Notes |
-|---|---|---|---|---|---|
-| National Gallery, London | `ng` | 27 | yes — her count | yes | |
-| Rijksmuseum | `rijks` | 37 | yes — her count (36) | yes | 37 since; not chased, her call. *Asian Pavilion* pulled by the venue |
-| Acquavella | `acq` | 15 | yes — her count | yes | |
-| Art Institute of Chicago | `artic` | 65 | yes — her count + every row's type tag read | yes | was **local only**; **REFUSES HER MACHINE TOO since 16 Sep — every page 403, cause unknown.** Only EXHIBITION and TICKETED EXHIBITION kept, her ruling |
-| The Met | `met` | 106 | yes — row by row, 11 Sep | yes | **local only**; 107 on 16 Sep, unaffected by any of the day's changes; see `docs/venues.md` |
-| The Frick | `frick` | 10 | **yes — 12 Sep** | **no — page two never read** | past archive paginates; `paginate` wired 13 Sep but the venue answered 403 on every verifying attempt, so the ~10 rows on page two are still uncollected |
-| The Menil | `menil` | 32 | **yes — 12 Sep** | yes | past AND current archives paginate; 7 permanent galleries excluded, her ruling |
-| V&A | `va` | 6 | **yes — 12 Sep** | yes | Displays excluded, **her ruling for THIS venue only** |
-| Tate Modern | `tate-modern` | 13 | **yes — 12 Sep** | yes | |
-| Tate Britain | `tate-britain` | 9 | **yes — 12 Sep** | yes | Ofili excluded on the venue's own ONGOING label |
-| Wallace Collection | `wallace` | 11 | **yes — 12 Sep** | yes | displays and trails kept, **her ruling for THIS venue** |
-| Louvre | `louvre` | 22 | **yes — 12 Sep** | yes | 22 was never a ceiling — see §5; "load more" pressed until it runs out |
-| Gallerie dell'Accademia | `dellav` | 2 | **yes — 12 Sep** | yes | prints Italian dates on its English page |
-| Kunsthistorisches | `khm` | 6 | **yes — 12 Sep** | yes — no change needed | two rows half-dated because the venue says "since"/"until" |
-| Capodimonte | `capo` | 18 | **partly — see below** | yes, fixes applied | **NOT count-verified and never will be**, her decision |
-| Uffizi | `uffizi` | 13 | **yes — 12 Sep** | yes | headlines kept as titles and undated rows kept, **both her rulings** |
-| Brera | `brera` | 8 | **yes — 12 Sep** | yes | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
-| Galleria Borghese | `borghese` | 8 | **yes — 12 Sep, her count** | yes | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
-| MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | n/a | n/a | No route; marker rows only. See the parked section below |
+| Venue | Code | Rows | Notes |
+|---|---|---|---|
+| National Gallery, London | `ng` | 27 | |
+| Rijksmuseum | `rijks` | 37 | 37 since; not chased, her call. *Asian Pavilion* pulled by the venue |
+| Acquavella | `acq` | 15 | |
+| Art Institute of Chicago | `artic` | 65 | was **local only**; **REFUSES HER MACHINE TOO since 16 Sep — every page 403, cause unknown.** Only EXHIBITION and TICKETED EXHIBITION kept, her ruling |
+| The Met | `met` | 106 | **local only**; 107 on 16 Sep, unaffected by any of the day's changes; see `docs/venues.md` |
+| The Frick | `frick` | 10 | **page two never read** — past archive paginates; `paginate` wired 13 Sep but the venue answered 403 on every verifying attempt, so the ~10 rows on page two are still uncollected |
+| The Menil | `menil` | 32 | past AND current archives paginate; 7 permanent galleries excluded, her ruling |
+| V&A | `va` | 6 | Displays excluded, **her ruling for THIS venue only** |
+| Tate Modern | `tate-modern` | 13 | |
+| Tate Britain | `tate-britain` | 9 | Ofili excluded on the venue's own ONGOING label |
+| Wallace Collection | `wallace` | 11 | displays and trails kept, **her ruling for THIS venue** |
+| Louvre | `louvre` | 22 | 22 was never a ceiling — see §5; "load more" pressed until it runs out |
+| Gallerie dell'Accademia | `dellav` | 2 | prints Italian dates on its English page |
+| Kunsthistorisches | `khm` | 6 | two rows half-dated because the venue says "since"/"until" |
+| Capodimonte | `capo` | 18 | **NOT count-verified and never will be**, her decision — reviewed only partly (see below) |
+| Uffizi | `uffizi` | 13 | headlines kept as titles and undated rows kept, **both her rulings** |
+| Brera | `brera` | 8 | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
+| Galleria Borghese | `borghese` | 8 | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
+| MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | No route; marker rows only. See the parked section below |
 
-**Read the two middle columns separately.** "Her substantive review" means she went
-through that venue against the live site herself and her findings are recorded.
-"Fixed" means those findings have been acted on and the venue re-swept and checked.
-A venue can have the first without the second — that is exactly the state `uffizi`
-and `brera` are in, and the state all thirteen were in at the start of 12 Sep.
+Every reachable venue but Capodimonte was reviewed by her against the live site
+and re-swept; the one open exception is the Frick's page two (Notes above, and §5
+"What is NOT confirmed"). Capodimonte is the deliberate exception — see below.
 
 **ALL SIXTEEN REACHABLE VENUES ARE REVIEWED BY HER, FIXED, AND VERIFIED AGAINST HER
 OWN COUNT.** Capodimonte is the one exception and a deliberate one — see below.
@@ -2217,9 +2215,6 @@ Each entry cost a real failure. Before changing the area, read the line.
   the built page for expected strings found them all, because the broken line
   was one of them. **None of them could have caught a blank page, and I read
   three greens as proof.**
-- Reading `npm test`'s FIRST half for a pass count while its second half
-  crashed — a green 170 printed halfway through, exit code 1 throughout.
-  **Check the exit code.**
 - Anchoring a test harness on a LINE OF CODE (`const TIERS = {`) rather than on
   prose describing the section. Dark mode made TIERS theme-dependent, the line
   stopped existing, and every intake fixture died at once.
