@@ -1518,6 +1518,51 @@ export default function App(){
     return{...hit,detail,row:filled};
   };
 
+  // \u2500\u2500 THE SHOP FOUND THE BOOK AND NOTHING ELSE \u2014 her finding, 21 Sep \u2500\u2500\u2500\u2500\u2500
+  //
+  // A REGRESSION THIS SESSION CAUSED, and worth writing down because the shape
+  // repeats. Acquavella's page for its Matisse catalogue prints a title, a
+  // price and the exhibition's dates \u2014 no ISBN, no publisher. While step one
+  // was a general web search it picked the ISBN up from the publisher or a
+  // bookseller; now that step one goes to the shop, finding the book there
+  // ENDED the lookup and the wider search never ran. **Going to the right
+  // place made the answer smaller.**
+  //
+  // So when the shop route leaves the ISBN blank, the wide search runs after
+  // all. It is not "both stages every time", which is rejected: it fires only
+  // on a catalogue that was found and is still missing its number.
+  //
+  // IT FILLS GAPS AND CANNOT DO ANYTHING ELSE. The book has already been
+  // identified in the venue's own shop, so the title, the shop link and the
+  // "in the museum shop" verdict all stand; only blank fields are written.
+  // A wide search must never be able to rename or relocate a book the shop
+  // already named.
+  const fillFromWeb=async(hit,venue,dom)=>{
+    const r=hit&&hit.row;
+    if(!r||!hit.ok||r.hasCatalogue!=="yes"||r.isbn13)return hit;
+    const book=r.catalogueTitle||r.title;
+    setLookPhase("web");
+    const s3=await searchWeb(
+      "The ISBN-13 and publisher of the printed exhibition catalogue \u201c"+book+"\u201d"
+        +(r.publisher?", published by "+r.publisher:"")+", for the exhibition at "+venue+".",
+      [book+" "+(r.publisher||"")+" ISBN",
+       book+" exhibition catalogue ISBN",
+       book+" catalogue publisher"]);
+    let detail=hit.detail+"\n"+s3.detail;
+    if(!s3.ok||!s3.results.length)return{...hit,detail};
+    const rd=await readResults(PAGE_RULES
+      +"\nBook: "+book+"\nExhibition venue: "+venue
+      +"\nThese are web search results about THIS book. Read its ISBN and publisher off them. "
+      +"If they are about a different book, answer null.\n\n"
+      +resultsForPrompt(s3.results)+PAGE_SHAPE);
+    detail=detail+"\n"+rd.detail;
+    if(!rd.ok)return{...hit,detail};
+    const filled=applyIsbnFill(r,rd.data||{},dom);
+    detail=detail+(filled.isbn13?"\nISBN found on the wider web: "+filled.isbn13
+                                :"\nNo ISBN anywhere for this one.");
+    return{...hit,detail,row:filled};
+  };
+
   async function lookupCat(row){
     const mu=MU[row.museumId];
     const dom=shopDomain(mu);
@@ -1565,7 +1610,7 @@ export default function App(){
         detail=s1.detail+"\n"+r1.detail;
         if(!r1.ok)return{row,detail,ok:false};
         const hit=settle(row,r1.data||{},dom,detail,true);
-        if(hit)return await fillIsbn(hit,venue,dom);
+        if(hit)return await fillFromWeb(await fillIsbn(hit,venue,dom),venue,dom);
       }
     }
 
@@ -2129,13 +2174,26 @@ export default function App(){
                     </div>
                   ):(
                     <div>
-                      {r.shopState==="shop"&&<div style={{fontSize:11,color:C.action,fontWeight:600,marginBottom:6}}>In the museum shop.</div>}
+                      {/* A MISSING BUTTON CANNOT REPORT ANYTHING \u2014 her ruling, 21 Sep, and the
+                          third time this app has had to learn it. The Publisher button is drawn
+                          only when a link was found, so its absence read the same whether the
+                          step found nothing, or never ran. It says so now. Most catalogues are
+                          published by the museum itself, where the publisher\u2019s page IS the shop
+                          and is deliberately refused, so "none" is the ordinary answer rather
+                          than a fault \u2014 which is exactly why the silence had to end. */}
+                      {r.shopState==="shop"&&<div style={{fontSize:11,marginBottom:6}}>
+                        <span style={{color:C.action,fontWeight:600}}>In the museum shop.</span>
+                        {!r.publisherUrl&&<span style={{color:C.soft}}> No separate publisher page.</span>}
+                      </div>}
                       {/* The dash is a STRING, not page text. Written as a bare
                           \u2014 among the words it printed those six characters
                           literally, and nothing caught it for weeks because no
                           row had ever reached this state until a catalogue was
                           found outside its venue's shop. */}
-                      {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>{"Not in the museum shop \u2014 the shop link below opens the general store; other buy options shown too."}</div>}
+                      {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
+                        {"Not in the museum shop \u2014 the shop link below opens the general store; other buy options shown too."}
+                        {!r.publisherUrl&&" No separate publisher page."}
+                      </div>}
                       {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
                       {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
                       <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",marginBottom:10,color:r.isbn13?C.ink:C.soft}}>

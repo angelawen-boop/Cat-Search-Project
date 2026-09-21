@@ -257,6 +257,26 @@ function runtime(answer, log) {
        'C-038: one we already had is never overwritten');
   }
 
+  // ── C-039 to C-042: the shop found the book and nothing else ──────────
+  // Her finding, 21 Sep. Acquavella's page for its Matisse catalogue prints a
+  // title, a price and the show's dates and no ISBN at all, so going to the
+  // shop made the answer smaller than the old web search had. The gap-fill
+  // may only ever ADD, never rename or relocate a book the shop named.
+  {
+    const api = lift({ document: {}, localStorage: {} });
+    const found = { hasCatalogue: 'yes', catalogueTitle: 'Matisse: The Pursuit of Harmony',
+                    isbn13: null, publisher: null, publisherUrl: null,
+                    shopUrl: 'https://acquavellagalleries.myshopify.com/products/matisse-the-pursuit-of-harmony',
+                    shopState: 'shop' };
+    const filled = api.applyIsbnFill(found,
+      { isbn13: '9780847873463', publisher: 'Rizzoli' }, 'acquavellagalleries.myshopify.com');
+    eq(filled.isbn13, '9780847873463', 'C-039: the number the shop page never printed');
+    eq(filled.publisher, 'Rizzoli', 'C-040: and the publisher with it');
+    eq(filled.shopUrl, found.shopUrl, 'C-041: the shop link the shop gave is untouched');
+    eq(filled.catalogueTitle, found.catalogueTitle,
+       'C-042: and so is the title \u2014 a wide search cannot rename the book');
+  }
+
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');
   process.exit(failures ? 1 : 0);
 })();

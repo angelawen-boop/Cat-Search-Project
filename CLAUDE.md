@@ -748,6 +748,31 @@ exist anywhere" really is a search.
 checked: a shop page links outward to publishers and distributors, so a link
 read off a shop page is not automatically on it.
 
+**GOING TO THE SHOP MADE ONE ANSWER SMALLER — her finding, 21 Sep, a
+regression this session caused.** Acquavella's page for its *Matisse* catalogue
+prints a title, a price and the exhibition's dates: **no ISBN and no
+publisher.** While stage one was a general web search the number came in from
+Rizzoli or a bookseller; once stage one went to the shop, finding the book
+there ENDED the lookup and the wide search never ran. She spotted it because
+that row had had its ISBN before.
+
+**So a catalogue found with no ISBN now goes wide anyway** (`fillFromWeb`).
+This is not "run both stages every time", which is rejected: it fires only on a
+book already found and still missing its number. **It fills gaps and cannot do
+anything else** — the title, the shop link and the "in the museum shop" verdict
+were settled by the venue's own shop and a wide search must never be able to
+rename or relocate them. Fixtures C-039 to C-042.
+
+**A MISSING BUTTON CANNOT REPORT ANYTHING — her ruling on the publisher line,
+and the third time this app has had to learn it.** The Publisher button is
+drawn only when a link was found, so its absence read identically whether the
+step found nothing or never ran. The card now ends the shop sentence with
+**"No separate publisher page."** in the same plain grey, her wording and her
+placement. It matters because "none" is the ORDINARY answer: most catalogues
+are published by the museum itself, where the publisher's page IS the shop and
+is deliberately refused — so the common case and the broken case looked the
+same.
+
 **THE MISSED ISBN — HER FINDING 20 SEP, BUILT 21 SEP.** The Met's *Musical
 Bodies* catalogue was found in the shop in one stage and came back with no ISBN,
 which is printed on that very shop page. The cause was structural: the connector
@@ -2225,6 +2250,11 @@ Each entry cost a real failure. Before changing the area, read the line.
   lists what is in stock" sounded right and is false: sold-out books stay
   listed everywhere we looked. **She asked whether it actually happens, and
   it does not.** The real reasons were thinner and had to be found afterwards.
+- Sending stage one to the right place and letting it END there. The shop
+  knows its own catalogue but Acquavella's page for it prints no ISBN at all,
+  so a row that HAD its number lost it. **A better source is not a complete
+  one**, and a step that stops on a partial answer is worse than the loose
+  search it replaced.
 - Rewriting a prompt and the row it fills in one go, and dropping a field
   from both. The Publisher button and its ledger field survived; nothing
   asked for the link any more and the row stored `null` every time, so the
