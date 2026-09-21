@@ -897,6 +897,37 @@ bearing on the result — which is exactly why it is code and not a habit.
 Fixtures S-001 to S-006, S-004 holding it against the JSX's own
 `mergeSweepLog` so the two cannot drift.
 
+**THE HEADLINE LINE READ THE LEDGER, NOT THE STORE — her finding, 21 Sep, and
+the wipe drill is what exposed it.** "Last refreshed" was `lastRun`: stamped
+at the moment she pressed Apply, and kept inside the LEDGER. So a wiped store
+still printed a confident time that nothing had swept at, and loading an older
+backup rolled that time back with it. **That is the 20 Sep fault still living
+one line above the drawer built to replace it** — fixed per venue, never
+carried across to the line on top. It now takes the LATEST attempt across all
+venues, out of the store. `lastRun` is still written into her export so an
+older build reads the file, and drives nothing on screen.
+
+**And the "By venue" control only rendered when there was something to list**,
+so emptying the store removed the control itself: the panel has said it holds
+nothing since the day it was built, and there was no way to open it and read
+that. Both the row and the panel are ungated on a ledger being open now, which
+the panel's own comment had claimed since 20 Sep while the row quietly
+required one.
+
+**"UNKNOWN", NEVER "NEVER" — her ruling on the wording, and it is a
+correctness point rather than a preference.** An empty store is not evidence
+that no sweep ever ran: she can be looking at rows she quarantined, and those
+only ever come from a sweep. "Never" is a claim about the WORLD made from the
+absence of a RECORD — the same shape of error as dating a venue by the moment
+she pressed a button. The panel's "No sweep imported yet." asserted the same
+thing and now states what is actually known. **Her proposed wording, "cannot
+be read from store", was declined and the distinction kept**: the store
+answered, and what it answered was nothing. A store that cannot be reached at
+all already prints its own sentence, and those two must never read alike.
+`page_renders.js` asserts both lines on the opening screen in each of the
+page's two homes, verified by restoring the old behaviour and watching them
+fail.
+
 **WRITTEN WHEN THE FILE IS READ, NOT WHEN SHE APPLIES IT.** It was written at
 Apply, on the reasoning that cancelling a review should leave no trace — correct
 WHILE THE LOG LIVED IN THE LEDGER, and wrong the moment it moved out. It is not
@@ -1960,6 +1991,22 @@ Each entry cost a real failure. Before changing the area, read the line.
   which file happened to be open: a Reset brought every quarantined row back.
   **A ruling about where a fact belongs applies to every fact of that kind in
   front of you, not only the one that prompted it.**
+- Telling her to rebuild a lost thing by choosing between files herself. "It
+  costs one re-import" was true and still put the choosing on HER, with no way
+  to know which sweep file held the picture that was lost — and sweep files
+  come from a session anyway. **A recovery step with one correct answer is
+  code, not an instruction to a human.**
+- Fixing a fault per venue and leaving the SUMMARY LINE above it reading the
+  old way. `lastRun` went on being stamped at Apply and kept in the ledger for
+  a day after `swept_at` and the per-venue drawer had replaced exactly that,
+  one line further down the same screen.
+- A control that renders only when it has something to show. Emptying the
+  sweep log removed the "By venue" button, so the panel's "there is nothing
+  here" line became unreachable at the only moment it was true. **A thing that
+  disappears cannot report anything.**
+- Printing "never" for an empty record. It is a claim about the world made
+  from the absence of a note, and she was looking at quarantined rows that
+  could only have come from a sweep. **Say what is unknown.**
 - Filtering `rows` after `applyLookback` has already copied it into `toFetch` — the
   log announced ten exclusions while all ten sat in the CSV with empty summaries.
   **A log line describing something that did not happen is worse than no log line**,
@@ -2093,29 +2140,41 @@ Each entry cost a real failure. Before changing the area, read the line.
    release. Conflict cards and per-field edits were confirmed in earlier
    sessions.
 
-   **ONE DRILL LEFT: the page's store being wiped and restored.** Nothing in
-   the app can empty that store and nothing she can do by accident will, so the
-   drill needs it cleared from outside — `ArtifactData` does it, no new control
-   required. **The two halves are restored from different places and by
-   different people, and that split is the drill's whole content:**
+   **THE WIPE-AND-RESTORE DRILL PASSED, 21 Sep — run for real, not reasoned
+   about.** Nothing in the app can empty the page's store and nothing she can
+   do by accident will, so it was cleared from outside with `ArtifactData`.
+   **The two halves come back from different places and by different people,
+   and that split is the drill's whole content:**
 
    | | Restored from | By |
    |---|---|---|
    | **Quarantine** | her export JSON, which is dated and timestamped | her |
    | **Sweep dates** | the sweep files on disk, via `scraper/sweep_log.js` | the session |
 
-   **THE SECOND ROW WAS WRONG UNTIL SHE CORRECTED IT, 21 Sep.** This step used
-   to read "she re-imports a sweep file", and she rejected it on two grounds,
-   both right: she would have to know which of several files held the lost
-   picture, and **sweep files are handed to her by a session in the first
-   place**, so the job was never hers. Reasoning and the script in §4 and §5.
+   **THE SECOND ROW WAS WRONG UNTIL SHE CORRECTED IT.** This step used to read
+   "she re-imports a sweep file", and she rejected it on two grounds, both
+   right: she would have to know which of several files held the lost picture,
+   and **sweep files are handed to her by a session in the first place**, so
+   the job was never hers. Reasoning and the script in §4 and §5.
 
-   Order: she quarantines something real and exports, both documents are read
-   back and kept, the store is emptied, she reloads to see the app know
-   nothing, she loads her export, then the session writes the rebuilt sweep
-   dates back. **A quarantine entry marked `released` is a tombstone and blocks
-   nothing** — as of 21 Sep both Louvre entries in the store are released, so a
-   wipe today would prove nothing about quarantine until she blocks a row.
+   What ran: she quarantined two real rows (artic *Raqib Shaw*, louvre
+   *Michelangelo Rodin*) and exported; both store documents were read out and
+   **committed to `docs/store_backup_2026-09-21/`** as insurance, not as a
+   restore route; the store was emptied and the emptiness confirmed by reading
+   it back; she reloaded, loaded her export, and **quarantine came back as
+   exactly those two rows**; the session then wrote the rebuilt sweep dates in
+   and she confirmed all 21 venues, the Borghese and Capodimonte gaps and the
+   three refusals all reading correctly.
+
+   **A `released` quarantine entry is a tombstone and does not survive the
+   round trip, correctly.** Her export carries only what is BLOCKED, so the
+   Met row she had quarantined and released minutes earlier came back absent
+   rather than as "released" — the same state, differently recorded.
+
+   **THE DRILL FOUND A REAL BUG, which is what a drill is for** — §4, the
+   headline freshness line. Neither the fixtures nor any amount of reasoning
+   had caught it, because it only shows when the store is empty, and nothing
+   had ever emptied it.
 
    **THE EXPORT WILL NOT CARRY THE SWEEP LOG — her ruling, 20 Sep, asked and
    declined.** It could be done safely with quarantine's own latest-wins rule,
