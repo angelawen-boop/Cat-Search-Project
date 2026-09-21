@@ -443,6 +443,12 @@ const SEARCH_TOOL   = "web_search";
 // READING A WHOLE PAGE, not a snippet. Declared 21 Sep 2026 for the ISBN gap
 // below; the connector has always offered it and only web_search was wired.
 const FETCH_TOOL    = "web_fetch";
+// HOW MANY PAGES ONE ISBN READ MAY OPEN \u2014 her Zurbar\u00e1n row, 21 Sep. Trusting
+// ONE link failed: the lookup filed the shop\u2019s CATEGORY page (a list of every
+// catalogue) as the book\u2019s page, so the read worked perfectly on the wrong
+// page. The search had already returned the real product page; nothing looked
+// at it. Three is enough to cover that and still one call.
+const PAGES_PER_FETCH = 3;
 
 // The connector wants a stable id per conversation for its free-tier limits.
 // One per page load is the honest reading of "conversation" here.
@@ -505,13 +511,15 @@ async function searchWeb(objective,queries){
 // so a full read sees it shut. Verified against that page, 21 Sep. A shop that
 // only goes and GETS those details when clicked would still come back empty
 // \u2014 no ISBN, noted, exactly as today. Never a wrong one.
-async function fetchPage(url,objective,queries){
+async function fetchPages(urls,objective,queries){
+  const list=(urls||[]).filter(Boolean).slice(0,PAGES_PER_FETCH);
+  if(!list.length)return{ok:false,results:[],detail:"no page to read"};
   const mcp=await useCap("mcp");
   if(!mcp)return{ok:false,results:[],detail:"No connector access in this viewer."};
   let res;
   try{
     res=await mcp.callTool(SEARCH_SERVER,FETCH_TOOL,{
-      urls:[url],
+      urls:list,
       objective,
       search_queries:queries,
       session_id:SEARCH_SESSION,
@@ -521,7 +529,7 @@ async function fetchPage(url,objective,queries){
   }
   const p=res&&res.payload;
   const results=(p&&Array.isArray(p.results))?p.results:[];
-  return{ok:true,results,detail:"fetched "+url+": "+results.length+" page(s)"};
+  return{ok:true,results,detail:"fetched "+list.length+" page(s), "+results.length+" answered:\n   "+list.join("\n   ")};
 }
 
 // Hand the search results to Claude and ask it to read the catalogue off them.
@@ -627,21 +635,80 @@ const today=()=>new Date().toISOString().slice(0,10);
 // is the one thing missing. Never for a row with no catalogue, and never to
 // second-guess an ISBN we already have.
 function needsIsbnFill(hit){
-  return !!(hit&&hit.ok&&hit.pageUrl&&hit.row
-            &&hit.row.hasCatalogue==="yes"&&!hit.row.isbn13);
+  return !!(hit&&hit.ok&&hit.row&&hit.row.hasCatalogue==="yes"&&!hit.row.isbn13
+            &&isbnPages(hit).length);
+}
+
+// A LOOSE NAME MATCH, and deliberately NOT normalizeTitle. That one decides
+// whether two rows are the same exhibition in her ledger, where a wrong answer
+// loses a show; this one only decides which of three pages to open first,
+// where a wrong answer costs nothing but a page. Different questions, different
+// cost, so they are not kept in step.
+const looseName=v=>String(v||"")
+  .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+  .toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+
+// WHICH PAGES TO OPEN, and the ORDER is the whole fix \u2014 her Zurbar\u00e1n row.
+//
+// The stage-one search is already locked to the venue's own shop, and it
+// returned ten of its pages. The read then picked the shop's CATEGORY page as
+// the book's, and the book's own page sat SIXTH in the same results with
+// nothing looking at it. So taking the first few addresses would not have
+// helped either.
+//
+// THE BOOK'S PAGE ANNOUNCES ITSELF: its title names the catalogue
+// ("Zurbar\u00e1n Exhibition Catalogue") while the list page's does not
+// ("Art Exhibition Catalogues"). That is mechanical, so it is code's job.
+// Pages whose title names the book come first, in the order the search gave
+// them; everything else follows; the link the read picked keeps its place
+// among them rather than being trusted outright. Deduplicated and capped.
+function isbnPages(hit){
+  // THE CATALOGUE'S title, never the exhibition's. Falling back to the
+  // exhibition name ranks the shop's Zurbaran PRINT and POSTCARDS above the
+  // book, because they all carry the artist's name. With no catalogue title
+  // nothing is reordered, which is the honest answer: we have nothing to
+  // recognise the book by.
+  const book=looseName(hit&&hit.row&&hit.row.catalogueTitle);
+  const named=c=>!!(book&&looseName(c&&c.title).includes(book));
+  const cands=((hit&&hit.candidates)||[]).map(c=>
+    (typeof c==="string")?{url:c,title:""}:{url:(c&&c.url)||"",title:(c&&c.title)||""});
+  // The picked link is a candidate like any other, but it keeps first place
+  // within its own group: usually it IS the book's page, and when it is not,
+  // a page that names the book outranks it.
+  const picked=String((hit&&hit.pageUrl)||"").trim();
+  if(picked&&!cands.some(c=>c.url===picked))cands.unshift({url:picked,title:""});
+  else if(picked)cands.sort((a,b)=>(a.url===picked?-1:0)-(b.url===picked?-1:0));
+  const out=[],seen=new Set();
+  for(const group of [cands.filter(named),cands.filter(c=>!named(c))]){
+    for(const c of group){
+      const v=String(c.url||"").trim();
+      if(!v||seen.has(v))continue;
+      seen.add(v); out.push(v);
+    }
+  }
+  return out.slice(0,PAGES_PER_FETCH);
 }
 
 // IT FILLS BLANKS AND NOTHING ELSE. A publisher already read from the search
 // results stands; a 10-digit ISBN, or anything that is not 13 digits, is
 // refused by cleanIsbn and the row keeps its blank. A page that yields nothing
 // must leave the row exactly as it was \u2014 the old answer, never a worse one.
-function applyIsbnFill(row,o){
+function applyIsbnFill(row,o,dom){
   const isbn=toIsbn13(o&&o.isbn13);
   const pub=(o&&o.publisher)?String(o.publisher).trim():"";
+  // THE PAGE THAT GAVE UP THE ISBN IS THE BOOK'S PAGE \u2014 her Zurbar\u00e1n row.
+  // The lookup had filed the shop's CATEGORY page as the shop link, so her
+  // "Museum shop" button opened a list of every catalogue rather than the
+  // book. A page printing this book's ISBN has proved what it is, so it
+  // replaces that link \u2014 but only when it is really on the venue's shop, the
+  // same check that decides shopState.
+  const src=(o&&o.sourceUrl)?String(o.sourceUrl):"";
+  const srcOnShop=!!(isbn&&src&&dom&&src.toLowerCase().includes(String(dom).toLowerCase()));
   if(!isbn&&!pub)return row;
   return{...row,
     isbn13:isbn||row.isbn13,
-    publisher:row.publisher||pub||null};
+    publisher:row.publisher||pub||null,
+    shopUrl:srcOnShop?src:row.shopUrl};
 }
 
 function shopDomain(mu){if(!mu||!mu.shopHome)return null;try{return new URL(mu.shopHome).hostname;}catch{return null;}}
@@ -1359,43 +1426,70 @@ export default function App(){
   // ── FILLING A MISSING ISBN FROM THE PAGE ITSELF \u2014 her finding, 20 Sep 2026 ──
   //
   // Runs ONLY when a catalogue was found, a page link came with it, and no
-  // ISBN did. It is not a third search: one page, read whole, because the
-  // number is printed there and the search excerpt simply stopped short of it.
+  // ISBN did. It is not another search: pages already in hand, read whole,
+  // because the number is printed there and the search excerpt stopped short.
+  //
+  // IT READS UP TO THREE PAGES, NOT ONE \u2014 her Zurbar\u00e1n row, 21 Sep, and the
+  // failure is worth keeping. The lookup filed the shop's CATEGORY page (a
+  // list of every catalogue) as the book's page, so the full read worked
+  // perfectly on the wrong page and reported no ISBN. The book's own page was
+  // sitting in the search results the whole time with nothing looking at it.
+  // ONE LINK IS A SINGLE POINT OF FAILURE WHEN A MODEL CHOSE IT.
   //
   // IT CAN ONLY EVER FILL A BLANK. An ISBN already read from the search
   // results is never overwritten, and neither is a publisher we already have.
-  // If the page yields nothing the row comes back exactly as it was \u2014 the
+  // If the pages yield nothing the row comes back exactly as it was \u2014 the
   // old answer, not a worse one.
   const PAGE_RULES=
-    "You are reading ONE web page in full: the page selling or describing a printed exhibition "
-   +"catalogue. Read the ISBN, publisher and author off THIS PAGE only.\n"
-   +"Use ONLY what the page says. Never use outside knowledge and never guess an ISBN.\n"
-   +"The number is usually in a details or specification list near the bottom, which on many shops "
-   +"sits inside a collapsed panel \u2014 read it wherever it appears.\n"
+    "You are reading whole web pages in full. ONE of them should be the page selling or "
+   +"describing the printed catalogue named below; the others may be a list of many books, a "
+   +"search page, or something unrelated. Read the ISBN and publisher off the page that is "
+   +"ABOUT THIS BOOK, and say which page you read it from.\n"
+   +"Use ONLY what the pages say. Never use outside knowledge and never guess an ISBN.\n"
+   +"The number is usually in a details, specification or product-information list near the "
+   +"bottom, which on many shops sits inside a collapsed panel \u2014 read it wherever it appears.\n"
+   +"A PAGE LISTING MANY BOOKS IS NOT THIS BOOK'S PAGE. If an ISBN appears there among several "
+   +"books, do not report it unless you are certain it belongs to this one.\n"
    +"REPORT THE ISBN EXACTLY AS THE PAGE PRINTS IT. A 13-digit one starts 978 or 979; an older "
    +"book may show a 10-digit one instead, and that is wanted too \u2014 give it as it stands and "
    +"never convert it yourself.\n"
-   +"If this page is not about the book named below, set every field null.\n";
+   +"If none of these pages is about the book named below, set every field null.\n";
   const PAGE_SHAPE=
     "\nReply with ONLY this JSON object and nothing else:\n"
-   +'{"isbn13": string|null, "publisher": string|null}\n'
-   +'Example: {"isbn13":"9781588398130","publisher":"The Metropolitan Museum of Art"}';
+   +'{"isbn13": string|null, "publisher": string|null, "sourceUrl": string|null}\n'
+   +'Example: {"isbn13":"9781588398130","publisher":"The Metropolitan Museum of Art",'
+   +'"sourceUrl":"https://store.metmuseum.org/musical-bodies-80061361"}\n'
+   +'"sourceUrl" is the address, copied exactly, of the page you read the ISBN from.';
 
-  // The page arrives as excerpts chosen against our objective. Capped, because
-  // the prompt has a ceiling and a product page can be very long.
-  const pageForPrompt=list=>list.slice(0,2).map(r=>
-    String(r.title||"")+"\n"+String(r.url||"")+"\n"
-    +(Array.isArray(r.excerpts)?r.excerpts.join("\n").replace(/[ \t]+/g," "):String(r.full_content||""))
-  ).join("\n\n").slice(0,6000);
+  // Each page arrives as excerpts chosen against our objective. Capped per
+  // page as well as overall, so one long page cannot crowd out the other two.
+  const pageForPrompt=list=>list.slice(0,PAGES_PER_FETCH).map(r=>
+    "PAGE: "+String(r.url||"")+"\n"+String(r.title||"")+"\n"
+    +(Array.isArray(r.excerpts)?r.excerpts.join("\n").replace(/[ \t]+/g," ")
+                               :String(r.full_content||"")).slice(0,4000)
+  ).join("\n\n").slice(0,9000);
 
-  const fillIsbn=async(hit,venue)=>{
+  // Pages from a search that are worth opening for an ISBN, WITH THEIR TITLES,
+  // because the title is what tells the book's own page from a list of books.
+  // On a venue with a shop, only that shop's pages \u2014 nowhere else sells its
+  // catalogue. On a venue with none, the results as they came, since a
+  // publisher's page prints the ISBN just as plainly. EVERY result is passed
+  // on: isbnPages ranks them and takes three, so cutting the list here would
+  // throw away the book's page before anything had looked at it, which is
+  // exactly what happened at the National Gallery.
+  const searchPages=(results,dom)=>(results||[])
+    .map(r=>({url:String((r&&r.url)||"").trim(),title:String((r&&r.title)||"")}))
+    .filter(c=>c.url&&(!dom||c.url.toLowerCase().includes(String(dom).toLowerCase())));
+
+  const fillIsbn=async(hit,venue,dom)=>{
     if(!needsIsbnFill(hit))return hit;
     const r=hit.row;
     const book=r.catalogueTitle||r.title;
+    const pages=isbnPages(hit);
     setLookPhase("page");
-    const f=await fetchPage(hit.pageUrl,
-      "The ISBN-13 and publisher of the book \u201c"+book+"\u201d, including any details or "
-        +"specification panel on the page.",
+    const f=await fetchPages(pages,
+      "The ISBN and publisher of the book \u201c"+book+"\u201d, including any details, "
+        +"specification or product-information panel on the page.",
       [book+" ISBN publisher details"]);
     let detail=hit.detail+"\n"+f.detail;
     if(!f.ok||!f.results.length)return{...hit,detail};
@@ -1405,9 +1499,11 @@ export default function App(){
     detail=detail+"\n"+rd.detail;
     if(!rd.ok)return{...hit,detail};
     const o=rd.data||{};
-    const filled=applyIsbnFill(r,o);
-    detail=detail+(filled.isbn13?"\nISBN read off the page: "+filled.isbn13
-                                :"\nNo ISBN on that page either.");
+    const filled=applyIsbnFill(r,o,dom);
+    detail=detail+(filled.isbn13
+      ?"\nISBN read off "+(o.sourceUrl||"the page")+": "+filled.isbn13
+        +(filled.shopUrl!==r.shopUrl?"\nShop link corrected to that page.":"")
+      :"\nNo ISBN on any of those pages.");
     return{...hit,detail,row:filled};
   };
 
@@ -1438,7 +1534,7 @@ export default function App(){
         detail=s1.detail+"\n"+r1.detail;
         if(!r1.ok)return{row,detail,ok:false};
         const hit=settle(row,r1.data||{},dom,detail,true);
-        if(hit)return await fillIsbn(hit,venue);
+        if(hit)return await fillIsbn({...hit,candidates:searchPages(s1.results,dom)},venue,dom);
       }
     }
 
@@ -1459,7 +1555,8 @@ export default function App(){
       +resultsForPrompt(s2.results)+READ_SHAPE);
     detail=detail+"\n"+r2.detail;
     if(!r2.ok)return{row,detail,ok:false};
-    return await fillIsbn(settle(row,r2.data||{},dom,detail,false),venue);
+    const hit2=settle(row,r2.data||{},dom,detail,false);
+    return await fillIsbn({...hit2,candidates:searchPages(s2.results,dom)},venue,dom);
   }
 
   async function findOneCat(id){setBusy(true);setBusyId(id);setError(null);const row=rows.find(r=>r.id===id);const out=await lookupCat(row);setDebug(out.detail);if(out.ok)await commit(rows.map(r=>r.id===id?out.row:r));else setError("Catalogue search failed for \u201c"+row.title+"\u201d.");setBusy(false);setBusyId(null);setLookPhase(null);}

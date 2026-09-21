@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 20 Sep 2026 (late) (evening)
+**Last updated:** 21 Sep 2026
 
 Cassili collects art-exhibition catalogues. They go out of print fast once a show
 closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 21
@@ -739,8 +739,8 @@ page, read once.
 
 **IT FILLS A BLANK AND CANNOT DO ANYTHING ELSE** (`applyIsbnFill`). An ISBN read
 from the search results is never second-guessed, a publisher already known is
-never overwritten, and a 10-digit ISBN is refused by `cleanIsbn` rather than
-half-converted. A page that yields nothing leaves the row exactly as it was — the
+never overwritten, and a 10-digit ISBN is taken and converted rather than
+half-read (below). A page that yields nothing leaves the row exactly as it was — the
 old answer, never a worse one.
 
 **A COLLAPSED SECTION IS REACHED, and that was her question.** The Met store
@@ -772,11 +772,35 @@ C-025. **Linking straight to an Amazon product page from an ISBN-10 was
 offered and declined.**
 
 **Both decisions sit OUTSIDE the component**, for the reason `countDecisions`
-moved out: a rule a fixture cannot reach is a rule nobody checks. Fixtures C-001
-to C-018 in `scraper/fixtures/catalogue_lookup.js`, verified by overwriting a
-known publisher and by accepting a 10-digit ISBN and watching C-016 and C-017
-fail. **It does not press the button**: the wiring from a finished lookup into
-the fill is read, not run.
+moved out: a rule a fixture cannot reach is a rule nobody checks. Fixtures
+C-001 to C-025 in `scraper/fixtures/catalogue_lookup.js`, verified by
+overwriting a known publisher and by accepting a bad check digit and watching
+them fail. **It does not press the button**: the wiring from a finished lookup
+into the fill is read, not run.
+
+**SHE RAN IT ON THREE REAL ROWS, 21 Sep, AND IT IS NOT FINISHED.** A Met row
+with no catalogue stayed correct; a Met row with one answered in a single step;
+**the National Gallery's *Zurbarán* found the book, filed it as in the shop,
+and still reported no ISBN.**
+
+**THE PAGE READ WORKED PERFECTLY ON THE WRONG PAGE, and her diagnostic said so
+in one line:** it opened
+`shop.nationalgallery.org.uk/books/exhibition-catalogues.html` — the shop's
+list of every catalogue. The book's own page was SIXTH in the same ten results
+that search returned, with nothing looking at it. **Trusting ONE link is a
+single point of failure when a model chose that link**, and the cost is not
+only the ISBN: that category page is also what her "Museum shop" button now
+opens, so the row's buy link goes to a list rather than the book.
+
+**WHAT STAGE ONE ACTUALLY DOES, because she asked and the answer was not what
+she expected.** It is a SEARCH restricted to the shop's domain — the
+`site:` hint — which returns that site's pages with a snippet of each and
+opens none of them. It has never been "go to this page": the app holds only
+each shop's home and search-box addresses, and no catalogue-listing address
+for any venue. **Her instruction is to FETCH a named page instead**, and the
+part that does not follow from it: a catalogue LISTING page prints covers and
+prices, not ISBNs, so the book's own page still has to be opened after it.
+**Nothing has been agreed and nothing is built — see §7 step 9.**
 
 ### Reading a stitched file — 13 Sep, SIGNED OFF BY HER ON REAL FILES 20 SEP
 
@@ -1090,7 +1114,7 @@ anything**; a button that throws when pressed is still uncovered.
 
 **THEY ARE ON `main` SINCE THE 20 SEP MERGE**, with the JSX they test. `npm
 test` runs 190 unit checks, then the 62 intake cases, then the load check, then
-the render check, then the 19 catalogue-lookup cases — and it is the exit code
+the render check, then the 25 catalogue-lookup cases — and it is the exit code
 that says whether all five passed, not the first number to scroll past.
 
 They only started running at all on 20 Sep: they required a `harness.js` that
@@ -2066,6 +2090,14 @@ Each entry cost a real failure. Before changing the area, read the line.
   simply absent, and the lookup reported "no ISBN" for a book whose page
   prints one. **Declaring only half a connector's tools is the same shape of
   gap**: `web_fetch` had been there all along.
+- Reading ONE page because a model named it. The stage-one read called the
+  National Gallery shop's category page the book's page, so a whole-page read
+  ran flawlessly on a list of every catalogue and reported no ISBN — while the
+  book's own page sat sixth in the same search results. **A link a model chose
+  is a guess, and building the next step on exactly one of them makes the guess
+  load-bearing.**
+- Building a fix she had not agreed to, twice in one session, while she was
+  still asking what the fault was. **Diagnose, say what it is, then STOP.**
 - Filtering `rows` after `applyLookback` has already copied it into `toFetch` — the
   log announced ten exclusions while all ten sat in the CSV with empty summaries.
   **A log line describing something that did not happen is worse than no log line**,
@@ -2257,12 +2289,21 @@ Each entry cost a real failure. Before changing the area, read the line.
    counted every later run as "before" it and a 12 Sep folder was reported as
    having lost rows against a 13 Sep one. **A comparison that can run backwards
    in time is worse than none.**
-9. **Catalogue lookup — the ISBN gap is BUILT, 21 Sep; the tuning question is
-   still open.** `web_fetch` is declared and reads the book's own page when a
-   catalogue was found with no ISBN, collapsed panels included. Detail and its
-   limits in §4; fixtures C-001 to C-018. **Not yet run by her against real
-   rows** — the Met's *Musical Bodies* is the row to try first, being the one
-   that found the fault. Then the old tuning question.
+9. **Catalogue lookup — HALF BUILT, and the open half is hers to decide.**
+   **PUBLISHED 21 Sep (version 22):** `web_fetch` is declared and reads a whole
+   page when a catalogue was found with no ISBN, collapsed panels included;
+   and a 10-digit ISBN is taken and converted rather than dropped.
+   **OPEN — her Zurbarán row:** the page it reads is whichever single link the
+   stage-one read picked, and at the National Gallery that was the shop's
+   category page, so the ISBN is still missing AND the row's shop link opens a
+   list of every catalogue. §4 has the finding.
+   **HER DIRECTION IS TO FETCH A NAMED SHOP PAGE RATHER THAN SEARCH THE SHOP'S
+   DOMAIN. NOT AGREED IN DETAIL, NOT BUILT, DO NOT BUILD IT ON THIS NOTE
+   ALONE** — a session built a different fix (rank the search results by title,
+   open the best three, and make the page that yields the ISBN the shop link)
+   without being asked. That work is committed and is NOT published; the
+   published page does not contain it. **Ask her before touching this.**
+   Then the old tuning question.
 
 10. ~~**The app is not really tested**~~ — **DONE 20 Sep, her decision to let
     the repo carry `react`, `react-dom` and `jsdom` as dev dependencies.**
