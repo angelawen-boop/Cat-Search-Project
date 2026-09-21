@@ -1,7 +1,7 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 21 Sep 2026
+**Last updated:** 21 Sep 2026 (late)
 
 Cassili collects art-exhibition catalogues. They go out of print fast once a show
 closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 21
@@ -573,12 +573,16 @@ no Code session involved. A session republishes to the same URL; she reloads.
 > ### https://claude.ai/artifact/E2WjpRgr4W5eSzYtxyfrt5
 >
 > **Republish to THAT url or a new page is created and hers stops updating.**
-> From a session that did not publish it, pass it as `url`. It carries three
-> capabilities, and losing any of them breaks a feature she uses: `downloads`
-> (Export — see below), `mcp` for her **Parallel Search** connector and
-> `sample` (the catalogue lookup). A publish that restates `capabilities` must
-> restate all three; omitting the field entirely carries them forward, which is
-> the safer default.
+> From a session that did not publish it, pass it as `url`. It carries FOUR
+> capabilities, and losing any breaks a feature she uses: `downloads` (Export —
+> see below), `mcp` for her **Parallel Search** connector, `sample` (Claude
+> reading what the connector found) and `db` (the sweep log and the quarantine
+> list). **The guide said three for a day; `db` was the one left out, and it
+> holds the two things that survive a Reset.** A publish that restates
+> `capabilities` must restate all four; omitting the field entirely carries
+> them forward, which is the safer default and what every publish has used.
+>
+> **Version 26, 21 Sep 2026**, is what she is running.
 >
 > **It is built from `main`.** Transpile the JSX to plain browser code, wrap it
 > in the HTML shell, publish. The shell is not in the repo: take it from the
@@ -605,8 +609,10 @@ baked into the tool.
 / want-catalogue / acquired / catalogue details. Losing or silently corrupting it
 is the worst outcome the design guards against.
 
-Current build: `Cat_Watch_v10.2_haiku.jsx` (1047 lines). An identical Sonnet copy
-exists on Claude chat, differing in one model string.
+Current build: `Cat_Watch_v10.2_haiku.jsx`. **A line count was typed here and went
+stale twice over** — it said 1047 while the file was 2143 — so it is not typed here
+again; `wc -l` answers it. An identical Sonnet copy exists on Claude chat,
+differing in one model string.
 
 **Ledger row shape:**
 
@@ -683,24 +689,34 @@ when it is working as designed.
 **Urgency tiers** are computed live from dates versus today (`tierFor`). No data
 written, no internet call.
 
-**Catalogue lookup (v10, re-plumbed 20 Sep 2026).** Two stages, her design,
-unchanged in behaviour: stage one asks the venue's own shop and nothing else;
-stage two, only if the shop had nothing, looks wider; nothing in either means no
-catalogue. Results are tagged shop / web / none, and the reseller links (Amazon
-AU, AbeBooks, Alibris) are built from the ISBN when there is one, the title when
-there is not.
+**Catalogue lookup — REBUILT 21 SEP 2026, and the route is now what she always
+designed.** It is no longer two stages. In order, each step running only if the
+one before left something missing:
 
-**THE SEARCHING IS FREE, THE READING IS NOT — her question, 21 Sep.** The
-connector costs nothing and needs no account, but it is a free TIER: fire enough
-lookups back to back and it rate-limits rather than bills. Every lookup also
-asks Claude to read what came back, and that runs on her usage allowance — so a
-lookup reaching both stages is two searches (free) and two readings (not). **The
-old reason for asking the shop first is therefore dead**: searching wide is no
-longer the expensive half. The order survives on better grounds — a shop hit is
-the only result that gives her a real "buy it here" link, a narrow shop search
-cannot return a novel sharing the exhibition's name, and stopping at stage one
-saves the half that still costs. **Do not flip to searching wide first, and do
-not run both stages every time.**
+1. **Go to the venue's shop** — its catalogues page and its search box for the
+   exhibition's title, opened together in one call. Take **the book's own
+   product page**, never a list.
+2. **Open that page** for the ISBN, the publisher and any publisher link.
+3. **If the ISBN is still missing, search the open web** for it. Gaps only: the
+   title, the shop link and the "in the shop" verdict were settled by the shop
+   and cannot be changed here.
+4. **If no publisher page came back, go to the publisher** — find their site
+   from their name, then search inside it.
+
+Step one finding nothing sends it to the open web to decide whether a catalogue
+exists at all; nothing anywhere means no catalogue. Results are still tagged
+shop / web / none, and the reseller links (Amazon AU, AbeBooks, Alibris) are
+still built from the ISBN when there is one and the title when there is not.
+
+**THE COST, RE-MEASURED 21 SEP.** A lookup is now up to four searches and three
+readings, where it was two and two. **The searches are free and the readings are
+not** — the connector needs no account but it is a free TIER, and it refused
+this session after roughly a dozen searches in quick succession; **the keyless
+limit is published nowhere** (Parallel's documented 600/min is for accounts with
+an API key). Every reading runs on her allowance. **Every step after the first
+is conditional**, so a shop page that prints everything still costs one search
+and one reading. **Do not make the later steps unconditional, and do not flip to
+searching wide first.**
 
 **What changed underneath.** The page used to call the Anthropic API directly.
 The viewer's sandbox now blocks a page from reaching ANY outside address, so the
@@ -740,9 +756,11 @@ search failure** — which is why the answer is to stop choosing from a general
 index at all, rather than to rank its results better.
 
 **THE CONNECTOR COULD ALWAYS DO IT.** `web_fetch` opens a page you name. It was
-declared on 21 Sep for reading a book's page and used for nothing else; stage
-one now uses it too. `web_search` is stage two only, where "does this book
-exist anywhere" really is a search.
+declared on 21 Sep for reading a book's page and used for nothing else; the shop
+step now uses it too. **`web_search` is for the three questions that really are
+searches** — does this book exist anywhere, where is its ISBN, and where does
+this publisher live — never for reaching a page whose address we already have
+or could work out.
 
 **The shop link is still checked** against the venue's shop domain, and stays
 checked: a shop page links outward to publishers and distributors, so a link
@@ -913,10 +931,10 @@ C-025. **Linking straight to an Amazon product page from an ISBN-10 was
 offered and declined.**
 
 **Both decisions sit OUTSIDE the component**, for the reason `countDecisions`
-moved out: a rule a fixture cannot reach is a rule nobody checks. Fixtures C-001
-to C-018 in `scraper/fixtures/catalogue_lookup.js`, verified by overwriting a
-known publisher and by accepting a 10-digit ISBN and watching C-016 and C-017
-fail. **It does not press the button**: the wiring from a finished lookup into
+moved out: a rule a fixture cannot reach is a rule nobody checks. Fixtures C-001 to
+C-051 in `scraper/fixtures/catalogue_lookup.js`, verified by overwriting a known
+publisher, by accepting a 10-digit ISBN, and by putting the old ISBN-only gate
+back and watching C-013a fail. **It does not press the button**: the wiring from a finished lookup into
 the fill is read, not run.
 
 ### Reading a stitched file — 13 Sep, SIGNED OFF BY HER ON REAL FILES 20 SEP
@@ -1231,8 +1249,11 @@ anything**; a button that throws when pressed is still uncovered.
 
 **THEY ARE ON `main` SINCE THE 20 SEP MERGE**, with the JSX they test. `npm
 test` runs 190 unit checks, then the 62 intake cases, then the load check, then
-the render check, then the 19 catalogue-lookup cases — and it is the exit code
-that says whether all five passed, not the first number to scroll past.
+the render check, then the catalogue-lookup cases (54 on 21 Sep) — and it is
+the exit code that says whether all five passed, not the first number to scroll
+past. **An early `return` anywhere in a fixture file exits the whole suite and
+the summary line just stops printing** — the fourth silent suite this guide has
+had to record. Await, never return.
 
 They only started running at all on 20 Sep: they required a `harness.js` that
 had never existed, and the test script did not name them either — two
@@ -2527,12 +2548,25 @@ Each entry cost a real failure. Before changing the area, read the line.
    counted every later run as "before" it and a 12 Sep folder was reported as
    having lost rows against a 13 Sep one. **A comparison that can run backwards
    in time is worse than none.**
-9. **Catalogue lookup — the ISBN gap is BUILT, 21 Sep; the tuning question is
-   still open.** `web_fetch` is declared and reads the book's own page when a
-   catalogue was found with no ISBN, collapsed panels included. Detail and its
-   limits in §4; fixtures C-001 to C-018. **Not yet run by her against real
-   rows** — the Met's *Musical Bodies* is the row to try first, being the one
-   that found the fault. Then the old tuning question.
+9. **Catalogue lookup — REBUILT AND RUN BY HER, 21 Sep. Open: the other 14
+   venues, and the old tuning question.** The route is in §4. **What she
+   confirmed herself, on real rows:** the National Gallery's *Zurbarán* now
+   returns ISBN 978-1857097399 and a shop link to the book rather than to the
+   list; the other three seed venues' shop links search by the ISBN found;
+   Acquavella's *Matisse* returns the publisher's page. **What she found and I
+   had to fix, in order**: the shop step ending on a book with no ISBN, the
+   Publisher button being unreachable, a step that dies looking like an answer,
+   and four rounds of query-tuning where the answer was to go to the publisher's
+   site. Fixtures C-001 to C-051.
+
+   **STILL OPEN.** The 14 venues she has no rows for yet — their shop addresses
+   are checked but no lookup has run against them; that happens during the 320
+   decisions. `khm`'s shop queues every request and `uffizi` has no catalogues
+   page, so both behave as if they had no shop; neither has been seen live.
+   Then the old tuning question.
+
+   **Her seed cannot test much more.** Four venues, two of which publish their
+   own catalogues, so the publisher step has one real test case in it.
 
 10. ~~**The app is not really tested**~~ — **DONE 20 Sep, her decision to let
     the repo carry `react`, `react-dom` and `jsdom` as dev dependencies.**
