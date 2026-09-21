@@ -573,6 +573,53 @@ function shelfPages(url){
   return out;
 }
 
+// \u2500\u2500 THE PUBLISHER'S OWN SEARCH BOX \u2014 her ruling, 21 Sep 2026 \u2500\u2500\u2500\u2500\u2500\u2500\u2500
+//
+// GO TO THE SITE, DO NOT SEARCH ABOUT IT. The publisher step used to ask a
+// general web index for "site:hannibalbooks.be <title>" and hand the handful
+// of links it returned to a model to choose between. That is the very pattern
+// removed from stage one on 21 Sep, left standing one step further down.
+//
+// WHAT IT COST, her finding: Metamorphoses. The index returned Hannibal's
+// homepage, two lists and the DUTCH edition's page, so the model was asked to
+// judge "Metamorfosen \u2013 Ovidius en de kunsten" against a row reading
+// "Metamorphoses: Ovid and the Arts", decided it was a different book, and
+// answered nothing. The book's page was in its hand.
+//
+// AND THE ISBN ONLY WORKS HERE. Asked of a general index, site:hannibalbooks.be
+// 9789493416543 returns nine unrelated Hannibal books \u2014 the number is not
+// indexed. Put into the publisher's OWN search box it returns exactly one
+// result, the right book, which is how she found it by hand.
+//
+// ENGLISH FIRST, because a Dutch publisher serves the same book in both and
+// the English page is the one she can read. Hannibal's is /en/search?q= and
+// its results link to /en/ pages, so asking the English box first means the
+// English address comes back with no rewriting of anyone's URL.
+//
+// FOUR SHAPES, ONE CALL. Nearly every site uses one of these, a shape that
+// does not exist comes back empty, and they all go over together \u2014 the same
+// reasoning as shelfPages, where depth is free because the call is already
+// being made. There is no list of publishers to write addresses down from, so
+// this is the honest substitute for one.
+function publisherSearchPages(host,term){
+  if(!host||!term)return[];
+  const q=encodeURIComponent(String(term).trim());
+  if(!q)return[];
+  return["https://"+host+"/en/search?q="+q,
+         "https://"+host+"/search?q="+q,
+         "https://"+host+"/en/?s="+q,
+         "https://"+host+"/?s="+q];
+}
+
+// A link is only the publisher's if it is ON the publisher's site. Compared
+// with any leading www. dropped from both sides: one search can answer
+// hannibalbooks.be and the next www.hannibalbooks.be, and an exact match
+// between two separate searches throws the right page away over four letters.
+function onPublisherHost(u,host){
+  const bare=h=>String(h||"").toLowerCase().replace(/^www\./,"");
+  try{ return !!host&&bare(new URL(String(u)).hostname)===bare(host); }catch{ return false; }
+}
+
 function shopPagesFor(mu,title){
   const out=[];
   if(mu&&mu.shopCatalogues)out.push(...shelfPages(mu.shopCatalogues));
@@ -1627,31 +1674,49 @@ export default function App(){
     const pubHost=publisherDomainFrom(d1.results,r.publisher);
     if(!pubHost)return{...hit,detail:detail+"\nCouldn\u2019t identify the publisher\u2019s own website."};
 
-    // \u2500\u2500 THEN SEARCH INSIDE IT, exactly as step one searches inside the shop \u2500\u2500
-    const sp=await searchWeb(
-      "The page on "+pubHost+" for the book \u201c"+book+"\u201d"+(isbn?", ISBN "+isbn:"")+".",
-      isbn?["site:"+pubHost+" "+book,"site:"+pubHost+" "+isbn,"site:"+pubHost+" "+book.split(/[:\u2013\u2014-]/)[0].trim()]
-          :["site:"+pubHost+" "+book,"site:"+pubHost+" "+book.split(/[:\u2013\u2014-]/)[0].trim()]);
+    // \u2500\u2500 THEN USE THEIR OWN SEARCH BOX, exactly as step one uses the shop's \u2500\u2500
+    //
+    // BY ISBN WHERE WE HAVE ONE. It is the one term that cannot mean another
+    // book, and a publisher's own box matches it \u2014 which a general index does
+    // not, having never indexed the number. Title only when there is no ISBN.
+    const term=isbn||book;
+    const pages=publisherSearchPages(pubHost,term);
+    const sp=await fetchPage(pages,
+      "The publisher's own page for the book \u201c"+book+"\u201d"+(isbn?", ISBN "+isbn:"")+".",
+      [term]);
     detail=detail+"\n"+sp.detail;
     if(!sp.ok)return{...hit,detail,trouble:sp.detail};
-    const onSite=(sp.results||[]).filter(x=>{try{return new URL(x.url).hostname.toLowerCase()===pubHost;}catch{return false;}});
-    if(!onSite.length)return{...hit,detail:detail+"\nNothing for this book on "+pubHost+"."};
+    if(!sp.results.length)return{...hit,detail:detail+"\nTheir search box answered nothing for "+term+"."};
 
+    // READ IT IN ENGLISH, AND A TRANSLATED TITLE IS THE SAME BOOK \u2014 her ruling.
+    // This is what lost Metamorphoses: handed "Metamorfosen \u2013 Ovidius en de
+    // kunsten" against a row reading "Metamorphoses: Ovid and the Arts", the
+    // model called it a different book and answered nothing.
     const rd=await readResults(
-      "These are pages from ONE publisher\u2019s own website. Pick the page FOR THIS BOOK.\n"
-     +"Prefer the book\u2019s own page over a list of many books. If only a list mentions it, "
-     +"give the list. If none of them is about this book, answer null.\n"
+      "These are results from the publisher\u2019s OWN website search. Give the link to the "
+     +"book\u2019s own page.\n"
+     +"READ THESE IN ENGLISH. This publisher may write in Dutch, French, German or Italian. "
+     +"A title in another language is the SAME BOOK when it is this book translated \u2014 "
+     +"\u201cMetamorfosen \u2013 Ovidius en de kunsten\u201d IS \u201cMetamorphoses: Ovid and the Arts\u201d. "
+     +"NEVER reject a page because its title is not in English.\n"
+     +"Prefer an English address (one with /en/ in it) when the results show both.\n"
+     +"A page listing many books is not the book. If nothing here is this book, answer null.\n"
      +"Use ONLY these results. Never invent a link.\n"
      +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+r.publisher
      +"\nExhibition venue: "+venue+"\n\n"
-     +resultsForPrompt(onSite)
+     +resultsForPrompt(sp.results,3000)
      +"\nReply with ONLY this JSON object and nothing else:\n"
      +'{"publisherUrl": string|null}\n'
-     +'Example: {"publisherUrl":"https://hannibalbooks.be/metamorfosen-ovidius-en-de-kunsten"}');
+     +'Example: {"publisherUrl":"https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten"}');
     detail=detail+"\n"+rd.detail;
     if(!rd.ok)return{...hit,detail,trouble:rd.detail};
-    const url=cleanPublisherUrl((rd.data||{}).publisherUrl,dom);
-    detail=detail+(url?"\nPublisher\u2019s page: "+url:"\nNo page for this book on "+pubHost+".");
+    const given=(rd.data||{}).publisherUrl;
+    // ON THEIR SITE, not merely somewhere. A search-results page carries
+    // outbound links too, and the www. is ignored on both sides.
+    const url=onPublisherHost(given,pubHost)?cleanPublisherUrl(given,dom):null;
+    detail=detail+(url?"\nPublisher\u2019s page: "+url
+                      :given?"\nThat link was not on "+pubHost+": "+given
+                            :"\nNo page for this book on "+pubHost+".");
     return url?{...hit,detail,row:{...r,publisherUrl:url}}:{...hit,detail};
   };
 

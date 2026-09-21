@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom };')(
+    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, publisherSearchPages, onPublisherHost };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -319,6 +319,42 @@ function runtime(answer, log) {
     eq(d('Hannibal Books', ['https://www.amazon.com/x', 'https://www.abebooks.com/y']), null,
        'C-050: booksellers are not the publisher, so nothing is returned');
     eq(d('', ['https://hannibalbooks.be/']), null, 'C-051: no publisher name, no guess');
+  }
+
+  // \u2500\u2500 C-052 to C-060: the publisher's own search box \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // Her ruling, 21 Sep. The step used to ask a general index for
+  // "site:hannibalbooks.be <title>" and let a model choose between the links
+  // it returned. That is the pattern removed from stage one the same day,
+  // left standing one step down, and it lost Metamorphoses twice over: the
+  // index does not index the ISBN (nine unrelated Hannibal books came back),
+  // and the only book page it did return was the Dutch edition, which the
+  // model rejected as a different book.
+  {
+    const api = lift({ document: {}, localStorage: {} });
+    const byIsbn = api.publisherSearchPages('hannibalbooks.be', '9789493416543');
+
+    eq(byIsbn[0], 'https://hannibalbooks.be/en/search?q=9789493416543',
+       'C-052: the English box is asked first \u2014 her page, her language');
+    eq(byIsbn.length, 4, 'C-053: four shapes, one call, an absent one costs nothing');
+    eq(byIsbn.includes('https://hannibalbooks.be/search?q=9789493416543'), true,
+       'C-054: a site with no /en/ is reached by the same call');
+    eq(byIsbn.includes('https://hannibalbooks.be/?s=9789493416543'), true,
+       'C-055: and so is a WordPress one');
+    eq(api.publisherSearchPages('hannibalbooks.be', 'Ovid & the Arts')[1],
+       'https://hannibalbooks.be/search?q=Ovid%20%26%20the%20Arts',
+       'C-056: a title with an ampersand survives the trip');
+    eq(api.publisherSearchPages('', '9789493416543').length, 0,
+       'C-057: no publisher site, no addresses invented');
+    eq(api.publisherSearchPages('hannibalbooks.be', '   ').length, 0,
+       'C-058: and nothing to search for is not a search');
+
+    // www. ON ONE SIDE ONLY. The host is found by one search and the pages
+    // come back from another, so an exact string match threw the right page
+    // away over four letters.
+    eq(api.onPublisherHost('https://www.hannibalbooks.be/en/x', 'hannibalbooks.be'), true,
+       'C-059: a www. on one side only is still the same site');
+    eq(api.onPublisherHost('https://www.amazon.com/x', 'hannibalbooks.be'), false,
+       'C-060: a bookseller linked from their page is not their page');
   }
 
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');

@@ -789,10 +789,52 @@ books, press, publishing, editions, **university** — carry nothing and are
 dropped, or any university press would match any other. Fixtures C-046 to
 C-051.
 
-Then it searches INSIDE that domain for the title, the way stage one searches
-inside the shop, and **only results actually on that host are read**.
-`site:hannibalbooks.be Metamorphoses` returns four pages, all on the
-publisher's site, including the book's own. Verified 21 Sep.
+**THEN IT OPENS THEIR OWN SEARCH BOX — her ruling, 21 Sep, and the sentence
+that used to sit here was wrong.** It said the step searches inside the domain,
+`site:hannibalbooks.be Metamorphoses`, and called that "the way stage one
+searches inside the shop". It is not: stage one OPENS the shop's box, and a
+`site:` query is a general index with a hint in it — the exact thing §4 spent
+the day removing, left standing one step further down.
+
+**WHAT IT COST: Metamorphoses, twice over, and she found both.** The index
+returned Hannibal's homepage, two lists and the DUTCH edition's page. The model
+was handed *Metamorfosen – Ovidius en de kunsten* against a row reading
+*Metamorphoses: Ovid and the Arts*, judged it a different book, and answered
+nothing. **The book's page was in its hand.** And `site:hannibalbooks.be
+9789493416543` returns **nine unrelated Hannibal books** — a general index has
+never indexed that number.
+
+**THE PUBLISHER'S OWN BOX MATCHES THE ISBN. She proved it by hand**:
+`hannibalbooks.be/en/search?q=9789493416543` returns exactly one product, the
+right book, in English. So the step searches BY ISBN where it has one and by
+title only where it does not — the ISBN cannot mean another book.
+
+**I REPORTED THE OPPOSITE AND IT WAS A BAD TEST.** Asked whether their box
+could find the book by ISBN, I ran a `site:` query against a general index and
+reported "no". Wrong question, worthless answer, and she caught it in one
+screenshot.
+
+**FOUR ADDRESS SHAPES, ONE CALL** (`publisherSearchPages`): `/en/search?q=`,
+`/search?q=`, `/en/?s=`, `/?s=`. English first, because a Dutch publisher
+serves the same book in both and its English results link to `/en/` pages, so
+the English address comes back without rewriting anyone's URL. A shape that
+does not exist comes back empty — the same free-depth reasoning as
+`shelfPages`. There is no list of publishers to write addresses down from the
+way the 18 shops were, and this is the honest substitute.
+
+**A TRANSLATED TITLE IS THE SAME BOOK, and the prompt now says so outright**,
+naming the Metamorfosen case. It also says to read the results in English and
+to prefer an English address when both are shown.
+
+**THE HOST IS COMPARED WITH `www.` DROPPED FROM BOTH SIDES**
+(`onPublisherHost`). The host is found by one search and the pages come back
+from another, so an exact string match threw the right page away over four
+letters. Fixtures C-052 to C-060.
+
+**STILL OPEN:** the step's three dead ends (no publisher site identified, the
+box answered nothing, the link was not on their site) all still print the one
+sentence "No separate publisher page." on her card. Only the connector refusing
+speaks up.
 
 **A row with no ISBN loses nothing here**, unlike the query-tuning versions:
 the title is searched inside one small site rather than against the whole web,
@@ -2216,6 +2258,19 @@ Each entry cost a real failure. Before changing the area, read the line.
 - Never writing down 17 of 18 shops' search addresses, and leaving the one
   venue that had one pointing at a dead page. **A field that is empty for most
   rows and wrong for one of the rest reads exactly like a field that works.**
+- Searching *about* a website instead of going to it, one step below the
+  place that had just been fixed. `site:hannibalbooks.be <title>` handed a
+  model Hannibal's homepage, two lists and the book's DUTCH page; it judged
+  *Metamorfosen – Ovidius en de kunsten* a different book from
+  *Metamorphoses: Ovid and the Arts* and answered nothing, with the right page
+  in its hand. The same query by ISBN returned nine unrelated Hannibal books.
+  Their own search box answers the ISBN with one result. **A ruling about where
+  to look applies to every step that looks, not only the one that prompted it.**
+- Rejecting a page because its title is in another language. A Dutch publisher
+  prints the same book in Dutch and English on one page with a language toggle.
+- Answering "can their search box find it by ISBN?" by running a DIFFERENT
+  search and reporting the result as a fact about the box. **She settled it
+  with one screenshot of the box itself.**
 - Filtering `rows` after `applyLookback` has already copied it into `toFetch` — the
   log announced ten exclusions while all ten sat in the CSV with empty summaries.
   **A log line describing something that did not happen is worse than no log line**,
