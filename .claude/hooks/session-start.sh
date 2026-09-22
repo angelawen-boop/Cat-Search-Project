@@ -85,4 +85,10 @@ fi
 npm install --no-audit --no-fund >/dev/null 2>&1 || note="$note  (npm install failed — run it by hand before npm test.)"
 
 # Hand the note to the session as context.
-printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"Branch policy for this repo: main is the trunk; work and push there, not on the auto-assigned session branch. %s"}}\n' "$note"
+#
+# THE PUBLISH LINE IS HERE BECAUSE SHE ASKED FOR IT, 22 Sep 2026: she had
+# watched too many sessions discover the publishing rules by being refused.
+# One sentence, because it fires on EVERY session and most never publish —
+# the full procedure is printed by build/build_app.js, which a session that
+# IS publishing has to run anyway.
+printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"Branch policy for this repo: main is the trunk; work and push there, not on the auto-assigned session branch. %s  To publish the app: run `node build/build_app.js` FIRST and follow the steps it prints — do not hand-build the page or publish before reading the live artifact in full, which is refused."}}\n' "$note"

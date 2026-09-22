@@ -21,3 +21,4 @@ node_modules/
 scraper/output/**/.compress_done.json
 scraper/output/eval_pending.json
 scraper/output/eval_answers.json
+build/dist/

@@ -579,11 +579,25 @@ Code session involved. A session republishes to the same URL; she reloads.
 > publish that restates `capabilities` must restate all four; omitting the field
 > carries them forward, the default every publish has used.
 >
-> **Version 26, 21 Sep 2026** is what she runs. **Built from `main`:** transpile
-> the JSX, wrap it in the HTML shell, publish. The shell is not in the repo —
-> take it from the published page (`action: "read"` hands it over: everything
-> before the script's first line and the two lines after its last). Rebuilding it
-> from memory loses the pre-paint background.
+> **Version 29, 22 Sep 2026** is what she runs. **BUILDING IT IS CODE'S JOB
+> NOW — `node build/build_app.js`**, which transpiles, wraps it in the shell,
+> proves it parses and writes `build/dist/index.html`. It reproduces version 29
+> byte for byte. **The shell is committed** (`build/shell_head.html`,
+> `build/shell_tail.html`, taken from the live page and verified against it):
+> it used to say "take it from the published page", which was one more thing to
+> remember and one more way to lose the pre-paint background.
+> `--shell-from <saved live page>` says whether the committed one still matches.
+>
+> **PUBLISHING CANNOT BE AUTOMATED and the order matters — her question,
+> 22 Sep.** The service refuses a publish from a session that has not VIEWED
+> the live version, and viewing means READING EVERY LINE of the ~3,000-line
+> saved copy; no script or hook can do that reading. Worse, a second refusal
+> follows a first: the same bytes resent are rejected as "resent unchanged"
+> even once the reading is done. So: **read the URL, read the whole saved file,
+> then build, then publish** — in that order it works first time.
+> `build_app.js` prints those steps when it finishes, which is the trigger
+> sitting next to the code rather than in an index, and the session-start hook
+> carries one line pointing at it.
 >
 > **Never republish while she has it open** — house rule, §1.
 
