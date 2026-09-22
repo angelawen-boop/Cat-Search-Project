@@ -1225,6 +1225,32 @@ test('R-005: moma is HERS, and says out loud that it needs a visible browser', (
   assert.match(block, /isNav[\s\S]*history/, 'the archive link must still be treated as navigation');
 });
 
+test('R-006: moma names its blurb container and drops installations', () => {
+  const at = SWEEP_SRC.indexOf("\n  moma: {");
+  const rest = SWEEP_SRC.slice(at + 1);
+  const next = rest.search(/\n  '?[a-z-]+'?: \{\n    name: /);
+  const block = next > -1 ? rest.slice(0, next) : rest;
+
+  // Read from the page she saved, not guessed: #description holds the
+  // curatorial paragraphs and stops before "Organized by", the funders, the
+  // Events block and the related articles that all carry their own dates.
+  assert.match(block, /description:\s*'#description'/);
+
+  // /calendar/exhibitions/ serves installations too, and the address does not
+  // say which is which. The page's own tag does.
+  const m = block.match(/excludeLabelledOnPage:\s*(\/.*?\/[a-z]*)/);
+  assert.ok(m, 'moma should drop rows the venue labels as something else');
+
+  // DROP WHAT IS NAMED, never keep-only. An unrecognised label must reach her
+  // approval pile rather than vanish. Prove it by asking the rule directly.
+  const rule = eval(m[1]);
+  assert.ok(rule.test('Installation'), 'Creativity Lab is an installation and must go');
+  assert.ok(!rule.test('Exhibition'), "It's Alive is an exhibition and must stay");
+  assert.ok(!rule.test('Ticketed Exhibition'), 'a word we have not seen must NOT be dropped');
+  assert.ok(!rule.test('Gallery installation of works on paper'),
+    'the word inside a sentence is not the venue\'s tag');
+});
+
 test('R-003: every other venue is the container\'s', () => {
   for (const c of ['ng', 'rijks', 'acq', 'frick', 'menil', 'va', 'louvre', 'capo',
                    'uffizi', 'brera', 'khm', 'dellav', 'wallace', 'borghese',

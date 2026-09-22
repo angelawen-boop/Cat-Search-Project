@@ -3638,6 +3638,35 @@ const VENUES = {
                 || /\/calendar\/exhibitions\/history\/?$/.test(href),
     title: { heading: true },
 
+    // THE BLURB HAS ITS OWN CONTAINER, AND NOTHING ELSE IS IN IT.
+    //
+    // Read from the page she saved on 22 Sep, not guessed: `<div id="description">`
+    // holds the curatorial paragraphs and stops before everything that follows
+    // them. That matters here more than at most venues, because what follows is
+    // a minefield — "Organized by…", then pages of funders, then an Events block
+    // listing member-preview times, then related articles carrying their own
+    // publication dates. Naming the container skips all of it outright rather
+    // than filtering it sentence by sentence afterwards.
+    description: '#description',
+
+    // WHAT MoMA CALLS THE THING, PRINTED ON ITS OWN PAGE.
+    //
+    // Her scope is exhibitions. `/calendar/exhibitions/` also serves
+    // INSTALLATIONS — Creativity Lab: Art of the Book is one — and the address
+    // gives no hint which is which. The page does: a tag beside the title reads
+    // "Exhibition" on It's Alive and "Installation" on Creativity Lab.
+    //
+    // DROP WHAT IS NAMED, rather than keep only what is. If MoMA uses a third
+    // word neither of us has seen, this lets that row through to her approval
+    // pile, where she can reject it. Keeping only "Exhibition" would delete it
+    // silently, and a row that vanishes is the failure this project guards
+    // against hardest.
+    //
+    // The gallery rooms in "In the galleries" need no rule at all: they live at
+    // /calendar/floors/N and /calendar/galleries/N, which `selector` never
+    // matches. Her finding, 22 Sep — it had been assumed they were mixed in.
+    excludeLabelledOnPage: /^\s*Installation\s*$/im,
+
     // HER MACHINE ONLY, and it must be a browser with a past — see the note on
     // `headed` below and §2 of the project guide.
     //
