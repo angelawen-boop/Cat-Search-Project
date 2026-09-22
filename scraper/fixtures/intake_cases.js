@@ -343,6 +343,47 @@ check('18f: the real sample file starts with every card undecided',
     H.offerPartialApply(allRefused)===false, allRefused);
 }
 
+// 18i. THE CONFIRM BOX MUST SIT ABOVE EVERY OTHER OVERLAY — her finding,
+// 22 Sep 2026, on the first press of the partial-apply button.
+//
+// WHAT HAPPENED. The confirm was raised at 1000 while the refresh review sits
+// at 1100, so a confirm asked FROM INSIDE the review painted behind it. The
+// box existed, the scrim was drawn, and every pixel of both was covered. The
+// button read as dead and nothing on screen said otherwise.
+//
+// WHY NO EXISTING CHECK COULD SEE IT. `tsc` says it parses, the unit suite
+// tests lifted functions, and page_renders draws the OPENING screen — where no
+// overlay exists at all. The fault was a pair of numbers in two different
+// places agreeing wrongly, which is only visible by comparing them.
+//
+// SO THIS COMPARES THEM, and it is honest about being a source check rather
+// than a rendered one: it reads every zIndex the file paints and asserts the
+// confirm layer is the largest. That is the actual rule — a confirm is the
+// thing asked last and must be answered first, whatever raised it — and it
+// catches the real way this returns, which is a NEW overlay added above it by
+// someone who never saw this note.
+{
+  const src = require('fs').readFileSync(
+    require('path').join(__dirname, '..', '..', 'Cat_Watch.jsx'), 'utf8');
+
+  const all = [...src.matchAll(/zIndex\s*:\s*(\d+)/g)].map(m => Number(m[1]));
+  check('18i: the page paints layered overlays at all', all.length >= 3, {found: all.length});
+
+  // The confirm box's own layer, taken from its block rather than from a
+  // count: anchored on the prose above it, never on the number itself.
+  const anchor = src.indexOf('ABOVE THE REVIEW PANEL, NOT UNDER IT');
+  check('18i1: the confirm box still carries its layering note', anchor > -1, {anchor});
+  const confirmZ = anchor > -1
+    ? Number((/zIndex\s*:\s*(\d+)/.exec(src.slice(anchor)) || [])[1])
+    : NaN;
+
+  const others = all.filter(z => z !== confirmZ);
+  const highestOther = Math.max(...others);
+  check('18i2: nothing is painted above the confirm box',
+    Number.isFinite(confirmZ) && confirmZ > highestOther,
+    {confirm: confirmZ, highestOther, all});
+}
+
 // 19. THE VENUE ORDER IS HERS, and one array drives all three places it shows
 // (the freshness drawer, the filter chips, the venue headings on the refresh
 // screen). Written down here so a later session reshuffling the array for

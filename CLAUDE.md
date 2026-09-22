@@ -294,7 +294,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 32, 22 Sep 2026.** The file is `Cat_Watch.jsx` — renamed from
+**Version 32.1, 22 Sep 2026.** The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -391,6 +391,10 @@ evidence and every finding: `docs/app.md`.**
 - **Quarantine ("never add this")**, keyed on normalised URL. Latest decision
   wins, which needs tombstones — a release is RECORDED, not merely absent.
 - **Per-venue freshness**, two dates, from `swept_at`.
+- **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
+  at 1100. It sat below it and a confirm raised from inside the review painted
+  where nothing could see it, so the button looked dead. **Any new overlay goes
+  BELOW that number.** Fixture 18i compares them.
 - **Dark mode**, every colour named; the shell paints a ground before React runs.
 - **Sorting, timestamps and dividers** — the timestamp scheme is the only way to
   tell this import from earlier ones from the seed. **Do NOT "simplify" it.**

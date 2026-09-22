@@ -13,7 +13,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "32";
+const APP_VERSION = "32.1";
 const APP_VERSION_DATE = "22 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -2999,17 +2999,17 @@ export default function App(){
                   block leaves and built at her ask. A number she cannot act on
                   is the thing that makes a hard gate feel arbitrary. It opens
                   the venue holding the first undecided card, because a
-                  collapsed venue would otherwise scroll to nothing. */}
-              {undecidedCount>0&&<button onClick={()=>{
-                  const hit=proposals.findIndex((p,i)=>isUndecided(p,i));
-                  if(hit<0)return;
-                  const v=proposals[hit].venueId;
-                  if(v)setOpenVenues(o=>({...o,[v]:true}));
-                  setOpenBands(o=>({...o,merged:true,mergedconf:true,nolink:true}));
-                  setTimeout(()=>{const el=document.getElementById("prop-"+hit);
-                    if(el)el.scrollIntoView({behavior:"smooth",block:"center"});},60);
-                }} style={{...sBtn,color:C.accent,borderColor:C.accent,fontWeight:600}}>
-                {undecidedCount} undecided {"\u2192"}</button>}
+                  collapsed venue would otherwise scroll to nothing.
+
+                  REMOVED 22 Sep 2026 — her ruling on seeing the finished
+                  footer: "clutter and duplication". Three things said the same
+                  number on one screen — this, the disabled button beside it,
+                  and the per-venue "N to decide" on every heading. The venue
+                  headings are the better answer, because they say WHERE as well
+                  as how many, and a closed venue still declares what it holds.
+
+                  DO NOT PUT IT BACK as a fix for "she cannot find the remaining
+                  cards" — she can, from the headings. Git holds it. */}
               {/* EVERY CARD MUST BE DECIDED BEFORE THE LEDGER MOVES — her ruling,
                   20 Sep. applyRefresh SKIPPED an undecided card silently: not
                   applied, and not remembered either, so it returned on the next
@@ -3071,8 +3071,24 @@ export default function App(){
           </div>
         </div>
       )}
+      {/* ABOVE THE REVIEW PANEL, NOT UNDER IT — her finding, 22 Sep 2026, on
+          the very first press of the partial-apply button.
+
+          It sat at 1000 while the refresh review sits at 1100, so a confirm
+          raised FROM inside the review painted behind it: the box was built,
+          the scrim was drawn, and every pixel of both was covered. The button
+          read as dead. Nothing was wrong with the button.
+
+          IT WENT UNSEEN BECAUSE OF WHERE IT USED TO BE RAISED FROM. Import and
+          Reset both live on the header, with no review open, so 1000 was above
+          everything that existed at the time and the gap could not show. The
+          first caller from inside the review found it immediately.
+
+          SO IT IS THE TOP LAYER NOW, which is what a confirm is: the thing
+          asked last is the thing answered first, whatever raised it. Any new
+          overlay belongs BELOW this number, never above it. */}
       {confirmBox&&(
-        <div style={{position:"fixed",inset:0,background:C.scrim,display:"grid",placeItems:"center",zIndex:1000,padding:16}}>
+        <div style={{position:"fixed",inset:0,background:C.scrim,display:"grid",placeItems:"center",zIndex:1200,padding:16}}>
           <div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:8,maxWidth:420,padding:"18px 20px",boxShadow:"0 6px 24px rgba(0,0,0,0.25)"}}>
             {/* The heading is now the CALLER'S, because this box no longer only
                 guards replacing the screen. The old wording stays as the
