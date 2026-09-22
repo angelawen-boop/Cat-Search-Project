@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote };')(
+    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -404,6 +404,47 @@ function runtime(answer, log) {
     const said = ['container', 'site', 'nosite', 'unnamed', null]
       .map(k => note(k, k === 'container' || k === 'site'));
     eq(new Set(said).size, said.length, 'C-069a: no two outcomes print the same sentence');
+  }
+
+  // C-070 to C-078: a museum's own imprint has no publisher page to find.
+  // Her ruling 22 Sep, and her CORRECTION of my first attempt, which is the
+  // part worth testing. I had matched the publisher's name against the
+  // VENUE's, so every Met and National Gallery catalogue would have skipped
+  // the search. She named the two ordinary ways that breaks - a blockbuster
+  // given to a big art-book house, and a joint show where the other museum
+  // prints it - and both are asserted here.
+  {
+    const api = lift({ document: {}, localStorage: {} });
+
+    eq(api.isSelfPublisher('National Gallery Global'), true,
+       'C-070: the National Gallery’s own imprint is on the list');
+    eq(api.isSelfPublisher('The Metropolitan Museum of Art'), true,
+       'C-071: so is the Met’s, with or without a leading "The"');
+    eq(api.isSelfPublisher('Metropolitan Museum of Art'), true,
+       'C-072: a leading "The" is noise, not a different publisher');
+
+    // THE TWO CASES SHE NAMED. A venue-based rule would have suppressed the
+    // search on both of these; a publisher-based one cannot.
+    eq(api.isSelfPublisher('Thames & Hudson'), false,
+       'C-073: a blockbuster given to a big art-book house is still searched for');
+    eq(api.isSelfPublisher('Mus\u00e9e du Louvre \u00c9ditions'), false,
+       'C-074: a joint show whose OTHER museum prints it is still searched for');
+
+    // Nothing is inferred from the shape of a name.
+    eq(api.isSelfPublisher('Tate Publishing'), false,
+       'C-075: a museum imprint we have not actually seen is not assumed');
+    eq(api.isSelfPublisher('Rijksmuseum'), false,
+       'C-076: nor is a venue name that happens to appear as a publisher');
+    eq(api.isSelfPublisher('Hannibal Books'), false, 'C-077: and an ordinary publisher never matches');
+    eq(api.isSelfPublisher(''), false, 'C-077a: no name, no match');
+    eq(api.isSelfPublisher(null), false, 'C-077b: and null is not a publisher');
+
+    eq(api.publisherNote('selfpublished', false), 'Catalogue is self-published by the venue.',
+       'C-078: and the card says so in her words');
+    // It must not collide with any other outcome, same rule as C-069a.
+    const said = ['container', 'site', 'nosite', 'unnamed', 'selfpublished', null]
+      .map(k => api.publisherNote(k, k === 'container' || k === 'site'));
+    eq(new Set(said).size, said.length, 'C-078a: still no two outcomes printing the same sentence');
   }
 
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');

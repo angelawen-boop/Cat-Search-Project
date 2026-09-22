@@ -891,6 +891,7 @@ asserts no two are the same:
 | `site` | The publisher's own site doesn't show this book — the link opens their home page. |
 | `nosite` | Couldn't work out the publisher's own website, so there's no link to it. |
 | `unnamed` | No publisher was named for this book, so none was looked for. |
+| `selfpublished` | Catalogue is self-published by the venue. — **and no search runs at all**, see below |
 | none recorded | No separate publisher page. — **the old sentence, kept for older rows only** |
 
 **THE LABEL IS THE POINT OF THE THIRD CASE.** The button reads
@@ -903,8 +904,44 @@ sentence** — inventing a claim about it in either direction would be worse
 than making none. Fixtures C-052 to C-069a.
 
 **One field, `publisherResult`, and it records what the STEP concluded**, not
-only what kind of address came back — which is why it is set on the three
+only what kind of address came back — which is why it is set on the four
 outcomes that produce no link at all.
+
+**A MUSEUM'S OWN IMPRINT IS SKIPPED ENTIRELY — her ruling, 22 Sep, from
+running the rebuilt lookup on real rows.** The National Gallery's *Zurbarán*
+came back published by "National Gallery Global", and the step then spent two
+searches and a page read proving what was already known: a museum publishing
+arm has no separate site, because its publisher page IS the shop, which
+`cleanPublisherUrl` refuses by design. `SELF_PUBLISHERS` skips it and the card
+says *"Catalogue is self-published by the venue."*
+
+**IT IS KEYED ON THE PUBLISHER, NEVER ON THE VENUE — her correction, and my
+first version got it wrong.** I matched the publisher's name against the
+venue's, so EVERY Met and National Gallery catalogue would have skipped the
+search. She named the two ordinary ways that breaks: **a blockbuster whose
+catalogue the museum hands to a big art-book house**, and **a show mounted
+jointly with another museum where the OTHER museum prints it** — a Met/Louvre
+co-production published by the Louvre. In both a real third-party page exists
+and the rule would have suppressed the search that finds it.
+
+**SO IT IS A LIST OF TWO AND IT GROWS ONLY WHEN SHE ADDS ONE** —
+`national gallery global` and `metropolitan museum of art`, her instruction,
+more as she meets them. **Nothing is inferred from a name's shape**, because
+inferring is exactly what went wrong; Tate and the Rijksmuseum are NOT on it,
+and *Metamorphoses* is the proof — a Rijksmuseum show printed by Hannibal.
+A miss costs one search; a wrong entry costs a buy link. Fixtures C-070 to
+C-078a, the two cases she named asserted directly, verified by adding Thames &
+Hudson and watching C-073 fail.
+
+**This is the named-offenders list the publisher map was rejected in favour
+of**, arriving for a different reason: not to find a site, but to know there
+is none.
+
+**One limit, stated rather than engineered around:** the sentence says "the
+venue", which is true for every case we have. A Met-published catalogue for a
+show at the Louvre would read slightly wrong — one word on one card and no
+lost link, and fixing it needs the venue comparison this whole note exists to
+avoid.
 
 **A PUBLISHER LINK FROM ANY OTHER STEP IS STILL UNVERIFIED AND STILL MAKES NO
 CLAIM.** Only this step sets the result. A link read off the book's shop page
@@ -1032,7 +1069,7 @@ offered and declined.**
 
 **Both decisions sit OUTSIDE the component**, for the reason `countDecisions`
 moved out: a rule a fixture cannot reach is a rule nobody checks. Fixtures C-001 to
-C-069a in `scraper/fixtures/catalogue_lookup.js`, verified by overwriting a known
+C-078a in `scraper/fixtures/catalogue_lookup.js`, verified by overwriting a known
 publisher, by accepting a 10-digit ISBN, and by putting the old ISBN-only gate
 back and watching C-013a fail. **It does not press the button**: the wiring from a finished lookup into
 the fill is read, not run.
@@ -1241,7 +1278,7 @@ pressed is still uncovered.
 
 **On `main` since the 20 Sep merge**, with the JSX they test. `npm test` runs 190
 unit checks, the 62 intake cases, the load check, the render check, then the
-catalogue-lookup cases (76 on 22 Sep) — and the **exit code** says whether all five
+catalogue-lookup cases (88 on 22 Sep) — and the **exit code** says whether all five
 passed, not the first number to scroll past. An early `return` in a fixture file
 exits the whole suite and the summary just stops printing (the fourth silent suite
 this guide has recorded) — await, never return. They only ran at all from 20 Sep:
@@ -2338,6 +2375,12 @@ Each entry cost a real failure. Before changing the area, read the line.
   negative has to say which negative it is.** Third time this app has had to
   learn the same lesson, after the missing Publisher button and the "never"
   printed for an empty sweep log.
+- Deciding a catalogue is self-published by matching the PUBLISHER'S name
+  against the VENUE'S. It skips the search for every catalogue that venue
+  ever issues, and she named the two ordinary cases that breaks on: a
+  blockbuster handed to a big art-book house, and a joint show where the
+  other museum prints it. **The list is of publishers actually seen
+  self-publishing, and it is added to by her, never inferred.**
 - An early `return` inside `catalogue_lookup.js`, which exits the whole suite
   so the summary line stops printing. **The fourth silent suite this guide has
   had to record.** Await, never return.
@@ -2555,7 +2598,7 @@ Each entry cost a real failure. Before changing the area, read the line.
    had to fix, in order**: the shop step ending on a book with no ISBN, the
    Publisher button being unreachable, a step that dies looking like an answer,
    and four rounds of query-tuning where the answer was to go to the publisher's
-   site. Fixtures C-001 to C-069a.
+   site. Fixtures C-001 to C-078a.
 
    **STILL OPEN.** The 14 venues she has no rows for yet — their shop addresses
    are checked but no lookup has run against them; that happens during the 320
@@ -2565,10 +2608,15 @@ Each entry cost a real failure. Before changing the area, read the line.
 
    **REBUILT AGAIN 22 SEP: the publisher step now opens what it found.** Her
    diagnosis, from her own Rizzoli and Hannibal lookups — the route and the
-   three outcomes are in §4, fixtures C-052 to C-069a. **Not yet run live by
+   three outcomes are in §4, fixtures C-052 to C-078a. **Not yet run live by
    her**: the shell path is proved against the real Hannibal page through the
    connector, but no end-to-end lookup has been pressed since the change. The
    Zurbaran, Matisse and Metamorphoses rows are the three to re-press.
+
+   **TESTED BY HER ON THE PUBLISHED PAGE, 22 Sep** — *Metamorphoses* returns
+   Hannibal with the section link and its note, both useful; *Zurbarán* is
+   correct and produced the self-publisher rule above; Acquavella's *Matisse*
+   still returns the Rizzoli page it always did.
 
    **Her seed cannot test much more.** Four venues, two of which publish their
    own catalogues, so the publisher step has one real test case in it.

@@ -747,6 +747,57 @@ function publisherDomainFrom(results,name){
   return null;
 }
 
+// \u2500\u2500 A MUSEUM THAT PRINTS ITS OWN CATALOGUES HAS NO PUBLISHER PAGE TO FIND \u2500\u2500
+// Her ruling, 22 Sep 2026, after running the rebuilt lookup on real rows.
+//
+// The National Gallery's Zurbaran came back publisher "National Gallery
+// Global", and the step then spent two searches and a page read proving what
+// was already known: a museum's publishing arm has no separate site, because
+// its "publisher page" IS the museum shop, which `cleanPublisherUrl` refuses
+// by design. Two searches and a reading of her allowance, every time, for a
+// guaranteed nothing.
+//
+// IT IS KEYED ON THE PUBLISHER, NEVER ON THE VENUE \u2014 her correction, and the
+// first version got this wrong. I had matched the publisher's name against
+// the venue's, so ANY catalogue from the Met or the National Gallery would
+// have skipped the search. She named the two ways that breaks, and both are
+// ordinary:
+//
+//   * a blockbuster show whose catalogue the museum gives to a big art-book
+//     house to print, and
+//   * a show mounted jointly with another museum, where the OTHER museum
+//     prints it \u2014 a Met/Louvre co-production published by the Louvre.
+//
+// In both, a real third-party publisher page exists and my rule would have
+// suppressed the search that finds it. So the test is not "is the publisher
+// this venue" \u2014 it is "is this publisher one of the named few we have
+// actually seen self-publish".
+//
+// SO IT IS A LIST OF TWO, AND IT GROWS ONLY WHEN SHE ADDS ONE. Her
+// instruction: these two now, more as she meets them. Nothing is inferred
+// from a name's shape, because inferring is precisely what went wrong.
+// A publisher not on this list is searched for exactly as before \u2014 the cost
+// of a miss is one search, the cost of a wrong entry is a lost buy link.
+//
+// ONE KNOWN LIMIT, STATED RATHER THAN ENGINEERED AROUND: the sentence says
+// "the venue", which is true for every case we have. A Met-published
+// catalogue for a show at the Louvre would read slightly wrong. It costs a
+// word on one card and no link, so it is not worth a venue comparison here \u2014
+// that comparison is the thing this note exists to avoid.
+const SELF_PUBLISHERS = new Set([
+  "national gallery global",              // ng \u2014 her row, Zurbaran
+  "metropolitan museum of art",           // met
+]);
+// A leading "The" and any punctuation are noise, not a different publisher.
+function normPublisher(name){
+  return String(name||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g," ").trim().replace(/^the\s+/,"");
+}
+function isSelfPublisher(name){
+  const n=normPublisher(name);
+  return !!n&&SELF_PUBLISHERS.has(n);
+}
+
 // THE PUBLISHER\u2019S OWN PAGE \u2014 restored 21 Sep 2026, her finding.
 //
 // The app has always had a Publisher button and the ledger has always had a
@@ -884,6 +935,7 @@ function publisherNote(result,hasUrl){
   if(result==="site")     return "The publisher\u2019s own site doesn\u2019t show this book — the link opens their home page.";
   if(result==="nosite")   return "Couldn\u2019t work out the publisher\u2019s own website, so there\u2019s no link to it.";
   if(result==="unnamed")  return "No publisher was named for this book, so none was looked for.";
+  if(result==="selfpublished")return "Catalogue is self-published by the venue.";
   if(result==="product")  return "";
   return hasUrl?"":"No separate publisher page.";
 }
@@ -1731,6 +1783,11 @@ export default function App(){
     // NO NAME, SO NOTHING WAS LOOKED FOR — and the card must say that rather
     // than print the same sentence as a search that ran and found nothing.
     if(!r.publisher)return{...hit,row:{...r,publisherResult:"unnamed"}};
+    // A NAMED MUSEUM PUBLISHING ARM — no searches at all. See SELF_PUBLISHERS.
+    if(isSelfPublisher(r.publisher)){
+      return{...hit,detail:hit.detail+"\n"+r.publisher+" is a museum’s own imprint — no publisher page to look for.",
+        row:{...r,publisherResult:"selfpublished"}};
+    }
     const book=r.catalogueTitle||r.title;
     const isbn=cleanIsbn(r.isbn13);
     setLookPhase("publisher");
