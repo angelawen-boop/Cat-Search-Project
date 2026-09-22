@@ -50,9 +50,12 @@ const intake = slice(src,
   '  function handleRefreshFile(e){');
 
 // withChoices sits further down, past the render helpers.
+// The end anchor is the COMMENT that opens applyRefresh, not its signature:
+// the signature grew a parameter on 22 Sep (partial apply) and an anchor on
+// the line of code itself would have died with it. Anchor on prose.
 const choices = slice(src,
   '  const withChoices=(cand,dec)=>{',
-  '  function applyRefresh(){');
+  '  // PARTIAL IS A PARAMETER, NOT A SECOND COPY OF THIS FUNCTION.');
 
 // `rows` is the ledger, which analyzeProForma closes over in the app. Here it
 // is a plain binding the fixtures set directly.
@@ -76,6 +79,7 @@ return {
   activeQuarantine,
   quarantineFromList,
   isUndecidedCard,
+  offerPartialApply,
   MUSEUMS, MU, KNOWN_VENUES,
 };
 `;

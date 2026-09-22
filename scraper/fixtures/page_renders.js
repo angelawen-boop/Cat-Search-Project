@@ -132,6 +132,19 @@ async function renderOnce(label, withRuntime) {
       pass(label + ': renders, ' + text.trim().length + ' characters on the opening screen');
     }
 
+    // THE VERSION HAS TO BE ON THE SCREEN, not merely in the file. It was put
+    // in the footer on 22 Sep so she can tell the page in front of her from the
+    // one just built, and a version line that is present in the source but does
+    // not draw answers that question no better than no line at all. Read back
+    // out of the rendered document for that reason — grepping the built page
+    // would find the string whether or not it reaches her.
+    const ver = /version\s+\d+(\.\d+)?/i.exec(text);
+    if (!ver) {
+      fail(label + ': the opening screen shows no version line');
+    } else {
+      pass(label + ': shows its version — "' + ver[0] + '"');
+    }
+
     if (withRuntime && !seen.includes('db')) {
       fail(label + ': the page never asked the runtime for its sweep-log store, '
            + 'so this pass tested nothing the plain-page pass did not');

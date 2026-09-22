@@ -294,11 +294,21 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 31, 22 Sep 2026** is what she runs. The file is `Cat_Watch.jsx` —
-renamed from `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question
-that no longer exists. **No version number in the name either**: the published
-version is already past it and a number in a filename only drifts. Line count
-went stale twice when typed here — `wc -l` answers it.
+**Version 32, 22 Sep 2026.** The file is `Cat_Watch.jsx` — renamed from
+`Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
+exists. **No version number in the name either**: the published version is
+already past it and a number in a filename only drifts. Line count went stale
+twice when typed here — `wc -l` answers it.
+
+**The number lives in `APP_VERSION`, and the footer prints it — her ruling,
+22 Sep.** It used to exist only here and in chat, so the page in front of her
+carried no way to tell itself apart from the one before it. One copy in the
+file, one place on screen, and the date beside it because the number alone
+cannot answer the only question it is ever asked: is this older than the one
+just built. **Bump it in the same breath as the change it describes.**
+
+**How it counts — hers: a whole number for a substantial change, a decimal
+for a small one** (v37, then v37.1).
 
 **Building is code's job — `node build/build_app.js`**, which transpiles, wraps it
 in the committed shell (`build/shell_head.html`, `build/shell_tail.html`), proves
@@ -370,6 +380,11 @@ evidence and every finding: `docs/app.md`.**
   fold; marker rows become a coverage panel, never proposals.
 - **The ledger will not move until every card is decided** — a hard block, not a
   warning. Rejecting counts as deciding. Do not re-propose confirm-and-continue.
+  **This is the permanent design and it has not moved.** One temporary button
+  sits BESIDE it for the 320-card import — §7.1. It is not confirm-and-continue,
+  which stays rejected (§8): it is a separate, plainly-labelled door that asks
+  first and says what it leaves behind. The gate itself is untouched, and so are
+  its fixtures.
 - **Counts that reconcile.** One line accounts for every row read, in two
   sentences each ending in the number the next starts from. **Every term stays** —
   drop one and the arithmetic stops closing, which is all these lines are for.
@@ -857,6 +872,19 @@ row identity closes: **419 = 13 markers + 0 folds + 86 matching + 320**.
 Expect debugging to fall out of it. Also still to do: a save round-trip after the
 import — export, re-import that file, confirm quarantine and per-venue freshness
 both survive.
+
+**It is done in sittings, and version 32 has the door for that — TEMPORARY, to
+be unwired when this import is finished.** A second button beside the gate
+applies only the cards she has decided. Her ask, 22 Sep, and her framing: the
+gate is right and stays; 320 cards is simply more than one sitting.
+
+- **The way back is re-importing the same sweep file.** What she accepted is in
+  the ledger, so it no longer proposes; what she never reached comes back.
+- **Rejections do not survive the round trip** — only "never add this" does.
+  She knows and accepted it. Not a defect to go and fix.
+- **To remove it:** the one marked block in `Cat_Watch.jsx`, the `partial`
+  parameter on `applyRefresh`, `offerPartialApply` and its harness export, and
+  fixture 18h. Nothing else knows about it.
 
 **The catalogue lookup gets its real test here.** Fourteen venues have had no
 lookup run against them; their shop addresses are checked but unseen live. `khm`'s

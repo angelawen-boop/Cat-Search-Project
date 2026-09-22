@@ -1,5 +1,21 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 
+// WHICH VERSION IS SHE LOOKING AT — her ruling, 22 Sep 2026. The number used to
+// live only in the guide and in chat, so the page in front of her carried no
+// way to tell itself apart from the one before it. It is printed in the footer
+// now: a number she can read off the screen instead of matching against a
+// conversation.
+//
+// THE DATE IS PART OF IT because the number alone cannot answer the only
+// question it is ever asked — is this older than the one just built. A date
+// answers that on sight.
+//
+// HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
+// for a small one. This is the ONLY place it is written down. Bump it in the
+// same breath as the change it describes, or it lies.
+const APP_VERSION = "32";
+const APP_VERSION_DATE = "22 Sep 2026";
+
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
 // size — it is the order she wants to WORK in. The venues she reads most come
 // first; the three Italian sites she finds hardest to check sit together near
@@ -121,6 +137,22 @@ function countDecisions(proposals,decisions){
     if(Object.values(dec.fields||{}).some(v=>v==="accept"))acceptedCount++;
   });
   return {acceptedCount,undecidedCount};
+}
+
+// ===== TEMPORARY, WITH countDecisions BECAUSE A FIXTURE MUST REACH IT =====
+// WHEN THE SIDE DOOR IS OFFERED — see the button itself for why it exists and
+// when to pull it out. The rule lives here, out of the component, for one
+// reason: written inline in the JSX it could only be tested by a second copy
+// of it in the test file, and a second copy drifts silently.
+//
+// BOTH HALVES MATTER. Nothing decided → nothing to apply, and offering a
+// button that would write an empty change is offering a dead control. Nothing
+// left undecided → the real button is already live, and a second way to do the
+// same thing is the kind of pair that ends up disagreeing. So it appears only
+// in the middle state, which is the only state it is for.
+function offerPartialApply(counts){
+  const c=counts||{};
+  return (c.acceptedCount||0)>0 && (c.undecidedCount||0)>0;
 }
 
 // MERGE, NEVER REPLACE — and this is the rule that stops the bug coming back
@@ -1592,7 +1624,17 @@ export default function App(){
     return out;
   };
 
-  function applyRefresh(){
+  // PARTIAL IS A PARAMETER, NOT A SECOND COPY OF THIS FUNCTION. Applying what
+  // she has decided and applying everything are the same walk over the same
+  // cards — an undecided card was always skipped here, which is exactly what
+  // made the 20 Sep gate necessary. The only difference is whether the gate
+  // let her arrive, and how the result is reported afterwards.
+  //
+  // So `partial` changes NOTHING about what is written. It only counts what
+  // was left behind, so the green bar can say so. Copying this function to
+  // make a partial version would put the ledger write in two places, and the
+  // second copy drifts.
+  function applyRefresh(partial){
     const byId=new Map(rows.map(r=>[r.id,r]));
     const now=new Date().toISOString();
     const touched=[];
@@ -1630,8 +1672,13 @@ export default function App(){
         writeQuarantine(merged).then(ok=>{ if(!ok) setQuarWhy("The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Export to keep it."); });
         return merged; });
     }
+    // COUNTED FROM THE CARDS, NOT FROM THE BUTTON. The figure that reaches the
+    // green bar is re-derived here from the same function the gate uses, so the
+    // sentence cannot claim a different number from the one she was just
+    // looking at. A count handed in from the caller is a second copy.
+    const leftUndecided=proposals.filter((p,i)=>isUndecidedCard(p,decisions[i])).length;
     commit(Array.from(byId.values()),new Date().toISOString());
-    setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length});
+    setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length,left:partial?leftUndecided:0});
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
     setVenueF(new Set()); setTimeF(new Set()); setWatchedF(false);
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqNoCat(false);
@@ -2367,7 +2414,15 @@ export default function App(){
         {savedText&&<div style={{marginTop:6,fontSize:11,color:savedCol,fontWeight:savedWeight}}>{savedText}</div>}
         {showUnsavedBanner&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.okBg,border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.okInk,lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u21BB"}</span>
-          <span>{"Refresh applied \u2014 "+refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated"+(refreshDone.never?", "+refreshDone.never+" never to be offered again":"")+". Not saved yet \u2014 tap \u201cExport / Save\u201d now."}</span>
+          {/* EVERY CARD SHE LOOKED AT IS ACCOUNTED FOR IN THIS ONE SENTENCE,
+              which is the whole job of it. Partial apply put cards somewhere
+              the sentence did not name \u2014 neither applied nor refused \u2014 so the
+              arithmetic stopped closing and the bar quietly under-reported.
+              The clause below is not decoration: drop it and the numbers no
+              longer add up to the pile she started with. It says HOW to get
+              them back too, because "left behind" with no next step reads as
+              lost. */}
+          <span>{"Refresh applied \u2014 "+refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated"+(refreshDone.never?", "+refreshDone.never+" never to be offered again":"")+(refreshDone.left?", "+refreshDone.left+" left undecided \u2014 import the same sweep file again to carry on with them":"")+". Not saved yet \u2014 tap \u201cExport / Save\u201d now."}</span>
         </div>}
         {hasLedger&&unconfirmedSave&&<div style={{marginTop:8,padding:"9px 12px",background:C.holdBg,border:"2px solid "+C.soft,borderRadius:5,fontSize:12.5,color:C.ink,lineHeight:1.45,display:"flex",alignItems:"flex-start",gap:9}}>
           <span style={{fontSize:16,lineHeight:1.1}}>{"\u2193"}</span>
@@ -2971,7 +3026,42 @@ export default function App(){
                   A dead control with no reason attached is the thing she would
                   be left staring at, and the count is the only clue to where the
                   work is. */}
-              <button onClick={applyRefresh} disabled={undecidedCount>0}
+              {/* ===== TEMPORARY — THE SIDE DOOR FOR THE 320-CARD IMPORT =====
+                  Her ask, 22 Sep 2026, and her words: the block above is the
+                  permanent design and STAYS. This is a way past it for one job
+                  — 320 cards is more than one sitting, and the gate makes a
+                  half-finished sitting worth nothing.
+
+                  UNWIRE THIS WHEN THAT IMPORT IS DONE. Delete this block and
+                  the `partial` parameter on applyRefresh; nothing else knows
+                  about it. It is deliberately one contiguous piece for that
+                  reason.
+
+                  IT CANNOT APPEAR INSTEAD OF THE BLOCK, only beside it. It is
+                  drawn when some cards are decided AND some are not — with
+                  nothing decided there is nothing to apply, and with everything
+                  decided the real button is live and this one would be a second
+                  way to do the same thing. So the gate is never the only thing
+                  on screen and never absent.
+
+                  IT ASKS FIRST. What is left behind is not remembered anywhere
+                  — that is not a fault to fix here, it is how refusing works
+                  today — so the confirm box says the number, says the way back,
+                  and says that rejections do not stick. Her call to make with
+                  the facts in front of her, every time, not once. */}
+              {offerPartialApply({acceptedCount,undecidedCount})&&<button
+                onClick={()=>setConfirmBox({
+                  title:"Update the ledger with part of this?",
+                  text:acceptedCount+" decided "+(acceptedCount===1?"card":"cards")+" will go into your ledger now. "
+                    +undecidedCount+" undecided "+(undecidedCount===1?"card":"cards")+" will be left behind and are not remembered anywhere — "
+                    +"import the same sweep file again to pick them up. Anything you rejected will come back too. "
+                    +"Export / Save straight afterwards.",
+                  act:()=>applyRefresh(true)})}
+                title={"Apply the "+acceptedCount+" you have decided and come back to the rest later."}
+                style={{...sBtn,borderColor:C.accent,color:C.accent,fontWeight:600}}>
+                Update with the {acceptedCount} I{"’"}ve decided</button>}
+              {/* ===== end temporary block ===== */}
+              <button onClick={()=>applyRefresh(false)} disabled={undecidedCount>0}
                 title={undecidedCount>0?"Decide every card first — "+undecidedCount+" still undecided.":""}
                 style={{...pBtn,...(undecidedCount>0?{background:C.muted,cursor:"not-allowed",opacity:1}:{})}}>
                 {undecidedCount>0
@@ -2984,7 +3074,10 @@ export default function App(){
       {confirmBox&&(
         <div style={{position:"fixed",inset:0,background:C.scrim,display:"grid",placeItems:"center",zIndex:1000,padding:16}}>
           <div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:8,maxWidth:420,padding:"18px 20px",boxShadow:"0 6px 24px rgba(0,0,0,0.25)"}}>
-            <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:8}}>Replace what's on screen?</div>
+            {/* The heading is now the CALLER'S, because this box no longer only
+                guards replacing the screen. The old wording stays as the
+                default so every existing caller reads exactly as it did. */}
+            <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:8}}>{confirmBox.title||"Replace what's on screen?"}</div>
             <div style={{fontSize:12.5,color:C.body,lineHeight:1.5,marginBottom:16}}>{confirmBox.text}</div>
             <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
               <button onClick={()=>setConfirmBox(null)} style={sBtn}>Cancel</button>
@@ -2993,6 +3086,13 @@ export default function App(){
           </div>
         </div>
       )}
+      {/* WHICH VERSION IS THIS — her ask, 22 Sep 2026. Small, grey, at the
+          bottom, out of the way of the work: it is not something she acts on,
+          it is something she checks when a page and a conversation disagree.
+          Reads APP_VERSION, so there is one copy of the number in the file. */}
+      <footer style={{maxWidth:760,margin:"28px auto 0",fontSize:10.5,color:C.soft,textAlign:"center"}}>
+        Cat Watch {"·"} version {APP_VERSION} {"·"} {APP_VERSION_DATE}
+      </footer>
     </div>
   );
 }

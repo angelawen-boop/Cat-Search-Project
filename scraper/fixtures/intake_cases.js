@@ -290,6 +290,59 @@ check('18f: the real sample file starts with every card undecided',
     g2.acceptedCount===3, g2);
 }
 
+// 18h. THE TEMPORARY SIDE DOOR — the partial-apply button added 22 Sep 2026
+// for the 320-card import. TEMPORARY: when that block leaves the JSX, this
+// case and offerPartialApply leave with it, and the harness export too.
+//
+// WHAT IS WORTH CHECKING, and it is narrower than it looks. The gate stays
+// exactly as it was — 18 to 18g above are its test and none of them moved.
+// What is new is only WHEN THE SIDE DOOR IS OFFERED, and both halves of that
+// have a way of going wrong that would not show up on screen as broken:
+//
+//   Offered with nothing decided  → a button that writes an empty change,
+//                                   which reads as a working button doing
+//                                   nothing.
+//   Offered with everything done  → two buttons doing one job, and the pair
+//                                   drifts apart the first time one is edited.
+//
+// IT ASKS THE RULE DIRECTLY, through the same countDecisions the gate uses, on
+// real decision shapes rather than hand-set numbers — a rule that agrees with
+// invented counts and disagrees with real cards is the failure this style of
+// fixture exists to stop.
+//
+// WHAT THIS CANNOT REACH, said plainly so nobody reads more into a green tick:
+// it does not prove that pressing the button writes the right rows. That walk
+// lives inside the component. It is the same walk the full apply has always
+// used — partial is one parameter on it, not a second copy — and she checks it
+// by clicking.
+{
+  const props=[
+    {type:'add'},                                   // untouched
+    {type:'add'},                                   // accepted
+    {type:'change',upd:[{field:'a'}]},              // untouched
+  ];
+  const none=H.countDecisions(props,{});
+  check('18h: not offered while nothing is decided — it would write nothing',
+    H.offerPartialApply(none)===false, none);
+
+  const some=H.countDecisions(props,{1:{mode:'accept'}});
+  check('18h1: offered once something is decided and something is not',
+    H.offerPartialApply(some)===true, some);
+
+  const all=H.countDecisions(props,{0:{mode:'reject'},1:{mode:'accept'},2:{fields:{0:'accept'}}});
+  check('18h2: not offered once every card is decided — the real button is live',
+    all.undecidedCount===0&&H.offerPartialApply(all)===false, all);
+
+  // REJECTING EVERYTHING IS DECIDING EVERYTHING, and it leaves nothing to
+  // apply — so neither button is the way out and Cancel is. The door must not
+  // open here either: it would apply an empty change and clear the screen,
+  // which looks exactly like work being thrown away.
+  const allRefused=H.countDecisions(props,{0:{mode:'reject'},1:{mode:'reject'},2:{fields:{0:'reject'}}});
+  check('18h3: not offered when every card was turned down',
+    allRefused.undecidedCount===0&&allRefused.acceptedCount===0&&
+    H.offerPartialApply(allRefused)===false, allRefused);
+}
+
 // 19. THE VENUE ORDER IS HERS, and one array drives all three places it shows
 // (the freshness drawer, the filter chips, the venue headings on the refresh
 // screen). Written down here so a later session reshuffling the array for
