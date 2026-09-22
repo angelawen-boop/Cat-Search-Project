@@ -1188,11 +1188,41 @@ test('R-001: met and artic are HERS — the container must not touch them', () =
   assert.strictEqual(routeOf('artic'), 'home');
 });
 
-test('R-002: the three blocked venues are the CONTAINER\'s, deliberately', () => {
+test('R-002: brit and morgan are still the CONTAINER\'s, deliberately', () => {
   // They are swept BECAUSE they are blocked: a refusal costs half a second,
   // proves the block is still real, and leaves the marker rows that make a
   // sweep's record complete. She must not be pinging them from home.
-  for (const c of ['moma', 'brit', 'morgan']) assert.strictEqual(routeOf(c), 'container');
+  //
+  // moma LEFT this set on 22 Sep — see R-005. brit and morgan stay until their
+  // recipes are written from the live pages and the engine can launch the
+  // browser they need; moving them sooner would only mean her machine
+  // collecting the refusals instead of the container's.
+  for (const c of ['brit', 'morgan']) assert.strictEqual(routeOf(c), 'container');
+});
+
+test('R-005: moma is HERS, and says out loud that it needs a visible browser', () => {
+  // 22 Sep: the container is refused and so is any browser arriving with no
+  // history. A visible Chrome on a profile she had browsed in was served the
+  // listing and a real exhibition page with no challenge at all.
+  assert.strictEqual(routeOf('moma'), 'home');
+
+  // The flag must not be able to lie. `headed: true` is read by the run, which
+  // announces that the engine cannot yet provide that browser — otherwise a
+  // recipe option nothing acts on looks exactly like one that works, and the
+  // next session takes it as evidence the venue is wired.
+  const at = SWEEP_SRC.indexOf("\n  moma: {");
+  const rest = SWEEP_SRC.slice(at + 1);
+  const next = rest.search(/\n  '?[a-z-]+'?: \{\n    name: /);
+  const block = next > -1 ? rest.slice(0, next) : rest;
+  assert.match(block, /headed:\s*true/, 'moma should be marked headed');
+  assert.match(SWEEP_SRC, /VENUES\[c\]\.headed/,
+    'the run must READ the headed flag, not merely carry it');
+
+  // Her scope: current and upcoming only. The archive is not swept.
+  assert.doesNotMatch(block, /calendar\/exhibitions\/history'\s*,\s*ctx/,
+    'moma must not sweep its past archive — her ruling, 22 Sep');
+  // But it stays in isNav, because the listing still LINKS to it.
+  assert.match(block, /isNav[\s\S]*history/, 'the archive link must still be treated as navigation');
 });
 
 test('R-003: every other venue is the container\'s', () => {
@@ -1208,8 +1238,8 @@ test('R-004: the two sets do not overlap and cover every venue', () => {
   assert.strictEqual(codes.length, 21, 'expected 21 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
-  assert.deepStrictEqual(home.sort(), ['artic', 'met']);
-  assert.strictEqual(container.length, 19);
+  assert.deepStrictEqual(home.sort(), ['artic', 'met', 'moma']);
+  assert.strictEqual(container.length, 18);
   assert.strictEqual(home.length + container.length, codes.length);
 });
 

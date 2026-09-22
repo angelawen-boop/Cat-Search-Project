@@ -3621,17 +3621,33 @@ const VENUES = {
     name: 'Museum of Modern Art, New York',
     base: 'https://www.moma.org',
     // Main MoMA only, never PS1.
+    //
+    // CURRENT AND UPCOMING ONLY — her ruling, 22 Sep. She does not want MoMA's
+    // past exhibitions at all, so `/calendar/exhibitions/history` is not swept.
+    // That is a scope decision about what she collects, not a claim the page is
+    // unreachable, and it is also why this venue is cheap: one listing page and
+    // roughly two dozen exhibitions, where the archive would be hundreds.
     pages: [
-      { path: '/calendar/exhibitions',         ctx: 'current/upcoming' },
-      { path: '/calendar/exhibitions/history', ctx: 'past' },
+      { path: '/calendar/exhibitions', ctx: 'current/upcoming' },
     ],
     selector: 'a[href*="/calendar/exhibitions/"]',
+    // `history` stays in isNav even though it is no longer swept: it is still
+    // LINKED from the listing, so without this the archive's own address would
+    // be collected as if it were an exhibition.
     isNav: href => /\/calendar\/exhibitions\/?$/.test(href)
                 || /\/calendar\/exhibitions\/history\/?$/.test(href),
     title: { heading: true },
-    // Refuses with a Cloudflare MANAGED CHALLENGE — 403 carrying
-    // cf-mitigated: challenge and a "Just a moment…" body. Refused from her own
-    // machine too, so unlike artic the local route does not rescue it.
+
+    // HER MACHINE ONLY, and it must be a browser with a past — see the note on
+    // `headed` below and §2 of the project guide.
+    //
+    // 22 Sep: the container is refused, and so was every browser that arrived
+    // with no history. A visible Chrome on a profile she had actually browsed
+    // in was served the listing and a real exhibition page, cleanly, with no
+    // challenge offered at all — the first time any exhibition text has been
+    // read from this venue.
+    route: 'local',
+    headed: true,
   },
 
   brit: {
@@ -4748,6 +4764,25 @@ async function main() {
     log(`Nothing left to scrape. sweep.csv rebuilt: ${built.rows} rows (${built.included.join(', ')})`);
     writeLog();
     return;
+  }
+
+  // A VENUE THAT ASKS FOR A BROWSER THIS RUN CANNOT PROVIDE SAYS SO, OUT LOUD.
+  //
+  // `headed: true` marks a venue that is only reachable from a visible Chrome
+  // carrying a real browsing history — moma, 22 Sep. The engine does not yet
+  // launch that browser, so such a venue is still attempted the ordinary way
+  // and is still expected to be refused.
+  //
+  // This line exists so the flag cannot LIE while the support is being built.
+  // A recipe option that nothing reads looks identical to one that works, and
+  // the next session to open this file would take moma's `headed: true` as
+  // evidence the venue was wired. Saying it plainly costs one line; finding it
+  // out from a sweep that quietly returned markers costs a day.
+  const wantHeaded = RUN_VENUES.filter(c => VENUES[c].headed);
+  if (wantHeaded.length) {
+    log(`Asks for a visible browser with a history: ${wantHeaded.join(', ')}`);
+    log('  The engine cannot launch that yet, so these are attempted the ordinary');
+    log('  way and are expected to be refused. See scraper/probe_headed.js.');
   }
 
   log(`Proxy: ${PROXY_URL || '(none — direct egress assumed)'}`);

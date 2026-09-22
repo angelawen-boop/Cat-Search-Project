@@ -294,6 +294,27 @@ async function visit(page, url, target, budget) {
     rec.challengeCleared = !looksLikeChallenge(seen);
   }
 
+  // KEEP THE PAGE ITSELF, not only what we measured off it.
+  //
+  // A recipe says where a title, a date and a blurb sit on a venue's page.
+  // That cannot be written from a link count and 300 characters of opening
+  // text — and guessing it from a thin artefact is how brit's recipe came to
+  // hunt for the wrong path for weeks. Saving the page means the recipe is
+  // written from the real thing, offline, with no further visits: the evidence
+  // outlives the run, and reading it again costs the venue nothing.
+  try {
+    const dir = path.join(__dirname, 'output', 'probe_pages');
+    fs.mkdirSync(dir, { recursive: true });
+    const safe = (new URL(url).host + new URL(url).pathname + new URL(url).search)
+      .replace(/[^a-z0-9]+/gi, '_').slice(0, 120);
+    const file = path.join(dir, `${safe}.html`);
+    fs.writeFileSync(file, await page.content());
+    rec.savedPage = path.relative(path.join(__dirname, '..'), file);
+  } catch (e) {
+    rec.savedPage = null;
+    rec.savedPageError = e.message.split('\n')[0];
+  }
+
   const links = await usableLinks(page, target);
   rec.title = seen.title;
   rec.textLength = seen.text.length;

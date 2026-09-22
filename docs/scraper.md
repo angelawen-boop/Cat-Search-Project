@@ -748,8 +748,9 @@ what you failed to imagine.
 
 ## 14. The blocked venues, and the `Headless` user-agent
 
-**PARKED ON `claude/quiet-user-agent`, her ruling 19 Sep. `main`'s scraper is
-byte-identical to 13 Sep and stays that way.** Her verdict on the session that
+**PARKED ON `claude/quiet-user-agent`, her ruling 19 Sep. Nothing on that branch
+is revived — the 22 Sep route (a profile with a history) is not the user-agent
+work and does not need it.** Her verdict on the session that
 produced it: theories were spun up, sweeps were run to test them, the sweeps
 caused rate limiting, and then the limiting was read as fresh evidence. Nothing
 usable came out that is worth the divergence. **Do not merge it, and do not
@@ -775,11 +776,21 @@ that does not do what the sweep does — its volume, its detail pages, its
 concurrency — cannot tell you a venue works. It tells you one request was
 answered.**
 
-**The Morgan is genuinely blocked — settled, do not re-probe.** All four
-combinations of Chromium/Chrome and hidden/on-screen were refused by Cloudflare,
-including with her answering the challenge by hand. The page opens instantly in
-her ordinary browser, so it is not her address: the venue detects that a script is
-driving at all. **Her ruling: one small venue, she will check it herself.**
+**The Morgan is NOT blocked — overturned 22 Sep, see `docs/venues.md` §Morgan.**
+All four combinations tried on 16 Sep used a BLANK profile, which is why they
+failed alike; a box that never cleared however many times she clicked was never
+grading the click. A visible Chrome on a profile she had browsed in was served
+the listing and a real page with no check at all. The same holds for `moma` and
+`brit`.
+
+**What is still open is PACE, and it is the harder half.** `probe_headed.js`
+now leaves a varied gap between pages and stops at the first check that will not
+clear. The engine does neither: it fetches exhibition pages back to back, and
+MoMA alone would fire 24 in seconds.
+
+**Who sweeps them now:** `moma` moved to her machine on 22 Sep (`route: 'local'`,
+`headed: true`); `brit` and `morgan` stay on the container until their recipes
+are written from the live pages. Fixtures R-001 to R-005.
 
 **Blocked venues stay wired in deliberately:** a refusal costs about half a
 second, leaves marker rows in the CSV so it is visible on the approval pile, and

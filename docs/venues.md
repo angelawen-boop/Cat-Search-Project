@@ -225,12 +225,17 @@ Tested with and without the trailing slash — both 403. So this is bot protecti
 acting before the institution's stated policy applies, not the museum declining
 us. Worth knowing, and it changes nothing about what we do.
 
-**What we do NOT do about any of it.** Passing a challenge means satisfying a
-check designed to stop automation, and the standing rule (Section 4) is that
-engineering around a deliberate block is not on the table. The Met's checkpoint
-was put to her as a genuine question and she answered it by moving the Met to a
-local run rather than by defeating the gate. The same answer applies here.
-`artic` is a local venue. `moma` and `brit`'s archive have no route yet.
+**Her line, stated plainly — 22 Sep 2026.** The only thing out of bounds is
+taking information a site does not publish. These are public exhibition
+listings the museums want people to read, so none of this engages it. The
+earlier framing here — that passing a challenge is "engineering around a
+deliberate block" — was hers to set and she did not set it; it is withdrawn at
+her instruction.
+
+What remains true is narrower and still holds: **be the thing, do not claim to
+be it.** A real browser with a real history genuinely passes these checks. An
+edited name card on a browser that contradicts itself fails them harder, which
+is what 16 Sep proved.
 
 **Several Italian venues have migrated during this project** — Borghese moved
 hosts, and now Gallerie dell'Accademia. Treat an Italian 404 as "find the new
@@ -244,7 +249,7 @@ venue sections below.
 | Venue | Finding | Evidence |
 |---|---|---|
 | `met` | **A bot checkpoint, NOT an IP block — corrected 11 Sep 2026.** The 429 is a **"Vercel Security Checkpoint"** page: the Met's site is hosted on Vercel, and Vercel serves this challenge instead of the content. See below — the data-centre theory was wrong for four days. `collectionapi.metmuseum.org` is unaffected but covers collection objects, not exhibitions. | Disproved from her home connection, 11 Sep 2026 |
-| `morgan` | **Hard blocked.** HTTP 403 on all three listing pages and on `sitemap.xml`, from Cloudflare. Their `robots.txt` permits general crawling (`User-agent: *  Allow: /`) and permits AI "reference" use, but name-blocks a list of AI crawlers, and Cloudflare is refusing this network before any of that applies. | Verified 7 Sep 2026 |
+| `morgan` | **Was read as hard blocked; overturned 22 Sep** — see §Morgan. A browser with a history is served normally. Their `robots.txt` gives `User-agent: *` an outright `Allow: /` with `Content-Signal: search=yes, use=reference`, and her use is reference. | Blank-profile 403s verified 7 Sep; access 22 Sep |
 | `ng` | **Works well.** Past archive loads 183 entries in one page. Dates live in the card wrapping each link, day-first format ("7 November 2025 – 10 May 2026"). | Full sweep |
 | `rijks` | **Works, fully worked through.** See below. | Full sweep + her count of the live pages |
 | `acq` | **Works.** One page carries current, upcoming and past together. Dates are in the link text itself ("… NEW YORK OCTOBER 16 - DECEMBER 5, 2025"). Its archive has year-range filter links (`/exhibitions/past/all/2023-2021`) which are navigation, not exhibitions — following them dragged in the whole catalogue back to 1999. | Full sweep |
@@ -434,10 +439,39 @@ the proxy (report, do not work around)"**. So the remaining route is to
 **report it** — to Anthropic support or a workspace admin — rather than to
 engineer past it. Nobody has done that yet.
 
-#### Morgan — every automated route is closed. Chat Claude is the one that works.
+#### Morgan — OVERTURNED 22 Sep. A browser with a history gets in.
 
-**Worked through exhaustively on 11 Sep. Do not re-litigate this; re-test only if
-something outside changes.**
+**The old heading read "every automated route is closed". It was wrong, and the
+reason it was wrong matters more than the venue.** Every route in the table
+below arrived with a BLANK profile — Playwright builds one, uses it once and
+discards it. A browser that has never been anywhere is itself a signal, and it
+was the one variable nobody moved.
+
+On 22 Sep a visible Chrome, on a profile she had spent a minute browsing in, was
+served `/exhibitions/current` and a real exhibition page: HTTP 200, no
+`cf-mitigated` header, no check offered at all. Same machine, same address, six
+days after the same setup with a blank profile was refused.
+
+**The "flat 403 with no challenge offered" reading is also withdrawn.** Her own
+browser is shown a "Performing security verification" page that clears itself —
+she screenshotted it. Morgan has a door; it judged our request shape before
+offering it.
+
+**Also worth keeping:** she gets that check EVERY visit, minutes apart, while
+the probe's profile gets none. The likely reason — a reading, not a measurement
+— is her six browser extensions. Ad and tracker blockers interfere with the
+scripts the check runs, and a blocked check is a failed one. The probe's profile
+is bare Chrome and passes silently. **So never install anything into that
+profile: its plainness is the asset.**
+
+**What has NOT been shown:** that this survives a sweep. Five addresses fired
+back to back, four at one museum, and everything after the first was challenged
+— at Morgan too, because Cloudflare's judgement followed us across both sites.
+Pace is the open question, not access.
+
+The table below is kept as the record of what a blank profile gets.
+
+**Worked through exhaustively on 11 Sep, and superseded above.**
 
 | Route | Result |
 |---|---|
@@ -470,12 +504,15 @@ genuinely Chromium's and the user-agent honest, it is reacting to something else
 — most likely headless and automation markers, which is behaviour rather than
 anything we could say about ourselves.
 
-**Two things were considered and REJECTED, so neither is quietly revived:**
+**Running headed was rejected on 11 Sep and REVERSED on 22 Sep — her ruling.**
+The old objection was that it needs her sitting watching a browser drive itself.
+Her answer six days later: she already operates a terminal for every sweep, and
+a window popping up is no worse than that. The alternative — giving up on three
+venues, or fetching them by hand through another tool — is far worse.
 
-- **Running headed** (`headless: false`). Legitimate — a visible browser genuinely
-  is one — but **her call: no.** It only works with her sitting watching a browser
-  drive itself, and for Morgan's three pages that is slower than clicking them
-  herself. In her words, it would make her "seem like I'm HANDSLESS".
+So headed is the route, with one correction to how it was tried: every 11 and 16
+Sep attempt used a BLANK profile. A visible browser on a profile she had
+actually used is a different thing, and it got in. See §Morgan below.
 - **Staying headless while masking it.** That is the disguise line. Saying
   "Chrome" when we are HeadlessChrome is a lie; `--no-ua` (declining to state)
   was the honest version of the same test, and it failed too.

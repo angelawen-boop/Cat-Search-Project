@@ -125,6 +125,22 @@ As of 22 Sep: **406 exhibitions across 18 venues**; `moma`, `brit` and `morgan`
 have never returned one; `met` and `artic` were refused on 16 Sep after that
 session's repeated sweeps.
 
+**A browser with a PAST gets into all three blocked venues — 22 Sep.** Every
+earlier attempt used a blank profile Playwright built and threw away. A visible
+Chrome on a profile SHE had browsed in was served `moma`, `brit` and `morgan`
+cleanly, no challenge offered, from the same machine and address that had been
+refused six days earlier. MoMA went all the way to a real exhibition page with
+text — the first ever read from that venue. **`scraper/probe_headed.js` is the
+record and the tool; `docs/venues.md` §Morgan has what this overturned.**
+
+**But access was never the hard part — PACE is.** Five addresses fired back to
+back, four at one museum, and everything after the first was challenged; the
+judgement then followed us to the other venue, since both sit behind the same
+protection. **The engine currently fetches exhibition pages with no gap at all**
+— MoMA alone would fire 24 in seconds. Nothing sweeps these three until that is
+fixed. Open: is it speed, or a limit per browsing session? The two look
+identical from here and the next run is designed to separate them.
+
 ### What the script cannot derive — her rulings, per venue
 
 Judgement about the outside world is not in any file.
@@ -137,6 +153,7 @@ Judgement about the outside world is not in any file.
 | `tate-britain` | Ofili excluded, on the venue's own ONGOING label |
 | `uffizi` | Headlines kept as titles; undated rows kept |
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md` |
+| `moma` | **Current and upcoming only.** She does not want its past at all |
 | `rijks` | 37 rows, not chased further. *Asian Pavilion* was pulled by the venue |
 | `capo` | **Not count-verified and never will be** — see below |
 | `brera`, `borghese` | Their single extra row is a marker for a genuinely empty upcoming page |
@@ -484,7 +501,8 @@ npm test                                     all fixtures
 | `probe_pagination.js` | Asks whether a given page holds anything. Read-only |
 | `inspect_listing.js` | Asks a listing page what link shapes it contains |
 | `probe_access.js` | Loads a listing twice, headless announced and not |
-| `probe_morgan.js` | The Morgan's four combinations. **Answered — keep as the record, do not re-run** |
+| `probe_headed.js` | Whether a browser with a HISTORY gets in. Paces itself, stops at the first check that will not clear, and saves each page it reads so a recipe can be written offline |
+| `probe_morgan.js` | The Morgan's four combinations, all blank-profile. **Superseded 22 Sep — keep as the record, do not re-run** |
 | `data_probe.js` | The only probe that asks the real question: opens exhibition pages and extracts title, dates, text |
 | `reach_probe.js` | Reachability only — says nothing about usable rows |
 | `sweep_fetch.js` | Older diagnostic copy, no browser. Not developed |
@@ -521,9 +539,18 @@ scraper/output/run_2026-09-10_183045/
 
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
-announces which it thinks it is before fetching. **Container: 19** (its 16 working
-venues plus the blocked three). **Her laptop: 2** — `met`, `artic`
+announces which it thinks it is before fetching. **Container: 18** (its 16 working
+venues plus `brit` and `morgan`). **Her laptop: 3** — `met`, `artic`, `moma`
 (`route: 'local'`).
+
+`moma` moved on 22 Sep: the container is refused and only a visible browser with
+a history gets in. `brit` and `morgan` stay on the container until their recipes
+are written from the live pages — moving them sooner would only mean her machine
+collecting the refusals instead. Fixtures R-001 to R-005.
+
+**`headed: true` marks a venue needing that browser.** The engine cannot launch
+one yet, so the run SAYS SO per venue rather than letting the flag sit there
+looking like working wiring.
 
 **The two machines never sweep the same venue.** Sweeping from both doubles what
 a venue sees, and both of these rate-limit — which is how a working venue becomes
@@ -839,16 +866,28 @@ if they had no shop.
 appears on the SECOND lookup of a row, because it is a comparison — so the first
 row to press is one she has seen leave a shop.
 
-### 2. Venues with no route
+### 2. The three blocked venues — a route exists, and it needs pacing
 
-`moma`, `brit`, `morgan`, and `artic` from her machine since 16 Sep.
+**Access is answered (§2). What is not answered is whether it survives a sweep.**
 
-**What is parked is the 16 Sep BRANCH, not the venues.** She is giving it one more
-attempt on her own machine: either something is fixed or `claude/quiet-user-agent`
-is ditched for good. **The deciding test is a real sweep, not a probe** — dropping
-`HeadlessChrome` opens MoMA's listing page but all 24 detail pages still refuse,
-so the question is whether any row arrives WITH TEXT. Every ordinary sweep
-re-tests all four anyway.
+Next, in order:
+
+1. **Three addresses, well spaced, one run.** All clean means speed was the
+   fault. First clean and the rest blocked means it is the browsing session, not
+   the speed — a different fix. Nothing else proceeds until this is known.
+2. **A gap between pages in the engine**, then headed support, then `brit` and
+   `morgan` move to her machine. This touches shared code that 18 working venues
+   depend on, so it is hers to approve before it is written.
+3. **The two recipes.** `brit`'s hunts for `/exhibitions-events/` while its
+   exhibitions live at `/exhibitions/`, and its listing is keyed to a DATE RANGE
+   in the address — one request returns the whole upcoming set, no pagination.
+   `morgan`'s only fault is that `/exhibitions/online` is a section, not a show.
+   **She writes both from the live site**, her ruling 22 Sep; the probe saves
+   the pages so no further visits are needed.
+
+`moma`'s recipe is done — current/upcoming, her machine, `headed`.
+
+**`artic` from her machine is unchanged and untested against any of this.**
 
 ### 3. A fresh sweep, eventually
 
