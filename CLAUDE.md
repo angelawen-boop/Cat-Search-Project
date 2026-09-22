@@ -604,7 +604,7 @@ differing in one model string.
 ```
 id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
 acquiring, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
-publisherUrl, publisherUrlKind, shopUrl, shopState, addedAt, editedAt
+publisherUrl, publisherResult, shopUrl, shopState, addedAt, editedAt
 ```
 
 Ledger backup is JSON; the sweep pro forma is CSV.
@@ -814,12 +814,12 @@ Search hands back a guess; the difference between a book and a shelf is
 inside the page. So after the `site:` search picks a page, the app fetches it
 and one of three things happens:
 
-| What the page turns out to be | What is kept |
-|---|---|
-| The book's own page | that address, marked **product** |
-| A list of books, this one among them | **the book's own link, read off the list**, marked product |
-| Came back empty — drawn by script | the section, marked **container**, and labelled as such on screen |
-| Nothing to do with this book | nothing; a link she can't use is worse than no button |
+| What the page turns out to be | What is kept | Button |
+|---|---|---|
+| The book's own page | that address, `product` | Publisher |
+| A list with the book on it | **the book's own link, read off the list**, `product` | Publisher |
+| Came back empty — drawn by script | the section, `container` | Publisher's section |
+| Nothing to do with this book | the next candidate is tried, then the fallback below | |
 
 **The link read off a list is checked, never trusted** (`deepLinkOn`): it must
 be on the publisher's own host, and it must not be the list we are standing
@@ -841,17 +841,59 @@ art publishers is not worth building; the honest label is. `full_content` was
 tested on Hannibal and returns the same 110 characters — there is no hidden
 data block to rescue, so there is no cheaper route either.
 
+**TWO CANDIDATES, NOT ONE — her question, 22 Sep.** She asked whether a page
+that turns out to have nothing to do with the book just means the model
+picked the wrong one of the eight results, and whether it should go back.
+It should, and **going back costs no new search** — the results are already
+in hand, so it is one more page opened and nothing else. The read hands back
+an ordered short list and the code walks it.
+
+**WHAT BOUNDS IT IS THE LIST, NOT A COUNTER**, which was her other worry.
+**Two is the cap and it is stated, not tuned:** the results came back ranked,
+so if the best two are both wrong the site does not have the book, and a
+third opening spends her allowance on hope. The fallback is better than a
+lucky third guess because it cannot be wrong.
+
+**THE LADDER ENDS AT THE PUBLISHER'S FRONT DOOR, NOT AT NOTHING — my call,
+easily reversed.** Once the publisher's website is identified, that address
+is the weakest answer that is still true, so a book the site will not
+surface falls back to `https://<publisher>/` labelled **Publisher's
+website**. Her framing invited it ("not even the publisher's section or home
+page"), and it matters most at Borghese, Capodimonte and the Accademia,
+which have no shop at all. **Say so if it is clutter and it comes out in one
+line.**
+
+**AND EVERY OUTCOME NOW SAYS WHICH ONE IT WAS — her second question, and the
+silence was real.** "No separate publisher page." printed whether the step
+had searched the publisher's own site and found nothing or **had never fired
+at all**. Her words: the silence could be *"search function didn't even
+fire"*. `publisherNote` gives each rung its own sentence and fixture C-069a
+asserts no two are the same:
+
+| Outcome | What the card says |
+|---|---|
+| `product` | nothing — the button is the answer |
+| `container` | The publisher's link opens the section this book sits in, not a page of its own. |
+| `site` | The publisher's own site doesn't show this book — the link opens their home page. |
+| `nosite` | Couldn't work out the publisher's own website, so there's no link to it. |
+| `unnamed` | No publisher was named for this book, so none was looked for. |
+| none recorded | No separate publisher page. — **the old sentence, kept for older rows only** |
+
 **THE LABEL IS THE POINT OF THE THIRD CASE.** The button reads
 **"Publisher's section"** rather than "Publisher", and the card adds *"The
 publisher's link opens the section this book sits in, not a page of its
 own."* She still gets a working link where the site will not give up a deeper
-one; the app just stops claiming it is the book's page. **A link from an
-older ledger carries no kind and keeps the plain label** — inventing a claim
-about it in either direction would be worse than making none. Fixtures C-052
-to C-062b.
+one; the app just stops claiming it is the book's page. **A row from an older
+ledger has no result recorded and keeps the plain label and the old
+sentence** — inventing a claim about it in either direction would be worse
+than making none. Fixtures C-052 to C-069a.
+
+**One field, `publisherResult`, and it records what the STEP concluded**, not
+only what kind of address came back — which is why it is set on the three
+outcomes that produce no link at all.
 
 **A PUBLISHER LINK FROM ANY OTHER STEP IS STILL UNVERIFIED AND STILL MAKES NO
-CLAIM.** Only this step sets the kind. A link read off the book's shop page
+CLAIM.** Only this step sets the result. A link read off the book's shop page
 is stored with no kind and shown exactly as it is today — it was never the
 thing she caught.
 
@@ -976,7 +1018,7 @@ offered and declined.**
 
 **Both decisions sit OUTSIDE the component**, for the reason `countDecisions`
 moved out: a rule a fixture cannot reach is a rule nobody checks. Fixtures C-001 to
-C-062b in `scraper/fixtures/catalogue_lookup.js`, verified by overwriting a known
+C-069a in `scraper/fixtures/catalogue_lookup.js`, verified by overwriting a known
 publisher, by accepting a 10-digit ISBN, and by putting the old ISBN-only gate
 back and watching C-013a fail. **It does not press the button**: the wiring from a finished lookup into
 the fill is read, not run.
@@ -1185,7 +1227,7 @@ pressed is still uncovered.
 
 **On `main` since the 20 Sep merge**, with the JSX they test. `npm test` runs 190
 unit checks, the 62 intake cases, the load check, the render check, then the
-catalogue-lookup cases (67 on 22 Sep) — and the **exit code** says whether all five
+catalogue-lookup cases (76 on 22 Sep) — and the **exit code** says whether all five
 passed, not the first number to scroll past. An early `return` in a fixture file
 exits the whole suite and the summary just stops printing (the fourth silent suite
 this guide has recorded) — await, never return. They only ran at all from 20 Sep:
@@ -2275,6 +2317,13 @@ Each entry cost a real failure. Before changing the area, read the line.
   characters of furniture; reporting that as "this book is not on the
   publisher's site" is a finding nobody earned. **Say the page came back
   empty.**
+- Printing one sentence for two different silences. "No separate publisher
+  page." was shown whether the step had searched the publisher's own site and
+  found nothing, or had never fired because no publisher was named. Her
+  words: the silence could be "search function didn't even fire". **A
+  negative has to say which negative it is.** Third time this app has had to
+  learn the same lesson, after the missing Publisher button and the "never"
+  printed for an empty sweep log.
 - An early `return` inside `catalogue_lookup.js`, which exits the whole suite
   so the summary line stops printing. **The fourth silent suite this guide has
   had to record.** Await, never return.
@@ -2492,7 +2541,7 @@ Each entry cost a real failure. Before changing the area, read the line.
    had to fix, in order**: the shop step ending on a book with no ISBN, the
    Publisher button being unreachable, a step that dies looking like an answer,
    and four rounds of query-tuning where the answer was to go to the publisher's
-   site. Fixtures C-001 to C-062b.
+   site. Fixtures C-001 to C-069a.
 
    **STILL OPEN.** The 14 venues she has no rows for yet — their shop addresses
    are checked but no lookup has run against them; that happens during the 320
@@ -2502,7 +2551,7 @@ Each entry cost a real failure. Before changing the area, read the line.
 
    **REBUILT AGAIN 22 SEP: the publisher step now opens what it found.** Her
    diagnosis, from her own Rizzoli and Hannibal lookups — the route and the
-   three outcomes are in §4, fixtures C-052 to C-062b. **Not yet run live by
+   three outcomes are in §4, fixtures C-052 to C-069a. **Not yet run live by
    her**: the shell path is proved against the real Hannibal page through the
    connector, but no end-to-end lookup has been pressed since the change. The
    Zurbaran, Matisse and Metamorphoses rows are the three to re-press.

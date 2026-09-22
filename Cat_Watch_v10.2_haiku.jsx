@@ -372,7 +372,7 @@ const S=[
 ["acq","Jacob El Hanani: Drawing on Canvas","2024-09-10","2024-10-18","New York. Microscopically fine line drawing.","jacob-el-hanani"],
 ];
 
-function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=m+"-"+t.toLowerCase().replace(/[^a-z0-9]+/g,"").slice(0,50);const mu=MU[m];return{id,museumId:m,title:t,startDate:s||null,endDate:e||null,summary:d,exUrl:sl?(mu.exBase+sl):mu.listUrl,interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherUrlKind:null,shopUrl:null,shopState:null};});}
+function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=m+"-"+t.toLowerCase().replace(/[^a-z0-9]+/g,"").slice(0,50);const mu=MU[m];return{id,museumId:m,title:t,startDate:s||null,endDate:e||null,summary:d,exUrl:sl?(mu.exBase+sl):mu.listUrl,interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null};});}
 
 function mergeSeedInto(existing){const byId=new Map(existing.map(r=>[r.id,r]));for(const s of buildSeed()){const p=byId.get(s.id);if(p)byId.set(s.id,{...p,startDate:p.startDate||s.startDate,endDate:p.endDate||s.endDate,summary:p.summary||s.summary,exUrl:p.exUrl||s.exUrl,watching:p.watching||false});else byId.set(s.id,s);}return Array.from(byId.values());}
 
@@ -425,7 +425,7 @@ const fmtDate=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");if(isNaN(x))
 function fmtRefresh(iso){if(!iso)return"never";const d=new Date(iso);if(isNaN(d))return"never";const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
 function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)return a+" \u2014 "+b;if(b)return"until "+b;if(a){const st=new Date(r.startDate+"T00:00:00");const past=!isNaN(st)&&st<=new Date();return(past?"open since ":"opens ")+a;}return"dates unknown";}
 
-function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:"Museum shop",href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+tq});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherUrlKind),href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?kn="+(isbn||tq)+"&sts=t"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q});return out;}
+function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:"Museum shop",href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+tq});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?kn="+(isbn||tq)+"&sts=t"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q});return out;}
 
 // ── FINDING A CATALOGUE — rebuilt 20 Sep 2026 ────────────────────────────────
 //
@@ -861,7 +861,32 @@ function deepLinkOn(u,host,container){
 // described. A link from an older ledger has no kind recorded; it keeps the
 // plain label, because inventing a claim about it either way would be worse
 // than making none.
-function publisherLinkLabel(kind){ return kind==="container"?"Publisher\u2019s section":"Publisher"; }
+function publisherLinkLabel(kind){
+  if(kind==="container")return "Publisher\u2019s section";
+  if(kind==="site")return "Publisher\u2019s website";
+  return "Publisher";
+}
+
+// THE SILENCE HAD TO END A SECOND TIME — her question, 22 Sep 2026.
+//
+// "No separate publisher page." was printed whether the step had searched the
+// publisher’s own site and found nothing, or had never fired at all. Her
+// words: the silence could be "search function didn’t even fire". So each
+// outcome now says which one it was, in one plain sentence.
+//
+// THE LADDER IS DELIBERATE, weakest answer last and each rung honest about
+// what it is: the book’s own page, then the section it sits in, then the
+// publisher’s front door, then no publisher website at all, then no
+// publisher name to go on. A row from an older ledger has no result recorded
+// and keeps the old sentence, because inventing one for it would be a claim.
+function publisherNote(result,hasUrl){
+  if(result==="container")return "The publisher\u2019s link opens the section this book sits in, not a page of its own.";
+  if(result==="site")     return "The publisher\u2019s own site doesn\u2019t show this book — the link opens their home page.";
+  if(result==="nosite")   return "Couldn\u2019t work out the publisher\u2019s own website, so there\u2019s no link to it.";
+  if(result==="unnamed")  return "No publisher was named for this book, so none was looked for.";
+  if(result==="product")  return "";
+  return hasUrl?"":"No separate publisher page.";
+}
 
 const SKEY="cw-v3";
 // DORMANT in v8: Claude cloud save is kept in the file but nothing calls it.
@@ -1442,7 +1467,7 @@ export default function App(){
 
   function makeLedgerRow(c,now){
     const base=c.museumId+"-"+normalizeTitle(c.title).replace(/[^a-z0-9]+/g,"").slice(0,50);
-    return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherUrlKind:null,shopUrl:null,shopState:null,addedAt:now,editedAt:null};
+    return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,addedAt:now,editedAt:null};
   }
 
   // Apply whatever she picked where the stitched file disagreed with itself.
@@ -1573,12 +1598,12 @@ export default function App(){
         shopState:onShop?"shop":"web",
         catalogueTitle:o.catalogueTitle||null,isbn13:toIsbn13(o.isbn13),
         publisher:o.publisher||null,publisherUrl:cleanPublisherUrl(o.publisherUrl,dom),
-        publisherUrlKind:null,
+        publisherResult:null,
         shopUrl:onShop?o.shopUrl:null}};
     }
     if(fromShopStage)return null;          // not found in the shop — go wider
     return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"no",shopState:"none",
-      catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherUrlKind:null,shopUrl:null}};
+      catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null}};
   };
 
   // ── FILLING A MISSING ISBN FROM THE PAGE ITSELF \u2014 her finding, 20 Sep 2026 ──
@@ -1702,109 +1727,141 @@ export default function App(){
   // after the shop has sold out. That is the window this whole app is about.
   const fillPublisherPage=async(hit,venue,dom)=>{
     const r=hit&&hit.row;
-    if(!r||!hit.ok||r.hasCatalogue!=="yes"||!r.publisher||r.publisherUrl)return hit;
+    if(!r||!hit.ok||r.hasCatalogue!=="yes"||r.publisherUrl)return hit;
+    // NO NAME, SO NOTHING WAS LOOKED FOR — and the card must say that rather
+    // than print the same sentence as a search that ran and found nothing.
+    if(!r.publisher)return{...hit,row:{...r,publisherResult:"unnamed"}};
     const book=r.catalogueTitle||r.title;
     const isbn=cleanIsbn(r.isbn13);
     setLookPhase("publisher");
 
-    // \u2500\u2500 FIRST, WHERE IS THE PUBLISHER \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-    // One search for the NAME alone. A publisher\u2019s own site is the top answer
+    // ── FIRST, WHERE IS THE PUBLISHER ──────────────────────────
+    // One search for the NAME alone. A publisher’s own site is the top answer
     // for its own name, and the domain is then read off the results in code.
     const d1=await searchWeb(
-      "The official website of the art-book publisher \u201c"+r.publisher+"\u201d.",
+      "The official website of the art-book publisher “"+r.publisher+"”.",
       [r.publisher, r.publisher+" art book publisher"]);
     let detail=hit.detail+"\n"+d1.detail;
     if(!d1.ok)return{...hit,detail,trouble:d1.detail};
     const pubHost=publisherDomainFrom(d1.results,r.publisher);
-    if(!pubHost)return{...hit,detail:detail+"\nCouldn\u2019t identify the publisher\u2019s own website."};
+    if(!pubHost)return{...hit,detail:detail+"\nCouldn’t identify the publisher’s own website.",
+      row:{...r,publisherResult:"nosite"}};
 
-    // \u2500\u2500 THEN SEARCH INSIDE IT, exactly as step one searches inside the shop \u2500\u2500
+    // FROM HERE THE PUBLISHER IS KNOWN, so the weakest honest answer is their
+    // own front door. Every branch below either beats it or falls back to it.
+    const home="https://"+pubHost+"/";
+    const onlyTheSite=why=>({...hit,detail:detail+"\n"+why,
+      row:{...r,publisherUrl:home,publisherResult:"site"}});
+
+    // ── THEN SEARCH INSIDE IT, exactly as step one searches inside the shop ──
     const sp=await searchWeb(
-      "The page on "+pubHost+" for the book \u201c"+book+"\u201d"+(isbn?", ISBN "+isbn:"")+".",
-      isbn?["site:"+pubHost+" "+book,"site:"+pubHost+" "+isbn,"site:"+pubHost+" "+book.split(/[:\u2013\u2014-]/)[0].trim()]
-          :["site:"+pubHost+" "+book,"site:"+pubHost+" "+book.split(/[:\u2013\u2014-]/)[0].trim()]);
+      "The page on "+pubHost+" for the book “"+book+"”"+(isbn?", ISBN "+isbn:"")+".",
+      isbn?["site:"+pubHost+" "+book,"site:"+pubHost+" "+isbn,"site:"+pubHost+" "+book.split(/[:–—-]/)[0].trim()]
+          :["site:"+pubHost+" "+book,"site:"+pubHost+" "+book.split(/[:–—-]/)[0].trim()]);
     detail=detail+"\n"+sp.detail;
     if(!sp.ok)return{...hit,detail,trouble:sp.detail};
     const onSite=(sp.results||[]).filter(x=>{try{return new URL(x.url).hostname.toLowerCase()===pubHost;}catch{return false;}});
-    if(!onSite.length)return{...hit,detail:detail+"\nNothing for this book on "+pubHost+"."};
+    if(!onSite.length)return onlyTheSite("Nothing for this book on "+pubHost+".");
 
+    // ── TWO CANDIDATES, NOT ONE — her question, 22 Sep ──────────────
+    //
+    // She asked what happens when the page we open turns out to have nothing
+    // to do with the book: did the model simply pick the wrong one of the
+    // eight results, and should we go back for another? Yes — and going back
+    // costs NO NEW SEARCH, because the results are already in hand. It is one
+    // more page opened, nothing else.
+    //
+    // WHAT BOUNDS IT IS THE LIST, NOT A COUNTER. The read hands back an
+    // ordered short list and the code walks it. Two is the cap and it is
+    // stated here rather than tuned: the results came back RANKED, so if the
+    // best two are both wrong the site does not have the book, and a third
+    // opening is spending her allowance on hope. The fallback below is better
+    // than a lucky third guess because it cannot be wrong.
     const rd=await readResults(
-      "These are pages from ONE publisher’s own website. Pick the ONE most likely to be, "
-     +"or to lead to, the page for this book.\n"
-     +"Prefer the book’s own page. If only a list or a section of many books mentions it, "
-     +"give that — it will be opened and read next. If none of them relates to this book, "
-     +"answer null.\n"
+      "These are pages from ONE publisher’s own website. Put them in order, best first, "
+     +"by how likely each is to BE the page for this book or to LEAD to it.\n"
+     +"A book’s own page beats a list or a section of many books, which beats anything else. "
+     +"Give at most two, and give none at all if nothing here relates to this book.\n"
      +"Use ONLY these results. Never invent a link.\n"
      +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+r.publisher
      +"\nExhibition venue: "+venue+"\n\n"
      +resultsForPrompt(onSite)
      +"\nReply with ONLY this JSON object and nothing else:\n"
-     +'{"publisherUrl": string|null}\n'
-     +'Example: {"publisherUrl":"https://hannibalbooks.be/en/fine-art"}');
+     +'{"candidates": [string]}\n'
+     +'Example: {"candidates":["https://hannibalbooks.be/en/fine-art","https://hannibalbooks.be/en/new"]}');
     detail=detail+"\n"+rd.detail;
     if(!rd.ok)return{...hit,detail,trouble:rd.detail};
-    const candidate=cleanPublisherUrl((rd.data||{}).publisherUrl,dom);
-    if(!candidate)return{...hit,detail:detail+"\nNo page for this book on "+pubHost+"."};
+    const raw=Array.isArray((rd.data||{}).candidates)?rd.data.candidates:[];
+    const candidates=[];
+    for(const c of raw){
+      const u=cleanPublisherUrl(c,dom);
+      if(u&&!candidates.some(x=>sameAddress(x,u)))candidates.push(u);
+      if(candidates.length>=2)break;
+    }
+    if(!candidates.length)return onlyTheSite("No page for this book on "+pubHost+".");
 
-    // ── NOW OPEN IT. WHAT SEARCH HANDS BACK IS A CANDIDATE, NOT AN ANSWER ──
+    // ── NOW OPEN THEM. WHAT SEARCH HANDS BACK IS A GUESS, NOT AN ANSWER ──
     //
-    // This is the step that was missing, and its absence is why Rizzoli read
-    // as a success and Hannibal as a success while one was the book and the
-    // other was a whole section of books. Search cannot tell us which it got,
-    // because the difference is IN the page. So we open the page.
-    const fp=await fetchPage(candidate,
-      "Whether this page is the book “"+book+"” itself, and any link on it to that book.",
-      [book,isbn||book]);
-    detail=detail+"\n"+fp.detail;
-    if(!fp.ok)return{...hit,detail,trouble:fp.detail};
+    // This is the step that was missing until 22 Sep, and its absence is why
+    // Rizzoli read as a success and Hannibal read as a success while one was
+    // the book and the other was a whole section of books. Search cannot tell
+    // us which it got, because the difference is INSIDE the page.
+    for(let i=0;i<candidates.length;i++){
+      const candidate=candidates[i];
+      const fp=await fetchPage(candidate,
+        "Whether this page is the book “"+book+"” itself, and any link on it to that book.",
+        [book,isbn||book]);
+      detail=detail+"\n"+fp.detail;
+      if(!fp.ok)return{...hit,detail,trouble:fp.detail};
 
-    // THE SHELL CASE, AND IT IS THE HONEST FLOOR. Hannibal draws its book list
-    // by script after the page arrives, so the reader gets a sort control and
-    // a newsletter box. We cannot see the book and we must not pretend we
-    // looked: the link is kept, and it is kept LABELLED as the section.
-    if(pageIsShell(fp.results)){
-      return{...hit,detail:detail+"\nThat page came back empty — kept as the publisher’s section, not the book’s own page.",
-        row:{...r,publisherUrl:candidate,publisherUrlKind:"container"}};
-    }
-
-    const vr=await readResults(
-      "You are reading ONE page from a publisher’s own website, in full. Decide what it is.\n"
-     +"Use ONLY what this page says. Never use outside knowledge and never invent a link.\n"
-     +'"book"    — this page IS about the book named below: it is that book’s own page.\n'
-     +'"listing" — this page lists or advertises several books. If one of them is the book '
-     +"below, give ITS link in bookUrl, copied exactly from this page; otherwise bookUrl null.\n"
-     +'"other"   — this page has nothing to do with this book or this publisher’s books.\n'
-     +"MATCH ON THE ISBN WHERE THERE IS ONE. A publisher may carry the same book in two "
-     +"languages, with two links and two numbers, and the titles will not tell them apart.\n"
-     +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+r.publisher+"\n\n"
-     +pageForPrompt(fp.results)
-     +"\nReply with ONLY this JSON object and nothing else:\n"
-     +'{"kind": "book"|"listing"|"other", "bookUrl": string|null}\n'
-     +'Example: {"kind":"listing","bookUrl":"https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten#102642"}');
-    detail=detail+"\n"+vr.detail;
-    if(!vr.ok)return{...hit,detail,trouble:vr.detail};
-    const kind=String((vr.data||{}).kind||"");
-
-    if(kind==="book"){
-      detail=detail+"\nPublisher’s page for the book: "+candidate;
-      return{...hit,detail,row:{...r,publisherUrl:candidate,publisherUrlKind:"product"}};
-    }
-    if(kind==="listing"){
-      // The deep link is checked, not trusted: it must be on the publisher's
-      // own host and it must not be the listing we are standing on.
-      const deep=deepLinkOn((vr.data||{}).bookUrl,pubHost,candidate);
-      if(deep){
-        detail=detail+"\nBook’s own page, read off the publisher’s list: "+deep;
-        return{...hit,detail,row:{...r,publisherUrl:deep,publisherUrlKind:"product"}};
+      // THE SHELL CASE, AND IT IS THE HONEST FLOOR. Hannibal draws its book
+      // list by script after the page arrives, so the reader gets a sort
+      // control and a newsletter box. We cannot see the book and we must not
+      // pretend we looked: the link is kept, and kept LABELLED as the section.
+      if(pageIsShell(fp.results)){
+        return{...hit,detail:detail+"\nThat page came back empty — kept as the publisher’s section, not the book’s own page.",
+          row:{...r,publisherUrl:candidate,publisherResult:"container"}};
       }
-      detail=detail+"\nThe publisher lists books here but gives this one no page of its own — kept as the section.";
-      return{...hit,detail,row:{...r,publisherUrl:candidate,publisherUrlKind:"container"}};
+
+      const vr=await readResults(
+        "You are reading ONE page from a publisher’s own website, in full. Decide what it is.\n"
+       +"Use ONLY what this page says. Never use outside knowledge and never invent a link.\n"
+       +'"book"    — this page IS about the book named below: it is that book’s own page.\n'
+       +'"listing" — this page lists or advertises several books. If one of them is the book '
+       +"below, give ITS link in bookUrl, copied exactly from this page; otherwise bookUrl null.\n"
+       +'"other"   — this page has nothing to do with this book or this publisher’s books.\n'
+       +"MATCH ON THE ISBN WHERE THERE IS ONE. A publisher may carry the same book in two "
+       +"languages, with two links and two numbers, and the titles will not tell them apart.\n"
+       +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+r.publisher+"\n\n"
+       +pageForPrompt(fp.results)
+       +"\nReply with ONLY this JSON object and nothing else:\n"
+       +'{"kind": "book"|"listing"|"other", "bookUrl": string|null}\n'
+       +'Example: {"kind":"listing","bookUrl":"https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten#102642"}');
+      detail=detail+"\n"+vr.detail;
+      if(!vr.ok)return{...hit,detail,trouble:vr.detail};
+      const kind=String((vr.data||{}).kind||"");
+
+      if(kind==="book"){
+        detail=detail+"\nPublisher’s page for the book: "+candidate;
+        return{...hit,detail,row:{...r,publisherUrl:candidate,publisherResult:"product"}};
+      }
+      if(kind==="listing"){
+        // The deep link is checked, not trusted: it must be on the publisher's
+        // own host and it must not be the listing we are standing on.
+        const deep=deepLinkOn((vr.data||{}).bookUrl,pubHost,candidate);
+        if(deep){
+          detail=detail+"\nBook’s own page, read off the publisher’s list: "+deep;
+          return{...hit,detail,row:{...r,publisherUrl:deep,publisherResult:"product"}};
+        }
+        detail=detail+"\nThe publisher lists books here but gives this one no page of its own — kept as the section.";
+        return{...hit,detail,row:{...r,publisherUrl:candidate,publisherResult:"container"}};
+      }
+      // "other" — the search matched something that is not this book at all.
+      // Try the next candidate if there is one; otherwise fall to the site.
+      detail=detail+"\nThat page is not about this book."
+        +(i+1<candidates.length?" Trying the next result.":"");
     }
-    // "other" — the search matched something that is not this publisher's book
-    // area at all. A link she cannot use is worse than no button, and a
-    // container label would be a claim we just disproved.
-    detail=detail+"\nThat page is not about this book — no publisher link kept.";
-    return{...hit,detail};
+    return onlyTheSite("None of the pages on "+pubHost+" was this book.");
   };
 
   async function lookupCat(row){
@@ -2451,8 +2508,7 @@ export default function App(){
                           than a fault \u2014 which is exactly why the silence had to end. */}
                       {r.shopState==="shop"&&<div style={{fontSize:11,marginBottom:6}}>
                         <span style={{color:C.action,fontWeight:600}}>In the museum shop.</span>
-                        {!r.publisherUrl&&<span style={{color:C.soft}}> No separate publisher page.</span>}
-                        {r.publisherUrlKind==="container"&&<span style={{color:C.soft}}> {"The publisher\u2019s link opens the section this book sits in, not a page of its own."}</span>}
+                        {publisherNote(r.publisherResult,!!r.publisherUrl)&&<span style={{color:C.soft}}> {publisherNote(r.publisherResult,!!r.publisherUrl)}</span>}
                       </div>}
                       {/* The dash is a STRING, not page text. Written as a bare
                           \u2014 among the words it printed those six characters
@@ -2461,8 +2517,7 @@ export default function App(){
                           found outside its venue's shop. */}
                       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
                         {"Not in the museum shop \u2014 the shop link below opens the general store; other buy options shown too."}
-                        {!r.publisherUrl&&" No separate publisher page."}
-                        {r.publisherUrlKind==="container"&&" The publisher\u2019s link opens the section this book sits in, not a page of its own."}
+                        {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
                       {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
                       {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
@@ -2473,7 +2528,7 @@ export default function App(){
                         {isAcq?(
                           <>
                             {r.shopUrl&&<a href={r.shopUrl} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
-                            {r.publisherUrl&&<a href={r.publisherUrl} target="_blank" rel="noopener noreferrer" style={lnk}>{publisherLinkLabel(r.publisherUrlKind)} {"\u2197"}</a>}
+                            {r.publisherUrl&&<a href={r.publisherUrl} target="_blank" rel="noopener noreferrer" style={lnk}>{publisherLinkLabel(r.publisherResult)} {"\u2197"}</a>}
                           </>
                         ):buyLinks(r).map(l=><a key={l.name} href={l.href} target="_blank" rel="noopener noreferrer" style={lnk}>{l.name} {"\u2197"}</a>)}
                       </div>

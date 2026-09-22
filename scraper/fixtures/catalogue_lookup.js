@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel };')(
+    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -370,10 +370,40 @@ function runtime(answer, log) {
     // What the button is allowed to claim.
     eq(api.publisherLinkLabel('container'), 'Publisher’s section',
        'C-062: a section is called a section');
+    eq(api.publisherLinkLabel('site'), 'Publisher’s website',
+       'C-062a: and a front door is called a website');
     eq(api.publisherLinkLabel('product'), 'Publisher',
-       'C-062a: a verified page is called the publisher');
+       'C-062b: a verified page is called the publisher');
     eq(api.publisherLinkLabel(null), 'Publisher',
-       'C-062b: a link from an older ledger makes no claim either way');
+       'C-062c: a link from an older ledger makes no claim either way');
+  }
+
+  // C-063 to C-069a: every outcome says which one it was.
+  // Her question, 22 Sep: "No separate publisher page." was printed whether
+  // the step had searched the publisher's own site and found nothing or had
+  // never fired at all, so the silence could be "search didn't even fire".
+  // Each rung of the ladder now has its own sentence, and no two are equal.
+  {
+    const api = lift({ document: {}, localStorage: {} });
+    const note = (result, hasUrl) => api.publisherNote(result, hasUrl);
+
+    eq(note('product', true), '', 'C-063: the book’s own page needs no explaining');
+    eq(/section this book sits in/.test(note('container', true)), true,
+       'C-064: a section says it is a section');
+    eq(/home page/.test(note('site', true)), true,
+       'C-065: a front door says the site does not show this book');
+    eq(/work out the publisher./.test(note('nosite', false)), true,
+       'C-066: no website found is not the same as no page found');
+    eq(/no publisher was named/i.test(note('unnamed', false)), true,
+       'C-067: and a step that never fired says so, which is what she asked for');
+    eq(note(null, false), 'No separate publisher page.',
+       'C-068: an older row keeps the old sentence rather than a new claim');
+    eq(note(null, true), '', 'C-069: an older row WITH a link says nothing at all');
+
+    // The sentences must differ, or the whole point of them is lost.
+    const said = ['container', 'site', 'nosite', 'unnamed', null]
+      .map(k => note(k, k === 'container' || k === 'site'));
+    eq(new Set(said).size, said.length, 'C-069a: no two outcomes print the same sentence');
   }
 
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');
