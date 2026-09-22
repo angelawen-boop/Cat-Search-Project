@@ -579,10 +579,10 @@ Code session involved. A session republishes to the same URL; she reloads.
 > publish that restates `capabilities` must restate all four; omitting the field
 > carries them forward, the default every publish has used.
 >
-> **Version 29, 22 Sep 2026** is what she runs. **BUILDING IT IS CODE'S JOB
+> **Version 31, 22 Sep 2026** is what she runs. **BUILDING IT IS CODE'S JOB
 > NOW — `node build/build_app.js`**, which transpiles, wraps it in the shell,
-> proves it parses and writes `build/dist/index.html`. It reproduces version 29
-> byte for byte. **The shell is committed** (`build/shell_head.html`,
+> proves it parses and writes `build/dist/index.html`. It reproduced version 29
+> byte for byte when it was written, and has built 30 and 31 since. **The shell is committed** (`build/shell_head.html`,
 > `build/shell_tail.html`, taken from the live page and verified against it):
 > it used to say "take it from the published page", which was one more thing to
 > remember and one more way to lose the pre-paint background.
@@ -609,8 +609,10 @@ Losing or silently corrupting the ledger is the worst outcome the design guards
 against; it holds every tracked exhibition plus her marks (watching / dismissed /
 want-catalogue / acquired / catalogue details).
 
-Current build: `Cat_Watch.jsx` (line count went stale twice when
-typed — `wc -l` answers it).
+Current build: `Cat_Watch.jsx` (line count went stale twice when typed —
+`wc -l` answers it). **Renamed from `Cat_Watch_v10.2_haiku.jsx` on 22 Sep**;
+no version number in the name either, because the published version is
+already past it and a number in a filename only drifts.
 
 ### The model question — CLOSED, her ruling 22 Sep 2026
 
@@ -2740,7 +2742,13 @@ Each entry cost a real failure. Before changing the area, read the line.
    **TESTED BY HER ON THE PUBLISHED PAGE, 22 Sep** — *Metamorphoses* returns
    Hannibal with the section link and its note, both useful; *Zurbarán* is
    correct and produced the self-publisher rule above; Acquavella's *Matisse*
-   still returns the Rizzoli page it always did.
+   still returns the Rizzoli page it always did. She re-tested after the
+   self-publisher list went in and confirmed it faster.
+
+   **SHIPPED 22 Sep AND NOT YET RUN BY HER: the shop-status change** (§4, "A
+   book leaving the shop"). Version 31 carries it. The first row to press is
+   any she has seen leave a shop — the sentence only appears on the SECOND
+   lookup of a row, because it is a comparison.
 
    **Her seed cannot test much more.** Four venues, two of which publish their
    own catalogues, so the publisher step has one real test case in it.
