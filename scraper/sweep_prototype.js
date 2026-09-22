@@ -414,6 +414,11 @@ function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
  * disagree about whether the first page is 0 or 1 and only the site can say.
  * The Menil's bare /exhibitions/past is page 0, so its second page is ?page=1.
  */
+// BEFORE CHANGING THIS OR THE LOAD-MORE PRESS, READ docs/scraper.md SECTION 2.
+// The two shapes of "there is more below" need opposite treatments, how many
+// pages a site has is never written into a recipe, and the press is followed by
+// a WATCH rather than a sleep — a fixed pause cost 4 Louvre exhibitions and made
+// the row count depend on how busy the machine was.
 function followPagination(queue, pg, newRows, rows, code, v) {
   const spec = pg.paginate;
   if (!spec) return;
@@ -881,6 +886,11 @@ function applyExtension(range, text) {
   return { ...range, end: iso, extendedFrom: range.end };
 }
 
+// BEFORE CHANGING ANYTHING IN THIS PARSER, READ docs/scraper.md SECTION 3.
+// It holds every format found in the wild, the three guards that stop art
+// history being read as exhibition dates, and the reason `looseSingles` exists
+// — a rule that is safe on a listing card and a lottery on a whole page. Each
+// of those cost real rows, and several of them cost them twice.
 function findDateRange(raw, opts = {}) {
   return applyExtension(findDateRangeCore(raw, opts), raw);
 }

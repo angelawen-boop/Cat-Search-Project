@@ -1,16 +1,15 @@
 # Cat Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
-**Last updated:** 21 Sep 2026 (late)
 
-Cassili collects art-exhibition catalogues. They go out of print fast once a show
+She collects art-exhibition catalogues. They go out of print fast once a show
 closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 21
 museums and galleries and shows how close each catalogue is to its likely
 out-of-print window, so she can buy before it is too late.
 
 Two components, and they are **coupled**:
 
-1. **The app** — `Cat_Watch.jsx`, a React artifact she runs inside Claude.
+1. **The app** — `Cat_Watch.jsx`, a React page published on her Claude account.
 2. **The scraper** — `scraper/`, which produces the CSV the app eats.
 
 They agree on the pro forma CSV columns (§3). If the scraper changes what it
@@ -23,391 +22,150 @@ is why they live in one repo, on one branch.
 
 ### House rules
 
-- **Plain English, ELI5 for a non-technical reader — but never use that as cover
-  for explaining less.** She does not read code and does not want to. Explain the
-  logic, the trade-off, the limitation, the risk — all of it — in easier words.
-  Simplify the *language*, never the *substance*. Leaving out a real problem
-  because it was hard to phrase simply is a failure, not a kindness.
-- **Be concise.** She is optimising for decisions-per-minute. Short bullets over
-  paragraphs.
-- **Cut the length of every reply by roughly 60%** against what comes naturally.
-  This is on top of "be concise", not a restatement of it.
-- **Suppress most visible thinking.** It burns her usage allowance and is written
-  in a register she cannot read. Think as hard as needed; show almost none of it.
+- **Plain English, ELI5 — but never as cover for explaining less.** She does not
+  read code and does not want to. Explain the logic, the trade-off, the risk —
+  all of it — in easier words. Simplify the *language*, never the *substance*.
+- **Be concise, then cut another 60%.** She is optimising for
+  decisions-per-minute. Short bullets, never paragraphs.
+- **Suppress most visible thinking.** It burns her allowance and is written in a
+  register she cannot read.
+- **This guide talks ABOUT her in the third person. Never talk TO her that way.**
+  "She" and "her" here mean the person reading your reply. Saying "her call" or
+  "she confirmed" to her face is alienating and she has said so.
+- **Never hand back a list of open items copied out of this guide without
+  checking it first.** Lines go stale: an item can be settled, rejected, or
+  already done. Read the surrounding passage before repeating it.
+- **She tests every change herself, by clicking, on the published page.** Never
+  report an automated test's blind spot as though the app were unverified.
 - **Never propose dropping a feature or accepting reduced functionality as the
   fix.** When something breaks, make it work.
-- **No undiscussed changes, no silent workarounds, no shortcut fixes.** Fix the
-  real problem and say what you did.
+- **No undiscussed changes, no silent workarounds, no shortcut fixes.**
 - **She will not manually enter exhibition data.** A fixed constraint.
 - **Destructive actions need a confirmed backup or an explicit yes.**
-- **NEVER REPUBLISH THE APP WHILE SHE HAS IT OPEN.** Her ruling, 20 Sep. The
-  published page updates under her, and her ledger lives IN that page until she
-  Exports — so a push landing mid-review can take unsaved work with it, not just
-  her scroll position. Ask, or wait until she says she is out. (A page can be
-  made to carry its state across an update; not built, and building it does not
-  retire this rule.)
-- **Long runs need progress.** A backgrounded command that shows nothing reads as
-  a dead session.
+- **NEVER REPUBLISH THE APP WHILE SHE HAS IT OPEN.** Her ledger lives IN that
+  page until she Exports, so a publish landing mid-review can take unsaved work
+  with it. Ask, or wait until she says she is out.
+- **Long runs need progress.** A backgrounded command showing nothing reads as a
+  dead session.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
-- **This guide talks ABOUT her in the third person. Never talk TO her that way.**
-  "She" and "her" in here mean the person reading your reply. Saying "her call"
-  or "she confirmed" to her face is alienating and she has said so.
-- **Never hand back a list of open items copied out of this guide without
-  checking it first.** Lines here go stale: an item can be settled, rejected or
-  already done. Read the surrounding passage before repeating it to her — and if
-  it says "her call" or "raised rather than decided", that is exactly the kind of
-  line that may already have been answered.
 
 ### Put it in code — her rule, 10 Sep 2026
 
-**Hard code beats a Claude Code session, and a Claude Code session beats Chat
-Claude.** Push every job as far up that order as it will go. The test:
+**Hard code beats a Claude Code session, and a session beats Chat Claude.** Push
+every job as far up that order as it goes. The test:
 
 > **Does the task have exactly one correct answer, derivable from the inputs?**
 
 - **One correct answer → code.** Merging files, choosing which venues still need
-  running, validating a date, resolving a link. These must never be prose rules a
-  session re-derives, because that is precisely how a CSV gets mangled — and the
-  damage is invisible until it reaches her.
+  running, validating a date, resolving a link, rebuilding a lost cache. These
+  must never be prose rules a session re-derives — that is precisely how a CSV
+  gets mangled, and the damage is invisible until it reaches her.
 - **Many acceptable answers, or judgement about the outside world → a model.**
   Compressing curatorial prose into a six-word teaser.
 - **Even then, a model touches strings, never files.** A script owns the CSV and
   asks for a value; the model never sees a comma or a column.
 
-Chat Claude has no project context and cannot read this guide. It is the last
-resort, not the plan.
+Chat Claude has no project context and cannot read this guide. Last resort.
 
 ### Editing this guide
 
-This file is loaded in full at the start of every session, so every line costs
-something on every session. It was 2,761 lines on 12 Sep 2026 and was cut to this.
-Keep it that way:
+Loaded in full at the start of every session, so every line costs something every
+time. It hit 2,905 lines on 22 Sep 2026 and was cut to this. Keep it that way:
 
+- **Record the conclusion, not the journey.** The story of how a bug was found
+  belongs in `docs/`, not here. When a finding is overturned, replace the passage
+  — git is the archive.
+- **Anything derivable from the repo is printed by a script, not typed here.**
+  The venue table was the standing example of the failure and is now
+  `scraper/venue_status.js`.
 - **Put the trigger next to the code, not in an index here.** A comment above the
-  date parser saying "before changing this, read `docs/venues.md`" fires because
-  the session is already looking at that line. An index entry only fires if a
-  session reads the index and follows it — that is where cross-referencing slop
-  comes from.
-- **Never duplicate a code comment into this guide.** One copy will drift, and the
-  drift is silent. The scraper's recipes are already well commented; trust them.
-- **Record the conclusion, not the journey.** When a finding is overturned,
-  replace the old passage with a line saying what is true now and what was wrong.
-  Git holds the full text; that is the archive.
-- **Never use `@path` imports here.** Claude Code loads those eagerly, so they
-  move text without saving anything.
-- **Anything derivable from the repo should be printed by a script, not typed
-  here.** The status table below is the standing example of the failure: it said
-  "artic never run" while four artic runs sat committed, and that line cost a
-  session.
+  date parser saying "read `docs/scraper.md` first" fires because the session is
+  already looking at that line.
+- **Never duplicate a code comment into this guide.** One copy will drift, and
+  the drift is silent.
+- **Never use `@path` imports here** — Claude Code loads those eagerly.
 
 ### Branching
 
-**`main` is the trunk and the source of truth for app and scraper both.** Work
-there by default. This document lives there and nowhere else.
+**`main` is the trunk and the source of truth for app, scraper and this guide.**
+Work there. `.claude/hooks/session-start.sh` switches a web session's
+auto-assigned branch to `main` before work begins; it refuses if the tree is
+dirty or the branch carries unmerged commits, and it fetches first.
 
-Branches are for separating **in-progress work from known-good work**, not for
+Branches are for separating in-progress work from known-good work, never for
 separating components. Use one only for a side quest that might be thrown away.
-Merge or abandon quickly.
 
-Claude Code web sessions are handed their own branch name at startup. That is the
-tool's habit, not a decision — `.claude/hooks/session-start.sh` switches to `main`
-before work begins. It refuses to move if the working tree is dirty or the branch
-carries commits not on `origin/main`, and it fetches before deciding, so it cannot
-discard anything.
+**Do not merge, do not re-open:**
 
-**THERE IS NO LIVE BRANCH ANY MORE — `claude/jsx-stitched-intake` MERGED INTO
-`main`, 20 Sep, on her instruction once she had signed off the intake against
-real files.** Everything the app gained since 13 Sep is on the trunk: the
-stitched-file intake, quarantine, per-venue freshness, the rebuilt save, the
-rebuilt catalogue lookup, `qc.js` and every fixture — §4 throughout. **`main`'s
-JSX is now what she is running**, and `npm test` on `main` finally covers the
-app rather than a fraction of it. The branch is kept as history; do not commit
-to it again.
+| Branch | What it is |
+|---|---|
+| `claude/quiet-user-agent` | The 16 Sep user-agent work. Parked, her ruling 19 Sep — §5 |
+| `claude/personal-tracking-ledgers-z49s2h` | Dead. An old default branch with no CLAUDE.md |
+| `claude/met-connection-experiments` | Abandoned experiment |
+| `claude/playwright-scraper-prototype-z68iko` | Abandoned — merging it would undo the current scraper |
 
-**PARKED BRANCH: `claude/quiet-user-agent`** — everything from 16 Sep. Her ruling
-19 Sep: do not merge, do not re-open. See §2.
-
-**Branches that exist:** `claude/personal-tracking-ledgers-z49s2h` is **dead** (an
-old default branch with no CLAUDE.md — if a session reports the scraper as having
-no date handling, it is on that branch). `claude/met-connection-experiments` and
-`claude/playwright-scraper-prototype-z68iko` hold abandoned experiments — **do not
-merge either**; the second would undo the current scraper.
+`claude/jsx-stitched-intake` merged into `main` on 20 Sep and is kept as history.
 
 ---
 
 ## 2. Where things stand
 
-**This table is hand-maintained and therefore suspect.** It is derivable from
-`scraper/output/` and should be printed by a script — see "Editing this guide".
-Until it is, check it against the newest run directory before trusting it.
+### Run the script, do not read a table
 
-| Venue | Code | Rows | Notes |
-|---|---|---|---|
-| National Gallery, London | `ng` | 27 | |
-| Rijksmuseum | `rijks` | 37 | 37 since; not chased, her call. *Asian Pavilion* pulled by the venue |
-| Acquavella | `acq` | 15 | |
-| Art Institute of Chicago | `artic` | 65 | was **local only**; **REFUSES HER MACHINE TOO since 16 Sep — every page 403, cause unknown.** Only EXHIBITION and TICKETED EXHIBITION kept, her ruling |
-| The Met | `met` | 106 | **local only**; 107 on 16 Sep, unaffected by any of the day's changes; see `docs/venues.md` |
-| The Frick | `frick` | 10 | **page two never read** — past archive paginates; `paginate` wired 13 Sep but the venue answered 403 on every verifying attempt, so the ~10 rows on page two are still uncollected |
-| The Menil | `menil` | 32 | past AND current archives paginate; 7 permanent galleries excluded, her ruling |
-| V&A | `va` | 6 | Displays excluded, **her ruling for THIS venue only** |
-| Tate Modern | `tate-modern` | 13 | |
-| Tate Britain | `tate-britain` | 9 | Ofili excluded on the venue's own ONGOING label |
-| Wallace Collection | `wallace` | 11 | displays and trails kept, **her ruling for THIS venue** |
-| Louvre | `louvre` | 22 | 22 was never a ceiling — see §5; "load more" pressed until it runs out |
-| Gallerie dell'Accademia | `dellav` | 2 | prints Italian dates on its English page |
-| Kunsthistorisches | `khm` | 6 | two rows half-dated because the venue says "since"/"until" |
-| Capodimonte | `capo` | 18 | **NOT count-verified and never will be**, her decision — reviewed only partly (see below) |
-| Uffizi | `uffizi` | 13 | headlines kept as titles and undated rows kept, **both her rulings** |
-| Brera | `brera` | 8 | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
-| Galleria Borghese | `borghese` | 8 | 7 exhibitions + 1 marker for a genuinely empty upcoming page |
-| MoMA / British Museum / Morgan | `moma` `brit` `morgan` | 0 | No route; marker rows only. See the parked section below |
+```
+node scraper/venue_status.js
+```
 
-Every reachable venue but Capodimonte was reviewed by her against the live site
-and re-swept; the one open exception is the Frick's page two (Notes above, and §5
-"What is NOT confirmed"). Capodimonte is the deliberate exception — see below.
+Per venue: rows from the last run that brought any, the last run that held the
+venue at all, which machine sweeps it, and — read from the marker rows, never
+inferred — why the last attempt brought nothing. When the two runs differ, that
+venue has stopped answering.
 
-**ALL SIXTEEN REACHABLE VENUES ARE REVIEWED BY HER, FIXED, AND VERIFIED AGAINST HER
-OWN COUNT.** Capodimonte is the one exception and a deliberate one — see below.
+As of 22 Sep: **406 exhibitions across 18 venues**; `moma`, `brit` and `morgan`
+have never returned one; `met` and `artic` were refused on 16 Sep after that
+session's repeated sweeps.
 
-Final counts, 12 Sep 2026 — **408 rows across the 18 reachable venues**: 406
-exhibitions and 2 marker rows (brera and borghese, each with a genuinely empty
-upcoming page). The per-venue figures are the Rows column above; container 237,
-met 106, artic 65. `moma`, `brit` and `morgan` return marker rows only, so nothing
-they do changes that figure.
-What to do about them is still open; see §7 step 6.
+### What the script cannot derive — her rulings, per venue
 
-No row at any venue carries a credit line, star rating, ticket price, funder list,
-opening hours, breadcrumb or cookie notice. The only empty summaries are the three
-Rijksmuseum rows whose own pages return HTTP 404, plus the occasional transient page
-timeout — which always says so on the row.
+Judgement about the outside world is not in any file.
 
-Her 12 Sep review and every fix made against it are written up in
-**`docs/review-2026-09-12.md`**, venue by venue, with what was wrong, what
-changed and what each venue now returns. Read that before touching a venue
-listed as DONE.
-
-### Getting past page one — 13 Sep 2026
-
-**Three venues were reading only page one of a listing, and none of it was a
-decision** — each recipe was written by looking at a first page and stopping.
-Her count cannot catch it: she counts what the site shows her, which is also
-page one. `menil` past lost 12 exhibitions; `menil` current and `frick` past
-both have a page two (~10 at the Frick).
-
-`detectUnwiredPagination()` now asks every listing page, every sweep, whether it
-links a page no recipe follows, and reports it in the run summary. **Structural,
-never a phrase list** — same address, one number different. **It warns, never
-fetches.** A filter the recipe drives itself is not a page: artic's `?year=`
-decade links tripped it 32 times for a venue with nothing missing, so
-`recipeDrivenParams()` excludes them. **A false alarm teaches her to scroll past
-the real one.**
-
-**The index base is the site's to state.** The Menil's bare page IS page 1
-(`from: 2`); the Frick's is page 0 (`from: 1`). Fixture P-014 holds both.
-
-`scraper/probe_pagination.js` asks whether a given page holds anything.
-Read-only; reads the venue's own selector so it cannot drift from the engine.
-
-### What is NOT confirmed — 13 Sep 2026
-
-Diagnosing the Louvre took repeated sweeps of the same pages, and by the end the
-Frick was 403 on a page it had just served and the Met was 429 on everything.
-**Her instruction: no probes or sweeps for hypothetical problems.** These are
-open, to be confirmed only as a by-product of a sweep that was happening anyway:
-
-| Open | Why |
+| Venue | Her ruling |
 |---|---|
-| `frick` page two, ~10 exhibitions | Wired 13 Sep, 403 on every attempt since |
-| `artic` — any year needing page **three**? | Recipe asks pages 1-2; no year holds 40+ today. The standing check reports it if it happens |
-| `louvre` — 2 summaries short | HTTP 429; those rows carry the reason |
-| The load-more fix beyond the Louvre | No other venue has such a control today |
+| `va` | Displays excluded — **this venue only** |
+| `wallace` | Displays and trails KEPT — **this venue only** |
+| `menil` | 7 permanent galleries excluded |
+| `tate-britain` | Ofili excluded, on the venue's own ONGOING label |
+| `uffizi` | Headlines kept as titles; undated rows kept |
+| `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md` |
+| `rijks` | 37 rows, not chased further. *Asian Pavilion* was pulled by the venue |
+| `capo` | **Not count-verified and never will be** — see below |
+| `brera`, `borghese` | Their single extra row is a marker for a genuinely empty upcoming page |
 
-**`met` needs nothing** — her check: its year pages load whole, nothing to click.
-`tate-modern`/`tate-britain` "recently opened" pages 1-4: **her ruling, the
-structure grows as needed and is not triggered — nothing to do.**
+**Whether displays count is HERS, and it varies by venue** — different museums
+mean different things by the word. Two venues disagreeing is the expected state,
+not a contradiction to tidy up.
 
-### Capodimonte is closed differently, and the difference matters — her ruling 12 Sep
+**Capodimonte is closed differently.** It publishes in Italian only, so taking a
+CSV row and finding that exhibition on the site is uselessly slow. Her decision:
+import every row unless visibly mangled, then use the app's URL button and let
+Chrome translate. Two consequences — **the `url` column is the load-bearing field
+at this venue, not the dates**, and **the summary must arrive in English**.
+Reasoning in `docs/scraper.md` §15.
 
-She could confirm the CSV holds no *visible* defects — no nonsensical titles, no
-mangled summaries. She could **not** verify it against the site: Capodimonte
-publishes in Italian only, and taking a CSV row and finding that exhibition on the
-site is slow to the point of uselessness.
+**All 21 have a recipe**, blocked ones included: a refusal costs half a second,
+leaves marker rows that show on the approval pile, and turns every sweep into a
+standing monitor. **Blocks are not permanent facts** — in five days Borghese went
+down and came back, dellav turned out never to have been blocked, the Met's
+archive turned out reachable, and `artic` went from reliable to refused.
 
-**So this venue is not count-verified and will not be.** Her decision instead:
-import every row unless it is visibly mangled, then use the app's URL button —
-Chrome translates the page for her, and the link is already attached to the card.
+**Every reachable venue but Capodimonte was reviewed by her against the live site
+and re-swept** — `docs/review-2026-09-12.md`, venue by venue. Read it before
+touching a venue listed there. The one open exception is the Frick's page two.
 
-Two consequences:
-
-- **The `url` column is the load-bearing field at this venue, not the dates.** All
-  18 rows carry the venue's own exhibition address and none was dead on the 12 Sep
-  run. Five rows have no closing date; she has accepted that.
-- **The summary must arrive in English.** Her whole approach rests on it. Prompt A
-  never stated an output language — English prompt, English examples, so a model
-  would most likely comply, but nothing required it. Now it does; see
-  `scraper/compress_prompt.md`.
-
-**Whether displays count is HERS, and it varies by venue** — different museums mean
-different things by the word. Not wanted at the V&A, wanted at the Wallace. Two
-venues disagreeing is the expected state, not a contradiction to tidy up.
-
-**All 21 have a recipe.** Blocked venues stay wired in deliberately: a refusal
-costs about half a second, leaves marker rows in the CSV so it is visible on the
-approval pile, and turns every sweep into a standing monitor. Blocks are not
-permanent facts — in five days Borghese went down and came back, dellav turned out
-never to have been blocked, the Met's archive turned out to be reachable, and
-`artic` went from "reliable" to refused.
-
-### The `Headless` user-agent — parked, her ruling 19 Sep
-
-**PARKED ON `claude/quiet-user-agent`. `main`'s scraper is byte-identical to
-13 Sep and stays that way.** Her verdict on the session that produced it: theories
-were spun up, sweeps were run to test them, the sweeps caused rate limiting, and
-then the limiting was read as fresh evidence. Nothing usable came out that is worth
-the divergence. **Do not merge it, and do not re-open it on a session's own
-initiative.**
-
-**WHAT IS PARKED IS THE BRANCH, NOT THE VENUES.** `moma`, `brit`, `morgan` and now
-`artic` are open work — §7 step 6. She is giving the question one more attempt, on
-her own machine, to either fix something or ditch the branch for good. **The
-deciding test is a real sweep, not a probe**, and the thing to look for is whether
-any row arrives WITH TEXT.
-
-**The one proven fact, kept because it is real:** Chromium announces
-`HeadlessChrome`, and removing that word changes MoMA's LISTING page from 403 to
-200 with 24 exhibitions. **It opens nothing else.** All 24 MoMA detail pages still
-refuse, so no row has text; `brit`, `artic` and the Met were unaffected. In the
-container all of them refuse either way.
-
-**WHY THESE VENUES REFUSE IS UNKNOWN.** Rate limiting, volume, her address,
-Cloudflare profiling her across sites — all guessed at, none tested. Do not repeat
-any as fact.
-
-**The shape of the failure, which is the part worth keeping:** a probe read one
-listing page, that was read as "the venue is open", the scraper was changed on it,
-and when the real sweep failed, causes were invented to explain it. **A probe that
-does not do what the sweep does — its volume, its detail pages, its concurrency —
-cannot tell you a venue works. It tells you one request was answered.**
-
-**THE MORGAN IS GENUINELY BLOCKED — settled, do not re-probe.** All four
-combinations of Chromium/Chrome and hidden/on-screen were refused by Cloudflare,
-including with her answering the challenge by hand. The page opens instantly in her
-ordinary browser, so it is not her address: the venue detects that a script is
-driving at all. **Her ruling: one small venue, she will check it herself.**
-
-**`artic` has refused HER MACHINE since 16 Sep**, having returned 65 rows on
-13 Sep. Whether that is the changed scraper, rate limiting from that day's sweeps,
-or the venue is unknown. Its 65 rows are already captured, so nothing is lost while
-it stays shut — but it is **open, not abandoned**, and is part of what her one
-further attempt at the 16 Sep question covers (§7 step 6).
-
-### Who sweeps what — IN CODE since 20 Sep, not a habit
-
-**The two machines never sweep the same venue.** `machineVenues()` decides, the
-machine is worked out from the proxy (present in the container, absent on her
-laptop), `--home` / `--container` force it, and the run announces which it
-thinks it is before fetching anything.
-
-| | |
-|---|---|
-| **Container — 19** | its 16 working venues, **plus `moma`, `brit`, `morgan`** |
-| **Her laptop — 2** | `met`, `artic` (`route: 'local'` in their recipes) |
-
-**The blocked three are swept BECAUSE they are blocked.** A refusal costs half a
-second, proves the block is still real, and leaves the marker rows that make a
-sweep's record complete.
-
-**It is code because remembering it failed.** On 13 Sep the container swept all
-21: its met and artic rows were nothing but refusals, and they landed in the
-stitched file beside the 171 real rows her own machine had for the same two
-venues — reading the coverage panel a week later she could not tell whether she
-had been blocked at home. And the cost is not only confusion: sweeping a venue
-from both machines doubles what it sees, and both of these rate-limit, which is
-how a working venue becomes a blocked one.
-
-**Naming venues by hand still wins**, because a one-off diagnostic is exactly
-when the rule should be breakable. It says so in the log rather than happening
-quietly. Fixtures R-001 to R-004.
-
-### artic — only the two types the venue calls an exhibition, her ruling 12 Sep
-
-**65 rows, down from 77.** She wants ONLY `EXHIBITION` and `TICKETED EXHIBITION`;
-`COLLECTION INSTALLATION`, `COLLECTION ROTATION`, `VIDEO INSTALLATION`,
-`SPECIAL LOAN INSTALLATION` and `HOLIDAY INSTALLATION` are all out. Her question was
-the right one: *"I don't know why we simply unglued the tags, instead of filtering
-out those exhibitions completely."* The badge stuck to the title was the visible
-symptom, so it had been treated as a title problem, and stripping it left the row
-in place looking like an exhibition.
-
-**The tag is on the exhibition's own page, not on every listing card.** Its current
-and upcoming cards carry it; its archive cards do not, which is why the card rule
-caught eight on the current page and nothing at all across six history pages.
-
-**Its year pages group by OPENING date**, so the year before the lookback floor has
-to be requested too — a show that opened in December 2023 and closed in August 2024
-is in range and sits on the 2023 page.
-
-**THE VENUE CONTRADICTS ITS OWN TAGGING.** The Neapolitan Crèche runs every year:
-one instance is labelled `HOLIDAY INSTALLATION` and excluded, the 2024 instance is
-labelled `EXHIBITION` and kept. **Her ruling: leave it.** Trusting the venue's tag is
-still right — the alternative is us deciding what things are — but it cannot survive
-the venue disagreeing with itself, and that is a known, accepted hole rather than a
-bug to chase.
-
-**`scraper/show_tags.js` prints every row's tag** and writes `tags_<venue>.txt` into
-the run directory. It exists because reconciling her count meant opening dozens of
-pages by hand to read one word off each — work with exactly one correct answer per
-row, which makes it code's job. It reads the same 400-character window as the
-scraper's own exclusion, so the two cannot disagree about where a tag lives.
-
-### artic — the earlier title lesson, still worth reading
-
-**77 rows, every title clean, verified against her own count and her reading of
-all 77.** The last of the 21. Detail in `docs/venues.md`.
-
-The lesson is worth more than the venue. **Three fixes in a row were guessed at
-from the CSV and all three were wrong**, because the CSV stores the title
-*squashed to one line* and the defect was made of line breaks — the evidence had
-been destroyed before it reached the file being read. One diagnostic on her
-machine printing the card's text **as lines** settled it in a single pass.
-
-**When the artefact cannot contain the evidence, stop reading the artefact.**
-And the CSV is not the only thing that flattens: a count does too. The run before
-last scored perfectly — 0 badges, 0 blanks, 0 wrong rows, exactly the predicted
-77 — while two titles had quietly lost half their names. **Only reading the 77
-titles found it.** Numbers confirm what you already suspect; they do not tell you
-what you failed to imagine.
-
-### Her rules for wiring a venue
-
-- **Count the live listing pages FIRST, then write the recipe, then check the
-  sweep returns that number.** This step was skipped for the European venues and
-  she caught two errors from the counts alone that the output could not show.
-  An independent count is the only check that can say "your number is wrong"
-  rather than "your rows look tidy".
-- **Two rounds of fixing and sweeping per venue, then stop.** If a session cannot
-  tell "the venue does not publish this" from "my recipe is wrong", it stops and
-  asks. **But check the limit is real first** — the KHM was written off as
-  publishing two links when the page simply lazy-loads.
-- At most ~15 diagnostic page reads per venue. Commit each venue before starting
-  the next; commit an unsolved venue anyway with the open question in the message.
-- **Diagnose one VENUE at a time, not one ISSUE at a time.** Within a venue:
-  is it getting data → is it getting the right data → is it recording it properly.
-- **An engine change is re-verified against the signed-off venues in the same
-  sitting.** Re-sweep after an engine change, never after a recipe tweak.
-
-### What is hers and what is the session's
-
-- **How the scraper mechanically finds the right thing on a page** — the session's.
-- **Whether a thing is an exhibition at all** — hers. Use judgement, proceed, and
-  surface it for confirmation.
-- **Checkable facts about the outside world** (is this documented address really
-  the listing?) — the session's, but **verified, never assumed**. This is the only
-  one of the three that fails silently: a bad extraction rule shows up as visible
-  junk, a wrong category call as unwanted cards, but a listing page never found
-  shows up as nothing at all. The Wallace brief's address is a two-tile hub;
-  trusting it would have returned 4 healthy-looking rows.
+No row carries a credit line, star rating, ticket price, funder list, opening
+hours, breadcrumb or cookie notice. The only empty summaries are three Rijksmuseum
+rows whose own pages return 404, plus occasional page timeouts — which say so on
+the row.
 
 ---
 
@@ -416,12 +174,13 @@ what you failed to imagine.
 The **only** file the app ingests. Columns exactly, in this order:
 
 ```
-venue_code, title, start_date, end_date, summary, url, notes
+venue_code, title, start_date, end_date, summary, url, notes, swept_at
 ```
 
 - CSV, not Excel. Excel silently reformats dates.
-- Dates must be `YYYY-MM-DD`. The app blanks anything it cannot read and notes it.
-- `venue_code` must be one of the codes in §2. Unknown codes land in "Couldn't be filed".
+- Dates `YYYY-MM-DD`. The app blanks what it cannot read and notes it.
+- `venue_code` must be one the recipes know. Unknown codes land in "Couldn't be
+  filed".
 - **Sweep lookback is 1 July 2024, permanently.**
 
 ### What the lookback means
@@ -432,46 +191,34 @@ Keep an exhibition if it was **open at any point on or after 1 July 2024**.
 - **The test is on the end date, never the start date.**
 - An unreadable end date is **kept and flagged** — an unknown date is not evidence
   of being too old.
-- **One exception: a year with no day.** "Summer 2022", "March / 2026". That is a
-  known but imprecise date, so take the **latest possible day of that year** as an
-  upper bound and drop if even that is before the floor. Used for the lookback
-  test only — **nothing is written into the date columns**.
+- **One exception: a year with no day.** "Summer 2022", "March / 2026" is a known
+  but imprecise date, so take the **latest possible day of that year** as an upper
+  bound and drop if even that is before the floor. Lookback test only —
+  **nothing is written into the date columns.**
 
 ### The scraper must never de-duplicate
 
 **It records everything it finds and makes no judgement about duplicates, ever.**
 Deciding whether two rows are the same exhibition happens in the app, where she
 sees each proposal. A scraper that silently drops rows it *thinks* are duplicates
-makes that decision unseen — and when wrong the loss is invisible. That is exactly
-what happened: 32 National Gallery exhibitions looked like 3 and 29 were destroyed.
-
-Know precisely what the app absorbs:
-
-- **Across sweeps — handled.** A row matching the ledger becomes a fill/change
-  proposal. Re-feeding the same file is safe.
-- **Within one file — on the branch only.** `main` compares each row against the
-  ledger and never against the rows beside it, so one exhibition twice makes two
-  Add cards. The branch folds them first — §4.
-
-**This does not license the scraper to de-duplicate.** The app folds on URL where
-she can see it happen; a scraper that drops rows makes the same call unseen.
+makes that decision unseen, and when wrong the loss is invisible. That is exactly
+what happened: **32 National Gallery exhibitions looked like 3 and 29 were
+destroyed.**
 
 **The one permitted exception: never read the same address twice.** Two rows with
 the same URL are the same exhibition, always, with no interpretation. Nothing
 cleverer qualifies — "same title", "looks like the same show" are judgements, and
 the last one cost 29 exhibitions. Three details make it work:
 
-- Compare the **finished address**, not the raw href. `normalizeUrl()` resolves
-  each href against the page it was found on.
+- Compare the **finished address**, not the raw href (`normalizeUrl()`).
 - The guard spans a **whole venue**, not one page.
 - **Only scheme and host are lowercased.** Hosts are case-insensitive by spec;
   paths are not. Folding the whole address merged two exhibitions differing only
   in capitalisation.
 
 A link resolving to **another host** is refused and counted in its own `offsite`
-column. When a link appears twice on different listing pages, the surviving row
-gains an "Also listed on the venue's 'past' page." note — information, never a
-silent drop.
+column. A link appearing twice on different listing pages gains an "Also listed on
+the venue's 'past' page." note — information, never a silent drop.
 
 ### The notes column is written for her, not for a log
 
@@ -479,211 +226,100 @@ Whatever lands in `notes` is shown **verbatim on the approval card**.
 
 - **Keep them short.** State the fact and stop.
 - **No advice, no instructions.** She can see an empty field and decide herself.
-- **Say WHY, not WHAT.** The app already reports empty fields itself; the
-  scraper's job is to explain the cause.
+- **Say WHY, not WHAT.** The app already reports empty fields; the scraper's job
+  is to explain the cause.
 
 Good: `No closing date found anywhere on the venue's pages.`
 Bad: `NO_END_DATE: kept, lookback unverified`
 
-**A NOTE THAT QUOTES THE PAGE QUOTES ITS MATCH, NEVER ITS INPUT — her finding,
-20 Sep.** Almost every Capodimonte row and the Wallace's Churchill row reached
-her carrying the whole page in `notes`: navigation, breadcrumbs and ticket
-prices, introduced by the words "read from a sentence". Capodimonte averaged
-**6,709 characters of notes per row** and one carried **17,734**.
+**A note that quotes the page quotes its MATCH, never its INPUT — her finding,
+20 Sep.** Almost every Capodimonte row reached her carrying the whole page in
+`notes` — navigation, breadcrumbs, ticket prices — averaging **6,709 characters
+per row**, one at **17,734**. `findDateRange` returned its input as `raw`, which
+was indistinguishable from returning the match while the input was always a
+listing card; then a second caller began handing it whole pages. Every branch now
+quotes its own match, capped (`frag()`). Fixtures Q-100 to Q-102. **A length cap
+alone would not have caught it** — the bug is quoting the wrong THING, and a
+capped whole page is still the wrong thing.
 
-`findDateRange` returns `raw`, and `raw` is what the note quotes. It was written
-for a LISTING CARD, where the input is a line or two — so returning the input
-was indistinguishable from returning the match. `findDateRangeInProse` then
-began falling through to it with a WHOLE PAGE. **The fall-through is right and
-is not the fault**: it is there to stop the two parsers drifting, which has cost
-dates twice. The fault is that one parser's idea of `raw` only held while its
-input stayed small. Every branch now quotes its own match, capped — `frag()`.
-Fixtures Q-100 to Q-102.
+### swept_at — the eighth column
 
-**A length cap alone would not have caught it.** The bug is quoting the wrong
-THING, and a capped whole page is still the wrong thing.
-
-### swept_at — the eighth column, 20 Sep 2026
-
-**HER FINDING.** The app's freshness drawer dated every venue by the moment she
-pressed Import and called it "tried". The sweep may have run twenty minutes or
-four days earlier. The file carried no sweep time, so the app had nothing truer
-to show.
-
-**PER ROW, NOT PER FILE OR PER VENUE.** Per file is wrong: a stitch mixes two
-machines, met and artic off her laptop and the rest off the container. Per venue
-is wrong too, because a stitch routinely holds TWO runs of one venue — the
-normal case, and the one that produces the app's combined bands.
-
-**HER QUESTION SETTLED THE SHAPE**, and the answer is the drawer's whole point:
-last TRIED is the latest sweep date for the venue, last BROUGHT ROWS the latest
-among its real rows. Borghese in her own file reads *tried 13 Sep 2:27pm · rows
-13 Sep 2:04am* — swept twice, the later run got only markers. That gap is the
-line that says re-run it alone.
-
-**IT ONLY READ THAT WAY AFTER A SECOND REPAIR, and the guide asserted it for a
-day while the file said otherwise — her catch, 20 Sep.** The rebuild described
-in §7 step 5 takes each venue's ROWS from one run, and for Borghese and
-Capodimonte that had to be the EARLIER run, because both had stopped answering
-by the afternoon. Dropping the later run dropped the only evidence it happened,
-so the drawer aged both venues back to 2am and lost the gap at the exact two
-venues that had earned it. **A repair that is right about the rows can still be
-wrong about the dates: they answer different questions of the same file.**
-`stitch_20260913_0442/fix_late_refusals.js` restores the later attempt's own
-marker rows, stamped from that run's log. It checks all 21 rather than the two
-we knew about, and throws rather than guess. Marker rows are not proposals, so
-her card count did not move.
+**PER ROW, not per file or per venue.** Per file is wrong because a stitch mixes
+two machines; per venue is wrong because a stitch routinely holds two runs of one
+venue.
 
 **Stamped when the venue FINISHES**, in `writeVenueCsv`, not at run start: a run
 takes ten minutes across nineteen venues and `--continue` can spread one across
-invocations hours apart, so the run's own stamp would flatten every venue to one
-instant — the exact flattening the column undoes. **UTC**, unlike run folder
-names, which are Sydney because a human sorts by them; this column is read by
-code in her browser's timezone.
+hours, so a run-level stamp would flatten every venue to one instant — the exact
+flattening this column undoes. **UTC**, unlike run folder names, which are Sydney
+because a human sorts by them.
 
-`stitch` and `compress` carry it without looking at it. compress needed its
-column list extended or `readProForma` would have dropped it silently.
+It drives the app's freshness drawer: **last TRIED** is the latest stamp for the
+venue, **last BROUGHT ROWS** the latest among its real rows. That gap is the line
+that says re-run this one alone.
 
-**Her 13 Sep file is repaired, no re-sweep** —
-`stitch_20260913_0442/add_swept_at.js`. Times recovered from **the venue's last
-line in the run log**, which is timestamped and venue-tagged, never from the
-folder name. It throws rather than guessing when a venue has no log line.
-
-### Prefer structured data over guessing
-
-Some venues embed a **schema.org Event** block: title, dates and description as
-real fields. It removes exactly the part that keeps breaking.
-
-**Universal logic, not a per-venue opt-in** — a venue that adds it later is picked
-up with no code change, one that removes it falls back silently. It is a **bonus
-source, never a replacement**: only the National Gallery publishes it, and only on
-detail pages, so the listing still has to be walked and the browser is always
-needed.
-
-**It must be proved to belong to this exhibition before use.** A page can carry
-several event blocks — a members' preview, a curator's tour, stale metadata.
-`pickStructuredEvent()` accepts one only on a confident name match; no match, or
-two equally good ones, and structured data is skipped entirely. A wrong date
-labelled "from the site's structured data" reads more authoritative than a blank
-one, which is worse than nothing.
+`stitch` and `compress` carry it without looking at it — but compress needed
+its column list extended, or `readProForma` would have dropped the column
+silently.
 
 ---
 
 ## 4. The app
 
-**Where it lives (changed 20 Sep; the earlier "hosting is impossible" was never
-checked and was wrong — test a claim before building a month of workarounds on
-it).** The app is a **published page on her Claude account** at one permanent
-private URL she bookmarks: open it in any browser signed in to Claude, no chat or
-Code session involved. A session republishes to the same URL; she reloads.
-
 > ### https://claude.ai/artifact/E2WjpRgr4W5eSzYtxyfrt5
 >
 > **Republish to THAT url** or a new page is created and hers stops updating;
 > from a session that did not publish it, pass it as `url`. It carries **four
-> capabilities**, each load-bearing: `downloads` (Export), `mcp` (her **Parallel
-> Search** connector), `sample` (Claude reading what the connector found), `db`
-> (the sweep log and quarantine list — the two things that survive a Reset). A
-> publish that restates `capabilities` must restate all four; omitting the field
-> carries them forward, the default every publish has used.
->
-> **Version 31, 22 Sep 2026** is what she runs. **BUILDING IT IS CODE'S JOB
-> NOW — `node build/build_app.js`**, which transpiles, wraps it in the shell,
-> proves it parses and writes `build/dist/index.html`. It reproduced version 29
-> byte for byte when it was written, and has built 30 and 31 since. **The shell is committed** (`build/shell_head.html`,
-> `build/shell_tail.html`, taken from the live page and verified against it):
-> it used to say "take it from the published page", which was one more thing to
-> remember and one more way to lose the pre-paint background.
-> `--shell-from <saved live page>` says whether the committed one still matches.
->
-> **PUBLISHING CANNOT BE AUTOMATED and the order matters — her question,
-> 22 Sep.** The service refuses a publish from a session that has not VIEWED
-> the live version, and viewing means READING EVERY LINE of the ~3,000-line
-> saved copy; no script or hook can do that reading. Worse, a second refusal
-> follows a first: the same bytes resent are rejected as "resent unchanged"
-> even once the reading is done. So: **read the URL, read the whole saved file,
-> then build, then publish** — in that order it works first time.
-> `build_app.js` prints those steps when it finishes, which is the trigger
-> sitting next to the code rather than in an index, and the session-start hook
-> carries one line pointing at it.
->
-> **Never republish while she has it open** — house rule, §1.
+> capabilities**, each load-bearing: `downloads` (Export), `mcp` (her Parallel
+> Search connector), `sample` (Claude reading what the connector found), `db`
+> (the sweep log and quarantine — the two things that survive a Reset). A publish
+> restating `capabilities` must restate all four; omitting it carries them
+> forward, which is what every publish has done.
 
-**Her data is NOT hosted** — the page is; the ledger is still a file she imports
-and exports, and opening the link gives an empty portal. **Core mental model
-(load-bearing):** the app is the *tool*, the ledger is the *document*, like a word
-processor and a file — data lives in the ledger, never baked into the tool.
+**Version 31, 22 Sep 2026** is what she runs. The file is `Cat_Watch.jsx` —
+renamed from `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question
+that no longer exists. **No version number in the name either**: the published
+version is already past it and a number in a filename only drifts. Line count
+went stale twice when typed here — `wc -l` answers it.
+
+**Building is code's job — `node build/build_app.js`**, which transpiles, wraps it
+in the committed shell (`build/shell_head.html`, `build/shell_tail.html`), proves
+it parses and writes `build/dist/index.html`. It reproduced version 29 byte for
+byte when written, and has built 30 and 31 since. `--shell-from <saved live page>`
+says whether the committed shell still matches.
+
+**Publishing cannot be automated and the order matters.** The service refuses a
+publish from a session that has not VIEWED the live version, and viewing means
+reading every line of the ~3,000-line saved copy; no script can do that reading.
+Worse, a second refusal follows a first — the same bytes resent are rejected as
+"resent unchanged" even once the reading is done. So: **read the URL, read the
+whole saved file, then build, then publish.** `build_app.js` prints those steps
+when it finishes.
+
+**Never republish while she has it open** — §1.
+
+### The mental model, load-bearing
+
+**Her data is NOT hosted** — the page is. The app is the *tool*, the ledger is the
+*document*, like a word processor and a file. Data lives in the ledger, never
+baked into the tool. Opening the link gives an empty portal.
+
 Losing or silently corrupting the ledger is the worst outcome the design guards
 against; it holds every tracked exhibition plus her marks (watching / dismissed /
 want-catalogue / acquired / catalogue details).
 
-Current build: `Cat_Watch.jsx` (line count went stale twice when typed —
-`wc -l` answers it). **Renamed from `Cat_Watch_v10.2_haiku.jsx` on 22 Sep**;
-no version number in the name either, because the published version is
-already past it and a number in a filename only drifts.
+**Three containers, and which one a fact belongs in is decided by what it is:**
 
-### The model question — CLOSED, her ruling 22 Sep 2026
+| | Lives in | Because |
+|---|---|---|
+| **The ledger** (her file) | her export, hers alone | Derivable from nothing. Rolls back with a backup, correctly |
+| **The sweep log** | the page's own store | A FACT ABOUT THE WORLD — must not roll back. Safe there because any sweep file rebuilds it |
+| **The quarantine** | the store AND her export | A fact about the world that is derivable from nothing — so it needs both, with one merge rule |
 
-**There is one app, one file, and it names no model.** Everything below
-replaces the older notes on this, which described a world that has not
-existed since 20 Sep.
+**Do not propose moving any of the three.** The reasoning, and the two rejected
+arguments, are in `docs/app.md` §4–5.
 
-**What the question WAS.** The app used to call Anthropic directly with a
-model string, and the only thing it used a model for was the catalogue
-lookup — so "Haiku or Sonnet for the JSX" and "which model does the lookup"
-were one question, written down once as a one-line to-do and **never
-argued**. Her memory of no debate is correct. It survived as the phrase
-"the old tuning question" for three days with nothing behind it; the
-original is in `afa25d1`: *"Catalogue lookup tuning — Haiku vs Sonnet, on
-known-tricky catalogues."*
-
-**Why it is moot.** The page cannot reach any outside address, so it does
-not choose a model at all — it asks the viewer's Claude through `sample`.
-The only dial is `modelTier`: **quick / default / complex**, and every one
-of the lookup's six `readResults` calls passes `default`.
-
-**Why `default` stays.** Those six reads are judgement on real text — which
-of eight results is the book, is this page the book or a shelf, is that ISBN
-in the small print. **`quick`'s failure mode is exactly the misreading this
-route spent two days fixing**; `complex` costs more on each of up to three
-reads per lookup. Nothing has misread in her testing, so **there is no
-signal to tune against**.
-
-**THERE WAS NEVER A SONNET BRANCH — checked, 22 Sep, not remembered.** Every
-branch in the repo, local and remote, has been searched: **one `.jsx` file
-has ever existed in this project's whole history.** The "identical Sonnet
-copy" this guide used to describe was a CLAUDE CHAT artifact, never a branch
-and never a file here — so there is nothing in git to close off. If that
-chat still exists it is a stale second app that cannot be updated and is
-missing every change since; **retiring it is hers to do, by deleting the
-chat.** (The `sonnet_*.json` files under `scraper/output/` are compression
-job files and have nothing to do with it.)
-
-**The file is renamed `Cat_Watch.jsx`** — `Cat_Watch_v10.2_haiku.jsx` was a
-fossil of a question that no longer exists and was literally wrong. No
-version number in the name either: the published version is already 30 and a
-number in a filename only drifts.
-
-**ONE MODEL STRING SURVIVES, IN DORMANT CODE, AND IT STAYS UNTIL SHE SAYS
-OTHERWISE.** `askDrive` carries `model: "claude-sonnet-4-6"` — the only model
-name left anywhere in the app. It sits in the Google Drive save routine, which
-nothing has called for months, alongside a Claude cloud save reaching for a
-`window.storage` that does not exist.
-
-**A SESSION DELETED THAT WHOLE CLUSTER WITHOUT ASKING, AND SHE CAUGHT IT —
-22 Sep. It is restored, byte for byte.** The reasoning was that the code was
-orphaned and carried the string this very ruling was about. Both facts are
-true and **neither was permission**. Her question was the right one: *"did you
-ask me first if I never want to consider using Google drive for backup ever
-again?"* No. **Unreachable is not unwanted**, deleting a whole integration was
-never what "update files to reflect the model conclusion" asked for, and the
-narrow change that WOULD have served it — take out the model string and leave
-the routine — was never put to her.
-
-§8 does list Drive saving and auto-load as rejected, so she may well not want
-it back. **That is a reason to ask, not a reason to have acted.**
-
-**Ledger row shape:**
+### Ledger row shape
 
 ```
 id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
@@ -696,851 +332,111 @@ Ledger backup is JSON; the sweep pro forma is CSV.
 **JSX validation:** `tsc check.tsx --jsx preserve --noEmit --skipLibCheck
 --allowJs --target esnext`, filtering for `error TS1[0-9]{3}[^0-9]`.
 
-### What is built and passed testing
-
-**Loading and saving (v8.3).** She holds the only real copy of the ledger; the
-app is the workspace. Open → empty portal, no auto-loading; Import → pick file.
-Status line: calm neutral on fresh load, loud red **UNSAVED CHANGES** after any
-change, calm green **✓ Saved — safe to close** after Export. **Export IS Save.**
-Import and Reset ask before replacing unsaved work.
-
-**Saving was rebuilt 20 Sep** because the viewer's sandbox now blocks any download
-a page starts for itself, `<a download>` included — *"File downloads aren't
-available for this artifact"*, from the host, not us. Her save function was never
-wrong; the ground moved. Two routes now, differing in what is KNOWN:
-
-1. **The runtime's file handoff** (`downloads`, declared at publish — a chat
-   session rendering the file will NOT declare it, which is why no session could
-   give her a working Export). Asks her, then saves or **rejects**.
-2. **An ordinary browser download** (plain page). Cannot tell a finished download
-   from a cancelled one from a refused one, so it **does not clear the unsaved
-   warning** — not knowing is reported as not knowing.
-
-> **Never put back a click-triggered green tick.** It used to fire on the click
-> (Claude's download prompt had a Cancel the app couldn't see); on 20 Sep that
-> showed "Saved — safe to close" while nothing was written — the worst thing this
-> app can do. On route 1 the save resolves or throws, so the tick now means a
-> save happened.
-
-**Refreshing (v9.2).** The app does the thinking; she approves each change. A
-sweep CSV goes in via **Import Refresh**; the app compares it against the ledger
-with no internet access and shows proposals as cards grouped by venue, applying
-only what she accepts. Types: **Add**, **Fill/Change** (per-field accept/reject,
-escape hatch "this is a different show"), **Couldn't be filed**. Bad data is
-always surfaced with a note, never dropped. Refeed workflow: reject bad rows, fix
-only those cells, refeed the whole file; already-applied rows stay silent.
-
-**Sorting, timestamps and dividers (v9.3)** — most likely to look "broken" later
-when it is working as designed.
-
-- **Timestamp scheme — do NOT "simplify".** Every import stamps **one shared time
-  for the whole batch**. A new import gets an `addedAt` only; `editedAt` is set
-  only when a later sweep changes an existing entry. The ~110 seed entries have no
-  timestamps at all — a permanent "Original set" floor. This is the only way to
-  tell this import from earlier imports, imported-but-never-edited, and the seed.
-- **Date ladder:** just opened → on now → dates unclear → announced → closed <3mo
-  → 3–6 → 6–12 → over a year. "Dates unclear" between "on now" and "announced" is
-  her explicit choice.
-- **Recently added** bands: This import / Earlier imports / Original set.
-  **Recently edited** bands: This import's edits / Earlier edits / Never edited /
-  Original set — one more, because there are two kinds of not-in-an-edit-batch.
-- Default post-import view floats the touched batch to the top under one "Rest of
-  the list" divider, vanishing on any sort click.
-- **"Announced last"** applies to the Wanted filter only. **Acquiring filters** are
-  AND across the three axes, OR within one.
-
-**Urgency tiers** are computed live from dates versus today (`tierFor`). No data
-written, no internet call.
-
-### A book leaving the shop — her ruling, 22 Sep 2026
-
-**A row ever found in the shop read "In the museum shop" FOREVER**, because
-nothing compared one lookup against the last. **Catalogues selling out is the
-thing this app exists to watch**, so the single event it most needed to show
-was the one it could not.
-
-**HER QUESTION FIRST, BECAUSE THE ANSWER IS A REAL LIMIT.** When she clicks
-Museum shop and sees for herself that the book has gone, **the app learns
-nothing**: the link opens a tab, and a page cannot see what comes back in a tab
-it opened. That is a browser rule, not something to engineer around. So the
-status moves only when the app itself re-opens that page, and only a lookup
-does that. **Her choice: on Search again and nowhere else** — which costs no
-extra calls, because the lookup already re-reads the shop page for the ISBN.
-A background check on every click was offered and not taken.
-
-| Last time | This time | What the card says |
-|---|---|---|
-| in the shop | not in the shop | **No longer in the museum shop.** — bold, dark red |
-| not in the shop (or no catalogue) | in the shop | **Now in the museum shop.** — the ordinary green |
-| never searched | either | the plain sentence, no news |
-
-**THE RETURN MATTERS AS MUCH AS THE LOSS, and that half is hers.** A shop pulls
-a page while a book is merely out of stock and puts it back; a museum simply
-fails to maintain its own site. Both look like a loss and neither is permanent.
-Same green as the plain sentence — **the word NOW carries the news**, and a
-second colour would make a book coming back read as a different kind of thing
-from a book being there.
-
-**"GONE" IS STICKY, "BACK" IS NOT**, and the asymmetry is deliberate. A book
-that left is still gone on the next search, so the red survives a lookup that
-finds the same nothing (`shopChange` remembers). "Now" is news and news
-expires: the search after that reads "In the museum shop." again.
-
-**A FIRST LOOKUP IS NOT A CHANGE.** No previous state means neither sentence
-fires — announcing "Now in the museum shop" on a row nobody had searched would
-be news only to the app.
-
-**The red is the "closed over a year" ink**, already muted, already carrying a
-dark-mode partner, and no loose hex added — her instruction was a dark red and
-not a fire engine. `shopChangeFor` and `shopHeadline` sit outside the component
-so fixtures reach them; C-079 to C-090b, verified by dropping the sticky half
-and watching C-084 fail.
-
-**ONE CASE RAISED AND REJECTED, 22 Sep — do not re-propose it.** A book that
-was in the shop and whose next lookup finds NO catalogue anywhere drops to "No
-catalogue found for this exhibition." and says nothing about having had one.
-It was put to her as a possible gap; **she rejected it and said to move on.**
-It is on the §8 list.
-
-**Catalogue lookup — REBUILT 21 SEP 2026, and the route is now what she always
-designed.** It is no longer two stages. In order, each step running only if the
-one before left something missing:
-
-1. **Go to the venue's shop** — its catalogues page and its search box for the
-   exhibition's title, opened together in one call. Take **the book's own
-   product page**, never a list.
-2. **Open that page** for the ISBN, the publisher and any publisher link.
-3. **If the ISBN is still missing, search the open web** for it. Gaps only: the
-   title, the shop link and the "in the shop" verdict were settled by the shop
-   and cannot be changed here.
-4. **If no publisher page came back, go to the publisher** — find their site
-   from their name, then search inside it.
-
-Step one finding nothing sends it to the open web to decide whether a catalogue
-exists at all; nothing anywhere means no catalogue. Results are still tagged
-shop / web / none, and the reseller links (Amazon AU, AbeBooks, Alibris) are
-still built from the ISBN when there is one and the title when there is not.
-
-**THE COST, RE-MEASURED 21 SEP.** A lookup is now up to four searches and three
-readings, where it was two and two. **The searches are free and the readings are
-not** — the connector needs no account but it is a free TIER, and it refused
-this session after roughly a dozen searches in quick succession; **the keyless
-limit is published nowhere** (Parallel's documented 600/min is for accounts with
-an API key). Every reading runs on her allowance. **Every step after the first
-is conditional**, so a shop page that prints everything still costs one search
-and one reading. **Do not make the later steps unconditional, and do not flip to
-searching wide first.**
-
-**What changed underneath.** The page used to call the Anthropic API directly.
-The viewer's sandbox now blocks a page from reaching ANY outside address, so the
-request never left — the diagnostic read `Network: Failed to fetch`, which is the
-browser refusing, not a server answering. Nothing was wrong with the key, the
-account or the prompt.
-
-It now runs on **her own Parallel Search connector** (free, authless, connected on
-her claude.ai account), with `sample` reading the results. The split is
-deliberate: Claude cannot browse, so the connector finds pages and Claude only
-reads text handed to it — it can never report a shop page that was not found.
-
-**STAGE ONE NOW OPENS THE SHOP. IT DID NOT BETWEEN THE CONNECTOR SWITCH AND
-21 SEP, AND NOBODY SAID SO — her finding, and the whole of it is hers.** The old
-search tool took `allowed_domains` and was **unable** to look elsewhere, so
-"search the shop and nothing else" was literally true. The connector has no such
-lock — only a `site:` hint inside the query, which a search engine treats as a
-suggestion. **The rebuild kept the search and lost the lock**, so stage one
-became a general web search dragging the shop's address along with it. Her
-words for what that is: not how a human looks for a museum catalogue.
-
-**The design never changed; only the tool did. Substituting a tool is not
-licence to re-shape the route it runs on** — and when a capability is lost in
-the substitution, that is the thing to report, not to quietly absorb.
-
-**WHAT IT COST: the National Gallery's *Zurbarán*, her test row.** A general
-index ranks the shop's LIST of every catalogue above the one book's own page.
-The whole-page read then ran flawlessly on a list of 32 books, reported no
-ISBN, and filed the list as her "Museum shop" link. **The book's own page was
-in the same results, five places down**, printing `978-1857097399` in plain
-sight. Reproduced 21 Sep, both halves.
-
-**The correction to the first account of it:** the book's page was not
-overlooked by the search. It was inside the eight results handed to the model,
-which read them all and named the list anyway. **A choosing failure, not a
-search failure** — which is why the answer is to stop choosing from a general
-index at all, rather than to rank its results better.
-
-**THE CONNECTOR COULD ALWAYS DO IT.** `web_fetch` opens a page you name. It was
-declared on 21 Sep for reading a book's page and used for nothing else; the shop
-step now uses it too. **`web_search` is for the three questions that really are
-searches** — does this book exist anywhere, where is its ISBN, and where does
-this publisher live — never for reaching a page whose address we already have
-or could work out.
-
-**The shop link is still checked** against the venue's shop domain, and stays
-checked: a shop page links outward to publishers and distributors, so a link
-read off a shop page is not automatically on it.
-
-**GOING TO THE SHOP MADE ONE ANSWER SMALLER — her finding, 21 Sep, a
-regression this session caused.** Acquavella's page for its *Matisse* catalogue
-prints a title, a price and the exhibition's dates: **no ISBN and no
-publisher.** While stage one was a general web search the number came in from
-Rizzoli or a bookseller; once stage one went to the shop, finding the book
-there ENDED the lookup and the wide search never ran. She spotted it because
-that row had had its ISBN before.
-
-**So a catalogue found with no ISBN now goes wide anyway** (`fillFromWeb`).
-This is not "run both stages every time", which is rejected: it fires only on a
-book already found and still missing its number. **It fills gaps and cannot do
-anything else** — the title, the shop link and the "in the museum shop" verdict
-were settled by the venue's own shop and a wide search must never be able to
-rename or relocate them. Fixtures C-039 to C-042.
-
-**THE PUBLISHER'S PAGE IS LOOKED FOR PROPERLY NOW — her ruling, 21 Sep, and
-she had to tell me twice that she wanted it.** The earlier steps find it only
-BY LUCK: when stage two searches, the publisher is not known yet, so not one of
-its queries can name the publisher's website. Hannibal Books is stated all over
-the Rijksmuseum's press kit for *Metamorphoses* — which is why the NAME came
-back — and Hannibal's own site was in none of the ten results.
-
-So once the name is known, `fillPublisherPage` asks for the page by name. It
-fires only on a catalogue found, with a publisher, and no page — never to
-second-guess a link an earlier step produced.
-
-**GO TO THE PUBLISHER, DO NOT SEARCH FOR THEM — her correction, and it is the
-lesson of this entire session applied to the one place I failed to apply it.**
-Four query strings were tried in a row to make a general index surface
-`hannibalbooks.be`: publisher and title (returns Ovid — Penguin, Oxford,
-Gutenberg, Wikipedia), publisher and ISBN, the bare ISBN, all three together.
-**That is exactly the pattern §4 spent the day removing from stage one**, and
-tuning it further would have been guessing with more words.
-
-**Two steps, and the first one is code's.** One search for the publisher's NAME
-alone — a publisher's own site is the top answer for its own name — and the
-domain is then read off the results **mechanically**: a publisher's name is in
-its hostname. Hannibal Books is `hannibalbooks.be`, Thames & Hudson is
-`thamesandhudson.com`, Yale University Press is `yalebooks.yale.edu`. One
-input, one correct answer, no model. The words every publisher shares —
-books, press, publishing, editions, **university** — carry nothing and are
-dropped, or any university press would match any other. Fixtures C-046 to
-C-051.
-
-Then it searches INSIDE that domain for the title, the way stage one searches
-inside the shop, and **only results actually on that host are read**.
-`site:hannibalbooks.be Metamorphoses` returns four pages, all on the
-publisher's site, including the book's own. Verified 21 Sep.
-
-**A row with no ISBN loses nothing here**, unlike the query-tuning versions:
-the title is searched inside one small site rather than against the whole web,
-where *Metamorphoses* means Ovid.
-
-**A CONTAINER IS NOT THE BOOK, AND THE CODE COULD NOT TELL — her diagnosis,
-22 Sep 2026, from two of her own lookups side by side.** Whatever page the
-`site:` search returned was filed as "the publisher's page" and the lookup
-stopped. For Rizzoli that was the book itself and it read as the step
-working. **It was not working, it was lucky:** Rizzoli puts the ISBN in its
-addresses (`rizzoliusa.com/book/9780847877645`), so a search matches the book
-directly. Hannibal addresses a book with a Dutch slug plus a `#fragment`, and
-a fragment is never sent to a server and never indexed — so the deepest thing
-**any** search can return there is the section, `/en/fine-art`. Two different
-outcomes, one label, nothing on screen saying which.
-
-**Her fix is one step and it is not a better query: open the candidate.**
-Search hands back a guess; the difference between a book and a shelf is
-inside the page. So after the `site:` search picks a page, the app fetches it
-and one of three things happens:
-
-| What the page turns out to be | What is kept | Button |
-|---|---|---|
-| The book's own page | that address, `product` | Publisher |
-| A list with the book on it | **the book's own link, read off the list**, `product` | Publisher |
-| Came back empty — drawn by script | the section, `container` | Publisher's section |
-| Nothing to do with this book | the next candidate is tried, then the fallback below | |
-
-**The link read off a list is checked, never trusted** (`deepLinkOn`): it must
-be on the publisher's own host, and it must not be the list we are standing
-on. **A differing `#fragment` counts as a different address, deliberately** —
-that is precisely how Hannibal addresses a book (`#102642` English, `#102640`
-Dutch), so folding on it would throw away the one case the step exists for.
-
-**"Came back empty" is measured, not assumed** (`pageIsShell`, 400
-characters). **The numbers come from the two real pages, read through the
-connector on 22 Sep:** Hannibal's section returns **110 characters** — a sort
-control, a newsletter box and the web designer's credit, with every book
-missing — and an ordinary server-drawn shelf returns several thousand with
-every book's own address in it. Nothing sits near the line.
-
-**NO RENDERING FETCH — her call, and the scope is the reason.** Only the
-buried-product publishers reach this step at all, and only the client-drawn
-ones among those come back empty. A headless browser for a handful of Belgian
-art publishers is not worth building; the honest label is. `full_content` was
-tested on Hannibal and returns the same 110 characters — there is no hidden
-data block to rescue, so there is no cheaper route either.
-
-**TWO CANDIDATES, NOT ONE — her question, 22 Sep.** She asked whether a page
-that turns out to have nothing to do with the book just means the model
-picked the wrong one of the eight results, and whether it should go back.
-It should, and **going back costs no new search** — the results are already
-in hand, so it is one more page opened and nothing else. The read hands back
-an ordered short list and the code walks it.
-
-**WHAT BOUNDS IT IS THE LIST, NOT A COUNTER**, which was her other worry.
-**Two is the cap and it is stated, not tuned:** the results came back ranked,
-so if the best two are both wrong the site does not have the book, and a
-third opening spends her allowance on hope. The fallback is better than a
-lucky third guess because it cannot be wrong.
-
-**THE LADDER ENDS AT THE PUBLISHER'S FRONT DOOR, NOT AT NOTHING — WANTED,
-CONFIRMED BY HER 22 Sep. Settled; do not offer to remove it.** Once the
-publisher's website is identified, that address is the weakest answer that is
-still true, so a book the site will not surface falls back to
-`https://<publisher>/` labelled **Publisher's website**. It matters most at
-Borghese, Capodimonte and the Accademia, which have no shop at all.
-
-**AND EVERY OUTCOME NOW SAYS WHICH ONE IT WAS — her second question, and the
-silence was real.** "No separate publisher page." printed whether the step
-had searched the publisher's own site and found nothing or **had never fired
-at all**. Her words: the silence could be *"search function didn't even
-fire"*. `publisherNote` gives each rung its own sentence and fixture C-069a
-asserts no two are the same:
-
-| Outcome | What the card says |
-|---|---|
-| `product` | nothing — the button is the answer |
-| `container` | The publisher's link opens the section this book sits in, not a page of its own. |
-| `site` | The publisher's own site doesn't show this book — the link opens their home page. |
-| `nosite` | Couldn't work out the publisher's own website, so there's no link to it. |
-| `unnamed` | No publisher was named for this book, so none was looked for. |
-| `selfpublished` | Catalogue is self-published by the venue. — **and no search runs at all**, see below |
-| none recorded | No separate publisher page. — **the old sentence, kept for older rows only** |
-
-**THE LABEL IS THE POINT OF THE THIRD CASE.** The button reads
-**"Publisher's section"** rather than "Publisher", and the card adds *"The
-publisher's link opens the section this book sits in, not a page of its
-own."* She still gets a working link where the site will not give up a deeper
-one; the app just stops claiming it is the book's page. **A row from an older
-ledger has no result recorded and keeps the plain label and the old
-sentence** — inventing a claim about it in either direction would be worse
-than making none. Fixtures C-052 to C-069a.
-
-**One field, `publisherResult`, and it records what the STEP concluded**, not
-only what kind of address came back — which is why it is set on the four
-outcomes that produce no link at all.
-
-**A MUSEUM'S OWN IMPRINT IS SKIPPED ENTIRELY — her ruling, 22 Sep, from
-running the rebuilt lookup on real rows.** The National Gallery's *Zurbarán*
-came back published by "National Gallery Global", and the step then spent two
-searches and a page read proving what was already known: a museum publishing
-arm has no separate site, because its publisher page IS the shop, which
-`cleanPublisherUrl` refuses by design. `SELF_PUBLISHERS` skips it and the card
-says *"Catalogue is self-published by the venue."*
-
-**IT IS KEYED ON THE PUBLISHER, NEVER ON THE VENUE — her correction, and my
-first version got it wrong.** I matched the publisher's name against the
-venue's, so EVERY Met and National Gallery catalogue would have skipped the
-search. She named the two ordinary ways that breaks: **a blockbuster whose
-catalogue the museum hands to a big art-book house**, and **a show mounted
-jointly with another museum where the OTHER museum prints it** — a Met/Louvre
-co-production published by the Louvre. In both a real third-party page exists
-and the rule would have suppressed the search that finds it.
-
-**SO IT IS A LIST OF TWO AND IT GROWS ONLY WHEN SHE ADDS ONE** —
-`national gallery global` and `metropolitan museum of art`, her instruction,
-more as she meets them. **Nothing is inferred from a name's shape**, because
-inferring is exactly what went wrong; Tate and the Rijksmuseum are NOT on it,
-and *Metamorphoses* is the proof — a Rijksmuseum show printed by Hannibal.
-A miss costs one search; a wrong entry costs a buy link. Fixtures C-070 to
-C-078a, the two cases she named asserted directly, verified by adding Thames &
-Hudson and watching C-073 fail.
-
-**This is the named-offenders list the publisher map was rejected in favour
-of**, arriving for a different reason: not to find a site, but to know there
-is none.
-
-**One limit, stated rather than engineered around:** the sentence says "the
-venue", which is true for every case we have. A Met-published catalogue for a
-show at the Louvre would read slightly wrong — one word on one card and no
-lost link, and fixing it needs the venue comparison this whole note exists to
-avoid.
-
-**A PUBLISHER LINK FROM ANY OTHER STEP IS STILL UNVERIFIED AND STILL MAKES NO
-CLAIM.** Only this step sets the result. A link read off the book's shop page
-is stored with no kind and shown exactly as it is today — it was never the
-thing she caught.
-
-**THE MAP OF PUBLISHER WEBSITES WAS OFFERED AND DROPPED, 22 Sep.** It was
-proposed when name-to-domain looked like the failure point; her two
-diagnostics disprove that — `publisherDomainFrom` resolved `hannibalbooks.be`
-and `www.rizzoliusa.com` cleanly both times. It stays un-built. If it is ever
-wanted it is a **named-offenders list** for co-imprints (Rizzoli Electa,
-DelMonico Books · Prestel) and for the one search round-trip it would save,
-never upfront scaffolding.
-
-**A STEP THAT DIED IS NOT AN ANSWER — her question, 21 Sep, and the fault was
-introduced the same day.** She asked how she would tell a rate-limited lookup
-from a book that genuinely has no ISBN and no publisher page. **She could not.**
-Steps one and two fail the whole lookup and say so on screen; the three later
-steps — reading the book's page, filling a missing ISBN, finding the publisher's
-page — were written to hand the row back UNCHANGED when they fail. Right for the
-row, wrong for the screen: the card then printed "ISBN not confirmed" and "No
-separate publisher page." as though those were findings.
-
-**And the connector's free tier really does refuse.** It stopped this session
-after roughly a dozen searches in quick succession. **The limit for the keyless
-tier is not published anywhere** — Parallel documents 600 a minute for accounts
-with an API key, which is a different thing. It clears in a few minutes and the
-refusal itself names the remedy.
-
-Each later step now carries WHY it came back empty, and the screen says so the
-moment it happens: the catalogue was found, the search stopped part-way, press
-Search again. **It is not stored in the ledger** — it is a fact about one
-attempt, not about the book. Fixtures C-043 to C-045.
-
-**A MISSING BUTTON CANNOT REPORT ANYTHING — her ruling on the publisher line,
-and the third time this app has had to learn it.** The Publisher button is
-drawn only when a link was found, so its absence read identically whether the
-step found nothing or never ran. The card now ends the shop sentence with
-**"No separate publisher page."** in the same plain grey, her wording and her
-placement. It matters because "none" is the ORDINARY answer: most catalogues
-are published by the museum itself, where the publisher's page IS the shop and
-is deliberately refused — so the common case and the broken case looked the
-same.
-
-**THE MISSED ISBN — HER FINDING 20 SEP, BUILT 21 SEP.** The Met's *Musical
-Bodies* catalogue was found in the shop in one stage and came back with no ISBN,
-which is printed on that very shop page. The cause was structural: the connector
-returns **excerpts**, not whole pages, so the small print below the fold was
-never in what Claude read. The old lookup had the model actually browsing, which
-is why this had never happened before.
-
-It mattered because of what happens next: with no ISBN the reseller links search
-by TITLE, and a title search misfires. *Musical Bodies* is unusual enough that
-Amazon and AbeBooks found it anyway; **Alibris returned the wrong book.**
-
-**The same connector's `web_fetch` reads a whole page, and only `web_search`
-had ever been declared.** It reads the book's own page for the ISBN and the
-publisher, and it is not a third search — one page, read once.
-
-**THE GATE IN FRONT OF IT IS GONE — her ruling, 21 Sep, and she was right that
-it was decoration.** It used to open the page only when the ISBN was missing.
-**A shop's list of catalogues prints a cover, a title and a price and never an
-ISBN**, so after a shop lookup the ISBN is always missing and the gate always
-opened. Her question was simply what it was for.
-
-**And in the one case it stayed shut it did harm.** It asked about the ISBN
-alone, so a web result carrying an ISBN and no publisher never opened the
-book's page and **the publisher was lost for nothing**. `needsPageRead` now
-asks whether EITHER is blank. Fixtures C-009 to C-013a, verified by putting
-the old condition back and watching C-013a fail.
-
-**IT FILLS A BLANK AND CANNOT DO ANYTHING ELSE** (`applyIsbnFill`). An ISBN
-read from the search results is never second-guessed, a publisher already
-known is never overwritten, and a page that yields nothing leaves the row
-exactly as it was — the old answer, never a worse one.
-
-**THE PUBLISHER'S OWN PAGE CAME BACK — her finding, 21 Sep, and it was the
-SAME rewrite that dropped the shop lock.** The app has always had a Publisher
-button and the ledger has always had a field for it. The 20 Sep rebuild asked
-neither prompt for it and wrote `null` into the row every time, so **the button
-could never appear** and nothing said so. Not a decision, not recorded.
-
-**It matters more than it looks, and most at the three venues with no shop.** A
-museum shop sells its catalogue while the show is on; the art-book house that
-printed it often lists the book long after the shop has sold out — which is the
-window this whole app is about. Borghese, Capodimonte and the Accademia have no
-shop at all, so the publisher's page is the only real "buy it here" link they
-can ever get.
-
-**CHECKED, NOT TRUSTED** (`cleanPublisherUrl`). It must be a real web address,
-and it is refused if it sits on the venue's own shop — that is the shop link
-wearing the wrong label, and she already has a button for it. There is no list
-of art publishers to check against and inventing one would be the phrase-list
-mistake again, so beyond those two tests it is hers to judge. Both prompts ask
-for it, the book's page can supply it, and like everything else it fills a
-blank and never overwrites. Fixtures C-032 to C-038.
-
-**A COLLAPSED SECTION IS REACHED, and that was her question.** The Met store
-prints the ISBN inside a "Details" panel that opens and shuts. The text is
-already in the page and the button only hides it, so a full read sees it shut —
-**verified against that page, 21 Sep: it returned the whole panel and ISBN
-978-1588398130 with the panel collapsed.** A shop that only GOES AND GETS those
-details when clicked would still come back empty, noted, exactly as today.
-
-**A 10-DIGIT ISBN IS TAKEN AND CONVERTED — her ruling, 21 Sep, and she
-corrected me to get there.** The first build refused one, which was a limit I
-put in rather than a fact about the number: an ISBN-10 is perfectly real, every
-book printed before 2007 has one, and plenty of shop pages show only that.
-Refusing it cost the row its ISBN for nothing, which is exactly the fallback to
-a title search that misfired on Alibris.
-
-**HER SPLIT, AND IT IS THE RIGHT ONE: display and search are different
-questions.** All three resellers find a book from either form, so the
-conversion is NOT for searching — it is for her screen, where the ledger has
-one field and one format (3 digits and 10). One input, one correct answer, no
-judgement: `isbn10to13`. **The old check digit is verified before anything is
-converted**, so a mistyped number is refused rather than turned into a
-plausible wrong one — the same reasoning as `ymd()` proving a date exists.
-`toIsbn13` is the only door an ISBN enters by; `cleanIsbn` stays the strict
-13-digit gate everything downstream reads. Both prompts now ask for the ISBN
-**exactly as printed** and forbid the model converting it itself — that is
-code's job and a model's arithmetic is not checkable. Fixtures C-017, C-019 to
-C-025. **Linking straight to an Amazon product page from an ISBN-10 was
-offered and declined.**
-
-**Both decisions sit OUTSIDE the component**, for the reason `countDecisions`
-moved out: a rule a fixture cannot reach is a rule nobody checks. Fixtures C-001 to
-C-090b in `scraper/fixtures/catalogue_lookup.js`, verified by overwriting a known
-publisher, by accepting a 10-digit ISBN, and by putting the old ISBN-only gate
-back and watching C-013a fail. **It does not press the button**: the wiring from a finished lookup into
-the fill is read, not run.
-
-### Reading a stitched file — 13 Sep, SIGNED OFF BY HER ON REAL FILES 20 SEP
-
-One CSV carries every machine's output, so the app reconciles rows against **each
-other** before the ledger. Her design: the stitch stays dumb, all judgement lives
-here where she sees it.
-
-- **Marker rows are not proposals.** Matched on the verbatim sentence `Marker row,
-  not an exhibition.`, not the bracketed title (a formatting guess); they become a
-  coverage panel. As Add cards they returned on every future sweep forever,
-  because rejecting is not remembered.
-- **Duplicate rows fold on venue + URL, nothing else.** Gaps fill silently; a
-  genuine disagreement becomes a CHOICE card, fuller value ticked and marked a
-  guess, both shown. Folds are disclosed in the notes so the card count reconciles
-  with the file.
-- **Rows with no URL never fold.** The only other key is the title, and
-  `sameExhibition()` returns true whenever either side lacks dates — fine against
-  the ledger (she sees each proposal), fatal here where it fires first. An
-  unfolded duplicate costs one visible card; a wrong fold costs an exhibition.
-
-**Odd cases come first, batched by kind, in four bands** (her ruling, cut from six):
-
-1. **Marker rows**
-2. **Combined rows** · identical rows de-duped or reconciled
-3. **Combined rows** · identical rows conflicted — yours to choose
-4. **No exhibition url** · link goes to the venue's listing page
-
-Easiest first: she is spending attention, not compute, so clearing what needs
-nothing leaves more for what does. Batched by kind (a venue can appear twice) so
-she finishes one kind of thinking before switching. Venue headings sit inside each
-band, in the ordinary-list order below. **Every band opens and closes; the default
-is what the band asks of her, never its size** — markers and combined-agreed open
-closed (she can't act on either), conflict and no-url open open. The count sits on
-the header, so a collapsed band can't hide that it holds something.
-
-**Two earlier bands were deleted, each wrong differently:**
-
-- **"Two different answers" was a phantom.** A conflict is only ever found by
-  holding two rows side by side, and `foldDuplicateRows` flags every card it
-  builds, so a conflict that did not come from a fold cannot exist. It shipped
-  empty, was listed here as one of six, and nobody ran a file to notice. Fixture
-  17 now asserts every conflict it produces came from a fold.
-- **"Unusable rows" was the wrong end of the pipe** (her ruling). A row with no
-  title or no venue code is a DATA FAULT whose only outcome is "re-run the sweep"
-  — a message to the session, not to her pile. `scraper/qc.js` stops it upstream
-  (§5) and the app refuses the **whole** file, naming the lines (importing the
-  rest would silently drop the faulty row's exhibition). A bad DATE is different —
-  the row is still an exhibition, so it is blanked and noted as before.
-
-**Band membership is the fold's own flag, never words in the notes.** It used to
-search notes for "same exhibition" — which `noteTravellingRuns()` also writes — so
-Acquavella's two real *Portraiture* runs (two addresses, nothing combined) were
-filed as "combined for you". `analyzeProForma` sets `merged` from `mergedFrom` and
-the band reads that. Fixture 16. A fact the code already knows is never re-derived
-from prose written for a human.
-
-**The pre-pick on a conflict card is `fuller()` (longest wins), meaningless for a
-date** — two 10-char dates tie, so it keeps file order and presents that as a
-choice. Meaningful for a description (stub vs real text) or a title. **Her ruling:
-leave it**; ticking nothing on a date conflict was offered and declined, do not
-re-propose.
-
-**Order inside a venue in "Normal cases"** (her ruling): fills, then edits, then
-new exhibitions; newest CLOSING date first within each; no-closing-date at the
-bottom of its group. It was file order (the order the scraper read the pages), so
-an edit to something she owns sat between two new shows and she switched between
-"is this change right?" and "do I want this?" every few cards. Closing date
-because that is the field the app is about.
-
-**The ledger will not move until every card is decided — a hard block, not a
-warning** (her ruling). `applyRefresh` used to skip an undecided card silently —
-not applied, not remembered, back on the next sweep; with 320 cards that is a
-session's reading gone on one tap. Her words: *"otherwise I envision total chaos
-if I can skip. this is SLOW mode at the moment."* A warning she can wave through
-is the same failure one dialogue later — do not re-propose confirm-and-continue.
-The button says what is missing ("323 still to decide"), the undecided figure
-accent-red beside it, rather than going quietly grey.
-
-`countDecisions` moved OUT of the component (a gate a fixture can't reach is a
-gate nobody checks). **Rejecting is deciding** — a turned-down Add, a quarantine,
-an edit whose every field she refused; counting those as undecided would make the
-button unreachable for anyone who rejects anything, which is most of a real sweep.
-Fixtures 18 to 18f. **Finding the undecided ones:** every venue heading carries
-its own count (a collapsed venue still declares what it holds) and the footer
-count is a button that opens the venue with the first undecided card and scrolls
-to it. The badge appears only where work remains (the screen "can easily become
-overengineered"). Gate and jump share one rule — `countDecisions` calls
-`isUndecidedCard`; fixture 18g asserts they agree, or the app is a dead end.
-
-**The sweep log lives OUTSIDE the ledger** (her ruling). Test: an older backup
-said "Met last brought rows 18 Sep", today's said 20 Sep — but a sweep either ran
-or it did not; opening an older file can't un-run it. The distinction: CONTENT
-rolls back with a backup (fewer exhibitions, her marks as they stood — correct), a
-FACT ABOUT THE WORLD must not, and the sweep log is the second kind sitting in the
-first kind's container. (Two rejected arguments for keeping it in the ledger: "a
-careless republish could destroy it" — that can wipe the seed too; "the shell has
-nowhere to keep anything" — false, the platform gives the page its own store. And
-she keeps one ledger, versioned by her backups, not several.)
-
-**What it is:** one document in the page's own store, one line per venue, 21 lines,
-never growing; survives Reset, present before any ledger opens, unmoved by loading
-an old backup. `venueSeen` is no longer in the ledger file at all. **It is a cache,
-not a master record** — which is what makes it safe somewhere she cannot export:
-every fact comes from `swept_at` in a sweep file, so any sweep file rebuilds it and
-losing it costs one re-import. The ledger can never live there for that same reason
-— it is derivable from nothing. Do not propose moving either.
-
-**Rebuilding the store is code's job, not hers** (her ruling). With three sweep
-files on hand she can't know which holds the lost picture — and sweep files come
-from a session anyway, which can write the store directly with `ArtifactData`.
-`scraper/sweep_log.js` reads every pro forma CSV under `output/` carrying
-`swept_at` and prints the document to write; order can't change its answer (it
-applies the app's own latest-wins rule per venue and per fact), which is why it is
-code and not a habit. Fixtures S-001 to S-006; S-004 holds it against the JSX's own
-`mergeSweepLog` so the two can't drift.
-
-**The headline "Last refreshed" line read the ledger, not the store** — it was
-`lastRun`, stamped at Apply and kept in the ledger, so a wiped store still printed
-a confident time and an older backup rolled it back. Fixed per venue on 20 Sep but
-never carried to the line on top; it now takes the latest attempt across all venues
-from the store. `lastRun` is still written to her export (so an older build reads
-the file) and drives nothing on screen. The "By venue" control used to render only
-when non-empty, so emptying the store removed the control itself; both the row and
-the panel are now ungated on a ledger being open.
-
-**"Unknown", never "never"** (her ruling — a correctness point). An empty store is
-not evidence no sweep ran: she may be looking at quarantined rows, which only ever
-come from a sweep. Her wording "cannot be read from store" was declined and the
-distinction kept — the store answered, and what it answered was nothing; a store
-that can't be reached prints its own separate sentence. `page_renders.js` asserts
-both lines on the opening screen in each of the page's two homes.
-
-**Written when the file is read, not when she Applies.** It was at Apply (so
-cancelling a review left no trace) — right while the log lived in the ledger, wrong
-once it moved out: reading a sweep file is when the page learns the sweep happened,
-accept or not. Her catch: *"I have to test this against the massive csv? how am I
-going to go thru 320 entries?"* — now she imports, cancels, and looks.
-
-**Merge, never replace.** A venue's line moves only when the incoming sweep is
-LATER, so importing an old file changes nothing; the two halves (tried / brought
-rows) move independently. Fixtures 15, 15a, 15b, confirmed by her against several
-older sweep files.
-
-**Dark mode** (her request: *"it's 9pm and this cream background with light grey
-text is v difficult to read."*) A **Dark / Light** button sits by Import Refresh;
-first visit follows the machine's setting, her explicit pick then wins on that
-device in browser storage (a per-device comfort, not ledger or sweep-log data;
-every touch wrapped because it can throw). **Every colour is named** (`PALETTES`,
-`TIER_SETS`) — the bulk of the work, since a stray hex left behind is a cream patch
-on a dark page that looks fine in light mode forever. The dark set is not the light
-set inverted: warm near-black ground, warm off-white text, `soft` deliberately
-lighter (her complaint was grey-on-cream and the reverse is as easy); urgency
-badges have their own dark set. **The shell paints a ground before React runs**,
-following the browser until the component sets `data-theme`, or a dark machine
-flashes cream on the way in.
-
-**Other screen rulings.** Venue headings in "Normal cases" are the CONTROL, not a
-label: accent red, larger, own count, disclosure triangle, sentence case (caps "a
-bit aggressive"), with one **Collapse all / Expand all** over the venues that have
-cards. The quarantine shelf is **12.5px in the body ink** (was 10.5 and muted —
-"tiny AND faint" — and it is a list of decisions she may need to undo); "Put back"
-is **"Remove from quarantine"**; the toggle reads **"Quarantine - 3"** on its own
-row (a standing decision, not part of refreshing). A quarantine that can't save is
-a **banner, not a footnote** — it borrows the unsaved-changes banner and is ungated
-on a ledger being open. **"n to decide" sits beside the venue's own count, not at
-the right-hand edge**, so the eye doesn't cross the screen to pair a number with
-its venue.
-
-**Counts, and the one that can fail.** "319 proposed changes found" is uncheckable,
-because rows leave the pile for three innocent reasons (marker, fold,
-already-matching), so a real loss looks identical. The header now carries the split
-by type, a count on every band, and one line that accounts for every row read —
-rewritten to her wording as two sentences, each ending in the number the next
-starts from:
-
-```
-From 415 rows in the file — 9 marker rows, 0 duplicate rows reconciled/de-duped,
-86 already matching ledger = 320 entries considered for import
-From 320 entries — 14 fill a gap, 7 edit existing data, 299 new exhibitions
-```
-
-A quarantine adds a "you'd said never to add" term. **Every term stays** — drop one
-and the arithmetic stops closing, which is the only thing these lines are for. The
-bands sort by SHAPE and the types cut across them: a new exhibition assembled from
-two duplicate rows is in the combined band, not "Normal cases".
-
-`scraper/fixtures/intake_cases.js` — **62 checks**: the two that must NOT merge,
-the quarantine rules, the freshness facts with their sweep dates, the row identity,
-the whole-file refusal, the phantom band, the ledger gate (18–18g), the sweep-log
-merge (15a, 15b), the quarantine's two homes (20–20g).
-
-**`page_loads.js` asks whether the app LOADS; `page_renders.js` asks whether it
-DRAWS** (added 20 Sep — the first thing this repo carries dependencies for:
-`react`, `react-dom`, `jsdom`, dev only, never shipped). The load check is only a
-floor: it passed twice while the published page was black, because a palette
-defining itself throws on first RENDER, not on load. `page_renders.js` builds the
-page as the build does, renders into jsdom, runs effects, reads the opening screen
-back — twice, plain then with the Claude runtime answering, so a fault in a
-capability path (the page asking the runtime for its sweep-log store) is not
-invisible. Proved by putting the real fault back: the load check still passes it,
-render fails both passes. Neither clicks anything, so a button that throws when
-pressed is still uncovered.
-
-**On `main` since the 20 Sep merge**, with the JSX they test. `npm test` runs 190
-unit checks, the 62 intake cases, the load check, the render check, then the
-catalogue-lookup cases (104 on 22 Sep) — and the **exit code** says whether all five
-passed, not the first number to scroll past. An early `return` in a fixture file
-exits the whole suite and the summary just stops printing (the fourth silent suite
-this guide has recorded) — await, never return. They only ran at all from 20 Sep:
-they needed a `harness.js` that didn't exist and the test script didn't name them.
-The harness lifts the intake out of the JSX by ANCHORS, not line numbers (one file,
-no build step; the alternative is a second copy that drifts).
-`scraper/fixtures/intake_sample.csv` — 76 rows, 8 venues from real sweeps: one
-venue with both marker and real rows, two markers-only, four real-only, and a
-Louvre block covering every conflict shape.
+### What is built and signed off
+
+All of this was confirmed by her on real files, not only by fixtures. **Design,
+evidence and every finding: `docs/app.md`.**
+
+- **Loading and saving.** Open → empty portal; Import → pick file. **Export IS
+  Save.** Two save routes, differing in what is KNOWN — the runtime's file handoff
+  resolves or throws, a plain browser download cannot tell finished from cancelled
+  and so does not clear the unsaved warning. **Never put back a click-triggered
+  green tick**: on 20 Sep that read "Saved — safe to close" while nothing was
+  written.
+- **Refreshing.** A sweep CSV goes in via Import Refresh; the app compares it
+  against the ledger with no internet access and shows proposals as cards grouped
+  by venue. Add / Fill / Change / Couldn't be filed. Bad data is always surfaced,
+  never dropped.
+- **Reading a stitched file.** Four bands for the odd cases, easiest first;
+  duplicate rows fold on venue + URL and nothing else; rows with no URL never
+  fold; marker rows become a coverage panel, never proposals.
+- **The ledger will not move until every card is decided** — a hard block, not a
+  warning. Rejecting counts as deciding. Do not re-propose confirm-and-continue.
+- **Counts that reconcile.** One line accounts for every row read, in two
+  sentences each ending in the number the next starts from. **Every term stays** —
+  drop one and the arithmetic stops closing, which is all these lines are for.
+- **Quarantine ("never add this")**, keyed on normalised URL. Latest decision
+  wins, which needs tombstones — a release is RECORDED, not merely absent.
+- **Per-venue freshness**, two dates, from `swept_at`.
+- **Dark mode**, every colour named; the shell paints a ground before React runs.
+- **Sorting, timestamps and dividers** — the timestamp scheme is the only way to
+  tell this import from earlier ones from the seed. **Do NOT "simplify" it.**
+- **Catalogue lookup** — the route is below.
+- **Seed set**, ~110 exhibitions read 20 Aug 2026, met / ng / rijks / acq only.
+  Thin on history at met and rijks because Chat Claude's fetch tool could not see
+  the archive. **Nothing to fix; do not re-diagnose this as a matching failure.**
 
 **Deliberately not built:** bulk-approve, in-app field editing, and the mirror
 case where the app proposes Add but it is really an update.
 
-### Shop addresses — CHECKED ONE BY ONE, 21 Sep 2026
+### Catalogue lookup — the route
 
-**Stage one needs the shop's own SEARCH BOX, and for 17 of 18 venues it was
-never written down.** Before 21 Sep the app held a search address for four
-venues only — met, ng, rijks, acq — and the National Gallery's was a **dead
-page**. So nothing could have gone straight to a shop even in principle.
-**This was not lost in the connector switch**: the version immediately before
-it had exactly the same four. It was never built.
+Each step runs only if the one before left something missing.
 
-Every address below was checked by opening it and reading the results back.
-`shopSearch` takes the exhibition title on the end. `shopCatalogues` is the
-shop's own page listing its exhibition catalogues — all books, no trinkets —
-and it is opened FIRST, in the same call.
+1. **Go to the venue's shop** — its catalogues page and its search box, opened
+   together in one call. Take **the book's own product page**, never a list.
+2. **Open that page** for the ISBN, the publisher and any publisher link.
+3. **If the ISBN is still missing, search the open web.** Gaps only.
+4. **If no publisher page came back, go to the publisher** — find their site from
+   their name, search inside it, then **open what that returns**.
 
-**WHY BOTH, CHECKED RATHER THAN ASSERTED — her challenge, 21 Sep.** The first
-answer given was that the catalogues page only lists what is IN STOCK, so an
-older catalogue would be missing. **That is wrong and is withdrawn.** A
-sold-out book stays listed: the Menil's page holds 47 and shows all 4 of its
-sold-out titles. The National Gallery's holds 36 going back to 2019, covering
-her whole lookback on its own.
+**The rules, each of which replaced a real failure:**
 
-**The real reasons are thinner and they are these two.** `uffizi` and `khm`
-have no catalogues page at all, so the search box is their only route. And for
-everyone else it is **the cheap fallback INSIDE the shop** — a catalogue filed
-under some other section, or sitting past the third page, would otherwise send
-the lookup straight out to the open internet, which is the exact failure of
-§4. One more address in a call already being made.
+- **`web_fetch` for a page whose address we have or can work out; `web_search`
+  only for the three questions that really are searches** — does this book exist,
+  where is its ISBN, where does this publisher live.
+- **Never choose a page from a general index and build on it.** That filed the
+  National Gallery shop's list of 32 books as the *Zurbarán* catalogue while the
+  book's own page sat five results lower printing its ISBN.
+- **Go to the publisher, do not search for them.** One search for the name alone,
+  then read the domain off the results mechanically — a publisher's name is in its
+  hostname. Shared words (books, press, publishing, editions, **university**) are
+  dropped.
+- **Open the candidate before believing it.** A search cannot tell a book from a
+  shelf; the difference is inside the page. Two candidates, then the fallback.
+- **Every outcome says which negative it is** (`publisherResult`, `publisherNote`)
+  — "searched and found nothing" and "never fired" are different sentences.
+- **A step that died is not an answer.** Each later step carries why it came back
+  empty and the screen says so.
+- **A museum's own imprint is skipped** — `SELF_PUBLISHERS`, keyed on the
+  **publisher**, never on the venue, and **added to only by her**.
+- **Everything fills a blank and can do nothing else.** A known value is never
+  overwritten; a step that yields nothing leaves the row as it was.
+- **A 10-digit ISBN is taken and converted**, check digit verified first.
+  `toIsbn13` is the only door; `cleanIsbn` is the strict 13-digit gate downstream.
+- **A book leaving the shop is news, and "gone" is sticky while "back" is not.**
+  The status moves only on Search again — a page cannot see what happens in a tab
+  it opened.
 
-**THE SHELF WAS NOT FOUND BY GUESSING A PATTERN.** Each shop's own navigation
-was read and the section it names itself was taken — "Exhibition Catalogues",
-"Exhibition books", "Menil Publications", "Guide e cataloghi". The same rung of
-the same ladder the scraper uses: the site says so.
+**The cost:** up to four searches and three readings. Searches are free; **every
+reading runs on her allowance**, and the connector's keyless tier refuses after
+roughly a dozen searches in quick succession. **Every step after the first is
+conditional — do not make them unconditional, and do not flip to searching wide
+first.**
 
-| Venue | Catalogue shelf | Search box |
-|---|---|---|
-| met | `store.metmuseum.org/books-toys-games/exhibition-catalogues` | `/search?q=` |
-| rijks | `rijksmuseumshop.nl/en/books/exhibition-books` | `/en/search?q=` |
-| ng | `shop.nationalgallery.org.uk/books/exhibition-catalogues.html` — **hers** | `/catalogsearch/result/?q=` |
-| acq | `acquavellagalleries.myshopify.com/collections/all` — its whole shop IS its catalogues | `/search?q=` |
-| frick | `shop.frick.org/publications/exhibition-catalogues/` | `/search.php?search_query=` |
-| menil | `bookstore.menil.org/collections/menil-publications` | `/search?q=` |
-| artic | `shop.artic.edu/collections/exhibition-catalogues` | `/search?q=` |
-| wallace | `wallacecollectionshop.org/collections/wallace-collection-publications` | `/search?q=` |
-| both Tates | `shop.tate.org.uk/books/exhibition-books?sz=96` — see below | `/search?q=` |
-| va | `vam.ac.uk/shop/books/exhibition-books.html` | `/shop/search?q=` |
-| louvre | `boutique.louvre.fr/en/products/400001-exhibition-catalogues/` | `/en/search/products/?q=` |
-| brera | `bottegabrera.org/en/collections/guide-e-cataloghi` | `/en/search?q=` |
-| moma | `store.moma.org/collections/exhibition-catalogues` — **hers** | `/search?q=` |
-| brit | `britishmuseumshoponline.org/books/exhibition-books.html` | `/catalogsearch/result/?q=` |
-| morgan | `shop.themorgan.org/collections/exhibition-catalogs` | `/search?q=` |
-| uffizi | **none found** — its books section would not show its contents | `shop.uffizi.it/en/?s=` |
-| khm | **none** | `shop.khm.at/en/search?q=` — unverified, see below |
+**Shop addresses for all 18 venues are checked and written down** —
+`docs/app.md` §1. `borghese`, `capo` and `dellav` have no shop.
 
-**No shop:** borghese, capo, dellav — these skip to the broad web search.
+**Which model — CLOSED, her ruling 22 Sep.** The page cannot reach any outside
+address, so it does not choose a model; it asks the viewer's Claude through
+`sample` at `modelTier: default`. Do not re-open without a real misread.
 
-**A SHELF THAT SCROLLS OR PAGINATES IS STILL JUST MORE ADDRESSES — her
-question, 21 Sep, and the scraper learned the same thing at the Menil.** The
-Menil's shelf shows **16 of its 47** books on the page you land on and offers
-three numbered pages; the Morgan's has no buttons at all and simply grows as
-you scroll. **Both answer `?page=2` perfectly well.** Tate's endless scroll
-answers a size parameter instead, so `?sz=96` is baked into its address and it
-serves the lot in one page — 40-odd titles where the plain address gave about
-fifteen. Verified on all three.
+### Tests
 
-**THE DEPTH IS ONE NUMBER FOR EVERY SHOP, NEVER A COUNT PER VENUE** — the same
-rule as `followPagination` and `expandYearArchive`, for the same reason: how
-many pages a shop has is the shop's business and it changes. Three pages, and
-they go over in the SAME call as the search box, so depth costs no extra wait;
-a page that does not exist comes back empty. **The stated limit:** a shelf
-longer than three pages is read only to page three, and the largest today is
-the Menil's 47. **The search box is unaffected** — it narrows to one title and
-has never needed a second page — so a title beyond the shelf's third page is
-still found. Fixtures C-026 to C-031.
+`npm test` runs, and **the exit code says whether all of it passed** — not the
+first number to scroll past:
 
-**THE SHOPS ARE NOT THE MUSEUM SITES, and five venues prove it.** `moma`,
-`brit` and `morgan` refuse the scraper outright and `met` and `artic` are
-swept from her laptop only — **yet all five shops answered the page reader
-first time.** The scraper's blocks are on the museums' own exhibition sites
-and are about a script driving a browser; the lookup is a different requester
-reading a different hostname. **A venue being blocked for sweeping says
-nothing about its shop.**
+| | |
+|---|---|
+| unit fixtures | `date.test.js`, `compress.test.js`, `qc.test.js`, `sweep_log.test.js`, `venue_status.test.js` |
+| `intake_cases.js` | 62 checks — folding, quarantine, freshness, the ledger gate |
+| `page_loads.js` | does the page load |
+| `page_renders.js` | does it DRAW — renders into jsdom twice, plain and with the runtime answering |
+| `catalogue_lookup.js` | C-001 to C-090b |
 
-**KHM is the one that did not answer.** Its shop sends every request to a
-waiting-room queue and the reader cannot follow that redirect. Wired in
-anyway, for the scraper's own reason: a refusal costs nothing, stays visible,
-and blocks are not permanent facts.
-
-**Only one venue needed a second look for a reason worth keeping.** The Met's
-results page reads as empty unless you ask it for the right thing — the
-products are in the page, the reader's first summary simply quoted the
-navigation. **A thin answer from a page is not proof the page is thin.**
-
-**Seed set:** ~110 exhibitions read 20 Aug 2026, covering met / ng / rijks / acq
-only. Baked into the JSX, shown via Reset. Stripping it has been rejected.
-
-**THE SEED IS THIN ON HISTORY AT TWO VENUES, AND IT IS NOT A MATCHING BUG —
-measured 20 Sep when she asked why so many "new" exhibitions were arriving at
-venues she had already seeded.**
-
-| | Seed | Sweep | New cards |
-|---|---|---|---|
-| met | 51 | 106 | **56** |
-| rijks | 20 | 37 | **18** |
-| ng | 25 | 27 | 2 |
-| acq | 14 | 15 | 2 |
-
-Of the 59 seed-venue Add cards for shows that had ALREADY CLOSED before the seed
-was built, **58 are genuinely absent from it** — checked loosely by title, not
-just by key. And of the 74 met+rijks Adds, **69 came from PAST listing pages**
-and 5 from current/upcoming.
-
-**The cause is §5's founding fact.** The seed was gathered by Chat Claude with a
-fetch tool that reads a page before its JavaScript runs, so it saw the current
-programme and almost none of the archive. ng and acq are behaving exactly as
-expected for a month's gap; met and rijks are the whole difference. Her lookback
-being ~mid-Aug 2024 rather than 1 July 2024 accounts for 7 rows of it.
-
-**Nothing to fix. Do not re-diagnose this as a matching failure.**
-
-### The inversion — worth preserving
-
-The originally-easy and originally-hard problems swapped: she expected ingestion
-trivial and the portal hard, but the React portal was straightforward and **data
-gathering is structurally hard because it depends on the outside world's current
-architecture**. Consequences that hold:
-
-- The app already built is what she keeps — no data-gathering solution forces a
-  portal rebuild.
-- **The data-gathering layer is swappable underneath**, never replacing the app.
-- When a session drifts toward "rebuild the app around a new backend" or
-  "downgrade the app to fit the tools" — neither.
+The harness lifts the intake out of the JSX by **anchors on prose, never line
+numbers**. An early `return` in a fixture file exits the whole suite and the
+summary just stops printing — **await, never return.**
 
 ---
 
@@ -1549,72 +445,54 @@ architecture**. Consequences that hold:
 ### Why it exists
 
 Chat Claude's fetch tool **retrieves a page before its JavaScript runs**. Modern
-museum sites are shell-plus-database designs, so the fetch tool sees an empty frame
-where a human sees exhibitions. Confirmed architectural across Sep 6–7 2026: no
-prompt-crafting fixes it. **A headless browser fixes this at the root** — it loads
-the page, runs the JavaScript, waits for content, and only then reads the text.
+museum sites are shell-plus-database designs, so it sees an empty frame where a
+human sees exhibitions. Architectural, confirmed across 6–7 Sep 2026: no
+prompt-crafting fixes it. **A headless browser fixes it at the root.**
 
-**Target output:** a CSV in exact pro forma format, with the **summary column
-carrying the raw curatorial text dump**. A later compression step turns that into
-the teaser she reads. Keeping the raw text is what makes fabrication structurally
-impossible.
+**Target output:** the pro forma CSV, with the **summary column carrying the raw
+curatorial dump**. Compression turns that into the teaser she reads. Keeping the
+raw text is what makes fabrication structurally impossible.
 
-### Files and commands
-
-- `scraper/sweep_prototype.js` — the real scraper. Playwright + headless Chromium.
-- `scraper/sweep_fetch.js` — older diagnostic copy, no browser. Not developed.
-- `scraper/compress.js` / `compress_cli.js` — raw dump → the summary she reads.
-- `scraper/date.test.js`, `compress.test.js` — fixtures. `npm test`, ~1 second.
-- `scraper/qc.js` — with `qc.test.js`, both on `main` since the 20 Sep merge.
-  **The exceptions report AND the gate in front of her import file** (§7 step 8, built 20 Sep; it had never existed). FATAL — no title, no or
-  unknown venue code — blocks `compress --apply`, so a session cannot write the
-  file she imports with one in it. EXCEPTIONS — a venue's count dropped against
-  the last run that HAD it, a venue gone to markers only, descriptions lost —
-  warn and never act. It runs at the end of every sweep into that run's log, and
-  in the compress plan step before any tokens are spent.
-- `scraper/sweep_log.js` — with `sweep_log.test.js`. **Rebuilds the app's freshness
-  drawer from the sweep files on disk**, so nobody has to know which sweep file
-  carries the latest picture. Read-only; prints the document, writes nothing.
-  Her question, 21 Sep — see §7 step 7.
-- `scraper/reach_probe.js` — **reachability only**; says nothing about usable rows.
-- `scraper/inspect_listing.js` — asks a listing page what link shapes it contains.
-- `scraper/probe_access.js` — loads a listing page twice, announcing headless and
-  not, changing nothing else. Answers "is the user-agent the block?"
-- `scraper/probe_morgan.js` — the Morgan's four combinations. **Already answered;
-  keep it as the record, do not re-run it.**
-- `scraper/data_probe.js` — **the only probe that asks the project's real question**:
-  opens real exhibition pages and extracts title, dates and text. Two live limits:
-  it lacks the engine's navigation filter, so listing pages can read as false
-  passes, and it still defaults to all 15 venues including wired ones.
+### Commands
 
 ```
-node scraper/sweep_prototype.js              everything
+node scraper/sweep_prototype.js              everything for this machine
 node scraper/sweep_prototype.js ng rijks     named venues only
 node scraper/sweep_prototype.js --continue   finish the newest run
 node scraper/sweep_prototype.js --jobs=6     venues at once (default 4)
 node scraper/sweep_prototype.js --budget-mins=3   abandon a venue after N min
-node scraper/stitch.js <run> <run> ...        combine runs into one importable file
+node scraper/stitch.js <run> <run> ...       combine runs into one importable file
 node scraper/compress.js <run>               plan, and write the subagent job files
 node scraper/compress.js <run> --check       verify the answers before they land
 node scraper/compress.js <run> --apply       write sweep_compressed.csv
 node scraper/qc.js <run|stitch>              faulty rows + exceptions; exit 1 on a fault
-node scraper/sweep_log.js [--json]           rebuild the app's freshness dates from every sweep file
+node scraper/sweep_log.js [--json]           rebuild the app's freshness dates
+node scraper/venue_status.js                 what each venue currently yields
 npm test                                     all fixtures
 ```
 
-**`stitch.js` chooses NOTHING** — her design. It does not pick which copy of a
-venue wins, drop marker rows or notice duplicates; every row from every named
-folder goes in. Order therefore cannot change the result. A venue swept on both
-machines arriving twice is the POINT: the app folds the copies where she can see
-it. It writes `output/stitch_<stamp>/sweep.csv` — a directory, because compress
-reads directories, and named `stitch_` not `run_` so `--continue` and the
-archiver both ignore it.
+### The files
 
-**Reachability is not the project's question.** Her correction: *"this is not a
-project in can you map me an internet directory."* A row needs a title, two dates
-and curatorial text. **Count rows, not links.** Three measurement failures in one
-afternoon all made the same mistake — measuring something cheap instead of the
-thing that mattered, then stating it confidently and having to withdraw it.
+| File | What it is |
+|---|---|
+| `sweep_prototype.js` | The real scraper. Playwright + headless Chromium |
+| `compress.js` / `compress_cli.js` | Raw dump → the summary she reads |
+| `qc.js` | Exceptions report **and the gate in front of her import file**. A faulty row (no title, no venue code) BLOCKS `--apply`; an exception (count dropped, venue gone to markers, descriptions lost) warns and never acts |
+| `sweep_log.js` | Rebuilds the app's freshness drawer from the sweep files on disk |
+| `venue_status.js` | Prints §2's table |
+| `show_tags.js` | Prints every row's venue tag |
+| `probe_pagination.js` | Asks whether a given page holds anything. Read-only |
+| `inspect_listing.js` | Asks a listing page what link shapes it contains |
+| `probe_access.js` | Loads a listing twice, headless announced and not |
+| `probe_morgan.js` | The Morgan's four combinations. **Answered — keep as the record, do not re-run** |
+| `data_probe.js` | The only probe that asks the real question: opens exhibition pages and extracts title, dates, text |
+| `reach_probe.js` | Reachability only — says nothing about usable rows |
+| `sweep_fetch.js` | Older diagnostic copy, no browser. Not developed |
+
+**`stitch.js` chooses NOTHING** — her design. It does not pick which copy of a
+venue wins, drop marker rows or notice duplicates. Order cannot change its
+result. A venue swept on both machines arriving twice is the POINT: the app folds
+the copies where she can see it.
 
 ### A run is a directory, not a file
 
@@ -1632,1260 +510,398 @@ scraper/output/run_2026-09-10_183045/
 - **`--continue` needs no stored state**: what still needs doing is which venues
   have no file yet. Nothing to go stale.
 - **`sweep.csv` is rebuilt from the venue files at the end of every run**, so a
-  sweep taking three invocations still produces one file. Rebuilding rather than
-  appending makes it idempotent.
+  sweep taking three invocations still produces one file.
+- Timestamps are **Sydney time**, fixed to that zone.
+- **Old runs are archived at start-up, never deleted.** Three things are never
+  moved: the newest 10, anything holding a compressed CSV (that is compression's
+  memory), and any run with 16+ venue files.
+- **Runs are committed, not gitignored.** The container is temporary.
 
-Timestamps are **Sydney time**, fixed to that zone rather than the machine's.
+### Who sweeps what — in code, not a habit
 
-**The sweep archives old runs at start-up** (`archiveOldRuns`, 13 Sep). Diagnosing
-one venue means running real sweeps, each leaving a folder, and `--continue` resumes
-whichever is NEWEST — by 13 Sep there were 135 and the newest three were one-venue
-probes. **Moved into `output/archive/`, never deleted**, and three things are never
-moved: the newest 10, anything holding a compressed CSV (that is compression's
-memory — archiving it silently recompresses everything), and any run with 16+ venue
-files. It runs before the run directory is chosen, and says what it moved.
+`machineVenues()` decides; the machine is worked out from the proxy (present in
+the container, absent on her laptop); `--home` / `--container` force it; the run
+announces which it thinks it is before fetching. **Container: 19** (its 16 working
+venues plus the blocked three). **Her laptop: 2** — `met`, `artic`
+(`route: 'local'`).
 
-**Runs are committed, not gitignored.** The container is temporary: a finished
-sweep could otherwise be lost because nobody asked for the file before the session
-closed. Committing also lets a later session read an earlier sweep to diagnose a
-change. Size is not a reason to hesitate (~500 KB per 21-venue run).
+**The two machines never sweep the same venue.** Sweeping from both doubles what
+a venue sees, and both of these rate-limit — which is how a working venue becomes
+a blocked one. Naming venues by hand still overrides it, and says so in the log.
 
-**Then hand her `sweep_compressed.csv` — she must never have to ask.** Send it
-with the file-sending tool as soon as compression finishes, saying how many rows
-it holds and how many summaries were reused versus written. **One file, and only
-one** — not `sweep.csv`, which still holds raw dumps, and not the per-venue files.
-Handing her several means she might import raw text. **If compression has not been
-run, the run is not finished.**
+### Then hand her the file — she must never have to ask
 
-One gap, honestly: if the container dies **mid-run**, completed venues are still
-lost. Git is deliberately not built into the scraper — credentials differ between
-machines, and that fails silently.
-
-### How long a sweep takes — measured 12 Sep 2026 from the run logs
-
-| | Time |
-|---|---|
-| All 21, one venue at a time | **33 min** |
-| `--jobs=4` (default) | **~9–11 min** |
-| `--jobs=6` | ~7–8 min, at which point Capodimonte alone is the bound |
-| Slowest single venue — `capo` | 6.0 min |
-| Blocked venues | 1–18 **seconds** each |
-
-**Parallelism is across venues only, never within one** (IR-15), so the floor is
-the slowest venue. It also splits across two machines: 19 venues here, 2 on hers,
-at the same time. **A hang is bounded** — a venue over budget (default 10 min) is
-abandoned, writes no file, and is redone by `--continue`.
-
-Caveats: these are container timings, and the listing scroll added 12 Sep costs a
-few seconds per listing page. Two additions of 12 Sep cost a page load each where
-they apply: following a numbered archive to the lookback floor (the Menil now
-reads 3 pages of past instead of 1) and pressing a "load more" control (the
-Louvre, once per year page).
+Send `sweep_compressed.csv` with the file-sending tool as soon as compression
+finishes, saying how many rows and how many summaries were reused versus written.
+**One file, and only one** — not `sweep.csv`, which holds raw dumps. **If
+compression has not been run, the run is not finished.**
 
 ### The network bridge — don't remove it
 
-In this container all outbound traffic goes through an agent proxy, and **Chromium
-cannot use it**: the tunnel opens, Chromium sends its unusually large (~1.8 KB) TLS
-greeting, and the proxy drops the tunnel — `net::ERR_CONNECTION_RESET` on every
-https page. Setting a proxy on `chromium.launch()` does not fix it; nor does
-ignoring certificate errors, because it is not a certificate problem.
-
-**The fix, proven and in the code:** Chromium does no network I/O at all. Every
-request is intercepted and answered by Node, which reaches the internet through the
-proxy fine. Chromium still parses, renders and runs JavaScript normally. This is
-`installNetworkBridge()`.
-
-Two consequences: the TLS fingerprint does not match the Chrome user-agent the page
-sends, so sites checking for that may notice; and image, media and font requests are
-deliberately dropped.
-
-**A raw egress path around the proxy exists. Do not use it and do not build on it.**
-The environment routes traffic through the policy proxy deliberately. The remaining
-route is to **report** the WebSocket limitation, not engineer past it.
-
-### How the scraper is organised
-
-**One engine, one recipe per venue.** The split follows what the logic is *about*,
-not whether it happens to be shared.
-
-**Universal — in the engine, a fix here helps all 21:** fetching and waiting, the
-counters, the URL-identity guard, the lookback rule, structured-data-first,
-**parsing a date string once you have it**, writing the CSV.
-
-**Per venue — in `VENUES`, one readable block each:** which pages to visit, which
-links are exhibitions rather than navigation, where the title sits, where the dates
-sit, what boilerplate to strip.
-
-There is no clever general rule for the second list, and **every attempt at one has
-cost us**. A rule learned at Borghese — "never read the title from above the link" —
-was wrong at Rijksmuseum a day later. A venue writes down only what differs.
-
-Recipe options: `selector`, `isNav`, `title` (heading / card / strip rules),
-`lookbackAfterDetail`, `excludeOngoing`, `yearArchive`, `lookbackFrom` (unused),
-`card: { firstLine }`, `otherBranch`, `within` (per **page**, not per venue),
-`excludeUndated`, `suffix`, `includeCurrentYear`, `notATitle`, `excludeLabelled`,
-`paginate` (per **page**), `loadMore`, `description`, `noise`.
-
-The last two are about where the BLURB is, and they exist because the shared
-extraction ladder expects a paragraph at every rung:
-
-- **`description`** names the element holding the curatorial text, read whatever its
-  tag. The V&A writes its blurb into a `div` with no paragraph in it at all, so the
-  ladder fell to the bottom rung and stored the membership offer on all 15 rows.
-  Capodimonte keeps its article in a tabbed panel whose paragraphs are divs, so the
-  ladder took a nested fragment and several summaries began mid-sentence.
-- **`noise`** names extra containers to exclude at one venue only — Capodimonte's
-  practical-info box is styled `has-custom-color`, a generic WordPress class that
-  means nothing anywhere else.
-
-Two that carry a trap:
-
-- **`notATitle` is checked wherever `CTA_ONLY` is checked, INCLUDING the heading
-  branch.** The heading was trusted first and returned before any check ran, which
-  was the entire bug on the first attempt — Tate's hero cards named two exhibitions
-  after the building.
-- **`yearArchive` never writes the years down.** A recipe listing `2025, 2024` by
-  hand is correct that afternoon and wrong every year after: run it in 2028 and the
-  sweep **completes, reports no error, and is quietly missing two years**. So a
-  recipe declares the shape and `expandYearArchive()` derives the years at run time
-  — the floor's year through **last** year, newest first, current year excluded
-  because the bare `past` page already serves it. Fixtures Y-001 to Y-005 assert no
-  recipe carries a hand-written year again.
-
-**`yearDropdown` is gone.** Driving the Met's year menu returned the same 68 links
-three times. **The menu changes the ADDRESS** — `?year=2025` — so each year is
-simply another page, and clicking raced the navigation. **Check the address bar
-before reaching for a click: if it changes, there is no interaction to automate.**
-
-**A link back to the venue's own listing page is navigation** — universal.
-`isOwnListingPage()` compares with any language prefix stripped, so `/es/exhibitions/past`
-matches. Mechanical rather than a judgement, because we already know which pages are
-listings. It cannot swallow a real exhibition; fixture N-004 guarantees it.
-
-### How a listing page is read
-
-Per page: `seen -> navigation / already-seen URL -> collected (n with no readable
-title)`, ending in a coverage table. **Every link is accounted for by a number.**
-
-**Titles come from the page's own heading where there is one**, never from the first
-line of link text — that captured badges and made 32 NG exhibitions share 3 titles.
-Where a venue wraps only the *image*, the title is read from the card container
-above, guarded: at most 2 levels up, nothing over 220 characters.
-
-**A link with no readable title is never dropped.** It gets a blank title and a note
-saying what the URL slug suggests. The slug guess stays in the notes and never enters
-the title column.
-
-**`noTitle` is counted when the page is FINISHED, not as each link is read.** A venue
-links one exhibition several times per card; `fillBlanksFromRepeatLink()` supplies the
-name a moment later, but the counter had already fired. The Met reported **43
-unreadable titles on a page whose finished rows every one had a title**, and that was
-read as a defect and reported as one. **Report the state that reaches her.**
-
-**The same exhibition linked three times on one card.** `fillBlanksFromRepeatLink()`
-fills the kept row's **empty fields only** from other links to the same address — not
-de-duplication, and it cannot lose anything. Button text is not a name: `CTA_ONLY`
-rejects a link whose **whole** text is one of those phrases, so a title containing
-"Explore" survives.
-
-### Getting past a listing's first page — added 12 Sep 2026
-
-Two shapes of "there is more below", and which one a venue uses decides everything.
-
-**A NUMBERED ARCHIVE is just more addresses.** The Menil's past listing paginates,
-`?page=2`, and only page one was being read — 12 exhibitions lost outright, invisible
-in the output because a first page that reads perfectly looks exactly like a complete
-archive. `followPagination()` asks for the next page and lets the site's answer decide
-whether there is another, stopping when a page hands over no address not already seen.
-**How many pages there are is never written into a recipe** — the same trap as a
-hand-written year, one step worse, because only the site knows.
-
-**It stops at the lookback floor, and that is not an optimisation.** The first version
-walked to the true end, on the grounds that stopping early assumes a newest-first
-archive. That caution cost eleven Menil pages instead of three and put 13 decades-old
-undated exhibitions on her approval pile that nothing downstream could drop. **The
-ordering is not assumed, it is checked**: each page carries its newest closing date to
-the next, and the first page that comes back newer says so in the log and reverts that
-venue to reading to the end.
-
-**A "LOAD MORE" BUTTON IS A CONTROL, and pressing it is correct here.** The test is
-whether the address changes — the Met's year menu changes it, so each year was simply
-another page and clicking raced the navigation; the Louvre's loader changes nothing in
-the address bar and has no address of its own that answers. A venue names its own
-control (`loadMore`); there is no general rule for what such a button looks like.
-
-Three things make it work, and each cost a failure:
-
-- **The consent banner comes down first** (`dismissConsent()`, universal). The Louvre's
-  control was recorded as broken for two days because the cookie popin swallowed the
-  click. **"I clicked it and nothing happened" is only evidence if the click reached
-  the thing.** The banner is not shown on every visit, which is how one unlucky test
-  became a written fact.
-- **The anchor's default action is cancelled before every press.** The button is a
-  disguised link to a page that 404s. While there is more to load the site intercepts
-  the click; once the list is complete it stops intercepting, the browser follows the
-  href, and the listing is replaced by the 404. **The failure needs the press AFTER
-  the last real one**, so a single-click probe cannot show it — mine reported success
-  immediately before the live sweep lost 8 rows. **A control tested once is tested in
-  its easy case.**
-- **THE PRESS IS FOLLOWED BY A WATCH, NOT A SLEEP — 13 Sep.** A fixed 2.5s pause
-  then one count was answering two questions at once — has the batch arrived, and
-  is there no batch — and cannot tell them apart. Under load it read a slow batch
-  as the end of the list: the Louvre's "past 2025" gave 6 links at `--jobs=4` and
-  11 alone, same code, same day, both reporting success. Now polled until it grows;
-  only 12s of nothing means the end. **22 was never a verified ceiling** — the old
-  loop read 43 links from the past page where it now reads 60.
-- **The stop REASON is logged, not just the press count.** "pressed 1x" was printed
-  whether the control vanished, the click missed, or the batch was slow. **A log
-  that cannot tell a working mechanism from a broken one is why this sat unnoticed.**
-
-### Three universal behaviours added 12 Sep 2026
-
-- **A listing page is SCROLLED before it is read.** The KHM builds cards as you
-  scroll; read at the fold its whole programme is two links, and that was written
-  into this guide as a fact about the venue. Listing pages only; the loop stops when
-  the page stops growing.
-- **Measure the page height AFTER the wait, not before.** The first version still
-  missed all three KHM upcoming shows. It now requires two unchanged steps.
-- **A page that loads and yields nothing leaves a marker row.** The check sits AFTER
-  the de-duplication guard, so a page whose links were all collected elsewhere does
-  not report itself as empty.
-- **A title can come from the exhibition's own page when the listing gives none.**
-  Fills a BLANK only, never overwrites.
-
-### Keeping junk out of the summary — her biggest issue, 12 Sep
-
-Her verdict across the twelve venues she reviewed: **the biggest problem is junk text
-in the summaries** — photo captions, "join us for the opening talk", ticketing. And
-the reason it matters is hers, not a restatement: some litter the compression step can
-be trusted to ignore, but **an artist and a work named in a caption read exactly like
-an artist and a work named in the blurb**, so the model cannot tell them apart and can
-state something false with no way to know.
-
-Three kinds of rule, in descending order of trust. Reach for the next one only when
-the one above gives nothing:
-
-1. **The page names the block itself** — `image-caption` at Tate, `Alert` at the
-   Louvre, `onetrust` anywhere, `has-custom-color` at Capodimonte. Strongest, because
-   it survives the wording inside changing, and the Louvre's visitor notices change
-   weekly.
-2. **The shape of the markup** — a paragraph that is bold end to end is a label, not
-   prose. The Wallace's details line sits in the same `div.rich-text` as its blurb,
-   same class, same parent; the bold is the only difference. Guarded to fire only
-   where the page has non-bold prose to fall back on.
-3. **A phrase list** (`BOILERPLATE`) — "admission charge", "generously provided by",
-   a star rating. **Weakest, and it does not generalise**: it catches only the
-   phrasings we have seen, and a venue writing "entry is chargeable" slips through.
-   Only add a phrase that could never appear in a real blurb — a donor list, a ticket
-   price — never a word that might turn up in curatorial prose.
-
-**Junk in a summary is visible on her approval card, unlike a dropped row.** That is
-why a phrase list is an acceptable last resort here and would not be acceptable for
-deciding what to collect.
-
-**Clearing one kind of junk can pull in another.** Removing Tate's caption freed a slot
-and what moved up at the Menil was the funder list — and the Frick was already shedding
-those while the Menil was taking them on. Re-check the closed venues after every change
-to this area, which is her standing rule for an engine change anyway.
-
-### Failure handling
-
-**Every venue leaves marker rows for listing pages it could not read** — one per
-page, titled `[past page]`, carrying the reason. Universal since 10 Sep: it was a
-per-venue opt-in, so **the Met, refused on every page, contributed nothing at all**.
-A standing monitor that reports nothing is not a monitor.
-
-`classifyLoadError()` reads Chromium's own error name and `failureProse()` turns it
-into the sentence she sees:
-
-| What happened | On the card |
-|---|---|
-| HTTP 403 / 418 / 429 | the venue's site refused us (HTTP 429) |
-| `ERR_FAILED` | the venue's site did not respond |
-| `ERR_CONNECTION_RESET` | the venue's server dropped the connection part-way |
-| `ERR_CONNECTION_REFUSED` | the venue's server refused the connection |
-| `ERR_NAME_NOT_RESOLVED` | the venue's web address could not be found |
-| `ERR_CERT_*` / `ERR_SSL_*` | the security certificate could not be verified |
-| navigation timeout | the page did not finish loading in time |
-
-A reason falling through to `LOAD_ERROR, cause unknown` means a network error we have
-not seen; add it rather than guess.
-
-**A transient failure is retried once — a refusal never is.** A failed page costs the
-row's dates, and a row with no end date cannot be dropped by the lookback, so it
-arrives as a rogue undated card. `safeGoto` retries **once**, after two seconds, only
-on `TIMEOUT`, `CONNECTION_*`, `EMPTY_RESPONSE`, `NO_RESPONSE`, `LOAD_ERROR`.
-**Every HTTP status is excluded, deliberately** — a venue answering 403 has told us
-its answer, and asking again is the hammering the standing rule forbids.
-
-**A page that loads is not a page that exists.** `safeGoto` refuses any status ≥ 400.
-A 404 still **serves a readable page**, so "This page does not exist." was stored as
-three Rijksmuseum summaries. Those rows are kept and carry a note; **the dead link
-stays in the URL column**, because `applyRefresh` falls back to the venue's generic
-listing when `exUrl` is empty, and an arrow that silently goes somewhere else is worse
-than one that goes nowhere honestly. Such rows necessarily have an empty summary.
-
-**A dying run is not a page failure.** The run directory rests on one guarantee — a
-venue file on disk means that venue finished — and it was not true. A run stopped
-by hand mid-venue recorded the browser teardown as nine ordinary page failures,
-**retried them against a browser that no longer existed**, declared the venue
-complete and wrote 10 of 16 summaries missing. Nothing said so. A browser crash does
-the same with nobody touching anything. Three parts, all needed:
-
-1. `classifyLoadError` returns `SHUTDOWN` for `Target closed`, `Browser has been
-   closed`, `Execution context was destroyed`, `Target crashed` — deliberately **not**
-   in `TRANSIENT_FAILURES`, so never retried.
-2. `safeGoto` **throws `ScrapeAborted`** rather than returning `{ok:false}`. A
-   returned failure looks like a page that would not load, so the venue finishes;
-   throwing means `writeVenueCsv` is never reached.
-3. **`rethrowIfAborted()` in every catch that continues past a failure.** This is the
-   part missed first time, and why it must be stated as a principle: **a dying browser
-   raises the same error from ANY Playwright call, not only navigation.** Every catch
-   in a scraper is written for the page in front of it — that is right, and exactly
-   why each one needs this guard.
-
-Also: a `SIGINT`/`SIGTERM` handler sets `STOPPING` so the venue stops at its next
-navigation. Fixtures E-001 to E-006 cover the classification.
-
-### Reading dates
-
-**All date parsing is shared, on purpose** — every venue contains several venues'
-worth of formats (the Rijksmuseum alone uses six), so a pattern learned at one is
-worth having at all.
-
-Sources in order: **structured data** → the **listing card** (`datesNearLink`) →
-**prose on the exhibition's page** (`findDateRangeInProse`) → a date-ish element. The
-detail scan runs whenever *either* date is missing and **fills only empty fields —
-the listing wins on disagreement.**
-
-Formats handled, all found in the wild:
-
-```
-6 FEBRUARY TILL 25 MAY 2026          day-first, year on the end
-22 MARCH 2025 TO 15 MARCH 2026       day-first, year on both
-12 SEP 2025 TO 25 JAN 2026           abbreviated months
-21 Sept. 2024 to 12 Jan. 2025        abbreviated with a full stop
-11 Oct. 2019 t/m 19 Jan. 2020        Dutch "t/m" (tot en met)
-December 13, 2025 - February 2, 2026 month-first
-From June 10 to September 14, 2025   month-first, word separator
-5 June to 25 October                 no year — borrowed from the listing
-Till 29 November                     no year, no opening date
-WORN till 21 March 2027              single date with a preposition
-March / 2026                         month and year only
-December 9 - 31, 2023                one month, day only on the closing side
-December 5 - January 20, 2026        crosses new year — opens in 2025
-Summer 2022                          season and year — a bound, not a date
-Dal 16 ottobre 2025 al 6 gennaio 2026   Italian, "from ... to ..."
-Dal 16 aprile all'8 settembre 2026      Italian, "al" elided before a vowel
-From 21/03/2024 to 28/04/2024           all numeric — see below
-10 set 2026 - 22 nov 2026               Italian month abbreviated to three letters
-Saturday 23 May - Sunday 29 Nov 2026    a weekday in front of each date
-```
-
-**A WEEKDAY NAME BREAKS EVERY RANGE PATTERN**, so it is stripped first. The Wallace
-prints "Saturday 23 May - Sunday 29 November 2026" and its Churchill row reached her
-with NO dates and a note saying the venue published none — untrue, and the same shape
-of failure as dellav below: **the scraper blamed the site for its own gap.** The strip
-is anchored on what follows (a day number or a month name) so a bare "Sun" is not cut
-out of prose. Longest alternative first, or it removes "Sunday" and silently leaves
-"Saturday" — which is what the first attempt did.
-
-**THREE-LETTER ITALIAN MONTHS.** The Gallerie dell'Accademia prints "10 set 2026 -
-22 nov 2026" on its ENGLISH page. `nov` matched as English, `set` did not, because the
-map held `sett`. Both dates came back blank.
-
-**Italian is in the SHARED month map**, like every other format: five wired venues
-are Italian. Without it Capodimonte's 50 rows were ALL undated, and undated rows
-cannot be excluded by the lookback, so its entire history survived. Note the elision:
-"al" becomes "all'" before a vowel, in both apostrophes, and **the longest alternative
-must come first** or a bare "al" matches the first two letters of "all'8".
-
-**An ALL-NUMERIC range is read only when the numbers PROVE their own order.** In
-"From 21/03/2024 to 28/04/2024", 21 cannot be a month, so the range is day-first and
-the other end inherits it. If either end has a first component over 12 it is
-day-first; a second component over 12, month-first; if **neither end proves anything
-the range is refused** rather than guessed. It is a **listing-card rule** — run
-against whole page text it gave two Uffizi exhibitions the run of a sidebar lecture.
-
-**A range that runs backwards crosses the new year**, and the opening year is worked
-out rather than assumed. "December 5 – January 20, 2026" opened in December **2025**.
-Until 10 Sep the start inherited the closing year, so the show ended seven weeks
-before it opened. Museums run winter shows constantly.
-
-**Every date is checked against the calendar before storage.** `ymd()` is the single
-gate. JavaScript rolls `2026-02-31` silently forward to 3 March, so an impossible date
-never announces itself — it becomes a plausible **wrong** one and can then decide
-whether a show passes the lookback.
-
-**Every dash is normalised first** — U+2010 to U+2015, minus sign, Hebrew maqaf. With
-only the en dash handled, a figure dash made "15 October 2026" read as 1 October.
-
-**Two guards stop art history being read as exhibition dates:** a month **name** must
-sit beside the number, and the year must be plausible (**1990–2035**). Verified
-against `Caravaggio (1571-1610)`, `stayed in Italy in 1629`, `confiscated on 4 May
-1607`, `August 17 1945` — all correctly ignored.
-
-**A PUBLISHED OPENING YEAR THAT FAILS THAT GUARD REFUSES THE WHOLE RANGE** — it is
-never quietly swapped for the closing year. Capodimonte's Mimmo Jodice page says
-"Mimmo Jodice ( Napoli 29 marzo 1934 – 27 ottobre 2025)", the photographer's birth and
-death. 1934 was rejected, the opening year was then worked out from the closing one,
-and **a lifespan was stored as the exhibition's run** in a row that looked healthy in
-every other respect. The flaw was treating "no year published" and "a year published
-that cannot be an exhibition year" as the same case. They are opposites: the first is
-a gap to fill, the second is proof the sentence is not about a run at all.
-
-**The two parsers must not diverge.** `findDateRange` (listings) and
-`findDateRangeInProse` (page text) drifted twice, each time silently losing dates.
-The prose parser now falls through to the listing parser, and there is one shared
-`MONTH_PATTERN`.
-
-**Her standing rule:** where the code has applicable logic it uses it; where it has
-none the date columns stay blank and the notes explain why. **Never a guess.**
-
-#### A listing card is not a page — the loose rules apply to one, not the other
-
-**The most dangerous rule in the file is "one month name beside one year".** On a
-listing card that is almost certainly the exhibition's date. On a whole page it is a
-lottery, because a page also carries navigation, captions, a footer and opening hours.
-
-The Rijksmuseum's *Express yourself* prints `16 Feb - 9 June` with **no year
-anywhere**, so the scan fell through to the bare month-and-year rule and matched a
-photo caption — *"Gerard Wessel, RoXY, Amsterdam, April 1994"*. A 2024 exhibition got
-a **1994** opening date, ranking it thirty years closed.
-
-So `findDateRange` takes `{ looseSingles }` and `findDateRangeInProse` passes
-**false**. Refused on page text: bare `Month YYYY`, bare `Season YYYY`, bare
-`Month D, YYYY` with no preposition. Still allowed everywhere: every range pattern,
-and a single date with a preposition (`until 20 February 2026`).
-
-Express yourself now returns **no dates at all**, with a note. That is the correct
-answer — the venue never published a usable one.
-
-#### A date must be proved to belong to this exhibition — three sources, three guards
-
-The 9 Sep review raised this against **structured data** only (IR-09). It was
-implemented exactly that narrowly, and the underlying principle was not carried
-across. Both other sources then failed the same way within a day. **Read the
-principle, not the finding.**
-
-1. **Structured data → match the event's name.** `pickStructuredEvent()`.
-2. **Page text → refuse a sentence that contradicts what is already known.** NG pages
-   carry related courses. Waldmüller's page advertises a course running "7 September -
-   28 September 2026" while its card says "Until 20 September 2026". The old rule was
-   "fill only what is empty", so it took the course's opening date and discarded its
-   closing date — the very thing proving the sentence belonged to something else. No
-   date-*shape* rule can catch this, so **if either end of a prose range disagrees
-   with a date already collected, the whole range is discarded.**
-3. **Listing cards → stop at the edge of the card.** `datesNearLink()` walked a fixed
-   two steps; a step count is not a boundary. Two steps up sat a box holding one card
-   *and the next one*, whose dates had a year and so won. The walk now stops as soon
-   as a box contains **more than one exhibition address**
-   (`coversMoreThanOneExhibition()`), whatever its size.
-
-**Why losing that date is the right outcome:** the row is then incomplete, and an
-incomplete row is exactly what sends the scraper to the exhibition's own page, which
-states the dates plainly. The bad grab cost the correct answer twice over, because a
-row that looks complete is never followed up.
-
-**The half that is NOT solved.** There is no general way to tell an exhibition's dates
-from any other date on its page. All three guards need something to check against.
-Where a venue's listing carries no dates and its page carries a related event, the
-scraper will take the wrong dates silently. **This is the same problem as known bug 2,
-one scale up.** The ladder is the same each time:
-
-1. **The site says so** — use its tag, exactly as structured data is used.
-2. **Structure implies it** — URL shape, which block the text sits in. Mechanical, so
-   code's job.
-3. **Neither** — collect it, flag it, let her decide. Never guess, never drop.
-
-### Travelling exhibitions — a note, never a merge
-
-A venue with two addresses runs the same show in both. Both rows are always kept and
-the **city stays in the title**, so they read as different entries.
-`noteTravellingRuns()` adds "The same exhibition is also shown at Palm Beach." to
-each. Matching ignores the city and all punctuation. **It must never become
-de-duplication:** a wrong match costs one misleading sentence, never a row. A venue
-opts in by listing its `locations`.
-
-### Compression — the summary column
-
-The scraper writes the **raw curatorial dump**; `scraper/compress.js` turns it into
-the ~6-word teaser she reads, and `sweep_compressed.csv` is **the file she imports**.
-
-- **Reuse is by code and cannot be wrong.** It reads the previous run's compressed
-  CSV; identical raw text reuses the wording with **no model call**. Changed text asks
-  one question — *is the old summary now false?* — handing over the old wording.
-- **Identical text INSIDE one file is also asked once** (`groupIdenticalRaw`, 13 Sep).
-  A stitched file repeats any venue swept on both machines, and the previous-run
-  memory cannot see the copy beside it. Asking twice is worse than wasteful: each row
-  is an isolated question, so the model can word the same text differently and the
-  difference reaches her as a conflict.
-- **Her 110 seed summaries are memory too** (`seedMemory`). They predate the
-  compressor, so every one read as "never seen" and would have been rewritten —
-  ~100 cards proposing to replace her own wording. They carry no raw text, so each
-  becomes a REVIEW rather than a free reuse. Matched through the same keys as
-  everything else: the seed stores a URL SLUG, and matching it by title found 56
-  of 110 where 103 were there. **It does not retire** — the seed is baked into the
-  JSX, so every run consults it.
-- **The seed fills gaps, it does not overrule.** `mergeSeedMemory()` adds her
-  wording only where the previous run knows nothing. `--seed-wins` lets hers
-  REPLACE a compressor-written summary, but that is a **one-time repair, never the
-  standing rule** — as a rule it is a revert machine, since a venue rewording its
-  page should produce an updated summary and a standing override would reset the
-  memory and propose changing it straight back forever. It repaired one
-  non-recurring condition (19 Sep): Acquavella was compressed 11 Sep, before
-  `seedMemory` existed, so 13 of her summaries came back as proposed rewrites; 10
-  of the 13 cost no model call, the pending set being byte-identical.
-- **Sonnet writes fresh, Haiku judges staleness.** Measured, not assumed.
-- **Reached by subagent, not the session itself** — a session uses whatever model it
-  happens to be, which discards the measurement.
-- **A reuse caused by a failed page must say so in `notes`.** Silent reuse papers over
-  a scraper failure.
-- Cap is **ten words**, ending in a full stop, a noun phrase — measured from her 110
-  seed summaries, not chosen. Their MEDIAN is 6, and that distinction cost a chunk:
-  told "maximum 10, examples average six", the model heard the ceiling and wrote a
-  median of 9 with nothing under 7. Told to aim for six, with her three-word
-  summaries quoted as exemplary, it came back at a median of 6.
-
-**Running it — measured 19 Sep on 652 rows, the first time at scale.** The mechanics
-are in `compress_cli.js`, which writes the job files and prints the steps; this is
-only what a session cannot see from there:
-
-- **ONE subagent cannot take 296 rows.** It must hold every row's raw text and write
-  every answer. Chunks of 75 cost ~100k tokens each, three times running.
-- **The file shape is most of the cost.** Pretty-printed JSON with unused fields plus
-  a separate examples file: 173KB, 178k tokens. The same rows flattened to one
-  compact line, examples folded in: 112KB, 100k. Identical work, 44% less.
-- **Run one chunk and look at it before spending the rest.**
-- **THE PROMPT IS ADVISORY.** In five jobs a subagent wrote a file it was told not to
-  (35k tokens to copy its own input), ignored "read once" twice, wrapped its answer
-  in a code fence, and twice carried an HTML entity through an explicit rule.
-  Anything that must not happen is removed from its tools — read-only subagents — or
-  checked in code coming back: `--check` gates `--apply` and refuses on a missing
-  index, an over-length summary, a fence or an HTML fragment.
-
-**Full design, evidence and the rejected alternatives: `docs/compression.md`.**
-It is finished and signed off — do not re-plan it.
-
-### No single key identifies an exhibition over time — 13 Sep 2026
-
-Found while matching her 110 seed summaries against a real sweep. Title matching
-found 56; URL matching found 103 of the same 110. Four cases where they
-disagreed, and they had four different causes:
-
-| What happened | Example |
-|---|---|
-| Same address, written differently | `waldmuller` vs `waldm%C3%BCller` |
-| The show moved to the archive | `/exhibitions/zurbaran` → `/exhibitions/**past**/zurbaran` |
-| The venue renamed its own slug | `ng-stories-making-a-national-gallery` → `ng-stories` |
-| **The venue RECYCLED an address** | Rijksmuseum's *Document Nederland* is annual; `/past/document-nederland` now points at the 2024 edition and the 2025 one has a suffix |
-
-The first two are code gaps, not changes: decode before comparing, and strip a
-known listing segment. The last is the important one — **a URL is not permanent
-either.** It is the address-shaped version of artic's Crèche problem.
-
-**So neither key works alone, and DATES are the tiebreaker.** Same address with
-date ranges a year apart is a recycled address, not one exhibition.
-
-**THE RIGHT ANSWER DIFFERS BY WHERE IT IS USED, because the cost of being wrong
-differs.** This is the part to carry across:
-
-- **The app's folding — strict, same URL only.** A wrong fold loses an
-  exhibition permanently and silently. Everything else becomes two cards she
-  can see and reject.
-- **Compression memory — loose is safe.** Both failures are soft: a miss costs
-  one model call, and a false match hands the model the wrong old wording
-  **together with the real blurb**, so it rewrites. URL, then title, then dates.
-
-Applying the app's rule to compression wastes calls; applying compression's rule
-to the app loses rows.
-
-### Known bugs — open
-
-1. **Nothing filters out non-exhibitions, generally.** The only test is URL shape, so
-   talks, tours and opening events filed under an exhibitions path are collected. A
-   venue that dumps everything *and* tags nothing still needs a different answer.
-   **Where a venue DOES tag, the tag is now used** — Tate's `event_type` query filter,
-   the V&A's `Display` badge, Tate Britain's `ONGOING`, the Art Institute's
-   `COLLECTION INSTALLATION`. That is rung 1 of the ladder, the site saying so.
-2. **Title casing is inconsistent** — some venues apply capitalisation in CSS.
-   **Her decision: live with it.** Genuinely all-caps titles exist.
-3. **artic's two title defects** — see §2.
+In this container all outbound traffic goes through an agent proxy and **Chromium
+cannot use it**. The fix, proven and in the code (`installNetworkBridge`):
+Chromium does no network I/O at all; every request is intercepted and answered by
+Node, which reaches the internet through the proxy fine. **A raw egress path
+around the proxy exists. Do not use it and do not build on it.**
+
+### How it is organised
+
+**One engine, one recipe per venue.** Universal logic in the engine — fetching,
+counters, the URL guard, the lookback, structured-data-first, date parsing,
+writing the CSV. Per venue in `VENUES` — which pages, which links are exhibitions,
+where the title and dates sit, what boilerplate to strip.
+
+There is no clever general rule for the second list, and **every attempt at one
+has cost us**: a rule learned at Borghese was wrong at Rijksmuseum a day later. A
+venue writes down only what differs.
+
+**Two recipe options carry a trap:** `notATitle` must be checked in the heading
+branch too (the heading was trusted first and returned before any check ran), and
+**`yearArchive` never writes the years down** — `expandYearArchive()` derives them
+at run time, or a sweep run in 2028 completes, reports no error, and is quietly
+missing two years.
+
+**Everything else about the scraper — how a listing page is read, pagination and
+load-more, the date parser and its twenty formats, keeping junk out of summaries,
+failure handling, compression, the blocked venues — is in `docs/scraper.md`.**
+Read the relevant section before changing that area.
 
 ---
 
 ## 6. Do not re-break these
 
-Each entry cost a real failure. Before changing the area, read the line.
+Each line cost a real failure. They group into a handful of mistakes this project
+keeps making in new clothes.
 
-- `networkidle` waits — 30s timeouts on pages that had loaded in 3.
-- Unwrapped `route.fulfill`/`abort` — a cascade of "interrupted by another
-  navigation" that returned zero rows for all six venues.
-- Title-based de-duplication — deleted 29 NG exhibitions.
-- Borghese's `/mostre/` selector — collected the navigation menu.
-- Dropping links with unreadable titles.
-- A cookie-banner filter that walked up to `<body>`, excluding every paragraph on
-  every page. **The ancestor walk must stop before `<body>` and `<html>`.**
-- A noise-class match believed on a container holding most of the page — the Wallace
-  Collection's `section--footer-spacer` LAYOUT class made an image-licence notice all
-  11 summaries.
-- Two copies of the month pattern, full names only, so `12 SEP 2025` parsed to nothing.
-- The plausible-year guard missing from a branch, so "4 May 1607" became a start date.
-  Later missing again from the day-first range branch, the busiest path in the parser.
-- Six near-identical venue scraper functions — now the engine/recipe split.
-- A single fixed `sweep_raw.csv`, which let a one-venue diagnostic silently replace a
-  full sweep while the file still looked complete.
-- A hardcoded Chromium path. `resolveChromium()` tries Playwright's answer first, then
-  what is installed, newest first — **both halves are needed**.
-- A range with the year on the closing side giving the opening date that same year,
-  and no impossible-range guard on the listing parser to catch it.
-- Building date strings by hand with `padStart`, nothing checking the day exists.
-- `parseMonthDay` matching the month as `[A-Za-z]+`, stopping at the full stop
-  `MONTH_PATTERN` allows, so `Sept. 21, 2024 - Oct. 12, 2024` produced nothing silently.
-- `normalizeUrl` lowercasing the whole address — two exhibitions differing only in
-  capitalisation collapsed into one.
-- Joining hrefs onto the venue base by hand — cannot resolve `../`, protocol-relative
-  `//host`, or query-only links, and never checked the result was still on the site.
-- Taking `events[0]` from structured data without checking the event was this exhibition.
-- `parseDateRange`, a second anchored parser nothing called. Dead code shaped like live
-  code is a trap for whoever debugs dates next.
-- The bare month-and-year rule applied to whole page text — a photo caption became an
-  opening date.
-- Giving up on a detail page after one transient failure, which cost a summary AND let
-  an out-of-range row survive the lookback undated.
-- Keeping the FIRST link to an address and ignoring the rest — the NG's first link to a
-  card is the image, so Renoir and Love lost its title and dates.
-- Only the en and em dash normalised.
-- Treating a 404 as a page that loaded.
-- Treating a torn-down browser as a page failure — a venue written to disk as COMPLETE
-  with 10 of 16 summaries missing, breaking the one guarantee the run directory exists
-  to give.
-- Reading a listing page without SCROLLING it, then writing the result down as a fact
-  about the venue.
-- Measuring a scrolled page's height BEFORE waiting for the new cards.
-- A listing that loads and yields nothing leaving no trace in the CSV.
-- Recording a test as "we stayed silent and let the site decide" when the code
-  had only stopped overriding the user-agent, so Chromium went on announcing
-  `HeadlessChrome`. **Name a test by what the code does, never by what it was
-  meant to achieve.**
-- Reading one listing page in a probe, calling the venue open, changing the real
-  scraper on that basis, and then — when the real sweep failed — inventing
-  causes (rate limiting, volume, her address) with nothing in any log to support
-  them. Two hours and a day's usage allowance for one listing page. **A probe
-  answers the one request it made. Everything else is a guess and must be
-  written as one.**
-- `TITLE_NOISE` stripping EXHIBITION / DISPLAY / FREE case-insensitively — "How to Make
-  an Exhibition" was stored as "How to Make an ".
-- `VENUE_ORDER` as a second hand-typed list of venue codes, so two finished recipes
-  could not be selected and nothing said why.
-- Trusting the heading FIRST and returning before any check ran.
-- Reading an all-numeric range from whole page text.
-- Acquavella's title rule stripping `NEW YORK` / `PALM BEACH`, making its two runs of
-  one show read as the same exhibition. It now strips only the date tail.
-- Reading only the FIRST page of a paginated archive — 12 Menil exhibitions lost, and
-  a first page that reads perfectly looks exactly like a complete archive.
-- Walking a paginated archive past the lookback floor "to be safe" — eleven pages
-  instead of three and 13 undated decades-old rows on her approval pile.
-- A load-more click following the anchor's href once the list is complete, replacing
-  the listing with a 404 and costing 8 Louvre rows.
-- A FIXED PAUSE after a load-more press, counted once, deciding both "has it
-  arrived" and "is there any more" — 4 Louvre exhibitions, invisible in the output
-  AND the log, and a row count that varied with how busy the machine was.
-- Reading only page one of a listing because nobody asked whether there was a two.
-- Assuming a site numbers pages from 0, or from 1. Only its own next link says.
-- A next-page check treating a recipe's OWN filter as a page — 32 false alarms at
-  artic for a venue with nothing missing.
-- Inserting a check into the middle of an existing block, splitting it: every venue
-  without a load-more control died before reading a page, while the unit suite
-  passed 148/148. **It has no browser, so the listing loop never runs in it.**
-- Archiving old run folders without checking which ones compression needs — its
-  memory is the newest previously-compressed run, and moving those recompresses
-  every row from scratch while reporting nothing.
-- Two groupings both claiming a pending row by assignment, so the second silently
-  dropped the first and that row never received an answer.
-- Writing a stitched file as a loose CSV when compress reads DIRECTORIES — it
-  compressed the newest sweep instead, 652 rows in and 172 out, no error. Each
-  half was correct; the join between them had never been run.
-- Matching her seed summaries by TITLE when the seed carries a URL slug — 56
-  matches where there were 103, and Acquavella scored zero because the scraper
-  deliberately keeps the city in its titles and her seed does not.
-- Consulting her seed BEHIND the previous compressed run — 13 of her own summaries
-  came back as proposed rewrites — and then fixing it by making her wording win on
-  EVERY run, which is a revert machine. **The repair had to be a flag, not a rule**;
-  reasoning in §5.
-- Deciding which triage band a card belongs in by searching its notes for the
-  words "same exhibition", which the sweeper also writes for a travelling show —
-  two Acquavella cards filed as "combined for you" with nothing combined. **A
-  fact the code already knows is never re-derived from prose written for a human.**
-- A band that never held a row, shipped and listed in this guide as one of six.
-  **She found it by importing the sample file and looking.** A band, a fixture
-  file or a check that is always silent reads exactly like one that is passing.
-- Putting a DATA FAULT on her approval pile. A row with no title or no venue code
-  can only ever mean "re-run the sweep", which is a message to the session, and
-  it sat in a band of its own for a week with no check upstream of it.
-- Letting the ledger update run with cards undecided, skipping them silently —
-  not applied, not remembered, back on the next sweep. She believed the guard
-  existed; it never had.
-- Appending fixtures to `intake_cases.js` BELOW its `process.exit`, so they
-  never ran while `npm test` stayed green. The third time this guide has had to
-  record a silent suite. **Grep the output for the new test's own name; a total
-  cannot tell you a case ran.**
-- Claiming to restore a deleted sentence and instead moving its words somewhere
-  else, displacing a different sentence. She caught both.
-- Keeping a FACT ABOUT THE WORLD in the ledger, so that opening an older backup
-  reported an older sweep date — as though rolling back a document could un-run
-  a sweep.
-- Arguing an architecture question from what had been BUILT rather than from
-  what the platform offers, and never checking. "The shell has nowhere to keep
-  anything" was false; the page can hold a store of its own.
-- Inventing a constraint she never stated (that she keeps several ledgers) and
-  leaning on it twice. **A convenient hypothesis is worse than no argument.**
-- Reading `npm test`'s FIRST half for a pass count while its second half
-  crashed — a green 170 printed halfway through, exit code 1 the whole time.
+### A check that cannot fail reads exactly like a check that passes
+
+- Fixtures below a `process.exit`, or needing a `harness.js` that did not exist,
+  or not named by `npm test` — **four silent suites so far.**
+- Reading `npm test`'s first half for a pass count while the second half crashed.
   **Check the exit code.**
-- **Shipping a page that does not load.** A blanket colour rename for dark mode
-  ran AFTER the palette was written and rewrote the palette's own literals, so
-  it defined itself (`drawer: C.drawer`). Valid syntax; throws on first render;
-  BLACK SCREEN. She found it, twice — the first "fix" addressed a different
-  instance of the same rename and I told her it was fixed without rendering it.
-  **A blanket find-and-replace over a file you have just added definitions to
-  will eat those definitions.**
-- Believing a check that asks the wrong question. `tsc --noEmit` answers "does
-  this parse"; the unit suite tests functions LIFTED OUT of the file; grepping
-  the built page for expected strings found them all, because the broken line
-  was one of them. **None of them could have caught a blank page, and I read
-  three greens as proof.**
-- Anchoring a test harness on a LINE OF CODE (`const TIERS = {`) rather than on
-  prose describing the section. Dark mode made TIERS theme-dependent, the line
-  stopped existing, and every intake fixture died at once.
+- A triage band that never held a row, shipped and documented as one of six. She
+  found it by importing the sample file and looking.
+- `tsc --noEmit` answers "does this parse"; the unit suite tests functions LIFTED
+  OUT of the file; grepping the built page found the broken line because it was
+  one of the expected strings. **Three greens, none of which could catch a blank
+  page.**
+- A fixture proving its rule through a SIDE EFFECT (W-004 read the parser's `raw`
+  field) so it broke on an unrelated change. **Ask the rule directly.**
+- **Grep the output for the new test's own name; a total cannot tell you a case
+  ran.**
+
+### A negative has to be earned, and has to say which negative it is
+
+- "No separate publisher page." printed whether the step searched and found
+  nothing or never fired at all.
+- "ISBN not confirmed" printed when the connector had refused mid-lookup.
+- "never" printed for an empty sweep log, from the absence of a note, while she
+  was looking at quarantined rows that could only have come from a sweep. **Say
+  what is unknown.**
+- A page that came back EMPTY reported as a page with nothing on it — Hannibal
+  draws its books by script, so the reader gets 110 characters of furniture.
+- **A missing button cannot report anything** — the Publisher button is drawn only
+  when a link was found, so its absence read identically to a step that never ran.
+  Third time this app learned it.
+- **A control that renders only when it has something to show.** Emptying the
+  sweep log removed the "By venue" button, so its "nothing here" line became
+  unreachable at the only moment it was true.
+- A status line saying "Saved — safe to close" because a button was CLICKED, while
+  the sandbox had refused the download.
+- A log line describing something that did not happen — filtering `rows` after
+  `applyLookback` had already copied it into `toFetch`. The log announced ten
+  exclusions while all ten sat in the CSV. **Count from the array AFTER the
+  change, never from the list of marks.**
+- **Name a test by what the code does, never by what it was meant to achieve.**
+  "We stayed silent and let the site decide" was recorded while Chromium went on
+  announcing `HeadlessChrome`.
+
+### Measuring the cheap thing instead of the thing that matters
+
+- **A probe answers the one request it made.** Reading one listing page, calling
+  the venue open, changing the real scraper on that basis, and then inventing
+  causes when the real sweep failed. Two hours and a day's allowance.
+- A single-click test of the Louvre's load-more, which reported success
+  immediately before the live sweep lost 8 rows. **The failure needs the press
+  AFTER the last real one.** A control tested once is tested in its easy case.
+- **A FIXED PAUSE answering two questions at once** — has the batch arrived, and
+  is there any more. Four Louvre exhibitions lost, and a row count that varied
+  with how busy the machine was.
+- Concluding a control is broken without checking the click reached it; the
+  Louvre's cookie popin swallowed it for two days.
 - Reporting a card total with nothing to check it against. Rows vanish for three
   innocent reasons, so a total alone cannot tell a fold from a loss.
-- A status line saying "Saved — safe to close" because a button was CLICKED,
-  while the sandbox had silently refused the download and nothing was written.
-- Writing `\u2014` among the words of a page instead of inside quotes, so six
-  characters printed literally. It sat unseen for weeks because no row had ever
-  reached that state — the first catalogue found outside its venue's shop exposed
-  it. **A branch nothing has entered is untested however long it has shipped.**
-- Fourteen fixture cases committed, cited in this guide as covering the folding
-  rules, requiring a `harness.js` that did not exist — and not named by
-  `npm test` either. Two independent reasons for one silence. **A file of
-  assertions with nothing to run them reads exactly like a passing suite.**
-- Diagnosing a fault in WORKING code from a test that was not that code. One
-  hand-written search query, run in a session rather than through the app, found
-  a shop page full of tote bags; that was read as "the lookup is broken" and her
-  two-stage design was rewritten around it. Her stage two would have found the
-  book, as the very next search proved. **Run the thing itself before concluding
-  the thing is wrong.**
-- Handing a compression subagent pretty-printed JSON with fields it never reads,
-  plus a second file for the examples — 178k tokens where 100k did the same work.
-- Telling a subagent what not to do and believing it. Five jobs, four disobeyed:
-  a file written, "read once" ignored twice, a code fence, two HTML entities.
-  **Remove the tool or check the answer. Wording is not a control.**
-- Concluding a control is broken without checking the click reached it; the Louvre's
-  cookie popin swallowed it and the wrong conclusion sat in the recipe for two days.
-- The layout-wrapper escape applied to a NAMED consent manager — the V&A's cookie
-  panel held 24 of 27 paragraphs, passed itself off as the layout, and its text became
-  the description on all 15 rows.
-- An extraction ladder that expects a paragraph at every rung, with no way for a venue
-  to name a blurb that lives in a div.
+- Reading a listing page **without scrolling it**, then writing the result down as
+  a fact about the venue. And measuring the scrolled height BEFORE the wait.
+- **A count flattens the evidence too.** A run scored 0 badges, 0 blanks, exactly
+  the predicted 77 — while two titles had quietly lost half their names.
+- **When the artefact cannot contain the evidence, stop reading the artefact.**
+  Three title fixes guessed from a CSV that stores titles squashed to one line,
+  when the defect was made of line breaks.
+- **Run the thing itself before concluding the thing is wrong.** One hand-written
+  query, run in a session rather than through the app, was read as "the lookup is
+  broken" and her design was rewritten around it.
+- Reading a search EXCERPT and treating it as the page. **Declaring only half a
+  connector's tools is the same gap** — `web_fetch` had been there all along.
+- **A thin answer from a page is not proof the page is thin.**
+
+### Judgement made silently where she should have seen it
+
+- **Title-based de-duplication — deleted 29 NG exhibitions.**
+- Dropping links with unreadable titles.
+- Putting a DATA FAULT on her approval pile — a row with no title can only ever
+  mean "re-run the sweep", which is a message to the session.
+- Letting the ledger update run with cards undecided, skipping them silently.
+- Deciding which triage band a card belongs in by searching its notes for words
+  the sweeper also writes. **A fact the code already knows is never re-derived
+  from prose written for a human.**
+- **Deleting working-but-dormant code because it carried something the session
+  WAS asked to change.** Unreachable is not unwanted, and "it was already dead" is
+  a description, not a permission.
+- Deleting a whole line when asked to delete one sentence in it. And claiming to
+  restore a deleted sentence while moving its words somewhere else.
+- **Telling her to rebuild a lost thing by choosing between files herself.** A
+  recovery step with one correct answer is code.
+- Inventing a constraint she never stated and leaning on it twice. **A convenient
+  hypothesis is worse than no argument.**
+- Giving a reason that had never been checked ("the catalogues page only lists
+  what is in stock" — false, sold-out books stay listed).
+- **Arguing an architecture question from what had been BUILT rather than what the
+  platform offers.** "The shell has nowhere to keep anything" was false.
+
+### A rule that held only while its input stayed small
+
+- Returning a parser's INPUT as the text it matched — 17,734 characters of
+  navigation on one approval card once a second caller fed it whole pages.
+- The bare month-and-year rule applied to whole page text — a photo caption became
+  an opening date.
+- Reading an all-numeric range from whole page text.
+- `datesNearLink` walking a fixed two steps. **A step count is not a boundary.**
+- A cookie-banner filter that walked up to `<body>`, excluding every paragraph on
+  every page. **The ancestor walk must stop before `<body>`.**
+- A noise-class match believed on a container holding most of the page — the
+  Wallace's `section--footer-spacer` LAYOUT class made an image-licence notice all
+  11 summaries. And the V&A's cookie panel, holding 24 of 27 paragraphs, passing
+  itself off as the layout.
+- **A branch nothing has entered is untested however long it has shipped.**
+  `—` written among the words of a page instead of inside quotes sat unseen
+  for weeks.
+
+### Two copies of one fact, which drift silently
+
+- Two copies of the month pattern, full names only, so `12 SEP 2025` parsed to
+  nothing.
+- The plausible-year guard missing from a branch — twice, the second time from the
+  busiest path in the parser.
+- `VENUE_ORDER` as a second hand-typed list of venue codes, so two finished
+  recipes could not be selected and nothing said why.
+- Six near-identical venue scraper functions — now the engine/recipe split.
+- `parseDateRange`, a second anchored parser nothing called. **Dead code shaped
+  like live code is a trap for whoever debugs dates next.**
+- `findDateRange` and `findDateRangeInProse` drifting twice, each time losing
+  dates silently.
+- Anchoring a test harness on a LINE OF CODE (`const TIERS = {`) rather than on
+  prose. Dark mode made TIERS theme-dependent and every intake fixture died.
+- **Fixing a fault per venue and leaving the SUMMARY LINE above it reading the old
+  way.** `lastRun` went on being stamped at Apply for a day after `swept_at` had
+  replaced exactly that, one line down the same screen.
+- **A ruling about where a fact belongs applies to every fact of that kind in
+  front of you.** The sweep log moved out of the ledger and quarantine was left in,
+  in the same session.
+
+### Joins that were never run, though both halves were tested
+
+- Stitch writing a loose CSV where compress reads DIRECTORIES — 652 rows in, 172
+  out, no error.
+- Matching her seed summaries by TITLE when the seed carries a URL slug — 56
+  matches where there were 103.
+- Consulting her seed BEHIND the previous compressed run, then fixing it by making
+  her wording win on EVERY run, **which is a revert machine.** The repair had to be
+  a flag, not a rule.
+- Archiving old run folders without checking which ones compression needs.
+- Two groupings both claiming a pending row, so the second silently dropped the
+  first and that row never received an answer.
+- Inserting a check into the middle of an existing block, splitting it: every
+  venue without a load-more control died before reading a page, while the unit
+  suite passed 148/148. **It has no browser, so the listing loop never runs in it.**
+- **Rebuilding the import file to one sweep per venue and letting the DATES follow
+  the rows.** Right about the rows, wrong about the dates.
+- **Leaving the reasoning for a hand-rebuilt data file in a comment inside the
+  one-off script.** Three sessions later the guide still described it wrongly and
+  SHE had to type the history out again — `docs/import-file.md` now holds it.
+
+### Substituting a tool and letting the route change with it
+
+- The old search tool could be locked to one website; the connector cannot, so
+  "ask the shop and nothing else" quietly became a general web search with the
+  shop's address in the query. It stayed that way for days and the screen went on
+  labelling it "shop". **A capability lost in a substitution is the thing to
+  report, not to absorb.**
+- Rewriting a prompt and the row it fills in one go, dropping the publisher field
+  from both, so the button was unreachable for a day.
+- **A gate that could only ever open.** The book's page was read "only when the
+  ISBN is missing", and a shop's list never prints an ISBN. She asked what it was
+  for and there was no answer.
+- **Sending stage one to the right place and letting it END there.** A better
+  source is not a complete one.
+- Filing whatever a search returned as "the publisher's page" without opening it.
+  **Rizzoli was not the step working, it was the step being lucky.**
+- **Tuning query strings to surface a page we could simply have gone to.** Four
+  attempts, on the same day the session was spent proving searching-and-hoping is
+  the wrong shape.
+- Deciding a catalogue is self-published by matching the PUBLISHER'S name against
+  the VENUE'S.
+- **A status that could only ever be set, never changed.** "In the museum shop"
+  was written once and never compared to the last lookup — in an app whose entire
+  subject is catalogues selling out.
+- Never writing down 17 of 18 shops' search addresses, and leaving the one that
+  existed pointing at a dead page.
+
+### Scraper mechanics that each cost rows
+
+- `networkidle` waits — 30s timeouts on pages that had loaded in 3.
+- Unwrapped `route.fulfill`/`abort` — zero rows for all six venues.
+- Borghese's `/mostre/` selector — collected the navigation menu.
+- A hardcoded Chromium path. `resolveChromium()` needs **both** halves.
+- A single fixed `sweep_raw.csv`, letting a one-venue diagnostic silently replace
+  a full sweep while the file still looked complete.
+- Building date strings by hand with `padStart`, nothing checking the day exists.
+- `parseMonthDay` matching the month as `[A-Za-z]+`, so `Sept. 21, 2024` produced
+  nothing silently.
+- `normalizeUrl` lowercasing the whole address.
+- Joining hrefs onto the venue base by hand.
+- Taking `events[0]` from structured data without checking it was this exhibition.
+- A range with the year on the closing side giving the opening date that same year.
+- Only the en and em dash normalised.
+- Treating a 404 as a page that loaded.
+- **Treating a torn-down browser as a page failure** — a venue written to disk as
+  COMPLETE with 10 of 16 summaries missing.
+- Giving up on a detail page after one transient failure.
+- Keeping the FIRST link to an address and ignoring the rest.
+- A listing that loads and yields nothing leaving no trace in the CSV.
+- `TITLE_NOISE` stripping EXHIBITION case-insensitively — "How to Make an
+  Exhibition" became "How to Make an ".
+- Acquavella's title rule stripping `NEW YORK` / `PALM BEACH`, making its two runs
+  of one show read as the same exhibition.
+- **Reading only page one of a paginated archive** — 12 Menil exhibitions lost.
+- Walking a paginated archive past the lookback floor "to be safe" — eleven pages
+  and 13 undated decades-old rows on her pile.
+- A load-more click following the anchor's href once the list is complete.
+- Assuming a site numbers pages from 0, or from 1. **Only its own next link says.**
+- A next-page check treating a recipe's OWN filter as a page — 32 false alarms.
+  **A false alarm teaches her to scroll past the real one.**
+- An extraction ladder expecting a paragraph at every rung, with no way for a venue
+  to name a blurb living in a div.
 - A weekday name in front of a date, which defeats every range pattern.
-- Discarding an implausible published opening year and deriving one from the closing
-  year — an artist's lifespan stored as an exhibition run.
-- Italian months abbreviated to three letters (`set`), where the map held only `sett`.
-- Checking output for junk with an ENGLISH-only word list, then reporting an Italian
-  venue as clean.
-- Returning a parser's INPUT as the text it matched, in a function written when
-  the input was always a listing card — then feeding it whole pages from a second
-  caller. 17,734 characters of navigation and ticket prices on one approval card.
-  **A field whose correctness rests on its input staying small has no guard at
-  all.**
-- A fixture proving its rule through a SIDE EFFECT: W-004 proved the weekday
-  strip leaves prose alone by looking for "Sun King" inside the parser's `raw`
-  field, so it broke on a change that had nothing to do with weekdays. **Ask the
-  rule directly, or the test moves when the rule does not.**
-- Deleting a whole line when asked to delete one sentence in it, taking with it a
-  sentence she had not mentioned.
-- Rebuilding the import file to one sweep per venue and letting the DATES
-  follow the rows. Borghese and Capodimonte kept rows from the 2am run because
-  the afternoon run could not reach them, and dropping the afternoon run erased
-  the fact that it had been tried at all — so the freshness drawer aged both
-  back twelve hours and lost the tried-but-empty gap at the only two venues that
-  had one. **Right about the rows, wrong about the dates.**
-- Leaving the reasoning for a hand-rebuilt data file in a comment inside the
-  one-off script that built it. Three sessions later the guide still said the
-  file was a straight stitch, stated a Borghese reading the file could not
-  produce, and SHE had to type the whole history out again. **A one-off script
-  that changes a file she USES is not a one-off: what it did belongs in §7 with
-  the file, not only beside the code.**
-- Moving one thing out of the ledger and leaving the thing beside it in, in
-  the SAME session that established why the ledger was the wrong container.
-  Quarantine's whole promise is "never show me this again", and it depended on
-  which file happened to be open: a Reset brought every quarantined row back.
-  **A ruling about where a fact belongs applies to every fact of that kind in
-  front of you, not only the one that prompted it.**
-- Telling her to rebuild a lost thing by choosing between files herself. "It
-  costs one re-import" was true and still put the choosing on HER, with no way
-  to know which sweep file held the picture that was lost — and sweep files
-  come from a session anyway. **A recovery step with one correct answer is
-  code, not an instruction to a human.**
-- Fixing a fault per venue and leaving the SUMMARY LINE above it reading the
-  old way. `lastRun` went on being stamped at Apply and kept in the ledger for
-  a day after `swept_at` and the per-venue drawer had replaced exactly that,
-  one line further down the same screen.
-- A control that renders only when it has something to show. Emptying the
-  sweep log removed the "By venue" button, so the panel's "there is nothing
-  here" line became unreachable at the only moment it was true. **A thing that
-  disappears cannot report anything.**
-- Printing "never" for an empty record. It is a claim about the world made
-  from the absence of a note, and she was looking at quarantined rows that
-  could only have come from a sweep. **Say what is unknown.**
-- Reading a search EXCERPT and treating it as the page. An excerpt is a
-  headline and a line or two, so anything in the small print — an ISBN — is
-  simply absent, and the lookup reported "no ISBN" for a book whose page
-  prints one. **Declaring only half a connector's tools is the same shape of
-  gap**: `web_fetch` had been there all along.
-- Swapping the search tool underneath a two-stage design and letting the
-  ROUTE change with it. The old tool could be locked to one website; the
-  connector cannot, so "ask the shop and nothing else" quietly became a
-  general web search with the shop's address in the query. It stayed that way
-  for days, and the screen went on labelling it "shop". **A capability lost in
-  a substitution is the thing to report, not to absorb.**
-- Reading ONE page because a model named it. The read then ran flawlessly on
-  the National Gallery shop's list of every catalogue and reported no ISBN,
-  while the book's own page sat five places lower in the same results.
-  **A link a model chose is a guess, and building the next step on exactly one
-  of them makes the guess load-bearing.**
-- A gate that could only ever open. The book's page was read "only when the
-  ISBN is missing", and a shop's list of catalogues never prints an ISBN, so
-  the condition was true every time. **She asked what it was for and there
-  was no answer.** Worse, the one case it stayed shut — an ISBN found with no
-  publisher — threw the publisher away.
-- Giving a reason that had never been checked. "The catalogues page only
-  lists what is in stock" sounded right and is false: sold-out books stay
-  listed everywhere we looked. **She asked whether it actually happens, and
-  it does not.** The real reasons were thinner and had to be found afterwards.
-- Tuning query strings to make a general web index surface a page we could
-  simply have gone to. Four attempts at finding one publisher's own site —
-  publisher and title, publisher and ISBN, the bare ISBN, all three — on the
-  same day the whole session was spent proving that searching-and-hoping is
-  the wrong shape. **When the answer is "go to the place", more words in the
-  query is never the fix.**
-- Adding steps that fail QUIETLY. The three later lookup steps handed the row
-  back untouched when the connector refused, which is correct for the row and
-  a lie on the screen: "ISBN not confirmed" and "No separate publisher page."
-  read as findings. **A negative has to be earned, and a step that never ran
-  has not earned one.**
-- Filing whatever a search returned as "the publisher's page" without ever
-  opening it. Rizzoli came back with the book and Hannibal with a whole
-  section of books, and both printed the same word on the same button.
-  **Rizzoli was not the step working, it was the step being lucky** — that
-  publisher puts the ISBN in its addresses. A search cannot tell a book from
-  a shelf, because the difference is inside the page.
-- Treating a page that came back EMPTY as a page with nothing on it. Hannibal
-  draws its books by script after the page arrives, so the reader gets 110
-  characters of furniture; reporting that as "this book is not on the
-  publisher's site" is a finding nobody earned. **Say the page came back
-  empty.**
-- Printing one sentence for two different silences. "No separate publisher
-  page." was shown whether the step had searched the publisher's own site and
-  found nothing, or had never fired because no publisher was named. Her
-  words: the silence could be "search function didn't even fire". **A
-  negative has to say which negative it is.** Third time this app has had to
-  learn the same lesson, after the missing Publisher button and the "never"
-  printed for an empty sweep log.
-- Deciding a catalogue is self-published by matching the PUBLISHER'S name
-  against the VENUE'S. It skips the search for every catalogue that venue
-  ever issues, and she named the two ordinary cases that breaks on: a
-  blockbuster handed to a big art-book house, and a joint show where the
-  other museum prints it. **The list is of publishers actually seen
-  self-publishing, and it is added to by her, never inferred.**
-- A status that could only ever be set, never changed. "In the museum shop"
-  was written once and no lookup ever compared itself to the last one, so a
-  catalogue that sold out went on reading green forever — **in an app whose
-  entire subject is catalogues selling out.**
-- Deleting working-but-dormant code because it happened to carry something
-  the session WAS asked to change. The Google Drive save routine held the
-  last model string, so a ruling about model choice was treated as licence
-  to remove the whole integration — she had not been asked, and the narrow
-  change that actually served her instruction (take out the string, leave
-  the routine) was never offered. **Unreachable is not unwanted, and "it was
-  already dead" is a description, not a permission.**
-- An early `return` inside `catalogue_lookup.js`, which exits the whole suite
-  so the summary line stops printing. **The fourth silent suite this guide has
-  had to record.** Await, never return.
-- Sending stage one to the right place and letting it END there. The shop
-  knows its own catalogue but Acquavella's page for it prints no ISBN at all,
-  so a row that HAD its number lost it. **A better source is not a complete
-  one**, and a step that stops on a partial answer is worse than the loose
-  search it replaced.
-- Rewriting a prompt and the row it fills in one go, and dropping a field
-  from both. The Publisher button and its ledger field survived; nothing
-  asked for the link any more and the row stored `null` every time, so the
-  button was unreachable for a day. **Same rewrite, same silence as the shop
-  lock** — and a button that never appears looks exactly like a book with no
-  publisher page.
-- Never writing down 17 of 18 shops' search addresses, and leaving the one
-  venue that had one pointing at a dead page. **A field that is empty for most
-  rows and wrong for one of the rest reads exactly like a field that works.**
-- Filtering `rows` after `applyLookback` has already copied it into `toFetch` — the
-  log announced ten exclusions while all ten sat in the CSV with empty summaries.
-  **A log line describing something that did not happen is worse than no log line**,
-  so counts are taken from the array AFTER the change, never from the list of marks.
+- Discarding an implausible published opening year and deriving one from the
+  closing year — an artist's lifespan stored as an exhibition run.
+- Italian months abbreviated to three letters (`set`) where the map held `sett`.
+- Checking output for junk with an ENGLISH-only word list, then reporting an
+  Italian venue as clean.
+- **Shipping a page that does not load.** A blanket colour rename ran AFTER the
+  palette was written and rewrote its own literals. Valid syntax, throws on first
+  render, black screen. **A blanket find-and-replace over a file you have just
+  added definitions to will eat those definitions.**
+
+### Subagents
+
+- Handing one pretty-printed JSON with fields it never reads, plus a second file
+  for examples — 178k tokens where 100k did the same work.
+- **Telling a subagent what not to do and believing it.** Five jobs, four
+  disobeyed. **Remove the tool or check the answer. Wording is not a control.**
 
 ---
 
-## 7. Open decisions and order of work
+## 7. Open work
 
-1. ~~**Compression**~~ — **DONE, built, tested and now proven. Do not re-plan.**
-   See `docs/compression.md`. **The judging half has fired on real data and was
-   right**, which this guide recorded for a week as never having happened. On
-   19 Sep it kept 94 of her summaries character for character, and on the repair
-   run it changed two Acquavella summaries — both correctly, both verified against
-   the raw text: *Postwar Abstraction* is not "abstract painting" when the line-up
-   is Andre, Chamberlain and David Smith, and *Portraiture* is not "Impressionism
-   to Pop" when the page says "to today" and lists Chambers and Eisenman.
-2. ~~**Wire all 21 venues**~~ — **DONE.** All 21 have a recipe; see §2 for state.
-3. ~~**Parallelism and the hang bound**~~ — **DONE** (`--jobs=N`, `--budget-mins=N`).
-4. ~~**Venue-by-venue diagnosis of the working set**~~ — **DONE, 12 Sep 2026.** All
-   sixteen reachable venues reviewed by her, fixed and verified against her counts.
-   Her findings and every fix, venue by venue: `docs/review-2026-09-12.md`.
-5. **Produce one importable CSV — DONE as far as the file, 19 Sep.** The chain
-   has now been run end to end except the last step:
+Everything not listed here is finished. Do not reopen a closed item without a new
+fact.
 
-   > sweep both machines → stitch the run folders → compress → import
+### 1. The 320 decisions — hers, and the next thing
 
-   - **Sweeps, 13 Sep** — `run_2026-09-13_020041` (container, all 21, which is
-     what the routing rule now prevents), `_142632` (container, 19), `_142846`
-     (hers: met 106, artic 65). Borghese answered the 2am run and was dead from
-     every machine by the afternoon: unreachable, not a refusal. Capodimonte did
-     the same, including from her laptop, where it timed out.
-   - **Stitch** → `stitch_20260913_0442`, 652 rows folding to **405 distinct
-     exhibitions**. Every venue but met and artic appears twice because two
-     container runs went in — not needed for coverage, but it gave the app's
-     folding 209 live pairs to work on rather than authored ones, and all 209
-     fold with no conflict at all.
-   - **THEN REBUILT BY HAND TO ONE SWEEP PER VENUE, and this is the part every
-     later session needs and no session wrote down until she had to explain it
-     twice.** Two container runs covering the same venues meant two copies of
-     nearly everything, and at import that is hundreds of duplicate cards. So
-     `rebuild_one_run_per_venue.js` SELECTS rows already in the compressed file —
-     nothing re-swept, nothing re-compressed — one run per venue:
+The file is `stitch_20260913_0442/sweep_compressed_clean.csv` — **not**
+`sweep_compressed.csv`. How it was built, and why it is not a straight stitch:
+**`docs/import-file.md`**.
 
-     | Rows taken from | Venues |
-     |---|---|
-     | `_142632` (container, afternoon) | acq brera brit dellav frick khm louvre menil moma morgan ng rijks tate-britain tate-modern uffizi va wallace |
-     | `_020041` (container, 2am) | **borghese, capo** — the afternoon run reached neither |
-     | `_142846` (her laptop) | met, artic |
+Against her 110-row seed it produces 320 cards — 299 add, 14 fill, 7 change. The
+row identity closes: **419 = 13 markers + 0 folds + 86 matching + 320**.
 
-     **So the venues in her file were NOT all swept at the same moment**, and
-     two of them carry rows from twelve hours before their last attempt. That is
-     what `fix_late_refusals.js` exists for; §3.
-   - **Compress, 19 Sep, repaired 20 Sep** → `sweep_compressed_clean.csv`, the
-     file she imports. **NOT `sweep_compressed.csv`, which is the unrebuilt
-     652-row original and would put hundreds of duplicate cards on her pile.** 390 rows went to a model in five jobs, 262 were answered
-     free, ~580k tokens. Summary length min 3, median 7, max 10 against her own
-     median of 6. Two repairs since: `--seed-wins` restored 13 Acquavella
-     summaries to her wording, and the rebuild-by-key fix restored 13 rows the
-     compressor had overwritten (§6). The 19 Sep first pass is kept whole in
-     `19sep_first_pass/`.
-   - **IMPORT: SHAKEDOWN RUN 20 SEP.** Against her 110-row seed the file
-     produces **320 cards** — 299 add, 14 fill, 7 change — with 86 rows matching
-     silently, **no card asking her to choose**, and a coverage panel.
-     The row identity closes on the rebuilt file:
-     **419 = 13 markers + 0 folds + 86 matching + 320** (415 and 9 before
-     `fix_late_refusals.js` added Borghese's and Capodimonte's later refusals).
-     The folds are 0 BECAUSE of the rebuild — the 210 folds and 36 markers
-     quoted for this step before came from importing the unrebuilt 652-row
-     stitch, which is a different file. Both triage bands are empty here.
+Expect debugging to fall out of it. Also still to do: a save round-trip after the
+import — export, re-import that file, confirm quarantine and per-venue freshness
+both survive.
 
-     **It was 319 until the rebuild-by-key bug was fixed** (§6). That bug had
-     copied one Rijksmuseum row over another, accidentally making two rows
-     identical so the app folded them. They are two ADDRESSES for one show —
-     `/exhibitions/ed-van-der-elsken` (dated, from the current page) and
-     `/exhibitions/past/ed-van-der-elsken` (no dates, its page 404s) — and two
-     cards is the correct answer: the app folds only on an identical address,
-     because a wrong fold loses an exhibition silently while an unfolded
-     duplicate costs one visible card. The `/past/` one is a quarantine
-     candidate, being a dead link.
+**The catalogue lookup gets its real test here.** Fourteen venues have had no
+lookup run against them; their shop addresses are checked but unseen live. `khm`'s
+shop queues every request and `uffizi` has no catalogues page, so both behave as
+if they had no shop.
 
-     **Still to do:** the 320 individual decisions, and a save round-trip —
-     export after the import, re-import that file, and confirm the quarantine
-     list and the per-venue freshness both survive it.
+**The shop-status change (version 31) has not been run by her.** The sentence only
+appears on the SECOND lookup of a row, because it is a comparison — so the first
+row to press is one she has seen leave a shop.
 
-   **Both faults found by running it were joins, not halves** — stitch writing a
-   loose file where compress reads directories, and the seed sitting behind the
-   previous run in memory. Each side was unit-tested and correct; neither join
-   had ever been run. See §6.
+### 2. Venues with no route
 
-   **A QA PASS BEFORE THE STITCH IS PARKED — her ruling 19 Sep**, along with
-   everything else from 16 Sep. It may be a good idea; it came out of a session
-   whose reasoning she does not trust, so it is not being built on that basis.
-   **The sweep log's own exceptions report (step 8) is NOT that pass** and does
-   not re-open it.
+`moma`, `brit`, `morgan`, and `artic` from her machine since 16 Sep.
 
-6. **Venues with no route — OPEN, not closed.** `moma`, `brit`, `morgan`, and
-   `artic` from her machine since 16 Sep. **What is parked is the 16 Sep
-   BRANCH, not the venues** — an earlier version of this line said "not being
-   chased" and that was wrong. She is giving it one more attempt: either
-   something is fixed or `claude/quiet-user-agent` is ditched for good. The
-   deciding test is a **real sweep, not a probe** — dropping `HeadlessChrome`
-   opens MoMA's listing page but all 24 detail pages still refuse, so the
-   question is whether any row arrives WITH TEXT. Every ordinary sweep re-tests
-   all four anyway, so the day one answers, it appears on the approval pile.
+**What is parked is the 16 Sep BRANCH, not the venues.** She is giving it one more
+attempt on her own machine: either something is fixed or `claude/quiet-user-agent`
+is ditched for good. **The deciding test is a real sweep, not a probe** — dropping
+`HeadlessChrome` opens MoMA's listing page but all 24 detail pages still refuse,
+so the question is whether any row arrives WITH TEXT. Every ordinary sweep
+re-tests all four anyway.
 
-7. ~~**JSX — quarantine and per-venue freshness**~~ — **BUILT and the SAVE
-   ROUND-TRIP PASSED, 20 Sep.** She imported the sample against the seed,
-   quarantined three, applied, exported, reset to seed, reloaded the export:
-   the quarantine came back with the ledger. **Neither the sweep log nor the
-   quarantine rides in that file as its working copy any more** — both live in
-   the page's own store (§4), so both survive a Reset, which the ledger copy
-   never could. The quarantine is still written into the export as a BACKUP;
-   the sweep log is not, because it is rebuilt by any sweep file.
-   - **Quarantine ("never add this")** — design below. Without it, rejecting a
-     card stores nothing, so every piece of junk returns on every future sweep.
-     **Visible and undoable**: a quarantine she cannot see is a silent loss.
-   - **Per-venue freshness** — **TWO facts**: last SWEPT and last RETURNED REAL
-     ROWS, both dated from the file's `swept_at`, both kept in the page's store.
+### 3. A fresh sweep, eventually
 
-   **SIGNED OFF BY HER ON REAL FILES, 20 Sep — intake, refresh status and
-   quarantine are CLOSED.** What she confirmed herself, as opposed to what a
-   fixture asserts: the venue order in all three places it shows; the drawer
-   surviving a reload; the two dates differing at Borghese and Capodimonte and
-   NOT moving when several older sweep files were fed in; import-then-cancel
-   leaving the ledger alone; the ledger gate refusing to fire and the jump
-   finding the next undecided card; collapse/expand; and, on quarantine,
-   marking, the count, surviving Reset, junk staying hidden on a re-import,
-   releasing, the release being written the instant she clicks (she reloaded to
-   check), the backup inside her export, and an OLD export failing to undo a
-   release. Conflict cards and per-field edits were confirmed in earlier
-   sessions.
+The import file was swept 13 Sep. Not urgent while the decisions are being worked
+through, but it is real work and nothing else on this list covers it.
 
-   **THE WIPE-AND-RESTORE DRILL PASSED, 21 Sep — run for real, not reasoned
-   about.** Nothing in the app can empty the page's store and nothing she can
-   do by accident will, so it was cleared from outside with `ArtifactData`.
-   **The two halves come back from different places and by different people,
-   and that split is the drill's whole content:**
+### 4. Smaller, parked
 
-   | | Restored from | By |
-   |---|---|---|
-   | **Quarantine** | her export JSON, which is dated and timestamped | her |
-   | **Sweep dates** | the sweep files on disk, via `scraper/sweep_log.js` | the session |
+- **A dead shop link is still stored silently.** Step one opens the shop's own
+  pages now, so the link is read off a page the shop served — but nothing checks
+  whether a re-open came back empty, and `pageIsShell` already exists to tell.
+  *(The rejected fix stays rejected: pointing the link at an ISBN search does not
+  work, because museum shops search by title.)*
+- **Sweeper brief v3** — the Chat-Claude-era instruction document still needs its
+  URL corrections. Expect it to end up as the fallback procedure for blocked
+  venues rather than the main sweep.
+- **A QA pass before the stitch** — parked with everything else from 16 Sep. It
+  may be a good idea; it came out of a session whose reasoning she does not trust.
+  `qc.js`'s exceptions report is NOT that pass and does not re-open it.
 
-   **THE SECOND ROW WAS WRONG UNTIL SHE CORRECTED IT.** This step used to read
-   "she re-imports a sweep file", and she rejected it on two grounds, both
-   right: she would have to know which of several files held the lost picture,
-   and **sweep files are handed to her by a session in the first place**, so
-   the job was never hers. Reasoning and the script in §4 and §5.
-
-   What ran: she quarantined two real rows (artic *Raqib Shaw*, louvre
-   *Michelangelo Rodin*) and exported; both store documents were read out and
-   **committed to `docs/store_backup_2026-09-21/`** as insurance, not as a
-   restore route; the store was emptied and the emptiness confirmed by reading
-   it back; she reloaded, loaded her export, and **quarantine came back as
-   exactly those two rows**; the session then wrote the rebuilt sweep dates in
-   and she confirmed all 21 venues, the Borghese and Capodimonte gaps and the
-   three refusals all reading correctly.
-
-   **A `released` quarantine entry is a tombstone and does not survive the
-   round trip, correctly.** Her export carries only what is BLOCKED, so the
-   Met row she had quarantined and released minutes earlier came back absent
-   rather than as "released" — the same state, differently recorded.
-
-   **THE DRILL FOUND A REAL BUG, which is what a drill is for** — §4, the
-   headline freshness line. Neither the fixtures nor any amount of reasoning
-   had caught it, because it only shows when the store is empty, and nothing
-   had ever emptied it.
-
-   **THE EXPORT WILL NOT CARRY THE SWEEP LOG — her ruling, 20 Sep, asked and
-   declined.** It could be done safely with quarantine's own latest-wins rule,
-   and it buys one step she was taking regardless, at the cost of putting a
-   fact about the world back inside a document that rolls back — the exact
-   shape of the bug she caught. **Do not re-propose it.**
-
-   **STILL HERS TO DO: the 320 decisions against the real file.** Everything
-   else on this list is finished.
-
-8. ~~**The sweep log flags exceptions**~~ — **BUILT 20 Sep, `scraper/qc.js`.**
-   It had been open since 13 Sep and nothing had been written. Two classes, split
-   by whether the answer is KNOWN: a faulty row (no title, no venue code) BLOCKS
-   `compress --apply`; an exception (count dropped, venue gone to markers,
-   descriptions lost) warns and never acts, like `detectUnwiredPagination()`.
-   **A false alarm is still the failure mode to fear** — artic's 32 false page
-   warnings taught exactly the habit of scrolling past — so each check compares
-   against the last run that ACTUALLY HAD that venue, not the run before.
-   **Ordered by the folder's own timestamp, and archived runs count**: the first
-   version used position in the live listing, so a run read out of `archive/`
-   counted every later run as "before" it and a 12 Sep folder was reported as
-   having lost rows against a 13 Sep one. **A comparison that can run backwards
-   in time is worse than none.**
-9. **Catalogue lookup — REBUILT AND RUN BY HER, 21 Sep. Open: the other 14
-   venues, and the old tuning question.** The route is in §4. **What she
-   confirmed herself, on real rows:** the National Gallery's *Zurbarán* now
-   returns ISBN 978-1857097399 and a shop link to the book rather than to the
-   list; the other three seed venues' shop links search by the ISBN found;
-   Acquavella's *Matisse* returns the publisher's page. **What she found and I
-   had to fix, in order**: the shop step ending on a book with no ISBN, the
-   Publisher button being unreachable, a step that dies looking like an answer,
-   and four rounds of query-tuning where the answer was to go to the publisher's
-   site. Fixtures C-001 to C-090b.
-
-   **STILL OPEN.** The 14 venues she has no rows for yet — their shop addresses
-   are checked but no lookup has run against them; that happens during the 320
-   decisions. `khm`'s shop queues every request and `uffizi` has no catalogues
-   page, so both behave as if they had no shop; neither has been seen live.
-
-   **WHICH MODEL — CLOSED, her ruling 22 Sep. Do not re-open without a real
-   misread.** `default` is right and stays. The rest of this is in §4, under
-   "The model question"; nothing about it is open.
-
-   **REBUILT AGAIN 22 SEP: the publisher step now opens what it found.** Her
-   diagnosis, from her own Rizzoli and Hannibal lookups — the route and the
-   three outcomes are in §4, fixtures C-052 to C-078a. **Not yet run live by
-   her**: the shell path is proved against the real Hannibal page through the
-   connector, but no end-to-end lookup has been pressed since the change. The
-   Zurbaran, Matisse and Metamorphoses rows are the three to re-press.
-
-   **TESTED BY HER ON THE PUBLISHED PAGE, 22 Sep** — *Metamorphoses* returns
-   Hannibal with the section link and its note, both useful; *Zurbarán* is
-   correct and produced the self-publisher rule above; Acquavella's *Matisse*
-   still returns the Rizzoli page it always did. She re-tested after the
-   self-publisher list went in and confirmed it faster.
-
-   **SHIPPED 22 Sep AND NOT YET RUN BY HER: the shop-status change** (§4, "A
-   book leaving the shop"). Version 31 carries it. The first row to press is
-   any she has seen leave a shop — the sentence only appears on the SECOND
-   lookup of a row, because it is a comparison.
-
-   **Her seed cannot test much more.** Four venues, two of which publish their
-   own catalogues, so the publisher step has one real test case in it.
-
-10. ~~**The app is not really tested**~~ — **DONE 20 Sep, her decision to let
-    the repo carry `react`, `react-dom` and `jsdom` as dev dependencies.**
-    `page_renders.js` renders the component and fails the exact fault that
-    shipped a blank page twice; §4. The automated check does not press
-    anything — **but SHE does, on the published page, on every change.** Every
-    route in §4 marked "tested by her" was clicked through by her by hand.
-    **Never report unpressed buttons to her as though the app were untested:
-    she is the one pressing them.**
-
-11. ~~**`qc.js`, `qc.test.js` and the intake fixtures live on a branch only**~~
-    — **DONE, merged into `main` 20 Sep on her instruction, once she had signed
-    off the intake against real files.** `main` is the trunk and the source of
-    truth for the app, the scraper and this guide alike, and its `npm test` now
-    covers the app instead of a fraction of it.
-
-**The ledger is not being protected during development.** Her ruling: she keeps no real
-ledger until JSX and scraper are both finished, so she can import freely and roll back.
+**The ledger is not being protected during development.** She keeps no real ledger
+until JSX and scraper are both finished, so she can import freely and roll back.
 **Do not raise ledger pollution as a reason to reorder this list.**
-
-### Quarantine — "never add this", BUILT 20 Sep, REHOUSED 20 Sep
-
-**Dismiss is not a rubbish chute.** She dismisses only exhibitions that are **real**,
-**not duplicates**, and that she has looked at and isn't interested in. Junk must never
-enter the ledger.
-
-Today there are two outcomes and neither fits junk: **Reject** stores nothing, so the
-row proposes itself again on every future sweep forever; **Accept then dismiss** puts it
-in the ledger permanently. There is no third option and there needs to be.
-
-**Keyed on normalised URL**, venue + title where a row has none.
-`analyzeProForma` drops a matching row in pass one, before it can fold with
-anything; Add cards have a third button.
-
-**IT LIVES IN THE PAGE'S STORE AND IN HER EXPORT, BOTH — her ruling, option C,
-20 Sep, and the correction matters: it was NOT built before the sweep log moved
-out of the ledger. Both were the same session.** She won the argument for a
-third place and the thing sitting beside it was left in the ledger anyway.
-
-**HER SCENARIO IS THE WHOLE CASE, and she found it by reasoning about the
-design rather than by hitting it:** quarantine two junk rows, Reset to the
-seed, feed the SAME sweep file again — and every piece of junk is back, because
-the only record went with the ledger she replaced. A feature whose promise is
-"never show me this again" cannot depend on which file happens to be open.
-
-**BUT IT IS NOT THE SWEEP LOG EITHER, and that is what forced two homes rather
-than a move.** The sweep log is safe living only in the store because it is
-DERIVABLE — every fact in it comes from a sweep file, so losing it costs one
-re-import. Quarantine is derivable from nothing. That is the same property that
-keeps the LEDGER out of the store, so putting quarantine there alone would have
-been the ledger's own mistake at smaller scale.
-
-**Her objection, kept because she was right to raise it:** *"it's messy and
-lazy to just loop in a bunch of redundancies."* It is not two hopeful copies.
-The store is the working copy that always applies, the export is the backup,
-and one rule settles every disagreement — the shape her ledger already has.
-
-**THE RULE IS LATEST DECISION WINS, WHICH NEEDS TOMBSTONES.** Releasing a row
-is RECORDED, not merely absent, or loading an older backup would silently
-re-block something she had released — the sweep log's own bug one door along.
-`mergeQuarantine` is the single rule; the ledger file keeps the plain `ignored`
-list it always had, so an older backup loads unchanged and a newer one stays
-readable to an older build. The panel shows with no ledger open, because it is
-in force before any file is loaded, and a store that cannot be written says so
-rather than silently blocking nothing. Fixtures 20 to 20g, verified by
-reversing the comparison and watching four of them fail.
-
-**It is COUNTED, never silent** — the row identity on the intake screen gains a
-"you'd said never to add" term, so a quarantine can never be mistaken for a lost
-row. And it is **listed at the top with Put back on every row**, because a
-quarantine she cannot see is a silent loss: one mis-tap and an exhibition never
-appears again with nothing to say so.
-
-**A venue retitling its own listing does not undo her decision** — same address,
-new title, still blocked. Fixtures 10 to 13.
-
-What it is for: dead links, non-exhibitions, genuine duplicates. **Not** undated shows —
-a real exhibition with no dates is fine to accept, and later sweeps match it silently.
-
-### Travelling shows — settled 8 Sep
-
-A show moving between venues is imported as **one entry per venue**, because rejecting an
-Add card is not remembered but dismissing in the ledger is. So: **accept both, then
-dismiss the one she doesn't want** — not reject the duplicate card. Cross-venue shows
-never merge on their own (`sameExhibition` returns false when `museumId` differs).
-
-### Parked, not accepted
-
-- **Shop links can be stale or dead — SMALLER THAN THIS NOTE SAID, corrected
-  22 Sep.** It read "the link comes from the search index, not a live check",
-  which stopped being true on 21 Sep when step one began OPENING the shop's own
-  pages: the link is now read off a page the shop itself served, and `fillIsbn`
-  re-opens it whenever the ISBN or publisher is missing, which is most of the
-  time. **What is left:** nothing looks at whether that re-open came back
-  empty, so a dead link is still stored silently — and `pageIsShell` already
-  exists to tell. The rejected fix stays rejected: pointing the link at an ISBN
-  search doesn't work, because museum shops search by title.
-- **Sweeper brief v3** — the Chat-Claude-era instruction document still needs its URL
-  corrections. Expect it to end up as the fallback procedure for blocked venues rather
-  than the main sweep.
 
 ---
 
 ## 8. Rejected — do not re-propose
 
-Announcing "this row used to have a catalogue" when a later lookup finds none
-anywhere (22 Sep — raised by a session, rejected by her on the spot, and raised
-AGAIN by the next session as though it were open). The sweep log inside her
-export (20 Sep — safe with quarantine's merge rule,
-but it returns a fact about the world to a document that rolls back, and one
-sweep file rebuilds it anyway). Ledger on Claude cloud storage. Google Drive
-auto-load on open. Saving the ledger to
-Drive from the app. The app gathering its own exhibition data. Auto-save on every change.
-A confirm-tap after download. Bulk-approve during refresh. In-app field editing. The
-separate readout doc. Excel as the sweep format. Merging the two Tates. Stripping the 110
-seed. Watching the sweeper and interrupting it. Firing a new JSX mid-discussion. Splitting
-catalogue lookup from drawer output. A "GPT scrapes, Claude compresses" role split.
-Blocking scripts and trackers in the network bridge (IR-13). Splitting the scraper into
-modules (IR-14). **Fetching several pages at once within one venue (IR-15) — never, at any
-scale.** Dropping an undated row because its start date is old (IR-18). **Proposing "drop
-the feature" as a fix — rejected as an approach entirely.**
+**Announcing "this row used to have a catalogue"** when a later lookup finds none
+anywhere (raised 22 Sep, rejected on the spot, then raised again by the next
+session as though it were open).
 
-Corrected along the way: Chat can **not** fetch any URL cold. The Italian venues are four
-different situations, not one problem. "18 venues fetchable" was wrong. The AbeBooks link
-is `/servlet/SearchResults?kn=…&sts=t`.
+The sweep log inside her export. Ledger on Claude cloud storage. Google Drive
+auto-load on open. Saving the ledger to Drive from the app. The app gathering its
+own exhibition data. Auto-save on every change. A confirm-tap after download.
+Bulk-approve during refresh. In-app field editing. The separate readout doc. Excel
+as the sweep format. Merging the two Tates. Stripping the 110 seed. Watching the
+sweeper and interrupting it. Firing a new JSX mid-discussion. Splitting catalogue
+lookup from drawer output. A "GPT scrapes, Claude compresses" role split. A map of
+publisher websites. Ticking nothing on a date conflict. A background shop check on
+every click. Linking straight to an Amazon product page from an ISBN-10.
+Confirm-and-continue past undecided cards.
 
-Reasoning for the compression-specific rejections is in `docs/compression.md`; for review
-findings, in `docs/review-log.md`.
+Blocking scripts and trackers in the network bridge (IR-13). Splitting the scraper
+into modules (IR-14). **Fetching several pages at once within one venue (IR-15) —
+never, at any scale.** Dropping an undated row because its start date is old
+(IR-18).
+
+**Proposing "drop the feature" as a fix — rejected as an approach entirely.**
+
+Corrected along the way: Chat can **not** fetch any URL cold. The Italian venues
+are four different situations, not one problem. "18 venues fetchable" was wrong.
+The AbeBooks link is `/servlet/SearchResults?kn=…&sts=t`.
 
 ---
 
@@ -2893,13 +909,17 @@ findings, in `docs/review-log.md`.
 
 | File | What is in it | Read it when |
 |---|---|---|
-| `docs/venues.md` | Per-venue forensics: the scoreboard, exactly what each refusal is, the Met, Morgan, Rijksmuseum, Borghese, the legacy fetch-tool notes, listing URLs | Working one specific venue |
-| `docs/venue_urls.md` | All 21 venues' addresses from the Sweeper Brief, plus its per-venue traps | Wiring or re-checking a venue's pages |
-| `docs/compression.md` | The compression design, the model split and its evidence, the eval, the rejected alternatives | Changing compression — otherwise don't |
-| `docs/review-2026-09-12.md` | **Her 12 Sep review of the 13 unchecked venues**, venue by venue: what she found, what was wrong, what changed, what each returns now | Before touching any venue marked DONE in §2 |
+| `docs/app.md` | The app's forensics: the catalogue lookup and its four rebuilds, shop addresses, saving, the intake bands, quarantine, the sweep log, the seed | Changing anything in the app |
+| `docs/scraper.md` | The scraper's forensics: reading a listing, pagination, the date parser, junk in summaries, failure handling, compression, the blocked venues | Changing anything in the scraper |
+| `docs/import-file.md` | How the file she imports was built, and why it is not a straight stitch | Touching that file, or explaining its dates |
+| `docs/venues.md` | Per-venue forensics: the scoreboard, exactly what each refusal is, listing URLs | Working one specific venue |
+| `docs/venue_urls.md` | All 21 venues' addresses from the Sweeper Brief, plus per-venue traps | Wiring or re-checking a venue's pages |
+| `docs/compression.md` | The compression design, the model split, the eval, the rejected alternatives | Changing compression — otherwise don't |
+| `docs/review-2026-09-12.md` | Her venue-by-venue review: what she found, what changed, what each returns now | Before touching a reviewed venue |
 | `docs/review-log.md` | Independent review findings and what was decided | A reviewer raises something |
-| `docs/Cat_Watch_Sweeper_Brief_v2.docx` | The original Chat-Claude brief | Rarely; most of it does not apply to the scraper |
+| `docs/store_backup_2026-09-21/` | A read-out of the page's store, as insurance | Never, unless the store is lost AND `sweep_log.js` cannot rebuild it |
 | `scraper/compress_prompt.md` | The compression prompts and three rounds of tuning | Changing summary wording |
+| `docs/Cat_Watch_Sweeper_Brief_v2.docx` | The original Chat-Claude brief | Rarely; most does not apply |
 
-Git history holds the full text of everything compressed out of this guide on
-12 Sep 2026 — `git log -- CLAUDE.md`.
+Git holds the full text of everything compressed out of this guide —
+`git log -- CLAUDE.md`.

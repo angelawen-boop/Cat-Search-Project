@@ -975,6 +975,9 @@ function publisherNote(result,hasUrl){
 // has to survive a lookup that finds the same nothing — hence `prevChange`.
 // "Now" is NEWS, and news expires: once she has seen it, the next search
 // showing the same book in the same shop reads "In the museum shop." again.
+// "Gone" is sticky and "back" is not, deliberately; a first lookup is never a
+// change. Reasoning in docs/app.md, "A book leaving the shop". Fixtures C-079
+// to C-090b — dropping the sticky half makes C-084 fail.
 function shopChangeFor(prevState,prevChange,nextState){
   if(nextState==="shop")return (prevState&&prevState!=="shop")?"back":null;
   if(nextState==="web") return (prevState==="shop"||prevChange==="gone")?"gone":null;
@@ -1831,6 +1834,11 @@ export default function App(){
   // WHY IT IS WORTH A SEARCH OF ITS OWN: the museum shop sells the book while
   // the show is on, and the art-book house that printed it often lists it long
   // after the shop has sold out. That is the window this whole app is about.
+  // BEFORE CHANGING THE LOOKUP CHAIN, READ docs/app.md SECTION 1. Four rebuilds
+  // are recorded there: why stage one must OPEN the shop rather than search for
+  // it, why a search result is opened before being believed, why each step fills
+  // a blank and can do nothing else, and why every step after the first stays
+  // conditional (every page read runs on her allowance).
   const fillPublisherPage=async(hit,venue,dom)=>{
     const r=hit&&hit.row;
     if(!r||!hit.ok||r.hasCatalogue!=="yes"||r.publisherUrl)return hit;
