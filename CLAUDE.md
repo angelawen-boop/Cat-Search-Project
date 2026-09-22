@@ -2604,7 +2604,15 @@ Each entry cost a real failure. Before changing the area, read the line.
    are checked but no lookup has run against them; that happens during the 320
    decisions. `khm`'s shop queues every request and `uffizi` has no catalogues
    page, so both behave as if they had no shop; neither has been seen live.
-   Then the old tuning question.
+
+   **THE "OLD TUNING QUESTION" IS WHICH MODEL READS THE RESULTS**, and the
+   phrase had been carried forward for three days with nothing left behind it
+   — recovered 22 Sep from `afa25d1`, where it reads in full: *"Catalogue
+   lookup tuning — Haiku vs Sonnet, on known-tricky catalogues."* Every
+   `readResults` call passes `modelTier: "default"` and always has. Compression
+   MEASURED its split (Sonnet writes, Haiku judges); the lookup never did.
+   **A phrase is not an open item.** If this is ever picked up it needs
+   known-tricky rows to measure against, and her seed has few.
 
    **REBUILT AGAIN 22 SEP: the publisher step now opens what it found.** Her
    diagnosis, from her own Rizzoli and Hannibal lookups — the route and the
@@ -2705,9 +2713,15 @@ never merge on their own (`sameExhibition` returns false when `museumId` differs
 
 ### Parked, not accepted
 
-- **Shop links can be stale or dead.** The link comes from the search index, not a live
-  check. The obvious fix — point it at an ISBN search — **doesn't work**, because museum
-  shops search by title, not ISBN. Open problem.
+- **Shop links can be stale or dead — SMALLER THAN THIS NOTE SAID, corrected
+  22 Sep.** It read "the link comes from the search index, not a live check",
+  which stopped being true on 21 Sep when step one began OPENING the shop's own
+  pages: the link is now read off a page the shop itself served, and `fillIsbn`
+  re-opens it whenever the ISBN or publisher is missing, which is most of the
+  time. **What is left:** nothing looks at whether that re-open came back
+  empty, so a dead link is still stored silently — and `pageIsShell` already
+  exists to tell. The rejected fix stays rejected: pointing the link at an ISBN
+  search doesn't work, because museum shops search by title.
 - **Sweeper brief v3** — the Chat-Claude-era instruction document still needs its URL
   corrections. Expect it to end up as the fallback procedure for blocked venues rather
   than the main sweep.
