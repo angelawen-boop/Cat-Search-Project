@@ -49,6 +49,14 @@ is why they live in one repo, on one branch.
 - **Long runs need progress.** A backgrounded command that shows nothing reads as
   a dead session.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
+- **This guide talks ABOUT her in the third person. Never talk TO her that way.**
+  "She" and "her" in here mean the person reading your reply. Saying "her call"
+  or "she confirmed" to her face is alienating and she has said so.
+- **Never hand back a list of open items copied out of this guide without
+  checking it first.** Lines here go stale: an item can be settled, rejected or
+  already done. Read the surrounding passage before repeating it to her — and if
+  it says "her call" or "raised rather than decided", that is exactly the kind of
+  line that may already have been answered.
 
 ### Put it in code — her rule, 10 Sep 2026
 
@@ -788,11 +796,11 @@ not a fire engine. `shopChangeFor` and `shopHeadline` sit outside the component
 so fixtures reach them; C-079 to C-090b, verified by dropping the sticky half
 and watching C-084 fail.
 
-**ONE CASE NOT COVERED, raised rather than decided:** a book that was in the
-shop and whose next lookup finds NO catalogue anywhere drops to "No catalogue
-found for this exhibition." and says nothing about having had one. That is the
-loudest out-of-print signal there is and it currently reads like a row that
-never had a catalogue. Not built — her call.
+**ONE CASE RAISED AND REJECTED, 22 Sep — do not re-propose it.** A book that
+was in the shop and whose next lookup finds NO catalogue anywhere drops to "No
+catalogue found for this exhibition." and says nothing about having had one.
+It was put to her as a possible gap; **she rejected it and said to move on.**
+It is on the §8 list.
 
 **Catalogue lookup — REBUILT 21 SEP 2026, and the route is now what she always
 designed.** It is no longer two stages. In order, each step running only if the
@@ -980,14 +988,12 @@ so if the best two are both wrong the site does not have the book, and a
 third opening spends her allowance on hope. The fallback is better than a
 lucky third guess because it cannot be wrong.
 
-**THE LADDER ENDS AT THE PUBLISHER'S FRONT DOOR, NOT AT NOTHING — my call,
-easily reversed.** Once the publisher's website is identified, that address
-is the weakest answer that is still true, so a book the site will not
-surface falls back to `https://<publisher>/` labelled **Publisher's
-website**. Her framing invited it ("not even the publisher's section or home
-page"), and it matters most at Borghese, Capodimonte and the Accademia,
-which have no shop at all. **Say so if it is clutter and it comes out in one
-line.**
+**THE LADDER ENDS AT THE PUBLISHER'S FRONT DOOR, NOT AT NOTHING — WANTED,
+CONFIRMED BY HER 22 Sep. Settled; do not offer to remove it.** Once the
+publisher's website is identified, that address is the weakest answer that is
+still true, so a book the site will not surface falls back to
+`https://<publisher>/` labelled **Publisher's website**. It matters most at
+Borghese, Capodimonte and the Accademia, which have no shop at all.
 
 **AND EVERY OUTCOME NOW SAYS WHICH ONE IT WAS — her second question, and the
 silence was real.** "No separate publisher page." printed whether the step
@@ -2756,8 +2762,11 @@ Each entry cost a real failure. Before changing the area, read the line.
 10. ~~**The app is not really tested**~~ — **DONE 20 Sep, her decision to let
     the repo carry `react`, `react-dom` and `jsdom` as dev dependencies.**
     `page_renders.js` renders the component and fails the exact fault that
-    shipped a blank page twice; §4. Still uncovered: it does not press
-    anything.
+    shipped a blank page twice; §4. The automated check does not press
+    anything — **but SHE does, on the published page, on every change.** Every
+    route in §4 marked "tested by her" was clicked through by her by hand.
+    **Never report unpressed buttons to her as though the app were untested:
+    she is the one pressing them.**
 
 11. ~~**`qc.js`, `qc.test.js` and the intake fixtures live on a branch only**~~
     — **DONE, merged into `main` 20 Sep on her instruction, once she had signed
@@ -2854,7 +2863,10 @@ never merge on their own (`sameExhibition` returns false when `museumId` differs
 
 ## 8. Rejected — do not re-propose
 
-The sweep log inside her export (20 Sep — safe with quarantine's merge rule,
+Announcing "this row used to have a catalogue" when a later lookup finds none
+anywhere (22 Sep — raised by a session, rejected by her on the spot, and raised
+AGAIN by the next session as though it were open). The sweep log inside her
+export (20 Sep — safe with quarantine's merge rule,
 but it returns a fact about the world to a document that rolls back, and one
 sweep file rebuilds it anyway). Ledger on Claude cloud storage. Google Drive
 auto-load on open. Saving the ledger to
