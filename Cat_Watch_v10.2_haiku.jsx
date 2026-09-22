@@ -372,7 +372,7 @@ const S=[
 ["acq","Jacob El Hanani: Drawing on Canvas","2024-09-10","2024-10-18","New York. Microscopically fine line drawing.","jacob-el-hanani"],
 ];
 
-function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=m+"-"+t.toLowerCase().replace(/[^a-z0-9]+/g,"").slice(0,50);const mu=MU[m];return{id,museumId:m,title:t,startDate:s||null,endDate:e||null,summary:d,exUrl:sl?(mu.exBase+sl):mu.listUrl,interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,shopUrl:null,shopState:null};});}
+function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=m+"-"+t.toLowerCase().replace(/[^a-z0-9]+/g,"").slice(0,50);const mu=MU[m];return{id,museumId:m,title:t,startDate:s||null,endDate:e||null,summary:d,exUrl:sl?(mu.exBase+sl):mu.listUrl,interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherUrlKind:null,shopUrl:null,shopState:null};});}
 
 function mergeSeedInto(existing){const byId=new Map(existing.map(r=>[r.id,r]));for(const s of buildSeed()){const p=byId.get(s.id);if(p)byId.set(s.id,{...p,startDate:p.startDate||s.startDate,endDate:p.endDate||s.endDate,summary:p.summary||s.summary,exUrl:p.exUrl||s.exUrl,watching:p.watching||false});else byId.set(s.id,s);}return Array.from(byId.values());}
 
@@ -425,7 +425,7 @@ const fmtDate=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");if(isNaN(x))
 function fmtRefresh(iso){if(!iso)return"never";const d=new Date(iso);if(isNaN(d))return"never";const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
 function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)return a+" \u2014 "+b;if(b)return"until "+b;if(a){const st=new Date(r.startDate+"T00:00:00");const past=!isNaN(st)&&st<=new Date();return(past?"open since ":"opens ")+a;}return"dates unknown";}
 
-function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:"Museum shop",href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+tq});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:"Publisher",href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?kn="+(isbn||tq)+"&sts=t"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q});return out;}
+function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:"Museum shop",href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+tq});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherUrlKind),href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?kn="+(isbn||tq)+"&sts=t"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q});return out;}
 
 // ── FINDING A CATALOGUE — rebuilt 20 Sep 2026 ────────────────────────────────
 //
@@ -772,6 +772,96 @@ function cleanPublisherUrl(u,dom){
   try{ if(dom&&new URL(t).hostname.toLowerCase().includes(String(dom).toLowerCase()))return null; }catch{ return null; }
   return t;
 }
+
+
+// ── A CONTAINER IS NOT THE BOOK, AND A SHELL IS NOT AN EMPTY SHELF ──────────
+// Her ruling, 22 Sep 2026, from her own diagnosis of two real lookups.
+//
+// WHAT WAS WRONG. The publisher step took whatever page the search returned
+// and filed it as "the publisher's page", full stop. For Rizzoli that was the
+// book itself — rizzoliusa.com/book/9780847877645 — and it looked like the
+// step working. It was not working; it was LUCKY. Rizzoli happens to key its
+// product addresses by ISBN, so a site: search matches the book directly.
+// Hannibal Books keys its books by a Dutch slug plus a #fragment, and a
+// fragment is never sent to a server and never indexed, so the deepest thing
+// any search can return for that book is the SECTION it sits in —
+// hannibalbooks.be/en/fine-art. The step returned that and called it the
+// book's page. The code could not tell the two outcomes apart.
+//
+// HER FIX, AND IT IS ONE STEP, NOT A BETTER QUERY: never accept a candidate
+// unseen. Open it. Either it IS the book (accept), or it LISTS the book
+// (take the link off it), or it came back empty (keep it, and say on screen
+// that it is the section and not the book).
+//
+// NO HEADLESS BROWSER. Her call, and the scope is why: only the buried-product
+// publishers reach this step at all, and only the client-rendered ones among
+// those come back empty. Building a rendering fetch for a handful of Belgian
+// art publishers is not worth it. The honest label is.
+
+// How much text a fetched page must carry before we believe we saw it.
+//
+// MEASURED, NOT CHOSEN, 22 Sep 2026, against the two real pages this rule is
+// about. Hannibal's fine-art section returns 110 characters — a sort control,
+// a newsletter box and the web designer's credit, with all 200-odd books
+// missing because they are drawn by script after the page arrives. The Menil's
+// shelf, which is ordinary server-drawn HTML, returns several thousand with
+// every book's own address in it. There is no third case anywhere near the
+// line, which is what makes one number safe here.
+const SHELL_CHARS=400;
+
+function pageTextOf(results){
+  return (results||[]).map(r=>
+    Array.isArray(r&&r.excerpts)?r.excerpts.join("\n"):String((r&&r.full_content)||"")
+  ).join("\n").trim();
+}
+
+// A page that came back empty is NOT a page with nothing on it. Saying which
+// is the whole point: an empty answer from a script-drawn page is our blind
+// spot, and reporting it as "this book is not on the publisher's site" would
+// be a finding we never earned.
+function pageIsShell(results){ return pageTextOf(results).length<SHELL_CHARS; }
+
+// A LINK READ OFF A LISTING IS CHECKED BEFORE IT IS BELIEVED.
+//
+// Two ways it can be wrong and both are mechanical, so both are code's. It
+// must be on the publisher's own site — a listing links out to Amazon, to
+// distributors, to the museum — and it must not be the listing itself, or
+// "the book's own page" is the container wearing a new label.
+//
+// A DIFFERING #FRAGMENT COUNTS AS A DIFFERENT ADDRESS, deliberately. That is
+// exactly how Hannibal addresses its books (#102642 is the English edition,
+// #102640 the Dutch), so folding on the fragment would throw away the one
+// case this whole step exists for.
+function sameAddress(a,b){
+  const strip=u=>{try{const x=new URL(String(u));return (x.origin+x.pathname).replace(/\/+$/,"")+x.search;}catch{return String(u||"").trim();}};
+  return strip(a)===strip(b);
+}
+function deepLinkOn(u,host,container){
+  if(!u)return null;
+  const t=String(u).trim();
+  if(!urlLooksValid(t))return null;
+  let h; try{ h=new URL(t).hostname.toLowerCase(); }catch{ return null; }
+  if(h!==String(host||"").toLowerCase())return null;
+  if(container&&sameAddress(t,container)&&!/#/.test(t))return null;
+  return t;
+}
+
+
+// WHAT THE PUBLISHER BUTTON IS ALLOWED TO CLAIM — her ruling, 22 Sep 2026.
+//
+// A link the app verified against the book's own page and a link that is only
+// the section the book sits in are DIFFERENT THINGS, and until today the
+// button called both of them "Publisher". That is the same fault as a status
+// line reading "Saved" on a download nobody watched: the claim was never
+// earned, and she could only catch it by opening the link herself.
+//
+// So the label carries the difference. "Publisher" means the book's own page.
+// "Publisher's section" means the link lands her in the right part of the
+// publisher's site and the book is one scroll away — useful, and honestly
+// described. A link from an older ledger has no kind recorded; it keeps the
+// plain label, because inventing a claim about it either way would be worse
+// than making none.
+function publisherLinkLabel(kind){ return kind==="container"?"Publisher\u2019s section":"Publisher"; }
 
 const SKEY="cw-v3";
 // DORMANT in v8: Claude cloud save is kept in the file but nothing calls it.
@@ -1352,7 +1442,7 @@ export default function App(){
 
   function makeLedgerRow(c,now){
     const base=c.museumId+"-"+normalizeTitle(c.title).replace(/[^a-z0-9]+/g,"").slice(0,50);
-    return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,shopUrl:null,shopState:null,addedAt:now,editedAt:null};
+    return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherUrlKind:null,shopUrl:null,shopState:null,addedAt:now,editedAt:null};
   }
 
   // Apply whatever she picked where the stitched file disagreed with itself.
@@ -1483,11 +1573,12 @@ export default function App(){
         shopState:onShop?"shop":"web",
         catalogueTitle:o.catalogueTitle||null,isbn13:toIsbn13(o.isbn13),
         publisher:o.publisher||null,publisherUrl:cleanPublisherUrl(o.publisherUrl,dom),
+        publisherUrlKind:null,
         shopUrl:onShop?o.shopUrl:null}};
     }
     if(fromShopStage)return null;          // not found in the shop — go wider
     return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"no",shopState:"none",
-      catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,shopUrl:null}};
+      catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherUrlKind:null,shopUrl:null}};
   };
 
   // ── FILLING A MISSING ISBN FROM THE PAGE ITSELF \u2014 her finding, 20 Sep 2026 ──
@@ -1638,21 +1729,82 @@ export default function App(){
     if(!onSite.length)return{...hit,detail:detail+"\nNothing for this book on "+pubHost+"."};
 
     const rd=await readResults(
-      "These are pages from ONE publisher\u2019s own website. Pick the page FOR THIS BOOK.\n"
-     +"Prefer the book\u2019s own page over a list of many books. If only a list mentions it, "
-     +"give the list. If none of them is about this book, answer null.\n"
+      "These are pages from ONE publisher’s own website. Pick the ONE most likely to be, "
+     +"or to lead to, the page for this book.\n"
+     +"Prefer the book’s own page. If only a list or a section of many books mentions it, "
+     +"give that — it will be opened and read next. If none of them relates to this book, "
+     +"answer null.\n"
      +"Use ONLY these results. Never invent a link.\n"
      +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+r.publisher
      +"\nExhibition venue: "+venue+"\n\n"
      +resultsForPrompt(onSite)
      +"\nReply with ONLY this JSON object and nothing else:\n"
      +'{"publisherUrl": string|null}\n'
-     +'Example: {"publisherUrl":"https://hannibalbooks.be/metamorfosen-ovidius-en-de-kunsten"}');
+     +'Example: {"publisherUrl":"https://hannibalbooks.be/en/fine-art"}');
     detail=detail+"\n"+rd.detail;
     if(!rd.ok)return{...hit,detail,trouble:rd.detail};
-    const url=cleanPublisherUrl((rd.data||{}).publisherUrl,dom);
-    detail=detail+(url?"\nPublisher\u2019s page: "+url:"\nNo page for this book on "+pubHost+".");
-    return url?{...hit,detail,row:{...r,publisherUrl:url}}:{...hit,detail};
+    const candidate=cleanPublisherUrl((rd.data||{}).publisherUrl,dom);
+    if(!candidate)return{...hit,detail:detail+"\nNo page for this book on "+pubHost+"."};
+
+    // ── NOW OPEN IT. WHAT SEARCH HANDS BACK IS A CANDIDATE, NOT AN ANSWER ──
+    //
+    // This is the step that was missing, and its absence is why Rizzoli read
+    // as a success and Hannibal as a success while one was the book and the
+    // other was a whole section of books. Search cannot tell us which it got,
+    // because the difference is IN the page. So we open the page.
+    const fp=await fetchPage(candidate,
+      "Whether this page is the book “"+book+"” itself, and any link on it to that book.",
+      [book,isbn||book]);
+    detail=detail+"\n"+fp.detail;
+    if(!fp.ok)return{...hit,detail,trouble:fp.detail};
+
+    // THE SHELL CASE, AND IT IS THE HONEST FLOOR. Hannibal draws its book list
+    // by script after the page arrives, so the reader gets a sort control and
+    // a newsletter box. We cannot see the book and we must not pretend we
+    // looked: the link is kept, and it is kept LABELLED as the section.
+    if(pageIsShell(fp.results)){
+      return{...hit,detail:detail+"\nThat page came back empty — kept as the publisher’s section, not the book’s own page.",
+        row:{...r,publisherUrl:candidate,publisherUrlKind:"container"}};
+    }
+
+    const vr=await readResults(
+      "You are reading ONE page from a publisher’s own website, in full. Decide what it is.\n"
+     +"Use ONLY what this page says. Never use outside knowledge and never invent a link.\n"
+     +'"book"    — this page IS about the book named below: it is that book’s own page.\n'
+     +'"listing" — this page lists or advertises several books. If one of them is the book '
+     +"below, give ITS link in bookUrl, copied exactly from this page; otherwise bookUrl null.\n"
+     +'"other"   — this page has nothing to do with this book or this publisher’s books.\n'
+     +"MATCH ON THE ISBN WHERE THERE IS ONE. A publisher may carry the same book in two "
+     +"languages, with two links and two numbers, and the titles will not tell them apart.\n"
+     +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+r.publisher+"\n\n"
+     +pageForPrompt(fp.results)
+     +"\nReply with ONLY this JSON object and nothing else:\n"
+     +'{"kind": "book"|"listing"|"other", "bookUrl": string|null}\n'
+     +'Example: {"kind":"listing","bookUrl":"https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten#102642"}');
+    detail=detail+"\n"+vr.detail;
+    if(!vr.ok)return{...hit,detail,trouble:vr.detail};
+    const kind=String((vr.data||{}).kind||"");
+
+    if(kind==="book"){
+      detail=detail+"\nPublisher’s page for the book: "+candidate;
+      return{...hit,detail,row:{...r,publisherUrl:candidate,publisherUrlKind:"product"}};
+    }
+    if(kind==="listing"){
+      // The deep link is checked, not trusted: it must be on the publisher's
+      // own host and it must not be the listing we are standing on.
+      const deep=deepLinkOn((vr.data||{}).bookUrl,pubHost,candidate);
+      if(deep){
+        detail=detail+"\nBook’s own page, read off the publisher’s list: "+deep;
+        return{...hit,detail,row:{...r,publisherUrl:deep,publisherUrlKind:"product"}};
+      }
+      detail=detail+"\nThe publisher lists books here but gives this one no page of its own — kept as the section.";
+      return{...hit,detail,row:{...r,publisherUrl:candidate,publisherUrlKind:"container"}};
+    }
+    // "other" — the search matched something that is not this publisher's book
+    // area at all. A link she cannot use is worse than no button, and a
+    // container label would be a claim we just disproved.
+    detail=detail+"\nThat page is not about this book — no publisher link kept.";
+    return{...hit,detail};
   };
 
   async function lookupCat(row){
@@ -2300,6 +2452,7 @@ export default function App(){
                       {r.shopState==="shop"&&<div style={{fontSize:11,marginBottom:6}}>
                         <span style={{color:C.action,fontWeight:600}}>In the museum shop.</span>
                         {!r.publisherUrl&&<span style={{color:C.soft}}> No separate publisher page.</span>}
+                        {r.publisherUrlKind==="container"&&<span style={{color:C.soft}}> {"The publisher\u2019s link opens the section this book sits in, not a page of its own."}</span>}
                       </div>}
                       {/* The dash is a STRING, not page text. Written as a bare
                           \u2014 among the words it printed those six characters
@@ -2309,6 +2462,7 @@ export default function App(){
                       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
                         {"Not in the museum shop \u2014 the shop link below opens the general store; other buy options shown too."}
                         {!r.publisherUrl&&" No separate publisher page."}
+                        {r.publisherUrlKind==="container"&&" The publisher\u2019s link opens the section this book sits in, not a page of its own."}
                       </div>}
                       {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
                       {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
@@ -2319,7 +2473,7 @@ export default function App(){
                         {isAcq?(
                           <>
                             {r.shopUrl&&<a href={r.shopUrl} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
-                            {r.publisherUrl&&<a href={r.publisherUrl} target="_blank" rel="noopener noreferrer" style={lnk}>Publisher {"\u2197"}</a>}
+                            {r.publisherUrl&&<a href={r.publisherUrl} target="_blank" rel="noopener noreferrer" style={lnk}>{publisherLinkLabel(r.publisherUrlKind)} {"\u2197"}</a>}
                           </>
                         ):buyLinks(r).map(l=><a key={l.name} href={l.href} target="_blank" rel="noopener noreferrer" style={lnk}>{l.name} {"\u2197"}</a>)}
                       </div>

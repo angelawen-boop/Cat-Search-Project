@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom };')(
+    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -319,6 +319,61 @@ function runtime(answer, log) {
     eq(d('Hannibal Books', ['https://www.amazon.com/x', 'https://www.abebooks.com/y']), null,
        'C-050: booksellers are not the publisher, so nothing is returned');
     eq(d('', ['https://hannibalbooks.be/']), null, 'C-051: no publisher name, no guess');
+  }
+
+
+  // ── C-052 to C-062: a container is not the book ───────────────────────
+  // Her ruling, 22 Sep, from two real lookups of her own. The publisher step
+  // filed whatever search returned as "the publisher's page". For Rizzoli
+  // that was the book, because Rizzoli puts the ISBN in its addresses; for
+  // Hannibal it was the whole fine-art section, because Hannibal addresses a
+  // book with a #fragment and a fragment is never indexed. Both were reported
+  // the same way, so the step could not tell a hit from a near miss.
+  {
+    const api = lift({ document: {}, localStorage: {} });
+
+    // The two real pages, as the connector really returned them on 22 Sep.
+    const hannibalShell = [{ url: 'https://hannibalbooks.be/en/fine-art', excerpts: [
+      'Show categories\nsort by Price Alphabetically Date\n\n# Newsletter Subscribe\nWebsite by [waanzin](https://waanz.in)' ] }];
+    const realListing = [{ url: 'https://bookstore.menil.org/collections/menil-publications', excerpts: [
+      '# Collection: Menil Publications\n## 47 products\n'
+      + Array.from({ length: 16 }, (_, i) =>
+          `* Book ${i}\n[Book ${i}](https://bookstore.menil.org/products/book-${i})\nRegular price $40.00 USD\nUnit price / per`
+        ).join('\n') ] }];
+
+    eq(api.pageIsShell(hannibalShell), true,
+       'C-052: a page whose books are drawn by script reads as empty, and says so');
+    eq(api.pageIsShell(realListing), false,
+       'C-053: an ordinary server-drawn list of books does not');
+    eq(api.pageIsShell([]), true,
+       'C-054: nothing came back at all, which is the same blind spot');
+    eq(api.pageIsShell([{ url: 'x', full_content: 'y'.repeat(900) }]), false,
+       'C-055: a page read in full counts its full text, not only its excerpts');
+
+    // The link read off a listing is checked before it is believed.
+    const cont = 'https://hannibalbooks.be/en/fine-art';
+    eq(api.deepLinkOn('https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten#102642',
+                      'hannibalbooks.be', cont),
+       'https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten#102642',
+       'C-056: the book’s own address on the publisher’s own site is taken');
+    eq(api.deepLinkOn('https://www.amazon.com/dp/123', 'hannibalbooks.be', cont), null,
+       'C-057: a listing links out to booksellers, and those are not the publisher');
+    eq(api.deepLinkOn(cont, 'hannibalbooks.be', cont), null,
+       'C-058: the listing itself is not the book’s page wearing a new label');
+    eq(api.deepLinkOn(cont + '/', 'hannibalbooks.be', cont), null,
+       'C-059: nor is it with a slash on the end');
+    eq(api.deepLinkOn(cont + '#102642', 'hannibalbooks.be', cont), cont + '#102642',
+       'C-060: but a #fragment IS how Hannibal addresses a book, so it is kept');
+    eq(api.deepLinkOn('not a url', 'hannibalbooks.be', cont), null,
+       'C-061: and nothing that is not an address gets through');
+
+    // What the button is allowed to claim.
+    eq(api.publisherLinkLabel('container'), 'Publisher’s section',
+       'C-062: a section is called a section');
+    eq(api.publisherLinkLabel('product'), 'Publisher',
+       'C-062a: a verified page is called the publisher');
+    eq(api.publisherLinkLabel(null), 'Publisher',
+       'C-062b: a link from an older ledger makes no claim either way');
   }
 
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');
