@@ -869,32 +869,32 @@ row to press is one she has seen leave a shop.
 
 ### 2. The three blocked venues — a route exists, and it needs pacing
 
-**Access is answered (§2). What is not answered is whether it survives a sweep.**
+**Access is answered (§2). Whether it survives a sweep is not.** In order, and
+each step really does block the next:
 
-Next, in order:
-
-1. **Three addresses, well spaced, one run.** All clean means speed was the
-   fault. First clean and the rest blocked means it is the browsing session, not
-   the speed — a different fix. Nothing else proceeds until this is known.
-2. **A gap between pages in the engine**, then headed support, then `brit` and
-   `morgan` move to her machine. This touches shared code that 18 working venues
-   depend on, so it is hers to approve before it is written.
-3. **The two recipes.** `brit`'s hunts for `/exhibitions-events/` while its
-   exhibitions live at `/exhibitions/`, and its listing is keyed to a DATE RANGE
+1. **Three addresses, well spaced, one run** — `brit` and `morgan`. Two
+   questions at once: does a REAL exhibition page open (brit has only ever
+   given listings, morgan a listing and a section page), and **was it speed or
+   something about the browsing session?** All clean means speed. First clean
+   and the rest blocked means the session, which is a different fix.
+2. **A gap between pages in the engine, then headed support.** Nothing can be
+   tested before this: a MoMA sweep fires 24 exhibition pages back to back and
+   is refused before it finishes, which is exactly what happened on 22 Sep.
+   `headed: true` currently does nothing but announce that it cannot be
+   honoured. **Shared code, 18 working venues — hers to approve.**
+3. **A real sweep of `moma` and `morgan`.** Their recipes are written and
+   fixtured, but **every selector in both is untestable without a browser** —
+   the fixtures cover what a recipe SAYS, not what it finds. This is the loop
+   that once passed 148/148 while every venue died.
+4. **`brit`'s recipe**, the last one. It hunts for `/exhibitions-events/` while
+   its exhibitions live at `/exhibitions/`, and its listing takes a DATE RANGE
    in the address — one request returns the whole upcoming set, no pagination.
-   `morgan`'s only fault is that `/exhibitions/online` is a section, not a show.
-   **She writes both from the live site**, her ruling 22 Sep; the probe saves
-   the pages so no further visits are needed.
+5. **`brit` and `morgan` move to her machine**, joining `met`, `artic`, `moma`.
 
-`moma`'s and `morgan`'s recipes are done. `brit`'s is not — it hunts for
-`/exhibitions-events/` while its exhibitions live at `/exhibitions/`, and its
-listing is keyed to a DATE RANGE in the address (one request returns the whole
-upcoming set, no pagination).
-
-**Every selector in both new recipes is untestable without a browser.** The
-fixtures cover what a recipe SAYS and what its year pages come out as; whether
-those selectors match the live markup is answered only by a real sweep. This is
-the loop that once passed 148/148 while every venue died.
+**Page layout comes from HER, never from a probe — her ruling, 22 Sep.** She
+saves the pages from her own browser; `docs/moma_pages/` and
+`docs/morgan_pages/` hold them and what each settled. The probe answers access
+and nothing else.
 
 **`artic` from her machine is unchanged and untested against any of this.**
 
@@ -962,6 +962,7 @@ The AbeBooks link is `/servlet/SearchResults?kn=…&sts=t`.
 | `docs/import-file.md` | How the file she imports was built, and why it is not a straight stitch | Touching that file, or explaining its dates |
 | `docs/venues.md` | Per-venue forensics: the scoreboard, exactly what each refusal is, listing URLs | Working one specific venue |
 | `docs/venue_urls.md` | All 21 venues' addresses from the Sweeper Brief, plus per-venue traps | Wiring or re-checking a venue's pages |
+| `docs/moma_pages/`, `docs/morgan_pages/` | Pages she saved from her own browser, with a README of what each settled — link shapes, blurb containers, the traps | Changing either recipe, before asking her for anything |
 | `docs/compression.md` | The compression design, the model split, the eval, the rejected alternatives | Changing compression — otherwise don't |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review: what she found, what changed, what each returns now | Before touching a reviewed venue |
 | `docs/review-log.md` | Independent review findings and what was decided | A reviewer raises something |
