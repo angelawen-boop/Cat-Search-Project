@@ -154,6 +154,7 @@ Judgement about the outside world is not in any file.
 | `uffizi` | Headlines kept as titles; undated rows kept |
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md` |
 | `moma` | **Current and upcoming only.** She does not want its past at all |
+| `morgan` | *Collections Spotlight* excluded — a standing rotation, not a show. Past blurbs read off the listing, pages not opened |
 | `rijks` | 37 rows, not chased further. *Asian Pavilion* was pulled by the venue |
 | `capo` | **Not count-verified and never will be** — see below |
 | `brera`, `borghese` | Their single extra row is a marker for a genuinely empty upcoming page |
@@ -885,7 +886,15 @@ Next, in order:
    **She writes both from the live site**, her ruling 22 Sep; the probe saves
    the pages so no further visits are needed.
 
-`moma`'s recipe is done — current/upcoming, her machine, `headed`.
+`moma`'s and `morgan`'s recipes are done. `brit`'s is not — it hunts for
+`/exhibitions-events/` while its exhibitions live at `/exhibitions/`, and its
+listing is keyed to a DATE RANGE in the address (one request returns the whole
+upcoming set, no pagination).
+
+**Every selector in both new recipes is untestable without a browser.** The
+fixtures cover what a recipe SAYS and what its year pages come out as; whether
+those selectors match the live markup is answered only by a real sweep. This is
+the loop that once passed 148/148 while every venue died.
 
 **`artic` from her machine is unchanged and untested against any of this.**
 

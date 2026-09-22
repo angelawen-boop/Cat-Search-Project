@@ -328,7 +328,9 @@ function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
   // alone never asks for. One year earlier is enough to reach any show still
   // open on the floor date, because a run long enough to start two years before
   // it and still be open is a permanent installation, which she excludes anyway.
-  const first = entry.yearByStartDate ? floor.getUTCFullYear() - 1 : floor.getUTCFullYear();
+  const first = (entry.yearByStartDate || entry.yearPair)
+    ? floor.getUTCFullYear() - 1
+    : floor.getUTCFullYear();
   const pages = [];
   for (let y = last; y >= first; y--) {
     // Two shapes of the same thing. Most venues filter with a query parameter
@@ -343,11 +345,29 @@ function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
     // parameters, so page 2 of a year is simply another address. See the
     // artic recipe for why that page number is written down here and not
     // handed to followPagination() like the years are.
+    // A THIRD SHAPE: A SEASON SPANNING TWO YEARS.
+    //
+    // The Morgan files its archive by a PAIR — /exhibitions/past/2025-2026 —
+    // because its year runs roughly autumn to autumn rather than January to
+    // December. So the page holding a show is named for the year it opened in
+    // and the year after.
+    //
+    // Derived like every other year here, and for the same reason: `2025-2026`
+    // and `2024-2025` are correct on the day they are typed and silently wrong
+    // the next year, which is exactly the failure this function exists to
+    // prevent at the Met.
+    //
+    // ONE PAIR EARLIER THAN A PLAIN YEAR WOULD ASK FOR. The 1 July 2024 floor
+    // falls inside the pair 2023-2024, not 2024-2025 — her correction, 22 Sep,
+    // after checking the venue's own pages. A run that stopped at 2024-2025
+    // would lose every show that closed in the weeks just after the floor, and
+    // nothing in the output could show it: the page was never requested.
+    const label = entry.yearPair ? `${y}-${y + 1}` : String(y);
     const path = entry.param
-      ? `${entry.path}?${entry.param}=${y}${entry.suffix || ''}`
-      : `${entry.path}${entry.yearPath}${y}${entry.suffix || ''}`;
+      ? `${entry.path}?${entry.param}=${label}${entry.suffix || ''}`
+      : `${entry.path}${entry.yearPath}${label}${entry.suffix || ''}`;
 
-    pages.push({ path, ctx: `${entry.ctx} ${y}` });
+    pages.push({ path, ctx: `${entry.ctx} ${label}`, ...(entry.carry || {}) });
   }
   return pages;
 }
@@ -1595,6 +1615,48 @@ function saysOngoing(text) {
  * Getting dates here rather than on the detail page is what lets the lookback
  * filter cut the list BEFORE we spend a page load on each entry.
  */
+/**
+ * A field of this row's own box on a listing page.
+ *
+ * WHY A LISTING BLURB IS EVER GOOD ENOUGH. Normally a row's summary comes from
+ * the exhibition's own page, because a listing card carries a title and dates
+ * and nothing else. The Morgan's past archive is different: every row carries a
+ * full paragraph of curatorial prose, ending in a complete sentence.
+ *
+ * That turns a question of tidiness into one of volume. Roughly 75 past
+ * exhibitions sit across the Morgan's three year-pages. Opening each one at a
+ * pace the venue tolerates is over half an hour of requests at a venue that has
+ * already refused us once for going too fast; reading the paragraphs off the
+ * listings is eight page loads in total. Her ruling, 22 Sep: take the listing
+ * paragraph for past exhibitions, and open pages only for current and upcoming.
+ *
+ * THE BOX IS FOUND BY WHAT IT IS, NOT BY COUNTING STEPS. `closest()` asks the
+ * browser for the nearest ancestor that IS this row, which is exact. Walking a
+ * fixed number of parents is what put one Rijksmuseum exhibition's dates on
+ * another — a step count is not a boundary.
+ *
+ * Returns '' when the venue's own markup does not hold what the recipe named,
+ * so a listing that changes shape yields an empty summary and a note rather
+ * than somebody else's text.
+ */
+async function textFromListingRow(link, rowSpec) {
+  if (!rowSpec || !rowSpec.container || !rowSpec.summary) return '';
+  try {
+    return await link.evaluate((el, spec) => {
+      const box = el.closest(spec.container);
+      if (!box) return '';
+      const parts = [];
+      for (const n of box.querySelectorAll(spec.summary)) {
+        const t = (n.innerText || n.textContent || '').replace(/\s+/g, ' ').trim();
+        if (t) parts.push(t);
+      }
+      return parts.join('\n\n');
+    }, rowSpec);
+  } catch {
+    return '';
+  }
+}
+
 async function datesNearLink(link, selector) {
   let linkText = '';
   try { linkText = await getText(link); } catch {}
@@ -2891,6 +2953,29 @@ async function collectFromListing(page, opts) {
       continue;
     }
 
+    // A KIND OF THING SHE DOES NOT COLLECT, RECOGNISED BY ITS NAME.
+    //
+    // Her ruling, 22 Sep: the Morgan's "Collections Spotlight" is a standing
+    // rotation of its own holdings, not a temporary exhibition, so it has no
+    // closing window and no catalogue to buy before one. It runs under several
+    // names — Summer 2026, Spring 2026, Fall 2026 — and the venue labels none
+    // of them, so neither excludeOngoing nor excludeLabelled can reach it.
+    //
+    // THIS IS NOT TITLE MATCHING AS JUDGEMENT. Deciding two rows are the same
+    // exhibition by their titles destroyed 29 National Gallery rows, and that
+    // stays forbidden. This is one venue, one ruling she has made and written
+    // down, matched on a name she named — the same footing as the Art
+    // Institute's gallery rotations and the V&A's other branches.
+    //
+    // Logged by name and counted, so an exclusion is something she can read
+    // back rather than a silent disappearance.
+    if (opts.excludeTitle && title && opts.excludeTitle.test(title)) {
+      c.labelled++;
+      log(`    not a temporary exhibition (venue rule), excluded: ${title}`);
+      seenUrls.add(key);
+      continue;
+    }
+
     const row = {
       venue_code: venueCode, title,
       // Internal, never a CSV column: which listing page this row came from,
@@ -2914,6 +2999,15 @@ async function collectFromListing(page, opts) {
       row.notes = addNote(row.notes,
         `The venue extended this exhibition; it first announced ${dates.extendedFrom} as the closing date.`);
     }
+
+    // WHERE THE LISTING ITSELF CARRIES THE BLURB, take it here and mark the row
+    // so the detail pass leaves it alone. `_fromListing` is internal and never
+    // a CSV column.
+    if (opts.listingRow) {
+      const blurb = await textFromListingRow(link, opts.listingRow);
+      if (blurb) { row.summary = blurb; row._fromListing = true; }
+    }
+
     seenUrls.add(key);
     urlToRow.set(key, row);
     rows.push(row);
@@ -3189,14 +3283,88 @@ const VENUES = {
   morgan: {
     name: 'Morgan Library & Museum, New York',
     base: 'https://www.themorgan.org',
+
+    // THREE DIFFERENT PAGES, NOT ONE LAYOUT REPEATED — read from the listings
+    // she saved on 22 Sep, which are committed in docs/morgan_pages/ with a
+    // README of what each settled. This venue runs Drupal and serves each
+    // listing from a separate view, so each needs its own way in.
     pages: [
-      { path: '/exhibitions/current',  ctx: 'current' },
-      { path: '/exhibitions/upcoming', ctx: 'upcoming' },
-      { path: '/exhibitions/past',     ctx: 'past' },
+      // CURRENT holds TWO blocks and only the first is wanted: the second is
+      // "Presentations from our Collection", which she excludes. That heading
+      // is a block boundary rather than a line of text, so scoping to the
+      // block skips the section outright — no searching prose for a heading.
+      { path: '/exhibitions/current', ctx: 'current',
+        selector: '.view-display-id-page_1 .views-field-field-teaser-image a[href]' },
+
+      // UPCOMING is the same card shape with one block — and it is page_2, not
+      // page_1. The id cannot be shared with the line above.
+      { path: '/exhibitions/upcoming', ctx: 'upcoming',
+        selector: '.view-display-id-page_2 .views-field-field-teaser-image a[href]' },
+
+      // PAST is a different view entirely: rows down the page, each carrying
+      // its own title, dates and paragraph.
+      //
+      // SELECTED BY THE TITLE FIELD, NEVER BY THE ADDRESS. Nine of the ten rows
+      // on its first page are /exhibitions/<slug>; the tenth is
+      // /collections-spotlight-summer-2026, at the site root. A selector
+      // matching the path would have found nine and lost the tenth in silence
+      // — and the CURRENT listing's Collections Spotlight IS under
+      // /exhibitions/, so nothing about the venue warns you.
+      //
+      // The year-PAIRS are derived, never typed: see expandYearArchive().
+      { path: '/exhibitions/past', ctx: 'past', yearPath: '/',
+        yearArchive: true, yearPair: true,
+        carry: {
+          selector: '.view-id-taxonomy_term .field--name-node-title h2 a[href]',
+          // HER RULING, 22 Sep: take the paragraph off the listing and do not
+          // open these pages. ~75 past exhibitions at a polite pace is over
+          // half an hour of requests at a venue that has already refused us
+          // once for going too fast; this way the whole archive costs eight
+          // page loads. The paragraph is a complete piece of curatorial prose,
+          // which is all compression needs.
+          listingRow: {
+            container: '.node--type-exhibitions',
+            summary: '.field--name-body',
+          },
+        } },
     ],
+
+    // The venue-wide fallback, used by any page that names no selector of its
+    // own. Every page above names one, so this only ever catches a page added
+    // later without one — in which case finding too much is safer than finding
+    // nothing, because the extra rows are visible on her approval pile.
     selector: 'a[href*="/exhibitions/"]',
-    isNav: href => /\/exhibitions\/(current|upcoming|past)\/?$/.test(href) || /\/exhibitions\/?$/.test(href),
+    isNav: href => /\/exhibitions\/(current|upcoming|past)\/?$/.test(href)
+                || /\/exhibitions\/past\/\d{4}-\d{4}\/?$/.test(href)
+                || /\/exhibitions\/(online|online\/[^/]+)\/?$/.test(href)
+                || /\/exhibitions\/?$/.test(href),
+
     title: { heading: true },
+
+    // THE BLURB, AND THE TRAP IN IT. `field--name-body` appears TWICE on every
+    // Morgan page, and the first one is 29,000 characters above the exhibition:
+    // it is the site header's Shop / Tickets / Search buttons. Named on its own
+    // it would put three buttons in the summary of every Morgan row, and the
+    // field would look filled rather than empty. Scoping to the article is the
+    // whole fix. Same shape as the Wallace's footer-spacer and the V&A's cookie
+    // panel: a class meaning "a field" in general, believed as though it meant
+    // this field in particular.
+    description: 'article.exhibitions .field--name-body',
+
+    // A standing rotation of the Morgan's own holdings under several names —
+    // Summer 2026, Spring 2026, Fall 2026. Not a temporary exhibition, so no
+    // closing window and no catalogue to buy before one. Her ruling, 22 Sep.
+    // The venue labels none of them, so no site-stated rule can reach it.
+    excludeTitle: /^Collections?\s+Spotlight\b/i,
+
+    // J. Pierpont Morgan's Library prints "Ongoing" where the others print a
+    // range — a permanent display, said so by the venue itself.
+    excludeOngoing: true,
+
+    // HER MACHINE ONLY, once the engine can launch that browser — see moma.
+    // Left on the container for now: moving it sooner would only mean her
+    // laptop collecting the refusals instead of the container's.
+    headed: true,
   },
 
   menil: {
@@ -4026,9 +4194,16 @@ async function scrapeVenue(page, code) {
       // Declared PER PAGE, because a venue rarely sections them all the same
       // way: the KHM's /en/exhibitions has four sections while its /upcoming
       // has none, and scoping both to the same container emptied the second.
+      // A PAGE MAY NAME ITS OWN SELECTOR, not just a container to scope the
+      // venue's one to. The Morgan needs this: its current and upcoming
+      // listings hang the link on a card's image, while its past archive is a
+      // different view whose rows are links in a title field — and one of
+      // those titles points at the site root rather than under /exhibitions/,
+      // so a path-shaped selector would lose it in silence. Composes with
+      // `within` above: a page can scope, or replace, or both.
       selector: (pg.within || v.within)
-        ? (pg.within || v.within).map(w => `${w} ${v.selector}`).join(', ')
-        : v.selector,
+        ? (pg.within || v.within).map(w => `${w} ${pg.selector || v.selector}`).join(', ')
+        : (pg.selector || v.selector),
       isNav: v.isNav,
       // Every listing page this venue has, so a link back to any of them is
       // recognised as navigation whatever language prefix it carries.
@@ -4036,6 +4211,8 @@ async function scrapeVenue(page, code) {
       excludeOngoing: !!v.excludeOngoing,
       otherBranch: v.otherBranch || null,
       excludeLabelled: v.excludeLabelled || null,
+      excludeTitle: v.excludeTitle || null,
+      listingRow: pg.listingRow || v.listingRow || null,
     };
 
     const rowsBefore = rows.length;
@@ -4098,7 +4275,14 @@ async function scrapeVenue(page, code) {
   }
 
   // Cut before opening detail pages where the listing gave us enough to judge.
-  const toFetch = v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing');
+  const toFetch = (v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing'))
+    // A ROW WHOSE BLURB CAME OFF THE LISTING NEEDS NO PAGE OPENED.
+    //
+    // Only rows from a page whose recipe named a `listingRow` reach here with a
+    // summary already on them, so this filters exactly those and nothing else.
+    // Counted from the array AFTER the change rather than from the marks, so
+    // the log line below describes what happened rather than what was intended.
+    .filter(r => !r._fromListing);
   await fetchIndividualPages(page, toFetch, code);
 
   // ROWS THE VENUE'S OWN PAGE LABELLED AS SOMETHING OTHER THAN AN EXHIBITION.
@@ -4118,6 +4302,11 @@ async function scrapeVenue(page, code) {
   // than from the list of marks, and cannot claim a drop that did not land.
   //
   // When lookbackAfterDetail is set, toFetch IS rows, so this covers both.
+  const readOffListing = rows.filter(r => r._fromListing).length;
+  if (readOffListing) {
+    log(`  ${readOffListing} row(s) took their description from the listing; their pages are not opened`);
+  }
+
   const before = toFetch.length;
   for (let i = toFetch.length - 1; i >= 0; i--) {
     const r = toFetch[i];

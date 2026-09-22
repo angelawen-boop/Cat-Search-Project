@@ -1269,6 +1269,123 @@ test('R-004: the two sets do not overlap and cover every venue', () => {
   assert.strictEqual(home.length + container.length, codes.length);
 });
 
+// ── THE MORGAN ────────────────────────────────────────────────────────────
+//
+// Read from the listings she saved on 22 Sep, committed in docs/morgan_pages/.
+// Each case asks the rule directly rather than through a side effect.
+//
+// NOTE THE LIMIT, and it is the one this venue is most exposed to: the listing
+// loop needs a browser, so none of these fixtures runs it. They cover what the
+// recipe SAYS and what the year pages come out as. Whether the selectors match
+// the venue's live markup can only be answered by a real sweep — inserting
+// into that loop once passed 148/148 while every venue died.
+
+const morganBlock = (() => {
+  const at = SWEEP_SRC.indexOf("\n  morgan: {");
+  const rest = SWEEP_SRC.slice(at + 1);
+  const next = rest.search(/\n  '?[a-z-]+'?: \{\n    name: /);
+  return next > -1 ? rest.slice(0, next) : rest;
+})();
+
+test('MG-001: the past archive is year PAIRS, and three of them reach the floor', () => {
+  // Her correction, 22 Sep: a show closing just after 1 July 2024 is filed
+  // under 2023-2024, so stopping at two pairs loses it — and nothing in the
+  // output could show it, because the page was never requested.
+  const pages = expandYearArchive(
+    { path: '/exhibitions/past', yearPath: '/', ctx: 'past', yearArchive: true, yearPair: true },
+    new Date('2024-07-01'), new Date(Date.UTC(2026, 8, 22)));
+  assert.deepStrictEqual(pages.map(p => p.path), [
+    '/exhibitions/past/2025-2026',
+    '/exhibitions/past/2024-2025',
+    '/exhibitions/past/2023-2024',
+  ]);
+});
+
+test('MG-002: and the pairs move on their own as the years do', () => {
+  // The whole point of deriving them. Typed out, "2025-2026" is right today
+  // and silently wrong next spring — the Met trap.
+  const pages = expandYearArchive(
+    { path: '/exhibitions/past', yearPath: '/', ctx: 'past', yearArchive: true, yearPair: true },
+    new Date('2024-07-01'), new Date(Date.UTC(2027, 2, 15)));
+  assert.strictEqual(pages[0].path, '/exhibitions/past/2026-2027');
+  assert.strictEqual(pages.at(-1).path, '/exhibitions/past/2023-2024',
+    'the floor pair is still asked for — the floor does not move');
+  assert.doesNotMatch(SWEEP_SRC, /['"]\/exhibitions\/past\/20\d\d-20\d\d['"]/,
+    'no year pair may be written into the file by hand');
+});
+
+test('MG-003: each listing names its own way in, because they are three views', () => {
+  const pages = listingPages(VENUES.morgan);
+  const byPath = Object.fromEntries(pages.map(p => [p.path, p]));
+
+  // Current holds a second block — "Presentations from our Collection" — which
+  // she excludes. The heading is a block boundary, not a line of prose.
+  assert.match(byPath['/exhibitions/current'].selector, /view-display-id-page_1/);
+  // Upcoming is the same card shape but page_2. The id cannot be shared.
+  assert.match(byPath['/exhibitions/upcoming'].selector, /view-display-id-page_2/);
+
+  // Past rows are taken by their TITLE FIELD, never by the address: nine of
+  // ten on its first page are /exhibitions/<slug> and the tenth sits at the
+  // site root, so a path-shaped selector loses it without a word.
+  const past = byPath['/exhibitions/past/2025-2026'];
+  assert.match(past.selector, /field--name-node-title/);
+  // `a[href]` means "a link"; `a[href*="…"]` means "a link whose address looks
+  // like this". Only the second loses the row at the site root, so only the
+  // second is forbidden here.
+  assert.doesNotMatch(past.selector, /href\s*[*^$~|]?=/,
+    'the past selector must not match on the SHAPE of the address');
+});
+
+test('MG-004: the past archive reads its blurb off the listing and opens nothing', () => {
+  // Her ruling, 22 Sep. ~75 past exhibitions at a polite pace is over half an
+  // hour of requests at a venue that has already refused us once for going too
+  // fast; this way the whole archive costs eight page loads.
+  const past = listingPages(VENUES.morgan).find(p => /2025-2026/.test(p.path));
+  assert.ok(past.listingRow, 'the past pages carry a listingRow');
+  assert.strictEqual(past.listingRow.container, '.node--type-exhibitions');
+  assert.strictEqual(past.listingRow.summary, '.field--name-body');
+
+  // Current and upcoming do NOT — eight rows, and their pages carry the full
+  // curatorial text.
+  for (const p of listingPages(VENUES.morgan)) {
+    if (!/\/past\//.test(p.path)) {
+      assert.ok(!p.listingRow, p.path + ' should still open its exhibition pages');
+    }
+  }
+});
+
+test('MG-005: the blurb selector is scoped to the article, not the class alone', () => {
+  // field--name-body appears TWICE on every Morgan page and the first is
+  // 29,000 characters above the exhibition: the header's Shop / Tickets /
+  // Search buttons. Named alone it puts three buttons in every summary, and
+  // the field looks filled rather than empty.
+  assert.match(morganBlock, /description:\s*'article\.exhibitions \.field--name-body'/);
+});
+
+test('MG-006: Collections Spotlight is excluded, and only by a name she named', () => {
+  const m = morganBlock.match(/excludeTitle:\s*(\/.*?\/[a-z]*)/);
+  assert.ok(m, 'morgan should carry an excludeTitle rule');
+  const rule = eval(m[1]);
+  assert.ok(rule.test('Collections Spotlight, Summer 2026'));
+  assert.ok(rule.test('Collection Spotlight, Spring 2026'));
+  // It must not reach a real exhibition that merely mentions a collection.
+  assert.ok(!rule.test('Crafting the Ballets Russes: The Robert Owen Lehman Collection'));
+  assert.ok(!rule.test('The Declaration of Independence: Rare Americana from the Collection'));
+  assert.ok(!rule.test('Tarot! Renaissance Symbols, Modern Visions'));
+});
+
+test('MG-007: the venue\'s own section pages are navigation, not exhibitions', () => {
+  // /exhibitions/online is a section of the site. The 22 Sep probe followed it
+  // as though it were a show, because it was simply the first link on the page.
+  const { isNav } = VENUES.morgan;
+  assert.ok(isNav('/exhibitions/online'));
+  assert.ok(isNav('/exhibitions/online/tarot'));
+  assert.ok(isNav('/exhibitions/past/2024-2025'));
+  assert.ok(isNav('/exhibitions/current'));
+  assert.ok(!isNav('/exhibitions/tarot'));
+  assert.ok(!isNav('/exhibitions/ballets-russes'));
+});
+
 // ── A CLOSING SIDE THAT IS NOT A DATE, AND A DATE WITH NO YEAR ─────────────
 //
 // MoMA's listing, read from the page she saved on 22 Sep 2026. Eleven date
