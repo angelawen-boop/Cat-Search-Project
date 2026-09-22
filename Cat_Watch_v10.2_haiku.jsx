@@ -372,7 +372,7 @@ const S=[
 ["acq","Jacob El Hanani: Drawing on Canvas","2024-09-10","2024-10-18","New York. Microscopically fine line drawing.","jacob-el-hanani"],
 ];
 
-function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=m+"-"+t.toLowerCase().replace(/[^a-z0-9]+/g,"").slice(0,50);const mu=MU[m];return{id,museumId:m,title:t,startDate:s||null,endDate:e||null,summary:d,exUrl:sl?(mu.exBase+sl):mu.listUrl,interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null};});}
+function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=m+"-"+t.toLowerCase().replace(/[^a-z0-9]+/g,"").slice(0,50);const mu=MU[m];return{id,museumId:m,title:t,startDate:s||null,endDate:e||null,summary:d,exUrl:sl?(mu.exBase+sl):mu.listUrl,interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null};});}
 
 function mergeSeedInto(existing){const byId=new Map(existing.map(r=>[r.id,r]));for(const s of buildSeed()){const p=byId.get(s.id);if(p)byId.set(s.id,{...p,startDate:p.startDate||s.startDate,endDate:p.endDate||s.endDate,summary:p.summary||s.summary,exUrl:p.exUrl||s.exUrl,watching:p.watching||false});else byId.set(s.id,s);}return Array.from(byId.values());}
 
@@ -938,6 +938,57 @@ function publisherNote(result,hasUrl){
   if(result==="selfpublished")return "Catalogue is self-published by the venue.";
   if(result==="product")  return "";
   return hasUrl?"":"No separate publisher page.";
+}
+
+
+// ── A BOOK LEAVES THE SHOP, AND THAT IS THE WHOLE POINT OF THE APP ─────
+// Her ruling, 22 Sep 2026, and she is right that the old screen could not say
+// it: a row that was ever found in the museum shop went on reading "In the
+// museum shop" forever, because nothing compared one lookup against the last.
+// Catalogues selling out is the thing this app exists to watch, so the one
+// event it most needs to show was the one it could not.
+//
+// HER QUESTION FIRST, BECAUSE THE ANSWER IS A REAL LIMIT: when she clicks the
+// Museum shop button and sees for herself that the book has gone, the app
+// learns NOTHING. The link opens a tab and a page cannot see what comes back
+// in a tab it opened — that is a browser rule, not something to engineer
+// around. So the status can only move when the app itself re-opens that page,
+// and only a lookup does that. **Her choice: on Search again, and nowhere
+// else.** It costs no extra calls, because the lookup already re-reads the
+// shop page for the ISBN.
+//
+// TWO TRIGGERS, BOTH HERS, AND THE SECOND MATTERS AS MUCH AS THE FIRST:
+//   * was in the shop, now is not  → "No longer in the museum shop.", dark red
+//   * was NOT in the shop, now is  → "Now in the museum shop.", the ordinary
+//     green, with the word NOW carrying the news
+// A shop pulls a page while a book is merely out of stock and puts it back, and
+// a museum simply fails to maintain its own site; both look like a loss and
+// neither is permanent, so the return has to be as visible as the loss.
+//
+// A FIRST LOOKUP IS NOT A CHANGE. `prevState` null means nothing has ever been
+// searched, so neither sentence fires and the card reads plainly — "Now in the
+// museum shop" on a row nobody had looked at would be announcing news that is
+// only news to the app.
+//
+// "GONE" IS STICKY, "BACK" IS NOT, and the asymmetry is deliberate. A book that
+// left the shop is still gone on the next search and the one after, so the red
+// has to survive a lookup that finds the same nothing — hence `prevChange`.
+// "Now" is NEWS, and news expires: once she has seen it, the next search
+// showing the same book in the same shop reads "In the museum shop." again.
+function shopChangeFor(prevState,prevChange,nextState){
+  if(nextState==="shop")return (prevState&&prevState!=="shop")?"back":null;
+  if(nextState==="web") return (prevState==="shop"||prevChange==="gone")?"gone":null;
+  return null;
+}
+
+// The one line at the top of the catalogue panel. Outside the component so a
+// fixture can read the wording, for the reason countDecisions moved out.
+// `null` on the web side means nothing has changed and the ordinary grey
+// sentence stands on its own.
+function shopHeadline(shopState,shopChange){
+  if(shopState==="shop")return shopChange==="back"?"Now in the museum shop.":"In the museum shop.";
+  if(shopState==="web") return shopChange==="gone"?"No longer in the museum shop.":null;
+  return null;
 }
 
 const SKEY="cw-v3";
@@ -1519,7 +1570,7 @@ export default function App(){
 
   function makeLedgerRow(c,now){
     const base=c.museumId+"-"+normalizeTitle(c.title).replace(/[^a-z0-9]+/g,"").slice(0,50);
-    return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,addedAt:now,editedAt:null};
+    return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null};
   }
 
   // Apply whatever she picked where the stitched file disagreed with itself.
@@ -1645,9 +1696,11 @@ export default function App(){
       // pageUrl is carried BESIDE the row, never in it: shopUrl is only filed
       // when the link is really on the venue's shop, and the ISBN step may
       // read a publisher's page too. Two different questions of one link.
+      const nextShop=onShop?"shop":"web";
       return{ok:true,detail,pageUrl:o.shopUrl||null,
         row:{...row,looked:true,hasCatalogue:"yes",
-        shopState:onShop?"shop":"web",
+        shopState:nextShop,
+        shopChange:shopChangeFor(row.shopState,row.shopChange,nextShop),
         catalogueTitle:o.catalogueTitle||null,isbn13:toIsbn13(o.isbn13),
         publisher:o.publisher||null,publisherUrl:cleanPublisherUrl(o.publisherUrl,dom),
         publisherResult:null,
@@ -1655,7 +1708,8 @@ export default function App(){
     }
     if(fromShopStage)return null;          // not found in the shop — go wider
     return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"no",shopState:"none",
-      catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null}};
+      catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,
+      shopUrl:null,shopChange:null}};
   };
 
   // ── FILLING A MISSING ISBN FROM THE PAGE ITSELF \u2014 her finding, 20 Sep 2026 ──
@@ -2563,8 +2617,12 @@ export default function App(){
                           published by the museum itself, where the publisher\u2019s page IS the shop
                           and is deliberately refused, so "none" is the ordinary answer rather
                           than a fault \u2014 which is exactly why the silence had to end. */}
+                      {/* "Now in the museum shop." is the SAME green as the plain
+                          sentence — her ruling. The word NOW carries the news; a
+                          second colour would make a book coming back look like a
+                          different kind of thing from a book being there. */}
                       {r.shopState==="shop"&&<div style={{fontSize:11,marginBottom:6}}>
-                        <span style={{color:C.action,fontWeight:600}}>In the museum shop.</span>
+                        <span style={{color:C.action,fontWeight:600}}>{shopHeadline(r.shopState,r.shopChange)}</span>
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&<span style={{color:C.soft}}> {publisherNote(r.publisherResult,!!r.publisherUrl)}</span>}
                       </div>}
                       {/* The dash is a STRING, not page text. Written as a bare
@@ -2572,8 +2630,19 @@ export default function App(){
                           literally, and nothing caught it for weeks because no
                           row had ever reached this state until a catalogue was
                           found outside its venue's shop. */}
+                      {/* A DARK RED, NOT A FIRE ENGINE — her words. It borrows the
+                          "closed over a year" ink, which is already muted, already
+                          has a dark-mode partner and adds no loose hex. The grey
+                          tail still explains where the button goes; only the
+                          opening clause changes, or the two sentences would say
+                          the same thing twice. */}
                       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-                        {"Not in the museum shop \u2014 the shop link below opens the general store; other buy options shown too."}
+                        {shopHeadline(r.shopState,r.shopChange)
+                          ?<span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopHeadline(r.shopState,r.shopChange)+" "}</span>
+                          :null}
+                        {shopHeadline(r.shopState,r.shopChange)
+                          ?"The shop link below opens the general store; other buy options shown too."
+                          :"Not in the museum shop \u2014 the shop link below opens the general store; other buy options shown too."}
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
                       {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}

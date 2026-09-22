@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher };')(
+    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopChangeFor, shopHeadline };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -445,6 +445,47 @@ function runtime(answer, log) {
     const said = ['container', 'site', 'nosite', 'unnamed', 'selfpublished', null]
       .map(k => api.publisherNote(k, k === 'container' || k === 'site'));
     eq(new Set(said).size, said.length, 'C-078a: still no two outcomes printing the same sentence');
+  }
+
+  // C-079 to C-090: a book leaving the shop, and coming back.
+  // Her ruling 22 Sep. A row ever found in the shop read "In the museum shop"
+  // forever, because nothing compared one lookup against the last - and a
+  // catalogue selling out is the thing this whole app watches for.
+  {
+    const api = lift({ document: {}, localStorage: {} });
+    const chg = (prevState, prevChange, next) => api.shopChangeFor(prevState, prevChange, next);
+
+    // A FIRST LOOKUP IS NOT A CHANGE. Nothing was ever searched, so neither
+    // sentence has any news in it.
+    eq(chg(null, null, 'shop'), null, 'C-079: a first lookup finding the shop announces nothing');
+    eq(chg(null, null, 'web'), null, 'C-080: nor does a first lookup that misses it');
+
+    // The two triggers she asked for.
+    eq(chg('shop', null, 'web'), 'gone', 'C-081: was in the shop, now is not');
+    eq(chg('web', null, 'shop'), 'back', 'C-082: was not in the shop, now is');
+    eq(chg('none', null, 'shop'), 'back',
+       'C-083: and "no catalogue at all" last time counts as not being in the shop');
+
+    // GONE IS STICKY. The book is still gone on the next search and the one
+    // after, so the red has to survive a lookup that finds the same nothing.
+    eq(chg('web', 'gone', 'web'), 'gone', 'C-084: still gone on the next search, still red');
+    eq(chg('web', 'gone', 'shop'), 'back', 'C-085: and it goes green the moment it returns');
+
+    // BACK IS NOT STICKY. "Now" is news, and news expires.
+    eq(chg('shop', 'back', 'shop'), null, 'C-086: the search after that reads plainly again');
+    eq(chg('shop', null, 'shop'), null, 'C-087: a book that never left says nothing new');
+    eq(chg('web', null, 'web'), null, 'C-088: nor does one that was never there');
+
+    // The wording, hers.
+    eq(api.shopHeadline('shop', null), 'In the museum shop.', 'C-089: the plain green sentence');
+    eq(api.shopHeadline('shop', 'back'), 'Now in the museum shop.',
+       'C-089a: the word NOW is what carries the news');
+    eq(api.shopHeadline('web', 'gone'), 'No longer in the museum shop.',
+       'C-090: and the red one says it plainly');
+    eq(api.shopHeadline('web', null), null,
+       'C-090a: an ordinary miss adds no headline at all');
+    eq(api.shopHeadline('none', 'gone'), null,
+       'C-090b: a row with no catalogue shows its own line, not this one');
   }
 
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');

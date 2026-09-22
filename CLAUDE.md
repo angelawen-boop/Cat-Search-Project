@@ -618,7 +618,7 @@ differing in one model string.
 ```
 id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
 acquiring, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
-publisherUrl, publisherResult, shopUrl, shopState, addedAt, editedAt
+publisherUrl, publisherResult, shopUrl, shopState, shopChange, addedAt, editedAt
 ```
 
 Ledger backup is JSON; the sweep pro forma is CSV.
@@ -681,6 +681,56 @@ when it is working as designed.
 
 **Urgency tiers** are computed live from dates versus today (`tierFor`). No data
 written, no internet call.
+
+### A book leaving the shop — her ruling, 22 Sep 2026
+
+**A row ever found in the shop read "In the museum shop" FOREVER**, because
+nothing compared one lookup against the last. **Catalogues selling out is the
+thing this app exists to watch**, so the single event it most needed to show
+was the one it could not.
+
+**HER QUESTION FIRST, BECAUSE THE ANSWER IS A REAL LIMIT.** When she clicks
+Museum shop and sees for herself that the book has gone, **the app learns
+nothing**: the link opens a tab, and a page cannot see what comes back in a tab
+it opened. That is a browser rule, not something to engineer around. So the
+status moves only when the app itself re-opens that page, and only a lookup
+does that. **Her choice: on Search again and nowhere else** — which costs no
+extra calls, because the lookup already re-reads the shop page for the ISBN.
+A background check on every click was offered and not taken.
+
+| Last time | This time | What the card says |
+|---|---|---|
+| in the shop | not in the shop | **No longer in the museum shop.** — bold, dark red |
+| not in the shop (or no catalogue) | in the shop | **Now in the museum shop.** — the ordinary green |
+| never searched | either | the plain sentence, no news |
+
+**THE RETURN MATTERS AS MUCH AS THE LOSS, and that half is hers.** A shop pulls
+a page while a book is merely out of stock and puts it back; a museum simply
+fails to maintain its own site. Both look like a loss and neither is permanent.
+Same green as the plain sentence — **the word NOW carries the news**, and a
+second colour would make a book coming back read as a different kind of thing
+from a book being there.
+
+**"GONE" IS STICKY, "BACK" IS NOT**, and the asymmetry is deliberate. A book
+that left is still gone on the next search, so the red survives a lookup that
+finds the same nothing (`shopChange` remembers). "Now" is news and news
+expires: the search after that reads "In the museum shop." again.
+
+**A FIRST LOOKUP IS NOT A CHANGE.** No previous state means neither sentence
+fires — announcing "Now in the museum shop" on a row nobody had searched would
+be news only to the app.
+
+**The red is the "closed over a year" ink**, already muted, already carrying a
+dark-mode partner, and no loose hex added — her instruction was a dark red and
+not a fire engine. `shopChangeFor` and `shopHeadline` sit outside the component
+so fixtures reach them; C-079 to C-090b, verified by dropping the sticky half
+and watching C-084 fail.
+
+**ONE CASE NOT COVERED, raised rather than decided:** a book that was in the
+shop and whose next lookup finds NO catalogue anywhere drops to "No catalogue
+found for this exhibition." and says nothing about having had one. That is the
+loudest out-of-print signal there is and it currently reads like a row that
+never had a catalogue. Not built — her call.
 
 **Catalogue lookup — REBUILT 21 SEP 2026, and the route is now what she always
 designed.** It is no longer two stages. In order, each step running only if the
@@ -1069,7 +1119,7 @@ offered and declined.**
 
 **Both decisions sit OUTSIDE the component**, for the reason `countDecisions`
 moved out: a rule a fixture cannot reach is a rule nobody checks. Fixtures C-001 to
-C-078a in `scraper/fixtures/catalogue_lookup.js`, verified by overwriting a known
+C-090b in `scraper/fixtures/catalogue_lookup.js`, verified by overwriting a known
 publisher, by accepting a 10-digit ISBN, and by putting the old ISBN-only gate
 back and watching C-013a fail. **It does not press the button**: the wiring from a finished lookup into
 the fill is read, not run.
@@ -1278,7 +1328,7 @@ pressed is still uncovered.
 
 **On `main` since the 20 Sep merge**, with the JSX they test. `npm test` runs 190
 unit checks, the 62 intake cases, the load check, the render check, then the
-catalogue-lookup cases (88 on 22 Sep) — and the **exit code** says whether all five
+catalogue-lookup cases (104 on 22 Sep) — and the **exit code** says whether all five
 passed, not the first number to scroll past. An early `return` in a fixture file
 exits the whole suite and the summary just stops printing (the fourth silent suite
 this guide has recorded) — await, never return. They only ran at all from 20 Sep:
@@ -2381,6 +2431,10 @@ Each entry cost a real failure. Before changing the area, read the line.
   blockbuster handed to a big art-book house, and a joint show where the
   other museum prints it. **The list is of publishers actually seen
   self-publishing, and it is added to by her, never inferred.**
+- A status that could only ever be set, never changed. "In the museum shop"
+  was written once and no lookup ever compared itself to the last one, so a
+  catalogue that sold out went on reading green forever — **in an app whose
+  entire subject is catalogues selling out.**
 - An early `return` inside `catalogue_lookup.js`, which exits the whole suite
   so the summary line stops printing. **The fourth silent suite this guide has
   had to record.** Await, never return.
@@ -2598,14 +2652,27 @@ Each entry cost a real failure. Before changing the area, read the line.
    had to fix, in order**: the shop step ending on a book with no ISBN, the
    Publisher button being unreachable, a step that dies looking like an answer,
    and four rounds of query-tuning where the answer was to go to the publisher's
-   site. Fixtures C-001 to C-078a.
+   site. Fixtures C-001 to C-090b.
 
    **STILL OPEN.** The 14 venues she has no rows for yet — their shop addresses
    are checked but no lookup has run against them; that happens during the 320
    decisions. `khm`'s shop queues every request and `uffizi` has no catalogues
    page, so both behave as if they had no shop; neither has been seen live.
 
-   **THE "OLD TUNING QUESTION" IS WHICH MODEL READS THE RESULTS**, and the
+   **THE MODEL QUESTION IS CLOSED, 22 Sep.** The choice is no longer Haiku vs
+   Sonnet — the app does not pick a model at all, it asks the viewer's Claude,
+   and the only dial is `modelTier`: **quick / default / complex**. It sits on
+   `default` and stays there. `quick` is cheaper and its failure mode is
+   exactly the misreading this route spent two days fixing (which of eight
+   results is the book, is this page the book or a shelf); `complex` costs more
+   on every one of up to three reads per lookup. **Nothing has misread in her
+   testing, so there is no signal to tune against** — reopen only on a real
+   misread. **The filename `Cat_Watch_v10.2_haiku.jsx` is a fossil of the old
+   question and is now literally wrong**; the only model string left in the
+   file says `claude-sonnet-4-6` and sits in the retired Drive code nothing
+   calls. Renaming was offered.
+
+   **THE BACKSTORY, recovered 22 Sep from `afa25d1`**, and the
    phrase had been carried forward for three days with nothing left behind it
    — recovered 22 Sep from `afa25d1`, where it reads in full: *"Catalogue
    lookup tuning — Haiku vs Sonnet, on known-tricky catalogues."* Every
