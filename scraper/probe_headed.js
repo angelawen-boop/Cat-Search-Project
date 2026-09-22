@@ -45,6 +45,12 @@
 //   node scraper/probe_headed.js open     Open it again — and LEAVE it open.
 //   node scraper/probe_headed.js B        Run B, into that open browser.
 //
+//   --pace=<seconds>                      The gap left between pages, varied.
+//                                         Default 30. Its ABSENCE is what cost
+//                                         the 22 Sep run: five addresses fired
+//                                         back to back, the first clean and
+//                                         every one after it challenged.
+//
 //   node scraper/probe_headed.js page <url> <url>
 //                                         Visit exactly those addresses and
 //                                         follow NOTHING. Used once access is
@@ -105,10 +111,55 @@ const MAX_VISITS = 6;
 // How long a challenge is given to clear. POLLED, never a fixed pause: a fixed
 // pause answers two questions at once — has it finished, and is it ever going
 // to — and cannot tell them apart. This asks every two seconds and stops the
-// moment the answer changes, so "cleared in 4s" and "still there at 60s" are
+// moment the answer changes, so "cleared in 4s" and "still there at 20s" are
 // different recorded facts rather than the same wait.
-const CHALLENGE_WAIT_MS = 60000;
+//
+// TWENTY SECONDS, DOWN FROM SIXTY. Her own browser's check clears in a few
+// seconds; one that is still there at twenty is not going to pass. Waiting a
+// full minute on each of four refusals meant four minutes of a browser openly
+// failing a bot test over and over, which deepens the very judgement we are
+// trying not to attract. Her rule, 22 Sep: tick it once, and if that does not
+// work, stop.
+const CHALLENGE_WAIT_MS = 20000;
 const POLL_MS = 2000;
+
+// THE GAP BETWEEN PAGES — the thing whose absence cost us the 22 Sep run.
+//
+// The probe fired five addresses back to back, four of them at one museum, in
+// a couple of seconds. The first came back clean and every one after it was
+// challenged. Nothing that browses like a person loads four pages that fast,
+// and the judgement followed us to the other venue, because both sit behind
+// the same protection.
+//
+// VARIED, NOT A METRONOME. A request every exactly-thirty-seconds is its own
+// signature; real reading is uneven. So the gap is the base plus up to half of
+// it again, drawn fresh each time.
+//
+// Overridable with --pace=<seconds>, because the right gap is not known yet and
+// finding it is the point of the next run.
+const PACE_ARG = process.argv.find(a => /^--pace=/.test(a));
+const PACE_MS = PACE_ARG ? Math.max(0, Number(PACE_ARG.split('=')[1]) * 1000) : 30000;
+
+function paceGap() {
+  return Math.round(PACE_MS + Math.random() * PACE_MS * 0.5);
+}
+
+async function pace(page, index) {
+  if (index === 0 || PACE_MS === 0) return;        // nothing to pace against yet
+  const ms = paceGap();
+  console.log(`   (waiting ${Math.round(ms / 1000)}s before the next page)`);
+  await page.waitForTimeout(ms);
+}
+
+// STOP AT THE FIRST REFUSAL THAT DOES NOT CLEAR.
+//
+// On 22 Sep the run kept going after the first blocked page and asked four more
+// times, each one failing in front of the same watcher. Carrying on cannot
+// learn anything the first refusal has not already said, and it makes the next
+// attempt worse. One refusal ends the run.
+function isRefusal(rec) {
+  return rec && (rec.outcome === 'challenge-not-cleared' || rec.outcome === 'refused-outright');
+}
 
 // ── Finding the real Chrome ───────────────────────────────────────────────────
 // Both halves, deliberately: a hardcoded path is how the scraper lost a day
@@ -294,6 +345,7 @@ async function probeVenue(page, target, budget) {
     // address on the venue's own host, never a mailto: or an offsite link.
     const detailUrl = out.listing.firstLinks[0];
     console.log(`   → now one exhibition page: ${detailUrl}`);
+    await pace(page, 1);
     out.detail = await visit(page, detailUrl, target, budget);
   } else {
     out.detail = { outcome: 'not-attempted', note: 'the listing did not let us in' };
@@ -368,19 +420,30 @@ async function runPages(urls) {
   const page = await context.newPage();
   const budget = { used: 0, cap: urls.length };
   const results = [];
-  for (const u of urls) {
+  let stopped = null;
+  for (let i = 0; i < urls.length; i++) {
+    const u = urls[i];
     const base = new URL(u).origin;
     // Every link on the page is recorded, filtered only for "is a real web
     // address on this venue's own host". What counts as an exhibition link is
     // hers to decide from the live page, not this probe's to guess.
     const target = { base, selector: 'a[href]', isNav: () => false };
+    await pace(page, i);
     console.log(`=== ${u}`);
     const rec = await visit(page, u, target, budget);
     results.push({ code: new URL(u).host, listing: rec, detail: { outcome: 'not-attempted', note: 'this mode follows nothing' } });
     console.log('');
+    if (isRefusal(rec)) {
+      stopped = { after: i + 1, of: urls.length, url: u, outcome: rec.outcome };
+      console.log(`Refused at address ${i + 1} of ${urls.length}. Stopping the run here.`);
+      console.log('Asking again cannot learn anything this refusal has not already said,');
+      console.log('and it makes the next attempt worse.\n');
+      break;
+    }
   }
   await context.close().catch(() => {});
-  return { run: 'PAGES', how: 'exact addresses she named; nothing followed', results, visits: budget.used };
+  return { run: 'PAGES', how: 'exact addresses she named; nothing followed',
+           paceSeconds: PACE_MS / 1000, stopped, results, visits: budget.used };
 }
 
 async function runA() {
@@ -404,9 +467,20 @@ async function runA() {
   const page = await context.newPage();
   const budget = { used: 0 };
   const results = [];
-  for (const t of TARGETS) results.push(await probeVenue(page, t, budget));
+  let stopped = null;
+  for (let i = 0; i < TARGETS.length; i++) {
+    await pace(page, i);
+    const v = await probeVenue(page, TARGETS[i], budget);
+    results.push(v);
+    if (isRefusal(v.listing) || isRefusal(v.detail)) {
+      stopped = { after: i + 1, of: TARGETS.length, code: TARGETS[i].code };
+      console.log(`Refused at ${TARGETS[i].code}. Stopping the run here.\n`);
+      break;
+    }
+  }
   await context.close().catch(() => {});
-  return { run: 'A', how: 'scraper opened Chrome, profile seeded by her', results, visits: budget.used };
+  return { run: 'A', how: 'scraper opened Chrome, profile seeded by her',
+           paceSeconds: PACE_MS / 1000, stopped, results, visits: budget.used };
 }
 
 async function runB() {
@@ -423,11 +497,22 @@ async function runB() {
   const page = await context.newPage();
   const budget = { used: 0 };
   const results = [];
-  for (const t of TARGETS) results.push(await probeVenue(page, t, budget));
+  let stopped = null;
+  for (let i = 0; i < TARGETS.length; i++) {
+    await pace(page, i);
+    const v = await probeVenue(page, TARGETS[i], budget);
+    results.push(v);
+    if (isRefusal(v.listing) || isRefusal(v.detail)) {
+      stopped = { after: i + 1, of: TARGETS.length, code: TARGETS[i].code };
+      console.log(`Refused at ${TARGETS[i].code}. Stopping the run here.\n`);
+      break;
+    }
+  }
   // Her window stays open — we opened a tab in it and close only that.
   await page.close().catch(() => {});
   await browser.close().catch(() => {});
-  return { run: 'B', how: 'she opened Chrome; the scraper read its pages', results, visits: budget.used };
+  return { run: 'B', how: 'she opened Chrome; the scraper read its pages',
+           paceSeconds: PACE_MS / 1000, stopped, results, visits: budget.used };
 }
 
 // ── Writing it down ──────────────────────────────────────────────────────────
@@ -448,7 +533,12 @@ function report(payload) {
       console.log(`         browser announced it was being driven: ${l.webdriverFlag}`);
     }
   }
-  console.log(`\nPages visited: ${payload.visits}.`);
+  console.log(`\nPages visited: ${payload.visits}, with about ${payload.paceSeconds}s between them.`);
+  if (payload.stopped) {
+    console.log(`The run STOPPED EARLY at ${payload.stopped.url || payload.stopped.code}`
+              + ` — ${payload.stopped.after} of ${payload.stopped.of} attempted.`);
+    console.log('The rest were not asked for, deliberately.');
+  }
   console.log(`Written to ${file}`);
   console.log('\nThis says whether a venue still refuses. It cannot say a venue');
   console.log('works — only a real sweep can.');
@@ -482,4 +572,7 @@ function report(payload) {
   console.log('');
   console.log('Or visit named pages and follow nothing:');
   console.log('  node scraper/probe_headed.js page https://... https://...');
+  console.log('');
+  console.log(`Every mode leaves about ${PACE_MS / 1000}s between pages and stops at the`);
+  console.log('first check that will not clear. Change the gap with --pace=<seconds>.');
 })();
