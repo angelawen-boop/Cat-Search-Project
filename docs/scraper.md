@@ -152,6 +152,37 @@ Sources in order: **structured data** → the **listing card** (`datesNearLink`)
 The detail scan runs whenever *either* date is missing and **fills only empty
 fields — the listing wins on disagreement.**
 
+### A closing side that is not a date — 22 Sep 2026
+
+Found by running MoMA's real listing text through the parser rather than
+reading it off a screenshot. **`Aug 1, 2026–Summer 2027` wrote 1 Aug 2026 into
+the CLOSING column** — the opening date, in the field her whole out-of-print
+window is calculated from. It fell through every range pattern (the closing
+side is not a date) to the single-date rule, which had no reason to know it was
+half of a range.
+
+**Not a gap. A wrong answer shaped exactly like a right one**, and no count or
+QC pass could see it: the row had a plausible date in a plausible column.
+
+Four shapes now read correctly, all above the single-date rule, and the
+placement is the fix:
+
+| Card | Reads as |
+|---|---|
+| `Aug 1, 2026–Summer 2027` | opens 1 Aug 2026, no closing date, 2027 kept as a bound |
+| `Sep 3, 2026—Spring 2027` | same, em dash — MoMA uses both |
+| `Mar 8, 2025–ongoing` | opens 8 Mar 2025, still open |
+| `Through Oct 4`, `Ongoing from Oct 19` | month-first, no year — the year is derived |
+
+**The derived year has one answer, so it is code.** A listing of what is on now
+cannot describe a show that closed last March, so a month already past belongs
+to next year — the same reasoning `startYearFor()` uses on the opening side.
+`findDateRange` takes an optional `today` so a fixture can pin it; a parser
+that silently read the clock would pass in September and fail in November.
+
+Fixtures MO-001 to MO-010. No other venue produced any of these shapes — every
+committed sweep was checked — so nothing existing changed behaviour.
+
 ### Formats handled, all found in the wild
 
 ```

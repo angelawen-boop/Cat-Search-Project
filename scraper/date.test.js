@@ -1269,6 +1269,86 @@ test('R-004: the two sets do not overlap and cover every venue', () => {
   assert.strictEqual(home.length + container.length, codes.length);
 });
 
+// ── A CLOSING SIDE THAT IS NOT A DATE, AND A DATE WITH NO YEAR ─────────────
+//
+// MoMA's listing, read from the page she saved on 22 Sep 2026. Eleven date
+// shapes on one page, five of which no other venue produces. Each case asks
+// the rule directly — what went into which column — rather than reading it off
+// `raw` or any other side effect.
+//
+// `today` is pinned. These rules derive a year from the current date, so a
+// fixture that let the parser consult the real clock would pass in September
+// and fail in November, and neither result would mean anything.
+const MOMA_TODAY = new Date(Date.UTC(2026, 8, 22));
+const momaRange = (s) => {
+  const r = findDateRange(s, { today: MOMA_TODAY });
+  return [r.start || '', r.end || '', r.latestYear || null];
+};
+
+test('MO-001: a season on the closing side is an OPENING date, never a closing one', () => {
+  // THE FAILURE THIS REPLACES. "Aug 1, 2026-Summer 2027" fell through to the
+  // single-date rule, which found "Aug 1, 2026" and wrote it as the CLOSING
+  // date — so a show opening in August 2026 was recorded as having closed in
+  // August 2026. Not a gap: a wrong answer shaped like a right one, in the one
+  // column her out-of-print window is calculated from.
+  assert.deepStrictEqual(momaRange('Aug 1, 2026–Summer 2027'), ['2026-08-01', '', 2027]);
+});
+
+test('MO-002: and with an em dash, which MoMA also uses', () => {
+  // Yoko Ono: IMAGINE PEACE is the only card on the page using U+2014.
+  assert.deepStrictEqual(momaRange('Sep 3, 2026—Spring 2027'), ['2026-09-03', '', 2027]);
+});
+
+test('MO-003: the season year is kept as a lookback bound, not written as a date', () => {
+  const [start, end, bound] = momaRange('Apr 23, 2026–Fall 2026');
+  assert.strictEqual(start, '2026-04-23');
+  assert.strictEqual(end, '', 'no day was published, so nothing is written');
+  assert.strictEqual(bound, 2026, 'but the year IS published and is a real bound');
+});
+
+test('MO-004: "open-ended" is an opening date with no closing one', () => {
+  assert.deepStrictEqual(momaRange('Mar 8, 2025–ongoing'), ['2025-03-08', '', null]);
+});
+
+test('MO-005: "Through Oct 4" — month-first, no year, and it closes', () => {
+  // Every current MoMA show prints this. The existing preposition rules are
+  // day-first and all require a year, so all of them came back with no closing
+  // date at all.
+  assert.deepStrictEqual(momaRange('Last chance\nThrough Oct 4'), ['', '2026-10-04', null]);
+});
+
+test('MO-006: a month already past belongs to NEXT year', () => {
+  // Read on 22 Sep 2026. A listing of what is on now cannot be describing a
+  // show that closed in March, so March means March 2027. Same reasoning
+  // startYearFor() already uses on the opening side.
+  assert.deepStrictEqual(momaRange('Through Mar 3'), ['', '2027-03-03', null]);
+});
+
+test('MO-007: "Ongoing from Oct 19" opens, it does not close', () => {
+  assert.deepStrictEqual(momaRange('Ongoing from Oct 19'), ['2026-10-19', '', null]);
+});
+
+test('MO-008: a bare "Ongoing" stays blank', () => {
+  assert.deepStrictEqual(momaRange('Ongoing'), ['', '', null]);
+});
+
+test('MO-009: a year that IS printed still wins over the derived one', () => {
+  // The new rules must not reach a card that the existing ones already read.
+  assert.deepStrictEqual(momaRange('Through Jan 2, 2027'), ['', '2027-01-02', null]);
+  assert.deepStrictEqual(momaRange('Mar 21–Jul 31, 2027'), ['2027-03-21', '2027-07-31', null]);
+});
+
+test('MO-010: a member preview never becomes the run', () => {
+  // Already true before any of this — recorded so it stays true. The preview
+  // line sits ABOVE the real range on the card.
+  assert.deepStrictEqual(
+    momaRange('Member Previews, Oct 1–3\nOct 4, 2026–Jan 23, 2027'),
+    ['2026-10-04', '2027-01-23', null]);
+  assert.deepStrictEqual(
+    momaRange('Member Previews, Mar 18–20\nMar 21–Jul 31, 2027'),
+    ['2027-03-21', '2027-07-31', null]);
+});
+
 // ── THE NOTE QUOTES THE MATCH, NEVER THE WHOLE PAGE ─────────────────────────
 //
 // `raw` is written verbatim into the notes column, and the notes column is

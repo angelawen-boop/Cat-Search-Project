@@ -1018,6 +1018,82 @@ function findDateRangeCore(raw, opts = {}) {
     if (mo) return sane(ymd(m[4], mo, m[2]), ymd(m[4], mo, m[3]), frag(m));
   }
 
+  // ── A RANGE WHOSE CLOSING SIDE IS NOT A DATE ──────────────────────────────
+  //
+  // MoMA prints "Aug 1, 2026-Summer 2027", "Sep 3, 2026-Spring 2027" and
+  // "Mar 8, 2025-ongoing". Every one of those has a real, published OPENING
+  // date and a closing side the museum has deliberately left vague.
+  //
+  // These must be caught HERE, above the single-date rule below, and that
+  // placement is the whole point. Left to fall through, the single-date rule
+  // found "Aug 1, 2026", had no reason to think it was half of a range, and
+  // wrote it into the CLOSING column — so an exhibition opening in August 2026
+  // was recorded as having closed in August 2026. Not a gap: a wrong answer
+  // shaped exactly like a right one, in the column her whole out-of-print
+  // window is calculated from.
+  //
+  // What is written is what the venue actually published: the opening date,
+  // and NO closing date. The season's year is kept as `latestYear`, which is
+  // a genuine upper bound for the lookback without inventing a day.
+  m = s.match(new RegExp(
+    `(${M}\\s+\\d{1,2},\\s*\\d{4})${RANGE_SEP}` +
+    `(?:(spring|summer|autumn|fall|winter)\\s+(\\d{4})|(ongoing|present|tbc|tba))`, 'i'));
+  if (m) {
+    const start = parseMonthDay(titleCase(m[1]), null) || '';
+    if (start) {
+      const seasonYear = m[3] && plausibleYear(m[3]) ? +m[3] : null;
+      return {
+        start, end: '',
+        ...(seasonYear ? { latestYear: seasonYear } : {}),
+        shownText: m[0].trim(),
+        shownWhy: m[2]
+          ? 'the venue gives a season, not a closing date'
+          : 'the venue has not announced a closing date',
+        raw: frag(m),
+      };
+    }
+  }
+
+  // ── A MONTH AND DAY WITH NO YEAR, CARRYING A PREPOSITION ──────────────────
+  //
+  // MoMA's current shows print "Through Oct 4" and "Through Nov 29"; its
+  // rolling ones print "Ongoing from Oct 19". Month-first, and no year at all
+  // — the existing preposition rules are day-first and all require one, so
+  // every current MoMA exhibition came back with NO CLOSING DATE. That is the
+  // one column this project cannot do without.
+  //
+  // THE YEAR IS DERIVED, NOT GUESSED, and only in a case where the derivation
+  // has one answer. A listing of what is on now cannot be telling us about a
+  // show that closed last year, so the closing date is the next occurrence of
+  // that month and day: this year if it has not passed, otherwise next. That
+  // is the same reasoning startYearFor() already uses to put an opening year
+  // on "December 5 - January 20, 2026", and it is logic rather than a guess.
+  //
+  // `today` is a parameter with a real default so a fixture can pin it. A
+  // parser that silently consulted the clock would pass in September and fail
+  // in November, which is a test that cannot be trusted either way.
+  if (looseSingles) {
+    const today = opts.today instanceof Date ? opts.today : new Date();
+    const nextOccurrence = (mo, day) => {
+      const y = today.getUTCFullYear();
+      const thisYear = Date.UTC(y, mo - 1, day);
+      const cutoff = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+      return thisYear >= cutoff ? y : y + 1;
+    };
+
+    m = s.match(new RegExp(`\\b(?:till|until|through|thru)\\s+(${M})\\s+(\\d{1,2})\\b(?!,?\\s*\\d{4})`, 'i'));
+    if (m) {
+      const mo = monthNum(m[1]), day = parseInt(m[2], 10);
+      if (mo) return { start: '', end: ymd(nextOccurrence(mo, day), mo, day), raw: frag(m) };
+    }
+
+    m = s.match(new RegExp(`\\b(?:ongoing from|from|opens?|opening)\\s+(${M})\\s+(\\d{1,2})\\b(?!,?\\s*\\d{4})`, 'i'));
+    if (m) {
+      const mo = monthNum(m[1]), day = parseInt(m[2], 10);
+      if (mo) return { start: ymd(nextOccurrence(mo, day), mo, day), end: '', raw: frag(m) };
+    }
+  }
+
   // Single "Month D, YYYY" — treat as the end date (open until).
   // Bare, with no preposition to anchor it, so it is a listing-card rule only.
   if (looseSingles) {
