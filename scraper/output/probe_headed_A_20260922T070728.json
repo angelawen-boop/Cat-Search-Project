@@ -1,0 +1,125 @@
+{
+  "run": "A",
+  "how": "scraper opened Chrome, profile seeded by her",
+  "results": [
+    {
+      "code": "moma",
+      "listing": {
+        "url": "https://www.moma.org/calendar/exhibitions",
+        "at": "2026-09-22T07:07:20.202Z",
+        "status": 200,
+        "cfMitigated": "(none)",
+        "cfCacheStatus": "DYNAMIC",
+        "server": "cloudflare",
+        "webdriverFlag": true,
+        "challengeAppeared": false,
+        "challengeWaitedMs": 0,
+        "title": "Galleries and exhibitions | MoMA",
+        "textLength": 2131,
+        "exhibitionLinks": 24,
+        "firstLinks": [
+          "/calendar/exhibitions/5890",
+          "/calendar/exhibitions/5928",
+          "/calendar/exhibitions/5912"
+        ],
+        "textOpening": "Skip to main content Visit Exhibitions and events Art and artists Store Membership Donate Tickets In the galleries See what’s on at MoMA PS1 Collection 1880–1950 Floor 5 Collection 1950–1980 Floor 4 Collection 1980–Today New on view Floor 2 Current exhibitions Peggy Weil Core Memory Last chance Thro",
+        "outcome": "in"
+      },
+      "detail": {
+        "url": "https://www.moma.org/calendar/exhibitions/5890",
+        "at": "2026-09-22T07:07:22.480Z",
+        "status": 200,
+        "cfMitigated": "(none)",
+        "cfCacheStatus": "DYNAMIC",
+        "server": "cloudflare",
+        "webdriverFlag": true,
+        "challengeAppeared": false,
+        "challengeWaitedMs": 0,
+        "title": "Peggy Weil: Core Memory | MoMA",
+        "textLength": 2219,
+        "exhibitionLinks": 17,
+        "firstLinks": [
+          "/calendar/exhibitions/history?sort_date=closing_date&mde_type=Exhibition&location=both",
+          "/calendar/exhibitions/5890/installation_images/56832",
+          "/calendar/exhibitions/5890/installation_images/56832"
+        ],
+        "textOpening": "Skip to main content Visit Exhibitions and events Art and artists Store Membership Donate Tickets Peggy Weil Core Memory Last chance Through Oct 4 MoMA Exhibition MoMA, Floor 1, Garden Lobby The Agnes Gund Garden Lobby “The pace of climate change is too slow to apprehend,” says artist Peggy Weil, “a",
+        "outcome": "in"
+      }
+    },
+    {
+      "code": "brit",
+      "listing": {
+        "url": "https://www.britishmuseum.org/exhibitions-events/past-exhibitions",
+        "at": "2026-09-22T07:07:23.618Z",
+        "status": 200,
+        "cfMitigated": "(none)",
+        "cfCacheStatus": "EXPIRED",
+        "server": "cloudflare",
+        "webdriverFlag": true,
+        "challengeAppeared": false,
+        "challengeWaitedMs": 0,
+        "title": "Past exhibitions | British Museum",
+        "textLength": 29307,
+        "exhibitionLinks": 1,
+        "firstLinks": [
+          "mailto:?body=https://www.britishmuseum.org/exhibitions-events/past-exhibitions&subject=Past%20exhibitions"
+        ],
+        "textOpening": "Skip to main content Menu Past exhibitions Show image caption You are in the Exhibitions and events section Home Exhibitions and events Past exhibitions Share the page Share on Facebook (Opens in new window) Share on X (formerly Twitter) (Opens in new window) Share using email Share on WhatsApp (Ope",
+        "outcome": "in"
+      },
+      "detail": {
+        "url": "mailto:?body=https://www.britishmuseum.org/exhibitions-events/past-exhibitions&subject=Past%20exhibitions",
+        "at": "2026-09-22T07:07:26.206Z",
+        "outcome": "error",
+        "note": "page.goto: net::ERR_ABORTED at mailto:?body=https://www.britishmuseum.org/exhibitions-events/past-exhibitions&subject=Past%20exhibitions"
+      }
+    },
+    {
+      "code": "morgan",
+      "listing": {
+        "url": "https://www.themorgan.org/exhibitions/current",
+        "at": "2026-09-22T07:07:26.236Z",
+        "status": 200,
+        "cfMitigated": "(none)",
+        "cfCacheStatus": "DYNAMIC",
+        "server": "cloudflare",
+        "webdriverFlag": true,
+        "challengeAppeared": false,
+        "challengeWaitedMs": 0,
+        "title": "Current Exhibitions | The Morgan Library & Museum",
+        "textLength": 1336,
+        "exhibitionLinks": 9,
+        "firstLinks": [
+          "/exhibitions/online",
+          "/exhibitions/tarot",
+          "/exhibitions/hujar-contact"
+        ],
+        "textOpening": "Skip to main content Toggle navigation Plan your visit. 225 Madison Avenue at 36th Street, New York, NY 10016. Current Exhibitions Tarot! Renaissance Symbols, Modern Visions June 26 through October 4, 2026 Hujar:Contact May 22 through October 25, 2026 Friends Who Came to See Me: Drawings from John A",
+        "outcome": "in"
+      },
+      "detail": {
+        "url": "https://www.themorgan.org/exhibitions/online",
+        "at": "2026-09-22T07:07:27.930Z",
+        "status": 200,
+        "cfMitigated": "(none)",
+        "cfCacheStatus": "DYNAMIC",
+        "server": "cloudflare",
+        "webdriverFlag": true,
+        "challengeAppeared": false,
+        "challengeWaitedMs": 0,
+        "title": "Online Exhibitions | The Morgan Library & Museum",
+        "textLength": 2881,
+        "exhibitionLinks": 16,
+        "firstLinks": [
+          "/exhibitions/online",
+          "/exhibitions/online/tarot",
+          "/exhibitions/online/mozart"
+        ],
+        "textOpening": "Skip to main content Toggle navigation Plan your visit. 225 Madison Avenue at 36th Street, New York, NY 10016. Online Exhibitions Tarot! Renaissance Symbols, Modern Visions See selected images from the exhibition and listen to the audio guide. Wolfgang Amadeus Mozart: Treasures from the Mozarteum Fo",
+        "outcome": "in"
+      }
+    }
+  ],
+  "visits": 6
+}
