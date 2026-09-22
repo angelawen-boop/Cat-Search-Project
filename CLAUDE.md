@@ -10,7 +10,7 @@ out-of-print window, so she can buy before it is too late.
 
 Two components, and they are **coupled**:
 
-1. **The app** — `Cat_Watch_v10.2_haiku.jsx`, a React artifact she runs inside Claude.
+1. **The app** — `Cat_Watch.jsx`, a React artifact she runs inside Claude.
 2. **The scraper** — `scraper/`, which produces the CSV the app eats.
 
 They agree on the pro forma CSV columns (§3). If the scraper changes what it
@@ -609,9 +609,60 @@ Losing or silently corrupting the ledger is the worst outcome the design guards
 against; it holds every tracked exhibition plus her marks (watching / dismissed /
 want-catalogue / acquired / catalogue details).
 
-Current build: `Cat_Watch_v10.2_haiku.jsx` (line count went stale twice when
-typed — `wc -l` answers it). An identical Sonnet copy exists on Claude chat,
-differing in one model string.
+Current build: `Cat_Watch.jsx` (line count went stale twice when
+typed — `wc -l` answers it).
+
+### The model question — CLOSED, her ruling 22 Sep 2026
+
+**There is one app, one file, and it names no model.** Everything below
+replaces the older notes on this, which described a world that has not
+existed since 20 Sep.
+
+**What the question WAS.** The app used to call Anthropic directly with a
+model string, and the only thing it used a model for was the catalogue
+lookup — so "Haiku or Sonnet for the JSX" and "which model does the lookup"
+were one question, written down once as a one-line to-do and **never
+argued**. Her memory of no debate is correct. It survived as the phrase
+"the old tuning question" for three days with nothing behind it; the
+original is in `afa25d1`: *"Catalogue lookup tuning — Haiku vs Sonnet, on
+known-tricky catalogues."*
+
+**Why it is moot.** The page cannot reach any outside address, so it does
+not choose a model at all — it asks the viewer's Claude through `sample`.
+The only dial is `modelTier`: **quick / default / complex**, and every one
+of the lookup's six `readResults` calls passes `default`.
+
+**Why `default` stays.** Those six reads are judgement on real text — which
+of eight results is the book, is this page the book or a shelf, is that ISBN
+in the small print. **`quick`'s failure mode is exactly the misreading this
+route spent two days fixing**; `complex` costs more on each of up to three
+reads per lookup. Nothing has misread in her testing, so **there is no
+signal to tune against**.
+
+**THERE WAS NEVER A SONNET BRANCH — checked, 22 Sep, not remembered.** Every
+branch in the repo, local and remote, has been searched: **one `.jsx` file
+has ever existed in this project's whole history.** The "identical Sonnet
+copy" this guide used to describe was a CLAUDE CHAT artifact, never a branch
+and never a file here — so there is nothing in git to close off. If that
+chat still exists it is a stale second app that cannot be updated and is
+missing every change since; **retiring it is hers to do, by deleting the
+chat.** (The `sonnet_*.json` files under `scraper/output/` are compression
+job files and have nothing to do with it.)
+
+**The file is renamed `Cat_Watch.jsx`** — `Cat_Watch_v10.2_haiku.jsx` was a
+fossil of a question that no longer exists and was literally wrong. No
+version number in the name either: the published version is already 30 and a
+number in a filename only drifts.
+
+**AND THE LAST MODEL STRING IS DELETED WITH IT.** `askDrive` carried
+`model: "claude-sonnet-4-6"` — the only model name left anywhere in the app.
+It sat in a Google Drive save routine that **nothing has called for months**,
+alongside a Claude cloud save reaching for a `window.storage` that does not
+exist and a JSON scraper for Drive's replies. All orphaned, all removed with
+`saveToDrive` and its three pieces of state; `LEDGER_PREFIX`, `localStamp`
+and `localReadable` stay because Export uses them. Git holds every line.
+**Dead code shaped like live code is a trap** — this guide's own rule, from
+`parseDateRange`.
 
 **Ledger row shape:**
 
@@ -2659,27 +2710,9 @@ Each entry cost a real failure. Before changing the area, read the line.
    decisions. `khm`'s shop queues every request and `uffizi` has no catalogues
    page, so both behave as if they had no shop; neither has been seen live.
 
-   **THE MODEL QUESTION IS CLOSED, 22 Sep.** The choice is no longer Haiku vs
-   Sonnet — the app does not pick a model at all, it asks the viewer's Claude,
-   and the only dial is `modelTier`: **quick / default / complex**. It sits on
-   `default` and stays there. `quick` is cheaper and its failure mode is
-   exactly the misreading this route spent two days fixing (which of eight
-   results is the book, is this page the book or a shelf); `complex` costs more
-   on every one of up to three reads per lookup. **Nothing has misread in her
-   testing, so there is no signal to tune against** — reopen only on a real
-   misread. **The filename `Cat_Watch_v10.2_haiku.jsx` is a fossil of the old
-   question and is now literally wrong**; the only model string left in the
-   file says `claude-sonnet-4-6` and sits in the retired Drive code nothing
-   calls. Renaming was offered.
-
-   **THE BACKSTORY, recovered 22 Sep from `afa25d1`**, and the
-   phrase had been carried forward for three days with nothing left behind it
-   — recovered 22 Sep from `afa25d1`, where it reads in full: *"Catalogue
-   lookup tuning — Haiku vs Sonnet, on known-tricky catalogues."* Every
-   `readResults` call passes `modelTier: "default"` and always has. Compression
-   MEASURED its split (Sonnet writes, Haiku judges); the lookup never did.
-   **A phrase is not an open item.** If this is ever picked up it needs
-   known-tricky rows to measure against, and her seed has few.
+   **WHICH MODEL — CLOSED, her ruling 22 Sep. Do not re-open without a real
+   misread.** `default` is right and stays. The rest of this is in §4, under
+   "The model question"; nothing about it is open.
 
    **REBUILT AGAIN 22 SEP: the publisher step now opens what it found.** Her
    diagnosis, from her own Rizzoli and Hannibal lookups — the route and the

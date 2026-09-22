@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * build_app.js — turn Cat_Watch_v10.2_haiku.jsx into the page she opens.
+ * build_app.js — turn Cat_Watch.jsx into the page she opens.
  *
  * WHY THIS EXISTS — her question, 22 Sep 2026, after watching a publish fail
  * and cost three round trips: "will putting it in the guide help future
@@ -62,7 +62,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
-const JSX = path.join(ROOT, 'Cat_Watch_v10.2_haiku.jsx');
+const JSX = path.join(ROOT, 'Cat_Watch.jsx');
 const HEAD = path.join(__dirname, 'shell_head.html');
 const TAIL = path.join(__dirname, 'shell_tail.html');
 const OUT_DIR = path.join(__dirname, 'dist');

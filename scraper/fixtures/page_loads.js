@@ -38,7 +38,7 @@ const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
-const JSX = path.join(__dirname, '..', '..', 'Cat_Watch_v10.2_haiku.jsx');
+const JSX = path.join(__dirname, '..', '..', 'Cat_Watch.jsx');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-load-'));
 
 // The same preparation the real build does, so this checks what SHIPS rather

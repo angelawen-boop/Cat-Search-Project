@@ -26,7 +26,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 const React = require('react');
 
-const JSX = path.join(__dirname, '..', '..', 'Cat_Watch_v10.2_haiku.jsx');
+const JSX = path.join(__dirname, '..', '..', 'Cat_Watch.jsx');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-lookup-'));
 
 // Prepared exactly as page_loads.js and page_renders.js prepare it. Three

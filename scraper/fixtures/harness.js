@@ -24,7 +24,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const JSX = path.join(__dirname, '..', '..', 'Cat_Watch_v10.2_haiku.jsx');
+const JSX = path.join(__dirname, '..', '..', 'Cat_Watch.jsx');
 
 function slice(src, startAnchor, endAnchor) {
   const a = src.indexOf(startAnchor);

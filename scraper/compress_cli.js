@@ -48,7 +48,7 @@ function newestRun() {
  * text to pair them with.
  */
 function buildExamples() {
-  const jsxPath = path.join(__dirname, '..', 'Cat_Watch_v10.2_haiku.jsx');
+  const jsxPath = path.join(__dirname, '..', 'Cat_Watch.jsx');
   const src = fs.readFileSync(jsxPath, 'utf8');
   const start = src.indexOf('const S=[');
   if (start === -1) throw new Error('seed array S not found in the JSX');
@@ -121,7 +121,7 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   if (!recompress) {
     try {
       const merged = C.mergeSeedMemory(
-        memory, C.seedMemory(path.join(__dirname, '..', 'Cat_Watch_v10.2_haiku.jsx')),
+        memory, C.seedMemory(path.join(__dirname, '..', 'Cat_Watch.jsx')),
         { seedWins });
       seedAdded = merged.added;
       seedKept = merged.overrode;
