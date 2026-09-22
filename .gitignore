@@ -22,3 +22,7 @@ scraper/output/**/.compress_done.json
 scraper/output/eval_pending.json
 scraper/output/eval_answers.json
 build/dist/
+
+# The headed probe's Chrome profile — cookies, history and any clearance it
+# picks up. Her machine only, rebuildable by browsing, and not ours to commit.
+scraper/chrome_profile/
