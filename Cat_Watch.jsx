@@ -991,29 +991,49 @@ function shopHeadline(shopState,shopChange){
   return null;
 }
 
-// THE LAST MODEL STRING IN THIS FILE IS GONE WITH IT — her instruction,
-// 22 Sep 2026, and the tidy-up is the point rather than a side effect.
-//
-// What sat here until today: a Google Drive save routine, a Claude cloud
-// save, and a JSON scraper for Drive’s replies. All three were marked
-// DORMANT months ago and NOTHING called any of them — safeSave reached for
-// a window.storage that does not exist, and askDrive posted to
-// api.anthropic.com, which the viewer’s sandbox has blocked since 20 Sep.
-// Dead code shaped like live code is a trap for whoever debugs this next;
-// git holds every line.
-//
-// IT MATTERED MORE THAN ORDINARY CLUTTER. askDrive carried
-// model:"claude-sonnet-4-6" — the ONLY model name left anywhere in the app,
-// a fossil of a question settled today (the page does not choose a model at
-// all now; it asks the viewer’s Claude). Leaving it would have left the next
-// session something to find and wonder about.
-//
-// These three are kept because Export still uses them.
+const SKEY="cw-v3";
+// DORMANT in v8: Claude cloud save is kept in the file but nothing calls it.
+// Drive is the single source of truth. Re-wire this only if Drive is retired.
+async function safeSave(rows,lastRun,lastSaved){const data=JSON.stringify({rows,lastRun,lastSaved:lastSaved||new Date().toISOString()});for(let i=0;i<3;i++){try{const r=await window.storage.set(SKEY,data,false);if(r)return{ok:true};}catch{}await new Promise(r=>setTimeout(r,500*(i+1)));}return{ok:false};}
+
+// ---- Google Drive spine (v8) ----------------------------------------------
+// Ledger files are saved as cat-watch-ledger-<localstamp>.json. Newest loads
+// on open; every save writes a NEW file (versioned backups, nothing deleted).
+const DRIVE_MCP={type:"url",url:"https://drivemcp.googleapis.com/mcp/v1",name:"google-drive"};
 const LEDGER_PREFIX="cat-watch-ledger-";
+let AUTOLOAD_FIRED=false; // module-level: survives a strict-mode remount so open never costs two Drive calls
 
 // Local 24hr timestamp (browser's timezone), e.g. 2026-08-23-2230 = 10:30pm local.
 function localStamp(){const d=new Date(),p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes());}
 function localReadable(){const d=new Date(),p=n=>String(n).padStart(2,"0");return p(d.getHours())+":"+p(d.getMinutes())+" "+p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+d.getFullYear();}
+
+// One instrumented call to Drive via the Anthropic API + MCP. Returns text + diagnostics.
+async function askDrive(prompt){
+  let res,raw;
+  try{
+    res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1500,messages:[{role:"user",content:prompt}],mcp_servers:[DRIVE_MCP]})});
+  }catch(e){return{ok:false,usedTool:false,text:"",detail:"Could not reach Drive (network): "+(e&&e.message?e.message:String(e))};}
+  if(!res.ok){raw=await res.text().catch(()=>"");return{ok:false,usedTool:false,text:"",detail:"HTTP "+res.status+" "+raw.slice(0,300)};}
+  raw=await res.text();
+  let data;try{data=JSON.parse(raw);}catch{return{ok:false,usedTool:false,text:"",detail:"Drive reply was not JSON."};}
+  const blocks=Array.isArray(data.content)?data.content:[];
+  const text=blocks.filter(b=>b.type==="text").map(b=>b.text).join("\n");
+  const usedTool=blocks.some(b=>b.type==="mcp_tool_use");
+  const toolErr=blocks.some(b=>b.type==="mcp_tool_result"&&b.is_error===true);
+  return{ok:true,usedTool,toolErr,text,detail:"blocks: "+blocks.map(b=>b.type).join(", ")+"\n"+text.slice(0,400)};
+}
+
+// Pull the newest ledger JSON out of a Drive read reply.
+function extractLedgerJson(text){
+  if(!text)return null;
+  let depth=0,start=-1,inStr=false,esc=false,best=null;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(inStr){if(esc)esc=false;else if(c==="\\")esc=true;else if(c==='"')inStr=false;continue;}
+    if(c==='"')inStr=true;else if(c==="{"){if(depth===0)start=i;depth++;}
+    else if(c==="}"){depth--;if(depth===0&&start!==-1){const chunk=text.slice(start,i+1);try{const o=JSON.parse(chunk);if(o&&Array.isArray(o.rows))best=o;}catch{}start=-1;}}}
+  return best;
+}
 
 export default function App(){
   const[rows,setRows]=useState([]);
@@ -1076,9 +1096,12 @@ export default function App(){
   const[saveState,setSaveState]=useState("idle");
   const[firstTime,setFirstTime]=useState(false);
   const[dirty,setDirty]=useState(false);
+  const[driveMsg,setDriveMsg]=useState(null);
   const[savedFile,setSavedFile]=useState(null);
   const[loadedInfo,setLoadedInfo]=useState(null);
   const[confirmBox,setConfirmBox]=useState(null); // {text, act} for confirm-before-replace
+  const[driveState,setDriveState]=useState("idle");
+  const driveStarted=useRef(false);
   const[,setTick]=useState(0);
   const[sortBy,setSortBy]=useState("date");
   const[venueF,setVenueF]=useState(new Set());
@@ -1215,6 +1238,28 @@ export default function App(){
     setPinTouched(false); setRefreshTouched([]);
   },[]);
 
+  // Write a NEW timestamped ledger copy to Drive. Never overwrites; nothing deleted.
+  const saveToDrive=useCallback(async()=>{
+    if(driveState==="saving")return;
+    setDriveState("saving");setError(null);
+    const fname=LEDGER_PREFIX+localStamp()+".json";
+    const payload=JSON.stringify({rows,ignored,lastRun,savedAt:new Date().toISOString(),savedLocal:localReadable()});
+    const prompt=
+      "Using Google Drive, create a NEW file named \""+fname+"\" whose entire text content is exactly this JSON:\n"+
+      payload+"\n"+
+      "Do NOT overwrite, modify, or delete any existing file \u2014 always create a new file. "+
+      "After saving, confirm the new file's name and its Drive file ID. Do not take any other action.";
+    const r=await askDrive(prompt);
+    if(r.ok&&r.usedTool&&!r.toolErr){
+      setDirty(false);setDriveState("saved");
+      setSavedFile(fname+"  ·  "+localReadable());
+      setDebug("Save to Drive OK.\n"+r.detail);
+    }else{
+      setDriveState("savefail");
+      setError("Save to Drive FAILED \u2014 your recent changes are NOT backed up. Try again, or use Export ledger to keep a local copy right now.");
+      setDebug("Save to Drive FAILED.\n"+r.detail);
+    }
+  },[rows,ignored,lastRun,driveState]);
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
   const clearFilters=()=>{setVenueF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqNoCat(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setSearch("");setShowSearch(false);};
 

@@ -654,15 +654,24 @@ fossil of a question that no longer exists and was literally wrong. No
 version number in the name either: the published version is already 30 and a
 number in a filename only drifts.
 
-**AND THE LAST MODEL STRING IS DELETED WITH IT.** `askDrive` carried
-`model: "claude-sonnet-4-6"` — the only model name left anywhere in the app.
-It sat in a Google Drive save routine that **nothing has called for months**,
-alongside a Claude cloud save reaching for a `window.storage` that does not
-exist and a JSON scraper for Drive's replies. All orphaned, all removed with
-`saveToDrive` and its three pieces of state; `LEDGER_PREFIX`, `localStamp`
-and `localReadable` stay because Export uses them. Git holds every line.
-**Dead code shaped like live code is a trap** — this guide's own rule, from
-`parseDateRange`.
+**ONE MODEL STRING SURVIVES, IN DORMANT CODE, AND IT STAYS UNTIL SHE SAYS
+OTHERWISE.** `askDrive` carries `model: "claude-sonnet-4-6"` — the only model
+name left anywhere in the app. It sits in the Google Drive save routine, which
+nothing has called for months, alongside a Claude cloud save reaching for a
+`window.storage` that does not exist.
+
+**A SESSION DELETED THAT WHOLE CLUSTER WITHOUT ASKING, AND SHE CAUGHT IT —
+22 Sep. It is restored, byte for byte.** The reasoning was that the code was
+orphaned and carried the string this very ruling was about. Both facts are
+true and **neither was permission**. Her question was the right one: *"did you
+ask me first if I never want to consider using Google drive for backup ever
+again?"* No. **Unreachable is not unwanted**, deleting a whole integration was
+never what "update files to reflect the model conclusion" asked for, and the
+narrow change that WOULD have served it — take out the model string and leave
+the routine — was never put to her.
+
+§8 does list Drive saving and auto-load as rejected, so she may well not want
+it back. **That is a reason to ask, not a reason to have acted.**
 
 **Ledger row shape:**
 
@@ -2486,6 +2495,13 @@ Each entry cost a real failure. Before changing the area, read the line.
   was written once and no lookup ever compared itself to the last one, so a
   catalogue that sold out went on reading green forever — **in an app whose
   entire subject is catalogues selling out.**
+- Deleting working-but-dormant code because it happened to carry something
+  the session WAS asked to change. The Google Drive save routine held the
+  last model string, so a ruling about model choice was treated as licence
+  to remove the whole integration — she had not been asked, and the narrow
+  change that actually served her instruction (take out the string, leave
+  the routine) was never offered. **Unreachable is not unwanted, and "it was
+  already dead" is a description, not a permission.**
 - An early `return` inside `catalogue_lookup.js`, which exits the whole suite
   so the summary line stops printing. **The fourth silent suite this guide has
   had to record.** Await, never return.
