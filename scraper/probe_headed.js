@@ -248,6 +248,16 @@ async function visit(page, url, target, budget) {
   rec.textLength = seen.text.length;
   rec.exhibitionLinks = links.length;
   rec.firstLinks = links.slice(0, 10);
+
+  // EVERY same-host path this page offers, deduped. A count cannot tell you
+  // what shape a venue's links are, and the first ten on a page built out of
+  // banners and menus are all navigation — which is exactly how the British
+  // Museum's recipe came to hunt for `/exhibitions-events/` when its actual
+  // exhibitions live at `/exhibitions/`. Nobody could see that from a number.
+  // Capped, because a listing page can carry hundreds and the point is the
+  // SHAPE, not the inventory.
+  rec.allPaths = [...new Set(links.map(u => { try { return new URL(u).pathname; } catch { return u; } }))]
+    .slice(0, 300);
   // Kept so a thin page can be told apart from an empty one by reading it,
   // rather than by trusting a number. A count flattens the evidence.
   rec.textOpening = seen.text.replace(/\s+/g, ' ').trim().slice(0, 300);
