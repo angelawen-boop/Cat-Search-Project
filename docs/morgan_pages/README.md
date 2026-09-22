@@ -8,6 +8,9 @@ produce any of them.
 | `exhibition_tarot.mhtml` | `/exhibitions/tarot` | current |
 | `exhibition_william_blake.mhtml` | `/exhibitions/william-blake` | upcoming |
 | `exhibition_ballets_russes.mhtml` | `/exhibitions/ballets-russes` | past, closed Sep 2024 |
+| `listing_current.mhtml` | `/exhibitions/current` | listing |
+| `listing_upcoming.mhtml` | `/exhibitions/upcoming` | listing |
+| `listing_past_2025-2026.mhtml` | `/exhibitions/past/2025-2026` | listing, page 1 of 3 |
 
 **All three share one shape**, which is what makes this venue cheap to wire:
 title in `h1.page-header span`, dates in `.field--name-field-display-date`
@@ -47,7 +50,71 @@ class alone. Same shape as the Wallace's `section--footer-spacer` and the V&A's
 cookie panel: a class that means "a field" in general, believed as though it
 meant this field in particular.
 
-## The listings — her description, 22 Sep
+## The listings — read from the saved pages, 22 Sep
+
+All three are now files. Morgan runs Drupal, and the listings are **three
+different views**, not one layout repeated.
+
+### Current — `/exhibitions/current`
+
+Two blocks. Only the first is wanted.
+
+| Block | Holds |
+|---|---|
+| `view-display-id-page_1` | tarot, hujar-contact, ashbery-collection, J-Pierpont-Morgans-Library |
+| `view-display-id-block_1` | "Presentations from our Collection" — **not wanted** |
+
+So her "exclude everything below that heading" is a **structural** boundary, not
+a textual one: scope to `page_1` and the second block is never read. A card's
+link is on its image (`.views-field-field-teaser-image a`), its title is a bare
+`<strong>` that is not a link, and its dates are an `<em>`.
+
+`J. Pierpont Morgan's Library` prints `Ongoing` where the others print a range —
+that is `excludeOngoing`, which the engine already has.
+
+### Upcoming — `/exhibitions/upcoming`
+
+Same card shape, one block, **and the block is `page_2`, not `page_1`.** Five
+exhibitions, all fully dated. Nothing after the cards, as she said.
+
+### Past — `/exhibitions/past/<year-pair>`
+
+A different view entirely (`view-id-taxonomy_term`), rows down the page, each
+carrying title, dates AND a paragraph of its own.
+
+**THREE LINK SHAPES, AND ONE OF THEM HAS NO `/exhibitions/` IN IT.** Nine of the
+ten rows on page one are `/exhibitions/<slug>`; the tenth is
+`/collections-spotlight-summer-2026`, at the site root. A selector matching
+`a[href*="/exhibitions/"]` — which is what the recipe has today — finds nine and
+silently loses the tenth. **So the past rows are selected structurally**, by
+`.field--name-node-title h2 a`, never by what the address looks like.
+
+Morgan is inconsistent about this on purpose or by accident: the CURRENT
+listing's Collections Spotlight IS under `/exhibitions/`.
+
+**The pager numbers from ZERO** — `?page=0`, `?page=1`, `?page=2` — so page one
+of three is `page=0`. Taken from its own links, never assumed.
+
+**Three year-pairs are needed**, her correction: `2025-2026`, `2024-2025` and
+`2023-2024`. A show closing just after the 1 July 2024 floor is filed under
+2023-2024, so stopping at two pairs loses it. **The pairs are derived from the
+floor and today, never typed** — the same trap `expandYearArchive()` already
+avoids at the Met, except that this venue's pages are pairs rather than single
+years.
+
+### The open question: does a past exhibition need opening at all?
+
+Each past row carries a full paragraph of curatorial prose, ending in a complete
+sentence. It is a Drupal `text-with-summary` field, so it is a trimmed summary
+rather than the whole page — Tarot's own article runs 13,575 characters against
+a listing paragraph of roughly 300.
+
+That matters because of volume, not tidiness. Roughly 70 past exhibitions sit
+across the three year-pairs. Opening each one at a polite pace is over half an
+hour of requests at a venue that has already refused us once for going too
+fast; reading them off the listings is eight page loads in total.
+
+## Access, as of 22 Sep
 
 Not yet saved as files; these are her words plus screenshots.
 
