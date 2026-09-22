@@ -45,6 +45,14 @@
 //   node scraper/probe_headed.js open     Open it again — and LEAVE it open.
 //   node scraper/probe_headed.js B        Run B, into that open browser.
 //
+//   node scraper/probe_headed.js page <url> <url>
+//                                         Visit exactly those addresses and
+//                                         follow NOTHING. Used once access is
+//                                         established and the question is what
+//                                         a named page contains — she names it,
+//                                         because the two unfinished recipes
+//                                         are hers to write from the live site.
+//
 // Results are written to scraper/output/, not just printed. The 16 Sep morgan
 // result printed to a terminal and vanished, so all that survives of it is a
 // sentence in a doc — which is why we are re-testing something we supposedly
@@ -150,10 +158,35 @@ function looksLikeChallenge({ title, text }) {
   return CHALLENGE_MARKERS.some(m => hay.includes(m));
 }
 
-async function countLinks(page, target) {
-  return page.$$eval(target.selector, els => els.map(e => e.getAttribute('href') || ''))
-    .then(hrefs => hrefs.filter(h => h && !target.isNav(h)))
+/**
+ * The links on this page that could be an exhibition.
+ *
+ * A HREF IS NOT AN ADDRESS UNTIL IT RESOLVES, and not every address is a page.
+ * The first version of this took the raw href, checked it was not one of the
+ * venue's own listing pages, and followed it. On the British Museum the first
+ * match was a "share this by email" link — a mailto: whose BODY happened to
+ * contain the venue's exhibition path, so the recipe's rule matched text that
+ * was never a link to anything. Telling a browser to go to a mailto: does not
+ * load a page: it hands the address to whatever handles mail, which opened a
+ * half-written email in her own browser, on a machine where Gmail handles mail.
+ *
+ * The real scraper already refuses this — it rejects any scheme that is not
+ * http or https, and any address resolving to another host. This probe skipped
+ * both guards. They are here now, so the failure cannot come back.
+ */
+async function usableLinks(page, target) {
+  const hrefs = await page.$$eval(target.selector, els => els.map(e => e.getAttribute('href') || ''))
     .catch(() => []);
+  const out = [];
+  for (const href of hrefs) {
+    if (!href || target.isNav(href)) continue;
+    let resolved;
+    try { resolved = new URL(href, target.base); } catch { continue; }
+    if (resolved.protocol !== 'http:' && resolved.protocol !== 'https:') continue;
+    if (resolved.host.replace(/^www\./, '') !== new URL(target.base).host.replace(/^www\./, '')) continue;
+    out.push(resolved.toString());
+  }
+  return out;
 }
 
 /**
@@ -166,8 +199,9 @@ async function countLinks(page, target) {
  * A-versus-B reading is wrong.
  */
 async function visit(page, url, target, budget) {
-  if (budget.used >= MAX_VISITS) {
-    return { url, outcome: 'skipped-visit-cap', note: `hit the ${MAX_VISITS}-visit cap` };
+  const cap = budget.cap || MAX_VISITS;
+  if (budget.used >= cap) {
+    return { url, outcome: 'skipped-visit-cap', note: `hit the ${cap}-visit cap` };
   }
   budget.used++;
 
@@ -209,11 +243,11 @@ async function visit(page, url, target, budget) {
     rec.challengeCleared = !looksLikeChallenge(seen);
   }
 
-  const links = await countLinks(page, target);
+  const links = await usableLinks(page, target);
   rec.title = seen.title;
   rec.textLength = seen.text.length;
   rec.exhibitionLinks = links.length;
-  rec.firstLinks = links.slice(0, 3);
+  rec.firstLinks = links.slice(0, 10);
   // Kept so a thin page can be told apart from an empty one by reading it,
   // rather than by trusting a number. A count flattens the evidence.
   rec.textOpening = seen.text.replace(/\s+/g, ' ').trim().slice(0, 300);
@@ -246,8 +280,9 @@ async function probeVenue(page, target, budget) {
   // September and it meant nothing — all 24 of its exhibition pages still
   // refused, so not one row had any text. A listing that opens is not a route.
   if (out.listing.outcome === 'in' && out.listing.firstLinks.length) {
-    const href = out.listing.firstLinks[0];
-    const detailUrl = new URL(href, target.base).toString();
+    // Already resolved and filtered by usableLinks() — an ordinary web
+    // address on the venue's own host, never a mailto: or an offsite link.
+    const detailUrl = out.listing.firstLinks[0];
     console.log(`   → now one exhibition page: ${detailUrl}`);
     out.detail = await visit(page, detailUrl, target, budget);
   } else {
@@ -288,6 +323,54 @@ function openChrome() {
   console.log('   https://www.themorgan.org/exhibitions/current');
   console.log('Click into a couple of exhibitions. Let any security check finish.\n');
   console.log('Then: CLOSE it before run A. LEAVE IT OPEN for run B.');
+}
+
+/**
+ * Visit exactly the addresses given, and follow nothing.
+ *
+ * This exists because SHE is writing the two unfinished recipes, not a probe.
+ * Both were written for pages nobody had ever been allowed to see, and guessing
+ * at their shape a second time from markup is how they got wrong in the first
+ * place. So the probe no longer hunts for a page to open — she names it.
+ *
+ * It answers one question per address: does a genuine exhibition page open,
+ * and what comes back. Nothing is crawled, so the visit count is exactly the
+ * number of addresses given.
+ */
+async function runPages(urls) {
+  console.log('Visiting exactly the addresses given. Following nothing.\n');
+  const bin = resolveChrome();
+  let context;
+  try {
+    context = await chromium.launchPersistentContext(PROFILE_DIR, {
+      executablePath: bin || undefined,
+      channel: bin ? undefined : 'chrome',
+      headless: false,
+      viewport: null,
+    });
+  } catch (e) {
+    if (/ProcessSingleton|already running|SingletonLock/i.test(e.message)) {
+      console.log('That profile is open in another window. Close that Chrome and try again.');
+      process.exit(1);
+    }
+    throw e;
+  }
+  const page = await context.newPage();
+  const budget = { used: 0, cap: urls.length };
+  const results = [];
+  for (const u of urls) {
+    const base = new URL(u).origin;
+    // Every link on the page is recorded, filtered only for "is a real web
+    // address on this venue's own host". What counts as an exhibition link is
+    // hers to decide from the live page, not this probe's to guess.
+    const target = { base, selector: 'a[href]', isNav: () => false };
+    console.log(`=== ${u}`);
+    const rec = await visit(page, u, target, budget);
+    results.push({ code: new URL(u).host, listing: rec, detail: { outcome: 'not-attempted', note: 'this mode follows nothing' } });
+    console.log('');
+  }
+  await context.close().catch(() => {});
+  return { run: 'PAGES', how: 'exact addresses she named; nothing followed', results, visits: budget.used };
 }
 
 async function runA() {
@@ -355,7 +438,7 @@ function report(payload) {
       console.log(`         browser announced it was being driven: ${l.webdriverFlag}`);
     }
   }
-  console.log(`\nPages visited: ${payload.visits} of a ${MAX_VISITS} cap.`);
+  console.log(`\nPages visited: ${payload.visits}.`);
   console.log(`Written to ${file}`);
   console.log('\nThis says whether a venue still refuses. It cannot say a venue');
   console.log('works — only a real sweep can.');
@@ -371,10 +454,22 @@ function report(payload) {
   if (mode === 'open') return openChrome();
   if (mode === 'a') return report(await runA());
   if (mode === 'b') return report(await runB());
+  if (mode === 'page') {
+    const urls = process.argv.slice(3).filter(u => /^https?:\/\//i.test(u));
+    if (!urls.length) {
+      console.log('Give it one or more ordinary web addresses:');
+      console.log('  node scraper/probe_headed.js page https://... https://...');
+      process.exit(1);
+    }
+    return report(await runPages(urls));
+  }
 
   console.log('Usage, in this order:');
   console.log('  node scraper/probe_headed.js open    seed the profile, then close Chrome');
   console.log('  node scraper/probe_headed.js A');
   console.log('  node scraper/probe_headed.js open    and LEAVE it open');
   console.log('  node scraper/probe_headed.js B');
+  console.log('');
+  console.log('Or visit named pages and follow nothing:');
+  console.log('  node scraper/probe_headed.js page https://... https://...');
 })();
