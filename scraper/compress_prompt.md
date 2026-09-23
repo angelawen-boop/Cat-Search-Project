@@ -6,7 +6,7 @@ them in the repo rather than in a session's head — a prompt that exists only i
 chat is lost the moment the session closes, and there is then no way to tell whether
 a change in summary quality came from the venue, the model or the wording of the ask.
 
-Prompts A and B take the same two inputs: the example pairs (`compress.js --examples`)
+Both prompts take the same two inputs: the example pairs (`compress.js --examples`)
 and a rows file. Both return **only** a JSON object mapping row index to a string or
 `null`. Neither may write a file — her standing rule is that a model touches strings,
 never files, so a confused model can produce bad wording but cannot mangle a CSV.
@@ -136,6 +136,17 @@ that came back in Italian would quietly break that.
 > exhibition's own title in its original language if that is how it is written;
 > translate the description around it.
 >
+> ROWS MARKED "englishTitle": true come from a venue that may title its
+> exhibitions in Italian. If that row's "title" is not English, begin your answer
+> with the title translated into natural English, in this exact form:
+> `In English: <the title in English>. — <your summary>`
+> Keep every name as the title writes it and keep its full stops and subtitle;
+> where an artwork has a well-established English name, use it. Use no em dash
+> inside the title — it is the separator. If the title is already English apart
+> from names, write the summary alone. The 10-word limit is the summary's; the
+> English title does not count towards it. Never add an English title to a row
+> that is not marked.
+>
 > THE RULE THAT MATTERS MOST: every word of your summary must be traceable to a
 > phrase in that row's own raw text. If you cannot point to where something came
 > from, leave it out. In particular:
@@ -195,7 +206,16 @@ that came back in Italian would quietly break that.
 >   ending with a full stop, stating only what is in the current raw text.
 > - If the current text is NOT a description of an exhibition at all — a curator's
 >   biography, ticketing copy, cookie/consent boilerplate, a bare link — output null.
->   Do not summarise the wrong thing.
+>   Do not summarise the wrong thing.>
+> ROWS MARKED "englishTitle": true come from a venue that may title its
+> exhibitions in Italian, and each also carries a "title". Decide the summary
+> exactly as above. Then, if the title is not English and the previousSummary
+> does not already begin with "In English:", put the title's English translation
+> in front, in this exact form: `In English: <the title in English>. — <summary>`.
+> Keep every name as written; use no em dash inside the title. A row whose action
+> is a retitle has UNCHANGED text — its previousSummary is true by definition, so
+> hand it back exactly, adding only the English title where one is needed. Never
+> add an English title to a row that is not marked.
 >
 > STEP 4. Output ONLY a JSON object, mapping each row's index (as a string) to your
 > answer string, or to null. No commentary before or after, no markdown code fence.
@@ -203,44 +223,29 @@ that came back in Italian would quietly break that.
 
 ---
 
-## Prompt C — the English title, or null
+## Italian titles — in the same answer, her ruling 23 Sep
 
-**Added 23 Sep 2026, her ruling.** A title stays in the venue's own language; where
-it is not English, its English rendering goes at the start of the description
-(`In English: … — teaser`). Asked **once per title, ever** — the answer lives in
-`scraper/title_english.json` and code reads it from then on, so a later sweep
-cannot word it differently and raise a false "description changed" card. Why it is
-a store and not run memory: `compress.js`, "English titles".
+A title stays in the venue's own language. Where it is not English, the English
+title opens the summary: `In English: … — teaser`. It is written **in the same
+answer as the summary**, from the row the model is already reading — no second
+request. Only rows from `ENGLISH_TITLE_VENUES` (`compress.js`) carry the
+`"englishTitle"` mark, so no English-language venue is ever asked.
 
-**Sonnet.** Titles are short, but getting a pun, an artwork's accepted English name
-or a bilingual title right is comprehension. One job holds every new title; the
-first run asks all of them, later runs a handful.
+**Why not a separate title step:** tried on 23 Sep and withdrawn the same day. It
+sent all 402 titles in the file to the model when about 50 could be Italian, and it
+was a second request for rows the summary step was already sending.
 
-> You are translating exhibition titles for a personal art-catalogue tracker. Your
-> ONLY output is text. Do not write or edit any file.
->
-> Read this file. Each line is a JSON object with a key "k" and a "title":
-> `<ROWS_PATH>`
->
-> For each title, decide whether an English reader can already read it.
->
-> - ALREADY ENGLISH → null. This includes titles that are English apart from
->   names: a person, a place, a collection, or an artwork's name kept in its
->   original language ("Giovanni Agostino da Lodi. An itinerant painter between
->   Leonardo and Giorgione" is null). Capital letters, accents and punctuation do
->   not make a title foreign.
-> - OTHERWISE → the title translated into natural English. Keep every name as the
->   title writes it. Keep the title's own structure — its full stops and
->   subtitle. Where an artwork has a well-established English name, use it. Do
->   not explain, add dates, or add anything the title does not say. Do not use an
->   em dash (—) anywhere; it is the separator in front of the summary.
->
-> Output ONLY a JSON object mapping each "k" exactly as given to your answer
-> string, or to null. No commentary, no markdown code fence. Every "k" must
-> appear exactly once.
+**Stable without a store:** an unchanged blurb reuses the whole summary field,
+English title included, with no model call.
 
-`--check` refuses a missing or unasked key, an empty string, an HTML fragment or an
-em dash; `--apply` writes the store only after every check has passed.
+**The one-time `retitle`:** memory from a run compressed before this rule has no
+English titles, so reusing it would leave them out forever. Such rows at those
+venues go to Prompt B once, which hands the summary back exactly and adds the
+title. A run compressed under the rule carries `.english_titles`, and from then on
+the ordinary reuse applies.
+
+`--check` and `--apply` hold the word cap to the SUMMARY, and refuse an English
+title on a row that was never asked for one.
 
 ---
 

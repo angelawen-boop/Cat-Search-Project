@@ -10,7 +10,8 @@
  *      only the first range, so the card contradicted itself and she rejected
  *      a correct row.
  *   3. THE SAME SENTENCE TWICE in a note — every Brera card.
- *   4. ENGLISH TITLES at the start of the description, from the title store.
+ *   4. ENGLISH TITLES at the start of the description — the 20 Italian titles
+ *      in this file, from english_titles_23sep.json.
  *
  * All four are fixed at the source (sweep_prototype.js, compress.js); this
  * brings the 13 Sep file into line without a re-sweep, as repair_notes_quote.js
@@ -19,7 +20,7 @@
  * IT INVENTS NOTHING. Dates are recomputed by the scraper's own CORRECTED
  * functions from text already in this folder — the quoted sentence in the note
  * and the venue's raw page text in sweep.csv. English titles come only from
- * the store, which only a checked model answer can fill.
+ * english_titles_23sep.json, kept beside this file.
  *
  *   node scraper/output/stitch_20260913_0442/repair_23sep.js           report only
  *   node scraper/output/stitch_20260913_0442/repair_23sep.js --apply   write it
@@ -34,38 +35,25 @@ const C = require('../../compress.js');
 
 const FILE = path.join(__dirname, 'sweep_compressed_clean.csv');
 const RAW = path.join(__dirname, 'sweep.csv');
-const TITLE_PENDING = path.join(__dirname, 'title_pending.json');
-const TITLE_ANSWERS = path.join(__dirname, 'title_answers.json');
 const APPLY = process.argv.includes('--apply');
 
 const EXTENDED = 'The venue extended this exhibition;';
 const QUOTE = /read from a sentence, not a date field: "([^"]*)"/;
 
-// ── The title store ─────────────────────────────────────────────────────────
-// The same checks compress.js --check applies: every title asked is answered,
-// nothing unasked, each answer a string or null of the right shape.
-function fillTitleStore() {
-  if (!fs.existsSync(TITLE_PENDING)) return C.loadTitleStore();
-  if (!fs.existsSync(TITLE_ANSWERS)) {
-    // Refused when writing; a report may still show the other three repairs.
-    if (APPLY) throw new Error('title_answers.json missing — the titles have not been answered yet.');
-    console.log('(No title answers yet — English titles not shown in this report.)\n');
-    return C.loadTitleStore();
-  }
-  const asked = JSON.parse(fs.readFileSync(TITLE_PENDING, 'utf8')).titles.map(t => t.key);
-  const ans = JSON.parse(fs.readFileSync(TITLE_ANSWERS, 'utf8'));
-  const problems = [];
-  for (const k of asked) if (!Object.prototype.hasOwnProperty.call(ans, k)) problems.push(`no answer: ${k}`);
-  for (const k of Object.keys(ans)) if (!asked.includes(k)) problems.push(`never asked: ${k}`);
-  for (const [k, v] of Object.entries(ans)) {
-    const r = C.validateTitleAnswer(v);
-    if (!r.ok) problems.push(`${k}: ${r.reason}`);
-  }
-  if (problems.length) throw new Error('Title answers refused:\n  ' + problems.join('\n  '));
-  const store = C.loadTitleStore();
-  for (const [k, v] of Object.entries(ans)) store[k] = C.validateTitleAnswer(v).text;
-  if (APPLY) C.saveTitleStore(store);
-  return store;
+// ── English titles ──────────────────────────────────────────────────────────
+// The 20 answers a model gave on 23 Sep for this file's Italian titles, kept
+// beside it. Every other title in the file was judged already English. The
+// compressor now writes these in the same answer as the summary (compress.js,
+// ENGLISH_TITLE_VENUES); this file was compressed before that existed.
+const EN = JSON.parse(fs.readFileSync(path.join(__dirname, 'english_titles_23sep.json'), 'utf8'));
+function withEnglishTitle(r) {
+  const en = EN[`${r.venue_code}|${r.title}`];
+  if (!en) return r;
+  if (!C.ENGLISH_TITLE_VENUES.has(r.venue_code)) throw new Error(`English title for a venue never asked: ${r.venue_code}`);
+  if (String(r.summary || '').startsWith(C.EN_PREFIX)) return r;          // already done
+  const head = C.EN_PREFIX + en.replace(/[.!?]?$/, m => m || '.');
+  const summary = r.summary ? head + C.EN_SEPARATOR + r.summary : head;
+  return { ...r, summary };
 }
 
 // ── Notes: the same sentence never twice ─────────────────────────────────────
@@ -86,7 +74,6 @@ for (const r of C.readProForma(RAW)) {
   const k = `${r.venue_code}|${r.url}`;
   if (r.url && r.summary && !rawByUrl.has(k)) rawByUrl.set(k, r.summary);
 }
-const store = fillTitleStore();
 
 const log = [];
 const unexplained = [];
@@ -121,9 +108,9 @@ const out = rows.map(row => {
   const n = dedupeSentences(r.notes);
   if (n !== r.notes) { log.push(`NOTE   ${r.venue_code} | ${r.title.slice(0, 60)}`); r.notes = n; }
 
-  // 4 — English titles, from the store only.
-  const [composed] = C.composeEnglishTitles([r], store);
-  if (composed.summary !== r.summary) log.push(`TITLE  ${r.venue_code} | ${r.title.slice(0, 60)} → ${store[C.titleStoreKey(r)]}`);
+  // 4 — English titles, from the answers kept beside this file.
+  const composed = withEnglishTitle(r);
+  if (composed.summary !== r.summary) log.push(`TITLE  ${r.venue_code} | ${composed.summary.slice(0, 110)}`);
   return composed;
 });
 

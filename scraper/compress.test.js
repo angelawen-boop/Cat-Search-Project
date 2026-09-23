@@ -513,65 +513,65 @@ test('RB-006: a position outside the file cannot write into it', () => {
 });
 
 // ---------------------------------------------------------------------------
-// ET-001 to ET-006 — the English title at the start of the description. Her
-// ruling 23 Sep: the title stays in its own language; the English goes in
-// front of the teaser, and is asked once per title, ever.
+// IT-001 to IT-006 — Italian titles, her ruling 23 Sep. The English title opens
+// the summary, written in the SAME answer, and only venues that may title in
+// Italian are ever asked.
 
-const ET = require('./compress.js');
+const IT = require('./compress.js');
+const ITRAW = 'Una mostra omaggio dedicata a Carlo Maria Mariani nel museo.';
+const capoRow = (o = {}) => ({ venue_code: 'capo', title: 'I Segni dei Tempi', url: 'https://c.it/a', summary: ITRAW, ...o });
 
-test('ET-001: an English rendering goes in front of the teaser', () => {
-  assert.equal(ET.withEnglishTitle('Mariani homage at Capodimonte.', 'The Signs of the Times'),
-    'In English: The Signs of the Times. — Mariani homage at Capodimonte.');
-  // null in the store means "already English" — the teaser is untouched.
-  assert.equal(ET.withEnglishTitle('Armani at Brera.', null), 'Armani at Brera.');
-  // No teaser at all still gives her a readable card.
-  assert.equal(ET.withEnglishTitle('', 'Thirst'), 'In English: Thirst.');
+test('IT-001: only the Italian venues are asked for an English title', () => {
+  for (const v of ['capo', 'brera', 'uffizi', 'borghese']) assert.equal(IT.asksEnglishTitle({ venue_code: v }), true, v);
+  for (const v of ['met', 'ng', 'tate-modern', 'louvre', 'acq']) assert.equal(IT.asksEnglishTitle({ venue_code: v }), false, v);
 });
 
-test('ET-002: stripping gives back exactly the teaser, so the next run reuses it', () => {
-  // If the prefix stayed on, the next run would compare it as though the venue
-  // had written it and the reuse that prevents drift would never fire.
-  const en = 'The Signs of the Times. Carlo Maria Mariani at Capodimonte';
-  const t = 'Mariani homage at Capodimonte.';
-  assert.equal(ET.stripEnglishTitle(ET.withEnglishTitle(t, en), en), t);
-  assert.equal(ET.stripEnglishTitle(ET.withEnglishTitle('', en), en), '');
+test('IT-002: the word cap is the SUMMARY\'s — a long title does not eat it', () => {
+  const a = 'In English: The Bergamask Guest Lucina Brembati by Lorenzo Lotto. Capodimonte Is in Fashion. — Lotto portrait amid fashion-history talks.';
+  assert.equal(IT.validateAnswer(a, { englishTitle: true }).ok, true);
+  const long = 'In English: Thirst. — one two three four five six seven eight nine ten eleven.';
+  assert.equal(IT.validateAnswer(long, { englishTitle: true }).ok, false);
 });
 
-test('ET-003: only the exact stored prefix is removed, never a pattern', () => {
-  // A teaser that happens to open with "In English:" is her text, not ours.
-  assert.equal(ET.stripEnglishTitle('In English: other words — teaser.', 'Thirst'),
-    'In English: other words — teaser.');
-  assert.equal(ET.stripEnglishTitle('A teaser.', null), 'A teaser.');
+test('IT-003: an English title where none was asked for is refused', () => {
+  assert.equal(IT.validateAnswer('In English: Thirst. — Fugazza on thirst.', { englishTitle: false }).ok, false);
+  // And the separator must be there, with a summary after it.
+  assert.equal(IT.validateAnswer('In English: Thirst. Fugazza on thirst.', { englishTitle: true }).ok, false);
+  assert.equal(IT.validateAnswer('In English: Thirst. — ', { englishTitle: true }).ok, false);
+  // An English title stays optional: a title already in English needs none.
+  assert.equal(IT.validateAnswer('Armani at Brera.', { englishTitle: true }).ok, true);
 });
 
-test('ET-004: composing twice gives the same result — the prefix never stacks', () => {
-  const store = { 'capo|Gaia Fugazza. Sete': 'Gaia Fugazza. Thirst' };
-  const r = [{ venue_code: 'capo', title: 'Gaia Fugazza. Sete', summary: 'Fugazza on thirst.' }];
-  const once = ET.composeEnglishTitles(r, store);
-  assert.deepStrictEqual(ET.composeEnglishTitles(once, store), once);
-  assert.equal(once[0].summary, 'In English: Gaia Fugazza. Thirst. — Fugazza on thirst.');
-  // The input is copied, never mutated.
-  assert.equal(r[0].summary, 'Fugazza on thirst.');
+test('IT-004: unchanged text reuses the whole field, English title included — no model call', () => {
+  const prev = { raw: ITRAW, summary: 'In English: The Signs of the Times. — Mariani homage.', titleJudged: true };
+  const d = IT.decide(capoRow(), prev);
+  assert.equal(d.action, 'reuse');
+  assert.equal(d.summary, prev.summary);
 });
 
-test('ET-005: a title already answered is never asked again — null included', () => {
-  const store = { 'brera|Beauty and the Ideal': null, 'capo|Gaia Fugazza. Sete': 'Gaia Fugazza. Thirst' };
-  const rows = [
-    { venue_code: 'brera', title: 'Beauty and the Ideal' },
-    { venue_code: 'capo', title: 'Gaia Fugazza. Sete' },
-    { venue_code: 'capo', title: 'Emilio Isgrò. Canto Napoli' },
-    { venue_code: 'capo', title: 'Emilio Isgrò. Canto Napoli' },   // asked once
-    { venue_code: 'capo', title: '[all (current/upcoming/past) page]' }, // a marker
-  ];
-  assert.deepStrictEqual(ET.titlesToAsk(rows, store).map(t => t.key), ['capo|Emilio Isgrò. Canto Napoli']);
+test('IT-005: memory from before the rule is asked ONCE, at Italian venues only', () => {
+  // A run compressed before 23 Sep never gave these rows an English title;
+  // reusing it would leave the title untranslated forever.
+  const old = { raw: ITRAW, summary: 'Mariani homage.', titleJudged: false };
+  assert.equal(IT.decide(capoRow(), old).action, 'retitle');
+  assert.equal(IT.decide(capoRow(), old).previousSummary, 'Mariani homage.');
+  // An English-language venue reuses as it always has.
+  assert.equal(IT.decide(capoRow({ venue_code: 'ng' }), old).action, 'reuse');
+  // Seed memory carries no mark at all, and must not be re-asked for it.
+  assert.equal(IT.decide(capoRow(), { raw: ITRAW, summary: 'Mariani homage.' }).action, 'reuse');
 });
 
-test('ET-006: a title answer is shape-checked before it may enter the store', () => {
-  assert.equal(ET.validateTitleAnswer(null).ok, true);
-  assert.equal(ET.validateTitleAnswer('Thirst').ok, true);
-  assert.equal(ET.validateTitleAnswer('').ok, false);
-  assert.equal(ET.validateTitleAnswer('Art &amp; Writing').ok, false);
-  // The em dash is the separator; one inside the title would make the strip
-  // ambiguous.
-  assert.equal(ET.validateTitleAnswer('Samorì — Collapse').ok, false);
+test('IT-006: identical text under different Italian titles is NOT one question', () => {
+  // The answer carries the title now, so sharing it would give one row the
+  // other's English title.
+  const rows = [capoRow({ title: 'A', index: 0 }), capoRow({ title: 'B', index: 1 })];
+  assert.equal(IT.groupIdenticalRaw(rows).size, 0);
+  const ng = [capoRow({ venue_code: 'ng', title: 'A' }), capoRow({ venue_code: 'ng', title: 'B' })];
+  assert.equal(IT.groupIdenticalRaw(ng).size, 1);
+});
+
+test('IT-007: splitting gives back the title and the summary', () => {
+  assert.deepStrictEqual(IT.splitEnglishTitle('In English: Thirst. — Fugazza on thirst.'),
+    { title: 'Thirst.', teaser: 'Fugazza on thirst.' });
+  assert.deepStrictEqual(IT.splitEnglishTitle('Fugazza on thirst.'), { title: '', teaser: 'Fugazza on thirst.' });
 });

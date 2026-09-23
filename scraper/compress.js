@@ -92,6 +92,46 @@ const MAX_WORDS = 10;
 const SKIP_NOTE = 'The text on this page is not a description of the exhibition, so no summary was written.';
 
 /**
+ * ITALIAN TITLES — her ruling, 23 Sep. The title column keeps the venue's own
+ * words; where a title is not English, the ENGLISH TITLE GOES AT THE START OF
+ * THE SUMMARY, written in the same answer as the summary itself:
+ *
+ *     In English: The Signs of the Times. Carlo Maria Mariani at Capodimonte. — Mariani homage…
+ *
+ * ONE STEP. The row the model already reads to write the summary carries the
+ * title, so the translation costs a few words of output and no extra request.
+ * Only rows from these venues are asked — the rest publish English titles, and
+ * asking about them was the waste of 23 Sep (402 titles sent where ~50 could
+ * be Italian).
+ *
+ * STABLE WITHOUT A STORE. An unchanged blurb reuses the whole summary field,
+ * English title included, with no model call — the same guarantee as every
+ * other summary.
+ */
+const ENGLISH_TITLE_VENUES = new Set(['capo', 'brera', 'uffizi', 'borghese']);
+const EN_PREFIX = 'In English: ';
+const EN_SEPARATOR = ' \u2014 ';
+
+/**
+ * A compressed run's folder holds this file once its summaries were written
+ * under the rule above. Memory from a run WITHOUT it predates the rule: its
+ * summaries for those venues were never given an English title, so reusing
+ * them would silently leave the title untranslated forever. See decide().
+ */
+const ENGLISH_TITLE_MARKER = '.english_titles';
+
+const asksEnglishTitle = row => ENGLISH_TITLE_VENUES.has(String(row.venue_code || ''));
+
+/** Split a summary into its English title (or '') and the teaser. */
+function splitEnglishTitle(summary) {
+  const s = String(summary || '').trim();
+  if (!s.startsWith(EN_PREFIX)) return { title: '', teaser: s };
+  const at = s.indexOf(EN_SEPARATOR, EN_PREFIX.length);
+  if (at === -1) return { title: s.slice(EN_PREFIX.length).trim(), teaser: '' };
+  return { title: s.slice(EN_PREFIX.length, at).trim(), teaser: s.slice(at + EN_SEPARATOR.length).trim() };
+}
+
+/**
  * Venues that run the same exhibition at more than one address.
  *
  * MIRRORS `VENUES[code].locations` in sweep_prototype.js, and a fixture asserts
@@ -174,8 +214,11 @@ function groupTravellingRuns(rows) {
 function groupIdenticalRaw(rows) {
   const groups = new Map();
   for (const row of rows) {
-    const key = normalizeRaw(row.raw !== undefined ? row.raw : row.summary);
-    if (!key) continue;
+    const text = normalizeRaw(row.raw !== undefined ? row.raw : row.summary);
+    if (!text) continue;
+    // At a venue asked for an English title the answer carries the TITLE too,
+    // so two rows share it only when their titles match as well.
+    const key = asksEnglishTitle(row) ? `${text}\u0000${row.title}` : text;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(row);
   }
@@ -407,6 +450,15 @@ function decide(row, prev) {
     };
   }
 
+  // The venue has not touched a word — but the wording we hold was written
+  // before English titles existed, at a venue that may title in Italian. Ask
+  // once: keep the summary, add the English title if the title needs one.
+  // Once written, the run carries ENGLISH_TITLE_MARKER and this never fires
+  // for that row again.
+  if (prevWords && raw === prevRaw && asksEnglishTitle(row) && prev.titleJudged === false) {
+    return { action: 'retitle', summary: null, previousSummary: prevWords };
+  }
+
   // The venue has not touched a word. Reuse, no model call. This is the case
   // that covers nearly every row, and it cannot be wrong: identical input.
   if (prevWords && raw === prevRaw) return { action: 'reuse', summary: prevWords };
@@ -433,7 +485,7 @@ const wordCount = s => String(s || '').trim().split(/\s+/).filter(Boolean).lengt
  * approval card — but length and shape are mechanical, so they are checked
  * here rather than trusted. A refusal is reported, never silently dropped.
  */
-function validateAnswer(text) {
+function validateAnswer(text, { englishTitle = false } = {}) {
   // An explicit null means "this text is not a curatorial description and I am
   // not going to invent one" — ticketing copy, a bare link, a curator
   // biography, boilerplate. This is DEF-03's second net, and it is deliberately
@@ -446,7 +498,13 @@ function validateAnswer(text) {
   const s = String(text == null ? '' : text).trim();
   if (!s) return { ok: false, reason: 'empty' };
   if (/\n/.test(s)) return { ok: false, reason: 'contains a line break' };
-  const n = wordCount(s);
+  // The English title is checked apart from the teaser: the word cap is the
+  // TEASER's, and a long Italian title must not eat it.
+  const { title, teaser } = splitEnglishTitle(s);
+  if (title && !englishTitle) return { ok: false, reason: 'an English title on a venue that is never asked for one' };
+  if (s.startsWith(EN_PREFIX) && !s.includes(EN_SEPARATOR)) return { ok: false, reason: 'English title with no " \u2014 " before the summary' };
+  if (!teaser) return { ok: false, reason: 'no summary after the English title' };
+  const n = wordCount(teaser);
   if (n > MAX_WORDS) return { ok: false, reason: `${n} words, cap is ${MAX_WORDS}` };
   // Her seed set is unanimous on this: all 110 end with a full stop.
   return { ok: true, text: /[.!?]$/.test(s) ? s : s + '.' };
@@ -492,10 +550,11 @@ function loadMemory(dir) {
   const raw = readProForma(path.join(OUTPUT_DIR, dir, RAW_CSV));
   const done = readProForma(path.join(OUTPUT_DIR, dir, COMPRESSED_CSV));
   const doneIndex = indexPrevious(done);
+  const titleJudged = fs.existsSync(path.join(OUTPUT_DIR, dir, ENGLISH_TITLE_MARKER));
   const memory = [];
   for (const r of raw) {
     const d = findPrevious(doneIndex, r);
-    memory.push({ ...r, raw: r.summary, summary: d ? d.summary : '' });
+    memory.push({ ...r, raw: r.summary, summary: d ? d.summary : '', titleJudged });
   }
   return indexPrevious(memory);
 }
@@ -623,105 +682,6 @@ function mergeSeedMemory(memory, seedRows, { seedWins = false } = {}) {
   return { overrode, added };
 }
 
-// ── English titles ───────────────────────────────────────────────────────────
-//
-// HER RULING, 23 Sep. A title stays in the venue's own language — it is the
-// exhibition's name, and the app compares it to spot a rename. But a card she
-// cannot read is no use to her, so where a title is not English its English
-// rendering is written at the START OF THE DESCRIPTION:
-//
-//     In English: The Signs of the Times. Carlo Maria Mariani at Capodimonte. — Mariani's …
-//
-// No new column: the pro forma stays eight columns.
-//
-// THE ANSWER IS STORED, KEYED ON THE TITLE, AND NEVER ASKED AGAIN. A translation
-// asked afresh on every sweep could come back worded differently, and the app
-// would then propose a changed description for an exhibition nothing had
-// happened to. So `title_english.json` holds one answer per venue + title,
-// written once by a model and read by code forever after — the same guarantee
-// as reuse on unchanged text: no question, no drift. A venue renaming a show
-// is a new title and a genuine new question.
-//
-// null in the store is an answer too: "this title is already English". It is
-// what stops an English title being re-asked on every run.
-//
-// IT DOES NOT LIVE IN THE RUN MEMORY, deliberately. Descriptions written before
-// 23 Sep carry no prefix, and a rule that took the English title from last
-// run's wording would reuse those unprefixed forever. The store is its own
-// memory, so it does not care which run came before.
-
-const TITLE_STORE = path.join(__dirname, 'title_english.json');
-const EN_PREFIX = 'In English: ';
-const EN_SEPARATOR = ' \u2014 ';
-
-const titleStoreKey = row => `${row.venue_code}|${String(row.title || '').replace(/\s+/g, ' ').trim()}`;
-
-function loadTitleStore(file = TITLE_STORE) {
-  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
-}
-
-/** Written sorted, so a diff of the store shows only what was added. */
-function saveTitleStore(store, file = TITLE_STORE) {
-  const sorted = Object.fromEntries(Object.keys(store).sort().map(k => [k, store[k]]));
-  fs.writeFileSync(file, JSON.stringify(sorted, null, 2) + '\n', 'utf8');
-}
-
-/** Rows whose title has never been asked about. Marker rows have no title. */
-function titlesToAsk(rows, store) {
-  const seen = new Set();
-  const out = [];
-  for (const r of rows) {
-    if (!r.title || String(r.title).startsWith('[')) continue;
-    const k = titleStoreKey(r);
-    if (Object.prototype.hasOwnProperty.call(store, k) || seen.has(k)) continue;
-    seen.add(k);
-    out.push({ key: k, title: String(r.title).replace(/\s+/g, ' ').trim() });
-  }
-  return out;
-}
-
-/** Shape check on one answer, before it may enter the store. */
-function validateTitleAnswer(v) {
-  if (v === null) return { ok: true, text: null };
-  if (typeof v !== 'string') return { ok: false, reason: 'not a string or null' };
-  const t = v.replace(/\s+/g, ' ').trim();
-  if (!t) return { ok: false, reason: 'empty — null means "already English"' };
-  if (/&[a-z]+;|&#\d+;|<[a-z/]/i.test(t)) return { ok: false, reason: 'carries an HTML fragment' };
-  if (t.includes(EN_SEPARATOR.trim())) return { ok: false, reason: 'contains an em dash, which is the separator' };
-  return { ok: true, text: t };
-}
-
-/** The description she sees: English title first, then the teaser. */
-function withEnglishTitle(teaser, english) {
-  const t = String(teaser || '').trim();
-  if (!english) return t;
-  const head = EN_PREFIX + english.replace(/[.!?]?$/, m => m || '.');
-  return t ? head + EN_SEPARATOR + t : head;
-}
-
-/**
- * Take the English title back off a description, so the teaser alone is what
- * the next run compares and reuses. Only the EXACT prefix this title's stored
- * answer produces is removed — never a pattern — so a teaser that happens to
- * begin with the same words cannot be cut.
- */
-function stripEnglishTitle(summary, english) {
-  const s = String(summary || '').trim();
-  if (!english) return s;
-  const head = withEnglishTitle('', english);
-  if (s === head) return '';
-  return s.startsWith(head + EN_SEPARATOR) ? s.slice((head + EN_SEPARATOR).length) : s;
-}
-
-/** Apply the store to every finished row. Rows are copied, never mutated. */
-function composeEnglishTitles(rows, store) {
-  return rows.map(r => {
-    if (!r.title || String(r.title).startsWith('[')) return r;
-    const en = store[titleStoreKey(r)];
-    return en ? { ...r, summary: withEnglishTitle(stripEnglishTitle(r.summary, en), en) } : r;
-  });
-}
-
 /**
  * Put a compressed file back together in the raw file's own order.
  *
@@ -760,9 +720,8 @@ module.exports = {
   mergeSeedMemory,
   findPrevious, decide, validateAnswer, normalizeRaw, wordCount, addNote,
   previousCompletedRun, seedMemory, MAX_WORDS, SKIP_NOTE,
+  ENGLISH_TITLE_VENUES, EN_PREFIX, EN_SEPARATOR, ENGLISH_TITLE_MARKER, asksEnglishTitle, splitEnglishTitle,
   TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns, groupIdenticalRaw,
-  TITLE_STORE, EN_PREFIX, EN_SEPARATOR, titleStoreKey, loadTitleStore, saveTitleStore,
-  titlesToAsk, validateTitleAnswer, withEnglishTitle, stripEnglishTitle, composeEnglishTitles,
 };
 
 // The CLI lives in compress_cli.js so this file stays importable by the tests

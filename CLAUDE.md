@@ -408,11 +408,11 @@ evidence and every finding: `docs/app.md`.**
   letter, on screen only — nothing stored changes, no card is raised. And a
   **rename is a Change card**: the title is compared on `normalizeTitle`, so a
   difference only in capitals, accents or punctuation raises nothing. Fixture 21.
-- **English titles ride in the description**, never in the title and never in
-  a ninth column: `In English: … — teaser`, written by the compressor from a
-  per-title store (`scraper/title_english.json`) that is asked once and read
-  forever, so it cannot drift into a false changed-description card.
-  `compress.js`, "English titles".
+- **Italian titles ride in the description**, never in the title and never in
+  a ninth column: `In English: … — teaser`, written by the compressor IN THE SAME
+  ANSWER as the summary, and only for `ENGLISH_TITLE_VENUES` (`compress.js`).
+  A separate title step was built and withdrawn on 23 Sep: it sent all 402
+  titles when ~50 could be Italian. `compress_prompt.md`, "Italian titles".
 
 **Deliberately not built:** bulk-approve, in-app field editing, and the mirror
 case where the app proposes Add but it is really an update.
@@ -883,6 +883,12 @@ The file is `stitch_20260913_0442/sweep_compressed_clean.csv` — **not**
 
 Against her 110-row seed it produces 320 cards — 299 add, 14 fill, 7 change. The
 row identity closes: **419 = 13 markers + 0 folds + 86 matching + 320**.
+
+**Repaired 23 Sep** after her first sitting (`repair_23sep.js`, reasoning in
+`docs/import-file.md`). Re-imported over what she accepted, it proposes **3 adds**
+(the three Capodimonte rows she rejected, now correct), **18 description changes**
+(English titles) and **49 title changes** — seed rows whose shortened titles now
+differ from the venue's full ones, since renames became cards in version 33.
 
 Expect debugging to fall out of it. Also still to do: a save round-trip after the
 import — export, re-import that file, confirm quarantine and per-venue freshness
