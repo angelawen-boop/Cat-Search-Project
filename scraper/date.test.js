@@ -1609,3 +1609,18 @@ test('MN-001: the Menil\'s foyer installations are not exhibitions', () => {
   assert.equal(re.test('Foyer Installation: René Magritte'), true);
   assert.equal(re.test('Janet Sobel: All-Over'), false);
 });
+
+test('AC-001: Art Institute shows drawn from a collection are excluded', () => {
+  // Her six quarantined titles, 23 Sep, and a sample of those she kept.
+  const re = VENUES.artic.excludeTitle;
+  for (const t of ['Threaded Visions: Contemporary Weavings from the Collection',
+    'Self, Made: Fourteen Modern Artists from the Richard and Ellen Sandor Family Collection',
+    'Contemporary Drawings from the Stenn Family Collection',
+    'Myth and Marble: Ancient Roman Sculpture from the Torlonia Collection',
+    'French Neoclassical Paintings from The Horvitz Collection',
+    'Revolution to Restoration: French Drawings from The Horvitz Collection'])
+    assert.equal(re.test(t), true, t);
+  for (const t of ['Christina Ramberg: A Retrospective', 'Transitory Beauty: Japanese Fan Prints',
+    'Frida Kahlo’s Month in Paris: A Friendship with Mary Reynolds', 'Mary Cassatt: After Impressionism'])
+    assert.equal(re.test(t), false, t);
+});

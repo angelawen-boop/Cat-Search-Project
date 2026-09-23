@@ -3786,6 +3786,14 @@ const VENUES = {
   artic: {
     name: 'Art Institute of Chicago',
     base: 'https://www.artic.edu',
+    // SHOWS DRAWN FROM A COLLECTION ARE OUT — her ruling, 23 Sep: the
+    // museum's permanent collection, a family collection, and named
+    // collections alike (Torlonia, Horvitz). She quarantined six; this title
+    // rule matches exactly those six and none of the 60 she kept. The museum
+    // labels them all EXHIBITION, so its tag cannot reach them, and its
+    // descriptions are no safer — "drawn from the Art Institute's collection"
+    // also describes a Ramberg retrospective she kept.
+    excludeTitle: /\bfrom the\b.*\bCollection\b/i,
     // HER MACHINE ONLY — see machineVenues(). Same reasoning as met.
     route: 'local',
     // BLOCKED FROM THIS CONTAINER, WORKS FROM HERS. A Cloudflare managed

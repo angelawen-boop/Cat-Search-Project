@@ -152,7 +152,7 @@ Judgement about the outside world is not in any file.
 | `menil` | 7 permanent galleries excluded; "Foyer Installation: …" rows excluded (23 Sep) |
 | `tate-britain` | Ofili excluded, on the venue's own ONGOING label |
 | `uffizi` | Headlines kept as titles; undated rows kept |
-| `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md` |
+| `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Shows "from the … Collection" excluded (23 Sep) |
 | `moma` | **Current and upcoming only.** She does not want its past at all |
 | `morgan` | *Collections Spotlight* excluded — a standing rotation, not a show. Past blurbs read off the listing, pages not opened |
 | `rijks` | 37 rows, not chased further. *Asian Pavilion* was pulled by the venue |
