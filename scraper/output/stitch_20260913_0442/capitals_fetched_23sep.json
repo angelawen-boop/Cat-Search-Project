@@ -195,8 +195,7 @@
       "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/rembrandt-velazquez": "Rembrandt-Velázquez",
       "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/all-the-rembrandts": "All the Rembrandts",
       "https://www.rijksmuseum.nl/en/whats-on/exhibitions/ed-van-der-elsken": "Ed van der Elsken. Up Close",
-      "https://www.rijksmuseum.nl/en/whats-on/exhibitions/fiep-westendorp": "Fiep Westendorp",
-      "https://www.rijksmuseum.nl/en/whats-on/exhibitions/asian-pavilion": "Partially Closed"
+      "https://www.rijksmuseum.nl/en/whats-on/exhibitions/fiep-westendorp": "Fiep Westendorp"
     },
     "tate-britain": {
       "https://www.tate.org.uk/whats-on/tate-britain/whistler": "James McNeill Whistler",
@@ -235,5 +234,5 @@
     }
   },
   "borghese_note": "Borghese unreachable 23 Sep. Two titles from the venue's own text in the 13 Sep sweep; five written in title case by hand, her instruction.",
-  "rijks_note": "Three rows no longer at their 13 Sep address; written in title case by hand, names as the venue spells them at their new addresses."
+  "rijks_note": "Two rows no longer at their 13 Sep address; written in title case by hand, names as the venue spells them at their new addresses. (Asian Pavilion: see titles_own_page_23sep.json.)"
 }

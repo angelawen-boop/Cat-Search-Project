@@ -3228,10 +3228,16 @@ const VENUES = {
     // ("METAMORPHOSES"). The now-on-view page wraps only the IMAGE, leaving
     // the title two levels up: "LAST CHANCE ED VAN DER ELSKEN. UP CLOSE till
     // 13 September 2026". Heading first, card as the fallback.
+    // A STATUS BADGE IS NOT A NAME. The Asian Pavilion's card carried
+    // "PARTIALLY CLOSED" as its heading, the heading was trusted, and the row
+    // reached her titled "PARTIALLY CLOSED" — her finding, 23 Sep. Its own page
+    // is headed "Asian Pavilion". Rejected in the heading branch, so the card
+    // is read instead, with the badge stripped off its front.
     title: {
       heading: true,
+      notATitle: /^(?:(?:PARTIALLY|TEMPORARILY)\s+)?CLOSED$|^(?:LAST CHANCE|OPENING SOON|SOON|NEW)$/i,
       card: { depth: 2,
-              stripLeading:  /^(LAST CHANCE|OPENING SOON|SOON|NEW)\b\s*/i,
+              stripLeading:  /^(LAST CHANCE|OPENING SOON|SOON|NEW|(?:PARTIALLY |TEMPORARILY )?CLOSED)\b\s*/i,
               stripTrailing: /\s+(till|until|from)\s+.*$/i },
     },
   },

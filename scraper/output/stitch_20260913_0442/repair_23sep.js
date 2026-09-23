@@ -12,6 +12,8 @@
  *   3. THE SAME SENTENCE TWICE in a note — every Brera card.
  *   4. ENGLISH TITLES at the start of the description — the 20 Italian titles
  *      in this file, from english_titles_23sep.json.
+ *   5. A STATUS BADGE READ AS A TITLE — the Rijksmuseum's "PARTIALLY CLOSED"
+ *      — replaced by the exhibition's own page heading, titles_own_page_23sep.json.
  *
  * All four are fixed at the source (sweep_prototype.js, compress.js); this
  * brings the 13 Sep file into line without a re-sweep, as repair_notes_quote.js
@@ -45,6 +47,7 @@ const QUOTE = /read from a sentence, not a date field: "([^"]*)"/;
 // beside it. Every other title in the file was judged already English. The
 // compressor now writes these in the same answer as the summary (compress.js,
 // ENGLISH_TITLE_VENUES); this file was compressed before that existed.
+const OWN = JSON.parse(fs.readFileSync(path.join(__dirname, 'titles_own_page_23sep.json'), 'utf8'));
 const EN = JSON.parse(fs.readFileSync(path.join(__dirname, 'english_titles_23sep.json'), 'utf8'));
 function withEnglishTitle(r) {
   const en = EN[`${r.venue_code}|${r.title}`];
@@ -107,6 +110,12 @@ const out = rows.map(row => {
   // 3 — the same sentence twice.
   const n = dedupeSentences(r.notes);
   if (n !== r.notes) { log.push(`NOTE   ${r.venue_code} | ${r.title.slice(0, 60)}`); r.notes = n; }
+
+  // 5 — a title that was not the exhibition's name (a status badge read as
+  // one), replaced by the heading of the exhibition's own page. Only the
+  // addresses listed in titles_own_page_23sep.json are touched.
+  const own = OWN[r.url];
+  if (own && r.title !== own) { log.push(`OWN    ${r.venue_code} | ${r.title} → ${own}`); r.title = own; }
 
   // 4 — English titles, from the answers kept beside this file.
   const composed = withEnglishTitle(r);

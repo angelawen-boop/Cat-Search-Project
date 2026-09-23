@@ -1591,3 +1591,13 @@ test('LV-002: the Art Institute reads only the page content, never its menu', ()
   // header nav; every exhibition in main#content. docs/artic_pages/.
   assert.deepStrictEqual(VENUES.artic.within, ['#content']);
 });
+
+test('RK-001: a Rijksmuseum status badge is never a title', () => {
+  // "PARTIALLY CLOSED" reached her as the Asian Pavilion's title, 23 Sep.
+  const t = VENUES.rijks.title;
+  for (const b of ['PARTIALLY CLOSED', 'Temporarily closed', 'CLOSED', 'LAST CHANCE', 'NEW'])
+    assert.equal(t.notATitle.test(b), true, b);
+  // A real title that merely contains the word is untouched.
+  assert.equal(t.notATitle.test('Closed Worlds'), false);
+  assert.equal('PARTIALLY CLOSED Asian Pavilion'.replace(t.card.stripLeading, ''), 'Asian Pavilion');
+});
