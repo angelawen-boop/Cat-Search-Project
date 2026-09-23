@@ -2537,7 +2537,53 @@ function pickTitleLine(raw, rule) {
   return '';
 }
 
+/**
+ * The title as the VENUE WROTE IT, not as its styling shows it — her ruling,
+ * 23 Sep: the scraper must record the truth, not leave the app to tidy it.
+ *
+ * Louvre, Borghese, the Rijksmuseum and others store titles in ordinary case
+ * and SHOUT them with CSS (`text-transform: uppercase`). innerText returns
+ * what is displayed, so ~75 rows of the 13 Sep sweep arrived in capitals. The
+ * Louvre's own menu proved it: the same show reads "Primeval Waters" there and
+ * "PRIMEVAL WATERS" in the grid.
+ *
+ * WHY NOT SIMPLY SWITCH THE STYLING OFF. Several rules downstream match
+ * listing badges IN CAPITALS on purpose — TITLE_NOISE_BADGES and artic's badge
+ * strip — because "Exhibition" in ordinary case is part of real titles. Change
+ * the case of everything and those rules miss, and badges leak into titles.
+ * So every rule still runs on the displayed text, and only the FINISHED title
+ * is looked up in the page's underlying text (textContent, which styling does
+ * not touch). Where it is found, the venue's own letters are taken; where it
+ * is not — a title stitched from pieces the source does not hold contiguously
+ * — the displayed title stands, unchanged.
+ */
+async function restoreCase(link, title) {
+  if (!title) return title;
+  try {
+    return await link.evaluate((a, t) => {
+      const norm = s => String(s || '').replace(/\s+/g, ' ').trim();
+      const want = norm(t);
+      const lower = want.toLowerCase();
+      let n = a;
+      // The link, then its ancestors — a heading can sit beside the link in
+      // its card. Stops before <body>, like every ancestor walk here.
+      for (let i = 0; n && n.tagName !== 'BODY' && i < 6; i++, n = n.parentElement) {
+        const text = norm(n.textContent);
+        const at = text.toLowerCase().indexOf(lower);
+        if (at === -1) continue;
+        const found = text.slice(at, at + want.length);
+        if (found.toLowerCase() === lower) return found;
+      }
+      return t;
+    }, title);
+  } catch { return title; }
+}
+
 async function extractTitle(link, venueCode) {
+  return restoreCase(link, await extractTitleAsShown(link, venueCode));
+}
+
+async function extractTitleAsShown(link, venueCode) {
   const rule = titleRule(venueCode);
 
   if (rule.heading) {
@@ -3784,6 +3830,19 @@ const VENUES = {
     // /exhibitions/history — that is why the old "links below the listing"
     // counter scored this venue zero and it was briefly read as empty.
     selector: 'a[href*="/exhibitions/"]',
+    // THE PAGE'S OWN CONTENT ONLY, never its header. The site's main menu
+    // carries a "Featured Exhibition" card on every page, and the selector
+    // matched it: Mary Cassatt was "also listed" on all eight archive pages,
+    // 2023 included, three years before it opened. Her finding, 23 Sep, and
+    // her saved 2024 archive page settled it: the promo sits in
+    // nav.g-header__nav-primary, every exhibition in main#content.
+    //
+    // UNSEEN on the current and upcoming pages — the container is refused
+    // here, so only the archive page was read. #content is the site's page
+    // template, not a listing class, which is why it was chosen over
+    // ul.o-row-listing. If it is wrong there, those pages collect nothing and
+    // leave marker rows on her pile — visible, never silent.
+    within: ['#content'],
     isNav: href => /\/exhibitions\/?$/.test(href)
                 || /\/exhibitions\/(upcoming|history)\/?$/.test(href)
                 || /\/exhibitions\/history\?/.test(href),
@@ -5386,6 +5445,8 @@ module.exports = {
   // Exported for the same reason as safeGoto: so a diagnostic can run the REAL
   // extractor against a page instead of reimplementing it and drifting from it.
   getCuratorialText,
+  // Exported so a diagnostic can read titles exactly as a sweep does.
+  extractTitle, restoreCase,
   // Pure — the line-by-line title pick, so a venue reachable only from her
   // laptop can still be covered by a fixture here.
   pickTitleLine,

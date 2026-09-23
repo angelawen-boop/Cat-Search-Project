@@ -1554,3 +1554,40 @@ test('LV-001: the Louvre reads only its listing grid, never the menu\'s promo ca
   // its 7 matching links, the seventh being the promo.
   assert.deepStrictEqual(VENUES.louvre.within, ['.Expositions_Grid']);
 });
+
+// TC-001 to TC-003 — titles as the venue WROTE them, not as its CSS shouts
+// them. Her ruling 23 Sep. jsdom applies no styling, so the displayed
+// (uppercased) title is handed in directly, as innerText would give it.
+const { JSDOM } = require('jsdom');
+const { restoreCase } = require('./sweep_prototype.js');
+const fakeLink = (html) => {
+  const dom = new JSDOM(`<body><div class="card">${html}</div></body>`);
+  const a = dom.window.document.querySelector('a');
+  return { evaluate: async (fn, arg) => fn(a, arg) };
+};
+
+test('TC-001: a shouted title comes back in the venue\'s own letters', async () => {
+  const l = fakeLink('<a href="/x"><h3>Primeval Waters</h3></a>');
+  assert.equal(await restoreCase(l, 'PRIMEVAL WATERS'), 'Primeval Waters');
+});
+
+test('TC-002: the heading may sit beside the link, in its card', async () => {
+  const l = fakeLink('<h2>Michel Lacoste’s donation to the musée du Louvre</h2><a href="/x">See</a>');
+  assert.equal(await restoreCase(l, 'MICHEL LACOSTE’S DONATION TO THE MUSÉE DU LOUVRE'),
+    'Michel Lacoste’s donation to the musée du Louvre');
+});
+
+test('TC-003: not found in the page text → the title stands unchanged', async () => {
+  // A title stitched from pieces the source does not hold in one run of text
+  // is kept exactly as read, never guessed at.
+  const l = fakeLink('<a href="/x"><span>Metamorphoses.</span><span>Ovid and the Arts</span></a>');
+  assert.equal(await restoreCase(l, 'METAMORPHOSES OVID AND THE ARTS'), 'METAMORPHOSES OVID AND THE ARTS');
+  // And a venue that really does write in capitals keeps them.
+  assert.equal(await restoreCase(fakeLink('<a href="/x">WORN</a>'), 'WORN'), 'WORN');
+});
+
+test('LV-002: the Art Institute reads only the page content, never its menu', () => {
+  // Her saved 2024 archive page: the "Featured Exhibition" card sits in the
+  // header nav; every exhibition in main#content. docs/artic_pages/.
+  assert.deepStrictEqual(VENUES.artic.within, ['#content']);
+});
