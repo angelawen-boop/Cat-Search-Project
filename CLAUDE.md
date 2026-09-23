@@ -404,8 +404,8 @@ evidence and every finding: `docs/app.md`.**
   the archive. **Nothing to fix; do not re-diagnose this as a matching failure.**
 
 - **Titles — her rulings, 23 Sep.** A title is never SHOWN in all capitals:
-  `displayTitle()` gives a capital to each word of a title with no lowercase
-  letter, on screen only — nothing stored changes, no card is raised. And a
+  `displayTitle()` gives a capital to each word of a title MOSTLY in capitals
+  (over half its words), on screen only — nothing stored changes, no card is raised. And a
   **rename is a Change card**: the title is compared on `normalizeTitle`, so a
   difference only in capitals, accents or punctuation raises nothing. Fixture 21.
 - **Italian titles ride in the description**, never in the title and never in

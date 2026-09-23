@@ -91,8 +91,12 @@ function normalizeUrlKey(u){
 // NO TITLE IS EVER SHOWN IN ALL CAPITALS — her ruling, 23 Sep. ~75 rows in
 // the 13 Sep sweep arrived in capitals (Rijksmuseum, Louvre, Acquavella,
 // Borghese), because a venue typed them that way or its styling shouts them.
-// A title with NO lowercase letter at all is shown with a capital on each word;
-// any title with a lowercase letter is left exactly as the venue wrote it.
+// A title MOSTLY in capitals — more than half its words with no lowercase
+// letter — is shown with a capital on each word; any other title is left
+// exactly as the venue wrote it. Mostly, not wholly: Tate Britain's "JAMES
+// McNEILL WHISTLER" carries one lowercase c and was missed by an all-or-nothing
+// rule, her finding 23 Sep. "NG Stories: Making a National Gallery" and "MoMA
+// PS1" stay as written.
 //
 // DISPLAY ONLY. The stored title is never rewritten, so nothing in her ledger
 // changes, no card is raised, and a row already accepted reads correctly the
@@ -102,7 +106,9 @@ function normalizeUrlKey(u){
 // Capital after a hyphen (Jacques-Louis), not after an apostrophe (Lacoste's).
 function displayTitle(t){
   const s=String(t==null?"":t);
-  if(!/\p{Lu}/u.test(s)||/\p{Ll}/u.test(s))return s;
+  const words=s.split(/\s+/).filter(w=>/\p{L}/u.test(w));
+  const shouting=words.filter(w=>!/\p{Ll}/u.test(w)).length;
+  if(!words.length||shouting*2<=words.length)return s;
   return s.toLocaleLowerCase().replace(/(^|[\s\-\u2010-\u2015(\/"\u201C\u2018«])(\p{L})/gu,(m,a,b)=>a+b.toLocaleUpperCase());
 }
 

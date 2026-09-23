@@ -466,8 +466,12 @@ check('18f: the real sample file starts with every card undecided',
 
   check('21d: an all-capitals title is shown with a capital on each word',
     H.displayTitle("JACQUES-LOUIS DAVID")==="Jacques-Louis David" && H.displayTitle("DRAWING!")==="Drawing!");
-  check('21e: a title with any lowercase letter is shown exactly as written',
+  check('21e: a title mostly in lowercase is shown exactly as written',
     H.displayTitle("Siena: The Rise of Painting")==="Siena: The Rise of Painting" && H.displayTitle("ming wong: Dance")==="ming wong: Dance");
+  check('21g: MOSTLY capitals counts too — one lowercase letter does not save it',
+    H.displayTitle("JAMES McNEILL WHISTLER")==="James Mcneill Whistler");
+  check('21h: but a title that is mostly lowercase keeps its acronyms',
+    H.displayTitle("NG Stories: Making a National Gallery")==="NG Stories: Making a National Gallery" && H.displayTitle("MoMA PS1")==="MoMA PS1");
   check('21f: no apostrophe capital, and a title with no letters is untouched',
     H.displayTitle("MICHEL LACOSTE\u2019S DONATION")==="Michel Lacoste\u2019s Donation" && H.displayTitle("1925")==="1925");
 }
