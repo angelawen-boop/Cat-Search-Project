@@ -511,3 +511,67 @@ test('RB-006: a position outside the file cannot write into it', () => {
   assert.equal(rebuildInOrder(raw, [{ ...raw[0], summary: 'x.', _row: 9 }]).length, 1);
   assert.equal(rebuildInOrder(raw, [{ ...raw[0], summary: 'x.', _row: -1 }])[0].summary, '');
 });
+
+// ---------------------------------------------------------------------------
+// ET-001 to ET-006 — the English title at the start of the description. Her
+// ruling 23 Sep: the title stays in its own language; the English goes in
+// front of the teaser, and is asked once per title, ever.
+
+const ET = require('./compress.js');
+
+test('ET-001: an English rendering goes in front of the teaser', () => {
+  assert.equal(ET.withEnglishTitle('Mariani homage at Capodimonte.', 'The Signs of the Times'),
+    'In English: The Signs of the Times. — Mariani homage at Capodimonte.');
+  // null in the store means "already English" — the teaser is untouched.
+  assert.equal(ET.withEnglishTitle('Armani at Brera.', null), 'Armani at Brera.');
+  // No teaser at all still gives her a readable card.
+  assert.equal(ET.withEnglishTitle('', 'Thirst'), 'In English: Thirst.');
+});
+
+test('ET-002: stripping gives back exactly the teaser, so the next run reuses it', () => {
+  // If the prefix stayed on, the next run would compare it as though the venue
+  // had written it and the reuse that prevents drift would never fire.
+  const en = 'The Signs of the Times. Carlo Maria Mariani at Capodimonte';
+  const t = 'Mariani homage at Capodimonte.';
+  assert.equal(ET.stripEnglishTitle(ET.withEnglishTitle(t, en), en), t);
+  assert.equal(ET.stripEnglishTitle(ET.withEnglishTitle('', en), en), '');
+});
+
+test('ET-003: only the exact stored prefix is removed, never a pattern', () => {
+  // A teaser that happens to open with "In English:" is her text, not ours.
+  assert.equal(ET.stripEnglishTitle('In English: other words — teaser.', 'Thirst'),
+    'In English: other words — teaser.');
+  assert.equal(ET.stripEnglishTitle('A teaser.', null), 'A teaser.');
+});
+
+test('ET-004: composing twice gives the same result — the prefix never stacks', () => {
+  const store = { 'capo|Gaia Fugazza. Sete': 'Gaia Fugazza. Thirst' };
+  const r = [{ venue_code: 'capo', title: 'Gaia Fugazza. Sete', summary: 'Fugazza on thirst.' }];
+  const once = ET.composeEnglishTitles(r, store);
+  assert.deepStrictEqual(ET.composeEnglishTitles(once, store), once);
+  assert.equal(once[0].summary, 'In English: Gaia Fugazza. Thirst. — Fugazza on thirst.');
+  // The input is copied, never mutated.
+  assert.equal(r[0].summary, 'Fugazza on thirst.');
+});
+
+test('ET-005: a title already answered is never asked again — null included', () => {
+  const store = { 'brera|Beauty and the Ideal': null, 'capo|Gaia Fugazza. Sete': 'Gaia Fugazza. Thirst' };
+  const rows = [
+    { venue_code: 'brera', title: 'Beauty and the Ideal' },
+    { venue_code: 'capo', title: 'Gaia Fugazza. Sete' },
+    { venue_code: 'capo', title: 'Emilio Isgrò. Canto Napoli' },
+    { venue_code: 'capo', title: 'Emilio Isgrò. Canto Napoli' },   // asked once
+    { venue_code: 'capo', title: '[all (current/upcoming/past) page]' }, // a marker
+  ];
+  assert.deepStrictEqual(ET.titlesToAsk(rows, store).map(t => t.key), ['capo|Emilio Isgrò. Canto Napoli']);
+});
+
+test('ET-006: a title answer is shape-checked before it may enter the store', () => {
+  assert.equal(ET.validateTitleAnswer(null).ok, true);
+  assert.equal(ET.validateTitleAnswer('Thirst').ok, true);
+  assert.equal(ET.validateTitleAnswer('').ok, false);
+  assert.equal(ET.validateTitleAnswer('Art &amp; Writing').ok, false);
+  // The em dash is the separator; one inside the title would make the strip
+  // ambiguous.
+  assert.equal(ET.validateTitleAnswer('Samorì — Collapse').ok, false);
+});

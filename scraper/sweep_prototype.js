@@ -895,11 +895,21 @@ function applyExtension(range, text) {
   // Borghese writes "extension through October 11" and nothing more. The year
   // is not guessed — it is DERIVED from the fact that an extension is later
   // than the date it replaces. Try the closing date's own year first, and only
-  // if that lands on or before the original closing date does the run cross
-  // into the next one.
+  // if that lands BEFORE the original closing date does the run cross into the
+  // next one.
+  //
+  // THE SAME DAY IS NOT A NEW YEAR. Capodimonte prints the extended date in its
+  // header AND repeats it in prose: "Dal 7 agosto 2025 al 11 novembre 2025 …
+  // fino al 28 ottobre (prorogato fino al 11 novembre)". The range already
+  // closes on 11 November, the phrase names 11 November again, and "on or
+  // before" rolled it into the next year — Gricci closed 2027-11-11 and Lotto's
+  // Lucina Brembati 2027-01-13, each a year late. Both reached her pile and she
+  // rejected them, 23 Sep. A repeat of the date already held is no extension.
   if (!year) {
     year = endYear;
-    if (ymd(year, mon, day) <= range.end) year = endYear + 1;
+    const same = ymd(year, mon, day);
+    if (same === range.end) return range;
+    if (same < range.end) year = endYear + 1;
   }
   const iso = ymd(year, mon, day);
   if (!iso || iso <= range.end) return range;
@@ -2774,6 +2784,11 @@ function sourceNote(ctx) {
 
 function addNote(existing, note) {
   if (!existing) return note;
+  // NEVER THE SAME SENTENCE TWICE. Brera's past page links each exhibition
+  // twice (picture and title), and each link stamped "Also listed on the
+  // venue's "past" page." again — every Brera card carried it twice, 23 Sep.
+  // A note repeated says nothing the first copy did not.
+  if (existing.includes(note)) return existing;
   // Notes are whole sentences now, so join them as sentences. Only fall back
   // to a semicolon for older fragments that do not end in punctuation.
   return /[.!?]$/.test(existing.trim())
@@ -4857,6 +4872,15 @@ async function fetchIndividualPages(page, rows, venueCode) {
         if (filled.length) {
           row.notes = addNote(row.notes,
             `${filled.join(' and ')} date read from a sentence, not a date field: "${p.raw}".`);
+          // SAY SO WHERE A RUN WAS EXTENDED — here as well as on the listing
+          // path. Samori's page reads "28 novembre 2025 – 10 marzo 2026 –
+          // prorogata al 9 giugno 2026"; the row closed correctly on 9 June but
+          // the note quoted only the first range, so the card contradicted its
+          // own dates and she rejected a correct row, 23 Sep.
+          if (p.extendedFrom && filled.includes('closing')) {
+            row.notes = addNote(row.notes,
+              `The venue extended this exhibition; it first announced ${p.extendedFrom} as the closing date.`);
+          }
           // Say so when the year came from somewhere else. The sentence quoted
           // above carries no year, so without this the note reads as though the
           // page stated a full date and she has no way to see the join.
@@ -5332,7 +5356,10 @@ if (require.main === module) {
 // Exported for scraper/date.test.js. Only pure functions — nothing here touches
 // the network, the browser or the filesystem.
 module.exports = {
-  findDateRange, findDateRangeInProse, parseMonthDay, ymd, startYearFor,
+  findDateRange, findDateRangeInProse, parseMonthDay,
+  // Exported for the 23 Sep repair of her import file, which must apply the
+  // CORRECTED rule rather than a copy of it.
+  applyExtension, ymd, startYearFor,
   // Exported so the weekday strip can be tested for what it does rather than
   // for a side effect of it. W-004 used to prove "a bare Sun is not cut out of
   // prose" by reading the surviving text out of the parser's `raw` field, which
@@ -5351,6 +5378,8 @@ module.exports = {
   // Pure — the line-by-line title pick, so a venue reachable only from her
   // laptop can still be covered by a fixture here.
   pickTitleLine,
+  // Pure — so the never-twice rule is asked directly.
+  addNote,
   // Exported so compress.js's mirrored location list can be checked against the
   // real one by a fixture. compress.js must not require THIS file at runtime —
   // that would pull Playwright into a step that is pure text — so a test is the

@@ -22,6 +22,11 @@ const RAW_CSV = 'sweep.csv';
 const COMPRESSED_CSV = 'sweep_compressed.csv';
 const PENDING_JSON = 'compress_pending.json';
 const ANSWERS_JSON = 'compress_answers.json';
+// English titles — see "English titles" in compress.js. Asked separately from
+// the summaries because the answer is stored per TITLE, forever, while a
+// summary is decided per row per run.
+const TITLE_PENDING_JSON = 'title_pending.json';
+const TITLE_ANSWERS_JSON = 'title_answers.json';
 
 const say = (...a) => console.log(...a);
 
@@ -175,8 +180,22 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   say(`  fresh    ${String(tally.fresh).padStart(4)}   never seen before — model writes new`);
   say('');
 
-  if (!pending.length) {
-    C.writeCsv(path.join(runPath, COMPRESSED_CSV), done);
+  // TITLES NEVER ASKED BEFORE. Most sweeps add a handful; the first run after
+  // 23 Sep asks every title once, and never again.
+  const titleAsk = C.titlesToAsk(rows, C.loadTitleStore());
+  const titlePendingPath = path.join(runPath, TITLE_PENDING_JSON);
+  if (titleAsk.length) {
+    fs.writeFileSync(titlePendingPath, JSON.stringify({ run: dir, titles: titleAsk }, null, 2), 'utf8');
+    const job = path.join(runPath, 'job_titles.txt');
+    fs.writeFileSync(job, titleAsk.map(t => JSON.stringify({ k: t.key, title: t.title })).join('\n'), 'utf8');
+    say(`  titles   ${String(titleAsk.length).padStart(4)}   never asked whether they are English — job_titles.txt, Prompt C`);
+    say('');
+  } else if (fs.existsSync(titlePendingPath)) {
+    fs.unlinkSync(titlePendingPath);
+  }
+
+  if (!pending.length && !titleAsk.length) {
+    C.writeCsv(path.join(runPath, COMPRESSED_CSV), C.composeEnglishTitles(done, C.loadTitleStore()));
     say(`Nothing needed a model. Wrote ${COMPRESSED_CSV} (${done.length} rows).`);
     return;
   }
@@ -301,6 +320,7 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   say('     writing these itself uses whatever model it happens to be.');
   if (needsReview) say('       job_haiku.txt      Prompt B — is the old summary now false?  → HAIKU');
   if (needsFresh)  say('       job_sonnet_N.txt   Prompt A — write a fresh summary          → SONNET');
+  if (titleAsk.length) say(`       job_titles.txt     Prompt C — English title, or null         → SONNET  → ${TITLE_ANSWERS_JSON}`);
   say('');
   say('     READ-ONLY MATTERS. Told not to write files, a subagent wrote one');
   say('     anyway — 35k tokens to copy its own input. Told to read once, two');
@@ -334,12 +354,16 @@ function loadMemory(dir) {
   const raw = C.readProForma(path.join(OUTPUT_DIR, dir, RAW_CSV));
   const done = C.readProForma(path.join(OUTPUT_DIR, dir, COMPRESSED_CSV));
   const doneIndex = C.indexPrevious(done);
+  const store = C.loadTitleStore();
   const memory = raw.map(r => {
     const d = C.findPrevious(doneIndex, r);
     return {
       ...r,
       raw: r.summary,
-      summary: d ? d.summary : '',
+      // The TEASER only. The English title in front of it is the store's, and
+      // is put back at --apply; left on, it would be compared as though it were
+      // the venue's wording and the model asked to judge it.
+      summary: d ? C.stripEnglishTitle(d.summary, store[C.titleStoreKey(d)]) : '',
       // A deliberate "not a description" answer, recognised by the note the
       // apply step wrote. This is what stops the row being re-asked forever.
       skipped: !!(d && !String(d.summary || '').trim() && String(d.notes || '').includes(C.SKIP_NOTE)),
@@ -385,6 +409,27 @@ function check(dir) {
     if (/^\s*```/.test(v)) problems.push(`row ${k}: carries a code fence — "${v}"`);
   }
 
+  // THE TITLE ANSWERS, when titles were asked. Same rule: every key present,
+  // none unasked, each a string or null.
+  const titlePendingPath = path.join(runPath, TITLE_PENDING_JSON);
+  let titleCount = 0;
+  if (fs.existsSync(titlePendingPath)) {
+    const tp = JSON.parse(fs.readFileSync(titlePendingPath, 'utf8'));
+    const taPath = path.join(runPath, TITLE_ANSWERS_JSON);
+    if (!fs.existsSync(taPath)) problems.push(`no ${TITLE_ANSWERS_JSON} — ${tp.titles.length} titles were asked`);
+    else {
+      const ta = JSON.parse(fs.readFileSync(taPath, 'utf8'));
+      const tw = new Set(tp.titles.map(t => t.key));
+      for (const k of tw) if (!Object.prototype.hasOwnProperty.call(ta, k)) problems.push(`title "${k}": no answer`);
+      for (const k of Object.keys(ta)) if (!tw.has(k)) problems.push(`title "${k}": answered but was never asked`);
+      for (const [k, v] of Object.entries(ta)) {
+        const r = C.validateTitleAnswer(v);
+        if (!r.ok) problems.push(`title "${k}": ${r.reason}`);
+      }
+      titleCount = tw.size;
+    }
+  }
+
   if (problems.length) {
     say(`\n${problems.length} problem${problems.length === 1 ? '' : 's'} — nothing was written.\n`);
     for (const p of problems.slice(0, 40)) say('  ' + p);
@@ -393,6 +438,7 @@ function check(dir) {
     return false;
   }
   say(`All ${got.size} answers pass: every index present, none over ${C.MAX_WORDS} words, no HTML, all ending in a full stop.`);
+  if (titleCount) say(`All ${titleCount} title answers pass.`);
   return true;
 }
 
@@ -459,7 +505,19 @@ function apply(dir) {
   // a venue that has RECYCLED an address (§5), or two rows with no address at
   // all and the same title. Position cannot collide, so it is the only safe
   // way to put a file back together.
-  const out = C.rebuildInOrder(rows, [...done, ...filled]);
+  // ENGLISH TITLES INTO THE STORE, then onto every row. The store is written
+  // only here, after every check has passed, so a refused run leaves it as it
+  // was.
+  const store = C.loadTitleStore();
+  const titlePendingPath = path.join(runPath, TITLE_PENDING_JSON);
+  if (fs.existsSync(titlePendingPath)) {
+    const ta = JSON.parse(fs.readFileSync(path.join(runPath, TITLE_ANSWERS_JSON), 'utf8'));
+    for (const [k, v] of Object.entries(ta)) store[k] = C.validateTitleAnswer(v).text;
+    C.saveTitleStore(store);
+    const n = Object.values(ta).filter(Boolean).length;
+    say(`Title store: ${Object.keys(ta).length} titles recorded, ${n} with an English rendering.`);
+  }
+  const out = C.composeEnglishTitles(C.rebuildInOrder(rows, [...done, ...filled]), store);
 
   C.writeCsv(path.join(runPath, COMPRESSED_CSV), out);
   fs.unlinkSync(donePath);

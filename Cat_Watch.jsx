@@ -13,8 +13,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "32.1";
-const APP_VERSION_DATE = "22 Sep 2026";
+const APP_VERSION = "33";
+const APP_VERSION_DATE = "23 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
 // size — it is the order she wants to WORK in. The venues she reads most come
@@ -86,6 +86,24 @@ function normalizeUrlKey(u){
     const path=x.pathname.replace(/\/+$/,"");
     return x.protocol.toLowerCase()+"//"+x.host.toLowerCase()+path+x.search;
   }catch{ return ""; }
+}
+
+// NO TITLE IS EVER SHOWN IN ALL CAPITALS — her ruling, 23 Sep. ~75 rows in
+// the 13 Sep sweep arrived in capitals (Rijksmuseum, Louvre, Acquavella,
+// Borghese), because a venue typed them that way or its styling shouts them.
+// A title with NO lowercase letter at all is shown with a capital on each word;
+// any title with a lowercase letter is left exactly as the venue wrote it.
+//
+// DISPLAY ONLY. The stored title is never rewritten, so nothing in her ledger
+// changes, no card is raised, and a row already accepted reads correctly the
+// moment the page loads. The cost she accepted: a title the venue really does
+// write in capitals ("ALIVE!") is shown as "Alive!".
+//
+// Capital after a hyphen (Jacques-Louis), not after an apostrophe (Lacoste's).
+function displayTitle(t){
+  const s=String(t==null?"":t);
+  if(!/\p{Lu}/u.test(s)||/\p{Ll}/u.test(s))return s;
+  return s.toLocaleLowerCase().replace(/(^|[\s\-\u2010-\u2015(\/"\u201C\u2018«])(\p{L})/gu,(m,a,b)=>a+b.toLocaleUpperCase());
 }
 
 function urlLooksValid(u){ if(!u)return false; try{ const url=new URL(String(u).trim()); if(!/^https?:$/.test(url.protocol))return false; if(!/^[a-z0-9.-]+$/i.test(url.hostname))return false; if(!url.hostname.includes("."))return false; return true; }catch{ return false; } }
@@ -1537,6 +1555,14 @@ export default function App(){
       if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line:p.line,choices,merged:!!p.mergedFrom}); continue; }
       const upd=[];
       const consider=(field,label,oldV,newV)=>{ const o=(oldV==null?"":String(oldV)), n=(newV==null?"":String(newV)); if(!n)return; if(!o)upd.push({field,label,oldVal:"",newVal:n,kind:"fill"}); else if(o!==n)upd.push({field,label,oldVal:o,newVal:n,kind:"change"}); };
+      // A RENAME IS A CHANGE — her ruling, 23 Sep. Until then the title was
+      // never compared, so a venue renaming a show was silently ignored.
+      // Compared on normalizeTitle, the same key the matching uses: a
+      // difference only in capitals, accents or punctuation is not a rename
+      // (displayTitle already fixes capitals on screen), and raising a card
+      // for it would ask her to choose between two spellings of one name.
+      if(title&&match.title&&normalizeTitle(title)!==normalizeTitle(match.title))
+        upd.push({field:"title",label:"Title",oldVal:String(match.title),newVal:String(title),kind:"change"});
       consider("startDate","Start date",match.startDate,sd);
       consider("endDate","End date",match.endDate,ed);
       consider("summary","Description",match.summary,summary);
@@ -2120,14 +2146,14 @@ export default function App(){
     setDebug(out.detail);
     if(out.ok){
       await commit(rows.map(r=>r.id===id?out.row:r));
-      if(out.trouble)setError("Found the catalogue for \u201c"+row.title+"\u201d, but the search "
+      if(out.trouble)setError("Found the catalogue for \u201c"+displayTitle(row.title)+"\u201d, but the search "
         +"stopped part-way, so the ISBN or the publisher\u2019s page may be missing when they "
         +"exist. "+out.trouble.split("[")[0].trim()+" Press \u201cSearch again\u201d.");
-    } else setError("Catalogue search failed for \u201c"+row.title+"\u201d.");
+    } else setError("Catalogue search failed for \u201c"+displayTitle(row.title)+"\u201d.");
     setBusy(false);setBusyId(null);setLookPhase(null);
   }
 
-  async function findWantedCats(){const targets=rows.filter(r=>r.acquiring==="yes"&&!r.looked&&r.interested);if(!targets.length)return;setBusy(true);setError(null);let next=[...rows];for(let i=0;i<targets.length;i++){setProg({done:i,total:targets.length,label:targets[i].title});const out=await lookupCat(targets[i]);if(out.ok){next=next.map(r=>r.id===out.row.id?out.row:r);setRows(next);}if(i===0)setDebug(out.detail);}await commit(next);setProg({done:targets.length,total:targets.length,label:"Done"});setBusy(false);setLookPhase(null);}
+  async function findWantedCats(){const targets=rows.filter(r=>r.acquiring==="yes"&&!r.looked&&r.interested);if(!targets.length)return;setBusy(true);setError(null);let next=[...rows];for(let i=0;i<targets.length;i++){setProg({done:i,total:targets.length,label:displayTitle(targets[i].title)});const out=await lookupCat(targets[i]);if(out.ok){next=next.map(r=>r.id===out.row.id?out.row:r);setRows(next);}if(i===0)setDebug(out.detail);}await commit(next);setProg({done:targets.length,total:targets.length,label:"Done"});setBusy(false);setLookPhase(null);}
 
   const dismiss=id=>{commit(rows.map(r=>r.id===id?{...r,interested:false}:r));if(undoTimer.current)clearTimeout(undoTimer.current);setUndo({id});undoTimer.current=setTimeout(()=>setUndo(null),10000);};
   const undoDismiss=()=>{if(!undo)return;commit(rows.map(r=>r.id===undo.id?{...r,interested:true}:r));setUndo(null);if(undoTimer.current)clearTimeout(undoTimer.current);};
@@ -2306,7 +2332,7 @@ export default function App(){
     const infoRow=(label,val)=><div style={{marginBottom:2}}><b style={{color:C.ink}}>{label}:</b> {val&&String(val).trim()?val:<span style={{color:C.muted}}>{"\u2014"}</span>}</div>;
     return(
       <div key={i} id={"prop-"+i} style={{border:"1px solid "+C.rule,borderRadius:6,background:C.card,padding:"10px 12px",marginBottom:8}}>
-        <div style={{fontSize:13,fontWeight:600,color:C.ink,marginBottom:4}}>{p.title}</div>
+        <div style={{fontSize:13,fontWeight:600,color:C.ink,marginBottom:4}}>{displayTitle(p.title)}</div>
 
 
         {p.type==="add"&&<div style={{fontSize:11.5,color:C.ink,lineHeight:1.5}}>
@@ -2322,7 +2348,7 @@ export default function App(){
             ? <div style={{fontStyle:"italic",color:C.action}}>Will be added as a separate new entry instead of changing the existing one.</div>
             : p.upd.map((u,j)=>{const fd=(dec.fields||{})[j];return(
                 <div key={j} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:5}}>
-                  <div style={{flex:1,lineHeight:1.4}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?("add \u201c"+u.newVal+"\u201d"):("\u201c"+u.oldVal+"\u201d \u2192 \u201c"+u.newVal+"\u201d")}</span></div>
+                  <div style={{flex:1,lineHeight:1.4}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{(v=>u.kind==="fill"?("add \u201c"+v(u.newVal)+"\u201d"):("\u201c"+v(u.oldVal)+"\u201d \u2192 \u201c"+v(u.newVal)+"\u201d"))(u.field==="title"?displayTitle:(x=>x))}</span></div>
                   <button onClick={()=>setFieldDec(i,j,"accept")} style={decBtn(fd==="accept",C.okEdge)}>{fd==="accept"?"\u2713 ":""}Accept edit</button>
                   <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject",C.rejectInk)}>Reject</button>
                 </div>
@@ -2531,7 +2557,7 @@ export default function App(){
           {ignored.map(x=>(
             <div key={x.key} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
               <span style={{minWidth:130,fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
-              <span style={{flex:1}}>{x.title||"(no title)"}</span>
+              <span style={{flex:1}}>{displayTitle(x.title)||"(no title)"}</span>
               <button onClick={()=>{
                 const at=new Date().toISOString();
                 setQuarantine(prev=>{ const next=mergeQuarantine(prev,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}});
@@ -2612,7 +2638,7 @@ export default function App(){
                 <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft}}>{mu?.short}</span>
                 <button onClick={()=>restore(r.id)} style={{background:"none",border:"1px solid "+C.action,borderRadius:3,color:C.action,fontSize:10,fontWeight:500,cursor:"pointer",padding:"2px 8px"}}>Restore</button>
               </div>
-              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,fontWeight:500,marginTop:3,color:C.soft}}>{r.title}</div>
+              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,fontWeight:500,marginTop:3,color:C.soft}}>{displayTitle(r.title)}</div>
               <div style={{fontSize:10.5,color:C.muted,marginTop:2}}>{dateRange(r)}</div>
             </article>
             </React.Fragment>
@@ -2629,7 +2655,7 @@ export default function App(){
                 </div>
                 <div style={{display:"flex",alignItems:"baseline",gap:0,marginTop:5}}>
                   <h3 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:18,lineHeight:1.2,fontWeight:500,margin:0,letterSpacing:"-0.01em",flex:1}}>
-                    {r.title}
+                    {displayTitle(r.title)}
                     {r.exUrl&&<a href={r.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.action,textDecoration:"none",marginLeft:5,fontSize:13,fontWeight:400}}>{"\u2197"}</a>}
                   </h3>
                   <div style={{display:"flex",gap:8,alignItems:"center",marginLeft:8,flexShrink:0}}>

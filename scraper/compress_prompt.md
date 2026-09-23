@@ -6,7 +6,7 @@ them in the repo rather than in a session's head — a prompt that exists only i
 chat is lost the moment the session closes, and there is then no way to tell whether
 a change in summary quality came from the venue, the model or the wording of the ask.
 
-Both prompts take the same two inputs: the example pairs (`compress.js --examples`)
+Prompts A and B take the same two inputs: the example pairs (`compress.js --examples`)
 and a rows file. Both return **only** a JSON object mapping row index to a string or
 `null`. Neither may write a file — her standing rule is that a model touches strings,
 never files, so a confused model can produce bad wording but cannot mangle a CSV.
@@ -200,6 +200,47 @@ that came back in Italian would quietly break that.
 > STEP 4. Output ONLY a JSON object, mapping each row's index (as a string) to your
 > answer string, or to null. No commentary before or after, no markdown code fence.
 > Every index in the file must appear exactly once.
+
+---
+
+## Prompt C — the English title, or null
+
+**Added 23 Sep 2026, her ruling.** A title stays in the venue's own language; where
+it is not English, its English rendering goes at the start of the description
+(`In English: … — teaser`). Asked **once per title, ever** — the answer lives in
+`scraper/title_english.json` and code reads it from then on, so a later sweep
+cannot word it differently and raise a false "description changed" card. Why it is
+a store and not run memory: `compress.js`, "English titles".
+
+**Sonnet.** Titles are short, but getting a pun, an artwork's accepted English name
+or a bilingual title right is comprehension. One job holds every new title; the
+first run asks all of them, later runs a handful.
+
+> You are translating exhibition titles for a personal art-catalogue tracker. Your
+> ONLY output is text. Do not write or edit any file.
+>
+> Read this file. Each line is a JSON object with a key "k" and a "title":
+> `<ROWS_PATH>`
+>
+> For each title, decide whether an English reader can already read it.
+>
+> - ALREADY ENGLISH → null. This includes titles that are English apart from
+>   names: a person, a place, a collection, or an artwork's name kept in its
+>   original language ("Giovanni Agostino da Lodi. An itinerant painter between
+>   Leonardo and Giorgione" is null). Capital letters, accents and punctuation do
+>   not make a title foreign.
+> - OTHERWISE → the title translated into natural English. Keep every name as the
+>   title writes it. Keep the title's own structure — its full stops and
+>   subtitle. Where an artwork has a well-established English name, use it. Do
+>   not explain, add dates, or add anything the title does not say. Do not use an
+>   em dash (—) anywhere; it is the separator in front of the summary.
+>
+> Output ONLY a JSON object mapping each "k" exactly as given to your answer
+> string, or to null. No commentary, no markdown code fence. Every "k" must
+> appear exactly once.
+
+`--check` refuses a missing or unasked key, an empty string, an HTML fragment or an
+em dash; `--apply` writes the store only after every check has passed.
 
 ---
 

@@ -438,4 +438,38 @@ check('18f: the real sample file starts with every card undecided',
     H.activeQuarantine(afterRelease).every(x=>x.key!=="a"));
 }
 
+// 21. TITLES — her rulings, 23 Sep, from the 320-card import.
+// A rename is a change she decides; a difference only in capitals, accents or
+// punctuation is not, and all-capitals titles are fixed on SCREEN only, so no
+// stored title moves and no card is raised for it.
+{
+  const led=(t)=>[{id:"x",museumId:"louvre",title:t,startDate:"2025-01-01",endDate:"2025-05-01",summary:"Same.",exUrl:"https://louvre.fr/a"}];
+  const file=(t)=>hdr+row(['louvre',t,'2025-01-01','2025-05-01','Same.','https://louvre.fr/a','']);
+
+  H.setRows(led("Mamluks"));
+  let t=H.analyzeProForma(file("Mamluks: 1250-1517"));
+  check('21: a renamed show raises a Change card for the title',
+    t.props.length===1 && t.props[0].type==="change" && t.props[0].upd.some(u=>u.field==="title"&&u.oldVal==="Mamluks"&&u.newVal==="Mamluks: 1250-1517"), t.props);
+
+  H.setRows(led("Mamluks"));
+  t=H.analyzeProForma(file("MAMLUKS"));
+  check('21a: capitals alone are not a rename — nothing proposed', t.props.length===0, t.props);
+
+  H.setRows(led("Guillon-Lethière, Born in Guadeloupe"));
+  t=H.analyzeProForma(file("Guillon-Lethiere: Born in Guadeloupe"));
+  check('21b: nor are accents and punctuation', t.props.length===0, t.props);
+
+  // Accepting it writes the new title, through the same patch as any field.
+  H.setRows(led("Mamluks"));
+  t=H.analyzeProForma(file("Mamluks: 1250-1517"));
+  check('21c: the title change is the only change on the card', t.props[0].upd.length===1, t.props[0].upd);
+
+  check('21d: an all-capitals title is shown with a capital on each word',
+    H.displayTitle("JACQUES-LOUIS DAVID")==="Jacques-Louis David" && H.displayTitle("DRAWING!")==="Drawing!");
+  check('21e: a title with any lowercase letter is shown exactly as written',
+    H.displayTitle("Siena: The Rise of Painting")==="Siena: The Rise of Painting" && H.displayTitle("ming wong: Dance")==="ming wong: Dance");
+  check('21f: no apostrophe capital, and a title with no letters is untouched',
+    H.displayTitle("MICHEL LACOSTE\u2019S DONATION")==="Michel Lacoste\u2019s Donation" && H.displayTitle("1925")==="1925");
+}
+
 process.exit(fails?1:0);

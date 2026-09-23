@@ -23,6 +23,7 @@ const {
   classifyLoadError, isOwnListingPage, saysOngoing,
   expandYearArchive, listingPages, followPagination, VENUES, pickTitleLine,
   stripWeekdays,
+  addNote,
 } = require('./sweep_prototype.js');
 
 const range = (s, hint) => {
@@ -1512,4 +1513,35 @@ test('Q-102: no dates means no quote, so no note can be written', () => {
   assert.equal(r.start, '');
   assert.equal(r.end, '');
   assert.equal(r.raw, '');
+});
+
+// ---------------------------------------------------------------------------
+// EX-009 to EX-011 — found in her 320-card import, 23 Sep.
+
+test('EX-009: an extension naming the closing date already held is NOT a year later', () => {
+  // Capodimonte's Gricci page: header range to 11 November 2025, then prose
+  // "(prorogato fino al 11 novembre)". Rolled into the next year, it closed
+  // 2027-11-11. Lotto's Lucina Brembati likewise became 2027-01-13.
+  const a = findDateRange('Dal 7 agosto 2025 al 11 novembre 2025, fino al 28 ottobre (prorogato fino al 11 novembre)');
+  assert.equal(a.end, '2025-11-11');
+  assert.equal(a.extendedFrom, undefined);
+  const b = findDateRangeInProse('(2 ottobre 2025- 13 gennaio 2026) … (2 ottobre- 6 gennaio, prorogato fino al 13 gennaio)');
+  assert.equal(b.end, '2026-01-13');
+  assert.equal(b.extendedFrom, undefined);
+});
+
+test('EX-010: an earlier day with no year still crosses into the next year', () => {
+  // The rule EX-009 narrowed must still hold where it was right.
+  const r = findDateRange('From December 5 to December 20, 2025, extended through January 18');
+  assert.equal(r.end, '2026-01-18');
+  assert.equal(r.extendedFrom, '2025-12-20');
+});
+
+test('EX-011: a note is never stamped twice', () => {
+  // Brera's past page links each exhibition twice; each link added the same
+  // "Also listed" sentence, so every card carried it twice.
+  const once = addNote('Found on the venue\'s "current" listing page.', 'Also listed on the venue\'s "past" page.');
+  assert.equal(addNote(once, 'Also listed on the venue\'s "past" page.'), once);
+  assert.equal(addNote(once, 'Also listed on the venue\'s "past 2025" page.'),
+    once + ' Also listed on the venue\'s "past 2025" page.');
 });

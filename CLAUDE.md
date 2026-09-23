@@ -294,7 +294,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 32.1, 22 Sep 2026.** The file is `Cat_Watch.jsx` — renamed from
+**Version 33, 23 Sep 2026.** The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -402,6 +402,17 @@ evidence and every finding: `docs/app.md`.**
 - **Seed set**, ~110 exhibitions read 20 Aug 2026, met / ng / rijks / acq only.
   Thin on history at met and rijks because Chat Claude's fetch tool could not see
   the archive. **Nothing to fix; do not re-diagnose this as a matching failure.**
+
+- **Titles — her rulings, 23 Sep.** A title is never SHOWN in all capitals:
+  `displayTitle()` gives a capital to each word of a title with no lowercase
+  letter, on screen only — nothing stored changes, no card is raised. And a
+  **rename is a Change card**: the title is compared on `normalizeTitle`, so a
+  difference only in capitals, accents or punctuation raises nothing. Fixture 21.
+- **English titles ride in the description**, never in the title and never in
+  a ninth column: `In English: … — teaser`, written by the compressor from a
+  per-title store (`scraper/title_english.json`) that is asked once and read
+  forever, so it cannot drift into a false changed-description card.
+  `compress.js`, "English titles".
 
 **Deliberately not built:** bulk-approve, in-app field editing, and the mirror
 case where the app proposes Add but it is really an update.
