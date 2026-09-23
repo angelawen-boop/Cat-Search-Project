@@ -890,8 +890,7 @@ row identity closes: **419 = 13 markers + 0 folds + 86 matching + 320**.
 what she accepted, it proposes **3 adds** (the three Capodimonte rows she
 rejected, now correct), **18 description changes** (English titles) and **94 title
 changes**: 42 titles corrected from capitals, 52 seed rows whose shortened August
-titles differ from the venue's own. Borghese's 7 capitals titles wait for its site
-to answer (`--fetch borghese`).
+titles differ from the venue's own.
 
 Expect debugging to fall out of it. Also still to do: a save round-trip after the
 import — export, re-import that file, confirm quarantine and per-venue freshness

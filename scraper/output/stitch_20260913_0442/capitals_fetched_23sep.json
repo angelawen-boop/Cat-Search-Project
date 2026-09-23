@@ -193,7 +193,10 @@
       "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/highlights-of-italian-drawing": "The best Italian drawings",
       "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/caravaggio-bernini": "Caravaggio-Bernini",
       "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/rembrandt-velazquez": "Rembrandt-Velázquez",
-      "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/all-the-rembrandts": "All the Rembrandts"
+      "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/all-the-rembrandts": "All the Rembrandts",
+      "https://www.rijksmuseum.nl/en/whats-on/exhibitions/ed-van-der-elsken": "Ed van der Elsken. Up Close",
+      "https://www.rijksmuseum.nl/en/whats-on/exhibitions/fiep-westendorp": "Fiep Westendorp",
+      "https://www.rijksmuseum.nl/en/whats-on/exhibitions/asian-pavilion": "Partially Closed"
     },
     "tate-britain": {
       "https://www.tate.org.uk/whats-on/tate-britain/whistler": "James McNeill Whistler",
@@ -221,6 +224,16 @@
       "https://www.tate.org.uk/whats-on/tate-modern/tarek-atoui": "Hyundai Commission: Tarek Atoui",
       "https://www.tate.org.uk/whats-on/tate-modern/hyundai-commission-2027": "Hyundai Commission 2027"
     },
-    "borghese": {}
-  }
+    "borghese": {
+      "https://galleriaborghese.cultura.gov.it/en/exhibition/metamorphoses/": "Metamorphoses Ovid and the Arts",
+      "https://galleriaborghese.cultura.gov.it/en/exhibition/return-to-the-galleria-borghese/": "Return to Galleria Borghese. Giovan Francesco Penni and Raphael’s Workshop",
+      "https://galleriaborghese.cultura.gov.it/en/exhibition/marcello-provenzale-from-cento/": "Marcello Provenzale from Cento. A Genius of Baroque Mosaic in Borghese Rome",
+      "https://galleriaborghese.cultura.gov.it/en/exhibition/zanabazar-at-the-galleria-borghese-from-mongolia-to-the-global-baroque/": "Zanabazar at the Galleria Borghese. From Mongolia to the Global Baroque",
+      "https://galleriaborghese.cultura.gov.it/en/exhibition/black-soil-poems/": "Wangechi Mutu – Black Soil Poems",
+      "https://galleriaborghese.cultura.gov.it/en/exhibition/poetry-and-painting-in-the-17th-century-giovan-battista-marino-and-the-marvelous-passion/": "Poetry and Painting in the 17th Century. Giovan Battista Marino and the Marvelous Passion.",
+      "https://galleriaborghese.cultura.gov.it/en/exhibition/louise-bourgeois-unconscious-memories/": "Louise Bourgeois. Unconscious Memories"
+    }
+  },
+  "borghese_note": "Borghese unreachable 23 Sep. Two titles from the venue's own text in the 13 Sep sweep; five written in title case by hand, her instruction.",
+  "rijks_note": "Three rows no longer at their 13 Sep address; written in title case by hand, names as the venue spells them at their new addresses."
 }

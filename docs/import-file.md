@@ -164,11 +164,12 @@ with the scraper's new `restoreCase`), saves url → title to
 `capitals_fetched_23sep.json`, and replaces a title only where the venue's own
 title at the SAME address is the same letters in a different case.
 
-**68 fixed. 13 left, each for a stated reason:** Louvre Couture, WORN and REVOLUSI!
-are written in capitals by the venue; two Rijksmuseum shows closed on 13 Sep and
-moved to /past/ addresses under shorter titles, and its Asian Pavilion row was
-pulled; **Borghese's 7 wait for its site**, down all day —
-`repair_capitals_23sep.js --fetch borghese`, then `--apply`.
+**78 fixed; 3 left** — Louvre Couture, WORN and REVOLUSI!, which the venues
+themselves write in capitals. Borghese (down all day): 2 from the venue's own text
+in the 13 Sep sweep, 5 written in title case by hand, her instruction. Three
+Rijksmuseum rows no longer at their address: written in title case by hand, names
+spelled as the venue spells them at their new addresses. Both recorded in
+`capitals_fetched_23sep.json`.
 
 Re-imported over what she accepted: 3 adds, 18 description changes, 94 title
 changes — 42 capitals corrections and 52 seed rows whose shortened August titles
