@@ -3557,6 +3557,15 @@ const VENUES = {
     // Past exhibitions use this same /exhibitions/<slug> path, so one selector
     // serves both.
     selector: 'a[href*="/exhibitions-and-events/exhibitions/"]',
+    // THE LISTING IS ONE GRID, and nothing outside it is an exhibition. The
+    // site's own menu — the "Exhibitions" dropdown in the header, on EVERY page
+    // — carries a promotional card for the current headline show. The selector
+    // matched it, so Primeval Waters was "also listed" on the past page and on
+    // the 2024 and 2025 archives, two years before it opened. Her finding,
+    // 23 Sep. Read off the live pages the same day: every exhibition card sits
+    // in div.Expositions_Grid on the current page and the year archives; the
+    // promo sits in div.Navigation_SubNavigation.
+    within: ['.Expositions_Grid'],
     isNav: href => /\/exhibitions-and-events\/exhibitions\/?$/.test(href),
     title: { heading: true },
     // SETTLED 12 Sep 2026, and the previous note here was wrong.

@@ -1545,3 +1545,12 @@ test('EX-011: a note is never stamped twice', () => {
   assert.equal(addNote(once, 'Also listed on the venue\'s "past 2025" page.'),
     once + ' Also listed on the venue\'s "past 2025" page.');
 });
+
+test('LV-001: the Louvre reads only its listing grid, never the menu\'s promo card', () => {
+  // The header's "Exhibitions" dropdown carries a card for the headline show
+  // on EVERY page; matched, it made Primeval Waters "also listed" on the 2024
+  // archive two years before it opened. This checks what the recipe SAYS; the
+  // live check was two page loads on 23 Sep — the past page's grid holds 6 of
+  // its 7 matching links, the seventh being the promo.
+  assert.deepStrictEqual(VENUES.louvre.within, ['.Expositions_Grid']);
+});
