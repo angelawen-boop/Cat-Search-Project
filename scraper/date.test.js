@@ -1624,3 +1624,16 @@ test('AC-001: Art Institute shows drawn from a collection are excluded', () => {
     'Frida Kahlo’s Month in Paris: A Friendship with Mary Reynolds', 'Mary Cassatt: After Impressionism'])
     assert.equal(re.test(t), false, t);
 });
+
+test('AC-002: Art Institute films and installations are flagged on the card, never dropped', () => {
+  const { flagFromDescription } = require('./sweep_prototype.js');
+  const re = VENUES.artic.flagWords;
+  const r = flagFromDescription({ title: 'Leslie Thornton: Jennifer, Where Are You?', notes: 'Found.',
+    summary: 'This 1981 film considers speech and perception.' }, re);
+  assert.equal(r.notes, 'Found. The venue\'s own description uses the word "film".');
+  // A show whose description says none of the words gets no note.
+  const k = flagFromDescription({ title: 'Mary Cassatt', notes: 'Found.', summary: 'Paintings and prints.' }, re);
+  assert.equal(k.notes, 'Found.');
+  // Marker rows are never touched.
+  assert.equal(flagFromDescription({ title: '[past page]', notes: 'x', summary: 'film' }, re).notes, 'x');
+});

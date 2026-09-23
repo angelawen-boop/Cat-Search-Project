@@ -3794,6 +3794,9 @@ const VENUES = {
     // descriptions are no safer — "drawn from the Art Institute's collection"
     // also describes a Ramberg retrospective she kept.
     excludeTitle: /\bfrom the\b.*\bCollection\b/i,
+    // Films, moving-image works and installations — flagged, not excluded.
+    // See flagFromDescription().
+    flagWords: /\b(films?|videos?|moving[- ]image|screenings?|site[- ]specific|in situ)\b/i,
     // HER MACHINE ONLY — see machineVenues(). Same reasoning as met.
     route: 'local',
     // BLOCKED FROM THIS CONTAINER, WORKS FROM HERS. A Cloudflare managed
@@ -4177,6 +4180,26 @@ const VENUE_ORDER = Object.keys(VENUES);
 /**
  * The engine. Every venue goes through this; none has its own copy.
  */
+/**
+ * Say on the card when the venue's OWN description uses a word for something
+ * she does not collect — "film", "video", "site-specific". Her ruling, 23 Sep,
+ * for the Art Institute: films, moving-image works and installations are out,
+ * but no rule tells them apart cleanly. Tested against her quarantine, the
+ * opening of the description caught 8 of her 11 and one show she kept, so it FLAGS and never
+ * drops: a wrong drop would lose an exhibition she never saw, a wrong note
+ * costs one glance. The note quotes the word, so it is a fact about the page.
+ */
+function flagFromDescription(row, re) {
+  if (!row || !row.summary || String(row.title || '').startsWith('[')) return row;
+  // THE OPENING ONLY — where a venue says what the show IS. Read whole, the
+  // same words turned up later in shows she kept (a photographer's "film",
+  // Samaras's Polaroids): 12 flags, 4 wrong. The first 600 characters: 9
+  // flags, 1 wrong, measured on the 13 Sep sweep.
+  const m = String(row.summary).slice(0, 600).match(re);
+  if (m) row.notes = addNote(row.notes, `The venue's own description uses the word "${m[0].toLowerCase()}".`);
+  return row;
+}
+
 async function scrapeVenue(page, code, { listingOnly = false } = {}) {
   const v = VENUES[code];
   if (!v) { log(`  no recipe for venue "${code}"`); return []; }
@@ -4387,6 +4410,10 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
     // the log line below describes what happened rather than what was intended.
     .filter(r => !r._fromListing);
   await fetchIndividualPages(page, toFetch, code);
+
+  // WORDS THE VENUE USES FOR WHAT SHE DOES NOT COLLECT — a note, never an
+  // exclusion. See flagFromDescription().
+  if (v.flagWords) for (const r of rows) flagFromDescription(r, v.flagWords);
 
   // ROWS THE VENUE'S OWN PAGE LABELLED AS SOMETHING OTHER THAN AN EXHIBITION.
   // Marked during the detail fetch, dropped here, and each one named — an
@@ -5473,7 +5500,7 @@ module.exports = {
   // laptop can still be covered by a fixture here.
   pickTitleLine,
   // Pure — so the never-twice rule is asked directly.
-  addNote,
+  addNote, flagFromDescription,
   // Exported so compress.js's mirrored location list can be checked against the
   // real one by a fixture. compress.js must not require THIS file at runtime —
   // that would pull Playwright into a step that is pure text — so a test is the
