@@ -171,7 +171,9 @@ Rijksmuseum rows no longer at their address: written in title case by hand, name
 spelled as the venue spells them at their new addresses. Both recorded in
 `capitals_fetched_23sep.json`.
 
-Re-imported over what she accepted: 3 adds, 18 description changes, 94 title
-changes — 42 capitals corrections and 52 seed rows whose shortened August titles
-differ from the venue's own (only 42 of the 68 reach a card because 26 of them
-sit on seed rows, whose ledger title is the seed's).
+Re-imported over what she accepted it gave her 113 cards. **The title cards were
+never read before the file was sent**, and ~52 of them were her August seed
+titles against the 13 Sep sweep's listing titles — several SHORTER than hers
+(*Radical Harmony: Neo-Impressionists* → *Radical Harmony*), Acquavella's run
+together with a city, the Louvre's in its own inconsistent capitals. The file
+still carries all of it; the open list is CLAUDE.md §7.1a.

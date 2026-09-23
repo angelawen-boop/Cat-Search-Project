@@ -408,12 +408,17 @@ evidence and every finding: `docs/app.md`.**
   recorded in capitals gets corrected. **Nothing is masked on screen**: an
   on-screen capitals fix was built and removed the same day, her ruling, because
   it would hide a scraper fault forever. The scraper records titles in the
-  venue's own letters (`restoreCase`). Fixture 21.
+  venue's own letters (`restoreCase`). Fixture 21. **SHIPPED BROKEN — §7.1a.**
+  It compares with no memory, so every old seed-vs-sweep wording difference
+  became a card, and a rejected one returns on every sweep.
 - **Italian titles ride in the description**, never in the title and never in
-  a ninth column: `In English: … — teaser`, written by the compressor IN THE SAME
+  a ninth column, written by the compressor IN THE SAME
   ANSWER as the summary, and only for `ENGLISH_TITLE_VENUES` (`compress.js`).
   A separate title step was built and withdrawn on 23 Sep: it sent all 402
   titles when ~50 could be Italian. `compress_prompt.md`, "Italian titles".
+  **Her format, 23 Sep, NOT YET BUILT:** `In English: "Carlo Maria Mariani. Art
+  Beyond Time." Sixteen works spanning Mariani's fifty-year career.` — the file
+  and compressor still write `In English: … . — teaser` (§7.1a).
 
 **Deliberately not built:** bulk-approve, in-app field editing, and the mirror
 case where the app proposes Add but it is really an update.
@@ -862,7 +867,21 @@ keeps making in new clothes.
   render, black screen. **A blanket find-and-replace over a file you have just
   added definitions to will eat those definitions.**
 
+### Handing her work nobody read
+
+- **Counting the cards a file would produce and calling the file checked**,
+  23 Sep. The count was right; ~52 of the cards were wrong titles, and the
+  summary described them as "the museum's full titles" without one being read.
+  She found them by working the pile. **Run the file through the app's own
+  intake and READ every card before sending it.**
+- **Asserting what a set of changes is instead of looking** — "longer, fuller
+  titles" — while several were shorter or lower-case.
+
 ### Subagents
+
+- **Sending a model everything when the question applies to a few**, 23 Sep:
+  all 402 titles in the file sent to ask "is this Italian?", ~85k tokens of her
+  allowance, when four venues' ~50 titles were the only candidates.
 
 - Handing one pretty-printed JSON with fields it never reads, plus a second file
   for examples — 178k tokens where 100k did the same work.
@@ -886,11 +905,51 @@ Against her 110-row seed it produces 320 cards — 299 add, 14 fill, 7 change. T
 row identity closes: **419 = 13 markers + 0 folds + 86 matching + 320**.
 
 **Repaired 23 Sep** after her first sitting (`repair_23sep.js`,
-`repair_capitals_23sep.js`; reasoning in `docs/import-file.md`). Re-imported over
-what she accepted, it proposes **3 adds** (the three Capodimonte rows she
-rejected, now correct), **18 description changes** (English titles) and **94 title
-changes**: 42 titles corrected from capitals, 52 seed rows whose shortened August
-titles differ from the venue's own.
+`repair_capitals_23sep.js`; `docs/import-file.md`): Capodimonte's two wrong end
+dates, doubled notes, 20 English titles, 78 titles out of capitals, Asian
+Pavilion named. **She is mid-way through re-importing that file into v33** —
+113 cards, 43 decided, 63 undecided when she stopped — and it is full of the
+faults in 1a. Do not republish until she has saved and closed.
+
+#### 1a. What the 23 Sep file and v33 got wrong — OPEN, in her order
+
+None of these is fixed. She is going through them one at a time; nothing is
+approved until she says so.
+
+1. **Title cards with no memory (app).** v33 compares a sweep's title with her
+   ledger's and raises a card on any difference. ~52 are her August seed titles
+   against the 13 Sep sweep's — not renames at all — and rejecting one is not
+   remembered, so they would return on every sweep. Proposed, not approved: the
+   ledger remembers the title the venue last used; a card only when that changes.
+2. **Short titles (scraper).** The scraper takes the listing card's title.
+   Checked 23 Sep on the live pages: the Rijksmuseum and the National Gallery
+   put the fuller name in the page's heading or its browser-tab title, not the
+   card — *Radical Harmony: Neo-Impressionists*, *Suit Yourself | 100 years of
+   menswear, 1750-1850*, *Document Nederland: Tina Farifteh*, *Isamu Noguchi in
+   the Rijksmuseum gardens*. Proposed, not approved: the longer of heading and
+   tab title, venue suffix stripped, tested on every row first. **Her call
+   pending:** three seed titles appear nowhere on the museum's pages (*Lee Ufan
+   in the Gardens*, *The Art of Drawing*, *Ming Wong…* in capitals) — seed or
+   museum wording?
+3. **Acquavella titles (scraper + file).** Name, subtitle and city run together
+   with no punctuation ("Matisse The Pursuit of Harmony New York"), and EVERY
+   title carries a city. Her ruling 23 Sep: colon between name and subtitle; the
+   city ONLY where the same show runs in both galleries. This reverses the
+   older rule in §6 ("stripping NEW YORK / PALM BEACH…") for single-gallery
+   shows — reconcile it there when built. Needs the card's parts read
+   separately off its listing.
+4. **Louvre capitals (file).** `restoreCase` took the Louvre's own letters and
+   the Louvre is inconsistent: *A New Look at Cimabue* but *A new look at
+   Watteau*, *Masterpieces from the Torlonia collection*. **Her call pending:**
+   the venue's letters, or standard title capitals.
+5. **National Gallery "ming wong" (file).** Lower case is the museum's own
+   heading. Tied to question 2.
+6. **Italian title format (compressor + file).** See §4 — her format is not
+   built; the file carries a full stop followed by an em dash.
+7. **Extension note (scraper + file).** "The venue extended this exhibition; it
+   first announced 2026-03-10" never says where the new closing date came
+   from. Should name the extended date and the page it was read from.
+8. **Checking (process).** §6, "Handing her work nobody read".
 
 Expect debugging to fall out of it. Also still to do: a save round-trip after the
 import — export, re-import that file, confirm quarantine and per-venue freshness
