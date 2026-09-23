@@ -403,11 +403,12 @@ evidence and every finding: `docs/app.md`.**
   Thin on history at met and rijks because Chat Claude's fetch tool could not see
   the archive. **Nothing to fix; do not re-diagnose this as a matching failure.**
 
-- **Titles — her rulings, 23 Sep.** A title is never SHOWN in all capitals:
-  `displayTitle()` gives a capital to each word of a title MOSTLY in capitals
-  (over half its words), on screen only — nothing stored changes, no card is raised. And a
-  **rename is a Change card**: the title is compared on `normalizeTitle`, so a
-  difference only in capitals, accents or punctuation raises nothing. Fixture 21.
+- **Titles — her rulings, 23 Sep.** A **changed title is a Change card** —
+  a rename, and equally a difference only in capitals, which is how a title
+  recorded in capitals gets corrected. **Nothing is masked on screen**: an
+  on-screen capitals fix was built and removed the same day, her ruling, because
+  it would hide a scraper fault forever. The scraper records titles in the
+  venue's own letters (`restoreCase`). Fixture 21.
 - **Italian titles ride in the description**, never in the title and never in
   a ninth column: `In English: … — teaser`, written by the compressor IN THE SAME
   ANSWER as the summary, and only for `ENGLISH_TITLE_VENUES` (`compress.js`).

@@ -4162,7 +4162,7 @@ const VENUE_ORDER = Object.keys(VENUES);
 /**
  * The engine. Every venue goes through this; none has its own copy.
  */
-async function scrapeVenue(page, code) {
+async function scrapeVenue(page, code, { listingOnly = false } = {}) {
   const v = VENUES[code];
   if (!v) { log(`  no recipe for venue "${code}"`); return []; }
 
@@ -4356,6 +4356,11 @@ async function scrapeVenue(page, code) {
       log(`  ERROR extracting ${code} listing (${pg.ctx}): ${e.message.slice(0, 120)}`);
     }
   }
+
+  // LISTING ONLY — for a diagnostic or a one-off repair that needs what the
+  // listing pages say (titles, addresses) read exactly as a sweep reads them,
+  // without opening every exhibition's own page. A sweep never passes it.
+  if (listingOnly) return rows;
 
   // Cut before opening detail pages where the listing gave us enough to judge.
   const toFetch = (v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing'))
@@ -5447,6 +5452,8 @@ module.exports = {
   getCuratorialText,
   // Exported so a diagnostic can read titles exactly as a sweep does.
   extractTitle, restoreCase,
+  // Exported for listing-only reads by a one-off repair; see listingOnly.
+  scrapeVenue,
   // Pure — the line-by-line title pick, so a venue reachable only from her
   // laptop can still be covered by a fixture here.
   pickTitleLine,
