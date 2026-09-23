@@ -577,8 +577,9 @@ The scraper writes the **raw curatorial dump**; `scraper/compress.js` turns it
 into the ~6-word teaser she reads, and `sweep_compressed.csv` is **the file she
 imports**.
 
-- **Reuse is by code and cannot be wrong.** It reads the previous run's
-  compressed CSV; identical raw text reuses the wording with **no model call**.
+- **Reuse is by code and cannot be wrong.** It reads every earlier compressed
+  CSV, stitch_ folders included, newest first (fixed 23 Sep — it once saw only
+  run_ folders and so never the file she imports); identical raw text reuses the wording with **no model call**.
   Changed text asks one question — *is the old summary now false?* — handing over
   the old wording.
 - **Identical text INSIDE one file is also asked once** (`groupIdenticalRaw`,

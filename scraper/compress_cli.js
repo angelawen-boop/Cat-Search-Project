@@ -88,6 +88,16 @@ function buildExamples() {
   return pairs;
 }
 
+/**
+ * Record that this folder's compressed file was written under the English-title
+ * rule. The marker lists FILE NAMES, one per line — see titleJudgedIn().
+ */
+function markTitleJudged(runPath) {
+  const m = path.join(runPath, C.ENGLISH_TITLE_MARKER);
+  const have = fs.existsSync(m) ? fs.readFileSync(m, 'utf8').split('\n').map(x => x.trim()).filter(Boolean) : [];
+  if (!have.includes(COMPRESSED_CSV)) fs.writeFileSync(m, [...have, COMPRESSED_CSV].join('\n') + '\n', 'utf8');
+}
+
 // ── Plan ─────────────────────────────────────────────────────────────────────
 
 function plan(dir, { recompress = false, seedWins = false } = {}) {
@@ -110,8 +120,9 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   }
 
   const rows = C.readProForma(rawPath);
-  const prevDir = recompress ? null : C.previousCompletedRun(dir);
-  const memory = recompress ? new Map() : loadMemory(prevDir);
+  const sources = recompress ? [] : C.completedCompressions(dir);
+  const memory = recompress ? new Map() : C.loadMemory(sources);
+  const prevDir = sources.length ? sources[0].dir : null;
 
   // HER 110 SEED SUMMARIES JOIN THE MEMORY. Normally they only fill gaps —
   // exhibitions the previous run knows nothing about. --seed-wins is the
@@ -131,7 +142,7 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   }
 
   say(`Run:      ${dir}  (${rows.length} rows)`);
-  say(`Memory:   ${prevDir ? prevDir : recompress ? '(ignored — --recompress)' : '(none — first compression)'}`);
+  say(`Memory:   ${sources.length ? `${sources.length} earlier compressions, newest ${prevDir}/${sources[0].file}` : recompress ? '(ignored — --recompress)' : '(none — first compression)'}`);
   if (seedAdded) say(`          + ${seedAdded} of her own seed summaries, so her wording is kept unless the venue has changed what it says`);
   if (seedKept) say(`          + ${seedKept} RESTORED to her wording (--seed-wins, a one-time repair)`);
 
@@ -179,7 +190,7 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
 
   if (!pending.length) {
     C.writeCsv(path.join(runPath, COMPRESSED_CSV), done);
-    fs.writeFileSync(path.join(runPath, C.ENGLISH_TITLE_MARKER), 'Summaries in this run carry English titles where asked.\n');
+    markTitleJudged(runPath);
     say(`Nothing needed a model. Wrote ${COMPRESSED_CSV} (${done.length} rows).`);
     return;
   }
@@ -337,28 +348,6 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   say(`  4. node scraper/compress.js ${dir} --apply`);
 }
 
-function loadMemory(dir) {
-  if (!dir) return new Map();
-  const raw = C.readProForma(path.join(OUTPUT_DIR, dir, RAW_CSV));
-  const done = C.readProForma(path.join(OUTPUT_DIR, dir, COMPRESSED_CSV));
-  const doneIndex = C.indexPrevious(done);
-  // Was this run compressed under the English-title rule? See decide().
-  const titleJudged = fs.existsSync(path.join(OUTPUT_DIR, dir, C.ENGLISH_TITLE_MARKER));
-  const memory = raw.map(r => {
-    const d = C.findPrevious(doneIndex, r);
-    return {
-      ...r,
-      raw: r.summary,
-      summary: d ? d.summary : '',
-      titleJudged,
-      // A deliberate "not a description" answer, recognised by the note the
-      // apply step wrote. This is what stops the row being re-asked forever.
-      skipped: !!(d && !String(d.summary || '').trim() && String(d.notes || '').includes(C.SKIP_NOTE)),
-    };
-  });
-  return C.indexPrevious(memory);
-}
-
 // ── Apply ────────────────────────────────────────────────────────────────────
 
 /**
@@ -476,7 +465,7 @@ function apply(dir) {
   const out = C.rebuildInOrder(rows, [...done, ...filled]);
 
   C.writeCsv(path.join(runPath, COMPRESSED_CSV), out);
-  fs.writeFileSync(path.join(runPath, C.ENGLISH_TITLE_MARKER), 'Summaries in this run carry English titles where asked.\n');
+  markTitleJudged(runPath);
   fs.unlinkSync(donePath);
   say(`Wrote ${COMPRESSED_CSV} — ${out.length} rows, ${filled.length - skipped} newly written` +
       (skipped ? `, ${skipped} left blank because the page text was not a description.` : '.'));

@@ -575,3 +575,96 @@ test('IT-007: splitting gives back the title and the summary', () => {
     { title: 'Thirst.', teaser: 'Fugazza on thirst.' });
   assert.deepStrictEqual(IT.splitEnglishTitle('Fugazza on thirst.'), { title: '', teaser: 'Fugazza on thirst.' });
 });
+
+// ---------------------------------------------------------------------------
+// MEM-001 to MEM-005 — memory sees EVERY finished compression, stitch_ folders
+// included. Found 23 Sep: it saw only run_ folders, so the compression she
+// imports — which lives in a stitch folder — was invisible to the next sweep,
+// and a trial asked the model about 174 rows it had already answered.
+
+const M = require('./compress.js');
+const fsm = require('fs');
+const os = require('os');
+const pm = require('path');
+
+function fakeOutput(folders) {
+  const root = fsm.mkdtempSync(pm.join(os.tmpdir(), 'mem-'));
+  for (const [name, files] of Object.entries(folders)) {
+    fsm.mkdirSync(pm.join(root, name));
+    for (const [f, rows] of Object.entries(files)) {
+      const text = typeof rows === 'string' ? rows : null;
+      if (text !== null) fsm.writeFileSync(pm.join(root, name, f), text);
+      else M.writeCsv(pm.join(root, name, f), rows);
+    }
+  }
+  return root;
+}
+const mrow = (o) => ({ venue_code: 'capo', title: 'Gaia Fugazza. Sete', url: 'https://c.it/sete', start_date: '', end_date: '', notes: '', ...o });
+
+test('MEM-001: folder names on two clocks are put on one', () => {
+  // run_ is Sydney wall-clock (UTC+10 in September), stitch_ is UTC.
+  assert.equal(M.dirInstant('run_2026-09-13_142632'), Date.UTC(2026, 8, 13, 4, 26, 32));
+  assert.equal(M.dirInstant('stitch_20260913_0442'), Date.UTC(2026, 8, 13, 4, 42));
+  // And across daylight saving: January is UTC+11.
+  assert.equal(M.dirInstant('run_2026-01-10_120000'), Date.UTC(2026, 0, 10, 1, 0, 0));
+  assert.equal(M.dirInstant('archive'), null);
+});
+
+test('MEM-002: a stitch folder is memory, and its _clean file wins over the raw compression', () => {
+  const root = fakeOutput({
+    'run_2026-09-11_150556': { 'sweep.csv': [mrow({ summary: 'RAW' })], 'sweep_compressed.csv': [mrow({ summary: 'old words.' })] },
+    'stitch_20260913_0442': {
+      'sweep.csv': [mrow({ summary: 'RAW' })],
+      'sweep_compressed.csv': [mrow({ summary: 'unrepaired.' })],
+      'sweep_compressed_clean.csv': [mrow({ summary: 'In English: Gaia Fugazza. Thirst. — Fugazza on thirst.' })],
+    },
+  });
+  const src = M.completedCompressions('run_2026-09-20_120000', root);
+  assert.deepStrictEqual(src.map(s => `${s.dir}/${s.file}`),
+    ['stitch_20260913_0442/sweep_compressed_clean.csv', 'run_2026-09-11_150556/sweep_compressed.csv']);
+  const hit = M.findPrevious(M.loadMemory(src, root), mrow({ summary: 'RAW' }));
+  assert.equal(hit.summary, 'In English: Gaia Fugazza. Thirst. — Fugazza on thirst.');
+});
+
+test('MEM-003: nothing at or after the folder being compressed is memory', () => {
+  const root = fakeOutput({
+    'stitch_20260920_0000': { 'sweep.csv': [mrow({ summary: 'RAW' })], 'sweep_compressed.csv': [mrow({ summary: 'later.' })] },
+    'run_2026-09-11_150556': { 'sweep.csv': [mrow({ summary: 'RAW' })] },   // swept, never compressed
+  });
+  assert.deepStrictEqual(M.completedCompressions('stitch_20260920_0000', root), []);
+  assert.deepStrictEqual(M.completedCompressions('run_2026-09-15_000000', root), []);
+});
+
+test('MEM-004: two DIFFERENT raw texts for one address claim neither — review, never reuse', () => {
+  const root = fakeOutput({
+    'stitch_20260913_0442': {
+      'sweep.csv': [mrow({ summary: 'first text' }), mrow({ summary: 'second text' })],
+      'sweep_compressed_clean.csv': [mrow({ summary: 'Words.' })],
+    },
+  });
+  const mem = M.loadMemory(M.completedCompressions('run_2026-09-20_000000', root), root);
+  const d = M.decide(mrow({ summary: 'first text' }), M.findPrevious(mem, mrow({})));
+  assert.equal(d.action, 'review');
+});
+
+test('MEM-005: the English-title marker covers only the files it names', () => {
+  const root = fakeOutput({
+    'stitch_20260913_0442': {
+      'sweep.csv': [mrow({ summary: 'RAW' })],
+      'sweep_compressed.csv': [mrow({ summary: 'Fugazza on thirst.' })],
+      'sweep_compressed_clean.csv': [mrow({ summary: 'In English: Gaia Fugazza. Thirst. — Fugazza on thirst.' })],
+      '.english_titles': 'sweep_compressed_clean.csv\n',
+    },
+  });
+  assert.equal(M.titleJudgedIn('stitch_20260913_0442', 'sweep_compressed_clean.csv', root), true);
+  assert.equal(M.titleJudgedIn('stitch_20260913_0442', 'sweep_compressed.csv', root), false);
+  // The clean file is the memory, and it is judged — so an unchanged row reuses.
+  const mem = M.loadMemory(M.completedCompressions('run_2026-09-20_000000', root), root);
+  assert.equal(M.decide(mrow({ summary: 'RAW' }), M.findPrevious(mem, mrow({}))).action, 'reuse');
+});
+
+test('MEM-006: the compressor\'s clock is the sweeper\'s', () => {
+  // compress.js must not require the scraper at runtime; this test is what
+  // keeps the two copies of the time zone from drifting.
+  assert.equal(M.RUN_TZ, require('./sweep_prototype.js').RUN_TZ);
+});

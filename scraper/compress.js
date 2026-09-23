@@ -19,8 +19,8 @@
  * PART OF THIS PIPELINE THAT THINKS — do not make it do dumb work so code can
  * be clever on top. An earlier design ran blind, rewriting all ~350 rows every
  * sweep so that code could discard the ~340 that had not meaningfully changed.
- * Upside down. Giving this step ONE piece of memory — the previous run — turns
- * it the right way up:
+ * Upside down. Giving this step memory — every earlier compression, newest
+ * first (see "Memory" below) — turns it the right way up:
  *
  *   raw text identical to last run  → reuse last run's words. NO model call.
  *                                     Pure code, identical input, cannot be wrong.
@@ -113,10 +113,11 @@ const EN_PREFIX = 'In English: ';
 const EN_SEPARATOR = ' \u2014 ';
 
 /**
- * A compressed run's folder holds this file once its summaries were written
- * under the rule above. Memory from a run WITHOUT it predates the rule: its
- * summaries for those venues were never given an English title, so reusing
- * them would silently leave the title untranslated forever. See decide().
+ * A folder holds this file once a compressed file in it was written under the
+ * rule above; it lists those FILE NAMES, one per line. Memory from a file not
+ * listed predates the rule: its summaries for those venues were never given an
+ * English title, so reusing them would silently leave the title untranslated
+ * forever. See decide() and titleJudgedIn().
  */
 const ENGLISH_TITLE_MARKER = '.english_titles';
 
@@ -517,46 +518,129 @@ function addNote(existing, note) {
   return cur ? `${cur} ${note}` : note;
 }
 
-// ── Run directories ──────────────────────────────────────────────────────────
-
-const runDirs = () =>
-  fs.existsSync(OUTPUT_DIR)
-    ? fs.readdirSync(OUTPUT_DIR).filter(d => d.startsWith('run_')).sort()
-    : [];
+// ── Memory: every finished compression before this one ──────────────────────
+//
+// FIXED 23 Sep — MEMORY USED TO SEE ONLY run_ FOLDERS. The real chain is sweep →
+// stitch → compress → import, so the compression she imports lives in a
+// stitch_ folder, and the next sweep never saw it: its memory fell back to the
+// 11 Sep run, and a trial on the 13 Sep sweep asked the model about 174 rows as
+// "never seen" — paid for again, and free to come back worded differently,
+// which reaches her as a changed-description card for nothing.
+//
+// So memory is EVERY finished compression before this one, run_ and stitch_
+// alike, newest first: for each exhibition, the newest wording wins. Older
+// memory is still worth holding — the reuse rule needs IDENTICAL raw text, and
+// wording made from identical text is right however old it is.
 
 /**
- * The most recent run BEFORE `dir` that actually finished compressing.
- *
- * It must have both files: the raw sweep to compare text against, and the
- * compressed one to take wording from. A run that was scraped but never
- * compressed has nothing to remember, so it is skipped rather than treated as
- * an empty memory — which would silently recompress everything.
+ * The compressed file to remember in a folder, best first. A `_clean` file is
+ * the one she actually imported — rebuilt and repaired after compression — so
+ * it wins over the raw compression beside it.
  */
-function previousCompletedRun(dir) {
-  const all = runDirs();
-  const here = all.indexOf(dir);
-  const before = here === -1 ? all : all.slice(0, here);
-  for (let i = before.length - 1; i >= 0; i--) {
-    const d = before[i];
-    if (fs.existsSync(path.join(OUTPUT_DIR, d, RAW_CSV)) &&
-        fs.existsSync(path.join(OUTPUT_DIR, d, COMPRESSED_CSV))) return d;
-  }
-  return null;
+const MEMORY_CSVS = ['sweep_compressed_clean.csv', COMPRESSED_CSV];
+
+// MIRRORS RUN_TZ in sweep_prototype.js — a fixture holds the two together.
+// Run folders are named in Sydney time for a human to sort; stitch folders in
+// UTC. Ordering them means putting both on one clock.
+const RUN_TZ = 'Australia/Sydney';
+
+/** The moment a folder's name records, as UTC milliseconds, or null. */
+function dirInstant(name) {
+  let m = /^stitch_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})/.exec(name);
+  if (m) return Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5]);
+  m = /^run_(\d{4})-(\d{2})-(\d{2})_(\d{2})(\d{2})(\d{2})/.exec(name);
+  if (!m) return null;
+  // Sydney wall-clock → UTC. Guess, read the zone's offset at the guess, and
+  // correct twice so a stamp near a daylight-saving change still lands.
+  const wall = Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+  const offsetAt = t => {
+    const p = new Intl.DateTimeFormat('en-CA', { timeZone: RUN_TZ, hourCycle: 'h23',
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      .formatToParts(new Date(t)).reduce((o, x) => (o[x.type] = x.value, o), {});
+    return Date.UTC(+p.year, p.month - 1, +p.day, +p.hour, +p.minute, +p.second) - t;
+  };
+  let t = wall - offsetAt(wall);
+  t = wall - offsetAt(t);
+  return t;
 }
 
-/** Previous rows keyed for lookup, carrying raw text AND final wording. */
-function loadMemory(dir) {
-  if (!dir) return new Map();
-  const raw = readProForma(path.join(OUTPUT_DIR, dir, RAW_CSV));
-  const done = readProForma(path.join(OUTPUT_DIR, dir, COMPRESSED_CSV));
-  const doneIndex = indexPrevious(done);
-  const titleJudged = fs.existsSync(path.join(OUTPUT_DIR, dir, ENGLISH_TITLE_MARKER));
-  const memory = [];
-  for (const r of raw) {
-    const d = findPrevious(doneIndex, r);
-    memory.push({ ...r, raw: r.summary, summary: d ? d.summary : '', titleJudged });
+/**
+ * Every finished compression before `dir`, newest first — [{dir, file}].
+ * Finished means a raw sweep.csv AND a compressed file: a folder that was swept
+ * but never compressed has nothing to remember and is skipped, not treated as
+ * an empty memory.
+ */
+function completedCompressions(dir, outputDir = OUTPUT_DIR) {
+  const here = dirInstant(dir);
+  const out = [];
+  for (const d of fs.existsSync(outputDir) ? fs.readdirSync(outputDir) : []) {
+    if (d === dir || !/^(run|stitch)_/.test(d)) continue;
+    const at = dirInstant(d);
+    if (at === null || (here !== null && at >= here)) continue;
+    if (!fs.existsSync(path.join(outputDir, d, RAW_CSV))) continue;
+    const file = MEMORY_CSVS.find(f => fs.existsSync(path.join(outputDir, d, f)));
+    if (file) out.push({ dir: d, file, at });
   }
-  return indexPrevious(memory);
+  return out.sort((a, b) => b.at - a.at);
+}
+
+/**
+ * Whether `file` in `dir` was written under the English-title rule. The marker
+ * NAMES the files it covers: a stitch folder holds a compression from before the
+ * rule and a repaired `_clean` file from after it, side by side.
+ */
+function titleJudgedIn(dir, file, outputDir = OUTPUT_DIR) {
+  const m = path.join(outputDir, dir, ENGLISH_TITLE_MARKER);
+  return fs.existsSync(m) && fs.readFileSync(m, 'utf8').split('\n').map(x => x.trim()).includes(file);
+}
+
+/**
+ * The memory rows one compressed file contributes, each carrying the RAW TEXT
+ * its wording was made from and the wording itself.
+ *
+ * Built from the compressed rows, because that file is what she has. The raw
+ * text is found by the same keys as everything else. A stitch holds two sweeps
+ * of most venues, so an address can carry two raw texts; where they DIFFER the
+ * wording's source cannot be told, so no raw text is claimed — the row is then
+ * reviewed rather than reused, which costs one question and cannot be wrong.
+ * (Two such rows in the 13 Sep stitch, both Louvre.)
+ */
+function memoryRows({ dir, file }, outputDir = OUTPUT_DIR) {
+  const raw = readProForma(path.join(outputDir, dir, RAW_CSV));
+  const texts = new Map();
+  for (const r of raw) {
+    for (const k of [urlKey(r), titleKey(r)]) {
+      if (!k) continue;
+      if (!texts.has(k)) texts.set(k, new Set());
+      texts.get(k).add(normalizeRaw(r.summary));
+    }
+  }
+  const titleJudged = titleJudgedIn(dir, file, outputDir);
+  const rows = [];
+  for (const d of readProForma(path.join(outputDir, dir, file))) {
+    if (String(d.title || '').startsWith('[')) continue;
+    const set = texts.get(urlKey(d)) || texts.get(titleKey(d));
+    rows.push({
+      ...d,
+      raw: set && set.size === 1 ? [...set][0] : '',
+      // A deliberate "not a description" answer, recognised by the note the
+      // apply step wrote. This is what stops the row being re-asked forever.
+      skipped: !String(d.summary || '').trim() && String(d.notes || '').includes(SKIP_NOTE),
+      titleJudged,
+    });
+  }
+  return rows;
+}
+
+/** One index over every memory, newest first — the first entry for a key wins. */
+function loadMemory(sources, outputDir = OUTPUT_DIR) {
+  const index = new Map();
+  for (const src of sources) {
+    for (const r of memoryRows(src, outputDir)) {
+      for (const k of [urlKey(r), titleKey(r)]) if (k && !index.has(k)) index.set(k, r);
+    }
+  }
+  return index;
 }
 
 /**
@@ -719,7 +803,7 @@ module.exports = {
   parseCsv, readProForma, writeCsv, urlKey, titleKey, indexPrevious, looksLikeADifferentEdition,
   mergeSeedMemory,
   findPrevious, decide, validateAnswer, normalizeRaw, wordCount, addNote,
-  previousCompletedRun, seedMemory, MAX_WORDS, SKIP_NOTE,
+  completedCompressions, loadMemory, memoryRows, dirInstant, titleJudgedIn, MEMORY_CSVS, RUN_TZ, seedMemory, MAX_WORDS, SKIP_NOTE,
   ENGLISH_TITLE_VENUES, EN_PREFIX, EN_SEPARATOR, ENGLISH_TITLE_MARKER, asksEnglishTitle, splitEnglishTitle,
   TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns, groupIdenticalRaw,
 };

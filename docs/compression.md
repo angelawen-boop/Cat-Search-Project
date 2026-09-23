@@ -21,8 +21,11 @@ cause was mine: insisting on statelessness is what created the waste.
 
 **Give the compressor one piece of memory and it turns the right way up.**
 
-It reads **the previous run's compressed CSV** — already committed in
-`scraper/output/`. Not her ledger: none of the ledger objections apply, the
+It reads **every earlier compressed CSV** — already committed in
+`scraper/output/`, run_ and stitch_ folders alike, newest first per exhibition.
+(Until 23 Sep it read only the newest run_ folder, which never held the file she
+imports — that lives in a stitch_ folder — so a sweep would have re-asked 174 rows
+already answered. `completedCompressions()` in `compress.js`.) Not her ledger: none of the ledger objections apply, the
 file is always present, and it is scraper output matched against scraper
 output rather than against a ledger months old.
 

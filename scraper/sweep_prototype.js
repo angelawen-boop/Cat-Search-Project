@@ -5360,6 +5360,8 @@ module.exports = {
   // Exported for the 23 Sep repair of her import file, which must apply the
   // CORRECTED rule rather than a copy of it.
   applyExtension, ymd, startYearFor,
+  // Mirrored in compress.js, which orders run folders by it; MEM-006.
+  RUN_TZ,
   // Exported so the weekday strip can be tested for what it does rather than
   // for a side effect of it. W-004 used to prove "a bare Sun is not cut out of
   // prose" by reading the surviving text out of the parser's `raw` field, which
