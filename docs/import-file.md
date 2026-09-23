@@ -154,3 +154,23 @@ accepted: 3 adds (the rows she rejected, now correct), 18 description changes (t
 English titles), 49 title changes. The 49 are seed rows whose shortened August
 titles differ from the venue's full ones — renames became cards in version 33.
 Notes are never compared, so the note repairs raise no card.
+
+### Capitals, the same day — `repair_capitals_23sep.js`
+
+81 titles arrived in capitals because the venues shout them with CSS. Her ruling:
+no on-screen masking in the app; fix the data. The script reads each affected
+venue's LISTING pages exactly as a sweep does (`scrapeVenue(…, { listingOnly })`,
+with the scraper's new `restoreCase`), saves url → title to
+`capitals_fetched_23sep.json`, and replaces a title only where the venue's own
+title at the SAME address is the same letters in a different case.
+
+**68 fixed. 13 left, each for a stated reason:** Louvre Couture, WORN and REVOLUSI!
+are written in capitals by the venue; two Rijksmuseum shows closed on 13 Sep and
+moved to /past/ addresses under shorter titles, and its Asian Pavilion row was
+pulled; **Borghese's 7 wait for its site**, down all day —
+`repair_capitals_23sep.js --fetch borghese`, then `--apply`.
+
+Re-imported over what she accepted: 3 adds, 18 description changes, 94 title
+changes — 42 capitals corrections and 52 seed rows whose shortened August titles
+differ from the venue's own (only 42 of the 68 reach a card because 26 of them
+sit on seed rows, whose ledger title is the seed's).

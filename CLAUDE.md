@@ -885,11 +885,13 @@ The file is `stitch_20260913_0442/sweep_compressed_clean.csv` — **not**
 Against her 110-row seed it produces 320 cards — 299 add, 14 fill, 7 change. The
 row identity closes: **419 = 13 markers + 0 folds + 86 matching + 320**.
 
-**Repaired 23 Sep** after her first sitting (`repair_23sep.js`, reasoning in
-`docs/import-file.md`). Re-imported over what she accepted, it proposes **3 adds**
-(the three Capodimonte rows she rejected, now correct), **18 description changes**
-(English titles) and **49 title changes** — seed rows whose shortened titles now
-differ from the venue's full ones, since renames became cards in version 33.
+**Repaired 23 Sep** after her first sitting (`repair_23sep.js`,
+`repair_capitals_23sep.js`; reasoning in `docs/import-file.md`). Re-imported over
+what she accepted, it proposes **3 adds** (the three Capodimonte rows she
+rejected, now correct), **18 description changes** (English titles) and **94 title
+changes**: 42 titles corrected from capitals, 52 seed rows whose shortened August
+titles differ from the venue's own. Borghese's 7 capitals titles wait for its site
+to answer (`--fetch borghese`).
 
 Expect debugging to fall out of it. Also still to do: a save round-trip after the
 import — export, re-import that file, confirm quarantine and per-venue freshness

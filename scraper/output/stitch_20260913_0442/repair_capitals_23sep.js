@@ -13,6 +13,10 @@
  *                                               a sweep reads them (listing only,
  *                                               no exhibition pages), and save
  *                                               url → title to capitals_fetched_23sep.json
+ *   node .../repair_capitals_23sep.js --fetch borghese
+ *                                               read only the venues named, and
+ *                                               merge them into the saved file —
+ *                                               for a venue that was down
  *   node .../repair_capitals_23sep.js            report what would change
  *   node .../repair_capitals_23sep.js --apply    write it
  *
@@ -39,7 +43,8 @@ function shouting(t) {
 
 const rows = C.readProForma(FILE);
 const targets = rows.filter(r => !String(r.title).startsWith('[') && shouting(r.title));
-const venues = [...new Set(targets.map(r => r.venue_code))];
+const named = process.argv.slice(2).filter(a => !a.startsWith('--'));
+const venues = named.length ? named : [...new Set(targets.map(r => r.venue_code))];
 
 async function fetchTitles() {
   const S = require('../../sweep_prototype.js');
@@ -48,14 +53,18 @@ async function fetchTitles() {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   if (process.env.HTTPS_PROXY || process.env.https_proxy) await S.installNetworkBridge(context);
   const page = await context.newPage();
-  const out = {};
+  // Venues named on the command line are MERGED into what was read before;
+  // a venue that reads nothing this time keeps its earlier titles.
+  const prev = fs.existsSync(FETCHED) ? JSON.parse(fs.readFileSync(FETCHED, 'utf8')).titles : {};
+  const out = named.length ? { ...prev } : {};
   for (const code of venues) {
     console.log(`\n[${code}] reading listing pages…`);
     try {
       const found = await S.scrapeVenue(page, code, { listingOnly: true });
-      out[code] = {};
-      for (const r of found) if (r.url && r.title && !r.title.startsWith('[')) out[code][r.url] = r.title;
-      console.log(`[${code}] ${Object.keys(out[code]).length} titles read`);
+      const got = {};
+      for (const r of found) if (r.url && r.title && !r.title.startsWith('[')) got[r.url] = r.title;
+      console.log(`[${code}] ${Object.keys(got).length} titles read`);
+      if (Object.keys(got).length || !out[code]) out[code] = got;
     } catch (e) {
       console.log(`[${code}] FAILED — ${e.message.slice(0, 120)}`);
     }
