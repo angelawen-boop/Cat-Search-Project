@@ -3834,14 +3834,10 @@ const VENUES = {
     // carries a "Featured Exhibition" card on every page, and the selector
     // matched it: Mary Cassatt was "also listed" on all eight archive pages,
     // 2023 included, three years before it opened. Her finding, 23 Sep, and
-    // her saved 2024 archive page settled it: the promo sits in
-    // nav.g-header__nav-primary, every exhibition in main#content.
-    //
-    // UNSEEN on the current and upcoming pages — the container is refused
-    // here, so only the archive page was read. #content is the site's page
-    // template, not a listing class, which is why it was chosen over
-    // ul.o-row-listing. If it is wrong there, those pages collect nothing and
-    // leave marker rows on her pile — visible, never silent.
+    // her saved pages settled it: the promo sits in nav.g-header__nav-primary,
+    // every exhibition in main#content — on all three kinds of page. Current:
+    // 18 of 18 inside, only the menu card outside. Upcoming: 6 of 6. The 2024
+    // archive: every row. docs/artic_pages/.
     within: ['#content'],
     isNav: href => /\/exhibitions\/?$/.test(href)
                 || /\/exhibitions\/(upcoming|history)\/?$/.test(href)
