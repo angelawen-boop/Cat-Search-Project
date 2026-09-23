@@ -260,14 +260,15 @@ const TIER_SETS = {
   },
 };
 const TIER_TEXT = {
-    upcoming: { label: "Announced", note: "Not open yet. Catalogue usually appears at opening.", time: "upcoming", ord: 3 },
+    upcoming: { label: "Announced", note: "Not open yet. Catalogue usually appears at opening.", time: "upcoming", ord: 2 },
     recent: { label: "Recently opened", note: "Just opened. Catalogue should be available now.", time: "current", ord: 0 },
     current: { label: "On now", note: "In print. Cheapest it will ever be.", time: "current", ord: 1 },
     fresh: { label: "Closed under 3 months", note: "Still stocked. Comfortable window.", time: "past", ord: 4 },
     closing: { label: "Closed 3\u20136 months", note: "Shop stock thinning. Buy now if you want it.", time: "past", ord: 5 },
     urgent: { label: "Closed 6\u201312 months", note: "Final call. Reprints are rare.", time: "past", ord: 6 },
     lapsed: { label: "Closed over a year", note: "Assume out of print. Secondhand only.", time: "past", ord: 7 },
-    unknown: { label: "Dates unclear", note: "No reliable end date found.", time: "current", ord: 2 },
+    // After Announced — her ordering, 23 Sep.
+    unknown: { label: "Dates unclear", note: "No reliable end date found.", time: "current", ord: 3 },
 };
 const tiersFor = mode => Object.fromEntries(Object.keys(TIER_TEXT).map(
   k => [k, { ...TIER_TEXT[k], ...TIER_SETS[mode][k] }]));
@@ -2377,7 +2378,7 @@ export default function App(){
           <button onClick={()=>setCardMode(i,"never")} style={decBtn(dec.mode==="never",C.neverInk)}>{dec.mode==="never"?"\u2713 ":""}{"Never add this"}</button>
         </div>}
         {p.type==="add"&&dec.mode==="never"&&<div style={{marginTop:5,fontSize:10.5,color:C.soft,lineHeight:1.45}}>
-          {"Won\u2019t be offered again on any future sweep. It won\u2019t enter your ledger. You can undo this from \u201cNever added\u201d at the top."}
+          {"Won\u2019t be offered again on future sweeps."}
         </div>}
 
         {p.type==="change"&&<div style={{marginTop:8}}>
@@ -2488,8 +2489,8 @@ export default function App(){
             of refreshing. It is not: a quarantine is a standing decision about
             what may never enter the ledger, and it holds whether or not a
             sweep ever happens again. */}
-        {ignored.length>0&&<div style={{marginTop:6,fontSize:12,color:C.soft}}>
-          <button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:12,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>
+        {ignored.length>0&&<div style={{marginTop:6,fontSize:10.5,color:C.soft}}>
+          <button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>
         </div>}
 
         {/* NOT GATED ON A LEDGER BEING OPEN. The sweep log is not part of her
@@ -2536,7 +2537,7 @@ export default function App(){
               smallest, palest text on the screen. Set at or above the filter
               chips below it, in the body ink rather than the muted grey. */}
           <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
-            {"Rows you said should never be entries. They are skipped on every import, whichever ledger is open, and a Reset does not clear them. They also ride along in your export as a backup. Taking one out of quarantine only makes it offer itself again on the next sweep \u2014 it does not add anything to your ledger."}
+            {"Entries excluded from all future imports. Removing them from quarantine will re-offer them in future sweeps \u2014 it does not immediately add them to your ledger."}
           </div>
           {ignored.map(x=>(
             <div key={x.key} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
@@ -2747,8 +2748,8 @@ export default function App(){
       )}
       {undo&&(
         <div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.onAction,borderRadius:4,padding:"7px 14px",fontSize:12,display:"flex",gap:10,alignItems:"center",zIndex:999,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
-          <span>Dismissed</span>
-          <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:C.onAction,fontSize:11,fontWeight:600,cursor:"pointer",padding:"3px 8px"}}>Restore</button>
+          <span style={{fontSize:14,fontWeight:600}}>Dismissed</span>
+          <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:C.onAction,fontSize:14,fontWeight:600,cursor:"pointer",padding:"3px 10px"}}>Undo</button>
         </div>
       )}
       <div style={{maxWidth:760,margin:"18px auto 0",paddingTop:10,borderTop:"1px solid "+C.rule,fontSize:10,color:C.soft,lineHeight:1.6}}>

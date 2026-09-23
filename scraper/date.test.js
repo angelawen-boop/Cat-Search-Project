@@ -1601,3 +1601,11 @@ test('RK-001: a Rijksmuseum status badge is never a title', () => {
   assert.equal(t.notATitle.test('Closed Worlds'), false);
   assert.equal('PARTIALLY CLOSED Asian Pavilion'.replace(t.card.stripLeading, ''), 'Asian Pavilion');
 });
+
+test('MN-001: the Menil\'s foyer installations are not exhibitions', () => {
+  // Her ruling, 23 Sep: "Foyer Installation: …" rows are excluded.
+  const re = VENUES.menil.excludeTitle;
+  assert.equal(re.test('Foyer Installation: Pop Art'), true);
+  assert.equal(re.test('Foyer Installation: René Magritte'), true);
+  assert.equal(re.test('Janet Sobel: All-Over'), false);
+});

@@ -3438,6 +3438,11 @@ const VENUES = {
     name: 'The Menil Collection, Houston',
     // See excludeUndated in scrapeVenue — her ruling on its permanent galleries.
     excludeUndated: true,
+    // Its "Foyer Installation: …" rows are rotations from the permanent
+    // collection in the entrance hall, not temporary exhibitions. Her ruling,
+    // 23 Sep; she quarantined the ones already on her pile. Every one carries
+    // the prefix in its title, which is the venue's own label.
+    excludeTitle: /^Foyer\s+Installation\b/i,
     base: 'https://www.menil.org',
     // The brief's /exhibitions/current 302s to /exhibitions, which is the
     // live address for what is on now.

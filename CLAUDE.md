@@ -149,7 +149,7 @@ Judgement about the outside world is not in any file.
 |---|---|
 | `va` | Displays excluded — **this venue only** |
 | `wallace` | Displays and trails KEPT — **this venue only** |
-| `menil` | 7 permanent galleries excluded |
+| `menil` | 7 permanent galleries excluded; "Foyer Installation: …" rows excluded (23 Sep) |
 | `tate-britain` | Ofili excluded, on the venue's own ONGOING label |
 | `uffizi` | Headlines kept as titles; undated rows kept |
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md` |
