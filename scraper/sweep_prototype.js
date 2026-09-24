@@ -3587,9 +3587,12 @@ const VENUES = {
   //
   // event_type does the job known bug 2 has been waiting for. Tate lists talks,
   // tours, workshops, films, courses and private views on the same page as its
-  // exhibitions; asking the site for display+exhibition only is rung 1 of the
-  // ladder — the venue's own tagging — rather than our guess about what a thing
-  // is.
+  // exhibitions; asking the site for one tag is rung 1 of the ladder — the
+  // venue's own tagging — rather than our guess about what a thing is.
+  //
+  // EXHIBITION ONLY, NEVER display — her ruling, 24 Sep. The menu link above
+  // asks for both, and was copied as it stood; nobody decided displays were
+  // wanted. Tate's collection displays are not shows she tracks.
   //
   // date_range=past is NOT an archive, despite its name. Every item it returns
   // for Tate Britain also appears under from_now, so it means "has already
@@ -4077,8 +4080,8 @@ const VENUES = {
     // looking alike. If a Tate Modern row ever arrives labelled ONGOING, the
     // line above is one to add — on that evidence, not for symmetry.
     pages: [
-      { path: '/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=display&event_type=exhibition', ctx: 'current/upcoming' },
-      { path: '/whats-on?date_range=past&gallery_group=tate-modern&event_type=display&event_type=exhibition',     ctx: 'recently opened' },
+      { path: '/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=exhibition', ctx: 'current/upcoming' },
+      { path: '/whats-on?date_range=past&gallery_group=tate-modern&event_type=exhibition',     ctx: 'recently opened' },
     ],
     // The path carries the gallery, so this also excludes Tate St Ives and Tate
     // Liverpool — neither is one of her 21 — with no text matching at all. They
@@ -4108,8 +4111,8 @@ const VENUES = {
     // set it. Rung 1 of the ladder: the venue's own word, named in the log.
     excludeOngoing: true,
     pages: [
-      { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=display&event_type=exhibition', ctx: 'current/upcoming' },
-      { path: '/whats-on?date_range=past&gallery_group=tate-britain&event_type=display&event_type=exhibition',     ctx: 'recently opened' },
+      { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition', ctx: 'current/upcoming' },
+      { path: '/whats-on?date_range=past&gallery_group=tate-britain&event_type=exhibition',     ctx: 'recently opened' },
     ],
     selector: 'a[href*="/whats-on/tate-britain/"]',
     isNav: href => /\/whats-on\/tate-britain\/?$/.test(href),
