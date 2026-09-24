@@ -936,6 +936,9 @@ Tate reading collection displays; two Louvre descriptions lost by the rebuild.
 **Short titles in the file are left for the next sweep**, her ruling — reject
 those cards meanwhile.
 
+**Hold the repaired file — her instruction, 24 Sep.** Repairs land in the file
+on disk, but it is sent once, when this debugging is finished, not after each.
+
 **Open:**
 *Sweeper notes*
 1. **Pages named twice or wrongly** — fixed 24 Sep, proven on her saved pages
