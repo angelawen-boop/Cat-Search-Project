@@ -1637,3 +1637,42 @@ test('AC-002: Art Institute films and installations are flagged on the card, nev
   // Marker rows are never touched.
   assert.equal(flagFromDescription({ title: '[past page]', notes: 'x', summary: 'film' }, re).notes, 'x');
 });
+
+// RT-001 to RT-004 — the Rijksmuseum name from the exhibition's own page,
+// 24 Sep. The line under the heading joins only when the museum's tab title
+// carries it; the words always come from the page. Real headings, lines and
+// tab titles, read from the six live pages that settled the rule.
+const { titleFromOwnPage } = require('./sweep_prototype.js');
+const rkTab = VENUES.rijks.pageTitle.tabSuffix;
+const rk = (heading, subtitle, tab) => titleFromOwnPage({ heading, subtitle, tab }, rkTab);
+
+test('RT-001: a line the tab title carries is part of the name, in full', () => {
+  assert.equal(rk('Isamu Noguchi', 'In the Rijksmuseum gardens', 'Isamu Noguchi in the Rijksmuseum gardens - Rijksmuseum'),
+    'Isamu Noguchi: In the Rijksmuseum gardens');
+  // The tab is cut short; the words still come whole from the page.
+  assert.equal(rk('Document Nederland', 'Tina Farifteh Photographs Asylum', 'Document Nederland: Tina Farifteh - Rijksmuseum'),
+    'Document Nederland: Tina Farifteh Photographs Asylum');
+});
+
+test('RT-002: a slogan or dates the tab title leaves out are not part of the name', () => {
+  assert.equal(rk('Express yourself', 'Photography exhibition ', 'Express yourself - Rijksmuseum'), 'Express yourself');
+  assert.equal(rk('Point of view', '5 July 2024 - 1 Sep 2024', 'Point of view - Rijksmuseum'), 'Point of view');
+  assert.equal(rk('Lee Ufan', '28 May 2024 - 27 Oct 2024', 'Lee Ufan - Rijksmuseum'), 'Lee Ufan');
+});
+
+test('RT-003: a heading that is already the whole name is taken as it is', () => {
+  assert.equal(rk('Suit Yourself | 100 years of menswear, 1750-1850 ', '',
+    'Suit Yourself | 100 years of menswear, 1750-1850  - Rijksmuseum'),
+    'Suit Yourself | 100 years of menswear, 1750-1850');
+});
+
+test('RT-004: anything uncertain gives the heading alone, never a guess', () => {
+  // Tab adds words that are not the start of the line.
+  assert.equal(rk('Lee Ufan', 'In the Rijksmuseum gardens', 'Lee Ufan retrospective - Rijksmuseum'), 'Lee Ufan');
+  // Tab does not start with the heading.
+  assert.equal(rk('Lee Ufan', 'In the Rijksmuseum gardens', 'Missie Meesterwerk - Rijksmuseum'), 'Lee Ufan');
+  // Heading is a prefix of a longer word in the tab, not the same name.
+  assert.equal(rk('Lee Uf', 'x', 'Lee Ufan - Rijksmuseum'), 'Lee Uf');
+  // No heading: nothing, so the listing's title stands.
+  assert.equal(rk('', 'In the Rijksmuseum gardens', 'Isamu Noguchi - Rijksmuseum'), '');
+});

@@ -2598,6 +2598,46 @@ async function extractTitle(link, venueCode) {
  * Each part keeps its own letters (restoreCase on each), since a joined string
  * never appears on the page and could not be looked up whole.
  */
+/**
+ * AN EXHIBITION'S NAME FROM ITS OWN PAGE — the Rijksmuseum, 24 Sep.
+ *
+ * The listing card carries only the short heading ("Suit Yourself",
+ * "Isamu Noguchi"). The exhibition's own page carries the full heading, plus
+ * a line beneath it that is SOMETIMES the rest of the name ("In the
+ * Rijksmuseum gardens", "Tina Farifteh Photographs Asylum"), sometimes the
+ * dates, sometimes a slogan ("Photography exhibition"). No wording rule tells
+ * those apart.
+ *
+ * THE MUSEUM'S OWN TAB TITLE DOES, as a yes/no signal. It carries that line
+ * when the line is part of the name ("Isamu Noguchi in the Rijksmuseum
+ * gardens", "Document Nederland: Tina Farifteh") and leaves it out when it is
+ * dates or a slogan ("Express yourself", "Lee Ufan"). Checked on six pages
+ * before this was written; all six agree.
+ *
+ * The tab is NEVER the source of the words — it is cut short ("Tina
+ * Farifteh", not "Tina Farifteh Photographs Asylum"). It only answers whether
+ * the line belongs. The words come from the heading and the line, in the
+ * page's typed letters (textContent, which styling does not touch).
+ *
+ * The line belongs when what the tab adds after the heading is the START of
+ * the line. Anything less certain — tab not starting with the heading, tab
+ * adding something else — gives the heading alone.
+ *
+ * Pure, so the rule is asked directly by a fixture.
+ */
+function titleFromOwnPage({ heading, subtitle, tab }, tabSuffix) {
+  const h = squash(heading);
+  if (h.length < 3) return '';
+  const flat = s => String(s || '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
+  const t = flat(String(tab || '').replace(tabSuffix || /$^/, ''));
+  const fh = flat(h);
+  if (!t.startsWith(fh) || /[\p{L}\p{N}]/u.test(t.charAt(fh.length))) return h;
+  const rest = t.slice(fh.length).trim();
+  const sub = squash(subtitle);
+  if (!rest || !sub || !flat(sub).startsWith(rest)) return h;
+  return /:\s*$/.test(h) ? `${h} ${sub}` : `${h}: ${sub}`;
+}
+
 async function withPostTitle(link, rule, title) {
   if (!title || !rule.postTitle) return title;
   try {
@@ -3248,6 +3288,8 @@ const VENUES = {
       { path: '/en/whats-on/exhibitions/now-on-view', ctx: 'current/upcoming' },
       { path: '/en/whats-on/exhibitions/past',        ctx: 'past' },
     ],
+    // The name is taken from the exhibition's own page; see titleFromOwnPage().
+    pageTitle: { heading: 'h1', subtitle: '.page-header-subtitle', tabSuffix: /\s*-\s*Rijksmuseum\s*$/i },
     // Some entries are linked to the DUTCH site even from the English
     // listing — "tentoonstellingen" rather than "exhibitions". Stop Motion is
     // one, and looking only for the English path missed it entirely.
@@ -4939,6 +4981,17 @@ async function fetchIndividualPages(page, rows, venueCode) {
         }
       }
 
+      // THE NAME FROM THE EXHIBITION'S OWN PAGE, where a recipe asks for it.
+      // Read on the visit already made for the description: no extra request.
+      if (vrec.pageTitle) {
+        const parts = await page.evaluate((sel) => {
+          const text = q => { const el = document.querySelector(q); return el ? el.textContent : ''; };
+          return { heading: text(sel.heading), subtitle: text(sel.subtitle), tab: document.title };
+        }, { heading: vrec.pageTitle.heading, subtitle: vrec.pageTitle.subtitle }).catch(() => null);
+        const t = parts && titleFromOwnPage(parts, vrec.pageTitle.tabSuffix);
+        if (t) row.title = t;
+      }
+
       const text = await getCuratorialText(page, vrec.description, vrec.noise);
       if (text) {
         row.summary = text;
@@ -5533,7 +5586,9 @@ module.exports = {
   scrapeVenue,
   // Pure — the line-by-line title pick, so a venue reachable only from her
   // laptop can still be covered by a fixture here.
-  pickTitleLine,
+  pickTitleLine, titleFromOwnPage,
+  // Not pure — exported so a check can run the real detail-page pass offline.
+  fetchIndividualPages,
   // Pure — so the never-twice rule is asked directly.
   addNote, flagFromDescription,
   // Exported so compress.js's mirrored location list can be checked against the
