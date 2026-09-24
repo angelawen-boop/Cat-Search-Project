@@ -13,7 +13,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 const {
-  parseCsv, urlKey, titleKey, indexPrevious, findPrevious,
+  parseCsv, urlKey, exactKey, titleKey, indexPrevious, findPrevious,
   decide, validateAnswer, normalizeRaw, addNote, MAX_WORDS, SKIP_NOTE, groupIdenticalRaw,
   TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns, mergeSeedMemory,
 } = require('./compress.js');
@@ -85,6 +85,35 @@ test('G-007: URL wins over title when both are available', () => {
   const a = row({ title: 'Renoir and Love', url: 'https://ng.org/a' });
   const b = row({ title: 'Something Else', url: 'https://ng.org/a' });
   assert.strictEqual(findPrevious(indexPrevious([a]), b), a);
+});
+
+// G-009 to G-011 — a memory belongs to its own address. 24 Sep: the
+// Rijksmuseum's older Ed van der Elsken show (page 404) was handed Up Close's
+// description, because with "past" dropped the two addresses are one key.
+const RK = 'https://www.rijksmuseum.nl/en/whats-on/exhibitions/';
+const upClose = row({ venue_code: 'rijks', title: 'Ed van der Elsken. Up Close', url: RK + 'ed-van-der-elsken',
+  start_date: '2026-06-19', end_date: '2026-09-13', summary: 'Unfiltered street energy across decades.' });
+const older = row({ venue_code: 'rijks', title: 'Ed van der Elsken', url: RK + 'past/ed-van-der-elsken',
+  start_date: '', end_date: '', summary: '' });
+
+test('G-009: two shows in ONE run never borrow each other\'s memory', () => {
+  const memory = indexPrevious([upClose]);
+  const claimed = new Set([upClose, older].map(exactKey));
+  assert.strictEqual(findPrevious(memory, older, claimed), null);
+  assert.strictEqual(findPrevious(memory, upClose, claimed), upClose);
+  assert.equal(decide(older, findPrevious(memory, older, claimed)).action, 'empty');
+});
+
+test('G-010: a show that MOVED still finds its own memory — its old address is gone', () => {
+  const was = row({ venue_code: 'ng', title: 'Zurbarán', url: 'https://www.nationalgallery.org.uk/exhibitions/zurbaran' });
+  const now = row({ venue_code: 'ng', title: 'Zurbarán', url: 'https://www.nationalgallery.org.uk/exhibitions/past/zurbaran' });
+  assert.strictEqual(findPrevious(indexPrevious([was]), now, new Set([exactKey(now)])), was);
+});
+
+test('G-011: the exact address wins over a look-alike remembered first', () => {
+  const olderMem = { ...older, summary: 'Its own words.' };
+  const memory = indexPrevious([upClose, olderMem]);        // Up Close filed first under the shared key
+  assert.strictEqual(findPrevious(memory, older), olderMem);
 });
 
 test('G-008: a row with no URL and no title matches nothing', () => {

@@ -150,6 +150,9 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   const pending = [];
   const tally = { reuse: 0, carried: 0, empty: 0, skipped: 0, review: 0, retitle: 0, fresh: 0 };
 
+  // Every exact address in this run: a remembered description is its own
+  // address's, never a look-alike's (findPrevious).
+  const claimed = new Set(rows.map(C.exactKey).filter(Boolean));
   rows.forEach((row, i) => {
     // Marker rows report a listing page the scraper could not read. There is
     // no exhibition and no prose — compressing one would be inventing.
@@ -158,7 +161,7 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
       tally.empty++;
       return;
     }
-    const prev = recompress ? null : C.findPrevious(memory, row);
+    const prev = recompress ? null : C.findPrevious(memory, row, claimed);
     const d = C.decide(row, prev);
     tally[d.action] = (tally[d.action] || 0) + 1;
 

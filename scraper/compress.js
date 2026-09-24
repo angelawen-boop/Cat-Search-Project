@@ -341,7 +341,7 @@ const LISTING_SEGMENTS = new Set([
   'present', 'presenti', 'future', 'passate', 'mostre', 'now-on', 'on-now',
 ]);
 
-function urlKey(row) {
+function urlKey(row, { exact = false } = {}) {
   const u = String(row.url || '').trim();
   if (!u) return null;
   try {
@@ -356,13 +356,19 @@ function urlKey(row) {
     try { pathname = decodeURI(p.pathname); } catch { pathname = p.pathname; }
     pathname = pathname
       .split('/')
-      .filter(seg => seg && !LISTING_SEGMENTS.has(seg.toLowerCase()))
+      .filter(seg => seg && (exact || !LISTING_SEGMENTS.has(seg.toLowerCase())))
       .join('/');
-    return `${row.venue_code}|url|${p.protocol.toLowerCase()}//${host}/${pathname}${p.search}`;
+    return `${row.venue_code}|${exact ? 'exact' : 'url'}|${p.protocol.toLowerCase()}//${host}/${pathname}${p.search}`;
   } catch {
-    return `${row.venue_code}|url|${u}`;
+    return `${row.venue_code}|${exact ? 'exact' : 'url'}|${u}`;
   }
 }
+
+/** The address exactly as the venue serves it — nothing dropped. */
+const exactKey = row => urlKey(row, { exact: true });
+
+/** Every key a remembered row is filed under, most exact first. */
+const memoryKeys = r => [exactKey(r), urlKey(r), titleKey(r)];
 
 function titleKey(row) {
   const t = String(row.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
@@ -373,7 +379,7 @@ function titleKey(row) {
 function indexPrevious(rows) {
   const index = new Map();
   for (const r of rows) {
-    for (const k of [urlKey(r), titleKey(r)]) {
+    for (const k of memoryKeys(r)) {
       if (k && !index.has(k)) index.set(k, r);
     }
   }
@@ -404,17 +410,25 @@ function looksLikeADifferentEdition(a, b) {
   return gap > 180;                                       // half a year apart or more
 }
 
-function findPrevious(index, row) {
-  const byUrl = urlKey(row);
-  if (byUrl && index.has(byUrl)) {
-    const hit = index.get(byUrl);
-    // Same address, but a run that cannot be the same one. See above.
-    if (!looksLikeADifferentEdition(row, hit)) return hit;
-  }
-  const byTitle = titleKey(row);
-  if (byTitle && index.has(byTitle)) {
-    const hit = index.get(byTitle);
-    if (!looksLikeADifferentEdition(row, hit)) return hit;
+/**
+ * THE EXACT ADDRESS FIRST, and a memory belongs to its own address. `claimed`
+ * is every exact address in the run being compressed: a remembered row whose
+ * exact address is another row's in this run is that row's, never borrowed by
+ * a look-alike. The Rijksmuseum lists /exhibitions/ed-van-der-elsken (Up Close)
+ * and /exhibitions/past/ed-van-der-elsken (an older show, page 404); with
+ * "past" dropped they are one key, and the older show was handed Up Close's
+ * description as "carried over". A show that MOVED (/zurbaran → /past/zurbaran)
+ * still matches: its old address is no longer in the run.
+ */
+function findPrevious(index, row, claimed = null) {
+  const own = exactKey(row);
+  const usable = hit => !looksLikeADifferentEdition(row, hit)
+    && !(claimed && hit.url && claimed.has(exactKey(hit)) && exactKey(hit) !== own);
+  for (const k of [own, urlKey(row), titleKey(row)]) {
+    if (!k || !index.has(k)) continue;
+    const hit = index.get(k);
+    // Same key, but a run that cannot be the same one, or another row's. See above.
+    if (usable(hit)) return hit;
   }
   return null;
 }
@@ -711,7 +725,7 @@ function loadMemory(sources, outputDir = OUTPUT_DIR) {
   const index = new Map();
   for (const src of sources) {
     for (const r of memoryRows(src, outputDir)) {
-      for (const k of [urlKey(r), titleKey(r)]) if (k && !index.has(k)) index.set(k, r);
+      for (const k of memoryKeys(r)) if (k && !index.has(k)) index.set(k, r);
     }
   }
   return index;
@@ -874,7 +888,7 @@ function rebuildInOrder(rows, parts) {
 
 module.exports = {
   rebuildInOrder,
-  parseCsv, readProForma, writeCsv, urlKey, titleKey, indexPrevious, looksLikeADifferentEdition,
+  parseCsv, readProForma, writeCsv, urlKey, exactKey, titleKey, indexPrevious, looksLikeADifferentEdition,
   mergeSeedMemory,
   findPrevious, decide, validateAnswer, normalizeRaw, wordCount, addNote,
   completedCompressions, loadMemory, memoryRows, dirInstant, titleJudgedIn, MEMORY_CSVS, RUN_TZ, seedMemory, MAX_WORDS, SKIP_NOTE,
