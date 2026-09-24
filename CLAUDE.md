@@ -954,9 +954,9 @@ on disk, but it is sent once, when this debugging is finished, not after each.
 4. **Title check not yet run** at `capo`, `borghese`, `met`, `artic`.
 
 *Compression*
-5. **Two shows at one address.** `urlKey` drops `past` from a path on purpose,
-   so the Rijksmuseum's two Ed van der Elsken shows collide: the older one
-   carries *Up Close*'s description.
+5. **Two shows at one address** — fixed 24 Sep: memory is found by exact
+   address first, is never another row's, and is carried only if some sweep
+   read text there. File repaired (held).
 
 *App*
 6. **Dismissed filter cannot be combined with a venue filter.**

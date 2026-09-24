@@ -220,3 +220,14 @@ the fixed parser, on the same text, gives another closing date. Exactly those
 two. Three rows whose extended date was already right — Samorì, Brera's
 Armani, Borghese's Metamorphoses — gained the note saying where it came from.
 Five cells changed in 419 rows; nothing else.
+
+### A borrowed description, 24 Sep — `stitch_20260924_0417/repair_borrowed_memory_24sep.js`
+
+The Rijksmuseum's older *Ed van der Elsken* (`/past/ed-van-der-elsken`, page
+always 404) carried *Up Close*'s description: with "past" dropped the two
+addresses were one key, the 13 Sep compression stored the borrowed words under
+the older show's own address, and 24 Sep carried them on. Repaired by replaying
+this folder's compression decisions with the memory code before and after the
+fix, over the same memory files: two rows differ, one changes — the older
+show's description emptied and its "carried over" note removed (*Up Close*
+keeps identical words). Two cells in 419 rows.

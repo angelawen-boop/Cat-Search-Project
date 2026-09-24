@@ -692,18 +692,21 @@ function memoryRows({ dir, file }, outputDir = OUTPUT_DIR) {
   const add = (k, t) => { if (!k) return; if (!texts.has(k)) texts.set(k, new Set()); texts.get(k).add(t); };
   for (const r of raw) {
     const t = normalizeRaw(r.summary);
-    for (const k of [urlKey(r), titleKey(r)]) add(k, t);
+    for (const k of [exactKey(r), urlKey(r), titleKey(r)]) add(k, t);
     // THE SWEEP TIME TELLS TWO SWEEPS APART. A stitch holds two sweeps of most
     // venues; where their texts differ, the address alone cannot say which
     // one a description was made from, but the row's swept_at can.
-    if (r.swept_at) add(`${urlKey(r)}@${r.swept_at}`, t);
+    if (r.swept_at) { add(`${exactKey(r)}@${r.swept_at}`, t); add(`${urlKey(r)}@${r.swept_at}`, t); }
   }
   const titleJudged = titleJudgedIn(dir, file, outputDir);
   const rows = [];
   for (const d of readProForma(path.join(outputDir, dir, file))) {
     if (String(d.title || '').startsWith('[')) continue;
-    const exact = d.swept_at ? texts.get(`${urlKey(d)}@${d.swept_at}`) : null;
-    const set = (exact && exact.size === 1 ? exact : null) || texts.get(urlKey(d)) || texts.get(titleKey(d));
+    // THE EXACT ADDRESS FIRST. With "past" dropped, the Rijksmuseum's older Ed
+    // van der Elsken page (404, no text) read Up Close's text as its own.
+    const one = k => { const x = texts.get(k); return x && x.size === 1 ? x : null; };
+    const set = (d.swept_at && (one(`${exactKey(d)}@${d.swept_at}`) || one(`${urlKey(d)}@${d.swept_at}`)))
+      || texts.get(exactKey(d)) || texts.get(urlKey(d)) || texts.get(titleKey(d));
     // A line written under the withdrawn 23 Sep rule is never carried
     // forward: the description is kept, the English title is asked again.
     const en = splitEnglishTitle(d.summary);
@@ -711,6 +714,9 @@ function memoryRows({ dir, file }, outputDir = OUTPUT_DIR) {
       ...d,
       summary: en.old ? en.teaser : d.summary,
       raw: set && set.size === 1 ? [...set][0] : '',
+      // Whether the sweep read ANY text here — even two differing texts, which
+      // `raw` above declines to choose between. mayCarry() asks this.
+      readText: !!set && [...set].some(t => normalizeRaw(t)),
       // A deliberate "not a description" answer, recognised by the note the
       // apply step wrote. This is what stops the row being re-asked forever.
       skipped: !String(d.summary || '').trim() && String(d.notes || '').includes(SKIP_NOTE),
@@ -723,12 +729,30 @@ function memoryRows({ dir, file }, outputDir = OUTPUT_DIR) {
 /** One index over every memory, newest first — the first entry for a key wins. */
 function loadMemory(sources, outputDir = OUTPUT_DIR) {
   const index = new Map();
+  // Every exact address at which some sweep READ text — see mayCarry().
+  index.everRead = new Set();
   for (const src of sources) {
     for (const r of memoryRows(src, outputDir)) {
       for (const k of memoryKeys(r)) if (k && !index.has(k)) index.set(k, r);
+      if (r.readText) index.everRead.add(exactKey(r));
     }
   }
   return index;
+}
+
+/**
+ * MAY THESE WORDS BE CARRIED OVER to a row whose page gave no text? Only if
+ * some sweep once read text at the remembered row's own address — or they are
+ * her seed words. Otherwise the words were themselves carried from somewhere
+ * else, and carrying them again repeats a borrowing: the Rijksmuseum's older
+ * Ed van der Elsken page has never given text (404), yet held Up Close's
+ * description from 13 Sep under its own address, so the corrected lookup found
+ * it there and carried it on. A memory with no record of reads (a test index)
+ * says nothing either way.
+ */
+function mayCarry(memory, prev) {
+  if (!prev || prev.fromSeed || !memory || !memory.everRead) return true;
+  return memory.everRead.has(exactKey(prev));
 }
 
 /**
@@ -890,7 +914,7 @@ module.exports = {
   rebuildInOrder,
   parseCsv, readProForma, writeCsv, urlKey, exactKey, titleKey, indexPrevious, looksLikeADifferentEdition,
   mergeSeedMemory,
-  findPrevious, decide, validateAnswer, normalizeRaw, wordCount, addNote,
+  findPrevious, mayCarry, decide, validateAnswer, normalizeRaw, wordCount, addNote,
   completedCompressions, loadMemory, memoryRows, dirInstant, titleJudgedIn, MEMORY_CSVS, RUN_TZ, seedMemory, MAX_WORDS, SKIP_NOTE,
   ENGLISH_TITLE_VENUES, EN_PREFIX, ENGLISH_TITLE_MARKER, asksEnglishTitle, splitEnglishTitle,
   composeSummary, validateEnglish, resolveAnswer,

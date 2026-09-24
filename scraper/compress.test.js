@@ -745,6 +745,44 @@ test('MEM-007: two sweeps of one address are told apart by swept_at', () => {
   assert.equal(M.decide(ng({ summary: 'first text' }), M.findPrevious(mem, ng({}))).action, 'review');
 });
 
+test('MEM-008: words are carried only if some sweep read text at that address — the Elsken chain', () => {
+  // 11 Sep: only Up Close. 13 Sep: the older show (page 404, no text) borrowed
+  // Up Close's words under its OWN address. 24 Sep: the page still gives no
+  // text; the older show must come out empty, not carry the borrowed words.
+  const RK = 'https://www.rijksmuseum.nl/en/whats-on/exhibitions/';
+  const up = o => ({ venue_code: 'rijks', title: 'Ed van der Elsken. Up Close', url: RK + 'ed-van-der-elsken', start_date: '', end_date: '', notes: '', ...o });
+  const old = o => ({ venue_code: 'rijks', title: 'Ed van der Elsken', url: RK + 'past/ed-van-der-elsken', start_date: '', end_date: '', notes: '', ...o });
+  const root = fakeOutput({
+    'run_2026-09-11_150556': { 'sweep.csv': [up({ summary: 'RAW up' })], 'sweep_compressed.csv': [up({ summary: 'Unfiltered.' })] },
+    'stitch_20260913_0442': {
+      'sweep.csv': [up({ summary: 'RAW up' }), old({ summary: '' })],
+      'sweep_compressed_clean.csv': [up({ summary: 'Unfiltered.' }), old({ summary: 'Unfiltered.' })],
+    },
+  });
+  const mem = M.loadMemory(M.completedCompressions('run_2026-09-20_000000', root), root);
+  const hit = M.findPrevious(mem, old({ summary: '' }));
+  assert.equal(hit.url, RK + 'past/ed-van-der-elsken');     // its own address — the lookup is right
+  assert.equal(M.mayCarry(mem, hit), false);                  // but no sweep ever read text there
+  assert.equal(M.mayCarry(mem, M.findPrevious(mem, up({ summary: '' }))), true);
+});
+
+test('MEM-009: a page read twice with DIFFERENT texts still counts as read', () => {
+  const root = fakeOutput({
+    'stitch_20260913_0442': {
+      'sweep.csv': [mrow({ summary: 'first text' }), mrow({ summary: 'second text' })],
+      'sweep_compressed_clean.csv': [mrow({ summary: 'Words.' })],
+    },
+  });
+  const mem = M.loadMemory(M.completedCompressions('run_2026-09-20_000000', root), root);
+  assert.equal(M.mayCarry(mem, M.findPrevious(mem, mrow({}))), true);
+});
+
+test('MEM-010: her seed words may always be carried', () => {
+  const mem = M.loadMemory([]);
+  assert.equal(M.mayCarry(mem, { url: 'https://x/y', venue_code: 'met', fromSeed: true }), true);
+  assert.equal(M.mayCarry(mem, { url: 'https://x/y', venue_code: 'met' }), false);
+});
+
 test('MEM-006: the compressor\'s clock is the sweeper\'s', () => {
   // compress.js must not require the scraper at runtime; this test is what
   // keeps the two copies of the time zone from drifting.

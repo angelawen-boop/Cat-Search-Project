@@ -161,7 +161,9 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
       tally.empty++;
       return;
     }
-    const prev = recompress ? null : C.findPrevious(memory, row, claimed);
+    const found = recompress ? null : C.findPrevious(memory, row, claimed);
+    // No text this time: carry only words some sweep read at that address.
+    const prev = found && !C.normalizeRaw(row.summary) && !C.mayCarry(memory, found) ? null : found;
     const d = C.decide(row, prev);
     tally[d.action] = (tally[d.action] || 0) + 1;
 
