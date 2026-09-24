@@ -177,3 +177,35 @@ titles against the 13 Sep sweep's listing titles — several SHORTER than hers
 (*Radical Harmony: Neo-Impressionists* → *Radical Harmony*), Acquavella's run
 together with a city, the Louvre's in its own inconsistent capitals. The file
 still carries all of it; the open list is CLAUDE.md §7.1a.
+
+## 24 Sep — rebuilt on the 21 Sep file, 23 Sep withdrawn
+
+**Her instruction, 24 Sep: the 23 Sep repairs and file are withdrawn.** Every
+repair below starts from her 21 Sep import file (`stitch_20260913_0442/
+sweep_compressed_clean.csv` at commit `f1bfb41`), and every changed value came from
+code reading the museums' own pages — nothing typed by hand.
+
+**Her import file is now `stitch_20260924_0417/sweep_compressed.csv`.** Two steps:
+
+1. **Titles** — `stitch_20260913_0442/titles_24sep.js` →
+   `sweep_titles_24sep.csv`. Capitals: the scraper's reading of four listing
+   pages she saved (`docs/title_case_pages/`) and four read live, 30 s apart; a
+   title replaced only where the same address reads the same letters in
+   different case. Three Rijksmuseum rows from their own pages (one was a status
+   label, "PARTIALLY CLOSED"; one address now 404, letters taken from her saved
+   page). All 15 Acquavella titles as the fixed scraper reads her saved page.
+   Only titles changed. Left: Borghese's 7 (site down) and three the museums
+   type in capitals (*LOUVRE COUTURE*, *WORN*, *REVOLUSI!*).
+2. **English titles** — `stitch_20260924_0417/`: a compression run whose input
+   (`build_input.js`) is that file's 419 rows given back the museum's text from
+   the 13 Sep sweep. 361 descriptions reused word for word; 20 English titles
+   added in her format; the two Louvre descriptions restored (below). Checked:
+   against step 1's file only the description differs, on 22 rows.
+
+**The two Louvre descriptions** (*A New Look at Cimabue*, *Figures of the Fool*).
+The Louvre was swept twice on 13 Sep; the first sweep was refused (HTTP 429) on
+those two pages, the second read them, and compression described them. The
+21 Sep rebuild (`rebuild_one_run_per_venue.js`) chose between the two copies by
+venue + address + title — identical in both — and kept the first, empty one.
+Restored from the 13 Sep compression after checking it was written from the
+identical text. These were the only two rows the rebuild lost.

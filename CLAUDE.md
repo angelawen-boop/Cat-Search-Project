@@ -151,6 +151,7 @@ Judgement about the outside world is not in any file.
 | `wallace` | Displays and trails KEPT — **this venue only** |
 | `menil` | 7 permanent galleries excluded; "Foyer Installation: …" rows excluded (23 Sep) |
 | `tate-britain` | Ofili excluded, on the venue's own ONGOING label |
+| `tate-modern`, `tate-britain` | Exhibitions only, never collection displays (24 Sep) |
 | `uffizi` | Headlines kept as titles; undated rows kept |
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Shows "from the … Collection" excluded (23 Sep) |
 | `moma` | **Current and upcoming only.** She does not want its past at all |
@@ -404,21 +405,19 @@ evidence and every finding: `docs/app.md`.**
   the archive. **Nothing to fix; do not re-diagnose this as a matching failure.**
 
 - **Titles — her rulings, 23 Sep.** A **changed title is a Change card** —
-  a rename, and equally a difference only in capitals, which is how a title
-  recorded in capitals gets corrected. **Nothing is masked on screen**: an
-  on-screen capitals fix was built and removed the same day, her ruling, because
-  it would hide a scraper fault forever. The scraper records titles in the
-  venue's own letters (`restoreCase`). Fixture 21. **SHIPPED BROKEN — §7.1a.**
-  It compares with no memory, so every old seed-vs-sweep wording difference
-  became a card, and a rejected one returns on every sweep.
-- **Italian titles ride in the description**, never in the title and never in
-  a ninth column, written by the compressor IN THE SAME
-  ANSWER as the summary, and only for `ENGLISH_TITLE_VENUES` (`compress.js`).
-  A separate title step was built and withdrawn on 23 Sep: it sent all 402
-  titles when ~50 could be Italian. `compress_prompt.md`, "Italian titles".
-  **Her format, 23 Sep, NOT YET BUILT:** `In English: "Carlo Maria Mariani. Art
-  Beyond Time." Sixteen works spanning Mariani's fifty-year career.` — the file
-  and compressor still write `In English: … . — teaser` (§7.1a).
+  a rename, and equally a difference only in capitals. **Nothing is masked on
+  screen**: the scraper records titles in the venue's own letters
+  (`restoreCase`, proven on her saved pages by `title_case_pages.js`). **Still
+  open (1a):** it compares with no memory, so a rejected title card returns on
+  every sweep.
+- **A changed description is a Change card too** (`consider` in the intake) —
+  anything written into the description must be stable from sweep to sweep.
+- **Italian titles — built 24 Sep, her format.** The title stays the museum's
+  own (the catalogue lookup searches by it); an English translation opens the
+  description: `In English: "Carlo Maria Mariani. Art Beyond Time." Sixteen
+  works…`. **The model returns plain strings; code writes the line**
+  (`composeSummary`). Only `capo`, `brera`, `uffizi`. Translated once, reused
+  by compression's memory. `compress_prompt.md`, "Italian titles".
 
 **Deliberately not built:** bulk-approve, in-app field editing, and the mirror
 case where the app proposes Add but it is really an update.
@@ -595,6 +594,9 @@ a venue sees, and both of these rate-limit — which is how a working venue beco
 a blocked one. Naming venues by hand still overrides it, and says so in the log.
 
 ### Then hand her the file — she must never have to ask
+
+**Before sending, read the run summary's TITLES list** — every title the
+page check (`titleFromPage`) changed, and every name it could not complete.
 
 Send `sweep_compressed.csv` with the file-sending tool as soon as compression
 finishes, saying how many rows and how many summaries were reused versus written.
@@ -791,6 +793,9 @@ keeps making in new clothes.
   suite passed 148/148. **It has no browser, so the listing loop never runs in it.**
 - **Rebuilding the import file to one sweep per venue and letting the DATES follow
   the rows.** Right about the rows, wrong about the dates.
+- **A rebuild choosing between two copies by a key both copies share.** The
+  21 Sep one-sweep-per-venue rebuild took the FIRST Louvre copy — the
+  rate-limited sweep's empty one — and dropped two descriptions.
 - **Leaving the reasoning for a hand-rebuilt data file in a comment inside the
   one-off script.** Three sessions later the guide still described it wrongly and
   SHE had to type the history out again — `docs/import-file.md` now holds it.
@@ -847,7 +852,9 @@ keeps making in new clothes.
 - `TITLE_NOISE` stripping EXHIBITION case-insensitively — "How to Make an
   Exhibition" became "How to Make an ".
 - Acquavella's title rule stripping `NEW YORK` / `PALM BEACH`, making its two runs
-  of one show read as the same exhibition.
+  of one show read as the same exhibition. **Now (24 Sep):** the gallery is
+  added only to a show run in both galleries within six months — same name
+  alone is not the same show (Barceló 2022 and 2025).
 - **Reading only page one of a paginated archive** — 12 Menil exhibitions lost.
 - Walking a paginated archive past the lookback floor "to be safe" — eleven pages
   and 13 undated decades-old rows on her pile.
@@ -878,6 +885,10 @@ keeps making in new clothes.
 - **Asserting what a set of changes is instead of looking** — "longer, fuller
   titles" — while several were shorter or lower-case.
 
+- **A title rule proven at two museums, shipped to all.** Testing on venues it
+  did not come from found MoMA's site name confirming its preview dates as a
+  title. Test a general rule where it was NOT derived.
+
 ### Subagents
 
 - **Sending a model everything when the question applies to a few**, 23 Sep:
@@ -898,59 +909,37 @@ fact.
 
 ### 1. The 320 decisions — hers, and the next thing
 
-The file is `stitch_20260913_0442/sweep_compressed_clean.csv` — **not**
-`sweep_compressed.csv`. How it was built, and why it is not a straight stitch:
-**`docs/import-file.md`**.
+**The file is `stitch_20260924_0417/sweep_compressed.csv`** — her 21 Sep file
+(`stitch_20260913_0442`, commit `f1bfb41`) with 24 Sep's repairs, all made by
+code from the museums' own pages. **Her instruction, 24 Sep: the 23 Sep repairs
+and file are withdrawn — build on the 21 Sep file.** How it was built:
+**`docs/import-file.md`**. It is also compression's newest memory.
 
-Against her 110-row seed it produces 320 cards — 299 add, 14 fill, 7 change. The
-row identity closes: **419 = 13 markers + 0 folds + 86 matching + 320**.
+#### 1a. Faults found working the pile
 
-**Repaired 23 Sep** after her first sitting (`repair_23sep.js`,
-`repair_capitals_23sep.js`; `docs/import-file.md`): Capodimonte's two wrong end
-dates, doubled notes, 20 English titles, 78 titles out of capitals, Asian
-Pavilion named. **She is mid-way through re-importing that file into v33** —
-113 cards, 43 decided, 63 undecided when she stopped — and it is full of the
-faults in 1a. Do not republish until she has saved and closed.
+**Fixed 24 Sep, scraper and file:** titles in capitals (70 rows); titles missing
+words, now checked against each exhibition's own page at every venue;
+Acquavella's run-together titles and cities; Italian titles in her format (20);
+Tate reading collection displays; two Louvre descriptions lost by the rebuild.
+**Short titles in the file are left for the next sweep**, her ruling — reject
+those cards meanwhile.
 
-#### 1a. What the 23 Sep file and v33 got wrong — OPEN, in her order
-
-None of these is fixed. She is going through them one at a time; nothing is
-approved until she says so.
-
-1. **Title cards with no memory (app).** v33 compares a sweep's title with her
-   ledger's and raises a card on any difference. ~52 are her August seed titles
-   against the 13 Sep sweep's — not renames at all — and rejecting one is not
-   remembered, so they would return on every sweep. Proposed, not approved: the
-   ledger remembers the title the venue last used; a card only when that changes.
-2. **Short titles (scraper).** The scraper takes the listing card's title.
-   Checked 23 Sep on the live pages: the Rijksmuseum and the National Gallery
-   put the fuller name in the page's heading or its browser-tab title, not the
-   card — *Radical Harmony: Neo-Impressionists*, *Suit Yourself | 100 years of
-   menswear, 1750-1850*, *Document Nederland: Tina Farifteh*, *Isamu Noguchi in
-   the Rijksmuseum gardens*. Proposed, not approved: the longer of heading and
-   tab title, venue suffix stripped, tested on every row first. **Her call
-   pending:** three seed titles appear nowhere on the museum's pages (*Lee Ufan
-   in the Gardens*, *The Art of Drawing*, *Ming Wong…* in capitals) — seed or
-   museum wording?
-3. **Acquavella titles (scraper + file).** Name, subtitle and city run together
-   with no punctuation ("Matisse The Pursuit of Harmony New York"), and EVERY
-   title carries a city. Her ruling 23 Sep: colon between name and subtitle; the
-   city ONLY where the same show runs in both galleries. This reverses the
-   older rule in §6 ("stripping NEW YORK / PALM BEACH…") for single-gallery
-   shows — reconcile it there when built. Needs the card's parts read
-   separately off its listing.
-4. **Louvre capitals (file).** `restoreCase` took the Louvre's own letters and
-   the Louvre is inconsistent: *A New Look at Cimabue* but *A new look at
-   Watteau*, *Masterpieces from the Torlonia collection*. **Her call pending:**
-   the venue's letters, or standard title capitals.
-5. **National Gallery "ming wong" (file).** Lower case is the museum's own
-   heading. Tied to question 2.
-6. **Italian title format (compressor + file).** See §4 — her format is not
-   built; the file carries a full stop followed by an em dash.
-7. **Extension note (scraper + file).** "The venue extended this exhibition; it
-   first announced 2026-03-10" never says where the new closing date came
-   from. Should name the extended date and the page it was read from.
-8. **Checking (process).** §6, "Handing her work nobody read".
+**Open:**
+1. **Title cards with no memory (app).** A rejected title card returns on every
+   sweep.
+2. **Borghese: 7 titles still in capitals** — site down 24 Sep; its 3 listing
+   pages, read once, when it is back.
+3. **Duplicated and loose sweeper notes** — next, 24 Sep.
+4. **Two shows at one address (compression).** `urlKey` drops `past` from a
+   path on purpose, so the Rijksmuseum's two Ed van der Elsken shows collide:
+   the older one carries *Up Close*'s description.
+5. **A closed show moves address (Rijksmuseum).** *Up Close*'s old link is dead;
+   the next sweep may present the new address as a new exhibition.
+6. **Dismissed filter cannot be combined with a venue filter (app).**
+7. **Extension note** never says where the new closing date came from.
+8. **Title check not yet run** at `capo`, `borghese`, `met`, `artic`.
+9. **Louvre letters, and National Gallery "ming wong"** — the venue's own
+   letters are recorded; whether that stands is her call.
 
 Expect debugging to fall out of it. Also still to do: a save round-trip after the
 import — export, re-import that file, confirm quarantine and per-venue freshness
