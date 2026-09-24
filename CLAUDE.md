@@ -890,11 +890,9 @@ keeps making in new clothes.
 
 ### Handing her work nobody read
 
-- **Counting the cards a file would produce and calling the file checked**,
-  23 Sep. The count was right; ~52 of the cards were wrong titles, and the
-  summary described them as "the museum's full titles" without one being read.
-  She found them by working the pile. **Run the file through the app's own
-  intake and READ every card before sending it.**
+- **Counting the cards a file would produce and calling the file checked.** A
+  right count can hide wrong cards. **Run the file through the app's own intake
+  and READ the cards before sending it.**
 - **Asserting what a set of changes is instead of looking** — "longer, fuller
   titles" — while several were shorter or lower-case.
 
@@ -904,9 +902,8 @@ keeps making in new clothes.
 
 ### Subagents
 
-- **Sending a model everything when the question applies to a few**, 23 Sep:
-  all 402 titles in the file sent to ask "is this Italian?", ~85k tokens of her
-  allowance, when four venues' ~50 titles were the only candidates.
+- **Sending a model everything when the question applies to a few.** Send only
+  the rows the question can apply to; every token is her allowance.
 
 - Handing one pretty-printed JSON with fields it never reads, plus a second file
   for examples — 178k tokens where 100k did the same work.
@@ -924,8 +921,7 @@ fact.
 
 **The file is `stitch_20260924_0417/sweep_compressed.csv`** — her 21 Sep file
 (`stitch_20260913_0442`, commit `f1bfb41`) with 24 Sep's repairs, all made by
-code from the museums' own pages. **Her instruction, 24 Sep: the 23 Sep repairs
-and file are withdrawn — build on the 21 Sep file.** How it was built:
+code from the museums' own pages. How it was built:
 **`docs/import-file.md`**. It is also compression's newest memory.
 
 #### 1a. Faults found working the pile
