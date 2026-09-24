@@ -1638,41 +1638,94 @@ test('AC-002: Art Institute films and installations are flagged on the card, nev
   assert.equal(flagFromDescription({ title: '[past page]', notes: 'x', summary: 'film' }, re).notes, 'x');
 });
 
-// RT-001 to RT-004 — the Rijksmuseum name from the exhibition's own page,
-// 24 Sep. The line under the heading joins only when the museum's tab title
-// carries it; the words always come from the page. Real headings, lines and
-// tab titles, read from the six live pages that settled the rule.
-const { titleFromOwnPage } = require('./sweep_prototype.js');
-const rkTab = VENUES.rijks.pageTitle.tabSuffix;
-const rk = (heading, subtitle, tab) => titleFromOwnPage({ heading, subtitle, tab }, rkTab);
+// RT-001 to RT-005 — the name on the exhibition's own page, every venue,
+// 24 Sep (titleFromPage). Real headings, lines and tab titles from seven live
+// pages at the two museums that settled the rule.
+const { titleFromPage } = require('./sweep_prototype.js');
+const tp = (recorded, heading, line, tab) => titleFromPage({ recorded, heading, line, tab });
 
 test('RT-001: a line the tab title carries is part of the name, in full', () => {
-  assert.equal(rk('Isamu Noguchi', 'In the Rijksmuseum gardens', 'Isamu Noguchi in the Rijksmuseum gardens - Rijksmuseum'),
+  assert.equal(tp('Isamu Noguchi', 'Isamu Noguchi', 'In the Rijksmuseum gardens',
+    'Isamu Noguchi in the Rijksmuseum gardens - Rijksmuseum').title,
     'Isamu Noguchi: In the Rijksmuseum gardens');
   // The tab is cut short; the words still come whole from the page.
-  assert.equal(rk('Document Nederland', 'Tina Farifteh Photographs Asylum', 'Document Nederland: Tina Farifteh - Rijksmuseum'),
+  assert.equal(tp('Document Nederland', 'Document Nederland', 'Tina Farifteh Photographs Asylum',
+    'Document Nederland: Tina Farifteh - Rijksmuseum').title,
     'Document Nederland: Tina Farifteh Photographs Asylum');
+  // The tab's furniture is cut off, and an abbreviated tab still confirms.
+  assert.equal(tp('Radical Harmony', 'Radical Harmony ', "Helene Kröller-Müller's Neo-Impressionists",
+    'Radical Harmony: Neo-Impressionists | Past exhibitions | National Gallery, London').title,
+    "Radical Harmony: Helene Kröller-Müller's Neo-Impressionists");
 });
 
-test('RT-002: a slogan or dates the tab title leaves out are not part of the name', () => {
-  assert.equal(rk('Express yourself', 'Photography exhibition ', 'Express yourself - Rijksmuseum'), 'Express yourself');
-  assert.equal(rk('Point of view', '5 July 2024 - 1 Sep 2024', 'Point of view - Rijksmuseum'), 'Point of view');
-  assert.equal(rk('Lee Ufan', '28 May 2024 - 27 Oct 2024', 'Lee Ufan - Rijksmuseum'), 'Lee Ufan');
+test('RT-002: a slogan or dates the tab title leaves out change nothing', () => {
+  for (const [rec, h, l, t] of [
+    ['Express yourself', 'Express yourself', 'Photography exhibition ', 'Express yourself - Rijksmuseum'],
+    ['Point of View', 'Point of view', '5 July 2024 - 1 Sep 2024', 'Point of view - Rijksmuseum'],
+    ['Lee Ufan', 'Lee Ufan', '28 May 2024 - 27 Oct 2024', 'Lee Ufan - Rijksmuseum'],
+  ]) {
+    const r = tp(rec, h, l, t);
+    assert.equal(r.changed, false, rec);
+    assert.equal(r.title, rec, rec);   // letters too: restoreCase settled those
+  }
 });
 
-test('RT-003: a heading that is already the whole name is taken as it is', () => {
-  assert.equal(rk('Suit Yourself | 100 years of menswear, 1750-1850 ', '',
-    'Suit Yourself | 100 years of menswear, 1750-1850  - Rijksmuseum'),
+test('RT-003: a heading that is the whole name replaces a shorter one', () => {
+  assert.equal(tp('Suit Yourself', 'Suit Yourself | 100 years of menswear, 1750-1850 ', 'Past exhibition',
+    'Suit Yourself | 100 years of menswear, 1750-1850  - Rijksmuseum').title,
     'Suit Yourself | 100 years of menswear, 1750-1850');
 });
 
-test('RT-004: anything uncertain gives the heading alone, never a guess', () => {
-  // Tab adds words that are not the start of the line.
-  assert.equal(rk('Lee Ufan', 'In the Rijksmuseum gardens', 'Lee Ufan retrospective - Rijksmuseum'), 'Lee Ufan');
-  // Tab does not start with the heading.
-  assert.equal(rk('Lee Ufan', 'In the Rijksmuseum gardens', 'Missie Meesterwerk - Rijksmuseum'), 'Lee Ufan');
-  // Heading is a prefix of a longer word in the tab, not the same name.
-  assert.equal(rk('Lee Uf', 'x', 'Lee Ufan - Rijksmuseum'), 'Lee Uf');
-  // No heading: nothing, so the listing's title stands.
-  assert.equal(rk('', 'In the Rijksmuseum gardens', 'Isamu Noguchi - Rijksmuseum'), '');
+test('RT-004: a heading that is something else never replaces the name', () => {
+  // A logo or section heading does not hold the recorded name.
+  assert.equal(tp('Lee Ufan', 'Exhibitions', '', 'Exhibitions - Rijksmuseum').changed, false);
+  // A recorded name LONGER than the page's (Acquavella's city) is kept.
+  assert.equal(tp('Matisse The Pursuit of Harmony New York', 'Matisse', 'The Pursuit of Harmony',
+    'Matisse: The Pursuit of Harmony | Acquavella').title, 'Matisse The Pursuit of Harmony New York');
+  // A page in another language (Missie Meesterwerk) changes nothing.
+  assert.equal(tp('Mission Masterpiece', 'Mission Masterpiece', '', 'Missie Meesterwerk - Rijksmuseum').changed, false);
+  // No heading: nothing.
+  assert.equal(tp('Lee Ufan', '', 'x', 'Lee Ufan').changed, false);
+});
+
+test('RT-005: tab words the page does not hold are reported, never guessed', () => {
+  const r = tp('Lee Ufan', 'Lee Ufan', '28 May 2024 - 27 Oct 2024', 'Lee Ufan: Requiem - Rijksmuseum');
+  assert.equal(r.changed, false);
+  assert.equal(r.unplaced, 'Lee Ufan: Requiem');
+});
+
+test('RT-006: the site name in the tab never confirms the line (MoMA)', () => {
+  // Her saved MoMA page, docs/moma_pages/exhibition_5918.mhtml. The line under
+  // the heading ends "MoMA" and so does the tab; that is not the name.
+  const r = tp('The Surrealist Book Tomorrow Lives in Mirrors', 'The Surrealist Book Tomorrow Lives in Mirrors',
+    'Member Previews, Oct 1–3 Oct 4, 2026–Jan 23, 2027 MoMA', 'The Surrealist Book: Tomorrow Lives in Mirrors | MoMA');
+  assert.equal(r.changed, false);
+  assert.equal(r.title, 'The Surrealist Book Tomorrow Lives in Mirrors');
+});
+
+// RT-007 to RT-009 — found testing on venues the rule did NOT come from,
+// 24 Sep: 13 live exhibition pages, one per venue, plus MoMA and the Morgan.
+test('RT-007: a heading built of separate pieces is read as pieces (Louvre)', () => {
+  // <h1><span>Primeval Waters</span><span>Lessons from Mesopotamia</span></h1>
+  const r = titleFromPage({ recorded: 'Primeval Waters',
+    headings: [{ pieces: ['Primeval Waters', 'Lessons from Mesopotamia'], line: 'CurrentSpotlight exhibition' }],
+    tab: 'Primeval Waters - Lessons from Mesopotamia' });
+  assert.equal(r.title, 'Primeval Waters: Lessons from Mesopotamia');
+});
+
+test('RT-008: the heading holding the name is used, not a cookie banner (Wallace)', () => {
+  const r = titleFromPage({ recorded: 'Swords of Lucknow',
+    headings: [{ pieces: ['Your choice regarding cookies on this site'], line: 'Essential cookies are enabled by default.' },
+               { pieces: ['Swords of Lucknow'], line: '' }],
+    tab: 'Swords of Lucknow - The Wallace Collection' });
+  assert.equal(r.changed, false);
+  assert.equal(r.title, 'Swords of Lucknow');
+});
+
+test('RT-009: a generic word in the tab is not reported as missing (Accademia)', () => {
+  const r = titleFromPage({ recorded: 'Transforming Energy: Marina Abramović',
+    headings: [{ pieces: ['Transforming Energy'], line: '' }],
+    tab: '"Transforming Energy": Marina Abramović Exhibition | Gallerie dell\'Accademia di Venezia' });
+  assert.equal(r.changed, false);
+  assert.equal(r.unplaced, '');
 });

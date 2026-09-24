@@ -2599,44 +2599,138 @@ async function extractTitle(link, venueCode) {
  * never appears on the page and could not be looked up whole.
  */
 /**
- * AN EXHIBITION'S NAME FROM ITS OWN PAGE — the Rijksmuseum, 24 Sep.
+ * THE NAME ON THE EXHIBITION'S OWN PAGE, checked against the name recorded
+ * from the listing — every venue, 24 Sep, her ruling.
  *
- * The listing card carries only the short heading ("Suit Yourself",
- * "Isamu Noguchi"). The exhibition's own page carries the full heading, plus
- * a line beneath it that is SOMETIMES the rest of the name ("In the
- * Rijksmuseum gardens", "Tina Farifteh Photographs Asylum"), sometimes the
- * dates, sometimes a slogan ("Photography exhibition"). No wording rule tells
- * those apart.
+ * WHY. Listing cards carry short names: the Rijksmuseum's "Suit Yourself" for
+ * "Suit Yourself | 100 years of menswear, 1750-1850", the National Gallery's
+ * "Radical Harmony" for "Radical Harmony: Helene Kröller-Müller's
+ * Neo-Impressionists". Nothing showed it: she could only have noticed at a
+ * venue in her seed, and only once. So the check runs on every row whose own
+ * page is opened — the visit already made for the description, no extra
+ * request — and fixes what it can be certain of.
  *
- * THE MUSEUM'S OWN TAB TITLE DOES, as a yes/no signal. It carries that line
- * when the line is part of the name ("Isamu Noguchi in the Rijksmuseum
- * gardens", "Document Nederland: Tina Farifteh") and leaves it out when it is
- * dates or a slogan ("Express yourself", "Lee Ufan"). Checked on six pages
- * before this was written; all six agree.
+ * THE SIGNAL. The page's main heading, and the line directly beneath it,
+ * which is SOMETIMES the rest of the name ("In the Rijksmuseum gardens"),
+ * sometimes dates, sometimes a slogan ("Photography exhibition"). No wording
+ * rule tells those apart. The museum's own TAB TITLE does, as a yes/no: it
+ * carries that line's words when the line is part of the name ("Isamu
+ * Noguchi in the Rijksmuseum gardens", "Radical Harmony: Neo-Impressionists")
+ * and leaves them out otherwise ("Express yourself - Rijksmuseum").
  *
  * The tab is NEVER the source of the words — it is cut short ("Tina
- * Farifteh", not "Tina Farifteh Photographs Asylum"). It only answers whether
- * the line belongs. The words come from the heading and the line, in the
- * page's typed letters (textContent, which styling does not touch).
+ * Farifteh" for "Tina Farifteh Photographs Asylum"). It only answers whether
+ * the line belongs. The words come from the page, in its typed letters.
  *
- * The line belongs when what the tab adds after the heading is the START of
- * the line. Anything less certain — tab not starting with the heading, tab
- * adding something else — gives the heading alone.
+ * Only the tab's FIRST segment counts — the name. What follows the first
+ * separator ("| Past exhibitions | National Gallery, London", "- Rijksmuseum",
+ * "| MoMA") is the site's furniture and never confirms anything.
+ *
+ * ACTS ONLY WHEN CERTAIN. The page's name replaces the recorded one only if it
+ * holds every word of the recorded name AND adds words. A heading that is
+ * something else (a logo, "Exhibitions"), or one that adds nothing, changes
+ * nothing — letters included, which restoreCase already settled.
+ *
+ * REPORTS WHAT IT CANNOT PLACE: a tab whose first segment starts with the
+ * heading but carries words found neither in the heading nor the line. That
+ * is a name we are still dropping words from, and a rule to write next.
+ *
+ * Proven on seven live pages at two museums (RT fixtures). Every change it
+ * makes is listed in the run summary, so the other venues are read on their
+ * first sweep before any file reaches her.
  *
  * Pure, so the rule is asked directly by a fixture.
  */
-function titleFromOwnPage({ heading, subtitle, tab }, tabSuffix) {
-  const h = squash(heading);
-  if (h.length < 3) return '';
-  const flat = s => String(s || '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
-  const t = flat(String(tab || '').replace(tabSuffix || /$^/, ''));
-  const fh = flat(h);
-  if (!t.startsWith(fh) || /[\p{L}\p{N}]/u.test(t.charAt(fh.length))) return h;
-  const rest = t.slice(fh.length).trim();
-  const sub = squash(subtitle);
-  if (!rest || !sub || !flat(sub).startsWith(rest)) return h;
-  return /:\s*$/.test(h) ? `${h} ${sub}` : `${h}: ${sub}`;
+const TITLE_SEP = /\s+[|\-–—]\s+/;
+function titleWords(s) {
+  return String(s || '').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
 }
+const joinName = (a, b) => /[:.!?]\s*$/.test(a) ? `${a} ${b}` : `${a}: ${b}`;
+// Words too general to be a missing part of a name, for the report only.
+const GENERIC_NAME_WORDS = new Set(['exhibition', 'exhibitions', 'mostra', 'ausstellung', 'exposition', 'tentoonstelling', 'the', 'a', 'an', 'and', 'of']);
+function titleFromPage({ recorded, heading, line, tab, headings }) {
+  const rec = squash(recorded);
+  const out = { title: rec, changed: false, unplaced: '' };
+  if (!rec) return out;
+  // Which heading: the first holding every word of the recorded name, else
+  // the first. A single heading may be handed in directly (fixtures).
+  const list = headings || [{ pieces: [heading], line }];
+  const rw0 = titleWords(rec);
+  const holds = c => { const w = new Set(titleWords(c.pieces.join(' ') + ' ' + c.line)); return rw0.every(x => w.has(x)); };
+  const pick = list.find(holds) || list[0];
+  if (!pick) return out;
+  const parts = pick.pieces.map(squash).filter(Boolean);
+  const h = parts.reduce((acc, p) => acc ? joinName(acc, p) : p, '');
+  const l = squash(pick.line);
+  if (h.length < 3) return out;
+
+  const hw = new Set(titleWords(h));
+  const lw = new Set(l.length <= 160 ? titleWords(l) : []);
+  const known = w => hw.has(w) || lw.has(w);
+
+  // What the museum's tab says beyond the heading — its FIRST segment only,
+  // the name. Everything after the first separator is the site's furniture
+  // ("| MoMA", "- Rijksmuseum"), and furniture can happen to share a word
+  // with the line: MoMA's tab ends "| MoMA" and its line under the heading
+  // ends "MoMA", which read as confirmation and made the preview dates a
+  // title. Found by testing on a venue the rule did not come from.
+  const segs = String(tab || '').split(TITLE_SEP);
+  const firstWords = titleWords(segs[0]);
+  const extra = firstWords.every(known) ? firstWords.filter(w => !hw.has(w)) : [];
+  const joinLine = extra.length > 0 && lw.size > 0 && extra.every(w => lw.has(w));
+  const name = !joinLine ? h : joinName(h, l);
+
+  // Unplaced: the tab's first segment names this page's heading and then
+  // carries words the page does not hold where we look.
+  // Unplaced: the tab's name segment carries a word found nowhere we look —
+  // not the heading, the line or the recorded name — and not a generic word.
+  // Found as a false alarm at the Accademia, whose tab adds "Exhibition".
+  const rset = new Set(rw0);
+  const missing = firstWords.filter(w => !known(w) && !rset.has(w) && !GENERIC_NAME_WORDS.has(w));
+  if (missing.length && firstWords.some(w => hw.has(w))) out.unplaced = squash(segs[0]);
+
+  const nw = new Set(titleWords(name));
+  const rw = titleWords(rec);
+  if (rw.every(w => nw.has(w)) && [...nw].some(w => !rw.includes(w))) {
+    out.title = name;
+    out.changed = true;
+  }
+  return out;
+}
+
+// What titleFromPage() reads, in the page's TYPED letters (textContent —
+// styling cannot shout it): EVERY <h1> with real text, each with the element
+// directly after it, and the tab title.
+//
+// Every h1, not the first: the Wallace's first is its cookie banner ("Your
+// choice regarding cookies on this site"). titleFromPage() takes the one
+// holding the recorded name.
+//
+// A heading built of separate pieces is read AS pieces. The Louvre's is two
+// spans, "Primeval Waters" and "Lessons from Mesopotamia", with nothing
+// between them in the source — textContent ran them into "WatersLessons".
+// Pieces only when the heading is made entirely of child elements; a heading
+// with its own words beside an element ("Ana <em>Mendieta</em>") already
+// carries its own spaces.
+async function readPageNameParts(page) {
+  return page.evaluate(() => {
+    const sq = s => String(s || '').replace(/\s+/g, ' ').trim();
+    const pieces = h => {
+      const loose = Array.from(h.childNodes).some(n => n.nodeType === 3 && sq(n.data));
+      const kids = Array.from(h.children).map(k => sq(k.textContent)).filter(Boolean);
+      return !loose && kids.length >= 2 ? kids : [sq(h.textContent)];
+    };
+    const headings = Array.from(document.querySelectorAll('h1'))
+      .map(h => ({ pieces: pieces(h), line: h.nextElementSibling ? h.nextElementSibling.textContent : '' }))
+      .filter(h => h.pieces.join(' ').length >= 3);
+    if (!headings.length) return null;
+    return { headings, tab: document.title };
+  }).catch(() => null);
+}
+
+// Every title the page check changed, and every name it could not place.
+// Printed in the run summary: see titleFromPage().
+const TITLE_REPORT = [];
 
 async function withPostTitle(link, rule, title) {
   if (!title || !rule.postTitle) return title;
@@ -3288,8 +3382,6 @@ const VENUES = {
       { path: '/en/whats-on/exhibitions/now-on-view', ctx: 'current/upcoming' },
       { path: '/en/whats-on/exhibitions/past',        ctx: 'past' },
     ],
-    // The name is taken from the exhibition's own page; see titleFromOwnPage().
-    pageTitle: { heading: 'h1', subtitle: '.page-header-subtitle', tabSuffix: /\s*-\s*Rijksmuseum\s*$/i },
     // Some entries are linked to the DUTCH site even from the English
     // listing — "tentoonstellingen" rather than "exhibitions". Stop Motion is
     // one, and looking only for the English path missed it entirely.
@@ -4981,15 +5073,20 @@ async function fetchIndividualPages(page, rows, venueCode) {
         }
       }
 
-      // THE NAME FROM THE EXHIBITION'S OWN PAGE, where a recipe asks for it.
+      // THE NAME ON THE EXHIBITION'S OWN PAGE, every venue — titleFromPage().
       // Read on the visit already made for the description: no extra request.
-      if (vrec.pageTitle) {
-        const parts = await page.evaluate((sel) => {
-          const text = q => { const el = document.querySelector(q); return el ? el.textContent : ''; };
-          return { heading: text(sel.heading), subtitle: text(sel.subtitle), tab: document.title };
-        }, { heading: vrec.pageTitle.heading, subtitle: vrec.pageTitle.subtitle }).catch(() => null);
-        const t = parts && titleFromOwnPage(parts, vrec.pageTitle.tabSuffix);
-        if (t) row.title = t;
+      {
+        const parts = await readPageNameParts(page);
+        if (parts) {
+          const r = titleFromPage({ recorded: row.title, ...parts });
+          if (r.changed) {
+            TITLE_REPORT.push({ venue: venueCode, kind: 'changed', from: row.title, to: r.title, url: row.url });
+            row.title = r.title;
+          }
+          if (r.unplaced) {
+            TITLE_REPORT.push({ venue: venueCode, kind: 'unplaced', from: row.title, to: r.unplaced, url: row.url });
+          }
+        }
       }
 
       const text = await getCuratorialText(page, vrec.description, vrec.noise);
@@ -5520,6 +5617,19 @@ async function main() {
       for (const h of u.hints) log(`    offers: ${h}`);
     }
   }
+  if (TITLE_REPORT.length) {
+    log('');
+    logSection('TITLES TAKEN FROM THE EXHIBITION\'S OWN PAGE — READ BEFORE SENDING');
+    for (const t of TITLE_REPORT.filter(t => t.kind === 'changed')) {
+      log(`  ${t.venue}: "${t.from}" → "${t.to}"`);
+    }
+    const unplaced = TITLE_REPORT.filter(t => t.kind === 'unplaced');
+    if (unplaced.length) {
+      log('');
+      log('  NAMES STILL MISSING WORDS — the tab title carries words the page does not hold where the check looks:');
+      for (const t of unplaced) log(`  ${t.venue}: recorded "${t.from}", tab says "${t.to}"\n    ${t.url}`);
+    }
+  }
   log('');
   log('  seen      = links matching the venue\'s selector on that page');
   log('  nav       = site navigation and filter links, not exhibitions');
@@ -5586,7 +5696,7 @@ module.exports = {
   scrapeVenue,
   // Pure — the line-by-line title pick, so a venue reachable only from her
   // laptop can still be covered by a fixture here.
-  pickTitleLine, titleFromOwnPage,
+  pickTitleLine, titleFromPage, readPageNameParts,
   // Not pure — exported so a check can run the real detail-page pass offline.
   fetchIndividualPages,
   // Pure — so the never-twice rule is asked directly.
