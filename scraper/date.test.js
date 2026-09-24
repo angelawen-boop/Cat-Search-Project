@@ -23,8 +23,9 @@ const {
   classifyLoadError, isOwnListingPage, saysOngoing,
   expandYearArchive, listingPages, followPagination, VENUES, pickTitleLine,
   stripWeekdays,
-  addNote,
+  addNote, finishNotes,
 } = require('./sweep_prototype.js');
+const { seenOn, listingNote } = require('./listing_note.js');
 
 const range = (s, hint) => {
   const r = hint ? findDateRangeInProse(s, hint) : findDateRange(s);
@@ -1537,13 +1538,41 @@ test('EX-010: an earlier day with no year still crosses into the next year', () 
   assert.equal(r.extendedFrom, '2025-12-20');
 });
 
-test('EX-011: a note is never stamped twice', () => {
-  // Brera's past page links each exhibition twice; each link added the same
-  // "Also listed" sentence, so every card carried it twice.
-  const once = addNote('Found on the venue\'s "current" listing page.', 'Also listed on the venue\'s "past" page.');
-  assert.equal(addNote(once, 'Also listed on the venue\'s "past" page.'), once);
-  assert.equal(addNote(once, 'Also listed on the venue\'s "past 2025" page.'),
-    once + ' Also listed on the venue\'s "past 2025" page.');
+// LN-001 to LN-004 — where a row was seen: recorded as a list, written once.
+// Brera links each show twice on its past page (picture and title); each link
+// used to add its own "Also listed" sentence. 56 rows of the 13 Sep sweep.
+test('LN-001: three links on one page record that page once', () => {
+  const row = { _pages: ['current'] };
+  seenOn(row, 'past'); seenOn(row, 'past'); seenOn(row, 'past');
+  seenOn(row, 'current');                       // the first page, linked again
+  assert.deepStrictEqual(row._pages, ['current', 'past']);
+});
+
+test('LN-002: the sentences, first sighting first', () => {
+  assert.equal(listingNote(['current', 'past', 'past 2025']),
+    'Found on the venue\'s "current" listing page. Also listed on the venue\'s "past" page. '
+    + 'Also listed on the venue\'s "past 2025" page.');
+  assert.equal(listingNote([]), '');
+  assert.equal(listingNote(undefined), '');
+});
+
+test('LN-003: written at the FRONT of the notes, ahead of later notes, and only once', () => {
+  const rows = [
+    { _pages: ['current', 'past'], notes: 'No closing date found anywhere on the venue\'s pages.' },
+    { _pages: ['past'], notes: '' },
+    { title: '[past page]', notes: 'Marker row, not an exhibition.' },   // no pages
+  ];
+  finishNotes(rows);
+  finishNotes(rows);                            // a second call adds nothing
+  assert.equal(rows[0].notes, 'Found on the venue\'s "current" listing page. Also listed on the '
+    + 'venue\'s "past" page. No closing date found anywhere on the venue\'s pages.');
+  assert.equal(rows[1].notes, 'Found on the venue\'s "past" listing page.');
+  assert.equal(rows[2].notes, 'Marker row, not an exhibition.');
+});
+
+test('LN-004: addNote no longer hides a repeat — a repeated note is a fault to see', () => {
+  const n = 'No description could be found on this exhibition\'s own page.';
+  assert.equal(addNote(n, n), n + ' ' + n);
 });
 
 test('LV-001: the Louvre reads only its listing grid, never the menu\'s promo card', () => {

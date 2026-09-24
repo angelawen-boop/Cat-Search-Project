@@ -30,6 +30,7 @@ const fetch = require('node-fetch');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const fs = require('fs');
 const path = require('path');
+const { seenOn, listingNote } = require('./listing_note.js');
 
 // ── Proxy setup ───────────────────────────────────────────────────────────────
 const PROXY_URL = process.env.HTTPS_PROXY || process.env.https_proxy;
@@ -601,6 +602,17 @@ function sweptAtNow() { return new Date().toISOString(); }
 
 const CSV_HEADER = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at';
 
+// WHERE EACH ROW WAS SEEN, written once, at the front of its notes — see
+// listing_note.js. Clears the list so a second call cannot write it twice.
+function finishNotes(rows) {
+  for (const r of rows) {
+    const where = listingNote(r._pages);
+    if (where) r.notes = r.notes ? `${where} ${r.notes}` : where;
+    r._pages = [];
+  }
+  return rows;
+}
+
 // Called only after a venue has finished. Its existence is the record that the
 // venue completed, so it must never be written part-way through one.
 function writeVenueCsv(code, rows) {
@@ -610,6 +622,7 @@ function writeVenueCsv(code, rows) {
   // venue finishes — the closest thing to a true answer we have.
   const at = sweptAtNow();
   for (const r of rows) if (!r.swept_at) r.swept_at = at;
+  finishNotes(rows);
   const lines = [CSV_HEADER, ...rows.map(csvRow)];
   fs.writeFileSync(venueCsvPath(code), lines.join('\n') + '\n', 'utf8');
 }
@@ -2482,9 +2495,9 @@ async function fillBlanksFromRepeatLink(row, link, venueCode, ctx, selector) {
     if (!row.latest_year && d.latestYear) row.latest_year = d.latestYear;
   }
 
-  // Only worth saying when it appeared on a DIFFERENT listing page. Three
-  // links inside one card are a page-building habit, not information.
-  if (ctx !== row._ctx) row.notes = addNote(row.notes, `Also listed on the venue's "${ctx}" page.`);
+  // Recorded, not written: three links in one card are one page, and
+  // listing_note.js keeps each page once. The sentences come at write time.
+  seenOn(row, ctx);
 }
 
 /** Text that is never an exhibition's name: a call to action, or a label this
@@ -3081,18 +3094,12 @@ function resolveHref(href, pageUrl, base) {
  *
  * The app already reports empty fields on its own ("No end date."). The
  * scraper's job here is only to say WHY.
+ *
+ * Where a row was found is not written here: listing_note.js.
  */
-function sourceNote(ctx) {
-  return `Found on the venue's "${ctx}" listing page.`;
-}
 
 function addNote(existing, note) {
   if (!existing) return note;
-  // NEVER THE SAME SENTENCE TWICE. Brera's past page links each exhibition
-  // twice (picture and title), and each link stamped "Also listed on the
-  // venue's "past" page." again — every Brera card carried it twice, 23 Sep.
-  // A note repeated says nothing the first copy did not.
-  if (existing.includes(note)) return existing;
   // Notes are whole sentences now, so join them as sentences. Only fall back
   // to a semicolon for older fragments that do not end in punctuation.
   return /[.!?]$/.test(existing.trim())
@@ -3300,9 +3307,10 @@ async function collectFromListing(page, opts) {
       // Internal, never a CSV column: the gallery a card names, for a venue
       // with several (see cardPartsTitle / placeTravellingRuns).
       _place: await readCardPlace(link, titleRule(venueCode), (VENUES[venueCode] || {}).locations),
-      // Internal, never a CSV column: which listing page this row came from,
-      // and the note to withdraw if a later link supplies the missing name.
-      _ctx: ctx, _titleNote: titleNote,
+      // Internal, never a CSV column: which listing pages this row was seen
+      // on (listing_note.js), and the note to withdraw if a later link
+      // supplies the missing name.
+      _pages: [ctx], _titleNote: titleNote,
       start_date: dates.start, end_date: dates.end,
       // Not a CSV column. An upper bound on the closing date for venues that
       // publish only a year ("Summer 2022"). See applyLookback.
@@ -3312,7 +3320,7 @@ async function collectFromListing(page, opts) {
       _shownDateText: dates.shownText || '',
       _shownDateWhy: dates.shownWhy || '',
       summary: '', url: fullUrl,
-      notes: titleNote ? `${sourceNote(ctx)} ${titleNote}` : sourceNote(ctx),
+      notes: titleNote,
     };
     // SAY SO WHERE A RUN WAS EXTENDED. The closing date then differs from the
     // one the venue first announced, and she should see that on the card rather
@@ -4345,6 +4353,12 @@ const VENUES = {
     // Liverpool — neither is one of her 21 — with no text matching at all. They
     // appear on every page as cross-promotion.
     selector: 'a[href*="/whats-on/tate-modern/"]',
+    // THE RESULTS GRID ONLY. The header's search promo and the featured strip
+    // carry the headline shows on every page, so they were "also listed" on
+    // pages they are not on, and the FIRST link read — title, dates — was the
+    // promo's. Her saved page: every listed show in div#whatson-results, the
+    // promos outside it. docs/title_case_pages/tate_modern_from_now.mhtml.
+    within: ['#whatson-results'],
     isNav: href => /\/whats-on\/tate-modern\/?$/.test(href),
     // Its promotional hero cards head the card with the GALLERY, not the show.
     title: {
@@ -4373,6 +4387,12 @@ const VENUES = {
       { path: '/whats-on?date_range=past&gallery_group=tate-britain&event_type=exhibition',     ctx: 'recently opened' },
     ],
     selector: 'a[href*="/whats-on/tate-britain/"]',
+    // THE RESULTS GRID ONLY. The header's search promo and the featured strip
+    // carry the headline shows on every page, so they were "also listed" on
+    // pages they are not on, and the FIRST link read — title, dates — was the
+    // promo's. Her saved page: every listed show in div#whatson-results, the
+    // promos outside it. docs/title_case_pages/tate_modern_from_now.mhtml.
+    within: ['#whatson-results'],
     isNav: href => /\/whats-on\/tate-britain\/?$/.test(href),
     // Its promotional hero cards head the card with the GALLERY, not the show.
     title: {
@@ -5795,8 +5815,8 @@ module.exports = {
   pickTitleLine, titleFromPage, readPageNameParts,
   // Not pure — exported so a check can run the real detail-page pass offline.
   fetchIndividualPages,
-  // Pure — so the never-twice rule is asked directly.
-  addNote, flagFromDescription,
+  // Pure — asked directly by the fixtures.
+  addNote, finishNotes, flagFromDescription,
   // Exported so compress.js's mirrored location list can be checked against the
   // real one by a fixture. compress.js must not require THIS file at runtime —
   // that would pull Playwright into a step that is pure text — so a test is the

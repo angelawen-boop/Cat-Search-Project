@@ -31,6 +31,7 @@
 const fs = require('fs');
 const path = require('path');
 const C = require('./compress.js');
+const { pagesFromNote, archiveYear } = require('./listing_note.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const RAW_CSV = 'sweep.csv';
@@ -143,12 +144,37 @@ function exceptions(dir, rows) {
   return out;
 }
 
+/**
+ * A row "listed" on a year's archive page from before the year it opened.
+ * Impossible, so a link from OUTSIDE the listing was read — a menu or promo
+ * card on every page: Mary Cassatt, opening 2026, was listed on the Art
+ * Institute's 2023 archive. The page's year is compared by its NEWEST year
+ * (a season "2024-2025" counts as 2025), so this cannot fire on a real row.
+ * Warns, never blocks — the fix is the venue's `within`, not the row.
+ */
+function impossibleListings(rows) {
+  const out = [];
+  rows.forEach((r, i) => {
+    if (isMarker(r)) return;
+    const opened = Number(String(r.start_date || '').slice(0, 4));
+    if (!opened) return;
+    const early = pagesFromNote(r.notes).filter(ctx => {
+      const y = archiveYear(ctx);
+      return y !== null && y < opened;
+    });
+    if (early.length) out.push({ line: i + 2, venue: String(r.venue_code || '').trim(),
+      title: r.title, opened, pages: early });
+  });
+  return out;
+}
+
 /** Read a run or stitch directory and report on it. */
 function inspect(dir) {
   const file = path.join(OUTPUT_DIR, dir, RAW_CSV);
   if (!fs.existsSync(file)) return { error: `No ${RAW_CSV} in ${dir}.` };
   const rows = C.readProForma(file);
-  return { dir, rows: rows.length, fatal: fatalRows(rows), exceptions: exceptions(dir, rows) };
+  return { dir, rows: rows.length, fatal: fatalRows(rows), exceptions: exceptions(dir, rows),
+           listings: impossibleListings(rows) };
 }
 
 /** Printed by --apply when it refuses, and by the CLI. */
@@ -168,9 +194,14 @@ function report(res) {
     say(`\nEXCEPTIONS — ${res.exceptions.length}. Look at each; none of them blocks anything.`);
     for (const e of res.exceptions) say(`  ${e.venue.padEnd(14)} ${e.what}`);
   } else say('\nNo exceptions: every venue looks like the last run that had it.');
+  const L = res.listings || [];
+  if (L.length) {
+    say(`\nLISTED BEFORE IT OPENED — ${L.length}. A menu or promo link was read as the listing; the venue needs \`within\`.`);
+    for (const x of L) say(`  line ${x.line}  ${x.venue.padEnd(14)} "${x.title}" opened ${x.opened}, listed on: ${x.pages.join(', ')}`);
+  } else say('\nNo row is listed on an archive page from before it opened.');
 }
 
-module.exports = { inspect, report, fatalRows, exceptions, venueShape, isMarker, KNOWN_VENUES };
+module.exports = { inspect, report, fatalRows, exceptions, impossibleListings, venueShape, isMarker, KNOWN_VENUES };
 
 if (require.main === module) {
   const dir = process.argv[2];

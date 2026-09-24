@@ -47,6 +47,11 @@ is why they live in one repo, on one branch.
   with it. Ask, or wait until she says she is out.
 - **Long runs need progress.** A backgrounded command showing nothing reads as a
   dead session.
+- **Test conservatively — her rule, 24 Sep.** Every page fetched from a venue
+  counts toward its rate limit, and a limit hit stops work. Before touching the
+  network, work out the fewest venues and the fewest pages at each that answer
+  the question. Saved pages and fixtures first. Never a blanket re-sweep because
+  it is quick.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
 
 ### Put it in code — her rule, 10 Sep 2026
@@ -151,7 +156,8 @@ Judgement about the outside world is not in any file.
 | `wallace` | Displays and trails KEPT — **this venue only** |
 | `menil` | 7 permanent galleries excluded; "Foyer Installation: …" rows excluded (23 Sep) |
 | `tate-britain` | Ofili excluded, on the venue's own ONGOING label |
-| `tate-modern`, `tate-britain` | Exhibitions only, never collection displays (24 Sep) |
+| `tate-modern`, `tate-britain` | Exhibitions only, never collection displays (24 Sep). No past exhibitions yet — the "recently opened" page is not an archive |
+| `tate-modern` | **Never its past exhibitions**, though she knows where they are (24 Sep) |
 | `uffizi` | Headlines kept as titles; undated rows kept |
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Shows "from the … Collection" excluded (23 Sep) |
 | `moma` | **Current and upcoming only.** She does not want its past at all |
@@ -236,8 +242,10 @@ the last one cost 29 exhibitions. Three details make it work:
   in capitalisation.
 
 A link resolving to **another host** is refused and counted in its own `offsite`
-column. A link appearing twice on different listing pages gains an "Also listed on
-the venue's 'past' page." note — information, never a silent drop.
+column. Every listing page a row is seen on is recorded once and written as
+"Found on … Also listed on …" (`listing_note.js`) — her only trace of where a
+row came from. A link read from OUTSIDE the listing (a menu or promo card on
+every page) makes these lie; a venue's `within` scopes it to the listing.
 
 ### The notes column is written for her, not for a log
 
@@ -490,6 +498,7 @@ first number to scroll past:
 | `page_renders.js` | does it DRAW — renders into jsdom twice, plain and with the runtime answering |
 | `catalogue_lookup.js` | C-001 to C-090b |
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
+| `listing_pages.js` | the same, for WHERE each row was seen — no page twice, no promo card read as a listing |
 
 The harness lifts the intake out of the JSX by **anchors on prose, never line
 numbers**. An early `return` in a fixture file exits the whole suite and the
@@ -534,7 +543,7 @@ npm test                                     all fixtures
 |---|---|
 | `sweep_prototype.js` | The real scraper. Playwright + headless Chromium |
 | `compress.js` / `compress_cli.js` | Raw dump → the summary she reads |
-| `qc.js` | Exceptions report **and the gate in front of her import file**. A faulty row (no title, no venue code) BLOCKS `--apply`; an exception (count dropped, venue gone to markers, descriptions lost) warns and never acts |
+| `qc.js` | Exceptions report **and the gate in front of her import file**. A faulty row (no title, no venue code) BLOCKS `--apply`; an exception (count dropped, venue gone to markers, descriptions lost, a row listed on an archive year before it opened) warns and never acts |
 | `sweep_log.js` | Rebuilds the app's freshness drawer from the sweep files on disk |
 | `venue_status.js` | Prints §2's table |
 | `show_tags.js` | Prints every row's venue tag |
@@ -929,7 +938,11 @@ those cards meanwhile.
 
 **Open:**
 *Sweeper notes*
-1. **Duplicated and loose sweeper notes** — next, 24 Sep.
+1. **Pages named twice or wrongly** — fixed 24 Sep in code, proven on saved
+   pages (`listing_pages.js`); shows from the next sweep. Still needs `within`
+   at `brera`, `frick`, `wallace` from pages she saves. **Tate's misfires were
+   on its "recently opened" page, which is unsaved** — `within` is set from
+   the from-now page's layout, unproven there.
 2. **Extension note** never says where the new closing date came from.
 
 *Titles at venues not yet reached*
@@ -1002,12 +1015,17 @@ and nothing else.
 
 **`artic` from her machine is unchanged and untested against any of this.**
 
-### 3. A fresh sweep, eventually
+### 3. Tate Britain's past exhibitions
+
+She has found its archive. To be added as pages in the recipe. Tate Modern's
+past stays out — §2.
+
+### 4. A fresh sweep, eventually
 
 The import file was swept 13 Sep. Not urgent while the decisions are being worked
 through, but it is real work and nothing else on this list covers it.
 
-### 4. Smaller, parked
+### 5. Smaller, parked
 
 - **A dead shop link is still stored silently.** Step one opens the shop's own
   pages now, so the link is read off a page the shop served — but nothing checks
