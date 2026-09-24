@@ -1,6 +1,8 @@
 # The file she imports — how it was built
 
-**`scraper/output/stitch_20260913_0442/sweep_compressed_clean.csv`.**
+**`scraper/output/stitch_20260924_0417/sweep_compressed.csv`** — the final,
+debugged file, sent to her 24 Sep. Built on the 21 Sep file below; its repairs are
+in the last section.
 
 This exists because the guide's own lesson said it must: *a one-off script that
 changes a file she USES is not a one-off.* What those scripts did was left in
@@ -8,8 +10,9 @@ comments inside them, three sessions passed, the guide went on describing the
 file as a straight stitch, and she had to type the whole history out again
 herself.
 
-**The file is NOT `sweep_compressed.csv`** — that is the unrebuilt 652-row
-original and would put hundreds of duplicate cards on her pile.
+**In `stitch_20260913_0442/`, the file is `sweep_compressed_clean.csv`, NOT
+`sweep_compressed.csv`** — that is the unrebuilt 652-row original and would put
+hundreds of duplicate cards on her pile.
 
 ---
 
@@ -130,58 +133,9 @@ exceptions report is NOT that pass** and does not re-open it.
 
 ---
 
-## The 23 Sep repair — her first sitting
+## 24 Sep — the final file, built on the 21 Sep file
 
-`repair_23sep.js`, beside the file. Report by default; `--apply` writes. Running it
-twice changes nothing. Every repair is also fixed at the source, so a fresh sweep
-will not need it.
-
-| Repair | Rows | How |
-|---|---|---|
-| End dates a year or two late | 2 — Gricci, Lotto's Lucina Brembati | The extension rule read a repeat of the closing date with no year ("prorogato fino al 11 novembre") as a new extension. Recomputed by the scraper's CORRECTED `applyExtension` from the quoted sentence and the raw page text; only the same-day-later-year family is touched |
-| Extension notes missing | 3 — Samorì, Metamorphoses, Armani | The detail-page path never wrote the note. Samorì's date was right; the card contradicted itself and she rejected it |
-| Same sentence twice in a note | 56 | Two links to one exhibition on a listing page each stamped "Also listed…" |
-| English titles | 20 | From `english_titles_23sep.json`, kept beside the file |
-
-**The English titles were bought badly.** A separate title step sent all 402 titles
-in the file to Sonnet when only the four Italian venues' ~50 could be Italian;
-~85k tokens of her allowance. The step was withdrawn the same day — the compressor
-now writes the English title in the same answer as the summary, for those venues
-only — and the 20 useful answers were kept.
-
-**What a re-import shows**, simulated against a ledger holding everything she
-accepted: 3 adds (the rows she rejected, now correct), 18 description changes (the
-English titles), 49 title changes. The 49 are seed rows whose shortened August
-titles differ from the venue's full ones — renames became cards in version 33.
-Notes are never compared, so the note repairs raise no card.
-
-### Capitals, the same day — `repair_capitals_23sep.js`
-
-81 titles arrived in capitals because the venues shout them with CSS. Her ruling:
-no on-screen masking in the app; fix the data. The script reads each affected
-venue's LISTING pages exactly as a sweep does (`scrapeVenue(…, { listingOnly })`,
-with the scraper's new `restoreCase`), saves url → title to
-`capitals_fetched_23sep.json`, and replaces a title only where the venue's own
-title at the SAME address is the same letters in a different case.
-
-**78 fixed; 3 left** — Louvre Couture, WORN and REVOLUSI!, which the venues
-themselves write in capitals. Borghese (down all day): 2 from the venue's own text
-in the 13 Sep sweep, 5 written in title case by hand, her instruction. Three
-Rijksmuseum rows no longer at their address: written in title case by hand, names
-spelled as the venue spells them at their new addresses. Both recorded in
-`capitals_fetched_23sep.json`.
-
-Re-imported over what she accepted it gave her 113 cards. **The title cards were
-never read before the file was sent**, and ~52 of them were her August seed
-titles against the 13 Sep sweep's listing titles — several SHORTER than hers
-(*Radical Harmony: Neo-Impressionists* → *Radical Harmony*), Acquavella's run
-together with a city, the Louvre's in its own inconsistent capitals. The file
-still carries all of it; the open list is CLAUDE.md §7.1a.
-
-## 24 Sep — rebuilt on the 21 Sep file, 23 Sep withdrawn
-
-**Her instruction, 24 Sep: the 23 Sep repairs and file are withdrawn.** Every
-repair below starts from her 21 Sep import file (`stitch_20260913_0442/
+Every repair below starts from her 21 Sep import file (`stitch_20260913_0442/
 sweep_compressed_clean.csv` at commit `f1bfb41`), and every changed value came from
 code reading the museums' own pages — nothing typed by hand.
 
