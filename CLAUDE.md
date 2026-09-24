@@ -160,7 +160,7 @@ Judgement about the outside world is not in any file.
 | `tate-modern` | **Never its past exhibitions**, though she knows where they are (24 Sep) |
 | `uffizi` | Headlines kept as titles; undated rows kept |
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Bare "from the Collection" excluded; family, named and lent collections KEPT (24 Sep) No note on the card for films or installations; no model judging rows — compression stays mechanical (24 Sep) |
-| `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection** — they can be major (24 Sep) |
+| `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection, a gift or acquisitions** — they can be major (24 Sep) |
 | `moma` | **Current and upcoming only.** She does not want its past at all |
 | `morgan` | *Collections Spotlight* excluded — a standing rotation, not a show. Past blurbs read off the listing, pages not opened |
 | `rijks` | 37 rows, not chased further. *Asian Pavilion* was pulled by the venue |

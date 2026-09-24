@@ -1818,7 +1818,6 @@ test('XT-002: Art Institute — its own collection only; lent and named collecti
 test('XT-003: Met — recurring series and commissions; NOTHING for coming from a collection', () => {
   xt('met', ['P. S. Art 2026: Celebrating the Creative Spirit of New York City Kids',
     'The Celebration: A Selection of Works by the 2025 Scholastic Art & Writing Awards New York City Gold Key Recipients',
-    'A Decade on Paper: Recent Acquisitions, 2014–2024', 'Emulating Books: Book Objects from the Lynn and Bruce Heckman Gift',
     'Art of Commerce: Trade Catalogs in Watson Library', 'Christmas Tree and Neapolitan Baroque Crèche',
     'Baseball Cards from the Collection of Jefferson R. Burdick',
     'The Genesis Facade Commission: Liu Wei, Speculation', 'The Great Hall Commission: Tong Yang-Tze, Dialogue',
@@ -1826,6 +1825,7 @@ test('XT-003: Met — recurring series and commissions; NOTHING for coming from 
   ['View Finding: Selections from The Walther Collection',
    'Making It Modern: European Ceramics from the Martin Eidelberg Collection',
    'Human/Nature: Selections from the Department of Drawings and Prints',
+   'A Decade on Paper: Recent Acquisitions, 2014–2024', 'Emulating Books: Book Objects from the Lynn and Bruce Heckman Gift',
    'Chinese Painting and Calligraphy: Selections from the Collection',
    'Independence and Identity: Selections from the Department of Drawings and Prints',
    'Rediscovering Della Robbia at The Met',

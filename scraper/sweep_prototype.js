@@ -3480,12 +3480,12 @@ const VENUES = {
     // (P.S. Art, Scholastic, the crèche, the Burdick baseball cards), which
     // quarantine, keyed on the address, cannot hold. NOTHING is excluded for
     // coming from a collection — "Selections from the Department of …", "from
-    // the Collection" and the like stay: at the Met they can be major shows
-    // with catalogues. Every commission series is out (Facade, Great Hall,
+    // the Collection", "Recent Acquisitions", "… Gift" all stay: one great gift
+    // can make a major show with a catalogue. Every commission series is out (Facade, Great Hall,
     // Roof Garden).
     excludeTitle: new RegExp([
       /^P\.\s?S\.\s?Art\b/, /\bScholastic Art (?:&|and) Writing\b/,
-      /\bRecent Acquisitions\b/, /\bfrom the\b.*\bGift\b/, /\bWatson Library\b/,
+      /\bWatson Library\b/,
       /\bChristmas Tree and Neapolitan\b/,
       /\bCommission:/,
       // Rotated every few months, a new address each time — she quarantined it
