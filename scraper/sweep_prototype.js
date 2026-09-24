@@ -3085,6 +3085,28 @@ function resolveHref(href, pageUrl, base) {
 }
 
 /**
+ * `within` × selector, EVERY PART OF EACH. A selector with a comma is several
+ * selectors; prefixing the string once scoped only the first. The Wallace's
+ * second part (past-exhibition links) went on reading the header menu, found
+ * by listing_pages.js on her saved pages, 24 Sep.
+ */
+function scopeSelector(within, selector) {
+  if (!within) return selector;
+  const parts = [];
+  let depth = 0, quote = '', cur = '';
+  for (const ch of selector) {
+    if (quote) { if (ch === quote) quote = ''; }
+    else if (ch === '"' || ch === "'") quote = ch;
+    else if (ch === '[' || ch === '(') depth++;
+    else if (ch === ']' || ch === ')') depth--;
+    else if (ch === ',' && depth === 0) { parts.push(cur.trim()); cur = ''; continue; }
+    cur += ch;
+  }
+  parts.push(cur.trim());
+  return within.flatMap(w => parts.map(p => `${w} ${p}`)).join(', ');
+}
+
+/**
  * Notes are written for her, not for a log file.
  *
  * Whatever lands in this column is shown verbatim on the approval card in the
@@ -3575,7 +3597,11 @@ const VENUES = {
     // /exhibitions carries 8 exhibition addresses and /exhibitions/past
     // carries 12.
     pages: [
-      { path: '/exhibitions',      ctx: 'current/upcoming' },
+      // ITS CARDS ONLY. Below them the page has its own "Past" section — the
+      // three latest closed shows — so Gainsborough, closed in May, was "found
+      // on" current/upcoming. They are on the past page anyway. Her saved
+      // page, 24 Sep: docs/listing_pages/frick_current.mhtml.
+      { path: '/exhibitions',      ctx: 'current/upcoming', within: ['.paragraph-cards-layout__cards'] },
       // ITS PAST ARCHIVE PAGINATES, and only page one was ever read. Found
       // 13 Sep by the standing unwired-pagination check — the page publishes
       // rel="next" outright — and confirmed with probe_pagination.js: page two
@@ -4413,8 +4439,12 @@ const VENUES = {
     // is useful, because Wallace files its talks and concerts under
     // /whats-on/events/, so nothing but exhibitions reaches us here.
     pages: [
-      { path: '/whats-on/exhibitions-displays/', ctx: 'current/upcoming' },
-      { path: '/explore/past-exhibitions/',      ctx: 'past' },
+      // EACH PAGE'S OWN GRID. The header's menu carries the three latest past
+      // shows on every page, so they were "found on" current/upcoming, and
+      // the current page closes with a "Discover more" promo (Ranjit Singh,
+      // 2024). Her saved pages, 24 Sep: docs/listing_pages/wallace_*.mhtml.
+      { path: '/whats-on/exhibitions-displays/', ctx: 'current/upcoming', within: ['.c-body-promos'] },
+      { path: '/explore/past-exhibitions/',      ctx: 'past', within: ['.section-listing'] },
     ],
     // Two different paths for the same kind of thing: a show moves from
     // /whats-on/exhibitions-displays/<slug> to /explore/past-exhibitions/<slug>
@@ -4601,9 +4631,7 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
       // those titles points at the site root rather than under /exhibitions/,
       // so a path-shaped selector would lose it in silence. Composes with
       // `within` above: a page can scope, or replace, or both.
-      selector: (pg.within || v.within)
-        ? (pg.within || v.within).map(w => `${w} ${pg.selector || v.selector}`).join(', ')
-        : (pg.selector || v.selector),
+      selector: scopeSelector(pg.within || v.within, pg.selector || v.selector),
       isNav: v.isNav,
       // Every listing page this venue has, so a link back to any of them is
       // recognised as navigation whatever language prefix it carries.
@@ -5814,7 +5842,7 @@ module.exports = {
   // Not pure — exported so a check can run the real detail-page pass offline.
   fetchIndividualPages,
   // Pure — asked directly by the fixtures.
-  addNote, finishNotes, flagFromDescription,
+  addNote, finishNotes, scopeSelector, flagFromDescription,
   // Exported so compress.js's mirrored location list can be checked against the
   // real one by a fixture. compress.js must not require THIS file at runtime —
   // that would pull Playwright into a step that is pure text — so a test is the

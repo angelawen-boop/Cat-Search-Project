@@ -55,6 +55,37 @@ const CASES = [
     },
     count: 13,
   },
+  {
+    venue: 'frick',
+    // The current page closes with its own "Past" section: the three latest
+    // closed shows. Their home is the past page.
+    pages: {
+      'https://www.frick.org/exhibitions':      'listing_pages/frick_current.mhtml',
+      'https://www.frick.org/exhibitions/past': 'listing_pages/frick_past.mhtml',
+    },
+    only: [['/exhibitions/gainsborough', ['past']], ['/exhibitions/siena', ['current/upcoming']]],
+  },
+  {
+    venue: 'wallace',
+    // The header menu names three past shows on every page; the current page
+    // ends with a "Discover more" promo.
+    pages: {
+      'https://www.wallacecollection.org/whats-on/exhibitions-displays/': 'listing_pages/wallace_current.mhtml',
+      'https://www.wallacecollection.org/explore/past-exhibitions/':      'listing_pages/wallace_past.mhtml',
+    },
+    only: [['/grayson-perry-delusions-of-grandeur/', ['past']], ['/ranjit-singh-sikh-warrior-king/', ['past']],
+           ['/winston-churchill-the-painter/', ['current/upcoming']]],
+  },
+  {
+    venue: 'brera',
+    // NOT a misfire: its archive genuinely lists the shows still running, in
+    // the same grid as the rest. Each card links twice — picture and title.
+    pages: {
+      'https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=in-progress': 'listing_pages/brera_current.mhtml',
+      'https://pinacotecabrera.org/en/exhibitions-and-events/exhibitions/?current_page=1&date=archive':     'listing_pages/brera_archive.mhtml',
+    },
+    only: [['/beauty-and-the-ideal/', ['current', 'past']]],
+  },
 ];
 
 let pass = 0, fail = 0;

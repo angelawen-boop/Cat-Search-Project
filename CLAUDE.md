@@ -938,10 +938,9 @@ those cards meanwhile.
 
 **Open:**
 *Sweeper notes*
-1. **Pages named twice or wrongly** — fixed 24 Sep in code, proven on saved
-   pages (`listing_pages.js`); shows from the next sweep. Still needs `within`
-   at `brera`, `frick`, `wallace` from pages she saves. Tate's misfires came
-   from its "recently opened" page, no longer fetched.
+1. **Pages named twice or wrongly** — fixed 24 Sep, proven on her saved pages
+   (`listing_pages.js`, `docs/listing_pages/`); shows from the next sweep.
+   Brera was never a misfire — its archive lists running shows.
 2. **Extension note** never says where the new closing date came from.
 
 *Titles at venues not yet reached*
@@ -1019,12 +1018,17 @@ and nothing else.
 She has found its archive. To be added as pages in the recipe. Tate Modern's
 past stays out — §2.
 
-### 4. A fresh sweep, eventually
+### 4. The cheapest archive route per venue — later fine-tuning
+
+Full paginated archive or year pages: whichever reaches 1 July 2024 in the
+fewest loads with certainty. Venue by venue; the recipes work, so not now.
+
+### 5. A fresh sweep, eventually
 
 The import file was swept 13 Sep. Not urgent while the decisions are being worked
 through, but it is real work and nothing else on this list covers it.
 
-### 5. Smaller, parked
+### 6. Smaller, parked
 
 - **A dead shop link is still stored silently.** Step one opens the shop's own
   pages now, so the link is read off a page the shop served — but nothing checks
@@ -1083,6 +1087,7 @@ The AbeBooks link is `/servlet/SearchResults?kn=…&sts=t`.
 | `docs/import-file.md` | How the file she imports was built, and why it is not a straight stitch | Touching that file, or explaining its dates |
 | `docs/venues.md` | Per-venue forensics: the scoreboard, exactly what each refusal is, listing URLs | Working one specific venue |
 | `docs/venue_urls.md` | All 21 venues' addresses from the Sweeper Brief, plus per-venue traps | Wiring or re-checking a venue's pages |
+| `docs/listing_pages/` | Frick, Wallace, Brera listing pages she saved — where each listing sits | Changing a `within` there |
 | `docs/moma_pages/`, `docs/morgan_pages/` | Pages she saved from her own browser, with a README of what each settled — link shapes, blurb containers, the traps | Changing either recipe, before asking her for anything |
 | `docs/compression.md` | The compression design, the model split, the eval, the rejected alternatives | Changing compression — otherwise don't |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review: what she found, what changed, what each returns now | Before touching a reviewed venue |

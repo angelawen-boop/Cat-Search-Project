@@ -23,7 +23,7 @@ const {
   classifyLoadError, isOwnListingPage, saysOngoing,
   expandYearArchive, listingPages, followPagination, VENUES, pickTitleLine,
   stripWeekdays,
-  addNote, finishNotes,
+  addNote, finishNotes, scopeSelector,
 } = require('./sweep_prototype.js');
 const { seenOn, listingNote } = require('./listing_note.js');
 
@@ -1568,6 +1568,14 @@ test('LN-003: written at the FRONT of the notes, ahead of later notes, and only 
     + 'venue\'s "past" page. No closing date found anywhere on the venue\'s pages.');
   assert.equal(rows[1].notes, 'Found on the venue\'s "past" listing page.');
   assert.equal(rows[2].notes, 'Marker row, not an exhibition.');
+});
+
+test('LN-005: within scopes EVERY part of a comma selector', () => {
+  assert.equal(scopeSelector(['.grid'], 'a[href*="/x/"], a[href*="/y/"]'),
+    '.grid a[href*="/x/"], .grid a[href*="/y/"]');
+  assert.equal(scopeSelector(['#a', '#b'], 'a'), '#a a, #b a');
+  assert.equal(scopeSelector(['.g'], 'a[href*="a,b"]'), '.g a[href*="a,b"]');   // a comma in quotes is not a split
+  assert.equal(scopeSelector(null, 'a, b'), 'a, b');
 });
 
 test('LN-004: addNote no longer hides a repeat — a repeated note is a fault to see', () => {
