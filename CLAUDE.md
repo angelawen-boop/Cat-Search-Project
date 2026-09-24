@@ -1043,6 +1043,8 @@ Her note, 24 Sep. The Louvre is the only one today. To add:
 - **Musée d'Orsay**
 - **Musée d'Art Moderne de Paris** (MAM Paris) — modern art
 - **Musée des Arts Décoratifs** (MAD Paris) — decorative arts
+- **Musée Jacquemart-André** — past exhibitions at
+  `https://www.musee-jacquemart-andre.com/en/past-exhibitions`
 
 ### 7. Catalogue lookup generally
 
