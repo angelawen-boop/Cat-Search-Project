@@ -304,7 +304,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 33, 23 Sep 2026.** The file is `Cat_Watch.jsx` — renamed from
+**Version 33, 23 Sep 2026, is live; 33.1 is built and NOT yet published (24 Sep).** The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -960,7 +960,7 @@ on disk, but it is sent once, when this debugging is finished, not after each.
    read text there. File repaired (held).
 
 *App*
-6. **Dismissed filter cannot be combined with a venue filter.**
+6. **Dismissed filter with a venue filter** — fixed 24 Sep in 33.1.
 
 Expect debugging to fall out of it. Also still to do: a save round-trip after the
 import — export, re-import that file, confirm quarantine and per-venue freshness

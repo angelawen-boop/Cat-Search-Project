@@ -2240,8 +2240,11 @@ export default function App(){
     const sq=search.toLowerCase().trim();
     let out=rows.filter(r=>{
       if(sq)return r.title.toLowerCase().includes(sq)||r.summary.toLowerCase().includes(sq)||(MU[r.museumId]?.name||"").toLowerCase().includes(sq);
-      if(dismissedOnly)return!r.interested;
-      if(!r.interested&&!showAll)return false;
+      // DISMISSED NARROWS, IT DOES NOT END THE CHECK — her finding, 24 Sep.
+      // It returned here, so a venue (or any other) filter beside it was
+      // never asked: Dismissed + Menil showed every venue's dismissed rows.
+      if(dismissedOnly){ if(r.interested)return false; }
+      else if(!r.interested&&!showAll)return false;
       if(venueF.size>0&&!venueF.has(r.museumId))return false;
       const t=tierFor(r),ts=TIERS[t]?.time||"current";
       if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
@@ -2723,8 +2726,12 @@ export default function App(){
       )}
       {undo&&(
         <div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.onAction,borderRadius:4,padding:"7px 14px",fontSize:12,display:"flex",gap:10,alignItems:"center",zIndex:999,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
-          <span style={{fontSize:14,fontWeight:600}}>Dismissed</span>
-          <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:C.onAction,fontSize:14,fontWeight:600,cursor:"pointer",padding:"3px 10px"}}>Undo</button>
+          {/* THE ORIGINAL STYLE, ONE WORD CHANGED — her ruling, 24 Sep:
+              "Restore" became "Undo", both words the same larger size. A
+              <button> does not inherit the page's font, so it is told to, and
+              both carry the same line height so their baselines meet. */}
+          <span style={{fontSize:14,lineHeight:"20px"}}>Dismissed</span>
+          <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:C.onAction,fontFamily:"inherit",fontSize:14,lineHeight:"20px",fontWeight:600,cursor:"pointer",padding:"1px 8px",margin:0}}>Undo</button>
         </div>
       )}
       {/* QUARANTINE LIVES DOWN HERE — her ruling, 24 Sep. At eye level at the
