@@ -1,0 +1,1185 @@
+{
+ "read": "24 Sep 2026, scraper listing pages only; saved pages = docs/title_case_pages/",
+ "titles": {
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/ed-van-der-elsken-up-close": {
+   "venue": "rijks",
+   "title": "Ed van der Elsken",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/fiep-westendorp": {
+   "venue": "rijks",
+   "title": "Fiep Westendorp",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/metamorphoses": {
+   "venue": "rijks",
+   "title": "Metamorphoses",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/fake": {
+   "venue": "rijks",
+   "title": "Fake!",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/suit-yourself-or100-years-of-menswear-1750-1850": {
+   "venue": "rijks",
+   "title": "Suit Yourself",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/steve-mcqueen-occupied-city": {
+   "venue": "rijks",
+   "title": "Occupied City",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/thuis-in-de-17de-eeuw": {
+   "venue": "rijks",
+   "title": "At Home in the 17th Century",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/document-nederland-tina-farifteh": {
+   "venue": "rijks",
+   "title": "Document Nederland",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/isamu-noguchi-in-de-rijksmuseumtuinen": {
+   "venue": "rijks",
+   "title": "Isamu Noguchi",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/crossings": {
+   "venue": "rijks",
+   "title": "Crossings",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/fiona-tan-monomania": {
+   "venue": "rijks",
+   "title": "Fiona Tan: Monomania",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/asian-bronze": {
+   "venue": "rijks",
+   "title": "Asian Bronze",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/document-nederland": {
+   "venue": "rijks",
+   "title": "Festival Frenzy",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/lee-ufan": {
+   "venue": "rijks",
+   "title": "Lee Ufan",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/point-of-view": {
+   "venue": "rijks",
+   "title": "Point of View",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/nl/zien-en-doen/tentoonstellingen/afgelopen/stop-motion": {
+   "venue": "rijks",
+   "title": "Stop motion",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/frans-hals": {
+   "venue": "rijks",
+   "title": "Frans Hals",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/collection-boijmans-van-beuningen": {
+   "venue": "rijks",
+   "title": "Museum Boijmans van Beuningen",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/express-yourself": {
+   "venue": "rijks",
+   "title": "Express yourself",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/mounir-raji": {
+   "venue": "rijks",
+   "title": "Perfect Day",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/richard-long": {
+   "venue": "rijks",
+   "title": "Richard Long",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/mission-masterpiece": {
+   "venue": "rijks",
+   "title": "Mission Masterpiece",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/new-horizons": {
+   "venue": "rijks",
+   "title": "New Horizons",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/vermeer": {
+   "venue": "rijks",
+   "title": "Vermeer",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/women-on-paper": {
+   "venue": "rijks",
+   "title": "Women on Paper",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/rijksmuseum-and-slavery": {
+   "venue": "rijks",
+   "title": "RIJKSMUSEUM & SLAVERY",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/clara-and-crawly-creatures": {
+   "venue": "rijks",
+   "title": "CLARA AND CRAWLY CREATURES",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/xxl-paper": {
+   "venue": "rijks",
+   "title": "XXL Paper",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/modern-japanese-lacquer": {
+   "venue": "rijks",
+   "title": "Modern Japanese Lacquer",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/revolusi": {
+   "venue": "rijks",
+   "title": "REVOLUSI!",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/vincent-mentzel": {
+   "venue": "rijks",
+   "title": "Vincent Mentzel",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/remember-me": {
+   "venue": "rijks",
+   "title": "Remember me",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/henk-wildschut": {
+   "venue": "rijks",
+   "title": "Henk Wildschut",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/ellsworth-kelly": {
+   "venue": "rijks",
+   "title": "Ellsworth Kelly",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/slavery": {
+   "venue": "rijks",
+   "title": "Slavery",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/ed-van-der-elsken": {
+   "venue": "rijks",
+   "title": "Ed van der Elsken",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/willem-diepraam": {
+   "venue": "rijks",
+   "title": "Willem Diepraam",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/strength-of-dutch-museum-collections": {
+   "venue": "rijks",
+   "title": "The Strength of Dutch Museum Collections",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/highlights-of-italian-drawing": {
+   "venue": "rijks",
+   "title": "The best Italian drawings",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/caravaggio-bernini": {
+   "venue": "rijks",
+   "title": "Caravaggio-Bernini",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/rembrandt-velazquez": {
+   "venue": "rijks",
+   "title": "Rembrandt-Velázquez",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/all-the-rembrandts": {
+   "venue": "rijks",
+   "title": "All the Rembrandts",
+   "from": "saved page"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/the-met-at-the-louvre": {
+   "venue": "louvre",
+   "title": "The Met at the Louvre",
+   "from": "saved page"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/a-passion-for-china": {
+   "venue": "louvre",
+   "title": "A Passion for China",
+   "from": "saved page"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/louvre-couture": {
+   "venue": "louvre",
+   "title": "LOUVRE COUTURE",
+   "from": "saved page"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/mamluks": {
+   "venue": "louvre",
+   "title": "Mamluks",
+   "from": "saved page"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/the-experience-of-nature": {
+   "venue": "louvre",
+   "title": "The Experience of Nature",
+   "from": "saved page"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/a-new-look-at-cimabue": {
+   "venue": "louvre",
+   "title": "A New Look at Cimabue",
+   "from": "saved page"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/guillon-lethiere-born-in-guadeloupe": {
+   "venue": "louvre",
+   "title": "Guillon-Lethière, \"born in Guadeloupe\"",
+   "from": "saved page"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/a-new-look-at-watteau": {
+   "venue": "louvre",
+   "title": "A new look at Watteau",
+   "from": "saved page"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/figures-of-the-fool": {
+   "venue": "louvre",
+   "title": "Figures of the Fool",
+   "from": "saved page"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/masterpieces-from-the-torlonia-collection": {
+   "venue": "louvre",
+   "title": "Masterpieces from the Torlonia collection",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/joan-miro-jean-paul-riopelle": {
+   "venue": "acq",
+   "title": "Joan Miró | Jean Paul Riopelle Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/matisse2": {
+   "venue": "acq",
+   "title": "Matisse The Pursuit of Harmony New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/soft-reins": {
+   "venue": "acq",
+   "title": "Soft Reins From Degas to Fordjour Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/masters-of-modernism": {
+   "venue": "acq",
+   "title": "Masters of Modernism From Gauguin to Warhol Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/nicole-wittenberg2": {
+   "venue": "acq",
+   "title": "Nicole Wittenberg All the Way New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/yuka-kashihara2": {
+   "venue": "acq",
+   "title": "Yuka Kashihara Stardust Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/miquel-barcelo4": {
+   "venue": "acq",
+   "title": "Miquel Barceló New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/joani-tremblay": {
+   "venue": "acq",
+   "title": "Joani Tremblay All the Wild That Remains Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/postwar-abstraction": {
+   "venue": "acq",
+   "title": "Postwar Abstraction Movement and Form Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/portraiture-from-cassatt-to-warhol": {
+   "venue": "acq",
+   "title": "Portraiture: From Cassatt to Warhol New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/harumi-klossowska-de-rola": {
+   "venue": "acq",
+   "title": "Harumi Klossowska de Rola Sacred Woods Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/portraiture": {
+   "venue": "acq",
+   "title": "Portraiture From Cassatt to Warhol Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/tom-sachs3": {
+   "venue": "acq",
+   "title": "Tom Sachs Bronze New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/jacob-el-hanani": {
+   "venue": "acq",
+   "title": "Jacob El Hanani Drawing on Canvas New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/afterglow": {
+   "venue": "acq",
+   "title": "Afterglow A Collaboration with Night Gallery Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/wayne-thiebaud5": {
+   "venue": "acq",
+   "title": "Wayne Thiebaud Summer Days New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/masterworks-from-bonnard-to-barcelo2": {
+   "venue": "acq",
+   "title": "Masterworks: From Bonnard to Barceló PALM BEACH",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/calder": {
+   "venue": "acq",
+   "title": "Calder Composing Motion Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/masterworks-from-bonnard-to-barcelo": {
+   "venue": "acq",
+   "title": "MASTERWORKS: FROM BONNARD TO BARCELÓ NEW YORK",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/painted-pop2": {
+   "venue": "acq",
+   "title": "Painted Pop Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/jon-joanis": {
+   "venue": "acq",
+   "title": "Jon Joanis Into Splendor Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/damian-loeb4": {
+   "venue": "acq",
+   "title": "Damian Loeb A Landscape Retrospective Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/painted-pop": {
+   "venue": "acq",
+   "title": "Painted Pop New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/in-and-out-of-color2": {
+   "venue": "acq",
+   "title": "In and Out of Color Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/vivid": {
+   "venue": "acq",
+   "title": "VIVID Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/makoto-saito": {
+   "venue": "acq",
+   "title": "Makoto Saito in Time E.H. Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/bonnard-the-experience-of-seeing": {
+   "venue": "acq",
+   "title": "Bonnard: The Experience of Seeing New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/daniel-heidkamp1": {
+   "venue": "acq",
+   "title": "Daniel Heidkamp Tempo Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/tom-sachs2": {
+   "venue": "acq",
+   "title": "Tom Sachs Spaceships Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/less-minimalism-in-the-1960s": {
+   "venue": "acq",
+   "title": "less: minimalism in the 1960s New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/from-cezanne-to-rosenquist": {
+   "venue": "acq",
+   "title": "From Cézanne to Rosenquist Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/nicole-wittenberg": {
+   "venue": "acq",
+   "title": "Nicole Wittenberg Our Love is Here to Stay Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/tom-sachs": {
+   "venue": "acq",
+   "title": "Tom Sachs Spaceships New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/barcelos-world": {
+   "venue": "acq",
+   "title": "Barceló's World New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/yuka-kashihara": {
+   "venue": "acq",
+   "title": "Yuka Kashihara Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/unnatural-nature-post-pop-landscapes": {
+   "venue": "acq",
+   "title": "Unnatural Nature: Post-Pop Landscapes Curated by Todd Bradway",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/james-rosenquist4": {
+   "venue": "acq",
+   "title": "James Rosenquist Painting Below Zero Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/miquel-barcelo3": {
+   "venue": "acq",
+   "title": "Miquel Barceló Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/calder-to-condo": {
+   "venue": "acq",
+   "title": "Calder to Condo Modern and Contemporary Painting and Sculpture Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/impressionist-modern-and-contemporary-masters": {
+   "venue": "acq",
+   "title": "Impressionist, Modern, and Contemporary Masters Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/tangerine": {
+   "venue": "acq",
+   "title": "Tangerine A collaboration with Canada, a New York artist run gallery Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/picasso": {
+   "venue": "acq",
+   "title": "PICASSO Seven Decades of Drawing New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/around-color": {
+   "venue": "acq",
+   "title": "Around Color New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/jacob-el-hanani2": {
+   "venue": "acq",
+   "title": "Jacob El Hanani Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/eva-hesse-hannah-wilke": {
+   "venue": "acq",
+   "title": "Eva Hesse | Hannah Wilke Erotic Abstraction New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/jacob-el-hanani-recent-works-on-canvas": {
+   "venue": "acq",
+   "title": "Jacob El Hanani: Recent Works on Canvas New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/impressionist-modern-and-postwar-masters": {
+   "venue": "acq",
+   "title": "Impressionist, Modern, and Postwar Masters Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/tom-sachs-work": {
+   "venue": "acq",
+   "title": "Tom Sachs: Work Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/wayne-thiebaud4": {
+   "venue": "acq",
+   "title": "Wayne Thiebaud Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/masterworks-from-cezanne-to-thiebaud": {
+   "venue": "acq",
+   "title": "Masterworks from Cézanne to Thiebaud Palm Beach",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/tom-sachs-handmade-paintings": {
+   "venue": "acq",
+   "title": "Tom Sachs Handmade Paintings New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/masterworks": {
+   "venue": "acq",
+   "title": "Masterworks From Cézanne to Thiebaud New York",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/works-on-paper-from-a-distinguished-private-collection": {
+   "venue": "acq",
+   "title": "Works on Paper from a Distinguished Private Collection",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/miro-the-sculptor": {
+   "venue": "acq",
+   "title": "Miró the Sculptor Elements of Nature",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/wayne-thiebaud3": {
+   "venue": "acq",
+   "title": "Wayne Thiebaud Mountains 1965-2019",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/wang-yan-cheng": {
+   "venue": "acq",
+   "title": "Wang Yan Cheng",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/damian-loeb3": {
+   "venue": "acq",
+   "title": "Damian Loeb All Hope is Lost",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/lucian-freud": {
+   "venue": "acq",
+   "title": "Lucian Freud Monumental",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/the-path-of-modernism": {
+   "venue": "acq",
+   "title": "The Path of Modernism From Impressionism to Today",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/james-rosenquist3": {
+   "venue": "acq",
+   "title": "James Rosenquist His American Life",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/white-black": {
+   "venue": "acq",
+   "title": "White | Black",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/the-worlds-of-joaquin-torres-garcia": {
+   "venue": "acq",
+   "title": "The Worlds of Joaquín Torres-García",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/california-landscapes": {
+   "venue": "acq",
+   "title": "California Landscapes Richard Diebenkorn | Wayne Thiebaud",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/jacob-el-hanani-linescape": {
+   "venue": "acq",
+   "title": "Jacob El Hanani Linescape Four Decades Exhibition extended through",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/three-dimensions-modern-contemporary-approaches-to-relief-and-sculpture": {
+   "venue": "acq",
+   "title": "Three Dimensions: Modern & Contemporary Approaches to Relief and Sculpture Exhibition extended through",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/calder-miro-constellations": {
+   "venue": "acq",
+   "title": "Calder | Miró Constellations In collaboration with the Pace Gallery",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/damian-loeb-sgr-a": {
+   "venue": "acq",
+   "title": "Damian Loeb: Sgr A*",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/miquel-barcelo2": {
+   "venue": "acq",
+   "title": "Miquel Barceló",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/postwar-new-york-capital-of-the-avant-garde": {
+   "venue": "acq",
+   "title": "Postwar New York: Capital of the Avant-Garde",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/jean-dubuffet-anticultural-positions": {
+   "venue": "acq",
+   "title": "Jean Dubuffet \"Anticultural Positions\"",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/riopelle-mir-color": {
+   "venue": "acq",
+   "title": "Riopelle | Miró: Color",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/off-canvas-drawing": {
+   "venue": "acq",
+   "title": "Off Canvas: Drawing",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/jacob-el-hanani-drawings": {
+   "venue": "acq",
+   "title": "Jacob El Hanani Drawings",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/wayne-thiebaud2": {
+   "venue": "acq",
+   "title": "Wayne Thiebaud",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/dubuffet-barcelo": {
+   "venue": "acq",
+   "title": "Dubuffet | Barceló",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/jean-michel-basquiat-drawing": {
+   "venue": "acq",
+   "title": "Jean-Michel Basquiat Drawing Work from the Schorr Family Collection",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/damian-loeb2": {
+   "venue": "acq",
+   "title": "Damian Loeb Sol-d",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/miquel-barcelo": {
+   "venue": "acq",
+   "title": "Miquel Barceló",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/the-pop-object-the-still-life-tradition-in-pop-art": {
+   "venue": "acq",
+   "title": "The Pop Object: The Still Life Tradition in Pop Art",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/white-collar-crimes": {
+   "venue": "acq",
+   "title": "White Collar Crimes Presented by Vito Schnabel",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/enoc-perez2": {
+   "venue": "acq",
+   "title": "Enoc Perez The Good Days",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/enoc-perez-utopia": {
+   "venue": "acq",
+   "title": "Enoc Perez: Utopia Corcoran Gallery of Art, Washington, DC",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/wayne-thiebaud": {
+   "venue": "acq",
+   "title": "Wayne Thiebaud A Retrospective",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/james-rosenquist2": {
+   "venue": "acq",
+   "title": "James Rosenquist Multiverse You Are, I Am",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/lucian-freud-drawings": {
+   "venue": "acq",
+   "title": "Lucian Freud Drawings",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/masterworks-from-degas-to-rosenquist": {
+   "venue": "acq",
+   "title": "Masterworks from Degas to Rosenquist",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/james-rosenquist-at-moma": {
+   "venue": "acq",
+   "title": "James Rosenquist at MoMA F-111 on view in The Werner and Elaine Dannheisser Gallery, Fourth Floor",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/georges-braque": {
+   "venue": "acq",
+   "title": "Georges Braque Pioneer of Modernism",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/damian-loeb": {
+   "venue": "acq",
+   "title": "Damian Loeb: Verschränkung and The Uncertainty Principle",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/enoc-perez": {
+   "venue": "acq",
+   "title": "Enoc Perez",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/works-on-paper-from-cezanne-to-freud": {
+   "venue": "acq",
+   "title": "Works on Paper from Cézanne to Freud",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/robert-and-ethel-scull-portrait-of-a-collection": {
+   "venue": "acq",
+   "title": "Robert & Ethel Scull: Portrait of a Collection",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/james-rosenquist": {
+   "venue": "acq",
+   "title": "James Rosenquist: The Hole in the Middle of Time and The Hole in the Wallpaper",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/riopelle": {
+   "venue": "acq",
+   "title": "Riopelle Grands Formats",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/zeng-fanzhi": {
+   "venue": "acq",
+   "title": "Zeng Fanzhi",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/picassos-marie-therese": {
+   "venue": "acq",
+   "title": "Picasso's Marie-Thérèse",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/synesthesia-parataxic-distortion-and-the-shadow": {
+   "venue": "acq",
+   "title": "Synesthesia, Parataxic Distortion, and the Shadow A Show of Paintings by Damian Loeb",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/fausto-melotti": {
+   "venue": "acq",
+   "title": "Fausto Melotti",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/james-rosenquist-time-blades": {
+   "venue": "acq",
+   "title": "James Rosenquist: Time Blades",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/drawings-watercolors-and-gouaches-from-toulouse-lautrec-to-freud": {
+   "venue": "acq",
+   "title": "Drawings, Watercolors and Gouaches: From Toulouse-Lautrec to Freud",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/lucian-freud-recent-work2": {
+   "venue": "acq",
+   "title": "Lucian Freud: Recent Work",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/manolo-millares": {
+   "venue": "acq",
+   "title": "Manolo Millares",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/james-rosenquist-monochromes": {
+   "venue": "acq",
+   "title": "James Rosenquist - Monochromes",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/lucian-freud-recent-paintings-and-etchings": {
+   "venue": "acq",
+   "title": "Lucian Freud: Recent Paintings and Etchings",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/20th-century-sculpture": {
+   "venue": "acq",
+   "title": "20th Century Sculpture",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/xix-and-xx-century-master-paintings-and-sculpture2": {
+   "venue": "acq",
+   "title": "XIX & XX Century Master Paintings & Sculpture",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/lucian-freud-recent-work": {
+   "venue": "acq",
+   "title": "Lucian Freud: Recent Work",
+   "from": "saved page"
+  },
+  "https://www.acquavellagalleries.com/exhibitions/cezanne-watercolors": {
+   "venue": "acq",
+   "title": "Cézanne Watercolors",
+   "from": "saved page"
+  },
+  "https://www.tate.org.uk/whats-on/tate-modern/frida-kahlo-the-making-of-an-icon": {
+   "venue": "tate-modern",
+   "title": "Frida: The Making of an Icon",
+   "from": "saved page"
+  },
+  "https://www.tate.org.uk/whats-on/tate-modern/julio-le-parc": {
+   "venue": "tate-modern",
+   "title": "Julio Le Parc: Light. Colour. Action.",
+   "from": "saved page"
+  },
+  "https://www.tate.org.uk/whats-on/tate-modern/ana-mendieta": {
+   "venue": "tate-modern",
+   "title": "Ana Mendieta",
+   "from": "saved page"
+  },
+  "https://www.tate.org.uk/whats-on/tate-modern/light-and-magic": {
+   "venue": "tate-modern",
+   "title": "Light and Magic: The Birth of Art Photography",
+   "from": "saved page"
+  },
+  "https://www.tate.org.uk/whats-on/tate-modern/monet": {
+   "venue": "tate-modern",
+   "title": "Monet: Painting Time",
+   "from": "saved page"
+  },
+  "https://www.tate.org.uk/whats-on/tate-modern/ink": {
+   "venue": "tate-modern",
+   "title": "Ink",
+   "from": "saved page"
+  },
+  "https://www.tate.org.uk/whats-on/tate-modern/baya": {
+   "venue": "tate-modern",
+   "title": "Baya",
+   "from": "saved page"
+  },
+  "https://www.tate.org.uk/whats-on/tate-modern/nalini-malani": {
+   "venue": "tate-modern",
+   "title": "Nalini Malani",
+   "from": "saved page"
+  },
+  "https://www.tate.org.uk/whats-on/tate-modern/lynda-benglis": {
+   "venue": "tate-modern",
+   "title": "Lynda Benglis",
+   "from": "saved page"
+  },
+  "https://www.tate.org.uk/whats-on/tate-modern/edvard-munch": {
+   "venue": "tate-modern",
+   "title": "Edvard Munch",
+   "from": "saved page"
+  },
+  "https://www.tate.org.uk/whats-on/tate-modern/gathering-ground": {
+   "venue": "tate-modern",
+   "title": "Gathering Ground",
+   "from": "saved page"
+  },
+  "https://www.tate.org.uk/whats-on/tate-modern/tarek-atoui": {
+   "venue": "tate-modern",
+   "title": "Hyundai Commission: Tarek Atoui",
+   "from": "saved page"
+  },
+  "https://www.tate.org.uk/whats-on/tate-modern/hyundai-commission-2027": {
+   "venue": "tate-modern",
+   "title": "Hyundai Commission 2027",
+   "from": "saved page"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/carel-visser": {
+   "venue": "rijks",
+   "title": "Carel Visser in the Rijksmuseum Gardens",
+   "from": "live read 24 Sep"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/in-the-rijksmuseum-print-cabinets": {
+   "venue": "rijks",
+   "title": "In the Rijksmuseum print cabinets",
+   "from": "live read 24 Sep"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/worn": {
+   "venue": "rijks",
+   "title": "WORN",
+   "from": "live read 24 Sep"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/new-displays-in-the-20th-century-galleries": {
+   "venue": "rijks",
+   "title": "20th-century Galleries",
+   "from": "live read 24 Sep"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/willem-de-kooning-at-work": {
+   "venue": "rijks",
+   "title": "Willem de Kooning at work",
+   "from": "live read 24 Sep"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/document-netherlands-new-energy": {
+   "venue": "rijks",
+   "title": "Document Netherlands: New Energy",
+   "from": "live read 24 Sep"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/draw": {
+   "venue": "rijks",
+   "title": "Drawing!",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/zurbaran": {
+   "venue": "louvre",
+   "title": "Zurbarán",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/sculpting-colour": {
+   "venue": "louvre",
+   "title": "Sculpting Colour",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/louvre-photo": {
+   "venue": "louvre",
+   "title": "Louvre Photo",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/primeval-waters": {
+   "venue": "louvre",
+   "title": "Primeval Waters",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/affinities": {
+   "venue": "louvre",
+   "title": "Affinities",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/michel-lacoste-s-donation-to-the-musee-du-louvre": {
+   "venue": "louvre",
+   "title": "Michel Lacoste’s donation to the musée du Louvre",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/hosts-at-the-louvre": {
+   "venue": "louvre",
+   "title": "Hosts at the Louvre",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/martin-schongauer": {
+   "venue": "louvre",
+   "title": "Martin Schongauer",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/michelangelo-rodin": {
+   "venue": "louvre",
+   "title": "Michelangelo Rodin",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/the-carracci-drawings": {
+   "venue": "louvre",
+   "title": "The Carracci Drawings",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/jacques-louis-david": {
+   "venue": "louvre",
+   "title": "Jacques-Louis David",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/olympism": {
+   "venue": "louvre",
+   "title": "Olympism",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/a-new-look-at-jan-van-eyck": {
+   "venue": "louvre",
+   "title": "A New Look at Jan Van Eyck",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/the-treasury-of-notre-dame-cathedral": {
+   "venue": "louvre",
+   "title": "THE TREASURY OF NOTRE-DAME CATHEDRAL",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/naples-in-paris": {
+   "venue": "louvre",
+   "title": "Naples in Paris",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/the-splendours-of-uzbekistan-s-oases": {
+   "venue": "louvre",
+   "title": "The splendours of Uzbekistan's oases",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/things": {
+   "venue": "louvre",
+   "title": "Things",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/16th-century-bolognese-drawings-in-the-louvre-collections": {
+   "venue": "louvre",
+   "title": "16th-century bolognese drawings in the Louvre collections",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/the-golden-age-of-the-portuguese-renaissance": {
+   "venue": "louvre",
+   "title": "The Golden Age of the Portuguese Renaissance",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/yves-saint-laurent-at-the-louvre": {
+   "venue": "louvre",
+   "title": "Yves Saint Laurent at the Louvre",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/pharaoh-of-the-two-lands": {
+   "venue": "louvre",
+   "title": "Pharaoh of the two lands",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/giorgio-vasari": {
+   "venue": "louvre",
+   "title": "Giorgio Vasari",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/from-afar": {
+   "venue": "louvre",
+   "title": "From afar",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/paris-athens": {
+   "venue": "louvre",
+   "title": "Paris-Athens",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/on-stage": {
+   "venue": "louvre",
+   "title": "On Stage!",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/the-advent-of-the-artist": {
+   "venue": "louvre",
+   "title": "The Advent of the Artist",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/body-and-soul": {
+   "venue": "louvre",
+   "title": "Body and Soul",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/albrecht-altdorfer": {
+   "venue": "louvre",
+   "title": "Albrecht Altdorfer",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/soulages-at-the-louvre": {
+   "venue": "louvre",
+   "title": "Soulages at the Louvre",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/leonardo-da-vinci": {
+   "venue": "louvre",
+   "title": "Leonardo da Vinci",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/officer-gentleman-in-the-19th-century": {
+   "venue": "louvre",
+   "title": "Officer & Gentleman in the 19th Century",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/italian-drawings-from-the-mariette-collection": {
+   "venue": "louvre",
+   "title": "Italian Drawings from the Mariette Collection",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/antoine-jean-gros-1771-1835": {
+   "venue": "louvre",
+   "title": "Antoine-Jean Gros, 1771-1835",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/forgotten-kingdoms": {
+   "venue": "louvre",
+   "title": "Forgotten Kingdoms",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/archaeology-goes-graphic": {
+   "venue": "louvre",
+   "title": "Archaeology Goes Graphic",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/engraving-for-the-king": {
+   "venue": "louvre",
+   "title": "Engraving for the King",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/a-dream-of-italy": {
+   "venue": "louvre",
+   "title": "A Dream of Italy",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/chiaroscuro-printmaking": {
+   "venue": "louvre",
+   "title": "Chiaroscuro Printmaking",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/in-society": {
+   "venue": "louvre",
+   "title": "In Society",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/delacroix-1798-1863": {
+   "venue": "louvre",
+   "title": "Delacroix (1798-1863)",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/france-viewed-from-the-grand-siecle": {
+   "venue": "louvre",
+   "title": "France Viewed from the Grand Siècle",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/drawing-in-the-open-air": {
+   "venue": "louvre",
+   "title": "Drawing in the Open Air",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/exhibition-francois-i-and-dutch-art": {
+   "venue": "louvre",
+   "title": "François I and Dutch Art",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/drawing-greatness": {
+   "venue": "louvre",
+   "title": "Drawing Greatness",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/the-body-in-movement": {
+   "venue": "louvre",
+   "title": "The Body in Movement",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/drawing-the-everyday": {
+   "venue": "louvre",
+   "title": "Drawing the Everyday",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/valentin-de-boulogne-beyond-caravaggio": {
+   "venue": "louvre",
+   "title": "Valentin de Boulogne. Beyond Caravaggio",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/vermeer-and-the-masters-of-genre-painting": {
+   "venue": "louvre",
+   "title": "Vermeer and the Masters of Genre Painting",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/bouchardon-1698-1762": {
+   "venue": "louvre",
+   "title": "Bouchardon (1698-1762)",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/a-revolutionary-museum": {
+   "venue": "louvre",
+   "title": "A Revolutionary Museum",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/founding-myths-from-hercules-to-darth-vader": {
+   "venue": "louvre",
+   "title": "Founding Myths: From Hercules to Darth Vader",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/hubert-robert-1733-1808-a-visionary-painter": {
+   "venue": "louvre",
+   "title": "Hubert Robert (1733–1808). A Visionary Painter",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/a-brief-history-of-the-future": {
+   "venue": "louvre",
+   "title": "A Brief History of the Future",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/poussin-and-god": {
+   "venue": "louvre",
+   "title": "Poussin and God",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/making-sacred-images": {
+   "venue": "louvre",
+   "title": "Making Sacred Images",
+   "from": "live read 24 Sep"
+  },
+  "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/medieval-morocco": {
+   "venue": "louvre",
+   "title": "Medieval Morocco",
+   "from": "live read 24 Sep"
+  }
+ }
+}
