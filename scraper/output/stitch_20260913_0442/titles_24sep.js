@@ -17,6 +17,9 @@
  *
  *   node titles_24sep.js            report only
  *   node titles_24sep.js --apply    write sweep_titles_24sep.csv
+ *
+ * ACQUAVELLA, added the same day: every acq title replaced by the fixed
+ * scraper's reading of her saved listing page (acq_pieces in the JSON).
  */
 'use strict';
 const fs = require('fs');
@@ -28,7 +31,11 @@ const S = require('../../sweep_prototype.js');
 const BASE_COMMIT = 'f1bfb41';
 const BASE_PATH = 'scraper/output/stitch_20260913_0442/sweep_compressed_clean.csv';
 const OUT = path.join(__dirname, 'sweep_titles_24sep.csv');
-const read = JSON.parse(fs.readFileSync(path.join(__dirname, 'titles_read_24sep.json'), 'utf8')).titles;
+const READ = JSON.parse(fs.readFileSync(path.join(__dirname, 'titles_read_24sep.json'), 'utf8'));
+const read = READ.titles;
+// Acquavella, second pass the same day: every title as the fixed scraper
+// reads its card (name: subtitle, gallery only on a show in both galleries).
+const acqPieces = (READ.acq_pieces || {}).titles || {};
 
 const root = path.join(__dirname, '..', '..', '..');
 const tmp = path.join(require('os').tmpdir(), 'base_21sep.csv');
@@ -60,8 +67,20 @@ for (const r of rows) {
   }
 }
 
+// ACQUAVELLA — the scraper's corrected reading replaces the title outright,
+// matched by address, because the fault was in how its pieces were JOINED,
+// not in their letters. Every acq row, capitals or not.
+const acqChanged = [];
+for (const r of rows) {
+  if (r.venue_code !== 'acq' || r.title.startsWith('[')) continue;
+  const t = acqPieces[S.normalizeUrl(r.url)];
+  if (t && t !== r.title) { acqChanged.push(`acq          ${r.title}  →  ${t}`); r.title = t; }
+  else if (!t) left.push(`acq          ${r.title}  —  address not on her saved Acquavella page`);
+}
+
 console.log(`Base: ${BASE_PATH} at ${BASE_COMMIT} — ${rows.length} rows\n`);
 console.log(`CHANGED (${changed.length})`); changed.forEach(l => console.log('  ' + l));
+console.log(`\nACQUAVELLA, PIECES JOINED (${acqChanged.length})`); acqChanged.forEach(l => console.log('  ' + l));
 console.log(`\nLEFT AS IS (${left.length})`); left.forEach(l => console.log('  ' + l));
 
 if (process.argv.includes('--apply')) {
