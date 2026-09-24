@@ -487,6 +487,7 @@ first number to scroll past:
 | `page_loads.js` | does the page load |
 | `page_renders.js` | does it DRAW — renders into jsdom twice, plain and with the runtime answering |
 | `catalogue_lookup.js` | C-001 to C-090b |
+| `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
 
 The harness lifts the intake out of the JSX by **anchors on prose, never line
 numbers**. An early `return` in a fixture file exits the whole suite and the
