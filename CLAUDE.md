@@ -929,6 +929,15 @@ Export still the backup, loading an old backup must replace the store only
 after asking, last write wins across two open tabs, store size limits against
 ~400 rows unchecked.
 
+**Checked 24 Sep against the platform's own spec (`db.d.ts`):** a document is at
+most 256 KiB, an artifact at most 5,000 documents, kept across republishes,
+erased only if the artifact is deleted, no transactions. Her ledger is ~290 KiB
+before catalogue details — too big for one document, so it must be split. The
+dormant `safeSave` in the JSX is Chat's old `window.storage`, a different
+mechanism — not evidence about this one. **Still to prove:** how many writes a
+page may make at once (an Apply of 300 cards), and that a half-finished write
+never leaves a half ledger — on a scratch page, never hers.
+
 ### 2. The 320 decisions — hers, in progress
 
 **The file is `stitch_20260924_0417/sweep_compressed.csv`** — her 21 Sep file
@@ -1047,9 +1056,8 @@ The import file was swept 13 Sep. **She sweeps no more than once a month.**
   may be a good idea; it came out of a session whose reasoning she does not trust.
   `qc.js`'s exceptions report is NOT that pass and does not re-open it.
 
-**The ledger is not being protected during development.** She keeps no real ledger
-until JSX and scraper are both finished, so she can import freely and roll back.
-**Do not raise ledger pollution as a reason to reorder this list.**
+**She keeps a real ledger since 24 Sep** — the 320-card import, with that day's
+fixes. Changes that touch her ledger now need the same care as any user data.
 
 ---
 
