@@ -940,9 +940,14 @@ never leaves a half ledger — on a scratch page, never hers.
 
 **Her direction so far, 24 Sep — nothing built:**
 - **Saves are instant**, as quarantine's already are.
-- **No pile of versions in the store** — she judged thousands of saved copies
-  the opposite of safe. Design under discussion: one piece per venue, each
-  overwritten in place; history comes from her Exports and Drive backups.
+- **One live ledger plus up to 10 snapshots — the design as she understands
+  it.** The live ledger is one piece per venue, overwritten on every action.
+  Snapshots are whole copies taken automatically at moments that matter
+  (opening the app, after an import, after a big batch of lookups), never
+  overwritten; the oldest is purged when an 11th is taken. Rollback = a
+  snapshot becomes the live ledger. Fixed at ~25 × 11 pieces. **A copy on
+  every save was rejected** — thousands of copies, the opposite of safe. A
+  change log that can rebuild the ledger was discussed and not chosen.
 - **A long trial before the app ever OPENS from the store:** it saves there in
   the background while she keeps importing and exporting as now, checked at
   several points and under several scenarios.
