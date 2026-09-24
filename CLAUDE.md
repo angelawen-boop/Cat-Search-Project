@@ -938,6 +938,21 @@ mechanism — not evidence about this one. **Still to prove:** how many writes a
 page may make at once (an Apply of 300 cards), and that a half-finished write
 never leaves a half ledger — on a scratch page, never hers.
 
+**Her direction so far, 24 Sep — nothing built:**
+- **Saves are instant**, as quarantine's already are.
+- **No pile of versions in the store** — she judged thousands of saved copies
+  the opposite of safe. Design under discussion: one piece per venue, each
+  overwritten in place; history comes from her Exports and Drive backups.
+- **A long trial before the app ever OPENS from the store:** it saves there in
+  the background while she keeps importing and exporting as now, checked at
+  several points and under several scenarios.
+- **Google Drive, back on the table as backup only** (was §8): a button that
+  sends a copy to her Drive (she would press it every ~20 minutes and before
+  leaving), and a button that loads the newest backup from her Drive without
+  her picking a file. **Never instant or automatic saving to Drive** — her
+  ruling. The page reaches Drive through her connector (`mcp`); the connector
+  can create and read files but not overwrite one, so each backup is a new file.
+
 ### 2. The 320 decisions — hers, in progress
 
 **The file is `stitch_20260924_0417/sweep_compressed.csv`** — her 21 Sep file
@@ -1068,7 +1083,8 @@ anywhere (raised 22 Sep, rejected on the spot, then raised again by the next
 session as though it were open).
 
 The sweep log inside her export. Ledger on Claude cloud storage (reopened by her 24 Sep — §7.1). Google Drive
-auto-load on open. Saving the ledger to Drive from the app. The app gathering its
+auto-load on open. Automatic saving to Drive (backup by button is back on the
+table — §7.1). The app gathering its
 own exhibition data. Auto-save on every change. A confirm-tap after download.
 Bulk-approve during refresh. In-app field editing. The separate readout doc. Excel
 as the sweep format. Merging the two Tates. Stripping the 110 seed. Watching the
