@@ -1688,18 +1688,16 @@ test('MN-001: the Menil\'s foyer installations are not exhibitions', () => {
   assert.equal(re.test('Janet Sobel: All-Over'), false);
 });
 
-test('AC-001: Art Institute shows drawn from a collection are excluded', () => {
-  // Her six quarantined titles, 23 Sep, and a sample of those she kept.
+test('AC-001: Art Institute — only its OWN collection is excluded (her ruling, 24 Sep)', () => {
+  // 23 Sep excluded every "from the … Collection"; 24 Sep narrowed it: lent,
+  // family and named collections can be significant and stay.
   const re = VENUES.artic.excludeTitle;
-  for (const t of ['Threaded Visions: Contemporary Weavings from the Collection',
-    'Self, Made: Fourteen Modern Artists from the Richard and Ellen Sandor Family Collection',
+  assert.equal(re.test('Threaded Visions: Contemporary Weavings from the Collection'), true);
+  for (const t of ['Self, Made: Fourteen Modern Artists from the Richard and Ellen Sandor Family Collection',
     'Contemporary Drawings from the Stenn Family Collection',
     'Myth and Marble: Ancient Roman Sculpture from the Torlonia Collection',
-    'French Neoclassical Paintings from The Horvitz Collection',
-    'Revolution to Restoration: French Drawings from The Horvitz Collection'])
-    assert.equal(re.test(t), true, t);
-  for (const t of ['Christina Ramberg: A Retrospective', 'Transitory Beauty: Japanese Fan Prints',
-    'Frida Kahlo’s Month in Paris: A Friendship with Mary Reynolds', 'Mary Cassatt: After Impressionism'])
+    'Revolution to Restoration: French Drawings from The Horvitz Collection',
+    'Christina Ramberg: A Retrospective', 'Mary Cassatt: After Impressionism'])
     assert.equal(re.test(t), false, t);
 });
 
@@ -1806,4 +1804,41 @@ test('RT-009: a generic word in the tab is not reported as missing (Accademia)',
     tab: '"Transforming Energy": Marina Abramović Exhibition | Gallerie dell\'Accademia di Venezia' });
   assert.equal(r.changed, false);
   assert.equal(r.unplaced, '');
+});
+
+// XT-001 to XT-003 — her exclusion rulings, 24 Sep, asked of the recipes'
+// own rules with real titles from the import file: what goes, what stays.
+const xt = (v, out, keep) => {
+  for (const t of out) assert.equal(VENUES[v].excludeTitle.test(t), true, `${v} must exclude: ${t}`);
+  for (const t of keep) assert.equal(VENUES[v].excludeTitle.test(t), false, `${v} must keep: ${t}`);
+};
+
+test('XT-001: Menil — foyer installations, its own collection, recent acquisitions', () => {
+  xt('menil', ['Foyer Installation: Pop Art', 'Portraits of Women from the Collection',
+    'Animals, Monsters, and Creatures from the Collection', 'Abstraction after Modernism: Recent Acquisitions'],
+  ['Photography from The Menil Collection: Curated by Wendy Watriss']);
+});
+
+test('XT-002: Art Institute — its own collection only; lent and named collections stay', () => {
+  xt('artic', ['Threaded Visions: Contemporary Weavings from the Collection'],
+  ['Contemporary Drawings from the Stenn Family Collection',
+   'Self, Made: Fourteen Modern Artists from the Richard and Ellen Sandor Family Collection',
+   'French Neoclassical Paintings from The Horvitz Collection',
+   'Myth and Marble: Ancient Roman Sculpture from the Torlonia Collection',
+   'Treasures from the Collection of Jane Doe', 'Mary Cassatt: After Impressionism']);
+});
+
+test('XT-003: Met — recurring series, commissions, rotations; its own-collection shows stay', () => {
+  xt('met', ['P. S. Art 2026: Celebrating the Creative Spirit of New York City Kids',
+    'The Celebration: A Selection of Works by the 2025 Scholastic Art & Writing Awards New York City Gold Key Recipients',
+    'A Decade on Paper: Recent Acquisitions, 2014–2024', 'Emulating Books: Book Objects from the Lynn and Bruce Heckman Gift',
+    'Art of Commerce: Trade Catalogs in Watson Library', 'Christmas Tree and Neapolitan Baroque Crèche',
+    'Human/Nature: Selections from the Department of Drawings and Prints',
+    'Chinese Painting and Calligraphy: Selections from the Collection',
+    'The Genesis Facade Commission: Liu Wei, Speculation', 'The Great Hall Commission: Tong Yang-Tze, Dialogue',
+    'The Roof Garden Commission: Jennie C. Jones, Ensemble'],
+  ['View Finding: Selections from The Walther Collection',
+   'Making It Modern: European Ceramics from the Martin Eidelberg Collection',
+   'Baseball Cards from the Collection of Jefferson R. Burdick', 'Rediscovering Della Robbia at The Met',
+   'Lineages: Korean Art at The Met', 'Ink and Ivory: Indian Drawings and Photographs Selected with James Ivory']);
 });

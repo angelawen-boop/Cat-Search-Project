@@ -3475,6 +3475,19 @@ const ARTIC_NOT_AN_EXHIBITION = new RegExp([
 const VENUES = {
   met: {
     name: 'The Metropolitan Museum of Art',
+    // RECURRING SERIES AND COLLECTION ROTATIONS — her ruling, 24 Sep. Most of
+    // her Met quarantine was series that return every year at a NEW address
+    // (P.S. Art, Scholastic, the crèche), which quarantine, keyed on the
+    // address, cannot hold. Her own-collection shows are NOT excluded as such:
+    // at the Met they can be major and carry catalogues. Every commission
+    // series is out (Facade, Great Hall, Roof Garden).
+    excludeTitle: new RegExp([
+      /^P\.\s?S\.\s?Art\b/, /\bScholastic Art (?:&|and) Writing\b/,
+      /\bRecent Acquisitions\b/, /\bfrom the\b.*\bGift\b/, /\bWatson Library\b/,
+      /\bChristmas Tree and Neapolitan\b/,
+      /\bSelections from the (?:Department of|Collection\b)/,
+      /\bCommission:/,
+    ].map(r => r.source).join('|'), 'i'),
     base: 'https://www.metmuseum.org',
     // HER MACHINE ONLY — see machineVenues(). The container is answered 429 on
     // every page here, so sweeping it from the container adds marker rows to a
@@ -3775,7 +3788,10 @@ const VENUES = {
     // collection in the entrance hall, not temporary exhibitions. Her ruling,
     // 23 Sep; she quarantined the ones already on her pile. Every one carries
     // the prefix in its title, which is the venue's own label.
-    excludeTitle: /^Foyer\s+Installation\b/i,
+    // AND ITS OWN COLLECTION — her ruling, 24 Sep, THIS VENUE ONLY: "… from
+    // the Collection" and "Recent Acquisitions". Not the Met: its own
+    // collection shows can be significant and carry catalogues.
+    excludeTitle: /^Foyer\s+Installation\b|\bfrom the Collection\b(?!\s+of\b)|\bRecent Acquisitions\b/i,
     base: 'https://www.menil.org',
     // The brief's /exhibitions/current 302s to /exhibitions, which is the
     // live address for what is on now.
@@ -4122,14 +4138,14 @@ const VENUES = {
   artic: {
     name: 'Art Institute of Chicago',
     base: 'https://www.artic.edu',
-    // SHOWS DRAWN FROM A COLLECTION ARE OUT — her ruling, 23 Sep: the
-    // museum's permanent collection, a family collection, and named
-    // collections alike (Torlonia, Horvitz). She quarantined six; this title
-    // rule matches exactly those six and none of the 60 she kept. The museum
-    // labels them all EXHIBITION, so its tag cannot reach them, and its
-    // descriptions are no safer — "drawn from the Art Institute's collection"
-    // also describes a Ramberg retrospective she kept.
-    excludeTitle: /\bfrom the\b.*\bCollection\b/i,
+    // ITS OWN COLLECTION ONLY — her ruling, 24 Sep, replacing 23 Sep's wider
+    // one. A bare "from the Collection" is always the Art Institute's own.
+    // "from the X Family Collection", "from The Horvitz Collection", "from the
+    // Collection of …" are KEPT: often lent in, and significant. A named own
+    // collection ("from the Bronze Collection") gets through; she quarantines
+    // those by hand, knowingly. The museum labels them all EXHIBITION, so its
+    // tag cannot reach them.
+    excludeTitle: /\bfrom the Collection\b(?!\s+of\b)/i,
     // Films, moving-image works and installations — flagged, not excluded.
     // See flagFromDescription().
     flagWords: /\b(films?|videos?|moving[- ]image|screenings?|site[- ]specific|in situ)\b/i,
