@@ -12,3 +12,17 @@ Recipe scoped with `within: ['#content']`.
 | `exhibitions_upcoming.mhtml` | 6 of 6 inside `#content`; only the menu card outside |
 
 Saved pages rewrite the menu's own links to `#`; those are the save, not the site.
+
+## Exhibition pages, saved 24 Sep — do films and installations look different?
+
+| File | Type label | Location | Catalogue section with a shop link |
+|---|---|---|---|
+| `show_caillebotte.mhtml` (kept) | Ticketed Exhibition | Regenstein Hall | yes |
+| `show_lee_miller.mhtml` (kept) | Exhibition | Galleries 1–4 | yes |
+| `show_thornton.mhtml` (film) | Exhibition | Gallery 186 | no |
+| `show_screens.mhtml` (film series) | Exhibition | Gallery 188 | no |
+| `show_kallat.mhtml` (installation) | Exhibition | Woman's Board Grand Staircase | no ("Catalogue" is a caption) |
+| `show_calel.mhtml` (installation) | Exhibition | Bluhm Family Terrace | no |
+
+The type label never differs. The location is in `.m-link-list`. Bluhm Family
+Terrace also held *Diane Simpson*, which she kept, so it is no signal.
