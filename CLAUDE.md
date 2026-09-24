@@ -391,6 +391,11 @@ evidence and every finding: `docs/app.md`.**
   drop one and the arithmetic stops closing, which is all these lines are for.
 - **Quarantine ("never add this")**, keyed on normalised URL. Latest decision
   wins, which needs tombstones — a release is RECORDED, not merely absent.
+- **Reject and quarantine are different jobs.** Quarantine is the app's only
+  memory: never show me this again. Reject means *this entry is wrong* — fix it
+  at the source so the next sweep imports it correctly. **A rejected card coming
+  back is correct**: the file still disagrees with the ledger. Never propose
+  remembering rejections.
 - **Per-venue freshness**, two dates, from `swept_at`.
 - **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
   at 1100. It sat below it and a confirm raised from inside the review painted
@@ -407,9 +412,7 @@ evidence and every finding: `docs/app.md`.**
 - **Titles — her rulings, 23 Sep.** A **changed title is a Change card** —
   a rename, and equally a difference only in capitals. **Nothing is masked on
   screen**: the scraper records titles in the venue's own letters
-  (`restoreCase`, proven on her saved pages by `title_case_pages.js`). **Still
-  open (1a):** it compares with no memory, so a rejected title card returns on
-  every sweep.
+  (`restoreCase`, proven on her saved pages by `title_case_pages.js`).
 - **A changed description is a Change card too** (`consider` in the intake) —
   anything written into the description must be stable from sweep to sweep.
 - **Italian titles — built 24 Sep, her format.** The title stays the museum's
@@ -925,19 +928,22 @@ Tate reading collection displays; two Louvre descriptions lost by the rebuild.
 those cards meanwhile.
 
 **Open:**
-1. **Title cards with no memory (app).** A rejected title card returns on every
-   sweep.
-2. **Borghese: 7 titles still in capitals** — site down 24 Sep; its 3 listing
+*Sweeper notes*
+1. **Duplicated and loose sweeper notes** — next, 24 Sep.
+2. **Extension note** never says where the new closing date came from.
+
+*Titles at venues not yet reached*
+3. **Borghese: 7 titles still in capitals** — site down 24 Sep; its 3 listing
    pages, read once, when it is back.
-3. **Duplicated and loose sweeper notes** — next, 24 Sep.
-4. **Two shows at one address (compression).** `urlKey` drops `past` from a
-   path on purpose, so the Rijksmuseum's two Ed van der Elsken shows collide:
-   the older one carries *Up Close*'s description.
-5. **Dismissed filter cannot be combined with a venue filter (app).**
-6. **Extension note** never says where the new closing date came from.
-7. **Title check not yet run** at `capo`, `borghese`, `met`, `artic`.
-8. **Louvre letters, and National Gallery "ming wong"** — the venue's own
-   letters are recorded; whether that stands is her call.
+4. **Title check not yet run** at `capo`, `borghese`, `met`, `artic`.
+
+*Compression*
+5. **Two shows at one address.** `urlKey` drops `past` from a path on purpose,
+   so the Rijksmuseum's two Ed van der Elsken shows collide: the older one
+   carries *Up Close*'s description.
+
+*App*
+6. **Dismissed filter cannot be combined with a venue filter.**
 
 Expect debugging to fall out of it. Also still to do: a save round-trip after the
 import — export, re-import that file, confirm quarantine and per-venue freshness
