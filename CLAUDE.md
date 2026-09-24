@@ -391,7 +391,7 @@ evidence and every finding: `docs/app.md`.**
 - **The ledger will not move until every card is decided** — a hard block, not a
   warning. Rejecting counts as deciding. Do not re-propose confirm-and-continue.
   **This is the permanent design and it has not moved.** One temporary button
-  sits BESIDE it for the 320-card import — §7.1. It is not confirm-and-continue,
+  sits BESIDE it for the 320-card import — §7.2. It is not confirm-and-continue,
   which stays rejected (§8): it is a separate, plainly-labelled door that asks
   first and says what it leaves behind. The gate itself is untouched, and so are
   its fixtures.
@@ -914,51 +914,41 @@ keeps making in new clothes.
 
 ## 7. Open work
 
-Everything not listed here is finished. Do not reopen a closed item without a new
-fact.
+In her order, 24 Sep. Everything not listed here is finished. Do not reopen a
+closed item without a new fact.
 
-### 1. The 320 decisions — hers, and the next thing
+### 1. Keeping the ledger in the page's store — a discussion, reopened by her 24 Sep
+
+Listed as rejected in §8 ("Ledger on Claude cloud storage"); she reopened it.
+Nothing new on the platform: the page has had a store since 20 Sep, holding the
+sweep log and quarantine. The one recorded objection — the ledger is derivable
+from nothing — is the one quarantine already answers with two homes (the store
+is the working copy, her Export the backup, one merge rule). Gains: no Import on
+open, a republish can no longer take unsaved work, changes saved as made. Costs:
+Export still the backup, loading an old backup must replace the store only
+after asking, last write wins across two open tabs, store size limits against
+~400 rows unchecked.
+
+### 2. The 320 decisions — hers, in progress
 
 **The file is `stitch_20260924_0417/sweep_compressed.csv`** — her 21 Sep file
 (`stitch_20260913_0442`, commit `f1bfb41`) with 24 Sep's repairs, all made by
 code from the museums' own pages. How it was built:
 **`docs/import-file.md`**. It is also compression's newest memory.
 
-#### 1a. Faults found working the pile
-
-**Fixed 24 Sep, scraper and file:** titles in capitals (70 rows); titles missing
-words, now checked against each exhibition's own page at every venue;
-Acquavella's run-together titles and cities; Italian titles in her format (20);
-Tate reading collection displays; two Louvre descriptions lost by the rebuild.
-**Short titles in the file are left for the next sweep**, her ruling — reject
-those cards meanwhile.
-
 **Debugging finished 24 Sep; the file was sent to her as the one cumulative
-copy.** Any later repair lands in the same file, and she is told.
+copy.** Any later repair lands in the same file, and she is told. Short titles
+in the file are left for the next sweep, her ruling — reject those cards
+meanwhile. Save round-trips work — her confirmation, 24 Sep.
 
-**Open:**
-*Sweeper notes*
-1. **Pages named twice or wrongly** — fixed 24 Sep, proven on her saved pages
-   (`listing_pages.js`, `docs/listing_pages/`); shows from the next sweep.
-   Brera was never a misfire — its archive lists running shows.
-2. **Extension dates** — fixed 24 Sep: applied once, a missing year taken
-   from the date being extended, the note quotes its source. Gricci and
-   Lotto repaired in the file; Samorì's date was always right.
+**The catalogue lookup works on real use** — she has bought two catalogues
+since the import. Not perfect; she is noting issues as she goes, for a later
+debugging session (item 7).
 
-*Titles at venues not yet reached*
-3. **Borghese: 7 titles still in capitals** — site down 24 Sep; its 3 listing
+**Still open, waiting on venues:**
+1. **Borghese: 7 titles still in capitals** — site down 24 Sep; its 3 listing
    pages, read once, when it is back.
-4. **Title check not yet run** at `capo`, `borghese`, `met`, `artic`.
-
-*Compression*
-5. **Two shows at one address** — fixed 24 Sep: memory is found by exact
-   address first, is never another row's, and is carried only if some sweep
-   read text there. File repaired (held).
-
-*App*
-6. **Dismissed filter with a venue filter** — fixed 24 Sep in 33.1.
-
-Save round-trips after the import work — her confirmation, 24 Sep.
+2. **Title check not yet run** at `capo`, `borghese`, `met`, `artic`.
 
 **It is done in sittings, and version 32 has the door for that — TEMPORARY, to
 be unwired when this import is finished.** A second button beside the gate
@@ -973,16 +963,20 @@ gate is right and stays; 320 cards is simply more than one sitting.
   parameter on `applyRefresh`, `offerPartialApply` and its harness export, and
   fixture 18h. Nothing else knows about it.
 
-**The catalogue lookup gets its real test here.** Fourteen venues have had no
-lookup run against them; their shop addresses are checked but unseen live. `khm`'s
-shop queues every request and `uffizi` has no catalogues page, so both behave as
-if they had no shop.
+### 3. A dead shop link is stored silently
 
-**The shop-status change (version 31) has not been run by her.** The sentence only
-appears on the SECOND lookup of a row, because it is a comparison — so the first
-row to press is one she has seen leave a shop.
+Step one opens the shop's own pages, so the link is read off a page the shop
+served — but nothing checks whether a re-open came back empty, and
+`pageIsShell` already exists to tell. *(The rejected fix stays rejected:
+pointing the link at an ISBN search does not work, because museum shops search
+by title.)*
 
-### 2. The three blocked venues — a route exists, and it needs pacing
+### 4. Tate Britain's past exhibitions
+
+She has found its archive. To be added as pages in the recipe. Tate Modern's
+past stays out — §2.
+
+### 5. The three blocked venues — a route exists, and it needs pacing
 
 **Access is answered (§2). Whether it survives a sweep is not.** In order, and
 each step really does block the next:
@@ -1013,32 +1007,35 @@ and nothing else.
 
 **`artic` from her machine is unchanged and untested against any of this.**
 
-### 3. Tate Britain's past exhibitions
-
-She has found its archive. To be added as pages in the recipe. Tate Modern's
-past stays out — §2.
-
-### 4. The cheapest archive route per venue — later fine-tuning
-
-Full paginated archive or year pages: whichever reaches 1 July 2024 in the
-fewest loads with certainty. Venue by venue; the recipes work, so not now.
-
-### 5. A fresh sweep, eventually
-
-The import file was swept 13 Sep. Not urgent while the decisions are being worked
-through, but it is real work and nothing else on this list covers it.
-
 ### 6. More French venues
 
-Her note, 24 Sep. The Louvre is the only one today. Which venues: not yet named.
+Her note, 24 Sep. The Louvre is the only one today. To add:
 
-### 7. Smaller, parked
+- **Musée d'Orsay**
+- **Musée d'Art Moderne de Paris** (MAM Paris) — modern art
+- **Musée des Arts Décoratifs** (MAD Paris) — decorative arts
 
-- **A dead shop link is still stored silently.** Step one opens the shop's own
-  pages now, so the link is read off a page the shop served — but nothing checks
-  whether a re-open came back empty, and `pageIsShell` already exists to tell.
-  *(The rejected fix stays rejected: pointing the link at an ISBN search does not
-  work, because museum shops search by title.)*
+### 7. Catalogue lookup generally
+
+The debugging session for the issues she is noting (item 2). Standing gaps:
+fourteen venues have had no lookup run against them, their shop addresses
+checked but unseen live; `khm`'s shop queues every request and `uffizi` has no
+catalogues page, so both behave as if they had no shop. **The shop-status
+change (version 31) has not been run by her** — its sentence only appears on
+the SECOND lookup of a row, being a comparison, so the first row to press is one
+she has seen leave a shop.
+
+### 8. The cheapest archive route per venue — very low priority, may never happen
+
+Full paginated archive or year pages: whichever reaches 1 July 2024 in the
+fewest loads with certainty. Venue by venue; the recipes work.
+
+### 9. A fresh sweep — mid-October at the earliest
+
+The import file was swept 13 Sep. **She sweeps no more than once a month.**
+
+### 10. Smaller, parked
+
 - **Sweeper brief v3** — the Chat-Claude-era instruction document still needs its
   URL corrections. Expect it to end up as the fallback procedure for blocked
   venues rather than the main sweep.
@@ -1062,7 +1059,7 @@ until JSX and scraper are both finished, so she can import freely and roll back.
 anywhere (raised 22 Sep, rejected on the spot, then raised again by the next
 session as though it were open).
 
-The sweep log inside her export. Ledger on Claude cloud storage. Google Drive
+The sweep log inside her export. Ledger on Claude cloud storage (reopened by her 24 Sep — §7.1). Google Drive
 auto-load on open. Saving the ledger to Drive from the app. The app gathering its
 own exhibition data. Auto-save on every change. A confirm-tap after download.
 Bulk-approve during refresh. In-app field editing. The separate readout doc. Excel
