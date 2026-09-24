@@ -933,12 +933,10 @@ those cards meanwhile.
 4. **Two shows at one address (compression).** `urlKey` drops `past` from a
    path on purpose, so the Rijksmuseum's two Ed van der Elsken shows collide:
    the older one carries *Up Close*'s description.
-5. **A closed show moves address (Rijksmuseum).** *Up Close*'s old link is dead;
-   the next sweep may present the new address as a new exhibition.
-6. **Dismissed filter cannot be combined with a venue filter (app).**
-7. **Extension note** never says where the new closing date came from.
-8. **Title check not yet run** at `capo`, `borghese`, `met`, `artic`.
-9. **Louvre letters, and National Gallery "ming wong"** — the venue's own
+5. **Dismissed filter cannot be combined with a venue filter (app).**
+6. **Extension note** never says where the new closing date came from.
+7. **Title check not yet run** at `capo`, `borghese`, `met`, `artic`.
+8. **Louvre letters, and National Gallery "ming wong"** — the venue's own
    letters are recorded; whether that stands is her call.
 
 Expect debugging to fall out of it. Also still to do: a save round-trip after the
