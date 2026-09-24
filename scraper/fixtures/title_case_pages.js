@@ -59,12 +59,22 @@ const CASES = [
     venue: 'acq',
     url: 'https://www.acquavellagalleries.com/exhibitions',
     file: 'acq_exhibitions.mhtml',
-    // Checked by the start only: how name, subtitle and city are joined is a
-    // separate open question, and this file must not pin today's answer.
-    starts: [
+    // Name, subtitle and gallery read as separate pieces; a colon between
+    // name and subtitle; the gallery only on a show run in both galleries
+    // back to back — her ruling, 24 Sep (cardPartsTitle, placeTravellingRuns).
+    named: [
       ['/exhibitions/joan-miro-jean-paul-riopelle', 'Joan Miró | Jean Paul Riopelle'],
+      ['/exhibitions/matisse2', 'Matisse: The Pursuit of Harmony'],
       ['/exhibitions/vivid', 'VIVID'],                                         // typed in capitals
-      ['/exhibitions/picasso', 'PICASSO Seven Decades of Drawing'],            // first word typed in capitals
+      ['/exhibitions/picasso', 'PICASSO: Seven Decades of Drawing'],           // first word typed in capitals
+      // One show, two galleries, back to back: each run names its gallery.
+      ['/exhibitions/portraiture-from-cassatt-to-warhol', 'Portraiture: From Cassatt to Warhol (New York)'],
+      ['/exhibitions/portraiture', 'Portraiture: From Cassatt to Warhol (Palm Beach)'],
+      // Same name three years apart is two shows: no gallery on either.
+      ['/exhibitions/miquel-barcelo4', 'Miquel Barceló'],
+      ['/exhibitions/miquel-barcelo3', 'Miquel Barceló'],
+      // A name with its own colon takes the subtitle after a dash.
+      ['/exhibitions/unnatural-nature-post-pop-landscapes', 'Unnatural Nature: Post-Pop Landscapes – Curated by Todd Bradway'],
     ],
   },
   {

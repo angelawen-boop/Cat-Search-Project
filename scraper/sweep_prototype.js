@@ -2579,7 +2579,100 @@ async function restoreCase(link, title) {
   } catch { return title; }
 }
 
+/**
+ * A CARD BUILT OF LABELLED PIECES — Acquavella, 24 Sep, her ruling.
+ *
+ * Its card holds the name, the subtitle and the gallery each in its own
+ * element: .title "Matisse", .subtitle "The Pursuit of Harmony",
+ * .subtitle.subtitle2 "New York". Read as one string they ran together into
+ * "Matisse The Pursuit of Harmony New York" — no punctuation, and a city on
+ * every title.
+ *
+ * Her rule: a colon between name and subtitle; the gallery ONLY where the
+ * same show runs in both galleries (placeTravellingRuns, which needs the whole
+ * listing, so the gallery is kept aside here as the row's _place).
+ *
+ * Older cards put the gallery in the subtitle slot ("New York",
+ * "PALM BEACH"). The venue's own `locations` list says which text is a
+ * gallery — one correct answer, no guessing.
+ *
+ * Each piece is read in its typed letters (textContent).
+ */
+async function readCardPieces(link, rule) {
+  return link.evaluate((a, sel) => {
+    const sq = s => String(s || '').replace(/\s+/g, ' ').trim();
+    const one = q => { const el = a.querySelector(q); return el ? sq(el.textContent) : ''; };
+    return { name: one(sel.name), subtitle: one(sel.subtitle), place: one(sel.place) };
+  }, rule.cardParts).catch(() => ({ name: '', subtitle: '', place: '' }));
+}
+const isPlace = (text, locations) => (locations || []).find(l => l.toLowerCase() === String(text).trim().toLowerCase());
+
+async function cardPartsTitle(link, rule, locations) {
+  const { name, subtitle } = await readCardPieces(link, rule);
+  if (!name) return '';
+  if (!subtitle || isPlace(subtitle, locations)) return name;
+  if (/[:.!?]\s*$/.test(name)) return `${name} ${subtitle}`;
+  // A name that already has its own colon ("Unnatural Nature: Post-Pop
+  // Landscapes") takes the subtitle after a dash, not a second colon.
+  return name.includes(':') ? `${name} – ${subtitle}` : `${name}: ${subtitle}`;
+}
+
+async function readCardPlace(link, rule, locations) {
+  if (!rule.cardParts) return '';
+  const { subtitle, place } = await readCardPieces(link, rule);
+  // The venue's own spelling of the gallery, whatever case the card uses.
+  return isPlace(place, locations) || isPlace(subtitle, locations) || '';
+}
+
+/**
+ * THE GALLERY, ONLY WHERE THE SAME SHOW RUNS IN BOTH — her ruling, 24 Sep.
+ *
+ * Two cards with the same name and subtitle, whose runs sit close in time
+ * (see below), (letters and punctuation
+ * ignored — the venue writes "MASTERWORKS: FROM BONNARD TO BARCELÓ" on one
+ * and "Masterworks: From Bonnard to Barceló" on the other) and different
+ * galleries are one exhibition in two places. Each gets its gallery in
+ * brackets; every other title stays without one.
+ *
+ * Decided over the WHOLE listing, before the lookback, because the second
+ * run is a fact about the show whether or not it falls inside the window.
+ * Both rows are always kept — this names them, it never merges them.
+ * noteTravellingRuns() and compress.js's travellingKey() then find the pair
+ * by the gallery in the title, as before.
+ */
+function placeTravellingRuns(rows) {
+  const key = r => String(r.title).replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
+  const groups = new Map();
+  for (const r of rows) {
+    if (!r._place || !r.title || r.title.startsWith('[')) continue;
+    const k = key(r);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  }
+  // Same name is not enough: Acquavella showed "Miquel Barceló" in Palm Beach
+  // in 2022 and again in New York in 2025 — two shows. A travelling show's
+  // runs sit back to back (Portraiture: Palm Beach to 5 Jan 2025, New York
+  // from 21 Jan). So a pair is two galleries whose runs are within
+  // TRAVEL_GAP_DAYS of each other; an undated run never pairs.
+  const day = d => (d ? Date.parse(d + 'T00:00:00Z') / 864e5 : NaN);
+  const near = (a, b) => {
+    const [as, ae, bs, be] = [day(a.start_date), day(a.end_date || a.start_date), day(b.start_date), day(b.end_date || b.start_date)];
+    if ([as, ae, bs, be].some(Number.isNaN)) return false;
+    return Math.max(as, bs) - Math.min(ae, be) <= TRAVEL_GAP_DAYS;
+  };
+  for (const g of groups.values()) {
+    const paired = new Set();
+    for (const a of g) for (const b of g) {
+      if (a !== b && a._place !== b._place && near(a, b)) { paired.add(a); paired.add(b); }
+    }
+    for (const r of paired) r.title = `${r.title} (${r._place})`;
+  }
+}
+const TRAVEL_GAP_DAYS = 183;
+
 async function extractTitle(link, venueCode) {
+  const rule = titleRule(venueCode);
+  if (rule.cardParts) return cardPartsTitle(link, rule, (VENUES[venueCode] || {}).locations);
   const title = await restoreCase(link, await extractTitleAsShown(link, venueCode));
   return withPostTitle(link, titleRule(venueCode), title);
 }
@@ -3204,6 +3297,9 @@ async function collectFromListing(page, opts) {
 
     const row = {
       venue_code: venueCode, title,
+      // Internal, never a CSV column: the gallery a card names, for a venue
+      // with several (see cardPartsTitle / placeTravellingRuns).
+      _place: await readCardPlace(link, titleRule(venueCode), (VENUES[venueCode] || {}).locations),
       // Internal, never a CSV column: which listing page this row came from,
       // and the note to withdraw if a later link supplies the missing name.
       _ctx: ctx, _titleNote: titleNote,
@@ -3419,18 +3515,14 @@ const VENUES = {
     // live under /exhibitions/past/. They are navigation, not exhibitions;
     // following them dragged in the whole back catalogue to 1999.
     isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/past\//.test(href),
-    // No headings. The card reads
-    // "NICOLE WITTENBERG ALL THE WAY NEW YORK OCTOBER 16 - DECEMBER 5, 2025":
-    // name, then gallery location, then dates.
-    //
-    // The location STAYS IN THE TITLE. Acquavella runs the same show in both
-    // its galleries, and without the city the two runs read as one exhibition
-    // on the approval cards. So strip only the date tail — matched as a month
-    // or season followed by a digit, so a title like "April in Paris" is left
-    // alone.
+    // No headings: the card holds name, subtitle and gallery in labelled
+    // pieces, read separately — see cardPartsTitle() and placeTravellingRuns().
+    // Read as one string they ran into "Matisse The Pursuit of Harmony New
+    // York". The gallery stays ONLY on a show running in both galleries, so
+    // its two runs still read as two rows on the approval cards.
     title: {
       heading: false,
-      stripTrailing: new RegExp(`\\s*\\b(?:${MONTH_PATTERN}|SPRING|SUMMER|AUTUMN|FALL|WINTER)\\b\\.?\\s*\\d.*$`, 'i'),
+      cardParts: { name: '.title', subtitle: '.subtitle:not(.subtitle2)', place: '.subtitle2' },
     },
     // Its two galleries. Used to cross-reference a show that ran in both.
     locations: ['New York', 'Palm Beach'],
@@ -4563,6 +4655,10 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
       log(`  ERROR extracting ${code} listing (${pg.ctx}): ${e.message.slice(0, 120)}`);
     }
   }
+
+  // The gallery on a title only where the same show runs in both — over the
+  // whole listing, before anything is cut. See placeTravellingRuns().
+  if (titleRule(code).cardParts) placeTravellingRuns(rows);
 
   // LISTING ONLY — for a diagnostic or a one-off repair that needs what the
   // listing pages say (titles, addresses) read exactly as a sweep reads them,
