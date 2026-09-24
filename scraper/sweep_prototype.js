@@ -2580,7 +2580,38 @@ async function restoreCase(link, title) {
 }
 
 async function extractTitle(link, venueCode) {
-  return restoreCase(link, await extractTitleAsShown(link, venueCode));
+  const title = await restoreCase(link, await extractTitleAsShown(link, venueCode));
+  return withPostTitle(link, titleRule(venueCode), title);
+}
+
+/**
+ * THE SECOND PART OF A TITLE, where the venue gives it a slot of its own —
+ * her ruling, 24 Sep. The National Gallery's card prints "Radical Harmony" as
+ * its heading and "Helene Kröller-Müller's Neo-Impressionists" beneath it in
+ * `.exhibition-post-title`; the heading alone reached her as the whole name.
+ * The museum's own text joins the two with a colon, so that is the join.
+ *
+ * Opt-in by selector, because the slot has to be one the VENUE marks as part
+ * of the title. A generic "line under the heading" is not: the Rijksmuseum's
+ * holds dates and slogans in the same place as name parts.
+ *
+ * Each part keeps its own letters (restoreCase on each), since a joined string
+ * never appears on the page and could not be looked up whole.
+ */
+async function withPostTitle(link, rule, title) {
+  if (!title || !rule.postTitle) return title;
+  try {
+    const el = await link.$(rule.postTitle);
+    if (!el) return title;
+    const post = squash(await getText(el));
+    if (!post) return title;
+    const typed = await restoreCase(el, post);
+    // A heading that already carries it must not get it twice.
+    if (title.toLowerCase().includes(typed.toLowerCase())) return title;
+    // Some headings already end in the colon ("Rachel Maclean:"), which a
+    // second one would double.
+    return /:\s*$/.test(title) ? `${squash(title)} ${typed}` : `${title}: ${typed}`;
+  } catch { return title; }
 }
 
 async function extractTitleAsShown(link, venueCode) {
@@ -3206,7 +3237,8 @@ const VENUES = {
                 || /\/exhibitions\/across-the-uk\/?$/.test(href),
     // Publishes schema.org Event data on detail pages — the only venue wired
     // so far that does. Picked up automatically; nothing needed here.
-    title: { heading: true },
+    // The card's second title line has its own slot; see withPostTitle().
+    title: { heading: true, postTitle: '.exhibition-post-title' },
   },
 
   rijks: {

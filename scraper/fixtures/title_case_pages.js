@@ -26,6 +26,7 @@
  *   node scraper/fixtures/title_case_pages.js
  */
 'use strict';
+const fs = require('fs');
 const path = require('path');
 const S = require('../sweep_prototype.js');
 const { chromium } = require('playwright');
@@ -67,6 +68,23 @@ const CASES = [
     ],
   },
   {
+    // Plain HTML, not a browser save: fetched 24 Sep with no browser, because
+    // the card's second title line is in the page as served. Served at its
+    // real address (not file://) so relative links resolve as on the site.
+    venue: 'ng',
+    url: 'https://www.nationalgallery.org.uk/exhibitions/past',
+    file: 'ng_past.html',
+    html: true,
+    named: [
+      // Heading + the card's own second title line (withPostTitle).
+      ['/exhibitions/past/radical-harmony-neo-impressionists', "Radical Harmony: Helene Kröller-Müller's Neo-Impressionists"],
+      // A heading that already ends in a colon is not given a second one.
+      ['/exhibitions/past/rachel-maclean-the-lion-and-the-unicorn', 'Rachel Maclean: The Lion and The Unicorn'],
+      // No second line on the card: the heading alone.
+      ['/exhibitions/past/zurbaran', 'Zurbarán'],
+    ],
+  },
+  {
     venue: 'tate-modern',
     url: 'https://www.tate.org.uk/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=exhibition',
     file: 'tate_modern_from_now.mhtml',
@@ -87,14 +105,22 @@ const squash = s => String(s || '').replace(/\s+/g, ' ').trim();
   const browser = await chromium.launch({ executablePath: S.resolveChromium(), headless: true });
   try {
     const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-    await context.route(u => u.protocol !== 'file:' && u.protocol !== 'about:', r => r.abort());
+    // Plain-HTML cases are answered at their real address; every other
+    // request is refused, so nothing leaves this machine.
+    const served = new Map(CASES.filter(c => c.html)
+      .map(c => [c.url, fs.readFileSync(path.join(PAGES, c.file))]));
+    await context.route(u => u.protocol !== 'file:' && u.protocol !== 'about:', r => {
+      const body = served.get(r.request().url());
+      return body ? r.fulfill({ status: 200, contentType: 'text/html', body }) : r.abort();
+    });
     const page = await context.newPage();
     const goto = page.goto.bind(page);
+    const open = (c, o) => c.html
+      ? goto(c.url, { ...o, waitUntil: 'load' })
+      : goto('file://' + path.join(PAGES, c.file), { ...o, waitUntil: 'load' });
 
     for (const c of CASES) {
-      page.goto = (url, o) => url === c.url
-        ? goto('file://' + path.join(PAGES, c.file), { ...o, waitUntil: 'load' })
-        : goto('about:blank');
+      page.goto = (url, o) => url === c.url ? open(c, o) : goto('about:blank');
 
       // The recipe's log lines are not this file's output.
       const log = console.log; console.log = () => {};
@@ -105,7 +131,7 @@ const squash = s => String(s || '').replace(/\s+/g, ' ').trim();
 
       // scrapeVenue ends on whichever page it visited last, so reload the saved
       // page to read its typed text.
-      await goto('file://' + path.join(PAGES, c.file), { waitUntil: 'load' });
+      await open(c, {});
       const typed = squash(await page.evaluate(() => document.body.textContent));
       const typedLower = typed.toLowerCase();
 

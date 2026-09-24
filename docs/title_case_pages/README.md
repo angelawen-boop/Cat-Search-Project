@@ -11,6 +11,12 @@ because the styling is what puts titles into capitals on screen.
 | `acq_exhibitions.mhtml` | https://www.acquavellagalleries.com/exhibitions |
 | `tate_modern_from_now.mhtml` | https://www.tate.org.uk/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=exhibition |
 
+Plus one that is NOT a browser save: `ng_past.html`, the National Gallery's past
+listing (https://www.nationalgallery.org.uk/exhibitions/past) fetched 24 Sep with no
+browser. Its cards are in the page as served, including the second title line in
+`.exhibition-post-title` — the slot that made *Radical Harmony* arrive without
+*Helene Kröller-Müller's Neo-Impressionists*.
+
 Used by `scraper/fixtures/title_case_pages.js`, which runs the real scraper over them
 with no network.
 
