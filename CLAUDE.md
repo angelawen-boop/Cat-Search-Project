@@ -941,7 +941,9 @@ those cards meanwhile.
 1. **Pages named twice or wrongly** — fixed 24 Sep, proven on her saved pages
    (`listing_pages.js`, `docs/listing_pages/`); shows from the next sweep.
    Brera was never a misfire — its archive lists running shows.
-2. **Extension note** never says where the new closing date came from.
+2. **Extension dates** — fixed 24 Sep: applied once, a missing year taken
+   from the date being extended, the note quotes its source. Gricci and
+   Lotto repaired in the file; Samorì's date was always right.
 
 *Titles at venues not yet reached*
 3. **Borghese: 7 titles still in capitals** — site down 24 Sep; its 3 listing

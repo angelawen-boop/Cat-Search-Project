@@ -23,7 +23,7 @@ const {
   classifyLoadError, isOwnListingPage, saysOngoing,
   expandYearArchive, listingPages, followPagination, VENUES, pickTitleLine,
   stripWeekdays,
-  addNote, finishNotes, scopeSelector,
+  addNote, finishNotes, scopeSelector, extensionNote,
 } = require('./sweep_prototype.js');
 const { seenOn, listingNote } = require('./listing_note.js');
 
@@ -1529,6 +1529,47 @@ test('EX-009: an extension naming the closing date already held is NOT a year la
   const b = findDateRangeInProse('(2 ottobre 2025- 13 gennaio 2026) … (2 ottobre- 6 gennaio, prorogato fino al 13 gennaio)');
   assert.equal(b.end, '2026-01-13');
   assert.equal(b.extendedFrom, undefined);
+});
+
+// EX-012 to EX-016 — 24 Sep, rebuilt: applied ONCE, the year from the date
+// being extended, and the note quotes where the new date came from.
+test('EX-012: the real Capodimonte pages — Gricci and Lotto unchanged, Samori extended', () => {
+  // Page text as swept 13 Sep. The old parser applied the rule twice: 2027.
+  const gricci = 'Dal 7 agosto 2025 al 11 novembre 2025, sala 20 primo piano … è il titolo dell\u2019allestimento, fino al 28 ottobre (prorogato fino al 11 novembre). In questa occasione';
+  const lotto = 'Lucina Brembati di Lorenzo Lotto è L\u2019Ospite Bergamasca (2 ottobre 2025- 13 gennaio 2026) Capodimonte … il nuovo \u2018ospite\u2019 del Museo e Real Bosco di Capodimonte (2 ottobre- 6 gennaio, prorogato fino al 13 gennaio)';
+  const samori = 'NICOLA SAMORÌ | CLASSICAL COLLAPSE Museo e Real Bosco di Capodimonte, Napoli 28 novembre 2025 \u2013 10 marzo 2026 \u2013 prorogata al 9 giugno 2026 Pinacoteca Ambrosiana, Milano';
+  for (const f of [findDateRange, t => findDateRangeInProse(t, '2025')]) {
+    const g = f(gricci), l = f(lotto), s = f(samori);
+    assert.deepEqual([g.start, g.end, g.extendedFrom], ['2025-08-07', '2025-11-11', undefined]);
+    assert.deepEqual([l.start, l.end, l.extendedFrom], ['2025-10-02', '2026-01-13', undefined]);
+    assert.deepEqual([s.start, s.end, s.extendedFrom], ['2025-11-28', '2026-06-09', '2026-03-10']);
+  }
+});
+
+test('EX-013: an OLDER extension the header has overtaken changes nothing', () => {
+  // Header already at 30 November; the prose still names the first extension.
+  const r = findDateRange('Dal 7 agosto 2025 al 30 novembre 2025. Fino al 28 ottobre (prorogato fino al 11 novembre)');
+  assert.equal(r.end, '2025-11-30');
+  assert.equal(r.extendedFrom, undefined);
+});
+
+test('EX-014: with no date to anchor on, a year is never guessed — and the note says so', () => {
+  const r = findDateRange('Dal 1 settembre 2025 al 30 novembre 2025. La mostra è prorogata fino al 11 novembre');
+  assert.equal(r.end, '2025-11-30');
+  assert.match(extensionNote(r), /^An extension is mentioned but its year is not stated.*"prorogata fino al 11 novembre"\.$/);
+});
+
+test('EX-015: the note quotes where the new closing date came from', () => {
+  const r = findDateRange('Dal 28 novembre 2025 al 10 marzo 2026 - prorogata al 9 giugno 2026');
+  assert.equal(extensionNote(r), 'Closing date extended from 10 Mar 2026 to 9 Jun 2026: "prorogata al 9 giugno 2026".');
+  assert.equal(extensionNote(findDateRange('Dal 16 ottobre 2025 al 6 gennaio 2026')), '');
+});
+
+test('EX-016: the prose parser applies the rule exactly once', () => {
+  // A year-less extension applied twice moved a year per application.
+  const r = findDateRangeInProse('From December 5 to December 20, 2025, extended through January 18', '2025');
+  assert.equal(r.end, '2026-01-18');
+  assert.equal(r.extendedFrom, '2025-12-20');
 });
 
 test('EX-010: an earlier day with no year still crosses into the next year', () => {

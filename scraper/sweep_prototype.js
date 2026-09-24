@@ -881,52 +881,93 @@ const EXTENDED_TO = new RegExp(
  */
 function applyExtension(range, text) {
   if (!range || !range.end || !text) return range;
-  const m = String(text).match(EXTENDED_TO);
+  const t = String(text);
+  const m = EXTENDED_TO.exec(t);
   if (!m) return range;
 
-  const endYear = Number(range.end.slice(0, 4));
-  const M = MONTH_PATTERN;
-  let day = 0, mon = 0, year = 0;
+  const dm = readDayMonth(m[1]);
+  if (!dm) return range;
+  let { day, mon, year } = dm;
+  const quote = frag(m);
 
-  const numeric = m[1].match(/^(\d{1,2})\s*[/.]\s*(\d{1,2})\s*[/.]\s*(\d{4})$/);
-  const dayFirst = m[1].match(new RegExp(`^(\\d{1,2})\\s+(${M})(?:\\s+(\\d{4}))?$`, 'i'));
-  const monthFirst = m[1].match(new RegExp(`^(${M})\\s+(\\d{1,2})(?:,?\\s*(\\d{4}))?$`, 'i'));
-
-  if (numeric) {
-    // Day-first: every venue seen writing this writes dd/mm/yyyy.
-    [day, mon, year] = [+numeric[1], +numeric[2], +numeric[3]];
-  } else if (dayFirst) {
-    [day, mon, year] = [+dayFirst[1], monthNum(dayFirst[2]), dayFirst[3] ? +dayFirst[3] : 0];
-  } else if (monthFirst) {
-    [day, mon, year] = [+monthFirst[2], monthNum(monthFirst[1]), monthFirst[3] ? +monthFirst[3] : 0];
-  } else {
-    return range;
-  }
-  if (!mon || !day) return range;
-
-  // NO YEAR PUBLISHED ON THE EXTENSION, which is the usual case in prose:
-  // Borghese writes "extension through October 11" and nothing more. The year
-  // is not guessed — it is DERIVED from the fact that an extension is later
-  // than the date it replaces. Try the closing date's own year first, and only
-  // if that lands BEFORE the original closing date does the run cross into the
-  // next one.
-  //
-  // THE SAME DAY IS NOT A NEW YEAR. Capodimonte prints the extended date in its
-  // header AND repeats it in prose: "Dal 7 agosto 2025 al 11 novembre 2025 …
-  // fino al 28 ottobre (prorogato fino al 11 novembre)". The range already
-  // closes on 11 November, the phrase names 11 November again, and "on or
-  // before" rolled it into the next year — Gricci closed 2027-11-11 and Lotto's
-  // Lucina Brembati 2027-01-13, each a year late. Both reached her pile and she
-  // rejected them, 23 Sep. A repeat of the date already held is no extension.
+  // NO YEAR ON THE EXTENSION — the usual case in prose. It is derived from THE
+  // DATE IT EXTENDS: the closing date written just before the trigger, in the
+  // same passage. Capodimonte: "fino al 28 ottobre (prorogato fino al 11
+  // novembre)" extends 28 October, so it is 11 November of that year; "until
+  // 20 December, extended to 18 January" crosses into the next — the ONLY way
+  // a year is ever added. Never derived from the range's closing date and
+  // rolled forward: that date may already BE the extension (Capodimonte's
+  // header prints it), and rolling it on put Gricci and Lotto a year late.
   if (!year) {
-    year = endYear;
-    const same = ymd(year, mon, day);
-    if (same === range.end) return range;
-    if (same < range.end) year = endYear + 1;
+    const before = precedingDate(t.slice(0, m.index), range.end);
+    if (before) {
+      year = Number(before.slice(0, 4));
+      if (ymd(year, mon, day) <= before) year += 1;
+    } else {
+      // Nothing to anchor on: the closing date's own year, taken only if that
+      // is later. Otherwise the year is unknown and the note says so.
+      year = Number(range.end.slice(0, 4));
+      const same = ymd(year, mon, day);
+      if (same && same < range.end) return { ...range, extensionUnclear: quote };
+    }
   }
   const iso = ymd(year, mon, day);
+  // Only ever LATER. The same date is the header repeating itself; an earlier
+  // one is an older extension the header has overtaken.
   if (!iso || iso <= range.end) return range;
-  return { ...range, end: iso, extendedFrom: range.end };
+  return { ...range, end: iso, extendedFrom: range.end, extendedRaw: quote };
+}
+
+/** "11 novembre", "October 11", "02/11/2025" → { day, mon, year (0 if none) }. */
+function readDayMonth(s) {
+  const M = MONTH_PATTERN;
+  const numeric = s.match(/^(\d{1,2})\s*[/.]\s*(\d{1,2})\s*[/.]\s*(\d{4})$/);
+  if (numeric) return { day: +numeric[1], mon: +numeric[2], year: +numeric[3] };  // day-first everywhere seen
+  const dayFirst = s.match(new RegExp(`^(\\d{1,2})\\s+(${M})(?:\\s+(\\d{4}))?$`, 'i'));
+  if (dayFirst) return ok(+dayFirst[1], monthNum(dayFirst[2]), +(dayFirst[3] || 0));
+  const monthFirst = s.match(new RegExp(`^(${M})\\s+(\\d{1,2})(?:,?\\s*(\\d{4}))?$`, 'i'));
+  if (monthFirst) return ok(+monthFirst[2], monthNum(monthFirst[1]), +(monthFirst[3] || 0));
+  return null;
+  function ok(day, mon, year) { return day && mon ? { day, mon, year } : null; }
+}
+
+/**
+ * The date an extension replaces: the LAST day-and-month in the same passage
+ * before the trigger — back to the previous full stop, at most 80 characters.
+ * Its own year if printed; otherwise the closing date's year, or the year
+ * before when that would put it after the closing date. '' if there is none.
+ */
+function precedingDate(before, closing) {
+  const M = MONTH_PATTERN;
+  const tail = before.slice(-80).split(/\.\s/).pop();
+  const re = new RegExp(`(\\d{1,2})\\s+(${M})(?:\\s+(\\d{4}))?|(${M})\\s+(\\d{1,2})(?:,?\\s*(\\d{4}))?`, 'gi');
+  let last = null, x;
+  while ((x = re.exec(tail))) last = x;
+  if (!last) return '';
+  const day = +(last[1] || last[5]), mon = monthNum(last[2] || last[4]);
+  let year = +(last[3] || last[6] || 0);
+  if (!day || !mon) return '';
+  if (!year) {
+    year = Number(closing.slice(0, 4));
+    if (ymd(year, mon, day) > closing) year -= 1;
+  }
+  return ymd(year, mon, day) || '';
+}
+
+/** The one note for an extension, on every path: where the new date came from. */
+function extensionNote(range) {
+  if (range.extendedFrom) {
+    return `Closing date extended from ${dayText(range.extendedFrom)} to ${dayText(range.end)}: "${range.extendedRaw}".`;
+  }
+  if (range.extensionUnclear) {
+    return `An extension is mentioned but its year is not stated, so the closing date was left as published: "${range.extensionUnclear}".`;
+  }
+  return '';
+}
+
+function dayText(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
 }
 
 // BEFORE CHANGING ANYTHING IN THIS PARSER, READ docs/scraper.md SECTION 3.
@@ -1431,7 +1472,9 @@ function findDateRangeInProseCore(text, hintYear) {
   // any pattern either parser knows is available to both.
   // Ranges and preposition-anchored dates only. The bare single-date rules are
   // listing-card rules and would match a photo caption or a footer here.
-  const viaListing = findDateRange(s, { looseSingles: false });
+  // The CORE, not findDateRange: the wrapper below applies the extension, and
+  // applying it here too ran it twice — Gricci and Lotto each a year late.
+  const viaListing = findDateRangeCore(s, { looseSingles: false });
   if (viaListing.start || viaListing.end) return viaListing;
 
   return { start: '', end: '', raw: '' };
@@ -3347,10 +3390,8 @@ async function collectFromListing(page, opts) {
     // SAY SO WHERE A RUN WAS EXTENDED. The closing date then differs from the
     // one the venue first announced, and she should see that on the card rather
     // than wonder why it disagrees with something she remembers.
-    if (dates.extendedFrom) {
-      row.notes = addNote(row.notes,
-        `The venue extended this exhibition; it first announced ${dates.extendedFrom} as the closing date.`);
-    }
+    const ext = extensionNote(dates);
+    if (ext) row.notes = addNote(row.notes, ext);
 
     // WHERE THE LISTING ITSELF CARRIES THE BLURB, take it here and mark the row
     // so the detail pass leaves it alone. `_fromListing` is internal and never
@@ -5319,10 +5360,8 @@ async function fetchIndividualPages(page, rows, venueCode) {
           // prorogata al 9 giugno 2026"; the row closed correctly on 9 June but
           // the note quoted only the first range, so the card contradicted its
           // own dates and she rejected a correct row, 23 Sep.
-          if (p.extendedFrom && filled.includes('closing')) {
-            row.notes = addNote(row.notes,
-              `The venue extended this exhibition; it first announced ${p.extendedFrom} as the closing date.`);
-          }
+          const ext = filled.includes('closing') ? extensionNote(p) : '';
+          if (ext) row.notes = addNote(row.notes, ext);
           // Say so when the year came from somewhere else. The sentence quoted
           // above carries no year, so without this the note reads as though the
           // page stated a full date and she has no way to see the join.
@@ -5814,7 +5853,7 @@ module.exports = {
   findDateRange, findDateRangeInProse, parseMonthDay,
   // Exported for the 23 Sep repair of her import file, which must apply the
   // CORRECTED rule rather than a copy of it.
-  applyExtension, ymd, startYearFor,
+  applyExtension, extensionNote, ymd, startYearFor,
   // Mirrored in compress.js, which orders run folders by it; MEM-006.
   RUN_TZ,
   // Exported so the weekday strip can be tested for what it does rather than

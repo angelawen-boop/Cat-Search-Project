@@ -209,3 +209,14 @@ those two pages, the second read them, and compression described them. The
 venue + address + title — identical in both — and kept the first, empty one.
 Restored from the 13 Sep compression after checking it was written from the
 identical text. These were the only two rows the rebuild lost.
+
+### Extension dates, 24 Sep — `stitch_20260924_0417/repair_extensions_24sep.js`
+
+A year-less "prorogato fino al 11 novembre" was applied twice by the scraper,
+a year added each time: Gricci closed 2027-11-11, Lotto's Lucina Brembati
+2027-01-13. Repaired from the 13 Sep page text on disk, no network: a date
+changes only where the old parser (from git) reproduces the file's dates and
+the fixed parser, on the same text, gives another closing date. Exactly those
+two. Three rows whose extended date was already right — Samorì, Brera's
+Armani, Borghese's Metamorphoses — gained the note saying where it came from.
+Five cells changed in 419 rows; nothing else.
