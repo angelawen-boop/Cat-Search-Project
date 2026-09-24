@@ -304,7 +304,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 33, 23 Sep 2026, is live; 33.1 is built and NOT yet published (24 Sep).** The file is `Cat_Watch.jsx` — renamed from
+**Version 33.1, 24 Sep 2026, is live.** The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
