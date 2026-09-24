@@ -10,8 +10,10 @@
  * pages read live, 30 s apart. Scraper code, not hand-typed.
  *
  * RULE: a title is replaced only where the reading at the SAME ADDRESS is the
- * same letters in different case. Nothing else in the row is touched. Every
- * other capitals title is left as it is and listed.
+ * same letters in different case — or where the title is a status label the
+ * venue's own recipe refuses (notATitle) and that address's own page was read
+ * for its heading. Nothing else in the row is touched. Every other capitals
+ * title is left as it is and listed.
  *
  *   node titles_24sep.js            report only
  *   node titles_24sep.js --apply    write sweep_titles_24sep.csv
@@ -38,6 +40,15 @@ const changed = [], left = [];
 for (const r of rows) {
   if (!capitals(r.title) || r.title.startsWith('[')) continue;
   const got = read[S.normalizeUrl(r.url)];
+  // A STATUS LABEL IN THE TITLE — the only other replacement. Decided by the
+  // venue's own recipe rule (notATitle), never by this script, and only where
+  // the exhibition's own page at the same address was read for its heading.
+  const rule = (S.VENUES[r.venue_code] || {}).title || {};
+  if (got && rule.notATitle && rule.notATitle.test(r.title) && /^own page/.test(got.from)) {
+    changed.push(`${r.venue_code.padEnd(12)} ${r.title}  →  ${got.title}   (status label, not a title; ${got.from})`);
+    r.title = got.title;
+    continue;
+  }
   if (got && got.title !== r.title && got.title.toLowerCase() === r.title.toLowerCase()) {
     changed.push(`${r.venue_code.padEnd(12)} ${r.title}  →  ${got.title}   (${got.from})`);
     r.title = got.title;

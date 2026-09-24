@@ -1180,6 +1180,21 @@
    "venue": "louvre",
    "title": "Medieval Morocco",
    "from": "live read 24 Sep"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/fiep-westendorp": {
+   "venue": "rijks",
+   "title": "Fiep Westendorp",
+   "from": "own page, live read 24 Sep (heading)"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/asian-pavilion": {
+   "venue": "rijks",
+   "title": "Asian Pavilion",
+   "from": "own page, live read 24 Sep (heading)"
+  },
+  "https://www.rijksmuseum.nl/en/whats-on/exhibitions/ed-van-der-elsken": {
+   "venue": "rijks",
+   "title": "Ed van der Elsken. Up Close",
+   "from": "saved past page, card at /exhibitions/past/ed-van-der-elsken-up-close: heading \"Ed van der Elsken\", subtitle \"Up Close\", 19 June - 13 Sep 2026. This address now answers 404"
   }
  }
 }
