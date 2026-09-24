@@ -1807,7 +1807,7 @@ test('XT-001: Menil — foyer installations, its own collection, recent acquisit
 });
 
 test('XT-002: Art Institute — its own collection only; lent and named collections stay', () => {
-  xt('artic', ['Threaded Visions: Contemporary Weavings from the Collection'],
+  xt('artic', ['Threaded Visions: Contemporary Weavings from the Collection', 'Screens: A Panafrica Film Series'],
   ['Contemporary Drawings from the Stenn Family Collection',
    'Self, Made: Fourteen Modern Artists from the Richard and Ellen Sandor Family Collection',
    'French Neoclassical Paintings from The Horvitz Collection',

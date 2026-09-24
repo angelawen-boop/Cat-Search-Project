@@ -159,7 +159,7 @@ Judgement about the outside world is not in any file.
 | `tate-modern`, `tate-britain` | Exhibitions only, never collection displays (24 Sep). No past exhibitions yet; the "recently opened" page is not an archive and is not fetched |
 | `tate-modern` | **Never its past exhibitions**, though she knows where they are (24 Sep) |
 | `uffizi` | Headlines kept as titles; undated rows kept |
-| `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Bare "from the Collection" excluded; family, named and lent collections KEPT (24 Sep) No note on the card for films or installations; no model judging rows — compression stays mechanical (24 Sep) |
+| `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Bare "from the Collection" and titles with "Film Series" excluded; family, named and lent collections KEPT (24 Sep). No note on the card for films or installations; no model judging rows — compression stays mechanical (24 Sep) |
 | `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection, a gift or acquisitions** — they can be major (24 Sep) |
 | `moma` | **Current and upcoming only.** She does not want its past at all |
 | `morgan` | *Collections Spotlight* excluded — a standing rotation, not a show. Past blurbs read off the listing, pages not opened |
@@ -1044,6 +1044,10 @@ through, but it is real work and nothing else on this list covers it.
 - **Sweeper brief v3** — the Chat-Claude-era instruction document still needs its
   URL corrections. Expect it to end up as the fallback procedure for blocked
   venues rather than the main sweep.
+- **Art Institute films by room — reopen only if the bin fills again.** Both
+  films in her saved pages sat in Gallery 186 or 188 (`docs/artic_pages/`
+  README). Idea: record each show's room at the next sweep, report the shows in
+  those rooms, exclude only if the list is all films. Unproven on two pages.
 - **A QA pass before the stitch** — parked with everything else from 16 Sep. It
   may be a good idea; it came out of a session whose reasoning she does not trust.
   `qc.js`'s exceptions report is NOT that pass and does not re-open it.

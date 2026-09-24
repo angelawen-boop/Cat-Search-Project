@@ -4149,7 +4149,9 @@ const VENUES = {
     // collection ("from the Bronze Collection") gets through; she quarantines
     // those by hand, knowingly. The museum labels them all EXHIBITION, so its
     // tag cannot reach them.
-    excludeTitle: /\bfrom the Collection\b(?!\s+of\b)/i,
+    // AND A FILM SERIES, by the venue's own title — her ruling, 24 Sep. The
+    // title names what it is; a description word would not be as safe.
+    excludeTitle: /\bfrom the Collection\b(?!\s+of\b)|\bFilm Series\b/i,
     // HER MACHINE ONLY — see machineVenues(). Same reasoning as met.
     route: 'local',
     // BLOCKED FROM THIS CONTAINER, WORKS FROM HERS. A Cloudflare managed
