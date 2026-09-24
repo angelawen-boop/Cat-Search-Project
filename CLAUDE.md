@@ -958,9 +958,7 @@ copy.** Any later repair lands in the same file, and she is told.
 *App*
 6. **Dismissed filter with a venue filter** — fixed 24 Sep in 33.1.
 
-Expect debugging to fall out of it. Also still to do: a save round-trip after the
-import — export, re-import that file, confirm quarantine and per-venue freshness
-both survive.
+Save round-trips after the import work — her confirmation, 24 Sep.
 
 **It is done in sittings, and version 32 has the door for that — TEMPORARY, to
 be unwired when this import is finished.** A second button beside the gate
@@ -1030,7 +1028,11 @@ fewest loads with certainty. Venue by venue; the recipes work, so not now.
 The import file was swept 13 Sep. Not urgent while the decisions are being worked
 through, but it is real work and nothing else on this list covers it.
 
-### 6. Smaller, parked
+### 6. More French venues
+
+Her note, 24 Sep. The Louvre is the only one today. Which venues: not yet named.
+
+### 7. Smaller, parked
 
 - **A dead shop link is still stored silently.** Step one opens the shop's own
   pages now, so the link is read off a page the shop served — but nothing checks
