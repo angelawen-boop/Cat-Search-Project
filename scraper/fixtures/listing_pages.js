@@ -48,7 +48,7 @@ const CASES = [
     // Frida is linked three times on this page — search promo, featured
     // strip, results grid. On ONE page that cannot misfire, so this proves
     // only that reading the grid alone loses nothing: all 13 shows. The
-    // misfires were on the "recently opened" page, which is not saved.
+    // misfires came from the "recently opened" page, no longer fetched.
     pages: {
       'https://www.tate.org.uk/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=exhibition':
         'title_case_pages/tate_modern_from_now.mhtml',

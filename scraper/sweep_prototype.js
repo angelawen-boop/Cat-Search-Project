@@ -3860,11 +3860,11 @@ const VENUES = {
   // asks for both, and was copied as it stood; nobody decided displays were
   // wanted. Tate's collection displays are not shows she tracks.
   //
-  // date_range=past is NOT an archive, despite its name. Every item it returns
-  // for Tate Britain also appears under from_now, so it means "has already
-  // opened" rather than "has closed". Both are fetched anyway and the URL guard
-  // collapses the overlap, which is exactly what that guard is for. Tate
-  // publishes no past archive; that is a site limit, not a gap here.
+  // date_range=past is NOT an archive, despite its name: it means "has
+  // already opened", and everything it returns is also under from_now. NOT
+  // FETCHED since 24 Sep, her decision: it never contributed a row of its own,
+  // and its promo cards made shows "also listed" on it. Tate Britain's real
+  // archive is on the roadmap; Tate Modern's past, never (CLAUDE.md §2).
   louvre: {
     name: 'Louvre, Paris',
     base: 'https://www.louvre.fr',
@@ -4347,7 +4347,6 @@ const VENUES = {
     // line above is one to add — on that evidence, not for symmetry.
     pages: [
       { path: '/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=exhibition', ctx: 'current/upcoming' },
-      { path: '/whats-on?date_range=past&gallery_group=tate-modern&event_type=exhibition',     ctx: 'recently opened' },
     ],
     // The path carries the gallery, so this also excludes Tate St Ives and Tate
     // Liverpool — neither is one of her 21 — with no text matching at all. They
@@ -4384,7 +4383,6 @@ const VENUES = {
     excludeOngoing: true,
     pages: [
       { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition', ctx: 'current/upcoming' },
-      { path: '/whats-on?date_range=past&gallery_group=tate-britain&event_type=exhibition',     ctx: 'recently opened' },
     ],
     selector: 'a[href*="/whats-on/tate-britain/"]',
     // THE RESULTS GRID ONLY. The header's search promo and the featured strip

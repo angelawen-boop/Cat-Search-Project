@@ -156,7 +156,7 @@ Judgement about the outside world is not in any file.
 | `wallace` | Displays and trails KEPT — **this venue only** |
 | `menil` | 7 permanent galleries excluded; "Foyer Installation: …" rows excluded (23 Sep) |
 | `tate-britain` | Ofili excluded, on the venue's own ONGOING label |
-| `tate-modern`, `tate-britain` | Exhibitions only, never collection displays (24 Sep). No past exhibitions yet — the "recently opened" page is not an archive |
+| `tate-modern`, `tate-britain` | Exhibitions only, never collection displays (24 Sep). No past exhibitions yet; the "recently opened" page is not an archive and is not fetched |
 | `tate-modern` | **Never its past exhibitions**, though she knows where they are (24 Sep) |
 | `uffizi` | Headlines kept as titles; undated rows kept |
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Shows "from the … Collection" excluded (23 Sep) |
@@ -940,9 +940,8 @@ those cards meanwhile.
 *Sweeper notes*
 1. **Pages named twice or wrongly** — fixed 24 Sep in code, proven on saved
    pages (`listing_pages.js`); shows from the next sweep. Still needs `within`
-   at `brera`, `frick`, `wallace` from pages she saves. **Tate's misfires were
-   on its "recently opened" page, which is unsaved** — `within` is set from
-   the from-now page's layout, unproven there.
+   at `brera`, `frick`, `wallace` from pages she saves. Tate's misfires came
+   from its "recently opened" page, no longer fetched.
 2. **Extension note** never says where the new closing date came from.
 
 *Titles at venues not yet reached*

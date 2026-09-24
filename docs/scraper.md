@@ -891,8 +891,8 @@ open, to be confirmed only as a by-product of a sweep that was happening anyway:
 | The load-more fix beyond the Louvre | No other venue has such a control today |
 
 **`met` needs nothing** — her check: its year pages load whole, nothing to click.
-`tate-modern`/`tate-britain` "recently opened" pages 1-4: **her ruling, the
-structure grows as needed and is not triggered — nothing to do.**
+`tate-modern`/`tate-britain` "recently opened" pages: **no longer fetched,
+24 Sep** — not an archive, and the source of misfired "Also listed" notes.
 
 ---
 
