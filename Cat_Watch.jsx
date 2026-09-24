@@ -13,8 +13,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "33";
-const APP_VERSION_DATE = "23 Sep 2026";
+const APP_VERSION = "33.1";
+const APP_VERSION_DATE = "24 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
 // size — it is the order she wants to WORK in. The venues she reads most come
@@ -1095,6 +1095,10 @@ export default function App(){
   const[quarantine,setQuarantine]=useState({});
   const[quarWhy,setQuarWhy]=useState(null);
   const ignored=useMemo(()=>activeQuarantine(quarantine),[quarantine]);
+  const ignoredByVenue=useMemo(()=>{
+    const ord=id=>{ const i=MUSEUMS.findIndex(m=>m.id===id); return i<0?MUSEUMS.length:i; };
+    return ignored.slice().sort((a,b)=>ord(a.venueId)-ord(b.venueId)||String(a.title||"").localeCompare(String(b.title||"")));
+  },[ignored]);
   const[showIgnored,setShowIgnored]=useState(false);
   // PER-VENUE FRESHNESS, and it has to be TWO facts. One global lastRun cannot
   // say "artic was tried today and last gave us rows on 13 Sep", which is the
@@ -2484,14 +2488,6 @@ export default function App(){
               A control that disappears cannot report anything. */}
           <button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide venues":"By venue"}</button>
         </div>
-        {/* QUARANTINE SITS ON ITS OWN ROW — her ruling, 20 Sep. It had been
-            tucked in beside the refresh line, which reads as though it is part
-            of refreshing. It is not: a quarantine is a standing decision about
-            what may never enter the ledger, and it holds whether or not a
-            sweep ever happens again. */}
-        {ignored.length>0&&<div style={{marginTop:6,fontSize:10.5,color:C.soft}}>
-          <button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>
-        </div>}
 
         {/* NOT GATED ON A LEDGER BEING OPEN. The sweep log is not part of her
             document — it is what this page knows about the world, so it is
@@ -2531,27 +2527,6 @@ export default function App(){
             </div>}
         </div>}
 
-        {showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
-          {/* BIG ENOUGH TO READ — her finding, 20 Sep: "tiny AND faint". This
-              is a list of decisions she may need to UNDO, so it cannot be the
-              smallest, palest text on the screen. Set at or above the filter
-              chips below it, in the body ink rather than the muted grey. */}
-          <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
-            {"Entries excluded from all future imports. Removing them from quarantine will re-offer them in future sweeps \u2014 it does not immediately add them to your ledger."}
-          </div>
-          {ignored.map(x=>(
-            <div key={x.key} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
-              <span style={{minWidth:130,fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
-              <span style={{flex:1}}>{x.title||"(no title)"}</span>
-              <button onClick={()=>{
-                const at=new Date().toISOString();
-                setQuarantine(prev=>{ const next=mergeQuarantine(prev,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}});
-                  writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy("That release couldn\u2019t be saved to this page\u2019s store, so it may come back when you reload."); });
-                  return next; });
-                setDirty(true);}} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Remove from quarantine</button>
-            </div>
-          ))}
-        </div>}
         <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",alignItems:"center"}}>
           <span><b style={{color:C.ink}}>{counts.total}</b> Tracked</span>
           <span><b style={{color:C.ink}}>{counts.wanted}</b> Wanted</span>
@@ -2752,10 +2727,42 @@ export default function App(){
           <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:C.onAction,fontSize:14,fontWeight:600,cursor:"pointer",padding:"3px 10px"}}>Undo</button>
         </div>
       )}
-      <div style={{maxWidth:760,margin:"18px auto 0",paddingTop:10,borderTop:"1px solid "+C.rule,fontSize:10,color:C.soft,lineHeight:1.6}}>
-        Built-in starter set from venue pages, 20 Aug 2026.{" "}
-        <button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset ledger</button>
-        {" \u2014 force-loads the starter set onto the screen."}
+      {/* QUARANTINE LIVES DOWN HERE — her ruling, 24 Sep. At eye level at the
+          top it read as an overflow bin. Right-aligned on the starter-set line,
+          in that line's own type; its drawer opens beneath. */}
+      <div style={{maxWidth:760,margin:"18px auto 0",paddingTop:10,borderTop:"1px solid "+C.rule,fontSize:10,color:C.soft,lineHeight:1.6,display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:12,flexWrap:"wrap"}}>
+        <span>
+          Built-in starter set from venue pages, 20 Aug 2026.{" "}
+          <button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset ledger</button>
+          {" \u2014 force-loads the starter set."}
+        </span>
+        {ignored.length>0&&<button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0,marginLeft:"auto"}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>}
+      </div>
+      <div style={{maxWidth:760,margin:"0 auto"}}>
+        {showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
+          {/* BIG ENOUGH TO READ — her finding, 20 Sep: "tiny AND faint". This
+              is a list of decisions she may need to UNDO, so it cannot be the
+              smallest, palest text on the screen. Set at or above the filter
+              chips below it, in the body ink rather than the muted grey. */}
+          <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
+            {"Entries excluded from all future imports. Removing them from quarantine will re-offer them in future sweeps \u2014 it does not immediately add them to your ledger."}
+          </div>
+          {/* BY VENUE ONLY — her ruling, 24 Sep. It listed newest decision
+              first, so each import session formed its own block. Venues in the
+              app's own order, titles A–Z within each. */}
+          {ignoredByVenue.map(x=>(
+            <div key={x.key} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
+              <span style={{minWidth:130,fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
+              <span style={{flex:1}}>{x.title||"(no title)"}</span>
+              <button onClick={()=>{
+                const at=new Date().toISOString();
+                setQuarantine(prev=>{ const next=mergeQuarantine(prev,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}});
+                  writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy("That release couldn\u2019t be saved to this page\u2019s store, so it may come back when you reload."); });
+                  return next; });
+                setDirty(true);}} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Remove from quarantine</button>
+            </div>
+          ))}
+        </div>}
       </div>
       {proposals&&(
         <div style={{position:"fixed",inset:0,background:"rgba(20,18,16,0.5)",zIndex:1100,display:"flex",flexDirection:"column",padding:16}}>
