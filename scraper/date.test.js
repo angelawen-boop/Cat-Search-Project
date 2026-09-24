@@ -1701,19 +1701,6 @@ test('AC-001: Art Institute — only its OWN collection is excluded (her ruling,
     assert.equal(re.test(t), false, t);
 });
 
-test('AC-002: Art Institute films and installations are flagged on the card, never dropped', () => {
-  const { flagFromDescription } = require('./sweep_prototype.js');
-  const re = VENUES.artic.flagWords;
-  const r = flagFromDescription({ title: 'Leslie Thornton: Jennifer, Where Are You?', notes: 'Found.',
-    summary: 'This 1981 film considers speech and perception.' }, re);
-  assert.equal(r.notes, 'Found. The venue\'s own description uses the word "film".');
-  // A show whose description says none of the words gets no note.
-  const k = flagFromDescription({ title: 'Mary Cassatt', notes: 'Found.', summary: 'Paintings and prints.' }, re);
-  assert.equal(k.notes, 'Found.');
-  // Marker rows are never touched.
-  assert.equal(flagFromDescription({ title: '[past page]', notes: 'x', summary: 'film' }, re).notes, 'x');
-});
-
 // RT-001 to RT-005 — the name on the exhibition's own page, every venue,
 // 24 Sep (titleFromPage). Real headings, lines and tab titles from seven live
 // pages at the two museums that settled the rule.
@@ -1828,17 +1815,19 @@ test('XT-002: Art Institute — its own collection only; lent and named collecti
    'Treasures from the Collection of Jane Doe', 'Mary Cassatt: After Impressionism']);
 });
 
-test('XT-003: Met — recurring series, commissions, rotations; its own-collection shows stay', () => {
+test('XT-003: Met — recurring series and commissions; NOTHING for coming from a collection', () => {
   xt('met', ['P. S. Art 2026: Celebrating the Creative Spirit of New York City Kids',
     'The Celebration: A Selection of Works by the 2025 Scholastic Art & Writing Awards New York City Gold Key Recipients',
     'A Decade on Paper: Recent Acquisitions, 2014–2024', 'Emulating Books: Book Objects from the Lynn and Bruce Heckman Gift',
     'Art of Commerce: Trade Catalogs in Watson Library', 'Christmas Tree and Neapolitan Baroque Crèche',
-    'Human/Nature: Selections from the Department of Drawings and Prints',
-    'Chinese Painting and Calligraphy: Selections from the Collection',
+    'Baseball Cards from the Collection of Jefferson R. Burdick',
     'The Genesis Facade Commission: Liu Wei, Speculation', 'The Great Hall Commission: Tong Yang-Tze, Dialogue',
     'The Roof Garden Commission: Jennie C. Jones, Ensemble'],
   ['View Finding: Selections from The Walther Collection',
    'Making It Modern: European Ceramics from the Martin Eidelberg Collection',
-   'Baseball Cards from the Collection of Jefferson R. Burdick', 'Rediscovering Della Robbia at The Met',
+   'Human/Nature: Selections from the Department of Drawings and Prints',
+   'Chinese Painting and Calligraphy: Selections from the Collection',
+   'Independence and Identity: Selections from the Department of Drawings and Prints',
+   'Rediscovering Della Robbia at The Met',
    'Lineages: Korean Art at The Met', 'Ink and Ivory: Indian Drawings and Photographs Selected with James Ivory']);
 });

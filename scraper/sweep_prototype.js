@@ -3477,16 +3477,20 @@ const VENUES = {
     name: 'The Metropolitan Museum of Art',
     // RECURRING SERIES AND COLLECTION ROTATIONS — her ruling, 24 Sep. Most of
     // her Met quarantine was series that return every year at a NEW address
-    // (P.S. Art, Scholastic, the crèche), which quarantine, keyed on the
-    // address, cannot hold. Her own-collection shows are NOT excluded as such:
-    // at the Met they can be major and carry catalogues. Every commission
-    // series is out (Facade, Great Hall, Roof Garden).
+    // (P.S. Art, Scholastic, the crèche, the Burdick baseball cards), which
+    // quarantine, keyed on the address, cannot hold. NOTHING is excluded for
+    // coming from a collection — "Selections from the Department of …", "from
+    // the Collection" and the like stay: at the Met they can be major shows
+    // with catalogues. Every commission series is out (Facade, Great Hall,
+    // Roof Garden).
     excludeTitle: new RegExp([
       /^P\.\s?S\.\s?Art\b/, /\bScholastic Art (?:&|and) Writing\b/,
       /\bRecent Acquisitions\b/, /\bfrom the\b.*\bGift\b/, /\bWatson Library\b/,
       /\bChristmas Tree and Neapolitan\b/,
-      /\bSelections from the (?:Department of|Collection\b)/,
       /\bCommission:/,
+      // Rotated every few months, a new address each time — she quarantined it
+      // three times. A named series, not a rule about collections.
+      /\bBaseball Cards from the Collection of Jefferson R\. Burdick\b/,
     ].map(r => r.source).join('|'), 'i'),
     base: 'https://www.metmuseum.org',
     // HER MACHINE ONLY — see machineVenues(). The container is answered 429 on
@@ -4146,9 +4150,6 @@ const VENUES = {
     // those by hand, knowingly. The museum labels them all EXHIBITION, so its
     // tag cannot reach them.
     excludeTitle: /\bfrom the Collection\b(?!\s+of\b)/i,
-    // Films, moving-image works and installations — flagged, not excluded.
-    // See flagFromDescription().
-    flagWords: /\b(films?|videos?|moving[- ]image|screenings?|site[- ]specific|in situ)\b/i,
     // HER MACHINE ONLY — see machineVenues(). Same reasoning as met.
     route: 'local',
     // BLOCKED FROM THIS CONTAINER, WORKS FROM HERS. A Cloudflare managed
@@ -4546,26 +4547,6 @@ const VENUE_ORDER = Object.keys(VENUES);
 /**
  * The engine. Every venue goes through this; none has its own copy.
  */
-/**
- * Say on the card when the venue's OWN description uses a word for something
- * she does not collect — "film", "video", "site-specific". Her ruling, 23 Sep,
- * for the Art Institute: films, moving-image works and installations are out,
- * but no rule tells them apart cleanly. Tested against her quarantine, the
- * opening of the description caught 8 of her 11 and one show she kept, so it FLAGS and never
- * drops: a wrong drop would lose an exhibition she never saw, a wrong note
- * costs one glance. The note quotes the word, so it is a fact about the page.
- */
-function flagFromDescription(row, re) {
-  if (!row || !row.summary || String(row.title || '').startsWith('[')) return row;
-  // THE OPENING ONLY — where a venue says what the show IS. Read whole, the
-  // same words turned up later in shows she kept (a photographer's "film",
-  // Samaras's Polaroids): 12 flags, 4 wrong. The first 600 characters: 9
-  // flags, 1 wrong, measured on the 13 Sep sweep.
-  const m = String(row.summary).slice(0, 600).match(re);
-  if (m) row.notes = addNote(row.notes, `The venue's own description uses the word "${m[0].toLowerCase()}".`);
-  return row;
-}
-
 async function scrapeVenue(page, code, { listingOnly = false } = {}) {
   const v = VENUES[code];
   if (!v) { log(`  no recipe for venue "${code}"`); return []; }
@@ -4778,10 +4759,6 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
     // the log line below describes what happened rather than what was intended.
     .filter(r => !r._fromListing);
   await fetchIndividualPages(page, toFetch, code);
-
-  // WORDS THE VENUE USES FOR WHAT SHE DOES NOT COLLECT — a note, never an
-  // exclusion. See flagFromDescription().
-  if (v.flagWords) for (const r of rows) flagFromDescription(r, v.flagWords);
 
   // ROWS THE VENUE'S OWN PAGE LABELLED AS SOMETHING OTHER THAN AN EXHIBITION.
   // Marked during the detail fetch, dropped here, and each one named — an
@@ -5897,7 +5874,7 @@ module.exports = {
   // Not pure — exported so a check can run the real detail-page pass offline.
   fetchIndividualPages,
   // Pure — asked directly by the fixtures.
-  addNote, finishNotes, scopeSelector, flagFromDescription,
+  addNote, finishNotes, scopeSelector,
   // Exported so compress.js's mirrored location list can be checked against the
   // real one by a fixture. compress.js must not require THIS file at runtime —
   // that would pull Playwright into a step that is pure text — so a test is the
