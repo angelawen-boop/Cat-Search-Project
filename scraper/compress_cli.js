@@ -231,7 +231,8 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   const asked = pending.filter(p => byIndex.has(p.index));
 
   const needsFresh = asked.some(p => p.action === 'fresh');
-  const needsReview = asked.some(p => p.action === 'review' || p.action === 'retitle');
+  const needsReview = asked.some(p => p.action === 'review');
+  const needsTitles = asked.some(p => p.action === 'retitle');
 
   fs.writeFileSync(
     path.join(runPath, PENDING_JSON),
@@ -280,7 +281,7 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
     for (const r of rows) {
       const row = { i: r.index, title: r.title, raw: String(r.raw || '').split(/\s+/).join(' ') };
       // previousSummary only matters to Prompt B, and it is dead weight in A.
-      if (r.action === 'review' || r.action === 'retitle') row.previousSummary = r.previousSummary;
+      if (r.action === 'review') row.previousSummary = r.previousSummary;
       // Only rows from a venue that may title in Italian are asked for an
       // English title. See ENGLISH_TITLE_VENUES in compress.js.
       if (r.englishTitle) row.englishTitle = true;
@@ -292,10 +293,17 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
     jobs.push({ name, rows: rows.length, kb: Math.round(fs.statSync(file).size / 1024) });
   };
 
-  // A retitle is a review whose text is known unchanged: Prompt B hands the
-  // summary back exactly, with the English title added where one is needed.
-  const reviewRows = asked.filter(p => p.action === 'review' || p.action === 'retitle');
+  // A RETITLE ASKS FOR ONE THING: the English title. Its description is
+  // unchanged and kept by code, so the job carries the title and nothing
+  // else — no raw text, no examples, no summary to hand back. Prompt C.
+  const titleRows  = asked.filter(p => p.action === 'retitle');
+  const reviewRows = asked.filter(p => p.action === 'review');
   const freshRows  = asked.filter(p => p.action !== 'review' && p.action !== 'retitle');
+  if (titleRows.length) {
+    const file = path.join(runPath, 'job_titles.txt');
+    fs.writeFileSync(file, titleRows.map(r => JSON.stringify({ i: r.index, title: r.title })).join('\n'), 'utf8');
+    jobs.push({ name: 'job_titles.txt', rows: titleRows.length, kb: Math.max(1, Math.round(fs.statSync(file).size / 1024)) });
+  }
   if (reviewRows.length) writeJob('job_haiku.txt', reviewRows);
   for (let i = 0; i < freshRows.length; i += CHUNK_ROWS) {
     writeJob(`job_sonnet_${i / CHUNK_ROWS + 1}.txt`, freshRows.slice(i, i + CHUNK_ROWS));
@@ -318,6 +326,7 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   say('  2. SPAWN ONE READ-ONLY SUBAGENT PER JOB FILE, prompt verbatim, pointing');
   say('     it at that one file. A subagent is what pins the model; a session');
   say('     writing these itself uses whatever model it happens to be.');
+  if (needsTitles) say('       job_titles.txt     Prompt C — English titles only            → SONNET');
   if (needsReview) say('       job_haiku.txt      Prompt B — is the old summary now false?  → HAIKU');
   if (needsFresh)  say('       job_sonnet_N.txt   Prompt A — write a fresh summary          → SONNET');
   say('');
@@ -340,7 +349,10 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   say('');
   say(`  3. Merge every job's answers into ${ANSWERS_JSON} beside the pending file —`);
   say('     {"<index>": "the summary.", ...}, a string to write it, the previous');
-  say('     summary verbatim to keep it, null to refuse. Then check before applying:');
+  say('     summary verbatim to keep it, null to refuse. Rows marked englishTitle');
+  say('     answer {"summary": "...", "english": "..." or ""}; job_titles rows');
+  say('     answer {"english": "..." or ""}. Strings only: code writes the line.');
+  say('     Then check before applying:');
   say(`         node scraper/compress.js ${dir} --check`);
   say('     It reports any index missing, unexpected, over the word cap, or still');
   say('     carrying an HTML fragment. --apply refuses to run until it passes.');
@@ -375,17 +387,20 @@ function check(dir) {
   for (const k of want) if (!got.has(k)) problems.push(`row ${k}: no answer`);
   for (const k of got) if (!want.has(k)) problems.push(`row ${k}: answered but was never asked`);
 
-  const askedTitle = new Set(pending.rows.filter(r => r.englishTitle).map(r => String(r.index)));
+  const byIdx = new Map(pending.rows.map(r => [String(r.index), r]));
   for (const [k, v] of Object.entries(answers)) {
-    if (v === null) continue;
-    if (typeof v !== 'string') { problems.push(`row ${k}: not a string`); continue; }
-    // Word cap, and the English title only where one was asked for — the same
-    // rule --apply enforces, so the two cannot disagree.
-    const shape = C.validateAnswer(v, { englishTitle: askedTitle.has(k) });
-    if (!shape.ok) problems.push(`row ${k}: ${shape.reason} — "${v}"`);
-    if (!v.trim().endsWith('.')) problems.push(`row ${k}: does not end in a full stop — "${v}"`);
-    if (/&[a-z]+;|&#\d+;|<[a-z/]/i.test(v)) problems.push(`row ${k}: carries an HTML fragment — "${v}"`);
-    if (/^\s*```/.test(v)) problems.push(`row ${k}: carries a code fence — "${v}"`);
+    const p = byIdx.get(k);
+    if (!p) continue;
+    // The same resolution --apply uses, so the two cannot disagree.
+    const r = C.resolveAnswer(v, p);
+    const shown = JSON.stringify(v);
+    if (!r.ok) { problems.push(`row ${k}: ${r.reason} — ${shown}`); continue; }
+    if (r.skip) continue;
+    const strings = typeof v === 'string' ? [v] : [v.summary, v.english].filter(x => typeof x === 'string');
+    if (typeof v === 'string' && !v.trim().endsWith('.')) problems.push(`row ${k}: does not end in a full stop — ${shown}`);
+    if (typeof v === 'object' && typeof v.summary === 'string' && !v.summary.trim().endsWith('.')) problems.push(`row ${k}: does not end in a full stop — ${shown}`);
+    if (strings.some(x => /&[a-z]+;|&#\d+;|<[a-z/]/i.test(x))) problems.push(`row ${k}: carries an HTML fragment — ${shown}`);
+    if (strings.some(x => /^\s*```/.test(x))) problems.push(`row ${k}: carries a code fence — ${shown}`);
   }
 
   if (problems.length) {
@@ -424,7 +439,7 @@ function apply(dir) {
       bad.push({ index: p.index, title: p.title, reason: 'no answer given' });
       continue;
     }
-    const v = C.validateAnswer(answers[String(p.index)], { englishTitle: !!p.englishTitle });
+    const v = C.resolveAnswer(answers[String(p.index)], p);
     if (!v.ok) { bad.push({ index: p.index, title: p.title, reason: v.reason }); continue; }
     if (v.skip) {
       skipped++;

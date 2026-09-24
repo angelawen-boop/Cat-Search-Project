@@ -513,67 +513,88 @@ test('RB-006: a position outside the file cannot write into it', () => {
 });
 
 // ---------------------------------------------------------------------------
-// IT-001 to IT-006 — Italian titles, her ruling 23 Sep. The English title opens
-// the summary, written in the SAME answer, and only venues that may title in
-// Italian are ever asked.
+// IT-001 to IT-010 — Italian titles, her rulings 23 and 24 Sep. The English
+// title opens the description in HER format, written by CODE from plain
+// strings; the model is never asked for format.
 
 const IT = require('./compress.js');
 const ITRAW = 'Una mostra omaggio dedicata a Carlo Maria Mariani nel museo.';
 const capoRow = (o = {}) => ({ venue_code: 'capo', title: 'I Segni dei Tempi', url: 'https://c.it/a', summary: ITRAW, ...o });
 
-test('IT-001: only the Italian venues are asked for an English title', () => {
-  for (const v of ['capo', 'brera', 'uffizi', 'borghese']) assert.equal(IT.asksEnglishTitle({ venue_code: v }), true, v);
-  for (const v of ['met', 'ng', 'tate-modern', 'louvre', 'acq']) assert.equal(IT.asksEnglishTitle({ venue_code: v }), false, v);
+test('IT-001: only the three Italian-titling venues are asked', () => {
+  for (const v of ['capo', 'brera', 'uffizi']) assert.equal(IT.asksEnglishTitle({ venue_code: v }), true, v);
+  // Borghese titles in English (24 Sep).
+  for (const v of ['borghese', 'met', 'ng', 'tate-modern', 'louvre', 'acq']) assert.equal(IT.asksEnglishTitle({ venue_code: v }), false, v);
 });
 
-test('IT-002: the word cap is the SUMMARY\'s — a long title does not eat it', () => {
-  const a = 'In English: The Bergamask Guest Lucina Brembati by Lorenzo Lotto. Capodimonte Is in Fashion. — Lotto portrait amid fashion-history talks.';
-  assert.equal(IT.validateAnswer(a, { englishTitle: true }).ok, true);
-  const long = 'In English: Thirst. — one two three four five six seven eight nine ten eleven.';
-  assert.equal(IT.validateAnswer(long, { englishTitle: true }).ok, false);
+test('IT-002: code writes her format from two plain strings', () => {
+  assert.equal(IT.composeSummary('Carlo Maria Mariani. Art Beyond Time', "Sixteen works spanning Mariani's fifty-year career."),
+    'In English: "Carlo Maria Mariani. Art Beyond Time." Sixteen works spanning Mariani\'s fifty-year career.');
+  // A title ending in its own ? or ! keeps it and gains no full stop.
+  assert.equal(IT.composeSummary('Why Paint?', 'Painting questioned.'), 'In English: "Why Paint?" Painting questioned.');
+  // No English title: the description alone.
+  assert.equal(IT.composeSummary('', 'Armani at Brera.'), 'Armani at Brera.');
 });
 
-test('IT-003: an English title where none was asked for is refused', () => {
-  assert.equal(IT.validateAnswer('In English: Thirst. — Fugazza on thirst.', { englishTitle: false }).ok, false);
-  // And the separator must be there, with a summary after it.
-  assert.equal(IT.validateAnswer('In English: Thirst. Fugazza on thirst.', { englishTitle: true }).ok, false);
-  assert.equal(IT.validateAnswer('In English: Thirst. — ', { englishTitle: true }).ok, false);
-  // An English title stays optional: a title already in English needs none.
-  assert.equal(IT.validateAnswer('Armani at Brera.', { englishTitle: true }).ok, true);
+test('IT-003: a marked row answers with strings; the word cap is the description\'s', () => {
+  const p = { englishTitle: true, action: 'fresh' };
+  const r = IT.resolveAnswer({ summary: 'Lotto portrait amid fashion-history talks.', english: 'The Bergamask Guest. Lucina Brembati by Lorenzo Lotto. Capodimonte Is in Fashion' }, p);
+  assert.equal(r.ok, true);
+  assert.equal(r.text, 'In English: "The Bergamask Guest. Lucina Brembati by Lorenzo Lotto. Capodimonte Is in Fashion." Lotto portrait amid fashion-history talks.');
+  assert.equal(IT.resolveAnswer({ summary: 'one two three four five six seven eight nine ten eleven.', english: 'Thirst' }, p).ok, false);
+  // Already English: "" and the description alone.
+  assert.equal(IT.resolveAnswer({ summary: 'Armani at Brera.', english: '' }, p).text, 'Armani at Brera.');
 });
 
-test('IT-004: unchanged text reuses the whole field, English title included — no model call', () => {
-  const prev = { raw: ITRAW, summary: 'In English: The Signs of the Times. — Mariani homage.', titleJudged: true };
+test('IT-004: formatting from the model is refused, never parsed', () => {
+  const p = { englishTitle: true, action: 'fresh' };
+  // The whole line written by the model — the 23 Sep shape.
+  assert.equal(IT.resolveAnswer('In English: Thirst. — Fugazza on thirst.', p).ok, false);
+  assert.equal(IT.resolveAnswer({ summary: 'In English: Thirst. — Fugazza.', english: '' }, p).ok, false);
+  assert.equal(IT.resolveAnswer({ summary: 'Fugazza on thirst.', english: '"Thirst"' }, p).ok, false);
+  // And on an unmarked row, an object or an "In English" line is refused.
+  assert.equal(IT.resolveAnswer({ summary: 'x.', english: 'y' }, { action: 'fresh' }).ok, false);
+  assert.equal(IT.resolveAnswer('In English: "Thirst." Fugazza.', { action: 'fresh' }).ok, false);
+});
+
+test('IT-005: a retitle row answers the English title only; the description is kept by code', () => {
+  const p = { englishTitle: true, action: 'retitle', previousSummary: 'Mariani homage.' };
+  assert.equal(IT.resolveAnswer({ english: 'The Signs of the Times' }, p).text, 'In English: "The Signs of the Times." Mariani homage.');
+  assert.equal(IT.resolveAnswer({ english: '' }, p).text, 'Mariani homage.');
+  // A summary handed back is refused: the description is not the model's to touch.
+  assert.equal(IT.resolveAnswer({ english: 'X', summary: 'Mariani homage.' }, p).ok, false);
+  assert.equal(IT.resolveAnswer(null, p).ok, false);
+});
+
+test('IT-006: unchanged text reuses the whole field, English title included — no model call', () => {
+  const prev = { raw: ITRAW, summary: 'In English: "The Signs of the Times." Mariani homage.', titleJudged: true };
   const d = IT.decide(capoRow(), prev);
   assert.equal(d.action, 'reuse');
   assert.equal(d.summary, prev.summary);
 });
 
-test('IT-005: memory from before the rule is asked ONCE, at Italian venues only', () => {
-  // A run compressed before 23 Sep never gave these rows an English title;
-  // reusing it would leave the title untranslated forever.
+test('IT-007: memory from before the rule is asked ONCE, at Italian venues only', () => {
   const old = { raw: ITRAW, summary: 'Mariani homage.', titleJudged: false };
   assert.equal(IT.decide(capoRow(), old).action, 'retitle');
   assert.equal(IT.decide(capoRow(), old).previousSummary, 'Mariani homage.');
-  // An English-language venue reuses as it always has.
   assert.equal(IT.decide(capoRow({ venue_code: 'ng' }), old).action, 'reuse');
   // Seed memory carries no mark at all, and must not be re-asked for it.
   assert.equal(IT.decide(capoRow(), { raw: ITRAW, summary: 'Mariani homage.' }).action, 'reuse');
 });
 
-test('IT-006: identical text under different Italian titles is NOT one question', () => {
-  // The answer carries the title now, so sharing it would give one row the
-  // other's English title.
+test('IT-008: identical text under different Italian titles is NOT one question', () => {
   const rows = [capoRow({ title: 'A', index: 0 }), capoRow({ title: 'B', index: 1 })];
   assert.equal(IT.groupIdenticalRaw(rows).size, 0);
   const ng = [capoRow({ venue_code: 'ng', title: 'A' }), capoRow({ venue_code: 'ng', title: 'B' })];
   assert.equal(IT.groupIdenticalRaw(ng).size, 1);
 });
 
-test('IT-007: splitting gives back the title and the summary', () => {
+test('IT-009: splitting reads her format, and recognises the withdrawn one', () => {
+  assert.deepStrictEqual(IT.splitEnglishTitle('In English: "Thirst." Fugazza on thirst.'),
+    { title: 'Thirst.', teaser: 'Fugazza on thirst.', old: false });
   assert.deepStrictEqual(IT.splitEnglishTitle('In English: Thirst. — Fugazza on thirst.'),
-    { title: 'Thirst.', teaser: 'Fugazza on thirst.' });
-  assert.deepStrictEqual(IT.splitEnglishTitle('Fugazza on thirst.'), { title: '', teaser: 'Fugazza on thirst.' });
+    { title: 'Thirst', teaser: 'Fugazza on thirst.', old: true });
+  assert.deepStrictEqual(IT.splitEnglishTitle('Fugazza on thirst.'), { title: '', teaser: 'Fugazza on thirst.', old: false });
 });
 
 // ---------------------------------------------------------------------------
@@ -623,7 +644,10 @@ test('MEM-002: a stitch folder is memory, and its _clean file wins over the raw 
   assert.deepStrictEqual(src.map(s => `${s.dir}/${s.file}`),
     ['stitch_20260913_0442/sweep_compressed_clean.csv', 'run_2026-09-11_150556/sweep_compressed.csv']);
   const hit = M.findPrevious(M.loadMemory(src, root), mrow({ summary: 'RAW' }));
-  assert.equal(hit.summary, 'In English: Gaia Fugazza. Thirst. — Fugazza on thirst.');
+  // The 23 Sep line is never carried forward: its description is kept, its
+  // English title dropped and asked again (IT-010).
+  assert.equal(hit.summary, 'Fugazza on thirst.');
+  assert.equal(hit.titleJudged, false);
 });
 
 test('MEM-003: nothing at or after the folder being compressed is memory', () => {
@@ -652,15 +676,44 @@ test('MEM-005: the English-title marker covers only the files it names', () => {
     'stitch_20260913_0442': {
       'sweep.csv': [mrow({ summary: 'RAW' })],
       'sweep_compressed.csv': [mrow({ summary: 'Fugazza on thirst.' })],
-      'sweep_compressed_clean.csv': [mrow({ summary: 'In English: Gaia Fugazza. Thirst. — Fugazza on thirst.' })],
-      '.english_titles': 'sweep_compressed_clean.csv\n',
+      'sweep_compressed_clean.csv': [mrow({ summary: 'In English: "Gaia Fugazza. Thirst." Fugazza on thirst.' })],
+      '.english_titles_v2': 'sweep_compressed_clean.csv\n',
     },
   });
   assert.equal(M.titleJudgedIn('stitch_20260913_0442', 'sweep_compressed_clean.csv', root), true);
   assert.equal(M.titleJudgedIn('stitch_20260913_0442', 'sweep_compressed.csv', root), false);
-  // The clean file is the memory, and it is judged — so an unchanged row reuses.
   const mem = M.loadMemory(M.completedCompressions('run_2026-09-20_000000', root), root);
   assert.equal(M.decide(mrow({ summary: 'RAW' }), M.findPrevious(mem, mrow({}))).action, 'reuse');
+});
+
+test('IT-010: a file judged under the 23 Sep marker is judged no longer', () => {
+  const root = fakeOutput({
+    'stitch_20260913_0442': {
+      'sweep.csv': [mrow({ summary: 'RAW' })],
+      'sweep_compressed_clean.csv': [mrow({ summary: 'In English: Gaia Fugazza. Thirst. — Fugazza on thirst.' })],
+      '.english_titles': 'sweep_compressed_clean.csv\n',
+    },
+  });
+  const mem = M.loadMemory(M.completedCompressions('run_2026-09-20_000000', root), root);
+  const d = M.decide(mrow({ summary: 'RAW' }), M.findPrevious(mem, mrow({})));
+  assert.equal(d.action, 'retitle');
+  assert.equal(d.previousSummary, 'Fugazza on thirst.');
+});
+
+test('MEM-007: two sweeps of one address are told apart by swept_at', () => {
+  // A stitch holds two sweeps; where their texts differ, the address alone
+  // cannot say which one a description came from, but its sweep time can.
+  const root = fakeOutput({
+    'stitch_20260913_0442': {
+      'sweep.csv': [mrow({ venue_code: 'ng', summary: 'first text', swept_at: '2026-09-11T05:00:00Z' }),
+                    mrow({ venue_code: 'ng', summary: 'second text', swept_at: '2026-09-13T02:00:00Z' })],
+      'sweep_compressed_clean.csv': [mrow({ venue_code: 'ng', summary: 'Words.', swept_at: '2026-09-13T02:00:00Z' })],
+    },
+  });
+  const mem = M.loadMemory(M.completedCompressions('run_2026-09-20_000000', root), root);
+  const ng = o => mrow({ venue_code: 'ng', ...o });
+  assert.equal(M.decide(ng({ summary: 'second text' }), M.findPrevious(mem, ng({}))).action, 'reuse');
+  assert.equal(M.decide(ng({ summary: 'first text' }), M.findPrevious(mem, ng({}))).action, 'review');
 });
 
 test('MEM-006: the compressor\'s clock is the sweeper\'s', () => {

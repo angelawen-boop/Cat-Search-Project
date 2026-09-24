@@ -1,0 +1,38 @@
+{"i":15,"title":"Beauty and the Ideal"}
+{"i":16,"title":"Pinacoteca viaggiante"}
+{"i":17,"title":"Giovanni Agostino da Lodi. An itinerant painter between Leonardo and Giorgione"}
+{"i":18,"title":"Oman and Italy: Two Millennia of Cross-Civilisational Dialogue"}
+{"i":20,"title":"Giorgio Armani. Milano, per amore"}
+{"i":21,"title":"La grande pittura italiana"}
+{"i":22,"title":"Buon Compleanno Linus"}
+{"i":188,"title":"At Palazzo Pitti the 20th century showcased in 40 dreamlike dresses: the new arrangement at the museum of Costume and Fashion"}
+{"i":189,"title":"At the Pitti Palace, the “very best” of the king’s furniture"}
+{"i":190,"title":"Sarmi’s Genius. A new exhibition at the Museum of Costume and Fashion"}
+{"i":191,"title":"Wax upon a time. The Medici and the arts of ceroplastics"}
+{"i":192,"title":"Florence and Europe. Arts of the Eighteenth Century at the Uffizi"}
+{"i":193,"title":"1925-1955 Fashion in the Spotlight. The origins of Made in Italy"}
+{"i":194,"title":"The Witch by Salvator Rosa displayed in Pitti Palace"}
+{"i":195,"title":"Stanislao Pointeau. A Tuscan \"macchiaiolo\"of French descent. An exhibition dedicated to Prof. Carlo Del Bravo"}
+{"i":196,"title":"Tuscan Tournaments. The Saracen Joust, the Crossbow Palio and the Game of the Bridge"}
+{"i":197,"title":"Carlo Maria Mariani. Arte oltre il tempo"}
+{"i":198,"title":"Self-portraits on paper by 19th-century Masters"}
+{"i":199,"title":"Self-portraits on paper by 18th- and early 19th-century masters"}
+{"i":200,"title":"Uffizi: on display two masterpieces damaged by the 1993 Georgofili mafia attack"}
+{"i":226,"title":"I Segni dei Tempi. Carlo Maria Mariani a Capodimonte"}
+{"i":227,"title":"Emilio Isgrò. Canto Napoli"}
+{"i":228,"title":"“Metamorfosi” di Bertozzi & Casoni"}
+{"i":229,"title":"Nicola Samorì. Classical collapse"}
+{"i":230,"title":"Capodimonte ricorda Mimmo Jodice"}
+{"i":231,"title":"Sogno mediterraneo. Sergio Vacchi"}
+{"i":232,"title":"NAFRICA-MASCHERE (Memorie & Identità / Uomini o Maschere)"}
+{"i":233,"title":"L’Ospite bergamasca Lucina Brembati di Lorenzo Lotto. Capodimonte è di Moda – Percorsi nella storia del Costume"}
+{"i":234,"title":"La Pietà di Gricci, il modellatore del Re. Nuova acquisizione di Capodimonte. Tra terracotta e porcellana"}
+{"i":235,"title":"Capodimonte doppio Caravaggio. L’Ecce Homo e La Flagellazione di Cristo"}
+{"i":236,"title":"L’Ospite bolognese. L’Annunciazione di Ludovico Carracci"}
+{"i":237,"title":"Ospiti d’eccezione. Pieter Paul Rubens ‘San Sebastiano curato dagli angeli’ e Giovanni Baglione ‘Amor sacro e Amor profano’"}
+{"i":238,"title":"Gaia Fugazza. Sete"}
+{"i":239,"title":"L’Ospite francese. Gustave Courbet ‘Les Demoiselles des bords de la Seine (été)"}
+{"i":240,"title":"Giuseppe Pirozzi. L’atelier dello scultore"}
+{"i":241,"title":"Gian Maria Tosatti. Damasa"}
+{"i":242,"title":"Oltre Caravaggio. Un nuovo racconto della pittura a Napoli"}
+{"i":243,"title":"Yeesookyung. Whisper Only to You"}

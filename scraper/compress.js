@@ -92,44 +92,63 @@ const MAX_WORDS = 10;
 const SKIP_NOTE = 'The text on this page is not a description of the exhibition, so no summary was written.';
 
 /**
- * ITALIAN TITLES — her ruling, 23 Sep. The title column keeps the venue's own
- * words; where a title is not English, the ENGLISH TITLE GOES AT THE START OF
- * THE SUMMARY, written in the same answer as the summary itself:
+ * ITALIAN TITLES — her rulings, 23 and 24 Sep. The title column keeps the
+ * venue's own words (the official name, which the catalogue lookup searches
+ * by); where a title is not English, an English translation goes at the START
+ * OF THE DESCRIPTION, in her format:
  *
- *     In English: The Signs of the Times. Carlo Maria Mariani at Capodimonte. — Mariani homage…
+ *     In English: "Carlo Maria Mariani. Art Beyond Time." Sixteen works spanning Mariani's fifty-year career.
  *
- * ONE STEP. The row the model already reads to write the summary carries the
- * title, so the translation costs a few words of output and no extra request.
- * Only rows from these venues are asked — the rest publish English titles, and
- * asking about them was the waste of 23 Sep (402 titles sent where ~50 could
- * be Italian).
+ * THE MODEL IS NEVER ASKED FOR FORMAT. It returns plain strings — the
+ * description, and separately the English title or "" — and composeSummary()
+ * writes the line. The 23 Sep version had the model write the whole line
+ * ("In English: X. — teaser") and code pick it apart: ungrammatical, and a
+ * format owned by a model. Such lines are recognised (OLD_EN) and stripped
+ * wherever they are met in memory, so they are translated again, never
+ * carried forward.
  *
- * STABLE WITHOUT A STORE. An unchanged blurb reuses the whole summary field,
- * English title included, with no model call — the same guarantee as every
- * other summary.
+ * Only these venues are asked: the three whose English pages keep Italian
+ * titles (Brera, the Uffizi) or that publish in Italian only (Capodimonte).
+ * Borghese titles in English and is not asked.
+ *
+ * STABLE: a translation is made once. An unchanged blurb reuses the whole
+ * description, English title included, with no model call; a description is
+ * compared by the app, so a re-worded translation would be a Change card.
  */
-const ENGLISH_TITLE_VENUES = new Set(['capo', 'brera', 'uffizi', 'borghese']);
+const ENGLISH_TITLE_VENUES = new Set(['capo', 'brera', 'uffizi']);
 const EN_PREFIX = 'In English: ';
-const EN_SEPARATOR = ' \u2014 ';
+// The 23 Sep line: 'In English: <title>. — <teaser>'.
+const OLD_EN = /^In English: (.*?) \u2014 ([\s\S]*)$/;
+// Her line: 'In English: "<title>" <teaser>', the title ending in . ! or ?
+const NEW_EN = /^In English: "(.+?[.!?])" ([\s\S]*)$/;
 
 /**
  * A folder holds this file once a compressed file in it was written under the
- * rule above; it lists those FILE NAMES, one per line. Memory from a file not
- * listed predates the rule: its summaries for those venues were never given an
- * English title, so reusing them would silently leave the title untranslated
- * forever. See decide() and titleJudgedIn().
+ * CURRENT rule; it lists those FILE NAMES, one per line. The name changed on
+ * 24 Sep so that files written under the 23 Sep rule no longer count as
+ * judged: their rows at these venues are asked once for an English title.
  */
-const ENGLISH_TITLE_MARKER = '.english_titles';
+const ENGLISH_TITLE_MARKER = '.english_titles_v2';
 
 const asksEnglishTitle = row => ENGLISH_TITLE_VENUES.has(String(row.venue_code || ''));
 
-/** Split a summary into its English title (or '') and the teaser. */
+/** Split a description into its English title (or '') and the rest. Reads
+ *  both her format and the withdrawn 23 Sep one; `old` says which. */
 function splitEnglishTitle(summary) {
   const s = String(summary || '').trim();
-  if (!s.startsWith(EN_PREFIX)) return { title: '', teaser: s };
-  const at = s.indexOf(EN_SEPARATOR, EN_PREFIX.length);
-  if (at === -1) return { title: s.slice(EN_PREFIX.length).trim(), teaser: '' };
-  return { title: s.slice(EN_PREFIX.length, at).trim(), teaser: s.slice(at + EN_SEPARATOR.length).trim() };
+  let m = NEW_EN.exec(s);
+  if (m) return { title: m[1].trim(), teaser: m[2].trim(), old: false };
+  m = OLD_EN.exec(s);
+  if (m) return { title: m[1].trim().replace(/\.$/, ''), teaser: m[2].trim(), old: true };
+  return { title: '', teaser: s, old: false };
+}
+
+/** Her format, written by code from two plain strings. */
+function composeSummary(english, teaser) {
+  const t = String(english || '').trim();
+  const d = String(teaser || '').trim();
+  if (!t) return d;
+  return `${EN_PREFIX}"${/[.!?]$/.test(t) ? t : t + '.'}" ${d}`;
 }
 
 /**
@@ -452,12 +471,12 @@ function decide(row, prev) {
   }
 
   // The venue has not touched a word — but the wording we hold was written
-  // before English titles existed, at a venue that may title in Italian. Ask
-  // once: keep the summary, add the English title if the title needs one.
-  // Once written, the run carries ENGLISH_TITLE_MARKER and this never fires
-  // for that row again.
+  // before the current English-title rule, at a venue that may title in
+  // Italian. Ask ONLY for the English title; the description is kept by code,
+  // never re-handed to a model. Once written, the run carries
+  // ENGLISH_TITLE_MARKER and this never fires for that row again.
   if (prevWords && raw === prevRaw && asksEnglishTitle(row) && prev.titleJudged === false) {
-    return { action: 'retitle', summary: null, previousSummary: prevWords };
+    return { action: 'retitle', summary: null, previousSummary: splitEnglishTitle(prevWords).teaser };
   }
 
   // The venue has not touched a word. Reuse, no model call. This is the case
@@ -486,7 +505,7 @@ const wordCount = s => String(s || '').trim().split(/\s+/).filter(Boolean).lengt
  * approval card — but length and shape are mechanical, so they are checked
  * here rather than trusted. A refusal is reported, never silently dropped.
  */
-function validateAnswer(text, { englishTitle = false } = {}) {
+function validateAnswer(text) {
   // An explicit null means "this text is not a curatorial description and I am
   // not going to invent one" — ticketing copy, a bare link, a curator
   // biography, boilerplate. This is DEF-03's second net, and it is deliberately
@@ -499,16 +518,64 @@ function validateAnswer(text, { englishTitle = false } = {}) {
   const s = String(text == null ? '' : text).trim();
   if (!s) return { ok: false, reason: 'empty' };
   if (/\n/.test(s)) return { ok: false, reason: 'contains a line break' };
-  // The English title is checked apart from the teaser: the word cap is the
-  // TEASER's, and a long Italian title must not eat it.
-  const { title, teaser } = splitEnglishTitle(s);
-  if (title && !englishTitle) return { ok: false, reason: 'an English title on a venue that is never asked for one' };
-  if (s.startsWith(EN_PREFIX) && !s.includes(EN_SEPARATOR)) return { ok: false, reason: 'English title with no " \u2014 " before the summary' };
-  if (!teaser) return { ok: false, reason: 'no summary after the English title' };
-  const n = wordCount(teaser);
+  // The model is never asked for format: an English title arrives as its own
+  // string, and code writes the "In English:" line.
+  if (/^In English\b/i.test(s)) return { ok: false, reason: 'the description carries an "In English" line — the English title is a separate answer' };
+  const n = wordCount(s);
   if (n > MAX_WORDS) return { ok: false, reason: `${n} words, cap is ${MAX_WORDS}` };
   // Her seed set is unanimous on this: all 110 end with a full stop.
   return { ok: true, text: /[.!?]$/.test(s) ? s : s + '.' };
+}
+
+/** An English title as the model returned it: a plain string, or "" when the
+ *  title is already English. Checked, never trusted. */
+function validateEnglish(e) {
+  if (e === '' ) return { ok: true, text: '' };
+  if (typeof e !== 'string') return { ok: false, reason: 'the English title is not a string' };
+  const t = e.trim();
+  if (!t) return { ok: true, text: '' };
+  if (/\n/.test(t)) return { ok: false, reason: 'the English title contains a line break' };
+  if (t.length > 200) return { ok: false, reason: `the English title is ${t.length} characters` };
+  if (/"/.test(t)) return { ok: false, reason: 'the English title contains a straight double quote, which the line uses' };
+  if (/^In English\b/i.test(t)) return { ok: false, reason: 'the English title carries formatting' };
+  return { ok: true, text: t };
+}
+
+/**
+ * One answer, as it will be written. `p` is the pending row it answers.
+ *
+ *   unmarked row             "the description."  | null
+ *   marked row (fresh/review) {"summary": "the description.", "english": "…" | ""}  | null
+ *   retitle row              {"english": "…" | ""}   — the description is the one
+ *                            already held (p.previousSummary), kept by code
+ *
+ * The model returns strings only; composeSummary() writes the line. Used by
+ * --check and --apply alike, so the two cannot disagree.
+ */
+function resolveAnswer(value, p) {
+  const marked = !!p.englishTitle;
+  if (!marked) {
+    if (value !== null && typeof value !== 'string') return { ok: false, reason: 'not a string' };
+    return validateAnswer(value);
+  }
+  if (value === null) {
+    if (p.action === 'retitle') return { ok: false, reason: 'null on a row asked only for its English title' };
+    return validateAnswer(null);
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return { ok: false, reason: 'not an object with "english" (and "summary")' };
+  }
+  const en = validateEnglish(value.english);
+  if (!en.ok) return en;
+  if (p.action === 'retitle') {
+    if (value.summary !== undefined) return { ok: false, reason: 'a retitle row is asked for "english" only' };
+    const kept = String(p.previousSummary || '').trim();
+    if (!kept) return { ok: false, reason: 'nothing held to keep' };
+    return { ok: true, text: composeSummary(en.text, kept) };
+  }
+  const d = validateAnswer(value.summary === undefined ? '' : value.summary);
+  if (!d.ok || d.skip) return d.ok ? { ok: false, reason: 'null summary inside an object; answer null instead' } : d;
+  return { ok: true, text: composeSummary(en.text, d.text) };
 }
 
 function addNote(existing, note) {
@@ -608,25 +675,32 @@ function titleJudgedIn(dir, file, outputDir = OUTPUT_DIR) {
 function memoryRows({ dir, file }, outputDir = OUTPUT_DIR) {
   const raw = readProForma(path.join(outputDir, dir, RAW_CSV));
   const texts = new Map();
+  const add = (k, t) => { if (!k) return; if (!texts.has(k)) texts.set(k, new Set()); texts.get(k).add(t); };
   for (const r of raw) {
-    for (const k of [urlKey(r), titleKey(r)]) {
-      if (!k) continue;
-      if (!texts.has(k)) texts.set(k, new Set());
-      texts.get(k).add(normalizeRaw(r.summary));
-    }
+    const t = normalizeRaw(r.summary);
+    for (const k of [urlKey(r), titleKey(r)]) add(k, t);
+    // THE SWEEP TIME TELLS TWO SWEEPS APART. A stitch holds two sweeps of most
+    // venues; where their texts differ, the address alone cannot say which
+    // one a description was made from, but the row's swept_at can.
+    if (r.swept_at) add(`${urlKey(r)}@${r.swept_at}`, t);
   }
   const titleJudged = titleJudgedIn(dir, file, outputDir);
   const rows = [];
   for (const d of readProForma(path.join(outputDir, dir, file))) {
     if (String(d.title || '').startsWith('[')) continue;
-    const set = texts.get(urlKey(d)) || texts.get(titleKey(d));
+    const exact = d.swept_at ? texts.get(`${urlKey(d)}@${d.swept_at}`) : null;
+    const set = (exact && exact.size === 1 ? exact : null) || texts.get(urlKey(d)) || texts.get(titleKey(d));
+    // A line written under the withdrawn 23 Sep rule is never carried
+    // forward: the description is kept, the English title is asked again.
+    const en = splitEnglishTitle(d.summary);
     rows.push({
       ...d,
+      summary: en.old ? en.teaser : d.summary,
       raw: set && set.size === 1 ? [...set][0] : '',
       // A deliberate "not a description" answer, recognised by the note the
       // apply step wrote. This is what stops the row being re-asked forever.
       skipped: !String(d.summary || '').trim() && String(d.notes || '').includes(SKIP_NOTE),
-      titleJudged,
+      titleJudged: titleJudged && !en.old,
     });
   }
   return rows;
@@ -804,7 +878,8 @@ module.exports = {
   mergeSeedMemory,
   findPrevious, decide, validateAnswer, normalizeRaw, wordCount, addNote,
   completedCompressions, loadMemory, memoryRows, dirInstant, titleJudgedIn, MEMORY_CSVS, RUN_TZ, seedMemory, MAX_WORDS, SKIP_NOTE,
-  ENGLISH_TITLE_VENUES, EN_PREFIX, EN_SEPARATOR, ENGLISH_TITLE_MARKER, asksEnglishTitle, splitEnglishTitle,
+  ENGLISH_TITLE_VENUES, EN_PREFIX, ENGLISH_TITLE_MARKER, asksEnglishTitle, splitEnglishTitle,
+  composeSummary, validateEnglish, resolveAnswer,
   TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns, groupIdenticalRaw,
 };
 

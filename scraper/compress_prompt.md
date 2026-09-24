@@ -137,15 +137,14 @@ that came back in Italian would quietly break that.
 > translate the description around it.
 >
 > ROWS MARKED "englishTitle": true come from a venue that may title its
-> exhibitions in Italian. If that row's "title" is not English, begin your answer
-> with the title translated into natural English, in this exact form:
-> `In English: <the title in English>. — <your summary>`
-> Keep every name as the title writes it and keep its full stops and subtitle;
-> where an artwork has a well-established English name, use it. Use no em dash
-> inside the title — it is the separator. If the title is already English apart
-> from names, write the summary alone. The 10-word limit is the summary's; the
-> English title does not count towards it. Never add an English title to a row
-> that is not marked.
+> exhibitions in Italian. For those rows ONLY, answer with an object of two
+> plain strings instead of a string: `{"summary": "<your summary>", "english":
+> "<the title in natural English>"}`. Write "english" as "" when the title is
+> already English apart from names. Keep every name as the title writes it and
+> keep its full stops and subtitle; where an artwork has a well-established
+> English name, use it. Do not add "In English", quotation marks or any other
+> formatting to either string — the line is written by code. Never answer with
+> an object for a row that is not marked.
 >
 > THE RULE THAT MATTERS MOST: every word of your summary must be traceable to a
 > phrase in that row's own raw text. If you cannot point to where something came
@@ -209,43 +208,65 @@ that came back in Italian would quietly break that.
 >   Do not summarise the wrong thing.>
 > ROWS MARKED "englishTitle": true come from a venue that may title its
 > exhibitions in Italian, and each also carries a "title". Decide the summary
-> exactly as above. Then, if the title is not English and the previousSummary
-> does not already begin with "In English:", put the title's English translation
-> in front, in this exact form: `In English: <the title in English>. — <summary>`.
-> Keep every name as written; use no em dash inside the title. A row whose action
-> is a retitle has UNCHANGED text — its previousSummary is true by definition, so
-> hand it back exactly, adding only the English title where one is needed. Never
-> add an English title to a row that is not marked.
+> exactly as above, then answer with an object of two plain strings:
+> `{"summary": "<the summary>", "english": "<the title in natural English>"}`,
+> with "english" as "" when the title is already English apart from names. No
+> "In English", no quotation marks, no formatting — the line is written by
+> code. Never answer with an object for a row that is not marked.
 >
 > STEP 4. Output ONLY a JSON object, mapping each row's index (as a string) to your
-> answer string, or to null. No commentary before or after, no markdown code fence.
+> answer (a string, or for a marked row an object), or to null. No commentary before or after, no markdown code fence.
 > Every index in the file must appear exactly once.
 
 ---
 
-## Italian titles — in the same answer, her ruling 23 Sep
+## Italian titles — her rulings, 23 and 24 Sep
 
-A title stays in the venue's own language. Where it is not English, the English
-title opens the summary: `In English: … — teaser`. It is written **in the same
-answer as the summary**, from the row the model is already reading — no second
-request. Only rows from `ENGLISH_TITLE_VENUES` (`compress.js`) carry the
-`"englishTitle"` mark, so no English-language venue is ever asked.
+A title stays in the venue's own language: it is the official name, and the
+catalogue lookup searches by it. Where it is not English, an English translation
+opens the description, in her format:
 
-**Why not a separate title step:** tried on 23 Sep and withdrawn the same day. It
-sent all 402 titles in the file to the model when about 50 could be Italian, and it
-was a second request for rows the summary step was already sending.
+`In English: "Carlo Maria Mariani. Art Beyond Time." Sixteen works spanning Mariani's fifty-year career.`
 
-**Stable without a store:** an unchanged blurb reuses the whole summary field,
-English title included, with no model call.
+**The model is never asked for format.** It returns plain strings — the summary,
+and separately the English title or `""` — and `composeSummary()` (`compress.js`)
+writes the line. The 23 Sep version had the model write `In English: … . — teaser`
+itself: ungrammatical, and a format owned by a model. Lines in that shape are
+stripped wherever memory holds them and the title is asked again.
 
-**The one-time `retitle`:** memory from a run compressed before this rule has no
-English titles, so reusing it would leave them out forever. Such rows at those
-venues go to Prompt B once, which hands the summary back exactly and adds the
-title. A run compressed under the rule carries `.english_titles`, and from then on
-the ordinary reuse applies.
+Only rows from `ENGLISH_TITLE_VENUES` (Capodimonte, Brera, the Uffizi) carry the
+`"englishTitle"` mark. Borghese titles in English and is not asked.
 
-`--check` and `--apply` hold the word cap to the SUMMARY, and refuse an English
-title on a row that was never asked for one.
+**Stable:** an unchanged blurb reuses the whole description, English title
+included, with no model call. The app compares descriptions, so a re-worded
+translation would reach her as a Change card; it is made once.
+
+**Prompt C, the one-time title job.** Memory from before the current rule
+(`.english_titles_v2`) has no usable English title. Such rows, text unchanged, go
+to `job_titles.txt`: one line per row, `{"i": …, "title": "…"}`, nothing else. The
+description is kept by code and never re-handed to a model.
+
+> You are translating exhibition titles for an art-catalogue tracker. Your ONLY
+> output is text. Do not write or edit any file.
+>
+> Read `<ROWS_PATH>`: one JSON object per line, each with "i" and "title". The
+> titles come from Italian museums and are mostly Italian.
+>
+> For each row, give the title in natural English, the way an English-language
+> museum would print it. Keep every name as written. Keep the title's own full
+> stops and subtitles. Where an artwork has a well-established English name, use
+> it. If the title is already English apart from names, give "".
+>
+> Plain words only: no "In English", no quotation marks around the title, no
+> commentary.
+>
+> Output ONLY a JSON object mapping each "i" (as a string) to
+> `{"english": "<the title in English>"}` or `{"english": ""}`. No markdown fence.
+> Every "i" must appear exactly once.
+
+`--check` and `--apply` refuse a description that carries an "In English" line,
+an English title with a straight double quote or a line break, a title object on a
+row that was not marked, and a retitle answer carrying a summary.
 
 ---
 
