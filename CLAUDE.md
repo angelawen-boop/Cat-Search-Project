@@ -1038,8 +1038,9 @@ link at an ISBN search — museum shops search by title.)*
 
 ### 4. Tate Britain's past exhibitions — BUILT 25 Sep
 
-Swept live once (`run_2026-09-25_130534`, 23 rows, 14 of them past); not yet
-in a file she has imported — it rides the next sweep unless she asks sooner.
+Swept live once (`run_2026-09-25_130534`, 23 rows, 14 of them past). **Kept
+for one import, her plan 25 Sep:** once Levy Gorvy Dayan and the French venues
+(item 6) are built, she imports those new venues and this run together.
 
 ### 5. The three blocked venues — a route exists, and it needs pacing
 
