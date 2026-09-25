@@ -156,7 +156,8 @@ Judgement about the outside world is not in any file.
 | `wallace` | Displays and trails KEPT — **this venue only** |
 | `menil` | 7 permanent galleries excluded; "Foyer Installation: …", "… from the Collection", "Recent Acquisitions" excluded — **this venue only** (24 Sep) |
 | `tate-britain` | Ofili excluded, on the venue's own ONGOING label |
-| `tate-modern`, `tate-britain` | Exhibitions only, never collection displays (24 Sep). No past exhibitions yet; the "recently opened" page is not an archive and is not fetched |
+| `tate-modern`, `tate-britain` | Exhibitions only, never collection displays (24 Sep). The "recently opened" page is not an archive and is not fetched |
+| `tate-britain` | Past exhibitions from the What's On calendar's date range, 1 Jul 2024 to the day of the run (25 Sep) — `expandDateRange`. A session nested under a show is not a show |
 | `tate-modern` | **Never its past exhibitions**, though she knows where they are (24 Sep) |
 | `uffizi` | Headlines kept as titles; undated rows kept |
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Bare "from the Collection" and titles with "Film Series" excluded; family, named and lent collections KEPT (24 Sep). No note on the card for films or installations; no model judging rows — compression stays mechanical (24 Sep) |
@@ -1035,10 +1036,10 @@ yet met a real sold-out, pulled or redirected shop page.** When she meets
 one and presses the button, check the result. *(Still rejected: pointing the
 link at an ISBN search — museum shops search by title.)*
 
-### 4. Tate Britain's past exhibitions
+### 4. Tate Britain's past exhibitions — BUILT 25 Sep
 
-She has found its archive. To be added as pages in the recipe. Tate Modern's
-past stays out — §2.
+Swept live once (`run_2026-09-25_130534`, 23 rows, 14 of them past); not yet
+in a file she has imported — it rides the next sweep unless she asks sooner.
 
 ### 5. The three blocked venues — a route exists, and it needs pacing
 
