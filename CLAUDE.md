@@ -500,6 +500,7 @@ first number to scroll past:
 | `catalogue_lookup.js` | C-001 to C-090b |
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
 | `listing_pages.js` | the same, for WHERE each row was seen — no page twice, no promo card read as a listing |
+| `cloud_ledger.js`, `cloud_app.js` | the cloud ledger (branch): storage against a stand-in store with the platform's limits, then the screen driven by clicks — both on her real ledger, `docs/ledger_2026-09-24/` |
 
 The harness lifts the intake out of the JSX by **anchors on prose, never line
 numbers**. An early `return` in a fixture file exits the whole suite and the
@@ -917,46 +918,41 @@ keeps making in new clothes.
 In her order, 24 Sep. Everything not listed here is finished. Do not reopen a
 closed item without a new fact.
 
-### 1. Keeping the ledger in the page's store — a discussion, reopened by her 24 Sep
+### 1. The ledger in the page's store — BUILT on branch `claude/ledger-cloud`, in trial
 
-Listed as rejected in §8 ("Ledger on Claude cloud storage"); she reopened it.
-Nothing new on the platform: the page has had a store since 20 Sep, holding the
-sweep log and quarantine. The one recorded objection — the ledger is derivable
-from nothing — is the one quarantine already answers with two homes (the store
-is the working copy, her Export the backup, one merge rule). Gains: no Import on
-open, a republish can no longer take unsaved work, changes saved as made. Costs:
-Export still the backup, loading an old backup must replace the store only
-after asking, last write wins across two open tabs, store size limits against
-~400 rows unchecked.
+Reopened by her 24 Sep (was §8). **Built 25 Sep as "33.1 · cloud 1"** — the
+branch has its own version series, her ruling. Test page, its own store, never
+her app: **https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf** (capabilities
+`db`, `downloads` only — no catalogue lookup there).
 
-**Checked 24 Sep against the platform's own spec (`db.d.ts`):** a document is at
-most 256 KiB, an artifact at most 5,000 documents, kept across republishes,
-erased only if the artifact is deleted, no transactions. Her ledger is ~290 KiB
-before catalogue details — too big for one document, so it must be split. The
-dormant `safeSave` in the JSX is Chat's old `window.storage`, a different
-mechanism — not evidence about this one. **Still to prove:** how many writes a
-page may make at once (an Apply of 300 cards), and that a half-finished write
-never leaves a half ledger — on a scratch page, never hers.
+**Her design, as built** (the code's comments hold the detail — "THE CLOUD
+LEDGER" in `Cat_Watch.jsx`):
+- **Live ledger:** saved compressed after every change, no button. One piece
+  (her 352 rows: 217 KiB → 46 KiB); a ledger outgrowing a piece splits, same
+  code. Her Exports carry on unchanged.
+- **Snapshots:** whole copies by button, optional label, **kept forever** (her
+  choice — judge later), downloadable as an ordinary ledger file. Automatic
+  only as SAFETY copies: before a rollback (her yes), and before an Import or
+  Reset replaces a cloud copy that differs (my call — nothing the store holds
+  is lost by opening a file).
+- **Rollback** asks first; a snapshot becomes the ledger.
+- **The line** under the buttons says when the cloud copy last saved; a banner
+  when it is NOT saving. Permanent, her ask.
+- **Trial switch `CLOUD_OPENS=false`:** the app still opens empty and she
+  imports her file; each import is compared with the cloud copy and the page
+  says "matches exactly" or how it differs — that sentence is the trial's
+  check. "Open it" on the line opens the cloud copy by hand.
 
-**Her direction so far, 24 Sep — nothing built:**
-- **Saves are instant**, as quarantine's already are.
-- **One live ledger plus up to 10 snapshots — the design as she understands
-  it.** The live ledger is one piece per venue, overwritten on every action.
-  Snapshots are whole copies taken automatically at moments that matter
-  (opening the app, after an import, after a big batch of lookups), never
-  overwritten; the oldest is purged when an 11th is taken. Rollback = a
-  snapshot becomes the live ledger. Fixed at ~25 × 11 pieces. **A copy on
-  every save was rejected** — thousands of copies, the opposite of safe. A
-  change log that can rebuild the ledger was discussed and not chosen.
-- **A long trial before the app ever OPENS from the store:** it saves there in
-  the background while she keeps importing and exporting as now, checked at
-  several points and under several scenarios.
-- **Google Drive, back on the table as backup only** (was §8): a button that
-  sends a copy to her Drive (she would press it every ~20 minutes and before
-  leaving), and a button that loads the newest backup from her Drive without
-  her picking a file. **Never instant or automatic saving to Drive** — her
-  ruling. The page reaches Drive through her connector (`mcp`); the connector
-  can create and read files but not overwrite one, so each backup is a new file.
+**Safety, proven by `cloud_ledger.js` and `cloud_app.js`:** a save writes
+new pieces then switches one record, so a save cut off at any point leaves the
+last complete ledger; every piece is fingerprinted and a mismatch is refused;
+an empty page never overwrites the cloud copy. **On the real store (25 Sep):**
+a 180 KB piece stored and read back identical; 270 KB refused at 256 KiB.
+
+**Not yet:** her clicks on the test page; merging to `main` and publishing to
+her app to start the real trial; Google Drive backup by button (back on the
+table — never automatic, her ruling). **Parked, not gating:** two tabs open at
+once.
 
 ### 2. The 320 decisions — hers, in progress
 
