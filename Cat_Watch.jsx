@@ -13,7 +13,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "34.11";
+const APP_VERSION = "34.12";
 const APP_VERSION_DATE = "25 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -2422,7 +2422,9 @@ export default function App(){
       const onShop=!!shopLinkOf(o,dom);
       // Not-there moves a "blocked" row on: the shop answered this time.
       const answered=row.shopState==="blocked"?{...row,shopState:row.hasCatalogue==="yes"?"web":"none"}:row;
-      const dropped=ticket?"The link on file was a ticket, not the book, so it was removed. ":"";
+      // The ticket link is dropped silently — her ruling, 25 Sep: saying so
+      // crowded the one card it applied to, and the row is right either way.
+      const dropped="";
       if(!s.ran)out={ok:false,detail:"",said:"This museum has no shop on file, so there is nothing to re-check."};
       else if(!s.ok)out={ok:false,detail:s.detail,said:"Re-check didn’t run — "+s.detail.split("\n").pop().split("[")[0].trim()+" Nothing changed."};
       // A blocked shop is a failed check and changes nothing — except a ticket

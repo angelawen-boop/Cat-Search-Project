@@ -431,7 +431,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     script.sample = () => { throw new Error('Claude must not be asked'); };
     await click(button(card(khmBad.title), /^Re-check museum shop$/));
     const c = card(khmBad.title), t = c ? c.textContent : '';
-    ok(/ticket, not the book, so it was removed/.test(t) && t.includes(BLOCKED_FOUND), 'L-014: the ticket link is removed and the card says the shop is blocked', t.slice(0, 400));
+    ok(!/ticket/.test(t) && t.includes(BLOCKED_FOUND) && /couldn’t be re-checked/.test(t), 'L-014: the ticket link is removed without a word about it, and the card says the shop is blocked', t.slice(0, 400));
     ok(shopLink(c) && !/tickets/.test(shopLink(c).getAttribute('href')), 'L-015: the Museum shop link no longer goes to the ticket');
     ok(!calls.some(x => x.tool === 'web_fetch' && x.args.urls.includes(TICKET)), 'L-016: the ticket page is not re-read');
   }
