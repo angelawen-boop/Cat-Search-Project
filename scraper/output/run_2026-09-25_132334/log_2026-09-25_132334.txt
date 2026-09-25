@@ -1,0 +1,65 @@
+[2026-09-25T03:23:34.263Z] Cat Watch Sweep Prototype — starting
+[2026-09-25T03:23:34.263Z] Lookback floor: 2024-07-01
+[2026-09-25T03:23:34.263Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_132334
+[2026-09-25T03:23:34.263Z] Machine: container (proxy present, so this is the container)
+[2026-09-25T03:23:34.263Z] Venues this run: lgd
+[2026-09-25T03:23:34.264Z] Proxy: http://127.0.0.1:39277
+[2026-09-25T03:23:34.264Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-25T03:23:34.422Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-25T03:23:34.515Z] [lgd] 
+[2026-09-25T03:23:34.515Z] [lgd] ────────────────────────────────────────────────────────────
+[2026-09-25T03:23:34.515Z] [lgd]   LGD — Lévy Gorvy Dayan, New York and London
+[2026-09-25T03:23:34.515Z] [lgd] ────────────────────────────────────────────────────────────
+[2026-09-25T03:23:34.515Z] [lgd]   Fetching current and past: https://www.levygorvydayan.com/exhibitions
+[2026-09-25T03:23:37.584Z] [lgd]     another site of this venue (her ruling), excluded: Color Form
+[2026-09-25T03:23:37.607Z] [lgd]     another site of this venue (her ruling), excluded: Portraits Go Pop!
+[2026-09-25T03:23:37.789Z] [lgd]     another site of this venue (her ruling), excluded: Francesco Clemente: Winter Flowers
+[2026-09-25T03:23:37.835Z] [lgd]     another site of this venue (her ruling), excluded: Derrick Adams: Sweet Spot
+[2026-09-25T03:23:38.045Z] [lgd]     another site of this venue (her ruling), excluded: Mickalene Thomas: Beyond the Pleasure Principle
+[2026-09-25T03:23:38.134Z] [lgd]     another site of this venue (her ruling), excluded: Joel Mesler: In the Beginning
+[2026-09-25T03:23:38.321Z] [lgd]     another site of this venue (her ruling), excluded: Pierre Soulages: Outrenoir
+[2026-09-25T03:23:38.336Z] [lgd]     another site of this venue (her ruling), excluded: Tu Hongtao
+[2026-09-25T03:23:38.419Z] [lgd]     another site of this venue (her ruling), excluded: American Master, Frank Stella: Polish Villages
+[2026-09-25T03:23:39.055Z] [lgd]   current and past: 130 links seen -> 0 navigation, 0 already-seen URL, 9 at another site of the same venue -> 121 collected (0 of them with no readable title)
+[2026-09-25T03:23:39.055Z] [lgd]   lookback (listing): kept 28, dropped 93 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-25T03:23:39.056Z] [lgd]   reading 28 individual page(s)…
+[2026-09-25T03:23:39.056Z] [lgd]     page 1 of 28
+[2026-09-25T03:23:47.475Z] [lgd]     page 10 of 28
+[2026-09-25T03:23:56.182Z] [lgd]     page 20 of 28
+[2026-09-25T03:24:04.092Z] [lgd]   Individual pages: 28 got text, 0 no curatorial text, 0 failed
+[2026-09-25T03:24:04.094Z] [lgd]   → 28 exhibitions, 28 with curatorial text → lgd.csv
+[2026-09-25T03:24:04.542Z] 
+[2026-09-25T03:24:04.542Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:24:04.542Z]   QC — faulty rows and exceptions
+[2026-09-25T03:24:04.542Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:24:04.542Z]   No faulty rows: every row has a title and a known venue code.
+[2026-09-25T03:24:04.542Z]   No exceptions: every venue looks like the last run that had it.
+[2026-09-25T03:24:04.542Z] 
+[2026-09-25T03:24:04.542Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:24:04.542Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-25T03:24:04.542Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:24:04.542Z]   LGD: 28 exhibitions | 28 with text
+[2026-09-25T03:24:04.542Z] 
+[2026-09-25T03:24:04.542Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:24:04.542Z]   COVERAGE — every link accounted for
+[2026-09-25T03:24:04.542Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:24:04.542Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-25T03:24:04.542Z]   -----------------------------------------------------------------------------------------------
+[2026-09-25T03:24:04.542Z]   lgd        current and past               130     0       0     0        0        0        121
+[2026-09-25T03:24:04.542Z] 
+[2026-09-25T03:24:04.543Z]   seen      = links matching the venue's selector on that page
+[2026-09-25T03:24:04.543Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-25T03:24:04.543Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-25T03:24:04.543Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-25T03:24:04.543Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-25T03:24:04.543Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-25T03:24:04.543Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-25T03:24:04.543Z] 
+[2026-09-25T03:24:04.543Z] Network bridge: 1019 requests served, 798 skipped (image/media/font), 0 failed
+[2026-09-25T03:24:04.543Z] 
+[2026-09-25T03:24:04.543Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_132334
+[2026-09-25T03:24:04.543Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_132334/sweep.csv  (28 rows — lgd:28)
+[2026-09-25T03:24:04.543Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_132334/log_2026-09-25_132334.txt
+[2026-09-25T03:24:04.543Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-25T03:24:04.543Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-25T03:24:04.543Z] No de-duplication is applied — see passThrough.

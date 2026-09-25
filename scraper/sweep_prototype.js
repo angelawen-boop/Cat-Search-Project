@@ -1532,6 +1532,19 @@ function lookbackFor(venueCode) {
 }
 
 /**
+ * HER ONE-TIME EXCEPTIONS to the lookback, named by address in a recipe's
+ * `keepDespiteLookback`. Only her ruling puts an address there; the lookback
+ * stands for every row not named.
+ */
+function keptDespiteLookback(row, venueCode) {
+  const list = (VENUES[venueCode] && VENUES[venueCode].keepDespiteLookback) || [];
+  if (!list.length || !row.url) return false;
+  let p;
+  try { p = new URL(row.url).pathname.replace(/\/+$/, ''); } catch { return false; }
+  return list.some(x => x.replace(/\/+$/, '') === p);
+}
+
+/**
  * Drop exhibitions that had already closed before the lookback floor.
  *
  * The rule: keep an exhibition if it was open at any point on or after
@@ -1583,6 +1596,10 @@ function applyLookback(rows, venueCode, stage) {
       row.notes = addNote(row.notes, 'No opening date published while this exhibition is running.');
     }
     if (afterLookback(row.end_date, floor)) kept.push(row);
+    else if (keptDespiteLookback(row, venueCode)) {
+      if (stage === 'final') row.notes = addNote(row.notes, 'Closed before the 1 July 2024 lookback; kept by your one-time exception.');
+      kept.push(row);
+    }
     else dropped++;
   }
   if (dropped || undated || noStart) {
@@ -3344,9 +3361,16 @@ async function collectFromListing(page, opts) {
     // site says so, so this is rung 1 of the ladder rather than our judgement.
     // Named in the log and counted in the coverage table, so an exclusion is
     // something you can read and check rather than a silent disappearance.
-    if (opts.otherBranch && opts.otherBranch.test(dates.raw || '')) {
+    //
+    // THE LINK'S OWN TEXT IS READ TOO. `dates.raw` is only the matched date
+    // when the date sits INSIDE the link — Lévy Gorvy Dayan's cards put name,
+    // location and dates all in the anchor — so the location line never
+    // reached this test and its Hong Kong shows passed straight through. The
+    // V&A's dates sit outside the link, which is why it never showed.
+    if (opts.otherBranch && (opts.otherBranch.test(dates.raw || '')
+        || opts.otherBranch.test(await getText(link).catch(() => '')))) {
       c.branch++;
-      log(`    another V&A/branch site, excluded: ${title || slugToWords(fullUrl)}`);
+      log(`    another site of this venue (her ruling), excluded: ${title || slugToWords(fullUrl)}`);
       seenUrls.add(key);
       continue;
     }
@@ -3634,6 +3658,28 @@ const VENUES = {
     },
     // Its two galleries. Used to cross-reference a show that ran in both.
     locations: ['New York', 'Palm Beach'],
+  },
+
+  // LÉVY GORVY DAYAN — her addition, 25 Sep. A gallery in New York and London;
+  // one page carries current and past (back to 2021), and upcoming shows are
+  // not announced. Every card is three lines inside the link — name, location,
+  // dates — so the title is the first line (linkLines).
+  lgd: {
+    name: 'Lévy Gorvy Dayan, New York and London',
+    base: 'https://www.levygorvydayan.com',
+    pages: [
+      { path: '/exhibitions', ctx: 'current and past' },
+    ],
+    selector: 'a[href*="/exhibitions/"]',
+    isNav: href => /\/exhibitions\/?$/.test(href),
+    title: { heading: false, linkLines: true },
+    // THE HONG KONG PARTNERSHIP SHOWS ARE NOT HERS — her ruling, 25 Sep. The
+    // card's own location line says "Lévy Gorvy Dayan & Wei, Hong Kong".
+    otherBranch: /Hong Kong/i,
+    // A ONE-TIME EXCEPTION, HERS, 25 Sep: this show closed in May 2024, before
+    // the lookback, but its catalogue has only just been published. This one
+    // address only — the lookback stands for every other row.
+    keepDespiteLookback: ['/exhibitions/yves-klein-and-the-tangible-world'],
   },
 
   borghese: {
@@ -5185,7 +5231,9 @@ async function fetchIndividualPages(page, rows, venueCode) {
   let fetched = 0, failed = 0, noText = 0;
   // Skip anything already known to have closed before the lookback floor —
   // no point spending a page load on an exhibition we will discard.
-  const skip = new Set(rows.filter(r => r.end_date && !afterLookback(r.end_date, lookbackFor(venueCode))));
+  // Her one-time exceptions are read like any kept row.
+  const skip = new Set(rows.filter(r => r.end_date && !afterLookback(r.end_date, lookbackFor(venueCode))
+    && !keptDespiteLookback(r, venueCode)));
   if (skip.size) log(`  skipping ${skip.size} individual page(s): closed before lookback`);
 
   // Progress, because this is the LONGEST phase and it used to print nothing at
@@ -5892,7 +5940,7 @@ module.exports = {
   stripWeekdays,
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
-  saysOngoing, expandYearArchive, expandDateRange, listingPages, followPagination,
+  saysOngoing, expandYearArchive, expandDateRange, keptDespiteLookback, listingPages, followPagination,
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.

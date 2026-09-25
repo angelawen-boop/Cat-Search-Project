@@ -389,13 +389,14 @@ check('18f: the real sample file starts with every card undecided',
 // screen). Written down here so a later session reshuffling the array for
 // tidiness has to answer to her list rather than to its own taste, and so a
 // venue cannot be dropped from it by an edit that looks harmless.
+// Lévy Gorvy Dayan (lgd) added 25 Sep — her ruling: always after Acquavella.
 {
-  const want=['met','rijks','ng','acq','frick','menil','artic','wallace',
+  const want=['met','rijks','ng','acq','lgd','frick','menil','artic','wallace',
     'tate-britain','tate-modern','va','louvre','khm','uffizi','dellav',
     'borghese','brera','capo','moma','brit','morgan'];
   const got=H.MUSEUMS.map(m=>m.id);
   check('19: the venues are in her order', got.join()===want.join(), {got});
-  check('19a: and all 21 are still there', got.length===21, {count:got.length});
+  check('19a: and all 22 are still there', got.length===22, {count:got.length});
 }
 
 // 20. QUARANTINE LIVES IN TWO PLACES AND THE LATEST DECISION WINS — her choice

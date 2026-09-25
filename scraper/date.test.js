@@ -21,7 +21,7 @@ const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
   classifyLoadError, isOwnListingPage, saysOngoing,
-  expandYearArchive, expandDateRange, listingPages, followPagination, VENUES, pickTitleLine,
+  expandYearArchive, expandDateRange, keptDespiteLookback, listingPages, followPagination, VENUES, pickTitleLine,
   stripWeekdays,
   addNote, finishNotes, scopeSelector, extensionNote,
 } = require('./sweep_prototype.js');
@@ -544,6 +544,31 @@ test('TB-004: a session nested inside a show is not a show', () => {
   assert.equal(nav('/whats-on/tate-britain/women-artists-in-britain-1520-1920'), false);
   assert.equal(nav('/whats-on/tate-britain/lee-miller/'), false);
   assert.equal(nav('/whats-on/tate-britain'), true);
+});
+
+// LG-001 to LG-003 — LÉVY GORVY DAYAN, her rulings of 25 Sep.
+
+test('LG-001: the Hong Kong partnership shows are refused on their own location line', () => {
+  const re = VENUES.lgd.otherBranch;
+  assert.ok(re.test('Color Form Lévy Gorvy Dayan & Wei, Hong Kong March 21 - May 31, 2024'));
+  assert.ok(re.test('Francesco Clemente: Winter Flowers LGDR & Wei, Hong Kong March 20 - April 29, 2023'));
+  assert.equal(re.test('Alison Watt Lévy Gorvy Dayan, London March 6 - June 8, 2025'), false);
+  assert.equal(re.test('Ziva Jelin Lévy Gorvy Dayan, New York September 25 - November 1, 2025'), false);
+});
+
+test('LG-002: her one-time exception keeps Yves Klein, and only it', () => {
+  const at = url => keptDespiteLookback({ url }, 'lgd');
+  assert.equal(at('https://www.levygorvydayan.com/exhibitions/yves-klein-and-the-tangible-world'), true);
+  assert.equal(at('https://www.levygorvydayan.com/exhibitions/yves-klein-and-the-tangible-world/'), true);
+  assert.equal(at('https://www.levygorvydayan.com/exhibitions/n-dash-london'), false);
+  assert.equal(keptDespiteLookback({ url: 'https://www.levygorvydayan.com/exhibitions/yves-klein-and-the-tangible-world' }, 'acq'), false,
+    'the exception belongs to one venue');
+});
+
+test('LG-003: no other venue carries a lookback exception', () => {
+  const withOne = Object.keys(VENUES).filter(c => (VENUES[c].keepDespiteLookback || []).length);
+  assert.deepEqual(withOne, ['lgd']);
+  assert.equal(VENUES.lgd.keepDespiteLookback.length, 1);
 });
 
 // ---------------------------------------------------------------------------
@@ -1287,18 +1312,18 @@ test('R-006: moma names its blurb container and drops installations', () => {
 test('R-003: every other venue is the container\'s', () => {
   for (const c of ['ng', 'rijks', 'acq', 'frick', 'menil', 'va', 'louvre', 'capo',
                    'uffizi', 'brera', 'khm', 'dellav', 'wallace', 'borghese',
-                   'tate-modern', 'tate-britain']) {
+                   'tate-modern', 'tate-britain', 'lgd']) {
     assert.strictEqual(routeOf(c), 'container', c + ' should be the container\'s');
   }
 });
 
 test('R-004: the two sets do not overlap and cover every venue', () => {
   const codes = [...SWEEP_SRC.matchAll(RECIPE_KEY)].map(m => m[1]);
-  assert.strictEqual(codes.length, 21, 'expected 21 recipes, found ' + codes.length);
+  assert.strictEqual(codes.length, 22, 'expected 22 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
   assert.deepStrictEqual(home.sort(), ['artic', 'met', 'moma']);
-  assert.strictEqual(container.length, 18);
+  assert.strictEqual(container.length, 19);
   assert.strictEqual(home.length + container.length, codes.length);
 });
 
