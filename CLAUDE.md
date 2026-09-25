@@ -309,7 +309,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34, 25 Sep 2026, is live; 34.5 (Levy Gorvy Dayan, Jacquemart-André, MAM Paris and d'Orsay added; chips renamed "Levy Gorvy", "Artic", "KHM") is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
+**Version 34, 25 Sep 2026, is live; 34.6 (Levy Gorvy Dayan, Jacquemart-André, MAM Paris and d'Orsay added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters) is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -482,6 +482,17 @@ Each step runs only if the one before left something missing.
   again fills blanks only and never moves the status.** `docs/app.md`, "A book
   leaving the shop". **Built and tested by fixtures; not yet met a real sold-out
   or pulled page.**
+- **A blocked shop says so — her wording, 25 Sep (KHM, 307 to a waiting
+  room).** Every shop page refused is `shopState: "blocked"`, never "not in the
+  shop" or "no catalogue": *"The museum shop is blocked - search it manually.
+  The catalogue is stocked elsewhere."* / *"The museum shop is blocked. The
+  catalogue also does not appear to exist elsewhere. Search manually to
+  confirm."* Both carry a Museum shop link to its search. Re-check refused
+  again changes nothing.
+- **A ticket is never a catalogue** (`isTicketLink`, and the reading rules).
+- **A shop link from the WEB search is opened before it is filed as in the
+  shop** (`confirmShopLink`): opens and is the book for sale → in the shop;
+  anything else → found on the web. KHM's was a dead ticket filed unopened.
 
 **The cost:** up to four searches and three readings. Searches are free; **every
 reading runs on her allowance**, and the connector's keyless tier refuses after
@@ -510,7 +521,7 @@ first number to scroll past:
 | `page_loads.js` | does the page load |
 | `page_renders.js` | does it DRAW — renders into jsdom twice, plain and with the runtime answering |
 | `catalogue_lookup.js` | C-001 to C-099 |
-| `recheck_shop.js` | "Re-check museum shop" pressed in the real app (jsdom) — R-001 to R-023 |
+| `recheck_shop.js` | the real app in jsdom, buttons pressed — Re-check (R-001 to R-023), blocked shops and web-found shop links (L-001 to L-019), search with filters (S-001 to S-003) |
 | `mam_pages.js` | the MAM recipe on its saved archive pages — her exclusions and count |
 | `orsay_pages.js` | the d'Orsay recipe on her saved pages, no network — her tag rulings, dates, titles, the description |
 | `summary_pages.js` | descriptions on saved pages (`docs/summary_pages/`), no network — the museum's own text, never a press list, credit or ticket note |
@@ -1002,7 +1013,7 @@ stored and read back identical; 270 KB refused at the 256 KiB limit.
    She will decide the routine from use.
 3. Merge to `main` and publish to her app to start the real trial — hers
    to call; §4's publishing rules apply. **`main` has moved on since the branch
-   was cut** (34.5: Re-check museum shop, four venues, chip renames), so merge
+   was cut** (34.6: Re-check museum shop, four venues, chip renames, blocked shops, search with filters), so merge
    `main` into the branch first and re-run `cloud_app.js` there.
 4. Google Drive backup by button — back on the table, never automatic.
 
@@ -1108,7 +1119,7 @@ venues plus Tate Britain's past (item 4). Steps, in order:
    sweep MAD; `jacquemart`'s run and compression stand.
 2. Stitch, compress (subagents per `compress.js`), qc, and READ the cards
    through the app's intake before sending (§6, "Handing her work nobody read").
-3. Publish the app first — **34.5 is built, not live**; it carries the new
+3. Publish the app first — **34.6 is built, not live**; it carries the new
    venue codes, and the live 34 would file every new row as unknown. Ask
    before publishing (§1). d'Orsay's rows cannot be in this file.
 

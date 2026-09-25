@@ -71,7 +71,23 @@ const noCatRow = { ...base, id: 'ng-testnocat', museumId: 'ng', title: 'Test Sho
   summary: 'x', exUrl: 'https://www.nationalgallery.org.uk/exhibitions/test2',
   hasCatalogue: 'no', catalogueTitle: null, isbn13: null, publisher: null, publisherUrl: null,
   publisherResult: null, shopUrl: null, shopState: 'none', shopChange: null };
-const ledger = { rows: [miller, hidden, webRow, noCatRow], ignored: [], lastRun: null };
+// A BLOCKED SHOP — her finding, 25 Sep, KHM. Her row exactly as it was
+// filed: a ticket link, "In the museum shop", from a shop that answers every
+// request with a 307 to its waiting room.
+const TICKET = 'https://shop.khm.at/en/tickets/canaletto-bellotto-200000000008445-T429-01';
+const khmBad = { ...base, id: 'khm-canalettobellotto', museumId: 'khm', title: 'Canaletto & Bellotto',
+  summary: 'x', exUrl: 'https://www.khm.at/en/exhibitions/canaletto-bellotto', startDate: '2026-03-24', endDate: '2026-09-06',
+  hasCatalogue: 'yes', catalogueTitle: 'Canaletto & Bellotto. Exhibition Catalogue 2026', isbn13: null,
+  publisher: null, publisherUrl: null, publisherResult: 'unnamed', shopUrl: TICKET, shopState: 'shop', shopChange: null };
+const fresh = (id, museumId, title) => ({ ...base, id, museumId, title, summary: 'x', exUrl: 'https://x.test/' + id,
+  looked: false, hasCatalogue: null, catalogueTitle: null, isbn13: null, publisher: null, publisherUrl: null,
+  publisherResult: null, shopUrl: null, shopState: null, shopChange: null });
+const khmA = fresh('khm-testa', 'khm', 'Test KHM Show Alpha');
+const khmB = fresh('khm-testb', 'khm', 'Test KHM Show Beta');
+const khmC = fresh('khm-testc', 'khm', 'Test KHM Show Gamma');
+const ngA = fresh('ng-testopens', 'ng', 'Test NG Show Opens');
+const ngB = fresh('ng-testdead', 'ng', 'Test NG Show Dead Link');
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -260,6 +276,176 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
        'R-023: and keeps the ISBN and title it already had');
   }
 
+
+  // ════ A BLOCKED SHOP, AND A SHOP LINK FROM THE WEB SEARCH — her rulings, 25 Sep ════
+  //
+  // The connector's answer for KHM, read off her diagnostic: "0 page(s), 1
+  // refused (307)" for the shop search, and the same for the ticket address.
+  const BLOCKED_FOUND = 'The museum shop is blocked - search it manually. The catalogue is stocked elsewhere.';
+  const BLOCKED_NONE = 'The museum shop is blocked. The catalogue also does not appear to exist elsewhere. Search manually to confirm.';
+  const r307 = u => ({ url: u, error_type: 'http_error', http_status_code: 307, content: null });
+  const isKhm = u => /shop\.khm\.at/.test(u);
+  const openTray = async t => { const c = card(t); if (c && !button(c, /Find catalogue|Search again|Re-check/)) await click(button(c, /Catalogue/)); };
+  const kind = p => /"forSale"/.test(p) ? 'forsale' : /venue’s OWN shop pages/.test(p) ? 'shop' : /^\{"isbn13"|"isbn13": string\|null, "publisher": string\|null, "publisherUrl": string\|null\}/m.test(p) && !/"found"/.test(p) ? 'page' : 'web';
+  const PRODUCT = 'https://shop.khm.at/en/products/ausstellungskatalog-2026-canaletto-bellotto-sprache-englisch-100000000039076-3631-02';
+
+  // ── L-001..L-004: her case. Shop refused; the web search offers the TICKET.
+  {
+    calls.length = 0;
+    await openTray(khmA.title);
+    script.mcp = (tool, args) => tool === 'web_search'
+      ? { payload: { results: [{ url: TICKET, title: 'Canaletto & Bellotto', excerpts: ['Canaletto & Bellotto. Exhibition Catalogue 2026'] }] } }
+      : { payload: { results: [], errors: args.urls.map(r307) } };
+    script.sample = p => kind(p) === 'web'
+      ? { found: true, catalogueTitle: 'Alpha. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: TICKET }
+      : { found: false };
+    await click(button(card(khmA.title), /Find catalogue/));
+    const c = card(khmA.title), t = c ? c.textContent : '';
+    ok(t.includes(BLOCKED_FOUND), 'L-001: shop refused, book found elsewhere — her sentence', t.slice(0, 300));
+    ok(!/In the museum shop/.test(t), 'L-002: never "In the museum shop"');
+    const a = shopLink(c);
+    ok(a && /shop\.khm\.at\/en\/search\?q=/.test(a.getAttribute('href')), 'L-003: the Museum shop link is the shop’s own search, to search it manually', a && a.getAttribute('href'));
+    ok(!calls.some(x => x.tool === 'web_fetch' && x.args.urls.includes(TICKET)), 'L-004: a ticket is never taken as the book, so it is never even opened');
+  }
+
+  // ── L-005..L-007: shop refused; the web search offers a real product page,
+  // which then refuses too (307) — it is not "In the museum shop".
+  {
+    calls.length = 0;
+    await openTray(khmB.title);
+    script.mcp = (tool, args) => tool === 'web_search'
+      ? { payload: { results: [{ url: PRODUCT, title: 'Ausstellungskatalog 2026', excerpts: ['Catalogue'] }] } }
+      : { payload: { results: [], errors: args.urls.map(r307) } };
+    script.sample = p => kind(p) === 'web'
+      ? { found: true, catalogueTitle: 'Test KHM Show Beta: The Catalogue', isbn13: '9781857096972', publisher: null, publisherUrl: null, shopUrl: PRODUCT }
+      : { found: false };
+    await click(button(card(khmB.title), /Find catalogue/));
+    const t = card(khmB.title).textContent;
+    ok(t.includes(BLOCKED_FOUND) && !/In the museum shop/.test(t), 'L-005: a shop link that will not open is not "In the museum shop"', t.slice(0, 300));
+    ok(calls.filter(x => x.tool === 'web_fetch' && x.args.urls.includes(PRODUCT)).length === 1, 'L-006: it was opened once — never again by the ISBN step after failing');
+    ok(!calls.some(x => x.kind === 'sample' && /"forSale"/.test(x.prompt)), 'L-007: and Claude is not asked about a page that never came back');
+  }
+
+  // ── L-008..L-009: shop refused and nothing anywhere ──────────────────────
+  {
+    await openTray(khmC.title);
+    script.mcp = (tool, args) => tool === 'web_search'
+      ? { payload: { results: [{ url: 'https://news.test/x', title: 'Show review', excerpts: ['A review.'] }] } }
+      : { payload: { results: [], errors: args.urls.map(r307) } };
+    script.sample = () => ({ found: false, catalogueTitle: null, isbn13: null, publisher: null, publisherUrl: null, shopUrl: null });
+    await click(button(card(khmC.title), /Find catalogue/));
+    const c = card(khmC.title), t = c ? c.textContent : '';
+    ok(t.includes(BLOCKED_NONE) && !/No catalogue found for this exhibition/.test(t), 'L-008: shop refused, nothing elsewhere — her sentence, not "No catalogue found"', t.slice(0, 300));
+    const a = shopLink(c);
+    ok(a && /shop\.khm\.at\/en\/search\?q=Test%20KHM%20Show%20Gamma/.test(a.getAttribute('href')), 'L-009: with a Museum shop link to search manually', a && a.getAttribute('href'));
+  }
+
+  // ── L-010..L-012: the shop answers; the web search offers a shop page that
+  // OPENS and is the book — filed in the museum shop, the page read once.
+  {
+    calls.length = 0;
+    await openTray(ngA.title);
+    const link = 'https://shop.nationalgallery.org.uk/test-ng-show-opens.html';
+    script.mcp = (tool, args) => tool === 'web_search'
+      ? { payload: { results: [{ url: link, title: 'Test', excerpts: ['Test NG Show Opens catalogue'] }] } }
+      : args.urls.includes(link)
+        ? { payload: { results: [{ url: link, title: 'Test NG Show Opens', excerpts: ['Hardback £40. Add to basket. Publisher: Yale. ' + 'Details. '.repeat(80)] }], errors: [] } }
+        : { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: ['Other books.'] })), errors: [] } };
+    script.sample = p => ({ forsale: { forSale: true, why: 'Add to basket.' },
+      shop: { found: false }, page: { isbn13: null, publisher: 'Yale', publisherUrl: null },
+      web: { found: true, catalogueTitle: 'Test NG Show Opens: Catalogue', isbn13: '9780300000009', publisher: null, publisherUrl: null, shopUrl: link } })[kind(p)];
+    await click(button(card(ngA.title), /Find catalogue/));
+    const c = card(ngA.title), t = c ? c.textContent : '';
+    ok(/In the museum shop\./.test(t), 'L-010: a web-found shop link that opens and is for sale — "In the museum shop."', t.slice(0, 300));
+    ok(shopLink(c) && shopLink(c).getAttribute('href') === link, 'L-011: the Museum shop link is that page');
+    ok(calls.filter(x => x.tool === 'web_fetch' && x.args.urls.includes(link)).length === 1, 'L-012: the page was opened once, and the ISBN step reused it');
+  }
+
+  // ── L-013: the same, but the shop page is gone (404) — found on the web ──
+  {
+    await openTray(ngB.title);
+    const link = 'https://shop.nationalgallery.org.uk/test-ng-show-dead.html';
+    script.mcp = (tool, args) => tool === 'web_search'
+      ? { payload: { results: [{ url: link, title: 'Test', excerpts: ['Test NG Show Dead Link catalogue'] }] } }
+      : args.urls.includes(link)
+        ? { payload: { results: [], errors: [{ url: link, error_type: 'http_error', http_status_code: 404, content: null }] } }
+        : { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: ['Other books.'] })), errors: [] } };
+    script.sample = p => kind(p) === 'web'
+      ? { found: true, catalogueTitle: 'Dead Link Catalogue', isbn13: '9780300000009', publisher: 'Yale', publisherUrl: null, shopUrl: link }
+      : { found: false };
+    await click(button(card(ngB.title), /Find catalogue/));
+    const t = card(ngB.title).textContent;
+    ok(/Not in the museum shop/.test(t) && !/In the museum shop\./.test(t), 'L-013: a web-found shop link that is gone is filed as found on the web', t.slice(0, 300));
+  }
+
+  // ── L-014..L-016: her real row. Re-check with the shop still blocked. ─────
+  {
+    calls.length = 0;
+    await openTray(khmBad.title);
+    script.mcp = (tool, args) => ({ payload: { results: [], errors: args.urls.map(r307) } });
+    script.sample = () => { throw new Error('Claude must not be asked'); };
+    await click(button(card(khmBad.title), /^Re-check museum shop$/));
+    const c = card(khmBad.title), t = c ? c.textContent : '';
+    ok(/ticket, not the book, so it was removed/.test(t) && t.includes(BLOCKED_FOUND), 'L-014: the ticket link is removed and the card says the shop is blocked', t.slice(0, 400));
+    ok(shopLink(c) && !/tickets/.test(shopLink(c).getAttribute('href')), 'L-015: the Museum shop link no longer goes to the ticket');
+    ok(!calls.some(x => x.tool === 'web_fetch' && x.args.urls.includes(TICKET)), 'L-016: the ticket page is not re-read');
+  }
+
+  // ── L-017..L-018: Re-check on a blocked row once the shop answers ────────
+  {
+    script.mcp = (tool, args) => ({ payload: { results: args.urls.map(u => ({ url: u, title: 'Shop',
+      excerpts: ['Canaletto & Bellotto. Exhibition Catalogue 2026 — ' + PRODUCT + ' €39.90'] })), errors: [] } });
+    script.sample = p => /"forSale"/.test(p) ? { forSale: true, why: 'x' } : /"found"/.test(p)
+      ? { found: true, catalogueTitle: 'Canaletto & Bellotto. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: PRODUCT }
+      : { isbn13: null, publisher: null, publisherUrl: null };
+    await click(button(card(khmBad.title), /^Re-check museum shop$/));
+    const c = card(khmBad.title), t = c ? c.textContent : '';
+    ok(/Now in the museum shop\./.test(t) && !t.includes(BLOCKED_FOUND), 'L-017: the shop answering moves "blocked" to "Now in the museum shop."', t.slice(0, 300));
+    ok(shopLink(c) && shopLink(c).getAttribute('href') === PRODUCT, 'L-018: with the book’s real page as the link');
+  }
+
+  // ── L-019: a blocked check on an ordinary row changes nothing ────────────
+  {
+    script.mcp = (tool, args) => ({ payload: { results: [], errors: args.urls.map(r307) } });
+    const before = card(webRow.title).textContent;
+    // webRow is "Now in the museum shop" with a link on file by now, so this
+    // reads that page; use noCatRow, which has none.
+    await click(button(card(noCatRow.title), /^Re-check museum shop$/));
+    const t = card(noCatRow.title).textContent;
+    ok(/museum shop is blocked\. Nothing changed\./.test(t) && /No catalogue found for this exhibition/.test(t),
+       'L-019: a re-check refused by the shop says so and changes nothing', t.slice(0, 300));
+    ok(card(webRow.title).textContent === before, 'L-019a: other cards untouched');
+  }
+
+
+  // ── S-001..S-003: the search narrows WITH the filters — her finding, 25 Sep.
+  // It used to return early, so text in the box switched every filter off.
+  {
+    const doc = win.document;
+    const titles = () => [...doc.querySelectorAll('article')].map(a => a.textContent);
+    // The Search button focuses the box, and that React (see below) watches
+    // through IE's attachEvent, which jsdom lacks. A no-op stands in for it.
+    win.HTMLElement.prototype.attachEvent = function () {};
+    win.HTMLElement.prototype.detachEvent = function () {};
+    await click([...doc.querySelectorAll('button')].find(b => b.title === 'Search'));
+    const box = doc.querySelector('input[placeholder^="Search exhibitions"]');
+    // React was loaded before this jsdom existed, so it cannot hear a synthetic
+    // input event here. Its own onChange is called instead — the same handler
+    // a keystroke reaches in a browser.
+    const props = box[Object.keys(box).find(k => k.startsWith('__reactProps'))];
+    await act(async () => { props.onChange({ target: { value: 'Test' } }); });
+    await settle();
+    const all = titles();
+    ok(all.some(x => x.includes(webRow.title)) && all.some(x => x.includes(khmA.title)), 'S-001: the search finds its matches across venues', all.length);
+    const chip = [...doc.querySelectorAll('button')].find(b => b.textContent === 'KHM');
+    await click(chip);
+    const khmOnly = titles();
+    ok(khmOnly.length === 3 && khmOnly.every(x => /Test KHM Show/.test(x)), 'S-002: with the search on, the KHM chip cuts it to KHM’s three', khmOnly.length + ': ' + khmOnly.map(x => x.slice(0, 40)).join(' | '));
+    await click(chip);
+    await click([...doc.querySelectorAll('button')].find(b => b.textContent === 'NG' || b.textContent === 'National Gallery'));
+    const ng = titles();
+    ok(ng.length > 0 && ng.every(x => /Test/.test(x)) && !ng.some(x => /KHM/.test(x)), 'S-003: and another venue’s chip cuts it to that venue', ng.length);
+  }
   try { await act(async () => root.unmount()); } catch {}
   console.error = realError;
   const loud = shouted.filter(m => !/not wrapped in act|ReactDOMTestUtils/.test(m));

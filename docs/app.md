@@ -352,6 +352,37 @@ the card read back), each mutation-checked. **Not tested: how a real shop words
 "sold out", or what the connector returns for a redirect** — those wait for a
 real case.
 
+### A blocked shop, a ticket, and a shop link the web search found — 25 Sep
+
+**What she met.** KHM's *Canaletto & Bellotto* read "In the museum shop" with a
+link to `shop.khm.at/en/tickets/canaletto-bellotto-…-T429-01`, a 404 in her
+browser. The real book is at `/en/products/ausstellungskatalog-2026-canaletto-
+bellotto-sprache-englisch-100000000039076-3631-02`. The diagnostic:
+
+```
+opened https://shop.khm.at/en/search?q=Canaletto%20%26%20Bellotto: 0 page(s), 1 refused (307)
+search: 10 results for [...]
+read the results
+opened https://shop.khm.at/en/tickets/canaletto-bellotto-200000000008445-T429-01: 0 page(s), 1 refused (307)
+```
+
+**Three faults, one route.**
+1. The shop refused every page (its waiting room, 307) and the code read that
+   as "not in the shop" and went wider without a word.
+2. The web search offered the shop's TICKET address from an old index, and
+   nothing said a ticket is not a book.
+3. A link on the shop's host was filed "In the museum shop" because of its
+   host alone. The ISBN step then tried to open it, was refused, and the
+   filing stood.
+
+**Her rulings.** A blocked shop says so, in her words (§4 of the guide).
+A ticket is not a catalogue. A shop link from the wider search counts only
+once it has been opened and is the book, for sale; otherwise the book is
+found on the web. Rows already carrying a ticket link lose it on Re-check.
+
+Fixtures L-001 to L-019 in `recheck_shop.js`, on rows shaped like hers,
+with the connector answering 307 as it did for her.
+
 ### Shop addresses — checked one by one, 21 Sep
 
 **Stage one needs the shop's own SEARCH BOX, and for 17 of 18 venues it was

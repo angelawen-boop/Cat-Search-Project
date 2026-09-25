@@ -13,7 +13,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "34.5";
+const APP_VERSION = "34.6";
 const APP_VERSION_DATE = "25 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -1034,7 +1034,10 @@ function publisherNote(result,hasUrl){
 // Pre-order and "available to order" count as in the shop; sold out, out of
 // stock and unavailable count as gone, in any language — her yes, 25 Sep.
 //
-// shopState: "shop" | "gone" | "web" | "none" | null.  "gone" keeps shopUrl.
+// shopState: "shop" | "gone" | "web" | "none" | "blocked" | null.  "gone" keeps shopUrl.
+// "blocked": the museum shop refused every page the lookup opened, so whether
+// the book is there is UNKNOWN — never filed as "not in the shop". Her
+// finding, 25 Sep: KHM's shop redirects every request to a waiting room (307).
 // shopChange: "now" | "back" | null on a "shop" row — how it got there.
 // (The 22 Sep code could leave "gone" on a "web" row, with no link kept. That
 // is read as plain "web" now: not in the shop, and no page to re-check.)
@@ -1050,6 +1053,28 @@ function shopHeadline(shopState,shopChange){
   }
   if(shopState==="gone")return "No longer in the museum shop.";
   return null;
+}
+
+// A BLOCKED SHOP SAYS SO — her wording, 25 Sep. "Not in the museum shop" and
+// "no catalogue" are findings; a shop that refused to be read is not one, and
+// before this the card could not tell them apart.
+const SHOP_BLOCKED_FOUND="The museum shop is blocked - search it manually. The catalogue is stocked elsewhere.";
+const SHOP_BLOCKED_NONE="The museum shop is blocked. The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
+
+// A TICKET IS NOT A CATALOGUE — her ruling, 25 Sep. KHM's Canaletto & Bellotto
+// was filed "In the museum shop" with a link to /en/tickets/…, a ticket that
+// died with the show. A link with /ticket/ or /tickets/ in its path is never
+// taken as the book, whichever step produced it.
+function isTicketLink(url){ return /\/tickets?\//i.test(String(url||"")); }
+
+// The link, only when it is really on the venue's shop and is not a ticket.
+// One copy, used by the lookup and by Re-check. A shop page links outward —
+// to a publisher, a distributor, another shop — so a link read off a shop page
+// is not automatically ON that shop.
+function shopLinkOf(o,dom){
+  const u=o&&o.shopUrl;
+  if(!u||!dom||isTicketLink(u))return null;
+  return String(u).toLowerCase().includes(String(dom).toLowerCase())?u:null;
 }
 
 // The shop button's label. "(last seen)" is what tells her the page may be
@@ -1104,25 +1129,28 @@ function foundInShop(row,o){
 // sale HERE, now? A redirect to the shop front is caught there, because the
 // page served is then not the book's own page.
 const GONE_HTTP=new Set([404,410]);
-async function recheckLinkedPage(row){
-  const book=row.catalogueTitle||row.title;
-  const f=await fetchPage(row.shopUrl,
+
+// READ ONE SHOP PAGE AND ASK: is this book for sale HERE, now? One copy, used
+// by Re-check and by the lookup's check of a shop link a web search turned up.
+// Returns {kind, detail, …}:
+//   "norun"      the connector refused; `why` says why
+//   "gone"       404 or 410; `status`
+//   "unreadable" nothing came back, or only a shell; `why` the errors, if any
+//   "noread"     Claude could not be asked; `why`
+//   "badanswer"  Claude's answer was not a yes or no
+//   "read"       `forSale` true or false, `why` Claude's reason, `results` the page
+async function readShopPage(book,url){
+  const f=await fetchPage(url,
     "Whether the book “"+book+"” can be bought on this page now: its product page, price, "
       +"add to cart, pre-order, sold out, out of stock, unavailable.",
     [book+" add to cart sold out"]);
-  if(!f.ok)return{ok:false,detail:f.detail,said:"Re-check didn’t run — "+f.detail.split("[")[0].trim()+" Nothing changed."};
+  if(!f.ok)return{kind:"norun",detail:f.detail,why:f.detail.split("[")[0].trim()};
   const dead=(f.errors||[]).find(e=>GONE_HTTP.has(Number(e&&e.http_status_code)));
-  const hadIt=row.shopState==="shop";
-  if(dead){
-    return{ok:true,detail:f.detail+"\nThe shop answered "+dead.http_status_code+": that page no longer exists.",
-      row:{...row,shopState:"gone",shopChange:null},
-      said:hadIt?"Re-checked: that shop page no longer exists. Marked no longer in the museum shop."
-                :"Re-checked: that shop page still doesn’t exist. Still no longer in the museum shop."};
-  }
+  if(dead)return{kind:"gone",status:dead.http_status_code,
+    detail:f.detail+"\nThe shop answered "+dead.http_status_code+": that page no longer exists."};
   if(!f.results.length||pageIsShell(f.results)){
     const why=(f.errors||[]).map(e=>String((e&&e.error_type)||"")+(e&&e.http_status_code?" "+e.http_status_code:"")).filter(Boolean).join(", ");
-    return{ok:false,detail:f.detail+(why?"\n"+why:""),
-      said:"Re-check didn’t work — the shop page couldn’t be read"+(why?" ("+why+")":"")+". Nothing changed."};
+    return{kind:"unreadable",why,detail:f.detail+(why?"\n"+why:"")};
   }
   const served=f.results.map(r=>String((r&&r.url)||"")).filter(Boolean).join(" ");
   const rd=await readResults(
@@ -1133,22 +1161,36 @@ async function recheckLinkedPage(row){
    +'"forSale": false if it says sold out, out of stock, unavailable, no longer available, or '
    +"not found, in any language (esaurito, épuisé, uitverkocht, ausverkauft, agotado …). "
    +"ALSO false if this page is NOT that book’s own page — the shop’s front page, a "
-   +"category, search results or a different product. That is what a pulled page redirecting looks like.\n"
-   +"\nBook: "+book+"\nAddress on file: "+row.shopUrl+"\nAddress served: "+(served||"(not given)")+"\n\n"
+   +"category, search results, a ticket or a different product. That is what a pulled page redirecting looks like.\n"
+   +"\nBook: "+book+"\nAddress on file: "+url+"\nAddress served: "+(served||"(not given)")+"\n\n"
    +pageTextOf(f.results).slice(0,6000)
    +'\n\nReply with ONLY this JSON object and nothing else:\n{"forSale": true|false, "why": string}\n'
    +'Example: {"forSale":false,"why":"The page says Sold out."}');
-  if(!rd.ok)return{ok:false,detail:f.detail+"\n"+rd.detail,said:"Re-check didn’t finish — "+rd.detail.split("[")[0].trim()+" Nothing changed."};
+  if(!rd.ok)return{kind:"noread",detail:f.detail+"\n"+rd.detail,why:rd.detail.split("[")[0].trim()};
   const d=rd.data||{};
-  if(typeof d.forSale!=="boolean")return{ok:false,detail:f.detail+"\n"+JSON.stringify(d),said:"Re-check didn’t finish — the answer came back unreadable. Nothing changed."};
+  if(typeof d.forSale!=="boolean")return{kind:"badanswer",detail:f.detail+"\n"+JSON.stringify(d)};
   const why=String(d.why||"").trim();
-  const detail=f.detail+"\n"+rd.detail+(why?"\n"+why:"");
-  if(d.forSale){
-    if(hadIt)return{ok:true,detail,row,said:"Re-checked: still for sale in the museum shop. Nothing changed."};
-    return{ok:true,detail,row:{...row,shopState:"shop",shopChange:"back"},said:"Re-checked: back in the museum shop."};
+  return{kind:"read",forSale:d.forSale,why,results:f.results,detail:f.detail+"\n"+rd.detail+(why?"\n"+why:"")};
+}
+
+async function recheckLinkedPage(row){
+  const book=row.catalogueTitle||row.title;
+  const p=await readShopPage(book,row.shopUrl);
+  const hadIt=row.shopState==="shop";
+  if(p.kind==="norun")return{ok:false,detail:p.detail,said:"Re-check didn’t run — "+p.why+" Nothing changed."};
+  if(p.kind==="gone")return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
+    said:hadIt?"Re-checked: that shop page no longer exists. Marked no longer in the museum shop."
+              :"Re-checked: that shop page still doesn’t exist. Still no longer in the museum shop."};
+  if(p.kind==="unreadable")return{ok:false,detail:p.detail,
+    said:"Re-check didn’t work — the shop page couldn’t be read"+(p.why?" ("+p.why+")":"")+". Nothing changed."};
+  if(p.kind==="noread")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — "+p.why+" Nothing changed."};
+  if(p.kind==="badanswer")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — the answer came back unreadable. Nothing changed."};
+  if(p.forSale){
+    if(hadIt)return{ok:true,detail:p.detail,row,said:"Re-checked: still for sale in the museum shop. Nothing changed."};
+    return{ok:true,detail:p.detail,row:{...row,shopState:"shop",shopChange:"back"},said:"Re-checked: back in the museum shop."};
   }
-  return{ok:true,detail,row:{...row,shopState:"gone",shopChange:null},
-    said:(hadIt?"Re-checked: no longer for sale in the museum shop.":"Re-checked: still not for sale in the museum shop.")+(why?" "+why:"")};
+  return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
+    said:(hadIt?"Re-checked: no longer for sale in the museum shop.":"Re-checked: still not for sale in the museum shop.")+(p.why?" "+p.why:"")};
 }
 
 const SKEY="cw-v3";
@@ -1851,7 +1893,8 @@ export default function App(){
    +"never invent a shop page.\n"
    +"Give the ISBN EXACTLY as printed \u2014 a 10-digit one is wanted as it stands, never converted.\n"
    +"A catalogue is a BOOK about the exhibition. Tote bags, prints, postcards, mugs, notebooks and "
-   +"generic gift items are NOT catalogues, even on the exhibition's own shop page.\n"
+   +"generic gift items are NOT catalogues, even on the exhibition's own shop page. Neither is a "
+   +"TICKET, an admission or a ticket bundle.\n"
    +"THE ISBN IS OFTEN NOT IN THE SHOP. Museums routinely print the catalogue's title, publisher and "
    +"ISBN in a PRESS RELEASE or on the exhibition's own page, while the shop lists only souvenirs. "
    +"A press release stating the book counts as finding it.\n"
@@ -1881,8 +1924,22 @@ export default function App(){
   // distributor, to another shop — so a link read off a shop page is not
   // automatically ON that shop. A link that is not on the venue's shop is
   // never filed as being in the venue's shop.
-  const settle=(row,o,dom,detail,fromShopStage)=>{
-    const onShop=o.shopUrl&&dom&&String(o.shopUrl).toLowerCase().includes(String(dom).toLowerCase());
+  //
+  // A SHOP LINK FROM THE WEB SEARCH IS OPENED BEFORE IT IS BELIEVED — her yes,
+  // 25 Sep. A general index keeps addresses a shop has long since pulled: KHM's
+  // was a ticket, dead since the show closed, filed "In the museum shop"
+  // unopened. Such a link rides out as shopCandidate and confirmShopLink opens
+  // it; until then, and if it will not open, the book is "found on the web".
+  //
+  // `blocked`: the shop step was refused on every page. The row then says the
+  // shop is blocked instead of "not in the shop" or "no catalogue".
+  const settle=(row,o,dom,detail,fromShopStage,blocked)=>{
+    const link=isTicketLink(o.shopUrl)?null:(o.shopUrl||null);
+    const onShop=!!shopLinkOf(o,dom);
+    const inShop=fromShopStage&&onShop;
+    // Only for a row whose status this lookup is setting: a status already on
+    // file is Re-check's alone (keepWhatWeKnew).
+    const ownStatus=row.looked&&row.hasCatalogue==="yes"&&row.shopState;
     if(o.found&&(o.catalogueTitle||o.isbn13)){
       // pageUrl is carried BESIDE the row, never in it: shopUrl is only filed
       // when the link is really on the venue's shop, and the ISBN step may
@@ -1890,16 +1947,17 @@ export default function App(){
       // The shop status is never CHANGED here — only "Re-check museum shop"
       // does that. keepWhatWeKnew hands a found row back with what it had, so
       // the steps after this one see the known ISBN and publisher and skip.
-      return{ok:true,detail,pageUrl:o.shopUrl||null,
+      return{ok:true,detail,pageUrl:link,
+        shopCandidate:(!fromShopStage&&onShop&&!ownStatus)?link:null,
         row:keepWhatWeKnew(row,{...row,looked:true,hasCatalogue:"yes",
-        shopState:onShop?"shop":"web",shopChange:null,
+        shopState:inShop?"shop":blocked?"blocked":"web",shopChange:null,
         catalogueTitle:o.catalogueTitle||null,isbn13:toIsbn13(o.isbn13),
         publisher:o.publisher||null,publisherUrl:cleanPublisherUrl(o.publisherUrl,dom),
         publisherResult:null,
-        shopUrl:onShop?o.shopUrl:null})};
+        shopUrl:inShop?link:null})};
     }
     if(fromShopStage)return null;          // not found in the shop — go wider
-    return{ok:true,detail,row:keepWhatWeKnew(row,{...row,looked:true,hasCatalogue:"no",shopState:"none",
+    return{ok:true,detail,row:keepWhatWeKnew(row,{...row,looked:true,hasCatalogue:"no",shopState:blocked?"blocked":"none",
       catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,
       shopUrl:null,shopChange:null})};
   };
@@ -1939,12 +1997,36 @@ export default function App(){
     +(Array.isArray(r.excerpts)?r.excerpts.join("\n").replace(/[ \t]+/g," "):String(r.full_content||""))
   ).join("\n\n").slice(0,6000);
 
+  // OPEN THE SHOP LINK THE WEB SEARCH GAVE — see settle. Filed as in the
+  // museum shop only when the page opens and is this book, for sale. Anything
+  // else leaves "found on the web" (or "blocked") and drops the link, so the
+  // ISBN step does not open a page that has just failed.
+  const confirmShopLink=async hit=>{
+    if(!hit||!hit.ok||!hit.shopCandidate)return hit;
+    const link=hit.shopCandidate;
+    setLookPhase("page");
+    const p=await readShopPage(hit.row.catalogueTitle||hit.row.title,link);
+    if(p.kind==="read"&&p.forSale){
+      return{...hit,shopCandidate:null,pageResults:p.results,
+        detail:hit.detail+"\n"+p.detail+"\nThe shop link from the web search opened and is the book, for sale.",
+        row:{...hit.row,shopState:"shop",shopChange:null,shopUrl:link}};
+    }
+    const why=p.kind==="read"?"isn’t this book for sale"+(p.why?" ("+p.why+")":"")
+      :p.kind==="gone"?"no longer exists ("+p.status+")"
+      :p.kind==="unreadable"?"didn’t open"+(p.why?" ("+p.why+")":"")
+      :"couldn’t be checked";
+    return{...hit,shopCandidate:null,pageUrl:null,
+      detail:hit.detail+"\n"+p.detail+"\nThe shop link from the web search "+why+", so it is not filed as in the museum shop.",
+      trouble:(p.kind==="norun"||p.kind==="noread")?p.detail:hit.trouble};
+  };
+
   const fillIsbn=async(hit,venue,dom)=>{
     if(!needsPageRead(hit))return hit;
     const r=hit.row;
     const book=r.catalogueTitle||r.title;
     setLookPhase("page");
-    const f=await fetchPage(hit.pageUrl,
+    // Already open when confirmShopLink read it — one reading, not two.
+    const f=hit.pageResults?{ok:true,results:hit.pageResults,detail:"the book’s page, already open"}:await fetchPage(hit.pageUrl,
       "The ISBN-13, the publisher, and any link to the publisher\u2019s own page for the book "
         +"\u201c"+book+"\u201d, including any details or specification panel on the page.",
       [book+" ISBN publisher details"]);
@@ -2190,6 +2272,10 @@ export default function App(){
         +"on this shop, its full title and its price.",
       [title+" exhibition catalogue book"]);
     if(!s1.ok)return{ran:true,ok:false,detail:s1.detail,data:null};
+    // EVERY PAGE REFUSED is not "nothing there" — her finding, 25 Sep (KHM:
+    // "0 page(s), 1 refused (307)"). The shop could not be read at all.
+    if(!s1.results.length&&(s1.errors||[]).length)
+      return{ran:true,ok:true,blocked:true,detail:s1.detail+"\nThe museum shop refused every page, so it could not be searched.",data:null};
     if(!s1.results.length)return{ran:true,ok:true,detail:s1.detail,data:null};
     const r1=await readResults(READ_RULES
       +"\nExhibition: "+title+"\nVenue: "+venue
@@ -2231,6 +2317,7 @@ export default function App(){
     // shop, which no general index does. Only step two searches the open web,
     // because "does this book exist anywhere" really is a search.
     const s1=await shopStep(row);
+    const blocked=!!(s1.ran&&s1.blocked);
     if(s1.ran){
       detail=s1.detail;
       if(!s1.ok)return{row,detail,ok:false};
@@ -2251,13 +2338,13 @@ export default function App(){
        venue+" "+title+" press release catalogue"]);
     detail=(detail?detail+"\n":"")+s2.detail;
     if(!s2.ok)return{row,detail,ok:false};
-    if(!s2.results.length)return settle(row,{},dom,detail,false);
+    if(!s2.results.length)return settle(row,{},dom,detail,false,blocked);
     const r2=await readResults(READ_RULES
       +"\nExhibition: "+title+"\nVenue: "+venue+(dom?"\nIts shop is at "+dom:"")+"\n\n"
       +resultsForPrompt(s2.results)+READ_SHAPE);
     detail=detail+"\n"+r2.detail;
     if(!r2.ok)return{row,detail,ok:false};
-    return await fillPublisherPage(await fillIsbn(settle(row,r2.data||{},dom,detail,false),venue,dom),venue,dom);
+    return await fillPublisherPage(await fillIsbn(await confirmShopLink(settle(row,r2.data||{},dom,detail,false,blocked)),venue,dom),venue,dom);
   }
 
   // A STEP THAT DIED IS NOT AN ANSWER \u2014 her question, 21 Sep, and the fault was
@@ -2293,7 +2380,12 @@ export default function App(){
   // the top of the page — she is looking at the card.
   async function recheckShop(id){
     setBusy(true);setBusyId(id);setRechecking(true);setError(null);setRecheckSaid(null);
-    const row=rows.find(r=>r.id===id);
+    const found=rows.find(r=>r.id===id);
+    // A TICKET ON FILE WAS NEVER THE BOOK (isTicketLink) — rows filed before
+    // that rule. The link is dropped and the shop searched afresh, as for a
+    // row with no link; if the shop is blocked the row says so.
+    const ticket=!!(found.shopUrl&&isTicketLink(found.shopUrl));
+    const row=ticket?{...found,shopUrl:null,shopState:"web",shopChange:null}:found;
     let out;
     if(row.shopUrl&&(row.shopState==="shop"||row.shopState==="gone")){
       setLookPhase("recheck");
@@ -2302,20 +2394,28 @@ export default function App(){
       const s=await shopStep(row);
       const dom=shopDomain(MU[row.museumId]);
       const o=s.data||{};
-      const onShop=o.shopUrl&&dom&&String(o.shopUrl).toLowerCase().includes(String(dom).toLowerCase());
+      const onShop=!!shopLinkOf(o,dom);
+      // Not-there moves a "blocked" row on: the shop answered this time.
+      const answered=row.shopState==="blocked"?{...row,shopState:row.hasCatalogue==="yes"?"web":"none"}:row;
+      const dropped=ticket?"The link on file was a ticket, not the book, so it was removed. ":"";
       if(!s.ran)out={ok:false,detail:"",said:"This museum has no shop on file, so there is nothing to re-check."};
       else if(!s.ok)out={ok:false,detail:s.detail,said:"Re-check didn’t run — "+s.detail.split("\n").pop().split("[")[0].trim()+" Nothing changed."};
+      // A blocked shop is a failed check and changes nothing — except a ticket
+      // link, which was wrong whatever the shop says.
+      else if(s.blocked)out=ticket
+        ?{ok:true,detail:s.detail,row:{...row,shopState:"blocked"},said:dropped+"The museum shop is blocked, so it couldn’t be re-checked."}
+        :{ok:false,detail:s.detail,said:"Re-check didn’t work — the museum shop is blocked. Nothing changed."};
       else if(o.found&&(o.catalogueTitle||o.isbn13)&&onShop){
         // Reading the book's page for a blank ISBN is part of the shop step —
         // the page IS the shop's. Web search and the publisher are never run.
         const hit=await fillIsbn({ok:true,detail:s.detail,pageUrl:o.shopUrl,row:foundInShop(row,o)},
           MU[row.museumId]?.name||"",dom);
-        out={ok:true,detail:hit.detail,row:hit.row,said:"Re-checked: now in the museum shop."};
+        out={ok:true,detail:hit.detail,row:hit.row,said:dropped+"Re-checked: now in the museum shop."};
       }
-      else out={ok:true,detail:s.detail,row,said:"Re-checked the museum shop: this book isn’t there."};
+      else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked the museum shop: this book isn’t there."};
     }
     setDebug(out.detail||null);
-    if(out.ok&&out.row&&out.row!==row)await commit(rows.map(r=>r.id===id?out.row:r));
+    if(out.ok&&out.row&&out.row!==found)await commit(rows.map(r=>r.id===id?out.row:r));
     setRecheckSaid({id,text:out.said,failed:!out.ok});
     setBusy(false);setBusyId(null);setRechecking(false);setLookPhase(null);
   }
@@ -2417,12 +2517,18 @@ export default function App(){
   const view=useMemo(()=>{
     const sq=search.toLowerCase().trim();
     let out=rows.filter(r=>{
-      if(sq)return r.title.toLowerCase().includes(sq)||r.summary.toLowerCase().includes(sq)||(MU[r.museumId]?.name||"").toLowerCase().includes(sq);
+      // THE SEARCH NARROWS, IT DOES NOT END THE CHECK — her finding, 25 Sep,
+      // the same fault as Dismissed below. It returned here, so with text in
+      // the box every filter was skipped: three shows called "Metamorphoses"
+      // could not be cut to one venue, or to Current, Watched, Wanted, Owned.
+      if(sq&&!(r.title.toLowerCase().includes(sq)||r.summary.toLowerCase().includes(sq)||(MU[r.museumId]?.name||"").toLowerCase().includes(sq)))return false;
       // DISMISSED NARROWS, IT DOES NOT END THE CHECK — her finding, 24 Sep.
       // It returned here, so a venue (or any other) filter beside it was
       // never asked: Dismissed + Menil showed every venue's dismissed rows.
+      // A search still finds a dismissed show, as it always has, unless
+      // Dismissed is on — then only dismissed ones.
       if(dismissedOnly){ if(r.interested)return false; }
-      else if(!r.interested&&!showAll)return false;
+      else if(!r.interested&&!showAll&&!sq)return false;
       if(venueF.size>0&&!venueF.has(r.museumId))return false;
       const t=tierFor(r),ts=TIERS[t]?.time||"current";
       if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
@@ -2839,7 +2945,14 @@ export default function App(){
                     </div>
                   ):noCat?(
                     <div>
-                      <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>
+                      {r.shopState==="blocked"?(
+                        <div style={{margin:"0 0 8px"}}>
+                          <p style={{fontSize:12,color:C.ink,fontWeight:600,margin:"0 0 6px"}}>{SHOP_BLOCKED_NONE}</p>
+                          {/* "Search manually" needs somewhere to press: the shop's own
+                              search with the title in it, as on a found card. */}
+                          {mu&&(mu.shopSearch||mu.shopHome)&&<a href={mu.shopSearch?mu.shopSearch+encodeURIComponent(r.title):mu.shopHome} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
+                        </div>
+                      ):<p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>}
                       <div style={{display:"flex",flexWrap:"wrap",gap:14}}>
                         <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
                         <button onClick={()=>recheckShop(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>
@@ -2879,6 +2992,10 @@ export default function App(){
                       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
                         {"Not in the museum shop \u2014 the shop link below opens the general store; other buy options shown too."}
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
+                      </div>}
+                      {r.shopState==="blocked"&&<div style={{fontSize:11,color:C.ink,fontWeight:600,marginBottom:6}}>
+                        {SHOP_BLOCKED_FOUND}
+                        {publisherNote(r.publisherResult,!!r.publisherUrl)&&<span style={{color:C.soft,fontWeight:400}}>{" "+publisherNote(r.publisherResult,!!r.publisherUrl)}</span>}
                       </div>}
                       {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
                       {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
