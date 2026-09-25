@@ -310,7 +310,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34.11, 25 Sep 2026, is live; 34.12 built, not published** (Re-check no longer announces a dropped ticket link). **34.11** (Levy cards headed "Lévy Gorvy Dayan" — `card` in MUSEUMS; the blocked-shop headline in red, the rest grey; no "No catalogue" corner tag — the corner keeps the time tag; a publisher step that died claims nothing — "No separate publisher page." retired). **34.8** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
+**Version 34.13, 25 Sep 2026, is live** (KHM's shop search is her address; the Museum shop link searches the EXHIBITION's title, never the book's; Re-check drops a ticket link silently). **34.11** (Levy cards headed "Lévy Gorvy Dayan" — `card` in MUSEUMS; the blocked-shop headline in red, the rest grey; no "No catalogue" corner tag — the corner keeps the time tag; a publisher step that died claims nothing — "No separate publisher page." retired). **34.8** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -489,7 +489,11 @@ Each step runs only if the one before left something missing.
   The catalogue is stocked elsewhere."* / *"The museum shop is blocked. The
   catalogue also does not appear to exist elsewhere. Search manually to
   confirm."* Both carry a Museum shop link to its search. Re-check refused
-  again changes nothing.
+  again changes nothing. Headline red and bold, the rest grey.
+- **The Museum shop link searches the shop for the EXHIBITION's title —
+  her ruling, 25 Sep.** The book's full title ("Canaletto & Bellotto.
+  Exhibition Catalogue 2026") found nothing; the resellers keep the ISBN or
+  the book's title. KHM's search is `/en/products?shop%5Bq%5D=`, from her.
 - **A ticket is never a catalogue** (`isTicketLink`, and the reading rules).
 - **A shop link from the WEB search is opened before it is filed as in the
   shop** (`confirmShopLink`): opens and is the book for sale → in the shop;
@@ -1027,7 +1031,7 @@ stored and read back identical; 270 KB refused at the 256 KiB limit.
    She will decide the routine from use.
 3. Merge to `main` and publish to her app to start the real trial — hers
    to call; §4's publishing rules apply. **`main` has moved on since the branch
-   was cut** (34.8: Re-check museum shop, five venues, chip renames, blocked shops, search with filters), so merge
+   was cut** (34.13: Re-check museum shop, five venues, chip renames, blocked shops, search with filters, card fixes), so merge
    `main` into the branch first and re-run `cloud_app.js` there.
 4. Google Drive backup by button — back on the table, never automatic.
 
@@ -1075,11 +1079,9 @@ yet met a real sold-out, pulled or redirected shop page.** When she meets
 one and presses the button, check the result. *(Still rejected: pointing the
 link at an ISBN search — museum shops search by title.)*
 
-### 4. Tate Britain's past exhibitions — BUILT and SENT 25 Sep
+### 4. Tate Britain's past exhibitions — DONE 25 Sep
 
-Swept live once (`run_2026-09-25_130534`, 23 rows, 14 of them past). **Kept
-for one import, her plan 25 Sep:** once Levy Gorvy Dayan and the French venues
-(item 6) are built, she imports those new venues and this run together.
+Imported by her with item 6's file; she checked every past show in the app.
 
 ### 5. The three blocked venues — a route exists, and it needs pacing
 
@@ -1112,7 +1114,7 @@ and nothing else.
 
 **`artic` from her machine is unchanged and untested against any of this.**
 
-### 6. More venues — five built 25 Sep; the container's four SENT
+### 6. More venues — five built 25 Sep; four imported and checked by her; d'Orsay and MAD wait on her laptop
 
 Her additions, 24–25 Sep. **Her order on the chips:** Levy Gorvy straight
 after Acquavella; the French venues Louvre, d'Orsay, MAM Paris, MAD Paris,
@@ -1121,9 +1123,9 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 
 | Venue | State | Run on disk | Open |
 |---|---|---|---|
-| `lgd` Levy Gorvy | built, 28 rows, her list checked | `run_2026-09-25_132334` — **predates description fixes** | — |
-| `jacquemart` | built, 5 rows, list checked, **compressed** | `run_2026-09-25_133825` | — |
-| `mam` MAM Paris | built, 19 rows once re-swept, **her list checked** | `run_2026-09-25_140234` — **predates title, credit and exclusion fixes** | — Shop search wired from her link, but the shop's Cloudflare refuses this machine and the connector (403); her browser passes. *Oliver Beer* is two runs, two rows, correct; a third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
+| `lgd` Levy Gorvy | **imported and checked by her**, lookup works | `run_2026-09-25_160850` | — |
+| `jacquemart` | **imported and checked by her**, lookup works | `run_2026-09-25_133825` | — |
+| `mam` MAM Paris | **imported and checked by her**; shop blocked, card says so | `run_2026-09-25_160850` (before her Prix Duchamp / Oliver Beer ruling — the next sweep drops them) | Shop's Cloudflare refuses this machine and the connector (403); her browser passes. A third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
 | `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | none — refuses the container | her laptop; **not pinned headed** (her ruling) — the first sweep there says whether headless gets in |
 | `mad` MAD Paris | recipe built from her saved pages; 2 + 2 + 16, **her counts** | none — refuses the container (plain 403, not Cloudflare) | her laptop; **not pinned headed** (her ruling) — the first sweep there says whether headless gets in |
 

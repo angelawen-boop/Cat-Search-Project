@@ -13,7 +13,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "34.12";
+const APP_VERSION = "34.13";
 const APP_VERSION_DATE = "25 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -39,9 +39,10 @@ const APP_VERSION_DATE = "25 Sep 2026";
 // all books, no trinkets, but only what is in stock today, so it is looked at
 // FIRST and the search box still runs after it.
 //
-// KHM is the one unverified line: its shop answers with a waiting-room
-// redirect that the reader cannot follow. Left wired so it is retried and
-// visible, exactly as the blocked venues are in the scraper.
+// KHM's search address is HERS, 25 Sep, read off her own search — the old
+// /en/search?q= was a 404. Its shop still answers this machine and the
+// connector with a waiting-room redirect, so the lookup reports it blocked;
+// the address is for her "Museum shop" link.
 // `card`, where a venue has one, is the name on its exhibition cards when the
 // chip's short name is not the one she wants there — her ruling, 25 Sep: the
 // chip reads "Levy Gorvy", the cards "Lévy Gorvy Dayan". Everything else
@@ -86,7 +87,7 @@ const MUSEUMS = [
   // too, so her "Museum shop" link lands on the books, not the front page.
   { id:"mad", short:"MAD Paris", name:"Mus\u00e9e des Arts D\u00e9coratifs", city:"Paris", exBase:null, shopSearch:null, shopCatalogues:"https://boutique.madparis.fr/en/mads-publications/c462/1/", shopHome:"https://boutique.madparis.fr/en/mads-publications/c462/1/", listUrl:null },
   { id:"jacquemart", short:"Jacquemart-Andr\u00e9", name:"Mus\u00e9e Jacquemart-Andr\u00e9", city:"Paris", exBase:null, shopSearch:"https://boutique.musee-jacquemart-andre.com/en/search/products/?q=", shopCatalogues:"https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/", shopHome:"https://boutique.musee-jacquemart-andre.com/en/", listUrl:null },
-  { id:"khm", short:"KHM", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:"https://shop.khm.at/en/search?q=", shopHome:"https://shop.khm.at/en/", listUrl:null },
+  { id:"khm", short:"KHM", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:"https://shop.khm.at/en/products?shop%5Bq%5D=", shopHome:"https://shop.khm.at/en/", listUrl:null },
   { id:"uffizi", short:"Uffizi", name:"Uffizi Galleries", city:"Florence", exBase:null, shopSearch:"https://shop.uffizi.it/en/?s=", shopHome:"https://shop.uffizi.it/en/", listUrl:null },
   { id:"dellav", short:"Accademia", name:"Gallerie dell'Accademia", city:"Venice", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"borghese", short:"Borghese", name:"Galleria Borghese", city:"Rome", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
@@ -485,7 +486,10 @@ const fmtDate=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");if(isNaN(x))
 function fmtRefresh(iso){if(!iso)return"never";const d=new Date(iso);if(isNaN(d))return"never";const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
 function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)return a+" \u2014 "+b;if(b)return"until "+b;if(a){const st=new Date(r.startDate+"T00:00:00");const past=!isNaN(st)&&st<=new Date();return(past?"open since ":"opens ")+a;}return"dates unknown";}
 
-function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+tq});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?kn="+(isbn||tq)+"&sts=t"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q});return out;}
+// THE SHOP IS SEARCHED BY THE EXHIBITION'S TITLE — her ruling, 25 Sep. A shop
+// indexes the show's name; "Canaletto & Bellotto. Exhibition Catalogue 2026"
+// found nothing at KHM. The resellers keep the ISBN, or the book's title.
+function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+encodeURIComponent(r.title)});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?kn="+(isbn||tq)+"&sts=t"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q});return out;}
 
 // ── FINDING A CATALOGUE — rebuilt 20 Sep 2026 ────────────────────────────────
 //

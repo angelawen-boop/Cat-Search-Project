@@ -430,7 +430,7 @@ was read and the section it names itself was taken — "Exhibition Catalogues",
 | brit | `britishmuseumshoponline.org/books/exhibition-books.html` | `/catalogsearch/result/?q=` |
 | morgan | `shop.themorgan.org/collections/exhibition-catalogs` | `/search?q=` |
 | uffizi | **none — the shop sells gifts and no books (her check, 25 Sep); a real lookup answered "no catalogue", likely correct** | `shop.uffizi.it/en/?s=` |
-| khm | **none** | `shop.khm.at/en/search?q=` — unverified, see below |
+| khm | **none** | `shop.khm.at/en/products?shop%5Bq%5D=` — her search, 25 Sep (the old `/en/search?q=` was a 404) |
 
 **No shop:** borghese, capo, dellav — these skip to the broad web search.
 

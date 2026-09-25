@@ -321,7 +321,8 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(t.includes(BLOCKED_FOUND), 'L-001: shop refused, book found elsewhere — her sentence', t.slice(0, 300));
     ok(!/In the museum shop/.test(t), 'L-002: never "In the museum shop"');
     const a = shopLink(c);
-    ok(a && /shop\.khm\.at\/en\/search\?q=/.test(a.getAttribute('href')), 'L-003: the Museum shop link is the shop’s own search, to search it manually', a && a.getAttribute('href'));
+    ok(a && a.getAttribute('href') === 'https://shop.khm.at/en/products?shop%5Bq%5D=Test%20KHM%20Show%20Alpha',
+       'L-003: the Museum shop link is the shop’s own search, for the EXHIBITION’s name — not the book’s title', a && a.getAttribute('href'));
     ok(!calls.some(x => x.tool === 'web_fetch' && x.args.urls.includes(TICKET)), 'L-004: a ticket is never taken as the book, so it is never even opened');
   }
 
@@ -362,7 +363,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const c = card(khmC.title), t = c ? c.textContent : '';
     ok(t.includes(BLOCKED_NONE) && !/No catalogue found for this exhibition/.test(t), 'L-008: shop refused, nothing elsewhere — her sentence, not "No catalogue found"', t.slice(0, 300));
     const a = shopLink(c);
-    ok(a && /shop\.khm\.at\/en\/search\?q=Test%20KHM%20Show%20Gamma/.test(a.getAttribute('href')), 'L-009: with a Museum shop link to search manually', a && a.getAttribute('href'));
+    ok(a && /shop\.khm\.at\/en\/products\?shop%5Bq%5D=Test%20KHM%20Show%20Gamma/.test(a.getAttribute('href')), 'L-009: with a Museum shop link to search manually', a && a.getAttribute('href'));
   }
 
   // ── L-010..L-012: the shop answers; the web search offers a shop page that
@@ -432,7 +433,8 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await click(button(card(khmBad.title), /^Re-check museum shop$/));
     const c = card(khmBad.title), t = c ? c.textContent : '';
     ok(!/ticket/.test(t) && t.includes(BLOCKED_FOUND) && /couldn’t be re-checked/.test(t), 'L-014: the ticket link is removed without a word about it, and the card says the shop is blocked', t.slice(0, 400));
-    ok(shopLink(c) && !/tickets/.test(shopLink(c).getAttribute('href')), 'L-015: the Museum shop link no longer goes to the ticket');
+    ok(shopLink(c) && shopLink(c).getAttribute('href') === 'https://shop.khm.at/en/products?shop%5Bq%5D=Canaletto%20%26%20Bellotto',
+       'L-015: her card’s Museum shop link is KHM’s own search for "Canaletto & Bellotto" — not the ticket, not the book title', shopLink(c) && shopLink(c).getAttribute('href'));
     ok(!calls.some(x => x.tool === 'web_fetch' && x.args.urls.includes(TICKET)), 'L-016: the ticket page is not re-read');
   }
 
