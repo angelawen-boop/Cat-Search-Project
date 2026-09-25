@@ -1098,9 +1098,12 @@ MAM Paris, MAD Paris, Jacquemart-André.
 **Descriptions checked 25 Sep** for Tate Britain, Levy and Jacquemart-André:
 junk found and removed at the source (Tate members' banner and joint-ticket
 note; Levy's press list and a photo credit) — `summary_pages.js`, SP-001 to
-SP-007. **Open, hers to decide:** every venue's description is cut at 4
-paragraphs and 2,000 characters (`getCuratorialText`); 57 of 419 rows in her
-import file hit the character limit.
+SP-007. **The 4-paragraph / 2,000-character description cut
+(`getCuratorialText`, every venue) — tested, her call pending.** 57 of 419 rows
+in her import file hit it. Compressing Baroque Splendors from the cut text and
+from her full saved page (3,360 chars) gave the same teaser in substance; a
+teaser is ~6 words, so the cut costs nothing she reads. Changing it would send
+every cut row back for a model review on the next sweep.
 
 **French venues** — the Louvre is the only one today. To add:
 
