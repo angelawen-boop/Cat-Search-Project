@@ -13,7 +13,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "34.7";
+const APP_VERSION = "34.8";
 const APP_VERSION_DATE = "25 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -619,8 +619,10 @@ async function fetchPage(url,objective,queries){
 // scraper's rule, and for the same reason: how many pages a shop has is the
 // shop's business and it changes. Asking for a page that does not exist costs
 // nothing and comes back empty, and all of them go in ONE call, so depth is
-// free. Today's largest shelf is the Menil's 47.
-const SHELF_DEPTH=3;
+// free. Today's largest shelf is MAD's 68, over five pages, and its shop
+// offers no "newest first" — only popularity, price, alphabet — so a recent
+// catalogue can sit on any page. Raised from 3 to 5, her question, 25 Sep.
+const SHELF_DEPTH=5;
 
 // Shopify and most others take ?page=N. A shelf that already carries its own
 // size parameter (Tate) is left exactly as written \u2014 it serves the lot in one.

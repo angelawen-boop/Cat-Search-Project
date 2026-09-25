@@ -201,7 +201,7 @@ function runtime(answer, log) {
   {
     const api = lift({ document: {}, localStorage: {} });
     const menil = api.shelfPages('https://bookstore.menil.org/collections/menil-publications');
-    eq(menil.length, 3, 'C-026: a shelf is read past its first screen');
+    eq(menil.length, 5, 'C-026: a shelf is read past its first screen, five pages deep');
     eq(menil[1], 'https://bookstore.menil.org/collections/menil-publications?page=2',
        'C-027: the later pages are the shop\u2019s own addresses');
 
@@ -216,14 +216,15 @@ function runtime(answer, log) {
     // be ignored and the same first page read three times.
     const mad = api.shelfPages('https://boutique.madparis.fr/en/mads-publications/c462/1/');
     eq(mad.join(' '), 'https://boutique.madparis.fr/en/mads-publications/c462/1/ '
-      + 'https://boutique.madparis.fr/en/mads-publications/c462/2/ https://boutique.madparis.fr/en/mads-publications/c462/3/',
+      + 'https://boutique.madparis.fr/en/mads-publications/c462/2/ https://boutique.madparis.fr/en/mads-publications/c462/3/ '
+      + 'https://boutique.madparis.fr/en/mads-publications/c462/4/ https://boutique.madparis.fr/en/mads-publications/c462/5/',
       'C-029a: a shelf numbered in its path is counted up in the path');
 
     // The shelf comes FIRST and the search box LAST, in one call.
     const pages = api.shopPagesFor(
       { shopCatalogues: 'https://x.test/shelf', shopSearch: 'https://x.test/find?q=' },
       'Zurbar\u00e1n');
-    eq(pages.length, 4, 'C-030: the shelf\u2019s pages and the search box go over together');
+    eq(pages.length, 6, 'C-030: the shelf\u2019s pages and the search box go over together');
     eq(pages[pages.length - 1], 'https://x.test/find?q=Zurbar%C3%A1n',
        'C-031: the title is written into the search address, never guessed at');
   }

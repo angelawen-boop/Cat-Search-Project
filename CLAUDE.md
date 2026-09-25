@@ -310,7 +310,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34, 25 Sep 2026, is live; 34.7 (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters) is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
+**Version 34, 25 Sep 2026, is live; 34.8 (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters) is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -505,7 +505,9 @@ first.**
 `docs/app.md` §1. `borghese`, `capo` and `dellav` have no shop. The 25 Sep
 venues' shops are in `MUSEUMS` with a comment each: `lgd` and `jacquemart`
 read off the live shops; `orsay` and `mam` from her links (`mam`'s shop refuses the connector); `mad`
-has no search box at all — its publications shelf only, paged in the path.
+has no search box at all — its publications shelf only, paged in the path,
+sorted by popularity with no newest-first, so every shelf is now read five
+pages deep (`SHELF_DEPTH`), her question 25 Sep.
 
 **Which model — CLOSED, her ruling 22 Sep.** The page cannot reach any outside
 address, so it does not choose a model; it asks the viewer's Claude through
@@ -1016,7 +1018,7 @@ stored and read back identical; 270 KB refused at the 256 KiB limit.
    She will decide the routine from use.
 3. Merge to `main` and publish to her app to start the real trial — hers
    to call; §4's publishing rules apply. **`main` has moved on since the branch
-   was cut** (34.7: Re-check museum shop, five venues, chip renames, blocked shops, search with filters), so merge
+   was cut** (34.8: Re-check museum shop, five venues, chip renames, blocked shops, search with filters), so merge
    `main` into the branch first and re-run `cloud_app.js` there.
 4. Google Drive backup by button — back on the table, never automatic.
 
@@ -1113,8 +1115,8 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 | `lgd` Levy Gorvy | built, 28 rows, her list checked | `run_2026-09-25_132334` — **predates description fixes** | — |
 | `jacquemart` | built, 5 rows, list checked, **compressed** | `run_2026-09-25_133825` | — |
 | `mam` MAM Paris | built, 19 rows once re-swept, **her list checked** | `run_2026-09-25_140234` — **predates title, credit and exclusion fixes** | — Shop search wired from her link, but the shop's Cloudflare refuses this machine and the connector (403); her browser passes. *Oliver Beer* is two runs, two rows, correct; a third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
-| `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | none — refuses the container | waits on item 5 (headed browser, her laptop) |
-| `mad` MAD Paris | recipe built from her saved pages; 2 + 2 + 16, **her counts** | none — refuses the container (plain 403, not Cloudflare) | waits on item 5 (headed browser, her laptop) — **headless there untested** |
+| `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | none — refuses the container | her laptop; **not pinned headed** (her ruling) — the first sweep there says whether headless gets in |
+| `mad` MAD Paris | recipe built from her saved pages; 2 + 2 + 16, **her counts** | none — refuses the container (plain 403, not Cloudflare) | her laptop; **not pinned headed** (her ruling) — the first sweep there says whether headless gets in |
 
 **THE IMPORT, her plan 25 Sep:** MAD is built, so ONE import file of the new
 venues plus Tate Britain's past (item 4). Steps, in order:
@@ -1122,7 +1124,7 @@ venues plus Tate Britain's past (item 4). Steps, in order:
    `jacquemart`'s run and compression stand.
 2. Stitch, compress (subagents per `compress.js`), qc, and READ the cards
    through the app's intake before sending (§6, "Handing her work nobody read").
-3. Publish the app first — **34.7 is built, not live**; it carries the new
+3. Publish the app first — **34.8 is built, not live**; it carries the new
    venue codes, and the live 34 would file every new row as unknown. Ask
    before publishing (§1). d'Orsay's and MAD's rows cannot be in this file.
 

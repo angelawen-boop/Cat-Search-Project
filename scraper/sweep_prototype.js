@@ -4324,8 +4324,9 @@ const VENUES = {
   orsay: {
     name: "Musée d'Orsay, Paris",
     base: 'https://www.musee-orsay.fr',
+    // Her laptop. NOT marked headed — her ruling, 25 Sep: nothing yet says a
+    // headless browser there is refused. Its first sweep answers that.
     route: 'local',
-    headed: true,
     pages: [
       { path: '/en/program/whats-on/exhibitions', ctx: 'current/upcoming' },
       { path: '/en/ressources/expositions-passees', ctx: 'past', paginate: { param: 'page', from: 1 } },
@@ -4381,7 +4382,8 @@ const VENUES = {
   // this container on the first request: a plain 403, not a Cloudflare check.
   // Written from the pages she saved (docs/mad_pages/), fixture MD-*; swept
   // from her laptop. Whether a headless browser there gets in is not known,
-  // so it is marked headed with d'Orsay and waits on the same work.
+  // and she ruled it is not pinned either way (25 Sep): the first sweep there
+  // answers it.
   //
   // A SPIP site. Three listings, English by their own "-en" page names, the
   // past one a single page going back to 2015. A show's own address is a bare
@@ -4393,7 +4395,6 @@ const VENUES = {
     name: 'Musée des Arts Décoratifs, Paris',
     base: 'https://madparis.fr',
     route: 'local',
-    headed: true,
     pages: [
       { path: '/?page=expo-actu-en',     ctx: 'current' },
       { path: '/?page=expo-avenir-en',   ctx: 'upcoming' },
