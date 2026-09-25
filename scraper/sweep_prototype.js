@@ -516,10 +516,30 @@ function followPagination(queue, pg, newRows, rows, code, v) {
   });
 }
 
+/**
+ * A listing that takes a DATE RANGE in its address — Tate's What's On, her
+ * finding 25 Sep: its calendar's "from … until …" is just two query
+ * parameters, `date_a` and `date_b`. From the lookback floor to TODAY covers
+ * every show that closed after the floor, and everything on now.
+ *
+ * Both dates are DERIVED at run time, for expandYearArchive's reason: a date
+ * typed into a recipe is right the day it is typed and silently wrong after,
+ * the sweep reporting no error while missing every show since.
+ *
+ * `rangeFrom` / `rangeTo` name the venue's two parameters.
+ */
+function ymdUTC(d) { return d.toISOString().slice(0, 10); }
+function expandDateRange(entry, floor = LOOKBACK, today = new Date()) {
+  const join = entry.path.includes('?') ? '&' : '?';
+  return [{ path: `${entry.path}${join}${entry.rangeFrom}=${ymdUTC(floor)}&${entry.rangeTo}=${ymdUTC(today)}`,
+            ctx: entry.ctx, ...(entry.carry || {}) }];
+}
+
 /** A venue's pages, with any year-filtered archive expanded to real years. */
 function listingPages(v) {
   const floor = v.lookbackFrom ? new Date(v.lookbackFrom) : LOOKBACK;
-  return v.pages.flatMap(pg => pg.yearArchive ? expandYearArchive(pg, floor) : [pg]);
+  return v.pages.flatMap(pg => pg.yearArchive ? expandYearArchive(pg, floor)
+    : pg.dateRange ? expandDateRange(pg, floor) : [pg]);
 }
 
 // Navigation timing. See safeGoto() for why 'networkidle' is not used.
@@ -4469,6 +4489,14 @@ const VENUES = {
     excludeOngoing: true,
     pages: [
       { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition', ctx: 'current/upcoming' },
+      // PAST EXHIBITIONS — her finding, 25 Sep. The archive is not missing, it
+      // is behind the calendar: pick a past "from" date and it offers an
+      // "until". Both are query parameters, derived at run time by
+      // expandDateRange. One page, no paging: 1 Jul 2024 to 25 Sep 2026 read
+      // "Showing 1–20 of 20 items". Tate MODERN's past stays out — her ruling.
+      // Shows on now appear on both pages, which the notes say truthfully.
+      { path: '/whats-on?date_range=custom&gallery_group=tate-britain&event_type=exhibition',
+        ctx: 'past and current', dateRange: true, rangeFrom: 'date_a', rangeTo: 'date_b' },
     ],
     selector: 'a[href*="/whats-on/tate-britain/"]',
     // THE RESULTS GRID ONLY. The header's search promo and the featured strip
@@ -4477,7 +4505,13 @@ const VENUES = {
     // promo's. Her saved page: every listed show in div#whatson-results, the
     // promos outside it. docs/title_case_pages/tate_modern_from_now.mhtml.
     within: ['#whatson-results'],
-    isNav: href => /\/whats-on\/tate-britain\/?$/.test(href),
+    // A SHOW'S OWN ADDRESS IS ONE STEP BELOW /tate-britain/. The date range
+    // also returns a page one step further down —
+    // /women-artists-in-britain-1520-1920/relaxed-hours-now-you-see-us — a
+    // relaxed-hours session inside an exhibition, tagged "exhibition" by Tate.
+    // It is not a show, so it is refused like navigation.
+    isNav: href => /\/whats-on\/tate-britain\/?$/.test(href)
+      || /\/whats-on\/tate-britain\/[^/?#]+\/[^/?#]+/.test(href),
     // Its promotional hero cards head the card with the GALLERY, not the show.
     title: {
       heading: true,
@@ -5858,7 +5892,7 @@ module.exports = {
   stripWeekdays,
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
-  saysOngoing, expandYearArchive, listingPages, followPagination,
+  saysOngoing, expandYearArchive, expandDateRange, listingPages, followPagination,
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.

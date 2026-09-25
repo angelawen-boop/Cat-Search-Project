@@ -1,0 +1,67 @@
+[2026-09-25T03:05:34.457Z] Cat Watch Sweep Prototype — starting
+[2026-09-25T03:05:34.457Z] Lookback floor: 2024-07-01
+[2026-09-25T03:05:34.457Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_130534
+[2026-09-25T03:05:34.457Z] Machine: container (proxy present, so this is the container)
+[2026-09-25T03:05:34.457Z] Venues this run: tate-britain
+[2026-09-25T03:05:34.458Z] Proxy: http://127.0.0.1:39277
+[2026-09-25T03:05:34.458Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-25T03:05:34.600Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-25T03:05:34.706Z] [tate-britain] 
+[2026-09-25T03:05:34.706Z] [tate-britain] ────────────────────────────────────────────────────────────
+[2026-09-25T03:05:34.706Z] [tate-britain]   TATE-BRITAIN — Tate Britain, London
+[2026-09-25T03:05:34.706Z] [tate-britain] ────────────────────────────────────────────────────────────
+[2026-09-25T03:05:34.706Z] [tate-britain]   Fetching current/upcoming: https://www.tate.org.uk/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition
+[2026-09-25T03:05:40.507Z] [tate-britain]     ongoing (permanent), excluded: Commission: Chris Ofili: Requiem
+[2026-09-25T03:05:40.666Z] [tate-britain]   current/upcoming: 10 links seen -> 0 navigation, 0 already-seen URL, 1 ongoing/permanent -> 9 collected (0 of them with no readable title)
+[2026-09-25T03:05:40.667Z] [tate-britain]   Fetching past and current: https://www.tate.org.uk/whats-on?date_range=custom&gallery_group=tate-britain&event_type=exhibition&date_a=2024-07-01&date_b=2026-09-25
+[2026-09-25T03:05:44.513Z] [tate-britain]     ongoing (permanent), excluded: Keith Piper & Rex Whistler
+[2026-09-25T03:05:45.036Z] [tate-britain]   past and current: 20 links seen -> 1 navigation, 4 already-seen URL, 1 ongoing/permanent -> 14 collected (0 of them with no readable title)
+[2026-09-25T03:05:45.037Z] [tate-britain]   reading 23 individual page(s)…
+[2026-09-25T03:05:45.037Z] [tate-britain]     page 1 of 23
+[2026-09-25T03:05:58.317Z] [tate-britain]     page 10 of 23
+[2026-09-25T03:06:11.369Z] [tate-britain]     page 20 of 23
+[2026-09-25T03:06:15.715Z] [tate-britain]   Individual pages: 23 got text, 0 no curatorial text, 0 failed
+[2026-09-25T03:06:15.717Z] [tate-britain]   → 23 exhibitions, 23 with curatorial text → tate-britain.csv
+[2026-09-25T03:06:15.943Z] 
+[2026-09-25T03:06:15.943Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:06:15.943Z]   QC — faulty rows and exceptions
+[2026-09-25T03:06:15.943Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:06:15.943Z]   No faulty rows: every row has a title and a known venue code.
+[2026-09-25T03:06:15.943Z]   No exceptions: every venue looks like the last run that had it.
+[2026-09-25T03:06:15.943Z] 
+[2026-09-25T03:06:15.943Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:06:15.943Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-25T03:06:15.943Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:06:15.943Z]   TATE-BRITAIN: 23 exhibitions | 23 with text
+[2026-09-25T03:06:15.943Z] 
+[2026-09-25T03:06:15.943Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:06:15.943Z]   COVERAGE — every link accounted for
+[2026-09-25T03:06:15.943Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:06:15.943Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-25T03:06:15.943Z]   -----------------------------------------------------------------------------------------------
+[2026-09-25T03:06:15.943Z]   tate-britain current/upcoming                10     0       0     0        1        0          9
+[2026-09-25T03:06:15.943Z]   tate-britain past and current                20     1       0     4        1        0         14
+[2026-09-25T03:06:15.943Z] 
+[2026-09-25T03:06:15.943Z] 
+[2026-09-25T03:06:15.943Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:06:15.943Z]   TITLES TAKEN FROM THE EXHIBITION'S OWN PAGE — READ BEFORE SENDING
+[2026-09-25T03:06:15.943Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:06:15.943Z]   tate-britain: "Commission 2026: Zineb Sedira: When Words Fall Silent, Cinema Speaks" → "Tate Britain Commission 2026: Zineb Sedira: When Words Fall Silent, Cinema Speaks"
+[2026-09-25T03:06:15.943Z]   tate-britain: "Commission: Alvaro Barrington: Grace" → "Tate Britain Commission: Alvaro Barrington: Grace"
+[2026-09-25T03:06:15.943Z] 
+[2026-09-25T03:06:15.943Z]   seen      = links matching the venue's selector on that page
+[2026-09-25T03:06:15.943Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-25T03:06:15.943Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-25T03:06:15.943Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-25T03:06:15.943Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-25T03:06:15.943Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-25T03:06:15.943Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-25T03:06:15.943Z] 
+[2026-09-25T03:06:15.943Z] Network bridge: 1314 requests served, 644 skipped (image/media/font), 0 failed
+[2026-09-25T03:06:15.943Z] 
+[2026-09-25T03:06:15.943Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_130534
+[2026-09-25T03:06:15.943Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_130534/sweep.csv  (23 rows — tate-britain:23)
+[2026-09-25T03:06:15.943Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_130534/log_2026-09-25_130534.txt
+[2026-09-25T03:06:15.943Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, khm, artic, moma, brit, dellav, tate-modern, wallace
+[2026-09-25T03:06:15.943Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-25T03:06:15.943Z] No de-duplication is applied — see passThrough.

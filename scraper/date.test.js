@@ -21,7 +21,7 @@ const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
   classifyLoadError, isOwnListingPage, saysOngoing,
-  expandYearArchive, listingPages, followPagination, VENUES, pickTitleLine,
+  expandYearArchive, expandDateRange, listingPages, followPagination, VENUES, pickTitleLine,
   stripWeekdays,
   addNote, finishNotes, scopeSelector, extensionNote,
 } = require('./sweep_prototype.js');
@@ -513,6 +513,37 @@ test('Y-004: nothing is requested before the lookback floor', () => {
   // A floor moved forward moves the oldest year with it.
   const later = expandYearArchive(YEAR_ENTRY, new Date('2027-07-01'), new Date('2029-01-01'));
   assert.deepEqual(later.map(p => Number(p.path.split('=')[1])), [2028, 2027]);
+});
+
+// TB-001 to TB-004 — TATE BRITAIN'S PAST, behind its calendar (her finding,
+// 25 Sep). A "from … until …" range is two query parameters; both derived.
+
+test('TB-001: the range runs from the lookback floor to the day of the run', () => {
+  const [pg] = expandDateRange({ path: '/whats-on?date_range=custom&g=x', ctx: 'past and current',
+    rangeFrom: 'date_a', rangeTo: 'date_b' }, FLOOR, new Date('2026-09-25T10:00:00Z'));
+  assert.equal(pg.path, '/whats-on?date_range=custom&g=x&date_a=2024-07-01&date_b=2026-09-25');
+  assert.equal(pg.ctx, 'past and current');
+});
+
+test('TB-002: the "until" date moves on its own — nothing typed into the recipe', () => {
+  const [pg] = expandDateRange({ path: '/p', ctx: 'c', rangeFrom: 'a', rangeTo: 'b' }, FLOOR, new Date('2028-02-03'));
+  assert.equal(pg.path, '/p?a=2024-07-01&b=2028-02-03');
+});
+
+test('TB-003: Tate Britain asks for the range page; Tate Modern does not', () => {
+  const tb = listingPages(VENUES['tate-britain']).map(p => p.path);
+  assert.ok(tb.some(p => /date_range=custom&.*gallery_group=tate-britain&.*date_a=2024-07-01&date_b=\d{4}-\d{2}-\d{2}$/.test(p)), tb.join(' | '));
+  assert.ok(tb.some(p => /date_range=from_now/.test(p)), 'current/upcoming page kept');
+  const tm = listingPages(VENUES['tate-modern']).map(p => p.path);
+  assert.equal(tm.some(p => /date_range=custom/.test(p)), false, 'her ruling: never Tate Modern’s past');
+});
+
+test('TB-004: a session nested inside a show is not a show', () => {
+  const nav = VENUES['tate-britain'].isNav;
+  assert.equal(nav('/whats-on/tate-britain/women-artists-in-britain-1520-1920/relaxed-hours-now-you-see-us'), true);
+  assert.equal(nav('/whats-on/tate-britain/women-artists-in-britain-1520-1920'), false);
+  assert.equal(nav('/whats-on/tate-britain/lee-miller/'), false);
+  assert.equal(nav('/whats-on/tate-britain'), true);
 });
 
 // ---------------------------------------------------------------------------
