@@ -87,7 +87,8 @@ const khmB = fresh('khm-testb', 'khm', 'Test KHM Show Beta');
 const khmC = fresh('khm-testc', 'khm', 'Test KHM Show Gamma');
 const ngA = fresh('ng-testopens', 'ng', 'Test NG Show Opens');
 const ngB = fresh('ng-testdead', 'ng', 'Test NG Show Dead Link');
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB], ignored: [], lastRun: null };
+const lgdRow = fresh('lgd-yvesklein', 'lgd', 'Yves Klein and the Tangible World');
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -154,6 +155,14 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const c = card(t);
     if (!c) { fail('the card for "' + t + '" is not on screen after Load — nothing below can run'); continue; }
     await click(button(c, /Catalogue/));
+  }
+
+  // ── V-001: a Levy Gorvy card carries the gallery's full name, her ruling
+  // 25 Sep; its chip keeps the short one.
+  {
+    const c = card(lgdRow.title);
+    ok(c && c.textContent.startsWith('Lévy Gorvy Dayan'), 'V-001: a Levy Gorvy card is headed "Lévy Gorvy Dayan"', c && c.textContent.slice(0, 40));
+    ok([...win.document.querySelectorAll('button')].some(b => b.textContent === 'Levy Gorvy'), 'V-001a:   while its chip still reads "Levy Gorvy"');
   }
 
   // ── R-001..R-004: CASE 1, the page is gone (a real 404's shape) ─────────
