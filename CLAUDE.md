@@ -1150,8 +1150,11 @@ month map reads "Feburary", both date parsers read ordinal days ("23rd");
 
 The debugging session for the issues she is noting (item 2). Standing gaps:
 fourteen venues have had no lookup run against them, their shop addresses
-checked but unseen live; `khm`'s shop queues every request and `uffizi` has no
-catalogues page, so both behave as if they had no shop.
+checked but unseen live. `khm`'s shop answers every request with a 307 to its
+waiting room — the card now says "blocked" (§4) instead of going wider in
+silence. `uffizi` has a search box but no catalogue shelf our reader could see
+(`docs/app.md`, shop addresses), so the search is its only route; not yet
+tried on a real lookup.
 
 ### 8. The cheapest archive route per venue — very low priority, may never happen
 
