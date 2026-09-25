@@ -310,7 +310,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34.8, 25 Sep 2026, is live; 34.9 built, not published** (Levy cards headed "Lévy Gorvy Dayan" — `card` in MUSEUMS). **34.8** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
+**Version 34.8, 25 Sep 2026, is live; 34.10 built, not published** (Levy cards headed "Lévy Gorvy Dayan" — `card` in MUSEUMS; the blocked-shop headline in red, the rest grey; no "No catalogue" corner tag — the corner keeps the time tag). **34.8** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -1207,7 +1207,7 @@ sweeper and interrupting it. Firing a new JSX mid-discussion. Splitting catalogu
 lookup from drawer output. A "GPT scrapes, Claude compresses" role split. A map of
 publisher websites. Ticking nothing on a date conflict. A background shop check on
 every click. Linking straight to an Amazon product page from an ISBN-10.
-Confirm-and-continue past undecided cards. A backup of the ledger in the browser's own storage (25 Sep — a fourth way of saving; §7.1).
+Confirm-and-continue past undecided cards. A backup of the ledger in the browser's own storage (25 Sep — a fourth way of saving; §7.1). **Reading the exhibition's own page for a catalogue when the shop is blocked** (25 Sep, MAM's *Lee Miller*: the page names Paris Musées, the search missed it) — needs a model read and a new step, and only two shops are blocked (KHM, MAM); the card already says so and links the shop's search, where she found it second. Her deciding reason: two shops.
 
 Blocking scripts and trackers in the network bridge (IR-13). Splitting the scraper
 into modules (IR-14). **Fetching several pages at once within one venue (IR-15) —

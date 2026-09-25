@@ -13,7 +13,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "34.9";
+const APP_VERSION = "34.10";
 const APP_VERSION_DATE = "25 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -1073,8 +1073,11 @@ function shopHeadline(shopState,shopChange){
 // A BLOCKED SHOP SAYS SO — her wording, 25 Sep. "Not in the museum shop" and
 // "no catalogue" are findings; a shop that refused to be read is not one, and
 // before this the card could not tell them apart.
-const SHOP_BLOCKED_FOUND="The museum shop is blocked - search it manually. The catalogue is stocked elsewhere.";
-const SHOP_BLOCKED_NONE="The museum shop is blocked. The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
+// Drawn in two parts, her ruling 25 Sep: the headline in the red and weight of
+// "No longer in the museum shop.", the rest in the ordinary grey.
+const SHOP_BLOCKED_HEAD="The museum shop is blocked";
+const SHOP_BLOCKED_FOUND_REST=" - search it manually. The catalogue is stocked elsewhere.";
+const SHOP_BLOCKED_NONE_REST=". The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
 
 // A TICKET IS NOT A CATALOGUE — her ruling, 25 Sep. KHM's Canaletto & Bellotto
 // was filed "In the museum shop" with a link to /en/tickets/…, a ticket that
@@ -2915,8 +2918,10 @@ export default function App(){
               <div style={{padding:"12px 14px"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
                   <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginTop:2}}>{mu?.card||mu?.short}</span>
-                  {noCat?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.muted,background:"#E3DED7",padding:"2px 7px",borderRadius:3}}>No catalogue</span>
-                  :isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:C.ownedBg,padding:"2px 7px",borderRadius:3}}>Owned</span>
+                  {/* NO "NO CATALOGUE" TAG — her ruling, 25 Sep. The corner says how long
+                      ago the show closed, which is its job; the Catalogue button below
+                      already carries the cross when none was found. */}
+                  {isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:C.ownedBg,padding:"2px 7px",borderRadius:3}}>Owned</span>
                   :<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:tier.ink,background:tier.wash,padding:"2px 7px",borderRadius:3}}>{tier.label}</span>}
                 </div>
                 <div style={{display:"flex",alignItems:"baseline",gap:0,marginTop:5}}>
@@ -2962,7 +2967,7 @@ export default function App(){
                     <div>
                       {r.shopState==="blocked"?(
                         <div style={{margin:"0 0 8px"}}>
-                          <p style={{fontSize:12,color:C.ink,fontWeight:600,margin:"0 0 6px"}}>{SHOP_BLOCKED_NONE}</p>
+                          <p style={{fontSize:12,color:C.soft,margin:"0 0 6px"}}><span style={{color:TH.lapsed.ink,fontWeight:700}}>{SHOP_BLOCKED_HEAD}</span>{SHOP_BLOCKED_NONE_REST}</p>
                           {/* "Search manually" needs somewhere to press: the shop's own
                               search with the title in it, as on a found card. */}
                           {mu&&(mu.shopSearch||mu.shopHome)&&<a href={mu.shopSearch?mu.shopSearch+encodeURIComponent(r.title):mu.shopHome} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
@@ -3008,9 +3013,9 @@ export default function App(){
                         {"Not in the museum shop \u2014 the shop link below opens the general store; other buy options shown too."}
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
-                      {r.shopState==="blocked"&&<div style={{fontSize:11,color:C.ink,fontWeight:600,marginBottom:6}}>
-                        {SHOP_BLOCKED_FOUND}
-                        {publisherNote(r.publisherResult,!!r.publisherUrl)&&<span style={{color:C.soft,fontWeight:400}}>{" "+publisherNote(r.publisherResult,!!r.publisherUrl)}</span>}
+                      {r.shopState==="blocked"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
+                        <span style={{color:TH.lapsed.ink,fontWeight:700}}>{SHOP_BLOCKED_HEAD}</span>{SHOP_BLOCKED_FOUND_REST}
+                        {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
                       {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
                       {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}

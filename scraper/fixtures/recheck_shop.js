@@ -165,6 +165,13 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok([...win.document.querySelectorAll('button')].some(b => b.textContent === 'Levy Gorvy'), 'V-001a:   while its chip still reads "Levy Gorvy"');
   }
 
+  // ── V-002: no "No catalogue" corner tag — the corner keeps the time tag.
+  {
+    const c = card(noCatRow.title);
+    const head = c ? c.textContent.slice(0, 40) : '';
+    ok(c && !/No catalogue/.test(head) && /Recently opened|On now/.test(head), 'V-002: a no-catalogue card keeps its time tag in the corner', head);
+  }
+
   // ── R-001..R-004: CASE 1, the page is gone (a real 404's shape) ─────────
   {
     calls.length = 0;
@@ -315,6 +322,14 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const a = shopLink(c);
     ok(a && /shop\.khm\.at\/en\/search\?q=/.test(a.getAttribute('href')), 'L-003: the Museum shop link is the shop’s own search, to search it manually', a && a.getAttribute('href'));
     ok(!calls.some(x => x.tool === 'web_fetch' && x.args.urls.includes(TICKET)), 'L-004: a ticket is never taken as the book, so it is never even opened');
+  }
+
+  // ── L-004a: the blocked headline is its own red, bold span; the rest grey.
+  {
+    const c = card(khmA.title);
+    const head = c && [...c.querySelectorAll('span')].find(x => x.textContent === 'The museum shop is blocked');
+    ok(head && head.style.fontWeight === '700' && head.style.color !== '' && head.parentElement.style.fontWeight === '',
+       'L-004a: "The museum shop is blocked" is bold and coloured on its own; the rest of the line is plain');
   }
 
   // ── L-005..L-007: shop refused; the web search offers a real product page,
