@@ -793,6 +793,11 @@ function seedMemory(jsxPath) {
     for (let j = i; j < src.length; j++) {
       const c = src[j];
       if (quote) { if (c === '\\') { j++; continue; } if (c === quote) quote = null; continue; }
+      // A COMMENT IS NOT CODE — 25 Sep. An apostrophe in a comment inside
+      // MUSEUMS ("MAD's", "shop's") opened a quote that never closed, and the
+      // seed was silently dropped with a one-line warning.
+      if (c === '/' && src[j + 1] === '/') { const nl = src.indexOf('\n', j); j = nl === -1 ? src.length : nl; continue; }
+      if (c === '/' && src[j + 1] === '*') { const e = src.indexOf('*/', j + 2); j = e === -1 ? src.length : e + 1; continue; }
       if (c === '"' || c === "'" || c === '`') { quote = c; continue; }
       if (c === '[') depth++;
       else if (c === ']') { depth--; if (depth === 0) return src.slice(i, j + 1); }

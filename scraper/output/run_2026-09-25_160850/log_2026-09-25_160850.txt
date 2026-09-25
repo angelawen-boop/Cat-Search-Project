@@ -1,0 +1,121 @@
+[2026-09-25T06:08:50.477Z] Cat Watch Sweep Prototype — starting
+[2026-09-25T06:08:50.477Z] Lookback floor: 2024-07-01
+[2026-09-25T06:08:50.477Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_160850
+[2026-09-25T06:08:50.477Z] Machine: container (proxy present, so this is the container)
+[2026-09-25T06:08:50.477Z] Venues this run: lgd, mam, tate-britain
+[2026-09-25T06:08:50.478Z] Proxy: http://127.0.0.1:33431
+[2026-09-25T06:08:50.478Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-25T06:08:51.318Z] Running 3 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-25T06:08:51.639Z] [lgd] 
+[2026-09-25T06:08:51.639Z] [lgd] ────────────────────────────────────────────────────────────
+[2026-09-25T06:08:51.639Z] [lgd]   LGD — Lévy Gorvy Dayan, New York and London
+[2026-09-25T06:08:51.639Z] [lgd] ────────────────────────────────────────────────────────────
+[2026-09-25T06:08:51.640Z] [lgd]   Fetching current and past: https://www.levygorvydayan.com/exhibitions
+[2026-09-25T06:08:55.621Z] [lgd]     another site of this venue (her ruling), excluded: Color Form
+[2026-09-25T06:08:55.650Z] [lgd]     another site of this venue (her ruling), excluded: Portraits Go Pop!
+[2026-09-25T06:08:55.856Z] [lgd]     another site of this venue (her ruling), excluded: Francesco Clemente: Winter Flowers
+[2026-09-25T06:08:55.911Z] [lgd]     another site of this venue (her ruling), excluded: Derrick Adams: Sweet Spot
+[2026-09-25T06:08:56.094Z] [lgd]     another site of this venue (her ruling), excluded: Mickalene Thomas: Beyond the Pleasure Principle
+[2026-09-25T06:08:56.189Z] [lgd]     another site of this venue (her ruling), excluded: Joel Mesler: In the Beginning
+[2026-09-25T06:08:56.381Z] [lgd]     another site of this venue (her ruling), excluded: Pierre Soulages: Outrenoir
+[2026-09-25T06:08:56.395Z] [lgd]     another site of this venue (her ruling), excluded: Tu Hongtao
+[2026-09-25T06:08:56.484Z] [lgd]     another site of this venue (her ruling), excluded: American Master, Frank Stella: Polish Villages
+[2026-09-25T06:08:57.081Z] [lgd]   current and past: 130 links seen -> 0 navigation, 0 already-seen URL, 9 at another site of the same venue -> 121 collected (0 of them with no readable title)
+[2026-09-25T06:08:57.082Z] [lgd]   lookback (listing): kept 28, dropped 93 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-25T06:08:57.083Z] [lgd]   reading 28 individual page(s)…
+[2026-09-25T06:08:57.083Z] [lgd]     page 1 of 28
+[2026-09-25T06:09:06.585Z] [lgd]     page 10 of 28
+[2026-09-25T06:09:16.884Z] [lgd]     page 20 of 28
+[2026-09-25T06:09:25.581Z] [lgd]   Individual pages: 28 got text, 0 no curatorial text, 0 failed
+[2026-09-25T06:09:25.584Z] [lgd]   → 28 exhibitions, 28 with curatorial text → lgd.csv
+[2026-09-25T06:09:25.716Z] [mam] 
+[2026-09-25T06:09:25.716Z] [mam] ────────────────────────────────────────────────────────────
+[2026-09-25T06:09:25.716Z] [mam]   MAM — Musée d'Art Moderne de Paris
+[2026-09-25T06:09:25.716Z] [mam] ────────────────────────────────────────────────────────────
+[2026-09-25T06:09:25.716Z] [mam]   Fetching current: https://www.mam.paris.fr/en/exhibitions
+[2026-09-25T06:09:29.353Z] [mam]   current: 3 links seen -> 0 navigation, 0 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-09-25T06:09:29.353Z] [mam]   Fetching upcoming: https://www.mam.paris.fr/en/upcoming
+[2026-09-25T06:09:32.113Z] [mam]   upcoming: 1 links seen -> 0 navigation, 0 already-seen URL -> 1 collected (0 of them with no readable title)
+[2026-09-25T06:09:32.113Z] [mam]   Fetching past: https://www.mam.paris.fr/en/archives?type_expo=Local&language=en
+[2026-09-25T06:09:35.103Z] [mam]   past: 10 links seen -> 0 navigation, 0 already-seen URL -> 10 collected (0 of them with no readable title)
+[2026-09-25T06:09:35.104Z] [mam]   Fetching past p1: https://www.mam.paris.fr/en/archives?type_expo=Local&language=en&page=0%2C0%2C0%2C0%2C0%2C1
+[2026-09-25T06:09:37.917Z] [mam]     not a temporary exhibition (venue rule), excluded: Cultural Olympiad: Permanent collection
+[2026-09-25T06:09:37.972Z] [mam]     not a temporary exhibition (venue rule), excluded: New acquisitions by the Photography Committee
+[2026-09-25T06:09:37.972Z] [mam]   past p1: 10 links seen -> 0 navigation, 0 already-seen URL, 2 labelled permanent by the venue -> 8 collected (0 of them with no readable title)
+[2026-09-25T06:09:37.972Z] [mam]   Fetching past p2: https://www.mam.paris.fr/en/archives?type_expo=Local&language=en&page=0%2C0%2C0%2C0%2C0%2C2
+[2026-09-25T06:09:40.929Z] [mam]   past p2: 10 links seen -> 0 navigation, 0 already-seen URL -> 10 collected (0 of them with no readable title)
+[2026-09-25T06:09:40.929Z] [mam]   PAGINATION end: past p2 — its newest exhibition closed 2024-01-12, before the 2024-07-01 floor, so every later page is older still
+[2026-09-25T06:09:40.930Z] [mam]   lookback (listing): kept 19, dropped 13 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-25T06:09:40.930Z] [mam]   reading 19 individual page(s)…
+[2026-09-25T06:09:40.930Z] [mam]     page 1 of 19
+[2026-09-25T06:09:54.434Z] [mam]     page 10 of 19
+[2026-09-25T06:10:10.033Z] [mam]   Individual pages: 19 got text, 0 no curatorial text, 0 failed
+[2026-09-25T06:10:10.035Z] [mam]   → 19 exhibitions, 19 with curatorial text → mam.csv
+[2026-09-25T06:10:10.116Z] [tate-britain] 
+[2026-09-25T06:10:10.116Z] [tate-britain] ────────────────────────────────────────────────────────────
+[2026-09-25T06:10:10.116Z] [tate-britain]   TATE-BRITAIN — Tate Britain, London
+[2026-09-25T06:10:10.116Z] [tate-britain] ────────────────────────────────────────────────────────────
+[2026-09-25T06:10:10.116Z] [tate-britain]   Fetching current/upcoming: https://www.tate.org.uk/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition
+[2026-09-25T06:10:13.601Z] [tate-britain]     ongoing (permanent), excluded: Commission: Chris Ofili: Requiem
+[2026-09-25T06:10:13.760Z] [tate-britain]   current/upcoming: 10 links seen -> 0 navigation, 0 already-seen URL, 1 ongoing/permanent -> 9 collected (0 of them with no readable title)
+[2026-09-25T06:10:13.760Z] [tate-britain]   Fetching past and current: https://www.tate.org.uk/whats-on?date_range=custom&gallery_group=tate-britain&event_type=exhibition&date_a=2024-07-01&date_b=2026-09-25
+[2026-09-25T06:10:16.840Z] [tate-britain]     ongoing (permanent), excluded: Keith Piper & Rex Whistler
+[2026-09-25T06:10:17.459Z] [tate-britain]   past and current: 20 links seen -> 1 navigation, 4 already-seen URL, 1 ongoing/permanent -> 14 collected (0 of them with no readable title)
+[2026-09-25T06:10:17.459Z] [tate-britain]   reading 23 individual page(s)…
+[2026-09-25T06:10:17.459Z] [tate-britain]     page 1 of 23
+[2026-09-25T06:10:26.946Z] [tate-britain]     page 10 of 23
+[2026-09-25T06:10:40.518Z] [tate-britain]     page 20 of 23
+[2026-09-25T06:10:44.835Z] [tate-britain]   Individual pages: 23 got text, 0 no curatorial text, 0 failed
+[2026-09-25T06:10:44.837Z] [tate-britain]   → 23 exhibitions, 23 with curatorial text → tate-britain.csv
+[2026-09-25T06:10:45.048Z] 
+[2026-09-25T06:10:45.049Z] ────────────────────────────────────────────────────────────
+[2026-09-25T06:10:45.049Z]   QC — faulty rows and exceptions
+[2026-09-25T06:10:45.049Z] ────────────────────────────────────────────────────────────
+[2026-09-25T06:10:45.049Z]   No faulty rows: every row has a title and a known venue code.
+[2026-09-25T06:10:45.049Z]   1 exception(s) against the last run that had each venue:
+[2026-09-25T06:10:45.049Z]     mam: 19 exhibitions, down from 20 in run_2026-09-25_140234.
+[2026-09-25T06:10:45.049Z] 
+[2026-09-25T06:10:45.049Z] ────────────────────────────────────────────────────────────
+[2026-09-25T06:10:45.049Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-25T06:10:45.049Z] ────────────────────────────────────────────────────────────
+[2026-09-25T06:10:45.049Z]   LGD: 28 exhibitions | 28 with text
+[2026-09-25T06:10:45.049Z]   MAM: 19 exhibitions | 19 with text
+[2026-09-25T06:10:45.049Z]   TATE-BRITAIN: 23 exhibitions | 23 with text
+[2026-09-25T06:10:45.049Z] 
+[2026-09-25T06:10:45.049Z] ────────────────────────────────────────────────────────────
+[2026-09-25T06:10:45.049Z]   COVERAGE — every link accounted for
+[2026-09-25T06:10:45.049Z] ────────────────────────────────────────────────────────────
+[2026-09-25T06:10:45.049Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-25T06:10:45.049Z]   -----------------------------------------------------------------------------------------------
+[2026-09-25T06:10:45.049Z]   lgd        current and past               130     0       0     0        0        0        121
+[2026-09-25T06:10:45.049Z]   mam        current                          3     0       0     0        0        0          3
+[2026-09-25T06:10:45.049Z]   mam        upcoming                         1     0       0     0        0        0          1
+[2026-09-25T06:10:45.049Z]   mam        past                            10     0       0     0        0        0         10
+[2026-09-25T06:10:45.049Z]   mam        past p1                         10     0       0     0        0        0          8
+[2026-09-25T06:10:45.049Z]   mam        past p2                         10     0       0     0        0        0         10
+[2026-09-25T06:10:45.049Z]   tate-britain current/upcoming                10     0       0     0        1        0          9
+[2026-09-25T06:10:45.049Z]   tate-britain past and current                20     1       0     4        1        0         14
+[2026-09-25T06:10:45.049Z] 
+[2026-09-25T06:10:45.049Z] 
+[2026-09-25T06:10:45.049Z] ────────────────────────────────────────────────────────────
+[2026-09-25T06:10:45.049Z]   TITLES TAKEN FROM THE EXHIBITION'S OWN PAGE — READ BEFORE SENDING
+[2026-09-25T06:10:45.049Z] ────────────────────────────────────────────────────────────
+[2026-09-25T06:10:45.049Z]   tate-britain: "Commission 2026: Zineb Sedira: When Words Fall Silent, Cinema Speaks" → "Tate Britain Commission 2026: Zineb Sedira: When Words Fall Silent, Cinema Speaks"
+[2026-09-25T06:10:45.049Z]   tate-britain: "Commission: Alvaro Barrington: Grace" → "Tate Britain Commission: Alvaro Barrington: Grace"
+[2026-09-25T06:10:45.049Z] 
+[2026-09-25T06:10:45.049Z]   seen      = links matching the venue's selector on that page
+[2026-09-25T06:10:45.049Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-25T06:10:45.049Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-25T06:10:45.049Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-25T06:10:45.049Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-25T06:10:45.049Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-25T06:10:45.049Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-25T06:10:45.049Z] 
+[2026-09-25T06:10:45.049Z] Network bridge: 2916 requests served, 2096 skipped (image/media/font), 0 failed
+[2026-09-25T06:10:45.049Z] 
+[2026-09-25T06:10:45.049Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_160850
+[2026-09-25T06:10:45.049Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_160850/sweep.csv  (70 rows — lgd:28, mam:19, tate-britain:23)
+[2026-09-25T06:10:45.049Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_160850/log_2026-09-25_160850.txt
+[2026-09-25T06:10:45.049Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, orsay, mad, jacquemart, khm, artic, moma, brit, dellav, tate-modern, wallace
+[2026-09-25T06:10:45.049Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-25T06:10:45.049Z] No de-duplication is applied — see passThrough.

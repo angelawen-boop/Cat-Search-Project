@@ -788,3 +788,13 @@ test('MEM-006: the compressor\'s clock is the sweeper\'s', () => {
   // keeps the two copies of the time zone from drifting.
   assert.equal(M.RUN_TZ, require('./sweep_prototype.js').RUN_TZ);
 });
+
+// THE SEED IS READ OFF THE REAL APP — 25 Sep. An apostrophe in a comment
+// inside MUSEUMS ("MAD's") opened a quote the reader never closed, and the
+// seed was dropped with a one-line warning nobody had to read. Asked of the
+// real file, so a new comment cannot do it again unseen.
+test('SM-100: the seed is read from the real Cat_Watch.jsx, all 110 rows with their links', () => {
+  const rows = require('./compress.js').seedMemory(require('path').join(__dirname, '..', 'Cat_Watch.jsx'));
+  assert.strictEqual(rows.length, 110);
+  assert.ok(rows.every(r => r.url.startsWith('https://')), 'every seed row has its exhibition link');
+});

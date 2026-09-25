@@ -310,7 +310,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34, 25 Sep 2026, is live; 34.8 (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters) is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
+**Version 34.8, 25 Sep 2026, is live** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -1066,7 +1066,7 @@ yet met a real sold-out, pulled or redirected shop page.** When she meets
 one and presses the button, check the result. *(Still rejected: pointing the
 link at an ISBN search — museum shops search by title.)*
 
-### 4. Tate Britain's past exhibitions — BUILT 25 Sep
+### 4. Tate Britain's past exhibitions — BUILT and SENT 25 Sep
 
 Swept live once (`run_2026-09-25_130534`, 23 rows, 14 of them past). **Kept
 for one import, her plan 25 Sep:** once Levy Gorvy Dayan and the French venues
@@ -1103,7 +1103,7 @@ and nothing else.
 
 **`artic` from her machine is unchanged and untested against any of this.**
 
-### 6. More venues — five built 25 Sep
+### 6. More venues — five built 25 Sep; the container's four SENT
 
 Her additions, 24–25 Sep. **Her order on the chips:** Levy Gorvy straight
 after Acquavella; the French venues Louvre, d'Orsay, MAM Paris, MAD Paris,
@@ -1118,8 +1118,11 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 | `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | none — refuses the container | her laptop; **not pinned headed** (her ruling) — the first sweep there says whether headless gets in |
 | `mad` MAD Paris | recipe built from her saved pages; 2 + 2 + 16, **her counts** | none — refuses the container (plain 403, not Cloudflare) | her laptop; **not pinned headed** (her ruling) — the first sweep there says whether headless gets in |
 
-**THE IMPORT, her plan 25 Sep:** MAD is built, so ONE import file of the new
-venues plus Tate Britain's past (item 4). Steps, in order:
+**THE IMPORT — SENT 25 Sep: `stitch_20260925_0611/sweep_compressed.csv`**, 75 rows
+(Levy Gorvy 28, MAM 19, Tate Britain 23, Jacquemart-André 5). Through the intake
+against her 24 Sep ledger: 66 new, 2 Tate title corrections, 7 matching. App
+34.8 published first. What remains is d'Orsay and MAD from her laptop. How it
+was built, kept for the record: Steps, in order:
 1. Re-sweep `tate-britain`, `lgd`, `mam` once (runs above predate fixes);
    `jacquemart`'s run and compression stand.
 2. Stitch, compress (subagents per `compress.js`), qc, and READ the cards
