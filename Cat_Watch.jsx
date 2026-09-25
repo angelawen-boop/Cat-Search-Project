@@ -66,9 +66,9 @@ const MUSEUMS = [
   // French venues added 25 Sep 2026, after the Louvre. Same shop system as the
   // Louvre's: search box and "Exhibition catalogs" shelf, read off the live shop.
   // d'Orsay, 25 Sep — her chip name "d'Orsay". Its shop is the national museums'
-  // shared one; the catalogues shelf is her link with the tracking tags removed.
-  // Search address not known yet.
-  { id:"orsay", short:"d'Orsay", name:"Mus\u00e9e d'Orsay", city:"Paris", exBase:null, shopSearch:null, shopCatalogues:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", shopHome:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", listUrl:null },
+  // shared one; the catalogues shelf is her link with the tracking tags removed,
+  // and the search is the one she sent (it searches every museum on the site).
+  { id:"orsay", short:"d'Orsay", name:"Mus\u00e9e d'Orsay", city:"Paris", exBase:null, shopSearch:"https://www.boutiquesdemusees.fr/en/search/products/?q=", shopCatalogues:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", shopHome:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", listUrl:null },
   // MAM Paris, 25 Sep. Its online bookshop (mamlibrairieboutique.fr) refused the
   // container with a Cloudflare check, so its search and catalogue addresses
   // are NOT known yet — the front door only, until she sends one from her browser.

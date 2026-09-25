@@ -3034,8 +3034,17 @@ async function extractTitleAsShown(link, venueCode) {
   // NAME, LINE BREAK, SUBTITLE, all inside the link — d'Orsay's
   // "Auguste Bartholdi<br>Liberty Enlightening the World". Joined exactly as
   // cardPartsTitle joins a name and a subtitle, so the two read the same.
+  // Older cards on its archive separate the two with a BLANK LINE in the
+  // source instead ("Henri Rivière\n\nThe man behind the camera"), which the
+  // rendered text collapses to a space — so the source text is read, split at
+  // a <br> or a blank line, never at a single wrapped line.
   if (rule.brParts) {
-    const lines = String(await getText(link).catch(() => '')).split(/\n+/).map(squash).filter(Boolean);
+    const raw = await link.evaluate(a => {
+      const c = a.cloneNode(true);
+      c.querySelectorAll('br').forEach(br => br.replaceWith('\u2029'));
+      return c.textContent;
+    }).catch(() => '');
+    const lines = String(raw).split(/\u2029|\n[ \t\u00a0]*\n/).map(squash).filter(Boolean);
     if (!lines.length) return '';
     const [name, ...rest] = lines;
     const subtitle = rest.join(' ');

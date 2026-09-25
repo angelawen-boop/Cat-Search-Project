@@ -25,6 +25,8 @@ const SERVED = {
   [SITE + '/en/program/whats-on/exhibitions']: 'current_upcoming.html',
   [SITE + '/en/ressources/expositions-passees']: 'past.html',
   [SITE + '/en/ressources/expositions-passees?page=1']: 'past_page2.html',
+  [SITE + '/en/ressources/expositions-passees?page=2']: 'past_page3.html',
+  [SITE + '/en/ressources/expositions-passees?page=3']: 'past_page4.html',
 };
 
 let failures = 0;
@@ -65,6 +67,15 @@ const check = (name, ok, got) => {
     check('OR-009: every show on her pages has a closing date', real.every(r => r.end_date),
       real.filter(r => !r.end_date).map(r => r.title).join(' | '));
     check('OR-010: the past archive is read on to its second page (?page=1)', !!byPath(W + 'sargent-dazzling-paris'));
+    const r = byPath(W + 'henri-riviere-man-behind-camera');
+    check('OR-013: an older card split by a blank line, not a <br>, still reads "Name: Subtitle"',
+      r && r.title === 'Henri Rivière: The man behind the camera', r && r.title);
+    // HER COUNT, 25 Sep: 45 past exhibitions back to 1 July 2024 on the site.
+    const onPage = (x, ctx) => (x._pages || []).some(p => p.startsWith(ctx));
+    const past = real.filter(x => onPage(x, 'past') && !onPage(x, 'current') && x.end_date >= '2024-07-01');
+    check('OR-014: 45 past exhibitions back to 1 July 2024 — her count', past.length === 45, past.length);
+    check('OR-015: the last page\u2019s immersive and invitation cards are dropped',
+      !real.some(x => /Tonight with the Impressionists|AGORIA|Van Gogh\u2019s Palette/.test(x.title)));
 
     // The description, on the page she saved because its English version
     // misbehaves.

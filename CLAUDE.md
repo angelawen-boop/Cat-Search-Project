@@ -1103,10 +1103,12 @@ collection display (an "Art and Sport tour", free with the collection).
 **d'Orsay — RECIPE BUILT 25 Sep, from her saved pages** (`orsay`, chip
 "d'Orsay"). Refuses the container (Cloudflare 403, not retried), so it is her
 laptop's, `headed: true`, and waits on item 5 like MoMA. Proven offline only:
-`orsay_pages.js` OR-001 to OR-012, the real scraper over `docs/orsay_pages/`
-(text only). New engine options it needed: `keepOnlyType.not`/`within`,
+`orsay_pages.js` OR-001 to OR-015, the real scraper over `docs/orsay_pages/`
+(text only, all four past pages) — **45 past shows back to 1 July 2024, her
+count, and her 14 current/upcoming less one Parcours.** New engine options it needed: `keepOnlyType.not`/`within`,
 `datesAt`, `title.brParts`, `noiseExempt`; ordinal days ("23rd") in both
-date parsers. Shop: her catalogues-shelf link; search address unknown.
+date parsers. Shop: her catalogues shelf and search (the shared national
+museums' shop — its search covers every museum on it).
 
 **Before her import, re-sweep `tate-britain`, `lgd` and `mam` once**: their
 committed runs predate the description fixes and MAM's title fix.
