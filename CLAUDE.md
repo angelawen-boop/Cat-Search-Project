@@ -163,6 +163,7 @@ Judgement about the outside world is not in any file.
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Bare "from the Collection" and titles with "Film Series" excluded; family, named and lent collections KEPT (24 Sep). No note on the card for films or installations; no model judging rows — compression stays mechanical (24 Sep) |
 | `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection, a gift or acquisitions** — they can be major (24 Sep) |
 | `moma` | **Current and upcoming only.** She does not want its past at all |
+| `mam` | Collection displays excluded — subtitle "Permanent collection" (Cultural Olympiad) and "New acquisitions…" (25 Sep). Her count: 3 current, 1 upcoming, 16 past less the Olympiad |
 | `jacquemart` | Exhibitions only — the card's own tag; operas, costume balls and other events refused (25 Sep) |
 | `orsay` | **Displays always kept**, "Focus on our collections" included — its collection is deep, like the Met's. **Every off-site show kept** — loans and collaborations abroad whose catalogues she may want. "Exceptional presentation" kept for now. Parcours, Immersive experience, Invitation dropped; an unseen tag is kept and named (25 Sep) |
 | `lgd` | New York and London only — the Hong Kong partnership shows ("& Wei, Hong Kong") excluded (25 Sep). **One-time lookback exception:** *Yves Klein and the Tangible World* kept, its catalogue only just published — `keepDespiteLookback`, that one address only |
@@ -308,7 +309,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34, 25 Sep 2026, is live; 34.4 (Levy Gorvy Dayan, Jacquemart-André, MAM Paris and d'Orsay added; chips renamed "Levy Gorvy", "Artic", "KHM") is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
+**Version 34, 25 Sep 2026, is live; 34.5 (Levy Gorvy Dayan, Jacquemart-André, MAM Paris and d'Orsay added; chips renamed "Levy Gorvy", "Artic", "KHM") is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -491,7 +492,7 @@ first.**
 **Shop addresses for all 18 original venues are checked and written down** —
 `docs/app.md` §1. `borghese`, `capo` and `dellav` have no shop. The 25 Sep
 venues' shops are in `MUSEUMS` with a comment each: `lgd` and `jacquemart`
-read off the live shops; `orsay` from her links; `mam` front door only.
+read off the live shops; `orsay` and `mam` from her links (`mam`'s shop refuses the connector).
 
 **Which model — CLOSED, her ruling 22 Sep.** The page cannot reach any outside
 address, so it does not choose a model; it asks the viewer's Claude through
@@ -510,6 +511,7 @@ first number to scroll past:
 | `page_renders.js` | does it DRAW — renders into jsdom twice, plain and with the runtime answering |
 | `catalogue_lookup.js` | C-001 to C-099 |
 | `recheck_shop.js` | "Re-check museum shop" pressed in the real app (jsdom) — R-001 to R-023 |
+| `mam_pages.js` | the MAM recipe on its saved archive pages — her exclusions and count |
 | `orsay_pages.js` | the d'Orsay recipe on her saved pages, no network — her tag rulings, dates, titles, the description |
 | `summary_pages.js` | descriptions on saved pages (`docs/summary_pages/`), no network — the museum's own text, never a press list, credit or ticket note |
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
@@ -1000,7 +1002,7 @@ stored and read back identical; 270 KB refused at the 256 KiB limit.
    She will decide the routine from use.
 3. Merge to `main` and publish to her app to start the real trial — hers
    to call; §4's publishing rules apply. **`main` has moved on since the branch
-   was cut** (34.4: Re-check museum shop, four venues, chip renames), so merge
+   was cut** (34.5: Re-check museum shop, four venues, chip renames), so merge
    `main` into the branch first and re-run `cloud_app.js` there.
 4. Google Drive backup by button — back on the table, never automatic.
 
@@ -1096,7 +1098,7 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 |---|---|---|---|
 | `lgd` Levy Gorvy | built, 28 rows, her list checked | `run_2026-09-25_132334` — **predates description fixes** | — |
 | `jacquemart` | built, 5 rows, list checked, **compressed** | `run_2026-09-25_133825` | — |
-| `mam` MAM Paris | built, 20 rows — **she is checking the list** | `run_2026-09-25_140234` — **predates title and credit fixes** | *Cultural Olympiad: Permanent collection* is a collection display ("Art and Sport tour") — keep or exclude, hers. Shop search unknown (Cloudflare) — she sends one. *Oliver Beer* is two runs (Oct 24–Jan 25, Apr–Jul 25), two rows, correct |
+| `mam` MAM Paris | built, 19 rows once re-swept, **her list checked** | `run_2026-09-25_140234` — **predates title, credit and exclusion fixes** | — Shop search wired from her link, but the shop's Cloudflare refuses this machine and the connector (403); her browser passes. *Oliver Beer* is two runs, two rows, correct; a third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
 | `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | none — refuses the container | waits on item 5 (headed browser, her laptop) |
 | MAD Paris | **not started** | — | next |
 
@@ -1106,7 +1108,7 @@ venues plus Tate Britain's past (item 4). Steps, in order:
    sweep MAD; `jacquemart`'s run and compression stand.
 2. Stitch, compress (subagents per `compress.js`), qc, and READ the cards
    through the app's intake before sending (§6, "Handing her work nobody read").
-3. Publish the app first — **34.4 is built, not live**; it carries the new
+3. Publish the app first — **34.5 is built, not live**; it carries the new
    venue codes, and the live 34 would file every new row as unknown. Ask
    before publishing (§1). d'Orsay's rows cannot be in this file.
 

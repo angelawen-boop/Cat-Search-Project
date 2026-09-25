@@ -4370,6 +4370,11 @@ const VENUES = {
       // The date line is ALSO a <p> after the <h2> on the current and upcoming
       // cards — the Prix Marcel Duchamp came out "…: From the 2 October 2026".
       subtitle: 'h2.post-summary-title .small, h2.post-summary-title + p:not(.post-summary-date)' } },
+    // Her ruling, 25 Sep: collection displays are not exhibitions here. The
+    // museum marks them with the subtitle "Permanent collection" (Cultural
+    // Olympiad, 2024); "New acquisitions by the Photography Committee" is the
+    // other kind she named. docs/mam_pages/, fixture MM-*.
+    excludeTitle: /(?:^|:\s*)Permanent collections?\s*$|^New acquisitions\b/i,
   },
 
   // MUSÉE JACQUEMART-ANDRÉ — her addition, 25 Sep. Two listings, both server-

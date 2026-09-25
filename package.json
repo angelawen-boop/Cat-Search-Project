@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --test scraper/date.test.js scraper/compress.test.js scraper/qc.test.js scraper/sweep_log.test.js scraper/venue_status.test.js && node scraper/fixtures/intake_cases.js && node scraper/fixtures/page_loads.js && node scraper/fixtures/page_renders.js && node scraper/fixtures/catalogue_lookup.js && node scraper/fixtures/recheck_shop.js && node scraper/fixtures/summary_pages.js && node scraper/fixtures/orsay_pages.js && node scraper/fixtures/title_case_pages.js && node scraper/fixtures/listing_pages.js"
+    "test": "node --test scraper/date.test.js scraper/compress.test.js scraper/qc.test.js scraper/sweep_log.test.js scraper/venue_status.test.js && node scraper/fixtures/intake_cases.js && node scraper/fixtures/page_loads.js && node scraper/fixtures/page_renders.js && node scraper/fixtures/catalogue_lookup.js && node scraper/fixtures/recheck_shop.js && node scraper/fixtures/summary_pages.js && node scraper/fixtures/orsay_pages.js && node scraper/fixtures/mam_pages.js && node scraper/fixtures/title_case_pages.js && node scraper/fixtures/listing_pages.js"
   },
   "repository": {
     "type": "git",
