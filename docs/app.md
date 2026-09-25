@@ -175,7 +175,7 @@ fixture C-069a asserts no two are the same.
 | `nosite` | Couldn't work out the publisher's own website, so there's no link to it. |
 | `unnamed` | No publisher was named for this book, so none was looked for. |
 | `selfpublished` | Catalogue is self-published by the venue. |
-| none recorded | No separate publisher page. — old sentence, older rows only |
+| none recorded | nothing — the step did not finish (the banner says why) or the row predates 22 Sep. The old "No separate publisher page." was retired 25 Sep, her ruling: it claimed a finished search |
 
 `publisherResult` records what the STEP concluded, not only what kind of
 address came back — which is why it is set on the four outcomes producing no

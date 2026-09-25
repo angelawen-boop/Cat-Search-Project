@@ -88,7 +88,8 @@ const khmC = fresh('khm-testc', 'khm', 'Test KHM Show Gamma');
 const ngA = fresh('ng-testopens', 'ng', 'Test NG Show Opens');
 const ngB = fresh('ng-testdead', 'ng', 'Test NG Show Dead Link');
 const lgdRow = fresh('lgd-yvesklein', 'lgd', 'Yves Klein and the Tangible World');
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow], ignored: [], lastRun: null };
+const ngPub = fresh('ng-testpubdies', 'ng', 'Test NG Publisher Dies');
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -400,6 +401,26 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await click(button(card(ngB.title), /Find catalogue/));
     const t = card(ngB.title).textContent;
     ok(/Not in the museum shop/.test(t) && !/In the museum shop\./.test(t), 'L-013: a web-found shop link that is gone is filed as found on the web', t.slice(0, 300));
+  }
+
+  // ── P-001..P-002: her Timeless Tintoretto, 25 Sep. The shop finds the book
+  // with its ISBN and publisher; the publisher search then fails
+  // ("upstream_error — Connector call failed"). The card must not say
+  // "No separate publisher page." as though that search had finished.
+  {
+    await openTray(ngPub.title);
+    const link = 'https://shop.nationalgallery.org.uk/test-ng-publisher-dies.html';
+    script.mcp = (tool, args) => {
+      if (tool === 'web_search') { const e = new Error('Connector call failed'); e.code = 'upstream_error'; throw e; }
+      return { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: ['Test NG Publisher Dies — ' + link + ' £40'] })), errors: [] } };
+    };
+    script.sample = () => ({ found: true, catalogueTitle: 'Publisher Dies: The Catalogue', isbn13: '9782754117418',
+      publisher: 'Editions Hazan', publisherUrl: null, shopUrl: link });
+    await click(button(card(ngPub.title), /Find catalogue/));
+    const t = card(ngPub.title).textContent;
+    ok(/In the museum shop\./.test(t) && !/No separate publisher page/.test(t),
+       'P-001: a publisher search that failed part-way claims nothing on the card', t.slice(0, 300));
+    ok(/stopped part-way/.test(win.document.body.textContent), 'P-002: the banner says the search stopped part-way');
   }
 
   // ── L-014..L-016: her real row. Re-check with the shop still blocked. ─────

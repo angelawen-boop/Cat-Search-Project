@@ -13,7 +13,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "34.10";
+const APP_VERSION = "34.11";
 const APP_VERSION_DATE = "25 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -997,8 +997,15 @@ function publisherLinkLabel(kind){
 // THE LADDER IS DELIBERATE, weakest answer last and each rung honest about
 // what it is: the book’s own page, then the section it sits in, then the
 // publisher’s front door, then no publisher website at all, then no
-// publisher name to go on. A row from an older ledger has no result recorded
-// and keeps the old sentence, because inventing one for it would be a claim.
+// publisher name to go on.
+//
+// NO RESULT RECORDED SAYS NOTHING — her ruling, 25 Sep. A finished search
+// always records one of the outcomes above, so an empty result means the step
+// did not finish (the connector failed part-way — Jacquemart-André's Timeless
+// Tintoretto, "upstream_error") or the row predates 22 Sep. The old sentence
+// "No separate publisher page." was printed for both, a finding claimed for a
+// search that never completed. The red banner says what failed; the card
+// claims nothing.
 function publisherNote(result,hasUrl){
   if(result==="container")return "The publisher\u2019s link opens the section this book sits in, not a page of its own.";
   if(result==="site")     return "The publisher\u2019s own site doesn\u2019t show this book — the link opens their home page.";
@@ -1006,7 +1013,7 @@ function publisherNote(result,hasUrl){
   if(result==="unnamed")  return "No publisher was named for this book, so none was looked for.";
   if(result==="selfpublished")return "Catalogue is self-published by the venue.";
   if(result==="product")  return "";
-  return hasUrl?"":"No separate publisher page.";
+  return "";
 }
 
 

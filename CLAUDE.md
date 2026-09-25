@@ -310,7 +310,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34.8, 25 Sep 2026, is live; 34.10 built, not published** (Levy cards headed "Lévy Gorvy Dayan" — `card` in MUSEUMS; the blocked-shop headline in red, the rest grey; no "No catalogue" corner tag — the corner keeps the time tag). **34.8** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
+**Version 34.8, 25 Sep 2026, is live; 34.11 built, not published** (Levy cards headed "Lévy Gorvy Dayan" — `card` in MUSEUMS; the blocked-shop headline in red, the rest grey; no "No catalogue" corner tag — the corner keeps the time tag; a publisher step that died claims nothing — "No separate publisher page." retired). **34.8** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -497,7 +497,9 @@ Each step runs only if the one before left something missing.
 
 **The cost:** up to four searches and three readings. Searches are free; **every
 reading runs on her allowance**, and the connector's keyless tier refuses after
-roughly a dozen searches in quick succession. **Every step after the first is
+roughly a dozen searches in quick succession (observed; Parallel publishes no
+figure — "lower rate limits" for anonymous use). A failed call shows in the
+red banner at the top of the page, not on the card — her choice, 25 Sep. **Every step after the first is
 conditional — do not make them unconditional, and do not flip to searching wide
 first.**
 

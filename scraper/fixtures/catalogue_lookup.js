@@ -404,12 +404,12 @@ function runtime(answer, log) {
        'C-066: no website found is not the same as no page found');
     eq(/no publisher was named/i.test(note('unnamed', false)), true,
        'C-067: and a step that never fired says so, which is what she asked for');
-    eq(note(null, false), 'No separate publisher page.',
-       'C-068: an older row keeps the old sentence rather than a new claim');
+    eq(note(null, false), '',
+       'C-068: no result recorded (a step that died, or an older row) claims nothing — her ruling 25 Sep');
     eq(note(null, true), '', 'C-069: an older row WITH a link says nothing at all');
 
     // The sentences must differ, or the whole point of them is lost.
-    const said = ['container', 'site', 'nosite', 'unnamed', null]
+    const said = ['container', 'site', 'nosite', 'unnamed', 'selfpublished']
       .map(k => note(k, k === 'container' || k === 'site'));
     eq(new Set(said).size, said.length, 'C-069a: no two outcomes print the same sentence');
   }
