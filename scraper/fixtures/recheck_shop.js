@@ -1,0 +1,269 @@
+/**
+ * "RE-CHECK MUSEUM SHOP", PRESSED — her design, 25 Sep 2026.
+ *
+ * The functions behind it are asserted one by one in catalogue_lookup.js
+ * (C-079 onward). This file does what that one cannot: it renders the real
+ * app, loads a ledger through the real Load input, opens the catalogue tray and
+ * PRESSES the buttons, with the connector and Claude played by a script. Then
+ * it reads the card back out of the page — the words and the link she would
+ * see — because a status that is right in the row and wrong on screen is the
+ * failure she would meet.
+ *
+ * The rows are two from her own 24 Sep ledger (docs/ledger_2026-09-24/), plus
+ * two made to be the other shapes: a catalogue found outside the museum shop,
+ * and no catalogue at all.
+ *
+ * WHAT IT CANNOT KNOW: how a real shop words "sold out", or what the connector
+ * really returns for a redirect. Those need a real case. It does know what a
+ * real 404 looks like — the shape below was read off the live connector on
+ * 25 Sep, against the Met's store.
+ *
+ *   node scraper/fixtures/recheck_shop.js
+ */
+'use strict';
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { execFileSync } = require('child_process');
+
+const JSX = path.join(__dirname, '..', '..', 'Cat_Watch.jsx');
+const LEDGER = path.join(__dirname, '..', '..', 'docs', 'ledger_2026-09-24',
+  'cat-watch-ledger-2026-09-24-1616.json');
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-recheck-'));
+
+// Prepared exactly as page_renders.js prepares it.
+const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = React;\n'
+  + fs.readFileSync(JSX, 'utf8')
+      .replace(/^import React.*$/m, '')
+      .replace(/^export default function App\(\)\{/m, 'function App(){');
+fs.writeFileSync(path.join(tmp, 'app.tsx'), prepared);
+try {
+  execFileSync('npx', ['tsc', path.join(tmp, 'app.tsx'), '--jsx', 'react',
+    '--target', 'esnext', '--outDir', tmp, '--skipLibCheck', '--allowJs'],
+    { stdio: 'pipe' });
+} catch { /* the emit is what matters */ }
+const built = path.join(tmp, 'app.js');
+if (!fs.existsSync(built)) { console.log('FAIL  the page did not transpile'); process.exit(1); }
+const code = fs.readFileSync(built, 'utf8');
+
+const { JSDOM } = require('jsdom');
+const React = require('react');
+const { createRoot } = require('react-dom/client');
+const { act } = require('react');
+
+let failures = 0;
+function fail(m) { console.log('FAIL  ' + m); failures++; }
+function pass(m) { console.log('PASS  ' + m); }
+function ok(cond, m, got) { if (cond) pass(m); else fail(m + (got !== undefined ? ' — got: ' + got : '')); }
+
+// ── the ledger: two of her real rows and two made shapes ──────────────────
+const real = JSON.parse(fs.readFileSync(LEDGER, 'utf8')).rows;
+const miller = real.find(r => r.id === 'artic-leemillerfearless');
+const hidden = real.find(r => r.id === 'met-hiddenfacescoveredportraitsoftherenaissance');
+const base = { interested: true, watching: true, acquiring: 'yes', looked: true,
+  addedAt: '2026-09-22T13:00:00.000Z', editedAt: null, startDate: '2026-09-01', endDate: '2026-12-31' };
+const webRow = { ...base, id: 'ng-testwebrow', museumId: 'ng', title: 'Test Show Outside The Shop',
+  summary: 'x', exUrl: 'https://www.nationalgallery.org.uk/exhibitions/test',
+  hasCatalogue: 'yes', catalogueTitle: 'Test Show: The Catalogue', isbn13: null,
+  publisher: 'Hannibal Books', publisherUrl: 'https://hannibalbooks.be/en/test-show',
+  publisherResult: 'product', shopUrl: null, shopState: 'web', shopChange: null };
+const noCatRow = { ...base, id: 'ng-testnocat', museumId: 'ng', title: 'Test Show With No Book',
+  summary: 'x', exUrl: 'https://www.nationalgallery.org.uk/exhibitions/test2',
+  hasCatalogue: 'no', catalogueTitle: null, isbn13: null, publisher: null, publisherUrl: null,
+  publisherResult: null, shopUrl: null, shopState: 'none', shopChange: null };
+const ledger = { rows: [miller, hidden, webRow, noCatRow], ignored: [], lastRun: null };
+
+// ── the runtime: a store, a download, and a scripted connector and Claude ──
+const script = { mcp: null, sample: null };
+const calls = [];
+function runtime() {
+  const store = new Map();
+  const doc = key => ({
+    get: async () => ({ exists: store.has(key), data: () => store.get(key) }),
+    set: async v => { store.set(key, v); },
+  });
+  return {
+    use: async name => {
+      if (name === 'db') return { doc };
+      if (name === 'downloads') return { save: async () => ({ ok: true }) };
+      if (name === 'mcp') return { callTool: async (server, tool, args) => {
+        calls.push({ kind: 'mcp', tool, args });
+        return script.mcp(tool, args);
+      } };
+      if (name === 'sample') return { json: async prompt => {
+        calls.push({ kind: 'sample', prompt });
+        return script.sample(prompt);
+      } };
+      return null;
+    },
+    complete: async () => '',
+  };
+}
+const refused = code => { const e = new Error('refused'); e.code = code; return e; };
+
+(async () => {
+  const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>',
+    { pretendToBeVisual: true, url: 'https://claude.ai/' });
+  const win = dom.window;
+  win.claude = runtime();
+  const globals = ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame',
+    'cancelAnimationFrame', 'MutationObserver', 'Node', 'Element', 'HTMLElement', 'Event',
+    'CustomEvent', 'getComputedStyle', 'FileReader', 'File', 'Blob'];
+  for (const k of globals) { try { global[k] = win[k]; } catch {} }
+  global.IS_REACT_ACT_ENVIRONMENT = true;
+  const realError = console.error;
+  const shouted = [];
+  console.error = (...a) => shouted.push(String(a[0]));
+
+  const settle = async () => { for (let i = 0; i < 6; i++) await act(async () => { await new Promise(r => setTimeout(r, 5)); }); };
+  const root = createRoot(win.document.getElementById('root'));
+  const App = new Function('React', 'window', 'document', 'localStorage', code + '\n;return App;')(
+    React, win, win.document, win.localStorage);
+  await act(async () => { root.render(React.createElement(App)); });
+  await settle();
+
+  // LOAD, through the real input.
+  const input = win.document.querySelector('input[type=file][accept=".json"]');
+  const file = new win.File([JSON.stringify(ledger)], 'ledger.json', { type: 'application/json' });
+  Object.defineProperty(input, 'files', { value: [file], configurable: true });
+  await act(async () => { input.dispatchEvent(new win.Event('change', { bubbles: true })); });
+  await settle();
+
+  const card = title => [...win.document.querySelectorAll('article')].find(a => a.textContent.includes(title));
+  const button = (el, re) => el && [...el.querySelectorAll('button')].find(b => re.test(b.textContent));
+  const click = async el => { await act(async () => { el.dispatchEvent(new win.MouseEvent('click', { bubbles: true })); }); await settle(); };
+  const shopLink = el => el && [...el.querySelectorAll('a')].find(a => /Museum shop/.test(a.textContent));
+
+  for (const t of [miller.title, webRow.title, noCatRow.title]) {
+    const c = card(t);
+    if (!c) { fail('the card for "' + t + '" is not on screen after Load — nothing below can run'); continue; }
+    await click(button(c, /Catalogue/));
+  }
+
+  // ── R-001..R-004: CASE 1, the page is gone (a real 404's shape) ─────────
+  {
+    calls.length = 0;
+    script.mcp = (tool, args) => ({ payload: { results: [], errors: [
+      { url: args.urls[0], error_type: 'http_error', http_status_code: 404, content: null }] } });
+    script.sample = () => { throw new Error('Claude must not be asked about a 404'); };
+    let c = card(miller.title);
+    const btn = button(c, /^Re-check museum shop$/);
+    ok(!!btn, 'R-001: the tray of a catalogue she has searched shows "Re-check museum shop"');
+    ok(!!button(c, /^Search again$/), 'R-001a:   beside "Search again"');
+    if (btn) await click(btn);
+    c = card(miller.title);
+    const t = c ? c.textContent : '';
+    ok(/No longer in the museum shop\./.test(t), 'R-002: a 404 turns the card red: "No longer in the museum shop."', t.slice(0, 200));
+    const a = shopLink(c);
+    ok(a && a.textContent.includes('Museum shop (last seen)'), 'R-003: the link stays, now "Museum shop (last seen)"', a && a.textContent);
+    ok(a && a.getAttribute('href') === miller.shopUrl, 'R-003a:   and still goes to the same page');
+    ok(calls.filter(x => x.kind === 'mcp').length === 1 && calls[0].tool === 'web_fetch'
+       && calls[0].args.urls.length === 1 && calls[0].args.urls[0] === miller.shopUrl,
+       'R-004: it read that ONE page and nothing else — no search, no Claude');
+  }
+
+  // ── R-005..R-007: CASE 3, it comes back ──────────────────────────────────
+  {
+    calls.length = 0;
+    script.mcp = (tool, args) => ({ payload: { results: [{ url: args.urls[0], title: 'Lee Miller',
+      excerpts: ['Lee Miller. Hardcover. $65.00. Add to cart. ' + 'Details. '.repeat(80)] }], errors: [] } });
+    script.sample = () => ({ forSale: true, why: 'Add to cart is shown.' });
+    await click(button(card(miller.title), /^Re-check museum shop$/));
+    const c = card(miller.title);
+    const t = c ? c.textContent : '';
+    ok(/Back in the museum shop\./.test(t), 'R-005: buyable again reads "Back in the museum shop."', t.slice(0, 200));
+    const a = shopLink(c);
+    ok(a && /^Museum shop\s*↗?$/.test(a.textContent.trim()), 'R-006: and the link is plain "Museum shop" again', a && a.textContent);
+    ok(!/No longer/.test(t), 'R-007: the red line is gone');
+  }
+
+  // ── R-008..R-010: a check that FAILED says so and changes nothing ────────
+  {
+    script.mcp = () => { throw refused('rate_limited'); };
+    script.sample = () => ({ forSale: false, why: 'should never be asked' });
+    await click(button(card(miller.title), /^Re-check museum shop$/));
+    const t = card(miller.title).textContent;
+    ok(/Re-check didn’t run/.test(t), 'R-008: a refused connector says the re-check didn’t run', t.slice(0, 300));
+    ok(/Nothing changed\./.test(t), 'R-009:   and that nothing changed');
+    ok(/Back in the museum shop\./.test(t) && !/No longer/.test(t), 'R-010: the status is exactly as before, not red');
+  }
+
+  // ── R-011..R-012: sold out on a page that still exists ──────────────────
+  {
+    script.mcp = (tool, args) => ({ payload: { results: [{ url: args.urls[0], title: 'Lee Miller',
+      excerpts: ['Lee Miller. Hardcover. Sold out. ' + 'Details. '.repeat(80)] }], errors: [] } });
+    script.sample = () => ({ forSale: false, why: 'The page says Sold out.' });
+    await click(button(card(miller.title), /^Re-check museum shop$/));
+    const t = card(miller.title).textContent;
+    ok(/No longer in the museum shop\./.test(t), 'R-011: sold out reads "No longer in the museum shop."', t.slice(0, 200));
+    ok(shopLink(card(miller.title)).textContent.includes('(last seen)'), 'R-012: with the link kept as "(last seen)"');
+  }
+
+  // ── R-013..R-017: CASE 2, it wasn't in the shop and now is ─────────────
+  {
+    calls.length = 0;
+    const found = 'https://shop.nationalgallery.org.uk/test-show-the-catalogue.html';
+    script.mcp = (tool, args) => ({ payload: { results: args.urls.map(u => ({ url: u, title: 'Shop',
+      excerpts: ['Test Show: The Catalogue — ' + found + ' £40 ISBN 9781857096972'] })), errors: [] } });
+    script.sample = () => ({ found: true, catalogueTitle: 'A Different Title From The Shop',
+      isbn13: '9781857096972', publisher: 'Someone Else', publisherUrl: 'https://elsewhere.test/x', shopUrl: found });
+    await click(button(card(webRow.title), /^Re-check museum shop$/));
+    const c = card(webRow.title);
+    const t = c ? c.textContent : '';
+    ok(/Now in the museum shop\./.test(t), 'R-013: found in the shop reads "Now in the museum shop."', t.slice(0, 200));
+    const a = shopLink(c);
+    ok(a && a.getAttribute('href') === found, 'R-014: the Museum shop link is the book’s page just found', a && a.getAttribute('href'));
+    ok(t.includes('Test Show: The Catalogue') && !t.includes('A Different Title'), 'R-015: the known title is kept, not replaced');
+    ok(/978-1857096972/.test(t), 'R-016: the blank ISBN is filled', t.slice(0, 300));
+    const pubLink = [...c.querySelectorAll('a')].find(x => x.getAttribute('href') === webRow.publisherUrl);
+    ok(!!pubLink && t.includes('Hannibal Books') && !t.includes('Someone Else'), 'R-016a: the publisher and its link are untouched');
+    ok(calls.every(x => x.kind === 'sample' || x.tool === 'web_fetch'), 'R-017: only the shop was opened — no web search, no publisher hunt',
+       calls.map(x => x.tool || x.kind).join(','));
+  }
+
+  // ── R-018..R-019: CASE 2 finding nothing leaves the card as it was ─────
+  {
+    script.mcp = (tool, args) => ({ payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: ['Other books.'] })), errors: [] } });
+    script.sample = () => ({ found: false, catalogueTitle: null, isbn13: null, publisher: null, publisherUrl: null, shopUrl: null });
+    const btn = button(card(noCatRow.title), /^Re-check museum shop$/);
+    ok(!!btn, 'R-018: a "no catalogue" tray has the button too');
+    if (btn) await click(btn);
+    const t = card(noCatRow.title).textContent;
+    ok(/this book isn’t there/.test(t) && /No catalogue found/.test(t), 'R-019: nothing found says so, and the card is unchanged', t.slice(0, 200));
+  }
+
+  // ── R-020..R-021: Search again never takes away what was there ─────────
+  {
+    script.mcp = (tool) => ({ payload: { results: [], errors: [] } });
+    script.sample = () => ({ found: false });
+    const before = card(webRow.title).textContent;
+    await click(button(card(webRow.title), /^Search again$/));
+    const t = card(webRow.title).textContent;
+    ok(/978-1857096972/.test(t) && t.includes('Hannibal Books'), 'R-020: a Search again that finds nothing keeps the ISBN and publisher', t.slice(0, 300));
+    ok(/Now in the museum shop\./.test(t) && /Now in the museum shop\./.test(before), 'R-021: and does not move the shop status');
+  }
+
+  // ── R-022..R-023: Search again that FINDS the book elsewhere still cannot
+  // move the shop status or replace what was known. R-020 cannot catch this:
+  // a lookup finding nothing hands the old row back before the status matters.
+  {
+    script.mcp = (tool, args) => tool === 'web_search'
+      ? { payload: { results: [{ url: 'https://bookseller.test/x', title: 'Test Show', excerpts: ['Test Show catalogue ISBN 9780300000009'] }] } }
+      : { payload: { results: [], errors: [] } };
+    script.sample = () => ({ found: true, catalogueTitle: 'Test Show (bookseller)', isbn13: '9780300000009',
+      publisher: 'Yale', publisherUrl: null, shopUrl: 'https://bookseller.test/x' });
+    await click(button(card(webRow.title), /^Search again$/));
+    const t = card(webRow.title).textContent;
+    ok(/Now in the museum shop\./.test(t) && !/Not in the museum shop/.test(t),
+       'R-022: a Search again finding the book at a bookseller leaves "Now in the museum shop." alone', t.slice(0, 300));
+    ok(/978-1857096972/.test(t) && !/978-0300000009/.test(t) && t.includes('Test Show: The Catalogue'),
+       'R-023: and keeps the ISBN and title it already had');
+  }
+
+  try { await act(async () => root.unmount()); } catch {}
+  console.error = realError;
+  const loud = shouted.filter(m => !/not wrapped in act|ReactDOMTestUtils/.test(m));
+  if (loud.length) fail('React complained — ' + loud[0].slice(0, 160));
+  console.log(failures ? failures + ' failed' : 'Re-check museum shop works when pressed');
+  process.exit(failures ? 1 : 0);
+})();

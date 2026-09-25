@@ -304,7 +304,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 33.1, 24 Sep 2026, is live.** The file is `Cat_Watch.jsx` — renamed from
+**Version 34, 25 Sep 2026, is built; 33.1 is live until it is published.** The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -469,9 +469,14 @@ Each step runs only if the one before left something missing.
   overwritten; a step that yields nothing leaves the row as it was.
 - **A 10-digit ISBN is taken and converted**, check digit verified first.
   `toIsbn13` is the only door; `cleanIsbn` is the strict 13-digit gate downstream.
-- **A book leaving the shop is news, and "gone" is sticky while "back" is not.**
-  The status moves only on Search again — a page cannot see what happens in a tab
-  it opened.
+- **Only "Re-check museum shop" moves the shop status — her design, 25 Sep,
+  version 34.** She presses it after seeing a change herself. With a link on
+  file it re-reads that one page (gone → "No longer", link kept as "Museum shop
+  (last seen)"; buyable again → "Back"); with none it runs the shop step alone
+  ("Now"). No history kept. A failed check says so and changes nothing. **Search
+  again fills blanks only and never moves the status.** `docs/app.md`, "A book
+  leaving the shop". **Built and tested by fixtures; not yet met a real sold-out
+  or pulled page.**
 
 **The cost:** up to four searches and three readings. Searches are free; **every
 reading runs on her allowance**, and the connector's keyless tier refuses after
@@ -497,7 +502,8 @@ first number to scroll past:
 | `intake_cases.js` | 62 checks — folding, quarantine, freshness, the ledger gate |
 | `page_loads.js` | does the page load |
 | `page_renders.js` | does it DRAW — renders into jsdom twice, plain and with the runtime answering |
-| `catalogue_lookup.js` | C-001 to C-090b |
+| `catalogue_lookup.js` | C-001 to C-099 |
+| `recheck_shop.js` | "Re-check museum shop" pressed in the real app (jsdom) — R-001 to R-023 |
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
 | `listing_pages.js` | the same, for WHERE each row was seen — no page twice, no promo card read as a listing |
 | `cloud_ledger.js`, `cloud_app.js` | the cloud ledger (branch): storage against a stand-in store with the platform's limits, then the screen driven by clicks — both on her real ledger, `docs/ledger_2026-09-24/` |
@@ -1021,13 +1027,12 @@ gate is right and stays; 320 cards is simply more than one sitting.
   parameter on `applyRefresh`, `offerPartialApply` and its harness export, and
   fixture 18h. Nothing else knows about it.
 
-### 3. A dead shop link is stored silently
+### 3. A dead shop link — BUILT 25 Sep, version 34, waiting on a real case
 
-Step one opens the shop's own pages, so the link is read off a page the shop
-served — but nothing checks whether a re-open came back empty, and
-`pageIsShell` already exists to tell. *(The rejected fix stays rejected:
-pointing the link at an ISBN search does not work, because museum shops search
-by title.)*
+"Re-check museum shop" (§4, catalogue lookup rules). Fixture-tested end to end;
+**not yet met a real sold-out, pulled or redirected shop page.** When she meets
+one and presses the button, check the result. *(Still rejected: pointing the
+link at an ISBN search — museum shops search by title.)*
 
 ### 4. Tate Britain's past exhibitions
 
@@ -1091,10 +1096,7 @@ other row.
 The debugging session for the issues she is noting (item 2). Standing gaps:
 fourteen venues have had no lookup run against them, their shop addresses
 checked but unseen live; `khm`'s shop queues every request and `uffizi` has no
-catalogues page, so both behave as if they had no shop. **The shop-status
-change (version 31) has not been run by her** — its sentence only appears on
-the SECOND lookup of a row, being a comparison, so the first row to press is one
-she has seen leave a shop.
+catalogues page, so both behave as if they had no shop.
 
 ### 8. The cheapest archive route per venue — very low priority, may never happen
 

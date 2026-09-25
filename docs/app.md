@@ -311,47 +311,46 @@ is conditional**, so a shop page that prints everything still costs one search
 and one reading. Do not make the later steps unconditional, and do not flip to
 searching wide first.
 
-### A book leaving the shop — her ruling, 22 Sep
+### A book leaving the shop — "Re-check museum shop", her design, 25 Sep
 
-A row ever found in the shop read "In the museum shop" FOREVER, because nothing
-compared one lookup against the last. **Catalogues selling out is the thing this
-app exists to watch**, so the single event it most needed to show was the one it
-could not.
+**The limit.** When she clicks Museum shop and sees for herself that the book
+has gone, the app learns nothing: a page cannot see what comes back in a tab it
+opened. So the status moves only when the app re-opens the page itself.
 
-**Her question first, because the answer is a real limit.** When she clicks
-Museum shop and sees for herself that the book has gone, the app learns nothing:
-the link opens a tab, and a page cannot see what comes back in a tab it opened.
-That is a browser rule. So the status moves only when the app itself re-opens
-that page, and only a lookup does that. **Her choice: on Search again and
-nowhere else** — which costs no extra calls, because the lookup already re-reads
-the shop page for the ISBN. A background check on every click was offered and
-not taken.
+**The 22 Sep design moved it on Search again and could not work** — replaced
+whole, and its code (`shopChangeFor`) removed. Search again searched the shop
+from scratch; shops keep sold-out books listed, so the listing put the green
+straight back. It cost a whole lookup to ask one question. And it rebuilt the
+row, wiping an ISBN or publisher it did not re-find.
 
-| Last time | This time | What the card says |
+**Her design.** She presses the button only AFTER seeing the change herself —
+it makes the screen agree with what she saw; it is not a monitor.
+
+| Row has | Re-check does | Result |
 |---|---|---|
-| in the shop | not in the shop | **No longer in the museum shop.** — bold, dark red |
-| not in the shop (or no catalogue) | in the shop | **Now in the museum shop.** — ordinary green |
-| never searched | either | the plain sentence, no news |
+| a shop link, green | re-reads THAT page only | 404 / redirected / sold out → **No longer in the museum shop.** (dark red), link kept as **Museum shop (last seen)** |
+| a shop link, red | re-reads THAT page only | buyable → **Back in the museum shop.**, link back to **Museum shop** |
+| no shop link | the shop step alone — never web search, never the publisher | found → **Now in the museum shop.** with the new link |
 
-**The return matters as much as the loss, and that half is hers.** A shop pulls
-a page while a book is merely out of stock and puts it back; a museum simply
-fails to maintain its own site. Both look like a loss and neither is permanent.
-Same green as the plain sentence — **the word NOW carries the news**, and a
-second colour would make a book coming back read as a different kind of thing
-from a book being there.
+- **No history is kept — her ruling.** The status implies it.
+- **A failed check says so and changes nothing.** A refused connector, a
+  timeout, a server error or a page that came back empty is never "gone".
+- **A 404 or 410 is decided in code**, off the connector's own error entry
+  (shape seen live on the Met's store, 25 Sep). Everything else is one question
+  to Claude about one page; a redirect is caught there, because the page served
+  is not the book's own.
+- **Pre-order and "available to order" count as in the shop**; sold out, out
+  of stock, unavailable count as gone, in any language.
+- **Search again fills blanks only and never moves the shop status**
+  (`keepWhatWeKnew`). A known publisher link stays with what it is, so the
+  publisher is never re-tangled.
+- Now, Back and the plain sentence share one green — the word carries the news.
 
-**"Gone" is sticky, "back" is not**, deliberately. A book that left is still
-gone on the next search, so the red survives a lookup that finds the same
-nothing (`shopChange` remembers). "Now" is news and news expires: the search
-after that reads "In the museum shop." again.
-
-**A first lookup is not a change.** No previous state means neither sentence
-fires.
-
-The red is the "closed over a year" ink, already muted, already carrying a
-dark-mode partner, no loose hex added. `shopChangeFor` and `shopHeadline` sit
-outside the component so fixtures reach them; C-079 to C-090b, verified by
-dropping the sticky half and watching C-084 fail.
+**Tested without a real case:** C-079 to C-099 (the pieces) and
+`recheck_shop.js` R-001 to R-023 (the real app in jsdom, Load, buttons pressed,
+the card read back), each mutation-checked. **Not tested: how a real shop words
+"sold out", or what the connector returns for a redirect** — those wait for a
+real case.
 
 ### Shop addresses — checked one by one, 21 Sep
 

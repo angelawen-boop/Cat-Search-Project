@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopChangeFor, shopHeadline };')(
+    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -447,45 +447,97 @@ function runtime(answer, log) {
     eq(new Set(said).size, said.length, 'C-078a: still no two outcomes printing the same sentence');
   }
 
-  // C-079 to C-090: a book leaving the shop, and coming back.
-  // Her ruling 22 Sep. A row ever found in the shop read "In the museum shop"
-  // forever, because nothing compared one lookup against the last - and a
-  // catalogue selling out is the thing this whole app watches for.
+  // C-079 to C-099: "Re-check museum shop" — her design, 25 Sep. It replaced
+  // the 22 Sep design, where Search again moved the status. Pressed for real,
+  // on screen, in recheck_shop.js; the pieces are asserted here.
   {
     const api = lift({ document: {}, localStorage: {} });
-    const chg = (prevState, prevChange, next) => api.shopChangeFor(prevState, prevChange, next);
 
-    // A FIRST LOOKUP IS NOT A CHANGE. Nothing was ever searched, so neither
-    // sentence has any news in it.
-    eq(chg(null, null, 'shop'), null, 'C-079: a first lookup finding the shop announces nothing');
-    eq(chg(null, null, 'web'), null, 'C-080: nor does a first lookup that misses it');
+    // The wording, hers. The status implies the history; none is kept.
+    eq(api.shopHeadline('shop', null), 'In the museum shop.', 'C-079: the plain green sentence');
+    eq(api.shopHeadline('shop', 'now'), 'Now in the museum shop.', 'C-079a: wasn’t there, now is');
+    eq(api.shopHeadline('shop', 'back'), 'Back in the museum shop.', 'C-079b: was there, went, came back');
+    eq(api.shopHeadline('gone', null), 'No longer in the museum shop.', 'C-080: the red one says it plainly');
+    eq(api.shopHeadline('web', 'gone'), null,
+       'C-080a: a 22 Sep "web"+"gone" row, with no link kept, reads as plain "not in the shop"');
+    eq(api.shopHeadline('web', null), null, 'C-080b: an ordinary miss adds no headline at all');
+    eq(api.shopHeadline('none', null), null, 'C-080c: nor does a row with no catalogue');
+    eq(api.shopLinkLabel('gone'), 'Museum shop (last seen)', 'C-081: a gone book’s link says "(last seen)"');
+    eq(api.shopLinkLabel('shop'), 'Museum shop', 'C-081a: an in-shop one does not');
 
-    // The two triggers she asked for.
-    eq(chg('shop', null, 'web'), 'gone', 'C-081: was in the shop, now is not');
-    eq(chg('web', null, 'shop'), 'back', 'C-082: was not in the shop, now is');
-    eq(chg('none', null, 'shop'), 'back',
-       'C-083: and "no catalogue at all" last time counts as not being in the shop');
+    // SEARCH AGAIN NEVER TAKES AWAY WHAT WAS THERE.
+    const had = { looked: true, hasCatalogue: 'yes', catalogueTitle: 'Old', isbn13: '9781588397751',
+      publisher: 'Pub', publisherUrl: 'https://pub.test/b', publisherResult: 'product',
+      shopUrl: 'https://shop.test/b', shopState: 'gone', shopChange: null };
+    const got = { ...had, catalogueTitle: 'New', isbn13: null, publisher: null, publisherUrl: null,
+      publisherResult: 'nosite', shopUrl: 'https://shop.test/other', shopState: 'shop', shopChange: null };
+    const k = api.keepWhatWeKnew(had, got);
+    eq(k.isbn13, '9781588397751', 'C-082: a known ISBN survives a lookup that did not find it');
+    eq(k.catalogueTitle, 'Old', 'C-082a: so does the title');
+    eq(k.publisher + '|' + k.publisherUrl + '|' + k.publisherResult, 'Pub|https://pub.test/b|product',
+       'C-083: the publisher, its link and what that link is stay together');
+    eq(k.shopState + '|' + k.shopUrl, 'gone|https://shop.test/b', 'C-084: the shop status is Re-check’s alone');
+    eq(api.keepWhatWeKnew(had, { ...got, hasCatalogue: 'no' }), had,
+       'C-085: a lookup finding nothing hands back the row it had');
+    const blank = { ...had, isbn13: null, publisher: null, publisherUrl: null, publisherResult: null };
+    const f = api.keepWhatWeKnew(blank, { ...got, isbn13: '9781588398130', publisher: 'P2' });
+    eq(f.isbn13 + '|' + f.publisher, '9781588398130|P2', 'C-086: blanks are still filled');
+    const first = { looked: false, hasCatalogue: 'unknown' };
+    eq(api.keepWhatWeKnew(first, got), got, 'C-087: a first lookup is taken whole');
+    eq(api.keepWhatWeKnew({ looked: true, hasCatalogue: 'no' }, got), got,
+       'C-087a: so is one after "no catalogue", which had nothing to lose');
 
-    // GONE IS STICKY. The book is still gone on the next search and the one
-    // after, so the red has to survive a lookup that finds the same nothing.
-    eq(chg('web', 'gone', 'web'), 'gone', 'C-084: still gone on the next search, still red');
-    eq(chg('web', 'gone', 'shop'), 'back', 'C-085: and it goes green the moment it returns');
+    // CASE 2's row. Fills blanks, and is "now".
+    const fis = api.foundInShop({ ...blank, catalogueTitle: 'Old', shopState: 'web', shopUrl: null },
+      { catalogueTitle: 'Shop title', isbn13: '1588398137', publisher: 'Shop pub', shopUrl: 'https://shop.test/n' });
+    eq(fis.shopState + '|' + fis.shopChange + '|' + fis.shopUrl, 'shop|now|https://shop.test/n',
+       'C-088: found in the shop becomes "now", with the new link');
+    eq(fis.catalogueTitle + '|' + fis.isbn13, 'Old|9781588398130', 'C-088a: keeps the title, converts and fills the ISBN');
+  }
 
-    // BACK IS NOT STICKY. "Now" is news, and news expires.
-    eq(chg('shop', 'back', 'shop'), null, 'C-086: the search after that reads plainly again');
-    eq(chg('shop', null, 'shop'), null, 'C-087: a book that never left says nothing new');
-    eq(chg('web', null, 'web'), null, 'C-088: nor does one that was never there');
+  // C-089 to C-099: reading the one page on file. The connector and Claude are
+  // played by a script; the 404 shape is the one the live connector returned.
+  {
+    const run = async (row, mcp, sample) => {
+      const asked = [];
+      const win = { document: {}, localStorage: {}, claude: { use: async n => {
+        if (n === 'mcp') return { callTool: async (s, t, a) => { asked.push(t); if (mcp instanceof Error) throw mcp; return mcp; } };
+        if (n === 'sample') return { json: async () => { asked.push('claude'); if (sample instanceof Error) throw sample; return sample; } };
+        return null; } } };
+      const out = await lift(win).recheckLinkedPage(row);
+      return { out, asked };
+    };
+    const inShop = { title: 'X', catalogueTitle: 'X', shopUrl: 'https://shop.test/x', shopState: 'shop', shopChange: null };
+    const isGone = { ...inShop, shopState: 'gone' };
+    const page = { payload: { results: [{ url: 'https://shop.test/x', excerpts: ['Add to cart. '.repeat(60)] }], errors: [] } };
+    const err = (type, status) => ({ payload: { results: [], errors: [{ url: 'https://shop.test/x', error_type: type, http_status_code: status }] } });
 
-    // The wording, hers.
-    eq(api.shopHeadline('shop', null), 'In the museum shop.', 'C-089: the plain green sentence');
-    eq(api.shopHeadline('shop', 'back'), 'Now in the museum shop.',
-       'C-089a: the word NOW is what carries the news');
-    eq(api.shopHeadline('web', 'gone'), 'No longer in the museum shop.',
-       'C-090: and the red one says it plainly');
-    eq(api.shopHeadline('web', null), null,
-       'C-090a: an ordinary miss adds no headline at all');
-    eq(api.shopHeadline('none', 'gone'), null,
-       'C-090b: a row with no catalogue shows its own line, not this one');
+    let r = await run(inShop, err('http_error', 404), new Error('never'));
+    eq(r.out.ok && r.out.row.shopState, 'gone', 'C-089: a 404 is gone');
+    eq(r.asked.join(), 'web_fetch', 'C-089a:   decided in code, Claude never asked');
+    eq(r.out.row.shopUrl, 'https://shop.test/x', 'C-089b:   and the link is kept');
+    r = await run(inShop, err('http_error', 410), null);
+    eq(r.out.row && r.out.row.shopState, 'gone', 'C-090: so is a 410');
+    r = await run(inShop, err('timeout', null), null);
+    eq(r.out.ok, false, 'C-091: a timeout is a failed check, never "gone"');
+    r = await run(inShop, err('http_error', 500), null);
+    eq(r.out.ok, false, 'C-092: so is a server error');
+    const e = new Error('x'); e.code = 'rate_limited';
+    r = await run(inShop, e, null);
+    eq(r.out.ok + '|' + /Nothing changed/.test(r.out.said), 'false|true', 'C-093: a refused connector says nothing changed');
+    r = await run(inShop, { payload: { results: [{ url: 'https://shop.test/x', excerpts: ['menu'] }], errors: [] } }, null);
+    eq(r.out.ok, false, 'C-094: a page that came back empty is a failed check, not "gone"');
+    r = await run(inShop, page, { forSale: false, why: 'Sold out.' });
+    eq(r.out.row.shopState, 'gone', 'C-095: sold out is gone');
+    r = await run(isGone, page, { forSale: true, why: 'Add to cart.' });
+    eq(r.out.row.shopState + '|' + r.out.row.shopChange, 'shop|back', 'C-096: gone then buyable is "back"');
+    r = await run(inShop, page, { forSale: true });
+    eq(r.out.ok && r.out.row === inShop, true, 'C-097: still for sale changes nothing');
+    r = await run(inShop, page, { forSale: 'maybe' });
+    eq(r.out.ok, false, 'C-098: an unreadable answer is a failed check');
+    const ce = new Error('x'); ce.code = 'rate_limited';
+    r = await run(inShop, page, ce);
+    eq(r.out.ok, false, 'C-099: Claude refusing is a failed check');
   }
 
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');
