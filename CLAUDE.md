@@ -1099,7 +1099,8 @@ MAM Paris, MAD Paris, Jacquemart-André.
 junk found and removed at the source (Tate members' banner and joint-ticket
 note; Levy's press list and a photo credit) — `summary_pages.js`, SP-001 to
 SP-007. **The 4-paragraph / 2,000-character description cut
-(`getCuratorialText`, every venue) — tested, her call pending.** 57 of 419 rows
+(`getCuratorialText`, every venue) — STAYS, her ruling 25 Sep:** a
+venue-wide change is not proportionate to a museum showing 1–2 shows a year. 57 of 419 rows
 in her import file hit it. Compressing Baroque Splendors from the cut text and
 from her full saved page (3,360 chars) gave the same teaser in substance; a
 teaser is ~6 words, so the cut costs nothing she reads. Changing it would send
