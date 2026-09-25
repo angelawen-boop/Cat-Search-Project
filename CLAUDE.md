@@ -1029,8 +1029,9 @@ gate is right and stays; 320 cards is simply more than one sitting.
 
 ### 3. A dead shop link — BUILT 25 Sep, version 34, waiting on a real case
 
-"Re-check museum shop" (§4, catalogue lookup rules). Fixture-tested end to end;
-**not yet met a real sold-out, pulled or redirected shop page.** When she meets
+"Re-check museum shop" (§4, catalogue lookup rules). Fixture-tested end to end.
+**Proven live by her, 25 Sep: "still for sale"** (artic, *Lee Miller*). **Not
+yet met a real sold-out, pulled or redirected shop page.** When she meets
 one and presses the button, check the result. *(Still rejected: pointing the
 link at an ISBN search — museum shops search by title.)*
 
