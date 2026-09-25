@@ -2783,9 +2783,9 @@ export default function App(){
         {/* Venue refresh buttons removed to protect usage. refreshVenues() is kept dormant below and can be re-wired here later. */}
         <div style={{marginTop:14,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
           {/* Bulk "Find catalogues for N Wanted" button removed to protect usage. findWantedCats() is kept dormant below. */}
-          {/* LOAD AND IMPORT SWEEP — renamed 25 Sep, her ruling: two buttons both
-              called Import had become confusing. Load opens a ledger file; Import
-              Sweep brings in a sweep CSV as cards. */}
+          {/* LOAD AND IMPORT — renamed 25 Sep, her ruling: "Import" and "Import
+              Refresh" had become confusing. Load opens a ledger file; Import brings
+              in a sweep CSV as cards. */}
           <button onClick={requestImport} style={sBtn}>Load</button>
           <button onClick={handleExport} disabled={!hasLedger} style={{...pBtn,opacity:hasLedger?1:0.4,cursor:hasLedger?"pointer":"not-allowed"}}>Export / Save</button>
           <input ref={fileRef} type="file" accept=".json" onChange={handleImport} style={{display:"none"}}/>
@@ -2793,7 +2793,7 @@ export default function App(){
               work. Says what it will DO, not what is currently on. */}
           <button onClick={toggleTheme} title={theme==="dark"?"Switch to light":"Switch to dark"}
             style={{...sBtn,marginLeft:"auto",padding:"5px 9px"}}>{theme==="dark"?"\u2600 Light":"\u263D Dark"}</button>
-          <button onClick={()=>refreshFileRef.current?.click()} style={sBtn}>Import Sweep</button>
+          <button onClick={()=>refreshFileRef.current?.click()} style={sBtn}>Import</button>
           <input ref={refreshFileRef} type="file" accept=".csv,text/csv" onChange={handleRefreshFile} style={{display:"none"}}/>
         </div>
         {savedText&&<div style={{marginTop:6,fontSize:11,color:savedCol,fontWeight:savedWeight}}>{savedText}</div>}
@@ -3138,7 +3138,7 @@ export default function App(){
           <button onClick={()=>{setShowSnaps(v=>!v); if(!showSnaps)loadSnaps();}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showSnaps?"Hide snapshots":"Snapshots"+(snaps?" - "+snaps.length:"")}</button>
           {/* ALWAYS DRAWN, like Snapshots — her catch, 25 Sep: on a page with an
               empty quarantine the link vanished and read as "the tray is gone". */}
-          {<button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>}
+          {<button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{"Quarantine"}</button>}
         </span>
       </div>
       <div style={{maxWidth:760,margin:"0 auto"}}>
@@ -3174,7 +3174,8 @@ export default function App(){
               smallest, palest text on the screen. Set at or above the filter
               chips below it, in the body ink rather than the muted grey. */}
           <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
-            {"Entries excluded from all future imports. Removing them from quarantine will re-offer them in future sweeps \u2014 it does not immediately add them to your ledger."}
+            {/* THE COUNT LIVES IN HERE — her ruling, 25 Sep; the footer button just says Quarantine. */}
+            <b>{ignored.length+" in quarantine. "}</b>{"Entries excluded from all future imports. Removing them from quarantine will re-offer them in future sweeps \u2014 it does not immediately add them to your ledger."}
           </div>
           {/* BY VENUE ONLY — her ruling, 24 Sep. It listed newest decision
               first, so each import session formed its own block. Venues in the

@@ -125,8 +125,8 @@ async function renderOnce(label, withRuntime) {
     const text = win.document.getElementById('root').textContent || '';
     if (text.trim().length < 40) {
       fail(label + ': it rendered, but the page is blank (' + text.trim().length + ' characters)');
-    } else if (!/\bLoad\b/.test(text) || !/Import Sweep/.test(text)) {
-      fail(label + ': the opening screen is missing Load or Import Sweep — got: '
+    } else if (!['Load', 'Import'].every(l => [...win.document.querySelectorAll('button')].some(b => b.textContent.trim() === l))) {
+      fail(label + ': the opening screen is missing Load or Import — got: '
            + text.trim().slice(0, 120));
     } else {
       pass(label + ': renders, ' + text.trim().length + ' characters on the opening screen');
