@@ -514,7 +514,7 @@ happened.
 ## 3. Refreshing, the intake screen and the bands
 
 **Refreshing (v9.2).** The app does the thinking; she approves each change. A
-sweep CSV goes in via **Import Refresh**; the app compares it against the ledger
+sweep CSV goes in via **Import Sweep** (named Import Refresh until 25 Sep); the app compares it against the ledger
 with no internet access and shows proposals as cards grouped by venue, applying
 only what she accepts. Types: **Add**, **Fill/Change** (per-field accept/reject,
 escape hatch "this is a different show"), **Couldn't be filed**. Bad data is
@@ -671,7 +671,7 @@ screen to pair a number with its venue.
 ### Dark mode
 
 Her request: *"it's 9pm and this cream background with light grey text is v
-difficult to read."* A **Dark / Light** button sits by Import Refresh; first
+difficult to read."* A **Dark / Light** button sits by Import Sweep; first
 visit follows the machine's setting, her explicit pick then wins on that device
 in browser storage (a per-device comfort, not ledger or sweep-log data; every
 touch wrapped because it can throw). **Every colour is named** (`PALETTES`,

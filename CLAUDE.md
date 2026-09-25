@@ -375,13 +375,13 @@ Ledger backup is JSON; the sweep pro forma is CSV.
 All of this was confirmed by her on real files, not only by fixtures. **Design,
 evidence and every finding: `docs/app.md`.**
 
-- **Loading and saving.** Open → empty portal; Import → pick file. **Export IS
+- **Loading and saving.** Open → empty portal; Load → pick file (the button was "Import" until 25 Sep). **Export IS
   Save.** Two save routes, differing in what is KNOWN — the runtime's file handoff
   resolves or throws, a plain browser download cannot tell finished from cancelled
   and so does not clear the unsaved warning. **Never put back a click-triggered
   green tick**: on 20 Sep that read "Saved — safe to close" while nothing was
   written.
-- **Refreshing.** A sweep CSV goes in via Import Refresh; the app compares it
+- **Refreshing.** A sweep CSV goes in via Import Sweep (was Import Refresh, renamed 25 Sep); the app compares it
   against the ledger with no internet access and shows proposals as cards grouped
   by venue. Add / Fill / Change / Couldn't be filed. Bad data is always surfaced,
   never dropped.

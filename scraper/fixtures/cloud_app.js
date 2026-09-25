@@ -166,7 +166,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     ok(await afterSave(() => importText(HERS_TEXT)), 'CA-006: importing a file that differs from the cloud copy is followed by a save');
     await until(() => snapCount() === 3);
     snaps = await C.cloudListSnapshots(store);
-    ok(snaps.length === 3 && snaps[0].label === 'Cloud copy before import' && snaps[0].kind === 'safety', 'CA-006b: the cloud copy was kept as a snapshot first');
+    ok(snaps.length === 3 && snaps[0].label === 'Cloud copy before Load' && snaps[0].kind === 'safety', 'CA-006b: the cloud copy was kept as a snapshot first');
     ok(/differs from this file: 1 different in some field/.test(text()), 'CA-006c: and the page says exactly how it differed', (text().match(/The cloud copy \(saved[^.]*\.[^.]*\./) || [''])[0]);
     ok(same((await live()).data, hers), 'CA-006d: then the imported file becomes the cloud copy');
     await until(() => (text().match(/Download/g) || []).length === 3);
@@ -182,7 +182,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     await until(() => saved.length > 0);
     const got = saved[saved.length - 1];
     ok(got && /^cat-watch-snapshot-.*\.json$/.test(got.filename) && Array.isArray(JSON.parse(got.data).rows),
-      'CA-008: Download hands over the snapshot as a ledger file Import can read', got && got.filename);
+      'CA-008: Download hands over the snapshot as a ledger file Load can read', got && got.filename);
 
     // 9. The store stops answering: the page says so, loudly.
     breakStore = true;

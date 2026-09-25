@@ -1562,7 +1562,7 @@ export default function App(){
     if(diff.changed)bits.push(diff.changed+" different in some field");
     if(diff.quarantineDiffers)bits.push("quarantine differs ("+diff.qa+" in the cloud copy, "+diff.qb+" here)");
     try{
-      await cloudTakeSnapshot(db,live.text,{label:"Cloud copy before "+(reason==="reset"?"Reset":"import"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
+      await cloudTakeSnapshot(db,live.text,{label:"Cloud copy before "+(reason==="reset"?"Reset":"Load"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
       loadSnaps();   // an open drawer shows it straight away
       setCloudCheck("The cloud copy (saved "+when+") differs from "+(reason==="reset"?"the starter set":"this file")+": "+bits.join(", ")+". It was kept as a snapshot before being replaced.");
     }catch(e){
@@ -2530,13 +2530,13 @@ export default function App(){
   // AN IMPORT CHECKS THE CLOUD COPY FIRST (guardCloudBeforeReplace), then
   // replaces the screen and arms saving. If the cloud copy differed and could
   // not be kept as a snapshot, the import stops there and says so.
-  function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{let d;try{d=JSON.parse(reader.result);}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");return;}if(!(d&&Array.isArray(d.rows))){setError("That file didn't contain a ledger (no entries found).");return;}const next=d.rows.map(r=>({...r,watching:r.watching||false})),ign=Array.isArray(d.ignored)?d.ignored:[];try{await guardCloudBeforeReplace({rows:next,ignored:ign},"import");}catch{return;}loadLedger(next,d.lastRun||null,"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",{ignored:ign});cloudArmed.current=true;setDebug("Imported "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");};reader.readAsText(file);e.target.value="";}
+  function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{let d;try{d=JSON.parse(reader.result);}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");return;}if(!(d&&Array.isArray(d.rows))){setError("That file didn't contain a ledger (no entries found).");return;}const next=d.rows.map(r=>({...r,watching:r.watching||false})),ign=Array.isArray(d.ignored)?d.ignored:[];try{await guardCloudBeforeReplace({rows:next,ignored:ign},"import");}catch{return;}loadLedger(next,d.lastRun||null,"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",{ignored:ign});cloudArmed.current=true;setDebug("Loaded "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");};reader.readAsText(file);e.target.value="";}
 
   // Confirm-before-replace: Import and Reset can wipe the screen in one tap, so
   // they ask first WHENEVER there is unsaved work showing.
   const openFilePicker=()=>fileRef.current?.click();
   function requestImport(){
-    if(rows.length>0&&dirty){setConfirmBox({text:"Importing replaces everything on screen, and you haven't exported these changes yet. They will be lost. Continue?",act:openFilePicker});}
+    if(rows.length>0&&dirty){setConfirmBox({text:"Loading replaces everything on screen, and you haven't exported these changes yet. They will be lost. Continue?",act:openFilePicker});}
     else openFilePicker();
   }
   const doReset=async()=>{const seed=buildSeed();try{await guardCloudBeforeReplace({rows:seed,ignored},"reset");}catch{return;}cloudArmed.current=true;loadLedger(seed,null,"Starter set loaded ("+seed.length+" exhibitions) \u2014 not saved to a file.");setDebug("Reset: loaded the built-in starter set ("+seed.length+" exhibitions). It isn't in any file \u2014 Export / Save if you want to keep it.");};
@@ -2767,7 +2767,7 @@ export default function App(){
   const hasLedger=rows.length>0;
   const showUnsavedBanner=hasLedger&&dirty;
   let savedText=null,savedCol=C.soft,savedWeight=500;
-  if(!hasLedger){savedText="No ledger loaded \u2014 tap Import to begin.";}
+  if(!hasLedger){savedText="No ledger loaded \u2014 tap Load to begin.";}
   else if(dirty){savedText=null;} // the red banner below covers this
   else if(savedFile){savedText="\u2713 Saved \u2014 safe to close  ("+savedFile+")";savedCol=C.okEdge;savedWeight=600;}
   else{savedText=loadedInfo||"Loaded \u2014 no edits yet.";}
@@ -2783,14 +2783,17 @@ export default function App(){
         {/* Venue refresh buttons removed to protect usage. refreshVenues() is kept dormant below and can be re-wired here later. */}
         <div style={{marginTop:14,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
           {/* Bulk "Find catalogues for N Wanted" button removed to protect usage. findWantedCats() is kept dormant below. */}
-          <button onClick={requestImport} style={sBtn}>Import</button>
+          {/* LOAD AND IMPORT SWEEP — renamed 25 Sep, her ruling: two buttons both
+              called Import had become confusing. Load opens a ledger file; Import
+              Sweep brings in a sweep CSV as cards. */}
+          <button onClick={requestImport} style={sBtn}>Load</button>
           <button onClick={handleExport} disabled={!hasLedger} style={{...pBtn,opacity:hasLedger?1:0.4,cursor:hasLedger?"pointer":"not-allowed"}}>Export / Save</button>
           <input ref={fileRef} type="file" accept=".json" onChange={handleImport} style={{display:"none"}}/>
           {/* Small and out of the way: it is a comfort control, not part of the
               work. Says what it will DO, not what is currently on. */}
           <button onClick={toggleTheme} title={theme==="dark"?"Switch to light":"Switch to dark"}
             style={{...sBtn,marginLeft:"auto",padding:"5px 9px"}}>{theme==="dark"?"\u2600 Light":"\u263D Dark"}</button>
-          <button onClick={()=>refreshFileRef.current?.click()} style={sBtn}>Import Refresh</button>
+          <button onClick={()=>refreshFileRef.current?.click()} style={sBtn}>Import Sweep</button>
           <input ref={refreshFileRef} type="file" accept=".csv,text/csv" onChange={handleRefreshFile} style={{display:"none"}}/>
         </div>
         {savedText&&<div style={{marginTop:6,fontSize:11,color:savedCol,fontWeight:savedWeight}}>{savedText}</div>}
