@@ -429,7 +429,7 @@ was read and the section it names itself was taken — "Exhibition Catalogues",
 | moma | `store.moma.org/collections/exhibition-catalogues` | `/search?q=` |
 | brit | `britishmuseumshoponline.org/books/exhibition-books.html` | `/catalogsearch/result/?q=` |
 | morgan | `shop.themorgan.org/collections/exhibition-catalogs` | `/search?q=` |
-| uffizi | **none found** — its books section would not show its contents | `shop.uffizi.it/en/?s=` |
+| uffizi | **none — the shop sells gifts and no books (her check, 25 Sep); a real lookup answered "no catalogue", likely correct** | `shop.uffizi.it/en/?s=` |
 | khm | **none** | `shop.khm.at/en/search?q=` — unverified, see below |
 
 **No shop:** borghese, capo, dellav — these skip to the broad web search.

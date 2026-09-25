@@ -1152,9 +1152,9 @@ The debugging session for the issues she is noting (item 2). Standing gaps:
 fourteen venues have had no lookup run against them, their shop addresses
 checked but unseen live. `khm`'s shop answers every request with a 307 to its
 waiting room — the card now says "blocked" (§4) instead of going wider in
-silence. `uffizi` has a search box but no catalogue shelf our reader could see
-(`docs/app.md`, shop addresses), so the search is its only route; not yet
-tried on a real lookup.
+silence. `uffizi`: **settled, her check 25 Sep** — its shop sells gifts, no books at
+all. A real lookup answered "no catalogue", which she judges likely correct.
+The search stays wired; nothing more to get there.
 
 ### 8. The cheapest archive route per venue — very low priority, may never happen
 
