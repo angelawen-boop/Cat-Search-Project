@@ -1078,7 +1078,7 @@ and nothing else.
 
 Her notes, 24–25 Sep.
 
-**Levy Gorvy Dayan — BUILT 25 Sep** (`lgd`, chip "Levy", always after
+**Levy Gorvy Dayan — BUILT 25 Sep** (`lgd`, chip "Levy Gorvy", always after
 Acquavella). Swept live once: `run_2026-09-25_132334`, 28 rows, all with text;
 kept for her one import with Tate Britain's past (item 4) and the French
 venues. App 34.1 carries the venue — **not yet published**.
