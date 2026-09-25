@@ -3,7 +3,7 @@
 **Repo:** `angelawen-boop/Cat-Search-Project`
 
 She collects art-exhibition catalogues. They go out of print fast once a show
-closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 22
+closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 23
 museums and galleries and shows how close each catalogue is to its likely
 out-of-print window, so she can buy before it is too late.
 
@@ -163,6 +163,7 @@ Judgement about the outside world is not in any file.
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Bare "from the Collection" and titles with "Film Series" excluded; family, named and lent collections KEPT (24 Sep). No note on the card for films or installations; no model judging rows — compression stays mechanical (24 Sep) |
 | `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection, a gift or acquisitions** — they can be major (24 Sep) |
 | `moma` | **Current and upcoming only.** She does not want its past at all |
+| `jacquemart` | Exhibitions only — the card's own tag; operas, costume balls and other events refused (25 Sep) |
 | `lgd` | New York and London only — the Hong Kong partnership shows ("& Wei, Hong Kong") excluded (25 Sep). **One-time lookback exception:** *Yves Klein and the Tangible World* kept, its catalogue only just published — `keepDespiteLookback`, that one address only |
 | `morgan` | *Collections Spotlight* excluded — a standing rotation, not a show. Past blurbs read off the listing, pages not opened |
 | `rijks` | 37 rows, not chased further. *Asian Pavilion* was pulled by the venue |
@@ -180,7 +181,7 @@ Chrome translate. Two consequences — **the `url` column is the load-bearing fi
 at this venue, not the dates**, and **the summary must arrive in English**.
 Reasoning in `docs/scraper.md` §15.
 
-**All 22 have a recipe**, blocked ones included: a refusal costs half a second,
+**All 23 have a recipe**, blocked ones included: a refusal costs half a second,
 leaves marker rows that show on the approval pile, and turns every sweep into a
 standing monitor. **Blocks are not permanent facts** — in five days Borghese went
 down and came back, dellav turned out never to have been blocked, the Met's
@@ -306,7 +307,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34, 25 Sep 2026, is live; 34.1 (Levy Gorvy Dayan added) is built, not yet published.** The file is `Cat_Watch.jsx` — renamed from
+**Version 34, 25 Sep 2026, is live; 34.2 (Levy Gorvy Dayan and Jacquemart-André added; chips renamed "Levy Gorvy", "Artic", "KHM") is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -598,7 +599,7 @@ scraper/output/run_2026-09-10_183045/
 
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
-announces which it thinks it is before fetching. **Container: 19** (its 17 working
+announces which it thinks it is before fetching. **Container: 20** (its 18 working
 venues plus `brit` and `morgan`). **Her laptop: 3** — `met`, `artic`, `moma`
 (`route: 'local'`).
 
@@ -1081,7 +1082,16 @@ Her notes, 24–25 Sep.
 **Levy Gorvy Dayan — BUILT 25 Sep** (`lgd`, chip "Levy Gorvy", always after
 Acquavella). Swept live once: `run_2026-09-25_132334`, 28 rows, all with text;
 kept for her one import with Tate Britain's past (item 4) and the French
-venues. App 34.1 carries the venue — **not yet published**.
+venues. App 34.2 carries the venue — **not yet published**.
+
+**Jacquemart-André — BUILT 25 Sep** (`jacquemart`, chip "Jacquemart-André",
+after the Louvre). Swept live once: `run_2026-09-25_133825`, 5 rows, all with
+text. Operas and a costume ball share its current page and are refused on the
+museum's own card tag (`keepOnlyType`, new engine option). Its past listing
+misspells "Feburary"; the shared month map now reads it.
+
+**Her chip names for the rest, 25 Sep:** Orsay → **"d'Orsay"**; the others
+"MAM Paris", "MAD Paris".
 
 **French venues** — the Louvre is the only one today. To add:
 

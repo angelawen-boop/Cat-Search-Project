@@ -571,6 +571,27 @@ test('LG-003: no other venue carries a lookback exception', () => {
   assert.equal(VENUES.lgd.keepDespiteLookback.length, 1);
 });
 
+// JA-001 to JA-003 — MUSÉE JACQUEMART-ANDRÉ, added 25 Sep.
+
+test('JA-001: the venue\u2019s own misspelling "Feburary" still gives the closing date', () => {
+  const r = findDateRange('From September 6, 2024 to Feburary 9, 2025');
+  assert.equal(r.start, '2024-09-06');
+  assert.equal(r.end, '2025-02-09');
+});
+
+test('JA-002: only cards the museum tags as an exhibition are kept', () => {
+  const re = VENUES.jacquemart.keepOnlyType.is;
+  for (const t of ['Exhibition', 'Exhibition ', 'EXHIBITION', 'Exposition']) assert.ok(re.test(t), t);
+  for (const t of ['Opera', 'Costume ball', 'Concert', 'Exhibition tour']) assert.equal(re.test(t), false, t);
+});
+
+test('JA-003: its listing pages are navigation, never shows', () => {
+  const nav = VENUES.jacquemart.isNav;
+  assert.equal(nav('/en/exhibitions'), true);
+  assert.equal(nav('/en/past-exhibitions'), true);
+  assert.equal(nav('/en/artemisia'), false);
+});
+
 // ---------------------------------------------------------------------------
 // EX-001 to EX-005 — A RUN THAT WAS EXTENDED AFTER IT WAS ANNOUNCED.
 //
@@ -1312,18 +1333,18 @@ test('R-006: moma names its blurb container and drops installations', () => {
 test('R-003: every other venue is the container\'s', () => {
   for (const c of ['ng', 'rijks', 'acq', 'frick', 'menil', 'va', 'louvre', 'capo',
                    'uffizi', 'brera', 'khm', 'dellav', 'wallace', 'borghese',
-                   'tate-modern', 'tate-britain', 'lgd']) {
+                   'tate-modern', 'tate-britain', 'lgd', 'jacquemart']) {
     assert.strictEqual(routeOf(c), 'container', c + ' should be the container\'s');
   }
 });
 
 test('R-004: the two sets do not overlap and cover every venue', () => {
   const codes = [...SWEEP_SRC.matchAll(RECIPE_KEY)].map(m => m[1]);
-  assert.strictEqual(codes.length, 22, 'expected 22 recipes, found ' + codes.length);
+  assert.strictEqual(codes.length, 23, 'expected 23 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
   assert.deepStrictEqual(home.sort(), ['artic', 'met', 'moma']);
-  assert.strictEqual(container.length, 19);
+  assert.strictEqual(container.length, 20);
   assert.strictEqual(home.length + container.length, codes.length);
 });
 

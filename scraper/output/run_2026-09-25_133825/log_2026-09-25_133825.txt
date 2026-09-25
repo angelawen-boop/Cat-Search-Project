@@ -1,0 +1,80 @@
+[2026-09-25T03:38:25.518Z] Cat Watch Sweep Prototype — starting
+[2026-09-25T03:38:25.519Z] Lookback floor: 2024-07-01
+[2026-09-25T03:38:25.519Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_133825
+[2026-09-25T03:38:25.519Z] Machine: container (proxy present, so this is the container)
+[2026-09-25T03:38:25.519Z] Venues this run: jacquemart
+[2026-09-25T03:38:25.519Z] Proxy: http://127.0.0.1:36351
+[2026-09-25T03:38:25.519Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-25T03:38:25.646Z] Running 1 venue(s) 1 at a time (one page at a time within each venue)
+[2026-09-25T03:38:25.748Z] [jacquemart] 
+[2026-09-25T03:38:25.748Z] [jacquemart] ────────────────────────────────────────────────────────────
+[2026-09-25T03:38:25.748Z] [jacquemart]   JACQUEMART — Musée Jacquemart-André, Paris
+[2026-09-25T03:38:25.748Z] [jacquemart] ────────────────────────────────────────────────────────────
+[2026-09-25T03:38:25.748Z] [jacquemart]   Fetching current/upcoming: https://www.musee-jacquemart-andre.com/en/exhibitions
+[2026-09-25T03:38:31.079Z] [jacquemart]     the venue tags this "Costume ball", not an exhibition, excluded: A night in the Belle Époque: Grand Costume Ball to Celebrate the 150th Anniversary of the Hôtel André
+[2026-09-25T03:38:31.114Z] [jacquemart]     the venue tags this "Opera", not an exhibition, excluded: Verdi’s La Traviata: An immersive experience in the museum’s salons
+[2026-09-25T03:38:31.134Z] [jacquemart]     the venue tags this "Opera", not an exhibition, excluded: Verdi's Rigoletto: An immersive experience in the museum’s salons
+[2026-09-25T03:38:31.135Z] [jacquemart]   current/upcoming: 4 links seen -> 0 navigation, 0 already-seen URL, 3 tagged by the venue as another kind of event -> 1 collected (0 of them with no readable title)
+[2026-09-25T03:38:31.135Z] [jacquemart]   Fetching past: https://www.musee-jacquemart-andre.com/en/past-exhibitions
+[2026-09-25T03:38:35.924Z] [jacquemart]   past: 34 links seen -> 0 navigation, 0 already-seen URL -> 34 collected (0 of them with no readable title)
+[2026-09-25T03:38:35.925Z] [jacquemart]   lookback (listing): kept 6, dropped 29 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-25T03:38:35.925Z] [jacquemart]   reading 6 individual page(s)…
+[2026-09-25T03:38:35.925Z] [jacquemart]     page 1 of 6
+[2026-09-25T03:38:48.304Z] [jacquemart]   Individual pages: 6 got text, 0 no curatorial text, 0 failed
+[2026-09-25T03:38:48.304Z] [jacquemart]   lookback (final): kept 5, dropped 1 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-25T03:38:48.305Z] [jacquemart]   → 5 exhibitions, 5 with curatorial text → jacquemart.csv
+[2026-09-25T03:38:48.759Z] 
+[2026-09-25T03:38:48.759Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:38:48.759Z]   QC — faulty rows and exceptions
+[2026-09-25T03:38:48.759Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:38:48.759Z]   No faulty rows: every row has a title and a known venue code.
+[2026-09-25T03:38:48.759Z]   No exceptions: every venue looks like the last run that had it.
+[2026-09-25T03:38:48.759Z] 
+[2026-09-25T03:38:48.759Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:38:48.759Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-25T03:38:48.759Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:38:48.759Z]   JACQUEMART: 5 exhibitions | 5 with text
+[2026-09-25T03:38:48.759Z] 
+[2026-09-25T03:38:48.759Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:38:48.759Z]   COVERAGE — every link accounted for
+[2026-09-25T03:38:48.759Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:38:48.759Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-25T03:38:48.759Z]   -----------------------------------------------------------------------------------------------
+[2026-09-25T03:38:48.759Z]   jacquemart current/upcoming                 4     0       0     0        0        0          1
+[2026-09-25T03:38:48.759Z]   jacquemart past                            34     0       0     0        0        0         34
+[2026-09-25T03:38:48.759Z] 
+[2026-09-25T03:38:48.759Z] 
+[2026-09-25T03:38:48.759Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:38:48.759Z]   TITLES TAKEN FROM THE EXHIBITION'S OWN PAGE — READ BEFORE SENDING
+[2026-09-25T03:38:48.759Z] ────────────────────────────────────────────────────────────
+[2026-09-25T03:38:48.759Z] 
+[2026-09-25T03:38:48.759Z]   NAMES STILL MISSING WORDS — the tab title carries words the page does not hold where the check looks:
+[2026-09-25T03:38:48.759Z]   jacquemart: recorded "Timeless Tintoretto", tab says "Exhibition Timeless Tintoretto in Paris"
+    https://www.musee-jacquemart-andre.com/en/timeless-tintoretto
+[2026-09-25T03:38:48.759Z]   jacquemart: recorded "Baroque Splendors", tab says "Exhibition Baroque Splendors in Paris"
+    https://www.musee-jacquemart-andre.com/en/baroque-splendors
+[2026-09-25T03:38:48.759Z]   jacquemart: recorded "Georges de La Tour", tab says "Exhibition Georges de La Tour in Paris"
+    https://www.musee-jacquemart-andre.com/en/georges-tour
+[2026-09-25T03:38:48.759Z]   jacquemart: recorded "Artemisia", tab says "Exhibition Artemisia in Paris"
+    https://www.musee-jacquemart-andre.com/en/artemisia
+[2026-09-25T03:38:48.759Z]   jacquemart: recorded "Masterpieces from the Borghese Gallery", tab says "Exhibition Masterpieces from the Borghese Gallery in Paris"
+    https://www.musee-jacquemart-andre.com/en/masterpieces-borghese-gallery
+[2026-09-25T03:38:48.759Z]   jacquemart: recorded "Signac", tab says "Exhibition Signac in Paris"
+    https://www.musee-jacquemart-andre.com/en/signac
+[2026-09-25T03:38:48.759Z] 
+[2026-09-25T03:38:48.759Z]   seen      = links matching the venue's selector on that page
+[2026-09-25T03:38:48.759Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-25T03:38:48.759Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-25T03:38:48.759Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-25T03:38:48.759Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-25T03:38:48.759Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-25T03:38:48.759Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-25T03:38:48.759Z] 
+[2026-09-25T03:38:48.759Z] Network bridge: 293 requests served, 191 skipped (image/media/font), 0 failed
+[2026-09-25T03:38:48.759Z] 
+[2026-09-25T03:38:48.760Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_133825
+[2026-09-25T03:38:48.760Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_133825/sweep.csv  (5 rows — jacquemart:5)
+[2026-09-25T03:38:48.760Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-25_133825/log_2026-09-25_133825.txt
+[2026-09-25T03:38:48.760Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-25T03:38:48.760Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-25T03:38:48.760Z] No de-duplication is applied — see passThrough.

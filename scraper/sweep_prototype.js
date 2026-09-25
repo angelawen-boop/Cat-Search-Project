@@ -704,7 +704,13 @@ const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
   // `gen` and `mag` are added with it rather than waiting to be caught by
   // another venue's review. The rest of the three-letter forms — feb, mar, apr,
   // giu, lug, ago, ott, dic — are already here or already English.
-  set:9, gen:1, mag:5 };
+  set:9, gen:1, mag:5,
+
+  // A VENUE'S OWN MISSPELLING, 25 Sep 2026. Jacquemart-André's past listing
+  // prints "From September 6, 2024 to Feburary 9, 2025"; without this the run
+  // lost its closing date and was stored as one day. Added to the shared map
+  // like every other spelling a venue has taught us.
+  feburary:2 };
 
 /**
  * One month pattern, shared by every date parser.
@@ -737,7 +743,7 @@ const WEEKDAY_PREFIX_SRC =
   '|thurs|thur|tues|weds|mon|tue|wed|thu|fri|sat|sun)\\.?,?\\s+';
 
 const MONTH_PATTERN =
-  '(?:January|February|March|April|May|June|July|August|September|October|November|December' +
+  '(?:January|February|Feburary|March|April|May|June|July|August|September|October|November|December' +
   '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre' +
   '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec' +
   // LONGEST FIRST WITHIN EACH LANGUAGE: `sett` must precede `set`, `genn`
@@ -3278,7 +3284,7 @@ async function collectFromListing(page, opts) {
   // it cannot swallow an exhibition.
 
   // (LANG_PREFIX and isOwnListingPage are defined at module scope, below.)
-  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, branch: 0, labelled: 0, kept: 0 };
+  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, branch: 0, labelled: 0, otherKind: 0, kept: 0 };
   // The rows this page contributed, so unreadable titles can be counted once
   // the page is finished rather than as each link is read.
   const fromThisPage = [];
@@ -3375,6 +3381,22 @@ async function collectFromListing(page, opts) {
       continue;
     }
 
+    // THE CARD'S OWN TYPE LABEL, WHERE A LISTING MIXES KINDS. Jacquemart-
+    // André's "current and upcoming" page carries its exhibition beside operas
+    // and a costume ball, each card tagged by the museum ("Exhibition",
+    // "Opera", "Costume ball") in its own element. Kept only when that tag is
+    // the one the recipe names — the venue's word, rung 1 of the ladder. A card
+    // with no tag at all is kept: a missing label is not evidence.
+    if (opts.keepOnlyType) {
+      const tag = await link.$eval(opts.keepOnlyType.label, e => e.textContent).catch(() => null);
+      if (tag != null && !opts.keepOnlyType.is.test(tag)) {
+        c.otherKind++;
+        log(`    the venue tags this "${String(tag).trim()}", not an exhibition, excluded: ${title || slugToWords(fullUrl)}`);
+        seenUrls.add(key);
+        continue;
+      }
+    }
+
     // A PERMANENT DISPLAY THE VENUE LABELS AS ONE. The Art Institute prints
     // "COLLECTION INSTALLATION" on the card of every standing hang — its new
     // European galleries, the Deering Family Galleries, the 20th-century
@@ -3458,7 +3480,7 @@ async function collectFromListing(page, opts) {
   c.noTitle = fromThisPage.filter(r => !r.title).length;
 
   COUNTS.push(c);
-  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''}${c.branch ? `, ${c.branch} at another site of the same venue` : ''}${c.labelled ? `, ${c.labelled} labelled permanent by the venue` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
+  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''}${c.branch ? `, ${c.branch} at another site of the same venue` : ''}${c.labelled ? `, ${c.labelled} labelled permanent by the venue` : ''}${c.otherKind ? `, ${c.otherKind} tagged by the venue as another kind of event` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
   return c;
 }
 
@@ -4176,6 +4198,28 @@ const VENUES = {
     description: 'div.wp-block-columns h4.wp-block-heading, div.wp-block-columns p.wp-block-paragraph',
   },
 
+  // MUSÉE JACQUEMART-ANDRÉ — her addition, 25 Sep. Two listings, both server-
+  // drawn: current/upcoming, and past grouped by year back to 2013 (the older
+  // years sit in folded accordions, still in the page). A show's own address
+  // is a bare /en/<name>, the SAME shape as the site's menu links, so only
+  // the listings' own cards are read — two card designs, one per page:
+  //   current  a.event       .festival__type  .title h2  .sous_titre
+  //   past     a.gallery_el  .item-type       .item-title .item-sub-title
+  jacquemart: {
+    name: 'Musée Jacquemart-André, Paris',
+    base: 'https://www.musee-jacquemart-andre.com',
+    pages: [
+      { path: '/en/exhibitions',      ctx: 'current/upcoming' },
+      { path: '/en/past-exhibitions', ctx: 'past' },
+    ],
+    selector: 'a.gallery_el, a.event',
+    isNav: href => /\/en\/(past-)?exhibitions\/?$/.test(href),
+    title: { heading: false, cardParts: { name: '.item-title, .title h2', subtitle: '.item-sub-title, .sous_titre' } },
+    // Operas and a costume ball share the current page; the museum tags each.
+    // The past list tags one old show in French, "Exposition" — same word.
+    keepOnlyType: { label: '.festival__type, .item-type', is: /^\s*(Exhibition|Exposition)\s*$/i },
+  },
+
   khm: {
     name: 'Kunsthistorisches Museum, Vienna',
     base: 'https://www.khm.at',
@@ -4758,6 +4802,7 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
       listingPaths: listingPages(v).map(p => p.path),
       excludeOngoing: !!v.excludeOngoing,
       otherBranch: v.otherBranch || null,
+      keepOnlyType: v.keepOnlyType || null,
       excludeLabelled: v.excludeLabelled || null,
       excludeTitle: v.excludeTitle || null,
       listingRow: pg.listingRow || v.listingRow || null,
@@ -4803,7 +4848,7 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
       // page holds that single item, so the page emptied and immediately
       // started claiming it could not be read.
       const excluded = cov
-        ? (cov.dupUrl || 0) + (cov.ongoing || 0) + (cov.branch || 0) + (cov.labelled || 0) + (cov.offsite || 0)
+        ? (cov.dupUrl || 0) + (cov.ongoing || 0) + (cov.branch || 0) + (cov.labelled || 0) + (cov.otherKind || 0) + (cov.offsite || 0)
         : 0;
       if (rows.length === rowsBefore && !excluded && !pg.discovered) {
         log(`  NO EXHIBITIONS ${pg.ctx}: page loaded and was read, but nothing matched`);
