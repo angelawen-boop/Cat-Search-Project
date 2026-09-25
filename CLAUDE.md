@@ -507,6 +507,7 @@ first number to scroll past:
 | `page_renders.js` | does it DRAW — renders into jsdom twice, plain and with the runtime answering |
 | `catalogue_lookup.js` | C-001 to C-099 |
 | `recheck_shop.js` | "Re-check museum shop" pressed in the real app (jsdom) — R-001 to R-023 |
+| `summary_pages.js` | descriptions on saved pages (`docs/summary_pages/`), no network — the museum's own text, never a press list, credit or ticket note |
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
 | `listing_pages.js` | the same, for WHERE each row was seen — no page twice, no promo card read as a listing |
 | `cloud_ledger.js`, `cloud_app.js` | the cloud ledger (branch): storage against a stand-in store with the platform's limits, then the screen driven by clicks — both on her real ledger, `docs/ledger_2026-09-24/` |
@@ -1091,7 +1092,15 @@ museum's own card tag (`keepOnlyType`, new engine option). Its past listing
 misspells "Feburary"; the shared month map now reads it.
 
 **Her chip names for the rest, 25 Sep:** Orsay → **"d'Orsay"**; the others
-"MAM Paris", "MAD Paris".
+"MAM Paris", "MAD Paris". **Her order for the French venues:** Louvre, d'Orsay,
+MAM Paris, MAD Paris, Jacquemart-André.
+
+**Descriptions checked 25 Sep** for Tate Britain, Levy and Jacquemart-André:
+junk found and removed at the source (Tate members' banner and joint-ticket
+note; Levy's press list and a photo credit) — `summary_pages.js`, SP-001 to
+SP-007. **Open, hers to decide:** every venue's description is cut at 4
+paragraphs and 2,000 characters (`getCuratorialText`); 57 of 419 rows in her
+import file hit the character limit.
 
 **French venues** — the Louvre is the only one today. To add:
 

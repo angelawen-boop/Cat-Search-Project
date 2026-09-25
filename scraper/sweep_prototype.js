@@ -2135,6 +2135,20 @@ const BOILERPLATE = [
   'members go free',
   'free for members',
   'tickets bookable',
+  // Tate Britain, 25 Sep 2026: a members' banner opening two summaries —
+  // "Members enjoy free entry – no need to book, just turn up with your card" —
+  // and a joint-ticket note opening two more: "Tickets for Edward Burra include
+  // entry to the Ithell Colquhoun exhibition".
+  'members enjoy free entry',
+  'no need to book',
+  'include entry to the',
+
+  // A PHOTO CREDIT IN THE BODY TEXT, Lévy Gorvy Dayan, 25 Sep 2026: the last
+  // paragraph of a description reads "(1-3) Installation views of Thievery by
+  // Servants, Lévy Gorvy Dayan, New York, 2026. Courtesy the artist and Hauser
+  // & Wirth." — no caption class to key on, so the wording is the test, like ©.
+  'installation view',
+  'courtesy the artist',
 
   // FUNDING ACKNOWLEDGEMENTS, found 12 Sep 2026 while checking that the caption
   // fix had not cost anything. It had not — but clearing the credit line freed
@@ -3702,6 +3716,11 @@ const VENUES = {
     // the lookback, but its catalogue has only just been published. This one
     // address only — the lookback stands for every other row.
     keepDespiteLookback: ['/exhibitions/yves-klein-and-the-tangible-world'],
+    // THE GALLERY'S OWN TEXT ONLY. Its pages end with a press list — links to
+    // articles, one reading "Frieze Dish, The Lalanne Bounce, A $17.5M Hockney
+    // & An $8.5M Gorky" — built from the same text class inside <li>s, and the
+    // shared ladder took it as description. The description is the div.
+    description: 'div.text-style-description p',
   },
 
   borghese: {
