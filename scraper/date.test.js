@@ -571,6 +571,13 @@ test('LG-003: no other venue carries a lookback exception', () => {
   assert.equal(VENUES.lgd.keepDespiteLookback.length, 1);
 });
 
+test('LG-004: the gallery\'s LGD Hammer auctions are excluded, and nothing else by that word', () => {
+  const re = VENUES.lgd.excludeTitle;
+  assert.ok(re.test('LGD Hammer: Willem de Kooning, Milkmaid (Untitled X) (1984)'));
+  assert.equal(re.test('Thomas Houseago: Death\'s Sacred Mirror'), false);
+  assert.equal(re.test('Hammer and Sickle: Soviet Posters'), false, 'only the sale series, by its own name');
+});
+
 // JA-001 to JA-003 — MUSÉE JACQUEMART-ANDRÉ, added 25 Sep.
 
 test('JA-001: the venue\u2019s own misspelling "Feburary" still gives the closing date', () => {

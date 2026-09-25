@@ -3804,6 +3804,10 @@ const VENUES = {
     // the lookback, but its catalogue has only just been published. This one
     // address only — the lookback stands for every other row.
     keepDespiteLookback: ['/exhibitions/yves-klein-and-the-tangible-world'],
+    // THE GALLERY'S AUCTIONS ARE NOT EXHIBITIONS — her ruling, 25 Sep. "LGD
+    // Hammer" is its sale series (hence the hammer), listed among the shows:
+    // "LGD Hammer: Willem de Kooning, Milkmaid (Untitled X) (1984)".
+    excludeTitle: /^LGD\s+Hammer\b/i,
     // THE GALLERY'S OWN TEXT ONLY. Its pages end with a press list — links to
     // articles, one reading "Frieze Dish, The Lalanne Bounce, A $17.5M Hockney
     // & An $8.5M Gorky" — built from the same text class inside <li>s, and the
