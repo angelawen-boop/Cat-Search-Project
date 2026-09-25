@@ -49,6 +49,11 @@ const check = (name, ok, got) => {
     check('SP-004: Levy — the photo credit in the body is dropped', !/Installation views|Courtesy the artist|Hauser/.test(t), t);
   }
   {
+    const t = await read(fs.readFileSync(path.join(PAGES, 'mam_otobong_nkanga.html'), 'utf8'), 'mam');
+    check('SP-008: MAM — the museum\u2019s sentence after the image survives', /first monographic exhibition in a Parisian museum/.test(t), t);
+    check('SP-009: MAM — the credit paragraph under the image is dropped', !/Wim Waumans|Courtesy of the artist/.test(t), t);
+  }
+  {
     const t = await read('<main><p>Members enjoy free entry – no need to book, just turn up with your card</p>'
       + '<p>A major exhibition of the trailblazing photographer Lee Miller, spanning her whole career across '
       + 'surrealism, fashion and war reporting in the twentieth century.</p>'

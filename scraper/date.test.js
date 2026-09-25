@@ -21,7 +21,7 @@ const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
   classifyLoadError, isOwnListingPage, saysOngoing,
-  expandYearArchive, expandDateRange, keptDespiteLookback, listingPages, followPagination, VENUES, pickTitleLine,
+  expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination, VENUES, pickTitleLine,
   stripWeekdays,
   addNote, finishNotes, scopeSelector, extensionNote,
 } = require('./sweep_prototype.js');
@@ -590,6 +590,30 @@ test('JA-003: its listing pages are navigation, never shows', () => {
   assert.equal(nav('/en/exhibitions'), true);
   assert.equal(nav('/en/past-exhibitions'), true);
   assert.equal(nav('/en/artemisia'), false);
+});
+
+// MA-001 to MA-003 — MUSÉE D'ART MODERNE DE PARIS, added 25 Sep.
+
+test('MA-001: a show keeps one address from current to archive', () => {
+  assert.equal(withoutQuery('https://www.mam.paris.fr/en/expositions/exhibitions-lee-miller?archive=1', ['archive']),
+    'https://www.mam.paris.fr/en/expositions/exhibitions-lee-miller');
+  assert.equal(withoutQuery('https://x.test/a?archive=1&id=4', ['archive']), 'https://x.test/a?id=4', 'only the named part goes');
+  assert.deepEqual(VENUES.mam.dropQuery, ['archive']);
+});
+
+test('MA-002: the archive\u2019s next page uses its Drupal pager value', () => {
+  const pg = listingPages(VENUES.mam).find(p => p.ctx === 'past');
+  const queue = [];
+  followPagination(queue, pg, [{ end_date: '2025-02-16' }], [], 'mam', VENUES.mam);
+  assert.equal(queue.length, 1);
+  assert.equal(queue[0].path, '/en/archives?type_expo=Local&language=en&page=0%2C0%2C0%2C0%2C0%2C1');
+});
+
+test('MA-003: the walk stops once a page is wholly before the floor', () => {
+  const pg = listingPages(VENUES.mam).find(p => p.ctx === 'past');
+  const queue = [];
+  followPagination(queue, { ...pg, discovered: true, pageNum: 2 }, [{ end_date: '2024-01-12' }], [], 'mam', VENUES.mam);
+  assert.equal(queue.length, 0);
 });
 
 // ---------------------------------------------------------------------------
@@ -1333,18 +1357,18 @@ test('R-006: moma names its blurb container and drops installations', () => {
 test('R-003: every other venue is the container\'s', () => {
   for (const c of ['ng', 'rijks', 'acq', 'frick', 'menil', 'va', 'louvre', 'capo',
                    'uffizi', 'brera', 'khm', 'dellav', 'wallace', 'borghese',
-                   'tate-modern', 'tate-britain', 'lgd', 'jacquemart']) {
+                   'tate-modern', 'tate-britain', 'lgd', 'jacquemart', 'mam']) {
     assert.strictEqual(routeOf(c), 'container', c + ' should be the container\'s');
   }
 });
 
 test('R-004: the two sets do not overlap and cover every venue', () => {
   const codes = [...SWEEP_SRC.matchAll(RECIPE_KEY)].map(m => m[1]);
-  assert.strictEqual(codes.length, 23, 'expected 23 recipes, found ' + codes.length);
+  assert.strictEqual(codes.length, 24, 'expected 24 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
   assert.deepStrictEqual(home.sort(), ['artic', 'met', 'moma']);
-  assert.strictEqual(container.length, 20);
+  assert.strictEqual(container.length, 21);
   assert.strictEqual(home.length + container.length, codes.length);
 });
 

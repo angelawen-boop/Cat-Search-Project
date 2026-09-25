@@ -41,7 +41,7 @@ const MARKER_SENTINEL = 'Marker row, not an exhibition.';
 // scraper so this can run against a stitched file the scraper never produced.
 const KNOWN_VENUES = new Set(['met','ng','rijks','acq','louvre','uffizi','borghese','brera',
   'capo','dellav','khm','moma','frick','morgan','menil','artic','va','brit','wallace',
-  'tate-modern','tate-britain','lgd','jacquemart']);
+  'tate-modern','tate-britain','lgd','jacquemart','mam']);
 
 const isMarker = r => String(r.notes || '').trim().endsWith(MARKER_SENTINEL);
 

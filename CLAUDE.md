@@ -3,7 +3,7 @@
 **Repo:** `angelawen-boop/Cat-Search-Project`
 
 She collects art-exhibition catalogues. They go out of print fast once a show
-closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 23
+closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 24
 museums and galleries and shows how close each catalogue is to its likely
 out-of-print window, so she can buy before it is too late.
 
@@ -181,7 +181,7 @@ Chrome translate. Two consequences — **the `url` column is the load-bearing fi
 at this venue, not the dates**, and **the summary must arrive in English**.
 Reasoning in `docs/scraper.md` §15.
 
-**All 23 have a recipe**, blocked ones included: a refusal costs half a second,
+**All 24 have a recipe**, blocked ones included: a refusal costs half a second,
 leaves marker rows that show on the approval pile, and turns every sweep into a
 standing monitor. **Blocks are not permanent facts** — in five days Borghese went
 down and came back, dellav turned out never to have been blocked, the Met's
@@ -307,7 +307,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34, 25 Sep 2026, is live; 34.2 (Levy Gorvy Dayan and Jacquemart-André added; chips renamed "Levy Gorvy", "Artic", "KHM") is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
+**Version 34, 25 Sep 2026, is live; 34.3 (Levy Gorvy Dayan, Jacquemart-André and MAM Paris added; chips renamed "Levy Gorvy", "Artic", "KHM") is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -600,7 +600,7 @@ scraper/output/run_2026-09-10_183045/
 
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
-announces which it thinks it is before fetching. **Container: 20** (its 18 working
+announces which it thinks it is before fetching. **Container: 21** (its 19 working
 venues plus `brit` and `morgan`). **Her laptop: 3** — `met`, `artic`, `moma`
 (`route: 'local'`).
 
@@ -1090,6 +1090,19 @@ after the Louvre). Swept live once: `run_2026-09-25_133825`, 5 rows, all with
 text. Operas and a costume ball share its current page and are refused on the
 museum's own card tag (`keepOnlyType`, new engine option). Its past listing
 misspells "Feburary"; the shared month map now reads it.
+
+**MAM Paris — BUILT 25 Sep** (`mam`). Swept live once: `run_2026-09-25_140234`,
+20 rows, all with text; archive paginated Drupal-style (`paginate.prefix`),
+`?archive=1` dropped from addresses (`dropQuery`). **Its shop refused the
+container (Cloudflare)** — front door only in the app until she sends a search
+address. **Hers to rule:** *Cultural Olympiad: Permanent collection* is a
+collection display (an "Art and Sport tour", free with the collection).
+
+**d'Orsay — BLOCKED 25 Sep:** Cloudflare 403 on the first page, not retried.
+She is saving its pages; it joins the headed-browser route (item 5).
+
+**Before her import, re-sweep `tate-britain`, `lgd` and `mam` once**: their
+committed runs predate the description fixes and MAM's title fix.
 
 **Her chip names for the rest, 25 Sep:** Orsay → **"d'Orsay"**; the others
 "MAM Paris", "MAD Paris". **Her order for the French venues:** Louvre, d'Orsay,

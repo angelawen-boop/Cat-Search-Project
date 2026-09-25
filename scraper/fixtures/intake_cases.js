@@ -390,14 +390,14 @@ check('18f: the real sample file starts with every card undecided',
 // tidiness has to answer to her list rather than to its own taste, and so a
 // venue cannot be dropped from it by an edit that looks harmless.
 // Lévy Gorvy Dayan (lgd) added 25 Sep — her ruling: always after Acquavella.
-// French venues added 25 Sep after the Louvre, starting with jacquemart.
+// French venues, her order 25 Sep: louvre, orsay, mam, mad, jacquemart.
 {
   const want=['met','rijks','ng','acq','lgd','frick','menil','artic','wallace',
-    'tate-britain','tate-modern','va','louvre','jacquemart','khm','uffizi','dellav',
+    'tate-britain','tate-modern','va','louvre','mam','jacquemart','khm','uffizi','dellav',
     'borghese','brera','capo','moma','brit','morgan'];
   const got=H.MUSEUMS.map(m=>m.id);
   check('19: the venues are in her order', got.join()===want.join(), {got});
-  check('19a: and all 23 are still there', got.length===23, {count:got.length});
+  check('19a: and all 24 are still there', got.length===24, {count:got.length});
 }
 
 // 20. QUARANTINE LIVES IN TWO PLACES AND THE LATEST DECISION WINS — her choice

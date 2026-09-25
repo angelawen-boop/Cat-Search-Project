@@ -499,7 +499,9 @@ function followPagination(queue, pg, newRows, rows, code, v) {
   const basePath = pg.basePath || pg.path;
   const sep = basePath.includes('?') ? '&' : '?';
   queue.push({
-    path: `${basePath}${sep}${spec.param}=${next}`,
+    // `prefix` for a site whose page value is not a bare number — MAM Paris's
+    // Drupal pager reads page=0,0,0,0,0,1 for its second page.
+    path: `${basePath}${sep}${spec.param}=${spec.prefix || ''}${next}`,
     ctx: `${pg.ctx.replace(/ p\d+$/, '')} p${next}`,
     basePath,
     paginate: spec,
@@ -2149,6 +2151,10 @@ const BOILERPLATE = [
   // & Wirth." — no caption class to key on, so the wording is the test, like ©.
   'installation view',
   'courtesy the artist',
+  // MAM Paris, 25 Sep: its own paragraph under an image — "Otobong Nkanga,
+  // Social Consequences V: The Harvest 2022, Wim Waumans Collection, Courtesy
+  // of the artist".
+  'courtesy of the artist',
 
   // FUNDING ACKNOWLEDGEMENTS, found 12 Sep 2026 while checking that the caption
   // fix had not cost anything. It had not — but clearing the credit line freed
@@ -2715,7 +2721,12 @@ async function readCardPieces(link, rule) {
   return link.evaluate((a, sel) => {
     const sq = s => String(s || '').replace(/\s+/g, ' ').trim();
     const one = q => { const el = a.querySelector(q); return el ? sq(el.textContent) : ''; };
-    return { name: one(sel.name), subtitle: one(sel.subtitle), place: one(sel.place) };
+    // `nameOwnText`: the name element also holds the subtitle as a child
+    // (MAM Paris: <h2>Simone Fattal <span class="small">Cities…</span></h2>),
+    // so read only the element's own words and let `subtitle` take the rest.
+    const own = q => { const el = a.querySelector(q);
+      return el ? sq([...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join(' ')) : ''; };
+    return { name: sel.nameOwnText ? own(sel.name) : one(sel.name), subtitle: one(sel.subtitle), place: one(sel.place) };
   }, rule.cardParts).catch(() => ({ name: '', subtitle: '', place: '' }));
 }
 const isPlace = (text, locations) => (locations || []).find(l => l.toLowerCase() === String(text).trim().toLowerCase());
@@ -3139,6 +3150,15 @@ function slugToWords(url) {
  * linked both as "exhibitions/matisse2" and "/exhibitions/matisse2", and
  * trailing slashes vary. Compare the finished address instead.
  */
+/** Drop the named query parameters from an address; anything else stays. */
+function withoutQuery(u, names) {
+  try {
+    const x = new URL(u);
+    for (const n of names) x.searchParams.delete(n);
+    return x.toString();
+  } catch { return u; }
+}
+
 function normalizeUrl(u) {
   try {
     const x = new URL(String(u).trim());
@@ -3324,7 +3344,12 @@ async function collectFromListing(page, opts) {
       }
       continue;
     }
-    const fullUrl = resolved.url;
+    // A QUERY PART THE VENUE ADDS BY LISTING, NOT BY EXHIBITION. MAM Paris
+    // links its archive cards as /exhibitions-lee-miller?archive=1 and its
+    // current cards without it, so one show would change address the day it
+    // closes — a Change card on her pile, and two rows if both are seen. A
+    // recipe names the parts to drop; the page served is the same.
+    const fullUrl = opts.dropQuery ? withoutQuery(resolved.url, opts.dropQuery) : resolved.url;
 
     if (isNav(href, fullUrl) || isOwnListingPage(fullUrl, opts.listingPaths)) { c.nav++; continue; }
 
@@ -4217,6 +4242,31 @@ const VENUES = {
     description: 'div.wp-block-columns h4.wp-block-heading, div.wp-block-columns p.wp-block-paragraph',
   },
 
+  // MUSÉE D'ART MODERNE DE PARIS — her addition, 25 Sep. Three listings:
+  // on view, upcoming, and an archive ten to a page, newest first. The
+  // archive is Drupal's multi-pager, page=0,0,0,0,0,N, so pagination carries
+  // a prefix. Its default tab, type_expo=Local, is the museum's own shows.
+  // Archive links add ?archive=1; dropped so a show keeps one address.
+  mam: {
+    name: "Musée d'Art Moderne de Paris",
+    base: 'https://www.mam.paris.fr',
+    pages: [
+      { path: '/en/exhibitions', ctx: 'current' },
+      { path: '/en/upcoming',    ctx: 'upcoming' },
+      { path: '/en/archives?type_expo=Local&language=en', ctx: 'past',
+        paginate: { param: 'page', from: 1, prefix: '0%2C0%2C0%2C0%2C0%2C' } },
+    ],
+    selector: 'a[href*="/en/expositions/"]',
+    isNav: href => /\/en\/expositions\/?$/.test(href),
+    dropQuery: ['archive'],
+    // Name and subtitle: in the same <h2> on the current and upcoming pages,
+    // the subtitle as the <p> after it in the archive.
+    title: { heading: false, cardParts: { name: 'h2.post-summary-title', nameOwnText: true,
+      // The date line is ALSO a <p> after the <h2> on the current and upcoming
+      // cards — the Prix Marcel Duchamp came out "…: From the 2 October 2026".
+      subtitle: 'h2.post-summary-title .small, h2.post-summary-title + p:not(.post-summary-date)' } },
+  },
+
   // MUSÉE JACQUEMART-ANDRÉ — her addition, 25 Sep. Two listings, both server-
   // drawn: current/upcoming, and past grouped by year back to 2013 (the older
   // years sit in folded accordions, still in the page). A show's own address
@@ -4822,6 +4872,7 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
       excludeOngoing: !!v.excludeOngoing,
       otherBranch: v.otherBranch || null,
       keepOnlyType: v.keepOnlyType || null,
+      dropQuery: v.dropQuery || null,
       excludeLabelled: v.excludeLabelled || null,
       excludeTitle: v.excludeTitle || null,
       listingRow: pg.listingRow || v.listingRow || null,
@@ -6004,7 +6055,7 @@ module.exports = {
   stripWeekdays,
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
-  saysOngoing, expandYearArchive, expandDateRange, keptDespiteLookback, listingPages, followPagination,
+  saysOngoing, expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination,
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
