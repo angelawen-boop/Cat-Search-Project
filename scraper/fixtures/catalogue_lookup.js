@@ -212,6 +212,13 @@ function runtime(answer, log) {
 
     eq(api.shelfPages(null).length, 0, 'C-029: a venue with no shelf asks for nothing');
 
+    // MAD Paris numbers its shelf pages in the PATH, 25 Sep — ?page=2 would
+    // be ignored and the same first page read three times.
+    const mad = api.shelfPages('https://boutique.madparis.fr/en/mads-publications/c462/1/');
+    eq(mad.join(' '), 'https://boutique.madparis.fr/en/mads-publications/c462/1/ '
+      + 'https://boutique.madparis.fr/en/mads-publications/c462/2/ https://boutique.madparis.fr/en/mads-publications/c462/3/',
+      'C-029a: a shelf numbered in its path is counted up in the path');
+
     // The shelf comes FIRST and the search box LAST, in one call.
     const pages = api.shopPagesFor(
       { shopCatalogues: 'https://x.test/shelf', shopSearch: 'https://x.test/find?q=' },

@@ -3,7 +3,7 @@
 **Repo:** `angelawen-boop/Cat-Search-Project`
 
 She collects art-exhibition catalogues. They go out of print fast once a show
-closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 25
+closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 26
 museums and galleries and shows how close each catalogue is to its likely
 out-of-print window, so she can buy before it is too late.
 
@@ -164,6 +164,7 @@ Judgement about the outside world is not in any file.
 | `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection, a gift or acquisitions** — they can be major (24 Sep) |
 | `moma` | **Current and upcoming only.** She does not want its past at all |
 | `mam` | Collection displays excluded — subtitle "Permanent collection" (Cultural Olympiad) and "New acquisitions…" (25 Sep). Her count: 3 current, 1 upcoming, 16 past less the Olympiad |
+| `mad` | Nothing excluded. Her count: 2 current, 2 upcoming, 16 past. Musée Nissim de Camondo ignored — closed until 2030 (25 Sep) |
 | `jacquemart` | Exhibitions only — the card's own tag; operas, costume balls and other events refused (25 Sep) |
 | `orsay` | **Displays always kept**, "Focus on our collections" included — its collection is deep, like the Met's. **Every off-site show kept** — loans and collaborations abroad whose catalogues she may want. "Exceptional presentation" kept for now. Parcours, Immersive experience, Invitation dropped; an unseen tag is kept and named (25 Sep) |
 | `lgd` | New York and London only — the Hong Kong partnership shows ("& Wei, Hong Kong") excluded (25 Sep). **One-time lookback exception:** *Yves Klein and the Tangible World* kept, its catalogue only just published — `keepDespiteLookback`, that one address only |
@@ -183,7 +184,7 @@ Chrome translate. Two consequences — **the `url` column is the load-bearing fi
 at this venue, not the dates**, and **the summary must arrive in English**.
 Reasoning in `docs/scraper.md` §15.
 
-**All 25 have a recipe**, blocked ones included: a refusal costs half a second,
+**All 26 have a recipe**, blocked ones included: a refusal costs half a second,
 leaves marker rows that show on the approval pile, and turns every sweep into a
 standing monitor. **Blocks are not permanent facts** — in five days Borghese went
 down and came back, dellav turned out never to have been blocked, the Met's
@@ -309,7 +310,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34, 25 Sep 2026, is live; 34.6 (Levy Gorvy Dayan, Jacquemart-André, MAM Paris and d'Orsay added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters) is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
+**Version 34, 25 Sep 2026, is live; 34.7 (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters) is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -503,7 +504,8 @@ first.**
 **Shop addresses for all 18 original venues are checked and written down** —
 `docs/app.md` §1. `borghese`, `capo` and `dellav` have no shop. The 25 Sep
 venues' shops are in `MUSEUMS` with a comment each: `lgd` and `jacquemart`
-read off the live shops; `orsay` and `mam` from her links (`mam`'s shop refuses the connector).
+read off the live shops; `orsay` and `mam` from her links (`mam`'s shop refuses the connector); `mad`
+has no search box at all — its publications shelf only, paged in the path.
 
 **Which model — CLOSED, her ruling 22 Sep.** The page cannot reach any outside
 address, so it does not choose a model; it asks the viewer's Claude through
@@ -523,6 +525,7 @@ first number to scroll past:
 | `catalogue_lookup.js` | C-001 to C-099 |
 | `recheck_shop.js` | the real app in jsdom, buttons pressed — Re-check (R-001 to R-023), blocked shops and web-found shop links (L-001 to L-019), search with filters (S-001 to S-003) |
 | `mam_pages.js` | the MAM recipe on its saved archive pages — her exclusions and count |
+| `mad_pages.js` | the MAD recipe on her saved pages, no network — her count, dates, titles, the description |
 | `orsay_pages.js` | the d'Orsay recipe on her saved pages, no network — her tag rulings, dates, titles, the description |
 | `summary_pages.js` | descriptions on saved pages (`docs/summary_pages/`), no network — the museum's own text, never a press list, credit or ticket note |
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
@@ -618,8 +621,8 @@ scraper/output/run_2026-09-10_183045/
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
 announces which it thinks it is before fetching. **Container: 21** (its 19 working
-venues plus `brit` and `morgan`). **Her laptop: 4** — `met`, `artic`, `moma`, `orsay`
-(`route: 'local'`).
+venues plus `brit` and `morgan`). **Her laptop: 5** — `met`, `artic`, `moma`, `orsay`,
+`mad` (`route: 'local'`).
 
 `moma` moved on 22 Sep: the container is refused and only a visible browser with
 a history gets in. `brit` and `morgan` stay on the container until their recipes
@@ -1013,7 +1016,7 @@ stored and read back identical; 270 KB refused at the 256 KiB limit.
    She will decide the routine from use.
 3. Merge to `main` and publish to her app to start the real trial — hers
    to call; §4's publishing rules apply. **`main` has moved on since the branch
-   was cut** (34.6: Re-check museum shop, four venues, chip renames, blocked shops, search with filters), so merge
+   was cut** (34.7: Re-check museum shop, five venues, chip renames, blocked shops, search with filters), so merge
    `main` into the branch first and re-run `cloud_app.js` there.
 4. Google Drive backup by button — back on the table, never automatic.
 
@@ -1098,7 +1101,7 @@ and nothing else.
 
 **`artic` from her machine is unchanged and untested against any of this.**
 
-### 6. More venues — four built 25 Sep, MAD Paris next
+### 6. More venues — five built 25 Sep
 
 Her additions, 24–25 Sep. **Her order on the chips:** Levy Gorvy straight
 after Acquavella; the French venues Louvre, d'Orsay, MAM Paris, MAD Paris,
@@ -1111,17 +1114,17 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 | `jacquemart` | built, 5 rows, list checked, **compressed** | `run_2026-09-25_133825` | — |
 | `mam` MAM Paris | built, 19 rows once re-swept, **her list checked** | `run_2026-09-25_140234` — **predates title, credit and exclusion fixes** | — Shop search wired from her link, but the shop's Cloudflare refuses this machine and the connector (403); her browser passes. *Oliver Beer* is two runs, two rows, correct; a third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
 | `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | none — refuses the container | waits on item 5 (headed browser, her laptop) |
-| MAD Paris | **not started** | — | next |
+| `mad` MAD Paris | recipe built from her saved pages; 2 + 2 + 16, **her counts** | none — refuses the container (plain 403, not Cloudflare) | waits on item 5 (headed browser, her laptop) — **headless there untested** |
 
-**THE IMPORT, her plan 25 Sep:** once MAD is built, ONE import file of the new
+**THE IMPORT, her plan 25 Sep:** MAD is built, so ONE import file of the new
 venues plus Tate Britain's past (item 4). Steps, in order:
-1. Re-sweep `tate-britain`, `lgd`, `mam` once (runs above predate fixes) and
-   sweep MAD; `jacquemart`'s run and compression stand.
+1. Re-sweep `tate-britain`, `lgd`, `mam` once (runs above predate fixes);
+   `jacquemart`'s run and compression stand.
 2. Stitch, compress (subagents per `compress.js`), qc, and READ the cards
    through the app's intake before sending (§6, "Handing her work nobody read").
-3. Publish the app first — **34.6 is built, not live**; it carries the new
+3. Publish the app first — **34.7 is built, not live**; it carries the new
    venue codes, and the live 34 would file every new row as unknown. Ask
-   before publishing (§1). d'Orsay's rows cannot be in this file.
+   before publishing (§1). d'Orsay's and MAD's rows cannot be in this file.
 
 **Descriptions are READ before a venue is called done** — her question 25 Sep,
 and every venue so far had something: Tate's members' banner and joint-ticket
@@ -1135,8 +1138,8 @@ chars) gave the same teaser in substance. 57 of 419 rows in her import file
 hit it; raising it would send each back for a model review.
 
 **Blocked sites found:** d'Orsay (whole site) and MAM's online bookshop, both
-Cloudflare 403 on the first request — not retried, per §1's rate-limit rule.
-Page layout then comes from pages she saves (`docs/orsay_pages/`, text only —
+Cloudflare 403 on the first request; MAD (whole site), a plain 403 — not retried, per §1's rate-limit rule.
+Page layout then comes from pages she saves (`docs/orsay_pages/`, `docs/mad_pages/`, text only —
 her saves carry ~20 MB of images each, which the tests never read).
 
 **Engine options added for these venues** (each documented where it is

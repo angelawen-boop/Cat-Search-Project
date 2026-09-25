@@ -393,11 +393,11 @@ check('18f: the real sample file starts with every card undecided',
 // French venues, her order 25 Sep: louvre, orsay, mam, mad, jacquemart.
 {
   const want=['met','rijks','ng','acq','lgd','frick','menil','artic','wallace',
-    'tate-britain','tate-modern','va','louvre','orsay','mam','jacquemart','khm','uffizi','dellav',
+    'tate-britain','tate-modern','va','louvre','orsay','mam','mad','jacquemart','khm','uffizi','dellav',
     'borghese','brera','capo','moma','brit','morgan'];
   const got=H.MUSEUMS.map(m=>m.id);
   check('19: the venues are in her order', got.join()===want.join(), {got});
-  check('19a: and all 25 are still there', got.length===25, {count:got.length});
+  check('19a: and all 26 are still there', got.length===26, {count:got.length});
 }
 
 // 20. QUARANTINE LIVES IN TWO PLACES AND THE LATEST DECISION WINS — her choice

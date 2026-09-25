@@ -4377,6 +4377,38 @@ const VENUES = {
     excludeTitle: /(?:^|:\s*)Permanent collections?\s*$|^New acquisitions\b/i,
   },
 
+  // MUSÉE DES ARTS DÉCORATIFS (MAD Paris) — her addition, 25 Sep. Refused
+  // this container on the first request: a plain 403, not a Cloudflare check.
+  // Written from the pages she saved (docs/mad_pages/), fixture MD-*; swept
+  // from her laptop. Whether a headless browser there gets in is not known,
+  // so it is marked headed with d'Orsay and waits on the same work.
+  //
+  // A SPIP site. Three listings, English by their own "-en" page names, the
+  // past one a single page going back to 2015. A show's own address is a bare
+  // /<Slug>, the same shape as every menu link, so only the listing's own
+  // cards are read. Each card: .titre, .dates, a one-line .descriptif.
+  // Her rulings: nothing excluded; Musée Nissim de Camondo is closed until
+  // 2030 and none of its shows are in these listings.
+  mad: {
+    name: 'Musée des Arts Décoratifs, Paris',
+    base: 'https://madparis.fr',
+    route: 'local',
+    headed: true,
+    pages: [
+      { path: '/?page=expo-actu-en',     ctx: 'current' },
+      { path: '/?page=expo-avenir-en',   ctx: 'upcoming' },
+      { path: '/?page=expo-archives-en', ctx: 'past' },
+    ],
+    selector: 'ul.liste_enfants li.item a',
+    // The listings themselves, should a card ever point back at one.
+    isNav: href => /[?&]page=expo-|\/(Current|Upcoming|Past)-exhibitions-\d+\/?$/i.test(href),
+    title: { heading: false, cardParts: { name: '.titre' } },
+    datesAt: { within: null, sel: '.dates' },
+    // The lead paragraph and the intro under it. The body below repeats the
+    // lead and is threaded with photo captions and credits.
+    description: '.chapeau p, .intro_texte p',
+  },
+
   // MUSÉE JACQUEMART-ANDRÉ — her addition, 25 Sep. Two listings, both server-
   // drawn: current/upcoming, and past grouped by year back to 2013 (the older
   // years sit in folded accordions, still in the page). A show's own address
