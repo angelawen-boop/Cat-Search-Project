@@ -338,7 +338,7 @@ when it finishes.
 
 ### The mental model, load-bearing
 
-**Her data is NOT hosted** — the page is. The app is the *tool*, the ledger is the
+**Her data is NOT hosted** — the page is. *(Changing: the branch `claude/ledger-cloud` keeps the ledger in the page's store — §7.1. True of `main` until that merges.)* The app is the *tool*, the ledger is the
 *document*, like a word processor and a file. Data lives in the ledger, never
 baked into the tool. Opening the link gives an empty portal.
 
@@ -375,13 +375,13 @@ Ledger backup is JSON; the sweep pro forma is CSV.
 All of this was confirmed by her on real files, not only by fixtures. **Design,
 evidence and every finding: `docs/app.md`.**
 
-- **Loading and saving.** Open → empty portal; Import → pick file. **Export IS
+- **Loading and saving.** Open → empty portal; Load → pick file (called Import on `main`; renamed on the cloud branch, 25 Sep). **Export IS
   Save.** Two save routes, differing in what is KNOWN — the runtime's file handoff
   resolves or throws, a plain browser download cannot tell finished from cancelled
   and so does not clear the unsaved warning. **Never put back a click-triggered
   green tick**: on 20 Sep that read "Saved — safe to close" while nothing was
   written.
-- **Refreshing.** A sweep CSV goes in via Import Refresh; the app compares it
+- **Refreshing.** A sweep CSV goes in via Import (called Import Refresh on `main`; renamed on the cloud branch, 25 Sep); the app compares it
   against the ledger with no internet access and shows proposals as cards grouped
   by venue. Add / Fill / Change / Couldn't be filed. Bad data is always surfaced,
   never dropped.
@@ -500,6 +500,7 @@ first number to scroll past:
 | `catalogue_lookup.js` | C-001 to C-090b |
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
 | `listing_pages.js` | the same, for WHERE each row was seen — no page twice, no promo card read as a listing |
+| `cloud_ledger.js`, `cloud_app.js` | the cloud ledger (branch): storage against a stand-in store with the platform's limits, then the screen driven by clicks — both on her real ledger, `docs/ledger_2026-09-24/` |
 
 The harness lifts the intake out of the JSX by **anchors on prose, never line
 numbers**. An early `return` in a fixture file exits the whole suite and the
@@ -917,46 +918,74 @@ keeps making in new clothes.
 In her order, 24 Sep. Everything not listed here is finished. Do not reopen a
 closed item without a new fact.
 
-### 1. Keeping the ledger in the page's store — a discussion, reopened by her 24 Sep
+### 1. The ledger in the page's store — BUILT on branch `claude/ledger-cloud`, in trial
 
-Listed as rejected in §8 ("Ledger on Claude cloud storage"); she reopened it.
-Nothing new on the platform: the page has had a store since 20 Sep, holding the
-sweep log and quarantine. The one recorded objection — the ledger is derivable
-from nothing — is the one quarantine already answers with two homes (the store
-is the working copy, her Export the backup, one merge rule). Gains: no Import on
-open, a republish can no longer take unsaved work, changes saved as made. Costs:
-Export still the backup, loading an old backup must replace the store only
-after asking, last write wins across two open tabs, store size limits against
-~400 rows unchecked.
+Reopened by her 24 Sep (was §8); built 25 Sep. **Branch only — `main` and her
+published app do not have it.** Version series of its own, her ruling:
+"33.1 · cloud 1". Test page, own store, never her app:
+**https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf** (`db` + `downloads`
+only, so no catalogue lookup there). The code's detail is under "THE CLOUD
+LEDGER" in `Cat_Watch.jsx`.
 
-**Checked 24 Sep against the platform's own spec (`db.d.ts`):** a document is at
-most 256 KiB, an artifact at most 5,000 documents, kept across republishes,
-erased only if the artifact is deleted, no transactions. Her ledger is ~290 KiB
-before catalogue details — too big for one document, so it must be split. The
-dormant `safeSave` in the JSX is Chat's old `window.storage`, a different
-mechanism — not evidence about this one. **Still to prove:** how many writes a
-page may make at once (an Apply of 300 cards), and that a half-finished write
-never leaves a half ledger — on a scratch page, never hers.
+**What is where — the store holds two kinds of thing:**
+- **The live ledger** — the ONLY thing the app reads and writes as she works.
+  Saved about a second after every change, no button, compressed (her 352
+  rows: 217 KiB → 46 KiB, one piece; a bigger ledger splits, same code).
+- **Snapshots** — whole copies, each under its own name, never written again
+  and never pruned (her choice: keep all, judge later). Read only when she
+  opens the drawer, downloads one or rolls back. **Kept in the same store as
+  the live ledger, her yes 25 Sep** — protected by the code never writing to
+  one and by its fingerprint, not by the platform (the file store would
+  have been write-once; declined).
+- **Her Exports** stay as they are: the copy outside Claude.
 
-**Her direction so far, 24 Sep — nothing built:**
-- **Saves are instant**, as quarantine's already are.
-- **One live ledger plus up to 10 snapshots — the design as she understands
-  it.** The live ledger is one piece per venue, overwritten on every action.
-  Snapshots are whole copies taken automatically at moments that matter
-  (opening the app, after an import, after a big batch of lookups), never
-  overwritten; the oldest is purged when an 11th is taken. Rollback = a
-  snapshot becomes the live ledger. Fixed at ~25 × 11 pieces. **A copy on
-  every save was rejected** — thousands of copies, the opposite of safe. A
-  change log that can rebuild the ledger was discussed and not chosen.
-- **A long trial before the app ever OPENS from the store:** it saves there in
-  the background while she keeps importing and exporting as now, checked at
-  several points and under several scenarios.
-- **Google Drive, back on the table as backup only** (was §8): a button that
-  sends a copy to her Drive (she would press it every ~20 minutes and before
-  leaving), and a button that loads the newest backup from her Drive without
-  her picking a file. **Never instant or automatic saving to Drive** — her
-  ruling. The page reaches Drive through her connector (`mcp`); the connector
-  can create and read files but not overwrite one, so each backup is a new file.
+**Snapshots — by her button, plus exactly two automatic SAFETY copies** (both
+her yes, 25 Sep): before a **rollback**, and before **Load** or **Reset**
+replaces a live ledger that differs from what is coming in ("differs": any
+exhibition or quarantine entry not identical; row order and file stamps
+ignored). The safety copy is of the live ledger being replaced, never of the
+file. If it cannot be kept, nothing is replaced. **Import (a sweep CSV) never
+triggers one** — it proposes cards and replaces nothing.
+
+**On screen:** a permanent ☁ line under the buttons (when it last saved, how
+many); a warning banner when it is NOT saving — her ask, never silent. The
+Snapshots drawer sits in the footer beside Quarantine: label, Take snapshot,
+the list, Download (an ordinary ledger file Load can read), Roll back (asks
+first). **Buttons renamed 25 Sep, her ruling:** Import → **Load** (a ledger
+file), Import Refresh → **Import** (a sweep CSV). Quarantine's button says
+only "Quarantine", always drawn; the count is inside the tray.
+
+**Trial switch `CLOUD_OPENS=false`.** The app still opens empty; she Loads her
+file, and every Load is compared with the live ledger — "matches exactly" or
+how it differs. That sentence is the trial's check. "Open it" on the ☁ line
+opens the live ledger by hand. True only when she ends the trial — her ruling:
+a long one, checked at several points and in several scenarios, Exports as
+usual throughout.
+
+**Safety, proven (`cloud_ledger.js`, `cloud_app.js`, her real ledger):** a
+save writes new pieces and switches one record last, so a save cut off at any
+point leaves the last complete ledger; a damaged or missing piece is refused;
+an empty page never saves. **On the real store, 25 Sep:** a 180 KB piece
+stored and read back identical; 270 KB refused at the 256 KiB limit.
+
+**Decided against, 25 Sep:**
+- **A snapshot on closing the page** — a browser gives a closing page no
+  reliable time to save and a crash gives none. Not buildable as asked.
+- **A backup copy in the browser's own storage** — her no: a fourth way of
+  saving is too messy. **Cloud saving has to be proven reliable; that is the
+  point of the trial.** Her own protection is snapshots and Exports.
+
+**Next:**
+1. **Her test session on the test page**, then this session reads the store
+   and checks it against her file.
+2. **Streamlining the saves — after her tests, not before (her ruling).** On
+   leaving she will always snapshot AND Export; today that is two buttons.
+   She will decide the routine from use.
+3. Merge to `main` and publish to her app to start the real trial — hers
+   to call; §4's publishing rules apply.
+4. Google Drive backup by button — back on the table, never automatic.
+
+**Parked, not gating:** two tabs open at once.
 
 ### 2. The 320 decisions — hers, in progress
 
@@ -1036,9 +1065,20 @@ and nothing else.
 
 **`artic` from her machine is unchanged and untested against any of this.**
 
-### 6. More French venues
+### 6. More venues
 
-Her note, 24 Sep. The Louvre is the only one today. To add:
+Her notes, 24–25 Sep.
+
+**Levy Gorvy Dayan** (gallery) — `https://www.levygorvydayan.com/exhibitions`,
+one page for current and past; upcoming shows are not announced. Shop:
+`https://shop.levygorvydayan.com/`. **One-time lookback exception, her
+ruling 25 Sep:** *Yves Klein and the Tangible World*
+(`https://www.levygorvydayan.com/exhibitions/yves-klein-and-the-tangible-world`)
+is kept although it falls just outside the lookback — its catalogue has only
+just been published. That one show only; the lookback rule stands for every
+other row.
+
+**French venues** — the Louvre is the only one today. To add:
 
 - **Musée d'Orsay**
 - **Musée d'Art Moderne de Paris** (MAM Paris) — modern art
@@ -1099,7 +1139,7 @@ sweeper and interrupting it. Firing a new JSX mid-discussion. Splitting catalogu
 lookup from drawer output. A "GPT scrapes, Claude compresses" role split. A map of
 publisher websites. Ticking nothing on a date conflict. A background shop check on
 every click. Linking straight to an Amazon product page from an ISBN-10.
-Confirm-and-continue past undecided cards.
+Confirm-and-continue past undecided cards. A backup of the ledger in the browser's own storage (25 Sep — a fourth way of saving; §7.1).
 
 Blocking scripts and trackers in the network bridge (IR-13). Splitting the scraper
 into modules (IR-14). **Fetching several pages at once within one venue (IR-15) —
