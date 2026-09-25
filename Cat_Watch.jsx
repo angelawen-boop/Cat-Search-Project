@@ -13,7 +13,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "34.3";
+const APP_VERSION = "34.4";
 const APP_VERSION_DATE = "25 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -65,6 +65,10 @@ const MUSEUMS = [
   { id:"louvre", short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:"https://boutique.louvre.fr/en/search/products/?q=", shopCatalogues:"https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
   // French venues added 25 Sep 2026, after the Louvre. Same shop system as the
   // Louvre's: search box and "Exhibition catalogs" shelf, read off the live shop.
+  // d'Orsay, 25 Sep — her chip name "d'Orsay". Its shop is the national museums'
+  // shared one; the catalogues shelf is her link with the tracking tags removed.
+  // Search address not known yet.
+  { id:"orsay", short:"d'Orsay", name:"Mus\u00e9e d'Orsay", city:"Paris", exBase:null, shopSearch:null, shopCatalogues:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", shopHome:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", listUrl:null },
   // MAM Paris, 25 Sep. Its online bookshop (mamlibrairieboutique.fr) refused the
   // container with a Cloudflare check, so its search and catalogue addresses
   // are NOT known yet — the front door only, until she sends one from her browser.

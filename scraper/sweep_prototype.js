@@ -744,6 +744,12 @@ const WEEKDAY_PREFIX_SRC =
   '\\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday' +
   '|thurs|thur|tues|weds|mon|tue|wed|thu|fri|sat|sun)\\.?,?\\s+';
 
+// ORDINAL DAYS — "From May 23rd to September 20th, 2026", "Until December
+// 06th, 2026" — every date on the Musée d'Orsay's cards, 25 Sep 2026. The
+// suffix defeats every pattern, so both parsers drop it first: a day number of
+// one or two digits followed by st/nd/rd/th and nothing else.
+const ORDINAL_SUFFIX = /\b(\d{1,2})(?:st|nd|rd|th)\b/gi;
+
 const MONTH_PATTERN =
   '(?:January|February|Feburary|March|April|May|June|July|August|September|October|November|December' +
   '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre' +
@@ -1028,6 +1034,7 @@ function findDateRangeCore(raw, opts = {}) {
     // can never be the only source of anything. Abbreviations included, with
     // the optional full stop and comma that follow them in the wild.
     .replace(WEEKDAY_PREFIX, '')
+    .replace(ORDINAL_SUFFIX, '$1')
     .replace(/\s+/g, ' ').trim();
   const M = MONTH_PATTERN;
 
@@ -1392,7 +1399,7 @@ function findDateRangeInProse(text, hintYear) {
 
 function findDateRangeInProseCore(text, hintYear) {
   if (!text) return { start: '', end: '', raw: '' };
-  const s = String(text).replace(/[–—]/g, '-').replace(/\s+/g, ' ');
+  const s = String(text).replace(/[–—]/g, '-').replace(ORDINAL_SUFFIX, '$1').replace(/\s+/g, ' ');
   const M = MONTH_PATTERN;
   const SEP = '(?:\\s*(?:-|t/m|to|until|through|till)\\s*(?:running\\s+)?)';
 
@@ -2256,9 +2263,9 @@ const CURATORIAL_SELECTORS = [
   'p',
 ];
 
-async function getCuratorialText(page, descSelector, noiseExtra) {
+async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt) {
   try {
-    return await page.evaluate(({ alwaysRe, noiseRe, boilerplate, selectors, MIN_WRAPPER_PARAS }) => {
+    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS }) => {
       const ALWAYS = new RegExp(alwaysRe, 'i');
       const NOISE = new RegExp(noiseRe, 'i');
       const clean = (t) => String(t || '').replace(/\s+/g, ' ').trim();
@@ -2368,7 +2375,10 @@ async function getCuratorialText(page, descSelector, noiseExtra) {
       const insideNoise = (el) => {
         for (let n = el; n && n.tagName !== 'BODY' && n.tagName !== 'HTML'; n = n.parentElement) {
           const cls = typeof n.className === 'string' ? n.className : '';
-          const sig = cls + ' ' + (n.id || '');
+          // A class a recipe names as NOT noise is removed before the test —
+          // d'Orsay's main article is `node--promoted`, which "promo" matched,
+          // so the museum's own description was thrown away as a promotion.
+          const sig = (cls + ' ' + (n.id || '')).replace(exemptRe ? new RegExp(exemptRe, 'gi') : /$^/, ' ');
           // A consent manager, named as itself. Never a layout class, so the
           // size of the thing is irrelevant — see ALWAYS_NOISE.
           if (ALWAYS.test(sig)) return true;
@@ -2402,6 +2412,7 @@ async function getCuratorialText(page, descSelector, noiseExtra) {
       return '';
     }, { alwaysRe: ALWAYS_NOISE,
          noiseRe: noiseExtra ? `${NOISE_CONTAINER}|${noiseExtra}` : NOISE_CONTAINER,
+         exemptRe: noiseExempt || null,
          boilerplate: BOILERPLATE,
          selectors: descSelector ? [descSelector, ...CURATORIAL_SELECTORS] : CURATORIAL_SELECTORS,
          MIN_WRAPPER_PARAS });
@@ -3020,6 +3031,19 @@ async function extractTitleAsShown(link, venueCode) {
     return pickTitleLine(await getText(link).catch(() => ''), rule);
   }
 
+  // NAME, LINE BREAK, SUBTITLE, all inside the link — d'Orsay's
+  // "Auguste Bartholdi<br>Liberty Enlightening the World". Joined exactly as
+  // cardPartsTitle joins a name and a subtitle, so the two read the same.
+  if (rule.brParts) {
+    const lines = String(await getText(link).catch(() => '')).split(/\n+/).map(squash).filter(Boolean);
+    if (!lines.length) return '';
+    const [name, ...rest] = lines;
+    const subtitle = rest.join(' ');
+    if (!subtitle) return name;
+    if (/[:.!?]\s*$/.test(name)) return `${name} ${subtitle}`;
+    return name.includes(':') ? `${name} – ${subtitle}` : `${name}: ${subtitle}`;
+  }
+
   let t = squash(await getText(link));
   if (rule.stripLeading)  t = t.replace(rule.stripLeading, '');
   if (rule.stripTrailing) t = t.replace(rule.stripTrailing, '');
@@ -3381,7 +3405,23 @@ async function collectFromListing(page, opts) {
       title = '';
     }
 
-    const dates = await datesNearLink(link, selector);
+    // A RECIPE MAY NAME WHERE ITS DATES SIT in the card around the link —
+    // d'Orsay's .surtitle — for a card too long for the walk below: its
+    // accessibility list ("Reduced mobility…", each twice) runs far past
+    // CARD_MAX_CHARS, so the walk refused the card and every current show
+    // came out undated. The named element is read alone; nothing else in
+    // the card can reach the parser.
+    let dates = null;
+    if (opts.datesAt) {
+      const dt = await link.evaluate((a, { within, sel }) => {
+        const card = within ? a.closest(within) : a;
+        const el = card && card.querySelector(sel);
+        return el ? el.innerText : '';
+      }, opts.datesAt).catch(() => '');
+      const d = dt ? findDateRange(dt) : null;
+      if (d && (d.start || d.end || d.latestYear)) dates = { ...d, ongoing: saysOngoing(dt) };
+    }
+    if (!dates) dates = await datesNearLink(link, selector);
 
     // A permanent display, said so by the venue itself. She tracks temporary
     // exhibitions and their catalogues; a gallery reinstallation that has been
@@ -3426,9 +3466,23 @@ async function collectFromListing(page, opts) {
     // "Opera", "Costume ball") in its own element. Kept only when that tag is
     // the one the recipe names — the venue's word, rung 1 of the ladder. A card
     // with no tag at all is kept: a missing label is not evidence.
+    //
+    // TWO FORMS. `is`: keep only that tag (Jacquemart-André). `not`: drop only
+    // those tags and keep every other, so a tag nobody has seen yet is KEPT and
+    // named in the log rather than silently lost (d'Orsay, her rule 25 Sep).
+    // `within` names the card around the link, for a site whose link wraps the
+    // title only and carries its tag outside it (d'Orsay's article cards).
     if (opts.keepOnlyType) {
-      const tag = await link.$eval(opts.keepOnlyType.label, e => e.textContent).catch(() => null);
-      if (tag != null && !opts.keepOnlyType.is.test(tag)) {
+      const kt = opts.keepOnlyType;
+      const tag = await link.evaluate((a, { within, label }) => {
+        const card = within ? a.closest(within) : a;
+        const el = card && card.querySelector(label);
+        return el ? el.textContent : null;
+      }, { within: kt.within || null, label: kt.label }).catch(() => null);
+      if (tag != null && kt.not && !kt.not.test(tag) && kt.seen && !kt.seen.test(tag)) {
+        log(`    a tag not seen before, "${String(tag).trim()}" — KEPT: ${title || slugToWords(fullUrl)}`);
+      }
+      if (tag != null && (kt.is ? !kt.is.test(tag) : kt.not.test(tag))) {
         c.otherKind++;
         log(`    the venue tags this "${String(tag).trim()}", not an exhibition, excluded: ${title || slugToWords(fullUrl)}`);
         seenUrls.add(key);
@@ -4242,6 +4296,48 @@ const VENUES = {
     description: 'div.wp-block-columns h4.wp-block-heading, div.wp-block-columns p.wp-block-paragraph',
   },
 
+  // MUSÉE D'ORSAY — her addition, 25 Sep. REFUSES THE CONTAINER (Cloudflare
+  // 403 on the first page), so it is her machine's, with a browser that has a
+  // history — the same route as MoMA. The recipe was written from pages she
+  // saved (docs/orsay_pages/) and is tested on them, not live.
+  //
+  // Two listings: what's on (current, "Focus on our collections", upcoming,
+  // "Outside the walls" — one page), and the past archive, paginated with the
+  // site's own ?page=1 for its second page. Every card is an
+  // article.node--type-exhibition-event whose LINK WRAPS ONLY THE TITLE; the
+  // tag (.surtitle2) and the dates (.surtitle) sit beside it in the card.
+  //
+  // HER RULINGS, 25 Sep: displays ALWAYS kept, "Focus on our collections"
+  // included — the collection is deep, like the Met's; every off-site show
+  // kept — collaborations and loans abroad whose catalogues she may want;
+  // "Exceptional presentation" kept for now. Dropped: Parcours (a route
+  // through the collection), Immersive experience, Invitation.
+  orsay: {
+    name: "Musée d'Orsay, Paris",
+    base: 'https://www.musee-orsay.fr',
+    route: 'local',
+    headed: true,
+    pages: [
+      { path: '/en/program/whats-on/exhibitions', ctx: 'current/upcoming' },
+      { path: '/en/ressources/expositions-passees', ctx: 'past', paginate: { param: 'page', from: 1 } },
+    ],
+    selector: 'article.node--type-exhibition-event h3.title a',
+    isNav: href => /\/en\/program\/whats-on\/exhibitions\/?$/.test(href),
+    title: { heading: false, brParts: true },
+    datesAt: { within: 'article', sel: '.surtitle' },
+    // Its main article is class node--promoted, which the shared "promo" noise
+    // rule took for a promotion — the description came back empty.
+    noiseExempt: 'node--promoted',
+    // The lead paragraph (.chapo) and the body under it.
+    description: '.chapo .field, .field--name-field-summary-event p',
+    keepOnlyType: {
+      within: 'article', label: '.surtitle2',
+      not: /^\s*(Parcours|Immersive experience|Exp[ée]rience immersive|Invitation)\s*$/i,
+      // Every tag seen on her saved pages; anything else is kept AND named.
+      seen: /^\s*(Exhibition at the museum|Contemporary exhibition|Exceptional presentation|Display|Exhibitions off-site|Parcours|Immersive experience|Invitation)\s*$/i,
+    },
+  },
+
   // MUSÉE D'ART MODERNE DE PARIS — her addition, 25 Sep. Three listings:
   // on view, upcoming, and an archive ten to a page, newest first. The
   // archive is Drupal's multi-pager, page=0,0,0,0,0,N, so pagination carries
@@ -4873,6 +4969,7 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
       otherBranch: v.otherBranch || null,
       keepOnlyType: v.keepOnlyType || null,
       dropQuery: v.dropQuery || null,
+      datesAt: v.datesAt || null,
       excludeLabelled: v.excludeLabelled || null,
       excludeTitle: v.excludeTitle || null,
       listingRow: pg.listingRow || v.listingRow || null,
@@ -5464,7 +5561,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
         }
       }
 
-      const text = await getCuratorialText(page, vrec.description, vrec.noise);
+      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt);
       if (text) {
         row.summary = text;
         fetched++;

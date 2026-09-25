@@ -616,6 +616,19 @@ test('MA-003: the walk stops once a page is wholly before the floor', () => {
   assert.equal(queue.length, 0);
 });
 
+// DO-001 — ORDINAL DAYS, every date on the Musée d'Orsay's cards (25 Sep).
+
+test('DO-001: "23rd", "06th", "1st" are read as day numbers, in both parsers', () => {
+  let r = findDateRange('From May 23rd to September 20th, 2026');
+  assert.equal(r.start + '|' + r.end, '2026-05-23|2026-09-20');
+  r = findDateRange('Until December 06th, 2026');
+  assert.equal(r.end, '2026-12-06');
+  r = findDateRange('From September 29th, 2026 to January 1st, 2027');
+  assert.equal(r.start + '|' + r.end, '2026-09-29|2027-01-01');
+  r = findDateRangeInProse('The exhibition runs from May 23rd to September 20th, 2026 in the nave.');
+  assert.equal(r.start + '|' + r.end, '2026-05-23|2026-09-20');
+});
+
 // ---------------------------------------------------------------------------
 // EX-001 to EX-005 — A RUN THAT WAS EXTENDED AFTER IT WAS ANNOUNCED.
 //
@@ -1364,10 +1377,10 @@ test('R-003: every other venue is the container\'s', () => {
 
 test('R-004: the two sets do not overlap and cover every venue', () => {
   const codes = [...SWEEP_SRC.matchAll(RECIPE_KEY)].map(m => m[1]);
-  assert.strictEqual(codes.length, 24, 'expected 24 recipes, found ' + codes.length);
+  assert.strictEqual(codes.length, 25, 'expected 25 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
-  assert.deepStrictEqual(home.sort(), ['artic', 'met', 'moma']);
+  assert.deepStrictEqual(home.sort(), ['artic', 'met', 'moma', 'orsay']);
   assert.strictEqual(container.length, 21);
   assert.strictEqual(home.length + container.length, codes.length);
 });

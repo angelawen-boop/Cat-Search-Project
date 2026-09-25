@@ -3,7 +3,7 @@
 **Repo:** `angelawen-boop/Cat-Search-Project`
 
 She collects art-exhibition catalogues. They go out of print fast once a show
-closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 24
+closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 25
 museums and galleries and shows how close each catalogue is to its likely
 out-of-print window, so she can buy before it is too late.
 
@@ -164,6 +164,7 @@ Judgement about the outside world is not in any file.
 | `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection, a gift or acquisitions** — they can be major (24 Sep) |
 | `moma` | **Current and upcoming only.** She does not want its past at all |
 | `jacquemart` | Exhibitions only — the card's own tag; operas, costume balls and other events refused (25 Sep) |
+| `orsay` | **Displays always kept**, "Focus on our collections" included — its collection is deep, like the Met's. **Every off-site show kept** — loans and collaborations abroad whose catalogues she may want. "Exceptional presentation" kept for now. Parcours, Immersive experience, Invitation dropped; an unseen tag is kept and named (25 Sep) |
 | `lgd` | New York and London only — the Hong Kong partnership shows ("& Wei, Hong Kong") excluded (25 Sep). **One-time lookback exception:** *Yves Klein and the Tangible World* kept, its catalogue only just published — `keepDespiteLookback`, that one address only |
 | `morgan` | *Collections Spotlight* excluded — a standing rotation, not a show. Past blurbs read off the listing, pages not opened |
 | `rijks` | 37 rows, not chased further. *Asian Pavilion* was pulled by the venue |
@@ -181,7 +182,7 @@ Chrome translate. Two consequences — **the `url` column is the load-bearing fi
 at this venue, not the dates**, and **the summary must arrive in English**.
 Reasoning in `docs/scraper.md` §15.
 
-**All 24 have a recipe**, blocked ones included: a refusal costs half a second,
+**All 25 have a recipe**, blocked ones included: a refusal costs half a second,
 leaves marker rows that show on the approval pile, and turns every sweep into a
 standing monitor. **Blocks are not permanent facts** — in five days Borghese went
 down and came back, dellav turned out never to have been blocked, the Met's
@@ -307,7 +308,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34, 25 Sep 2026, is live; 34.3 (Levy Gorvy Dayan, Jacquemart-André and MAM Paris added; chips renamed "Levy Gorvy", "Artic", "KHM") is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
+**Version 34, 25 Sep 2026, is live; 34.4 (Levy Gorvy Dayan, Jacquemart-André, MAM Paris and d'Orsay added; chips renamed "Levy Gorvy", "Artic", "KHM") is built, not yet published — held for her one import (§7.6).** The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -507,6 +508,7 @@ first number to scroll past:
 | `page_renders.js` | does it DRAW — renders into jsdom twice, plain and with the runtime answering |
 | `catalogue_lookup.js` | C-001 to C-099 |
 | `recheck_shop.js` | "Re-check museum shop" pressed in the real app (jsdom) — R-001 to R-023 |
+| `orsay_pages.js` | the d'Orsay recipe on her saved pages, no network — her tag rulings, dates, titles, the description |
 | `summary_pages.js` | descriptions on saved pages (`docs/summary_pages/`), no network — the museum's own text, never a press list, credit or ticket note |
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
 | `listing_pages.js` | the same, for WHERE each row was seen — no page twice, no promo card read as a listing |
@@ -601,7 +603,7 @@ scraper/output/run_2026-09-10_183045/
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
 announces which it thinks it is before fetching. **Container: 21** (its 19 working
-venues plus `brit` and `morgan`). **Her laptop: 3** — `met`, `artic`, `moma`
+venues plus `brit` and `morgan`). **Her laptop: 4** — `met`, `artic`, `moma`, `orsay`
 (`route: 'local'`).
 
 `moma` moved on 22 Sep: the container is refused and only a visible browser with
@@ -1098,8 +1100,13 @@ container (Cloudflare)** — front door only in the app until she sends a search
 address. **Hers to rule:** *Cultural Olympiad: Permanent collection* is a
 collection display (an "Art and Sport tour", free with the collection).
 
-**d'Orsay — BLOCKED 25 Sep:** Cloudflare 403 on the first page, not retried.
-She is saving its pages; it joins the headed-browser route (item 5).
+**d'Orsay — RECIPE BUILT 25 Sep, from her saved pages** (`orsay`, chip
+"d'Orsay"). Refuses the container (Cloudflare 403, not retried), so it is her
+laptop's, `headed: true`, and waits on item 5 like MoMA. Proven offline only:
+`orsay_pages.js` OR-001 to OR-012, the real scraper over `docs/orsay_pages/`
+(text only). New engine options it needed: `keepOnlyType.not`/`within`,
+`datesAt`, `title.brParts`, `noiseExempt`; ordinal days ("23rd") in both
+date parsers. Shop: her catalogues-shelf link; search address unknown.
 
 **Before her import, re-sweep `tate-britain`, `lgd` and `mam` once**: their
 committed runs predate the description fixes and MAM's title fix.
@@ -1202,7 +1209,7 @@ The AbeBooks link is `/servlet/SearchResults?kn=…&sts=t`.
 | `docs/venues.md` | Per-venue forensics: the scoreboard, exactly what each refusal is, listing URLs | Working one specific venue |
 | `docs/venue_urls.md` | All 21 venues' addresses from the Sweeper Brief, plus per-venue traps | Wiring or re-checking a venue's pages |
 | `docs/listing_pages/` | Frick, Wallace, Brera listing pages she saved — where each listing sits | Changing a `within` there |
-| `docs/moma_pages/`, `docs/morgan_pages/` | Pages she saved from her own browser, with a README of what each settled — link shapes, blurb containers, the traps | Changing either recipe, before asking her for anything |
+| `docs/moma_pages/`, `docs/morgan_pages/`, `docs/orsay_pages/` | Pages she saved from her own browser, with a README of what each settled — link shapes, blurb containers, the traps | Changing either recipe, before asking her for anything |
 | `docs/compression.md` | The compression design, the model split, the eval, the rejected alternatives | Changing compression — otherwise don't |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review: what she found, what changed, what each returns now | Before touching a reviewed venue |
 | `docs/review-log.md` | Independent review findings and what was decided | A reviewer raises something |
