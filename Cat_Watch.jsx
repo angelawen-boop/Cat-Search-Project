@@ -3133,7 +3133,9 @@ export default function App(){
               a control that only appears once it has something to show can't
               say "none yet" (guide §6). */}
           <button onClick={()=>{setShowSnaps(v=>!v); if(!showSnaps)loadSnaps();}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showSnaps?"Hide snapshots":"Snapshots"+(snaps?" - "+snaps.length:"")}</button>
-          {ignored.length>0&&<button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>}
+          {/* ALWAYS DRAWN, like Snapshots — her catch, 25 Sep: on a page with an
+              empty quarantine the link vanished and read as "the tray is gone". */}
+          {<button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>}
         </span>
       </div>
       <div style={{maxWidth:760,margin:"0 auto"}}>
@@ -3162,6 +3164,7 @@ export default function App(){
         </div>}
       </div>
       <div style={{maxWidth:760,margin:"0 auto"}}>
+        {showIgnored&&ignored.length===0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:12,color:C.soft}}>{quarWhy?"Quarantine can\u2019t be read: "+quarWhy:"Nothing in quarantine."}</div>}
         {showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
           {/* BIG ENOUGH TO READ — her finding, 20 Sep: "tiny AND faint". This
               is a list of decisions she may need to UNDO, so it cannot be the
