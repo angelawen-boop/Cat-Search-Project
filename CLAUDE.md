@@ -488,8 +488,10 @@ roughly a dozen searches in quick succession. **Every step after the first is
 conditional — do not make them unconditional, and do not flip to searching wide
 first.**
 
-**Shop addresses for all 18 venues are checked and written down** —
-`docs/app.md` §1. `borghese`, `capo` and `dellav` have no shop.
+**Shop addresses for all 18 original venues are checked and written down** —
+`docs/app.md` §1. `borghese`, `capo` and `dellav` have no shop. The 25 Sep
+venues' shops are in `MUSEUMS` with a comment each: `lgd` and `jacquemart`
+read off the live shops; `orsay` from her links; `mam` front door only.
 
 **Which model — CLOSED, her ruling 22 Sep.** The page cannot reach any outside
 address, so it does not choose a model; it asks the viewer's Claude through
@@ -908,6 +910,9 @@ keeps making in new clothes.
   and READ the cards before sending it.**
 - **Asserting what a set of changes is instead of looking** — "longer, fuller
   titles" — while several were shorter or lower-case.
+- **Calling a new venue done on its row count.** She asked, 25 Sep, whether
+  the descriptions had been checked; they had not, and four venues out of four
+  carried junk. Read the raw summaries — and her count of the list — first.
 
 - **A title rule proven at two museums, shipped to all.** Testing on venues it
   did not come from found MoMA's site name confirming its preview dates as a
@@ -994,7 +999,9 @@ stored and read back identical; 270 KB refused at the 256 KiB limit.
    leaving she will always snapshot AND Export; today that is two buttons.
    She will decide the routine from use.
 3. Merge to `main` and publish to her app to start the real trial — hers
-   to call; §4's publishing rules apply.
+   to call; §4's publishing rules apply. **`main` has moved on since the branch
+   was cut** (34.4: Re-check museum shop, four venues, chip renames), so merge
+   `main` into the branch first and re-run `cloud_app.js` there.
 4. Google Drive backup by button — back on the table, never automatic.
 
 **Parked, not gating:** two tabs open at once.
@@ -1078,63 +1085,53 @@ and nothing else.
 
 **`artic` from her machine is unchanged and untested against any of this.**
 
-### 6. More venues
+### 6. More venues — four built 25 Sep, MAD Paris next
 
-Her notes, 24–25 Sep.
+Her additions, 24–25 Sep. **Her order on the chips:** Levy Gorvy straight
+after Acquavella; the French venues Louvre, d'Orsay, MAM Paris, MAD Paris,
+Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
+"MAD Paris", "Jacquemart-André" (and, same day, "Artic" and "KHM").
 
-**Levy Gorvy Dayan — BUILT 25 Sep** (`lgd`, chip "Levy Gorvy", always after
-Acquavella). Swept live once: `run_2026-09-25_132334`, 28 rows, all with text;
-kept for her one import with Tate Britain's past (item 4) and the French
-venues. App 34.2 carries the venue — **not yet published**.
+| Venue | State | Run on disk | Open |
+|---|---|---|---|
+| `lgd` Levy Gorvy | built, 28 rows, her list checked | `run_2026-09-25_132334` — **predates description fixes** | — |
+| `jacquemart` | built, 5 rows, list checked, **compressed** | `run_2026-09-25_133825` | — |
+| `mam` MAM Paris | built, 20 rows — **she is checking the list** | `run_2026-09-25_140234` — **predates title and credit fixes** | *Cultural Olympiad: Permanent collection* is a collection display ("Art and Sport tour") — keep or exclude, hers. Shop search unknown (Cloudflare) — she sends one. *Oliver Beer* is two runs (Oct 24–Jan 25, Apr–Jul 25), two rows, correct |
+| `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | none — refuses the container | waits on item 5 (headed browser, her laptop) |
+| MAD Paris | **not started** | — | next |
 
-**Jacquemart-André — BUILT 25 Sep** (`jacquemart`, chip "Jacquemart-André",
-after the Louvre). Swept live once: `run_2026-09-25_133825`, 5 rows, all with
-text. Operas and a costume ball share its current page and are refused on the
-museum's own card tag (`keepOnlyType`, new engine option). Its past listing
-misspells "Feburary"; the shared month map now reads it.
+**THE IMPORT, her plan 25 Sep:** once MAD is built, ONE import file of the new
+venues plus Tate Britain's past (item 4). Steps, in order:
+1. Re-sweep `tate-britain`, `lgd`, `mam` once (runs above predate fixes) and
+   sweep MAD; `jacquemart`'s run and compression stand.
+2. Stitch, compress (subagents per `compress.js`), qc, and READ the cards
+   through the app's intake before sending (§6, "Handing her work nobody read").
+3. Publish the app first — **34.4 is built, not live**; it carries the new
+   venue codes, and the live 34 would file every new row as unknown. Ask
+   before publishing (§1). d'Orsay's rows cannot be in this file.
 
-**MAM Paris — BUILT 25 Sep** (`mam`). Swept live once: `run_2026-09-25_140234`,
-20 rows, all with text; archive paginated Drupal-style (`paginate.prefix`),
-`?archive=1` dropped from addresses (`dropQuery`). **Its shop refused the
-container (Cloudflare)** — front door only in the app until she sends a search
-address. **Hers to rule:** *Cultural Olympiad: Permanent collection* is a
-collection display (an "Art and Sport tour", free with the collection).
+**Descriptions are READ before a venue is called done** — her question 25 Sep,
+and every venue so far had something: Tate's members' banner and joint-ticket
+note, Levy's press list and a photo credit, MAM's "Courtesy of the artist"
+paragraph, d'Orsay's description thrown away whole by the shared "promo"
+noise rule. All fixed at the source; `summary_pages.js`, `orsay_pages.js`.
 
-**d'Orsay — RECIPE BUILT 25 Sep, from her saved pages** (`orsay`, chip
-"d'Orsay"). Refuses the container (Cloudflare 403, not retried), so it is her
-laptop's, `headed: true`, and waits on item 5 like MoMA. Proven offline only:
-`orsay_pages.js` OR-001 to OR-015, the real scraper over `docs/orsay_pages/`
-(text only, all four past pages) — **45 past shows back to 1 July 2024, her
-count, and her 14 current/upcoming less one Parcours.** New engine options it needed: `keepOnlyType.not`/`within`,
-`datesAt`, `title.brParts`, `noiseExempt`; ordinal days ("23rd") in both
-date parsers. Shop: her catalogues shelf and search (the shared national
-museums' shop — its search covers every museum on it).
+**The 4-paragraph / 2,000-character description cut stays — her ruling
+25 Sep.** Tested on Baroque Splendors: the cut text and her full page (3,360
+chars) gave the same teaser in substance. 57 of 419 rows in her import file
+hit it; raising it would send each back for a model review.
 
-**Before her import, re-sweep `tate-britain`, `lgd` and `mam` once**: their
-committed runs predate the description fixes and MAM's title fix.
+**Blocked sites found:** d'Orsay (whole site) and MAM's online bookshop, both
+Cloudflare 403 on the first request — not retried, per §1's rate-limit rule.
+Page layout then comes from pages she saves (`docs/orsay_pages/`, text only —
+her saves carry ~20 MB of images each, which the tests never read).
 
-**Her chip names for the rest, 25 Sep:** Orsay → **"d'Orsay"**; the others
-"MAM Paris", "MAD Paris". **Her order for the French venues:** Louvre, d'Orsay,
-MAM Paris, MAD Paris, Jacquemart-André.
-
-**Descriptions checked 25 Sep** for Tate Britain, Levy and Jacquemart-André:
-junk found and removed at the source (Tate members' banner and joint-ticket
-note; Levy's press list and a photo credit) — `summary_pages.js`, SP-001 to
-SP-007. **The 4-paragraph / 2,000-character description cut
-(`getCuratorialText`, every venue) — STAYS, her ruling 25 Sep:** a
-venue-wide change is not proportionate to a museum showing 1–2 shows a year. 57 of 419 rows
-in her import file hit it. Compressing Baroque Splendors from the cut text and
-from her full saved page (3,360 chars) gave the same teaser in substance; a
-teaser is ~6 words, so the cut costs nothing she reads. Changing it would send
-every cut row back for a model review on the next sweep.
-
-**French venues** — the Louvre is the only one today. To add:
-
-- **Musée d'Orsay**
-- **Musée d'Art Moderne de Paris** (MAM Paris) — modern art
-- **Musée des Arts Décoratifs** (MAD Paris) — decorative arts
-- **Musée Jacquemart-André** — past exhibitions at
-  `https://www.musee-jacquemart-andre.com/en/past-exhibitions`
+**Engine options added for these venues** (each documented where it is
+defined in `sweep_prototype.js`): `expandDateRange`, `keepDespiteLookback`,
+`keepOnlyType` (`is` / `not` / `within`), `dropQuery`, `paginate.prefix`,
+`cardParts.nameOwnText`, `datesAt`, `title.brParts`, `noiseExempt`; the shared
+month map reads "Feburary", both date parsers read ordinal days ("23rd");
+`otherBranch` now also reads the link's own text.
 
 ### 7. Catalogue lookup generally
 
