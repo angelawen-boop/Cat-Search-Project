@@ -4375,11 +4375,13 @@ const VENUES = {
       // The date line is ALSO a <p> after the <h2> on the current and upcoming
       // cards — the Prix Marcel Duchamp came out "…: From the 2 October 2026".
       subtitle: 'h2.post-summary-title .small, h2.post-summary-title + p:not(.post-summary-date)' } },
-    // Her ruling, 25 Sep: collection displays are not exhibitions here. The
+    // Her rulings, 25 Sep: collection displays are not exhibitions here. The
     // museum marks them with the subtitle "Permanent collection" (Cultural
     // Olympiad, 2024); "New acquisitions by the Photography Committee" is the
-    // other kind she named. docs/mam_pages/, fixture MM-*.
-    excludeTitle: /(?:^|:\s*)Permanent collections?\s*$|^New acquisitions\b/i,
+    // other kind she named. Also not wanted: the Prix Marcel Duchamp show, and
+    // Oliver Beer's "Reanimation Paintings" — films, each run its own page.
+    // docs/mam_pages/, fixture MM-*.
+    excludeTitle: /(?:^|:\s*)Permanent collections?\s*$|^New acquisitions\b|^Prix Marcel Duchamp\b|^Oliver Beer\b/i,
   },
 
   // MUSÉE DES ARTS DÉCORATIFS (MAD Paris) — her addition, 25 Sep. Refused
@@ -4793,6 +4795,11 @@ const VENUES = {
     // ongoing on the listing. The switch existed and this venue simply never
     // set it. Rung 1 of the ladder: the venue's own word, named in the log.
     excludeOngoing: true,
+    // HER RULING, 25 Sep: the Turner Prize and the Tate Britain Commission are
+    // not wanted. The listing names a commission "Commission: …" or
+    // "Commission 2026: …"; its own page adds "Tate Britain" in front — both
+    // are caught, since this test runs on the listing's name.
+    excludeTitle: /^(?:Tate\s+Britain\s+)?Commission\b|^Turner\s+Prize\b/i,
     pages: [
       { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition', ctx: 'current/upcoming' },
       // PAST EXHIBITIONS — her finding, 25 Sep. The archive is not missing, it

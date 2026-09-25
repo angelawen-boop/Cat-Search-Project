@@ -52,7 +52,9 @@ const check = (name, ok, got) => {
     check('MM-003: both exclusions are named in the log, not silent',
       logged.some(l => /excluded: Cultural Olympiad/.test(l)) && logged.some(l => /excluded: New acquisitions/.test(l)));
     const past = real.filter(r => r.end_date >= '2024-07-01');
-    check('MM-004: 15 past exhibitions back to 1 July 2024 — her 16, less the Cultural Olympiad', past.length === 15,
+    // Her 16, less the Cultural Olympiad and — her later ruling, 25 Sep — both
+    // runs of Oliver Beer's films.
+    check('MM-004: 13 past exhibitions back to 1 July 2024 — her 16, less the Cultural Olympiad and the two Oliver Beer runs', past.length === 13,
       past.length + ': ' + past.map(r => r.title).join(' | '));
     const re = S.VENUES.mam.excludeTitle;
     check('MM-005: a show whose name merely mentions a collection is kept',

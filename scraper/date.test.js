@@ -578,6 +578,25 @@ test('LG-004: the gallery\'s LGD Hammer auctions are excluded, and nothing else 
   assert.equal(re.test('Hammer and Sickle: Soviet Posters'), false, 'only the sale series, by its own name');
 });
 
+test('TB-005: Tate Britain — the Turner Prize and the Commission are excluded, by either name', () => {
+  const re = VENUES['tate-britain'].excludeTitle;
+  for (const t of ['Turner Prize 2024', 'Commission: Alvaro Barrington: Grace',
+    'Commission 2026: Zineb Sedira: When Words Fall Silent, Cinema Speaks',
+    'Tate Britain Commission 2026: Zineb Sedira: When Words Fall Silent, Cinema Speaks'])
+    assert.ok(re.test(t), t);
+  for (const t of ['Turner & Constable: Rivals & Originals', 'Art Now: Mohammed Z Rahman', 'Lee Miller'])
+    assert.equal(re.test(t), false, t);
+});
+
+test('MA-004: MAM — the Prix Marcel Duchamp and Oliver Beer are excluded, nothing else', () => {
+  const re = VENUES.mam.excludeTitle;
+  for (const t of ['Prix Marcel Duchamp 2026', 'Oliver Beer: « Reanimation Paintings: A Thousand Voices »',
+    'Oliver Beer: « Reanimation Paintings : A Thousand Voices»'])
+    assert.ok(re.test(t), t);
+  for (const t of ['Kerry James Marshall: The Histories', 'Brion Gysin: The Last Museum', 'Josephsohn: as seen by Albert Oehlen'])
+    assert.equal(re.test(t), false, t);
+});
+
 // JA-001 to JA-003 — MUSÉE JACQUEMART-ANDRÉ, added 25 Sep.
 
 test('JA-001: the venue\u2019s own misspelling "Feburary" still gives the closing date', () => {
