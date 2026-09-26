@@ -1,0 +1,28 @@
+{
+  "machine": "home",
+  "savedAt": "2026-09-26T01:54:51.326Z",
+  "paceSeconds": 30,
+  "gatekeepers": {
+    "orsay": "Cloudflare"
+  },
+  "lanes": {
+    "Cloudflare": {
+      "venues": [
+        "orsay"
+      ],
+      "clean": 0,
+      "firstAt": "2026-09-26T01:54:50.834Z",
+      "lastAt": "2026-09-26T01:54:50.834Z",
+      "stopped": {
+        "venue": "orsay",
+        "url": "https://www.musee-orsay.fr/en/program/whats-on/exhibitions",
+        "reason": "BLOCKED_HTTP_403",
+        "at": "2026-09-26T01:54:51.319Z",
+        "venuePage": 1,
+        "venueCleanBefore": 0,
+        "laneCleanBefore": 0,
+        "minutesIntoLane": 0.01
+      }
+    }
+  }
+}
