@@ -4774,6 +4774,10 @@ const VENUES = {
     // down ("Guided tours and workshop are available in…") — her first laptop
     // sweep, 26 Sep, carried it on 5 of 20 rows.
     description: '.chapeau:not(.entry-summary) p, .intro_texte p',
+    // The ticket-and-address sidebar. Gallery presentations have no lead box,
+    // so the reader falls back to the page and took "107, rue de Rivoli …
+    // Phone: …" from it — Luxury in China, 26 Sep, on the pages she saved.
+    noise: 'col_annexe',
   },
 
   // MUSÉE JACQUEMART-ANDRÉ — her addition, 25 Sep. Two listings, both server-

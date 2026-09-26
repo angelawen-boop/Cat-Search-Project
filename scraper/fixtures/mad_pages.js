@@ -62,18 +62,22 @@ const check = (name, ok, got) => {
     const c = real.find(r => /Christofle-a-brilliant-story/.test(r.url));
     check('MD-007: a two-year run reads both years', c && c.start_date === '2024-11-14' && c.end_date === '2025-04-20', c && c.start_date + '→' + c.end_date);
 
-    // The description, on her two exhibition pages.
+    // The description, on her four exhibition pages.
     const p2 = await browser.newPage();
     await p2.route('**/*', r => r.abort());
     const v = S.VENUES.mad;
     for (const [f, lead, body] of [
       ['exhibition_christofle.html', /presents a major exhibition on the Maison\s+Christofle/, /over\s+six hundred pieces/],
-      ['exhibition_thai_dress.html', /clothing evolution at the Thai court/, /more than a hundred exceptional garments/]]) {
+      ['exhibition_thai_dress.html', /clothing evolution at the Thai court/, /more than a hundred exceptional garments/],
+      // Gallery presentations: no lead box, so the reader falls back to the
+      // page — and the ticket-and-address sidebar (.col_annexe) came with it.
+      ['exhibition_luxury_china.html', /60th anniversary of cultural relations/, /The tour begins in the Jewelry Gallery/],
+      ['exhibition_fashion_design_jewellery.html', /levels 5 to 9 of the Pavillon de Marsan/, /Christian Astuguevieille, and many others/]]) {
       await p2.setContent(fs.readFileSync(path.join(PAGES, f), 'utf8'));
       const d = await S.getCuratorialText(p2, v.description, v.noise, v.noiseExempt);
       const txt = typeof d === 'string' ? d : String((d && d.text) || '');
       check('MD-008: ' + f + ' — the lead and the intro are read', lead.test(txt) && body.test(txt), txt);
-      check('MD-009: ' + f + ' — no ticket box, caption, credit or visit teaser', !/Tickets|Individual tickets|©|Download|Curator|Phone|Guided tours/.test(txt), txt);
+      check('MD-009: ' + f + ' — no ticket box, caption, credit or visit teaser', !/Tickets|Individual tickets|©|Download|Curator|Phone|Guided tours|rue de Rivoli/.test(txt), txt);
     }
     if (process.env.MD_LIST) for (const r of real) console.log(r.start_date + ' → ' + r.end_date + '  ' + r.title);
   } finally {
