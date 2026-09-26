@@ -26,9 +26,11 @@ test('V-001 every wired venue appears, whether or not it has ever returned a row
 });
 
 test('V-002 a blocked venue is present with no rows, never silently dropped', () => {
-  // The three that have never returned an exhibition are the ones most at risk
+  // The venues that have never returned an exhibition are the ones most at risk
   // of vanishing from a derived table, because nothing they produce is real.
-  for (const code of ['moma', 'brit', 'morgan']) {
+  // moma left this list on 26 Sep: her laptop's 16 Sep runs, pushed that day,
+  // hold 24 listing rows read before its exhibition pages refused.
+  for (const code of ['brit', 'morgan']) {
     const v = collect().find(x => x.code === code);
     assert.ok(v, `${code} missing`);
     assert.strictEqual(v.rows, null, `${code} should have no rows`);

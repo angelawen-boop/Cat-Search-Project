@@ -126,8 +126,9 @@ venue at all, which machine sweeps it, and — read from the marker rows, never
 inferred — why the last attempt brought nothing. When the two runs differ, that
 venue has stopped answering.
 
-As of 22 Sep: **406 exhibitions across 18 venues**; `moma`, `brit` and `morgan`
-have never returned one; `met` and `artic` were refused on 16 Sep after that
+As of 22 Sep: **406 exhibitions across 18 venues**; `brit` and `morgan` have
+never returned one, and `moma` only 24 listing rows with no descriptions (her
+laptop, 16 Sep — pushed 26 Sep); `met` and `artic` were refused on 16 Sep after that
 session's repeated sweeps.
 
 **A browser with a PAST gets into all three blocked venues — 22 Sep.** Every
@@ -647,11 +648,14 @@ tested on her laptop by NAMING them. `moma` went early on 22 Sep on one probe
 page and came back; `orsay`, `mad`, `moma`, `brit`, `morgan` are candidates.
 Fixtures R-001 to R-005.
 
-**`headed: true` marks a venue needing that browser.** The engine cannot launch
-one yet, so the run SAYS SO per venue rather than letting the flag sit there
-looking like working wiring. Set on `moma`, `brit`, `morgan` (her ruling, 26 Sep).
-On her machine such a venue is **not attempted at
-all** — a known refusal there would stop its gatekeeper's lane for nothing.
+**`headed: true` — BUILT 26 Sep: on her machine the venue is swept in a
+visible Google Chrome on the profile `probe_headed.js open` seeds** (the mode
+that got in on 22 Sep), with the same pacing; never headless there, and never
+on an unseeded profile. The container still sweeps it headless, for markers.
+Set on `moma`, `brit`, `morgan`, `orsay` (her rulings, 26 Sep — d'Orsay's
+first home sweep, headless, was refused on page 1). Design: the HEADED block
+in `sweep_prototype.js`; fixtures H-001 to H-004. **Not yet run against a real
+site.**
 
 ### Pacing — her machine only, her approval 26 Sep
 
@@ -1112,9 +1116,11 @@ each step really does block the next:
    given listings, morgan a listing and a section page), and **was it speed or
    something about the browsing session?** All clean means speed. First clean
    and the rest blocked means the session, which is a different fix.
-2. **A gap between pages — DONE 26 Sep, her machine only (§5 "Pacing").
-   Headed support — still to build.** `headed: true` still only announces that
-   it cannot be honoured; on her machine the venue is skipped.
+2. **A gap between pages and headed support — BUILT 26 Sep, her machine only
+   (§5).** Offline-proven only. **The test is a complete paced headed sweep of
+   one venue, not a probe:** passes only if every page is read and the count
+   matches hers. Before it: seed the profile (`probe_headed.js open`, browse
+   the venue, close Chrome) and check Cloudflare's quiet period has passed.
 3. **A real sweep of `moma` and `morgan`.** Their recipes are written and
    fixtured, but **every selector in both is untestable without a browser** —
    the fixtures cover what a recipe SAYS, not what it finds. This is the loop
@@ -1143,7 +1149,7 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 | `lgd` Levy Gorvy | **imported and checked by her**, lookup works | `run_2026-09-25_160850` | — |
 | `jacquemart` | **imported and checked by her**, lookup works | `run_2026-09-25_133825` | — |
 | `mam` MAM Paris | **imported and checked by her**; shop blocked, card says so | `run_2026-09-25_160850` (before her Prix Duchamp / Oliver Beer ruling — the next sweep drops them) | Shop's Cloudflare refuses this machine and the connector (403); her browser passes. A third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
-| `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | none — refuses the container | the container's until a clean laptop sweep (§5); **not pinned headed** (her ruling) — the first sweep there says whether headless gets in |
+| `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | `run_2026-09-26_115449` — headless from her laptop, refused on page 1 | **headed pile** (her ruling 26 Sep); the container's until a clean laptop sweep (§5) |
 | `mad` MAD Paris | recipe built from her saved pages; 2 + 2 + 16, **her counts** | none — refuses the container (plain 403, not Cloudflare) | the container's until a clean laptop sweep (§5); **not pinned headed** (her ruling) — the first sweep there says whether headless gets in |
 
 **THE IMPORT — SENT 25 Sep: `stitch_20260925_0611/sweep_compressed.csv`**, 75 rows

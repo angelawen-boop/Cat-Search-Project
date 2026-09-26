@@ -4685,8 +4685,10 @@ const VENUES = {
     base: 'https://www.musee-orsay.fr',
     // The CONTAINER's until a complete, clean sweep from her laptop confirms
     // it — her rule, 26 Sep; the container's refusals are its marker rows.
-    // Tested on her laptop by naming it. NOT marked headed — her ruling, 25
-    // Sep: nothing yet says a headless browser there is refused.
+    // Tested on her laptop by naming it. HEADED — her ruling, 26 Sep: her
+    // first laptop sweep, headless, was refused on its first page (Cloudflare
+    // 403 after days of quiet), so it joins the headed pile.
+    headed: true,
     pages: [
       { path: '/en/program/whats-on/exhibitions', ctx: 'current/upcoming' },
       { path: '/en/ressources/expositions-passees', ctx: 'past', paginate: { param: 'page', from: 1 } },
@@ -6204,6 +6206,75 @@ function resolveChromium() {
   return undefined;  // let Playwright raise its own error
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+ * HEADED — her machine only. Built 26 Sep 2026, her go-ahead.
+ *
+ * A venue marked `headed: true` is swept in a VISIBLE Google Chrome on a
+ * profile she has browsed in, exactly as the one mode that ever got in did
+ * (probe_headed.js run A, 22 Sep: the scraper opening Chrome on her seeded
+ * profile — moma's listing and an exhibition page, no challenge). Nothing else
+ * about the sweep changes: same recipe, same pacing lanes, same stop at the
+ * first objection. One Chrome, so headed venues go one after another.
+ *
+ * The profile is the folder `node scraper/probe_headed.js open` seeds — one
+ * folder, two scripts; fixture H-003 holds the two paths together. It is not
+ * her everyday Chrome, and is never committed (.gitignore).
+ *
+ * An UNSEEDED profile is refused before anything is asked: its history is the
+ * whole reason this works, and a blank one is the 16 Sep refusal again —
+ * spent on a gatekeeper that then stops the lane for a day.
+ *
+ * On the container nothing changes: no display, no Chrome. A headed venue is
+ * still attempted headless there, for its marker rows, and the run says so.
+ * ═════════════════════════════════════════════════════════════════════════ */
+
+const HEADED_PROFILE_DIR = path.join(__dirname, 'chrome_profile');
+
+// Where Google Chrome lives; null lets Playwright find it by channel instead
+// (how a Mac or Windows install is found). Same list as probe_headed.js.
+function resolveChrome() {
+  const candidates = [
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/opt/google/chrome/chrome',
+    '/usr/bin/chromium',
+  ];
+  for (const c of candidates) if (fs.existsSync(c)) return c;
+  return null;
+}
+
+/** Has Chrome ever run on this profile? It writes Default/ on first use. */
+function headedProfileSeeded(dir = HEADED_PROFILE_DIR) {
+  return fs.existsSync(path.join(dir, 'Default'));
+}
+
+/**
+ * Which of this run's venues go to the visible Chrome, and which to headless.
+ * Pure. Headed only on her machine: the container has neither Chrome nor a
+ * screen, and there a headed venue is swept headless for its marker rows.
+ */
+function splitHeaded(codes, paced, venues = VENUES) {
+  const headed = paced ? codes.filter(c => venues[c] && venues[c].headed) : [];
+  return { headed, headless: codes.filter(c => !headed.includes(c)) };
+}
+
+async function launchHeadedContext() {
+  const bin = resolveChrome();
+  try {
+    return await chromium.launchPersistentContext(HEADED_PROFILE_DIR, {
+      executablePath: bin || undefined,
+      channel: bin ? undefined : 'chrome',
+      headless: false,
+      viewport: null,
+    });
+  } catch (e) {
+    if (/ProcessSingleton|already running|SingletonLock/i.test(e.message)) {
+      throw new Error('the seeded Chrome profile is open in another window — close that Chrome, then run --continue');
+    }
+    throw e;
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 // Set by Ctrl-C. Read by safeGoto so the venue in progress stops at its next
 // navigation instead of grinding through its remaining pages as failures.
@@ -6300,13 +6371,18 @@ async function main() {
     log('  One venue at a time behind each gatekeeper; different gatekeepers side by side.');
     log('  The first refusal or bot check stops that gatekeeper for the rest of the run.');
 
-    // A venue that needs a visible browser is NOT attempted headless here. On
-    // the container a refusal is free; here it is a request to a gatekeeper
-    // that would stop the whole lane and count against the other museums
-    // behind it, to learn something already known.
+    // A venue that needs a visible browser gets one — see HEADED. Never
+    // headless here: a refusal would stop its gatekeeper's lane for a day to
+    // learn something already known. And never on an UNSEEDED profile, for
+    // the same reason: the history is what gets it in.
     if (wantHeaded.length) {
-      log(`  Not attempted: ${wantHeaded.join(', ')} — needs a visible browser with a history, which the engine cannot launch yet.`);
-      RUN_VENUES = RUN_VENUES.filter(c => !VENUES[c].headed);
+      if (headedProfileSeeded()) {
+        log(`  In a visible Chrome on the seeded profile: ${wantHeaded.join(', ')}`);
+      } else {
+        log(`  Not attempted: ${wantHeaded.join(', ')} — the Chrome profile has never been seeded`);
+        log(`  (${HEADED_PROFILE_DIR}). Run: node scraper/probe_headed.js open — browse, then close it.`);
+        RUN_VENUES = RUN_VENUES.filter(c => !VENUES[c].headed);
+      }
     }
 
     const history = readPacingHistory();
@@ -6425,12 +6501,16 @@ async function main() {
   // fixed slice, so one slow venue cannot leave a worker idle while another
   // still has five to do.
   const queue = [...RUN_VENUES];
-  let next = 0;
+  // Two queues on her machine: headed venues go to the one visible Chrome, one
+  // after another; the rest to headless workers. See HEADED.
+  const split = splitHeaded(queue, PACED);
+  const headlessQ = { items: split.headless, next: 0 };
+  const headedQ = { items: split.headed, next: 0 };
 
-  async function worker(n) {
+  async function worker(n, q = headlessQ, openContext = null) {
     // No userAgent override — see the note where USER_AGENT used to be defined.
     // Chromium sends its own, which is true and agrees with its client hints.
-    const context = await browser.newContext({
+    const context = openContext ? await openContext() : await browser.newContext({
       viewport: { width: 1280, height: 800 },
     });
     // The bridge exists ONLY because Chromium cannot use this container's agent
@@ -6450,7 +6530,7 @@ async function main() {
     // So turning it off where it is not needed REMOVES a misrepresentation
     // rather than adding one: Chromium doing its own requests means the
     // user-agent is simply true.
-    const stats = PROXY_URL
+    const stats = (PROXY_URL && !openContext)
       ? await installNetworkBridge(context)
       : { fulfilled: 0, skipped: 0, failed: 0, disabled: true };
     if (!PROXY_URL && n === 0) {
@@ -6463,9 +6543,9 @@ async function main() {
         // start a venue it has no intention of finishing, since an abandoned
         // venue writes nothing and the work is simply thrown away.
         if (STOPPING) break;
-        const i = next++;
-        if (i >= queue.length) break;
-        const code = queue[i];
+        const i = q.next++;
+        if (i >= q.items.length) break;
+        const code = q.items[i];
 
         const page = await context.newPage();
         let timer;
@@ -6534,9 +6614,25 @@ async function main() {
   // Her machine: every venue gets a worker, because the lanes, not the worker
   // count, decide what is in flight — a worker waiting for the Cloudflare lane
   // must not hold up MAD, which is behind nothing of the kind.
-  const workerCount = (PACED && !JOBS_ARG) ? queue.length : Math.min(CONCURRENCY, queue.length);
-  log(`Running ${queue.length} venue(s) ${workerCount} at a time (one page at a time within each venue)`);
-  await Promise.all(Array.from({ length: workerCount }, (_, n) => worker(n)));
+  const hq = headlessQ.items.length;
+  const workerCount = (PACED && !JOBS_ARG) ? hq : Math.min(CONCURRENCY, hq);
+  log(`Running ${hq} venue(s) headless, ${workerCount} at a time (one page at a time within each venue)`);
+  const workers = Array.from({ length: workerCount }, (_, n) => worker(n));
+  if (headedQ.items.length) {
+    log(`Running ${headedQ.items.length} venue(s) in a visible Chrome, one after another: ${headedQ.items.join(', ')}`);
+    workers.push(worker('headed', headedQ, async () => {
+      try { return await launchHeadedContext(); }
+      catch (e) {
+        // Chrome would not open: nothing was asked of any venue. Each headed
+        // venue says why and writes nothing, so --continue picks it up.
+        for (const c of headedQ.items) summary[c] = { error: `visible Chrome did not open: ${e.message}` };
+        headedQ.next = headedQ.items.length;
+        log(`  VISIBLE CHROME DID NOT OPEN — ${e.message}`);
+        throw Object.assign(e, { headedLaunch: true });
+      }
+    }).catch(e => { if (!e.headedLaunch) throw e; }));
+  }
+  await Promise.all(workers);
 
   const netStats = netTotals;
   await browser.close().catch(() => {});
@@ -6700,6 +6796,8 @@ module.exports = {
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
   // Pure, or driven with a gap of milliseconds — scraper/pacing.test.js.
   gatekeeperFrom, objectionFrom, laneCooldown, knownGatekeepers, makePacer, pacedWithheld, usePacerForFixtures,
+  // HEADED: pure, or a path — pacing.test.js H-001 to H-003.
+  splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome,
   saysOngoing, expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination,
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way

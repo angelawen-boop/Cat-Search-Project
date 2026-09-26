@@ -154,3 +154,38 @@ test('P-010 what is written to disk: a finish or a plain refusal, never a venue 
   assert.match(pacedWithheld({ clean: 0, objection: null, sawStop: true }), /already refused/);
   assert.match(pacedWithheld({ clean: 5, objection: null, sawStop: true }), /already refused/);
 });
+
+// ── HEADED ────────────────────────────────────────────────────────────────
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, VENUES } = require('./sweep_prototype.js');
+
+test('H-001 headed venues go to the visible Chrome on her machine only', () => {
+  const codes = ['met', 'moma', 'orsay', 'mad'];
+  assert.deepStrictEqual(splitHeaded(codes, true), { headed: ['moma', 'orsay'], headless: ['met', 'mad'] });
+  // The container has no Chrome and no screen: everything headless, for markers.
+  assert.deepStrictEqual(splitHeaded(codes, false), { headed: [], headless: codes });
+});
+
+test('H-002 an unseeded profile is recognised, so nothing is risked on it', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-profile-'));
+  assert.strictEqual(headedProfileSeeded(dir), false);
+  fs.mkdirSync(path.join(dir, 'Default'));
+  assert.strictEqual(headedProfileSeeded(dir), true);
+  fs.rmSync(dir, { recursive: true });
+});
+
+test('H-003 the sweep uses the same profile folder and Chrome list that probe_headed.js seeds', () => {
+  const probe = fs.readFileSync(path.join(__dirname, 'probe_headed.js'), 'utf8');
+  assert.match(probe, /const PROFILE_DIR = path\.join\(__dirname, 'chrome_profile'\);/);
+  assert.strictEqual(HEADED_PROFILE_DIR, path.join(__dirname, 'chrome_profile'));
+  const list = src => (src.match(/function resolveChrome\(\) \{[\s\S]*?\]/) || [''])[0].match(/'[^']+'/g);
+  const sweep = fs.readFileSync(path.join(__dirname, 'sweep_prototype.js'), 'utf8');
+  assert.deepStrictEqual(list(sweep), list(probe));
+});
+
+test('H-004 the headed pile is hers: moma, brit, morgan, orsay', () => {
+  const pile = Object.keys(VENUES).filter(c => VENUES[c].headed).sort();
+  assert.deepStrictEqual(pile, ['brit', 'moma', 'morgan', 'orsay']);
+});
