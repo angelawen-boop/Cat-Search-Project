@@ -1199,6 +1199,14 @@ the dead ticket link because the ledger she loaded predates her Re-check —
 one Re-check, then Export, clears it. KHM's shop ANSWERED the connector that
 day: its block comes and goes.
 
+**NEXT — her question, 26 Sep: why only the search results, not the book's
+own page?** Likely cause, UNCONFIRMED (the check hit the rate limit): the
+shop step asks the connector for EXCERPTS — text with the links stripped — so
+the read sees the book's line but not its address. Proposal: ask for the page
+whole (`full_content: true` on the shop step), which usually keeps links.
+Cost: bigger reads; a long page may be cut before the book. Test on KHM and
+one working shop BEFORE building; the change is hers to approve.
+
 The debugging session for the issues she is noting (item 2). Standing gaps:
 fourteen venues have had no lookup run against them, their shop addresses
 checked but unseen live. `khm`'s shop answers every request with a 307 to its
