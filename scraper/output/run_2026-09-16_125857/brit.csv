@@ -1,0 +1,3 @@
+venue_code,title,start_date,end_date,summary,url,notes
+brit,[current/upcoming page],,,,https://www.britishmuseum.org/exhibitions-events,"The venue's ""current/upcoming"" listing page loaded but no exhibitions could be read from it. Marker row, not an exhibition."
+brit,[past page],,,,https://www.britishmuseum.org/exhibitions-events/past-exhibitions,"The venue's ""past"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition."

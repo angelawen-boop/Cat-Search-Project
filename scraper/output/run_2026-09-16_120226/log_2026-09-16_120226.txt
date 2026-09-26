@@ -1,0 +1,64 @@
+[2026-09-16T02:02:26.276Z] Cat Watch Sweep Prototype — starting
+[2026-09-16T02:02:26.279Z] Lookback floor: 2024-07-01
+[2026-09-16T02:02:26.280Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-16_120226
+[2026-09-16T02:02:26.280Z] Venues this run: moma, brit
+[2026-09-16T02:02:26.280Z] Proxy: (none — direct egress assumed)
+[2026-09-16T02:02:26.280Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-16T02:02:26.280Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-16T02:02:26.282Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-16T02:02:26.587Z] Running 2 venue(s) 2 at a time (one page at a time within each venue)
+[2026-09-16T02:02:26.643Z] No proxy set — Chromium is making its own requests (network bridge off)
+[2026-09-16T02:02:26.982Z] [moma] 
+[2026-09-16T02:02:26.983Z] [moma] ────────────────────────────────────────────────────────────
+[2026-09-16T02:02:26.984Z] [moma]   MOMA — Museum of Modern Art, New York
+[2026-09-16T02:02:26.984Z] [moma] ────────────────────────────────────────────────────────────
+[2026-09-16T02:02:26.985Z] [moma]   Fetching current/upcoming: https://www.moma.org/calendar/exhibitions
+[2026-09-16T02:02:27.017Z] [brit] 
+[2026-09-16T02:02:27.017Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-16T02:02:27.018Z] [brit]   BRIT — British Museum, London
+[2026-09-16T02:02:27.018Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-16T02:02:27.018Z] [brit]   Fetching current/upcoming: https://www.britishmuseum.org/exhibitions-events
+[2026-09-16T02:02:27.224Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions
+[2026-09-16T02:02:27.225Z] [moma]   FAILED current/upcoming — BLOCKED_HTTP_403
+[2026-09-16T02:02:27.226Z] [moma]   Fetching past: https://www.moma.org/calendar/exhibitions/history
+[2026-09-16T02:02:27.315Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/history
+[2026-09-16T02:02:27.315Z] [moma]   FAILED past — BLOCKED_HTTP_403
+[2026-09-16T02:02:27.319Z] [moma]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-16T02:02:27.324Z] [moma]   → 0 exhibitions, 0 with curatorial text → moma.csv
+[2026-09-16T02:02:31.033Z] [brit]   current/upcoming: 1 links seen -> 1 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-16T02:02:31.033Z] [brit]   NO EXHIBITIONS current/upcoming: page loaded and was read, but nothing matched
+[2026-09-16T02:02:31.033Z] [brit]   Fetching past: https://www.britishmuseum.org/exhibitions-events/past-exhibitions
+[2026-09-16T02:02:31.229Z] [brit]   BLOCKED (HTTP 403): https://www.britishmuseum.org/exhibitions-events/past-exhibitions
+[2026-09-16T02:02:31.229Z] [brit]   FAILED past — BLOCKED_HTTP_403
+[2026-09-16T02:02:31.229Z] [brit]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-16T02:02:31.230Z] [brit]   → 0 exhibitions, 0 with curatorial text → brit.csv
+[2026-09-16T02:02:31.362Z] 
+[2026-09-16T02:02:31.362Z] ────────────────────────────────────────────────────────────
+[2026-09-16T02:02:31.362Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-16T02:02:31.362Z] ────────────────────────────────────────────────────────────
+[2026-09-16T02:02:31.362Z]   MOMA: 0 exhibitions | 0 with text | 2 page(s) blocked/empty
+[2026-09-16T02:02:31.362Z]   BRIT: 0 exhibitions | 0 with text | 2 page(s) blocked/empty
+[2026-09-16T02:02:31.362Z] 
+[2026-09-16T02:02:31.362Z] ────────────────────────────────────────────────────────────
+[2026-09-16T02:02:31.362Z]   COVERAGE — every link accounted for
+[2026-09-16T02:02:31.362Z] ────────────────────────────────────────────────────────────
+[2026-09-16T02:02:31.362Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-16T02:02:31.362Z]   -----------------------------------------------------------------------------------------------
+[2026-09-16T02:02:31.362Z]   brit       current/upcoming                 1     1       0     0        0        0          0
+[2026-09-16T02:02:31.362Z] 
+[2026-09-16T02:02:31.362Z]   seen      = links matching the venue's selector on that page
+[2026-09-16T02:02:31.362Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-16T02:02:31.362Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-16T02:02:31.362Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-16T02:02:31.362Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-16T02:02:31.362Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-16T02:02:31.362Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-16T02:02:31.362Z] 
+[2026-09-16T02:02:31.362Z] Network bridge: 0 requests served, 0 skipped (image/media/font), 0 failed
+[2026-09-16T02:02:31.363Z] 
+[2026-09-16T02:02:31.363Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-16_120226
+[2026-09-16T02:02:31.363Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-16_120226/sweep.csv  (4 rows — moma:2, brit:2)
+[2026-09-16T02:02:31.363Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-16_120226/log_2026-09-16_120226.txt
+[2026-09-16T02:02:31.363Z] Not yet in this run: met, ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, khm, artic, dellav, tate-modern, tate-britain, wallace
+[2026-09-16T02:02:31.363Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-16T02:02:31.363Z] No de-duplication is applied — see passThrough.
