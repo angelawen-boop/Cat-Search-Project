@@ -1069,6 +1069,10 @@ stored and read back identical; 270 KB refused at the 256 KiB limit.
 2. **Open straight from the cloud (`CLOUD_OPENS=true`) once Loads have matched
    every time** — her end state, her call.
 3. Merge to `main` and publish to her app — hers to call; §4's rules apply.
+   **First copy the test page's `sweeps/venues` and `quarantine/rows` into her
+   app's store** (quarantine merged latest-wins, never replaced). A page can
+   read only its own store, so during the trial the test page's copies are the
+   live ones: seeded from her app's on 26 Sep, updated by her imports since.
 4. Google Drive backup by button — back on the table, never automatic.
 
 **Parked, not gating:** two tabs open at once.
