@@ -1190,6 +1190,15 @@ month map reads "Feburary", both date parsers read ordinal days ("23rd");
 
 ### 7. Catalogue lookup generally
 
+**NEXT, found 26 Sep on KHM's *Canaletto & Bellotto* — proposed, not built:**
+the shop read returned KHM's SEARCH-RESULTS page as the book's own page (and
+the ISBN step re-opened it). Nothing in code stops a listing being filed as
+the book. Fix proposed: refuse a shop link that is one of the pages the step
+itself opened (the search address or a shelf page) — code, not a model. Her
+card also still carried the ticket link because the ledger she loaded predates
+her Re-check; Re-check then Export clears it. KHM's shop ANSWERED the
+connector that day — its block comes and goes.
+
 The debugging session for the issues she is noting (item 2). Standing gaps:
 fourteen venues have had no lookup run against them, their shop addresses
 checked but unseen live. `khm`'s shop answers every request with a 307 to its
