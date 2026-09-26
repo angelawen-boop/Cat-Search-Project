@@ -1875,6 +1875,20 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
   // letting the rest of the venue fail one page at a time.
   if (STOPPING) throw new ScrapeAborted(url);
 
+  // Her machine: wait for this venue's turn and the gap. See PACING.
+  if (PACER) {
+    const gate = await PACER.before(venue, url);
+    if (gate) {
+      // Once per venue: every remaining page would otherwise repeat it.
+      const pv = PACER.venue(venue);
+      if (pv && !pv.stopLogged) {
+        pv.stopLogged = true;
+        log(`  not requesting anything more from this venue (${gate}) — first skipped: ${url}`);
+      }
+      return { ok: false, reason: gate };
+    }
+  }
+
   try {
     // Deliberately NOT 'networkidle'. That waits for the page to make no
     // requests for 500ms, and these sites never fall silent — analytics,
@@ -1884,6 +1898,17 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
     // content, and ignore whatever background noise continues after that.
     const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT });
     const status = resp ? resp.status() : null;
+
+    // Her machine: who answered, and did it object? An objection stops the
+    // whole lane, so it is returned here before anything reads the page.
+    if (PACER) {
+      const title = await page.title().catch(() => '');
+      const objection = await PACER.after(venue, url, status, resp ? resp.headers() : {}, title);
+      if (objection) {
+        log(`  BLOCKED (${objection}): ${url}`);
+        return { ok: false, reason: objection };
+      }
+    }
 
     if (status && (status === 403 || status === 418 || status === 429)) {
       log(`  BLOCKED (HTTP ${status}): ${url}`);
@@ -1911,6 +1936,7 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
 
     return { ok: true, status };
   } catch (e) {
+    if (PACER) PACER.failed(venue);
     // A navigation left over from the previous page can land on top of this
     // one. It is transient: settle, then try this URL once more.
     if (attempt === 0 && /interrupted by another navigation|ERR_ABORTED/.test(e.message)) {
@@ -2014,6 +2040,11 @@ const FAILURE_PROSE = {
   LOAD_ERROR:         'the page could not be loaded, cause unknown',
 };
 
+// Only ever written on her machine — see PACING below. Worded to fit inside
+// "could not be read: <this>. Marker row", which venue_status.js reads whole.
+FAILURE_PROSE.BLOCKED_CHALLENGE = 'the venue’s site answered with a bot check instead of the page';
+FAILURE_PROSE.LANE_STOPPED = 'not asked for, because the gatekeeper in front of this site had just refused us and the run stopped asking';
+
 function failureProse(reason) {
   const blocked = /^BLOCKED_HTTP_(\d+)$/.exec(reason);
   if (blocked) return `the venue’s site refused us (HTTP ${blocked[1]})`;
@@ -2021,6 +2052,327 @@ function failureProse(reason) {
   if (http) return `the venue’s server answered HTTP ${http[1]}`;
   return FAILURE_PROSE[reason] || 'the page could not be loaded, cause unknown';
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PACING — her machine only. Her approval, 26 Sep 2026.
+ *
+ * THE LIMIT BELONGS TO THE GATEKEEPER, NOT THE VENUE. Cloudflare stands in
+ * front of artic, moma, brit, morgan and orsay. Requests to several of them
+ * from one address add up, in Cloudflare's eyes, to one burst — on 22 Sep a
+ * challenge at one museum followed us to the next. So pages are paced per
+ * GATEKEEPER ("lane"), and different lanes run side by side.
+ *
+ *   - Which lane a venue is in is READ OFF THE REPLY (gatekeeperFrom), never
+ *     typed in. What was read is kept in the run's pacing.json, so the next
+ *     run knows before it sends anything.
+ *   - One venue at a time per lane, one page at a time, a gap between pages
+ *     varied around --pace=<seconds> (default 30).
+ *   - STOP AT THE FIRST OBJECTION. A refusal or a bot check stops the WHOLE
+ *     lane for the rest of the run: no retry, no moving on to the next site
+ *     behind the same gatekeeper. That is what keeps one museum's judgement
+ *     from spreading to the others.
+ *   - A lane that was refused is not asked again for a day; one that finished
+ *     clean is left an hour's quiet (laneCooldown). --ignore-cooldown overrides.
+ *   - Where it stopped is recorded: refused on page 1 after a quiet day means
+ *     blocked for this kind of browser; refused after 11 clean pages means a
+ *     pace or volume limit. That is the question 22 Sep left open.
+ *
+ * The container is untouched: its venues are not behind these gatekeepers and
+ * a paced 21-venue sweep would take hours for nothing.
+ * ═════════════════════════════════════════════════════════════════════════ */
+
+const PACED = MACHINE === 'home';
+const PACE_ARG = ARGS.find(a => a.startsWith('--pace='));
+const PACE_MS = Math.max(1000, Math.round((parseFloat(PACE_ARG?.split('=')[1] ?? '30') || 30) * 1000));
+const IGNORE_COOLDOWN = ARGS.includes('--ignore-cooldown');
+const COOLDOWN_AFTER_REFUSAL_MS = 24 * 60 * 60 * 1000;
+const QUIET_AFTER_CLEAN_MS = 60 * 60 * 1000;
+
+/**
+ * Who answered: the gatekeeper's own name, or "site:<host>" when nothing in
+ * front of the site identified itself — a lane of its own. Headers only; a
+ * header is the gatekeeper stamping its own reply, not a guess.
+ */
+function gatekeeperFrom(headers, url) {
+  const h = headers || {};
+  const val = k => String(h[k] || '').toLowerCase();
+  if (h['cf-ray'] || h['cf-mitigated'] || /cloudflare/.test(val('server'))) return 'Cloudflare';
+  if (h['x-vercel-id'] || /vercel/.test(val('server'))) return 'Vercel';
+  if (h['akamai-grn'] || h['x-akamai-transformed'] || /akamai/.test(val('server'))) return 'Akamai';
+  if (h['x-iinfo'] || /incapsula|imperva/.test(val('x-cdn'))) return 'Imperva';
+  if (h['x-datadome'] || h['x-datadome-cid']) return 'DataDome';
+  let host = '';
+  try { host = new URL(url).host.toLowerCase(); } catch { host = String(url); }
+  return `site:${host}`;
+}
+
+// The titles bot checks put on their own pages. A check can arrive with a 200,
+// so the status alone would read it as a page.
+const CHALLENGE_TITLE = /^\s*(just a moment|attention required|performing security verification|access denied|pardon our interruption|one more step)/i;
+
+/** An objection is a refusal or a bot check. Null when the page was served. */
+function objectionFrom(status, headers, title) {
+  if (headers && headers['cf-mitigated']) return 'BLOCKED_CHALLENGE';
+  if (status === 403 || status === 418 || status === 429) return `BLOCKED_HTTP_${status}`;
+  if (CHALLENGE_TITLE.test(String(title || ''))) return 'BLOCKED_CHALLENGE';
+  return null;
+}
+
+/**
+ * Whether a lane may be asked at all, from what earlier runs recorded.
+ * `history` is a list of pacing.json contents. Pure: `now` is passed in.
+ */
+function laneCooldown(history, lane, now = Date.now()) {
+  let lastStop = null, lastAt = 0;
+  for (const h of history || []) {
+    const l = h && h.lanes && h.lanes[lane];
+    if (!l) continue;
+    if (l.stopped && (!lastStop || Date.parse(l.stopped.at) > Date.parse(lastStop.at))) lastStop = l.stopped;
+    const t = Date.parse(l.lastAt || '') || 0;
+    if (t > lastAt) lastAt = t;
+  }
+  if (lastStop) {
+    const until = Date.parse(lastStop.at) + COOLDOWN_AFTER_REFUSAL_MS;
+    if (now < until) return { wait: true, until, why: `refused us at ${lastStop.venue} (${lastStop.reason}) on ${sydneyTime(Date.parse(lastStop.at))}` };
+  }
+  if (lastAt) {
+    const until = lastAt + QUIET_AFTER_CLEAN_MS;
+    if (now < until) return { wait: true, until, why: `was last asked at ${sydneyTime(lastAt)}` };
+  }
+  return { wait: false };
+}
+
+/** The latest gatekeeper each venue was seen behind, across earlier runs. */
+function knownGatekeepers(history) {
+  const out = {}, when = {};
+  for (const h of history || []) {
+    const t = Date.parse(h && h.savedAt || '') || 0;
+    for (const [code, gk] of Object.entries((h && h.gatekeepers) || {})) {
+      if (!(code in when) || t >= when[code]) { out[code] = gk; when[code] = t; }
+    }
+  }
+  return out;
+}
+
+/**
+ * The pacer. A factory so the fixtures can drive one with a gap of
+ * milliseconds; the sweep makes exactly one.
+ *
+ *   before(code, url)  wait for this venue's turn in its lane and for the gap.
+ *                      Returns 'LANE_STOPPED' if the lane has been stopped.
+ *   after(code, url, status, headers, title)
+ *                      reads who answered and whether it objected. Returns the
+ *                      objection, or null. An objection stops the lane.
+ *   failed(code)       a request that got no reply at all (timeout, reset).
+ *   release(code)      the venue is finished; the next in its lane may start.
+ */
+function makePacer({ gapMs, known = {}, logFn = () => {}, isStopping = () => false,
+                     random = Math.random, sleepChunkMs = 1000, onChange = () => {} }) {
+  const lanes = new Map();      // name -> { holder, queue:[resolve], lastAt, firstAt, clean, venues:Set, stopped }
+  const venues = new Map();     // code -> { lane, clean, objection, sawStop, waitedMs, waitingSince, requests }
+  const discovered = {};        // code -> gatekeeper, as read THIS run
+  let lastAny = 0;              // the latest request on ANY lane
+  // While a venue with an unknown gatekeeper sends its first page, every lane
+  // pauses: that page might belong to any of them.
+  let discovery = null;
+
+  const laneOf = name => {
+    if (!lanes.has(name)) lanes.set(name, { holder: null, queue: [], lastAt: 0, firstAt: 0, clean: 0, venues: new Set(), stopped: null });
+    return lanes.get(name);
+  };
+  const venueOf = code => {
+    if (!venues.has(code)) venues.set(code, { lane: known[code] || null, clean: 0, objection: null, sawStop: false, waitedMs: 0, waitingSince: 0, requests: 0 });
+    return venues.get(code);
+  };
+
+  async function waitUntil(v, t) {
+    if (Date.now() >= t) return;
+    v.waitingSince = Date.now();
+    try {
+      while (Date.now() < t) {
+        if (isStopping()) throw new ScrapeAborted('(paced wait)');
+        await new Promise(r => setTimeout(r, Math.min(sleepChunkMs, t - Date.now())));
+      }
+    } finally {
+      v.waitedMs += Date.now() - v.waitingSince;
+      v.waitingSince = 0;
+    }
+  }
+  async function holdLane(v, code, name) {
+    const l = laneOf(name);
+    l.venues.add(code);
+    if (l.holder === code) return;
+    if (l.holder) {
+      logFn(`  waiting for the ${name} lane (${l.holder} is using it)`);
+      v.waitingSince = Date.now();
+      await new Promise(r => l.queue.push(r));
+      v.waitedMs += Date.now() - v.waitingSince;
+      v.waitingSince = 0;
+    }
+    l.holder = code;
+  }
+  const jitter = () => Math.round(gapMs * (0.75 + random() * 0.5));
+
+  async function before(code, url) {
+    const v = venueOf(code);
+    if (!v.lane) {
+      // Gatekeeper not known yet: this first request could belong to ANY lane,
+      // so it is spaced from every lane's last request, and discoveries go one
+      // at a time. And if any lane has already stopped this run, a venue that
+      // might stand behind the same gatekeeper is not risked at all.
+      const anyStopped = () => [...lanes.values()].some(l => l.stopped);
+      if (anyStopped()) { v.sawStop = true; return 'LANE_STOPPED'; }
+      while (discovery) await discovery.promise;
+      let resolve;
+      discovery = { promise: new Promise(r => { resolve = r; }) };
+      const done = () => { discovery = null; resolve(); };
+      try {
+        // Lanes are paused now, so lastAny cannot move while this waits.
+        await waitUntil(v, lastAny + jitter());
+        if (anyStopped()) { v.sawStop = true; done(); return 'LANE_STOPPED'; }
+        lastAny = Date.now();
+        v.requests++;
+        v.pendingDiscovery = done;   // released in after(), failed() or release()
+        logFn(`  paced: request ${v.requests}, gatekeeper not yet known — every lane paused for it`);
+        return null;
+      } catch (e) { done(); throw e; }
+    }
+    await holdLane(v, code, v.lane);
+    const l = laneOf(v.lane);
+    if (l.stopped) { v.sawStop = true; return 'LANE_STOPPED'; }
+    const gap = jitter();
+    const waitFor = Math.max(0, l.lastAt + gap - Date.now());
+    // Re-checked after every wait: a discovery may have started meanwhile, and
+    // this lane must not fire beside it.
+    for (;;) {
+      while (discovery) await discovery.promise;
+      await waitUntil(v, l.lastAt + gap);
+      if (!discovery) break;
+    }
+    if (l.stopped) { v.sawStop = true; return 'LANE_STOPPED'; }
+    l.lastAt = lastAny = Date.now();
+    if (!l.firstAt) l.firstAt = l.lastAt;
+    v.requests++;
+    logFn(`  paced: request ${v.requests} via ${v.lane}${waitFor ? `, after ${Math.round(waitFor / 1000)}s` : ''}`);
+    return null;
+  }
+
+  function finishDiscovery(v) {
+    if (v.pendingDiscovery) { const d = v.pendingDiscovery; v.pendingDiscovery = null; d(); }
+  }
+
+  async function after(code, url, status, headers, title) {
+    const v = venueOf(code);
+    const gk = gatekeeperFrom(headers, url);
+    if (!v.lane) {
+      v.lane = gk;
+      const l = laneOf(gk);
+      l.lastAt = lastAny;
+      if (!l.firstAt) l.firstAt = lastAny;
+      logFn(`  gatekeeper: ${gk} — read off its reply; this venue is paced in that lane`);
+      finishDiscovery(v);
+      await holdLane(v, code, gk);
+    } else if (gk !== v.lane) {
+      logFn(`  gatekeeper: ${gk} answered, where earlier runs saw ${v.lane}. Recorded for next time; this run keeps ${v.lane}.`);
+    }
+    discovered[code] = gk;
+    const l = laneOf(v.lane);
+    const objection = objectionFrom(status, headers, title);
+    if (objection) {
+      v.objection = objection;
+      if (!l.stopped) {
+        l.stopped = {
+          venue: code, url, reason: objection, at: new Date().toISOString(),
+          venuePage: v.requests, venueCleanBefore: v.clean, laneCleanBefore: l.clean,
+          minutesIntoLane: l.firstAt ? Math.round((Date.now() - l.firstAt) / 600) / 100 : 0,
+        };
+        logFn(`  ${v.lane} OBJECTED (${objection}) on request ${v.requests} of ${code}, after ${v.clean} clean page(s) here and ${l.clean} in the lane.`);
+        logFn(`  The ${v.lane} lane is STOPPED for the rest of this run. Nothing more is asked of any site behind it.`);
+      }
+    } else {
+      v.clean++; l.clean++;
+    }
+    onChange();
+    return objection;
+  }
+
+  function failed(code) { finishDiscovery(venueOf(code)); }
+
+  function release(code) {
+    const v = venues.get(code);
+    if (!v) return;
+    finishDiscovery(v);
+    const l = v.lane && lanes.get(v.lane);
+    if (l && l.holder === code) {
+      l.holder = null;
+      const next = l.queue.shift();
+      if (next) next();
+    }
+    onChange();
+  }
+
+  /** Waiting time for the venue budget, including a wait still in progress. */
+  function waited(code) {
+    const v = venues.get(code);
+    if (!v) return 0;
+    return v.waitedMs + (v.waitingSince ? Date.now() - v.waitingSince : 0);
+  }
+
+  function snapshot() {
+    const out = { lanes: {}, gatekeepers: { ...discovered } };
+    for (const [name, l] of lanes) {
+      out.lanes[name] = {
+        venues: [...l.venues], clean: l.clean,
+        firstAt: l.firstAt ? new Date(l.firstAt).toISOString() : null,
+        lastAt: l.lastAt ? new Date(l.lastAt).toISOString() : null,
+        stopped: l.stopped,
+      };
+    }
+    return out;
+  }
+
+  return { before, after, failed, release, waited, snapshot, venue: code => venues.get(code), laneOf };
+}
+
+/**
+ * Why a paced venue must NOT be written to disk, or null when it may be.
+ * Written: an ordinary finish, or the plain refusal record (its own first
+ * request was the objection). Withheld: refused part-way, or never got to ask.
+ */
+function pacedWithheld(pv) {
+  if (!pv) return null;
+  if (pv.objection) return pv.clean > 0 ? `refused (${pv.objection}) after ${pv.clean} clean page(s)` : null;
+  if (pv.sawStop) return 'its gatekeeper had already refused us this run, so nothing more was asked';
+  return null;
+}
+
+// Her clock, for the lines she reads: "not asked again before …".
+function sydneyTime(ms) {
+  return new Intl.DateTimeFormat('en-AU', {
+    timeZone: RUN_TZ, weekday: 'short', day: 'numeric', month: 'short',
+    hour: 'numeric', minute: '2-digit', hour12: true,
+  }).format(new Date(ms)) + ' Sydney';
+}
+
+const PACING_FILE = 'pacing.json';
+
+/** Every pacing.json on disk, live runs and archived ones. */
+function readPacingHistory() {
+  const out = [];
+  for (const dir of [OUT_DIR, path.join(OUT_DIR, 'archive')]) {
+    let names = [];
+    try { names = fs.readdirSync(dir).filter(n => /^run_/.test(n)); } catch { continue; }
+    for (const n of names) {
+      try { out.push(JSON.parse(fs.readFileSync(path.join(dir, n, PACING_FILE), 'utf8'))); } catch { /* none */ }
+    }
+  }
+  return out;
+}
+
+// The one pacer this run uses, made in main(). Null on the container.
+let PACER = null;
+// Fixtures only: drive the real scrapeVenue/safeGoto with a pacer of their own.
+function usePacerForFixtures(p) { PACER = p; }
 
 // Extract visible text from an element, trimmed
 async function getText(el) {
@@ -5852,7 +6204,7 @@ async function main() {
   // directory exists, so there was nowhere to write it at the time.
   for (const line of TIDY_NOTES) log(line);
 
-  const RUN_VENUES = venuesForThisRun();
+  let RUN_VENUES = venuesForThisRun();
 
   // An interrupted venue must leave NO file behind, so that a file on disk
   // still means "this venue finished". Without this, stopping a run by hand
@@ -5925,10 +6277,81 @@ async function main() {
   // evidence the venue was wired. Saying it plainly costs one line; finding it
   // out from a sweep that quietly returned markers costs a day.
   const wantHeaded = RUN_VENUES.filter(c => VENUES[c].headed);
-  if (wantHeaded.length) {
+  if (wantHeaded.length && !PACED) {
     log(`Asks for a visible browser with a history: ${wantHeaded.join(', ')}`);
     log('  The engine cannot launch that yet, so these are attempted the ordinary');
     log('  way and are expected to be refused. See scraper/probe_headed.js.');
+  }
+
+  // HER MACHINE: PACING. See the PACING block above safeGoto for the design.
+  if (PACED) {
+    logSection('PACING — her machine');
+    log(`  Gap between pages: about ${Math.round(PACE_MS / 1000)}s, varied 75–125%, per gatekeeper.`);
+    log('  One venue at a time behind each gatekeeper; different gatekeepers side by side.');
+    log('  The first refusal or bot check stops that gatekeeper for the rest of the run.');
+
+    // A venue that needs a visible browser is NOT attempted headless here. On
+    // the container a refusal is free; here it is a request to a gatekeeper
+    // that would stop the whole lane and count against the other museums
+    // behind it, to learn something already known.
+    if (wantHeaded.length) {
+      log(`  Not attempted: ${wantHeaded.join(', ')} — needs a visible browser with a history, which the engine cannot launch yet.`);
+      RUN_VENUES = RUN_VENUES.filter(c => !VENUES[c].headed);
+    }
+
+    const history = readPacingHistory();
+    const known = knownGatekeepers(history);
+    const cooling = [];
+    for (const c of RUN_VENUES) {
+      if (!known[c]) { log(`  ${c}: gatekeeper not known yet — read off its first reply.`); continue; }
+      const cd = laneCooldown(history, known[c]);
+      if (!cd.wait) { log(`  ${c}: behind ${known[c]}, from an earlier run.`); continue; }
+      const until = sydneyTime(cd.until);
+      if (IGNORE_COOLDOWN) {
+        log(`  ${c}: behind ${known[c]}, which ${cd.why}. Quiet period until ${until} OVERRIDDEN by --ignore-cooldown.`);
+      } else {
+        log(`  ${c}: SKIPPED — behind ${known[c]}, which ${cd.why}. Not asked again before ${until}.`);
+        cooling.push(c);
+      }
+    }
+    RUN_VENUES = RUN_VENUES.filter(c => !cooling.includes(c));
+
+    // --continue into the same run: what the earlier invocation learned is read
+    // ONCE, here, and every write adds this invocation on top of it.
+    const prev = (() => { try { return JSON.parse(fs.readFileSync(path.join(RUN_DIR, PACING_FILE), 'utf8')); } catch { return null; } })();
+    const writePacing = () => {
+      try {
+        const now = PACER.snapshot();
+        const merged = {
+          machine: MACHINE, savedAt: new Date().toISOString(), paceSeconds: PACE_MS / 1000,
+          gatekeepers: { ...(prev && prev.gatekeepers), ...now.gatekeepers },
+          lanes: { ...(prev && prev.lanes) },
+        };
+        for (const [name, l] of Object.entries(now.lanes)) {
+          const p = merged.lanes[name];
+          merged.lanes[name] = p ? {
+            venues: [...new Set([...(p.venues || []), ...l.venues])],
+            clean: (p.clean || 0) + l.clean,
+            firstAt: p.firstAt || l.firstAt,
+            lastAt: l.lastAt || p.lastAt,
+            stopped: l.stopped || p.stopped,
+          } : l;
+        }
+        fs.writeFileSync(path.join(RUN_DIR, PACING_FILE), JSON.stringify(merged, null, 2) + '\n');
+      } catch (e) { log(`  pacing.json could not be written: ${e.message}`); }
+    };
+    PACER = makePacer({
+      gapMs: PACE_MS, known, logFn: log, isStopping: () => STOPPING,
+      // Written as it happens, so a run killed mid-lane still leaves the record.
+      onChange: () => writePacing(),
+    });
+
+    if (!RUN_VENUES.length) {
+      log('  Nothing left to ask this run.');
+      writeLog();
+      return;
+    }
+    log(`  Venues this run: ${RUN_VENUES.join(', ')}`);
   }
 
   log(`Proxy: ${PROXY_URL || '(none — direct egress assumed)'}`);
@@ -5957,6 +6380,19 @@ async function main() {
     // Final lookback pass — applies to every venue without exception, after
     // individual pages have had a chance to fill in missing dates.
     const rows = applyLookback(await scrapeVenue(page, code), code, 'final');
+
+    // HER MACHINE: A VENUE CUT SHORT BY A STOPPED LANE IS NOT FINISHED.
+    // Written only when it is the plain refusal record — this venue's own first
+    // request was the objection, so its marker rows say exactly that, as on the
+    // container. Anything else is not written, so --continue redoes it once the
+    // quiet period is over: a venue that got 11 clean pages and then nothing,
+    // or one that never got to ask.
+    const why = pacedWithheld(PACER && PACER.venue(code));
+    if (why) {
+      log(`  → NOT WRITTEN: ${why}. --continue will redo it after the quiet period.`);
+      summary[code] = { laneStopped: why };
+      return;
+    }
     noteTravellingRuns(rows, code);
     const real = rows.filter(r => !r.title.startsWith('['));
     const placeholders = rows.filter(r => r.title.startsWith('['));
@@ -6031,11 +6467,23 @@ async function main() {
               // nothing in Playwright can — which is why the page is closed in
               // the finally below. That makes the abandoned venue's next call
               // throw, so it unwinds instead of running on invisibly.
+              //
+              // Time spent WAITING for its lane or for the gap between pages is
+              // not counted (her machine only; elsewhere it is always zero). The
+              // budget is for a venue that hangs, and a paced venue with 60
+              // pages spends most of its half hour deliberately idle.
               new Promise((_, reject) => {
-                timer = setTimeout(() => reject(Object.assign(
-                  new Error(`venue exceeded its ${(VENUE_BUDGET_MS/60000).toFixed(2)} minute budget`),
-                  { budgetExceeded: true },
-                )), VENUE_BUDGET_MS);
+                const started = Date.now();
+                const check = () => {
+                  const active = Date.now() - started - (PACER ? PACER.waited(code) : 0);
+                  if (active >= VENUE_BUDGET_MS) {
+                    reject(Object.assign(
+                      new Error(`venue exceeded its ${(VENUE_BUDGET_MS/60000).toFixed(2)} minute budget`),
+                      { budgetExceeded: true },
+                    ));
+                  } else timer = setTimeout(check, VENUE_BUDGET_MS - active);
+                };
+                timer = setTimeout(check, VENUE_BUDGET_MS);
               }),
             ]));
         } catch (e) {
@@ -6057,6 +6505,8 @@ async function main() {
           }
         } finally {
           clearTimeout(timer);
+          // Its lane is free for the next venue behind the same gatekeeper.
+          if (PACER) PACER.release(code);
           // Always close the page, never reuse it. A venue that was abandoned
           // may still have work in flight against it, and a fresh page for the
           // next venue costs almost nothing.
@@ -6071,7 +6521,10 @@ async function main() {
     }
   }
 
-  const workerCount = Math.min(CONCURRENCY, queue.length);
+  // Her machine: every venue gets a worker, because the lanes, not the worker
+  // count, decide what is in flight — a worker waiting for the Cloudflare lane
+  // must not hold up MAD, which is behind nothing of the kind.
+  const workerCount = (PACED && !JOBS_ARG) ? queue.length : Math.min(CONCURRENCY, queue.length);
   log(`Running ${queue.length} venue(s) ${workerCount} at a time (one page at a time within each venue)`);
   await Promise.all(Array.from({ length: workerCount }, (_, n) => worker(n)));
 
@@ -6109,11 +6562,36 @@ async function main() {
   for (const [code, s] of Object.entries(summary)) {
     if (s.error) {
       log(`  ${code.toUpperCase()}: FATAL ERROR — ${s.error}`);
+    } else if (s.laneStopped) {
+      log(`  ${code.toUpperCase()}: NOT WRITTEN — ${s.laneStopped}`);
     } else {
       const blocked = s.placeholders > 0 ? ` | ${s.placeholders} page(s) blocked/empty` : '';
       log(`  ${code.toUpperCase()}: ${s.real} exhibitions | ${s.withSummary} with text${blocked}`);
     }
   }
+  // ── Pacing: where each gatekeeper lane got to ───────────────────────────────
+  // The question this answers is WHICH KIND of refusal: on the very first page
+  // after a quiet day is a block on this kind of browser; after a run of clean
+  // pages is a pace or volume limit.
+  if (PACER) {
+    logSection('PACING — where each gatekeeper got to');
+    const snap = PACER.snapshot();
+    for (const [name, l] of Object.entries(snap.lanes)) {
+      log(`  ${name}: ${l.venues.join(', ')} — ${l.clean} clean page(s)`);
+      if (l.stopped) {
+        const st = l.stopped;
+        log(`    STOPPED at ${st.venue}, its request ${st.venuePage}, ${st.reason}, ${st.minutesIntoLane} min into the lane`);
+        log(`    ${st.venueCleanBefore} clean page(s) at ${st.venue} and ${st.laneCleanBefore} in the lane before it`);
+        log(`    ${st.laneCleanBefore === 0
+          ? 'Refused on the lane\'s first page: points to a block on this kind of browser (if the lane had been quiet a day).'
+          : 'Refused after clean pages: points to a pace or volume limit, not a block.'}`);
+        log(`    ${st.url}`);
+        log(`    Not asked again before ${sydneyTime(Date.parse(st.at) + COOLDOWN_AFTER_REFUSAL_MS)} (pacing.json).`);
+      }
+    }
+    if (!Object.keys(snap.lanes).length) log('  No requests were made.');
+  }
+
   // ── Coverage report ─────────────────────────────────────────────────────────
   // Every link the scraper saw is accounted for by one of these columns.
   // If a venue's total looks wrong, this says which stage lost the rows.
@@ -6210,6 +6688,8 @@ module.exports = {
   stripWeekdays,
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
+  // Pure, or driven with a gap of milliseconds — scraper/pacing.test.js.
+  gatekeeperFrom, objectionFrom, laneCooldown, knownGatekeepers, makePacer, pacedWithheld, usePacerForFixtures,
   saysOngoing, expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination,
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way

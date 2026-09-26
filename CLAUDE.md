@@ -141,10 +141,9 @@ record and the tool; `docs/venues.md` §Morgan has what this overturned.**
 **But access was never the hard part — PACE is.** Five addresses fired back to
 back, four at one museum, and everything after the first was challenged; the
 judgement then followed us to the other venue, since both sit behind the same
-protection. **The engine currently fetches exhibition pages with no gap at all**
-— MoMA alone would fire 24 in seconds. Nothing sweeps these three until that is
-fixed. Open: is it speed, or a limit per browsing session? The two look
-identical from here and the next run is designed to separate them.
+protection. **Pacing is built — her machine only, 26 Sep, §5 "Pacing".** Open:
+is it speed, or a limit per browsing session? A paced run records where it was
+refused, which separates the two.
 
 ### What the script cannot derive — her rulings, per venue
 
@@ -533,7 +532,7 @@ first number to scroll past:
 
 | | |
 |---|---|
-| unit fixtures | `date.test.js`, `compress.test.js`, `qc.test.js`, `sweep_log.test.js`, `venue_status.test.js` |
+| unit fixtures | `date.test.js`, `compress.test.js`, `qc.test.js`, `sweep_log.test.js`, `venue_status.test.js`, `pacing.test.js` |
 | `intake_cases.js` | 62 checks — folding, quarantine, freshness, the ledger gate |
 | `page_loads.js` | does the page load |
 | `page_renders.js` | does it DRAW — renders into jsdom twice, plain and with the runtime answering |
@@ -545,6 +544,7 @@ first number to scroll past:
 | `summary_pages.js` | descriptions on saved pages (`docs/summary_pages/`), no network — the museum's own text, never a press list, credit or ticket note |
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
 | `listing_pages.js` | the same, for WHERE each row was seen — no page twice, no promo card read as a listing |
+| `pacing_pages.js` | the real page loader, paced, over her saved d'Orsay pages with Cloudflare's headers — a refusal part-way and a bot check served with 200 |
 | `cloud_ledger.js`, `cloud_app.js` | the cloud ledger (branch): storage against a stand-in store with the platform's limits, then the screen driven by clicks — both on her real ledger, `docs/ledger_2026-09-24/` |
 
 The harness lifts the intake out of the JSX by **anchors on prose, never line
@@ -574,6 +574,8 @@ node scraper/sweep_prototype.js ng rijks     named venues only
 node scraper/sweep_prototype.js --continue   finish the newest run
 node scraper/sweep_prototype.js --jobs=6     venues at once (default 4)
 node scraper/sweep_prototype.js --budget-mins=3   abandon a venue after N min
+node scraper/sweep_prototype.js --pace=30    her machine: seconds between pages (default 30)
+node scraper/sweep_prototype.js --ignore-cooldown   her machine: ask a gatekeeper still in its quiet period
 node scraper/stitch.js <run> <run> ...       combine runs into one importable file
 node scraper/compress.js <run>               plan, and write the subagent job files
 node scraper/compress.js <run> --check       verify the answers before they land
@@ -646,7 +648,22 @@ collecting the refusals instead. Fixtures R-001 to R-005.
 
 **`headed: true` marks a venue needing that browser.** The engine cannot launch
 one yet, so the run SAYS SO per venue rather than letting the flag sit there
-looking like working wiring.
+looking like working wiring. On her machine such a venue is **not attempted at
+all** — a known refusal there would stop its gatekeeper's lane for nothing.
+
+### Pacing — her machine only, her approval 26 Sep
+
+**The limit belongs to the gatekeeper, not the venue** — Cloudflare fronts
+`artic`, `moma`, `brit`, `morgan`, `orsay`, and a challenge at one followed us
+to the next on 22 Sep. So on her machine every venue is paced, in **lanes by
+gatekeeper, read off the reply** (never typed in; kept in the run's
+`pacing.json`): one venue at a time per lane, ~30s varied between pages,
+different lanes side by side. **The first refusal or bot check stops the whole
+lane for the run** — no retry, no next site behind it. A refused lane is not
+asked for a day, a clean one gets an hour's quiet. A venue cut short is NOT
+written, so `--continue` redoes it. The container is untouched. Design: the
+PACING block in `sweep_prototype.js`; fixtures `pacing.test.js` (P-001 to
+P-010), `pacing_pages.js` (PC-001 to PC-013).
 
 **The two machines never sweep the same venue.** Sweeping from both doubles what
 a venue sees, and both of these rate-limit — which is how a working venue becomes
@@ -1093,11 +1110,9 @@ each step really does block the next:
    given listings, morgan a listing and a section page), and **was it speed or
    something about the browsing session?** All clean means speed. First clean
    and the rest blocked means the session, which is a different fix.
-2. **A gap between pages in the engine, then headed support.** Nothing can be
-   tested before this: a MoMA sweep fires 24 exhibition pages back to back and
-   is refused before it finishes, which is exactly what happened on 22 Sep.
-   `headed: true` currently does nothing but announce that it cannot be
-   honoured. **Shared code, 18 working venues — hers to approve.**
+2. **A gap between pages — DONE 26 Sep, her machine only (§5 "Pacing").
+   Headed support — still to build.** `headed: true` still only announces that
+   it cannot be honoured; on her machine the venue is skipped.
 3. **A real sweep of `moma` and `morgan`.** Their recipes are written and
    fixtured, but **every selector in both is untestable without a browser** —
    the fixtures cover what a recipe SAYS, not what it finds. This is the loop
