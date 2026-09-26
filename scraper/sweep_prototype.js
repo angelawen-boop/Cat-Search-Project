@@ -4250,6 +4250,9 @@ const VENUES = {
 
   morgan: {
     name: 'Morgan Library & Museum, New York',
+    // Headless has never got in; a visible Chrome with her history did, 22 Sep.
+    // Her ruling, 26 Sep: not attempted headless from her machine.
+    headed: true,
     base: 'https://www.themorgan.org',
 
     // THREE DIFFERENT PAGES, NOT ONE LAYOUT REPEATED — read from the listings
@@ -5061,6 +5064,9 @@ const VENUES = {
 
   brit: {
     name: 'British Museum, London',
+    // Headless has never got in; a visible Chrome with her history did, 22 Sep.
+    // Her ruling, 26 Sep: not attempted headless from her machine.
+    headed: true,
     base: 'https://www.britishmuseum.org',
     pages: [
       { path: '/exhibitions-events',                 ctx: 'current/upcoming' },

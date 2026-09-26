@@ -648,7 +648,8 @@ collecting the refusals instead. Fixtures R-001 to R-005.
 
 **`headed: true` marks a venue needing that browser.** The engine cannot launch
 one yet, so the run SAYS SO per venue rather than letting the flag sit there
-looking like working wiring. On her machine such a venue is **not attempted at
+looking like working wiring. Set on `moma`, `brit`, `morgan` (her ruling, 26 Sep).
+On her machine such a venue is **not attempted at
 all** — a known refusal there would stop its gatekeeper's lane for nothing.
 
 ### Pacing — her machine only, her approval 26 Sep
