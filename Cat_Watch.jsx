@@ -777,11 +777,12 @@ async function offerFile(filename,data){
 //
 //   THE LIVE LEDGER — one copy, overwritten after every change, which is what
 //     the app will open. "Instant save": nothing to press.
-//   SNAPSHOTS — whole copies she takes by button at the moments she would
-//     want to go back to. Never overwritten, never pruned (her choice: keep
-//     every one and judge later).
+//   SNAPSHOTS ("Cloud Saves" on screen, 26 Sep) — whole copies: one each time
+//     she Saves with the cloud box ticked (the same file as her offline copy,
+//     same name), plus the automatic safety copies. Never overwritten, never
+//     pruned (her choice: keep every one and judge later).
 //
-// Her Exports stay exactly as they are — the copy that lives outside Claude.
+// Her offline files stay exactly as they are — the copy that lives outside Claude.
 //
 // COMPRESSED, SO THE LEDGER IS ONE PIECE. The store caps a document at
 // 256 KiB; her 24 Sep ledger is 217 KiB as text and 45 KiB compressed. A
@@ -876,10 +877,14 @@ async function cloudReadLive(db){
 
 // SNAPSHOTS. The parts go first and the listing record last, so a snapshot
 // that died midway never appears in her list.
+// A copy made by Save carries the NAME of the file Save handed her, so the
+// offline file and its cloud twin match by name — her ruling, 26 Sep — and
+// the moment in both is the same one.
 async function cloudTakeSnapshot(db,text,info){
   const w=await cloudWriteParts(db,SNAP_PARTS,cloudNewId("s"),text);
-  const rec={...w,at:new Date().toISOString(),label:String(info.label||"").slice(0,80),
+  const rec={...w,at:info.at||new Date().toISOString(),label:String(info.label||"").slice(0,80),
              kind:info.kind||"manual",rows:info.rows,quarantined:info.quarantined};
+  if(info.filename)rec.filename=String(info.filename);
   await db.doc(SNAP_COLL+"/"+w.id).set(rec);
   return rec;
 }
@@ -1412,6 +1417,8 @@ const LEDGER_PREFIX="cat-watch-ledger-";
 let AUTOLOAD_FIRED=false; // module-level: survives a strict-mode remount so open never costs two Drive calls
 
 // Local 24hr timestamp (browser's timezone), e.g. 2026-08-23-2230 = 10:30pm local.
+// A description, as it goes into a file name: lower case, words joined by hyphens.
+function labelSlug(label){return String(label||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);}
 function localStamp(iso){const d=iso?new Date(iso):new Date(),p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes());}
 function localReadable(iso){const d=iso?new Date(iso):new Date(),p=n=>String(n).padStart(2,"0");return p(d.getHours())+":"+p(d.getMinutes())+" "+p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+d.getFullYear();}
 
@@ -1497,8 +1504,15 @@ export default function App(){
   const[snaps,setSnaps]=useState(null);       // null = not read yet
   const[snapWhy,setSnapWhy]=useState(null);
   const[showSnaps,setShowSnaps]=useState(false);
-  const[snapLabel,setSnapLabel]=useState("");
   const[snapBusy,setSnapBusy]=useState(false);
+  // THE SAVE PANEL — her design, 26 Sep. Save = the offline file, plus (ticked
+  // by default, her ruling) a copy of the same file in Cloud Saves. The
+  // description names both.
+  const[showSave,setShowSave]=useState(false);
+  const[saveLabel,setSaveLabel]=useState("");
+  const[saveCloud,setSaveCloud]=useState(true);
+  const[saveBusy,setSaveBusy]=useState(false);
+  const[saveNote,setSaveNote]=useState(null);   // {text, ok} — what the last Save did
   // PER-VENUE FRESHNESS, and it has to be TWO facts. One global lastRun cannot
   // say "artic was tried today and last gave us rows on 13 Sep", which is the
   // line that decides whether a solo re-run is worth it. Shape:
@@ -1533,6 +1547,7 @@ export default function App(){
   const[unconfirmedSave,setUnconfirmedSave]=useState(null);
   const[lastSaved,setLastSaved]=useState(null);
   const[saveState,setSaveState]=useState("idle");
+  const cloudNotSaving=saveState==="failed"||saveState==="off";
   const[firstTime,setFirstTime]=useState(false);
   const[dirty,setDirty]=useState(false);
   const[driveMsg,setDriveMsg]=useState(null);
@@ -1654,12 +1669,15 @@ export default function App(){
   // Keep the "Last saved ... ago" text and its colour current.
   useEffect(()=>{const t=setInterval(()=>setTick(n=>n+1),30000);return()=>clearInterval(t);},[]);
 
-  // EDITS mark the ledger unsaved (dirty). Nothing is written until you Export / Save.
+  // EDITS mark the ledger dirty: changed since the last offline Save. The
+  // cloud copy saves them by itself; `dirty` now only decides whether a Load
+  // or Reset must ask first while the cloud is NOT saving.
   const commit=useCallback(async(next,lr)=>{
     setRows(next);
     if(lr!==undefined)setLastRun(lr);
     setFirstTime(false);
     setDirty(true);
+    setSaveNote(null);
     
   },[]);
 
@@ -1683,7 +1701,7 @@ export default function App(){
     // with it, as though opening an older document un-ran a sweep.
     setFirstTime(false);
     setDirty(false);
-    
+    setSaveNote(null);
     setSavedFile(null);
     setUnconfirmedSave(null);
     setError(null);
@@ -1761,9 +1779,9 @@ export default function App(){
     try{
       await cloudTakeSnapshot(db,live.text,{label:"Cloud copy before "+(reason==="reset"?"Reset":"Load"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
       loadSnaps();   // an open drawer shows it straight away
-      setCloudCheck("The cloud copy (saved "+when+") differs from "+(reason==="reset"?"the starter set":"this file")+": "+bits.join(", ")+". It was kept as a snapshot before being replaced.");
+      setCloudCheck("The cloud copy (saved "+when+") differs from "+(reason==="reset"?"the starter set":"this file")+": "+bits.join(", ")+". It was kept in Cloud Saves before being replaced.");
     }catch(e){
-      setCloudCheck("The cloud copy (saved "+when+") differs ("+bits.join(", ")+") and could NOT be kept as a snapshot ("+cloudTrouble(e,"save")+"). It has not been replaced.");
+      setCloudCheck("The cloud copy (saved "+when+") differs ("+bits.join(", ")+") and could NOT be kept in Cloud Saves ("+cloudTrouble(e,"save")+"). It has not been replaced.");
       throw e;   // the caller stops: nothing is armed, nothing overwritten
     }
   }
@@ -1771,7 +1789,7 @@ export default function App(){
   // OPEN THE CLOUD COPY. During the trial, by her button; afterwards, on open.
   function openCloudData(rec,data){
     loadLedger((data.rows||[]).map(r=>({...r,watching:r.watching||false})),data.lastRun||null,
-      "Opened the cloud copy saved "+localReadable(rec.savedAt)+" — "+(data.rows||[]).length+" exhibitions. Not the same as a file: Export / Save to put it in one.",
+      "Opened the cloud copy saved "+localReadable(rec.savedAt)+" — "+(data.rows||[]).length+" exhibitions. Not the same as a file: Save to put it in one.",
       {ignored:Array.isArray(data.ignored)?data.ignored:[]});
     cloudPrev.current=rec; cloudFp.current=ledgerFingerprintText(data);
     setLastSaved(rec); setSaveState("saved"); setSaveErr(null); setCloudCheck(null);
@@ -1786,7 +1804,7 @@ export default function App(){
         openCloudData(rec,JSON.parse(text));
       }catch(e){ setError("The cloud copy couldn’t be opened: "+cloudTrouble(e,"read")); }
     };
-    if(rows.length>0&&dirty)setConfirmBox({text:"Opening the cloud copy replaces everything on screen, and you haven't exported these changes yet. Continue?",act:go});
+    if(rows.length>0&&dirty&&cloudNotSaving)setConfirmBox({text:"Opening the cloud copy replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",act:go});
     else go();
   }
 
@@ -1795,27 +1813,14 @@ export default function App(){
     const db=await useCap("db");
     if(!db){ setSnaps([]); setSnapWhy("This viewer can’t reach the page’s store."); return; }
     try{ setSnaps(await cloudListSnapshots(db)); setSnapWhy(null); }
-    catch(e){ setSnaps([]); setSnapWhy("Couldn’t read the snapshots ("+cloudTrouble(e,"read")+")."); }
-  }
-  async function takeSnapshot(){
-    if(!rows.length||snapBusy)return;
-    const db=await useCap("db"); if(!db)return;
-    setSnapBusy(true);
-    try{
-      const d=cloudLatest.current;
-      const text=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()});
-      await cloudTakeSnapshot(db,text,{label:snapLabel.trim(),kind:"manual",rows:d.rows.length,quarantined:d.ignored.length});
-      setSnapLabel(""); setSnapWhy(null);
-      await loadSnaps();
-    }catch(e){ setSnapWhy("Snapshot NOT taken — "+cloudTrouble(e,"save")); }
-    finally{ setSnapBusy(false); }
+    catch(e){ setSnaps([]); setSnapWhy("Couldn’t read the cloud saves ("+cloudTrouble(e,"read")+")."); }
   }
   // ROLL BACK: a snapshot becomes the ledger. The ledger it replaces is kept
   // first as a safety snapshot — her ruling, 24 Sep — so a rollback can itself
   // be undone. If that safety copy cannot be taken, nothing is replaced.
   function requestRollback(s){
-    setConfirmBox({title:"Roll back to this snapshot?",
-      text:"The ledger becomes the snapshot “"+(s.label||"untitled")+"” from "+localReadable(s.at)+" ("+s.rows+" exhibitions). What you have now is kept as a snapshot first, so this can be undone.",
+    setConfirmBox({title:"Roll back to this cloud save?",
+      text:"The ledger becomes the cloud save “"+(s.label||"untitled")+"” from "+localReadable(s.at)+" ("+s.rows+" exhibitions). What you have now is kept in Cloud Saves first, so this can be undone.",
       act:async()=>{
         const db=await useCap("db"); if(!db)return;
         setSnapBusy(true);
@@ -1826,7 +1831,7 @@ export default function App(){
           if(curText)await cloudTakeSnapshot(db,curText,{label:"Before rolling back to "+(s.label||localReadable(s.at)),kind:"safety",rows:curRows,quarantined:curQ});
           const data=JSON.parse(await cloudReadSnapshot(db,s));
           loadLedger((data.rows||[]).map(r=>({...r,watching:r.watching||false})),data.lastRun||null,
-            "Rolled back to the snapshot “"+(s.label||"untitled")+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
+            "Rolled back to the cloud save “"+(s.label||"untitled")+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
             {ignored:Array.isArray(data.ignored)?data.ignored:[]});
           setDirty(true);          // it is in no file yet
           setCloudCheck(null);
@@ -1840,8 +1845,10 @@ export default function App(){
     const db=await useCap("db"); if(!db)return;
     try{
       const text=await cloudReadSnapshot(db,s);
-      const slug=String(s.label||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
-      const filename="cat-watch-snapshot-"+localStamp(s.at)+(slug?"-"+slug:"")+".json";
+      // A copy made by Save comes back under the name its offline twin has.
+      // Older copies, and the automatic ones, are named as before.
+      const slug=labelSlug(s.label);
+      const filename=s.filename||("cat-watch-snapshot-"+localStamp(s.at)+(slug?"-"+slug:"")+".json");
       const route=await offerFile(filename,JSON.stringify(JSON.parse(text),null,2));
       setSnapWhy(route==="runtime"?"Saved "+filename+".":"A download of "+filename+" was started — this viewer can’t confirm it arrived; check your downloads folder.");
     }catch(e){
@@ -2258,7 +2265,7 @@ export default function App(){
       const add={};
       for(const x of newlyIgnored) add[x.key]={venueId:x.venueId,title:x.title,at:x.at,state:"blocked"};
       setQuarantine(prev=>{ const merged=mergeQuarantine(prev,add);
-        writeQuarantine(merged).then(ok=>{ if(!ok) setQuarWhy("The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Export to keep it."); });
+        writeQuarantine(merged).then(ok=>{ if(!ok) setQuarWhy("The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Save to keep it."); });
         return merged; });
     }
     // COUNTED FROM THE CARDS, NOT FROM THE BUTTON. The figure that reaches the
@@ -2845,12 +2852,12 @@ export default function App(){
   // they ask first WHENEVER there is unsaved work showing.
   const openFilePicker=()=>fileRef.current?.click();
   function requestImport(){
-    if(rows.length>0&&dirty){setConfirmBox({text:"Loading replaces everything on screen, and you haven't exported these changes yet. They will be lost. Continue?",act:openFilePicker});}
+    if(rows.length>0&&dirty&&cloudNotSaving){setConfirmBox({text:"Loading replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",act:openFilePicker});}
     else openFilePicker();
   }
-  const doReset=async()=>{const seed=buildSeed();try{await guardCloudBeforeReplace({rows:seed,ignored},"reset");}catch{return;}cloudArmed.current=true;loadLedger(seed,null,"Starter set loaded ("+seed.length+" exhibitions) \u2014 not saved to a file.");setDebug("Reset: loaded the built-in starter set ("+seed.length+" exhibitions). It isn't in any file \u2014 Export / Save if you want to keep it.");};
+  const doReset=async()=>{const seed=buildSeed();try{await guardCloudBeforeReplace({rows:seed,ignored},"reset");}catch{return;}cloudArmed.current=true;loadLedger(seed,null,"Starter set loaded ("+seed.length+" exhibitions) \u2014 not saved to a file.");setDebug("Reset: loaded the built-in starter set ("+seed.length+" exhibitions). It isn't in any file \u2014 Save if you want one.");};
   function requestReset(){
-    if(rows.length>0&&dirty){setConfirmBox({text:"This loads the built-in starter set and replaces everything on screen, which you haven't exported. Those changes will be lost. Continue?",act:doReset});}
+    if(rows.length>0&&dirty&&cloudNotSaving){setConfirmBox({text:"This loads the built-in starter set and replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",act:doReset});}
     else doReset();
   }
 
@@ -2873,38 +2880,75 @@ export default function App(){
   //
   // The guide records her accepting a dishonest tick because Claude's download
   // prompt had a Cancel the app could not see. That premise is gone on route 1.
-  async function handleExport(){
-    const stamp=localStamp();
-    const filename=LEDGER_PREFIX+stamp+".json";
+  // SAVE — her design, 26 Sep: the offline file AND, when ticked, the same
+  // file into Cloud Saves. One press, two copies, identical name and content.
+  //
+  // THE CLOUD COPY GOES FIRST, because the file waits on her answer in the
+  // viewer's dialog: a cancelled file must not take the cloud copy with it.
+  // EACH HALF REPORTS ITSELF — one tick for both would be the 20 Sep lie
+  // ("Saved — safe to close" while nothing was written) in a new place.
+  async function handleSave(){
+    if(saveBusy||!rows.length)return;
+    const at=new Date().toISOString();
+    const label=saveLabel.trim().slice(0,80);
+    const slug=labelSlug(label);
+    const filename=LEDGER_PREFIX+localStamp(at)+(slug?"-"+slug:"")+".json";
     let data;
     try{
-      data=JSON.stringify({rows,ignored,lastRun,exportedAt:new Date().toISOString(),exportedLocal:localReadable()},null,2);
-    }catch(e){ setError("Export failed while building the file: "+String(e?.message||e)); return; }
-
-    // Both routes live in offerFile, shared with snapshot downloads, so the
-    // two cannot drift. It resolves "runtime" (confirmed), "browser" (started,
-    // unknowable) or throws (refused, or the browser route itself failed).
-    let route;
-    try{ route=await offerFile(filename,data); }
-    catch(e){
-      setSavedFile(null); setUnconfirmedSave(null);
-      if(e&&e.route==="browser"){ setError("Export failed: "+String(e.cause?.message||e.cause||e)); return; }
-      // A REJECTION IS REAL INFORMATION. She declined, or it failed. Either
-      // way nothing was written, so the ledger stays dirty and says so.
-      setError("NOT SAVED \u2014 the save was refused or cancelled ("+String(e?.code||e?.message||e)+"). Your ledger is still on screen and still unsaved. Try Export / Save again.");
-      setDebug("downloads.save rejected: "+String(e?.code||"")+" "+String(e?.message||e));
-      return;
-    }
-    if(route==="runtime"){
-      setError(null); setDirty(false); setUnconfirmedSave(null);
-      setSavedFile(filename+"  \u00b7  "+localReadable());
-      setRefreshDone(null);
-      setDebug("Saved "+rows.length+" exhibitions as "+filename+" ("+localReadable()+"), confirmed by the viewer.");
-    }else{
-      setError(null); setSavedFile(null);
-      setUnconfirmedSave(filename);   // dirty stays TRUE on purpose
-      setDebug("Started a browser download of "+filename+" ("+localReadable()+"). This route cannot confirm the file arrived, so the ledger is still marked unsaved. Check your downloads folder.");
-    }
+      data=JSON.stringify({rows,ignored,lastRun,exportedAt:at,exportedLocal:localReadable(at),...(label?{label}:{})},null,2);
+    }catch(e){ setSaveNote({ok:false,text:"NOT SAVED \u2014 the file couldn\u2019t be built: "+String(e?.message||e)}); return; }
+    setSaveBusy(true);
+    try{
+      // cloud: null = not asked for; true = kept; a string = why not
+      let cloud=null;
+      if(saveCloud){
+        const db=await useCap("db");
+        if(!db)cloud="this viewer can\u2019t reach the page\u2019s store";
+        else{
+          try{
+            await cloudTakeSnapshot(db,data,{label,kind:"manual",rows:rows.length,quarantined:ignored.length,filename,at});
+            cloud=true;
+            if(showSnaps)loadSnaps();
+          }catch(e){ cloud=cloudTrouble(e,"save"); }
+        }
+      }
+      // file: "saved" (the viewer confirmed), "browser" (started, cannot be
+      // confirmed), or a string saying why it was not saved.
+      // Both routes live in offerFile, shared with Cloud Saves' Download.
+      let file;
+      try{ file=(await offerFile(filename,data))==="runtime"?"saved":"browser"; }
+      catch(e){
+        file=e&&e.route==="browser"?"the download couldn\u2019t start"
+          :e&&e.code==="declined"?"cancelled"
+          :"refused ("+String(e?.code||e?.message||e)+")";
+        setDebug("Save: the file was not saved \u2014 "+String(e?.code||"")+" "+String(e?.message||e));
+      }
+      const cloudBit=cloud===true?null:cloud===null?"":"Cloud copy NOT kept \u2014 "+cloud+".";
+      let text,ok;
+      if(file==="saved"){
+        ok=cloud!==null&&cloud!==true?false:true;
+        text=cloud===true?"Local file saved. Extra copy also sent to cloud."
+          :cloud===null?"Local file saved."
+          :"Local file saved. "+cloudBit;
+      }else if(file==="browser"){
+        ok=false;
+        text=(cloud===true?"Extra copy sent to cloud. ":cloud===null?"":cloudBit+" ")
+          +"A download of the local file was started \u2014 this viewer can\u2019t confirm it arrived; check your downloads folder.";
+      }else{
+        ok=false;
+        text=cloud===true?"Cloud copy kept. Local file not saved - "+file+"."
+          :cloud===null?"Local file not saved - "+file+"."
+          :"NOTHING SAVED \u2014 local file not saved - "+file+". "+cloudBit;
+      }
+      setSaveNote({ok,text:text+"  ("+filename+")"});
+      if(file==="saved"){
+        setError(null); setDirty(false); setUnconfirmedSave(null);
+        setShowSave(false); setSaveLabel(""); setSaveCloud(true);
+        // THE IMPORT REMINDER ASKS FOR BOTH, her wording — it goes only when both happened.
+        if(cloud===true)setRefreshDone(null);
+      }
+      setDebug("Save "+filename+" ("+localReadable(at)+"): file "+(file==="saved"?"confirmed by the viewer":file)+"; cloud "+(cloud===true?"kept":cloud===null?"not asked for":cloud)+".");
+    }finally{ setSaveBusy(false); }
   }
 
   const wantedUnlooked=useMemo(()=>rows.filter(r=>r.acquiring==="yes"&&!r.looked&&r.interested).length,[rows]);
@@ -3076,15 +3120,20 @@ export default function App(){
   };
   const{acceptedCount,undecidedCount}=countDecisions(proposals,decisions);
 
-  // v8.3 status, file model. Three states: fresh load = neutral line; your edits
-  // = loud red banner; after Export/Save = calm green line. Green only appears once
-  // you've actually exported this session (a reset seed is in no file, so it's neutral).
+  // THE LINE UNDER THE BUTTONS. What the last Save did, in her words, until
+  // the next change; otherwise what was loaded. Whether the work is SAFE is
+  // the cloud line's job now, not this one's.
   const hasLedger=rows.length>0;
-  const showUnsavedBanner=hasLedger&&dirty;
+  // THE "NOT SAVED TO A FILE" WARNING IS UNWIRED, NOT DELETED — her ruling,
+  // 26 Sep. With the cloud copy saving every change it would nag after every
+  // click; the cloud banner says when work is really at risk. If the cloud
+  // trial fails she goes back to Export by hand and needs it again: set true.
+  const FILE_UNSAVED_WARNING=false;
+  const showUnsavedBanner=FILE_UNSAVED_WARNING&&hasLedger&&dirty;
   let savedText=null,savedCol=C.soft,savedWeight=500;
   if(!hasLedger){savedText="No ledger loaded \u2014 tap Load to begin.";}
-  else if(dirty){savedText=null;} // the red banner below covers this
-  else if(savedFile){savedText="\u2713 Saved \u2014 safe to close  ("+savedFile+")";savedCol=C.okEdge;savedWeight=600;}
+  else if(saveNote){savedText=saveNote.text;savedCol=saveNote.ok?C.okEdge:C.warnInk;savedWeight=saveNote.ok?600:700;}
+  else if(dirty){savedText=null;}
   else{savedText=loadedInfo||"Loaded \u2014 no edits yet.";}
 
   if(!loaded)return(<div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.soft,minHeight:"100vh",display:"grid",placeItems:"center",fontSize:13}}>Opening the ledger{"\u2026"}</div>);
@@ -3102,7 +3151,7 @@ export default function App(){
               Refresh" had become confusing. Load opens a ledger file; Import brings
               in a sweep CSV as cards. */}
           <button onClick={requestImport} style={sBtn}>Load</button>
-          <button onClick={handleExport} disabled={!hasLedger} style={{...pBtn,opacity:hasLedger?1:0.4,cursor:hasLedger?"pointer":"not-allowed"}}>Export / Save</button>
+          <button onClick={()=>setShowSave(v=>!v)} disabled={!hasLedger} style={{...pBtn,opacity:hasLedger?1:0.4,cursor:hasLedger?"pointer":"not-allowed"}}>Save</button>
           <input ref={fileRef} type="file" accept=".json" onChange={handleImport} style={{display:"none"}}/>
           {/* Small and out of the way: it is a comfort control, not part of the
               work. Says what it will DO, not what is currently on. */}
@@ -3111,6 +3160,22 @@ export default function App(){
           <button onClick={()=>refreshFileRef.current?.click()} style={sBtn}>Import</button>
           <input ref={refreshFileRef} type="file" accept=".csv,text/csv" onChange={handleRefreshFile} style={{display:"none"}}/>
         </div>
+        {/* THE SAVE PANEL — her design, 26 Sep. The description names the
+            offline file AND its cloud twin; the tick starts on, her ruling. */}
+        {showSave&&hasLedger&&<div style={{marginTop:8,padding:"10px 12px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
+          <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+            <input value={saveLabel} onChange={e=>setSaveLabel(e.target.value)} maxLength={80} placeholder={"Description (optional) \u2014 e.g. after 30 lookups"}
+              onKeyDown={e=>{if(e.key==="Enter")handleSave();}}
+              style={{flex:"1 1 220px",minWidth:0,padding:"5px 8px",fontSize:12.5,border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontFamily:"inherit"}}/>
+            <button onClick={handleSave} disabled={saveBusy} style={{...pBtn,opacity:saveBusy?0.4:1,cursor:saveBusy?"not-allowed":"pointer"}}>{saveBusy?"Saving\u2026":"Save now"}</button>
+            <button onClick={()=>setShowSave(false)} style={sBtn}>Cancel</button>
+          </div>
+          <label style={{display:"flex",gap:6,alignItems:"center",marginTop:8,fontSize:12.5,color:C.ink,cursor:"pointer"}}>
+            <input type="checkbox" checked={saveCloud} onChange={e=>setSaveCloud(e.target.checked)}/>
+            {"Also save a copy to cloud"}
+          </label>
+          <div style={{marginTop:6,fontSize:11,color:C.soft,wordBreak:"break-all"}}>{"File name: "+LEDGER_PREFIX+localStamp()+(labelSlug(saveLabel)?"-"+labelSlug(saveLabel):"")+".json"}</div>
+        </div>}
         {savedText&&<div style={{marginTop:6,fontSize:11,color:savedCol,fontWeight:savedWeight}}>{savedText}</div>}
         {/* THE CLOUD COPY'S LINE — permanent, never silent (her ask, 24 Sep).
             One line when it is working; the warning banner when it is not,
@@ -3119,7 +3184,12 @@ export default function App(){
         {(saveState==="failed"||saveState==="off")?
           <div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
             <span style={{fontSize:17,lineHeight:1.1}}>{"☁"}</span>
-            <span>{"CLOUD COPY NOT SAVING — "+(saveErr||"reason unknown.")+(hasLedger?" Your changes are on screen only: Export / Save to keep them.":"")}</span>
+            {/* WHEN IT LAST WORKED — her ask, 26 Sep: the banner says how far
+                back the cloud copy stands until a save lands and it goes. */}
+            <span>{"CLOUD COPY NOT SAVING — "+(saveErr||"reason unknown.")
+              +(lastSaved&&lastSaved.savedAt?" Last saved to the cloud: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+")."
+                :" Nothing has been saved to the cloud yet.")
+              +(hasLedger?" Changes since then are on screen only \u2014 tap Save to keep them in a file.":"")}</span>
           </div>
         :<div style={{marginTop:4,fontSize:11,color:saveState==="saved"?C.okEdge:C.soft,fontWeight:saveState==="saved"?600:500,display:"flex",gap:8,alignItems:"baseline",flexWrap:"wrap"}}>
           <span>{"☁ "}{
@@ -3132,7 +3202,7 @@ export default function App(){
           {!hasLedger&&cloudLive&&cloudLive.rec&&<button onClick={requestOpenCloud} style={{background:"none",border:"none",color:C.action,fontSize:11,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0}}>Open it</button>}
         </div>}
         {cloudCheck&&<div style={{marginTop:4,fontSize:11,color:C.ink,lineHeight:1.45}}>{cloudCheck}</div>}
-        {showUnsavedBanner&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.okBg,border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.okInk,lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
+        {hasLedger&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.okBg,border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.okInk,lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u21BB"}</span>
           {/* EVERY CARD SHE LOOKED AT IS ACCOUNTED FOR IN THIS ONE SENTENCE,
               which is the whole job of it. Partial apply put cards somewhere
@@ -3142,7 +3212,7 @@ export default function App(){
               longer add up to the pile she started with. It says HOW to get
               them back too, because "left behind" with no next step reads as
               lost. */}
-          <span>{"Refresh applied \u2014 "+refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated"+(refreshDone.never?", "+refreshDone.never+" never to be offered again":"")+(refreshDone.left?", "+refreshDone.left+" left undecided \u2014 import the same sweep file again to carry on with them":"")+". Not saved yet \u2014 tap \u201cExport / Save\u201d now."}</span>
+          <span>{"Import complete and needs to be saved offline and to the cloud \u2014 tap Save now. "+refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated"+(refreshDone.never?", "+refreshDone.never+" never to be offered again":"")+(refreshDone.left?", "+refreshDone.left+" left undecided \u2014 import the same sweep file again to carry on with them":"")+"."}</span>
         </div>}
         {hasLedger&&unconfirmedSave&&<div style={{marginTop:8,padding:"9px 12px",background:C.holdBg,border:"2px solid "+C.soft,borderRadius:5,fontSize:12.5,color:C.ink,lineHeight:1.45,display:"flex",alignItems:"flex-start",gap:9}}>
           <span style={{fontSize:16,lineHeight:1.1}}>{"\u2193"}</span>
@@ -3150,7 +3220,7 @@ export default function App(){
         </div>}
         {showUnsavedBanner&&!refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid #B5791A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u26A0"}</span>
-          <span>{"UNSAVED CHANGES \u2014 what's on screen is not saved to a file. Tap \u201cExport / Save\u201d before you close this tab or your work is lost."}</span>
+          <span>{"UNSAVED CHANGES \u2014 what's on screen is not saved to a file. Tap \u201cSave\u201d before you close this tab or your work is lost."}</span>
         </div>}
         {/* A QUARANTINE THAT ISN'T SAVING IS A BANNER, NOT A FOOTNOTE — her
             ruling, 20 Sep. It used to print inside the quarantine panel, which
@@ -3468,35 +3538,33 @@ export default function App(){
           {" \u2014 force-loads the starter set."}
         </span>
         <span style={{marginLeft:"auto",display:"flex",gap:14}}>
-          {/* SNAPSHOTS SIT BESIDE QUARANTINE, in the same type — both are
+          {/* CLOUD SAVES SIT BESIDE QUARANTINE, in the same type — both are
               drawers she opens on purpose, not part of the work. Always drawn:
               a control that only appears once it has something to show can't
-              say "none yet" (guide §6). */}
-          <button onClick={()=>{setShowSnaps(v=>!v); if(!showSnaps)loadSnaps();}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showSnaps?"Hide snapshots":"Snapshots"+(snaps?" - "+snaps.length:"")}</button>
-          {/* ALWAYS DRAWN, like Snapshots — her catch, 25 Sep: on a page with an
+              say "none yet" (guide §6). Renamed from Snapshots, her ruling
+              26 Sep; like Quarantine, the button is just the name. */}
+          <button onClick={()=>{setShowSnaps(v=>!v); if(!showSnaps)loadSnaps();}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{"Cloud Saves"}</button>
+          {/* ALWAYS DRAWN, like Cloud Saves — her catch, 25 Sep: on a page with an
               empty quarantine the link vanished and read as "the tray is gone". */}
           {<button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{"Quarantine"}</button>}
         </span>
       </div>
       <div style={{maxWidth:760,margin:"0 auto"}}>
         {showSnaps&&<div style={{marginTop:6,padding:"10px 12px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
+          {/* A LIST, LIKE QUARANTINE — her design, 26 Sep. Copies are made by
+              Save (the tick) and by the two automatic safety copies; nothing
+              here makes one. */}
           <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
-            {"Whole copies of your ledger, kept in this page’s store and never changed. Take one at the moments you’d want to go back to. Rolling back makes a snapshot your ledger, and keeps what you had as a snapshot first."}
+            {snaps&&snaps.length>0&&<b>{snaps.length+" cloud save"+(snaps.length===1?"":"s")+". "}</b>}
+            {"Copies of your ledger kept in the cloud: one each time you Save with \u201cAlso save a copy to cloud\u201d ticked, plus a copy kept automatically before a Load, Reset or roll-back replaces a different ledger. Never changed once kept. Download gives you the file; Roll back makes it your ledger, keeping what you had in Cloud Saves first."}
           </div>
-          <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap",marginBottom:10}}>
-            <input value={snapLabel} onChange={e=>setSnapLabel(e.target.value)} maxLength={80} placeholder={"Label (optional) — e.g. after import"}
-              onKeyDown={e=>{if(e.key==="Enter")takeSnapshot();}}
-              style={{flex:"1 1 200px",minWidth:0,padding:"5px 8px",fontSize:12,border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontFamily:"inherit"}}/>
-            <button onClick={takeSnapshot} disabled={!hasLedger||snapBusy} style={{...pBtn,opacity:hasLedger&&!snapBusy?1:0.4,cursor:hasLedger&&!snapBusy?"pointer":"not-allowed"}}>{snapBusy?"Working…":"Take snapshot"}</button>
-          </div>
-          {!hasLedger&&<div style={{fontSize:11.5,color:C.soft,marginBottom:6}}>{"Open your ledger to take a snapshot."}</div>}
           {snapWhy&&<div style={{fontSize:12,fontWeight:600,color:C.warnInk,background:C.warnBg,border:"1px solid "+C.warnEdge,borderRadius:4,padding:"5px 8px",marginBottom:8}}>{snapWhy}</div>}
-          {snaps===null?<div style={{fontSize:12,color:C.soft}}>{"Reading snapshots…"}</div>
-          :snaps.length===0?<div style={{fontSize:12,color:C.soft}}>{"No snapshots yet."}</div>
+          {snaps===null?<div style={{fontSize:12,color:C.soft}}>{"Reading cloud saves…"}</div>
+          :snaps.length===0?<div style={{fontSize:12,color:C.soft}}>{"No cloud saves yet."}</div>
           :snaps.map(s=>(
             <div key={s.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"5px 0",alignItems:"baseline",borderTop:"1px dotted "+C.rule,flexWrap:"wrap"}}>
               <span style={{minWidth:120,fontWeight:600,whiteSpace:"nowrap"}}>{localReadable(s.at)}</span>
-              <span style={{flex:"1 1 160px"}}>{s.label||<span style={{color:C.soft}}>{"(no label)"}</span>}{s.kind==="safety"&&<span style={{color:C.soft}}>{" · kept automatically"}</span>}<span style={{color:C.soft}}>{" · "+s.rows+" exhibitions"}</span></span>
+              <span style={{flex:"1 1 160px"}}>{s.label||<span style={{color:C.soft}}>{"(no label)"}</span>}{s.kind==="safety"&&<span style={{color:C.soft}}>{" · kept automatically"}</span>}<span style={{color:C.soft}}>{" · "+s.rows+" exhibitions"}</span>{s.filename&&<span style={{display:"block",fontSize:11,color:C.soft,wordBreak:"break-all"}}>{s.filename}</span>}</span>
               <button onClick={()=>downloadSnapshot(s)} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Download</button>
               <button onClick={()=>requestRollback(s)} disabled={snapBusy} style={{background:"none",border:"none",color:C.accent,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Roll back to this</button>
             </div>
@@ -3840,7 +3908,7 @@ export default function App(){
                   text:acceptedCount+" decided "+(acceptedCount===1?"card":"cards")+" will go into your ledger now. "
                     +undecidedCount+" undecided "+(undecidedCount===1?"card":"cards")+" will be left behind and are not remembered anywhere — "
                     +"import the same sweep file again to pick them up. Anything you rejected will come back too. "
-                    +"Export / Save straight afterwards.",
+                    +"Save straight afterwards.",
                   act:()=>applyRefresh(true)})}
                 title={"Apply the "+acceptedCount+" you have decided and come back to the rest later."}
                 style={{...sBtn,borderColor:C.accent,color:C.accent,fontWeight:600}}>

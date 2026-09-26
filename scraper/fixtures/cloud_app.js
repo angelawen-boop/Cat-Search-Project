@@ -5,7 +5,7 @@
  * does the SCREEN do what she was told it does? It renders the real page in
  * jsdom (built the way page_renders.js builds it), hands it a runtime whose
  * store is the stand-in from fake_store.js, and then imports her real ledger,
- * stars a show, takes a snapshot, rolls back, re-imports, and breaks the store
+ * stars a show, Saves (file + cloud copy), rolls back, re-imports, and breaks the store
  * — reading what lands in the store and what the page says after each.
  *
  * What it cannot see: the real store and the real viewer. That is the trial.
@@ -66,10 +66,13 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
   const store = fakeStore({ failOnSet: () => breakStore });
   let breakStore = false;
   const saved = [];
+  let declineNext = false;   // the viewer says no to the next file
   win.claude = {
     use: async name => {
       if (name === 'db') return store;
-      if (name === 'downloads') return { save: async f => { saved.push(f); } };
+      if (name === 'downloads') return { save: async f => {
+        if (declineNext) { declineNext = false; throw { code: 'declined', message: 'The viewer declined.' }; }
+        saved.push(f); } };
       return null;
     },
   };
@@ -133,25 +136,39 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     ok(differ(l.data) === 1, 'CA-003b: exactly one row differs from her file in the cloud copy', String(differ(l.data)));
     const afterStar = l.data;
 
-    // 4. A snapshot, labelled.
-    click(button('Snapshots'));
-    await until(() => /No snapshots yet/.test(text()));
-    ok(/No snapshots yet/.test(text()), 'CA-004: the drawer says "No snapshots yet" when there are none');
-    await typeInto(doc.querySelector('input[placeholder^="Label"]'), 'after starring');
-    click(button('Take snapshot'));
-    await until(() => snapCount() === 1 && /after starring/.test(text()));
+    // 4. Save, described, with the cloud box as it starts: the offline file
+    //    and its cloud twin, one press.
+    ok(button('Cloud Saves') && !button('Snapshots') && !button('Take snapshot'), 'CA-004: the drawer is called Cloud Saves and makes nothing itself');
+    click(button('Cloud Saves'));
+    await until(() => /No cloud saves yet/.test(text()));
+    ok(/No cloud saves yet/.test(text()), 'CA-004a: the drawer says "No cloud saves yet" when there are none');
+    ok(button('Save') && !button('Export / Save'), 'CA-004b: the button is called Save');
+    click(button('Save'));
+    await until(() => doc.querySelector('input[placeholder^="Description"]'));
+    const tick = doc.querySelector('input[type=checkbox]');
+    ok(tick && tick.checked && /Also save a copy to cloud/.test(tick.parentElement.textContent), 'CA-004c: "Also save a copy to cloud" starts ticked');
+    await typeInto(doc.querySelector('input[placeholder^="Description"]'), 'after starring');
+    click(button('Save now'));
+    await until(() => saved.length === 1 && snapCount() === 1 && /Local file saved/.test(text()));
     let snaps = await C.cloudListSnapshots(store);
-    ok(snaps.length === 1 && snaps[0].label === 'after starring' && snaps[0].kind === 'manual', 'CA-004b: Take snapshot stores one, with her label, marked as hers', JSON.stringify(snaps.map(x => [x.label, x.kind])));
-    const snapData = JSON.parse(await C.cloudReadSnapshot(store, snaps[0]));
-    ok(same(snapData, afterStar), 'CA-004c: the snapshot holds exactly the ledger on screen');
+    const file1 = saved[0];
+    ok(file1 && /^cat-watch-ledger-\d{4}-\d\d-\d\d-\d{4}-after-starring\.json$/.test(file1.filename), 'CA-004d: the offline file is named with her description', file1 && file1.filename);
+    ok(snaps.length === 1 && snaps[0].label === 'after starring' && snaps[0].kind === 'manual' && snaps[0].filename === file1.filename,
+      'CA-004e: the cloud copy carries her description and the SAME file name', JSON.stringify(snaps.map(x => [x.label, x.kind, x.filename])));
+    const snapText = await C.cloudReadSnapshot(store, snaps[0]);
+    ok(snapText === file1.data, 'CA-004f: the cloud copy is the offline file, byte for byte');
+    const snapData = JSON.parse(snapText);
+    ok(same(snapData, afterStar), 'CA-004g: and it holds exactly the ledger on screen');
+    ok(/Local file saved\. Extra copy also sent to cloud\./.test(text()), 'CA-004h: the note says both happened, in her words');
+    ok(/after starring/.test(text()) && /cat-watch-ledger-.*-after-starring\.json/.test(text()), 'CA-004i: the open drawer lists it at once, with its file name');
 
     // 5. Another change, then roll back to the snapshot.
     ok(await afterSave(() => click(firstUnwatched())), 'CA-005: a second star saves');
     const beforeRollback = (await live()).data;
     ok(!same(beforeRollback, snapData), 'CA-005b: the cloud copy now differs from the snapshot');
     click(button('Roll back to this'));
-    await until(() => /Roll back to this snapshot\?/.test(text()));
-    ok(/Roll back to this snapshot\?/.test(text()), 'CA-005c: rolling back asks first');
+    await until(() => /Roll back to this cloud save\?/.test(text()));
+    ok(/Roll back to this cloud save\?/.test(text()), 'CA-005c: rolling back asks first');
     ok(await afterSave(() => click(button('Continue'))), 'CA-005d: confirming the rollback is followed by a save');
     l = await live();
     ok(same(l.data, snapData), 'CA-005e: the cloud copy is now the snapshot');
@@ -160,7 +177,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     const safety = snaps.find(x => x.kind === 'safety');
     ok(snaps.length === 2 && safety && same(JSON.parse(await C.cloudReadSnapshot(store, safety)), beforeRollback),
       'CA-005f: what she had before was kept as a snapshot first, so the rollback can be undone');
-    ok(/UNSAVED CHANGES/.test(text()), 'CA-005g: a rolled-back ledger is in no file, and the Export warning says so');
+    ok(!/UNSAVED CHANGES/.test(text()), 'CA-005g: the old "not saved to a file" warning stays unwired while the cloud saves');
 
     // 6. Import her original file now: it differs, so the cloud copy is kept first.
     ok(await afterSave(() => importText(HERS_TEXT)), 'CA-006: importing a file that differs from the cloud copy is followed by a save');
@@ -177,17 +194,50 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     await until(() => /matches this file exactly/.test(text()));
     ok(/matches this file exactly/.test(text()) && snapCount() === 3, 'CA-007: importing the file the cloud copy already holds says "matches exactly" and keeps nothing extra');
 
-    // 8. A snapshot can be downloaded as an ordinary ledger file.
-    click(button('Download'));
-    await until(() => saved.length > 0);
-    const got = saved[saved.length - 1];
+    // 8. Download: an automatic copy comes as an ordinary ledger file; the one
+    //    Save made comes back as its offline twin, same name, same bytes.
+    const downloads = () => [...doc.querySelectorAll('button')].filter(b => b.textContent.trim() === 'Download');
+    click(downloads()[0]);
+    await until(() => saved.length === 2);
+    let got = saved[saved.length - 1];
     ok(got && /^cat-watch-snapshot-.*\.json$/.test(got.filename) && Array.isArray(JSON.parse(got.data).rows),
-      'CA-008: Download hands over the snapshot as a ledger file Load can read', got && got.filename);
+      'CA-008: Download hands over an automatic copy as a ledger file Load can read', got && got.filename);
+    click(downloads()[downloads().length - 1]);
+    await until(() => saved.length === 3);
+    got = saved[saved.length - 1];
+    ok(got && got.filename === file1.filename && got.data === file1.data, 'CA-008b: the copy Save made downloads under the same name, byte for byte', got && got.filename);
+
+    // 8c. The viewer cancels the file: the cloud copy is still kept, and the note says which half.
+    click(firstUnwatched()); await until(() => !/Local file saved/.test(text()));
+    if (!doc.querySelector('input[placeholder^="Description"]')) click(button('Save'));
+    await until(() => doc.querySelector('input[placeholder^="Description"]'));
+    declineNext = true;
+    click(button('Save now'));
+    ok(await until(() => /Cloud copy kept\. Local file not saved - cancelled\./.test(text())), 'CA-008c: a cancelled file keeps the cloud copy, and says "Local file not saved - cancelled"');
+    ok(snapCount() === 4 && saved.length === 3, 'CA-008d: one more cloud copy, no file', snapCount() + ' / ' + saved.length);
+
+    // 8e. Unticked: the file only.
+    const tick2 = doc.querySelector('input[type=checkbox]');
+    click(tick2);
+    await until(() => !tick2.checked);
+    click(button('Save now'));
+    ok(await until(() => /Local file saved\.  \(/.test(text()) && saved.length === 4), 'CA-008e: unticked, Save gives the file alone and says only "Local file saved."');
+    ok(snapCount() === 4, 'CA-008f: and keeps no cloud copy');
+
+    // 8g. Load asks nothing while the cloud is saving — the safety copy covers it.
+    click(firstUnwatched()); await settle(200);
+    click(button('Load'));
+    await settle(100);
+    ok(!/Continue\?/.test(text()), 'CA-008g: Load does not ask first while the cloud copy is saving');
 
     // 9. The store stops answering: the page says so, loudly.
     breakStore = true;
     click(firstUnwatched());
     ok(await until(() => /CLOUD COPY NOT SAVING/.test(text())), 'CA-009: when saving fails, the warning banner appears');
+    ok(/Last saved to the cloud: /.test(text()), 'CA-009a: and it says when the cloud copy last saved', (text().match(/CLOUD COPY NOT SAVING[^\u2601]{0,200}/) || [''])[0]);
+    click(button('Load'));
+    ok(await until(() => /The cloud copy is NOT saving/.test(text())), 'CA-009d: while it is not saving, Load asks first');
+    click(button('Cancel'));
     breakStore = false;
     ok(await afterSave(() => click(firstUnwatched())), 'CA-009b: the next change after the store recovers saves');
     await until(() => !/CLOUD COPY NOT SAVING/.test(text()));
