@@ -1335,18 +1335,16 @@ test('R-002: brit and morgan are still the CONTAINER\'s, deliberately', () => {
   // proves the block is still real, and leaves the marker rows that make a
   // sweep's record complete. She must not be pinging them from home.
   //
-  // moma LEFT this set on 22 Sep — see R-005. brit and morgan stay until their
-  // recipes are written from the live pages and the engine can launch the
-  // browser they need; moving them sooner would only mean her machine
-  // collecting the refusals instead of the container's.
-  for (const c of ['brit', 'morgan']) assert.strictEqual(routeOf(c), 'container');
+  // Her rule, 26 Sep: a venue moves to her laptop only after a complete,
+  // clean sweep from there. moma, brit and morgan have had none — moma went
+  // early on 22 Sep on one probe page and came back.
+  for (const c of ['brit', 'morgan', 'moma']) assert.strictEqual(routeOf(c), 'container');
 });
 
-test('R-005: moma is HERS, and says out loud that it needs a visible browser', () => {
+test('R-005: moma says out loud that it needs a visible browser', () => {
   // 22 Sep: the container is refused and so is any browser arriving with no
   // history. A visible Chrome on a profile she had browsed in was served the
   // listing and a real exhibition page with no challenge at all.
-  assert.strictEqual(routeOf('moma'), 'home');
 
   // The flag must not be able to lie. `headed: true` is read by the run, which
   // announces that the engine cannot yet provide that browser — otherwise a
@@ -1396,7 +1394,8 @@ test('R-006: moma names its blurb container and drops installations', () => {
 test('R-003: every other venue is the container\'s', () => {
   for (const c of ['ng', 'rijks', 'acq', 'frick', 'menil', 'va', 'louvre', 'capo',
                    'uffizi', 'brera', 'khm', 'dellav', 'wallace', 'borghese',
-                   'tate-modern', 'tate-britain', 'lgd', 'jacquemart', 'mam']) {
+                   'tate-modern', 'tate-britain', 'lgd', 'jacquemart', 'mam',
+                   'orsay', 'mad']) {
     assert.strictEqual(routeOf(c), 'container', c + ' should be the container\'s');
   }
 });
@@ -1406,8 +1405,8 @@ test('R-004: the two sets do not overlap and cover every venue', () => {
   assert.strictEqual(codes.length, 26, 'expected 26 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
-  assert.deepStrictEqual(home.sort(), ['artic', 'mad', 'met', 'moma', 'orsay']);
-  assert.strictEqual(container.length, 21);
+  assert.deepStrictEqual(home.sort(), ['artic', 'met']);
+  assert.strictEqual(container.length, 24);
   assert.strictEqual(home.length + container.length, codes.length);
 });
 

@@ -4683,9 +4683,10 @@ const VENUES = {
   orsay: {
     name: "Musée d'Orsay, Paris",
     base: 'https://www.musee-orsay.fr',
-    // Her laptop. NOT marked headed — her ruling, 25 Sep: nothing yet says a
-    // headless browser there is refused. Its first sweep answers that.
-    route: 'local',
+    // The CONTAINER's until a complete, clean sweep from her laptop confirms
+    // it — her rule, 26 Sep; the container's refusals are its marker rows.
+    // Tested on her laptop by naming it. NOT marked headed — her ruling, 25
+    // Sep: nothing yet says a headless browser there is refused.
     pages: [
       { path: '/en/program/whats-on/exhibitions', ctx: 'current/upcoming' },
       { path: '/en/ressources/expositions-passees', ctx: 'past', paginate: { param: 'page', from: 1 } },
@@ -4755,7 +4756,8 @@ const VENUES = {
   mad: {
     name: 'Musée des Arts Décoratifs, Paris',
     base: 'https://madparis.fr',
-    route: 'local',
+    // The CONTAINER's until a complete, clean sweep from her laptop confirms
+    // it — her rule, 26 Sep. Tested on her laptop by naming it.
     pages: [
       { path: '/?page=expo-actu-en',     ctx: 'current' },
       { path: '/?page=expo-avenir-en',   ctx: 'upcoming' },
@@ -5050,15 +5052,10 @@ const VENUES = {
     // matches. Her finding, 22 Sep — it had been assumed they were mixed in.
     excludeLabelledOnPage: /^\s*Installation\s*$/im,
 
-    // HER MACHINE ONLY, and it must be a browser with a past — see the note on
-    // `headed` below and §2 of the project guide.
-    //
-    // 22 Sep: the container is refused, and so was every browser that arrived
-    // with no history. A visible Chrome on a profile she had actually browsed
-    // in was served the listing and a real exhibition page, cleanly, with no
-    // challenge offered at all — the first time any exhibition text has been
-    // read from this venue.
-    route: 'local',
+    // The CONTAINER's, for its marker rows — her rule, 26 Sep: a venue moves
+    // to her laptop only after a complete, clean sweep from there. 22 Sep's
+    // probe (a visible Chrome with her history reached the listing and one
+    // exhibition page) moved it early; one probe page is not a sweep.
     headed: true,
   },
 

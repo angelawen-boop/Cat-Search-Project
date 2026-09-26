@@ -637,14 +637,15 @@ scraper/output/run_2026-09-10_183045/
 
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
-announces which it thinks it is before fetching. **Container: 21** (its 19 working
-venues plus `brit` and `morgan`). **Her laptop: 5** — `met`, `artic`, `moma`, `orsay`,
-`mad` (`route: 'local'`).
+announces which it thinks it is before fetching. **Container: 24. Her laptop: 2**
+— `met`, `artic` (`route: 'local'`).
 
-`moma` moved on 22 Sep: the container is refused and only a visible browser with
-a history gets in. `brit` and `morgan` stay on the container until their recipes
-are written from the live pages — moving them sooner would only mean her machine
-collecting the refusals instead. Fixtures R-001 to R-005.
+**Her rule, 26 Sep: a venue moves to her laptop only after a COMPLETE, CLEAN
+sweep from there.** Until then it stays with the container, whose refusals are
+its marker rows — the sweep record and her "last tried" date. Candidates are
+tested on her laptop by NAMING them. `moma` went early on 22 Sep on one probe
+page and came back; `orsay`, `mad`, `moma`, `brit`, `morgan` are candidates.
+Fixtures R-001 to R-005.
 
 **`headed: true` marks a venue needing that browser.** The engine cannot launch
 one yet, so the run SAYS SO per venue rather than letting the flag sit there
@@ -1130,7 +1131,7 @@ and nothing else.
 
 **`artic` from her machine is unchanged and untested against any of this.**
 
-### 6. More venues — five built 25 Sep; four imported and checked by her; d'Orsay and MAD wait on her laptop
+### 6. More venues — five built 25 Sep; four imported and checked by her; d'Orsay and MAD being tested on her laptop
 
 Her additions, 24–25 Sep. **Her order on the chips:** Levy Gorvy straight
 after Acquavella; the French venues Louvre, d'Orsay, MAM Paris, MAD Paris,
@@ -1142,8 +1143,8 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 | `lgd` Levy Gorvy | **imported and checked by her**, lookup works | `run_2026-09-25_160850` | — |
 | `jacquemart` | **imported and checked by her**, lookup works | `run_2026-09-25_133825` | — |
 | `mam` MAM Paris | **imported and checked by her**; shop blocked, card says so | `run_2026-09-25_160850` (before her Prix Duchamp / Oliver Beer ruling — the next sweep drops them) | Shop's Cloudflare refuses this machine and the connector (403); her browser passes. A third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
-| `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | none — refuses the container | her laptop; **not pinned headed** (her ruling) — the first sweep there says whether headless gets in |
-| `mad` MAD Paris | recipe built from her saved pages; 2 + 2 + 16, **her counts** | none — refuses the container (plain 403, not Cloudflare) | her laptop; **not pinned headed** (her ruling) — the first sweep there says whether headless gets in |
+| `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | none — refuses the container | the container's until a clean laptop sweep (§5); **not pinned headed** (her ruling) — the first sweep there says whether headless gets in |
+| `mad` MAD Paris | recipe built from her saved pages; 2 + 2 + 16, **her counts** | none — refuses the container (plain 403, not Cloudflare) | the container's until a clean laptop sweep (§5); **not pinned headed** (her ruling) — the first sweep there says whether headless gets in |
 
 **THE IMPORT — SENT 25 Sep: `stitch_20260925_0611/sweep_compressed.csv`**, 75 rows
 (Levy Gorvy 28, MAM 19, Tate Britain 23, Jacquemart-André 5). Through the intake
