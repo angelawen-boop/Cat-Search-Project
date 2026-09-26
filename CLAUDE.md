@@ -672,6 +672,10 @@ written, so `--continue` redoes it. The container is untouched. Design: the
 PACING block in `sweep_prototype.js`; fixtures `pacing.test.js` (P-001 to
 P-010), `pacing_pages.js` (PC-001 to PC-013).
 
+**Pushing a laptop run: `git add scraper/output`** (not just the new folder —
+the start-up tidy may have moved old runs), commit, `git pull --rebase`, push.
+Her 26 Sep push also carried 16 Sep laptop runs never pushed before.
+
 **The two machines never sweep the same venue.** Sweeping from both doubles what
 a venue sees, and both of these rate-limit — which is how a working venue becomes
 a blocked one. Naming venues by hand still overrides it, and says so in the log.
@@ -973,6 +977,16 @@ keeps making in new clothes.
   did not come from found MoMA's site name confirming its preview dates as a
   title. Test a general rule where it was NOT derived.
 
+### Tests that reach the network (26 Sep)
+
+- **A dry run in the container with one venue left unstubbed sent 2 real
+  requests to MAD.** `--home` in the container keeps the network bridge ON for
+  headless workers. Stub EVERY venue a dry run names, or name only stubbed ones.
+- **Requiring `sweep_prototype.js` runs the run-folder tidy.** Any test or probe
+  can move old runs into `archive/`; commit the move, never undo it by hand.
+- **"The headed path is built" was reported while `brit` had no recipe.** A
+  shared path built is not every venue ready — say per venue what exists.
+
 ### Subagents
 
 - **Sending a model everything when the question applies to a few.** Send only
@@ -1155,38 +1169,33 @@ link at an ISBN search — museum shops search by title.)*
 
 Imported by her with item 6's file; she checked every past show in the app.
 
-### 5. The three blocked venues — a route exists, and it needs pacing
+### 5. The headed venues — `moma`, `morgan`, `brit`, `orsay` — built, not yet run live
 
-**Access is answered (§2). Whether it survives a sweep is not.** In order, and
-each step really does block the next:
+**Everything is built and offline-proven (26 Sep):** pacing, the headed path
+(§5), and a recipe for each — `moma`, `morgan`, `orsay` and `brit` (written 26
+Sep from `docs/brit_pages/`; fixtures BM-001 to BM-011). All four sit behind
+Cloudflare, so they share one lane. **None has met the live site headed.**
 
-1. **Three addresses, well spaced, one run** — `brit` and `morgan`. Two
-   questions at once: does a REAL exhibition page open (brit has only ever
-   given listings, morgan a listing and a section page), and **was it speed or
-   something about the browsing session?** All clean means speed. First clean
-   and the rest blocked means the session, which is a different fix.
-2. **A gap between pages and headed support — BUILT 26 Sep, her machine only
-   (§5).** Offline-proven only. **The test is a complete paced headed sweep of
-   one venue, not a probe:** passes only if every page is read and the count
-   matches hers. Before it: seed the profile (`probe_headed.js open`, browse
-   the venue, close Chrome) and check Cloudflare's quiet period has passed.
-3. **A real sweep of `moma` and `morgan`.** Their recipes are written and
-   fixtured, but **every selector in both is untestable without a browser** —
-   the fixtures cover what a recipe SAYS, not what it finds. This is the loop
-   that once passed 148/148 while every venue died.
-4. **`brit`'s recipe — WRITTEN 26 Sep from her saved pages (`docs/brit_pages/`),
-   offline-proven only.** New engine options: `fromToday`, `yearHeading`,
-   `detailDates`, `title.cardName`. Fixtures BM-001 to BM-010.
-5. **`brit` and `morgan` move to her machine**, joining `met`, `artic`, `moma`.
+**The test is a complete paced headed sweep of ONE venue, not a probe** — it
+passes only if every page is read and the count matches hers. Her steps, to be
+repeated to her on the day (she asked):
+1. **Cloudflare's quiet period must have passed** — the run says so and refuses
+   otherwise. Refused on 26 Sep (d'Orsay headless, 11:54 Sydney), so not before
+   27 Sep ~11:55 Sydney.
+2. **Seed the profile:** `node scraper/probe_headed.js open`, browse the venue
+   for a minute in that window (it opens MoMA, and lists MoMA, BM and the Morgan —
+   **d'Orsay is not in its list; she types the address**), let any check finish,
+   then CLOSE that Chrome.
+3. `git pull`, then `node scraper/sweep_prototype.js <venue>`, then push.
+4. **First venue: `moma`** — smallest (~25 pages), furthest on 22 Sep. One
+   Cloudflare venue per day if refused.
 
-**Page layout comes from HER, never from a probe — her ruling, 22 Sep.** She
-saves the pages from her own browser; `docs/moma_pages/` and
-`docs/morgan_pages/` hold them and what each settled. The probe answers access
-and nothing else.
+**Sizes at 30s a page:** moma ~25 pages, brit ~40, orsay ~65, morgan unknown.
+A venue moves to her laptop only after a clean complete sweep (§5).
 
-**`artic` from her machine is unchanged and untested against any of this.**
+**Page layout comes from HER, never from a probe — her ruling, 22 Sep.**
 
-### 6. More venues — five built 25 Sep; four imported and checked by her; d'Orsay and MAD being tested on her laptop
+### 6. More venues — five built 25 Sep; four imported and checked by her; MAD and d'Orsay in progress
 
 Her additions, 24–25 Sep. **Her order on the chips:** Levy Gorvy straight
 after Acquavella; the French venues Louvre, d'Orsay, MAM Paris, MAD Paris,
@@ -1198,8 +1207,8 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 | `lgd` Levy Gorvy | **imported and checked by her**, lookup works | `run_2026-09-25_160850` | — |
 | `jacquemart` | **imported and checked by her**, lookup works | `run_2026-09-25_133825` | — |
 | `mam` MAM Paris | **imported and checked by her**; shop blocked, card says so | `run_2026-09-25_160850` (before her Prix Duchamp / Oliver Beer ruling — the next sweep drops them) | Shop's Cloudflare refuses this machine and the connector (403); her browser passes. A third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
-| `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | `run_2026-09-26_115449` — headless from her laptop, refused on page 1 | **headed pile** (her ruling 26 Sep); the container's until a clean laptop sweep (§5) |
-| `mad` MAD Paris | recipe built from her saved pages; 2 + 2 + 16, **her counts** | none — refuses the container (plain 403, not Cloudflare) | the container's until a clean laptop sweep (§5); **not pinned headed** (her ruling) — the first sweep there says whether headless gets in |
+| `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | `run_2026-09-26_115449` — headless from her laptop, refused on page 1 | **headed pile** (her ruling 26 Sep) — §7.5; the container's until a clean laptop sweep |
+| `mad` MAD Paris | **headless from her laptop gets in.** 26 Sep 11:37: 23 pages clean, 20 rows = her count; junk found and fixed at source (visit teasers; the ticket-and-address sidebar — MD-008/009, four saved pages) | `run_2026-09-26_113719` (before the fixes); 16:12 re-sweep refused after 5 clean pages, nothing written | **Likely a daily page limit (~25–30 from one address) — inferred from two runs.** One MAD sweep a day at most. **Next: one run after 27 Sep ~16:15 Sydney**; if clean and complete it moves to her laptop and its rows go to her import. Still the container's until then |
 
 **THE IMPORT — SENT 25 Sep: `stitch_20260925_0611/sweep_compressed.csv`**, 75 rows
 (Levy Gorvy 28, MAM 19, Tate Britain 23, Jacquemart-André 5). Through the intake
