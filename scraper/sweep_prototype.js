@@ -499,7 +499,9 @@ function followPagination(queue, pg, newRows, rows, code, v) {
   const basePath = pg.basePath || pg.path;
   const sep = basePath.includes('?') ? '&' : '?';
   queue.push({
-    path: `${basePath}${sep}${spec.param}=${next}`,
+    // `prefix` for a site whose page value is not a bare number — MAM Paris's
+    // Drupal pager reads page=0,0,0,0,0,1 for its second page.
+    path: `${basePath}${sep}${spec.param}=${spec.prefix || ''}${next}`,
     ctx: `${pg.ctx.replace(/ p\d+$/, '')} p${next}`,
     basePath,
     paginate: spec,
@@ -516,10 +518,30 @@ function followPagination(queue, pg, newRows, rows, code, v) {
   });
 }
 
+/**
+ * A listing that takes a DATE RANGE in its address — Tate's What's On, her
+ * finding 25 Sep: its calendar's "from … until …" is just two query
+ * parameters, `date_a` and `date_b`. From the lookback floor to TODAY covers
+ * every show that closed after the floor, and everything on now.
+ *
+ * Both dates are DERIVED at run time, for expandYearArchive's reason: a date
+ * typed into a recipe is right the day it is typed and silently wrong after,
+ * the sweep reporting no error while missing every show since.
+ *
+ * `rangeFrom` / `rangeTo` name the venue's two parameters.
+ */
+function ymdUTC(d) { return d.toISOString().slice(0, 10); }
+function expandDateRange(entry, floor = LOOKBACK, today = new Date()) {
+  const join = entry.path.includes('?') ? '&' : '?';
+  return [{ path: `${entry.path}${join}${entry.rangeFrom}=${ymdUTC(floor)}&${entry.rangeTo}=${ymdUTC(today)}`,
+            ctx: entry.ctx, ...(entry.carry || {}) }];
+}
+
 /** A venue's pages, with any year-filtered archive expanded to real years. */
 function listingPages(v) {
   const floor = v.lookbackFrom ? new Date(v.lookbackFrom) : LOOKBACK;
-  return v.pages.flatMap(pg => pg.yearArchive ? expandYearArchive(pg, floor) : [pg]);
+  return v.pages.flatMap(pg => pg.yearArchive ? expandYearArchive(pg, floor)
+    : pg.dateRange ? expandDateRange(pg, floor) : [pg]);
 }
 
 // Navigation timing. See safeGoto() for why 'networkidle' is not used.
@@ -684,7 +706,13 @@ const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
   // `gen` and `mag` are added with it rather than waiting to be caught by
   // another venue's review. The rest of the three-letter forms — feb, mar, apr,
   // giu, lug, ago, ott, dic — are already here or already English.
-  set:9, gen:1, mag:5 };
+  set:9, gen:1, mag:5,
+
+  // A VENUE'S OWN MISSPELLING, 25 Sep 2026. Jacquemart-André's past listing
+  // prints "From September 6, 2024 to Feburary 9, 2025"; without this the run
+  // lost its closing date and was stored as one day. Added to the shared map
+  // like every other spelling a venue has taught us.
+  feburary:2 };
 
 /**
  * One month pattern, shared by every date parser.
@@ -716,8 +744,14 @@ const WEEKDAY_PREFIX_SRC =
   '\\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday' +
   '|thurs|thur|tues|weds|mon|tue|wed|thu|fri|sat|sun)\\.?,?\\s+';
 
+// ORDINAL DAYS — "From May 23rd to September 20th, 2026", "Until December
+// 06th, 2026" — every date on the Musée d'Orsay's cards, 25 Sep 2026. The
+// suffix defeats every pattern, so both parsers drop it first: a day number of
+// one or two digits followed by st/nd/rd/th and nothing else.
+const ORDINAL_SUFFIX = /\b(\d{1,2})(?:st|nd|rd|th)\b/gi;
+
 const MONTH_PATTERN =
-  '(?:January|February|March|April|May|June|July|August|September|October|November|December' +
+  '(?:January|February|Feburary|March|April|May|June|July|August|September|October|November|December' +
   '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre' +
   '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec' +
   // LONGEST FIRST WITHIN EACH LANGUAGE: `sett` must precede `set`, `genn`
@@ -1000,6 +1034,7 @@ function findDateRangeCore(raw, opts = {}) {
     // can never be the only source of anything. Abbreviations included, with
     // the optional full stop and comma that follow them in the wild.
     .replace(WEEKDAY_PREFIX, '')
+    .replace(ORDINAL_SUFFIX, '$1')
     .replace(/\s+/g, ' ').trim();
   const M = MONTH_PATTERN;
 
@@ -1364,7 +1399,7 @@ function findDateRangeInProse(text, hintYear) {
 
 function findDateRangeInProseCore(text, hintYear) {
   if (!text) return { start: '', end: '', raw: '' };
-  const s = String(text).replace(/[–—]/g, '-').replace(/\s+/g, ' ');
+  const s = String(text).replace(/[–—]/g, '-').replace(ORDINAL_SUFFIX, '$1').replace(/\s+/g, ' ');
   const M = MONTH_PATTERN;
   const SEP = '(?:\\s*(?:-|t/m|to|until|through|till)\\s*(?:running\\s+)?)';
 
@@ -1512,6 +1547,19 @@ function lookbackFor(venueCode) {
 }
 
 /**
+ * HER ONE-TIME EXCEPTIONS to the lookback, named by address in a recipe's
+ * `keepDespiteLookback`. Only her ruling puts an address there; the lookback
+ * stands for every row not named.
+ */
+function keptDespiteLookback(row, venueCode) {
+  const list = (VENUES[venueCode] && VENUES[venueCode].keepDespiteLookback) || [];
+  if (!list.length || !row.url) return false;
+  let p;
+  try { p = new URL(row.url).pathname.replace(/\/+$/, ''); } catch { return false; }
+  return list.some(x => x.replace(/\/+$/, '') === p);
+}
+
+/**
  * Drop exhibitions that had already closed before the lookback floor.
  *
  * The rule: keep an exhibition if it was open at any point on or after
@@ -1563,6 +1611,10 @@ function applyLookback(rows, venueCode, stage) {
       row.notes = addNote(row.notes, 'No opening date published while this exhibition is running.');
     }
     if (afterLookback(row.end_date, floor)) kept.push(row);
+    else if (keptDespiteLookback(row, venueCode)) {
+      if (stage === 'final') row.notes = addNote(row.notes, 'Closed before the 1 July 2024 lookback; kept by your one-time exception.');
+      kept.push(row);
+    }
     else dropped++;
   }
   if (dropped || undated || noStart) {
@@ -1823,6 +1875,20 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
   // letting the rest of the venue fail one page at a time.
   if (STOPPING) throw new ScrapeAborted(url);
 
+  // Her machine: wait for this venue's turn and the gap. See PACING.
+  if (PACER) {
+    const gate = await PACER.before(venue, url);
+    if (gate) {
+      // Once per venue: every remaining page would otherwise repeat it.
+      const pv = PACER.venue(venue);
+      if (pv && !pv.stopLogged) {
+        pv.stopLogged = true;
+        log(`  not requesting anything more from this venue (${gate}) — first skipped: ${url}`);
+      }
+      return { ok: false, reason: gate };
+    }
+  }
+
   try {
     // Deliberately NOT 'networkidle'. That waits for the page to make no
     // requests for 500ms, and these sites never fall silent — analytics,
@@ -1832,6 +1898,17 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
     // content, and ignore whatever background noise continues after that.
     const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT });
     const status = resp ? resp.status() : null;
+
+    // Her machine: who answered, and did it object? An objection stops the
+    // whole lane, so it is returned here before anything reads the page.
+    if (PACER) {
+      const title = await page.title().catch(() => '');
+      const objection = await PACER.after(venue, url, status, resp ? resp.headers() : {}, title);
+      if (objection) {
+        log(`  BLOCKED (${objection}): ${url}`);
+        return { ok: false, reason: objection };
+      }
+    }
 
     if (status && (status === 403 || status === 418 || status === 429)) {
       log(`  BLOCKED (HTTP ${status}): ${url}`);
@@ -1859,6 +1936,7 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
 
     return { ok: true, status };
   } catch (e) {
+    if (PACER) PACER.failed(venue);
     // A navigation left over from the previous page can land on top of this
     // one. It is transient: settle, then try this URL once more.
     if (attempt === 0 && /interrupted by another navigation|ERR_ABORTED/.test(e.message)) {
@@ -1962,6 +2040,11 @@ const FAILURE_PROSE = {
   LOAD_ERROR:         'the page could not be loaded, cause unknown',
 };
 
+// Only ever written on her machine — see PACING below. Worded to fit inside
+// "could not be read: <this>. Marker row", which venue_status.js reads whole.
+FAILURE_PROSE.BLOCKED_CHALLENGE = 'the venue’s site answered with a bot check instead of the page';
+FAILURE_PROSE.LANE_STOPPED = 'not asked for, because the gatekeeper in front of this site had just refused us and the run stopped asking';
+
 function failureProse(reason) {
   const blocked = /^BLOCKED_HTTP_(\d+)$/.exec(reason);
   if (blocked) return `the venue’s site refused us (HTTP ${blocked[1]})`;
@@ -1969,6 +2052,327 @@ function failureProse(reason) {
   if (http) return `the venue’s server answered HTTP ${http[1]}`;
   return FAILURE_PROSE[reason] || 'the page could not be loaded, cause unknown';
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PACING — her machine only. Her approval, 26 Sep 2026.
+ *
+ * THE LIMIT BELONGS TO THE GATEKEEPER, NOT THE VENUE. Cloudflare stands in
+ * front of artic, moma, brit, morgan and orsay. Requests to several of them
+ * from one address add up, in Cloudflare's eyes, to one burst — on 22 Sep a
+ * challenge at one museum followed us to the next. So pages are paced per
+ * GATEKEEPER ("lane"), and different lanes run side by side.
+ *
+ *   - Which lane a venue is in is READ OFF THE REPLY (gatekeeperFrom), never
+ *     typed in. What was read is kept in the run's pacing.json, so the next
+ *     run knows before it sends anything.
+ *   - One venue at a time per lane, one page at a time, a gap between pages
+ *     varied around --pace=<seconds> (default 30).
+ *   - STOP AT THE FIRST OBJECTION. A refusal or a bot check stops the WHOLE
+ *     lane for the rest of the run: no retry, no moving on to the next site
+ *     behind the same gatekeeper. That is what keeps one museum's judgement
+ *     from spreading to the others.
+ *   - A lane that was refused is not asked again for a day; one that finished
+ *     clean is left an hour's quiet (laneCooldown). --ignore-cooldown overrides.
+ *   - Where it stopped is recorded: refused on page 1 after a quiet day means
+ *     blocked for this kind of browser; refused after 11 clean pages means a
+ *     pace or volume limit. That is the question 22 Sep left open.
+ *
+ * The container is untouched: its venues are not behind these gatekeepers and
+ * a paced 21-venue sweep would take hours for nothing.
+ * ═════════════════════════════════════════════════════════════════════════ */
+
+const PACED = MACHINE === 'home';
+const PACE_ARG = ARGS.find(a => a.startsWith('--pace='));
+const PACE_MS = Math.max(1000, Math.round((parseFloat(PACE_ARG?.split('=')[1] ?? '30') || 30) * 1000));
+const IGNORE_COOLDOWN = ARGS.includes('--ignore-cooldown');
+const COOLDOWN_AFTER_REFUSAL_MS = 24 * 60 * 60 * 1000;
+const QUIET_AFTER_CLEAN_MS = 60 * 60 * 1000;
+
+/**
+ * Who answered: the gatekeeper's own name, or "site:<host>" when nothing in
+ * front of the site identified itself — a lane of its own. Headers only; a
+ * header is the gatekeeper stamping its own reply, not a guess.
+ */
+function gatekeeperFrom(headers, url) {
+  const h = headers || {};
+  const val = k => String(h[k] || '').toLowerCase();
+  if (h['cf-ray'] || h['cf-mitigated'] || /cloudflare/.test(val('server'))) return 'Cloudflare';
+  if (h['x-vercel-id'] || /vercel/.test(val('server'))) return 'Vercel';
+  if (h['akamai-grn'] || h['x-akamai-transformed'] || /akamai/.test(val('server'))) return 'Akamai';
+  if (h['x-iinfo'] || /incapsula|imperva/.test(val('x-cdn'))) return 'Imperva';
+  if (h['x-datadome'] || h['x-datadome-cid']) return 'DataDome';
+  let host = '';
+  try { host = new URL(url).host.toLowerCase(); } catch { host = String(url); }
+  return `site:${host}`;
+}
+
+// The titles bot checks put on their own pages. A check can arrive with a 200,
+// so the status alone would read it as a page.
+const CHALLENGE_TITLE = /^\s*(just a moment|attention required|performing security verification|access denied|pardon our interruption|one more step)/i;
+
+/** An objection is a refusal or a bot check. Null when the page was served. */
+function objectionFrom(status, headers, title) {
+  if (headers && headers['cf-mitigated']) return 'BLOCKED_CHALLENGE';
+  if (status === 403 || status === 418 || status === 429) return `BLOCKED_HTTP_${status}`;
+  if (CHALLENGE_TITLE.test(String(title || ''))) return 'BLOCKED_CHALLENGE';
+  return null;
+}
+
+/**
+ * Whether a lane may be asked at all, from what earlier runs recorded.
+ * `history` is a list of pacing.json contents. Pure: `now` is passed in.
+ */
+function laneCooldown(history, lane, now = Date.now()) {
+  let lastStop = null, lastAt = 0;
+  for (const h of history || []) {
+    const l = h && h.lanes && h.lanes[lane];
+    if (!l) continue;
+    if (l.stopped && (!lastStop || Date.parse(l.stopped.at) > Date.parse(lastStop.at))) lastStop = l.stopped;
+    const t = Date.parse(l.lastAt || '') || 0;
+    if (t > lastAt) lastAt = t;
+  }
+  if (lastStop) {
+    const until = Date.parse(lastStop.at) + COOLDOWN_AFTER_REFUSAL_MS;
+    if (now < until) return { wait: true, until, why: `refused us at ${lastStop.venue} (${lastStop.reason}) on ${sydneyTime(Date.parse(lastStop.at))}` };
+  }
+  if (lastAt) {
+    const until = lastAt + QUIET_AFTER_CLEAN_MS;
+    if (now < until) return { wait: true, until, why: `was last asked at ${sydneyTime(lastAt)}` };
+  }
+  return { wait: false };
+}
+
+/** The latest gatekeeper each venue was seen behind, across earlier runs. */
+function knownGatekeepers(history) {
+  const out = {}, when = {};
+  for (const h of history || []) {
+    const t = Date.parse(h && h.savedAt || '') || 0;
+    for (const [code, gk] of Object.entries((h && h.gatekeepers) || {})) {
+      if (!(code in when) || t >= when[code]) { out[code] = gk; when[code] = t; }
+    }
+  }
+  return out;
+}
+
+/**
+ * The pacer. A factory so the fixtures can drive one with a gap of
+ * milliseconds; the sweep makes exactly one.
+ *
+ *   before(code, url)  wait for this venue's turn in its lane and for the gap.
+ *                      Returns 'LANE_STOPPED' if the lane has been stopped.
+ *   after(code, url, status, headers, title)
+ *                      reads who answered and whether it objected. Returns the
+ *                      objection, or null. An objection stops the lane.
+ *   failed(code)       a request that got no reply at all (timeout, reset).
+ *   release(code)      the venue is finished; the next in its lane may start.
+ */
+function makePacer({ gapMs, known = {}, logFn = () => {}, isStopping = () => false,
+                     random = Math.random, sleepChunkMs = 1000, onChange = () => {} }) {
+  const lanes = new Map();      // name -> { holder, queue:[resolve], lastAt, firstAt, clean, venues:Set, stopped }
+  const venues = new Map();     // code -> { lane, clean, objection, sawStop, waitedMs, waitingSince, requests }
+  const discovered = {};        // code -> gatekeeper, as read THIS run
+  let lastAny = 0;              // the latest request on ANY lane
+  // While a venue with an unknown gatekeeper sends its first page, every lane
+  // pauses: that page might belong to any of them.
+  let discovery = null;
+
+  const laneOf = name => {
+    if (!lanes.has(name)) lanes.set(name, { holder: null, queue: [], lastAt: 0, firstAt: 0, clean: 0, venues: new Set(), stopped: null });
+    return lanes.get(name);
+  };
+  const venueOf = code => {
+    if (!venues.has(code)) venues.set(code, { lane: known[code] || null, clean: 0, objection: null, sawStop: false, waitedMs: 0, waitingSince: 0, requests: 0 });
+    return venues.get(code);
+  };
+
+  async function waitUntil(v, t) {
+    if (Date.now() >= t) return;
+    v.waitingSince = Date.now();
+    try {
+      while (Date.now() < t) {
+        if (isStopping()) throw new ScrapeAborted('(paced wait)');
+        await new Promise(r => setTimeout(r, Math.min(sleepChunkMs, t - Date.now())));
+      }
+    } finally {
+      v.waitedMs += Date.now() - v.waitingSince;
+      v.waitingSince = 0;
+    }
+  }
+  async function holdLane(v, code, name) {
+    const l = laneOf(name);
+    l.venues.add(code);
+    if (l.holder === code) return;
+    if (l.holder) {
+      logFn(`  waiting for the ${name} lane (${l.holder} is using it)`);
+      v.waitingSince = Date.now();
+      await new Promise(r => l.queue.push(r));
+      v.waitedMs += Date.now() - v.waitingSince;
+      v.waitingSince = 0;
+    }
+    l.holder = code;
+  }
+  const jitter = () => Math.round(gapMs * (0.75 + random() * 0.5));
+
+  async function before(code, url) {
+    const v = venueOf(code);
+    if (!v.lane) {
+      // Gatekeeper not known yet: this first request could belong to ANY lane,
+      // so it is spaced from every lane's last request, and discoveries go one
+      // at a time. And if any lane has already stopped this run, a venue that
+      // might stand behind the same gatekeeper is not risked at all.
+      const anyStopped = () => [...lanes.values()].some(l => l.stopped);
+      if (anyStopped()) { v.sawStop = true; return 'LANE_STOPPED'; }
+      while (discovery) await discovery.promise;
+      let resolve;
+      discovery = { promise: new Promise(r => { resolve = r; }) };
+      const done = () => { discovery = null; resolve(); };
+      try {
+        // Lanes are paused now, so lastAny cannot move while this waits.
+        await waitUntil(v, lastAny + jitter());
+        if (anyStopped()) { v.sawStop = true; done(); return 'LANE_STOPPED'; }
+        lastAny = Date.now();
+        v.requests++;
+        v.pendingDiscovery = done;   // released in after(), failed() or release()
+        logFn(`  paced: request ${v.requests}, gatekeeper not yet known — every lane paused for it`);
+        return null;
+      } catch (e) { done(); throw e; }
+    }
+    await holdLane(v, code, v.lane);
+    const l = laneOf(v.lane);
+    if (l.stopped) { v.sawStop = true; return 'LANE_STOPPED'; }
+    const gap = jitter();
+    const waitFor = Math.max(0, l.lastAt + gap - Date.now());
+    // Re-checked after every wait: a discovery may have started meanwhile, and
+    // this lane must not fire beside it.
+    for (;;) {
+      while (discovery) await discovery.promise;
+      await waitUntil(v, l.lastAt + gap);
+      if (!discovery) break;
+    }
+    if (l.stopped) { v.sawStop = true; return 'LANE_STOPPED'; }
+    l.lastAt = lastAny = Date.now();
+    if (!l.firstAt) l.firstAt = l.lastAt;
+    v.requests++;
+    logFn(`  paced: request ${v.requests} via ${v.lane}${waitFor ? `, after ${Math.round(waitFor / 1000)}s` : ''}`);
+    return null;
+  }
+
+  function finishDiscovery(v) {
+    if (v.pendingDiscovery) { const d = v.pendingDiscovery; v.pendingDiscovery = null; d(); }
+  }
+
+  async function after(code, url, status, headers, title) {
+    const v = venueOf(code);
+    const gk = gatekeeperFrom(headers, url);
+    if (!v.lane) {
+      v.lane = gk;
+      const l = laneOf(gk);
+      l.lastAt = lastAny;
+      if (!l.firstAt) l.firstAt = lastAny;
+      logFn(`  gatekeeper: ${gk} — read off its reply; this venue is paced in that lane`);
+      finishDiscovery(v);
+      await holdLane(v, code, gk);
+    } else if (gk !== v.lane) {
+      logFn(`  gatekeeper: ${gk} answered, where earlier runs saw ${v.lane}. Recorded for next time; this run keeps ${v.lane}.`);
+    }
+    discovered[code] = gk;
+    const l = laneOf(v.lane);
+    const objection = objectionFrom(status, headers, title);
+    if (objection) {
+      v.objection = objection;
+      if (!l.stopped) {
+        l.stopped = {
+          venue: code, url, reason: objection, at: new Date().toISOString(),
+          venuePage: v.requests, venueCleanBefore: v.clean, laneCleanBefore: l.clean,
+          minutesIntoLane: l.firstAt ? Math.round((Date.now() - l.firstAt) / 600) / 100 : 0,
+        };
+        logFn(`  ${v.lane} OBJECTED (${objection}) on request ${v.requests} of ${code}, after ${v.clean} clean page(s) here and ${l.clean} in the lane.`);
+        logFn(`  The ${v.lane} lane is STOPPED for the rest of this run. Nothing more is asked of any site behind it.`);
+      }
+    } else {
+      v.clean++; l.clean++;
+    }
+    onChange();
+    return objection;
+  }
+
+  function failed(code) { finishDiscovery(venueOf(code)); }
+
+  function release(code) {
+    const v = venues.get(code);
+    if (!v) return;
+    finishDiscovery(v);
+    const l = v.lane && lanes.get(v.lane);
+    if (l && l.holder === code) {
+      l.holder = null;
+      const next = l.queue.shift();
+      if (next) next();
+    }
+    onChange();
+  }
+
+  /** Waiting time for the venue budget, including a wait still in progress. */
+  function waited(code) {
+    const v = venues.get(code);
+    if (!v) return 0;
+    return v.waitedMs + (v.waitingSince ? Date.now() - v.waitingSince : 0);
+  }
+
+  function snapshot() {
+    const out = { lanes: {}, gatekeepers: { ...discovered } };
+    for (const [name, l] of lanes) {
+      out.lanes[name] = {
+        venues: [...l.venues], clean: l.clean,
+        firstAt: l.firstAt ? new Date(l.firstAt).toISOString() : null,
+        lastAt: l.lastAt ? new Date(l.lastAt).toISOString() : null,
+        stopped: l.stopped,
+      };
+    }
+    return out;
+  }
+
+  return { before, after, failed, release, waited, snapshot, venue: code => venues.get(code), laneOf };
+}
+
+/**
+ * Why a paced venue must NOT be written to disk, or null when it may be.
+ * Written: an ordinary finish, or the plain refusal record (its own first
+ * request was the objection). Withheld: refused part-way, or never got to ask.
+ */
+function pacedWithheld(pv) {
+  if (!pv) return null;
+  if (pv.objection) return pv.clean > 0 ? `refused (${pv.objection}) after ${pv.clean} clean page(s)` : null;
+  if (pv.sawStop) return 'its gatekeeper had already refused us this run, so nothing more was asked';
+  return null;
+}
+
+// Her clock, for the lines she reads: "not asked again before …".
+function sydneyTime(ms) {
+  return new Intl.DateTimeFormat('en-AU', {
+    timeZone: RUN_TZ, weekday: 'short', day: 'numeric', month: 'short',
+    hour: 'numeric', minute: '2-digit', hour12: true,
+  }).format(new Date(ms)) + ' Sydney';
+}
+
+const PACING_FILE = 'pacing.json';
+
+/** Every pacing.json on disk, live runs and archived ones. */
+function readPacingHistory() {
+  const out = [];
+  for (const dir of [OUT_DIR, path.join(OUT_DIR, 'archive')]) {
+    let names = [];
+    try { names = fs.readdirSync(dir).filter(n => /^run_/.test(n)); } catch { continue; }
+    for (const n of names) {
+      try { out.push(JSON.parse(fs.readFileSync(path.join(dir, n, PACING_FILE), 'utf8'))); } catch { /* none */ }
+    }
+  }
+  return out;
+}
+
+// The one pacer this run uses, made in main(). Null on the container.
+let PACER = null;
+// Fixtures only: drive the real scrapeVenue/safeGoto with a pacer of their own.
+function usePacerForFixtures(p) { PACER = p; }
 
 // Extract visible text from an element, trimmed
 async function getText(el) {
@@ -2092,6 +2496,24 @@ const BOILERPLATE = [
   'members go free',
   'free for members',
   'tickets bookable',
+  // Tate Britain, 25 Sep 2026: a members' banner opening two summaries —
+  // "Members enjoy free entry – no need to book, just turn up with your card" —
+  // and a joint-ticket note opening two more: "Tickets for Edward Burra include
+  // entry to the Ithell Colquhoun exhibition".
+  'members enjoy free entry',
+  'no need to book',
+  'include entry to the',
+
+  // A PHOTO CREDIT IN THE BODY TEXT, Lévy Gorvy Dayan, 25 Sep 2026: the last
+  // paragraph of a description reads "(1-3) Installation views of Thievery by
+  // Servants, Lévy Gorvy Dayan, New York, 2026. Courtesy the artist and Hauser
+  // & Wirth." — no caption class to key on, so the wording is the test, like ©.
+  'installation view',
+  'courtesy the artist',
+  // MAM Paris, 25 Sep: its own paragraph under an image — "Otobong Nkanga,
+  // Social Consequences V: The Harvest 2022, Wim Waumans Collection, Courtesy
+  // of the artist".
+  'courtesy of the artist',
 
   // FUNDING ACKNOWLEDGEMENTS, found 12 Sep 2026 while checking that the caption
   // fix had not cost anything. It had not — but clearing the credit line freed
@@ -2193,9 +2615,9 @@ const CURATORIAL_SELECTORS = [
   'p',
 ];
 
-async function getCuratorialText(page, descSelector, noiseExtra) {
+async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt) {
   try {
-    return await page.evaluate(({ alwaysRe, noiseRe, boilerplate, selectors, MIN_WRAPPER_PARAS }) => {
+    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS }) => {
       const ALWAYS = new RegExp(alwaysRe, 'i');
       const NOISE = new RegExp(noiseRe, 'i');
       const clean = (t) => String(t || '').replace(/\s+/g, ' ').trim();
@@ -2305,7 +2727,10 @@ async function getCuratorialText(page, descSelector, noiseExtra) {
       const insideNoise = (el) => {
         for (let n = el; n && n.tagName !== 'BODY' && n.tagName !== 'HTML'; n = n.parentElement) {
           const cls = typeof n.className === 'string' ? n.className : '';
-          const sig = cls + ' ' + (n.id || '');
+          // A class a recipe names as NOT noise is removed before the test —
+          // d'Orsay's main article is `node--promoted`, which "promo" matched,
+          // so the museum's own description was thrown away as a promotion.
+          const sig = (cls + ' ' + (n.id || '')).replace(exemptRe ? new RegExp(exemptRe, 'gi') : /$^/, ' ');
           // A consent manager, named as itself. Never a layout class, so the
           // size of the thing is irrelevant — see ALWAYS_NOISE.
           if (ALWAYS.test(sig)) return true;
@@ -2339,6 +2764,7 @@ async function getCuratorialText(page, descSelector, noiseExtra) {
       return '';
     }, { alwaysRe: ALWAYS_NOISE,
          noiseRe: noiseExtra ? `${NOISE_CONTAINER}|${noiseExtra}` : NOISE_CONTAINER,
+         exemptRe: noiseExempt || null,
          boilerplate: BOILERPLATE,
          selectors: descSelector ? [descSelector, ...CURATORIAL_SELECTORS] : CURATORIAL_SELECTORS,
          MIN_WRAPPER_PARAS });
@@ -2658,7 +3084,12 @@ async function readCardPieces(link, rule) {
   return link.evaluate((a, sel) => {
     const sq = s => String(s || '').replace(/\s+/g, ' ').trim();
     const one = q => { const el = a.querySelector(q); return el ? sq(el.textContent) : ''; };
-    return { name: one(sel.name), subtitle: one(sel.subtitle), place: one(sel.place) };
+    // `nameOwnText`: the name element also holds the subtitle as a child
+    // (MAM Paris: <h2>Simone Fattal <span class="small">Cities…</span></h2>),
+    // so read only the element's own words and let `subtitle` take the rest.
+    const own = q => { const el = a.querySelector(q);
+      return el ? sq([...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join(' ')) : ''; };
+    return { name: sel.nameOwnText ? own(sel.name) : one(sel.name), subtitle: one(sel.subtitle), place: one(sel.place) };
   }, rule.cardParts).catch(() => ({ name: '', subtitle: '', place: '' }));
 }
 const isPlace = (text, locations) => (locations || []).find(l => l.toLowerCase() === String(text).trim().toLowerCase());
@@ -2952,6 +3383,28 @@ async function extractTitleAsShown(link, venueCode) {
     return pickTitleLine(await getText(link).catch(() => ''), rule);
   }
 
+  // NAME, LINE BREAK, SUBTITLE, all inside the link — d'Orsay's
+  // "Auguste Bartholdi<br>Liberty Enlightening the World". Joined exactly as
+  // cardPartsTitle joins a name and a subtitle, so the two read the same.
+  // Older cards on its archive separate the two with a BLANK LINE in the
+  // source instead ("Henri Rivière\n\nThe man behind the camera"), which the
+  // rendered text collapses to a space — so the source text is read, split at
+  // a <br> or a blank line, never at a single wrapped line.
+  if (rule.brParts) {
+    const raw = await link.evaluate(a => {
+      const c = a.cloneNode(true);
+      c.querySelectorAll('br').forEach(br => br.replaceWith('\u2029'));
+      return c.textContent;
+    }).catch(() => '');
+    const lines = String(raw).split(/\u2029|\n[ \t\u00a0]*\n/).map(squash).filter(Boolean);
+    if (!lines.length) return '';
+    const [name, ...rest] = lines;
+    const subtitle = rest.join(' ');
+    if (!subtitle) return name;
+    if (/[:.!?]\s*$/.test(name)) return `${name} ${subtitle}`;
+    return name.includes(':') ? `${name} – ${subtitle}` : `${name}: ${subtitle}`;
+  }
+
   let t = squash(await getText(link));
   if (rule.stripLeading)  t = t.replace(rule.stripLeading, '');
   if (rule.stripTrailing) t = t.replace(rule.stripTrailing, '');
@@ -3082,6 +3535,15 @@ function slugToWords(url) {
  * linked both as "exhibitions/matisse2" and "/exhibitions/matisse2", and
  * trailing slashes vary. Compare the finished address instead.
  */
+/** Drop the named query parameters from an address; anything else stays. */
+function withoutQuery(u, names) {
+  try {
+    const x = new URL(u);
+    for (const n of names) x.searchParams.delete(n);
+    return x.toString();
+  } catch { return u; }
+}
+
 function normalizeUrl(u) {
   try {
     const x = new URL(String(u).trim());
@@ -3241,7 +3703,7 @@ async function collectFromListing(page, opts) {
   // it cannot swallow an exhibition.
 
   // (LANG_PREFIX and isOwnListingPage are defined at module scope, below.)
-  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, branch: 0, labelled: 0, kept: 0 };
+  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, branch: 0, labelled: 0, otherKind: 0, kept: 0 };
   // The rows this page contributed, so unreadable titles can be counted once
   // the page is finished rather than as each link is read.
   const fromThisPage = [];
@@ -3267,7 +3729,12 @@ async function collectFromListing(page, opts) {
       }
       continue;
     }
-    const fullUrl = resolved.url;
+    // A QUERY PART THE VENUE ADDS BY LISTING, NOT BY EXHIBITION. MAM Paris
+    // links its archive cards as /exhibitions-lee-miller?archive=1 and its
+    // current cards without it, so one show would change address the day it
+    // closes — a Change card on her pile, and two rows if both are seen. A
+    // recipe names the parts to drop; the page served is the same.
+    const fullUrl = opts.dropQuery ? withoutQuery(resolved.url, opts.dropQuery) : resolved.url;
 
     if (isNav(href, fullUrl) || isOwnListingPage(fullUrl, opts.listingPaths)) { c.nav++; continue; }
 
@@ -3299,7 +3766,23 @@ async function collectFromListing(page, opts) {
       title = '';
     }
 
-    const dates = await datesNearLink(link, selector);
+    // A RECIPE MAY NAME WHERE ITS DATES SIT in the card around the link —
+    // d'Orsay's .surtitle — for a card too long for the walk below: its
+    // accessibility list ("Reduced mobility…", each twice) runs far past
+    // CARD_MAX_CHARS, so the walk refused the card and every current show
+    // came out undated. The named element is read alone; nothing else in
+    // the card can reach the parser.
+    let dates = null;
+    if (opts.datesAt) {
+      const dt = await link.evaluate((a, { within, sel }) => {
+        const card = within ? a.closest(within) : a;
+        const el = card && card.querySelector(sel);
+        return el ? el.innerText : '';
+      }, opts.datesAt).catch(() => '');
+      const d = dt ? findDateRange(dt) : null;
+      if (d && (d.start || d.end || d.latestYear)) dates = { ...d, ongoing: saysOngoing(dt) };
+    }
+    if (!dates) dates = await datesNearLink(link, selector);
 
     // A permanent display, said so by the venue itself. She tracks temporary
     // exhibitions and their catalogues; a gallery reinstallation that has been
@@ -3324,11 +3807,48 @@ async function collectFromListing(page, opts) {
     // site says so, so this is rung 1 of the ladder rather than our judgement.
     // Named in the log and counted in the coverage table, so an exclusion is
     // something you can read and check rather than a silent disappearance.
-    if (opts.otherBranch && opts.otherBranch.test(dates.raw || '')) {
+    //
+    // THE LINK'S OWN TEXT IS READ TOO. `dates.raw` is only the matched date
+    // when the date sits INSIDE the link — Lévy Gorvy Dayan's cards put name,
+    // location and dates all in the anchor — so the location line never
+    // reached this test and its Hong Kong shows passed straight through. The
+    // V&A's dates sit outside the link, which is why it never showed.
+    if (opts.otherBranch && (opts.otherBranch.test(dates.raw || '')
+        || opts.otherBranch.test(await getText(link).catch(() => '')))) {
       c.branch++;
-      log(`    another V&A/branch site, excluded: ${title || slugToWords(fullUrl)}`);
+      log(`    another site of this venue (her ruling), excluded: ${title || slugToWords(fullUrl)}`);
       seenUrls.add(key);
       continue;
+    }
+
+    // THE CARD'S OWN TYPE LABEL, WHERE A LISTING MIXES KINDS. Jacquemart-
+    // André's "current and upcoming" page carries its exhibition beside operas
+    // and a costume ball, each card tagged by the museum ("Exhibition",
+    // "Opera", "Costume ball") in its own element. Kept only when that tag is
+    // the one the recipe names — the venue's word, rung 1 of the ladder. A card
+    // with no tag at all is kept: a missing label is not evidence.
+    //
+    // TWO FORMS. `is`: keep only that tag (Jacquemart-André). `not`: drop only
+    // those tags and keep every other, so a tag nobody has seen yet is KEPT and
+    // named in the log rather than silently lost (d'Orsay, her rule 25 Sep).
+    // `within` names the card around the link, for a site whose link wraps the
+    // title only and carries its tag outside it (d'Orsay's article cards).
+    if (opts.keepOnlyType) {
+      const kt = opts.keepOnlyType;
+      const tag = await link.evaluate((a, { within, label }) => {
+        const card = within ? a.closest(within) : a;
+        const el = card && card.querySelector(label);
+        return el ? el.textContent : null;
+      }, { within: kt.within || null, label: kt.label }).catch(() => null);
+      if (tag != null && kt.not && !kt.not.test(tag) && kt.seen && !kt.seen.test(tag)) {
+        log(`    a tag not seen before, "${String(tag).trim()}" — KEPT: ${title || slugToWords(fullUrl)}`);
+      }
+      if (tag != null && (kt.is ? !kt.is.test(tag) : kt.not.test(tag))) {
+        c.otherKind++;
+        log(`    the venue tags this "${String(tag).trim()}", not an exhibition, excluded: ${title || slugToWords(fullUrl)}`);
+        seenUrls.add(key);
+        continue;
+      }
     }
 
     // A PERMANENT DISPLAY THE VENUE LABELS AS ONE. The Art Institute prints
@@ -3414,7 +3934,7 @@ async function collectFromListing(page, opts) {
   c.noTitle = fromThisPage.filter(r => !r.title).length;
 
   COUNTS.push(c);
-  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''}${c.branch ? `, ${c.branch} at another site of the same venue` : ''}${c.labelled ? `, ${c.labelled} labelled permanent by the venue` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
+  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''}${c.branch ? `, ${c.branch} at another site of the same venue` : ''}${c.labelled ? `, ${c.labelled} labelled permanent by the venue` : ''}${c.otherKind ? `, ${c.otherKind} tagged by the venue as another kind of event` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
   return c;
 }
 
@@ -3616,6 +4136,37 @@ const VENUES = {
     locations: ['New York', 'Palm Beach'],
   },
 
+  // LÉVY GORVY DAYAN — her addition, 25 Sep. A gallery in New York and London;
+  // one page carries current and past (back to 2021), and upcoming shows are
+  // not announced. Every card is three lines inside the link — name, location,
+  // dates — so the title is the first line (linkLines).
+  lgd: {
+    name: 'Lévy Gorvy Dayan, New York and London',
+    base: 'https://www.levygorvydayan.com',
+    pages: [
+      { path: '/exhibitions', ctx: 'current and past' },
+    ],
+    selector: 'a[href*="/exhibitions/"]',
+    isNav: href => /\/exhibitions\/?$/.test(href),
+    title: { heading: false, linkLines: true },
+    // THE HONG KONG PARTNERSHIP SHOWS ARE NOT HERS — her ruling, 25 Sep. The
+    // card's own location line says "Lévy Gorvy Dayan & Wei, Hong Kong".
+    otherBranch: /Hong Kong/i,
+    // A ONE-TIME EXCEPTION, HERS, 25 Sep: this show closed in May 2024, before
+    // the lookback, but its catalogue has only just been published. This one
+    // address only — the lookback stands for every other row.
+    keepDespiteLookback: ['/exhibitions/yves-klein-and-the-tangible-world'],
+    // THE GALLERY'S AUCTIONS ARE NOT EXHIBITIONS — her ruling, 25 Sep. "LGD
+    // Hammer" is its sale series (hence the hammer), listed among the shows:
+    // "LGD Hammer: Willem de Kooning, Milkmaid (Untitled X) (1984)".
+    excludeTitle: /^LGD\s+Hammer\b/i,
+    // THE GALLERY'S OWN TEXT ONLY. Its pages end with a press list — links to
+    // articles, one reading "Frieze Dish, The Lalanne Bounce, A $17.5M Hockney
+    // & An $8.5M Gorky" — built from the same text class inside <li>s, and the
+    // shared ladder took it as description. The description is the div.
+    description: 'div.text-style-description p',
+  },
+
   borghese: {
     name: 'Galleria Borghese, Rome',
     base: 'https://galleriaborghese.cultura.gov.it',
@@ -3699,6 +4250,9 @@ const VENUES = {
 
   morgan: {
     name: 'Morgan Library & Museum, New York',
+    // Headless has never got in; a visible Chrome with her history did, 22 Sep.
+    // Her ruling, 26 Sep: not attempted headless from her machine.
+    headed: true,
     base: 'https://www.themorgan.org',
 
     // THREE DIFFERENT PAGES, NOT ONE LAYOUT REPEATED — read from the listings
@@ -4110,6 +4664,146 @@ const VENUES = {
     description: 'div.wp-block-columns h4.wp-block-heading, div.wp-block-columns p.wp-block-paragraph',
   },
 
+  // MUSÉE D'ORSAY — her addition, 25 Sep. REFUSES THE CONTAINER (Cloudflare
+  // 403 on the first page), so it is her machine's, with a browser that has a
+  // history — the same route as MoMA. The recipe was written from pages she
+  // saved (docs/orsay_pages/) and is tested on them, not live.
+  //
+  // Two listings: what's on (current, "Focus on our collections", upcoming,
+  // "Outside the walls" — one page), and the past archive, paginated with the
+  // site's own ?page=1 for its second page. Every card is an
+  // article.node--type-exhibition-event whose LINK WRAPS ONLY THE TITLE; the
+  // tag (.surtitle2) and the dates (.surtitle) sit beside it in the card.
+  //
+  // HER RULINGS, 25 Sep: displays ALWAYS kept, "Focus on our collections"
+  // included — the collection is deep, like the Met's; every off-site show
+  // kept — collaborations and loans abroad whose catalogues she may want;
+  // "Exceptional presentation" kept for now. Dropped: Parcours (a route
+  // through the collection), Immersive experience, Invitation.
+  orsay: {
+    name: "Musée d'Orsay, Paris",
+    base: 'https://www.musee-orsay.fr',
+    // The CONTAINER's until a complete, clean sweep from her laptop confirms
+    // it — her rule, 26 Sep; the container's refusals are its marker rows.
+    // Tested on her laptop by naming it. HEADED — her ruling, 26 Sep: her
+    // first laptop sweep, headless, was refused on its first page (Cloudflare
+    // 403 after days of quiet), so it joins the headed pile.
+    headed: true,
+    pages: [
+      { path: '/en/program/whats-on/exhibitions', ctx: 'current/upcoming' },
+      { path: '/en/ressources/expositions-passees', ctx: 'past', paginate: { param: 'page', from: 1 } },
+    ],
+    selector: 'article.node--type-exhibition-event h3.title a',
+    isNav: href => /\/en\/program\/whats-on\/exhibitions\/?$/.test(href),
+    title: { heading: false, brParts: true },
+    datesAt: { within: 'article', sel: '.surtitle' },
+    // Its main article is class node--promoted, which the shared "promo" noise
+    // rule took for a promotion — the description came back empty.
+    noiseExempt: 'node--promoted',
+    // The lead paragraph (.chapo) and the body under it.
+    description: '.chapo .field, .field--name-field-summary-event p',
+    keepOnlyType: {
+      within: 'article', label: '.surtitle2',
+      not: /^\s*(Parcours|Immersive experience|Exp[ée]rience immersive|Invitation)\s*$/i,
+      // Every tag seen on her saved pages; anything else is kept AND named.
+      seen: /^\s*(Exhibition at the museum|Contemporary exhibition|Exceptional presentation|Display|Exhibitions off-site|Parcours|Immersive experience|Invitation)\s*$/i,
+    },
+  },
+
+  // MUSÉE D'ART MODERNE DE PARIS — her addition, 25 Sep. Three listings:
+  // on view, upcoming, and an archive ten to a page, newest first. The
+  // archive is Drupal's multi-pager, page=0,0,0,0,0,N, so pagination carries
+  // a prefix. Its default tab, type_expo=Local, is the museum's own shows.
+  // Archive links add ?archive=1; dropped so a show keeps one address.
+  mam: {
+    name: "Musée d'Art Moderne de Paris",
+    base: 'https://www.mam.paris.fr',
+    pages: [
+      { path: '/en/exhibitions', ctx: 'current' },
+      { path: '/en/upcoming',    ctx: 'upcoming' },
+      { path: '/en/archives?type_expo=Local&language=en', ctx: 'past',
+        paginate: { param: 'page', from: 1, prefix: '0%2C0%2C0%2C0%2C0%2C' } },
+    ],
+    selector: 'a[href*="/en/expositions/"]',
+    isNav: href => /\/en\/expositions\/?$/.test(href),
+    dropQuery: ['archive'],
+    // Name and subtitle: in the same <h2> on the current and upcoming pages,
+    // the subtitle as the <p> after it in the archive.
+    title: { heading: false, cardParts: { name: 'h2.post-summary-title', nameOwnText: true,
+      // The date line is ALSO a <p> after the <h2> on the current and upcoming
+      // cards — the Prix Marcel Duchamp came out "…: From the 2 October 2026".
+      subtitle: 'h2.post-summary-title .small, h2.post-summary-title + p:not(.post-summary-date)' } },
+    // Her rulings, 25 Sep: collection displays are not exhibitions here. The
+    // museum marks them with the subtitle "Permanent collection" (Cultural
+    // Olympiad, 2024); "New acquisitions by the Photography Committee" is the
+    // other kind she named. Also not wanted: the Prix Marcel Duchamp show, and
+    // Oliver Beer's "Reanimation Paintings" — films, each run its own page.
+    // docs/mam_pages/, fixture MM-*.
+    excludeTitle: /(?:^|:\s*)Permanent collections?\s*$|^New acquisitions\b|^Prix Marcel Duchamp\b|^Oliver Beer\b/i,
+  },
+
+  // MUSÉE DES ARTS DÉCORATIFS (MAD Paris) — her addition, 25 Sep. Refused
+  // this container on the first request: a plain 403, not a Cloudflare check.
+  // Written from the pages she saved (docs/mad_pages/), fixture MD-*; swept
+  // from her laptop. Whether a headless browser there gets in is not known,
+  // and she ruled it is not pinned either way (25 Sep): the first sweep there
+  // answers it.
+  //
+  // A SPIP site. Three listings, English by their own "-en" page names, the
+  // past one a single page going back to 2015. A show's own address is a bare
+  // /<Slug>, the same shape as every menu link, so only the listing's own
+  // cards are read. Each card: .titre, .dates, a one-line .descriptif.
+  // Her rulings: nothing excluded; Musée Nissim de Camondo is closed until
+  // 2030 and none of its shows are in these listings.
+  mad: {
+    name: 'Musée des Arts Décoratifs, Paris',
+    base: 'https://madparis.fr',
+    // The CONTAINER's until a complete, clean sweep from her laptop confirms
+    // it — her rule, 26 Sep. Tested on her laptop by naming it.
+    pages: [
+      { path: '/?page=expo-actu-en',     ctx: 'current' },
+      { path: '/?page=expo-avenir-en',   ctx: 'upcoming' },
+      { path: '/?page=expo-archives-en', ctx: 'past' },
+    ],
+    selector: 'ul.liste_enfants li.item a',
+    // The listings themselves, should a card ever point back at one.
+    isNav: href => /[?&]page=expo-|\/(Current|Upcoming|Past)-exhibitions-\d+\/?$/i.test(href),
+    title: { heading: false, cardParts: { name: '.titre' } },
+    datesAt: { within: null, sel: '.dates' },
+    // The lead paragraph and the intro under it. The body below repeats the
+    // lead and is threaded with photo captions and credits. NOT an
+    // .entry-summary chapeau: those are teaser cards for other pages further
+    // down ("Guided tours and workshop are available in…") — her first laptop
+    // sweep, 26 Sep, carried it on 5 of 20 rows.
+    description: '.chapeau:not(.entry-summary) p, .intro_texte p',
+    // The ticket-and-address sidebar. Gallery presentations have no lead box,
+    // so the reader falls back to the page and took "107, rue de Rivoli …
+    // Phone: …" from it — Luxury in China, 26 Sep, on the pages she saved.
+    noise: 'col_annexe',
+  },
+
+  // MUSÉE JACQUEMART-ANDRÉ — her addition, 25 Sep. Two listings, both server-
+  // drawn: current/upcoming, and past grouped by year back to 2013 (the older
+  // years sit in folded accordions, still in the page). A show's own address
+  // is a bare /en/<name>, the SAME shape as the site's menu links, so only
+  // the listings' own cards are read — two card designs, one per page:
+  //   current  a.event       .festival__type  .title h2  .sous_titre
+  //   past     a.gallery_el  .item-type       .item-title .item-sub-title
+  jacquemart: {
+    name: 'Musée Jacquemart-André, Paris',
+    base: 'https://www.musee-jacquemart-andre.com',
+    pages: [
+      { path: '/en/exhibitions',      ctx: 'current/upcoming' },
+      { path: '/en/past-exhibitions', ctx: 'past' },
+    ],
+    selector: 'a.gallery_el, a.event',
+    isNav: href => /\/en\/(past-)?exhibitions\/?$/.test(href),
+    title: { heading: false, cardParts: { name: '.item-title, .title h2', subtitle: '.item-sub-title, .sous_titre' } },
+    // Operas and a costume ball share the current page; the museum tags each.
+    // The past list tags one old show in French, "Exposition" — same word.
+    keepOnlyType: { label: '.festival__type, .item-type', is: /^\s*(Exhibition|Exposition)\s*$/i },
+  },
+
   khm: {
     name: 'Kunsthistorisches Museum, Vienna',
     base: 'https://www.khm.at',
@@ -4367,20 +5061,18 @@ const VENUES = {
     // matches. Her finding, 22 Sep — it had been assumed they were mixed in.
     excludeLabelledOnPage: /^\s*Installation\s*$/im,
 
-    // HER MACHINE ONLY, and it must be a browser with a past — see the note on
-    // `headed` below and §2 of the project guide.
-    //
-    // 22 Sep: the container is refused, and so was every browser that arrived
-    // with no history. A visible Chrome on a profile she had actually browsed
-    // in was served the listing and a real exhibition page, cleanly, with no
-    // challenge offered at all — the first time any exhibition text has been
-    // read from this venue.
-    route: 'local',
+    // The CONTAINER's, for its marker rows — her rule, 26 Sep: a venue moves
+    // to her laptop only after a complete, clean sweep from there. 22 Sep's
+    // probe (a visible Chrome with her history reached the listing and one
+    // exhibition page) moved it early; one probe page is not a sweep.
     headed: true,
   },
 
   brit: {
     name: 'British Museum, London',
+    // Headless has never got in; a visible Chrome with her history did, 22 Sep.
+    // Her ruling, 26 Sep: not attempted headless from her machine.
+    headed: true,
     base: 'https://www.britishmuseum.org',
     pages: [
       { path: '/exhibitions-events',                 ctx: 'current/upcoming' },
@@ -4467,8 +5159,21 @@ const VENUES = {
     // ongoing on the listing. The switch existed and this venue simply never
     // set it. Rung 1 of the ladder: the venue's own word, named in the log.
     excludeOngoing: true,
+    // HER RULING, 25 Sep: the Turner Prize and the Tate Britain Commission are
+    // not wanted. The listing names a commission "Commission: …" or
+    // "Commission 2026: …"; its own page adds "Tate Britain" in front — both
+    // are caught, since this test runs on the listing's name.
+    excludeTitle: /^(?:Tate\s+Britain\s+)?Commission\b|^Turner\s+Prize\b/i,
     pages: [
       { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition', ctx: 'current/upcoming' },
+      // PAST EXHIBITIONS — her finding, 25 Sep. The archive is not missing, it
+      // is behind the calendar: pick a past "from" date and it offers an
+      // "until". Both are query parameters, derived at run time by
+      // expandDateRange. One page, no paging: 1 Jul 2024 to 25 Sep 2026 read
+      // "Showing 1–20 of 20 items". Tate MODERN's past stays out — her ruling.
+      // Shows on now appear on both pages, which the notes say truthfully.
+      { path: '/whats-on?date_range=custom&gallery_group=tate-britain&event_type=exhibition',
+        ctx: 'past and current', dateRange: true, rangeFrom: 'date_a', rangeTo: 'date_b' },
     ],
     selector: 'a[href*="/whats-on/tate-britain/"]',
     // THE RESULTS GRID ONLY. The header's search promo and the featured strip
@@ -4477,7 +5182,13 @@ const VENUES = {
     // promo's. Her saved page: every listed show in div#whatson-results, the
     // promos outside it. docs/title_case_pages/tate_modern_from_now.mhtml.
     within: ['#whatson-results'],
-    isNav: href => /\/whats-on\/tate-britain\/?$/.test(href),
+    // A SHOW'S OWN ADDRESS IS ONE STEP BELOW /tate-britain/. The date range
+    // also returns a page one step further down —
+    // /women-artists-in-britain-1520-1920/relaxed-hours-now-you-see-us — a
+    // relaxed-hours session inside an exhibition, tagged "exhibition" by Tate.
+    // It is not a show, so it is refused like navigation.
+    isNav: href => /\/whats-on\/tate-britain\/?$/.test(href)
+      || /\/whats-on\/tate-britain\/[^/?#]+\/[^/?#]+/.test(href),
     // Its promotional hero cards head the card with the GALLERY, not the show.
     title: {
       heading: true,
@@ -4678,6 +5389,9 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
       listingPaths: listingPages(v).map(p => p.path),
       excludeOngoing: !!v.excludeOngoing,
       otherBranch: v.otherBranch || null,
+      keepOnlyType: v.keepOnlyType || null,
+      dropQuery: v.dropQuery || null,
+      datesAt: v.datesAt || null,
       excludeLabelled: v.excludeLabelled || null,
       excludeTitle: v.excludeTitle || null,
       listingRow: pg.listingRow || v.listingRow || null,
@@ -4723,7 +5437,7 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
       // page holds that single item, so the page emptied and immediately
       // started claiming it could not be read.
       const excluded = cov
-        ? (cov.dupUrl || 0) + (cov.ongoing || 0) + (cov.branch || 0) + (cov.labelled || 0) + (cov.offsite || 0)
+        ? (cov.dupUrl || 0) + (cov.ongoing || 0) + (cov.branch || 0) + (cov.labelled || 0) + (cov.otherKind || 0) + (cov.offsite || 0)
         : 0;
       if (rows.length === rowsBefore && !excluded && !pg.discovered) {
         log(`  NO EXHIBITIONS ${pg.ctx}: page loaded and was read, but nothing matched`);
@@ -5151,7 +5865,9 @@ async function fetchIndividualPages(page, rows, venueCode) {
   let fetched = 0, failed = 0, noText = 0;
   // Skip anything already known to have closed before the lookback floor —
   // no point spending a page load on an exhibition we will discard.
-  const skip = new Set(rows.filter(r => r.end_date && !afterLookback(r.end_date, lookbackFor(venueCode))));
+  // Her one-time exceptions are read like any kept row.
+  const skip = new Set(rows.filter(r => r.end_date && !afterLookback(r.end_date, lookbackFor(venueCode))
+    && !keptDespiteLookback(r, venueCode)));
   if (skip.size) log(`  skipping ${skip.size} individual page(s): closed before lookback`);
 
   // Progress, because this is the LONGEST phase and it used to print nothing at
@@ -5267,7 +5983,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
         }
       }
 
-      const text = await getCuratorialText(page, vrec.description, vrec.noise);
+      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt);
       if (text) {
         row.summary = text;
         fetched++;
@@ -5490,6 +6206,75 @@ function resolveChromium() {
   return undefined;  // let Playwright raise its own error
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+ * HEADED — her machine only. Built 26 Sep 2026, her go-ahead.
+ *
+ * A venue marked `headed: true` is swept in a VISIBLE Google Chrome on a
+ * profile she has browsed in, exactly as the one mode that ever got in did
+ * (probe_headed.js run A, 22 Sep: the scraper opening Chrome on her seeded
+ * profile — moma's listing and an exhibition page, no challenge). Nothing else
+ * about the sweep changes: same recipe, same pacing lanes, same stop at the
+ * first objection. One Chrome, so headed venues go one after another.
+ *
+ * The profile is the folder `node scraper/probe_headed.js open` seeds — one
+ * folder, two scripts; fixture H-003 holds the two paths together. It is not
+ * her everyday Chrome, and is never committed (.gitignore).
+ *
+ * An UNSEEDED profile is refused before anything is asked: its history is the
+ * whole reason this works, and a blank one is the 16 Sep refusal again —
+ * spent on a gatekeeper that then stops the lane for a day.
+ *
+ * On the container nothing changes: no display, no Chrome. A headed venue is
+ * still attempted headless there, for its marker rows, and the run says so.
+ * ═════════════════════════════════════════════════════════════════════════ */
+
+const HEADED_PROFILE_DIR = path.join(__dirname, 'chrome_profile');
+
+// Where Google Chrome lives; null lets Playwright find it by channel instead
+// (how a Mac or Windows install is found). Same list as probe_headed.js.
+function resolveChrome() {
+  const candidates = [
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/opt/google/chrome/chrome',
+    '/usr/bin/chromium',
+  ];
+  for (const c of candidates) if (fs.existsSync(c)) return c;
+  return null;
+}
+
+/** Has Chrome ever run on this profile? It writes Default/ on first use. */
+function headedProfileSeeded(dir = HEADED_PROFILE_DIR) {
+  return fs.existsSync(path.join(dir, 'Default'));
+}
+
+/**
+ * Which of this run's venues go to the visible Chrome, and which to headless.
+ * Pure. Headed only on her machine: the container has neither Chrome nor a
+ * screen, and there a headed venue is swept headless for its marker rows.
+ */
+function splitHeaded(codes, paced, venues = VENUES) {
+  const headed = paced ? codes.filter(c => venues[c] && venues[c].headed) : [];
+  return { headed, headless: codes.filter(c => !headed.includes(c)) };
+}
+
+async function launchHeadedContext() {
+  const bin = resolveChrome();
+  try {
+    return await chromium.launchPersistentContext(HEADED_PROFILE_DIR, {
+      executablePath: bin || undefined,
+      channel: bin ? undefined : 'chrome',
+      headless: false,
+      viewport: null,
+    });
+  } catch (e) {
+    if (/ProcessSingleton|already running|SingletonLock/i.test(e.message)) {
+      throw new Error('the seeded Chrome profile is open in another window — close that Chrome, then run --continue');
+    }
+    throw e;
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 // Set by Ctrl-C. Read by safeGoto so the venue in progress stops at its next
 // navigation instead of grinding through its remaining pages as failures.
@@ -5500,7 +6285,7 @@ async function main() {
   // directory exists, so there was nowhere to write it at the time.
   for (const line of TIDY_NOTES) log(line);
 
-  const RUN_VENUES = venuesForThisRun();
+  let RUN_VENUES = venuesForThisRun();
 
   // An interrupted venue must leave NO file behind, so that a file on disk
   // still means "this venue finished". Without this, stopping a run by hand
@@ -5573,10 +6358,86 @@ async function main() {
   // evidence the venue was wired. Saying it plainly costs one line; finding it
   // out from a sweep that quietly returned markers costs a day.
   const wantHeaded = RUN_VENUES.filter(c => VENUES[c].headed);
-  if (wantHeaded.length) {
+  if (wantHeaded.length && !PACED) {
     log(`Asks for a visible browser with a history: ${wantHeaded.join(', ')}`);
     log('  The engine cannot launch that yet, so these are attempted the ordinary');
     log('  way and are expected to be refused. See scraper/probe_headed.js.');
+  }
+
+  // HER MACHINE: PACING. See the PACING block above safeGoto for the design.
+  if (PACED) {
+    logSection('PACING — her machine');
+    log(`  Gap between pages: about ${Math.round(PACE_MS / 1000)}s, varied 75–125%, per gatekeeper.`);
+    log('  One venue at a time behind each gatekeeper; different gatekeepers side by side.');
+    log('  The first refusal or bot check stops that gatekeeper for the rest of the run.');
+
+    // A venue that needs a visible browser gets one — see HEADED. Never
+    // headless here: a refusal would stop its gatekeeper's lane for a day to
+    // learn something already known. And never on an UNSEEDED profile, for
+    // the same reason: the history is what gets it in.
+    if (wantHeaded.length) {
+      if (headedProfileSeeded()) {
+        log(`  In a visible Chrome on the seeded profile: ${wantHeaded.join(', ')}`);
+      } else {
+        log(`  Not attempted: ${wantHeaded.join(', ')} — the Chrome profile has never been seeded`);
+        log(`  (${HEADED_PROFILE_DIR}). Run: node scraper/probe_headed.js open — browse, then close it.`);
+        RUN_VENUES = RUN_VENUES.filter(c => !VENUES[c].headed);
+      }
+    }
+
+    const history = readPacingHistory();
+    const known = knownGatekeepers(history);
+    const cooling = [];
+    for (const c of RUN_VENUES) {
+      if (!known[c]) { log(`  ${c}: gatekeeper not known yet — read off its first reply.`); continue; }
+      const cd = laneCooldown(history, known[c]);
+      if (!cd.wait) { log(`  ${c}: behind ${known[c]}, from an earlier run.`); continue; }
+      const until = sydneyTime(cd.until);
+      if (IGNORE_COOLDOWN) {
+        log(`  ${c}: behind ${known[c]}, which ${cd.why}. Quiet period until ${until} OVERRIDDEN by --ignore-cooldown.`);
+      } else {
+        log(`  ${c}: SKIPPED — behind ${known[c]}, which ${cd.why}. Not asked again before ${until}.`);
+        cooling.push(c);
+      }
+    }
+    RUN_VENUES = RUN_VENUES.filter(c => !cooling.includes(c));
+
+    // --continue into the same run: what the earlier invocation learned is read
+    // ONCE, here, and every write adds this invocation on top of it.
+    const prev = (() => { try { return JSON.parse(fs.readFileSync(path.join(RUN_DIR, PACING_FILE), 'utf8')); } catch { return null; } })();
+    const writePacing = () => {
+      try {
+        const now = PACER.snapshot();
+        const merged = {
+          machine: MACHINE, savedAt: new Date().toISOString(), paceSeconds: PACE_MS / 1000,
+          gatekeepers: { ...(prev && prev.gatekeepers), ...now.gatekeepers },
+          lanes: { ...(prev && prev.lanes) },
+        };
+        for (const [name, l] of Object.entries(now.lanes)) {
+          const p = merged.lanes[name];
+          merged.lanes[name] = p ? {
+            venues: [...new Set([...(p.venues || []), ...l.venues])],
+            clean: (p.clean || 0) + l.clean,
+            firstAt: p.firstAt || l.firstAt,
+            lastAt: l.lastAt || p.lastAt,
+            stopped: l.stopped || p.stopped,
+          } : l;
+        }
+        fs.writeFileSync(path.join(RUN_DIR, PACING_FILE), JSON.stringify(merged, null, 2) + '\n');
+      } catch (e) { log(`  pacing.json could not be written: ${e.message}`); }
+    };
+    PACER = makePacer({
+      gapMs: PACE_MS, known, logFn: log, isStopping: () => STOPPING,
+      // Written as it happens, so a run killed mid-lane still leaves the record.
+      onChange: () => writePacing(),
+    });
+
+    if (!RUN_VENUES.length) {
+      log('  Nothing left to ask this run.');
+      writeLog();
+      return;
+    }
+    log(`  Venues this run: ${RUN_VENUES.join(', ')}`);
   }
 
   log(`Proxy: ${PROXY_URL || '(none — direct egress assumed)'}`);
@@ -5605,6 +6466,19 @@ async function main() {
     // Final lookback pass — applies to every venue without exception, after
     // individual pages have had a chance to fill in missing dates.
     const rows = applyLookback(await scrapeVenue(page, code), code, 'final');
+
+    // HER MACHINE: A VENUE CUT SHORT BY A STOPPED LANE IS NOT FINISHED.
+    // Written only when it is the plain refusal record — this venue's own first
+    // request was the objection, so its marker rows say exactly that, as on the
+    // container. Anything else is not written, so --continue redoes it once the
+    // quiet period is over: a venue that got 11 clean pages and then nothing,
+    // or one that never got to ask.
+    const why = pacedWithheld(PACER && PACER.venue(code));
+    if (why) {
+      log(`  → NOT WRITTEN: ${why}. --continue will redo it after the quiet period.`);
+      summary[code] = { laneStopped: why };
+      return;
+    }
     noteTravellingRuns(rows, code);
     const real = rows.filter(r => !r.title.startsWith('['));
     const placeholders = rows.filter(r => r.title.startsWith('['));
@@ -5627,12 +6501,16 @@ async function main() {
   // fixed slice, so one slow venue cannot leave a worker idle while another
   // still has five to do.
   const queue = [...RUN_VENUES];
-  let next = 0;
+  // Two queues on her machine: headed venues go to the one visible Chrome, one
+  // after another; the rest to headless workers. See HEADED.
+  const split = splitHeaded(queue, PACED);
+  const headlessQ = { items: split.headless, next: 0 };
+  const headedQ = { items: split.headed, next: 0 };
 
-  async function worker(n) {
+  async function worker(n, q = headlessQ, openContext = null) {
     // No userAgent override — see the note where USER_AGENT used to be defined.
     // Chromium sends its own, which is true and agrees with its client hints.
-    const context = await browser.newContext({
+    const context = openContext ? await openContext() : await browser.newContext({
       viewport: { width: 1280, height: 800 },
     });
     // The bridge exists ONLY because Chromium cannot use this container's agent
@@ -5652,7 +6530,7 @@ async function main() {
     // So turning it off where it is not needed REMOVES a misrepresentation
     // rather than adding one: Chromium doing its own requests means the
     // user-agent is simply true.
-    const stats = PROXY_URL
+    const stats = (PROXY_URL && !openContext)
       ? await installNetworkBridge(context)
       : { fulfilled: 0, skipped: 0, failed: 0, disabled: true };
     if (!PROXY_URL && n === 0) {
@@ -5665,9 +6543,9 @@ async function main() {
         // start a venue it has no intention of finishing, since an abandoned
         // venue writes nothing and the work is simply thrown away.
         if (STOPPING) break;
-        const i = next++;
-        if (i >= queue.length) break;
-        const code = queue[i];
+        const i = q.next++;
+        if (i >= q.items.length) break;
+        const code = q.items[i];
 
         const page = await context.newPage();
         let timer;
@@ -5679,11 +6557,23 @@ async function main() {
               // nothing in Playwright can — which is why the page is closed in
               // the finally below. That makes the abandoned venue's next call
               // throw, so it unwinds instead of running on invisibly.
+              //
+              // Time spent WAITING for its lane or for the gap between pages is
+              // not counted (her machine only; elsewhere it is always zero). The
+              // budget is for a venue that hangs, and a paced venue with 60
+              // pages spends most of its half hour deliberately idle.
               new Promise((_, reject) => {
-                timer = setTimeout(() => reject(Object.assign(
-                  new Error(`venue exceeded its ${(VENUE_BUDGET_MS/60000).toFixed(2)} minute budget`),
-                  { budgetExceeded: true },
-                )), VENUE_BUDGET_MS);
+                const started = Date.now();
+                const check = () => {
+                  const active = Date.now() - started - (PACER ? PACER.waited(code) : 0);
+                  if (active >= VENUE_BUDGET_MS) {
+                    reject(Object.assign(
+                      new Error(`venue exceeded its ${(VENUE_BUDGET_MS/60000).toFixed(2)} minute budget`),
+                      { budgetExceeded: true },
+                    ));
+                  } else timer = setTimeout(check, VENUE_BUDGET_MS - active);
+                };
+                timer = setTimeout(check, VENUE_BUDGET_MS);
               }),
             ]));
         } catch (e) {
@@ -5705,6 +6595,8 @@ async function main() {
           }
         } finally {
           clearTimeout(timer);
+          // Its lane is free for the next venue behind the same gatekeeper.
+          if (PACER) PACER.release(code);
           // Always close the page, never reuse it. A venue that was abandoned
           // may still have work in flight against it, and a fresh page for the
           // next venue costs almost nothing.
@@ -5719,9 +6611,28 @@ async function main() {
     }
   }
 
-  const workerCount = Math.min(CONCURRENCY, queue.length);
-  log(`Running ${queue.length} venue(s) ${workerCount} at a time (one page at a time within each venue)`);
-  await Promise.all(Array.from({ length: workerCount }, (_, n) => worker(n)));
+  // Her machine: every venue gets a worker, because the lanes, not the worker
+  // count, decide what is in flight — a worker waiting for the Cloudflare lane
+  // must not hold up MAD, which is behind nothing of the kind.
+  const hq = headlessQ.items.length;
+  const workerCount = (PACED && !JOBS_ARG) ? hq : Math.min(CONCURRENCY, hq);
+  log(`Running ${hq} venue(s) headless, ${workerCount} at a time (one page at a time within each venue)`);
+  const workers = Array.from({ length: workerCount }, (_, n) => worker(n));
+  if (headedQ.items.length) {
+    log(`Running ${headedQ.items.length} venue(s) in a visible Chrome, one after another: ${headedQ.items.join(', ')}`);
+    workers.push(worker('headed', headedQ, async () => {
+      try { return await launchHeadedContext(); }
+      catch (e) {
+        // Chrome would not open: nothing was asked of any venue. Each headed
+        // venue says why and writes nothing, so --continue picks it up.
+        for (const c of headedQ.items) summary[c] = { error: `visible Chrome did not open: ${e.message}` };
+        headedQ.next = headedQ.items.length;
+        log(`  VISIBLE CHROME DID NOT OPEN — ${e.message}`);
+        throw Object.assign(e, { headedLaunch: true });
+      }
+    }).catch(e => { if (!e.headedLaunch) throw e; }));
+  }
+  await Promise.all(workers);
 
   const netStats = netTotals;
   await browser.close().catch(() => {});
@@ -5757,11 +6668,36 @@ async function main() {
   for (const [code, s] of Object.entries(summary)) {
     if (s.error) {
       log(`  ${code.toUpperCase()}: FATAL ERROR — ${s.error}`);
+    } else if (s.laneStopped) {
+      log(`  ${code.toUpperCase()}: NOT WRITTEN — ${s.laneStopped}`);
     } else {
       const blocked = s.placeholders > 0 ? ` | ${s.placeholders} page(s) blocked/empty` : '';
       log(`  ${code.toUpperCase()}: ${s.real} exhibitions | ${s.withSummary} with text${blocked}`);
     }
   }
+  // ── Pacing: where each gatekeeper lane got to ───────────────────────────────
+  // The question this answers is WHICH KIND of refusal: on the very first page
+  // after a quiet day is a block on this kind of browser; after a run of clean
+  // pages is a pace or volume limit.
+  if (PACER) {
+    logSection('PACING — where each gatekeeper got to');
+    const snap = PACER.snapshot();
+    for (const [name, l] of Object.entries(snap.lanes)) {
+      log(`  ${name}: ${l.venues.join(', ')} — ${l.clean} clean page(s)`);
+      if (l.stopped) {
+        const st = l.stopped;
+        log(`    STOPPED at ${st.venue}, its request ${st.venuePage}, ${st.reason}, ${st.minutesIntoLane} min into the lane`);
+        log(`    ${st.venueCleanBefore} clean page(s) at ${st.venue} and ${st.laneCleanBefore} in the lane before it`);
+        log(`    ${st.laneCleanBefore === 0
+          ? 'Refused on the lane\'s first page: points to a block on this kind of browser (if the lane had been quiet a day).'
+          : 'Refused after clean pages: points to a pace or volume limit, not a block.'}`);
+        log(`    ${st.url}`);
+        log(`    Not asked again before ${sydneyTime(Date.parse(st.at) + COOLDOWN_AFTER_REFUSAL_MS)} (pacing.json).`);
+      }
+    }
+    if (!Object.keys(snap.lanes).length) log('  No requests were made.');
+  }
+
   // ── Coverage report ─────────────────────────────────────────────────────────
   // Every link the scraper saw is accounted for by one of these columns.
   // If a venue's total looks wrong, this says which stage lost the rows.
@@ -5858,7 +6794,11 @@ module.exports = {
   stripWeekdays,
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
-  saysOngoing, expandYearArchive, listingPages, followPagination,
+  // Pure, or driven with a gap of milliseconds — scraper/pacing.test.js.
+  gatekeeperFrom, objectionFrom, laneCooldown, knownGatekeepers, makePacer, pacedWithheld, usePacerForFixtures,
+  // HEADED: pure, or a path — pacing.test.js H-001 to H-003.
+  splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome,
+  saysOngoing, expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination,
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.

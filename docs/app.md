@@ -175,7 +175,7 @@ fixture C-069a asserts no two are the same.
 | `nosite` | Couldn't work out the publisher's own website, so there's no link to it. |
 | `unnamed` | No publisher was named for this book, so none was looked for. |
 | `selfpublished` | Catalogue is self-published by the venue. |
-| none recorded | No separate publisher page. — old sentence, older rows only |
+| none recorded | nothing — the step did not finish (the banner says why) or the row predates 22 Sep. The old "No separate publisher page." was retired 25 Sep, her ruling: it claimed a finished search |
 
 `publisherResult` records what the STEP concluded, not only what kind of
 address came back — which is why it is set on the four outcomes producing no
@@ -311,47 +311,77 @@ is conditional**, so a shop page that prints everything still costs one search
 and one reading. Do not make the later steps unconditional, and do not flip to
 searching wide first.
 
-### A book leaving the shop — her ruling, 22 Sep
+### A book leaving the shop — "Re-check museum shop", her design, 25 Sep
 
-A row ever found in the shop read "In the museum shop" FOREVER, because nothing
-compared one lookup against the last. **Catalogues selling out is the thing this
-app exists to watch**, so the single event it most needed to show was the one it
-could not.
+**The limit.** When she clicks Museum shop and sees for herself that the book
+has gone, the app learns nothing: a page cannot see what comes back in a tab it
+opened. So the status moves only when the app re-opens the page itself.
 
-**Her question first, because the answer is a real limit.** When she clicks
-Museum shop and sees for herself that the book has gone, the app learns nothing:
-the link opens a tab, and a page cannot see what comes back in a tab it opened.
-That is a browser rule. So the status moves only when the app itself re-opens
-that page, and only a lookup does that. **Her choice: on Search again and
-nowhere else** — which costs no extra calls, because the lookup already re-reads
-the shop page for the ISBN. A background check on every click was offered and
-not taken.
+**The 22 Sep design moved it on Search again and could not work** — replaced
+whole, and its code (`shopChangeFor`) removed. Search again searched the shop
+from scratch; shops keep sold-out books listed, so the listing put the green
+straight back. It cost a whole lookup to ask one question. And it rebuilt the
+row, wiping an ISBN or publisher it did not re-find.
 
-| Last time | This time | What the card says |
+**Her design.** She presses the button only AFTER seeing the change herself —
+it makes the screen agree with what she saw; it is not a monitor.
+
+| Row has | Re-check does | Result |
 |---|---|---|
-| in the shop | not in the shop | **No longer in the museum shop.** — bold, dark red |
-| not in the shop (or no catalogue) | in the shop | **Now in the museum shop.** — ordinary green |
-| never searched | either | the plain sentence, no news |
+| a shop link, green | re-reads THAT page only | 404 / redirected / sold out → **No longer in the museum shop.** (dark red), link kept as **Museum shop (last seen)** |
+| a shop link, red | re-reads THAT page only | buyable → **Back in the museum shop.**, link back to **Museum shop** |
+| no shop link | the shop step alone — never web search, never the publisher | found → **Now in the museum shop.** with the new link |
 
-**The return matters as much as the loss, and that half is hers.** A shop pulls
-a page while a book is merely out of stock and puts it back; a museum simply
-fails to maintain its own site. Both look like a loss and neither is permanent.
-Same green as the plain sentence — **the word NOW carries the news**, and a
-second colour would make a book coming back read as a different kind of thing
-from a book being there.
+- **No history is kept — her ruling.** The status implies it.
+- **A failed check says so and changes nothing.** A refused connector, a
+  timeout, a server error or a page that came back empty is never "gone".
+- **A 404 or 410 is decided in code**, off the connector's own error entry
+  (shape seen live on the Met's store, 25 Sep). Everything else is one question
+  to Claude about one page; a redirect is caught there, because the page served
+  is not the book's own.
+- **Pre-order and "available to order" count as in the shop**; sold out, out
+  of stock, unavailable count as gone, in any language.
+- **Search again fills blanks only and never moves the shop status**
+  (`keepWhatWeKnew`). A known publisher link stays with what it is, so the
+  publisher is never re-tangled.
+- Now, Back and the plain sentence share one green — the word carries the news.
 
-**"Gone" is sticky, "back" is not**, deliberately. A book that left is still
-gone on the next search, so the red survives a lookup that finds the same
-nothing (`shopChange` remembers). "Now" is news and news expires: the search
-after that reads "In the museum shop." again.
+**Tested without a real case:** C-079 to C-099 (the pieces) and
+`recheck_shop.js` R-001 to R-023 (the real app in jsdom, Load, buttons pressed,
+the card read back), each mutation-checked. **Not tested: how a real shop words
+"sold out", or what the connector returns for a redirect** — those wait for a
+real case.
 
-**A first lookup is not a change.** No previous state means neither sentence
-fires.
+### A blocked shop, a ticket, and a shop link the web search found — 25 Sep
 
-The red is the "closed over a year" ink, already muted, already carrying a
-dark-mode partner, no loose hex added. `shopChangeFor` and `shopHeadline` sit
-outside the component so fixtures reach them; C-079 to C-090b, verified by
-dropping the sticky half and watching C-084 fail.
+**What she met.** KHM's *Canaletto & Bellotto* read "In the museum shop" with a
+link to `shop.khm.at/en/tickets/canaletto-bellotto-…-T429-01`, a 404 in her
+browser. The real book is at `/en/products/ausstellungskatalog-2026-canaletto-
+bellotto-sprache-englisch-100000000039076-3631-02`. The diagnostic:
+
+```
+opened https://shop.khm.at/en/search?q=Canaletto%20%26%20Bellotto: 0 page(s), 1 refused (307)
+search: 10 results for [...]
+read the results
+opened https://shop.khm.at/en/tickets/canaletto-bellotto-200000000008445-T429-01: 0 page(s), 1 refused (307)
+```
+
+**Three faults, one route.**
+1. The shop refused every page (its waiting room, 307) and the code read that
+   as "not in the shop" and went wider without a word.
+2. The web search offered the shop's TICKET address from an old index, and
+   nothing said a ticket is not a book.
+3. A link on the shop's host was filed "In the museum shop" because of its
+   host alone. The ISBN step then tried to open it, was refused, and the
+   filing stood.
+
+**Her rulings.** A blocked shop says so, in her words (§4 of the guide).
+A ticket is not a catalogue. A shop link from the wider search counts only
+once it has been opened and is the book, for sale; otherwise the book is
+found on the web. Rows already carrying a ticket link lose it on Re-check.
+
+Fixtures L-001 to L-019 in `recheck_shop.js`, on rows shaped like hers,
+with the connector answering 307 as it did for her.
 
 ### Shop addresses — checked one by one, 21 Sep
 
@@ -399,8 +429,8 @@ was read and the section it names itself was taken — "Exhibition Catalogues",
 | moma | `store.moma.org/collections/exhibition-catalogues` | `/search?q=` |
 | brit | `britishmuseumshoponline.org/books/exhibition-books.html` | `/catalogsearch/result/?q=` |
 | morgan | `shop.themorgan.org/collections/exhibition-catalogs` | `/search?q=` |
-| uffizi | **none found** — its books section would not show its contents | `shop.uffizi.it/en/?s=` |
-| khm | **none** | `shop.khm.at/en/search?q=` — unverified, see below |
+| uffizi | **none — the shop sells gifts and no books (her check, 25 Sep); a real lookup answered "no catalogue", likely correct** | `shop.uffizi.it/en/?s=` |
+| khm | **none** | `shop.khm.at/en/products?shop%5Bq%5D=` — her search, 25 Sep (the old `/en/search?q=` was a 404) |
 
 **No shop:** borghese, capo, dellav — these skip to the broad web search.
 

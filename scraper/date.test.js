@@ -21,7 +21,7 @@ const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
   classifyLoadError, isOwnListingPage, saysOngoing,
-  expandYearArchive, listingPages, followPagination, VENUES, pickTitleLine,
+  expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination, VENUES, pickTitleLine,
   stripWeekdays,
   addNote, finishNotes, scopeSelector, extensionNote,
 } = require('./sweep_prototype.js');
@@ -513,6 +513,146 @@ test('Y-004: nothing is requested before the lookback floor', () => {
   // A floor moved forward moves the oldest year with it.
   const later = expandYearArchive(YEAR_ENTRY, new Date('2027-07-01'), new Date('2029-01-01'));
   assert.deepEqual(later.map(p => Number(p.path.split('=')[1])), [2028, 2027]);
+});
+
+// TB-001 to TB-004 — TATE BRITAIN'S PAST, behind its calendar (her finding,
+// 25 Sep). A "from … until …" range is two query parameters; both derived.
+
+test('TB-001: the range runs from the lookback floor to the day of the run', () => {
+  const [pg] = expandDateRange({ path: '/whats-on?date_range=custom&g=x', ctx: 'past and current',
+    rangeFrom: 'date_a', rangeTo: 'date_b' }, FLOOR, new Date('2026-09-25T10:00:00Z'));
+  assert.equal(pg.path, '/whats-on?date_range=custom&g=x&date_a=2024-07-01&date_b=2026-09-25');
+  assert.equal(pg.ctx, 'past and current');
+});
+
+test('TB-002: the "until" date moves on its own — nothing typed into the recipe', () => {
+  const [pg] = expandDateRange({ path: '/p', ctx: 'c', rangeFrom: 'a', rangeTo: 'b' }, FLOOR, new Date('2028-02-03'));
+  assert.equal(pg.path, '/p?a=2024-07-01&b=2028-02-03');
+});
+
+test('TB-003: Tate Britain asks for the range page; Tate Modern does not', () => {
+  const tb = listingPages(VENUES['tate-britain']).map(p => p.path);
+  assert.ok(tb.some(p => /date_range=custom&.*gallery_group=tate-britain&.*date_a=2024-07-01&date_b=\d{4}-\d{2}-\d{2}$/.test(p)), tb.join(' | '));
+  assert.ok(tb.some(p => /date_range=from_now/.test(p)), 'current/upcoming page kept');
+  const tm = listingPages(VENUES['tate-modern']).map(p => p.path);
+  assert.equal(tm.some(p => /date_range=custom/.test(p)), false, 'her ruling: never Tate Modern’s past');
+});
+
+test('TB-004: a session nested inside a show is not a show', () => {
+  const nav = VENUES['tate-britain'].isNav;
+  assert.equal(nav('/whats-on/tate-britain/women-artists-in-britain-1520-1920/relaxed-hours-now-you-see-us'), true);
+  assert.equal(nav('/whats-on/tate-britain/women-artists-in-britain-1520-1920'), false);
+  assert.equal(nav('/whats-on/tate-britain/lee-miller/'), false);
+  assert.equal(nav('/whats-on/tate-britain'), true);
+});
+
+// LG-001 to LG-003 — LÉVY GORVY DAYAN, her rulings of 25 Sep.
+
+test('LG-001: the Hong Kong partnership shows are refused on their own location line', () => {
+  const re = VENUES.lgd.otherBranch;
+  assert.ok(re.test('Color Form Lévy Gorvy Dayan & Wei, Hong Kong March 21 - May 31, 2024'));
+  assert.ok(re.test('Francesco Clemente: Winter Flowers LGDR & Wei, Hong Kong March 20 - April 29, 2023'));
+  assert.equal(re.test('Alison Watt Lévy Gorvy Dayan, London March 6 - June 8, 2025'), false);
+  assert.equal(re.test('Ziva Jelin Lévy Gorvy Dayan, New York September 25 - November 1, 2025'), false);
+});
+
+test('LG-002: her one-time exception keeps Yves Klein, and only it', () => {
+  const at = url => keptDespiteLookback({ url }, 'lgd');
+  assert.equal(at('https://www.levygorvydayan.com/exhibitions/yves-klein-and-the-tangible-world'), true);
+  assert.equal(at('https://www.levygorvydayan.com/exhibitions/yves-klein-and-the-tangible-world/'), true);
+  assert.equal(at('https://www.levygorvydayan.com/exhibitions/n-dash-london'), false);
+  assert.equal(keptDespiteLookback({ url: 'https://www.levygorvydayan.com/exhibitions/yves-klein-and-the-tangible-world' }, 'acq'), false,
+    'the exception belongs to one venue');
+});
+
+test('LG-003: no other venue carries a lookback exception', () => {
+  const withOne = Object.keys(VENUES).filter(c => (VENUES[c].keepDespiteLookback || []).length);
+  assert.deepEqual(withOne, ['lgd']);
+  assert.equal(VENUES.lgd.keepDespiteLookback.length, 1);
+});
+
+test('LG-004: the gallery\'s LGD Hammer auctions are excluded, and nothing else by that word', () => {
+  const re = VENUES.lgd.excludeTitle;
+  assert.ok(re.test('LGD Hammer: Willem de Kooning, Milkmaid (Untitled X) (1984)'));
+  assert.equal(re.test('Thomas Houseago: Death\'s Sacred Mirror'), false);
+  assert.equal(re.test('Hammer and Sickle: Soviet Posters'), false, 'only the sale series, by its own name');
+});
+
+test('TB-005: Tate Britain — the Turner Prize and the Commission are excluded, by either name', () => {
+  const re = VENUES['tate-britain'].excludeTitle;
+  for (const t of ['Turner Prize 2024', 'Commission: Alvaro Barrington: Grace',
+    'Commission 2026: Zineb Sedira: When Words Fall Silent, Cinema Speaks',
+    'Tate Britain Commission 2026: Zineb Sedira: When Words Fall Silent, Cinema Speaks'])
+    assert.ok(re.test(t), t);
+  for (const t of ['Turner & Constable: Rivals & Originals', 'Art Now: Mohammed Z Rahman', 'Lee Miller'])
+    assert.equal(re.test(t), false, t);
+});
+
+test('MA-004: MAM — the Prix Marcel Duchamp and Oliver Beer are excluded, nothing else', () => {
+  const re = VENUES.mam.excludeTitle;
+  for (const t of ['Prix Marcel Duchamp 2026', 'Oliver Beer: « Reanimation Paintings: A Thousand Voices »',
+    'Oliver Beer: « Reanimation Paintings : A Thousand Voices»'])
+    assert.ok(re.test(t), t);
+  for (const t of ['Kerry James Marshall: The Histories', 'Brion Gysin: The Last Museum', 'Josephsohn: as seen by Albert Oehlen'])
+    assert.equal(re.test(t), false, t);
+});
+
+// JA-001 to JA-003 — MUSÉE JACQUEMART-ANDRÉ, added 25 Sep.
+
+test('JA-001: the venue\u2019s own misspelling "Feburary" still gives the closing date', () => {
+  const r = findDateRange('From September 6, 2024 to Feburary 9, 2025');
+  assert.equal(r.start, '2024-09-06');
+  assert.equal(r.end, '2025-02-09');
+});
+
+test('JA-002: only cards the museum tags as an exhibition are kept', () => {
+  const re = VENUES.jacquemart.keepOnlyType.is;
+  for (const t of ['Exhibition', 'Exhibition ', 'EXHIBITION', 'Exposition']) assert.ok(re.test(t), t);
+  for (const t of ['Opera', 'Costume ball', 'Concert', 'Exhibition tour']) assert.equal(re.test(t), false, t);
+});
+
+test('JA-003: its listing pages are navigation, never shows', () => {
+  const nav = VENUES.jacquemart.isNav;
+  assert.equal(nav('/en/exhibitions'), true);
+  assert.equal(nav('/en/past-exhibitions'), true);
+  assert.equal(nav('/en/artemisia'), false);
+});
+
+// MA-001 to MA-003 — MUSÉE D'ART MODERNE DE PARIS, added 25 Sep.
+
+test('MA-001: a show keeps one address from current to archive', () => {
+  assert.equal(withoutQuery('https://www.mam.paris.fr/en/expositions/exhibitions-lee-miller?archive=1', ['archive']),
+    'https://www.mam.paris.fr/en/expositions/exhibitions-lee-miller');
+  assert.equal(withoutQuery('https://x.test/a?archive=1&id=4', ['archive']), 'https://x.test/a?id=4', 'only the named part goes');
+  assert.deepEqual(VENUES.mam.dropQuery, ['archive']);
+});
+
+test('MA-002: the archive\u2019s next page uses its Drupal pager value', () => {
+  const pg = listingPages(VENUES.mam).find(p => p.ctx === 'past');
+  const queue = [];
+  followPagination(queue, pg, [{ end_date: '2025-02-16' }], [], 'mam', VENUES.mam);
+  assert.equal(queue.length, 1);
+  assert.equal(queue[0].path, '/en/archives?type_expo=Local&language=en&page=0%2C0%2C0%2C0%2C0%2C1');
+});
+
+test('MA-003: the walk stops once a page is wholly before the floor', () => {
+  const pg = listingPages(VENUES.mam).find(p => p.ctx === 'past');
+  const queue = [];
+  followPagination(queue, { ...pg, discovered: true, pageNum: 2 }, [{ end_date: '2024-01-12' }], [], 'mam', VENUES.mam);
+  assert.equal(queue.length, 0);
+});
+
+// DO-001 — ORDINAL DAYS, every date on the Musée d'Orsay's cards (25 Sep).
+
+test('DO-001: "23rd", "06th", "1st" are read as day numbers, in both parsers', () => {
+  let r = findDateRange('From May 23rd to September 20th, 2026');
+  assert.equal(r.start + '|' + r.end, '2026-05-23|2026-09-20');
+  r = findDateRange('Until December 06th, 2026');
+  assert.equal(r.end, '2026-12-06');
+  r = findDateRange('From September 29th, 2026 to January 1st, 2027');
+  assert.equal(r.start + '|' + r.end, '2026-09-29|2027-01-01');
+  r = findDateRangeInProse('The exhibition runs from May 23rd to September 20th, 2026 in the nave.');
+  assert.equal(r.start + '|' + r.end, '2026-05-23|2026-09-20');
 });
 
 // ---------------------------------------------------------------------------
@@ -1195,18 +1335,16 @@ test('R-002: brit and morgan are still the CONTAINER\'s, deliberately', () => {
   // proves the block is still real, and leaves the marker rows that make a
   // sweep's record complete. She must not be pinging them from home.
   //
-  // moma LEFT this set on 22 Sep — see R-005. brit and morgan stay until their
-  // recipes are written from the live pages and the engine can launch the
-  // browser they need; moving them sooner would only mean her machine
-  // collecting the refusals instead of the container's.
-  for (const c of ['brit', 'morgan']) assert.strictEqual(routeOf(c), 'container');
+  // Her rule, 26 Sep: a venue moves to her laptop only after a complete,
+  // clean sweep from there. moma, brit and morgan have had none — moma went
+  // early on 22 Sep on one probe page and came back.
+  for (const c of ['brit', 'morgan', 'moma']) assert.strictEqual(routeOf(c), 'container');
 });
 
-test('R-005: moma is HERS, and says out loud that it needs a visible browser', () => {
+test('R-005: moma says out loud that it needs a visible browser', () => {
   // 22 Sep: the container is refused and so is any browser arriving with no
   // history. A visible Chrome on a profile she had browsed in was served the
   // listing and a real exhibition page with no challenge at all.
-  assert.strictEqual(routeOf('moma'), 'home');
 
   // The flag must not be able to lie. `headed: true` is read by the run, which
   // announces that the engine cannot yet provide that browser — otherwise a
@@ -1256,18 +1394,19 @@ test('R-006: moma names its blurb container and drops installations', () => {
 test('R-003: every other venue is the container\'s', () => {
   for (const c of ['ng', 'rijks', 'acq', 'frick', 'menil', 'va', 'louvre', 'capo',
                    'uffizi', 'brera', 'khm', 'dellav', 'wallace', 'borghese',
-                   'tate-modern', 'tate-britain']) {
+                   'tate-modern', 'tate-britain', 'lgd', 'jacquemart', 'mam',
+                   'orsay', 'mad']) {
     assert.strictEqual(routeOf(c), 'container', c + ' should be the container\'s');
   }
 });
 
 test('R-004: the two sets do not overlap and cover every venue', () => {
   const codes = [...SWEEP_SRC.matchAll(RECIPE_KEY)].map(m => m[1]);
-  assert.strictEqual(codes.length, 21, 'expected 21 recipes, found ' + codes.length);
+  assert.strictEqual(codes.length, 26, 'expected 26 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
-  assert.deepStrictEqual(home.sort(), ['artic', 'met', 'moma']);
-  assert.strictEqual(container.length, 18);
+  assert.deepStrictEqual(home.sort(), ['artic', 'met']);
+  assert.strictEqual(container.length, 24);
   assert.strictEqual(home.length + container.length, codes.length);
 });
 

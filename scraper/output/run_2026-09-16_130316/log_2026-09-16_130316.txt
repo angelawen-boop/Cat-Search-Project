@@ -1,0 +1,201 @@
+[2026-09-16T03:03:16.801Z] Tidied 2 old run directories into output/archive/ — moved, not deleted.
+[2026-09-16T03:03:16.804Z]   run_2026-09-11_212543 .. run_2026-09-12_173407
+[2026-09-16T03:03:16.805Z] Cat Watch Sweep Prototype — starting
+[2026-09-16T03:03:16.805Z] Lookback floor: 2024-07-01
+[2026-09-16T03:03:16.805Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-16_130316
+[2026-09-16T03:03:16.805Z] Venues this run: met, artic, moma, brit
+[2026-09-16T03:03:16.806Z] Proxy: (none — direct egress assumed)
+[2026-09-16T03:03:16.807Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-16T03:03:16.807Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-16T03:03:16.808Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-16T03:03:17.519Z] Identifying as: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36
+[2026-09-16T03:03:17.520Z] Running 4 venue(s) 4 at a time (one page at a time within each venue)
+[2026-09-16T03:03:17.570Z] No proxy set — Chromium is making its own requests (network bridge off)
+[2026-09-16T03:03:18.003Z] [met] 
+[2026-09-16T03:03:18.007Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-16T03:03:18.009Z] [met]   MET — The Metropolitan Museum of Art
+[2026-09-16T03:03:18.010Z] [met] ────────────────────────────────────────────────────────────
+[2026-09-16T03:03:18.016Z] [met]   Fetching current/upcoming: https://www.metmuseum.org/exhibitions
+[2026-09-16T03:03:18.068Z] [artic] 
+[2026-09-16T03:03:18.069Z] [artic] ────────────────────────────────────────────────────────────
+[2026-09-16T03:03:18.070Z] [artic]   ARTIC — Art Institute of Chicago
+[2026-09-16T03:03:18.070Z] [artic] ────────────────────────────────────────────────────────────
+[2026-09-16T03:03:18.071Z] [artic]   Fetching current: https://www.artic.edu/exhibitions
+[2026-09-16T03:03:18.076Z] [moma] 
+[2026-09-16T03:03:18.081Z] [moma] ────────────────────────────────────────────────────────────
+[2026-09-16T03:03:18.082Z] [moma]   MOMA — Museum of Modern Art, New York
+[2026-09-16T03:03:18.088Z] [moma] ────────────────────────────────────────────────────────────
+[2026-09-16T03:03:18.089Z] [moma]   Fetching current/upcoming: https://www.moma.org/calendar/exhibitions
+[2026-09-16T03:03:18.160Z] [brit] 
+[2026-09-16T03:03:18.160Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-16T03:03:18.160Z] [brit]   BRIT — British Museum, London
+[2026-09-16T03:03:18.160Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-16T03:03:18.160Z] [brit]   Fetching current/upcoming: https://www.britishmuseum.org/exhibitions-events
+[2026-09-16T03:03:18.415Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions
+[2026-09-16T03:03:18.416Z] [artic]   FAILED current — BLOCKED_HTTP_403
+[2026-09-16T03:03:18.417Z] [artic]   Fetching upcoming: https://www.artic.edu/exhibitions/upcoming
+[2026-09-16T03:03:18.621Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/upcoming
+[2026-09-16T03:03:18.623Z] [artic]   FAILED upcoming — BLOCKED_HTTP_403
+[2026-09-16T03:03:18.624Z] [artic]   Fetching past 2026: https://www.artic.edu/exhibitions/history?year=2026
+[2026-09-16T03:03:18.754Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2026
+[2026-09-16T03:03:18.755Z] [artic]   FAILED past 2026 — BLOCKED_HTTP_403
+[2026-09-16T03:03:18.755Z] [artic]   Fetching past 2025: https://www.artic.edu/exhibitions/history?year=2025
+[2026-09-16T03:03:18.858Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2025
+[2026-09-16T03:03:18.858Z] [artic]   FAILED past 2025 — BLOCKED_HTTP_403
+[2026-09-16T03:03:18.859Z] [artic]   Fetching past 2024: https://www.artic.edu/exhibitions/history?year=2024
+[2026-09-16T03:03:19.055Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2024
+[2026-09-16T03:03:19.056Z] [artic]   FAILED past 2024 — BLOCKED_HTTP_403
+[2026-09-16T03:03:19.056Z] [artic]   Fetching past 2023: https://www.artic.edu/exhibitions/history?year=2023
+[2026-09-16T03:03:19.162Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2023
+[2026-09-16T03:03:19.162Z] [artic]   FAILED past 2023 — BLOCKED_HTTP_403
+[2026-09-16T03:03:19.163Z] [artic]   Fetching past p2 2026: https://www.artic.edu/exhibitions/history?year=2026&page=2
+[2026-09-16T03:03:19.461Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2026&page=2
+[2026-09-16T03:03:19.461Z] [artic]   FAILED past p2 2026 — BLOCKED_HTTP_403
+[2026-09-16T03:03:19.462Z] [artic]   Fetching past p2 2025: https://www.artic.edu/exhibitions/history?year=2025&page=2
+[2026-09-16T03:03:19.731Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2025&page=2
+[2026-09-16T03:03:19.735Z] [artic]   FAILED past p2 2025 — BLOCKED_HTTP_403
+[2026-09-16T03:03:19.735Z] [artic]   Fetching past p2 2024: https://www.artic.edu/exhibitions/history?year=2024&page=2
+[2026-09-16T03:03:19.960Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2024&page=2
+[2026-09-16T03:03:19.960Z] [artic]   FAILED past p2 2024 — BLOCKED_HTTP_403
+[2026-09-16T03:03:19.960Z] [artic]   Fetching past p2 2023: https://www.artic.edu/exhibitions/history?year=2023&page=2
+[2026-09-16T03:03:20.096Z] [artic]   BLOCKED (HTTP 403): https://www.artic.edu/exhibitions/history?year=2023&page=2
+[2026-09-16T03:03:20.101Z] [artic]   FAILED past p2 2023 — BLOCKED_HTTP_403
+[2026-09-16T03:03:20.103Z] [artic]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-16T03:03:20.109Z] [artic]   → 0 exhibitions, 0 with curatorial text → artic.csv
+[2026-09-16T03:03:24.005Z] [brit]   current/upcoming: 1 links seen -> 1 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-16T03:03:24.006Z] [brit]   NO EXHIBITIONS current/upcoming: page loaded and was read, but nothing matched
+[2026-09-16T03:03:24.006Z] [brit]   Fetching past: https://www.britishmuseum.org/exhibitions-events/past-exhibitions
+[2026-09-16T03:03:24.117Z] [brit]   BLOCKED (HTTP 403): https://www.britishmuseum.org/exhibitions-events/past-exhibitions
+[2026-09-16T03:03:24.117Z] [brit]   FAILED past — BLOCKED_HTTP_403
+[2026-09-16T03:03:24.118Z] [brit]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-09-16T03:03:24.118Z] [brit]   → 0 exhibitions, 0 with curatorial text → brit.csv
+[2026-09-16T03:03:24.344Z] [moma]   UNWIRED PAGINATION current/upcoming: this page links another page and no recipe follows it — page 5890 -> /calendar/exhibitions/5890 | page 5928 -> /calendar/exhibitions/5928 | page 5912 -> /calendar/exhibitions/5912 | page 5906 -> /calendar/exhibitions/5906
+[2026-09-16T03:03:24.444Z] [met]     ongoing (permanent), excluded: The Face Of Life Modern Portraits At The Met
+[2026-09-16T03:03:26.129Z] [moma]   current/upcoming: 26 links seen -> 2 navigation, 0 already-seen URL -> 24 collected (0 of them with no readable title)
+[2026-09-16T03:03:26.129Z] [moma]   Fetching past: https://www.moma.org/calendar/exhibitions/history
+[2026-09-16T03:03:26.227Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/history
+[2026-09-16T03:03:26.228Z] [moma]   FAILED past — BLOCKED_HTTP_403
+[2026-09-16T03:03:26.229Z] [moma]   lookback (listing): kept 25, dropped 0 closed before 2024-07-01, 6 with no closing date, 0 with no opening date
+[2026-09-16T03:03:26.230Z] [moma]   reading 24 individual page(s)…
+[2026-09-16T03:03:26.230Z] [moma]     page 1 of 24
+[2026-09-16T03:03:26.353Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5890
+[2026-09-16T03:03:26.419Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5928
+[2026-09-16T03:03:26.472Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5912
+[2026-09-16T03:03:26.530Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5906
+[2026-09-16T03:03:26.637Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5794
+[2026-09-16T03:03:26.693Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5920
+[2026-09-16T03:03:26.748Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5678
+[2026-09-16T03:03:26.805Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5926
+[2026-09-16T03:03:26.908Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5932
+[2026-09-16T03:03:26.909Z] [moma]     page 10 of 24
+[2026-09-16T03:03:26.961Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5918
+[2026-09-16T03:03:27.018Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5936
+[2026-09-16T03:03:27.124Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5910
+[2026-09-16T03:03:27.228Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5869
+[2026-09-16T03:03:27.335Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5916
+[2026-09-16T03:03:27.387Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5861
+[2026-09-16T03:03:27.491Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5908
+[2026-09-16T03:03:27.601Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5907
+[2026-09-16T03:03:27.707Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5940
+[2026-09-16T03:03:27.762Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5933
+[2026-09-16T03:03:27.762Z] [moma]     page 20 of 24
+[2026-09-16T03:03:27.867Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5797
+[2026-09-16T03:03:27.925Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5943
+[2026-09-16T03:03:27.975Z] [met]     ongoing (permanent), excluded: Decorative Arts In China 1000 To The Present
+[2026-09-16T03:03:28.034Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5870
+[2026-09-16T03:03:28.086Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5935
+[2026-09-16T03:03:28.103Z] [met]     ongoing (permanent), excluded: A Lasting Legacy Chinese Jades From New York Collections
+[2026-09-16T03:03:28.188Z] [moma]   BLOCKED (HTTP 403): https://www.moma.org/calendar/exhibitions/5942
+[2026-09-16T03:03:28.189Z] [moma]   Individual pages: 0 got text, 0 no curatorial text, 24 failed
+[2026-09-16T03:03:28.189Z] [moma]   lookback (final): kept 25, dropped 0 closed before 2024-07-01, 6 with no closing date, 7 with no opening date
+[2026-09-16T03:03:28.190Z] [moma]   → 24 exhibitions, 0 with curatorial text → moma.csv
+[2026-09-16T03:03:28.258Z] [met]     ongoing (permanent), excluded: Wedding Attire Three Cultures One Celebration
+[2026-09-16T03:03:28.317Z] [met]     ongoing (permanent), excluded: Arts Of Oceania
+[2026-09-16T03:03:28.374Z] [met]     ongoing (permanent), excluded: Arts Of The Ancient Americas
+[2026-09-16T03:03:28.438Z] [met]     ongoing (permanent), excluded: Arts Of Africa
+[2026-09-16T03:03:28.504Z] [met]     ongoing (permanent), excluded: Defensive Display Shields From The Met Collection
+[2026-09-16T03:03:28.569Z] [met]     ongoing (permanent), excluded: The American Wing At 100
+[2026-09-16T03:03:28.632Z] [met]     ongoing (permanent), excluded: The Calculated Curve Eighteenth Century American Furniture
+[2026-09-16T03:03:28.694Z] [met]     ongoing (permanent), excluded: Cycladic Art
+[2026-09-16T03:03:28.756Z] [met]     ongoing (permanent), excluded: Look Again European Paintings 1300 1800
+[2026-09-16T03:03:28.862Z] [met]     ongoing (permanent), excluded: Layered Narratives The Northern Renaissance Gallery
+[2026-09-16T03:03:28.970Z] [met]     ongoing (permanent), excluded: Art Of Native America Diker Collection
+[2026-09-16T03:03:29.042Z] [met]     ongoing (permanent), excluded: Renaissance Masterpieces
+[2026-09-16T03:03:29.134Z] [met]     ongoing (permanent), excluded: Michael Lin Pentachrome
+[2026-09-16T03:03:29.199Z] [met]     ongoing (permanent), excluded: Afrofuturist Period Room
+[2026-09-16T03:03:29.268Z] [met]     ongoing (permanent), excluded: British Galleries
+[2026-09-16T03:03:29.341Z] [met]     ongoing (permanent), excluded: Faberge
+[2026-09-16T03:03:29.873Z] [met]   current/upcoming: 94 links seen -> 2 navigation, 48 already-seen URL, 19 ongoing/permanent -> 25 collected (0 of them with no readable title)
+[2026-09-16T03:03:29.873Z] [met]   Fetching past: https://www.metmuseum.org/exhibitions/past
+[2026-09-16T03:03:34.997Z] [met]   past: 68 links seen -> 10 navigation, 29 already-seen URL -> 29 collected (0 of them with no readable title)
+[2026-09-16T03:03:34.997Z] [met]   Fetching past 2025: https://www.metmuseum.org/exhibitions/past?year=2025
+[2026-09-16T03:03:41.241Z] [met]   past 2025: 128 links seen -> 10 navigation, 81 already-seen URL -> 37 collected (0 of them with no readable title)
+[2026-09-16T03:03:41.241Z] [met]   Fetching past 2024: https://www.metmuseum.org/exhibitions/past?year=2024
+[2026-09-16T03:03:47.594Z] [met]   past 2024: 144 links seen -> 10 navigation, 93 already-seen URL -> 41 collected (0 of them with no readable title)
+[2026-09-16T03:03:47.595Z] [met]   lookback (listing): kept 107, dropped 25 closed before 2024-07-01, 7 with no closing date, 0 with no opening date
+[2026-09-16T03:03:47.596Z] [met]   reading 107 individual page(s)…
+[2026-09-16T03:03:47.596Z] [met]     page 1 of 107
+[2026-09-16T03:03:50.170Z] [met]     page 10 of 107
+[2026-09-16T03:03:52.443Z] [met]     page 20 of 107
+[2026-09-16T03:03:54.971Z] [met]     page 30 of 107
+[2026-09-16T03:03:57.303Z] [met]     page 40 of 107
+[2026-09-16T03:03:59.645Z] [met]     page 50 of 107
+[2026-09-16T03:04:01.747Z] [met]     page 60 of 107
+[2026-09-16T03:04:04.005Z] [met]     page 70 of 107
+[2026-09-16T03:04:06.438Z] [met]     page 80 of 107
+[2026-09-16T03:04:08.779Z] [met]     page 90 of 107
+[2026-09-16T03:04:11.005Z] [met]     page 100 of 107
+[2026-09-16T03:04:12.932Z] [met]   Individual pages: 107 got text, 0 no curatorial text, 0 failed
+[2026-09-16T03:04:12.932Z] [met]   lookback (final): kept 107, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-09-16T03:04:12.938Z] [met]   → 107 exhibitions, 107 with curatorial text → met.csv
+[2026-09-16T03:04:13.196Z] 
+[2026-09-16T03:04:13.196Z] ────────────────────────────────────────────────────────────
+[2026-09-16T03:04:13.196Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-16T03:04:13.197Z] ────────────────────────────────────────────────────────────
+[2026-09-16T03:04:13.197Z]   ARTIC: 0 exhibitions | 0 with text | 10 page(s) blocked/empty
+[2026-09-16T03:04:13.197Z]   BRIT: 0 exhibitions | 0 with text | 2 page(s) blocked/empty
+[2026-09-16T03:04:13.197Z]   MOMA: 24 exhibitions | 0 with text | 1 page(s) blocked/empty
+[2026-09-16T03:04:13.197Z]   MET: 107 exhibitions | 107 with text
+[2026-09-16T03:04:13.197Z] 
+[2026-09-16T03:04:13.197Z] ────────────────────────────────────────────────────────────
+[2026-09-16T03:04:13.197Z]   COVERAGE — every link accounted for
+[2026-09-16T03:04:13.197Z] ────────────────────────────────────────────────────────────
+[2026-09-16T03:04:13.197Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-16T03:04:13.197Z]   -----------------------------------------------------------------------------------------------
+[2026-09-16T03:04:13.197Z]   brit       current/upcoming                 1     1       0     0        0        0          0
+[2026-09-16T03:04:13.198Z]   moma       current/upcoming                26     2       0     0        0        0         24
+[2026-09-16T03:04:13.198Z]   met        current/upcoming                94     2       0    48       19        0         25
+[2026-09-16T03:04:13.198Z]   met        past                            68    10       0    29        0        0         29
+[2026-09-16T03:04:13.198Z]   met        past 2025                      128    10       0    81        0        0         37
+[2026-09-16T03:04:13.198Z]   met        past 2024                      144    10       0    93        0        0         41
+[2026-09-16T03:04:13.198Z] 
+[2026-09-16T03:04:13.198Z] 
+[2026-09-16T03:04:13.198Z] ────────────────────────────────────────────────────────────
+[2026-09-16T03:04:13.198Z]   MORE PAGES OFFERED THAN TAKEN — CHECK THESE
+[2026-09-16T03:04:13.199Z] ────────────────────────────────────────────────────────────
+[2026-09-16T03:04:13.199Z]   Each page below links to another page of itself, and no recipe follows it.
+[2026-09-16T03:04:13.199Z]   Exhibitions may be missing from the CSV with nothing else to show it.
+[2026-09-16T03:04:13.199Z] 
+[2026-09-16T03:04:13.199Z]   moma / current/upcoming
+[2026-09-16T03:04:13.199Z]     https://www.moma.org/calendar/exhibitions
+[2026-09-16T03:04:13.199Z]     offers: page 5890 -> /calendar/exhibitions/5890
+[2026-09-16T03:04:13.199Z]     offers: page 5928 -> /calendar/exhibitions/5928
+[2026-09-16T03:04:13.199Z]     offers: page 5912 -> /calendar/exhibitions/5912
+[2026-09-16T03:04:13.199Z]     offers: page 5906 -> /calendar/exhibitions/5906
+[2026-09-16T03:04:13.199Z] 
+[2026-09-16T03:04:13.199Z]   seen      = links matching the venue's selector on that page
+[2026-09-16T03:04:13.199Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-16T03:04:13.199Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-16T03:04:13.199Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-16T03:04:13.199Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-16T03:04:13.199Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-16T03:04:13.199Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-16T03:04:13.199Z] 
+[2026-09-16T03:04:13.199Z] Network bridge: 0 requests served, 0 skipped (image/media/font), 0 failed
+[2026-09-16T03:04:13.199Z] 
+[2026-09-16T03:04:13.199Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-16_130316
+[2026-09-16T03:04:13.199Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-16_130316/sweep.csv  (144 rows — met:107, artic:10, moma:25, brit:2)
+[2026-09-16T03:04:13.199Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-16_130316/log_2026-09-16_130316.txt
+[2026-09-16T03:04:13.199Z] Not yet in this run: ng, rijks, acq, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, khm, dellav, tate-modern, tate-britain, wallace
+[2026-09-16T03:04:13.199Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-16T03:04:13.200Z] No de-duplication is applied — see passThrough.
