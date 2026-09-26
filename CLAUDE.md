@@ -310,7 +310,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34.14, 26 Sep 2026, built — publish when she is out of the app** (a shop's own search/shelf page is never filed as the book). **34.13, 25 Sep, is live** (KHM's shop search is her address; the Museum shop link searches the EXHIBITION's title, never the book's; Re-check drops a ticket link silently). **34.11** (Levy cards headed "Lévy Gorvy Dayan" — `card` in MUSEUMS; the blocked-shop headline in red, the rest grey; no "No catalogue" corner tag — the corner keeps the time tag; a publisher step that died claims nothing — "No separate publisher page." retired). **34.8** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
+**Version 34.14, 26 Sep 2026, is live** (a shop's own search/shelf page is never filed as the book). **34.13** (KHM's shop search is her address; the Museum shop link searches the EXHIBITION's title, never the book's; Re-check drops a ticket link silently). **34.11** (Levy cards headed "Lévy Gorvy Dayan" — `card` in MUSEUMS; the blocked-shop headline in red, the rest grey; no "No catalogue" corner tag — the corner keeps the time tag; a publisher step that died claims nothing — "No separate publisher page." retired). **34.8** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -1209,9 +1209,8 @@ book's own link? **Not diagnosed.** Unchecked hypothesis only: the shop step
 asks the connector for EXCERPTS (text, links likely stripped), so the read
 never sees the product address. First step next session: fetch that search
 page once in excerpt mode and once whole (`full_content`), and LOOK for the
-product address before proposing anything. 34.14 (built, not yet published —
-publish only when she is out of the app) stops the search page being filed
-as the book; it does not solve this.
+product address before proposing anything. 34.14 (live, 26 Sep) stops the
+search page being filed as the book; it does not solve this.
 
 **NEXT — her question, 26 Sep: why only the search results, not the book's
 own page?** Likely cause, UNCONFIRMED (the check hit the rate limit): the
