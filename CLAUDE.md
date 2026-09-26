@@ -310,7 +310,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34.13, 25 Sep 2026, is live** (KHM's shop search is her address; the Museum shop link searches the EXHIBITION's title, never the book's; Re-check drops a ticket link silently). **34.11** (Levy cards headed "Lévy Gorvy Dayan" — `card` in MUSEUMS; the blocked-shop headline in red, the rest grey; no "No catalogue" corner tag — the corner keeps the time tag; a publisher step that died claims nothing — "No separate publisher page." retired). **34.8** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
+**Version 34.14, 26 Sep 2026, built — publish when she is out of the app** (a shop's own search/shelf page is never filed as the book). **34.13, 25 Sep, is live** (KHM's shop search is her address; the Museum shop link searches the EXHIBITION's title, never the book's; Re-check drops a ticket link silently). **34.11** (Levy cards headed "Lévy Gorvy Dayan" — `card` in MUSEUMS; the blocked-shop headline in red, the rest grey; no "No catalogue" corner tag — the corner keeps the time tag; a publisher step that died claims nothing — "No separate publisher page." retired). **34.8** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -1190,14 +1190,14 @@ month map reads "Feburary", both date parsers read ordinal days ("23rd");
 
 ### 7. Catalogue lookup generally
 
-**NEXT, found 26 Sep on KHM's *Canaletto & Bellotto* — proposed, not built:**
-the shop read returned KHM's SEARCH-RESULTS page as the book's own page (and
-the ISBN step re-opened it). Nothing in code stops a listing being filed as
-the book. Fix proposed: refuse a shop link that is one of the pages the step
-itself opened (the search address or a shelf page) — code, not a model. Her
-card also still carried the ticket link because the ledger she loaded predates
-her Re-check; Re-check then Export clears it. KHM's shop ANSWERED the
-connector that day — its block comes and goes.
+**Built 26 Sep (34.14), from her KHM *Canaletto & Bellotto*:** the shop read
+returned KHM's SEARCH-RESULTS page as the book's own page. A shop link that is
+one of the pages the step itself opened (search or shelf) is now refused as a
+link — the book still counts as in the shop, and the Museum shop button opens
+the shop's search for the show (`listedOnly`; L-020 to L-023). Her card kept
+the dead ticket link because the ledger she loaded predates her Re-check —
+one Re-check, then Export, clears it. KHM's shop ANSWERED the connector that
+day: its block comes and goes.
 
 The debugging session for the issues she is noting (item 2). Standing gaps:
 fourteen venues have had no lookup run against them, their shop addresses
