@@ -89,7 +89,11 @@ const ngA = fresh('ng-testopens', 'ng', 'Test NG Show Opens');
 const ngB = fresh('ng-testdead', 'ng', 'Test NG Show Dead Link');
 const lgdRow = fresh('lgd-yvesklein', 'lgd', 'Yves Klein and the Tangible World');
 const ngPub = fresh('ng-testpubdies', 'ng', 'Test NG Publisher Dies');
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub], ignored: [], lastRun: null };
+const khmList = fresh('khm-testlist', 'khm', 'Test KHM Listed Only');
+// Her Canaletto card exactly as her 26 Sep file still had it: the ticket link,
+// "In the museum shop" — saved before her Re-check.
+const khmOld = { ...khmBad, id: 'khm-canaletto-oldfile', title: 'Canaletto and Bellotto (her older file)' };
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -424,6 +428,38 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/stopped part-way/.test(win.document.body.textContent), 'P-002: the banner says the search stopped part-way');
   }
 
+  // ── L-020..L-023: her KHM finding, 26 Sep. KHM's shop ANSWERS, and the read
+  // hands back the shop's own search-results page as "the book's page".
+  {
+    calls.length = 0;
+    await openTray(khmList.title);
+    const searchUrl = 'https://shop.khm.at/en/products?shop%5Bq%5D=' + encodeURIComponent(khmList.title);
+    script.mcp = (tool, args) => tool === 'web_search'
+      ? { payload: { results: [] } }
+      : { payload: { results: args.urls.map(u => ({ url: u, title: 'Search', excerpts: ['Test KHM Listed Only. Exhibition Catalogue 2026 €39.90 ' + 'x '.repeat(300)] })), errors: [] } };
+    script.sample = p => /"found"/.test(p)
+      ? { found: true, catalogueTitle: 'Listed Only. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: searchUrl }
+      : { isbn13: null, publisher: null, publisherUrl: null };
+    await click(button(card(khmList.title), /Find catalogue/));
+    const c = card(khmList.title), t = c ? c.textContent : '';
+    ok(/In the museum shop\./.test(t) && !/Not in the museum shop/.test(t), 'L-020: a book read off the shop’s own results is in the museum shop', t.slice(0, 300));
+    ok(shopLink(c) && shopLink(c).getAttribute('href') === searchUrl, 'L-021: its Museum shop link is the shop’s search for the show — not filed as the book’s page', shopLink(c) && shopLink(c).getAttribute('href'));
+    ok(calls.filter(x => x.tool === 'web_fetch' && x.args.urls.includes(searchUrl)).length === 1, 'L-022: the search page is not re-opened as though it were the book');
+  }
+  {
+    // Her card from the older file: Re-check drops the ticket; the shop answers.
+    await openTray(khmOld.title);
+    const searchUrl = 'https://shop.khm.at/en/products?shop%5Bq%5D=' + encodeURIComponent(khmOld.title);
+    script.mcp = (tool, args) => ({ payload: { results: args.urls.map(u => ({ url: u, title: 'Search', excerpts: ['Canaletto and Bellotto. Exhibition Catalogue 2026 €39.90 ' + 'x '.repeat(300)] })), errors: [] } });
+    script.sample = p => /"found"/.test(p)
+      ? { found: true, catalogueTitle: 'Canaletto & Bellotto. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: searchUrl }
+      : { isbn13: null, publisher: null, publisherUrl: null };
+    await click(button(card(khmOld.title), /^Re-check museum shop$/));
+    const c = card(khmOld.title), t = c ? c.textContent : '';
+    ok(/Now in the museum shop\./.test(t) && shopLink(c) && shopLink(c).getAttribute('href') === searchUrl && !/tickets/.test(c.innerHTML),
+       'L-023: her older card — one Re-check: ticket gone, "Now in the museum shop.", link opens KHM’s search', (shopLink(c) && shopLink(c).getAttribute('href')) + ' | ' + t.slice(0, 200));
+  }
+
   // ── L-014..L-016: her real row. Re-check with the shop still blocked. ─────
   {
     calls.length = 0;
@@ -487,7 +523,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const chip = [...doc.querySelectorAll('button')].find(b => b.textContent === 'KHM');
     await click(chip);
     const khmOnly = titles();
-    ok(khmOnly.length === 3 && khmOnly.every(x => /Test KHM Show/.test(x)), 'S-002: with the search on, the KHM chip cuts it to KHM’s three', khmOnly.length + ': ' + khmOnly.map(x => x.slice(0, 40)).join(' | '));
+    ok(khmOnly.length === 4 && khmOnly.every(x => /Test KHM /.test(x)), 'S-002: with the search on, the KHM chip cuts it to KHM’s four test shows', khmOnly.length + ': ' + khmOnly.map(x => x.slice(0, 40)).join(' | '));
     await click(chip);
     await click([...doc.querySelectorAll('button')].find(b => b.textContent === 'NG' || b.textContent === 'National Gallery'));
     const ng = titles();

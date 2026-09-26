@@ -13,7 +13,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "34.13 · cloud 3";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
+const APP_VERSION = "34.14 · cloud 3";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
 const APP_VERSION_DATE = "26 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -2380,7 +2380,7 @@ export default function App(){
   const settle=(row,o,dom,detail,fromShopStage,blocked)=>{
     const link=isTicketLink(o.shopUrl)?null:(o.shopUrl||null);
     const onShop=!!shopLinkOf(o,dom);
-    const inShop=fromShopStage&&onShop;
+    const inShop=fromShopStage&&(onShop||!!o.listedOnly);
     // Only for a row whose status this lookup is setting: a status already on
     // file is Re-check's alone (keepWhatWeKnew).
     const ownStatus=row.looked&&row.hasCatalogue==="yes"&&row.shopState;
@@ -2729,9 +2729,20 @@ export default function App(){
       +"one link on it that names this exhibition. If nothing on these pages is this "
       +"exhibition’s catalogue, answer found false.\n\n"
       +resultsForPrompt(s1.results,6000)+READ_SHAPE);
-    const detail=s1.detail+"\n"+r1.detail;
+    let detail=s1.detail+"\n"+r1.detail;
     if(!r1.ok)return{ran:true,ok:false,detail,data:null};
-    return{ran:true,ok:true,detail,data:r1.data||{}};
+    const data=r1.data||{};
+    // A LIST IS NOT THE BOOK — her KHM Canaletto, 26 Sep. The read handed back
+    // KHM's own search-results page as "the book's page". A link that is one of
+    // the pages this step itself opened is refused as a link; the book still
+    // counts as in the shop (it was read off the shop's own pages), and her
+    // Museum shop button falls back to the shop's search for the show.
+    const opened=new Set(shopPages.map(normalizeUrlKey));
+    if(data.shopUrl&&opened.has(normalizeUrlKey(data.shopUrl))){
+      detail+="\nThe link given was the shop's own listing, not the book's page — kept as in the shop, without a link of its own.";
+      return{ran:true,ok:true,detail,data:{...data,shopUrl:null,listedOnly:true}};
+    }
+    return{ran:true,ok:true,detail,data};
   }
 
   async function lookupCat(row){
@@ -2851,7 +2862,7 @@ export default function App(){
       else if(s.blocked)out=ticket
         ?{ok:true,detail:s.detail,row:{...row,shopState:"blocked"},said:dropped+"The museum shop is blocked, so it couldn’t be re-checked."}
         :{ok:false,detail:s.detail,said:"Re-check didn’t work — the museum shop is blocked. Nothing changed."};
-      else if(o.found&&(o.catalogueTitle||o.isbn13)&&onShop){
+      else if(o.found&&(o.catalogueTitle||o.isbn13)&&(onShop||o.listedOnly)){
         // Reading the book's page for a blank ISBN is part of the shop step —
         // the page IS the shop's. Web search and the publisher are never run.
         const hit=await fillIsbn({ok:true,detail:s.detail,pageUrl:o.shopUrl,row:foundInShop(row,o)},
