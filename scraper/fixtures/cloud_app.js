@@ -126,8 +126,8 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     let l = await live();
     ok(l && same(l.data, hers), `CA-002b: the cloud copy is her ledger exactly — ${hers.rows.length} rows, ${hers.ignored.length} quarantined`);
     ok(/No cloud copy existed yet/.test(text()), 'CA-002c: the first import says it is now the first cloud copy');
-    await until(() => /Cloud copy saved .* 352 exhibitions/.test(text()));
-    ok(/Cloud copy saved .* 352 exhibitions/.test(text()), 'CA-002d: the line says when it saved and how many', (text().match(/\u2601[^\u2601]{0,90}/) || [''])[0]);
+    await until(() => /Last cloud save: .* 352 exhibitions/.test(text()));
+    ok(/Last cloud save: .* 352 exhibitions/.test(text()), 'CA-002d: the line says when it saved and how many', (text().match(/\u2601[^\u2601]{0,90}/) || [''])[0]);
 
     // 3. One click — star a show — reaches the store with no button pressed.
     ok(await afterSave(() => click(firstUnwatched())), 'CA-003: starring one show saves by itself');
@@ -184,7 +184,8 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     await until(() => snapCount() === 3);
     snaps = await C.cloudListSnapshots(store);
     ok(snaps.length === 3 && snaps[0].label === 'Cloud copy before Load' && snaps[0].kind === 'safety', 'CA-006b: the cloud copy was kept as a snapshot first');
-    ok(/differs from this file: 1 different in some field/.test(text()), 'CA-006c: and the page says exactly how it differed', (text().match(/The cloud copy \(saved[^.]*\.[^.]*\./) || [''])[0]);
+    ok(/The file you just loaded differs from the last cloud save \(\d\d:\d\d \d\d\/\d\d\/\d{4}\): 1 difference\. A snapshot of the last cloud state was taken before loading your file\./.test(text()),
+      'CA-006c: and the page says so in her words, with the count', (text().match(/The file you just loaded[^.]*\.[^.]*\./) || [''])[0]);
     ok(same((await live()).data, hers), 'CA-006d: then the imported file becomes the cloud copy');
     await until(() => (text().match(/Download/g) || []).length === 3);
     ok((text().match(/Roll back to this/g) || []).length === 3, 'CA-006e: the open drawer lists all three snapshots without being reopened');

@@ -13,7 +13,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "34.13 · cloud 2";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
+const APP_VERSION = "34.13 · cloud 2.1";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
 const APP_VERSION_DATE = "26 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -912,7 +912,14 @@ function ledgerDifference(a,b){
   for(const [k,v] of A){ if(!B.has(k))onlyA++; else if(B.get(k)!==v)changed++; }
   for(const k of B.keys()) if(!A.has(k))onlyB++;
   const qa=(a.ignored||[]).length,qb=(b.ignored||[]).length;
-  return {onlyA,onlyB,changed,quarantineDiffers:ledgerFingerprintText({ignored:a.ignored})!==ledgerFingerprintText({ignored:b.ignored}),qa,qb};
+  // Quarantine entries that differ, counted by key: in one list only, or in
+  // both but not identical. One count, so her sentence can add them up.
+  const byKey=l=>new Map((l||[]).map(x=>[String(x&&x.key),JSON.stringify(x)]));
+  const QA=byKey(a.ignored),QB=byKey(b.ignored);
+  let qDiff=0;
+  for(const [k,v] of QA){ if(QB.get(k)!==v)qDiff++; }
+  for(const k of QB.keys()) if(!QA.has(k))qDiff++;
+  return {onlyA,onlyB,changed,quarantineDiffers:ledgerFingerprintText({ignored:a.ignored})!==ledgerFingerprintText({ignored:b.ignored}),qa,qb,qDiff};
 }
 // Every failure that has its own fix gets its own sentence (mcpTrouble's rule).
 function cloudTrouble(e,verb){
@@ -1771,17 +1778,24 @@ export default function App(){
     const when=localReadable(live.rec.savedAt);
     const diff=ledgerDifference(data,incoming);
     if(!diff){ setCloudCheck("✓ Checked: the cloud copy (saved "+when+") matches this file exactly."); return; }
+    // HER FORMAT, 26 Sep: one count of differences, the cloud save's time,
+    // and what was done. The breakdown stays in the diagnostic, not lost.
     const bits=[];
     if(diff.onlyA)bits.push(diff.onlyA+" exhibition"+(diff.onlyA===1?"":"s")+" only in the cloud copy");
     if(diff.onlyB)bits.push(diff.onlyB+" only in "+(reason==="reset"?"the starter set":"this file"));
     if(diff.changed)bits.push(diff.changed+" different in some field");
-    if(diff.quarantineDiffers)bits.push("quarantine differs ("+diff.qa+" in the cloud copy, "+diff.qb+" here)");
+    if(diff.quarantineDiffers)bits.push(diff.qDiff+" quarantine entr"+(diff.qDiff===1?"y":"ies")+" different ("+diff.qa+" in the cloud copy, "+diff.qb+" here)");
+    // Never "0 differences" beside a ledger that does differ.
+    const n=Math.max(1,diff.onlyA+diff.onlyB+diff.changed+(diff.quarantineDiffers?diff.qDiff:0));
+    const what=reason==="reset"?"The starter set":"The file you just loaded";
+    const head=what+" differs from the last cloud save ("+when+"): "+n+" difference"+(n===1?"":"s")+".";
+    setDebug("Compared with the last cloud save ("+when+"): "+bits.join(", ")+".");
     try{
       await cloudTakeSnapshot(db,live.text,{label:"Cloud copy before "+(reason==="reset"?"Reset":"Load"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
       loadSnaps();   // an open drawer shows it straight away
-      setCloudCheck("The cloud copy (saved "+when+") differs from "+(reason==="reset"?"the starter set":"this file")+": "+bits.join(", ")+". It was kept in Cloud Saves before being replaced.");
+      setCloudCheck(head+" A snapshot of the last cloud state was taken before loading "+(reason==="reset"?"it":"your file")+".");
     }catch(e){
-      setCloudCheck("The cloud copy (saved "+when+") differs ("+bits.join(", ")+") and could NOT be kept in Cloud Saves ("+cloudTrouble(e,"save")+"). It has not been replaced.");
+      setCloudCheck(head+" A snapshot of the last cloud state could NOT be taken ("+cloudTrouble(e,"save")+"), so "+(reason==="reset"?"it":"your file")+" was not loaded.");
       throw e;   // the caller stops: nothing is armed, nothing overwritten
     }
   }
@@ -3194,7 +3208,7 @@ export default function App(){
         :<div style={{marginTop:4,fontSize:11,color:saveState==="saved"?C.okEdge:C.soft,fontWeight:saveState==="saved"?600:500,display:"flex",gap:8,alignItems:"baseline",flexWrap:"wrap"}}>
           <span>{"☁ "}{
             saveState==="saving"?"Saving to the cloud copy…"
-            :lastSaved?("Cloud copy saved "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+") · "+lastSaved.rows+" exhibitions"+(saveState==="saved"?"":" — not yet updated this session"))
+            :lastSaved?("Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+") · "+lastSaved.rows+" exhibitions"+(saveState==="saved"?"":" — not yet updated this session"))
             :cloudLive&&cloudLive.why?("Cloud copy: "+cloudLive.why)
             :cloudLive&&cloudLive.rec===null?"No cloud copy yet — it starts when you open your ledger."
             :"Checking the cloud copy…"
