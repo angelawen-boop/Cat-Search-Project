@@ -73,7 +73,7 @@ const check = (name, ok, got) => {
       const d = await S.getCuratorialText(p2, v.description, v.noise, v.noiseExempt);
       const txt = typeof d === 'string' ? d : String((d && d.text) || '');
       check('MD-008: ' + f + ' — the lead and the intro are read', lead.test(txt) && body.test(txt), txt);
-      check('MD-009: ' + f + ' — no ticket box, caption or credit', !/Tickets|Individual tickets|©|Download|Curator|Phone/.test(txt), txt);
+      check('MD-009: ' + f + ' — no ticket box, caption, credit or visit teaser', !/Tickets|Individual tickets|©|Download|Curator|Phone|Guided tours/.test(txt), txt);
     }
     if (process.env.MD_LIST) for (const r of real) console.log(r.start_date + ' → ' + r.end_date + '  ' + r.title);
   } finally {

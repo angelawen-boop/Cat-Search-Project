@@ -4769,8 +4769,11 @@ const VENUES = {
     title: { heading: false, cardParts: { name: '.titre' } },
     datesAt: { within: null, sel: '.dates' },
     // The lead paragraph and the intro under it. The body below repeats the
-    // lead and is threaded with photo captions and credits.
-    description: '.chapeau p, .intro_texte p',
+    // lead and is threaded with photo captions and credits. NOT an
+    // .entry-summary chapeau: those are teaser cards for other pages further
+    // down ("Guided tours and workshop are available in…") — her first laptop
+    // sweep, 26 Sep, carried it on 5 of 20 rows.
+    description: '.chapeau:not(.entry-summary) p, .intro_texte p',
   },
 
   // MUSÉE JACQUEMART-ANDRÉ — her addition, 25 Sep. Two listings, both server-
