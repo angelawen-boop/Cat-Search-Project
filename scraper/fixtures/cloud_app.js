@@ -159,14 +159,15 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     ok(snapText === file1.data, 'CA-004f: the cloud copy is the offline file, byte for byte');
     const snapData = JSON.parse(snapText);
     ok(same(snapData, afterStar), 'CA-004g: and it holds exactly the ledger on screen');
-    ok(/Local file saved\. Extra copy also sent to cloud\./.test(text()), 'CA-004h: the note says both happened, in her words');
+    ok(/Local file saved\. Extra copy also sent to the cloud\./.test(text()), 'CA-004h: the note says both happened, in her words');
     ok(/after starring/.test(text()) && /cat-watch-ledger-.*-after-starring\.json/.test(text()), 'CA-004i: the open drawer lists it at once, with its file name');
+    ok(/Cloud copy of Export: \u201cafter starring\u201d · 352 exhibitions/.test(text()), 'CA-004j: in the list it reads Cloud copy of Export: "her description" · count');
 
     // 5. Another change, then roll back to the snapshot.
     ok(await afterSave(() => click(firstUnwatched())), 'CA-005: a second star saves');
     const beforeRollback = (await live()).data;
     ok(!same(beforeRollback, snapData), 'CA-005b: the cloud copy now differs from the snapshot');
-    click(button('Roll back to this'));
+    click(button('Roll back'));
     await until(() => /Roll back to this cloud save\?/.test(text()));
     ok(/Roll back to this cloud save\?/.test(text()), 'CA-005c: rolling back asks first');
     ok(await afterSave(() => click(button('Continue'))), 'CA-005d: confirming the rollback is followed by a save');
@@ -183,17 +184,27 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     ok(await afterSave(() => importText(HERS_TEXT)), 'CA-006: importing a file that differs from the cloud copy is followed by a save');
     await until(() => snapCount() === 3);
     snaps = await C.cloudListSnapshots(store);
-    ok(snaps.length === 3 && snaps[0].label === 'Cloud copy before Load' && snaps[0].kind === 'safety', 'CA-006b: the cloud copy was kept as a snapshot first');
+    ok(snaps.length === 3 && snaps[0].label === 'Safety snapshot before Load' && snaps[0].kind === 'safety', 'CA-006b: the cloud copy was kept as a snapshot first');
+    ok(/Safety snapshot before Load · \d+ exhibitions/.test(text()) && /Safety snapshot before roll-back to the save of [A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d\d[ap]m · \d+ exhibitions/.test(text()),
+      'CA-006f: safety copies read "Safety snapshot before …", with no automatic tag');
+    ok(!/automatic/.test(text()) && [...doc.querySelectorAll('b')].some(b => b.textContent === 'after starring'), 'CA-006g: only her own description is in bold; no tag on the rest');
     ok(/The file you just loaded differs from the last cloud save \([A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d\d[ap]m\): 1 difference\. A snapshot of the last cloud state was taken before loading your file\./.test(text()),
       'CA-006c: and the page says so in her words, with the count', (text().match(/The file you just loaded[^.]*\.[^.]*\./) || [''])[0]);
     ok(same((await live()).data, hers), 'CA-006d: then the imported file becomes the cloud copy');
     await until(() => (text().match(/Download/g) || []).length === 3);
-    ok((text().match(/Roll back to this/g) || []).length === 3, 'CA-006e: the open drawer lists all three snapshots without being reopened');
+    ok([...doc.querySelectorAll('button')].filter(b => b.textContent.trim() === 'Roll back').length === 3, 'CA-006e: the open drawer lists all three snapshots without being reopened');
 
     // 7. Import the same file again: the trial's check says they match, nothing kept.
     await importText(HERS_TEXT);
     await until(() => /is identical to the last cloud save \([A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d\d[ap]m\)\. No snapshot of the last cloud state was needed before loading your file\./.test(text()));
     ok(/is identical to the last cloud save \([A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d\d[ap]m\)\. No snapshot of the last cloud state was needed before loading your file\./.test(text()) && snapCount() === 3, 'CA-007: importing the file the cloud copy already holds says it is identical, in her words, and keeps nothing extra');
+    {
+      const t = text(), a = t.indexOf('Last cloud save:'), b = t.indexOf('The file you just loaded is identical');
+      ok(a >= 0 && b > a, 'CA-007b: the cloud line comes first, the loading line after it');
+      ok(!/exhibitions from your file/.test(t), 'CA-007d: no separate "Loaded N exhibitions from your file" line beside the check line');
+      click([...doc.querySelectorAll('button')].find(x => x.title === 'Dismiss'));
+      ok(await until(() => !/The file you just loaded is identical/.test(text())), 'CA-007c: the loading line can be dismissed');
+    }
 
     // 8. Download: an automatic copy comes as an ordinary ledger file; the one
     //    Save made comes back as its offline twin, same name, same bytes.
@@ -222,7 +233,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     click(tick2);
     await until(() => !tick2.checked);
     click(button('Save now'));
-    ok(await until(() => /Local file saved\.  \(/.test(text()) && saved.length === 4), 'CA-008e: unticked, Save gives the file alone and says only "Local file saved."');
+    ok(await until(() => /Local file saved\. \(cat-watch-ledger-/.test(text()) && saved.length === 4), 'CA-008e: unticked, Save gives the file alone and says only "Local file saved."');
     ok(snapCount() === 4, 'CA-008f: and keeps no cloud copy');
 
     // 8g. Load asks nothing while the cloud is saving — the safety copy covers it.

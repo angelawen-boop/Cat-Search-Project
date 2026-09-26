@@ -1426,6 +1426,18 @@ let AUTOLOAD_FIRED=false; // module-level: survives a strict-mode remount so ope
 // Local 24hr timestamp (browser's timezone), e.g. 2026-08-23-2230 = 10:30pm local.
 // A description, as it goes into a file name: lower case, words joined by hyphens.
 function labelSlug(label){return String(label||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);}
+// WHAT A CLOUD SAVE IS CALLED IN THE LIST — her wording, 26 Sep. A copy made
+// by Save: 'Cloud copy of Export: "her description"'. A safety copy: its own
+// label; older safety copies were stored under the first wording and are
+// renamed on screen here, never rewritten in the store.
+function snapTitle(s){
+  if(!s)return "";
+  if(s.kind!=="safety")return "Cloud copy of Export"+(s.label?": \u201c"+s.label+"\u201d":"");
+  const l=String(s.label||"");
+  const m=l.match(/^Before rolling back to (.*)$/);
+  if(m)return "Safety snapshot before roll-back to \u201c"+m[1].replace(/^Cloud copy before /,"Safety snapshot before ")+"\u201d";
+  return l.replace(/^Cloud copy before /,"Safety snapshot before ")||"Safety snapshot";
+}
 function localStamp(iso){const d=iso?new Date(iso):new Date(),p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes());}
 // ONE WAY TO WRITE A MOMENT, her ruling 26 Sep: "Sep 26, 2026 1:22pm", the
 // same as "Last refreshed". Every time on screen comes through here.
@@ -1767,19 +1779,21 @@ export default function App(){
   // the cloud copy is compared with what is arriving. The same: said so, and
   // that sentence IS the trial's check. Different: the cloud copy is kept as a
   // snapshot first, so nothing the store held can be lost by opening a file.
+  // Returns true when it put a line on screen about what was loaded — then the
+  // plain "Loaded N exhibitions" line is not needed (her ruling, 26 Sep).
   // Returns only when that is done; the new ledger is armed after it.
   async function guardCloudBeforeReplace(incoming,reason){
     const db=await useCap("db");
-    if(!db){ setCloudCheck(null); return; }
+    if(!db){ setCloudCheck(null); return false; }
     let live;
     try{ live=await cloudReadLive(db); }
-    catch(e){ setCloudCheck("The cloud copy couldn’t be read ("+cloudTrouble(e,"read")+"). It was left in the store untouched; this ledger is saved as the new cloud copy."); cloudPrev.current=null; cloudFp.current=null; return; }
-    if(!live.rec){ setCloudCheck("No cloud copy existed yet — this ledger is now the first one."); return; }
+    catch(e){ setCloudCheck("The cloud copy couldn’t be read ("+cloudTrouble(e,"read")+"). It was left in the store untouched; this ledger is saved as the new cloud copy."); cloudPrev.current=null; cloudFp.current=null; return true; }
+    if(!live.rec){ setCloudCheck("No cloud copy existed yet — this ledger is now the first one."); return true; }
     const data=JSON.parse(live.text);
     cloudPrev.current=live.rec; cloudFp.current=ledgerFingerprintText(data);
     const when=localReadable(live.rec.savedAt);
     const diff=ledgerDifference(data,incoming);
-    if(!diff){ setCloudCheck("✓ The file you just loaded is identical to the last cloud save ("+when+"). No snapshot of the last cloud state was needed before loading your file."); return; }
+    if(!diff){ setCloudCheck("✓ The file you just loaded is identical to the last cloud save ("+when+"). No snapshot of the last cloud state was needed before loading your file."); return true; }
     // HER FORMAT, 26 Sep: one count of differences, the cloud save's time,
     // and what was done. The breakdown stays in the diagnostic, not lost.
     const bits=[];
@@ -1793,9 +1807,10 @@ export default function App(){
     const head=what+" differs from the last cloud save ("+when+"): "+n+" difference"+(n===1?"":"s")+".";
     setDebug("Compared with the last cloud save ("+when+"): "+bits.join(", ")+".");
     try{
-      await cloudTakeSnapshot(db,live.text,{label:"Cloud copy before "+(reason==="reset"?"Reset":"Load"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
+      await cloudTakeSnapshot(db,live.text,{label:"Safety snapshot before "+(reason==="reset"?"Reset":"Load"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
       loadSnaps();   // an open drawer shows it straight away
       setCloudCheck(head+" A snapshot of the last cloud state was taken before loading "+(reason==="reset"?"it":"your file")+".");
+      return true;
     }catch(e){
       setCloudCheck(head+" A snapshot of the last cloud state could NOT be taken ("+cloudTrouble(e,"save")+"), so "+(reason==="reset"?"it":"your file")+" was not loaded.");
       throw e;   // the caller stops: nothing is armed, nothing overwritten
@@ -1836,7 +1851,7 @@ export default function App(){
   // be undone. If that safety copy cannot be taken, nothing is replaced.
   function requestRollback(s){
     setConfirmBox({title:"Roll back to this cloud save?",
-      text:"The ledger becomes the cloud save “"+(s.label||"untitled")+"” from "+localReadable(s.at)+" ("+s.rows+" exhibitions). What you have now is kept in Cloud Saves first, so this can be undone.",
+      text:"The ledger becomes the cloud save “"+snapTitle(s)+"” from "+localReadable(s.at)+" ("+s.rows+" exhibitions). What you have now is kept in Cloud Saves first, so this can be undone.",
       act:async()=>{
         const db=await useCap("db"); if(!db)return;
         setSnapBusy(true);
@@ -1844,10 +1859,10 @@ export default function App(){
           let curText=null,curRows=0,curQ=0;
           if(rows.length){ const d=cloudLatest.current; curText=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()}); curRows=d.rows.length; curQ=d.ignored.length; }
           else{ const live=await cloudReadLive(db); if(live.rec){ curText=live.text; const cd=JSON.parse(live.text); curRows=cd.rows.length; curQ=(cd.ignored||[]).length; cloudPrev.current=live.rec; } }
-          if(curText)await cloudTakeSnapshot(db,curText,{label:"Before rolling back to "+(s.label||localReadable(s.at)),kind:"safety",rows:curRows,quarantined:curQ});
+          if(curText)await cloudTakeSnapshot(db,curText,{label:"Safety snapshot before roll-back to the save of "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
           const data=JSON.parse(await cloudReadSnapshot(db,s));
           loadLedger((data.rows||[]).map(r=>({...r,watching:r.watching||false})),data.lastRun||null,
-            "Rolled back to the cloud save “"+(s.label||"untitled")+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
+            "Rolled back to the cloud save “"+snapTitle(s)+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
             {ignored:Array.isArray(data.ignored)?data.ignored:[]});
           setDirty(true);          // it is in no file yet
           setCloudCheck(null);
@@ -2862,7 +2877,7 @@ export default function App(){
   // AN IMPORT CHECKS THE CLOUD COPY FIRST (guardCloudBeforeReplace), then
   // replaces the screen and arms saving. If the cloud copy differed and could
   // not be kept as a snapshot, the import stops there and says so.
-  function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{let d;try{d=JSON.parse(reader.result);}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");return;}if(!(d&&Array.isArray(d.rows))){setError("That file didn't contain a ledger (no entries found).");return;}const next=d.rows.map(r=>({...r,watching:r.watching||false})),ign=Array.isArray(d.ignored)?d.ignored:[];try{await guardCloudBeforeReplace({rows:next,ignored:ign},"import");}catch{return;}loadLedger(next,d.lastRun||null,"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",{ignored:ign});cloudArmed.current=true;setDebug("Loaded "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");};reader.readAsText(file);e.target.value="";}
+  function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{let d;try{d=JSON.parse(reader.result);}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");return;}if(!(d&&Array.isArray(d.rows))){setError("That file didn't contain a ledger (no entries found).");return;}const next=d.rows.map(r=>({...r,watching:r.watching||false})),ign=Array.isArray(d.ignored)?d.ignored:[];let said=false;try{said=await guardCloudBeforeReplace({rows:next,ignored:ign},"import");}catch{return;}loadLedger(next,d.lastRun||null,said?null:"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",{ignored:ign});cloudArmed.current=true;setDebug("Loaded "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");};reader.readAsText(file);e.target.value="";}
 
   // Confirm-before-replace: Import and Reset can wipe the screen in one tap, so
   // they ask first WHENEVER there is unsaved work showing.
@@ -2943,12 +2958,12 @@ export default function App(){
       let text,ok;
       if(file==="saved"){
         ok=cloud!==null&&cloud!==true?false:true;
-        text=cloud===true?"Local file saved. Extra copy also sent to cloud."
+        text=cloud===true?"Local file saved. Extra copy also sent to the cloud."
           :cloud===null?"Local file saved."
           :"Local file saved. "+cloudBit;
       }else if(file==="browser"){
         ok=false;
-        text=(cloud===true?"Extra copy sent to cloud. ":cloud===null?"":cloudBit+" ")
+        text=(cloud===true?"Extra copy sent to the cloud. ":cloud===null?"":cloudBit+" ")
           +"A download of the local file was started \u2014 this viewer can\u2019t confirm it arrived; check your downloads folder.";
       }else{
         ok=false;
@@ -2956,7 +2971,7 @@ export default function App(){
           :cloud===null?"Local file not saved - "+file+"."
           :"NOTHING SAVED \u2014 local file not saved - "+file+". "+cloudBit;
       }
-      setSaveNote({ok,text:text+"  ("+filename+")"});
+      setSaveNote({ok,text,file:filename});
       if(file==="saved"){
         setError(null); setDirty(false); setUnconfirmedSave(null);
         setShowSave(false); setSaveLabel(""); setSaveCloud(true);
@@ -3146,11 +3161,14 @@ export default function App(){
   // trial fails she goes back to Export by hand and needs it again: set true.
   const FILE_UNSAVED_WARNING=false;
   const showUnsavedBanner=FILE_UNSAVED_WARNING&&hasLedger&&dirty;
-  let savedText=null,savedCol=C.soft,savedWeight=500;
+  // THE LOAD LINE — what was opened, until the first change.
+  let savedText=null;
   if(!hasLedger){savedText="No ledger loaded \u2014 tap Load to begin.";}
-  else if(saveNote){savedText=saveNote.text;savedCol=saveNote.ok?C.okEdge:C.warnInk;savedWeight=saveNote.ok?600:700;}
-  else if(dirty){savedText=null;}
-  else{savedText=loadedInfo||"Loaded \u2014 no edits yet.";}
+  // UNWIRED WHEN THE CLOUD CHECK SPEAKS — her ruling, 26 Sep: "Loaded N
+  // exhibitions from your file" repeated what the check line and the cloud
+  // line already say. It still shows when there is no check line (a page
+  // that cannot reach its store) and for Reset, roll-back and open-from-cloud.
+  else if(!dirty&&!saveNote&&loadedInfo){savedText=loadedInfo;}
 
   if(!loaded)return(<div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.soft,minHeight:"100vh",display:"grid",placeItems:"center",fontSize:13}}>Opening the ledger{"\u2026"}</div>);
 
@@ -3192,7 +3210,9 @@ export default function App(){
           </label>
           <div style={{marginTop:6,fontSize:11,color:C.soft,wordBreak:"break-all"}}>{"File name: "+LEDGER_PREFIX+localStamp()+(labelSlug(saveLabel)?"-"+labelSlug(saveLabel):"")+".json"}</div>
         </div>}
-        {savedText&&<div style={{marginTop:6,fontSize:11,color:savedCol,fontWeight:savedWeight}}>{savedText}</div>}
+        {/* THE STATUS LINES, IN HER ORDER — 26 Sep. The cloud line first, always
+            (green, or the red banner when saving has stopped); a line's space;
+            then what LOADING did (black, dismissable); then what SAVING did. */}
         {/* THE CLOUD COPY'S LINE — permanent, never silent (her ask, 24 Sep).
             One line when it is working; the warning banner when it is not,
             because a save that has stopped is the one fact she must not have
@@ -3207,7 +3227,7 @@ export default function App(){
                 :" Nothing has been saved to the cloud yet.")
               +(hasLedger?" Changes since then are on screen only \u2014 tap Save to keep them in a file.":"")}</span>
           </div>
-        :<div style={{marginTop:4,fontSize:11,color:saveState==="saved"?C.okEdge:C.soft,fontWeight:saveState==="saved"?600:500,display:"flex",gap:8,alignItems:"baseline",flexWrap:"wrap"}}>
+        :<div style={{marginTop:6,fontSize:11,color:C.okEdge,fontWeight:600,display:"flex",gap:8,alignItems:"baseline",flexWrap:"wrap"}}>
           <span>{"☁ "}{
             saveState==="saving"?"Saving to the cloud copy…"
             :lastSaved?("Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+") · "+lastSaved.rows+" exhibitions"+(saveState==="saved"?"":" — not yet updated this session"))
@@ -3217,7 +3237,20 @@ export default function App(){
           }</span>
           {!hasLedger&&cloudLive&&cloudLive.rec&&<button onClick={requestOpenCloud} style={{background:"none",border:"none",color:C.action,fontSize:11,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0}}>Open it</button>}
         </div>}
-        {cloudCheck&&<div style={{marginTop:4,fontSize:11,color:C.ink,lineHeight:1.45}}>{cloudCheck}</div>}
+        <div style={{marginTop:16}}>
+          {savedText&&<div style={{fontSize:11,color:C.ink,lineHeight:1.45}}>{savedText}</div>}
+          {/* STAYS UNTIL SHE DISMISSES IT or the next Load replaces it — her
+              question, 26 Sep. Timed fading was the other option: a line that
+              can vanish before it is read is a negative nobody earned. */}
+          {cloudCheck&&<div style={{marginTop:2,fontSize:11,color:C.ink,lineHeight:1.45,display:"flex",gap:8,alignItems:"baseline"}}>
+            <span style={{flex:1}}>{cloudCheck}</span>
+            <button onClick={()=>setCloudCheck(null)} title="Dismiss" aria-label="Dismiss" style={{background:"none",border:"none",color:C.soft,fontSize:14,lineHeight:1,cursor:"pointer",padding:0}}>{"\u00d7"}</button>
+          </div>}
+          {hasLedger&&saveNote&&<div style={{marginTop:6,fontSize:11,lineHeight:1.45}}>
+            <span style={{color:saveNote.ok?C.okEdge:C.warnInk,fontWeight:saveNote.ok?600:700}}>{saveNote.text}</span>
+            {saveNote.file&&<span style={{color:C.ink,fontWeight:400}}>{" ("+saveNote.file+")"}</span>}
+          </div>}
+        </div>
         {hasLedger&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.okBg,border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.okInk,lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u21BB"}</span>
           {/* EVERY CARD SHE LOOKED AT IS ACCOUNTED FOR IN THIS ONE SENTENCE,
@@ -3572,7 +3605,7 @@ export default function App(){
               here makes one. */}
           <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
             {snaps&&snaps.length>0&&<b>{snaps.length+" cloud save"+(snaps.length===1?"":"s")+". "}</b>}
-            {"Copies of your ledger kept in the cloud: one each time you Save with \u201cAlso save a copy to cloud\u201d ticked, plus a copy kept automatically before a Load, Reset or roll-back replaces a different ledger. Never changed once kept. Download gives you the file; Roll back makes it your ledger, keeping what you had in Cloud Saves first."}
+            {"From (1) exports that were also saved to the cloud and (2) safety snapshots taken of the current cloud state before a Load, Reset or roll-back to an earlier snapshot."}
           </div>
           {snapWhy&&<div style={{fontSize:12,fontWeight:600,color:C.warnInk,background:C.warnBg,border:"1px solid "+C.warnEdge,borderRadius:4,padding:"5px 8px",marginBottom:8}}>{snapWhy}</div>}
           {snaps===null?<div style={{fontSize:12,color:C.soft}}>{"Reading cloud saves…"}</div>
@@ -3580,9 +3613,11 @@ export default function App(){
           :snaps.map(s=>(
             <div key={s.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"5px 0",alignItems:"baseline",borderTop:"1px dotted "+C.rule,flexWrap:"wrap"}}>
               <span style={{minWidth:120,fontWeight:600,whiteSpace:"nowrap"}}>{localReadable(s.at)}</span>
-              <span style={{flex:"1 1 160px"}}>{s.label||<span style={{color:C.soft}}>{"(no label)"}</span>}{s.kind==="safety"&&<span style={{color:C.soft}}>{" · kept automatically"}</span>}<span style={{color:C.soft}}>{" · "+s.rows+" exhibitions"}</span>{s.filename&&<span style={{display:"block",fontSize:11,color:C.soft,wordBreak:"break-all"}}>{s.filename}</span>}</span>
+              {/* NO "AUTOMATIC" TAG — her ruling, 26 Sep: the copies SHE made are the
+                  ones marked, by her own description in bold. */}
+              <span style={{flex:"1 1 160px"}}>{s.kind!=="safety"&&s.label?<>{"Cloud copy of Export: \u201c"}<b>{s.label}</b>{"\u201d"}</>:snapTitle(s)}<span style={{color:C.soft}}>{" · "+s.rows+" exhibitions"}</span>{s.filename&&<span style={{display:"block",fontSize:11,color:C.soft,wordBreak:"break-all"}}>{s.filename}</span>}</span>
               <button onClick={()=>downloadSnapshot(s)} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Download</button>
-              <button onClick={()=>requestRollback(s)} disabled={snapBusy} style={{background:"none",border:"none",color:C.accent,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Roll back to this</button>
+              <button onClick={()=>requestRollback(s)} disabled={snapBusy} style={{background:"none",border:"none",color:C.accent,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Roll back</button>
             </div>
           ))}
         </div>}
