@@ -1190,35 +1190,13 @@ month map reads "Feburary", both date parsers read ordinal days ("23rd");
 
 ### 7. Catalogue lookup generally
 
-**Built 26 Sep (34.14), from her KHM *Canaletto & Bellotto*:** the shop read
-returned KHM's SEARCH-RESULTS page as the book's own page. A shop link that is
-one of the pages the step itself opened (search or shelf) is now refused as a
-link — the book still counts as in the shop, and the Museum shop button opens
-the shop's search for the show (`listedOnly`; L-020 to L-023). Her card kept
-the dead ticket link because the ledger she loaded predates her Re-check —
-one Re-check, then Export, clears it. KHM's shop ANSWERED the connector that
-day: its block comes and goes.
-
-**OUTSTANDING — her issue, 26 Sep, START HERE.** The shop step opened KHM's
-search for "Canaletto & Bellotto" and read the book on it — yet the card's
-Museum shop link can only be that SEARCH page, never the book's own product
-page (`shop.khm.at/en/products/ausstellungskatalog-2026-canaletto-bellotto-
-sprache-englisch-100000000039076-3631-02`, which she found by hand). Her
-question: if the lookup sees the book on the page, why can't it give the
-book's own link? **Not diagnosed.** Unchecked hypothesis only: the shop step
-asks the connector for EXCERPTS (text, links likely stripped), so the read
-never sees the product address. First step next session: fetch that search
-page once in excerpt mode and once whole (`full_content`), and LOOK for the
-product address before proposing anything. 34.14 (live, 26 Sep) stops the
-search page being filed as the book; it does not solve this.
-
-**NEXT — her question, 26 Sep: why only the search results, not the book's
-own page?** Likely cause, UNCONFIRMED (the check hit the rate limit): the
-shop step asks the connector for EXCERPTS — text with the links stripped — so
-the read sees the book's line but not its address. Proposal: ask for the page
-whole (`full_content: true` on the shop step), which usually keeps links.
-Cost: bigger reads; a long page may be cut before the book. Test on KHM and
-one working shop BEFORE building; the change is hers to approve.
+**KHM — FIXED, 34.14, confirmed by her 26 Sep (*Canaletto & Bellotto*).**
+With no link to the book's own page on file, the Museum shop button is the
+shop's search for the EXHIBITION's title — her design for blocked shops, and
+the same at every venue with a search box (`buyLinks`). A search or shelf
+page the shop step opened is never filed as the book's page (`listedOnly`;
+L-020 to L-023). **Not an open issue: the button opening KHM's search rather
+than the book's own page is the design working.** Do not re-open it.
 
 The debugging session for the issues she is noting (item 2). Standing gaps:
 fourteen venues have had no lookup run against them, their shop addresses
