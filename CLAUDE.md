@@ -992,13 +992,14 @@ closed item without a new fact.
 ### 1. The ledger in the page's store — BUILT on branch `claude/ledger-cloud`, in trial
 
 Reopened by her 24 Sep (was §8); built 25 Sep. **Branch only — `main` and her
-published app do not have it.** Version series of its own, her ruling:
-"34.13 · cloud 2" (26 Sep: `main` merged in, so it carries every venue and the
-catalogue lookup). Test page, own store, never her app:
-**https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf** — **from 26 Sep her
-working app for the trial, not a sandbox: she works ONLY there, on her real
-ledger, never switching between the two** (her ruling). It needs all four
-capabilities for the lookup. The code's detail is under "THE CLOUD LEDGER" in
+published app do not have it.** Version series of its own, her ruling: `main`'s
+number then the cloud count. **"34.13 · cloud 3" is live on the test page (26
+Sep); the branch holds "34.14 · cloud 3"** (`main`'s 34.14 merged in, not
+published) — her ruling: edits stay "cloud 3" until she says otherwise. Test
+page, own store: **https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf** — **her
+working app for the trial from 26 Sep: she works ONLY there, on her real
+ledger, and only in ONE tab on ONE device** (two open copies save over each
+other; not handled). All four capabilities. Code: "THE CLOUD LEDGER" in
 `Cat_Watch.jsx`.
 
 **What is where — the store holds two kinds of thing:**
@@ -1010,50 +1011,76 @@ capabilities for the lookup. The code's detail is under "THE CLOUD LEDGER" in
   same store as the live ledger, her yes 25 Sep** — protected by the code never
   writing to one and by its fingerprint, not by the platform.
 - **Her offline files** — the copy outside Claude.
+- **The sweep log and quarantine live in the TEST page's store during the
+  trial.** A page reads only its own store (platform, not app). Seeded from her
+  app's store 26 Sep (sweep log copied; quarantine merged with its two release
+  records); her imports there update them live.
 
-**Saving — her design, 26 Sep.** One **Save** button (was Export / Save) opens
-a panel: a description, **"Also save a copy to cloud"** (starts TICKED, her
-ruling — revisit if storage fills), Save now. It hands her the offline file AND
-puts the same file into Cloud Saves — same name (description in it), same
-bytes; the cloud copy goes first so a cancelled file keeps it. Each half
-reports itself, her wording: "Local file saved. Extra copy also sent to
-cloud." / "Cloud copy kept. Local file not saved - cancelled."
+**Saving — her design, 26 Sep.** One **Save** button opens a panel: a
+description, **"Also save a copy to cloud"** (starts TICKED — revisit if
+storage fills), Save now. Offline file and cloud copy share name and bytes; the
+cloud copy goes first so a cancelled file keeps it. Each half reports itself:
+"Local file saved. Extra copy also sent to the cloud." / "Cloud copy kept.
+Local file not saved - cancelled."
 
-**Plus exactly two automatic SAFETY copies** (her yes, 25 Sep; unchanged 26
-Sep): before a **rollback**, and before **Load** or **Reset** replaces a live
-ledger that differs from what is coming in ("differs": any exhibition or
-quarantine entry not identical; row order and file stamps ignored). Of the
-live ledger, never of the file. If it cannot be kept, nothing is replaced.
-**Import (a sweep CSV) never triggers one.**
+**Plus exactly two automatic SAFETY copies** (her yes, 25 Sep): before a
+**roll-back**, and before **Load** or **Reset** replaces a live ledger that
+differs from what is coming in (any exhibition or quarantine entry not
+identical; row order and file stamps ignored). Of the live ledger, never of
+the file. If it cannot be kept, nothing is replaced. **Import (a sweep CSV)
+never triggers one.**
 
-**On screen, her rulings 26 Sep:**
-- **Cloud Saves** in the footer beside Quarantine — a list, like Quarantine:
-  each entry with Download (its offline twin's name) and Roll back (asks
-  first). Nothing in it makes a copy.
-- **Red "CLOUD COPY NOT SAVING"** the moment a save fails, saying when the
-  cloud copy last saved; gone once a save lands. Load / Reset ask first only
-  while it shows.
-- **The ☁ line** — the heartbeat: when it last saved, how many.
+**On screen — her wording and order, 26 Sep:**
+- **Every time on screen reads "Sep 26, 2026 1:22pm"** (`localReadable` =
+  `fmtRefresh`). File names keep the sortable stamp.
+- **Status lines, in order:** (1) the cloud line, always green — "☁ Last cloud
+  save: … (N minutes ago) · 412 exhibitions" — or the red "CLOUD COPY NOT
+  SAVING" banner ending "Last cloud save: …"; (2) a line's space; (3) the
+  LOADING line, black, with a × to dismiss, replaced by the next Load: "The
+  file you just loaded differs from the last cloud save (…): N differences. A
+  snapshot of the last cloud state was taken before loading your file." or "✓
+  The file you just loaded is identical to the last cloud save (…). No snapshot
+  of the last cloud state was needed before loading your file." (the breakdown
+  is in the diagnostic); (4) the SAVING line — message green and bold, file
+  name black and plain.
+- **"Loaded N exhibitions from your file" is unwired while the loading line
+  shows** (code kept; still shows with no store, and for Reset / roll-back /
+  Open it).
+- **Cloud Saves** tray beside Quarantine: "N cloud saves. From (1) exports that
+  were also saved to the cloud and (2) safety snapshots taken of the current
+  cloud state before a Load, Reset or roll-back to an earlier snapshot." Her
+  own: 'Cloud copy of Export: "**description**" · N exhibitions' with the file
+  name below — only her description bold, no "automatic" tag anywhere. Safety
+  copies: "Safety snapshot before Load" / "…Reset" / "…roll-back to <time>";
+  older stored labels are renamed on screen only (`snapTitle`). Buttons
+  Download and Roll back (asks first).
 - **After an Import is applied:** "Import complete and needs to be saved
-  offline and to the cloud — tap Save now", with the counts. Goes when a Save
+  offline and to the cloud — tap Save now", then the counts. Goes when a Save
   delivers both.
 - **The amber "not saved to a file" banner is UNWIRED, not deleted**
   (`FILE_UNSAVED_WARNING`) — if the trial fails she goes back to Export by
-  hand and needs it again.
+  hand and needs it again. Load / Reset ask first only while the red banner
+  shows.
 - Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep CSV).
 
-**Trial switch `CLOUD_OPENS=false`.** The app still opens empty; she Loads her
-file, and every Load is compared with the live ledger — "matches exactly" or
-how it differs. That sentence is the trial's check. "Open it" on the ☁ line
-opens the live ledger by hand. True only when she ends the trial — her ruling:
-a long one, checked at several points and in several scenarios, Exports as
-usual throughout.
+**Trial switch `CLOUD_OPENS=false`.** The app opens empty; she Loads her file
+and the loading line is the trial's check. "Open it" on the cloud line opens
+the live ledger by hand. True only when she ends the trial.
 
-**Safety, proven (`cloud_ledger.js`, `cloud_app.js`, her real ledger):** a
-save writes new pieces and switches one record last, so a save cut off at any
-point leaves the last complete ledger; a damaged or missing piece is refused;
-an empty page never saves. **On the real store, 25 Sep:** a 180 KB piece
-stored and read back identical; 270 KB refused at the 256 KiB limit.
+**Her tests, 26 Sep — all passed:** load, change, reload, Load the older file
+(safety copy kept, differs by 1); roll back (safety copy kept, her change
+restored); Save with the cloud box (both copies, listed in the tray); export →
+change → reload the export (correct, change absent); saving lands within a
+second of each action; catalogue lookups work on the test page. **Still to
+meet in real use:** Download a cloud save and Load it; close the page fully and
+reopen; the first real sweep Import (sweep log updates live; the Import
+reminder — the one line with no fixture).
+
+**Safety, proven (`cloud_ledger.js`, `cloud_app.js` — 51 checks — her real
+ledger):** a save writes new pieces and switches one record last, so a save cut
+off at any point leaves the last complete ledger; a damaged or missing piece is
+refused; an empty page never saves. **On the real store, 25 Sep:** a 180 KB
+piece stored and read back identical; 270 KB refused at the 256 KiB limit.
 
 **Decided against, 25 Sep:**
 - **A snapshot on closing the page** — a browser gives a closing page no
@@ -1062,17 +1089,21 @@ stored and read back identical; 270 KB refused at the 256 KiB limit.
   saving is too messy. **Cloud saving has to be proven reliable; that is the
   point of the trial.** Her own protection is Cloud Saves and offline files.
 
+**Held for the next change (her ruling 26 Sep, not yet built):**
+- **Delete "No ledger loaded — tap Load to begin." permanently** — in the
+  cloud version AND on `main`, whether or not the cloud trial goes ahead.
+
 **Next:**
-1. **Her real use on the test page** (from 26 Sep), then this session reads the
-   store and checks it against her file. Anything changed on `main` meanwhile
-   must be merged into the branch before the page is rebuilt.
+1. **Her normal use on the test page, over several sessions** (from 26 Sep);
+   she reports what surfaces. On request, read the store and check it against
+   her file. Anything changed on `main` is merged into the branch before the
+   page is rebuilt.
 2. **Open straight from the cloud (`CLOUD_OPENS=true`) once Loads have matched
    every time** — her end state, her call.
 3. Merge to `main` and publish to her app — hers to call; §4's rules apply.
    **First copy the test page's `sweeps/venues` and `quarantine/rows` into her
-   app's store** (quarantine merged latest-wins, never replaced). A page can
-   read only its own store, so during the trial the test page's copies are the
-   live ones: seeded from her app's on 26 Sep, updated by her imports since.
+   app's store** (quarantine merged latest-wins, never replaced) — during the
+   trial the test page's copies are the live ones.
 4. Google Drive backup by button — back on the table, never automatic.
 
 **Parked, not gating:** two tabs open at once.
