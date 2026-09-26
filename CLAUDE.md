@@ -541,6 +541,7 @@ first number to scroll past:
 | `recheck_shop.js` | the real app in jsdom, buttons pressed — Re-check (R-001 to R-023), blocked shops and web-found shop links (L-001 to L-019), search with filters (S-001 to S-003) |
 | `mam_pages.js` | the MAM recipe on its saved archive pages — her exclusions and count |
 | `mad_pages.js` | the MAD recipe on her saved pages, no network — her count, dates, titles, the description |
+| `brit_pages.js` | the British Museum recipe on her saved pages, no network — titles, year headings, dates, the description |
 | `orsay_pages.js` | the d'Orsay recipe on her saved pages, no network — her tag rulings, dates, titles, the description |
 | `summary_pages.js` | descriptions on saved pages (`docs/summary_pages/`), no network — the museum's own text, never a press list, credit or ticket note |
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
@@ -1125,9 +1126,9 @@ each step really does block the next:
    fixtured, but **every selector in both is untestable without a browser** —
    the fixtures cover what a recipe SAYS, not what it finds. This is the loop
    that once passed 148/148 while every venue died.
-4. **`brit`'s recipe**, the last one. It hunts for `/exhibitions-events/` while
-   its exhibitions live at `/exhibitions/`, and its listing takes a DATE RANGE
-   in the address — one request returns the whole upcoming set, no pagination.
+4. **`brit`'s recipe — WRITTEN 26 Sep from her saved pages (`docs/brit_pages/`),
+   offline-proven only.** New engine options: `fromToday`, `yearHeading`,
+   `detailDates`, `title.cardName`. Fixtures BM-001 to BM-010.
 5. **`brit` and `morgan` move to her machine**, joining `met`, `artic`, `moma`.
 
 **Page layout comes from HER, never from a probe — her ruling, 22 Sep.** She

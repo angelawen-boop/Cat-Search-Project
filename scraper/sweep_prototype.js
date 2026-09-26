@@ -537,11 +537,24 @@ function expandDateRange(entry, floor = LOOKBACK, today = new Date()) {
             ctx: entry.ctx, ...(entry.carry || {}) }];
 }
 
+/**
+ * A "from today" window in ONE parameter, the British Museum's shape:
+ * `whats_on_when=2026-09-26TO2027-12-31` — today to the end of next year, the
+ * window its own filter produced on both pages she saved (22 and 26 Sep).
+ * Derived at run time, never typed, for the reason given at expandYearArchive.
+ */
+function expandFromToday(entry, today = new Date()) {
+  const join = entry.path.includes('?') ? '&' : '?';
+  return [{ path: `${entry.path}${join}${entry.fromToday}=${ymdUTC(today)}TO${today.getUTCFullYear() + 1}-12-31`,
+            ctx: entry.ctx, ...(entry.carry || {}) }];
+}
+
 /** A venue's pages, with any year-filtered archive expanded to real years. */
 function listingPages(v) {
   const floor = v.lookbackFrom ? new Date(v.lookbackFrom) : LOOKBACK;
   return v.pages.flatMap(pg => pg.yearArchive ? expandYearArchive(pg, floor)
-    : pg.dateRange ? expandDateRange(pg, floor) : [pg]);
+    : pg.dateRange ? expandDateRange(pg, floor)
+    : pg.fromToday ? expandFromToday(pg) : [pg]);
 }
 
 // Navigation timing. See safeGoto() for why 'networkidle' is not used.
@@ -3421,6 +3434,19 @@ async function extractTitleAsShown(link, venueCode) {
   // Emptying it hands the row back to fillBlanksFromRepeatLink, which takes the
   // real name from the ordinary card linking the same address.
   if (isNotATitle(t, rule)) t = '';
+
+  // THE NAME IN THE CARD, where the link itself only says "Find out more".
+  // The British Museum's display cards: the name in the card's own heading
+  // (.listing__title), the link a button beside it. Read from the card the
+  // venue marks, never by walking upwards (the Borghese lesson, below).
+  if (!t && rule.cardName) {
+    t = await link.evaluate((a, { within, sel }) => {
+      const card = a.closest(within);
+      const el = card && card.querySelector(sel);
+      return el ? el.textContent : '';
+    }, rule.cardName).catch(() => '');
+    t = squash(t);
+  }
   if (!rule.heading) return squash(t);
 
   // Strip the venue's own badges from the link text before judging whether it
@@ -3703,7 +3729,7 @@ async function collectFromListing(page, opts) {
   // it cannot swallow an exhibition.
 
   // (LANG_PREFIX and isOwnListingPage are defined at module scope, below.)
-  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, branch: 0, labelled: 0, otherKind: 0, kept: 0 };
+  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, branch: 0, labelled: 0, otherKind: 0, oldYear: 0, kept: 0 };
   // The rows this page contributed, so unreadable titles can be counted once
   // the page is finished rather than as each link is read.
   const fromThisPage = [];
@@ -3833,6 +3859,31 @@ async function collectFromListing(page, opts) {
     // named in the log rather than silently lost (d'Orsay, her rule 25 Sep).
     // `within` names the card around the link, for a site whose link wraps the
     // title only and carries its tag outside it (d'Orsay's article cards).
+    // A YEAR HEADING, WHERE THE CARDS CARRY NO DATES. The British Museum's past
+    // archive lists every show since 2018 under "2026 Special exhibitions",
+    // "2025 Free exhibitions and displays" and so on, by the year it OPENED,
+    // with no dates on any card. Without this every one of 107 pages would be
+    // opened to learn its dates. A show that opened the year before the floor
+    // can still have been open on it, so that year is kept too and the
+    // exhibition's own dates decide; anything under an earlier year cannot
+    // reach the floor unless it ran more than a year. Years derived, never
+    // typed. A card with no year heading is kept — a missing label is not
+    // evidence.
+    if (opts.yearHeading) {
+      const yh = opts.yearHeading;
+      const heading = await link.evaluate((a, { within, heading }) => {
+        const sec = a.closest(within);
+        const h = sec && sec.querySelector(heading);
+        return h ? h.textContent : null;
+      }, yh).catch(() => null);
+      const y = heading && /\b(19|20)\d\d\b/.exec(heading);
+      if (y && Number(y[0]) < lookbackFor(venueCode).getUTCFullYear() - 1) {
+        c.oldYear++;
+        seenUrls.add(key);
+        continue;
+      }
+    }
+
     if (opts.keepOnlyType) {
       const kt = opts.keepOnlyType;
       const tag = await link.evaluate((a, { within, label }) => {
@@ -3934,7 +3985,7 @@ async function collectFromListing(page, opts) {
   c.noTitle = fromThisPage.filter(r => !r.title).length;
 
   COUNTS.push(c);
-  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''}${c.branch ? `, ${c.branch} at another site of the same venue` : ''}${c.labelled ? `, ${c.labelled} labelled permanent by the venue` : ''}${c.otherKind ? `, ${c.otherKind} tagged by the venue as another kind of event` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
+  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''}${c.branch ? `, ${c.branch} at another site of the same venue` : ''}${c.labelled ? `, ${c.labelled} labelled permanent by the venue` : ''}${c.otherKind ? `, ${c.otherKind} tagged by the venue as another kind of event` : ''}${c.oldYear ? `, ${c.oldYear} under a year heading too early for the lookback` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
   return c;
 }
 
@@ -5074,14 +5125,36 @@ const VENUES = {
     // Her ruling, 26 Sep: not attempted headless from her machine.
     headed: true,
     base: 'https://www.britishmuseum.org',
+    // WRITTEN 26 Sep FROM THE PAGES SHE SAVED (docs/brit_pages/). The old
+    // recipe hunted /exhibitions-events/ links; exhibitions live at
+    // /exhibitions/<name>. Current and upcoming: the What's On list filtered
+    // to exhibitions, with a date window in the address (expandFromToday).
+    // Past: one long page, sections by the year a show opened, no dates on
+    // any card — yearHeading keeps the years that can reach the lookback, and
+    // each exhibition's own page gives its dates (detailDates).
     pages: [
-      { path: '/exhibitions-events',                 ctx: 'current/upcoming' },
+      { path: '/exhibitions-events?whats_on_event_type=Exhibition', fromToday: 'whats_on_when', ctx: 'current/upcoming' },
       { path: '/exhibitions-events/past-exhibitions', ctx: 'past' },
     ],
-    selector: 'a[href*="/exhibitions-events/"]',
-    isNav: href => /\/exhibitions-events\/?$/.test(href)
-                || /\/exhibitions-events\/past-exhibitions\/?$/.test(href),
-    title: { heading: true },
+    selector: 'a[href*="/exhibitions/"]',
+    // The exhibitions landing page, and an exhibition's own sub-pages (its
+    // large-print and plain-English guides) — never a show.
+    isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/[^/?#]+\/[^?#]+/.test(href),
+    yearHeading: { within: 'section', heading: 'h2' },
+    detailDates: '.date-display-range',
+    // Two card shapes. Special exhibitions: the name is the link, followed by
+    // screen-reader text inside it (" . Final weeks . ", " . Book now . ").
+    // Displays: the link says "Find out more"; name and dates sit in the card.
+    title: {
+      heading: false,
+      stripTrailing: /\s+\.\s+(?:[^.]*?\s+)?\.\s*$/,
+      notATitle: /^\s*Find out more\s*$/i,
+      cardName: { within: '.listing__item', sel: '.listing__title' },
+    },
+    datesAt: { within: '.listing__item', sel: '.listing__intro' },
+    // The museum's own text. The info column beside it (.section--intro__info:
+    // opening hours, room, tickets sold out, newsletter, shop) is not.
+    description: '.section--intro__content p',
     // Its current page once read 200 and was reported as "works". That was a
     // Cloudflare EDGE CACHE with a lifetime, not a property of the site: once
     // the cache expired the same page returned 403 with cf-mitigated:challenge,
@@ -5390,6 +5463,7 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
       excludeOngoing: !!v.excludeOngoing,
       otherBranch: v.otherBranch || null,
       keepOnlyType: v.keepOnlyType || null,
+      yearHeading: v.yearHeading || null,
       dropQuery: v.dropQuery || null,
       datesAt: v.datesAt || null,
       excludeLabelled: v.excludeLabelled || null,
@@ -5990,6 +6064,20 @@ async function fetchIndividualPages(page, rows, venueCode) {
       } else {
         row.notes = addNote(row.notes, 'No description could be found on this exhibition\'s own page.');
         noText++;
+      }
+
+      // THE EXHIBITION PAGE'S OWN DATE FIELD, where a venue prints its dates
+      // there and nowhere on the listing (the British Museum: "03 February –
+      // 04 May 2026" in .date-display-range, beside "Next ticket release 21
+      // October 2026" further down the same hero, which a sentence scan could
+      // pick up). A field, so read before structured data and prose.
+      if ((!row.start_date || !row.end_date) && vrec.detailDates) {
+        const dt = await page.$eval(vrec.detailDates, el => el.innerText).catch(() => '');
+        const d = dt ? findDateRange(dt) : null;
+        if (d) {
+          if (!row.start_date && d.start) row.start_date = d.start;
+          if (!row.end_date && d.end) row.end_date = d.end;
+        }
       }
 
       // Venues that print no date field at all (Borghese) write the run into
@@ -6798,7 +6886,7 @@ module.exports = {
   gatekeeperFrom, objectionFrom, laneCooldown, knownGatekeepers, makePacer, pacedWithheld, usePacerForFixtures,
   // HEADED: pure, or a path — pacing.test.js H-001 to H-003.
   splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome,
-  saysOngoing, expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination,
+  saysOngoing, applyLookback, expandYearArchive, expandDateRange, expandFromToday, keptDespiteLookback, withoutQuery, listingPages, followPagination,
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
