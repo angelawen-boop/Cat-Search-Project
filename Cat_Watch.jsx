@@ -1859,7 +1859,7 @@ export default function App(){
           let curText=null,curRows=0,curQ=0;
           if(rows.length){ const d=cloudLatest.current; curText=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()}); curRows=d.rows.length; curQ=d.ignored.length; }
           else{ const live=await cloudReadLive(db); if(live.rec){ curText=live.text; const cd=JSON.parse(live.text); curRows=cd.rows.length; curQ=(cd.ignored||[]).length; cloudPrev.current=live.rec; } }
-          if(curText)await cloudTakeSnapshot(db,curText,{label:"Safety snapshot before roll-back to the save of "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
+          if(curText)await cloudTakeSnapshot(db,curText,{label:"Safety snapshot before roll-back to "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
           const data=JSON.parse(await cloudReadSnapshot(db,s));
           loadLedger((data.rows||[]).map(r=>({...r,watching:r.watching||false})),data.lastRun||null,
             "Rolled back to the cloud save “"+snapTitle(s)+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",

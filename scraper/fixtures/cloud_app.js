@@ -185,7 +185,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     await until(() => snapCount() === 3);
     snaps = await C.cloudListSnapshots(store);
     ok(snaps.length === 3 && snaps[0].label === 'Safety snapshot before Load' && snaps[0].kind === 'safety', 'CA-006b: the cloud copy was kept as a snapshot first');
-    ok(/Safety snapshot before Load · \d+ exhibitions/.test(text()) && /Safety snapshot before roll-back to the save of [A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d\d[ap]m · \d+ exhibitions/.test(text()),
+    ok(/Safety snapshot before Load · \d+ exhibitions/.test(text()) && /Safety snapshot before roll-back to [A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d\d[ap]m · \d+ exhibitions/.test(text()),
       'CA-006f: safety copies read "Safety snapshot before …", with no automatic tag');
     ok(!/automatic/.test(text()) && [...doc.querySelectorAll('b')].some(b => b.textContent === 'after starring'), 'CA-006g: only her own description is in bold; no tag on the rest');
     ok(/The file you just loaded differs from the last cloud save \([A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d\d[ap]m\): 1 difference\. A snapshot of the last cloud state was taken before loading your file\./.test(text()),
