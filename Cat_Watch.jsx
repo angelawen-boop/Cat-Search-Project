@@ -13,7 +13,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "34.13 · cloud 2.1";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
+const APP_VERSION = "34.13 · cloud 3";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
 const APP_VERSION_DATE = "26 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -1427,7 +1427,9 @@ let AUTOLOAD_FIRED=false; // module-level: survives a strict-mode remount so ope
 // A description, as it goes into a file name: lower case, words joined by hyphens.
 function labelSlug(label){return String(label||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);}
 function localStamp(iso){const d=iso?new Date(iso):new Date(),p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes());}
-function localReadable(iso){const d=iso?new Date(iso):new Date(),p=n=>String(n).padStart(2,"0");return p(d.getHours())+":"+p(d.getMinutes())+" "+p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+d.getFullYear();}
+// ONE WAY TO WRITE A MOMENT, her ruling 26 Sep: "Sep 26, 2026 1:22pm", the
+// same as "Last refreshed". Every time on screen comes through here.
+function localReadable(iso){return fmtRefresh(iso||new Date().toISOString());}
 
 // One instrumented call to Drive via the Anthropic API + MCP. Returns text + diagnostics.
 async function askDrive(prompt){
@@ -1777,7 +1779,7 @@ export default function App(){
     cloudPrev.current=live.rec; cloudFp.current=ledgerFingerprintText(data);
     const when=localReadable(live.rec.savedAt);
     const diff=ledgerDifference(data,incoming);
-    if(!diff){ setCloudCheck("✓ Checked: the cloud copy (saved "+when+") matches this file exactly."); return; }
+    if(!diff){ setCloudCheck("✓ The file you just loaded is identical to the last cloud save ("+when+"). No snapshot of the last cloud state was needed before loading your file."); return; }
     // HER FORMAT, 26 Sep: one count of differences, the cloud save's time,
     // and what was done. The breakdown stays in the diagnostic, not lost.
     const bits=[];
@@ -1803,7 +1805,7 @@ export default function App(){
   // OPEN THE CLOUD COPY. During the trial, by her button; afterwards, on open.
   function openCloudData(rec,data){
     loadLedger((data.rows||[]).map(r=>({...r,watching:r.watching||false})),data.lastRun||null,
-      "Opened the cloud copy saved "+localReadable(rec.savedAt)+" — "+(data.rows||[]).length+" exhibitions. Not the same as a file: Save to put it in one.",
+      "Opened the cloud copy saved "+localReadable(rec.savedAt)+" — "+(data.rows||[]).length+" exhibitions.",
       {ignored:Array.isArray(data.ignored)?data.ignored:[]});
     cloudPrev.current=rec; cloudFp.current=ledgerFingerprintText(data);
     setLastSaved(rec); setSaveState("saved"); setSaveErr(null); setCloudCheck(null);
@@ -3201,7 +3203,7 @@ export default function App(){
             {/* WHEN IT LAST WORKED — her ask, 26 Sep: the banner says how far
                 back the cloud copy stands until a save lands and it goes. */}
             <span>{"CLOUD COPY NOT SAVING — "+(saveErr||"reason unknown.")
-              +(lastSaved&&lastSaved.savedAt?" Last saved to the cloud: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+")."
+              +(lastSaved&&lastSaved.savedAt?" Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+")."
                 :" Nothing has been saved to the cloud yet.")
               +(hasLedger?" Changes since then are on screen only \u2014 tap Save to keep them in a file.":"")}</span>
           </div>

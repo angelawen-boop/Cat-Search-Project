@@ -126,8 +126,8 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     let l = await live();
     ok(l && same(l.data, hers), `CA-002b: the cloud copy is her ledger exactly — ${hers.rows.length} rows, ${hers.ignored.length} quarantined`);
     ok(/No cloud copy existed yet/.test(text()), 'CA-002c: the first import says it is now the first cloud copy');
-    await until(() => /Last cloud save: .* 352 exhibitions/.test(text()));
-    ok(/Last cloud save: .* 352 exhibitions/.test(text()), 'CA-002d: the line says when it saved and how many', (text().match(/\u2601[^\u2601]{0,90}/) || [''])[0]);
+    await until(() => /Last cloud save: [A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d\d[ap]m \([^)]*\) · 352 exhibitions/.test(text()));
+    ok(/Last cloud save: [A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d\d[ap]m \([^)]*\) · 352 exhibitions/.test(text()), 'CA-002d: the line says when it saved and how many', (text().match(/\u2601[^\u2601]{0,90}/) || [''])[0]);
 
     // 3. One click — star a show — reaches the store with no button pressed.
     ok(await afterSave(() => click(firstUnwatched())), 'CA-003: starring one show saves by itself');
@@ -184,7 +184,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     await until(() => snapCount() === 3);
     snaps = await C.cloudListSnapshots(store);
     ok(snaps.length === 3 && snaps[0].label === 'Cloud copy before Load' && snaps[0].kind === 'safety', 'CA-006b: the cloud copy was kept as a snapshot first');
-    ok(/The file you just loaded differs from the last cloud save \(\d\d:\d\d \d\d\/\d\d\/\d{4}\): 1 difference\. A snapshot of the last cloud state was taken before loading your file\./.test(text()),
+    ok(/The file you just loaded differs from the last cloud save \([A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d\d[ap]m\): 1 difference\. A snapshot of the last cloud state was taken before loading your file\./.test(text()),
       'CA-006c: and the page says so in her words, with the count', (text().match(/The file you just loaded[^.]*\.[^.]*\./) || [''])[0]);
     ok(same((await live()).data, hers), 'CA-006d: then the imported file becomes the cloud copy');
     await until(() => (text().match(/Download/g) || []).length === 3);
@@ -192,8 +192,8 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
 
     // 7. Import the same file again: the trial's check says they match, nothing kept.
     await importText(HERS_TEXT);
-    await until(() => /matches this file exactly/.test(text()));
-    ok(/matches this file exactly/.test(text()) && snapCount() === 3, 'CA-007: importing the file the cloud copy already holds says "matches exactly" and keeps nothing extra');
+    await until(() => /is identical to the last cloud save \([A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d\d[ap]m\)\. No snapshot of the last cloud state was needed before loading your file\./.test(text()));
+    ok(/is identical to the last cloud save \([A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d\d[ap]m\)\. No snapshot of the last cloud state was needed before loading your file\./.test(text()) && snapCount() === 3, 'CA-007: importing the file the cloud copy already holds says it is identical, in her words, and keeps nothing extra');
 
     // 8. Download: an automatic copy comes as an ordinary ledger file; the one
     //    Save made comes back as its offline twin, same name, same bytes.
@@ -235,7 +235,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     breakStore = true;
     click(firstUnwatched());
     ok(await until(() => /CLOUD COPY NOT SAVING/.test(text())), 'CA-009: when saving fails, the warning banner appears');
-    ok(/Last saved to the cloud: /.test(text()), 'CA-009a: and it says when the cloud copy last saved', (text().match(/CLOUD COPY NOT SAVING[^\u2601]{0,200}/) || [''])[0]);
+    ok(/Last cloud save: [A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d\d[ap]m/.test(text()), 'CA-009a: and it says when the cloud copy last saved', (text().match(/CLOUD COPY NOT SAVING[^\u2601]{0,200}/) || [''])[0]);
     click(button('Load'));
     ok(await until(() => /The cloud copy is NOT saving/.test(text())), 'CA-009d: while it is not saving, Load asks first');
     click(button('Cancel'));
