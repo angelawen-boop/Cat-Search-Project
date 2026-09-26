@@ -1199,6 +1199,20 @@ the dead ticket link because the ledger she loaded predates her Re-check —
 one Re-check, then Export, clears it. KHM's shop ANSWERED the connector that
 day: its block comes and goes.
 
+**OUTSTANDING — her issue, 26 Sep, START HERE.** The shop step opened KHM's
+search for "Canaletto & Bellotto" and read the book on it — yet the card's
+Museum shop link can only be that SEARCH page, never the book's own product
+page (`shop.khm.at/en/products/ausstellungskatalog-2026-canaletto-bellotto-
+sprache-englisch-100000000039076-3631-02`, which she found by hand). Her
+question: if the lookup sees the book on the page, why can't it give the
+book's own link? **Not diagnosed.** Unchecked hypothesis only: the shop step
+asks the connector for EXCERPTS (text, links likely stripped), so the read
+never sees the product address. First step next session: fetch that search
+page once in excerpt mode and once whole (`full_content`), and LOOK for the
+product address before proposing anything. 34.14 (built, not yet published —
+publish only when she is out of the app) stops the search page being filed
+as the book; it does not solve this.
+
 **NEXT — her question, 26 Sep: why only the search results, not the book's
 own page?** Likely cause, UNCONFIRMED (the check hit the rate limit): the
 shop step asks the connector for EXCERPTS — text with the links stripped — so
