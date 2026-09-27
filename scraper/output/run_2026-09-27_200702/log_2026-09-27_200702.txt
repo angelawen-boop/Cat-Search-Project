@@ -1,0 +1,108 @@
+[2026-09-27T10:07:02.081Z] Cat Watch Sweep Prototype — starting
+[2026-09-27T10:07:02.084Z] Lookback floor: 2024-07-01
+[2026-09-27T10:07:02.084Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-27_200702
+[2026-09-27T10:07:02.084Z] Machine: home (no proxy, so this is not the container)
+[2026-09-27T10:07:02.084Z] NAMED BY HAND, and not this machine's job: mad.
+[2026-09-27T10:07:02.084Z] Running them anyway — naming a venue always wins. Both machines
+[2026-09-27T10:07:02.084Z] sweeping one venue doubles what it sees, and met and artic both
+[2026-09-27T10:07:02.084Z] rate-limit, so do not make a habit of it.
+[2026-09-27T10:07:02.084Z] Venues this run: mad
+[2026-09-27T10:07:02.086Z] 
+[2026-09-27T10:07:02.086Z] ────────────────────────────────────────────────────────────
+[2026-09-27T10:07:02.087Z]   PACING — her machine
+[2026-09-27T10:07:02.087Z] ────────────────────────────────────────────────────────────
+[2026-09-27T10:07:02.087Z]   Gap between pages: about 30s, varied 75–125%, per gatekeeper.
+[2026-09-27T10:07:02.087Z]   One venue at a time behind each gatekeeper; different gatekeepers side by side.
+[2026-09-27T10:07:02.087Z]   The first refusal or bot check stops that gatekeeper for the rest of the run.
+[2026-09-27T10:07:02.101Z]   mad: behind site:madparis.fr, from an earlier run.
+[2026-09-27T10:07:02.102Z]   Venues this run: mad
+[2026-09-27T10:07:02.102Z] Proxy: (none — direct egress assumed)
+[2026-09-27T10:07:02.103Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-27T10:07:02.103Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-27T10:07:02.105Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-27T10:07:03.477Z] Running 1 venue(s) headless, 1 at a time (one page at a time within each venue)
+[2026-09-27T10:07:03.541Z] No proxy set — Chromium is making its own requests (network bridge off)
+[2026-09-27T10:07:04.100Z] [mad] 
+[2026-09-27T10:07:04.101Z] [mad] ────────────────────────────────────────────────────────────
+[2026-09-27T10:07:04.101Z] [mad]   MAD — Musée des Arts Décoratifs, Paris
+[2026-09-27T10:07:04.101Z] [mad] ────────────────────────────────────────────────────────────
+[2026-09-27T10:07:04.101Z] [mad]   Fetching current: https://madparis.fr/?page=expo-actu-en
+[2026-09-27T10:07:04.109Z] [mad]   robots.txt (madparis.fr, kept copy of 2026-09-27): unreadable (HTTP 403) — asks nothing we can see
+[2026-09-27T10:07:04.120Z] [mad]   paced: request 1 via site:madparis.fr
+[2026-09-27T10:07:11.488Z] [mad]   current: 2 links seen -> 0 navigation, 0 already-seen URL -> 2 collected (0 of them with no readable title)
+[2026-09-27T10:07:11.503Z] [mad]   Fetching upcoming: https://madparis.fr/?page=expo-avenir-en
+[2026-09-27T10:07:41.596Z] [mad]   paced: request 2 via site:madparis.fr, after 30s
+[2026-09-27T10:07:44.711Z] [mad]   upcoming: 2 links seen -> 0 navigation, 0 already-seen URL -> 2 collected (0 of them with no readable title)
+[2026-09-27T10:07:44.719Z] [mad]   Fetching past: https://madparis.fr/?page=expo-archives-en
+[2026-09-27T10:08:05.193Z] [mad]   paced: request 3 via site:madparis.fr, after 20s
+[2026-09-27T10:08:12.088Z] [mad]   past: 76 links seen -> 0 navigation, 0 already-seen URL -> 76 collected (0 of them with no readable title)
+[2026-09-27T10:08:12.101Z] [mad]   lookback (listing): kept 20, dropped 60 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-27T10:08:12.103Z] [mad]   reading 20 individual page(s)…
+[2026-09-27T10:08:12.104Z] [mad]     page 1 of 20
+[2026-09-27T10:08:37.253Z] [mad]   paced: request 4 via site:madparis.fr, after 25s
+[2026-09-27T10:09:11.027Z] [mad]   paced: request 5 via site:madparis.fr, after 32s
+[2026-09-27T10:09:40.134Z] [mad]   paced: request 6 via site:madparis.fr, after 28s
+[2026-09-27T10:10:17.484Z] [mad]   paced: request 7 via site:madparis.fr, after 36s
+[2026-09-27T10:10:41.144Z] [mad]   paced: request 8 via site:madparis.fr, after 19s
+[2026-09-27T10:11:16.548Z] [mad]   paced: request 9 via site:madparis.fr, after 34s
+[2026-09-27T10:11:53.878Z] [mad]   paced: request 10 via site:madparis.fr, after 35s
+[2026-09-27T10:12:28.928Z] [mad]   paced: request 11 via site:madparis.fr, after 33s
+[2026-09-27T10:12:57.406Z] [mad]   paced: request 12 via site:madparis.fr, after 27s
+[2026-09-27T10:12:59.048Z] [mad]     page 10 of 20
+[2026-09-27T10:13:25.106Z] [mad]   paced: request 13 via site:madparis.fr, after 26s
+[2026-09-27T10:13:49.586Z] [mad]   paced: request 14 via site:madparis.fr, after 22s
+[2026-09-27T10:14:24.704Z] [mad]   paced: request 15 via site:madparis.fr, after 33s
+[2026-09-27T10:14:50.070Z] [mad]   paced: request 16 via site:madparis.fr, after 19s
+[2026-09-27T10:15:26.620Z] [mad]   paced: request 17 via site:madparis.fr, after 35s
+[2026-09-27T10:15:55.456Z] [mad]   paced: request 18 via site:madparis.fr, after 26s
+[2026-09-27T10:16:28.298Z] [mad]   paced: request 19 via site:madparis.fr, after 29s
+[2026-09-27T10:17:00.910Z] [mad]   paced: request 20 via site:madparis.fr, after 29s
+[2026-09-27T10:17:23.826Z] [mad]   paced: request 21 via site:madparis.fr, after 21s
+[2026-09-27T10:17:52.331Z] [mad]   paced: request 22 via site:madparis.fr, after 27s
+[2026-09-27T10:17:54.103Z] [mad]     page 20 of 20
+[2026-09-27T10:18:15.584Z] [mad]   paced: request 23 via site:madparis.fr, after 21s
+[2026-09-27T10:18:17.836Z] [mad]   Individual pages: 20 got text, 0 no curatorial text, 0 failed
+[2026-09-27T10:18:17.836Z] [mad]   20 page(s) kept on disk as read (pages_kept/mad)
+[2026-09-27T10:18:17.844Z] [mad]   → 20 exhibitions, 20 with curatorial text → mad.csv
+[2026-09-27T10:18:18.138Z] 
+[2026-09-27T10:18:18.139Z] ────────────────────────────────────────────────────────────
+[2026-09-27T10:18:18.139Z]   QC — faulty rows and exceptions
+[2026-09-27T10:18:18.139Z] ────────────────────────────────────────────────────────────
+[2026-09-27T10:18:18.139Z]   No faulty rows: every row has a title and a known venue code.
+[2026-09-27T10:18:18.139Z]   No exceptions: every venue looks like the last run that had it.
+[2026-09-27T10:18:18.139Z] 
+[2026-09-27T10:18:18.139Z] ────────────────────────────────────────────────────────────
+[2026-09-27T10:18:18.139Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-27T10:18:18.139Z] ────────────────────────────────────────────────────────────
+[2026-09-27T10:18:18.139Z]   MAD: 20 exhibitions | 20 with text
+[2026-09-27T10:18:18.139Z] 
+[2026-09-27T10:18:18.139Z] ────────────────────────────────────────────────────────────
+[2026-09-27T10:18:18.139Z]   PACING — where each gatekeeper got to
+[2026-09-27T10:18:18.139Z] ────────────────────────────────────────────────────────────
+[2026-09-27T10:18:18.139Z]   site:madparis.fr: mad — 23 clean page(s)
+[2026-09-27T10:18:18.139Z] 
+[2026-09-27T10:18:18.139Z] ────────────────────────────────────────────────────────────
+[2026-09-27T10:18:18.139Z]   COVERAGE — every link accounted for
+[2026-09-27T10:18:18.139Z] ────────────────────────────────────────────────────────────
+[2026-09-27T10:18:18.139Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-27T10:18:18.139Z]   -----------------------------------------------------------------------------------------------
+[2026-09-27T10:18:18.140Z]   mad        current                          2     0       0     0        0        0          2
+[2026-09-27T10:18:18.140Z]   mad        upcoming                         2     0       0     0        0        0          2
+[2026-09-27T10:18:18.140Z]   mad        past                            76     0       0     0        0        0         76
+[2026-09-27T10:18:18.140Z] 
+[2026-09-27T10:18:18.140Z]   seen      = links matching the venue's selector on that page
+[2026-09-27T10:18:18.140Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-27T10:18:18.140Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-27T10:18:18.140Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-27T10:18:18.140Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-27T10:18:18.140Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-27T10:18:18.140Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-27T10:18:18.140Z] 
+[2026-09-27T10:18:18.140Z] Network bridge: 0 requests served, 0 handed back from files already fetched (not asked again), 0 skipped (image/media/font), 0 failed
+[2026-09-27T10:18:18.140Z] 
+[2026-09-27T10:18:18.140Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-27_200702
+[2026-09-27T10:18:18.140Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-27_200702/sweep.csv  (20 rows — mad:20)
+[2026-09-27T10:18:18.140Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-27_200702/log_2026-09-27_200702.txt
+[2026-09-27T10:18:18.141Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, orsay, mam, ashmolean, jacquemart, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-27T10:18:18.141Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-27T10:18:18.141Z] No de-duplication is applied — see passThrough.
