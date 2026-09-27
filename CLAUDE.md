@@ -167,7 +167,7 @@ Judgement about the outside world is not in any file.
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Bare "from the Collection" and titles with "Film Series" excluded; family, named and lent collections KEPT (24 Sep). No note on the card for films or installations; no model judging rows — compression stays mechanical (24 Sep) |
 | `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection, a gift or acquisitions** — they can be major (24 Sep) |
 | `moma` | **Current and upcoming only.** She does not want its past at all. **Not swept, 27 Sep** — she saves the pages of the shows she wants (§7.5) |
-| `brit` | Current/upcoming asks for **Exhibition AND Experience** — the Bayeux Tapestry is filed as an Experience (her finding, 27 Sep; BM-012). The selector still keeps only `/exhibitions/` pages |
+| `brit` | Current/upcoming asks for **Exhibition AND Experience** — the Bayeux Tapestry is filed as an Experience (her finding, 27 Sep; BM-012). The selector still keeps only `/exhibitions/` pages. **Her count, 27 Sep:** current + upcoming 4; past by the listing's year headings 2026 **9**, 2025 **12**, 2024 **11** — a heading is the year a show OPENED, and one display (*Admonitions*) is listed under every year at one address, so it is one row |
 | `mam` | Collection displays excluded — subtitle "Permanent collection" (Cultural Olympiad) and "New acquisitions…"; also the Prix Marcel Duchamp and Oliver Beer's films (25 Sep). Her count: 3 current, 1 upcoming, 16 past — less those, 3 + 0 + 13 |
 | `mad` | Nothing excluded. Her count: 2 current, 2 upcoming, 16 past. Musée Nissim de Camondo ignored — closed until 2030 (25 Sep) |
 | `jacquemart` | Exhibitions only — the card's own tag; operas, costume balls and other events refused (25 Sep) |
@@ -1342,6 +1342,10 @@ pacing.
 
 **Sizes at 30s a page:** moma ~25 pages, brit ~40, orsay ~65, morgan unknown.
 A venue moves to her laptop only after a clean complete sweep (§5).
+
+**After `brit`'s sweep — put these to her again, her ruling 27 Sep** (not before):
+- **`orsay`:** she saves one show page of each other kind — an off-site show and a "Focus on our collections" display; the recipe is checked on them offline.
+- **`morgan`:** her count; pages 2–3 of a past-year listing (past blurbs come only from listings); then a fixture of its recipe on her pages — it has none. Its robots.txt is unreadable (403), so no wait is known; her 30s pacing is the only one.
 
 **Page layout comes from HER, never from a probe — her ruling, 22 Sep.**
 
