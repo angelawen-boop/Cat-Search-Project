@@ -546,7 +546,7 @@ first number to scroll past:
 | `catalogue_lookup.js` | C-001 to C-099 |
 | `recheck_shop.js` | the real app in jsdom, buttons pressed — Re-check (R-001 to R-023), blocked shops and web-found shop links (L-001 to L-019), search with filters (S-001 to S-003) |
 | `mam_pages.js` | the MAM recipe on its saved archive pages — her exclusions and count |
-| `ashmolean_pages.js` | the Ashmolean recipe on pages read once and saved (`docs/ashmolean_pages/`), no network — her count, dates completed from the show's page, the description |
+| `ashmolean_pages.js` | the Ashmolean recipe on pages read once and saved (`docs/ashmolean_pages/`), no network — her count, dates completed from the show's page, the description; the bare page (AS-021–025); the 27 Sep sweep's four faults fixed on its kept pages (AS-026–033) |
 | `page_keep_pages.js`, `moma_pages.js` | pages kept as read (a cut-short run asks only for what is missing); MoMA's description without its credit paragraph |
 | `mad_pages.js` | the MAD recipe on her saved pages, no network — her count, dates, titles, the description |
 | `brit_pages.js` | the British Museum recipe on her saved pages, no network — titles, year headings, dates, the description |
@@ -598,6 +598,7 @@ node scraper/qc.js <run|stitch>              faulty rows + exceptions; exit 1 on
 node scraper/sweep_log.js [--json]           rebuild the app's freshness dates
 node scraper/venue_status.js                 what each venue currently yields
 node scraper/robots.js [--report]            each site's robots.txt: its wait and off-limits paths
+node scraper/reread_kept.js <run> <venue> [--write]   a recipe fix applied to the pages that run kept, no network
 npm test                                     all fixtures
 ```
 
@@ -621,6 +622,7 @@ npm test                                     all fixtures
 | `sweep_fetch.js` | Older diagnostic copy, no browser. Not developed |
 | `page_keep.js` | Pages kept as read, her machine — see Pacing |
 | `robots.js` | Each site's robots.txt, kept in `robots/` and read again weekly — see "What each site asks" |
+| `reread_kept.js` | **A fault in a sweep's rows is fixed from the pages it kept, never by sweeping again** (her rule, 27 Sep). The real show-page pass over that run's kept pages; prints every changed field; `--write` corrects the run's files, `swept_at` kept |
 | `from_saved_pages.js` | A venue's REAL recipe over `.mhtml` pages she saved, no network; writes an ordinary run folder. Only the shows whose page she saved are written; the rest are named. MoMA's four, 27 Sep |
 
 **`stitch.js` chooses NOTHING** — her design. It does not pick which copy of a
@@ -1301,7 +1303,8 @@ ruling, 27 Sep). One Cloudflare venue per day. Not before **Mon 28 Sep
 — pacing works, a limit remains. **Her ruling: MoMA is not swept.** She wants
 four upcoming shows; she saves those pages and `from_saved_pages.js` reads
 them (`run_2026-09-27_123228`, 4 rows, raw — **compression held**: other
-headed venues may join this saved-pages pile). Not waiting through a bot check
+venues join this pile — the Ashmolean's 24 (`run_2026-09-27_192852`), 27 Sep —
+and it is stitched and compressed as one when she says, her ruling 27 Sep). Not waiting through a bot check
 either — a clearance is per site and opens nothing else. **Next: `brit`, then
 `orsay`, then `morgan`**, from Mon 28 Sep 12:08pm Sydney.
 
@@ -1340,7 +1343,7 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 | `jacquemart` | **imported and checked by her**, lookup works | `run_2026-09-25_133825` | — |
 | `mam` MAM Paris | **imported and checked by her**; shop blocked, card says so | `run_2026-09-25_160850` (before her Prix Duchamp / Oliver Beer ruling — the next sweep drops them) | Shop's Cloudflare refuses this machine and the connector (403); her browser passes. A third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
 | `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | `run_2026-09-26_115449` — headless from her laptop, refused on page 1 | **headed pile** (her ruling 26 Sep) — §7.5; the container's until a clean laptop sweep |
-| `ashmolean` Ashmolean | **recipe built 27 Sep from pages read once and saved; her count proven offline** (`ashmolean_pages.js`, AS-001 to AS-020). App 35.4 carries it — **not published** | none — three live sweeps 27 Sep wrote nothing: two stopped by the session, the third abandoned at its 10-minute budget, page 20 of 24; 13 show pages timed out, every second one (`run_2026-09-27_142243`, log only). The same page alone later that day: 3s and 2s, nothing stuck — drop-outs come and go (she has seen it blank for a minute too) | `keepPages: true` (her yes). Longer timeouts NOT adopted. 27 Sep 16:36 sweep: 24 rows, 10 pages timed out — partial, NOT for import. **Page alone, no programs — PROVEN OFFLINE on five bare pages, one of every kind** (four saved by her via view-source, one fetched; `docs/ashmolean_pages/raw/`): ~100 other files refused each, title, dates and description identical to the full read (AS-021 to AS-025). **Built as `pageOnly: true`** — show pages only (its lists need their scripts); ~28 files a sweep instead of ~2,400. Its labels (one plain request, a cache hit): Acquia hosting, Varnish cache, no named gatekeeper — which says nothing about a limit. **robots.txt asks 10s between requests; we asked every 2** — now obeyed by code. The stall pattern points to a rate limit, not proven (§6, "Diagnosing in the wrong order"). **No sweep until she says go** |
+| `ashmolean` Ashmolean | **recipe built 27 Sep from pages read once and saved; her count proven offline** (`ashmolean_pages.js`, AS-001 to AS-020). App 35.4 carries it — **not published** | none — three live sweeps 27 Sep wrote nothing: two stopped by the session, the third abandoned at its 10-minute budget, page 20 of 24; 13 show pages timed out, every second one (`run_2026-09-27_142243`, log only). The same page alone later that day: 3s and 2s, nothing stuck — drop-outs come and go (she has seen it blank for a minute too) | `keepPages: true` (her yes). Longer timeouts NOT adopted. 27 Sep 16:36 sweep: 24 rows, 10 pages timed out — partial, NOT for import. **Page alone, no programs — PROVEN OFFLINE on five bare pages, one of every kind** (four saved by her via view-source, one fetched; `docs/ashmolean_pages/raw/`): ~100 other files refused each, title, dates and description identical to the full read (AS-021 to AS-025). **Built as `pageOnly: true`** — show pages only (its lists need their scripts); ~28 files a sweep instead of ~2,400. Its labels (one plain request, a cache hit): Acquia hosting, Varnish cache, no named gatekeeper — which says nothing about a limit. **robots.txt asks 10s between requests; we asked every 2** — now obeyed by code. The stall pattern points to a rate limit, not proven (§6, "Diagnosing in the wrong order"). **Swept 27 Sep 19:28, her go: 24 of 24 show pages, no timeouts, her count (4 + 3 + 17)** (`run_2026-09-27_192852`). Four faults fixed from its kept pages, no resweep: Radiohead's title taken from a teaser card, Cheung Yee's "…: And His", Kabuki Kimono's short title, Renaissance Worlds' ticket sentence. **Raw, in the held pile with MoMA's four** (§7.5) — compressed together later. App 35.4 must be live before import |
 | `mad` MAD Paris | **headless from her laptop gets in.** 26 Sep 11:37: 23 pages clean, 20 rows = her count; junk found and fixed at source (visit teasers; the ticket-and-address sidebar — MD-008/009, four saved pages) | `run_2026-09-26_113719` (before the fixes); 16:12 re-sweep refused after 5 clean pages, nothing written | **Likely a daily page limit (~25–30 from one address) — inferred from two runs.** One MAD sweep a day at most. **Next: one run after 27 Sep ~16:15 Sydney**; if clean and complete it moves to her laptop and its rows go to her import. Still the container's until then |
 
 **THE IMPORT — SENT 25 Sep: `stitch_20260925_0611/sweep_compressed.csv`**, 75 rows

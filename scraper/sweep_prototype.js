@@ -2709,6 +2709,11 @@ const BOILERPLATE = [
   // and a joint-ticket note opening two more: "Tickets for Edward Burra include
   // entry to the Ithell Colquhoun exhibition".
   'members enjoy free entry',
+  // The Ashmolean, 27 Sep sweep: Renaissance Worlds' description opened
+  // "Tickets for this major exhibition will be available in spring 2027.
+  // Become a Member to visit for free."
+  'become a member',
+  'tickets for this',
   'no need to book',
   'include entry to the',
 
@@ -5093,7 +5098,8 @@ const VENUES = {
     capsTitles: true,
     // The full name: the page header's name and its subtitle line (the first
     // line of its teaser, above the dates) — see `pageTitle` in the detail pass.
-    pageTitle: { box: '.text-box', name: '.listing-title h3', sub: '.teaser-text p' },
+    // A header can name its show in an <h1> instead ("THIS IS WHAT<br>YOU GET").
+    pageTitle: { box: '.text-box', name: '.listing-title h3, h1', sub: '.teaser-text p' },
   },
 
   jacquemart: {
@@ -6465,26 +6471,54 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
       // the listing's ("ROMAN OXFORDSHIRE COINS DISPLAY" against "RESTORING
       // ROME: ROMAN OXFORDSHIRE COINS DISPLAY"), so the listing's stands.
       // A subtitle line that is the show's dates is not a subtitle.
+      //
+      // ONLY THE FIRST BOX, 27 Sep sweep: the same box class also draws the
+      // teaser cards for OTHER pages further down, and when the header named
+      // its show in an <h1> ("THIS IS WHAT / YOU GET") rather than the usual
+      // <h3>, the old loop walked on and took a teaser — "Radiohead's Story:
+      // Exhibition curator Lena Fritsch looks back…" — as the title. A first
+      // box with no name (Pio Abad's page has no header box) leaves the title
+      // alone.
+      //
+      // A HEADER NAME WITH NO SUBTITLE is used only when it EXTENDS the
+      // listing's ("KABUKI KIMONO" → "KABUKI KIMONO: Costumes of Bandō
+      // Tamasaburō V"); a shorter one never replaces a fuller listing name.
       if (vrec.pageTitle) {
         const h = await page.evaluate(({ box, name, sub }) => {
           const sq = x => String(x || '').replace(/\s+/g, ' ').trim();
-          for (const b of document.querySelectorAll(box)) {
-            const n = b.querySelector(name);
-            if (!n || !sq(n.textContent)) continue;
-            const p = b.querySelector(sub);
-            const lines = p ? String(p.innerText || p.textContent).split('\n').map(sq).filter(Boolean) : [];
-            return { name: sq(n.textContent), sub: lines[0] || '' };
-          }
-          return null;
+          const b = document.querySelector(box);
+          const n = b && b.querySelector(name);
+          if (!n || !sq(n.innerText || n.textContent)) return null;
+          const p = b.querySelector(sub);
+          const lines = p ? String(p.innerText || p.textContent).split('\n').map(sq).filter(Boolean) : [];
+          return { name: sq(n.innerText || n.textContent), sub: lines[0] || '' };
         }, vrec.pageTitle).catch(() => null);
         const d = h && h.sub ? findDateRange(h.sub) : null;
-        if (h && h.sub && h.sub.length <= 150 && !(d && (d.start || d.end))) {
-          const part = x => vrec.capsTitles ? titleFromCaps(x) : x;
+        // A line in another script is the name translated (Li Jin's Chinese
+        // title under the English one), not a subtitle.
+        const subOk = h && h.sub && h.sub.length <= 150 && /[A-Za-z]/.test(h.sub) && !(d && (d.start || d.end));
+        // Capitals judged per part: a header can type its name in capitals and
+        // its subtitle in ordinary letters in one line ("KABUKI KIMONO:
+        // Costumes of Bandō Tamasaburō V"), which titleFromCaps, judging the
+        // whole line, would leave in capitals.
+        const part = x => vrec.capsTitles ? String(x).split(/(\s*[:–—]\s*)/).map((seg, i) => i % 2 ? seg : titleFromCaps(seg)).join('') : x;
+        const fold = x => String(x).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        if (h && !subOk && fold(h.name).length > fold(row.title).length && fold(h.name).startsWith(fold(row.title))) {
+          const full = part(h.name);
+          if (full !== row.title) {
+            TITLE_REPORT.push({ venue: venueCode, kind: 'changed', from: row.title, to: full, url: row.url });
+            row.title = full;
+          }
+        }
+        if (subOk) {
           // Joined as cardPartsTitle joins: a name that already has its own
           // colon ("Ashmolean NOW: Bettina von Zwehl") takes the subtitle after
-          // a dash, never a second colon.
+          // a dash, never a second colon. A subtitle that CONTINUES the name
+          // ("CHEUNG YEE" / "AND HIS 1960s HONG KONG CONTEMPORARIES") joins
+          // with a space: a colon there made "Cheung Yee: And His…".
           const nm = part(h.name), sb = part(h.sub);
-          const full = nm.includes(':') ? `${nm} – ${sb}` : `${nm}: ${sb}`;
+          const full = /^(and|&|with)\b/i.test(h.sub) ? `${nm} ${/^and\b/i.test(sb) ? sb.replace(/^and\b/i, 'and') : sb.replace(/^with\b/i, 'with')}`
+            : nm.includes(':') ? `${nm} – ${sb}` : `${nm}: ${sb}`;
           if (full !== row.title) {
             TITLE_REPORT.push({ venue: venueCode, kind: 'changed', from: row.title, to: full, url: row.url });
             row.title = full;

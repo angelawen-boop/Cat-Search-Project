@@ -141,6 +141,52 @@ async function run(browser, listingOnly) {
     }
     await browser2.close();
   }
+
+  // THE 27 SEP 19:28 SWEEP'S FAULTS, fixed on the pages it kept (her go-ahead:
+  // saved pages, never a resweep). Each row starts as the sweep wrote it; the
+  // show-page pass is run again over its kept page, as reread_kept.js does.
+  {
+    const K = path.join(D, 'sweep_2026-09-27');
+    const zlib = require('zlib');
+    const { readProForma } = require('../compress.js');
+    const rows = readProForma(path.join(K, 'sweep_rows.csv'));
+    const WANT = {
+      'this-is-what-you-get-stanley-donwood-radiohead-thom-yorke':
+        ['AS-026', 'a header naming its show in an <h1> — never a teaser card further down', { title: 'This Is What You Get: Stanley Donwood | Radiohead | Thom Yorke' }],
+      'cheung-lee-and-his-1960s-hong-kong-contemporaries':
+        ['AS-027', 'a subtitle that continues the name joins with a space, not a colon', { title: 'Cheung Yee and His 1960s Hong Kong Contemporaries' }],
+      'kabuki-kimono-display-costumes-of-bando-tamasaburo-v':
+        ['AS-028', 'a header name that extends the listing\'s, capitals judged per part', { title: 'Kabuki Kimono: Costumes of Bandō Tamasaburō V' }],
+      'renaissance-worlds-art-and-the-senses':
+        ['AS-029', 'no ticket or membership sentence opens the description', { summaryStarts: 'This major new exhibition explores' }],
+      'li-jin-with-roger-law-simple-pleasures':
+        ['AS-030', 'a Chinese translation under the name is not a subtitle — title unchanged', { same: true }],
+      'ashmolean-now-pio-abad-those-sitting-in-darkness':
+        ['AS-031', 'a page with no header box keeps the listing\'s title', { same: true }],
+      'churchill-money-gallery-display':
+        ['AS-032', 'a shorter header name never replaces a fuller listing name', { same: true }],
+      'roman-oxfordshire-coins-display':
+        ['AS-033', 'the same, for a display', { same: true }],
+    };
+    const browser3 = await chromium.launch({ executablePath: S.resolveChromium(), args: ['--no-sandbox'] });
+    for (const before of rows) {
+      const slug = before.url.split('/').pop();
+      const [id, what, want] = WANT[slug];
+      const row = { ...before };
+      const ctx = await browser3.newContext();
+      await ctx.route(() => true, r => r.request().url() === row.url
+        ? r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: zlib.gunzipSync(fs.readFileSync(path.join(K, slug + '.html.gz'))) })
+        : r.abort());
+      const page = await ctx.newPage();
+      const log = console.log; console.log = () => {};
+      try { await S.fetchIndividualPages(page, [row], 'ashmolean'); } finally { console.log = log; await ctx.close(); }
+      const ok = want.title ? row.title === want.title
+        : want.summaryStarts ? row.summary.startsWith(want.summaryStarts) && !/tickets for this|become a member/i.test(row.summary)
+        : row.title === before.title && row.summary === before.summary;
+      check(`${id}: ${what}`, ok, `title: ${row.title} | summary: ${row.summary.slice(0, 80)}`);
+    }
+    await browser3.close();
+  }
   console.log(failures ? failures + ' failed' : 'the Ashmolean recipe reads its saved pages');
   process.exit(failures ? 1 : 0);
 })().catch(e => { console.log('FAIL  ashmolean_pages crashed — ' + e.message); process.exit(1); });
