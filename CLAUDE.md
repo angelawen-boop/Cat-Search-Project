@@ -310,7 +310,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34.14, 26 Sep 2026, is live** (a shop's own search/shelf page is never filed as the book). **34.13** (KHM's shop search is her address; the Museum shop link searches the EXHIBITION's title, never the book's; Re-check drops a ticket link silently). **34.11** (Levy cards headed "Lévy Gorvy Dayan" — `card` in MUSEUMS; the blocked-shop headline in red, the rest grey; no "No catalogue" corner tag — the corner keeps the time tag; a publisher step that died claims nothing — "No separate publisher page." retired). **34.8** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
+**Version 34.15, 27 Sep 2026, is built on `main`, NOT published** (MoMA's shop search is her own, `/collections/shop?q=`; no line at all with no ledger open). **Version 34.14, 26 Sep 2026, is live** (a shop's own search/shelf page is never filed as the book). **34.13** (KHM's shop search is her address; the Museum shop link searches the EXHIBITION's title, never the book's; Re-check drops a ticket link silently). **34.11** (Levy cards headed "Lévy Gorvy Dayan" — `card` in MUSEUMS; the blocked-shop headline in red, the rest grey; no "No catalogue" corner tag — the corner keeps the time tag; a publisher step that died claims nothing — "No separate publisher page." retired). **34.8** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -1112,9 +1112,9 @@ piece stored and read back identical; 270 KB refused at the 256 KiB limit.
   saving is too messy. **Cloud saving has to be proven reliable; that is the
   point of the trial.** Her own protection is Cloud Saves and offline files.
 
-**Held for the next change (her ruling 26 Sep, not yet built):**
-- **Delete "No ledger loaded — tap Load to begin." permanently** — in the
-  cloud version AND on `main`, whether or not the cloud trial goes ahead.
+**Held for the next change (her ruling 26 Sep):**
+- **Delete "No ledger loaded — tap Load to begin." permanently** — done on
+  `main` in 34.15; the branch gets it when `main` is next merged in.
 
 **Next:**
 1. **Her normal use on the test page, over several sessions** (from 26 Sep);
