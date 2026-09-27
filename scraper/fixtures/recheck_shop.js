@@ -167,7 +167,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   {
     const c = card(lgdRow.title);
     ok(c && c.textContent.startsWith('Lévy Gorvy Dayan'), 'V-001: a Levy Gorvy card is headed "Lévy Gorvy Dayan"', c && c.textContent.slice(0, 40));
-    ok([...win.document.querySelectorAll('button')].some(b => b.textContent === 'Levy Gorvy'), 'V-001a:   while its chip still reads "Levy Gorvy"');
+    ok([...win.document.querySelectorAll('button')].some(b => b.textContent === 'Levy'), 'V-001a:   while its chip reads "Levy" (her ruling, 27 Sep)');
   }
 
   // ── V-002: no "No catalogue" corner tag — the corner keeps the time tag.

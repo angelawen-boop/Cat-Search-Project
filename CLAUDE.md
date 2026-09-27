@@ -3,7 +3,7 @@
 **Repo:** `angelawen-boop/Cat-Search-Project`
 
 She collects art-exhibition catalogues. They go out of print fast once a show
-closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 26
+closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 27
 museums and galleries and shows how close each catalogue is to its likely
 out-of-print window, so she can buy before it is too late.
 
@@ -172,6 +172,7 @@ Judgement about the outside world is not in any file.
 | `rijks` | 37 rows, not chased further. *Asian Pavilion* was pulled by the venue |
 | `capo` | **Not count-verified and never will be** — see below |
 | `brera`, `borghese` | Their single extra row is a marker for a genuinely empty upcoming page |
+| `ashmolean` | **Everything kept** — major exhibitions, free exhibitions and displays, past included (27 Sep). Her count: current 0 major + 4 free, upcoming 2 major + 1 free, past 4 major + 13 free. `ashmolean_pages.js` |
 
 **Whether displays count is HERS, and it varies by venue** — different museums
 mean different things by the word. Two venues disagreeing is the expected state,
@@ -184,7 +185,7 @@ Chrome translate. Two consequences — **the `url` column is the load-bearing fi
 at this venue, not the dates**, and **the summary must arrive in English**.
 Reasoning in `docs/scraper.md` §15.
 
-**All 26 have a recipe**, blocked ones included: a refusal costs half a second,
+**All 27 have a recipe**, blocked ones included: a refusal costs half a second,
 leaves marker rows that show on the approval pile, and turns every sweep into a
 standing monitor. **Blocks are not permanent facts** — in five days Borghese went
 down and came back, dellav turned out never to have been blocked, the Met's
@@ -310,7 +311,7 @@ silently.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Version 34.15, 27 Sep 2026, is built on `main`, NOT published** (MoMA's shop search is her own, `/collections/shop?q=`; no line at all with no ledger open). **Version 34.14, 26 Sep 2026, is live** (a shop's own search/shelf page is never filed as the book). **34.13** (KHM's shop search is her address; the Museum shop link searches the EXHIBITION's title, never the book's; Re-check drops a ticket link silently). **34.11** (Levy cards headed "Lévy Gorvy Dayan" — `card` in MUSEUMS; the blocked-shop headline in red, the rest grey; no "No catalogue" corner tag — the corner keeps the time tag; a publisher step that died claims nothing — "No separate publisher page." retired). **34.8** (Levy Gorvy Dayan, Jacquemart-André, MAM Paris, d'Orsay and MAD Paris added; chips renamed "Levy Gorvy", "Artic", "KHM"; blocked shops said plainly; search works with the filters; shelves read five pages deep). The file is `Cat_Watch.jsx` — renamed from
+**Version 35.4, 27 Sep 2026, is built on `main`, NOT published** (MoMA's shop search is her own, `/collections/shop?q=`; no line at all with no ledger open; the Ashmolean, its shop searched once and working; her chip order of 27 Sep, fixture 19; chip "Levy", cards still "Lévy Gorvy Dayan"). **It must be live before any import carrying `ashmolean` rows** — the live app files an unknown code under "Couldn't be filed". **35.3 is live** (footer still reads its old number, 34.14). **Renumbered 27 Sep, her ruling** — old numbers in git: 34.8 → **35** (five venues added), 34.11 → 35.1, 34.13 → 35.2, 34.14 → 35.3. **One number per PUBLISH**, never per build — unpublished builds 34.9, 34.10, 34.12 made the footer skip. The file is `Cat_Watch.jsx` — renamed from
 `Cat_Watch_v10.2_haiku.jsx` on 22 Sep, a fossil of a question that no longer
 exists. **No version number in the name either**: the published version is
 already past it and a number in a filename only drifts. Line count went stale
@@ -324,7 +325,7 @@ cannot answer the only question it is ever asked: is this older than the one
 just built. **Bump it in the same breath as the change it describes.**
 
 **How it counts — hers: a whole number for a substantial change, a decimal
-for a small one** (v37, then v37.1).
+for a small one** (v37, then v37.1). Adding venues is substantial.
 
 **Building is code's job — `node build/build_app.js`**, which transpiles, wraps it
 in the committed shell (`build/shell_head.html`, `build/shell_tail.html`), proves
@@ -540,6 +541,8 @@ first number to scroll past:
 | `catalogue_lookup.js` | C-001 to C-099 |
 | `recheck_shop.js` | the real app in jsdom, buttons pressed — Re-check (R-001 to R-023), blocked shops and web-found shop links (L-001 to L-019), search with filters (S-001 to S-003) |
 | `mam_pages.js` | the MAM recipe on its saved archive pages — her exclusions and count |
+| `ashmolean_pages.js` | the Ashmolean recipe on pages read once and saved (`docs/ashmolean_pages/`), no network — her count, dates completed from the show's page, the description |
+| `page_keep_pages.js`, `moma_pages.js` | pages kept as read (a cut-short run asks only for what is missing); MoMA's description without its credit paragraph |
 | `mad_pages.js` | the MAD recipe on her saved pages, no network — her count, dates, titles, the description |
 | `brit_pages.js` | the British Museum recipe on her saved pages, no network — titles, year headings, dates, the description |
 | `orsay_pages.js` | the d'Orsay recipe on her saved pages, no network — her tag rulings, dates, titles, the description |
@@ -641,7 +644,7 @@ scraper/output/run_2026-09-10_183045/
 
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
-announces which it thinks it is before fetching. **Container: 24. Her laptop: 2**
+announces which it thinks it is before fetching. **Container: 25. Her laptop: 2**
 — `met`, `artic` (`route: 'local'`).
 
 **Her rule, 26 Sep: a venue moves to her laptop only after a COMPLETE, CLEAN
@@ -1016,8 +1019,8 @@ closed item without a new fact.
 
 Reopened by her 24 Sep (was §8); built 25 Sep. **Branch only — `main` and her
 published app do not have it.** Version series of its own, her ruling: `main`'s
-number then the cloud count. **"34.13 · cloud 3" is live on the test page (26
-Sep); the branch holds "34.14 · cloud 3"** (`main`'s 34.14 merged in, not
+number then the cloud count. **"34.13 · cloud 3" (now 35.2 · cloud 3) is live on the test page (26
+Sep); the branch holds "34.14 · cloud 3" (35.3 · cloud 3 after the renumbering)** (`main`'s 34.14 merged in, not
 published) — her ruling: edits stay "cloud 3" until she says otherwise. Test
 page, own store: **https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf** — **her
 working app for the trial from 26 Sep: she works ONLY there, on her real

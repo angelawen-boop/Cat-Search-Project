@@ -2578,6 +2578,9 @@ const BOILERPLATE = [
   'entitled to a discount',
   'ticket office',
   'ticket purchase',
+  // The Ashmolean, 27 Sep: "No exhibition booking needed for Members, but
+  // proof of Membership is required" sat among Aphrodite's paragraphs.
+  'proof of membership',
   'subscribe to',
   'to stay updated',
   'opening hours',
@@ -2637,9 +2640,9 @@ const CURATORIAL_SELECTORS = [
   'p',
 ];
 
-async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, creditPara) {
+async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, creditPara, keepBold) {
   try {
-    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe }) => {
+    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe, keepBold }) => {
       const CREDIT = creditRe ? new RegExp(creditRe, 'i') : null;
       const ALWAYS = new RegExp(alwaysRe, 'i');
       const NOISE = new RegExp(noiseRe, 'i');
@@ -2778,7 +2781,9 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, cr
         for (const el of els) {
           if (out.length >= 4) break;
           if (insideNoise(el)) continue;
-          if (hasPlainProse && boldOnly(el)) continue;
+          // `keepBold`: a venue whose opening paragraph IS bold (the Ashmolean's
+          // lead), and which prints no bold label among its paragraphs.
+          if (hasPlainProse && !keepBold && boldOnly(el)) continue;
           // A recipe's own credit paragraph — see `creditPara`.
           if (CREDIT && CREDIT.test(clean(el.innerText))) continue;
           const t = stripBoilerplate(clean(el.innerText));
@@ -2793,7 +2798,8 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, cr
          boilerplate: BOILERPLATE,
          selectors: descSelector ? [descSelector, ...CURATORIAL_SELECTORS] : CURATORIAL_SELECTORS,
          MIN_WRAPPER_PARAS,
-         creditRe: creditPara ? creditPara.source : null });
+         creditRe: creditPara ? creditPara.source : null,
+         keepBold: !!keepBold });
   } catch {
     return '';
   }
@@ -4853,6 +4859,42 @@ const VENUES = {
   // the listings' own cards are read — two card designs, one per page:
   //   current  a.event       .festival__type  .title h2  .sous_titre
   //   past     a.gallery_el  .item-type       .item-title .item-sub-title
+  ashmolean: {
+    name: 'Ashmolean Museum, Oxford',
+    base: 'https://www.ashmolean.org',
+    // HER ADDITION, 27 Sep. Major exhibitions, free exhibitions AND displays,
+    // current and past alike — nothing excluded (her ruling). Her count: current
+    // 0 major + 4 free, upcoming 2 major + 1 free, past back to 1 July 2024
+    // 4 major + 13 free. Written from pages read once each and saved
+    // (docs/ashmolean_pages/); fixtures/ashmolean_pages.js.
+    //
+    // The page draws its lists by script, and the past page holds TWO of them:
+    // "past exhibitions" (the majors, paged by page-181616) and "past free
+    // exhibitions and displays" (paged by page-996041). The majors' first page
+    // already reaches 2023, so only the free list is followed; the majors
+    // re-appear on every page of it and fall to the address guard.
+    pages: [
+      { path: '/exhibitions',      ctx: 'current/upcoming' },
+      { path: '/past-exhibitions', ctx: 'past', paginate: { param: 'page-996041', from: 1 } },
+    ],
+    // Shows live at /exhibition/<name>, displays at /display/<name>. The card's
+    // own link class keeps out the menu's promo card, which links Aphrodite on
+    // every page of the site.
+    selector: 'a.listing-item-link[href*="/exhibition/"], a.listing-item-link[href*="/display/"]',
+    isNav: href => /\/(past-)?exhibitions\/?(\?|$)/.test(href),
+    // The link holds only the name, in screen-reader text; the card's visible
+    // heading is outside it.
+    title: { heading: false, cardParts: { name: '.screen-reader-only' } },
+    // A free show's card prints "Open until 9 Nov 2025" in its date row; an
+    // upcoming major's prints "Opens on 8 Oct 2026" in bold in its teaser. The
+    // missing half comes from the show's own page ("Open 11 Apr – 13 Dec 2026").
+    datesAt: { within: 'article', sel: '.listing-item-event-date, .teaser-text strong' },
+    // The page's own text field. Its lead paragraph is set in bold ("Step into
+    // the world of Aphrodite…"), which the shared bold-label rule would drop.
+    description: '.field-name-field-content p',
+    keepBold: true,
+  },
+
   jacquemart: {
     name: 'Musée Jacquemart-André, Paris',
     base: 'https://www.musee-jacquemart-andre.com',
@@ -6115,7 +6157,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
         }
       }
 
-      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt, vrec.creditPara);
+      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt, vrec.creditPara, vrec.keepBold);
       if (text) {
         row.summary = text;
         fetched++;

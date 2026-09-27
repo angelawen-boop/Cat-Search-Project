@@ -1404,11 +1404,11 @@ test('R-003: every other venue is the container\'s', () => {
 
 test('R-004: the two sets do not overlap and cover every venue', () => {
   const codes = [...SWEEP_SRC.matchAll(RECIPE_KEY)].map(m => m[1]);
-  assert.strictEqual(codes.length, 26, 'expected 26 recipes, found ' + codes.length);
+  assert.strictEqual(codes.length, 27, 'expected 27 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
   assert.deepStrictEqual(home.sort(), ['artic', 'met']);
-  assert.strictEqual(container.length, 24);
+  assert.strictEqual(container.length, 25);
   assert.strictEqual(home.length + container.length, codes.length);
 });
 

@@ -13,7 +13,11 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
 // for a small one. This is the ONLY place it is written down. Bump it in the
 // same breath as the change it describes, or it lies.
-const APP_VERSION = "34.15";
+// ONE NUMBER PER PUBLISH — her ruling, 27 Sep. Builds she never saw took
+// numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
+// 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
+// 34.14 → 35.3. Git keeps the old numbers.
+const APP_VERSION = "35.4";
 const APP_VERSION_DATE = "27 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -48,6 +52,7 @@ const APP_VERSION_DATE = "27 Sep 2026";
 // chip reads "Levy Gorvy", the cards "Lévy Gorvy Dayan". Everything else
 // (chips, drawer, refresh headings) reads `short`.
 const MUSEUMS = [
+  // CHIP ORDER IS THIS ARRAY'S ORDER — hers, 27 Sep 2026.
   { id:"met", short:"The Met", name:"The Metropolitan Museum of Art", city:"New York",
     exBase:"https://www.metmuseum.org/exhibitions/", shopSearch:"https://store.metmuseum.org/search?q=", shopCatalogues:"https://store.metmuseum.org/books-toys-games/exhibition-catalogues", shopHome:"https://store.metmuseum.org/", listUrl:"https://www.metmuseum.org/exhibitions" },
   { id:"rijks", short:"Rijksmuseum", name:"Rijksmuseum", city:"Amsterdam",
@@ -56,16 +61,19 @@ const MUSEUMS = [
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
   { id:"acq", short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
-  // Added 25 Sep 2026, her ruling: chip "Levy Gorvy" (renamed from "Levy", 25 Sep), always straight after Acquavella.
+  // Added 25 Sep 2026, her ruling: chip "Levy" (her ruling 27 Sep; the cards keep "L\u00e9vy Gorvy Dayan"), straight after Acquavella.
   // Shopify, like Acquavella's: search box and "View all" read off the live shop.
-  { id:"lgd", short:"Levy Gorvy", card:"Lévy Gorvy Dayan", name:"Lévy Gorvy Dayan", city:"New York / London",
+  { id:"lgd", short:"Levy", card:"Lévy Gorvy Dayan", name:"Lévy Gorvy Dayan", city:"New York / London",
     exBase:"https://www.levygorvydayan.com/exhibitions/", shopSearch:"https://shop.levygorvydayan.com/search?q=", shopCatalogues:"https://shop.levygorvydayan.com/collections/all", shopHome:"https://shop.levygorvydayan.com/", listUrl:"https://www.levygorvydayan.com/exhibitions" },
   { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopCatalogues:"https://shop.frick.org/publications/exhibition-catalogues/", shopHome:"https://shop.frick.org/", listUrl:null },
   { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopCatalogues:"https://bookstore.menil.org/collections/menil-publications", shopHome:"https://bookstore.menil.org/", listUrl:null },
   { id:"artic", short:"Artic", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
   { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:"https://wallacecollectionshop.org/search?q=", shopCatalogues:"https://wallacecollectionshop.org/collections/wallace-collection-publications", shopHome:"https://wallacecollectionshop.org/", listUrl:null },
   { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
-  { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
+  // The Ashmolean, 27 Sep 2026, her addition; chip after Tate Britain. Shopify:
+  // search checked once (it finds "Colonial Views of India"), and her
+  // exhibition-catalogues shelf.
+  { id:"ashmolean", short:"Ashmolean", name:"Ashmolean Museum", city:"Oxford", exBase:null, shopSearch:"https://shop.ashmolean.org/search?q=", shopCatalogues:"https://shop.ashmolean.org/collections/exhibition-catalogues", shopHome:"https://shop.ashmolean.org/", listUrl:null },
   { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:"https://www.vam.ac.uk/shop/search?q=", shopCatalogues:"https://www.vam.ac.uk/shop/books/exhibition-books.html", shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
   { id:"louvre", short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:"https://boutique.louvre.fr/en/search/products/?q=", shopCatalogues:"https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
   // French venues added 25 Sep 2026, after the Louvre. Same shop system as the
@@ -74,12 +82,6 @@ const MUSEUMS = [
   // shared one; the catalogues shelf is her link with the tracking tags removed,
   // and the search is the one she sent (it searches every museum on the site).
   { id:"orsay", short:"d'Orsay", name:"Mus\u00e9e d'Orsay", city:"Paris", exBase:null, shopSearch:"https://www.boutiquesdemusees.fr/en/search/products/?q=", shopCatalogues:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", shopHome:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", listUrl:null },
-  // MAM Paris, 25 Sep. The search is the one she sent from her browser, its
-  // query moved last so the title can be tacked on. French only, no English
-  // version. Behind a Cloudflare check that refuses this machine AND the
-  // connector (403, 25 Sep) while her browser passes it unaided — so, like KHM,
-  // left wired: retried and visible, and her "Museum shop" link works.
-  { id:"mam", short:"MAM Paris", name:"Mus\u00e9e d'Art Moderne de Paris", city:"Paris", exBase:null, shopSearch:"https://www.mamlibrairieboutique.fr/listeliv.php?flou&base=paper&mots_recherche=", shopHome:"https://www.mamlibrairieboutique.fr/", listUrl:null },
   // MAD Paris, 25 Sep. Its boutique has NO search box (her check, and none in
   // the page she saved), so the publications shelf is the only route in: 68
   // books over five pages, the newest first. It numbers pages in the PATH
@@ -93,9 +95,16 @@ const MUSEUMS = [
   { id:"borghese", short:"Borghese", name:"Galleria Borghese", city:"Rome", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"brera", short:"Brera", name:"Pinacoteca di Brera", city:"Milan", exBase:null, shopSearch:"https://bottegabrera.org/en/search?q=", shopCatalogues:"https://bottegabrera.org/en/collections/guide-e-cataloghi", shopHome:"https://bottegabrera.org/en/", listUrl:null },
   { id:"capo", short:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
-  { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search, 27 Sep */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
-  { id:"brit", short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:"https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", shopCatalogues:"https://www.britishmuseumshoponline.org/books/exhibition-books.html", shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
   { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:"https://shop.themorgan.org/search?q=", shopCatalogues:"https://shop.themorgan.org/collections/exhibition-catalogs", shopHome:"https://shop.themorgan.org/", listUrl:null },
+  { id:"brit", short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:"https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", shopCatalogues:"https://www.britishmuseumshoponline.org/books/exhibition-books.html", shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
+  { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search, 27 Sep */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
+  { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
+  // MAM Paris, 25 Sep. The search is the one she sent from her browser, its
+  // query moved last so the title can be tacked on. French only, no English
+  // version. Behind a Cloudflare check that refuses this machine AND the
+  // connector (403, 25 Sep) while her browser passes it unaided — so, like KHM,
+  // left wired: retried and visible, and her "Museum shop" link works.
+  { id:"mam", short:"MAM Paris", name:"Mus\u00e9e d'Art Moderne de Paris", city:"Paris", exBase:null, shopSearch:"https://www.mamlibrairieboutique.fr/listeliv.php?flou&base=paper&mots_recherche=", shopHome:"https://www.mamlibrairieboutique.fr/", listUrl:null },
 ];
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 
