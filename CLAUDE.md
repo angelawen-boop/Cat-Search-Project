@@ -555,7 +555,7 @@ first number to scroll past:
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
 | `listing_pages.js` | the same, for WHERE each row was seen — no page twice, no promo card read as a listing |
 | `bridge_reuse.js` | the bridge reuses program files as a browser does (BR-001 to BR-017) |
-| `robots_pages.js` | robots.txt read, obeyed (waits, off-limits) and never read by a fixture; a timeout says whether the page or one of its files stalled (RB-001 to RB-020, ST-001/002) |
+| `robots_pages.js` | robots.txt read, obeyed (waits, off-limits) and never read by a fixture; a timeout says whether the page or one of its files stalled (RB-001 to RB-022, ST-001/002) |
 | `pacing_pages.js` | the real page loader, paced, over her saved d'Orsay pages with Cloudflare's headers — a refusal part-way and a bot check served with 200 |
 | `cloud_ledger.js`, `cloud_app.js` | the cloud ledger (branch): storage against a stand-in store with the platform's limits, then the screen driven by clicks — both on her real ledger, `docs/ledger_2026-09-24/` |
 
@@ -1332,7 +1332,7 @@ A venue moves to her laptop only after a clean complete sweep (§5).
 
 **Page layout comes from HER, never from a probe — her ruling, 22 Sep.**
 
-### 6. More venues — five built 25 Sep, the Ashmolean 27 Sep; four imported and checked by her; MAD, d'Orsay and the Ashmolean in progress
+### 6. More venues — five built 25 Sep, the Ashmolean 27 Sep; four imported and checked by her; MAD and the Ashmolean swept clean 27 Sep (held pile); d'Orsay on the headed pile
 
 Her additions, 24–25 Sep. **Her order on the chips:** Levy Gorvy straight
 after Acquavella; the French venues Louvre, d'Orsay, MAM Paris, MAD Paris,
@@ -1345,13 +1345,13 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 | `jacquemart` | **imported and checked by her**, lookup works | `run_2026-09-25_133825` | — |
 | `mam` MAM Paris | **imported and checked by her**; shop blocked, card says so | `run_2026-09-25_160850` (before her Prix Duchamp / Oliver Beer ruling — the next sweep drops them) | Shop's Cloudflare refuses this machine and the connector (403); her browser passes. A third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
 | `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | `run_2026-09-26_115449` — headless from her laptop, refused on page 1 | **headed pile** (her ruling 26 Sep) — §7.5; the container's until a clean laptop sweep |
-| `ashmolean` Ashmolean | **recipe built 27 Sep from pages read once and saved; her count proven offline** (`ashmolean_pages.js`, AS-001 to AS-020). App 35.4 carries it — **not published** | none — three live sweeps 27 Sep wrote nothing: two stopped by the session, the third abandoned at its 10-minute budget, page 20 of 24; 13 show pages timed out, every second one (`run_2026-09-27_142243`, log only). The same page alone later that day: 3s and 2s, nothing stuck — drop-outs come and go (she has seen it blank for a minute too) | `keepPages: true` (her yes). Longer timeouts NOT adopted. 27 Sep 16:36 sweep: 24 rows, 10 pages timed out — partial, NOT for import. **Page alone, no programs — PROVEN OFFLINE on five bare pages, one of every kind** (four saved by her via view-source, one fetched; `docs/ashmolean_pages/raw/`): ~100 other files refused each, title, dates and description identical to the full read (AS-021 to AS-025). **Built as `pageOnly: true`** — show pages only (its lists need their scripts); ~28 files a sweep instead of ~2,400. Its labels (one plain request, a cache hit): Acquia hosting, Varnish cache, no named gatekeeper — which says nothing about a limit. **robots.txt asks 10s between requests; we asked every 2** — now obeyed by code. The stall pattern points to a rate limit, not proven (§6, "Diagnosing in the wrong order"). **Swept 27 Sep 19:28, her go: 24 of 24 show pages, no timeouts, her count (4 + 3 + 17)** (`run_2026-09-27_192852`). Four faults fixed from its kept pages, no resweep: Radiohead's title taken from a teaser card, Cheung Yee's "…: And His", Kabuki Kimono's short title, Renaissance Worlds' ticket sentence. **Raw, in the held pile with MoMA's four** (§7.5) — compressed together later. App 35.4 must be live before import |
+| `ashmolean` Ashmolean | **Swept clean 27 Sep 19:28, her go**: 24 of 24 show pages, her count (4 + 3 + 17). App 35.4 carries it — **not published**, and must be live before import | `run_2026-09-27_192852` (container, pages kept) | **How it got there** (§6, "Diagnosing in the wrong order"): four earlier sweeps timed out; fixed by reading each show page alone (`pageOnly`, ~1 file a page, proven offline AS-021–025) and its robots.txt's 10s wait. `keepPages: true`. Four title/description faults corrected from its kept pages, no resweep (AS-026–033). **Raw, in the held pile** (§7.5) |
 | `mad` MAD Paris | **Her laptop's, her ruling 27 Sep** (`route: 'local'`) | `run_2026-09-27_200702` — her laptop, paced: 20 of 20 pages clean, her count (2 + 2 + 16), pages kept | ANDAM's sponsor sentence dropped by a MAD-only rule (`dropSentence`, MD-010/011) and the row corrected from the kept page, no resweep. **Raw, in the held pile** with MoMA and the Ashmolean (§7.5). The container is refused outright (403, robots.txt included) |
 
 **THE IMPORT — SENT 25 Sep: `stitch_20260925_0611/sweep_compressed.csv`**, 75 rows
 (Levy Gorvy 28, MAM 19, Tate Britain 23, Jacquemart-André 5). Through the intake
 against her 24 Sep ledger: 66 new, 2 Tate title corrections, 7 matching. App
-34.8 published first. What remains is d'Orsay and MAD from her laptop. How it
+34.8 published first. MAD and the Ashmolean followed 27 Sep into the held pile (§7.5); d'Orsay remains. How it
 was built, kept for the record: Steps, in order:
 1. Re-sweep `tate-britain`, `lgd`, `mam` once (runs above predate fixes);
    `jacquemart`'s run and compression stand.
