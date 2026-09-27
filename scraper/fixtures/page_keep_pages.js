@@ -155,6 +155,12 @@ function htmlFromMhtml(file) {
         check('KP-017: ' + label + ' — still reported', found.some(u => u.hints.some(h => /page=2/.test(h))), JSON.stringify(found));
       }
     }
+    // WHICH VENUES KEEP PAGES (27 Sep). Asked of the switch directly.
+    check('KP-018: a fixture never keeps or reuses pages, even for a keepPages venue',
+      S.pageKeepFor('ashmolean') === null && S.pageKeepFor('ashmolean', { paced: true }) === null);
+    check('KP-019: container sweep — the Ashmolean keeps pages', !!S.pageKeepFor('ashmolean', { asSweep: true, paced: false }));
+    check('KP-020: container sweep — a venue without keepPages does not', S.pageKeepFor('ng', { asSweep: true, paced: false }) === null);
+    check('KP-021: her machine — every venue still keeps pages', !!S.pageKeepFor('ng', { asSweep: true, paced: true }));
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
     await browser.close();

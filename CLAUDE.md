@@ -680,11 +680,14 @@ written, so `--continue` redoes it. The container is untouched. Design: the
 PACING block in `sweep_prototype.js`; fixtures `pacing.test.js` (P-001 to
 P-010), `pacing_pages.js` (PC-001 to PC-013).
 
-**Pages kept — her machine, 27 Sep.** Every exhibition page read is kept as
-it is read (`output/pages_kept/<venue>/`), so a venue cut short asks next time
-only for what is missing. Saving sends nothing. Not reused once the venue has
-finished, after 14 days, or with `--reread`. Design: `page_keep.js`; fixtures
-KP-001 to KP-017.
+**Pages kept — her machine, 27 Sep; container per venue.** Every exhibition
+page read is kept as it is read (`output/pages_kept/<venue>/`), so a venue cut
+short asks next time only for what is missing. Saving sends nothing. Not reused
+once the venue has finished, after 14 days, or with `--reread`. **Container:
+only a recipe with `keepPages: true`** — a site that drops out part-way or
+blocks part-way more than once, never every site every run (her ruling). Only a
+real sweep keeps or reuses; fixtures never do. Design: `page_keep.js`,
+`pageKeepFor`; fixtures KP-001 to KP-021.
 
 **Pushing a laptop run: `git add scraper/output`** (not just the new folder —
 the start-up tidy may have moved old runs), commit, `git pull --rebase`, push.
@@ -1239,7 +1242,7 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 | `jacquemart` | **imported and checked by her**, lookup works | `run_2026-09-25_133825` | — |
 | `mam` MAM Paris | **imported and checked by her**; shop blocked, card says so | `run_2026-09-25_160850` (before her Prix Duchamp / Oliver Beer ruling — the next sweep drops them) | Shop's Cloudflare refuses this machine and the connector (403); her browser passes. A third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
 | `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | `run_2026-09-26_115449` — headless from her laptop, refused on page 1 | **headed pile** (her ruling 26 Sep) — §7.5; the container's until a clean laptop sweep |
-| `ashmolean` Ashmolean | **recipe built 27 Sep from pages read once and saved; her count proven offline** (`ashmolean_pages.js`, AS-001 to AS-020). App 35.4 carries it — **not published** | none — three live sweeps 27 Sep wrote nothing: two stopped by the session, the third abandoned at its 10-minute budget, page 20 of 24; 13 show pages took over 20s each, twice (`run_2026-09-27_142243`, log only) | **Waiting on her, two questions:** (1) this venue only, 60s per page and a 30-minute budget; (2) keep pages as read in the container too, so a cut-off sweep is not wasted. **No sweep until she says go** |
+| `ashmolean` Ashmolean | **recipe built 27 Sep from pages read once and saved; her count proven offline** (`ashmolean_pages.js`, AS-001 to AS-020). App 35.4 carries it — **not published** | none — three live sweeps 27 Sep wrote nothing: two stopped by the session, the third abandoned at its 10-minute budget, page 20 of 24; 13 show pages timed out, every second one (`run_2026-09-27_142243`, log only). The same page alone later that day: 3s and 2s, nothing stuck — drop-outs come and go (she has seen it blank for a minute too) | `keepPages: true` (her yes). Longer timeouts NOT adopted — a guess at a symptom. **No sweep until she says go** |
 | `mad` MAD Paris | **headless from her laptop gets in.** 26 Sep 11:37: 23 pages clean, 20 rows = her count; junk found and fixed at source (visit teasers; the ticket-and-address sidebar — MD-008/009, four saved pages) | `run_2026-09-26_113719` (before the fixes); 16:12 re-sweep refused after 5 clean pages, nothing written | **Likely a daily page limit (~25–30 from one address) — inferred from two runs.** One MAD sweep a day at most. **Next: one run after 27 Sep ~16:15 Sydney**; if clean and complete it moves to her laptop and its rows go to her import. Still the container's until then |
 
 **THE IMPORT — SENT 25 Sep: `stitch_20260925_0611/sweep_compressed.csv`**, 75 rows

@@ -2099,14 +2099,24 @@ const PACE_ARG = ARGS.find(a => a.startsWith('--pace='));
 const PACE_MS = Math.max(1000, Math.round((parseFloat(PACE_ARG?.split('=')[1] ?? '30') || 30) * 1000));
 const IGNORE_COOLDOWN = ARGS.includes('--ignore-cooldown');
 
-// PAGES KEPT — her machine only. Every exhibition page read is kept as it is
-// read, so a venue cut short does not have to ask for it again. The design and
-// when a kept page is NOT used: page_keep.js. --reread ignores them all.
+// PAGES KEPT. Every exhibition page read is kept as it is read, so a venue cut
+// short does not have to ask for it again. The design and when a kept page is
+// NOT used: page_keep.js. --reread ignores them all.
+//   her machine  every venue (her go-ahead, 27 Sep)
+//   container    only a venue whose recipe says `keepPages: true` — a site we
+//                have seen drop out part-way, or block us part-way more than
+//                once. Not every site every run (her ruling, 27 Sep).
+// Only a real sweep keeps or reuses pages. A fixture calling scrapeVenue must
+// neither write into output/pages_kept nor be handed rows a live sweep kept.
 const { snapshot: keepSnapshot, rowChanges } = require('./page_keep');
-let PAGE_KEEP = PACED
-  ? require('./page_keep').makePageKeep(path.join(OUT_DIR, 'pages_kept'), { reread: ARGS.includes('--reread') })
-  : null;
-function usePageKeepForFixtures(k) { PAGE_KEEP = k; }
+const PAGE_KEEP_STORE = require('./page_keep').makePageKeep(path.join(OUT_DIR, 'pages_kept'), { reread: ARGS.includes('--reread') });
+let PAGE_KEEP_FIXTURE = null;
+function pageKeepFor(code, { asSweep = require.main === module, paced = PACED } = {}) {
+  if (PAGE_KEEP_FIXTURE) return PAGE_KEEP_FIXTURE;
+  if (!asSweep) return null;
+  return paced || (VENUES[code] && VENUES[code].keepPages) ? PAGE_KEEP_STORE : null;
+}
+function usePageKeepForFixtures(k) { PAGE_KEEP_FIXTURE = k; }
 const COOLDOWN_AFTER_REFUSAL_MS = 24 * 60 * 60 * 1000;
 const QUIET_AFTER_CLEAN_MS = 60 * 60 * 1000;
 
@@ -4862,6 +4872,12 @@ const VENUES = {
   ashmolean: {
     name: 'Ashmolean Museum, Oxford',
     base: 'https://www.ashmolean.org',
+    // Pages kept as read, in the container too (her yes, 27 Sep): its 27 Sep
+    // sweep lost 13 of its first 20 show pages to 20s timeouts, every second
+    // page, and was abandoned at its budget with nothing written. The same
+    // page loaded in 2-3s twice when tried alone that afternoon, so the drop-
+    // outs come and go (she has also seen its pages sit blank for a minute).
+    keepPages: true,
     // HER ADDITION, 27 Sep. Major exhibitions, free exhibitions AND displays,
     // current and past alike — nothing excluded (her ruling). Her count: current
     // 0 major + 4 free, upcoming 2 major + 1 free, past back to 1 July 2024
@@ -6090,6 +6106,7 @@ async function autoScroll(page, maxSteps = 12) {
 
 async function fetchIndividualPages(page, rows, venueCode) {
   let fetched = 0, failed = 0, noText = 0, reused = 0, keptNow = 0;
+  const PAGE_KEEP = pageKeepFor(venueCode);
   // Skip anything already known to have closed before the lookback floor —
   // no point spending a page load on an exhibition we will discard.
   // Her one-time exceptions are read like any kept row.
@@ -6802,7 +6819,8 @@ async function main() {
     // from an earlier attempt still count.
     {
       const pv = PACER && PACER.venue(code);
-      if (PAGE_KEEP && !(pv && (pv.objection || pv.sawStop))) PAGE_KEEP.markFinished(code);
+      const keep = pageKeepFor(code);
+      if (keep && !(pv && (pv.objection || pv.sawStop))) keep.markFinished(code);
     }
 
     summary[code] = {
@@ -7112,7 +7130,7 @@ module.exports = {
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
   // Pure, or driven with a gap of milliseconds — scraper/pacing.test.js.
-  gatekeeperFrom, objectionFrom, laneCooldown, knownGatekeepers, makePacer, pacedWithheld, usePacerForFixtures, usePageKeepForFixtures, UNWIRED,
+  gatekeeperFrom, objectionFrom, laneCooldown, knownGatekeepers, makePacer, pacedWithheld, usePacerForFixtures, usePageKeepForFixtures, pageKeepFor, UNWIRED,
   // HEADED: pure, or a path — pacing.test.js H-001 to H-003.
   splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome,
   saysOngoing, applyLookback, expandYearArchive, expandDateRange, expandFromToday, keptDespiteLookback, withoutQuery, listingPages, followPagination,
