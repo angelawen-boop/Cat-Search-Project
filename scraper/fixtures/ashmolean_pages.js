@@ -99,6 +99,42 @@ async function run(browser, listingOnly) {
         r.summary && !/[Mm]embership|[Tt]icket|©|Header image|£|Gallery \d/.test(r.summary), r.summary);
     }
   } finally { await browser.close(); }
+  // THE BARE PAGE IS ENOUGH (27 Sep). Each show page as the server sends it,
+  // every other file refused, must give exactly the row a full read gave.
+  {
+    const RAW = path.join(D, 'raw');
+    const { readProForma } = require('../compress.js');
+    const FULL = readProForma(path.join(RAW, 'full_read_rows.csv'));
+    const BARE = {
+      'colonial-views-of-india-impey-photographs': 'exhibition_colonial_views_raw.html',
+      'anselm-kiefer-early-works': 'exhibition_anselm-kiefer-early-works_raw.html',
+      'churchill-money-gallery-display': 'exhibition_churchill-money-gallery-display_raw.html',
+      'ashmolean-now-soma-surovi-jannat': 'exhibition_ashmolean-now-soma-surovi-jannat_raw.html',
+      'roman-oxfordshire-coins-display': 'display_roman-oxfordshire-coins-display_raw.html',
+    };
+    const browser2 = await chromium.launch({ executablePath: S.resolveChromium(), args: ['--no-sandbox'] });
+    let n = 21;
+    for (const [slug, file] of Object.entries(BARE)) {
+      const full = FULL.find(r => r.url.endsWith('/' + slug));
+      const url = full.url;
+      // As the listing hands it over: no description, no page-read opening date,
+      // and — where the show's page completes the name — the listing's short one
+      // (the 16:36 sweep's TITLES report: "COLONIAL VIEWS OF INDIA" → full name).
+      const LISTING_TITLE = { 'colonial-views-of-india-impey-photographs': 'COLONIAL VIEWS OF INDIA' };
+      const row = { ...full, title: LISTING_TITLE[slug] || full.title, summary: '', start_date: '' };
+      const ctx = await browser2.newContext(); let other = 0;
+      await ctx.route(() => true, r => r.request().url() === url
+        ? r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: fs.readFileSync(path.join(RAW, file)) })
+        : (other++, r.abort()));
+      const page = await ctx.newPage();
+      const log = console.log; console.log = () => {};
+      try { await S.fetchIndividualPages(page, [row], 'ashmolean'); } finally { console.log = log; await ctx.close(); }
+      const diff = ['title', 'start_date', 'end_date', 'summary'].filter(f => (row[f] || '') !== (full[f] || ''));
+      check(`AS-0${n++}: ${slug} — the bare page gives the full read's row (${other} other files refused)`,
+        diff.length === 0 && other > 50, diff.map(f => f + ': ' + row[f] + ' ≠ ' + full[f]).join(' | '));
+    }
+    await browser2.close();
+  }
   console.log(failures ? failures + ' failed' : 'the Ashmolean recipe reads its saved pages');
   process.exit(failures ? 1 : 0);
 })().catch(e => { console.log('FAIL  ashmolean_pages crashed — ' + e.message); process.exit(1); });
