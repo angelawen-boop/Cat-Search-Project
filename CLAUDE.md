@@ -548,7 +548,7 @@ first number to scroll past:
 | `mam_pages.js` | the MAM recipe on its saved archive pages — her exclusions and count |
 | `ashmolean_pages.js` | the Ashmolean recipe on pages read once and saved (`docs/ashmolean_pages/`), no network — her count, dates completed from the show's page, the description; the bare page (AS-021–025); the 27 Sep sweep's four faults fixed on its kept pages (AS-026–033) |
 | `page_keep_pages.js`, `moma_pages.js` | pages kept as read (a cut-short run asks only for what is missing); MoMA's description without its credit paragraph |
-| `mad_pages.js` | the MAD recipe on her saved pages, no network — her count, dates, titles, the description |
+| `mad_pages.js` | the MAD recipe on her saved pages, no network — her count, dates, titles, the description; its sponsor sentence (MD-010/011) |
 | `brit_pages.js` | the British Museum recipe on her saved pages, no network — titles, year headings, dates, the description |
 | `orsay_pages.js` | the d'Orsay recipe on her saved pages, no network — her tag rulings, dates, titles, the description |
 | `summary_pages.js` | descriptions on saved pages (`docs/summary_pages/`), no network — the museum's own text, never a press list, credit or ticket note |
@@ -684,14 +684,15 @@ request would settle.
 
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
-announces which it thinks it is before fetching. **Container: 25. Her laptop: 2**
-— `met`, `artic` (`route: 'local'`).
+announces which it thinks it is before fetching. **Container: 24. Her laptop: 3**
+— `met`, `artic`, `mad` (`route: 'local'`; `mad` by her ruling 27 Sep, after
+its clean laptop sweep).
 
 **Her rule, 26 Sep: a venue moves to her laptop only after a COMPLETE, CLEAN
 sweep from there.** Until then it stays with the container, whose refusals are
 its marker rows — the sweep record and her "last tried" date. Candidates are
 tested on her laptop by NAMING them. `moma` went early on 22 Sep on one probe
-page and came back; `orsay`, `mad`, `moma`, `brit`, `morgan` are candidates.
+page and came back; `orsay`, `moma`, `brit`, `morgan` are candidates.
 Fixtures R-001 to R-005.
 
 **`headed: true` — BUILT 26 Sep: on her machine the venue is swept in a
@@ -1303,7 +1304,8 @@ ruling, 27 Sep). One Cloudflare venue per day. Not before **Mon 28 Sep
 — pacing works, a limit remains. **Her ruling: MoMA is not swept.** She wants
 four upcoming shows; she saves those pages and `from_saved_pages.js` reads
 them (`run_2026-09-27_123228`, 4 rows, raw — **compression held**: other
-venues join this pile — the Ashmolean's 24 (`run_2026-09-27_192852`), 27 Sep —
+venues join this pile — the Ashmolean's 24 (`run_2026-09-27_192852`) and MAD's 20
+(`run_2026-09-27_200702`), 27 Sep —
 and it is stitched and compressed as one when she says, her ruling 27 Sep). Not waiting through a bot check
 either — a clearance is per site and opens nothing else. **Next: `brit`, then
 `orsay`, then `morgan`**, from Mon 28 Sep 12:08pm Sydney.
@@ -1344,7 +1346,7 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 | `mam` MAM Paris | **imported and checked by her**; shop blocked, card says so | `run_2026-09-25_160850` (before her Prix Duchamp / Oliver Beer ruling — the next sweep drops them) | Shop's Cloudflare refuses this machine and the connector (403); her browser passes. A third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
 | `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | `run_2026-09-26_115449` — headless from her laptop, refused on page 1 | **headed pile** (her ruling 26 Sep) — §7.5; the container's until a clean laptop sweep |
 | `ashmolean` Ashmolean | **recipe built 27 Sep from pages read once and saved; her count proven offline** (`ashmolean_pages.js`, AS-001 to AS-020). App 35.4 carries it — **not published** | none — three live sweeps 27 Sep wrote nothing: two stopped by the session, the third abandoned at its 10-minute budget, page 20 of 24; 13 show pages timed out, every second one (`run_2026-09-27_142243`, log only). The same page alone later that day: 3s and 2s, nothing stuck — drop-outs come and go (she has seen it blank for a minute too) | `keepPages: true` (her yes). Longer timeouts NOT adopted. 27 Sep 16:36 sweep: 24 rows, 10 pages timed out — partial, NOT for import. **Page alone, no programs — PROVEN OFFLINE on five bare pages, one of every kind** (four saved by her via view-source, one fetched; `docs/ashmolean_pages/raw/`): ~100 other files refused each, title, dates and description identical to the full read (AS-021 to AS-025). **Built as `pageOnly: true`** — show pages only (its lists need their scripts); ~28 files a sweep instead of ~2,400. Its labels (one plain request, a cache hit): Acquia hosting, Varnish cache, no named gatekeeper — which says nothing about a limit. **robots.txt asks 10s between requests; we asked every 2** — now obeyed by code. The stall pattern points to a rate limit, not proven (§6, "Diagnosing in the wrong order"). **Swept 27 Sep 19:28, her go: 24 of 24 show pages, no timeouts, her count (4 + 3 + 17)** (`run_2026-09-27_192852`). Four faults fixed from its kept pages, no resweep: Radiohead's title taken from a teaser card, Cheung Yee's "…: And His", Kabuki Kimono's short title, Renaissance Worlds' ticket sentence. **Raw, in the held pile with MoMA's four** (§7.5) — compressed together later. App 35.4 must be live before import |
-| `mad` MAD Paris | **headless from her laptop gets in.** 26 Sep 11:37: 23 pages clean, 20 rows = her count; junk found and fixed at source (visit teasers; the ticket-and-address sidebar — MD-008/009, four saved pages) | `run_2026-09-26_113719` (before the fixes); 16:12 re-sweep refused after 5 clean pages, nothing written | **Likely a daily page limit (~25–30 from one address) — inferred from two runs.** One MAD sweep a day at most. **Next: one run after 27 Sep ~16:15 Sydney**; if clean and complete it moves to her laptop and its rows go to her import. Still the container's until then |
+| `mad` MAD Paris | **Her laptop's, her ruling 27 Sep** (`route: 'local'`) | `run_2026-09-27_200702` — her laptop, paced: 20 of 20 pages clean, her count (2 + 2 + 16), pages kept | ANDAM's sponsor sentence dropped by a MAD-only rule (`dropSentence`, MD-010/011) and the row corrected from the kept page, no resweep. **Raw, in the held pile** with MoMA and the Ashmolean (§7.5). The container is refused outright (403, robots.txt included) |
 
 **THE IMPORT — SENT 25 Sep: `stitch_20260925_0611/sweep_compressed.csv`**, 75 rows
 (Levy Gorvy 28, MAM 19, Tate Britain 23, Jacquemart-André 5). Through the intake

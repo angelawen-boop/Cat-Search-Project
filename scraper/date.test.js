@@ -1325,9 +1325,11 @@ const routeOf = code => {
   return /route:\s*'local'/.test(block) ? 'home' : 'container';
 };
 
-test('R-001: met and artic are HERS — the container must not touch them', () => {
+test('R-001: met, artic and mad are HERS — the container must not touch them', () => {
   assert.strictEqual(routeOf('met'), 'home');
   assert.strictEqual(routeOf('artic'), 'home');
+  // Her ruling, 27 Sep, after a complete, clean sweep from her laptop.
+  assert.strictEqual(routeOf('mad'), 'home');
 });
 
 test('R-002: brit and morgan are still the CONTAINER\'s, deliberately', () => {
@@ -1397,7 +1399,7 @@ test('R-003: every other venue is the container\'s', () => {
   for (const c of ['ng', 'rijks', 'acq', 'frick', 'menil', 'va', 'louvre', 'capo',
                    'uffizi', 'brera', 'khm', 'dellav', 'wallace', 'borghese',
                    'tate-modern', 'tate-britain', 'lgd', 'jacquemart', 'mam',
-                   'orsay', 'mad']) {
+                   'orsay', 'ashmolean']) {
     assert.strictEqual(routeOf(c), 'container', c + ' should be the container\'s');
   }
 });
@@ -1407,8 +1409,8 @@ test('R-004: the two sets do not overlap and cover every venue', () => {
   assert.strictEqual(codes.length, 27, 'expected 27 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
-  assert.deepStrictEqual(home.sort(), ['artic', 'met']);
-  assert.strictEqual(container.length, 25);
+  assert.deepStrictEqual(home.sort(), ['artic', 'mad', 'met']);
+  assert.strictEqual(container.length, 24);
   assert.strictEqual(home.length + container.length, codes.length);
 });
 

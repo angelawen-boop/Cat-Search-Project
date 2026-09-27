@@ -79,6 +79,17 @@ const check = (name, ok, got) => {
       check('MD-008: ' + f + ' — the lead and the intro are read', lead.test(txt) && body.test(txt), txt);
       check('MD-009: ' + f + ' — no ticket box, caption, credit or visit teaser', !/Tickets|Individual tickets|©|Download|Curator|Phone|Guided tours|rue de Rivoli/.test(txt), txt);
     }
+    // MD-010 — the sponsor's thanks (her ruling, 27 Sep), on ANDAM's page as
+    // her 27 Sep laptop sweep kept it. The recipe's own reader, all its options.
+    {
+      const html = require('zlib').gunzipSync(fs.readFileSync(path.join(PAGES, 'sweep_2026-09-27', 'andam.html.gz'))).toString('utf8');
+      await p2.setContent(html);
+      const txt = String(await S.getCuratorialText(p2, v.description, v.noise, v.noiseExempt, v.creditPara, v.keepBold, v.dropSentence) || '');
+      check('MD-010: ANDAM — the sponsor sentence goes, the show and its designers stay',
+        !/With the support of|Nathalie Dufour|Galeries Lafayette/.test(txt) && /35th anniversary of the ANDAM/.test(txt) && /Featured fashion designers: Martin Margiela/.test(txt), txt.slice(1300, 1700));
+      const without = String(await S.getCuratorialText(p2, v.description, v.noise, v.noiseExempt, v.creditPara, v.keepBold) || '');
+      check('MD-011: the same page without the rule still carries it (the test can fail)', /With the support of ANDAM/.test(without));
+    }
     if (process.env.MD_LIST) for (const r of real) console.log(r.start_date + ' → ' + r.end_date + '  ' + r.title);
   } finally {
     await browser.close();

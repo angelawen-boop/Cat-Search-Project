@@ -2836,17 +2836,21 @@ const CURATORIAL_SELECTORS = [
   'p',
 ];
 
-async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, creditPara, keepBold) {
+async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, creditPara, keepBold, dropSentence) {
   try {
-    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe, keepBold }) => {
+    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe, keepBold, dropRe }) => {
       const CREDIT = creditRe ? new RegExp(creditRe, 'i') : null;
       const ALWAYS = new RegExp(alwaysRe, 'i');
       const NOISE = new RegExp(noiseRe, 'i');
       const clean = (t) => String(t || '').replace(/\s+/g, ' ').trim();
 
+      // A venue's own sentence to drop (`dropSentence`), matched where a
+      // sentence BEGINS — so a paragraph holding one is split, and only that
+      // sentence goes.
+      const DROP = dropRe ? new RegExp(`(?:^|[.!?]\\s+)(?:${dropRe})`, 'i') : null;
       const isBoilerplate = (t) => {
         const low = t.toLowerCase();
-        return boilerplate.some(b => low.includes(b));
+        return boilerplate.some(b => low.includes(b)) || !!(DROP && DROP.test(t.trim()));
       };
 
       // DROP THE BOILERPLATE SENTENCE, NOT THE WHOLE BLOCK IT SITS IN.
@@ -2995,7 +2999,8 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, cr
          selectors: descSelector ? [descSelector, ...CURATORIAL_SELECTORS] : CURATORIAL_SELECTORS,
          MIN_WRAPPER_PARAS,
          creditRe: creditPara ? creditPara.source : null,
-         keepBold: !!keepBold });
+         keepBold: !!keepBold,
+         dropRe: dropSentence ? dropSentence.source : null });
   } catch {
     return '';
   }
@@ -5024,8 +5029,10 @@ const VENUES = {
   mad: {
     name: 'Musée des Arts Décoratifs, Paris',
     base: 'https://madparis.fr',
-    // The CONTAINER's until a complete, clean sweep from her laptop confirms
-    // it — her rule, 26 Sep. Tested on her laptop by naming it.
+    // HER MACHINE ONLY — her ruling, 27 Sep, after a complete, clean sweep
+    // from her laptop (27 Sep 20:07, 20 of 20 pages, her count). The container
+    // is refused outright (403, robots.txt included).
+    route: 'local',
     pages: [
       { path: '/?page=expo-actu-en',     ctx: 'current' },
       { path: '/?page=expo-avenir-en',   ctx: 'upcoming' },
@@ -5046,6 +5053,12 @@ const VENUES = {
     // so the reader falls back to the page and took "107, rue de Rivoli …
     // Phone: …" from it — Luxury in China, 26 Sep, on the pages she saved.
     noise: 'col_annexe',
+    // A sponsor's thanks, not the show — her ruling, 27 Sep: ANDAM's 35th
+    // Anniversary carried "With the support of ANDAM, Nathalie Dufour, Founder
+    // and CEO…". MAD only: elsewhere the phrase opens sentences that carry the
+    // show ("Organized with the support of the Sobel family, this exhibition
+    // marked the first time…").
+    dropSentence: /With the support of\b/,
   },
 
   // MUSÉE JACQUEMART-ANDRÉ — her addition, 25 Sep. Two listings, both server-
@@ -6531,7 +6544,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
         }
       }
 
-      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt, vrec.creditPara, vrec.keepBold);
+      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt, vrec.creditPara, vrec.keepBold, vrec.dropSentence);
       if (text) {
         row.summary = text;
         fetched++;
