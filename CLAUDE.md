@@ -680,6 +680,15 @@ venue's PAGES HANG (the stall report: the page answered, its files did not):
 she saves view-source (Ctrl+U, then Ctrl+S) of its show pages, and reading the
 page alone (`pageOnly`) is tested on those. Never pre-empted.
 
+**Never on a headed venue — her conclusion, 27 Sep.** What makes headed
+Chrome look like a person browsing, and so gets it past Cloudflare, is exactly
+what the bare page strips out: the page's programs, the bot check among them. The two
+can be combined in code; together they defeat the point of headed. Less
+contact with these sites means fewer PAGES (listings that already carry the
+text, kept pages, one venue a day), not lighter ones. Unproven: whether a
+browser Cloudflare has already cleared would get bare pages through — only a
+try at one of these sites would say, at the cost of a refused lane.
+
 **A guess is labelled a guess.** Five explanations were stated as fact in one
 afternoon at the Ashmolean. Say what is proven, what is not, and what one
 request would settle.
