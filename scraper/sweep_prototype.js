@@ -1620,8 +1620,13 @@ function applyLookback(rows, venueCode, stage) {
       // A closing date but no opening one. Common: venues print only
       // "until 20 December" while a show is running, and fill the opening date
       // in later, once it moves to their past listing.
+      // Her wording, 27 Sep: once a show has CLOSED the "while running"
+      // excuse no longer holds — the venue never filled it in (the
+      // Ashmolean's Cheung Yee and Churchill displays, closed 2025).
       noStart++;
-      row.notes = addNote(row.notes, 'No opening date published while this exhibition is running.');
+      row.notes = addNote(row.notes, row.end_date < new Date().toISOString().slice(0, 10)
+        ? 'Opening date not provided by the venue, even after the exhibition closed.'
+        : 'No opening date published while this exhibition is running.');
     }
     if (afterLookback(row.end_date, floor)) kept.push(row);
     else if (keptDespiteLookback(row, venueCode)) {

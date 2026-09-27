@@ -23,7 +23,7 @@ const {
   classifyLoadError, isOwnListingPage, saysOngoing,
   expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination, VENUES, pickTitleLine,
   stripWeekdays,
-  addNote, finishNotes, scopeSelector, extensionNote,
+  addNote, finishNotes, scopeSelector, extensionNote, applyLookback,
 } = require('./sweep_prototype.js');
 const { seenOn, listingNote } = require('./listing_note.js');
 
@@ -1971,4 +1971,16 @@ test('XT-003: Met — recurring series and commissions; NOTHING for coming from 
    'Independence and Identity: Selections from the Department of Drawings and Prints',
    'Rediscovering Della Robbia at The Met',
    'Lineages: Korean Art at The Met', 'Ink and Ivory: Indian Drawings and Photographs Selected with James Ivory']);
+});
+
+test('a missing opening date is worded by whether the show has closed (her wording, 27 Sep)', () => {
+  const log = console.log; console.log = () => {};
+  let closed, running;
+  try {
+    [closed] = applyLookback([{ title: 'Cheung Yee', start_date: '', end_date: '2025-09-07', notes: '', url: 'https://x/a' }], 'ashmolean', 'final');
+    [running] = applyLookback([{ title: 'Later', start_date: '', end_date: '2099-01-01', notes: '', url: 'https://x/b' }], 'ashmolean', 'final');
+  } finally { console.log = log; }
+  assert.match(closed.notes, /Opening date not provided by the venue, even after the exhibition closed\./);
+  assert.doesNotMatch(closed.notes, /while this exhibition is running/);
+  assert.match(running.notes, /No opening date published while this exhibition is running\./);
 });
