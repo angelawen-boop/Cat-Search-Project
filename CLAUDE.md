@@ -578,6 +578,8 @@ node scraper/sweep_prototype.js --jobs=6     venues at once (default 4)
 node scraper/sweep_prototype.js --budget-mins=3   abandon a venue after N min
 node scraper/sweep_prototype.js --pace=30    her machine: seconds between pages (default 30)
 node scraper/sweep_prototype.js --ignore-cooldown   her machine: ask a gatekeeper still in its quiet period
+node scraper/sweep_prototype.js --reread     her machine: ignore pages kept from a cut-short attempt
+node scraper/from_saved_pages.js <venue> <listing.mhtml> <page.mhtml> ...   rows from pages she saved, no network
 node scraper/stitch.js <run> <run> ...       combine runs into one importable file
 node scraper/compress.js <run>               plan, and write the subagent job files
 node scraper/compress.js <run> --check       verify the answers before they land
@@ -671,6 +673,12 @@ asked for a day, a clean one gets an hour's quiet. A venue cut short is NOT
 written, so `--continue` redoes it. The container is untouched. Design: the
 PACING block in `sweep_prototype.js`; fixtures `pacing.test.js` (P-001 to
 P-010), `pacing_pages.js` (PC-001 to PC-013).
+
+**Pages kept — her machine, 27 Sep.** Every exhibition page read is kept as
+it is read (`output/pages_kept/<venue>/`), so a venue cut short asks next time
+only for what is missing. Saving sends nothing. Not reused once the venue has
+finished, after 14 days, or with `--reread`. Design: `page_keep.js`; fixtures
+KP-001 to KP-017.
 
 **Pushing a laptop run: `git add scraper/output`** (not just the new folder —
 the start-up tidy may have moved old runs), commit, `git pull --rebase`, push.
@@ -1176,6 +1184,14 @@ Imported by her with item 6's file; she checked every past show in the app.
 Sep from `docs/brit_pages/`; fixtures BM-001 to BM-011). All four sit behind
 Cloudflare, so they share one lane. **None has met the live site headed.**
 
+**MoMA, 27 Sep: challenged on page 19 of ~25** (18 clean, 30s apart, 9 min)
+— pacing works, a limit remains. **Her ruling: MoMA is not swept.** She wants
+four upcoming shows; she saves those pages and `from_saved_pages.js` reads
+them (`run_2026-09-27_123228`, 4 rows, raw — **compression held**: other
+headed venues may join this saved-pages pile). Not waiting through a bot check
+either — a clearance is per site and opens nothing else. **Next: `brit`, then
+`orsay`, then `morgan`**, from Mon 28 Sep 12:08pm Sydney.
+
 **The test is a complete paced headed sweep of ONE venue, not a probe** — it
 passes only if every page is read and the count matches hers. Her steps, to be
 repeated to her on the day (she asked):
@@ -1187,8 +1203,7 @@ repeated to her on the day (she asked):
    **d'Orsay is not in its list; she types the address**), let any check finish,
    then CLOSE that Chrome.
 3. `git pull`, then `node scraper/sweep_prototype.js <venue>`, then push.
-4. **First venue: `moma`** — smallest (~25 pages), furthest on 22 Sep. One
-   Cloudflare venue per day if refused.
+4. One Cloudflare venue per day if refused.
 
 **Sizes at 30s a page:** moma ~25 pages, brit ~40, orsay ~65, morgan unknown.
 A venue moves to her laptop only after a clean complete sweep (§5).

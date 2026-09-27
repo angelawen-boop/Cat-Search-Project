@@ -1371,10 +1371,12 @@ test('R-006: moma names its blurb container and drops installations', () => {
   const next = rest.search(/\n  '?[a-z-]+'?: \{\n    name: /);
   const block = next > -1 ? rest.slice(0, next) : rest;
 
-  // Read from the page she saved, not guessed: #description holds the
-  // curatorial paragraphs and stops before "Organized by", the funders, the
-  // Events block and the related articles that all carry their own dates.
-  assert.match(block, /description:\s*'#description'/);
+  // Read from the pages she saved, not guessed: #description holds the
+  // curatorial paragraphs and stops before the funders, the Events block and
+  // the related articles. Its LAST paragraph is the credit ("Organized by…"),
+  // so it is read by paragraph and the credit dropped — moma_pages.js.
+  assert.match(block, /description:\s*'#description p'/);
+  assert.match(block, /creditPara:/);
 
   // /calendar/exhibitions/ serves installations too, and the address does not
   // say which is which. The page's own tag does.

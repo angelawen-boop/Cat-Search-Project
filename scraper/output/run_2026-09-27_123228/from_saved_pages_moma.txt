@@ -1,0 +1,124 @@
+FILES: listing.mhtml, exhibition_5910_brancusi.mhtml, exhibition_5916_mondrian.mhtml, exhibition_5918_surrealist_book_27sep.mhtml, exhibition_5932_nilima_sheikh.mhtml
+
+moma: 4 row(s) from saved pages → scraper/output/run_2026-09-27_123228/moma.csv
+  2026-09-27 → 2027-06-13  Nilima Sheikh: Fractured Skies  (1705 chars of description)
+  2026-10-04 → 2027-01-23  The Surrealist Book: Tomorrow Lives in Mirrors  (1545 chars of description)
+  2026-10-25 → 2027-02-27  Brancusi: The Artist and His Studio  (1753 chars of description)
+  2027-03-21 → 2027-07-31  Mondrian Boogie Woogie  (1831 chars of description)
+Left out — on the listing, no saved page: 20
+  Peggy Weil: Core Memory Peggy Weil Core Memory  https://www.moma.org/calendar/exhibitions/5890
+  Sarah Michelson: nowhere Sarah Michelson nowhere  https://www.moma.org/calendar/exhibitions/5928
+  Pierre Huyghe: UUmwelt Pierre Huyghe UUmwelt  https://www.moma.org/calendar/exhibitions/5912
+  Architects of Liberation: Modernism in Western Africa  https://www.moma.org/calendar/exhibitions/5906
+  Odili Donald Odita: Songs from Life  https://www.moma.org/calendar/exhibitions/5794
+  Taking Back Our Space: Photographic Perspectives  https://www.moma.org/calendar/exhibitions/5678
+  It’s Alive! A Century of Animation from the Collection  https://www.moma.org/calendar/exhibitions/5920
+  Full Disclosure: The Edge of Information Design  https://www.moma.org/calendar/exhibitions/5926
+  Jakob Kudsk Steensen: Wetland  https://www.moma.org/calendar/exhibitions/5936
+  Na Mira: NO SMOKING  https://www.moma.org/calendar/exhibitions/5869
+  The Modern Window: Julien Ceccaldi  https://www.moma.org/calendar/exhibitions/5861
+  Hyundai Card First Look: Sheree Hovsepian  https://www.moma.org/calendar/exhibitions/5908
+  Hyundai Card First Look: Joan Snyder  https://www.moma.org/calendar/exhibitions/5907
+  Ecologies of Care at Socrates Sculpture Park  https://www.moma.org/calendar/exhibitions/5940
+  In the Making 2026  https://www.moma.org/calendar/exhibitions/5933
+  The Sumptuous Discovery of Gotham a Go-Go  https://www.moma.org/calendar/exhibitions/5797
+  Creativity Lab: Art of the Book  https://www.moma.org/calendar/exhibitions/5943
+  Modern Mural: Nina Chanel Abney’s LOVE NYC  https://www.moma.org/calendar/exhibitions/5870
+  Yoko Ono: IMAGINE PEACE  https://www.moma.org/calendar/exhibitions/5935
+  Art Lab: Imagination  https://www.moma.org/calendar/exhibitions/5942
+Requests refused (no saved page): 60. Nothing reached the network.
+
+RECIPE LOG
+[2026-09-27T02:32:29.184Z] 
+[2026-09-27T02:32:29.184Z] ────────────────────────────────────────────────────────────
+[2026-09-27T02:32:29.184Z]   MOMA — Museum of Modern Art, New York
+[2026-09-27T02:32:29.184Z] ────────────────────────────────────────────────────────────
+[2026-09-27T02:32:29.184Z]   Fetching current/upcoming: https://www.moma.org/calendar/exhibitions
+[2026-09-27T02:32:31.286Z]   current/upcoming: 26 links seen -> 2 navigation, 0 already-seen URL -> 24 collected (0 of them with no readable title)
+[2026-09-27T02:32:31.291Z]   lookback (listing): kept 24, dropped 0 closed before 2024-07-01, 7 with no closing date, 0 with no opening date
+[2026-09-27T02:32:31.292Z]   reading 24 individual page(s)…
+[2026-09-27T02:32:31.292Z]     page 1 of 24
+[2026-09-27T02:32:31.306Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5890 — retrying once
+[2026-09-27T02:32:33.328Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5890 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5890
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:32:33.347Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5928 — retrying once
+[2026-09-27T02:32:35.368Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5928 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5928
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:32:35.394Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5912 — retrying once
+[2026-09-27T02:32:37.415Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5912 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5912
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:32:37.433Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5906 — retrying once
+[2026-09-27T02:32:39.454Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5906 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5906
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:32:39.477Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5794 — retrying once
+[2026-09-27T02:32:41.495Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5794 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5794
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:32:41.512Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5678 — retrying once
+[2026-09-27T02:32:43.530Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5678 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5678
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:32:43.563Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5920 — retrying once
+[2026-09-27T02:32:45.589Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5920 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5920
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:32:45.623Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5926 — retrying once
+[2026-09-27T02:32:47.645Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5926 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5926
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:32:49.382Z]     page 10 of 24
+[2026-09-27T02:32:49.545Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5936 — retrying once
+[2026-09-27T02:32:51.564Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5936 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5936
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:32:53.270Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5869 — retrying once
+[2026-09-27T02:32:55.294Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5869 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5869
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:32:56.988Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5861 — retrying once
+[2026-09-27T02:32:59.005Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5861 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5861
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:32:59.032Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5908 — retrying once
+[2026-09-27T02:33:01.054Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5908 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5908
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:33:01.077Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5907 — retrying once
+[2026-09-27T02:33:03.093Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5907 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5907
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:33:03.123Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5940 — retrying once
+[2026-09-27T02:33:05.155Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5940 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5940
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:33:05.186Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5933 — retrying once
+[2026-09-27T02:33:07.207Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5933 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5933
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:33:07.207Z]     page 20 of 24
+[2026-09-27T02:33:07.229Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5797 — retrying once
+[2026-09-27T02:33:09.257Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5797 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5797
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:33:09.299Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5943 — retrying once
+[2026-09-27T02:33:11.319Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5943 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5943
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:33:11.339Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5870 — retrying once
+[2026-09-27T02:33:13.356Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5870 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5870
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:33:13.375Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5935 — retrying once
+[2026-09-27T02:33:15.399Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5935 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5935
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:33:15.424Z]   NO_RESPONSE on https://www.moma.org/calendar/exhibitions/5942 — retrying once
+[2026-09-27T02:33:17.443Z]   NO_RESPONSE: https://www.moma.org/calendar/exhibitions/5942 — page.goto: net::ERR_FAILED at https://www.moma.org/calendar/exhibitions/5942
+Call log:
+[2m  - navigating to "https://ww
+[2026-09-27T02:33:17.443Z]   Individual pages: 4 got text, 0 no curatorial text, 20 failed
+[2026-09-27T02:33:17.443Z]   lookback (final): kept 24, dropped 0 closed before 2024-07-01, 7 with no closing date, 9 with no opening date

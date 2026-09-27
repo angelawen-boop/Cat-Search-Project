@@ -1,6 +1,6 @@
 # MoMA pages, saved from her browser — 22 Sep 2026
 
-Two `.mhtml` files, saved with Ctrl+S from tabs she already had open. **No
+The first two `.mhtml` files were saved with Ctrl+S from tabs she already had open. **No
 request was made to MoMA to produce them**, which is the point: the probe
 answers access and nothing else, and page layout comes from her.
 
@@ -15,9 +15,12 @@ finds nothing.
 
 ## What they settled
 
-- **`<div id="description">`** holds the curatorial blurb and nothing else. It
-  stops before "Organized by…", the funders, the Events block and the related
-  articles — all of which carry their own dates.
+- **`<div id="description">`** holds the curatorial blurb and stops before
+  the funders, the Events block and the related articles — all of which carry
+  their own dates. **Corrected 27 Sep:** its LAST paragraph is the credit
+  ("Organized by…", "… is organized by…", "We are grateful…") on all four
+  pages saved that day, so the recipe reads it paragraph by paragraph and drops
+  that one (`creditPara`; `fixtures/moma_pages.js`).
 - **A tag beside the title says what MoMA calls the thing**: `Exhibition` on
   *It's Alive*, `Installation` on *Creativity Lab*. Same address shape, so
   nothing but the page can tell them apart.
@@ -54,3 +57,13 @@ Eleven shapes on one page, five of which no other venue produces.
 **These files are a snapshot of one day.** They are evidence of what the markup
 was, not a promise about what it is. Re-save rather than trust them if a sweep
 disagrees with them.
+
+## 27 Sep 2026 — four upcoming shows, her pick
+
+`exhibition_5910_brancusi`, `exhibition_5916_mondrian`,
+`exhibition_5918_surrealist_book_27sep`, `exhibition_5932_nilima_sheikh` —
+saved by her the day the paced headed sweep was challenged on page 19. She
+wants these four and not the rest of MoMA's calendar, so her rows come from
+these pages through `scraper/from_saved_pages.js`, with the 22 Sep `listing`
+supplying titles and dates (all four are on it; the dates agree with each
+page's own date line). Images stripped; the page text is whole.

@@ -2098,6 +2098,15 @@ const PACED = MACHINE === 'home';
 const PACE_ARG = ARGS.find(a => a.startsWith('--pace='));
 const PACE_MS = Math.max(1000, Math.round((parseFloat(PACE_ARG?.split('=')[1] ?? '30') || 30) * 1000));
 const IGNORE_COOLDOWN = ARGS.includes('--ignore-cooldown');
+
+// PAGES KEPT — her machine only. Every exhibition page read is kept as it is
+// read, so a venue cut short does not have to ask for it again. The design and
+// when a kept page is NOT used: page_keep.js. --reread ignores them all.
+const { snapshot: keepSnapshot, rowChanges } = require('./page_keep');
+let PAGE_KEEP = PACED
+  ? require('./page_keep').makePageKeep(path.join(OUT_DIR, 'pages_kept'), { reread: ARGS.includes('--reread') })
+  : null;
+function usePageKeepForFixtures(k) { PAGE_KEEP = k; }
 const COOLDOWN_AFTER_REFUSAL_MS = 24 * 60 * 60 * 1000;
 const QUIET_AFTER_CLEAN_MS = 60 * 60 * 1000;
 
@@ -2628,9 +2637,10 @@ const CURATORIAL_SELECTORS = [
   'p',
 ];
 
-async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt) {
+async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, creditPara) {
   try {
-    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS }) => {
+    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe }) => {
+      const CREDIT = creditRe ? new RegExp(creditRe, 'i') : null;
       const ALWAYS = new RegExp(alwaysRe, 'i');
       const NOISE = new RegExp(noiseRe, 'i');
       const clean = (t) => String(t || '').replace(/\s+/g, ' ').trim();
@@ -2769,6 +2779,8 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt) {
           if (out.length >= 4) break;
           if (insideNoise(el)) continue;
           if (hasPlainProse && boldOnly(el)) continue;
+          // A recipe's own credit paragraph — see `creditPara`.
+          if (CREDIT && CREDIT.test(clean(el.innerText))) continue;
           const t = stripBoilerplate(clean(el.innerText));
           if (t.length > 60) out.push(t);
         }
@@ -2780,7 +2792,8 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt) {
          exemptRe: noiseExempt || null,
          boilerplate: BOILERPLATE,
          selectors: descSelector ? [descSelector, ...CURATORIAL_SELECTORS] : CURATORIAL_SELECTORS,
-         MIN_WRAPPER_PARAS });
+         MIN_WRAPPER_PARAS,
+         creditRe: creditPara ? creditPara.source : null });
   } catch {
     return '';
   }
@@ -5092,7 +5105,20 @@ const VENUES = {
     // listing member-preview times, then related articles carrying their own
     // publication dates. Naming the container skips all of it outright rather
     // than filtering it sentence by sentence afterwards.
-    description: '#description',
+    //
+    // READ PARAGRAPH BY PARAGRAPH, 27 Sep. The credit sits INSIDE the container
+    // after all, as its last paragraph — "Organized by Jodi Hauptman…",
+    // "Mondrian Boogie Woogie is organized by The Museum of Modern Art…", "We
+    // are grateful for the collaboration of…" — on all four pages she saved
+    // that day. Read whole, the container brought it into every description.
+    // Paragraphs let `creditPara` drop exactly that one.
+    description: '#description p',
+    // A PARAGRAPH THAT IS A CREDIT, dropped whole. This venue only: "organized
+    // by" can open a real sentence of curatorial prose elsewhere ("a show
+    // organized by the artist in 1930"). Here it is anchored to the START of a
+    // paragraph, or to the show's own name directly before "is organized by",
+    // which is how MoMA words every credit it prints.
+    creditPara: /^(?:organized by\b|we are grateful\b|[^.]{0,160}?\bis (?:co-)?organized by\b)/i,
 
     // WHAT MoMA CALLS THE THING, PRINTED ON ITS OWN PAGE.
     //
@@ -5405,22 +5431,6 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
       }
     }
 
-    // DOES THIS PAGE OFFER MORE THAN WE ARE TAKING? Only asked where nothing is
-    // already wired — a page with `paginate` is followed by followPagination()
-    // and a venue with `loadMore` presses its control, so both are handled and
-    // finding their own next-page links would be noise on every sweep.
-    if (!pg.paginate && !v.loadMore) {
-      const more = await detectUnwiredPagination(page, recipeDrivenParams(v));
-      if (more) {
-        log(`  UNWIRED PAGINATION ${pg.ctx}: this page links another page and no recipe follows it — ${more.join(' | ')}`);
-        // ONE ENTRY PER VENUE AND FINDING. artic's eight archive pages all
-        // carry the same links, so the summary listed the same finding eight
-        // times over and buried everything else.
-        const sig = code + '|' + more.join('|');
-        if (!UNWIRED.some(u => u.sig === sig)) UNWIRED.push({ sig, venue: code, page: pg.ctx, url, hints: more });
-      }
-    }
-
     const bodyText = await page.innerText('body').catch(() => '');
     if (bodyText.length < MIN_BODY_CHARS) {
       log(`  EMPTY_PAGE ${pg.ctx}: loaded but body has <${MIN_BODY_CHARS} chars`);
@@ -5475,6 +5485,30 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
 
     try {
       const cov = await collectFromListing(page, opts);
+
+      // DOES THIS PAGE OFFER MORE THAN WE ARE TAKING? Only asked where nothing is
+      // already wired — a page with `paginate` is followed by followPagination()
+      // and a venue with `loadMore` presses its control, so both are handled and
+      // finding their own next-page links would be noise on every sweep.
+      if (!pg.paginate && !v.loadMore) {
+        // A LINK THIS PAGE'S OWN READING FILED AS AN EXHIBITION IS NOT ANOTHER
+        // PAGE OF IT. MoMA numbers its exhibitions — /calendar/exhibitions/5890
+        // sits under the listing's own path exactly as a page 2 would — so every
+        // sweep warned "more pages offered" about four of its shows (27 Sep). So
+        // this asks AFTER the page is read, and drops any address collected from
+        // it. Nothing else is dropped: a real next-page link is never collected,
+        // because the reading files it as navigation.
+        const offered = await detectUnwiredPagination(page, recipeDrivenParams(v));
+        const more = offered && offered.filter(o => !seenUrls.has(normalizeUrl(o.href))).map(o => o.hint).slice(0, 4);
+        if (more && more.length) {
+          log(`  UNWIRED PAGINATION ${pg.ctx}: this page links another page and no recipe follows it — ${more.join(' | ')}`);
+          // ONE ENTRY PER VENUE AND FINDING. artic's eight archive pages all
+          // carry the same links, so the summary listed the same finding eight
+          // times over and buried everything else.
+          const sig = code + '|' + more.join('|');
+          if (!UNWIRED.some(u => u.sig === sig)) UNWIRED.push({ sig, venue: code, page: pg.ctx, url, hints: more });
+        }
+      }
 
       // A PAGE THAT LOADS AND YIELDS NOTHING MUST SAY SO TOO.
       //
@@ -5755,7 +5789,7 @@ async function detectUnwiredPagination(page, driven = []) {
       for (const a of document.querySelectorAll('a[href]')) {
         let q; try { q = new URL(a.href, location.href); } catch { continue; }
         if (q.origin !== here.origin) continue;
-        if (a.rel === 'next') { found.push(`rel="next" -> ${a.getAttribute('href')}`); continue; }
+        if (a.rel === 'next') { found.push({ hint: `rel="next" -> ${a.getAttribute('href')}`, href: q.href }); continue; }
 
         // SHAPE ONE: the SAME path, one extra or different NUMERIC parameter.
         // This is the Uffizi's, read off its 2023 page rather than guessed:
@@ -5770,7 +5804,7 @@ async function detectUnwiredPagination(page, driven = []) {
             // A parameter the recipe steers is a filter it already asks for,
             // never another page of this one. See recipeDrivenParams().
             if (driven.includes(k)) continue;
-            found.push(`${k}=${val} -> ${a.getAttribute('href')}`);
+            found.push({ hint: `${k}=${val} -> ${a.getAttribute('href')}`, href: q.href });
           }
           continue;
         }
@@ -5780,10 +5814,13 @@ async function detectUnwiredPagination(page, driven = []) {
         // number in the middle, for the same reason as above.
         const m = q.pathname.replace(/\/$/, '').match(/^(.*?)(?:\/page)?\/(\d+)$/);
         if (m && m[1] === base && q.search === here.search) {
-          found.push(`page ${m[2]} -> ${a.getAttribute('href')}`);
+          found.push({ hint: `page ${m[2]} -> ${a.getAttribute('href')}`, href: q.href });
         }
       }
-      return found.length ? [...new Set(found)].slice(0, 4) : null;
+      // Every candidate, with its full address, so the caller can drop the
+      // ones it collected as exhibitions before choosing four to report.
+      const byHint = new Map(found.map(f => [f.hint, f]));
+      return byHint.size ? [...byHint.values()] : null;
     }, driven);
   } catch { return null; }
 }
@@ -5936,7 +5973,7 @@ async function autoScroll(page, maxSteps = 12) {
 }
 
 async function fetchIndividualPages(page, rows, venueCode) {
-  let fetched = 0, failed = 0, noText = 0;
+  let fetched = 0, failed = 0, noText = 0, reused = 0, keptNow = 0;
   // Skip anything already known to have closed before the lookback floor —
   // no point spending a page load on an exhibition we will discard.
   // Her one-time exceptions are read like any kept row.
@@ -5966,8 +6003,24 @@ async function fetchIndividualPages(page, rows, venueCode) {
     if (row.title && row.title.startsWith('[')) continue;
     seen++;
     if (seen === 1 || seen % 10 === 0) log(`    page ${seen} of ${due.length}`);
+
+    // PAGES KEPT (page_keep.js): read on an earlier attempt that was cut short,
+    // so the row is rebuilt from what that read did and the site is not asked.
+    const kept = PAGE_KEEP && PAGE_KEEP.lookup(venueCode, row.url);
+    if (kept) {
+      Object.assign(row, kept.changes);
+      for (const t of kept.titleReport || []) TITLE_REPORT.push(t);
+      if (kept.outcome === 'text') fetched++;
+      else if (kept.outcome === 'noText') noText++;
+      reused++;
+      continue;
+    }
+    const keepFrom = PAGE_KEEP ? { row: keepSnapshot(row), titles: TITLE_REPORT.length, fetched, noText } : null;
+    let landed = false, broke = false;
+
     try {
       const r = await safeGoto(page, row.url, venueCode, 'individual');
+      landed = r.ok;
       if (!r.ok) {
         // Say which kind of failure: a dead link is the venue's own broken
         // page, not a network problem, and she can see that from the note.
@@ -6036,7 +6089,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
       if (vrec.excludeLabelledOnPage) {
         const head = (await page.innerText('body').catch(() => '')).slice(0, 400);
         if (vrec.excludeLabelledOnPage.test(head)) {
-          row._dropByPageLabel = (head.match(vrec.excludeLabelledOnPage) || [''])[0];
+          row._dropByPageLabel = (head.match(vrec.excludeLabelledOnPage) || [''])[0].replace(/\s+/g, ' ').trim();
           continue;
         }
       }
@@ -6057,7 +6110,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
         }
       }
 
-      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt);
+      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt, vrec.creditPara);
       if (text) {
         row.summary = text;
         fetched++;
@@ -6201,12 +6254,29 @@ async function fetchIndividualPages(page, rows, venueCode) {
         } catch {}
       }
     } catch (e) {
+      broke = true;
       rethrowIfAborted(e);
       row.notes = addNote(row.notes, `Something went wrong while reading this exhibition's own page: ${e.message.slice(0,80)}`);
       failed++;
+    } finally {
+      // Kept only once read all the way through. Written from what the browser
+      // already holds — no request is made to keep a page.
+      if (keepFrom && landed && !broke) {
+        const html = await page.content().catch(() => '');
+        const outcome = row._dropByPageLabel ? 'dropped'
+          : fetched > keepFrom.fetched ? 'text'
+          : noText > keepFrom.noText ? 'noText' : 'other';
+        if (PAGE_KEEP.save(venueCode, row.url, {
+          changes: rowChanges(keepFrom.row, row),
+          titleReport: TITLE_REPORT.slice(keepFrom.titles),
+          outcome, html,
+        })) keptNow++;
+      }
     }
   }
   log(`  Individual pages: ${fetched} got text, ${noText} no curatorial text, ${failed} failed`);
+  if (reused) log(`  ${reused} page(s) taken from an earlier attempt that was cut short — not asked for again (pages_kept/${venueCode})`);
+  if (keptNow) log(`  ${keptNow} page(s) kept on disk as read (pages_kept/${venueCode})`);
 }
 
 // ── Deduplication ─────────────────────────────────────────────────────────────
@@ -6575,6 +6645,14 @@ async function main() {
     // any point before this line, the venue simply has no file and is picked
     // up by the next --continue. There is never a half-scraped venue on disk.
     writeVenueCsv(code, rows);
+    // PAGES KEPT: a venue swept to the end with nothing refused is finished,
+    // so its next sweep reads everything fresh. One refused on its first
+    // request is written (its refusal record) but NOT finished — the pages kept
+    // from an earlier attempt still count.
+    {
+      const pv = PACER && PACER.venue(code);
+      if (PAGE_KEEP && !(pv && (pv.objection || pv.sawStop))) PAGE_KEEP.markFinished(code);
+    }
 
     summary[code] = {
       total: rows.length,
@@ -6883,7 +6961,7 @@ module.exports = {
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
   // Pure, or driven with a gap of milliseconds — scraper/pacing.test.js.
-  gatekeeperFrom, objectionFrom, laneCooldown, knownGatekeepers, makePacer, pacedWithheld, usePacerForFixtures,
+  gatekeeperFrom, objectionFrom, laneCooldown, knownGatekeepers, makePacer, pacedWithheld, usePacerForFixtures, usePageKeepForFixtures, UNWIRED,
   // HEADED: pure, or a path — pacing.test.js H-001 to H-003.
   splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome,
   saysOngoing, applyLookback, expandYearArchive, expandDateRange, expandFromToday, keptDespiteLookback, withoutQuery, listingPages, followPagination,
@@ -6903,6 +6981,8 @@ module.exports = {
   pickTitleLine, titleFromPage, readPageNameParts,
   // Not pure — exported so a check can run the real detail-page pass offline.
   fetchIndividualPages,
+  // For from_saved_pages.js: the sweep's own finish, over pages she saved.
+  noteTravellingRuns, writeVenueCsv, rebuildSweepCsv, RUN_DIR,
   // Pure — asked directly by the fixtures.
   addNote, finishNotes, scopeSelector,
   // Exported so compress.js's mirrored location list can be checked against the
