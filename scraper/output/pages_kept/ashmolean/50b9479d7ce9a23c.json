@@ -1,0 +1,20 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/pat-suet-bik-hui-and-the-three-perfections",
+  "savedAt": "2026-09-27T06:39:30.845Z",
+  "outcome": "text",
+  "changes": {
+    "title": "Pat Suet-Bik Hui & the Three Perfections: Poetry, Calligraphy, Painting",
+    "start_date": "2025-09-20",
+    "summary": "Pat Suet-Bik Hui 許雪碧 (b. 1943) is a US-based Hong Kong artist. This exhibition showcases her work alongside others who engage with the tradition of the 'three perfections' 三絕, which brings together the three art forms of poetry, calligraphy, and painting. The exhibition included works by Hui, her contemporaries, her teacher Lui Shou-Kwan and others of his generation, as well as earlier examples from the 17th, 18th, and 19th centuries. Seeing Hui alongside these other artists gave the context to understand her as both innovator and standard-bearer of tradition. In this tradition, calligraphic brushstrokes are as integral to compositional balance as those used in painting. Likewise, images conjured by a poem and those rendered in a painting combine to create effects neither can achieve alone. Hui’s modern interpretation fuses abstract and semi-abstract washes of colour and ink with simple, restrained calligraphy inscribing poems reflecting on a variety of themes, from love, to loss, to the pleasures of drinking.",
+    "notes": "opening date read from a sentence, not a date field: \"20 Sep 2025 to 28 Jun 2026\"."
+  },
+  "titleReport": [
+    {
+      "venue": "ashmolean",
+      "kind": "changed",
+      "from": "PAT SUET-BIK HUI & THE THREE PERFECTIONS",
+      "to": "Pat Suet-Bik Hui & the Three Perfections: Poetry, Calligraphy, Painting",
+      "url": "https://www.ashmolean.org/exhibition/pat-suet-bik-hui-and-the-three-perfections"
+    }
+  ]
+}

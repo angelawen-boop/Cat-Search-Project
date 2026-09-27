@@ -1,0 +1,20 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/colonial-views-of-india-impey-photographs",
+  "savedAt": "2026-09-27T06:37:17.720Z",
+  "outcome": "text",
+  "changes": {
+    "title": "Colonial Views of India: Photographs by Eugene Clutterbuck Impey",
+    "start_date": "2026-04-11",
+    "summary": "This is the first exhibition to focus on photographs and negatives in the Ashmolean, and as such features previously unseen photographs of India by Colonel Eugene Clutterbuck Impey (1830–1904). A member of the East India Company, Impey arrived in India in 1851 and took part in military actions during the Indian Uprising of 1857. After the British Crown took control in 1858 following the Uprising, he worked as a political agent until returning to Britain in 1878. Impey’s photographs reflect British imperial interests, showcasing portraits of colonial officers and Indians, as well as staged scenes of daily life, clothing, religious sites, animals, and landscapes. These images often reinforced stereotypes with the aim to justify colonial efforts. Photography, which gained popularity after its debut in 1839, was used to highlight cultural differences. From the mid-1800s British officials documented various social groups in India, often categorising people by ethnicity.",
+    "notes": "opening date read from a sentence, not a date field: \"11 Apr - 13 Dec 2026\"."
+  },
+  "titleReport": [
+    {
+      "venue": "ashmolean",
+      "kind": "changed",
+      "from": "COLONIAL VIEWS OF INDIA",
+      "to": "Colonial Views of India: Photographs by Eugene Clutterbuck Impey",
+      "url": "https://www.ashmolean.org/exhibition/colonial-views-of-india-impey-photographs"
+    }
+  ]
+}

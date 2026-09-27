@@ -1,0 +1,20 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/images-of-authority-portraits-between-iran-and-europe",
+  "savedAt": "2026-09-27T06:39:34.433Z",
+  "outcome": "text",
+  "changes": {
+    "title": "Images of Authority: Portraits Between Iran and Europe",
+    "start_date": "2025-03-01",
+    "summary": "As we grapple with the possibilities and excesses of our image-obsessed culture, this free exhibition looked back at the way in which a specific kind of image – portraits – dominated the lives of three contemporaneous rulers: Fath Ali Shah Qajar (1797–1834), King George III (1760–1820), and Napoleon Bonaparte (1799–1814). Juxtaposing portraits on different media from across Iran, Britain and France, the display explored similar and unique strategies developed to convey the personal and political aspirations of these ambitious leaders and astute image-makers. Exhibited for the first time in over a century, are also two recently restored Qajar paintings and some of the discoveries made during their conservation treatment. The Ashmolean Museum gratefully acknowledged the British Institute of Persian Studies, the Flora Foundation, the Pilgrim Trust, the Persian Heritage Foundation, the Yadiran Foundation and additional anonymous donors for supporting the study and restoration of the Qajar paintings.",
+    "notes": "opening date read from a sentence, not a date field: \"1 Mar 2025 - 15 Mar 2026\"."
+  },
+  "titleReport": [
+    {
+      "venue": "ashmolean",
+      "kind": "changed",
+      "from": "IMAGES OF AUTHORITY",
+      "to": "Images of Authority: Portraits Between Iran and Europe",
+      "url": "https://www.ashmolean.org/exhibition/images-of-authority-portraits-between-iran-and-europe"
+    }
+  ]
+}

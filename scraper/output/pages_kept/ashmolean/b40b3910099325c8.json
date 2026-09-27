@@ -1,0 +1,12 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/renaissance-worlds-art-and-the-senses",
+  "savedAt": "2026-09-27T06:37:12.138Z",
+  "outcome": "text",
+  "changes": {
+    "start_date": "2027-06-04",
+    "end_date": "2027-10-10",
+    "summary": "Tickets for this major exhibition will be available in spring 2027. Become a Member to visit for free. This major new exhibition explores how art and objects created between 1450 and 1650 delighted the senses and revealed an increasingly connected world. Featuring works by artists including Raphael, Uccello, Dürer, Sofonisba Anguissola, and Antonello da Messina, alongside sculpture, textiles, musical instruments, and exquisite objects from Europe and beyond, Renaissance Worlds reveals a period shaped by global exchanges and alive with colour, texture, music, food, and fragrance. Iridescent images fashioned from hummingbird feathers, the taste of chocolate, the sounds of Renaissance drums and lutes, the scent of incense and spices, and the textures of velvet and silk reveal how Renaissance beholders experienced a multi-sensory and globally-connected world.",
+    "notes": "opening and closing date read from a sentence, not a date field: \"4 JUN - 10 OCT 2027\"."
+  },
+  "titleReport": []
+}
