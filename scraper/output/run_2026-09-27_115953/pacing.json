@@ -1,0 +1,28 @@
+{
+  "machine": "home",
+  "savedAt": "2026-09-27T02:08:58.248Z",
+  "paceSeconds": 30,
+  "gatekeepers": {
+    "moma": "Cloudflare"
+  },
+  "lanes": {
+    "Cloudflare": {
+      "venues": [
+        "moma"
+      ],
+      "clean": 18,
+      "firstAt": "2026-09-27T01:59:56.069Z",
+      "lastAt": "2026-09-27T02:08:57.696Z",
+      "stopped": {
+        "venue": "moma",
+        "url": "https://www.moma.org/calendar/exhibitions/5940",
+        "reason": "BLOCKED_CHALLENGE",
+        "at": "2026-09-27T02:08:58.224Z",
+        "venuePage": 19,
+        "venueCleanBefore": 18,
+        "laneCleanBefore": 18,
+        "minutesIntoLane": 9.04
+      }
+    }
+  }
+}
