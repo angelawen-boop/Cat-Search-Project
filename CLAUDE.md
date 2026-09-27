@@ -1006,6 +1006,9 @@ keeps making in new clothes.
   when her title ruling changed the recipe): ~30 pages spent for nothing.
   **A sweep runs once, after every open question is answered and the recipe
   passes offline on saved pages.** Ask first; she decides when.
+  **Worse than the pages: the third sweep's 13 timeouts cannot be read** —
+  the site's own fault, or its answer to our two sweeps before? Repeated
+  sweeps spoil the evidence the next diagnosis needs.
 - **"The headed path is built" was reported while `brit` had no recipe.** A
   shared path built is not every venue ready — say per venue what exists.
 
