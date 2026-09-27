@@ -1496,6 +1496,7 @@ The AbeBooks link is `/servlet/SearchResults?kn=…&sts=t`.
 | `docs/listing_pages/` | Frick, Wallace, Brera listing pages she saved — where each listing sits | Changing a `within` there |
 | `docs/moma_pages/`, `docs/morgan_pages/`, `docs/orsay_pages/` | Pages she saved from her own browser, with a README of what each settled — link shapes, blurb containers, the traps | Changing either recipe, before asking her for anything |
 | `docs/compression.md` | The compression design, the model split, the eval, the rejected alternatives | Changing compression — otherwise don't |
+| `docs/library.md` | **Future consideration, not open work** — purchase tracking and a Library tab, brainstormed 27 Sep. Never propose it; she may build it or not | She raises it |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review: what she found, what changed, what each returns now | Before touching a reviewed venue |
 | `docs/review-log.md` | Independent review findings and what was decided | A reviewer raises something |
 | `docs/store_backup_2026-09-21/` | A read-out of the page's store, as insurance | Never, unless the store is lost AND `sweep_log.js` cannot rebuild it |
