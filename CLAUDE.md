@@ -995,6 +995,11 @@ keeps making in new clothes.
   headless workers. Stub EVERY venue a dry run names, or name only stubbed ones.
 - **Requiring `sweep_prototype.js` runs the run-folder tidy.** Any test or probe
   can move old runs into `archive/`; commit the move, never undo it by hand.
+- **A live sweep started while a question about the recipe was still open —
+  the Ashmolean, 27 Sep, twice** (one cut off by a time limit, one stopped
+  when her title ruling changed the recipe): ~30 pages spent for nothing.
+  **A sweep runs once, after every open question is answered and the recipe
+  passes offline on saved pages.** Ask first; she decides when.
 - **"The headed path is built" was reported while `brit` had no recipe.** A
   shared path built is not every venue ready — say per venue what exists.
 
