@@ -74,6 +74,13 @@ const FILES = {
     check('BR-012: no-cache is not kept', S.reusableFile('stylesheet', 200, { 'Cache-Control': 'public, no-cache' }) === false);
     check('BR-013: an Expires in the past is not kept', S.reusableFile('script', 200, { expires: 'Mon, 01 Jan 2024 00:00:00 GMT' }) === false);
     check('BR-014: a document is never kept', S.reusableFile('document', 200, { 'cache-control': 'max-age=60' }) === false);
+    // WHO ANSWERED (27 Sep): the labels the container now logs.
+    const ash = { 'Server': 'Apache', 'X-Ah-Environment': 'prod', 'X-Cache-Hits': '226', 'Cache-Control': 'public, max-age=60' };
+    const L = S.replyLabels(ash, 'https://www.ashmolean.org/exhibition/x');
+    check('BR-015: a site with no gatekeeper is named by its own host', /^gatekeeper site:www\.ashmolean\.org/.test(L), L);
+    check('BR-016: its hosting and cache labels are kept', /x-ah-environment: prod/.test(L) && /x-cache-hits: 226/.test(L) && /server: Apache/.test(L), L);
+    const cf = S.replyLabels({ 'cf-ray': '8a1b', server: 'cloudflare', 'retry-after': '120' }, 'https://www.moma.org/');
+    check('BR-017: Cloudflare, and a stated wait, are named', /gatekeeper Cloudflare/.test(cf) && /retry-after: 120/.test(cf), cf);
   } finally {
     await browser.close();
   }

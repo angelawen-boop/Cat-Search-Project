@@ -1946,6 +1946,13 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
     const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT });
     const status = resp ? resp.status() : null;
 
+    // The container: the first reply from each venue, and every refusal or
+    // error, says who answered (replyLabels). Her machine reads them in PACER.
+    if (!PACER && resp && (!LABELS_LOGGED.has(venue) || status >= 400)) {
+      LABELS_LOGGED.add(venue);
+      log(`  reply labels (HTTP ${status}): ${replyLabels(resp.headers(), url)}`);
+    }
+
     // Her machine: who answered, and did it object? An objection stops the
     // whole lane, so it is returned here before anything reads the page.
     if (PACER) {
@@ -2015,7 +2022,7 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
       return safeGoto(page, url, venue, context, 1);
     }
 
-    log(`  ${reason}: ${url} — ${e.message.slice(0, 120)}`);
+    log(`  ${reason}: ${url} — ${e.message.slice(0, 120)}${reason === 'TIMEOUT' ? ' (no reply, so no labels to say who was in front of the site)' : ''}`);
     return { ok: false, reason };
   }
 }
@@ -2171,6 +2178,25 @@ function gatekeeperFrom(headers, url) {
   try { host = new URL(url).host.toLowerCase(); } catch { host = String(url); }
   return `site:${host}`;
 }
+
+/**
+ * WHO ANSWERED, IN ONE LINE — the container, 27 Sep. Her laptop already reads
+ * these on every reply (pacing); the container kept none, so the Ashmolean's
+ * timeouts could not say who was in front of the site. The labels a reply
+ * carries about its gatekeeper, host, cache and any stated limit. A timeout
+ * carries none — there was no reply — and the log says so instead.
+ */
+function replyLabels(headers, url) {
+  const h = {};
+  for (const [k, v] of Object.entries(headers || {})) h[k.toLowerCase()] = String(v);
+  const parts = [`gatekeeper ${gatekeeperFrom(h, url)}`];
+  for (const k of ['server', 'via', 'x-served-by', 'x-cache', 'x-cache-hits', 'x-ah-environment', 'x-generator',
+    'retry-after', 'x-ratelimit-limit', 'x-ratelimit-remaining', 'x-ratelimit-reset', 'ratelimit-limit', 'ratelimit-policy']) {
+    if (h[k]) parts.push(`${k}: ${h[k].slice(0, 60)}`);
+  }
+  return parts.join(' · ');
+}
+const LABELS_LOGGED = new Set();
 
 // The titles bot checks put on their own pages. A check can arrive with a 200,
 // so the status alone would read it as a page.
@@ -4912,6 +4938,9 @@ const VENUES = {
     // page loaded in 2-3s twice when tried alone that afternoon, so the drop-
     // outs come and go (she has also seen its pages sit blank for a minute).
     keepPages: true,
+    // Show pages read ALONE — one file each, not ~100 (her go-ahead, 27 Sep).
+    // Proven on five bare pages, one of every kind: docs/ashmolean_pages/raw/.
+    pageOnly: true,
     // HER ADDITION, 27 Sep. Major exhibitions, free exhibitions AND displays,
     // current and past alike — nothing excluded (her ruling). Her count: current
     // 0 major + 4 free, upcoming 2 major + 1 free, past back to 1 July 2024
@@ -6138,7 +6167,36 @@ async function autoScroll(page, maxSteps = 12) {
   } catch { /* a page that will not scroll is read as it is */ }
 }
 
+/**
+ * THE SHOW PAGE ALONE — `pageOnly: true`, her go-ahead 27 Sep (the Ashmolean).
+ * On a venue whose show page carries everything the recipe reads in the HTML
+ * the server sends, only that one file is fetched: every program, stylesheet,
+ * data request and embedded frame the page would pull in is refused before it
+ * leaves the machine. The Ashmolean's show page pulls ~100 such files, and its
+ * sweeps stalled under them; the bare page gave identical rows on five pages,
+ * one of every kind (AS-021 to AS-025). Listing pages are NOT affected — the
+ * Ashmolean draws its lists by script. Set only where saved bare pages prove it.
+ */
 async function fetchIndividualPages(page, rows, venueCode) {
+  const bare = (VENUES[venueCode] || {}).pageOnly;
+  const onlyThePage = route => {
+    const req = route.request();
+    let main = false;
+    try { main = req.resourceType() === 'document' && req.frame() === page.mainFrame(); } catch { main = false; }
+    return main ? route.fallback() : route.abort();
+  };
+  if (bare) {
+    await page.route('**/*', onlyThePage);
+    log('  show pages read alone: the page itself only, none of its other files (pageOnly)');
+  }
+  try {
+    await fetchIndividualPagesEach(page, rows, venueCode);
+  } finally {
+    if (bare) await page.unroute('**/*', onlyThePage).catch(() => {});
+  }
+}
+
+async function fetchIndividualPagesEach(page, rows, venueCode) {
   let fetched = 0, failed = 0, noText = 0, reused = 0, keptNow = 0;
   const PAGE_KEEP = pageKeepFor(venueCode);
   // Skip anything already known to have closed before the lookback floor —
@@ -7172,7 +7230,7 @@ module.exports = {
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
-  installNetworkBridge, reusableFile, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
+  installNetworkBridge, reusableFile, replyLabels, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
   // Exported for the same reason as safeGoto: so a diagnostic can run the REAL
   // extractor against a page instead of reimplementing it and drifting from it.
   getCuratorialText,

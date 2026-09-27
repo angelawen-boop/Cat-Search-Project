@@ -127,11 +127,17 @@ async function run(browser, listingOnly) {
         ? r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: fs.readFileSync(path.join(RAW, file)) })
         : (other++, r.abort()));
       const page = await ctx.newPage();
+      // What the page TRIED to fetch, whether or not it got out.
+      let tried = 0;
+      page.on('request', r => { if (r.url() !== url) tried++; });
       const log = console.log; console.log = () => {};
       try { await S.fetchIndividualPages(page, [row], 'ashmolean'); } finally { console.log = log; await ctx.close(); }
       const diff = ['title', 'start_date', 'end_date', 'summary'].filter(f => (row[f] || '') !== (full[f] || ''));
-      check(`AS-0${n++}: ${slug} — the bare page gives the full read's row (${other} other files refused)`,
-        diff.length === 0 && other > 50, diff.map(f => f + ': ' + row[f] + ' ≠ ' + full[f]).join(' | '));
+      check(`AS-0${n}: ${slug} — the bare page gives the full read's row`,
+        diff.length === 0, diff.map(f => f + ': ' + row[f] + ' ≠ ' + full[f]).join(' | '));
+      // pageOnly: the page asked for its other files and not one left the machine.
+      check(`AS-0${n++}b: ${slug} — pageOnly: ${tried} other files asked for, none reached the site`,
+        tried > 50 && other === 0, `tried ${tried}, reached ${other}`);
     }
     await browser2.close();
   }
