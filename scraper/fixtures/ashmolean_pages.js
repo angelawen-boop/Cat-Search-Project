@@ -65,6 +65,24 @@ async function run(browser, listingOnly) {
     check('AS-008: a past major\'s full run off the card', (real.find(r => /anselm-kiefer/.test(r.url)) || {}).start_date === '2025-02-14');
     check('AS-009: nothing older than the floor', real.every(r => !r.end_date || r.end_date >= '2024-07-01'), real.filter(r => r.end_date && r.end_date < '2024-07-01').map(r => r.title).join(' | '));
 
+    // Titles typed in capitals — code writes ordinary capitals, her ruling 27 Sep.
+    for (const [from, to] of [
+      ['COLONIAL VIEWS OF INDIA', 'Colonial Views of India'],
+      ['SISTERS, BROTHERS, OTHERS: NATIONALITY AND 20TH-CENTURY CHINESE ART', 'Sisters, Brothers, Others: Nationality and 20th-Century Chinese Art'],
+      ['CHEUNG YEE AND HIS 1960s HONG KONG CONTEMPORARIES', 'Cheung Yee and His 1960s Hong Kong Contemporaries'],
+      ['ASHMOLEAN NOW: FLORA YUKHNOVICH x DANIEL CREWS-CHUBB', 'Ashmolean Now: Flora Yukhnovich x Daniel Crews-Chubb'],
+      ['KABUKI KIMONO: DISPLAY COSTUMES OF BANDŌ TAMASABURŌ V', 'Kabuki Kimono: Display Costumes of Bandō Tamasaburō V'],
+      ['SIMPLE PLEASURES: LI JIN WITH ROGER LAW', 'Simple Pleasures: Li Jin with Roger Law'],
+      ['HENRY VIII AND HIS WIVES', 'Henry VIII and His Wives'],
+      ['ASHMOLEAN NOW: BETTINA VON ZWEHL', 'Ashmolean Now: Bettina von Zwehl'],
+      ["O'KEEFFE AND RUSKIN'S WORLD", "O'Keeffe and Ruskin's World"],
+      ['A LIFE IN ART – THE EARLY YEARS', 'A Life in Art – The Early Years'],
+      // Not all capitals: left exactly as the venue wrote it.
+      ['Turner\'s High Street', 'Turner\'s High Street'],
+      ['IN BLOOM: How Plants Changed Our World', 'IN BLOOM: How Plants Changed Our World'],
+    ]) check('AS-016: "' + from + '" → "' + to + '"', S.titleFromCaps(from) === to, S.titleFromCaps(from));
+    check('AS-017: every Ashmolean row leaves the listing in ordinary capitals', real.every(r => /\p{Ll}/u.test(r.title)), real.filter(r => !/\p{Ll}/u.test(r.title)).map(r => r.title).join(' | '));
+
     const full = await run(browser, false);
     const get = end => full.find(r => r.url.endsWith(end)) || {};
     const a = get('/aphrodite-the-making-of-a-goddess'), c = get('/colonial-views-of-india-impey-photographs'), d = get('/roman-oxfordshire-coins-display');
@@ -72,6 +90,9 @@ async function run(browser, listingOnly) {
     check('AS-011: a free show\'s opening date from its own page', c.start_date === '2026-04-11' && c.end_date === '2026-12-13', c.start_date + '→' + c.end_date);
     check('AS-012: a display\'s too', d.start_date === '2025-12-06' && d.end_date === '2026-11-29', d.start_date + '→' + d.end_date);
     check('AS-013: no note claims only a month was published once the page gave the day', !/shows only/.test(a.notes || ''), a.notes);
+    check('AS-018: the full name from the page header — name and subtitle', c.title === 'Colonial Views of India: Photographs by Eugene Clutterbuck Impey', c.title);
+    check('AS-019: a header with no subtitle leaves the listing\'s longer name', d.title === 'Restoring Rome: Roman Oxfordshire Coins Display', d.title);
+    check('AS-020: a subtitle line that is the dates is not a subtitle', a.title === 'Aphrodite: The Making of a Goddess', a.title);
     check('AS-014: Aphrodite\'s bold lead is kept', /^Step into the world of Aphrodite/.test(a.summary || ''), (a.summary || '').slice(0, 120));
     for (const r of [a, c, d]) {
       check('AS-015: ' + (r.title || '?') + ' — no ticket, membership, caption or credit text',

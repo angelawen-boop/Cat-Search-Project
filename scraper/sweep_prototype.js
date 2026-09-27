@@ -4893,6 +4893,12 @@ const VENUES = {
     // the world of Aphrodite…"), which the shared bold-label rule would drop.
     description: '.field-name-field-content p',
     keepBold: true,
+    // Titles are TYPED in capitals here, listing and page alike — her ruling,
+    // 27 Sep: code writes ordinary capitals (titleFromCaps).
+    capsTitles: true,
+    // The full name: the page header's name and its subtitle line (the first
+    // line of its teaser, above the dates) — see `pageTitle` in the detail pass.
+    pageTitle: { box: '.text-box', name: '.listing-title h3', sub: '.teaser-text p' },
   },
 
   jacquemart: {
@@ -5406,7 +5412,70 @@ const VENUE_ORDER = Object.keys(VENUES);
 /**
  * The engine. Every venue goes through this; none has its own copy.
  */
-async function scrapeVenue(page, code, { listingOnly = false } = {}) {
+/**
+ * TITLES TYPED IN CAPITALS, turned into ordinary capitals — her ruling, 27 Sep
+ * (the Ashmolean). restoreCase() recovers letters a site only DISPLAYS in
+ * capitals; this venue TYPES them, on the listing and on the show's own page,
+ * so there is nothing to recover and code writes the capitals instead.
+ *
+ * Only a title with no lower-case word is touched: a word of two or more
+ * letters, no digit. "1960s" and "x" (as in "Yukhnovich x Crews-Chubb") are
+ * not evidence either way. Each word: first letter capital, rest small;
+ * small joining words stay small unless they open the title or follow a colon
+ * or dash. Roman numerals stay capitals ("Bandō Tamasaburō V"). "20TH-CENTURY"
+ * becomes "20th-Century"; "O'KEEFFE" "O'Keeffe"; "RUSKIN'S" "Ruskin's".
+ * It cannot know a styled name ("Ashmolean NOW") — those come out ordinary.
+ */
+const SMALL_WORDS = new Set(['a', 'an', 'the', 'and', 'or', 'nor', 'but', 'of', 'in', 'on', 'at', 'to', 'for', 'by', 'with', 'from', 'as', 'into', 'over', 'upon', 'via', 'vs', 'x', 'von']);
+const ROMAN = /^(?=[IVXLC]+$)C{0,3}(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
+function titleFromCaps(title) {
+  const t = String(title || '');
+  const words = t.match(/[\p{L}\p{N}]+/gu) || [];
+  const judged = words.filter(w => w.length >= 2 && !/\d/.test(w));
+  if (!judged.length || judged.some(w => w !== w.toUpperCase())) return t;
+  let startOfPhrase = true;
+  // Word positions, so a token can tell whether it ends its phrase.
+  const tokens = t.match(/[\p{L}\p{N}'’]+|[^\p{L}\p{N}'’]+/gu) || [];
+  let at = -1;
+  const lastOfPhrase = () => {
+    for (let k = at + 1; k < tokens.length; k++) {
+      if (/[\p{L}\p{N}]/u.test(tokens[k])) return false;
+      if (/[:–—(]|\s-\s/.test(tokens[k])) return true;
+    }
+    return true;
+  };
+  return t.replace(/[\p{L}\p{N}'’]+|[^\p{L}\p{N}'’]+/gu, tok => {
+    at++;
+    if (!/[\p{L}\p{N}]/u.test(tok)) {
+      if (/[:–—]|\s-\s/.test(tok)) startOfPhrase = true;
+      return tok;
+    }
+    const first = startOfPhrase; startOfPhrase = false;
+    // A numeral stays capitals: "Bandō Tamasaburō V", "Henry VIII and…".
+    // Mid-phrase a single letter is a word, and so are the numeral-shaped
+    // names "LI" and "LIV" ("LI JIN" is Li Jin); at a phrase's end they count.
+    if (ROMAN.test(tok) && tok !== 'I' && (lastOfPhrase() || (tok.length >= 2 && !/^(LI|LIV)$/.test(tok)))) return tok;
+    const low = tok.toLowerCase();
+    if (!first && SMALL_WORDS.has(low)) return low;
+    // Pieces joined by an apostrophe: O'KEEFFE → O'Keeffe, RUSKIN'S → Ruskin's.
+    return low.split(/(['’])/).map((part, i, all) => {
+      if (i === 0) return part.replace(/^(\d*)(\p{L})/u, (m, d, c) => d ? d + c : c.toUpperCase());
+      if (/['’]/.test(part)) return part;
+      return all[0].length === 1 && part.length > 1 ? part[0].toUpperCase() + part.slice(1) : part;
+    }).join('');
+  }).replace(/(^|[-–])(\p{Ll})/gu, (m, d, c) => d === '' ? m : d + c.toUpperCase())
+    .replace(/^(\p{Ll})/u, c => c.toUpperCase());
+}
+
+async function scrapeVenue(page, code, opts = {}) {
+  const rows = await scrapeVenueRows(page, code, opts);
+  if ((VENUES[code] || {}).capsTitles) {
+    for (const r of rows) if (r.title && !r.title.startsWith('[')) r.title = titleFromCaps(r.title);
+  }
+  return rows;
+}
+
+async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
   const v = VENUES[code];
   if (!v) { log(`  no recipe for venue "${code}"`); return []; }
 
@@ -6153,6 +6222,37 @@ async function fetchIndividualPages(page, rows, venueCode) {
           }
           if (r.unplaced) {
             TITLE_REPORT.push({ venue: venueCode, kind: 'unplaced', from: row.title, to: r.unplaced, url: row.url });
+          }
+        }
+      }
+
+      // THE FULL NAME FROM THE SHOW'S OWN HEADER — a venue whose listing
+      // carries a short label (the Ashmolean's "IN BLOOM EXHIBITION") while
+      // its page's header prints the name AND the subtitle ("IN BLOOM" / "How
+      // Plants Changed Our World"). Her finding, 27 Sep. Used only when the
+      // header HAS a subtitle: a header with just a name can be shorter than
+      // the listing's ("ROMAN OXFORDSHIRE COINS DISPLAY" against "RESTORING
+      // ROME: ROMAN OXFORDSHIRE COINS DISPLAY"), so the listing's stands.
+      // A subtitle line that is the show's dates is not a subtitle.
+      if (vrec.pageTitle) {
+        const h = await page.evaluate(({ box, name, sub }) => {
+          const sq = x => String(x || '').replace(/\s+/g, ' ').trim();
+          for (const b of document.querySelectorAll(box)) {
+            const n = b.querySelector(name);
+            if (!n || !sq(n.textContent)) continue;
+            const p = b.querySelector(sub);
+            const lines = p ? String(p.innerText || p.textContent).split('\n').map(sq).filter(Boolean) : [];
+            return { name: sq(n.textContent), sub: lines[0] || '' };
+          }
+          return null;
+        }, vrec.pageTitle).catch(() => null);
+        const d = h && h.sub ? findDateRange(h.sub) : null;
+        if (h && h.sub && h.sub.length <= 150 && !(d && (d.start || d.end))) {
+          const part = x => vrec.capsTitles ? titleFromCaps(x) : x;
+          const full = `${part(h.name)}: ${part(h.sub)}`;
+          if (full !== row.title) {
+            TITLE_REPORT.push({ venue: venueCode, kind: 'changed', from: row.title, to: full, url: row.url });
+            row.title = full;
           }
         }
       }
@@ -7025,7 +7125,7 @@ module.exports = {
   scrapeVenue,
   // Pure — the line-by-line title pick, so a venue reachable only from her
   // laptop can still be covered by a fixture here.
-  pickTitleLine, titleFromPage, readPageNameParts,
+  pickTitleLine, titleFromPage, readPageNameParts, titleFromCaps,
   // Not pure — exported so a check can run the real detail-page pass offline.
   fetchIndividualPages,
   // For from_saved_pages.js: the sweep's own finish, over pages she saved.

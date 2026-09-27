@@ -172,7 +172,7 @@ Judgement about the outside world is not in any file.
 | `rijks` | 37 rows, not chased further. *Asian Pavilion* was pulled by the venue |
 | `capo` | **Not count-verified and never will be** — see below |
 | `brera`, `borghese` | Their single extra row is a marker for a genuinely empty upcoming page |
-| `ashmolean` | **Everything kept** — major exhibitions, free exhibitions and displays, past included (27 Sep). Her count: current 0 major + 4 free, upcoming 2 major + 1 free, past 4 major + 13 free. `ashmolean_pages.js` |
+| `ashmolean` | **Everything kept** — major exhibitions, free exhibitions and displays, past included (27 Sep). Her count: current 0 major + 4 free, upcoming 2 major + 1 free, past 4 major + 13 free. **Titles: the full name from the show's page header (name + subtitle), and ordinary capitals written by code** — the venue types capitals everywhere (`capsTitles`, `titleFromCaps`, `pageTitle`). `ashmolean_pages.js` |
 
 **Whether displays count is HERS, and it varies by venue** — different museums
 mean different things by the word. Two venues disagreeing is the expected state,
