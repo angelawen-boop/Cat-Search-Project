@@ -1,0 +1,11 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/ashmolean-now-pio-abad-those-sitting-in-darkness",
+  "savedAt": "2026-09-27T09:33:14.924Z",
+  "outcome": "text",
+  "changes": {
+    "start_date": "2024-02-10",
+    "summary": "Our Pio Abad exhibition, which closed at the Ashmolean in Sep 2024, was one of four nominated for the Turner Prize 2024. Congratulations to the winner Jasleen Kaur for her exhibition Alter Altar, at Tramway in Glasgow. The second in the Ashmolean NOW exhibition series, where contemporary artists are invited to create new work inspired by the Ashmolean’s historical collections. This exhibition, entitled To Those Sitting in Darkness, featured new drawings and objects by London-based artist Pio Abad (b.1983).",
+    "notes": "opening date read from a sentence, not a date field: \"10 Feb - 8 Sep 2024\"."
+  },
+  "titleReport": []
+}
