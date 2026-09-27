@@ -6249,7 +6249,11 @@ async function fetchIndividualPages(page, rows, venueCode) {
         const d = h && h.sub ? findDateRange(h.sub) : null;
         if (h && h.sub && h.sub.length <= 150 && !(d && (d.start || d.end))) {
           const part = x => vrec.capsTitles ? titleFromCaps(x) : x;
-          const full = `${part(h.name)}: ${part(h.sub)}`;
+          // Joined as cardPartsTitle joins: a name that already has its own
+          // colon ("Ashmolean NOW: Bettina von Zwehl") takes the subtitle after
+          // a dash, never a second colon.
+          const nm = part(h.name), sb = part(h.sub);
+          const full = nm.includes(':') ? `${nm} – ${sb}` : `${nm}: ${sb}`;
           if (full !== row.title) {
             TITLE_REPORT.push({ venue: venueCode, kind: 'changed', from: row.title, to: full, url: row.url });
             row.title = full;
