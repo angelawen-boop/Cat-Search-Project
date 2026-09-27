@@ -1657,8 +1657,15 @@ async function safeRouteCall(fn) {
  * reaches the internet through the agent proxy. Chromium receives a normal
  * response and behaves normally — including running the page's JavaScript.
  */
-async function installNetworkBridge(context) {
-  const stats = { fulfilled: 0, skipped: 0, failed: 0 };
+async function installNetworkBridge(context, { fetchImpl = fetch } = {}) {
+  const stats = { fulfilled: 0, skipped: 0, failed: 0, reused: 0 };
+  // FILES REUSED, AS A PERSON'S BROWSER DOES — her go-ahead, 27 Sep. Chromium
+  // never reuses a file this bridge hands it (proven: one script, three pages,
+  // asked for three times), so every page re-fetched all of its program files:
+  // ~100 files per Ashmolean show page, ~2,400 for one 24-page sweep, where a
+  // person's browser fetches the shared files once. Kept for the life of this
+  // context (one worker's run); only what `reusableFile` allows.
+  const kept = new Map();
 
   await context.route('**/*', async (route) => {
     const request = route.request();
@@ -1669,13 +1676,18 @@ async function installNetworkBridge(context) {
     }
 
     const method = request.method();
+    const copy = method === 'GET' && kept.get(request.url());
+    if (copy) {
+      stats.reused++;
+      return safeRouteCall(() => route.fulfill(copy));
+    }
     const headers = { ...request.headers() };
     // Let node-fetch negotiate its own encoding and connection handling.
     delete headers['accept-encoding'];
     delete headers['connection'];
 
     try {
-      const response = await fetch(request.url(), {
+      const response = await fetchImpl(request.url(), {
         method,
         headers,
         body: method === 'GET' || method === 'HEAD' ? undefined : request.postData(),
@@ -1698,7 +1710,9 @@ async function installNetworkBridge(context) {
       }
 
       stats.fulfilled++;
-      await safeRouteCall(() => route.fulfill({ status: response.status, headers: out, body }));
+      const reply = { status: response.status, headers: out, body };
+      if (method === 'GET' && reusableFile(request.resourceType(), response.status, out)) kept.set(request.url(), reply);
+      await safeRouteCall(() => route.fulfill(reply));
     } catch (e) {
       stats.failed++;
       await safeRouteCall(() => route.abort());
@@ -1706,6 +1720,26 @@ async function installNetworkBridge(context) {
   });
 
   return stats;
+}
+
+/**
+ * Would a person's browser reuse this file on the next page? Only program files
+ * and stylesheets — never the page itself, its live data (xhr/fetch) or
+ * anything else — and only a clean 200 the site has not forbidden keeping
+ * (no-store, no-cache). Otherwise the site's own say: a max-age above zero, a
+ * future Expires, or a Last-Modified date (browsers keep those too).
+ */
+function reusableFile(type, status, headers) {
+  if (type !== 'script' && type !== 'stylesheet') return false;
+  if (status !== 200) return false;
+  const h = {};
+  for (const [k, v] of Object.entries(headers || {})) h[k.toLowerCase()] = String(v);
+  const cc = (h['cache-control'] || '').toLowerCase();
+  if (/no-store|no-cache/.test(cc)) return false;
+  const age = cc.match(/(?:^|[,\s])(?:s-)?max-age=(\d+)/);
+  if (age) return Number(age[1]) > 0;
+  if (h['expires']) { const t = Date.parse(h['expires']); return Number.isFinite(t) && t > Date.now(); }
+  return !!h['last-modified'];
 }
 
 /**
@@ -6782,7 +6816,7 @@ async function main() {
   });
 
   const summary = {};
-  const netTotals = { fulfilled: 0, skipped: 0, failed: 0 };
+  const netTotals = { fulfilled: 0, skipped: 0, failed: 0, reused: 0 };
 
   // Each worker gets its OWN browser context, and therefore its own cookie jar,
   // its own network bridge and its own page. Sharing one page across concurrent
@@ -6942,6 +6976,7 @@ async function main() {
       netTotals.fulfilled += stats.fulfilled;
       netTotals.skipped   += stats.skipped;
       netTotals.failed    += stats.failed;
+      netTotals.reused    += stats.reused || 0;
       await context.close().catch(() => {});
     }
   }
@@ -7087,7 +7122,7 @@ async function main() {
   log('  collected = rows handed on to the lookback filter and detail-page fetch');
 
   log('');
-  log(`Network bridge: ${netStats.fulfilled} requests served, ${netStats.skipped} skipped (image/media/font), ${netStats.failed} failed`);
+  log(`Network bridge: ${netStats.fulfilled} requests served, ${netStats.reused} handed back from files already fetched (not asked again), ${netStats.skipped} skipped (image/media/font), ${netStats.failed} failed`);
   log('');
   const outstanding = VENUE_ORDER.filter(c => !venueIsDone(c));
   log(`Run directory:   ${RUN_DIR}`);
@@ -7137,7 +7172,7 @@ module.exports = {
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
-  installNetworkBridge, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
+  installNetworkBridge, reusableFile, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
   // Exported for the same reason as safeGoto: so a diagnostic can run the REAL
   // extractor against a page instead of reimplementing it and drifting from it.
   getCuratorialText,
