@@ -52,6 +52,10 @@ is why they live in one repo, on one branch.
   network, work out the fewest venues and the fewest pages at each that answer
   the question. Saved pages and fixtures first. Never a blanket re-sweep because
   it is quick.
+- **A question gets an answer first — her rule, 27 Sep.** "Talk to me about X"
+  means discuss; nothing is built until she says. A session that answered a
+  question by building for half an hour, on assumptions never discussed, is
+  the failure this rule exists for.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
 
 ### Put it in code — her rule, 10 Sep 2026
@@ -771,12 +775,15 @@ probes never read it.
 --report` prints the current state. Waits stated: **Wallace 30s, British Museum
 20s, Frick, MAM and Ashmolean 10s, V&A 2s**; the rest none. Unreadable: `met`
 (429 — refused even this file), `morgan`, `mad`, `artic` (403). **Every address
-ever swept is allowed except one** — see §7.5, British Museum.
+ever swept is allowed except one**: the British Museum's past page, which its
+file allows only with a trailing slash its own links omit — **allowed by her
+ruling, 27 Sep** (`robotsAllow` on `brit`, that one address; RB-021/022).
 
 **Until 27 Sep the container waited NOTHING between pages, at any venue** —
 pacing is her machine only. 13 Sep, three full sweeps: 2–5s a page, 5–6 of ~370
-pages failed each time, nothing refused among the venues that answer. Whether
-to add a default wait on top of robots.txt: **open, her call** (§7.9).
+pages failed each time, nothing refused among the venues that answer. **A
+default wait on top of robots.txt: not adopted, her ruling 27 Sep** — no
+problem seen in container sweeps.
 
 
 ### How it is organised
@@ -1311,14 +1318,9 @@ repeated to her on the day (she asked):
 3. `git pull`, then `node scraper/sweep_prototype.js <venue>`, then push.
 4. One Cloudflare venue per day if refused.
 
-**British Museum and robots.txt — HER RULING NEEDED before its sweep.** Its
-file rules out `/exhibitions-events/*` but allows
-`/exhibitions-events/past-exhibitions/` — WITH a slash. Its own pages link to
-it WITHOUT one, which is what the recipe reads. As written, the past listing
-is off-limits and will not be asked for (RB-004); by its evident intent it is
-allowed. Its filtered current listing is allowed as written, though the
-file's comment says it means to stop bots on "exhibition and events facets".
-Its wait, 20s, is inside her 30s pacing.
+**British Museum and robots.txt — settled 27 Sep.** Its past page is allowed
+by her ruling (§5, "What each site asks"). Its wait, 20s, is inside her 30s
+pacing.
 
 **Sizes at 30s a page:** moma ~25 pages, brit ~40, orsay ~65, morgan unknown.
 A venue moves to her laptop only after a clean complete sweep (§5).
@@ -1407,9 +1409,8 @@ fewest loads with certainty. Venue by venue; the recipes work.
 
 The import file was swept 13 Sep. **She sweeps no more than once a month.**
 
-**Before it — hers to decide (27 Sep):** a default wait between pages in the
-container at sites whose robots.txt states none. robots.txt waits are already
-obeyed (§5). **Reading the page alone (`pageOnly`) stays Ashmolean-only** — her
+**Settled 27 Sep:** robots.txt waits are obeyed (§5); no default wait on top.
+**Reading the page alone (`pageOnly`) stays Ashmolean-only** — her
 ruling 27 Sep: tested per venue on saved pages when a venue next misbehaves.
 
 ### 10. Smaller, parked

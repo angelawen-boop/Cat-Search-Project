@@ -90,6 +90,19 @@ const kept = host => R.interpret(R.readKept(host));
     check('RB-018: …and says why, in words for her card', /robots\.txt/.test(S.failureProse('ROBOTS_OFF_LIMITS')));
     check('RB-019: the log names the rule', lines.some(l => /NOT ASKED — robots\.txt rules it out \(Disallow: \/private\/\)/.test(l)), lines.join(' | '));
 
+    // The British Museum: its past page allowed by her ruling, nothing else.
+    S.useRobotsForFixtures({ brit: { crawlDelay: null, rules: bm } });
+    let b1, b2, b3;
+    console.log = () => {};
+    try {
+      b1 = await S.safeGoto(page, 'https://www.britishmuseum.org/exhibitions-events/past-exhibitions', 'brit', 'past');
+      b2 = await S.safeGoto(page, 'https://www.britishmuseum.org/exhibitions-events/past-exhibitions?page=2', 'brit', 'past');
+      b3 = await S.safeGoto(page, 'https://www.britishmuseum.org/exhibitions-events/family-events', 'brit', 'past');
+    } finally { console.log = log; }
+    check('RB-021: BM — its past exhibitions page is asked for (her ruling, 27 Sep)', b1.ok && b2.ok, JSON.stringify([b1, b2]));
+    check('RB-022: BM — any other /exhibitions-events/ address is still refused',
+      b3.reason === 'ROBOTS_OFF_LIMITS' && !hits.some(h => h.u.includes('family-events')), JSON.stringify(b3));
+
     S.useRobotsForFixtures(null);
     const t0 = Date.now();
     console.log = () => {};

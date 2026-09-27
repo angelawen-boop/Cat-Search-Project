@@ -1957,12 +1957,23 @@ async function robotsState(venue) {
   return st;
 }
 
+/**
+ * `robotsAllow` — addresses a site's robots.txt rules out only by a slip in how
+ * it was written, read as allowed by HER ruling, one venue at a time. Matched on
+ * the path alone (any query), exactly; nothing broader.
+ */
+function robotsAllowedByRuling(venue, url) {
+  const list = (VENUES[venue] && VENUES[venue].robotsAllow) || [];
+  let p; try { p = new URL(url).pathname.replace(/\/$/, ''); } catch { return false; }
+  return list.some(x => x.replace(/\/$/, '') === p);
+}
+
 /** Before a page: null to go ahead (after any wait), or a reason not to ask. */
 async function robotsBefore(venue, url) {
   const st = await robotsState(venue);
   if (!st) return null;
   const a = require('./robots').isAllowed(st.rules, url);
-  if (!a.allowed) {
+  if (!a.allowed && !robotsAllowedByRuling(venue, url)) {
     log(`  NOT ASKED — robots.txt rules it out (${a.rule}): ${url}`);
     return 'ROBOTS_OFF_LIMITS';
   }
@@ -5383,6 +5394,12 @@ const VENUES = {
     // Her ruling, 26 Sep: not attempted headless from her machine.
     headed: true,
     base: 'https://www.britishmuseum.org',
+    // robots.txt rules out /exhibitions-events/* but ALLOWS
+    // /exhibitions-events/past-exhibitions/ — with a slash. Its own pages, and
+    // Google's first result, link to it without one. Her ruling, 27 Sep: they
+    // allow the past exhibitions page; the missing slash is a slip, not a "keep
+    // out". This one address only (robotsAllowedByRuling).
+    robotsAllow: ['/exhibitions-events/past-exhibitions'],
     // WRITTEN 26 Sep FROM THE PAGES SHE SAVED (docs/brit_pages/). The old
     // recipe hunted /exhibitions-events/ links; exhibitions live at
     // /exhibitions/<name>. Current and upcoming: the What's On list filtered
