@@ -48,6 +48,8 @@ const check = (name, ok, got) => {
     const today = new Date().toISOString().slice(0, 10);
     check('BM-001: the current listing asks from today to the end of next year',
       url.endsWith(`whats_on_when=${today}TO${new Date().getUTCFullYear() + 1}-12-31`), url);
+    check('BM-012: it asks for exhibitions AND experiences — the Bayeux Tapestry is filed as an Experience (her finding, 27 Sep)',
+      /whats_on_event_type=Exhibition&whats_on_event_type=Experience&whats_on_when=/.test(url), url);
     const cur = ['john-constable-views-nature', 'declaring-independence-usa-250', 'korea', 'bayeux-tapestry'];
     check('BM-002: the four current and upcoming shows', cur.every(at), cur.filter(p => !at(p)).join(', '));
     check('BM-003: titles carry no screen-reader text', real.every(r => !/\s\.\s|Book now|Final weeks|Now open/.test(r.title)),

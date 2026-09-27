@@ -5159,7 +5159,12 @@ const VENUES = {
     // any card — yearHeading keeps the years that can reach the lookback, and
     // each exhibition's own page gives its dates (detailDates).
     pages: [
-      { path: '/exhibitions-events?whats_on_event_type=Exhibition', fromToday: 'whats_on_when', ctx: 'current/upcoming' },
+      // EXHIBITION AND EXPERIENCE — her finding, 27 Sep. The Bayeux Tapestry is
+      // filed by the museum as an "Experience", so the Exhibition filter alone
+      // left it out; its own page lives under /exhibitions/ like every show.
+      // The site takes the parameter twice. The selector still keeps only
+      // /exhibitions/ pages, so an experience that is not a show stays out.
+      { path: '/exhibitions-events?whats_on_event_type=Exhibition&whats_on_event_type=Experience', fromToday: 'whats_on_when', ctx: 'current/upcoming' },
       { path: '/exhibitions-events/past-exhibitions', ctx: 'past' },
     ],
     selector: 'a[href*="/exhibitions/"]',
