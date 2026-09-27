@@ -1,0 +1,9 @@
+{
+  "host": "www.artic.edu",
+  "url": "https://www.artic.edu/robots.txt",
+  "fetchedAt": "2026-09-27T08:18:59.861Z",
+  "status": 403,
+  "readable": false,
+  "why": "HTTP 403",
+  "server": "cloudflare"
+}

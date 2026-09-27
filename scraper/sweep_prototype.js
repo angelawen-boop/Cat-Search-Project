@@ -1917,10 +1917,110 @@ function rethrowIfAborted(e) {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+ * WHAT THE SITE ASKS — robots.txt, both machines. Her go-ahead, 27 Sep 2026.
+ *
+ * The Ashmolean asks for 10 seconds between requests; we asked every 2 and its
+ * show pages stalled. Of 26 sites read on 27 Sep, six state a wait (Wallace
+ * 30s, British Museum 20s, Frick / MAM / Ashmolean 10s, V&A 2s). Reading and
+ * parsing the file: robots.js. Here, per venue, before every page it asks for:
+ *
+ *   - OFF-LIMITS: an address the file rules out is not asked for. It fails like
+ *     any other page, with its own reason, so it shows as a marker row / note.
+ *   - THE WAIT: pages are at least the stated delay apart. On her machine the
+ *     pacing gap (~30s) usually covers it already; the longer of the two wins.
+ *     Time spent here is not counted against the venue's budget.
+ *
+ * Only a real sweep reads robots.txt. Fixtures and probes never do (a fixture
+ * waiting 30s a page, or fetching, would be wrong) unless handed rules with
+ * useRobotsForFixtures. A file that could not be read asks nothing, and the
+ * log says it was unreadable rather than silent.
+ * ═════════════════════════════════════════════════════════════════════════ */
+const ROBOTS = new Map();          // venue -> { crawlDelay, rules, lastAt, waited }
+let ROBOTS_FIXTURE = null;         // { [venue]: { crawlDelay, rules } }
+function useRobotsForFixtures(f) { ROBOTS_FIXTURE = f; ROBOTS.clear(); }
+
+async function robotsState(venue) {
+  if (ROBOTS.has(venue)) return ROBOTS.get(venue);
+  let st = null;
+  if (ROBOTS_FIXTURE) {
+    const f = ROBOTS_FIXTURE[venue];
+    if (f) st = { crawlDelay: f.crawlDelay ?? null, rules: f.rules || [] };
+  } else if (require.main === module && VENUES[venue]) {
+    const r = await require('./robots').robotsFor(VENUES[venue].base, { agent: proxyAgent });
+    const wait = r.crawlDelay ? ` — pages at least ${r.crawlDelay}s apart` : '';
+    log(`  robots.txt (${r.host}, ${r.fetched ? 'read now' : 'kept copy of ' + String(r.fetchedAt).slice(0, 10)}): ${r.says}${wait}`);
+    st = { crawlDelay: r.crawlDelay, rules: r.rules };
+  }
+  if (st) Object.assign(st, { lastAt: 0, waited: 0 });
+  ROBOTS.set(venue, st);
+  return st;
+}
+
+/** Before a page: null to go ahead (after any wait), or a reason not to ask. */
+async function robotsBefore(venue, url) {
+  const st = await robotsState(venue);
+  if (!st) return null;
+  const a = require('./robots').isAllowed(st.rules, url);
+  if (!a.allowed) {
+    log(`  NOT ASKED — robots.txt rules it out (${a.rule}): ${url}`);
+    return 'ROBOTS_OFF_LIMITS';
+  }
+  if (st.crawlDelay && st.lastAt) {
+    const due = st.lastAt + st.crawlDelay * 1000 - Date.now();
+    if (due > 0) { st.waited += due; await new Promise(r => setTimeout(r, due)); }
+  }
+  st.lastAt = Date.now();
+  return null;
+}
+const robotsWaited = venue => (ROBOTS.get(venue) || {}).waited || 0;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * WHAT A TIMEOUT WAS WAITING FOR — 27 Sep 2026.
+ *
+ * "Timeout 20000ms exceeded" cannot tell the Ashmolean's two possible causes
+ * apart: the page itself never arriving, or the page arriving and one of its
+ * ~100 other files hanging. A timeout has no reply, so it has no labels either.
+ * So every page records its own requests, and a timeout names which half it was
+ * and the files still outstanding — the evidence the 27 Sep diagnosis lacked.
+ * ═════════════════════════════════════════════════════════════════════════ */
+function trackRequests(page) {
+  if (page.__catwatchRequests) return page.__catwatchRequests;
+  const t = { open: new Map(), navStart: 0, docAt: null };
+  page.on('request', r => t.open.set(r, { at: Date.now(), type: r.resourceType(), url: r.url() }));
+  const done = r => t.open.delete(r);
+  page.on('requestfinished', done);
+  page.on('requestfailed', done);
+  page.on('response', resp => {
+    const r = resp.request();
+    if (r.isNavigationRequest() && r.frame() === page.mainFrame() && t.docAt == null && t.navStart) t.docAt = Date.now();
+  });
+  page.__catwatchRequests = t;
+  return t;
+}
+
+/** One line for the log: did the page itself answer, and what was still open. */
+function stallReport(t, now = Date.now()) {
+  if (!t || !t.navStart) return '';
+  if (t.docAt == null) return `the page itself never answered within ${Math.round((now - t.navStart) / 1000)}s`;
+  const open = [...t.open.values()].filter(e => e.at >= t.navStart).sort((a, b) => a.at - b.at);
+  const short = u => { try { const x = new URL(u); return x.host + x.pathname.slice(0, 50); } catch { return String(u).slice(0, 60); } };
+  const list = open.slice(0, 4).map(e => `${e.type} ${short(e.url)} (${Math.round((now - e.at) / 1000)}s)`).join('; ');
+  return `the page itself answered in ${((t.docAt - t.navStart) / 1000).toFixed(1)}s; ` +
+    (open.length ? `still waiting on ${open.length} other file(s): ${list}${open.length > 4 ? '; …' : ''}` : 'nothing else outstanding');
+}
+
 async function safeGoto(page, url, venue, context, attempt = 0) {
   // Ctrl-C already seen: stop before opening anything else, rather than
   // letting the rest of the venue fail one page at a time.
   if (STOPPING) throw new ScrapeAborted(url);
+
+  // What the site's robots.txt asks: an address it rules out is not asked for,
+  // and pages are at least its stated delay apart. See WHAT THE SITE ASKS.
+  if (attempt === 0) {
+    const off = await robotsBefore(venue, url);
+    if (off) return { ok: false, reason: off };
+  }
 
   // Her machine: wait for this venue's turn and the gap. See PACING.
   if (PACER) {
@@ -1943,6 +2043,8 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
     // expired at 30s on pages whose text had been readable for seconds.
     // Instead: wait for the HTML, then for the body to actually contain
     // content, and ignore whatever background noise continues after that.
+    const track = trackRequests(page);
+    track.navStart = Date.now(); track.docAt = null;
     const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT });
     const status = resp ? resp.status() : null;
 
@@ -1998,6 +2100,8 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
       return safeGoto(page, url, venue, context, 1);
     }
     const reason = classifyLoadError(e.message);
+    // Read at the moment it failed, before a retry resets it.
+    const stall = /TIMEOUT/.test(reason) ? stallReport(page.__catwatchRequests) : '';
 
     // The browser is gone: the run is over, this is not this page's failure,
     // and there is nothing to retry. Throwing rather than returning is the
@@ -2017,12 +2121,12 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
     // 429, 404 — is never asked twice: it has told us its answer, and asking
     // again is exactly the hammering the standing rule forbids (Section 4).
     if (attempt === 0 && TRANSIENT_FAILURES.has(reason)) {
-      log(`  ${reason} on ${url} — retrying once`);
+      log(`  ${reason} on ${url} — retrying once${stall ? ` (${stall})` : ''}`);
       await page.waitForTimeout(2000);
       return safeGoto(page, url, venue, context, 1);
     }
 
-    log(`  ${reason}: ${url} — ${e.message.slice(0, 120)}${reason === 'TIMEOUT' ? ' (no reply, so no labels to say who was in front of the site)' : ''}`);
+    log(`  ${reason}: ${url} — ${e.message.slice(0, 120)}${stall ? ` — ${stall}` : ''}${reason === 'TIMEOUT' && !/answered in/.test(stall) ? ' (no reply, so no labels to say who was in front of the site)' : ''}`);
     return { ok: false, reason };
   }
 }
@@ -2097,6 +2201,7 @@ const FAILURE_PROSE = {
 // Only ever written on her machine — see PACING below. Worded to fit inside
 // "could not be read: <this>. Marker row", which venue_status.js reads whole.
 FAILURE_PROSE.BLOCKED_CHALLENGE = 'the venue’s site answered with a bot check instead of the page';
+FAILURE_PROSE.ROBOTS_OFF_LIMITS = 'not asked for, because the venue’s robots.txt marks this address off-limits';
 FAILURE_PROSE.LANE_STOPPED = 'not asked for, because the gatekeeper in front of this site had just refused us and the run stopped asking';
 
 function failureProse(reason) {
@@ -6986,13 +7091,14 @@ async function main() {
               // throw, so it unwinds instead of running on invisibly.
               //
               // Time spent WAITING for its lane or for the gap between pages is
-              // not counted (her machine only; elsewhere it is always zero). The
+              // not counted — her pacing, and the wait a site's robots.txt asks
+              // for on either machine (WHAT THE SITE ASKS). The
               // budget is for a venue that hangs, and a paced venue with 60
               // pages spends most of its half hour deliberately idle.
               new Promise((_, reject) => {
                 const started = Date.now();
                 const check = () => {
-                  const active = Date.now() - started - (PACER ? PACER.waited(code) : 0);
+                  const active = Date.now() - started - (PACER ? PACER.waited(code) : 0) - robotsWaited(code);
                   if (active >= VENUE_BUDGET_MS) {
                     reject(Object.assign(
                       new Error(`venue exceeded its ${(VENUE_BUDGET_MS/60000).toFixed(2)} minute budget`),
@@ -7230,7 +7336,7 @@ module.exports = {
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
-  installNetworkBridge, reusableFile, replyLabels, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
+  installNetworkBridge, reusableFile, replyLabels, useRobotsForFixtures, trackRequests, stallReport, failureProse, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
   // Exported for the same reason as safeGoto: so a diagnostic can run the REAL
   // extractor against a page instead of reimplementing it and drifting from it.
   getCuratorialText,

@@ -1,0 +1,10 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /*?query=
+
+# Host
+Host: https://www.uffizi.it
+
+# Sitemaps
+Sitemap: https://www.uffizi.it/sitemap.xml

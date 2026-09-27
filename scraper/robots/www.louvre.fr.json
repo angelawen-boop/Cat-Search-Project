@@ -1,0 +1,9 @@
+{
+  "host": "www.louvre.fr",
+  "url": "https://www.louvre.fr/robots.txt",
+  "fetchedAt": "2026-09-27T08:18:53.268Z",
+  "status": 200,
+  "readable": true,
+  "server": "wadp2",
+  "sha": "6af1f2f91008"
+}

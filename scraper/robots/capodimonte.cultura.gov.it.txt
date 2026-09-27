@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: 
+
+Sitemap: https://capodimonte.cultura.gov.it/sitemap_index.xml
