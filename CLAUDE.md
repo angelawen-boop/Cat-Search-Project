@@ -661,20 +661,24 @@ before step 6.**
 
 1. **Her count and her rulings** — what counts at this venue (§2 table).
 2. **Pages SHE saves**: the listings, and one show page of EVERY address shape
-   (`/exhibition/`, `/display/`…), each also as view-source (Ctrl+U, then
-   Ctrl+S): that is the bare page the site sends. **One complete list**, the
+   (`/exhibition/`, `/display/`…). **One complete list**, the
    addresses copied from a record and never typed from memory. Any question about
    what a page says is answered by opening it, never by asking her.
 3. **What the site asks** — `node scraper/robots.js`: its wait and its
    off-limits paths. Anything the recipe needs that is off-limits goes to her.
 4. **The recipe, offline**, on her pages: her count, dates, titles, and the
-   descriptions READ. Does the bare page carry everything? Then `pageOnly`.
+   descriptions READ.
 5. **The time, worked out**: pages × the wait, written down. Waits no longer
    count against the budget (they did not on 27 Sep).
 6. **One sweep, when she says go**, with nothing open. It passes only if every
    page is read and her count holds. **A failure is diagnosed offline from its
    log** (reply labels, stall report, kept pages), never by sweeping again; the
    next attempt is hers to call, after a quiet gap.
+
+**The bare page is not an intake step — her ruling, 27 Sep.** Only when a
+venue's PAGES HANG (the stall report: the page answered, its files did not):
+she saves view-source (Ctrl+U, then Ctrl+S) of its show pages, and reading the
+page alone (`pageOnly`) is tested on those. Never pre-empted.
 
 **A guess is labelled a guess.** Five explanations were stated as fact in one
 afternoon at the Ashmolean. Say what is proven, what is not, and what one
@@ -1416,7 +1420,7 @@ The import file was swept 13 Sep. **She sweeps no more than once a month.**
 
 **Settled 27 Sep:** robots.txt waits are obeyed (§5); no default wait on top.
 **Reading the page alone (`pageOnly`) stays Ashmolean-only** — her
-ruling 27 Sep: tested per venue on saved pages when a venue next misbehaves.
+ruling 27 Sep: tried only at a venue whose pages hang (§5, the intake).
 
 ### 10. Smaller, parked
 
