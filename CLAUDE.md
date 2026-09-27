@@ -162,7 +162,8 @@ Judgement about the outside world is not in any file.
 | `uffizi` | Headlines kept as titles; undated rows kept |
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Bare "from the Collection" and titles with "Film Series" excluded; family, named and lent collections KEPT (24 Sep). No note on the card for films or installations; no model judging rows — compression stays mechanical (24 Sep) |
 | `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection, a gift or acquisitions** — they can be major (24 Sep) |
-| `moma` | **Current and upcoming only.** She does not want its past at all |
+| `moma` | **Current and upcoming only.** She does not want its past at all. **Not swept, 27 Sep** — she saves the pages of the shows she wants (§7.5) |
+| `brit` | Current/upcoming asks for **Exhibition AND Experience** — the Bayeux Tapestry is filed as an Experience (her finding, 27 Sep; BM-012). The selector still keeps only `/exhibitions/` pages |
 | `mam` | Collection displays excluded — subtitle "Permanent collection" (Cultural Olympiad) and "New acquisitions…"; also the Prix Marcel Duchamp and Oliver Beer's films (25 Sep). Her count: 3 current, 1 upcoming, 16 past — less those, 3 + 0 + 13 |
 | `mad` | Nothing excluded. Her count: 2 current, 2 upcoming, 16 past. Musée Nissim de Camondo ignored — closed until 2030 (25 Sep) |
 | `jacquemart` | Exhibitions only — the card's own tag; operas, costume balls and other events refused (25 Sep) |
@@ -611,6 +612,8 @@ npm test                                     all fixtures
 | `data_probe.js` | The only probe that asks the real question: opens exhibition pages and extracts title, dates, text |
 | `reach_probe.js` | Reachability only — says nothing about usable rows |
 | `sweep_fetch.js` | Older diagnostic copy, no browser. Not developed |
+| `page_keep.js` | Pages kept as read, her machine — see Pacing |
+| `from_saved_pages.js` | A venue's REAL recipe over `.mhtml` pages she saved, no network; writes an ordinary run folder. Only the shows whose page she saved are written; the rest are named. MoMA's four, 27 Sep |
 
 **`stitch.js` chooses NOTHING** — her design. It does not pick which copy of a
 venue wins, drop marker rows or notice duplicates. Order cannot change its
@@ -660,8 +663,8 @@ that got in on 22 Sep), with the same pacing; never headless there, and never
 on an unseeded profile. The container still sweeps it headless, for markers.
 Set on `moma`, `brit`, `morgan`, `orsay` (her rulings, 26 Sep — d'Orsay's
 first home sweep, headless, was refused on page 1). Design: the HEADED block
-in `sweep_prototype.js`; fixtures H-001 to H-004. **Not yet run against a real
-site.**
+in `sweep_prototype.js`; fixtures H-001 to H-004. **Run live once: MoMA, 27
+Sep — got in, challenged on page 19 (§7.5).**
 
 ### Pacing — her machine only, her approval 26 Sep
 
@@ -1185,12 +1188,17 @@ link at an ISBN search — museum shops search by title.)*
 
 Imported by her with item 6's file; she checked every past show in the app.
 
-### 5. The headed venues — `moma`, `morgan`, `brit`, `orsay` — built, not yet run live
+### 5. The headed venues — `brit`, `orsay`, `morgan` next; `moma` settled
 
 **Everything is built and offline-proven (26 Sep):** pacing, the headed path
 (§5), and a recipe for each — `moma`, `morgan`, `orsay` and `brit` (written 26
 Sep from `docs/brit_pages/`; fixtures BM-001 to BM-011). All four sit behind
-Cloudflare, so they share one lane. **None has met the live site headed.**
+Cloudflare, so they share one lane.
+
+**Her order: `brit`, then `orsay`, then `morgan`** — each has a large past
+she wants, too much to save by hand, so the headed sweep is the route (her
+ruling, 27 Sep). One Cloudflare venue per day. Not before **Mon 28 Sep
+12:08pm Sydney** (the lane's quiet period, from MoMA's challenge).
 
 **MoMA, 27 Sep: challenged on page 19 of ~25** (18 clean, 30s apart, 9 min)
 — pacing works, a limit remains. **Her ruling: MoMA is not swept.** She wants
@@ -1218,7 +1226,7 @@ A venue moves to her laptop only after a clean complete sweep (§5).
 
 **Page layout comes from HER, never from a probe — her ruling, 22 Sep.**
 
-### 6. More venues — five built 25 Sep; four imported and checked by her; MAD and d'Orsay in progress
+### 6. More venues — five built 25 Sep, the Ashmolean 27 Sep; four imported and checked by her; MAD, d'Orsay and the Ashmolean in progress
 
 Her additions, 24–25 Sep. **Her order on the chips:** Levy Gorvy straight
 after Acquavella; the French venues Louvre, d'Orsay, MAM Paris, MAD Paris,
@@ -1231,6 +1239,7 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 | `jacquemart` | **imported and checked by her**, lookup works | `run_2026-09-25_133825` | — |
 | `mam` MAM Paris | **imported and checked by her**; shop blocked, card says so | `run_2026-09-25_160850` (before her Prix Duchamp / Oliver Beer ruling — the next sweep drops them) | Shop's Cloudflare refuses this machine and the connector (403); her browser passes. A third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
 | `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | `run_2026-09-26_115449` — headless from her laptop, refused on page 1 | **headed pile** (her ruling 26 Sep) — §7.5; the container's until a clean laptop sweep |
+| `ashmolean` Ashmolean | **recipe built 27 Sep from pages read once and saved; her count proven offline** (`ashmolean_pages.js`, AS-001 to AS-020). App 35.4 carries it — **not published** | none — three live sweeps 27 Sep wrote nothing: two stopped by the session, the third abandoned at its 10-minute budget, page 20 of 24; 13 show pages took over 20s each, twice (`run_2026-09-27_142243`, log only) | **Waiting on her, two questions:** (1) this venue only, 60s per page and a 30-minute budget; (2) keep pages as read in the container too, so a cut-off sweep is not wasted. **No sweep until she says go** |
 | `mad` MAD Paris | **headless from her laptop gets in.** 26 Sep 11:37: 23 pages clean, 20 rows = her count; junk found and fixed at source (visit teasers; the ticket-and-address sidebar — MD-008/009, four saved pages) | `run_2026-09-26_113719` (before the fixes); 16:12 re-sweep refused after 5 clean pages, nothing written | **Likely a daily page limit (~25–30 from one address) — inferred from two runs.** One MAD sweep a day at most. **Next: one run after 27 Sep ~16:15 Sydney**; if clean and complete it moves to her laptop and its rows go to her import. Still the container's until then |
 
 **THE IMPORT — SENT 25 Sep: `stitch_20260925_0611/sweep_compressed.csv`**, 75 rows
@@ -1267,7 +1276,10 @@ defined in `sweep_prototype.js`): `expandDateRange`, `keepDespiteLookback`,
 `keepOnlyType` (`is` / `not` / `within`), `dropQuery`, `paginate.prefix`,
 `cardParts.nameOwnText`, `datesAt`, `title.brParts`, `noiseExempt`; the shared
 month map reads "Feburary", both date parsers read ordinal days ("23rd");
-`otherBranch` now also reads the link's own text.
+`otherBranch` now also reads the link's own text. **27 Sep:** `creditPara`
+(MoMA's credit paragraph), `keepBold` (a bold lead paragraph), `capsTitles`
+(`titleFromCaps` — capitals the venue TYPES, written as ordinary capitals),
+`pageTitle` (name + subtitle from the show's page header).
 
 ### 7. Catalogue lookup generally
 
