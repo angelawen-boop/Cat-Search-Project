@@ -499,6 +499,13 @@ function followPagination(queue, pg, newRows, rows, code, v) {
   const basePath = pg.basePath || pg.path;
   const sep = basePath.includes('?') ? '&' : '?';
   queue.push({
+    // THE PAGE'S OWN READING SETTINGS GO WITH IT — its selector, its `within`,
+    // its `listingRow`. Only the address used to travel, which was harmless
+    // while every paginated venue set those for the whole site. The Morgan's
+    // past year-pairs are the first paginated pages with settings of their
+    // own: page 2 on would have been read with the venue's fallback selector
+    // and no listing description (MP-003, MP-004).
+    ...pg,
     // `prefix` for a site whose page value is not a bare number — MAM Paris's
     // Drupal pager reads page=0,0,0,0,0,1 for its second page.
     path: `${basePath}${sep}${spec.param}=${spec.prefix || ''}${next}`,
@@ -4031,6 +4038,10 @@ async function collectFromListing(page, opts) {
       }, opts.datesAt).catch(() => '');
       const d = dt ? findDateRange(dt) : null;
       if (d && (d.start || d.end || d.latestYear)) dates = { ...d, ongoing: saysOngoing(dt) };
+      // A named field saying "Ongoing" and nothing else holds no date, and is
+      // still the venue's own answer — the Morgan's J. Pierpont Morgan's
+      // Library (MP-007). Same shape datesNearLink gives an undated card.
+      else if (dt && saysOngoing(dt)) dates = { start: '', end: '', raw: squash(dt), ongoing: true };
     }
     if (!dates) dates = await datesNearLink(link, selector);
 
@@ -4546,12 +4557,17 @@ const VENUES = {
       // is a block boundary rather than a line of text, so scoping to the
       // block skips the section outright — no searching prose for a heading.
       { path: '/exhibitions/current', ctx: 'current',
-        selector: '.view-display-id-page_1 .views-field-field-teaser-image a[href]' },
+        selector: '.view-display-id-page_1 .views-field-field-teaser-image a[href]',
+        // Each card's dates in their own field: "June 26 through October 4,
+        // 2026", or "Ongoing" — which excludeOngoing drops before the page is
+        // opened. The general walk found none (MP-007, 28 Sep).
+        datesAt: { within: '.thumbnail', sel: '.views-field-field-display-date' } },
 
       // UPCOMING is the same card shape with one block — and it is page_2, not
       // page_1. The id cannot be shared with the line above.
       { path: '/exhibitions/upcoming', ctx: 'upcoming',
-        selector: '.view-display-id-page_2 .views-field-field-teaser-image a[href]' },
+        selector: '.view-display-id-page_2 .views-field-field-teaser-image a[href]',
+        datesAt: { within: '.thumbnail', sel: '.views-field-field-display-date' } },
 
       // PAST is a different view entirely: rows down the page, each carrying
       // its own title, dates and paragraph.
@@ -4567,6 +4583,10 @@ const VENUES = {
       { path: '/exhibitions/past', ctx: 'past', yearPath: '/',
         yearArchive: true, yearPair: true,
         carry: {
+          // Each year-pair runs to more than one page (2025-2026: three). The
+          // pager numbers from ZERO — the bare address is ?page=0, so the next
+          // is ?page=1 — read off her saved page's own pager links.
+          paginate: { param: 'page', from: 1 },
           selector: '.view-id-taxonomy_term .field--name-node-title h2 a[href]',
           // HER RULING, 22 Sep: take the paragraph off the listing and do not
           // open these pages. ~75 past exhibitions at a polite pace is over
@@ -4578,6 +4598,12 @@ const VENUES = {
             container: '.node--type-exhibitions',
             summary: '.field--name-body',
           },
+          // Each row's dates sit in their own field ("March 17 through June
+          // 28, 2026"). The row also holds the paragraph, too long for the
+          // general walk to reach them: every past row came out undated
+          // (MP-006, 28 Sep), which disables the lookback and the stop at the
+          // floor. Current and upcoming cards are short and read as before.
+          datesAt: { within: '.node--type-exhibitions', sel: '.field--name-field-display-date' },
         } },
     ],
 
@@ -4591,7 +4617,9 @@ const VENUES = {
                 || /\/exhibitions\/(online|online\/[^/]+)\/?$/.test(href)
                 || /\/exhibitions\/?$/.test(href),
 
-    title: { heading: true },
+    // The current and upcoming links are images with no words; the card's
+    // name sits beside them in its own field. Past links carry the name.
+    title: { heading: true, cardName: { within: '.thumbnail', sel: '.views-field-title' } },
 
     // THE BLURB, AND THE TRAP IN IT. `field--name-body` appears TWICE on every
     // Morgan page, and the first one is 29,000 characters above the exhibition:
@@ -5840,7 +5868,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
       keepOnlyType: v.keepOnlyType || null,
       yearHeading: v.yearHeading || null,
       dropQuery: v.dropQuery || null,
-      datesAt: v.datesAt || null,
+      datesAt: pg.datesAt || v.datesAt || null,
       excludeLabelled: v.excludeLabelled || null,
       excludeTitle: v.excludeTitle || null,
       listingRow: pg.listingRow || v.listingRow || null,
