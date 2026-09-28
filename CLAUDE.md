@@ -166,7 +166,7 @@ Judgement about the outside world is not in any file.
 | `uffizi` | Headlines kept as titles; undated rows kept |
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Bare "from the Collection" and titles with "Film Series" excluded; family, named and lent collections KEPT (24 Sep). No note on the card for films or installations; no model judging rows — compression stays mechanical (24 Sep) |
 | `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection, a gift or acquisitions** — they can be major (24 Sep) |
-| `moma` | **Current and upcoming only.** She does not want its past at all. **Not swept, 27 Sep** — she saves the pages of the shows she wants (§7.5) |
+| `moma` | **Current and upcoming only.** She does not want its past at all. **Not swept, 27 Sep** — she saves the pages of the shows she wants. Belongs to the picked-shows stream (§7.11), not the sweep |
 | `brit` | Current/upcoming asks for **Exhibition AND Experience** — the Bayeux Tapestry is filed as an Experience (her finding, 27 Sep; BM-012). The selector still keeps only `/exhibitions/` pages. **Her count, 27 Sep:** current + upcoming 4; past since 1 July 2024, by the listing's year headings, 2026 **9**, 2025 **12**, 2024 **10** (her correction 28 Sep: *Legion*, closed 23 Jun 2024, is out) — her counts are always what should reach the app; a heading is the year a show OPENED, and one display (*Admonitions*) is listed under every year at one address, so it is one row. **A page outside the cutoff is never opened (her ruling, 28 Sep):** the past page is read in its year sections only (not the introduction's prose links or the current carousel), and nothing under 2023 is opened — proven to hold nothing that reaches the floor (BM-013–015). **Her laptop's, headed, from 28 Sep** |
 | `mam` | Collection displays excluded — subtitle "Permanent collection" (Cultural Olympiad) and "New acquisitions…"; also the Prix Marcel Duchamp and Oliver Beer's films (25 Sep). Her count: 3 current, 1 upcoming, 16 past — less those, 3 + 0 + 13 |
 | `mad` | Nothing excluded. Her count: 2 current, 2 upcoming, 16 past. Musée Nissim de Camondo ignored — closed until 2030 (25 Sep) |
@@ -1483,6 +1483,12 @@ ruling 27 Sep: tried only at a venue whose pages hang (§5, the intake).
   may be a good idea; it came out of a session whose reasoning she does not trust.
   `qc.js`'s exceptions report is NOT that pass and does not re-open it.
 
+### 11. Picked shows — occasional venues, NOT BUILT
+
+Venues where she wants at most ~5 shows a year: she picks the shows, the
+scraper reads only those pages. Test case: Detroit Institute of Arts. MoMA
+already works this way. Design and open questions: `docs/picked_shows.md`.
+
 **She keeps a real ledger since 24 Sep** — the 320-card import, with that day's
 fixes. Changes that touch her ledger now need the same care as any user data.
 
@@ -1536,6 +1542,7 @@ The AbeBooks link is `/servlet/SearchResults?kn=…&sts=t`.
 | `docs/listing_pages/` | Frick, Wallace, Brera listing pages she saved — where each listing sits | Changing a `within` there |
 | `docs/moma_pages/`, `docs/morgan_pages/`, `docs/orsay_pages/` | Pages she saved from her own browser, with a README of what each settled — link shapes, blurb containers, the traps | Changing either recipe, before asking her for anything |
 | `docs/compression.md` | The compression design, the model split, the eval, the rejected alternatives | Changing compression — otherwise don't |
+| `docs/picked_shows.md` | Picked shows: occasional venues where she picks a few shows and only those pages are read — design, venues, open questions. **Not built** | Setting up a venue this way, or she raises it |
 | `docs/library.md` | **Future consideration, not open work** — purchase tracking and a Library tab, brainstormed 27 Sep. Never propose it; she may build it or not | She raises it |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review: what she found, what changed, what each returns now | Before touching a reviewed venue |
 | `docs/review-log.md` | Independent review findings and what was decided | A reviewer raises something |
