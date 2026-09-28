@@ -173,7 +173,7 @@ Judgement about the outside world is not in any file.
 | `jacquemart` | Exhibitions only — the card's own tag; operas, costume balls and other events refused (25 Sep) |
 | `orsay` | **Displays always kept**, "Focus on our collections" included — its collection is deep, like the Met's. **Every off-site show kept** — loans and collaborations abroad whose catalogues she may want. "Exceptional presentation" kept for now. Parcours, Immersive experience, Invitation dropped; an unseen tag is kept and named (25 Sep) |
 | `lgd` | New York and London only — the Hong Kong partnership shows ("& Wei, Hong Kong") excluded (25 Sep). **One-time lookback exception:** *Yves Klein and the Tangible World* kept, its catalogue only just published — `keepDespiteLookback`, that one address only. **"LGD Hammer" auctions excluded** — its sale series, not shows (25 Sep) |
-| `morgan` | *Collections Spotlight* excluded — a standing rotation, not a show. Past blurbs read off the listing, pages not opened |
+| `morgan` | *Collections Spotlight* excluded — a standing rotation, not a show. Past blurbs read off the listing, pages not opened. **Her count, 28 Sep:** current 3, upcoming 5; past by year-pair page, 2025-2026 **20**, 2024-2025 **3**, 2023-2024 **8** (Spotlights not counted) — 39 |
 | `rijks` | 37 rows, not chased further. *Asian Pavilion* was pulled by the venue |
 | `capo` | **Not count-verified and never will be** — see below |
 | `brera`, `borghese` | Their single extra row is a marker for a genuinely empty upcoming page |
@@ -1379,7 +1379,7 @@ A venue moves to her laptop only after a clean complete sweep (§5).
 
 **After `brit`'s sweep — put these to her again, her ruling 27 Sep** (DUE — `brit` swept 28 Sep):
 - **`orsay`: DONE 28 Sep** — she saved an off-site show (*What a Wonderful World*) and a "Focus on our collections" display (*Maurice Denis*); both descriptions read clean, lead to last sentence (OR-016/017). Offline, her count holds on her pages (13 + 45 = 58; 6 closed before the floor dropped on the listing, never opened). ~64 pages, ~32 min. **Ready for its sweep, from 29 Sep, her go.**
-- **`morgan`:** her count; the past listings she has not saved — 2025-2026 pages 2–3, and every page of 2024-2025 and 2023-2024 (only 2025-2026 page 1 is saved, 22 Sep; past blurbs come only from listings); then a fixture of its recipe on her pages — it has none. **The past pages are not paged through today** — the recipe reads page 1 of each year-pair only (no `paginate`); her pages 2–3 wire and prove it. Its robots.txt is unreadable (403), so no wait is known; her 30s pacing is the only one.
+- **`morgan`:** her count — DONE 28 Sep (§2 table). **Saved pages are the recipe's guide and its offline test, never the data** — the sweep reads the live site. Asking her for every past listing and fresh re-saves was an over-ask, withdrawn 28 Sep: they share the layout of the page already saved, and the live sweep against her count is the real test. **Still open: 2025-2026 pages 2–3, her choice** — the recipe reads page 1 of each year-pair only (no `paginate`); page 1's own pager shows `?page=0,1,2`, enough to wire it, and her two pages would prove offline that the walk reaches page 3 and stops; without them the live sweep is the first proof. Then a fixture of its recipe on her pages — it has none. Its robots.txt is unreadable (403), so no wait is known; her 30s pacing is the only one.
 
 **Page layout comes from HER, never from a probe — her ruling, 22 Sep.**
 
