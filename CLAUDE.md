@@ -550,7 +550,7 @@ first number to scroll past:
 | `page_keep_pages.js`, `moma_pages.js` | pages kept as read (a cut-short run asks only for what is missing); MoMA's description without its credit paragraph |
 | `mad_pages.js` | the MAD recipe on her saved pages, no network — her count, dates, titles, the description; its sponsor sentence (MD-010/011) |
 | `brit_pages.js` | the British Museum recipe on her saved pages, no network — titles, year headings, dates, the description; no page outside the cutoff opened (BM-013–015) |
-| `orsay_pages.js` | the d'Orsay recipe on her saved pages, no network — her tag rulings, dates, titles, the description |
+| `orsay_pages.js` | the d'Orsay recipe on her saved pages, no network — her tag rulings, dates, titles, the description (every kind of show page: at the museum, off-site, "Focus on our collections") |
 | `summary_pages.js` | descriptions on saved pages (`docs/summary_pages/`), no network — the museum's own text, never a press list, credit or ticket note |
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
 | `listing_pages.js` | the same, for WHERE each row was seen — no page twice, no promo card read as a listing |
@@ -1378,8 +1378,8 @@ pacing.
 A venue moves to her laptop only after a clean complete sweep (§5).
 
 **After `brit`'s sweep — put these to her again, her ruling 27 Sep** (DUE — `brit` swept 28 Sep):
-- **`orsay`:** she saves one show page of each other kind — an off-site show and a "Focus on our collections" display; the recipe is checked on them offline.
-- **`morgan`:** her count; pages 2–3 of a past-year listing (past blurbs come only from listings); then a fixture of its recipe on her pages — it has none. Its robots.txt is unreadable (403), so no wait is known; her 30s pacing is the only one.
+- **`orsay`: DONE 28 Sep** — she saved an off-site show (*What a Wonderful World*) and a "Focus on our collections" display (*Maurice Denis*); both descriptions read clean, lead to last sentence (OR-016/017). Offline, her count holds on her pages (13 + 45 = 58; 6 closed before the floor dropped on the listing, never opened). ~64 pages, ~32 min. **Ready for its sweep, from 29 Sep, her go.**
+- **`morgan`:** her count; the past listings she has not saved — 2025-2026 pages 2–3, and every page of 2024-2025 and 2023-2024 (only 2025-2026 page 1 is saved, 22 Sep; past blurbs come only from listings); then a fixture of its recipe on her pages — it has none. **The past pages are not paged through today** — the recipe reads page 1 of each year-pair only (no `paginate`); her pages 2–3 wire and prove it. Its robots.txt is unreadable (403), so no wait is known; her 30s pacing is the only one.
 
 **Page layout comes from HER, never from a probe — her ruling, 22 Sep.**
 
