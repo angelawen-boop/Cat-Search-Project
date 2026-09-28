@@ -38,10 +38,13 @@ The cost is out of all proportion to what she keeps.
    pages, no network, as every recipe is.
 3. **What the site asks** — `node scraper/robots.js` for its wait and
    off-limits paths, before any live page is read.
-4. **One live check that we can get in** — one request, for ONE of the
-   pages the recipe was written on, read through the recipe. Only after the
-   robots.txt check, and never more than that one page. If it is refused,
-   the venue's links are read on her laptop, or she saves the pages instead.
+4. **One live check that the container can get in** — robots.txt guarantees
+   nothing until a page is actually asked for. One request, for ONE of the
+   show pages the recipe was written on (the recipe itself is already proven
+   offline, so this asks about ACCESS only). It passes only if the real page
+   comes back — not a refusal, and not a bot-check page served as if it
+   were fine. Never more than that one page. If it fails, she saves the
+   pages instead of giving links.
 5. **The app** gets the venue's code, chip and shop address, and a publish
    (CLAUDE.md §4's rules apply).
 
@@ -56,7 +59,7 @@ plausible-looking wrong row.
 
 | Venue | State |
 |---|---|
-| `moma` | **Already works this way** — since 27 Sep she saves the pages of the shows she wants and `from_saved_pages.js` reads them (`run_2026-09-27_123228`, 4 rows). Belongs to this stream, not the sweep. **Today only:** `from_saved_pages.js` runs MoMA's full sweep recipe, so the listing page has to be one of her saved files. **Once this is built, MoMA is links only, like every other venue here** (her ruling 28 Sep) — no listing. MoMA refuses the container, so its links are read on her laptop (headed; 18 pages went through clean on 27 Sep before a challenge on the 19th), or she saves the pages if refused |
+| `moma` | **Already works this way** — since 27 Sep she saves the pages of the shows she wants and `from_saved_pages.js` reads them (`run_2026-09-27_123228`, 4 rows). Belongs to this stream, not the sweep. **Today only:** `from_saved_pages.js` runs MoMA's full sweep recipe, so the listing page has to be one of her saved files. **Once this is built, MoMA is her saved show pages only** (her ruling 28 Sep) — no listing, no links, since MoMA refuses the container |
 | Detroit Institute of Arts (DIA) | **The test case** — the first venue set up this way, her choice 28 Sep. No venue code chosen, no robots.txt read, no pages saved yet |
 | Guggenheim, Whitney | Named by her as likely candidates, 28 Sep. Nothing decided |
 
