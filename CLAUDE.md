@@ -130,8 +130,8 @@ venue at all, which machine sweeps it, and — read from the marker rows, never
 inferred — why the last attempt brought nothing. When the two runs differ, that
 venue has stopped answering.
 
-As of 22 Sep: **406 exhibitions across 18 venues**; `brit` and `morgan` have
-never returned one, and `moma` only 24 listing rows with no descriptions (her
+As of 22 Sep: **406 exhibitions across 18 venues**; `morgan` has never
+returned one (`brit` first did 28 Sep — §7.5), and `moma` only 24 listing rows with no descriptions (her
 laptop, 16 Sep — pushed 26 Sep); `met` and `artic` were refused on 16 Sep after that
 session's repeated sweeps.
 
@@ -167,7 +167,7 @@ Judgement about the outside world is not in any file.
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Bare "from the Collection" and titles with "Film Series" excluded; family, named and lent collections KEPT (24 Sep). No note on the card for films or installations; no model judging rows — compression stays mechanical (24 Sep) |
 | `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection, a gift or acquisitions** — they can be major (24 Sep) |
 | `moma` | **Current and upcoming only.** She does not want its past at all. **Not swept, 27 Sep** — she saves the pages of the shows she wants (§7.5) |
-| `brit` | Current/upcoming asks for **Exhibition AND Experience** — the Bayeux Tapestry is filed as an Experience (her finding, 27 Sep; BM-012). The selector still keeps only `/exhibitions/` pages. **Her count, 27 Sep:** current + upcoming 4; past since 1 July 2024, by the listing's year headings, 2026 **9**, 2025 **12**, 2024 **11** (her counts are always what should reach the app) — a heading is the year a show OPENED, and one display (*Admonitions*) is listed under every year at one address, so it is one row |
+| `brit` | Current/upcoming asks for **Exhibition AND Experience** — the Bayeux Tapestry is filed as an Experience (her finding, 27 Sep; BM-012). The selector still keeps only `/exhibitions/` pages. **Her count, 27 Sep:** current + upcoming 4; past since 1 July 2024, by the listing's year headings, 2026 **9**, 2025 **12**, 2024 **10** (her correction 28 Sep: *Legion*, closed 23 Jun 2024, is out) — her counts are always what should reach the app; a heading is the year a show OPENED, and one display (*Admonitions*) is listed under every year at one address, so it is one row. **A page outside the cutoff is never opened (her ruling, 28 Sep):** the past page is read in its year sections only (not the introduction's prose links or the current carousel), and nothing under 2023 is opened — proven to hold nothing that reaches the floor (BM-013–015). **Her laptop's, headed, from 28 Sep** |
 | `mam` | Collection displays excluded — subtitle "Permanent collection" (Cultural Olympiad) and "New acquisitions…"; also the Prix Marcel Duchamp and Oliver Beer's films (25 Sep). Her count: 3 current, 1 upcoming, 16 past — less those, 3 + 0 + 13 |
 | `mad` | Nothing excluded. Her count: 2 current, 2 upcoming, 16 past. Musée Nissim de Camondo ignored — closed until 2030 (25 Sep) |
 | `jacquemart` | Exhibitions only — the card's own tag; operas, costume balls and other events refused (25 Sep) |
@@ -549,7 +549,7 @@ first number to scroll past:
 | `ashmolean_pages.js` | the Ashmolean recipe on pages read once and saved (`docs/ashmolean_pages/`), no network — her count, dates completed from the show's page, the description; the bare page (AS-021–025); the 27 Sep sweep's four faults fixed on its kept pages (AS-026–033) |
 | `page_keep_pages.js`, `moma_pages.js` | pages kept as read (a cut-short run asks only for what is missing); MoMA's description without its credit paragraph |
 | `mad_pages.js` | the MAD recipe on her saved pages, no network — her count, dates, titles, the description; its sponsor sentence (MD-010/011) |
-| `brit_pages.js` | the British Museum recipe on her saved pages, no network — titles, year headings, dates, the description |
+| `brit_pages.js` | the British Museum recipe on her saved pages, no network — titles, year headings, dates, the description; no page outside the cutoff opened (BM-013–015) |
 | `orsay_pages.js` | the d'Orsay recipe on her saved pages, no network — her tag rulings, dates, titles, the description |
 | `summary_pages.js` | descriptions on saved pages (`docs/summary_pages/`), no network — the museum's own text, never a press list, credit or ticket note |
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
@@ -622,7 +622,7 @@ npm test                                     all fixtures
 | `sweep_fetch.js` | Older diagnostic copy, no browser. Not developed |
 | `page_keep.js` | Pages kept as read, her machine — see Pacing |
 | `robots.js` | Each site's robots.txt, kept in `robots/` and read again weekly — see "What each site asks" |
-| `reread_kept.js` | **A fault in a sweep's rows is fixed from the pages it kept, never by sweeping again** (her rule, 27 Sep). The real show-page pass over that run's kept pages; prints every changed field; `--write` corrects the run's files, `swept_at` kept |
+| `reread_kept.js` | **A fault in a sweep's rows is fixed from the pages it kept, never by sweeping again** (her rule, 27 Sep). The real show-page pass over that run's kept pages; prints every changed field; `--write` corrects the run's files, `swept_at` kept. A title the page check changed is re-checked from the listing's own name, recorded in the kept page |
 | `from_saved_pages.js` | A venue's REAL recipe over `.mhtml` pages she saved, no network; writes an ordinary run folder. Only the shows whose page she saved are written; the rest are named. MoMA's four, 27 Sep |
 
 **`stitch.js` chooses NOTHING** — her design. It does not pick which copy of a
@@ -697,15 +697,15 @@ request would settle.
 
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
-announces which it thinks it is before fetching. **Container: 24. Her laptop: 3**
-— `met`, `artic`, `mad` (`route: 'local'`; `mad` by her ruling 27 Sep, after
-its clean laptop sweep).
+announces which it thinks it is before fetching. **Container: 23. Her laptop: 4**
+— `met`, `artic`, `mad`, `brit` (`route: 'local'`; `mad` by her ruling 27 Sep,
+`brit` 28 Sep, each after its clean laptop sweep).
 
 **Her rule, 26 Sep: a venue moves to her laptop only after a COMPLETE, CLEAN
 sweep from there.** Until then it stays with the container, whose refusals are
 its marker rows — the sweep record and her "last tried" date. Candidates are
 tested on her laptop by NAMING them. `moma` went early on 22 Sep on one probe
-page and came back; `orsay`, `moma`, `brit`, `morgan` are candidates.
+page and came back; `orsay`, `moma`, `morgan` are candidates.
 Fixtures R-001 to R-005.
 
 **`headed: true` — BUILT 26 Sep: on her machine the venue is swept in a
@@ -714,8 +714,9 @@ that got in on 22 Sep), with the same pacing; never headless there, and never
 on an unseeded profile. The container still sweeps it headless, for markers.
 Set on `moma`, `brit`, `morgan`, `orsay` (her rulings, 26 Sep — d'Orsay's
 first home sweep, headless, was refused on page 1). Design: the HEADED block
-in `sweep_prototype.js`; fixtures H-001 to H-004. **Run live once: MoMA, 27
-Sep — got in, challenged on page 19 (§7.5).**
+in `sweep_prototype.js`; fixtures H-001 to H-004. **Run live twice: MoMA, 27
+Sep — got in, challenged on page 19; the British Museum, 28 Sep — 41 pages,
+no challenge (§7.5).**
 
 **Three ways to be "headed" — never blur them:**
 - **A — the sweep launches Chrome** on the seeded profile, so Chrome
@@ -862,6 +863,11 @@ keeps making in new clothes.
   field) so it broke on an unrelated change. **Ask the rule directly.**
 - **Grep the output for the new test's own name; a total cannot tell you a case
   ran.**
+- **A fixture serving a page by an address the recipe no longer asks for.**
+  `brit`'s current listing gained a second filter on 27 Sep; the fixture's
+  pattern named the old address and served nothing, and BM-002 went on
+  passing because the past page's carousel repeated the four shows. Found 28
+  Sep only because a recipe fix removed the carousel.
 
 ### A negative has to be earned, and has to say which negative it is
 
@@ -1316,7 +1322,7 @@ link at an ISBN search — museum shops search by title.)*
 
 Imported by her with item 6's file; she checked every past show in the app.
 
-### 5. The headed venues — `brit`, `orsay`, `morgan` next; `moma` settled
+### 5. The headed venues — `brit` DONE 28 Sep; `orsay`, then `morgan`; `moma` settled
 
 **Everything is built and offline-proven (26 Sep):** pacing, the headed path
 (§5), and a recipe for each — `moma`, `morgan`, `orsay` and `brit` (written 26
@@ -1333,10 +1339,23 @@ ruling, 27 Sep). One Cloudflare venue per day. Not before **Mon 28 Sep
 four upcoming shows; she saves those pages and `from_saved_pages.js` reads
 them (`run_2026-09-27_123228`, 4 rows, raw — **compression held**: other
 venues join this pile — the Ashmolean's 24 (`run_2026-09-27_192852`) and MAD's 20
-(`run_2026-09-27_200702`), 27 Sep —
+(`run_2026-09-27_200702`), 27 Sep — and the British Museum's 33
+(`run_2026-09-28_121556`), 28 Sep —
 and it is stitched and compressed as one when she says, her ruling 27 Sep). Not waiting through a bot check
-either — a clearance is per site and opens nothing else. **Next: `brit`, then
-`orsay`, then `morgan`**, from Mon 28 Sep 12:08pm Sydney.
+either — a clearance is per site and opens nothing else. **Next: `orsay`,
+then `morgan`** — one Cloudflare venue a day, so not before 29 Sep.
+
+**British Museum, 28 Sep 12:15 — CLEAN, her laptop, headed (mode A).** 41
+pages ~30s apart, no challenge; 39 of 39 show pages read, all with text; her
+count held (4 + 9 + 12 + 10, *Admonitions* one row) — 33 rows. The laptop
+slept near the end: one page's connection closed, retried once, came
+through. Three faults fixed offline, no resweep: *Korea*'s title took the
+date line (a generic tab word — RT-010; the run corrected by
+`reread_kept.js`), and five pages outside the cutoff were opened (BM-013–015).
+Moved to her laptop (§5). **Raw, in the held pile.** Its shop
+(`britishmuseumshoponline.org`, a separate site behind Varnish, not
+Cloudflare) refused her seeded Chrome with a 403 on 28 Sep; the sweep never
+visits it, and the catalogue lookup has not yet met it.
 
 **The test is a complete paced headed sweep of ONE venue, not a probe** — it
 passes only if every page is read and the count matches hers. Her steps, to be
@@ -1358,7 +1377,7 @@ pacing.
 **Sizes at 30s a page:** moma ~25 pages, brit ~40, orsay ~65, morgan unknown.
 A venue moves to her laptop only after a clean complete sweep (§5).
 
-**After `brit`'s sweep — put these to her again, her ruling 27 Sep** (not before):
+**After `brit`'s sweep — put these to her again, her ruling 27 Sep** (DUE — `brit` swept 28 Sep):
 - **`orsay`:** she saves one show page of each other kind — an off-site show and a "Focus on our collections" display; the recipe is checked on them offline.
 - **`morgan`:** her count; pages 2–3 of a past-year listing (past blurbs come only from listings); then a fixture of its recipe on her pages — it has none. Its robots.txt is unreadable (403), so no wait is known; her 30s pacing is the only one.
 

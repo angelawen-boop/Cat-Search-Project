@@ -16,7 +16,12 @@ const { chromium } = require('playwright');
 const PAGES = path.join(__dirname, '..', '..', 'docs', 'brit_pages');
 const B = 'https://www.britishmuseum.org';
 const served = u =>
-  u.startsWith(B + '/exhibitions-events?whats_on_event_type=Exhibition&whats_on_when=') ? 'current_upcoming.html'
+  // Any What's On address filtered from Exhibition — it gained a second
+  // type (Experience) on 27 Sep, and a pattern naming the old address served
+  // nothing: the current shows then passed BM-002 only because the past page's
+  // carousel repeated them. Scoping that page to its year sections (28 Sep)
+  // exposed it. BM-012 asks the address itself.
+  u.startsWith(B + '/exhibitions-events?whats_on_event_type=Exhibition&') ? 'current_upcoming.html'
   : u === B + '/exhibitions-events/past-exhibitions' ? 'past.html'
   : u === B + '/exhibitions/samurai' ? 'exhibition_samurai_past.html'
   : u === B + '/exhibitions/bayeux-tapestry' ? 'exhibition_bayeux_current.html' : null;
@@ -31,7 +36,9 @@ const check = (name, ok, got) => {
   const browser = await chromium.launch({ executablePath: S.resolveChromium() });
   try {
     const context = await browser.newContext();
+    const asked = [];
     await context.route(() => true, r => {
+      asked.push(r.request().url());
       const f = served(r.request().url());
       return f ? r.fulfill({ status: 200, contentType: 'text/html', body: fs.readFileSync(path.join(PAGES, f)) }) : r.abort();
     });
@@ -58,7 +65,19 @@ const check = (name, ok, got) => {
       at('war-rugs-afghanistans-knotted-history') && at('war-rugs-afghanistans-knotted-history').title === "War rugs: Afghanistan's knotted history");
     const pastLine = logged.find(l => /past: \d+ links seen/.test(l)) || '';
     check('BM-005: shows under a year heading too early for the lookback are never opened',
-      /53 under a year heading too early/.test(pastLine), pastLine);
+      /71 under a year heading too early/.test(pastLine), pastLine);
+    // Her ruling, 28 Sep: a page outside the cutoff is never opened. The 28 Sep
+    // sweep opened five: two 2022 shows linked from the page's introduction,
+    // three under 2023 (all closed by 11 Feb 2024).
+    const opened = p => asked.includes(B + '/exhibitions/' + p);
+    check('BM-013: the introduction\'s prose links are not read as the archive (Stonehenge, Feminine power)',
+      !opened('world-stonehenge') && !opened('feminine-power-divine-demonic') && !at('world-stonehenge'),
+      asked.filter(u => /stonehenge|feminine/.test(u)).join(' '));
+    check('BM-014: nothing under 2023 is opened — none of it reaches 1 July 2024',
+      !['chinas-hidden-century', 'luxury-and-power-persia-greece', 'burma-myanmar'].some(opened),
+      asked.filter(u => /hidden-century|luxury|burma/.test(u)).join(' '));
+    check('BM-015: a show under 2024 with no dates on its card is still opened (Legion)',
+      opened('legion-life-roman-army'));
     const s = at('samurai'), b = at('bayeux-tapestry');
     check('BM-006: dates from the exhibition page\'s own date field',
       s && s.start_date === '2026-02-03' && s.end_date === '2026-05-04' && b && b.start_date === '2026-09-10' && b.end_date === '2027-07-11',

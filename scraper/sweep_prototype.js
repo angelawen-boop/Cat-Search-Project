@@ -3489,7 +3489,11 @@ function titleFromPage({ recorded, heading, line, tab, headings }) {
   // title. Found by testing on a venue the rule did not come from.
   const segs = String(tab || '').split(TITLE_SEP);
   const firstWords = titleWords(segs[0]);
-  const extra = firstWords.every(known) ? firstWords.filter(w => !hw.has(w)) : [];
+  // A GENERIC word never confirms the line. The British Museum's tab reads
+  // "Korea exhibition" and the line under its heading "Exhibition / 01 October
+  // 2026 – 31 January 2027": "exhibition" matched, and the dates became part
+  // of the name (28 Sep sweep). Same list the report below already ignores.
+  const extra = firstWords.every(known) ? firstWords.filter(w => !hw.has(w) && !GENERIC_NAME_WORDS.has(w)) : [];
   const joinLine = extra.length > 0 && lw.size > 0 && extra.every(w => lw.has(w));
   const name = !joinLine ? h : joinName(h, l);
 
@@ -4097,7 +4101,13 @@ async function collectFromListing(page, opts) {
         return h ? h.textContent : null;
       }, yh).catch(() => null);
       const y = heading && /\b(19|20)\d\d\b/.exec(heading);
-      if (y && Number(y[0]) < lookbackFor(venueCode).getUTCFullYear() - 1) {
+      // `yearsBefore`: how many years before the floor's own year still get
+      // opened (default 1, as above). A recipe sets 0 only once every show
+      // under that earlier year has been read and none reached the floor —
+      // the floor is permanent and that year's list is closed history, so the
+      // answer cannot change. Evidence sits on the recipe.
+      const before = yh.yearsBefore != null ? yh.yearsBefore : 1;
+      if (y && Number(y[0]) < lookbackFor(venueCode).getUTCFullYear() - before) {
         c.oldYear++;
         seenUrls.add(key);
         continue;
@@ -5417,6 +5427,9 @@ const VENUES = {
     // Headless has never got in; a visible Chrome with her history did, 22 Sep.
     // Her ruling, 26 Sep: not attempted headless from her machine.
     headed: true,
+    // HER MACHINE ONLY — her ruling, 28 Sep, after a complete, clean headed
+    // sweep from her laptop (28 Sep 12:15, 41 pages, no challenge, her count).
+    route: 'local',
     base: 'https://www.britishmuseum.org',
     // robots.txt rules out /exhibitions-events/* but ALLOWS
     // /exhibitions-events/past-exhibitions/ — with a slash. Its own pages, and
@@ -5438,13 +5451,24 @@ const VENUES = {
       // The site takes the parameter twice. The selector still keeps only
       // /exhibitions/ pages, so an experience that is not a show stays out.
       { path: '/exhibitions-events?whats_on_event_type=Exhibition&whats_on_event_type=Experience', fromToday: 'whats_on_when', ctx: 'current/upcoming' },
-      { path: '/exhibitions-events/past-exhibitions', ctx: 'past' },
+      // THE YEAR SECTIONS ONLY. Above them the page's introduction links shows
+      // in its prose ("From Legion … to China's hidden century") and a
+      // carousel repeats the current shows; neither has a year heading, so
+      // both were kept, and the 28 Sep sweep opened two 2022 shows from the
+      // prose only to drop them. Her ruling, 28 Sep: a page outside the cutoff
+      // is never opened.
+      { path: '/exhibitions-events/past-exhibitions', ctx: 'past', within: ['section'] },
     ],
     selector: 'a[href*="/exhibitions/"]',
     // The exhibitions landing page, and an exhibition's own sub-pages (its
     // large-print and plain-English guides) — never a show.
     isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/[^/?#]+\/[^?#]+/.test(href),
-    yearHeading: { within: 'section', heading: 'h2' },
+    // 2023 is not opened (yearsBefore 0) — her ruling, 28 Sep. The 28 Sep
+    // sweep read all three 2023 special exhibitions (China's hidden century,
+    // Luxury and power, Burma to Myanmar), closed 13 Aug 2023 to 11 Feb 2024;
+    // every 2023 display carries its dates on the listing and all closed
+    // before the floor. Nothing under 2023 can reach 1 July 2024.
+    yearHeading: { within: 'section', heading: 'h2', yearsBefore: 0 },
     detailDates: '.date-display-range',
     // Two card shapes. Special exhibitions: the name is the link, followed by
     // screen-reader text inside it (" . Final weeks . ", " . Book now . ").

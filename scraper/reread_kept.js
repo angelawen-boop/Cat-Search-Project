@@ -30,14 +30,17 @@ async function reread(runDir, venue, { S = require('./sweep_prototype.js'), kept
   const runStart = runStartOf(runDir);
   const dir = keptDir || path.join(__dirname, 'output', 'pages_kept', venue);
 
-  // The kept pages of THIS run, by address.
-  const kept = new Map();
+  // The kept pages of THIS run, by address — and, per address, the name the
+  // LISTING gave before the sweep's page check changed it (titleReport).
+  const kept = new Map(), listingName = new Map();
   for (const f of fs.existsSync(dir) ? fs.readdirSync(dir) : []) {
     if (!f.endsWith('.json') || f === 'finished.json') continue;
     const j = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
     const gz = path.join(dir, f.replace(/\.json$/, '.html.gz'));
     if (!fs.existsSync(gz) || (runStart && Date.parse(j.savedAt) < runStart)) continue;
     kept.set(j.url, zlib.gunzipSync(fs.readFileSync(gz)).toString('utf8'));
+    const t = (j.titleReport || []).find(r => r.kind === 'changed');
+    if (t) listingName.set(j.url, t);
   }
 
   const browser = await chromium.launch({ executablePath: S.resolveChromium(), args: ['--no-sandbox'] });
@@ -56,6 +59,14 @@ async function reread(runDir, venue, { S = require('./sweep_prototype.js'), kept
         if (row.title.startsWith('[')) continue;               // marker rows
         if (!kept.has(row.url)) { missing.push(row.title); continue; }
         const before = { ...row };
+        // A NAME THE PAGE CHECK CHANGED is re-checked from the listing's name.
+        // The check only ever lengthens a name, so started from its own wrong
+        // answer it could never take it back — the British Museum's "Korea"
+        // became "Korea: Exhibition / 01 October 2026 – 31 January 2027" on
+        // 28 Sep, and a fixed rule left it standing. Only when the row still
+        // holds exactly what the check wrote; a hand-set title is not touched.
+        const t = listingName.get(row.url);
+        if (t && t.to === row.title) row.title = t.from;
         await S.fetchIndividualPages(page, [row], venue);
         row.notes = before.notes;                              // the sweep's notes stand
         for (const k of ['title', 'start_date', 'end_date', 'summary']) {

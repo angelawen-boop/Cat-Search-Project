@@ -1325,22 +1325,25 @@ const routeOf = code => {
   return /route:\s*'local'/.test(block) ? 'home' : 'container';
 };
 
-test('R-001: met, artic and mad are HERS — the container must not touch them', () => {
+test('R-001: met, artic, mad and brit are HERS — the container must not touch them', () => {
   assert.strictEqual(routeOf('met'), 'home');
   assert.strictEqual(routeOf('artic'), 'home');
   // Her ruling, 27 Sep, after a complete, clean sweep from her laptop.
   assert.strictEqual(routeOf('mad'), 'home');
+  // Her ruling, 28 Sep, after a complete, clean headed sweep from her laptop.
+  assert.strictEqual(routeOf('brit'), 'home');
 });
 
-test('R-002: brit and morgan are still the CONTAINER\'s, deliberately', () => {
+test('R-002: morgan and moma are still the CONTAINER\'s, deliberately', () => {
   // They are swept BECAUSE they are blocked: a refusal costs half a second,
   // proves the block is still real, and leaves the marker rows that make a
   // sweep's record complete. She must not be pinging them from home.
   //
   // Her rule, 26 Sep: a venue moves to her laptop only after a complete,
-  // clean sweep from there. moma, brit and morgan have had none — moma went
-  // early on 22 Sep on one probe page and came back.
-  for (const c of ['brit', 'morgan', 'moma']) assert.strictEqual(routeOf(c), 'container');
+  // clean sweep from there. moma and morgan have had none — moma went
+  // early on 22 Sep on one probe page and came back. brit had its clean
+  // sweep on 28 Sep and moved (R-001).
+  for (const c of ['morgan', 'moma']) assert.strictEqual(routeOf(c), 'container');
 });
 
 test('R-005: moma says out loud that it needs a visible browser', () => {
@@ -1409,8 +1412,8 @@ test('R-004: the two sets do not overlap and cover every venue', () => {
   assert.strictEqual(codes.length, 27, 'expected 27 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
-  assert.deepStrictEqual(home.sort(), ['artic', 'mad', 'met']);
-  assert.strictEqual(container.length, 24);
+  assert.deepStrictEqual(home.sort(), ['artic', 'brit', 'mad', 'met']);
+  assert.strictEqual(container.length, 23);
   assert.strictEqual(home.length + container.length, codes.length);
 });
 
@@ -1934,6 +1937,16 @@ test('RT-009: a generic word in the tab is not reported as missing (Accademia)',
     tab: '"Transforming Energy": Marina Abramović Exhibition | Gallerie dell\'Accademia di Venezia' });
   assert.equal(r.changed, false);
   assert.equal(r.unplaced, '');
+});
+
+test('RT-010: a generic word in the tab never confirms the line (British Museum, 28 Sep)', () => {
+  // Kept page of 28 Sep: tab "Korea exhibition | British Museum", heading
+  // "Korea", the line under it the dates. "exhibition" matched the line.
+  const r = titleFromPage({ recorded: 'Korea',
+    headings: [{ pieces: ['Korea'], line: 'Exhibition / 01 October 2026 – 31 January 2027' }],
+    tab: 'Korea exhibition | British Museum' });
+  assert.equal(r.changed, false);
+  assert.equal(r.title, 'Korea');
 });
 
 // XT-001 to XT-003 — her exclusion rulings, 24 Sep, asked of the recipes'
