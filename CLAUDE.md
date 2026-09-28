@@ -717,6 +717,21 @@ first home sweep, headless, was refused on page 1). Design: the HEADED block
 in `sweep_prototype.js`; fixtures H-001 to H-004. **Run live once: MoMA, 27
 Sep — got in, challenged on page 19 (§7.5).**
 
+**Three ways to be "headed" — never blur them:**
+- **A — the sweep launches Chrome** on the seeded profile, so Chrome
+  announces it is driven by a program. **What the sweep does.**
+- **B — she opens Chrome (`probe_headed.js open`), warms it up, LEAVES IT
+  OPEN, and the sweep attaches to it.** Nothing announces a program. Written
+  into the probe (`probe_headed.js B`, 22 Sep) and **never run, never built
+  into the sweep, and never rejected** — the sweep was built on A (26 Sep) as
+  "the one mode that got in", with no reason recorded for passing over B.
+  Her verdict, 28 Sep: sidelined for no proper reason. **Untried, not ruled
+  out** — the first thing to put to her if a headed venue is challenged
+  part-way. Unproven whether the "driven by a program" signal had any part
+  in MoMA's page-19 challenge.
+- **C — her everyday Chrome and profile. REJECTED and retired, her ruling
+  28 Sep** — §8.
+
 ### Pacing — her machine only, her approval 26 Sep
 
 **The limit belongs to the gatekeeper, not the venue** — Cloudflare fronts
@@ -1474,7 +1489,12 @@ Confirm-and-continue past undecided cards. A backup of the ledger in the browser
 Blocking scripts and trackers in the network bridge (IR-13). Splitting the scraper
 into modules (IR-14). **Fetching several pages at once within one venue (IR-15) —
 never, at any scale.** Dropping an undated row because its start date is old
-(IR-18).
+(IR-18). **Sweeping in her everyday Chrome on her own profile** (her ruling,
+28 Sep — retired): Chrome refuses a program attaching to its main profile;
+her personal browsing stays out of this; and the Morgan checks her own browser
+on EVERY visit, three minutes apart or days (her observation, 28 Sep), while
+the plain seeded profile is not checked. Why is unproven — her extensions are
+a guess. Headed modes A and B stay, §5.
 
 **Proposing "drop the feature" as a fix — rejected as an approach entirely.**
 
