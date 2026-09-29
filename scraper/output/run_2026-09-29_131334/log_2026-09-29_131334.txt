@@ -1,0 +1,135 @@
+[2026-09-29T03:13:34.864Z] Cat Watch Sweep Prototype — starting
+[2026-09-29T03:13:34.867Z] Lookback floor: 2024-07-01
+[2026-09-29T03:13:34.867Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-29_131334
+[2026-09-29T03:13:34.867Z] Machine: home (no proxy, so this is not the container)
+[2026-09-29T03:13:34.867Z] NAMED BY HAND, and not this machine's job: orsay.
+[2026-09-29T03:13:34.868Z] Running them anyway — naming a venue always wins. Both machines
+[2026-09-29T03:13:34.868Z] sweeping one venue doubles what it sees, and met and artic both
+[2026-09-29T03:13:34.868Z] rate-limit, so do not make a habit of it.
+[2026-09-29T03:13:34.868Z] Venues this run: orsay
+[2026-09-29T03:13:34.870Z] 
+[2026-09-29T03:13:34.870Z] ────────────────────────────────────────────────────────────
+[2026-09-29T03:13:34.871Z]   PACING — her machine
+[2026-09-29T03:13:34.871Z] ────────────────────────────────────────────────────────────
+[2026-09-29T03:13:34.871Z]   Gap between pages: about 30s, varied 75–125%, per gatekeeper.
+[2026-09-29T03:13:34.871Z]   One venue at a time behind each gatekeeper; different gatekeepers side by side.
+[2026-09-29T03:13:34.872Z]   The first refusal or bot check stops that gatekeeper for the rest of the run.
+[2026-09-29T03:13:34.872Z]   In a visible Chrome on the seeded profile: orsay
+[2026-09-29T03:13:34.907Z]   orsay: behind Cloudflare, from an earlier run.
+[2026-09-29T03:13:34.910Z]   Venues this run: orsay
+[2026-09-29T03:13:34.910Z] Proxy: (none — direct egress assumed)
+[2026-09-29T03:13:34.910Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-29T03:13:34.911Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-29T03:13:34.911Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-29T03:13:35.966Z] Running 0 venue(s) headless, 0 at a time (one page at a time within each venue)
+[2026-09-29T03:13:35.966Z] Running 1 venue(s) in a visible Chrome, one after another: orsay
+[2026-09-29T03:13:37.272Z] [orsay] 
+[2026-09-29T03:13:37.273Z] [orsay] ────────────────────────────────────────────────────────────
+[2026-09-29T03:13:37.273Z] [orsay]   ORSAY — Musée d'Orsay, Paris
+[2026-09-29T03:13:37.273Z] [orsay] ────────────────────────────────────────────────────────────
+[2026-09-29T03:13:37.274Z] [orsay]   Fetching current/upcoming: https://www.musee-orsay.fr/en/program/whats-on/exhibitions
+[2026-09-29T03:13:37.284Z] [orsay]   robots.txt (www.musee-orsay.fr, kept copy of 2026-09-27): states no delay, 32 path(s) off-limits
+[2026-09-29T03:13:37.288Z] [orsay]   paced: request 1 via Cloudflare
+[2026-09-29T03:13:43.111Z] [orsay]     the venue tags this "Immersive experience", not an exhibition, excluded: A Statue for Liberty: An immersive virtual reality experience
+[2026-09-29T03:13:43.292Z] [orsay]     the venue tags this "Parcours", not an exhibition, excluded: “I Spend My Life Painting”
+[2026-09-29T03:13:43.443Z] [orsay]   current/upcoming: 15 links seen -> 0 navigation, 0 already-seen URL, 2 tagged by the venue as another kind of event -> 13 collected (0 of them with no readable title)
+[2026-09-29T03:13:43.453Z] [orsay]   Fetching past: https://www.musee-orsay.fr/en/ressources/expositions-passees
+[2026-09-29T03:14:02.573Z] [orsay]   paced: request 2 via Cloudflare, after 19s
+[2026-09-29T03:14:07.076Z] [orsay]     the venue tags this "Parcours", not an exhibition, excluded: “100 Works that Tell the Story of Work” itinerary
+[2026-09-29T03:14:07.283Z] [orsay]     the venue tags this "Invitation", not an exhibition, excluded: Larissa Fassler: État des lieux
+[2026-09-29T03:14:07.284Z] [orsay]   past: 14 links seen -> 0 navigation, 0 already-seen URL, 2 tagged by the venue as another kind of event -> 12 collected (0 of them with no readable title)
+[2026-09-29T03:14:07.284Z] [orsay]   Fetching past p1: https://www.musee-orsay.fr/en/ressources/expositions-passees?page=1
+[2026-09-29T03:14:30.901Z] [orsay]   paced: request 3 via Cloudflare, after 24s
+[2026-09-29T03:14:36.241Z] [orsay]   past p1: 14 links seen -> 0 navigation, 0 already-seen URL -> 14 collected (0 of them with no readable title)
+[2026-09-29T03:14:36.242Z] [orsay]   Fetching past p2: https://www.musee-orsay.fr/en/ressources/expositions-passees?page=2
+[2026-09-29T03:14:54.103Z] [orsay]   paced: request 4 via Cloudflare, after 18s
+[2026-09-29T03:14:58.766Z] [orsay]   past p2: 14 links seen -> 0 navigation, 0 already-seen URL -> 14 collected (0 of them with no readable title)
+[2026-09-29T03:14:58.766Z] [orsay]   Fetching past p3: https://www.musee-orsay.fr/en/ressources/expositions-passees?page=3
+[2026-09-29T03:15:30.246Z] [orsay]   paced: request 5 via Cloudflare, after 31s
+[2026-09-29T03:15:36.647Z] [orsay]     the venue tags this "Immersive experience", not an exhibition, excluded: Tonight with the ImpressionistsParis 1874
+[2026-09-29T03:15:36.802Z] [orsay]     the venue tags this "Invitation", not an exhibition, excluded: AGORIA { Le Code d’Orsay } · Digital Art
+[2026-09-29T03:15:36.852Z] [orsay]     the venue tags this "Immersive experience", not an exhibition, excluded: Virtual Reality - Van Gogh’s Palette
+[2026-09-29T03:15:36.898Z] [orsay]   past p3: 14 links seen -> 0 navigation, 0 already-seen URL, 3 tagged by the venue as another kind of event -> 11 collected (0 of them with no readable title)
+[2026-09-29T03:15:36.898Z] [orsay]   Fetching past p4: https://www.musee-orsay.fr/en/ressources/expositions-passees?page=4
+[2026-09-29T03:15:57.420Z] [orsay]   paced: request 6 via Cloudflare, after 21s
+[2026-09-29T03:16:04.551Z] [orsay]     a tag not seen before, "Contemporary readings" — KEPT: Claude Rutault, After the Masters: The Gates of Painting
+[2026-09-29T03:16:04.670Z] [orsay]   past p4: 14 links seen -> 0 navigation, 0 already-seen URL -> 14 collected (0 of them with no readable title)
+[2026-09-29T03:16:04.670Z] [orsay]   PAGINATION end: past p4 — its newest exhibition closed 2024-01-21, before the 2024-07-01 floor, so every later page is older still
+[2026-09-29T03:16:04.672Z] [orsay]   lookback (listing): kept 58, dropped 20 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-29T03:16:04.674Z] [orsay]   reading 58 individual page(s)…
+[2026-09-29T03:16:04.674Z] [orsay]     page 1 of 58
+[2026-09-29T03:16:26.306Z] [orsay]   paced: request 7 via Cloudflare, after 22s
+[2026-09-29T03:16:56.739Z] [orsay]   paced: request 8 via Cloudflare, after 28s
+[2026-09-29T03:17:32.543Z] [orsay]   paced: request 9 via Cloudflare, after 34s
+[2026-09-29T03:18:00.985Z] [orsay]   paced: request 10 via Cloudflare, after 26s
+[2026-09-29T03:18:33.469Z] [orsay]   paced: request 11 via Cloudflare, after 30s
+[2026-09-29T03:19:02.644Z] [orsay]   paced: request 12 via Cloudflare, after 27s
+[2026-09-29T03:19:31.681Z] [orsay]   paced: request 13 via Cloudflare, after 27s
+[2026-09-29T03:20:05.097Z] [orsay]   paced: request 14 via Cloudflare, after 30s
+[2026-09-29T03:20:36.222Z] [orsay]   paced: request 15 via Cloudflare, after 25s
+[2026-09-29T03:20:39.293Z] [orsay]     page 10 of 58
+[2026-09-29T03:21:02.310Z] [orsay]   paced: request 16 via Cloudflare, after 23s
+[2026-09-29T03:21:30.257Z] [orsay]   paced: request 17 via Cloudflare, after 25s
+[2026-09-29T03:22:05.635Z] [orsay]   paced: request 18 via Cloudflare, after 31s
+[2026-09-29T03:22:05.830Z] [orsay]   Cloudflare OBJECTED (BLOCKED_HTTP_403) on request 18 of orsay, after 17 clean page(s) here and 17 in the lane.
+[2026-09-29T03:22:05.832Z] [orsay]   The Cloudflare lane is STOPPED for the rest of this run. Nothing more is asked of any site behind it.
+[2026-09-29T03:22:05.833Z] [orsay]   BLOCKED (BLOCKED_HTTP_403): https://www.musee-orsay.fr/en/program/whats-on/exhibitions/cezanne-and-us
+[2026-09-29T03:22:05.838Z] [orsay]   not requesting anything more from this venue (LANE_STOPPED) — first skipped: https://www.musee-orsay.fr/en/program/whats-on/exhibitions/what-wonderful-world-masterpieces-musee-dorsay
+[2026-09-29T03:22:05.847Z] [orsay]     page 20 of 58
+[2026-09-29T03:22:05.862Z] [orsay]     page 30 of 58
+[2026-09-29T03:22:05.885Z] [orsay]     page 40 of 58
+[2026-09-29T03:22:05.893Z] [orsay]     page 50 of 58
+[2026-09-29T03:22:05.904Z] [orsay]   Individual pages: 11 got text, 0 no curatorial text, 47 failed
+[2026-09-29T03:22:05.904Z] [orsay]   11 page(s) kept on disk as read (pages_kept/orsay)
+[2026-09-29T03:22:05.905Z] [orsay]   lookback (final): kept 58, dropped 0 closed before 2024-07-01, 0 with no closing date, 1 with no opening date
+[2026-09-29T03:22:05.906Z] [orsay]   → NOT WRITTEN: refused (BLOCKED_HTTP_403) after 17 clean page(s). --continue will redo it after the quiet period.
+[2026-09-29T03:22:06.285Z] 
+[2026-09-29T03:22:06.285Z] ────────────────────────────────────────────────────────────
+[2026-09-29T03:22:06.285Z]   QC — faulty rows and exceptions
+[2026-09-29T03:22:06.285Z] ────────────────────────────────────────────────────────────
+[2026-09-29T03:22:06.285Z]   No faulty rows: every row has a title and a known venue code.
+[2026-09-29T03:22:06.286Z]   No exceptions: every venue looks like the last run that had it.
+[2026-09-29T03:22:06.286Z] 
+[2026-09-29T03:22:06.286Z] ────────────────────────────────────────────────────────────
+[2026-09-29T03:22:06.286Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-29T03:22:06.286Z] ────────────────────────────────────────────────────────────
+[2026-09-29T03:22:06.286Z]   ORSAY: NOT WRITTEN — refused (BLOCKED_HTTP_403) after 17 clean page(s)
+[2026-09-29T03:22:06.287Z] 
+[2026-09-29T03:22:06.287Z] ────────────────────────────────────────────────────────────
+[2026-09-29T03:22:06.287Z]   PACING — where each gatekeeper got to
+[2026-09-29T03:22:06.287Z] ────────────────────────────────────────────────────────────
+[2026-09-29T03:22:06.288Z]   Cloudflare: orsay — 17 clean page(s)
+[2026-09-29T03:22:06.288Z]     STOPPED at orsay, its request 18, BLOCKED_HTTP_403, 8.48 min into the lane
+[2026-09-29T03:22:06.289Z]     17 clean page(s) at orsay and 17 in the lane before it
+[2026-09-29T03:22:06.289Z]     Refused after clean pages: points to a pace or volume limit, not a block.
+[2026-09-29T03:22:06.289Z]     https://www.musee-orsay.fr/en/program/whats-on/exhibitions/cezanne-and-us
+[2026-09-29T03:22:06.294Z]     Not asked again before Wed, 30 Sept, 1:22 pm Sydney (pacing.json).
+[2026-09-29T03:22:06.295Z] 
+[2026-09-29T03:22:06.295Z] ────────────────────────────────────────────────────────────
+[2026-09-29T03:22:06.295Z]   COVERAGE — every link accounted for
+[2026-09-29T03:22:06.295Z] ────────────────────────────────────────────────────────────
+[2026-09-29T03:22:06.295Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-29T03:22:06.295Z]   -----------------------------------------------------------------------------------------------
+[2026-09-29T03:22:06.296Z]   orsay      current/upcoming                15     0       0     0        0        0         13
+[2026-09-29T03:22:06.296Z]   orsay      past                            14     0       0     0        0        0         12
+[2026-09-29T03:22:06.297Z]   orsay      past p1                         14     0       0     0        0        0         14
+[2026-09-29T03:22:06.297Z]   orsay      past p2                         14     0       0     0        0        0         14
+[2026-09-29T03:22:06.298Z]   orsay      past p3                         14     0       0     0        0        0         11
+[2026-09-29T03:22:06.298Z]   orsay      past p4                         14     0       0     0        0        0         14
+[2026-09-29T03:22:06.299Z] 
+[2026-09-29T03:22:06.299Z]   seen      = links matching the venue's selector on that page
+[2026-09-29T03:22:06.299Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-29T03:22:06.299Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-29T03:22:06.300Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-29T03:22:06.300Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-29T03:22:06.300Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-29T03:22:06.300Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-29T03:22:06.300Z] 
+[2026-09-29T03:22:06.301Z] Network bridge: 0 requests served, 0 handed back from files already fetched (not asked again), 0 skipped (image/media/font), 0 failed
+[2026-09-29T03:22:06.301Z] 
+[2026-09-29T03:22:06.303Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-29_131334
+[2026-09-29T03:22:06.303Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-29_131334/sweep.csv  (0 rows — )
+[2026-09-29T03:22:06.303Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-29_131334/log_2026-09-29_131334.txt
+[2026-09-29T03:22:06.303Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, orsay, mam, mad, ashmolean, jacquemart, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-29T03:22:06.303Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-29T03:22:06.303Z] No de-duplication is applied — see passThrough.

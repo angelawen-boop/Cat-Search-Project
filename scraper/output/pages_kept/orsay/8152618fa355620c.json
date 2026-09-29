@@ -1,0 +1,11 @@
+{
+  "url": "https://www.musee-orsay.fr/en/program/whats-on/exhibitions/marie-and-felix-bracquemond",
+  "savedAt": "2026-09-29T03:16:58.763Z",
+  "outcome": "text",
+  "changes": {
+    "start_date": "2026-09-22",
+    "summary": "In 2024, a significant set of almost 200 paintings and drawings by Marie and Félix Bracquemond was generously donated to the Musée d’Orsay by Armel and Nicolas Jundt, descendants of the artist couple. The same year, several purchases at public auctions were added to this donation to complete it. Marie Bracquemond (1840-1916) was one of the female figures in the Impressionist movement, alongside Mary Cassatt and Berthe Morisot. As for Félix Bracquemond (1833-1914), he was one of the leading engravers of his time, and was also close to the Impressionist circles. He is particularly known for the Rousseau dinner service decor, which marked the rise of Japonisme. From 1872 to 1881 he managed an artistic ceramics workshop in Auteuil, near Paris, for the porcelain manufacturer Charles Haviland (1839-1921). Slip decoration was the speciality of the Auteuil workshop, where barbotine decoration was slip-painted using a brush and coloured clays. Marie Bracquemond worked there alongside twenty or so other painters. She notably produced two monumental decors that no longer exist today.",
+    "notes": "opening date read from a sentence, not a date field: \"September 22 to December 06, 2026\"."
+  },
+  "titleReport": []
+}
