@@ -1277,7 +1277,11 @@ piece stored and read back identical; 270 KB refused at the 256 KiB limit.
 
 **Parked, not gating:** two tabs open at once.
 
-### 2. The 320 decisions — hers, in progress
+### 2. The 320 decisions — DONE, in her ledger
+
+**The import itself is finished** (her word, 29 Sep); the cards were decided and the
+ledger holds them. What remains below are debugging fixes not yet checked in the
+limited cases they were written for — not import work.
 
 **The file is `stitch_20260924_0417/sweep_compressed.csv`** — her 21 Sep file
 (`stitch_20260913_0442`, commit `f1bfb41`) with 24 Sep's repairs, all made by
@@ -1293,12 +1297,13 @@ meanwhile. Save round-trips work — her confirmation, 24 Sep.
 since the import. Not perfect; she is noting issues as she goes, for a later
 debugging session (item 7).
 
-**Still open, waiting on venues:**
+**Fixes made while debugging her import, not yet checked in the cases they
+were written for:**
 1. **Borghese: 7 titles still in capitals** — site down 24 Sep; its 3 listing
    pages, read once, when it is back.
 2. **Title check not yet run** at `capo`, `borghese`, `met`, `artic`.
 
-**It is done in sittings, and version 32 has the door for that — TEMPORARY, to
+**It was done in sittings, and version 32 has the door for that — TEMPORARY, to
 be unwired when this import is finished.** A second button beside the gate
 applies only the cards she has decided. Her ask, 22 Sep, and her framing: the
 gate is right and stays; 320 cards is simply more than one sitting.
