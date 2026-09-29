@@ -730,7 +730,13 @@ no challenge (§7.5).**
   Her verdict, 28 Sep: sidelined for no proper reason. **Untried, not ruled
   out** — the first thing to put to her if a headed venue is challenged
   part-way. Unproven whether the "driven by a program" signal had any part
-  in MoMA's page-19 challenge.
+  in MoMA's page-19 challenge. **Now due: d'Orsay, 29 Sep, mode A, refused
+  (403) on request 18 after 17 clean** — MoMA stopped at 19 after 18. Same
+  point at two museums, both at 30s: pages or minutes, not proven which.
+- **Her rulings, 29 Sep: never split one venue across days** (pages kept
+  make it possible; she will not run a sweep day after day), **and no
+  slower pace** — no venue gets an hour. Whether several Cloudflare venues
+  may be spread across days at all is still open with her.
 - **C — her everyday Chrome and profile. REJECTED and retired, her ruling
   28 Sep** — §8.
 
