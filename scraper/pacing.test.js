@@ -189,3 +189,56 @@ test('H-004 the headed pile is hers: moma, brit, morgan, orsay', () => {
   const pile = Object.keys(VENUES).filter(c => VENUES[c].headed).sort();
   assert.deepStrictEqual(pile, ['brit', 'moma', 'morgan', 'orsay']);
 });
+
+// ── HEADED, MODE B — her Chrome, attached to (29 Sep) ─────────────────────
+// Real Chromium, about:blank only: nothing here reaches the network. Ports are
+// picked free, never 9222, so a test run cannot touch a Chrome she has open.
+const net = require('net');
+const { spawn } = require('child_process');
+const { HEADED_DEBUG_PORT, attachHeadedContext, resolveChromium } = require('./sweep_prototype.js');
+
+const freePort = () => new Promise(res => {
+  const srv = net.createServer().listen(0, '127.0.0.1', () => { const p = srv.address().port; srv.close(() => res(p)); });
+});
+const tabs = async port => (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).filter(t => t.type === 'page');
+
+test('H-005 the sweep attaches on the port probe_headed.js open starts Chrome with', () => {
+  const probe = fs.readFileSync(path.join(__dirname, 'probe_headed.js'), 'utf8');
+  const port = Number((probe.match(/const DEBUG_PORT = (\d+);/) || [])[1]);
+  assert.strictEqual(HEADED_DEBUG_PORT, port);
+  assert.match(probe, /`--remote-debugging-port=\$\{DEBUG_PORT\}`/);
+});
+
+test('H-006 attaching, working in a tab and finishing leaves her Chrome and her tab as they were', async () => {
+  const port = await freePort();
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-b-'));
+  const chrome = spawn(resolveChromium(), [`--user-data-dir=${dir}`, `--remote-debugging-port=${port}`,
+    '--headless=new', '--no-sandbox', '--no-first-run', 'about:blank'], { stdio: 'ignore' });
+  try {
+    // Her tab is whatever Chrome opened with; it is known by its id.
+    let before = [];
+    for (let i = 0; i < 50 && !before.length; i++) {
+      await new Promise(r => setTimeout(r, 200));
+      before = await tabs(port).catch(() => []);
+    }
+    assert.strictEqual(before.length, 1);
+    const { context, detach } = await attachHeadedContext(port);
+    const page = await context.newPage();                 // what the worker does per venue
+    assert.strictEqual((await tabs(port)).length, 2);
+    await page.close();
+    await detach();
+    await new Promise(r => setTimeout(r, 500));
+    assert.strictEqual(chrome.exitCode, null, 'her Chrome is still running');
+    assert.deepStrictEqual((await tabs(port)).map(t => t.id), before.map(t => t.id), 'her tab, and only her tab, is left');
+  } finally {
+    chrome.kill();
+    await new Promise(r => setTimeout(r, 300));
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('H-007 no Chrome open: refused before anything is asked, and says how to open one', async () => {
+  const port = await freePort();
+  await assert.rejects(attachHeadedContext(port), e =>
+    /no open Chrome to work in/.test(e.message) && /probe_headed\.js open/.test(e.message) && /LEAVE IT OPEN/.test(e.message));
+});

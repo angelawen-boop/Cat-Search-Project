@@ -721,18 +721,17 @@ no challenge (§7.5).**
 
 **Three ways to be "headed" — never blur them:**
 - **A — the sweep launches Chrome** on the seeded profile, so Chrome
-  announces it is driven by a program. **What the sweep does.**
-- **B — she opens Chrome (`probe_headed.js open`), warms it up, LEAVES IT
-  OPEN, and the sweep attaches to it.** Nothing announces a program. Written
-  into the probe (`probe_headed.js B`, 22 Sep) and **never run, never built
-  into the sweep, and never rejected** — the sweep was built on A (26 Sep) as
-  "the one mode that got in", with no reason recorded for passing over B.
-  Her verdict, 28 Sep: sidelined for no proper reason. **Untried, not ruled
-  out** — the first thing to put to her if a headed venue is challenged
-  part-way. Unproven whether the "driven by a program" signal had any part
-  in MoMA's page-19 challenge. **Now due: d'Orsay, 29 Sep, mode A, refused
-  (403) on request 18 after 17 clean** — MoMA stopped at 19 after 18. Same
-  point at two museums, both at 30s: pages or minutes, not proven which.
+  announces it is driven by a program. Kept behind `--launch-chrome`, not
+  the default. Stopped part-way twice: MoMA at 19 after 18 clean (27 Sep),
+  d'Orsay 403 at 18 after 17 (29 Sep) — both at 30s, pages or minutes not
+  proven which. The British Museum's 41 were clean.
+- **B — THE DEFAULT, built 29 Sep, her ruling.** She opens Chrome
+  (`probe_headed.js open`), warms it up, LEAVES IT OPEN; the sweep attaches
+  and works in a tab of its own, closing only its own tabs (H-005 to H-007).
+  No Chrome open → nothing asked, the run says so; never falls back to A.
+  Built on A first only because A was the one mode ever run. **Not yet run
+  live** — first try: d'Orsay, not before Wed 30 Sep 1:22pm Sydney. Still
+  connected from outside, so less visible, not invisible.
 - **Her rulings, 29 Sep: never split one venue across days** (pages kept
   make it possible; she will not run a sweep day after day), **and no
   slower pace** — no venue gets an hour. Whether several Cloudflare venues
@@ -1375,10 +1374,9 @@ repeated to her on the day (she asked):
 1. **Cloudflare's quiet period must have passed** — the run says so and refuses
    otherwise. Refused on 26 Sep (d'Orsay headless, 11:54 Sydney), so not before
    27 Sep ~11:55 Sydney.
-2. **Seed the profile:** `node scraper/probe_headed.js open`, browse the venue
-   for a minute in that window (it opens MoMA, and lists MoMA, BM and the Morgan —
-   **d'Orsay is not in its list; she types the address**), let any check finish,
-   then CLOSE that Chrome.
+2. **Open and warm the profile:** `node scraper/probe_headed.js open`, browse
+   the venue for a minute in that window (it lists d'Orsay, the Morgan, BM and
+   MoMA), let any check finish, and **LEAVE IT OPEN** (mode B).
 3. `git pull`, then `node scraper/sweep_prototype.js <venue>`, then push.
 4. One Cloudflare venue per day if refused.
 

@@ -6854,11 +6854,25 @@ function resolveChromium() {
  * HEADED — her machine only. Built 26 Sep 2026, her go-ahead.
  *
  * A venue marked `headed: true` is swept in a VISIBLE Google Chrome on a
- * profile she has browsed in, exactly as the one mode that ever got in did
- * (probe_headed.js run A, 22 Sep: the scraper opening Chrome on her seeded
- * profile — moma's listing and an exhibition page, no challenge). Nothing else
- * about the sweep changes: same recipe, same pacing lanes, same stop at the
- * first objection. One Chrome, so headed venues go one after another.
+ * profile she has browsed in. Nothing else about the sweep changes: same
+ * recipe, same pacing lanes, same stop at the first objection. One Chrome, so
+ * headed venues go one after another.
+ *
+ * MODE B, THE DEFAULT — her ruling, 29 Sep. She opens that Chrome herself
+ * (`node scraper/probe_headed.js open`), warms it up, and LEAVES IT OPEN; the
+ * sweep attaches to it over its debugging port and works in a tab of its own.
+ * A Chrome she started is not started with the automation switches, so it
+ * does not announce that a program drives it — mode A's launch did. Why A was
+ * built first: it was the only mode ever run (22 Sep), never a reason against
+ * B. d'Orsay, 29 Sep, mode A: refused on request 18 after 17 clean.
+ *
+ * Her window is never closed: the sweep closes only the tabs it opened, then
+ * disconnects (H-006). No Chrome open → nothing is asked of any venue, and the
+ * run says how to open one (H-007). It never falls back to A on its own.
+ *
+ * MODE A, kept behind `--launch-chrome`: the sweep launches Chrome on the
+ * seeded profile itself (the profile must then be CLOSED). Unwired as the
+ * default, not deleted.
  *
  * The profile is the folder `node scraper/probe_headed.js open` seeds — one
  * folder, two scripts; fixture H-003 holds the two paths together. It is not
@@ -6900,6 +6914,33 @@ function headedProfileSeeded(dir = HEADED_PROFILE_DIR) {
 function splitHeaded(codes, paced, venues = VENUES) {
   const headed = paced ? codes.filter(c => venues[c] && venues[c].headed) : [];
   return { headed, headless: codes.filter(c => !headed.includes(c)) };
+}
+
+// Mode B: the port `probe_headed.js open` starts her Chrome with. One number,
+// two files — H-005 holds them together.
+const HEADED_DEBUG_PORT = 9222;
+const LAUNCH_CHROME = ARGS.includes('--launch-chrome');
+
+/**
+ * Mode B. Attach to the Chrome she opened and left open. Returns the context
+ * to open tabs in, and `detach`, which closes nothing of hers: only the tabs
+ * this sweep opened (the worker closes each one), then the connection.
+ * Throws, having asked no venue for anything, when no Chrome is listening.
+ */
+async function attachHeadedContext(port = HEADED_DEBUG_PORT) {
+  let browser;
+  try {
+    browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`, { timeout: 10000 });
+  } catch (e) {
+    throw new Error(`no open Chrome to work in (nothing on port ${port}). ` +
+      'Run: node scraper/probe_headed.js open — warm it up, LEAVE IT OPEN, then run this again');
+  }
+  const context = browser.contexts()[0];
+  if (!context) {
+    await browser.close().catch(() => {});
+    throw new Error('the open Chrome has no window to work in — open one, then run this again');
+  }
+  return { context, detach: () => browser.close().catch(() => {}) };
 }
 
 async function launchHeadedContext() {
@@ -7021,10 +7062,12 @@ async function main() {
     // the same reason: the history is what gets it in.
     if (wantHeaded.length) {
       if (headedProfileSeeded()) {
-        log(`  In a visible Chrome on the seeded profile: ${wantHeaded.join(', ')}`);
+        log(LAUNCH_CHROME
+          ? `  In a visible Chrome the sweep launches on the seeded profile (mode A, --launch-chrome): ${wantHeaded.join(', ')}`
+          : `  In the Chrome you opened and left open, in a tab of its own (mode B): ${wantHeaded.join(', ')}`);
       } else {
         log(`  Not attempted: ${wantHeaded.join(', ')} — the Chrome profile has never been seeded`);
-        log(`  (${HEADED_PROFILE_DIR}). Run: node scraper/probe_headed.js open — browse, then close it.`);
+        log(`  (${HEADED_PROFILE_DIR}). Run: node scraper/probe_headed.js open — browse, and leave it open.`);
         RUN_VENUES = RUN_VENUES.filter(c => !VENUES[c].headed);
       }
     }
@@ -7163,7 +7206,11 @@ async function main() {
   async function worker(n, q = headlessQ, openContext = null) {
     // No userAgent override — see the note where USER_AGENT used to be defined.
     // Chromium sends its own, which is true and agrees with its client hints.
-    const context = openContext ? await openContext() : await browser.newContext({
+    // An attached Chrome (mode B) comes back as { context, detach }: hers, so
+    // the finally below disconnects instead of closing it.
+    const opened = openContext ? await openContext() : null;
+    const attached = opened && opened.detach ? opened : null;
+    const context = attached ? attached.context : opened || await browser.newContext({
       viewport: { width: 1280, height: 800 },
     });
     // The bridge exists ONLY because Chromium cannot use this container's agent
@@ -7262,7 +7309,8 @@ async function main() {
       netTotals.skipped   += stats.skipped;
       netTotals.failed    += stats.failed;
       netTotals.reused    += stats.reused || 0;
-      await context.close().catch(() => {});
+      if (attached) await attached.detach();
+      else await context.close().catch(() => {});
     }
   }
 
@@ -7276,13 +7324,14 @@ async function main() {
   if (headedQ.items.length) {
     log(`Running ${headedQ.items.length} venue(s) in a visible Chrome, one after another: ${headedQ.items.join(', ')}`);
     workers.push(worker('headed', headedQ, async () => {
-      try { return await launchHeadedContext(); }
+      try { return LAUNCH_CHROME ? await launchHeadedContext() : await attachHeadedContext(); }
       catch (e) {
-        // Chrome would not open: nothing was asked of any venue. Each headed
+        // No Chrome to work in — none open (B) or it would not launch (A):
+        // nothing was asked of any venue. Each headed
         // venue says why and writes nothing, so --continue picks it up.
-        for (const c of headedQ.items) summary[c] = { error: `visible Chrome did not open: ${e.message}` };
+        for (const c of headedQ.items) summary[c] = { error: `no visible Chrome to work in: ${e.message}` };
         headedQ.next = headedQ.items.length;
-        log(`  VISIBLE CHROME DID NOT OPEN — ${e.message}`);
+        log(`  NO VISIBLE CHROME TO WORK IN — ${e.message}`);
         throw Object.assign(e, { headedLaunch: true });
       }
     }).catch(e => { if (!e.headedLaunch) throw e; }));
@@ -7451,8 +7500,8 @@ module.exports = {
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
   // Pure, or driven with a gap of milliseconds — scraper/pacing.test.js.
   gatekeeperFrom, objectionFrom, laneCooldown, knownGatekeepers, makePacer, pacedWithheld, usePacerForFixtures, usePageKeepForFixtures, pageKeepFor, UNWIRED,
-  // HEADED: pure, or a path — pacing.test.js H-001 to H-003.
-  splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome,
+  // HEADED: pure, or a path — pacing.test.js H-001 to H-003; mode B, H-005 to H-007.
+  splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome, HEADED_DEBUG_PORT, attachHeadedContext,
   saysOngoing, applyLookback, expandYearArchive, expandDateRange, expandFromToday, keptDespiteLookback, withoutQuery, listingPages, followPagination,
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
