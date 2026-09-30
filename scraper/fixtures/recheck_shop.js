@@ -270,6 +270,8 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const t = card(miller.title).textContent;
     ok(/Search again didn’t run — Too many searches just now\. Leave it a minute\. Nothing changed\./.test(t),
       'R-011c: a Search again that didn’t run says so on the card', t.slice(-200));
+    ok(!/Catalogue search failed/.test(win.document.body.textContent),
+      'R-011c:   and no red banner at the top of the page — her ruling, 30 Sep');
     const doc = win.document;
     const show = [...doc.querySelectorAll('button')].find(b => b.textContent === 'Show diagnostic');
     if (show) await click(show);

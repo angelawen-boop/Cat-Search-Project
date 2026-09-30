@@ -2870,12 +2870,11 @@ export default function App(){
         +"stopped part-way, so the ISBN or the publisher\u2019s page may be missing when they "
         +"exist. "+out.trouble.split("[")[0].trim()+" Press \u201cSearch again\u201d.");
     } else {
-      setError("Catalogue search failed for \u201c"+row.title+"\u201d.");
-      // ON THE CARD TOO, in Re-check's words — her ask, 30 Sep: one line under
-      // the button she pressed, the details in the diagnostic.
+      // ON THE CARD, NOT IN A BANNER — her ruling, 30 Sep: Re-check's line
+      // word for word, "Re-check" swapped for "Search" or "Search again".
+      // The details stay in the diagnostic.
       const why=String(out.detail||"").split("\n").pop().split("[")[0].trim();
-      setRecheckSaid({id,failed:true,text:(row.looked?"Search again didn\u2019t run \u2014 ":"Search didn\u2019t run \u2014 ")
-        +(why||"the search stopped.")+" Nothing changed."});
+      setRecheckSaid({id,failed:true,text:(row.looked?"Search again":"Search")+" didn\u2019t run \u2014 "+why+" Nothing changed."});
     }
     setBusy(false);setBusyId(null);setLookPhase(null);
   }
