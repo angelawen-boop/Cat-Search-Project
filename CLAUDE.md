@@ -94,7 +94,7 @@ growth run-by-run stories. Cut again 30 Sep. The rules:
   test: the clean-up is a separate session, away from active work — never the
   session that tripped it, mid-task. Raising a budget is her call.
 - **The clean-up is the "Guide review" routine** — a fresh session on the 15th
-  and 30th, 7:50am Sydney, push notification to her; it follows
+  and 30th (28th in February — a second routine), 7:50am Sydney, push to her; it follows
   `.claude/skills/guide-review/SKILL.md` (fix what has one answer, ask her
   about rulings and anything untraceable). She can also ask for it any time.
 - **Anything derivable from the repo is printed by a script, not typed here**
