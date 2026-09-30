@@ -260,6 +260,36 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
        asked.slice(0, 300));
   }
 
+  // ── R-011c: SEARCH AGAIN THAT DIDN'T RUN says so on the card, in
+  // Re-check's words — her ask, 30 Sep. And the diagnostic's Copy button says
+  // whether the copy happened (R-011d, R-011e).
+  {
+    script.mcp = () => { throw refused('rate_limited'); };
+    script.sample = () => { throw new Error('Claude must not be asked when the connector refused'); };
+    await click(button(card(miller.title), /^Search again$/));
+    const t = card(miller.title).textContent;
+    ok(/Search again didn’t run — Too many searches just now\. Leave it a minute\. Nothing changed\./.test(t),
+      'R-011c: a Search again that didn’t run says so on the card', t.slice(-200));
+    const doc = win.document;
+    const show = [...doc.querySelectorAll('button')].find(b => b.textContent === 'Show diagnostic');
+    if (show) await click(show);
+    const copy = [...doc.querySelectorAll('button')].find(b => /Copy$/.test(b.textContent));
+    ok(!!copy, 'R-011d: the open diagnostic has a Copy button');
+    if (copy) {
+      await click(copy);
+      ok(/Couldn’t copy — select the text instead/.test(doc.body.textContent),
+        'R-011d:   with no clipboard it says it couldn’t copy, never "Copied"');
+      let got = null;
+      // The page reads whichever navigator is global here — jsdom's, or
+      // Node's own where Node will not let it be replaced. Both get one.
+      for (const nav of [win.navigator, globalThis.navigator].filter(Boolean))
+        Object.defineProperty(nav, 'clipboard', { value: { writeText: async x => { got = x; } }, configurable: true });
+      await click(copy);
+      ok(/Copied/.test(doc.body.textContent) && got && /Too many searches/.test(got),
+        'R-011e:   with a clipboard it copies the diagnostic’s text and says Copied', String(got).slice(0, 80));
+    }
+  }
+
   // ── R-013..R-017: CASE 2, it wasn't in the shop and now is ─────────────
   {
     calls.length = 0;
@@ -552,6 +582,13 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await click([...doc.querySelectorAll('button')].find(b => b.textContent === 'NG' || b.textContent === 'National Gallery'));
     const ng = titles();
     ok(ng.length > 0 && ng.every(x => /Test/.test(x)) && !ng.some(x => /KHM/.test(x)), 'S-003: and another venue’s chip cuts it to that venue', ng.length);
+    // S-004: the cross inside the box clears what she typed — her ask, 30 Sep.
+    const clear = doc.querySelector('button[aria-label="Clear search"]');
+    ok(!!clear, 'S-004: with text typed, a clear cross sits inside the search box');
+    if (clear) await click(clear);
+    const box2 = doc.querySelector('input[placeholder^="Search exhibitions"]');
+    ok(box2 && box2.value === '' && !doc.querySelector('button[aria-label="Clear search"]'),
+      'S-004a:   pressing it empties the box, and the cross goes with the text', box2 && box2.value);
   }
   try { await act(async () => root.unmount()); } catch {}
   console.error = realError;

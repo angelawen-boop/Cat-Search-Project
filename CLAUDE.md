@@ -292,7 +292,7 @@ no line at all with no ledger open, the Ashmolean and its shop, her chip order
 same as 35.4 · cloud 3 (§7.1).
 **Built, NOT published: 35.5** (branch: 35.5 · cloud 3) — her batch from the
 held-pile import, 30 Sep: review footer counts quarantined, her partial-import
-wording, a jump-to-bottom button, Re-check's sold-out rules (R-011b), British Museum Press as self-published (C-072a). **She is batching changes; publish only when
+wording, a jump-to-bottom button, Re-check's sold-out rules (R-011b), British Museum Press as self-published (C-072a), "Search (again) didn't run" on the card (R-011c), Copy on the diagnostic (R-011d/e), a clear cross in the search box (S-004), chip "Orsay". **She is batching changes; publish only when
 she says.**
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
@@ -1017,10 +1017,27 @@ she presses it on one, check the result.
 
 ### 6. Catalogue lookup generally
 
-She is noting issues as she uses it, for a later debugging session. Standing
-gaps: fourteen venues have had no lookup run against them (shop addresses
-checked, unseen live); the British Museum's shop refused her seeded Chrome
-(403) and the lookup has not met it. `uffizi`'s shop sells no books — settled.
+She is noting issues as she uses it, for a later debugging session.
+**Shops tested by her in the app: `brit`, `morgan`. Not yet: `moma`** (30 Sep).
+`uffizi`'s shop sells no books — settled.
+
+- **RAISE AT THE START OF THE NEXT SESSION (her ask, 30 Sep) — asking a Shopify
+  shop directly whether a book is available**, instead of a model reading the
+  page. Through her connector, Morgan Tarot: `.js` refused by the connector (200
+  from the shop); `.json` passes but has no availability field; `.oembed` got
+  429. Untested: `.oembed` once the 429 has cleared — it normally carries an
+  in-stock yes/no. Shopify shops: morgan, artic, moma, ashmolean, lgd, menil,
+  wallace, acq. `docs/shop_pages/README.md`.
+- **Orsay (and every Boutiques de musées shop — louvre, jacquemart): the book
+  is found on the shelf but never gets its own link.** Proven 30 Sep: the
+  connector's copy of the shelf, excerpt and full page alike, has titles and
+  prices but NO product links, so the read can only name the shelf
+  (`listedOnly`) and the Museum shop button falls back to the shop's search for
+  the EXHIBITION's English title — site-wide at Orsay, so posters and mugs.
+  **Proposed, awaiting her yes (it changes her 25 Sep ruling):** when the book
+  was read off the shop's own shelf, search the shop for the BOOK's title as
+  the shop printed it ("John Singer Sargent. Éblouir Paris"). No ISBN either:
+  the book's page, where it is printed, is never opened.
 
 ### 7. A fresh sweep — mid-October at the earliest
 
