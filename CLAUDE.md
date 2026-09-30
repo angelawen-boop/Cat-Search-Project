@@ -130,10 +130,10 @@ venue at all, which machine sweeps it, and — read from the marker rows, never
 inferred — why the last attempt brought nothing. When the two runs differ, that
 venue has stopped answering.
 
-As of 22 Sep: **406 exhibitions across 18 venues**; `morgan` has never
-returned one (`brit` first did 28 Sep — §7.5), and `moma` only 24 listing rows with no descriptions (her
-laptop, 16 Sep — pushed 26 Sep); `met` and `artic` were refused on 16 Sep after that
-session's repeated sweeps.
+As of 22 Sep: **406 exhibitions across 18 venues**; `met` and `artic` were
+refused on 16 Sep after that session's repeated sweeps. **By 30 Sep every
+venue has returned rows** — `brit` first 28 Sep, `orsay`, `morgan`, `moma`
+30 Sep (§7.5).
 
 **A browser with a PAST gets into all three blocked venues — 22 Sep.** Every
 earlier attempt used a blank profile Playwright built and threw away. A visible
@@ -716,9 +716,7 @@ that got in on 22 Sep), with the same pacing; never headless there, and never
 on an unseeded profile. The container still sweeps it headless, for markers.
 Set on `moma`, `brit`, `morgan`, `orsay` (her rulings, 26 Sep — d'Orsay's
 first home sweep, headless, was refused on page 1). Design: the HEADED block
-in `sweep_prototype.js`; fixtures H-001 to H-004. **Run live twice: MoMA, 27
-Sep — got in, challenged on page 19; the British Museum, 28 Sep — 41 pages,
-no challenge (§7.5).**
+in `sweep_prototype.js`; fixtures H-001 to H-007. Every live run: §7.5.
 
 **Three ways to be "headed" — never blur them:**
 - **A — the sweep launches Chrome** on the seeded profile, so Chrome
@@ -737,7 +735,8 @@ no challenge (§7.5).**
 - **Her rulings, 29 Sep: never split one venue across days** (pages kept
   make it possible; she will not run a sweep day after day), **and no
   slower pace** — no venue gets an hour. Whether several Cloudflare venues
-  may be spread across days at all is still open with her.
+  may be spread across days is still open with her; on 30 Sep she ran three
+  in one afternoon, clean.
 - **C — her everyday Chrome and profile. REJECTED and retired, her ruling
   28 Sep** — §8.
 
@@ -1349,7 +1348,7 @@ link at an ISBN search — museum shops search by title.)*
 
 Imported by her with item 6's file; she checked every past show in the app.
 
-### 5. The headed venues — `brit` DONE 28 Sep, `orsay` and `morgan` DONE 30 Sep; `moma` next, in mode B
+### 5. The headed venues — all four DONE (`brit` 28 Sep; `orsay`, `morgan`, `moma` 30 Sep, mode B); `brit` re-testing in mode B
 
 **Morgan, 30 Sep 16:07 — CLEAN, her laptop, mode B, re-run.** 18 pages, no
 challenge; 39 of 39 with text, her count (3 + 5 + 20 + 3 + 8) —
@@ -1381,26 +1380,20 @@ apart (6 listings + 48 show pages; 10 more from pages kept 29 Sep), no
 challenge; 58 of 58 with text, her count (13 + 45) — `run_2026-09-30_140401`.
 Moved to her laptop (§5). **Raw, in the held pile.**
 
-**Everything is built and offline-proven (26 Sep):** pacing, the headed path
-(§5), and a recipe for each — `moma`, `morgan`, `orsay` and `brit` (written 26
-Sep from `docs/brit_pages/`; fixtures BM-001 to BM-011). All four sit behind
-Cloudflare, so they share one lane.
+**All four headed venues are Cloudflare's, one lane, and all swept clean from
+her laptop by 30 Sep** — `brit` in mode A (28 Sep), `orsay`, `morgan` and
+`moma` in mode B (30 Sep). On 30 Sep she ran three back to back, each with
+`--ignore-cooldown` (the hour after a CLEAN run is our own caution, not the
+site's), all clean.
 
-**Her order: `brit`, then `orsay`, then `morgan`** — each has a large past
-she wants, too much to save by hand, so the headed sweep is the route (her
-ruling, 27 Sep). One Cloudflare venue per day. Not before **Mon 28 Sep
-12:08pm Sydney** (the lane's quiet period, from MoMA's challenge).
-
-**MoMA, 27 Sep: challenged on page 19 of ~25** (18 clean, 30s apart, 9 min)
-— pacing works, a limit remains. **Her ruling: MoMA is not swept.** She wants
-four upcoming shows; she saves those pages and `from_saved_pages.js` reads
-them (`run_2026-09-27_123228`, 4 rows, raw — **compression held**: other
-venues join this pile — the Ashmolean's 24 (`run_2026-09-27_192852`) and MAD's 20
-(`run_2026-09-27_200702`), 27 Sep — and the British Museum's 33
-(`run_2026-09-28_121556`), 28 Sep —
-and it is stitched and compressed as one when she says, her ruling 27 Sep). Not waiting through a bot check
-either — a clearance is per site and opens nothing else. **Next: `orsay`,
-then `morgan`** — one Cloudflare venue a day, so not before 29 Sep.
+**THE HELD PILE — raw, stitched and compressed as one when she says (her
+ruling 27 Sep):** Ashmolean 24 (`run_2026-09-27_192852`), MAD 20
+(`run_2026-09-27_200702`), British Museum 33 (`run_2026-09-28_121556`, unless
+today's mode-B re-test replaces it), d'Orsay 58 (`run_2026-09-30_140401`),
+Morgan 39 (`run_2026-09-30_160740`), MoMA 14 (`run_2026-09-30_162442`). Not
+in it: the superseded Morgan 15:38 run and MoMA's 4-row saved-pages run
+(archived). App 35.4 must be live before the import (§4) — it carries
+`ashmolean`.
 
 **British Museum, 28 Sep 12:15 — CLEAN, her laptop, headed (mode A).** 41
 pages ~30s apart, no challenge; 39 of 39 show pages read, all with text; her
@@ -1409,37 +1402,36 @@ slept near the end: one page's connection closed, retried once, came
 through. Three faults fixed offline, no resweep: *Korea*'s title took the
 date line (a generic tab word — RT-010; the run corrected by
 `reread_kept.js`), and five pages outside the cutoff were opened (BM-013–015).
-Moved to her laptop (§5). **Raw, in the held pile.** Its shop
-(`britishmuseumshoponline.org`, a separate site behind Varnish, not
-Cloudflare) refused her seeded Chrome with a 403 on 28 Sep; the sweep never
-visits it, and the catalogue lookup has not yet met it.
+Moved to her laptop (§5). Its shop (`britishmuseumshoponline.org`, a
+separate site behind Varnish, not Cloudflare) refused her seeded Chrome with
+a 403 on 28 Sep; the sweep never visits it, and the catalogue lookup has not
+yet met it. **Re-test in mode B running 30 Sep (her plan)** — passes on
+every page read and her count 33; check its log and rows when pushed.
 
-**The test is a complete paced headed sweep of ONE venue, not a probe** — it
-passes only if every page is read and the count matches hers. Her steps, to be
-repeated to her on the day (she asked):
-1. **Cloudflare's quiet period must have passed** — the run says so and refuses
-   otherwise. Refused on 26 Sep (d'Orsay headless, 11:54 Sydney), so not before
-   27 Sep ~11:55 Sydney.
-2. **Open and warm the profile:** `node scraper/probe_headed.js open`, browse
-   the venue for a minute in that window (it lists d'Orsay, the Morgan, BM and
-   MoMA), let any check finish, and **LEAVE IT OPEN** (mode B).
-3. `git pull`, then `node scraper/sweep_prototype.js <venue>`, then push.
-4. One Cloudflare venue per day if refused.
+**A headed run, her steps:**
+1. `git pull`.
+2. `node scraper/probe_headed.js open`, browse the venue a minute (it lists
+   d'Orsay, the Morgan, BM and MoMA), let any check finish, **LEAVE IT OPEN**.
+3. `node scraper/sweep_prototype.js <venue>` (add `--ignore-cooldown` inside
+   the hour after a clean run), then `git add scraper/output`, commit,
+   `git pull --rebase`, push.
+4. A REFUSED lane waits a day — that wait has evidence behind it.
+
+**Pass tests (her counts):** brit 33, orsay 58 (13 + 45), morgan 39 (3 + 5 +
+20 + 3 + 8), moma 14 (9 + 5). **Sizes at 30s:** brit ~41 pages, orsay ~64,
+morgan 18, moma 15.
 
 **British Museum and robots.txt — settled 27 Sep.** Its past page is allowed
 by her ruling (§5, "What each site asks"). Its wait, 20s, is inside her 30s
-pacing.
+pacing. The Morgan's robots.txt is unreadable (403): her 30s is its only wait.
 
-**Sizes at 30s a page:** moma ~25 pages, brit ~40, orsay ~65, morgan unknown.
-A venue moves to her laptop only after a clean complete sweep (§5).
-
-**After `brit`'s sweep — put these to her again, her ruling 27 Sep** (DUE — `brit` swept 28 Sep):
-- **`orsay`: DONE 28 Sep** — she saved an off-site show (*What a Wonderful World*) and a "Focus on our collections" display (*Maurice Denis*); both descriptions read clean, lead to last sentence (OR-016/017). Offline, her count holds on her pages (13 + 45 = 58; 6 closed before the floor dropped on the listing, never opened). ~64 pages, ~32 min. **Ready for its sweep, from 29 Sep, her go.**
-- **`morgan`:** her count — DONE 28 Sep (§2 table). **Saved pages are the recipe's guide and its offline test, never the data** — the sweep reads the live site. Asking her for every past listing and fresh re-saves was an over-ask, withdrawn 28 Sep: they share the layout of the page already saved, and the live sweep against her count is the real test. **No more pages from her (her ruling, 28 Sep).** Recipe fixed and proven offline on her 22 Sep pages, 28 Sep (`morgan_pages.js`, MP-001–008): the past year-pairs page through (`paginate`) and page 2 on keeps the page's own reading settings (the walk used to carry only the address — MP-003/004 fail without it); past dates read from each row's own field (all were undated); current/upcoming names and dates from the card's own fields, "Ongoing" dropped before opening. **Ready for its sweep after `orsay`'s, her go** — her count 39 is the pass test. Its robots.txt is unreadable (403), so no wait is known; her 30s pacing is the only one.
+**Saved pages are a recipe's guide and its offline test, never the data** —
+the sweep reads the live site (her ruling, 28 Sep; no more pages asked of her
+for the Morgan).
 
 **Page layout comes from HER, never from a probe — her ruling, 22 Sep.**
 
-### 6. More venues — five built 25 Sep, the Ashmolean 27 Sep; four imported and checked by her; MAD and the Ashmolean swept clean 27 Sep (held pile); d'Orsay on the headed pile
+### 6. More venues — five built 25 Sep, the Ashmolean 27 Sep; four imported and checked by her; MAD, the Ashmolean and d'Orsay swept clean (held pile, §7.5)
 
 Her additions, 24–25 Sep. **Her order on the chips:** Levy Gorvy straight
 after Acquavella; the French venues Louvre, d'Orsay, MAM Paris, MAD Paris,
@@ -1576,6 +1568,11 @@ her personal browsing stays out of this; and the Morgan checks her own browser
 on EVERY visit, three minutes apart or days (her observation, 28 Sep), while
 the plain seeded profile is not checked. Why is unproven — her extensions are
 a guess. Headed modes A and B stay, §5.
+
+**Fetching a blocked venue's pages through the Parallel connector** (29 Sep,
+d'Orsay: it gets in, but returns text, not the page, so a second reader and an
+API key were needed) — declined by her: no more new methods to chase a venue.
+**Splitting one venue across days, or a slower pace** — her rulings 29 Sep (§5).
 
 **Proposing "drop the feature" as a fix — rejected as an approach entirely.**
 
