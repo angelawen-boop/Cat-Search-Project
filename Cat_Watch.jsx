@@ -1203,10 +1203,21 @@ async function readShopPage(book,url){
   const rd=await readResults(
     "You are reading ONE page from a museum shop. Decide whether the book named below can be bought "
    +"on it NOW.\nUse ONLY what this page says.\n"
-   +'"forSale": true ONLY if this page IS that book’s own product page AND it can be bought or '
-   +"ordered now: add to cart or bag, buy now, pre-order, available to order.\n"
-   +'"forSale": false if it says sold out, out of stock, unavailable, no longer available, or '
+   // SOLD OUT OUTRANKS EVERYTHING — her Morgan Tarot, 30 Sep. The page said
+   // "SOLD OUT!", its price carried a Sold Out badge and its only button was a
+   // greyed-out "Sold out"; it ALSO told earlier buyers "if you pre-ordered a
+   // copy, shipments will begin soon". The read answered "pre-orders are being
+   // accepted, with an Add to cart option present" and Re-check said still
+   // for sale, because the old rule said pre-order counts as for sale.
+   +'"forSale": true ONLY if this page IS that book’s own product page AND a NEW order can be '
+   +"placed on it today: add to cart or bag, buy now, pre-order now, available to order.\n"
+   +'"forSale": false if the page says sold out, out of stock, unavailable, no longer available, or '
    +"not found, in any language (esaurito, épuisé, uitverkocht, ausverkauft, agotado …). "
+   +"SOLD OUT OUTRANKS EVERYTHING ELSE ON THE PAGE: if the page says this book is sold out anywhere, "
+   +"the answer is false, whatever else it says. "
+   +"A note to people who have ALREADY ordered or pre-ordered (\u201cif you pre-ordered\u201d, shipping news, "
+   +"\u201cpreorders will ship\u201d) is NOT an offer to order. The words \u201cAdd to cart\u201d or a price are not "
+   +"proof on their own: a greyed-out button still prints its words. "
    +"ALSO false if this page is NOT that book’s own page — the shop’s front page, a "
    +"category, search results, a ticket or a different product. That is what a pulled page redirecting looks like.\n"
    +"\nBook: "+book+"\nAddress on file: "+url+"\nAddress served: "+(served||"(not given)")+"\n\n"

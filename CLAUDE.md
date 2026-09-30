@@ -292,7 +292,7 @@ no line at all with no ledger open, the Ashmolean and its shop, her chip order
 same as 35.4 · cloud 3 (§7.1).
 **Built, NOT published: 35.5** (branch: 35.5 · cloud 3) — her batch from the
 held-pile import, 30 Sep: review footer counts quarantined, her partial-import
-wording, a jump-to-bottom button. **She is batching changes; publish only when
+wording, a jump-to-bottom button, Re-check's sold-out rules (R-011b). **She is batching changes; publish only when
 she says.**
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
