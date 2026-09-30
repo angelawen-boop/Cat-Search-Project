@@ -89,6 +89,10 @@ growth run-by-run stories. Cut again 30 Sep. The rules:
 - **Moving text to `docs/` is not a way to keep it.** Compress it first, in
   place, then move it. A side doc holds evidence a future session will need,
   never a transcript.
+- **Every file has a line budget** — `node scraper/doc_budget.js` (her ruling,
+  30 Sep; runs at the end of `npm test`). Over budget warns and never fails a
+  test: the clean-up is a separate session, away from active work — never the
+  session that tripped it, mid-task. Raising a budget is her call.
 - **Anything derivable from the repo is printed by a script, not typed here**
   (`scraper/venue_status.js` replaced the venue table).
 - **Put the trigger next to the code, not in an index here.** A comment above the
@@ -1086,7 +1090,7 @@ venues are four different situations, not one problem. The AbeBooks link is
 | `docs/scraper.md` | The scraper's evidence: listings, pagination, the date parser, junk in summaries, failure handling, compression, blocked venues | Changing anything in the scraper |
 | `docs/import-file.md` | How each file she imported was built | Touching that file, or explaining its dates |
 | `docs/venues.md` | Per-venue evidence: refusals, listing URLs, the headed venues' runs | Working one specific venue |
-| `docs/venue_urls.md` | The original 21 venues' addresses from the Sweeper Brief, plus traps | Wiring or re-checking one of those venues |
+| `docs/venue_urls.md` | The original 21 venues' addresses from the Sweeper Brief, and which of its notes still hold | Wiring or re-checking one of those venues |
 | `docs/listing_pages/`, `docs/*_pages/` | Pages she saved, with a README of what each settled | Changing that venue's recipe — before asking her for anything |
 | `docs/compression.md` | Compression design, model split, eval, rejected alternatives | Changing compression — otherwise don't |
 | `docs/picked_shows.md` | Picked shows — **not built** | She raises it |

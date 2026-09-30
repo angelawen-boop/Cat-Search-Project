@@ -22,8 +22,9 @@ finds nothing.
   pages saved that day, so the recipe reads it paragraph by paragraph and drops
   that one (`creditPara`; `fixtures/moma_pages.js`).
 - **A tag beside the title says what MoMA calls the thing**: `Exhibition` on
-  *It's Alive*, `Installation` on *Creativity Lab*. Same address shape, so
-  nothing but the page can tell them apart.
+  *It's Alive*, `Installation` on *Creativity Lab*. **Superseded 30 Sep:** the
+  listing's own section headings already separate them, so installations are
+  dropped on the listing and never opened (MM-001–003).
 - **"In the galleries" needs no rule.** Those rooms live at `/calendar/floors/N`
   and `/calendar/galleries/N`, which the recipe's selector never matches. It had
   been assumed they were mixed in with the exhibitions; they are not.
@@ -58,12 +59,10 @@ Eleven shapes on one page, five of which no other venue produces.
 was, not a promise about what it is. Re-save rather than trust them if a sweep
 disagrees with them.
 
-## 27 Sep 2026 — four upcoming shows, her pick
+## 27 Sep 2026 — four upcoming shows
 
 `exhibition_5910_brancusi`, `exhibition_5916_mondrian`,
-`exhibition_5918_surrealist_book_27sep`, `exhibition_5932_nilima_sheikh` —
-saved by her the day the paced headed sweep was challenged on page 19. She
-wants these four and not the rest of MoMA's calendar, so her rows come from
-these pages through `scraper/from_saved_pages.js`, with the 22 Sep `listing`
-supplying titles and dates (all four are on it; the dates agree with each
-page's own date line). Images stripped; the page text is whole.
+`exhibition_5918_surrealist_book_27sep`, `exhibition_5932_nilima_sheikh`,
+saved by her. Used for the one-off saved-pages run (`from_saved_pages.js`) and
+now as the recipe's offline test. **MoMA has been swept live since 30 Sep** (her
+ruling — no more pages saved by hand). Images stripped; the page text is whole.
