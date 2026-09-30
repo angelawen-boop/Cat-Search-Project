@@ -18,6 +18,7 @@
 'use strict';
 const path = require('path');
 const S = require('../sweep_prototype.js');
+S.useFixtureWaits(); // saved pages: nothing can arrive late — see PAUSES THAT ONLY A LIVE PAGE CAN USE
 const QC = require('../qc.js');
 const { chromium } = require('playwright');
 

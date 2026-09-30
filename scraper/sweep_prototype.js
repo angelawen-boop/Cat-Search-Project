@@ -569,6 +569,22 @@ const NAV_TIMEOUT = 20000;      // ceiling for the HTML itself to arrive
 const CONTENT_TIMEOUT = 8000;   // extra grace for client-rendered body text
 const MIN_BODY_CHARS = 200;     // below this a page is a shell, not content
 
+// PAUSES THAT ONLY A LIVE PAGE CAN USE. Each waits for the outside world: text
+// a site's script has yet to draw, cards a scroll has yet to fetch, a network
+// fault to pass before one retry. A fixture's page is a saved file with every
+// outside request refused — nothing can arrive late, so each pause there is
+// dead time: 5 of the suite's 8 minutes on 30 Sep, most of it waiting for text
+// on pages a fixture leaves blank on purpose, and retrying pages it refuses on
+// purpose. useFixtureWaits() zeroes them; the steps themselves all still run,
+// so a check still sees every branch. A real sweep never calls it.
+//
+// Deliberately NOT here: the 1.5s settles after a navigation was interrupted
+// or a load-more followed its link — those wait for the browser itself, which
+// runs in a fixture too — and pacing and robots.txt, which fixtures set
+// themselves (usePacerForFixtures, useRobotsForFixtures).
+const WAITS = { content: CONTENT_TIMEOUT, scrollStep: 450, beforeRetry: 2000 };
+function useFixtureWaits() { WAITS.content = 1; WAITS.scrollStep = 0; WAITS.beforeRetry = 0; }
+
 // How many pages of a numbered archive to follow before giving up. See
 // followPagination() — this is a runaway guard, never the intended stop, so
 // hitting it leaves a marker row rather than quietly truncating the venue.
@@ -2110,7 +2126,7 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
     await page.waitForFunction(
       (min) => document.body && document.body.innerText.trim().length > min,
       MIN_BODY_CHARS,
-      { timeout: CONTENT_TIMEOUT }
+      { timeout: WAITS.content }
     ).catch(() => {});
 
     return { ok: true, status };
@@ -2145,7 +2161,7 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
     // again is exactly the hammering the standing rule forbids (Section 4).
     if (attempt === 0 && TRANSIENT_FAILURES.has(reason)) {
       log(`  ${reason} on ${url} — retrying once${stall ? ` (${stall})` : ''}`);
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(WAITS.beforeRetry);
       return safeGoto(page, url, venue, context, 1);
     }
 
@@ -6396,7 +6412,7 @@ async function autoScroll(page, maxSteps = 12) {
       // the page had before the new cards arrived, so two steps look identical
       // and the loop stops at the fold — which is exactly how the KHM's three
       // upcoming exhibitions stayed invisible even with scrolling switched on.
-      await page.waitForTimeout(450);
+      await page.waitForTimeout(WAITS.scrollStep);
       const h = await page.evaluate(() => document.body.scrollHeight);
       // One unchanged step is not proof: a slow fetch can land between two
       // measurements. Stop after two in a row.
@@ -7543,6 +7559,8 @@ module.exports = {
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
   // Pure, or driven with a gap of milliseconds — scraper/pacing.test.js.
   gatekeeperFrom, objectionFrom, laneCooldown, knownGatekeepers, makePacer, pacedWithheld, usePacerForFixtures, usePageKeepForFixtures, pageKeepFor, UNWIRED,
+  // Every fixture that drives a browser — see PAUSES THAT ONLY A LIVE PAGE CAN USE.
+  useFixtureWaits,
   // HEADED: pure, or a path — pacing.test.js H-001 to H-003; mode B, H-005 to H-007.
   splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome, HEADED_DEBUG_PORT, attachHeadedContext,
   saysOngoing, applyLookback, expandYearArchive, expandDateRange, expandFromToday, keptDespiteLookback, withoutQuery, listingPages, followPagination,

@@ -7,6 +7,7 @@
  */
 'use strict';
 const S = require('../sweep_prototype.js');
+S.useFixtureWaits(); // saved pages: nothing can arrive late — see PAUSES THAT ONLY A LIVE PAGE CAN USE
 const { chromium } = require('playwright');
 
 let failures = 0;

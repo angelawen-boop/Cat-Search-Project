@@ -25,6 +25,7 @@ const os = require('os');
 const path = require('path');
 const zlib = require('zlib');
 const S = require('../sweep_prototype.js');
+S.useFixtureWaits(); // saved pages: nothing can arrive late — see PAUSES THAT ONLY A LIVE PAGE CAN USE
 const K = require('../page_keep.js');
 const { chromium } = require('playwright');
 
