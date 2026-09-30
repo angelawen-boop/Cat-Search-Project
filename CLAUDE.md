@@ -927,9 +927,8 @@ each other; not handled). Buttons there: **Load** (a ledger file), **Save**,
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
 live on the test page **35.2 · cloud 3** (footer shows 34.13 · cloud 3); the
-branch holds **35.3 · cloud 3** (file reads 34.14 · cloud 3). Edits stay
-"cloud 3" until she says. **The branch is 50 commits behind `main`** — merge
-`main` in before the page is rebuilt.
+branch holds **35.4 · cloud 3** (`main` merged in 30 Sep). Edits stay
+"cloud 3" until she says. Merge `main` in again before the page is rebuilt.
 
 **What the store holds:**
 - **The live ledger** — the only thing the app reads and writes as she works.
@@ -977,25 +976,13 @@ Parked: two tabs open at once.
 
 ### 2. The held pile — the next import (six venues)
 
-**Raw, to be stitched and compressed as one when she says** (her ruling 27 Sep):
+**Stitched and compressed 30 Sep: `stitch_20260930_0758/sweep_compressed.csv`,
+189 rows** (Ashmolean 24, MAD 20, British Museum 34, d'Orsay 58, Morgan 39,
+MoMA 14). Through the intake against her 24 Sep ledger: 189 Add, 0 unfiled.
+MoMA is the sweep, not the 4-row saved-pages run (her ruling).
 
-| Venue | Rows | Run |
-|---|---|---|
-| Ashmolean | 24 | `run_2026-09-27_192852` |
-| MAD Paris | 20 | `run_2026-09-27_200702` |
-| British Museum | 34 | `run_2026-09-30_165517` (titles corrected offline) |
-| d'Orsay | 58 | `run_2026-09-30_140401` |
-| Morgan | 39 | `run_2026-09-30_160740` |
-| MoMA | 14 | `run_2026-09-30_162442` |
-
-- **Not in it:** the superseded Morgan 15:38 run; the British Museum's 28 Sep run.
-- **Hers to decide:** MoMA's 4-row saved-pages run (`archive/run_2026-09-27_123228`,
-  moved by the tidy). Compared 30 Sep: the same 4 shows are in the sweep with
-  identical titles and dates; descriptions identical except one where MoMA
-  reordered artists' names; only the notes differ.
 - **App 35.4 must be published before the import** — it knows `ashmolean`.
-- Then: stitch, compress, qc, read the cards through the intake, send the one
-  file (§5). She works it in sittings with the partial-apply button (§4).
+- She works the cards in sittings with the partial-apply button (§4).
 
 ### 3. Fixes not yet checked in the cases they were written for
 
