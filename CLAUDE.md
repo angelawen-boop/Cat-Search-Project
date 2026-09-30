@@ -1368,9 +1368,9 @@ after the run** — the "Installations and projects" section is dropped on the
 listing, 14 pages next time (MM-001–003). Also fixed, and the run corrected
 offline: three titles lost their colon (MoMA writes a featured title twice,
 MM-004), and a gallery-closure notice in *Architects of Liberation* (MM-005).
-Moved to her laptop; swept from now on. **Raw, in the held pile — it
-replaces the 4-row saved-pages run `run_2026-09-27_123228`**, which is not to
-be stitched with it.
+Moved to her laptop; swept from now on — no more pages saved by hand (her
+ruling); the pages she saved are kept. **Raw, in the held pile** (whether the
+4-row saved-pages run goes too is hers — above).
 
 **Next, her plan 30 Sep: `brit` re-tested in mode B**, so no headed venue is
 proven only in mode A. ~41 pages. Nothing to change — headed means mode B.
@@ -1391,8 +1391,11 @@ ruling 27 Sep):** Ashmolean 24 (`run_2026-09-27_192852`), MAD 20
 (`run_2026-09-27_200702`), British Museum 33 (`run_2026-09-28_121556`, unless
 today's mode-B re-test replaces it), d'Orsay 58 (`run_2026-09-30_140401`),
 Morgan 39 (`run_2026-09-30_160740`), MoMA 14 (`run_2026-09-30_162442`). Not
-in it: the superseded Morgan 15:38 run and MoMA's 4-row saved-pages run
-(archived). App 35.4 must be live before the import (§4) — it carries
+in it: the superseded Morgan 15:38 run. **MoMA's 4-row saved-pages run
+(`archive/run_2026-09-27_123228`, moved by the start-up tidy, not deleted) is
+HERS to include or not** — compared 30 Sep: the same 4 shows are in the
+sweep, titles and dates identical, descriptions identical but one where MoMA
+itself reordered artists' names since 27 Sep; only the notes differ. App 35.4 must be live before the import (§4) — it carries
 `ashmolean`.
 
 **British Museum, 28 Sep 12:15 — CLEAN, her laptop, headed (mode A).** 41
