@@ -1,0 +1,17 @@
+{
+  "run": "stitch_20260930_1013",
+  "previous": "stitch_20260930_0758",
+  "maxWords": 10,
+  "rows": [
+    {
+      "index": 149,
+      "venue_code": "morgan",
+      "title": "Giovanni Bellini's \"Pietà\" Restored and Pietro Perugino’s “Man of Sorrows”",
+      "url": "https://www.themorgan.org/exhibitions/bellini-perugino",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "The Morgan is honored to display two Italian Renaissance masterpieces: Giovanni Bellini's Pietà (also known as Dead Christ Supported by Angels, ca. 1470) and Pietro Perugino’s Man of Sorrows (1495). The Pietà by Giovanni Bellini (1424/26–1516), on view in the United States for the first time, is on loan from the Museo della Città in Rimini, Italy, following a comprehensive conservation treatment made possible by Venetian Heritage, Inc. This melancholy and powerful Pietà shows youthful angels contemplating the wounds of Christ’s dead body as they arrange it for veneration. In contrast to other versions of the subject, the angels in this painting do not wail uncontrollably; instead, the work’s poignancy derives from their sad, pensive preparation of Christ’s body. The Man of Sorrows by Pietro Perugino (ca. 1450–1523), on loan from the Galleria Nazionale dell’Umbria, Perugia, also shows Christ within his tomb, with his eyes closed and head bowed, displaying his wounds. The painting, which retains its original frame, was a part of an altarpiece commissioned by the Decemviri, Perugia’s ten ruling magistrates, for their chapel in the town hall. Its display at the Morgan is thanks to the Friends of Umbria, a newly founded American organization supporting the National Museums of Umbria. These exceptional loans are displayed in J. Pierpont Morgan’s Study within the Morgan’s historic library, alongside highlights of Morgan’s own Renaissance collection, including paintings by Hans Memling and Perugino and sculptures by Antonio Rossellino.",
+      "englishTitle": false
+    }
+  ]
+}

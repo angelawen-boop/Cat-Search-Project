@@ -11,6 +11,7 @@ the data — the Morgan is swept live from her laptop.
 | `exhibition_ballets_russes.mhtml` | `/exhibitions/ballets-russes` — past |
 | `listing_current.mhtml`, `listing_upcoming.mhtml` | the two listings |
 | `listing_past_2025-2026.mhtml` | past, year pair 2025-2026, page 1 of 3 |
+| `exhibition_bellini_perugino.mhtml` | `/exhibitions/bellini-perugino` — past; saved 30 Sep |
 
 Read an `.mhtml` with `email.message_from_bytes` and take the `text/html`
 part — a plain grep sees quoted-printable.
@@ -45,3 +46,8 @@ dates and a paragraph each.
 - **Past blurbs are read off the listing; pages are not opened** (her ruling) —
   eight listing loads instead of dozens of show pages. Collections Spotlight is
   excluded (§2 of the guide).
+- **Unless the listing has no description — then the page IS opened** (her
+  ruling, 30 Sep). The Bellini row's body is a picture and its caption only;
+  captions are `p.small`, skipped (`listingRow.skip`), so the row comes back
+  empty and its page is read. Show pages carry the same `p.small` captions
+  inside the body, skipped there too (`descriptionSkip`). MP-004, MP-011/012.

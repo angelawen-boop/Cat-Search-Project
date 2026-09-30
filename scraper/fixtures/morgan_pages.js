@@ -85,9 +85,14 @@ const check = (name, ok, got) => {
       p1.length > 0 && past('-p2').length === p1.length && past('-p3').length === p1.length,
       `page 1: ${p1.length}, page 2: ${past('-p2').length}, page 3: ${past('-p3').length}`);
     const later = [...past('-p2'), ...past('-p3')];
-    check('MP-004: every show on pages 2 and 3 carries its listing description',
-      later.length > 0 && later.every(r => (r.summary || '').length > 80),
-      later.filter(r => (r.summary || '').length <= 80).map(r => r.title).join(' | '));
+    // The Bellini row's listing text is a picture caption only — no
+    // description, so it must come back EMPTY here and have its page opened
+    // (MP-011/012). Every other show carries its listing description.
+    const captionOnly = r => /bellini-perugino/.test(r.url);
+    check('MP-004: every show on pages 2 and 3 carries its listing description — and the caption-only one carries none',
+      later.length > 0 && later.filter(r => !captionOnly(r)).every(r => (r.summary || '').length > 80)
+      && later.some(captionOnly) && later.filter(captionOnly).every(r => !r.summary),
+      later.filter(r => captionOnly(r) ? !!r.summary : (r.summary || '').length <= 80).map(r => r.title).join(' | '));
     check('MP-005: Collections Spotlight is excluded on every page, at either address shape',
       !real.some(r => /Collections?\s+Spotlight/i.test(r.title)), real.filter(r => /Spotlight/i.test(r.title)).map(r => r.url).join(' '));
     check('MP-006: every past show has a closing date',
@@ -135,6 +140,19 @@ const check = (name, ok, got) => {
       written.some(r => keptPast.includes(r.url))
       && written.filter(r => keptPast.includes(r.url)).every(r => (r.summary || '').length > 80),
       written.filter(r => keptPast.includes(r.url) && (r.summary || '').length <= 80).map(r => r.title).join(' | '));
+
+    // MP-011/012 — NO DESCRIPTION ON THE LISTING, SO THE PAGE IS OPENED. Her
+    // ruling, 30 Sep. The Bellini row's body on her saved listing is a
+    // picture and its caption, nothing else; the caption reached her file as
+    // the description and the page with the real one was never opened.
+    const bellini = B + '/exhibitions/bellini-perugino';
+    const bRow = written.find(r => r.url === bellini);
+    check('MP-011: a listing row whose only text is a picture caption is not taken as described',
+      !keptPast.includes(bellini) && !!bRow,
+      bRow ? 'taken off the listing: ' + keptPast.includes(bellini) : 'the Bellini row was not written');
+    check('MP-012: its own page is opened and gives the description — never the caption',
+      !!bRow && /plain paragraph standing in/.test(bRow.summary || '') && !/Photography by/.test(bRow.summary || ''),
+      bRow ? (bRow.summary || '(empty)').slice(0, 90) : 'no row');
     await full.close();
   } finally {
     await browser.close();
