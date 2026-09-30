@@ -1839,8 +1839,18 @@ async function textFromListingRow(link, rowSpec) {
       const box = el.closest(spec.container);
       if (!box) return '';
       const parts = [];
+      const clean = s => String(s || '').replace(/\s+/g, ' ').trim();
       for (const n of box.querySelectorAll(spec.summary)) {
-        const t = (n.innerText || n.textContent || '').replace(/\s+/g, ' ').trim();
+        // `skip`: what inside the field is NOT description — a picture's
+        // caption. Left in, a caption alone passes for a blurb and the page
+        // that holds the real one is never opened (the Morgan's Bellini, 30 Sep).
+        // Its TEXT is taken out of the field's text, so the field keeps the
+        // spacing the page gives it.
+        let t = clean(n.innerText || n.textContent);
+        if (spec.skip) for (const s of n.querySelectorAll(spec.skip)) {
+          const c = clean(s.innerText || s.textContent);
+          if (c) t = clean(t.split(c).join(' '));
+        }
         if (t) parts.push(t);
       }
       return parts.join('\n\n');
@@ -2859,9 +2869,9 @@ const CURATORIAL_SELECTORS = [
   'p',
 ];
 
-async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, creditPara, keepBold, dropSentence) {
+async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, creditPara, keepBold, dropSentence, descriptionSkip) {
   try {
-    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe, keepBold, dropRe }) => {
+    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe, keepBold, dropRe, skipSel }) => {
       const CREDIT = creditRe ? new RegExp(creditRe, 'i') : null;
       const ALWAYS = new RegExp(alwaysRe, 'i');
       const NOISE = new RegExp(noiseRe, 'i');
@@ -3009,7 +3019,14 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, cr
           if (hasPlainProse && !keepBold && boldOnly(el)) continue;
           // A recipe's own credit paragraph — see `creditPara`.
           if (CREDIT && CREDIT.test(clean(el.innerText))) continue;
-          const t = stripBoilerplate(clean(el.innerText));
+          // `descriptionSkip`: a picture's caption inside the description
+          // field — its text taken out, the rest kept as the page spaces it.
+          let raw = clean(el.innerText);
+          if (skipSel) for (const s of el.querySelectorAll(skipSel)) {
+            const c = clean(s.innerText);
+            if (c) raw = clean(raw.split(c).join(' '));
+          }
+          const t = stripBoilerplate(raw);
           if (t.length > 60) out.push(t);
         }
         if (out.length) return out.join(' ').slice(0, 2000);
@@ -3023,7 +3040,8 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, cr
          MIN_WRAPPER_PARAS,
          creditRe: creditPara ? creditPara.source : null,
          keepBold: !!keepBold,
-         dropRe: dropSentence ? dropSentence.source : null });
+         dropRe: dropSentence ? dropSentence.source : null,
+         skipSel: descriptionSkip || null });
   } catch {
     return '';
   }
@@ -3927,6 +3945,17 @@ function scopeSelector(within, selector) {
  * Where a row was found is not written here: listing_note.js.
  */
 
+/**
+ * The note saying which dates came from somewhere other than a date field.
+ * A sentence on her card, so it opens with a capital: "Opening date …",
+ * "Opening and closing dates …". Both date notes are written here and nowhere else.
+ */
+function filledDatesNote(filled, how) {
+  const which = filled.join(' and ');
+  return which.charAt(0).toUpperCase() + which.slice(1)
+    + (filled.length > 1 ? ' dates ' : ' date ') + how;
+}
+
 function addNote(existing, note) {
   if (!existing) return note;
   // Notes are whole sentences now, so join them as sentences. Only fall back
@@ -4106,7 +4135,7 @@ async function collectFromListing(page, opts) {
     //
     // The V&A runs four: South Kensington, V&A East Museum, V&A East Storehouse
     // and Young V&A, and its listing mixes all four on one page. Her venue list
-    // (CLAUDE.md §7) says South Kensington only, so the other three are hers to
+    // (docs/venue_urls.md) says South Kensington only, so the other three are hers to
     // exclude, already ruled, and the card states which site it is.
     //
     // Same footing as excludeOngoing and permitted for the same reason: the
@@ -4639,9 +4668,14 @@ const VENUES = {
           // once for going too fast; this way the whole archive costs eight
           // page loads. The paragraph is a complete piece of curatorial prose,
           // which is all compression needs.
+          // NO DESCRIPTION ON THE LISTING → THE PAGE IS OPENED — her ruling,
+          // 30 Sep. The Bellini row's body is a picture and its caption
+          // (`p.small`), nothing else; the caption is skipped, the row comes
+          // back empty, and the ordinary page pass reads its own page.
           listingRow: {
             container: '.node--type-exhibitions',
             summary: '.field--name-body',
+            skip: 'p.small, figcaption',
           },
           // Each row's dates sit in their own field ("March 17 through June
           // 28, 2026"). The row also holds the paragraph, too long for the
@@ -4675,6 +4709,10 @@ const VENUES = {
     // panel: a class meaning "a field" in general, believed as though it meant
     // this field in particular.
     description: 'article.exhibitions .field--name-body',
+    // The show page puts its pictures' captions INSIDE that field, each a
+    // `p.small` ("… Photography by …, courtesy of …"). Not description; taken
+    // out (the Bellini page, 30 Sep). Same marker as on the past listing.
+    descriptionSkip: 'p.small, figcaption',
 
     // A standing rotation of the Morgan's own holdings under several names —
     // Summer 2026, Spring 2026, Fall 2026. Not a temporary exhibition, so no
@@ -4836,7 +4874,7 @@ const VENUES = {
 
   // TATE — two venues in her list, one website, and the URL is what separates
   // them. Kept as two recipes rather than one shared block because they are two
-  // entries in her ledger; merging them was rejected (CLAUDE.md §7).
+  // entries in her ledger; merging them was rejected (CLAUDE.md §8).
   //
   // THE QUERY FILTERS ARE THE UNLOCK, and they were hiding in Tate's own
   // navigation menu. The guide recorded that "venue-filtered query-param URLs
@@ -6671,7 +6709,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
         }
       }
 
-      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt, vrec.creditPara, vrec.keepBold, vrec.dropSentence);
+      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt, vrec.creditPara, vrec.keepBold, vrec.dropSentence, vrec.descriptionSkip);
       if (text) {
         row.summary = text;
         fetched++;
@@ -6708,7 +6746,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
           if (!row.end_date && ed)   { row.end_date   = ed; filled.push('closing'); }
           if (filled.length) {
             row.notes = addNote(row.notes,
-              `${filled.join(' and ')} date taken from the site's structured data, not its visible page.`);
+              filledDatesNote(filled, 'taken from the site\'s structured data, not its visible page.'));
           }
           if (!row.summary && ev.description && ev.description.length > 60) {
             row.summary = ev.description.slice(0, 2000);
@@ -6767,7 +6805,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
         if (!row.end_date   && p.end)   { row.end_date   = p.end;   filled.push('closing'); }
         if (filled.length) {
           row.notes = addNote(row.notes,
-            `${filled.join(' and ')} date read from a sentence, not a date field: "${p.raw}".`);
+            filledDatesNote(filled, `read from a sentence, not a date field: "${p.raw}".`));
           // SAY SO WHERE A RUN WAS EXTENDED — here as well as on the listing
           // path. Samori's page reads "28 novembre 2025 – 10 marzo 2026 –
           // prorogata al 9 giugno 2026"; the row closed correctly on 9 June but
@@ -7560,6 +7598,7 @@ if (require.main === module) {
 // Exported for scraper/date.test.js. Only pure functions — nothing here touches
 // the network, the browser or the filesystem.
 module.exports = {
+  filledDatesNote,
   findDateRange, findDateRangeInProse, parseMonthDay,
   // Exported for the 23 Sep repair of her import file, which must apply the
   // CORRECTED rule rather than a copy of it.

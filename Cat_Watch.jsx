@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "35.4 · cloud 3";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
+const APP_VERSION = "35.5 · cloud 3";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
 const APP_VERSION_DATE = "30 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -164,16 +164,25 @@ function isUndecidedCard(p,dec){
   return !Object.values(dec.fields||{}).some(v=>v);
 }
 
+// EVERY DECIDED CARD LANDS IN ONE OF THREE COUNTS — her ask, 30 Sep: 53 cards
+// decided and the footer said 48, with nothing to say where the other 5 went.
+// Decided = to apply + quarantined + rejected, always, so the footer adds up.
 function countDecisions(proposals,decisions){
-  let acceptedCount=0,undecidedCount=0;
+  let acceptedCount=0,undecidedCount=0,quarantinedCount=0,rejectedCount=0;
   (proposals||[]).forEach((p,i)=>{
     const dec=(decisions||{})[i]||{};
     if(isUndecidedCard(p,dec)){undecidedCount++;return;}
-    if(p.type==="add"){ if(dec.mode==="accept")acceptedCount++; return; }
+    if(p.type==="add"){
+      if(dec.mode==="accept")acceptedCount++;
+      else if(dec.mode==="never")quarantinedCount++;
+      else rejectedCount++;
+      return;
+    }
     if(dec.mode==="addnew"){acceptedCount++;return;}
     if(Object.values(dec.fields||{}).some(v=>v==="accept"))acceptedCount++;
+    else rejectedCount++;
   });
-  return {acceptedCount,undecidedCount};
+  return {acceptedCount,undecidedCount,quarantinedCount,rejectedCount};
 }
 
 // ===== TEMPORARY, WITH countDecisions BECAUSE A FIXTURE MUST REACH IT =====
@@ -1436,12 +1445,12 @@ let AUTOLOAD_FIRED=false; // module-level: survives a strict-mode remount so ope
 // A description, as it goes into a file name: lower case, words joined by hyphens.
 function labelSlug(label){return String(label||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);}
 // WHAT A CLOUD SAVE IS CALLED IN THE LIST — her wording, 26 Sep. A copy made
-// by Save: 'Cloud copy of Export: "her description"'. A safety copy: its own
+// by Save: 'Export: "her description"' (her wording, 30 Sep; was "Cloud copy of Export"). A safety copy: its own
 // label; older safety copies were stored under the first wording and are
 // renamed on screen here, never rewritten in the store.
 function snapTitle(s){
   if(!s)return "";
-  if(s.kind!=="safety")return "Cloud copy of Export"+(s.label?": \u201c"+s.label+"\u201d":"");
+  if(s.kind!=="safety")return "Export"+(s.label?": \u201c"+s.label+"\u201d":"");
   const l=String(s.label||"");
   const m=l.match(/^Before rolling back to (.*)$/);
   if(m)return "Safety snapshot before roll-back to \u201c"+m[1].replace(/^Cloud copy before /,"Safety snapshot before ")+"\u201d";
@@ -3169,7 +3178,7 @@ export default function App(){
       </div>
     );
   };
-  const{acceptedCount,undecidedCount}=countDecisions(proposals,decisions);
+  const{acceptedCount,undecidedCount,quarantinedCount,rejectedCount}=countDecisions(proposals,decisions);
 
   // THE LINE UNDER THE BUTTONS. What the last Save did, in her words, until
   // the next change; otherwise what was loaded. Whether the work is SAFE is
@@ -3279,10 +3288,14 @@ export default function App(){
               the sentence did not name \u2014 neither applied nor refused \u2014 so the
               arithmetic stopped closing and the bar quietly under-reported.
               The clause below is not decoration: drop it and the numbers no
-              longer add up to the pile she started with. It says HOW to get
-              them back too, because "left behind" with no next step reads as
-              lost. */}
-          <span>{"Import complete and needs to be saved offline and to the cloud \u2014 tap Save now. "+refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated"+(refreshDone.never?", "+refreshDone.never+" never to be offered again":"")+(refreshDone.left?", "+refreshDone.left+" left undecided \u2014 import the same sweep file again to carry on with them":"")+"."}</span>
+              longer add up to the pile she started with. The way back for
+              them is on the partial-import confirm box.
+              TWO PARAGRAPHS, her wording, 30 Sep: the instruction, a blank
+              line, then the counts. */}
+          <span>
+            <span style={{display:"block",marginBottom:"1.45em"}}>{"Import complete. Save it now both offline and to the cloud."}</span>
+            <span style={{display:"block"}}>{refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated"+(refreshDone.never?", "+refreshDone.never+" quarantined":"")+(refreshDone.left?", "+refreshDone.left+" left undecided":"")+"."}</span>
+          </span>
         </div>}
         {hasLedger&&unconfirmedSave&&<div style={{marginTop:8,padding:"9px 12px",background:C.holdBg,border:"2px solid "+C.soft,borderRadius:5,fontSize:12.5,color:C.ink,lineHeight:1.45,display:"flex",alignItems:"flex-start",gap:9}}>
           <span style={{fontSize:16,lineHeight:1.1}}>{"\u2193"}</span>
@@ -3584,10 +3597,14 @@ export default function App(){
           );
         });})()}
       </div>
-      {showTop&&(
+      {/* TOP ON THE LEFT, BOTTOM ON THE RIGHT — her layout, 30 Sep. A pair
+          centred on the page, both shown once she has scrolled down. */}
+      {showTop&&(<>
         <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label="Return to top"
-          style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(-50%)",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>
-      )}
+          style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(calc(-100% - 5px))",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>
+        <button onClick={()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"})} aria-label="Jump to bottom"
+          style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(5px)",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2193"}</button>
+      </>)}
       {undo&&(
         <div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.onAction,borderRadius:4,padding:"7px 14px",fontSize:12,display:"flex",gap:10,alignItems:"center",zIndex:999,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
           {/* THE ORIGINAL STYLE, ONE WORD CHANGED — her ruling, 24 Sep:
@@ -3626,7 +3643,7 @@ export default function App(){
               here makes one. */}
           <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
             {snaps&&snaps.length>0&&<b>{snaps.length+" cloud save"+(snaps.length===1?"":"s")+". "}</b>}
-            {"From (1) exports that were also saved to the cloud and (2) safety snapshots taken of the current cloud state before a Load, Reset or roll-back to an earlier snapshot."}
+            {"From exports also saved to the cloud and safety snapshots (taken before a Load, Reset or roll-back to an earlier snapshot)."}
           </div>
           {snapWhy&&<div style={{fontSize:12,fontWeight:600,color:C.warnInk,background:C.warnBg,border:"1px solid "+C.warnEdge,borderRadius:4,padding:"5px 8px",marginBottom:8}}>{snapWhy}</div>}
           {snaps===null?<div style={{fontSize:12,color:C.soft}}>{"Reading cloud saves…"}</div>
@@ -3636,7 +3653,7 @@ export default function App(){
               <span style={{minWidth:120,fontWeight:600,whiteSpace:"nowrap"}}>{localReadable(s.at)}</span>
               {/* NO "AUTOMATIC" TAG — her ruling, 26 Sep: the copies SHE made are the
                   ones marked, by her own description in bold. */}
-              <span style={{flex:"1 1 160px"}}>{s.kind!=="safety"&&s.label?<>{"Cloud copy of Export: \u201c"}<b>{s.label}</b>{"\u201d"}</>:snapTitle(s)}<span style={{color:C.soft}}>{" · "+s.rows+" exhibitions"}</span>{s.filename&&<span style={{display:"block",fontSize:11,color:C.soft,wordBreak:"break-all"}}>{s.filename}</span>}</span>
+              <span style={{flex:"1 1 160px"}}>{s.kind!=="safety"&&s.label?<>{"Export: \u201c"}<b>{s.label}</b>{"\u201d"}</>:snapTitle(s)}<span style={{color:C.soft}}>{" · "+s.rows+" exhibitions"}</span>{s.filename&&<span style={{display:"block",fontSize:11,color:C.soft,wordBreak:"break-all"}}>{s.filename}</span>}</span>
               <button onClick={()=>downloadSnapshot(s)} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Download</button>
               <button onClick={()=>requestRollback(s)} disabled={snapBusy} style={{background:"none",border:"none",color:C.accent,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Roll back</button>
             </div>
@@ -3919,7 +3936,11 @@ export default function App(){
             </div>
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
               <button onClick={cancelRefresh} style={sBtn}>Cancel refresh</button>
-              <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>{acceptedCount} to apply</span>
+              {/* Rejected is named only when there is one: she asked for
+                  quarantined and to-apply, and a third "0" is one more number
+                  to read past. The three always add up to what is decided. */}
+              <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>
+                {(rejectedCount?rejectedCount+" rejected, ":"")+quarantinedCount+" quarantined, "+acceptedCount+" to apply"}</span>
               {/* THE COUNT IS THE WAY TO REACH ONE — raised as the gap the
                   block leaves and built at her ask. A number she cannot act on
                   is the thing that makes a hard gate feel arbitrary. It opens
@@ -3971,16 +3992,15 @@ export default function App(){
 
                   IT ASKS FIRST. What is left behind is not remembered anywhere
                   — that is not a fault to fix here, it is how refusing works
-                  today — so the confirm box says the number, says the way back,
-                  and says that rejections do not stick. Her call to make with
-                  the facts in front of her, every time, not once. */}
+                  today — so the confirm box says both numbers and the way back.
+                  Its wording is hers, 30 Sep. Her call to make with the facts
+                  in front of her, every time, not once. */}
               {offerPartialApply({acceptedCount,undecidedCount})&&<button
                 onClick={()=>setConfirmBox({
-                  title:"Update the ledger with part of this?",
+                  title:"Complete this partial import?",
                   text:acceptedCount+" decided "+(acceptedCount===1?"card":"cards")+" will go into your ledger now. "
-                    +undecidedCount+" undecided "+(undecidedCount===1?"card":"cards")+" will be left behind and are not remembered anywhere — "
-                    +"import the same sweep file again to pick them up. Anything you rejected will come back too. "
-                    +"Save straight afterwards.",
+                    +undecidedCount+" undecided "+(undecidedCount===1?"card":"cards")+" will be left behind \u2014 "
+                    +"import them using the same sweep file.",
                   act:()=>applyRefresh(true)})}
                 title={"Apply the "+acceptedCount+" you have decided and come back to the rest later."}
                 style={{...sBtn,borderColor:C.accent,color:C.accent,fontWeight:600}}>

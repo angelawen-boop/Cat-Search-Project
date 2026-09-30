@@ -161,7 +161,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     ok(same(snapData, afterStar), 'CA-004g: and it holds exactly the ledger on screen');
     ok(/Local file saved\. Extra copy also sent to the cloud\./.test(text()), 'CA-004h: the note says both happened, in her words');
     ok(/after starring/.test(text()) && /cat-watch-ledger-.*-after-starring\.json/.test(text()), 'CA-004i: the open drawer lists it at once, with its file name');
-    ok(/Cloud copy of Export: \u201cafter starring\u201d · 352 exhibitions/.test(text()), 'CA-004j: in the list it reads Cloud copy of Export: "her description" · count');
+    ok(/Export: \u201cafter starring\u201d · 352 exhibitions/.test(text())&&!/Cloud copy of/.test(text()), 'CA-004j: in the list it reads Export: "her description" · count');
 
     // 5. Another change, then roll back to the snapshot.
     ok(await afterSave(() => click(firstUnwatched())), 'CA-005: a second star saves');

@@ -251,6 +251,15 @@ check('18d: accepting one field of an edit decides the card', g.undecidedCount==
 g=cd([{type:'fill',upd:[{field:'endDate'}]}],{0:{mode:'addnew'}});
 check('18e: "this is a different show" decides the card', g.undecidedCount===0&&g.acceptedCount===1, g);
 
+// 18e2. THE FOOTER ADDS UP — her ask, 30 Sep: 53 decided, "48 to apply", and
+// nothing said where 5 went. Every decided card is exactly one of to apply,
+// quarantined, rejected.
+g=cd([{type:'add'},{type:'add'},{type:'add'},{type:'change',upd:[{field:'endDate'}]},{type:'fill',upd:[{field:'endDate'}]},{type:'add'}],
+  {0:{mode:'accept'},1:{mode:'never'},2:{mode:'reject'},3:{fields:{0:'reject'}},4:{fields:{0:'accept'}}});
+check('18e2: decided cards split into to apply, quarantined and rejected, and add up',
+  g.acceptedCount===2&&g.quarantinedCount===1&&g.rejectedCount===2&&g.undecidedCount===1
+  &&g.acceptedCount+g.quarantinedCount+g.rejectedCount+g.undecidedCount===6, g);
+
 // The gate has to hold on the pile she actually faces, not only on hand-built
 // cards.
 H.setRows([]);

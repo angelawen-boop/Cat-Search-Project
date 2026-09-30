@@ -25,7 +25,7 @@ The cost is out of all proportion to what she keeps.
 - **The output is the ordinary pro forma CSV** (CLAUDE.md §3), so stitch,
   compress, qc, the import and the catalogue lookup all work unchanged.
 - **A site that blocks us:** she saves the pages instead of giving links, and
-  the same reader reads those (as `from_saved_pages.js` does for MoMA).
+  the same reader reads those (as `from_saved_pages.js` did for MoMA on 27 Sep).
 
 ## Setting up a venue — once
 
@@ -59,7 +59,7 @@ plausible-looking wrong row.
 
 | Venue | State |
 |---|---|
-| `moma` | **Already works this way** — since 27 Sep she saves the pages of the shows she wants and `from_saved_pages.js` reads them (`run_2026-09-27_123228`, 4 rows). Belongs to this stream, not the sweep. **Today only:** `from_saved_pages.js` runs MoMA's full sweep recipe, so the listing page has to be one of her saved files. **Once this is built, MoMA is her saved show pages only** (her ruling 28 Sep) — no listing, no links, since MoMA refuses the container |
+| `moma` | **No longer — swept live from her laptop since 30 Sep** (her ruling). It was the first venue handled this way (27 Sep, `from_saved_pages.js`, 4 rows) |
 | Detroit Institute of Arts (DIA) | **The test case** — the first venue set up this way, her choice 28 Sep. No venue code chosen, no robots.txt read, no pages saved yet |
 | Guggenheim, Whitney | Named by her as likely candidates, 28 Sep. Nothing decided |
 
