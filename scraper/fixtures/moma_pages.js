@@ -46,11 +46,79 @@ const check = (name, ok, got) => {
     const v = S.VENUES.moma;
     for (const [f, lead, last] of CASES) {
       await page.setContent(htmlFromMhtml(path.join(PAGES, f)));
-      const t = await S.getCuratorialText(page, v.description, v.noise, v.noiseExempt, v.creditPara);
+      const t = await S.getCuratorialText(page, v.description, v.noise, v.noiseExempt, v.creditPara, v.keepBold, v.dropSentence);
       check(`MO-001: ${f} — opens on the curatorial text`, lead.test(t), t.slice(0, 120));
       check(`MO-002: ${f} — ends on it, whole`, last.test(t), t.slice(-160));
       check(`MO-003: ${f} — no credit, funder or licence text`, !/organized by|grateful|support|reproduce|©/i.test(t), t);
     }
+
+    // ── THE LISTING, 30 Sep — what is opened, and the names ─────────────────
+    // Her saved listing (listing_2026-09-30.html) has three sections under
+    // their own headings. Only the exhibitions are opened; the installations
+    // are dropped on the listing, never asked for. Show pages are one plain
+    // paragraph each: the question is which pages are asked for and which
+    // rows come back.
+    const B = 'https://www.moma.org';
+    const INSTALL = ['5861', '5908', '5907', '5940', '5933', '5797', '5943', '5870', '5935', '5942'];
+    const EXHIB = ['5890', '5928', '5912', '5906', '5794', '5678', '5932', '5926', '5920',
+                   '5918', '5936', '5910', '5869', '5916'];
+    const sweep = async (listingHtml, listingOnly) => {
+      const ctx = await browser.newContext();
+      const asked = [];
+      await ctx.route(() => true, r => {
+        const u = r.request().url();
+        if (r.request().resourceType() !== 'document') return r.abort();
+        asked.push(u);
+        if (u === B + '/calendar/exhibitions') return r.fulfill({ status: 200, contentType: 'text/html', body: listingHtml });
+        if (u.startsWith(B + '/calendar/exhibitions/')) return r.fulfill({ status: 200, contentType: 'text/html',
+          body: '<html><head><title>Show | MoMA</title></head><body><h1><p>Show</p></h1><div id="description"><p>'
+            + 'A plain paragraph standing in for the show page, long enough to count as curatorial text. '.repeat(3)
+            + '</p></div></body></html>' });
+        return r.abort();
+      });
+      const pg = await ctx.newPage();
+      const log = console.log; console.log = () => {};
+      let rows;
+      try { rows = await S.scrapeVenue(pg, 'moma', listingOnly ? { listingOnly: true } : {}); }
+      finally { console.log = log; await ctx.close(); }
+      return { rows: rows.filter(r => !String(r.title).startsWith('[')), asked };
+    };
+    const idOf = u => (String(u).match(/\/calendar\/exhibitions\/(\d+)/) || [])[1];
+
+    const l30 = fs.readFileSync(path.join(PAGES, 'listing_2026-09-30.html'), 'utf8');
+    const a = await sweep(l30, true);
+    const got = a.rows.map(r => idOf(r.url)).sort();
+    check('MM-001: 30 Sep listing — exactly the 9 current and 5 upcoming exhibitions, her count 14',
+      JSON.stringify(got) === JSON.stringify([...EXHIB].sort()), got.join(' '));
+
+    const l22 = htmlFromMhtml(path.join(PAGES, 'listing.mhtml'));
+    const b = await sweep(l22, true);
+    check('MM-002: 22 Sep listing — the same three headings: 14 exhibitions, no installation',
+      b.rows.length === 14 && !b.rows.some(r => INSTALL.includes(idOf(r.url))), b.rows.map(r => r.title).join(' | '));
+
+    const c = await sweep(l30, false);
+    const askedIds = c.asked.map(idOf).filter(Boolean);
+    check('MM-003: the full sweep never asks for an installation page — 14 pages opened, not 24',
+      askedIds.length === 14 && !askedIds.some(id => INSTALL.includes(id)), askedIds.join(' '));
+    check('MM-003b: and writes those 14',
+      c.rows.length === 14, c.rows.length);
+
+    const title = id => (a.rows.find(r => idOf(r.url) === id) || {}).title;
+    const want = { '5890': 'Peggy Weil: Core Memory', '5928': 'Sarah Michelson: nowhere', '5912': 'Pierre Huyghe: UUmwelt',
+      '5906': 'Architects of Liberation: Modernism in Western Africa',
+      '5920': 'It’s Alive! A Century of Animation from the Collection', '5916': 'Mondrian Boogie Woogie' };
+    const bad = Object.entries(want).filter(([id, t]) => title(id) !== t);
+    check('MM-004: titles as MoMA joins them — the colon kept on the featured cards, none added after "!"',
+      bad.length === 0, bad.map(([id, t]) => `${id}: "${title(id)}" (want "${t}")`).join(' | '));
+
+    // ── THE VISITOR NOTICE, on the Architects page as the sweep read it ──────
+    const arch = fs.readFileSync(path.join(PAGES, 'exhibition_5906_architects_30sep.html'), 'utf8');
+    await page.setContent(arch);
+    const t1 = await S.getCuratorialText(page, v.description, v.noise, v.noiseExempt, v.creditPara, v.keepBold, v.dropSentence);
+    check('MM-005: Architects of Liberation — the gallery-closure notice is dropped, the text before it kept',
+      !/Please note/i.test(t1) && /^During the unprecedented period of liberation/.test(t1), t1.slice(-200));
+    const t0 = await S.getCuratorialText(page, v.description, v.noise, v.noiseExempt, v.creditPara, v.keepBold, null);
+    check('MM-006: the same page without the rule still carries it (the test can fail)', /Please note/i.test(t0), t0.slice(-120));
   } finally { await browser.close(); }
   console.log(failures ? failures + ' failed' : 'the MoMA description reads her saved pages');
   process.exit(failures ? 1 : 0);

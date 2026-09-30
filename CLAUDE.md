@@ -166,7 +166,7 @@ Judgement about the outside world is not in any file.
 | `uffizi` | Headlines kept as titles; undated rows kept |
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Bare "from the Collection" and titles with "Film Series" excluded; family, named and lent collections KEPT (24 Sep). No note on the card for films or installations; no model judging rows — compression stays mechanical (24 Sep) |
 | `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection, a gift or acquisitions** — they can be major (24 Sep) |
-| `moma` | **Current and upcoming only.** She does not want its past at all. **Not swept, 27 Sep** — she saves the pages of the shows she wants. Belongs to the picked-shows stream (§7.11), not the sweep |
+| `moma` | **Current and upcoming only.** She does not want its past at all. **Exhibitions only**: the listing's "Installations and projects" section is dropped on the listing, never opened (her finding 30 Sep; MM-001–003). **Swept, her laptop, mode B, from 30 Sep** — the saved-pages route is retired. Her count 30 Sep: 9 current + 5 upcoming = 14 |
 | `brit` | Current/upcoming asks for **Exhibition AND Experience** — the Bayeux Tapestry is filed as an Experience (her finding, 27 Sep; BM-012). The selector still keeps only `/exhibitions/` pages. **Her count, 27 Sep:** current + upcoming 4; past since 1 July 2024, by the listing's year headings, 2026 **9**, 2025 **12**, 2024 **10** (her correction 28 Sep: *Legion*, closed 23 Jun 2024, is out) — her counts are always what should reach the app; a heading is the year a show OPENED, and one display (*Admonitions*) is listed under every year at one address, so it is one row. **A page outside the cutoff is never opened (her ruling, 28 Sep):** the past page is read in its year sections only (not the introduction's prose links or the current carousel), and nothing under 2023 is opened — proven to hold nothing that reaches the floor (BM-013–015). **Her laptop's, headed, from 28 Sep** |
 | `mam` | Collection displays excluded — subtitle "Permanent collection" (Cultural Olympiad) and "New acquisitions…"; also the Prix Marcel Duchamp and Oliver Beer's films (25 Sep). Her count: 3 current, 1 upcoming, 16 past — less those, 3 + 0 + 13 |
 | `mad` | Nothing excluded. Her count: 2 current, 2 upcoming, 16 past. Musée Nissim de Camondo ignored — closed until 2030 (25 Sep) |
@@ -547,10 +547,10 @@ first number to scroll past:
 | `recheck_shop.js` | the real app in jsdom, buttons pressed — Re-check (R-001 to R-023), blocked shops and web-found shop links (L-001 to L-019), search with filters (S-001 to S-003) |
 | `mam_pages.js` | the MAM recipe on its saved archive pages — her exclusions and count |
 | `ashmolean_pages.js` | the Ashmolean recipe on pages read once and saved (`docs/ashmolean_pages/`), no network — her count, dates completed from the show's page, the description; the bare page (AS-021–025); the 27 Sep sweep's four faults fixed on its kept pages (AS-026–033) |
-| `page_keep_pages.js`, `moma_pages.js` | pages kept as read (a cut-short run asks only for what is missing); MoMA's description without its credit paragraph |
+| `page_keep_pages.js`, `moma_pages.js` | pages kept as read (a cut-short run asks only for what is missing); MoMA's description without its credit paragraph, and its listing on her saved pages — installations never opened, titles as MoMA joins them (MM-001–006) |
 | `mad_pages.js` | the MAD recipe on her saved pages, no network — her count, dates, titles, the description; its sponsor sentence (MD-010/011) |
 | `brit_pages.js` | the British Museum recipe on her saved pages, no network — titles, year headings, dates, the description; no page outside the cutoff opened (BM-013–015) |
-| `morgan_pages.js` | the Morgan recipe on her saved pages, no network — the past paged through with its own settings, dates from each row's field, current/upcoming names and dates from the card, "Ongoing" dropped (MP-001–008) |
+| `morgan_pages.js` | the Morgan recipe on her saved pages, no network — the past paged through with its own settings, dates from each row's field, current/upcoming names and dates from the card, "Ongoing" dropped (MP-001–008); the whole sweep writes the rows read off the listing (MP-009/010) |
 | `orsay_pages.js` | the d'Orsay recipe on her saved pages, no network — her tag rulings, dates, titles, the description (every kind of show page: at the museum, off-site, "Focus on our collections") |
 | `summary_pages.js` | descriptions on saved pages (`docs/summary_pages/`), no network — the museum's own text, never a press list, credit or ticket note |
 | `title_case_pages.js` | the real scraper over pages she saved (`docs/title_case_pages/`), no network — titles in the museum's own letters, Tate asking for exhibitions only |
@@ -698,16 +698,16 @@ request would settle.
 
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
-announces which it thinks it is before fetching. **Container: 21. Her laptop: 6**
-— `met`, `artic`, `mad`, `brit`, `orsay`, `morgan` (`route: 'local'`; `mad` by
-her ruling 27 Sep, `brit` 28 Sep, `orsay` and `morgan` 30 Sep, each after its
-clean laptop sweep).
+announces which it thinks it is before fetching. **Container: 20. Her laptop: 7**
+— `met`, `artic`, `mad`, `brit`, `orsay`, `morgan`, `moma` (`route: 'local'`;
+`mad` by her ruling 27 Sep, `brit` 28 Sep, `orsay`, `morgan` and `moma` 30 Sep,
+each after its clean laptop sweep). Every headed venue is hers (R-002).
 
 **Her rule, 26 Sep: a venue moves to her laptop only after a COMPLETE, CLEAN
 sweep from there.** Until then it stays with the container, whose refusals are
 its marker rows — the sweep record and her "last tried" date. Candidates are
 tested on her laptop by NAMING them. `moma` went early on 22 Sep on one probe
-page and came back; it is the last candidate.
+page and came back; none is left.
 Fixtures R-001 to R-005.
 
 **`headed: true` — BUILT 26 Sep: on her machine the venue is swept in a
@@ -731,8 +731,9 @@ no challenge (§7.5).**
   and works in a tab of its own, closing only its own tabs (H-005 to H-007).
   No Chrome open → nothing asked, the run says so; never falls back to A.
   Built on A first only because A was the one mode ever run. **Proven live
-  30 Sep: d'Orsay, 54 pages ~30s apart, no challenge** — where A was refused
-  at 18 the day before. One run: that B is WHY is likely, not proven.
+  30 Sep: d'Orsay 54 pages, the Morgan 18 (twice), MoMA 25 — no challenge**,
+  where A was refused at 18 (d'Orsay) and 19 (MoMA). That B is WHY is likely,
+  not proven.
 - **Her rulings, 29 Sep: never split one venue across days** (pages kept
   make it possible; she will not run a sweep day after day), **and no
   slower pace** — no venue gets an hour. Whether several Cloudflare venues
@@ -1019,6 +1020,11 @@ keeps making in new clothes.
 - **A rebuild choosing between two copies by a key both copies share.** The
   21 Sep one-sweep-per-venue rebuild took the FIRST Louvre copy — the
   rate-limited sweep's empty one — and dropped two descriptions.
+- **A recipe that opened every page to learn what the listing already said.**
+  MoMA, 22 Sep: its listing sorts shows under "Current exhibitions",
+  "Upcoming exhibitions" and "Installations and projects"; the recipe was
+  written as if only each show's page could tell them apart, and opened 24 to
+  keep 14. **Where the listing labels a thing, filter on the listing.**
 - **A recipe called ready on fixtures that stop before the step that writes.**
   The Morgan's past, 30 Sep: every listing read right (39, her count), then 31
   rows whose blurb came off the listing were cut with the pages-to-open list —
@@ -1355,12 +1361,20 @@ Moved to her laptop (§5). **Raw, in the held pile.** *Giovanni Bellini's
 "Pietà" Restored*: the listing's only text is a picture caption and photo
 credit — the page is not opened (her ruling), so that is all there is.
 
-**MoMA, mode B, current/upcoming only — started 30 Sep 16:24, her laptop**
-(her plan: if Morgan and MoMA both pass in mode B, `brit` is re-tested in
-mode B too, so no headed venue is proven only in mode A). One listing, 24
-show pages, no kept pages. The listing carries labs, a mural, a window display
-and an off-site show as well as exhibitions — whether any go is hers. Pass
-test: every page read, and her count (not yet given).
+**MoMA, 30 Sep 16:24 — CLEAN, her laptop, mode B.** 25 pages, no challenge;
+14 exhibitions with text, her count (9 + 5) — `run_2026-09-30_162442`. It
+opened all 24 listed pages and dropped the 10 installations on their page tag:
+the 22 Sep recipe had missed the listing's own section headings. **Fixed
+after the run** — the "Installations and projects" section is dropped on the
+listing, 14 pages next time (MM-001–003). Also fixed, and the run corrected
+offline: three titles lost their colon (MoMA writes a featured title twice,
+MM-004), and a gallery-closure notice in *Architects of Liberation* (MM-005).
+Moved to her laptop; swept from now on. **Raw, in the held pile — it
+replaces the 4-row saved-pages run `run_2026-09-27_123228`**, which is not to
+be stitched with it.
+
+**Next, her plan 30 Sep: `brit` re-tested in mode B**, so no headed venue is
+proven only in mode A. ~41 pages. Nothing to change — headed means mode B.
 
 **d'Orsay, 30 Sep 14:04 — CLEAN, her laptop, headed mode B.** 54 pages ~30s
 apart (6 listings + 48 show pages; 10 more from pages kept 29 Sep), no
@@ -1527,8 +1541,8 @@ ruling 27 Sep: tried only at a venue whose pages hang (§5, the intake).
 ### 11. Picked shows — occasional venues, NOT BUILT
 
 Venues where she wants at most ~5 shows a year: she picks the shows, the
-scraper reads only those pages. Test case: Detroit Institute of Arts. MoMA
-already works this way. Design and open questions: `docs/picked_shows.md`.
+scraper reads only those pages. Test case: Detroit Institute of Arts. (MoMA
+did until 30 Sep; it is swept now.) Design and open questions: `docs/picked_shows.md`.
 
 **She keeps a real ledger since 24 Sep** — the 320-card import, with that day's
 fixes. Changes that touch her ledger now need the same care as any user data.

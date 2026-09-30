@@ -3577,6 +3577,22 @@ async function extractTitleAsShown(link, venueCode) {
 
   if (rule.heading) {
     try {
+      // THE HEADING'S OWN JOINED NAME, where a venue writes the name twice.
+      // MoMA's featured cards carry "Peggy Weil: Core Memory" for narrow
+      // screens and "Peggy Weil" / "Core Memory" as two lines for wide ones;
+      // read as seen, the colon was lost (30 Sep sweep, 3 of 14 rows). The
+      // element is read by its source text, a <br> as a space, visible or not.
+      if (rule.headingName) {
+        const joined = await link.evaluate((a, sel) => {
+          const el = a.querySelector(sel);
+          if (!el) return '';
+          const c = el.cloneNode(true);
+          c.querySelectorAll('br').forEach(br => br.replaceWith(' '));
+          return c.textContent;
+        }, rule.headingName).catch(() => '');
+        const t = squash(joined);
+        if (t.length >= 3 && !isNotATitle(t, rule)) return t;
+      }
       const h = await link.$('h1,h2,h3,h4,h5');
       if (h) {
         // The heading is trusted FIRST but not blindly, and THE RECIPE'S STRIP
@@ -5400,7 +5416,30 @@ const VENUES = {
     // be collected as if it were an exhibition.
     isNav: href => /\/calendar\/exhibitions\/?$/.test(href)
                 || /\/calendar\/exhibitions\/history\/?$/.test(href),
-    title: { heading: true },
+    // `headingName`: the heading's first line, which holds the whole name with
+    // its colon on every card — see extractTitleAsShown. MM-004.
+    title: { heading: true, headingName: 'h3 p.balance-text' },
+
+    // THE LISTING SAYS WHAT EACH THING IS — her finding, 30 Sep, on the page
+    // she saved. Three sections under their own headings: "Current
+    // exhibitions", "Upcoming exhibitions", "Installations and projects". Her
+    // scope is exhibitions, so the third is dropped HERE, before any page is
+    // opened: 14 pages, not 24. The 22 Sep recipe missed these headings and
+    // opened every page to read a tag on it (excludeLabelledOnPage, below,
+    // kept as a second net). The Current section nests an inner section with
+    // no heading, so the card's section is the nearest one that HAS one.
+    // An unseen heading is KEPT and named — d'Orsay's rule.
+    keepOnlyType: {
+      within: 'section:has(.page-section__header)', label: '.page-section__heading__text',
+      not: /^\s*Installations and projects\s*$/i,
+      seen: /^\s*(Current exhibitions|Upcoming exhibitions|Installations and projects)\s*$/i,
+    },
+
+    // A visitor notice inside the description ("Please note that Gallery 4E
+    // will be temporarily closed on Monday, September 28…", Architects of
+    // Liberation, 30 Sep). Dated, so it would also change the description
+    // from sweep to sweep. This venue only.
+    dropSentence: /Please note that\b/,
 
     // THE BLURB HAS ITS OWN CONTAINER, AND NOTHING ELSE IS IN IT.
     //
@@ -5444,11 +5483,13 @@ const VENUES = {
     // matches. Her finding, 22 Sep — it had been assumed they were mixed in.
     excludeLabelledOnPage: /^\s*Installation\s*$/im,
 
-    // The CONTAINER's, for its marker rows — her rule, 26 Sep: a venue moves
-    // to her laptop only after a complete, clean sweep from there. 22 Sep's
-    // probe (a visible Chrome with her history reached the listing and one
-    // exhibition page) moved it early; one probe page is not a sweep.
+    // A visible Chrome with her history — see HEADED. Mode B by default.
     headed: true,
+    // HER MACHINE ONLY — her rule, 26 Sep: moved after a complete, clean
+    // headed sweep from her laptop (30 Sep 16:24, mode B, 25 pages, no
+    // challenge; mode A was challenged at page 19 on 27 Sep). Swept from now
+    // on — her ruling 30 Sep; the saved-pages route for MoMA is retired.
+    route: 'local',
   },
 
   brit: {

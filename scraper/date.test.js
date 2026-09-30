@@ -1325,7 +1325,7 @@ const routeOf = code => {
   return /route:\s*'local'/.test(block) ? 'home' : 'container';
 };
 
-test('R-001: met, artic, mad, brit, orsay and morgan are HERS — the container must not touch them', () => {
+test('R-001: met, artic, mad, brit, orsay, morgan and moma are HERS — the container must not touch them', () => {
   assert.strictEqual(routeOf('met'), 'home');
   assert.strictEqual(routeOf('artic'), 'home');
   // Her ruling, 27 Sep, after a complete, clean sweep from her laptop.
@@ -1336,18 +1336,20 @@ test('R-001: met, artic, mad, brit, orsay and morgan are HERS — the container 
   assert.strictEqual(routeOf('orsay'), 'home');
   // The same, 30 Sep: the Morgan's re-run, complete and clean (mode B).
   assert.strictEqual(routeOf('morgan'), 'home');
+  // And MoMA, 30 Sep: complete and clean in mode B (25 pages), where mode A
+  // was challenged at page 19 on 27 Sep. Swept from now on — her ruling.
+  assert.strictEqual(routeOf('moma'), 'home');
 });
 
-test('R-002: moma is still the CONTAINER\'s, deliberately', () => {
-  // They are swept BECAUSE they are blocked: a refusal costs half a second,
-  // proves the block is still real, and leaves the marker rows that make a
-  // sweep's record complete. She must not be pinging them from home.
-  //
+test('R-002: every headed venue is hers — none is left for the container to be refused at', () => {
   // Her rule, 26 Sep: a venue moves to her laptop only after a complete,
-  // clean sweep from there. moma has had none — it went early on 22 Sep on
-  // one probe page and came back. brit (28 Sep), orsay and morgan (30 Sep)
-  // had theirs and moved (R-001).
-  assert.strictEqual(routeOf('moma'), 'container');
+  // clean sweep from there. moma went early on 22 Sep on one probe page and
+  // came back; brit (28 Sep), orsay, morgan and moma (30 Sep) each had a
+  // complete clean sweep and moved (R-001). A headed venue still routed to
+  // the container would only collect refusals there.
+  const headed = Object.keys(VENUES_ALL).filter(c => VENUES_ALL[c].headed);
+  assert.ok(headed.length >= 4);
+  for (const c of headed) assert.strictEqual(routeOf(c), 'home', c + ' is headed but routed to the container');
 });
 
 test('R-005: moma says out loud that it needs a visible browser', () => {
@@ -1416,8 +1418,8 @@ test('R-004: the two sets do not overlap and cover every venue', () => {
   assert.strictEqual(codes.length, 27, 'expected 27 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
-  assert.deepStrictEqual(home.sort(), ['artic', 'brit', 'mad', 'met', 'morgan', 'orsay']);
-  assert.strictEqual(container.length, 21);
+  assert.deepStrictEqual(home.sort(), ['artic', 'brit', 'mad', 'met', 'moma', 'morgan', 'orsay']);
+  assert.strictEqual(container.length, 20);
   assert.strictEqual(home.length + container.length, codes.length);
 });
 
@@ -1855,6 +1857,7 @@ test('AC-001: Art Institute — only its OWN collection is excluded (her ruling,
 // 24 Sep (titleFromPage). Real headings, lines and tab titles from seven live
 // pages at the two museums that settled the rule.
 const { titleFromPage } = require('./sweep_prototype.js');
+const { VENUES: VENUES_ALL } = require('./sweep_prototype.js');
 const tp = (recorded, heading, line, tab) => titleFromPage({ recorded, heading, line, tab });
 
 test('RT-001: a line the tab title carries is part of the name, in full', () => {
