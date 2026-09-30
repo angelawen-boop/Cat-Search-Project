@@ -457,8 +457,9 @@ and do not flip to searching wide first.**
 
 **The cost:** up to four searches and three readings. **Every reading runs on
 her allowance.** The connector's keyless tier refuses after roughly a dozen
-searches in quick succession (observed; unpublished). Failures show in the red
-banner at the top, not on the card (her choice): "Too many searches just now"
+searches in quick succession (observed; unpublished). A failed search shows one
+line on the card, Re-check's words with "Search"/"Search again" (her ruling
+30 Sep; the red banner for it is gone): "Too many searches just now"
 (`rate_limited`) is the limit; "Search failed (upstream_error)" is Parallel's
 own service failing one request. Either: press Search again. A free Parallel key
 raises the limit — a connector setting, not the app.
@@ -1044,10 +1045,12 @@ She is noting issues as she uses it, for a later debugging session.
   given. **Likely the same missing product links — a guess, not tested at MAD.**
   Opening it would have named the publisher, Éditions Les Arts Décoratifs (now
   on `SELF_PUBLISHERS`, her addition).
-- **ISBNs go unfound where one plain search finds them** — Ashmolean *In Bloom*:
-  the lookup found the book but no ISBN; her one Google search ("Ashmolean
-  Museum Oxford In Bloom Catalogue isbn") gave 978-1910807743 at once. For the
-  debugging session.
+- **OPEN, general (her ask, 30 Sep): the lookup reports "no ISBN" where one
+  plain web search finds it.** Read from the code: the ISBN search
+  (`fillFromWeb`) leaves out the venue's name; each result is cut to 700
+  characters before it is read; no result page is ever opened; and the verdict
+  "No ISBN anywhere" claims more than excerpts can show. Fixes proposed to her,
+  not yet agreed.
 - **FOR THE VERSION AFTER 35.5 (her ask, 30 Sep) — a Booko button** among the
   buy links. To discuss first: its address shapes (by ISBN, and by title when
   there is none) are unchecked.
