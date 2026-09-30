@@ -1053,7 +1053,7 @@ function publisherDomainFrom(results,name){
 // this venue" \u2014 it is "is this publisher one of the named few we have
 // actually seen self-publish".
 //
-// SO IT IS A LIST OF TWO, AND IT GROWS ONLY WHEN SHE ADDS ONE. Her
+// SO IT IS A SHORT LIST, AND IT GROWS ONLY WHEN SHE ADDS ONE. Her
 // instruction: these two now, more as she meets them. Nothing is inferred
 // from a name's shape, because inferring is precisely what went wrong.
 // A publisher not on this list is searched for exactly as before \u2014 the cost
@@ -1067,6 +1067,7 @@ function publisherDomainFrom(results,name){
 const SELF_PUBLISHERS = new Set([
   "national gallery global",              // ng \u2014 her row, Zurbaran
   "metropolitan museum of art",           // met
+  "british museum press",                 // brit — her addition, 30 Sep (Bayeux Tapestry)
 ]);
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){

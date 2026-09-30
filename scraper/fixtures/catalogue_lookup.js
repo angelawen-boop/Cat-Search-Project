@@ -430,6 +430,8 @@ function runtime(answer, log) {
        'C-071: so is the Met’s, with or without a leading "The"');
     eq(api.isSelfPublisher('Metropolitan Museum of Art'), true,
        'C-072: a leading "The" is noise, not a different publisher');
+    eq(api.isSelfPublisher('The British Museum Press'), true,
+       'C-072a: the British Museum Press is on the list — her addition, 30 Sep');
 
     // THE TWO CASES SHE NAMED. A venue-based rule would have suppressed the
     // search on both of these; a publisher-based one cannot.
