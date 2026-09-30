@@ -292,7 +292,7 @@ no line at all with no ledger open, the Ashmolean and its shop, her chip order
 same as 35.4 · cloud 3 (§7.1).
 **Built, NOT published: 35.5** (branch: 35.5 · cloud 3) — her batch from the
 held-pile import, 30 Sep: review footer counts quarantined, her partial-import
-wording, a jump-to-bottom button, Re-check's sold-out rules (R-011b), British Museum Press as self-published (C-072a), "Search (again) didn't run" on the card (R-011c), Copy on the diagnostic (R-011d/e), a clear cross in the search box (S-004), chip "Orsay". **She is batching changes; publish only when
+wording, a jump-to-bottom button, Re-check's sold-out rules (R-011b), British Museum Press and Éditions Les Arts Décoratifs as self-published (C-072a/b), "Search (again) didn't run" on the card (R-011c), Copy on the diagnostic (R-011d/e), a clear cross in the search box (S-004), chip "Orsay". **She is batching changes; publish only when
 she says.**
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
@@ -1038,6 +1038,19 @@ She is noting issues as she uses it, for a later debugging session.
   was read off the shop's own shelf, search the shop for the BOOK's title as
   the shop printed it ("John Singer Sargent. Éblouir Paris"). No ISBN either:
   the book's page, where it is printed, is never opened.
+- **MAD, same outcome (her find, 30 Sep):** *Christofle* stopped at the shelf
+  (`/mads-publications/c462/1/`); the book's own page
+  (`/en/decorative-arts/christofle-brilliant-story/14474.html`) was never
+  given. **Likely the same missing product links — a guess, not tested at MAD.**
+  Opening it would have named the publisher, Éditions Les Arts Décoratifs (now
+  on `SELF_PUBLISHERS`, her addition).
+- **ISBNs go unfound where one plain search finds them** — Ashmolean *In Bloom*:
+  the lookup found the book but no ISBN; her one Google search ("Ashmolean
+  Museum Oxford In Bloom Catalogue isbn") gave 978-1910807743 at once. For the
+  debugging session.
+- **FOR THE VERSION AFTER 35.5 (her ask, 30 Sep) — a Booko button** among the
+  buy links. To discuss first: its address shapes (by ISBN, and by title when
+  there is none) are unchecked.
 
 ### 7. A fresh sweep — mid-October at the earliest
 
