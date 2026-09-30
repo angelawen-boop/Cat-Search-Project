@@ -286,12 +286,10 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward, which is what every publish has done.
 
-**Live: 35.3** (its footer still shows its pre-renumbering number, 34.14).
-**Built on `main`, NOT published: 35.4** — MoMA's shop search
-(`/collections/shop?q=`), no line at all with no ledger open, the Ashmolean and
-its shop, her chip order (fixture 19; chip "Levy", cards "Lévy Gorvy Dayan").
-**It must be live before any import carrying `ashmolean` rows.** Live on the
-test page as 35.4 · cloud 3 (§7.1).
+**Live: 35.4**, published 30 Sep — MoMA's shop search (`/collections/shop?q=`),
+no line at all with no ledger open, the Ashmolean and its shop, her chip order
+(fixture 19; chip "Levy", cards "Lévy Gorvy Dayan"). The test page carries the
+same as 35.4 · cloud 3 (§7.1).
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
