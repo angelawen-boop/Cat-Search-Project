@@ -4992,12 +4992,13 @@ const VENUES = {
   orsay: {
     name: "Musée d'Orsay, Paris",
     base: 'https://www.musee-orsay.fr',
-    // The CONTAINER's until a complete, clean sweep from her laptop confirms
-    // it — her rule, 26 Sep; the container's refusals are its marker rows.
-    // Tested on her laptop by naming it. HEADED — her ruling, 26 Sep: her
-    // first laptop sweep, headless, was refused on its first page (Cloudflare
-    // 403 after days of quiet), so it joins the headed pile.
+    // HEADED — her ruling, 26 Sep: her first laptop sweep, headless, was
+    // refused on its first page (Cloudflare 403 after days of quiet).
     headed: true,
+    // HER MACHINE ONLY — her rule, 26 Sep: moved after a complete, clean
+    // headed sweep from her laptop (30 Sep 14:04, mode B, 54 pages, no
+    // challenge, her count 13 + 45). Mode A had been refused at request 18.
+    route: 'local',
     pages: [
       { path: '/en/program/whats-on/exhibitions', ctx: 'current/upcoming' },
       { path: '/en/ressources/expositions-passees', ctx: 'past', paginate: { param: 'page', from: 1 } },

@@ -1325,13 +1325,15 @@ const routeOf = code => {
   return /route:\s*'local'/.test(block) ? 'home' : 'container';
 };
 
-test('R-001: met, artic, mad and brit are HERS — the container must not touch them', () => {
+test('R-001: met, artic, mad, brit and orsay are HERS — the container must not touch them', () => {
   assert.strictEqual(routeOf('met'), 'home');
   assert.strictEqual(routeOf('artic'), 'home');
   // Her ruling, 27 Sep, after a complete, clean sweep from her laptop.
   assert.strictEqual(routeOf('mad'), 'home');
   // Her ruling, 28 Sep, after a complete, clean headed sweep from her laptop.
   assert.strictEqual(routeOf('brit'), 'home');
+  // Her rule, 26 Sep, applied 30 Sep: a complete, clean headed sweep (mode B).
+  assert.strictEqual(routeOf('orsay'), 'home');
 });
 
 test('R-002: morgan and moma are still the CONTAINER\'s, deliberately', () => {
@@ -1402,7 +1404,7 @@ test('R-003: every other venue is the container\'s', () => {
   for (const c of ['ng', 'rijks', 'acq', 'frick', 'menil', 'va', 'louvre', 'capo',
                    'uffizi', 'brera', 'khm', 'dellav', 'wallace', 'borghese',
                    'tate-modern', 'tate-britain', 'lgd', 'jacquemart', 'mam',
-                   'orsay', 'ashmolean']) {
+                   'ashmolean']) {
     assert.strictEqual(routeOf(c), 'container', c + ' should be the container\'s');
   }
 });
@@ -1412,8 +1414,8 @@ test('R-004: the two sets do not overlap and cover every venue', () => {
   assert.strictEqual(codes.length, 27, 'expected 27 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
-  assert.deepStrictEqual(home.sort(), ['artic', 'brit', 'mad', 'met']);
-  assert.strictEqual(container.length, 23);
+  assert.deepStrictEqual(home.sort(), ['artic', 'brit', 'mad', 'met', 'orsay']);
+  assert.strictEqual(container.length, 22);
   assert.strictEqual(home.length + container.length, codes.length);
 });
 

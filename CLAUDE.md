@@ -698,15 +698,15 @@ request would settle.
 
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
-announces which it thinks it is before fetching. **Container: 23. Her laptop: 4**
-— `met`, `artic`, `mad`, `brit` (`route: 'local'`; `mad` by her ruling 27 Sep,
-`brit` 28 Sep, each after its clean laptop sweep).
+announces which it thinks it is before fetching. **Container: 22. Her laptop: 5**
+— `met`, `artic`, `mad`, `brit`, `orsay` (`route: 'local'`; `mad` by her ruling
+27 Sep, `brit` 28 Sep, `orsay` 30 Sep, each after its clean laptop sweep).
 
 **Her rule, 26 Sep: a venue moves to her laptop only after a COMPLETE, CLEAN
 sweep from there.** Until then it stays with the container, whose refusals are
 its marker rows — the sweep record and her "last tried" date. Candidates are
 tested on her laptop by NAMING them. `moma` went early on 22 Sep on one probe
-page and came back; `orsay`, `moma`, `morgan` are candidates.
+page and came back; `morgan` is the candidate.
 Fixtures R-001 to R-005.
 
 **`headed: true` — BUILT 26 Sep: on her machine the venue is swept in a
@@ -729,9 +729,9 @@ no challenge (§7.5).**
   (`probe_headed.js open`), warms it up, LEAVES IT OPEN; the sweep attaches
   and works in a tab of its own, closing only its own tabs (H-005 to H-007).
   No Chrome open → nothing asked, the run says so; never falls back to A.
-  Built on A first only because A was the one mode ever run. **Not yet run
-  live** — first try: d'Orsay, not before Wed 30 Sep 1:22pm Sydney. Still
-  connected from outside, so less visible, not invisible.
+  Built on A first only because A was the one mode ever run. **Proven live
+  30 Sep: d'Orsay, 54 pages ~30s apart, no challenge** — where A was refused
+  at 18 the day before. One run: that B is WHY is likely, not proven.
 - **Her rulings, 29 Sep: never split one venue across days** (pages kept
   make it possible; she will not run a sweep day after day), **and no
   slower pace** — no venue gets an hour. Whether several Cloudflare venues
@@ -1333,7 +1333,12 @@ link at an ISBN search — museum shops search by title.)*
 
 Imported by her with item 6's file; she checked every past show in the app.
 
-### 5. The headed venues — `brit` DONE 28 Sep; `orsay`, then `morgan`; `moma` settled
+### 5. The headed venues — `brit` DONE 28 Sep, `orsay` DONE 30 Sep; `morgan` next; `moma` settled
+
+**d'Orsay, 30 Sep 14:04 — CLEAN, her laptop, headed mode B.** 54 pages ~30s
+apart (6 listings + 48 show pages; 10 more from pages kept 29 Sep), no
+challenge; 58 of 58 with text, her count (13 + 45) — `run_2026-09-30_140401`.
+Moved to her laptop (§5). **Raw, in the held pile.**
 
 **Everything is built and offline-proven (26 Sep):** pacing, the headed path
 (§5), and a recipe for each — `moma`, `morgan`, `orsay` and `brit` (written 26
@@ -1405,7 +1410,7 @@ Jacquemart-André. **Her chip names:** "Levy Gorvy", "d'Orsay", "MAM Paris",
 | `lgd` Levy Gorvy | **imported and checked by her**, lookup works | `run_2026-09-25_160850` | — |
 | `jacquemart` | **imported and checked by her**, lookup works | `run_2026-09-25_133825` | — |
 | `mam` MAM Paris | **imported and checked by her**; shop blocked, card says so | `run_2026-09-25_160850` (before her Prix Duchamp / Oliver Beer ruling — the next sweep drops them) | Shop's Cloudflare refuses this machine and the connector (403); her browser passes. A third Oliver Beer page carries a typo'd 2024 closing date and falls to the lookback. `mam_pages.js` |
-| `orsay` d'Orsay | recipe built from her saved pages; 45 past + 13 current/upcoming, **her counts** | `run_2026-09-26_115449` — headless from her laptop, refused on page 1 | **headed pile** (her ruling 26 Sep) — §7.5; the container's until a clean laptop sweep |
+| `orsay` d'Orsay | **Swept clean 30 Sep, her laptop, headed mode B**: 58 of 58, her count (13 + 45). Her laptop's | `run_2026-09-30_140401` | **Raw, in the held pile** (§7.5) |
 | `ashmolean` Ashmolean | **Swept clean 27 Sep 19:28, her go**: 24 of 24 show pages, her count (4 + 3 + 17). App 35.4 carries it — **not published**, and must be live before import | `run_2026-09-27_192852` (container, pages kept) | **How it got there** (§6, "Diagnosing in the wrong order"): four earlier sweeps timed out; fixed by reading each show page alone (`pageOnly`, ~1 file a page, proven offline AS-021–025) and its robots.txt's 10s wait. `keepPages: true`. Four title/description faults corrected from its kept pages, no resweep (AS-026–033). **Raw, in the held pile** (§7.5) |
 | `mad` MAD Paris | **Her laptop's, her ruling 27 Sep** (`route: 'local'`) | `run_2026-09-27_200702` — her laptop, paced: 20 of 20 pages clean, her count (2 + 2 + 16), pages kept | ANDAM's sponsor sentence dropped by a MAD-only rule (`dropSentence`, MD-010/011) and the row corrected from the kept page, no resweep. **Raw, in the held pile** with MoMA and the Ashmolean (§7.5). The container is refused outright (403, robots.txt included) |
 
