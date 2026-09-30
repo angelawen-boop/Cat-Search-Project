@@ -698,15 +698,16 @@ request would settle.
 
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
-announces which it thinks it is before fetching. **Container: 22. Her laptop: 5**
-— `met`, `artic`, `mad`, `brit`, `orsay` (`route: 'local'`; `mad` by her ruling
-27 Sep, `brit` 28 Sep, `orsay` 30 Sep, each after its clean laptop sweep).
+announces which it thinks it is before fetching. **Container: 21. Her laptop: 6**
+— `met`, `artic`, `mad`, `brit`, `orsay`, `morgan` (`route: 'local'`; `mad` by
+her ruling 27 Sep, `brit` 28 Sep, `orsay` and `morgan` 30 Sep, each after its
+clean laptop sweep).
 
 **Her rule, 26 Sep: a venue moves to her laptop only after a COMPLETE, CLEAN
 sweep from there.** Until then it stays with the container, whose refusals are
 its marker rows — the sweep record and her "last tried" date. Candidates are
 tested on her laptop by NAMING them. `moma` went early on 22 Sep on one probe
-page and came back; `morgan` is the candidate.
+page and came back; it is the last candidate.
 Fixtures R-001 to R-005.
 
 **`headed: true` — BUILT 26 Sep: on her machine the venue is swept in a
@@ -1338,15 +1339,24 @@ link at an ISBN search — museum shops search by title.)*
 
 Imported by her with item 6's file; she checked every past show in the app.
 
-### 5. The headed venues — `brit` DONE 28 Sep, `orsay` DONE 30 Sep; `morgan` to re-run; `moma` settled
+### 5. The headed venues — `brit` DONE 28 Sep, `orsay` and `morgan` DONE 30 Sep; `moma` next, in mode B
 
-**Morgan, 30 Sep 15:38 — the SITE was clean, the FILE was not.** Mode B, 18
-pages, no challenge; 39 kept after the lookback, her count — but only the 8
-current/upcoming written: an engine fault dropped every row whose blurb is read
-off the listing (§6, "Joins"). Fixed and proven (MP-009/010). The listing
-pages are not kept, so the 31 cannot be rebuilt offline: **one re-run, her
-go** (`run_2026-09-30_153840` is superseded by it). Stays the container's
-until that re-run is clean and complete.
+**Morgan, 30 Sep 16:07 — CLEAN, her laptop, mode B, re-run.** 18 pages, no
+challenge; 39 of 39 with text, her count (3 + 5 + 20 + 3 + 8) —
+`run_2026-09-30_160740`. The 15:38 run (`run_2026-09-30_153840`, superseded)
+wrote 8: an engine fault dropped rows read off the listing (§6, "Joins"),
+fixed by MP-009/010. The re-run asked for the 8 show pages again — kept
+pages are not reused once a venue has written a file, even a wrong one.
+Moved to her laptop (§5). **Raw, in the held pile.** *Giovanni Bellini's
+"Pietà" Restored*: the listing's only text is a picture caption and photo
+credit — the page is not opened (her ruling), so that is all there is.
+
+**MoMA, mode B, current/upcoming only — started 30 Sep 16:24, her laptop**
+(her plan: if Morgan and MoMA both pass in mode B, `brit` is re-tested in
+mode B too, so no headed venue is proven only in mode A). One listing, 24
+show pages, no kept pages. The listing carries labs, a mural, a window display
+and an off-site show as well as exhibitions — whether any go is hers. Pass
+test: every page read, and her count (not yet given).
 
 **d'Orsay, 30 Sep 14:04 — CLEAN, her laptop, headed mode B.** 54 pages ~30s
 apart (6 listings + 48 show pages; 10 more from pages kept 29 Sep), no

@@ -1325,7 +1325,7 @@ const routeOf = code => {
   return /route:\s*'local'/.test(block) ? 'home' : 'container';
 };
 
-test('R-001: met, artic, mad, brit and orsay are HERS — the container must not touch them', () => {
+test('R-001: met, artic, mad, brit, orsay and morgan are HERS — the container must not touch them', () => {
   assert.strictEqual(routeOf('met'), 'home');
   assert.strictEqual(routeOf('artic'), 'home');
   // Her ruling, 27 Sep, after a complete, clean sweep from her laptop.
@@ -1334,18 +1334,20 @@ test('R-001: met, artic, mad, brit and orsay are HERS — the container must not
   assert.strictEqual(routeOf('brit'), 'home');
   // Her rule, 26 Sep, applied 30 Sep: a complete, clean headed sweep (mode B).
   assert.strictEqual(routeOf('orsay'), 'home');
+  // The same, 30 Sep: the Morgan's re-run, complete and clean (mode B).
+  assert.strictEqual(routeOf('morgan'), 'home');
 });
 
-test('R-002: morgan and moma are still the CONTAINER\'s, deliberately', () => {
+test('R-002: moma is still the CONTAINER\'s, deliberately', () => {
   // They are swept BECAUSE they are blocked: a refusal costs half a second,
   // proves the block is still real, and leaves the marker rows that make a
   // sweep's record complete. She must not be pinging them from home.
   //
   // Her rule, 26 Sep: a venue moves to her laptop only after a complete,
-  // clean sweep from there. moma and morgan have had none — moma went
-  // early on 22 Sep on one probe page and came back. brit had its clean
-  // sweep on 28 Sep and moved (R-001).
-  for (const c of ['morgan', 'moma']) assert.strictEqual(routeOf(c), 'container');
+  // clean sweep from there. moma has had none — it went early on 22 Sep on
+  // one probe page and came back. brit (28 Sep), orsay and morgan (30 Sep)
+  // had theirs and moved (R-001).
+  assert.strictEqual(routeOf('moma'), 'container');
 });
 
 test('R-005: moma says out loud that it needs a visible browser', () => {
@@ -1414,8 +1416,8 @@ test('R-004: the two sets do not overlap and cover every venue', () => {
   assert.strictEqual(codes.length, 27, 'expected 27 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
-  assert.deepStrictEqual(home.sort(), ['artic', 'brit', 'mad', 'met', 'orsay']);
-  assert.strictEqual(container.length, 22);
+  assert.deepStrictEqual(home.sort(), ['artic', 'brit', 'mad', 'met', 'morgan', 'orsay']);
+  assert.strictEqual(container.length, 21);
   assert.strictEqual(home.length + container.length, codes.length);
 });
 

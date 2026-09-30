@@ -4641,10 +4641,10 @@ const VENUES = {
     // range — a permanent display, said so by the venue itself.
     excludeOngoing: true,
 
-    // HER MACHINE ONLY, once the engine can launch that browser — see moma.
-    // Left on the container for now: moving it sooner would only mean her
-    // laptop collecting the refusals instead of the container's.
-    headed: true,
+    // HER MACHINE ONLY — her rule, 26 Sep: moved after a complete, clean
+    // headed sweep from her laptop (30 Sep 16:07, mode B, 18 pages, no
+    // challenge, her count 3 + 5 + 20 + 3 + 8 = 39).
+    route: 'local',
   },
 
   menil: {
