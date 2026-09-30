@@ -930,6 +930,10 @@ keeps making in new clothes.
 - Reading a search EXCERPT and treating it as the page. **Declaring only half a
   connector's tools is the same gap** — `web_fetch` had been there all along.
 - **A thin answer from a page is not proof the page is thin.**
+- **Answering "what will the scraper do" from an OLD RUN'S OUTPUT, not the
+  recipe.** 30 Sep: told her MoMA's labs and installations "will come through"
+  from its 16 Sep rows — a run older than her exclusion, which the recipe has
+  (`excludeLabelledOnPage`). **Read the recipe and the code first, every time.**
 
 ### Judgement made silently where she should have seen it
 
