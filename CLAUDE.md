@@ -167,7 +167,7 @@ Judgement about the outside world is not in any file.
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — §13 of `docs/scraper.md`. Bare "from the Collection" and titles with "Film Series" excluded; family, named and lent collections KEPT (24 Sep). No note on the card for films or installations; no model judging rows — compression stays mechanical (24 Sep) |
 | `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection, a gift or acquisitions** — they can be major (24 Sep) |
 | `moma` | **Current and upcoming only.** She does not want its past at all. **Exhibitions only**: the listing's "Installations and projects" section is dropped on the listing, never opened (her finding 30 Sep; MM-001–003). **Swept, her laptop, mode B, from 30 Sep** — the saved-pages route is retired. Her count 30 Sep: 9 current + 5 upcoming = 14 |
-| `brit` | Current/upcoming asks for **Exhibition AND Experience** — the Bayeux Tapestry is filed as an Experience (her finding, 27 Sep; BM-012). The selector still keeps only `/exhibitions/` pages. **Her count, 27 Sep:** current + upcoming 4; past since 1 July 2024, by the listing's year headings, 2026 **9**, 2025 **12**, 2024 **10** (her correction 28 Sep: *Legion*, closed 23 Jun 2024, is out) — her counts are always what should reach the app; a heading is the year a show OPENED, and one display (*Admonitions*) is listed under every year at one address, so it is one row. **A page outside the cutoff is never opened (her ruling, 28 Sep):** the past page is read in its year sections only (not the introduction's prose links or the current carousel), and nothing under 2023 is opened — proven to hold nothing that reaches the floor (BM-013–015). **Her laptop's, headed, from 28 Sep** |
+| `brit` | Current/upcoming asks for **Exhibition AND Experience** — the Bayeux Tapestry is filed as an Experience (her finding, 27 Sep; BM-012). The selector still keeps only `/exhibitions/` pages. **Her count, 27 Sep:** current + upcoming 4; past since 1 July 2024, by the listing's year headings, 2026 **9**, 2025 **12**, 2024 **10** (her correction 28 Sep: *Legion*, closed 23 Jun 2024, is out); **30 Sep a fifth upcoming show, *Multiplied wonders*, newly listed (opens 8 Oct) — 34** — her counts are always what should reach the app; a heading is the year a show OPENED, and one display (*Admonitions*) is listed under every year at one address, so it is one row. **A page outside the cutoff is never opened (her ruling, 28 Sep):** the past page is read in its year sections only (not the introduction's prose links or the current carousel), and nothing under 2023 is opened — proven to hold nothing that reaches the floor (BM-013–015). **Her laptop's, headed, from 28 Sep** |
 | `mam` | Collection displays excluded — subtitle "Permanent collection" (Cultural Olympiad) and "New acquisitions…"; also the Prix Marcel Duchamp and Oliver Beer's films (25 Sep). Her count: 3 current, 1 upcoming, 16 past — less those, 3 + 0 + 13 |
 | `mad` | Nothing excluded. Her count: 2 current, 2 upcoming, 16 past. Musée Nissim de Camondo ignored — closed until 2030 (25 Sep) |
 | `jacquemart` | Exhibitions only — the card's own tag; operas, costume balls and other events refused (25 Sep) |
@@ -549,7 +549,7 @@ first number to scroll past:
 | `ashmolean_pages.js` | the Ashmolean recipe on pages read once and saved (`docs/ashmolean_pages/`), no network — her count, dates completed from the show's page, the description; the bare page (AS-021–025); the 27 Sep sweep's four faults fixed on its kept pages (AS-026–033) |
 | `page_keep_pages.js`, `moma_pages.js` | pages kept as read (a cut-short run asks only for what is missing); MoMA's description without its credit paragraph, and its listing on her saved pages — installations never opened, titles as MoMA joins them (MM-001–006) |
 | `mad_pages.js` | the MAD recipe on her saved pages, no network — her count, dates, titles, the description; its sponsor sentence (MD-010/011) |
-| `brit_pages.js` | the British Museum recipe on her saved pages, no network — titles, year headings, dates, the description; no page outside the cutoff opened (BM-013–015) |
+| `brit_pages.js` | the British Museum recipe on her saved pages, no network — titles, year headings, dates, the description; no page outside the cutoff opened (BM-013–015); a two-line current name joined with a colon (BM-016/017) |
 | `morgan_pages.js` | the Morgan recipe on her saved pages, no network — the past paged through with its own settings, dates from each row's field, current/upcoming names and dates from the card, "Ongoing" dropped (MP-001–008); the whole sweep writes the rows read off the listing (MP-009/010) |
 | `orsay_pages.js` | the d'Orsay recipe on her saved pages, no network — her tag rulings, dates, titles, the description (every kind of show page: at the museum, off-site, "Focus on our collections") |
 | `summary_pages.js` | descriptions on saved pages (`docs/summary_pages/`), no network — the museum's own text, never a press list, credit or ticket note |
@@ -729,7 +729,8 @@ in `sweep_prototype.js`; fixtures H-001 to H-007. Every live run: §7.5.
   and works in a tab of its own, closing only its own tabs (H-005 to H-007).
   No Chrome open → nothing asked, the run says so; never falls back to A.
   Built on A first only because A was the one mode ever run. **Proven live
-  30 Sep: d'Orsay 54 pages, the Morgan 18 (twice), MoMA 25 — no challenge**,
+  30 Sep on all four: d'Orsay 54 pages, the Morgan 18 (twice), MoMA 25, the
+  British Museum 37 — no challenge**,
   where A was refused at 18 (d'Orsay) and 19 (MoMA). That B is WHY is likely,
   not proven.
 - **Her rulings, 29 Sep: never split one venue across days** (pages kept
@@ -930,6 +931,10 @@ keeps making in new clothes.
 - Reading a search EXCERPT and treating it as the page. **Declaring only half a
   connector's tools is the same gap** — `web_fetch` had been there all along.
 - **A thin answer from a page is not proof the page is thin.**
+- **A title checked against the listing it came from, never against the
+  museum's own spelling of it.** The British Museum's current cards lost
+  their colon for two sweeps ("John Constable views of nature"); its past
+  listing and each page's <title> carry it. BM-016/017.
 - **Answering "what will the scraper do" from an OLD RUN'S OUTPUT, not the
   recipe.** 30 Sep: told her MoMA's labs and installations "will come through"
   from its 16 Sep rows — a run older than her exclusion, which the recipe has
@@ -1348,7 +1353,7 @@ link at an ISBN search — museum shops search by title.)*
 
 Imported by her with item 6's file; she checked every past show in the app.
 
-### 5. The headed venues — all four DONE (`brit` 28 Sep; `orsay`, `morgan`, `moma` 30 Sep, mode B); `brit` re-testing in mode B
+### 5. The headed venues — all four DONE, all four proven in mode B (30 Sep)
 
 **Morgan, 30 Sep 16:07 — CLEAN, her laptop, mode B, re-run.** 18 pages, no
 challenge; 39 of 39 with text, her count (3 + 5 + 20 + 3 + 8) —
@@ -1372,8 +1377,17 @@ Moved to her laptop; swept from now on — no more pages saved by hand (her
 ruling); the pages she saved are kept. **Raw, in the held pile** (whether the
 4-row saved-pages run goes too is hers — above).
 
-**Next, her plan 30 Sep: `brit` re-tested in mode B**, so no headed venue is
-proven only in mode A. ~41 pages. Nothing to change — headed means mode B.
+**British Museum, 30 Sep 16:55 — CLEAN, her laptop, mode B re-test.** 37
+pages, no challenge; 35 of 35 show pages with text (four fewer than 28 Sep:
+nothing under 2023 is opened now, BM-013–015; *Legion* is opened for its
+dates and dropped, BM-015) — `run_2026-09-30_165517`, 34 rows: her 33 plus
+*Multiplied wonders*, newly listed upcoming (opens 8 Oct). Descriptions as
+28 Sep's, the new one read. **Fixed after the run:** a current card's
+two-line name joined with a space ("John Constable views of nature") where
+the past listing and the show's own page write a colon — the title would
+have changed when the show closed. `brParts` on `brit` (BM-016/017); three
+titles corrected offline from the kept pages' own titles, the other 31
+matching them exactly. The 28 Sep run carries the same fault on two rows.
 
 **d'Orsay, 30 Sep 14:04 — CLEAN, her laptop, headed mode B.** 54 pages ~30s
 apart (6 listings + 48 show pages; 10 more from pages kept 29 Sep), no
@@ -1381,17 +1395,16 @@ challenge; 58 of 58 with text, her count (13 + 45) — `run_2026-09-30_140401`.
 Moved to her laptop (§5). **Raw, in the held pile.**
 
 **All four headed venues are Cloudflare's, one lane, and all swept clean from
-her laptop by 30 Sep** — `brit` in mode A (28 Sep), `orsay`, `morgan` and
-`moma` in mode B (30 Sep). On 30 Sep she ran three back to back, each with
-`--ignore-cooldown` (the hour after a CLEAN run is our own caution, not the
-site's), all clean.
+her laptop by 30 Sep, all four in mode B** (`brit` also in mode A, 28 Sep).
+On 30 Sep she ran all four back to back, each with `--ignore-cooldown` (the
+hour after a CLEAN run is our own caution, not the site's), all clean.
 
 **THE HELD PILE — raw, stitched and compressed as one when she says (her
 ruling 27 Sep):** Ashmolean 24 (`run_2026-09-27_192852`), MAD 20
-(`run_2026-09-27_200702`), British Museum 33 (`run_2026-09-28_121556`, unless
-today's mode-B re-test replaces it), d'Orsay 58 (`run_2026-09-30_140401`),
+(`run_2026-09-27_200702`), British Museum 34 (`run_2026-09-30_165517`, titles corrected —
+her choice 30 Sep), d'Orsay 58 (`run_2026-09-30_140401`),
 Morgan 39 (`run_2026-09-30_160740`), MoMA 14 (`run_2026-09-30_162442`). Not
-in it: the superseded Morgan 15:38 run. **MoMA's 4-row saved-pages run
+in it: the superseded Morgan 15:38 run, the British Museum's 28 Sep run. **MoMA's 4-row saved-pages run
 (`archive/run_2026-09-27_123228`, moved by the start-up tidy, not deleted) is
 HERS to include or not** — compared 30 Sep: the same 4 shows are in the
 sweep, titles and dates identical, descriptions identical but one where MoMA
@@ -1408,8 +1421,7 @@ date line (a generic tab word — RT-010; the run corrected by
 Moved to her laptop (§5). Its shop (`britishmuseumshoponline.org`, a
 separate site behind Varnish, not Cloudflare) refused her seeded Chrome with
 a 403 on 28 Sep; the sweep never visits it, and the catalogue lookup has not
-yet met it. **Re-test in mode B running 30 Sep (her plan)** — passes on
-every page read and her count 33; check its log and rows when pushed.
+yet met it. Re-tested in mode B 30 Sep — clean (above).
 
 **A headed run, her steps:**
 1. `git pull`.
@@ -1420,8 +1432,8 @@ every page read and her count 33; check its log and rows when pushed.
    `git pull --rebase`, push.
 4. A REFUSED lane waits a day — that wait has evidence behind it.
 
-**Pass tests (her counts):** brit 33, orsay 58 (13 + 45), morgan 39 (3 + 5 +
-20 + 3 + 8), moma 14 (9 + 5). **Sizes at 30s:** brit ~41 pages, orsay ~64,
+**Pass tests (her counts):** brit 34 (her 33 + *Multiplied wonders*, 30 Sep), orsay 58 (13 + 45), morgan 39 (3 + 5 +
+20 + 3 + 8), moma 14 (9 + 5). **Sizes at 30s:** brit ~37 pages, orsay ~64,
 morgan 18, moma 15.
 
 **British Museum and robots.txt — settled 27 Sep.** Its past page is allowed

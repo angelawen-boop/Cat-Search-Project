@@ -3666,19 +3666,32 @@ async function extractTitleAsShown(link, venueCode) {
   // source instead ("Henri Rivière\n\nThe man behind the camera"), which the
   // rendered text collapses to a space — so the source text is read, split at
   // a <br> or a blank line, never at a single wrapped line.
+  //
+  // The British Museum's current cards too: "John Constable<br><strong>views
+  // of nature</strong>", joined with a space until 30 Sep, while its past
+  // listing and the show's own <title> write "John Constable: views of
+  // nature" — the title would have changed the day the show closed. Its link
+  // also carries screen-reader text after a blank line (" . Book now . "),
+  // stripped by the venue's rules BEFORE the split or it reads as a subtitle;
+  // and its display cards say only "Find out more", which falls through to
+  // the card's own name below (BM-016/017).
   if (rule.brParts) {
-    const raw = await link.evaluate(a => {
+    let raw = await link.evaluate(a => {
       const c = a.cloneNode(true);
       c.querySelectorAll('br').forEach(br => br.replaceWith('\u2029'));
       return c.textContent;
     }).catch(() => '');
-    const lines = String(raw).split(/\u2029|\n[ \t\u00a0]*\n/).map(squash).filter(Boolean);
+    raw = String(raw);
+    if (rule.stripLeading)  raw = raw.replace(rule.stripLeading, '');
+    if (rule.stripTrailing) raw = raw.replace(rule.stripTrailing, '');
+    const lines = raw.split(/\u2029|\n[ \t\u00a0]*\n/).map(squash).filter(Boolean);
     if (!lines.length) return '';
     const [name, ...rest] = lines;
     const subtitle = rest.join(' ');
-    if (!subtitle) return name;
-    if (/[:.!?]\s*$/.test(name)) return `${name} ${subtitle}`;
-    return name.includes(':') ? `${name} – ${subtitle}` : `${name}: ${subtitle}`;
+    const joined = !subtitle ? name
+      : /[:.!?]\s*$/.test(name) ? `${name} ${subtitle}`
+      : name.includes(':') ? `${name} – ${subtitle}` : `${name}: ${subtitle}`;
+    if (!isNotATitle(joined, rule)) return joined;
   }
 
   let t = squash(await getText(link));
@@ -5559,8 +5572,11 @@ const VENUES = {
     // Two card shapes. Special exhibitions: the name is the link, followed by
     // screen-reader text inside it (" . Final weeks . ", " . Book now . ").
     // Displays: the link says "Find out more"; name and dates sit in the card.
+    // Name and subtitle on two lines in a current card are joined with a
+    // colon, as its past listing and the show's own page write them (brParts).
     title: {
       heading: false,
+      brParts: true,
       stripTrailing: /\s+\.\s+(?:[^.]*?\s+)?\.\s*$/,
       notATitle: /^\s*Find out more\s*$/i,
       cardName: { within: '.listing__item', sel: '.listing__title' },

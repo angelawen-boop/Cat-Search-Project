@@ -64,6 +64,17 @@ const check = (name, ok, got) => {
       real.filter(r => /\s\.\s/.test(r.title)).map(r => r.title).join(' | '));
     check('BM-004: a display card named from its own heading, not "Find out more"',
       at('war-rugs-afghanistans-knotted-history') && at('war-rugs-afghanistans-knotted-history').title === "War rugs: Afghanistan's knotted history");
+    // A current card writes name and subtitle on two lines; the past listing
+    // and the show's own <title> join them with a colon. Joined with a space,
+    // the title would change the day the show closed (30 Sep).
+    const t = p => at(p) && at(p).title;
+    check('BM-016: a two-line current card is joined with a colon, as the museum writes it',
+      t('john-constable-views-nature') === 'John Constable: views of nature'
+      && t('declaring-independence-usa-250') === 'Declaring independence: USA 250',
+      t('john-constable-views-nature') + ' | ' + t('declaring-independence-usa-250'));
+    check('BM-017: a one-line current card is left as it is',
+      t('korea') === 'Korea' && t('bayeux-tapestry') === 'The Bayeux Tapestry',
+      t('korea') + ' | ' + t('bayeux-tapestry'));
     const pastLine = logged.find(l => /past: \d+ links seen/.test(l)) || '';
     check('BM-005: shows under a year heading too early for the lookback are never opened',
       /71 under a year heading too early/.test(pastLine), pastLine);
