@@ -1,0 +1,9 @@
+{
+  "host": "www.britishmuseum.org",
+  "url": "https://www.britishmuseum.org/robots.txt",
+  "fetchedAt": "2026-09-27T08:19:00.299Z",
+  "status": 200,
+  "readable": true,
+  "server": "cloudflare",
+  "sha": "49740bd20146"
+}

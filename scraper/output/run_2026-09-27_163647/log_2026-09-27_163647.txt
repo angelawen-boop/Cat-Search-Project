@@ -1,0 +1,148 @@
+[2026-09-27T06:36:47.883Z] Cat Watch Sweep Prototype — starting
+[2026-09-27T06:36:47.884Z] Lookback floor: 2024-07-01
+[2026-09-27T06:36:47.884Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-27_163647
+[2026-09-27T06:36:47.884Z] Machine: container (proxy present, so this is the container)
+[2026-09-27T06:36:47.884Z] Venues this run: ashmolean
+[2026-09-27T06:36:47.885Z] Proxy: http://127.0.0.1:43581
+[2026-09-27T06:36:47.886Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-27T06:36:48.936Z] Running 1 venue(s) headless, 1 at a time (one page at a time within each venue)
+[2026-09-27T06:36:49.255Z] [ashmolean] 
+[2026-09-27T06:36:49.256Z] [ashmolean] ────────────────────────────────────────────────────────────
+[2026-09-27T06:36:49.256Z] [ashmolean]   ASHMOLEAN — Ashmolean Museum, Oxford
+[2026-09-27T06:36:49.256Z] [ashmolean] ────────────────────────────────────────────────────────────
+[2026-09-27T06:36:49.256Z] [ashmolean]   Fetching current/upcoming: https://www.ashmolean.org/exhibitions
+[2026-09-27T06:36:55.720Z] [ashmolean]   current/upcoming: 16 links seen -> 0 navigation, 9 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-27T06:36:55.725Z] [ashmolean]   Fetching past: https://www.ashmolean.org/past-exhibitions
+[2026-09-27T06:37:00.135Z] [ashmolean]   past: 28 links seen -> 0 navigation, 14 already-seen URL -> 14 collected (0 of them with no readable title)
+[2026-09-27T06:37:00.136Z] [ashmolean]   Fetching past p1: https://www.ashmolean.org/past-exhibitions?page-996041=1
+[2026-09-27T06:37:04.951Z] [ashmolean]   past p1: 28 links seen -> 0 navigation, 20 already-seen URL -> 8 collected (0 of them with no readable title)
+[2026-09-27T06:37:04.951Z] [ashmolean]   Fetching past p2: https://www.ashmolean.org/past-exhibitions?page-996041=2
+[2026-09-27T06:37:08.228Z] [ashmolean]   past p2: 20 links seen -> 0 navigation, 16 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-27T06:37:08.228Z] [ashmolean]   PAGINATION end: past p2 — its newest exhibition closed 2024-02-11, before the 2024-07-01 floor, so every later page is older still
+[2026-09-27T06:37:08.229Z] [ashmolean]   lookback (listing): kept 24, dropped 9 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-27T06:37:08.230Z] [ashmolean]   reading 24 individual page(s)…
+[2026-09-27T06:37:08.230Z] [ashmolean]     page 1 of 24
+[2026-09-27T06:37:39.562Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/ashmolean-now-garry-fabian-miller — retrying once
+[2026-09-27T06:38:01.566Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/ashmolean-now-garry-fabian-miller — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/ashmolean-now
+[2026-09-27T06:38:21.568Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/in-bloom-how-plants-changed-our-world — retrying once
+[2026-09-27T06:38:43.571Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/in-bloom-how-plants-changed-our-world — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/in-bloom-how-
+[2026-09-27T06:39:03.573Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/this-is-what-you-get-stanley-donwood-radiohead-thom-yorke — retrying once
+[2026-09-27T06:39:25.577Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/this-is-what-you-get-stanley-donwood-radiohead-thom-yorke — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/this-is-what-
+[2026-09-27T06:39:25.577Z] [ashmolean]     page 10 of 24
+[2026-09-27T06:39:54.443Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/kabuki-kimono-display-costumes-of-bando-tamasaburo-v — retrying once
+[2026-09-27T06:40:16.445Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/kabuki-kimono-display-costumes-of-bando-tamasaburo-v — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/kabuki-kimono
+[2026-09-27T06:40:36.447Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/cheung-lee-and-his-1960s-hong-kong-contemporaries — retrying once
+[2026-09-27T06:41:03.468Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/demon-mother-maker-of-kings-display — retrying once
+[2026-09-27T06:41:25.470Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/demon-mother-maker-of-kings-display — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/demon-mother-
+[2026-09-27T06:41:25.471Z] [ashmolean]     page 20 of 24
+[2026-09-27T06:41:45.471Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/national-treasures-wilton-diptych-in-oxford — retrying once
+[2026-09-27T06:42:07.475Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/national-treasures-wilton-diptych-in-oxford — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/national-trea
+[2026-09-27T06:42:27.479Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/li-jin-with-roger-law-simple-pleasures — retrying once
+[2026-09-27T06:42:49.483Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/li-jin-with-roger-law-simple-pleasures — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/li-jin-with-r
+[2026-09-27T06:43:09.488Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/kabuki-legends-part-two-stencil-prints-of-takahashi-hiromitsu — retrying once
+[2026-09-27T06:43:31.494Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/kabuki-legends-part-two-stencil-prints-of-takahashi-hiromitsu — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/kabuki-legend
+[2026-09-27T06:43:51.499Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/ashmolean-now-pio-abad-those-sitting-in-darkness — retrying once
+[2026-09-27T06:44:13.503Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/ashmolean-now-pio-abad-those-sitting-in-darkness — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/ashmolean-now
+[2026-09-27T06:44:33.505Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/money-in-renaissance-germany — retrying once
+[2026-09-27T06:44:55.512Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/money-in-renaissance-germany — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/money-in-rena
+[2026-09-27T06:44:55.513Z] [ashmolean]   Individual pages: 14 got text, 0 no curatorial text, 10 failed
+[2026-09-27T06:44:55.513Z] [ashmolean]   14 page(s) kept on disk as read (pages_kept/ashmolean)
+[2026-09-27T06:44:55.520Z] [ashmolean]   lookback (final): kept 24, dropped 0 closed before 2024-07-01, 0 with no closing date, 9 with no opening date
+[2026-09-27T06:44:55.522Z] [ashmolean]   → 24 exhibitions, 14 with curatorial text → ashmolean.csv
+[2026-09-27T06:44:57.857Z] 
+[2026-09-27T06:44:57.857Z] ────────────────────────────────────────────────────────────
+[2026-09-27T06:44:57.857Z]   QC — faulty rows and exceptions
+[2026-09-27T06:44:57.857Z] ────────────────────────────────────────────────────────────
+[2026-09-27T06:44:57.857Z]   24 FAULTY ROW(S). These block compress --apply; re-run or fix the recipe.
+[2026-09-27T06:44:57.857Z]     line 2  unknown venue code  https://www.ashmolean.org/exhibition/aphrodite-the-making-of-a-goddess
+[2026-09-27T06:44:57.857Z]     line 3  unknown venue code  https://www.ashmolean.org/exhibition/renaissance-worlds-art-and-the-senses
+[2026-09-27T06:44:57.857Z]     line 4  unknown venue code  https://www.ashmolean.org/exhibition/ashmolean-now-soma-surovi-jannat
+[2026-09-27T06:44:57.857Z]     line 5  unknown venue code  https://www.ashmolean.org/display/roman-oxfordshire-coins-display
+[2026-09-27T06:44:57.857Z]     line 6  unknown venue code  https://www.ashmolean.org/exhibition/colonial-views-of-india-impey-photographs
+[2026-09-27T06:44:57.857Z]     line 7  unknown venue code  https://www.ashmolean.org/exhibition/sisters-brothers-others-nationality-and-20th-century-chinese-art
+[2026-09-27T06:44:57.857Z]     line 8  unknown venue code  https://www.ashmolean.org/exhibition/ashmolean-now-garry-fabian-miller
+[2026-09-27T06:44:57.857Z]     line 9  unknown venue code  https://www.ashmolean.org/exhibition/in-bloom-how-plants-changed-our-world
+[2026-09-27T06:44:57.857Z]     line 10  unknown venue code  https://www.ashmolean.org/exhibition/this-is-what-you-get-stanley-donwood-radiohead-thom-yorke
+[2026-09-27T06:44:57.857Z]     line 11  unknown venue code  https://www.ashmolean.org/exhibition/anselm-kiefer-early-works
+[2026-09-27T06:44:57.857Z]     line 12  unknown venue code  https://www.ashmolean.org/exhibition/money-talks-art-power-and-society
+[2026-09-27T06:44:57.857Z]     line 13  unknown venue code  https://www.ashmolean.org/exhibition/pat-suet-bik-hui-and-the-three-perfections
+[2026-09-27T06:44:57.857Z]     line 14  unknown venue code  https://www.ashmolean.org/exhibition/ashmolean-now-daphne-wright
+[2026-09-27T06:44:57.857Z]     line 15  unknown venue code  https://www.ashmolean.org/exhibition/images-of-authority-portraits-between-iran-and-europe
+[2026-09-27T06:44:57.857Z]     line 16  unknown venue code  https://www.ashmolean.org/exhibition/kabuki-kimono-display-costumes-of-bando-tamasaburo-v
+[2026-09-27T06:44:57.857Z]     line 17  unknown venue code  https://www.ashmolean.org/exhibition/cheung-lee-and-his-1960s-hong-kong-contemporaries
+[2026-09-27T06:44:57.857Z]     line 18  unknown venue code  https://www.ashmolean.org/exhibition/churchill-money-gallery-display
+[2026-09-27T06:44:57.857Z]     line 19  unknown venue code  https://www.ashmolean.org/exhibition/ashmolean-now-bettina-von-zwehl
+[2026-09-27T06:44:57.858Z]     line 20  unknown venue code  https://www.ashmolean.org/exhibition/demon-mother-maker-of-kings-display
+[2026-09-27T06:44:57.858Z]     line 21  unknown venue code  https://www.ashmolean.org/exhibition/national-treasures-wilton-diptych-in-oxford
+[2026-09-27T06:44:57.858Z]     line 22  unknown venue code  https://www.ashmolean.org/exhibition/li-jin-with-roger-law-simple-pleasures
+[2026-09-27T06:44:57.858Z]     line 23  unknown venue code  https://www.ashmolean.org/exhibition/kabuki-legends-part-two-stencil-prints-of-takahashi-hiromitsu
+[2026-09-27T06:44:57.858Z]     line 24  unknown venue code  https://www.ashmolean.org/exhibition/ashmolean-now-pio-abad-those-sitting-in-darkness
+[2026-09-27T06:44:57.858Z]     line 25  unknown venue code  https://www.ashmolean.org/exhibition/money-in-renaissance-germany
+[2026-09-27T06:44:57.858Z]   1 exception(s) against the last run that had each venue:
+[2026-09-27T06:44:57.858Z]     ashmolean: 10 of 24 rows have no description.
+[2026-09-27T06:44:57.858Z] 
+[2026-09-27T06:44:57.858Z] ────────────────────────────────────────────────────────────
+[2026-09-27T06:44:57.858Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-27T06:44:57.858Z] ────────────────────────────────────────────────────────────
+[2026-09-27T06:44:57.858Z]   ASHMOLEAN: 24 exhibitions | 14 with text
+[2026-09-27T06:44:57.858Z] 
+[2026-09-27T06:44:57.858Z] ────────────────────────────────────────────────────────────
+[2026-09-27T06:44:57.858Z]   COVERAGE — every link accounted for
+[2026-09-27T06:44:57.858Z] ────────────────────────────────────────────────────────────
+[2026-09-27T06:44:57.858Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-27T06:44:57.858Z]   -----------------------------------------------------------------------------------------------
+[2026-09-27T06:44:57.858Z]   ashmolean  current/upcoming                16     0       0     9        0        0          7
+[2026-09-27T06:44:57.858Z]   ashmolean  past                            28     0       0    14        0        0         14
+[2026-09-27T06:44:57.858Z]   ashmolean  past p1                         28     0       0    20        0        0          8
+[2026-09-27T06:44:57.858Z]   ashmolean  past p2                         20     0       0    16        0        0          4
+[2026-09-27T06:44:57.858Z] 
+[2026-09-27T06:44:57.858Z] 
+[2026-09-27T06:44:57.858Z] ────────────────────────────────────────────────────────────
+[2026-09-27T06:44:57.858Z]   TITLES TAKEN FROM THE EXHIBITION'S OWN PAGE — READ BEFORE SENDING
+[2026-09-27T06:44:57.858Z] ────────────────────────────────────────────────────────────
+[2026-09-27T06:44:57.858Z]   ashmolean: "APHRODITE: THE MAKING OF A GODDESS" → "Aphrodite: The Making of a Goddess"
+[2026-09-27T06:44:57.858Z]   ashmolean: "COLONIAL VIEWS OF INDIA" → "Colonial Views of India: Photographs by Eugene Clutterbuck Impey"
+[2026-09-27T06:44:57.858Z]   ashmolean: "SISTERS, BROTHERS, OTHERS: NATIONALITY AND 20TH-CENTURY CHINESE ART" → "Sisters, Brothers, Others: Nationality and 20th-Century Chinese Art"
+[2026-09-27T06:44:57.858Z]   ashmolean: "MONEY TALKS: ART, SOCIETY & POWER" → "Money Talks: Art, Society & Power"
+[2026-09-27T06:44:57.858Z]   ashmolean: "PAT SUET-BIK HUI & THE THREE PERFECTIONS" → "Pat Suet-Bik Hui & the Three Perfections: Poetry, Calligraphy, Painting"
+[2026-09-27T06:44:57.858Z]   ashmolean: "ASHMOLEAN NOW: DAPHNE WRIGHT" → "Ashmolean Now: Daphne Wright – Deep-Rooted Things"
+[2026-09-27T06:44:57.858Z]   ashmolean: "IMAGES OF AUTHORITY" → "Images of Authority: Portraits Between Iran and Europe"
+[2026-09-27T06:44:57.858Z]   ashmolean: "CHEUNG YEE AND HIS 1960s HONG KONG CONTEMPORARIES" → "Cheung Yee: And His 1960s Hong Kong Contemporaries"
+[2026-09-27T06:44:57.858Z]   ashmolean: "ASHMOLEAN NOW: BETTINA VON ZWEHL" → "Ashmolean Now: Bettina von Zwehl – The Flood"
+[2026-09-27T06:44:57.858Z] 
+[2026-09-27T06:44:57.858Z]   seen      = links matching the venue's selector on that page
+[2026-09-27T06:44:57.858Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-27T06:44:57.858Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-27T06:44:57.858Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-27T06:44:57.858Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-27T06:44:57.858Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-27T06:44:57.858Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-27T06:44:57.858Z] 
+[2026-09-27T06:44:57.858Z] Network bridge: 3125 requests served, 919 skipped (image/media/font), 69 failed
+[2026-09-27T06:44:57.858Z] 
+[2026-09-27T06:44:57.858Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-27_163647
+[2026-09-27T06:44:57.858Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-27_163647/sweep.csv  (24 rows — ashmolean:24)
+[2026-09-27T06:44:57.858Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-27_163647/log_2026-09-27_163647.txt
+[2026-09-27T06:44:57.858Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, orsay, mam, mad, jacquemart, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-27T06:44:57.859Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-27T06:44:57.859Z] No de-duplication is applied — see passThrough.

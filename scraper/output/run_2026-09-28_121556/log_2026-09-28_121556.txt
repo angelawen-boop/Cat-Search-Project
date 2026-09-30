@@ -1,0 +1,135 @@
+[2026-09-28T02:15:56.808Z] Cat Watch Sweep Prototype — starting
+[2026-09-28T02:15:56.810Z] Lookback floor: 2024-07-01
+[2026-09-28T02:15:56.811Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-28_121556
+[2026-09-28T02:15:56.811Z] Machine: home (no proxy, so this is not the container)
+[2026-09-28T02:15:56.811Z] NAMED BY HAND, and not this machine's job: brit.
+[2026-09-28T02:15:56.811Z] Running them anyway — naming a venue always wins. Both machines
+[2026-09-28T02:15:56.811Z] sweeping one venue doubles what it sees, and met and artic both
+[2026-09-28T02:15:56.812Z] rate-limit, so do not make a habit of it.
+[2026-09-28T02:15:56.812Z] Venues this run: brit
+[2026-09-28T02:15:56.813Z] 
+[2026-09-28T02:15:56.814Z] ────────────────────────────────────────────────────────────
+[2026-09-28T02:15:56.815Z]   PACING — her machine
+[2026-09-28T02:15:56.815Z] ────────────────────────────────────────────────────────────
+[2026-09-28T02:15:56.815Z]   Gap between pages: about 30s, varied 75–125%, per gatekeeper.
+[2026-09-28T02:15:56.815Z]   One venue at a time behind each gatekeeper; different gatekeepers side by side.
+[2026-09-28T02:15:56.816Z]   The first refusal or bot check stops that gatekeeper for the rest of the run.
+[2026-09-28T02:15:56.816Z]   In a visible Chrome on the seeded profile: brit
+[2026-09-28T02:15:56.840Z]   brit: gatekeeper not known yet — read off its first reply.
+[2026-09-28T02:15:56.842Z]   Venues this run: brit
+[2026-09-28T02:15:56.842Z] Proxy: (none — direct egress assumed)
+[2026-09-28T02:15:56.843Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-28T02:15:56.843Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-28T02:15:56.844Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-28T02:15:58.273Z] Running 0 venue(s) headless, 0 at a time (one page at a time within each venue)
+[2026-09-28T02:15:58.273Z] Running 1 venue(s) in a visible Chrome, one after another: brit
+[2026-09-28T02:15:59.396Z] [brit] 
+[2026-09-28T02:15:59.397Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-28T02:15:59.397Z] [brit]   BRIT — British Museum, London
+[2026-09-28T02:15:59.397Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-28T02:15:59.399Z] [brit]   Fetching current/upcoming: https://www.britishmuseum.org/exhibitions-events?whats_on_event_type=Exhibition&whats_on_event_type=Experience&whats_on_when=2026-09-28TO2027-12-31
+[2026-09-28T02:15:59.410Z] [brit]   robots.txt (www.britishmuseum.org, kept copy of 2026-09-27): asks 20s between requests, 24 path(s) off-limits — pages at least 20s apart
+[2026-09-28T02:15:59.413Z] [brit]   paced: request 1, gatekeeper not yet known — every lane paused for it
+[2026-09-28T02:16:00.559Z] [brit]   gatekeeper: Cloudflare — read off its reply; this venue is paced in that lane
+[2026-09-28T02:16:03.358Z] [brit]   current/upcoming: 8 links seen -> 0 navigation, 4 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-28T02:16:03.367Z] [brit]   Fetching past: https://www.britishmuseum.org/exhibitions-events/past-exhibitions
+[2026-09-28T02:16:25.877Z] [brit]   paced: request 2 via Cloudflare, after 6s
+[2026-09-28T02:16:32.210Z] [brit]   past: 115 links seen -> 0 navigation, 12 already-seen URL, 53 under a year heading too early for the lookback -> 50 collected (0 of them with no readable title)
+[2026-09-28T02:16:32.221Z] [brit]   lookback (listing): kept 39, dropped 15 closed before 2024-07-01, 14 with no closing date, 0 with no opening date
+[2026-09-28T02:16:32.223Z] [brit]   reading 39 individual page(s)…
+[2026-09-28T02:16:32.223Z] [brit]     page 1 of 39
+[2026-09-28T02:16:58.876Z] [brit]   paced: request 3 via Cloudflare, after 19s
+[2026-09-28T02:17:25.758Z] [brit]   paced: request 4 via Cloudflare, after 26s
+[2026-09-28T02:17:58.734Z] [brit]   paced: request 5 via Cloudflare, after 31s
+[2026-09-28T02:18:22.963Z] [brit]   paced: request 6 via Cloudflare, after 23s
+[2026-09-28T02:18:50.179Z] [brit]   paced: request 7 via Cloudflare, after 24s
+[2026-09-28T02:19:20.591Z] [brit]   paced: request 8 via Cloudflare, after 29s
+[2026-09-28T02:19:57.811Z] [brit]   paced: request 9 via Cloudflare, after 35s
+[2026-09-28T02:20:20.362Z] [brit]   paced: request 10 via Cloudflare, after 19s
+[2026-09-28T02:20:43.640Z] [brit]   paced: request 11 via Cloudflare, after 20s
+[2026-09-28T02:20:46.540Z] [brit]     page 10 of 39
+[2026-09-28T02:21:17.628Z] [brit]   paced: request 12 via Cloudflare, after 31s
+[2026-09-28T02:21:54.731Z] [brit]   paced: request 13 via Cloudflare, after 34s
+[2026-09-28T02:22:24.952Z] [brit]   paced: request 14 via Cloudflare, after 28s
+[2026-09-28T02:22:48.231Z] [brit]   paced: request 15 via Cloudflare, after 21s
+[2026-09-28T02:23:14.752Z] [brit]   paced: request 16 via Cloudflare, after 25s
+[2026-09-28T02:23:39.764Z] [brit]   paced: request 17 via Cloudflare, after 23s
+[2026-09-28T02:24:16.402Z] [brit]   paced: request 18 via Cloudflare, after 35s
+[2026-09-28T02:24:42.770Z] [brit]   paced: request 19 via Cloudflare, after 25s
+[2026-09-28T02:25:15.227Z] [brit]   paced: request 20 via Cloudflare, after 31s
+[2026-09-28T02:25:50.118Z] [brit]   paced: request 21 via Cloudflare, after 32s
+[2026-09-28T02:25:52.490Z] [brit]     page 20 of 39
+[2026-09-28T02:26:27.394Z] [brit]   paced: request 22 via Cloudflare, after 35s
+[2026-09-28T02:26:50.855Z] [brit]   paced: request 23 via Cloudflare, after 21s
+[2026-09-28T02:27:16.230Z] [brit]   paced: request 24 via Cloudflare, after 24s
+[2026-09-28T02:27:49.878Z] [brit]   paced: request 25 via Cloudflare, after 32s
+[2026-09-28T02:28:25.918Z] [brit]   paced: request 26 via Cloudflare, after 34s
+[2026-09-28T02:28:55.447Z] [brit]   paced: request 27 via Cloudflare, after 28s
+[2026-09-28T02:29:18.190Z] [brit]   paced: request 28 via Cloudflare, after 21s
+[2026-09-28T02:29:43.401Z] [brit]   paced: request 29 via Cloudflare, after 23s
+[2026-09-28T02:30:10.016Z] [brit]   paced: request 30 via Cloudflare, after 25s
+[2026-09-28T02:30:35.382Z] [brit]   paced: request 31 via Cloudflare, after 24s
+[2026-09-28T02:30:37.930Z] [brit]     page 30 of 39
+[2026-09-28T02:31:05.621Z] [brit]   paced: request 32 via Cloudflare, after 28s
+[2026-09-28T02:31:41.191Z] [brit]   paced: request 33 via Cloudflare, after 32s
+[2026-09-28T02:32:15.643Z] [brit]   paced: request 34 via Cloudflare, after 31s
+[2026-09-28T02:32:48.679Z] [brit]   paced: request 35 via Cloudflare, after 30s
+[2026-09-28T02:33:15.355Z] [brit]   paced: request 36 via Cloudflare, after 25s
+[2026-09-28T02:33:48.885Z] [brit]   paced: request 37 via Cloudflare, after 32s
+[2026-09-28T02:34:12.119Z] [brit]   paced: request 38 via Cloudflare, after 22s
+[2026-09-28T02:34:40.923Z] [brit]   paced: request 39 via Cloudflare, after 27s
+[2026-09-28T02:35:11.304Z] [brit]   paced: request 40 via Cloudflare, after 29s
+[2026-09-28T02:35:11.389Z] [brit]   CONNECTION_CLOSED on https://www.britishmuseum.org/exhibitions/luxury-and-power-persia-greece — retrying once
+[2026-09-28T02:35:40.601Z] [brit]   paced: request 41 via Cloudflare, after 27s
+[2026-09-28T02:36:14.592Z] [brit]   paced: request 42 via Cloudflare, after 33s
+[2026-09-28T02:36:17.130Z] [brit]   Individual pages: 39 got text, 0 no curatorial text, 0 failed
+[2026-09-28T02:36:17.131Z] [brit]   39 page(s) kept on disk as read (pages_kept/brit)
+[2026-09-28T02:36:17.132Z] [brit]   lookback (final): kept 33, dropped 6 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-28T02:36:17.140Z] [brit]   → 33 exhibitions, 33 with curatorial text → brit.csv
+[2026-09-28T02:36:17.874Z] 
+[2026-09-28T02:36:17.875Z] ────────────────────────────────────────────────────────────
+[2026-09-28T02:36:17.875Z]   QC — faulty rows and exceptions
+[2026-09-28T02:36:17.875Z] ────────────────────────────────────────────────────────────
+[2026-09-28T02:36:17.875Z]   No faulty rows: every row has a title and a known venue code.
+[2026-09-28T02:36:17.875Z]   No exceptions: every venue looks like the last run that had it.
+[2026-09-28T02:36:17.875Z] 
+[2026-09-28T02:36:17.876Z] ────────────────────────────────────────────────────────────
+[2026-09-28T02:36:17.876Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-28T02:36:17.876Z] ────────────────────────────────────────────────────────────
+[2026-09-28T02:36:17.876Z]   BRIT: 33 exhibitions | 33 with text
+[2026-09-28T02:36:17.876Z] 
+[2026-09-28T02:36:17.876Z] ────────────────────────────────────────────────────────────
+[2026-09-28T02:36:17.877Z]   PACING — where each gatekeeper got to
+[2026-09-28T02:36:17.877Z] ────────────────────────────────────────────────────────────
+[2026-09-28T02:36:17.877Z]   Cloudflare: brit — 41 clean page(s)
+[2026-09-28T02:36:17.878Z] 
+[2026-09-28T02:36:17.878Z] ────────────────────────────────────────────────────────────
+[2026-09-28T02:36:17.878Z]   COVERAGE — every link accounted for
+[2026-09-28T02:36:17.878Z] ────────────────────────────────────────────────────────────
+[2026-09-28T02:36:17.878Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-28T02:36:17.878Z]   -----------------------------------------------------------------------------------------------
+[2026-09-28T02:36:17.879Z]   brit       current/upcoming                 8     0       0     4        0        0          4
+[2026-09-28T02:36:17.880Z]   brit       past                           115     0       0    12        0        0         50
+[2026-09-28T02:36:17.880Z] 
+[2026-09-28T02:36:17.880Z] 
+[2026-09-28T02:36:17.880Z] ────────────────────────────────────────────────────────────
+[2026-09-28T02:36:17.880Z]   TITLES TAKEN FROM THE EXHIBITION'S OWN PAGE — READ BEFORE SENDING
+[2026-09-28T02:36:17.881Z] ────────────────────────────────────────────────────────────
+[2026-09-28T02:36:17.881Z]   brit: "Korea" → "Korea: Exhibition / 01 October 2026 – 31 January 2027"
+[2026-09-28T02:36:17.882Z] 
+[2026-09-28T02:36:17.882Z]   seen      = links matching the venue's selector on that page
+[2026-09-28T02:36:17.882Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-28T02:36:17.882Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-28T02:36:17.882Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-28T02:36:17.882Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-28T02:36:17.882Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-28T02:36:17.882Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-28T02:36:17.882Z] 
+[2026-09-28T02:36:17.882Z] Network bridge: 0 requests served, 0 handed back from files already fetched (not asked again), 0 skipped (image/media/font), 0 failed
+[2026-09-28T02:36:17.882Z] 
+[2026-09-28T02:36:17.883Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-28_121556
+[2026-09-28T02:36:17.884Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-28_121556/sweep.csv  (33 rows — brit:33)
+[2026-09-28T02:36:17.884Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-28_121556/log_2026-09-28_121556.txt
+[2026-09-28T02:36:17.884Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, orsay, mam, mad, ashmolean, jacquemart, khm, artic, moma, dellav, tate-modern, tate-britain, wallace
+[2026-09-28T02:36:17.884Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-28T02:36:17.884Z] No de-duplication is applied — see passThrough.

@@ -1,0 +1,20 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/ashmolean-now-daphne-wright",
+  "savedAt": "2026-09-27T09:31:34.989Z",
+  "outcome": "text",
+  "changes": {
+    "title": "Ashmolean Now: Daphne Wright – Deep-Rooted Things",
+    "start_date": "2025-06-13",
+    "summary": "This was the fourth in the Ashmolean NOW exhibition series, where contemporary artists are invited to create new work inspired by the Ashmolean’s historical collections. This exhibition focused on sculptures by Irish artist Daphne Wright and has been curated by Ashmolean director, Xa Sturgis. Conceived in partnership with the Hugh Lane Gallery in Dublin, the exhibition featured several new works which consider the tradition of still lifes and respond to the sculptures in our Cast Gallery. Daphne Wright works in unfired clay and jesmonite and has long experimented with casting.",
+    "notes": "opening date read from a sentence, not a date field: \"13 Jun 2025 to 8 Feb 2026\"."
+  },
+  "titleReport": [
+    {
+      "venue": "ashmolean",
+      "kind": "changed",
+      "from": "ASHMOLEAN NOW: DAPHNE WRIGHT",
+      "to": "Ashmolean Now: Daphne Wright – Deep-Rooted Things",
+      "url": "https://www.ashmolean.org/exhibition/ashmolean-now-daphne-wright"
+    }
+  ]
+}

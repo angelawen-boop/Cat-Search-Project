@@ -386,12 +386,15 @@ function openChrome() {
 
   console.log('A browser window should appear. It is a fresh Chrome with no');
   console.log('bookmarks or sign-ins, which is expected.\n');
-  console.log('Visit all three for a minute each, as you normally would:');
-  console.log('   https://www.moma.org/calendar/exhibitions');
-  console.log('   https://www.britishmuseum.org/exhibitions-events/past-exhibitions');
+  console.log('Visit the venue you are about to sweep for a minute, as you normally would:');
+  console.log('   https://www.musee-orsay.fr/en/program/whats-on/exhibitions');
   console.log('   https://www.themorgan.org/exhibitions/current');
+  console.log('   https://www.britishmuseum.org/exhibitions-events/past-exhibitions');
+  console.log('   https://www.moma.org/calendar/exhibitions');
   console.log('Click into a couple of exhibitions. Let any security check finish.\n');
-  console.log('Then: CLOSE it before run A. LEAVE IT OPEN for run B.');
+  console.log('Then LEAVE IT OPEN. The sweep works in a tab of its own in this window');
+  console.log('(mode B) and leaves your tabs and the window as they are.');
+  console.log('Only for the sweep\'s --launch-chrome, or run A of this probe: close it first.');
 }
 
 /**

@@ -1,0 +1,19 @@
+{
+  "machine": "home",
+  "savedAt": "2026-09-27T10:18:17.846Z",
+  "paceSeconds": 30,
+  "gatekeepers": {
+    "mad": "site:madparis.fr"
+  },
+  "lanes": {
+    "site:madparis.fr": {
+      "venues": [
+        "mad"
+      ],
+      "clean": 23,
+      "firstAt": "2026-09-27T10:07:04.120Z",
+      "lastAt": "2026-09-27T10:18:15.584Z",
+      "stopped": null
+    }
+  }
+}

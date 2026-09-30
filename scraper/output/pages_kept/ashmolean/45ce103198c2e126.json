@@ -1,0 +1,20 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/sisters-brothers-others-nationality-and-20th-century-chinese-art",
+  "savedAt": "2026-09-27T09:30:24.937Z",
+  "outcome": "text",
+  "changes": {
+    "title": "Sisters, Brothers, Others: Nationality and 20th-Century Chinese Art",
+    "start_date": "2026-07-11",
+    "summary": "Most citizens of the People’s Republic of China are Han, an ethnicity often translated as ‘Chinese.’ Officially, however, 56 different ‘brother and sister nationalities’ make up the country. The Sisters, Brothers, Others exhibition showcases how both Han and non-Han artists in the People's Republic of China have approached notions of 'self' and 'other' in their depictions of nationality and ethnicity. Through artworks and objects ranging from political propaganda posters to intimate self-portraits, the show explores questions of identity and the relationship between artistic and political representation. After the Manchu Qing dynasty fell in 1912, China transformed from an empire representing the power of an emperor into a state representing a nation. How could the diverse population of the former empire be united into a single national identity?",
+    "notes": "opening date read from a sentence, not a date field: \"11 Jul 2026 - 7 Mar 2027\"."
+  },
+  "titleReport": [
+    {
+      "venue": "ashmolean",
+      "kind": "changed",
+      "from": "SISTERS, BROTHERS, OTHERS: NATIONALITY AND 20TH-CENTURY CHINESE ART",
+      "to": "Sisters, Brothers, Others: Nationality and 20th-Century Chinese Art",
+      "url": "https://www.ashmolean.org/exhibition/sisters-brothers-others-nationality-and-20th-century-chinese-art"
+    }
+  ]
+}

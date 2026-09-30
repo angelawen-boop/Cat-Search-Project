@@ -1,0 +1,20 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/ashmolean-now-bettina-von-zwehl",
+  "savedAt": "2026-09-27T09:32:25.027Z",
+  "outcome": "text",
+  "changes": {
+    "title": "Ashmolean Now: Bettina von Zwehl – The Flood",
+    "start_date": "2024-10-18",
+    "summary": "The third in the Ashmolean NOW exhibition series, where contemporary artists are invited to create new work inspired by the Ashmolean’s historical collections. This exhibition featured photographs by London-based artist, Bettina von Zwehl (b. 1971). Von Zwehl's aim is to rekindle wonder and curiosity as critical tools for exploring new ideas and practices. During a residency in Oxford from 2022–23, von Zwehl spent time researching the Ashmolean’s founding collections – the wonderfully diverse objects and works of art which were displayed when the Museum first opened in the 17th century. The artist's time at the Ashmolean served as inspiration for a unique photographic 'Wunderkammer' installation that moves between portraiture, silhouetted fragments, still-life, monumental and miniature elements, as well as non-art objects and specimens from natural history collections.",
+    "notes": "opening date read from a sentence, not a date field: \"18 Oct 2024 - 11 May 2025\"."
+  },
+  "titleReport": [
+    {
+      "venue": "ashmolean",
+      "kind": "changed",
+      "from": "ASHMOLEAN NOW: BETTINA VON ZWEHL",
+      "to": "Ashmolean Now: Bettina von Zwehl – The Flood",
+      "url": "https://www.ashmolean.org/exhibition/ashmolean-now-bettina-von-zwehl"
+    }
+  ]
+}

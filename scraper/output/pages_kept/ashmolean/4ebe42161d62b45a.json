@@ -1,0 +1,21 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/aphrodite-the-making-of-a-goddess",
+  "savedAt": "2026-09-27T09:29:34.910Z",
+  "outcome": "text",
+  "changes": {
+    "title": "Aphrodite: The Making of a Goddess",
+    "start_date": "2026-10-08",
+    "end_date": "2027-04-11",
+    "summary": "Step into the world of Aphrodite, the Greek goddess of love, beauty, and desire – later worshipped by the Romans as Venus. Today she is thought of as a symbol of passion and beauty, but her story is far older and more complex. This major exhibition will explore Aphrodite’s beginnings on the island of Cyprus, where she was worshipped as an all-powerful goddess over 3,000 years ago, and will trace her journey through the Greek and into the Roman world, where she became Venus. The exhibition will reveal how, over the centuries, Aphrodite evolved into an iconic figure symbolising love and beauty as her myths and images flourished – inspiring art, literature, and imagination from the Renaissance to the present day.",
+    "notes": "opening and closing date read from a sentence, not a date field: \"8 Oct 2026 - 11 Apr 2027\"."
+  },
+  "titleReport": [
+    {
+      "venue": "ashmolean",
+      "kind": "changed",
+      "from": "APHRODITE: THE MAKING OF A GODDESS",
+      "to": "Aphrodite: The Making of a Goddess",
+      "url": "https://www.ashmolean.org/exhibition/aphrodite-the-making-of-a-goddess"
+    }
+  ]
+}

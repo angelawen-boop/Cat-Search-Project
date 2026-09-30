@@ -1,0 +1,19 @@
+{
+  "machine": "home",
+  "savedAt": "2026-09-30T04:30:27.957Z",
+  "paceSeconds": 30,
+  "gatekeepers": {
+    "orsay": "Cloudflare"
+  },
+  "lanes": {
+    "Cloudflare": {
+      "venues": [
+        "orsay"
+      ],
+      "clean": 54,
+      "firstAt": "2026-09-30T04:04:07.301Z",
+      "lastAt": "2026-09-30T04:30:25.839Z",
+      "stopped": null
+    }
+  }
+}

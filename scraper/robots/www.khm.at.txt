@@ -1,0 +1,41 @@
+# 2026-05-18
+User-Agent: *
+Allow: /
+
+# folders
+Disallow: /typo3/
+Disallow: /typo3conf/
+Allow: /typo3conf/ext/
+Allow: /typo3temp/
+
+# parameters
+Disallow: /*?id=*                   # non speaking URLs
+Disallow: /*&id=*                   # non speaking URLs
+Disallow: /*?query=*                # no search query
+Disallow: /*&query=*                # no search query
+Disallow: /*?facet_*                # no facet search
+Disallow: /*&facet_*                # no facet search
+
+# Disallow: /*?type=687*          
+# Disallow: /*&type=687*         
+
+# File / image downloads in online collection
+# Disallow: /*?type=689*
+# Disallow: /*&type=689*
+
+Disallow: /*?type=912*          
+Disallow: /*&type=912* 
+
+Disallow: /*?type=911*              # ICS Downloads
+Disallow: /*&type=911*              # ICS Downloads
+
+Disallow: /*?eID=*                  # eID XHR
+Disallow: /*&eID=*                  # eID XHR
+
+Disallow: /*?tx_theme_eventlist*
+Disallow: /*&tx_theme_eventlist*
+
+# sitemaps
+Sitemap: https://www.khm.at/sitemap.xml
+Sitemap: https://www.khm.at/en/sitemap.xml
+# Disallow: /typo3/

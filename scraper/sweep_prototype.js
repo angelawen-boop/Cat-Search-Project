@@ -499,6 +499,13 @@ function followPagination(queue, pg, newRows, rows, code, v) {
   const basePath = pg.basePath || pg.path;
   const sep = basePath.includes('?') ? '&' : '?';
   queue.push({
+    // THE PAGE'S OWN READING SETTINGS GO WITH IT — its selector, its `within`,
+    // its `listingRow`. Only the address used to travel, which was harmless
+    // while every paginated venue set those for the whole site. The Morgan's
+    // past year-pairs are the first paginated pages with settings of their
+    // own: page 2 on would have been read with the venue's fallback selector
+    // and no listing description (MP-003, MP-004).
+    ...pg,
     // `prefix` for a site whose page value is not a bare number — MAM Paris's
     // Drupal pager reads page=0,0,0,0,0,1 for its second page.
     path: `${basePath}${sep}${spec.param}=${spec.prefix || ''}${next}`,
@@ -537,17 +544,46 @@ function expandDateRange(entry, floor = LOOKBACK, today = new Date()) {
             ctx: entry.ctx, ...(entry.carry || {}) }];
 }
 
+/**
+ * A "from today" window in ONE parameter, the British Museum's shape:
+ * `whats_on_when=2026-09-26TO2027-12-31` — today to the end of next year, the
+ * window its own filter produced on both pages she saved (22 and 26 Sep).
+ * Derived at run time, never typed, for the reason given at expandYearArchive.
+ */
+function expandFromToday(entry, today = new Date()) {
+  const join = entry.path.includes('?') ? '&' : '?';
+  return [{ path: `${entry.path}${join}${entry.fromToday}=${ymdUTC(today)}TO${today.getUTCFullYear() + 1}-12-31`,
+            ctx: entry.ctx, ...(entry.carry || {}) }];
+}
+
 /** A venue's pages, with any year-filtered archive expanded to real years. */
 function listingPages(v) {
   const floor = v.lookbackFrom ? new Date(v.lookbackFrom) : LOOKBACK;
   return v.pages.flatMap(pg => pg.yearArchive ? expandYearArchive(pg, floor)
-    : pg.dateRange ? expandDateRange(pg, floor) : [pg]);
+    : pg.dateRange ? expandDateRange(pg, floor)
+    : pg.fromToday ? expandFromToday(pg) : [pg]);
 }
 
 // Navigation timing. See safeGoto() for why 'networkidle' is not used.
 const NAV_TIMEOUT = 20000;      // ceiling for the HTML itself to arrive
 const CONTENT_TIMEOUT = 8000;   // extra grace for client-rendered body text
 const MIN_BODY_CHARS = 200;     // below this a page is a shell, not content
+
+// PAUSES THAT ONLY A LIVE PAGE CAN USE. Each waits for the outside world: text
+// a site's script has yet to draw, cards a scroll has yet to fetch, a network
+// fault to pass before one retry. A fixture's page is a saved file with every
+// outside request refused — nothing can arrive late, so each pause there is
+// dead time: 5 of the suite's 8 minutes on 30 Sep, most of it waiting for text
+// on pages a fixture leaves blank on purpose, and retrying pages it refuses on
+// purpose. useFixtureWaits() zeroes them; the steps themselves all still run,
+// so a check still sees every branch. A real sweep never calls it.
+//
+// Deliberately NOT here: the 1.5s settles after a navigation was interrupted
+// or a load-more followed its link — those wait for the browser itself, which
+// runs in a fixture too — and pacing and robots.txt, which fixtures set
+// themselves (usePacerForFixtures, useRobotsForFixtures).
+const WAITS = { content: CONTENT_TIMEOUT, scrollStep: 450, beforeRetry: 2000 };
+function useFixtureWaits() { WAITS.content = 1; WAITS.scrollStep = 0; WAITS.beforeRetry = 0; }
 
 // How many pages of a numbered archive to follow before giving up. See
 // followPagination() — this is a runaway guard, never the intended stop, so
@@ -1607,8 +1643,13 @@ function applyLookback(rows, venueCode, stage) {
       // A closing date but no opening one. Common: venues print only
       // "until 20 December" while a show is running, and fill the opening date
       // in later, once it moves to their past listing.
+      // Her wording, 27 Sep: once a show has CLOSED the "while running"
+      // excuse no longer holds — the venue never filled it in (the
+      // Ashmolean's Cheung Yee and Churchill displays, closed 2025).
       noStart++;
-      row.notes = addNote(row.notes, 'No opening date published while this exhibition is running.');
+      row.notes = addNote(row.notes, row.end_date < new Date().toISOString().slice(0, 10)
+        ? 'Opening date not provided by the venue, even after the exhibition closed.'
+        : 'No opening date published while this exhibition is running.');
     }
     if (afterLookback(row.end_date, floor)) kept.push(row);
     else if (keptDespiteLookback(row, venueCode)) {
@@ -1644,8 +1685,15 @@ async function safeRouteCall(fn) {
  * reaches the internet through the agent proxy. Chromium receives a normal
  * response and behaves normally — including running the page's JavaScript.
  */
-async function installNetworkBridge(context) {
-  const stats = { fulfilled: 0, skipped: 0, failed: 0 };
+async function installNetworkBridge(context, { fetchImpl = fetch } = {}) {
+  const stats = { fulfilled: 0, skipped: 0, failed: 0, reused: 0 };
+  // FILES REUSED, AS A PERSON'S BROWSER DOES — her go-ahead, 27 Sep. Chromium
+  // never reuses a file this bridge hands it (proven: one script, three pages,
+  // asked for three times), so every page re-fetched all of its program files:
+  // ~100 files per Ashmolean show page, ~2,400 for one 24-page sweep, where a
+  // person's browser fetches the shared files once. Kept for the life of this
+  // context (one worker's run); only what `reusableFile` allows.
+  const kept = new Map();
 
   await context.route('**/*', async (route) => {
     const request = route.request();
@@ -1656,13 +1704,18 @@ async function installNetworkBridge(context) {
     }
 
     const method = request.method();
+    const copy = method === 'GET' && kept.get(request.url());
+    if (copy) {
+      stats.reused++;
+      return safeRouteCall(() => route.fulfill(copy));
+    }
     const headers = { ...request.headers() };
     // Let node-fetch negotiate its own encoding and connection handling.
     delete headers['accept-encoding'];
     delete headers['connection'];
 
     try {
-      const response = await fetch(request.url(), {
+      const response = await fetchImpl(request.url(), {
         method,
         headers,
         body: method === 'GET' || method === 'HEAD' ? undefined : request.postData(),
@@ -1685,7 +1738,9 @@ async function installNetworkBridge(context) {
       }
 
       stats.fulfilled++;
-      await safeRouteCall(() => route.fulfill({ status: response.status, headers: out, body }));
+      const reply = { status: response.status, headers: out, body };
+      if (method === 'GET' && reusableFile(request.resourceType(), response.status, out)) kept.set(request.url(), reply);
+      await safeRouteCall(() => route.fulfill(reply));
     } catch (e) {
       stats.failed++;
       await safeRouteCall(() => route.abort());
@@ -1693,6 +1748,26 @@ async function installNetworkBridge(context) {
   });
 
   return stats;
+}
+
+/**
+ * Would a person's browser reuse this file on the next page? Only program files
+ * and stylesheets — never the page itself, its live data (xhr/fetch) or
+ * anything else — and only a clean 200 the site has not forbidden keeping
+ * (no-store, no-cache). Otherwise the site's own say: a max-age above zero, a
+ * future Expires, or a Last-Modified date (browsers keep those too).
+ */
+function reusableFile(type, status, headers) {
+  if (type !== 'script' && type !== 'stylesheet') return false;
+  if (status !== 200) return false;
+  const h = {};
+  for (const [k, v] of Object.entries(headers || {})) h[k.toLowerCase()] = String(v);
+  const cc = (h['cache-control'] || '').toLowerCase();
+  if (/no-store|no-cache/.test(cc)) return false;
+  const age = cc.match(/(?:^|[,\s])(?:s-)?max-age=(\d+)/);
+  if (age) return Number(age[1]) > 0;
+  if (h['expires']) { const t = Date.parse(h['expires']); return Number.isFinite(t) && t > Date.now(); }
+  return !!h['last-modified'];
 }
 
 /**
@@ -1870,10 +1945,121 @@ function rethrowIfAborted(e) {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+ * WHAT THE SITE ASKS — robots.txt, both machines. Her go-ahead, 27 Sep 2026.
+ *
+ * The Ashmolean asks for 10 seconds between requests; we asked every 2 and its
+ * show pages stalled. Of 26 sites read on 27 Sep, six state a wait (Wallace
+ * 30s, British Museum 20s, Frick / MAM / Ashmolean 10s, V&A 2s). Reading and
+ * parsing the file: robots.js. Here, per venue, before every page it asks for:
+ *
+ *   - OFF-LIMITS: an address the file rules out is not asked for. It fails like
+ *     any other page, with its own reason, so it shows as a marker row / note.
+ *   - THE WAIT: pages are at least the stated delay apart. On her machine the
+ *     pacing gap (~30s) usually covers it already; the longer of the two wins.
+ *     Time spent here is not counted against the venue's budget.
+ *
+ * Only a real sweep reads robots.txt. Fixtures and probes never do (a fixture
+ * waiting 30s a page, or fetching, would be wrong) unless handed rules with
+ * useRobotsForFixtures. A file that could not be read asks nothing, and the
+ * log says it was unreadable rather than silent.
+ * ═════════════════════════════════════════════════════════════════════════ */
+const ROBOTS = new Map();          // venue -> { crawlDelay, rules, lastAt, waited }
+let ROBOTS_FIXTURE = null;         // { [venue]: { crawlDelay, rules } }
+function useRobotsForFixtures(f) { ROBOTS_FIXTURE = f; ROBOTS.clear(); }
+
+async function robotsState(venue) {
+  if (ROBOTS.has(venue)) return ROBOTS.get(venue);
+  let st = null;
+  if (ROBOTS_FIXTURE) {
+    const f = ROBOTS_FIXTURE[venue];
+    if (f) st = { crawlDelay: f.crawlDelay ?? null, rules: f.rules || [] };
+  } else if (require.main === module && VENUES[venue]) {
+    const r = await require('./robots').robotsFor(VENUES[venue].base, { agent: proxyAgent });
+    const wait = r.crawlDelay ? ` — pages at least ${r.crawlDelay}s apart` : '';
+    log(`  robots.txt (${r.host}, ${r.fetched ? 'read now' : 'kept copy of ' + String(r.fetchedAt).slice(0, 10)}): ${r.says}${wait}`);
+    st = { crawlDelay: r.crawlDelay, rules: r.rules };
+  }
+  if (st) Object.assign(st, { lastAt: 0, waited: 0 });
+  ROBOTS.set(venue, st);
+  return st;
+}
+
+/**
+ * `robotsAllow` — addresses a site's robots.txt rules out only by a slip in how
+ * it was written, read as allowed by HER ruling, one venue at a time. Matched on
+ * the path alone (any query), exactly; nothing broader.
+ */
+function robotsAllowedByRuling(venue, url) {
+  const list = (VENUES[venue] && VENUES[venue].robotsAllow) || [];
+  let p; try { p = new URL(url).pathname.replace(/\/$/, ''); } catch { return false; }
+  return list.some(x => x.replace(/\/$/, '') === p);
+}
+
+/** Before a page: null to go ahead (after any wait), or a reason not to ask. */
+async function robotsBefore(venue, url) {
+  const st = await robotsState(venue);
+  if (!st) return null;
+  const a = require('./robots').isAllowed(st.rules, url);
+  if (!a.allowed && !robotsAllowedByRuling(venue, url)) {
+    log(`  NOT ASKED — robots.txt rules it out (${a.rule}): ${url}`);
+    return 'ROBOTS_OFF_LIMITS';
+  }
+  if (st.crawlDelay && st.lastAt) {
+    const due = st.lastAt + st.crawlDelay * 1000 - Date.now();
+    if (due > 0) { st.waited += due; await new Promise(r => setTimeout(r, due)); }
+  }
+  st.lastAt = Date.now();
+  return null;
+}
+const robotsWaited = venue => (ROBOTS.get(venue) || {}).waited || 0;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * WHAT A TIMEOUT WAS WAITING FOR — 27 Sep 2026.
+ *
+ * "Timeout 20000ms exceeded" cannot tell the Ashmolean's two possible causes
+ * apart: the page itself never arriving, or the page arriving and one of its
+ * ~100 other files hanging. A timeout has no reply, so it has no labels either.
+ * So every page records its own requests, and a timeout names which half it was
+ * and the files still outstanding — the evidence the 27 Sep diagnosis lacked.
+ * ═════════════════════════════════════════════════════════════════════════ */
+function trackRequests(page) {
+  if (page.__catwatchRequests) return page.__catwatchRequests;
+  const t = { open: new Map(), navStart: 0, docAt: null };
+  page.on('request', r => t.open.set(r, { at: Date.now(), type: r.resourceType(), url: r.url() }));
+  const done = r => t.open.delete(r);
+  page.on('requestfinished', done);
+  page.on('requestfailed', done);
+  page.on('response', resp => {
+    const r = resp.request();
+    if (r.isNavigationRequest() && r.frame() === page.mainFrame() && t.docAt == null && t.navStart) t.docAt = Date.now();
+  });
+  page.__catwatchRequests = t;
+  return t;
+}
+
+/** One line for the log: did the page itself answer, and what was still open. */
+function stallReport(t, now = Date.now()) {
+  if (!t || !t.navStart) return '';
+  if (t.docAt == null) return `the page itself never answered within ${Math.round((now - t.navStart) / 1000)}s`;
+  const open = [...t.open.values()].filter(e => e.at >= t.navStart).sort((a, b) => a.at - b.at);
+  const short = u => { try { const x = new URL(u); return x.host + x.pathname.slice(0, 50); } catch { return String(u).slice(0, 60); } };
+  const list = open.slice(0, 4).map(e => `${e.type} ${short(e.url)} (${Math.round((now - e.at) / 1000)}s)`).join('; ');
+  return `the page itself answered in ${((t.docAt - t.navStart) / 1000).toFixed(1)}s; ` +
+    (open.length ? `still waiting on ${open.length} other file(s): ${list}${open.length > 4 ? '; …' : ''}` : 'nothing else outstanding');
+}
+
 async function safeGoto(page, url, venue, context, attempt = 0) {
   // Ctrl-C already seen: stop before opening anything else, rather than
   // letting the rest of the venue fail one page at a time.
   if (STOPPING) throw new ScrapeAborted(url);
+
+  // What the site's robots.txt asks: an address it rules out is not asked for,
+  // and pages are at least its stated delay apart. See WHAT THE SITE ASKS.
+  if (attempt === 0) {
+    const off = await robotsBefore(venue, url);
+    if (off) return { ok: false, reason: off };
+  }
 
   // Her machine: wait for this venue's turn and the gap. See PACING.
   if (PACER) {
@@ -1896,8 +2082,17 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
     // expired at 30s on pages whose text had been readable for seconds.
     // Instead: wait for the HTML, then for the body to actually contain
     // content, and ignore whatever background noise continues after that.
+    const track = trackRequests(page);
+    track.navStart = Date.now(); track.docAt = null;
     const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT });
     const status = resp ? resp.status() : null;
+
+    // The container: the first reply from each venue, and every refusal or
+    // error, says who answered (replyLabels). Her machine reads them in PACER.
+    if (!PACER && resp && (!LABELS_LOGGED.has(venue) || status >= 400)) {
+      LABELS_LOGGED.add(venue);
+      log(`  reply labels (HTTP ${status}): ${replyLabels(resp.headers(), url)}`);
+    }
 
     // Her machine: who answered, and did it object? An objection stops the
     // whole lane, so it is returned here before anything reads the page.
@@ -1931,7 +2126,7 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
     await page.waitForFunction(
       (min) => document.body && document.body.innerText.trim().length > min,
       MIN_BODY_CHARS,
-      { timeout: CONTENT_TIMEOUT }
+      { timeout: WAITS.content }
     ).catch(() => {});
 
     return { ok: true, status };
@@ -1944,6 +2139,8 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
       return safeGoto(page, url, venue, context, 1);
     }
     const reason = classifyLoadError(e.message);
+    // Read at the moment it failed, before a retry resets it.
+    const stall = /TIMEOUT/.test(reason) ? stallReport(page.__catwatchRequests) : '';
 
     // The browser is gone: the run is over, this is not this page's failure,
     // and there is nothing to retry. Throwing rather than returning is the
@@ -1963,12 +2160,12 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
     // 429, 404 — is never asked twice: it has told us its answer, and asking
     // again is exactly the hammering the standing rule forbids (Section 4).
     if (attempt === 0 && TRANSIENT_FAILURES.has(reason)) {
-      log(`  ${reason} on ${url} — retrying once`);
-      await page.waitForTimeout(2000);
+      log(`  ${reason} on ${url} — retrying once${stall ? ` (${stall})` : ''}`);
+      await page.waitForTimeout(WAITS.beforeRetry);
       return safeGoto(page, url, venue, context, 1);
     }
 
-    log(`  ${reason}: ${url} — ${e.message.slice(0, 120)}`);
+    log(`  ${reason}: ${url} — ${e.message.slice(0, 120)}${stall ? ` — ${stall}` : ''}${reason === 'TIMEOUT' && !/answered in/.test(stall) ? ' (no reply, so no labels to say who was in front of the site)' : ''}`);
     return { ok: false, reason };
   }
 }
@@ -2043,6 +2240,7 @@ const FAILURE_PROSE = {
 // Only ever written on her machine — see PACING below. Worded to fit inside
 // "could not be read: <this>. Marker row", which venue_status.js reads whole.
 FAILURE_PROSE.BLOCKED_CHALLENGE = 'the venue’s site answered with a bot check instead of the page';
+FAILURE_PROSE.ROBOTS_OFF_LIMITS = 'not asked for, because the venue’s robots.txt marks this address off-limits';
 FAILURE_PROSE.LANE_STOPPED = 'not asked for, because the gatekeeper in front of this site had just refused us and the run stopped asking';
 
 function failureProse(reason) {
@@ -2085,6 +2283,25 @@ const PACED = MACHINE === 'home';
 const PACE_ARG = ARGS.find(a => a.startsWith('--pace='));
 const PACE_MS = Math.max(1000, Math.round((parseFloat(PACE_ARG?.split('=')[1] ?? '30') || 30) * 1000));
 const IGNORE_COOLDOWN = ARGS.includes('--ignore-cooldown');
+
+// PAGES KEPT. Every exhibition page read is kept as it is read, so a venue cut
+// short does not have to ask for it again. The design and when a kept page is
+// NOT used: page_keep.js. --reread ignores them all.
+//   her machine  every venue (her go-ahead, 27 Sep)
+//   container    only a venue whose recipe says `keepPages: true` — a site we
+//                have seen drop out part-way, or block us part-way more than
+//                once. Not every site every run (her ruling, 27 Sep).
+// Only a real sweep keeps or reuses pages. A fixture calling scrapeVenue must
+// neither write into output/pages_kept nor be handed rows a live sweep kept.
+const { snapshot: keepSnapshot, rowChanges } = require('./page_keep');
+const PAGE_KEEP_STORE = require('./page_keep').makePageKeep(path.join(OUT_DIR, 'pages_kept'), { reread: ARGS.includes('--reread') });
+let PAGE_KEEP_FIXTURE = null;
+function pageKeepFor(code, { asSweep = require.main === module, paced = PACED } = {}) {
+  if (PAGE_KEEP_FIXTURE) return PAGE_KEEP_FIXTURE;
+  if (!asSweep) return null;
+  return paced || (VENUES[code] && VENUES[code].keepPages) ? PAGE_KEEP_STORE : null;
+}
+function usePageKeepForFixtures(k) { PAGE_KEEP_FIXTURE = k; }
 const COOLDOWN_AFTER_REFUSAL_MS = 24 * 60 * 60 * 1000;
 const QUIET_AFTER_CLEAN_MS = 60 * 60 * 1000;
 
@@ -2105,6 +2322,25 @@ function gatekeeperFrom(headers, url) {
   try { host = new URL(url).host.toLowerCase(); } catch { host = String(url); }
   return `site:${host}`;
 }
+
+/**
+ * WHO ANSWERED, IN ONE LINE — the container, 27 Sep. Her laptop already reads
+ * these on every reply (pacing); the container kept none, so the Ashmolean's
+ * timeouts could not say who was in front of the site. The labels a reply
+ * carries about its gatekeeper, host, cache and any stated limit. A timeout
+ * carries none — there was no reply — and the log says so instead.
+ */
+function replyLabels(headers, url) {
+  const h = {};
+  for (const [k, v] of Object.entries(headers || {})) h[k.toLowerCase()] = String(v);
+  const parts = [`gatekeeper ${gatekeeperFrom(h, url)}`];
+  for (const k of ['server', 'via', 'x-served-by', 'x-cache', 'x-cache-hits', 'x-ah-environment', 'x-generator',
+    'retry-after', 'x-ratelimit-limit', 'x-ratelimit-remaining', 'x-ratelimit-reset', 'ratelimit-limit', 'ratelimit-policy']) {
+    if (h[k]) parts.push(`${k}: ${h[k].slice(0, 60)}`);
+  }
+  return parts.join(' · ');
+}
+const LABELS_LOGGED = new Set();
 
 // The titles bot checks put on their own pages. A check can arrive with a 200,
 // so the status alone would read it as a page.
@@ -2501,6 +2737,11 @@ const BOILERPLATE = [
   // and a joint-ticket note opening two more: "Tickets for Edward Burra include
   // entry to the Ithell Colquhoun exhibition".
   'members enjoy free entry',
+  // The Ashmolean, 27 Sep sweep: Renaissance Worlds' description opened
+  // "Tickets for this major exhibition will be available in spring 2027.
+  // Become a Member to visit for free."
+  'become a member',
+  'tickets for this',
   'no need to book',
   'include entry to the',
 
@@ -2556,6 +2797,9 @@ const BOILERPLATE = [
   'entitled to a discount',
   'ticket office',
   'ticket purchase',
+  // The Ashmolean, 27 Sep: "No exhibition booking needed for Members, but
+  // proof of Membership is required" sat among Aphrodite's paragraphs.
+  'proof of membership',
   'subscribe to',
   'to stay updated',
   'opening hours',
@@ -2615,16 +2859,21 @@ const CURATORIAL_SELECTORS = [
   'p',
 ];
 
-async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt) {
+async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, creditPara, keepBold, dropSentence) {
   try {
-    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS }) => {
+    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe, keepBold, dropRe }) => {
+      const CREDIT = creditRe ? new RegExp(creditRe, 'i') : null;
       const ALWAYS = new RegExp(alwaysRe, 'i');
       const NOISE = new RegExp(noiseRe, 'i');
       const clean = (t) => String(t || '').replace(/\s+/g, ' ').trim();
 
+      // A venue's own sentence to drop (`dropSentence`), matched where a
+      // sentence BEGINS — so a paragraph holding one is split, and only that
+      // sentence goes.
+      const DROP = dropRe ? new RegExp(`(?:^|[.!?]\\s+)(?:${dropRe})`, 'i') : null;
       const isBoilerplate = (t) => {
         const low = t.toLowerCase();
-        return boilerplate.some(b => low.includes(b));
+        return boilerplate.some(b => low.includes(b)) || !!(DROP && DROP.test(t.trim()));
       };
 
       // DROP THE BOILERPLATE SENTENCE, NOT THE WHOLE BLOCK IT SITS IN.
@@ -2755,7 +3004,11 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt) {
         for (const el of els) {
           if (out.length >= 4) break;
           if (insideNoise(el)) continue;
-          if (hasPlainProse && boldOnly(el)) continue;
+          // `keepBold`: a venue whose opening paragraph IS bold (the Ashmolean's
+          // lead), and which prints no bold label among its paragraphs.
+          if (hasPlainProse && !keepBold && boldOnly(el)) continue;
+          // A recipe's own credit paragraph — see `creditPara`.
+          if (CREDIT && CREDIT.test(clean(el.innerText))) continue;
           const t = stripBoilerplate(clean(el.innerText));
           if (t.length > 60) out.push(t);
         }
@@ -2767,7 +3020,10 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt) {
          exemptRe: noiseExempt || null,
          boilerplate: BOILERPLATE,
          selectors: descSelector ? [descSelector, ...CURATORIAL_SELECTORS] : CURATORIAL_SELECTORS,
-         MIN_WRAPPER_PARAS });
+         MIN_WRAPPER_PARAS,
+         creditRe: creditPara ? creditPara.source : null,
+         keepBold: !!keepBold,
+         dropRe: dropSentence ? dropSentence.source : null });
   } catch {
     return '';
   }
@@ -3256,7 +3512,11 @@ function titleFromPage({ recorded, heading, line, tab, headings }) {
   // title. Found by testing on a venue the rule did not come from.
   const segs = String(tab || '').split(TITLE_SEP);
   const firstWords = titleWords(segs[0]);
-  const extra = firstWords.every(known) ? firstWords.filter(w => !hw.has(w)) : [];
+  // A GENERIC word never confirms the line. The British Museum's tab reads
+  // "Korea exhibition" and the line under its heading "Exhibition / 01 October
+  // 2026 – 31 January 2027": "exhibition" matched, and the dates became part
+  // of the name (28 Sep sweep). Same list the report below already ignores.
+  const extra = firstWords.every(known) ? firstWords.filter(w => !hw.has(w) && !GENERIC_NAME_WORDS.has(w)) : [];
   const joinLine = extra.length > 0 && lw.size > 0 && extra.every(w => lw.has(w));
   const name = !joinLine ? h : joinName(h, l);
 
@@ -3333,6 +3593,22 @@ async function extractTitleAsShown(link, venueCode) {
 
   if (rule.heading) {
     try {
+      // THE HEADING'S OWN JOINED NAME, where a venue writes the name twice.
+      // MoMA's featured cards carry "Peggy Weil: Core Memory" for narrow
+      // screens and "Peggy Weil" / "Core Memory" as two lines for wide ones;
+      // read as seen, the colon was lost (30 Sep sweep, 3 of 14 rows). The
+      // element is read by its source text, a <br> as a space, visible or not.
+      if (rule.headingName) {
+        const joined = await link.evaluate((a, sel) => {
+          const el = a.querySelector(sel);
+          if (!el) return '';
+          const c = el.cloneNode(true);
+          c.querySelectorAll('br').forEach(br => br.replaceWith(' '));
+          return c.textContent;
+        }, rule.headingName).catch(() => '');
+        const t = squash(joined);
+        if (t.length >= 3 && !isNotATitle(t, rule)) return t;
+      }
       const h = await link.$('h1,h2,h3,h4,h5');
       if (h) {
         // The heading is trusted FIRST but not blindly, and THE RECIPE'S STRIP
@@ -3390,19 +3666,32 @@ async function extractTitleAsShown(link, venueCode) {
   // source instead ("Henri Rivière\n\nThe man behind the camera"), which the
   // rendered text collapses to a space — so the source text is read, split at
   // a <br> or a blank line, never at a single wrapped line.
+  //
+  // The British Museum's current cards too: "John Constable<br><strong>views
+  // of nature</strong>", joined with a space until 30 Sep, while its past
+  // listing and the show's own <title> write "John Constable: views of
+  // nature" — the title would have changed the day the show closed. Its link
+  // also carries screen-reader text after a blank line (" . Book now . "),
+  // stripped by the venue's rules BEFORE the split or it reads as a subtitle;
+  // and its display cards say only "Find out more", which falls through to
+  // the card's own name below (BM-016/017).
   if (rule.brParts) {
-    const raw = await link.evaluate(a => {
+    let raw = await link.evaluate(a => {
       const c = a.cloneNode(true);
       c.querySelectorAll('br').forEach(br => br.replaceWith('\u2029'));
       return c.textContent;
     }).catch(() => '');
-    const lines = String(raw).split(/\u2029|\n[ \t\u00a0]*\n/).map(squash).filter(Boolean);
+    raw = String(raw);
+    if (rule.stripLeading)  raw = raw.replace(rule.stripLeading, '');
+    if (rule.stripTrailing) raw = raw.replace(rule.stripTrailing, '');
+    const lines = raw.split(/\u2029|\n[ \t\u00a0]*\n/).map(squash).filter(Boolean);
     if (!lines.length) return '';
     const [name, ...rest] = lines;
     const subtitle = rest.join(' ');
-    if (!subtitle) return name;
-    if (/[:.!?]\s*$/.test(name)) return `${name} ${subtitle}`;
-    return name.includes(':') ? `${name} – ${subtitle}` : `${name}: ${subtitle}`;
+    const joined = !subtitle ? name
+      : /[:.!?]\s*$/.test(name) ? `${name} ${subtitle}`
+      : name.includes(':') ? `${name} – ${subtitle}` : `${name}: ${subtitle}`;
+    if (!isNotATitle(joined, rule)) return joined;
   }
 
   let t = squash(await getText(link));
@@ -3421,6 +3710,19 @@ async function extractTitleAsShown(link, venueCode) {
   // Emptying it hands the row back to fillBlanksFromRepeatLink, which takes the
   // real name from the ordinary card linking the same address.
   if (isNotATitle(t, rule)) t = '';
+
+  // THE NAME IN THE CARD, where the link itself only says "Find out more".
+  // The British Museum's display cards: the name in the card's own heading
+  // (.listing__title), the link a button beside it. Read from the card the
+  // venue marks, never by walking upwards (the Borghese lesson, below).
+  if (!t && rule.cardName) {
+    t = await link.evaluate((a, { within, sel }) => {
+      const card = a.closest(within);
+      const el = card && card.querySelector(sel);
+      return el ? el.textContent : '';
+    }, rule.cardName).catch(() => '');
+    t = squash(t);
+  }
   if (!rule.heading) return squash(t);
 
   // Strip the venue's own badges from the link text before judging whether it
@@ -3703,7 +4005,7 @@ async function collectFromListing(page, opts) {
   // it cannot swallow an exhibition.
 
   // (LANG_PREFIX and isOwnListingPage are defined at module scope, below.)
-  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, branch: 0, labelled: 0, otherKind: 0, kept: 0 };
+  const c = { venue: venueCode, page: ctx, seen: 0, nav: 0, offsite: 0, dupUrl: 0, noTitle: 0, ongoing: 0, branch: 0, labelled: 0, otherKind: 0, oldYear: 0, kept: 0 };
   // The rows this page contributed, so unreadable titles can be counted once
   // the page is finished rather than as each link is read.
   const fromThisPage = [];
@@ -3781,6 +4083,10 @@ async function collectFromListing(page, opts) {
       }, opts.datesAt).catch(() => '');
       const d = dt ? findDateRange(dt) : null;
       if (d && (d.start || d.end || d.latestYear)) dates = { ...d, ongoing: saysOngoing(dt) };
+      // A named field saying "Ongoing" and nothing else holds no date, and is
+      // still the venue's own answer — the Morgan's J. Pierpont Morgan's
+      // Library (MP-007). Same shape datesNearLink gives an undated card.
+      else if (dt && saysOngoing(dt)) dates = { start: '', end: '', raw: squash(dt), ongoing: true };
     }
     if (!dates) dates = await datesNearLink(link, selector);
 
@@ -3833,6 +4139,37 @@ async function collectFromListing(page, opts) {
     // named in the log rather than silently lost (d'Orsay, her rule 25 Sep).
     // `within` names the card around the link, for a site whose link wraps the
     // title only and carries its tag outside it (d'Orsay's article cards).
+    // A YEAR HEADING, WHERE THE CARDS CARRY NO DATES. The British Museum's past
+    // archive lists every show since 2018 under "2026 Special exhibitions",
+    // "2025 Free exhibitions and displays" and so on, by the year it OPENED,
+    // with no dates on any card. Without this every one of 107 pages would be
+    // opened to learn its dates. A show that opened the year before the floor
+    // can still have been open on it, so that year is kept too and the
+    // exhibition's own dates decide; anything under an earlier year cannot
+    // reach the floor unless it ran more than a year. Years derived, never
+    // typed. A card with no year heading is kept — a missing label is not
+    // evidence.
+    if (opts.yearHeading) {
+      const yh = opts.yearHeading;
+      const heading = await link.evaluate((a, { within, heading }) => {
+        const sec = a.closest(within);
+        const h = sec && sec.querySelector(heading);
+        return h ? h.textContent : null;
+      }, yh).catch(() => null);
+      const y = heading && /\b(19|20)\d\d\b/.exec(heading);
+      // `yearsBefore`: how many years before the floor's own year still get
+      // opened (default 1, as above). A recipe sets 0 only once every show
+      // under that earlier year has been read and none reached the floor —
+      // the floor is permanent and that year's list is closed history, so the
+      // answer cannot change. Evidence sits on the recipe.
+      const before = yh.yearsBefore != null ? yh.yearsBefore : 1;
+      if (y && Number(y[0]) < lookbackFor(venueCode).getUTCFullYear() - before) {
+        c.oldYear++;
+        seenUrls.add(key);
+        continue;
+      }
+    }
+
     if (opts.keepOnlyType) {
       const kt = opts.keepOnlyType;
       const tag = await link.evaluate((a, { within, label }) => {
@@ -3934,7 +4271,7 @@ async function collectFromListing(page, opts) {
   c.noTitle = fromThisPage.filter(r => !r.title).length;
 
   COUNTS.push(c);
-  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''}${c.branch ? `, ${c.branch} at another site of the same venue` : ''}${c.labelled ? `, ${c.labelled} labelled permanent by the venue` : ''}${c.otherKind ? `, ${c.otherKind} tagged by the venue as another kind of event` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
+  log(`  ${ctx}: ${c.seen} links seen -> ${c.nav} navigation, ${c.dupUrl} already-seen URL${c.ongoing ? `, ${c.ongoing} ongoing/permanent` : ''}${c.branch ? `, ${c.branch} at another site of the same venue` : ''}${c.labelled ? `, ${c.labelled} labelled permanent by the venue` : ''}${c.otherKind ? `, ${c.otherKind} tagged by the venue as another kind of event` : ''}${c.oldYear ? `, ${c.oldYear} under a year heading too early for the lookback` : ''} -> ${c.kept} collected (${c.noTitle} of them with no readable title)`);
   return c;
 }
 
@@ -4265,12 +4602,17 @@ const VENUES = {
       // is a block boundary rather than a line of text, so scoping to the
       // block skips the section outright — no searching prose for a heading.
       { path: '/exhibitions/current', ctx: 'current',
-        selector: '.view-display-id-page_1 .views-field-field-teaser-image a[href]' },
+        selector: '.view-display-id-page_1 .views-field-field-teaser-image a[href]',
+        // Each card's dates in their own field: "June 26 through October 4,
+        // 2026", or "Ongoing" — which excludeOngoing drops before the page is
+        // opened. The general walk found none (MP-007, 28 Sep).
+        datesAt: { within: '.thumbnail', sel: '.views-field-field-display-date' } },
 
       // UPCOMING is the same card shape with one block — and it is page_2, not
       // page_1. The id cannot be shared with the line above.
       { path: '/exhibitions/upcoming', ctx: 'upcoming',
-        selector: '.view-display-id-page_2 .views-field-field-teaser-image a[href]' },
+        selector: '.view-display-id-page_2 .views-field-field-teaser-image a[href]',
+        datesAt: { within: '.thumbnail', sel: '.views-field-field-display-date' } },
 
       // PAST is a different view entirely: rows down the page, each carrying
       // its own title, dates and paragraph.
@@ -4286,6 +4628,10 @@ const VENUES = {
       { path: '/exhibitions/past', ctx: 'past', yearPath: '/',
         yearArchive: true, yearPair: true,
         carry: {
+          // Each year-pair runs to more than one page (2025-2026: three). The
+          // pager numbers from ZERO — the bare address is ?page=0, so the next
+          // is ?page=1 — read off her saved page's own pager links.
+          paginate: { param: 'page', from: 1 },
           selector: '.view-id-taxonomy_term .field--name-node-title h2 a[href]',
           // HER RULING, 22 Sep: take the paragraph off the listing and do not
           // open these pages. ~75 past exhibitions at a polite pace is over
@@ -4297,6 +4643,12 @@ const VENUES = {
             container: '.node--type-exhibitions',
             summary: '.field--name-body',
           },
+          // Each row's dates sit in their own field ("March 17 through June
+          // 28, 2026"). The row also holds the paragraph, too long for the
+          // general walk to reach them: every past row came out undated
+          // (MP-006, 28 Sep), which disables the lookback and the stop at the
+          // floor. Current and upcoming cards are short and read as before.
+          datesAt: { within: '.node--type-exhibitions', sel: '.field--name-field-display-date' },
         } },
     ],
 
@@ -4310,7 +4662,9 @@ const VENUES = {
                 || /\/exhibitions\/(online|online\/[^/]+)\/?$/.test(href)
                 || /\/exhibitions\/?$/.test(href),
 
-    title: { heading: true },
+    // The current and upcoming links are images with no words; the card's
+    // name sits beside them in its own field. Past links carry the name.
+    title: { heading: true, cardName: { within: '.thumbnail', sel: '.views-field-title' } },
 
     // THE BLURB, AND THE TRAP IN IT. `field--name-body` appears TWICE on every
     // Morgan page, and the first one is 29,000 characters above the exhibition:
@@ -4332,10 +4686,10 @@ const VENUES = {
     // range — a permanent display, said so by the venue itself.
     excludeOngoing: true,
 
-    // HER MACHINE ONLY, once the engine can launch that browser — see moma.
-    // Left on the container for now: moving it sooner would only mean her
-    // laptop collecting the refusals instead of the container's.
-    headed: true,
+    // HER MACHINE ONLY — her rule, 26 Sep: moved after a complete, clean
+    // headed sweep from her laptop (30 Sep 16:07, mode B, 18 pages, no
+    // challenge, her count 3 + 5 + 20 + 3 + 8 = 39).
+    route: 'local',
   },
 
   menil: {
@@ -4683,12 +5037,13 @@ const VENUES = {
   orsay: {
     name: "Musée d'Orsay, Paris",
     base: 'https://www.musee-orsay.fr',
-    // The CONTAINER's until a complete, clean sweep from her laptop confirms
-    // it — her rule, 26 Sep; the container's refusals are its marker rows.
-    // Tested on her laptop by naming it. HEADED — her ruling, 26 Sep: her
-    // first laptop sweep, headless, was refused on its first page (Cloudflare
-    // 403 after days of quiet), so it joins the headed pile.
+    // HEADED — her ruling, 26 Sep: her first laptop sweep, headless, was
+    // refused on its first page (Cloudflare 403 after days of quiet).
     headed: true,
+    // HER MACHINE ONLY — her rule, 26 Sep: moved after a complete, clean
+    // headed sweep from her laptop (30 Sep 14:04, mode B, 54 pages, no
+    // challenge, her count 13 + 45). Mode A had been refused at request 18.
+    route: 'local',
     pages: [
       { path: '/en/program/whats-on/exhibitions', ctx: 'current/upcoming' },
       { path: '/en/ressources/expositions-passees', ctx: 'past', paginate: { param: 'page', from: 1 } },
@@ -4758,8 +5113,10 @@ const VENUES = {
   mad: {
     name: 'Musée des Arts Décoratifs, Paris',
     base: 'https://madparis.fr',
-    // The CONTAINER's until a complete, clean sweep from her laptop confirms
-    // it — her rule, 26 Sep. Tested on her laptop by naming it.
+    // HER MACHINE ONLY — her ruling, 27 Sep, after a complete, clean sweep
+    // from her laptop (27 Sep 20:07, 20 of 20 pages, her count). The container
+    // is refused outright (403, robots.txt included).
+    route: 'local',
     pages: [
       { path: '/?page=expo-actu-en',     ctx: 'current' },
       { path: '/?page=expo-avenir-en',   ctx: 'upcoming' },
@@ -4780,6 +5137,12 @@ const VENUES = {
     // so the reader falls back to the page and took "107, rue de Rivoli …
     // Phone: …" from it — Luxury in China, 26 Sep, on the pages she saved.
     noise: 'col_annexe',
+    // A sponsor's thanks, not the show — her ruling, 27 Sep: ANDAM's 35th
+    // Anniversary carried "With the support of ANDAM, Nathalie Dufour, Founder
+    // and CEO…". MAD only: elsewhere the phrase opens sentences that carry the
+    // show ("Organized with the support of the Sobel family, this exhibition
+    // marked the first time…").
+    dropSentence: /With the support of\b/,
   },
 
   // MUSÉE JACQUEMART-ANDRÉ — her addition, 25 Sep. Two listings, both server-
@@ -4789,6 +5152,58 @@ const VENUES = {
   // the listings' own cards are read — two card designs, one per page:
   //   current  a.event       .festival__type  .title h2  .sous_titre
   //   past     a.gallery_el  .item-type       .item-title .item-sub-title
+  ashmolean: {
+    name: 'Ashmolean Museum, Oxford',
+    base: 'https://www.ashmolean.org',
+    // Pages kept as read, in the container too (her yes, 27 Sep): its 27 Sep
+    // sweep lost 13 of its first 20 show pages to 20s timeouts, every second
+    // page, and was abandoned at its budget with nothing written. The same
+    // page loaded in 2-3s twice when tried alone that afternoon, so the drop-
+    // outs come and go (she has also seen its pages sit blank for a minute).
+    keepPages: true,
+    // Show pages read ALONE — one file each, not ~100 (her go-ahead, 27 Sep).
+    // Proven on five bare pages, one of every kind: docs/ashmolean_pages/raw/.
+    pageOnly: true,
+    // HER ADDITION, 27 Sep. Major exhibitions, free exhibitions AND displays,
+    // current and past alike — nothing excluded (her ruling). Her count: current
+    // 0 major + 4 free, upcoming 2 major + 1 free, past back to 1 July 2024
+    // 4 major + 13 free. Written from pages read once each and saved
+    // (docs/ashmolean_pages/); fixtures/ashmolean_pages.js.
+    //
+    // The page draws its lists by script, and the past page holds TWO of them:
+    // "past exhibitions" (the majors, paged by page-181616) and "past free
+    // exhibitions and displays" (paged by page-996041). The majors' first page
+    // already reaches 2023, so only the free list is followed; the majors
+    // re-appear on every page of it and fall to the address guard.
+    pages: [
+      { path: '/exhibitions',      ctx: 'current/upcoming' },
+      { path: '/past-exhibitions', ctx: 'past', paginate: { param: 'page-996041', from: 1 } },
+    ],
+    // Shows live at /exhibition/<name>, displays at /display/<name>. The card's
+    // own link class keeps out the menu's promo card, which links Aphrodite on
+    // every page of the site.
+    selector: 'a.listing-item-link[href*="/exhibition/"], a.listing-item-link[href*="/display/"]',
+    isNav: href => /\/(past-)?exhibitions\/?(\?|$)/.test(href),
+    // The link holds only the name, in screen-reader text; the card's visible
+    // heading is outside it.
+    title: { heading: false, cardParts: { name: '.screen-reader-only' } },
+    // A free show's card prints "Open until 9 Nov 2025" in its date row; an
+    // upcoming major's prints "Opens on 8 Oct 2026" in bold in its teaser. The
+    // missing half comes from the show's own page ("Open 11 Apr – 13 Dec 2026").
+    datesAt: { within: 'article', sel: '.listing-item-event-date, .teaser-text strong' },
+    // The page's own text field. Its lead paragraph is set in bold ("Step into
+    // the world of Aphrodite…"), which the shared bold-label rule would drop.
+    description: '.field-name-field-content p',
+    keepBold: true,
+    // Titles are TYPED in capitals here, listing and page alike — her ruling,
+    // 27 Sep: code writes ordinary capitals (titleFromCaps).
+    capsTitles: true,
+    // The full name: the page header's name and its subtitle line (the first
+    // line of its teaser, above the dates) — see `pageTitle` in the detail pass.
+    // A header can name its show in an <h1> instead ("THIS IS WHAT<br>YOU GET").
+    pageTitle: { box: '.text-box', name: '.listing-title h3, h1', sub: '.teaser-text p' },
+  },
+
   jacquemart: {
     name: 'Musée Jacquemart-André, Paris',
     base: 'https://www.musee-jacquemart-andre.com',
@@ -5030,7 +5445,30 @@ const VENUES = {
     // be collected as if it were an exhibition.
     isNav: href => /\/calendar\/exhibitions\/?$/.test(href)
                 || /\/calendar\/exhibitions\/history\/?$/.test(href),
-    title: { heading: true },
+    // `headingName`: the heading's first line, which holds the whole name with
+    // its colon on every card — see extractTitleAsShown. MM-004.
+    title: { heading: true, headingName: 'h3 p.balance-text' },
+
+    // THE LISTING SAYS WHAT EACH THING IS — her finding, 30 Sep, on the page
+    // she saved. Three sections under their own headings: "Current
+    // exhibitions", "Upcoming exhibitions", "Installations and projects". Her
+    // scope is exhibitions, so the third is dropped HERE, before any page is
+    // opened: 14 pages, not 24. The 22 Sep recipe missed these headings and
+    // opened every page to read a tag on it (excludeLabelledOnPage, below,
+    // kept as a second net). The Current section nests an inner section with
+    // no heading, so the card's section is the nearest one that HAS one.
+    // An unseen heading is KEPT and named — d'Orsay's rule.
+    keepOnlyType: {
+      within: 'section:has(.page-section__header)', label: '.page-section__heading__text',
+      not: /^\s*Installations and projects\s*$/i,
+      seen: /^\s*(Current exhibitions|Upcoming exhibitions|Installations and projects)\s*$/i,
+    },
+
+    // A visitor notice inside the description ("Please note that Gallery 4E
+    // will be temporarily closed on Monday, September 28…", Architects of
+    // Liberation, 30 Sep). Dated, so it would also change the description
+    // from sweep to sweep. This venue only.
+    dropSentence: /Please note that\b/,
 
     // THE BLURB HAS ITS OWN CONTAINER, AND NOTHING ELSE IS IN IT.
     //
@@ -5041,7 +5479,20 @@ const VENUES = {
     // listing member-preview times, then related articles carrying their own
     // publication dates. Naming the container skips all of it outright rather
     // than filtering it sentence by sentence afterwards.
-    description: '#description',
+    //
+    // READ PARAGRAPH BY PARAGRAPH, 27 Sep. The credit sits INSIDE the container
+    // after all, as its last paragraph — "Organized by Jodi Hauptman…",
+    // "Mondrian Boogie Woogie is organized by The Museum of Modern Art…", "We
+    // are grateful for the collaboration of…" — on all four pages she saved
+    // that day. Read whole, the container brought it into every description.
+    // Paragraphs let `creditPara` drop exactly that one.
+    description: '#description p',
+    // A PARAGRAPH THAT IS A CREDIT, dropped whole. This venue only: "organized
+    // by" can open a real sentence of curatorial prose elsewhere ("a show
+    // organized by the artist in 1930"). Here it is anchored to the START of a
+    // paragraph, or to the show's own name directly before "is organized by",
+    // which is how MoMA words every credit it prints.
+    creditPara: /^(?:organized by\b|we are grateful\b|[^.]{0,160}?\bis (?:co-)?organized by\b)/i,
 
     // WHAT MoMA CALLS THE THING, PRINTED ON ITS OWN PAGE.
     //
@@ -5061,11 +5512,13 @@ const VENUES = {
     // matches. Her finding, 22 Sep — it had been assumed they were mixed in.
     excludeLabelledOnPage: /^\s*Installation\s*$/im,
 
-    // The CONTAINER's, for its marker rows — her rule, 26 Sep: a venue moves
-    // to her laptop only after a complete, clean sweep from there. 22 Sep's
-    // probe (a visible Chrome with her history reached the listing and one
-    // exhibition page) moved it early; one probe page is not a sweep.
+    // A visible Chrome with her history — see HEADED. Mode B by default.
     headed: true,
+    // HER MACHINE ONLY — her rule, 26 Sep: moved after a complete, clean
+    // headed sweep from her laptop (30 Sep 16:24, mode B, 25 pages, no
+    // challenge; mode A was challenged at page 19 on 27 Sep). Swept from now
+    // on — her ruling 30 Sep; the saved-pages route for MoMA is retired.
+    route: 'local',
   },
 
   brit: {
@@ -5073,15 +5526,65 @@ const VENUES = {
     // Headless has never got in; a visible Chrome with her history did, 22 Sep.
     // Her ruling, 26 Sep: not attempted headless from her machine.
     headed: true,
+    // HER MACHINE ONLY — her ruling, 28 Sep, after a complete, clean headed
+    // sweep from her laptop (28 Sep 12:15, 41 pages, no challenge, her count).
+    route: 'local',
     base: 'https://www.britishmuseum.org',
+    // robots.txt rules out /exhibitions-events/* but ALLOWS
+    // /exhibitions-events/past-exhibitions/ — with a slash. Its own pages, and
+    // Google's first result, link to it without one. Her ruling, 27 Sep: they
+    // allow the past exhibitions page; the missing slash is a slip, not a "keep
+    // out". This one address only (robotsAllowedByRuling).
+    robotsAllow: ['/exhibitions-events/past-exhibitions'],
+    // WRITTEN 26 Sep FROM THE PAGES SHE SAVED (docs/brit_pages/). The old
+    // recipe hunted /exhibitions-events/ links; exhibitions live at
+    // /exhibitions/<name>. Current and upcoming: the What's On list filtered
+    // to exhibitions, with a date window in the address (expandFromToday).
+    // Past: one long page, sections by the year a show opened, no dates on
+    // any card — yearHeading keeps the years that can reach the lookback, and
+    // each exhibition's own page gives its dates (detailDates).
     pages: [
-      { path: '/exhibitions-events',                 ctx: 'current/upcoming' },
-      { path: '/exhibitions-events/past-exhibitions', ctx: 'past' },
+      // EXHIBITION AND EXPERIENCE — her finding, 27 Sep. The Bayeux Tapestry is
+      // filed by the museum as an "Experience", so the Exhibition filter alone
+      // left it out; its own page lives under /exhibitions/ like every show.
+      // The site takes the parameter twice. The selector still keeps only
+      // /exhibitions/ pages, so an experience that is not a show stays out.
+      { path: '/exhibitions-events?whats_on_event_type=Exhibition&whats_on_event_type=Experience', fromToday: 'whats_on_when', ctx: 'current/upcoming' },
+      // THE YEAR SECTIONS ONLY. Above them the page's introduction links shows
+      // in its prose ("From Legion … to China's hidden century") and a
+      // carousel repeats the current shows; neither has a year heading, so
+      // both were kept, and the 28 Sep sweep opened two 2022 shows from the
+      // prose only to drop them. Her ruling, 28 Sep: a page outside the cutoff
+      // is never opened.
+      { path: '/exhibitions-events/past-exhibitions', ctx: 'past', within: ['section'] },
     ],
-    selector: 'a[href*="/exhibitions-events/"]',
-    isNav: href => /\/exhibitions-events\/?$/.test(href)
-                || /\/exhibitions-events\/past-exhibitions\/?$/.test(href),
-    title: { heading: true },
+    selector: 'a[href*="/exhibitions/"]',
+    // The exhibitions landing page, and an exhibition's own sub-pages (its
+    // large-print and plain-English guides) — never a show.
+    isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/[^/?#]+\/[^?#]+/.test(href),
+    // 2023 is not opened (yearsBefore 0) — her ruling, 28 Sep. The 28 Sep
+    // sweep read all three 2023 special exhibitions (China's hidden century,
+    // Luxury and power, Burma to Myanmar), closed 13 Aug 2023 to 11 Feb 2024;
+    // every 2023 display carries its dates on the listing and all closed
+    // before the floor. Nothing under 2023 can reach 1 July 2024.
+    yearHeading: { within: 'section', heading: 'h2', yearsBefore: 0 },
+    detailDates: '.date-display-range',
+    // Two card shapes. Special exhibitions: the name is the link, followed by
+    // screen-reader text inside it (" . Final weeks . ", " . Book now . ").
+    // Displays: the link says "Find out more"; name and dates sit in the card.
+    // Name and subtitle on two lines in a current card are joined with a
+    // colon, as its past listing and the show's own page write them (brParts).
+    title: {
+      heading: false,
+      brParts: true,
+      stripTrailing: /\s+\.\s+(?:[^.]*?\s+)?\.\s*$/,
+      notATitle: /^\s*Find out more\s*$/i,
+      cardName: { within: '.listing__item', sel: '.listing__title' },
+    },
+    datesAt: { within: '.listing__item', sel: '.listing__intro' },
+    // The museum's own text. The info column beside it (.section--intro__info:
+    // opening hours, room, tickets sold out, newsletter, shop) is not.
+    description: '.section--intro__content p',
     // Its current page once read 200 and was reported as "works". That was a
     // Cloudflare EDGE CACHE with a lifetime, not a property of the site: once
     // the cache expired the same page returned 403 with cf-mitigated:challenge,
@@ -5260,7 +5763,70 @@ const VENUE_ORDER = Object.keys(VENUES);
 /**
  * The engine. Every venue goes through this; none has its own copy.
  */
-async function scrapeVenue(page, code, { listingOnly = false } = {}) {
+/**
+ * TITLES TYPED IN CAPITALS, turned into ordinary capitals — her ruling, 27 Sep
+ * (the Ashmolean). restoreCase() recovers letters a site only DISPLAYS in
+ * capitals; this venue TYPES them, on the listing and on the show's own page,
+ * so there is nothing to recover and code writes the capitals instead.
+ *
+ * Only a title with no lower-case word is touched: a word of two or more
+ * letters, no digit. "1960s" and "x" (as in "Yukhnovich x Crews-Chubb") are
+ * not evidence either way. Each word: first letter capital, rest small;
+ * small joining words stay small unless they open the title or follow a colon
+ * or dash. Roman numerals stay capitals ("Bandō Tamasaburō V"). "20TH-CENTURY"
+ * becomes "20th-Century"; "O'KEEFFE" "O'Keeffe"; "RUSKIN'S" "Ruskin's".
+ * It cannot know a styled name ("Ashmolean NOW") — those come out ordinary.
+ */
+const SMALL_WORDS = new Set(['a', 'an', 'the', 'and', 'or', 'nor', 'but', 'of', 'in', 'on', 'at', 'to', 'for', 'by', 'with', 'from', 'as', 'into', 'over', 'upon', 'via', 'vs', 'x', 'von']);
+const ROMAN = /^(?=[IVXLC]+$)C{0,3}(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
+function titleFromCaps(title) {
+  const t = String(title || '');
+  const words = t.match(/[\p{L}\p{N}]+/gu) || [];
+  const judged = words.filter(w => w.length >= 2 && !/\d/.test(w));
+  if (!judged.length || judged.some(w => w !== w.toUpperCase())) return t;
+  let startOfPhrase = true;
+  // Word positions, so a token can tell whether it ends its phrase.
+  const tokens = t.match(/[\p{L}\p{N}'’]+|[^\p{L}\p{N}'’]+/gu) || [];
+  let at = -1;
+  const lastOfPhrase = () => {
+    for (let k = at + 1; k < tokens.length; k++) {
+      if (/[\p{L}\p{N}]/u.test(tokens[k])) return false;
+      if (/[:–—(]|\s-\s/.test(tokens[k])) return true;
+    }
+    return true;
+  };
+  return t.replace(/[\p{L}\p{N}'’]+|[^\p{L}\p{N}'’]+/gu, tok => {
+    at++;
+    if (!/[\p{L}\p{N}]/u.test(tok)) {
+      if (/[:–—]|\s-\s/.test(tok)) startOfPhrase = true;
+      return tok;
+    }
+    const first = startOfPhrase; startOfPhrase = false;
+    // A numeral stays capitals: "Bandō Tamasaburō V", "Henry VIII and…".
+    // Mid-phrase a single letter is a word, and so are the numeral-shaped
+    // names "LI" and "LIV" ("LI JIN" is Li Jin); at a phrase's end they count.
+    if (ROMAN.test(tok) && tok !== 'I' && (lastOfPhrase() || (tok.length >= 2 && !/^(LI|LIV)$/.test(tok)))) return tok;
+    const low = tok.toLowerCase();
+    if (!first && SMALL_WORDS.has(low)) return low;
+    // Pieces joined by an apostrophe: O'KEEFFE → O'Keeffe, RUSKIN'S → Ruskin's.
+    return low.split(/(['’])/).map((part, i, all) => {
+      if (i === 0) return part.replace(/^(\d*)(\p{L})/u, (m, d, c) => d ? d + c : c.toUpperCase());
+      if (/['’]/.test(part)) return part;
+      return all[0].length === 1 && part.length > 1 ? part[0].toUpperCase() + part.slice(1) : part;
+    }).join('');
+  }).replace(/(^|[-–])(\p{Ll})/gu, (m, d, c) => d === '' ? m : d + c.toUpperCase())
+    .replace(/^(\p{Ll})/u, c => c.toUpperCase());
+}
+
+async function scrapeVenue(page, code, opts = {}) {
+  const rows = await scrapeVenueRows(page, code, opts);
+  if ((VENUES[code] || {}).capsTitles) {
+    for (const r of rows) if (r.title && !r.title.startsWith('[')) r.title = titleFromCaps(r.title);
+  }
+  return rows;
+}
+
+async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
   const v = VENUES[code];
   if (!v) { log(`  no recipe for venue "${code}"`); return []; }
 
@@ -5332,22 +5898,6 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
       }
     }
 
-    // DOES THIS PAGE OFFER MORE THAN WE ARE TAKING? Only asked where nothing is
-    // already wired — a page with `paginate` is followed by followPagination()
-    // and a venue with `loadMore` presses its control, so both are handled and
-    // finding their own next-page links would be noise on every sweep.
-    if (!pg.paginate && !v.loadMore) {
-      const more = await detectUnwiredPagination(page, recipeDrivenParams(v));
-      if (more) {
-        log(`  UNWIRED PAGINATION ${pg.ctx}: this page links another page and no recipe follows it — ${more.join(' | ')}`);
-        // ONE ENTRY PER VENUE AND FINDING. artic's eight archive pages all
-        // carry the same links, so the summary listed the same finding eight
-        // times over and buried everything else.
-        const sig = code + '|' + more.join('|');
-        if (!UNWIRED.some(u => u.sig === sig)) UNWIRED.push({ sig, venue: code, page: pg.ctx, url, hints: more });
-      }
-    }
-
     const bodyText = await page.innerText('body').catch(() => '');
     if (bodyText.length < MIN_BODY_CHARS) {
       log(`  EMPTY_PAGE ${pg.ctx}: loaded but body has <${MIN_BODY_CHARS} chars`);
@@ -5390,8 +5940,9 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
       excludeOngoing: !!v.excludeOngoing,
       otherBranch: v.otherBranch || null,
       keepOnlyType: v.keepOnlyType || null,
+      yearHeading: v.yearHeading || null,
       dropQuery: v.dropQuery || null,
-      datesAt: v.datesAt || null,
+      datesAt: pg.datesAt || v.datesAt || null,
       excludeLabelled: v.excludeLabelled || null,
       excludeTitle: v.excludeTitle || null,
       listingRow: pg.listingRow || v.listingRow || null,
@@ -5401,6 +5952,30 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
 
     try {
       const cov = await collectFromListing(page, opts);
+
+      // DOES THIS PAGE OFFER MORE THAN WE ARE TAKING? Only asked where nothing is
+      // already wired — a page with `paginate` is followed by followPagination()
+      // and a venue with `loadMore` presses its control, so both are handled and
+      // finding their own next-page links would be noise on every sweep.
+      if (!pg.paginate && !v.loadMore) {
+        // A LINK THIS PAGE'S OWN READING FILED AS AN EXHIBITION IS NOT ANOTHER
+        // PAGE OF IT. MoMA numbers its exhibitions — /calendar/exhibitions/5890
+        // sits under the listing's own path exactly as a page 2 would — so every
+        // sweep warned "more pages offered" about four of its shows (27 Sep). So
+        // this asks AFTER the page is read, and drops any address collected from
+        // it. Nothing else is dropped: a real next-page link is never collected,
+        // because the reading files it as navigation.
+        const offered = await detectUnwiredPagination(page, recipeDrivenParams(v));
+        const more = offered && offered.filter(o => !seenUrls.has(normalizeUrl(o.href))).map(o => o.hint).slice(0, 4);
+        if (more && more.length) {
+          log(`  UNWIRED PAGINATION ${pg.ctx}: this page links another page and no recipe follows it — ${more.join(' | ')}`);
+          // ONE ENTRY PER VENUE AND FINDING. artic's eight archive pages all
+          // carry the same links, so the summary listed the same finding eight
+          // times over and buried everything else.
+          const sig = code + '|' + more.join('|');
+          if (!UNWIRED.some(u => u.sig === sig)) UNWIRED.push({ sig, venue: code, page: pg.ctx, url, hints: more });
+        }
+      }
 
       // A PAGE THAT LOADS AND YIELDS NOTHING MUST SAY SO TOO.
       //
@@ -5466,15 +6041,16 @@ async function scrapeVenue(page, code, { listingOnly = false } = {}) {
   if (listingOnly) return rows;
 
   // Cut before opening detail pages where the listing gave us enough to judge.
-  const toFetch = (v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing'))
-    // A ROW WHOSE BLURB CAME OFF THE LISTING NEEDS NO PAGE OPENED.
-    //
-    // Only rows from a page whose recipe named a `listingRow` reach here with a
-    // summary already on them, so this filters exactly those and nothing else.
-    // Counted from the array AFTER the change rather than from the marks, so
-    // the log line below describes what happened rather than what was intended.
-    .filter(r => !r._fromListing);
-  await fetchIndividualPages(page, toFetch, code);
+  // `toFetch` is every row that goes on from here — and what is WRITTEN.
+  const toFetch = v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing');
+  // A ROW WHOSE BLURB CAME OFF THE LISTING NEEDS NO PAGE OPENED — but it is
+  // still a row. Only rows from a page whose recipe named a `listingRow` carry
+  // a summary here, so only those skip the fetch; they stay in `toFetch`.
+  //
+  // 30 Sep, the Morgan's first live run: this filter used to sit on `toFetch`
+  // itself, so the rows it spared a page load were also left out of the CSV —
+  // 39 kept after the lookback, 8 written. MP-009 runs the whole path.
+  await fetchIndividualPages(page, toFetch.filter(r => !r._fromListing), code);
 
   // ROWS THE VENUE'S OWN PAGE LABELLED AS SOMETHING OTHER THAN AN EXHIBITION.
   // Marked during the detail fetch, dropped here, and each one named — an
@@ -5681,7 +6257,7 @@ async function detectUnwiredPagination(page, driven = []) {
       for (const a of document.querySelectorAll('a[href]')) {
         let q; try { q = new URL(a.href, location.href); } catch { continue; }
         if (q.origin !== here.origin) continue;
-        if (a.rel === 'next') { found.push(`rel="next" -> ${a.getAttribute('href')}`); continue; }
+        if (a.rel === 'next') { found.push({ hint: `rel="next" -> ${a.getAttribute('href')}`, href: q.href }); continue; }
 
         // SHAPE ONE: the SAME path, one extra or different NUMERIC parameter.
         // This is the Uffizi's, read off its 2023 page rather than guessed:
@@ -5696,7 +6272,7 @@ async function detectUnwiredPagination(page, driven = []) {
             // A parameter the recipe steers is a filter it already asks for,
             // never another page of this one. See recipeDrivenParams().
             if (driven.includes(k)) continue;
-            found.push(`${k}=${val} -> ${a.getAttribute('href')}`);
+            found.push({ hint: `${k}=${val} -> ${a.getAttribute('href')}`, href: q.href });
           }
           continue;
         }
@@ -5706,10 +6282,13 @@ async function detectUnwiredPagination(page, driven = []) {
         // number in the middle, for the same reason as above.
         const m = q.pathname.replace(/\/$/, '').match(/^(.*?)(?:\/page)?\/(\d+)$/);
         if (m && m[1] === base && q.search === here.search) {
-          found.push(`page ${m[2]} -> ${a.getAttribute('href')}`);
+          found.push({ hint: `page ${m[2]} -> ${a.getAttribute('href')}`, href: q.href });
         }
       }
-      return found.length ? [...new Set(found)].slice(0, 4) : null;
+      // Every candidate, with its full address, so the caller can drop the
+      // ones it collected as exhibitions before choosing four to report.
+      const byHint = new Map(found.map(f => [f.hint, f]));
+      return byHint.size ? [...byHint.values()] : null;
     }, driven);
   } catch { return null; }
 }
@@ -5849,7 +6428,7 @@ async function autoScroll(page, maxSteps = 12) {
       // the page had before the new cards arrived, so two steps look identical
       // and the loop stops at the fold — which is exactly how the KHM's three
       // upcoming exhibitions stayed invisible even with scrolling switched on.
-      await page.waitForTimeout(450);
+      await page.waitForTimeout(WAITS.scrollStep);
       const h = await page.evaluate(() => document.body.scrollHeight);
       // One unchanged step is not proof: a slow fetch can land between two
       // measurements. Stop after two in a row.
@@ -5861,8 +6440,38 @@ async function autoScroll(page, maxSteps = 12) {
   } catch { /* a page that will not scroll is read as it is */ }
 }
 
+/**
+ * THE SHOW PAGE ALONE — `pageOnly: true`, her go-ahead 27 Sep (the Ashmolean).
+ * On a venue whose show page carries everything the recipe reads in the HTML
+ * the server sends, only that one file is fetched: every program, stylesheet,
+ * data request and embedded frame the page would pull in is refused before it
+ * leaves the machine. The Ashmolean's show page pulls ~100 such files, and its
+ * sweeps stalled under them; the bare page gave identical rows on five pages,
+ * one of every kind (AS-021 to AS-025). Listing pages are NOT affected — the
+ * Ashmolean draws its lists by script. Set only where saved bare pages prove it.
+ */
 async function fetchIndividualPages(page, rows, venueCode) {
-  let fetched = 0, failed = 0, noText = 0;
+  const bare = (VENUES[venueCode] || {}).pageOnly;
+  const onlyThePage = route => {
+    const req = route.request();
+    let main = false;
+    try { main = req.resourceType() === 'document' && req.frame() === page.mainFrame(); } catch { main = false; }
+    return main ? route.fallback() : route.abort();
+  };
+  if (bare) {
+    await page.route('**/*', onlyThePage);
+    log('  show pages read alone: the page itself only, none of its other files (pageOnly)');
+  }
+  try {
+    await fetchIndividualPagesEach(page, rows, venueCode);
+  } finally {
+    if (bare) await page.unroute('**/*', onlyThePage).catch(() => {});
+  }
+}
+
+async function fetchIndividualPagesEach(page, rows, venueCode) {
+  let fetched = 0, failed = 0, noText = 0, reused = 0, keptNow = 0;
+  const PAGE_KEEP = pageKeepFor(venueCode);
   // Skip anything already known to have closed before the lookback floor —
   // no point spending a page load on an exhibition we will discard.
   // Her one-time exceptions are read like any kept row.
@@ -5892,8 +6501,24 @@ async function fetchIndividualPages(page, rows, venueCode) {
     if (row.title && row.title.startsWith('[')) continue;
     seen++;
     if (seen === 1 || seen % 10 === 0) log(`    page ${seen} of ${due.length}`);
+
+    // PAGES KEPT (page_keep.js): read on an earlier attempt that was cut short,
+    // so the row is rebuilt from what that read did and the site is not asked.
+    const kept = PAGE_KEEP && PAGE_KEEP.lookup(venueCode, row.url);
+    if (kept) {
+      Object.assign(row, kept.changes);
+      for (const t of kept.titleReport || []) TITLE_REPORT.push(t);
+      if (kept.outcome === 'text') fetched++;
+      else if (kept.outcome === 'noText') noText++;
+      reused++;
+      continue;
+    }
+    const keepFrom = PAGE_KEEP ? { row: keepSnapshot(row), titles: TITLE_REPORT.length, fetched, noText } : null;
+    let landed = false, broke = false;
+
     try {
       const r = await safeGoto(page, row.url, venueCode, 'individual');
+      landed = r.ok;
       if (!r.ok) {
         // Say which kind of failure: a dead link is the venue's own broken
         // page, not a network problem, and she can see that from the note.
@@ -5962,7 +6587,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
       if (vrec.excludeLabelledOnPage) {
         const head = (await page.innerText('body').catch(() => '')).slice(0, 400);
         if (vrec.excludeLabelledOnPage.test(head)) {
-          row._dropByPageLabel = (head.match(vrec.excludeLabelledOnPage) || [''])[0];
+          row._dropByPageLabel = (head.match(vrec.excludeLabelledOnPage) || [''])[0].replace(/\s+/g, ' ').trim();
           continue;
         }
       }
@@ -5983,13 +6608,90 @@ async function fetchIndividualPages(page, rows, venueCode) {
         }
       }
 
-      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt);
+      // THE FULL NAME FROM THE SHOW'S OWN HEADER — a venue whose listing
+      // carries a short label (the Ashmolean's "IN BLOOM EXHIBITION") while
+      // its page's header prints the name AND the subtitle ("IN BLOOM" / "How
+      // Plants Changed Our World"). Her finding, 27 Sep. Used only when the
+      // header HAS a subtitle: a header with just a name can be shorter than
+      // the listing's ("ROMAN OXFORDSHIRE COINS DISPLAY" against "RESTORING
+      // ROME: ROMAN OXFORDSHIRE COINS DISPLAY"), so the listing's stands.
+      // A subtitle line that is the show's dates is not a subtitle.
+      //
+      // ONLY THE FIRST BOX, 27 Sep sweep: the same box class also draws the
+      // teaser cards for OTHER pages further down, and when the header named
+      // its show in an <h1> ("THIS IS WHAT / YOU GET") rather than the usual
+      // <h3>, the old loop walked on and took a teaser — "Radiohead's Story:
+      // Exhibition curator Lena Fritsch looks back…" — as the title. A first
+      // box with no name (Pio Abad's page has no header box) leaves the title
+      // alone.
+      //
+      // A HEADER NAME WITH NO SUBTITLE is used only when it EXTENDS the
+      // listing's ("KABUKI KIMONO" → "KABUKI KIMONO: Costumes of Bandō
+      // Tamasaburō V"); a shorter one never replaces a fuller listing name.
+      if (vrec.pageTitle) {
+        const h = await page.evaluate(({ box, name, sub }) => {
+          const sq = x => String(x || '').replace(/\s+/g, ' ').trim();
+          const b = document.querySelector(box);
+          const n = b && b.querySelector(name);
+          if (!n || !sq(n.innerText || n.textContent)) return null;
+          const p = b.querySelector(sub);
+          const lines = p ? String(p.innerText || p.textContent).split('\n').map(sq).filter(Boolean) : [];
+          return { name: sq(n.innerText || n.textContent), sub: lines[0] || '' };
+        }, vrec.pageTitle).catch(() => null);
+        const d = h && h.sub ? findDateRange(h.sub) : null;
+        // A line in another script is the name translated (Li Jin's Chinese
+        // title under the English one), not a subtitle.
+        const subOk = h && h.sub && h.sub.length <= 150 && /[A-Za-z]/.test(h.sub) && !(d && (d.start || d.end));
+        // Capitals judged per part: a header can type its name in capitals and
+        // its subtitle in ordinary letters in one line ("KABUKI KIMONO:
+        // Costumes of Bandō Tamasaburō V"), which titleFromCaps, judging the
+        // whole line, would leave in capitals.
+        const part = x => vrec.capsTitles ? String(x).split(/(\s*[:–—]\s*)/).map((seg, i) => i % 2 ? seg : titleFromCaps(seg)).join('') : x;
+        const fold = x => String(x).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        if (h && !subOk && fold(h.name).length > fold(row.title).length && fold(h.name).startsWith(fold(row.title))) {
+          const full = part(h.name);
+          if (full !== row.title) {
+            TITLE_REPORT.push({ venue: venueCode, kind: 'changed', from: row.title, to: full, url: row.url });
+            row.title = full;
+          }
+        }
+        if (subOk) {
+          // Joined as cardPartsTitle joins: a name that already has its own
+          // colon ("Ashmolean NOW: Bettina von Zwehl") takes the subtitle after
+          // a dash, never a second colon. A subtitle that CONTINUES the name
+          // ("CHEUNG YEE" / "AND HIS 1960s HONG KONG CONTEMPORARIES") joins
+          // with a space: a colon there made "Cheung Yee: And His…".
+          const nm = part(h.name), sb = part(h.sub);
+          const full = /^(and|&|with)\b/i.test(h.sub) ? `${nm} ${/^and\b/i.test(sb) ? sb.replace(/^and\b/i, 'and') : sb.replace(/^with\b/i, 'with')}`
+            : nm.includes(':') ? `${nm} – ${sb}` : `${nm}: ${sb}`;
+          if (full !== row.title) {
+            TITLE_REPORT.push({ venue: venueCode, kind: 'changed', from: row.title, to: full, url: row.url });
+            row.title = full;
+          }
+        }
+      }
+
+      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt, vrec.creditPara, vrec.keepBold, vrec.dropSentence);
       if (text) {
         row.summary = text;
         fetched++;
       } else {
         row.notes = addNote(row.notes, 'No description could be found on this exhibition\'s own page.');
         noText++;
+      }
+
+      // THE EXHIBITION PAGE'S OWN DATE FIELD, where a venue prints its dates
+      // there and nowhere on the listing (the British Museum: "03 February –
+      // 04 May 2026" in .date-display-range, beside "Next ticket release 21
+      // October 2026" further down the same hero, which a sentence scan could
+      // pick up). A field, so read before structured data and prose.
+      if ((!row.start_date || !row.end_date) && vrec.detailDates) {
+        const dt = await page.$eval(vrec.detailDates, el => el.innerText).catch(() => '');
+        const d = dt ? findDateRange(dt) : null;
+        if (d) {
+          if (!row.start_date && d.start) row.start_date = d.start;
+          if (!row.end_date && d.end) row.end_date = d.end;
+        }
       }
 
       // Venues that print no date field at all (Borghese) write the run into
@@ -6113,12 +6815,29 @@ async function fetchIndividualPages(page, rows, venueCode) {
         } catch {}
       }
     } catch (e) {
+      broke = true;
       rethrowIfAborted(e);
       row.notes = addNote(row.notes, `Something went wrong while reading this exhibition's own page: ${e.message.slice(0,80)}`);
       failed++;
+    } finally {
+      // Kept only once read all the way through. Written from what the browser
+      // already holds — no request is made to keep a page.
+      if (keepFrom && landed && !broke) {
+        const html = await page.content().catch(() => '');
+        const outcome = row._dropByPageLabel ? 'dropped'
+          : fetched > keepFrom.fetched ? 'text'
+          : noText > keepFrom.noText ? 'noText' : 'other';
+        if (PAGE_KEEP.save(venueCode, row.url, {
+          changes: rowChanges(keepFrom.row, row),
+          titleReport: TITLE_REPORT.slice(keepFrom.titles),
+          outcome, html,
+        })) keptNow++;
+      }
     }
   }
   log(`  Individual pages: ${fetched} got text, ${noText} no curatorial text, ${failed} failed`);
+  if (reused) log(`  ${reused} page(s) taken from an earlier attempt that was cut short — not asked for again (pages_kept/${venueCode})`);
+  if (keptNow) log(`  ${keptNow} page(s) kept on disk as read (pages_kept/${venueCode})`);
 }
 
 // ── Deduplication ─────────────────────────────────────────────────────────────
@@ -6210,11 +6929,25 @@ function resolveChromium() {
  * HEADED — her machine only. Built 26 Sep 2026, her go-ahead.
  *
  * A venue marked `headed: true` is swept in a VISIBLE Google Chrome on a
- * profile she has browsed in, exactly as the one mode that ever got in did
- * (probe_headed.js run A, 22 Sep: the scraper opening Chrome on her seeded
- * profile — moma's listing and an exhibition page, no challenge). Nothing else
- * about the sweep changes: same recipe, same pacing lanes, same stop at the
- * first objection. One Chrome, so headed venues go one after another.
+ * profile she has browsed in. Nothing else about the sweep changes: same
+ * recipe, same pacing lanes, same stop at the first objection. One Chrome, so
+ * headed venues go one after another.
+ *
+ * MODE B, THE DEFAULT — her ruling, 29 Sep. She opens that Chrome herself
+ * (`node scraper/probe_headed.js open`), warms it up, and LEAVES IT OPEN; the
+ * sweep attaches to it over its debugging port and works in a tab of its own.
+ * A Chrome she started is not started with the automation switches, so it
+ * does not announce that a program drives it — mode A's launch did. Why A was
+ * built first: it was the only mode ever run (22 Sep), never a reason against
+ * B. d'Orsay, 29 Sep, mode A: refused on request 18 after 17 clean.
+ *
+ * Her window is never closed: the sweep closes only the tabs it opened, then
+ * disconnects (H-006). No Chrome open → nothing is asked of any venue, and the
+ * run says how to open one (H-007). It never falls back to A on its own.
+ *
+ * MODE A, kept behind `--launch-chrome`: the sweep launches Chrome on the
+ * seeded profile itself (the profile must then be CLOSED). Unwired as the
+ * default, not deleted.
  *
  * The profile is the folder `node scraper/probe_headed.js open` seeds — one
  * folder, two scripts; fixture H-003 holds the two paths together. It is not
@@ -6256,6 +6989,33 @@ function headedProfileSeeded(dir = HEADED_PROFILE_DIR) {
 function splitHeaded(codes, paced, venues = VENUES) {
   const headed = paced ? codes.filter(c => venues[c] && venues[c].headed) : [];
   return { headed, headless: codes.filter(c => !headed.includes(c)) };
+}
+
+// Mode B: the port `probe_headed.js open` starts her Chrome with. One number,
+// two files — H-005 holds them together.
+const HEADED_DEBUG_PORT = 9222;
+const LAUNCH_CHROME = ARGS.includes('--launch-chrome');
+
+/**
+ * Mode B. Attach to the Chrome she opened and left open. Returns the context
+ * to open tabs in, and `detach`, which closes nothing of hers: only the tabs
+ * this sweep opened (the worker closes each one), then the connection.
+ * Throws, having asked no venue for anything, when no Chrome is listening.
+ */
+async function attachHeadedContext(port = HEADED_DEBUG_PORT) {
+  let browser;
+  try {
+    browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`, { timeout: 10000 });
+  } catch (e) {
+    throw new Error(`no open Chrome to work in (nothing on port ${port}). ` +
+      'Run: node scraper/probe_headed.js open — warm it up, LEAVE IT OPEN, then run this again');
+  }
+  const context = browser.contexts()[0];
+  if (!context) {
+    await browser.close().catch(() => {});
+    throw new Error('the open Chrome has no window to work in — open one, then run this again');
+  }
+  return { context, detach: () => browser.close().catch(() => {}) };
 }
 
 async function launchHeadedContext() {
@@ -6377,10 +7137,12 @@ async function main() {
     // the same reason: the history is what gets it in.
     if (wantHeaded.length) {
       if (headedProfileSeeded()) {
-        log(`  In a visible Chrome on the seeded profile: ${wantHeaded.join(', ')}`);
+        log(LAUNCH_CHROME
+          ? `  In a visible Chrome the sweep launches on the seeded profile (mode A, --launch-chrome): ${wantHeaded.join(', ')}`
+          : `  In the Chrome you opened and left open, in a tab of its own (mode B): ${wantHeaded.join(', ')}`);
       } else {
         log(`  Not attempted: ${wantHeaded.join(', ')} — the Chrome profile has never been seeded`);
-        log(`  (${HEADED_PROFILE_DIR}). Run: node scraper/probe_headed.js open — browse, then close it.`);
+        log(`  (${HEADED_PROFILE_DIR}). Run: node scraper/probe_headed.js open — browse, and leave it open.`);
         RUN_VENUES = RUN_VENUES.filter(c => !VENUES[c].headed);
       }
     }
@@ -6456,7 +7218,7 @@ async function main() {
   });
 
   const summary = {};
-  const netTotals = { fulfilled: 0, skipped: 0, failed: 0 };
+  const netTotals = { fulfilled: 0, skipped: 0, failed: 0, reused: 0 };
 
   // Each worker gets its OWN browser context, and therefore its own cookie jar,
   // its own network bridge and its own page. Sharing one page across concurrent
@@ -6487,6 +7249,15 @@ async function main() {
     // any point before this line, the venue simply has no file and is picked
     // up by the next --continue. There is never a half-scraped venue on disk.
     writeVenueCsv(code, rows);
+    // PAGES KEPT: a venue swept to the end with nothing refused is finished,
+    // so its next sweep reads everything fresh. One refused on its first
+    // request is written (its refusal record) but NOT finished — the pages kept
+    // from an earlier attempt still count.
+    {
+      const pv = PACER && PACER.venue(code);
+      const keep = pageKeepFor(code);
+      if (keep && !(pv && (pv.objection || pv.sawStop))) keep.markFinished(code);
+    }
 
     summary[code] = {
       total: rows.length,
@@ -6510,7 +7281,11 @@ async function main() {
   async function worker(n, q = headlessQ, openContext = null) {
     // No userAgent override — see the note where USER_AGENT used to be defined.
     // Chromium sends its own, which is true and agrees with its client hints.
-    const context = openContext ? await openContext() : await browser.newContext({
+    // An attached Chrome (mode B) comes back as { context, detach }: hers, so
+    // the finally below disconnects instead of closing it.
+    const opened = openContext ? await openContext() : null;
+    const attached = opened && opened.detach ? opened : null;
+    const context = attached ? attached.context : opened || await browser.newContext({
       viewport: { width: 1280, height: 800 },
     });
     // The bridge exists ONLY because Chromium cannot use this container's agent
@@ -6559,13 +7334,14 @@ async function main() {
               // throw, so it unwinds instead of running on invisibly.
               //
               // Time spent WAITING for its lane or for the gap between pages is
-              // not counted (her machine only; elsewhere it is always zero). The
+              // not counted — her pacing, and the wait a site's robots.txt asks
+              // for on either machine (WHAT THE SITE ASKS). The
               // budget is for a venue that hangs, and a paced venue with 60
               // pages spends most of its half hour deliberately idle.
               new Promise((_, reject) => {
                 const started = Date.now();
                 const check = () => {
-                  const active = Date.now() - started - (PACER ? PACER.waited(code) : 0);
+                  const active = Date.now() - started - (PACER ? PACER.waited(code) : 0) - robotsWaited(code);
                   if (active >= VENUE_BUDGET_MS) {
                     reject(Object.assign(
                       new Error(`venue exceeded its ${(VENUE_BUDGET_MS/60000).toFixed(2)} minute budget`),
@@ -6607,7 +7383,9 @@ async function main() {
       netTotals.fulfilled += stats.fulfilled;
       netTotals.skipped   += stats.skipped;
       netTotals.failed    += stats.failed;
-      await context.close().catch(() => {});
+      netTotals.reused    += stats.reused || 0;
+      if (attached) await attached.detach();
+      else await context.close().catch(() => {});
     }
   }
 
@@ -6621,13 +7399,14 @@ async function main() {
   if (headedQ.items.length) {
     log(`Running ${headedQ.items.length} venue(s) in a visible Chrome, one after another: ${headedQ.items.join(', ')}`);
     workers.push(worker('headed', headedQ, async () => {
-      try { return await launchHeadedContext(); }
+      try { return LAUNCH_CHROME ? await launchHeadedContext() : await attachHeadedContext(); }
       catch (e) {
-        // Chrome would not open: nothing was asked of any venue. Each headed
+        // No Chrome to work in — none open (B) or it would not launch (A):
+        // nothing was asked of any venue. Each headed
         // venue says why and writes nothing, so --continue picks it up.
-        for (const c of headedQ.items) summary[c] = { error: `visible Chrome did not open: ${e.message}` };
+        for (const c of headedQ.items) summary[c] = { error: `no visible Chrome to work in: ${e.message}` };
         headedQ.next = headedQ.items.length;
-        log(`  VISIBLE CHROME DID NOT OPEN — ${e.message}`);
+        log(`  NO VISIBLE CHROME TO WORK IN — ${e.message}`);
         throw Object.assign(e, { headedLaunch: true });
       }
     }).catch(e => { if (!e.headedLaunch) throw e; }));
@@ -6752,7 +7531,7 @@ async function main() {
   log('  collected = rows handed on to the lookback filter and detail-page fetch');
 
   log('');
-  log(`Network bridge: ${netStats.fulfilled} requests served, ${netStats.skipped} skipped (image/media/font), ${netStats.failed} failed`);
+  log(`Network bridge: ${netStats.fulfilled} requests served, ${netStats.reused} handed back from files already fetched (not asked again), ${netStats.skipped} skipped (image/media/font), ${netStats.failed} failed`);
   log('');
   const outstanding = VENUE_ORDER.filter(c => !venueIsDone(c));
   log(`Run directory:   ${RUN_DIR}`);
@@ -6795,14 +7574,16 @@ module.exports = {
   monthNum, plausibleYear, sane, normalizeUrl, resolveHref,
   pickStructuredEvent, isoDay, runStamp, unusableDateText, isOwnListingPage,
   // Pure, or driven with a gap of milliseconds — scraper/pacing.test.js.
-  gatekeeperFrom, objectionFrom, laneCooldown, knownGatekeepers, makePacer, pacedWithheld, usePacerForFixtures,
-  // HEADED: pure, or a path — pacing.test.js H-001 to H-003.
-  splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome,
-  saysOngoing, expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination,
+  gatekeeperFrom, objectionFrom, laneCooldown, knownGatekeepers, makePacer, pacedWithheld, usePacerForFixtures, usePageKeepForFixtures, pageKeepFor, UNWIRED,
+  // Every fixture that drives a browser — see PAUSES THAT ONLY A LIVE PAGE CAN USE.
+  useFixtureWaits,
+  // HEADED: pure, or a path — pacing.test.js H-001 to H-003; mode B, H-005 to H-007.
+  splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome, HEADED_DEBUG_PORT, attachHeadedContext,
+  saysOngoing, applyLookback, expandYearArchive, expandDateRange, expandFromToday, keptDespiteLookback, withoutQuery, listingPages, followPagination,
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
-  installNetworkBridge, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
+  installNetworkBridge, reusableFile, replyLabels, useRobotsForFixtures, trackRequests, stallReport, failureProse, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
   // Exported for the same reason as safeGoto: so a diagnostic can run the REAL
   // extractor against a page instead of reimplementing it and drifting from it.
   getCuratorialText,
@@ -6812,9 +7593,11 @@ module.exports = {
   scrapeVenue,
   // Pure — the line-by-line title pick, so a venue reachable only from her
   // laptop can still be covered by a fixture here.
-  pickTitleLine, titleFromPage, readPageNameParts,
+  pickTitleLine, titleFromPage, readPageNameParts, titleFromCaps,
   // Not pure — exported so a check can run the real detail-page pass offline.
   fetchIndividualPages,
+  // For from_saved_pages.js: the sweep's own finish, over pages she saved.
+  noteTravellingRuns, writeVenueCsv, rebuildSweepCsv, RUN_DIR,
   // Pure — asked directly by the fixtures.
   addNote, finishNotes, scopeSelector,
   // Exported so compress.js's mirrored location list can be checked against the

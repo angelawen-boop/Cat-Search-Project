@@ -17,6 +17,7 @@
 const fs = require('fs');
 const path = require('path');
 const S = require('../sweep_prototype.js');
+S.useFixtureWaits(); // saved pages: nothing can arrive late — see PAUSES THAT ONLY A LIVE PAGE CAN USE
 const { chromium } = require('playwright');
 
 const PAGES = path.join(__dirname, '..', '..', 'docs', 'orsay_pages');
@@ -86,6 +87,21 @@ const check = (name, ok, got) => {
     const t = await S.getCuratorialText(p2, v.description, v.noise, v.noiseExempt);
     check('OR-011: the lead paragraph is read', /Before becoming a museum in 1986/.test(t), t);
     check('OR-012: and the body under it, to its last sentence', /first invited to take part in the Olympic Games/.test(t), t);
+
+    // The two other kinds of show page, saved by her 28 Sep: an off-site show
+    // and a "Focus on our collections" display. Same address shape; asked so a
+    // kind whose description sat elsewhere would not arrive empty.
+    const readSaved = async f => {
+      await p2.setContent(fs.readFileSync(path.join(PAGES, f), 'utf8'));
+      return S.getCuratorialText(p2, v.description, v.noise, v.noiseExempt);
+    };
+    const junk = /Reduced mobility|Book now|Buy tickets|Opening hours|Newsletter|cookies/i;
+    const off = await readSaved('exhibition_wonderful_world_offsite.html');
+    check('OR-016: an off-site show\u2019s description is read, lead to last sentence, nothing else',
+      /During the second half of the 19th century/.test(off) && /better capture the present time and tradition/.test(off) && !junk.test(off), off.slice(0, 200));
+    const foc = await readSaved('exhibition_maurice_denis_display.html');
+    check('OR-017: a "Focus on our collections" display\u2019s description is read, lead to last sentence, nothing else',
+      /The Imitation of Christ/.test(foc) && /avant-garde publisher together/.test(foc) && !junk.test(foc), foc.slice(0, 200));
   } finally {
     await browser.close();
   }

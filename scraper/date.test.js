@@ -23,7 +23,7 @@ const {
   classifyLoadError, isOwnListingPage, saysOngoing,
   expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination, VENUES, pickTitleLine,
   stripWeekdays,
-  addNote, finishNotes, scopeSelector, extensionNote,
+  addNote, finishNotes, scopeSelector, extensionNote, applyLookback,
 } = require('./sweep_prototype.js');
 const { seenOn, listingNote } = require('./listing_note.js');
 
@@ -1325,20 +1325,31 @@ const routeOf = code => {
   return /route:\s*'local'/.test(block) ? 'home' : 'container';
 };
 
-test('R-001: met and artic are HERS — the container must not touch them', () => {
+test('R-001: met, artic, mad, brit, orsay, morgan and moma are HERS — the container must not touch them', () => {
   assert.strictEqual(routeOf('met'), 'home');
   assert.strictEqual(routeOf('artic'), 'home');
+  // Her ruling, 27 Sep, after a complete, clean sweep from her laptop.
+  assert.strictEqual(routeOf('mad'), 'home');
+  // Her ruling, 28 Sep, after a complete, clean headed sweep from her laptop.
+  assert.strictEqual(routeOf('brit'), 'home');
+  // Her rule, 26 Sep, applied 30 Sep: a complete, clean headed sweep (mode B).
+  assert.strictEqual(routeOf('orsay'), 'home');
+  // The same, 30 Sep: the Morgan's re-run, complete and clean (mode B).
+  assert.strictEqual(routeOf('morgan'), 'home');
+  // And MoMA, 30 Sep: complete and clean in mode B (25 pages), where mode A
+  // was challenged at page 19 on 27 Sep. Swept from now on — her ruling.
+  assert.strictEqual(routeOf('moma'), 'home');
 });
 
-test('R-002: brit and morgan are still the CONTAINER\'s, deliberately', () => {
-  // They are swept BECAUSE they are blocked: a refusal costs half a second,
-  // proves the block is still real, and leaves the marker rows that make a
-  // sweep's record complete. She must not be pinging them from home.
-  //
+test('R-002: every headed venue is hers — none is left for the container to be refused at', () => {
   // Her rule, 26 Sep: a venue moves to her laptop only after a complete,
-  // clean sweep from there. moma, brit and morgan have had none — moma went
-  // early on 22 Sep on one probe page and came back.
-  for (const c of ['brit', 'morgan', 'moma']) assert.strictEqual(routeOf(c), 'container');
+  // clean sweep from there. moma went early on 22 Sep on one probe page and
+  // came back; brit (28 Sep), orsay, morgan and moma (30 Sep) each had a
+  // complete clean sweep and moved (R-001). A headed venue still routed to
+  // the container would only collect refusals there.
+  const headed = Object.keys(VENUES_ALL).filter(c => VENUES_ALL[c].headed);
+  assert.ok(headed.length >= 4);
+  for (const c of headed) assert.strictEqual(routeOf(c), 'home', c + ' is headed but routed to the container');
 });
 
 test('R-005: moma says out loud that it needs a visible browser', () => {
@@ -1371,10 +1382,12 @@ test('R-006: moma names its blurb container and drops installations', () => {
   const next = rest.search(/\n  '?[a-z-]+'?: \{\n    name: /);
   const block = next > -1 ? rest.slice(0, next) : rest;
 
-  // Read from the page she saved, not guessed: #description holds the
-  // curatorial paragraphs and stops before "Organized by", the funders, the
-  // Events block and the related articles that all carry their own dates.
-  assert.match(block, /description:\s*'#description'/);
+  // Read from the pages she saved, not guessed: #description holds the
+  // curatorial paragraphs and stops before the funders, the Events block and
+  // the related articles. Its LAST paragraph is the credit ("Organized by…"),
+  // so it is read by paragraph and the credit dropped — moma_pages.js.
+  assert.match(block, /description:\s*'#description p'/);
+  assert.match(block, /creditPara:/);
 
   // /calendar/exhibitions/ serves installations too, and the address does not
   // say which is which. The page's own tag does.
@@ -1395,18 +1408,18 @@ test('R-003: every other venue is the container\'s', () => {
   for (const c of ['ng', 'rijks', 'acq', 'frick', 'menil', 'va', 'louvre', 'capo',
                    'uffizi', 'brera', 'khm', 'dellav', 'wallace', 'borghese',
                    'tate-modern', 'tate-britain', 'lgd', 'jacquemart', 'mam',
-                   'orsay', 'mad']) {
+                   'ashmolean']) {
     assert.strictEqual(routeOf(c), 'container', c + ' should be the container\'s');
   }
 });
 
 test('R-004: the two sets do not overlap and cover every venue', () => {
   const codes = [...SWEEP_SRC.matchAll(RECIPE_KEY)].map(m => m[1]);
-  assert.strictEqual(codes.length, 26, 'expected 26 recipes, found ' + codes.length);
+  assert.strictEqual(codes.length, 27, 'expected 27 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
-  assert.deepStrictEqual(home.sort(), ['artic', 'met']);
-  assert.strictEqual(container.length, 24);
+  assert.deepStrictEqual(home.sort(), ['artic', 'brit', 'mad', 'met', 'moma', 'morgan', 'orsay']);
+  assert.strictEqual(container.length, 20);
   assert.strictEqual(home.length + container.length, codes.length);
 });
 
@@ -1844,6 +1857,7 @@ test('AC-001: Art Institute — only its OWN collection is excluded (her ruling,
 // 24 Sep (titleFromPage). Real headings, lines and tab titles from seven live
 // pages at the two museums that settled the rule.
 const { titleFromPage } = require('./sweep_prototype.js');
+const { VENUES: VENUES_ALL } = require('./sweep_prototype.js');
 const tp = (recorded, heading, line, tab) => titleFromPage({ recorded, heading, line, tab });
 
 test('RT-001: a line the tab title carries is part of the name, in full', () => {
@@ -1932,6 +1946,16 @@ test('RT-009: a generic word in the tab is not reported as missing (Accademia)',
   assert.equal(r.unplaced, '');
 });
 
+test('RT-010: a generic word in the tab never confirms the line (British Museum, 28 Sep)', () => {
+  // Kept page of 28 Sep: tab "Korea exhibition | British Museum", heading
+  // "Korea", the line under it the dates. "exhibition" matched the line.
+  const r = titleFromPage({ recorded: 'Korea',
+    headings: [{ pieces: ['Korea'], line: 'Exhibition / 01 October 2026 – 31 January 2027' }],
+    tab: 'Korea exhibition | British Museum' });
+  assert.equal(r.changed, false);
+  assert.equal(r.title, 'Korea');
+});
+
 // XT-001 to XT-003 — her exclusion rulings, 24 Sep, asked of the recipes'
 // own rules with real titles from the import file: what goes, what stays.
 const xt = (v, out, keep) => {
@@ -1969,4 +1993,16 @@ test('XT-003: Met — recurring series and commissions; NOTHING for coming from 
    'Independence and Identity: Selections from the Department of Drawings and Prints',
    'Rediscovering Della Robbia at The Met',
    'Lineages: Korean Art at The Met', 'Ink and Ivory: Indian Drawings and Photographs Selected with James Ivory']);
+});
+
+test('a missing opening date is worded by whether the show has closed (her wording, 27 Sep)', () => {
+  const log = console.log; console.log = () => {};
+  let closed, running;
+  try {
+    [closed] = applyLookback([{ title: 'Cheung Yee', start_date: '', end_date: '2025-09-07', notes: '', url: 'https://x/a' }], 'ashmolean', 'final');
+    [running] = applyLookback([{ title: 'Later', start_date: '', end_date: '2099-01-01', notes: '', url: 'https://x/b' }], 'ashmolean', 'final');
+  } finally { console.log = log; }
+  assert.match(closed.notes, /Opening date not provided by the venue, even after the exhibition closed\./);
+  assert.doesNotMatch(closed.notes, /while this exhibition is running/);
+  assert.match(running.notes, /No opening date published while this exhibition is running\./);
 });

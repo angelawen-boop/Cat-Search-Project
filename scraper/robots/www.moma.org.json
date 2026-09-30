@@ -1,0 +1,9 @@
+{
+  "host": "www.moma.org",
+  "url": "https://www.moma.org/robots.txt",
+  "fetchedAt": "2026-09-27T08:19:00.077Z",
+  "status": 200,
+  "readable": true,
+  "server": "cloudflare",
+  "sha": "91e2f2b70b96"
+}

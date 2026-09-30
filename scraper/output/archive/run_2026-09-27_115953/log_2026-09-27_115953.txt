@@ -1,0 +1,130 @@
+[2026-09-27T01:59:53.835Z] Cat Watch Sweep Prototype — starting
+[2026-09-27T01:59:53.837Z] Lookback floor: 2024-07-01
+[2026-09-27T01:59:53.838Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-27_115953
+[2026-09-27T01:59:53.838Z] Machine: home (no proxy, so this is not the container)
+[2026-09-27T01:59:53.838Z] NAMED BY HAND, and not this machine's job: moma.
+[2026-09-27T01:59:53.838Z] Running them anyway — naming a venue always wins. Both machines
+[2026-09-27T01:59:53.838Z] sweeping one venue doubles what it sees, and met and artic both
+[2026-09-27T01:59:53.838Z] rate-limit, so do not make a habit of it.
+[2026-09-27T01:59:53.838Z] Venues this run: moma
+[2026-09-27T01:59:53.839Z] 
+[2026-09-27T01:59:53.839Z] ────────────────────────────────────────────────────────────
+[2026-09-27T01:59:53.840Z]   PACING — her machine
+[2026-09-27T01:59:53.840Z] ────────────────────────────────────────────────────────────
+[2026-09-27T01:59:53.841Z]   Gap between pages: about 30s, varied 75–125%, per gatekeeper.
+[2026-09-27T01:59:53.841Z]   One venue at a time behind each gatekeeper; different gatekeepers side by side.
+[2026-09-27T01:59:53.841Z]   The first refusal or bot check stops that gatekeeper for the rest of the run.
+[2026-09-27T01:59:53.842Z]   In a visible Chrome on the seeded profile: moma
+[2026-09-27T01:59:53.887Z]   moma: gatekeeper not known yet — read off its first reply.
+[2026-09-27T01:59:53.893Z]   Venues this run: moma
+[2026-09-27T01:59:53.894Z] Proxy: (none — direct egress assumed)
+[2026-09-27T01:59:53.894Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-27T01:59:53.894Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-27T01:59:53.895Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-27T01:59:54.809Z] Running 0 venue(s) headless, 0 at a time (one page at a time within each venue)
+[2026-09-27T01:59:54.810Z] Running 1 venue(s) in a visible Chrome, one after another: moma
+[2026-09-27T01:59:56.064Z] [moma] 
+[2026-09-27T01:59:56.065Z] [moma] ────────────────────────────────────────────────────────────
+[2026-09-27T01:59:56.065Z] [moma]   MOMA — Museum of Modern Art, New York
+[2026-09-27T01:59:56.066Z] [moma] ────────────────────────────────────────────────────────────
+[2026-09-27T01:59:56.066Z] [moma]   Fetching current/upcoming: https://www.moma.org/calendar/exhibitions
+[2026-09-27T01:59:56.069Z] [moma]   paced: request 1, gatekeeper not yet known — every lane paused for it
+[2026-09-27T01:59:57.055Z] [moma]   gatekeeper: Cloudflare — read off its reply; this venue is paced in that lane
+[2026-09-27T01:59:59.280Z] [moma]   UNWIRED PAGINATION current/upcoming: this page links another page and no recipe follows it — page 5890 -> /calendar/exhibitions/5890 | page 5928 -> /calendar/exhibitions/5928 | page 5912 -> /calendar/exhibitions/5912 | page 5906 -> /calendar/exhibitions/5906
+[2026-09-27T02:00:00.957Z] [moma]   current/upcoming: 26 links seen -> 2 navigation, 0 already-seen URL -> 24 collected (0 of them with no readable title)
+[2026-09-27T02:00:00.958Z] [moma]   lookback (listing): kept 24, dropped 0 closed before 2024-07-01, 7 with no closing date, 0 with no opening date
+[2026-09-27T02:00:00.959Z] [moma]   reading 24 individual page(s)…
+[2026-09-27T02:00:00.959Z] [moma]     page 1 of 24
+[2026-09-27T02:00:24.806Z] [moma]   paced: request 2 via Cloudflare, after 24s
+[2026-09-27T02:00:54.478Z] [moma]   paced: request 3 via Cloudflare, after 28s
+[2026-09-27T02:01:22.516Z] [moma]   paced: request 4 via Cloudflare, after 26s
+[2026-09-27T02:01:48.874Z] [moma]   paced: request 5 via Cloudflare, after 24s
+[2026-09-27T02:02:12.213Z] [moma]   paced: request 6 via Cloudflare, after 22s
+[2026-09-27T02:02:44.416Z] [moma]   paced: request 7 via Cloudflare, after 30s
+[2026-09-27T02:03:11.425Z] [moma]   paced: request 8 via Cloudflare, after 25s
+[2026-09-27T02:03:35.414Z] [moma]   paced: request 9 via Cloudflare, after 21s
+[2026-09-27T02:04:12.416Z] [moma]   paced: request 10 via Cloudflare, after 36s
+[2026-09-27T02:04:14.496Z] [moma]     page 10 of 24
+[2026-09-27T02:04:41.058Z] [moma]   paced: request 11 via Cloudflare, after 27s
+[2026-09-27T02:05:15.698Z] [moma]   paced: request 12 via Cloudflare, after 33s
+[2026-09-27T02:05:50.797Z] [moma]   paced: request 13 via Cloudflare, after 34s
+[2026-09-27T02:06:26.850Z] [moma]   paced: request 14 via Cloudflare, after 34s
+[2026-09-27T02:06:52.089Z] [moma]   paced: request 15 via Cloudflare, after 24s
+[2026-09-27T02:07:15.404Z] [moma]   paced: request 16 via Cloudflare, after 22s
+[2026-09-27T02:07:45.086Z] [moma]   paced: request 17 via Cloudflare, after 25s
+[2026-09-27T02:08:21.205Z] [moma]   paced: request 18 via Cloudflare, after 34s
+[2026-09-27T02:08:57.696Z] [moma]   paced: request 19 via Cloudflare, after 35s
+[2026-09-27T02:08:58.224Z] [moma]   Cloudflare OBJECTED (BLOCKED_CHALLENGE) on request 19 of moma, after 18 clean page(s) here and 18 in the lane.
+[2026-09-27T02:08:58.225Z] [moma]   The Cloudflare lane is STOPPED for the rest of this run. Nothing more is asked of any site behind it.
+[2026-09-27T02:08:58.226Z] [moma]   BLOCKED (BLOCKED_CHALLENGE): https://www.moma.org/calendar/exhibitions/5940
+[2026-09-27T02:08:58.232Z] [moma]   not requesting anything more from this venue (LANE_STOPPED) — first skipped: https://www.moma.org/calendar/exhibitions/5933
+[2026-09-27T02:08:58.233Z] [moma]     page 20 of 24
+[2026-09-27T02:08:58.235Z] [moma]   Individual pages: 14 got text, 0 no curatorial text, 7 failed
+[2026-09-27T02:08:58.236Z] [moma]     the venue's own page labels this a 
+Installation, excluded: Hyundai Card First Look: Joan Snyder
+[2026-09-27T02:08:58.237Z] [moma]     the venue's own page labels this a 
+Installation, excluded: Hyundai Card First Look: Sheree Hovsepian
+[2026-09-27T02:08:58.239Z] [moma]     the venue's own page labels this a 
+Installation, excluded: The Modern Window: Julien Ceccaldi
+[2026-09-27T02:08:58.241Z] [moma]   3 row(s) excluded on the type printed on their own page
+[2026-09-27T02:08:58.245Z] [moma]   lookback (final): kept 21, dropped 0 closed before 2024-07-01, 4 with no closing date, 2 with no opening date
+[2026-09-27T02:08:58.247Z] [moma]   → NOT WRITTEN: refused (BLOCKED_CHALLENGE) after 18 clean page(s). --continue will redo it after the quiet period.
+[2026-09-27T02:08:58.866Z] 
+[2026-09-27T02:08:58.867Z] ────────────────────────────────────────────────────────────
+[2026-09-27T02:08:58.867Z]   QC — faulty rows and exceptions
+[2026-09-27T02:08:58.867Z] ────────────────────────────────────────────────────────────
+[2026-09-27T02:08:58.867Z]   No faulty rows: every row has a title and a known venue code.
+[2026-09-27T02:08:58.867Z]   No exceptions: every venue looks like the last run that had it.
+[2026-09-27T02:08:58.867Z] 
+[2026-09-27T02:08:58.868Z] ────────────────────────────────────────────────────────────
+[2026-09-27T02:08:58.868Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-27T02:08:58.868Z] ────────────────────────────────────────────────────────────
+[2026-09-27T02:08:58.868Z]   MOMA: NOT WRITTEN — refused (BLOCKED_CHALLENGE) after 18 clean page(s)
+[2026-09-27T02:08:58.868Z] 
+[2026-09-27T02:08:58.869Z] ────────────────────────────────────────────────────────────
+[2026-09-27T02:08:58.869Z]   PACING — where each gatekeeper got to
+[2026-09-27T02:08:58.869Z] ────────────────────────────────────────────────────────────
+[2026-09-27T02:08:58.869Z]   Cloudflare: moma — 18 clean page(s)
+[2026-09-27T02:08:58.869Z]     STOPPED at moma, its request 19, BLOCKED_CHALLENGE, 9.04 min into the lane
+[2026-09-27T02:08:58.870Z]     18 clean page(s) at moma and 18 in the lane before it
+[2026-09-27T02:08:58.872Z]     Refused after clean pages: points to a pace or volume limit, not a block.
+[2026-09-27T02:08:58.873Z]     https://www.moma.org/calendar/exhibitions/5940
+[2026-09-27T02:08:58.881Z]     Not asked again before Mon, 28 Sept, 12:08 pm Sydney (pacing.json).
+[2026-09-27T02:08:58.882Z] 
+[2026-09-27T02:08:58.882Z] ────────────────────────────────────────────────────────────
+[2026-09-27T02:08:58.882Z]   COVERAGE — every link accounted for
+[2026-09-27T02:08:58.882Z] ────────────────────────────────────────────────────────────
+[2026-09-27T02:08:58.882Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-27T02:08:58.882Z]   -----------------------------------------------------------------------------------------------
+[2026-09-27T02:08:58.884Z]   moma       current/upcoming                26     2       0     0        0        0         24
+[2026-09-27T02:08:58.884Z] 
+[2026-09-27T02:08:58.884Z] 
+[2026-09-27T02:08:58.885Z] ────────────────────────────────────────────────────────────
+[2026-09-27T02:08:58.885Z]   MORE PAGES OFFERED THAN TAKEN — CHECK THESE
+[2026-09-27T02:08:58.885Z] ────────────────────────────────────────────────────────────
+[2026-09-27T02:08:58.885Z]   Each page below links to another page of itself, and no recipe follows it.
+[2026-09-27T02:08:58.885Z]   Exhibitions may be missing from the CSV with nothing else to show it.
+[2026-09-27T02:08:58.885Z] 
+[2026-09-27T02:08:58.885Z]   moma / current/upcoming
+[2026-09-27T02:08:58.885Z]     https://www.moma.org/calendar/exhibitions
+[2026-09-27T02:08:58.885Z]     offers: page 5890 -> /calendar/exhibitions/5890
+[2026-09-27T02:08:58.885Z]     offers: page 5928 -> /calendar/exhibitions/5928
+[2026-09-27T02:08:58.885Z]     offers: page 5912 -> /calendar/exhibitions/5912
+[2026-09-27T02:08:58.885Z]     offers: page 5906 -> /calendar/exhibitions/5906
+[2026-09-27T02:08:58.885Z] 
+[2026-09-27T02:08:58.885Z]   seen      = links matching the venue's selector on that page
+[2026-09-27T02:08:58.885Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-27T02:08:58.885Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-27T02:08:58.885Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-27T02:08:58.885Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-27T02:08:58.885Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-27T02:08:58.885Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-27T02:08:58.885Z] 
+[2026-09-27T02:08:58.886Z] Network bridge: 0 requests served, 0 skipped (image/media/font), 0 failed
+[2026-09-27T02:08:58.886Z] 
+[2026-09-27T02:08:58.889Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-27_115953
+[2026-09-27T02:08:58.890Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-27_115953/sweep.csv  (0 rows — )
+[2026-09-27T02:08:58.890Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-27_115953/log_2026-09-27_115953.txt
+[2026-09-27T02:08:58.891Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, orsay, mam, mad, jacquemart, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-27T02:08:58.891Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-27T02:08:58.891Z] No de-duplication is applied — see passThrough.

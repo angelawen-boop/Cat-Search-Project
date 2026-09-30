@@ -1,0 +1,28 @@
+{
+  "machine": "home",
+  "savedAt": "2026-09-29T03:22:05.907Z",
+  "paceSeconds": 30,
+  "gatekeepers": {
+    "orsay": "Cloudflare"
+  },
+  "lanes": {
+    "Cloudflare": {
+      "venues": [
+        "orsay"
+      ],
+      "clean": 17,
+      "firstAt": "2026-09-29T03:13:37.288Z",
+      "lastAt": "2026-09-29T03:22:05.635Z",
+      "stopped": {
+        "venue": "orsay",
+        "url": "https://www.musee-orsay.fr/en/program/whats-on/exhibitions/cezanne-and-us",
+        "reason": "BLOCKED_HTTP_403",
+        "at": "2026-09-29T03:22:05.830Z",
+        "venuePage": 18,
+        "venueCleanBefore": 17,
+        "laneCleanBefore": 17,
+        "minutesIntoLane": 8.48
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "host": "www.metmuseum.org",
+  "url": "https://www.metmuseum.org/robots.txt",
+  "fetchedAt": "2026-09-27T08:18:46.811Z",
+  "status": 429,
+  "readable": false,
+  "why": "HTTP 429",
+  "server": "Vercel"
+}

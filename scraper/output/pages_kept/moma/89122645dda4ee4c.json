@@ -1,0 +1,11 @@
+{
+  "url": "https://www.moma.org/calendar/exhibitions/5912",
+  "savedAt": "2026-09-30T06:26:12.808Z",
+  "outcome": "text",
+  "changes": {
+    "start_date": "2026-07-01",
+    "summary": "At a time when AI is dramatically changing how we see, what does it mean to visualize a world that’s no longer centered on the human mind? Pierre Huyghe’s immersive, otherworldly works have redefined how art can engage with technology, human consciousness, and the natural environment. UUmwelt, presented on freestanding screens throughout the Abby Aldrich Rockefeller Sculpture Garden, uses machine learning to explore what it might look like if nonhuman entities could reconstruct our thoughts. Working with a team of neuroscientists in Kyoto, Japan, Huyghe asked a human subject to imagine a set of images while an fMRI scanner recorded their brain activity. An artificial neural network then used the data from the scans to generate thousands of visual interpretations of what they might have imagined. Hallucinatory and fragmentary, these indeterminate mental images reveal the neural network’s attempts to interpret and refine the data while conjuring a reality different from our own. The work is activated in real time by the gazes of visitors to the Sculpture Garden (which are detected by a sensor) and data collected from virtual simulations of cancer cell mutations. These inputs determine the creation of new images and their sequencing on the screens, drawing metaphorical connections between the limitless proliferation enabled by algorithmic systems and metastatic growth. The title is a riff on the German scientific term umwelt (environment), referring to the idea that every species perceives the world according to its distinct physical characteristics. The extra “U” complicates this idea, proposing an unstable environment in which the boundaries between human and machine cognition begin to dissolve, producing what Huyghe calls “a collective production of imagination between two kinds of intelligences.” Art becomes an open-ended ecosystem that invites new encounters and exchanges between people, biological systems, and machines.",
+    "notes": "opening date taken from the site's structured data, not its visible page."
+  },
+  "titleReport": []
+}

@@ -1,0 +1,124 @@
+[2026-09-27T04:22:43.278Z] Cat Watch Sweep Prototype — starting
+[2026-09-27T04:22:43.278Z] Lookback floor: 2024-07-01
+[2026-09-27T04:22:43.278Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-09-27_142243
+[2026-09-27T04:22:43.278Z] Machine: container (proxy present, so this is the container)
+[2026-09-27T04:22:43.278Z] Venues this run: ashmolean
+[2026-09-27T04:22:43.279Z] Proxy: http://127.0.0.1:37017
+[2026-09-27T04:22:43.279Z] Chromium: /opt/pw-browsers/chromium-1194/chrome-linux/chrome
+[2026-09-27T04:22:43.493Z] Running 1 venue(s) headless, 1 at a time (one page at a time within each venue)
+[2026-09-27T04:22:43.611Z] [ashmolean] 
+[2026-09-27T04:22:43.611Z] [ashmolean] ────────────────────────────────────────────────────────────
+[2026-09-27T04:22:43.611Z] [ashmolean]   ASHMOLEAN — Ashmolean Museum, Oxford
+[2026-09-27T04:22:43.611Z] [ashmolean] ────────────────────────────────────────────────────────────
+[2026-09-27T04:22:43.611Z] [ashmolean]   Fetching current/upcoming: https://www.ashmolean.org/exhibitions
+[2026-09-27T04:22:48.413Z] [ashmolean]   current/upcoming: 16 links seen -> 0 navigation, 9 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-09-27T04:22:48.420Z] [ashmolean]   Fetching past: https://www.ashmolean.org/past-exhibitions
+[2026-09-27T04:22:52.995Z] [ashmolean]   past: 28 links seen -> 0 navigation, 14 already-seen URL -> 14 collected (0 of them with no readable title)
+[2026-09-27T04:22:52.996Z] [ashmolean]   Fetching past p1: https://www.ashmolean.org/past-exhibitions?page-996041=1
+[2026-09-27T04:22:57.871Z] [ashmolean]   past p1: 28 links seen -> 0 navigation, 20 already-seen URL -> 8 collected (0 of them with no readable title)
+[2026-09-27T04:22:57.871Z] [ashmolean]   Fetching past p2: https://www.ashmolean.org/past-exhibitions?page-996041=2
+[2026-09-27T04:23:02.453Z] [ashmolean]   past p2: 20 links seen -> 0 navigation, 16 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-09-27T04:23:02.453Z] [ashmolean]   PAGINATION end: past p2 — its newest exhibition closed 2024-02-11, before the 2024-07-01 floor, so every later page is older still
+[2026-09-27T04:23:02.454Z] [ashmolean]   lookback (listing): kept 24, dropped 9 closed before 2024-07-01, 3 with no closing date, 0 with no opening date
+[2026-09-27T04:23:02.455Z] [ashmolean]   reading 24 individual page(s)…
+[2026-09-27T04:23:02.455Z] [ashmolean]     page 1 of 24
+[2026-09-27T04:23:33.480Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/colonial-views-of-india-impey-photographs — retrying once
+[2026-09-27T04:23:55.483Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/colonial-views-of-india-impey-photographs — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/colonial-view
+[2026-09-27T04:24:15.486Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/sisters-brothers-others-nationality-and-20th-century-chinese-art — retrying once
+[2026-09-27T04:24:37.490Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/sisters-brothers-others-nationality-and-20th-century-chinese-art — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/sisters-broth
+[2026-09-27T04:24:57.493Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/ashmolean-now-garry-fabian-miller — retrying once
+[2026-09-27T04:25:19.497Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/ashmolean-now-garry-fabian-miller — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/ashmolean-now
+[2026-09-27T04:25:39.506Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/in-bloom-how-plants-changed-our-world — retrying once
+[2026-09-27T04:26:01.515Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/in-bloom-how-plants-changed-our-world — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/in-bloom-how-
+[2026-09-27T04:26:21.523Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/this-is-what-you-get-stanley-donwood-radiohead-thom-yorke — retrying once
+[2026-09-27T04:26:43.526Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/this-is-what-you-get-stanley-donwood-radiohead-thom-yorke — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/this-is-what-
+[2026-09-27T04:26:43.527Z] [ashmolean]     page 10 of 24
+[2026-09-27T04:27:03.529Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/anselm-kiefer-early-works — retrying once
+[2026-09-27T04:27:25.539Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/anselm-kiefer-early-works — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/anselm-kiefer
+[2026-09-27T04:27:45.545Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/money-talks-art-power-and-society — retrying once
+[2026-09-27T04:28:07.552Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/money-talks-art-power-and-society — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/money-talks-a
+[2026-09-27T04:28:27.559Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/pat-suet-bik-hui-and-the-three-perfections — retrying once
+[2026-09-27T04:28:49.567Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/pat-suet-bik-hui-and-the-three-perfections — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/pat-suet-bik-
+[2026-09-27T04:29:09.570Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/ashmolean-now-daphne-wright — retrying once
+[2026-09-27T04:29:31.573Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/ashmolean-now-daphne-wright — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/ashmolean-now
+[2026-09-27T04:29:51.579Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/images-of-authority-portraits-between-iran-and-europe — retrying once
+[2026-09-27T04:30:13.586Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/images-of-authority-portraits-between-iran-and-europe — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/images-of-aut
+[2026-09-27T04:30:33.590Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/kabuki-kimono-display-costumes-of-bando-tamasaburo-v — retrying once
+[2026-09-27T04:30:55.595Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/kabuki-kimono-display-costumes-of-bando-tamasaburo-v — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/kabuki-kimono
+[2026-09-27T04:31:15.598Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/cheung-lee-and-his-1960s-hong-kong-contemporaries — retrying once
+[2026-09-27T04:31:37.602Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/cheung-lee-and-his-1960s-hong-kong-contemporaries — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/cheung-lee-an
+[2026-09-27T04:31:44.936Z] [ashmolean]     page 20 of 24
+[2026-09-27T04:32:04.939Z] [ashmolean]   TIMEOUT on https://www.ashmolean.org/exhibition/national-treasures-wilton-diptych-in-oxford — retrying once
+[2026-09-27T04:32:26.943Z] [ashmolean]   TIMEOUT: https://www.ashmolean.org/exhibition/national-treasures-wilton-diptych-in-oxford — page.goto: Timeout 20000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.ashmolean.org/exhibition/national-trea
+[2026-09-27T04:32:43.613Z]   ashmolean: ABANDONED — venue exceeded its 10.00 minute budget. Nothing written; --continue will redo it.
+[2026-09-27T04:32:43.783Z] 
+[2026-09-27T04:32:43.784Z] ────────────────────────────────────────────────────────────
+[2026-09-27T04:32:43.784Z]   QC — faulty rows and exceptions
+[2026-09-27T04:32:43.784Z] ────────────────────────────────────────────────────────────
+[2026-09-27T04:32:43.784Z]   No faulty rows: every row has a title and a known venue code.
+[2026-09-27T04:32:43.784Z]   No exceptions: every venue looks like the last run that had it.
+[2026-09-27T04:32:43.784Z] 
+[2026-09-27T04:32:43.784Z] ────────────────────────────────────────────────────────────
+[2026-09-27T04:32:43.784Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-27T04:32:43.784Z] ────────────────────────────────────────────────────────────
+[2026-09-27T04:32:43.784Z]   ASHMOLEAN: undefined exhibitions | undefined with text
+[2026-09-27T04:32:43.784Z] 
+[2026-09-27T04:32:43.784Z] ────────────────────────────────────────────────────────────
+[2026-09-27T04:32:43.784Z]   COVERAGE — every link accounted for
+[2026-09-27T04:32:43.784Z] ────────────────────────────────────────────────────────────
+[2026-09-27T04:32:43.784Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-27T04:32:43.784Z]   -----------------------------------------------------------------------------------------------
+[2026-09-27T04:32:43.784Z]   ashmolean  current/upcoming                16     0       0     9        0        0          7
+[2026-09-27T04:32:43.784Z]   ashmolean  past                            28     0       0    14        0        0         14
+[2026-09-27T04:32:43.784Z]   ashmolean  past p1                         28     0       0    20        0        0          8
+[2026-09-27T04:32:43.784Z]   ashmolean  past p2                         20     0       0    16        0        0          4
+[2026-09-27T04:32:43.784Z] 
+[2026-09-27T04:32:43.784Z] 
+[2026-09-27T04:32:43.784Z] ────────────────────────────────────────────────────────────
+[2026-09-27T04:32:43.784Z]   TITLES TAKEN FROM THE EXHIBITION'S OWN PAGE — READ BEFORE SENDING
+[2026-09-27T04:32:43.784Z] ────────────────────────────────────────────────────────────
+[2026-09-27T04:32:43.784Z]   ashmolean: "APHRODITE: THE MAKING OF A GODDESS" → "Aphrodite: The Making of a Goddess"
+[2026-09-27T04:32:43.784Z]   ashmolean: "ASHMOLEAN NOW: BETTINA VON ZWEHL" → "Ashmolean Now: Bettina von Zwehl: The Flood"
+[2026-09-27T04:32:43.784Z] 
+[2026-09-27T04:32:43.784Z]   seen      = links matching the venue's selector on that page
+[2026-09-27T04:32:43.784Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-27T04:32:43.784Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-27T04:32:43.784Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-27T04:32:43.784Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-27T04:32:43.784Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-27T04:32:43.784Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-27T04:32:43.784Z] 
+[2026-09-27T04:32:43.784Z] Network bridge: 2855 requests served, 675 skipped (image/media/font), 132 failed
+[2026-09-27T04:32:43.784Z] 
+[2026-09-27T04:32:43.784Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-09-27_142243
+[2026-09-27T04:32:43.784Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-27_142243/sweep.csv  (0 rows — )
+[2026-09-27T04:32:43.784Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-09-27_142243/log_2026-09-27_142243.txt
+[2026-09-27T04:32:43.784Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, orsay, mam, mad, ashmolean, jacquemart, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-27T04:32:43.784Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-27T04:32:43.784Z] No de-duplication is applied — see passThrough.

@@ -1,0 +1,12 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/ashmolean-now-soma-surovi-jannat",
+  "savedAt": "2026-09-27T09:29:58.672Z",
+  "outcome": "text",
+  "changes": {
+    "start_date": "2026-03-28",
+    "end_date": "2026-11-01",
+    "summary": "This is the fifth in the Ashmolean NOW exhibition series, where contemporary artists are invited to create new work inspired by the Ashmolean’s historical collections. This exhibition showcases the work of Bangladeshi artist Soma Surovi Jannat, who draws inspiration from the Sundarbans, the largest mangrove forest in the world, and the Ashmolean collections to address the climate crisis. Her art reflects on environmental issues and the interconnectedness of nature and humanity, especially in Bangladesh, where the Sundarbans, faces threats from climate change. In her paintings and drawings, capturing urgent global and environmental issues, Surovi critiques the link between natural disasters and social inequalities. As the first Bangladeshi artist-in-residence at the Ashmolean, this exhibition marks Surovi's debut solo show in the UK and also the first solo exhibition of a Bangladesh-based artist in a museum in the UK.",
+    "notes": "opening and closing date read from a sentence, not a date field: \"28 Mar - 1 Nov 2026\"."
+  },
+  "titleReport": []
+}

@@ -1,0 +1,11 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/money-in-renaissance-germany",
+  "savedAt": "2026-09-27T09:33:25.099Z",
+  "outcome": "text",
+  "changes": {
+    "start_date": "2024-01-12",
+    "summary": "This display in the Money Gallery explores the creation of a common currency across the Holy Roman Empire in 1559. It was the first European currency whose units were clearly and consistently marked with their face values in Arab numerals. While the fronts of the coins were harmonised, the backs retained some forms of local reference, which was in some cases quite playfully medieval. Before the adoption of a common silver currency in 1559, parts of the empire faced well-known monetary pressures. In the absence of central control and consensus, different issuing authorities of a similar geographical area minted coins which were superficially the same, but in fact tended to become baser or lighter. This made the currency steadily worse. Images above: Front and back: Silver coin (Leicesterrijksdaalder) of Robert Dudley, Earl of Leicester, Lord of Denbigh, Governor-General of the United Provinces of the Netherlands, 1564-1588 from Harderwijk (Modern), 1587. HCR45928",
+    "notes": "opening date read from a sentence, not a date field: \"12 Jan - 10 Nov 2024\"."
+  },
+  "titleReport": []
+}

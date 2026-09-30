@@ -1,0 +1,118 @@
+[2026-09-30T06:55:17.259Z] Cat Watch Sweep Prototype — starting
+[2026-09-30T06:55:17.262Z] Lookback floor: 2024-07-01
+[2026-09-30T06:55:17.262Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-30_165517
+[2026-09-30T06:55:17.262Z] Machine: home (no proxy, so this is not the container)
+[2026-09-30T06:55:17.262Z] Venues this run: brit
+[2026-09-30T06:55:17.263Z] 
+[2026-09-30T06:55:17.263Z] ────────────────────────────────────────────────────────────
+[2026-09-30T06:55:17.263Z]   PACING — her machine
+[2026-09-30T06:55:17.263Z] ────────────────────────────────────────────────────────────
+[2026-09-30T06:55:17.263Z]   Gap between pages: about 30s, varied 75–125%, per gatekeeper.
+[2026-09-30T06:55:17.263Z]   One venue at a time behind each gatekeeper; different gatekeepers side by side.
+[2026-09-30T06:55:17.264Z]   The first refusal or bot check stops that gatekeeper for the rest of the run.
+[2026-09-30T06:55:17.264Z]   In the Chrome you opened and left open, in a tab of its own (mode B): brit
+[2026-09-30T06:55:17.279Z]   brit: behind Cloudflare, which was last asked at Wed, 30 Sept, 4:37 pm Sydney. Quiet period until Wed, 30 Sept, 5:37 pm Sydney OVERRIDDEN by --ignore-cooldown.
+[2026-09-30T06:55:17.280Z]   Venues this run: brit
+[2026-09-30T06:55:17.280Z] Proxy: (none — direct egress assumed)
+[2026-09-30T06:55:17.280Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-30T06:55:17.281Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-30T06:55:17.282Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-30T06:55:19.076Z] Running 0 venue(s) headless, 0 at a time (one page at a time within each venue)
+[2026-09-30T06:55:19.076Z] Running 1 venue(s) in a visible Chrome, one after another: brit
+[2026-09-30T06:55:19.616Z] [brit] 
+[2026-09-30T06:55:19.617Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-30T06:55:19.617Z] [brit]   BRIT — British Museum, London
+[2026-09-30T06:55:19.617Z] [brit] ────────────────────────────────────────────────────────────
+[2026-09-30T06:55:19.618Z] [brit]   Fetching current/upcoming: https://www.britishmuseum.org/exhibitions-events?whats_on_event_type=Exhibition&whats_on_event_type=Experience&whats_on_when=2026-09-30TO2027-12-31
+[2026-09-30T06:55:19.695Z] [brit]   robots.txt (www.britishmuseum.org, kept copy of 2026-09-27): asks 20s between requests, 24 path(s) off-limits — pages at least 20s apart
+[2026-09-30T06:55:19.702Z] [brit]   paced: request 1 via Cloudflare
+[2026-09-30T06:55:24.271Z] [brit]   current/upcoming: 10 links seen -> 0 navigation, 5 already-seen URL -> 5 collected (0 of them with no readable title)
+[2026-09-30T06:55:24.280Z] [brit]   Fetching past: https://www.britishmuseum.org/exhibitions-events/past-exhibitions
+[2026-09-30T06:55:47.734Z] [brit]   paced: request 2 via Cloudflare, after 8s
+[2026-09-30T06:56:00.160Z] [brit]   past: 107 links seen -> 0 navigation, 4 already-seen URL, 71 under a year heading too early for the lookback -> 32 collected (0 of them with no readable title)
+[2026-09-30T06:56:00.170Z] [brit]   lookback (listing): kept 35, dropped 2 closed before 2024-07-01, 9 with no closing date, 0 with no opening date
+[2026-09-30T06:56:00.172Z] [brit]   reading 35 individual page(s)…
+[2026-09-30T06:56:00.173Z] [brit]     page 1 of 35
+[2026-09-30T06:56:24.312Z] [brit]   paced: request 3 via Cloudflare, after 24s
+[2026-09-30T06:56:57.838Z] [brit]   paced: request 4 via Cloudflare, after 32s
+[2026-09-30T06:57:22.499Z] [brit]   paced: request 5 via Cloudflare, after 23s
+[2026-09-30T06:57:50.723Z] [brit]   paced: request 6 via Cloudflare, after 27s
+[2026-09-30T06:58:20.224Z] [brit]   paced: request 7 via Cloudflare, after 28s
+[2026-09-30T06:58:44.256Z] [brit]   paced: request 8 via Cloudflare, after 22s
+[2026-09-30T06:59:11.421Z] [brit]   paced: request 9 via Cloudflare, after 26s
+[2026-09-30T06:59:39.174Z] [brit]   paced: request 10 via Cloudflare, after 26s
+[2026-09-30T07:00:12.304Z] [brit]   paced: request 11 via Cloudflare, after 32s
+[2026-09-30T07:00:14.462Z] [brit]     page 10 of 35
+[2026-09-30T07:00:42.511Z] [brit]   paced: request 12 via Cloudflare, after 28s
+[2026-09-30T07:01:18.265Z] [brit]   paced: request 13 via Cloudflare, after 34s
+[2026-09-30T07:01:55.615Z] [brit]   paced: request 14 via Cloudflare, after 35s
+[2026-09-30T07:02:25.322Z] [brit]   paced: request 15 via Cloudflare, after 28s
+[2026-09-30T07:02:59.989Z] [brit]   paced: request 16 via Cloudflare, after 33s
+[2026-09-30T07:03:23.432Z] [brit]   paced: request 17 via Cloudflare, after 21s
+[2026-09-30T07:03:51.837Z] [brit]   paced: request 18 via Cloudflare, after 27s
+[2026-09-30T07:04:16.998Z] [brit]   paced: request 19 via Cloudflare, after 23s
+[2026-09-30T07:04:50.250Z] [brit]   paced: request 20 via Cloudflare, after 31s
+[2026-09-30T07:05:24.840Z] [brit]   paced: request 21 via Cloudflare, after 32s
+[2026-09-30T07:05:26.859Z] [brit]     page 20 of 35
+[2026-09-30T07:06:01.047Z] [brit]   paced: request 22 via Cloudflare, after 34s
+[2026-09-30T07:06:32.523Z] [brit]   paced: request 23 via Cloudflare, after 29s
+[2026-09-30T07:07:01.345Z] [brit]   paced: request 24 via Cloudflare, after 27s
+[2026-09-30T07:07:28.656Z] [brit]   paced: request 25 via Cloudflare, after 26s
+[2026-09-30T07:08:00.517Z] [brit]   paced: request 26 via Cloudflare, after 30s
+[2026-09-30T07:08:32.116Z] [brit]   paced: request 27 via Cloudflare, after 29s
+[2026-09-30T07:08:59.491Z] [brit]   paced: request 28 via Cloudflare, after 25s
+[2026-09-30T07:09:31.221Z] [brit]   paced: request 29 via Cloudflare, after 30s
+[2026-09-30T07:09:57.259Z] [brit]   paced: request 30 via Cloudflare, after 23s
+[2026-09-30T07:10:31.229Z] [brit]   paced: request 31 via Cloudflare, after 31s
+[2026-09-30T07:10:34.538Z] [brit]     page 30 of 35
+[2026-09-30T07:11:07.328Z] [brit]   paced: request 32 via Cloudflare, after 33s
+[2026-09-30T07:11:42.196Z] [brit]   paced: request 33 via Cloudflare, after 32s
+[2026-09-30T07:12:11.318Z] [brit]   paced: request 34 via Cloudflare, after 27s
+[2026-09-30T07:12:43.208Z] [brit]   paced: request 35 via Cloudflare, after 29s
+[2026-09-30T07:13:08.929Z] [brit]   paced: request 36 via Cloudflare, after 24s
+[2026-09-30T07:13:44.702Z] [brit]   paced: request 37 via Cloudflare, after 34s
+[2026-09-30T07:13:46.776Z] [brit]   Individual pages: 35 got text, 0 no curatorial text, 0 failed
+[2026-09-30T07:13:46.777Z] [brit]   35 page(s) kept on disk as read (pages_kept/brit)
+[2026-09-30T07:13:46.779Z] [brit]   lookback (final): kept 34, dropped 1 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-30T07:13:46.793Z] [brit]   → 34 exhibitions, 34 with curatorial text → brit.csv
+[2026-09-30T07:13:48.974Z] 
+[2026-09-30T07:13:48.975Z] ────────────────────────────────────────────────────────────
+[2026-09-30T07:13:48.975Z]   QC — faulty rows and exceptions
+[2026-09-30T07:13:48.976Z] ────────────────────────────────────────────────────────────
+[2026-09-30T07:13:48.976Z]   No faulty rows: every row has a title and a known venue code.
+[2026-09-30T07:13:48.976Z]   No exceptions: every venue looks like the last run that had it.
+[2026-09-30T07:13:48.977Z] 
+[2026-09-30T07:13:48.977Z] ────────────────────────────────────────────────────────────
+[2026-09-30T07:13:48.977Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-30T07:13:48.977Z] ────────────────────────────────────────────────────────────
+[2026-09-30T07:13:48.978Z]   BRIT: 34 exhibitions | 34 with text
+[2026-09-30T07:13:48.978Z] 
+[2026-09-30T07:13:48.978Z] ────────────────────────────────────────────────────────────
+[2026-09-30T07:13:48.979Z]   PACING — where each gatekeeper got to
+[2026-09-30T07:13:48.979Z] ────────────────────────────────────────────────────────────
+[2026-09-30T07:13:48.980Z]   Cloudflare: brit — 37 clean page(s)
+[2026-09-30T07:13:48.980Z] 
+[2026-09-30T07:13:48.980Z] ────────────────────────────────────────────────────────────
+[2026-09-30T07:13:48.980Z]   COVERAGE — every link accounted for
+[2026-09-30T07:13:48.980Z] ────────────────────────────────────────────────────────────
+[2026-09-30T07:13:48.981Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-30T07:13:48.981Z]   -----------------------------------------------------------------------------------------------
+[2026-09-30T07:13:48.981Z]   brit       current/upcoming                10     0       0     5        0        0          5
+[2026-09-30T07:13:48.981Z]   brit       past                           107     0       0     4        0        0         32
+[2026-09-30T07:13:48.982Z] 
+[2026-09-30T07:13:48.982Z]   seen      = links matching the venue's selector on that page
+[2026-09-30T07:13:48.982Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-30T07:13:48.982Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-30T07:13:48.982Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-30T07:13:48.982Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-30T07:13:48.982Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-30T07:13:48.982Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-30T07:13:48.982Z] 
+[2026-09-30T07:13:48.983Z] Network bridge: 0 requests served, 0 handed back from files already fetched (not asked again), 0 skipped (image/media/font), 0 failed
+[2026-09-30T07:13:48.984Z] 
+[2026-09-30T07:13:48.985Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-30_165517
+[2026-09-30T07:13:48.986Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-30_165517/sweep.csv  (34 rows — brit:34)
+[2026-09-30T07:13:48.987Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-30_165517/log_2026-09-30_165517.txt
+[2026-09-30T07:13:48.988Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, orsay, mam, mad, ashmolean, jacquemart, khm, artic, moma, dellav, tate-modern, tate-britain, wallace
+[2026-09-30T07:13:48.988Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-30T07:13:48.989Z] No de-duplication is applied — see passThrough.

@@ -1,0 +1,135 @@
+[2026-09-30T05:38:40.584Z] Cat Watch Sweep Prototype — starting
+[2026-09-30T05:38:40.587Z] Lookback floor: 2024-07-01
+[2026-09-30T05:38:40.587Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-30_153840
+[2026-09-30T05:38:40.587Z] Machine: home (no proxy, so this is not the container)
+[2026-09-30T05:38:40.588Z] NAMED BY HAND, and not this machine's job: morgan.
+[2026-09-30T05:38:40.588Z] Running them anyway — naming a venue always wins. Both machines
+[2026-09-30T05:38:40.588Z] sweeping one venue doubles what it sees, and met and artic both
+[2026-09-30T05:38:40.588Z] rate-limit, so do not make a habit of it.
+[2026-09-30T05:38:40.588Z] Venues this run: morgan
+[2026-09-30T05:38:40.590Z] 
+[2026-09-30T05:38:40.591Z] ────────────────────────────────────────────────────────────
+[2026-09-30T05:38:40.591Z]   PACING — her machine
+[2026-09-30T05:38:40.592Z] ────────────────────────────────────────────────────────────
+[2026-09-30T05:38:40.592Z]   Gap between pages: about 30s, varied 75–125%, per gatekeeper.
+[2026-09-30T05:38:40.592Z]   One venue at a time behind each gatekeeper; different gatekeepers side by side.
+[2026-09-30T05:38:40.593Z]   The first refusal or bot check stops that gatekeeper for the rest of the run.
+[2026-09-30T05:38:40.594Z]   In the Chrome you opened and left open, in a tab of its own (mode B): morgan
+[2026-09-30T05:38:40.632Z]   morgan: gatekeeper not known yet — read off its first reply.
+[2026-09-30T05:38:40.636Z]   Venues this run: morgan
+[2026-09-30T05:38:40.638Z] Proxy: (none — direct egress assumed)
+[2026-09-30T05:38:40.639Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-30T05:38:40.639Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-30T05:38:40.641Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-30T05:38:42.328Z] Running 0 venue(s) headless, 0 at a time (one page at a time within each venue)
+[2026-09-30T05:38:42.348Z] Running 1 venue(s) in a visible Chrome, one after another: morgan
+[2026-09-30T05:38:43.669Z] [morgan] 
+[2026-09-30T05:38:43.670Z] [morgan] ────────────────────────────────────────────────────────────
+[2026-09-30T05:38:43.670Z] [morgan]   MORGAN — Morgan Library & Museum, New York
+[2026-09-30T05:38:43.670Z] [morgan] ────────────────────────────────────────────────────────────
+[2026-09-30T05:38:43.671Z] [morgan]   Fetching current: https://www.themorgan.org/exhibitions/current
+[2026-09-30T05:38:43.687Z] [morgan]   robots.txt (www.themorgan.org, kept copy of 2026-09-27): unreadable (HTTP 403) — asks nothing we can see
+[2026-09-30T05:38:43.692Z] [morgan]   paced: request 1, gatekeeper not yet known — every lane paused for it
+[2026-09-30T05:38:45.169Z] [morgan]   gatekeeper: Cloudflare — read off its reply; this venue is paced in that lane
+[2026-09-30T05:38:47.304Z] [morgan]     ongoing (permanent), excluded: J. Pierpont Morgan's Library
+[2026-09-30T05:38:47.304Z] [morgan]   current: 4 links seen -> 0 navigation, 0 already-seen URL, 1 ongoing/permanent -> 3 collected (0 of them with no readable title)
+[2026-09-30T05:38:47.317Z] [morgan]   Fetching upcoming: https://www.themorgan.org/exhibitions/upcoming
+[2026-09-30T05:39:12.021Z] [morgan]   paced: request 2 via Cloudflare, after 25s
+[2026-09-30T05:39:14.931Z] [morgan]   upcoming: 5 links seen -> 0 navigation, 0 already-seen URL -> 5 collected (0 of them with no readable title)
+[2026-09-30T05:39:14.942Z] [morgan]   Fetching past 2025-2026: https://www.themorgan.org/exhibitions/past/2025-2026
+[2026-09-30T05:39:41.451Z] [morgan]   paced: request 3 via Cloudflare, after 27s
+[2026-09-30T05:39:45.214Z] [morgan]     not a temporary exhibition (venue rule), excluded: Collections Spotlight, Summer 2026
+[2026-09-30T05:39:45.535Z] [morgan]     not a temporary exhibition (venue rule), excluded: Collections Spotlight, Spring 2026
+[2026-09-30T05:39:45.710Z] [morgan]   past 2025-2026: 10 links seen -> 0 navigation, 0 already-seen URL, 2 labelled permanent by the venue -> 8 collected (0 of them with no readable title)
+[2026-09-30T05:39:45.711Z] [morgan]   Fetching past 2024-2025: https://www.themorgan.org/exhibitions/past/2024-2025
+[2026-09-30T05:40:14.637Z] [morgan]   paced: request 4 via Cloudflare, after 29s
+[2026-09-30T05:40:17.425Z] [morgan]   past 2024-2025: 3 links seen -> 0 navigation, 0 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-09-30T05:40:17.426Z] [morgan]   Fetching past 2023-2024: https://www.themorgan.org/exhibitions/past/2023-2024
+[2026-09-30T05:40:37.476Z] [morgan]   paced: request 5 via Cloudflare, after 20s
+[2026-09-30T05:40:40.191Z] [morgan]   past 2023-2024: 10 links seen -> 0 navigation, 0 already-seen URL -> 10 collected (0 of them with no readable title)
+[2026-09-30T05:40:40.192Z] [morgan]   Fetching past 2025-2026 p1: https://www.themorgan.org/exhibitions/past/2025-2026?page=1
+[2026-09-30T05:41:09.694Z] [morgan]   paced: request 6 via Cloudflare, after 30s
+[2026-09-30T05:41:12.958Z] [morgan]     not a temporary exhibition (venue rule), excluded: Collections Spotlight, Fall 2025
+[2026-09-30T05:41:13.345Z] [morgan]     not a temporary exhibition (venue rule), excluded: Collections Spotlight, Summer 2025
+[2026-09-30T05:41:13.345Z] [morgan]   past 2025-2026 p1: 10 links seen -> 0 navigation, 0 already-seen URL, 2 labelled permanent by the venue -> 8 collected (0 of them with no readable title)
+[2026-09-30T05:41:13.345Z] [morgan]   Fetching past 2024-2025 p1: https://www.themorgan.org/exhibitions/past/2024-2025?page=1
+[2026-09-30T05:41:37.598Z] [morgan]   paced: request 7 via Cloudflare, after 24s
+[2026-09-30T05:41:40.719Z] [morgan]   past 2024-2025 p1: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-30T05:41:40.719Z] [morgan]   PAGINATION end: past 2024-2025 p1 added no new exhibitions
+[2026-09-30T05:41:40.719Z] [morgan]   Fetching past 2023-2024 p1: https://www.themorgan.org/exhibitions/past/2023-2024?page=1
+[2026-09-30T05:42:07.175Z] [morgan]   paced: request 8 via Cloudflare, after 26s
+[2026-09-30T05:42:10.684Z] [morgan]     not a temporary exhibition (venue rule), excluded: Collections Spotlight, Fall 2023 / Winter 2024
+[2026-09-30T05:42:10.685Z] [morgan]   past 2023-2024 p1: 6 links seen -> 0 navigation, 0 already-seen URL, 1 labelled permanent by the venue -> 5 collected (0 of them with no readable title)
+[2026-09-30T05:42:10.685Z] [morgan]   PAGINATION end: past 2023-2024 p1 — its newest exhibition closed 2024-04-21, before the 2024-07-01 floor, so every later page is older still
+[2026-09-30T05:42:10.685Z] [morgan]   Fetching past 2025-2026 p2: https://www.themorgan.org/exhibitions/past/2025-2026?page=2
+[2026-09-30T05:42:41.426Z] [morgan]   paced: request 9 via Cloudflare, after 31s
+[2026-09-30T05:42:44.662Z] [morgan]     not a temporary exhibition (venue rule), excluded: Collections Spotlight, Spring 2025
+[2026-09-30T05:42:44.662Z] [morgan]   past 2025-2026 p2: 5 links seen -> 0 navigation, 0 already-seen URL, 1 labelled permanent by the venue -> 4 collected (0 of them with no readable title)
+[2026-09-30T05:42:44.662Z] [morgan]   Fetching past 2025-2026 p3: https://www.themorgan.org/exhibitions/past/2025-2026?page=3
+[2026-09-30T05:43:03.959Z] [morgan]   paced: request 10 via Cloudflare, after 19s
+[2026-09-30T05:43:06.421Z] [morgan]   past 2025-2026 p3: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-09-30T05:43:06.421Z] [morgan]   PAGINATION end: past 2025-2026 p3 added no new exhibitions
+[2026-09-30T05:43:06.423Z] [morgan]   lookback (listing): kept 39, dropped 7 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-30T05:43:06.425Z] [morgan]   reading 8 individual page(s)…
+[2026-09-30T05:43:06.426Z] [morgan]     page 1 of 8
+[2026-09-30T05:43:39.171Z] [morgan]   paced: request 11 via Cloudflare, after 33s
+[2026-09-30T05:44:11.995Z] [morgan]   paced: request 12 via Cloudflare, after 31s
+[2026-09-30T05:44:42.999Z] [morgan]   paced: request 13 via Cloudflare, after 29s
+[2026-09-30T05:45:12.503Z] [morgan]   paced: request 14 via Cloudflare, after 27s
+[2026-09-30T05:45:47.570Z] [morgan]   paced: request 15 via Cloudflare, after 33s
+[2026-09-30T05:46:19.536Z] [morgan]   paced: request 16 via Cloudflare, after 30s
+[2026-09-30T05:46:53.733Z] [morgan]   paced: request 17 via Cloudflare, after 33s
+[2026-09-30T05:47:18.793Z] [morgan]   paced: request 18 via Cloudflare, after 23s
+[2026-09-30T05:47:20.126Z] [morgan]   Individual pages: 8 got text, 0 no curatorial text, 0 failed
+[2026-09-30T05:47:20.127Z] [morgan]   8 page(s) kept on disk as read (pages_kept/morgan)
+[2026-09-30T05:47:20.127Z] [morgan]   38 row(s) took their description from the listing; their pages are not opened
+[2026-09-30T05:47:20.131Z] [morgan]   → 8 exhibitions, 8 with curatorial text → morgan.csv
+[2026-09-30T05:47:20.792Z] 
+[2026-09-30T05:47:20.793Z] ────────────────────────────────────────────────────────────
+[2026-09-30T05:47:20.793Z]   QC — faulty rows and exceptions
+[2026-09-30T05:47:20.793Z] ────────────────────────────────────────────────────────────
+[2026-09-30T05:47:20.793Z]   No faulty rows: every row has a title and a known venue code.
+[2026-09-30T05:47:20.793Z]   No exceptions: every venue looks like the last run that had it.
+[2026-09-30T05:47:20.793Z] 
+[2026-09-30T05:47:20.793Z] ────────────────────────────────────────────────────────────
+[2026-09-30T05:47:20.793Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-30T05:47:20.793Z] ────────────────────────────────────────────────────────────
+[2026-09-30T05:47:20.793Z]   MORGAN: 8 exhibitions | 8 with text
+[2026-09-30T05:47:20.793Z] 
+[2026-09-30T05:47:20.793Z] ────────────────────────────────────────────────────────────
+[2026-09-30T05:47:20.793Z]   PACING — where each gatekeeper got to
+[2026-09-30T05:47:20.793Z] ────────────────────────────────────────────────────────────
+[2026-09-30T05:47:20.793Z]   Cloudflare: morgan — 18 clean page(s)
+[2026-09-30T05:47:20.794Z] 
+[2026-09-30T05:47:20.794Z] ────────────────────────────────────────────────────────────
+[2026-09-30T05:47:20.794Z]   COVERAGE — every link accounted for
+[2026-09-30T05:47:20.794Z] ────────────────────────────────────────────────────────────
+[2026-09-30T05:47:20.794Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-30T05:47:20.794Z]   -----------------------------------------------------------------------------------------------
+[2026-09-30T05:47:20.794Z]   morgan     current                          4     0       0     0        1        0          3
+[2026-09-30T05:47:20.795Z]   morgan     upcoming                         5     0       0     0        0        0          5
+[2026-09-30T05:47:20.795Z]   morgan     past 2025-2026                  10     0       0     0        0        0          8
+[2026-09-30T05:47:20.796Z]   morgan     past 2024-2025                   3     0       0     0        0        0          3
+[2026-09-30T05:47:20.796Z]   morgan     past 2023-2024                  10     0       0     0        0        0         10
+[2026-09-30T05:47:20.797Z]   morgan     past 2025-2026 p1               10     0       0     0        0        0          8
+[2026-09-30T05:47:20.797Z]   morgan     past 2024-2025 p1                0     0       0     0        0        0          0
+[2026-09-30T05:47:20.798Z]   morgan     past 2023-2024 p1                6     0       0     0        0        0          5
+[2026-09-30T05:47:20.798Z]   morgan     past 2025-2026 p2                5     0       0     0        0        0          4
+[2026-09-30T05:47:20.798Z]   morgan     past 2025-2026 p3                0     0       0     0        0        0          0
+[2026-09-30T05:47:20.798Z] 
+[2026-09-30T05:47:20.799Z]   seen      = links matching the venue's selector on that page
+[2026-09-30T05:47:20.799Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-30T05:47:20.799Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-30T05:47:20.799Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-30T05:47:20.799Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-30T05:47:20.799Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-30T05:47:20.799Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-30T05:47:20.799Z] 
+[2026-09-30T05:47:20.799Z] Network bridge: 0 requests served, 0 handed back from files already fetched (not asked again), 0 skipped (image/media/font), 0 failed
+[2026-09-30T05:47:20.799Z] 
+[2026-09-30T05:47:20.800Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-30_153840
+[2026-09-30T05:47:20.800Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-30_153840/sweep.csv  (8 rows — morgan:8)
+[2026-09-30T05:47:20.800Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-30_153840/log_2026-09-30_153840.txt
+[2026-09-30T05:47:20.800Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, menil, va, louvre, capo, uffizi, brera, orsay, mam, mad, ashmolean, jacquemart, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-30T05:47:20.800Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-30T05:47:20.800Z] No de-duplication is applied — see passThrough.

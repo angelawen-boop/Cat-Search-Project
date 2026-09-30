@@ -1,0 +1,20 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/kabuki-legends-part-two-stencil-prints-of-takahashi-hiromitsu",
+  "savedAt": "2026-09-27T09:33:05.104Z",
+  "outcome": "text",
+  "changes": {
+    "title": "Kabuki Legends: Part Two – Stencil Prints by Takahashi Hiromitsu",
+    "start_date": "2024-02-16",
+    "summary": "Japanese artist Takahashi Hiromitsu creates dynamic, colourful prints showing exciting moments in kabuki, a traditional form of dance-drama. This was the second show in a two-part exhibition of his works in Gallery 29. Hiromitsu’s striking designs are not portraits of actual actors, but visualisations of famous kabuki roles. In kabuki, performers wearing elaborate costumes and make-up use stylised movement and song to enact melodramatic stories about love, loyalty and the clash between duty and emotion. The works recall Japan’s traditional ukiyo-e woodblock actor prints, but are made using a different technique – kappazuri, or stencil printing, originally used for dyeing kimono. This process is complex and labour-intensive and Hiromitsu is one of very few artists working in this way today.",
+    "notes": "opening date read from a sentence, not a date field: \"16 Feb 2024 - 23 Feb 2025\"."
+  },
+  "titleReport": [
+    {
+      "venue": "ashmolean",
+      "kind": "changed",
+      "from": "KABUKI LEGENDS PART TWO",
+      "to": "Kabuki Legends: Part Two – Stencil Prints by Takahashi Hiromitsu",
+      "url": "https://www.ashmolean.org/exhibition/kabuki-legends-part-two-stencil-prints-of-takahashi-hiromitsu"
+    }
+  ]
+}

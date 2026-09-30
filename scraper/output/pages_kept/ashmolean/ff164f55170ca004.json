@@ -1,0 +1,18 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/in-bloom-how-plants-changed-our-world",
+  "savedAt": "2026-09-27T09:30:45.015Z",
+  "outcome": "text",
+  "changes": {
+    "title": "In Bloom: How Plants Changed Our World",
+    "summary": "What do we really know about the plants and flowers in our gardens and window boxes? Beyond their beauty, many have hidden histories – tales of exploration, obsession, and knowledge. This major new exhibition took visitors on a journey from Oxford to the farthest corners of the world and back, uncovering the global stories behind some of Britain’s most beloved blooms – from roses and tulips to camellias and peonies. Featuring over 100 artworks and objects, including drawings, paintings, rare prints, and ceramics, In Bloom explored our changing relationship with the natural world."
+  },
+  "titleReport": [
+    {
+      "venue": "ashmolean",
+      "kind": "changed",
+      "from": "IN BLOOM EXHIBITION",
+      "to": "In Bloom: How Plants Changed Our World",
+      "url": "https://www.ashmolean.org/exhibition/in-bloom-how-plants-changed-our-world"
+    }
+  ]
+}

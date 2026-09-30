@@ -1,0 +1,20 @@
+{
+  "url": "https://www.ashmolean.org/exhibition/national-treasures-wilton-diptych-in-oxford",
+  "savedAt": "2026-09-27T09:32:45.010Z",
+  "outcome": "text",
+  "changes": {
+    "title": "National Treasures: The Wilton Diptych in Oxford",
+    "start_date": "2024-05-10",
+    "summary": "The Ashmolean is proud to have been a partner venue for the National Treasures displays in 2024. As part of its 200th birthday celebrations, the National Gallery loaned 12 paintings to venues around the UK, with the displays all opening on 10 May 2024. The Ashmolean displayed the Wilton Diptych, painted about 1395-9 and made for Richard II, King of England from 1377 to 1399. The small, portable altarpiece is one of a handful of English panel paintings to have survived from the Middle Ages. The Wilton Diptych English or French, painted about 1395-9. Egg on oak.",
+    "notes": "opening date read from a sentence, not a date field: \"10 May 2024 - 1 Sep 2024\"."
+  },
+  "titleReport": [
+    {
+      "venue": "ashmolean",
+      "kind": "changed",
+      "from": "NATIONAL TREASURES: THE WILTON DIPTYCH IN OXFORD",
+      "to": "National Treasures: The Wilton Diptych in Oxford",
+      "url": "https://www.ashmolean.org/exhibition/national-treasures-wilton-diptych-in-oxford"
+    }
+  ]
+}

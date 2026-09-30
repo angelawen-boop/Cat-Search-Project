@@ -1,0 +1,19 @@
+{
+  "machine": "home",
+  "savedAt": "2026-09-30T05:47:20.132Z",
+  "paceSeconds": 30,
+  "gatekeepers": {
+    "morgan": "Cloudflare"
+  },
+  "lanes": {
+    "Cloudflare": {
+      "venues": [
+        "morgan"
+      ],
+      "clean": 18,
+      "firstAt": "2026-09-30T05:38:43.692Z",
+      "lastAt": "2026-09-30T05:47:18.793Z",
+      "stopped": null
+    }
+  }
+}

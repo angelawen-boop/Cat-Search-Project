@@ -1,0 +1,106 @@
+<title>Cover Shelf Test</title>
+<style>
+:root{--bg:#f6f5f2;--ink:#1d1c1a;--soft:#6a6660;--line:#d9d5ce;--card:#ffffff;--ok:#1f6b3a;--bad:#a3261c;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171614;--ink:#ecebe7;--soft:#a39e96;--line:#3a3733;--card:#211f1c;--ok:#7fd49a;--bad:#ff8f84;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171614;--ink:#ecebe7;--soft:#a39e96;--line:#3a3733;--card:#211f1c;--ok:#7fd49a;--bad:#ff8f84;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 Georgia,"Times New Roman",serif;padding-inline:16px;padding-block:24px 48px}
+main{max-width:760px;margin:0 auto;display:grid;gap:28px}
+h1{font-size:24px;margin:0;text-wrap:balance}
+p{margin:0}
+.intro{color:var(--soft);max-width:62ch}
+.tests{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
+.test{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px;display:grid;gap:10px;align-content:start}
+.test h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin:0;font-family:system-ui,sans-serif;color:var(--soft)}
+.shelf{aspect-ratio:2/3;max-width:100%;background:var(--bg);border:1px dashed var(--line);display:grid;place-items:center;overflow:hidden}
+.shelf img{width:100%;height:100%;object-fit:cover;display:block}
+.shelf span{color:var(--soft);font-size:13px;padding:8px;text-align:center}
+.result{font-family:system-ui,sans-serif;font-size:14px;font-weight:600}
+.result.ok{color:var(--ok)}
+.result.bad{color:var(--bad)}
+.result.ok::before{content:"✓ YES — "}
+.result.bad::before{content:"✗ NO — "}
+.what{font-size:13px;color:var(--soft)}
+label.pick{font-family:system-ui,sans-serif;font-size:14px;border:1px solid var(--ink);border-radius:4px;padding:6px 10px;cursor:pointer;justify-self:start}
+label.pick:focus-within{outline:2px solid var(--ink);outline-offset:2px}
+input[type=file]{position:absolute;opacity:0;width:1px;height:1px}
+</style>
+
+<main>
+  <div style="display:grid;gap:8px">
+    <h1>Cover Shelf Test</h1>
+    <p class="intro">Three questions for the Library idea. This page is separate from Cat Watch and touches nothing of yours. Each box answers YES or NO in words, so black-and-white is fine.</p>
+  </div>
+
+  <div class="tests">
+    <section class="test">
+      <h2>1 · Picture from another website</h2>
+      <div class="shelf" id="s1"><span>Loading…</span></div>
+      <p class="result" id="r1">Waiting…</p>
+      <p class="what">Loads a cover straight from Open Library by its address, as a shelf would if it linked to covers.</p>
+    </section>
+
+    <section class="test">
+      <h2>2 · Cover kept in the page's store</h2>
+      <div class="shelf" id="s2"><span>Loading…</span></div>
+      <p class="result" id="r2">Waiting…</p>
+      <p class="what">Claude fetched this cover and saved it in this page's own store — the same kind of storage your live ledger uses.</p>
+    </section>
+
+    <section class="test">
+      <h2>3 · A picture you add</h2>
+      <div class="shelf" id="s3"><span>Nothing added yet</span></div>
+      <p class="result" id="r3">Waiting…</p>
+      <label class="pick">Choose a picture<input type="file" id="pick" accept="image/*"></label>
+      <p class="what">Pick any image (a cover you saved, a phone photo). It is shrunk, saved in the store, then shown back from the store. Reload the page: it should still be here.</p>
+    </section>
+  </div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+function say(n,ok,msg){const r=$("r"+n);r.className="result "+(ok?"ok":"bad");r.textContent=msg;}
+function show(n,src,onok,onbad){const s=$("s"+n);const img=new Image();img.alt="Book cover";img.onload=()=>{s.replaceChildren(img);onok&&onok(img)};img.onerror=()=>{s.innerHTML="<span>Picture did not load</span>";onbad&&onbad()};img.src=src;}
+const kb=n=>Math.round(n/1024*10)/10+" KB";
+
+// Test 1: outside address
+let done1=false;
+show(1,"https://covers.openlibrary.org/b/id/2282778-M.jpg",
+  ()=>{done1=true;say(1,true,"pictures from other websites show.")},
+  ()=>{done1=true;say(1,false,"the page blocks pictures from other websites.")});
+setTimeout(()=>{if(!done1){$("s1").innerHTML="<span>Picture did not load</span>";say(1,false,"no picture after 15 seconds — blocked.")}},15000);
+
+// Tests 2 and 3: the store
+let db=null;
+async function start(){
+  try{db=await window.claude?.use?.("db");}catch(e){db=null}
+  if(!db){say(2,false,"this view has no store.");say(3,false,"this view has no store.");$("pick").disabled=true;return;}
+  try{
+    const snap=await db.doc("covers/sample").get();
+    if(!snap.exists){say(2,false,"nothing found in the store yet.");$("s2").innerHTML="<span>Empty</span>";}
+    else{const d=snap.data();show(2,d.dataUri,()=>say(2,true,"stored covers show ("+kb(d.dataUri.length)+" in the store)."),()=>say(2,false,"the store had it, but it would not draw."));}
+  }catch(e){say(2,false,"could not read the store ("+(e.code||e.message)+").");}
+  try{
+    const snap=await db.doc("covers/yours").get();
+    if(snap.exists){const d=snap.data();show(3,d.dataUri,()=>say(3,true,"your picture came back from the store after reload ("+kb(d.dataUri.length)+")."));}
+    else{$("r3").textContent="Choose a picture to test.";$("r3").className="result";}
+  }catch(e){say(3,false,"could not read the store ("+(e.code||e.message)+").");}
+}
+(function wait(t){if(window.claude?.use||t>50)start();else setTimeout(()=>wait(t+1),200)})(0);
+
+$("pick").addEventListener("change",async ev=>{
+  const f=ev.target.files[0];if(!f)return;
+  $("r3").className="result";$("r3").textContent="Shrinking and saving…";
+  try{
+    const url=URL.createObjectURL(f);const img=new Image();
+    await new Promise((ok,bad)=>{img.onload=ok;img.onerror=bad;img.src=url});
+    const w=Math.min(400,img.naturalWidth),h=Math.round(img.naturalHeight*w/img.naturalWidth);
+    const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);
+    URL.revokeObjectURL(url);
+    const dataUri=c.toDataURL("image/jpeg",0.8);
+    if(!db){say(3,false,"this view has no store.");return;}
+    await db.doc("covers/yours").set({dataUri,name:f.name,savedAt:new Date().toISOString()});
+    const back=await db.doc("covers/yours").get();
+    show(3,back.data().dataUri,()=>say(3,true,"saved to the store and shown back ("+kb(dataUri.length)+"). Now reload the page."),()=>say(3,false,"saved, but it would not draw."));
+  }catch(e){say(3,false,"could not save ("+(e.code||e.message||"unreadable picture")+").");}
+});
+</script>
