@@ -164,16 +164,25 @@ function isUndecidedCard(p,dec){
   return !Object.values(dec.fields||{}).some(v=>v);
 }
 
+// EVERY DECIDED CARD LANDS IN ONE OF THREE COUNTS — her ask, 30 Sep: 53 cards
+// decided and the footer said 48, with nothing to say where the other 5 went.
+// Decided = to apply + quarantined + rejected, always, so the footer adds up.
 function countDecisions(proposals,decisions){
-  let acceptedCount=0,undecidedCount=0;
+  let acceptedCount=0,undecidedCount=0,quarantinedCount=0,rejectedCount=0;
   (proposals||[]).forEach((p,i)=>{
     const dec=(decisions||{})[i]||{};
     if(isUndecidedCard(p,dec)){undecidedCount++;return;}
-    if(p.type==="add"){ if(dec.mode==="accept")acceptedCount++; return; }
+    if(p.type==="add"){
+      if(dec.mode==="accept")acceptedCount++;
+      else if(dec.mode==="never")quarantinedCount++;
+      else rejectedCount++;
+      return;
+    }
     if(dec.mode==="addnew"){acceptedCount++;return;}
     if(Object.values(dec.fields||{}).some(v=>v==="accept"))acceptedCount++;
+    else rejectedCount++;
   });
-  return {acceptedCount,undecidedCount};
+  return {acceptedCount,undecidedCount,quarantinedCount,rejectedCount};
 }
 
 // ===== TEMPORARY, WITH countDecisions BECAUSE A FIXTURE MUST REACH IT =====
@@ -2730,7 +2739,7 @@ export default function App(){
       </div>
     );
   };
-  const{acceptedCount,undecidedCount}=countDecisions(proposals,decisions);
+  const{acceptedCount,undecidedCount,quarantinedCount,rejectedCount}=countDecisions(proposals,decisions);
 
   // v8.3 status, file model. Three states: fresh load = neutral line; your edits
   // = loud red banner; after Export/Save = calm green line. Green only appears once
@@ -3078,10 +3087,14 @@ export default function App(){
           );
         });})()}
       </div>
-      {showTop&&(
+      {/* TOP ON THE LEFT, BOTTOM ON THE RIGHT — her layout, 30 Sep. A pair
+          centred on the page, both shown once she has scrolled down. */}
+      {showTop&&(<>
         <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label="Return to top"
-          style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(-50%)",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>
-      )}
+          style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(calc(-100% - 5px))",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>
+        <button onClick={()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"})} aria-label="Jump to bottom"
+          style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(5px)",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2193"}</button>
+      </>)}
       {undo&&(
         <div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.onAction,borderRadius:4,padding:"7px 14px",fontSize:12,display:"flex",gap:10,alignItems:"center",zIndex:999,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
           {/* THE ORIGINAL STYLE, ONE WORD CHANGED — her ruling, 24 Sep:
@@ -3377,7 +3390,11 @@ export default function App(){
             </div>
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
               <button onClick={cancelRefresh} style={sBtn}>Cancel refresh</button>
-              <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>{acceptedCount} to apply</span>
+              {/* Rejected is named only when there is one: she asked for
+                  quarantined and to-apply, and a third "0" is one more number
+                  to read past. The three always add up to what is decided. */}
+              <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>
+                {(rejectedCount?rejectedCount+" rejected, ":"")+quarantinedCount+" quarantined, "+acceptedCount+" to apply"}</span>
               {/* THE COUNT IS THE WAY TO REACH ONE — raised as the gap the
                   block leaves and built at her ask. A number she cannot act on
                   is the thing that makes a hard gate feel arbitrary. It opens
@@ -3429,16 +3446,15 @@ export default function App(){
 
                   IT ASKS FIRST. What is left behind is not remembered anywhere
                   — that is not a fault to fix here, it is how refusing works
-                  today — so the confirm box says the number, says the way back,
-                  and says that rejections do not stick. Her call to make with
-                  the facts in front of her, every time, not once. */}
+                  today — so the confirm box says both numbers and the way back.
+                  Its wording is hers, 30 Sep. Her call to make with the facts
+                  in front of her, every time, not once. */}
               {offerPartialApply({acceptedCount,undecidedCount})&&<button
                 onClick={()=>setConfirmBox({
-                  title:"Update the ledger with part of this?",
+                  title:"Complete this partial import?",
                   text:acceptedCount+" decided "+(acceptedCount===1?"card":"cards")+" will go into your ledger now. "
-                    +undecidedCount+" undecided "+(undecidedCount===1?"card":"cards")+" will be left behind and are not remembered anywhere — "
-                    +"import the same sweep file again to pick them up. Anything you rejected will come back too. "
-                    +"Export / Save straight afterwards.",
+                    +undecidedCount+" undecided "+(undecidedCount===1?"card":"cards")+" will be left behind \u2014 "
+                    +"import them using the same sweep file.",
                   act:()=>applyRefresh(true)})}
                 title={"Apply the "+acceptedCount+" you have decided and come back to the rest later."}
                 style={{...sBtn,borderColor:C.accent,color:C.accent,fontWeight:600}}>

@@ -3945,6 +3945,17 @@ function scopeSelector(within, selector) {
  * Where a row was found is not written here: listing_note.js.
  */
 
+/**
+ * The note saying which dates came from somewhere other than a date field.
+ * A sentence on her card, so it opens with a capital: "Opening date …",
+ * "Opening and closing dates …". Both date notes are written here and nowhere else.
+ */
+function filledDatesNote(filled, how) {
+  const which = filled.join(' and ');
+  return which.charAt(0).toUpperCase() + which.slice(1)
+    + (filled.length > 1 ? ' dates ' : ' date ') + how;
+}
+
 function addNote(existing, note) {
   if (!existing) return note;
   // Notes are whole sentences now, so join them as sentences. Only fall back
@@ -6735,7 +6746,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
           if (!row.end_date && ed)   { row.end_date   = ed; filled.push('closing'); }
           if (filled.length) {
             row.notes = addNote(row.notes,
-              `${filled.join(' and ')} date taken from the site's structured data, not its visible page.`);
+              filledDatesNote(filled, 'taken from the site\'s structured data, not its visible page.'));
           }
           if (!row.summary && ev.description && ev.description.length > 60) {
             row.summary = ev.description.slice(0, 2000);
@@ -6794,7 +6805,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
         if (!row.end_date   && p.end)   { row.end_date   = p.end;   filled.push('closing'); }
         if (filled.length) {
           row.notes = addNote(row.notes,
-            `${filled.join(' and ')} date read from a sentence, not a date field: "${p.raw}".`);
+            filledDatesNote(filled, `read from a sentence, not a date field: "${p.raw}".`));
           // SAY SO WHERE A RUN WAS EXTENDED — here as well as on the listing
           // path. Samori's page reads "28 novembre 2025 – 10 marzo 2026 –
           // prorogata al 9 giugno 2026"; the row closed correctly on 9 June but
@@ -7587,6 +7598,7 @@ if (require.main === module) {
 // Exported for scraper/date.test.js. Only pure functions — nothing here touches
 // the network, the browser or the filesystem.
 module.exports = {
+  filledDatesNote,
   findDateRange, findDateRangeInProse, parseMonthDay,
   // Exported for the 23 Sep repair of her import file, which must apply the
   // CORRECTED rule rather than a copy of it.

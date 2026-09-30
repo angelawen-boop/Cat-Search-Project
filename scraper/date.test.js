@@ -23,7 +23,7 @@ const {
   classifyLoadError, isOwnListingPage, saysOngoing,
   expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination, VENUES, pickTitleLine,
   stripWeekdays,
-  addNote, finishNotes, scopeSelector, extensionNote, applyLookback,
+  addNote, filledDatesNote, finishNotes, scopeSelector, extensionNote, applyLookback,
 } = require('./sweep_prototype.js');
 const { seenOn, listingNote } = require('./listing_note.js');
 
@@ -2005,4 +2005,11 @@ test('a missing opening date is worded by whether the show has closed (her wordi
   assert.match(closed.notes, /Opening date not provided by the venue, even after the exhibition closed\./);
   assert.doesNotMatch(closed.notes, /while this exhibition is running/);
   assert.match(running.notes, /No opening date published while this exhibition is running\./);
+});
+
+test('DN-001: a date note opens with a capital, and says "dates" for two (her card, 30 Sep)', () => {
+  assert.equal(filledDatesNote(['closing'], "taken from the site's structured data, not its visible page."),
+    "Closing date taken from the site's structured data, not its visible page.");
+  assert.equal(filledDatesNote(['opening', 'closing'], 'read from a sentence, not a date field: "x".'),
+    'Opening and closing dates read from a sentence, not a date field: "x".');
 });
