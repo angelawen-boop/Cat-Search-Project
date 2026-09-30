@@ -168,7 +168,7 @@ should reach the app.
 | `jacquemart` | Exhibitions only — the card's own tag; operas, costume balls and other events refused (25 Sep) |
 | `orsay` | **Displays always kept**, "Focus on our collections" included — its collection is deep, like the Met's. **Every off-site show kept.** "Exceptional presentation" kept for now. Parcours, Immersive experience, Invitation dropped; an unseen tag is kept and named (25 Sep). Her count: 13 + 45 = 58 |
 | `lgd` | New York and London only — Hong Kong partnership shows ("& Wei, Hong Kong") and "LGD Hammer" auctions excluded. One exception to the lookback: *Yves Klein and the Tangible World*, its catalogue only just published — `keepDespiteLookback`, that one address (25 Sep) |
-| `morgan` | *Collections Spotlight* excluded — a standing rotation, not a show. Past blurbs read off the listing, pages not opened. Her count, 28 Sep: current 3, upcoming 5; past 2025-26 **20**, 2024-25 **3**, 2023-24 **8** — 39 |
+| `morgan` | *Collections Spotlight* excluded — a standing rotation, not a show. Past blurbs read off the listing, pages not opened — **unless the listing gives no description; then the page is opened** (30 Sep). A picture caption (`p.small`) is not a description. Her count, 28 Sep: current 3, upcoming 5; past 2025-26 **20**, 2024-25 **3**, 2023-24 **8** — 39 |
 | `rijks` | 37 rows, not chased further. *Asian Pavilion* was pulled by the venue |
 | `capo` | **Not count-verified and never will be** — see below |
 | `brera`, `borghese` | Their single extra row is a marker for a genuinely empty upcoming page |
@@ -290,7 +290,8 @@ this one alone. `stitch` and `compress` carry it untouched.
 **Built on `main`, NOT published: 35.4** — MoMA's shop search
 (`/collections/shop?q=`), no line at all with no ledger open, the Ashmolean and
 its shop, her chip order (fixture 19; chip "Levy", cards "Lévy Gorvy Dayan").
-**It must be live before any import carrying `ashmolean` rows.**
+**It must be live before any import carrying `ashmolean` rows.** Live on the
+test page as 35.4 · cloud 3 (§7.1).
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
@@ -781,6 +782,8 @@ here.
   old run's output.**
 - **Scroll a listing before reading it**, and measure its height AFTER the wait.
 - **Test a general rule where it was NOT derived.**
+- **A filled field is not a right one** — a picture caption passed for a
+  listing's description, so the page holding the real one was never opened.
 
 ### Judgement made silently where she should have seen it
 
@@ -926,9 +929,9 @@ each other; not handled). Buttons there: **Load** (a ledger file), **Save**,
 **Import** (a sweep CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **35.2 · cloud 3** (footer shows 34.13 · cloud 3); the
-branch holds **35.4 · cloud 3** (`main` merged in 30 Sep). Edits stay
-"cloud 3" until she says. Merge `main` in again before the page is rebuilt.
+live on the test page **35.4 · cloud 3**, published 30 Sep (`main` merged in
+that day). Edits stay "cloud 3" until she says. Merge `main` in again before
+the page is rebuilt.
 
 **What the store holds:**
 - **The live ledger** — the only thing the app reads and writes as she works.
@@ -976,12 +979,15 @@ Parked: two tabs open at once.
 
 ### 2. The held pile — the next import (six venues)
 
-**Stitched and compressed 30 Sep: `stitch_20260930_0758/sweep_compressed.csv`,
-189 rows** (Ashmolean 24, MAD 20, British Museum 34, d'Orsay 58, Morgan 39,
-MoMA 14). Through the intake against her 24 Sep ledger: 189 Add, 0 unfiled.
-MoMA is the sweep, not the 4-row saved-pages run (her ruling).
+**Stitched and compressed 30 Sep: `stitch_20260930_1013/sweep_compressed.csv`,
+189 rows, every one described** (Ashmolean 24, MAD 20, British Museum 34,
+d'Orsay 58, Morgan 39, MoMA 14). Through the intake against her 24 Sep
+ledger: 189 Add, 0 unfiled. MoMA is the sweep, not the 4-row saved-pages run
+(her ruling). Supersedes `stitch_20260930_0758`, whose Morgan *Bellini* row
+carried a picture caption.
 
-- **App 35.4 must be published before the import** — it knows `ashmolean`.
+- **Import it on the test page** — 35.4 · cloud 3 is live there and knows
+  `ashmolean`.
 - She works the cards in sittings with the partial-apply button (§4).
 
 ### 3. Fixes not yet checked in the cases they were written for
