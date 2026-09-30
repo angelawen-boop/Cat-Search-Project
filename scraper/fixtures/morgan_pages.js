@@ -100,6 +100,41 @@ const check = (name, ok, got) => {
     check('MP-008: upcoming — all five, each named and dated from its card',
       up.length === 5 && up.every(r => r.title && r.start_date && r.end_date),
       up.map(r => `${r.title} ${r.start_date}→${r.end_date}`).join(' | '));
+
+    // MP-009 — THE WHOLE SWEEP, NOT THE LISTINGS ONLY. 30 Sep, her first live
+    // Morgan run: 39 kept after the lookback, 8 written. The past rows take
+    // their description off the listing and were cut from the list of pages to
+    // open — which was also the list written to the CSV. MP-001 to MP-008 stop
+    // before that step (listingOnly), so none could see it. Show pages here
+    // are one plain paragraph each: the question is which rows come back.
+    const full = await browser.newContext();
+    await full.route(() => true, r => {
+      const u = r.request().url();
+      if (SERVED[u]) return r.fulfill({ status: 200, contentType: 'text/html', body: SERVED[u] });
+      if (u.startsWith(B + '/exhibitions/') && r.request().resourceType() === 'document') {
+        return r.fulfill({ status: 200, contentType: 'text/html',
+          body: '<html><body><article class="exhibitions"><h1>Show</h1><div class="field--name-body"><p>'
+            + 'A plain paragraph standing in for the show page, long enough to count as curatorial text for this check. '.repeat(3)
+            + '</p></div></article></body></html>' });
+      }
+      return r.abort();
+    });
+    const fullPage = await full.newPage();
+    console.log = () => {};
+    let written;
+    try { written = await S.scrapeVenue(fullPage, 'morgan'); }
+    finally { console.log = log; }
+    const kept = S.applyLookback(rows.filter(r => !r.title.startsWith('[')), 'morgan', 'fixture');
+    const keptPast = kept.filter(r => r._fromListing).map(r => r.url);
+    const writtenUrls = new Set(written.map(r => r.url));
+    check('MP-009: the full sweep writes every past show whose description came off the listing',
+      keptPast.length > 0 && keptPast.every(u => writtenUrls.has(u)),
+      `${keptPast.filter(u => !writtenUrls.has(u)).length} of ${keptPast.length} missing from the output`);
+    check('MP-010: and their descriptions are the listing\'s, not left empty',
+      written.some(r => keptPast.includes(r.url))
+      && written.filter(r => keptPast.includes(r.url)).every(r => (r.summary || '').length > 80),
+      written.filter(r => keptPast.includes(r.url) && (r.summary || '').length <= 80).map(r => r.title).join(' | '));
+    await full.close();
   } finally {
     await browser.close();
   }

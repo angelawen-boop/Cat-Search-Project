@@ -30,13 +30,16 @@ test('V-002 a blocked venue is present with no rows, never silently dropped', ()
   // of vanishing from a derived table, because nothing they produce is real.
   // moma left this list on 26 Sep: her laptop's 16 Sep runs, pushed that day,
   // hold 24 listing rows read before its exhibition pages refused. brit left
-  // it on 28 Sep: her laptop's headed sweep, 33 rows.
-  for (const code of ['morgan']) {
-    const v = collect().find(x => x.code === code);
-    assert.ok(v, `${code} missing`);
-    assert.strictEqual(v.rows, null, `${code} should have no rows`);
-    assert.ok(v.triedFrom, `${code} should still record that it was tried`);
+  // it on 28 Sep: her laptop's headed sweep, 33 rows. morgan, the last, left
+  // it on 30 Sep: her laptop's headed sweep. No real venue is blocked-only now,
+  // so the rule is asked of whichever ones are — and morgan's move is checked
+  // directly, so this test still says something while that list is empty.
+  const all = collect();
+  for (const v of all.filter(x => x.rows === null)) {
+    assert.ok(v.triedFrom, `${v.code} has no rows and should still record that it was tried`);
   }
+  const morgan = all.find(x => x.code === 'morgan');
+  assert.ok(morgan && morgan.rows > 0, 'morgan brought rows on 30 Sep and should be credited with them');
 });
 
 test('V-003 a row count is only ever attributed to a run that actually holds it', () => {

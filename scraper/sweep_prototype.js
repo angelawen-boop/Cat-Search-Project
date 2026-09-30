@@ -5968,15 +5968,16 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
   if (listingOnly) return rows;
 
   // Cut before opening detail pages where the listing gave us enough to judge.
-  const toFetch = (v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing'))
-    // A ROW WHOSE BLURB CAME OFF THE LISTING NEEDS NO PAGE OPENED.
-    //
-    // Only rows from a page whose recipe named a `listingRow` reach here with a
-    // summary already on them, so this filters exactly those and nothing else.
-    // Counted from the array AFTER the change rather than from the marks, so
-    // the log line below describes what happened rather than what was intended.
-    .filter(r => !r._fromListing);
-  await fetchIndividualPages(page, toFetch, code);
+  // `toFetch` is every row that goes on from here — and what is WRITTEN.
+  const toFetch = v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing');
+  // A ROW WHOSE BLURB CAME OFF THE LISTING NEEDS NO PAGE OPENED — but it is
+  // still a row. Only rows from a page whose recipe named a `listingRow` carry
+  // a summary here, so only those skip the fetch; they stay in `toFetch`.
+  //
+  // 30 Sep, the Morgan's first live run: this filter used to sit on `toFetch`
+  // itself, so the rows it spared a page load were also left out of the CSV —
+  // 39 kept after the lookback, 8 written. MP-009 runs the whole path.
+  await fetchIndividualPages(page, toFetch.filter(r => !r._fromListing), code);
 
   // ROWS THE VENUE'S OWN PAGE LABELLED AS SOMETHING OTHER THAN AN EXHIBITION.
   // Marked during the detail fetch, dropped here, and each one named — an

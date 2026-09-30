@@ -1014,6 +1014,11 @@ keeps making in new clothes.
 - **A rebuild choosing between two copies by a key both copies share.** The
   21 Sep one-sweep-per-venue rebuild took the FIRST Louvre copy — the
   rate-limited sweep's empty one — and dropped two descriptions.
+- **A recipe called ready on fixtures that stop before the step that writes.**
+  The Morgan's past, 30 Sep: every listing read right (39, her count), then 31
+  rows whose blurb came off the listing were cut with the pages-to-open list —
+  which was also the list written. 8 of 39 reached the file. MP-001–008 ran
+  `listingOnly`; MP-009/010 run the whole path.
 - **Leaving the reasoning for a hand-rebuilt data file in a comment inside the
   one-off script.** Three sessions later the guide still described it wrongly and
   SHE had to type the history out again — `docs/import-file.md` now holds it.
@@ -1333,7 +1338,15 @@ link at an ISBN search — museum shops search by title.)*
 
 Imported by her with item 6's file; she checked every past show in the app.
 
-### 5. The headed venues — `brit` DONE 28 Sep, `orsay` DONE 30 Sep; `morgan` next; `moma` settled
+### 5. The headed venues — `brit` DONE 28 Sep, `orsay` DONE 30 Sep; `morgan` to re-run; `moma` settled
+
+**Morgan, 30 Sep 15:38 — the SITE was clean, the FILE was not.** Mode B, 18
+pages, no challenge; 39 kept after the lookback, her count — but only the 8
+current/upcoming written: an engine fault dropped every row whose blurb is read
+off the listing (§6, "Joins"). Fixed and proven (MP-009/010). The listing
+pages are not kept, so the 31 cannot be rebuilt offline: **one re-run, her
+go** (`run_2026-09-30_153840` is superseded by it). Stays the container's
+until that re-run is clean and complete.
 
 **d'Orsay, 30 Sep 14:04 — CLEAN, her laptop, headed mode B.** 54 pages ~30s
 apart (6 listings + 48 show pages; 10 more from pages kept 29 Sep), no
