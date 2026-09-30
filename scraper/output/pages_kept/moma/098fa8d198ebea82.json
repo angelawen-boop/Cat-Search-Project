@@ -1,0 +1,11 @@
+{
+  "url": "https://www.moma.org/calendar/exhibitions/5926",
+  "savedAt": "2026-09-30T06:29:00.712Z",
+  "outcome": "text",
+  "changes": {
+    "start_date": "2026-09-27",
+    "summary": "We swim in an ocean of data. Every click, weather pattern, border crossing, and blood test is tracked and fed into systems that increasingly inform our daily behaviors. Data, however, is not knowledge. Before it can be put to use, it must first be translated—through design. Full Disclosure explores how contemporary designers act as essential interpreters of this cultural revolution, transforming raw data into visual stories we can understand and use. While the practice of mapping information is as ancient as abstract thought—stretching back to cosmological charts and cave drawings—computer logic, algorithms, machine learning, and artificial intelligence have upended the field of data visualization. Today’s practitioners create dynamic networks and animated narratives, expanding far beyond traditional charts and graphs. At a time when public confidence in big data and institutions has frayed, data visualization deals in trust as much as in truth, rendering design choices and sources ever more vital. Full Disclosure showcases an array of projects, both digital and analog, that encourage close looking and critical examination. Visitors will discover how contemporary information designers distill data to give form to invisible systems, expose hidden structures of power, preserve histories, and capture the intimate nuances of human experience.",
+    "notes": "opening date taken from the site's structured data, not its visible page."
+  },
+  "titleReport": []
+}
