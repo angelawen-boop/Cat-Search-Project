@@ -37,11 +37,22 @@ const OUTPUT_DIR = path.join(__dirname, 'output');
 const RAW_CSV = 'sweep.csv';
 const MARKER_SENTINEL = 'Marker row, not an exhibition.';
 
-// The venue codes the app will accept. Kept here rather than imported from the
-// scraper so this can run against a stitched file the scraper never produced.
-const KNOWN_VENUES = new Set(['met','ng','rijks','acq','louvre','uffizi','borghese','brera',
-  'capo','dellav','khm','moma','frick','morgan','menil','artic','va','brit','wallace',
-  'tate-modern','tate-britain','lgd','jacquemart','mam','orsay','mad']);
+// The venue codes the app will accept — READ FROM THE APP'S OWN MUSEUMS LIST,
+// the very list its intake files against. Not imported from the scraper, so
+// this runs against a stitched file the scraper never produced. It was a
+// hand-typed copy until 30 Sep, and it drifted: the Ashmolean was added to
+// the app on 27 Sep and not here, so all 24 of its rows were refused as
+// unknown and sweep_log dropped its freshness dates.
+const APP_JSX = path.join(__dirname, '..', 'Cat_Watch.jsx');
+const KNOWN_VENUES = (() => {
+  const src = fs.readFileSync(APP_JSX, 'utf8');
+  const a = src.indexOf('const MUSEUMS = [');
+  const b = src.indexOf('const KNOWN_VENUES', a);
+  if (a === -1 || b === -1) throw new Error('qc: the MUSEUMS list was not found in Cat_Watch.jsx');
+  const ids = [...src.slice(a, b).matchAll(/\bid:"([^"]+)"/g)].map(m => m[1]);
+  if (!ids.length) throw new Error('qc: the MUSEUMS list in Cat_Watch.jsx holds no venue ids');
+  return new Set(ids);
+})();
 
 const isMarker = r => String(r.notes || '').trim().endsWith(MARKER_SENTINEL);
 
@@ -56,7 +67,7 @@ function fatalRows(rows) {
       'The row came from somewhere, so the file is malformed rather than the venue being unknown.',
       url: r.url, title });
     else if (!KNOWN_VENUES.has(vc)) out.push({ line, kind: 'unknown venue code', why:
-      `"${vc}" is not one of the 21 codes. The app would file it under "couldn't be filed".`,
+      `"${vc}" is not one of the app's ${KNOWN_VENUES.size} venue codes. The app would file it under "couldn't be filed".`,
       url: r.url, title });
     if (!title) out.push({ line, kind: 'no title', why:
       'There is no such thing as an exhibition with no name — either the venue recipe stopped '

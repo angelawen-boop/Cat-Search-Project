@@ -90,3 +90,10 @@ test('Q-010: a marker row is never reported, whatever its notes say', () => {
   assert.deepStrictEqual(QC.impossibleListings([row({ venue_code:'artic', title:'[past page]',
     start_date:'2026-01-01', notes: F('past 2024') + ' ' + MARKER })]), []);
 });
+
+test('Q-011: the codes QC accepts are exactly the app\'s MUSEUMS — one list, read from the app', () => {
+  const H = require('./fixtures/harness.js');
+  assert.deepStrictEqual([...QC.KNOWN_VENUES].sort(), [...H.KNOWN_VENUES].sort());
+  assert.ok(QC.KNOWN_VENUES.has('ashmolean'), 'the Ashmolean, added to the app 27 Sep');
+  assert.strictEqual(QC.fatalRows([row({ venue_code:'ashmolean', title:'Aphrodite', url:'https://www.ashmolean.org/exhibition/x' })]).length, 0);
+});
