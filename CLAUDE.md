@@ -290,6 +290,10 @@ this one alone. `stitch` and `compress` carry it untouched.
 no line at all with no ledger open, the Ashmolean and its shop, her chip order
 (fixture 19; chip "Levy", cards "Lévy Gorvy Dayan"). The test page carries the
 same as 35.4 · cloud 3 (§7.1).
+**Built, NOT published: 35.5** (branch: 35.5 · cloud 3) — her batch from the
+held-pile import, 30 Sep: review footer counts quarantined, her partial-import
+wording, a jump-to-bottom button, Re-check's sold-out rules (R-011b). **She is batching changes; publish only when
+she says.**
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
@@ -929,7 +933,7 @@ each other; not handled). Buttons there: **Load** (a ledger file), **Save**,
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
 live on the test page **35.4 · cloud 3**, published 30 Sep (`main` merged in
 that day). Edits stay "cloud 3" until she says. Merge `main` in again before
-the page is rebuilt.
+the page is rebuilt. **The branch holds 35.5 · cloud 3, unpublished** (§4).
 
 **What the store holds:**
 - **The live ledger** — the only thing the app reads and writes as she works.

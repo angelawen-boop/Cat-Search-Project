@@ -236,6 +236,30 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(shopLink(card(miller.title)).textContent.includes('(last seen)'), 'R-012: with the link kept as "(last seen)"');
   }
 
+  // ── R-011b: her Morgan Tarot, 30 Sep — sold out, with a note to earlier
+  // pre-order buyers. The words are the page's own (docs/shop_pages/). This
+  // proves the page's words and the sold-out rules reach Claude together; a
+  // scripted Claude cannot prove a real one obeys them — her Re-check does.
+  {
+    calls.length = 0;
+    const morgan = 'Tarot! Renaissance Symbols, Modern Visions $66.00 Sold Out '
+      + 'SOLD OUT! At this time, we are not expecting a second reprinting. If you pre-ordered a copy from the '
+      + 'first reprint, shipments will begin soon. Any preorders from this reprint will ship in the order we '
+      + 'received them. Due to high demand, processing times will last into October. Sold out Email me when available ';
+    script.mcp = (tool, args) => ({ payload: { results: [{ url: args.urls[0], title: 'Tarot!',
+      excerpts: [morgan + 'Details. '.repeat(40)] }], errors: [] } });
+    script.sample = () => ({ forSale: false, why: 'The page says Sold out.' });
+    await click(button(card(miller.title), /^Re-check museum shop$/));
+    const asked = (calls.find(x => x.kind === 'sample' && /"forSale"/.test(x.prompt)) || {}).prompt || '';
+    ok(asked.includes('If you pre-ordered a copy from the first reprint')
+       && /SOLD OUT OUTRANKS EVERYTHING ELSE ON THE PAGE/.test(asked)
+       && /ALREADY ordered or pre-ordered .* is NOT an offer to order/.test(asked)
+       && /a greyed-out button still prints its words/.test(asked)
+       && /a NEW order can be placed on it today/.test(asked),
+       'R-011b: the Morgan Tarot page reaches Claude with sold-out-outranks, past pre-orders and button-words rules',
+       asked.slice(0, 300));
+  }
+
   // ── R-013..R-017: CASE 2, it wasn't in the shop and now is ─────────────
   {
     calls.length = 0;
