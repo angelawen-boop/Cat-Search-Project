@@ -78,10 +78,10 @@ const MUSEUMS = [
   { id:"louvre", short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:"https://boutique.louvre.fr/en/search/products/?q=", shopCatalogues:"https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
   // French venues added 25 Sep 2026, after the Louvre. Same shop system as the
   // Louvre's: search box and "Exhibition catalogs" shelf, read off the live shop.
-  // d'Orsay, 25 Sep — her chip name "d'Orsay". Its shop is the national museums'
+  // d'Orsay, 25 Sep — her chip name "d'Orsay", "Orsay" everywhere from 30 Sep (her ruling). Its shop is the national museums'
   // shared one; the catalogues shelf is her link with the tracking tags removed,
   // and the search is the one she sent (it searches every museum on the site).
-  { id:"orsay", short:"d'Orsay", name:"Mus\u00e9e d'Orsay", city:"Paris", exBase:null, shopSearch:"https://www.boutiquesdemusees.fr/en/search/products/?q=", shopCatalogues:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", shopHome:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", listUrl:null },
+  { id:"orsay", short:"Orsay", name:"Mus\u00e9e d'Orsay", city:"Paris", exBase:null, shopSearch:"https://www.boutiquesdemusees.fr/en/search/products/?q=", shopCatalogues:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", shopHome:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", listUrl:null },
   // MAD Paris, 25 Sep. Its boutique has NO search box (her check, and none in
   // the page she saved), so the publications shelf is the only route in: 68
   // books over five pages, the newest first. It numbers pages in the PATH
@@ -1421,6 +1421,18 @@ async function readShopPage(book,url){
   return{kind:"read",forSale:d.forSale,why,results:f.results,detail:f.detail+"\n"+rd.detail+(why?"\n"+why:"")};
 }
 
+// Put text on the clipboard; true only if it got there. The clipboard API
+// first; a page in a frame may be refused it, so the old select-and-copy
+// route second. Neither throwing is taken as success.
+async function copyText(text){
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){ await navigator.clipboard.writeText(String(text)); return true; } }catch{}
+  try{
+    const t=document.createElement("textarea"); t.value=String(text); t.setAttribute("readonly","");
+    t.style.position="fixed"; t.style.opacity="0"; document.body.appendChild(t); t.select();
+    const ok=document.execCommand&&document.execCommand("copy"); document.body.removeChild(t); return !!ok;
+  }catch{ return false; }
+}
+
 async function recheckLinkedPage(row){
   const book=row.catalogueTitle||row.title;
   const p=await readShopPage(book,row.shopUrl);
@@ -1510,9 +1522,11 @@ export default function App(){
   const[prog,setProg]=useState({done:0,total:0,label:""});
   const[error,setError]=useState(null);
   const[rechecking,setRechecking]=useState(false);   // which of the card's two buttons is running
+  const[copySaid,setCopySaid]=useState(null);       // what the diagnostic's Copy button last managed
   const[recheckSaid,setRecheckSaid]=useState(null);  // {id,text,failed}: Re-check's answer, shown on that card
   const[saveErr,setSaveErr]=useState(false);
   const[debug,setDebug]=useState(null);
+  useEffect(()=>setCopySaid(null),[debug]); // a new diagnostic has not been copied
   const[showDebug,setShowDebug]=useState(false);
   const[lastRun,setLastRun]=useState(null);
   // QUARANTINE — "this should never have been an entry". Not the same as
@@ -2854,7 +2868,14 @@ export default function App(){
       if(out.trouble)setError("Found the catalogue for \u201c"+row.title+"\u201d, but the search "
         +"stopped part-way, so the ISBN or the publisher\u2019s page may be missing when they "
         +"exist. "+out.trouble.split("[")[0].trim()+" Press \u201cSearch again\u201d.");
-    } else setError("Catalogue search failed for \u201c"+row.title+"\u201d.");
+    } else {
+      setError("Catalogue search failed for \u201c"+row.title+"\u201d.");
+      // ON THE CARD TOO, in Re-check's words — her ask, 30 Sep: one line under
+      // the button she pressed, the details in the diagnostic.
+      const why=String(out.detail||"").split("\n").pop().split("[")[0].trim();
+      setRecheckSaid({id,failed:true,text:(row.looked?"Search again didn\u2019t run \u2014 ":"Search didn\u2019t run \u2014 ")
+        +(why||"the search stopped.")+" Nothing changed."});
+    }
     setBusy(false);setBusyId(null);setLookPhase(null);
   }
 
@@ -3332,7 +3353,13 @@ export default function App(){
         </div>}
         {busy&&prog.total>0&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
         {error&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
-        {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>{showDebug&&<pre style={{marginTop:4,padding:7,background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>}</div>}
+        {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>
+          {/* COPY — her ask, 30 Sep. It says whether the copy happened: a
+              browser can refuse the clipboard to a page in a frame, and a
+              button that always said "Copied" would be the green tick again. */}
+          {showDebug&&<button onClick={async()=>setCopySaid(await copyText(debug)?"Copied":"Couldn\u2019t copy \u2014 select the text instead")} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0,marginLeft:12}}>{"\u29c9 Copy"}</button>}
+          {showDebug&&copySaid&&<span style={{fontSize:10,color:C.soft,marginLeft:8}}>{copySaid}</span>}
+          {showDebug&&<pre style={{marginTop:4,padding:7,background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>}</div>}
         {/* NOT GATED ON A LEDGER EITHER, matching the panel below, whose own
             comment has said so since 20 Sep while this row quietly required
             one. When a sweep last ran is what the PAGE knows about the world,
@@ -3405,7 +3432,11 @@ export default function App(){
           {counts.dismissed>0&&<span><b>{counts.dismissed}</b> Dismissed</span>}
           <button onClick={()=>{setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);}} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Search">{"\uD83D\uDD0D"}</button>
         </div>
-        {showSearch&&<div style={{marginTop:6}}><input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search exhibitions\u2026" style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/></div>}
+        {/* THE CROSS CLEARS WHAT SHE TYPED — her ask, 30 Sep: right-aligned inside
+            the box, there while there is text to clear. */}
+        {showSearch&&<div style={{marginTop:6,position:"relative"}}><input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search exhibitions\u2026" style={{width:"100%",padding:"7px 30px 7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
+          {search&&<button onClick={()=>{setSearch("");if(searchRef.current)searchRef.current.focus();}} aria-label="Clear search" title="Clear"
+            style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:C.soft,fontSize:16,lineHeight:1,cursor:"pointer",padding:"2px 4px"}}>{"\u00d7"}</button>}</div>}
       </header>
 
       <div style={{maxWidth:760,margin:"0 auto 12px",display:"flex",flexDirection:"column",gap:5}}>
@@ -3527,6 +3558,7 @@ export default function App(){
                     <div>
                       <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue search run yet.</p>
                       <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{...pBtn,padding:"6px 12px",fontSize:12}}>{isBusy?searchingLabel:"Find catalogue"}</button>
+                      {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
                     </div>
                   ):noCat?(
                     <div>
