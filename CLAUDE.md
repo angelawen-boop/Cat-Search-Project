@@ -290,10 +290,13 @@ this one alone. `stitch` and `compress` carry it untouched.
 no line at all with no ledger open, the Ashmolean and its shop, her chip order
 (fixture 19; chip "Levy", cards "Lévy Gorvy Dayan"). The test page carries the
 same as 35.4 · cloud 3 (§7.1).
-**Built, NOT published: 35.5** (branch: 35.5 · cloud 3) — her batch from the
-held-pile import, 30 Sep: review footer counts quarantined, her partial-import
-wording, a jump-to-bottom button, Re-check's sold-out rules (R-011b), British Museum Press and Éditions Les Arts Décoratifs as self-published (C-072a/b), "Search (again) didn't run" on the card (R-011c), Copy on the diagnostic (R-011d/e), a clear cross in the search box (S-004), chip "Orsay". **She is batching changes; publish only when
-she says.**
+**35.5 · cloud 3 live on the test page, 30 Sep** (her working app, §7.1) —
+the held-pile batch: footer counts quarantined, her partial-import wording,
+jump-to-bottom, Re-check's sold-out rules (R-011b), British Museum Press and
+Éditions Les Arts Décoratifs self-published (C-072a/b), "Search (again)
+didn't run" on the card with no banner (R-011c), Copy on the diagnostic, a
+clear cross in the search box, chip "Orsay". **`main`'s 35.5 is not on her
+main app** — only on her say.
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
@@ -932,9 +935,10 @@ each other; not handled). Buttons there: **Load** (a ledger file), **Save**,
 **Import** (a sweep CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **35.4 · cloud 3**, published 30 Sep (`main` merged in
+live on the test page **35.5 · cloud 3**, published 30 Sep (`main` merged in
 that day). Edits stay "cloud 3" until she says. Merge `main` in again before
-the page is rebuilt. **The branch holds 35.5 · cloud 3, unpublished** (§4).
+the page is rebuilt. The page's title is "Cat Watch Cloud Test" — set it in
+`build/dist/index.html` before publishing (the shell says "Cat Watch").
 
 **What the store holds:**
 - **The live ledger** — the only thing the app reads and writes as she works.
@@ -989,9 +993,8 @@ ledger: 189 Add, 0 unfiled. MoMA is the sweep, not the 4-row saved-pages run
 (her ruling). Supersedes `stitch_20260930_0758`, whose Morgan *Bellini* row
 carried a picture caption.
 
-- **Import it on the test page** — 35.4 · cloud 3 is live there and knows
-  `ashmolean`.
-- She works the cards in sittings with the partial-apply button (§4).
+- **In progress on the test page (30 Sep):** Morgan and MoMA applied, the rest
+  worked in sittings with the partial-apply button (§4), re-importing this file.
 
 ### 3. Fixes not yet checked in the cases they were written for
 
@@ -1010,11 +1013,12 @@ for 10s, which sweeps have obeyed since 27 Sep. **Nothing to do now** — no
 probe. The next monthly sweep reads it; a refusal shows as a marker row. Record
 the result here and close it.
 
-### 5. A dead shop link — built, waiting on a real case
+### 5. A dead shop link — first real case met
 
-"Re-check museum shop" (§4). Proven live once: "still for sale" (artic, *Lee
-Miller*). **Not yet met a real sold-out, pulled or redirected shop page.** When
-she presses it on one, check the result.
+"Re-check museum shop" (§4). First real sold-out page, 30 Sep: Morgan *Tarot*
+read as "still for sale" — the model took a note to past pre-order buyers as an
+offer. Rules fixed in 35.5 (R-011b, her saved page in `docs/shop_pages/`).
+**Next:** she presses Re-check on *Tarot* again; it should read "No longer".
 
 ### 6. Catalogue lookup generally
 
@@ -1029,28 +1033,20 @@ She is noting issues as she uses it, for a later debugging session.
   429. Untested: `.oembed` once the 429 has cleared — it normally carries an
   in-stock yes/no. Shopify shops: morgan, artic, moma, ashmolean, lgd, menil,
   wallace, acq. `docs/shop_pages/README.md`.
-- **Orsay (and every Boutiques de musées shop — louvre, jacquemart): the book
-  is found on the shelf but never gets its own link.** Proven 30 Sep: the
-  connector's copy of the shelf, excerpt and full page alike, has titles and
-  prices but NO product links, so the read can only name the shelf
-  (`listedOnly`) and the Museum shop button falls back to the shop's search for
-  the EXHIBITION's English title — site-wide at Orsay, so posters and mugs.
-  **Proposed, awaiting her yes (it changes her 25 Sep ruling):** when the book
-  was read off the shop's own shelf, search the shop for the BOOK's title as
-  the shop printed it ("John Singer Sargent. Éblouir Paris"). No ISBN either:
-  the book's page, where it is printed, is never opened.
-- **MAD, same outcome (her find, 30 Sep):** *Christofle* stopped at the shelf
-  (`/mads-publications/c462/1/`); the book's own page
-  (`/en/decorative-arts/christofle-brilliant-story/14474.html`) was never
-  given. **Likely the same missing product links — a guess, not tested at MAD.**
-  Opening it would have named the publisher, Éditions Les Arts Décoratifs (now
-  on `SELF_PUBLISHERS`, her addition).
-- **OPEN, general (her ask, 30 Sep): the lookup reports "no ISBN" where one
-  plain web search finds it.** Read from the code: the ISBN search
-  (`fillFromWeb`) leaves out the venue's name; each result is cut to 700
-  characters before it is read; no result page is ever opened; and the verdict
-  "No ISBN anywhere" claims more than excerpts can show. Fixes proposed to her,
-  not yet agreed.
+- **TO BE CONTINUED — the French shops stop at the shelf** (Orsay 30 Sep,
+  MAD *Christofle*; likely louvre, jacquemart): the book is found on the shelf,
+  never its own page, so no ISBN and no publisher; the Museum shop button
+  falls back to a search. **Proven:** Parallel's copy of the Orsay shelf,
+  excerpt and full page alike, keeps plain text links (page 2, 3) and has none
+  of the book links; `web_fetch` has no raw-page option. At Orsay and MAD one
+  link wraps the whole tile (picture, title, price); the Morgan's shelf also
+  has a plain title link, and its lookup reaches the book. **Not proven:** that
+  tile-wrapping links are what Parallel drops. Her question, open: why the
+  button cannot open what the app already saw.
+- **OPEN, for later (her ask, 30 Sep): the lookup says "no ISBN" where one
+  plain web search finds it** (Ashmolean *In Bloom*). From the code: the ISBN
+  search (`fillFromWeb`) omits the venue's name, reads 700 characters of each
+  result, opens none, and "No ISBN anywhere" claims more than that.
 - **FOR THE VERSION AFTER 35.5 (her ask, 30 Sep) — a Booko button** among the
   buy links. To discuss first: its address shapes (by ISBN, and by title when
   there is none) are unchecked.
