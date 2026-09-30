@@ -432,6 +432,8 @@ function runtime(answer, log) {
        'C-072: a leading "The" is noise, not a different publisher');
     eq(api.isSelfPublisher('The British Museum Press'), true,
        'C-072a: the British Museum Press is on the list — her addition, 30 Sep');
+    eq(api.isSelfPublisher('\u00c9ditions Les Arts D\u00e9coratifs'), true,
+       'C-072b: so is \u00c9ditions Les Arts D\u00e9coratifs, accents and all — her addition, 30 Sep');
 
     // THE TWO CASES SHE NAMED. A venue-based rule would have suppressed the
     // search on both of these; a publisher-based one cannot.

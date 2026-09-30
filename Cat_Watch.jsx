@@ -879,6 +879,7 @@ const SELF_PUBLISHERS = new Set([
   "national gallery global",              // ng \u2014 her row, Zurbaran
   "metropolitan museum of art",           // met
   "british museum press",                 // brit — her addition, 30 Sep (Bayeux Tapestry)
+  "editions les arts decoratifs",         // mad — her addition, 30 Sep (Christofle); normPublisher drops the accents
 ]);
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){
