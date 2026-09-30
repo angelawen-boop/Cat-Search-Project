@@ -1,0 +1,175 @@
+[2026-09-30T04:04:01.968Z] Cat Watch Sweep Prototype — starting
+[2026-09-30T04:04:01.973Z] Lookback floor: 2024-07-01
+[2026-09-30T04:04:01.974Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-09-30_140401
+[2026-09-30T04:04:01.974Z] Machine: home (no proxy, so this is not the container)
+[2026-09-30T04:04:01.974Z] NAMED BY HAND, and not this machine's job: orsay.
+[2026-09-30T04:04:01.974Z] Running them anyway — naming a venue always wins. Both machines
+[2026-09-30T04:04:01.975Z] sweeping one venue doubles what it sees, and met and artic both
+[2026-09-30T04:04:01.975Z] rate-limit, so do not make a habit of it.
+[2026-09-30T04:04:01.975Z] Venues this run: orsay
+[2026-09-30T04:04:01.977Z] 
+[2026-09-30T04:04:01.977Z] ────────────────────────────────────────────────────────────
+[2026-09-30T04:04:01.978Z]   PACING — her machine
+[2026-09-30T04:04:01.978Z] ────────────────────────────────────────────────────────────
+[2026-09-30T04:04:01.979Z]   Gap between pages: about 30s, varied 75–125%, per gatekeeper.
+[2026-09-30T04:04:01.979Z]   One venue at a time behind each gatekeeper; different gatekeepers side by side.
+[2026-09-30T04:04:01.979Z]   The first refusal or bot check stops that gatekeeper for the rest of the run.
+[2026-09-30T04:04:01.981Z]   In the Chrome you opened and left open, in a tab of its own (mode B): orsay
+[2026-09-30T04:04:02.036Z]   orsay: behind Cloudflare, from an earlier run.
+[2026-09-30T04:04:02.037Z]   Venues this run: orsay
+[2026-09-30T04:04:02.038Z] Proxy: (none — direct egress assumed)
+[2026-09-30T04:04:02.038Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-09-30T04:04:02.038Z]   In a Claude Code container this means every venue will fail to load.
+[2026-09-30T04:04:02.041Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-09-30T04:04:05.449Z] Running 0 venue(s) headless, 0 at a time (one page at a time within each venue)
+[2026-09-30T04:04:05.449Z] Running 1 venue(s) in a visible Chrome, one after another: orsay
+[2026-09-30T04:04:07.239Z] [orsay] 
+[2026-09-30T04:04:07.240Z] [orsay] ────────────────────────────────────────────────────────────
+[2026-09-30T04:04:07.241Z] [orsay]   ORSAY — Musée d'Orsay, Paris
+[2026-09-30T04:04:07.241Z] [orsay] ────────────────────────────────────────────────────────────
+[2026-09-30T04:04:07.242Z] [orsay]   Fetching current/upcoming: https://www.musee-orsay.fr/en/program/whats-on/exhibitions
+[2026-09-30T04:04:07.296Z] [orsay]   robots.txt (www.musee-orsay.fr, kept copy of 2026-09-27): states no delay, 32 path(s) off-limits
+[2026-09-30T04:04:07.301Z] [orsay]   paced: request 1 via Cloudflare
+[2026-09-30T04:04:13.802Z] [orsay]     the venue tags this "Parcours", not an exhibition, excluded: “I Spend My Life Painting”
+[2026-09-30T04:04:13.854Z] [orsay]     the venue tags this "Immersive experience", not an exhibition, excluded: A Statue for Liberty: An immersive virtual reality experience
+[2026-09-30T04:04:14.353Z] [orsay]   current/upcoming: 15 links seen -> 0 navigation, 0 already-seen URL, 2 tagged by the venue as another kind of event -> 13 collected (0 of them with no readable title)
+[2026-09-30T04:04:14.364Z] [orsay]   Fetching past: https://www.musee-orsay.fr/en/ressources/expositions-passees
+[2026-09-30T04:04:36.300Z] [orsay]   paced: request 2 via Cloudflare, after 22s
+[2026-09-30T04:04:40.653Z] [orsay]     the venue tags this "Parcours", not an exhibition, excluded: “100 Works that Tell the Story of Work” itinerary
+[2026-09-30T04:04:40.988Z] [orsay]     the venue tags this "Invitation", not an exhibition, excluded: Larissa Fassler: État des lieux
+[2026-09-30T04:04:40.988Z] [orsay]   past: 14 links seen -> 0 navigation, 0 already-seen URL, 2 tagged by the venue as another kind of event -> 12 collected (0 of them with no readable title)
+[2026-09-30T04:04:40.990Z] [orsay]   Fetching past p1: https://www.musee-orsay.fr/en/ressources/expositions-passees?page=1
+[2026-09-30T04:05:04.522Z] [orsay]   paced: request 3 via Cloudflare, after 24s
+[2026-09-30T04:05:09.693Z] [orsay]   past p1: 14 links seen -> 0 navigation, 0 already-seen URL -> 14 collected (0 of them with no readable title)
+[2026-09-30T04:05:09.693Z] [orsay]   Fetching past p2: https://www.musee-orsay.fr/en/ressources/expositions-passees?page=2
+[2026-09-30T04:05:35.313Z] [orsay]   paced: request 4 via Cloudflare, after 26s
+[2026-09-30T04:05:41.349Z] [orsay]   past p2: 14 links seen -> 0 navigation, 0 already-seen URL -> 14 collected (0 of them with no readable title)
+[2026-09-30T04:05:41.350Z] [orsay]   Fetching past p3: https://www.musee-orsay.fr/en/ressources/expositions-passees?page=3
+[2026-09-30T04:06:08.607Z] [orsay]   paced: request 5 via Cloudflare, after 27s
+[2026-09-30T04:06:13.271Z] [orsay]     the venue tags this "Immersive experience", not an exhibition, excluded: Tonight with the ImpressionistsParis 1874
+[2026-09-30T04:06:13.503Z] [orsay]     the venue tags this "Invitation", not an exhibition, excluded: AGORIA { Le Code d’Orsay } · Digital Art
+[2026-09-30T04:06:13.636Z] [orsay]     the venue tags this "Immersive experience", not an exhibition, excluded: Virtual Reality - Van Gogh’s Palette
+[2026-09-30T04:06:13.695Z] [orsay]   past p3: 14 links seen -> 0 navigation, 0 already-seen URL, 3 tagged by the venue as another kind of event -> 11 collected (0 of them with no readable title)
+[2026-09-30T04:06:13.696Z] [orsay]   Fetching past p4: https://www.musee-orsay.fr/en/ressources/expositions-passees?page=4
+[2026-09-30T04:06:44.139Z] [orsay]   paced: request 6 via Cloudflare, after 30s
+[2026-09-30T04:06:48.922Z] [orsay]     a tag not seen before, "Contemporary readings" — KEPT: Claude Rutault, After the Masters: The Gates of Painting
+[2026-09-30T04:06:49.080Z] [orsay]   past p4: 14 links seen -> 0 navigation, 0 already-seen URL -> 14 collected (0 of them with no readable title)
+[2026-09-30T04:06:49.080Z] [orsay]   PAGINATION end: past p4 — its newest exhibition closed 2024-01-21, before the 2024-07-01 floor, so every later page is older still
+[2026-09-30T04:06:49.083Z] [orsay]   lookback (listing): kept 58, dropped 20 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-09-30T04:06:49.086Z] [orsay]   reading 58 individual page(s)…
+[2026-09-30T04:06:49.086Z] [orsay]     page 1 of 58
+[2026-09-30T04:07:16.586Z] [orsay]   paced: request 7 via Cloudflare, after 27s
+[2026-09-30T04:07:22.409Z] [orsay]     page 10 of 58
+[2026-09-30T04:07:44.535Z] [orsay]   paced: request 8 via Cloudflare, after 22s
+[2026-09-30T04:08:14.734Z] [orsay]   paced: request 9 via Cloudflare, after 26s
+[2026-09-30T04:08:51.355Z] [orsay]   paced: request 10 via Cloudflare, after 34s
+[2026-09-30T04:09:23.602Z] [orsay]   paced: request 11 via Cloudflare, after 30s
+[2026-09-30T04:09:59.279Z] [orsay]   paced: request 12 via Cloudflare, after 32s
+[2026-09-30T04:10:32.365Z] [orsay]   paced: request 13 via Cloudflare, after 31s
+[2026-09-30T04:11:01.259Z] [orsay]   paced: request 14 via Cloudflare, after 27s
+[2026-09-30T04:11:28.471Z] [orsay]   paced: request 15 via Cloudflare, after 24s
+[2026-09-30T04:11:30.888Z] [orsay]     page 20 of 58
+[2026-09-30T04:11:55.416Z] [orsay]   paced: request 16 via Cloudflare, after 25s
+[2026-09-30T04:12:23.553Z] [orsay]   paced: request 17 via Cloudflare, after 26s
+[2026-09-30T04:12:52.585Z] [orsay]   paced: request 18 via Cloudflare, after 26s
+[2026-09-30T04:13:16.332Z] [orsay]   paced: request 19 via Cloudflare, after 21s
+[2026-09-30T04:13:52.818Z] [orsay]   paced: request 20 via Cloudflare, after 34s
+[2026-09-30T04:14:29.043Z] [orsay]   paced: request 21 via Cloudflare, after 32s
+[2026-09-30T04:14:58.239Z] [orsay]   paced: request 22 via Cloudflare, after 27s
+[2026-09-30T04:15:22.626Z] [orsay]   paced: request 23 via Cloudflare, after 22s
+[2026-09-30T04:15:45.735Z] [orsay]   paced: request 24 via Cloudflare, after 20s
+[2026-09-30T04:16:11.325Z] [orsay]   paced: request 25 via Cloudflare, after 24s
+[2026-09-30T04:16:14.329Z] [orsay]     page 30 of 58
+[2026-09-30T04:16:48.261Z] [orsay]   paced: request 26 via Cloudflare, after 34s
+[2026-09-30T04:17:16.883Z] [orsay]   paced: request 27 via Cloudflare, after 23s
+[2026-09-30T04:17:45.585Z] [orsay]   paced: request 28 via Cloudflare, after 26s
+[2026-09-30T04:18:16.675Z] [orsay]   paced: request 29 via Cloudflare, after 28s
+[2026-09-30T04:18:52.015Z] [orsay]   paced: request 30 via Cloudflare, after 32s
+[2026-09-30T04:19:20.838Z] [orsay]   paced: request 31 via Cloudflare, after 26s
+[2026-09-30T04:19:55.550Z] [orsay]   paced: request 32 via Cloudflare, after 31s
+[2026-09-30T04:20:27.185Z] [orsay]   paced: request 33 via Cloudflare, after 30s
+[2026-09-30T04:21:04.158Z] [orsay]   paced: request 34 via Cloudflare, after 34s
+[2026-09-30T04:21:31.432Z] [orsay]   paced: request 35 via Cloudflare, after 25s
+[2026-09-30T04:21:34.726Z] [orsay]     page 40 of 58
+[2026-09-30T04:21:56.758Z] [orsay]   paced: request 36 via Cloudflare, after 22s
+[2026-09-30T04:22:23.454Z] [orsay]   paced: request 37 via Cloudflare, after 24s
+[2026-09-30T04:22:57.994Z] [orsay]   paced: request 38 via Cloudflare, after 31s
+[2026-09-30T04:23:26.887Z] [orsay]   paced: request 39 via Cloudflare, after 27s
+[2026-09-30T04:24:03.638Z] [orsay]   paced: request 40 via Cloudflare, after 35s
+[2026-09-30T04:24:40.625Z] [orsay]   paced: request 41 via Cloudflare, after 34s
+[2026-09-30T04:25:07.704Z] [orsay]   paced: request 42 via Cloudflare, after 25s
+[2026-09-30T04:25:31.273Z] [orsay]   paced: request 43 via Cloudflare, after 21s
+[2026-09-30T04:25:55.369Z] [orsay]   paced: request 44 via Cloudflare, after 20s
+[2026-09-30T04:26:18.849Z] [orsay]   paced: request 45 via Cloudflare, after 21s
+[2026-09-30T04:26:21.692Z] [orsay]     page 50 of 58
+[2026-09-30T04:26:43.582Z] [orsay]   paced: request 46 via Cloudflare, after 22s
+[2026-09-30T04:27:11.592Z] [orsay]   paced: request 47 via Cloudflare, after 25s
+[2026-09-30T04:27:36.812Z] [orsay]   paced: request 48 via Cloudflare, after 23s
+[2026-09-30T04:28:06.828Z] [orsay]   paced: request 49 via Cloudflare, after 28s
+[2026-09-30T04:28:33.894Z] [orsay]   paced: request 50 via Cloudflare, after 24s
+[2026-09-30T04:29:04.926Z] [orsay]   paced: request 51 via Cloudflare, after 29s
+[2026-09-30T04:29:31.546Z] [orsay]   paced: request 52 via Cloudflare, after 24s
+[2026-09-30T04:29:59.699Z] [orsay]   paced: request 53 via Cloudflare, after 23s
+[2026-09-30T04:30:25.839Z] [orsay]   paced: request 54 via Cloudflare, after 24s
+[2026-09-30T04:30:27.939Z] [orsay]   Individual pages: 58 got text, 0 no curatorial text, 0 failed
+[2026-09-30T04:30:27.939Z] [orsay]   10 page(s) taken from an earlier attempt that was cut short — not asked for again (pages_kept/orsay)
+[2026-09-30T04:30:27.939Z] [orsay]   48 page(s) kept on disk as read (pages_kept/orsay)
+[2026-09-30T04:30:27.956Z] [orsay]   → 58 exhibitions, 58 with curatorial text → orsay.csv
+[2026-09-30T04:30:28.899Z] 
+[2026-09-30T04:30:28.899Z] ────────────────────────────────────────────────────────────
+[2026-09-30T04:30:28.899Z]   QC — faulty rows and exceptions
+[2026-09-30T04:30:28.899Z] ────────────────────────────────────────────────────────────
+[2026-09-30T04:30:28.899Z]   No faulty rows: every row has a title and a known venue code.
+[2026-09-30T04:30:28.899Z]   No exceptions: every venue looks like the last run that had it.
+[2026-09-30T04:30:28.900Z] 
+[2026-09-30T04:30:28.900Z] ────────────────────────────────────────────────────────────
+[2026-09-30T04:30:28.900Z]   SWEEP COMPLETE — SUMMARY
+[2026-09-30T04:30:28.900Z] ────────────────────────────────────────────────────────────
+[2026-09-30T04:30:28.900Z]   ORSAY: 58 exhibitions | 58 with text
+[2026-09-30T04:30:28.900Z] 
+[2026-09-30T04:30:28.900Z] ────────────────────────────────────────────────────────────
+[2026-09-30T04:30:28.900Z]   PACING — where each gatekeeper got to
+[2026-09-30T04:30:28.900Z] ────────────────────────────────────────────────────────────
+[2026-09-30T04:30:28.900Z]   Cloudflare: orsay — 54 clean page(s)
+[2026-09-30T04:30:28.900Z] 
+[2026-09-30T04:30:28.900Z] ────────────────────────────────────────────────────────────
+[2026-09-30T04:30:28.900Z]   COVERAGE — every link accounted for
+[2026-09-30T04:30:28.900Z] ────────────────────────────────────────────────────────────
+[2026-09-30T04:30:28.900Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-09-30T04:30:28.900Z]   -----------------------------------------------------------------------------------------------
+[2026-09-30T04:30:28.900Z]   orsay      current/upcoming                15     0       0     0        0        0         13
+[2026-09-30T04:30:28.900Z]   orsay      past                            14     0       0     0        0        0         12
+[2026-09-30T04:30:28.900Z]   orsay      past p1                         14     0       0     0        0        0         14
+[2026-09-30T04:30:28.901Z]   orsay      past p2                         14     0       0     0        0        0         14
+[2026-09-30T04:30:28.901Z]   orsay      past p3                         14     0       0     0        0        0         11
+[2026-09-30T04:30:28.901Z]   orsay      past p4                         14     0       0     0        0        0         14
+[2026-09-30T04:30:28.901Z] 
+[2026-09-30T04:30:28.901Z] 
+[2026-09-30T04:30:28.901Z] ────────────────────────────────────────────────────────────
+[2026-09-30T04:30:28.901Z]   TITLES TAKEN FROM THE EXHIBITION'S OWN PAGE — READ BEFORE SENDING
+[2026-09-30T04:30:28.901Z] ────────────────────────────────────────────────────────────
+[2026-09-30T04:30:28.901Z] 
+[2026-09-30T04:30:28.901Z]   NAMES STILL MISSING WORDS — the tab title carries words the page does not hold where the check looks:
+[2026-09-30T04:30:28.901Z]   orsay: recorded "Youssef Nabil: To dream again", tab says "Exhibition Youssef Nabil De rêver encore"
+    https://www.musee-orsay.fr/en/program/whats-on/exhibitions/youssef-nabil-de-rever-encore
+[2026-09-30T04:30:28.902Z]   orsay: recorded "A new dation at the Musée d’Orsay: Caillebotte’s Portrait de l’artiste au chevalet", tab says "Exhibition A new dation at the Musée d’Orsay: Caillebotte’s Portrait de l’artiste au chevalet [Portrait of the Artist at his Easel]"
+    https://www.musee-orsay.fr/en/program/whats-on/exhibitions/new-dation-musee-dorsay-caillebottes-portrait-de-lartiste-au-chevalet-portrait-artist-his-easel
+[2026-09-30T04:30:28.902Z]   orsay: recorded "Caillebotte: Painting men", tab says "Exhibition Gustave Caillebotte Painting men"
+    https://www.musee-orsay.fr/en/program/whats-on/exhibitions/gustave-caillebotte-painting-men
+[2026-09-30T04:30:28.902Z] 
+[2026-09-30T04:30:28.902Z]   seen      = links matching the venue's selector on that page
+[2026-09-30T04:30:28.902Z]   nav       = site navigation and filter links, not exhibitions
+[2026-09-30T04:30:28.902Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-09-30T04:30:28.902Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-09-30T04:30:28.902Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-09-30T04:30:28.902Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-09-30T04:30:28.902Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-09-30T04:30:28.902Z] 
+[2026-09-30T04:30:28.902Z] Network bridge: 0 requests served, 0 handed back from files already fetched (not asked again), 0 skipped (image/media/font), 0 failed
+[2026-09-30T04:30:28.902Z] 
+[2026-09-30T04:30:28.903Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-09-30_140401
+[2026-09-30T04:30:28.904Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-30_140401/sweep.csv  (58 rows — orsay:58)
+[2026-09-30T04:30:28.904Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-09-30_140401/log_2026-09-30_140401.txt
+[2026-09-30T04:30:28.904Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, mam, mad, ashmolean, jacquemart, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-09-30T04:30:28.904Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-09-30T04:30:28.904Z] No de-duplication is applied — see passThrough.
