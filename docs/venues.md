@@ -464,10 +464,11 @@ scripts the check runs, and a blocked check is a failed one. The probe's profile
 is bare Chrome and passes silently. **So never install anything into that
 profile: its plainness is the asset.**
 
-**What has NOT been shown:** that this survives a sweep. Five addresses fired
-back to back, four at one museum, and everything after the first was challenged
-— at Morgan too, because Cloudflare's judgement followed us across both sites.
-Pace is the open question, not access.
+**Pace, not access, was the problem that followed:** five addresses fired back
+to back, four at one museum, and everything after the first was challenged — at
+Morgan too, because Cloudflare's judgement followed us across both sites. Paced
+sweeps from her laptop have since been clean at all four Cloudflare venues — see
+"The headed venues" at the end of this file.
 
 The table below is kept as the record of what a blank profile gets.
 
@@ -771,3 +772,48 @@ these the wrong way round on the rotations and she corrected it.
   may not be an exhibition — known bug 1, and her call.
 - Artic has a separate **EVENTS** tab and an "Upcoming events" strip below the
   exhibition listings. Nothing from either reaches the output today.
+
+---
+
+## The headed venues — what each run proved, 22–30 Sep 2026
+
+Moved out of `CLAUDE.md` on 30 Sep, compressed. `brit`, `orsay`, `morgan`,
+`moma`: all behind Cloudflare, one pacing lane, all swept from her laptop.
+
+### The three modes, and what each run showed
+
+| Mode | What it is | Runs |
+|---|---|---|
+| A (`--launch-chrome`) | The sweep launches Chrome on the seeded profile | MoMA stopped at page 19 after 18 clean (27 Sep). d'Orsay 403 at 18 after 17 (29 Sep). British Museum 41 clean (28 Sep). All at 30s |
+| **B (default)** | She opens Chrome, warms it up, leaves it open; the sweep attaches | 30 Sep: d'Orsay 54 pages, Morgan 18 (twice), MoMA 25, British Museum 37. No challenge at all, four venues back to back with `--ignore-cooldown` |
+| C | Her everyday Chrome and profile | Rejected 28 Sep (`CLAUDE.md` §8) |
+
+Mode A's stops can't show whether the trigger was the number of pages or the
+number of minutes. That mode B is WHY the 30 Sep runs were clean is likely but
+not proven.
+
+### The runs that count, and what was fixed without sweeping again
+
+- **d'Orsay** `run_2026-09-30_140401`: 58 of 58 with text, her count
+  (13 + 45). 10 pages came from those kept on 29 Sep.
+- **Morgan** `run_2026-09-30_160740`: 39 of 39, her count. The 15:38 run
+  (`run_2026-09-30_153840`, superseded) wrote only 8: the engine dropped rows
+  whose text came off the listing (MP-009/010). The re-run asked for 8 show
+  pages again, because kept pages aren't reused once a venue has written a file,
+  even a wrong one. *Giovanni Bellini's "Pietà" Restored*: the listing's only
+  text is a picture caption and photo credit; the page isn't opened (her ruling).
+- **MoMA** `run_2026-09-30_162442`: 14, her count (9 + 5). It opened all 24
+  listed pages, because the recipe missed the listing's section headings. Fixed
+  so installations are dropped on the listing (MM-001–003). Three titles had lost
+  their colon (MM-004) and a gallery-closure notice was in one description
+  (MM-005); both were corrected offline. MoMA first went to the laptop on
+  22 Sep on the strength of one probe page, and came back.
+- **British Museum** `run_2026-09-30_165517`: 34 (her 33 + *Multiplied
+  wonders*, newly listed). A current card's two-line name was joined with a
+  space where the museum writes a colon (`brParts`, BM-016/017); three titles
+  were corrected offline. The earlier run on 28 Sep (mode A, 41 pages, 33 rows)
+  had *Korea*'s title taking the date line (RT-010), five pages outside the
+  cutoff opened (BM-013–015), and the same two-line fault on two rows.
+- **British Museum shop** (`britishmuseumshoponline.org`, a separate site
+  behind Varnish): gave her seeded Chrome a 403 on 28 Sep. Sweeps never visit
+  it, and the catalogue lookup hasn't met it yet.

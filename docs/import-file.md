@@ -185,3 +185,13 @@ this folder's compression decisions with the memory code before and after the
 fix, over the same memory files: two rows differ, one changes — the older
 show's description emptied and its "carried over" note removed (*Up Close*
 keeps identical words). Two cells in 419 rows.
+
+## 25 Sep — the new-venues import
+
+`stitch_20260925_0611/sweep_compressed.csv`: 75 rows (Levy Gorvy 28, MAM 19,
+Tate Britain 23, Jacquemart-André 5). Compared with her 24 Sep ledger: 66 new,
+2 Tate title corrections, 7 matching. `tate-britain`, `lgd` and `mam` were swept
+again first, because their runs came before fixes. Then stitch, compress, qc,
+and the cards were read through the app's intake. App 35 (then called 34.8) was
+published first, because the live app filed unknown venue codes as "Couldn't be
+filed".

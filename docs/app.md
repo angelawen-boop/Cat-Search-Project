@@ -942,3 +942,44 @@ architecture**. Consequences that hold:
 - **The data-gathering layer is swappable underneath**, never replacing the app.
 - When a session drifts toward "rebuild the app around a new backend" or
   "downgrade the app to fit the tools" — neither.
+
+---
+
+## 9. The cloud ledger — what's on screen (branch `claude/ledger-cloud`)
+
+Moved out of `CLAUDE.md` on 30 Sep, compressed. This is her wording and order,
+26 Sep. The branch code holds the exact strings; this is the map.
+
+- **Times** read "Sep 26, 2026 1:22pm" everywhere (`localReadable` =
+  `fmtRefresh`). File names keep the sortable stamp.
+- **Status lines, in order:**
+  1. The cloud line, green: "☁ Last cloud save: … (N minutes ago) · N
+     exhibitions". Or, when saving fails, the red "CLOUD COPY NOT SAVING" banner
+     ending with the last save time.
+  2. A blank line.
+  3. The loading line, black, dismissable with ×, replaced by the next Load.
+     It says either that the file differs from the last cloud save (with N
+     differences, and a safety snapshot taken), or that it's identical and no
+     snapshot was needed. The breakdown is in the diagnostic.
+  4. The saving line: the message green and bold, the file name black and plain.
+- **"Loaded N exhibitions from your file"** isn't wired while the loading line
+  shows. It still shows with no store, and for Reset, roll-back and Open.
+- **The Save panel:** a description box, "Also save a copy to cloud" (starts
+  ticked), Save now. The cloud copy is written first, so a cancelled file still
+  keeps it. Each half reports itself: "Local file saved. Extra copy also sent to
+  the cloud." / "Cloud copy kept. Local file not saved - cancelled."
+- **Cloud Saves tray**, beside Quarantine. Her own saves read
+  'Cloud copy of Export: "**description**" · N exhibitions', with only her
+  description in bold. Safety copies read "Safety snapshot before Load" /
+  "…Reset" / "…roll-back to <time>"; older stored labels are renamed on screen
+  only (`snapTitle`). Buttons: Download, and Roll back (asks first).
+- **After an Import is applied:** "Import complete and needs to be saved
+  offline and to the cloud — tap Save now", then the counts. It goes away when a
+  Save delivers both copies.
+- **The amber "not saved to a file" banner isn't wired, but it isn't deleted
+  either** (`FILE_UNSAVED_WARNING`). If the trial fails she goes back to
+  exporting by hand and needs it again. Load and Reset ask first only while the
+  red banner shows.
+- **Storage, proven 25 Sep on the real store:** her 352 rows compress from
+  217 KiB to 46 KiB, one piece; a 180 KB piece read back identical; a 270 KB
+  piece was refused at the 256 KiB limit.

@@ -4106,7 +4106,7 @@ async function collectFromListing(page, opts) {
     //
     // The V&A runs four: South Kensington, V&A East Museum, V&A East Storehouse
     // and Young V&A, and its listing mixes all four on one page. Her venue list
-    // (CLAUDE.md §7) says South Kensington only, so the other three are hers to
+    // (docs/venue_urls.md) says South Kensington only, so the other three are hers to
     // exclude, already ruled, and the card states which site it is.
     //
     // Same footing as excludeOngoing and permitted for the same reason: the
@@ -4836,7 +4836,7 @@ const VENUES = {
 
   // TATE — two venues in her list, one website, and the URL is what separates
   // them. Kept as two recipes rather than one shared block because they are two
-  // entries in her ledger; merging them was rejected (CLAUDE.md §7).
+  // entries in her ledger; merging them was rejected (CLAUDE.md §8).
   //
   // THE QUERY FILTERS ARE THE UNLOCK, and they were hiding in Tate's own
   // navigation menu. The guide recorded that "venue-filtered query-param URLs
