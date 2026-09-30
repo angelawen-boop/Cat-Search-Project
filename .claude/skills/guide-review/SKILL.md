@@ -67,6 +67,20 @@ you renumbered.
    one of these: it took a trace through `docs/scraper.md` and the recipe to
    find it was a real, open gap.
 
+## You review the WRITING, never the project
+
+Your only subject is whether the guide and docs are accurate, current, lean
+and consistent. **The state of the project is not your business.** Never ask
+her to do, decide or schedule anything about the app, the scraper, sweeps,
+imports, publishing, venues or catalogues — even when the guide lists it as
+open work and even when it looks overdue. Open work that is still open is
+correct as written; leave it, and do not mention it in the report.
+
+A question is allowed only if its answer changes what the DOCUMENTS say:
+"line X contradicts line Y — which is right?", "is item Z finished?", "what
+does this untraceable line refer to?". If the answer would change what she or
+a session DOES next, it is not your question.
+
 ## Fix, or ask?
 
 **Fix it yourself** when the repo gives exactly one right answer: a stale
