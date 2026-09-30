@@ -93,6 +93,10 @@ growth run-by-run stories. Cut again 30 Sep. The rules:
   30 Sep; runs at the end of `npm test`). Over budget warns and never fails a
   test: the clean-up is a separate session, away from active work — never the
   session that tripped it, mid-task. Raising a budget is her call.
+- **The clean-up is the "Guide review" routine** — a fresh session on the 15th
+  and 30th, 7:50am Sydney, push notification to her; it follows
+  `.claude/skills/guide-review/SKILL.md` (fix what has one answer, ask her
+  about rulings and anything untraceable). She can also ask for it any time.
 - **Anything derivable from the repo is printed by a script, not typed here**
   (`scraper/venue_status.js` replaced the venue table).
 - **Put the trigger next to the code, not in an index here.** A comment above the
