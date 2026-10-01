@@ -3614,8 +3614,8 @@ export default function App(){
                           it borrows the "closed over a year" ink, already muted, already
                           with a dark-mode partner, no loose hex. */}
                       {r.shopState==="gone"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-                        <span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopHeadline(r.shopState,r.shopChange)+" "}</span>
-                        {"The museum shop link below is where it was last seen; other buy options shown too."}
+                        {/* The headline alone — her ask, 1 Oct: the sentence after it is gone. */}
+                        <span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopHeadline(r.shopState,r.shopChange)}</span>
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
                       {/* The dash is a STRING, not page text. Written as a bare
