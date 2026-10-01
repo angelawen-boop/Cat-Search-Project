@@ -519,7 +519,7 @@ through `sample` at `modelTier: default`. Do not re-open without a real misread.
 | `*_pages.js` per venue | `mam`, `ashmolean`, `moma`, `mad`, `brit`, `morgan`, `orsay` recipes on her saved pages, no network — her counts, dates, titles, descriptions |
 | `summary_pages.js`, `title_case_pages.js`, `listing_pages.js` | descriptions, titles in the venue's letters, where each row was seen — on saved pages |
 | `page_keep_pages.js`, `bridge_reuse.js`, `robots_pages.js`, `pacing_pages.js` | kept pages; the bridge's file reuse and reply labels; robots.txt obeyed and stall reports; pacing against Cloudflare's replies |
-| `cloud_ledger.js`, `cloud_app.js` | the cloud ledger (branch), on her real ledger |
+| `cloud_ledger.js`, `cloud_app.js`, `cloud_two_copies.js` | the cloud ledger (branch), on her real ledger; two copies open at once |
 
 The harness lifts the intake out of the JSX by **anchors on prose, never line
 numbers**. An early `return` in a fixture file exits the whole suite silently —
@@ -964,7 +964,7 @@ it.** Code: "THE CLOUD LEDGER" in `Cat_Watch.jsx` on the branch. Screen spec:
 **Where:** test page **https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf**, its
 own store, all four capabilities. **Her working app since 26 Sep: she works ONLY
 there, on her real ledger, in ONE tab on ONE device** (two open copies save over
-each other; not handled). Buttons there: **Load** (a ledger file), **Save**,
+each other — now the later copy is read only, below). Buttons there: **Load** (a ledger file), **Save**,
 **Import** (a sweep CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
@@ -999,12 +999,16 @@ ledger): a save writes new pieces and switches one record last, so a save cut of
 anywhere leaves the last complete ledger; a damaged or missing piece is refused;
 an empty page never saves.
 
-**Her tests 26 Sep, all passed:** load/change/reload; loading an older file;
-roll-back; Save with the cloud copy; export → change → reload; saving within a
-second; catalogue lookups. **Her 30 Sep import updated the sweep log live**
-(store read 1 Oct: six venues' dates match their runs). **Still to meet in real
-use:** Download a cloud save and Load it; close the page fully and reopen; the
-Import reminder (the one line with no fixture).
+**Her tests, all passed (26 Sep–1 Oct):** load/change/reload; loading an older
+file; roll-back; Save with the cloud copy; export → change → reload; saving
+within a second; catalogue lookups; Download a cloud save and Load it; close
+and reopen; a real sweep Import (the sweep log updated live; the reminder).
+
+**Two copies open: the later one is READ ONLY** (her ruling, 1 Oct; built in
+37 · cloud 3, not yet published). It shows the cloud copy and writes nothing;
+an edit record with a heartbeat decides, stale after a minute; every save
+checks it first. Design: "ONE COPY EDITS AT A TIME" in the code;
+`cloud_two_copies.js`, TC-001–010.
 
 **Decided against, 25 Sep:** a snapshot on closing the page (a browser gives a
 closing page no reliable time); a backup copy in browser storage (a fourth way
@@ -1019,7 +1023,6 @@ of saving — too messy).
    store** (quarantine merged latest-wins, never replaced).
 4. Google Drive backup by button — on the table, never automatic.
 
-Parked: two tabs open at once.
 
 ### 2. Fixes not yet checked in the cases they were written for
 
