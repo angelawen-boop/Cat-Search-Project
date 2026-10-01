@@ -291,9 +291,9 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 36 on her main app, 36 · cloud 3 on the test page**, both 1 Oct, her
-go-ahead — the lookup asks her keyed connector (below). Her main app went from
-35.4 straight to 36, so it gained the 35.5/35.6 batch too.
+**Live: 36 on her main app, 36 · cloud 3 on the test page** (1 Oct) — the
+lookup asks her keyed connector (below). **36.1 built and pushed, NOT
+published** — §7.5 goes in first; publish when she is out.
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
@@ -432,7 +432,8 @@ and do not flip to searching wide first.**
   `publisherNote`); **a step that died is not an answer** — later steps carry
   why it came back empty.
 - **A museum's own imprint is skipped** — `SELF_PUBLISHERS`, keyed on the
-  **publisher**, never the venue, **added to only by her**.
+  **publisher**, never the venue, **added to only by her**; one imprint may need
+  two names (MAD has two).
 - **Everything fills a blank and nothing else.** A known value is never
   overwritten.
 - **A 10-digit ISBN is taken and converted**, check digit verified. `toIsbn13`
@@ -440,7 +441,9 @@ and do not flip to searching wide first.**
 - **Only "Re-check museum shop" moves the shop status** (her design, 25 Sep).
   With a link on file it re-reads that page (gone → "No longer", link kept as
   "Museum shop (last seen)"; buyable again → "Back"); with none it runs the shop
-  step alone ("Now"). A failed check changes nothing. **Search again fills
+  step alone ("Now"; a book already in the shop stays "In the museum shop" and
+  the card says "Re-checked: still in the museum shop.", 36.1). A failed check
+  changes nothing. **Search again fills
   blanks only.** `docs/app.md`, "A book leaving the shop".
 - **A blocked shop says so** — `shopState: "blocked"`, her wording: *"The
   museum shop is blocked - search it manually. The catalogue is stocked
@@ -454,25 +457,27 @@ and do not flip to searching wide first.**
 - **A ticket is never a catalogue** (`isTicketLink`).
 - **A shop link from the web search is opened before it is filed as in the
   shop** (`confirmShopLink`).
+- **A book's link on a shelf is read in code** (`bookLinkOnShelf`, 36.1): the
+  one link on the shop whose words carry the whole catalogue title; two, or
+  none, and nothing. Her MAD *Christofle*: the shelf held it, the read returned
+  the shelf. (Parallel dropping tile links was one Orsay read, not a rule.)
 
 **The cost:** up to four searches and three readings. **Every reading runs on
 her allowance.** The connector's keyless tier refuses after roughly a dozen
 searches in quick succession (observed; unpublished). A failed search shows one
 line on the card, Re-check's words with "Search"/"Search again" (her ruling
 30 Sep; the red banner for it is gone): "Too many searches just now"
-(`rate_limited`) and "Search failed (upstream_error)". **From the platform's
-own types (`mcp.d.ts`, 1 Oct): `rate_limited` is never returned today;
-`upstream_error` is the catch-all, and Parallel's words never reach the page.**
-Parallel's free-tier refusal (seen 1 Oct: "You've hit the free-tier rate
-limit") has no code of its own, so it most likely arrives as `upstream_error`
-— not proven.
+(`rate_limited`) and "Search failed (upstream_error)". **Per `mcp.d.ts`:
+`rate_limited` is never returned; `upstream_error` is the catch-all and
+Parallel's words never reach the page** — its free-tier refusal most likely
+arrives that way (not proven).
 
 **Her keyed connector since 36: "Parallel Search Key"** — custom, at
-`https://search.parallel.ai/mcp-oauth`, No sign-in, her API key in an
-**`x-api-key`** header (an `authorization: Bearer` one never reached Parallel),
-billed to her Parallel account ($20 credit for 60 days, $5 a month, auto-reload
-off). The built-in keyless "Parallel Search" cannot be removed, and a second
-connector at `/mcp` is refused. Whether it ends `upstream_error`: her use shows.
+`https://search.parallel.ai/mcp-oauth`, No sign-in, her key in an **`x-api-key`**
+header (`authorization: Bearer` never reached Parallel); billed to her Parallel
+account ($20 credit for 60 days, $5 a month, auto-reload off). The built-in
+keyless "Parallel Search" cannot be removed; a second connector at `/mcp` is
+refused. Whether it ends `upstream_error`: her use shows.
 
 **Shop addresses:** all 18 original venues checked, `docs/app.md` §1;
 `borghese`, `capo`, `dellav` have none. Newer venues: in `MUSEUMS`, a comment
@@ -1026,21 +1031,26 @@ for 10s, which sweeps have obeyed since 27 Sep. **Nothing to do now** — no
 probe. The next monthly sweep reads it; a refusal shows as a marker row. Record
 the result here and close it.
 
-### 5. Re-check says "the shop page couldn't be read" on a page that loaded
+### 5. Read a book's own page in full — her yes, 1 Oct; build into 36.1
 
-Her next item (1 Oct). *Tarot* (sold out) gave "Re-check didn't work — the
-shop page couldn't be read". Re-check itself works (it read "No longer"
-correctly, 1 Oct). **Likely cause, not proven:** `readShopPage` calls a page
-unreadable when Parallel's excerpt is under `SHELL_CHARS` (400) — a number
-measured on shelves and publisher listings, never on one product page. The
-same request on *Tarot*, 1 Oct, returned 486 characters; excerpts vary per
-read. **Settles it:** her diagnostic's `1 page(s)` (the rule) or `0 page(s)`.
-**Proposed, not built:** on a short excerpt, re-ask with `full_content`.
+Her ruling: a page already fetched gets every chance to yield what it holds —
+excerpts were never put to her, and a thin read sends the lookup to the wider
+web. Evidence: `docs/shop_pages/README.md`, Orsay *Cassatt* (excerpts dropped
+the folded tray holding the EAN; "Sold by GrandPalaisRmn" filed as publisher).
+1. Every one-page read asks `full_content` (`fillIsbn`, `readShopPage`, the
+   publisher's candidates) — likely also ends *Tarot*'s "couldn't be read"
+   (486-character excerpt vs `SHELL_CHARS` 400; not proven). The shelf call
+   stays excerpts until measured: Parallel caps a call at ~25,000 characters.
+2. ISBN read in code first: one 13-digit 978/979 number labelled ISBN or EAN,
+   check digit valid; else Claude reads.
+3. Both read prompts: "Sold by …" is the shop, never the publisher.
+Hazan is not on that page as Parallel copies it (hidden description) — settled.
 
 ### 6. Catalogue lookup generally
 
 She is noting issues as she uses it, for a later debugging session.
-**Shops tested by her in the app: `brit`, `morgan`. Not yet: `moma`** (30 Sep).
+**Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`
+(1 Oct). Not yet: `moma`.**
 `uffizi`'s shop sells no books — settled.
 
 - **RAISE AT THE START OF THE NEXT SESSION (her ask, 30 Sep) — asking a Shopify
@@ -1050,21 +1060,11 @@ She is noting issues as she uses it, for a later debugging session.
   429. Untested: `.oembed` once the 429 has cleared — it normally carries an
   in-stock yes/no. Shopify shops: morgan, artic, moma, ashmolean, lgd, menil,
   wallace, acq. `docs/shop_pages/README.md`.
-- **TO BE CONTINUED — the French shops stop at the shelf** (Orsay 30 Sep,
-  MAD *Christofle*; likely louvre, jacquemart): the book is found on the shelf,
-  never its own page, so no ISBN and no publisher; the Museum shop button
-  falls back to a search. **Proven:** Parallel's copy of the Orsay shelf,
-  excerpt and full page alike, keeps plain text links (page 2, 3) and has none
-  of the book links; `web_fetch` has no raw-page option. At Orsay and MAD one
-  link wraps the whole tile (picture, title, price); the Morgan's shelf also
-  has a plain title link, and its lookup reaches the book. **Not proven:** that
-  tile-wrapping links are what Parallel drops. Her question, open: why the
-  button cannot open what the app already saw.
 - **OPEN, for later (her ask, 30 Sep): the lookup says "no ISBN" where one
   plain web search finds it** (Ashmolean *In Bloom*). From the code: the ISBN
   search (`fillFromWeb`) omits the venue's name, reads 700 characters of each
   result, opens none, and "No ISBN anywhere" claims more than that.
-- **FOR THE VERSION AFTER 35.5 (her ask, 30 Sep) — a Booko button** among the
+- **OPEN (her ask, 30 Sep) — a Booko button** among the
   buy links. To discuss first: its address shapes (by ISBN, and by title when
   there is none) are unchecked.
 
