@@ -291,9 +291,10 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 37 on her main app, 37 · cloud 4 on the test page** (1 Oct): the
-lookup fixes marked 36.1 below plus Booko; the test page also has the
-read-only lock for a second open copy (§7.1). 36.1 was never published alone.
+**Live: 37 on her main app, 37.1 · cloud 4 on the test page** (1 Oct). 37.1:
+AbeBooks sorted by lowest total price, the ISBN search off the shop route too,
+only the publisher is the publisher, two card lines shortened. 36.1 was never
+published alone.
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
@@ -971,7 +972,7 @@ each other — now the later copy is read only, below). Buttons there: **Load** 
 **Import** (a sweep CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **37 · cloud 4**, published 1 Oct (`main` merged in
+live on the test page **37.1 · cloud 4**, published 1 Oct (`main` merged in
 that day; cloud 3 was 37 without the lock, live minutes). Cloud-only in it: the
 read-only lock (below); a roll-back's safety copy names the save by its
 time ("…roll-back to snapshot of Sep 26, 2026 1:16pm"; CL-T1–3), and Cloud
@@ -1074,6 +1075,8 @@ She is noting issues as she uses it, for a later debugging session.
   blocked venues.
 - **Art Institute films by room** — reopen only if the bin fills again.
   `docs/artic_pages/` README has the idea.
+- **`ashmolean_pages.js` fails now and then** ("route.abort: Route is already
+  handled"; a re-run passes). Not to be touched — her ruling, 1 Oct.
 - **A QA pass before the stitch** — parked from a session whose reasoning she
   does not trust. `qc.js` is NOT that pass and does not re-open it.
 - **Picked shows** — occasional venues where she picks ~5 shows a year and only
