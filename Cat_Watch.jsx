@@ -558,7 +558,9 @@ const SEARCH_SESSION = "catwatch" + Math.random().toString(16).slice(2).padEnd(1
 async function useCap(name){
   try{
     if(typeof window==="undefined"||!window.claude||typeof window.claude.use!=="function")return null;
-    return await window.claude.use(name);
+    const cap=await window.claude.use(name);
+    // A READ-ONLY COPY CANNOT WRITE TO THE STORE — see ONE COPY EDITS.
+    return (name==="db"&&cap&&cloudReadOnly)?readOnlyStore(cap):cap;
   }catch{ return null; }
 }
 
@@ -968,6 +970,46 @@ function cloudTrouble(e,verb){
   if(code==="revoked")            return "This page lost access to its store while open. Reload the page.";
   if(code==="missing_part"||code==="fingerprint") return String(e.message);
   return "Couldn’t "+act+" the cloud copy ("+(code||String((e&&e.message)||e||"unknown"))+").";
+}
+// ONE COPY EDITS AT A TIME — her ruling, 1 Oct. Two open copies of the page
+// each save their own ledger over the other's. So the copy that opens while
+// another is open is READ ONLY: it shows the cloud copy and writes nothing.
+//
+// Each editing copy writes its id and the time into one small record every
+// SESSION_BEAT_MS. A copy opening finds a fresh record with another id → read
+// only. A record older than SESSION_STALE_MS is a copy that closed without
+// saying so (a browser gives a closing page no reliable time — §7.1), and is
+// taken over. A copy that wakes from sleep to find another one editing turns
+// read only itself; and every cloud save checks the record first, so a
+// sleeping copy's first act on waking can never be overwriting the live
+// ledger. Read only lasts until the page is reloaded.
+const CLOUD_SESSION_DOC="ledger/session";
+const RO_LINE="Read only — Cat Watch is open in another tab or device. Close it there, then reload this one.";
+const SESSION_BEAT_MS=20000;
+const SESSION_STALE_MS=60000;
+const CLOUD_SESSION_ID=cloudNewId("t");
+let cloudReadOnly=false;
+
+// The store, with every write refused. Reads pass through.
+function readOnlyStore(db){
+  const no=()=>Promise.reject({code:"read_only",message:"This copy is read only."});
+  // Named members only: the platform's namespace is frozen, and spreading it
+  // would copy nothing its prototype holds.
+  return {doc:path=>({get:()=>db.doc(path).get(),set:no,update:no,delete:no}),
+          collection:c=>db.collection(c)};
+}
+// "mine": this copy may edit (the record now names it). "other": another copy
+// is editing. Reads the record, then writes it — so it is also the heartbeat.
+async function cloudSessionClaim(db,now){
+  const t=now||Date.now();
+  let cur=null;
+  try{ const snap=await db.doc(CLOUD_SESSION_DOC).get(); cur=snap.exists?snap.data():null; }catch{}
+  if(cur&&cur.id!==CLOUD_SESSION_ID&&t-Date.parse(cur.beat)<SESSION_STALE_MS)return "other";
+  await db.doc(CLOUD_SESSION_DOC).set({id:CLOUD_SESSION_ID,beat:new Date(t).toISOString()});
+  return "mine";
+}
+async function rawStore(){
+  try{ return (typeof window!=="undefined"&&window.claude&&window.claude.use)?await window.claude.use("db"):null; }catch{ return null; }
 }
 // ── END OF THE CLOUD LEDGER ──────────────────────────────────────────────────
 
@@ -1687,6 +1729,12 @@ export default function App(){
   // imported, reset, opened from the cloud or rolled back to. An empty portal
   // must never overwrite the cloud copy with nothing.
   const cloudArmed=useRef(false);
+  // ONE COPY EDITS AT A TIME — see cloudSessionClaim. True for the rest of
+  // this page load once another copy is found editing.
+  const[readOnly,setReadOnly]=useState(false);
+  const goReadOnly=useCallback(()=>{ cloudReadOnly=true; setReadOnly(true); },[]);
+  // Every action that would change the ledger asks this first.
+  const roStop=()=>{ if(!cloudReadOnly)return false; setError(RO_LINE); return true; };
   const cloudPrev=useRef(null);   // the live record this page last wrote or read
   const cloudFp=useRef(null);     // the fingerprint of what that record holds
   const cloudBusy=useRef(false);  // one save at a time …
@@ -1844,6 +1892,8 @@ export default function App(){
     // still opens empty and waits for her file. After the trial (CLOUD_OPENS)
     // it opens the cloud copy itself.
     (async()=>{
+      const raw=await rawStore();
+      if(raw){ try{ if(await cloudSessionClaim(raw)==="other")goReadOnly(); }catch{} }
       const db=await useCap("db");
       if(!db){ setCloudLive({why:"This viewer can’t reach the page’s store."}); setSaveState("off"); setSaveErr("This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."); return; }
       try{
@@ -1852,7 +1902,8 @@ export default function App(){
         const data=JSON.parse(text);
         cloudPrev.current=rec; cloudFp.current=ledgerFingerprintText(data);
         setCloudLive({rec,data}); setLastSaved(rec);
-        if(CLOUD_OPENS)openCloudData(rec,data);
+        // A read-only copy shows the cloud copy: it cannot Load a file.
+        if(CLOUD_OPENS||cloudReadOnly)openCloudData(rec,data);
       }catch(e){ setCloudLive({why:cloudTrouble(e,"read")}); }
     })();
   },[]);
@@ -1860,10 +1911,23 @@ export default function App(){
   // Keep the "Last saved ... ago" text and its colour current.
   useEffect(()=>{const t=setInterval(()=>setTick(n=>n+1),30000);return()=>clearInterval(t);},[]);
 
+  // THE HEARTBEAT, and letting go on the way out (best effort — a closing page
+  // may not finish it; the record then goes stale in SESSION_STALE_MS).
+  useEffect(()=>{
+    const beat=async()=>{ if(cloudReadOnly)return; const raw=await rawStore(); if(!raw)return;
+      try{ if(await cloudSessionClaim(raw)==="other")goReadOnly(); }catch{} };
+    const t=setInterval(beat,SESSION_BEAT_MS);
+    const bye=async()=>{ if(cloudReadOnly)return; const raw=await rawStore(); if(!raw)return;
+      try{ const snap=await raw.doc(CLOUD_SESSION_DOC).get(); if(snap.exists&&(snap.data()||{}).id===CLOUD_SESSION_ID)await raw.doc(CLOUD_SESSION_DOC).delete(); }catch{} };
+    window.addEventListener("pagehide",bye);
+    return()=>{ clearInterval(t); window.removeEventListener("pagehide",bye); };
+  },[goReadOnly]);
+
   // EDITS mark the ledger dirty: changed since the last offline Save. The
   // cloud copy saves them by itself; `dirty` now only decides whether a Load
   // or Reset must ask first while the cloud is NOT saving.
   const commit=useCallback(async(next,lr)=>{
+    if(cloudReadOnly){ setError(RO_LINE); return; }
     setRows(next);
     if(lr!==undefined)setLastRun(lr);
     setFirstTime(false);
@@ -1875,7 +1939,8 @@ export default function App(){
   // LOADS (Import, Reset) are NOT unsaved work. Freshly loaded data matches its
   // source, so there's nothing to lose yet. The unsaved warning only appears once
   // you actually change something.
-  const loadLedger=useCallback((next,lr,info,extra)=>{
+  const loadLedger=useCallback((next,lr,info,extra,display)=>{
+    if(cloudReadOnly&&!display){ setError(RO_LINE); return; }
     setRows(next);
     setLastRun(lr!==undefined?lr:null);
     // A LEDGER'S QUARANTINE IS MERGED IN, NEVER SWITCHED TO. The file is the
@@ -1912,7 +1977,11 @@ export default function App(){
   // a short pause, because the store's own advice for a passing fault is
   // exactly that; a second failure is reported, never swallowed.
   const cloudSaveNow=useCallback(async()=>{
+    if(cloudReadOnly)return;
     if(cloudBusy.current){ cloudAgain.current=true; return; }
+    // Another copy took over while this one slept? Then nothing is written.
+    { const raw=await rawStore();
+      if(raw){ try{ if(await cloudSessionClaim(raw)==="other"){ goReadOnly(); setError(RO_LINE); return; } }catch{} } }
     const db=await useCap("db");
     if(!db){ setSaveState("off"); setSaveErr("This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."); return; }
     cloudBusy.current=true;
@@ -1937,7 +2006,7 @@ export default function App(){
       }while(cloudAgain.current);
     }catch(e){ setSaveState("failed"); setSaveErr(cloudTrouble(e,"save")); }
     finally{ cloudBusy.current=false; }
-  },[]);
+  },[goReadOnly]);
   // INSTANT SAVE: shortly after every change, once a ledger is open.
   useEffect(()=>{
     if(!cloudArmed.current||!rows.length)return;
@@ -1991,12 +2060,13 @@ export default function App(){
   function openCloudData(rec,data){
     loadLedger((data.rows||[]).map(r=>({...r,watching:r.watching||false})),data.lastRun||null,
       "Opened the cloud copy saved "+localReadable(rec.savedAt)+" — "+(data.rows||[]).length+" exhibitions.",
-      {ignored:Array.isArray(data.ignored)?data.ignored:[]});
+      {ignored:Array.isArray(data.ignored)?data.ignored:[]},cloudReadOnly);
     cloudPrev.current=rec; cloudFp.current=ledgerFingerprintText(data);
     setLastSaved(rec); setSaveState("saved"); setSaveErr(null); setCloudCheck(null);
     cloudArmed.current=true;
   }
   async function requestOpenCloud(){
+    if(roStop())return;
     const go=async()=>{
       const db=await useCap("db"); if(!db)return;
       try{
@@ -2020,6 +2090,7 @@ export default function App(){
   // first as a safety snapshot — her ruling, 24 Sep — so a rollback can itself
   // be undone. If that safety copy cannot be taken, nothing is replaced.
   function requestRollback(s){
+    if(roStop())return;
     setConfirmBox({title:"Roll back to this cloud save?",
       text:"The ledger becomes the cloud save “"+snapTitle(s,snaps)+"” from "+localReadable(s.at)+" ("+s.rows+" exhibitions). What you have now is kept in Cloud Saves first, so this can be undone.",
       act:async()=>{
@@ -2377,6 +2448,7 @@ export default function App(){
 
   function handleRefreshFile(e){
     const file=e.target.files[0]; if(!file)return;
+    if(roStop()){ e.target.value=""; return; }
     const reader=new FileReader();
     reader.onload=()=>{
       const res=analyzeProForma(String(reader.result||""),new Set(ignored.map(x=>x.key)));
@@ -3029,6 +3101,7 @@ export default function App(){
   // in the ledger: it is a fact about one attempt, not about the book, and the
   // remedy is simply to press Search again.
   async function findOneCat(id){
+    if(roStop())return;
     setBusy(true);setBusyId(id);setError(null);setRecheckSaid(null);
     const row=rows.find(r=>r.id===id);
     const out=await lookupCat(row);
@@ -3054,6 +3127,7 @@ export default function App(){
   // is printed ON THE CARD, under the button she pressed, not in the banner at
   // the top of the page — she is looking at the card.
   async function recheckShop(id){
+    if(roStop())return;
     setBusy(true);setBusyId(id);setRechecking(true);setError(null);setRecheckSaid(null);
     const found=rows.find(r=>r.id===id);
     // A TICKET ON FILE WAS NEVER THE BOOK (isTicketLink) — rows filed before
@@ -3097,7 +3171,7 @@ export default function App(){
     setBusy(false);setBusyId(null);setRechecking(false);setLookPhase(null);
   }
 
-  async function findWantedCats(){const targets=rows.filter(r=>r.acquiring==="yes"&&!r.looked&&r.interested);if(!targets.length)return;setBusy(true);setError(null);let next=[...rows];for(let i=0;i<targets.length;i++){setProg({done:i,total:targets.length,label:targets[i].title});const out=await lookupCat(targets[i]);if(out.ok){next=next.map(r=>r.id===out.row.id?out.row:r);setRows(next);}if(i===0)setDebug(out.detail);}await commit(next);setProg({done:targets.length,total:targets.length,label:"Done"});setBusy(false);setLookPhase(null);}
+  async function findWantedCats(){if(roStop())return;const targets=rows.filter(r=>r.acquiring==="yes"&&!r.looked&&r.interested);if(!targets.length)return;setBusy(true);setError(null);let next=[...rows];for(let i=0;i<targets.length;i++){setProg({done:i,total:targets.length,label:targets[i].title});const out=await lookupCat(targets[i]);if(out.ok){next=next.map(r=>r.id===out.row.id?out.row:r);setRows(next);}if(i===0)setDebug(out.detail);}await commit(next);setProg({done:targets.length,total:targets.length,label:"Done"});setBusy(false);setLookPhase(null);}
 
   const dismiss=id=>{commit(rows.map(r=>r.id===id?{...r,interested:false}:r));if(undoTimer.current)clearTimeout(undoTimer.current);setUndo({id});undoTimer.current=setTimeout(()=>setUndo(null),10000);};
   const undoDismiss=()=>{if(!undo)return;commit(rows.map(r=>r.id===undo.id?{...r,interested:true}:r));setUndo(null);if(undoTimer.current)clearTimeout(undoTimer.current);};
@@ -3108,7 +3182,7 @@ export default function App(){
   // AN IMPORT CHECKS THE CLOUD COPY FIRST (guardCloudBeforeReplace), then
   // replaces the screen and arms saving. If the cloud copy differed and could
   // not be kept as a snapshot, the import stops there and says so.
-  function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{let d;try{d=JSON.parse(reader.result);}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");return;}if(!(d&&Array.isArray(d.rows))){setError("That file didn't contain a ledger (no entries found).");return;}const next=d.rows.map(r=>({...r,watching:r.watching||false})),ign=Array.isArray(d.ignored)?d.ignored:[];let said=false;try{said=await guardCloudBeforeReplace({rows:next,ignored:ign},"import");}catch{return;}loadLedger(next,d.lastRun||null,said?null:"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",{ignored:ign});cloudArmed.current=true;setDebug("Loaded "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");};reader.readAsText(file);e.target.value="";}
+  function handleImport(e){const file=e.target.files[0];if(!file)return;if(roStop()){e.target.value="";return;}const reader=new FileReader();reader.onload=async()=>{let d;try{d=JSON.parse(reader.result);}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");return;}if(!(d&&Array.isArray(d.rows))){setError("That file didn't contain a ledger (no entries found).");return;}const next=d.rows.map(r=>({...r,watching:r.watching||false})),ign=Array.isArray(d.ignored)?d.ignored:[];let said=false;try{said=await guardCloudBeforeReplace({rows:next,ignored:ign},"import");}catch{return;}loadLedger(next,d.lastRun||null,said?null:"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",{ignored:ign});cloudArmed.current=true;setDebug("Loaded "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");};reader.readAsText(file);e.target.value="";}
 
   // Confirm-before-replace: Import and Reset can wipe the screen in one tap, so
   // they ask first WHENEVER there is unsaved work showing.
@@ -3117,7 +3191,7 @@ export default function App(){
     if(rows.length>0&&dirty&&cloudNotSaving){setConfirmBox({text:"Loading replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",act:openFilePicker});}
     else openFilePicker();
   }
-  const doReset=async()=>{const seed=buildSeed();try{await guardCloudBeforeReplace({rows:seed,ignored},"reset");}catch{return;}cloudArmed.current=true;loadLedger(seed,null,"Starter set loaded ("+seed.length+" exhibitions) \u2014 not saved to a file.");setDebug("Reset: loaded the built-in starter set ("+seed.length+" exhibitions). It isn't in any file \u2014 Save if you want one.");};
+  const doReset=async()=>{if(roStop())return;const seed=buildSeed();try{await guardCloudBeforeReplace({rows:seed,ignored},"reset");}catch{return;}cloudArmed.current=true;loadLedger(seed,null,"Starter set loaded ("+seed.length+" exhibitions) \u2014 not saved to a file.");setDebug("Reset: loaded the built-in starter set ("+seed.length+" exhibitions). It isn't in any file \u2014 Save if you want one.");};
   function requestReset(){
     if(rows.length>0&&dirty&&cloudNotSaving){setConfirmBox({text:"This loads the built-in starter set and replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",act:doReset});}
     else doReset();
@@ -3163,7 +3237,7 @@ export default function App(){
     try{
       // cloud: null = not asked for; true = kept; a string = why not
       let cloud=null;
-      if(saveCloud){
+      if(saveCloud&&!cloudReadOnly){
         const db=await useCap("db");
         if(!db)cloud="this viewer can\u2019t reach the page\u2019s store";
         else{
@@ -3521,7 +3595,8 @@ export default function App(){
           <span>{"QUARANTINE \u2014 "+quarWhy}</span>
         </div>}
         {busy&&prog.total>0&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
-        {error&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
+        {readOnly&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink,fontWeight:700}}>{RO_LINE}</div>}
+        {error&&error!==RO_LINE&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
         {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>
           {/* COPY — her ask, 30 Sep; an icon alone, inside the tray at its
               bottom right (her ask, 1 Oct). A tick only if the copy happened:
@@ -3901,6 +3976,7 @@ export default function App(){
               <span style={{minWidth:130,fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
               <span style={{flex:1}}>{x.title||"(no title)"}</span>
               <button onClick={()=>{
+                if(roStop())return;
                 const at=new Date().toISOString();
                 setQuarantine(prev=>{ const next=mergeQuarantine(prev,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}});
                   writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy("That release couldn\u2019t be saved to this page\u2019s store, so it may come back when you reload."); });
