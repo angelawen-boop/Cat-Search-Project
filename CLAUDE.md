@@ -285,20 +285,15 @@ this one alone. `stitch` and `compress` carry it untouched.
 >
 > **Republish to THAT url** or a new page is created and hers stops updating;
 > from a session that did not publish it, pass it as `url`. It carries **four
-> capabilities**, each load-bearing: `downloads` (Export), `mcp` (her Parallel
-> Search connector), `sample` (Claude reading what the connector found), `db`
+> capabilities**, each load-bearing: `downloads` (Export), `mcp` (her **Parallel
+> Search Key** connector, by name), `sample` (Claude reading what the connector found), `db`
 > (the sweep log and quarantine — the two things that survive a Reset). A publish
 > restating `capabilities` must restate all four; omitting it carries them
-> forward, which is what every publish has done.
+> forward. **Renaming the connector means restating them.**
 
-**Live: 35.4**, published 30 Sep — MoMA's shop search (`/collections/shop?q=`),
-no line at all with no ledger open, the Ashmolean and its shop, her chip order
-(fixture 19; chip "Levy", cards "Lévy Gorvy Dayan"). The test page carries the
-same as 35.4 · cloud 3 (§7.1).
-**35.6 · cloud 3 live on the test page, 1 Oct** (her working app, §7.1): the
-held-pile batch (R-011b/c, C-072a/b) plus copy as an icon in the diagnostic
-tray (tick or cross; R-011d/e), "quarantined" named only when there is one,
-"No longer in the museum shop." alone. **Not on her main app** — her say.
+**Live: 36 on her main app, 36 · cloud 3 on the test page**, both 1 Oct, her
+go-ahead — the lookup asks her keyed connector (below). Her main app went from
+35.4 straight to 36, so it gained the 35.5/35.6 batch too.
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
@@ -470,7 +465,14 @@ own types (`mcp.d.ts`, 1 Oct): `rate_limited` is never returned today;
 `upstream_error` is the catch-all, and Parallel's words never reach the page.**
 Parallel's free-tier refusal (seen 1 Oct: "You've hit the free-tier rate
 limit") has no code of its own, so it most likely arrives as `upstream_error`
-— not proven. A keyed connector is being set up in another session (1 Oct).
+— not proven.
+
+**Her keyed connector since 36: "Parallel Search Key"** — custom, at
+`https://search.parallel.ai/mcp-oauth`, No sign-in, her API key in an
+**`x-api-key`** header (an `authorization: Bearer` one never reached Parallel),
+billed to her Parallel account ($20 credit for 60 days, $5 a month, auto-reload
+off). The built-in keyless "Parallel Search" cannot be removed, and a second
+connector at `/mcp` is refused. Whether it ends `upstream_error`: her use shows.
 
 **Shop addresses:** all 18 original venues checked, `docs/app.md` §1;
 `borghese`, `capo`, `dellav` have none. Newer venues: in `MUSEUMS`, a comment
@@ -942,7 +944,7 @@ each other; not handled). Buttons there: **Load** (a ledger file), **Save**,
 **Import** (a sweep CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **35.6 · cloud 3**, published 1 Oct (`main` merged in
+live on the test page **36 · cloud 3**, published 1 Oct (`main` merged in
 that day). Cloud-only in it: a roll-back's safety copy names the save by its
 time ("…roll-back to snapshot of Sep 26, 2026 1:16pm"; CL-T1–3), and Cloud
 Saves' times share one width. Edits stay "cloud 3" until she says. Merge
