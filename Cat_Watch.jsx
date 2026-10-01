@@ -18,7 +18,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
 const APP_VERSION = "35.6 · cloud 3";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
-const APP_VERSION_DATE = "30 Sep 2026";
+const APP_VERSION_DATE = "1 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
 // size — it is the order she wants to WORK in. The venues she reads most come
@@ -1473,13 +1473,23 @@ function labelSlug(label){return String(label||"").toLowerCase().replace(/[^a-z0
 // by Save: 'Export: "her description"' (her wording, 30 Sep; was "Cloud copy of Export"). A safety copy: its own
 // label; older safety copies were stored under the first wording and are
 // renamed on screen here, never rewritten in the store.
-function snapTitle(s){
+function snapTitle(s,all){
   if(!s)return "";
   if(s.kind!=="safety")return "Export"+(s.label?": \u201c"+s.label+"\u201d":"");
   const l=String(s.label||"");
+  // ROLL-BACK COPIES NAME THE SAVE BY ITS TIME — her ask, 1 Oct:
+  // "Safety snapshot before roll-back to snapshot of Sep 26, 2026 1:16pm".
+  // Copies made before 30 Sep stored the target's NAME only ("Before rolling
+  // back to Cloud copy before Load"); its time is read off the one earlier
+  // save carrying that name. Two or none → the name, quoted, as before.
   const m=l.match(/^Before rolling back to (.*)$/);
-  if(m)return "Safety snapshot before roll-back to \u201c"+m[1].replace(/^Cloud copy before /,"Safety snapshot before ")+"\u201d";
-  return l.replace(/^Cloud copy before /,"Safety snapshot before ")||"Safety snapshot";
+  if(m){
+    const was=m[1].replace(/^Cloud copy before /,"Safety snapshot before ");
+    const hits=(all||[]).filter(o=>o&&o!==s&&o.at<s.at&&snapTitle(o)===was);
+    return hits.length===1?"Safety snapshot before roll-back to snapshot of "+localReadable(hits[0].at)
+      :"Safety snapshot before roll-back to \u201c"+was+"\u201d";
+  }
+  return l.replace(/^Cloud copy before /,"Safety snapshot before ").replace(/^(Safety snapshot before roll-back to )(?!snapshot of )/,"$1snapshot of ")||"Safety snapshot";
 }
 function localStamp(iso){const d=iso?new Date(iso):new Date(),p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes());}
 // ONE WAY TO WRITE A MOMENT, her ruling 26 Sep: "Sep 26, 2026 1:22pm", the
@@ -1896,7 +1906,7 @@ export default function App(){
   // be undone. If that safety copy cannot be taken, nothing is replaced.
   function requestRollback(s){
     setConfirmBox({title:"Roll back to this cloud save?",
-      text:"The ledger becomes the cloud save “"+snapTitle(s)+"” from "+localReadable(s.at)+" ("+s.rows+" exhibitions). What you have now is kept in Cloud Saves first, so this can be undone.",
+      text:"The ledger becomes the cloud save “"+snapTitle(s,snaps)+"” from "+localReadable(s.at)+" ("+s.rows+" exhibitions). What you have now is kept in Cloud Saves first, so this can be undone.",
       act:async()=>{
         const db=await useCap("db"); if(!db)return;
         setSnapBusy(true);
@@ -1904,10 +1914,10 @@ export default function App(){
           let curText=null,curRows=0,curQ=0;
           if(rows.length){ const d=cloudLatest.current; curText=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()}); curRows=d.rows.length; curQ=d.ignored.length; }
           else{ const live=await cloudReadLive(db); if(live.rec){ curText=live.text; const cd=JSON.parse(live.text); curRows=cd.rows.length; curQ=(cd.ignored||[]).length; cloudPrev.current=live.rec; } }
-          if(curText)await cloudTakeSnapshot(db,curText,{label:"Safety snapshot before roll-back to "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
+          if(curText)await cloudTakeSnapshot(db,curText,{label:"Safety snapshot before roll-back to snapshot of "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
           const data=JSON.parse(await cloudReadSnapshot(db,s));
           loadLedger((data.rows||[]).map(r=>({...r,watching:r.watching||false})),data.lastRun||null,
-            "Rolled back to the cloud save “"+snapTitle(s)+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
+            "Rolled back to the cloud save “"+snapTitle(s,snaps)+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
             {ignored:Array.isArray(data.ignored)?data.ignored:[]});
           setDirty(true);          // it is in no file yet
           setCloudCheck(null);
@@ -3702,7 +3712,7 @@ export default function App(){
               <span style={{minWidth:120,fontWeight:600,whiteSpace:"nowrap"}}>{localReadable(s.at)}</span>
               {/* NO "AUTOMATIC" TAG — her ruling, 26 Sep: the copies SHE made are the
                   ones marked, by her own description in bold. */}
-              <span style={{flex:"1 1 160px"}}>{s.kind!=="safety"&&s.label?<>{"Export: \u201c"}<b>{s.label}</b>{"\u201d"}</>:snapTitle(s)}<span style={{color:C.soft}}>{" · "+s.rows+" exhibitions"}</span>{s.filename&&<span style={{display:"block",fontSize:11,color:C.soft,wordBreak:"break-all"}}>{s.filename}</span>}</span>
+              <span style={{flex:"1 1 160px"}}>{s.kind!=="safety"&&s.label?<>{"Export: \u201c"}<b>{s.label}</b>{"\u201d"}</>:snapTitle(s,snaps)}<span style={{color:C.soft}}>{" · "+s.rows+" exhibitions"}</span>{s.filename&&<span style={{display:"block",fontSize:11,color:C.soft,wordBreak:"break-all"}}>{s.filename}</span>}</span>
               <button onClick={()=>downloadSnapshot(s)} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Download</button>
               <button onClick={()=>requestRollback(s)} disabled={snapBusy} style={{background:"none",border:"none",color:C.accent,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Roll back</button>
             </div>

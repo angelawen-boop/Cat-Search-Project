@@ -188,5 +188,28 @@ const info = d => ({ rows: d.rows.length, quarantined: d.ignored.length });
   }
 
   console.log(`\ncloud_ledger: ${pass} passed, ${fail} failed`);
+  // ── CL-T: A ROLL-BACK COPY NAMES ITS SAVE BY TIME — her ask, 1 Oct. Her
+  // real records of 26 Sep: the 1:22pm copy stored only the target's name; the
+  // one earlier save of that name (1:16pm) supplies the time.
+  {
+    const fn = src.slice(src.indexOf('function snapTitle(s,all){'));
+    const snapTitle = new Function('localReadable', fn.slice(0, fn.indexOf('\n}\n') + 3) + 'return snapTitle;')(iso => 'AT ' + iso);
+    const recs = [
+      { at: '2026-09-26T05:48:21.354Z', kind: 'safety', label: 'Cloud copy before Load' },
+      { at: '2026-09-26T04:13:14.315Z', kind: 'safety', label: 'Cloud copy before Load' },
+      { at: '2026-09-26T03:22:31.372Z', kind: 'safety', label: 'Before rolling back to Cloud copy before Load' },
+      { at: '2026-09-26T03:16:44.837Z', kind: 'safety', label: 'Cloud copy before Load' },
+    ];
+    const t = snapTitle(recs[2], recs);
+    ok(t === 'Safety snapshot before roll-back to snapshot of AT 2026-09-26T03:16:44.837Z',
+      'CL-T1: her 26 Sep roll-back copy reads the time of the one earlier save with that name', t);
+    const two = recs.concat([{ at: '2026-09-26T03:00:00.000Z', kind: 'safety', label: 'Cloud copy before Load' }]);
+    ok(snapTitle(recs[2], two) === 'Safety snapshot before roll-back to \u201cSafety snapshot before Load\u201d',
+      'CL-T2: two earlier saves of that name — the name, quoted, never a guessed time', snapTitle(recs[2], two));
+    ok(snapTitle({ kind: 'safety', label: 'Safety snapshot before roll-back to Sep 30, 2026 1:00pm' }, []) === 'Safety snapshot before roll-back to snapshot of Sep 30, 2026 1:00pm'
+      && snapTitle({ kind: 'safety', label: 'Safety snapshot before roll-back to snapshot of Sep 30, 2026 1:00pm' }, []) === 'Safety snapshot before roll-back to snapshot of Sep 30, 2026 1:00pm',
+      'CL-T3: a copy that stored the time reads "to snapshot of <time>", never doubled');
+  }
+
   process.exitCode = fail ? 1 : 0;
 })().catch(e => { console.log('FAIL  cloud_ledger crashed — ' + (e && (e.stack || e.message || JSON.stringify(e)))); process.exitCode = 1; });
