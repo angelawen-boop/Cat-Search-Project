@@ -612,7 +612,13 @@ async function searchWeb(objective,queries){
 // IT TAKES ONE PAGE OR SEVERAL. Step one opens a shop's catalogue shelf and
 // its search box together, in ONE call, because they answer the same question
 // and two calls would be two waits.
-async function fetchPage(url,objective,queries){
+//
+// ONE PAGE IS READ WHOLE — her ruling, 1 Oct. `{full:true}` asks for the
+// page in full (`full_content`); without it the connector hands back excerpts
+// it chose, and they dropped the Orsay Cassatt's folded tray holding the EAN.
+// Excerpts were never put to her. The shelf call stays excerpts until
+// measured: a call's whole answer is capped at ~25,000 characters.
+async function fetchPage(url,objective,queries,opts){
   const urls=Array.isArray(url)?url.filter(Boolean):[url];
   if(!urls.length)return{ok:false,results:[],detail:"No page to open."};
   const mcp=await useCap("mcp");
@@ -624,6 +630,7 @@ async function fetchPage(url,objective,queries){
       objective,
       search_queries:queries,
       session_id:SEARCH_SESSION,
+      ...((opts&&opts.full)?{full_content:true}:{}),
     });
   }catch(e){
     return{ok:false,results:[],detail:mcpTrouble(e)+"  ["+String((e&&e.code)||"")+" "+String((e&&e.message)||e)+"]"};
@@ -1152,10 +1159,38 @@ function cleanPublisherUrl(u,dom){
 // line, which is what makes one number safe here.
 const SHELL_CHARS=400;
 
+// The page's own text: the full copy when one was asked for, else excerpts.
+function oneText(r){
+  const full=r&&typeof r.full_content==="string"?r.full_content:"";
+  if(full.trim())return full;
+  return Array.isArray(r&&r.excerpts)?r.excerpts.join("\n"):"";
+}
 function pageTextOf(results){
-  return (results||[]).map(r=>
-    Array.isArray(r&&r.excerpts)?r.excerpts.join("\n"):String((r&&r.full_content)||"")
-  ).join("\n").trim();
+  return (results||[]).map(oneText).join("\n").trim();
+}
+
+// HOW MUCH OF ONE PAGE CLAUDE IS HANDED. Was 6,000 when pages were excerpts;
+// a whole page carries its menus too. The ISBN is read in code from the
+// uncut text (isbnOnPage), so this cap can only cost the publisher line.
+const PAGE_CHARS=20000;
+
+// THE ISBN, READ IN CODE FIRST — her yes, 1 Oct. One correct answer: a
+// 13-digit number starting 978 or 979, labelled ISBN or EAN, with a valid
+// check digit. Taken only when the page carries exactly ONE such number
+// (a shop's related-books strip can carry others); none, or two, and Claude
+// reads the page as before. Orsay prints it "EAN 9782754117425".
+function isbnOnPage(text){
+  const found=new Set();
+  const re=/\b(?:ISBN|EAN)(?:[\s-]?13)?\b[^0-9]{0,15}(97[89](?:[\s\u2010-\u2013-]?\d){10})(?!\d)/gi;
+  let m;
+  while((m=re.exec(String(text||"")))){
+    const d=m[1].replace(/\D/g,"");
+    if(d.length!==13)continue;
+    let sum=0;
+    for(let i=0;i<12;i++)sum+=Number(d[i])*(i%2?3:1);
+    if((10-(sum%10))%10===Number(d[12]))found.add(d);
+  }
+  return found.size===1?[...found][0]:null;
 }
 
 // A page that came back empty is NOT a page with nothing on it. Saying which
@@ -1426,7 +1461,7 @@ async function readShopPage(book,url){
   const f=await fetchPage(url,
     "Whether the book “"+book+"” can be bought on this page now: its product page, price, "
       +"add to cart, pre-order, sold out, out of stock, unavailable.",
-    [book+" add to cart sold out"]);
+    [book+" add to cart sold out"],{full:true});
   if(!f.ok)return{kind:"norun",detail:f.detail,why:f.detail.split("[")[0].trim()};
   const dead=(f.errors||[]).find(e=>GONE_HTTP.has(Number(e&&e.http_status_code)));
   if(dead)return{kind:"gone",status:dead.http_status_code,
@@ -1457,7 +1492,7 @@ async function readShopPage(book,url){
    +"ALSO false if this page is NOT that book’s own page — the shop’s front page, a "
    +"category, search results, a ticket or a different product. That is what a pulled page redirecting looks like.\n"
    +"\nBook: "+book+"\nAddress on file: "+url+"\nAddress served: "+(served||"(not given)")+"\n\n"
-   +pageTextOf(f.results).slice(0,6000)
+   +pageTextOf(f.results).slice(0,PAGE_CHARS)
    +'\n\nReply with ONLY this JSON object and nothing else:\n{"forSale": true|false, "why": string}\n'
    +'Example: {"forSale":false,"why":"The page says Sold out."}');
   if(!rd.ok)return{kind:"noread",detail:f.detail+"\n"+rd.detail,why:rd.detail.split("[")[0].trim()};
@@ -2445,7 +2480,9 @@ export default function App(){
    +"Beware of unrelated books that merely share the exhibition's title \u2014 a classical text, a novel, "
    +"a textbook. The catalogue is the one tied to THIS exhibition at THIS venue.\n"
    +"publisherUrl is the PUBLISHER'S OWN page for this book \u2014 the art-book house that printed it, "
-   +"not the museum shop, not a bookseller. Give it only if a result actually shows it; null otherwise.\n";
+   +"not the museum shop, not a bookseller. Give it only if a result actually shows it; null otherwise.\n"
+   +"\"Sold by \u2026\" (\u201cvendu par\u201d, \u201cvenduto da\u201d) names the SHOP, never the publisher \u2014 "
+   +"the Orsay\u2019s shop says \u201cSold by GrandPalaisRmn\u201d for books Hazan printed. Never report it as publisher.\n";
 
   const READ_SHAPE=
     "\nReply with ONLY this JSON object and nothing else:\n"
@@ -2527,19 +2564,20 @@ export default function App(){
    +"never convert it yourself.\n"
    +"publisherUrl is a link to the PUBLISHER'S OWN page for this book, if this page shows one. "
    +"A link to this shop, to Amazon or to another bookseller is NOT it \u2014 answer null.\n"
-   +"If this page is not about the book named below, set every field null.\n";
+   +"If this page is not about the book named below, set every field null.\n"
+   +"\"Sold by \u2026\" (\u201cvendu par\u201d, \u201cvenduto da\u201d) names the SHOP, never the publisher \u2014 "
+   +"the Orsay\u2019s shop says \u201cSold by GrandPalaisRmn\u201d for books Hazan printed. Never report it as publisher.\n";
   const PAGE_SHAPE=
     "\nReply with ONLY this JSON object and nothing else:\n"
    +'{"isbn13": string|null, "publisher": string|null, "publisherUrl": string|null}\n'
    +'Example: {"isbn13":"9781588398130","publisher":"The Metropolitan Museum of Art",'
    +'"publisherUrl":null}';
 
-  // The page arrives as excerpts chosen against our objective. Capped, because
-  // the prompt has a ceiling and a product page can be very long.
+  // The page arrives whole (fetchPage {full}). Capped, because the prompt has
+  // a ceiling and a page carries its menus too — PAGE_CHARS.
   const pageForPrompt=list=>list.slice(0,2).map(r=>
-    String(r.title||"")+"\n"+String(r.url||"")+"\n"
-    +(Array.isArray(r.excerpts)?r.excerpts.join("\n").replace(/[ \t]+/g," "):String(r.full_content||""))
-  ).join("\n\n").slice(0,6000);
+    String(r.title||"")+"\n"+String(r.url||"")+"\n"+oneText(r).replace(/[ \t]+/g," ")
+  ).join("\n\n").slice(0,PAGE_CHARS);
 
   // OPEN THE SHOP LINK THE WEB SEARCH GAVE — see settle. Filed as in the
   // museum shop only when the page opens and is this book, for sale. Anything
@@ -2573,16 +2611,22 @@ export default function App(){
     const f=hit.pageResults?{ok:true,results:hit.pageResults,detail:"the book’s page, already open"}:await fetchPage(hit.pageUrl,
       "The ISBN-13, the publisher, and any link to the publisher\u2019s own page for the book "
         +"\u201c"+book+"\u201d, including any details or specification panel on the page.",
-      [book+" ISBN publisher details"]);
+      [book+" ISBN publisher details"],{full:true});
     let detail=hit.detail+"\n"+f.detail;
     if(!f.ok)return{...hit,detail,trouble:f.detail};
     if(!f.results.length)return{...hit,detail};
+    // The number is code's; Claude's ISBN is used only when code found none.
+    const coded=r.isbn13?null:isbnOnPage(pageTextOf(f.results));
+    if(coded)detail=detail+"\nISBN read off the page in code: "+coded;
     const rd=await readResults(PAGE_RULES
       +"\nBook: "+book+"\nExhibition venue: "+venue+"\n\n"
       +pageForPrompt(f.results)+PAGE_SHAPE);
     detail=detail+"\n"+rd.detail;
-    if(!rd.ok)return{...hit,detail,trouble:rd.detail};
-    const o=rd.data||{};
+    if(!rd.ok){
+      if(!coded)return{...hit,detail,trouble:rd.detail};
+      return{...hit,detail,trouble:rd.detail,row:applyIsbnFill(r,{isbn13:coded},dom)};
+    }
+    const o={...(rd.data||{}),...(coded?{isbn13:coded}:{})};
     const filled=applyIsbnFill(r,o,dom);
     detail=detail+(filled.isbn13?"\nISBN read off the page: "+filled.isbn13
                                 :"\nNo ISBN on that page either.");
@@ -2744,7 +2788,7 @@ export default function App(){
       const candidate=candidates[i];
       const fp=await fetchPage(candidate,
         "Whether this page is the book “"+book+"” itself, and any link on it to that book.",
-        [book,isbn||book]);
+        [book,isbn||book],{full:true});
       detail=detail+"\n"+fp.detail;
       if(!fp.ok)return{...hit,detail,trouble:fp.detail};
 

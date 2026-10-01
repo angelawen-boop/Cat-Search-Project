@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage };')(
+    code + '\n;return { fetchPage, isbnOnPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -552,6 +552,35 @@ function runtime(answer, log) {
     const ce = new Error('x'); ce.code = 'rate_limited';
     r = await run(inShop, page, ce);
     eq(r.out.ok, false, 'C-099: Claude refusing is a failed check');
+  }
+
+  // ── C-120 to C-129: one page read whole, and its ISBN read in code ─────
+  // Her yes, 1 Oct. Evidence: the Orsay Cassatt page — excerpts dropped the
+  // folded tray, the whole page carried "EAN 9782754117425".
+  {
+    const log = [];
+    const { window } = runtime({ payload: { results: [] } }, log);
+    const api = lift(window);
+    await api.fetchPage('https://x.test/b', 'isbn', ['isbn'], { full: true });
+    await api.fetchPage(['https://x.test/s', 'https://x.test/s?page=2'], 'shelf', ['shelf']);
+    eq(log[0] && log[0].args.full_content, true, 'C-120: a one-page read asks for the page in full');
+    eq(log[1] && 'full_content' in log[1].args, false, 'C-121: the shelf call still asks for excerpts');
+
+    eq(api.pageTextOf([{ url: 'x', excerpts: ['short'], full_content: 'the whole page' }]), 'the whole page',
+       'C-122: when the full page came back, that is what is read');
+    eq(api.pageTextOf([{ url: 'x', excerpts: ['short'], full_content: '' }]), 'short',
+       'C-122a:   and the excerpts when it did not');
+
+    eq(api.isbnOnPage('## Characteristics\n* Format: 24 x 28 cm\n* EAN\n  9782754117425\n* Sold by GrandPalaisRmn'),
+       '9782754117425', 'C-123: the Orsay tray’s EAN is read in code');
+    eq(api.isbnOnPage('ISBN: 978-1-58839-813-0'), '9781588398130', 'C-124: hyphens are fine');
+    eq(api.isbnOnPage('ISBN-13 9781588398130 · EAN 9781588398130'), '9781588398130',
+       'C-125: the same number twice is still one');
+    eq(api.isbnOnPage('ISBN 9781588398130\nYou may also like: ISBN 9782754117425'), null,
+       'C-126: two different numbers — code does not choose, Claude reads');
+    eq(api.isbnOnPage('ISBN 9781588398131'), null, 'C-127: a wrong check digit is refused');
+    eq(api.isbnOnPage('Item 9781588398130'), null, 'C-128: a number with no ISBN or EAN label is not taken');
+    eq(api.isbnOnPage('EAN 3700000000017'), null, 'C-129: an EAN that is not a book (no 978/979) is not an ISBN');
   }
 
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');

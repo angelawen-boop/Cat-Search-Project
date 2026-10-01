@@ -101,7 +101,11 @@ const madShelf = fresh('mad-testshelf', 'mad', 'Test MAD Shelf Show');
 const madListed = { ...fresh('mad-testlisted', 'mad', 'Test MAD Listed Show'), looked: true, hasCatalogue: 'yes',
   catalogueTitle: 'Test MAD Listed : A brilliant story', publisher: 'Musée des Arts Décoratifs', shopState: 'shop' };
 const madTwo = fresh('mad-testtwo', 'mad', 'Test MAD Two Books');
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo], ignored: [], lastRun: null };
+// HER ORSAY CASSATT, 1 Oct: the EAN sat in a folded tray that excerpts
+// dropped and the whole page carried. orsayB: Claude misreads the number.
+const orsayA = fresh('orsay-testcassatt', 'orsay', 'Test Orsay Cassatt Show');
+const orsayB = fresh('orsay-testmisread', 'orsay', 'Test Orsay Misread Show');
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -604,6 +608,42 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     c = card(madTwo.title);
     ok(shopLink(c) && shopLink(c).getAttribute('href') === 'https://boutique.madparis.fr/en/mads-publications/c462/1/',
       'M-006: two different links carry the title — neither is taken; the button opens the shelf', shopLink(c) && shopLink(c).getAttribute('href'));
+  }
+
+  // ── O-001..O-005: the book's page read whole, its ISBN read in code ────
+  {
+    const PAGE = 'https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/test-cassatt/30001.html';
+    const fullPage = '# Test Cassatt : The catalogue\nSold by GrandPalaisRmn\nUnder the sign...\n'
+      + 'menu '.repeat(200) + '\n## Characteristics\n* Format 24 x 28 cm\n* EAN\n  9782754117425\n';
+    script.mcp = (tool, args) => {
+      if (tool === 'web_search') return { payload: { results: [] } };
+      if (args.urls.includes(PAGE)) return { payload: { errors: [], results: [{ url: PAGE, title: 'Cassatt',
+        excerpts: ['# Test Cassatt : The catalogue\nSold by GrandPalaisRmn\n## Characteristics'],
+        ...(args.full_content ? { full_content: fullPage } : {}) }] } };
+      return { payload: { errors: [], results: [{ url: args.urls[0], title: 'Catalogues', excerpts: ['Test Cassatt : The catalogue ' + 'x '.repeat(300)] }] } };
+    };
+    const reads = isbn => p => /"found"/.test(p)
+      ? { found: true, catalogueTitle: 'Test Cassatt : The catalogue', isbn13: null, publisher: null, publisherUrl: null, shopUrl: PAGE }
+      : { isbn13: isbn, publisher: null, publisherUrl: null };
+
+    calls.length = 0;
+    await openTray(orsayA.title);
+    script.sample = reads(null);
+    await click(button(card(orsayA.title), /Find catalogue/));
+    let t = card(orsayA.title) ? card(orsayA.title).textContent : '';
+    const pageCall = calls.find(c => c.kind === 'mcp' && c.args.urls && c.args.urls.includes(PAGE));
+    ok(pageCall && pageCall.args.full_content === true, 'O-001: the book’s own page is asked for in full', pageCall && JSON.stringify(pageCall.args));
+    const shelfCall = calls.find(c => c.kind === 'mcp' && c.args.urls && !c.args.urls.includes(PAGE));
+    ok(shelfCall && !('full_content' in shelfCall.args), 'O-002:   the shelf is not', shelfCall && JSON.stringify(shelfCall.args));
+    ok(/978-2754117425/.test(t), 'O-003: the EAN in the folded tray reaches her card, though Claude read none', t.slice(0, 400));
+    const pagePrompt = calls.filter(c => c.kind === 'sample').map(c => c.prompt).find(p => /ONE web page in full/.test(p)) || '';
+    ok(/Sold by/.test(pagePrompt) && /never the publisher/.test(pagePrompt), 'O-004: the page read is told "Sold by" is the shop, never the publisher');
+
+    await openTray(orsayB.title);
+    script.sample = reads('9781588398130');
+    await click(button(card(orsayB.title), /Find catalogue/));
+    t = card(orsayB.title) ? card(orsayB.title).textContent : '';
+    ok(/978-2754117425/.test(t) && !/978-1588398130/.test(t), 'O-005: the number on the page beats a different one from Claude', t.slice(0, 400));
   }
 
   // ── S-001..S-003: the search narrows WITH the filters — her finding, 25 Sep.
