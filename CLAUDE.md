@@ -1055,6 +1055,13 @@ She is noting issues as she uses it, for a later debugging session.
 - **OPEN — Booko with no ISBN.** Live in 37: "Booko AU", last buy link;
   `booko.au/<isbn>` (Booko fills the title — her check), else its title search,
   which she finds poor. A better no-ISBN query: her question, 1 Oct, unsettled.
+- **OPEN — the publisher step's verdict is not stable.** *Metamorphoses*
+  (Hannibal), two fresh lookups, same code, 1 Oct: "Publisher's section", then
+  "Publisher" (right). Where they split is unproven — a different candidate
+  page, the page returning empty (`pageIsShell`), or the read judging the same
+  page differently. Only that lookup's log settles it, and "Show diagnostic"
+  keeps the last action's only. If it recurs, get the log before anything else.
+  A log kept per card was offered, not built.
 
 ### 5. A fresh sweep — mid-October at the earliest
 
