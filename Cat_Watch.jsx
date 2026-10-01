@@ -897,6 +897,8 @@ const SELF_PUBLISHERS = new Set([
   "british museum press",                 // brit — her addition, 30 Sep (Bayeux Tapestry)
   "editions les arts decoratifs",         // mad — her addition, 30 Sep (Christofle); normPublisher drops the accents
   "musee des arts decoratifs",            // mad — the same imprint under the museum's name, her addition 1 Oct (Christofle again)
+  "museum of modern art",                 // moma — her addition, 1 Oct (The Surrealist Book)
+  "museum of modern art new york",        // moma — the same, as the lookup also read it (Brancusi)
 ]);
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){

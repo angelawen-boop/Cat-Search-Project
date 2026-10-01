@@ -436,6 +436,8 @@ function runtime(answer, log) {
        'C-072b: so is \u00c9ditions Les Arts D\u00e9coratifs, accents and all — her addition, 30 Sep');
     eq(api.isSelfPublisher('Mus\u00e9e des Arts D\u00e9coratifs'), true,
        'C-072c: and the same imprint under the museum\u2019s own name — her addition, 1 Oct (Christofle)');
+    eq(api.isSelfPublisher('The Museum of Modern Art') && api.isSelfPublisher('The Museum of Modern Art, New York'), true,
+       'C-072d: MoMA, under both names the lookup read — her addition, 1 Oct');
 
     // THE TWO CASES SHE NAMED. A venue-based rule would have suppressed the
     // search on both of these; a publisher-based one cannot.

@@ -433,7 +433,7 @@ and do not flip to searching wide first.**
   why it came back empty.
 - **A museum's own imprint is skipped** — `SELF_PUBLISHERS`, keyed on the
   **publisher**, never the venue, **added to only by her**; one imprint may need
-  two names (MAD has two).
+  two names (MAD and MoMA have two).
 - **Everything fills a blank and nothing else.** A known value is never
   overwritten.
 - **A 10-digit ISBN is taken and converted**, check digit verified. `toIsbn13`
@@ -477,8 +477,9 @@ line on the card, Re-check's words with "Search"/"Search again" (her ruling
 30 Sep; the red banner for it is gone): "Too many searches just now"
 (`rate_limited`) and "Search failed (upstream_error)". **Per `mcp.d.ts`:
 `rate_limited` is never returned; `upstream_error` is the catch-all and
-Parallel's words never reach the page** — its free-tier refusal most likely
-arrives that way (not proven).
+Parallel's words never reach the page** — its free-tier refusal, seen 1 Oct
+through Claude Code, reads "You've hit the free-tier rate limit for Parallel
+Search MCP" — most likely `upstream_error` in the app (not proven).
 
 **Her keyed connector since 36: "Parallel Search Key"** — custom, at
 `https://search.parallel.ai/mcp-oauth`, No sign-in, her key in an **`x-api-key`**
@@ -1009,20 +1010,7 @@ of saving — too messy).
 
 Parked: two tabs open at once.
 
-### 2. The held pile — the next import (six venues)
-
-**Stitched and compressed 30 Sep: `stitch_20260930_1013/sweep_compressed.csv`,
-189 rows, every one described** (Ashmolean 24, MAD 20, British Museum 34,
-d'Orsay 58, Morgan 39, MoMA 14). Through the intake against her 24 Sep
-ledger: 189 Add, 0 unfiled. MoMA is the sweep, not the 4-row saved-pages run
-(her ruling). Supersedes `stitch_20260930_0758`, whose Morgan *Bellini* row
-carried a picture caption.
-
-- **Worked on the test page 30 Sep** in sittings (partial-apply, §4): her Cloud
-  Saves show "import Morgan MoMa Brit" (494) and "Import Orsay MAD Ashmolean"
-  (594). Whether any cards were left undecided: ask her before closing this.
-
-### 3. Fixes not yet checked in the cases they were written for
+### 2. Fixes not yet checked in the cases they were written for
 
 1. **Borghese: 7 titles still in capitals** — site was down 24 Sep; read its 3
    listing pages once, when it is back.
@@ -1030,7 +1018,7 @@ carried a picture caption.
 3. **MAM:** its current run predates her Prix Duchamp / Oliver Beer ruling; the
    next sweep drops them (`mam_pages.js` proves it offline).
 
-### 4. The Frick's past archive, page two
+### 3. The Frick's past archive, page two
 
 About 10 past exhibitions have never been read. The archive paginates; page two
 was wired 13 Sep and refused (403) on every attempt that day. **Likely cause, not
@@ -1039,12 +1027,20 @@ for 10s, which sweeps have obeyed since 27 Sep. **Nothing to do now** — no
 probe. The next monthly sweep reads it; a refusal shows as a marker row. Record
 the result here and close it.
 
-### 5. Catalogue lookup generally
+### 4. Catalogue lookup generally
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`
-(1 Oct). Not yet: `moma`.**
+`moma` (1 Oct).**
 `uffizi`'s shop sells no books — settled.
+
+- **OPEN (1 Oct) — MoMA's shelf is blind to the lookup.** Parallel's copy of
+  `store.moma.org/collections/exhibition-catalogues`, excerpt and full, holds
+  a membership pop-up and NO books (drawn by script; she sees *Brancusi*
+  first). Its search page and `products.json` answer 403. So *Brancusi*,
+  on that shelf, was filed "Not in the museum shop" — a negative never earned
+  (§6). *Surrealist Book* got "In the museum shop" most likely by the web
+  search's store link being opened (not proven). Fix not yet discussed.
 
 - **RAISE AT THE START OF THE NEXT SESSION (her ask, 30 Sep) — asking a Shopify
   shop directly whether a book is available**, instead of a model reading the
@@ -1061,11 +1057,11 @@ She is noting issues as she uses it, for a later debugging session.
   buy links. To discuss first: its address shapes (by ISBN, and by title when
   there is none) are unchecked.
 
-### 6. A fresh sweep — mid-October at the earliest
+### 5. A fresh sweep — mid-October at the earliest
 
 **She sweeps no more than once a month.**
 
-### 7. Smaller, parked
+### 6. Smaller, parked
 
 - **The cheapest archive route per venue** — very low priority, may never happen.
 - **Sweeper brief v3** — needs URL corrections; likely the fallback procedure for
