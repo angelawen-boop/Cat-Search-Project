@@ -1044,7 +1044,7 @@ the result here and close it.
 ### 4. Catalogue lookup generally
 
 She is noting issues as she uses it, for a later debugging session.
-**Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`
+**Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
 `moma` (1 Oct).**
 `uffizi`'s shop sells no books — settled.
 
