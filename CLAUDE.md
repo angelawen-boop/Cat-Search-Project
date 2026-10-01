@@ -1043,13 +1043,15 @@ She is noting issues as she uses it, for a later debugging session.
 `moma` (1 Oct).**
 `uffizi`'s shop sells no books — settled.
 
-- **RAISE AT THE START OF THE NEXT SESSION (her ask, 30 Sep) — asking a Shopify
-  shop directly whether a book is available**, instead of a model reading the
-  page. Through her connector, Morgan Tarot: `.js` refused by the connector (200
-  from the shop); `.json` passes but has no availability field; `.oembed` got
-  429. Untested: `.oembed` once the 429 has cleared — it normally carries an
-  in-stock yes/no. Shopify shops: morgan, artic, moma, ashmolean, lgd, menil,
-  wallace, acq. `docs/shop_pages/README.md`.
+- **OPEN, her decision (1 Oct) — asking a Shopify shop directly whether a book
+  is for sale.** Tried at the Morgan through her connector: `.js` refused,
+  `.oembed` 429 (30 Sep and 1 Oct), a product's `.json` has no availability.
+  Two answers carry `"available"`: the whole-store `/products.json` (too big
+  to read for one book) and the search box's `/search/suggest.json` (small).
+  But `available: true` means "can be ordered", pre-orders included (Visconti
+  Sforza deck: "SOLD OUT! … Pre-order today!", `true`), and the sold-out
+  *Tarot* is not in the search answer at all — absence cannot be read as sold
+  out. Not built; the read stays Claude's, on the whole page.
 - **OPEN (her ask, 30 Sep) — a Booko button** among the
   buy links. To discuss first: its address shapes (by ISBN, and by title when
   there is none) are unchecked.

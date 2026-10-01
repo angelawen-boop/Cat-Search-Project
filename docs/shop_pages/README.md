@@ -10,6 +10,10 @@ For the catalogue lookup and Re-check, not the scraper.
   Shopify's machine-readable answers, tried through her connector the same day:
   `.js` refused by the connector (200 from the shop), `.json` passes but has no
   availability field, `.oembed` answered 429. So the read stays a model read.
+  1 Oct: `.oembed` 429 again. `/products.json` (whole store) and
+  `/search/suggest.json?q=…&resources[type]=product` both pass and carry
+  `"available"` — true for a "SOLD OUT! … Pre-order today!" deck; the Tarot
+  itself absent from the search answer, even with `unavailable_products=last`.
 - `orsay_cassatt_product.mhtml` — 1 Oct 2026, saved with "Read more" and the
   Characteristics tray open. The ISBN is "EAN 9782754117425" in the tray (in
   the page, only folded); the publisher, "Co-publishing Hazan / Musée d'Orsay",
