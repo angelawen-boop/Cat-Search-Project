@@ -472,6 +472,12 @@ and do not flip to searching wide first.**
   the shop, never the publisher** (both read prompts). Text a page hides until
   clicked is not in Parallel's copy (Orsay *Cassatt*'s Hazan) — the wider web
   is the route for it. Evidence: `docs/shop_pages/README.md`.
+- **The web ISBN search reads its results in code too** (`isbnInResults`,
+  36.1; her Ashmolean *In Bloom*: AbeBooks' "ISBN 13" was in the results and
+  the read said none). Only results carrying the whole book title count;
+  labelled numbers and valid 978/979 numbers in their addresses; exactly one.
+  None → the two results about the book are opened whole. Queries name the
+  venue.
 
 **The cost:** up to four searches and three readings. **Every reading runs on
 her allowance.** The connector's keyless tier refuses after roughly a dozen
@@ -1044,10 +1050,6 @@ She is noting issues as she uses it, for a later debugging session.
   429. Untested: `.oembed` once the 429 has cleared — it normally carries an
   in-stock yes/no. Shopify shops: morgan, artic, moma, ashmolean, lgd, menil,
   wallace, acq. `docs/shop_pages/README.md`.
-- **OPEN, for later (her ask, 30 Sep): the lookup says "no ISBN" where one
-  plain web search finds it** (Ashmolean *In Bloom*). From the code: the ISBN
-  search (`fillFromWeb`) omits the venue's name, reads 700 characters of each
-  result, opens none, and "No ISBN anywhere" claims more than that.
 - **OPEN (her ask, 30 Sep) — a Booko button** among the
   buy links. To discuss first: its address shapes (by ISBN, and by title when
   there is none) are unchecked.

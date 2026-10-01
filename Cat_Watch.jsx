@@ -992,16 +992,46 @@ const PAGE_CHARS=20000;
 // check digit. Taken only when the page carries exactly ONE such number
 // (a shop's related-books strip can carry others); none, or two, and Claude
 // reads the page as before. Orsay prints it "EAN 9782754117425".
-function isbnOnPage(text){
+function isbn13Checks(d){
+  if(!/^97[89]\d{10}$/.test(d))return false;
+  let sum=0;
+  for(let i=0;i<12;i++)sum+=Number(d[i])*(i%2?3:1);
+  return (10-(sum%10))%10===Number(d[12]);
+}
+function isbnsLabelled(text){
   const found=new Set();
   const re=/\b(?:ISBN|EAN)(?:[\s-]?13)?\b[^0-9]{0,15}(97[89](?:[\s\u2010-\u2013-]?\d){10})(?!\d)/gi;
   let m;
   while((m=re.exec(String(text||"")))){
     const d=m[1].replace(/\D/g,"");
-    if(d.length!==13)continue;
-    let sum=0;
-    for(let i=0;i<12;i++)sum+=Number(d[i])*(i%2?3:1);
-    if((10-(sum%10))%10===Number(d[12]))found.add(d);
+    if(isbn13Checks(d))found.add(d);
+  }
+  return found;
+}
+function isbnOnPage(text){
+  const found=isbnsLabelled(text);
+  return found.size===1?[...found][0]:null;
+}
+
+// THE ISBN IN WEB SEARCH RESULTS, READ IN CODE — her Ashmolean In Bloom,
+// 30 Sep. The search handed back AbeBooks' "ISBN 13: 9781910807743", and
+// three booksellers' addresses carrying it, and the read still said none.
+// Only results whose headline or text carries the whole book title count — a
+// "related books" strip prints other numbers — and from those, the labelled
+// numbers in the text plus any valid 978/979 number in the address. Exactly
+// one distinct number, or nothing.
+function resultsCarrying(results,bookTitle){
+  const norm=v=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+  const want=norm(bookTitle);
+  if(want.length<6)return[];
+  return (results||[]).filter(r=>(" "+norm(String((r&&r.title)||"")+" "+oneText(r))+" ").includes(" "+want+" "));
+}
+function isbnInResults(results,bookTitle){
+  const found=new Set();
+  for(const r of resultsCarrying(results,bookTitle)){
+    for(const d of isbnsLabelled(oneText(r)))found.add(d);
+    for(const m of String((r&&r.url)||"").matchAll(/(?:^|[^0-9])(97[89]\d{10})(?![0-9])/g))
+      if(isbn13Checks(m[1]))found.add(m[1]);
   }
   return found.size===1?[...found][0]:null;
 }
@@ -2237,23 +2267,42 @@ export default function App(){
     const s3=await searchWeb(
       "The ISBN-13 and publisher of the printed exhibition catalogue \u201c"+book+"\u201d"
         +(r.publisher?", published by "+r.publisher:"")+", for the exhibition at "+venue+".",
-      [book+" "+(r.publisher||"")+" ISBN",
-       book+" exhibition catalogue ISBN",
+      // The venue's name is in a query — her one Google search had it.
+      [book+" "+venue+" catalogue ISBN",
+       book+" "+(r.publisher||"exhibition catalogue")+" ISBN",
        book+" catalogue publisher"]);
     let detail=hit.detail+"\n"+s3.detail;
     if(!s3.ok)return{...hit,detail,trouble:s3.detail};
     if(!s3.results.length)return{...hit,detail};
+    // The number is code's first (isbnInResults); Claude still reads the
+    // publisher, and its ISBN only when code found none.
+    let coded=isbnInResults(s3.results,book);
+    if(coded)detail=detail+"\nISBN read off the search results in code: "+coded;
     const rd=await readResults(PAGE_RULES
       +"\nBook: "+book+"\nExhibition venue: "+venue
       +"\nThese are web search results about THIS book. Read its ISBN and publisher off them. "
       +"If they are about a different book, answer null.\n\n"
       +resultsForPrompt(s3.results)+PAGE_SHAPE);
     detail=detail+"\n"+rd.detail;
-    if(!rd.ok)return{...hit,detail,trouble:rd.detail};
-    const filled=applyIsbnFill(r,rd.data||{},dom);
+    if(!rd.ok&&!coded)return{...hit,detail,trouble:rd.detail};
+    let filled=applyIsbnFill(r,{...(rd.ok?(rd.data||{}):{}),...(coded?{isbn13:coded}:{})},dom);
+    // STILL NONE: open the two results that are about this book and read
+    // them whole, in code. A search excerpt is a few lines; the page is not.
+    if(!filled.isbn13){
+      const open=resultsCarrying(s3.results,book).map(x=>x.url).filter(Boolean).slice(0,2);
+      if(open.length){
+        const fp=await fetchPage(open,"The ISBN of the book \u201c"+book+"\u201d.",[book+" ISBN"],{full:true});
+        detail=detail+"\n"+fp.detail;
+        const onPages=fp.ok?isbnInResults(fp.results,book):null;
+        if(onPages){
+          filled=applyIsbnFill(filled,{isbn13:onPages},dom);
+          detail=detail+"\nISBN read off "+(open.length>1?"those pages":"that page")+" in code: "+onPages;
+        }
+      }
+    }
     detail=detail+(filled.isbn13?"\nISBN found on the wider web: "+filled.isbn13
-                                :"\nNo ISBN anywhere for this one.");
-    return{...hit,detail,row:filled};
+                                :"\nNo ISBN in the web search, or on the pages it found about this book.");
+    return{...hit,detail,row:filled,...(rd.ok?{}:{trouble:rd.detail})};
   };
 
   // \u2500\u2500 THE PUBLISHER\u2019S PAGE, LOOKED FOR PROPERLY \u2014 her ruling, 21 Sep \u2500\u2500\u2500\u2500

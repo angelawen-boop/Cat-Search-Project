@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, isbnOnPage, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage };')(
+    code + '\n;return { fetchPage, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -583,6 +583,28 @@ function runtime(answer, log) {
     eq(api.isbnOnPage('ISBN 9781588398131'), null, 'C-127: a wrong check digit is refused');
     eq(api.isbnOnPage('Item 9781588398130'), null, 'C-128: a number with no ISBN or EAN label is not taken');
     eq(api.isbnOnPage('EAN 3700000000017'), null, 'C-129: an EAN that is not a book (no 978/979) is not an ISBN');
+  }
+
+  // ── C-130 to C-135: the ISBN in web search results, read in code ─────
+  // Her Ashmolean In Bloom: the real results Parallel gave, 1 Oct.
+  {
+    const api = lift({ document: {}, localStorage: {} });
+    const book = 'In Bloom: How Plants Changed Our World';
+    const real = [
+      { url: 'https://www.amazon.com/Bloom-Plants-Changed-Exhibition-Catalogue/dp/1910807745', title: 'In Bloom: How Plants Changed Our World (Exhibition Catalogue)', excerpts: ['A journey through art and material culture…'] },
+      { url: 'https://www.abebooks.co.uk/9781910807743/Bloom-Plants-Changed-World-Exhibition-1910807745/plp', title: 'In Bloom: How Plants Changed Our World (Exhibition Catalogue ...',
+        excerpts: ['In Bloom: How Plants Changed Our World (Exhibition Catalogue) - Softcover ISBN 10: 1910807745 ISBN 13: 9781910807743 Publisher: Ashmolean Museum, 2026'] },
+      { url: 'https://www.simonandschuster.com/books/In-Bloom/Francesca-Leoni/Exhibition-Catalogue/9781910807743', title: 'In Bloom | Book by Francesca Leoni', excerpts: ['In Bloom How Plants Changed Our World Part of Exhibition Catalogue'] },
+    ];
+    eq(api.isbnInResults(real, book), '9781910807743', 'C-130: her In Bloom — the ISBN in the search results is read in code');
+    eq(api.isbnInResults([real[2]], book), '9781910807743', 'C-131: a bookseller’s address carrying it counts, on a result about this book');
+    eq(api.isbnInResults([{ url: 'https://x.test/9781910807743', title: 'Another book', excerpts: ['Another book'] }], book), null,
+       'C-132: a result not about this book counts for nothing');
+    eq(api.isbnInResults([...real, { url: 'https://x.test/b', title: book, excerpts: [book + ' ISBN 9781588398130'] }], book), null,
+       'C-133: two different numbers about this book — code does not choose');
+    eq(api.isbnInResults(real, 'Bloom'), null, 'C-134: a title too short to match on matches nothing');
+    eq(api.isbnInResults([{ url: 'https://x.test/9781910807744', title: book, excerpts: [book] }], book), null,
+       'C-135: a number in an address with a wrong check digit is not an ISBN');
   }
 
   console.log(failures ? failures + ' failed' : 'the ISBN fill holds');
