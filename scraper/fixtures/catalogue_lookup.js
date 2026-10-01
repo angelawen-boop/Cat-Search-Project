@@ -434,6 +434,8 @@ function runtime(answer, log) {
        'C-072a: the British Museum Press is on the list — her addition, 30 Sep');
     eq(api.isSelfPublisher('\u00c9ditions Les Arts D\u00e9coratifs'), true,
        'C-072b: so is \u00c9ditions Les Arts D\u00e9coratifs, accents and all — her addition, 30 Sep');
+    eq(api.isSelfPublisher('Mus\u00e9e des Arts D\u00e9coratifs'), true,
+       'C-072c: and the same imprint under the museum\u2019s own name — her addition, 1 Oct (Christofle)');
 
     // THE TWO CASES SHE NAMED. A venue-based rule would have suppressed the
     // search on both of these; a publisher-based one cannot.
