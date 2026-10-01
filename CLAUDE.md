@@ -292,8 +292,9 @@ this one alone. `stitch` and `compress` carry it untouched.
 > forward. **Renaming the connector means restating them.**
 
 **Live: 36 on her main app, 36 · cloud 3 on the test page** (1 Oct) — the
-lookup asks her keyed connector (below). **36.1 built and pushed, NOT
-published** — held on her word (1 Oct); publish only when she says.
+lookup asks her keyed connector (below). **Built, NOT published — held on her
+word (1 Oct):** 36.1 (the lookup fixes below) and 37 (Booko, on top of 36.1).
+Publish only when she says.
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
@@ -1043,18 +1044,9 @@ She is noting issues as she uses it, for a later debugging session.
 `moma` (1 Oct).**
 `uffizi`'s shop sells no books — settled.
 
-- **OPEN, her decision (1 Oct) — asking a Shopify shop directly whether a book
-  is for sale.** Tried at the Morgan through her connector: `.js` refused,
-  `.oembed` 429 (30 Sep and 1 Oct), a product's `.json` has no availability.
-  Two answers carry `"available"`: the whole-store `/products.json` (too big
-  to read for one book) and the search box's `/search/suggest.json` (small).
-  But `available: true` means "can be ordered", pre-orders included (Visconti
-  Sforza deck: "SOLD OUT! … Pre-order today!", `true`), and the sold-out
-  *Tarot* is not in the search answer at all — absence cannot be read as sold
-  out. Not built; the read stays Claude's, on the whole page.
-- **OPEN (her ask, 30 Sep) — a Booko button** among the
-  buy links. To discuss first: its address shapes (by ISBN, and by title when
-  there is none) are unchecked.
+- **OPEN — Booko with no ISBN.** Built in 37: "Booko AU", last buy link;
+  `booko.au/<isbn>` (Booko fills the title — her check), else its title search,
+  which she finds poor. A better no-ISBN query: her question, 1 Oct, unsettled.
 
 ### 5. A fresh sweep — mid-October at the earliest
 
@@ -1095,6 +1087,9 @@ She is noting issues as she uses it, for a later debugging session.
 - **Catalogue lookup:** splitting it from drawer output. A map of publisher
   websites. A background shop check on every click. Linking straight to an
   Amazon product page from an ISBN-10. Pointing the shop link at an ISBN search.
+  **Asking a Shopify shop directly whether a book is for sale** (1 Oct):
+  `.js` refused, `.oembed` 429, a product's `.json` has no availability; the
+  search answer's `available` counts pre-orders and omits the sold-out Tarot.
   **Reading the exhibition's own page for a catalogue when the shop is blocked**
   — a model read and a new step for two shops (KHM, MAM); the card already links
   the shop's search.
