@@ -110,7 +110,17 @@ const momaRow = fresh('moma-testbrancusi', 'moma', 'Test MoMA Brancusi Show');
 // HER ASHMOLEAN IN BLOOM, 30 Sep: the ISBN was in the web results, unread.
 const bloomRow = fresh('ng-testinbloom', 'ng', 'Test In Bloom Show');
 const bloomOpen = fresh('ng-testinbloomopen', 'ng', 'Test In Bloom Opened');
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen], ignored: [], lastRun: null };
+// HER METAMORPHOSES, 1 Oct: not in the shop, and the ISBN search never ran.
+// HER MILLET, 1 Oct: the read filed Yale's page — the distributor — as the
+// publisher of a book National Gallery published itself. milletHad is her
+// card as it stood; distRow a real publisher handed a distributor's link.
+const metaRow = fresh('rijks-testmeta', 'rijks', 'Test Rijks Metamorphoses Show');
+const milletRow = fresh('ng-testmillet', 'ng', 'Test NG Millet Show');
+const milletHad = { ...fresh('ng-testmillethad', 'ng', 'Test NG Millet Had'), looked: true, hasCatalogue: 'yes',
+  catalogueTitle: 'Test Millet Had : Life on the Land', isbn13: '9781857097382', publisher: 'National Gallery London',
+  publisherUrl: 'https://yalebooks.co.uk/book/9781857097382/millet', publisherResult: null, shopState: 'web' };
+const distRow = fresh('rijks-testdist', 'rijks', 'Test Rijks Distributor Show');
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -715,6 +725,44 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const opened = calls.find(c => c.tool === 'web_fetch' && c.args.urls.includes(SELLER));
     ok(opened && opened.args.full_content === true, 'W-004: no ISBN in the results — the result about this book is opened, whole');
     ok(/978-1910807743/.test(t), 'W-005:   and the ISBN on it reaches her card', t.slice(0, 400));
+  }
+
+  // ── N-001..N-007: not in the shop — the ISBN search, and only the publisher is the publisher
+  {
+    const YALE = 'https://yalebooks.co.uk/book/9781857097382/millet';
+    const ANY = [{ url: 'https://news.test/review', title: 'A review', excerpts: ['A review of the show.'] }];
+    const run = async (row, book, read, results) => {
+      calls.length = 0;
+      script.mcp = (tool, args) => tool === 'web_search'
+        ? { payload: { results } }
+        : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Some other book · £20')] })) } };
+      script.sample = p => /OWN shop pages, opened directly/.test(p) ? { found: false }
+        : /"found"/.test(p) ? { found: true, catalogueTitle: book, shopUrl: null, ...read }
+        : { isbn13: null, publisher: null, publisherUrl: null };
+      await openTray(row.title);
+      await click(button(card(row.title), /Find catalogue|Search again/));
+      const c = card(row.title);
+      return { t: c ? c.textContent : '', hrefs: c ? [...c.querySelectorAll('a')].map(a => a.href) : [] };
+    };
+
+    const META = 'Test Metamorphoses: Ovid and the Arts';
+    let r = await run(metaRow, META, { isbn13: null, publisher: 'Hannibal Books', publisherUrl: 'https://hannibalbooks.be/test-metamorphoses' },
+      [{ url: 'https://www.amazon.com.au/dp/9493416542', title: META, excerpts: ['ISBN-10 : 9493416542 ISBN-13 : 978-9493416543'] }]);
+    const qs = calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries);
+    ok(qs.some(q => q.some(x => x.includes(META) && /ISBN/.test(x))), 'N-001: not in the shop — the dedicated ISBN search runs', JSON.stringify(qs));
+    ok(/978-9493416543/.test(r.t), 'N-002:   and its ISBN reaches her card', r.t.slice(0, 400));
+    ok(r.hrefs.includes('https://hannibalbooks.be/test-metamorphoses'), 'N-003: a link on the publisher’s own site is kept');
+
+    r = await run(milletRow, 'Test Millet: Life on the Land', { isbn13: '9781857097382', publisher: 'National Gallery London', publisherUrl: YALE }, ANY);
+    ok(!r.hrefs.includes(YALE), 'N-004: a distributor’s page is never filed as a self-published book’s publisher', JSON.stringify(r.hrefs));
+    ok(/self-published by the venue/.test(r.t), 'N-005:   the card says self-published', r.t.slice(0, 400));
+
+    r = await run(distRow, 'Test Distributed Book', { isbn13: '9789493416543', publisher: 'Hannibal Books', publisherUrl: YALE }, ANY);
+    ok(!r.hrefs.includes(YALE), 'N-006: a distributor’s page is never filed as a publisher’s', JSON.stringify(r.hrefs));
+    ok(calls.some(c => c.tool === 'web_search' && c.args.search_queries[0] === 'Hannibal Books'), 'N-006a:   the publisher step goes to the publisher instead');
+
+    r = await run(milletHad, 'Test Millet Had : Life on the Land', { isbn13: '9781857097382', publisher: 'National Gallery London', publisherUrl: YALE }, ANY);
+    ok(!r.hrefs.includes(YALE) && /self-published by the venue/.test(r.t), 'N-007: Search again clears the distributor link already on her card', r.t.slice(0, 400));
   }
 
   // ── S-001..S-003: the search narrows WITH the filters — her finding, 25 Sep.

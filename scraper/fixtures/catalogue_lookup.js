@@ -255,10 +255,14 @@ function runtime(answer, log) {
     // The page read fills it, and like everything else it fills a BLANK only.
     const row = { hasCatalogue: 'yes', isbn13: null, publisher: null, publisherUrl: null };
     const out = api.applyIsbnFill(row,
-      { isbn13: '9781857097399', publisher: 'National Gallery Global',
-        publisherUrl: 'https://nationalgalleryglobal.com/zurbaran' }, dom);
-    eq(out.publisherUrl, 'https://nationalgalleryglobal.com/zurbaran',
+      { isbn13: '9781857097399', publisher: 'Hannibal Books',
+        publisherUrl: 'https://hannibalbooks.be/zurbaran' }, dom);
+    eq(out.publisherUrl, 'https://hannibalbooks.be/zurbaran',
        'C-037: the book\u2019s page can supply it');
+    eq(api.applyIsbnFill(row, { publisher: 'Hannibal Books', publisherUrl: 'https://yalebooks.co.uk/book/1/x' }, dom).publisherUrl, null,
+       'C-037a: a link off the publisher\u2019s own site (a distributor) is not filed');
+    eq(api.applyIsbnFill(row, { publisher: 'National Gallery Global', publisherUrl: 'https://nationalgalleryglobal.com/zurbaran' }, dom).publisherUrl, null,
+       'C-037b: a self-published book gets no publisher link');
     const had = api.applyIsbnFill({ ...row, publisherUrl: 'https://kept.example/book' },
       { publisherUrl: 'https://other.example/book' }, dom);
     eq(had.publisherUrl, 'https://kept.example/book',

@@ -81,7 +81,7 @@ handed to it, so it can never report a page that was not found.
   | Outcome | The card says |
   |---|---|
   | `product` | nothing — the button is the answer |
-  | `container` | The publisher's link opens the section this book sits in, not a page of its own. |
+  | `container` | Publisher's link opens the section this book sits in, not the book's own page. |
   | `site` | The publisher's own site doesn't show this book — the link opens their home page. |
   | `nosite` | Couldn't work out the publisher's own website, so there's no link to it. |
   | `unnamed` | No publisher was named for this book, so none was looked for. |

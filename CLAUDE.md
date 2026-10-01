@@ -410,7 +410,8 @@ Each step runs only if the one before left something missing.
 1. **The venue's shop** — its catalogues page and its search box, in one call.
    Take **the book's own product page**, never a list.
 2. **Open that page** for the ISBN, the publisher and any publisher link.
-3. **ISBN still missing → search the open web.** Gaps only.
+3. **ISBN still missing → search the open web.** Gaps only — whether or not
+   the shop had the book (the not-in-shop route lacked it until 1 Oct; N-001).
 4. **No publisher page → go to the publisher**: find their site from their
    name, search inside it, **open what that returns**.
 
@@ -431,6 +432,9 @@ and do not flip to searching wide first.**
 - **Every outcome says which negative it is** (`publisherResult`,
   `publisherNote`); **a step that died is not an answer** — later steps carry
   why it came back empty.
+- **Only the publisher is the publisher** (her ruling, 1 Oct, Millet): a link a
+  read hands over is filed only on the publisher's own site (`publisherLinkOf`);
+  a distributor's page never. Self-published → no link at all.
 - **A museum's own imprint is skipped** — `SELF_PUBLISHERS`, keyed on the
   **publisher**, never the venue, **added to only by her**; one imprint may need
   two names (MAD and MoMA have two).
@@ -1051,6 +1055,13 @@ She is noting issues as she uses it, for a later debugging session.
 - **OPEN — Booko with no ISBN.** Live in 37: "Booko AU", last buy link;
   `booko.au/<isbn>` (Booko fills the title — her check), else its title search,
   which she finds poor. A better no-ISBN query: her question, 1 Oct, unsettled.
+- **OPEN — the publisher step's verdict is not stable.** *Metamorphoses*
+  (Hannibal), two fresh lookups, same code, 1 Oct: "Publisher's section", then
+  "Publisher" (right). Where they split is unproven — a different candidate
+  page, the page returning empty (`pageIsShell`), or the read judging the same
+  page differently. Only that lookup's log settles it, and "Show diagnostic"
+  keeps the last action's only. If it recurs, get the log before anything else.
+  A log kept per card was offered, not built.
 
 ### 5. A fresh sweep — mid-October at the earliest
 
@@ -1110,7 +1121,8 @@ She is noting issues as she uses it, for a later debugging session.
 
 **Corrected along the way:** Chat can **not** fetch any URL cold. The Italian
 venues are four different situations, not one problem. The AbeBooks link is
-`/servlet/SearchResults?kn=…&sts=t`.
+`/servlet/SearchResults?ds=30&dym=on&kn=…&rollup=on&sortby=17` —
+sorted by lowest total price (her ruling, 1 Oct).
 
 ---
 
