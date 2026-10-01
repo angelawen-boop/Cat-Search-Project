@@ -410,7 +410,8 @@ Each step runs only if the one before left something missing.
 1. **The venue's shop** — its catalogues page and its search box, in one call.
    Take **the book's own product page**, never a list.
 2. **Open that page** for the ISBN, the publisher and any publisher link.
-3. **ISBN still missing → search the open web.** Gaps only.
+3. **ISBN still missing → search the open web.** Gaps only — whether or not
+   the shop had the book (the not-in-shop route lacked it until 1 Oct; N-001).
 4. **No publisher page → go to the publisher**: find their site from their
    name, search inside it, **open what that returns**.
 
@@ -431,6 +432,9 @@ and do not flip to searching wide first.**
 - **Every outcome says which negative it is** (`publisherResult`,
   `publisherNote`); **a step that died is not an answer** — later steps carry
   why it came back empty.
+- **Only the publisher is the publisher** (her ruling, 1 Oct, Millet): a link a
+  read hands over is filed only on the publisher's own site (`publisherLinkOf`);
+  a distributor's page never. Self-published → no link at all.
 - **A museum's own imprint is skipped** — `SELF_PUBLISHERS`, keyed on the
   **publisher**, never the venue, **added to only by her**; one imprint may need
   two names (MAD and MoMA have two).

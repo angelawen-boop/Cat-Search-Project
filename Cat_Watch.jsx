@@ -817,7 +817,7 @@ function needsPageRead(hit){
 function applyIsbnFill(row,o,dom){
   const isbn=toIsbn13(o&&o.isbn13);
   const pub=(o&&o.publisher)?String(o.publisher).trim():"";
-  const purl=cleanPublisherUrl(o&&o.publisherUrl,dom);
+  const purl=publisherLinkOf(o&&o.publisherUrl,row.publisher||pub,dom);
   if(!isbn&&!pub&&!purl)return row;
   return{...row,
     isbn13:isbn||row.isbn13,
@@ -938,6 +938,20 @@ function cleanPublisherUrl(u,dom){
   if(!urlLooksValid(t))return null;
   try{ if(dom&&new URL(t).hostname.toLowerCase().includes(String(dom).toLowerCase()))return null; }catch{ return null; }
   return t;
+}
+
+// ONLY THE PUBLISHER IS THE PUBLISHER — her ruling, 1 Oct (Millet). A read
+// of search results or of a shop's page will call a distributor's page the
+// publisher's: Millet, published by National Gallery Global, came back with
+// Yale's page for it. So a link a read hands over is filed only when it sits
+// on the publisher's own site — the name in the hostname, the same test the
+// publisher step uses (publisherDomainFrom). A self-published book has no
+// publisher link at all. Anything else is dropped, and the publisher step,
+// which goes to the publisher, runs.
+function publisherLinkOf(u,publisher,dom){
+  const t=cleanPublisherUrl(u,dom);
+  if(!t||!publisher||isSelfPublisher(publisher))return null;
+  return publisherDomainFrom([{url:t}],publisher)?t:null;
 }
 
 
@@ -1261,7 +1275,10 @@ function keepWhatWeKnew(prev,next){
   out.catalogueTitle=prev.catalogueTitle||next.catalogueTitle||null;
   out.isbn13=prev.isbn13||next.isbn13||null;
   out.publisher=prev.publisher||next.publisher||null;
-  if(prev.publisherUrl){out.publisherUrl=prev.publisherUrl;out.publisherResult=prev.publisherResult??null;}
+  // A link with no recorded kind came from a read, unchecked — it stays only
+  // if it is on the publisher's own site (publisherLinkOf, her ruling 1 Oct).
+  const keepLink=prev.publisherUrl&&(prev.publisherResult||publisherLinkOf(prev.publisherUrl,out.publisher,null));
+  if(keepLink){out.publisherUrl=prev.publisherUrl;out.publisherResult=prev.publisherResult??null;}
   if(prev.shopState){out.shopState=prev.shopState;out.shopUrl=prev.shopUrl??null;out.shopChange=prev.shopChange??null;}
   return out;
 }
@@ -2144,7 +2161,7 @@ export default function App(){
         row:keepWhatWeKnew(row,{...row,looked:true,hasCatalogue:"yes",
         shopState:inShop?"shop":blocked?"blocked":"web",shopChange:null,
         catalogueTitle:o.catalogueTitle||null,isbn13:toIsbn13(o.isbn13),
-        publisher:o.publisher||null,publisherUrl:cleanPublisherUrl(o.publisherUrl,dom),
+        publisher:o.publisher||null,publisherUrl:publisherLinkOf(o.publisherUrl,row.publisher||o.publisher,dom),
         publisherResult:null,
         shopUrl:inShop?link:null})};
     }
@@ -2330,15 +2347,17 @@ export default function App(){
   // conditional (every page read runs on her allowance).
   const fillPublisherPage=async(hit,venue,dom)=>{
     const r=hit&&hit.row;
-    if(!r||!hit.ok||r.hasCatalogue!=="yes"||r.publisherUrl)return hit;
+    if(!r||!hit.ok||r.hasCatalogue!=="yes")return hit;
+    // A NAMED MUSEUM PUBLISHING ARM — no searches at all, and no link: only
+    // the publisher is the publisher (her ruling, 1 Oct). See SELF_PUBLISHERS.
+    if(isSelfPublisher(r.publisher)){
+      return{...hit,detail:hit.detail+"\n"+r.publisher+" is a museum’s own imprint — no publisher page to look for.",
+        row:{...r,publisherUrl:null,publisherResult:"selfpublished"}};
+    }
+    if(r.publisherUrl)return hit;
     // NO NAME, SO NOTHING WAS LOOKED FOR — and the card must say that rather
     // than print the same sentence as a search that ran and found nothing.
     if(!r.publisher)return{...hit,row:{...r,publisherResult:"unnamed"}};
-    // A NAMED MUSEUM PUBLISHING ARM — no searches at all. See SELF_PUBLISHERS.
-    if(isSelfPublisher(r.publisher)){
-      return{...hit,detail:hit.detail+"\n"+r.publisher+" is a museum’s own imprint — no publisher page to look for.",
-        row:{...r,publisherResult:"selfpublished"}};
-    }
     const book=r.catalogueTitle||r.title;
     const isbn=cleanIsbn(r.isbn13);
     setLookPhase("publisher");
@@ -2589,7 +2608,9 @@ export default function App(){
       +resultsForPrompt(s2.results)+READ_SHAPE);
     detail=detail+"\n"+r2.detail;
     if(!r2.ok)return{row,detail,ok:false};
-    return await fillPublisherPage(await fillIsbn(await confirmShopLink(settle(row,r2.data||{},dom,detail,false,blocked)),venue,dom),venue,dom);
+    // The dedicated ISBN search runs here too when the ISBN is still blank —
+    // her ruling, 1 Oct (Metamorphoses): until then only the shop route had it.
+    return await fillPublisherPage(await fillFromWeb(await fillIsbn(await confirmShopLink(settle(row,r2.data||{},dom,detail,false,blocked)),venue,dom),venue,dom),venue,dom);
   }
 
   // A STEP THAT DIED IS NOT AN ANSWER \u2014 her question, 21 Sep, and the fault was
