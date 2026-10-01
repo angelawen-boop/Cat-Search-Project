@@ -1001,9 +1001,10 @@ an empty page never saves.
 
 **Her tests 26 Sep, all passed:** load/change/reload; loading an older file;
 roll-back; Save with the cloud copy; export → change → reload; saving within a
-second; catalogue lookups. **Still to meet in real use:** Download a cloud save
-and Load it; close the page fully and reopen; the first real sweep Import
-(sweep log updates live; the Import reminder — the one line with no fixture).
+second; catalogue lookups. **Her 30 Sep import updated the sweep log live**
+(store read 1 Oct: six venues' dates match their runs). **Still to meet in real
+use:** Download a cloud save and Load it; close the page fully and reopen; the
+Import reminder (the one line with no fixture).
 
 **Decided against, 25 Sep:** a snapshot on closing the page (a browser gives a
 closing page no reliable time); a backup copy in browser storage (a fourth way
