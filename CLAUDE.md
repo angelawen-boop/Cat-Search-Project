@@ -293,7 +293,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 
 **Live: 36 on her main app, 36 · cloud 3 on the test page** (1 Oct) — the
 lookup asks her keyed connector (below). **36.1 built and pushed, NOT
-published** — §7.5 goes in first; publish when she is out.
+published** — publish when she is out.
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
@@ -461,6 +461,14 @@ and do not flip to searching wide first.**
   one link on the shop whose words carry the whole catalogue title; two, or
   none, and nothing. Her MAD *Christofle*: the shelf held it, the read returned
   the shelf. (Parallel dropping tile links was one Orsay read, not a rule.)
+- **One page is read whole** (`fetchPage` `{full:true}`, 36.1, her ruling
+  1 Oct): the book's page, Re-check's page, the publisher's candidates. The
+  shelf stays excerpts (a call is capped ~25,000 characters). **The ISBN is read
+  in code first** (`isbnOnPage`): exactly one 978/979 number labelled ISBN or
+  EAN, check digit valid; Claude's only when code finds none. **"Sold by …" is
+  the shop, never the publisher** (both read prompts). Text a page hides until
+  clicked is not in Parallel's copy (Orsay *Cassatt*'s Hazan) — the wider web
+  is the route for it. Evidence: `docs/shop_pages/README.md`.
 
 **The cost:** up to four searches and three readings. **Every reading runs on
 her allowance.** The connector's keyless tier refuses after roughly a dozen
@@ -1031,22 +1039,7 @@ for 10s, which sweeps have obeyed since 27 Sep. **Nothing to do now** — no
 probe. The next monthly sweep reads it; a refusal shows as a marker row. Record
 the result here and close it.
 
-### 5. Read a book's own page in full — her yes, 1 Oct; build into 36.1
-
-Her ruling: a page already fetched gets every chance to yield what it holds —
-excerpts were never put to her, and a thin read sends the lookup to the wider
-web. Evidence: `docs/shop_pages/README.md`, Orsay *Cassatt* (excerpts dropped
-the folded tray holding the EAN; "Sold by GrandPalaisRmn" filed as publisher).
-1. Every one-page read asks `full_content` (`fillIsbn`, `readShopPage`, the
-   publisher's candidates) — likely also ends *Tarot*'s "couldn't be read"
-   (486-character excerpt vs `SHELL_CHARS` 400; not proven). The shelf call
-   stays excerpts until measured: Parallel caps a call at ~25,000 characters.
-2. ISBN read in code first: one 13-digit 978/979 number labelled ISBN or EAN,
-   check digit valid; else Claude reads.
-3. Both read prompts: "Sold by …" is the shop, never the publisher.
-Hazan is not on that page as Parallel copies it (hidden description) — settled.
-
-### 6. Catalogue lookup generally
+### 5. Catalogue lookup generally
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`
@@ -1068,11 +1061,11 @@ She is noting issues as she uses it, for a later debugging session.
   buy links. To discuss first: its address shapes (by ISBN, and by title when
   there is none) are unchecked.
 
-### 7. A fresh sweep — mid-October at the earliest
+### 6. A fresh sweep — mid-October at the earliest
 
 **She sweeps no more than once a month.**
 
-### 8. Smaller, parked
+### 7. Smaller, parked
 
 - **The cheapest archive route per venue** — very low priority, may never happen.
 - **Sweeper brief v3** — needs URL corrections; likely the fallback procedure for
