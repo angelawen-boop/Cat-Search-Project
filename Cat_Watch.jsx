@@ -18,7 +18,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
 const APP_VERSION = "35.6";
-const APP_VERSION_DATE = "30 Sep 2026";
+const APP_VERSION_DATE = "1 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
 // size — it is the order she wants to WORK in. The venues she reads most come
