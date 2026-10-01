@@ -3709,7 +3709,11 @@ export default function App(){
           :snaps.length===0?<div style={{fontSize:12,color:C.soft}}>{"No cloud saves yet."}</div>
           :snaps.map(s=>(
             <div key={s.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"5px 0",alignItems:"baseline",borderTop:"1px dotted "+C.rule,flexWrap:"wrap"}}>
-              <span style={{minWidth:120,fontWeight:600,whiteSpace:"nowrap"}}>{localReadable(s.at)}</span>
+              {/* ONE WIDTH FOR EVERY TIME — her ask, 1 Oct. 120px was narrower than
+                  every time, so each description started where its own time
+                  ended ("10:49pm" wider than "11:59pm"). 15em fits the longest;
+                  even-width digits. */}
+              <span style={{flex:"0 0 auto",minWidth:"15em",fontWeight:600,whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums"}}>{localReadable(s.at)}</span>
               {/* NO "AUTOMATIC" TAG — her ruling, 26 Sep: the copies SHE made are the
                   ones marked, by her own description in bold. */}
               <span style={{flex:"1 1 160px"}}>{s.kind!=="safety"&&s.label?<>{"Export: \u201c"}<b>{s.label}</b>{"\u201d"}</>:snapTitle(s,snaps)}<span style={{color:C.soft}}>{" · "+s.rows+" exhibitions"}</span>{s.filename&&<span style={{display:"block",fontSize:11,color:C.soft,wordBreak:"break-all"}}>{s.filename}</span>}</span>
