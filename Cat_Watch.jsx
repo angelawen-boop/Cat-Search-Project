@@ -896,6 +896,7 @@ function publisherDomainFrom(results,name){
 // that comparison is the thing this note exists to avoid.
 const SELF_PUBLISHERS = new Set([
   "national gallery global",              // ng \u2014 her row, Zurbaran
+  "national gallery london",              // ng — the same imprint as Yale (its distributor) names it, her addition 1 Oct (Millet)
   "metropolitan museum of art",           // met
   "british museum press",                 // brit — her addition, 30 Sep (Bayeux Tapestry)
   "editions les arts decoratifs",         // mad — her addition, 30 Sep (Christofle); normPublisher drops the accents
