@@ -93,7 +93,15 @@ const khmList = fresh('khm-testlist', 'khm', 'Test KHM Listed Only');
 // Her Canaletto card exactly as her 26 Sep file still had it: the ticket link,
 // "In the museum shop" — saved before her Re-check.
 const khmOld = { ...khmBad, id: 'khm-canaletto-oldfile', title: 'Canaletto and Bellotto (her older file)' };
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld], ignored: [], lastRun: null };
+// HER MAD CHRISTOFLE, 1 Oct: the shelf carried the book's own link and the
+// read handed back the shelf. madShelf is a first search; madListed is her
+// card as it stood — in the shop, no link of its own; madTwo has two books
+// whose link words both carry the title, so neither may be taken.
+const madShelf = fresh('mad-testshelf', 'mad', 'Test MAD Shelf Show');
+const madListed = { ...fresh('mad-testlisted', 'mad', 'Test MAD Listed Show'), looked: true, hasCatalogue: 'yes',
+  catalogueTitle: 'Test MAD Listed : A brilliant story', publisher: 'Musée des Arts Décoratifs', shopState: 'shop' };
+const madTwo = fresh('mad-testtwo', 'mad', 'Test MAD Two Books');
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -557,6 +565,46 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(card(webRow.title).textContent === before, 'L-019a: other cards untouched');
   }
 
+
+  // ── M-001..M-006: the book's link read off the shelf in code ───────────
+  {
+    const SHELF1 = 'https://boutique.madparis.fr/en/mads-publications/c462/1/';
+    const BOOK = 'https://boutique.madparis.fr/en/decorative-arts/test-mad-shelf/14474.html';
+    const LISTED = 'https://boutique.madparis.fr/en/decorative-arts/test-mad-listed/14475.html';
+    const OTHER = 'https://boutique.madparis.fr/en/decorative-arts/test-mad-two-fr/20002.html';
+    const tile = (t, u) => '[' + t + ' #### ' + t + ' * €55](' + u + ' "Product information sheet for ' + t + '")';
+    const shelf = urls => ({ payload: { errors: [], results: urls.filter(u => /c462/.test(u)).map((u, i) => ({ url: u, title: "MAD's publications",
+      excerpts: [i ? 'Page ' + (i + 1) + ' /5' : '# Librairie\n' + tile('Test MAD Shelf : A brilliant story', BOOK) + '\n' + tile('Test MAD Listed : A brilliant story', LISTED)
+        + '\n' + tile('Test MAD Two Books', 'https://boutique.madparis.fr/en/decorative-arts/test-mad-two/20001.html') + '\n' + tile('Test MAD Two Books (FR)', OTHER)] })) } });
+    const product = u => ({ payload: { errors: [], results: [{ url: u, title: 'Book', excerpts: ['The book. ' + 'x '.repeat(300)] }] } });
+    script.mcp = (tool, args) => tool === 'web_search' ? { payload: { results: [] } }
+      : args.urls.some(u => /c462/.test(u)) ? shelf(args.urls) : product(args.urls[0]);
+    const found = title => p => /"found"/.test(p)
+      ? { found: true, catalogueTitle: title, isbn13: null, publisher: null, publisherUrl: null, shopUrl: SHELF1 }
+      : { isbn13: null, publisher: null, publisherUrl: null };
+
+    await openTray(madShelf.title);
+    script.sample = found('Test MAD Shelf : A brilliant story');
+    await click(button(card(madShelf.title), /Find catalogue/));
+    let c = card(madShelf.title), t = c ? c.textContent : '';
+    ok(shopLink(c) && shopLink(c).getAttribute('href') === BOOK, 'M-001: the read hands back the shelf, and the book’s own link on it becomes her Museum shop link', shopLink(c) && shopLink(c).getAttribute('href'));
+    ok(/In the museum shop\./.test(t), 'M-002:   filed as in the museum shop', t.slice(0, 200));
+
+    await openTray(madListed.title);
+    script.sample = found('Test MAD Listed : A brilliant story');
+    await click(button(card(madListed.title), /^Re-check museum shop$/));
+    c = card(madListed.title); t = c ? c.textContent : '';
+    ok(shopLink(c) && shopLink(c).getAttribute('href') === LISTED, 'M-003: her card in the shop with no link — Re-check reads the link off the shelf', shopLink(c) && shopLink(c).getAttribute('href'));
+    ok(/In the museum shop\./.test(t) && !/Now in the museum shop/.test(t), 'M-004:   and it stays "In the museum shop." — never "Now", it was there already', t.slice(0, 200));
+    ok(/Re-checked: still in the museum shop\./.test(t), 'M-005:   Re-check says it is still there', t.slice(0, 400));
+
+    await openTray(madTwo.title);
+    script.sample = found('Test MAD Two Books');
+    await click(button(card(madTwo.title), /Find catalogue/));
+    c = card(madTwo.title);
+    ok(shopLink(c) && shopLink(c).getAttribute('href') === 'https://boutique.madparis.fr/en/mads-publications/c462/1/',
+      'M-006: two different links carry the title — neither is taken; the button opens the shelf', shopLink(c) && shopLink(c).getAttribute('href'));
+  }
 
   // ── S-001..S-003: the search narrows WITH the filters — her finding, 25 Sep.
   // It used to return early, so text in the box switched every filter off.

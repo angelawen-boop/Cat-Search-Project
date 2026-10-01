@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "36";
+const APP_VERSION = "36.1";
 const APP_VERSION_DATE = "1 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -889,6 +889,7 @@ const SELF_PUBLISHERS = new Set([
   "metropolitan museum of art",           // met
   "british museum press",                 // brit — her addition, 30 Sep (Bayeux Tapestry)
   "editions les arts decoratifs",         // mad — her addition, 30 Sep (Christofle); normPublisher drops the accents
+  "musee des arts decoratifs",            // mad — the same imprint under the museum's name, her addition 1 Oct (Christofle again)
 ]);
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){
@@ -1135,6 +1136,38 @@ function shopLinkOf(o,dom){
   return String(u).toLowerCase().includes(String(dom).toLowerCase())?u:null;
 }
 
+// THE BOOK'S LINK, READ OFF THE SHELF IN CODE — her MAD Christofle, 1 Oct.
+// Parallel's copy of MAD's shelf carried the book's own link, written
+// [Christofle : A brilliant story … €55](…/christofle-brilliant-story/14474.html),
+// and Claude still handed back the shelf's address, so her Museum shop button
+// fell back to the shelf. Which link on a shelf names the book Claude just
+// read is one answer from the text, so it is code's job.
+//
+// Taken only when EXACTLY ONE address on the shop's own site carries the
+// whole catalogue title in its link words; two different ones, or none, and
+// nothing is taken — never a guess between candidates. Never a page this step
+// opened, never a ticket. Accents, capitals and punctuation are ignored.
+function bookLinkOnShelf(results,bookTitle,dom,opened){
+  const norm=v=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+  const want=norm(bookTitle);
+  if(want.length<6||!dom)return null;
+  const found=new Map();
+  for(const r of (results||[])){
+    const text=Array.isArray(r&&r.excerpts)?r.excerpts.join("\n"):String((r&&r.full_content)||"");
+    const re=/\[([^\]]*)\]\((https?:\/\/[^\s)]+)(?:\s+"([^"]*)")?\)/g;
+    let m;
+    while((m=re.exec(text))){
+      const url=m[2];
+      if(!shopLinkOf({shopUrl:url},dom))continue;
+      const key=normalizeUrlKey(url);
+      if(!key||(opened&&opened.has(key)))continue;
+      if(!(" "+norm(m[1]+" "+(m[3]||""))+" ").includes(" "+want+" "))continue;
+      found.set(key,url);
+    }
+  }
+  return found.size===1?[...found.values()][0]:null;
+}
+
 // The shop button's label. "(last seen)" is what tells her the page may be
 // dead or sold out while the link is still worth keeping.
 function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last seen)":"Museum shop"; }
@@ -1171,7 +1204,10 @@ function foundInShop(row,o){
     catalogueTitle:row.catalogueTitle||o.catalogueTitle||null,
     isbn13:row.isbn13||toIsbn13(o.isbn13),
     publisher:row.publisher||(o.publisher?String(o.publisher).trim():null)||null,
-    shopState:"shop",shopChange:"now",shopUrl:o.shopUrl};
+    // "Now" only for a book that was NOT in the shop before — her Christofle,
+    // 1 Oct: a row already "In the museum shop" without a link of its own
+    // read "Now in the museum shop" once Re-check found the link.
+    shopState:"shop",shopChange:row.shopState==="shop"?(row.shopChange||null):"now",shopUrl:o.shopUrl};
 }
 
 // CASES 1 AND 3 — re-read the ONE page on file. Returns
@@ -2377,7 +2413,17 @@ export default function App(){
     // counts as in the shop (it was read off the shop's own pages), and her
     // Museum shop button falls back to the shop's search for the show.
     const opened=new Set(shopPages.map(normalizeUrlKey));
-    if(data.shopUrl&&opened.has(normalizeUrlKey(data.shopUrl))){
+    // Before falling back: the book's own link may be on the shelf all the
+    // same — bookLinkOnShelf. Also when Claude found the book and gave no link.
+    const listed=data.shopUrl&&opened.has(normalizeUrlKey(data.shopUrl));
+    if(data.found&&(listed||!data.shopUrl)){
+      const own=bookLinkOnShelf(s1.results,data.catalogueTitle,dom,opened);
+      if(own){
+        detail+="\nThe book’s own link, read off the shop’s listing: "+own;
+        return{ran:true,ok:true,detail,data:{...data,shopUrl:own}};
+      }
+    }
+    if(listed){
       detail+="\nThe link given was the shop's own listing, not the book's page — kept as in the shop, without a link of its own.";
       return{ran:true,ok:true,detail,data:{...data,shopUrl:null,listedOnly:true}};
     }
@@ -2512,7 +2558,7 @@ export default function App(){
         // the page IS the shop's. Web search and the publisher are never run.
         const hit=await fillIsbn({ok:true,detail:s.detail,pageUrl:o.shopUrl,row:foundInShop(row,o)},
           MU[row.museumId]?.name||"",dom);
-        out={ok:true,detail:hit.detail,row:hit.row,said:dropped+"Re-checked: now in the museum shop."};
+        out={ok:true,detail:hit.detail,row:hit.row,said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")};
       }
       else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked the museum shop: this book isn’t there."};
     }
