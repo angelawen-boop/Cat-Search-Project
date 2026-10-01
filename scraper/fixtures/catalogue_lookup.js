@@ -91,7 +91,7 @@ function runtime(answer, log) {
     const out = await api.fetchPage(page.url, 'its ISBN', ['Musical Bodies ISBN']);
 
     eq(log.length, 1, 'C-001: one page is read, never a second search');
-    eq(log[0] && log[0].server, 'Parallel Search', 'C-002: it asks her own connector');
+    eq(log[0] && log[0].server, 'Parallel Search Key', 'C-002: it asks her own connector');
     eq(log[0] && log[0].tool, 'web_fetch', 'C-003: and its whole-page tool, not web_search');
     const urls = log[0] && log[0].args && log[0].args.urls;
     if (Array.isArray(urls) && urls.length === 1 && urls[0] === page.url) {
