@@ -1111,7 +1111,7 @@ function publisherLinkLabel(kind){
 // search that never completed. The red banner says what failed; the card
 // claims nothing.
 function publisherNote(result,hasUrl){
-  if(result==="container")return "The publisher\u2019s link opens the section this book sits in, not a page of its own.";
+  if(result==="container")return "Publisher\u2019s link opens the section this book sits in, not the book\u2019s own page.";
   if(result==="site")     return "The publisher\u2019s own site doesn\u2019t show this book — the link opens their home page.";
   if(result==="nosite")   return "Couldn\u2019t work out the publisher\u2019s own website, so there\u2019s no link to it.";
   if(result==="unnamed")  return "No publisher was named for this book, so none was looked for.";
@@ -2433,11 +2433,13 @@ export default function App(){
       const vr=await readResults(
         "You are reading ONE page from a publisher’s own website, in full. Decide what it is.\n"
        +"Use ONLY what this page says. Never use outside knowledge and never invent a link.\n"
-       +'"book"    — this page IS about the book named below: it is that book’s own page.\n'
+       +'"book"    — this page IS about the book named below: it is that book’s own page. It still '
+       +"counts when the page shows the book in another language edition with a switch to this one, "
+       +"or lists other editions or related books below it.\n"
        +'"listing" — this page lists or advertises several books. If one of them is the book '
        +"below, give ITS link in bookUrl, copied exactly from this page; otherwise bookUrl null.\n"
        +'"other"   — this page has nothing to do with this book or this publisher’s books.\n'
-       +"MATCH ON THE ISBN WHERE THERE IS ONE. A publisher may carry the same book in two "
+       +"ON A LIST, MATCH ON THE ISBN WHERE THERE IS ONE. A publisher may carry the same book in two "
        +"languages, with two links and two numbers, and the titles will not tell them apart.\n"
        +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+r.publisher+"\n\n"
        +pageForPrompt(fp.results)
@@ -2447,6 +2449,9 @@ export default function App(){
       detail=detail+"\n"+vr.detail;
       if(!vr.ok)return{...hit,detail,trouble:vr.detail};
       const kind=String((vr.data||{}).kind||"");
+      // HER METAMORPHOSES, 1 Oct: Hannibal's page for the book shows the Dutch
+      // edition with an NL/EN switch, related books below — and was filed as
+      // the section. One page, either language, is the book's own page.
 
       if(kind==="book"){
         detail=detail+"\nPublisher’s page for the book: "+candidate;
