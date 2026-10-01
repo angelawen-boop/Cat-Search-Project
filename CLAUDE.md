@@ -450,6 +450,9 @@ and do not flip to searching wide first.**
   elsewhere."* / *"The museum shop is blocked. The catalogue also does not
   appear to exist elsewhere. Search manually to confirm."* Headline red and
   bold, the rest grey. Blocked today: KHM (307 to a waiting room), MAM.
+  **A shop whose every page comes back empty is blocked too** (36.1, her
+  ruling 1 Oct): MoMA's shelf draws its books by script, so Parallel's copy is
+  a membership pop-up; its search and `products.json` answer 403.
 - **The Museum shop link searches the shop for the EXHIBITION's title** when
   no book page is on file (`buyLinks`) — resellers keep the book's title, the
   shop keeps the show's. A search or shelf page is never filed as the book's
@@ -469,6 +472,12 @@ and do not flip to searching wide first.**
   the shop, never the publisher** (both read prompts). Text a page hides until
   clicked is not in Parallel's copy (Orsay *Cassatt*'s Hazan) — the wider web
   is the route for it. Evidence: `docs/shop_pages/README.md`.
+- **The web ISBN search reads its results in code too** (`isbnInResults`,
+  36.1; her Ashmolean *In Bloom*: AbeBooks' "ISBN 13" was in the results and
+  the read said none). Only results carrying the whole book title count;
+  labelled numbers and valid 978/979 numbers in their addresses; exactly one.
+  None → the two results about the book are opened whole. Queries name the
+  venue.
 
 **The cost:** up to four searches and three readings. **Every reading runs on
 her allowance.** The connector's keyless tier refuses after roughly a dozen
@@ -1034,25 +1043,15 @@ She is noting issues as she uses it, for a later debugging session.
 `moma` (1 Oct).**
 `uffizi`'s shop sells no books — settled.
 
-- **OPEN (1 Oct) — MoMA's shelf is blind to the lookup.** Parallel's copy of
-  `store.moma.org/collections/exhibition-catalogues`, excerpt and full, holds
-  a membership pop-up and NO books (drawn by script; she sees *Brancusi*
-  first). Its search page and `products.json` answer 403. So *Brancusi*,
-  on that shelf, was filed "Not in the museum shop" — a negative never earned
-  (§6). *Surrealist Book* got "In the museum shop" most likely by the web
-  search's store link being opened (not proven). Fix not yet discussed.
-
-- **RAISE AT THE START OF THE NEXT SESSION (her ask, 30 Sep) — asking a Shopify
-  shop directly whether a book is available**, instead of a model reading the
-  page. Through her connector, Morgan Tarot: `.js` refused by the connector (200
-  from the shop); `.json` passes but has no availability field; `.oembed` got
-  429. Untested: `.oembed` once the 429 has cleared — it normally carries an
-  in-stock yes/no. Shopify shops: morgan, artic, moma, ashmolean, lgd, menil,
-  wallace, acq. `docs/shop_pages/README.md`.
-- **OPEN, for later (her ask, 30 Sep): the lookup says "no ISBN" where one
-  plain web search finds it** (Ashmolean *In Bloom*). From the code: the ISBN
-  search (`fillFromWeb`) omits the venue's name, reads 700 characters of each
-  result, opens none, and "No ISBN anywhere" claims more than that.
+- **OPEN, her decision (1 Oct) — asking a Shopify shop directly whether a book
+  is for sale.** Tried at the Morgan through her connector: `.js` refused,
+  `.oembed` 429 (30 Sep and 1 Oct), a product's `.json` has no availability.
+  Two answers carry `"available"`: the whole-store `/products.json` (too big
+  to read for one book) and the search box's `/search/suggest.json` (small).
+  But `available: true` means "can be ordered", pre-orders included (Visconti
+  Sforza deck: "SOLD OUT! … Pre-order today!", `true`), and the sold-out
+  *Tarot* is not in the search answer at all — absence cannot be read as sold
+  out. Not built; the read stays Claude's, on the whole page.
 - **OPEN (her ask, 30 Sep) — a Booko button** among the
   buy links. To discuss first: its address shapes (by ISBN, and by title when
   there is none) are unchecked.
