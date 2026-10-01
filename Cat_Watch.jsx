@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "35.6";
+const APP_VERSION = "36";
 const APP_VERSION_DATE = "1 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -521,8 +521,8 @@ function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.ti
 // the internet, but it MAY call the viewer's own connectors, under the viewer's
 // credentials, with no key anywhere in this file. So:
 //
-//   1. SEARCH runs on her Parallel Search connector — free, no account, and
-//      the page never touches the network itself.
+//   1. SEARCH runs on her Parallel Search Key connector, and the page never
+//      touches the network itself.
 //   2. READING the results is Claude's job, through `sample`. Claude cannot
 //      browse, which is exactly why the two halves are separate: the connector
 //      finds pages, Claude only reads text we hand it. It can never invent a
@@ -532,7 +532,16 @@ function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.ti
 // back. Only the plumbing changed.
 //
 // NAMED CONSTANTS, because a typo here fails at the viewer, not here.
-const SEARCH_SERVER = "Parallel Search";
+//
+// HER OWN KEYED CONNECTOR, 1 Oct 2026 (version 36). claude.ai's built-in
+// "Parallel Search" is keyless and cannot be removed; on it her lookups kept
+// failing with upstream_error (the free tier the likely cause, not proven).
+// "Parallel Search Key" is a custom connector at
+// https://search.parallel.ai/mcp-oauth (claude.ai refuses a second connector at
+// /mcp), No sign-in, her Parallel API key in an `x-api-key` request header —
+// an `authorization: Bearer` header never reached Parallel. Billed to her
+// Parallel account. THIS NAME MUST MATCH the page's published `mcp` capability.
+const SEARCH_SERVER = "Parallel Search Key";
 const SEARCH_TOOL   = "web_search";
 // READING A WHOLE PAGE, not a snippet. Declared 21 Sep 2026 for the ISBN gap
 // below; the connector has always offered it and only web_search was wired.
@@ -555,10 +564,10 @@ async function useCap(name){
 // action that would fix the page.
 function mcpTrouble(e){
   const code=String((e&&e.code)||"");
-  if(code==="server_not_connected")return "Add the \u201cParallel Search\u201d connector in claude.ai \u2192 Settings \u2192 Connectors, then try again.";
-  if(code==="needs_reauth")       return "Reconnect \u201cParallel Search\u201d in claude.ai \u2192 Settings \u2192 Connectors \u2014 its access has lapsed.";
-  if(code==="not_in_manifest")    return "This page isn\u2019t allowed to use \u201cParallel Search\u201d \u2014 you may have turned it off for this artifact.";
-  if(code==="selection_required") return "You have more than one \u201cParallel Search\u201d connector. Pick one when Claude asks, then try again.";
+  if(code==="server_not_connected")return "Add the \u201cParallel Search Key\u201d connector in claude.ai \u2192 Settings \u2192 Connectors, then try again.";
+  if(code==="needs_reauth")       return "Reconnect \u201cParallel Search Key\u201d in claude.ai \u2192 Settings \u2192 Connectors \u2014 its access has lapsed.";
+  if(code==="not_in_manifest")    return "This page isn\u2019t allowed to use \u201cParallel Search Key\u201d \u2014 you may have turned it off for this artifact.";
+  if(code==="selection_required") return "You have more than one \u201cParallel Search Key\u201d connector. Pick one when Claude asks, then try again.";
   if(code==="blocked_by_policy")  return "Your organisation blocks this connector.";
   if(code==="server_unavailable") return "The search service didn\u2019t answer. Worth one more try in a moment.";
   if(code==="rate_limited")       return "Too many searches just now. Leave it a minute.";
