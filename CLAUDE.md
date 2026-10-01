@@ -291,10 +291,9 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 36 on her main app, 36 · cloud 3 on the test page** (1 Oct) — the
-lookup asks her keyed connector (below). **Built, NOT published — held on her
-word (1 Oct):** 36.1 (the lookup fixes below) and 37 (Booko, on top of 36.1).
-Publish only when she says.
+**Live: 37 on her main app, 37 · cloud 4 on the test page** (1 Oct): the
+lookup fixes marked 36.1 below plus Booko; the test page also has the
+read-only lock for a second open copy (§7.1). 36.1 was never published alone.
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
@@ -968,10 +967,11 @@ each other — now the later copy is read only, below). Buttons there: **Load** 
 **Import** (a sweep CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **36 · cloud 3**, published 1 Oct (`main` merged in
-that day). Cloud-only in it: a roll-back's safety copy names the save by its
+live on the test page **37 · cloud 4**, published 1 Oct (`main` merged in
+that day; cloud 3 was 37 without the lock, live minutes). Cloud-only in it: the
+read-only lock (below); a roll-back's safety copy names the save by its
 time ("…roll-back to snapshot of Sep 26, 2026 1:16pm"; CL-T1–3), and Cloud
-Saves' times share one width. Edits stay "cloud 3" until she says. Merge
+Saves' times share one width. The cloud count moves only when she says. Merge
 `main` in again before
 the page is rebuilt. The page's title is "Cat Watch Cloud Test" — set it in
 `build/dist/index.html` before publishing (the shell says "Cat Watch").
@@ -1004,8 +1004,8 @@ file; roll-back; Save with the cloud copy; export → change → reload; saving
 within a second; catalogue lookups; Download a cloud save and Load it; close
 and reopen; a real sweep Import (the sweep log updated live; the reminder).
 
-**Two copies open: the later one is READ ONLY** (her ruling, 1 Oct; built in
-37 · cloud 3, not yet published). It shows the cloud copy and writes nothing;
+**Two copies open: the later one is READ ONLY** (her ruling, 1 Oct; live in
+37 · cloud 4). It shows the cloud copy and writes nothing;
 an edit record with a heartbeat decides, stale after a minute; every save
 checks it first. Design: "ONE COPY EDITS AT A TIME" in the code;
 `cloud_two_copies.js`, TC-001–010.
@@ -1048,7 +1048,7 @@ She is noting issues as she uses it, for a later debugging session.
 `moma` (1 Oct).**
 `uffizi`'s shop sells no books — settled.
 
-- **OPEN — Booko with no ISBN.** Built in 37: "Booko AU", last buy link;
+- **OPEN — Booko with no ISBN.** Live in 37: "Booko AU", last buy link;
   `booko.au/<isbn>` (Booko fills the title — her check), else its title search,
   which she finds poor. A better no-ISBN query: her question, 1 Oct, unsettled.
 
