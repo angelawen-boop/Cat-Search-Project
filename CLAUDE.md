@@ -1110,7 +1110,8 @@ She is noting issues as she uses it, for a later debugging session.
 
 **Corrected along the way:** Chat can **not** fetch any URL cold. The Italian
 venues are four different situations, not one problem. The AbeBooks link is
-`/servlet/SearchResults?kn=…&sts=t`.
+`/servlet/SearchResults?ds=30&dym=on&kn=…&rollup=on&sortby=17` —
+sorted by lowest total price (her ruling, 1 Oct).
 
 ---
 
