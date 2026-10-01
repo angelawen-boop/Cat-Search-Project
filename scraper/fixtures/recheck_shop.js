@@ -105,7 +105,9 @@ const madTwo = fresh('mad-testtwo', 'mad', 'Test MAD Two Books');
 // dropped and the whole page carried. orsayB: Claude misreads the number.
 const orsayA = fresh('orsay-testcassatt', 'orsay', 'Test Orsay Cassatt Show');
 const orsayB = fresh('orsay-testmisread', 'orsay', 'Test Orsay Misread Show');
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB], ignored: [], lastRun: null };
+// HER MOMA BRANCUSI, 1 Oct: the shelf answers with no books on it.
+const momaRow = fresh('moma-testbrancusi', 'moma', 'Test MoMA Brancusi Show');
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -133,6 +135,9 @@ function runtime() {
     complete: async () => '',
   };
 }
+// A shop page as a real one arrives: a shelf carries its other books too.
+// Under SHELL_CHARS a page counts as empty, and an all-empty shop as blocked.
+const shelf = text => text + '\n' + 'Another catalogue · £35. '.repeat(20);
 const refused = code => { const e = new Error('refused'); e.code = code; return e; };
 
 (async () => {
@@ -310,7 +315,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     calls.length = 0;
     const found = 'https://shop.nationalgallery.org.uk/test-show-the-catalogue.html';
     script.mcp = (tool, args) => ({ payload: { results: args.urls.map(u => ({ url: u, title: 'Shop',
-      excerpts: ['Test Show: The Catalogue — ' + found + ' £40 ISBN 9781857096972'] })), errors: [] } });
+      excerpts: [shelf('Test Show: The Catalogue — ' + found + ' £40 ISBN 9781857096972')] })), errors: [] } });
     script.sample = () => ({ found: true, catalogueTitle: 'A Different Title From The Shop',
       isbn13: '9781857096972', publisher: 'Someone Else', publisherUrl: 'https://elsewhere.test/x', shopUrl: found });
     await click(button(card(webRow.title), /^Re-check museum shop$/));
@@ -329,7 +334,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
 
   // ── R-018..R-019: CASE 2 finding nothing leaves the card as it was ─────
   {
-    script.mcp = (tool, args) => ({ payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: ['Other books.'] })), errors: [] } });
+    script.mcp = (tool, args) => ({ payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Other books.')] })), errors: [] } });
     script.sample = () => ({ found: false, catalogueTitle: null, isbn13: null, publisher: null, publisherUrl: null, shopUrl: null });
     const btn = button(card(noCatRow.title), /^Re-check museum shop$/);
     ok(!!btn, 'R-018: a "no catalogue" tray has the button too');
@@ -449,7 +454,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       ? { payload: { results: [{ url: link, title: 'Test', excerpts: ['Test NG Show Opens catalogue'] }] } }
       : args.urls.includes(link)
         ? { payload: { results: [{ url: link, title: 'Test NG Show Opens', excerpts: ['Hardback £40. Add to basket. Publisher: Yale. ' + 'Details. '.repeat(80)] }], errors: [] } }
-        : { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: ['Other books.'] })), errors: [] } };
+        : { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Other books.')] })), errors: [] } };
     script.sample = p => ({ forsale: { forSale: true, why: 'Add to basket.' },
       shop: { found: false }, page: { isbn13: null, publisher: 'Yale', publisherUrl: null },
       web: { found: true, catalogueTitle: 'Test NG Show Opens: Catalogue', isbn13: '9780300000009', publisher: null, publisherUrl: null, shopUrl: link } })[kind(p)];
@@ -468,7 +473,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       ? { payload: { results: [{ url: link, title: 'Test', excerpts: ['Test NG Show Dead Link catalogue'] }] } }
       : args.urls.includes(link)
         ? { payload: { results: [], errors: [{ url: link, error_type: 'http_error', http_status_code: 404, content: null }] } }
-        : { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: ['Other books.'] })), errors: [] } };
+        : { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Other books.')] })), errors: [] } };
     script.sample = p => kind(p) === 'web'
       ? { found: true, catalogueTitle: 'Dead Link Catalogue', isbn13: '9780300000009', publisher: 'Yale', publisherUrl: null, shopUrl: link }
       : { found: false };
@@ -486,7 +491,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const link = 'https://shop.nationalgallery.org.uk/test-ng-publisher-dies.html';
     script.mcp = (tool, args) => {
       if (tool === 'web_search') { const e = new Error('Connector call failed'); e.code = 'upstream_error'; throw e; }
-      return { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: ['Test NG Publisher Dies — ' + link + ' £40'] })), errors: [] } };
+      return { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Test NG Publisher Dies — ' + link + ' £40')] })), errors: [] } };
     };
     script.sample = () => ({ found: true, catalogueTitle: 'Publisher Dies: The Catalogue', isbn13: '9782754117418',
       publisher: 'Editions Hazan', publisherUrl: null, shopUrl: link });
@@ -546,7 +551,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   // ── L-017..L-018: Re-check on a blocked row once the shop answers ────────
   {
     script.mcp = (tool, args) => ({ payload: { results: args.urls.map(u => ({ url: u, title: 'Shop',
-      excerpts: ['Canaletto & Bellotto. Exhibition Catalogue 2026 — ' + PRODUCT + ' €39.90'] })), errors: [] } });
+      excerpts: [shelf('Canaletto & Bellotto. Exhibition Catalogue 2026 — ' + PRODUCT + ' €39.90')] })), errors: [] } });
     script.sample = p => /"forSale"/.test(p) ? { forSale: true, why: 'x' } : /"found"/.test(p)
       ? { found: true, catalogueTitle: 'Canaletto & Bellotto. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: PRODUCT }
       : { isbn13: null, publisher: null, publisherUrl: null };
@@ -644,6 +649,25 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await click(button(card(orsayB.title), /Find catalogue/));
     t = card(orsayB.title) ? card(orsayB.title).textContent : '';
     ok(/978-2754117425/.test(t) && !/978-1588398130/.test(t), 'O-005: the number on the page beats a different one from Claude', t.slice(0, 400));
+  }
+
+  // ── B-001..B-003: a shop whose pages all come back empty is blocked ────
+  // Parallel's real copy of MoMA's shelf, 1 Oct: a membership pop-up, no books.
+  {
+    calls.length = 0;
+    const popup = '# Exhibition Catalogues\n## Become a Member\n### Join now to save 20% off your first order. All Member categories enjoy:\n'
+      + 'Add Membership Cancel\n[View All Memberships](https://store.moma.org/pages/memberships)\nAdditional membership categories for artists and students are available.';
+    script.mcp = (tool, args) => tool === 'web_search'
+      ? { payload: { results: [{ url: 'https://bookseller.test/brancusi', title: 'Brancusi', excerpts: ['Test MoMA Brancusi Show ISBN 9781633451971'] }] } }
+      : { payload: { results: args.urls.filter(u => !/[?&]q=/.test(u)).map(u => ({ url: u, title: 'Exhibition Catalogues – MoMA Design Store', excerpts: [popup] })),
+          errors: args.urls.filter(u => /[?&]q=/.test(u)).map(u => ({ url: u, error_type: 'http_error', http_status_code: 403, content: null })) } };
+    script.sample = () => ({ found: true, catalogueTitle: 'Test MoMA Brancusi Show', isbn13: '9781633451971', publisher: 'The Museum of Modern Art', publisherUrl: null, shopUrl: null });
+    await openTray(momaRow.title);
+    await click(button(card(momaRow.title), /Find catalogue/));
+    const t = card(momaRow.title) ? card(momaRow.title).textContent : '';
+    ok(t.includes(BLOCKED_FOUND), 'B-001: a shelf with no books on it reads as blocked — her wording', t.slice(0, 300));
+    ok(!/Not in the museum shop/.test(t), 'B-002:   never "Not in the museum shop"');
+    ok(!calls.some(x => x.kind === 'sample' && /OWN shop pages, opened directly/.test(x.prompt)), 'B-003:   and Claude is not asked to read the empty shelf');
   }
 
   // ── S-001..S-003: the search narrows WITH the filters — her finding, 25 Sep.

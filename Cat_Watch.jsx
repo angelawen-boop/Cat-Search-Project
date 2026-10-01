@@ -2442,6 +2442,12 @@ export default function App(){
     if(!s1.results.length&&(s1.errors||[]).length)
       return{ran:true,ok:true,blocked:true,detail:s1.detail+"\nThe museum shop refused every page, so it could not be searched.",data:null};
     if(!s1.results.length)return{ran:true,ok:true,detail:s1.detail,data:null};
+    // EVERY PAGE CAME BACK EMPTY is blocked too — her ruling, 1 Oct (MoMA
+    // Brancusi). MoMA's shelf answers, but its books are drawn by script after
+    // the page arrives: Parallel's copy is a membership pop-up and no books.
+    // "Not in the museum shop" off that would be a negative never earned.
+    if(s1.results.every(r=>pageIsShell([r])))
+      return{ran:true,ok:true,blocked:true,detail:s1.detail+"\nThe museum shop’s pages came back with no books on them, so it could not be searched.",data:null};
     const r1=await readResults(READ_RULES
       +"\nExhibition: "+title+"\nVenue: "+venue
       +"\nBelow are the venue’s OWN shop pages, opened directly at "+dom

@@ -450,6 +450,9 @@ and do not flip to searching wide first.**
   elsewhere."* / *"The museum shop is blocked. The catalogue also does not
   appear to exist elsewhere. Search manually to confirm."* Headline red and
   bold, the rest grey. Blocked today: KHM (307 to a waiting room), MAM.
+  **A shop whose every page comes back empty is blocked too** (36.1, her
+  ruling 1 Oct): MoMA's shelf draws its books by script, so Parallel's copy is
+  a membership pop-up; its search and `products.json` answer 403.
 - **The Museum shop link searches the shop for the EXHIBITION's title** when
   no book page is on file (`buyLinks`) — resellers keep the book's title, the
   shop keeps the show's. A search or shelf page is never filed as the book's
@@ -1033,14 +1036,6 @@ She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`
 `moma` (1 Oct).**
 `uffizi`'s shop sells no books — settled.
-
-- **OPEN (1 Oct) — MoMA's shelf is blind to the lookup.** Parallel's copy of
-  `store.moma.org/collections/exhibition-catalogues`, excerpt and full, holds
-  a membership pop-up and NO books (drawn by script; she sees *Brancusi*
-  first). Its search page and `products.json` answer 403. So *Brancusi*,
-  on that shelf, was filed "Not in the museum shop" — a negative never earned
-  (§6). *Surrealist Book* got "In the museum shop" most likely by the web
-  search's store link being opened (not proven). Fix not yet discussed.
 
 - **RAISE AT THE START OF THE NEXT SESSION (her ask, 30 Sep) — asking a Shopify
   shop directly whether a book is available**, instead of a model reading the
