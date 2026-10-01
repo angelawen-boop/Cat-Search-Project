@@ -293,7 +293,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 
 **Live: 36 on her main app, 36 · cloud 3 on the test page** (1 Oct) — the
 lookup asks her keyed connector (below). **36.1 built and pushed, NOT
-published** — publish when she is out.
+published** — held on her word (1 Oct); publish only when she says.
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
