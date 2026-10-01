@@ -292,8 +292,9 @@ this one alone. `stitch` and `compress` carry it untouched.
 > forward. **Renaming the connector means restating them.**
 
 **Live: 36 on her main app, 36 · cloud 3 on the test page** (1 Oct) — the
-lookup asks her keyed connector (below). **36.1 built and pushed, NOT
-published** — held on her word (1 Oct); publish only when she says.
+lookup asks her keyed connector (below). **Built, NOT published — held on her
+word (1 Oct):** 36.1 (the lookup fixes below) and 37 (Booko, on top of 36.1).
+Publish only when she says.
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
@@ -1043,8 +1044,9 @@ She is noting issues as she uses it, for a later debugging session.
 `moma` (1 Oct).**
 `uffizi`'s shop sells no books — settled.
 
-- **NEXT, 37 (her answers, 1 Oct) — a Booko AU button.** `booko.au/<isbn>`
-  (Booko fills the title — her check); no ISBN → its title search.
+- **OPEN — Booko with no ISBN.** Built in 37: "Booko AU", last buy link;
+  `booko.au/<isbn>` (Booko fills the title — her check), else its title search,
+  which she finds poor. A better no-ISBN query: her question, 1 Oct, unsettled.
 
 ### 5. A fresh sweep — mid-October at the earliest
 
