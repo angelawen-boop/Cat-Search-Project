@@ -295,13 +295,10 @@ this one alone. `stitch` and `compress` carry it untouched.
 no line at all with no ledger open, the Ashmolean and its shop, her chip order
 (fixture 19; chip "Levy", cards "Lévy Gorvy Dayan"). The test page carries the
 same as 35.4 · cloud 3 (§7.1).
-**35.5 · cloud 3 live on the test page, 30 Sep** (her working app, §7.1) —
-the held-pile batch: footer counts quarantined, her partial-import wording,
-jump-to-bottom, Re-check's sold-out rules (R-011b), British Museum Press and
-Éditions Les Arts Décoratifs self-published (C-072a/b), "Search (again)
-didn't run" on the card with no banner (R-011c), Copy on the diagnostic, a
-clear cross in the search box, chip "Orsay". **`main`'s 35.5 is not on her
-main app** — only on her say.
+**35.6 · cloud 3 live on the test page, 1 Oct** (her working app, §7.1): the
+held-pile batch (R-011b/c, C-072a/b) plus copy as an icon in the diagnostic
+tray (tick or cross; R-011d/e), "quarantined" named only when there is one,
+"No longer in the museum shop." alone. **Not on her main app** — her say.
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
@@ -468,9 +465,12 @@ her allowance.** The connector's keyless tier refuses after roughly a dozen
 searches in quick succession (observed; unpublished). A failed search shows one
 line on the card, Re-check's words with "Search"/"Search again" (her ruling
 30 Sep; the red banner for it is gone): "Too many searches just now"
-(`rate_limited`) is the limit; "Search failed (upstream_error)" is Parallel's
-own service failing one request. Either: press Search again. A free Parallel key
-raises the limit — a connector setting, not the app.
+(`rate_limited`) and "Search failed (upstream_error)". **From the platform's
+own types (`mcp.d.ts`, 1 Oct): `rate_limited` is never returned today;
+`upstream_error` is the catch-all, and Parallel's words never reach the page.**
+Parallel's free-tier refusal (seen 1 Oct: "You've hit the free-tier rate
+limit") has no code of its own, so it most likely arrives as `upstream_error`
+— not proven. A keyed connector is being set up in another session (1 Oct).
 
 **Shop addresses:** all 18 original venues checked, `docs/app.md` §1;
 `borghese`, `capo`, `dellav` have none. Newer venues: in `MUSEUMS`, a comment
@@ -812,7 +812,9 @@ here.
 - **A recovery step with one correct answer is code**, never a choice handed to
   her.
 - **Never invent a constraint she did not state, or give a reason nobody
-  checked.** A convenient hypothesis is worse than no argument.
+  checked.** An error code is explained from the platform's types
+  (`mcp.d.ts`), never from memory. A change that is code is yours — never her
+  settings task with a failure branch (1 Oct).
 - **Argue architecture from what the platform offers, not from what was built.**
 
 ### A rule that held only while its input stayed small
@@ -940,8 +942,11 @@ each other; not handled). Buttons there: **Load** (a ledger file), **Save**,
 **Import** (a sweep CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **35.5 · cloud 3**, published 30 Sep (`main` merged in
-that day). Edits stay "cloud 3" until she says. Merge `main` in again before
+live on the test page **35.6 · cloud 3**, published 1 Oct (`main` merged in
+that day). Cloud-only in it: a roll-back's safety copy names the save by its
+time ("…roll-back to snapshot of Sep 26, 2026 1:16pm"; CL-T1–3), and Cloud
+Saves' times share one width. Edits stay "cloud 3" until she says. Merge
+`main` in again before
 the page is rebuilt. The page's title is "Cat Watch Cloud Test" — set it in
 `build/dist/index.html` before publishing (the shell says "Cat Watch").
 
@@ -998,8 +1003,9 @@ ledger: 189 Add, 0 unfiled. MoMA is the sweep, not the 4-row saved-pages run
 (her ruling). Supersedes `stitch_20260930_0758`, whose Morgan *Bellini* row
 carried a picture caption.
 
-- **In progress on the test page (30 Sep):** Morgan and MoMA applied, the rest
-  worked in sittings with the partial-apply button (§4), re-importing this file.
+- **Worked on the test page 30 Sep** in sittings (partial-apply, §4): her Cloud
+  Saves show "import Morgan MoMa Brit" (494) and "Import Orsay MAD Ashmolean"
+  (594). Whether any cards were left undecided: ask her before closing this.
 
 ### 3. Fixes not yet checked in the cases they were written for
 
@@ -1018,12 +1024,16 @@ for 10s, which sweeps have obeyed since 27 Sep. **Nothing to do now** — no
 probe. The next monthly sweep reads it; a refusal shows as a marker row. Record
 the result here and close it.
 
-### 5. A dead shop link — first real case met
+### 5. Re-check says "the shop page couldn't be read" on a page that loaded
 
-"Re-check museum shop" (§4). First real sold-out page, 30 Sep: Morgan *Tarot*
-read as "still for sale" — the model took a note to past pre-order buyers as an
-offer. Rules fixed in 35.5 (R-011b, her saved page in `docs/shop_pages/`).
-**Next:** she presses Re-check on *Tarot* again; it should read "No longer".
+Her next item (1 Oct). *Tarot* (sold out) gave "Re-check didn't work — the
+shop page couldn't be read". Re-check itself works (it read "No longer"
+correctly, 1 Oct). **Likely cause, not proven:** `readShopPage` calls a page
+unreadable when Parallel's excerpt is under `SHELL_CHARS` (400) — a number
+measured on shelves and publisher listings, never on one product page. The
+same request on *Tarot*, 1 Oct, returned 486 characters; excerpts vary per
+read. **Settles it:** her diagnostic's `1 page(s)` (the rule) or `0 page(s)`.
+**Proposed, not built:** on a short excerpt, re-ask with `full_content`.
 
 ### 6. Catalogue lookup generally
 
