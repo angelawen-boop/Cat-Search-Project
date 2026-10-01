@@ -399,7 +399,7 @@ Her instruction: no probes for hypothetical problems.
 
 | Open | Why |
 |---|---|
-| `frick` page two | `CLAUDE.md` §7.4 |
+| `frick` page two | `CLAUDE.md` §7.3 |
 | `artic` — a year needing page three? | Recipe reads pages 1–2; the standing check reports it |
 | The load-more fix beyond the Louvre | No other venue has such a control |
 
