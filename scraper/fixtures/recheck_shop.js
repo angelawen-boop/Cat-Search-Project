@@ -261,8 +261,8 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   }
 
   // ── R-011c: SEARCH AGAIN THAT DIDN'T RUN says so on the card, in
-  // Re-check's words — her ask, 30 Sep. And the diagnostic's Copy button says
-  // whether the copy happened (R-011d, R-011e).
+  // Re-check's words — her ask, 30 Sep. And the diagnostic's copy icon says
+  // whether the copy happened, tick or cross, no words (R-011d, R-011e).
   {
     script.mcp = () => { throw refused('rate_limited'); };
     script.sample = () => { throw new Error('Claude must not be asked when the connector refused'); };
@@ -275,20 +275,21 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const doc = win.document;
     const show = [...doc.querySelectorAll('button')].find(b => b.textContent === 'Show diagnostic');
     if (show) await click(show);
-    const copy = [...doc.querySelectorAll('button')].find(b => /Copy$/.test(b.textContent));
-    ok(!!copy, 'R-011d: the open diagnostic has a Copy button');
+    const copy = [...doc.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === 'Copy');
+    ok(!!copy && copy.textContent === '\u29c9' && !!copy.closest('div').querySelector('pre'),
+      'R-011d: the open diagnostic has a copy icon, no word, inside the tray', copy && copy.textContent);
     if (copy) {
       await click(copy);
-      ok(/Couldn’t copy — select the text instead/.test(doc.body.textContent),
-        'R-011d:   with no clipboard it says it couldn’t copy, never "Copied"');
+      ok(copy.textContent === '\u2717' && !/Copied/.test(doc.body.textContent),
+        'R-011d:   with no clipboard it shows a cross, never a tick', copy.textContent);
       let got = null;
       // The page reads whichever navigator is global here — jsdom's, or
       // Node's own where Node will not let it be replaced. Both get one.
       for (const nav of [win.navigator, globalThis.navigator].filter(Boolean))
         Object.defineProperty(nav, 'clipboard', { value: { writeText: async x => { got = x; } }, configurable: true });
       await click(copy);
-      ok(/Copied/.test(doc.body.textContent) && got && /Too many searches/.test(got),
-        'R-011e:   with a clipboard it copies the diagnostic’s text and says Copied', String(got).slice(0, 80));
+      ok(copy.textContent === '\u2713' && got && /Too many searches/.test(got),
+        'R-011e:   with a clipboard it copies the diagnostic’s text and the icon turns to a tick', String(got).slice(0, 80));
     }
   }
 

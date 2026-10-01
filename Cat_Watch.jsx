@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "35.5 · cloud 3";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
+const APP_VERSION = "35.6 · cloud 3";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
 const APP_VERSION_DATE = "30 Sep 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -1523,7 +1523,7 @@ export default function App(){
   const[prog,setProg]=useState({done:0,total:0,label:""});
   const[error,setError]=useState(null);
   const[rechecking,setRechecking]=useState(false);   // which of the card's two buttons is running
-  const[copySaid,setCopySaid]=useState(null);       // what the diagnostic's Copy button last managed
+  const[copySaid,setCopySaid]=useState(null);       // "ok" / "no": what the diagnostic's copy icon last managed
   const[recheckSaid,setRecheckSaid]=useState(null);  // {id,text,failed}: Re-check's answer, shown on that card
   const[saveErr,setSaveErr]=useState(false);
   const[debug,setDebug]=useState(null);
@@ -3354,12 +3354,17 @@ export default function App(){
         {busy&&prog.total>0&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
         {error&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
         {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>
-          {/* COPY — her ask, 30 Sep. It says whether the copy happened: a
-              browser can refuse the clipboard to a page in a frame, and a
-              button that always said "Copied" would be the green tick again. */}
-          {showDebug&&<button onClick={async()=>setCopySaid(await copyText(debug)?"Copied":"Couldn\u2019t copy \u2014 select the text instead")} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0,marginLeft:12}}>{"\u29c9 Copy"}</button>}
-          {showDebug&&copySaid&&<span style={{fontSize:10,color:C.soft,marginLeft:8}}>{copySaid}</span>}
-          {showDebug&&<pre style={{marginTop:4,padding:7,background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>}</div>}
+          {/* COPY — her ask, 30 Sep; an icon alone, inside the tray at its
+              bottom right (her ask, 1 Oct). A tick only if the copy happened:
+              a browser can refuse the clipboard to a page in a frame, and an
+              icon that always ticked would be the green tick again. A refusal
+              shows a cross. Back to the copy icon after two seconds. */}
+          {showDebug&&<div style={{position:"relative",marginTop:4}}>
+            <pre style={{margin:0,padding:"7px 28px 7px 7px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>
+            <button aria-label={copySaid==="ok"?"Copied":copySaid==="no"?"Couldn\u2019t copy":"Copy"} title={copySaid==="ok"?"Copied":copySaid==="no"?"Couldn\u2019t copy":"Copy"}
+              onClick={async()=>{const r=await copyText(debug)?"ok":"no";setCopySaid(r);setTimeout(()=>setCopySaid(v=>v===r?null:v),2000);}}
+              style={{position:"absolute",right:5,bottom:5,background:"none",border:"none",color:C.soft,fontSize:13,lineHeight:1,cursor:"pointer",padding:2}}>{copySaid==="ok"?"\u2713":copySaid==="no"?"\u2717":"\u29c9"}</button>
+          </div>}</div>}
         {/* NOT GATED ON A LEDGER EITHER, matching the panel below, whose own
             comment has said so since 20 Sep while this row quietly required
             one. When a sweep last ran is what the PAGE knows about the world,
@@ -3980,11 +3985,11 @@ export default function App(){
             </div>
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
               <button onClick={cancelRefresh} style={sBtn}>Cancel refresh</button>
-              {/* Rejected is named only when there is one: she asked for
-                  quarantined and to-apply, and a third "0" is one more number
-                  to read past. The three always add up to what is decided. */}
+              {/* Rejected and quarantined are named only when there is one
+                  (quarantined too, her ask 1 Oct): a "0" is one more number to
+                  read past. Whatever is named adds up to what is decided. */}
               <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>
-                {(rejectedCount?rejectedCount+" rejected, ":"")+quarantinedCount+" quarantined, "+acceptedCount+" to apply"}</span>
+                {(rejectedCount?rejectedCount+" rejected, ":"")+(quarantinedCount?quarantinedCount+" quarantined, ":"")+acceptedCount+" to apply"}</span>
               {/* THE COUNT IS THE WAY TO REACH ONE — raised as the gap the
                   block leaves and built at her ask. A number she cannot act on
                   is the thing that makes a hard gate feel arbitrary. It opens

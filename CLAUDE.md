@@ -54,6 +54,11 @@ is why they live in one repo, on one branch.
   it is quick.
 - **A question gets an answer first — her rule, 27 Sep.** "Talk to me about X"
   means discuss; nothing is built until she says.
+- **Respect UI simplicity and specific UI instructions — her rule, 1 Oct.** Build
+  exactly what she named, nothing added. "Add a copy icon" = an icon, not an icon
+  plus the word "Copy". "Copy this line for case X and Y" = the same line with
+  only the words naming X and Y swapped, never a new, longer line. No words she
+  did not ask for — she is constantly decluttering invented verbiage.
 - **A guess is labelled a guess.** Say what is proven, what is not, and what one
   request would settle.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
