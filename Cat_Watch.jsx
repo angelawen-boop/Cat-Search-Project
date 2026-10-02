@@ -53,9 +53,12 @@ const APP_VERSION_DATE = "2 Oct 2026";
 // (chips, drawer, refresh headings) reads `short`.
 const MUSEUMS = [
   // CHIP ORDER IS THIS ARRAY'S ORDER — hers, 27 Sep 2026.
+  // english:false — a venue whose books may not be in English. Only there does
+  // the lookup check a found book's language and look for an English edition
+  // (her ruling, 2 Oct: non-English venues only). See fillLanguage.
   { id:"met", short:"The Met", name:"The Metropolitan Museum of Art", city:"New York",
     exBase:"https://www.metmuseum.org/exhibitions/", shopSearch:"https://store.metmuseum.org/search?q=", shopCatalogues:"https://store.metmuseum.org/books-toys-games/exhibition-catalogues", shopHome:"https://store.metmuseum.org/", listUrl:"https://www.metmuseum.org/exhibitions" },
-  { id:"rijks", short:"Rijksmuseum", name:"Rijksmuseum", city:"Amsterdam",
+  { id:"rijks", english:false, short:"Rijksmuseum", name:"Rijksmuseum", city:"Amsterdam",
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopCatalogues:"https://www.rijksmuseumshop.nl/en/books/exhibition-books", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
   { id:"ng", short:"National Gallery", name:"The National Gallery", city:"London",
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
@@ -78,26 +81,26 @@ const MUSEUMS = [
   // exhibition-catalogues shelf.
   { id:"ashmolean", short:"Ashmolean", name:"Ashmolean Museum", city:"Oxford", exBase:null, shopSearch:"https://shop.ashmolean.org/search?q=", shopCatalogues:"https://shop.ashmolean.org/collections/exhibition-catalogues", shopHome:"https://shop.ashmolean.org/", listUrl:null },
   { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:"https://www.vam.ac.uk/shop/search?q=", shopCatalogues:"https://www.vam.ac.uk/shop/books/exhibition-books.html", shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
-  { id:"louvre", short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:"https://boutique.louvre.fr/en/search/products/?q=", shopCatalogues:"https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
+  { id:"louvre", english:false, short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:"https://boutique.louvre.fr/en/search/products/?q=", shopCatalogues:"https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
   // French venues added 25 Sep 2026, after the Louvre. Same shop system as the
   // Louvre's: search box and "Exhibition catalogs" shelf, read off the live shop.
   // d'Orsay, 25 Sep — her chip name "d'Orsay", "Orsay" everywhere from 30 Sep (her ruling). Its shop is the national museums'
   // shared one; the catalogues shelf is her link with the tracking tags removed,
   // and the search is the one she sent (it searches every museum on the site).
-  { id:"orsay", short:"Orsay", name:"Mus\u00e9e d'Orsay", city:"Paris", exBase:null, shopSearch:"https://www.boutiquesdemusees.fr/en/search/products/?q=", shopCatalogues:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", shopHome:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", listUrl:null },
+  { id:"orsay", english:false, short:"Orsay", name:"Mus\u00e9e d'Orsay", city:"Paris", exBase:null, shopSearch:"https://www.boutiquesdemusees.fr/en/search/products/?q=", shopCatalogues:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", shopHome:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", listUrl:null },
   // MAD Paris, 25 Sep. Its boutique has NO search box (her check, and none in
   // the page she saved), so the publications shelf is the only route in: 68
   // books over five pages, the newest first. It numbers pages in the PATH
   // (/c462/2/), not ?page= — shelfPages counts that up. shopHome is the shelf
   // too, so her "Museum shop" link lands on the books, not the front page.
-  { id:"mad", short:"MAD Paris", name:"Mus\u00e9e des Arts D\u00e9coratifs", city:"Paris", exBase:null, shopSearch:null, shopCatalogues:"https://boutique.madparis.fr/en/mads-publications/c462/1/", shopHome:"https://boutique.madparis.fr/en/mads-publications/c462/1/", listUrl:null },
-  { id:"jacquemart", short:"Jacquemart-Andr\u00e9", name:"Mus\u00e9e Jacquemart-Andr\u00e9", city:"Paris", exBase:null, shopSearch:"https://boutique.musee-jacquemart-andre.com/en/search/products/?q=", shopCatalogues:"https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/", shopHome:"https://boutique.musee-jacquemart-andre.com/en/", listUrl:null },
-  { id:"khm", short:"KHM", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:"https://shop.khm.at/en/products?shop%5Bq%5D=", shopHome:"https://shop.khm.at/en/", listUrl:null },
-  { id:"uffizi", short:"Uffizi", name:"Uffizi Galleries", city:"Florence", exBase:null, shopSearch:"https://shop.uffizi.it/en/?s=", shopHome:"https://shop.uffizi.it/en/", listUrl:null },
-  { id:"dellav", short:"Accademia", name:"Gallerie dell'Accademia", city:"Venice", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
-  { id:"borghese", short:"Borghese", name:"Galleria Borghese", city:"Rome", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
-  { id:"brera", short:"Brera", name:"Pinacoteca di Brera", city:"Milan", exBase:null, shopSearch:"https://bottegabrera.org/en/search?q=", shopCatalogues:"https://bottegabrera.org/en/collections/guide-e-cataloghi", shopHome:"https://bottegabrera.org/en/", listUrl:null },
-  { id:"capo", short:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
+  { id:"mad", english:false, short:"MAD Paris", name:"Mus\u00e9e des Arts D\u00e9coratifs", city:"Paris", exBase:null, shopSearch:null, shopCatalogues:"https://boutique.madparis.fr/en/mads-publications/c462/1/", shopHome:"https://boutique.madparis.fr/en/mads-publications/c462/1/", listUrl:null },
+  { id:"jacquemart", english:false, short:"Jacquemart-Andr\u00e9", name:"Mus\u00e9e Jacquemart-Andr\u00e9", city:"Paris", exBase:null, shopSearch:"https://boutique.musee-jacquemart-andre.com/en/search/products/?q=", shopCatalogues:"https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/", shopHome:"https://boutique.musee-jacquemart-andre.com/en/", listUrl:null },
+  { id:"khm", english:false, short:"KHM", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:"https://shop.khm.at/en/products?shop%5Bq%5D=", shopHome:"https://shop.khm.at/en/", listUrl:null },
+  { id:"uffizi", english:false, short:"Uffizi", name:"Uffizi Galleries", city:"Florence", exBase:null, shopSearch:"https://shop.uffizi.it/en/?s=", shopHome:"https://shop.uffizi.it/en/", listUrl:null },
+  { id:"dellav", english:false, short:"Accademia", name:"Gallerie dell'Accademia", city:"Venice", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
+  { id:"borghese", english:false, short:"Borghese", name:"Galleria Borghese", city:"Rome", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
+  { id:"brera", english:false, short:"Brera", name:"Pinacoteca di Brera", city:"Milan", exBase:null, shopSearch:"https://bottegabrera.org/en/search?q=", shopCatalogues:"https://bottegabrera.org/en/collections/guide-e-cataloghi", shopHome:"https://bottegabrera.org/en/", listUrl:null },
+  { id:"capo", english:false, short:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:"https://shop.themorgan.org/search?q=", shopCatalogues:"https://shop.themorgan.org/collections/exhibition-catalogs", shopHome:"https://shop.themorgan.org/", listUrl:null },
   { id:"brit", short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:"https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", shopCatalogues:"https://www.britishmuseumshoponline.org/books/exhibition-books.html", shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
   { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search, 27 Sep */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
@@ -107,7 +110,7 @@ const MUSEUMS = [
   // version. Behind a Cloudflare check that refuses this machine AND the
   // connector (403, 25 Sep) while her browser passes it unaided — so, like KHM,
   // left wired: retried and visible, and her "Museum shop" link works.
-  { id:"mam", short:"MAM Paris", name:"Mus\u00e9e d'Art Moderne de Paris", city:"Paris", exBase:null, shopSearch:"https://www.mamlibrairieboutique.fr/listeliv.php?flou&base=paper&mots_recherche=", shopHome:"https://www.mamlibrairieboutique.fr/", listUrl:null },
+  { id:"mam", english:false, short:"MAM Paris", name:"Mus\u00e9e d'Art Moderne de Paris", city:"Paris", exBase:null, shopSearch:"https://www.mamlibrairieboutique.fr/listeliv.php?flou&base=paper&mots_recherche=", shopHome:"https://www.mamlibrairieboutique.fr/", listUrl:null },
 ];
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 
@@ -1233,6 +1236,40 @@ function oneText(r){
 }
 function pageTextOf(results){
   return (results||[]).map(oneText).join("\n").trim();
+}
+
+// THE TITLE AS PRINTED — her Louvre Experience of Nature, 2 Oct. The shop's
+// page said "Experience of Nature"; the read handed back "Experience of
+// Nature. Art in Prague at the Court of Rudolf II", the show's English
+// subtitle, which is on no page. A title is kept only as far as the pages
+// carry it: whole if they print it whole, else its longest leading part that
+// they do print (parts split at . : and dashes). None of it on the pages →
+// returned as given, and the caller says so. One answer from the inputs, so
+// code. Accents, capitals and punctuation do not count as differences.
+function titleKey(t){
+  return " "+String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g," ").trim()+" ";
+}
+function titleAsPrinted(title,results){
+  const t=String(title||"").trim();
+  if(!t)return{title:t,cut:false,onPage:false};
+  const text=titleKey(pageTextOf(results));
+  if(text.includes(titleKey(t)))return{title:t,cut:false,onPage:true};
+  const parts=t.split(/\s*(?:[.:]|\s[\u2013\u2014-])\s+/).filter(Boolean);
+  for(let n=parts.length-1;n>=1;n--){
+    const lead=parts.slice(0,n);
+    if(text.includes(titleKey(lead.join(" ")))){
+      // The leading words, cut out of the title exactly as written.
+      const last=lead[lead.length-1],at=t.indexOf(last);
+      return{title:t.slice(0,at+last.length).trim(),cut:true,onPage:true};
+    }
+  }
+  return{title:t,cut:false,onPage:false};
+}
+
+// A LANGUAGE NAMED BY A READ, in any of the venues' languages.
+function isEnglishLang(l){
+  return /\b(english|anglais|inglese|englisch|engels|ingl[e\u00e9]s)\b/i.test(String(l||""));
 }
 
 // HOW MUCH OF ONE PAGE CLAUDE IS HANDED. Was 6,000 when pages were excerpts;
@@ -2616,7 +2653,10 @@ export default function App(){
    +"the venue's own page, shop or press release names it, or a publisher or bookseller says it "
    +"accompanies the exhibition at this venue. A catalogue of a show at ANOTHER venue is false \u2014 "
    +"even when that show travels here, \u201cin modified form\u201d or as a \u201csecond venue\u201d, and "
-   +"even when the artist is the same. A different title from the exhibition's needs this venue's own word.\n";
+   +"even when the artist is the same. A different title from the exhibition's needs this venue's own word.\n"
+   +"catalogueTitle is the book's title EXACTLY as the results print it \u2014 never translated, and never "
+   +"completed with words from the exhibition's title.\n"
+   +"If the same catalogue is sold in more than one language, take the ENGLISH edition.\n";
 
   const READ_SHAPE=
     "\nReply with ONLY this JSON object and nothing else:\n"
@@ -2854,6 +2894,85 @@ export default function App(){
   // it, why a search result is opened before being believed, why each step fills
   // a blank and can do nothing else, and why every step after the first stays
   // conditional (every page read runs on her allowance).
+  // ── THE BOOK'S LANGUAGE, AND AN ENGLISH EDITION — her ruling, 2 Oct ─────
+  //
+  // HER LOUVRE EXPERIENCE OF NATURE. The Louvre's English shop gives French
+  // books English names and states no language, so the card offered a French
+  // book under an English title. She reads English: a French book is not one
+  // she can buy, and an English edition, if there is one, is the one she wants.
+  //
+  // ONLY AT A VENUE MARKED english:false (her ruling: non-English venues only)
+  // and only for a book THIS lookup found — a book already on the card is
+  // never renamed (everything fills a blank; she asked for no card to be reset).
+  //
+  // ONE SEARCH by the ISBN (or the title, without one) reads the book's
+  // language and its title as printed. English, or unknown → nothing changes.
+  // Not English → the card takes the book's own title, and ONE more search
+  // looks for an English edition. Found — its own ISBN, different, printed in
+  // the results, and the read says English → the card carries the English
+  // edition, "Not in the museum shop", since the shop's book was the other.
+  // None → the original book stays, under its own title.
+  const fillLanguage=async(hit,venue,dom,mu,wasKnown)=>{
+    const r=hit&&hit.row;
+    if(!r||!hit.ok||r.hasCatalogue!=="yes"||wasKnown||!mu||mu.english!==false)return hit;
+    const isbn=cleanIsbn(r.isbn13);
+    const book=r.catalogueTitle||r.title;
+    setLookPhase("web");
+    const s=await searchWeb(
+      "The language and the exact printed title of the book "+(isbn?"with ISBN "+isbn:"\u201c"+book+"\u201d")
+        +", the catalogue of the exhibition \u201c"+r.title+"\u201d at "+venue+".",
+      isbn?[isbn,isbn+" "+book]:[book+" "+venue+" catalogue",book+" catalogue language"]);
+    let detail=hit.detail+"\n"+s.detail;
+    const stopped=why=>({...hit,detail,trouble:why,troubleLang:true});
+    if(!s.ok)return stopped(s.detail);
+    if(!s.results.length)return{...hit,detail:detail+"\nLanguage check: nothing found, so the book stands as found."};
+    const rd=await readResults(
+      "You are reading real web search results about ONE book"+(isbn?", ISBN "+isbn:"")+": \u201c"+book+"\u201d.\n"
+      +"Use ONLY what the results say. Never use outside knowledge.\n"
+      +"language: the language the book's text is printed in, named in English (French, Italian\u2026), "
+      +"or null if no result says. A bilingual book: name both.\n"
+      +"title: the book's title EXACTLY as printed, in its own language \u2014 never translated. Null if not shown.\n\n"
+      +resultsForPrompt(s.results)
+      +'\n\nReply with ONLY this JSON object: {"language": string|null, "title": string|null}');
+    detail=detail+"\n"+rd.detail;
+    if(!rd.ok)return stopped(rd.detail);
+    const lang=rd.data&&rd.data.language;
+    if(!lang)return{...hit,detail:detail+"\nLanguage check: no result says, so the book stands as found."};
+    if(isEnglishLang(lang))return{...hit,detail:detail+"\nLanguage check: "+lang+"."};
+    // Not English. The book's own title, if the results print it.
+    const own=rd.data.title?titleAsPrinted(rd.data.title,s.results):null;
+    let row={...r};
+    if(own&&own.onPage)row.catalogueTitle=own.title;
+    detail=detail+"\nLanguage check: "+lang+(own&&own.onPage?" \u2014 its own title \u201c"+own.title+"\u201d.":".");
+    const orig=row.catalogueTitle||book;
+    const e=await searchWeb(
+      "An ENGLISH-language edition of the exhibition catalogue \u201c"+orig+"\u201d ("+venue
+        +", exhibition \u201c"+r.title+"\u201d"+(isbn?", original ISBN "+isbn:"")+"): its English title and its own ISBN-13.",
+      [orig+" English edition",r.title+" "+venue+" catalogue English edition ISBN"]);
+    detail=detail+"\n"+e.detail;
+    if(!e.ok)return{...hit,row,detail,trouble:e.detail,troubleLang:true};
+    const none=()=>({...hit,row,detail:detail+"\nEnglish edition: none found."});
+    if(!e.results.length)return none();
+    const re=await readResults(
+      "You are reading real web search results, looking for an ENGLISH-language edition of the exhibition catalogue \u201c"
+      +orig+"\u201d ("+lang+(isbn?", ISBN "+isbn:"")+"), for the exhibition \u201c"+r.title+"\u201d at "+venue+".\n"
+      +"Use ONLY what the results say. Never use outside knowledge and never guess an ISBN.\n"
+      +"found is true ONLY if a result shows an edition printed in English, with its OWN ISBN, different from the one above.\n"
+      +"title: that edition's title exactly as printed. publisher: its publisher, never a shop or a seller.\n\n"
+      +resultsForPrompt(e.results)
+      +'\n\nReply with ONLY this JSON object: {"found": true|false, "title": string|null, "isbn13": string|null, "language": string|null, "publisher": string|null}');
+    detail=detail+"\n"+re.detail;
+    if(!re.ok)return{...hit,row,detail,trouble:re.detail,troubleLang:true};
+    const ed=re.data||{};
+    const enIsbn=toIsbn13(ed.isbn13);
+    const printed=enIsbn&&e.results.some(x=>(String(x.url||"")+" "+oneText(x)).replace(/[^0-9Xx]/g,"").includes(enIsbn));
+    if(!ed.found||!enIsbn||enIsbn===isbn||!isEnglishLang(ed.language)||!printed||!ed.title)return none();
+    return{...hit,pageUrl:null,detail:detail+"\nEnglish edition: \u201c"+ed.title+"\u201d, ISBN "+enIsbn+".",
+      row:{...row,catalogueTitle:String(ed.title).trim(),isbn13:enIsbn,
+        publisher:ed.publisher?String(ed.publisher).trim():null,publisherUrl:null,publisherResult:null,
+        shopState:"web",shopUrl:null,shopChange:null}};
+  };
+
   const fillPublisherPage=async(hit,venue,dom)=>{
     const r=hit&&hit.row;
     if(!r||!hit.ok||r.hasCatalogue!=="yes")return hit;
@@ -3039,7 +3158,14 @@ export default function App(){
       +resultsForPrompt(s1.results,6000)+READ_SHAPE);
     let detail=s1.detail+"\n"+r1.detail;
     if(!r1.ok)return{ran:true,ok:false,detail,data:null};
-    const data=r1.data||{};
+    const data={...(r1.data||{})};
+    // The title as the shop's pages print it — titleAsPrinted.
+    if(data.found&&data.catalogueTitle){
+      const tp=titleAsPrinted(data.catalogueTitle,s1.results);
+      if(tp.cut)detail+="\nTitle cut to what the shop prints: \u201c"+tp.title+"\u201d (the read gave \u201c"+data.catalogueTitle+"\u201d).";
+      else if(!tp.onPage)detail+="\nThe title the read gave is not on the shop\u2019s pages as written.";
+      data.catalogueTitle=tp.title;
+    }
     // A LIST IS NOT THE BOOK — her KHM Canaletto, 26 Sep. The read handed back
     // KHM's own search-results page as "the book's page". A link that is one of
     // the pages this step itself opened is refused as a link; the book still
@@ -3069,6 +3195,8 @@ export default function App(){
     const title=String(row.title||"").trim();
     const venue=mu?mu.name:"";
     let detail="";
+    // A book already on the card is never renamed by the language check.
+    const wasKnown=!!(row.looked&&row.hasCatalogue==="yes");
 
     // ── Stage one: GO TO THE SHOP ───────────────────────────────
     //
@@ -3096,7 +3224,7 @@ export default function App(){
       if(!s1.ok)return{row,detail,ok:false};
       if(s1.data){
         const hit=settle(row,s1.data,dom,detail,true);
-        if(hit)return await fillPublisherPage(await fillFromWeb(await fillIsbn(hit,venue,dom),venue,dom),venue,dom);
+        if(hit)return await fillPublisherPage(await fillLanguage(await fillFromWeb(await fillIsbn(hit,venue,dom),venue,dom),venue,dom,mu,wasKnown),venue,dom);
       }
     }
 
@@ -3131,7 +3259,7 @@ export default function App(){
     }
     // The dedicated ISBN search runs here too when the ISBN is still blank —
     // her ruling, 1 Oct (Metamorphoses): until then only the shop route had it.
-    return await fillPublisherPage(await fillFromWeb(await fillIsbn(await confirmShopLink(settle(row,d2,dom,detail,false,blocked)),venue,dom),venue,dom),venue,dom);
+    return await fillPublisherPage(await fillLanguage(await fillFromWeb(await fillIsbn(await confirmShopLink(settle(row,d2,dom,detail,false,blocked)),venue,dom),venue,dom),venue,dom,mu,wasKnown),venue,dom);
   }
 
   // A STEP THAT DIED IS NOT AN ANSWER \u2014 her question, 21 Sep, and the fault was
@@ -3154,7 +3282,10 @@ export default function App(){
     setDebug(out.detail);
     if(out.ok){
       await commit(rows.map(r=>r.id===id?out.row:r));
-      if(out.trouble)setError("Found the catalogue for \u201c"+row.title+"\u201d, but the search "
+      if(out.trouble&&out.troubleLang)setError("Found the catalogue for \u201c"+row.title+"\u201d, but the language check "
+        +"stopped part-way, so the title may be the shop\u2019s translation and an English edition may be missed. "
+        +out.trouble.split("[")[0].trim());
+      else if(out.trouble)setError("Found the catalogue for \u201c"+row.title+"\u201d, but the search "
         +"stopped part-way, so the ISBN or the publisher\u2019s page may be missing when they "
         +"exist. "+out.trouble.split("[")[0].trim()+" Press \u201cSearch again\u201d.");
     } else {

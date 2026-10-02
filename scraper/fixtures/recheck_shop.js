@@ -128,7 +128,16 @@ const vanHNone = fresh('ng-testvanhnone', 'ng', 'Test NG Van Hemessen Unsaid');
 const vanHPub = fresh('ng-testvanhpub', 'ng', 'Test NG Publisher Gap Show');
 const webLine = { ...webRow, id: 'ng-testwebline', title: 'Test NG Web Line Show' };
 const noShop = { ...webRow, id: 'borghese-testnoshop', museumId: 'borghese', title: 'Test Borghese No Shop Show' };
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop], ignored: [], lastRun: null };
+// HER LOUVRE EXPERIENCE OF NATURE, 2 Oct: a French book the English shop
+// names in English, and a read that padded the title with the show's subtitle.
+const louNature = fresh('louvre-testnature', 'louvre', 'Test Louvre Nature Show');
+const louEnglish = fresh('louvre-testenglish', 'louvre', 'Test Louvre English Edition Show');
+const louUnprinted = fresh('louvre-testunprinted', 'louvre', 'Test Louvre Unprinted ISBN Show');
+const louSaysEn = fresh('louvre-testsaysen', 'louvre', 'Test Louvre Says English Show');
+const ngLang = fresh('ng-testlang', 'ng', 'Test NG Language Show');
+const louKnown = { ...fresh('louvre-testknown', 'louvre', 'Test Louvre Known Show'), looked: true, hasCatalogue: 'yes',
+  catalogueTitle: 'Test Known Catalogue', isbn13: null, shopState: 'shop' };
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -811,6 +820,59 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await openTray(noCatRow.title);
     const nc = card(noCatRow.title);
     ok(nc && [...nc.querySelectorAll('button')].some(b => /Re-check museum shop/.test(b.textContent)), 'VN-010: a venue with a shop keeps its Re-check button');
+  }
+
+  // ── LG-001..LG-012: the book's language, and an English edition ─────────
+  {
+    const FR = '9782359064612', EN = '9781234567897';
+    const PAGE = 'https://boutique.louvre.fr/en/product/61740-test-experience-de-la-nature-fra.html';
+    const OWN = 'L\u2019Exp\u00e9rience de la nature. Les arts \u00e0 Prague \u00e0 la cour de Rodolphe II';
+    const run = async (row, { lang = 'French', title = OWN, en = null, enPrinted = true, shopTitle = 'Experience of Nature. Art in Prague at the Court of Rudolf II' } = {}) => {
+      calls.length = 0;
+      script.mcp = (tool, args) => {
+        if (tool === 'web_search') {
+          const q = args.search_queries.join(' | ');
+          if (q.startsWith(FR)) return { payload: { results: [{ url: 'https://www.louvre.fr/editions/catalogue/test', title: OWN, excerpts: [OWN + ' \u2014 Lienart, 2025. EAN ' + FR + '. Langue : fran\u00e7ais.'] }] } };
+          if (/English edition/.test(q) && en) return { payload: { results: [{ url: 'https://books.test/en', title: en, excerpts: [en + ' \u2014 English edition. ' + (enPrinted ? 'ISBN ' + EN : 'Paperback.')] }] } };
+          return { payload: { results: [] } };
+        }
+        if (args.urls.includes(PAGE)) return { payload: { errors: [], results: [{ url: PAGE, title: 'Exhibition catalogue Experience of Nature', excerpts: [], full_content: '# Exhibition catalogue Experience of Nature\nSold by GrandPalaisRmn\nEAN ' + FR + '\n' }] } };
+        return { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Exhibition catalogue Experience of Nature \u2014 ' + PAGE + ' \u20ac42')] })) } };
+      };
+      script.sample = p => /OWN shop pages, opened directly/.test(p)
+        ? { found: true, thisVenue: true, catalogueTitle: shopTitle, isbn13: null, publisher: null, publisherUrl: null, shopUrl: PAGE }
+        : /"language": string\|null, "title"/.test(p) ? { language: lang, title }
+        : /ENGLISH-language edition/.test(p) ? (en ? { found: true, title: en, isbn13: EN, language: 'English', publisher: null } : { found: false })
+        : { isbn13: null, publisher: null, publisherUrl: null };
+      await openTray(row.title);
+      await click(button(card(row.title), /Find catalogue|Search again/));
+      const c = card(row.title);
+      return c ? c.textContent : '';
+    };
+    const searches = () => calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries);
+
+    let t = await run(louNature);
+    ok(t.includes(OWN), 'LG-001: her Nature book \u2014 the card carries the book\u2019s own French title', t.slice(0, 400));
+    ok(!/Art in Prague at the Court/.test(t), 'LG-002:   never the show\u2019s English subtitle', t.slice(0, 400));
+    ok(/978-2359064612/.test(t) && /In the museum shop/.test(t), 'LG-003:   no English edition \u2014 the shop\u2019s book stays, in the museum shop', t.slice(0, 400));
+    ok(searches().some(q => q.some(x => /English edition/.test(x))), 'LG-004:   an English edition was looked for', JSON.stringify(searches()));
+
+    t = await run(louEnglish, { en: 'Test The Experience of Nature (English edition)' });
+    ok(/Test The Experience of Nature \(English edition\)/.test(t) && /978-1234567897/.test(t), 'LG-005: an English edition exists \u2014 its title and ISBN on the card', t.slice(0, 400));
+    ok(/Not in the museum shop/.test(t) && !/978-2359064612/.test(t), 'LG-006:   "Not in the museum shop", and the French ISBN gone', t.slice(0, 400));
+
+    t = await run(louUnprinted, { en: 'Test Phantom English Edition', enPrinted: false });
+    ok(!/Phantom/.test(t) && t.includes(OWN), 'LG-007: an English ISBN the results never print is not believed', t.slice(0, 400));
+
+    t = await run(louSaysEn, { lang: 'English', title: 'Experience of Nature' });
+    ok(!searches().some(q => q.some(x => /English edition/.test(x))) && /In the museum shop/.test(t), 'LG-008: the book is English \u2014 nothing more is looked for', JSON.stringify(searches()));
+    ok(/Experience of Nature/.test(t) && !/Art in Prague at the Court/.test(t), 'LG-009:   and the title is cut to what the shop prints', t.slice(0, 400));
+
+    await run(ngLang);
+    ok(!searches().some(q => q.some(x => x === FR || /English edition/.test(x))), 'LG-010: an English-speaking venue \u2014 no language check', JSON.stringify(searches()));
+
+    t = await run(louKnown);
+    ok(!searches().some(q => q.some(x => x === FR || /English edition/.test(x))) && /Test Known Catalogue/.test(t), 'LG-011: a book already on the card is never renamed (Search again)', t.slice(0, 400));
   }
 
   // ── S-001..S-003: the search narrows WITH the filters — her finding, 25 Sep.
