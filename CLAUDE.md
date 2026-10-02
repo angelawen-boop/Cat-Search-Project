@@ -83,8 +83,7 @@ Chat Claude has no project context and cannot read this guide. Last resort.
 ### Editing this guide — and the side docs
 
 Loaded in full at the start of every session, so every line costs something every
-time. It hit 2,905 lines on 22 Sep; it was back to 1,621 by 30 Sep, most of the
-growth run-by-run stories. Cut again 30 Sep. The rules:
+time. It once grew to 2,905 lines, mostly run-by-run stories. The rules:
 
 - **Record the conclusion, not the journey.** Results, rulings and the lesson —
   never the order things happened in. When a finding is overturned, replace the
@@ -125,6 +124,7 @@ Branches separate in-progress work from known-good work, never components.
 | `claude/jsx-stitched-intake` | Merged 20 Sep; kept as history |
 | `claude/quiet-user-agent` | Parked, her ruling 19 Sep — do not merge or re-open |
 | `claude/personal-tracking-ledgers-z49s2h` | Dead — do not merge |
+| `claude/blissful-knuth-snbqci`, `claude/design-questions-87gj6w`, `claude/headless-chromium-claude-code-wl94l0` | Dead — early 7–10 Sep work from before `main` was the trunk (no shared history with it); superseded, do not merge. Kept on GitHub, her ruling 2 Oct — never raise deleting them |
 | `claude/met-connection-experiments` | Abandoned — do not merge |
 | `claude/playwright-scraper-prototype-z68iko` | Abandoned — merging it would undo the current scraper |
 
@@ -179,8 +179,8 @@ should reach the app.
 | `brera`, `borghese` | Their single extra row is a marker for a genuinely empty upcoming page |
 | `ashmolean` | **Everything kept** — major, free and displays, past included (27 Sep). Her count: current 0 major + 4 free, upcoming 2 + 1, past 4 + 13. **Titles: the full name from the show's page header, ordinary capitals written by code** — the venue types capitals everywhere (`capsTitles`, `titleFromCaps`, `pageTitle`) |
 
-**Whether displays count is HERS, and it varies by venue.** Two venues
-disagreeing is the expected state, not a contradiction to tidy up.
+**Whether displays count is HERS, and varies by venue.** Two venues disagreeing
+is the expected state, not a contradiction.
 
 **Capodimonte is closed differently.** Italian only, so checking a row against
 the site is uselessly slow. Her decision: import every row unless visibly
@@ -292,19 +292,15 @@ this one alone. `stitch` and `compress` carry it untouched.
 > forward. **Renaming the connector means restating them.**
 
 **Live: 38.1 on her main app, 38.1 · cloud 4 on the test page** (published
-2 Oct). **38.1:** Reset to Seed always asks ("This loads the seed set and
-replaces everything on screen. Continue?"); counts line Watched · Wanted ·
-Owned · Closing Window (Yes-wanted catalogues closed 3–12 months ago,
-`inClosingWindow`), Tracked and Dismissed inside "Details"; "Reset this
-search?". **38:** footer "Reset to Seed", "Reset cards" (clears one card's
-lookup). **37.2, under 38:** the lookup fixes in the rules below; Frick shelf =
-its whole Publications page. Older numbers are in git.
+2 Oct). Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
+Closing Window (Yes-wanted catalogues closed 3–12 months ago,
+`inClosingWindow`), Tracked and Dismissed inside "Details"; footer "Reset to
+Seed" and "Reset cards" (clears one card's lookup). Older numbers are in git.
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
 - **Her numbering:** whole number for a substantial change (adding venues is
   one), decimal for a small one. **One number per PUBLISH**, never per build.
-  Renumbered 27 Sep (34.8 → 35 … 34.14 → 35.3); older numbers are in git.
 - The file is `Cat_Watch.jsx` — no version number in the name, ever.
 
 **Building is code's job — `node build/build_app.js`**: transpiles, wraps it in
@@ -344,7 +340,7 @@ reopening, §7.1). Reasoning and the two rejected arguments: `docs/app.md` §4�
 
 ```
 id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
-acquiring, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
+acquiring, buyNext, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
 publisherUrl, publisherResult, shopUrl, shopState, shopChange, addedAt, editedAt
 ```
 
@@ -416,7 +412,7 @@ Each step runs only if the one before left something missing.
    Take **the book's own product page**, never a list.
 2. **Open that page** for the ISBN, the publisher and any publisher link.
 3. **ISBN still missing → search the open web.** Gaps only — whether or not
-   the shop had the book (the not-in-shop route lacked it until 1 Oct; N-001).
+   the shop had the book (N-001).
 4. **No publisher page → go to the publisher**: find their site from their
    name, search inside it, **open what that returns**.
 
@@ -440,19 +436,18 @@ and do not flip to searching wide first.**
 - **Only the publisher is the publisher** (her ruling, 1 Oct, Millet): a link a
   read hands over is filed only on the publisher's own site (`publisherLinkOf`);
   a distributor's page never. Self-published → no link at all.
-- **Another venue's catalogue is not this show's** (her ruling, 2 Oct, NG
-  *van Hemessen*): a book found on the web is filed only when the read says
-  it is the catalogue of the show AT THIS VENUE (`thisVenue`); a show that
-  travels here "in modified form" does not count. The shop step needs no such
-  answer. A blank publisher with the ISBN known runs the wider search too.
+- **Another venue's catalogue is not this show's** (her ruling, 2 Oct): a book
+  found on the web is filed only when the read says it is the catalogue of the
+  show AT THIS VENUE (`thisVenue`); a show that travels here "in modified form"
+  does not count. The shop step needs no such answer. A blank publisher with the
+  ISBN known runs the wider search too.
 - **The title as printed, and English first at non-English venues** (her
-  ruling, 2 Oct, Louvre *Experience of Nature*): a shop title is kept only as
-  far as the pages print it (`titleAsPrinted`). At a venue marked
-  `english:false`, a book this lookup found gets one search by ISBN for its
-  language and own title; not English → one search for an English edition
-  (its own ISBN, printed in the results) → filed as "Not in the museum shop".
-  None → the book stays under its own title. A book already on a card is never
-  renamed (`fillLanguage`).
+  ruling, 2 Oct): a shop title is kept only as far as the pages print it
+  (`titleAsPrinted`). At a venue marked `english:false`, a book this lookup
+  found gets one search by ISBN for its language and own title; not English →
+  one search for an English edition → filed as "Not in the museum shop". None →
+  the book stays under its own title. A book already on a card is never renamed
+  (`fillLanguage`).
 - **"X in association with Y" — Y is the publisher** (her ruling, 2 Oct):
   the publisher step and the self-publisher check use Y (`publisherToFind`);
   the card prints the line as given.
@@ -466,67 +461,61 @@ and do not flip to searching wide first.**
 - **Only "Re-check museum shop" moves the shop status** (her design, 25 Sep).
   With a link on file it re-reads that page (gone → "No longer", link kept as
   "Museum shop (last seen)"; buyable again → "Back"); with none it runs the shop
-  step alone ("Now"; a book already in the shop stays "In the museum shop" and
-  the card says "Re-checked: still in the museum shop.", 36.1). A failed check
-  changes nothing. **Search again fills
-  blanks only.** `docs/app.md`, "A book leaving the shop".
+  step alone ("Now"; a book already in the shop stays "In the museum shop",
+  "Re-checked: still in the museum shop."). A failed check changes nothing.
+  **Search again fills blanks only.** `docs/app.md`, "A book leaving the shop".
 - **A blocked shop says so** — `shopState: "blocked"`, her wording: *"The
   museum shop is blocked - search it manually. The catalogue is stocked
   elsewhere."* / *"The museum shop is blocked. The catalogue also does not
   appear to exist elsewhere. Search manually to confirm."* Headline red and
-  bold, the rest grey. Blocked today: KHM (307 to a waiting room), MAM.
-  **A shop whose every page comes back empty is blocked too** (36.1, her
-  ruling 1 Oct): MoMA's shelf draws its books by script, so Parallel's copy is
-  a membership pop-up; its search and `products.json` answer 403.
+  bold, the rest grey. Blocked today: KHM, MAM. **A shop whose every page comes
+  back empty is blocked too** (her ruling, 1 Oct) — MoMA's shelf is drawn by
+  script and its search and `products.json` answer 403.
 - **The Museum shop link searches the shop for the EXHIBITION's title** when
   no book page is on file (`buyLinks`) — resellers keep the book's title, the
   shop keeps the show's. A search or shelf page is never filed as the book's
   page (`listedOnly`). KHM opening its search is the design working.
 - **The line under a book not in the shop** reads "Not in the museum shop —
   shop link opens the general store." for every venue with a shop (her ruling
-  2 Oct: a per-venue rewording was reverted). **A venue with no shop**
+  2 Oct; no per-venue wording). **A venue with no shop**
   (`borghese`, `capo`, `dellav`) reads only "Venue has no shop.", grey, with
   no shop link and no Re-check button; its lookup goes straight to the web.
+- **Booko AU** (last buy link) is `booko.au/<isbn>`; with no ISBN, its title
+  search. Her verdict, 2 Oct: works well on the ISBN, which the lookup now finds
+  far more often; the messier title-search results are accepted.
 - **A ticket is never a catalogue** (`isTicketLink`).
 - **A shop link from the web search is opened before it is filed as in the
   shop** (`confirmShopLink`).
-- **A book's link on a shelf is read in code** (`bookLinkOnShelf`, 36.1): the
-  one link on the shop whose words carry the whole catalogue title; two, or
-  none, and nothing. Her MAD *Christofle*: the shelf held it, the read returned
-  the shelf. (Parallel dropping tile links was one Orsay read, not a rule.)
-- **One page is read whole** (`fetchPage` `{full:true}`, 36.1, her ruling
-  1 Oct): the book's page, Re-check's page, the publisher's candidates. The
-  shelf stays excerpts (a call is capped ~25,000 characters). **The ISBN is read
-  in code first** (`isbnOnPage`): exactly one 978/979 number labelled ISBN or
-  EAN, check digit valid; Claude's only when code finds none. **"Sold by …" is
-  the shop, never the publisher** (both read prompts). Text a page hides until
-  clicked is not in Parallel's copy (Orsay *Cassatt*'s Hazan) — the wider web
-  is the route for it. Evidence: `docs/shop_pages/README.md`.
-- **The web ISBN search reads its results in code too** (`isbnInResults`,
-  36.1; her Ashmolean *In Bloom*: AbeBooks' "ISBN 13" was in the results and
-  the read said none). Only results carrying the whole book title count;
-  labelled numbers and valid 978/979 numbers in their addresses; exactly one.
-  None → the two results about the book are opened whole. Queries name the
-  venue.
+- **A book's link on a shelf is read in code** (`bookLinkOnShelf`): the one link
+  on the shop whose words carry the whole catalogue title; two, or none, and
+  nothing.
+- **One page is read whole** (`fetchPage` `{full:true}`, her ruling 1 Oct): the
+  book's page, Re-check's page, the publisher's candidates. The shelf stays
+  excerpts (a call is capped ~25,000 characters). **The ISBN is read in code
+  first** (`isbnOnPage`): exactly one 978/979 number labelled ISBN or EAN, check
+  digit valid; Claude's only when code finds none. **"Sold by …" is the shop,
+  never the publisher.** Text a page hides until clicked is not in Parallel's
+  copy — the wider web is the route for it. Evidence: `docs/shop_pages/README.md`.
+- **The web ISBN search reads its results in code too** (`isbnInResults`): only
+  results carrying the whole book title count; labelled numbers and valid
+  978/979 numbers in their addresses; exactly one. None → the two results about
+  the book are opened whole. Queries name the venue.
 
 **The cost:** up to four searches and three readings. **Every reading runs on
-her allowance.** The connector's keyless tier refuses after roughly a dozen
-searches in quick succession (observed; unpublished). A failed search shows one
-line on the card, Re-check's words with "Search"/"Search again" (her ruling
-30 Sep; the red banner for it is gone): "Too many searches just now"
-(`rate_limited`) and "Search failed (upstream_error)". **Per `mcp.d.ts`:
-`rate_limited` is never returned; `upstream_error` is the catch-all and
-Parallel's words never reach the page** — its free-tier refusal, seen 1 Oct
-through Claude Code, reads "You've hit the free-tier rate limit for Parallel
-Search MCP" — most likely `upstream_error` in the app (not proven).
+her allowance.** The keyless tier refuses after roughly a dozen quick searches
+(observed; unpublished). A failed search shows one line on the card, Re-check's
+words with "Search"/"Search again" (her ruling 30 Sep; no red banner). **Per
+`mcp.d.ts`: `rate_limited` is never returned; `upstream_error` is the catch-all
+and Parallel's words never reach the page** — so its free-tier refusal is most
+likely "Search failed (upstream_error)" in the app (not proven).
 
 **Her keyed connector since 36: "Parallel Search Key"** — custom, at
 `https://search.parallel.ai/mcp-oauth`, No sign-in, her key in an **`x-api-key`**
 header (`authorization: Bearer` never reached Parallel); billed to her Parallel
 account ($20 credit for 60 days, $5 a month, auto-reload off). The built-in
 keyless "Parallel Search" cannot be removed; a second connector at `/mcp` is
-refused. **Her report, 2 Oct:** ~30–50 books looked up over two days on the
-key; the connection error 3 times one morning, each clearing within a minute.
+refused. The key has been used for ~30–50 lookups with only brief connection
+errors (2 Oct).
 
 **Shop addresses:** all 18 original venues checked, `docs/app.md` §1;
 `borghese`, `capo`, `dellav` have none. Newer venues: in `MUSEUMS`, a comment
@@ -545,7 +534,7 @@ through `sample` at `modelTier: default`. Do not re-open without a real misread.
 | unit fixtures | `date.test.js`, `compress.test.js`, `qc.test.js`, `sweep_log.test.js`, `venue_status.test.js`, `pacing.test.js` |
 | `intake_cases.js` | folding, quarantine, freshness, the ledger gate |
 | `page_loads.js`, `page_renders.js` | does the page load; does it DRAW (jsdom, plain and with the runtime answering) |
-| `catalogue_lookup.js`, `recheck_shop.js` | the lookup (C-); Re-check, blocked shops, web-found links, search filters, another venue's book, no-shop venues, language, Reset cards, counts — the real app, buttons pressed (R-, L-, S-, VN-, LG-, RC-, RS-, CT-) |
+| `catalogue_lookup.js`, `recheck_shop.js` | the lookup (C-); Re-check, blocked shops, web-found links, search filters, another venue's book, no-shop venues, language, Reset cards, counts, buy-next dot, closing a search box — the real app, buttons pressed (R-, L-, S-, VN-, LG-, RC-, RS-, CT-, SC-, BN-) |
 | `*_pages.js` per venue | `mam`, `ashmolean`, `moma`, `mad`, `brit`, `morgan`, `orsay` recipes on her saved pages, no network — her counts, dates, titles, descriptions |
 | `summary_pages.js`, `title_case_pages.js`, `listing_pages.js` | descriptions, titles in the venue's letters, where each row was seen — on saved pages |
 | `page_keep_pages.js`, `bridge_reuse.js`, `robots_pages.js`, `pacing_pages.js` | kept pages; the bridge's file reuse and reply labels; robots.txt obeyed and stall reports; pacing against Cloudflare's replies |
@@ -865,8 +854,7 @@ here.
   it carried something you were asked to change.
 - **Change exactly what was asked** — one sentence, not its whole line; a
   restored sentence restored where it was.
-- **A recovery step with one correct answer is code**, never a choice handed to
-  her.
+- **A recovery step with one correct answer is code**, never a choice handed to her.
 - **Never invent a constraint she did not state, or give a reason nobody
   checked.** An error code is explained from the platform's types
   (`mcp.d.ts`), never from memory. A change that is code is yours — never her
@@ -993,19 +981,17 @@ it.** Code: "THE CLOUD LEDGER" in `Cat_Watch.jsx` on the branch. Screen spec:
 
 **Where:** test page **https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf**, its
 own store, all four capabilities. **Her working app since 26 Sep: she works ONLY
-there, on her real ledger, in ONE tab on ONE device** (two open copies save over
-each other — now the later copy is read only, below). Buttons there: **Load** (a ledger file), **Save**,
-**Import** (a sweep CSV) — `main`'s Import, Export and Import Refresh, renamed.
+there, on her real ledger, in ONE tab on ONE device** (a second copy is read
+only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
+CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **38.1 · cloud 4**, published 2 Oct (`main` merged in
-that day; cloud 3 was 37 without the lock, live minutes). Cloud-only in it: the
-read-only lock (below); a roll-back's safety copy names the save by its
-time ("…roll-back to snapshot of Sep 26, 2026 1:16pm"; CL-T1–3), and Cloud
-Saves' times share one width. The cloud count moves only when she says. Merge
-`main` in again before
-the page is rebuilt. The page's title is "Cat Watch Cloud Test" — set it in
-`build/dist/index.html` before publishing (the shell says "Cat Watch").
+live on the test page **38.1 · cloud 4**, published 2 Oct. Cloud-only in it:
+the read-only lock (below); a roll-back's safety copy names the save by its
+time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
+when she says. Merge `main` in again before the page is rebuilt. The page's
+title is "Cat Watch Cloud Test" — set it in `build/dist/index.html` before
+publishing (the shell says "Cat Watch").
 
 **What the store holds:**
 - **The live ledger** — the only thing the app reads and writes as she works.
@@ -1030,20 +1016,13 @@ ledger): a save writes new pieces and switches one record last, so a save cut of
 anywhere leaves the last complete ledger; a damaged or missing piece is refused;
 an empty page never saves.
 
-**Her tests, all passed (26 Sep–1 Oct):** load/change/reload; loading an older
-file; roll-back; Save with the cloud copy; export → change → reload; saving
-within a second; catalogue lookups; Download a cloud save and Load it; close
-and reopen; a real sweep Import (the sweep log updated live; the reminder).
+**Her tests, all passed (26 Sep–1 Oct):** load, change, reload, roll-back,
+Save, Download and Load, close and reopen, a real sweep Import.
 
-**Two copies open: the later one is READ ONLY** (her ruling, 1 Oct; live in
-37 · cloud 4). It shows the cloud copy and writes nothing;
-an edit record with a heartbeat decides, stale after a minute; every save
-checks it first. Design: "ONE COPY EDITS AT A TIME" in the code;
+**Two copies open: the later one is READ ONLY** (her ruling, 1 Oct). It shows
+the cloud copy and writes nothing; an edit record with a heartbeat decides,
+stale after a minute; every save checks it first. Design: "ONE COPY EDITS AT A TIME" in the code;
 `cloud_two_copies.js`, TC-001–010.
-
-**Decided against, 25 Sep:** a snapshot on closing the page (a browser gives a
-closing page no reliable time); a backup copy in browser storage (a fourth way
-of saving — too messy).
 
 **Next:**
 1. Her normal use, over several sessions; she reports what surfaces. On request,
@@ -1065,30 +1044,22 @@ of saving — too messy).
 
 ### 3. The Frick's past archive, page two
 
-About 10 past exhibitions have never been read. The archive paginates; page two
-was wired 13 Sep and refused (403) on every attempt that day. **Likely cause, not
-proven:** the container then asked every 2–5s, and the Frick's robots.txt asks
-for 10s, which sweeps have obeyed since 27 Sep. **Nothing to do now** — no
-probe. The next monthly sweep reads it; a refusal shows as a marker row. Record
-the result here and close it.
+About 10 past exhibitions (archive page two, refused 13 Sep) have never been
+read. Her ruling: leave them for the next sweep to pick up. Nothing else to do;
+close this once that sweep has run.
 
 ### 4. Catalogue lookup generally
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
-`moma` (1 Oct).**
-`uffizi`'s shop sells no books — settled.
+`moma` (1 Oct).** `uffizi`'s shop sells no books — settled.
 
-- **OPEN — Booko with no ISBN.** Live in 37: "Booko AU", last buy link;
-  `booko.au/<isbn>` (Booko fills the title — her check), else its title search,
-  which she finds poor. A better no-ISBN query: her question, 1 Oct, unsettled.
 - **OPEN — the publisher step's verdict is not stable.** *Metamorphoses*
   (Hannibal), two fresh lookups, same code, 1 Oct: "Publisher's section", then
-  "Publisher" (right). Where they split is unproven — a different candidate
-  page, the page returning empty (`pageIsShell`), or the read judging the same
-  page differently. Only that lookup's log settles it, and "Show diagnostic"
-  keeps the last action's only. If it recurs, get the log before anything else.
-  A log kept per card was offered, not built.
+  "Publisher" (right). Cause unproven — a different candidate page, the page
+  returning empty (`pageIsShell`), or the read judging one page differently.
+  Only that lookup's log settles it ("Show diagnostic" keeps the last action's
+  only); if it recurs, get the log first. A log per card: offered, not built.
 
 ### 5. A fresh sweep — mid-October at the earliest
 
@@ -1147,9 +1118,9 @@ She is noting issues as she uses it, for a later debugging session.
   **Splitting one venue across days, or a slower pace** (29 Sep).
 
 **Corrected along the way:** Chat can **not** fetch any URL cold. The Italian
-venues are four different situations, not one problem. The AbeBooks link is
-`/servlet/SearchResults?ds=30&dym=on&kn=…&rollup=on&sortby=17` —
-sorted by lowest total price (her ruling, 1 Oct).
+venues are four different situations. The AbeBooks link is
+`/servlet/SearchResults?ds=30&dym=on&kn=…&rollup=on&sortby=17` (lowest total
+price, her ruling 1 Oct).
 
 ---
 

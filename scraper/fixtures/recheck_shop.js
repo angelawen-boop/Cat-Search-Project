@@ -993,6 +993,58 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(box2 && box2.value === '' && !doc.querySelector('button[aria-label="Clear search"]'),
       'S-004a:   pressing it empties the box, and the cross goes with the text', box2 && box2.value);
   }
+
+  // ── SC-001..SC-002: closing a search box empties it — her ask, 2 Oct ──────
+  {
+    const doc = win.document;
+    const btns = () => [...doc.querySelectorAll('button')];
+    const typeIn = async (box, v) => { const props = box[Object.keys(box).find(k => k.startsWith('__reactProps'))]; await act(async () => { props.onChange({ target: { value: v } }); }); await settle(); };
+    const searchBtn = () => btns().find(b => b.title === 'Search');
+    const sbox = () => doc.querySelector('input[placeholder^="Search exhibitions"]');
+    if (!sbox()) await click(searchBtn());
+    await typeIn(sbox(), 'Test');
+    await click(searchBtn());
+    await click(searchBtn());
+    ok(sbox() && sbox().value === '', 'SC-001: closing the search bar and opening it again finds it empty', sbox() && sbox().value);
+    const rc = () => btns().find(b => b.textContent === 'Reset cards');
+    const rbox = () => doc.querySelector('input[placeholder^="Search cards"]');
+    if (!rbox()) await click(rc());
+    await typeIn(rbox(), 'nature');
+    await click(rc());
+    await click(rc());
+    ok(rbox() && rbox().value === '', 'SC-002: closing Reset cards and opening it again finds its box empty', rbox() && rbox().value);
+    await click(rc());
+  }
+
+  // ── BN-001..BN-007: the buy-next dot and the catalogue filters — her ask, 2 Oct
+  {
+    const doc = win.document;
+    const btns = () => [...doc.querySelectorAll('button')];
+    const chipNamed = t => btns().find(b => b.textContent === t);
+    const shown = () => [...doc.querySelectorAll('article')].map(a => a.textContent);
+    await click(chipNamed('Clear all'));
+    const dotOf = t => { const c = card(t); return c && [...c.querySelectorAll('button')].find(b => b.title === 'Buy next' || b.title === 'Not buying next'); };
+    const d = dotOf(webRow.title);
+    const star = d && d.nextElementSibling;
+    ok(!!d && !!star && /^(Watch|Unwatch)$/.test(star.title), 'BN-001: a card marked Yes has the dot, just left of the star', d && star && star.title);
+    const acq = [...doc.querySelectorAll('span')].find(s => s.textContent === 'Acquiring?');
+    const row = acq ? [...acq.parentElement.querySelectorAll('button')].map(b => b.textContent) : [];
+    ok(row.slice(-3).join('|') === 'Has catalogue|No catalogue|Buy next', 'BN-002: the Acquiring row ends Has catalogue, No catalogue, Buy next', row.join('|'));
+    await click(d);
+    ok(dotOf(webRow.title).title === 'Not buying next', 'BN-003: pressing the dot marks it');
+    await click(chipNamed('Buy next'));
+    const bn = shown();
+    ok(bn.length === 1 && bn[0].includes(webRow.title), 'BN-004:   Buy next shows only the marked card', bn.length);
+    await click(chipNamed('Buy next'));
+    await click(chipNamed('Has catalogue'));
+    const has = shown();
+    ok(has.some(x => x.includes(webRow.title)) && !has.some(x => x.includes(noCatRow.title)), 'BN-005: Has catalogue keeps the found book and drops the one with none', has.length);
+    await click(chipNamed('Has catalogue'));
+    await click([...card(webRow.title).querySelectorAll('button')].find(b => b.textContent === 'No'));
+    ok(!dotOf(webRow.title), 'BN-006: a card not on Yes has no dot');
+    await click([...card(webRow.title).querySelectorAll('button')].find(b => b.textContent === 'Yes'));
+    ok(dotOf(webRow.title) && dotOf(webRow.title).title === 'Buy next', 'BN-007:   and back on Yes its dot starts unmarked — leaving Yes cleared it');
+  }
   try { await act(async () => root.unmount()); } catch {}
   console.error = realError;
   const loud = shouted.filter(m => !/not wrapped in act|ReactDOMTestUtils/.test(m));
