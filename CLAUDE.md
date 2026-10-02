@@ -449,6 +449,9 @@ and do not flip to searching wide first.**
   (its own ISBN, printed in the results) → filed as "Not in the museum shop".
   None → the book stays under its own title. A book already on a card is never
   renamed (`fillLanguage`).
+- **"X in association with Y" — Y is the publisher** (her ruling, 2 Oct):
+  the publisher step and the self-publisher check use Y (`publisherToFind`);
+  the card prints the line as given.
 - **A museum's own imprint is skipped** — `SELF_PUBLISHERS`, keyed on the
   **publisher**, never the venue, **added to only by her**; one imprint may need
   two names (MAD and MoMA have two).

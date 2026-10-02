@@ -917,6 +917,7 @@ function normPublisher(name){
     .replace(/[^a-z0-9]+/g," ").trim().replace(/^the\s+/,"");
 }
 function isSelfPublisher(name){
+  name=publisherToFind(name);
   const n=normPublisher(name);
   return !!n&&SELF_PUBLISHERS.has(n);
 }
@@ -955,7 +956,20 @@ function cleanPublisherUrl(u,dom){
 // publisher step uses (publisherDomainFrom). A self-published book has no
 // publisher link at all. Anything else is dropped, and the publisher step,
 // which goes to the publisher, runs.
+// "X IN ASSOCIATION WITH Y" — Y IS THE PUBLISHER. Her ruling, 2 Oct: "Morgan
+// Library & Museum in association with Rizzoli Electa" names the museum first
+// and the house that printed the book after, so the publisher step looks for
+// Rizzoli Electa. The card still prints the line as the book gives it; only
+// which publisher is looked for (and checked against SELF_PUBLISHERS) changes.
+function publisherToFind(name){
+  const s=String(name||"").trim();
+  const m=s.match(/\bin\s+association\s+with\s+(.+)$/i);
+  const y=m?m[1].replace(/[\s.,;:]+$/,"").trim():"";
+  return y||s;
+}
+
 function publisherLinkOf(u,publisher,dom){
+  publisher=publisherToFind(publisher);
   const t=cleanPublisherUrl(u,dom);
   if(!t||!publisher||isSelfPublisher(publisher))return null;
   return publisherDomainFrom([{url:t}],publisher)?t:null;
@@ -2509,6 +2523,8 @@ export default function App(){
     // than print the same sentence as a search that ran and found nothing.
     if(!r.publisher)return{...hit,row:{...r,publisherResult:"unnamed"}};
     const book=r.catalogueTitle||r.title;
+    // The publisher looked for — "X in association with Y" is Y (publisherToFind).
+    const pub=publisherToFind(r.publisher);
     const isbn=cleanIsbn(r.isbn13);
     setLookPhase("publisher");
 
@@ -2516,11 +2532,11 @@ export default function App(){
     // One search for the NAME alone. A publisher’s own site is the top answer
     // for its own name, and the domain is then read off the results in code.
     const d1=await searchWeb(
-      "The official website of the art-book publisher “"+r.publisher+"”.",
-      [r.publisher, r.publisher+" art book publisher"]);
+      "The official website of the art-book publisher “"+pub+"”.",
+      [pub, pub+" art book publisher"]);
     let detail=hit.detail+"\n"+d1.detail;
     if(!d1.ok)return{...hit,detail,trouble:d1.detail};
-    const pubHost=publisherDomainFrom(d1.results,r.publisher);
+    const pubHost=publisherDomainFrom(d1.results,pub);
     if(!pubHost)return{...hit,detail:detail+"\nCouldn’t identify the publisher’s own website.",
       row:{...r,publisherResult:"nosite"}};
 
@@ -2560,7 +2576,7 @@ export default function App(){
      +"A book’s own page beats a list or a section of many books, which beats anything else. "
      +"Give at most two, and give none at all if nothing here relates to this book.\n"
      +"Use ONLY these results. Never invent a link.\n"
-     +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+r.publisher
+     +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+pub
      +"\nExhibition venue: "+venue+"\n\n"
      +resultsForPrompt(onSite)
      +"\nReply with ONLY this JSON object and nothing else:\n"
@@ -2609,7 +2625,7 @@ export default function App(){
        +'"other"   — this page has nothing to do with this book or this publisher’s books.\n'
        +"MATCH ON THE ISBN WHERE THERE IS ONE. A publisher may carry the same book in two "
        +"languages, with two links and two numbers, and the titles will not tell them apart.\n"
-       +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+r.publisher+"\n\n"
+       +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+pub+"\n\n"
        +pageForPrompt(fp.results)
        +"\nReply with ONLY this JSON object and nothing else:\n"
        +'{"kind": "book"|"listing"|"other", "bookUrl": string|null}\n'

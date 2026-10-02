@@ -131,13 +131,14 @@ const noShop = { ...webRow, id: 'borghese-testnoshop', museumId: 'borghese', tit
 // HER LOUVRE EXPERIENCE OF NATURE, 2 Oct: a French book the English shop
 // names in English, and a read that padded the title with the show's subtitle.
 const louNature = fresh('louvre-testnature', 'louvre', 'Test Louvre Nature Show');
+const morganAssoc = fresh('morgan-testassoc', 'morgan', 'Test Morgan Association Show');
 const louEnglish = fresh('louvre-testenglish', 'louvre', 'Test Louvre English Edition Show');
 const louUnprinted = fresh('louvre-testunprinted', 'louvre', 'Test Louvre Unprinted ISBN Show');
 const louSaysEn = fresh('louvre-testsaysen', 'louvre', 'Test Louvre Says English Show');
 const ngLang = fresh('ng-testlang', 'ng', 'Test NG Language Show');
 const louKnown = { ...fresh('louvre-testknown', 'louvre', 'Test Louvre Known Show'), looked: true, hasCatalogue: 'yes',
   catalogueTitle: 'Test Known Catalogue', isbn13: null, shopState: 'shop' };
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown], ignored: [], lastRun: null };
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, morganAssoc], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -873,6 +874,23 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
 
     t = await run(louKnown);
     ok(!searches().some(q => q.some(x => x === FR || /English edition/.test(x))) && /Test Known Catalogue/.test(t), 'LG-011: a book already on the card is never renamed (Search again)', t.slice(0, 400));
+  }
+
+  // ── PA-001: "in association with" — her ruling, 2 Oct ───────────────────
+  {
+    calls.length = 0;
+    script.mcp = (tool, args) => tool === 'web_search'
+      ? { payload: { results: [{ url: 'https://news.test/x', title: 'x', excerpts: ['x'] }] } }
+      : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Some other book \u00b7 $20')] })) } };
+    script.sample = p => /OWN shop pages, opened directly/.test(p) ? { found: false }
+      : /"found"/.test(p) ? { found: true, thisVenue: true, catalogueTitle: 'Test Association Book', isbn13: '9780847877645', publisher: 'Morgan Library & Museum in association with Rizzoli Electa', publisherUrl: null, shopUrl: null }
+      : { isbn13: null, publisher: null, publisherUrl: null };
+    await openTray(morganAssoc.title);
+    await click(button(card(morganAssoc.title), /Find catalogue/));
+    const firsts = calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries[0]);
+    ok(firsts.includes('Rizzoli Electa') && !firsts.some(q => /in association with/.test(q)), 'PA-001: the publisher step looks for Rizzoli Electa, not the whole line', JSON.stringify(firsts));
+    const t = card(morganAssoc.title) ? card(morganAssoc.title).textContent : '';
+    ok(/Morgan Library & Museum in association with Rizzoli Electa/.test(t), 'PA-002:   the card still prints the line as the book gives it', t.slice(0, 400));
   }
 
   // ── RC-001..RC-008: Reset cards, in the footer — her design, 2 Oct ───────

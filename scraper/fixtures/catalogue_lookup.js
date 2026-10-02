@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage, MU, titleAsPrinted, isEnglishLang };')(
+    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage, MU, titleAsPrinted, isEnglishLang, publisherToFind, publisherLinkOf };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -244,6 +244,16 @@ function runtime(answer, log) {
        'C-150: accents, capitals and apostrophes are not differences');
     eq([api.isEnglishLang('English'), api.isEnglishLang('French and English'), api.isEnglishLang('French'), api.isEnglishLang(null)].join(),
        'true,true,false,false', 'C-151: a language named English, bilingual included');
+    // Her ruling, 2 Oct: "X in association with Y" — Y is the publisher.
+    eq(api.publisherToFind('Morgan Library & Museum in association with Rizzoli Electa'), 'Rizzoli Electa',
+       'C-152: "in association with" \u2014 the publisher looked for is the one after it');
+    eq(api.publisherToFind('The Frick Collection In Association With D Giles Ltd.'), 'D Giles Ltd',
+       'C-153:   any capitals, trailing full stop dropped');
+    eq(api.publisherToFind('Rizzoli Electa'), 'Rizzoli Electa', 'C-154:   a plain name is left as it is');
+    eq(api.isSelfPublisher('The Metropolitan Museum of Art in association with Yale University Press'), false,
+       'C-155:   a museum named first is not self-publishing when a house is named after it');
+    eq(api.publisherLinkOf('https://www.rizzoliusa.com/book/9780847877645/', 'Morgan Library & Museum in association with Rizzoli', null),
+       'https://www.rizzoliusa.com/book/9780847877645/', 'C-156:   a link on that house\u2019s own site is kept');
     eq(api.isSelfPublisher('The Art Institute of Chicago'), true, 'C-146: the Art Institute of Chicago is a museum\u2019s own imprint \u2014 her addition, 2 Oct');
   }
 
