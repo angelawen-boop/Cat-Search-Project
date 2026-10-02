@@ -287,6 +287,11 @@ function runtime(answer, log) {
     eq(filled.shopUrl, found.shopUrl, 'C-041: the shop link the shop gave is untouched');
     eq(filled.catalogueTitle, found.catalogueTitle,
        'C-042: and so is the title \u2014 a wide search cannot rename the book');
+    // C-143: the wider search now runs for a blank publisher with the ISBN
+    // known (2 Oct), so a number it turns up must never replace the known one.
+    const known = api.applyIsbnFill({ ...found, isbn13: '9789059962514' },
+      { isbn13: '9780847873463', publisher: 'Lannoo' }, 'acquavellagalleries.myshopify.com');
+    eq(known.isbn13, '9789059962514', 'C-143: a known ISBN is never overwritten by a later step');
   }
 
   // ── C-043 to C-045: a step that died is not an answer ────────────────

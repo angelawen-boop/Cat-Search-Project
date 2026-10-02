@@ -120,7 +120,14 @@ const milletHad = { ...fresh('ng-testmillethad', 'ng', 'Test NG Millet Had'), lo
   catalogueTitle: 'Test Millet Had : Life on the Land', isbn13: '9781857097382', publisher: 'National Gallery London',
   publisherUrl: 'https://yalebooks.co.uk/book/9781857097382/millet', publisherResult: null, shopState: 'web' };
 const distRow = fresh('rijks-testdist', 'rijks', 'Test Rijks Distributor Show');
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow], ignored: [], lastRun: null };
+// HER NG VAN HEMESSEN, 2 Oct: the read filed another venue's catalogue (the
+// Antwerp show's, travelling to London "in a modified form"). vanHPub: the
+// read gave an ISBN and no publisher, and nothing looked for one.
+const vanH = fresh('ng-testvanh', 'ng', 'Test NG Van Hemessen Show');
+const vanHNone = fresh('ng-testvanhnone', 'ng', 'Test NG Van Hemessen Unsaid');
+const vanHPub = fresh('ng-testvanhpub', 'ng', 'Test NG Publisher Gap Show');
+const webLine = { ...webRow, id: 'ng-testwebline', title: 'Test NG Web Line Show' };
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -329,7 +336,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const found = 'https://shop.nationalgallery.org.uk/test-show-the-catalogue.html';
     script.mcp = (tool, args) => ({ payload: { results: args.urls.map(u => ({ url: u, title: 'Shop',
       excerpts: [shelf('Test Show: The Catalogue — ' + found + ' £40 ISBN 9781857096972')] })), errors: [] } });
-    script.sample = () => ({ found: true, catalogueTitle: 'A Different Title From The Shop',
+    script.sample = () => ({ found: true, thisVenue: true, catalogueTitle: 'A Different Title From The Shop',
       isbn13: '9781857096972', publisher: 'Someone Else', publisherUrl: 'https://elsewhere.test/x', shopUrl: found });
     await click(button(card(webRow.title), /^Re-check museum shop$/));
     const c = card(webRow.title);
@@ -374,7 +381,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     script.mcp = (tool, args) => tool === 'web_search'
       ? { payload: { results: [{ url: 'https://bookseller.test/x', title: 'Test Show', excerpts: ['Test Show catalogue ISBN 9780300000009'] }] } }
       : { payload: { results: [], errors: [] } };
-    script.sample = () => ({ found: true, catalogueTitle: 'Test Show (bookseller)', isbn13: '9780300000009',
+    script.sample = () => ({ found: true, thisVenue: true, catalogueTitle: 'Test Show (bookseller)', isbn13: '9780300000009',
       publisher: 'Yale', publisherUrl: null, shopUrl: 'https://bookseller.test/x' });
     await click(button(card(webRow.title), /^Search again$/));
     const t = card(webRow.title).textContent;
@@ -405,7 +412,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       ? { payload: { results: [{ url: TICKET, title: 'Canaletto & Bellotto', excerpts: ['Canaletto & Bellotto. Exhibition Catalogue 2026'] }] } }
       : { payload: { results: [], errors: args.urls.map(r307) } };
     script.sample = p => kind(p) === 'web'
-      ? { found: true, catalogueTitle: 'Alpha. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: TICKET }
+      ? { found: true, thisVenue: true, catalogueTitle: 'Alpha. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: TICKET }
       : { found: false };
     await click(button(card(khmA.title), /Find catalogue/));
     const c = card(khmA.title), t = c ? c.textContent : '';
@@ -434,7 +441,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       ? { payload: { results: [{ url: PRODUCT, title: 'Ausstellungskatalog 2026', excerpts: ['Catalogue'] }] } }
       : { payload: { results: [], errors: args.urls.map(r307) } };
     script.sample = p => kind(p) === 'web'
-      ? { found: true, catalogueTitle: 'Test KHM Show Beta: The Catalogue', isbn13: '9781857096972', publisher: null, publisherUrl: null, shopUrl: PRODUCT }
+      ? { found: true, thisVenue: true, catalogueTitle: 'Test KHM Show Beta: The Catalogue', isbn13: '9781857096972', publisher: null, publisherUrl: null, shopUrl: PRODUCT }
       : { found: false };
     await click(button(card(khmB.title), /Find catalogue/));
     const t = card(khmB.title).textContent;
@@ -470,7 +477,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
         : { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Other books.')] })), errors: [] } };
     script.sample = p => ({ forsale: { forSale: true, why: 'Add to basket.' },
       shop: { found: false }, page: { isbn13: null, publisher: 'Yale', publisherUrl: null },
-      web: { found: true, catalogueTitle: 'Test NG Show Opens: Catalogue', isbn13: '9780300000009', publisher: null, publisherUrl: null, shopUrl: link } })[kind(p)];
+      web: { found: true, thisVenue: true, catalogueTitle: 'Test NG Show Opens: Catalogue', isbn13: '9780300000009', publisher: null, publisherUrl: null, shopUrl: link } })[kind(p)];
     await click(button(card(ngA.title), /Find catalogue/));
     const c = card(ngA.title), t = c ? c.textContent : '';
     ok(/In the museum shop\./.test(t), 'L-010: a web-found shop link that opens and is for sale — "In the museum shop."', t.slice(0, 300));
@@ -488,7 +495,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
         ? { payload: { results: [], errors: [{ url: link, error_type: 'http_error', http_status_code: 404, content: null }] } }
         : { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Other books.')] })), errors: [] } };
     script.sample = p => kind(p) === 'web'
-      ? { found: true, catalogueTitle: 'Dead Link Catalogue', isbn13: '9780300000009', publisher: 'Yale', publisherUrl: null, shopUrl: link }
+      ? { found: true, thisVenue: true, catalogueTitle: 'Dead Link Catalogue', isbn13: '9780300000009', publisher: 'Yale', publisherUrl: null, shopUrl: link }
       : { found: false };
     await click(button(card(ngB.title), /Find catalogue/));
     const t = card(ngB.title).textContent;
@@ -506,7 +513,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       if (tool === 'web_search') { const e = new Error('Connector call failed'); e.code = 'upstream_error'; throw e; }
       return { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Test NG Publisher Dies — ' + link + ' £40')] })), errors: [] } };
     };
-    script.sample = () => ({ found: true, catalogueTitle: 'Publisher Dies: The Catalogue', isbn13: '9782754117418',
+    script.sample = () => ({ found: true, thisVenue: true, catalogueTitle: 'Publisher Dies: The Catalogue', isbn13: '9782754117418',
       publisher: 'Editions Hazan', publisherUrl: null, shopUrl: link });
     await click(button(card(ngPub.title), /Find catalogue/));
     const t = card(ngPub.title).textContent;
@@ -525,7 +532,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       ? { payload: { results: [] } }
       : { payload: { results: args.urls.map(u => ({ url: u, title: 'Search', excerpts: ['Test KHM Listed Only. Exhibition Catalogue 2026 €39.90 ' + 'x '.repeat(300)] })), errors: [] } };
     script.sample = p => /"found"/.test(p)
-      ? { found: true, catalogueTitle: 'Listed Only. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: searchUrl }
+      ? { found: true, thisVenue: true, catalogueTitle: 'Listed Only. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: searchUrl }
       : { isbn13: null, publisher: null, publisherUrl: null };
     await click(button(card(khmList.title), /Find catalogue/));
     const c = card(khmList.title), t = c ? c.textContent : '';
@@ -539,7 +546,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const searchUrl = 'https://shop.khm.at/en/products?shop%5Bq%5D=' + encodeURIComponent(khmOld.title);
     script.mcp = (tool, args) => ({ payload: { results: args.urls.map(u => ({ url: u, title: 'Search', excerpts: ['Canaletto and Bellotto. Exhibition Catalogue 2026 €39.90 ' + 'x '.repeat(300)] })), errors: [] } });
     script.sample = p => /"found"/.test(p)
-      ? { found: true, catalogueTitle: 'Canaletto & Bellotto. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: searchUrl }
+      ? { found: true, thisVenue: true, catalogueTitle: 'Canaletto & Bellotto. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: searchUrl }
       : { isbn13: null, publisher: null, publisherUrl: null };
     await click(button(card(khmOld.title), /^Re-check museum shop$/));
     const c = card(khmOld.title), t = c ? c.textContent : '';
@@ -566,7 +573,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     script.mcp = (tool, args) => ({ payload: { results: args.urls.map(u => ({ url: u, title: 'Shop',
       excerpts: [shelf('Canaletto & Bellotto. Exhibition Catalogue 2026 — ' + PRODUCT + ' €39.90')] })), errors: [] } });
     script.sample = p => /"forSale"/.test(p) ? { forSale: true, why: 'x' } : /"found"/.test(p)
-      ? { found: true, catalogueTitle: 'Canaletto & Bellotto. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: PRODUCT }
+      ? { found: true, thisVenue: true, catalogueTitle: 'Canaletto & Bellotto. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: PRODUCT }
       : { isbn13: null, publisher: null, publisherUrl: null };
     await click(button(card(khmBad.title), /^Re-check museum shop$/));
     const c = card(khmBad.title), t = c ? c.textContent : '';
@@ -602,7 +609,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     script.mcp = (tool, args) => tool === 'web_search' ? { payload: { results: [] } }
       : args.urls.some(u => /c462/.test(u)) ? shelf(args.urls) : product(args.urls[0]);
     const found = title => p => /"found"/.test(p)
-      ? { found: true, catalogueTitle: title, isbn13: null, publisher: null, publisherUrl: null, shopUrl: SHELF1 }
+      ? { found: true, thisVenue: true, catalogueTitle: title, isbn13: null, publisher: null, publisherUrl: null, shopUrl: SHELF1 }
       : { isbn13: null, publisher: null, publisherUrl: null };
 
     await openTray(madShelf.title);
@@ -641,7 +648,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       return { payload: { errors: [], results: [{ url: args.urls[0], title: 'Catalogues', excerpts: ['Test Cassatt : The catalogue ' + 'x '.repeat(300)] }] } };
     };
     const reads = isbn => p => /"found"/.test(p)
-      ? { found: true, catalogueTitle: 'Test Cassatt : The catalogue', isbn13: null, publisher: null, publisherUrl: null, shopUrl: PAGE }
+      ? { found: true, thisVenue: true, catalogueTitle: 'Test Cassatt : The catalogue', isbn13: null, publisher: null, publisherUrl: null, shopUrl: PAGE }
       : { isbn13: isbn, publisher: null, publisherUrl: null };
 
     calls.length = 0;
@@ -674,7 +681,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       ? { payload: { results: [{ url: 'https://bookseller.test/brancusi', title: 'Brancusi', excerpts: ['Test MoMA Brancusi Show ISBN 9781633451971'] }] } }
       : { payload: { results: args.urls.filter(u => !/[?&]q=/.test(u)).map(u => ({ url: u, title: 'Exhibition Catalogues – MoMA Design Store', excerpts: [popup] })),
           errors: args.urls.filter(u => /[?&]q=/.test(u)).map(u => ({ url: u, error_type: 'http_error', http_status_code: 403, content: null })) } };
-    script.sample = () => ({ found: true, catalogueTitle: 'Test MoMA Brancusi Show', isbn13: '9781633451971', publisher: 'The Museum of Modern Art', publisherUrl: null, shopUrl: null });
+    script.sample = () => ({ found: true, thisVenue: true, catalogueTitle: 'Test MoMA Brancusi Show', isbn13: '9781633451971', publisher: 'The Museum of Modern Art', publisherUrl: null, shopUrl: null });
     await openTray(momaRow.title);
     await click(button(card(momaRow.title), /Find catalogue/));
     const t = card(momaRow.title) ? card(momaRow.title).textContent : '';
@@ -694,7 +701,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
           { url: 'https://www.abebooks.co.uk/9781910807743/Bloom/plp', title: BOOK + ' (Exhibition Catalogue ...', excerpts: [BOOK + ' - Softcover ISBN 10: 1910807745 ISBN 13: 9781910807743'] }] } }
       : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf(BOOK + ' — ' + PAGE + ' £25')] })) } };
     script.sample = p => /"found"/.test(p)
-      ? { found: true, catalogueTitle: BOOK, isbn13: null, publisher: null, publisherUrl: null, shopUrl: PAGE }
+      ? { found: true, thisVenue: true, catalogueTitle: BOOK, isbn13: null, publisher: null, publisherUrl: null, shopUrl: PAGE }
       : { isbn13: null, publisher: null, publisherUrl: null };
     await openTray(bloomRow.title);
     await click(button(card(bloomRow.title), /Find catalogue/));
@@ -717,7 +724,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
         ? { payload: { errors: [], results: [{ url: SELLER, title: BOOK, excerpts: [], full_content: '# ' + BOOK + '\nDetails\nISBN-13: 978-1-910807-74-3\n' }] } }
         : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf(BOOK + ' — ' + PAGE + ' £25')] })) } };
     script.sample = p => /"found"/.test(p)
-      ? { found: true, catalogueTitle: BOOK, isbn13: null, publisher: null, publisherUrl: null, shopUrl: PAGE }
+      ? { found: true, thisVenue: true, catalogueTitle: BOOK, isbn13: null, publisher: null, publisherUrl: null, shopUrl: PAGE }
       : { isbn13: null, publisher: null, publisherUrl: null };
     await openTray(bloomOpen.title);
     await click(button(card(bloomOpen.title), /Find catalogue/));
@@ -737,7 +744,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
         ? { payload: { results } }
         : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Some other book · £20')] })) } };
       script.sample = p => /OWN shop pages, opened directly/.test(p) ? { found: false }
-        : /"found"/.test(p) ? { found: true, catalogueTitle: book, shopUrl: null, ...read }
+        : /"found"/.test(p) ? { found: true, thisVenue: true, catalogueTitle: book, shopUrl: null, ...read }
         : { isbn13: null, publisher: null, publisherUrl: null };
       await openTray(row.title);
       await click(button(card(row.title), /Find catalogue|Search again/));
@@ -763,6 +770,37 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
 
     r = await run(milletHad, 'Test Millet Had : Life on the Land', { isbn13: '9781857097382', publisher: 'National Gallery London', publisherUrl: YALE }, ANY);
     ok(!r.hrefs.includes(YALE) && /self-published by the venue/.test(r.t), 'N-007: Search again clears the distributor link already on her card', r.t.slice(0, 400));
+  }
+
+  // ── VN-001..VN-006: her NG van Hemessen, 2 Oct ────────────────────────
+  {
+    const OTHER = 'Test Van Hemessen & Father';
+    const ANY = [{ url: 'https://publisher.test/van-hemessen', title: OTHER, excerpts: ['The catalogue of the Antwerp show, which travels to London in a modified form.'] }];
+    const run = async (row, read, fill) => {
+      calls.length = 0;
+      script.mcp = (tool, args) => tool === 'web_search'
+        ? { payload: { results: ANY } }
+        : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Some other book · £20')] })) } };
+      script.sample = p => /OWN shop pages, opened directly/.test(p) ? { found: false }
+        : /"found"/.test(p) ? { found: true, catalogueTitle: OTHER, isbn13: '9789059962514', publisher: null, publisherUrl: null, shopUrl: null, ...read }
+        : { isbn13: null, publisher: null, publisherUrl: null, ...fill };
+      await openTray(row.title);
+      await click(button(card(row.title), /Find catalogue|Search again/));
+      const c = card(row.title);
+      return c ? c.textContent : '';
+    };
+    let t = await run(vanH, { thisVenue: false });
+    ok(/No catalogue found/.test(t) && !t.includes(OTHER), 'VN-001: a book the read ties to another venue\u2019s show is not filed', t.slice(0, 400));
+    t = await run(vanHNone, {});
+    ok(/No catalogue found/.test(t) && !t.includes(OTHER), 'VN-002: a read that does not say this venue is not filed either', t.slice(0, 400));
+    t = await run(vanHPub, { thisVenue: true }, { publisher: 'Test Lannoo Publishers' });
+    const qs = calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries);
+    ok(qs.some(q => q.some(x => x.includes(OTHER) && /publisher/.test(x))), 'VN-003: ISBN found, publisher blank \u2014 the wider search runs for it', JSON.stringify(qs));
+    ok(/Test Lannoo Publishers/.test(t) && !/No publisher was named/.test(t), 'VN-004:   and the publisher reaches her card', t.slice(0, 400));
+    ok(/978-9059962514/.test(t), 'VN-005:   the ISBN already found stands', t.slice(0, 400));
+    await openTray(webLine.title);
+    const w = card(webLine.title) ? card(webLine.title).textContent : '';
+    ok(/shop link opens the shop\u2019s search\./.test(w) && !/general store/.test(w), 'VN-006: NG has a shop search \u2014 the line names it, not the general store', w.slice(0, 300));
   }
 
   // ── S-001..S-003: the search narrows WITH the filters — her finding, 25 Sep.
