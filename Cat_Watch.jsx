@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "37.2 · cloud 4";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
+const APP_VERSION = "38 · cloud 4";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
 const APP_VERSION_DATE = "2 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
