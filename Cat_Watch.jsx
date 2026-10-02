@@ -2914,7 +2914,7 @@ export default function App(){
   // one tap beside "Reset cards" replaced her ledger with no question.
   function requestReset(){
     if(rows.length>0&&dirty){setConfirmBox({text:"This loads the built-in starter set and replaces everything on screen, which you haven't exported. Those changes will be lost. Continue?",act:doReset});}
-    else if(rows.length>0){setConfirmBox({text:"This loads the built-in starter set and replaces everything on screen. Continue?",act:doReset});}
+    else if(rows.length>0){setConfirmBox({text:"This loads the seed set and replaces everything on screen. Continue?",act:doReset});}
     else doReset();
   }
 
