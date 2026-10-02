@@ -1137,6 +1137,7 @@ const SELF_PUBLISHERS = new Set([
   "musee des arts decoratifs",            // mad — the same imprint under the museum's name, her addition 1 Oct (Christofle again)
   "museum of modern art",                 // moma — her addition, 1 Oct (The Surrealist Book)
   "museum of modern art new york",        // moma — the same, as the lookup also read it (Brancusi)
+  "art institute of chicago",             // artic — her addition, 2 Oct
 ]);
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){
@@ -3789,6 +3790,9 @@ export default function App(){
           // Two buttons share one busy row; only the one pressed shows progress.
           const againLabel=isBusy&&!rechecking?searchingLabel:"Search again";
           const recheckLabel=isBusy&&rechecking?searchingLabel:"Re-check museum shop";
+          // NO SHOP AT ALL (Borghese, Capodimonte, the Accademia) — her ruling,
+          // 2 Oct: no Re-check button, and the line says only "Venue has no shop."
+          const noShop=!(MU[r.museumId]&&(MU[r.museumId].shopSearch||MU[r.museumId].shopHome));
           const said=recheckSaid&&recheckSaid.id===r.id?recheckSaid:null;
           if(dismissed)return(
             <React.Fragment key={r.id}>{lead}
@@ -3866,7 +3870,7 @@ export default function App(){
                       ):<p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>}
                       <div style={{display:"flex",flexWrap:"wrap",gap:14}}>
                         <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
-                        <button onClick={()=>recheckShop(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>
+                        {!noShop&&<button onClick={()=>recheckShop(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
                       </div>
                       {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
                     </div>
@@ -3901,9 +3905,7 @@ export default function App(){
                           \u2014 among the words it printed those six characters
                           literally, and nothing caught it for weeks. */}
                       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-                        {/* NO SHOP AT ALL — her wording, 2 Oct (Borghese, Capodimonte): no shop
-                            link is offered, and the line says why. */}
-                        {!(MU[r.museumId]&&(MU[r.museumId].shopSearch||MU[r.museumId].shopHome))?"Not in the museum shop. Venue has no shop."
+                        {noShop?"Venue has no shop."
                           :MU[r.museumId].shopSearch?"Not in the museum shop \u2014 shop link opens the shop\u2019s search.":"Not in the museum shop \u2014 shop link opens the general store."}
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
@@ -3926,7 +3928,7 @@ export default function App(){
                       </div>
                       <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:14}}>
                         <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
-                        <button onClick={()=>recheckShop(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>
+                        {!noShop&&<button onClick={()=>recheckShop(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
                       </div>
                       {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
                     </div>

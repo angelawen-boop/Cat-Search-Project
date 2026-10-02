@@ -235,6 +235,7 @@ function runtime(answer, log) {
       const names = api.buyLinks({ museumId: id, title: 'X', isbn13: null }).map(l => l.name);
       eq(names.some(n => /Museum shop/.test(n)), false, 'C-145: ' + id + ' has no shop, so no Museum shop link');
     }
+    eq(api.isSelfPublisher('The Art Institute of Chicago'), true, 'C-146: the Art Institute of Chicago is a museum\u2019s own imprint \u2014 her addition, 2 Oct');
   }
 
   // ── C-032 to C-038: the publisher's own page ───────────────────────
