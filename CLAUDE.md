@@ -124,7 +124,7 @@ Branches separate in-progress work from known-good work, never components.
 | `claude/jsx-stitched-intake` | Merged 20 Sep; kept as history |
 | `claude/quiet-user-agent` | Parked, her ruling 19 Sep — do not merge or re-open |
 | `claude/personal-tracking-ledgers-z49s2h` | Dead — do not merge |
-| `claude/blissful-knuth-snbqci`, `claude/design-questions-87gj6w`, `claude/headless-chromium-claude-code-wl94l0` | Dead — early 7–10 Sep work from before `main` was the trunk (no shared history with it); superseded, do not merge |
+| `claude/blissful-knuth-snbqci`, `claude/design-questions-87gj6w`, `claude/headless-chromium-claude-code-wl94l0` | Dead — early 7–10 Sep work from before `main` was the trunk (no shared history with it); superseded, do not merge. Kept on GitHub, her ruling 2 Oct — never raise deleting them |
 | `claude/met-connection-experiments` | Abandoned — do not merge |
 | `claude/playwright-scraper-prototype-z68iko` | Abandoned — merging it would undo the current scraper |
 
