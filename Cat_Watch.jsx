@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "38 · cloud 4";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
+const APP_VERSION = "38.1 · cloud 4";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
 const APP_VERSION_DATE = "2 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -3412,8 +3412,11 @@ export default function App(){
     else openFilePicker();
   }
   const doReset=async()=>{if(roStop())return;const seed=buildSeed();try{await guardCloudBeforeReplace({rows:seed,ignored},"reset");}catch{return;}cloudArmed.current=true;loadLedger(seed,null,"Starter set loaded ("+seed.length+" exhibitions) \u2014 not saved to a file.");setDebug("Reset: loaded the built-in starter set ("+seed.length+" exhibitions). It isn't in any file \u2014 Save if you want one.");};
+  // RESET TO SEED ALWAYS ASKS while a ledger is on screen — her ruling, 2 Oct:
+  // one tap beside "Reset cards" replaced her ledger with no question.
   function requestReset(){
     if(rows.length>0&&dirty&&cloudNotSaving){setConfirmBox({text:"This loads the built-in starter set and replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",act:doReset});}
+    else if(rows.length>0){setConfirmBox({text:"This loads the built-in starter set and replaces everything on screen. Continue?",act:doReset});}
     else doReset();
   }
 
@@ -3551,7 +3554,7 @@ export default function App(){
     return out;
   },[rows,sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqNoCat,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched]);
 
-  const counts=useMemo(()=>{const c={total:rows.length,dismissed:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;if(inClosingWindow(r))c.pressing++;}return c;},[rows]);
+  const counts=useMemo(()=>{const c={total:rows.length,dismissed:0,watched:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.watching)c.watched++;if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;if(inClosingWindow(r))c.pressing++;}return c;},[rows]);
 
   // ── TWO PALETTES, ONE SET OF NAMES — dark added 20 Sep 2026, her request:
   //    "it's 9pm and this cream background with light grey text is v difficult
@@ -3852,13 +3855,19 @@ export default function App(){
               screen said nothing at all was wrong — which is precisely the
               silence the panel's own "no sweeps yet" line exists to break.
               A control that disappears cannot report anything. */}
-          <button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide venues":"By venue"}</button>
+          <button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide details":"Details"}</button>
         </div>
 
         {/* NOT GATED ON A LEDGER BEING OPEN. The sweep log is not part of her
             document — it is what this page knows about the world, so it is
             there on a fresh page and it survives Reset. */}
         {showFresh&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
+          {/* TRACKED AND DISMISSED LIVE HERE — her ruling, 2 Oct: beside the point
+              on the counts line, so they open with Details, at the top. */}
+          <div style={{display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",marginBottom:8}}>
+            <span><b style={{color:C.ink}}>{counts.total}</b> Tracked</span>
+            {counts.dismissed>0&&<span><b>{counts.dismissed}</b> Dismissed</span>}
+          </div>
           <div style={{fontSize:10,color:C.soft,marginBottom:6,lineHeight:1.5}}>
             {"When each venue was last swept, and when it last actually gave us exhibitions. A venue swept recently but with no rows since an older date is being refused \u2014 worth a solo re-run."}
           </div>
@@ -3894,16 +3903,15 @@ export default function App(){
         </div>}
 
         <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",alignItems:"center"}}>
-          <span><b style={{color:C.ink}}>{counts.total}</b> Tracked</span>
+          <span><b style={{color:C.ink}}>{counts.watched}</b> Watched</span>
           <span><b style={{color:C.ink}}>{counts.wanted}</b> Wanted</span>
           <span><b style={{color:C.owned}}>{counts.owned}</b> Owned</span>
           <span><b style={{color:TH.urgent.ink}}>{counts.pressing}</b> Closing Window</span>
-          {counts.dismissed>0&&<span><b>{counts.dismissed}</b> Dismissed</span>}
           <button onClick={()=>{setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);}} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Search">{"\uD83D\uDD0D"}</button>
         </div>
         {/* THE CROSS CLEARS WHAT SHE TYPED — her ask, 30 Sep: right-aligned inside
             the box, there while there is text to clear. */}
-        {showSearch&&<div style={{marginTop:6,position:"relative"}}><input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search exhibitions\u2026" style={{width:"100%",padding:"7px 30px 7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
+        {showSearch&&<div style={{marginTop:6,position:"relative"}}><input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder={"Search exhibitions\u2026"} style={{width:"100%",padding:"7px 30px 7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
           {search&&<button onClick={()=>{setSearch("");if(searchRef.current)searchRef.current.focus();}} aria-label="Clear search" title="Clear"
             style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:C.soft,fontSize:16,lineHeight:1,cursor:"pointer",padding:"2px 4px"}}>{"\u00d7"}</button>}</div>}
       </header>
@@ -4190,14 +4198,14 @@ export default function App(){
             cleared and the card shows "Find catalogue" again. Her marks — star,
             Yes/No/Acquired, Hide — stay. One card per confirm. */}
         {showResetCards&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
-          <input value={resetQuery} onChange={e=>setResetQuery(e.target.value)} placeholder="Search cards\u2026" style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
+          <input value={resetQuery} onChange={e=>setResetQuery(e.target.value)} placeholder={"Search cards\u2026"} style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
           {resetQuery.trim()&&(()=>{
             const hits=cardsToReset(rows,resetQuery);
             if(!hits.length)return <div style={{fontSize:12,color:C.soft,marginTop:8}}>{"No searched cards match."}</div>;
             return hits.map(r=>(
               <div key={r.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline",marginTop:4}}>
                 <span style={{minWidth:130,fontWeight:600}}>{MU[r.museumId]?MU[r.museumId].short:r.museumId}</span>
-                <button onClick={()=>setConfirmBox({title:"Confirm?",yes:"Yes",act:()=>{
+                <button onClick={()=>setConfirmBox({title:"Reset this search?",yes:"Yes",act:()=>{
                   commit(rows.map(x=>x.id===r.id?resetCard(x):x));
                   if(recheckSaid&&recheckSaid.id===r.id)setRecheckSaid(null);
                   setResetQuery("");}})} style={{flex:1,textAlign:"left",background:"none",border:"none",color:C.action,fontSize:12.5,fontFamily:"inherit",textDecoration:"underline",cursor:"pointer",padding:0}}>{r.title}</button>

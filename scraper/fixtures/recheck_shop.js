@@ -915,7 +915,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const conf = () => [...doc.querySelectorAll('div')].find(d => d.style && d.style.zIndex === '1200');
     const inConf = label => conf() && [...conf().querySelectorAll('button')].find(b => b.textContent === label);
     const ct = conf() ? conf().textContent : '';
-    ok(ct === 'Confirm?CancelYes', 'RC-005:   picking it asks only "Confirm?", Yes or Cancel', ct);
+    ok(ct === 'Reset this search?CancelYes', 'RC-005:   picking it asks only "Reset this search?", Yes or Cancel', ct);
     await click(inConf('Cancel'));
     ok(!conf() && card(louNature.title).textContent === before, 'RC-006:   Cancel changes nothing');
     await click(pick());
@@ -926,6 +926,36 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/Find catalogue/.test(at) && !/978-2359064612/.test(at) && !/Exp\u00e9rience/.test(at), 'RC-007:   Yes clears the card back to "Find catalogue"', at.slice(0, 300));
     ok(markBefore && chipStyle() === markBefore, 'RC-008:   her "Yes, want the catalogue" mark is kept');
     ok(!btns().some(b => b.textContent === louNature.title), 'RC-009:   the box empties once the card is reset');
+  }
+
+  // ── RS-001..RS-002: Reset to Seed asks first — her ruling, 2 Oct ───────────
+  {
+    const doc = win.document;
+    const before = doc.querySelectorAll('article').length;
+    await click([...doc.querySelectorAll('button')].find(b => b.textContent === 'Reset to Seed'));
+    const conf = [...doc.querySelectorAll('div')].find(d => d.style && d.style.zIndex === '1200');
+    ok(!!conf && /replaces everything on screen/.test(conf.textContent), 'RS-001: Reset to Seed asks before replacing the ledger', conf ? conf.textContent : 'no box');
+    if (conf) await click([...conf.querySelectorAll('button')].find(b => b.textContent === 'Cancel'));
+    ok(doc.querySelectorAll('article').length === before, 'RS-002:   Cancel leaves the ledger as it was');
+  }
+
+  // ── CT-001..CT-005: the counts line and Details — her ruling, 2 Oct ──────
+  {
+    const doc = win.document;
+    const btns = () => [...doc.querySelectorAll('button')];
+    const head = doc.querySelector('header');
+    const ht = head ? head.textContent : '';
+    const at = w => ht.indexOf(w);
+    ok(at('Watched') >= 0 && at('Watched') < at('Wanted') && at('Wanted') < at('Owned') && at('Owned') < at('Closing Window'), 'CT-001: the counts line reads Watched, Wanted, Owned, Closing Window', ht.slice(0, 300));
+    ok(!/Tracked|Dismissed/.test(ht), 'CT-002:   Tracked and Dismissed are not on it until Details opens', ht.slice(0, 300));
+    const det = btns().find(b => b.textContent === 'Details');
+    ok(!!det, 'CT-003: the drawer button reads "Details"');
+    if (det) await click(det);
+    const ht2 = doc.querySelector('header').textContent;
+    ok(/\d+ Tracked/.test(ht2) && ht2.indexOf('Tracked') < ht2.indexOf('When each venue'), 'CT-004:   Details opens with Tracked at the top, above the sweep dates', ht2.slice(0, 400));
+    const ph = [...doc.querySelectorAll('input[placeholder]')].map(i => i.getAttribute('placeholder'));
+    ok(ph.every(x => !/\\u/.test(x)), 'CT-005: no search box shows a raw \\u code', JSON.stringify(ph));
+    const hide = btns().find(b => b.textContent === 'Hide details'); if (hide) await click(hide);
   }
 
   // ── S-001..S-003: the search narrows WITH the filters — her finding, 25 Sep.
