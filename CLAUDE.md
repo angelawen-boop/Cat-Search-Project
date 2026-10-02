@@ -291,7 +291,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 37 on her main app, 37.1 · cloud 4 on the test page** (1 Oct). 37.1:
+**Live: 37 on her main app, 37.1 · cloud 4 on the test page** (1 Oct). **37.2 built, not published** (2 Oct): another venue's catalogue refused; publisher gap filled; "opens the shop's search"; no-shop venues say "Venue has no shop."; Frick shelf = whole Publications page. 37.1:
 AbeBooks sorted by lowest total price, the ISBN search off the shop route too,
 only the publisher is the publisher, two card lines shortened. 36.1 was never
 published alone.
@@ -436,6 +436,11 @@ and do not flip to searching wide first.**
 - **Only the publisher is the publisher** (her ruling, 1 Oct, Millet): a link a
   read hands over is filed only on the publisher's own site (`publisherLinkOf`);
   a distributor's page never. Self-published → no link at all.
+- **Another venue's catalogue is not this show's** (her ruling, 2 Oct, NG
+  *van Hemessen*): a book found on the web is filed only when the read says
+  it is the catalogue of the show AT THIS VENUE (`thisVenue`); a show that
+  travels here "in modified form" does not count. The shop step needs no such
+  answer. A blank publisher with the ISBN known runs the wider search too.
 - **A museum's own imprint is skipped** — `SELF_PUBLISHERS`, keyed on the
   **publisher**, never the venue, **added to only by her**; one imprint may need
   two names (MAD and MoMA have two).

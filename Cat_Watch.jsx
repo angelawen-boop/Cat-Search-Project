@@ -17,8 +17,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "37.1 · cloud 4";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
-const APP_VERSION_DATE = "1 Oct 2026";
+const APP_VERSION = "37.2 · cloud 4";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
+const APP_VERSION_DATE = "2 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
 // size — it is the order she wants to WORK in. The venues she reads most come
@@ -65,7 +65,10 @@ const MUSEUMS = [
   // Shopify, like Acquavella's: search box and "View all" read off the live shop.
   { id:"lgd", short:"Levy", card:"Lévy Gorvy Dayan", name:"Lévy Gorvy Dayan", city:"New York / London",
     exBase:"https://www.levygorvydayan.com/exhibitions/", shopSearch:"https://shop.levygorvydayan.com/search?q=", shopCatalogues:"https://shop.levygorvydayan.com/collections/all", shopHome:"https://shop.levygorvydayan.com/", listUrl:"https://www.levygorvydayan.com/exhibitions" },
-  { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopCatalogues:"https://shop.frick.org/publications/exhibition-catalogues/", shopHome:"https://shop.frick.org/", listUrl:null },
+  // Frick, 2 Oct: the whole Publications shelf, not its "Exhibition
+  // catalogues" corner — her finding: the Frick publishes books tied to a show
+  // that it does not file as catalogues. One page of about 40 today.
+  { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopCatalogues:"https://shop.frick.org/publications/", shopHome:"https://shop.frick.org/", listUrl:null },
   { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopCatalogues:"https://bookstore.menil.org/collections/menil-publications", shopHome:"https://bookstore.menil.org/", listUrl:null },
   { id:"artic", short:"Artic", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
   { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:"https://wallacecollectionshop.org/search?q=", shopCatalogues:"https://wallacecollectionshop.org/collections/wallace-collection-publications", shopHome:"https://wallacecollectionshop.org/", listUrl:null },
@@ -1051,7 +1054,7 @@ function applyIsbnFill(row,o,dom){
   const purl=publisherLinkOf(o&&o.publisherUrl,row.publisher||pub,dom);
   if(!isbn&&!pub&&!purl)return row;
   return{...row,
-    isbn13:isbn||row.isbn13,
+    isbn13:row.isbn13||isbn||null,
     publisher:row.publisher||pub||null,
     publisherUrl:row.publisherUrl||purl||null};
 }
@@ -2607,15 +2610,20 @@ export default function App(){
    +"publisherUrl is the PUBLISHER'S OWN page for this book \u2014 the art-book house that printed it, "
    +"not the museum shop, not a bookseller. Give it only if a result actually shows it; null otherwise.\n"
    +"\"Sold by \u2026\" (\u201cvendu par\u201d, \u201cvenduto da\u201d) names the SHOP, never the publisher \u2014 "
-   +"the Orsay\u2019s shop says \u201cSold by GrandPalaisRmn\u201d for books Hazan printed. Never report it as publisher.\n";
+   +"the Orsay\u2019s shop says \u201cSold by GrandPalaisRmn\u201d for books Hazan printed. Never report it as publisher.\n"
+   +"thisVenue is true ONLY when a result says this book is the catalogue of the show AT THIS VENUE: "
+   +"the venue's own page, shop or press release names it, or a publisher or bookseller says it "
+   +"accompanies the exhibition at this venue. A catalogue of a show at ANOTHER venue is false \u2014 "
+   +"even when that show travels here, \u201cin modified form\u201d or as a \u201csecond venue\u201d, and "
+   +"even when the artist is the same. A different title from the exhibition's needs this venue's own word.\n";
 
   const READ_SHAPE=
     "\nReply with ONLY this JSON object and nothing else:\n"
    +'{"found": true|false, "catalogueTitle": string|null, "isbn13": string|null, '
-   +'"publisher": string|null, "publisherUrl": string|null, "shopUrl": string|null}\n'
+   +'"publisher": string|null, "publisherUrl": string|null, "shopUrl": string|null, "thisVenue": true|false}\n'
    +'Example: {"found":true,"catalogueTitle":"Metamorphoses: Ovid and the Arts","isbn13":"9789493416543",'
    +'"publisher":"Hannibal Books","publisherUrl":"https://hannibalbooks.be/en/metamorphoses",'
-   +'"shopUrl":null}\n'
+   +'"shopUrl":null,"thisVenue":true}\n'
    +'Set "found" false and every other field null when these results show no catalogue.';
 
   // TWO STAGES, HER DESIGN, UNCHANGED SINCE IT WAS TESTED.
@@ -2779,7 +2787,10 @@ export default function App(){
   // already named.
   const fillFromWeb=async(hit,venue,dom)=>{
     const r=hit&&hit.row;
-    if(!r||!hit.ok||r.hasCatalogue!=="yes"||r.isbn13)return hit;
+    // A BLANK PUBLISHER IS A GAP TOO — her NG van Hemessen, 2 Oct: the read
+    // brought the ISBN and no publisher, so this step never ran and the card
+    // said "No publisher was named". It runs while either is blank.
+    if(!r||!hit.ok||r.hasCatalogue!=="yes"||(r.isbn13&&r.publisher))return hit;
     const book=r.catalogueTitle||r.title;
     setLookPhase("web");
     const s3=await searchWeb(
@@ -3105,9 +3116,21 @@ export default function App(){
       +resultsForPrompt(s2.results)+READ_SHAPE);
     detail=detail+"\n"+r2.detail;
     if(!r2.ok)return{row,detail,ok:false};
+    // ANOTHER VENUE'S CATALOGUE IS NOT THIS SHOW'S — her ruling, 2 Oct (NG,
+    // Catharina van Hemessen: Signature Works). The read filed Lannoo's Van
+    // Hemessen & Father, the catalogue of the Antwerp show that travels to
+    // London "in a modified form". The venue never named it. A book found on
+    // the web counts only when the read says it is tied to THIS venue's show;
+    // anything short of a plain true is not found. The shop step needs no
+    // such answer — a book on the venue's own shop is the venue's word.
+    let d2=r2.data||{};
+    if(d2.found&&d2.thisVenue!==true){
+      detail=detail+"\nNot filed: \u201c"+(d2.catalogueTitle||"the book found")+"\u201d is not tied to this venue\u2019s show in the results.";
+      d2={};
+    }
     // The dedicated ISBN search runs here too when the ISBN is still blank —
     // her ruling, 1 Oct (Metamorphoses): until then only the shop route had it.
-    return await fillPublisherPage(await fillFromWeb(await fillIsbn(await confirmShopLink(settle(row,r2.data||{},dom,detail,false,blocked)),venue,dom),venue,dom),venue,dom);
+    return await fillPublisherPage(await fillFromWeb(await fillIsbn(await confirmShopLink(settle(row,d2,dom,detail,false,blocked)),venue,dom),venue,dom),venue,dom);
   }
 
   // A STEP THAT DIED IS NOT AN ANSWER \u2014 her question, 21 Sep, and the fault was
@@ -3878,7 +3901,10 @@ export default function App(){
                           \u2014 among the words it printed those six characters
                           literally, and nothing caught it for weeks. */}
                       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-                        {"Not in the museum shop \u2014 shop link opens the general store."}
+                        {/* NO SHOP AT ALL — her wording, 2 Oct (Borghese, Capodimonte): no shop
+                            link is offered, and the line says why. */}
+                        {!(MU[r.museumId]&&(MU[r.museumId].shopSearch||MU[r.museumId].shopHome))?"Not in the museum shop. Venue has no shop."
+                          :MU[r.museumId].shopSearch?"Not in the museum shop \u2014 shop link opens the shop\u2019s search.":"Not in the museum shop \u2014 shop link opens the general store."}
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
                       {r.shopState==="blocked"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>

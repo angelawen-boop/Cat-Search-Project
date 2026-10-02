@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage };')(
+    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage, MU };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -227,6 +227,14 @@ function runtime(answer, log) {
     eq(pages.length, 6, 'C-030: the shelf\u2019s pages and the search box go over together');
     eq(pages[pages.length - 1], 'https://x.test/find?q=Zurbar%C3%A1n',
        'C-031: the title is written into the search address, never guessed at');
+    // Her Frick ruling, 2 Oct: the whole Publications shelf, not its catalogues corner.
+    eq(api.shopPagesFor(api.MU.frick, 'X')[0], 'https://shop.frick.org/publications/',
+       'C-144: the Frick\u2019s shelf is its whole Publications page');
+    // Her ruling, 2 Oct: a venue with no shop is never offered a shop link.
+    for (const id of ['borghese', 'capo', 'dellav']) {
+      const names = api.buyLinks({ museumId: id, title: 'X', isbn13: null }).map(l => l.name);
+      eq(names.some(n => /Museum shop/.test(n)), false, 'C-145: ' + id + ' has no shop, so no Museum shop link');
+    }
   }
 
   // ── C-032 to C-038: the publisher's own page ───────────────────────
@@ -287,6 +295,11 @@ function runtime(answer, log) {
     eq(filled.shopUrl, found.shopUrl, 'C-041: the shop link the shop gave is untouched');
     eq(filled.catalogueTitle, found.catalogueTitle,
        'C-042: and so is the title \u2014 a wide search cannot rename the book');
+    // C-143: the wider search now runs for a blank publisher with the ISBN
+    // known (2 Oct), so a number it turns up must never replace the known one.
+    const known = api.applyIsbnFill({ ...found, isbn13: '9789059962514' },
+      { isbn13: '9780847873463', publisher: 'Lannoo' }, 'acquavellagalleries.myshopify.com');
+    eq(known.isbn13, '9789059962514', 'C-143: a known ISBN is never overwritten by a later step');
   }
 
   // ── C-043 to C-045: a step that died is not an answer ────────────────
