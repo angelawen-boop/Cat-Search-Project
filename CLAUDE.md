@@ -717,6 +717,8 @@ out or blocks part-way more than once (her ruling). Fixtures never keep or
 reuse. `page_keep.js`, `pageKeepFor`; KP-001 to KP-021. **Keeping pages at
 every container venue: reconsider if the monthly routine's reports show many
 faults that kept pages would have fixed without a re-sweep** (her ruling, 2 Oct).
+If so, the best home is **a separate repo for kept pages** — fetched only when
+needed, never on her laptop, deletable outright; here they bloat every clone.
 
 ### What each site asks — robots.txt, both machines
 
