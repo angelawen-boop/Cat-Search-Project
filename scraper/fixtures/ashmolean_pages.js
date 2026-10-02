@@ -34,11 +34,19 @@ const check = (name, ok, got) => {
   else { failures++; console.log('FAIL  ' + name + (got !== undefined ? ' — got: ' + String(got).slice(0, 400) : '')); }
 };
 
+// A ROUTE ANSWERED AFTER ITS PAGE HAS GONE throws "Route is already handled"
+// — the page closes while a stray file request is still in flight. The
+// scraper guards every route call against this (safeRouteCall); this test did
+// not, so the throw went unhandled and killed the whole suite now and then
+// (her ask, 2 Oct: fix it). Answering a page that is gone answers nothing, and
+// every check below reads the rows, which this cannot change.
+const answered = p => Promise.resolve(p).catch(() => {});
+
 async function run(browser, listingOnly) {
   const ctx = await browser.newContext();
   await ctx.route(() => true, r => {
     const f = SERVED[r.request().url()];
-    return f ? r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: fs.readFileSync(path.join(D, f)) }) : r.abort();
+    return answered(f ? r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: fs.readFileSync(path.join(D, f)) }) : r.abort());
   });
   const page = await ctx.newPage();
   const log = console.log; console.log = () => {};
@@ -124,9 +132,9 @@ async function run(browser, listingOnly) {
       const LISTING_TITLE = { 'colonial-views-of-india-impey-photographs': 'COLONIAL VIEWS OF INDIA' };
       const row = { ...full, title: LISTING_TITLE[slug] || full.title, summary: '', start_date: '' };
       const ctx = await browser2.newContext(); let other = 0;
-      await ctx.route(() => true, r => r.request().url() === url
+      await ctx.route(() => true, r => answered(r.request().url() === url
         ? r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: fs.readFileSync(path.join(RAW, file)) })
-        : (other++, r.abort()));
+        : (other++, r.abort())));
       const page = await ctx.newPage();
       // What the page TRIED to fetch, whether or not it got out.
       let tried = 0;
@@ -175,9 +183,9 @@ async function run(browser, listingOnly) {
       const [id, what, want] = WANT[slug];
       const row = { ...before };
       const ctx = await browser3.newContext();
-      await ctx.route(() => true, r => r.request().url() === row.url
+      await ctx.route(() => true, r => answered(r.request().url() === row.url
         ? r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: zlib.gunzipSync(fs.readFileSync(path.join(K, slug + '.html.gz'))) })
-        : r.abort());
+        : r.abort()));
       const page = await ctx.newPage();
       const log = console.log; console.log = () => {};
       try { await S.fetchIndividualPages(page, [row], 'ashmolean'); } finally { console.log = log; await ctx.close(); }
