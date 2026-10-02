@@ -805,8 +805,12 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await openTray(noShop.title);
     const ns = card(noShop.title);
     const nt = ns ? ns.textContent : '';
-    ok(/Not in the museum shop\. Venue has no shop\./.test(nt) && !/shop link opens/.test(nt), 'VN-007: a venue with no shop \u2014 her line, word for word', nt.slice(0, 300));
+    ok(/Venue has no shop\./.test(nt) && !/Not in the museum shop/.test(nt) && !/shop link opens/.test(nt), 'VN-007: a venue with no shop \u2014 her line, word for word', nt.slice(0, 300));
     ok(ns && ![...ns.querySelectorAll('a')].some(a => /Museum shop/.test(a.textContent)), 'VN-008:   and no Museum shop button');
+    ok(ns && ![...ns.querySelectorAll('button')].some(b => /Re-check museum shop/.test(b.textContent)), 'VN-009:   and no Re-check museum shop button');
+    await openTray(noCatRow.title);
+    const nc = card(noCatRow.title);
+    ok(nc && [...nc.querySelectorAll('button')].some(b => /Re-check museum shop/.test(b.textContent)), 'VN-010: a venue with a shop keeps its Re-check button');
   }
 
   // ── S-001..S-003: the search narrows WITH the filters — her finding, 25 Sep.
