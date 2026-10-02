@@ -292,7 +292,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > forward. **Renaming the connector means restating them.**
 
 **Live: 38.2 on her main app, 38.2 · cloud 4 on the test page** (published
-2 Oct). Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
+2 Oct; the test page republished with the same-tab reload fix, §7.1). Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
 `inClosingWindow`), Tracked and Dismissed inside "Details"; footer "Reset to
 Seed" and "Reset cards" (clears one card's lookup). Older numbers are in git.
@@ -383,6 +383,10 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
 - **Reject and quarantine are different jobs.** Quarantine: never show me this
   again. Reject: *this entry is wrong* — fix it at the source. **A rejected card
   coming back is correct.** Never propose remembering rejections.
+- **Buy next** (her design, 2 Oct): on a Yes card, a dot left of the star, drawn
+  to the star's measured size (`starInk`) — hollow off, red on. Leaving Yes clears
+  it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
+  anywhere.** Closing the search bar or Reset cards empties its box.
 - **Per-venue freshness**, two dates, from `swept_at`.
 - **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
   at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.
@@ -1021,8 +1025,8 @@ Save, Download and Load, close and reopen, a real sweep Import.
 
 **Two copies open: the later one is READ ONLY** (her ruling, 1 Oct). It shows
 the cloud copy and writes nothing; an edit record with a heartbeat decides,
-stale after a minute; every save checks it first. A reload or republish in the same tab takes over its own record (TC-011/012, 2 Oct — on the branch, not yet published). Design: "ONE COPY EDITS AT A TIME" in the code;
-`cloud_two_copies.js`, TC-001–010.
+stale after a minute; every save checks it first. A reload or republish in the same tab takes over its own record — a publish once locked her open page for a minute (2 Oct). Design: "ONE COPY EDITS AT A TIME" in the code;
+`cloud_two_copies.js`, TC-001–012.
 
 **Next:**
 1. Her normal use, over several sessions; she reports what surfaces. On request,
