@@ -291,7 +291,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 37 on her main app, 37.1 · cloud 4 on the test page** (1 Oct). **37.2 built, not published** (2 Oct): another venue's catalogue refused; publisher gap filled; "opens the shop's search"; no-shop venues: "Venue has no shop." and no Re-check button; Frick shelf = whole Publications page; Art Institute of Chicago self-published; language check and English edition at non-English venues; footer: "Reset to Seed", "Reset cards" (clears one card's lookup, "Confirm?" Yes/Cancel). 37.1:
+**Live: 37 on her main app, 37.1 · cloud 4 on the test page** (1 Oct). **38 built, not published** (2 Oct) — her numbering: **38 is Reset cards** (footer: "Reset to Seed", "Reset cards" — clears one card's lookup, "Confirm?" Yes/Cancel); **37.2 is the fixes under it**, never published alone: another venue's catalogue refused; publisher gap filled; "opens the shop's search"; no-shop venues: "Venue has no shop." and no Re-check button; Frick shelf = whole Publications page; Art Institute of Chicago self-published; language check and English edition at non-English venues. 37.1:
 AbeBooks sorted by lowest total price, the ISBN search off the shop route too,
 only the publisher is the publisher, two card lines shortened. 36.1 was never
 published alone.
@@ -513,7 +513,8 @@ Search MCP" — most likely `upstream_error` in the app (not proven).
 header (`authorization: Bearer` never reached Parallel); billed to her Parallel
 account ($20 credit for 60 days, $5 a month, auto-reload off). The built-in
 keyless "Parallel Search" cannot be removed; a second connector at `/mcp` is
-refused. Whether it ends `upstream_error`: her use shows.
+refused. **Her report, 2 Oct:** ~30–50 books looked up over two days on the
+key; the connection error 3 times one morning, each clearing within a minute.
 
 **Shop addresses:** all 18 original venues checked, `docs/app.md` §1;
 `borghese`, `capo`, `dellav` have none. Newer venues: in `MUSEUMS`, a comment
