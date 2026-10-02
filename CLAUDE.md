@@ -714,7 +714,9 @@ so a venue cut short asks next time only for what is missing. Not reused once
 the venue has written a file, after 14 days, or with `--reread`. Her machine:
 always. **Container: only a recipe with `keepPages: true`** — a site that drops
 out or blocks part-way more than once (her ruling). Fixtures never keep or
-reuse. `page_keep.js`, `pageKeepFor`; KP-001 to KP-021.
+reuse. `page_keep.js`, `pageKeepFor`; KP-001 to KP-021. **Keeping pages at
+every container venue: reconsider if the monthly routine's reports show many
+faults that kept pages would have fixed without a re-sweep** (her ruling, 2 Oct).
 
 ### What each site asks — robots.txt, both machines
 
