@@ -811,7 +811,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/978-9059962514/.test(t), 'VN-005:   the ISBN already found stands', t.slice(0, 400));
     await openTray(webLine.title);
     const w = card(webLine.title) ? card(webLine.title).textContent : '';
-    ok(/shop link opens the shop\u2019s search\./.test(w) && !/general store/.test(w), 'VN-006: NG has a shop search \u2014 the line names it, not the general store', w.slice(0, 300));
+    ok(/Not in the museum shop \u2014 shop link opens the general store\./.test(w), 'VN-006: a venue with a shop \u2014 the line as it was before 37.2, word for word', w.slice(0, 300));
     await openTray(noShop.title);
     const ns = card(noShop.title);
     const nt = ns ? ns.textContent : '';

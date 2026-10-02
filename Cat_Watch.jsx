@@ -3493,7 +3493,7 @@ export default function App(){
                           literally, and nothing caught it for weeks. */}
                       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
                         {noShop?"Venue has no shop."
-                          :MU[r.museumId].shopSearch?"Not in the museum shop \u2014 shop link opens the shop\u2019s search.":"Not in the museum shop \u2014 shop link opens the general store."}
+                          :"Not in the museum shop \u2014 shop link opens the general store."}
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
                       {r.shopState==="blocked"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
