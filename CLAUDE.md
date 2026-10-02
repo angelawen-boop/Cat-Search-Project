@@ -83,8 +83,7 @@ Chat Claude has no project context and cannot read this guide. Last resort.
 ### Editing this guide — and the side docs
 
 Loaded in full at the start of every session, so every line costs something every
-time. It hit 2,905 lines on 22 Sep; it was back to 1,621 by 30 Sep, most of the
-growth run-by-run stories. Cut again 30 Sep. The rules:
+time. It once grew to 2,905 lines, mostly run-by-run stories. The rules:
 
 - **Record the conclusion, not the journey.** Results, rulings and the lesson —
   never the order things happened in. When a finding is overturned, replace the
@@ -292,19 +291,15 @@ this one alone. `stitch` and `compress` carry it untouched.
 > forward. **Renaming the connector means restating them.**
 
 **Live: 38.1 on her main app, 38.1 · cloud 4 on the test page** (published
-2 Oct). **38.1:** Reset to Seed always asks ("This loads the seed set and
-replaces everything on screen. Continue?"); counts line Watched · Wanted ·
-Owned · Closing Window (Yes-wanted catalogues closed 3–12 months ago,
-`inClosingWindow`), Tracked and Dismissed inside "Details"; "Reset this
-search?". **38:** footer "Reset to Seed", "Reset cards" (clears one card's
-lookup). **37.2, under 38:** the lookup fixes in the rules below; Frick shelf =
-its whole Publications page. Older numbers are in git.
+2 Oct). Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
+Closing Window (Yes-wanted catalogues closed 3–12 months ago,
+`inClosingWindow`), Tracked and Dismissed inside "Details"; footer "Reset to
+Seed" and "Reset cards" (clears one card's lookup). Older numbers are in git.
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
 - **Her numbering:** whole number for a substantial change (adding venues is
   one), decimal for a small one. **One number per PUBLISH**, never per build.
-  Renumbered 27 Sep (34.8 → 35 … 34.14 → 35.3); older numbers are in git.
 - The file is `Cat_Watch.jsx` — no version number in the name, ever.
 
 **Building is code's job — `node build/build_app.js`**: transpiles, wraps it in
@@ -510,15 +505,12 @@ and do not flip to searching wide first.**
   venue.
 
 **The cost:** up to four searches and three readings. **Every reading runs on
-her allowance.** The connector's keyless tier refuses after roughly a dozen
-searches in quick succession (observed; unpublished). A failed search shows one
-line on the card, Re-check's words with "Search"/"Search again" (her ruling
-30 Sep; the red banner for it is gone): "Too many searches just now"
-(`rate_limited`) and "Search failed (upstream_error)". **Per `mcp.d.ts`:
-`rate_limited` is never returned; `upstream_error` is the catch-all and
-Parallel's words never reach the page** — its free-tier refusal, seen 1 Oct
-through Claude Code, reads "You've hit the free-tier rate limit for Parallel
-Search MCP" — most likely `upstream_error` in the app (not proven).
+her allowance.** The keyless tier refuses after roughly a dozen quick searches
+(observed; unpublished). A failed search shows one line on the card, Re-check's
+words with "Search"/"Search again" (her ruling 30 Sep; no red banner). **Per
+`mcp.d.ts`: `rate_limited` is never returned; `upstream_error` is the catch-all
+and Parallel's words never reach the page** — so its free-tier refusal is most
+likely "Search failed (upstream_error)" in the app (not proven).
 
 **Her keyed connector since 36: "Parallel Search Key"** — custom, at
 `https://search.parallel.ai/mcp-oauth`, No sign-in, her key in an **`x-api-key`**
@@ -993,19 +985,17 @@ it.** Code: "THE CLOUD LEDGER" in `Cat_Watch.jsx` on the branch. Screen spec:
 
 **Where:** test page **https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf**, its
 own store, all four capabilities. **Her working app since 26 Sep: she works ONLY
-there, on her real ledger, in ONE tab on ONE device** (two open copies save over
-each other — now the later copy is read only, below). Buttons there: **Load** (a ledger file), **Save**,
-**Import** (a sweep CSV) — `main`'s Import, Export and Import Refresh, renamed.
+there, on her real ledger, in ONE tab on ONE device** (a second copy is read
+only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
+CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **38.1 · cloud 4**, published 2 Oct (`main` merged in
-that day; cloud 3 was 37 without the lock, live minutes). Cloud-only in it: the
-read-only lock (below); a roll-back's safety copy names the save by its
-time ("…roll-back to snapshot of Sep 26, 2026 1:16pm"; CL-T1–3), and Cloud
-Saves' times share one width. The cloud count moves only when she says. Merge
-`main` in again before
-the page is rebuilt. The page's title is "Cat Watch Cloud Test" — set it in
-`build/dist/index.html` before publishing (the shell says "Cat Watch").
+live on the test page **38.1 · cloud 4**, published 2 Oct. Cloud-only in it:
+the read-only lock (below); a roll-back's safety copy names the save by its
+time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
+when she says. Merge `main` in again before the page is rebuilt. The page's
+title is "Cat Watch Cloud Test" — set it in `build/dist/index.html` before
+publishing (the shell says "Cat Watch").
 
 **What the store holds:**
 - **The live ledger** — the only thing the app reads and writes as she works.
@@ -1030,20 +1020,13 @@ ledger): a save writes new pieces and switches one record last, so a save cut of
 anywhere leaves the last complete ledger; a damaged or missing piece is refused;
 an empty page never saves.
 
-**Her tests, all passed (26 Sep–1 Oct):** load/change/reload; loading an older
-file; roll-back; Save with the cloud copy; export → change → reload; saving
-within a second; catalogue lookups; Download a cloud save and Load it; close
-and reopen; a real sweep Import (the sweep log updated live; the reminder).
+**Her tests, all passed (26 Sep–1 Oct):** load, change, reload, roll-back,
+Save, Download and Load, close and reopen, a real sweep Import.
 
-**Two copies open: the later one is READ ONLY** (her ruling, 1 Oct; live in
-37 · cloud 4). It shows the cloud copy and writes nothing;
-an edit record with a heartbeat decides, stale after a minute; every save
-checks it first. Design: "ONE COPY EDITS AT A TIME" in the code;
+**Two copies open: the later one is READ ONLY** (her ruling, 1 Oct). It shows
+the cloud copy and writes nothing; an edit record with a heartbeat decides,
+stale after a minute; every save checks it first. Design: "ONE COPY EDITS AT A TIME" in the code;
 `cloud_two_copies.js`, TC-001–010.
-
-**Decided against, 25 Sep:** a snapshot on closing the page (a browser gives a
-closing page no reliable time); a backup copy in browser storage (a fourth way
-of saving — too messy).
 
 **Next:**
 1. Her normal use, over several sessions; she reports what surfaces. On request,
