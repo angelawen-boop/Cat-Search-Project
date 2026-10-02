@@ -3415,13 +3415,8 @@ export default function App(){
   // RESET TO SEED ALWAYS ASKS while a ledger is on screen — her ruling, 2 Oct:
   // one tap beside "Reset cards" replaced her ledger with no question.
   function requestReset(){
-<<<<<<< HEAD
     if(rows.length>0&&dirty&&cloudNotSaving){setConfirmBox({text:"This loads the built-in starter set and replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",act:doReset});}
     else if(rows.length>0){setConfirmBox({text:"This loads the seed set and replaces everything on screen. Continue?",act:doReset});}
-=======
-    if(rows.length>0&&dirty){setConfirmBox({text:"This loads the built-in starter set and replaces everything on screen, which you haven't exported. Those changes will be lost. Continue?",act:doReset});}
-    else if(rows.length>0){setConfirmBox({text:"This loads the seed set and replaces everything on screen. Continue?",act:doReset});}
->>>>>>> main
     else doReset();
   }
 
