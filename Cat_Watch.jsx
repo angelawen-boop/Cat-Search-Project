@@ -336,6 +336,14 @@ const MS_MO=1e3*60*60*24*30.44, MS_WK=1e3*60*60*24*7;
 const moSince=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");return isNaN(x)?null:(Date.now()-x)/MS_MO;};
 const wksSince=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");return isNaN(x)?null:(Date.now()-x)/MS_WK;};
 
+// "CLOSING WINDOW" ON THE COUNTS LINE — her ruling, 2 Oct: catalogues she has
+// said she wants (Yes) whose show closed 3–12 months ago. Nothing else.
+function inClosingWindow(r){
+  if(!r||!r.interested||r.acquiring!=="yes")return false;
+  const t=tierFor(r);
+  return t==="closing"||t==="urgent";
+}
+
 function tierFor(r){
   const now=new Date(),st=r.startDate?new Date(r.startDate+"T00:00:00"):null,en=r.endDate?new Date(r.endDate+"T00:00:00"):null;
   if(st&&!isNaN(st)&&st>now)return"upcoming";
@@ -3020,7 +3028,7 @@ export default function App(){
     return out;
   },[rows,sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqNoCat,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched]);
 
-  const counts=useMemo(()=>{const c={total:rows.length,dismissed:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;const t=tierFor(r);if((t==="closing"||t==="urgent")&&r.acquiring!=="no"&&r.acquiring!=="acquired"&&r.hasCatalogue!=="no")c.pressing++;}return c;},[rows]);
+  const counts=useMemo(()=>{const c={total:rows.length,dismissed:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;if(inClosingWindow(r))c.pressing++;}return c;},[rows]);
 
   // ── TWO PALETTES, ONE SET OF NAMES — dark added 20 Sep 2026, her request:
   //    "it's 9pm and this cream background with light grey text is v difficult

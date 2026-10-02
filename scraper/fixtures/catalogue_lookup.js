@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage, MU, titleAsPrinted, isEnglishLang, publisherToFind, publisherLinkOf };')(
+    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage, MU, titleAsPrinted, isEnglishLang, publisherToFind, publisherLinkOf, inClosingWindow };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -254,6 +254,14 @@ function runtime(answer, log) {
        'C-155:   a museum named first is not self-publishing when a house is named after it');
     eq(api.publisherLinkOf('https://www.rizzoliusa.com/book/9780847877645/', 'Morgan Library & Museum in association with Rizzoli', null),
        'https://www.rizzoliusa.com/book/9780847877645/', 'C-156:   a link on that house\u2019s own site is kept');
+    // Her ruling, 2 Oct: Closing Window counts only what she said Yes to.
+    const ago = m => { const d = new Date(); d.setMonth(d.getMonth() - m); return d.toISOString().slice(0, 10); };
+    const shut = (acquiring, months, extra) => ({ interested: true, acquiring, startDate: '2024-01-01', endDate: ago(months), ...extra });
+    eq([api.inClosingWindow(shut('yes', 4)), api.inClosingWindow(shut('yes', 8)), api.inClosingWindow(shut(null, 4)),
+        api.inClosingWindow(shut('no', 4)), api.inClosingWindow(shut('acquired', 4)), api.inClosingWindow(shut('yes', 1)),
+        api.inClosingWindow(shut('yes', 14)), api.inClosingWindow(shut('yes', 4, { interested: false }))].join(),
+       'true,true,false,false,false,false,false,false',
+       'C-157: Closing Window \u2014 wanted (Yes) and closed 3\u201312 months ago, nothing else');
     eq(api.isSelfPublisher('The Art Institute of Chicago'), true, 'C-146: the Art Institute of Chicago is a museum\u2019s own imprint \u2014 her addition, 2 Oct');
   }
 
