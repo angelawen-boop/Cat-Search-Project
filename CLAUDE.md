@@ -291,10 +291,14 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 38 on her main app, 38 · cloud 4 on the test page** (published 2 Oct) — her numbering: **38 is Reset cards** (footer: "Reset to Seed", "Reset cards" — clears one card's lookup, "Confirm?" Yes/Cancel; "Closing Window" counts only Yes-wanted catalogues closed 3–12 months ago, `inClosingWindow`); **38.1 (built 2 Oct, not published):** Reset to Seed always asks; counts line Watched · Wanted · Owned · Closing Window, Tracked and Dismissed inside "Details" (was "By venue"); "Reset this search?"; search boxes show "…" not a raw code. **37.2 is the fixes under 38**, never published alone: another venue's catalogue refused; publisher gap filled; "opens the shop's search"; no-shop venues: "Venue has no shop." and no Re-check button; Frick shelf = whole Publications page; Art Institute of Chicago self-published; language check and English edition at non-English venues. 37.1:
-AbeBooks sorted by lowest total price, the ISBN search off the shop route too,
-only the publisher is the publisher, two card lines shortened. 36.1 was never
-published alone.
+**Live: 38.1 on her main app, 38.1 · cloud 4 on the test page** (published
+2 Oct). **38.1:** Reset to Seed always asks ("This loads the seed set and
+replaces everything on screen. Continue?"); counts line Watched · Wanted ·
+Owned · Closing Window (Yes-wanted catalogues closed 3–12 months ago,
+`inClosingWindow`), Tracked and Dismissed inside "Details"; "Reset this
+search?". **38:** footer "Reset to Seed", "Reset cards" (clears one card's
+lookup). **37.2, under 38:** the lookup fixes in the rules below; Frick shelf =
+its whole Publications page. Older numbers are in git.
 
 - **The number lives in `APP_VERSION`; the footer prints it with the date.**
   Bump it in the same breath as the change.
@@ -478,6 +482,11 @@ and do not flip to searching wide first.**
   no book page is on file (`buyLinks`) — resellers keep the book's title, the
   shop keeps the show's. A search or shelf page is never filed as the book's
   page (`listedOnly`). KHM opening its search is the design working.
+- **The line under a book not in the shop** reads "Not in the museum shop —
+  shop link opens the general store." for every venue with a shop (her ruling
+  2 Oct: a per-venue rewording was reverted). **A venue with no shop**
+  (`borghese`, `capo`, `dellav`) reads only "Venue has no shop.", grey, with
+  no shop link and no Re-check button; its lookup goes straight to the web.
 - **A ticket is never a catalogue** (`isTicketLink`).
 - **A shop link from the web search is opened before it is filed as in the
   shop** (`confirmShopLink`).
@@ -989,7 +998,7 @@ each other — now the later copy is read only, below). Buttons there: **Load** 
 **Import** (a sweep CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **38 · cloud 4**, published 2 Oct (`main` merged in
+live on the test page **38.1 · cloud 4**, published 2 Oct (`main` merged in
 that day; cloud 3 was 37 without the lock, live minutes). Cloud-only in it: the
 read-only lock (below); a roll-back's safety copy names the save by its
 time ("…roll-back to snapshot of Sep 26, 2026 1:16pm"; CL-T1–3), and Cloud
