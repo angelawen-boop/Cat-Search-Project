@@ -1092,8 +1092,6 @@ She is noting issues as she uses it, for a later debugging session.
   blocked venues.
 - **Art Institute films by room** — reopen only if the bin fills again.
   `docs/artic_pages/` README has the idea.
-- **`ashmolean_pages.js` fails now and then** ("route.abort: Route is already
-  handled"; a re-run passes). Not to be touched — her ruling, 1 Oct.
 - **A QA pass before the stitch** — parked from a session whose reasoning she
   does not trust. `qc.js` is NOT that pass and does not re-open it.
 - **Picked shows** — occasional venues where she picks ~5 shows a year and only
