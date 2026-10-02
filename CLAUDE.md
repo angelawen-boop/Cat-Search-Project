@@ -291,7 +291,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 37 on her main app, 37.1 · cloud 4 on the test page** (1 Oct). **38 built, not published** (2 Oct) — her numbering: **38 is Reset cards** (footer: "Reset to Seed", "Reset cards" — clears one card's lookup, "Confirm?" Yes/Cancel); **37.2 is the fixes under it**, never published alone: another venue's catalogue refused; publisher gap filled; "opens the shop's search"; no-shop venues: "Venue has no shop." and no Re-check button; Frick shelf = whole Publications page; Art Institute of Chicago self-published; language check and English edition at non-English venues. 37.1:
+**Live: 37 on her main app, 37.1 · cloud 4 on the test page** (1 Oct). **38 built, not published** (2 Oct) — her numbering: **38 is Reset cards** (footer: "Reset to Seed", "Reset cards" — clears one card's lookup, "Confirm?" Yes/Cancel; "Closing Window" counts only Yes-wanted catalogues closed 3–12 months ago, `inClosingWindow`); **37.2 is the fixes under it**, never published alone: another venue's catalogue refused; publisher gap filled; "opens the shop's search"; no-shop venues: "Venue has no shop." and no Re-check button; Frick shelf = whole Publications page; Art Institute of Chicago self-published; language check and English edition at non-English venues. 37.1:
 AbeBooks sorted by lowest total price, the ISBN search off the shop route too,
 only the publisher is the publisher, two card lines shortened. 36.1 was never
 published alone.
