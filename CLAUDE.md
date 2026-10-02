@@ -1067,7 +1067,11 @@ She is noting issues as she uses it, for a later debugging session.
 
 ### 5. A fresh sweep — mid-October at the earliest
 
-**She sweeps no more than once a month.**
+**She sweeps no more than once a month.** The container's half runs itself:
+the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
+`.claude/skills/monthly-sweep/SKILL.md` — sweep, QC, push, report; anything
+needing a re-sweep or a code change waits for her. She then does the home
+sweep, and a session with her stitches and compresses (her design, 2 Oct).
 
 ### 6. Smaller, parked
 
