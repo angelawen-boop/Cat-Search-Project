@@ -1021,7 +1021,7 @@ Save, Download and Load, close and reopen, a real sweep Import.
 
 **Two copies open: the later one is READ ONLY** (her ruling, 1 Oct). It shows
 the cloud copy and writes nothing; an edit record with a heartbeat decides,
-stale after a minute; every save checks it first. Design: "ONE COPY EDITS AT A TIME" in the code;
+stale after a minute; every save checks it first. A reload or republish in the same tab takes over its own record (TC-011/012, 2 Oct — on the branch, not yet published). Design: "ONE COPY EDITS AT A TIME" in the code;
 `cloud_two_copies.js`, TC-001–010.
 
 **Next:**
