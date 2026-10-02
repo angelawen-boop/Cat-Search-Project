@@ -127,7 +127,8 @@ const vanH = fresh('ng-testvanh', 'ng', 'Test NG Van Hemessen Show');
 const vanHNone = fresh('ng-testvanhnone', 'ng', 'Test NG Van Hemessen Unsaid');
 const vanHPub = fresh('ng-testvanhpub', 'ng', 'Test NG Publisher Gap Show');
 const webLine = { ...webRow, id: 'ng-testwebline', title: 'Test NG Web Line Show' };
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine], ignored: [], lastRun: null };
+const noShop = { ...webRow, id: 'borghese-testnoshop', museumId: 'borghese', title: 'Test Borghese No Shop Show' };
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -801,6 +802,11 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await openTray(webLine.title);
     const w = card(webLine.title) ? card(webLine.title).textContent : '';
     ok(/shop link opens the shop\u2019s search\./.test(w) && !/general store/.test(w), 'VN-006: NG has a shop search \u2014 the line names it, not the general store', w.slice(0, 300));
+    await openTray(noShop.title);
+    const ns = card(noShop.title);
+    const nt = ns ? ns.textContent : '';
+    ok(/Not in the museum shop\. Venue has no shop\./.test(nt) && !/shop link opens/.test(nt), 'VN-007: a venue with no shop \u2014 her line, word for word', nt.slice(0, 300));
+    ok(ns && ![...ns.querySelectorAll('a')].some(a => /Museum shop/.test(a.textContent)), 'VN-008:   and no Museum shop button');
   }
 
   // ── S-001..S-003: the search narrows WITH the filters — her finding, 25 Sep.

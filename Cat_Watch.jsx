@@ -65,7 +65,10 @@ const MUSEUMS = [
   // Shopify, like Acquavella's: search box and "View all" read off the live shop.
   { id:"lgd", short:"Levy", card:"Lévy Gorvy Dayan", name:"Lévy Gorvy Dayan", city:"New York / London",
     exBase:"https://www.levygorvydayan.com/exhibitions/", shopSearch:"https://shop.levygorvydayan.com/search?q=", shopCatalogues:"https://shop.levygorvydayan.com/collections/all", shopHome:"https://shop.levygorvydayan.com/", listUrl:"https://www.levygorvydayan.com/exhibitions" },
-  { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopCatalogues:"https://shop.frick.org/publications/exhibition-catalogues/", shopHome:"https://shop.frick.org/", listUrl:null },
+  // Frick, 2 Oct: the whole Publications shelf, not its "Exhibition
+  // catalogues" corner — her finding: the Frick publishes books tied to a show
+  // that it does not file as catalogues. One page of about 40 today.
+  { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopCatalogues:"https://shop.frick.org/publications/", shopHome:"https://shop.frick.org/", listUrl:null },
   { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopCatalogues:"https://bookstore.menil.org/collections/menil-publications", shopHome:"https://bookstore.menil.org/", listUrl:null },
   { id:"artic", short:"Artic", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
   { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:"https://wallacecollectionshop.org/search?q=", shopCatalogues:"https://wallacecollectionshop.org/collections/wallace-collection-publications", shopHome:"https://wallacecollectionshop.org/", listUrl:null },
@@ -3303,7 +3306,10 @@ export default function App(){
                           \u2014 among the words it printed those six characters
                           literally, and nothing caught it for weeks. */}
                       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-                        {MU[r.museumId]&&MU[r.museumId].shopSearch?"Not in the museum shop \u2014 shop link opens the shop\u2019s search.":"Not in the museum shop \u2014 shop link opens the general store."}
+                        {/* NO SHOP AT ALL — her wording, 2 Oct (Borghese, Capodimonte): no shop
+                            link is offered, and the line says why. */}
+                        {!(MU[r.museumId]&&(MU[r.museumId].shopSearch||MU[r.museumId].shopHome))?"Not in the museum shop. Venue has no shop."
+                          :MU[r.museumId].shopSearch?"Not in the museum shop \u2014 shop link opens the shop\u2019s search.":"Not in the museum shop \u2014 shop link opens the general store."}
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
                       {r.shopState==="blocked"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>

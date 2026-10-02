@@ -173,7 +173,7 @@ filed on another shelf. **Sold-out books stay listed** on shelves (Menil 47 with
 | rijks | `rijksmuseumshop.nl/en/books/exhibition-books` | `/en/search?q=` |
 | ng | `shop.nationalgallery.org.uk/books/exhibition-catalogues.html` | `/catalogsearch/result/?q=` |
 | acq | `acquavellagalleries.myshopify.com/collections/all` — the whole shop is catalogues | `/search?q=` |
-| frick | `shop.frick.org/publications/exhibition-catalogues/` | `/search.php?search_query=` |
+| frick | `shop.frick.org/publications/` (whole shelf, 2 Oct) | `/search.php?search_query=` |
 | menil | `bookstore.menil.org/collections/menil-publications` | `/search?q=` |
 | artic | `shop.artic.edu/collections/exhibition-catalogues` | `/search?q=` |
 | wallace | `wallacecollectionshop.org/collections/wallace-collection-publications` | `/search?q=` |
