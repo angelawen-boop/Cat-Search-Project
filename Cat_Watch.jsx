@@ -1309,6 +1309,23 @@ function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last 
 //   * a lookup finding nothing leaves a found catalogue exactly as it was.
 // A row never searched, or searched and found nothing, has nothing to lose,
 // so the new answer is taken whole.
+// RESET CARDS — her design, 2 Oct. The card as it was before any catalogue
+// search: every lookup field blank, everything she marked kept. The next
+// "Find catalogue" is then a first search, the whole route.
+function resetCard(r){
+  return{...r,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,
+    publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null};
+}
+// The cards Reset cards can offer: searched ones whose title, catalogue title
+// or venue carry what she typed. Accents and capitals do not count.
+function cardsToReset(rows,q){
+  const k=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  const want=k(q).trim();
+  if(!want)return[];
+  return rows.filter(r=>r.looked&&[r.title,r.catalogueTitle,MU[r.museumId]&&MU[r.museumId].short,MU[r.museumId]&&MU[r.museumId].name]
+    .some(t=>k(t).includes(want)));
+}
+
 function keepWhatWeKnew(prev,next){
   if(!prev||!prev.looked||prev.hasCatalogue!=="yes")return next;
   if(!next||next.hasCatalogue!=="yes")return prev;
@@ -1516,6 +1533,8 @@ export default function App(){
     return ignored.slice().sort((a,b)=>ord(a.venueId)-ord(b.venueId)||String(a.title||"").localeCompare(String(b.title||"")));
   },[ignored]);
   const[showIgnored,setShowIgnored]=useState(false);
+  const[showResetCards,setShowResetCards]=useState(false);
+  const[resetQuery,setResetQuery]=useState("");
   // PER-VENUE FRESHNESS, and it has to be TWO facts. One global lastRun cannot
   // say "artic was tried today and last gave us rows on 13 Sep", which is the
   // line that decides whether a solo re-run is worth it. Shape:
@@ -3498,14 +3517,35 @@ export default function App(){
           top it read as an overflow bin. Right-aligned on the starter-set line,
           in that line's own type; its drawer opens beneath. */}
       <div style={{maxWidth:760,margin:"18px auto 0",paddingTop:10,borderTop:"1px solid "+C.rule,fontSize:10,color:C.soft,lineHeight:1.6,display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:12,flexWrap:"wrap"}}>
-        <span>
-          Built-in starter set from venue pages, 20 Aug 2026.{" "}
-          <button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset ledger</button>
-          {" \u2014 force-loads the starter set."}
+        {/* TWO BUTTONS ON THE LEFT, NO SENTENCE — her ruling, 2 Oct. Spaced as
+            the two drawers on the right are. */}
+        <span style={{display:"flex",gap:14}}>
+          <button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset to Seed</button>
+          <button onClick={()=>setShowResetCards(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset cards</button>
         </span>
         {ignored.length>0&&<button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0,marginLeft:"auto"}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>}
       </div>
       <div style={{maxWidth:760,margin:"0 auto"}}>
+        {/* RESET CARDS — her design, 2 Oct. "Search again" only fills blanks, so
+            a card whose search went wrong could never start over. Here she finds
+            the card by typing, picks it, confirms; its catalogue result is
+            cleared and the card shows "Find catalogue" again. Her marks — star,
+            Yes/No/Acquired, Hide — stay. One card per confirm. */}
+        {showResetCards&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
+          <input value={resetQuery} onChange={e=>setResetQuery(e.target.value)} placeholder="Search cards\u2026" style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
+          {resetQuery.trim()&&(()=>{
+            const hits=cardsToReset(rows,resetQuery);
+            if(!hits.length)return <div style={{fontSize:12,color:C.soft,marginTop:8}}>{"No searched cards match."}</div>;
+            return hits.map(r=>(
+              <div key={r.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline",marginTop:4}}>
+                <span style={{minWidth:130,fontWeight:600}}>{MU[r.museumId]?MU[r.museumId].short:r.museumId}</span>
+                <button onClick={()=>setConfirmBox({title:"Confirm?",yes:"Yes",act:()=>{
+                  commit(rows.map(x=>x.id===r.id?resetCard(x):x));
+                  if(recheckSaid&&recheckSaid.id===r.id)setRecheckSaid(null);
+                  setResetQuery("");}})} style={{flex:1,textAlign:"left",background:"none",border:"none",color:C.action,fontSize:12.5,fontFamily:"inherit",textDecoration:"underline",cursor:"pointer",padding:0}}>{r.title}</button>
+              </div>));
+          })()}
+        </div>}
         {showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
           {/* BIG ENOUGH TO READ — her finding, 20 Sep: "tiny AND faint". This
               is a list of decisions she may need to UNDO, so it cannot be the
@@ -3882,10 +3922,10 @@ export default function App(){
                 guards replacing the screen. The old wording stays as the
                 default so every existing caller reads exactly as it did. */}
             <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:8}}>{confirmBox.title||"Replace what's on screen?"}</div>
-            <div style={{fontSize:12.5,color:C.body,lineHeight:1.5,marginBottom:16}}>{confirmBox.text}</div>
+            {confirmBox.text?<div style={{fontSize:12.5,color:C.body,lineHeight:1.5,marginBottom:16}}>{confirmBox.text}</div>:<div style={{height:8}}/>}
             <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
               <button onClick={()=>setConfirmBox(null)} style={sBtn}>Cancel</button>
-              <button onClick={()=>{const a=confirmBox.act;setConfirmBox(null);a&&a();}} style={{...pBtn,background:C.accent}}>Continue</button>
+              <button onClick={()=>{const a=confirmBox.act;setConfirmBox(null);a&&a();}} style={{...pBtn,background:C.accent}}>{confirmBox.yes||"Continue"}</button>
             </div>
           </div>
         </div>
