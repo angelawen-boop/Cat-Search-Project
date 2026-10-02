@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage, MU };')(
+    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage, MU, titleAsPrinted, isEnglishLang };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -235,6 +235,15 @@ function runtime(answer, log) {
       const names = api.buyLinks({ museumId: id, title: 'X', isbn13: null }).map(l => l.name);
       eq(names.some(n => /Museum shop/.test(n)), false, 'C-145: ' + id + ' has no shop, so no Museum shop link');
     }
+    const pg = [{ url: 'x', excerpts: ['Exhibition catalogue Experience of Nature \u20ac42'] }];
+    eq(api.titleAsPrinted('Experience of Nature. Art in Prague at the Court of Rudolf II', pg).title, 'Experience of Nature',
+       'C-147: a title the page does not print whole is cut to the part it does');
+    eq(api.titleAsPrinted('Experience of Nature', pg).cut, false, 'C-148: a title the page prints whole is kept whole');
+    eq(api.titleAsPrinted('Something Else Entirely', pg).onPage, false, 'C-149: a title not on the page at all is reported as such');
+    eq(api.titleAsPrinted('L\u2019exp\u00e9rience de la nature', [{ excerpts: ['L\'EXPERIENCE DE LA NATURE'] }]).onPage, true,
+       'C-150: accents, capitals and apostrophes are not differences');
+    eq([api.isEnglishLang('English'), api.isEnglishLang('French and English'), api.isEnglishLang('French'), api.isEnglishLang(null)].join(),
+       'true,true,false,false', 'C-151: a language named English, bilingual included');
     eq(api.isSelfPublisher('The Art Institute of Chicago'), true, 'C-146: the Art Institute of Chicago is a museum\u2019s own imprint \u2014 her addition, 2 Oct');
   }
 

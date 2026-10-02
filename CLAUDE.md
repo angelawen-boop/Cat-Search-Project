@@ -291,7 +291,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 37 on her main app, 37.1 · cloud 4 on the test page** (1 Oct). **37.2 built, not published** (2 Oct): another venue's catalogue refused; publisher gap filled; "opens the shop's search"; no-shop venues: "Venue has no shop." and no Re-check button; Frick shelf = whole Publications page; Art Institute of Chicago self-published. 37.1:
+**Live: 37 on her main app, 37.1 · cloud 4 on the test page** (1 Oct). **37.2 built, not published** (2 Oct): another venue's catalogue refused; publisher gap filled; "opens the shop's search"; no-shop venues: "Venue has no shop." and no Re-check button; Frick shelf = whole Publications page; Art Institute of Chicago self-published; language check and English edition at non-English venues. 37.1:
 AbeBooks sorted by lowest total price, the ISBN search off the shop route too,
 only the publisher is the publisher, two card lines shortened. 36.1 was never
 published alone.
@@ -441,6 +441,14 @@ and do not flip to searching wide first.**
   it is the catalogue of the show AT THIS VENUE (`thisVenue`); a show that
   travels here "in modified form" does not count. The shop step needs no such
   answer. A blank publisher with the ISBN known runs the wider search too.
+- **The title as printed, and English first at non-English venues** (her
+  ruling, 2 Oct, Louvre *Experience of Nature*): a shop title is kept only as
+  far as the pages print it (`titleAsPrinted`). At a venue marked
+  `english:false`, a book this lookup found gets one search by ISBN for its
+  language and own title; not English → one search for an English edition
+  (its own ISBN, printed in the results) → filed as "Not in the museum shop".
+  None → the book stays under its own title. A book already on a card is never
+  renamed (`fillLanguage`).
 - **A museum's own imprint is skipped** — `SELF_PUBLISHERS`, keyed on the
   **publisher**, never the venue, **added to only by her**; one imprint may need
   two names (MAD and MoMA have two).
