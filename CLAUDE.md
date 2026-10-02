@@ -480,6 +480,9 @@ and do not flip to searching wide first.**
   2 Oct; no per-venue wording). **A venue with no shop**
   (`borghese`, `capo`, `dellav`) reads only "Venue has no shop.", grey, with
   no shop link and no Re-check button; its lookup goes straight to the web.
+- **Booko AU** (last buy link) is `booko.au/<isbn>`; with no ISBN, its title
+  search. Her verdict, 2 Oct: works well on the ISBN, which the lookup now finds
+  far more often; the messier title-search results are accepted.
 - **A ticket is never a catalogue** (`isTicketLink`).
 - **A shop link from the web search is opened before it is filed as in the
   shop** (`confirmShopLink`).
@@ -1041,11 +1044,9 @@ stale after a minute; every save checks it first. Design: "ONE COPY EDITS AT A T
 
 ### 3. The Frick's past archive, page two
 
-About 10 past exhibitions have never been read. Page two was refused (403) on
-every attempt on 13 Sep. **Likely cause, not proven:** the container asked every
-2–5s and the Frick's robots.txt asks 10s, obeyed since 27 Sep. **Nothing to do
-now** — no probe. The next monthly sweep reads it; a refusal shows as a marker
-row. Record the result here and close it.
+About 10 past exhibitions (archive page two, refused 13 Sep) have never been
+read. Her ruling: leave them for the next sweep to pick up. Nothing else to do;
+close this once that sweep has run.
 
 ### 4. Catalogue lookup generally
 
@@ -1053,9 +1054,6 @@ She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
 `moma` (1 Oct).** `uffizi`'s shop sells no books — settled.
 
-- **OPEN — Booko with no ISBN.** "Booko AU", last buy link: `booko.au/<isbn>`,
-  else its title search, which she finds poor. A better no-ISBN query is
-  unsettled (1 Oct).
 - **OPEN — the publisher step's verdict is not stable.** *Metamorphoses*
   (Hannibal), two fresh lookups, same code, 1 Oct: "Publisher's section", then
   "Publisher" (right). Cause unproven — a different candidate page, the page
