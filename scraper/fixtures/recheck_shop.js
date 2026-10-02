@@ -875,6 +875,41 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(!searches().some(q => q.some(x => x === FR || /English edition/.test(x))) && /Test Known Catalogue/.test(t), 'LG-011: a book already on the card is never renamed (Search again)', t.slice(0, 400));
   }
 
+  // ── RC-001..RC-008: Reset cards, in the footer — her design, 2 Oct ───────
+  {
+    const doc = win.document;
+    const btns = () => [...doc.querySelectorAll('button')];
+    const footer = btns().find(b => b.textContent === 'Reset to Seed');
+    ok(!!footer && !/starter set from venue pages|force-loads/.test(doc.body.textContent), 'RC-001: the footer says only "Reset to Seed" \u2014 no sentence', doc.body.textContent.match(/.{0,40}Reset to Seed.{0,40}/));
+    const rc = btns().find(b => b.textContent === 'Reset cards');
+    ok(!!rc && rc.parentElement === footer.parentElement, 'RC-002:   with "Reset cards" beside it');
+    await click(rc);
+    const box = doc.querySelector('input[placeholder^="Search cards"]');
+    ok(!!box, 'RC-003: Reset cards opens a search box');
+    const type = async v => { const props = box[Object.keys(box).find(k => k.startsWith('__reactProps'))]; await act(async () => { props.onChange({ target: { value: v } }); }); await settle(); };
+    await type('nature show');
+    const pick = () => btns().find(b => b.textContent === louNature.title);
+    ok(!!pick() && !btns().some(b => b.textContent === louKnown.title), 'RC-004:   typing finds the searched card, and only cards that match');
+    const chipStyle = () => { const c = card(louNature.title); const y = c && [...c.querySelectorAll('button')].find(b => b.textContent === 'Yes'); return y ? y.getAttribute('style') : null; };
+    const markBefore = chipStyle();
+    const before = card(louNature.title).textContent;
+    await click(pick());
+    const conf = () => [...doc.querySelectorAll('div')].find(d => d.style && d.style.zIndex === '1200');
+    const inConf = label => conf() && [...conf().querySelectorAll('button')].find(b => b.textContent === label);
+    const ct = conf() ? conf().textContent : '';
+    ok(ct === 'Confirm?CancelYes', 'RC-005:   picking it asks only "Confirm?", Yes or Cancel', ct);
+    await click(inConf('Cancel'));
+    ok(!conf() && card(louNature.title).textContent === before, 'RC-006:   Cancel changes nothing');
+    await click(pick());
+    await click(inConf('Yes'));
+    await openTray(louNature.title);
+    const after = card(louNature.title);
+    const at = after ? after.textContent : '';
+    ok(/Find catalogue/.test(at) && !/978-2359064612/.test(at) && !/Exp\u00e9rience/.test(at), 'RC-007:   Yes clears the card back to "Find catalogue"', at.slice(0, 300));
+    ok(markBefore && chipStyle() === markBefore, 'RC-008:   her "Yes, want the catalogue" mark is kept');
+    ok(!btns().some(b => b.textContent === louNature.title), 'RC-009:   the box empties once the card is reset');
+  }
+
   // ── S-001..S-003: the search narrows WITH the filters — her finding, 25 Sep.
   // It used to return early, so text in the box switched every filter off.
   {
