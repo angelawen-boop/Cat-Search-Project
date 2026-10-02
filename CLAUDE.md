@@ -545,7 +545,7 @@ through `sample` at `modelTier: default`. Do not re-open without a real misread.
 | unit fixtures | `date.test.js`, `compress.test.js`, `qc.test.js`, `sweep_log.test.js`, `venue_status.test.js`, `pacing.test.js` |
 | `intake_cases.js` | folding, quarantine, freshness, the ledger gate |
 | `page_loads.js`, `page_renders.js` | does the page load; does it DRAW (jsdom, plain and with the runtime answering) |
-| `catalogue_lookup.js`, `recheck_shop.js` | the lookup (C-); Re-check, blocked shops, web-found links, search filters — the real app, buttons pressed (R-, L-, S-) |
+| `catalogue_lookup.js`, `recheck_shop.js` | the lookup (C-); Re-check, blocked shops, web-found links, search filters, another venue's book, no-shop venues, language, Reset cards, counts — the real app, buttons pressed (R-, L-, S-, VN-, LG-, RC-, RS-, CT-) |
 | `*_pages.js` per venue | `mam`, `ashmolean`, `moma`, `mad`, `brit`, `morgan`, `orsay` recipes on her saved pages, no network — her counts, dates, titles, descriptions |
 | `summary_pages.js`, `title_case_pages.js`, `listing_pages.js` | descriptions, titles in the venue's letters, where each row was seen — on saved pages |
 | `page_keep_pages.js`, `bridge_reuse.js`, `robots_pages.js`, `pacing_pages.js` | kept pages; the bridge's file reuse and reply labels; robots.txt obeyed and stall reports; pacing against Cloudflare's replies |
