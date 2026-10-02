@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "38.1";
+const APP_VERSION = "38.2";
 const APP_VERSION_DATE = "2 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -338,6 +338,30 @@ const wksSince=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");return isNa
 
 // "CLOSING WINDOW" ON THE COUNTS LINE — her ruling, 2 Oct: catalogues she has
 // said she wants (Yes) whose show closed 3–12 months ago. Nothing else.
+// THE BUY-NEXT DOT IS THE STAR'S SIZE — her ruling, 2 Oct. The star is a
+// font glyph, so its size and where it sits depend on the font each machine
+// falls back to; a fixed circle came out bigger than it and off its line. So
+// the star's own ink is measured, in the font a card's button uses, and the
+// dot is centred where the star's ink is. The canvas reports the ink rounded
+// outward and a disc reads larger than a star of equal height, so the dot is
+// 85% of that height: on screen the two then measure the same (11.5px at
+// 16px, checked on the rendered page). Measured once. No off-screen canvas
+// (the test harness) → an 11px dot centred on the line.
+let starInkCache=null;
+function starInk(){
+  if(starInkCache)return starInkCache;
+  let out={a:12,d:1};
+  try{
+    const b=document.createElement("button");b.style.fontSize="16px";document.body.appendChild(b);
+    const f=getComputedStyle(b);const font=f.fontStyle+" "+f.fontWeight+" 16px "+f.fontFamily;b.remove();
+    const c=typeof OffscreenCanvas==="function"?new OffscreenCanvas(1,1).getContext("2d"):null;
+    if(c){c.font=font;const m=c.measureText("\u2605");const h=m.actualBoundingBoxAscent+m.actualBoundingBoxDescent;
+      if(h>0&&h<=16)out={a:m.actualBoundingBoxAscent,d:m.actualBoundingBoxDescent};}
+  }catch{}
+  const D=Math.round((out.a+out.d)*0.85*2)/2;
+  return starInkCache={D,v:(out.a-out.d-D)/2};
+}
+
 function inClosingWindow(r){
   if(!r||!r.interested||r.acquiring!=="yes")return false;
   const t=tierFor(r);
@@ -1607,7 +1631,9 @@ export default function App(){
   const[acqOwned,setAcqOwned]=useState(false);
   const[acq3mo,setAcq3mo]=useState(false);
   const[acq6mo,setAcq6mo]=useState(false);
+  const[acqHasCat,setAcqHasCat]=useState(false);
   const[acqNoCat,setAcqNoCat]=useState(false);
+  const[acqBuyNext,setAcqBuyNext]=useState(false);
   const[showAll,setShowAll]=useState(false);
   const[dismissedOnly,setDismissedOnly]=useState(false);
   const[watchedF,setWatchedF]=useState(false);
@@ -1758,7 +1784,7 @@ export default function App(){
     }
   },[rows,ignored,lastRun,driveState]);
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
-  const clearFilters=()=>{setVenueF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqNoCat(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setSearch("");setShowSearch(false);};
+  const clearFilters=()=>{setVenueF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqBuyNext(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setSearch("");setShowSearch(false);};
 
   // WHAT A QUARANTINE REMEMBERS. The URL where there is one, because that is
   // the only key that cannot be wrong; venue + title where there is not,
@@ -2898,7 +2924,9 @@ export default function App(){
   const undoDismiss=()=>{if(!undo)return;commit(rows.map(r=>r.id===undo.id?{...r,interested:true}:r));setUndo(null);if(undoTimer.current)clearTimeout(undoTimer.current);};
   const restore=id=>commit(rows.map(r=>r.id===id?{...r,interested:true}:r));
   const toggleWatch=id=>commit(rows.map(r=>r.id===id?{...r,watching:!r.watching}:r));
-  const setAcq=(id,v)=>commit(rows.map(r=>r.id===id?{...r,acquiring:r.acquiring===v?null:v}:r));
+  // Leaving Yes clears the buy-next dot: it marks a wanted book only.
+  const setAcq=(id,v)=>commit(rows.map(r=>{if(r.id!==id)return r;const a=r.acquiring===v?null:v;return{...r,acquiring:a,buyNext:a==="yes"?!!r.buyNext:false};}));
+  const toggleBuyNext=id=>commit(rows.map(r=>r.id===id?{...r,buyNext:!r.buyNext}:r));
 
   function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);if(d&&Array.isArray(d.rows)){loadLedger(d.rows.map(r=>({...r,watching:r.watching||false})),d.lastRun||null,"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",{ignored:Array.isArray(d.ignored)?d.ignored:[]});setDebug("Imported "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");}else{setError("That file didn't contain a ledger (no entries found).");}}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");}};reader.readAsText(file);e.target.value="";}
 
@@ -3011,7 +3039,8 @@ export default function App(){
       // Acquiring filters stack as AND across the three axes, OR within an axis.
       if(acqWanted||acqOwned){if(!((acqWanted&&r.acquiring==="yes")||(acqOwned&&r.acquiring==="acquired")))return false;}
       if(acq3mo||acq6mo){if(!((acq3mo&&t==="closing")||(acq6mo&&(t==="urgent"||t==="lapsed"))))return false;}
-      if(acqNoCat){if(!(r.looked&&r.hasCatalogue==="no"))return false;}
+      if(acqHasCat||acqNoCat){if(!((acqHasCat&&r.looked&&r.hasCatalogue==="yes")||(acqNoCat&&r.looked&&r.hasCatalogue==="no")))return false;}
+      if(acqBuyNext){if(!(r.acquiring==="yes"&&r.buyNext))return false;}
       return true;
     });
     out.sort((a,b)=>{
@@ -3029,7 +3058,7 @@ export default function App(){
       return db.localeCompare(da);
     });
     return out;
-  },[rows,sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqNoCat,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched]);
+  },[rows,sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched]);
 
   const counts=useMemo(()=>{const c={total:rows.length,dismissed:0,watched:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.watching)c.watched++;if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;if(inClosingWindow(r))c.pressing++;}return c;},[rows]);
 
@@ -3056,7 +3085,7 @@ export default function App(){
            warnBg:"#F7E4C4",warnEdge:"#B5791A",warnInk:"#6B4A1E",
            okBg:"#D8EAE4",okEdge:"#2D6B5A",okInk:"#1F4C40",
            holdBg:"#E8E2D6",ownedBg:"#EDE5F5",
-           rejectInk:"#8A6D3B",neverInk:"#7A4A4A",star:"#B8860B",onAction:"#fff",
+           rejectInk:"#8A6D3B",neverInk:"#7A4A4A",star:"#B8860B",buyNext:"#C0281E",onAction:"#fff",
            scrim:"rgba(20,18,16,0.45)"},
     dark: {bg:"#1A1815",card:"#232019",ink:"#EDE8E0",soft:"#A8A29A",rule:"#3A352E",
            action:"#5E9E85",accent:"#E2735A",owned:"#B79BE0",muted:"#6A645C",
@@ -3064,7 +3093,7 @@ export default function App(){
            warnBg:"#3A2E14",warnEdge:"#C79A3E",warnInk:"#F0D9A4",
            okBg:"#16302A",okEdge:"#4E9B80",okInk:"#A6DCC6",
            holdBg:"#32291C",ownedBg:"#2B2136",
-           rejectInk:"#D6B87A",neverInk:"#E0A3A3",star:"#E0B45C",onAction:"#12100E",
+           rejectInk:"#D6B87A",neverInk:"#E0A3A3",star:"#E0B45C",buyNext:"#F0705F",onAction:"#12100E",
            scrim:"rgba(0,0,0,0.6)"},
   };
   const C=PALETTES[theme];
@@ -3312,7 +3341,7 @@ export default function App(){
           <span><b style={{color:C.ink}}>{counts.wanted}</b> Wanted</span>
           <span><b style={{color:C.owned}}>{counts.owned}</b> Owned</span>
           <span><b style={{color:TH.urgent.ink}}>{counts.pressing}</b> Closing Window</span>
-          <button onClick={()=>{setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);}} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Search">{"\uD83D\uDD0D"}</button>
+          <button onClick={()=>{if(showSearch)setSearch("");setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);}} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Search">{"\uD83D\uDD0D"}</button>
         </div>
         {/* THE CROSS CLEARS WHAT SHE TYPED — her ask, 30 Sep: right-aligned inside
             the box, there while there is text to clear. */}
@@ -3341,7 +3370,9 @@ export default function App(){
           <button onClick={()=>setAcqOwned(v=>!v)} style={chip(acqOwned)}>Owned</button>
           <button onClick={()=>setAcq3mo(v=>!v)} style={chip(acq3mo)}>3+ mos</button>
           <button onClick={()=>setAcq6mo(v=>!v)} style={chip(acq6mo)}>6+ mos closing window</button>
+          <button onClick={()=>setAcqHasCat(v=>!v)} style={chip(acqHasCat)}>Has catalogue</button>
           <button onClick={()=>setAcqNoCat(v=>!v)} style={chip(acqNoCat)}>No catalogue</button>
+          <button onClick={()=>setAcqBuyNext(v=>!v)} style={chip(acqBuyNext)}>Buy next</button>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Showing</span>
@@ -3411,6 +3442,7 @@ export default function App(){
                     {r.exUrl&&<a href={r.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.action,textDecoration:"none",marginLeft:5,fontSize:13,fontWeight:400}}>{"\u2197"}</a>}
                   </h3>
                   <div style={{display:"flex",gap:8,alignItems:"center",marginLeft:8,flexShrink:0}}>
+                    {r.acquiring==="yes"&&(()=>{const k=starInk();return <button onClick={()=>toggleBuyNext(r.id)} title={r.buyNext?"Not buying next":"Buy next"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1}}><svg width={k.D} height={k.D} style={{display:"inline-block",verticalAlign:k.v}} aria-hidden="true"><circle cx={k.D/2} cy={k.D/2} r={k.D/2-0.75} fill={r.buyNext?C.buyNext:"none"} stroke={r.buyNext?C.buyNext:C.muted} strokeWidth="1.5"/></svg></button>;})()}
                     <button onClick={()=>toggleWatch(r.id)} title={r.watching?"Unwatch":"Watch"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1,color:r.watching?C.star:C.muted}}>{r.watching?"\u2605":"\u2606"}</button>
                     {!isAcq&&<button onClick={()=>dismiss(r.id)} title="Not interested" style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:18,lineHeight:1,color:C.muted}}>{"\u00d7"}</button>}
                   </div>
@@ -3553,7 +3585,7 @@ export default function App(){
             the two drawers on the right are. */}
         <span style={{display:"flex",gap:14}}>
           <button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset to Seed</button>
-          <button onClick={()=>setShowResetCards(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset cards</button>
+          <button onClick={()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset cards</button>
         </span>
         {ignored.length>0&&<button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0,marginLeft:"auto"}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>}
       </div>
