@@ -173,11 +173,11 @@ async function renderOnce(label, withRuntime) {
       pass(label + ': empty sweep log reads "Unknown" \u2014 not a made-up date, '
            + 'and not a claim that no sweep ever ran');
     }
-    if (!/By venue/i.test(text)) {
-      fail(label + ': the "By venue" control is missing with an empty sweep log, '
+    if (!/Details/.test(text)) {
+      fail(label + ': the "Details" control is missing with an empty sweep log, '
            + 'so nothing on screen can report that the store holds nothing');
     } else {
-      pass(label + ': the "By venue" control is there to be opened when empty');
+      pass(label + ': the "Details" control is there to be opened when empty');
     }
 
     // The ground has to be painted, or a dark-mode machine keeps a cream page.
