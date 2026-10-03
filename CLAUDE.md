@@ -61,6 +61,9 @@ is why they live in one repo, on one branch.
   did not ask for — she is constantly decluttering invented verbiage.
 - **A guess is labelled a guess.** Say what is proven, what is not, and what one
   request would settle.
+- **A session's own Parallel calls use the free "Parallel Search" — her rule,
+  3 Oct.** Her keyed "Parallel Search Key" only with a reason (e.g. ten pages at
+  once, which would hit the free limit), and she is told clearly BEFORE the call.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
 
 ### Put it in code — her rule, 10 Sep 2026

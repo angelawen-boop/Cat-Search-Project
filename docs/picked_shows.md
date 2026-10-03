@@ -65,6 +65,19 @@ plausible-looking wrong row.
 
 More will come; she has not listed them yet.
 
+## The in-app route — "Add by link", tested 3 Oct (not built)
+
+Her preferred shape: paste one link (or up to ~10) in the app → Add cards.
+**Test:** 10 show pages, 6 venues, one keyed Parallel read each — all full
+text, none empty. Dates: the first range after the show's heading, by code,
+right on 10/10. No JSON-LD comes through Parallel. Shop link on the page at 4 of 6.
+- **Title = what the catalogue would be called** (her ruling): subtitles and
+  split headings kept — "Peggy Guggenheim in London: The Making of a Collector",
+  "Hammershøi. The Eye that Listens".
+- **A new venue's shop:** found once, confirmed by her, kept in the store. It
+  must find the **exhibition-catalogues shelf**, else the books shelf — never
+  the whole shop (mugs, prints).
+
 ## Open — hers to decide when building
 
 - **Chips:** one per venue, or one grouped chip (e.g. "Occasional") holding
