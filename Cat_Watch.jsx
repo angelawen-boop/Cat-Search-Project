@@ -5333,7 +5333,7 @@ export default function App(){
               })()}
             </div>
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-              <button onClick={cancelRefresh} style={sBtn}>Cancel refresh</button>
+              <button onClick={cancelRefresh} style={sBtn}>Cancel import</button>
               {/* Rejected and quarantined are named only when there is one
                   (quarantined too, her ask 1 Oct): a "0" is one more number to
                   read past. Whatever is named adds up to what is decided. */}

@@ -65,7 +65,9 @@ Name from the page title. Its shop: the **exhibition-catalogues section**,
 else books / publications — **never the front page, one book or a post** (her
 ruling, 4 Oct). Code: "FINDING A NEW VENUE'S SHOP SECTION".
 
-1. **One search, her own query: "<venue> shop exhibition catalogues".**
+1. **One search call, two queries: hers, "<venue> shop exhibition
+   catalogues", and "<venue> shop books publications"** — Detroit's "DIA
+   Publications" came back 1st with both, never with hers alone (keyed, 4 Oct).
    Parallel finds the section but does not always rank it first (Cleveland's
    was 4th, 4 Oct), so code ranks every result: on the museum's own shop
    site only (not Museum Bookstore's "Courtauld" shelf, not the library's
@@ -76,8 +78,9 @@ ruling, 4 Oct). Code: "FINDING A NEW VENUE'S SHOP SECTION".
 3. **The shop's menu.**
 
 A pick is **opened and must read as books with prices**, unless its search
-excerpt already does. Nothing → "Books section not found." / "No museum shop
-found." / "Search failed." **Look again** skips only the pages she turned down,
+excerpt already does. Nothing → "Shop found, but not its books section: <shop>" /
+"No museum shop found." / "Search failed." — and **a miss is a finder bug,
+fixed in code: she never pastes a shop link** (her ruling, 4 Oct). **Look again** skips only the pages she turned down,
 never the site (the old "Wrong shop" banned the site — the RA and Courtauld
 had the right shop, wrong page). **No shop** → lookups go to the web, as at
 Capodimonte. Venues found by the old finder and never confirmed are looked

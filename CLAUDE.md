@@ -295,10 +295,10 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 39.2 on her main app, 39.2 · cloud 4 on the test page** (4 Oct, Import
-as CSV · Links, shop screen). **Both pages are published together, every time — her rule, 4 Oct:** the
-test page differs from her main app only by its cloud functions, never by
-falling behind. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
+**Live: 39.3 · cloud 4 on the test page** (4 Oct, Import as CSV · Links, shop
+screen); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
+keeps up with it, merged, so her main app never falls behind — it is not
+republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
 `inClosingWindow`), Tracked and Dismissed inside "Details"; footer "Reset to
 Seed" and "Reset cards" (clears one card's lookup). Older numbers are in git.
@@ -316,8 +316,9 @@ whether the committed shell still matches.
 
 **Publishing cannot be automated and the order matters.** The service refuses a
 publish from a session that has not read the live version in full, and then
-refuses the same bytes resent. So: **read the URL, read the whole saved file,
-then build, then publish.** `build_app.js` prints the steps.
+refuses the same bytes resent. So: **read the URL (the service then counts it
+as viewed), build, diff the saved live file against the build in code, publish.**
+Never page the 6,700 lines into context — it filled whole sessions. `build_app.js` prints the steps.
 
 ### The mental model, load-bearing
 
@@ -1010,7 +1011,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **39.2 · cloud 4**, published 4 Oct (shop screen). Cloud-only in it:
+live on the test page **39.3 · cloud 4**, published 4 Oct (Detroit's shop, Cancel import). Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
@@ -1062,43 +1063,25 @@ stale after a minute; every save checks it first. A republish while her page is 
 4. Google Drive backup by button — on the table, never automatic.
 
 
-### 2. Add by link — 39.3 in progress (uncommitted work committed as WIP, 4 Oct)
+### 2. Add by link — 39.3 live on the test page, her test next
 
-**Live is 39.2** (both pages). 39.3 is built on `main` and the cloud branch, NOT published.
+39.3, from her 4 Oct test of 39.2: CSV / Links in
+Load/Save's style, the pressed one green, the pop-up sized to its buttons; no
+second progress bar; shop screen "New Venue Shops" / "Check and approve each
+shop link.", the review cards' buttons, always Confirm · Look again · No shop;
+every new venue met is listed; the review's cancel reads **"Cancel import"**.
 
-Done in code, from her 4 Oct test of 39.2 (screenshots):
-- CSV / Links: Load/Save's size and style, both plain; the pressed one green.
-  The two-button pop-up is `width: fit-content`.
-- The header's progress bar is hidden while the Import pop-up is open (it
-  duplicated the pop-up's own).
-- Shop screen: title **"New Venue Shops"**, line **"Check and approve each shop
-  link."** Buttons are the review cards' `decBtn`: Confirm ticks green like "Add
-  new entry", No shop like "Reject". **Always Confirm · Look again · No shop in
-  that order**; Confirm greyed when no section was found. "Shop found, but not
-  its books section: <shop link>" vs "No museum shop found." vs "Search failed."
-- **Every new venue met in the Read is listed**, whatever her card decisions
-  (`readVenues`). 39.2 listed only venues with a card going in, so the RA and
-  Courtauld were missing — a rule nobody asked for, removed.
-- Finder search sends two queries in one call: hers, plus "<venue> shop books
-  publications". **Unproven** — Detroit's "Books & Stationery - DIA
-  Publications" (Google's 3rd) never came back from Parallel; the free tier
-  then refused the test. One keyed search settles it — ask her first.
+**Detroit, settled 4 Oct (her keyed connector):** the finder's search sends two
+queries in one call — hers and "<venue> shop books publications". With both,
+"DIA Publications" came back 1st; with hers alone, never. Saved:
+`docs/link_pages/shop_search/detroit*.json`; AL-008f, AL-009e.
 
-**Test state:** `npm test` all green at 39.3 (AL-002a, AL-010a → 9, AL-010b on
-Cleveland). Merged into `claude/ledger-cloud`; both pages built, not published.
+**Her ruling, 4 Oct: she never feeds the app a shop link, and "no shop found"
+is not an answer she accepts from a museum that has one.** No paste box, no
+skip. A venue the finder misses is a finder bug, fixed in code on a saved
+real search.
 
-**Waiting on her:**
-1. Her note "the import review screen for importing links — the cancel button
-   that says 'cancel refresh'" was cut off. Ask what she wants it to say.
-2. **No way past the shop screen** when Look again fails and No shop is wrong
-   (Detroit today) — she would have to cancel the whole import. Offer: paste
-   the right link herself, and/or "Skip for now" (shop stays unconfirmed, asked
-   again next Read). Her call; build nothing until she picks.
-
-Her store, read 4 Oct: Cleveland, Mauritshuis, Thyssen confirmed; RA
-(`shop.royalacademy.org.uk/books/bookshop/exhibition-catalogues`) and Courtauld
-(`/collections/courtauld-catalogues`) found, unconfirmed; Detroit `noshelf`.
-Card short names are in the test page's store only.
+**Next:** her test of 39.3 on the test page.
 
 ### 3. Fixes not yet checked in the cases they were written for
 
@@ -1141,7 +1124,7 @@ Recipe and fixture on `main` (CI-001–021). **The app's venue entry is on
 branch `claude/blissful-volta-jxj5c0`, not `main`** — her instruction, other
 JSX work in flight; merge when she says, then bump the version. Until then a
 sweep's `cincinnati` rows are refused on import — and the monthly container
-sweep (5 Nov) will sweep it. On the branch: chip "Cincinnati" after Artic, its
+sweep (5 Oct, ~2am Sydney) is its first sweep — check its 31 against her count. On the branch: chip "Cincinnati" after Artic, its
 imprint in `SELF_PUBLISHERS` (her rulings, 4 Oct); fixtures 19b, C-146b.
 
 ### 7. Smaller, parked
