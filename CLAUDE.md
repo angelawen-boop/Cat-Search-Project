@@ -294,10 +294,10 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 39.1 on her main app, 39.1 · cloud 4 on the test page** (4 Oct — Add
-by link, Import pop-up). **Both pages
-are published together, every time — her rule, 4 Oct:** the test page differs
-from her main app only by its cloud functions, never by falling behind. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
+**Live: 39.1 on her main app, 39.1 · cloud 4 on the test page** (4 Oct, Add by
+link). **Both pages are published together, every time — her rule, 4 Oct:** the
+test page differs from her main app only by its cloud functions, never by
+falling behind. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
 `inClosingWindow`), Tracked and Dismissed inside "Details"; footer "Reset to
 Seed" and "Reset cards" (clears one card's lookup). Older numbers are in git.
@@ -393,11 +393,14 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
   anywhere.** Closing the search bar or Reset cards empties its box.
 - **Per-venue freshness**, two dates, from `swept_at`.
-- **Add by link** (39, her design 3–4 Oct): Import opens ONE pop-up (39.1 —
-  nothing added to the page itself): the link box, CSV file, Read;
-  each link read once by code (title, dates) and the model (prose), then the
-  same intake as a sweep. New venues file under one "Occasional" chip, shop
-  found once and confirmed by her; both kept in the store. `docs/picked_shows.md`.
+- **Add by link** (39, her design 3–4 Oct): Import opens ONE pop-up — link
+  box, CSV file, Read; **nothing added to the page itself**. Each link is read
+  once by code (title, dates) and the model (prose, always English), then the
+  same intake as a sweep; no lookback. New venues file under one "Occasional"
+  chip, shop found once and confirmed by her; both kept in the store.
+  **The date reader and summary rules are the scraper's own**, written into the
+  JSX by `node build/sync_shared.js` — never edit between its SHARED markers.
+  `docs/picked_shows.md`.
 - **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
   at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.
 - **Dark mode**, every colour named; the shell paints a ground before React runs.
@@ -1058,7 +1061,18 @@ stale after a minute; every save checks it first. A republish while her page is 
 4. Google Drive backup by button — on the table, never automatic.
 
 
-### 2. Fixes not yet checked in the cases they were written for
+### 2. Add by link — first use, 4 Oct
+
+- **OPEN — her report: Read and approve left the ledger at 0**, only the new
+  rows in it (test page, after a republish). Her cloud copy was untouched (594
+  rows, saved 3 Oct); the screenshot read "not yet updated this session". Cause
+  unproven. If it recurs: "Show diagnostic" first, before anything else.
+- **Her to do:** "Wrong shop" on the RA and Courtauld cards — chosen before the
+  shelf rule.
+- Card short names are in the test page's store only; her main app's
+  `venues/occasional` is empty until a link is read there.
+
+### 3. Fixes not yet checked in the cases they were written for
 
 1. **Borghese: 7 titles still in capitals** — site was down 24 Sep; read its 3
    listing pages once, when it is back.
@@ -1066,13 +1080,13 @@ stale after a minute; every save checks it first. A republish while her page is 
 3. **MAM:** its current run predates her Prix Duchamp / Oliver Beer ruling; the
    next sweep drops them (`mam_pages.js` proves it offline).
 
-### 3. The Frick's past archive, page two
+### 4. The Frick's past archive, page two
 
 About 10 past exhibitions (archive page two, refused 13 Sep) have never been
 read. Her ruling: leave them for the next sweep to pick up. Nothing else to do;
 close this once that sweep has run.
 
-### 4. Catalogue lookup generally
+### 5. Catalogue lookup generally
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
@@ -1085,7 +1099,7 @@ She is noting issues as she uses it, for a later debugging session.
   Only that lookup's log settles it ("Show diagnostic" keeps the last action's
   only); if it recurs, get the log first. A log per card: offered, not built.
 
-### 5. A fresh sweep — mid-October at the earliest
+### 6. A fresh sweep — mid-October at the earliest
 
 **She sweeps no more than once a month.** The container's half runs itself:
 the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
@@ -1093,7 +1107,7 @@ the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
 needing a re-sweep or a code change waits for her. She then does the home
 sweep, and a session with her stitches and compresses (her design, 2 Oct).
 
-### 6. Smaller, parked
+### 7. Smaller, parked
 
 - **The cheapest archive route per venue** — very low priority, may never happen.
 - **Sweeper brief v3** — needs URL corrections; likely the fallback procedure for
@@ -1160,7 +1174,7 @@ price, her ruling 1 Oct).
 | `docs/venue_urls.md` | The original 21 venues' addresses from the Sweeper Brief, and which of its notes still hold | Wiring or re-checking one of those venues |
 | `docs/listing_pages/`, `docs/*_pages/` | Pages she saved, with a README of what each settled | Changing that venue's recipe — before asking her for anything |
 | `docs/compression.md` | Compression design, model split, eval, rejected alternatives | Changing compression — otherwise don't |
-| `docs/picked_shows.md` | Add by link — design, rulings, 3 Oct test; **not built** | Building it |
+| `docs/picked_shows.md` | Add by link — design, rulings, store, shelf rule, 3 Oct test | Changing Add by link |
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review | Before touching a reviewed venue |
 | `docs/review-log.md` | Independent review findings and decisions | A reviewer raises something |
