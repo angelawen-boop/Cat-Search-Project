@@ -294,8 +294,8 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 38.2 on her main app (2 Oct), 39 · cloud 4 on the test page** (4 Oct,
-Add by link); **39.1 built** (Import pop-up), waiting for her go. **Both pages
+**Live: 39.1 on her main app, 39.1 · cloud 4 on the test page** (4 Oct — Add
+by link, Import pop-up). **Both pages
 are published together, every time — her rule, 4 Oct:** the test page differs
 from her main app only by its cloud functions, never by falling behind. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -1006,7 +1006,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **39 · cloud 4**, published 4 Oct (Add by link). Cloud-only in it:
+live on the test page **39.1 · cloud 4**, published 4 Oct (Add by link). Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
