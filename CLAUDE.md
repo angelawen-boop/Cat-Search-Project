@@ -295,10 +295,10 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 39.2 on her main app, 39.2 · cloud 4 on the test page** (4 Oct, Import
-as CSV · Links, shop screen). 39.3 built, unpublished (§7.2). **Both pages are published together, every time — her rule, 4 Oct:** the
-test page differs from her main app only by its cloud functions, never by
-falling behind. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
+**Live: 39.2 on her main app (code on `main` is current), 39.2 · cloud 4 on the test page** (4 Oct, Import
+as CSV · Links, shop screen). 39.3 built, unpublished (§7.2). **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
+keeps up with it, merged, so her main app never falls behind — it is not
+republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
 `inClosingWindow`), Tracked and Dismissed inside "Details"; footer "Reset to
 Seed" and "Reset cards" (clears one card's lookup). Older numbers are in git.
@@ -1080,7 +1080,7 @@ is not an answer she accepts from a museum that has one.** No paste box, no
 skip. A venue the finder misses is a finder bug, fixed in code on a saved
 real search.
 
-**Next:** merge into `claude/ledger-cloud`, build both, ask before publishing.
+**Next:** publish 39.3 · cloud 4 to the test page only.
 
 ### 3. Fixes not yet checked in the cases they were written for
 
