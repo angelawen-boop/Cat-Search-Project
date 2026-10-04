@@ -2,7 +2,7 @@
  * "ADD BY LINK", PRESSED — her design, 3–4 Oct 2026 (docs/picked_shows.md).
  *
  * Renders the real app, loads a ledger through the real Load input, opens
- * Import Refresh → Paste links, pastes links the careless way she will, and
+ * Import, pastes links into its pop-up the careless way she will, and
  * presses Read — with the connector and Claude played by a script. Then it
  * reads the review back off the screen: the titles and dates she would see.
  *
@@ -90,7 +90,7 @@ const SHOPS = {
   'https://tienda.museothyssen.org/en': '[Catálogos](https://tienda.museothyssen.org/en/catalogos) [Libros](https://tienda.museothyssen.org/en/libros) [Regalos](https://tienda.museothyssen.org/en/regalos)' + filler,
   'https://shop.mauritshuis.nl/': '[Books](https://shop.mauritshuis.nl/en/books) [Prints](https://shop.mauritshuis.nl/en/prints)' + filler,
   'https://shop.clevelandart.org/': '[Exhibition Catalogs](https://shop.clevelandart.org/collections/exhibition-catalogs) [Mugs](https://shop.clevelandart.org/collections/mugs) [A Book](https://shop.clevelandart.org/products/a-book)' + filler,
-  'https://shop.courtauld.ac.uk/': '[Exhibition catalogues](https://shop.courtauld.ac.uk/exhibition-catalogues/) [Books](https://shop.courtauld.ac.uk/books/)' + filler,
+  'https://shop.courtauld.ac.uk/': '[Book of the month](https://shop.courtauld.ac.uk/blogs/book-of-the-month) [Georgia O’Keeffe: Ghost Ranch exhibition catalogue](https://shop.courtauld.ac.uk/georgia-okeeffe-exhibition-catalogue) [Exhibition catalogues](https://shop.courtauld.ac.uk/exhibition-catalogues/) [Books](https://shop.courtauld.ac.uk/books/)' + filler,
 };
 
 // ── the runtime: a store, a scripted connector and a scripted Claude ───────
@@ -171,20 +171,27 @@ function runtime() {
   // The sweep-file button: "Import Refresh" on main, "Import" on the cloud
   // branch (where main's ledger "Import" is "Load").
   const importBtn = () => buttons(/^Import Refresh$/)[0] || buttons(/^Import$/)[0];
-  // ── AL-001: Import Refresh opens the two ways in, and nothing else ────────
-  ok(buttons(/^CSV file$/).length === 0 && buttons(/^Paste links$/).length === 0, 'AL-001: before Import Refresh is pressed, neither choice is on screen');
+  // ── AL-001: Import opens ONE pop-up; nothing is added to the page ───────
+  // Her ruling, 4 Oct: no new buttons and no text in the page's header.
+  const dialog = () => win.document.querySelector('[role=dialog]');
+  const headerButtons = () => [...win.document.querySelector('header').querySelectorAll('button')].map(b => b.textContent.trim());
+  const before = headerButtons();
+  ok(!dialog(), 'AL-001: before Import is pressed, no pop-up');
   await click(importBtn());
-  ok(buttons(/^CSV file$/).length === 1 && buttons(/^Paste links$/).length === 1, 'AL-001a:  pressed, it offers "CSV file" and "Paste links"');
+  ok(!!dialog(), 'AL-001a:  pressed, a pop-up opens');
+  ok(JSON.stringify(headerButtons()) === JSON.stringify(before), 'AL-001b:  and not one button is added to the page itself', headerButtons().join(' | '));
   {
+    const inside = [...dialog().querySelectorAll('button')].map(b => b.textContent.trim());
+    ok(inside.join('|') === 'Close|CSV file|Read' && !!dialog().querySelector('textarea'),
+      'AL-001c:  inside: the box, and Close · CSV file · Read', inside.join(' | '));
     const csvInput = win.document.querySelector('input[type=file][accept=".csv,text/csv"]');
     let opened = false; csvInput.click = () => { opened = true; };
-    await click(buttons(/^CSV file$/)[0]);
-    ok(opened, 'AL-001b:  "CSV file" opens the file picker, as Import Refresh always did');
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'CSV file'));
+    ok(opened && !dialog(), 'AL-001d:  "CSV file" closes it and opens the file picker, as Import always did');
   }
   await click(importBtn());
-  await click(buttons(/^Paste links$/)[0]);
-  const box = win.document.querySelector('textarea');
-  ok(!!box && buttons(/^Read$/).length === 1, 'AL-002: "Paste links" opens one box and a Read button');
+  const box = dialog().querySelector('textarea');
+  ok(!!box, 'AL-002: the link box is in the pop-up');
 
   // ── AL-003: pasted carelessly — commas, spaces, lines, words, a repeat ─────
   const pasted = 'here you go: ' + WANT.slice(0, 4).map(w => urlOf(w[0])).join(', ') + ' ' + GRAND + '\n'
@@ -193,7 +200,7 @@ function runtime() {
   await act(async () => { setter.call(box, pasted); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
   await settle();
   calls.length = 0;
-  await click(buttons(/^Read$/)[0]);
+  await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
   await settle(30);
   const expand = buttons(/^Expand all venues$/)[0];
   if (expand) await click(expand);
@@ -240,13 +247,14 @@ function runtime() {
   ok(v('occ-clevelandart-org').shopCatalogues === 'https://shop.clevelandart.org/collections/exhibition-catalogs'
      && v('occ-clevelandart-org').shopSearch === 'https://shop.clevelandart.org/search?q=', 'AL-008d:  Cleveland: the catalogues collection, not mugs or a product, and Shopify\'s search', JSON.stringify(v('occ-clevelandart-org')));
   ok(v('occ-dia-org').shopHome === 'https://diashop.org/' && !v('occ-dia-org').shopCatalogues, 'AL-008e:  DIA: a shop whose menu came back empty keeps its address and claims no shelf');
+  ok(v('occ-courtauld-ac-uk').shopCatalogues === 'https://shop.courtauld.ac.uk/exhibition-catalogues/', 'AL-008h:  Courtauld: the shelf, not a blog post ("Book of the month") nor one book\'s page — her 4 Oct run', v('occ-courtauld-ac-uk').shopCatalogues);
   ok(v('occ-museothyssen-org').english === false && v('occ-dia-org').english === true, 'AL-008f:  whether a venue is English-speaking is kept, for the lookup\'s language check');
   ok(v('occ-dia-org').name === 'Detroit Institute of Arts Museum' && v('occ-courtauld-ac-uk').name === 'Courtauld', 'AL-008g:  a venue is named from the page title\'s site part', v('occ-courtauld-ac-uk').name);
 
   // ── AL-009: she confirms a shop, or says it is wrong ─────────────────────
   ok(buttons(/^Confirm$/).length === 6, 'AL-009: one Confirm per new venue', buttons(/^Confirm$/).length);
-  const lineOf = name => [...win.document.querySelectorAll('div')].find(d => d.firstChild && d.firstChild.textContent === name
-    && [...d.children].some(b => b.tagName === 'BUTTON' && b.textContent === 'Confirm'));
+  const lineOf = name => [...(dialog() || win.document).querySelectorAll('div')].find(d => d.firstChild && d.firstChild.textContent === name
+    && [...d.querySelectorAll('button')].some(b => b.textContent === 'Confirm'));
   await click([...lineOf('Museo Nacional Thyssen-Bornemisza').querySelectorAll('button')].find(b => b.textContent === 'Confirm'));
   ok(((store.get('venues/occasional') || {}).venues['occ-museothyssen-org'] || {}).confirmed === true && !lineOf('Museo Nacional Thyssen-Bornemisza'),
     'AL-009a:  Confirm keeps it and the line goes');
@@ -262,6 +270,8 @@ function runtime() {
   // ── AL-010: accepted, they file under their venues and the one chip ─────
   for (const b of buttons(/Add new entry$/)) await click(b);
   await click(buttons(/^Go ahead and update the ledger$/)[0]);
+  ok(!!dialog(), 'AL-010z:  after the review, she is back in the pop-up');
+  await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Close'));
   const chip = buttons(/^Occasional$/)[0];
   ok(!!chip, 'AL-010: an "Occasional" chip sits with the venue chips');
   await click(chip);

@@ -295,8 +295,9 @@ this one alone. `stitch` and `compress` carry it untouched.
 > forward. **Renaming the connector means restating them.**
 
 **Live: 38.2 on her main app (2 Oct), 39 · cloud 4 on the test page** (4 Oct,
-Add by link). Main app left at 38.2 — she works only on the test page; it
-catches up at the merge (§7.1). Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
+Add by link); **39.1 built** (Import pop-up), waiting for her go. **Both pages
+are published together, every time — her rule, 4 Oct:** the test page differs
+from her main app only by its cloud functions, never by falling behind. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
 `inClosingWindow`), Tracked and Dismissed inside "Details"; footer "Reset to
 Seed" and "Reset cards" (clears one card's lookup). Older numbers are in git.
@@ -392,7 +393,8 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
   anywhere.** Closing the search bar or Reset cards empties its box.
 - **Per-venue freshness**, two dates, from `swept_at`.
-- **Add by link** (39, her design 3–4 Oct): Import → CSV file / Paste links;
+- **Add by link** (39, her design 3–4 Oct): Import opens ONE pop-up (39.1 —
+  nothing added to the page itself): the link box, CSV file, Read;
   each link read once by code (title, dates) and the model (prose), then the
   same intake as a sweep. New venues file under one "Occasional" chip, shop
   found once and confirmed by her; both kept in the store. `docs/picked_shows.md`.

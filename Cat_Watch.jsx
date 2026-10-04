@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "39 · cloud 4";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
+const APP_VERSION = "39.1 · cloud 4";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
 const APP_VERSION_DATE = "4 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -1220,12 +1220,21 @@ function shopFromResults(results,rejected){
   }
   return "";
 }
-const SHELF_CATALOGUES=/exhibition[\s-]*(?:catalog|book|publication)|catalog(?:ue)?s?\b|cat[aá]logos?\b|catalogi\b|katalog/i;
-const SHELF_BOOKS=/\bbooks?\b|publications?\b|\blivres\b|\blibros\b|\bboeken\b|bücher|\blibri\b/i;
+// A SHELF IS A MENU ITEM, NOT A BOOK OR A POST — her first real run, 4 Oct:
+// the RA's pick was one book's page ("Painting the French Riviera exhibition
+// catalogue") and the Courtauld's a blog post ("Book of the month"). A menu
+// names a section in the PLURAL and in a few words; a book's page names one
+// catalogue in the singular. So: plural words only, six words at most, and
+// never a blog, news or journal address.
+const SHELF_CATALOGUES=/\bcatalogues\b|\bcatalogs\b|cat[a\u00e1]logos\b|\bcatalogi\b|\bcataloghi\b|\bkataloge\b/i;
+const SHELF_BOOKS=/\bbooks\b|\bpublications\b|\blivres\b|\blibros\b|\bboeken\b|b\u00fccher|\blibri\b/i;
+const NOT_A_SHELF=/\/(?:products?|p|blogs?|news|journal|articles?|stories)\/|[?&]q=|\/search/i;
 function shelfOnShop(text,home){
   const h=hostOf(home);
-  const links=mdLinks(text).filter(l=>hostOf(l.url)===h&&!/\/(?:products?|p)\/|[?&]q=|\/search/i.test(l.url));
-  const pick=re=>links.find(l=>re.test(l.label))||links.find(l=>re.test(decodeURIComponent(new URL(l.url).pathname).replace(/[-_/]/g," ")));
+  const links=mdLinks(text).filter(l=>hostOf(l.url)===h&&!NOT_A_SHELF.test(l.url));
+  const menuWords=l=>l.label&&l.label.split(/\s+/).length<=6;
+  const pathWords=l=>{ try{ return decodeURIComponent(new URL(l.url).pathname).replace(/[-_/]/g," "); }catch{ return ""; } };
+  const pick=re=>links.find(l=>menuWords(l)&&re.test(l.label))||links.find(l=>!l.label&&re.test(pathWords(l)));
   const c=pick(SHELF_CATALOGUES);
   if(c)return{url:c.url,kind:"catalogues"};
   const b=pick(SHELF_BOOKS);
@@ -2963,8 +2972,11 @@ export default function App(){
   const[prog,setProg]=useState({done:0,total:0,label:""});
   // ADD BY LINK — see the block above readShowPage. The box's text and the
   // occasional venues live in the page's store, not the ledger.
-  const[importMenu,setImportMenu]=useState(false);
-  const[linkPanel,setLinkPanel]=useState(false);
+  // ONE POP-UP FOR BOTH WAYS IN — her ruling, 4 Oct: nothing added to the
+  // page itself. Import opens it; the sweep file, the link box, what could not
+  // be read and the new venues' shops all live inside it.
+  const[importOpen,setImportOpen]=useState(false);
+  const[linkNote,setLinkNote]=useState(null);
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
   const[occVenues,setOccVenues]=useState({});
@@ -3766,7 +3778,7 @@ export default function App(){
   async function readLinks(){
     const urls=linksIn(linkText);
     if(!urls.length){ setLinkFails([{url:"",why:"No links found in the box."}]); return; }
-    setBusy(true); setError(null); setLinkFails([]);
+    setBusy(true); setLinkNote(null); setLinkFails([]);
     const got=[], fails=[];
     let venues={...occVenues}, venuesChanged=false;
     for(let n=0;n<urls.length;n++){
@@ -3810,10 +3822,10 @@ export default function App(){
     setLinkText(left); writePendingLinks(left); setLinkFails(fails);
     if(!got.length)return;
     const res=analyzeProForma(proFormaCsv(got),new Set(ignored.map(x=>x.key)),{notePrefix:""});
-    if(res.error){ setError(res.error); return; }
+    if(res.error){ setLinkNote(res.error); return; }
     if(!res.props.length){
       setTally(res.tally||null);
-      setError("Read "+got.length+" link"+(got.length===1?"":"s")+", but nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+".");
+      setLinkNote("Read "+got.length+" link"+(got.length===1?"":"s")+", but nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+".");
       return;
     }
     setProposals(res.props); setCoverage([]); setTally(res.tally||null); setSeenInFile(null); setDecisions({});
@@ -4987,35 +4999,9 @@ export default function App(){
               work. Says what it will DO, not what is currently on. */}
           <button onClick={toggleTheme} title={theme==="dark"?"Switch to light":"Switch to dark"}
             style={{...sBtn,marginLeft:"auto",padding:"5px 9px"}}>{theme==="dark"?"\u2600 Light":"\u263D Dark"}</button>
-          <button onClick={()=>setImportMenu(v=>!v)} style={sBtn}>Import</button>
-          {/* ONE DOOR, TWO WAYS IN — her design, 4 Oct: a sweep file, or links
-              pasted any old way. No new section, no new button row. */}
-          {importMenu&&<button onClick={()=>{setImportMenu(false);refreshFileRef.current?.click();}} style={sBtn}>CSV file</button>}
-          {importMenu&&<button onClick={()=>{setImportMenu(false);setLinkPanel(true);}} style={sBtn}>Paste links</button>}
+          <button onClick={()=>{setLinkNote(null);setImportOpen(true);}} style={sBtn}>Import</button>
           <input ref={refreshFileRef} type="file" accept=".csv,text/csv" onChange={handleRefreshFile} style={{display:"none"}}/>
         </div>
-        {linkPanel&&<div style={{marginTop:8}}>
-          <textarea value={linkText} onChange={e=>{setLinkText(e.target.value);saveLinksSoon(e.target.value);}} rows={4}
-            style={{width:"100%",boxSizing:"border-box",fontSize:12,fontFamily:"inherit",padding:"7px 9px",border:"1px solid "+C.rule,borderRadius:4,background:C.bg,color:C.ink,resize:"vertical"}}/>
-          <div style={{display:"flex",gap:5,marginTop:5}}>
-            <button onClick={readLinks} disabled={busy} style={pBtn}>Read</button>
-            <button onClick={()=>setLinkPanel(false)} style={sBtn}>Close</button>
-          </div>
-          {linkFails.map((f,i)=><div key={i} style={{marginTop:5,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
-            {f.url&&<a href={f.url} target="_blank" rel="noopener noreferrer" style={{color:TH.urgent.ink}}>{f.url}</a>}{f.url?" \u2014 ":""}{f.why}
-          </div>)}
-        </div>}
-        {/* A NEW VENUE'S SHOP, FOUND ONCE — she confirms it (her design,
-            3 Oct). Stays on screen until she does. */}
-        {Object.values(occVenues).filter(v=>!v.confirmed&&v.shop!=="unknown").map(v=>{
-          const link=v.shopCatalogues||v.shopHome;
-          return <div key={v.id} style={{marginTop:6,fontSize:11.5,color:C.ink,display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",lineHeight:1.4}}>
-            <span style={{fontWeight:600}}>{v.name}</span>
-            {link?<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.soft,overflowWrap:"anywhere"}}>{link}</a>
-              :<span style={{color:C.soft}}>No museum shop found.</span>}
-            <button onClick={()=>decideVenue(v.id,true)} style={sBtn}>Confirm</button>
-            {link&&<button onClick={()=>decideVenue(v.id,false)} style={sBtn}>Wrong shop</button>}
-          </div>;})}
         {/* THE SAVE PANEL — her design, 26 Sep. The description names the
             offline file AND its cloud twin; the tick starts on, her ruling. */}
         {showSave&&hasLedger&&<div style={{marginTop:8,padding:"10px 12px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
@@ -5073,8 +5059,10 @@ export default function App(){
             {saveNote.file&&<span style={{color:C.ink,fontWeight:400}}>{" ("+saveNote.file+")"}</span>}
           </div>}
         </div>
-        {hasLedger&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.okBg,border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.okInk,lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
-          <span style={{fontSize:17,lineHeight:1}}>{"\u21BB"}</span>
+        {hasLedger&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.okBg,border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.okInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
+          {/* The icon sits on the FIRST line of text (her ask, 4 Oct): the
+              banner wraps, and centred it drifted between the lines. */}
+          <span style={{fontSize:17,lineHeight:"17.5px"}}>{"\u21BB"}</span>
           {/* EVERY CARD SHE LOOKED AT IS ACCOUNTED FOR IN THIS ONE SENTENCE,
               which is the whole job of it. Partial apply put cards somewhere
               the sentence did not name \u2014 neither applied nor refused \u2014 so the
@@ -5536,6 +5524,43 @@ export default function App(){
           ))}
         </div>}
       </div>
+      {/* THE IMPORT POP-UP — her ruling, 4 Oct: everything for Import lives
+          here, nothing on the page. Under the review (1100) so the cards it
+          produces open on top and she comes back to it after; under the
+          confirm box (1200), like every overlay. */}
+      {importOpen&&(
+        <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",padding:16}}>
+          <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
+            <div style={{overflow:"auto",padding:"16px 18px",flex:1}}>
+              <textarea value={linkText} onChange={e=>{setLinkText(e.target.value);saveLinksSoon(e.target.value);}} rows={6}
+                style={{width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"8px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,resize:"vertical"}}/>
+              {busy&&prog.total>0&&<div style={{marginTop:6,fontSize:11,color:C.soft}}>{prog.label}</div>}
+              {linkNote&&<div style={{marginTop:6,fontSize:11.5,color:C.soft,lineHeight:1.45}}>{linkNote}</div>}
+              {linkFails.map((f,i)=><div key={i} style={{marginTop:6,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
+                {f.url&&<a href={f.url} target="_blank" rel="noopener noreferrer" style={{color:TH.urgent.ink}}>{f.url}</a>}{f.url?" \u2014 ":""}{f.why}
+              </div>)}
+              {/* A NEW VENUE'S SHOP, FOUND ONCE — she confirms it (her design,
+                  3 Oct). Stays here until she does. */}
+              {Object.values(occVenues).filter(v=>!v.confirmed&&v.shop!=="unknown").map(v=>{
+                const link=v.shopCatalogues||v.shopHome;
+                return <div key={v.id} style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,fontSize:11.5,color:C.ink,lineHeight:1.45}}>
+                  <div style={{fontWeight:600}}>{v.name}</div>
+                  {link?<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.soft,overflowWrap:"anywhere"}}>{link}</a>
+                    :<span style={{color:C.soft}}>No museum shop found.</span>}
+                  <div style={{display:"flex",gap:6,marginTop:5}}>
+                    <button onClick={()=>decideVenue(v.id,true)} style={sBtn}>Confirm</button>
+                    {link&&<button onClick={()=>decideVenue(v.id,false)} style={sBtn}>Wrong shop</button>}
+                  </div>
+                </div>;})}
+            </div>
+            <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:8,alignItems:"center"}}>
+              <button onClick={()=>setImportOpen(false)} disabled={busy} style={sBtn}>Close</button>
+              <button onClick={()=>{setImportOpen(false);refreshFileRef.current?.click();}} disabled={busy} style={{...sBtn,marginLeft:"auto"}}>CSV file</button>
+              <button onClick={readLinks} disabled={busy} style={pBtn}>Read</button>
+            </div>
+          </div>
+        </div>
+      )}
       {proposals&&(
         <div style={{position:"fixed",inset:0,background:"rgba(20,18,16,0.5)",zIndex:1100,display:"flex",flexDirection:"column",padding:16}}>
           <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
