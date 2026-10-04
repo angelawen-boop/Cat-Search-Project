@@ -403,12 +403,16 @@ check('18f: the real sample file starts with every card undecided',
 // Her order of 27 Sep replaces both: the Ashmolean after Tate Britain; Tate
 // Modern and MAM Paris last; the headed venues before them.
 {
-  const want=['met','rijks','ng','acq','lgd','frick','menil','artic','wallace',
+  const want=['met','rijks','ng','acq','lgd','frick','menil','artic','cincinnati','wallace',
     'tate-britain','ashmolean','va','louvre','orsay','mad','jacquemart','khm','uffizi','dellav',
     'borghese','brera','capo','morgan','brit','moma','tate-modern','mam'];
   const got=H.MUSEUMS.map(m=>m.id);
   check('19: the venues are in her order', got.join()===want.join(), {got});
-  check('19a: and all 27 are still there', got.length===27, {count:got.length});
+  check('19a: and all 28 are still there', got.length===28, {count:got.length});
+  // 19b. A venue in MUSEUMS is a venue the import files — Cincinnati, 4 Oct.
+  H.setRows([]);
+  const ci=H.analyzeProForma(hdr+row(['cincinnati','Tintoretto’s Genesis','2025-04-18','2025-08-31','In the early 1550s.','https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/2025/tintorettos-genesis/','']));
+  check('19b: a cincinnati row is an Add card filed under Cincinnati', ci.props && ci.props.length===1 && ci.props[0].type==='add' && ci.props[0].cand.museumId==='cincinnati', ci.props);
 }
 
 // 20. QUARANTINE LIVES IN TWO PLACES AND THE LATEST DECISION WINS — her choice

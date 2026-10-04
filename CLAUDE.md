@@ -1124,14 +1124,11 @@ the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
 needing a re-sweep or a code change waits for her. She then does the home
 sweep, and a session with her stitches and compresses (her design, 2 Oct).
 
-### 6a. Cincinnati — the app does not know it yet (4 Oct)
+### 6a. Cincinnati — first sweep 5 Oct (~2am Sydney)
 
-Recipe and fixture on `main` (CI-001–021). **The app's venue entry is on
-branch `claude/blissful-volta-jxj5c0`, not `main`** — her instruction, other
-JSX work in flight; merge when she says, then bump the version. Until then a
-sweep's `cincinnati` rows are refused on import — and the monthly container
-sweep (5 Oct, ~2am Sydney) is its first sweep — check its 31 against her count. On the branch: chip "Cincinnati" after Artic, its
-imprint in `SELF_PUBLISHERS` (her rulings, 4 Oct); fixtures 19b, C-146b.
+Recipe, fixture and app entry all on `main` (CI-001–021, 19b, C-146b): chip
+"Cincinnati" after Artic, imprint in `SELF_PUBLISHERS` (her rulings, 4 Oct).
+Check the sweep's rows against her 31; then cut this item to its result.
 
 ### 7. Smaller, parked
 
