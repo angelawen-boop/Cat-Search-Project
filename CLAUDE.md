@@ -1037,10 +1037,10 @@ an empty page never saves.
 **Her tests, all passed (26 Sep–1 Oct):** load, change, reload, roll-back,
 Save, Download and Load, close and reopen, a real sweep Import.
 
-**Two copies open: the later one is READ ONLY** (her ruling, 1 Oct). It shows
-the cloud copy and writes nothing; an edit record with a heartbeat decides,
-stale after a minute; every save checks it first. A reload or republish in the same tab takes over its own record — a publish once locked her open page for a minute (2 Oct). Design: "ONE COPY EDITS AT A TIME" in the code;
-`cloud_two_copies.js`, TC-001–012.
+**Two copies open: the later one is READ ONLY** (her ruling, 1 Oct). It opens
+empty and writes nothing — "Open it" shows the cloud copy when she asks, never by itself (her ruling, 4 Oct); an edit record with a heartbeat decides,
+stale after a minute; every save checks it first. A republish while her page is open can lock the new page for up to a minute — accepted, her ruling 4 Oct (a same-tab fix did not hold and was removed). Design: "ONE COPY EDITS AT A TIME" in the code;
+`cloud_two_copies.js`, TC-001–010.
 
 **Next:**
 1. Her normal use, over several sessions; she reports what surfaces. On request,
