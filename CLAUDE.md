@@ -295,8 +295,8 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 39.3 · cloud 4 on the test page** (4 Oct, Import as CSV · Links, shop
-screen; 39.4 built); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
+**Live: 39.4 · cloud 4 on the test page** (4 Oct, Import as CSV · Links, shop
+screen, nothing kept from an unfinished import); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -1011,7 +1011,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **39.3 · cloud 4**, published 4 Oct (Detroit's shop, Cancel import). Cloud-only in it:
+live on the test page **39.4 · cloud 4**, published 4 Oct (nothing kept from an unfinished import; books-only shop sections). Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
@@ -1063,7 +1063,7 @@ stale after a minute; every save checks it first. A republish while her page is 
 4. Google Drive backup by button — on the table, never automatic.
 
 
-### 2. Add by link — 39.4 built, her test next
+### 2. Add by link — 39.4 live on the test page, her test next
 
 **Her rule, 4 Oct: an import she does not finish keeps NOTHING** — CSV or
 links. The Read's venues and shops, Confirm, No shop and Look again are held in
