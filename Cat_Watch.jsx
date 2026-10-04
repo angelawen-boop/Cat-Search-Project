@@ -2169,25 +2169,11 @@ function cloudTrouble(e,verb){
 // read only itself; and every cloud save checks the record first, so a
 // sleeping copy's first act on waking can never be overwriting the live
 // ledger. Read only lasts until the page is reloaded.
-//
-// A RELOAD IN THE SAME TAB IS THE SAME COPY — her finding, 2 Oct. A republish
-// swaps the open page for the new one without the old one letting go, so the
-// new page found its own predecessor's fresh record and locked itself out for
-// a minute. So each page keeps its id in the tab's own memory (sessionStorage,
-// which a reload keeps and another tab or device never sees), and on its way
-// out marks that id as gone. The next page in that tab takes over a record
-// carrying that id. The "gone" mark is what stops a DUPLICATED tab, which
-// copies the tab's memory while the first page is still open, from doing the
-// same. No tab memory (blocked) → exactly as before.
 const CLOUD_SESSION_DOC="ledger/session";
 const RO_LINE="Read only — Cat Watch is open in another tab or device. Close it there, then reload this one.";
 const SESSION_BEAT_MS=20000;
 const SESSION_STALE_MS=60000;
 const CLOUD_SESSION_ID=cloudNewId("t");
-const TAB_ID_KEY="cw-tab-id", TAB_LEFT_KEY="cw-tab-left";
-let CLOUD_SESSION_PREV=null;
-try{ const ss=window.sessionStorage; const prev=ss.getItem(TAB_ID_KEY), left=ss.getItem(TAB_LEFT_KEY);
-  if(prev&&left===prev)CLOUD_SESSION_PREV=prev; ss.removeItem(TAB_LEFT_KEY); ss.setItem(TAB_ID_KEY,CLOUD_SESSION_ID); }catch{}
 let cloudReadOnly=false;
 
 // The store, with every write refused. Reads pass through.
@@ -2204,7 +2190,7 @@ async function cloudSessionClaim(db,now){
   const t=now||Date.now();
   let cur=null;
   try{ const snap=await db.doc(CLOUD_SESSION_DOC).get(); cur=snap.exists?snap.data():null; }catch{}
-  if(cur&&cur.id!==CLOUD_SESSION_ID&&cur.id!==CLOUD_SESSION_PREV&&t-Date.parse(cur.beat)<SESSION_STALE_MS)return "other";
+  if(cur&&cur.id!==CLOUD_SESSION_ID&&t-Date.parse(cur.beat)<SESSION_STALE_MS)return "other";
   await db.doc(CLOUD_SESSION_DOC).set({id:CLOUD_SESSION_ID,beat:new Date(t).toISOString()});
   return "mine";
 }
@@ -3219,8 +3205,7 @@ export default function App(){
     const beat=async()=>{ if(cloudReadOnly)return; const raw=await rawStore(); if(!raw)return;
       try{ if(await cloudSessionClaim(raw)==="other")goReadOnly(); }catch{} };
     const t=setInterval(beat,SESSION_BEAT_MS);
-    const bye=async()=>{ try{ window.sessionStorage.setItem(TAB_LEFT_KEY,CLOUD_SESSION_ID); }catch{}
-      if(cloudReadOnly)return; const raw=await rawStore(); if(!raw)return;
+    const bye=async()=>{ if(cloudReadOnly)return; const raw=await rawStore(); if(!raw)return;
       try{ const snap=await raw.doc(CLOUD_SESSION_DOC).get(); if(snap.exists&&(snap.data()||{}).id===CLOUD_SESSION_ID)await raw.doc(CLOUD_SESSION_DOC).delete(); }catch{} };
     window.addEventListener("pagehide",bye);
     return()=>{ clearInterval(t); window.removeEventListener("pagehide",bye); };

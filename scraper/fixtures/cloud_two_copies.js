@@ -113,27 +113,6 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     A.click(A.star());
     ok(await until(() => RO.test(A.text())), 'TC-009: a copy that slept while another took over turns read only on its next save');
     ok(liveSaved() === b3, 'TC-010:   and writes nothing over the other copy’s ledger');
-
-    // The same tab, reloaded — her finding, 2 Oct: a republish swaps the open
-    // page without its record being let go. The tab's own memory carries over.
-    const cId = session().id;
-    const sameTab = from => {
-      const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'https://claude.ai/' });
-      const ss = from.win.sessionStorage;
-      for (let i = 0; i < ss.length; i++) dom.window.sessionStorage.setItem(ss.key(i), ss.getItem(ss.key(i)));
-      return dom;
-    };
-    // A DUPLICATED tab copies that memory while C is still open: still read only.
-    const D = await open(sameTab(C));
-    await settle(600);
-    ok(RO.test(D.text()) && session().id === cId, 'TC-011: a duplicate of an open tab is still read only');
-    // C leaves (the republish), and its record is left behind, fresh.
-    C.win.dispatchEvent(new C.win.Event('pagehide'));
-    await settle(100);
-    store.docs.set('ledger/session', JSON.stringify({ id: cId, beat: new Date().toISOString() }));
-    const E = await open(sameTab(C));
-    await settle(600);
-    ok(!RO.test(E.text()) && session().id !== cId, 'TC-012: the page that replaces it in the same tab edits, not read only');
   } catch (e) {
     fail++; console.log('FAIL  the run stopped — ' + (e && e.stack || e));
   }
