@@ -38,34 +38,59 @@ approval), runs the final QC and hands her the CSV. This job does none of that.
    `node scraper/sweep_prototype.js --continue` — it asks only for venues with
    no file, so a finished venue is never swept again. **Once.** A venue still
    missing after that is a fault for the report.
-4. **QC — all of it, read, not only counted:**
-   - `node scraper/qc.js <run>` — exit 1 means faulty rows. Name each one.
-   - Its exceptions: counts dropped, venues gone to markers only, summaries lost.
-   - `node scraper/venue_status.js` — rows per venue now against the last run
-     that brought rows.
+4. **QC — `node scraper/qc.js <run>`.** Exit 1 means faulty rows: name each.
+   Its second half, **CHANGES SINCE EACH VENUE'S LAST RUN**, is the
+   comparison done for you, by address, with the cause read from the run's
+   own log and notes. **Its causes are facts — repeat them, never re-guess
+   them.** A row it marks `excluded … (log)` was dropped by her ruling; a
+   `MOVED` row is the same show at a new address; `KEPT BY RULE` is the
+   lookback rule working; `SAME NAME` is the no-de-duplication rule working;
+   `LOST TEXT … (note)` says why. None of these is junk or a fault.
+5. **Your job is what the code could not settle:**
+   - **Every `UNEXPLAINED` row** and every `EMPTY PAGE` needing a look. For
+     each: open the log section for that venue (`grep '\[<venue>\]'` the
+     log), the row in the earlier run, and the kept pages
+     (`scraper/output/pages_kept/<venue>/`) or saved pages under `docs/`.
+     Find the cause. No network request — if only the live site can settle
+     it, say exactly which one page would.
+   - **Every `JUNK?` row**: confirm or clear it by reading the whole summary.
+   - **Read every title and summary in `sweep.csv`** for junk the patterns
+     miss: cookie notices, prices, opening hours, breadcrumbs, menu text,
+     whole pages, broken characters, halved or run-together titles, a show
+     whose own dates put it before the lookback, notes quoting a page instead
+     of a match. `CLAUDE.md` §2 rulings decide what belongs; a row her ruling
+     excludes appearing is a fault.
    - The log's TITLES section (titles the page check changed or could not
      complete).
-   - **Read every title and summary in `sweep.csv`** for junk: cookie
-     notices, credit lines, prices, opening hours, breadcrumbs, menu text,
-     whole pages, broken characters, halved or run-together titles, notes that
-     quote a page instead of a match. The rulings in `CLAUDE.md` §2 decide
-     what belongs; a row her ruling excludes appearing is a fault.
-5. **Every fault: diagnose offline** — the log, reply labels, stall report,
-   kept pages (`scraper/output/pages_kept/`), saved pages under `docs/`. Say
-   what is proven, what is a guess, and what would settle it. No network
-   request to answer a question.
+
+   **Before you call anything a fault, check it against the rule.** Two rows
+   are a duplicate only at the SAME address. A row is outside the lookback
+   only if its CLOSING date is before 1 July 2024 — no closing date means
+   kept. Before you write "probably", "looks like" or "a guess", run the
+   check that would settle it; a guess is allowed only when the one thing
+   that settles it is the live site, and then you name that page.
+   **The report is not finished while any UNEXPLAINED row has no cause.**
 6. `git add scraper/output scraper/robots`, commit ("Monthly container sweep <run>"),
    `git pull --rebase origin main`, push to `main`. Retry the push on network
    failure only (2s, 4s, 8s, 16s).
 
 ## The report — to her, plain English, short bullets
 
+She works IN this session after reading it, so it must be ready to act on.
+
 - The run folder, and done / done with faults.
-- Per venue: rows this run, rows last time; anything that changed sharply.
-- **Faults** — each one: what, which rows, the likely cause (labelled proven or
-  guess), the proposed fix, and whether it needs a code change or a re-sweep.
-  "Waiting for you" on every one.
-- Venues refused or blocked (marker rows) — said as a fact, not a fault.
-- Last line: "Next: your home sweep, then stitch and compress."
+- **Changes** — one line per venue that changed: rows last time → now, and
+  the cause in a few words (from QC, or what you found). Venues unchanged:
+  one line naming them.
+- **Faults** — numbered, each in this shape:
+  - **What:** the rows, by title.
+  - **Cause:** what you found — **proven** (say from what: log line, note,
+    kept page) or **guess** (and the one page that would settle it).
+  - **Fix:** the change you propose, and whether it is code, a recipe, or a
+    re-sweep (a re-sweep is always hers to call).
+- **Expected, not faults** — your rulings taking effect, moved shows, rows
+  kept by rule, refusals (marker rows), in one short list.
+- Last lines: "Say which faults to fix." then "Next: your home sweep, then
+  stitch and compress."
 
 Talk TO her ("you"), never about her.

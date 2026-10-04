@@ -566,7 +566,7 @@ through `sample` at `modelTier: default`. Do not re-open without a real misread.
 
 | | |
 |---|---|
-| unit fixtures | `date.test.js`, `compress.test.js`, `qc.test.js`, `sweep_log.test.js`, `venue_status.test.js`, `pacing.test.js` |
+| unit fixtures | `date.test.js`, `compress.test.js`, `qc.test.js`, `sweep_log.test.js`, `venue_status.test.js`, `pacing.test.js`, `sweep_diff.test.js` |
 | `intake_cases.js` | folding, quarantine, freshness, the ledger gate |
 | `page_loads.js`, `page_renders.js` | does the page load; does it DRAW (jsdom, plain and with the runtime answering) |
 | `add_by_link.js` | Add by link on the 3 Oct pages (`docs/link_pages/`): titles, dates, unread links, new venues' shops, the chip (AL-) |
@@ -611,6 +611,7 @@ node scraper/compress.js <run>               plan, and write the subagent job fi
 node scraper/compress.js <run> --check       verify the answers before they land
 node scraper/compress.js <run> --apply       write sweep_compressed.csv
 node scraper/qc.js <run|stitch>              faulty rows + exceptions; exit 1 on a fault
+node scraper/sweep_diff.js <run>             each venue vs its last run, by address, causes from the log (qc.js prints it for a run)
 node scraper/sweep_log.js [--json]           rebuild the app's freshness dates
 node scraper/venue_status.js                 what each venue currently yields
 node scraper/robots.js [--report]            each site's robots.txt: its wait and off-limits paths
