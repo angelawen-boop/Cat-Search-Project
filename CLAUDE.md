@@ -1062,14 +1062,47 @@ stale after a minute; every save checks it first. A republish while her page is 
 4. Google Drive backup by button — on the table, never automatic.
 
 
-### 2. Add by link — first use, 4 Oct
+### 2. Add by link — 39.3 in progress (uncommitted work committed as WIP, 4 Oct)
 
-- **OPEN — her report: Read and approve left the ledger at 0**, only the new
-  rows in it (test page, after a republish). Her cloud copy was untouched (594
-  rows, saved 3 Oct); the screenshot read "not yet updated this session". Cause
-  unproven. If it recurs: "Show diagnostic" first, before anything else.
-- Card short names are in the test page's store only; her main app's
-  `venues/occasional` is empty until a link is read there.
+**Live is 39.2** (both pages). 39.3 is built in `Cat_Watch.jsx` on `main`, NOT
+published, version still reads 39.2 — bump to 39.3 before building.
+
+Done in code, from her 4 Oct test of 39.2 (screenshots):
+- CSV / Links: Load/Save's size and style, both plain; the pressed one green.
+  The two-button pop-up is `width: fit-content`.
+- The header's progress bar is hidden while the Import pop-up is open (it
+  duplicated the pop-up's own).
+- Shop screen: title **"New Venue Shops"**, line **"Check and approve each shop
+  link."** Buttons are the review cards' `decBtn`: Confirm ticks green like "Add
+  new entry", No shop like "Reject". **Always Confirm · Look again · No shop in
+  that order**; Confirm greyed when no section was found. "Shop found, but not
+  its books section: <shop link>" vs "No museum shop found." vs "Search failed."
+- **Every new venue met in the Read is listed**, whatever her card decisions
+  (`readVenues`). 39.2 listed only venues with a card going in, so the RA and
+  Courtauld were missing — a rule nobody asked for, removed.
+- Finder search sends two queries in one call: hers, plus "<venue> shop books
+  publications". **Unproven** — Detroit's "Books & Stationery - DIA
+  Publications" (Google's 3rd) never came back from Parallel; the free tier
+  then refused the test. One keyed search settles it — ask her first.
+
+**Test state:** `add_by_link.js` passes except AL-010a, which still expects 10
+shows — the test now rejects the RA card, so 9 is right. Pending edit: AL-010a
+→ 9, AL-010b → check a Cleveland card, add AL-002a (pressed Links is solid,
+CSV transparent). Then `npm test`, then merge into `claude/ledger-cloud`,
+build both, ask before publishing.
+
+**Waiting on her:**
+1. Her note "the import review screen for importing links — the cancel button
+   that says 'cancel refresh'" was cut off. Ask what she wants it to say.
+2. **No way past the shop screen** when Look again fails and No shop is wrong
+   (Detroit today) — she would have to cancel the whole import. Offer: paste
+   the right link herself, and/or "Skip for now" (shop stays unconfirmed, asked
+   again next Read). Her call; build nothing until she picks.
+
+Her store, read 4 Oct: Cleveland, Mauritshuis, Thyssen confirmed; RA
+(`shop.royalacademy.org.uk/books/bookshop/exhibition-catalogues`) and Courtauld
+(`/collections/courtauld-catalogues`) found, unconfirmed; Detroit `noshelf`.
+Card short names are in the test page's store only.
 
 ### 3. Fixes not yet checked in the cases they were written for
 

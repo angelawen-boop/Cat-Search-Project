@@ -22,8 +22,9 @@ one the moment she comes across it.
   ends; the pop-up closes, or waits under the review if a link failed.
 - **Then the shop screen** (her design, 4 Oct): with a card going in from a
   venue outside her 27 whose shop is unconfirmed, the review's last button is
-  **Next** → one card per venue: **Confirm · Look again** (a section found) or
-  **Look again · No shop**. **The ledger moves only when every one is
+  **Next** → one card per new venue met in the Read (whatever her card
+  decisions): **Confirm · Look again · No shop**, always in that order, the
+  review cards' button style. **The ledger moves only when every one is
   answered.** Back returns to the review. Confirmed once, never asked again.
 - **The ordinary review.** Each link becomes a pro forma row fed to the
   existing intake: Add / Fill / Change / Reject / quarantine all as now.
