@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "39.2";
+const APP_VERSION = "39.3";
 const APP_VERSION_DATE = "4 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -1340,7 +1340,10 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
     return null;
   };
   // 1. The search.
-  const s=await searchWeb("The museum shop's exhibition catalogues section of "+venueName+".",[venueName+" shop exhibition catalogues"]);
+  // Two queries, ONE search call: her own, and the books section's — Detroit's
+  // "Books & Stationery - DIA Publications" (Google's 3rd, 4 Oct) never came
+  // back for the first alone.
+  const s=await searchWeb("The museum shop's exhibition catalogues or books section of "+venueName+".",[venueName+" shop exhibition catalogues",venueName+" shop books publications"]);
   if(!s.ok)died=s.detail;
   const mine=(s.results||[]).filter(r=>r&&place(r.url));
   seenText+="\n"+mine.map(r=>r.url).join("\n");
@@ -2834,6 +2837,7 @@ export default function App(){
   // looked for again.
   const[shopScreen,setShopScreen]=useState(null);
   const[shopLooking,setShopLooking]=useState(null);
+  const[readVenues,setReadVenues]=useState([]);   // the new venues the last Read met
   const[linkNote,setLinkNote]=useState(null);
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
@@ -3366,6 +3370,7 @@ export default function App(){
   };
 
   function handleRefreshFile(e){
+    setReadVenues([]);
     const file=e.target.files[0]; if(!file)return;
     const reader=new FileReader();
     reader.onload=()=>{
@@ -3395,7 +3400,7 @@ export default function App(){
     const urls=linksIn(linkText);
     if(!urls.length){ setLinkFails([{url:"",why:"No links found in the box."}]); return; }
     setBusy(true); setLinkNote(null); setLinkFails([]);
-    const got=[], fails=[];
+    const got=[], fails=[], met=new Set();
     let venues={...occVenues}, venuesChanged=false;
     for(let n=0;n<urls.length;n++){
       const url=urls[n];
@@ -3415,6 +3420,7 @@ export default function App(){
         let vc=knownVenueFor(host);
         if(!vc){
           vc=occVenueId(host);
+          met.add(vc);
           const had=venues[vc];
           // Looked for once and kept. Looked for again only while she has not
           // confirmed it AND it was found by the finder before 4 Oct's (which
@@ -3439,7 +3445,7 @@ export default function App(){
       }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
     }
     if(venuesChanged){ registerOccasional(venues); setOccVenues(venues); writeOccasional(venues); }
-    setProg({done:0,total:0,label:""}); setBusy(false);
+    setProg({done:0,total:0,label:""}); setBusy(false); setReadVenues([...met]);
     const left=fails.map(x=>x.url).join("\n");
     setLinkText(left); writePendingLinks(left); setLinkFails(fails);
     if(!got.length)return;
@@ -3477,18 +3483,14 @@ export default function App(){
       const next={...prev,[id]:{...prev[id],shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,...shop,confirmed:false,turnedDown}};
       registerOccasional(next); writeOccasional(next); return next; });
   }
-  // WHICH VENUES THE SHOP SCREEN ASKS ABOUT: a venue outside her 27 with a
-  // card going into the ledger, whose shop she has not confirmed. A venue whose
-  // every card she rejected is not asked about.
-  function cardGoesIn(p,dec){
-    if(p.type==="add")return dec.mode==="accept";
-    if(dec.mode==="addnew")return true;
-    return Object.values(dec.fields||{}).some(x=>x==="accept");
-  }
+  // WHICH VENUES THE SHOP SCREEN ASKS ABOUT: every venue outside her 27 met
+  // in this read (or on a card) whose shop she has not confirmed — whatever she
+  // decided about its cards (her ruling, 4 Oct: the RA and the Courtauld were
+  // left off when their cards were not going in).
   function venuesToConfirm(){
-    const ids=new Set();
-    (proposals||[]).forEach((p,i)=>{ const id=(p.cand||{}).museumId;
-      if(isOcc(id)&&occVenues[id]&&!occVenues[id].confirmed&&cardGoesIn(p,decisions[i]||{}))ids.add(id); });
+    const ids=new Set(readVenues);
+    (proposals||[]).forEach(p=>{ const id=(p.cand||{}).museumId; if(isOcc(id))ids.add(id); });
+    for(const id of [...ids]) if(!occVenues[id]||occVenues[id].confirmed)ids.delete(id);
     return [...ids].sort((a,b)=>String(occVenues[a].name).localeCompare(String(occVenues[b].name)));
   }
   // THE REVIEW'S LAST BUTTON. With a shop to confirm it is "Next" and opens
@@ -3582,14 +3584,14 @@ export default function App(){
     // looking at. A count handed in from the caller is a second copy.
     const leftUndecided=proposals.filter((p,i)=>isUndecidedCard(p,decisions[i])).length;
     commit(Array.from(byId.values()),new Date().toISOString());
-    setShopScreen(null);
+    setShopScreen(null); setReadVenues([]);
     setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length,left:partial?leftUndecided:0});
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
     setVenueF(new Set()); setTimeF(new Set()); setWatchedF(false);
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqBuyNext(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
-  function cancelRefresh(){ setShopScreen(null); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
+  function cancelRefresh(){ setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   const pickSort=k=>{setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
   // refreshVenues() REMOVED 20 Sep 2026. It had the app gathering its own
@@ -4661,7 +4663,7 @@ export default function App(){
           <span style={{fontSize:17,lineHeight:1.1}}>{"\u26A0"}</span>
           <span>{"QUARANTINE \u2014 "+quarWhy}</span>
         </div>}
-        {busy&&prog.total>0&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
+        {busy&&prog.total>0&&!importMode&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
         {error&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
         {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>
           {/* COPY — her ask, 30 Sep; an icon alone, inside the tray at its
@@ -5054,10 +5056,13 @@ export default function App(){
           box (1200), like every overlay. */}
       {importMode&&(
         <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",justifyContent:"center",padding:16}}>
-          <div style={{background:C.bg,borderRadius:8,maxWidth:importMode==="links"?820:320,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"18px 18px 12px"}}>
-            <div style={{display:"flex",gap:10,justifyContent:"center"}}>
-              <button onClick={()=>{setImportMode(null);refreshFileRef.current?.click();}} disabled={busy} style={{...sBtn,fontSize:12.5,padding:"7px 22px"}}>CSV</button>
-              <button onClick={()=>setImportMode("links")} disabled={busy} style={{...sBtn,fontSize:12.5,padding:"7px 22px",...(importMode==="links"?{borderColor:C.ink,color:C.ink}:{})}}>Links</button>
+          {/* Sized to what it holds: the two buttons alone, or the box too.
+              CSV and Links are Load and Save's size and style, both plain; the
+              one pressed turns green, as Save is (her design, 4 Oct). */}
+          <div style={{background:C.bg,borderRadius:8,...(importMode==="links"?{maxWidth:820,width:"100%"}:{width:"fit-content"}),margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px"}}>
+            <div style={{display:"flex",gap:5,justifyContent:"center"}}>
+              <button onClick={()=>{setImportMode(null);refreshFileRef.current?.click();}} disabled={busy} style={sBtn}>CSV</button>
+              <button onClick={()=>setImportMode("links")} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>Links</button>
             </div>
             {importMode==="links"&&<div style={{marginTop:14}}>
               <textarea value={linkText} onChange={e=>{setLinkText(e.target.value);saveLinksSoon(e.target.value);}} rows={8} disabled={busy}
@@ -5075,7 +5080,7 @@ export default function App(){
                 {f.url&&<a href={f.url} target="_blank" rel="noopener noreferrer" style={{color:TH.urgent.ink}}>{f.url}</a>}{f.url?" \u2014 ":""}{f.why}
               </div>)}
             </div>}
-            <div style={{textAlign:"center",marginTop:14}}>
+            <div style={{textAlign:"center",marginTop:10}}>
               <button onClick={()=>setImportMode(null)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
             </div>
           </div>
@@ -5419,26 +5424,33 @@ export default function App(){
           Over the review (1100), under the confirm box (1200). */}
       {shopScreen&&proposals&&(()=>{
         const left=shopScreen.ids.filter(id=>!(occVenues[id]||{}).confirmed||shopLooking===id).length;
-        const on={borderColor:C.accent,color:C.accent,fontWeight:600};
         return <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1150,display:"flex",flexDirection:"column",padding:16}}>
           <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
             <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
-              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>New venues{"\u2019"} shops</div>
-              <div style={{fontSize:11.5,color:C.soft,marginTop:4}}>Catalogue lookups search the section you confirm.</div>
+              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>New Venue Shops</div>
+              <div style={{fontSize:11.5,color:C.soft,marginTop:4}}>Check and approve each shop link.</div>
             </div>
             <div style={{overflow:"auto",padding:"4px 18px 14px",flex:1}}>
+              {/* THE BUTTONS ARE THE REVIEW CARDS' (decBtn): the same size, and a
+                  decision turns solid with a tick — Confirm green as "Add new
+                  entry", No shop as "Reject". Always the same three in the same
+                  places (her ruling, 4 Oct); Confirm is greyed while there is
+                  no section to confirm. */}
               {shopScreen.ids.map(id=>{
                 const v=occVenues[id]||{}, link=v.shop==="found"?v.shopCatalogues:null, looking=shopLooking===id;
-                const said=v.shop==="found"?null:v.shop==="none"?"No museum shop found.":v.shop==="failed"?"Search failed.":"Books section not found.";
+                const home=v.shop==="noshelf"||v.shop==="failed"?v.shopHome:null;
+                const said=v.shop==="found"?null:v.shop==="noshelf"?"Shop found, but not its books section: "
+                  :v.shop==="failed"?"Search failed.":"No museum shop found.";
+                const yes=v.confirmed&&v.shop==="found", none=v.confirmed&&v.shop==="none";
                 return <div key={id} style={{paddingTop:12,marginTop:10,borderTop:"1px solid "+C.rule,fontSize:12.5,color:C.ink,lineHeight:1.45}}>
                   <div style={{fontWeight:600}}>{v.name||id}</div>
                   {link?<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{link}</a>
-                    :<div style={{color:C.soft}}>{said}</div>}
-                  <div style={{display:"flex",gap:6,marginTop:6,alignItems:"center"}}>
+                    :<div style={{color:C.soft}}>{said}{home&&v.shop==="noshelf"&&<a href={home} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{home}</a>}</div>}
+                  <div style={{display:"flex",gap:6,marginTop:6,alignItems:"center",flexWrap:"wrap"}}>
                     {looking?<span style={{fontSize:11.5,color:C.soft}}>Looking{"\u2026"}</span>:<>
-                      {link&&<button onClick={()=>confirmShop(id)} disabled={!!shopLooking} style={{...sBtn,...(v.confirmed?on:{})}}>Confirm</button>}
-                      <button onClick={()=>lookAgain(id)} disabled={!!shopLooking} style={sBtn}>Look again</button>
-                      {!link&&<button onClick={()=>noShopFor(id)} disabled={!!shopLooking} style={{...sBtn,...(v.confirmed?on:{})}}>No shop</button>}
+                      <button onClick={()=>confirmShop(id)} disabled={!!shopLooking||!link} style={{...decBtn(yes,C.okEdge),...(!link?{opacity:0.4,cursor:"not-allowed"}:{})}}>{yes?"\u2713 ":""}Confirm</button>
+                      <button onClick={()=>lookAgain(id)} disabled={!!shopLooking} style={decBtn(false,C.okEdge)}>Look again</button>
+                      <button onClick={()=>noShopFor(id)} disabled={!!shopLooking} style={decBtn(none,C.rejectInk)}>{none?"\u2713 ":""}No shop</button>
                     </>}
                   </div>
                 </div>;})}

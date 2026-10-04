@@ -1062,14 +1062,43 @@ stale after a minute; every save checks it first. A republish while her page is 
 4. Google Drive backup by button — on the table, never automatic.
 
 
-### 2. Add by link — first use, 4 Oct
+### 2. Add by link — 39.3 in progress (uncommitted work committed as WIP, 4 Oct)
 
-- **OPEN — her report: Read and approve left the ledger at 0**, only the new
-  rows in it (test page, after a republish). Her cloud copy was untouched (594
-  rows, saved 3 Oct); the screenshot read "not yet updated this session". Cause
-  unproven. If it recurs: "Show diagnostic" first, before anything else.
-- Card short names are in the test page's store only; her main app's
-  `venues/occasional` is empty until a link is read there.
+**Live is 39.2** (both pages). 39.3 is built on `main` and the cloud branch, NOT published.
+
+Done in code, from her 4 Oct test of 39.2 (screenshots):
+- CSV / Links: Load/Save's size and style, both plain; the pressed one green.
+  The two-button pop-up is `width: fit-content`.
+- The header's progress bar is hidden while the Import pop-up is open (it
+  duplicated the pop-up's own).
+- Shop screen: title **"New Venue Shops"**, line **"Check and approve each shop
+  link."** Buttons are the review cards' `decBtn`: Confirm ticks green like "Add
+  new entry", No shop like "Reject". **Always Confirm · Look again · No shop in
+  that order**; Confirm greyed when no section was found. "Shop found, but not
+  its books section: <shop link>" vs "No museum shop found." vs "Search failed."
+- **Every new venue met in the Read is listed**, whatever her card decisions
+  (`readVenues`). 39.2 listed only venues with a card going in, so the RA and
+  Courtauld were missing — a rule nobody asked for, removed.
+- Finder search sends two queries in one call: hers, plus "<venue> shop books
+  publications". **Unproven** — Detroit's "Books & Stationery - DIA
+  Publications" (Google's 3rd) never came back from Parallel; the free tier
+  then refused the test. One keyed search settles it — ask her first.
+
+**Test state:** `npm test` all green at 39.3 (AL-002a, AL-010a → 9, AL-010b on
+Cleveland). Merged into `claude/ledger-cloud`; both pages built, not published.
+
+**Waiting on her:**
+1. Her note "the import review screen for importing links — the cancel button
+   that says 'cancel refresh'" was cut off. Ask what she wants it to say.
+2. **No way past the shop screen** when Look again fails and No shop is wrong
+   (Detroit today) — she would have to cancel the whole import. Offer: paste
+   the right link herself, and/or "Skip for now" (shop stays unconfirmed, asked
+   again next Read). Her call; build nothing until she picks.
+
+Her store, read 4 Oct: Cleveland, Mauritshuis, Thyssen confirmed; RA
+(`shop.royalacademy.org.uk/books/bookshop/exhibition-catalogues`) and Courtauld
+(`/collections/courtauld-catalogues`) found, unconfirmed; Detroit `noshelf`.
+Card short names are in the test page's store only.
 
 ### 3. Fixes not yet checked in the cases they were written for
 
@@ -1108,11 +1137,12 @@ sweep, and a session with her stitches and compresses (her design, 2 Oct).
 
 ### 6a. Cincinnati — the app does not know it yet (4 Oct)
 
-Recipe and fixture on `main` (CI-001–021). **The app's chip is not**: she
-asked for it NOT to be pushed, other JSX work being in flight. Until it lands,
-a sweep's `cincinnati` rows land in "Couldn't be filed" — and the monthly
-container sweep (5 Nov) will sweep it. Chip label "Cincinnati" (her spelling
-ruling, 4 Oct); order among the chips not yet given.
+Recipe and fixture on `main` (CI-001–021). **The app's venue entry is on
+branch `claude/blissful-volta-jxj5c0`, not `main`** — her instruction, other
+JSX work in flight; merge when she says, then bump the version. Until then a
+sweep's `cincinnati` rows are refused on import — and the monthly container
+sweep (5 Nov) will sweep it. On the branch: chip "Cincinnati" after Artic, its
+imprint in `SELF_PUBLISHERS` (her rulings, 4 Oct); fixtures 19b, C-146b.
 
 ### 7. Smaller, parked
 

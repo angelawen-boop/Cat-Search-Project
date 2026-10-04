@@ -207,6 +207,11 @@ function runtime() {
   await click(importBtn());
   await click(inDialog('Links'));
   const box = dialog().querySelector('textarea');
+  {
+    const [csvB, linksB] = [...dialog().querySelectorAll('button')];
+    ok(linksB.style.background && linksB.style.background !== 'transparent' && csvB.style.background === 'transparent',
+      'AL-002a:  the pressed one turns solid (Save\'s green), the other stays plain', linksB.style.background + ' / ' + csvB.style.background);
+  }
   ok(!!box && inside() === 'CSV|Links|Read|Cancel', 'AL-002: "Links" opens the box and Read on the same pop-up, Cancel still below', inside());
 
   // ── AL-003: pasted carelessly — commas, spaces, lines, words, a repeat ─────
@@ -281,22 +286,37 @@ function runtime() {
 
   // ── AL-009: the shop screen, between the review and the ledger ───────────
   ok(!/Confirm|Wrong shop|Look again/.test(dialog() ? dialog().textContent : ''), 'AL-009: the import pop-up asks nothing about shops');
-  for (const b of buttons(/Add new entry$/)) await click(b);
+  // Her 4 Oct run: the RA's and the Courtauld's cards were not going in, and
+  // their shops were left off the screen. Every new venue met is asked about.
+  {
+    const adds = buttons(/Add new entry$/);
+    for (const b of adds) await click(b);
+    const raAdd = adds.find(b => { let el = b; while (el && !/Peggy Guggenheim/.test(el.textContent)) el = el.parentElement; return el && el.textContent.length < 3000; });
+    let el = raAdd; while (el && !/Peggy Guggenheim/.test(el.textContent)) el = el.parentElement;
+    await click([...el.querySelectorAll('button')].find(b => /Reject$/.test(b.textContent.trim())));
+  }
   const ledgerCards = () => win.document.querySelectorAll('article').length;
   const cardsBefore = ledgerCards();
   ok(buttons(/^Next$/).length === 1 && !buttons(/^Go ahead and update the ledger$/).length, 'AL-009a:  every card decided, the review\'s last button reads "Next"');
   await click(buttons(/^Next$/)[0]);
-  const shops = () => [...win.document.querySelectorAll('[role=dialog]')].find(d => /New venues/.test(d.textContent));
+  const shops = () => [...win.document.querySelectorAll('[role=dialog]')].find(d => /New Venue Shops/.test(d.textContent));
   ok(!!shops() && ledgerCards() === cardsBefore, 'AL-009b:  "Next" opens the shop screen; the ledger has not moved');
   const shopCard = name => [...shops().querySelectorAll('div')].find(d => d.firstChild && d.firstChild.textContent === name && d.querySelector('button'));
   const press = async (name, label) => { const c = shopCard(name); const b = c && [...c.querySelectorAll('button')].find(x => x.textContent === label); if (b) await click(b); return !!b; };
   const footer = () => [...shops().querySelectorAll('button')].pop().textContent;
-  ok(footer() === '6 still to decide', 'AL-009c:  six venues to answer, and the ledger button says so', footer());
-  ok(shopCard('Royal Academy of Arts').textContent.includes('No museum shop found.')
-     && [...shopCard('Royal Academy of Arts').querySelectorAll('button')].map(b => b.textContent).join('|') === 'Look again|No shop',
-    'AL-009d:  no shop found: Look again · No shop, and no Confirm', shopCard('Royal Academy of Arts').textContent);
-  ok(shopCard('Detroit Institute of Arts Museum').textContent.includes('Books section not found.'), 'AL-009e:  a shop with no books section says so');
+  ok(footer() === '6 still to decide' && !!shopCard('Royal Academy of Arts'), 'AL-009c:  six venues to answer — the RA too, its one card rejected — and the ledger button says so', footer());
+  ok(shops().textContent.includes('Check and approve each shop link.'), 'AL-009c2:  her heading and line');
+  {
+    const order = name => [...shopCard(name).querySelectorAll('button')].map(b => b.textContent).join('|');
+    const conf = [...shopCard('Royal Academy of Arts').querySelectorAll('button')].find(b => b.textContent === 'Confirm');
+    ok(shopCard('Royal Academy of Arts').textContent.includes('No museum shop found.') && order('Royal Academy of Arts') === 'Confirm|Look again|No shop'
+       && conf.disabled && order('Courtauld') === 'Confirm|Look again|No shop',
+      'AL-009d:  the same three buttons in the same places on every card; Confirm greyed where nothing was found', order('Royal Academy of Arts'));
+  }
+  ok(shopCard('Detroit Institute of Arts Museum').textContent.includes('Shop found, but not its books section: https://diashop.org/'),
+    'AL-009e:  a shop found without its books section says which, and links the shop', shopCard('Detroit Institute of Arts Museum').textContent);
   await press('Museo Nacional Thyssen-Bornemisza', 'Confirm');
+  ok(/^✓ Confirm$/.test([...shopCard('Museo Nacional Thyssen-Bornemisza').querySelectorAll('button')][0].textContent), 'AL-009f0:  Confirm ticks, as "Add new entry" does');
   ok(((store.get('venues/occasional') || {}).venues['occ-museothyssen-org'] || {}).confirmed === true && footer() === '5 still to decide',
     'AL-009f:  Confirm is kept at once, and one fewer to decide', footer());
   calls.length = 0;
@@ -327,9 +347,9 @@ function runtime() {
   ok(!!chip, 'AL-010: an "Occasional" chip sits with the venue chips');
   await click(chip);
   const arts = [...win.document.querySelectorAll('article')];
-  ok(arts.length === 10, 'AL-010a:  pressed, it shows the ten occasional shows and nothing else', arts.length);
-  const ra = arts.find(a => a.textContent.includes('Peggy Guggenheim'));
-  ok(ra && /Royal Academy of Arts/.test(ra.textContent), 'AL-010b:  each card is headed by its venue', ra && ra.textContent.slice(0, 60));
+  ok(arts.length === 9, 'AL-010a:  pressed, it shows the nine occasional shows accepted (the RA one rejected) and nothing else', arts.length);
+  const cle = arts.find(a => a.textContent.includes('Filippino Lippi'));
+  ok(cle && /^Cleveland Museum of Art/.test(cle.textContent), 'AL-010b:  each card is headed by its venue', cle && cle.textContent.slice(0, 60));
 
   const dia = arts.find(a => a.textContent.includes('Caravaggio'));
   ok(dia && /^Detroit/.test(dia.textContent) && !/^Detroit Institute/.test(dia.textContent), 'AL-011: a venue\'s short name, hers, heads its cards', dia && dia.textContent.slice(0, 40));
