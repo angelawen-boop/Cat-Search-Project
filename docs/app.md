@@ -361,7 +361,9 @@ anything" (false — the page has its own store).
 - **Rebuilding it is code's job** — `scraper/sweep_log.js` prints the document
   from every sweep file on disk; a session writes it with `ArtifactData`.
   Fixtures S-001 to S-006 (S-004 holds it against the JSX's `mergeSweepLog`).
-- **Written when the file is READ**, not at Apply.
+- **Written when the import FINISHES** (her rule, 4 Oct: an import she does
+  not finish keeps nothing); a file with nothing to propose is recorded at once.
+  AL-013.
 - **Merge, never replace** — a venue's line moves only for a LATER sweep; tried
   and brought-rows move independently. Fixtures 15, 15a, 15b.
 - **The headline "Last refreshed" reads the store**, not the ledger's old

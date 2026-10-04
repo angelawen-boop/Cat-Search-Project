@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "39.4 · cloud 4";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
+const APP_VERSION = "39.5 · cloud 4";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
 const APP_VERSION_DATE = "4 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -3123,7 +3123,6 @@ export default function App(){
   // import changes; the store is written only when the ledger moves (her rule,
   // 4 Oct: nothing is kept from an import she did not finish).
   const occSaved=useRef({});
-  const linkSaveTimer=useRef(null);
   const[error,setError]=useState(null);
   const[rechecking,setRechecking]=useState(false);   // which of the card's two buttons is running
   const[copySaid,setCopySaid]=useState(null);       // "ok" / "no": what the diagnostic's copy icon last managed
@@ -3871,19 +3870,11 @@ export default function App(){
     return {props,coverage,tally,seen:{attempted,returned}};
   }
 
-  // THE SWEEP LOG IS WRITTEN AT IMPORT, NOT AT APPLY — corrected 20 Sep, and
-  // it is the half of her ruling I failed to carry through.
-  //
-  // It used to be written when she pressed "Go ahead and update the ledger",
-  // on the reasoning that cancelling a review should leave no trace. That
-  // reasoning was correct WHILE THE LOG LIVED IN THE LEDGER, where it was part
-  // of the document. It is not part of the document any more. It is what this
-  // page knows about the world, and reading a sweep file is the moment it
-  // learns the sweep happened — whether or not she then accepts a single card.
-  //
-  // It also had a cost she found immediately: with the ledger gated on deciding
-  // every card, seeing the drawer fill meant working 320 cards first. Now she
-  // can import, look, and cancel.
+  // THE SWEEP LOG IS WRITTEN WHEN THE IMPORT FINISHES — her rule, 4 Oct: an
+  // import she does not finish keeps nothing. (20 Sep it moved to the moment
+  // the file was read; she has ruled the other way.) Held in seenInFile until
+  // the ledger moves; a file with nothing to propose has nothing to finish, so
+  // it is recorded at once.
   const recordSweep=(seen)=>{
     if(!seen) return;
     const vs=mergeSweepLog(venueSeen,seen);
@@ -3899,8 +3890,8 @@ export default function App(){
     reader.onload=()=>{
       const res=analyzeProForma(String(reader.result||""),new Set(ignored.map(x=>x.key)));
       if(res.error){setError(res.error);return;}
-      recordSweep(res.seen);
       if(!res.props.length){
+        recordSweep(res.seen);
         setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null);
         setError("Read the refresh file, but nothing new to propose \u2014 your ledger already matches it."+((res.coverage||[]).length?" ("+res.coverage.length+" listing page"+(res.coverage.length===1?"":"s")+" couldn\u2019t be read \u2014 see below.)":""));
         return;
@@ -3915,10 +3906,6 @@ export default function App(){
   // One page read per link, then one model call for the prose; a new venue's
   // shop is found once. Every row then goes through analyzeProForma, the same
   // door as a sweep file. What could not be read stays in the box.
-  const saveLinksSoon=text=>{
-    if(linkSaveTimer.current)clearTimeout(linkSaveTimer.current);
-    linkSaveTimer.current=setTimeout(()=>{ writePendingLinks(text); },800);
-  };
   async function readLinks(){
     const urls=linksIn(linkText);
     if(!urls.length){ setLinkFails([{url:"",why:"No links found in the box."}]); return; }
@@ -3971,12 +3958,13 @@ export default function App(){
     if(venuesChanged){ registerOccasional(venues); setOccVenues(venues); }   // held, not stored: see occSaved
     setProg({done:0,total:0,label:""}); setBusy(false); setReadVenues([...met]);
     const left=fails.map(x=>x.url).join("\n");
-    setLinkText(left); writePendingLinks(left); setLinkFails(fails);
+    setLinkText(left); setLinkFails(fails);   // the box is stored when the import finishes
     if(!got.length)return;
     const res=analyzeProForma(proFormaCsv(got),new Set(ignored.map(x=>x.key)),{notePrefix:""});
     if(res.error){ setLinkNote(res.error); return; }
     if(!res.props.length){
       setTally(res.tally||null);
+      writePendingLinks(left);   // nothing to approve: this Read is finished
       setLinkNote("Read "+got.length+" link"+(got.length===1?"":"s")+", but nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+".");
       return;
     }
@@ -4097,9 +4085,10 @@ export default function App(){
       p.upd.forEach((u,j)=>{ if((dec.fields||{})[j]==="accept"){ patch[u.field]=u.newVal; if(u.kind==="fill")filled++; else changed++; hit=true; } });
       if(hit){ patch.editedAt=now; byId.set(p.matchId,patch); touched.push(p.matchId); }
     });
-    // The sweep log is NOT touched here. It was written the moment the file was
-    // read — see recordSweep. Applying changes her ledger; it tells us nothing
-    // new about when a venue was swept.
+    // The import is finished: what it held back is stored now — the sweep log
+    // (a CSV's), and the paste box's unread links (a Read's).
+    // seenInFile is set by a CSV and only by a CSV: a link is not a sweep.
+    if(seenInFile)recordSweep(seenInFile); else writePendingLinks(linkText);
     // A NEW QUARANTINE GOES TO THE STORE, not into the ledger she is about to
     // commit. Her export still carries the list, but the copy that does the
     // blocking is the one that survives a Reset.
@@ -5737,7 +5726,7 @@ export default function App(){
               <button onClick={()=>setImportMode("links")} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>Links</button>
             </div>
             {importMode==="links"&&<div style={{marginTop:14}}>
-              <textarea value={linkText} onChange={e=>{setLinkText(e.target.value);saveLinksSoon(e.target.value);}} rows={8} disabled={busy}
+              <textarea value={linkText} onChange={e=>setLinkText(e.target.value)} rows={8} disabled={busy}
                 style={{width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"8px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,resize:"vertical"}}/>
               <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
                 <button onClick={readLinks} disabled={busy} style={pBtn}>Read</button>

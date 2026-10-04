@@ -30,7 +30,7 @@ one the moment she comes across it.
   existing intake: Add / Fill / Change / Reject / quarantine all as now.
 - **A link it cannot read is a line, never a card** — the full link and why
   (empty page, refused, no dates). Unread links **stay in the paste box**,
-  kept in the store, until read or cleared by her.
+  stored when the import finishes (her rule, 4 Oct), until read or cleared.
 - **No lookback cutoff** for anything added by link (her ruling).
 - **Chip: one "Occasional"** for every venue added this way (her ruling); each
   venue keeps its own name and shop behind it. A link to a venue already

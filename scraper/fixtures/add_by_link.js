@@ -263,7 +263,7 @@ function runtime() {
     ok(text.includes(REFUSED + ' — The museum refused the page (403).'), 'AL-007: a refused page is a line naming the link and why');
     ok(text.includes(EMPTY + ' — The page came back empty.'), 'AL-007a:  so is an empty one');
     ok(win.document.querySelector('textarea').value === REFUSED + '\n' + EMPTY, 'AL-007b:  and the box now holds exactly those two links', JSON.stringify(win.document.querySelector('textarea').value));
-    ok((store.get('links/pending') || {}).text === REFUSED + '\n' + EMPTY, 'AL-007c:  kept in the page\'s store, so closing the page loses nothing');
+    ok(!store.has('links/pending'), 'AL-007c:  not stored yet — the import has not finished (her rule, 4 Oct)');
   }
 
   // ── AL-012: an import she does not finish keeps nothing (her rule, 4 Oct) ─
@@ -377,6 +377,7 @@ function runtime() {
   ok(footer() === 'Go ahead and update the ledger', 'AL-009k:  every shop answered, the ledger may move', footer());
   await click([...shops().querySelectorAll('button')].pop());
   ok(!shops() && ledgerCards() > cardsBefore, 'AL-009l:  and does');
+  ok((store.get('links/pending') || {}).text === REFUSED + '\n' + EMPTY, 'AL-007d:  the import finished, the two unread links are stored, so closing the page loses nothing');
   {
     const v = id => occStored()[id] || {};
     ok(Object.keys(occStored()).length === 6 && Object.values(occStored()).every(x => x.confirmed === true),
@@ -404,6 +405,25 @@ function runtime() {
   const dia = arts.find(a => a.textContent.includes('Caravaggio'));
   ok(dia && /^Detroit/.test(dia.textContent) && !/^Detroit Institute/.test(dia.textContent), 'AL-011: a venue\'s short name, hers, heads its cards', dia && dia.textContent.slice(0, 40));
   ok((((store.get('venues/occasional') || {}).venues || {})['occ-dia-org'] || {}).short === 'Detroit', 'AL-011a:   and survives its shop being looked for again');
+  // ── AL-013: a CSV import keeps nothing until it finishes either ─────────
+  {
+    const csv = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at\n'
+      + 'met,A Show Never Seen,2026-11-01,2027-02-01,A test row.,https://www.metmuseum.org/exhibitions/a-show-never-seen,,2026-10-03T00:00:00.000Z\n';
+    const feed = async () => {
+      const input = win.document.querySelector('input[type=file][accept=".csv,text/csv"]');
+      Object.defineProperty(input, 'files', { value: [new win.File([csv], 'sweep.csv', { type: 'text/csv' })], configurable: true });
+      await act(async () => { input.dispatchEvent(new win.Event('change', { bubbles: true })); });
+      await settle(10);
+    };
+    await feed();
+    ok(buttons(/Add new entry$/).length === 1 && !store.has('sweeps/venues'), 'AL-013: a CSV read: its card shown, the sweep log not stored yet');
+    await click(buttons(/^Cancel import$/)[0]);
+    ok(!store.has('sweeps/venues'), 'AL-013a:  Cancel import: the sweep log still not stored');
+    await feed();
+    await click(buttons(/Add new entry$/)[0]);
+    await click(buttons(/^Go ahead and update the ledger$/)[0]);
+    ok(!!((store.get('sweeps/venues') || {}).venues || {}).met, 'AL-013b:  the import finished: the sweep log stored', JSON.stringify(store.get('sweeps/venues')));
+  }
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) fail('React complained: ' + shouted.find(s => /Warning/.test(s)));
   console.log(failures ? '\n' + failures + ' FAILED' : '\nadd_by_link: all passed');
   process.exit(failures ? 1 : 0);
