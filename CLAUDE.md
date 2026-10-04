@@ -128,12 +128,24 @@ Branches separate in-progress work from known-good work, never components.
 | Branch | What it is |
 |---|---|
 | `claude/ledger-cloud` | **Live trial — §7.1.** Merged to `main` only on her call |
+| `parked` | Work held for another session (below). Deleted once on `main` |
 | `claude/jsx-stitched-intake` | Merged 20 Sep; kept as history |
 | `claude/quiet-user-agent` | Parked, her ruling 19 Sep — do not merge or re-open |
 | `claude/personal-tracking-ledgers-z49s2h` | Dead — do not merge |
 | `claude/blissful-knuth-snbqci`, `claude/design-questions-87gj6w`, `claude/headless-chromium-claude-code-wl94l0` | Dead — early 7–10 Sep work from before `main` was the trunk (no shared history with it); superseded, do not merge. Kept on GitHub, her ruling 2 Oct — never raise deleting them |
 | `claude/met-connection-experiments` | Abandoned — do not merge |
 | `claude/playwright-scraper-prototype-z68iko` | Abandoned — merging it would undo the current scraper |
+
+**Holding a push for another session — her rule, 4 Oct.** When she says a
+session must wait for another:
+- **The waiting session** commits locally, pushes nothing and does not ask about
+  it. It waits for a message from the named session (cross-session
+  `send_message`), then pulls `main`, merges, runs `npm test` and pushes to `main`.
+- **The finishing session**, once its work is on `main`, messages the waiting
+  session by the title she gave (`list_sessions` finds it) that it may push.
+- Unpushed work is lost if an idle container is reclaimed. Only if that is a
+  real worry: push to `parked` — that branch, never a new one; delete it once
+  the work is on `main`.
 
 ---
 
