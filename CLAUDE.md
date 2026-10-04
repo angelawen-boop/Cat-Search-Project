@@ -61,6 +61,9 @@ is why they live in one repo, on one branch.
   did not ask for — she is constantly decluttering invented verbiage.
 - **A guess is labelled a guess.** Say what is proven, what is not, and what one
   request would settle.
+- **A session's own Parallel calls use the free "Parallel Search" — her rule,
+  3 Oct.** Her keyed "Parallel Search Key" only with a reason (e.g. ten pages at
+  once, which would hit the free limit), and she is told clearly BEFORE the call.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
 
 ### Put it in code — her rule, 10 Sep 2026
@@ -292,7 +295,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > forward. **Renaming the connector means restating them.**
 
 **Live: 38.2 on her main app, 38.2 · cloud 4 on the test page** (published
-2 Oct). Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
+2 Oct; the test page republished with the same-tab reload fix, §7.1). Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
 `inClosingWindow`), Tracked and Dismissed inside "Details"; footer "Reset to
 Seed" and "Reset cards" (clears one card's lookup). Older numbers are in git.
@@ -383,7 +386,15 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
 - **Reject and quarantine are different jobs.** Quarantine: never show me this
   again. Reject: *this entry is wrong* — fix it at the source. **A rejected card
   coming back is correct.** Never propose remembering rejections.
+- **Buy next** (her design, 2 Oct): on a Yes card, a dot left of the star, drawn
+  to the star's measured size (`starInk`) — hollow off, red on. Leaving Yes clears
+  it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
+  anywhere.** Closing the search bar or Reset cards empties its box.
 - **Per-venue freshness**, two dates, from `swept_at`.
+- **Add by link** (39, her design 3–4 Oct): Import → CSV file / Paste links;
+  each link read once by code (title, dates) and the model (prose), then the
+  same intake as a sweep. New venues file under one "Occasional" chip, shop
+  found once and confirmed by her; both kept in the store. `docs/picked_shows.md`.
 - **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
   at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.
 - **Dark mode**, every colour named; the shell paints a ground before React runs.
@@ -534,6 +545,7 @@ through `sample` at `modelTier: default`. Do not re-open without a real misread.
 | unit fixtures | `date.test.js`, `compress.test.js`, `qc.test.js`, `sweep_log.test.js`, `venue_status.test.js`, `pacing.test.js` |
 | `intake_cases.js` | folding, quarantine, freshness, the ledger gate |
 | `page_loads.js`, `page_renders.js` | does the page load; does it DRAW (jsdom, plain and with the runtime answering) |
+| `add_by_link.js` | Add by link on the 3 Oct pages (`docs/link_pages/`): titles, dates, unread links, new venues' shops, the chip (AL-) |
 | `catalogue_lookup.js`, `recheck_shop.js` | the lookup (C-); Re-check, blocked shops, web-found links, search filters, another venue's book, no-shop venues, language, Reset cards, counts, buy-next dot, closing a search box — the real app, buttons pressed (R-, L-, S-, VN-, LG-, RC-, RS-, CT-, SC-, BN-) |
 | `*_pages.js` per venue | `mam`, `ashmolean`, `moma`, `mad`, `brit`, `morgan`, `orsay` recipes on her saved pages, no network — her counts, dates, titles, descriptions |
 | `summary_pages.js`, `title_case_pages.js`, `listing_pages.js` | descriptions, titles in the venue's letters, where each row was seen — on saved pages |
@@ -587,6 +599,7 @@ npm test                                     all fixtures
 | File | What it is |
 |---|---|
 | `sweep_prototype.js` | The real scraper. Playwright + Chromium |
+| `dates.js` | THE date reader — the app gets it via `node build/sync_shared.js` (with compression's rules); `npm test` fails if they differ |
 | `compress.js` / `compress_cli.js` | Raw text → the summary she reads |
 | `qc.js` | Exceptions report **and the gate in front of her import file**. A faulty row (no title, no venue code) BLOCKS `--apply`; an exception warns and never acts |
 | `sweep_log.js`, `venue_status.js` | Freshness drawer rebuilt from disk; §2's table |
@@ -710,7 +723,11 @@ so a venue cut short asks next time only for what is missing. Not reused once
 the venue has written a file, after 14 days, or with `--reread`. Her machine:
 always. **Container: only a recipe with `keepPages: true`** — a site that drops
 out or blocks part-way more than once (her ruling). Fixtures never keep or
-reuse. `page_keep.js`, `pageKeepFor`; KP-001 to KP-021.
+reuse. `page_keep.js`, `pageKeepFor`; KP-001 to KP-021. **Keeping pages at
+every container venue: reconsider if the monthly routine's reports show many
+faults that kept pages would have fixed without a re-sweep** (her ruling, 2 Oct).
+If so, the best home is **a separate repo for kept pages** — fetched only when
+needed, never on her laptop, deletable outright; here they bloat every clone.
 
 ### What each site asks — robots.txt, both machines
 
@@ -1021,15 +1038,19 @@ Save, Download and Load, close and reopen, a real sweep Import.
 
 **Two copies open: the later one is READ ONLY** (her ruling, 1 Oct). It shows
 the cloud copy and writes nothing; an edit record with a heartbeat decides,
-stale after a minute; every save checks it first. A reload or republish in the same tab takes over its own record (TC-011/012, 2 Oct — on the branch, not yet published). Design: "ONE COPY EDITS AT A TIME" in the code;
-`cloud_two_copies.js`, TC-001–010.
+stale after a minute; every save checks it first. A reload or republish in the same tab takes over its own record — a publish once locked her open page for a minute (2 Oct). Design: "ONE COPY EDITS AT A TIME" in the code;
+`cloud_two_copies.js`, TC-001–012.
 
 **Next:**
 1. Her normal use, over several sessions; she reports what surfaces. On request,
-   read the store and check it against her file.
-2. `CLOUD_OPENS=true` once Loads have matched every time — her call.
+   read the store and check it against her file. **4 Oct:** the cloud copy works
+   well, but she has been opening it ("open it") and not exporting on leaving —
+   so Loads were never checked. **One more week, from 4 Oct:** export on every
+   exit, Load that file next time, read the match line.
+2. `CLOUD_OPENS=true` once Loads have matched every time — her call. **Load
+   stays for good** — it is how she opens a backup.
 3. Merge to `main` and publish to her app — her call; §4's rules apply. **First
-   copy the test page's `sweeps/venues` and `quarantine/rows` into her app's
+   copy the test page's `sweeps/venues`, `quarantine/rows`, `venues/occasional` and `links/pending` into her app's
    store** (quarantine merged latest-wins, never replaced).
 4. Google Drive backup by button — on the table, never automatic.
 
@@ -1063,7 +1084,11 @@ She is noting issues as she uses it, for a later debugging session.
 
 ### 5. A fresh sweep — mid-October at the earliest
 
-**She sweeps no more than once a month.**
+**She sweeps no more than once a month.** The container's half runs itself:
+the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
+`.claude/skills/monthly-sweep/SKILL.md` — sweep, QC, push, report; anything
+needing a re-sweep or a code change waits for her. She then does the home
+sweep, and a session with her stitches and compresses (her design, 2 Oct).
 
 ### 6. Smaller, parked
 
@@ -1074,9 +1099,6 @@ She is noting issues as she uses it, for a later debugging session.
   `docs/artic_pages/` README has the idea.
 - **A QA pass before the stitch** — parked from a session whose reasoning she
   does not trust. `qc.js` is NOT that pass and does not re-open it.
-- **Picked shows** — occasional venues where she picks ~5 shows a year and only
-  those pages are read. Test case: Detroit Institute of Arts. **Not built.**
-  `docs/picked_shows.md`.
 
 ---
 
@@ -1135,7 +1157,7 @@ price, her ruling 1 Oct).
 | `docs/venue_urls.md` | The original 21 venues' addresses from the Sweeper Brief, and which of its notes still hold | Wiring or re-checking one of those venues |
 | `docs/listing_pages/`, `docs/*_pages/` | Pages she saved, with a README of what each settled | Changing that venue's recipe — before asking her for anything |
 | `docs/compression.md` | Compression design, model split, eval, rejected alternatives | Changing compression — otherwise don't |
-| `docs/picked_shows.md` | Picked shows — **not built** | She raises it |
+| `docs/picked_shows.md` | Add by link — design, rulings, 3 Oct test; **not built** | Building it |
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review | Before touching a reviewed venue |
 | `docs/review-log.md` | Independent review findings and decisions | A reviewer raises something |
