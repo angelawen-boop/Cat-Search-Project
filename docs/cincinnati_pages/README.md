@@ -1,0 +1,17 @@
+# Cincinnati Art Museum — saved pages, 4 Oct 2026
+
+Saved by the container itself (her yes, for this venue only): one fetch each,
+10s apart, through the sweep's own browser and network bridge. Behind
+Cloudflare, but a blank headless browser was let in on all 12. robots.txt
+asks no wait and rules out none of these addresses.
+
+| File | Page | What it settled |
+|---|---|---|
+| `current.html` | `/art/exhibitions/` | 2 cards — her count |
+| `upcoming.html` | `/art/exhibitions/upcoming-exhibitions/` | 2 cards — her count |
+| `archive_index.html` | `/art/exhibitions/exhibition-archive/` | Holds THIS year's closed shows (4 — her "2026"); its `/2026/` page is empty |
+| `archive_2025.html`, `archive_2024.html` | `/exhibition-archive/<year>/` | 14; 12 of which 9 inside the lookback, one (Venice) on another host |
+| `archive_2023.html` | `/exhibition-archive/2023/` | Years are filed by OPENING date (Shapeshifting, Jan 2024–Jan 2025, on 2024), so 2023 is read too; nothing on it closed after 1 Jul 2024 |
+| `show_*.html` | one show page per address shape: current, upcoming, archive year, special features | The description block — title h2, dates h3, prose up to the next heading |
+
+Fixture: `scraper/fixtures/cincinnati_pages.js`.

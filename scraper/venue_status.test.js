@@ -34,9 +34,17 @@ test('V-002 a blocked venue is present with no rows, never silently dropped', ()
   // it on 30 Sep: her laptop's headed sweep. No real venue is blocked-only now,
   // so the rule is asked of whichever ones are — and morgan's move is checked
   // directly, so this test still says something while that list is empty.
+  // A venue wired but not yet swept (cincinnati, 4 Oct) has no rows AND no
+  // try — the table prints "never swept". That is allowed only when no run
+  // file holds the code at all, read here from the files themselves.
   const all = collect();
-  for (const v of all.filter(x => x.rows === null)) {
-    assert.ok(v.triedFrom, `${v.code} has no rows and should still record that it was tried`);
+  const held = new Set();
+  for (const run of allRuns()) {
+    try { for (const r of C.readProForma(path.join(__dirname, 'output', run.rel, 'sweep.csv'))) held.add(r.venue_code); } catch {}
+  }
+  assert.ok(held.has('ng'), 'the run files were read');
+  for (const v of all.filter(x => x.rows === null && !x.triedFrom)) {
+    assert.ok(!held.has(v.code), `${v.code} is in a run but records no try`);
   }
   const morgan = all.find(x => x.code === 'morgan');
   assert.ok(morgan && morgan.rows > 0, 'morgan brought rows on 30 Sep and should be credited with them');
