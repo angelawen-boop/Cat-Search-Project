@@ -44,7 +44,11 @@ is why they live in one repo, on one branch.
 - **Destructive actions need a confirmed backup or an explicit yes.**
 - **NEVER REPUBLISH THE APP WHILE SHE HAS IT OPEN.** Her ledger lives IN that
   page until she Exports, so a publish landing mid-review can take unsaved work
-  with it. Ask, or wait until she says she is out.
+  with it. Ask ONCE; her yes holds until she says otherwise — never ask again in
+  the same exchange (4 Oct: asked three times, she was furious).
+- **Her report and output first, the guide after — her rule, 4 Oct.** Send the
+  report and anything for her review, then update this guide in a background
+  job; say once when it lands. Her review never waits on the guide.
 - **Long runs need progress.** A backgrounded command showing nothing reads as a
   dead session.
 - **Test conservatively — her rule, 24 Sep.** Every page fetched from a venue
@@ -295,8 +299,8 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 39.3 · cloud 4 on the test page** (4 Oct, Import as CSV · Links, shop
-screen); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
+**Live: 39.5 · cloud 4 on the test page** (4 Oct, Import as CSV · Links, shop
+screen, nothing kept from an unfinished import); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -395,8 +399,9 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
   anywhere.** Closing the search bar or Reset cards empties its box.
 - **Per-venue freshness**, two dates, from `swept_at`.
-- **Add by link** (39, her design 3–4 Oct): Import opens a small pop-up —
-  CSV · Links, Cancel; **nothing added to the page itself**. Each link is read
+- **Add by link** (39–39.5, her design 3–4 Oct; signed off on her 10 links
+  4 Oct): Import opens a small pop-up — CSV · Links, Cancel; **nothing added
+  to the page itself**. Each link is read
   once by code (title, dates) and the model (prose, always English), then the
   same intake as a sweep; no lookback. New venues file under one "Occasional"
   chip; their shop sections confirmed on a screen after the review (39.2).
@@ -1011,7 +1016,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **39.3 · cloud 4**, published 4 Oct (Detroit's shop, Cancel import). Cloud-only in it:
+live on the test page **39.5 · cloud 4**, published 4 Oct (nothing kept from an unfinished import, CSV or links; books-only shop sections). Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
@@ -1063,25 +1068,26 @@ stale after a minute; every save checks it first. A republish while her page is 
 4. Google Drive backup by button — on the table, never automatic.
 
 
-### 2. Add by link — 39.3 live on the test page, her test next
+### 2. Add by link — 39.5 signed off on her 10 links; a new venue still to see
 
-39.3, from her 4 Oct test of 39.2: CSV / Links in
-Load/Save's style, the pressed one green, the pop-up sized to its buttons; no
-second progress bar; shop screen "New Venue Shops" / "Check and approve each
-shop link.", the review cards' buttons, always Confirm · Look again · No shop;
-every new venue met is listed; the review's cancel reads **"Cancel import"**.
+**Her test, 4 Oct (39.5):** all 10 original links imported; the shop finder
+better; catalogue lookups at Thyssen and Mauritshuis found the catalogue. Left
+here for now. **Open:** how the finder does on a venue it has never met — she
+will see when she next adds one by link. A miss is a finder bug (below).
 
-**Detroit, settled 4 Oct (her keyed connector):** the finder's search sends two
-queries in one call — hers and "<venue> shop books publications". With both,
-"DIA Publications" came back 1st; with hers alone, never. Saved:
-`docs/link_pages/shop_search/detroit*.json`; AL-008f, AL-009e.
-
-**Her ruling, 4 Oct: she never feeds the app a shop link, and "no shop found"
-is not an answer she accepts from a museum that has one.** No paste box, no
-skip. A venue the finder misses is a finder bug, fixed in code on a saved
-real search.
-
-**Next:** her test of 39.3 on the test page.
+Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`):
+- **An import she does not finish keeps NOTHING** — CSV or links: new venues
+  and shops, Confirm / No shop / Look again, a CSV's sweep log, the paste box.
+  All stored when the ledger moves; Cancel import drops them; Back keeps them.
+  A file or Read with nothing to propose counts as finished.
+- **Books and ONLY books** — a section mixing books with other goods is never
+  taken; the finder looks inside it for a books-only one. Catalogues ›
+  publications › books. Never a front page.
+- **She never feeds the app a shop link**, and "no shop found" is not an answer
+  from a museum that has one.
+- **The finder's search sends two queries in one call** — hers and "<venue>
+  shop books publications" (Detroit's "DIA Publications" came only with both;
+  her keyed connector, 4 Oct).
 
 ### 3. Fixes not yet checked in the cases they were written for
 

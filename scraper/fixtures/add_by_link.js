@@ -89,7 +89,8 @@ const ledger = { rows: [{ id: 'occ-mauritshuis-nl-thegrandtourdestinationitaly',
 
 // ── the shops: real searches, and pages made to real shapes ─────────────────
 const SEARCH = name => JSON.parse(fs.readFileSync(path.join(PAGES, 'shop_search', name + '.json'), 'utf8'));
-const SEARCHES = [[/Courtauld/, SEARCH('courtauld')], [/Cleveland/, SEARCH('cleveland')],
+const DIA_MIXED_ONLY = { results: [SEARCH('detroit').results[2]] };   // made: the reply with only "Books & Stationery" in it
+const SEARCHES = [[/DIA only mixed/, DIA_MIXED_ONLY], [/Courtauld/, SEARCH('courtauld')], [/Cleveland/, SEARCH('cleveland')],
   [/Mauritshuis/, SEARCH('mauritshuis')], [/Thyssen/, SEARCH('thyssen')], [/Detroit/, SEARCH('detroit')]];
 const books = ' Hardcover. 240 pages. € 34,95 — Paperback catalogue. € 24,95 — Exhibition catalogue, hardcover. € 49,95.';
 const SHOPS = {
@@ -99,7 +100,11 @@ const SHOPS = {
   'https://tienda.museothyssen.org/en/': '[Print on demand](https://tienda.museothyssen.org/en/collections/print-on-demand) [Gifts](https://tienda.museothyssen.org/en/collections/regalos) [Museum publications](https://tienda.museothyssen.org/en/collections/publicaciones-museo) [Posters](https://tienda.museothyssen.org/en/collections/posters)',
   'https://tienda.museothyssen.org/en/collections/publicaciones-museo': 'Museum publications' + books,
   'https://diashop.org/dia-publications': SEARCH('detroit_publications').full_content,
+  'https://diashop.org/dia-publications/': SEARCH('detroit_publications').full_content,   // the sidebar's own spelling
   'https://diashop.org/': '',
+  // "Books & Stationery": its sidebar as on her 4 Oct screenshot, links as the
+  // search excerpt gives them; products pens and books alike.
+  'https://diashop.org/dia-museum-book-shop/': '# Books & Stationery\n[Notecards & Journals](https://diashop.org/notecards-journals/) [Art Supplies](https://diashop.org/art-supplies/) [Cookbooks](https://diashop.org/cookbooks-1/) [DIA Publications](https://diashop.org/dia-publications/) [Detroit & Michigan](https://diashop.org/detroit-michigan/) [Artist Monographs & Subjects](https://diashop.org/artist-monographs-subjects/) [Gift Books](https://diashop.org/book-gifts/)\n#### [Gold Fountain Pen - Wave](https://diashop.org/gold-fountain-pen-wave/) $26.95\n#### [Fineliners Set of 5](https://diashop.org/fineliners/) $21.95\n#### [Dutch Art in a Global Age](https://diashop.org/dutch-art-in-a-global-age/) $60.00',
 };
 
 // ── the runtime: a store, a scripted connector and a scripted Claude ───────
@@ -167,6 +172,8 @@ function runtime() {
   const settle = async (n = 6) => { for (let i = 0; i < n; i++) await act(async () => { await new Promise(r => setTimeout(r, 5)); }); };
   const root = createRoot(win.document.getElementById('root'));
   const App = new Function('React', 'window', 'document', 'localStorage', code + '\n;return App;')(
+    React, win, win.document, win.localStorage);
+  const discoverShop = new Function('React', 'window', 'document', 'localStorage', code + '\n;return discoverShop;')(
     React, win, win.document, win.localStorage);
   await act(async () => { root.render(React.createElement(App)); });
   await settle();
@@ -256,37 +263,52 @@ function runtime() {
     ok(text.includes(REFUSED + ' — The museum refused the page (403).'), 'AL-007: a refused page is a line naming the link and why');
     ok(text.includes(EMPTY + ' — The page came back empty.'), 'AL-007a:  so is an empty one');
     ok(win.document.querySelector('textarea').value === REFUSED + '\n' + EMPTY, 'AL-007b:  and the box now holds exactly those two links', JSON.stringify(win.document.querySelector('textarea').value));
-    ok((store.get('links/pending') || {}).text === REFUSED + '\n' + EMPTY, 'AL-007c:  kept in the page\'s store, so closing the page loses nothing');
+    ok(!store.has('links/pending'), 'AL-007c:  not stored yet — the import has not finished (her rule, 4 Oct)');
   }
 
-  // ── AL-008: the new venues and their shops, kept in the store ────────────
-  const venues = (store.get('venues/occasional') || {}).venues || {};
-  const v = id => venues[id] || {};
-  ok(Object.keys(venues).length === 6, 'AL-008: six new venues kept', Object.keys(venues).join(', '));
+  // ── AL-012: an import she does not finish keeps nothing (her rule, 4 Oct) ─
+  const occStored = () => ((store.get('venues/occasional') || {}).venues) || {};
+  const before12 = JSON.stringify(occStored());
+  ok(Object.keys(occStored()).length === 1, 'AL-012: the Read stores no venue and no shop — only what was there before', Object.keys(occStored()).join(', '));
+  {
+    for (const b of buttons(/Add new entry$/)) await click(b);
+    await click(buttons(/^Next$/)[0]);
+    const scr = () => [...win.document.querySelectorAll('[role=dialog]')].find(d => /New Venue Shops/.test(d.textContent));
+    const card = name => [...scr().querySelectorAll('div')].find(d => d.firstChild && d.firstChild.textContent === name && d.querySelector('button'));
+    await click([...card('Museo Nacional Thyssen-Bornemisza').querySelectorAll('button')].find(x => x.textContent === 'Confirm'));
+    ok(JSON.stringify(occStored()) === before12, 'AL-012a:  Confirm on the shop screen stores nothing yet');
+    await click([...scr().querySelectorAll('button')].find(b => b.textContent === 'Back'));
+    await click(buttons(/^Cancel import$/)[0]);
+    ok(!scr() && JSON.stringify(occStored()) === before12, 'AL-012b:  Cancel import: the store is as it was before the Read');
+    // The same links again, from the start: every venue is asked about again.
+    const box2 = dialog().querySelector('textarea');
+    await act(async () => { setter.call(box2, pasted); box2.dispatchEvent(new win.Event('input', { bubbles: true })); });
+    await settle();
+    calls.length = 0;
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await settle(30);
+    const ex = buttons(/^Expand all venues$/)[0];
+    if (ex) await click(ex);
+  }
+
+  // ── AL-008: the new venues' shops, as the finder found them ──────────────
   const fetched = u => calls.some(c => c.kind === 'mcp' && c.tool === 'web_fetch' && c.args.urls[0] === u);
   const searchedFor = re => calls.filter(c => c.kind === 'mcp' && c.tool === 'web_search' && re.test(c.args.search_queries.join(' ')));
   ok(searchedFor(/Courtauld/).length === 1 && searchedFor(/Courtauld/)[0].args.search_queries[0] === 'Courtauld shop exhibition catalogues',
     'AL-008: her own query, "<venue> shop exhibition catalogues", searched once per venue', JSON.stringify(searchedFor(/Courtauld/).map(c => c.args.search_queries)));
-  ok(v('occ-courtauld-ac-uk').shopCatalogues === 'https://shop.courtauld.ac.uk/collections/courtauld-catalogues' && v('occ-courtauld-ac-uk').shelfKind === 'catalogues',
-    'AL-008a:  Courtauld: its catalogues section — not the reseller\'s Courtauld shelf, the museum library\'s catalogues page, the front page or one book', v('occ-courtauld-ac-uk').shopCatalogues);
-  ok(v('occ-clevelandart-org').shopCatalogues === 'https://shop.clevelandart.org/collections/exhibitions'
-     && v('occ-clevelandart-org').shopSearch === 'https://shop.clevelandart.org/search?q=',
-    'AL-008b:  Cleveland: the 4th result, "Exhibition Catalogues" — not "Arts & Crafts" ranked 1st, nor "All Products (not Catalogues)"; Shopify\'s search kept', JSON.stringify(v('occ-clevelandart-org')));
   ok(!fetched('https://shop.clevelandart.org/collections/exhibitions') && !fetched('https://shop.courtauld.ac.uk/collections/courtauld-catalogues'),
-    'AL-008c:  both proved shelves of books by the search\'s own excerpt — no page opened');
-  ok(v('occ-mauritshuis-nl').shopCatalogues === 'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi' && fetched('https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi'),
-    'AL-008d:  Mauritshuis: "Catalogi", opened to check, its excerpt being too thin to prove it', v('occ-mauritshuis-nl').shopCatalogues);
-  ok(fetched('https://tienda.museothyssen.org/collections.json?limit=250')
-     && v('occ-museothyssen-org').shopCatalogues === 'https://tienda.museothyssen.org/en/collections/publicaciones-museo' && v('occ-museothyssen-org').shelfKind === 'books',
-    'AL-008e:  Thyssen: the search found only single books; the shop\'s section list held none (Balenciaga\'s "…catalogos" handle not taken); its menu\'s "Museum publications"', JSON.stringify(v('occ-museothyssen-org')));
-  ok(v('occ-dia-org').shopCatalogues === 'https://diashop.org/dia-publications' && v('occ-dia-org').shelfKind === 'books'
-     && fetched('https://diashop.org/dia-publications'),
-    'AL-008f:  DIA: "DIA Publications", the 1st result of her keyed search (4 Oct), opened to check — its excerpt is only the footer', JSON.stringify(v('occ-dia-org')));
+    'AL-008c:  Courtauld\'s and Cleveland\'s sections proved shelves of books by the search\'s own excerpt — no page opened');
+  ok(fetched('https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi'), 'AL-008d:  Mauritshuis: "Catalogi" opened to check, its excerpt being too thin');
+  ok(fetched('https://tienda.museothyssen.org/collections.json?limit=250'), 'AL-008e:  Thyssen: the search found only single books, so the shop\'s section list was read');
+  ok(fetched('https://diashop.org/dia-publications') && !fetched('https://diashop.org/dia-museum-book-shop/'),
+    'AL-008f:  DIA: "DIA Publications", the 1st result of her keyed search (4 Oct), opened to check; "Books & Stationery" never offered');
   ok(searchedFor(/Detroit/).length === 1 && searchedFor(/Detroit/)[0].args.search_queries[1] === 'Detroit Institute of Arts Museum shop books publications',
     'AL-008f2:  the books section\'s own query rides in the same search call — without it Parallel never returned DIA Publications', JSON.stringify(searchedFor(/Detroit/).map(c => c.args.search_queries)));
-  ok(v('occ-royalacademy-org-uk').shop === 'none', 'AL-008g:  RA: no shop found is "none", never a guess', v('occ-royalacademy-org-uk').shop);
-  ok(v('occ-museothyssen-org').english === false && v('occ-dia-org').english === true, 'AL-008h:  whether a venue is English-speaking is kept, for the lookup\'s language check');
-  ok(v('occ-dia-org').name === 'Detroit Institute of Arts Museum' && v('occ-courtauld-ac-uk').name === 'Courtauld', 'AL-008i:  a venue is named from the page title\'s site part', v('occ-courtauld-ac-uk').name);
+  {
+    const r = await discoverShop('https://diashop.org/', 'dia.org', 'DIA only mixed', []);
+    ok(r.shopCatalogues === 'https://diashop.org/dia-publications/' && r.shelfKind === 'publications' && fetched('https://diashop.org/dia-museum-book-shop/'),
+      'AL-008j:  a search that finds only "Books & Stationery" (pens, journals, books): never taken — opened, and its books-only "DIA Publications" taken', JSON.stringify(r));
+  }
 
   // ── AL-009: the shop screen, between the review and the ledger ───────────
   ok(!/Confirm|Wrong shop|Look again/.test(dialog() ? dialog().textContent : ''), 'AL-009: the import pop-up asks nothing about shops');
@@ -311,6 +333,14 @@ function runtime() {
   ok(footer() === '6 still to decide' && !!shopCard('Royal Academy of Arts'), 'AL-009c:  six venues to answer — the RA too, its one card rejected — and the ledger button says so', footer());
   ok(shops().textContent.includes('Check and approve each shop link.'), 'AL-009c2:  her heading and line');
   {
+    const has = (name, u) => shopCard(name).textContent.includes(u);
+    ok(has('Courtauld', 'https://shop.courtauld.ac.uk/collections/courtauld-catalogues')
+       && has('Cleveland Museum of Art', 'https://shop.clevelandart.org/collections/exhibitions')
+       && has('Mauritshuis', 'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi')
+       && has('Museo Nacional Thyssen-Bornemisza', 'https://tienda.museothyssen.org/en/collections/publicaciones-museo'),
+      'AL-009c3:  each card shows the section the finder took: Courtauld\'s catalogues (not the reseller\'s shelf), Cleveland\'s 4th result "Exhibition Catalogues", Mauritshuis\'s "Catalogi", Thyssen\'s menu "Museum publications"');
+  }
+  {
     const order = name => [...shopCard(name).querySelectorAll('button')].map(b => b.textContent).join('|');
     const conf = [...shopCard('Royal Academy of Arts').querySelectorAll('button')].find(b => b.textContent === 'Confirm');
     ok(shopCard('Royal Academy of Arts').textContent.includes('No museum shop found.') && order('Royal Academy of Arts') === 'Confirm|Look again|No shop'
@@ -318,38 +348,48 @@ function runtime() {
       'AL-009d:  the same three buttons in the same places on every card; Confirm greyed where nothing was found', order('Royal Academy of Arts'));
   }
   ok(shopCard('Detroit Institute of Arts Museum').textContent.includes('https://diashop.org/dia-publications'), 'AL-009e0:  DIA\'s section shown, to confirm');
-  // Both of DIA's sections turned down in turn: the shop is still found, its
-  // books section is not — and the card says which.
-  await press('Detroit Institute of Arts Museum', 'Look again'); await settle(10);
-  ok(shopCard('Detroit Institute of Arts Museum').textContent.includes('https://diashop.org/dia-museum-book-shop/'), 'AL-009e1:  Look again offers "Books & Stationery", proved by its excerpt', shopCard('Detroit Institute of Arts Museum').textContent);
+  // DIA Publications turned down: "Books & Stationery" is mixed, so it is only
+  // looked inside — and holds no other books-only section.
+  calls.length = 0;
   await press('Detroit Institute of Arts Museum', 'Look again'); await settle(10);
   ok(shopCard('Detroit Institute of Arts Museum').textContent.includes('Shop found, but not its books section: https://diashop.org/')
-     && (v2 => v2.shop === 'noshelf' && v2.turnedDown.length === 2)(((store.get('venues/occasional') || {}).venues || {})['occ-dia-org'] || {}),
-    'AL-009e:  both turned down, a shop with no other books section says which, links the shop — never its front page as the section', shopCard('Detroit Institute of Arts Museum').textContent);
+     && !shopCard('Detroit Institute of Arts Museum').textContent.includes('dia-museum-book-shop') && fetched('https://diashop.org/dia-museum-book-shop/'),
+    'AL-009e:  Look again never offers a mixed books-and-stationery section; with nothing books-only left it says so and links the shop', shopCard('Detroit Institute of Arts Museum').textContent);
   await press('Museo Nacional Thyssen-Bornemisza', 'Confirm');
   ok(/^✓ Confirm$/.test([...shopCard('Museo Nacional Thyssen-Bornemisza').querySelectorAll('button')][0].textContent), 'AL-009f0:  Confirm ticks, as "Add new entry" does');
-  ok(((store.get('venues/occasional') || {}).venues['occ-museothyssen-org'] || {}).confirmed === true && footer() === '5 still to decide',
-    'AL-009f:  Confirm is kept at once, and one fewer to decide', footer());
+  ok(!(occStored()['occ-museothyssen-org'] || {}).confirmed && footer() === '5 still to decide',
+    'AL-009f:  Confirm counts at once — one fewer to decide — but is not stored yet', footer());
   calls.length = 0;
   await press('Mauritshuis', 'Look again');
   await settle(10);
-  {
-    const m = (store.get('venues/occasional') || {}).venues['occ-mauritshuis-nl'] || {};
-    ok(calls.some(c => c.tool === 'web_search') && m.shopCatalogues === 'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi'
-       && (m.turnedDown || []).includes('https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi'),
-      'AL-009g:  Look again searches on the spot and skips only the page turned down — the same shop\'s other section is offered', JSON.stringify(m));
-    ok(shopCard('Mauritshuis').textContent.includes('boeken-catalogi') && !m.confirmed, 'AL-009h:   shown on the same card, to confirm');
-  }
+  ok(calls.some(c => c.tool === 'web_search') && shopCard('Mauritshuis').textContent.includes('https://shop.mauritshuis.nl/product-categorie/boeken-catalogi')
+     && !shopCard('Mauritshuis').textContent.includes('/catalogi/catalogi') && !/✓/.test(shopCard('Mauritshuis').textContent),
+    'AL-009g:  Look again searches on the spot and skips only the page turned down — the same shop\'s other section offered, to confirm', shopCard('Mauritshuis').textContent);
   await click([...shops().querySelectorAll('button')].find(b => b.textContent === 'Back'));
   ok(!shops() && buttons(/^Next$/).length === 1, 'AL-009i:  Back returns to the review, decisions kept');
   await click(buttons(/^Next$/)[0]);
+  ok(/^✓ Confirm$/.test([...shopCard('Museo Nacional Thyssen-Bornemisza').querySelectorAll('button')][0].textContent) && footer() === '5 still to decide',
+    'AL-009i2:  and the shop answers given before Back are still there', footer());
   await press('Royal Academy of Arts', 'No shop');
-  ok(((store.get('venues/occasional') || {}).venues['occ-royalacademy-org-uk'] || {}).confirmed === true, 'AL-009j:  No shop is an answer, kept: its lookups go to the web');
+  ok(/^✓ No shop$/.test([...shopCard('Royal Academy of Arts').querySelectorAll('button')][2].textContent), 'AL-009j:  No shop is an answer');
   await press('Detroit Institute of Arts Museum', 'No shop');
   await press('Courtauld', 'Confirm'); await press('Cleveland Museum of Art', 'Confirm'); await press('Mauritshuis', 'Confirm');
   ok(footer() === 'Go ahead and update the ledger', 'AL-009k:  every shop answered, the ledger may move', footer());
   await click([...shops().querySelectorAll('button')].pop());
   ok(!shops() && ledgerCards() > cardsBefore, 'AL-009l:  and does');
+  ok((store.get('links/pending') || {}).text === REFUSED + '\n' + EMPTY, 'AL-007d:  the import finished, the two unread links are stored, so closing the page loses nothing');
+  {
+    const v = id => occStored()[id] || {};
+    ok(Object.keys(occStored()).length === 6 && Object.values(occStored()).every(x => x.confirmed === true),
+      'AL-009m:  only now are the six venues and her answers stored', JSON.stringify(Object.values(occStored()).map(x => [x.id, x.shop, x.confirmed])));
+    ok(v('occ-courtauld-ac-uk').shelfKind === 'catalogues' && v('occ-clevelandart-org').shopSearch === 'https://shop.clevelandart.org/search?q='
+       && v('occ-museothyssen-org').shelfKind === 'publications' && v('occ-mauritshuis-nl').shopCatalogues === 'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi'
+       && v('occ-mauritshuis-nl').turnedDown.includes('https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi'),
+      'AL-009n:  stored as answered: the section, its kind, the shop\'s search, the pages turned down', JSON.stringify([v('occ-courtauld-ac-uk'), v('occ-mauritshuis-nl')]));
+    ok(v('occ-royalacademy-org-uk').shop === 'none' && v('occ-dia-org').shop === 'none', 'AL-009o:  No shop stored: their lookups go to the web');
+    ok(v('occ-museothyssen-org').english === false && v('occ-dia-org').english === true && v('occ-courtauld-ac-uk').name === 'Courtauld',
+      'AL-009p:  English-speaking or not, and the name from the page title, stored with them');
+  }
 
   // ── AL-010: accepted, they file under their venues and the one chip ─────
   ok(!!dialog() && /Links/.test(dialog().textContent), 'AL-010z:  two links could not be read, so the import pop-up waits under it');
@@ -365,6 +405,25 @@ function runtime() {
   const dia = arts.find(a => a.textContent.includes('Caravaggio'));
   ok(dia && /^Detroit/.test(dia.textContent) && !/^Detroit Institute/.test(dia.textContent), 'AL-011: a venue\'s short name, hers, heads its cards', dia && dia.textContent.slice(0, 40));
   ok((((store.get('venues/occasional') || {}).venues || {})['occ-dia-org'] || {}).short === 'Detroit', 'AL-011a:   and survives its shop being looked for again');
+  // ── AL-013: a CSV import keeps nothing until it finishes either ─────────
+  {
+    const csv = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at\n'
+      + 'met,A Show Never Seen,2026-11-01,2027-02-01,A test row.,https://www.metmuseum.org/exhibitions/a-show-never-seen,,2026-10-03T00:00:00.000Z\n';
+    const feed = async () => {
+      const input = win.document.querySelector('input[type=file][accept=".csv,text/csv"]');
+      Object.defineProperty(input, 'files', { value: [new win.File([csv], 'sweep.csv', { type: 'text/csv' })], configurable: true });
+      await act(async () => { input.dispatchEvent(new win.Event('change', { bubbles: true })); });
+      await settle(10);
+    };
+    await feed();
+    ok(buttons(/Add new entry$/).length === 1 && !store.has('sweeps/venues'), 'AL-013: a CSV read: its card shown, the sweep log not stored yet');
+    await click(buttons(/^Cancel import$/)[0]);
+    ok(!store.has('sweeps/venues'), 'AL-013a:  Cancel import: the sweep log still not stored');
+    await feed();
+    await click(buttons(/Add new entry$/)[0]);
+    await click(buttons(/^Go ahead and update the ledger$/)[0]);
+    ok(!!((store.get('sweeps/venues') || {}).venues || {}).met, 'AL-013b:  the import finished: the sweep log stored', JSON.stringify(store.get('sweeps/venues')));
+  }
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) fail('React complained: ' + shouted.find(s => /Warning/.test(s)));
   console.log(failures ? '\n' + failures + ' FAILED' : '\nadd_by_link: all passed');
   process.exit(failures ? 1 : 0);
