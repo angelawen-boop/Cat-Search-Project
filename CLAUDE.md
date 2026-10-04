@@ -296,7 +296,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > forward. **Renaming the connector means restating them.**
 
 **Live: 39.2 on her main app, 39.2 · cloud 4 on the test page** (4 Oct, Import
-as CSV · Links, shop screen). **Both pages are published together, every time — her rule, 4 Oct:** the
+as CSV · Links, shop screen). 39.3 built, unpublished (§7.2). **Both pages are published together, every time — her rule, 4 Oct:** the
 test page differs from her main app only by its cloud functions, never by
 falling behind. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -1062,43 +1062,25 @@ stale after a minute; every save checks it first. A republish while her page is 
 4. Google Drive backup by button — on the table, never automatic.
 
 
-### 2. Add by link — 39.3 in progress (uncommitted work committed as WIP, 4 Oct)
+### 2. Add by link — 39.3 built, not published
 
-**Live is 39.2** (both pages). 39.3 is built on `main` and the cloud branch, NOT published.
+**Live is 39.2** (both pages). 39.3, from her 4 Oct test of 39.2: CSV / Links in
+Load/Save's style, the pressed one green, the pop-up sized to its buttons; no
+second progress bar; shop screen "New Venue Shops" / "Check and approve each
+shop link.", the review cards' buttons, always Confirm · Look again · No shop;
+every new venue met is listed; the review's cancel reads **"Cancel import"**.
 
-Done in code, from her 4 Oct test of 39.2 (screenshots):
-- CSV / Links: Load/Save's size and style, both plain; the pressed one green.
-  The two-button pop-up is `width: fit-content`.
-- The header's progress bar is hidden while the Import pop-up is open (it
-  duplicated the pop-up's own).
-- Shop screen: title **"New Venue Shops"**, line **"Check and approve each shop
-  link."** Buttons are the review cards' `decBtn`: Confirm ticks green like "Add
-  new entry", No shop like "Reject". **Always Confirm · Look again · No shop in
-  that order**; Confirm greyed when no section was found. "Shop found, but not
-  its books section: <shop link>" vs "No museum shop found." vs "Search failed."
-- **Every new venue met in the Read is listed**, whatever her card decisions
-  (`readVenues`). 39.2 listed only venues with a card going in, so the RA and
-  Courtauld were missing — a rule nobody asked for, removed.
-- Finder search sends two queries in one call: hers, plus "<venue> shop books
-  publications". **Unproven** — Detroit's "Books & Stationery - DIA
-  Publications" (Google's 3rd) never came back from Parallel; the free tier
-  then refused the test. One keyed search settles it — ask her first.
+**Detroit, settled 4 Oct (her keyed connector):** the finder's search sends two
+queries in one call — hers and "<venue> shop books publications". With both,
+"DIA Publications" came back 1st; with hers alone, never. Saved:
+`docs/link_pages/shop_search/detroit*.json`; AL-008f, AL-009e.
 
-**Test state:** `npm test` all green at 39.3 (AL-002a, AL-010a → 9, AL-010b on
-Cleveland). Merged into `claude/ledger-cloud`; both pages built, not published.
+**Her ruling, 4 Oct: she never feeds the app a shop link, and "no shop found"
+is not an answer she accepts from a museum that has one.** No paste box, no
+skip. A venue the finder misses is a finder bug, fixed in code on a saved
+real search.
 
-**Waiting on her:**
-1. Her note "the import review screen for importing links — the cancel button
-   that says 'cancel refresh'" was cut off. Ask what she wants it to say.
-2. **No way past the shop screen** when Look again fails and No shop is wrong
-   (Detroit today) — she would have to cancel the whole import. Offer: paste
-   the right link herself, and/or "Skip for now" (shop stays unconfirmed, asked
-   again next Read). Her call; build nothing until she picks.
-
-Her store, read 4 Oct: Cleveland, Mauritshuis, Thyssen confirmed; RA
-(`shop.royalacademy.org.uk/books/bookshop/exhibition-catalogues`) and Courtauld
-(`/collections/courtauld-catalogues`) found, unconfirmed; Detroit `noshelf`.
-Card short names are in the test page's store only.
+**Next:** merge into `claude/ledger-cloud`, build both, ask before publishing.
 
 ### 3. Fixes not yet checked in the cases they were written for
 

@@ -90,7 +90,7 @@ const ledger = { rows: [{ id: 'occ-mauritshuis-nl-thegrandtourdestinationitaly',
 // ── the shops: real searches, and pages made to real shapes ─────────────────
 const SEARCH = name => JSON.parse(fs.readFileSync(path.join(PAGES, 'shop_search', name + '.json'), 'utf8'));
 const SEARCHES = [[/Courtauld/, SEARCH('courtauld')], [/Cleveland/, SEARCH('cleveland')],
-  [/Mauritshuis/, SEARCH('mauritshuis')], [/Thyssen/, SEARCH('thyssen')]];
+  [/Mauritshuis/, SEARCH('mauritshuis')], [/Thyssen/, SEARCH('thyssen')], [/Detroit/, SEARCH('detroit')]];
 const books = ' Hardcover. 240 pages. € 34,95 — Paperback catalogue. € 24,95 — Exhibition catalogue, hardcover. € 49,95.';
 const SHOPS = {
   'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi': 'Catalogi' + books,
@@ -98,6 +98,7 @@ const SHOPS = {
   'https://tienda.museothyssen.org/collections.json?limit=250': SEARCH('thyssen_collections').full_content,
   'https://tienda.museothyssen.org/en/': '[Print on demand](https://tienda.museothyssen.org/en/collections/print-on-demand) [Gifts](https://tienda.museothyssen.org/en/collections/regalos) [Museum publications](https://tienda.museothyssen.org/en/collections/publicaciones-museo) [Posters](https://tienda.museothyssen.org/en/collections/posters)',
   'https://tienda.museothyssen.org/en/collections/publicaciones-museo': 'Museum publications' + books,
+  'https://diashop.org/dia-publications': SEARCH('detroit_publications').full_content,
   'https://diashop.org/': '',
 };
 
@@ -278,8 +279,11 @@ function runtime() {
   ok(fetched('https://tienda.museothyssen.org/collections.json?limit=250')
      && v('occ-museothyssen-org').shopCatalogues === 'https://tienda.museothyssen.org/en/collections/publicaciones-museo' && v('occ-museothyssen-org').shelfKind === 'books',
     'AL-008e:  Thyssen: the search found only single books; the shop\'s section list held none (Balenciaga\'s "…catalogos" handle not taken); its menu\'s "Museum publications"', JSON.stringify(v('occ-museothyssen-org')));
-  ok(v('occ-dia-org').shop === 'noshelf' && v('occ-dia-org').shopHome === 'https://diashop.org/' && !v('occ-dia-org').shopCatalogues,
-    'AL-008f:  DIA: a shop with no books section found claims none — never its front page', JSON.stringify(v('occ-dia-org')));
+  ok(v('occ-dia-org').shopCatalogues === 'https://diashop.org/dia-publications' && v('occ-dia-org').shelfKind === 'books'
+     && fetched('https://diashop.org/dia-publications'),
+    'AL-008f:  DIA: "DIA Publications", the 1st result of her keyed search (4 Oct), opened to check — its excerpt is only the footer', JSON.stringify(v('occ-dia-org')));
+  ok(searchedFor(/Detroit/).length === 1 && searchedFor(/Detroit/)[0].args.search_queries[1] === 'Detroit Institute of Arts Museum shop books publications',
+    'AL-008f2:  the books section\'s own query rides in the same search call — without it Parallel never returned DIA Publications', JSON.stringify(searchedFor(/Detroit/).map(c => c.args.search_queries)));
   ok(v('occ-royalacademy-org-uk').shop === 'none', 'AL-008g:  RA: no shop found is "none", never a guess', v('occ-royalacademy-org-uk').shop);
   ok(v('occ-museothyssen-org').english === false && v('occ-dia-org').english === true, 'AL-008h:  whether a venue is English-speaking is kept, for the lookup\'s language check');
   ok(v('occ-dia-org').name === 'Detroit Institute of Arts Museum' && v('occ-courtauld-ac-uk').name === 'Courtauld', 'AL-008i:  a venue is named from the page title\'s site part', v('occ-courtauld-ac-uk').name);
@@ -313,8 +317,15 @@ function runtime() {
        && conf.disabled && order('Courtauld') === 'Confirm|Look again|No shop',
       'AL-009d:  the same three buttons in the same places on every card; Confirm greyed where nothing was found', order('Royal Academy of Arts'));
   }
-  ok(shopCard('Detroit Institute of Arts Museum').textContent.includes('Shop found, but not its books section: https://diashop.org/'),
-    'AL-009e:  a shop found without its books section says which, and links the shop', shopCard('Detroit Institute of Arts Museum').textContent);
+  ok(shopCard('Detroit Institute of Arts Museum').textContent.includes('https://diashop.org/dia-publications'), 'AL-009e0:  DIA\'s section shown, to confirm');
+  // Both of DIA's sections turned down in turn: the shop is still found, its
+  // books section is not — and the card says which.
+  await press('Detroit Institute of Arts Museum', 'Look again'); await settle(10);
+  ok(shopCard('Detroit Institute of Arts Museum').textContent.includes('https://diashop.org/dia-museum-book-shop/'), 'AL-009e1:  Look again offers "Books & Stationery", proved by its excerpt', shopCard('Detroit Institute of Arts Museum').textContent);
+  await press('Detroit Institute of Arts Museum', 'Look again'); await settle(10);
+  ok(shopCard('Detroit Institute of Arts Museum').textContent.includes('Shop found, but not its books section: https://diashop.org/')
+     && (v2 => v2.shop === 'noshelf' && v2.turnedDown.length === 2)(((store.get('venues/occasional') || {}).venues || {})['occ-dia-org'] || {}),
+    'AL-009e:  both turned down, a shop with no other books section says which, links the shop — never its front page as the section', shopCard('Detroit Institute of Arts Museum').textContent);
   await press('Museo Nacional Thyssen-Bornemisza', 'Confirm');
   ok(/^✓ Confirm$/.test([...shopCard('Museo Nacional Thyssen-Bornemisza').querySelectorAll('button')][0].textContent), 'AL-009f0:  Confirm ticks, as "Add new entry" does');
   ok(((store.get('venues/occasional') || {}).venues['occ-museothyssen-org'] || {}).confirmed === true && footer() === '5 still to decide',
