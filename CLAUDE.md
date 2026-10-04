@@ -1037,8 +1037,12 @@ stale after a minute; every save checks it first. A reload or republish in the s
 
 **Next:**
 1. Her normal use, over several sessions; she reports what surfaces. On request,
-   read the store and check it against her file.
-2. `CLOUD_OPENS=true` once Loads have matched every time — her call.
+   read the store and check it against her file. **4 Oct:** the cloud copy works
+   well, but she has been opening it ("open it") and not exporting on leaving —
+   so Loads were never checked. **One more week, from 4 Oct:** export on every
+   exit, Load that file next time, read the match line.
+2. `CLOUD_OPENS=true` once Loads have matched every time — her call. **Load
+   stays for good** — it is how she opens a backup.
 3. Merge to `main` and publish to her app — her call; §4's rules apply. **First
    copy the test page's `sweeps/venues` and `quarantine/rows` into her app's
    store** (quarantine merged latest-wins, never replaced).
@@ -1089,9 +1093,9 @@ sweep, and a session with her stitches and compresses (her design, 2 Oct).
   `docs/artic_pages/` README has the idea.
 - **A QA pass before the stitch** — parked from a session whose reasoning she
   does not trust. `qc.js` is NOT that pass and does not re-open it.
-- **Picked shows** — occasional venues where she picks ~5 shows a year and only
-  those pages are read. Test case: Detroit Institute of Arts. **Not built.**
-  `docs/picked_shows.md`.
+- **Add by link** — she pastes show links under Import; the app reads them into
+  ordinary cards, "Occasional" chip. Designed and tested 3–4 Oct; **not built —
+  waits for her go.** `docs/picked_shows.md`.
 
 ---
 
@@ -1150,7 +1154,7 @@ price, her ruling 1 Oct).
 | `docs/venue_urls.md` | The original 21 venues' addresses from the Sweeper Brief, and which of its notes still hold | Wiring or re-checking one of those venues |
 | `docs/listing_pages/`, `docs/*_pages/` | Pages she saved, with a README of what each settled | Changing that venue's recipe — before asking her for anything |
 | `docs/compression.md` | Compression design, model split, eval, rejected alternatives | Changing compression — otherwise don't |
-| `docs/picked_shows.md` | Picked shows — **not built** | She raises it |
+| `docs/picked_shows.md` | Add by link — design, rulings, 3 Oct test; **not built** | Building it |
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review | Before touching a reviewed venue |
 | `docs/review-log.md` | Independent review findings and decisions | A reviewer raises something |

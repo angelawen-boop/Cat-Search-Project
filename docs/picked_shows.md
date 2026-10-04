@@ -1,89 +1,65 @@
-# Picked shows — venues watched a few shows at a time
+# Picked shows — "Add by link" in the app
 
-**Her idea, agreed in rough shape 28 Sep 2026. Not built.** Nothing is built
-until she says go. Open questions are at the bottom, and they are hers.
+**Her design, agreed 3–4 Oct 2026. Not built** — nothing is built until she
+says go. Replaces the scraper-side plan of 28 Sep (in git), which survives
+only as the fallback below.
 
 ## The problem
 
-Some venues matter to her only now and then: an occasional blockbuster, at
-most ~5 shows a year reaching her ledger. A full venue costs a listing
-recipe, pagination, a past archive, her exclusion rulings and a count check,
-plus a monthly sweep's page loads. Then ~30 rows arrive and she dismisses 27.
-The cost is out of all proportion to what she keeps.
+Some venues matter to her only now and then: ~5 shows a year. A full venue
+costs a recipe, an archive, her rulings and a monthly sweep — then ~30 rows
+arrive and she dismisses 27. She would rather pick the shows herself, and add
+one the moment she comes across it.
 
-## The design as agreed
+## The design
 
-**She picks the shows; the scraper reads only those pages.**
+- **Behind Import — no new section or button.** Import offers **CSV file**
+  (the file picker, as now) or **Paste links**: one box, links separated any
+  way (commas, spaces, lines, mixed with text); code takes everything starting
+  `http`, a repeat read once. One button, **Read**; progress "Reading 3 of 10…".
+- **The ordinary review.** Each link becomes a pro forma row fed to the
+  existing intake: Add / Fill / Change / Reject / quarantine all as now.
+- **A link it cannot read is a line, never a card** — the full link and why
+  (empty page, refused, no dates). Unread links **stay in the paste box**,
+  kept in the store, until read or cleared by her.
+- **No lookback cutoff** for anything added by link (her ruling).
+- **Chip: one "Occasional"** for every venue added this way (her ruling); each
+  venue keeps its own name and shop behind it.
+- **Cost:** one keyed Parallel read and one model call per link; a venue's
+  first link 2–3 more, once.
 
-- **She browses** the venue's current, upcoming and past shows herself and
-  picks the ones she wants.
-- **She hands over the addresses** in a file, one link per show. That is
-  pasting addresses, not typing exhibition data, so her "no manual data
-  entry" constraint holds.
-- **The scraper reads only those pages**, one each. No listing, no archive,
-  no pagination, no count to check against hers.
-- **The output is the ordinary pro forma CSV** (CLAUDE.md §3), so stitch,
-  compress, qc, the import and the catalogue lookup all work unchanged.
-- **A site that blocks us:** she saves the pages instead of giving links, and
-  the same reader reads those (as `from_saved_pages.js` did for MoMA on 27 Sep).
+## Per link — code first, model only for prose
 
-## Setting up a venue — once
+1. One page read (`fetchPage`, `full`).
+2. **Title = what the catalogue would be called** (her ruling): the page's
+   title, site name stripped; subtitles and split headings kept — "Peggy
+   Guggenheim in London: The Making of a Collector", "Hammershøi. The Eye that
+   Listens". **Title stays in the museum's language.**
+3. **Dates:** the first range after the show's heading, by the scraper's own
+   date reader — moved to its own file and shared, never copied.
+4. **Description by the model** (`modelTier: default`, her ruling), same
+   prompt as compression, shared not copied. **Any non-English page comes out
+   in English; a non-English title gets its translation at the start**
+   (`In English: "…".`) — every language, not only Italian (her ruling).
+5. Note: `Added by link.`
 
-1. **She saves one show page of every kind** the venue has. Past shows often
-   sit on a differently built page from current ones, so that could be 1
-   page or 3–4. Same rule as the intake (CLAUDE.md §5, step 2): the
-   addresses are copied from a record, never typed from memory.
-2. **A small recipe, written offline** on those pages: where the title, the
-   dates and the description sit on ONE kind of page. Tested on her saved
-   pages, no network, as every recipe is.
-3. **What the site asks** — `node scraper/robots.js` for its wait and
-   off-limits paths, before any live page is read.
-4. **One live check that the container can get in** — robots.txt guarantees
-   nothing until a page is actually asked for. One request, for ONE of the
-   show pages the recipe was written on (the recipe itself is already proven
-   offline, so this asks about ACCESS only). It passes only if the real page
-   comes back — not a refusal, and not a bot-check page served as if it
-   were fine. Never more than that one page. If it fails, she saves the
-   pages instead of giving links.
-5. **The app** gets the venue's code, chip and shop address, and a publish
-   (CLAUDE.md §4's rules apply).
+## A venue the app has not seen
 
-## A page the samples did not cover
+Name from the page title; shop from the show page's own link, else one
+search. It must find the **exhibition-catalogues shelf**, else the books
+shelf — never the whole shop (mugs, prints). **One card shows venue and shop;
+she confirms**; kept in the store, so the next show there skips this. "No
+shop" kept the same way.
 
-A picked show whose page is built differently must come out **flagged, not
-wrong**: a note on the row saying which field could not be read. She saves
-that page and the recipe is extended to it. It must never produce a
-plausible-looking wrong row.
+## Tested 3 Oct
 
-## Venues in this stream
+10 show pages, 6 venues (Thyssen, Mauritshuis, RA, Courtauld, DIA,
+Cleveland), one keyed read each: all full text, none empty. The dates rule
+right 10/10 — every page also carried other dates (another venue's leg, other
+displays, events, "More exhibitions"). No JSON-LD comes through Parallel.
+Shop link on the show page at 4 of 6. These pages become the offline fixtures.
 
-| Venue | State |
-|---|---|
-| `moma` | **No longer — swept live from her laptop since 30 Sep** (her ruling). It was the first venue handled this way (27 Sep, `from_saved_pages.js`, 4 rows) |
-| Detroit Institute of Arts (DIA) | **The test case** — the first venue set up this way, her choice 28 Sep. No venue code chosen, no robots.txt read, no pages saved yet |
-| Guggenheim, Whitney | Named by her as likely candidates, 28 Sep. Nothing decided |
+## Fallback — a link the app cannot read
 
-More will come; she has not listed them yet.
-
-## The in-app route — "Add by link", tested 3 Oct (not built)
-
-Her preferred shape: paste one link (or up to ~10) in the app → Add cards.
-**Test:** 10 show pages, 6 venues, one keyed Parallel read each — all full
-text, none empty. Dates: the first range after the show's heading, by code,
-right on 10/10. No JSON-LD comes through Parallel. Shop link on the page at 4 of 6.
-- **Title = what the catalogue would be called** (her ruling): subtitles and
-  split headings kept — "Peggy Guggenheim in London: The Making of a Collector",
-  "Hammershøi. The Eye that Listens".
-- **A new venue's shop:** found once, confirmed by her, kept in the store. It
-  must find the **exhibition-catalogues shelf**, else the books shelf — never
-  the whole shop (mugs, prints).
-
-## Open — hers to decide when building
-
-- **Chips:** one per venue, or one grouped chip (e.g. "Occasional") holding
-  them all. A grouped chip keeps the row short but changes how venues are
-  filed.
-- **Re-reading the list:** read each link once and never again, or re-read
-  the whole list on each monthly sweep (one page per show) so a changed date
-  or description reaches her as a Change card.
-- **Where the link file lives** and what it looks like.
+The scraper reads that one page (a small recipe on pages she saves; robots.txt
+first; one access check), output the ordinary CSV.
