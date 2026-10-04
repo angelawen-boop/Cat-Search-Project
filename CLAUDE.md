@@ -1064,8 +1064,7 @@ stale after a minute; every save checks it first. A republish while her page is 
 
 ### 2. Add by link — 39.3 in progress (uncommitted work committed as WIP, 4 Oct)
 
-**Live is 39.2** (both pages). 39.3 is built in `Cat_Watch.jsx` on `main`, NOT
-published, version still reads 39.2 — bump to 39.3 before building.
+**Live is 39.2** (both pages). 39.3 is built on `main` and the cloud branch, NOT published.
 
 Done in code, from her 4 Oct test of 39.2 (screenshots):
 - CSV / Links: Load/Save's size and style, both plain; the pressed one green.
@@ -1085,11 +1084,8 @@ Done in code, from her 4 Oct test of 39.2 (screenshots):
   Publications" (Google's 3rd) never came back from Parallel; the free tier
   then refused the test. One keyed search settles it — ask her first.
 
-**Test state:** `add_by_link.js` passes except AL-010a, which still expects 10
-shows — the test now rejects the RA card, so 9 is right. Pending edit: AL-010a
-→ 9, AL-010b → check a Cleveland card, add AL-002a (pressed Links is solid,
-CSV transparent). Then `npm test`, then merge into `claude/ledger-cloud`,
-build both, ask before publishing.
+**Test state:** `npm test` all green at 39.3 (AL-002a, AL-010a → 9, AL-010b on
+Cleveland). Merged into `claude/ledger-cloud`; both pages built, not published.
 
 **Waiting on her:**
 1. Her note "the import review screen for importing links — the cancel button
