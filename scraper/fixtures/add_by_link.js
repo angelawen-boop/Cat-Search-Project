@@ -168,9 +168,12 @@ function runtime() {
   const buttons = re => [...win.document.querySelectorAll('button')].filter(b => re.test(b.textContent.trim()));
   const click = async el => { await act(async () => { el.dispatchEvent(new win.MouseEvent('click', { bubbles: true })); }); await settle(); };
 
+  // The sweep-file button: "Import Refresh" on main, "Import" on the cloud
+  // branch (where main's ledger "Import" is "Load").
+  const importBtn = () => buttons(/^Import Refresh$/)[0] || buttons(/^Import$/)[0];
   // ── AL-001: Import Refresh opens the two ways in, and nothing else ────────
   ok(buttons(/^CSV file$/).length === 0 && buttons(/^Paste links$/).length === 0, 'AL-001: before Import Refresh is pressed, neither choice is on screen');
-  await click(buttons(/^Import Refresh$/)[0]);
+  await click(importBtn());
   ok(buttons(/^CSV file$/).length === 1 && buttons(/^Paste links$/).length === 1, 'AL-001a:  pressed, it offers "CSV file" and "Paste links"');
   {
     const csvInput = win.document.querySelector('input[type=file][accept=".csv,text/csv"]');
@@ -178,7 +181,7 @@ function runtime() {
     await click(buttons(/^CSV file$/)[0]);
     ok(opened, 'AL-001b:  "CSV file" opens the file picker, as Import Refresh always did');
   }
-  await click(buttons(/^Import Refresh$/)[0]);
+  await click(importBtn());
   await click(buttons(/^Paste links$/)[0]);
   const box = win.document.querySelector('textarea');
   ok(!!box && buttons(/^Read$/).length === 1, 'AL-002: "Paste links" opens one box and a Read button');
