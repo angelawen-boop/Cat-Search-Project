@@ -3187,8 +3187,9 @@ export default function App(){
         const data=JSON.parse(text);
         cloudPrev.current=rec; cloudFp.current=ledgerFingerprintText(data);
         setCloudLive({rec,data}); setLastSaved(rec);
-        // A read-only copy shows the cloud copy: it cannot Load a file.
-        if(CLOUD_OPENS||cloudReadOnly)openCloudData(rec,data);
+        // A READ-ONLY COPY OPENS NOTHING BY ITSELF — her ruling, 4 Oct. It opens
+        // empty like any copy; "Open it" shows the cloud copy when she asks.
+        if(CLOUD_OPENS&&!cloudReadOnly)openCloudData(rec,data);
       }catch(e){ setCloudLive({why:cloudTrouble(e,"read")}); }
     })();
     // Add by link: the venues it has met, and links still waiting in the box.
@@ -3353,8 +3354,9 @@ export default function App(){
     setLastSaved(rec); setSaveState("saved"); setSaveErr(null); setCloudCheck(null);
     cloudArmed.current=true;
   }
+  // Allowed in a read-only copy (her ruling, 4 Oct): it shows the cloud copy
+  // and writes nothing — openCloudData passes the read-only flag on to loadLedger.
   async function requestOpenCloud(){
-    if(roStop())return;
     const go=async()=>{
       const db=await useCap("db"); if(!db)return;
       try{

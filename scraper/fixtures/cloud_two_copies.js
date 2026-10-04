@@ -86,7 +86,11 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     // B: a second copy opens while A is open.
     const B = await open();
     ok(await until(() => RO.test(B.text())), 'TC-002: a copy opened while another is open says it is read only');
-    ok(await until(() => new RegExp('Opened the cloud copy saved .* — ' + hers.rows.length + ' exhibitions').test(B.text())), 'TC-003:   and shows the cloud copy — all ' + hers.rows.length + ' exhibitions — though it cannot Load a file');
+    // It opens NOTHING by itself (her ruling, 4 Oct); "Open it" shows the cloud copy.
+    await settle(600);
+    ok(!B.star() && !/Opened the cloud copy/.test(B.text()), 'TC-003: a read-only copy opens nothing by itself');
+    B.click([...B.doc.querySelectorAll('button')].find(b => b.textContent === 'Open it'));
+    ok(await until(() => new RegExp('Opened the cloud copy saved .* — ' + hers.rows.length + ' exhibitions').test(B.text())), 'TC-003b:   "Open it" shows the cloud copy — all ' + hers.rows.length + ' exhibitions');
     ok(session().id === aId, 'TC-004:   the edit record still names the first copy');
 
     const before = liveSaved(), docsBefore = store.docs.size;
