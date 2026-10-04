@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "39.5 · cloud 4";   // branch claude/ledger-cloud: its own series, her ruling 24 Sep — main's number, then the cloud count
+const APP_VERSION = "39.5";
 const APP_VERSION_DATE = "4 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -2338,6 +2338,10 @@ async function cloudSessionClaim(db,now){
 async function rawStore(){
   try{ return (typeof window!=="undefined"&&window.claude&&window.claude.use)?await window.claude.use("db"):null; }catch{ return null; }
 }
+// The branch's own version series (her ruling, 24 Sep): main's number, then the
+// cloud count. The cloud count lives HERE, not on the APP_VERSION line, so that
+// line stays identical to main's and merging main in never clashes over it.
+const CLOUD_COUNT = "cloud 4";
 // ── END OF THE CLOUD LEDGER ──────────────────────────────────────────────────
 
 const today=()=>new Date().toISOString().slice(0,10);
@@ -6160,7 +6164,7 @@ export default function App(){
           it is something she checks when a page and a conversation disagree.
           Reads APP_VERSION, so there is one copy of the number in the file. */}
       <footer style={{maxWidth:760,margin:"28px auto 0",fontSize:10.5,color:C.soft,textAlign:"center"}}>
-        Cat Watch {"·"} version {APP_VERSION} {"·"} {APP_VERSION_DATE}
+        Cat Watch {"·"} version {APP_VERSION} {"·"} {CLOUD_COUNT} {"·"} {APP_VERSION_DATE}
       </footer>
     </div>
   );

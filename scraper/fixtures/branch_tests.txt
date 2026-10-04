@@ -1,0 +1,6 @@
+# Suites only this branch has (claude/ledger-cloud). npm test adds them to
+# scraper/run_tests.js's list. Main never has this file, so merging main in
+# never clashes over the test list. Delete this file when the branch merges.
+node scraper/fixtures/cloud_ledger.js
+node scraper/fixtures/cloud_app.js
+node scraper/fixtures/cloud_two_copies.js
