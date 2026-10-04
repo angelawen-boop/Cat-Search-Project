@@ -17,8 +17,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "38.2";
-const APP_VERSION_DATE = "2 Oct 2026";
+const APP_VERSION = "39";
+const APP_VERSION_DATE = "4 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
 // size — it is the order she wants to WORK in. The venues she reads most come
@@ -113,6 +113,1154 @@ const MUSEUMS = [
   { id:"mam", english:false, short:"MAM Paris", name:"Mus\u00e9e d'Art Moderne de Paris", city:"Paris", exBase:null, shopSearch:"https://www.mamlibrairieboutique.fr/listeliv.php?flou&base=paper&mots_recherche=", shopHome:"https://www.mamlibrairieboutique.fr/", listUrl:null },
 ];
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
+
+// ===== SHARED WITH THE SCRAPER — written by `node build/sync_shared.js`; never edit between these markers. Edit scraper/dates.js or scraper/compress_prompt.md, then run it. =====
+const DATES=(()=>{
+// ── Date helpers ──────────────────────────────────────────────────────────────
+// Parse date strings like "March 2–July 26, 2026" or "April 16–July 19, 2026" or "July 2, 2022–June 28, 2026"
+// Returns { start: 'YYYY-MM-DD'|'', end: 'YYYY-MM-DD'|'', raw: original }
+const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
+  july:7,august:8,september:9,october:10,november:11,december:12,
+  jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12,
+
+  // ITALIAN. Five of the wired venues are Italian — capo, brera, borghese,
+  // dellav and uffizi — and their listings print dates in their own language:
+  // Capodimonte's read "(11 maggio-12 giugno 2025)". Without these the parser
+  // saw no month name at all, the plausible-year guard refused every bare
+  // number, and all 50 Capodimonte rows came out undated. Undated rows cannot
+  // be excluded by the lookback, so its entire history back to 2013 survived
+  // and she correctly spotted that 50 was too many for the museum.
+  //
+  // Deliberately in the SHARED map rather than a per-venue rule, like every
+  // other format: a month name learned at one venue is worth having at all of
+  // them. Note gennaio/giugno and marzo/maggio differ only late in the word,
+  // which is why abbreviations below stay long enough to stay unambiguous.
+  gennaio:1, febbraio:2, marzo:3, aprile:4, maggio:5, giugno:6,
+  luglio:7, agosto:8, settembre:9, ottobre:10, novembre:11, dicembre:12,
+  genn:1, febbr:2, magg:5, giu:6, lug:7, ago:8, sett:9, ott:10, dic:12,
+
+  // THE THREE-LETTER ITALIAN FORMS, added 12 Sep 2026 from the Gallerie
+  // dell'Accademia. Its ENGLISH exhibition page prints the run in abbreviated
+  // Italian — "10 set 2026 - 22 nov 2026" — so a row she could see dated on the
+  // site arrived with both columns blank and a note blaming the venue for
+  // publishing only "10 September". `nov` already matched as English, `set` did
+  // not: the map held `sett` but the site writes three letters.
+  //
+  // `gen` and `mag` are added with it rather than waiting to be caught by
+  // another venue's review. The rest of the three-letter forms — feb, mar, apr,
+  // giu, lug, ago, ott, dic — are already here or already English.
+  set:9, gen:1, mag:5,
+
+  // A VENUE'S OWN MISSPELLING, 25 Sep 2026. Jacquemart-André's past listing
+  // prints "From September 6, 2024 to Feburary 9, 2025"; without this the run
+  // lost its closing date and was stored as one day. Added to the shared map
+  // like every other spelling a venue has taught us.
+  feburary:2 };
+
+/**
+ * One month pattern, shared by every date parser.
+ *
+ * It previously existed as two separate copies that listed only the FULL month
+ * names, so Rijksmuseum's past listing — "12 SEP 2025 TO 25 JAN 2026" — parsed
+ * to nothing at all. Long names come first in the alternation so "September"
+ * is not matched as "Sep" followed by stray letters, and a trailing full stop
+ * is allowed for venues that write "Sept.".
+ */
+// The trailing (?![A-Za-z]) is load-bearing, not tidiness. Without it the
+// alternation backtracks into the abbreviation: "7 November 2025" can match as
+// "7 Nov" with "ember 2025" left over, which silently defeats any lookahead
+// that follows — a no-year test then passes on a date that plainly has one.
+/**
+ * A weekday name sitting in front of a date, which every range pattern trips on.
+ *
+ * LONGEST ALTERNATIVE FIRST, the same trap as the Italian "al" / "all'": with
+ * `sat` ahead of `saturday` the match stops after three letters, leaves "urday"
+ * behind, and the strip silently does nothing. The first version of this had
+ * exactly that bug and removed "Sunday" while leaving "Saturday" untouched.
+ *
+ * ANCHORED ON WHAT FOLLOWS, so it only fires where a date really comes next —
+ * a day number or a month name. Without that, a bare "Sun " would be stripped
+ * out of ordinary prose ("the Sun King, Louis XIV") whenever a page's text was
+ * scanned for dates.
+ */
+const WEEKDAY_PREFIX_SRC =
+  '\\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday' +
+  '|thurs|thur|tues|weds|mon|tue|wed|thu|fri|sat|sun)\\.?,?\\s+';
+
+// ORDINAL DAYS — "From May 23rd to September 20th, 2026", "Until December
+// 06th, 2026" — every date on the Musée d'Orsay's cards, 25 Sep 2026. The
+// suffix defeats every pattern, so both parsers drop it first: a day number of
+// one or two digits followed by st/nd/rd/th and nothing else.
+const ORDINAL_SUFFIX = /\b(\d{1,2})(?:st|nd|rd|th)\b/gi;
+
+const MONTH_PATTERN =
+  '(?:January|February|Feburary|March|April|May|June|July|August|September|October|November|December' +
+  '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre' +
+  '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec' +
+  // LONGEST FIRST WITHIN EACH LANGUAGE: `sett` must precede `set`, `genn`
+  // precede `gen` and `magg` precede `mag`, or the match stops three letters in
+  // and leaves a stray "t" behind — the same trap as the Italian "al" before
+  // "all'" and as `sat` before `saturday`.
+  '|genn|febbr|magg|giu|lug|ago|sett|ott|dic|set|gen|mag)\\.?(?![A-Za-z])';
+
+// Month name to number, tolerating the trailing full stop the pattern allows.
+function monthNum(name) {
+  return MONTHS[String(name || '').toLowerCase().replace(/\.$/, '')];
+}
+
+/**
+ * Build YYYY-MM-DD only when the calendar agrees the day exists.
+ *
+ * Returning '' rather than an impossible string is the whole point. JavaScript
+ * rolls 2026-02-31 silently forward to 3 March, so an impossible date does not
+ * announce itself — it becomes a plausible WRONG date further downstream, and
+ * can then decide whether an exhibition passes the lookback. Her rule: where
+ * the code has applicable logic it uses it, and where it does not the column
+ * stays blank and the notes say why.
+ */
+function ymd(y, m, d) {
+  const yy = parseInt(y, 10), mm = parseInt(m, 10), dd = parseInt(d, 10);
+  if (!plausibleYear(yy)) return '';
+  if (!(mm >= 1 && mm <= 12) || !(dd >= 1 && dd <= 31)) return '';
+  const dt = new Date(Date.UTC(yy, mm - 1, dd));
+  if (dt.getUTCFullYear() !== yy || dt.getUTCMonth() !== mm - 1 || dt.getUTCDate() !== dd) return '';
+  return `${yy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+}
+
+/**
+ * Which year does the opening date belong to, when the venue printed the year
+ * only once, on the closing side?
+ *
+ * "December 5 - January 20, 2026" opened in December 2025. A range that runs
+ * backwards inside a single year is a run that crosses new year, and there is
+ * exactly ONE reading of it — so this is logic, not a guess, and the row keeps
+ * its dates instead of being blanked.
+ *
+ * Before this, the start simply inherited the end's year, producing
+ * 2026-12-05 → 2026-01-20: an exhibition ending seven weeks before it opened.
+ * Museums run winter shows constantly, so this was not an edge case.
+ */
+function startYearFor(startMo, startDay, endMo, endDay, endYear) {
+  const backwards = startMo > endMo || (startMo === endMo && startDay > endDay);
+  return backwards ? endYear - 1 : endYear;
+}
+
+function parseMonthDay(str, fallbackYear) {
+  // e.g. "March 2", "July 26, 2026", "Sept. 21, 2024".
+  // The trailing full stop is allowed because MONTH_PATTERN allows it: without
+  // it here, "Sept. 21, 2024 - Oct. 12, 2024" matched the range pattern and
+  // then produced no dates at all, silently.
+  const m = str.trim().match(/^([A-Za-z]+\.?)\s+(\d{1,2})(?:,\s*(\d{4}))?$/);
+  if (!m) return null;
+  const mo = monthNum(m[1]);
+  if (!mo) return null;
+  const yr = m[3] ? parseInt(m[3], 10) : fallbackYear;
+  if (!yr) return null;
+  return ymd(yr, mo, m[2]) || null;
+}
+
+/**
+ * Scan a blob of text for a date range appearing anywhere inside it.
+ *
+ * parseDateRange() is anchored (^...$) and only matches a string that is
+ * nothing but a date. Listing pages rarely oblige — Acquavella renders
+ * "NICOLE WITTENBERG ALL THE WAY NEW YORK OCTOBER 16 - DECEMBER 5, 2025",
+ * where the date is buried after the title and the city. This searches
+ * instead of matching, so those dates are recovered.
+ */
+// Range separators. findDateRange (listing pages) and findDateRangeInProse
+// (page text) must agree on these — they had drifted, so the listing parser
+// read "From June 10 to September 14, 2025" as a closing date only, silently
+// losing the opening date.
+// "t/m" is Dutch — "tot en met", up to and including. The Rijksmuseum writes
+// its older runs that way: "11 Oct. 2019 t/m 19 Jan. 2020".
+//
+// ITALIAN, added 12 Sep 2026. Capodimonte publishes its runs only on the
+// exhibition's own page and only as a sentence: "Dal 16 ottobre 2025 al 6
+// gennaio 2026". Without "al" as a separator no pattern matched, all 50 rows
+// came out undated, and undated rows cannot be excluded by the lookback — so
+// the museum's entire history survived and she spotted the count was far too
+// high for the institution.
+//
+// "al" ELIDES before a vowel — "Dal 16 aprile all'8 settembre 2026" — in both
+// the typographic apostrophe and the plain one, so both are accepted. "alle"
+// and "allo" appear in the same position. This is spelling, not judgement.
+// LONGEST ALTERNATIVE FIRST: regex alternation takes the first that matches, so
+// a bare "al" listed before "all'" would match the first two letters of
+// "all'8 settembre" and leave "l'8", which is not a day.
+// A COMMA MAY SIT IN FRONT OF THE SEPARATOR, and leaving it out cost Brera two
+// rows. It writes "From May 16, 2025, to May 17, 2027" — the comma after the
+// opening year, before "to". Without this the range failed, the scan fell
+// through to a single date, and Pinacoteca viaggiante was stored as ENDING on
+// its opening day. The same break hid Giorgio Armani's opening date, whose page
+// reads "From September 24, 2025, to January 11, 2026".
+const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]|al)\\s*";
+
+/**
+ * @param raw    the text to search
+ * @param opts   { looseSingles }. A LISTING CARD is a short string about one
+ *   exhibition, so a bare "March / 2026" in it is almost certainly that show's
+ *   date. A whole PAGE is not: it carries navigation, photo captions, a footer
+ *   and the museum's opening hours, and the loosest patterns then become a
+ *   lottery. Pass looseSingles:false when scanning page text.
+ *
+ *   This is not hypothetical. The Rijksmuseum's "Express yourself" page prints
+ *   its real run as "16 Feb - 9 June" with no year anywhere, so no pattern
+ *   could use it — and the scan fell through to the bare month-and-year rule,
+ *   which matched a PHOTO CAPTION: "Gerard Wessel, RoXY, Amsterdam, April
+ *   1994". A 2024 exhibition was given a 1994 opening date, which would have
+ *   ranked it as thirty years closed.
+ */
+const WEEKDAY_PREFIX = new RegExp(WEEKDAY_PREFIX_SRC + '(?=\\d|' + MONTH_PATTERN + ')', 'gi');
+const stripWeekdays = t => String(t || '').replace(WEEKDAY_PREFIX, '');
+
+/**
+ * A run that was EXTENDED after it was announced.
+ *
+ * The Uffizi's card for 1925-1955 Fashion in the Spotlight reads
+ *   "From 18/06/2025 to 28/09/2025, extended to02/11/2025"
+ * — note the missing space, which is theirs. Read as an ordinary range it closes
+ * on 28 September and the extension is lost, so an exhibition she could still
+ * have bought a catalogue for reads as five weeks more closed than it was. She
+ * caught it on the listing page.
+ *
+ * NOT A UFFIZI RULE. Capodimonte writes the same thing in Italian — "prorogata
+ * al 9 giugno 2026", "prorogata all'8 settembre 2026" — and its Samori row has
+ * exactly this defect today. A venue that extends a show is a general fact
+ * about museums, so it belongs in the shared parser like every other format.
+ *
+ * THE EXTENSION ONLY EVER MOVES THE CLOSING DATE LATER. If the phrase yields a
+ * date that is not after the one already read, it is ignored rather than
+ * trusted — that way a stray match cannot shorten a run or rewrite an opening.
+ */
+const EXTENDED_TO = new RegExp(
+  // The trigger is the WORD, verb or noun: "extended", "extension",
+  // "prorogata". Borghese writes "with an extraordinary extension through
+  // October 11", so a few words are allowed between the trigger and the
+  // separator — but not a full stop, which would let it reach into the next
+  // sentence and pick up an unrelated date.
+  '(?:extend(?:ed|ing)?|extension|prorogat[ao])[^.]{0,30}?' +
+  // Longest alternative first, or a bare "al" matches the first two letters of
+  // "all\'8" — the elision trap from the Italian date formats.
+  '(?:through|until|to|all[\'\u2019]|alla|al)\\s*' +
+  '(' +
+    '\\d{1,2}\\s*[/.]\\s*\\d{1,2}\\s*[/.]\\s*\\d{4}' +      // 02/11/2025
+    '|\\d{1,2}\\s+' + MONTH_PATTERN + '(?:\\s+\\d{4})?' +          // 9 giugno 2026
+    '|' + MONTH_PATTERN + '\\s+\\d{1,2}(?:,?\\s*\\d{4})?' +        // October 11
+  ')', 'i');
+
+/**
+ * Apply an extension to a run that already has a closing date.
+ *
+ * THE EXTENSION ONLY EVER MOVES THE CLOSING DATE LATER. If the phrase yields a
+ * date that is not after the one already read, it is ignored rather than
+ * trusted — a stray match cannot shorten a run or rewrite an opening.
+ */
+function applyExtension(range, text) {
+  if (!range || !range.end || !text) return range;
+  const t = String(text);
+  const m = EXTENDED_TO.exec(t);
+  if (!m) return range;
+
+  const dm = readDayMonth(m[1]);
+  if (!dm) return range;
+  let { day, mon, year } = dm;
+  const quote = frag(m);
+
+  // NO YEAR ON THE EXTENSION — the usual case in prose. It is derived from THE
+  // DATE IT EXTENDS: the closing date written just before the trigger, in the
+  // same passage. Capodimonte: "fino al 28 ottobre (prorogato fino al 11
+  // novembre)" extends 28 October, so it is 11 November of that year; "until
+  // 20 December, extended to 18 January" crosses into the next — the ONLY way
+  // a year is ever added. Never derived from the range's closing date and
+  // rolled forward: that date may already BE the extension (Capodimonte's
+  // header prints it), and rolling it on put Gricci and Lotto a year late.
+  if (!year) {
+    const before = precedingDate(t.slice(0, m.index), range.end);
+    if (before) {
+      year = Number(before.slice(0, 4));
+      if (ymd(year, mon, day) <= before) year += 1;
+    } else {
+      // Nothing to anchor on: the closing date's own year, taken only if that
+      // is later. Otherwise the year is unknown and the note says so.
+      year = Number(range.end.slice(0, 4));
+      const same = ymd(year, mon, day);
+      if (same && same < range.end) return { ...range, extensionUnclear: quote };
+    }
+  }
+  const iso = ymd(year, mon, day);
+  // Only ever LATER. The same date is the header repeating itself; an earlier
+  // one is an older extension the header has overtaken.
+  if (!iso || iso <= range.end) return range;
+  return { ...range, end: iso, extendedFrom: range.end, extendedRaw: quote };
+}
+
+/** "11 novembre", "October 11", "02/11/2025" → { day, mon, year (0 if none) }. */
+function readDayMonth(s) {
+  const M = MONTH_PATTERN;
+  const numeric = s.match(/^(\d{1,2})\s*[/.]\s*(\d{1,2})\s*[/.]\s*(\d{4})$/);
+  if (numeric) return { day: +numeric[1], mon: +numeric[2], year: +numeric[3] };  // day-first everywhere seen
+  const dayFirst = s.match(new RegExp(`^(\\d{1,2})\\s+(${M})(?:\\s+(\\d{4}))?$`, 'i'));
+  if (dayFirst) return ok(+dayFirst[1], monthNum(dayFirst[2]), +(dayFirst[3] || 0));
+  const monthFirst = s.match(new RegExp(`^(${M})\\s+(\\d{1,2})(?:,?\\s*(\\d{4}))?$`, 'i'));
+  if (monthFirst) return ok(+monthFirst[2], monthNum(monthFirst[1]), +(monthFirst[3] || 0));
+  return null;
+  function ok(day, mon, year) { return day && mon ? { day, mon, year } : null; }
+}
+
+/**
+ * The date an extension replaces: the LAST day-and-month in the same passage
+ * before the trigger — back to the previous full stop, at most 80 characters.
+ * Its own year if printed; otherwise the closing date's year, or the year
+ * before when that would put it after the closing date. '' if there is none.
+ */
+function precedingDate(before, closing) {
+  const M = MONTH_PATTERN;
+  const tail = before.slice(-80).split(/\.\s/).pop();
+  const re = new RegExp(`(\\d{1,2})\\s+(${M})(?:\\s+(\\d{4}))?|(${M})\\s+(\\d{1,2})(?:,?\\s*(\\d{4}))?`, 'gi');
+  let last = null, x;
+  while ((x = re.exec(tail))) last = x;
+  if (!last) return '';
+  const day = +(last[1] || last[5]), mon = monthNum(last[2] || last[4]);
+  let year = +(last[3] || last[6] || 0);
+  if (!day || !mon) return '';
+  if (!year) {
+    year = Number(closing.slice(0, 4));
+    if (ymd(year, mon, day) > closing) year -= 1;
+  }
+  return ymd(year, mon, day) || '';
+}
+
+/** The one note for an extension, on every path: where the new date came from. */
+function extensionNote(range) {
+  if (range.extendedFrom) {
+    return `Closing date extended from ${dayText(range.extendedFrom)} to ${dayText(range.end)}: "${range.extendedRaw}".`;
+  }
+  if (range.extensionUnclear) {
+    return `An extension is mentioned but its year is not stated, so the closing date was left as published: "${range.extensionUnclear}".`;
+  }
+  return '';
+}
+
+function dayText(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
+}
+
+// BEFORE CHANGING ANYTHING IN THIS PARSER, READ docs/scraper.md SECTION 3.
+// It holds every format found in the wild, the three guards that stop art
+// history being read as exhibition dates, and the reason `looseSingles` exists
+// — a rule that is safe on a listing card and a lottery on a whole page. Each
+// of those cost real rows, and several of them cost them twice.
+function findDateRange(raw, opts = {}) {
+  return applyExtension(findDateRangeCore(raw, opts), raw);
+}
+
+function findDateRangeCore(raw, opts = {}) {
+  const looseSingles = opts.looseSingles !== false;
+  if (!raw) return { start: '', end: '', raw: '' };
+  // Normalise every dash a museum's typesetter might reach for. The National
+  // Gallery uses U+2012 FIGURE DASH on some cards and U+2013 EN DASH on
+  // others; with only the en dash normalised, "15 October 2026 - 7 February
+  // 2027" fell through the range patterns and came out as 1 October 2026.
+  const s = String(raw).replace(/[\u2010-\u2015\u2212\u2043]/g, '-')
+    // WEEKDAY NAMES CARRY NO DATE AND BREAK EVERY RANGE PATTERN.
+    //
+    // The Wallace Collection prints "Saturday 23 May - Sunday 29 November
+    // 2026". Strip the two weekdays and that is an ordinary day-first range
+    // this parser reads correctly; leave them in and every pattern misses,
+    // the scan falls through to the bare month-and-year rule, and the row
+    // arrives with NO DATES and a note saying the venue published none — which
+    // was a lie about the venue, since it had published the run in full.
+    //
+    // Safe to remove universally: a weekday is derivable from the date, so it
+    // can never be the only source of anything. Abbreviations included, with
+    // the optional full stop and comma that follow them in the wild.
+    .replace(WEEKDAY_PREFIX, '')
+    .replace(ORDINAL_SUFFIX, '$1')
+    .replace(/\s+/g, ' ').trim();
+  const M = MONTH_PATTERN;
+
+  // ALL-NUMERIC RANGE — and the order is PROVED from the numbers, never assumed.
+  //
+  // The Uffizi publishes "From 21/03/2024 to 28/04/2024" and nothing else, so
+  // 9 of its 16 rows had no closing date. The objection to reading these is
+  // that 03/04 could be 3 April or March 4th — but that objection does not
+  // apply to a string that answers the question itself: 21 cannot be a month,
+  // so THAT range is day-first, and the other end inherits the same order
+  // because one venue does not switch conventions mid-sentence.
+  //
+  // So: if either end has a first component above 12, the range is day-first.
+  // If either has a SECOND component above 12, it is month-first. If neither
+  // end proves anything, the range is genuinely ambiguous and is REFUSED
+  // rather than guessed — a wrong date here would be plausible, silent, and
+  // able to decide whether a show passes the lookback. Her standing rule: use
+  // the logic where it applies, leave the column blank where it does not.
+  //
+  // LISTING CARDS ONLY — and this was learned by breaking it. On a card the
+  // numbers are about the one exhibition; on a whole PAGE they are a lottery,
+  // exactly as the bare month-and-year rule is. Run unguarded, this branch gave
+  // two Uffizi exhibitions the run of "Vasari Corridor. Friday evening opening"
+  // — a related item in the page's sidebar — because it was simply the first
+  // numeric range in the text. That is the Waldmüller failure again, and the
+  // contradiction guard could not catch it because the listing had supplied no
+  // date to contradict. So it obeys looseSingles like every other loose rule,
+  // and a page that publishes its dates only in a sidebar now yields a blank
+  // column and a note, which is the honest answer.
+  const num = looseSingles && s.match(new RegExp(
+    `\\b(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})${RANGE_SEP}(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})\\b`));
+  if (num) {
+    const [a1, b1, y1, a2, b2, y2] = [1,2,3,4,5,6].map(i => Number(num[i]));
+    const dayFirst   = a1 > 12 || a2 > 12;
+    const monthFirst = b1 > 12 || b2 > 12;
+    if (dayFirst !== monthFirst && plausibleYear(y1) && plausibleYear(y2)) {
+      const start = dayFirst ? ymd(y1, b1, a1) : ymd(y1, a1, b1);
+      const end   = dayFirst ? ymd(y2, b2, a2) : ymd(y2, a2, b2);
+      const r = sane(start, end, frag(num));
+      if (r.start || r.end) return r;
+    }
+  }
+
+  // Day-first European form, as used by Borghese and the National Gallery:
+  // "1 November 2025 to 11 January 2026", "19 June till 13 September 2026".
+  let dm = s.match(new RegExp(`(\\d{1,2})\\s+(${M})\\s*(\\d{4})?${RANGE_SEP}(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  if (dm && plausibleYear(dm[6])) {
+    const endYr = parseInt(dm[6], 10);
+    const sMo = monthNum(dm[2]), eMo = monthNum(dm[5]);
+    if (sMo && eMo) {
+      const sDay = parseInt(dm[1], 10), eDay = parseInt(dm[4], 10);
+      // A PUBLISHED OPENING YEAR THAT FAILS THE PLAUSIBILITY CHECK REFUSES THE
+      // WHOLE RANGE — it is never quietly swapped for the closing year.
+      //
+      // Capodimonte's page for its Mimmo Jodice memorial room says
+      //   "Mimmo Jodice ( Napoli 29 marzo 1934 - 27 ottobre 2025)"
+      // — the photographer's birth and death. 1934 is outside 1990-2035 and was
+      // therefore DISCARDED, after which the opening year was worked out from
+      // the closing one, and an artist's lifespan was stored as the
+      // exhibition's run: 29 Mar 2025 to 27 Oct 2025. The row looked perfectly
+      // healthy; only reading it against the site could show it.
+      //
+      // The old line treated "no year published" and "a year published that
+      // cannot be an exhibition year" as the same thing. They are opposites:
+      // the first is a gap to fill, the second is proof this sentence is not
+      // about an exhibition's run at all.
+      if (dm[3] && !plausibleYear(dm[3])) return { start: '', end: '', raw: '' };
+      const startYr = dm[3] ? parseInt(dm[3], 10)
+                            : startYearFor(sMo, sDay, eMo, eDay, endYr);
+      return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), frag(dm));
+    }
+  }
+
+  // "Month D, YYYY - Month D, YYYY" — year on both sides
+  let m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})${RANGE_SEP}(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
+  if (m) return sane(parseMonthDay(titleCase(m[1]), null) || '', parseMonthDay(titleCase(m[2]), null) || '', frag(m));
+
+  // "Month D - Month D, YYYY" — year only on the end side.
+  // The opening year is worked out, not assumed: "December 5 - January 20,
+  // 2026" opened in December 2025. See startYearFor().
+  m = s.match(new RegExp(`(${M})\\s+(\\d{1,2})${RANGE_SEP}(${M})\\s+(\\d{1,2}),\\s*(\\d{4})`, 'i'));
+  if (m && plausibleYear(m[5])) {
+    const endYr = parseInt(m[5], 10);
+    const sMo = monthNum(m[1]), eMo = monthNum(m[3]);
+    if (sMo && eMo) {
+      const sDay = parseInt(m[2], 10), eDay = parseInt(m[4], 10);
+      const startYr = startYearFor(sMo, sDay, eMo, eDay, endYr);
+      return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), frag(m));
+    }
+  }
+
+  // "Month D - D, YYYY" — one month, day only on the closing side.
+  // Acquavella's archive prints "December 9 - 31, 2023" and
+  // "August 12 - 20, 2020". Without this the row came out undated, was kept by
+  // the lookback (an unknown date is never evidence of being too old) and
+  // arrived as a stray on the approval pile.
+  m = s.match(new RegExp(`(${M})\\s+(\\d{1,2})${RANGE_SEP}(\\d{1,2}),\\s*(\\d{4})`, 'i'));
+  if (m && plausibleYear(m[4])) {
+    const mo = monthNum(m[1]);
+    if (mo) return sane(ymd(m[4], mo, m[2]), ymd(m[4], mo, m[3]), frag(m));
+  }
+
+  // ── A RANGE WHOSE CLOSING SIDE IS NOT A DATE ──────────────────────────────
+  //
+  // MoMA prints "Aug 1, 2026-Summer 2027", "Sep 3, 2026-Spring 2027" and
+  // "Mar 8, 2025-ongoing". Every one of those has a real, published OPENING
+  // date and a closing side the museum has deliberately left vague.
+  //
+  // These must be caught HERE, above the single-date rule below, and that
+  // placement is the whole point. Left to fall through, the single-date rule
+  // found "Aug 1, 2026", had no reason to think it was half of a range, and
+  // wrote it into the CLOSING column — so an exhibition opening in August 2026
+  // was recorded as having closed in August 2026. Not a gap: a wrong answer
+  // shaped exactly like a right one, in the column her whole out-of-print
+  // window is calculated from.
+  //
+  // What is written is what the venue actually published: the opening date,
+  // and NO closing date. The season's year is kept as `latestYear`, which is
+  // a genuine upper bound for the lookback without inventing a day.
+  m = s.match(new RegExp(
+    `(${M}\\s+\\d{1,2},\\s*\\d{4})${RANGE_SEP}` +
+    `(?:(spring|summer|autumn|fall|winter)\\s+(\\d{4})|(ongoing|present|tbc|tba))`, 'i'));
+  if (m) {
+    const start = parseMonthDay(titleCase(m[1]), null) || '';
+    if (start) {
+      const seasonYear = m[3] && plausibleYear(m[3]) ? +m[3] : null;
+      return {
+        start, end: '',
+        ...(seasonYear ? { latestYear: seasonYear } : {}),
+        shownText: m[0].trim(),
+        shownWhy: m[2]
+          ? 'the venue gives a season, not a closing date'
+          : 'the venue has not announced a closing date',
+        raw: frag(m),
+      };
+    }
+  }
+
+  // ── A MONTH AND DAY WITH NO YEAR, CARRYING A PREPOSITION ──────────────────
+  //
+  // MoMA's current shows print "Through Oct 4" and "Through Nov 29"; its
+  // rolling ones print "Ongoing from Oct 19". Month-first, and no year at all
+  // — the existing preposition rules are day-first and all require one, so
+  // every current MoMA exhibition came back with NO CLOSING DATE. That is the
+  // one column this project cannot do without.
+  //
+  // THE YEAR IS DERIVED, NOT GUESSED, and only in a case where the derivation
+  // has one answer. A listing of what is on now cannot be telling us about a
+  // show that closed last year, so the closing date is the next occurrence of
+  // that month and day: this year if it has not passed, otherwise next. That
+  // is the same reasoning startYearFor() already uses to put an opening year
+  // on "December 5 - January 20, 2026", and it is logic rather than a guess.
+  //
+  // `today` is a parameter with a real default so a fixture can pin it. A
+  // parser that silently consulted the clock would pass in September and fail
+  // in November, which is a test that cannot be trusted either way.
+  if (looseSingles) {
+    const today = opts.today instanceof Date ? opts.today : new Date();
+    const nextOccurrence = (mo, day) => {
+      const y = today.getUTCFullYear();
+      const thisYear = Date.UTC(y, mo - 1, day);
+      const cutoff = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+      return thisYear >= cutoff ? y : y + 1;
+    };
+
+    m = s.match(new RegExp(`\\b(?:till|until|through|thru)\\s+(${M})\\s+(\\d{1,2})\\b(?!,?\\s*\\d{4})`, 'i'));
+    if (m) {
+      const mo = monthNum(m[1]), day = parseInt(m[2], 10);
+      if (mo) return { start: '', end: ymd(nextOccurrence(mo, day), mo, day), raw: frag(m) };
+    }
+
+    m = s.match(new RegExp(`\\b(?:ongoing from|from|opens?|opening)\\s+(${M})\\s+(\\d{1,2})\\b(?!,?\\s*\\d{4})`, 'i'));
+    if (m) {
+      const mo = monthNum(m[1]), day = parseInt(m[2], 10);
+      if (mo) return { start: ymd(nextOccurrence(mo, day), mo, day), end: '', raw: frag(m) };
+    }
+  }
+
+  // Single "Month D, YYYY" — treat as the end date (open until).
+  // Bare, with no preposition to anchor it, so it is a listing-card rule only.
+  if (looseSingles) {
+    m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
+    if (m) return { start: '', end: parseMonthDay(titleCase(m[1]), null) || '', raw: frag(m) };
+  }
+
+  // A single day-first date carrying a preposition, as Rijksmuseum's cards do:
+  //   "WORN till 21 March 2027"          -> a closing date
+  //   "WILLEM DE KOONING from 9 October 2026" -> an opening date
+  // Placed after the range patterns so "from 25 October 2022 to 29 January
+  // 2023" is still read as a range rather than just its opening date.
+  m = s.match(new RegExp(`\\b(till|until|through|to)\\s+(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  if (m && plausibleYear(m[4])) {
+    const mo = monthNum(m[3]);
+    if (mo) return { start: '', end: ymd(m[4], mo, m[2]), raw: frag(m) };
+  }
+
+  m = s.match(new RegExp(`\\b(from|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  if (m && plausibleYear(m[4])) {
+    const mo = monthNum(m[3]);
+    if (mo) return { start: ymd(m[4], mo, m[2]), end: '', raw: frag(m) };
+  }
+
+  // "Month YYYY" or "Month / YYYY" with no day — a start month, end unknown.
+  // Borghese's archive prints "March / 2026" and nothing else.
+  //
+  // The loosest rule in the file: one month name beside one year, anywhere.
+  // Safe on a listing card, which is a short string about a single show.
+  // Never applied to page text — see the header comment.
+  if (looseSingles) {
+    m = s.match(new RegExp(`(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
+    if (m && plausibleYear(m[2])) {
+      const mo = monthNum(m[1]);
+      // NO DATE IS WRITTEN. This used to return the 1st of that month, which
+      // invented a day the venue never published — Acquavella's "SEPTEMBER
+      // 2026" became an opening date of 2026-09-01. Her rule: where the code
+      // has no applicable logic the column stays blank and the note says why.
+      // The year is still kept as a lookback bound, which is a real fact.
+      if (mo) return {
+        start: '', end: '', latestYear: +m[2],
+        shownText: m[0].trim(),
+        shownWhy: 'no day is published, only the month and year',
+        raw: frag(m),
+      };
+    }
+  }
+
+  // A season and a year, no day at all: Acquavella's archive prints
+  // "Summer 2022". That is not a date and never becomes one — nothing is
+  // written to the date columns. But it IS a published bound: a show the
+  // gallery itself labels "Summer 2022" cannot still have been open in
+  // July 2024. See latestYear, below.
+  if (looseSingles) {
+    m = s.match(/\b(?:spring|summer|autumn|fall|winter)\s+(\d{4})\b/i);
+    if (m && plausibleYear(m[1])) return {
+      start: '', end: '', latestYear: +m[1],
+      shownText: m[0].trim(),
+      shownWhy: 'only a season and a year are published',
+      raw: frag(m),
+    };
+  }
+
+  return { start: '', end: '', raw: '' };
+}
+
+/**
+ * Find an exhibition's run inside ordinary prose.
+ *
+ * Some venues never print dates in a field of their own. Borghese writes them
+ * into the opening sentence: "From June 10 to September 14, 2025, Galleria
+ * Borghese presents...", "On March 17, and running until May 10, 2026...".
+ *
+ * This is pattern-matching, not comprehension — but a date has a shape, and
+ * that is enough. The danger is grabbing the WRONG date: these pages are full
+ * of art-historical years ("Caravaggio (1571-1610)", "stayed in Italy in
+ * 1629"). Two guards prevent that:
+ *
+ *   1. A month NAME must sit next to the number. Bare years never match.
+ *   2. The year must be a plausible exhibition year, not a birth or a
+ *      painting date.
+ *
+ * hintYear supplies the year when the sentence omits it entirely — Borghese's
+ * Velazquez page says only "From March 26 to June 23", and the listing page
+ * for that show says "March / 2024".
+ *
+ * Returns the matched sentence too, so a wrong grab is visible in the notes
+ * rather than silently becoming an exhibition's dates.
+ */
+// Wide enough to cover any exhibition a venue still lists in its archive
+// (Borghese's goes back to 2013, Acquavella's to 1999), narrow enough that an
+// artist's lifespan or a painting's date can never be mistaken for a run:
+// "Caravaggio (1571-1610)", "confiscated on 4 May 1607", "in 1629".
+const PLAUSIBLE_YEAR_MIN = 1990;
+const PLAUSIBLE_YEAR_MAX = 2035;
+
+function plausibleYear(y) {
+  const n = parseInt(y, 10);
+  return n >= PLAUSIBLE_YEAR_MIN && n <= PLAUSIBLE_YEAR_MAX;
+}
+
+/**
+ * Refuse a range that runs backwards.
+ *
+ * Without this, "From 8 October 2014 to 11 January 2015" produced a start of
+ * 2015-10-08 — after its own end — because the start year had been rejected
+ * and quietly replaced with the end year. Better to report the end date alone
+ * than an impossible range: the lookback only tests the end date anyway.
+ */
+// THE QUOTE IN HER NOTE IS THE FRAGMENT THE DATES CAME FROM, never the whole
+// input. findDateRange was written for a LISTING CARD, where the input is a
+// line or two, so returning the input as `raw` was indistinguishable from
+// returning the match. Then findDateRangeInProse started falling through to it
+// with a WHOLE PAGE as the input — and `raw` is quoted verbatim into the notes
+// column, which is shown verbatim on her approval card. Capodimonte's rows
+// averaged 6,709 characters of notes and one carried 17,734: the entire page,
+// navigation and ticket prices included, under the words "read from a
+// sentence". The Wallace's Churchill row did the same.
+//
+// The fault was not the fall-through, which is right and is there to stop the
+// two parsers drifting. It was that one parser's idea of "raw" only held while
+// its input stayed small. So every branch now quotes ITS OWN MATCH, capped,
+// exactly as the prose parser already did — the size of the input stops
+// mattering. A branch that returns no dates returns no quote either; nothing
+// downstream writes a note without a date to explain.
+function frag(m) { return m && m[0] ? String(m[0]).replace(/\s+/g, ' ').trim().slice(0, 120) : ''; }
+
+function sane(start, end, raw) {
+  if (start && end && start > end) return { start: '', end, raw };
+  return { start, end, raw };
+}
+
+/**
+ * A date the venue printed that nobody can use: a day and month with NO YEAR.
+ *
+ * The Rijksmuseum's past pages do this systematically — "Until 24 October",
+ * "18 November - 6 March" — and there is nowhere to borrow a year from: the
+ * listing card does not carry one and the site publishes no structured data.
+ * So the date columns stay blank, which is right. But the note then said "No
+ * closing date found anywhere on the venue's pages", which is simply FALSE:
+ * she would open the page expecting nothing and find a date sitting there.
+ *
+ * Requiring the year to be ABSENT is what makes quoting this safe. A photo
+ * caption reads "Amsterdam, April 1994" — month AND year — so it can never be
+ * picked up here. That is the exact trap that once put a 1994 opening date on a
+ * 2024 exhibition.
+ */
+function unusableDateText(text) {
+  if (!text) return '';
+  const s = String(text).replace(/[‐-―−⁃]/g, '-').replace(/\s+/g, ' ');
+  const M = MONTH_PATTERN;
+  // The leading \.? matters: an abbreviated month can match without its full
+  // stop ("Sept" out of "Sept."), and the year test would then be looking at
+  // ". 2024" and conclude there was no year.
+  const NO_YEAR = '(?!\\.?\\s*,?\\s*\\d{4})';
+  // A range is more use to her than one end of it, so look for those first.
+  const patterns = [
+    new RegExp(`\\d{1,2}\\s+${M}${RANGE_SEP}\\d{1,2}\\s+${M}${NO_YEAR}`, 'i'),
+    new RegExp(`${M}\\s+\\d{1,2}${RANGE_SEP}${M}\\s+\\d{1,2}${NO_YEAR}`, 'i'),
+    new RegExp(`\\b(?:until|till|through|from)\\s+\\d{1,2}\\s+${M}${NO_YEAR}`, 'i'),
+    new RegExp(`\\b(?:until|till|through|from)\\s+${M}\\s+\\d{1,2}${NO_YEAR}`, 'i'),
+    new RegExp(`\\d{1,2}\\s+${M}${NO_YEAR}`, 'i'),
+  ];
+  for (const re of patterns) {
+    const m = s.match(re);
+    if (m) return m[0].trim();
+  }
+  return '';
+}
+
+function findDateRangeInProse(text, hintYear) {
+  // THE TWO PARSERS MUST NOT DIVERGE — they have drifted twice before and each
+  // time silently lost dates. The extension rule is applied here as well, and
+  // Giorgio Armani is why it matters beyond tidiness.
+  //
+  // His page reads "From September 24, 2025, to January 11, 2026 Extended until
+  // May 3, 2026". The listing had already given the extended closing date, so a
+  // prose range ending 11 January CONTRADICTED it — and the guard that discards
+  // a contradictory range threw away the opening date with it. The row lost a
+  // date the page states plainly, because one parser knew about extensions and
+  // the other did not.
+  return applyExtension(findDateRangeInProseCore(text, hintYear), text);
+}
+
+function findDateRangeInProseCore(text, hintYear) {
+  if (!text) return { start: '', end: '', raw: '' };
+  const s = String(text).replace(/[–—]/g, '-').replace(ORDINAL_SUFFIX, '$1').replace(/\s+/g, ' ');
+  const M = MONTH_PATTERN;
+  const SEP = '(?:\\s*(?:-|t/m|to|until|through|till)\\s*(?:running\\s+)?)';
+
+  // Day-first, the form Borghese actually uses in its prose:
+  //   "From 20 January to 22 February 2026, the Galleria Borghese..."
+  //   "from 25 October 2022 to 29 January 2023, curated by..."
+  //   "will open to the public on 1 November 2017 and will last until 20 February 2018"
+  // The year may sit on the end side only, or on both.
+  let dm = s.match(new RegExp(
+    `(\\d{1,2})\\s+(${M})(?:\\s+(\\d{4}))?[^.]{0,40}?${SEP}(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  if (dm && plausibleYear(dm[6])) {
+    const endYr = parseInt(dm[6], 10);
+    const sMo = monthNum(dm[2]), eMo = monthNum(dm[5]);
+    if (sMo && eMo) {
+      const sDay = parseInt(dm[1], 10), eDay = parseInt(dm[4], 10);
+      // See the note in findDateRange: a published-but-implausible opening year
+      // refuses the range rather than being replaced by the closing year.
+      if (dm[3] && !plausibleYear(dm[3])) return { start: '', end: '', raw: '' };
+      const startYr = dm[3] ? parseInt(dm[3], 10)
+                            : startYearFor(sMo, sDay, eMo, eDay, endYr);
+      return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), dm[0].slice(0, 120));
+    }
+  }
+
+  // "From June 10 to September 14, 2025"  /  "March 17 ... until May 10, 2026"
+  let m = s.match(new RegExp(
+    `(${M})\\s+(\\d{1,2})(?:,\\s*(\\d{4}))?[^.]{0,40}?${SEP}(${M})\\s+(\\d{1,2}),?\\s*(\\d{4})`, 'i'));
+  if (m && plausibleYear(m[6])) {
+    const endYr = parseInt(m[6], 10);
+    const sMo = monthNum(m[1]), eMo = monthNum(m[4]);
+    if (sMo && eMo) {
+      const sDay = parseInt(m[2], 10), eDay = parseInt(m[5], 10);
+      // Same rule for the month-first form: "Mimmo Jodice (March 29, 1934 -
+      // October 27, 2025)" must refuse, not borrow the closing year.
+      if (m[3] && !plausibleYear(m[3])) return { start: '', end: '', raw: '' };
+      const startYr = m[3] ? parseInt(m[3], 10)
+                           : startYearFor(sMo, sDay, eMo, eDay, endYr);
+      return sane(ymd(startYr, sMo, sDay), ymd(endYr, eMo, eDay), m[0].slice(0, 120));
+    }
+  }
+
+  // Day-first with NO year anywhere: "5 June to 25 October".
+  // Rijksmuseum writes its current shows this way. Only usable when the
+  // listing page already told us which year this exhibition belongs to.
+  if (hintYear && plausibleYear(hintYear)) {
+    dm = s.match(new RegExp(`(\\d{1,2})\\s+(${M})[^.]{0,40}?${SEP}(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
+    if (dm) {
+      const sMo = monthNum(dm[2]), eMo = monthNum(dm[4]);
+      if (sMo && eMo) {
+        // A run that crosses new year ends in the following year. Same test as
+        // startYearFor, read from the other end: the year we hold is the start's.
+        const sDay = parseInt(dm[1], 10), eDay = parseInt(dm[3], 10);
+        const endYr = startYearFor(sMo, sDay, eMo, eDay, Number(hintYear)) === Number(hintYear)
+          ? Number(hintYear)
+          : Number(hintYear) + 1;
+        return sane(
+          ymd(hintYear, sMo, sDay),
+          ymd(endYr, eMo, eDay),
+          dm[0].slice(0, 120) + ' (year taken from the listing page)');
+      }
+    }
+
+    // A lone closing date with no year: "Till 29 November".
+    let one = s.match(new RegExp(`\\b(till|until|through)\\s+(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
+    if (one) {
+      const mo = monthNum(one[3]);
+      if (mo) return { start: '',
+        end: ymd(hintYear, mo, one[2]),
+        raw: one[0].slice(0, 120) + ' (year taken from the listing page)' };
+    }
+
+    // A lone opening date with no year: "From 5 June".
+    one = s.match(new RegExp(`\\b(from|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
+    if (one) {
+      const mo = monthNum(one[3]);
+      if (mo) return {
+        start: ymd(hintYear, mo, one[2]),
+        end: '', raw: one[0].slice(0, 120) + ' (year taken from the listing page)' };
+    }
+  }
+
+  // Same shape but no year anywhere: "From March 26 to June 23".
+  // Only usable when the listing page told us which year this show belongs to.
+  if (hintYear && plausibleYear(hintYear)) {
+    m = s.match(new RegExp(`(${M})\\s+(\\d{1,2})[^.]{0,40}?${SEP}(${M})\\s+(\\d{1,2})(?!\\s*,?\\s*\\d{4})`, 'i'));
+    if (m) {
+      const sMo = monthNum(m[1]), eMo = monthNum(m[3]);
+      if (sMo && eMo) {
+        // A run that crosses new year ends in the following year.
+        const sDay = parseInt(m[2], 10), eDay = parseInt(m[4], 10);
+        const endYr = startYearFor(sMo, sDay, eMo, eDay, Number(hintYear)) === Number(hintYear)
+          ? Number(hintYear)
+          : Number(hintYear) + 1;
+        return sane(
+          ymd(hintYear, sMo, sDay),
+          ymd(endYr, eMo, eDay),
+          m[0].slice(0, 120) + ' (year taken from listing page)');
+      }
+    }
+  }
+
+  // Last resort: hand it to the listing-page parser. The two have repeatedly
+  // drifted apart — one learned a format the other did not, and a venue whose
+  // dates lived on the detail page silently lost them. Falling through means
+  // any pattern either parser knows is available to both.
+  // Ranges and preposition-anchored dates only. The bare single-date rules are
+  // listing-card rules and would match a photo caption or a footer here.
+  // The CORE, not findDateRange: the wrapper below applies the extension, and
+  // applying it here too ran it twice — Gricci and Lotto each a year late.
+  const viaListing = findDateRangeCore(s, { looseSingles: false });
+  if (viaListing.start || viaListing.end) return viaListing;
+
+  return { start: '', end: '', raw: '' };
+}
+
+function titleCase(str) {
+  return str.replace(/([A-Za-z]+)/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase());
+}
+return { findDateRange, findDateRangeInProse };
+})();
+const SUMMARY_RULES="- Maximum 10 words. The examples average about six.\n- End with a full stop. Avoid colons — the accepted summaries almost never use one.\n- Name the artist or artists the exhibition is built around.\n\nNAME THEM THE WAY A GALLERY-GOER WOULD. Surname alone, unless the surname alone\nwould be ambiguous. Write \"Zurbarán\", not \"Francisco de Zurbarán\". \"Shonibare\",\nnot \"Yinka Shonibare\". \"Velasco\", not \"Mexican artist José María Velasco\". Drop\n\"painter\", \"artist\" and similar labels in front of a name — the reader already\nknows. Full names, honorifics and formal titles read stiff and waste words that\ncould carry meaning instead.\n\nALWAYS WRITE IN ENGLISH, whatever language the raw text is in. Several venues\npublish only in Italian and one only in French; she reads the summaries in\nEnglish. Translating a phrase does not break the traceability rule below — a\ntranslated phrase is still traceable to the text it came from. Keep the\nexhibition's own title in its original language if that is how it is written;\ntranslate the description around it.\n\nTHE RULE THAT MATTERS MOST: every word of your summary must be traceable to a\nphrase in that row's own raw text. If you cannot point to where something came\nfrom, leave it out. In particular:\n\n- Never add an artist, place, medium or date that you happen to know about but the\n  text does not mention.\n- Use a number only if the text states that number. Do not count a list of names\n  and report the total — the page may state a different figure, and the page is\n  right, not your count.\n\nBeing vague is a much smaller failure than being confidently wrong. If the text\nwill only support something general, write something general.\n\nIf the raw text is not a description of an exhibition — a bare link, a curator's\nbiography, ticketing or opening-hours copy, cookie or consent boilerplate, a \"page\nnot found\" message, or empty — answer null for that row. Do not invent one.";
+const EN_PREFIX = 'In English: ';
+function composeSummary(english, teaser) {
+  const t = String(english || '').trim();
+  const d = String(teaser || '').trim();
+  if (!t) return d;
+  return `${EN_PREFIX}"${/[.!?]$/.test(t) ? t : t + '.'}" ${d}`;
+}
+const SUMMARY_EXAMPLES=[{"title":"German Expressionism","raw":"Across Germany’s major cities, a new generation of artists emerged between 1900 and 1918 to change the rules of painting. They were the German Expressionists. Made up of two pioneering groups – Die Brücke (The Bridge) and Der Blaue Reiter (The Blue Rider) – these young artists painted raw emotions on canvas with a new intensity. Die Brücke was formed by a group of self-taught artists. Rebelling against conservative society, they lived and worked together in the bohemian corners of Dresden and other cities, before moving to Berlin, Germany’s rapidly modernising capital. For them, colour became…","summary":"Fifty German Expressionist works."},{"title":"Asian Bronze","raw":"From Shiva and the Buddha to wine casks and weapons. Everything about bronze triggers your senses. For centuries, this material has played a central role in the traditions of Asia. Now you too can experience the beauty of bronze art at last.","summary":"Four thousand years of Asian bronze."},{"title":"Hockney and Piero: A Longer Look","raw":"David Hockney, in his own words, has always been a looker. Throughout his career, Hockney has found inspiration in the work of other artists. He never tires of looking at paintings. For him, there’s magic in it every time, whether that’s enjoying a picture in a gallery or a much-loved poster at home. This very personal show brings together two Hockney paintings, one showing his mother and father and the other depicting his friend, curator Henry Geldzahler. They are displayed with the thread that ties them together, Piero della Francesca’s ‘The Baptism of Christ’. ‘My Parents’ and ‘Looking at…","summary":"Hockney against Piero della Francesca."},{"title":"At Home in the 17th Century","raw":"What was life really like in the 17th century? That’s the museum’s most-asked question. Now, the time has come to find out. At Home in the 17th Century offers an up-close experience of daily life 400 years ago. Immerse yourself in a full day of the 17th century as you walk among the nine diorama-style displays that make up this exhibition — packed with personal stories and unique objects.","summary":"Domestic life with Rembrandt, Hals, Vermeer."},{"title":"José María Velasco","raw":"See the first UK exhibition of Mexico’s much-loved artist, José María Velasco. Velasco, working in Mexico in the 19th century, was a man of many interests. He was fascinated by advances in geology, the archaeology of his home country, the study of local flora, and the increasing presence of industrialisation. He painted the sweeping landscapes of the Valley of Mexico, the home of modern-day Mexico City, with exquisite detail. His impressive panoramic views of the valley reveal allusions to Mexico's historic past and its rapidly modernising present. Velasco was keenly aware of his country’s…","summary":"Mexico's landscape painter."},{"title":"Carel Visser in the Rijksmuseum Gardens","raw":"This summer, the Rijksmuseum Gardens are home to the work of Carel Visser, the most influential Dutch sculptor of the twentieth century. Visser's sculptures, some as tall as eight metres or as long as five metres, come from museums, private collections and public spaces. Now they are brought together for the very first time. Carel Visser (1928–2015) had little affinity with traditional sculptors' materials such as marble, stone or wood. Iron was his great love. With a cutting torch and welding equipment, he shaped his sculptures from steel plates and beams. Stacking, repetition and symmetry…","summary":"Most influential Dutch sculptor of the twentieth century."},{"title":"Millet: Life on the Land","raw":"The sower, the woodcutter, a shepherd girl. These are the subjects that made French artist Jean-Francois Millet famous. Marking the 150th anniversary of his death, this is an opportunity to see some of Millet’s best-loved paintings and drawings. Born into a farming family in Normandy, Millet moved to the village of Barbizon in 1849 where he put the people who spent their life working on the land, often the poorest of the poor in 19th-century France, at the heart of his work. He knew these people and his realistic, unsentimental approach to painting them was completely new. See his iconic…","summary":"The subjects that made Millet famous."},{"title":"Crossings","raw":"Discover how colonial and contemporary perspectives converge in photographs from the Indian subcontinent. Past meets present in the Crossings exhibition.","summary":"Photography from the Indian subcontinent."}];
+// ===== END SHARED =====
+
+// ── ADD BY LINK — her design, 3–4 Oct 2026 (docs/picked_shows.md) ───────────
+//
+// She pastes show links under Import; each page is read once through her
+// keyed connector and becomes an ordinary pro forma row, fed to the SAME
+// intake as a sweep file — so Add, Fill, Change, Reject and quarantine all
+// work exactly as they do for a CSV. Nothing here writes the ledger.
+//
+// CODE FIRST, THE MODEL ONLY FOR PROSE. Title and dates are read by code: the
+// title is the page's own (site name stripped), the dates are the FIRST date
+// line under the show's heading, read by the scraper's own date reader
+// (DATES, above). Tested 3 Oct on 10 pages at 6 venues: every page also
+// carried other dates — another venue's leg, other displays, events, a "More
+// exhibitions" strip — so "any date on the page" would have been wrong.
+// The model writes the short description, translates a non-English title,
+// and says whether a line between title and dates is the show's SUBTITLE —
+// and code checks that answer is one of those lines, word for word.
+//
+// A link that cannot be read is a LINE, never a card: a half-filled card is a
+// plausible wrong row. Unread links stay in the box, which is kept in the
+// page's store until she clears it.
+//
+// NO LOOKBACK for a link (her ruling, 4 Oct): she chose the show.
+const OCC_CHIP="occasional";
+const OCC_DOC="venues/occasional";
+const LINKS_DOC="links/pending";
+const isOcc=id=>String(id||"").startsWith("occ-");
+
+// Every address in whatever she pasted — commas, spaces, lines, or mixed in
+// with other words. A repeat is read once (same finished address).
+function linksIn(text){
+  const out=[],seen=new Set();
+  for(const m of String(text||"").matchAll(/https?:\/\/[^\s,;<>"'\]\[]+/gi)){
+    const u=m[0].replace(/[.,;:!?)\]]+$/,"");
+    const k=normalizeUrlKey(u);
+    if(!k||seen.has(k))continue;
+    seen.add(k); out.push(u);
+  }
+  return out;
+}
+
+function hostOf(u){ try{ return new URL(u).hostname.toLowerCase(); }catch{ return ""; } }
+function originOf(u){ try{ return new URL(u).origin+"/"; }catch{ return ""; } }
+const foldText=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+
+// The connector hands back the page as markdown. One line of it, as words.
+function stripMd(line){
+  return String(line||"")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g,"")             // images
+    .replace(/\[([^\]]*)\]\([^)]*\)/g,"$1")          // links → their words
+    .replace(/<https?:[^>]*>/g,"")
+    .replace(/\*\*|__/g,"")
+    .replace(/(^|[^\w])_([^_]+)_(?=[^\w]|$)/g,"$1$2") // _italic_
+    .replace(/\\([-*_#.()\[\]])/g,"$1")              // markdown escapes
+    .replace(/^\s*#{1,6}\s+/,"")
+    .replace(/^\s*[*+]\s+/,"")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+// "Hammershøi. The Eye that Listens | Museo Nacional Thyssen-Bornemisza".
+// A bar always parts the show from the site. A dash only when the words after
+// it are the site's own (Courtauld) — Mauritshuis titles a show "The Grand
+// Tour - Destination Italy", and that dash belongs to the title.
+function splitPageTitle(t,host){
+  const s=stripMd(t);
+  if(!s)return{show:"",site:""};
+  const bar=s.lastIndexOf(" | ");
+  if(bar>0)return{show:s.slice(0,bar).trim(),site:s.slice(bar+3).trim()};
+  const m=s.match(/^(.*\S)\s+[-–—]\s+([^-–—]+)$/);
+  if(m){
+    const h=foldText(host);
+    if(foldText(m[2]).split(/[^a-z0-9]+/).some(w=>w.length>=4&&h.includes(w)))return{show:m[1].trim(),site:m[2].trim()};
+  }
+  return{show:s,site:""};
+}
+
+// THE SCRAPER'S CUT — her ruling 25 Sep: the description is read to about
+// 2,000 characters. Here it starts AFTER the date line, so the page's furniture
+// above the show (menus, opening hours) never reaches the model.
+const LINK_RAW_CHARS=2000;
+const LINK_DATE_LINES=40;
+
+// One page → {ok, base, between, start, end, raw, site} or {ok:false, why}.
+function readShowPage(res,url){
+  const text=String(oneText(res)||"");
+  if(text.trim().length<SHELL_CHARS)return{ok:false,why:"The page came back empty."};
+  const host=hostOf(url);
+  const{show,site}=splitPageTitle(res&&res.title,host);
+  const lines=text.split("\n");
+  // The show's heading: the page's first top-level heading, else the line
+  // carrying the page title's words.
+  let h=lines.findIndex(l=>/^\s*#\s+\S/.test(l));
+  if(h<0&&show)h=lines.findIndex(l=>foldText(stripMd(l)).includes(foldText(show)));
+  if(h<0)return{ok:false,why:"Couldn’t find the show’s title on the page."};
+  const heading=stripMd(lines[h]);
+  let d=-1,range=null;
+  for(let k=h+1,seen=0;k<lines.length&&seen<LINK_DATE_LINES;k++){
+    const l=stripMd(lines[k]); if(!l)continue; seen++;
+    const r=DATES.findDateRange(l,{looseSingles:false});
+    if(r.start||r.end){d=k;range=r;break;}
+  }
+  if(d<0)return{ok:false,why:"No dates found under the show’s title."};
+  const base=show||heading;
+  const between=lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l)));
+  const dateLine=stripMd(lines[d]);
+  let raw="";
+  for(let k=d+1;k<lines.length&&raw.length<LINK_RAW_CHARS;k++){
+    const l=stripMd(lines[k]);
+    if(!l||l===dateLine)continue;
+    raw+=(raw?"\n":"")+l;
+  }
+  return{ok:true,base,between,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||host.replace(/^www\./,"")};
+}
+
+// The title is WHAT THE CATALOGUE WOULD BE CALLED — her ruling, 3 Oct: a
+// subtitle the page prints is kept ("Peggy Guggenheim in London: The Making
+// of a Collector").
+function linkTitle(base,subtitle,between){
+  const sub=String(subtitle||"").trim();
+  if(!sub||!(between||[]).includes(sub)||foldText(base).includes(foldText(sub)))return base;
+  return base.replace(/[\s:.—-]+$/,"")+": "+sub;
+}
+
+function linkPrompt(page){
+  const ex=SUMMARY_EXAMPLES.map(e=>"RAW: "+e.raw+"\nACCEPTED SUMMARY: "+e.summary).join("\n\n");
+  return "You are reading one museum exhibition page for a personal art-catalogue tracker. Your ONLY output is one JSON object.\n\n"
+    +"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
+    +(page.between.length?"LINES BETWEEN THE TITLE AND THE DATES: "+JSON.stringify(page.between)+"\n":"")
+    +"RAW TEXT (the page after the dates):\n\"\"\"\n"+page.raw+"\n\"\"\"\n\n"
+    +"EXAMPLES of the required summary style — a venue's raw text, and the summary that was accepted:\n\n"+ex+"\n\n"
+    +"RULES FOR THE SUMMARY:\n"+SUMMARY_RULES+"\n\n"
+    +"Answer with exactly these keys:\n"
+    +"\"summary\": the summary, following the rules above — or null if the raw text does not describe an exhibition.\n"
+    +(page.between.length?"\"subtitle\": if one of the LINES BETWEEN THE TITLE AND THE DATES is the second part of the exhibition's own name — the part a catalogue's title would carry after the main title — copy that line exactly as written. Otherwise \"\". Never a category (\"Special Exhibition\"), a sponsor, a place, a price or a date.\n":"")
+    +"\"english\": the exhibition's title"+(page.between.length?" (with the subtitle you gave, if any)":"")+" in natural English if it is not in English; \"\" if it already is, names aside. Keep every name as written and the title's own full stops. Plain words: no \"In English\", no quotation marks.\n"
+    +"\"englishSpeaking\": true if the museum is in an English-speaking country, false if not.";
+}
+
+// What the model said, checked. Wording is not a control.
+function linkAnswer(a){
+  const o=a&&typeof a==="object"?a:{};
+  const str=v=>typeof v==="string"?v.replace(/["“”]/g,"").replace(/\s+/g," ").trim():"";
+  return{summary:typeof o.summary==="string"?o.summary.trim():"",subtitle:typeof o.subtitle==="string"?o.subtitle.trim():"",
+    english:str(o.english).replace(/^In English:\s*/i,""),englishSpeaking:o.englishSpeaking!==false};
+}
+
+function occVenueId(host){
+  return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+}
+
+// A link to a venue the app already sweeps files under THAT venue.
+function knownVenueFor(host){
+  const h=String(host||"").replace(/^www\./,"");
+  if(!h)return null;
+  for(const m of MUSEUMS){
+    for(const u of [m.exBase,m.listUrl]){ if(u&&hostOf(u).replace(/^www\./,"")===h)return m.id; }
+  }
+  return null;
+}
+
+// AN OCCASIONAL VENUE, AS THE APP USES IT. Kept in the page's store (a fact
+// about the world, like the sweep log), registered into MU so every card,
+// lookup and link reads it like any venue. One chip for all of them,
+// "Occasional" (her ruling, 4 Oct).
+//   shop: "found" (confirmed or not), "none" (nothing found), "unknown" (she
+//   said the shop found was wrong — found again on the next link).
+function occEntry(v){
+  const live=v.shop==="found";
+  return{id:v.id,short:v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
+    exBase:null,listUrl:null,
+    shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
+    shopUnknown:v.shop==="unknown"||(v.shop==="none"&&!v.confirmed)};
+}
+// Every venue a card can be filed under, in her order, the occasional ones
+// last (by name). The review walks THIS, not MUSEUMS — walking MUSEUMS alone,
+// a card from an occasional venue was counted and never drawn.
+function allVenues(){
+  const occ=Object.values(MU).filter(m=>m&&m.occasional).sort((a,b)=>a.short.localeCompare(b.short));
+  return MUSEUMS.concat(occ);
+}
+function venueRank(id){ const i=allVenues().findIndex(m=>m.id===id); return i<0?1e6:i; }
+function registerOccasional(map){
+  for(const v of Object.values(map||{})){ if(!v||!isOcc(v.id))continue; MU[v.id]=occEntry(v); KNOWN_VENUES.add(v.id); }
+}
+// A ledger row from a venue this page's store has never seen (her file opened
+// on another page): filed under its own address, shop not known.
+function registerUnseenOccasional(rows){
+  for(const r of rows||[]){
+    if(!isOcc(r.museumId)||MU[r.museumId])continue;
+    const name=hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4);
+    MU[r.museumId]={id:r.museumId,short:name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
+    KNOWN_VENUES.add(r.museumId);
+  }
+}
+
+async function readOccasional(){
+  const db=await useCap("db");
+  if(!db)return{};
+  try{ const s=await db.doc(OCC_DOC).get(); return s.exists?((s.data()||{}).venues||{}):{}; }catch{ return {}; }
+}
+async function writeOccasional(map){
+  const db=await useCap("db");
+  if(!db)return false;
+  try{ await db.doc(OCC_DOC).set({venues:map,updatedAt:new Date().toISOString()}); return true; }catch{ return false; }
+}
+async function readPendingLinks(){
+  const db=await useCap("db");
+  if(!db)return"";
+  try{ const s=await db.doc(LINKS_DOC).get(); return s.exists?String((s.data()||{}).text||""):""; }catch{ return ""; }
+}
+async function writePendingLinks(text){
+  const db=await useCap("db");
+  if(!db)return false;
+  try{ await db.doc(LINKS_DOC).set({text:String(text||""),updatedAt:new Date().toISOString()}); return true; }catch{ return false; }
+}
+
+// ── FINDING A NEW VENUE'S SHOP — once per venue, then kept ──────────────────
+// The show page's own shop link first (4 of 6 test venues carry one), else ONE
+// search. Then the shop's front page is read once for its EXHIBITION
+// CATALOGUES shelf, else its BOOKS shelf — never the whole shop, which turns
+// up mugs and prints (her ruling, 3 Oct). She confirms what was found.
+const SHOP_WORDS=/^(?:the\s+)?(?:museum\s+|online\s+|gift\s+|book)?(?:shop|store|boutique|tienda|winkel|webshop|museumshop|negozio|librairie|bookshop)(?:\s+online)?$/i;
+const SHOP_HOST=/^(?:shop|store|boutique|tienda|winkel|webshop|bookshop|negozio|museumshop)\.|shop/i;
+function mdLinks(text){
+  const out=[];
+  for(const m of String(text||"").matchAll(/\[([^\]]*)\]\((https?:\/\/[^)\s]+)/g))out.push({label:stripMd(m[1]),url:m[2]});
+  return out;
+}
+function shopLinkOnPage(text,museumHost,rejected){
+  const no=new Set(rejected||[]);
+  const links=mdLinks(text).filter(l=>!no.has(hostOf(l.url)));
+  const named=links.find(l=>SHOP_WORDS.test(l.label));
+  if(named){ try{ const u=new URL(named.url); return (/\/(?:products?|collections)\//.test(u.pathname)||u.pathname==="/")?u.origin+"/":named.url; }catch{ return ""; } }
+  const byHost=links.find(l=>hostOf(l.url)!==museumHost&&SHOP_HOST.test(hostOf(l.url)));
+  return byHost?originOf(byHost.url):"";
+}
+function shopFromResults(results,rejected){
+  const no=new Set(rejected||[]);
+  for(const r of results||[]){
+    const u=String((r&&r.url)||""), h=hostOf(u);
+    if(!h||no.has(h))continue;
+    if(SHOP_HOST.test(h))return originOf(u);
+    if(/\/(?:shop|store|boutique)(?:\/|$)/i.test(u))return u;
+  }
+  return "";
+}
+const SHELF_CATALOGUES=/exhibition[\s-]*(?:catalog|book|publication)|catalog(?:ue)?s?\b|cat[aá]logos?\b|catalogi\b|katalog/i;
+const SHELF_BOOKS=/\bbooks?\b|publications?\b|\blivres\b|\blibros\b|\bboeken\b|bücher|\blibri\b/i;
+function shelfOnShop(text,home){
+  const h=hostOf(home);
+  const links=mdLinks(text).filter(l=>hostOf(l.url)===h&&!/\/(?:products?|p)\/|[?&]q=|\/search/i.test(l.url));
+  const pick=re=>links.find(l=>re.test(l.label))||links.find(l=>re.test(decodeURIComponent(new URL(l.url).pathname).replace(/[-_/]/g," ")));
+  const c=pick(SHELF_CATALOGUES);
+  if(c)return{url:c.url,kind:"catalogues"};
+  const b=pick(SHELF_BOOKS);
+  return b?{url:b.url,kind:"books"}:null;
+}
+// A search address only where the shop's platform says how it searches.
+function searchFor(text,home){
+  const o=originOf(home);
+  if(!o)return null;
+  if(/\/collections\/|\/products\/|cdn\.shopify/i.test(text))return o+"search?q=";
+  if(/catalogsearch/i.test(text))return o+"catalogsearch/result/?q=";
+  return null;
+}
+async function discoverShop(pageText,museumHost,venueName,rejected){
+  let home=shopLinkOnPage(pageText,museumHost,rejected), how="the show page";
+  if(!home){
+    const s=await searchWeb("The online shop of the museum "+venueName+".",[venueName+" museum shop",venueName+" shop exhibition catalogues"]);
+    if(s.ok)home=shopFromResults(s.results,rejected);
+    how="a search";
+  }
+  if(!home)return{shop:"none"};
+  const f=await fetchPage(home,"The shop's menu: its exhibition catalogues and books sections.",null,{full:true});
+  const text=f.ok?pageTextOf(f.results):"";
+  const shelf=shelfOnShop(text,home);
+  return{shop:"found",shopHome:home,shopCatalogues:shelf?shelf.url:null,shelfKind:shelf?shelf.kind:null,shopSearch:searchFor(text,home),foundBy:how};
+}
+
+// One pro forma file, built in memory, so a link goes through the very same
+// door as a sweep. swept_at stays blank: a link is not a sweep, and the
+// freshness drawer is about sweeps.
+function proFormaCsv(rows){
+  const cell=v=>{const s=String(v==null?"":v);return /[",\n\r]/.test(s)?"\""+s.replace(/"/g,"\"\"")+"\"":s;};
+  const cols=["venue_code","title","start_date","end_date","summary","url","notes","swept_at"];
+  return [cols.join(",")].concat(rows.map(r=>cols.map(c=>cell(r[c])).join(","))).join("\n")+"\n";
+}
 
 // ---- v9 pro forma helpers (pure) ----
 const KNOWN_VENUES = new Set(MUSEUMS.map(m=>m.id));
@@ -1548,11 +2696,22 @@ function extractLedgerJson(text){
 
 export default function App(){
   const[rows,setRows]=useState([]);
+  // A row from an occasional venue this page's store has not met still files
+  // under a venue — see registerUnseenOccasional. Idempotent; costs a loop.
+  registerUnseenOccasional(rows);
   const[loaded,setLoaded]=useState(false);
   const[busy,setBusy]=useState(false);
   const[busyId,setBusyId]=useState(null);
   const[lookPhase,setLookPhase]=useState(null); // DIAGNOSTIC: "shop"|"web"|null — which lookup step is running (revert to plain "Searching…" later)
   const[prog,setProg]=useState({done:0,total:0,label:""});
+  // ADD BY LINK — see the block above readShowPage. The box's text and the
+  // occasional venues live in the page's store, not the ledger.
+  const[importMenu,setImportMenu]=useState(false);
+  const[linkPanel,setLinkPanel]=useState(false);
+  const[linkText,setLinkText]=useState("");
+  const[linkFails,setLinkFails]=useState([]);
+  const[occVenues,setOccVenues]=useState({});
+  const linkSaveTimer=useRef(null);
   const[error,setError]=useState(null);
   const[rechecking,setRechecking]=useState(false);   // which of the card's two buttons is running
   const[copySaid,setCopySaid]=useState(null);       // "ok" / "no": what the diagnostic's copy icon last managed
@@ -1718,6 +2877,9 @@ export default function App(){
     // Quarantine loads here too, and for the same reason: it is not part of the
     // ledger any more, so it has to be in force before any file is opened.
     readQuarantine().then(({map,why})=>{ setQuarantine(map); setQuarWhy(why); });
+    // Add by link: the venues it has met, and links still waiting in the box.
+    readOccasional().then(map=>{ registerOccasional(map); setOccVenues(map); });
+    readPendingLinks().then(t=>{ if(t)setLinkText(t); });
   },[]);
 
   // Keep the "Last saved ... ago" text and its colour current.
@@ -1903,7 +3065,7 @@ export default function App(){
     return out;
   }
 
-  function analyzeProForma(text,ignoredKeys){
+  function analyzeProForma(text,ignoredKeys,opts){
     const table=csvParse(text);
     if(!table.length) return {error:"That file was empty."};
     const header=table[0].map(h=>String(h).trim().toLowerCase());
@@ -1981,7 +3143,7 @@ export default function App(){
       // a real row or reach the ledger comparison. Counted, never silent.
       if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
       parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,
-                   rowNotes:rowNote?["Sweeper note: "+rowNote]:[],parseNotes:notes,line});
+                   rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:"Sweeper note: ")+rowNote]:[],parseNotes:notes,line});
     }
 
     // THE FILE IS REFUSED WHOLE, not row by row. A sweep that produced a
@@ -2091,6 +3253,80 @@ export default function App(){
       setError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions({});
     };
     reader.readAsText(file); e.target.value="";
+  }
+
+
+  // ── ADD BY LINK — the button's work ────────────────────────────────────────
+  // One page read per link, then one model call for the prose; a new venue's
+  // shop is found once. Every row then goes through analyzeProForma, the same
+  // door as a sweep file. What could not be read stays in the box.
+  const saveLinksSoon=text=>{
+    if(linkSaveTimer.current)clearTimeout(linkSaveTimer.current);
+    linkSaveTimer.current=setTimeout(()=>{ writePendingLinks(text); },800);
+  };
+  async function readLinks(){
+    const urls=linksIn(linkText);
+    if(!urls.length){ setLinkFails([{url:"",why:"No links found in the box."}]); return; }
+    setBusy(true); setError(null); setLinkFails([]);
+    const got=[], fails=[];
+    let venues={...occVenues}, venuesChanged=false;
+    for(let n=0;n<urls.length;n++){
+      const url=urls[n];
+      setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026"});
+      try{
+        const f=await fetchPage(url,"The exhibition's title, dates and description.",null,{full:true});
+        if(!f.ok){ fails.push({url,why:f.detail}); continue; }
+        const res=f.results[0];
+        if(!res){
+          const e=(f.errors||[])[0];
+          fails.push({url,why:e?"The museum refused the page ("+String(e.http_status_code||e.error_type||"no reason given")+").":"The page came back empty."});
+          continue;
+        }
+        const page=readShowPage(res,url);
+        if(!page.ok){ fails.push({url,why:page.why}); continue; }
+        const host=hostOf(url);
+        let vc=knownVenueFor(host);
+        if(!vc){
+          vc=occVenueId(host);
+          const had=venues[vc];
+          if(!had||had.shop==="unknown"){
+            const shop=await discoverShop(oneText(res),host,page.site,had?had.rejected:[]);
+            venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:page.site,host,english:had?had.english:undefined,
+              ...shop,confirmed:false,rejected:had?had.rejected||[]:[],addedAt:had?had.addedAt:new Date().toISOString()}};
+            venuesChanged=true;
+          }
+        }
+        const ask=await readResults(linkPrompt(page));
+        const a=linkAnswer(ask.ok?ask.data:null);
+        if(isOcc(vc)&&venues[vc].english===undefined&&ask.ok){ venues={...venues,[vc]:{...venues[vc],english:a.englishSpeaking}}; venuesChanged=true; }
+        const title=linkTitle(page.base,a.subtitle,page.between);
+        got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
+          summary:a.summary?composeSummary(a.english,a.summary):"",url,
+          notes:ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")});
+      }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
+    }
+    if(venuesChanged){ registerOccasional(venues); setOccVenues(venues); writeOccasional(venues); }
+    setProg({done:0,total:0,label:""}); setBusy(false);
+    const left=fails.map(x=>x.url).join("\n");
+    setLinkText(left); writePendingLinks(left); setLinkFails(fails);
+    if(!got.length)return;
+    const res=analyzeProForma(proFormaCsv(got),new Set(ignored.map(x=>x.key)),{notePrefix:""});
+    if(res.error){ setError(res.error); return; }
+    if(!res.props.length){
+      setTally(res.tally||null);
+      setError("Read "+got.length+" link"+(got.length===1?"":"s")+", but nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+".");
+      return;
+    }
+    setProposals(res.props); setCoverage([]); setTally(res.tally||null); setSeenInFile(null); setDecisions({});
+  }
+  // Her answer about a new venue's shop. Confirm keeps it; "Wrong shop" sets
+  // it aside, and the next link from that venue looks again, skipping it.
+  function decideVenue(id,ok){
+    const v=occVenues[id]; if(!v)return;
+    const next={...occVenues,[id]:ok?{...v,confirmed:true}
+      :{...v,shop:"unknown",confirmed:false,shopHome:null,shopCatalogues:null,shopSearch:null,
+         rejected:[...(v.rejected||[]),hostOf(v.shopHome)].filter(Boolean)}};
+    registerOccasional(next); setOccVenues(next); writeOccasional(next);
   }
 
   // Decision model. Each card holds: {mode} for an add ("accept"/"reject"/"never"),
@@ -3032,7 +4268,7 @@ export default function App(){
       // Dismissed is on — then only dismissed ones.
       if(dismissedOnly){ if(r.interested)return false; }
       else if(!r.interested&&!showAll&&!sq)return false;
-      if(venueF.size>0&&!venueF.has(r.museumId))return false;
+      if(venueF.size>0&&!venueF.has(r.museumId)&&!(venueF.has(OCC_CHIP)&&isOcc(r.museumId)))return false;
       const t=tierFor(r),ts=TIERS[t]?.time||"current";
       if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
       if(watchedF&&!r.watching)return false;
@@ -3047,7 +4283,7 @@ export default function App(){
       if(pinTouched){const aT=refreshTouched.includes(a.id)?0:1,bT=refreshTouched.includes(b.id)?0:1;if(aT!==bT)return aT-bT;}
       if(sortBy==="added"){const d=String(b.addedAt||"").localeCompare(String(a.addedAt||""));if(d!==0)return d;}
       if(sortBy==="edited"){const d=String(b.editedAt||"").localeCompare(String(a.editedAt||""));if(d!==0)return d;if(!a.editedAt&&!b.editedAt){const aH=a.addedAt?1:0,bH=b.addedAt?1:0;if(aH!==bH)return bH-aH;}}
-      if(sortBy==="venue"){const d=MUSEUMS.findIndex(m=>m.id===a.museumId)-MUSEUMS.findIndex(m=>m.id===b.museumId);if(d!==0)return d;}
+      if(sortBy==="venue"){const d=venueRank(a.museumId)-venueRank(b.museumId);if(d!==0)return d;}
       if(sortBy==="acquiring"){const w={acquired:0,yes:1,no:3};const d=(w[a.acquiring]??2)-(w[b.acquiring]??2);if(d!==0)return d;}
       const ta=tierFor(a),tb=tierFor(b);
       let oa=TIERS[ta]?.ord??9,ob=TIERS[tb]?.ord??9;
@@ -3215,9 +4451,35 @@ export default function App(){
               work. Says what it will DO, not what is currently on. */}
           <button onClick={toggleTheme} title={theme==="dark"?"Switch to light":"Switch to dark"}
             style={{...sBtn,marginLeft:"auto",padding:"5px 9px"}}>{theme==="dark"?"\u2600 Light":"\u263D Dark"}</button>
-          <button onClick={()=>refreshFileRef.current?.click()} style={sBtn}>Import Refresh</button>
+          <button onClick={()=>setImportMenu(v=>!v)} style={sBtn}>Import Refresh</button>
+          {/* ONE DOOR, TWO WAYS IN — her design, 4 Oct: a sweep file, or links
+              pasted any old way. No new section, no new button row. */}
+          {importMenu&&<button onClick={()=>{setImportMenu(false);refreshFileRef.current?.click();}} style={sBtn}>CSV file</button>}
+          {importMenu&&<button onClick={()=>{setImportMenu(false);setLinkPanel(true);}} style={sBtn}>Paste links</button>}
           <input ref={refreshFileRef} type="file" accept=".csv,text/csv" onChange={handleRefreshFile} style={{display:"none"}}/>
         </div>
+        {linkPanel&&<div style={{marginTop:8}}>
+          <textarea value={linkText} onChange={e=>{setLinkText(e.target.value);saveLinksSoon(e.target.value);}} rows={4}
+            style={{width:"100%",boxSizing:"border-box",fontSize:12,fontFamily:"inherit",padding:"7px 9px",border:"1px solid "+C.rule,borderRadius:4,background:C.bg,color:C.ink,resize:"vertical"}}/>
+          <div style={{display:"flex",gap:5,marginTop:5}}>
+            <button onClick={readLinks} disabled={busy} style={pBtn}>Read</button>
+            <button onClick={()=>setLinkPanel(false)} style={sBtn}>Close</button>
+          </div>
+          {linkFails.map((f,i)=><div key={i} style={{marginTop:5,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
+            {f.url&&<a href={f.url} target="_blank" rel="noopener noreferrer" style={{color:TH.urgent.ink}}>{f.url}</a>}{f.url?" \u2014 ":""}{f.why}
+          </div>)}
+        </div>}
+        {/* A NEW VENUE'S SHOP, FOUND ONCE — she confirms it (her design,
+            3 Oct). Stays on screen until she does. */}
+        {Object.values(occVenues).filter(v=>!v.confirmed&&v.shop!=="unknown").map(v=>{
+          const link=v.shopCatalogues||v.shopHome;
+          return <div key={v.id} style={{marginTop:6,fontSize:11.5,color:C.ink,display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",lineHeight:1.4}}>
+            <span style={{fontWeight:600}}>{v.name}</span>
+            {link?<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.soft,overflowWrap:"anywhere"}}>{link}</a>
+              :<span style={{color:C.soft}}>No museum shop found.</span>}
+            <button onClick={()=>decideVenue(v.id,true)} style={sBtn}>Confirm</button>
+            {link&&<button onClick={()=>decideVenue(v.id,false)} style={sBtn}>Wrong shop</button>}
+          </div>;})}
         {savedText&&<div style={{marginTop:6,fontSize:11,color:savedCol,fontWeight:savedWeight}}>{savedText}</div>}
         {showUnsavedBanner&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.okBg,border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.okInk,lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u21BB"}</span>
@@ -3363,6 +4625,7 @@ export default function App(){
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
           {MUSEUMS.map(m=><button key={m.id} onClick={()=>toggleSet(setVenueF,m.id)} style={chip(venueF.has(m.id))}>{m.short}</button>)}
+          <button onClick={()=>toggleSet(setVenueF,OCC_CHIP)} style={chip(venueF.has(OCC_CHIP))}>Occasional</button>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Acquiring?</span>
@@ -3524,7 +4787,7 @@ export default function App(){
                           \u2014 among the words it printed those six characters
                           literally, and nothing caught it for weeks. */}
                       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-                        {noShop?"Venue has no shop."
+                        {noShop?(MU[r.museumId]&&MU[r.museumId].shopUnknown?"Museum shop not found.":"Venue has no shop.")
                           :"Not in the museum shop \u2014 shop link opens the general store."}
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
@@ -3742,7 +5005,7 @@ export default function App(){
                 // at was to read its link. Same heading style and same venue
                 // order as the ordinary list below, so both halves of the
                 // screen read the same way round.
-                const byVenueBlocks=list=>MUSEUMS.map(m=>{
+                const byVenueBlocks=list=>allVenues().map(m=>{
                   const grp=list.filter(x=>x.p.venueId===m.id);
                   if(!grp.length)return null;
                   return(
@@ -3810,7 +5073,7 @@ export default function App(){
                     // act on THESE and not on all 21, or "collapse all" would
                     // write keys for venues with nothing in them and the button
                     // would read the wrong way on the next click.
-                    const venuesHere=MUSEUMS.filter(m=>ordinary.some(x=>x.p.venueId===m.id)).map(m=>m.id);
+                    const venuesHere=allVenues().filter(m=>ordinary.some(x=>x.p.venueId===m.id)).map(m=>m.id);
                     const anyOpen=venuesHere.some(id=>venueOpen(id));
                     return(
                     <div style={{marginBottom:12,display:"flex",alignItems:"flex-end",gap:12,flexWrap:"wrap"}}>
@@ -3838,7 +5101,7 @@ export default function App(){
                       A row with no closing date has nothing to sort on, so it
                       sits at the BOTTOM of its group rather than being given a
                       position it did not earn. */}
-                  {MUSEUMS.map(m=>{
+                  {allVenues().map(m=>{
                     const rank={fill:0,change:1,add:2};
                     const grp=ordinary.filter(x=>x.p.venueId===m.id).slice().sort((a,b)=>{
                       const d=(rank[a.p.type]??9)-(rank[b.p.type]??9); if(d!==0)return d;

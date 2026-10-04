@@ -391,6 +391,10 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
   anywhere.** Closing the search bar or Reset cards empties its box.
 - **Per-venue freshness**, two dates, from `swept_at`.
+- **Add by link** (39, her design 3–4 Oct): Import → CSV file / Paste links;
+  each link read once by code (title, dates) and the model (prose), then the
+  same intake as a sweep. New venues file under one "Occasional" chip, shop
+  found once and confirmed by her; both kept in the store. `docs/picked_shows.md`.
 - **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
   at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.
 - **Dark mode**, every colour named; the shell paints a ground before React runs.
@@ -541,6 +545,7 @@ through `sample` at `modelTier: default`. Do not re-open without a real misread.
 | unit fixtures | `date.test.js`, `compress.test.js`, `qc.test.js`, `sweep_log.test.js`, `venue_status.test.js`, `pacing.test.js` |
 | `intake_cases.js` | folding, quarantine, freshness, the ledger gate |
 | `page_loads.js`, `page_renders.js` | does the page load; does it DRAW (jsdom, plain and with the runtime answering) |
+| `add_by_link.js` | Add by link on the 3 Oct pages (`docs/link_pages/`): titles, dates, unread links, new venues' shops, the chip (AL-) |
 | `catalogue_lookup.js`, `recheck_shop.js` | the lookup (C-); Re-check, blocked shops, web-found links, search filters, another venue's book, no-shop venues, language, Reset cards, counts, buy-next dot, closing a search box — the real app, buttons pressed (R-, L-, S-, VN-, LG-, RC-, RS-, CT-, SC-, BN-) |
 | `*_pages.js` per venue | `mam`, `ashmolean`, `moma`, `mad`, `brit`, `morgan`, `orsay` recipes on her saved pages, no network — her counts, dates, titles, descriptions |
 | `summary_pages.js`, `title_case_pages.js`, `listing_pages.js` | descriptions, titles in the venue's letters, where each row was seen — on saved pages |
@@ -594,6 +599,7 @@ npm test                                     all fixtures
 | File | What it is |
 |---|---|
 | `sweep_prototype.js` | The real scraper. Playwright + Chromium |
+| `dates.js` | THE date reader — the app gets it via `node build/sync_shared.js` (with compression's rules); `npm test` fails if they differ |
 | `compress.js` / `compress_cli.js` | Raw text → the summary she reads |
 | `qc.js` | Exceptions report **and the gate in front of her import file**. A faulty row (no title, no venue code) BLOCKS `--apply`; an exception warns and never acts |
 | `sweep_log.js`, `venue_status.js` | Freshness drawer rebuilt from disk; §2's table |
@@ -1044,7 +1050,7 @@ stale after a minute; every save checks it first. A reload or republish in the s
 2. `CLOUD_OPENS=true` once Loads have matched every time — her call. **Load
    stays for good** — it is how she opens a backup.
 3. Merge to `main` and publish to her app — her call; §4's rules apply. **First
-   copy the test page's `sweeps/venues` and `quarantine/rows` into her app's
+   copy the test page's `sweeps/venues`, `quarantine/rows`, `venues/occasional` and `links/pending` into her app's
    store** (quarantine merged latest-wins, never replaced).
 4. Google Drive backup by button — on the table, never automatic.
 
@@ -1093,9 +1099,6 @@ sweep, and a session with her stitches and compresses (her design, 2 Oct).
   `docs/artic_pages/` README has the idea.
 - **A QA pass before the stitch** — parked from a session whose reasoning she
   does not trust. `qc.js` is NOT that pass and does not re-open it.
-- **Add by link** — she pastes show links under Import; the app reads them into
-  ordinary cards, "Occasional" chip. Designed and tested 3–4 Oct; **not built —
-  waits for her go.** `docs/picked_shows.md`.
 
 ---
 
