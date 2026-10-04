@@ -263,6 +263,7 @@ function runtime(answer, log) {
        'true,true,false,false,false,false,false,false',
        'C-157: Closing Window \u2014 wanted (Yes) and closed 3\u201312 months ago, nothing else');
     eq(api.isSelfPublisher('The Art Institute of Chicago'), true, 'C-146: the Art Institute of Chicago is a museum\u2019s own imprint \u2014 her addition, 2 Oct');
+    eq(api.isSelfPublisher('Cincinnati Art Museum'), true, 'C-146b: the Cincinnati Art Museum is a museum\u2019s own imprint \u2014 her addition, 4 Oct');
   }
 
   // ── C-032 to C-038: the publisher's own page ───────────────────────

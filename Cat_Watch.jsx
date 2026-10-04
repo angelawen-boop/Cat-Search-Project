@@ -75,7 +75,7 @@ const MUSEUMS = [
   { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopCatalogues:"https://bookstore.menil.org/collections/menil-publications", shopHome:"https://bookstore.menil.org/", listUrl:null },
   { id:"artic", short:"Artic", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
   // Cincinnati Art Museum, 4 Oct 2026, her addition; chip name "Cincinnati"
-  // (her spelling ruling). Placed after Artic until she gives its place.
+  // (her spelling ruling). After Artic — her ruling, 4 Oct.
   // Shopify: search box and the Books shelf she sent (five pages on 4 Oct).
   { id:"cincinnati", short:"Cincinnati", name:"Cincinnati Art Museum", city:"Cincinnati", exBase:null, shopSearch:"https://shop.cincinnatiartmuseum.org/search?q=", shopCatalogues:"https://shop.cincinnatiartmuseum.org/collections/books", shopHome:"https://shop.cincinnatiartmuseum.org/", listUrl:null },
   { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:"https://wallacecollectionshop.org/search?q=", shopCatalogues:"https://wallacecollectionshop.org/collections/wallace-collection-publications", shopHome:"https://wallacecollectionshop.org/", listUrl:null },
@@ -2207,6 +2207,7 @@ const SELF_PUBLISHERS = new Set([
   "museum of modern art",                 // moma — her addition, 1 Oct (The Surrealist Book)
   "museum of modern art new york",        // moma — the same, as the lookup also read it (Brancusi)
   "art institute of chicago",             // artic — her addition, 2 Oct
+  "cincinnati art museum",                // cincinnati — her addition, 4 Oct
 ]);
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){
