@@ -24,11 +24,14 @@ approval), runs the final QC and hands her the CSV. This job does none of that.
   needs a recipe change first.
 - **No subagents, no compression, no stitch, no `Artifact`/`ArtifactData`
   calls, no publish.**
-- **Commit only `scraper/output/`.**
+- **Commit only `scraper/output/` and `scraper/robots/`** (the sweep refreshes
+  each site's saved robots.txt there; her ruling, 5 Oct).
 
 ## Steps
 
-1. `git pull origin main`. Confirm you are on `main` with a clean tree.
+1. `git pull origin main`. Confirm you are on `main` with a clean tree. Then
+   `npm ci` — a routine session can start without the repo's own setup having
+   run, and the sweep dies on a missing package (5 Oct: `node-fetch`).
 2. Start the sweep **in the background** and wait on its log until it prints
    that it has finished. Never cut it short.
 3. **Venues with no file in the run** (cut short, over budget, browser died):
@@ -51,7 +54,7 @@ approval), runs the final QC and hands her the CSV. This job does none of that.
    kept pages (`scraper/output/pages_kept/`), saved pages under `docs/`. Say
    what is proven, what is a guess, and what would settle it. No network
    request to answer a question.
-6. `git add scraper/output`, commit ("Monthly container sweep <run>"),
+6. `git add scraper/output scraper/robots`, commit ("Monthly container sweep <run>"),
    `git pull --rebase origin main`, push to `main`. Retry the push on network
    failure only (2s, 4s, 8s, 16s).
 
