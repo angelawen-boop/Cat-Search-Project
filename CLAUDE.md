@@ -294,8 +294,9 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 38.2 on her main app, 38.2 · cloud 4 on the test page** (published
-2 Oct; the test page republished with the same-tab reload fix, §7.1). Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
+**Live: 38.2 on her main app (2 Oct), 39 · cloud 4 on the test page** (4 Oct,
+Add by link). Main app left at 38.2 — she works only on the test page; it
+catches up at the merge (§7.1). Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
 `inClosingWindow`), Tracked and Dismissed inside "Details"; footer "Reset to
 Seed" and "Reset cards" (clears one card's lookup). Older numbers are in git.
@@ -1003,7 +1004,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **38.2 · cloud 4**, published 2 Oct. Cloud-only in it:
+live on the test page **39 · cloud 4**, published 4 Oct (Add by link). Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
