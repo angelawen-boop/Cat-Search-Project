@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "39.1";
+const APP_VERSION = "39.2";
 const APP_VERSION_DATE = "4 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -1138,8 +1138,11 @@ function knownVenueFor(host){
 // about the world, like the sweep log), registered into MU so every card,
 // lookup and link reads it like any venue. One chip for all of them,
 // "Occasional" (her ruling, 4 Oct).
-//   shop: "found" (confirmed or not), "none" (nothing found), "unknown" (she
-//   said the shop found was wrong — found again on the next link).
+//   shop: "found" (a books section, confirmed or not), "noshelf" (a shop but
+//   no books section found), "none" (no shop found; confirmed = her "No shop"),
+//   "failed" (a step died — not an answer), "unknown" (look again on the next
+//   link). Only "found" is used by the lookup; "none" confirmed sends it to the
+//   web, as at Capodimonte.
 function occEntry(v){
   const live=v.shop==="found";
   // `short` is HER name for the venue on its cards (4 Oct: "Royal Academy UK",
@@ -1148,7 +1151,7 @@ function occEntry(v){
   return{id:v.id,short:v.short||v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
-    shopUnknown:v.shop==="unknown"||(v.shop==="none"&&!v.confirmed)};
+    shopUnknown:v.shop!=="found"&&!(v.shop==="none"&&v.confirmed)};
 }
 // Every venue a card can be filed under, in her order, the occasional ones
 // last (by name). The review walks THIS, not MUSEUMS — walking MUSEUMS alone,
@@ -1193,55 +1196,115 @@ async function writePendingLinks(text){
   try{ await db.doc(LINKS_DOC).set({text:String(text||""),updatedAt:new Date().toISOString()}); return true; }catch{ return false; }
 }
 
-// ── FINDING A NEW VENUE'S SHOP — once per venue, then kept ──────────────────
-// The show page's own shop link first (4 of 6 test venues carry one), else ONE
-// search. Then the shop's front page is read once for its EXHIBITION
-// CATALOGUES shelf, else its BOOKS shelf — never the whole shop, which turns
-// up mugs and prints (her ruling, 3 Oct). She confirms what was found.
+// ── FINDING A NEW VENUE'S SHOP SECTION — once per venue, then kept ─────────
+// Her design, 4 Oct. What is wanted is the shop's EXHIBITION CATALOGUES
+// section, else its BOOKS / PUBLICATIONS section — NEVER the front page (every
+// museum shop she has met has a books section) and never one book or a post.
+// Each step runs only if the one before found nothing:
+//   1. One search, "<venue> shop exhibition catalogues" — her own Google query.
+//      Parallel finds the right page but does not always rank it first
+//      (Cleveland's was 4th behind "Arts & Crafts", 4 Oct), so CODE reads all
+//      of the results and ranks them; the first is never simply taken.
+//   2. A Shopify shop's own list of its sections (collections.json) — Thyssen,
+//      whose search returned only single books.
+//   3. The shop's front page, its menu read for those sections.
+// Whatever wins is OPENED before she sees it and must read as a shelf of books
+// (book words and prices), unless the search excerpt already does. She
+// confirms; "Look again" re-runs this skipping only the PAGES she turned down,
+// never the shop's whole site (the shop was right for the RA and the
+// Courtauld — only the page was wrong). Evidence: docs/link_pages/shop_search/.
 const SHOP_WORDS=/^(?:the\s+)?(?:museum\s+|online\s+|gift\s+|book)?(?:shop|store|boutique|tienda|winkel|webshop|museumshop|negozio|librairie|bookshop)(?:\s+online)?$/i;
 const SHOP_HOST=/^(?:shop|store|boutique|tienda|winkel|webshop|bookshop|negozio|museumshop)\.|shop/i;
+const SHOP_PATH=/\/(?:shop|store|boutique|tienda|winkel|webshop|negozio|bookshop)(?:\/|$)/i;
 function mdLinks(text){
   const out=[];
   for(const m of String(text||"").matchAll(/\[([^\]]*)\]\((https?:\/\/[^)\s]+)/g))out.push({label:stripMd(m[1]),url:m[2]});
   return out;
 }
-function shopLinkOnPage(text,museumHost,rejected){
-  const no=new Set(rejected||[]);
-  const links=mdLinks(text).filter(l=>!no.has(hostOf(l.url)));
+// "shop.courtauld.ac.uk" → "courtauld.ac.uk". Two labels, three behind a
+// country's own second level (ac.uk, org.uk, com.au…).
+function baseDomain(h){
+  const p=String(h||"").toLowerCase().replace(/^www\./,"").split(".").filter(Boolean);
+  if(p.length<=2)return p.join(".");
+  const two=p.slice(-2).join(".");
+  return /^(?:ac|co|org|gov|com|net|edu)\.[a-z]{2}$/.test(two)?p.slice(-3).join("."):two;
+}
+// The show page's own link to its shop, as an address; "" when it has none.
+function shopLinkOnPage(text,museumHost){
+  const links=mdLinks(text);
   const named=links.find(l=>SHOP_WORDS.test(l.label));
-  if(named){ try{ const u=new URL(named.url); return (/\/(?:products?|collections)\//.test(u.pathname)||u.pathname==="/")?u.origin+"/":named.url; }catch{ return ""; } }
+  if(named)return named.url;
   const byHost=links.find(l=>hostOf(l.url)!==museumHost&&SHOP_HOST.test(hostOf(l.url)));
   return byHost?originOf(byHost.url):"";
 }
-function shopFromResults(results,rejected){
-  const no=new Set(rejected||[]);
-  for(const r of results||[]){
-    const u=String((r&&r.url)||""), h=hostOf(u);
-    if(!h||no.has(h))continue;
-    if(SHOP_HOST.test(h))return originOf(u);
-    if(/\/(?:shop|store|boutique)(?:\/|$)/i.test(u))return u;
-  }
-  return "";
+// IS THIS ADDRESS THE MUSEUM'S OWN SHOP? Its show page's shop link's site; or
+// a shop on the museum's own domain (shop.courtauld.ac.uk, a /shop path); or a
+// shop site carrying the museum's name (diashop.org for dia.org). A reseller's
+// shelf for the museum — Museum Bookstore's "Courtauld Gallery", 4 Oct — is
+// not, and neither is the museum's library page about catalogues.
+function isShopPlace(u,museumHost,pageShopHost){
+  const h=hostOf(u).replace(/^www\./,"");
+  if(!h)return false;
+  if(pageShopHost&&h===pageShopHost.replace(/^www\./,""))return true;
+  const b=baseDomain(museumHost), hb=baseDomain(h), label=b.split(".")[0], hl=hb.split(".")[0];
+  if(hb===b){ let path=""; try{ path=new URL(u).pathname; }catch{} return SHOP_HOST.test(h)||SHOP_PATH.test(path); }
+  return label.length>=3&&hl!==label&&hl.includes(label)&&SHOP_HOST.test(hl);
 }
-// A SHELF IS A MENU ITEM, NOT A BOOK OR A POST — her first real run, 4 Oct:
-// the RA's pick was one book's page ("Painting the French Riviera exhibition
-// catalogue") and the Courtauld's a blog post ("Book of the month"). A menu
-// names a section in the PLURAL and in a few words; a book's page names one
-// catalogue in the singular. So: plural words only, six words at most, and
-// never a blog, news or journal address.
-const SHELF_CATALOGUES=/\bcatalogues\b|\bcatalogs\b|cat[a\u00e1]logos\b|\bcatalogi\b|\bcataloghi\b|\bkataloge\b/i;
-const SHELF_BOOKS=/\bbooks\b|\bpublications\b|\blivres\b|\blibros\b|\bboeken\b|b\u00fccher|\blibri\b/i;
-const NOT_A_SHELF=/\/(?:products?|p|blogs?|news|journal|articles?|stories)\/|[?&]q=|\/search/i;
-function shelfOnShop(text,home){
-  const h=hostOf(home);
-  const links=mdLinks(text).filter(l=>hostOf(l.url)===h&&!NOT_A_SHELF.test(l.url));
-  const menuWords=l=>l.label&&l.label.split(/\s+/).length<=6;
-  const pathWords=l=>{ try{ return decodeURIComponent(new URL(l.url).pathname).replace(/[-_/]/g," "); }catch{ return ""; } };
-  const pick=re=>links.find(l=>menuWords(l)&&re.test(l.label))||links.find(l=>!l.label&&re.test(pathWords(l)));
-  const c=pick(SHELF_CATALOGUES);
-  if(c)return{url:c.url,kind:"catalogues"};
-  const b=pick(SHELF_BOOKS);
-  return b?{url:b.url,kind:"books"}:null;
+// A SECTION NAMES ITSELF IN THE PLURAL (her first run, 4 Oct: the RA's pick was
+// one book's page, the Courtauld's a "Book of the month" post). Read on the
+// words with accents folded: catálogos → catalogos.
+const SHELF_CATALOGUES=/\bcatalog(?:ue)?s\b|\bcatalogos\b|\bcatalogi\b|\bcataloghi\b|\bkataloge\b/;
+const SHELF_BOOKS=/\bbooks\b|\bpublications\b|\bpublicaciones\b|\bpublicaties\b|\bpubblicazioni\b|\blivres\b|\blibros\b|\bboeken\b|\bbucher\b|\blibri\b/;
+// "All Products (not Catalogues)" — Cleveland's, 4 Oct. A section that says
+// it is NOT books is not one.
+const SHELF_NOT=/\b(?:not|non|sin|sans|ohne|niet|geen|zonder|except)\b\W+(?:\w+\W+)?(?:catalog|book|boek|libr|livre|public)/;
+// A sale or clearance section holds only some of the books ("Catálogos en
+// oferta", Thyssen): kept as a last resort, never ahead of a whole section.
+const SHELF_SALE=/\b(?:sale|clearance|offers?|outlet|ofertas?|rebajas|saldi|soldes|korting|aanbieding|black friday|promo\w*)\b/;
+const NOT_A_SHELF=/\/(?:products?|p|blogs?|news|journal|articles?|stories|pages|account|cart)\/|[?&]q=|\/search/i;
+function pathWords(u){ try{ return decodeURIComponent(new URL(u).pathname).replace(/[-_/.]/g," "); }catch{ return ""; } }
+function isFrontPage(u){ try{ return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/?)?$/i.test(new URL(u).pathname); }catch{ return true; } }
+// Candidates, best first: a catalogues section, then books; a sale section
+// after both. Ties keep the order they came in (the search's own).
+function rankShelves(cands){
+  const out=[];
+  cands.forEach((c,n)=>{
+    if(!c||!c.url||NOT_A_SHELF.test(c.url)||isFrontPage(c.url))return;
+    const t=foldText(c.words);
+    if(SHELF_NOT.test(t))return;
+    const kind=SHELF_CATALOGUES.test(t)?"catalogues":SHELF_BOOKS.test(t)?"books":null;
+    if(!kind)return;
+    out.push({...c,kind,score:(kind==="catalogues"?2:1)-(SHELF_SALE.test(t)?1.5:0),n});
+  });
+  return out.sort((a,b)=>b.score-a.score||a.n-b.n);
+}
+// A SHELF OF BOOKS, READ OFF ITS TEXT: book words and prices, both plural.
+const BOOK_WORD=/\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b|\bpages\b|\bcatalog(?:ue|o|us)?s?\b|\bcatalogi\b|\bkataloge?\b|\bbooks?\b|\bboek(?:en)?\b|\blibros?\b|\blivres?\b|\bbuch\b|\btapa (?:dura|blanda)\b/g;
+const PRICE=/[$€£]\s?\d|\d[.,]\d{2}\s?(?:€|eur\b|usd\b|gbp\b|\$|£)/g;
+function looksLikeBookShelf(text){
+  const t=foldText(text);
+  return (t.match(BOOK_WORD)||[]).length>=3&&(t.match(PRICE)||[]).length>=2;
+}
+// A Shopify shop's list of its sections. Read as text, not parsed as JSON: a
+// long list can come back cut short, and the sections before the cut still
+// count. A section with nothing in it is skipped. Ranked on its TITLE, the
+// name her menu shows — never its handle, which can be a sentence (Thyssen's
+// Balenciaga section's ends "…productos-y-catalogos").
+function shopifySections(text,root){
+  const out=[];
+  for(const chunk of String(text||"").split(/\{\s*"id"\s*:/).slice(1)){
+    const t=(chunk.match(/"title"\s*:\s*"((?:[^"\\]|\\.)*)"/)||[])[1];
+    const h=(chunk.match(/"handle"\s*:\s*"([^"]+)"/)||[])[1];
+    const n=(chunk.match(/"products_count"\s*:\s*(\d+)/)||[])[1];
+    if(!t||!h||n==="0")continue;
+    let title=t; try{ title=JSON.parse('"'+t+'"'); }catch{}
+    out.push({url:root+"collections/"+h,words:title});
+  }
+  return out;
+}
+// The shop's root, keeping a language path its own link chose ("/en/").
+function shopRootOf(u){
+  try{ const x=new URL(u); const lang=(x.pathname.match(/^\/([a-z]{2}(?:-[a-z]{2})?)(?:\/|$)/i)||[])[1]; return x.origin+"/"+(lang?lang+"/":""); }catch{ return ""; }
 }
 // A search address only where the shop's platform says how it searches.
 function searchFor(text,home){
@@ -1251,18 +1314,56 @@ function searchFor(text,home){
   if(/catalogsearch/i.test(text))return o+"catalogsearch/result/?q=";
   return null;
 }
-async function discoverShop(pageText,museumHost,venueName,rejected){
-  let home=shopLinkOnPage(pageText,museumHost,rejected), how="the show page";
-  if(!home){
-    const s=await searchWeb("The online shop of the museum "+venueName+".",[venueName+" museum shop",venueName+" shop exhibition catalogues"]);
-    if(s.ok)home=shopFromResults(s.results,rejected);
-    how="a search";
+const SHELF_OPENS=2;   // at most two candidates opened to check, then the next step
+// pageShop: the show page's own shop link (shopLinkOnPage), kept on the venue
+// so "Look again" has it without reading the show page twice.
+async function discoverShop(pageShop,museumHost,venueName,turnedDown){
+  const no=new Set((turnedDown||[]).map(normalizeUrlKey));
+  const pageShopHost=hostOf(pageShop);
+  const place=u=>isShopPlace(u,museumHost,pageShopHost);
+  let opens=0, seenText="", died=null;
+  const tryCands=async(cands,how)=>{
+    for(const c of rankShelves(cands)){
+      if(no.has(normalizeUrlKey(c.url)))continue;
+      if(c.proof&&looksLikeBookShelf(c.proof))return{...c,how};
+      if(opens>=SHELF_OPENS)return null;
+      opens++;
+      const f=await fetchPage(c.url,"The books in this section of the shop, with their prices.",null,{full:true});
+      if(!f.ok){ died=f.detail; continue; }
+      const t=pageTextOf(f.results); seenText+="\n"+t;
+      if(looksLikeBookShelf(t))return{...c,how};
+    }
+    return null;
+  };
+  // 1. The search.
+  const s=await searchWeb("The museum shop's exhibition catalogues section of "+venueName+".",[venueName+" shop exhibition catalogues"]);
+  if(!s.ok)died=s.detail;
+  const mine=(s.results||[]).filter(r=>r&&place(r.url));
+  seenText+="\n"+mine.map(r=>r.url).join("\n");
+  const root=pageShop?shopRootOf(pageShop):mine.length?shopRootOf(mine[0].url):"";
+  opens=0;
+  let pick=await tryCands(mine.map(r=>({url:r.url,words:(r.title||"")+" "+pathWords(r.url),proof:(r.excerpts||[]).join("\n")})),"a search");
+  // 2. A Shopify shop's list of its sections.
+  if(!pick&&root&&/\/(?:collections|products)\//i.test(seenText)){
+    const f=await fetchPage(originOf(root)+"collections.json?limit=250","The shop's sections: titles and handles.",null,{full:true});
+    if(f.ok){ opens=0; pick=await tryCands(shopifySections(pageTextOf(f.results),root),"the shop's list of sections"); }
+    else died=f.detail;
   }
-  if(!home)return{shop:"none"};
-  const f=await fetchPage(home,"The shop's menu: its exhibition catalogues and books sections.",null,{full:true});
-  const text=f.ok?pageTextOf(f.results):"";
-  const shelf=shelfOnShop(text,home);
-  return{shop:"found",shopHome:home,shopCatalogues:shelf?shelf.url:null,shelfKind:shelf?shelf.kind:null,shopSearch:searchFor(text,home),foundBy:how};
+  // 3. The front page's menu.
+  if(!pick&&root){
+    const f=await fetchPage(root,"The shop's menu: its exhibition catalogues and books sections.",null,{full:true});
+    if(f.ok){
+      const t=pageTextOf(f.results); seenText+="\n"+t;
+      const rh=hostOf(root);
+      const menu=mdLinks(t).filter(l=>hostOf(l.url)===rh&&l.label.split(/\s+/).length<=6).map(l=>({url:l.url,words:l.label+" "+pathWords(l.url)}));
+      opens=0; pick=await tryCands(menu,"the shop's menu");
+    }else died=f.detail;
+  }
+  if(pick)return{shop:"found",shopHome:originOf(root||pick.url),shopCatalogues:pick.url,shelfKind:pick.kind,
+    shopSearch:searchFor(seenText+"\n"+pick.url,root||pick.url),foundBy:pick.how,finder:2};
+  // A step that died is not an answer: said as such, not as "nothing found".
+  if(died)return{shop:"failed",shopHome:root?originOf(root):null,why:died,finder:2};
+  return root?{shop:"noshelf",shopHome:originOf(root),finder:2}:{shop:"none",finder:2};
 }
 
 // One pro forma file, built in memory, so a link goes through the very same
@@ -2719,9 +2820,15 @@ export default function App(){
   // ADD BY LINK — see the block above readShowPage. The box's text and the
   // occasional venues live in the page's store, not the ledger.
   // ONE POP-UP FOR BOTH WAYS IN — her ruling, 4 Oct: nothing added to the
-  // page itself. Import opens it; the sweep file, the link box, what could not
-  // be read and the new venues' shops all live inside it.
-  const[importOpen,setImportOpen]=useState(false);
+  // page itself. Import opens it small, with CSV and Links; Links opens the
+  // box below them. New venues' shops are a screen of their own, after the
+  // review (shopScreen).
+  // null · "choose" (CSV or Links) · "links" (the box open below them).
+  const[importMode,setImportMode]=useState(null);
+  // The shop screen, after the review: {partial, ids}. Which venue is being
+  // looked for again.
+  const[shopScreen,setShopScreen]=useState(null);
+  const[shopLooking,setShopLooking]=useState(null);
   const[linkNote,setLinkNote]=useState(null);
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
@@ -3304,10 +3411,16 @@ export default function App(){
         if(!vc){
           vc=occVenueId(host);
           const had=venues[vc];
-          if(!had||had.shop==="unknown"){
-            const shop=await discoverShop(oneText(res),host,page.site,had?had.rejected:[]);
+          // Looked for once and kept. Looked for again only while she has not
+          // confirmed it AND it was found by the finder before 4 Oct's (which
+          // could hand back a front page, a post or one book), or never found.
+          if(!had||(!had.confirmed&&(had.finder!==2||had.shop==="unknown"||had.shop==="failed"))){
+            setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+page.site+"\u2019s shop"});
+            const pageShop=shopLinkOnPage(oneText(res),host);
+            const shop=await discoverShop(pageShop,host,page.site,had?had.turnedDown:[]);
             venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:page.site,host,english:had?had.english:undefined,
-              ...shop,confirmed:false,rejected:had?had.rejected||[]:[],addedAt:had?had.addedAt:new Date().toISOString()}};
+              shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,
+              ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
             venuesChanged=true;
           }
         }
@@ -3333,15 +3446,52 @@ export default function App(){
       return;
     }
     setProposals(res.props); setCoverage([]); setTally(res.tally||null); setSeenInFile(null); setDecisions({});
+    // Done with the pop-up — unless a link could not be read: then it stays
+    // under the review, its lines waiting for her when the review closes.
+    if(!fails.length)setImportMode(null);
   }
-  // Her answer about a new venue's shop. Confirm keeps it; "Wrong shop" sets
-  // it aside, and the next link from that venue looks again, skipping it.
-  function decideVenue(id,ok){
+  // THE SHOP SCREEN'S ANSWERS — her design, 4 Oct. Each is kept in the store
+  // the moment she gives it: a fact about the venue, like the sweep log, so a
+  // venue confirmed once is never asked about again.
+  function saveVenues(next){ registerOccasional(next); setOccVenues(next); writeOccasional(next); }
+  function confirmShop(id){ const v=occVenues[id]; if(v)saveVenues({...occVenues,[id]:{...v,confirmed:true}}); }
+  // "No shop": the lookup goes straight to the web, as at Capodimonte.
+  function noShopFor(id){ const v=occVenues[id]; if(v)saveVenues({...occVenues,[id]:{...v,shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null}}); }
+  // "Look again": a new search NOW, skipping only the pages she turned down —
+  // never the shop's whole site (the old "Wrong shop" banned the site, which
+  // for the RA and the Courtauld was the right shop on the wrong page).
+  async function lookAgain(id){
     const v=occVenues[id]; if(!v)return;
-    const next={...occVenues,[id]:ok?{...v,confirmed:true}
-      :{...v,shop:"unknown",confirmed:false,shopHome:null,shopCatalogues:null,shopSearch:null,
-         rejected:[...(v.rejected||[]),hostOf(v.shopHome)].filter(Boolean)}};
-    registerOccasional(next); setOccVenues(next); writeOccasional(next);
+    const turnedDown=[...(v.turnedDown||[]),v.shopCatalogues].filter(Boolean);
+    setShopLooking(id);
+    let shop;
+    try{ shop=await discoverShop(v.pageShop||"",v.host,v.name,turnedDown); }
+    catch(e){ shop={shop:"failed",why:"Couldn\u2019t look ("+String((e&&e.message)||e)+")."}; }
+    setShopLooking(null);
+    setOccVenues(prev=>{
+      const next={...prev,[id]:{...prev[id],shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,...shop,confirmed:false,turnedDown}};
+      registerOccasional(next); writeOccasional(next); return next; });
+  }
+  // WHICH VENUES THE SHOP SCREEN ASKS ABOUT: a venue outside her 27 with a
+  // card going into the ledger, whose shop she has not confirmed. A venue whose
+  // every card she rejected is not asked about.
+  function cardGoesIn(p,dec){
+    if(p.type==="add")return dec.mode==="accept";
+    if(dec.mode==="addnew")return true;
+    return Object.values(dec.fields||{}).some(x=>x==="accept");
+  }
+  function venuesToConfirm(){
+    const ids=new Set();
+    (proposals||[]).forEach((p,i)=>{ const id=(p.cand||{}).museumId;
+      if(isOcc(id)&&occVenues[id]&&!occVenues[id].confirmed&&cardGoesIn(p,decisions[i]||{}))ids.add(id); });
+    return [...ids].sort((a,b)=>String(occVenues[a].name).localeCompare(String(occVenues[b].name)));
+  }
+  // THE REVIEW'S LAST BUTTON. With a shop to confirm it is "Next" and opens
+  // the shop screen; the ledger moves only when that screen is done.
+  function proceedRefresh(partial){
+    const ids=venuesToConfirm();
+    if(ids.length){ setShopScreen({partial,ids}); return; }
+    applyRefresh(partial);
   }
 
   // Decision model. Each card holds: {mode} for an add ("accept"/"reject"/"never"),
@@ -3427,13 +3577,14 @@ export default function App(){
     // looking at. A count handed in from the caller is a second copy.
     const leftUndecided=proposals.filter((p,i)=>isUndecidedCard(p,decisions[i])).length;
     commit(Array.from(byId.values()),new Date().toISOString());
+    setShopScreen(null);
     setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length,left:partial?leftUndecided:0});
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
     setVenueF(new Set()); setTimeF(new Set()); setWatchedF(false);
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqBuyNext(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
-  function cancelRefresh(){ setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
+  function cancelRefresh(){ setShopScreen(null); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   const pickSort=k=>{setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
   // refreshVenues() REMOVED 20 Sep 2026. It had the app gathering its own
@@ -4466,7 +4617,7 @@ export default function App(){
               work. Says what it will DO, not what is currently on. */}
           <button onClick={toggleTheme} title={theme==="dark"?"Switch to light":"Switch to dark"}
             style={{...sBtn,marginLeft:"auto",padding:"5px 9px"}}>{theme==="dark"?"\u2600 Light":"\u263D Dark"}</button>
-          <button onClick={()=>{setLinkNote(null);setImportOpen(true);}} style={sBtn}>Import Refresh</button>
+          <button onClick={()=>{setLinkNote(null);setImportMode("choose");}} style={sBtn}>Import Refresh</button>
           <input ref={refreshFileRef} type="file" accept=".csv,text/csv" onChange={handleRefreshFile} style={{display:"none"}}/>
         </div>
         {savedText&&<div style={{marginTop:6,fontSize:11,color:savedCol,fontWeight:savedWeight}}>{savedText}</div>}
@@ -4889,39 +5040,38 @@ export default function App(){
           ))}
         </div>}
       </div>
-      {/* THE IMPORT POP-UP — her ruling, 4 Oct: everything for Import lives
-          here, nothing on the page. Under the review (1100) so the cards it
-          produces open on top and she comes back to it after; under the
-          confirm box (1200), like every overlay. */}
-      {importOpen&&(
-        <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",padding:16}}>
-          <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
-            <div style={{overflow:"auto",padding:"16px 18px",flex:1}}>
-              <textarea value={linkText} onChange={e=>{setLinkText(e.target.value);saveLinksSoon(e.target.value);}} rows={6}
+      {/* THE IMPORT POP-UP — her design, 4 Oct. Small: CSV and Links, and a
+          small Cancel styled as the footer's Quarantine link. CSV opens the
+          file picker, the sweep route as always. Links opens the box and Read
+          below them, on the same pop-up; reading's progress shows here too.
+          Nothing else: a new venue's shop is its own screen, after the review.
+          Under the review (1100) so the cards open on top; under the confirm
+          box (1200), like every overlay. */}
+      {importMode&&(
+        <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",justifyContent:"center",padding:16}}>
+          <div style={{background:C.bg,borderRadius:8,maxWidth:importMode==="links"?820:320,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"18px 18px 12px"}}>
+            <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+              <button onClick={()=>{setImportMode(null);refreshFileRef.current?.click();}} disabled={busy} style={{...sBtn,fontSize:12.5,padding:"7px 22px"}}>CSV</button>
+              <button onClick={()=>setImportMode("links")} disabled={busy} style={{...sBtn,fontSize:12.5,padding:"7px 22px",...(importMode==="links"?{borderColor:C.ink,color:C.ink}:{})}}>Links</button>
+            </div>
+            {importMode==="links"&&<div style={{marginTop:14}}>
+              <textarea value={linkText} onChange={e=>{setLinkText(e.target.value);saveLinksSoon(e.target.value);}} rows={8} disabled={busy}
                 style={{width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"8px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,resize:"vertical"}}/>
-              {busy&&prog.total>0&&<div style={{marginTop:6,fontSize:11,color:C.soft}}>{prog.label}</div>}
+              <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
+                <button onClick={readLinks} disabled={busy} style={pBtn}>Read</button>
+              </div>
+              {busy&&prog.total>0&&<div style={{marginTop:8}}>
+                <div style={{height:4,background:C.rule,borderRadius:2,overflow:"hidden"}}>
+                  <div style={{height:"100%",width:Math.round(100*prog.done/prog.total)+"%",background:C.action}}/></div>
+                <div style={{marginTop:4,fontSize:11,color:C.soft}}>{prog.label}</div>
+              </div>}
               {linkNote&&<div style={{marginTop:6,fontSize:11.5,color:C.soft,lineHeight:1.45}}>{linkNote}</div>}
               {linkFails.map((f,i)=><div key={i} style={{marginTop:6,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
                 {f.url&&<a href={f.url} target="_blank" rel="noopener noreferrer" style={{color:TH.urgent.ink}}>{f.url}</a>}{f.url?" \u2014 ":""}{f.why}
               </div>)}
-              {/* A NEW VENUE'S SHOP, FOUND ONCE — she confirms it (her design,
-                  3 Oct). Stays here until she does. */}
-              {Object.values(occVenues).filter(v=>!v.confirmed&&v.shop!=="unknown").map(v=>{
-                const link=v.shopCatalogues||v.shopHome;
-                return <div key={v.id} style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,fontSize:11.5,color:C.ink,lineHeight:1.45}}>
-                  <div style={{fontWeight:600}}>{v.name}</div>
-                  {link?<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.soft,overflowWrap:"anywhere"}}>{link}</a>
-                    :<span style={{color:C.soft}}>No museum shop found.</span>}
-                  <div style={{display:"flex",gap:6,marginTop:5}}>
-                    <button onClick={()=>decideVenue(v.id,true)} style={sBtn}>Confirm</button>
-                    {link&&<button onClick={()=>decideVenue(v.id,false)} style={sBtn}>Wrong shop</button>}
-                  </div>
-                </div>;})}
-            </div>
-            <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:8,alignItems:"center"}}>
-              <button onClick={()=>setImportOpen(false)} disabled={busy} style={sBtn}>Close</button>
-              <button onClick={()=>{setImportOpen(false);refreshFileRef.current?.click();}} disabled={busy} style={{...sBtn,marginLeft:"auto"}}>CSV file</button>
-              <button onClick={readLinks} disabled={busy} style={pBtn}>Read</button>
+            </div>}
+            <div style={{textAlign:"center",marginTop:14}}>
+              <button onClick={()=>setImportMode(null)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
             </div>
           </div>
         </div>
@@ -5239,21 +5389,63 @@ export default function App(){
                   text:acceptedCount+" decided "+(acceptedCount===1?"card":"cards")+" will go into your ledger now. "
                     +undecidedCount+" undecided "+(undecidedCount===1?"card":"cards")+" will be left behind \u2014 "
                     +"import them using the same sweep file.",
-                  act:()=>applyRefresh(true)})}
+                  act:()=>proceedRefresh(true)})}
                 title={"Apply the "+acceptedCount+" you have decided and come back to the rest later."}
                 style={{...sBtn,borderColor:C.accent,color:C.accent,fontWeight:600}}>
                 Update with the {acceptedCount} I{"’"}ve decided</button>}
               {/* ===== end temporary block ===== */}
-              <button onClick={()=>applyRefresh(false)} disabled={undecidedCount>0}
+              {/* "NEXT" WHEN A NEW VENUE'S SHOP IS STILL TO CONFIRM — her
+                  design, 4 Oct: the shop screen comes between the review and
+                  the ledger, and the ledger moves only when it is done. */}
+              <button onClick={()=>proceedRefresh(false)} disabled={undecidedCount>0}
                 title={undecidedCount>0?"Decide every card first — "+undecidedCount+" still undecided.":""}
                 style={{...pBtn,...(undecidedCount>0?{background:C.muted,cursor:"not-allowed",opacity:1}:{})}}>
                 {undecidedCount>0
                   ? undecidedCount+" still to decide"
-                  : "Go ahead and update the ledger"}</button>
+                  : venuesToConfirm().length?"Next":"Go ahead and update the ledger"}</button>
             </div>
           </div>
         </div>
       )}
+      {/* THE SHOP SCREEN — her design, 4 Oct. After the review's "Next",
+          before the ledger moves: one card per new venue whose shop she has
+          not confirmed. The ledger is updated only when every card is
+          answered — Confirm, or No shop; Look again searches on the spot.
+          Over the review (1100), under the confirm box (1200). */}
+      {shopScreen&&proposals&&(()=>{
+        const left=shopScreen.ids.filter(id=>!(occVenues[id]||{}).confirmed||shopLooking===id).length;
+        const on={borderColor:C.accent,color:C.accent,fontWeight:600};
+        return <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1150,display:"flex",flexDirection:"column",padding:16}}>
+          <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
+            <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
+              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>New venues{"\u2019"} shops</div>
+              <div style={{fontSize:11.5,color:C.soft,marginTop:4}}>Catalogue lookups search the section you confirm.</div>
+            </div>
+            <div style={{overflow:"auto",padding:"4px 18px 14px",flex:1}}>
+              {shopScreen.ids.map(id=>{
+                const v=occVenues[id]||{}, link=v.shop==="found"?v.shopCatalogues:null, looking=shopLooking===id;
+                const said=v.shop==="found"?null:v.shop==="none"?"No museum shop found.":v.shop==="failed"?"Search failed.":"Books section not found.";
+                return <div key={id} style={{paddingTop:12,marginTop:10,borderTop:"1px solid "+C.rule,fontSize:12.5,color:C.ink,lineHeight:1.45}}>
+                  <div style={{fontWeight:600}}>{v.name||id}</div>
+                  {link?<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{link}</a>
+                    :<div style={{color:C.soft}}>{said}</div>}
+                  <div style={{display:"flex",gap:6,marginTop:6,alignItems:"center"}}>
+                    {looking?<span style={{fontSize:11.5,color:C.soft}}>Looking{"\u2026"}</span>:<>
+                      {link&&<button onClick={()=>confirmShop(id)} disabled={!!shopLooking} style={{...sBtn,...(v.confirmed?on:{})}}>Confirm</button>}
+                      <button onClick={()=>lookAgain(id)} disabled={!!shopLooking} style={sBtn}>Look again</button>
+                      {!link&&<button onClick={()=>noShopFor(id)} disabled={!!shopLooking} style={{...sBtn,...(v.confirmed?on:{})}}>No shop</button>}
+                    </>}
+                  </div>
+                </div>;})}
+            </div>
+            <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center"}}>
+              <button onClick={()=>setShopScreen(null)} disabled={!!shopLooking} style={sBtn}>Back</button>
+              <button onClick={()=>applyRefresh(shopScreen.partial)} disabled={left>0}
+                style={{...pBtn,marginLeft:"auto",...(left>0?{background:C.muted,cursor:"not-allowed",opacity:1}:{})}}>
+                {left>0?left+" still to decide":"Go ahead and update the ledger"}</button>
+            </div>
+          </div>
+        </div>;})()}
       {/* ABOVE THE REVIEW PANEL, NOT UNDER IT — her finding, 22 Sep 2026, on
           the very first press of the partial-apply button.
 
