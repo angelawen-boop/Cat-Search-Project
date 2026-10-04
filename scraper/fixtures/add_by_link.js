@@ -96,6 +96,10 @@ const SHOPS = {
 // ── the runtime: a store, a scripted connector and a scripted Claude ───────
 const calls = [];
 const store = new Map();
+// DIA already met, with her short name, its shop set aside ("Wrong shop"):
+// the next link looks for the shop again and must keep her name.
+store.set('venues/occasional', { venues: { 'occ-dia-org': { id: 'occ-dia-org', name: 'Detroit Institute of Arts Museum',
+  short: 'Detroit', host: 'dia.org', shop: 'unknown', confirmed: false, rejected: [], addedAt: '2026-10-04T00:00:00.000Z' } } });
 function runtime() {
   const doc = key => ({
     get: async () => ({ exists: store.has(key), data: () => store.get(key) }),
@@ -280,6 +284,9 @@ function runtime() {
   const ra = arts.find(a => a.textContent.includes('Peggy Guggenheim'));
   ok(ra && /Royal Academy of Arts/.test(ra.textContent), 'AL-010b:  each card is headed by its venue', ra && ra.textContent.slice(0, 60));
 
+  const dia = arts.find(a => a.textContent.includes('Caravaggio'));
+  ok(dia && /^Detroit/.test(dia.textContent) && !/^Detroit Institute/.test(dia.textContent), 'AL-011: a venue\'s short name, hers, heads its cards', dia && dia.textContent.slice(0, 40));
+  ok((((store.get('venues/occasional') || {}).venues || {})['occ-dia-org'] || {}).short === 'Detroit', 'AL-011a:   and survives its shop being looked for again');
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) fail('React complained: ' + shouted.find(s => /Warning/.test(s)));
   console.log(failures ? '\n' + failures + ' FAILED' : '\nadd_by_link: all passed');
   process.exit(failures ? 1 : 0);

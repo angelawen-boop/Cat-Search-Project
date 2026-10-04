@@ -27,7 +27,9 @@ one the moment she comes across it.
 - **No lookback cutoff** for anything added by link (her ruling).
 - **Chip: one "Occasional"** for every venue added this way (her ruling); each
   venue keeps its own name and shop behind it. A link to a venue already
-  swept files under that venue.
+  swept files under that venue. **Card names are hers** (`short` in the
+  store, written by a session; 4 Oct: Royal Academy UK, Detroit, Cleveland,
+  Thyssen-Bornemisza); the page title's name until she gives one.
 - **Store:** `venues/occasional` (venues, shops, her confirmations) and
   `links/pending` (the box). Copy both when the cloud page merges (CLAUDE.md
   §7.1). A ledger row whose venue a page's store has not met shows under its

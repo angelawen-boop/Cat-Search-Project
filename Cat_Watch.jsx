@@ -1142,7 +1142,10 @@ function knownVenueFor(host){
 //   said the shop found was wrong — found again on the next link).
 function occEntry(v){
   const live=v.shop==="found";
-  return{id:v.id,short:v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
+  // `short` is HER name for the venue on its cards (4 Oct: "Royal Academy UK",
+  // "Detroit"…), written into the store by a session; the page title's name
+  // stands until she gives one.
+  return{id:v.id,short:v.short||v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
     shopUnknown:v.shop==="unknown"||(v.shop==="none"&&!v.confirmed)};
