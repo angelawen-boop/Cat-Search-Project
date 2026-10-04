@@ -399,8 +399,9 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
   anywhere.** Closing the search bar or Reset cards empties its box.
 - **Per-venue freshness**, two dates, from `swept_at`.
-- **Add by link** (39, her design 3–4 Oct): Import opens a small pop-up —
-  CSV · Links, Cancel; **nothing added to the page itself**. Each link is read
+- **Add by link** (39–39.5, her design 3–4 Oct; signed off on her 10 links
+  4 Oct): Import opens a small pop-up — CSV · Links, Cancel; **nothing added
+  to the page itself**. Each link is read
   once by code (title, dates) and the model (prose, always English), then the
   same intake as a sweep; no lookback. New venues file under one "Occasional"
   chip; their shop sections confirmed on a screen after the review (39.2).
@@ -1067,31 +1068,26 @@ stale after a minute; every save checks it first. A republish while her page is 
 4. Google Drive backup by button — on the table, never automatic.
 
 
-### 2. Add by link — 39.5 live on the test page, her test next
+### 2. Add by link — 39.5 signed off on her 10 links; a new venue still to see
 
-**Her rule, 4 Oct: an import she does not finish keeps NOTHING** — CSV or
-links. The Read's venues and shops, Confirm, No shop and Look again are held in
-memory (`occSaved` is what the store holds) and stored only when the ledger
-moves; Cancel import drops them; Back keeps them. So are a CSV's sweep log and
-the paste box's unread links (39.5, her ruling 4 Oct; the sweep log had been
-written on reading since 20 Sep). AL-012, AL-013, AL-007c/d, AL-009i2, AL-009m.
+**Her test, 4 Oct (39.5):** all 10 original links imported; the shop finder
+better; catalogue lookups at Thyssen and Mauritshuis found the catalogue. Left
+here for now. **Open:** how the finder does on a venue it has never met — she
+will see when she next adds one by link. A miss is a finder bug (below).
 
-**Books and ONLY books (her ruling, 4 Oct):** a section mixing books with other
-goods ("Books & Stationery", DIA) is never taken — the finder opens it and
-takes a books-only section inside it. Catalogues › publications › books.
-AL-008j, AL-009e. A Read searches again for any unconfirmed venue whose books
-section was not found.
-
-**Detroit (her keyed connector, 4 Oct):** the search sends hers and "<venue>
-shop books publications" in one call; with both, "DIA Publications" came 1st.
-`docs/link_pages/shop_search/detroit*.json`.
-
-**Her ruling, 4 Oct: she never feeds the app a shop link**, and "no shop
-found" is not an answer from a museum that has one. A miss is a finder bug.
-
-**Her test page's store, 4 Oct:** the old save-at-once approvals of
-Cleveland, Mauritshuis and Thyssen cleared on her yes; Courtauld and the RA
-confirmed by her in a finished 39.4 import, kept.
+Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`):
+- **An import she does not finish keeps NOTHING** — CSV or links: new venues
+  and shops, Confirm / No shop / Look again, a CSV's sweep log, the paste box.
+  All stored when the ledger moves; Cancel import drops them; Back keeps them.
+  A file or Read with nothing to propose counts as finished.
+- **Books and ONLY books** — a section mixing books with other goods is never
+  taken; the finder looks inside it for a books-only one. Catalogues ›
+  publications › books. Never a front page.
+- **She never feeds the app a shop link**, and "no shop found" is not an answer
+  from a museum that has one.
+- **The finder's search sends two queries in one call** — hers and "<venue>
+  shop books publications" (Detroit's "DIA Publications" came only with both;
+  her keyed connector, 4 Oct).
 
 ### 3. Fixes not yet checked in the cases they were written for
 
