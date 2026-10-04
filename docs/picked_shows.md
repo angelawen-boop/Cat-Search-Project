@@ -14,11 +14,17 @@ one the moment she comes across it.
 
 ## The design
 
-- **Import opens ONE pop-up — nothing added to the page** (her ruling, 4 Oct,
-  after 39 put buttons and lines in the header): the link box, then **Close ·
-  CSV file · Read**. Links separated any way; a repeat read once; progress
-  "Reading 3 of 10…", what could not be read, and new venues' shops to confirm
-  — all inside it. Under the review, so she returns to it after.
+- **Import opens ONE small pop-up — nothing added to the page** (her design,
+  4 Oct, 39.2): **CSV · Links**, a small **Cancel** under them (the footer's
+  Quarantine style). CSV = the file picker, the sweep route. Links = the box
+  and **Read** below, same pop-up; progress bar and "Reading 3 of 10…" there.
+  Links separated any way; a repeat read once. The review opens when reading
+  ends; the pop-up closes, or waits under the review if a link failed.
+- **Then the shop screen** (her design, 4 Oct): with a card going in from a
+  venue outside her 27 whose shop is unconfirmed, the review's last button is
+  **Next** → one card per venue: **Confirm · Look again** (a section found) or
+  **Look again · No shop**. **The ledger moves only when every one is
+  answered.** Back returns to the review. Confirmed once, never asked again.
 - **The ordinary review.** Each link becomes a pro forma row fed to the
   existing intake: Add / Fill / Change / Reject / quarantine all as now.
 - **A link it cannot read is a line, never a card** — the full link and why
@@ -54,14 +60,27 @@ one the moment she comes across it.
 
 ## A venue the app has not seen
 
-Name from the page title; shop from the show page's own link, else one
-search. It must find the **exhibition-catalogues shelf**, else the books
-shelf — never the whole shop (mugs, prints). **One card shows venue and shop;
-she confirms**; kept in the store, so the next show there skips this. "No
-shop" kept the same way. **A shelf is a menu item** — plural, six words at
-most, never a blog or product page (her 4 Oct run picked the RA's one book
-and the Courtauld's "Book of the month"). A search address only where the platform says how
-(Shopify, Magento). "Wrong shop" sets it aside; the next link looks again.
+Name from the page title. Its shop: the **exhibition-catalogues section**,
+else books / publications — **never the front page, one book or a post** (her
+ruling, 4 Oct). Code: "FINDING A NEW VENUE'S SHOP SECTION".
+
+1. **One search, her own query: "<venue> shop exhibition catalogues".**
+   Parallel finds the section but does not always rank it first (Cleveland's
+   was 4th, 4 Oct), so code ranks every result: on the museum's own shop
+   site only (not Museum Bookstore's "Courtauld" shelf, not the library's
+   catalogues page); plural section words; "not Catalogues" and sale shelves
+   refused or last.
+2. **A Shopify shop's section list** (`collections.json`, read by Parallel
+   4 Oct) — Thyssen's search held only single books. Ranked on titles.
+3. **The shop's menu.**
+
+A pick is **opened and must read as books with prices**, unless its search
+excerpt already does. Nothing → "Books section not found." / "No museum shop
+found." / "Search failed." **Look again** skips only the pages she turned down,
+never the site (the old "Wrong shop" banned the site — the RA and Courtauld
+had the right shop, wrong page). **No shop** → lookups go to the web, as at
+Capodimonte. Venues found by the old finder and never confirmed are looked
+for again on their next link. Evidence: `docs/link_pages/shop_search/`.
 
 ## Tested 3 Oct
 

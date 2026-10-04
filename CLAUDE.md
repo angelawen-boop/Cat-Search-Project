@@ -393,11 +393,11 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
   anywhere.** Closing the search bar or Reset cards empties its box.
 - **Per-venue freshness**, two dates, from `swept_at`.
-- **Add by link** (39, her design 3–4 Oct): Import opens ONE pop-up — link
-  box, CSV file, Read; **nothing added to the page itself**. Each link is read
+- **Add by link** (39, her design 3–4 Oct): Import opens a small pop-up —
+  CSV · Links, Cancel; **nothing added to the page itself**. Each link is read
   once by code (title, dates) and the model (prose, always English), then the
   same intake as a sweep; no lookback. New venues file under one "Occasional"
-  chip, shop found once and confirmed by her; both kept in the store.
+  chip; their shop sections confirmed on a screen after the review (39.2).
   **The date reader and summary rules are the scraper's own**, written into the
   JSX by `node build/sync_shared.js` — never edit between its SHARED markers.
   `docs/picked_shows.md`.
@@ -1067,8 +1067,6 @@ stale after a minute; every save checks it first. A republish while her page is 
   rows in it (test page, after a republish). Her cloud copy was untouched (594
   rows, saved 3 Oct); the screenshot read "not yet updated this session". Cause
   unproven. If it recurs: "Show diagnostic" first, before anything else.
-- **Her to do:** "Wrong shop" on the RA and Courtauld cards — chosen before the
-  shelf rule.
 - Card short names are in the test page's store only; her main app's
   `venues/occasional` is empty until a link is read there.
 
