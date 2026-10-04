@@ -4934,6 +4934,48 @@ const VENUES = {
     // a DISPLAY or a TRAIL belongs in her ledger is her ruling, not the
     // scraper's, and until she makes it everything is collected.
   },
+
+  // CINCINNATI ART MUSEUM — her addition, 4 Oct. Behind Cloudflare, yet a
+  // blank headless browser in the container was let in on every page (4 Oct,
+  // 12 pages, one fetch each, 10s apart). The pages were saved by the
+  // container itself, her yes for this venue (docs/cincinnati_pages/), fixture
+  // CI-*. Her count: current 2, upcoming 2, past 2026 4, 2025 14, 2024 9.
+  // Nothing excluded.
+  //
+  // Umbraco, server-drawn. Every listing is a stack of cards, each its own
+  // .thumbnailCallouts.vertical: image link, h4 link, a date paragraph, a
+  // blurb. The plain .thumbnailCallouts under them are "Explore more" tiles
+  // and the archive's year links — never shows.
+  cincinnati: {
+    name: 'Cincinnati Art Museum',
+    base: 'https://www.cincinnatiartmuseum.org',
+    pages: [
+      { path: '/art/exhibitions/', ctx: 'current' },
+      { path: '/art/exhibitions/upcoming-exhibitions/', ctx: 'upcoming' },
+      // The archive's own page holds THIS year's closed shows; its /2026/
+      // page is empty. Earlier years are one page each, filed by the year a
+      // show OPENED (Shapeshifting, Jan 2024–Jan 2025, is on 2024) — hence
+      // yearByStartDate, which reaches back to 2023. Nothing on 2023 closed
+      // after the floor on 4 Oct; it is read so that stays a fact, not a guess.
+      { path: '/art/exhibitions/exhibition-archive/', ctx: 'past' },
+      { path: '/art/exhibitions/exhibition-archive', ctx: 'past', yearPath: '/', suffix: '/',
+        yearArchive: true, yearByStartDate: true },
+    ],
+    // The card's own two links only — a link inside a blurb ("Galleries 124
+    // and 125" → the visitor map) is not a show.
+    selector: '#ContentPageWrapper .thumbnailCallouts.vertical .row > div > a',
+    // The listings themselves, should a card ever point back at one.
+    isNav: href => /\/art\/exhibitions\/((upcoming-exhibitions|special-features|online-exhibitions|exhibition-archive)\/((\d{4}|\d{4}-exhibitions)\/)?)?$/.test(href.split(/[?#]/)[0]),
+    // The first unclassed paragraph of the card: "July 17–October 18, 2026",
+    // sometimes after a subtitle line, sometimes split across two <strong>s
+    // (Bold Gestures), so the paragraph, not its first <strong>.
+    datesAt: { within: '.row', sel: '.col-sm-8 > p:not(.bodSmall)' },
+    // The show page's first text block: title h2, dates h3, then the prose —
+    // stopping at the next heading ("Accessing the Exhibition", "Featured
+    // Media"). The funder list sits in a later block with no h2. The logistics
+    // line under the dates (gallery, admission) is wholly bold and drops out.
+    description: '#ContentPageWrapper .richTextBox:has(h2) h2 + h3 ~ p:not(h2 + h3 ~ h3 ~ p, h2 + h3 ~ h2 ~ p)',
+  },
 };
 
 /**

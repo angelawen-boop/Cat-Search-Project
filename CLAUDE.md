@@ -3,7 +3,7 @@
 **Repo:** `angelawen-boop/Cat-Search-Project`
 
 She collects art-exhibition catalogues. They go out of print fast once a show
-closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 27
+closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 28
 museums and galleries and shows how close each catalogue is to its likely
 out-of-print window, so she can buy before it is too late.
 
@@ -144,7 +144,7 @@ node scraper/venue_status.js
 Per venue: rows from the last run that brought any, the last run that held the
 venue at all, which machine sweeps it, and — read from the marker rows — why the
 last attempt brought nothing. When the two runs differ, that venue has stopped
-answering. **Every venue has returned rows at least once.**
+answering. **Every venue has returned rows at least once** — except `cincinnati`, never swept.
 
 **Access and pace — settled for the four Cloudflare venues.** A blank browser
 profile is refused; a visible Chrome on a profile she has browsed in gets in
@@ -181,6 +181,7 @@ should reach the app.
 | `capo` | **Not count-verified and never will be** — see below |
 | `brera`, `borghese` | Their single extra row is a marker for a genuinely empty upcoming page |
 | `ashmolean` | **Everything kept** — major, free and displays, past included (27 Sep). Her count: current 0 major + 4 free, upcoming 2 + 1, past 4 + 13. **Titles: the full name from the show's page header, ordinary capitals written by code** — the venue types capitals everywhere (`capsTitles`, `titleFromCaps`, `pageTitle`) |
+| `cincinnati` | Nothing excluded (4 Oct). Her count: current 2, upcoming 2, past 2026 **4**, 2025 **14**, 2024 **9** — 31. Pages saved by the container, her yes for this venue only. **Never swept yet** |
 
 **Whether displays count is HERS, and varies by venue.** Two venues disagreeing
 is the expected state, not a contradiction.
@@ -191,7 +192,7 @@ mangled, then use the app's URL button and let Chrome translate. So **the `url`
 column is the load-bearing field there**, and **the summary must arrive in
 English**. `docs/scraper.md` §15.
 
-**All 27 have a recipe**, blocked ones included: a refusal costs half a second,
+**All 28 have a recipe**, blocked ones included: a refusal costs half a second,
 leaves marker rows on the approval pile, and turns every sweep into a standing
 monitor. **Blocks are not permanent facts** — venues have gone down and come
 back within days.
@@ -553,7 +554,7 @@ through `sample` at `modelTier: default`. Do not re-open without a real misread.
 | `page_loads.js`, `page_renders.js` | does the page load; does it DRAW (jsdom, plain and with the runtime answering) |
 | `add_by_link.js` | Add by link on the 3 Oct pages (`docs/link_pages/`): titles, dates, unread links, new venues' shops, the chip (AL-) |
 | `catalogue_lookup.js`, `recheck_shop.js` | the lookup (C-); Re-check, blocked shops, web-found links, search filters, another venue's book, no-shop venues, language, Reset cards, counts, buy-next dot, closing a search box — the real app, buttons pressed (R-, L-, S-, VN-, LG-, RC-, RS-, CT-, SC-, BN-) |
-| `*_pages.js` per venue | `mam`, `ashmolean`, `moma`, `mad`, `brit`, `morgan`, `orsay` recipes on her saved pages, no network — her counts, dates, titles, descriptions |
+| `*_pages.js` per venue | `mam`, `ashmolean`, `moma`, `mad`, `brit`, `morgan`, `orsay`, `cincinnati` recipes on saved pages, no network — her counts, dates, titles, descriptions |
 | `summary_pages.js`, `title_case_pages.js`, `listing_pages.js` | descriptions, titles in the venue's letters, where each row was seen — on saved pages |
 | `page_keep_pages.js`, `bridge_reuse.js`, `robots_pages.js`, `pacing_pages.js` | kept pages; the bridge's file reuse and reply labels; robots.txt obeyed and stall reports; pacing against Cloudflare's replies |
 | `cloud_ledger.js`, `cloud_app.js`, `cloud_two_copies.js` | the cloud ledger (branch), on her real ledger; two copies open at once |
@@ -673,7 +674,7 @@ is what headed exists to run.
 
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
-announces which it thinks it is. **Container: 20. Her laptop: 7** — `met`,
+announces which it thinks it is. **Container: 21. Her laptop: 7** — `met`,
 `artic`, `mad`, `brit`, `orsay`, `morgan`, `moma` (`route: 'local'`). Naming
 venues by hand overrides it, and says so in the log. R-001 to R-005.
 
@@ -1104,6 +1105,14 @@ the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
 `.claude/skills/monthly-sweep/SKILL.md` — sweep, QC, push, report; anything
 needing a re-sweep or a code change waits for her. She then does the home
 sweep, and a session with her stitches and compresses (her design, 2 Oct).
+
+### 6a. Cincinnati — the app does not know it yet (4 Oct)
+
+Recipe and fixture on `main` (CI-001–021). **The app's chip is not**: she
+asked for it NOT to be pushed, other JSX work being in flight. Until it lands,
+a sweep's `cincinnati` rows land in "Couldn't be filed" — and the monthly
+container sweep (5 Nov) will sweep it. Chip label "Cincinnati" (her spelling
+ruling, 4 Oct); order among the chips not yet given.
 
 ### 7. Smaller, parked
 
