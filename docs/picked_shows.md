@@ -62,8 +62,10 @@ one the moment she comes across it.
 ## A venue the app has not seen
 
 Name from the page title. Its shop: the **exhibition-catalogues section**,
-else books / publications — **never the front page, one book or a post** (her
-ruling, 4 Oct). Code: "FINDING A NEW VENUE'S SHOP SECTION".
+else the museum's publications, else books — **never the front page, one book,
+a post, or a section mixing books with other goods** (her rulings, 4 Oct). A
+mixed section ("Books & Stationery") is opened and a books-only section inside
+it taken. **Nothing found is stored until the import finishes.** Code: "FINDING A NEW VENUE'S SHOP SECTION".
 
 1. **One search call, two queries: hers, "<venue> shop exhibition
    catalogues", and "<venue> shop books publications"** — Detroit's "DIA

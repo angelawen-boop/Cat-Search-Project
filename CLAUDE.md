@@ -296,7 +296,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > forward. **Renaming the connector means restating them.**
 
 **Live: 39.3 · cloud 4 on the test page** (4 Oct, Import as CSV · Links, shop
-screen); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
+screen; 39.4 built); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -1063,25 +1063,31 @@ stale after a minute; every save checks it first. A republish while her page is 
 4. Google Drive backup by button — on the table, never automatic.
 
 
-### 2. Add by link — 39.3 live on the test page, her test next
+### 2. Add by link — 39.4 built, her test next
 
-39.3, from her 4 Oct test of 39.2: CSV / Links in
-Load/Save's style, the pressed one green, the pop-up sized to its buttons; no
-second progress bar; shop screen "New Venue Shops" / "Check and approve each
-shop link.", the review cards' buttons, always Confirm · Look again · No shop;
-every new venue met is listed; the review's cancel reads **"Cancel import"**.
+**Her rule, 4 Oct: an import she does not finish keeps NOTHING** — CSV or
+links. The Read's venues and shops, Confirm, No shop and Look again are held in
+memory (`occSaved` is what the store holds) and stored only when the ledger
+moves; Cancel import drops them; Back keeps them. Still written at once, both
+older designs of hers, not yet put to her under this rule: the sweep log on
+reading a CSV, and the paste box's unread links. AL-012, AL-009i2, AL-009m.
 
-**Detroit, settled 4 Oct (her keyed connector):** the finder's search sends two
-queries in one call — hers and "<venue> shop books publications". With both,
-"DIA Publications" came back 1st; with hers alone, never. Saved:
-`docs/link_pages/shop_search/detroit*.json`; AL-008f, AL-009e.
+**Books and ONLY books (her ruling, 4 Oct):** a section mixing books with other
+goods ("Books & Stationery", DIA) is never taken — the finder opens it and
+takes a books-only section inside it. Catalogues › publications › books.
+AL-008j, AL-009e. A Read searches again for any unconfirmed venue whose books
+section was not found.
 
-**Her ruling, 4 Oct: she never feeds the app a shop link, and "no shop found"
-is not an answer she accepts from a museum that has one.** No paste box, no
-skip. A venue the finder misses is a finder bug, fixed in code on a saved
-real search.
+**Detroit (her keyed connector, 4 Oct):** the search sends hers and "<venue>
+shop books publications" in one call; with both, "DIA Publications" came 1st.
+`docs/link_pages/shop_search/detroit*.json`.
 
-**Next:** her test of 39.3 on the test page.
+**Her ruling, 4 Oct: she never feeds the app a shop link**, and "no shop
+found" is not an answer from a museum that has one. A miss is a finder bug.
+
+**Her test page's store, 4 Oct:** Cleveland, Mauritshuis, Thyssen confirmed
+there by the old save-at-once Confirm; she has not been asked whether to clear
+them.
 
 ### 3. Fixes not yet checked in the cases they were written for
 
@@ -1124,7 +1130,7 @@ Recipe and fixture on `main` (CI-001–021). **The app's venue entry is on
 branch `claude/blissful-volta-jxj5c0`, not `main`** — her instruction, other
 JSX work in flight; merge when she says, then bump the version. Until then a
 sweep's `cincinnati` rows are refused on import — and the monthly container
-sweep (5 Nov) will sweep it. On the branch: chip "Cincinnati" after Artic, its
+sweep (5 Oct, ~2am Sydney) is its first sweep — check its 31 against her count. On the branch: chip "Cincinnati" after Artic, its
 imprint in `SELF_PUBLISHERS` (her rulings, 4 Oct); fixtures 19b, C-146b.
 
 ### 7. Smaller, parked
