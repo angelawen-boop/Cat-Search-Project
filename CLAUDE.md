@@ -1124,7 +1124,7 @@ Recipe and fixture on `main` (CI-001–021). **The app's venue entry is on
 branch `claude/blissful-volta-jxj5c0`, not `main`** — her instruction, other
 JSX work in flight; merge when she says, then bump the version. Until then a
 sweep's `cincinnati` rows are refused on import — and the monthly container
-sweep (5 Nov) will sweep it. On the branch: chip "Cincinnati" after Artic, its
+sweep (5 Oct, ~2am Sydney) is its first sweep — check its 31 against her count. On the branch: chip "Cincinnati" after Artic, its
 imprint in `SELF_PUBLISHERS` (her rulings, 4 Oct); fixtures 19b, C-146b.
 
 ### 7. Smaller, parked
