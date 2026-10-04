@@ -46,6 +46,9 @@ is why they live in one repo, on one branch.
   page until she Exports, so a publish landing mid-review can take unsaved work
   with it. Ask ONCE; her yes holds until she says otherwise — never ask again in
   the same exchange (4 Oct: asked three times, she was furious).
+- **Her report and output first, the guide after — her rule, 4 Oct.** Send the
+  report and anything for her review, then update this guide in a background
+  job; say once when it lands. Her review never waits on the guide.
 - **Long runs need progress.** A backgrounded command showing nothing reads as a
   dead session.
 - **Test conservatively — her rule, 24 Sep.** Every page fetched from a venue
