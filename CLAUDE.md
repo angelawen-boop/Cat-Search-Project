@@ -1137,11 +1137,12 @@ sweep, and a session with her stitches and compresses (her design, 2 Oct).
 
 ### 6a. Cincinnati — the app does not know it yet (4 Oct)
 
-Recipe and fixture on `main` (CI-001–021). **The app's chip is not**: she
-asked for it NOT to be pushed, other JSX work being in flight. Until it lands,
-a sweep's `cincinnati` rows land in "Couldn't be filed" — and the monthly
-container sweep (5 Nov) will sweep it. Chip label "Cincinnati" (her spelling
-ruling, 4 Oct); order among the chips not yet given.
+Recipe and fixture on `main` (CI-001–021). **The app's venue entry is on
+branch `claude/blissful-volta-jxj5c0`, not `main`** — her instruction, other
+JSX work in flight; merge when she says, then bump the version. Until then a
+sweep's `cincinnati` rows are refused on import — and the monthly container
+sweep (5 Nov) will sweep it. On the branch: chip "Cincinnati" after Artic, its
+imprint in `SELF_PUBLISHERS` (her rulings, 4 Oct); fixtures 19b, C-146b.
 
 ### 7. Smaller, parked
 
