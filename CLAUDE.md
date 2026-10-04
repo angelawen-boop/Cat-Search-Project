@@ -295,8 +295,8 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 39.2 on her main app (code on `main` is current), 39.2 · cloud 4 on the test page** (4 Oct, Import
-as CSV · Links, shop screen). 39.3 built, unpublished (§7.2). **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
+**Live: 39.3 · cloud 4 on the test page** (4 Oct, Import as CSV · Links, shop
+screen); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -316,8 +316,9 @@ whether the committed shell still matches.
 
 **Publishing cannot be automated and the order matters.** The service refuses a
 publish from a session that has not read the live version in full, and then
-refuses the same bytes resent. So: **read the URL, read the whole saved file,
-then build, then publish.** `build_app.js` prints the steps.
+refuses the same bytes resent. So: **read the URL (the service then counts it
+as viewed), build, diff the saved live file against the build in code, publish.**
+Never page the 6,700 lines into context — it filled whole sessions. `build_app.js` prints the steps.
 
 ### The mental model, load-bearing
 
@@ -1010,7 +1011,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **39.2 · cloud 4**, published 4 Oct (shop screen). Cloud-only in it:
+live on the test page **39.3 · cloud 4**, published 4 Oct (Detroit's shop, Cancel import). Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
@@ -1062,9 +1063,9 @@ stale after a minute; every save checks it first. A republish while her page is 
 4. Google Drive backup by button — on the table, never automatic.
 
 
-### 2. Add by link — 39.3 built, not published
+### 2. Add by link — 39.3 live on the test page, her test next
 
-**Live is 39.2** (both pages). 39.3, from her 4 Oct test of 39.2: CSV / Links in
+39.3, from her 4 Oct test of 39.2: CSV / Links in
 Load/Save's style, the pressed one green, the pop-up sized to its buttons; no
 second progress bar; shop screen "New Venue Shops" / "Check and approve each
 shop link.", the review cards' buttons, always Confirm · Look again · No shop;
@@ -1080,7 +1081,7 @@ is not an answer she accepts from a museum that has one.** No paste box, no
 skip. A venue the finder misses is a finder bug, fixed in code on a saved
 real search.
 
-**Next:** publish 39.3 · cloud 4 to the test page only.
+**Next:** her test of 39.3 on the test page.
 
 ### 3. Fixes not yet checked in the cases they were written for
 
