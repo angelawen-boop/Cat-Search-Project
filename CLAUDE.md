@@ -1063,14 +1063,14 @@ stale after a minute; every save checks it first. A republish while her page is 
 4. Google Drive backup by button — on the table, never automatic.
 
 
-### 2. Add by link — 39.4 live on the test page, her test next
+### 2. Add by link — 39.5 built (39.4 live), her test next
 
 **Her rule, 4 Oct: an import she does not finish keeps NOTHING** — CSV or
 links. The Read's venues and shops, Confirm, No shop and Look again are held in
 memory (`occSaved` is what the store holds) and stored only when the ledger
-moves; Cancel import drops them; Back keeps them. Still written at once, both
-older designs of hers, not yet put to her under this rule: the sweep log on
-reading a CSV, and the paste box's unread links. AL-012, AL-009i2, AL-009m.
+moves; Cancel import drops them; Back keeps them. So are a CSV's sweep log and
+the paste box's unread links (39.5, her ruling 4 Oct; the sweep log had been
+written on reading since 20 Sep). AL-012, AL-013, AL-007c/d, AL-009i2, AL-009m.
 
 **Books and ONLY books (her ruling, 4 Oct):** a section mixing books with other
 goods ("Books & Stationery", DIA) is never taken — the finder opens it and
@@ -1085,9 +1085,9 @@ shop books publications" in one call; with both, "DIA Publications" came 1st.
 **Her ruling, 4 Oct: she never feeds the app a shop link**, and "no shop
 found" is not an answer from a museum that has one. A miss is a finder bug.
 
-**Her test page's store, 4 Oct:** Cleveland, Mauritshuis, Thyssen confirmed
-there by the old save-at-once Confirm; she has not been asked whether to clear
-them.
+**Her test page's store, 4 Oct:** the old save-at-once approvals of
+Cleveland, Mauritshuis and Thyssen cleared on her yes; Courtauld and the RA
+confirmed by her in a finished 39.4 import, kept.
 
 ### 3. Fixes not yet checked in the cases they were written for
 
