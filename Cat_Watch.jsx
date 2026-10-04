@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "39.3";
+const APP_VERSION = "39.4";
 const APP_VERSION_DATE = "4 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -1261,22 +1261,34 @@ const SHELF_NOT=/\b(?:not|non|sin|sans|ohne|niet|geen|zonder|except)\b\W+(?:\w+\
 // A sale or clearance section holds only some of the books ("Catálogos en
 // oferta", Thyssen): kept as a last resort, never ahead of a whole section.
 const SHELF_SALE=/\b(?:sale|clearance|offers?|outlet|ofertas?|rebajas|saldi|soldes|korting|aanbieding|black friday|promo\w*)\b/;
+// BOOKS AND ONLY BOOKS (her ruling, 4 Oct): a section that mixes books with
+// other goods — DIA's "Books & Stationery", six pages of pens and journals —
+// is never the shelf; every later lookup would wade through it. It is opened
+// instead for a books-only section inside it (DIA Publications). A museum's own
+// publications rank above a general books section.
+const SHELF_PUBS=/\bpublications\b|\bpublicaciones\b|\bpublicaties\b|\bpubblicazioni\b/;
+const SHELF_GOODS=/\b(?:stationery|stationary|gifts?|toys|games|apparel|clothing|jewell?ery|accessories|homeware|home goods|decor|cards|notecards|journals|notebooks|prints|posters|supplies|merch\w*|souvenirs?|papeterie|cadeaux|jouets|regalos|papeleria|juguetes|cadeaus|speelgoed|regali|cartoleria|giochi)\b/;
 const NOT_A_SHELF=/\/(?:products?|p|blogs?|news|journal|articles?|stories|pages|account|cart)\/|[?&]q=|\/search/i;
 function pathWords(u){ try{ return decodeURIComponent(new URL(u).pathname).replace(/[-_/.]/g," "); }catch{ return ""; } }
 function isFrontPage(u){ try{ return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/?)?$/i.test(new URL(u).pathname); }catch{ return true; } }
-// Candidates, best first: a catalogues section, then books; a sale section
-// after both. Ties keep the order they came in (the search's own).
+// Candidates, best first: a catalogues section, then the museum's
+// publications, then books; a sale section after all of them. Ties keep the
+// order they came in (the search's own). A books section mixed with other
+// goods comes back apart, as `mixed` — never a pick, only a place to look in.
 function rankShelves(cands){
-  const out=[];
+  const out=[], mixed=[];
   cands.forEach((c,n)=>{
     if(!c||!c.url||NOT_A_SHELF.test(c.url)||isFrontPage(c.url))return;
-    const t=foldText(c.words);
+    const t=foldText(c.words).replace(/\bgift ?shop\b|\bmuseum stores?\b/g," ");
     if(SHELF_NOT.test(t))return;
-    const kind=SHELF_CATALOGUES.test(t)?"catalogues":SHELF_BOOKS.test(t)?"books":null;
+    const kind=SHELF_CATALOGUES.test(t)?"catalogues":SHELF_PUBS.test(t)?"publications":SHELF_BOOKS.test(t)?"books":null;
     if(!kind)return;
-    out.push({...c,kind,score:(kind==="catalogues"?2:1)-(SHELF_SALE.test(t)?1.5:0),n});
+    if(kind==="books"&&SHELF_GOODS.test(t)){ mixed.push(c); return; }
+    out.push({...c,kind,score:({catalogues:3,publications:2,books:1})[kind]-(SHELF_SALE.test(t)?2.5:0),n});
   });
-  return out.sort((a,b)=>b.score-a.score||a.n-b.n);
+  out.sort((a,b)=>b.score-a.score||a.n-b.n);
+  out.mixed=mixed;
+  return out;
 }
 // A SHELF OF BOOKS, READ OFF ITS TEXT: book words and prices, both plural.
 const BOOK_WORD=/\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b|\bpages\b|\bcatalog(?:ue|o|us)?s?\b|\bcatalogi\b|\bkataloge?\b|\bbooks?\b|\bboek(?:en)?\b|\blibros?\b|\blivres?\b|\bbuch\b|\btapa (?:dura|blanda)\b/g;
@@ -1322,8 +1334,9 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
   const pageShopHost=hostOf(pageShop);
   const place=u=>isShopPlace(u,museumHost,pageShopHost);
   let opens=0, seenText="", died=null;
-  const tryCands=async(cands,how)=>{
-    for(const c of rankShelves(cands)){
+  const tryCands=async(cands,how,inside)=>{
+    const ranked=rankShelves(cands);
+    for(const c of ranked){
       if(no.has(normalizeUrlKey(c.url)))continue;
       if(c.proof&&looksLikeBookShelf(c.proof))return{...c,how};
       if(opens>=SHELF_OPENS)return null;
@@ -1333,7 +1346,19 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
       const t=pageTextOf(f.results); seenText+="\n"+t;
       if(looksLikeBookShelf(t))return{...c,how};
     }
-    return null;
+    // Nothing books-only: open the first mixed section and try the sections
+    // listed inside it. One level down, once.
+    if(inside||!ranked.mixed.length)return null;
+    const m=ranked.mixed[0];
+    const f=await fetchPage(m.url,"The sections listed on this page: their names and links.",null,{full:true});
+    if(!f.ok){ died=f.detail; return null; }
+    const t=pageTextOf(f.results); seenText+="\n"+t;
+    const mh=hostOf(m.url);
+    const subs=mdLinks(t).filter(l=>hostOf(l.url)===mh&&l.label.split(/\s+/).length<=6).map(l=>({url:l.url,words:l.label+" "+pathWords(l.url)}));
+    const keep=opens; opens=0;
+    const r=await tryCands(subs,how,true);
+    opens=keep;
+    return r;
   };
   // 1. The search.
   // Two queries, ONE search call: her own, and the books section's — Detroit's
@@ -2837,6 +2862,10 @@ export default function App(){
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
   const[occVenues,setOccVenues]=useState({});
+  // WHAT THE STORE HOLDS for the new venues. occVenues is the working copy an
+  // import changes; the store is written only when the ledger moves (her rule,
+  // 4 Oct: nothing is kept from an import she did not finish).
+  const occSaved=useRef({});
   const linkSaveTimer=useRef(null);
   const[error,setError]=useState(null);
   const[rechecking,setRechecking]=useState(false);   // which of the card's two buttons is running
@@ -3004,7 +3033,7 @@ export default function App(){
     // ledger any more, so it has to be in force before any file is opened.
     readQuarantine().then(({map,why})=>{ setQuarantine(map); setQuarWhy(why); });
     // Add by link: the venues it has met, and links still waiting in the box.
-    readOccasional().then(map=>{ registerOccasional(map); setOccVenues(map); });
+    readOccasional().then(map=>{ occSaved.current=map; registerOccasional(map); setOccVenues(map); });
     readPendingLinks().then(t=>{ if(t)setLinkText(t); });
   },[]);
 
@@ -3417,10 +3446,11 @@ export default function App(){
           vc=occVenueId(host);
           met.add(vc);
           const had=venues[vc];
-          // Looked for once and kept. Looked for again only while she has not
+          // Looked for once and kept. Looked for again while she has not
           // confirmed it AND it was found by the finder before 4 Oct's (which
-          // could hand back a front page, a post or one book), or never found.
-          if(!had||(!had.confirmed&&(had.finder!==2||had.shop==="unknown"||had.shop==="failed"))){
+          // could hand back a front page, a post or one book), or its books
+          // section was not found — a miss is never kept as the answer.
+          if(!had||(!had.confirmed&&(had.finder!==2||had.shop!=="found"))){
             setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+page.site+"\u2019s shop"});
             const pageShop=shopLinkOnPage(oneText(res),host);
             const shop=await discoverShop(pageShop,host,page.site,had?had.turnedDown:[]);
@@ -3439,7 +3469,7 @@ export default function App(){
           notes:ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")});
       }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
     }
-    if(venuesChanged){ registerOccasional(venues); setOccVenues(venues); writeOccasional(venues); }
+    if(venuesChanged){ registerOccasional(venues); setOccVenues(venues); }   // held, not stored: see occSaved
     setProg({done:0,total:0,label:""}); setBusy(false); setReadVenues([...met]);
     const left=fails.map(x=>x.url).join("\n");
     setLinkText(left); writePendingLinks(left); setLinkFails(fails);
@@ -3456,13 +3486,19 @@ export default function App(){
     // under the review, its lines waiting for her when the review closes.
     if(!fails.length)setImportMode(null);
   }
-  // THE SHOP SCREEN'S ANSWERS — her design, 4 Oct. Each is kept in the store
-  // the moment she gives it: a fact about the venue, like the sweep log, so a
-  // venue confirmed once is never asked about again.
-  function saveVenues(next){ registerOccasional(next); setOccVenues(next); writeOccasional(next); }
-  function confirmShop(id){ const v=occVenues[id]; if(v)saveVenues({...occVenues,[id]:{...v,confirmed:true}}); }
+  // THE SHOP SCREEN'S ANSWERS — held in the working copy, and stored with the
+  // ledger when it moves; Cancel import throws them away, Back keeps them (her
+  // rule, 4 Oct). A venue confirmed in a finished import is never asked again.
+  function holdVenues(next){ registerOccasional(next); setOccVenues(next); }
+  // Back to what the store holds: the import's venues and answers dropped.
+  function dropHeldVenues(){
+    const saved=occSaved.current;
+    for(const id of Object.keys(MU)) if(isOcc(id)&&!saved[id]){ delete MU[id]; KNOWN_VENUES.delete(id); }
+    registerOccasional(saved); registerUnseenOccasional(rows); setOccVenues(saved);
+  }
+  function confirmShop(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,confirmed:true}}); }
   // "No shop": the lookup goes straight to the web, as at Capodimonte.
-  function noShopFor(id){ const v=occVenues[id]; if(v)saveVenues({...occVenues,[id]:{...v,shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null}}); }
+  function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null}}); }
   // "Look again": a new search NOW, skipping only the pages she turned down —
   // never the shop's whole site (the old "Wrong shop" banned the site, which
   // for the RA and the Courtauld was the right shop on the wrong page).
@@ -3476,7 +3512,7 @@ export default function App(){
     setShopLooking(null);
     setOccVenues(prev=>{
       const next={...prev,[id]:{...prev[id],shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,...shop,confirmed:false,turnedDown}};
-      registerOccasional(next); writeOccasional(next); return next; });
+      registerOccasional(next); return next; });
   }
   // WHICH VENUES THE SHOP SCREEN ASKS ABOUT: every venue outside her 27 met
   // in this read (or on a card) whose shop she has not confirmed — whatever she
@@ -3485,7 +3521,9 @@ export default function App(){
   function venuesToConfirm(){
     const ids=new Set(readVenues);
     (proposals||[]).forEach(p=>{ const id=(p.cand||{}).museumId; if(isOcc(id))ids.add(id); });
-    for(const id of [...ids]) if(!occVenues[id]||occVenues[id].confirmed)ids.delete(id);
+    // Confirmed in a FINISHED import only: an answer held in this one stays on
+    // the screen after Back, to be changed.
+    for(const id of [...ids]) if(!occVenues[id]||(occSaved.current[id]||{}).confirmed)ids.delete(id);
     return [...ids].sort((a,b)=>String(occVenues[a].name).localeCompare(String(occVenues[b].name)));
   }
   // THE REVIEW'S LAST BUTTON. With a shop to confirm it is "Next" and opens
@@ -3579,6 +3617,7 @@ export default function App(){
     // looking at. A count handed in from the caller is a second copy.
     const leftUndecided=proposals.filter((p,i)=>isUndecidedCard(p,decisions[i])).length;
     commit(Array.from(byId.values()),new Date().toISOString());
+    if(occVenues!==occSaved.current){ writeOccasional(occVenues); occSaved.current=occVenues; }
     setShopScreen(null); setReadVenues([]);
     setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length,left:partial?leftUndecided:0});
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
@@ -3586,7 +3625,7 @@ export default function App(){
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqBuyNext(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
-  function cancelRefresh(){ setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
+  function cancelRefresh(){ dropHeldVenues(); setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   const pickSort=k=>{setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
   // refreshVenues() REMOVED 20 Sep 2026. It had the app gathering its own
@@ -5076,7 +5115,7 @@ export default function App(){
               </div>)}
             </div>}
             <div style={{textAlign:"center",marginTop:10}}>
-              <button onClick={()=>setImportMode(null)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
+              <button onClick={()=>{ if(!proposals)dropHeldVenues(); setImportMode(null); }} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
             </div>
           </div>
         </div>
