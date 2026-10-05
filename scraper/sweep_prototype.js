@@ -3389,6 +3389,24 @@ async function collectFromListing(page, opts) {
       continue;
     }
 
+    // THE SAME LABEL, READ FROM THE LINK'S OWN TEXT. `dates.raw` holds the
+    // card's text only while the date sits OUTSIDE the link; once the date is
+    // inside it, `dates.raw` is the matched date alone and a badge in front of
+    // it never reaches excludeLabelled. The V&A moved its whole card into the
+    // link before the 5 Oct sweep and ten Displays came through against her
+    // ruling (docs/va_pages/). The link's text starts with the badge whichever
+    // layout the venue uses, so a venue that labels its cards names the label
+    // here.
+    if (opts.excludeLinkLabelled) {
+      const m = (await getText(link).catch(() => '')).match(opts.excludeLinkLabelled);
+      if (m) {
+        c.labelled++;
+        log(`    the venue labels this "${m[0].trim()}", not an exhibition (her ruling), excluded: ${title || slugToWords(fullUrl)}`);
+        seenUrls.add(key);
+        continue;
+      }
+    }
+
     // A KIND OF THING SHE DOES NOT COLLECT, RECOGNISED BY ITS NAME.
     //
     // Her ruling, 22 Sep: the Morgan's "Collections Spotlight" is a standing
@@ -4027,8 +4045,10 @@ const VENUES = {
     //
     // ANCHORED AT THE START, because "Display" also occurs inside a title:
     // "Adobe Creative Residents On Display". The badge is the first thing on
-    // the card, so only a leading match is the label.
-    excludeLabelled: /^\s*Display\b/i,
+    // the card, so only a leading match is the label; a featured card puts
+    // "Featured" before it. Read from the LINK's text — see excludeLinkLabelled
+    // where it is used; the date-side copy stopped working on 5 Oct.
+    excludeLinkLabelled: /^\s*(?:Featured\s+)?Display\b/i,
   },
 
   // TATE — two venues in her list, one website, and the URL is what separates
@@ -5183,6 +5203,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
       dropQuery: v.dropQuery || null,
       datesAt: pg.datesAt || v.datesAt || null,
       excludeLabelled: v.excludeLabelled || null,
+      excludeLinkLabelled: v.excludeLinkLabelled || null,
       excludeTitle: v.excludeTitle || null,
       listingRow: pg.listingRow || v.listingRow || null,
     };
