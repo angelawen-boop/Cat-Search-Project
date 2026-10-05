@@ -60,7 +60,7 @@ function previousRowsFor(selfName, venue, runs = allRuns()) {
   const before = runs.filter(r => r.name < selfName);
   for (let i = before.length - 1; i >= 0; i--) {
     const rows = C.readProForma(path.join(before[i].abs, RAW_CSV)).filter(r => s(r.venue_code) === venue);
-    if (rows.some(r => !isMarker(r))) return { run: before[i].name, rows };
+    if (rows.some(r => !isMarker(r))) return { run: before[i].name, abs: before[i].abs, rows };
   }
   return null;
 }
@@ -120,7 +120,7 @@ function diffVenue(venue, nowRows, prev, log, runDate = '') {
   const markers = nowRows.filter(isMarker);
   const out = { venue, now: now.length, prevRun: prev && prev.run, prev: null,
     gone: [], added: [], moved: [], renamed: [], redated: [], lostSummary: [], noSummary: [],
-    keptNoEnd: [], sameName: [], junk: [], emptiedPages: [] };
+    keptNoEnd: [], sameName: [], junk: [], emptiedPages: [], ruleStopped: [] };
 
   for (const r of now) {
     if (!s(r.summary)) out.noSummary.push({ title: r.title, url: r.url, why: pageFailure(r.notes) });
@@ -164,7 +164,13 @@ function diffVenue(venue, nowRows, prev, log, runDate = '') {
     else { cause = 'UNEXPLAINED'; proven = false; }
     out.gone.push({ title: p.title, url: p.url, start: p.start_date, end: p.end_date, cause, proven });
   }
+  // A new row that the LAST run's log excluded by name: the rule has stopped
+  // firing (V&A, 5 Oct: the venue stopped labelling displays "permanent" and
+  // ten came through against her ruling). A fault, never a new show.
+  const prevExcl = (prev.log && prev.log.excluded.get(venue)) || [];
   for (const r of newOnes) if (!pairedNew.has(r)) {
+    const was = prevExcl.find(e => sameName(e.title, r.title));
+    if (was) { out.ruleStopped.push({ title: r.title, url: r.url, reason: was.reason }); continue; }
     const opened = s(r.start_date);
     const note = opened && prev.run && opened >= runDateOf(prev.run) ? 'opened or announced since the last run'
       : 'not in the last run though it is not new — check why it was missed then or found now';
@@ -198,13 +204,18 @@ function diffRun(dirName) {
   const log = readLogs(abs);
   const venues = [...new Set(rows.map(r => s(r.venue_code)).filter(Boolean))];
   return { run: dirName, venues: venues.map(v =>
-    diffVenue(v, rows.filter(r => s(r.venue_code) === v), previousRowsFor(path.basename(abs), v, runs), log, runDateOf(dirName))) };
+    diffVenue(v, rows.filter(r => s(r.venue_code) === v), withLog(previousRowsFor(path.basename(abs), v, runs)), log, runDateOf(dirName))) };
+}
+function withLog(prev) {
+  if (prev && prev.abs) prev.log = readLogs(prev.abs);
+  return prev;
 }
 
 function report(res, say = console.log) {
   if (res.error) { say(res.error); return; }
   const all = res.venues;
   const unexplained = all.flatMap(v => v.gone.filter(g => !g.proven).map(g => ({ v: v.venue, ...g })));
+  const stopped = all.flatMap(v => v.ruleStopped.map(x => ({ v: v.venue, ...x })));
   say(`\nCHANGES SINCE EACH VENUE'S LAST RUN — ${res.run}`);
   say(`Matched by address. A cause marked (log) or (note) is read from the run itself; UNEXPLAINED needs a session.\n`);
   for (const v of all) {
@@ -212,6 +223,7 @@ function report(res, say = console.log) {
     const lines = [];
     for (const g of v.gone) lines.push(`  GONE      "${g.title}" (${g.start || '?'} → ${g.end || '?'}) — ${g.cause}\n            ${g.url}`);
     for (const m of v.moved) lines.push(`  MOVED     "${m.prevTitle}"${m.prevTitle !== m.title ? ` → "${m.title}"` : ''} — new address; the app will see a NEW row\n            ${m.from}\n         -> ${m.to}`);
+    for (const x of v.ruleStopped) lines.push(`  RULE STOPPED "${x.title}" — EXCLUDED last run ("${x.reason}", log), let through now: the rule stopped firing. A fault.`);
     for (const a of v.added) lines.push(`  NEW       "${a.title}" (${a.start || '?'} → ${a.end || '?'}) — ${a.note}`);
     for (const r of v.renamed) lines.push(`  TITLE     "${r.from}" → "${r.to}"${r.onlyCase ? ' (capitals only)' : ''} — a Change card in the app`);
     for (const d of v.redated) lines.push(`  DATES     "${d.title}" ${d.from}  ⇒  ${d.to}`);
@@ -226,6 +238,8 @@ function report(res, say = console.log) {
     say(`${v.venue.padEnd(14)} ${head}${lines.length ? '' : ' — nothing changed'}`);
     for (const l of lines) say(l);
   }
+  if (stopped.length) say(`\nRULE STOPPED FIRING — ${stopped.length} row(s) a ruling excluded last run are back. A fault at each venue:\n`
+    + [...new Set(stopped.map(x => x.v))].map(v => `  ${v.padEnd(14)} ${stopped.filter(x => x.v === v).length} row(s)`).join('\n'));
   say(unexplained.length
     ? `\nUNEXPLAINED — ${unexplained.length}. Each needs a cause before the report is finished:\n` + unexplained.map(u => `  ${u.v.padEnd(14)} "${u.title}"`).join('\n')
     : '\nUNEXPLAINED — none: every row that left has a cause from the run itself.');

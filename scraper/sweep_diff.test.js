@@ -93,3 +93,12 @@ test('SD-010: the log reader takes exclusions, link counts and failed pages', ()
   assert.strictEqual(L.linksSeen.get('khm').get('current'), 0);
   assert.match(L.linksSeen.get('louvre').get('past 2024'), /BLOCKED_HTTP_403/);
 });
+
+test('SD-011: a new row the LAST run excluded by name means the rule stopped firing (V&A 5 Oct)', () => {
+  const p = prev([row({ title:'Kept show', url:'https://va/k' })]);
+  p.log = log({ v: [{ reason:'the venue labels this a permanent installation', title:'Urushi Now: Contemporary Japanese Lacquer' }] });
+  const out = D.diffVenue('v', [row({ title:'Kept show', url:'https://va/k' }), row({ title:'Urushi Now: Contemporary Japanese Lacquer', url:'https://va/u' })], p, log());
+  assert.strictEqual(out.ruleStopped.length, 1);
+  assert.strictEqual(out.added.length, 0);
+  assert.match(out.ruleStopped[0].reason, /permanent/);
+});

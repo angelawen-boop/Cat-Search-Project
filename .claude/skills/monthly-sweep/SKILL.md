@@ -46,6 +46,9 @@ approval), runs the final QC and hands her the CSV. This job does none of that.
    `MOVED` row is the same show at a new address; `KEPT BY RULE` is the
    lookback rule working; `SAME NAME` is the no-de-duplication rule working;
    `LOST TEXT … (note)` says why. None of these is junk or a fault.
+   **`RULE STOPPED` is always a fault**: a row her ruling excluded last run is
+   back. Check the venue's other NEW rows for the same kind (a newly opened
+   display has no earlier exclusion to match).
 5. **Your job is what the code could not settle:**
    - **Every `UNEXPLAINED` row** and every `EMPTY PAGE` needing a look. For
      each: open the log section for that venue (`grep '\[<venue>\]'` the
@@ -79,17 +82,20 @@ approval), runs the final QC and hands her the CSV. This job does none of that.
 She works IN this session after reading it, so it must be ready to act on.
 
 - The run folder, and done / done with faults.
-- **Changes** — one line per venue that changed: rows last time → now, and
-  the cause in a few words (from QC, or what you found). Venues unchanged:
-  one line naming them.
+- **Changes** — one line per venue that changed in ANY way QC lists (rows,
+  titles, dates, moves, lost text — not only the count): before → now, and
+  the cause in a few words. Venues QC says "nothing changed": one line
+  naming them.
 - **Faults** — numbered, each in this shape:
   - **What:** the rows, by title.
   - **Cause:** what you found — **proven** (say from what: log line, note,
     kept page) or **guess** (and the one page that would settle it).
   - **Fix:** the change you propose, and whether it is code, a recipe, or a
     re-sweep (a re-sweep is always hers to call).
-- **Expected, not faults** — your rulings taking effect, moved shows, rows
-  kept by rule, refusals (marker rows), in one short list.
+- **Expected, not faults** — your rulings taking effect, rows kept by rule,
+  refusals (marker rows), in one short list. Say which of them will reach her
+  as cards: a MOVED show arrives as a NEW card, a title change as a Change
+  card.
 - Last lines: "Say which faults to fix." then "Next: your home sweep, then
   stitch and compress."
 
