@@ -814,192 +814,30 @@ junk in summaries, failure handling, compression, the blocked venues — is in
 
 ---
 
-## 6. Do not re-break these
+## 6. Lessons — mistakes not to repeat
 
-Each line cost a real failure. The details are in git and `docs/`; the lesson is
-here.
+Each line came from a real failure. Details are in git history and `docs/`.
 
-### A check that cannot fail looks exactly like a check that passes
-
-- **Check the exit code, and grep the output for the new test's own name.** Four
-  suites have run silently: below a `process.exit`, needing a missing harness,
-  not named by `npm test`, or cut short by an early `return`. A total cannot say a
-  case ran.
-- **Three greens can all miss a blank page** — `tsc` says it parses, unit tests
-  test lifted-out functions, grepping the built page finds expected strings.
-  Render it (`page_renders.js`).
-- **Ask the rule directly**, never through a side effect of another field.
-- **A fixture must serve the address the recipe asks for NOW.** One served a
-  retired address and kept passing on a carousel that happened to repeat the
-  same shows.
-- **A fixture that stops before the step that writes proves nothing about what
-  is written.** The Morgan's listing read 39 right and the file got 8.
-- **A branch nothing has entered is untested however long it has shipped.**
-- **Name a test by what the code does, never by what it was meant to achieve.**
-
-### A negative has to be earned, and has to say which negative it is
-
-- "Found nothing", "never ran" and "was refused" are different sentences. Several
-  screens once printed the same line for all three.
-- **An empty page is not a page with nothing on it** — script-drawn pages read
-  as 110 characters of furniture.
-- **A control that only renders when it has something to show cannot report
-  nothing** — a missing button, and a "nothing here" line inside a button that
-  vanished when the list emptied. Three times.
-- **Never report a success because a button was CLICKED.**
-- **Count from the array AFTER the change, never from the list of marks.** A log
-  announced ten exclusions while all ten sat in the CSV.
-- **Say what is unknown** rather than print a default like "never".
-
-### Measuring the cheap thing instead of the thing that matters
-
-- **A probe answers only the one request it made.** One listing page read, the
-  venue called open, the scraper changed, and causes invented when the sweep
-  failed.
-- **A control tested once is tested in its easy case** — the Louvre's load-more
-  failed on the press AFTER the last real one. Check the click reached it (a
-  cookie popin swallowed it for two days).
-- **Never let one fixed pause answer two questions** (has the batch arrived; is
-  there more).
-- **A count flattens the evidence.** A right total can hide lost rows, halved
-  titles, or junk descriptions. **Read the cards, the titles and the
-  descriptions** before calling anything done.
-- **When the artefact cannot contain the evidence, stop reading the artefact** —
-  a CSV squashes titles to one line; the defect was made of line breaks.
-- **Run the thing itself** before concluding it is wrong, and **read a page, not
-  a search excerpt of it.** A thin answer from a page is not proof the page is
-  thin.
-- **Check a title against the museum's own spelling**, not only against the
-  listing it came from.
-- **Answer "what will the scraper do" from the recipe and the code, never from an
-  old run's output.**
-- **Scroll a listing before reading it**, and measure its height AFTER the wait.
-- **Test a general rule where it was NOT derived.**
-- **A filled field is not a right one** — a picture caption passed for a
-  listing's description, so the page holding the real one was never opened.
-
-### Judgement made silently where she should have seen it
-
-- **De-duplicating by title — deleted 29 National Gallery exhibitions.** Never
-  drop a row on a judgement: unreadable titles, "looks the same", undecided
-  cards skipped on apply.
-- **A data fault never goes on her approval pile** — a row with no title means
-  "re-run", a message to the session.
-- **A fact the code already knows is never re-derived from prose written for a
-  human** (triage bands chosen by searching notes).
-- **Unreachable is not unwanted.** Never delete working-but-dormant code because
-  it carried something you were asked to change.
-- **Change exactly what was asked** — one sentence, not its whole line; a
-  restored sentence restored where it was.
-- **A recovery step with one correct answer is code**, never a choice handed to her.
-- **Never invent a constraint she did not state, or give a reason nobody
-  checked.** An error code is explained from the platform's types
-  (`mcp.d.ts`), never from memory. A change that is code is yours — never her
-  settings task with a failure branch (1 Oct).
-- **Argue architecture from what the platform offers, not from what was built.**
-
-### A rule that held only while its input stayed small
-
-- **Quote the match, never the input** — a parser's input once became 17,734
-  characters on one card.
-- **Loose rules apply to a listing card, not to whole page text** — a photo
-  caption became an opening date; an all-numeric range was read from page text.
-- **A step count is not a boundary** (`datesNearLink` walking two steps).
-- **An ancestor walk stops before `<body>`**, and a noise class on a container
-  holding most of the page is layout, not noise (Wallace, V&A).
-
-### Two copies of one fact drift silently
-
-- Two month patterns, two date parsers, a second hand-typed venue list, six
-  near-identical venue functions — **each lost dates or venues without a word.
-  One copy, and delete the dead one: dead code shaped like live code is a trap.**
-- **Anchor a harness on prose, never on a line of code.**
-- **When you fix a fact in one place, fix every place on screen that shows it**
-  — a summary line read the old way a day after the line below it was fixed.
-- **A ruling about where a fact belongs applies to every fact of that kind in
-  front of you.**
-
-### Joins that were never run, though both halves were tested
-
-- **Run the whole chain end to end** — stitch wrote a loose file where compress
-  read directories: 652 rows in, 172 out, no error.
-- **Match on the key the data actually carries** (URL slug, not title — 56
-  matches instead of 103).
-- **A repair is a flag, not a rule that wins every run** — a rule that always
-  prefers one source is a revert machine.
-- **When rows are rebuilt, check what follows them** (dates, descriptions); and
-  **never choose between two copies by a key both share.**
-- **Archiving must ask what else depends on a folder** (compression's memory).
-- **Inserting a check into an existing block can split it** — every venue
-  without a load-more died while 148/148 unit tests passed; the unit suite has
-  no browser.
-- **Where the listing labels a thing, filter on the listing** — never open every
-  page to learn what the listing already said.
-- **Reasoning for a hand-built data file goes in `docs/`,** not a comment in a
-  one-off script.
-
-### Substituting a tool and letting the route change with it
-
-- **A capability lost in a substitution is the thing to report, not to absorb** —
-  "ask the shop" silently became a general web search, still labelled "shop".
-- **Change one thing at a time** — a prompt and the row it fills rewritten
-  together dropped the publisher field from both.
-- **A gate that can only ever open, or a status that can only ever be set, is a
-  bug.**
-- **A better source is not a complete one** — do not let stage one end the route.
-- **Open a candidate before filing it.** A lucky hit is not a working step.
-- **Go to a page you can address; do not tune searches to surface it.**
-- **Self-publishing is decided on the publisher, never by matching it against
-  the venue.**
-- **Write every address down, and check the ones already written.**
-
-### Scraper mechanics that each cost rows
-
-- Waits: never `networkidle`; wrap `route.fulfill`/`abort`; a 404 is not a
-  loaded page; a torn-down browser is not a page failure; retry a detail page
-  after one transient failure.
-- Addresses: `normalizeUrl` lowercases scheme and host only; resolve hrefs, never
-  join by hand; keep every link to an address, not the first.
-- Dates: never build date strings by hand; month patterns take every spelling
-  (`Sept.`, `SEP`, Italian `set`); a weekday before a date; the year on the
-  closing side; never derive an opening year from the closing year; normalise
-  every dash.
-- Listings: read every page of a paginated archive, and stop at the lookback
-  floor; only the site's own next link says how it numbers pages; a load-more
-  click must not follow its href once the list is complete; a recipe's own
-  filter is not a page; a listing that loads and yields nothing leaves a marker.
-- Structured data: check `events[0]` is this exhibition.
-- Titles: noise stripping is case-exact ("How to Make an Exhibition"); never
-  strip a location that tells two shows apart — Acquavella adds the gallery only
-  to a show run in both galleries within six months.
-- Summaries: a venue can name a blurb living in a div; junk checks cover every
-  language a venue writes in.
-- `resolveChromium()` needs both halves; never a hardcoded path.
-- **A blanket find-and-replace over a file you just added definitions to will eat
-  those definitions** — valid syntax, black screen.
-
-### Diagnosing in the wrong order — the Ashmolean, 27 Sep
-
-- **Free checks before live sweeps:** robots.txt, the reply's labels, her
-  view-source saves. The answer was in the first (it asks 10s; we asked every 2).
-- **A missing label on one reply proves nothing** — that reply came from a cache.
-- **Repeated sweeps spoil the evidence the next diagnosis needs.** A sweep runs
-  once, after every question is answered and the recipe passes offline.
-- **A capability on one machine is not on both** — pacing was her laptop's; the
-  container went unpaced for a month unnoticed.
-- **"The shared path is built" is not "every venue is ready"** — say per venue.
-
-### Tests that reach the network
-
-- **A container dry run with `--home` keeps the network bridge on.** Stub EVERY
-  venue a dry run names, or name only stubbed ones.
-
-### Subagents
-
-- **Send only the rows the question applies to, and only the fields it reads.**
-  Every token is her allowance.
-- **Wording is not a control.** Five jobs told what not to do; four disobeyed.
-  Remove the tool or check the answer.
+- **Tests can pass and prove nothing.** Check the exit code and grep the output
+  for the new test's own name; a suite can be skipped silently (code after
+  `process.exit`, a missing harness, an early `return` — use `await`).
+- **Render the page** (`page_renders.js`). `tsc`, unit tests and string greps can all pass on a blank page.
+- **Test the real thing.** A fixture must serve the address the recipe asks for now, and must run the step that writes the output. Name a test for what the code does.
+- **A count can hide errors.** Read the cards, titles and descriptions, and check titles against the museum's own spelling. Read the page, not a search excerpt of it.
+- **A probe answers only the request it made.** One page read says nothing about the venue; do not invent causes when a sweep fails. Free checks first (robots.txt, reply labels, her saved pages), then at most one sweep.
+- **Say which "nothing" it is:** found nothing, never ran, or was refused. An empty page is not an empty venue. Say what is unknown instead of printing a default.
+- **Never report success because a button was clicked.** Count from the data after the change, not from the list of marks. A control that only appears when it has something to show cannot report "nothing".
+- **Never drop a row on a judgement.** No de-duplicating by title (it deleted 29 National Gallery shows); undecided cards are never skipped on apply; a data fault means "re-run", never a card for her.
+- **Code owns anything with one right answer**, and anything derivable is never re-derived from prose written for a human. Do not delete dormant code, change more than asked, or invent a constraint she did not state.
+- **Quote the match, never the input** (a whole page once landed in one note). Loose rules apply to a listing card, not whole-page text. Ancestor walks stop before `<body>`.
+- **One copy of every fact.** Two date parsers, two venue lists and two month patterns each lost data silently. Delete the dead copy; when you fix a fact, fix every place that shows it.
+- **Run the whole chain end to end** (stitch → compress → app). Match on the key the data carries (URL, not title). A repair is a flag, not a rule that always wins. Inserting a check into a block can split it; the unit suite has no browser.
+- **Where the listing labels a thing, filter on the listing** rather than opening every page.
+- **When a tool is swapped, the route must not change with it.** A better source is not a complete one; open a candidate before filing it; go to an address you can build rather than tuning searches. Change one thing at a time.
+- **Scraper mechanics:** never `networkidle`; wrap `route.fulfill`/`abort`; a 404 is not a loaded page; retry a detail page once. `normalizeUrl` lowercases scheme and host only; resolve hrefs, never join by hand; keep every link to an address. Dates: never build strings by hand; every month spelling (`Sept.`, Italian `set`); normalise dashes; the year can sit on the closing side only. Listings: read every page and stop at the lookback floor; a load-more click must not follow its href. Titles: noise stripping is case-exact; never strip a location that tells two shows apart. `resolveChromium()` needs both halves. A blanket find-and-replace can eat definitions you just added.
+- **A container dry run with `--home` keeps the network bridge on.** Stub every venue it names.
+- **Subagents:** send only the rows and fields the question needs. Wording is not a control — remove the tool or check the answer.
+- **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ---
 
