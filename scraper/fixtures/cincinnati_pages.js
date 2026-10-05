@@ -34,6 +34,9 @@ const SERVED = {
   [E + '/upcoming-exhibitions/the-art-of-charley-harper-creatures-wild-and-tame/']: 'show_upcoming_harper.html',
   [E + '/exhibition-archive/2025/tintorettos-genesis/']: 'show_archive_tintoretto.html',
   [E + '/special-features/you-and-me-and-the-space-between-our-expedition-starts-now/']: 'show_special_you_and_me.html',
+  // Her saves of 5 Oct: two rows the sweep filled with picture captions.
+  [E + '/exhibition-archive/2024/discovering-ansel-adams/']: 'show_archive_discovering_ansel_adams.html',
+  [E + '/exhibition-archive/2024/modern-and-contemporary-craft/']: 'show_archive_modern_and_contemporary_craft.html',
 };
 
 let failures = 0;
@@ -115,6 +118,22 @@ const check = (name, ok, got) => {
       const txt = row ? String(row.summary || '') : '';
       check(`CI-018: ${slug} — the curatorial text is read`, lead.test(txt), txt.slice(0, 200));
       check(`CI-019: ${slug} — no tickets, access notes, funders or gallery line`, txt && !notIn.test(txt), txt);
+    }
+
+    // 5 Oct: prose set in <div>s (Craft), and prose under an "Extended Hours"
+    // notice's heading (Ansel Adams) — both came back as picture captions.
+    for (const [slug, lead] of [
+      ['discovering-ansel-adams', /^Premiering at the Cincinnati Art Museum, Discovering Ansel Adams/],
+      ['modern-and-contemporary-craft', /^Today’s multifaceted contemporary art scene/]]) {
+      const txt = String((at(slug) || {}).summary || '');
+      check(`CI-022: ${slug} — the curatorial text is read`, lead.test(txt), txt.slice(0, 200));
+      check(`CI-023: ${slug} — no captions, opening hours, access notes or funders`,
+        txt && !/gelatin silver print|American, \d{4}|Open until|Not a member|Elevators|ArtsWave|Oklahoma City/.test(txt), txt);
+    }
+    for (const slug of ['nancy-rexroth-secrets-of-my-power', 'the-art-of-charley-harper-creatures-wild-and-tame']) {
+      const txt = String((at(slug) || {}).summary || '');
+      check(`CI-024: ${slug} — no organiser credit or catalogue sales line`,
+        txt && !/is organized by|available for purchase/.test(txt), txt);
     }
 
     check('CI-020: all six listings were read', Object.keys(SERVED).slice(0, 6).every(u => asked.includes(u)),

@@ -17,6 +17,8 @@ asks no wait and rules out none of these addresses.
 Fixture: `scraper/fixtures/cincinnati_pages.js`.
 
 - `show_archive_discovering_ansel_adams.html`, `show_archive_modern_and_contemporary_craft.html`
-  — her saves of 5 Oct 2026; both rows came back as picture captions. Craft's
-  page has no description at all; Ansel Adams's prose sits after an "Extended
-  Hours" section the recipe's selector stops at. Open — see the 5 Oct fault list.
+  — her saves of 5 Oct 2026; both rows came back as picture captions. Craft sets
+  its prose in `<div>`s; Ansel Adams's prose sits under an "Extended Hours"
+  notice's heading. The recipe now reads p or div, stops at the visiting
+  sections (`descriptionUntil`), drops the hours lines (`creditPara`) and
+  organiser/catalogue-sales sentences (`dropSentence`). CI-022–024.

@@ -34,7 +34,7 @@ const check = (name, ok, got) => {
   const read = async (file, venue) => {
     const v = S.VENUES[venue];
     await page.setContent(fs.readFileSync(path.join(DOCS, file), 'utf8'));
-    const t = await S.getCuratorialText(page, v.description, v.noise, v.noiseExempt, v.creditPara, v.keepBold, v.dropSentence, v.descriptionSkip);
+    const t = await S.getCuratorialText(page, v.description, v.noise, v.noiseExempt, v.creditPara, v.keepBold, v.dropSentence, v.descriptionSkip, v.descriptionUntil);
     return typeof t === 'string' ? t : String((t && t.text) || '');
   };
   try {
