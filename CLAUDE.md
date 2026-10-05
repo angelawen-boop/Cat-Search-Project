@@ -1103,15 +1103,16 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
 
 ### 3. Fixes not yet checked in the cases they were written for
 
-1. **Borghese: 7 titles still in capitals** — site was down 24 Sep; read its 3
-   listing pages once, when it is back.
-2. **Title check not yet run** at `capo`, `borghese`, `met`, `artic`.
-
-### 4. The Frick's past archive, page two
-
-About 10 past exhibitions (archive page two, refused 13 Sep) have never been
-read. Her ruling: leave them for the next sweep to pick up. Nothing else to do;
-close this once that sweep has run.
+1. **Borghese: 7 titles still in capitals.** The site answered on 5 Oct and the
+   sweep still wrote all 7 in capitals; the title check changed none. Her import
+   file has them corrected by hand (2 from the venue's text, 5 by hand, 23 Sep),
+   so each sweep proposes 7 capitals-only Change cards. Whether the venue TYPES
+   them in capitals needs one saved listing and one show page.
+2. **Title check not yet run** at `met`, `artic` (home venues). Ran at `capo` and
+   `borghese` on 5 Oct, changing nothing.
+3. **KHM: two rows lost their opening dates on 5 Oct** — *Head and Shoulders*
+   (had 2025-11-11) and *Prime Time* (had 2026-09-25). Both are image-only
+   links whose names come from their pages. Not yet diagnosed.
 
 ### 5. Catalogue lookup generally
 
