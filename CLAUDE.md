@@ -1154,11 +1154,8 @@ Not good → more work on the routine or the recipes.
 
 ### 7. Smaller, parked
 
-- **The cheapest archive route per venue** — very low priority, may never happen.
 - **Sweeper brief v3** — needs URL corrections; likely the fallback procedure for
   blocked venues.
-- **Art Institute films by room** — reopen only if the bin fills again.
-  `docs/artic_pages/` README has the idea.
 - **A QA pass before the stitch** — parked from a session whose reasoning she
   does not trust. `qc.js` is NOT that pass and does not re-open it.
 
