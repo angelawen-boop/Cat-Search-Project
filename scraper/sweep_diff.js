@@ -106,6 +106,7 @@ const readsPast = rows => rows.some(r => pagesFromNote(r.notes).some(p => /past|
 const JUNK = [
   { kind: 'catalogue sales line', re: /\b(order(ing)?|buy|purchase|pre-?order)\b[^.]{0,60}\bcatalogue\b|\bcatalogue\b[^.]{0,40}\b(that )?accompan(ies|ying)\b/i, short: 400 },
   { kind: 'picture caption', re: /\((?:American|British|English|French|German|Italian|Dutch|Flemish|Spanish|Austrian|Japanese|Chinese|Mexican|Canadian|Swiss|Belgian|[A-Z][a-z]+-born)[^)]{0,20}, (?:born )?\d{4}(?:\s*[–-]\s*\d{4})?\)|\b(gelatin silver print|oil on canvas|Museum Purchase)\b/, head: 160 },
+  { kind: 'restaurant or visiting line', re: /\b(set menu|two courses|our restaurant|book a table|members go free|opening hours)\b/i },
   { kind: 'credit or sponsor line', re: /\b(is|are) (generously )?supported by\b|\bsponsored by\b|\bComitato scientifico\b|\bscientific committee\b|\bwith the support of\b/i, head: 200 },
 ];
 function junkIn(summary) {
@@ -120,7 +121,7 @@ function diffVenue(venue, nowRows, prev, log, runDate = '') {
   const markers = nowRows.filter(isMarker);
   const out = { venue, now: now.length, prevRun: prev && prev.run, prev: null,
     gone: [], added: [], moved: [], renamed: [], redated: [], lostSummary: [], noSummary: [],
-    keptNoEnd: [], sameName: [], junk: [], emptiedPages: [], ruleStopped: [] };
+    keptNoEnd: [], sameName: [], junk: [], emptiedPages: [], ruleStopped: [], worseText: [] };
 
   for (const r of now) {
     if (!s(r.summary)) out.noSummary.push({ title: r.title, url: r.url, why: pageFailure(r.notes) });
@@ -153,6 +154,14 @@ function diffVenue(venue, nowRows, prev, log, runDate = '') {
       if (s(n.start_date) !== s(p.start_date) || s(n.end_date) !== s(p.end_date)) out.redated.push({ title: n.title, url: n.url,
         from: `${s(p.start_date) || '?'} → ${s(p.end_date) || '?'}`, to: `${s(n.start_date) || '?'} → ${s(n.end_date) || '?'}` });
       if (s(p.summary) && !s(n.summary)) out.lostSummary.push({ title: n.title, url: n.url, why: pageFailure(n.notes) });
+      // Text that got much SHORTER, or turned into junk: National Gallery, 5 Oct —
+      // 850 characters of description became one catalogue sales line.
+      else if (s(p.summary) && s(n.summary) !== s(p.summary)) {
+        const shrank = s(n.summary).length < s(p.summary).length / 2;
+        const turned = junkIn(n.summary).filter(k => !junkIn(p.summary).includes(k));
+        if (shrank || turned.length) out.worseText.push({ title: n.title, url: n.url,
+          from: s(p.summary).length, to: s(n.summary).length, turned });
+      }
       continue;
     }
     const ex = excl.find(e => sameName(e.title, p.title));
@@ -227,6 +236,7 @@ function report(res, say = console.log) {
     for (const a of v.added) lines.push(`  NEW       "${a.title}" (${a.start || '?'} → ${a.end || '?'}) — ${a.note}`);
     for (const r of v.renamed) lines.push(`  TITLE     "${r.from}" → "${r.to}"${r.onlyCase ? ' (capitals only)' : ''} — a Change card in the app`);
     for (const d of v.redated) lines.push(`  DATES     "${d.title}" ${d.from}  ⇒  ${d.to}`);
+    for (const w of v.worseText) lines.push(`  WORSE TEXT "${w.title}" — description ${w.from} → ${w.to} characters${w.turned.length ? '; now reads as ' + w.turned.join(', ') : ''}. A fault: last run had better text`);
     for (const l of v.lostSummary) lines.push(`  LOST TEXT "${l.title}" — ${l.why ? 'its page: ' + l.why + ' (note)' : 'UNEXPLAINED: the note gives no page failure'}`);
     for (const n of v.noSummary) if (!v.lostSummary.some(l => l.url === n.url)) lines.push(`  NO TEXT   "${n.title}" — ${n.why ? 'its page: ' + n.why + ' (note)' : 'never had a description'}`);
     for (const e of v.emptiedPages) lines.push(typeof e.linksSeen === 'string' && e.linksSeen.startsWith('none')

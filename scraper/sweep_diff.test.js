@@ -102,3 +102,17 @@ test('SD-011: a new row the LAST run excluded by name means the rule stopped fir
   assert.strictEqual(out.added.length, 0);
   assert.match(out.ruleStopped[0].reason, /permanent/);
 });
+
+test('SD-012: a description that shrank to junk is WORSE TEXT, a fault (National Gallery 5 Oct)', () => {
+  const old = 'Fall in love with Renoir and his Impressionist paintings at the National Gallery. '.repeat(10);
+  const out = D.diffVenue('v', [row({ title:'Renoir and Love', url:'https://ng/r', summary:"Explore the themes of 'Renoir and Love' further in the catalogue that accompanies the exhibition." })],
+    prev([row({ title:'Renoir and Love', url:'https://ng/r', summary: old })]), log());
+  assert.strictEqual(out.worseText.length, 1);
+  assert.ok(out.worseText[0].turned.includes('catalogue sales line'));
+  const same = D.diffVenue('v', [row({ title:'A', url:'https://ng/a', summary: old + ' One more sentence.' })], prev([row({ title:'A', url:'https://ng/a', summary: old })]), log());
+  assert.strictEqual(same.worseText.length, 0);
+});
+
+test('SD-013: a restaurant line in a description is flagged (Tate Modern 5 Oct)', () => {
+  assert.ok(D.junkIn('…photography as a medium. Experience the exhibition then enjoy two courses from our set menu.').includes('restaurant or visiting line'));
+});
