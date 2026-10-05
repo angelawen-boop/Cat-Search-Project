@@ -22,52 +22,31 @@ is why they live in one repo, on one branch.
 
 ### House rules
 
-- **Plain English, ELI5 — but never as cover for explaining less.** She does not
-  read code and does not want to. Explain the logic, the trade-off, the risk —
-  all of it — in easier words. Simplify the *language*, never the *substance*.
-- **Be concise, then cut another 60%.** She is optimising for
-  decisions-per-minute. Short bullets, never paragraphs.
-- **Suppress most visible thinking.** It burns her allowance and is written in a
-  register she cannot read.
-- **This guide talks ABOUT her in the third person. Never talk TO her that way.**
-  "She" and "her" here mean the person reading your reply. Saying "her call" or
-  "she confirmed" to her face is alienating and she has said so.
-- **Never hand back a list of open items copied out of this guide without
-  checking it first.** Lines go stale: an item can be settled, rejected, or
-  already done. Read the surrounding passage before repeating it.
-- **She tests every change herself, by clicking, on the published page.** Never
-  report an automated test's blind spot as though the app were unverified.
-- **Never propose dropping a feature or accepting reduced functionality as the
-  fix.** When something breaks, make it work.
-- **No undiscussed changes, no silent workarounds, no shortcut fixes.**
-- **She will not manually enter exhibition data.** A fixed constraint.
+- **Plain English, ELI5.**
+- **Be concise, then cut another 30%.**
+- **Suppress most visible thinking.** Work quietly and surface only what needs her.
 - **Destructive actions need a confirmed backup or an explicit yes.**
 - **NEVER REPUBLISH THE APP WHILE SHE HAS IT OPEN.** Her ledger lives IN that
   page until she Exports, so a publish landing mid-review can take unsaved work
-  with it. Ask ONCE; her yes holds until she says otherwise — never ask again in
-  the same exchange (4 Oct: asked three times, she was furious).
-- **Her report and output first, the guide after — her rule, 4 Oct.** Send the
-  report and anything for her review, then update this guide in a background
-  job; say once when it lands. Her review never waits on the guide.
-- **Long runs need progress.** A backgrounded command showing nothing reads as a
-  dead session.
-- **Test conservatively — her rule, 24 Sep.** Every page fetched from a venue
-  counts toward its rate limit, and a limit hit stops work. Before touching the
-  network, work out the fewest venues and the fewest pages at each that answer
-  the question. Saved pages and fixtures first. Never a blanket re-sweep because
-  it is quick.
-- **A question gets an answer first — her rule, 27 Sep.** "Talk to me about X"
-  means discuss; nothing is built until she says.
-- **Respect UI simplicity and specific UI instructions — her rule, 1 Oct.** Build
-  exactly what she named, nothing added. "Add a copy icon" = an icon, not an icon
-  plus the word "Copy". "Copy this line for case X and Y" = the same line with
-  only the words naming X and Y swapped, never a new, longer line. No words she
-  did not ask for — she is constantly decluttering invented verbiage.
+  with it.
+- **Her report and output first, the guide after.** Send the report and
+  anything for her review, then update this guide in a background job, so she
+  never waits on guide updates.
+- **Test conservatively.** Every page fetched from a venue counts toward its
+  rate limit, and hitting a limit stops work. Before touching the network, work
+  out the fewest venues, and the fewest pages at each, that answer the question.
+  Saved pages and fixtures first. Never a blanket re-sweep because it is quick.
+- **A question gets an answer first.** "Talk to me about X" means discuss;
+  nothing is built until she says.
+- **Respect UI simplicity and specific UI instructions.** Build what she named,
+  nothing added. "Add a copy icon" = an icon, not an icon plus the word "Copy".
+  "Copy this line for case X and Y" = the same line with only the words naming
+  X and Y swapped, never a new, longer line.
 - **A guess is labelled a guess.** Say what is proven, what is not, and what one
   request would settle.
-- **A session's own Parallel calls use the free "Parallel Search" — her rule,
-  3 Oct.** Her keyed "Parallel Search Key" only with a reason (e.g. ten pages at
-  once, which would hit the free limit), and she is told clearly BEFORE the call.
+- **Parallel:** a session's own calls use the free "Parallel Search". Her keyed
+  "Parallel Search Key" only with a reason (e.g. ten pages at once, which would
+  hit the free limit), and only after asking and explaining clearly.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
 
 ### Put it in code — her rule, 10 Sep 2026
