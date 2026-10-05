@@ -1110,11 +1110,11 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
    them in capitals needs one saved listing and one show page.
 2. **Title check not yet run** at `met`, `artic` (home venues). Ran at `capo` and
    `borghese` on 5 Oct, changing nothing.
-3. **KHM: two rows lost their opening dates on 5 Oct** — *Head and Shoulders*
-   (had 2025-11-11) and *Prime Time* (had 2026-09-25). Both are image-only
-   links whose names come from their pages. Not yet diagnosed.
+3. **KHM: *Head and Shoulders* lost its opening date on 5 Oct** — the page
+   says "since 11. November 2025"; the date reader now reads "since" (DS-001,
+   `docs/khm_pages/`). Check the 15 Oct run has 2025-11-11.
 
-### 5. Catalogue lookup generally
+### 4. Catalogue lookup generally
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
@@ -1127,7 +1127,7 @@ She is noting issues as she uses it, for a later debugging session.
   Only that lookup's log settles it ("Show diagnostic" keeps the last action's
   only); if it recurs, get the log first. A log per card: offered, not built.
 
-### 6. The monthly container sweep — confirmation re-run 15 Oct
+### 5. The monthly container sweep — confirmation re-run 15 Oct
 
 **She sweeps no more than once a month.** The container's half runs itself:
 the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
@@ -1154,9 +1154,6 @@ its own pages — no fault. Louvre refused 3 pages.
 `send_later`). Her test: it pushes and reports in the new format; the five
 fixed venues come back clean; nothing new broken. Good → she imports that run.
 Not good → more work on the routine or the recipes.
-
-### 7. Smaller, parked
-
 
 ---
 
