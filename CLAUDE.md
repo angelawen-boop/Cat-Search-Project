@@ -129,7 +129,7 @@ Branches separate in-progress work from known-good work, never components.
 |---|---|
 | `claude/ledger-cloud` | **Live trial — §7.1.** Merged to `main` only on her call |
 | `parked` | Work held for another session (below). Deleted once on `main` |
-| `claude/jsx-stitched-intake` | Merged 20 Sep; kept as history |
+| `claude/jsx-stitched-intake`, `claude/blissful-volta-jxj5c0` | Merged into `main` (20 Sep; 4–5 Oct); kept as history |
 | `claude/quiet-user-agent` | Parked, her ruling 19 Sep — do not merge or re-open |
 | `claude/personal-tracking-ledgers-z49s2h` | Dead — do not merge |
 | `claude/blissful-knuth-snbqci`, `claude/design-questions-87gj6w`, `claude/headless-chromium-claude-code-wl94l0` | Dead — early 7–10 Sep work from before `main` was the trunk (no shared history with it); superseded, do not merge. Kept on GitHub, her ruling 2 Oct — never raise deleting them |
@@ -564,17 +564,12 @@ through `sample` at `modelTier: default`. Do not re-open without a real misread.
 
 `npm test` runs everything, and **the exit code says whether all of it passed**.
 
-| | |
-|---|---|
-| unit fixtures | `date.test.js`, `compress.test.js`, `qc.test.js`, `sweep_log.test.js`, `venue_status.test.js`, `pacing.test.js`, `sweep_diff.test.js` |
-| `intake_cases.js` | folding, quarantine, freshness, the ledger gate |
-| `page_loads.js`, `page_renders.js` | does the page load; does it DRAW (jsdom, plain and with the runtime answering) |
-| `add_by_link.js` | Add by link on the 3 Oct pages (`docs/link_pages/`): titles, dates, unread links, new venues' shops, the chip (AL-) |
-| `catalogue_lookup.js`, `recheck_shop.js` | the lookup (C-); Re-check, blocked shops, web-found links, search filters, another venue's book, no-shop venues, language, Reset cards, counts, buy-next dot, closing a search box — the real app, buttons pressed (R-, L-, S-, VN-, LG-, RC-, RS-, CT-, SC-, BN-) |
-| `*_pages.js` per venue | `mam`, `ashmolean`, `moma`, `mad`, `brit`, `morgan`, `orsay`, `cincinnati`, `va` recipes on saved pages, no network — her counts, dates, titles, descriptions |
-| `summary_pages.js`, `description_pages_oct.js`, `title_case_pages.js`, `listing_pages.js` | descriptions, titles in the venue's letters, where each row was seen — on saved pages |
-| `page_keep_pages.js`, `bridge_reuse.js`, `robots_pages.js`, `pacing_pages.js` | kept pages; the bridge's file reuse and reply labels; robots.txt obeyed and stall reports; pacing against Cloudflare's replies |
-| `cloud_ledger.js`, `cloud_app.js`, `cloud_two_copies.js` | the cloud ledger (branch), on her real ledger; two copies open at once |
+The suite list is `scraper/run_tests.js`, never retyped here; a suite only a
+branch has goes in that branch's `scraper/fixtures/branch_tests.txt`
+(`claude/ledger-cloud`: `cloud_ledger.js`, `cloud_app.js`, `cloud_two_copies.js`).
+Each fixture file opens with what it proves; case IDs (AL-, C-, R-, KP-…) are
+found by grep. Per-venue `*_pages.js` run a recipe on saved pages, no network,
+against her counts, dates, titles and descriptions.
 
 The harness lifts the intake out of the JSX by **anchors on prose, never line
 numbers**. An early `return` in a fixture file exits the whole suite silently —
@@ -1058,8 +1053,8 @@ ledger): a save writes new pieces and switches one record last, so a save cut of
 anywhere leaves the last complete ledger; a damaged or missing piece is refused;
 an empty page never saves.
 
-**Her tests, all passed (26 Sep–1 Oct):** load, change, reload, roll-back,
-Save, Download and Load, close and reopen, a real sweep Import.
+**Her tests all passed (26 Sep–1 Oct)** — load, change, reload, roll-back,
+Save, close and reopen, a real sweep Import.
 
 **Two copies open: the later one is READ ONLY** (her ruling, 1 Oct). It opens
 empty and writes nothing — "Open it" shows the cloud copy when she asks, never by itself (her ruling, 4 Oct); an edit record with a heartbeat decides,
@@ -1068,10 +1063,10 @@ stale after a minute; every save checks it first. A republish while her page is 
 
 **Next:**
 1. Her normal use, over several sessions; she reports what surfaces. On request,
-   read the store and check it against her file. **4 Oct:** the cloud copy works
-   well, but she has been opening it ("open it") and not exporting on leaving —
-   so Loads were never checked. **One more week, from 4 Oct:** export on every
-   exit, Load that file next time, read the match line.
+   read the store and check it against her file. Loads were never checked
+   (she opened the cloud copy and did not export on leaving). **One more week,
+   from 4 Oct:** export on every exit, Load that file next time, read the match
+   line.
 2. `CLOUD_OPENS=true` once Loads have matched every time — her call. **Load
    stays for good** — it is how she opens a backup.
 3. Merge to `main` and publish to her app — her call; §4's rules apply. **First
@@ -1142,13 +1137,9 @@ session clones read-only and cannot push. It sweeps only the container's 21;
 its report never names a home venue (her ruling, 5 Oct).
 
 **First run, 5 Oct — a test, not imported** (`run_2026-10-05_015417`, 359
-rows; Cincinnati 31, her count). Its report guessed where code could know, so
-`sweep_diff.js` now works out each change's cause and the skill asks only for
-the UNEXPLAINED pile. Faults found and fixed on her saves the same day: V&A
-Displays back (badge now inside the link), National Gallery catalogue promo
-read as the text, Cincinnati captions (prose in divs; prose under an "Extended
-Hours" heading), Brera credit label, Tate dining panels. Rijksmuseum shortened
-its own pages — no fault. Louvre refused 3 pages.
+rows). `sweep_diff.js` now works out each change's cause; the skill asks only
+for the UNEXPLAINED pile. Its faults (V&A, National Gallery, Cincinnati, Brera,
+Tates) were fixed from her saves the same day; Louvre refused 3 pages.
 
 **Re-run 15 Oct, 1:53am Sydney** — this session fires the routine (a
 `send_later`). Her test: it pushes and reports in the new format; the five
