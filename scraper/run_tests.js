@@ -34,6 +34,7 @@ const SUITES = [
   'node scraper/fixtures/ashmolean_pages.js',
   'node scraper/fixtures/cincinnati_pages.js',
   'node scraper/fixtures/va_pages.js',
+  'node scraper/fixtures/description_pages_oct.js',
   'node scraper/fixtures/bridge_reuse.js',
   'node scraper/fixtures/robots_pages.js',
   'node build/sync_shared.js --check',

@@ -3535,6 +3535,14 @@ const ARTIC_NOT_AN_EXHIBITION = new RegExp([
   '\\bG\\d+\\s+Rotation\\b',
 ].join('|'), 'i');
 
+// Tate's promo blocks on a show page: the grey editorial panel and the
+// pull-down FAQ (its dining offer — "enjoy two courses from our set menu",
+// "Choose the 10.45 … time slot to book your exhibition visit with lunch") and
+// related-event cards ("Relaxed Hours: …"). The show's own text sits in none
+// of them (Light and Magic, 5 Oct; docs/tate_pages/). Matched as noise
+// containers by class.
+const TATE_NOISE = 'editorial-background|accordion|card-content';
+
 const VENUES = {
   met: {
     name: 'The Metropolitan Museum of Art',
@@ -3620,6 +3628,17 @@ const VENUES = {
     // so far that does. Picked up automatically; nothing needed here.
     // The card's second title line has its own slot; see withPostTitle().
     title: { heading: true, postTitle: '.exhibition-post-title' },
+    // THE DESCRIPTION IS NAMED, because the shared ladder's
+    // '[class*="description"] p' rung now finds the wrong one. By 5 Oct a show
+    // with a published catalogue carries a promo panel whose container is
+    // classed "description" ("Explore the themes of 'Renoir and Love' further
+    // in the catalogue…"), and that rung outranks the bare <p> the real text
+    // was read through. The text lives in the page's exhibition-info block
+    // (docs/ng_pages/, her saves of 5 Oct).
+    description: '.exhibition-info .body-text',
+    // Its last line credits the organising museums — a credit line, which no
+    // row carries (CLAUDE.md §2).
+    dropSentence: /Exhibition organised by\b/,
   },
 
   rijks: {
@@ -4233,6 +4252,13 @@ const VENUES = {
     // is therefore left out — that block was the ENTIRE summary on the Oman row.
     // Both tags in one selector so they arrive in the page's own order.
     description: 'div.wp-block-columns h4.wp-block-heading, div.wp-block-columns p.wp-block-paragraph',
+    // A credit LABEL opening a paragraph — a bold run then a line break,
+    // "Comitato scientifico: Alessandro Ballarin, …" — with the curatorial
+    // text after the break in the same <p> (Giovanni Agostino da Lodi, 5 Oct;
+    // docs/brera_pages/). Only the label goes: a sentence rule would also take
+    // the real sentence after it, since no full stop ends the label. A bold
+    // run NOT followed by a break — a lead-in name — stays.
+    descriptionSkip: 'p.wp-block-paragraph > strong:first-child:has(+ br)',
   },
 
   // MUSÉE D'ORSAY — her addition, 25 Sep. REFUSES THE CONTAINER (Cloudflare
@@ -4866,6 +4892,8 @@ const VENUES = {
       stripLeading: /^TATE MODERN\s+/i,
       stripTrailing: /\s*More info\s*$/i,
     },
+    // Promo panels (dining offer) are not the show's text — see TATE_NOISE.
+    noise: TATE_NOISE,
   },
 
   'tate-britain': {
@@ -4884,6 +4912,7 @@ const VENUES = {
     // "Commission 2026: …"; its own page adds "Tate Britain" in front — both
     // are caught, since this test runs on the listing's name.
     excludeTitle: /^(?:Tate\s+Britain\s+)?Commission\b|^Turner\s+Prize\b/i,
+    noise: TATE_NOISE,   // see Tate Modern
     pages: [
       { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition', ctx: 'current/upcoming' },
       // PAST EXHIBITIONS — her finding, 25 Sep. The archive is not missing, it

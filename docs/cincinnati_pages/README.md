@@ -15,3 +15,8 @@ asks no wait and rules out none of these addresses.
 | `show_*.html` | one show page per address shape: current, upcoming, archive year, special features | The description block — title h2, dates h3, prose up to the next heading |
 
 Fixture: `scraper/fixtures/cincinnati_pages.js`.
+
+- `show_archive_discovering_ansel_adams.html`, `show_archive_modern_and_contemporary_craft.html`
+  — her saves of 5 Oct 2026; both rows came back as picture captions. Craft's
+  page has no description at all; Ansel Adams's prose sits after an "Extended
+  Hours" section the recipe's selector stops at. Open — see the 5 Oct fault list.
