@@ -706,7 +706,7 @@ venues by hand overrides it, and says so in the log. R-001 to R-005.
 
 **`headed: true`: on her machine the venue is swept in a visible Google Chrome
 on the profile `probe_headed.js open` seeds**, paced; never headless there,
-never on an unseeded profile. The container sweeps it headless, for markers.
+never on an unseeded profile. The container never sweeps it (her ruling, 5 Oct).
 Design: the HEADED block in `sweep_prototype.js`; H-001 to H-007.
 
 **Three modes — never blur them:**

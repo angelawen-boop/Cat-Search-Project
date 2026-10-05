@@ -104,4 +104,9 @@ She works IN this session after reading it, so it must be ready to act on.
 - Last lines: "Say which faults to fix." then "Next: your home sweep, then
   stitch and compress."
 
+**Only this run's venues.** Never mention a home venue (met, artic, mad,
+brit, orsay, morgan, moma — `route: 'local'`) or its status, even where a
+script prints it (`venue_status.js` lists every venue): the two piles must
+not be confused (her ruling, 5 Oct).
+
 Talk TO her ("you"), never about her.
