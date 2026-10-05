@@ -1106,8 +1106,6 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
 1. **Borghese: 7 titles still in capitals** — site was down 24 Sep; read its 3
    listing pages once, when it is back.
 2. **Title check not yet run** at `capo`, `borghese`, `met`, `artic`.
-3. **MAM:** its current run predates her Prix Duchamp / Oliver Beer ruling; the
-   next sweep drops them (`mam_pages.js` proves it offline).
 
 ### 4. The Frick's past archive, page two
 
@@ -1128,19 +1126,30 @@ She is noting issues as she uses it, for a later debugging session.
   Only that lookup's log settles it ("Show diagnostic" keeps the last action's
   only); if it recurs, get the log first. A log per card: offered, not built.
 
-### 6. A fresh sweep — mid-October at the earliest
+### 6. The monthly container sweep — confirmation re-run 15 Oct
 
 **She sweeps no more than once a month.** The container's half runs itself:
 the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
 `.claude/skills/monthly-sweep/SKILL.md` — sweep, QC, push, report; anything
 needing a re-sweep or a code change waits for her. She then does the home
 sweep, and a session with her stitches and compresses (her design, 2 Oct).
+**The routine has the repo attached** (her setting, 5 Oct) — without it the
+session clones read-only and cannot push. It sweeps only the container's 21;
+its report never names a home venue (her ruling, 5 Oct).
 
-### 6a. Cincinnati — first sweep 5 Oct (~2am Sydney)
+**First run, 5 Oct — a test, not imported** (`run_2026-10-05_015417`, 359
+rows; Cincinnati 31, her count). Its report guessed where code could know, so
+`sweep_diff.js` now works out each change's cause and the skill asks only for
+the UNEXPLAINED pile. Faults found and fixed on her saves the same day: V&A
+Displays back (badge now inside the link), National Gallery catalogue promo
+read as the text, Cincinnati captions (prose in divs; prose under an "Extended
+Hours" heading), Brera credit label, Tate dining panels. Rijksmuseum shortened
+its own pages — no fault. Louvre refused 3 pages.
 
-Recipe, fixture and app entry all on `main` (CI-001–021, 19b, C-146b): chip
-"Cincinnati" after Artic, imprint in `SELF_PUBLISHERS` (her rulings, 4 Oct).
-Check the sweep's rows against her 31; then cut this item to its result.
+**Re-run 15 Oct, 1:53am Sydney** — this session fires the routine (a
+`send_later`). Her test: it pushes and reports in the new format; the five
+fixed venues come back clean; nothing new broken. Good → she imports that run.
+Not good → more work on the routine or the recipes.
 
 ### 7. Smaller, parked
 
