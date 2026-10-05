@@ -572,7 +572,11 @@ function findDateRangeCore(raw, opts = {}) {
     if (mo) return { start: '', end: ymd(m[4], mo, m[2]), raw: frag(m) };
   }
 
-  m = s.match(new RegExp(`\\b(from|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  // "since" too, and a day written with a full stop the German way:
+  // KHM's "since 11. November 2025" (Head and Shoulders, 5 Oct). Only here,
+  // WITH a year: the yearless forms below guess the NEXT such date, which is
+  // right for "from"/"opens" and wrong for "since".
+  m = s.match(new RegExp(`\\b(from|since|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\.?\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
     const mo = monthNum(m[3]);
     if (mo) return { start: ymd(m[4], mo, m[2]), end: '', raw: frag(m) };
@@ -813,7 +817,7 @@ function findDateRangeInProseCore(text, hintYear) {
     }
 
     // A lone opening date with no year: "From 5 June".
-    one = s.match(new RegExp(`\\b(from|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
+    one = s.match(new RegExp(`\\b(from|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\.?\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
     if (one) {
       const mo = monthNum(one[3]);
       if (mo) return {

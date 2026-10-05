@@ -1134,6 +1134,9 @@ the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
 `.claude/skills/monthly-sweep/SKILL.md` — sweep, QC, push, report; anything
 needing a re-sweep or a code change waits for her. She then does the home
 sweep, and a session with her stitches and compresses (her design, 2 Oct).
+**Every run — container and home — goes through `.claude/skills/sweep-qc/`
+and has its faults fixed before anything is stitched** (her ruling, 5 Oct):
+the routine runs it on its own run; she starts a session for her home run.
 **The routine has the repo attached** (her setting, 5 Oct) — without it the
 session clones read-only and cannot push. It sweeps only the container's 21;
 its report never names a home venue (her ruling, 5 Oct).
@@ -1154,10 +1157,6 @@ Not good → more work on the routine or the recipes.
 
 ### 7. Smaller, parked
 
-- **Sweeper brief v3** — needs URL corrections; likely the fallback procedure for
-  blocked venues.
-- **A QA pass before the stitch** — parked from a session whose reasoning she
-  does not trust. `qc.js` is NOT that pass and does not re-open it.
 
 ---
 
