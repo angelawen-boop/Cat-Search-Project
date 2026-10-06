@@ -2028,9 +2028,9 @@ const CURATORIAL_SELECTORS = [
   'p',
 ];
 
-async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, creditPara, keepBold, dropSentence, descriptionSkip) {
+async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, creditPara, keepBold, dropSentence, descriptionSkip, descriptionUntil) {
   try {
-    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe, keepBold, dropRe, skipSel }) => {
+    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe, keepBold, dropRe, skipSel, untilRe }) => {
       const CREDIT = creditRe ? new RegExp(creditRe, 'i') : null;
       const ALWAYS = new RegExp(alwaysRe, 'i');
       const NOISE = new RegExp(noiseRe, 'i');
@@ -2166,12 +2166,28 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, cr
       // is it safe to discard the bold paragraphs — see boldOnly() above.
       const hasPlainProse = substantial.some(el => !boldOnly(el));
 
+      // `descriptionUntil`: the recipe's description runs on past sub-headings
+      // and stops at the first heading this names ("Accessing the Exhibition").
+      // A venue whose prose can sit under a notice's heading needs it —
+      // Cincinnati's Ansel Adams page, 5 Oct: "Extended Hours During Final
+      // Days", then the curatorial text under that same heading. Only the
+      // recipe's own selector; the shared ladder never uses it.
+      const UNTIL = untilRe ? new RegExp(untilRe, 'i') : null;
+      const pastStop = (el) => {
+        for (const h of document.querySelectorAll('h1, h2, h3, h4, h5')) {
+          if (!(h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)) break;
+          if (UNTIL.test(clean(h.innerText))) return true;
+        }
+        return false;
+      };
+
       for (const sel of selectors) {
         let els;
         try { els = Array.from(document.querySelectorAll(sel)); } catch { continue; }
         const out = [];
         for (const el of els) {
           if (out.length >= 4) break;
+          if (UNTIL && sel === selectors[0] && pastStop(el)) break;
           if (insideNoise(el)) continue;
           // `keepBold`: a venue whose opening paragraph IS bold (the Ashmolean's
           // lead), and which prints no bold label among its paragraphs.
@@ -2200,7 +2216,8 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, cr
          creditRe: creditPara ? creditPara.source : null,
          keepBold: !!keepBold,
          dropRe: dropSentence ? dropSentence.source : null,
-         skipSel: descriptionSkip || null });
+         skipSel: descriptionSkip || null,
+         untilRe: descriptionUntil ? descriptionUntil.source : null });
   } catch {
     return '';
   }
@@ -3389,6 +3406,24 @@ async function collectFromListing(page, opts) {
       continue;
     }
 
+    // THE SAME LABEL, READ FROM THE LINK'S OWN TEXT. `dates.raw` holds the
+    // card's text only while the date sits OUTSIDE the link; once the date is
+    // inside it, `dates.raw` is the matched date alone and a badge in front of
+    // it never reaches excludeLabelled. The V&A moved its whole card into the
+    // link before the 5 Oct sweep and ten Displays came through against her
+    // ruling (docs/va_pages/). The link's text starts with the badge whichever
+    // layout the venue uses, so a venue that labels its cards names the label
+    // here.
+    if (opts.excludeLinkLabelled) {
+      const m = (await getText(link).catch(() => '')).match(opts.excludeLinkLabelled);
+      if (m) {
+        c.labelled++;
+        log(`    the venue labels this "${m[0].trim()}", not an exhibition (her ruling), excluded: ${title || slugToWords(fullUrl)}`);
+        seenUrls.add(key);
+        continue;
+      }
+    }
+
     // A KIND OF THING SHE DOES NOT COLLECT, RECOGNISED BY ITS NAME.
     //
     // Her ruling, 22 Sep: the Morgan's "Collections Spotlight" is a standing
@@ -3517,6 +3552,14 @@ const ARTIC_NOT_AN_EXHIBITION = new RegExp([
   '\\bG\\d+\\s+Rotation\\b',
 ].join('|'), 'i');
 
+// Tate's promo blocks on a show page: the grey editorial panel and the
+// pull-down FAQ (its dining offer — "enjoy two courses from our set menu",
+// "Choose the 10.45 … time slot to book your exhibition visit with lunch") and
+// related-event cards ("Relaxed Hours: …"). The show's own text sits in none
+// of them (Light and Magic, 5 Oct; docs/tate_pages/). Matched as noise
+// containers by class.
+const TATE_NOISE = 'editorial-background|accordion|card-content';
+
 const VENUES = {
   met: {
     name: 'The Metropolitan Museum of Art',
@@ -3602,6 +3645,17 @@ const VENUES = {
     // so far that does. Picked up automatically; nothing needed here.
     // The card's second title line has its own slot; see withPostTitle().
     title: { heading: true, postTitle: '.exhibition-post-title' },
+    // THE DESCRIPTION IS NAMED, because the shared ladder's
+    // '[class*="description"] p' rung now finds the wrong one. By 5 Oct a show
+    // with a published catalogue carries a promo panel whose container is
+    // classed "description" ("Explore the themes of 'Renoir and Love' further
+    // in the catalogue…"), and that rung outranks the bare <p> the real text
+    // was read through. The text lives in the page's exhibition-info block
+    // (docs/ng_pages/, her saves of 5 Oct).
+    description: '.exhibition-info .body-text',
+    // Its last line credits the organising museums — a credit line, which no
+    // row carries (CLAUDE.md §2).
+    dropSentence: /Exhibition organised by\b/,
   },
 
   rijks: {
@@ -4027,8 +4081,10 @@ const VENUES = {
     //
     // ANCHORED AT THE START, because "Display" also occurs inside a title:
     // "Adobe Creative Residents On Display". The badge is the first thing on
-    // the card, so only a leading match is the label.
-    excludeLabelled: /^\s*Display\b/i,
+    // the card, so only a leading match is the label; a featured card puts
+    // "Featured" before it. Read from the LINK's text — see excludeLinkLabelled
+    // where it is used; the date-side copy stopped working on 5 Oct.
+    excludeLinkLabelled: /^\s*(?:Featured\s+)?Display\b/i,
   },
 
   // TATE — two venues in her list, one website, and the URL is what separates
@@ -4213,6 +4269,13 @@ const VENUES = {
     // is therefore left out — that block was the ENTIRE summary on the Oman row.
     // Both tags in one selector so they arrive in the page's own order.
     description: 'div.wp-block-columns h4.wp-block-heading, div.wp-block-columns p.wp-block-paragraph',
+    // A credit LABEL opening a paragraph — a bold run then a line break,
+    // "Comitato scientifico: Alessandro Ballarin, …" — with the curatorial
+    // text after the break in the same <p> (Giovanni Agostino da Lodi, 5 Oct;
+    // docs/brera_pages/). Only the label goes: a sentence rule would also take
+    // the real sentence after it, since no full stop ends the label. A bold
+    // run NOT followed by a break — a lead-in name — stays.
+    descriptionSkip: 'p.wp-block-paragraph > strong:first-child:has(+ br)',
   },
 
   // MUSÉE D'ORSAY — her addition, 25 Sep. REFUSES THE CONTAINER (Cloudflare
@@ -4846,6 +4909,8 @@ const VENUES = {
       stripLeading: /^TATE MODERN\s+/i,
       stripTrailing: /\s*More info\s*$/i,
     },
+    // Promo panels (dining offer) are not the show's text — see TATE_NOISE.
+    noise: TATE_NOISE,
   },
 
   'tate-britain': {
@@ -4864,6 +4929,7 @@ const VENUES = {
     // "Commission 2026: …"; its own page adds "Tate Britain" in front — both
     // are caught, since this test runs on the listing's name.
     excludeTitle: /^(?:Tate\s+Britain\s+)?Commission\b|^Turner\s+Prize\b/i,
+    noise: TATE_NOISE,   // see Tate Modern
     pages: [
       { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition', ctx: 'current/upcoming' },
       // PAST EXHIBITIONS — her finding, 25 Sep. The archive is not missing, it
@@ -4970,11 +5036,27 @@ const VENUES = {
     // sometimes after a subtitle line, sometimes split across two <strong>s
     // (Bold Gestures), so the paragraph, not its first <strong>.
     datesAt: { within: '.row', sel: '.col-sm-8 > p:not(.bodSmall)' },
-    // The show page's first text block: title h2, dates h3, then the prose —
-    // stopping at the next heading ("Accessing the Exhibition", "Featured
-    // Media"). The funder list sits in a later block with no h2. The logistics
-    // line under the dates (gallery, admission) is wholly bold and drops out.
-    description: '#ContentPageWrapper .richTextBox:has(h2) h2 + h3 ~ p:not(h2 + h3 ~ h3 ~ p, h2 + h3 ~ h2 ~ p)',
+    // The show page's first text block: title h2, dates h3, then the prose.
+    // The funder list sits in a later block with no h2. The logistics line
+    // under the dates (gallery, admission) is wholly bold and drops out.
+    //
+    // PARAGRAPHS OR DIVS: Modern and Contemporary Craft sets its prose in
+    // <div>s (docs/cincinnati_pages/, 5 Oct), so a p-only selector found
+    // nothing and the shared ladder took picture captions instead.
+    description: '#ContentPageWrapper .richTextBox:has(h2) h2 + h3 ~ :is(p, div)',
+    // STOP AT THE VISITING SECTIONS, NOT AT THE FIRST SUB-HEADING. Discovering
+    // Ansel Adams put an "Extended Hours During Final Days" notice under its
+    // own h3 and the curatorial text after it, under that same heading; a
+    // stop at any sub-heading read only the hours.
+    descriptionUntil: /^(?:Accessing the Exhibition|Visitor Tips|Featured Media)\b/,
+    // ...and the notice's own lines go, whole: "Due to popular demand…",
+    // "Thursday, January 16: Open until 9 p.m. …", "*Not a member? …".
+    creditPara: /^(?:Due to popular demand\b|\*?Not a member\?|(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day, [A-Z][a-z]+ \d{1,2}:)/,
+    // Organiser credits and catalogue sales lines inside the prose — "… is
+    // organized by the Cincinnati Art Museum.", "A fully illustrated exhibition
+    // catalogue is available for purchase …" (Rexroth, Harper). No row carries
+    // a credit line (CLAUDE.md §2).
+    dropSentence: /[^.!?]*\bis organized by\b|[^.!?]*\bcatalogue is available for purchase\b/,
   },
 };
 
@@ -5183,6 +5265,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
       dropQuery: v.dropQuery || null,
       datesAt: pg.datesAt || v.datesAt || null,
       excludeLabelled: v.excludeLabelled || null,
+      excludeLinkLabelled: v.excludeLinkLabelled || null,
       excludeTitle: v.excludeTitle || null,
       listingRow: pg.listingRow || v.listingRow || null,
     };
@@ -5910,7 +5993,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
         }
       }
 
-      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt, vrec.creditPara, vrec.keepBold, vrec.dropSentence, vrec.descriptionSkip);
+      const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt, vrec.creditPara, vrec.keepBold, vrec.dropSentence, vrec.descriptionSkip, vrec.descriptionUntil);
       if (text) {
         row.summary = text;
         fetched++;

@@ -219,5 +219,9 @@ if (require.main === module) {
   if (!dir) { console.log('usage: node scraper/qc.js <run or stitch directory>'); process.exit(1); }
   const res = inspect(dir);
   report(res);
+  // A single run is also compared row by row with each venue's last run, the
+  // cause read from the run's own log and notes (sweep_diff.js). A stitch mixes
+  // runs, so it has no one "last run" to compare with.
+  if (!res.error && /^run_/.test(path.basename(dir))) require('./sweep_diff.js').report(require('./sweep_diff.js').diffRun(path.basename(dir)));
   process.exit(res.error || (res.fatal && res.fatal.length) ? 1 : 0);
 }

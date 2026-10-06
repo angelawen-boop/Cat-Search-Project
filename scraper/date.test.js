@@ -2013,3 +2013,11 @@ test('DN-001: a date note opens with a capital, and says "dates" for two (her ca
   assert.equal(filledDatesNote(['opening', 'closing'], 'read from a sentence, not a date field: "x".'),
     'Opening and closing dates read from a sentence, not a date field: "x".');
 });
+
+test('DS-001: "since" with a full date is an opening date, German dotted day too (KHM Head and Shoulders, 5 Oct)', () => {
+  const { findDateRange } = require('./dates.js');
+  assert.strictEqual(findDateRange('since 11. November 2025').start, '2025-11-11');
+  assert.strictEqual(findDateRange('since 11 November 2025').start, '2025-11-11');
+  // With no year, "since" names a past date the reader cannot place: nothing is guessed.
+  assert.strictEqual(findDateRange('Since November 11').start, '');
+});

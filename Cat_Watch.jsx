@@ -17,8 +17,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "40";
-const APP_VERSION_DATE = "4 Oct 2026";
+const APP_VERSION = "40.1";
+const APP_VERSION_DATE = "6 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
 // size — it is the order she wants to WORK in. The venues she reads most come
@@ -678,7 +678,11 @@ function findDateRangeCore(raw, opts = {}) {
     if (mo) return { start: '', end: ymd(m[4], mo, m[2]), raw: frag(m) };
   }
 
-  m = s.match(new RegExp(`\\b(from|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  // "since" too, and a day written with a full stop the German way:
+  // KHM's "since 11. November 2025" (Head and Shoulders, 5 Oct). Only here,
+  // WITH a year: the yearless forms below guess the NEXT such date, which is
+  // right for "from"/"opens" and wrong for "since".
+  m = s.match(new RegExp(`\\b(from|since|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\.?\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
     const mo = monthNum(m[3]);
     if (mo) return { start: ymd(m[4], mo, m[2]), end: '', raw: frag(m) };
@@ -919,7 +923,7 @@ function findDateRangeInProseCore(text, hintYear) {
     }
 
     // A lone opening date with no year: "From 5 June".
-    one = s.match(new RegExp(`\\b(from|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
+    one = s.match(new RegExp(`\\b(from|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\.?\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
     if (one) {
       const mo = monthNum(one[3]);
       if (mo) return {
@@ -1044,8 +1048,11 @@ function stripMd(line){
 function splitPageTitle(t,host){
   const s=stripMd(t);
   if(!s)return{show:"",site:""};
-  const bar=s.lastIndexOf(" | ");
-  if(bar>0)return{show:s.slice(0,bar).trim(),site:s.slice(bar+3).trim()};
+  // Several bars carry the site's own sections between show and site: "Venice:
+  // Canaletto and His Rivals | Past exhibitions | National Gallery" (her
+  // link, 6 Oct). The show is named first, the site last.
+  const parts=s.split(" | ").map(x=>x.trim()).filter(Boolean);
+  if(parts.length>1)return{show:parts[0],site:parts[parts.length-1]};
   const m=s.match(/^(.*\S)\s+[-–—]\s+([^-–—]+)$/);
   if(m){
     const h=foldText(host);
@@ -1145,17 +1152,17 @@ function knownVenueFor(host){
 //   shop: "found" (a books section, confirmed or not), "noshelf" (a shop but
 //   no books section found), "none" (no shop found; confirmed = her "No shop"),
 //   "failed" (a step died — not an answer), "unknown" (look again on the next
-//   link). Only "found" is used by the lookup; "none" confirmed sends it to the
-//   web, as at Capodimonte.
+//   link). "found" is used by the lookup, and "noshelf" when its search was
+//   proved; "none" confirmed sends it to the web, as at Capodimonte.
 function occEntry(v){
-  const live=v.shop==="found";
+  const live=v.shop==="found"||(v.shop==="noshelf"&&!!v.shopSearch);
   // `short` is HER name for the venue on its cards (4 Oct: "Royal Academy UK",
   // "Detroit"…), written into the store by a session; the page title's name
   // stands until she gives one.
   return{id:v.id,short:v.short||v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
-    shopUnknown:v.shop!=="found"&&!(v.shop==="none"&&v.confirmed)};
+    shopUnknown:!live&&!(v.shop==="none"&&v.confirmed)};
 }
 // Every venue a card can be filed under, in her order, the occasional ones
 // last (by name). The review walks THIS, not MUSEUMS — walking MUSEUMS alone,
@@ -1330,6 +1337,43 @@ function searchFor(text,home){
   if(/catalogsearch/i.test(text))return o+"catalogsearch/result/?q=";
   return null;
 }
+// THE WHOLE SHOP'S SEARCH, PROVED — her rule, 6 Oct: a venue added by link is
+// looked up exactly as one of the 28 is, its books shelf AND its search box.
+// DIA gives a show's catalogue the show's own section ("Georgia O'Keeffe:
+// Architecture") and leaves it off "DIA Publications", so the shelf alone
+// missed it. Its shop is BigCommerce, which searchFor could not name.
+// NOT GUESSED: each common shop software's search is asked for a book just
+// seen on the shop's own pages (a link with its price beside it); the first
+// whose results carry that book's own page is kept. None does → null, and the
+// lookup reads the shelf alone, as before. A call that died → undefined: not
+// an answer, asked again next time.
+const SEARCH_SHAPES=["search?q=","search.php?search_query=","catalogsearch/result/?q=","?post_type=product&s="];
+const PRICE_ONE=new RegExp(PRICE.source,"i");
+function booksSeenOn(text,host){
+  const out=[], seen=new Set();
+  for(const m of String(text||"").matchAll(/\[([^\]\[]{3,160})\]\((https?:\/\/[^)\s]+)\)([^\[\n]{0,40})/g)){
+    if(!PRICE_ONE.test(m[3])||hostOf(m[2])!==host)continue;
+    let path=""; try{ path=new URL(m[2]).pathname; }catch{ continue; }
+    if(path.length<3||/cart|wishlist|account|login/i.test(m[2])||seen.has(path))continue;
+    seen.add(path); out.push({label:stripMd(m[1]),path});
+  }
+  return out;
+}
+async function proveShopSearch(text,home){
+  const host=hostOf(home), books=booksSeenOn(text,host).slice(0,2);
+  if(!host||!books.length)return null;
+  const bases=[...new Set([originOf(home),shopRootOf(home)])].filter(Boolean);
+  const tries=[];
+  for(const b of bases)for(const sh of SEARCH_SHAPES)for(const bk of books)tries.push({search:b+sh,path:bk.path,url:b+sh+encodeURIComponent(bk.label)});
+  const f=await fetchPage(tries.map(t=>t.url),"The products this shop search returns: their names and links.",null,{full:true});
+  if(!f.ok)return undefined;
+  const key=u=>{ try{ return decodeURIComponent(normalizeUrlKey(u)).replace(/\+/g," "); }catch{ return normalizeUrlKey(u); } };
+  for(const t of tries){
+    const r=f.results.find(x=>x&&key(x.url)===key(t.url));
+    if(r&&pageTextOf([r]).includes(t.path))return t.search;
+  }
+  return null;
+}
 const SHELF_OPENS=2;   // at most two candidates opened to check, then the next step
 // pageShop: the show page's own shop link (shopLinkOnPage), kept on the venue
 // so "Look again" has it without reading the show page twice.
@@ -1391,11 +1435,15 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
       opens=0; pick=await tryCands(menu,"the shop's menu");
     }else died=f.detail;
   }
-  if(pick)return{shop:"found",shopHome:originOf(root||pick.url),shopCatalogues:pick.url,shelfKind:pick.kind,
-    shopSearch:searchFor(seenText+"\n"+pick.url,root||pick.url),foundBy:pick.how,finder:2};
+  if(pick){
+    const home=root||pick.url, seen=seenText+"\n"+(pick.proof||"");
+    return{shop:"found",shopHome:originOf(home),shopCatalogues:pick.url,shelfKind:pick.kind,
+      shopSearch:searchFor(seen+"\n"+pick.url,home)||(await proveShopSearch(seen,home))||null,foundBy:pick.how,finder:3};
+  }
   // A step that died is not an answer: said as such, not as "nothing found".
-  if(died)return{shop:"failed",shopHome:root?originOf(root):null,why:died,finder:2};
-  return root?{shop:"noshelf",shopHome:originOf(root),finder:2}:{shop:"none",finder:2};
+  if(died)return{shop:"failed",shopHome:root?originOf(root):null,why:died,finder:3};
+  // A shop with no books section is still searched, as KHM's is.
+  return root?{shop:"noshelf",shopHome:originOf(root),shopSearch:searchFor(seenText,root)||(await proveShopSearch(seenText,root))||null,finder:3}:{shop:"none",finder:3};
 }
 
 // One pro forma file, built in memory, so a link goes through the very same
@@ -2019,7 +2067,8 @@ function shelfPages(url){
 function shopPagesFor(mu,title){
   const out=[];
   if(mu&&mu.shopCatalogues)out.push(...shelfPages(mu.shopCatalogues));
-  if(mu&&mu.shopSearch)out.push(mu.shopSearch+encodeURIComponent(title));
+  // Curly quotes straightened: "O’Keeffe" is filed as "O'Keeffe" (DIA, 6 Oct).
+  if(mu&&mu.shopSearch)out.push(mu.shopSearch+encodeURIComponent(String(title).replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"')));
   return out;
 }
 
@@ -2471,6 +2520,7 @@ const SELF_PUBLISHERS = new Set([
   "museum of modern art new york",        // moma — the same, as the lookup also read it (Brancusi)
   "art institute of chicago",             // artic — her addition, 2 Oct
   "cincinnati art museum",                // cincinnati — her addition, 4 Oct
+  "frick collection new york",            // frick — her addition, 6 Oct (Ruffles & Ribbons)
 ]);
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){
@@ -3945,7 +3995,7 @@ export default function App(){
           // confirmed it AND it was found by the finder before 4 Oct's (which
           // could hand back a front page, a post or one book), or its books
           // section was not found — a miss is never kept as the answer.
-          if(!had||(!had.confirmed&&(had.finder!==2||had.shop!=="found"))){
+          if(!had||(!had.confirmed&&(!(had.finder>=2)||had.shop!=="found"))){
             setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+page.site+"\u2019s shop"});
             const pageShop=shopLinkOnPage(oneText(res),host);
             const shop=await discoverShop(pageShop,host,page.site,had?had.turnedDown:[]);
@@ -4631,12 +4681,30 @@ export default function App(){
     return onlyTheSite("None of the pages on "+pubHost+" was this book.");
   };
 
+  // A VENUE MET BEFORE THE FINDER PROVED SEARCHES (finder 2: Detroit,
+  // Mauritshuis, the RA on 4 Oct) gets its search worked out once, at its
+  // first lookup, from its own shelf — then stored, like the venue itself.
+  async function fillShopSearch(id){
+    const mu=MU[id];
+    if(!mu||!mu.occasional||mu.shopSearch||!mu.shopHome)return;
+    const v=occVenues[id]||occSaved.current[id];
+    if(!v||v.finder>=3)return;
+    let found;
+    const f=mu.shopCatalogues?await fetchPage(mu.shopCatalogues,"The books in this section of the shop, with their prices.",null,{full:true}):{ok:true,results:[]};
+    if(f.ok)found=await proveShopSearch(pageTextOf(f.results),mu.shopCatalogues||mu.shopHome);
+    if(found===undefined||!f.ok)return;   // a call that died is not an answer
+    const add=x=>x?{...x,shopSearch:found,finder:3}:x;
+    if(occSaved.current[id]){ const saved={...occSaved.current,[id]:add(occSaved.current[id])}; occSaved.current=saved; writeOccasional(saved); }
+    setOccVenues(prev=>{ const next=prev[id]?{...prev,[id]:add(prev[id])}:prev; registerOccasional(next); return next; });
+    MU[id]={...MU[id],...occEntry({...v,shopSearch:found,finder:3})};
+  }
   // STAGE ONE ON ITS OWN: open the venue's shop pages and read the book off
   // them. Used by the lookup, and ALONE by "Re-check museum shop" when no shop
   // link is on file — one copy of the step, so the two cannot drift.
   // Returns {ran:false} for a venue with no shop; otherwise {ran, ok, detail,
   // data} where data is the read, or null when the pages came back empty.
   async function shopStep(row){
+    await fillShopSearch(row.museumId);
     const mu=MU[row.museumId];
     const dom=shopDomain(mu);
     const title=String(row.title||"").trim();

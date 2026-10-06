@@ -14,7 +14,7 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 
 const SUITES = [
-  'node --test scraper/date.test.js scraper/compress.test.js scraper/qc.test.js scraper/sweep_log.test.js scraper/venue_status.test.js scraper/pacing.test.js',
+  'node --test scraper/date.test.js scraper/compress.test.js scraper/qc.test.js scraper/sweep_log.test.js scraper/venue_status.test.js scraper/pacing.test.js scraper/sweep_diff.test.js',
   'node scraper/fixtures/intake_cases.js',
   'node scraper/fixtures/page_loads.js',
   'node scraper/fixtures/page_renders.js',
@@ -33,6 +33,8 @@ const SUITES = [
   'node scraper/fixtures/moma_pages.js',
   'node scraper/fixtures/ashmolean_pages.js',
   'node scraper/fixtures/cincinnati_pages.js',
+  'node scraper/fixtures/va_pages.js',
+  'node scraper/fixtures/description_pages_oct.js',
   'node scraper/fixtures/bridge_reuse.js',
   'node scraper/fixtures/robots_pages.js',
   'node build/sync_shared.js --check',
