@@ -290,7 +290,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 40.1 · cloud 4 on the test page** (6 Oct); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
+**Live: 40.2 · cloud 4 on the test page** (6 Oct); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -465,9 +465,10 @@ and do not flip to searching wide first.**
 - **"X in association with Y" — Y is the publisher** (her ruling, 2 Oct):
   the publisher step and the self-publisher check use Y (`publisherToFind`);
   the card prints the line as given.
-- **A museum's own imprint is skipped** — `SELF_PUBLISHERS`, keyed on the
-  **publisher**, never the venue, **added to only by her**; one imprint may need
-  two names (MAD and MoMA have two).
+- **A museum's own imprint is skipped**, no line on the card (her ruling, 6 Oct):
+  a publisher carrying the **venue's full name** as whole words is the venue
+  (`isSelfPublisher`), plus her list `SELF_PUBLISHERS`; her `NOT_SELF_PUBLISHERS`
+  overrides both. On trial: too many misfires → back to her list alone.
 - **Everything fills a blank and nothing else.** A known value is never
   overwritten.
 - **A 10-digit ISBN is taken and converted**, check digit verified. `toIsbn13`
@@ -840,7 +841,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **40.1 · cloud 4**, published 6 Oct. Cloud-only in it:
+live on the test page **40.2 · cloud 4**, published 6 Oct. Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's

@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "40.1";
+const APP_VERSION = "40.2";
 const APP_VERSION_DATE = "6 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -1034,7 +1034,7 @@ function stripMd(line){
     .replace(/<https?:[^>]*>/g,"")
     .replace(/\*\*|__/g,"")
     .replace(/(^|[^\w])_([^_]+)_(?=[^\w]|$)/g,"$1$2") // _italic_
-    .replace(/\\([-*_#.()\[\]])/g,"$1")              // markdown escapes
+    .replace(/\\([-*_#.()\[\]|])/g,"$1")              // markdown escapes
     .replace(/^\s*#{1,6}\s+/,"")
     .replace(/^\s*[*+]\s+/,"")
     .replace(/\s+/g," ")
@@ -1087,7 +1087,10 @@ function readShowPage(res,url){
     if(r.start||r.end){d=k;range=r;break;}
   }
   if(d<0)return{ok:false,why:"No dates found under the show’s title."};
-  const base=show||heading;
+  // A show whose own name holds a bar — "Art in Dialogue: Duccio | Caro" (her
+  // NG link, 6 Oct): the page title cuts it at the bar, so the heading, which
+  // starts with the same words and goes on, is the name.
+  const base=show&&heading.length>show.length&&heading.length<=200&&foldText(heading).startsWith(foldText(show))?heading:(show||heading);
   const between=lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l)));
   const dateLine=stripMd(lines[d]);
   let raw="";
@@ -2432,7 +2435,7 @@ function needsPageRead(hit){
 function applyIsbnFill(row,o,dom){
   const isbn=toIsbn13(o&&o.isbn13);
   const pub=(o&&o.publisher)?String(o.publisher).trim():"";
-  const purl=publisherLinkOf(o&&o.publisherUrl,row.publisher||pub,dom);
+  const purl=publisherLinkOf(o&&o.publisherUrl,row.publisher||pub,dom,row.museumId);
   if(!isbn&&!pub&&!purl)return row;
   return{...row,
     isbn13:row.isbn13||isbn||null,
@@ -2521,16 +2524,34 @@ const SELF_PUBLISHERS = new Set([
   "art institute of chicago",             // artic — her addition, 2 Oct
   "cincinnati art museum",                // cincinnati — her addition, 4 Oct
   "frick collection new york",            // frick — her addition, 6 Oct (Ruffles & Ribbons)
+  "national gallery publications limited", // ng — her addition, 6 Oct (Venice: Canaletto and His Rivals)
+  "national gallery company",              // ng — her addition, 6 Oct (Ed Ruscha: Course of Empire)
 ]);
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){
   return String(name||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .replace(/[^a-z0-9]+/g," ").trim().replace(/^the\s+/,"");
 }
-function isSelfPublisher(name){
+// A PUBLISHER CARRYING THE VENUE'S OWN NAME IS THE VENUE — her ruling, 6 Oct,
+// after three National Gallery imprints in one day ("National Gallery
+// Company", "… Publications, Limited", "… Global"). The venue's FULL name,
+// whole words, "The" dropped; never its short chip name ("Met", "Brera").
+// Her own ruling of 22 Sep still holds: a book house or ANOTHER museum
+// carries no part of this venue's name and is still looked for.
+// Known misfire, accepted: a namesake museum ("National Gallery of Art",
+// Washington, at the London National Gallery) — she names it in
+// NOT_SELF_PUBLISHERS. If this misfires too often she goes back to the list
+// alone: delete the venue test below.
+const NOT_SELF_PUBLISHERS = new Set([
+  // her entries, normalised as normPublisher writes them
+]);
+function isSelfPublisher(name,museumId){
   name=publisherToFind(name);
   const n=normPublisher(name);
-  return !!n&&SELF_PUBLISHERS.has(n);
+  if(!n||NOT_SELF_PUBLISHERS.has(n))return false;
+  if(SELF_PUBLISHERS.has(n))return true;
+  const v=normPublisher(MU[museumId]&&MU[museumId].name);
+  return v.length>=6&&(" "+n+" ").includes(" "+v+" ");
 }
 
 // THE PUBLISHER\u2019S OWN PAGE \u2014 restored 21 Sep 2026, her finding.
@@ -2579,10 +2600,10 @@ function publisherToFind(name){
   return y||s;
 }
 
-function publisherLinkOf(u,publisher,dom){
+function publisherLinkOf(u,publisher,dom,museumId){
   publisher=publisherToFind(publisher);
   const t=cleanPublisherUrl(u,dom);
-  if(!t||!publisher||isSelfPublisher(publisher))return null;
+  if(!t||!publisher||isSelfPublisher(publisher,museumId))return null;
   return publisherDomainFrom([{url:t}],publisher)?t:null;
 }
 
@@ -2796,7 +2817,8 @@ function publisherNote(result,hasUrl){
   if(result==="site")     return "The publisher\u2019s own site doesn\u2019t show this book — the link opens their home page.";
   if(result==="nosite")   return "Couldn\u2019t work out the publisher\u2019s own website, so there\u2019s no link to it.";
   if(result==="unnamed")  return "No publisher was named for this book, so none was looked for.";
-  if(result==="selfpublished")return "Catalogue is self-published by the venue.";
+  // Self-published says nothing — her ruling, 6 Oct: no button is answer enough.
+  if(result==="selfpublished")return "";
   if(result==="product")  return "";
   return "";
 }
@@ -2960,7 +2982,7 @@ function keepWhatWeKnew(prev,next){
   out.publisher=prev.publisher||next.publisher||null;
   // A link with no recorded kind came from a read, unchecked — it stays only
   // if it is on the publisher's own site (publisherLinkOf, her ruling 1 Oct).
-  const keepLink=prev.publisherUrl&&(prev.publisherResult||publisherLinkOf(prev.publisherUrl,out.publisher,null));
+  const keepLink=prev.publisherUrl&&(prev.publisherResult||publisherLinkOf(prev.publisherUrl,out.publisher,null,prev.museumId));
   if(keepLink){out.publisherUrl=prev.publisherUrl;out.publisherResult=prev.publisherResult??null;}
   if(prev.shopState){out.shopState=prev.shopState;out.shopUrl=prev.shopUrl??null;out.shopChange=prev.shopChange??null;}
   return out;
@@ -4267,7 +4289,7 @@ export default function App(){
         row:keepWhatWeKnew(row,{...row,looked:true,hasCatalogue:"yes",
         shopState:inShop?"shop":blocked?"blocked":"web",shopChange:null,
         catalogueTitle:o.catalogueTitle||null,isbn13:toIsbn13(o.isbn13),
-        publisher:o.publisher||null,publisherUrl:publisherLinkOf(o.publisherUrl,row.publisher||o.publisher,dom),
+        publisher:o.publisher||null,publisherUrl:publisherLinkOf(o.publisherUrl,row.publisher||o.publisher,dom,row.museumId),
         publisherResult:null,
         shopUrl:inShop?link:null})};
     }
@@ -4538,7 +4560,7 @@ export default function App(){
     if(!r||!hit.ok||r.hasCatalogue!=="yes")return hit;
     // A NAMED MUSEUM PUBLISHING ARM — no searches at all, and no link: only
     // the publisher is the publisher (her ruling, 1 Oct). See SELF_PUBLISHERS.
-    if(isSelfPublisher(r.publisher)){
+    if(isSelfPublisher(r.publisher,r.museumId)){
       return{...hit,detail:hit.detail+"\n"+r.publisher+" is a museum’s own imprint — no publisher page to look for.",
         row:{...r,publisherUrl:null,publisherResult:"selfpublished"}};
     }

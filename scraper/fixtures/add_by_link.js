@@ -211,6 +211,16 @@ function runtime() {
     ok(r.show === 'Venice: Canaletto and His Rivals' && r.site === 'National Gallery',
       'AL-015: several bars — the show is the first part, the site the last; the section between dropped', JSON.stringify(r));
   }
+  // Her NG Duccio, 6 Oct: the show's own name holds a bar ("Duccio | Caro"),
+  // so the page title alone cut it short. The heading carries it whole.
+  {
+    const read = new Function('React', 'window', 'document', 'localStorage', code + '\n;return readShowPage;')(React, win, win.document, win.localStorage);
+    const body = '\n\nPast exhibition\n\n13 June - 8 November 2015\n\nAdmission free\n\n' + 'A work by the late British sculptor Sir Anthony Caro functions as a gateway to re-examining Duccio\'s Annunciation. '.repeat(6);
+    const duccio = read({ title: 'Art in Dialogue: Duccio | Caro | Past exhibitions | National Gallery', full_content: '# Art in Dialogue: Duccio \\| Caro' + body }, 'https://www.nationalgallery.org.uk/exhibitions/past/art-in-dialogue-duccio-caro');
+    const venice = read({ title: 'Venice: Canaletto and His Rivals | Past exhibitions | National Gallery', full_content: '# Venice: Canaletto and His Rivals' + body }, 'https://www.nationalgallery.org.uk/exhibitions/past/venice-canaletto-and-his-rivals');
+    ok(duccio.base === 'Art in Dialogue: Duccio | Caro' && venice.base === 'Venice: Canaletto and His Rivals',
+      'AL-015a: a bar inside the show\'s own name is kept, read off the page\'s heading; a section name still is not', JSON.stringify([duccio.base, venice.base]));
+  }
   // ── AL-001: Import opens ONE pop-up; nothing is added to the page ───────
   // Her ruling, 4 Oct: no new buttons and no text in the page's header.
   const dialog = () => win.document.querySelector('[role=dialog]');
