@@ -2290,6 +2290,7 @@ const SELF_PUBLISHERS = new Set([
   "cincinnati art museum",                // cincinnati — her addition, 4 Oct
   "frick collection new york",            // frick — her addition, 6 Oct (Ruffles & Ribbons)
   "national gallery publications limited", // ng — her addition, 6 Oct (Venice: Canaletto and His Rivals)
+  "national gallery company",              // ng — her addition, 6 Oct (Ed Ruscha: Course of Empire)
 ]);
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){

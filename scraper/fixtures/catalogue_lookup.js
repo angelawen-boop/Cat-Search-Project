@@ -503,8 +503,8 @@ function runtime(answer, log) {
 
     eq(api.publisherNote('selfpublished', false), '',
        'C-078: and the card says nothing about it — her ruling, 6 Oct: no publisher button is answer enough');
-    eq(api.isSelfPublisher('National Gallery Publications, Limited') && api.isSelfPublisher('The Frick Collection, New York'), true,
-       'C-078a: her additions, 6 Oct — National Gallery Publications, Limited and The Frick Collection, New York');
+    eq(api.isSelfPublisher('National Gallery Publications, Limited') && api.isSelfPublisher('National Gallery Company') && api.isSelfPublisher('The Frick Collection, New York'), true,
+       'C-078a: her additions, 6 Oct — National Gallery Publications, Limited, National Gallery Company and The Frick Collection, New York');
   }
 
   // C-079 to C-099: "Re-check museum shop" — her design, 25 Sep. It replaced
