@@ -79,6 +79,10 @@ skips only the pages she turned down, never the site. **No shop** → lookups go
 Capodimonte. Venues found by the old finder and never confirmed are looked
 for again on their next link. Evidence: `docs/link_pages/shop_search/`.
 
+**Shelf AND whole-shop search, as the 28 (her rule, 6 Oct)** — DIA files a show's book in the
+show's own section. A search is kept only if it finds a book the finder saw
+(`proveShopSearch`; AL-008k, AL-014); older venues work it out at first lookup.
+
 ## Tested 3 Oct
 
 10 pages, 6 venues: all full text; dates rule right 10/10. No JSON-LD comes

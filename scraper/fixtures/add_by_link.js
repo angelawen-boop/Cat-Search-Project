@@ -107,6 +107,17 @@ const SHOPS = {
   'https://diashop.org/dia-museum-book-shop/': '# Books & Stationery\n[Notecards & Journals](https://diashop.org/notecards-journals/) [Art Supplies](https://diashop.org/art-supplies/) [Cookbooks](https://diashop.org/cookbooks-1/) [DIA Publications](https://diashop.org/dia-publications/) [Detroit & Michigan](https://diashop.org/detroit-michigan/) [Artist Monographs & Subjects](https://diashop.org/artist-monographs-subjects/) [Gift Books](https://diashop.org/book-gifts/)\n#### [Gold Fountain Pen - Wave](https://diashop.org/gold-fountain-pen-wave/) $26.95\n#### [Fineliners Set of 5](https://diashop.org/fineliners/) $21.95\n#### [Dutch Art in a Global Age](https://diashop.org/dutch-art-in-a-global-age/) $60.00',
 };
 
+// DIA's own search (BigCommerce) answers only at search.php, with the product
+// the words name — made to the shape of DIA's own link to one
+// (?searchuuid=…&search_query=…, 4 Oct). Every other address answers empty.
+function DIA_SEARCH(u) {
+  const m = u.match(/^https:\/\/diashop\.org\/search\.php\?search_query=(.+)$/);
+  if (!m) return '';
+  const words = decodeURIComponent(m[1]);
+  const hit = Object.values(SHOPS).join('\n').match(new RegExp('\\[' + words.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\]\\((https://diashop\\.org/[^)]+)\\)'));
+  return hit ? '# Search Results\n#### [' + words + '](' + hit[1] + '?searchuuid=1)$36.00' : '# Search Results\nNo products found';
+}
+
 // ── the runtime: a store, a scripted connector and a scripted Claude ───────
 const calls = [];
 const store = new Map();
@@ -131,6 +142,8 @@ function runtime() {
           if (hit) return { payload: { results: hit[1].results } };
           return { payload: { results: [{ url: 'https://www.royalacademy.org.uk/visit', title: 'Visit the RA' }] } };
         }
+        // Several addresses in one call (the search proof): each answered alone.
+        if (args.urls.length > 1) return { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', full_content: DIA_SEARCH(u) || SHOPS[u] || '' })), errors: [] } };
         const u = args.urls[0];
         if (u === REFUSED) return { payload: { results: [], errors: [{ url: u, error_type: 'http_error', http_status_code: 403 }] } };
         if (u === EMPTY) return { payload: { results: [{ url: u, title: 'Empty', full_content: 'Loading…' }], errors: [] } };
@@ -308,6 +321,14 @@ function runtime() {
     const r = await discoverShop('https://diashop.org/', 'dia.org', 'DIA only mixed', []);
     ok(r.shopCatalogues === 'https://diashop.org/dia-publications/' && r.shelfKind === 'publications' && fetched('https://diashop.org/dia-museum-book-shop/'),
       'AL-008j:  a search that finds only "Books & Stationery" (pens, journals, books): never taken — opened, and its books-only "DIA Publications" taken', JSON.stringify(r));
+    // Her finding, 6 Oct: DIA files a show's catalogue in the show's own
+    // section, not on its shelf. Its whole-shop search is proved on a book
+    // the shelf showed — BigCommerce's address, which nothing could name before.
+    ok(r.shopSearch === 'https://diashop.org/search.php?search_query=' && r.finder === 3,
+      'AL-008k:  DIA: its whole-shop search worked out, proved on a product seen on its own shop', JSON.stringify(r));
+    const probe = calls.find(c => c.kind === 'mcp' && c.tool === 'web_fetch' && c.args.urls.length > 1);
+    ok(probe && probe.args.urls.length === 8 && probe.args.urls.every(u => u.startsWith('https://diashop.org/')),
+      'AL-008k2:  the proof is ONE call: four shop softwares × two books seen, all on DIA\'s own shop', probe && JSON.stringify(probe.args.urls));
   }
 
   // ── AL-009: the shop screen, between the review and the ledger ───────────
@@ -423,6 +444,45 @@ function runtime() {
     await click(buttons(/Add new entry$/)[0]);
     await click(buttons(/^Go ahead and update the ledger$/)[0]);
     ok(!!((store.get('sweeps/venues') || {}).venues || {}).met, 'AL-013b:  the import finished: the sweep log stored', JSON.stringify(store.get('sweeps/venues')));
+  }
+  // ── AL-014: a venue met before searches were proved gets one ────────────
+  // Her store as it stood 6 Oct: Detroit confirmed on 4 Oct with its shelf and
+  // NO search, so "Georgia O'Keeffe: Architecture" — filed in the show's own
+  // section, not on the shelf — was missed. Its first lookup works the search
+  // out from the shelf, stores it, and searches the whole shop.
+  {
+    await act(async () => { root.unmount(); });
+    store.set('venues/occasional', { venues: { 'occ-dia-org': { id: 'occ-dia-org', name: 'Detroit Institute of Arts Museum', short: 'Detroit',
+      host: 'www.dia.org', english: true, shop: 'found', confirmed: true, finder: 2, shelfKind: 'publications',
+      shopHome: 'https://diashop.org/', shopCatalogues: 'https://diashop.org/dia-publications/', shopSearch: null,
+      turnedDown: [], addedAt: '2026-10-04T00:00:00.000Z' } } });
+    const okeeffe = { ...ledger.rows[0], id: 'occ-dia-org-okeeffe', museumId: 'occ-dia-org', title: 'Georgia O’Keeffe: Architecture',
+      startDate: '2026-09-11', endDate: '2027-01-03', exUrl: urlOf('dia_okeeffe'), acquiring: 'yes', looked: true, hasCatalogue: 'no' };
+    const root2 = createRoot(win.document.getElementById('root'));
+    await act(async () => { root2.render(React.createElement(App)); });
+    await settle();
+    const input2 = win.document.querySelector('input[type=file][accept=".json"]');
+    Object.defineProperty(input2, 'files', { value: [new win.File([JSON.stringify({ ...ledger, rows: [okeeffe] })], 'ledger.json', { type: 'application/json' })], configurable: true });
+    await act(async () => { input2.dispatchEvent(new win.Event('change', { bubbles: true })); });
+    await settle();
+    calls.length = 0;
+    const drawer = buttons(/Catalogue$/)[0];
+    if (drawer) await click(drawer);
+    const again = buttons(/^Search again$/)[0];
+    ok(!!again, 'AL-014: the O\'Keeffe card, looked up before, offers Search again');
+    if (again) { await click(again); await settle(20); }
+    const dia = ((store.get('venues/occasional') || {}).venues || {})['occ-dia-org'] || {};
+    ok(dia.shopSearch === 'https://diashop.org/search.php?search_query=' && dia.finder === 3 && dia.short === 'Detroit' && dia.confirmed === true,
+      'AL-014a:  its search worked out from its own shelf and stored; her name and her Confirm kept', JSON.stringify(dia));
+    const shopCall = calls.find(c => c.kind === 'mcp' && c.tool === 'web_fetch' && c.args.urls.includes('https://diashop.org/dia-publications/?page=2'));
+    ok(shopCall && shopCall.args.urls.includes("https://diashop.org/search.php?search_query=Georgia%20O'Keeffe%3A%20Architecture"),
+      'AL-014b:  the lookup reads the shelf AND searches the whole shop, the curly apostrophe straightened', shopCall && JSON.stringify(shopCall.args.urls));
+    calls.length = 0;
+    if (!buttons(/^Search again$/)[0] && buttons(/Catalogue$/)[0]) await click(buttons(/Catalogue$/)[0]);
+    ok(!!buttons(/^Search again$/)[0], 'AL-014c0:  Search again still offered');
+    if (buttons(/^Search again$/)[0]) { await click(buttons(/^Search again$/)[0]); await settle(20); }
+    ok(!calls.some(c => c.kind === 'mcp' && c.tool === 'web_fetch' && c.args.urls.length === 8),
+      'AL-014c:  worked out once: the next lookup does not prove it again');
   }
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) fail('React complained: ' + shouted.find(s => /Warning/.test(s)));
   console.log(failures ? '\n' + failures + ' FAILED' : '\nadd_by_link: all passed');
