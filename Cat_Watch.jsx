@@ -1034,7 +1034,7 @@ function stripMd(line){
     .replace(/<https?:[^>]*>/g,"")
     .replace(/\*\*|__/g,"")
     .replace(/(^|[^\w])_([^_]+)_(?=[^\w]|$)/g,"$1$2") // _italic_
-    .replace(/\\([-*_#.()\[\]])/g,"$1")              // markdown escapes
+    .replace(/\\([-*_#.()\[\]|])/g,"$1")              // markdown escapes
     .replace(/^\s*#{1,6}\s+/,"")
     .replace(/^\s*[*+]\s+/,"")
     .replace(/\s+/g," ")
@@ -1087,7 +1087,10 @@ function readShowPage(res,url){
     if(r.start||r.end){d=k;range=r;break;}
   }
   if(d<0)return{ok:false,why:"No dates found under the show’s title."};
-  const base=show||heading;
+  // A show whose own name holds a bar — "Art in Dialogue: Duccio | Caro" (her
+  // NG link, 6 Oct): the page title cuts it at the bar, so the heading, which
+  // starts with the same words and goes on, is the name.
+  const base=show&&heading.length>show.length&&heading.length<=200&&foldText(heading).startsWith(foldText(show))?heading:(show||heading);
   const between=lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l)));
   const dateLine=stripMd(lines[d]);
   let raw="";
@@ -2286,6 +2289,7 @@ const SELF_PUBLISHERS = new Set([
   "art institute of chicago",             // artic — her addition, 2 Oct
   "cincinnati art museum",                // cincinnati — her addition, 4 Oct
   "frick collection new york",            // frick — her addition, 6 Oct (Ruffles & Ribbons)
+  "national gallery publications limited", // ng — her addition, 6 Oct (Venice: Canaletto and His Rivals)
 ]);
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){
@@ -2561,7 +2565,8 @@ function publisherNote(result,hasUrl){
   if(result==="site")     return "The publisher\u2019s own site doesn\u2019t show this book — the link opens their home page.";
   if(result==="nosite")   return "Couldn\u2019t work out the publisher\u2019s own website, so there\u2019s no link to it.";
   if(result==="unnamed")  return "No publisher was named for this book, so none was looked for.";
-  if(result==="selfpublished")return "Catalogue is self-published by the venue.";
+  // Self-published says nothing — her ruling, 6 Oct: no button is answer enough.
+  if(result==="selfpublished")return "";
   if(result==="product")  return "";
   return "";
 }

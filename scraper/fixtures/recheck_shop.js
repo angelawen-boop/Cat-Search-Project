@@ -773,14 +773,14 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
 
     r = await run(milletRow, 'Test Millet: Life on the Land', { isbn13: '9781857097382', publisher: 'National Gallery London', publisherUrl: YALE }, ANY);
     ok(!r.hrefs.includes(YALE), 'N-004: a distributor’s page is never filed as a self-published book’s publisher', JSON.stringify(r.hrefs));
-    ok(/self-published by the venue/.test(r.t), 'N-005:   the card says self-published', r.t.slice(0, 400));
+    ok(!/self-published/.test(r.t) && !/publisher/i.test(r.t.replace(/National Gallery London/g, '')), 'N-005:   the card says nothing about self-publishing (her ruling, 6 Oct)', r.t.slice(0, 400));
 
     r = await run(distRow, 'Test Distributed Book', { isbn13: '9789493416543', publisher: 'Hannibal Books', publisherUrl: YALE }, ANY);
     ok(!r.hrefs.includes(YALE), 'N-006: a distributor’s page is never filed as a publisher’s', JSON.stringify(r.hrefs));
     ok(calls.some(c => c.tool === 'web_search' && c.args.search_queries[0] === 'Hannibal Books'), 'N-006a:   the publisher step goes to the publisher instead');
 
     r = await run(milletHad, 'Test Millet Had : Life on the Land', { isbn13: '9781857097382', publisher: 'National Gallery London', publisherUrl: YALE }, ANY);
-    ok(!r.hrefs.includes(YALE) && /self-published by the venue/.test(r.t), 'N-007: Search again clears the distributor link already on her card', r.t.slice(0, 400));
+    ok(!r.hrefs.includes(YALE) && !/self-published/.test(r.t), 'N-007: Search again clears the distributor link already on her card', r.t.slice(0, 400));
   }
 
   // ── VN-001..VN-006: her NG van Hemessen, 2 Oct ────────────────────────

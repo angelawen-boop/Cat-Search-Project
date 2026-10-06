@@ -85,7 +85,7 @@ handed to it, so it can never report a page that was not found.
   | `site` | The publisher's own site doesn't show this book — the link opens their home page. |
   | `nosite` | Couldn't work out the publisher's own website, so there's no link to it. |
   | `unnamed` | No publisher was named for this book, so none was looked for. |
-  | `selfpublished` | Catalogue is self-published by the venue. |
+  | `selfpublished` | nothing — no publisher button is answer enough (her ruling, 6 Oct) |
   | none recorded | nothing — the step did not finish (the banner says why), or the row is older than 22 Sep |
 
 - **A museum's own imprint is skipped** — `SELF_PUBLISHERS`: `national gallery
