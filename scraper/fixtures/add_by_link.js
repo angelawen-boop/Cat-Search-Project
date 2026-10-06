@@ -203,6 +203,14 @@ function runtime() {
   // The sweep-file button: "Import Refresh" on main, "Import" on the cloud
   // branch (where main's ledger "Import" is "Load").
   const importBtn = () => buttons(/^Import Refresh$/)[0] || buttons(/^Import$/)[0];
+  // ── AL-015: a page title with the site's sections between show and site ─
+  // Her NG link, 6 Oct: "… | Past exhibitions" came through on the title.
+  {
+    const split = new Function('React', 'window', 'document', 'localStorage', code + '\n;return splitPageTitle;')(React, win, win.document, win.localStorage);
+    const r = split('Venice: Canaletto and His Rivals | Past exhibitions | National Gallery', 'www.nationalgallery.org.uk');
+    ok(r.show === 'Venice: Canaletto and His Rivals' && r.site === 'National Gallery',
+      'AL-015: several bars — the show is the first part, the site the last; the section between dropped', JSON.stringify(r));
+  }
   // ── AL-001: Import opens ONE pop-up; nothing is added to the page ───────
   // Her ruling, 4 Oct: no new buttons and no text in the page's header.
   const dialog = () => win.document.querySelector('[role=dialog]');

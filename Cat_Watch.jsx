@@ -1048,8 +1048,11 @@ function stripMd(line){
 function splitPageTitle(t,host){
   const s=stripMd(t);
   if(!s)return{show:"",site:""};
-  const bar=s.lastIndexOf(" | ");
-  if(bar>0)return{show:s.slice(0,bar).trim(),site:s.slice(bar+3).trim()};
+  // Several bars carry the site's own sections between show and site: "Venice:
+  // Canaletto and His Rivals | Past exhibitions | National Gallery" (her
+  // link, 6 Oct). The show is named first, the site last.
+  const parts=s.split(" | ").map(x=>x.trim()).filter(Boolean);
+  if(parts.length>1)return{show:parts[0],site:parts[parts.length-1]};
   const m=s.match(/^(.*\S)\s+[-–—]\s+([^-–—]+)$/);
   if(m){
     const h=foldText(host);
