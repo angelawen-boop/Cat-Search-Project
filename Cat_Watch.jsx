@@ -2240,6 +2240,7 @@ const SELF_PUBLISHERS = new Set([
   "museum of modern art new york",        // moma — the same, as the lookup also read it (Brancusi)
   "art institute of chicago",             // artic — her addition, 2 Oct
   "cincinnati art museum",                // cincinnati — her addition, 4 Oct
+  "frick collection new york",            // frick — her addition, 6 Oct (Ruffles & Ribbons)
 ]);
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){
