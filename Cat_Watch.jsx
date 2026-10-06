@@ -2200,7 +2200,7 @@ function needsPageRead(hit){
 function applyIsbnFill(row,o,dom){
   const isbn=toIsbn13(o&&o.isbn13);
   const pub=(o&&o.publisher)?String(o.publisher).trim():"";
-  const purl=publisherLinkOf(o&&o.publisherUrl,row.publisher||pub,dom);
+  const purl=publisherLinkOf(o&&o.publisherUrl,row.publisher||pub,dom,row.museumId);
   if(!isbn&&!pub&&!purl)return row;
   return{...row,
     isbn13:row.isbn13||isbn||null,
@@ -2297,10 +2297,26 @@ function normPublisher(name){
   return String(name||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .replace(/[^a-z0-9]+/g," ").trim().replace(/^the\s+/,"");
 }
-function isSelfPublisher(name){
+// A PUBLISHER CARRYING THE VENUE'S OWN NAME IS THE VENUE — her ruling, 6 Oct,
+// after three National Gallery imprints in one day ("National Gallery
+// Company", "… Publications, Limited", "… Global"). The venue's FULL name,
+// whole words, "The" dropped; never its short chip name ("Met", "Brera").
+// Her own ruling of 22 Sep still holds: a book house or ANOTHER museum
+// carries no part of this venue's name and is still looked for.
+// Known misfire, accepted: a namesake museum ("National Gallery of Art",
+// Washington, at the London National Gallery) — she names it in
+// NOT_SELF_PUBLISHERS. If this misfires too often she goes back to the list
+// alone: delete the venue test below.
+const NOT_SELF_PUBLISHERS = new Set([
+  // her entries, normalised as normPublisher writes them
+]);
+function isSelfPublisher(name,museumId){
   name=publisherToFind(name);
   const n=normPublisher(name);
-  return !!n&&SELF_PUBLISHERS.has(n);
+  if(!n||NOT_SELF_PUBLISHERS.has(n))return false;
+  if(SELF_PUBLISHERS.has(n))return true;
+  const v=normPublisher(MU[museumId]&&MU[museumId].name);
+  return v.length>=6&&(" "+n+" ").includes(" "+v+" ");
 }
 
 // THE PUBLISHER\u2019S OWN PAGE \u2014 restored 21 Sep 2026, her finding.
@@ -2349,10 +2365,10 @@ function publisherToFind(name){
   return y||s;
 }
 
-function publisherLinkOf(u,publisher,dom){
+function publisherLinkOf(u,publisher,dom,museumId){
   publisher=publisherToFind(publisher);
   const t=cleanPublisherUrl(u,dom);
-  if(!t||!publisher||isSelfPublisher(publisher))return null;
+  if(!t||!publisher||isSelfPublisher(publisher,museumId))return null;
   return publisherDomainFrom([{url:t}],publisher)?t:null;
 }
 
@@ -2731,7 +2747,7 @@ function keepWhatWeKnew(prev,next){
   out.publisher=prev.publisher||next.publisher||null;
   // A link with no recorded kind came from a read, unchecked — it stays only
   // if it is on the publisher's own site (publisherLinkOf, her ruling 1 Oct).
-  const keepLink=prev.publisherUrl&&(prev.publisherResult||publisherLinkOf(prev.publisherUrl,out.publisher,null));
+  const keepLink=prev.publisherUrl&&(prev.publisherResult||publisherLinkOf(prev.publisherUrl,out.publisher,null,prev.museumId));
   if(keepLink){out.publisherUrl=prev.publisherUrl;out.publisherResult=prev.publisherResult??null;}
   if(prev.shopState){out.shopState=prev.shopState;out.shopUrl=prev.shopUrl??null;out.shopChange=prev.shopChange??null;}
   return out;
@@ -3770,7 +3786,7 @@ export default function App(){
         row:keepWhatWeKnew(row,{...row,looked:true,hasCatalogue:"yes",
         shopState:inShop?"shop":blocked?"blocked":"web",shopChange:null,
         catalogueTitle:o.catalogueTitle||null,isbn13:toIsbn13(o.isbn13),
-        publisher:o.publisher||null,publisherUrl:publisherLinkOf(o.publisherUrl,row.publisher||o.publisher,dom),
+        publisher:o.publisher||null,publisherUrl:publisherLinkOf(o.publisherUrl,row.publisher||o.publisher,dom,row.museumId),
         publisherResult:null,
         shopUrl:inShop?link:null})};
     }
@@ -4041,7 +4057,7 @@ export default function App(){
     if(!r||!hit.ok||r.hasCatalogue!=="yes")return hit;
     // A NAMED MUSEUM PUBLISHING ARM — no searches at all, and no link: only
     // the publisher is the publisher (her ruling, 1 Oct). See SELF_PUBLISHERS.
-    if(isSelfPublisher(r.publisher)){
+    if(isSelfPublisher(r.publisher,r.museumId)){
       return{...hit,detail:hit.detail+"\n"+r.publisher+" is a museum’s own imprint — no publisher page to look for.",
         row:{...r,publisherUrl:null,publisherResult:"selfpublished"}};
     }

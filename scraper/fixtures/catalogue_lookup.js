@@ -505,6 +505,15 @@ function runtime(answer, log) {
        'C-078: and the card says nothing about it — her ruling, 6 Oct: no publisher button is answer enough');
     eq(api.isSelfPublisher('National Gallery Publications, Limited') && api.isSelfPublisher('National Gallery Company') && api.isSelfPublisher('The Frick Collection, New York'), true,
        'C-078a: her additions, 6 Oct — National Gallery Publications, Limited, National Gallery Company and The Frick Collection, New York');
+    // Her rule, 6 Oct: a publisher carrying the VENUE's full name is the venue.
+    eq(api.isSelfPublisher('National Gallery Company Ltd', 'ng') && api.isSelfPublisher('The Museum of Modern Art, New York', 'moma'), true,
+       'C-078b: a publisher carrying the venue\u2019s full name is the venue, no list entry needed');
+    eq(api.isSelfPublisher('Thames & Hudson', 'ng') || api.isSelfPublisher('Mus\u00e9e du Louvre \u00c9ditions', 'met') || api.isSelfPublisher('Tate Publishing', 'ng'), false,
+       'C-078c: her 22 Sep cases still looked for — a book house, another museum, another museum\u2019s imprint');
+    eq(api.isSelfPublisher('National Gallery Company Ltd in association with Yale University Press', 'ng'), false,
+       'C-078d: "X in association with Y" is Y, still looked for');
+    eq(api.isSelfPublisher('Brera Editions', 'brera') || api.isSelfPublisher('Nationaal Gallery', 'ng'), false,
+       'C-078e: whole words of the full name only — a short or partial name is not the venue');
   }
 
   // C-079 to C-099: "Re-check museum shop" — her design, 25 Sep. It replaced

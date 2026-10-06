@@ -465,9 +465,10 @@ and do not flip to searching wide first.**
 - **"X in association with Y" — Y is the publisher** (her ruling, 2 Oct):
   the publisher step and the self-publisher check use Y (`publisherToFind`);
   the card prints the line as given.
-- **A museum's own imprint is skipped** — `SELF_PUBLISHERS`, keyed on the
-  **publisher**, never the venue, **added to only by her**; one imprint may need
-  two names (MAD and MoMA have two).
+- **A museum's own imprint is skipped**, no line on the card (her ruling, 6 Oct):
+  a publisher carrying the **venue's full name** as whole words is the venue
+  (`isSelfPublisher`), plus her list `SELF_PUBLISHERS`; her `NOT_SELF_PUBLISHERS`
+  overrides both. On trial: too many misfires → back to her list alone.
 - **Everything fills a blank and nothing else.** A known value is never
   overwritten.
 - **A 10-digit ISBN is taken and converted**, check digit verified. `toIsbn13`
