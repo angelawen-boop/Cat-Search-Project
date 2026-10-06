@@ -551,6 +551,9 @@ Each fixture file opens with what it proves; case IDs (AL-, C-, R-, KP-…) are
 found by grep. Per-venue `*_pages.js` run a recipe on saved pages, no network,
 against her counts, dates, titles and descriptions.
 
+**RB-016** (robots wait) once read 1440ms under the full parallel run and passed
+alone (6 Oct) — if it recurs, it is real.
+
 The harness lifts the intake out of the JSX by **anchors on prose, never line
 numbers**. An early `return` in a fixture file exits the whole suite silently —
 **await, never return.**
@@ -913,6 +916,15 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
 - **The finder's search sends two queries in one call** — hers and "<venue>
   shop books publications" (Detroit's "DIA Publications" came only with both;
   her keyed connector, 4 Oct).
+- **A link venue is looked up exactly as the 28 are — shelf AND whole-shop
+  search** (her rule, 6 Oct). DIA files a show's book in the show's own shop
+  section, not its shelf. The finder keeps a search only if it finds a book it
+  saw (`proveShopSearch`); venues met before (finder 2) work it out at their
+  first lookup. **Open:** O'Keeffe found at Detroit? Did Mauritshuis and the RA
+  get a search? Her next lookups there say.
+- **Titles from a page title** (6 Oct): the show is the first part of a barred
+  title, the site the last; a bar inside the show's own name ("Duccio | Caro")
+  is kept, read off the page's heading. AL-015.
 
 ### 3. Fixes not yet checked in the cases they were written for
 

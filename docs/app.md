@@ -88,13 +88,13 @@ handed to it, so it can never report a page that was not found.
   | `selfpublished` | nothing — no publisher button is answer enough (her ruling, 6 Oct) |
   | none recorded | nothing — the step did not finish (the banner says why), or the row is older than 22 Sep |
 
-- **A museum's own imprint is skipped** — `SELF_PUBLISHERS`: `national gallery
-  global`, `metropolitan museum of art`. **Keyed on the publisher, never the
-  venue** — a blockbuster handed to an art-book house, or a joint show printed
-  by the other museum, still has a real publisher page. Grows only when she adds
-  one. Tate and the Rijksmuseum are not on it (*Metamorphoses*: Rijksmuseum
-  show, Hannibal book). C-070 to C-078a. Known limit: the sentence says "the
-  venue", slightly wrong for a Met-printed book of a Louvre show.
+- **A museum's own imprint is skipped** (`isSelfPublisher`): a publisher
+  carrying THIS venue's full name, whole words (her rule, 6 Oct, on trial —
+  misfires → back to the list alone); her list `SELF_PUBLISHERS`; her
+  `NOT_SELF_PUBLISHERS` overrides both. A blockbuster handed to an art-book
+  house, or a joint show printed by the other museum, carries no part of this
+  venue's name and is still looked for (her 22 Sep cases). Known misfire: a
+  namesake ("National Gallery of Art" at the London NG). C-070 to C-078e.
 - **The publisher link is checked** (`cleanPublisherUrl`): a real address, not
   the venue's own shop. C-032 to C-038.
 - **A step that died is not an answer.** Each later step carries why it came
