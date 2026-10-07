@@ -107,6 +107,8 @@ const orsayA = fresh('orsay-testcassatt', 'orsay', 'Test Orsay Cassatt Show');
 const orsayB = fresh('orsay-testmisread', 'orsay', 'Test Orsay Misread Show');
 // HER MOMA BRANCUSI, 1 Oct: the shelf answers with no books on it.
 const momaRow = fresh('moma-testbrancusi', 'moma', 'Test MoMA Brancusi Show');
+// HER WATTEAU, 7 Oct: a shelf without the book gives short excerpts, not an empty page.
+const jqWatteau = fresh('jacquemart-testwatteau', 'jacquemart', 'Test Jacquemart Watteau Show');
 // HER ASHMOLEAN IN BLOOM, 30 Sep: the ISBN was in the web results, unread.
 const bloomRow = fresh('ng-testinbloom', 'ng', 'Test In Bloom Show');
 const bloomOpen = fresh('ng-testinbloomopen', 'ng', 'Test In Bloom Opened');
@@ -143,9 +145,13 @@ const louKnown = { ...fresh('louvre-testknown', 'louvre', 'Test Louvre Known Sho
 // Her Botticelli, 7 Oct: a check that stopped is run again by Search again.
 const louLookalike = fresh('louvre-testlookalike', 'louvre', 'Test Louvre Lookalike Show');
 const louIsbnPub = fresh('louvre-testisbnpub', 'louvre', 'Test Louvre Isbn Publisher Show');
+// Her Canaletto, 7 Oct: the publisher step found the book's page; the English
+// check said it hadn't.
+const louPubKnown = fresh('louvre-testpubknown', 'louvre', 'Test Louvre Publisher Known Show');
+const louEnClaim = fresh('louvre-testenclaim', 'louvre', 'Test Louvre English Claim Show');
 const louStale = { ...fresh('louvre-teststale', 'louvre', 'Test Louvre Stale Check Show'), looked: true, hasCatalogue: 'yes',
   catalogueTitle: 'Test Stale Catalogue', isbn13: '9782359064612', shopState: 'shop', englishCheck: 'stopped' };
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, louPub, louStop, louStale, louLookalike, louIsbnPub, morganAssoc], ignored: [], lastRun: null };
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, louPub, louStop, louStale, louLookalike, louIsbnPub, louPubKnown, louEnClaim, jqWatteau, morganAssoc], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -704,6 +710,22 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(!calls.some(x => x.kind === 'sample' && /OWN shop pages, opened directly/.test(x.prompt)), 'B-003:   and Claude is not asked to read the empty shelf');
   }
 
+  // ── B-004..B-006: short excerpts are not an empty shelf (her Watteau, 7 Oct) ─
+  {
+    calls.length = 0;
+    script.mcp = (tool, args) => tool === 'web_search'
+      ? { payload: { results: [] } }
+      : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Exhibition catalogs',
+          excerpts: ['Exhibition catalogs'], ...(args.full_content ? { full_content: shelf('# Exhibition catalogs') } : {}) })) } };
+    script.sample = p => /OWN shop pages, opened directly/.test(p) ? { found: false } : { found: false };
+    await openTray(jqWatteau.title);
+    await click(button(card(jqWatteau.title), /Find catalogue/));
+    const t = card(jqWatteau.title) ? card(jqWatteau.title).textContent : '';
+    ok(!t.includes('The museum shop is blocked'), 'B-004: a shelf whose excerpts are short but whose whole page lists priced books is not blocked', t.slice(0, 300));
+    ok(calls.some(x => x.kind === 'mcp' && x.args.full_content === true && x.args.urls.some(u => /116-exhibition-catalogs/.test(u))), 'B-005:   the shelf was opened once more, whole');
+    ok(calls.some(x => x.kind === 'sample' && /OWN shop pages, opened directly/.test(x.prompt)), 'B-006:   and Claude read it');
+  }
+
   // ── W-001..W-003: the ISBN in the web search results, read in code ────
   {
     calls.length = 0;
@@ -832,7 +854,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const PAGE = 'https://boutique.louvre.fr/en/product/61740-test-experience-de-la-nature-fra.html';
     const OWN = 'L\u2019Exp\u00e9rience de la nature. Les arts \u00e0 Prague \u00e0 la cour de Rodolphe II';
     const PUB_PAGE = 'https://www.lienart.fr/livre/test-experience-de-la-nature';
-    const run = async (row, { lang = 'French', title = OWN, en = null, enPrinted = true, shopTitle = 'Experience of Nature. Art in Prague at the Court of Rudolf II', pub = null, pubPage = false, enFail = false, enVenue = true, enPub = null, isbnPub = null } = {}) => {
+    const run = async (row, { lang = 'French', title = OWN, en = null, enPrinted = true, shopTitle = 'Experience of Nature. Art in Prague at the Court of Rudolf II', pub = null, pubPage = false, enFail = false, enVenue = true, enPub = null, isbnPub = null, pubFound = false, enIsbnPub = null } = {}) => {
       calls.length = 0;
       script.mcp = (tool, args) => {
         if (tool === 'web_search') {
@@ -841,18 +863,23 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
             { url: 'https://books.test/a/' + FR, title: OWN, excerpts: ['ISBN 13: ' + FR + '\nPublisher: ' + isbnPub + ', 2025\nLangue : fran\u00e7ais'] },
             { url: 'https://books.test/b', title: OWN, excerpts: ['EAN ' + FR + '\n\u00c9diteur : ' + isbnPub + ', 2025'] }] } };
           if (q.startsWith(FR)) return { payload: { results: [{ url: 'https://www.louvre.fr/editions/catalogue/test', title: OWN, excerpts: [OWN + ' \u2014 Lienart, 2025. EAN ' + FR + '. Langue : fran\u00e7ais.'] }] } };
+          if (pubFound && q.startsWith('Lienart')) return { payload: { results: [{ url: 'https://www.lienart.fr/', title: 'Lienart \u00e9ditions', excerpts: ['Lienart \u00e9ditions'] }] } };
+          if (pubFound && q.startsWith('site:www.lienart.fr')) return { payload: { results: [{ url: PUB_PAGE, title: OWN, excerpts: [OWN] }] } };
+          if (/English edition/.test(q) && en && enIsbnPub) return { payload: { results: ['a', 'b'].map(k => ({ url: 'https://books.test/en-' + k, title: en, excerpts: [en + '. ISBN ' + EN + '\nPublisher: ' + enIsbnPub + ', 2025'] })) } };
           if (/English edition/.test(q) && enFail) throw Object.assign(new Error('upstream'), { code: 'upstream_error' });
           if (/English edition/.test(q) && en) return { payload: { results: [{ url: 'https://books.test/en', title: en, excerpts: [en + ' \u2014 English edition' + (enVenue ? ' of the catalogue for the exhibition at the Louvre' : '') + '. ' + (enPrinted ? 'ISBN ' + EN : 'Paperback.')] }] } };
           if (/English edition/.test(q) && pubPage) return { payload: { results: [{ url: PUB_PAGE, title: OWN + ' | Lienart \u00e9ditions', excerpts: [OWN + '. Lienart, 2025.'] }] } };
           return { payload: { results: [] } };
         }
-        if (args.urls.includes(PUB_PAGE)) return { payload: { errors: [], results: [{ url: PUB_PAGE, title: OWN, excerpts: [], full_content: '# ' + OWN + '\nLienart \u00e9ditions, 2025. 320 pages. Fran\u00e7ais. EAN ' + FR + '. Co-\u00e9dition Mus\u00e9e du Louvre.' }] } };
+        if (args.urls.includes(PUB_PAGE)) return { payload: { errors: [], results: [{ url: PUB_PAGE, title: OWN, excerpts: [], full_content: '# ' + OWN + '\nLienart \u00e9ditions, 2025. 320 pages. Fran\u00e7ais. EAN ' + FR + '. Co-\u00e9dition Mus\u00e9e du Louvre.\n' + 'Catalogue de l\u2019exposition, avec les essais des commissaires sur la peinture et les arts d\u00e9coratifs \u00e0 la cour de Prague. '.repeat(4) }] } };
         if (args.urls.includes(PAGE)) return { payload: { errors: [], results: [{ url: PAGE, title: 'Exhibition catalogue Experience of Nature', excerpts: [], full_content: '# Exhibition catalogue Experience of Nature\nSold by GrandPalaisRmn\nEAN ' + FR + '\n' }] } };
         return { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Exhibition catalogue Experience of Nature \u2014 ' + PAGE + ' \u20ac42')] })) } };
       };
       script.sample = p => /OWN shop pages, opened directly/.test(p)
         ? { found: true, thisVenue: true, catalogueTitle: shopTitle, isbn13: null, publisher: null, publisherUrl: null, shopUrl: PAGE }
         : /"language": string\|null, "title"/.test(p) ? { language: lang, title }
+        : /"candidates": \[string\]/.test(p) ? { candidates: [PUB_PAGE] }
+        : /"kind": "book"\|"listing"\|"other"/.test(p) ? { kind: 'book', bookUrl: null }
         : /ENGLISH-language edition/.test(p) ? (en ? { found: true, title: en, isbn13: EN, language: 'English', publisher: enPub } : { found: false })
         : { isbn13: null, publisher: pub, publisherUrl: null };
       await openTray(row.title);
@@ -901,6 +928,15 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(calls.some(c => c.tool === 'web_fetch' && c.args.urls.includes(PUB_PAGE)), 'LG-013: the publisher\u2019s own page for the book, found in the search, is opened whole');
     ok(t.includes("No English edition - checked publisher's site (Lienart) and bookshops."), 'LG-013a:  and the card says so, naming the publisher', t.slice(0, 600));
     ok(searches().some(q => q.some(x => /Lienart ISBN$/.test(x))), 'LG-013b:  the show\u2019s English title is searched with the publisher, not only "English edition"', JSON.stringify(searches()));
+    // Her Canaletto, 7 Oct: the page the publisher step found is the one the
+    // English check reads — and it is opened once.
+    t = await run(louPubKnown, { pub: 'Lienart', pubFound: true });
+    ok(t.includes("No English edition - checked publisher's site (Lienart) and bookshops."), 'LG-020: the publisher\u2019s page the card links is the one the English check read', t.slice(0, 600));
+    ok(calls.filter(c => c.tool === 'web_fetch' && c.args.urls.includes(PUB_PAGE)).length === 1, 'LG-020a:  opened once, not twice');
+    // Her ruling, 7 Oct: an English edition's publisher is read off its ISBN in
+    // code. Claude naming the original's publisher does not get a look-alike in.
+    t = await run(louEnClaim, { en: 'Test Claimed Monograph', enVenue: false, enPub: 'Lienart', pub: 'Lienart', enIsbnPub: 'Reaktion Books' });
+    ok(!/Test Claimed Monograph/.test(t) && t.includes(OWN), 'LG-021: an English book whose ISBN names another publisher is refused, whatever the read said', t.slice(0, 600));
     t = await run(louStop, { enFail: true });
     ok(/English edition not checked \u2014 the search stopped part-way\. Search again to retry\./.test(t), 'LG-014: a search that died says the check was not done', t.slice(0, 600));
     t = await run(louStop, { enFail: true, shopTitle: 'Test Changed Shop Title' });

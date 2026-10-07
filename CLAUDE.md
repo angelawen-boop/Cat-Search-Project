@@ -468,7 +468,10 @@ and do not flip to searching wide first.**
   the book stays under its own title (`fillLanguage`). **The English edition is looked for where it is listed**
   (her ruling, 7 Oct): the show's English title with the publisher, and the
   publisher's own page for the book, read whole; the card says how far it was
-  checked (`englishCheck`, `englishLine`).
+  checked (`englishCheck`, `englishLine`). It reads the page the publisher step found (that step
+  runs first); the English edition's publisher is read off its ISBN in code.
+  At those venues the web search adds one query in the venue's language
+  (`localCatalogueQuery`; Hammershøi, listed only in French, 7 Oct).
 - **"X in association with Y" — Y is the publisher** (her ruling, 2 Oct):
   the publisher step and the self-publisher check use Y (`publisherToFind`);
   the card prints the line as given. **A co-edition, "X / Venue", "X and
@@ -508,7 +511,8 @@ and do not flip to searching wide first.**
   appear to exist elsewhere. Search manually to confirm."* Headline red and
   bold, the rest grey. Blocked today: KHM, MAM. **A shop whose every page comes
   back empty is blocked too** (her ruling, 1 Oct) — MoMA's shelf is drawn by
-  script and its search and `products.json` answer 403.
+  script and its search and `products.json` answer 403. Judged on the WHOLE page, opened
+  again when the excerpts are short; no price anywhere = empty (Watteau, 7 Oct).
 - **The Museum shop link searches the shop for the EXHIBITION's title** when
   no book page is on file (`buyLinks`) — resellers keep the book's title, the
   shop keeps the show's. A search or shelf page is never filed as the book's
@@ -565,17 +569,21 @@ through `sample` at `modelTier: default`. Do not re-open without a real misread.
 
 ### Tests
 
-`npm test` runs everything, and **the exit code says whether all of it passed**.
+**Test the half you changed — her ruling, 7 Oct.** A plumber does not test the
+wiring.
 
-**Run only the tests for the code you changed** (her ruling, 7 Oct). App or
-catalogue-search work → the app's suites (`add_by_link.js`,
-`catalogue_lookup.js`, `recheck_shop.js`, `page_renders.js`, and the cloud
-branch's three); scraper suites only when scraper code or the shared date
-reader changes. Never chase an unrelated suite's failure mid-task — note it
-for her in one line and move on.
+- App work (`Cat_Watch.jsx`, `build/`) → `npm run test:app`.
+- Scraper work (`scraper/`) → `npm run test:scraper`.
+- `npm test` (both) only when a change touches both halves.
 
-The suite list is `scraper/run_tests.js`, never retyped here; a suite only a
-branch has goes in that branch's `scraper/fixtures/branch_tests.txt`
+Where the halves meet — importing a scraper CSV, the shared date reader and
+summary rules — those tests run in both halves already. A test failing in the
+other half is reported in one line and left alone. **The exit code says
+whether everything run passed.**
+
+The suite list, and which half each belongs to, is `scraper/run_tests.js`,
+never retyped here; a suite only a branch has goes in that branch's
+`scraper/fixtures/branch_tests.txt` and runs with the app half
 (`claude/ledger-cloud`: `cloud_ledger.js`, `cloud_app.js`, `cloud_two_copies.js`).
 Each fixture file opens with what it proves; case IDs (AL-, C-, R-, KP-…) are
 found by grep. Per-venue `*_pages.js` run a recipe on saved pages, no network,
@@ -584,10 +592,6 @@ against her counts, dates, titles and descriptions.
 **OPEN — RB-016 and RB-020** (robots wait, scraper) fail under load: run ten at
 once on 7 Oct, RB-016 read 1148–1293ms against 1450 in 5 of 10, RB-020 over
 1400ms in 2. Not investigated. A scraper session's job — not an app one's.
-
-**A test that fails only now and then is not a flake** — run it 8–10 at once to
-reproduce it under load. The Ashmolean's AS-021b–025b did that and caught a
-real leak in `pageOnly` (7 Oct; fixed, the comment above `fetchIndividualPages`).
 
 The harness lifts the intake out of the JSX by **anchors on prose, never line
 numbers**. An early `return` in a fixture file exits the whole suite silently —
@@ -629,7 +633,7 @@ node scraper/sweep_log.js [--json]           rebuild the app's freshness dates
 node scraper/venue_status.js                 what each venue currently yields
 node scraper/robots.js [--report]            each site's robots.txt: its wait and off-limits paths
 node scraper/reread_kept.js <run> <venue> [--write]   a recipe fix applied to the pages that run kept, no network
-npm test                                     all fixtures
+npm run test:scraper                         scraper tests (npm test: app and scraper)
 ```
 
 ### The files

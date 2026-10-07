@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, foundInShop, recheckLinkedPage, MU, titleAsPrinted, isEnglishLang, publisherToFind, publisherLinkOf, inClosingWindow, sameCatalogue, publisherOnIsbnResults };')(
+    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, foundInShop, recheckLinkedPage, MU, titleAsPrinted, isEnglishLang, publisherToFind, publisherLinkOf, inClosingWindow, sameCatalogue, publisherOnIsbnResults, localCatalogueQuery };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -286,7 +286,16 @@ function runtime(answer, log) {
       eq(api.sameCatalogue('Mercatorfonds', 'Fonds Mercator', [], 'jacquemart'), true, 'CE-002a:  the same publisher, however spelled, is');
       eq(api.sameCatalogue(null, null, [{ title: 'x', excerpts: ['English edition of the catalogue of the exhibition at the Musée Jacquemart-André. ISBN 9780000000002'] }], 'jacquemart'), true, 'CE-002b:  or a result carrying its ISBN that names the venue');
       eq(api.sameCatalogue('Reaktion Books', 'Fonds Mercator', saved.results.slice(1, 2), 'jacquemart'), true, 'CE-002c:  (a result naming the venue counts — which is why the gate reads only results carrying the English ISBN)');
+      const names = t => [{ title: 'x', excerpts: [t + '. ISBN 9780000000002'] }];
+      eq(api.sameCatalogue(null, null, names('English catalogue of the exhibition at Capodimonte, Naples'), 'capo'), true, 'CE-003: a venue named by its chip name counts — Capodimonte’s full name ("… aka …") never matched');
+      eq(api.sameCatalogue(null, null, names('Published for the exhibition at the Gallerie degli Uffizi'), 'uffizi'), true, 'CE-003a:  the Uffizi, named in Italian');
+      eq(api.sameCatalogue(null, null, names('Published for the exhibition at the Pitti Palace'), 'uffizi'), false, 'CE-003b:  a result naming another place still does not count');
     }
+    // ── CQ-001: the catalogue searched in the venue's own language (her Hammershøi, 7 Oct) ─
+    eq(api.localCatalogueQuery(api.MU.jacquemart, { title: 'Hammersh\u00f8i: the master of danish painting', startDate: '2019-03-14' }).join('|'),
+       'Hammersh\u00f8i Jacquemart-Andr\u00e9 catalogue exposition 2019', 'CQ-001: Hammersh\u00f8i \u2014 the show\u2019s name, the venue, "catalogue exposition", the year');
+    eq(api.localCatalogueQuery(api.MU.uffizi, { title: 'Test Show', startDate: '' }).join('|'), 'Test Show Uffizi catalogo mostra', 'CQ-002: Italian venue, no year known');
+    eq(api.localCatalogueQuery(api.MU.ng, { title: 'Test Show', startDate: '2025-01-01' }).length, 0, 'CQ-003: an English-speaking venue adds nothing');
     eq(api.isSelfPublisher('The Art Institute of Chicago'), true, 'C-146: the Art Institute of Chicago is a museum\u2019s own imprint \u2014 her addition, 2 Oct');
     eq(api.isSelfPublisher('Cincinnati Art Museum'), true, 'C-146b: the Cincinnati Art Museum is a museum\u2019s own imprint \u2014 her addition, 4 Oct');
   }

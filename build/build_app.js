@@ -131,7 +131,7 @@ const js = fs.readFileSync(built, 'utf8').replace(/\n*$/, '\n') + MOUNT + '\n';
 //
 // A SYNTAX CHECK IS A FLOOR, NOT A PASS. It cannot catch a palette that
 // defines itself, which is valid JavaScript that throws on first render and
-// shipped a BLACK SCREEN twice. `npm test` runs page_renders.js, which can;
+// shipped a BLACK SCREEN twice. `npm run test:app` runs page_renders.js, which can;
 // this only catches a stitch that produced something unparseable.
 try { new Function(js); } catch (e) { die('the stitched page does not parse — ' + e.message); }
 if (!/function App\(/.test(js)) die('the built page has no App component in it');
@@ -155,5 +155,5 @@ console.log('  Skipping 1-2 is refused. Re-sending the same bytes after a refusa
 console.log('  again as "resent unchanged" — read the url once more, then publish.');
 console.log('');
 console.log('  NEVER REPUBLISH WHILE SHE HAS THE PAGE OPEN (CLAUDE.md §1). Ask first.');
-console.log('  Run `npm test` before publishing: page_renders.js is the only check that');
+console.log('  Run `npm run test:app` before publishing: page_renders.js is the only check that');
 console.log('  catches a page which parses and still shows a black screen.');
