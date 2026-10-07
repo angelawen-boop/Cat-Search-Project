@@ -280,13 +280,25 @@ function runtime() {
     const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
     const saved = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'jacquemart_botticelli.json'), 'utf8'));
     const forPrompt = fn('resultsForPrompt'), catLink = fn('catalogueLinkOn');
-    ok(forPrompt(saved.results, 6000).includes('Buy the catalog') && !forPrompt(saved.results).includes('Buy the catalog'),
-      'AL-022: the museum page\'s "Buy the catalog" reaches the read at the web step\'s cap; at 700 it did not');
+    ok(forPrompt(saved.results, 6000, { words: ['Botticelli', 'Musée Jacquemart-André'], dom: 'boutique.musee-jacquemart-andre.com' }).includes('Buy the catalog'),
+      'AL-022: the museum page\'s "Buy the catalog" reaches the read at the web step');
+    // ── AL-023: the relevant passages, not the first N characters (7 Oct) ──
+    {
+      const museum = saved.results[1].excerpts.join('\n');
+      const pick = fn('pickPassages');
+      const small = pick(museum, { words: ['Botticelli'], dom: 'boutique.musee-jacquemart-andre.com' }, 700);
+      ok(small.includes('Buy the catalog') && small.length <= 700,
+        'AL-023: even at 700 characters the catalogue line deep in the page is kept — the blind cut lost it', small.length);
+      ok(museum.replace(/\s+/g, ' ').slice(0, 700).indexOf('Buy the catalog') < 0, 'AL-023a:  (the old first-700 cut really did lose it)');
+      ok(pick('Short page. Nothing to cut.', {}, 700) === 'Short page. Nothing to cut.', 'AL-023b:  a result that fits is given whole');
+      const order = pick(['Intro line one.', 'x'.repeat(800), 'The ISBN is 9789462302815.', 'Last line.'].join('\n'), {}, 300);
+      ok(/^Intro line one\..*ISBN/.test(order) && order.length <= 300, 'AL-023c:  passages kept in page order, the relevant one in, under the cap', order.slice(0, 80));
+    }
     ok(catLink(saved.results, 'boutique.musee-jacquemart-andre.com') === 'https://boutique.musee-jacquemart-andre.com/en/product/230-special-issue-botticelli-artist-and-designer.html',
       'AL-022a:  the catalogue link onto the venue\'s own shop is read off the results in code');
     ok(catLink(saved.results, 'shop.example.org') === null, 'AL-022b:  and only onto THAT venue\'s shop');
     const lookup = fs.readFileSync(path.join(__dirname, '..', '..', 'Cat_Watch.jsx'), 'utf8');
-    ok(/resultsForPrompt\(s2\.results,6000\)/.test(lookup), 'AL-022c:  the web step asks for the whole excerpt (6,000)');
+    ok(/resultsForPrompt\(s2\.results,6000,\{words:\[title,venue\],dom\}\)/.test(lookup), "AL-022c:  the web step reads up to 6,000 characters, chosen around the show and the shop");
   }
   // ── AL-001: Import opens ONE pop-up; nothing is added to the page ───────
   // Her ruling, 4 Oct: no new buttons and no text in the page's header.
