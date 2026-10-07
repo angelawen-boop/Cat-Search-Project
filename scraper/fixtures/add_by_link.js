@@ -255,6 +255,20 @@ function runtime() {
       'AL-017a:  the text handed to Claude is the show\'s, from under its heading — not the hours, prices and cookies under the dates', r.raw && r.raw.slice(0, 120));
     ok(r.ok && !r.raw.includes('From 14 March to 21 July 2014') && !/^From Watteau to Fragonard$/m.test(r.raw), 'AL-017b:  the date line and the heading are not repeated in it');
   }
+  // ── AL-019: a page title that dresses the show's name — the heading wins ─
+  // 7 Oct, her cards: "Exhibition Fra Angelico in Paris: and the Masters of Light".
+  {
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const read = fn('readShowPage'), title = fn('linkTitle');
+    const fa = read(page('jacquemart_angelico'), page('jacquemart_angelico').url);
+    const wf = read(page('jacquemart_watteau'), page('jacquemart_watteau').url);
+    ok(fa.base === 'Fra Angelico' && wf.base === 'From Watteau to Fragonard', 'AL-019: "Exhibition … in Paris" round the heading: the heading is the name', JSON.stringify([fa.base, wf.base]));
+    ok(title(fa.base, 'and the Masters of Light', fa.between) === 'Fra Angelico and the Masters of Light',
+      'AL-019a:  a subtitle that carries on the sentence joins with a space', title(fa.base, 'and the Masters of Light', fa.between));
+    ok(title(wf.base, 'les fêtes galantes', wf.between) === 'From Watteau to Fragonard: les fêtes galantes', 'AL-019b:  any other subtitle still takes a colon');
+    const ham = read(P[urlOf('thyssen_hammershoi')], urlOf('thyssen_hammershoi'));
+    ok(ham.base === 'Hammershøi. The Eye that Listens', 'AL-019c:  a title that only runs on past the heading keeps its subtitle (Thyssen)', ham.base);
+  }
   // ── AL-001: Import opens ONE pop-up; nothing is added to the page ───────
   // Her ruling, 4 Oct: no new buttons and no text in the page's header.
   const dialog = () => win.document.querySelector('[role=dialog]');
@@ -390,9 +404,13 @@ function runtime() {
   {
     const adds = buttons(/Add new entry$/);
     for (const b of adds) await click(b);
-    const raAdd = adds.find(b => { let el = b; while (el && !/Peggy Guggenheim/.test(el.textContent)) el = el.parentElement; return el && el.textContent.length < 3000; });
-    let el = raAdd; while (el && !/Peggy Guggenheim/.test(el.textContent)) el = el.parentElement;
-    await click([...el.querySelectorAll('button')].find(b => /Reject$/.test(b.textContent.trim())));
+    // The RA's own card: the highest box holding only that card's three
+    // buttons. (7 Oct: the old climb stopped at a box of several cards and
+    // pressed Manet & Morisot's Reject — the rejected link coming back in the
+    // box showed it.)
+    const cardOf = b => { let el = b.parentElement; while (el.parentElement && el.parentElement.querySelectorAll('button').length <= 3) el = el.parentElement; return el; };
+    const raCard = buttons(/Add new entry$/).map(cardOf).find(el => el && /Peggy Guggenheim/.test(el.textContent));
+    await click([...raCard.querySelectorAll('button')].find(b => /Reject$/.test(b.textContent.trim())));
   }
   const ledgerCards = () => win.document.querySelectorAll('article').length;
   const cardsBefore = ledgerCards();
@@ -450,7 +468,7 @@ function runtime() {
   ok(footer() === 'Go ahead and update the ledger', 'AL-009k:  every shop answered, the ledger may move', footer());
   await click([...shops().querySelectorAll('button')].pop());
   ok(!shops() && ledgerCards() > cardsBefore, 'AL-009l:  and does');
-  ok((store.get('links/pending') || {}).text === REFUSED + '\n' + EMPTY, 'AL-007d:  the import finished, the two unread links are stored, so closing the page loses nothing');
+  ok((store.get('links/pending') || {}).text === REFUSED + '\n' + EMPTY + '\n' + urlOf('ra_guggenheim'), 'AL-007d:  the import finished, the two unread links are stored, so closing the page loses nothing', JSON.stringify(store.get('links/pending')));
   {
     const v = id => occStored()[id] || {};
     ok(Object.keys(occStored()).length === 6 && Object.values(occStored()).every(x => x.confirmed === true),
@@ -478,6 +496,22 @@ function runtime() {
   const dia = arts.find(a => a.textContent.includes('Caravaggio'));
   ok(dia && /^Detroit/.test(dia.textContent) && !/^Detroit Institute/.test(dia.textContent), 'AL-011: a venue\'s short name, hers, heads its cards', dia && dia.textContent.slice(0, 40));
   ok((((store.get('venues/occasional') || {}).venues || {})['occ-dia-org'] || {}).short === 'Detroit', 'AL-011a:   and survives its shop being looked for again');
+  // ── AL-020: a rejected card's link goes back in the box (her ask, 7 Oct) ─
+  {
+    await click(importBtn());
+    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    const box3 = dialog().querySelector('textarea');
+    ok(box3.value === REFUSED + '\n' + EMPTY + '\n' + urlOf('ra_guggenheim'), 'AL-020: the RA card was rejected: its link is back in the box with the two unread, and nothing accepted is', JSON.stringify(box3.value));
+    const clear = inDialog('Clear');
+    ok(!!clear && box3.parentElement.contains(clear), 'AL-020a:  a "Clear" sits inside the box');
+    if (clear) await click(clear);
+    ok(dialog().querySelector('textarea').value === '' && (store.get('links/pending') || {}).text === '',
+      'AL-020b:  pressed, the box is empty and stays empty — the store emptied too', JSON.stringify(store.get('links/pending')));
+    ok(!inDialog('Clear'), 'AL-020c:  and with nothing in the box, no Clear');
+    await act(async () => { setter.call(dialog().querySelector('textarea'), REFUSED + '\n' + EMPTY); dialog().querySelector('textarea').dispatchEvent(new win.Event('input', { bubbles: true })); });
+    await settle();
+    await click(inDialog('Cancel'));
+  }
   // ── AL-013: a CSV import keeps nothing until it finishes either ─────────
   {
     const csv = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at\n'
