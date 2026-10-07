@@ -1,0 +1,33 @@
+{
+ "_note": "Her keyed Parallel Search, 7 Oct 2026: the language check's own ISBN search for Botticelli (Musée Jacquemart-André), [\"9789462302815\", \"9789462302815 Botticelli, Artiste et Designer\"]. Kept: the results that carry a publisher label, trimmed to those lines, and the museum's page (credited to Culturespaces, carrying no ISBN). Read by scraper/fixtures/catalogue_lookup.js, PI-001.",
+ "results": [
+  {
+   "url": "https://www.abebooks.com/9789462302815/Botticelli-Artiste-Designer-DEBENEDETTI-ANACURIE-9462302812/plp",
+   "title": "Botticelli, Artiste et Designer - DEBENEDETTI ANA/CURIE PIERRE: 9789462302815 - AbeBooks",
+   "excerpts": [
+    "ISBN 10: 9462302812 ISBN 13: 9789462302815\n\nPublisher: [FONDS MERCATOR](https://www.abebooks.com/book-search/publisher/fonds-mercator/) , 2021\n\nPublisher\n    [FONDS MERCATOR](https://www.abebooks.com/book-search/publisher/fonds-mercator)\nPublication date\n    2021\n\n## [Botticelli: artiste & designer](https://www.abebooks.com/servlet/BookDetailsPL?bi=31845149669)\n\nPublished by [Mercatorfonds](https://www.abebooks.com/book-search/publisher/mercatorfonds/) , 2021"
+   ]
+  },
+  {
+   "url": "https://www.abebooks.fr/9789462302815/Botticelli-Artiste-Designer-9462302812/plp",
+   "title": "Botticelli, Artiste et Designer: 9789462302815 - AbeBooks",
+   "excerpts": [
+    "ISBN 10 : 9462302812 ISBN 13 : 9789462302815\n\nEditeur : [Fonds Mercator](https://www.abebooks.fr/rechercher-livre/editeur/fonds-mercator/) , 2021\n\nEdité par [FONDS MERCATOR](https://www.abebooks.fr/rechercher-livre/editeur/fonds-mercator/) , 2021"
+   ]
+  },
+  {
+   "url": "https://www.decitre.fr/livres/botticelli-9789462302815.html",
+   "title": "Botticelli. Artiste & Designer - Ana Debenedetti | Decitre",
+   "excerpts": [
+    "Ce catalogue, qui accompagne et prolonge l'exposition, évoque le développement stylistique personnel de Botticelli."
+   ]
+  },
+  {
+   "url": "https://www.musee-jacquemart-andre.com/en/botticelli",
+   "title": "Exhibition Botticelli in Paris",
+   "excerpts": [
+    "She is currently working on a catalogue of the French drawings at the V&A and a book, _Botticelli, Artist and Designer_ (Reaktion books, Nov. 2021).\n\n[Buy the catalog](https://boutique.musee-jacquemart-andre.com/en/product/230-special-issue-botticelli-artist-and-designer.html)\n\n © Culturespaces / Thomas Garnier\n\nA site created and managed by\n\n[Culturespaces](https://www.culturespaces.com/en)"
+   ]
+  }
+ ]
+}

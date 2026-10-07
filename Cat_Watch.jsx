@@ -2827,6 +2827,45 @@ function sameCatalogue(edPublisher,origPublisher,isbnResults,museumId){
   return (isbnResults||[]).some(x=>{ const t=normPublisher((x&&x.title||"")+" "+oneText(x)); return v.every(w=>(" "+t+" ").includes(" "+w+" ")); });
 }
 
+// THE PUBLISHER, READ OFF THE ISBN — her ruling, 7 Oct (Botticelli: three
+// lookups, three publishers — Culturespaces off the museum's own page, Reaktion
+// off a curator's bio, Fonds Mercator off the bookshops). Only results that
+// carry the book's ISBN count, and only their LABELLED publisher ("Publisher:",
+// "Published by", "Éditeur :", "Edité par", "Editore", "Verlag"…). Each result
+// votes once; names of one house fold together (Fonds Mercator ~ Mercatorfonds).
+// The house at least two results name, ahead of any other, or nothing.
+// The label must not sit inside a longer word; an ASCII \b cannot see "É".
+const PUBLISHER_LABEL=/(?<!\p{L})(?:publisher|published by|[ée]diteur|[ée]dit[ée] par|editore|editorial|verlag|uitgever(?:ij)?)\s*:?\s*\[?([^\]\n|(]{2,70}?)(?:\]|\s*,\s*(?:19|20)\d\d|\s*\(|\n|$)/giu;
+function houseWords(n){
+  return normPublisher(n).split(" ").filter(w=>w.length>2&&!PUBLISHER_WORDS.has(w)&&!["fonds","editions","ed","sa","srl","gmbh"].includes(w));
+}
+function publisherOnIsbnResults(results,isbn){
+  const d=String(isbn||"").replace(/\D/g,"");
+  if(d.length!==13)return null;
+  const groups=[];
+  for(const r of (results||[])){
+    const text=(r&&r.title||"")+"\n"+oneText(r);
+    if(!text.replace(/[^0-9]/g,"").includes(d)&&!String((r&&r.url)||"").includes(d))continue;
+    const seen=new Set();
+    for(const m of text.matchAll(PUBLISHER_LABEL)){
+      const name=stripMd(m[1]).replace(/[\s.,;:]+$/,"").trim();
+      const w=houseWords(name);
+      if(!w.length)continue;
+      let g=groups.find(g=>w.some(x=>g.words.some(y=>x.includes(y)||y.includes(x))));
+      if(!g){ g={words:w,names:[],votes:0}; groups.push(g); }
+      if(seen.has(g))continue;
+      seen.add(g); g.votes++; g.names.push(name);
+    }
+  }
+  groups.sort((a,b)=>b.votes-a.votes);
+  const top=groups[0];
+  if(!top||top.votes<2||(groups[1]&&groups[1].votes===top.votes))return null;
+  // The spelling most results use, ordinary capitals preferred over SHOUTING.
+  const count=new Map();
+  for(const n of top.names)count.set(n,(count.get(n)||0)+1);
+  return [...count.entries()].sort((a,b)=>b[1]-a[1]||(a[0]===a[0].toUpperCase())-(b[0]===b[0].toUpperCase()))[0][0];
+}
+
 // THE ENGLISH-EDITION LINE ON A CARD — her ruling, 7 Oct: a foreign book
 // says how far an English edition was looked for. Null: nothing to say.
 function englishLine(r){
@@ -4128,13 +4167,43 @@ export default function App(){
   // the results, and the read says English → the card carries the English
   // edition, "Not in the museum shop", since the shop's book was the other.
   // None → the original book stays, under its own title.
+  // STEP: THE PUBLISHER FROM THE ISBN (publisherOnIsbnResults). Runs only once
+  // the ISBN is known — every ISBN source comes before it and none depends on
+  // the publisher. A publisher Claude read off general results is a guess and
+  // is REPLACED; one read off the book's own shop page stands unless the ISBN
+  // says otherwise. At a non-English venue the search is the language check's
+  // own, reused (hit.isbnResults); elsewhere it runs only for a guessed or
+  // missing publisher.
+  const publisherFromIsbn=async(hit,venue,mu)=>{
+    const r=hit&&hit.row;
+    const isbn=r&&cleanIsbn(r.isbn13);
+    if(!r||!hit.ok||r.hasCatalogue!=="yes"||!isbn)return hit;
+    const foreign=!!(mu&&mu.english===false);
+    if(!foreign&&r.publisher&&!hit.pubGuess)return hit;
+    const book=r.catalogueTitle||r.title;
+    setLookPhase("web");
+    const s=await searchWeb("The publisher, language and exact printed title of the book with ISBN "+isbn+" (\u201c"+book+"\u201d).",[isbn,isbn+" "+book]);
+    let detail=hit.detail+"\n"+s.detail;
+    if(!s.ok)return{...hit,detail};
+    const found=publisherOnIsbnResults(s.results,isbn);
+    let row=r;
+    if(!found)detail=detail+"\nPublisher from the ISBN: the results carrying it don\u2019t agree on one, so it stands as read.";
+    else if(r.publisher&&houseWords(r.publisher).some(x=>houseWords(found).some(y=>x.includes(y)||y.includes(x))))detail=detail+"\nPublisher from the ISBN: "+found+" \u2014 the same as read.";
+    else{
+      detail=detail+"\nPublisher from the ISBN: "+found+(r.publisher?" (replacing \u201c"+r.publisher+"\u201d, read off general results).":".");
+      row={...r,publisher:found,publisherUrl:null,publisherResult:null};
+    }
+    return{...hit,detail,row,isbnResults:s.results};
+  };
+
   const fillLanguage=async(hit,venue,dom,mu,wasKnown)=>{
     const r=hit&&hit.row;
     if(!r||!hit.ok||r.hasCatalogue!=="yes"||wasKnown||!mu||mu.english!==false)return hit;
     const isbn=cleanIsbn(r.isbn13);
     const book=r.catalogueTitle||r.title;
     setLookPhase("web");
-    const s=await searchWeb(
+    // The ISBN search publisherFromIsbn already made, reused: same queries.
+    const s=isbn&&hit.isbnResults?{ok:true,results:hit.isbnResults,detail:"(the ISBN search above, read again for the language)"}:await searchWeb(
       "The language and the exact printed title of the book "+(isbn?"with ISBN "+isbn:"\u201c"+book+"\u201d")
         +", the catalogue of the exhibition \u201c"+r.title+"\u201d at "+venue+".",
       isbn?[isbn,isbn+" "+book]:[book+" "+venue+" catalogue",book+" catalogue language"]);
@@ -4496,7 +4565,7 @@ export default function App(){
       if(!s1.ok)return{row,detail,ok:false};
       if(s1.data){
         const hit=settle(row,s1.data,dom,detail,true);
-        if(hit)return await fillPublisherPage(await fillLanguage(await fillFromWeb(await fillIsbn(hit,venue,dom),venue,dom),venue,dom,mu,wasKnown),venue,dom);
+        if(hit)return await fillPublisherPage(await fillLanguage(await publisherFromIsbn(await fillFromWeb(await fillIsbn(hit,venue,dom),venue,dom),venue,mu),venue,dom,mu,wasKnown),venue,dom);
       }
     }
 
@@ -4539,7 +4608,11 @@ export default function App(){
     }
     // The dedicated ISBN search runs here too when the ISBN is still blank —
     // her ruling, 1 Oct (Metamorphoses): until then only the shop route had it.
-    return await fillPublisherPage(await fillLanguage(await fillFromWeb(await fillIsbn(await confirmShopLink(settle(row,d2,dom,detail,false,blocked)),venue,dom),venue,dom),venue,dom,mu,wasKnown),venue,dom);
+    // A publisher read off these general results is a guess (pubGuess):
+    // publisherFromIsbn checks it against the ISBN.
+    const webHit=await confirmShopLink(settle(row,d2,dom,detail,false,blocked));
+    if(webHit&&d2.publisher)webHit.pubGuess=true;
+    return await fillPublisherPage(await fillLanguage(await publisherFromIsbn(await fillFromWeb(await fillIsbn(webHit,venue,dom),venue,dom),venue,mu),venue,dom,mu,wasKnown),venue,dom);
   }
 
   // A STEP THAT DIED IS NOT AN ANSWER \u2014 her question, 21 Sep, and the fault was

@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage, MU, titleAsPrinted, isEnglishLang, publisherToFind, publisherLinkOf, inClosingWindow, sameCatalogue };')(
+    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage, MU, titleAsPrinted, isEnglishLang, publisherToFind, publisherLinkOf, inClosingWindow, sameCatalogue, publisherOnIsbnResults };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -270,6 +270,14 @@ function runtime(answer, log) {
     eq(api.publisherToFind('Thames & Hudson', 'jacquemart'), 'Thames & Hudson', 'CE-001d:  a publisher’s own "&" is never split');
     eq(api.publisherToFind('Rizzoli Electa and The Frick Collection', 'frick'), 'Rizzoli Electa', 'CE-001e:  "X and Venue" too');
     eq(api.isSelfPublisher('The Museum of Modern Art, New York', 'moma'), true, 'CE-001f:  a venue and its city is still the venue — no comma split');
+    // ── PI-001: the publisher read off the ISBN's results, in code (her ruling, 7 Oct) ─
+    {
+      const isbnRes = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'jacquemart_botticelli_isbn.json'), 'utf8')).results;
+      eq(api.publisherOnIsbnResults(isbnRes, '9789462302815'), 'Fonds Mercator', 'PI-001: Botticelli — the results carrying its ISBN agree: Fonds Mercator (never Culturespaces or Reaktion)');
+      eq(api.publisherOnIsbnResults(isbnRes.slice(3), '9789462302815'), null, 'PI-001a:  the museum’s page carries no ISBN, so its "Culturespaces" never votes');
+      eq(api.publisherOnIsbnResults(isbnRes.slice(0, 1), '9789462302815'), null, 'PI-001b:  one result alone is not agreement');
+      eq(api.publisherOnIsbnResults([{ url: 'a', excerpts: ['ISBN 9789462302815 Publisher: Alpha Press'] }, { url: 'b', excerpts: ['ISBN 9789462302815 Publisher: Beta Books'] }], '9789462302815'), null, 'PI-001c:  two results naming two houses: no answer');
+    }
     // ── CE-002: an English "edition" must be the same catalogue (her Botticelli, 7 Oct) ─
     {
       const saved = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'jacquemart_botticelli.json'), 'utf8'));

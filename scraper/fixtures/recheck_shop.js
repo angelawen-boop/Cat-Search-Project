@@ -142,9 +142,10 @@ const louKnown = { ...fresh('louvre-testknown', 'louvre', 'Test Louvre Known Sho
   catalogueTitle: 'Test Known Catalogue', isbn13: null, shopState: 'shop', englishCheck: 'shops' };
 // Her Botticelli, 7 Oct: a check that stopped is run again by Search again.
 const louLookalike = fresh('louvre-testlookalike', 'louvre', 'Test Louvre Lookalike Show');
+const louIsbnPub = fresh('louvre-testisbnpub', 'louvre', 'Test Louvre Isbn Publisher Show');
 const louStale = { ...fresh('louvre-teststale', 'louvre', 'Test Louvre Stale Check Show'), looked: true, hasCatalogue: 'yes',
   catalogueTitle: 'Test Stale Catalogue', isbn13: '9782359064612', shopState: 'shop', englishCheck: 'stopped' };
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, louPub, louStop, louStale, louLookalike, morganAssoc], ignored: [], lastRun: null };
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, louPub, louStop, louStale, louLookalike, louIsbnPub, morganAssoc], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -835,11 +836,14 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const PAGE = 'https://boutique.louvre.fr/en/product/61740-test-experience-de-la-nature-fra.html';
     const OWN = 'L\u2019Exp\u00e9rience de la nature. Les arts \u00e0 Prague \u00e0 la cour de Rodolphe II';
     const PUB_PAGE = 'https://www.lienart.fr/livre/test-experience-de-la-nature';
-    const run = async (row, { lang = 'French', title = OWN, en = null, enPrinted = true, shopTitle = 'Experience of Nature. Art in Prague at the Court of Rudolf II', pub = null, pubPage = false, enFail = false, enVenue = true, enPub = null } = {}) => {
+    const run = async (row, { lang = 'French', title = OWN, en = null, enPrinted = true, shopTitle = 'Experience of Nature. Art in Prague at the Court of Rudolf II', pub = null, pubPage = false, enFail = false, enVenue = true, enPub = null, isbnPub = null } = {}) => {
       calls.length = 0;
       script.mcp = (tool, args) => {
         if (tool === 'web_search') {
           const q = args.search_queries.join(' | ');
+          if (q.startsWith(FR) && isbnPub) return { payload: { results: [
+            { url: 'https://books.test/a/' + FR, title: OWN, excerpts: ['ISBN 13: ' + FR + '\nPublisher: ' + isbnPub + ', 2025\nLangue : fran\u00e7ais'] },
+            { url: 'https://books.test/b', title: OWN, excerpts: ['EAN ' + FR + '\n\u00c9diteur : ' + isbnPub + ', 2025'] }] } };
           if (q.startsWith(FR)) return { payload: { results: [{ url: 'https://www.louvre.fr/editions/catalogue/test', title: OWN, excerpts: [OWN + ' \u2014 Lienart, 2025. EAN ' + FR + '. Langue : fran\u00e7ais.'] }] } };
           if (/English edition/.test(q) && enFail) throw Object.assign(new Error('upstream'), { code: 'upstream_error' });
           if (/English edition/.test(q) && en) return { payload: { results: [{ url: 'https://books.test/en', title: en, excerpts: [en + ' \u2014 English edition' + (enVenue ? ' of the catalogue for the exhibition at the Louvre' : '') + '. ' + (enPrinted ? 'ISBN ' + EN : 'Paperback.')] }] } };
@@ -878,6 +882,12 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     t = await run(louLookalike, { en: 'Test Look-alike Monograph', enVenue: false, enPub: 'Reaktion Books', pub: 'Lienart' });
     ok(!/Test Look-alike Monograph/.test(t) && t.includes(OWN) && /No English edition/.test(t), 'LG-016: a look-alike English book (other publisher, no venue named) is refused; the original stands', t.slice(0, 600));
 
+    // Her ruling, 7 Oct: the publisher is read off the ISBN's results in code,
+    // replacing one read off general results.
+    t = await run(louIsbnPub, { pub: 'Culturespaces', isbnPub: 'Lienart' });
+    ok(/Lienart/.test(t) && !/Culturespaces/.test(t), 'LG-017: the publisher is the one the ISBN\u2019s results agree on, replacing a guess', t.slice(0, 600));
+    ok(calls.filter(c => c.tool === 'web_search' && c.args.search_queries[0] === FR).length === 1, 'LG-017a:  one ISBN search, shared by the publisher and the language check', JSON.stringify(calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries)));
+
     t = await run(louUnprinted, { en: 'Test Phantom English Edition', enPrinted: false });
     ok(!/Phantom/.test(t) && t.includes(OWN), 'LG-007: an English ISBN the results never print is not believed', t.slice(0, 400));
 
@@ -886,7 +896,9 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/Experience of Nature/.test(t) && !/Art in Prague at the Court/.test(t), 'LG-009:   and the title is cut to what the shop prints', t.slice(0, 400));
 
     await run(ngLang);
-    ok(!searches().some(q => q.some(x => x === FR || /English edition/.test(x))), 'LG-010: an English-speaking venue \u2014 no language check', JSON.stringify(searches()));
+    // The ISBN search for the publisher may run here (no publisher was read);
+    // the language check and the English-edition search may not.
+    ok(!searches().some(q => q.some(x => /English edition/.test(x))), 'LG-010: an English-speaking venue \u2014 no language check', JSON.stringify(searches()));
 
     // Her ruling, 7 Oct (Watteau): the publisher lists every edition it printed.
     t = await run(louPub, { pub: 'Lienart', pubPage: true });
@@ -897,7 +909,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/English edition not checked \u2014 the search stopped part-way\. Search again to retry\./.test(t), 'LG-014: a search that died says the check was not done', t.slice(0, 600));
 
     t = await run(louKnown);
-    ok(!searches().some(q => q.some(x => x === FR || /English edition/.test(x))) && /Test Known Catalogue/.test(t), 'LG-011: a book whose check FINISHED is never renamed (Search again)', t.slice(0, 400));
+    ok(!searches().some(q => q.some(x => /English edition/.test(x))) && /Test Known Catalogue/.test(t), 'LG-011: a book whose check FINISHED is never renamed (Search again)', t.slice(0, 400));
     t = await run(louStale);
     ok(searches().some(q => q.includes(FR)) && t.includes(OWN) && !t.includes('Test Stale Catalogue'),
       'LG-015: a check that stopped is run again by Search again, and its finished result replaces the card\u2019s', t.slice(0, 500));
