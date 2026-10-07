@@ -2660,7 +2660,7 @@ function publisherNote(result,hasUrl){
 // "A book leaving the shop". Fixtures C-079 to C-099.
 //
 //   * ONE BUTTON MOVES THE SHOP STATUS: "Re-check museum shop". Nothing else.
-//     Search again fills blanks and never touches it (keepWhatWeKnew).
+//     Search again runs a whole fresh lookup (lookupCat) and replaces the card.
 //   * She presses it only AFTER she has seen the change for herself, so it is
 //     a way to make the screen agree with what she saw, not a monitor.
 //   * WITH A SHOP LINK ON FILE it re-reads THAT ONE PAGE, nothing else:
@@ -2882,17 +2882,6 @@ function englishLine(r){
 // dead or sold out while the link is still worth keeping.
 function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last seen)":"Museum shop"; }
 
-// SEARCH AGAIN NEVER TAKES AWAY WHAT WAS THERE — her rule, 25 Sep. Until now it
-// rebuilt the row from scratch, so a lookup that found less (the connector
-// half-refusing, a shop reshuffling its shelf) wiped an ISBN and a publisher
-// she had already had. Now:
-//   * a known title, ISBN or publisher is kept; the new lookup only fills gaps;
-//   * a known publisher LINK is kept together with what it is (publisherResult),
-//     so the publisher never gets re-tangled — it has been messy before;
-//   * the shop status and link are Re-check's alone, once there is one;
-//   * a lookup finding nothing leaves a found catalogue exactly as it was.
-// A row never searched, or searched and found nothing, has nothing to lose,
-// so the new answer is taken whole.
 // RESET CARDS — her design, 2 Oct. The card as it was before any catalogue
 // search: every lookup field blank, everything she marked kept. The next
 // "Find catalogue" is then a first search, the whole route.
@@ -2908,21 +2897,6 @@ function cardsToReset(rows,q){
   if(!want)return[];
   return rows.filter(r=>r.looked&&[r.title,r.catalogueTitle,MU[r.museumId]&&MU[r.museumId].short,MU[r.museumId]&&MU[r.museumId].name]
     .some(t=>k(t).includes(want)));
-}
-
-function keepWhatWeKnew(prev,next){
-  if(!prev||!prev.looked||prev.hasCatalogue!=="yes")return next;
-  if(!next||next.hasCatalogue!=="yes")return prev;
-  const out={...next};
-  out.catalogueTitle=prev.catalogueTitle||next.catalogueTitle||null;
-  out.isbn13=prev.isbn13||next.isbn13||null;
-  out.publisher=prev.publisher||next.publisher||null;
-  // A link with no recorded kind came from a read, unchecked — it stays only
-  // if it is on the publisher's own site (publisherLinkOf, her ruling 1 Oct).
-  const keepLink=prev.publisherUrl&&(prev.publisherResult||publisherLinkOf(prev.publisherUrl,out.publisher,null,prev.museumId));
-  if(keepLink){out.publisherUrl=prev.publisherUrl;out.publisherResult=prev.publisherResult??null;}
-  if(prev.shopState){out.shopState=prev.shopState;out.shopUrl=prev.shopUrl??null;out.shopChange=prev.shopChange??null;}
-  return out;
 }
 
 // CASE 2 — the shop step found the book where no shop link was on file.
@@ -3947,29 +3921,23 @@ export default function App(){
     const link=isTicketLink(o.shopUrl)?null:(o.shopUrl||null);
     const onShop=!!shopLinkOf(o,dom);
     const inShop=fromShopStage&&(onShop||!!o.listedOnly);
-    // Only for a row whose status this lookup is setting: a status already on
-    // file is Re-check's alone (keepWhatWeKnew).
-    const ownStatus=row.looked&&row.hasCatalogue==="yes"&&row.shopState;
     if(o.found&&(o.catalogueTitle||o.isbn13)){
       // pageUrl is carried BESIDE the row, never in it: shopUrl is only filed
       // when the link is really on the venue's shop, and the ISBN step may
       // read a publisher's page too. Two different questions of one link.
-      // The shop status is never CHANGED here — only "Re-check museum shop"
-      // does that. keepWhatWeKnew hands a found row back with what it had, so
-      // the steps after this one see the known ISBN and publisher and skip.
       return{ok:true,detail,pageUrl:link,
-        shopCandidate:(!fromShopStage&&onShop&&!ownStatus)?link:null,
-        row:keepWhatWeKnew(row,{...row,looked:true,hasCatalogue:"yes",
+        shopCandidate:(!fromShopStage&&onShop)?link:null,
+        row:{...row,looked:true,hasCatalogue:"yes",
         shopState:inShop?"shop":blocked?"blocked":"web",shopChange:null,
         catalogueTitle:o.catalogueTitle||null,isbn13:toIsbn13(o.isbn13),
         publisher:o.publisher||null,publisherUrl:publisherLinkOf(o.publisherUrl,row.publisher||o.publisher,dom,row.museumId),
         publisherResult:null,
-        shopUrl:inShop?link:null})};
+        shopUrl:inShop?link:null}};
     }
     if(fromShopStage)return null;          // not found in the shop — go wider
-    return{ok:true,detail,row:keepWhatWeKnew(row,{...row,looked:true,hasCatalogue:"no",shopState:blocked?"blocked":"none",
+    return{ok:true,detail,row:{...row,looked:true,hasCatalogue:"no",shopState:blocked?"blocked":"none",
       catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,
-      shopUrl:null,shopChange:null})};
+      shopUrl:null,shopChange:null}};
   };
 
   // ── FILLING A MISSING ISBN FROM THE PAGE ITSELF \u2014 her finding, 20 Sep 2026 ──
@@ -4192,17 +4160,13 @@ export default function App(){
     else{
       detail=detail+"\nPublisher from the ISBN: "+found+(r.publisher?" (replacing \u201c"+r.publisher+"\u201d, read off general results).":".");
       row={...r,publisher:found,publisherUrl:null,publisherResult:null};
-      // An English check done against the old publisher is not a check of
-      // this one: it runs again (her Botticelli, 7 Oct — "shops" checked under
-      // Culturespaces stood after the ISBN named Fonds Mercator).
-      return{...hit,detail,row,isbnResults:s.results,pubReplaced:true};
     }
     return{...hit,detail,row,isbnResults:s.results};
   };
 
-  const fillLanguage=async(hit,venue,dom,mu,wasKnown)=>{
+  const fillLanguage=async(hit,venue,dom,mu)=>{
     const r=hit&&hit.row;
-    if(!r||!hit.ok||r.hasCatalogue!=="yes"||(wasKnown&&!hit.pubReplaced)||!mu||mu.english!==false)return hit;
+    if(!r||!hit.ok||r.hasCatalogue!=="yes"||!mu||mu.english!==false)return hit;
     const isbn=cleanIsbn(r.isbn13);
     const book=r.catalogueTitle||r.title;
     setLookPhase("web");
@@ -4530,18 +4494,16 @@ export default function App(){
     return{ran:true,ok:true,detail,data};
   }
 
+  // EVERY LOOKUP STARTS FROM A BLANK CARD — her ruling: "Search again
+  // literally means search again." Nothing already on the card is kept or
+  // skipped; the caller decides whether the result replaces the card.
   async function lookupCat(row){
+    row=resetCard(row);
     const mu=MU[row.museumId];
     const dom=shopDomain(mu);
     const title=String(row.title||"").trim();
     const venue=mu?mu.name:"";
     let detail="";
-    // A FINISHED LANGUAGE CHECK IS NOT REDONE; AN UNFINISHED ONE IS — her
-    // ruling, 7 Oct (Botticelli): a check that stopped, or never ran, is run by
-    // Search again and its finished result replaces what the card had. Only a
-    // check that finished (englishCheck "english", "publisher", "shops")
-    // protects the book on the card (her 2 Oct rule, for finished results).
-    const wasKnown=!!(row.looked&&row.hasCatalogue==="yes"&&["english","publisher","shops"].includes(row.englishCheck));
 
     // ── Stage one: GO TO THE SHOP ───────────────────────────────
     //
@@ -4569,7 +4531,7 @@ export default function App(){
       if(!s1.ok)return{row,detail,ok:false};
       if(s1.data){
         const hit=settle(row,s1.data,dom,detail,true);
-        if(hit)return await fillPublisherPage(await fillLanguage(await publisherFromIsbn(await fillFromWeb(await fillIsbn(hit,venue,dom),venue,dom),venue,mu),venue,dom,mu,wasKnown),venue,dom);
+        if(hit)return await fillPublisherPage(await fillLanguage(await publisherFromIsbn(await fillFromWeb(await fillIsbn(hit,venue,dom),venue,dom),venue,mu),venue,dom,mu),venue,dom);
       }
     }
 
@@ -4616,7 +4578,7 @@ export default function App(){
     // publisherFromIsbn checks it against the ISBN.
     const webHit=await confirmShopLink(settle(row,d2,dom,detail,false,blocked));
     if(webHit&&d2.publisher)webHit.pubGuess=true;
-    return await fillPublisherPage(await fillLanguage(await publisherFromIsbn(await fillFromWeb(await fillIsbn(webHit,venue,dom),venue,dom),venue,mu),venue,dom,mu,wasKnown),venue,dom);
+    return await fillPublisherPage(await fillLanguage(await publisherFromIsbn(await fillFromWeb(await fillIsbn(webHit,venue,dom),venue,dom),venue,mu),venue,dom,mu),venue,dom);
   }
 
   // A STEP THAT DIED IS NOT AN ANSWER \u2014 her question, 21 Sep, and the fault was
@@ -4636,7 +4598,11 @@ export default function App(){
     const row=rows.find(r=>r.id===id);
     const out=await lookupCat(row);
     setDebug(out.detail);
-    if(out.ok){
+    // SEARCH AGAIN REPLACES THE CARD ONLY WHEN IT FINISHED. Any step that
+    // failed → the card stays as it was, and says so.
+    if(row.looked&&out.ok&&out.trouble){
+      setRecheckSaid({id,failed:true,text:"Search again didn\u2019t finish \u2014 "+out.trouble.split("[")[0].trim()+" Nothing changed."});
+    } else if(out.ok){
       await commit(rows.map(r=>r.id===id?out.row:r));
       if(out.trouble&&out.troubleLang)setError("Found the catalogue for \u201c"+row.title+"\u201d, but the language check "
         +"stopped part-way, so the title may be the shop\u2019s translation and an English edition may be missed. "
