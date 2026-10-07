@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "40.7";
+const APP_VERSION = "40.8";
 const APP_VERSION_DATE = "7 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -2340,7 +2340,10 @@ const NOT_SELF_PUBLISHERS = new Set([
   // her entries, normalised as normPublisher writes them
 ]);
 function isSelfPublisher(name,museumId){
-  name=publisherToFind(name);
+  return isVenueImprint(publisherToFind(name,museumId),museumId);
+}
+// One name, taken whole: is it the venue's own imprint?
+function isVenueImprint(name,museumId){
   const n=normPublisher(name);
   if(!n||NOT_SELF_PUBLISHERS.has(n))return false;
   if(SELF_PUBLISHERS.has(n))return true;
@@ -2387,15 +2390,33 @@ function cleanPublisherUrl(u,dom){
 // and the house that printed the book after, so the publisher step looks for
 // Rizzoli Electa. The card still prints the line as the book gives it; only
 // which publisher is looked for (and checked against SELF_PUBLISHERS) changes.
-function publisherToFind(name){
+// A CO-EDITION NAMES THE PUBLISHER BESIDE THE VENUE — her ruling, 7 Oct
+// (Turner: "Fonds Mercator / Musée Jacquemart-André" was taken as the museum's
+// own imprint, so no publisher was looked for). When the line pairs the venue
+// with another name — "X / Venue", "X and Venue", "X with Venue", "X & Venue"
+// — the other name is the publisher, for every publisher verdict. Split on
+// the strongest mark first, so "Thames & Hudson / Venue" keeps its "&". NOT a
+// comma: "The Museum of Modern Art, New York" is the venue and its city. Only
+// a line that is the venue and nothing else is the venue's imprint.
+const CO_EDITION_MARKS=[/\s*\/\s*/,/\s*;\s*/,/\s+with\s+/i,/\s+and\s+/i,/\s+&\s+/];
+function publisherToFind(name,museumId){
   const s=String(name||"").trim();
   const m=s.match(/\bin\s+association\s+with\s+(.+)$/i);
   const y=m?m[1].replace(/[\s.,;:]+$/,"").trim():"";
-  return y||s;
+  if(y)return y;
+  if(museumId){
+    for(const mark of CO_EDITION_MARKS){
+      const parts=s.split(mark).map(x=>x.trim()).filter(Boolean);
+      if(parts.length<2)continue;
+      const others=parts.filter(x=>!isVenueImprint(x,museumId));
+      if(others.length&&others.length<parts.length)return others[0];
+    }
+  }
+  return s;
 }
 
 function publisherLinkOf(u,publisher,dom,museumId){
-  publisher=publisherToFind(publisher);
+  publisher=publisherToFind(publisher,museumId);
   const t=cleanPublisherUrl(u,dom);
   if(!t||!publisher||isSelfPublisher(publisher,museumId))return null;
   return publisherDomainFrom([{url:t}],publisher)?t:null;
@@ -2793,11 +2814,25 @@ function catalogueLinkOn(results,dom){
   return found.size===1?[...found.values()][0]:null;
 }
 
+// IS THIS ENGLISH BOOK AN EDITION OF THE SAME CATALOGUE? One answer from
+// the inputs: its publisher shares the original's distinctive name words
+// (Fonds Mercator ~ Mercatorfonds), or a result carrying its ISBN names the
+// venue (its distinctive words, accents and "musée" aside).
+function sameCatalogue(edPublisher,origPublisher,isbnResults,museumId){
+  const words=n=>normPublisher(n).split(" ").filter(w=>w.length>2&&!PUBLISHER_WORDS.has(w)&&!["fonds","musee","museum","museo","galleria","gallery"].includes(w));
+  const a=words(edPublisher), b=words(origPublisher);
+  if(a.length&&b.length&&b.every(w=>a.some(x=>x.includes(w)||w.includes(x))))return true;
+  const v=words(MU[museumId]&&MU[museumId].name);
+  if(!v.length)return false;
+  return (isbnResults||[]).some(x=>{ const t=normPublisher((x&&x.title||"")+" "+oneText(x)); return v.every(w=>(" "+t+" ").includes(" "+w+" ")); });
+}
+
 // THE ENGLISH-EDITION LINE ON A CARD — her ruling, 7 Oct: a foreign book
 // says how far an English edition was looked for. Null: nothing to say.
 function englishLine(r){
   const c=r&&r.englishCheck;
-  if(c==="publisher")return "No English edition \u2014 checked: the publisher\u2019s site"+(r.publisher?" ("+r.publisher+")":"")+" and bookshops.";
+  // Her wording, 7 Oct.
+  if(c==="publisher")return "No English edition - checked publisher's site"+(r.publisher?" ("+r.publisher+")":"")+" and bookshops.";
   if(c==="shops")return "No English edition found in bookshops; the publisher\u2019s own page for this book wasn\u2019t found.";
   if(c==="unknownlang")return "The book\u2019s language couldn\u2019t be confirmed, so no English edition was looked for.";
   if(c==="stopped")return "English edition not checked \u2014 the search stopped part-way. Search again to retry.";
@@ -4137,7 +4172,7 @@ export default function App(){
     // publisher; and the PUBLISHER lists every language it printed, so its own
     // page for the book is found (in the same search) and read whole. Her
     // Watteau, 7 Oct: Fonds Mercator's page lists the book in French only.
-    const pub=row.publisher&&!isSelfPublisher(row.publisher,row.museumId)?publisherToFind(row.publisher):"";
+    const pub=row.publisher&&!isSelfPublisher(row.publisher,row.museumId)?publisherToFind(row.publisher,row.museumId):"";
     const e=await searchWeb(
       "An ENGLISH-language edition of the exhibition catalogue \u201c"+orig+"\u201d ("+venue
         +", exhibition \u201c"+r.title+"\u201d"+(isbn?", original ISBN "+isbn:"")+(pub?", publisher "+pub:"")+"): its English title and its own ISBN-13.",
@@ -4162,6 +4197,7 @@ export default function App(){
       +orig+"\u201d ("+lang+(isbn?", ISBN "+isbn:"")+"), for the exhibition \u201c"+r.title+"\u201d at "+venue+".\n"
       +"Use ONLY what the results say. Never use outside knowledge and never guess an ISBN.\n"
       +"found is true ONLY if a result shows an edition printed in English, with its OWN ISBN, different from the one above.\n"
+      +"A separate book with a similar title \u2014 a curator's own monograph, a biography of the artist \u2014 is NOT an edition of this catalogue.\n"
       +"title: that edition's title exactly as printed. publisher: its publisher, never a shop or a seller.\n\n"
       +resultsForPrompt(pages,3000,{words:[orig,r.title]})
       +'\n\nReply with ONLY this JSON object: {"found": true|false, "title": string|null, "isbn13": string|null, "language": string|null, "publisher": string|null}');
@@ -4171,6 +4207,14 @@ export default function App(){
     const enIsbn=toIsbn13(ed.isbn13);
     const printed=enIsbn&&pages.some(x=>(String(x.url||"")+" "+oneText(x)).replace(/[^0-9Xx]/g,"").includes(enIsbn));
     if(!ed.found||!enIsbn||enIsbn===isbn||!isEnglishLang(ed.language)||!printed||!ed.title)return none();
+    // THE SAME BOOK, PROVED IN CODE — her Botticelli, 7 Oct: Reaktion's
+    // "Botticelli: Artist and Designer" (the curator's own life of the artist,
+    // English, its own ISBN) is not the catalogue's English edition. Taken only
+    // from the SAME publisher, or where a result carrying its ISBN names this
+    // venue. Anything else is a look-alike, and the original stands.
+    if(!sameCatalogue(ed.publisher,pub||row.publisher,pages.filter(x=>(String(x.url||"")+" "+oneText(x)).replace(/[^0-9Xx]/g,"").includes(enIsbn)),row.museumId)){
+      return none();
+    }
     return{...hit,pageUrl:null,detail:detail+"\nEnglish edition: \u201c"+ed.title+"\u201d, ISBN "+enIsbn+".",
       row:{...row,englishCheck:"english",catalogueTitle:String(ed.title).trim(),isbn13:enIsbn,
         publisher:ed.publisher?String(ed.publisher).trim():null,publisherUrl:null,publisherResult:null,
@@ -4192,7 +4236,7 @@ export default function App(){
     if(!r.publisher)return{...hit,row:{...r,publisherResult:"unnamed"}};
     const book=r.catalogueTitle||r.title;
     // The publisher looked for — "X in association with Y" is Y (publisherToFind).
-    const pub=publisherToFind(r.publisher);
+    const pub=publisherToFind(r.publisher,r.museumId);
     const isbn=cleanIsbn(r.isbn13);
     setLookPhase("publisher");
 
