@@ -1,6 +1,6 @@
 ---
 name: guide-review
-description: The fortnightly outside review of CLAUDE.md and docs/ — finds stale, contradictory, bloated or hand-typed content, fixes what has one right answer, and asks her about anything that is hers to rule on. Run by the "Guide review" routine on the 15th and 30th; also on request ("review the guide").
+description: The fortnightly outside review of CLAUDE.md and docs/ — finds stale, contradictory, bloated or hand-typed content, fixes what has one right answer, and asks her about anything that is hers to decide. Run by the "Guide review" routine on the 15th and 30th; also on request ("review the guide").
 ---
 
 # Guide review — the outside reader
