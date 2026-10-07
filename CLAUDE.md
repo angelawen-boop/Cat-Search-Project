@@ -557,6 +557,10 @@ against her counts, dates, titles and descriptions.
 **RB-016** (robots wait) once read 1440ms under the full parallel run and passed
 alone (6 Oct) — if it recurs, it is real.
 
+**A test that fails only now and then is not a flake** — run it 8–10 at once to
+reproduce it under load. The Ashmolean's AS-021b–025b did that and caught a
+real leak in `pageOnly` (7 Oct; fixed, the comment above `fetchIndividualPages`).
+
 The harness lifts the intake out of the JSX by **anchors on prose, never line
 numbers**. An early `return` in a fixture file exits the whole suite silently —
 **await, never return.**
