@@ -293,7 +293,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 40.9 · cloud 4 on the test page** (7 Oct); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
+**Live: 40.10 · cloud 4 on the test page** (7 Oct); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -485,8 +485,9 @@ and do not flip to searching wide first.**
   is shared with the language check; elsewhere it runs only for a guessed or
   missing publisher.
 - **An English edition must be the same catalogue** (her Botticelli, 7 Oct):
-  the same publisher, or a result carrying its ISBN naming the venue
-  (`sameCatalogue`); a curator's own monograph with the same title is refused.
+  the same publisher, or a result carrying its ISBN naming the venue by its
+  full, chip or card name (`sameCatalogue`); a curator's own monograph with
+  the same title is refused.
 - **A museum's own imprint is skipped**, no line on the card (her ruling, 6 Oct):
   a publisher carrying the **venue's full name** as whole words is the venue
   (`isSelfPublisher`), plus her list `SELF_PUBLISHERS`; her `NOT_SELF_PUBLISHERS`
@@ -858,6 +859,8 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **When a tool is swapped, the route must not change with it.** A better source is not a complete one; open a candidate before filing it; go to an address you can build rather than tuning searches. Change one thing at a time.
 - **Scraper mechanics:** never `networkidle`; wrap `route.fulfill`/`abort`; a 404 is not a loaded page; retry a detail page once. `normalizeUrl` lowercases scheme and host only; resolve hrefs, never join by hand; keep every link to an address. Dates: never build strings by hand; every month spelling (`Sept.`, Italian `set`); normalise dashes; the year can sit on the closing side only. Listings: read every page and stop at the lookback floor; a load-more click must not follow its href. Titles: noise stripping is case-exact; never strip a location that tells two shows apart. `resolveChromium()` needs both halves. A blanket find-and-replace can eat definitions you just added.
 - **A container dry run with `--home` keeps the network bridge on.** Stub every venue it names.
+- **Two steps looking for the same thing will contradict each other on the card.** The later step reuses what the earlier found (Canaletto, 7 Oct).
+- **An excerpt is what matches the query, not the page.** Short excerpts are not an empty page; judge emptiness on the whole page (Watteau, 7 Oct).
 - **Subagents:** send only the rows and fields the question needs. Wording is not a control — remove the tool or check the answer.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
@@ -883,7 +886,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **40.9 · cloud 4**, published 7 Oct. Cloud-only in it:
+live on the test page **40.10 · cloud 4**, published 7 Oct. Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
@@ -1004,6 +1007,15 @@ She is noting issues as she uses it, for a later debugging session.
   returning empty (`pageIsShell`), or the read judging one page differently.
   Only that lookup's log settles it ("Show diagnostic" keeps the last action's
   only); if it recurs, get the log first. A log per card: offered, not built.
+- **OPEN — 40.10's fixes, unchecked in the app** (7 Oct). Her next lookups
+  settle each: *Hammershøi* (Jacquemart-André) finds *Hammershøi : le maître
+  de la peinture danoise*, ISBN 978-9462302495; *Watteau* no longer reads the
+  shop as blocked; *Canaletto - Guardi*'s English line names the publisher's
+  page; a MoMA lookup still reads its shop as blocked under the whole-page test.
+- **Search again and Reset card + Find catalogue run the same lookup** (checked
+  on the live page, 7 Oct). They differ only when a step fails part-way: Search
+  again then leaves the card untouched. Otherwise a different result is the
+  web answering differently — get that run's log.
 
 ### 5. The monthly container sweep — confirmation re-run 15 Oct
 
