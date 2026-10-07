@@ -36,6 +36,9 @@ is why they live in one repo, on one branch.
   rate limit, and hitting a limit stops work. Before touching the network, work
   out the fewest venues, and the fewest pages at each, that answer the question.
   Saved pages and fixtures first. Never a blanket re-sweep because it is quick.
+- **Never cite her past decisions by date alone** ("your ruling of 25 Sep").
+  She keeps no log. Say what the decision was about, in plain words, so she
+  can judge whether it still stands.
 - **A question gets an answer first.** "Talk to me about X" means discuss;
   nothing is built until she says.
 - **Respect UI simplicity and specific UI instructions.** Build what she named,
@@ -290,7 +293,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 40.8 · cloud 4 on the test page** (7 Oct); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
+**Live: 40.9 · cloud 4 on the test page** (7 Oct); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her ruling, 4 Oct): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -301,6 +304,8 @@ Seed" and "Reset cards" (clears one card's lookup). Older numbers are in git.
   Bump it in the same breath as the change.
 - **Her numbering:** whole number for a substantial change (adding venues is
   one), decimal for a small one. **One number per PUBLISH**, never per build.
+  Bump it only when a publish is under way — never turn by turn while one
+  issue is still being worked on (her ask, 7 Oct).
 - The file is `Cat_Watch.jsx` — no version number in the name, ever.
 
 **Building is code's job — `node build/build_app.js`**: transpiles, wraps it in
@@ -562,6 +567,13 @@ through `sample` at `modelTier: default`. Do not re-open without a real misread.
 
 `npm test` runs everything, and **the exit code says whether all of it passed**.
 
+**Run only the tests for the code you changed** (her ruling, 7 Oct). App or
+catalogue-search work → the app's suites (`add_by_link.js`,
+`catalogue_lookup.js`, `recheck_shop.js`, `page_renders.js`, and the cloud
+branch's three); scraper suites only when scraper code or the shared date
+reader changes. Never chase an unrelated suite's failure mid-task — note it
+for her in one line and move on.
+
 The suite list is `scraper/run_tests.js`, never retyped here; a suite only a
 branch has goes in that branch's `scraper/fixtures/branch_tests.txt`
 (`claude/ledger-cloud`: `cloud_ledger.js`, `cloud_app.js`, `cloud_two_copies.js`).
@@ -569,8 +581,9 @@ Each fixture file opens with what it proves; case IDs (AL-, C-, R-, KP-…) are
 found by grep. Per-venue `*_pages.js` run a recipe on saved pages, no network,
 against her counts, dates, titles and descriptions.
 
-**RB-016** (robots wait) once read 1440ms under the full parallel run and passed
-alone (6 Oct) — if it recurs, it is real.
+**OPEN — RB-016 and RB-020** (robots wait, scraper) fail under load: run ten at
+once on 7 Oct, RB-016 read 1148–1293ms against 1450 in 5 of 10, RB-020 over
+1400ms in 2. Not investigated. A scraper session's job — not an app one's.
 
 **A test that fails only now and then is not a flake** — run it 8–10 at once to
 reproduce it under load. The Ashmolean's AS-021b–025b did that and caught a
@@ -866,7 +879,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **40.8 · cloud 4**, published 7 Oct. Cloud-only in it:
+live on the test page **40.9 · cloud 4**, published 7 Oct. Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
@@ -948,7 +961,19 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
   get a search? Her next lookups there say.
 - **Titles from a page title** (6 Oct): the show is the first part of a barred
   title, the site the last; a bar inside the show's own name ("Duccio | Caro")
-  is kept, read off the page's heading. AL-015.
+  is kept, read off the page's heading. AL-015. A page title that dresses the
+  heading ("Exhibition Giovanni Bellini in Paris") gives way to the heading.
+- **A link from one of the 28 files under that venue** (7 Oct): known by its
+  site, from the scraper's recipes (`VENUE_SITES`, written by
+  `build/sync_shared.js`; the Tates told apart by path). A new venue's shop is
+  looked for once per Read, never once per link.
+- **Jacquemart-André** (her saved pages, `docs/link_pages/`): the line under the
+  heading is the subtitle, read by code (`subtitleUnderHeading`); the dates
+  sit at the page's foot, so the description is read from under the heading.
+- **Claude reads relevant passages, not the first N characters** (7 Oct,
+  `pickPassages`): lines naming the book or show, catalogue/ISBN/price words,
+  or a link onto the venue's shop come first. A link labelled "catalog" onto
+  the venue's shop, in the web results, is taken in code (`catalogueLinkOn`).
 
 ### 3. Fixes not yet checked in the cases they were written for
 
