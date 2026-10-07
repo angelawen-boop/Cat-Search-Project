@@ -2457,6 +2457,8 @@ function publisherLinkOf(u,publisher,dom,museumId){
 // every book's own address in it. There is no third case anywhere near the
 // line, which is what makes one number safe here.
 const SHELL_CHARS=400;
+// A price on a shop page: a shelf of books always shows them (shopStep).
+const SHOP_PRICE=/(?:[\u20ac$\u00a3]\s?\d|\d(?:[.,]\d{1,2})?\s?(?:\u20ac|(?:EUR|USD|GBP)\b))/;
 
 // The page's own text: the full copy when one was asked for, else excerpts.
 function oneText(r){
@@ -2817,14 +2819,18 @@ function catalogueLinkOn(results,dom){
 // IS THIS ENGLISH BOOK AN EDITION OF THE SAME CATALOGUE? One answer from
 // the inputs: its publisher shares the original's distinctive name words
 // (Fonds Mercator ~ Mercatorfonds), or a result carrying its ISBN names the
-// venue (its distinctive words, accents and "musée" aside).
+// venue (its distinctive words, accents and "musée" aside). The venue by any
+// of its names — full, chip or card: the full name alone never matched at
+// Capodimonte ("… aka …") or the Uffizi ("Uffizi Galleries" vs "Gallerie
+// degli Uffizi").
 function sameCatalogue(edPublisher,origPublisher,isbnResults,museumId){
   const words=n=>normPublisher(n).split(" ").filter(w=>w.length>2&&!PUBLISHER_WORDS.has(w)&&!["fonds","musee","museum","museo","galleria","gallery"].includes(w));
   const a=words(edPublisher), b=words(origPublisher);
   if(a.length&&b.length&&b.every(w=>a.some(x=>x.includes(w)||w.includes(x))))return true;
-  const v=words(MU[museumId]&&MU[museumId].name);
-  if(!v.length)return false;
-  return (isbnResults||[]).some(x=>{ const t=normPublisher((x&&x.title||"")+" "+oneText(x)); return v.every(w=>(" "+t+" ").includes(" "+w+" ")); });
+  const mu=MU[museumId];
+  const names=(mu?[mu.name,mu.short,mu.card]:[]).map(words).filter(v=>v.length);
+  if(!names.length)return false;
+  return (isbnResults||[]).some(x=>{ const t=" "+normPublisher((x&&x.title||"")+" "+oneText(x))+" "; return names.some(v=>v.every(w=>t.includes(" "+w+" "))); });
 }
 
 // THE PUBLISHER, READ OFF THE ISBN — her ruling, 7 Oct (Botticelli: three
@@ -4125,8 +4131,8 @@ export default function App(){
   // she can buy, and an English edition, if there is one, is the one she wants.
   //
   // ONLY AT A VENUE MARKED english:false (her ruling: non-English venues only)
-  // and only for a book THIS lookup found — a book already on the card is
-  // never renamed (everything fills a blank; she asked for no card to be reset).
+  // and only for a book found — every lookup starts from a blank card
+  // (lookupCat → resetCard), so Search again checks afresh too.
   //
   // ONE SEARCH by the ISBN (or the title, without one) reads the book's
   // language and its title as printed. English, or unknown → nothing changes.
@@ -4216,19 +4222,26 @@ export default function App(){
       [r.title+" "+(pub||venue)+" ISBN",orig+" "+(pub||venue)+" catalogue",orig+" English edition"]);
     detail=detail+"\n"+e.detail;
     if(!e.ok)return{...hit,row:{...row,englishCheck:"stopped"},detail,trouble:e.detail,troubleLang:true};
-    // The publisher's own page for THIS book, if the search found it: on the
-    // publisher's site (publisherDomainFrom) and carrying the book's title.
-    const pubHost=pub?publisherDomainFrom(e.results,pub):null;
-    const pubPage=pubHost?resultsCarrying(e.results.filter(x=>hostOf(x.url)===pubHost),orig)[0]:null;
+    // The publisher's own page for THIS book. FIRST the one the publisher step
+    // already found and judged to be the book's page (publisherResult
+    // "product") \u2014 her Canaletto, 7 Oct: the card linked that page while this
+    // check said it wasn't found, because this check only looked in its own
+    // search. Else, if this search found it: on the publisher's site
+    // (publisherDomainFrom) and carrying the book's title.
+    const known=row.publisherResult==="product"&&row.publisherUrl?{url:row.publisherUrl,title:null}:null;
+    const pubHost=!known&&pub?publisherDomainFrom(e.results,pub):null;
+    const pubPage=known||(pubHost?resultsCarrying(e.results.filter(x=>hostOf(x.url)===pubHost),orig)[0]:null);
     let pages=e.results;
     if(pubPage){
-      const pf=await fetchPage(pubPage.url,"Every language edition of the book \u201c"+orig+"\u201d this publisher lists: titles, ISBNs, languages.",null,{full:true});
+      // Already read whole by the publisher step: not opened twice.
+      const pf=hit.pubPageRead&&hit.pubPageRead.url===pubPage.url?{ok:true,results:hit.pubPageRead.results,detail:"(the publisher\u2019s page above, read again for its editions)"}
+        :await fetchPage(pubPage.url,"Every language edition of the book \u201c"+orig+"\u201d this publisher lists: titles, ISBNs, languages.",null,{full:true});
       detail=detail+"\n"+pf.detail;
-      if(pf.ok&&pf.results.length)pages=[{...pf.results[0],url:pubPage.url,title:pubPage.title||pf.results[0].title,excerpts:[oneText(pf.results[0])]}].concat(e.results.filter(x=>x!==pubPage));
+      if(pf.ok&&pf.results.length)pages=[{...pf.results[0],url:pubPage.url,title:pubPage.title||pf.results[0].title,excerpts:[oneText(pf.results[0])]}].concat(e.results.filter(x=>x!==pubPage&&!sameAddress(x.url,pubPage.url)));
     }
     const checked=pubPage?"publisher":"shops";
     const none=()=>({...hit,row:{...row,englishCheck:checked},detail:detail+"\nEnglish edition: none found"+(pubPage?" \u2014 the publisher\u2019s own page read ("+pubPage.url+").":"; the publisher\u2019s own page for it was not found.")});
-    if(!e.results.length)return none();
+    if(!pages.length)return none();
     const re=await readResults(
       "You are reading real web search results, looking for an ENGLISH-language edition of the exhibition catalogue \u201c"
       +orig+"\u201d ("+lang+(isbn?", ISBN "+isbn:"")+"), for the exhibition \u201c"+r.title+"\u201d at "+venue+".\n"
@@ -4249,12 +4262,19 @@ export default function App(){
     // English, its own ISBN) is not the catalogue's English edition. Taken only
     // from the SAME publisher, or where a result carrying its ISBN names this
     // venue. Anything else is a look-alike, and the original stands.
-    if(!sameCatalogue(ed.publisher,pub||row.publisher,pages.filter(x=>(String(x.url||"")+" "+oneText(x)).replace(/[^0-9Xx]/g,"").includes(enIsbn)),row.museumId)){
+    // ITS PUBLISHER IS READ OFF ITS ISBN, IN CODE \u2014 her ruling, 7 Oct, as for
+    // the original (publisherOnIsbnResults); Claude's read only where the
+    // results carrying the English ISBN don't agree on one.
+    const onEn=pages.filter(x=>(String(x.url||"")+" "+oneText(x)).replace(/[^0-9Xx]/g,"").includes(enIsbn));
+    const enCoded=publisherOnIsbnResults(onEn,enIsbn);
+    const enPub=enCoded||(ed.publisher?String(ed.publisher).trim():null);
+    if(enCoded)detail=detail+"\nEnglish edition\u2019s publisher from its ISBN: "+enCoded+".";
+    if(!sameCatalogue(enPub,pub||row.publisher,onEn,row.museumId)){
       return none();
     }
-    return{...hit,pageUrl:null,detail:detail+"\nEnglish edition: \u201c"+ed.title+"\u201d, ISBN "+enIsbn+".",
+    return{...hit,pageUrl:null,englishSwap:true,detail:detail+"\nEnglish edition: \u201c"+ed.title+"\u201d, ISBN "+enIsbn+".",
       row:{...row,englishCheck:"english",catalogueTitle:String(ed.title).trim(),isbn13:enIsbn,
-        publisher:ed.publisher?String(ed.publisher).trim():null,publisherUrl:null,publisherResult:null,
+        publisher:enPub,publisherUrl:null,publisherResult:null,
         shopState:"web",shopUrl:null,shopChange:null}};
   };
 
@@ -4385,7 +4405,7 @@ export default function App(){
 
       if(kind==="book"){
         detail=detail+"\nPublisher’s page for the book: "+candidate;
-        return{...hit,detail,row:{...r,publisherUrl:candidate,publisherResult:"product"}};
+        return{...hit,detail,pubPageRead:{url:candidate,results:fp.results},row:{...r,publisherUrl:candidate,publisherResult:"product"}};
       }
       if(kind==="listing"){
         // The deep link is checked, not trusted: it must be on the publisher's
@@ -4451,8 +4471,20 @@ export default function App(){
     // Brancusi). MoMA's shelf answers, but its books are drawn by script after
     // the page arrives: Parallel's copy is a membership pop-up and no books.
     // "Not in the museum shop" off that would be a negative never earned.
-    if(s1.results.every(r=>pageIsShell([r])))
-      return{ran:true,ok:true,blocked:true,detail:s1.detail+"\nThe museum shop’s pages came back with no books on them, so it could not be searched.",data:null};
+    // BUT SHORT EXCERPTS ARE NOT AN EMPTY PAGE — her Watteau, 7 Oct: the
+    // excerpts are the parts about THIS show, so a shelf without the book
+    // gives almost none, and Jacquemart-André read as blocked. The pages are
+    // opened once more, whole; blocked only if the whole pages are still
+    // empty or show no price anywhere (a shelf of books always prices them).
+    let shop=s1;
+    if(s1.results.every(r=>pageIsShell([r]))){
+      const whole=await fetchPage(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
+      if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
+      const books=whole.results.filter(r=>!pageIsShell([r])&&SHOP_PRICE.test(oneText(r)));
+      if(!books.length)
+        return{ran:true,ok:true,blocked:true,detail:s1.detail+"\n"+whole.detail+"\nThe museum shop’s pages came back with no books on them, so it could not be searched.",data:null};
+      shop={...whole,detail:s1.detail+"\n"+whole.detail+"\nThe shop’s pages, read whole: books on them, none about this show in the excerpts."};
+    }
     const r1=await readResults(READ_RULES
       +"\nExhibition: "+title+"\nVenue: "+venue
       +"\nBelow are the venue’s OWN shop pages, opened directly at "+dom
@@ -4460,13 +4492,13 @@ export default function App(){
       +"catalogues, a category page or a search-results page is NOT the book — take the "
       +"one link on it that names this exhibition. If nothing on these pages is this "
       +"exhibition’s catalogue, answer found false.\n\n"
-      +resultsForPrompt(s1.results,6000,{words:[title],dom})+READ_SHAPE);
-    let detail=s1.detail+"\n"+r1.detail;
+      +resultsForPrompt(shop.results,6000,{words:[title],dom})+READ_SHAPE);
+    let detail=shop.detail+"\n"+r1.detail;
     if(!r1.ok)return{ran:true,ok:false,detail,data:null};
     const data={...(r1.data||{})};
     // The title as the shop's pages print it — titleAsPrinted.
     if(data.found&&data.catalogueTitle){
-      const tp=titleAsPrinted(data.catalogueTitle,s1.results);
+      const tp=titleAsPrinted(data.catalogueTitle,shop.results);
       if(tp.cut)detail+="\nTitle cut to what the shop prints: \u201c"+tp.title+"\u201d (the read gave \u201c"+data.catalogueTitle+"\u201d).";
       else if(!tp.onPage)detail+="\nThe title the read gave is not on the shop\u2019s pages as written.";
       data.catalogueTitle=tp.title;
@@ -4481,7 +4513,7 @@ export default function App(){
     // same — bookLinkOnShelf. Also when Claude found the book and gave no link.
     const listed=data.shopUrl&&opened.has(normalizeUrlKey(data.shopUrl));
     if(data.found&&(listed||!data.shopUrl)){
-      const own=bookLinkOnShelf(s1.results,data.catalogueTitle,dom,opened);
+      const own=bookLinkOnShelf(shop.results,data.catalogueTitle,dom,opened);
       if(own){
         detail+="\nThe book’s own link, read off the shop’s listing: "+own;
         return{ran:true,ok:true,detail,data:{...data,shopUrl:own}};
@@ -4497,6 +4529,15 @@ export default function App(){
   // EVERY LOOKUP STARTS FROM A BLANK CARD — her ruling: "Search again
   // literally means search again." Nothing already on the card is kept or
   // skipped; the caller decides whether the result replaces the card.
+  // THE STEPS AFTER THE BOOK IS FOUND, in order. The publisher's page is
+  // found BEFORE the English check, so the check reads the same page the card
+  // links (her Canaletto, 7 Oct); found again only when an English edition
+  // replaced the book, since that edition's publisher is another page.
+  async function laterSteps(hit,venue,dom,mu){
+    const h=await fillPublisherPage(await publisherFromIsbn(await fillFromWeb(await fillIsbn(hit,venue,dom),venue,dom),venue,mu),venue,dom);
+    const e=await fillLanguage(h,venue,dom,mu);
+    return e&&e.englishSwap?await fillPublisherPage(e,venue,dom):e;
+  }
   async function lookupCat(row){
     row=resetCard(row);
     const mu=MU[row.museumId];
@@ -4531,7 +4572,7 @@ export default function App(){
       if(!s1.ok)return{row,detail,ok:false};
       if(s1.data){
         const hit=settle(row,s1.data,dom,detail,true);
-        if(hit)return await fillPublisherPage(await fillLanguage(await publisherFromIsbn(await fillFromWeb(await fillIsbn(hit,venue,dom),venue,dom),venue,mu),venue,dom,mu),venue,dom);
+        if(hit)return await laterSteps(hit,venue,dom,mu);
       }
     }
 
@@ -4578,7 +4619,7 @@ export default function App(){
     // publisherFromIsbn checks it against the ISBN.
     const webHit=await confirmShopLink(settle(row,d2,dom,detail,false,blocked));
     if(webHit&&d2.publisher)webHit.pubGuess=true;
-    return await fillPublisherPage(await fillLanguage(await publisherFromIsbn(await fillFromWeb(await fillIsbn(webHit,venue,dom),venue,dom),venue,mu),venue,dom,mu),venue,dom);
+    return await laterSteps(webHit,venue,dom,mu);
   }
 
   // A STEP THAT DIED IS NOT AN ANSWER \u2014 her question, 21 Sep, and the fault was

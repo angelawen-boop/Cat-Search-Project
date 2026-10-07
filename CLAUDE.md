@@ -468,7 +468,8 @@ and do not flip to searching wide first.**
   the book stays under its own title (`fillLanguage`). **The English edition is looked for where it is listed**
   (her ruling, 7 Oct): the show's English title with the publisher, and the
   publisher's own page for the book, read whole; the card says how far it was
-  checked (`englishCheck`, `englishLine`).
+  checked (`englishCheck`, `englishLine`). It reads the page the publisher step found (that step
+  runs first); the English edition's publisher is read off its ISBN in code.
 - **"X in association with Y" — Y is the publisher** (her ruling, 2 Oct):
   the publisher step and the self-publisher check use Y (`publisherToFind`);
   the card prints the line as given. **A co-edition, "X / Venue", "X and
@@ -508,7 +509,8 @@ and do not flip to searching wide first.**
   appear to exist elsewhere. Search manually to confirm."* Headline red and
   bold, the rest grey. Blocked today: KHM, MAM. **A shop whose every page comes
   back empty is blocked too** (her ruling, 1 Oct) — MoMA's shelf is drawn by
-  script and its search and `products.json` answer 403.
+  script and its search and `products.json` answer 403. Judged on the WHOLE page, opened
+  again when the excerpts are short; no price anywhere = empty (Watteau, 7 Oct).
 - **The Museum shop link searches the shop for the EXHIBITION's title** when
   no book page is on file (`buyLinks`) — resellers keep the book's title, the
   shop keeps the show's. A search or shelf page is never filed as the book's

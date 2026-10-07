@@ -286,6 +286,10 @@ function runtime(answer, log) {
       eq(api.sameCatalogue('Mercatorfonds', 'Fonds Mercator', [], 'jacquemart'), true, 'CE-002a:  the same publisher, however spelled, is');
       eq(api.sameCatalogue(null, null, [{ title: 'x', excerpts: ['English edition of the catalogue of the exhibition at the Musée Jacquemart-André. ISBN 9780000000002'] }], 'jacquemart'), true, 'CE-002b:  or a result carrying its ISBN that names the venue');
       eq(api.sameCatalogue('Reaktion Books', 'Fonds Mercator', saved.results.slice(1, 2), 'jacquemart'), true, 'CE-002c:  (a result naming the venue counts — which is why the gate reads only results carrying the English ISBN)');
+      const names = t => [{ title: 'x', excerpts: [t + '. ISBN 9780000000002'] }];
+      eq(api.sameCatalogue(null, null, names('English catalogue of the exhibition at Capodimonte, Naples'), 'capo'), true, 'CE-003: a venue named by its chip name counts — Capodimonte’s full name ("… aka …") never matched');
+      eq(api.sameCatalogue(null, null, names('Published for the exhibition at the Gallerie degli Uffizi'), 'uffizi'), true, 'CE-003a:  the Uffizi, named in Italian');
+      eq(api.sameCatalogue(null, null, names('Published for the exhibition at the Pitti Palace'), 'uffizi'), false, 'CE-003b:  a result naming another place still does not count');
     }
     eq(api.isSelfPublisher('The Art Institute of Chicago'), true, 'C-146: the Art Institute of Chicago is a museum\u2019s own imprint \u2014 her addition, 2 Oct');
     eq(api.isSelfPublisher('Cincinnati Art Museum'), true, 'C-146b: the Cincinnati Art Museum is a museum\u2019s own imprint \u2014 her addition, 4 Oct');
