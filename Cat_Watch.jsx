@@ -2970,16 +2970,44 @@ function bookLinkOnShelf(results,bookTitle,dom,opened){
   return found.size===1?[...found.values()][0]:null;
 }
 
-// Turn the connector's results into the few lines Claude is asked to read.
-// Trimmed hard: excerpts are long, and the prompt has a 64 KiB ceiling.
-// Trimmed hard for a SEARCH result, which is a headline and a line or two.
-// A shop page opened whole is a different size of thing \u2014 its product list
-// IS the answer \u2014 so step one raises the cap rather than cutting the list
-// off after the first few books.
-// Outside the component so a fixture can reach it (AL-022).
-const resultsForPrompt=(list,cap)=>list.slice(0,8).map((r,i)=>
+// WHAT CLAUDE IS GIVEN TO READ — her ruling, 7 Oct. A result's text was cut
+// to its first N characters, blind: Botticelli's "Buy the catalog" sat at
+// ~1,970 and was cut off, while a curator's bio naming another book got in.
+// Now a result that fits is given whole; one that does not is given its
+// RELEVANT passages first — every line naming the show or book (its longer
+// words), a catalogue / ISBN / edition / price / sale word, or a link onto the
+// venue's shop, each with the line either side — then the rest in page order
+// until the cap. Never worse than the old cut, and the deep line arrives.
+// The cap keeps a read under its 64 KiB ceiling: eight results at most.
+const PASSAGE_CUES=/catal[o\u00f3]g|katalog|isbn|\bean\b|edition|\u00e9dition|edizione|ausgabe|publisher|\u00e9diteur|editore|verlag|uitgeverij|hardcover|hardback|paperback|softcover|\bpages\b|[$\u20ac\u00a3]\s?\d|\d\s?(?:\u20ac|eur\b)|sold out|out of stock|\u00e9puis\u00e9|esaurito|ausverkauft|uitverkocht|add to (?:cart|bag|basket)|pre-?order|english|anglais|inglese|englisch|engels/i;
+const FOCUS_STOP=new Set(["the","and","from","with","exhibition","catalogue","catalog","museum","musee","mus\u00e9e","paris","london","edition"]);
+function focusWords(words){
+  const out=new Set();
+  for(const w of (words||[]).join(" ").split(/[^\p{L}\p{N}]+/u)){
+    const f=foldText(w);
+    if(f.length>=4&&!FOCUS_STOP.has(f))out.add(f);
+  }
+  return [...out];
+}
+function pickPassages(text,focus,cap){
+  const t=String(text||"");
+  if(t.replace(/\s+/g," ").length<=cap)return t.replace(/\s+/g," ").trim();
+  const lines=t.split(/\n+/).map(l=>l.replace(/\s+/g," ").trim()).filter(Boolean);
+  const words=focusWords((focus&&focus.words)||[]), dom=focus&&focus.dom;
+  const hit=l=>{ const f=foldText(l); return PASSAGE_CUES.test(l)||words.some(w=>f.includes(w))||(dom&&l.toLowerCase().includes(String(dom).toLowerCase())); };
+  const keep=new Set();
+  lines.forEach((l,i)=>{ if(hit(l))for(const j of [i-1,i,i+1])if(j>=0&&j<lines.length)keep.add(j); });
+  let out="", used=new Set();
+  const add=i=>{ if(used.has(i))return; const piece=(out?" ":"")+lines[i]; if(out.length+piece.length>cap)return; out+=piece; used.add(i); };
+  [...keep].sort((a,b)=>a-b).forEach(add);
+  lines.forEach((l,i)=>add(i));
+  // Kept in page order, so a passage still reads where it stood.
+  return [...used].sort((a,b)=>a-b).map(i=>lines[i]).join(" ").slice(0,cap);
+}
+// Outside the component so a fixture can reach it (AL-022, AL-023).
+const resultsForPrompt=(list,cap,focus)=>list.slice(0,8).map((r,i)=>
   (i+1)+". "+String(r.title||"(untitled)")+"\n   "+String(r.url||"")+"\n   "
-  +(Array.isArray(r.excerpts)?r.excerpts.join(" ").replace(/\s+/g," ").slice(0,cap||700):"")
+  +(Array.isArray(r.excerpts)?pickPassages(r.excerpts.join("\n"),focus,cap||700):"")
 ).join("\n\n");
 
 // A LINK LABELLED CATALOGUE, ONTO THE VENUE'S OWN SHOP — her Botticelli,
@@ -4497,7 +4525,7 @@ export default function App(){
       +"\nBook: "+book+"\nExhibition venue: "+venue
       +"\nThese are web search results about THIS book. Read its ISBN and publisher off them. "
       +"If they are about a different book, answer null.\n\n"
-      +resultsForPrompt(s3.results)+PAGE_SHAPE);
+      +resultsForPrompt(s3.results,3000,{words:[book,r.publisher||""],dom})+PAGE_SHAPE);
     detail=detail+"\n"+rd.detail;
     if(!rd.ok&&!coded)return{...hit,detail,trouble:rd.detail};
     let filled=applyIsbnFill(r,{...(rd.ok?(rd.data||{}):{}),...(coded?{isbn13:coded}:{})},dom);
@@ -4577,7 +4605,7 @@ export default function App(){
       +"language: the language the book's text is printed in, named in English (French, Italian\u2026), "
       +"or null if no result says. A bilingual book: name both.\n"
       +"title: the book's title EXACTLY as printed, in its own language \u2014 never translated. Null if not shown.\n\n"
-      +resultsForPrompt(s.results)
+      +resultsForPrompt(s.results,3000,{words:[book,isbn||""]})
       +'\n\nReply with ONLY this JSON object: {"language": string|null, "title": string|null}');
     detail=detail+"\n"+rd.detail;
     if(!rd.ok)return stopped(rd.detail);
@@ -4604,7 +4632,7 @@ export default function App(){
       +"Use ONLY what the results say. Never use outside knowledge and never guess an ISBN.\n"
       +"found is true ONLY if a result shows an edition printed in English, with its OWN ISBN, different from the one above.\n"
       +"title: that edition's title exactly as printed. publisher: its publisher, never a shop or a seller.\n\n"
-      +resultsForPrompt(e.results)
+      +resultsForPrompt(e.results,3000,{words:[orig,r.title]})
       +'\n\nReply with ONLY this JSON object: {"found": true|false, "title": string|null, "isbn13": string|null, "language": string|null, "publisher": string|null}');
     detail=detail+"\n"+re.detail;
     if(!re.ok)return{...hit,row,detail,trouble:re.detail,troubleLang:true};
@@ -4687,7 +4715,7 @@ export default function App(){
      +"Use ONLY these results. Never invent a link.\n"
      +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+pub
      +"\nExhibition venue: "+venue+"\n\n"
-     +resultsForPrompt(onSite)
+     +resultsForPrompt(onSite,3000,{words:[book,isbn||""]})
      +"\nReply with ONLY this JSON object and nothing else:\n"
      +'{"candidates": [string]}\n'
      +'Example: {"candidates":["https://hannibalbooks.be/en/fine-art","https://hannibalbooks.be/en/new"]}');
@@ -4820,7 +4848,7 @@ export default function App(){
       +"catalogues, a category page or a search-results page is NOT the book — take the "
       +"one link on it that names this exhibition. If nothing on these pages is this "
       +"exhibition’s catalogue, answer found false.\n\n"
-      +resultsForPrompt(s1.results,6000)+READ_SHAPE);
+      +resultsForPrompt(s1.results,6000,{words:[title],dom})+READ_SHAPE);
     let detail=s1.detail+"\n"+r1.detail;
     if(!r1.ok)return{ran:true,ok:false,detail,data:null};
     const data={...(r1.data||{})};
@@ -4910,7 +4938,7 @@ export default function App(){
       // Read whole (the shop step's cap), never cut to 700 characters — her
       // Botticelli, 7 Oct: the museum's own page said "Buy the catalog" at
       // character ~1,970, after the curators' bios, and Claude never saw it.
-      +resultsForPrompt(s2.results,6000)+READ_SHAPE);
+      +resultsForPrompt(s2.results,6000,{words:[title,venue],dom})+READ_SHAPE);
     detail=detail+"\n"+r2.detail;
     if(!r2.ok)return{row,detail,ok:false};
     // ANOTHER VENUE'S CATALOGUE IS NOT THIS SHOW'S — her ruling, 2 Oct (NG,
