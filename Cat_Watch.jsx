@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "40.3";
+const APP_VERSION = "40.4";
 const APP_VERSION_DATE = "7 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -1095,7 +1095,13 @@ function readShowPage(res,url){
   // A show whose own name holds a bar — "Art in Dialogue: Duccio | Caro" (her
   // NG link, 6 Oct): the page title cuts it at the bar, so the heading, which
   // starts with the same words and goes on, is the name.
-  const base=show&&heading.length>show.length&&heading.length<=200&&foldText(heading).startsWith(foldText(show))?heading:(show||heading);
+  // A page title that WRAPS the heading — words before it — is dressed by the
+  // site: "Exhibition Giovanni Bellini in Paris" for the heading "Giovanni
+  // Bellini" (Jacquemart-André, 7 Oct). The heading is the name. A title that
+  // only runs on past the heading is a subtitle and stays: "Hammershøi. The
+  // Eye that Listens" for "Hammershøi" (Thyssen).
+  const wrapped=show&&heading&&foldText(show).indexOf(foldText(heading))>0;
+  const base=wrapped?heading:show&&heading.length>show.length&&heading.length<=200&&foldText(heading).startsWith(foldText(show))?heading:(show||heading);
   const between=lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l)));
   const dateLine=stripMd(lines[d]);
   let raw="";
@@ -1110,10 +1116,12 @@ function readShowPage(res,url){
 // The title is WHAT THE CATALOGUE WOULD BE CALLED — her ruling, 3 Oct: a
 // subtitle the page prints is kept ("Peggy Guggenheim in London: The Making
 // of a Collector").
+// A subtitle that carries on the sentence — "and the Masters of Light" under
+// "Fra Angelico" (Jacquemart-André, 7 Oct) — joins with a space, not a colon.
 function linkTitle(base,subtitle,between){
   const sub=String(subtitle||"").trim();
   if(!sub||!(between||[]).includes(sub)||foldText(base).includes(foldText(sub)))return base;
-  return base.replace(/[\s:.—-]+$/,"")+": "+sub;
+  return base.replace(/[\s:.—-]+$/,"")+(/^(and|&)\s/.test(sub)?" ":": ")+sub;
 }
 
 function linkPrompt(page){
@@ -1526,19 +1534,22 @@ function isUndecidedCard(p,dec){
 // EVERY DECIDED CARD LANDS IN ONE OF THREE COUNTS — her ask, 30 Sep: 53 cards
 // decided and the footer said 48, with nothing to say where the other 5 went.
 // Decided = to apply + quarantined + rejected, always, so the footer adds up.
+// One card's fate. The counts and the link box (rejected links go back in it)
+// both ask this, so they cannot disagree about what "rejected" is.
+function cardOutcome(p,dec){
+  dec=dec||{};
+  if(isUndecidedCard(p,dec))return"undecided";
+  if(p.type==="add")return dec.mode==="accept"?"accepted":dec.mode==="never"?"quarantined":"rejected";
+  if(dec.mode==="addnew")return"accepted";
+  return Object.values(dec.fields||{}).some(v=>v==="accept")?"accepted":"rejected";
+}
 function countDecisions(proposals,decisions){
   let acceptedCount=0,undecidedCount=0,quarantinedCount=0,rejectedCount=0;
   (proposals||[]).forEach((p,i)=>{
-    const dec=(decisions||{})[i]||{};
-    if(isUndecidedCard(p,dec)){undecidedCount++;return;}
-    if(p.type==="add"){
-      if(dec.mode==="accept")acceptedCount++;
-      else if(dec.mode==="never")quarantinedCount++;
-      else rejectedCount++;
-      return;
-    }
-    if(dec.mode==="addnew"){acceptedCount++;return;}
-    if(Object.values(dec.fields||{}).some(v=>v==="accept"))acceptedCount++;
+    const o=cardOutcome(p,(decisions||{})[i]);
+    if(o==="undecided")undecidedCount++;
+    else if(o==="accepted")acceptedCount++;
+    else if(o==="quarantined")quarantinedCount++;
     else rejectedCount++;
   });
   return {acceptedCount,undecidedCount,quarantinedCount,rejectedCount};
@@ -3678,7 +3689,15 @@ export default function App(){
     // The import is finished: what it held back is stored now — the sweep log
     // (a CSV's), and the paste box's unread links (a Read's).
     // seenInFile is set by a CSV and only by a CSV: a link is not a sweep.
-    if(seenInFile)recordSweep(seenInFile); else writePendingLinks(linkText);
+    // A Read's REJECTED cards go back in the box with the unread links (her
+    // ask, 7 Oct: rejected for a fault, to be read again once it is fixed,
+    // without pasting them again). "Clear" in the box empties it.
+    if(seenInFile)recordSweep(seenInFile);
+    else{
+      const rejected=proposals.filter((p,i)=>cardOutcome(p,decisions[i])==="rejected").map(p=>(p.cand||{}).exUrl).filter(Boolean);
+      const box=[...new Set([...linksIn(linkText),...rejected])].join("\n");
+      setLinkText(box); writePendingLinks(box);
+    }
     // A NEW QUARANTINE GOES TO THE STORE, not into the ledger she is about to
     // commit. Her export still carries the list, but the copy that does the
     // blocking is the one that survives a Reset.
@@ -5195,8 +5214,15 @@ export default function App(){
               <button onClick={()=>setImportMode("links")} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>Links</button>
             </div>
             {importMode==="links"&&<div style={{marginTop:14}}>
-              <textarea value={linkText} onChange={e=>setLinkText(e.target.value)} rows={8} disabled={busy}
-                style={{width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"8px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,resize:"vertical"}}/>
+              {/* "Clear" sits inside the box, top right (her design, 7 Oct):
+                  links come back in it by themselves, so emptying it is one
+                  press, and stays emptied. */}
+              <div style={{position:"relative"}}>
+                <textarea value={linkText} onChange={e=>setLinkText(e.target.value)} rows={8} disabled={busy}
+                  style={{width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"8px 52px 8px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,resize:"vertical",display:"block"}}/>
+                {linkText.trim()&&<button onClick={()=>{ setLinkText(""); setLinkFails([]); setLinkNote(null); writePendingLinks(""); }} disabled={busy}
+                  style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
+              </div>
               <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
                 <button onClick={readLinks} disabled={busy} style={pBtn}>Read</button>
               </div>

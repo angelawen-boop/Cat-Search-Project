@@ -908,6 +908,8 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
   and shops, Confirm / No shop / Look again, a CSV's sweep log, the paste box.
   All stored when the ledger moves; Cancel import drops them; Back keeps them.
   A file or Read with nothing to propose counts as finished.
+- **A rejected link goes back in the box** when the import finishes, with the
+  unread ones; "Clear", inside the box, empties it and the store (7 Oct).
 - **Books and ONLY books** — a section mixing books with other goods is never
   taken; the finder looks inside it for a books-only one. Catalogues ›
   publications › books. Never a front page.
