@@ -17,8 +17,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "40.2";
-const APP_VERSION_DATE = "6 Oct 2026";
+const APP_VERSION = "40.3";
+const APP_VERSION_DATE = "7 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
 // size — it is the order she wants to WORK in. The venues she reads most come
@@ -979,6 +979,7 @@ function composeSummary(english, teaser) {
   if (!t) return d;
   return `${EN_PREFIX}"${/[.!?]$/.test(t) ? t : t + '.'}" ${d}`;
 }
+const VENUE_SITES=[{"id":"met","host":"metmuseum.org"},{"id":"ng","host":"nationalgallery.org.uk"},{"id":"rijks","host":"rijksmuseum.nl"},{"id":"acq","host":"acquavellagalleries.com"},{"id":"lgd","host":"levygorvydayan.com"},{"id":"borghese","host":"galleriaborghese.cultura.gov.it"},{"id":"frick","host":"frick.org"},{"id":"morgan","host":"themorgan.org"},{"id":"menil","host":"menil.org"},{"id":"va","host":"vam.ac.uk"},{"id":"louvre","host":"louvre.fr"},{"id":"capo","host":"capodimonte.cultura.gov.it"},{"id":"uffizi","host":"uffizi.it"},{"id":"brera","host":"pinacotecabrera.org"},{"id":"orsay","host":"musee-orsay.fr"},{"id":"mam","host":"mam.paris.fr"},{"id":"mad","host":"madparis.fr"},{"id":"ashmolean","host":"ashmolean.org"},{"id":"jacquemart","host":"musee-jacquemart-andre.com"},{"id":"khm","host":"khm.at"},{"id":"artic","host":"artic.edu"},{"id":"moma","host":"moma.org"},{"id":"brit","host":"britishmuseum.org"},{"id":"dellav","host":"gallerieaccademia.it"},{"id":"tate-modern","host":"tate.org.uk","path":"/whats-on/tate-modern/"},{"id":"tate-britain","host":"tate.org.uk","path":"/whats-on/tate-britain/"},{"id":"wallace","host":"wallacecollection.org"},{"id":"cincinnati","host":"cincinnatiartmuseum.org"}];
 const SUMMARY_EXAMPLES=[{"title":"German Expressionism","raw":"Across Germany’s major cities, a new generation of artists emerged between 1900 and 1918 to change the rules of painting. They were the German Expressionists. Made up of two pioneering groups – Die Brücke (The Bridge) and Der Blaue Reiter (The Blue Rider) – these young artists painted raw emotions on canvas with a new intensity. Die Brücke was formed by a group of self-taught artists. Rebelling against conservative society, they lived and worked together in the bohemian corners of Dresden and other cities, before moving to Berlin, Germany’s rapidly modernising capital. For them, colour became…","summary":"Fifty German Expressionist works."},{"title":"Asian Bronze","raw":"From Shiva and the Buddha to wine casks and weapons. Everything about bronze triggers your senses. For centuries, this material has played a central role in the traditions of Asia. Now you too can experience the beauty of bronze art at last.","summary":"Four thousand years of Asian bronze."},{"title":"Hockney and Piero: A Longer Look","raw":"David Hockney, in his own words, has always been a looker. Throughout his career, Hockney has found inspiration in the work of other artists. He never tires of looking at paintings. For him, there’s magic in it every time, whether that’s enjoying a picture in a gallery or a much-loved poster at home. This very personal show brings together two Hockney paintings, one showing his mother and father and the other depicting his friend, curator Henry Geldzahler. They are displayed with the thread that ties them together, Piero della Francesca’s ‘The Baptism of Christ’. ‘My Parents’ and ‘Looking at…","summary":"Hockney against Piero della Francesca."},{"title":"At Home in the 17th Century","raw":"What was life really like in the 17th century? That’s the museum’s most-asked question. Now, the time has come to find out. At Home in the 17th Century offers an up-close experience of daily life 400 years ago. Immerse yourself in a full day of the 17th century as you walk among the nine diorama-style displays that make up this exhibition — packed with personal stories and unique objects.","summary":"Domestic life with Rembrandt, Hals, Vermeer."},{"title":"José María Velasco","raw":"See the first UK exhibition of Mexico’s much-loved artist, José María Velasco. Velasco, working in Mexico in the 19th century, was a man of many interests. He was fascinated by advances in geology, the archaeology of his home country, the study of local flora, and the increasing presence of industrialisation. He painted the sweeping landscapes of the Valley of Mexico, the home of modern-day Mexico City, with exquisite detail. His impressive panoramic views of the valley reveal allusions to Mexico's historic past and its rapidly modernising present. Velasco was keenly aware of his country’s…","summary":"Mexico's landscape painter."},{"title":"Carel Visser in the Rijksmuseum Gardens","raw":"This summer, the Rijksmuseum Gardens are home to the work of Carel Visser, the most influential Dutch sculptor of the twentieth century. Visser's sculptures, some as tall as eight metres or as long as five metres, come from museums, private collections and public spaces. Now they are brought together for the very first time. Carel Visser (1928–2015) had little affinity with traditional sculptors' materials such as marble, stone or wood. Iron was his great love. With a cutting torch and welding equipment, he shaped his sculptures from steel plates and beams. Stacking, repetition and symmetry…","summary":"Most influential Dutch sculptor of the twentieth century."},{"title":"Millet: Life on the Land","raw":"The sower, the woodcutter, a shepherd girl. These are the subjects that made French artist Jean-Francois Millet famous. Marking the 150th anniversary of his death, this is an opportunity to see some of Millet’s best-loved paintings and drawings. Born into a farming family in Normandy, Millet moved to the village of Barbizon in 1849 where he put the people who spent their life working on the land, often the poorest of the poor in 19th-century France, at the heart of his work. He knew these people and his realistic, unsentimental approach to painting them was completely new. See his iconic…","summary":"The subjects that made Millet famous."},{"title":"Crossings","raw":"Discover how colonial and contemporary perspectives converge in photographs from the Indian subcontinent. Past meets present in the Crossings exhibition.","summary":"Photography from the Indian subcontinent."}];
 // ===== END SHARED =====
 
@@ -1062,8 +1063,12 @@ function splitPageTitle(t,host){
 }
 
 // THE SCRAPER'S CUT — her ruling 25 Sep: the description is read to about
-// 2,000 characters. Here it starts AFTER the date line, so the page's furniture
-// above the show (menus, opening hours) never reaches the model.
+// 2,000 characters. Here it starts UNDER THE SHOW'S HEADING, so the page's
+// furniture above the show (menus) never reaches the model, and runs on past
+// the date line, which is left out. 7 Oct: it started after the date line, and
+// Jacquemart-André prints the dates at the FOOT of the page, under the text —
+// the model was handed opening hours and cookies, and two cards came with no
+// description.
 const LINK_RAW_CHARS=2000;
 const LINK_DATE_LINES=40;
 
@@ -1094,9 +1099,9 @@ function readShowPage(res,url){
   const between=lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l)));
   const dateLine=stripMd(lines[d]);
   let raw="";
-  for(let k=d+1;k<lines.length&&raw.length<LINK_RAW_CHARS;k++){
+  for(let k=h+1;k<lines.length&&raw.length<LINK_RAW_CHARS;k++){
     const l=stripMd(lines[k]);
-    if(!l||l===dateLine)continue;
+    if(!l||l===dateLine||l===heading)continue;
     raw+=(raw?"\n":"")+l;
   }
   return{ok:true,base,between,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||host.replace(/^www\./,"")};
@@ -1116,7 +1121,7 @@ function linkPrompt(page){
   return "You are reading one museum exhibition page for a personal art-catalogue tracker. Your ONLY output is one JSON object.\n\n"
     +"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
     +(page.between.length?"LINES BETWEEN THE TITLE AND THE DATES: "+JSON.stringify(page.between)+"\n":"")
-    +"RAW TEXT (the page after the dates):\n\"\"\"\n"+page.raw+"\n\"\"\"\n\n"
+    +"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"\n\n"
     +"EXAMPLES of the required summary style — a venue's raw text, and the summary that was accepted:\n\n"+ex+"\n\n"
     +"RULES FOR THE SUMMARY:\n"+SUMMARY_RULES+"\n\n"
     +"Answer with exactly these keys:\n"
@@ -1138,14 +1143,18 @@ function occVenueId(host){
   return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
 
-// A link to a venue the app already sweeps files under THAT venue.
-function knownVenueFor(host){
-  const h=String(host||"").replace(/^www\./,"");
+// A link to a venue the app already sweeps files under THAT venue — known by
+// its site, from the scraper's own recipes (VENUE_SITES, written by
+// sync_shared). 7 Oct: matched on exBase/listUrl, blank at 23 of the 28, her
+// Jacquemart-André links became a new venue. Two venues on one site (the
+// Tates) are told apart by the path the recipe gives.
+function knownVenueFor(url){
+  const h=hostOf(url).replace(/^www\./,"");
   if(!h)return null;
-  for(const m of MUSEUMS){
-    for(const u of [m.exBase,m.listUrl]){ if(u&&hostOf(u).replace(/^www\./,"")===h)return m.id; }
-  }
-  return null;
+  let path="";
+  try{ path=new URL(url).pathname; }catch{}
+  const hit=VENUE_SITES.find(v=>v.host===h&&(!v.path||path.startsWith(v.path)));
+  return hit?hit.id:null;
 }
 
 // AN OCCASIONAL VENUE, AS THE APP USES IT. Kept in the page's store (a fact
@@ -3488,7 +3497,7 @@ export default function App(){
     const urls=linksIn(linkText);
     if(!urls.length){ setLinkFails([{url:"",why:"No links found in the box."}]); return; }
     setBusy(true); setLinkNote(null); setLinkFails([]);
-    const got=[], fails=[], met=new Set();
+    const got=[], fails=[], met=new Set(), looked=new Set();
     let venues={...occVenues}, venuesChanged=false;
     for(let n=0;n<urls.length;n++){
       const url=urls[n];
@@ -3505,7 +3514,7 @@ export default function App(){
         const page=readShowPage(res,url);
         if(!page.ok){ fails.push({url,why:page.why}); continue; }
         const host=hostOf(url);
-        let vc=knownVenueFor(host);
+        let vc=knownVenueFor(url);
         if(!vc){
           vc=occVenueId(host);
           met.add(vc);
@@ -3514,7 +3523,10 @@ export default function App(){
           // confirmed it AND it was found by the finder before 4 Oct's (which
           // could hand back a front page, a post or one book), or its books
           // section was not found — a miss is never kept as the answer.
-          if(!had||(!had.confirmed&&(!(had.finder>=2)||had.shop!=="found"))){
+          // Once per venue in a Read, whatever it found (7 Oct: seven
+          // Jacquemart-André links, seven looks).
+          if(!looked.has(vc)&&(!had||(!had.confirmed&&(!(had.finder>=2)||had.shop!=="found")))){
+            looked.add(vc);
             setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+page.site+"\u2019s shop"});
             const pageShop=shopLinkOnPage(oneText(res),host);
             const shop=await discoverShop(pageShop,host,page.site,had?had.turnedDown:[]);

@@ -12,3 +12,8 @@ app could read show pages without a browser (docs/picked_shows.md).
 
 Used by `scraper/fixtures/add_by_link.js` (AL-001 to AL-010). Never fetched
 again by a test.
+
+`jacquemart_watteau.json` (7 Oct) is not a connector answer: it is HER saved
+page (*From Watteau to Fragonard*), turned to the connector's shape by code, its
+broken accents mended by hand. The trap: the dates sit at the FOOT, under the
+description and the curators — the description is above them (AL-017).

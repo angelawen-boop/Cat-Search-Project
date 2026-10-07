@@ -4893,6 +4893,9 @@ const VENUES = {
     // Liverpool — neither is one of her 21 — with no text matching at all. They
     // appear on every page as cross-promotion.
     selector: 'a[href*="/whats-on/tate-modern/"]',
+    // ONE SITE, TWO VENUES: the app's Add by link tells a Tate link's gallery
+    // by this path (build/sync_shared.js). Only a venue sharing its site has one.
+    showPath: '/whats-on/tate-modern/',
     // THE RESULTS GRID ONLY. The header's search promo and the featured strip
     // carry the headline shows on every page, so they were "also listed" on
     // pages they are not on, and the FIRST link read — title, dates — was the
@@ -4942,6 +4945,8 @@ const VENUES = {
         ctx: 'past and current', dateRange: true, rangeFrom: 'date_a', rangeTo: 'date_b' },
     ],
     selector: 'a[href*="/whats-on/tate-britain/"]',
+    // The app's Add by link: see tate-modern's showPath.
+    showPath: '/whats-on/tate-britain/',
     // THE RESULTS GRID ONLY. The header's search promo and the featured strip
     // carry the headline shows on every page, so they were "also listed" on
     // pages they are not on, and the FIRST link read — title, dates — was the

@@ -221,6 +221,40 @@ function runtime() {
     ok(duccio.base === 'Art in Dialogue: Duccio | Caro' && venice.base === 'Venice: Canaletto and His Rivals',
       'AL-015a: a bar inside the show\'s own name is kept, read off the page\'s heading; a section name still is not', JSON.stringify([duccio.base, venice.base]));
   }
+  // ── AL-016: a link from one of her 28 files under that venue ───────────
+  // 7 Oct: her Jacquemart-André links became a new venue — the app knew a venue
+  // by exBase/listUrl, blank at 23 of the 28. It now knows each by its site,
+  // written in from the scraper's recipes (VENUE_SITES).
+  {
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const known = fn('knownVenueFor'), sites = fn('VENUE_SITES'), museums = fn('MUSEUMS');
+    const { VENUES } = require('../sweep_prototype.js');
+    ok(JSON.stringify(sites.map(v => v.id).sort()) === JSON.stringify(Object.keys(VENUES).sort())
+      && JSON.stringify(museums.map(m => m.id).sort()) === JSON.stringify(Object.keys(VENUES).sort()),
+      'AL-016: the app knows the site of every one of the scraper\'s venues, and the same 28 as its own list', sites.length);
+    const wrong = Object.entries(VENUES).filter(([id, v]) => known(v.base + (v.showPath || '/') + 'some-show') !== id).map(([id]) => id);
+    ok(!wrong.length, 'AL-016a:  a show link at each of the 28 files under that venue', wrong.join(', '));
+    ok(known('https://www.musee-jacquemart-andre.com/en/watteau-fragonard') === 'jacquemart'
+      && known('https://musee-jacquemart-andre.com/en/turner') === 'jacquemart',
+      'AL-016b:  her Jacquemart-André links, with and without www');
+    ok(known('https://www.tate.org.uk/whats-on/tate-britain/some-show') === 'tate-britain'
+      && known('https://www.tate.org.uk/whats-on/tate-modern/some-show') === 'tate-modern'
+      && known('https://www.tate.org.uk/whats-on/tate-liverpool/some-show') === null,
+      'AL-016c:  one site, two venues: the Tates told apart by the path; Tate Liverpool is neither');
+    ok(known('https://www.mauritshuis.nl/en/exhibitions/x') === null, 'AL-016d:  a site outside the 28 is not one of them');
+  }
+  // ── AL-017: the description is wherever it sits, not only below the dates ─
+  // 7 Oct: two of her Jacquemart-André links came with no description. The
+  // page prints its dates at the FOOT, and the text read started after them —
+  // opening hours, prices and cookies. Her saved page (docs/link_pages/).
+  {
+    const read = new Function('React', 'window', 'document', 'localStorage', code + '\n;return readShowPage;')(React, win, win.document, win.localStorage);
+    const r = read(page('jacquemart_watteau'), page('jacquemart_watteau').url);
+    ok(r.ok && r.start === '2014-03-14' && r.end === '2014-07-21', 'AL-017: Watteau to Fragonard dated from the foot of the page', JSON.stringify([r.start, r.end, r.why]));
+    ok(r.ok && /delighted to be holding the exhibition/.test(r.raw) && !/Open every day|cookies/i.test(r.raw),
+      'AL-017a:  the text handed to Claude is the show\'s, from under its heading — not the hours, prices and cookies under the dates', r.raw && r.raw.slice(0, 120));
+    ok(r.ok && !r.raw.includes('From 14 March to 21 July 2014') && !/^From Watteau to Fragonard$/m.test(r.raw), 'AL-017b:  the date line and the heading are not repeated in it');
+  }
   // ── AL-001: Import opens ONE pop-up; nothing is added to the page ───────
   // Her ruling, 4 Oct: no new buttons and no text in the page's header.
   const dialog = () => win.document.querySelector('[role=dialog]');
@@ -501,6 +535,30 @@ function runtime() {
     if (buttons(/^Search again$/)[0]) { await click(buttons(/^Search again$/)[0]); await settle(20); }
     ok(!calls.some(c => c.kind === 'mcp' && c.tool === 'web_fetch' && c.args.urls.length === 8),
       'AL-014c:  worked out once: the next lookup does not prove it again');
+  }
+  // ── AL-018: one shop look per venue in a Read — and none at her 28 ──────
+  // 7 Oct: seven Jacquemart-André links, seven looks for a shop the app knew.
+  {
+    const jq = ['fra-angelico', 'canaletto-guardi-0', 'watteau-fragonard', 'hammershoi', 'turner', 'botticelli', 'giovanni-bellini']
+      .map(s => 'https://www.musee-jacquemart-andre.com/en/' + s);
+    const ra2 = 'https://www.royalacademy.org.uk/exhibition/another-show';
+    for (const u of jq) P[u] = { ...page('jacquemart_watteau'), url: u };
+    P[ra2] = { ...P[urlOf('ra_guggenheim')], url: ra2 };
+    store.delete('venues/occasional');   // the RA unmet: its shop not found, twice over
+    await click(importBtn());
+    await click(inDialog('Links'));
+    const box2 = dialog().querySelector('textarea');
+    await act(async () => { setter.call(box2, jq.join('\n') + '\n' + urlOf('ra_guggenheim') + '\n' + ra2); box2.dispatchEvent(new win.Event('input', { bubbles: true })); });
+    await settle();
+    calls.length = 0;
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await settle(30);
+    const shopSearches = calls.filter(c => c.kind === 'mcp' && c.tool === 'web_search');
+    ok(!shopSearches.some(c => /Jacquemart/i.test(c.args.search_queries.join(' '))), 'AL-018: seven Jacquemart-André links: no shop looked for — it is one of her 28', JSON.stringify(shopSearches.map(c => c.args.search_queries)));
+    ok(shopSearches.filter(c => /Royal Academy/i.test(c.args.search_queries.join(' '))).length === 1,
+      'AL-018a:  two links from a new venue whose shop is not found: looked for ONCE', shopSearches.length);
+    const jqCards = [...win.document.querySelectorAll('button')].filter(b => /^Add new entry$/.test(b.textContent.trim())).length;
+    ok(jqCards === 9, 'AL-018b:  and all nine links come to a card', jqCards);
   }
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) fail('React complained: ' + shouted.find(s => /Warning/.test(s)));
   console.log(failures ? '\n' + failures + ' FAILED' : '\nadd_by_link: all passed');
