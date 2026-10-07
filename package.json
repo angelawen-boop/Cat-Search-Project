@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node scraper/run_tests.js"
+    "test": "node scraper/run_tests.js",
+    "test:app": "node scraper/run_tests.js app",
+    "test:scraper": "node scraper/run_tests.js scraper"
   },
   "repository": {
     "type": "git",
