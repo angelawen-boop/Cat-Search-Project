@@ -16,6 +16,11 @@
  *   scraper/compress.js        → EN_PREFIX and composeSummary(), which
  *                                 write the "In English: …" line
  *   compress.js --examples     → SUMMARY_EXAMPLES — only with --examples.
+ *   sweep_prototype.js VENUES  → VENUE_SITES: each venue's site (and, where
+ *                                 two venues share one, its showPath), so a
+ *                                 link from one of her 28 files under it —
+ *                                 7 Oct, her Jacquemart-André links were
+ *                                 filed as a new venue.
  *
  * THE EXAMPLES ARE A SNAPSHOT, ON PURPOSE. They are built from whatever runs
  * are on disk, so they change with every sweep; checking them would fail
@@ -81,6 +86,21 @@ function composeBlock() {
   return prefix + '\n' + src.slice(at, end + 2);
 }
 
+function sitesBlock() {
+  const { VENUES } = require(path.join(ROOT, 'scraper', 'sweep_prototype.js'));
+  const sites = Object.entries(VENUES).map(([id, v]) => {
+    let host;
+    try { host = new URL(v.base).hostname.toLowerCase().replace(/^www\./, ''); } catch { die(`VENUES.${id} has no readable base`); }
+    return v.showPath ? { id, host, path: v.showPath } : { id, host };
+  });
+  // Two venues on one site are told apart only by a path: without one each,
+  // a link would file under whichever came first.
+  for (const s of sites) {
+    if (sites.some(o => o !== s && o.host === s.host) && !s.path) die(`VENUES.${s.id} shares ${s.host} with another venue and has no showPath`);
+  }
+  return 'const VENUE_SITES=' + JSON.stringify(sites) + ';';
+}
+
 function examplesBlock() {
   const { buildExamples } = require(path.join(ROOT, 'scraper', 'compress_cli.js'));
   const pairs = buildExamples()
@@ -104,11 +124,11 @@ if (i < 0 || j < 0 || j < i) die('Cat_Watch.jsx has no SHARED markers');
 const current = jsx.slice(i + OPEN.length, j);
 const keptExamples = (current.match(/^const SUMMARY_EXAMPLES=.*;$/m) || [])[0];
 const examples = retakeExamples || !keptExamples ? examplesBlock() : keptExamples;
-const region = '\n' + [datesBlock(), rulesBlock(), composeBlock(), examples].join('\n') + '\n';
+const region = '\n' + [datesBlock(), rulesBlock(), composeBlock(), sitesBlock(), examples].join('\n') + '\n';
 
 if (check) {
-  if (region !== current) die('Cat_Watch.jsx is OUT OF STEP with scraper/dates.js or compress_prompt.md — run `node build/sync_shared.js`.');
-  console.log('sync_shared: Cat_Watch.jsx matches scraper/dates.js, compress_prompt.md and compress.js.');
+  if (region !== current) die('Cat_Watch.jsx is OUT OF STEP with scraper/dates.js, compress_prompt.md, compress.js or the scraper\'s VENUES — run `node build/sync_shared.js`.');
+  console.log('sync_shared: Cat_Watch.jsx matches scraper/dates.js, compress_prompt.md, compress.js and VENUES.');
   process.exit(0);
 }
 fs.writeFileSync(JSX, jsx.slice(0, i + OPEN.length) + region + jsx.slice(j));
