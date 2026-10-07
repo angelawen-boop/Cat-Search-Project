@@ -460,11 +460,12 @@ and do not flip to searching wide first.**
   (`titleAsPrinted`). At a venue marked `english:false`, a book this lookup
   found gets one search by ISBN for its language and own title; not English →
   one search for an English edition → filed as "Not in the museum shop". None →
-  the book stays under its own title. A book already on a card is never renamed
-  (`fillLanguage`). **The English edition is looked for where it is listed**
+  the book stays under its own title (`fillLanguage`). **The English edition is looked for where it is listed**
   (her ruling, 7 Oct): the show's English title with the publisher, and the
   publisher's own page for the book, read whole; the card says how far it was
-  checked (`englishCheck`, `englishLine`).
+  checked (`englishCheck`, `englishLine`). **A check that stopped or never
+  ran is run again by Search again, and its finished result replaces the
+  card's** (her ruling, 7 Oct); only a finished check protects the book.
 - **"X in association with Y" — Y is the publisher** (her ruling, 2 Oct):
   the publisher step and the self-publisher check use Y (`publisherToFind`);
   the card prints the line as given.

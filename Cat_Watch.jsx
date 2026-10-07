@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "40.6";
+const APP_VERSION = "40.7";
 const APP_VERSION_DATE = "7 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -4124,7 +4124,7 @@ export default function App(){
     if(!rd.ok)return stopped(rd.detail);
     const lang=rd.data&&rd.data.language;
     if(!lang)return mark({...hit,detail:detail+"\nLanguage check: no result says, so the book stands as found."},"unknownlang");
-    if(isEnglishLang(lang))return{...hit,detail:detail+"\nLanguage check: "+lang+"."};
+    if(isEnglishLang(lang))return mark({...hit,detail:detail+"\nLanguage check: "+lang+"."},"english");
     // Not English. The book's own title, if the results print it.
     const own=rd.data.title?titleAsPrinted(rd.data.title,s.results):null;
     let row={...r};
@@ -4172,7 +4172,7 @@ export default function App(){
     const printed=enIsbn&&pages.some(x=>(String(x.url||"")+" "+oneText(x)).replace(/[^0-9Xx]/g,"").includes(enIsbn));
     if(!ed.found||!enIsbn||enIsbn===isbn||!isEnglishLang(ed.language)||!printed||!ed.title)return none();
     return{...hit,pageUrl:null,detail:detail+"\nEnglish edition: \u201c"+ed.title+"\u201d, ISBN "+enIsbn+".",
-      row:{...row,catalogueTitle:String(ed.title).trim(),isbn13:enIsbn,
+      row:{...row,englishCheck:"english",catalogueTitle:String(ed.title).trim(),isbn13:enIsbn,
         publisher:ed.publisher?String(ed.publisher).trim():null,publisherUrl:null,publisherResult:null,
         shopState:"web",shopUrl:null,shopChange:null}};
   };
@@ -4419,8 +4419,12 @@ export default function App(){
     const title=String(row.title||"").trim();
     const venue=mu?mu.name:"";
     let detail="";
-    // A book already on the card is never renamed by the language check.
-    const wasKnown=!!(row.looked&&row.hasCatalogue==="yes");
+    // A FINISHED LANGUAGE CHECK IS NOT REDONE; AN UNFINISHED ONE IS — her
+    // ruling, 7 Oct (Botticelli): a check that stopped, or never ran, is run by
+    // Search again and its finished result replaces what the card had. Only a
+    // check that finished (englishCheck "english", "publisher", "shops")
+    // protects the book on the card (her 2 Oct rule, for finished results).
+    const wasKnown=!!(row.looked&&row.hasCatalogue==="yes"&&["english","publisher","shops"].includes(row.englishCheck));
 
     // ── Stage one: GO TO THE SHOP ───────────────────────────────
     //
