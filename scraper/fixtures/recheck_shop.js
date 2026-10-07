@@ -139,8 +139,11 @@ const louStop = fresh('louvre-teststop', 'louvre', 'Test Louvre Stopped Check Sh
 const louSaysEn = fresh('louvre-testsaysen', 'louvre', 'Test Louvre Says English Show');
 const ngLang = fresh('ng-testlang', 'ng', 'Test NG Language Show');
 const louKnown = { ...fresh('louvre-testknown', 'louvre', 'Test Louvre Known Show'), looked: true, hasCatalogue: 'yes',
-  catalogueTitle: 'Test Known Catalogue', isbn13: null, shopState: 'shop' };
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, louPub, louStop, morganAssoc], ignored: [], lastRun: null };
+  catalogueTitle: 'Test Known Catalogue', isbn13: null, shopState: 'shop', englishCheck: 'shops' };
+// Her Botticelli, 7 Oct: a check that stopped is run again by Search again.
+const louStale = { ...fresh('louvre-teststale', 'louvre', 'Test Louvre Stale Check Show'), looked: true, hasCatalogue: 'yes',
+  catalogueTitle: 'Test Stale Catalogue', isbn13: '9782359064612', shopState: 'shop', englishCheck: 'stopped' };
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, louPub, louStop, louStale, morganAssoc], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -888,7 +891,11 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/English edition not checked \u2014 the search stopped part-way\. Search again to retry\./.test(t), 'LG-014: a search that died says the check was not done', t.slice(0, 600));
 
     t = await run(louKnown);
-    ok(!searches().some(q => q.some(x => x === FR || /English edition/.test(x))) && /Test Known Catalogue/.test(t), 'LG-011: a book already on the card is never renamed (Search again)', t.slice(0, 400));
+    ok(!searches().some(q => q.some(x => x === FR || /English edition/.test(x))) && /Test Known Catalogue/.test(t), 'LG-011: a book whose check FINISHED is never renamed (Search again)', t.slice(0, 400));
+    t = await run(louStale);
+    ok(searches().some(q => q.includes(FR)) && t.includes(OWN) && !t.includes('Test Stale Catalogue'),
+      'LG-015: a check that stopped is run again by Search again, and its finished result replaces the card\u2019s', t.slice(0, 500));
+    ok(/No English edition found in bookshops/.test(t) && !/stopped part-way/.test(t), 'LG-015a:  and the line now says what the finished check found', t.slice(0, 600));
   }
 
   // ── PA-001: "in association with" — her ruling, 2 Oct ───────────────────
