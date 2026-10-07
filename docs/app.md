@@ -142,9 +142,8 @@ seeing the change. It is not a monitor.
 - 404/410 decided in code from the connector's error entry; anything else is one
   question to Claude about one page. Pre-order counts as in the shop; sold out /
   unavailable in any language counts as gone.
-- **Search again fills blanks only and never moves the status**
-  (`keepWhatWeKnew`). An earlier design moved it on Search again and could not
-  work — shops keep sold-out books listed — so it was replaced.
+- **Search again is a whole fresh lookup** (7 Oct, her ruling) and, when it
+  finishes, replaces the card — shop status included. Re-check is unchanged.
 - Tested: C-079 to C-099, `recheck_shop.js` R-001 to R-023. **Not yet seen: how
   a real shop words "sold out", or a real redirect.**
 

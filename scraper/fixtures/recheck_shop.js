@@ -145,11 +145,7 @@ const louLookalike = fresh('louvre-testlookalike', 'louvre', 'Test Louvre Lookal
 const louIsbnPub = fresh('louvre-testisbnpub', 'louvre', 'Test Louvre Isbn Publisher Show');
 const louStale = { ...fresh('louvre-teststale', 'louvre', 'Test Louvre Stale Check Show'), looked: true, hasCatalogue: 'yes',
   catalogueTitle: 'Test Stale Catalogue', isbn13: '9782359064612', shopState: 'shop', englishCheck: 'stopped' };
-// Her Botticelli, 7 Oct: a FINISHED check made under a publisher the ISBN
-// later replaced is run again.
-const louOldPub = { ...fresh('louvre-testoldpub', 'louvre', 'Test Louvre Old Publisher Show'), looked: true, hasCatalogue: 'yes',
-  catalogueTitle: 'L\u2019Exp\u00e9rience de la nature. Les arts \u00e0 Prague \u00e0 la cour de Rodolphe II', isbn13: '9782359064612', publisher: 'Culturespaces', shopState: 'shop', englishCheck: 'shops' };
-const ledger = { rows: [louOldPub, miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, louPub, louStop, louStale, louLookalike, louIsbnPub, morganAssoc], ignored: [], lastRun: null };
+const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, louPub, louStop, louStale, louLookalike, louIsbnPub, morganAssoc], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -385,32 +381,28 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/this book isn’t there/.test(t) && /No catalogue found/.test(t), 'R-019: nothing found says so, and the card is unchanged', t.slice(0, 200));
   }
 
-  // ── R-020..R-021: Search again never takes away what was there ─────────
+  // ── R-020..R-023: Search again is a whole fresh lookup. Finished, it
+  // replaces the card; any step failing, the card stays as it was.
   {
-    script.mcp = (tool) => ({ payload: { results: [], errors: [] } });
+    script.mcp = () => { throw Object.assign(new Error('upstream'), { code: 'upstream_error' }); };
     script.sample = () => ({ found: false });
     const before = card(webRow.title).textContent;
     await click(button(card(webRow.title), /^Search again$/));
-    const t = card(webRow.title).textContent;
-    ok(/978-1857096972/.test(t) && t.includes('Hannibal Books'), 'R-020: a Search again that finds nothing keeps the ISBN and publisher', t.slice(0, 300));
-    ok(/Now in the museum shop\./.test(t) && /Now in the museum shop\./.test(before), 'R-021: and does not move the shop status');
-  }
+    let t = card(webRow.title).textContent;
+    ok(/978-1857096972/.test(t) && t.includes('Hannibal Books') && /Now in the museum shop\./.test(before) && /Now in the museum shop\./.test(t),
+      'R-020: a Search again that fails changes nothing on the card', t.slice(0, 300));
+    ok(/Search again didn\u2019t (run|finish)/.test(t) && /Nothing changed/.test(t), 'R-021:   and says so on the card', t.slice(0, 400));
 
-  // ── R-022..R-023: Search again that FINDS the book elsewhere still cannot
-  // move the shop status or replace what was known. R-020 cannot catch this:
-  // a lookup finding nothing hands the old row back before the status matters.
-  {
     script.mcp = (tool, args) => tool === 'web_search'
       ? { payload: { results: [{ url: 'https://bookseller.test/x', title: 'Test Show', excerpts: ['Test Show catalogue ISBN 9780300000009'] }] } }
       : { payload: { results: [], errors: [] } };
     script.sample = () => ({ found: true, thisVenue: true, catalogueTitle: 'Test Show (bookseller)', isbn13: '9780300000009',
       publisher: 'Yale', publisherUrl: null, shopUrl: 'https://bookseller.test/x' });
     await click(button(card(webRow.title), /^Search again$/));
-    const t = card(webRow.title).textContent;
-    ok(/Now in the museum shop\./.test(t) && !/Not in the museum shop/.test(t),
-       'R-022: a Search again finding the book at a bookseller leaves "Now in the museum shop." alone', t.slice(0, 300));
-    ok(/978-1857096972/.test(t) && !/978-0300000009/.test(t) && t.includes('Test Show: The Catalogue'),
-       'R-023: and keeps the ISBN and title it already had');
+    t = card(webRow.title).textContent;
+    ok(/978-0300000009/.test(t) && !/978-1857096972/.test(t) && t.includes('Test Show (bookseller)') && !t.includes('Hannibal Books'),
+       'R-022: a Search again that finishes replaces the card with what it found', t.slice(0, 400));
+    ok(/Not in the museum shop/.test(t) && !/Now in the museum shop\./.test(t), 'R-023:   the shop line too', t.slice(0, 400));
   }
 
 
@@ -911,13 +903,13 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(searches().some(q => q.some(x => /Lienart ISBN$/.test(x))), 'LG-013b:  the show\u2019s English title is searched with the publisher, not only "English edition"', JSON.stringify(searches()));
     t = await run(louStop, { enFail: true });
     ok(/English edition not checked \u2014 the search stopped part-way\. Search again to retry\./.test(t), 'LG-014: a search that died says the check was not done', t.slice(0, 600));
+    t = await run(louStop, { enFail: true, shopTitle: 'Test Changed Shop Title' });
+    ok(!t.includes('Test Changed Shop Title') && /Search again didn\u2019t finish/.test(t) && /Nothing changed/.test(t),
+      'LG-019: a Search again where a later step fails changes nothing, and says it didn\u2019t finish', t.slice(0, 600));
 
     ok(t.indexOf('978-2359064612') >= 0 && t.indexOf('978-2359064612') < t.indexOf('English edition not checked'), 'LG-013c:  the English line sits under the ISBN', t.slice(0, 600));
-    t = await run(louOldPub, { isbnPub: 'Lienart', pubPage: true });
-    ok(searches().some(q => q.some(x => /English edition/.test(x))) && t.includes("No English edition - checked publisher's site (Lienart) and bookshops.") && !/Culturespaces/.test(t),
-      'LG-018: a finished check made under a publisher the ISBN replaced is run again, under the new one', t.slice(0, 600));
     t = await run(louKnown);
-    ok(!searches().some(q => q.some(x => /English edition/.test(x))) && /Test Known Catalogue/.test(t), 'LG-011: a book whose check FINISHED is never renamed (Search again)', t.slice(0, 400));
+    ok(searches().some(q => q.some(x => /English edition/.test(x))) && !/Test Known Catalogue/.test(t), 'LG-011: Search again runs the whole check again, even where one finished, and replaces the card', t.slice(0, 400));
     t = await run(louStale);
     ok(searches().some(q => q.includes(FR)) && t.includes(OWN) && !t.includes('Test Stale Catalogue'),
       'LG-015: a check that stopped is run again by Search again, and its finished result replaces the card\u2019s', t.slice(0, 500));

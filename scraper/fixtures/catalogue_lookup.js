@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage, MU, titleAsPrinted, isEnglishLang, publisherToFind, publisherLinkOf, inClosingWindow, sameCatalogue, publisherOnIsbnResults };')(
+    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, foundInShop, recheckLinkedPage, MU, titleAsPrinted, isEnglishLang, publisherToFind, publisherLinkOf, inClosingWindow, sameCatalogue, publisherOnIsbnResults };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -559,27 +559,10 @@ function runtime(answer, log) {
     eq(api.shopLinkLabel('gone'), 'Museum shop (last seen)', 'C-081: a gone book’s link says "(last seen)"');
     eq(api.shopLinkLabel('shop'), 'Museum shop', 'C-081a: an in-shop one does not');
 
-    // SEARCH AGAIN NEVER TAKES AWAY WHAT WAS THERE.
     const had = { looked: true, hasCatalogue: 'yes', catalogueTitle: 'Old', isbn13: '9781588397751',
       publisher: 'Pub', publisherUrl: 'https://pub.test/b', publisherResult: 'product',
       shopUrl: 'https://shop.test/b', shopState: 'gone', shopChange: null };
-    const got = { ...had, catalogueTitle: 'New', isbn13: null, publisher: null, publisherUrl: null,
-      publisherResult: 'nosite', shopUrl: 'https://shop.test/other', shopState: 'shop', shopChange: null };
-    const k = api.keepWhatWeKnew(had, got);
-    eq(k.isbn13, '9781588397751', 'C-082: a known ISBN survives a lookup that did not find it');
-    eq(k.catalogueTitle, 'Old', 'C-082a: so does the title');
-    eq(k.publisher + '|' + k.publisherUrl + '|' + k.publisherResult, 'Pub|https://pub.test/b|product',
-       'C-083: the publisher, its link and what that link is stay together');
-    eq(k.shopState + '|' + k.shopUrl, 'gone|https://shop.test/b', 'C-084: the shop status is Re-check’s alone');
-    eq(api.keepWhatWeKnew(had, { ...got, hasCatalogue: 'no' }), had,
-       'C-085: a lookup finding nothing hands back the row it had');
     const blank = { ...had, isbn13: null, publisher: null, publisherUrl: null, publisherResult: null };
-    const f = api.keepWhatWeKnew(blank, { ...got, isbn13: '9781588398130', publisher: 'P2' });
-    eq(f.isbn13 + '|' + f.publisher, '9781588398130|P2', 'C-086: blanks are still filled');
-    const first = { looked: false, hasCatalogue: 'unknown' };
-    eq(api.keepWhatWeKnew(first, got), got, 'C-087: a first lookup is taken whole');
-    eq(api.keepWhatWeKnew({ looked: true, hasCatalogue: 'no' }, got), got,
-       'C-087a: so is one after "no catalogue", which had nothing to lose');
 
     // CASE 2's row. Fills blanks, and is "now".
     const fis = api.foundInShop({ ...blank, catalogueTitle: 'Old', shopState: 'web', shopUrl: null },

@@ -463,9 +463,7 @@ and do not flip to searching wide first.**
   the book stays under its own title (`fillLanguage`). **The English edition is looked for where it is listed**
   (her ruling, 7 Oct): the show's English title with the publisher, and the
   publisher's own page for the book, read whole; the card says how far it was
-  checked (`englishCheck`, `englishLine`). **A check that stopped or never
-  ran is run again by Search again, and its finished result replaces the
-  card's** (her ruling, 7 Oct); only a finished check protects the book.
+  checked (`englishCheck`, `englishLine`).
 - **"X in association with Y" — Y is the publisher** (her ruling, 2 Oct):
   the publisher step and the self-publisher check use Y (`publisherToFind`);
   the card prints the line as given. **A co-edition, "X / Venue", "X and
@@ -485,16 +483,20 @@ and do not flip to searching wide first.**
   a publisher carrying the **venue's full name** as whole words is the venue
   (`isSelfPublisher`), plus her list `SELF_PUBLISHERS`; her `NOT_SELF_PUBLISHERS`
   overrides both. On trial: too many misfires → back to her list alone.
-- **Everything fills a blank and nothing else.** A known value is never
-  overwritten.
+- **Search again means search again** (her ruling, 7 Oct): a whole fresh
+  lookup from a blank card (`lookupCat` → `resetCard`), nothing kept or
+  skipped. Finished → it replaces the card's catalogue details. Any step
+  failed → the card is untouched and says "Search again didn't finish". The
+  old "keep what's on the card" rule is gone; do not bring it back. Within one
+  lookup, each step fills what earlier steps left blank.
 - **A 10-digit ISBN is taken and converted**, check digit verified. `toIsbn13`
   is the only door; `cleanIsbn` the strict gate downstream.
-- **Only "Re-check museum shop" moves the shop status** (her design, 25 Sep).
+- **"Re-check museum shop" checks the shop alone** (her design, 25 Sep; untouched by Search again's change).
   With a link on file it re-reads that page (gone → "No longer", link kept as
   "Museum shop (last seen)"; buyable again → "Back"); with none it runs the shop
   step alone ("Now"; a book already in the shop stays "In the museum shop",
   "Re-checked: still in the museum shop."). A failed check changes nothing.
-  **Search again fills blanks only.** `docs/app.md`, "A book leaving the shop".
+  `docs/app.md`, "A book leaving the shop".
 - **A blocked shop says so** — `shopState: "blocked"`, her wording: *"The
   museum shop is blocked - search it manually. The catalogue is stocked
   elsewhere."* / *"The museum shop is blocked. The catalogue also does not
