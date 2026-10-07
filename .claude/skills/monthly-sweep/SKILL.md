@@ -5,7 +5,7 @@ description: The container's half of the monthly sweep — sweeps the container'
 
 # Monthly container sweep — unattended
 
-Her design, 2 Oct 2026. **This job goes first; she follows** with the home
+Her design. **This job goes first; she follows** with the home
 sweep, then a session with her stitches, compresses (subagents need her
 approval), runs the final QC and hands her the CSV. This job does none of that.
 
@@ -14,7 +14,7 @@ approval), runs the final QC and hands her the CSV. This job does none of that.
 - **Sweep only the container's venues** — `node scraper/sweep_prototype.js`
   with no venue names; `machineVenues()` picks them. Never `--home`, never name
   a venue, never `--reread`.
-- **Never sweep a venue again once it has written its file.** Her rule, 27 Sep:
+- **Never sweep a venue again once it has written its file.** Her decision:
   a fault is fixed from kept pages or diagnosed from the log, never by sweeping
   again. Any re-sweep waits for her.
 - **Never change code** — `scraper/*.js`, recipes, `Cat_Watch.jsx`, tests,
@@ -25,7 +25,7 @@ approval), runs the final QC and hands her the CSV. This job does none of that.
 - **No subagents, no compression, no stitch, no `Artifact`/`ArtifactData`
   calls, no publish.**
 - **Commit only `scraper/output/` and `scraper/robots/`** (the sweep refreshes
-  each site's saved robots.txt there; her ruling, 5 Oct).
+  each site's saved robots.txt there; her decision).
 
 ## Steps
 
@@ -39,7 +39,7 @@ approval), runs the final QC and hands her the CSV. This job does none of that.
    no file, so a finished venue is never swept again. **Once.** A venue still
    missing after that is a fault for the report.
 4. **QC and diagnosis — follow `.claude/skills/sweep-qc/SKILL.md`** on this
-   run, all of it. It is the same QC her home runs get (her ruling, 5 Oct).
+   run, all of it. It is the same QC her home runs get (her decision).
    Here, under this job's hard limits: no code change — a fix is proposed in
    the report and waits for her.
 5. `git add scraper/output scraper/robots`, commit ("Monthly container sweep <run>"),

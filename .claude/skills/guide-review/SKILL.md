@@ -8,7 +8,7 @@ description: The fortnightly outside review of CLAUDE.md and docs/ — finds sta
 You are the reviewer, not the author. You did not write this guide and you owe
 it nothing. **Assume every line is wrong until the repo proves it right.**
 The guide rots in predictable ways: work finished but still listed as open,
-rulings overturned but still stated, run-by-run stories where a result belongs,
+decisions overturned but still stated, run-by-run stories where a result belongs,
 numbers typed by hand that a script prints, side docs used as a dumping ground.
 
 Scope: `CLAUDE.md` and everything under `docs/` (and `.md` READMEs inside it).
@@ -23,7 +23,7 @@ you renumbered.
   all you need.
 - **No subagents.** The repo's approval hook would stall the run waiting for
   a click nobody is there to give.
-- **Never change a ruling.** Anything that reads "her ruling", "her call",
+- **Never change one of her decisions.** Anything that reads "her decision", "her call",
   "her count", "rejected" is hers. You may move it, shorten its wording or fix
   a fact it rests on that the repo contradicts — never its substance.
 - `npm test` must exit 0 before you push. If it was already failing before you
@@ -46,9 +46,9 @@ you renumbered.
    backstory, enough for a cold session to pick it up.
 4. **Contradictions:** the same fact stated two ways (in the guide, between the
    guide and a doc, between a doc and the code). The code wins over prose. Two
-   prose rulings that disagree → ASK, don't pick.
+   prose decisions that disagree → ASK, don't pick.
 5. **Stories:** anything narrated as a sequence of events ("first we tried…,
-   then on 27 Sep…"). Cut to the result, the ruling and the lesson. If the
+   then a week later…"). Cut to the result, the decision and the lesson. If the
    evidence is worth keeping, compress it FIRST, then move it to the right doc.
    A side doc is never a place to park text uncompressed.
 6. **Hand-typed things a script prints:** tables of venues, counts, fixtures,
@@ -58,7 +58,7 @@ you renumbered.
    illustrate; one lesson, one line where possible. Never drop a lesson.
 8. **Budgets:** every file within `scraper/doc_budget.js`. Getting there is the
    finish line, not a reason to cut substance — if a file cannot fit without
-   losing a ruling or a lesson, stop and report it; raising a budget is hers.
+   losing a decision or a lesson, stop and report it; raising a budget is hers.
 9. **Anything you cannot trace** — a line whose origin, meaning or current
    truth you cannot establish from the repo and its history
    (`git log -S"<phrase>" -- CLAUDE.md docs/` is the tool) — gets
@@ -83,13 +83,18 @@ a session DOES next, it is not your question.
 
 ## Fix, or ask?
 
+**Dates on decisions:** remove any date stamped on one of her decisions
+("her decision, 2 Oct"), and any "ruling"/"rule" wording for her choices —
+CLAUDE.md §1. Keep a date only where an open item's story needs the
+sequence, it names a run, or it is a deadline.
+
 **Fix it yourself** when the repo gives exactly one right answer: a stale
 count or version, a finished item still listed, a broken cross-reference, a
 story compressed to its result, a duplicated passage, an entry merged into
 its lesson, a file brought within budget.
 
-**Ask her** when it needs judgement or a ruling: two rulings that disagree; a
-ruling the code no longer follows (report it — don't change either); an
+**Ask her** when it needs her judgement: two of her decisions that disagree; a
+decision the code no longer follows (report it — don't change either); an
 item you can't tell is finished; a line you can't trace; anything that would
 remove a rule rather than restate it.
 
