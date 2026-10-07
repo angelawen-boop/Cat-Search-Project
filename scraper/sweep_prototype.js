@@ -5767,6 +5767,9 @@ async function autoScroll(page, maxSteps = 12) {
   } catch { /* a page that will not scroll is read as it is */ }
 }
 
+// Pages already carrying the rule — reread_kept.js calls once per row.
+const PAGE_ONLY_SET = new WeakSet();
+
 /**
  * THE SHOW PAGE ALONE — `pageOnly: true`, her go-ahead 27 Sep (the Ashmolean).
  * On a venue whose show page carries everything the recipe reads in the HTML
@@ -5783,17 +5786,19 @@ async function fetchIndividualPages(page, rows, venueCode) {
     const req = route.request();
     let main = false;
     try { main = req.resourceType() === 'document' && req.frame() === page.mainFrame(); } catch { main = false; }
-    return main ? route.fallback() : route.abort();
+    return safeRouteCall(() => main ? route.fallback() : route.abort());
   };
-  if (bare) {
+  if (bare && !PAGE_ONLY_SET.has(page)) {
+    PAGE_ONLY_SET.add(page);
     await page.route('**/*', onlyThePage);
     log('  show pages read alone: the page itself only, none of its other files (pageOnly)');
   }
-  try {
-    await fetchIndividualPagesEach(page, rows, venueCode);
-  } finally {
-    if (bare) await page.unroute('**/*', onlyThePage).catch(() => {});
-  }
+  // NEVER LIFTED (7 Oct). The rule stays until the venue's page closes — that
+  // page is the venue's own and reads nothing after this. A page asks for
+  // files after it has been read (a late favicon, a New Relic script); once
+  // unrouted, those went out to the site. AS-021b–025b caught it, ~1 run in
+  // 15 under load; leaving for about:blank first did not stop the favicon.
+  await fetchIndividualPagesEach(page, rows, venueCode);
 }
 
 async function fetchIndividualPagesEach(page, rows, venueCode) {
