@@ -56,7 +56,7 @@ function eq(got, want, m) {
 // Lift the page's own functions rather than keeping a second copy of them here.
 function lift(fakeWindow) {
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage, MU, titleAsPrinted, isEnglishLang, publisherToFind, publisherLinkOf, inClosingWindow };')(
+    code + '\n;return { fetchPage, buyLinks, isbnOnPage, isbnInResults, applyIsbnFill, isbn10to13, shelfPages, shopPagesFor, needsPageRead, cleanPublisherUrl, publisherDomainFrom, pageIsShell, pageTextOf, deepLinkOn, publisherLinkLabel, publisherNote, isSelfPublisher, normPublisher, shopHeadline, shopLinkLabel, keepWhatWeKnew, foundInShop, recheckLinkedPage, MU, titleAsPrinted, isEnglishLang, publisherToFind, publisherLinkOf, inClosingWindow, sameCatalogue };')(
     React, fakeWindow, fakeWindow.document, fakeWindow.localStorage);
 }
 
@@ -262,6 +262,23 @@ function runtime(answer, log) {
         api.inClosingWindow(shut('yes', 14)), api.inClosingWindow(shut('yes', 4, { interested: false }))].join(),
        'true,true,false,false,false,false,false,false',
        'C-157: Closing Window \u2014 wanted (Yes) and closed 3\u201312 months ago, nothing else');
+    // ── CE-001: a co-edition names the publisher beside the venue (her ruling, 7 Oct, Turner) ─
+    eq(api.publisherToFind('Fonds Mercator / Musée Jacquemart-André', 'jacquemart'), 'Fonds Mercator', 'CE-001: "Fonds Mercator / Musée Jacquemart-André" — the publisher is Fonds Mercator');
+    eq(api.isSelfPublisher('Fonds Mercator / Musée Jacquemart-André', 'jacquemart'), false, 'CE-001a:  so it is not the museum’s own imprint, and the publisher is looked for');
+    eq(api.isSelfPublisher('Musée Jacquemart-André', 'jacquemart'), true, 'CE-001b:  the venue alone still is');
+    eq(api.publisherToFind('Thames & Hudson / Musée Jacquemart-André', 'jacquemart'), 'Thames & Hudson', 'CE-001c:  the strongest mark first: "Thames & Hudson" keeps its "&"');
+    eq(api.publisherToFind('Thames & Hudson', 'jacquemart'), 'Thames & Hudson', 'CE-001d:  a publisher’s own "&" is never split');
+    eq(api.publisherToFind('Rizzoli Electa and The Frick Collection', 'frick'), 'Rizzoli Electa', 'CE-001e:  "X and Venue" too');
+    eq(api.isSelfPublisher('The Museum of Modern Art, New York', 'moma'), true, 'CE-001f:  a venue and its city is still the venue — no comma split');
+    // ── CE-002: an English "edition" must be the same catalogue (her Botticelli, 7 Oct) ─
+    {
+      const saved = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'jacquemart_botticelli.json'), 'utf8'));
+      const reaktion = [{ url: 'https://www.amazon.com/dp/1789144388', title: 'Botticelli: Artist and Designer (Renaissance Lives)', excerpts: ['Ana Debenedetti examines the life and work of Renaissance artist Sandro Botticelli. ISBN 9781789144383. Reaktion Books.'] }];
+      eq(api.sameCatalogue('Reaktion Books', 'Fonds Mercator', reaktion, 'jacquemart'), false, 'CE-002: Reaktion’s "Botticelli: Artist and Designer" is not the Fonds Mercator catalogue’s English edition');
+      eq(api.sameCatalogue('Mercatorfonds', 'Fonds Mercator', [], 'jacquemart'), true, 'CE-002a:  the same publisher, however spelled, is');
+      eq(api.sameCatalogue(null, null, [{ title: 'x', excerpts: ['English edition of the catalogue of the exhibition at the Musée Jacquemart-André. ISBN 9780000000002'] }], 'jacquemart'), true, 'CE-002b:  or a result carrying its ISBN that names the venue');
+      eq(api.sameCatalogue('Reaktion Books', 'Fonds Mercator', saved.results.slice(1, 2), 'jacquemart'), true, 'CE-002c:  (a result naming the venue counts — which is why the gate reads only results carrying the English ISBN)');
+    }
     eq(api.isSelfPublisher('The Art Institute of Chicago'), true, 'C-146: the Art Institute of Chicago is a museum\u2019s own imprint \u2014 her addition, 2 Oct');
     eq(api.isSelfPublisher('Cincinnati Art Museum'), true, 'C-146b: the Cincinnati Art Museum is a museum\u2019s own imprint \u2014 her addition, 4 Oct');
   }

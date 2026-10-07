@@ -468,7 +468,12 @@ and do not flip to searching wide first.**
   card's** (her ruling, 7 Oct); only a finished check protects the book.
 - **"X in association with Y" — Y is the publisher** (her ruling, 2 Oct):
   the publisher step and the self-publisher check use Y (`publisherToFind`);
-  the card prints the line as given.
+  the card prints the line as given. **A co-edition, "X / Venue", "X and
+  Venue", "X with Venue": X is the publisher**, for every publisher verdict
+  (her ruling, 7 Oct, Turner).
+- **An English edition must be the same catalogue** (her Botticelli, 7 Oct):
+  the same publisher, or a result carrying its ISBN naming the venue
+  (`sameCatalogue`); a curator's own monograph with the same title is refused.
 - **A museum's own imprint is skipped**, no line on the card (her ruling, 6 Oct):
   a publisher carrying the **venue's full name** as whole words is the venue
   (`isSelfPublisher`), plus her list `SELF_PUBLISHERS`; her `NOT_SELF_PUBLISHERS`
