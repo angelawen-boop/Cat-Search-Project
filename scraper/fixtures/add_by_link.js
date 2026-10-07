@@ -266,6 +266,9 @@ function runtime() {
     ok(title(fa.base, 'and the Masters of Light', fa.between) === 'Fra Angelico and the Masters of Light',
       'AL-019a:  a subtitle that carries on the sentence joins with a space', title(fa.base, 'and the Masters of Light', fa.between));
     ok(title(wf.base, 'les fêtes galantes', wf.between) === 'From Watteau to Fragonard: les fêtes galantes', 'AL-019b:  any other subtitle still takes a colon');
+    ok(title('Botticelli', 'Artist And Designer', ['Artist and designer', 'Exhibition']) === 'Botticelli: Artist and designer',
+      'AL-021a:  Claude\'s subtitle in other capitals still matches, and the page\'s own spelling is kept');
+    ok(fa.under === 'and the Masters of Light' && wf.under === 'les fêtes galantes', 'AL-021b:  the line under the heading is read off the page', JSON.stringify([fa.under, wf.under]));
     const ham = read(P[urlOf('thyssen_hammershoi')], urlOf('thyssen_hammershoi'));
     ok(ham.base === 'Hammershøi. The Eye that Listens', 'AL-019c:  a title that only runs on past the heading keeps its subtitle (Thyssen)', ham.base);
   }
@@ -593,6 +596,11 @@ function runtime() {
       'AL-018a:  two links from a new venue whose shop is not found: looked for ONCE', shopSearches.length);
     const jqCards = [...win.document.querySelectorAll('button')].filter(b => /^Add new entry$/.test(b.textContent.trim())).length;
     ok(jqCards === 9, 'AL-018b:  and all nine links come to a card', jqCards);
+    // ── AL-021: Jacquemart-André's subtitle is read by code (7 Oct, Botticelli) ─
+    // Claude is scripted to give NO subtitle for these pages; the title must
+    // still carry the line under the heading.
+    const titled = [...win.document.querySelectorAll('div')].filter(d => d.textContent === 'From Watteau to Fragonard: les fêtes galantes').length;
+    ok(titled === 7, 'AL-021: seven Jacquemart-André cards titled with the line under the heading, Claude giving none', titled);
   }
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) fail('React complained: ' + shouted.find(s => /Warning/.test(s)));
   console.log(failures ? '\n' + failures + ' FAILED' : '\nadd_by_link: all passed');

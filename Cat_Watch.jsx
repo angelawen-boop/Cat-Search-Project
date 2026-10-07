@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "40.4";
+const APP_VERSION = "40.5";
 const APP_VERSION_DATE = "7 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -98,7 +98,10 @@ const MUSEUMS = [
   // (/c462/2/), not ?page= — shelfPages counts that up. shopHome is the shelf
   // too, so her "Museum shop" link lands on the books, not the front page.
   { id:"mad", english:false, short:"MAD Paris", name:"Mus\u00e9e des Arts D\u00e9coratifs", city:"Paris", exBase:null, shopSearch:null, shopCatalogues:"https://boutique.madparis.fr/en/mads-publications/c462/1/", shopHome:"https://boutique.madparis.fr/en/mads-publications/c462/1/", listUrl:null },
-  { id:"jacquemart", english:false, short:"Jacquemart-Andr\u00e9", name:"Mus\u00e9e Jacquemart-Andr\u00e9", city:"Paris", exBase:null, shopSearch:"https://boutique.musee-jacquemart-andre.com/en/search/products/?q=", shopCatalogues:"https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/", shopHome:"https://boutique.musee-jacquemart-andre.com/en/", listUrl:null },
+  // subtitleUnderHeading: on its show pages the line straight under the
+  // heading IS the subtitle ("Botticelli" / "Artist and designer") — read by
+  // code for Add by link, never asked of Claude (her saved pages, 7 Oct).
+  { id:"jacquemart", subtitleUnderHeading:true, english:false, short:"Jacquemart-Andr\u00e9", name:"Mus\u00e9e Jacquemart-Andr\u00e9", city:"Paris", exBase:null, shopSearch:"https://boutique.musee-jacquemart-andre.com/en/search/products/?q=", shopCatalogues:"https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/", shopHome:"https://boutique.musee-jacquemart-andre.com/en/", listUrl:null },
   { id:"khm", english:false, short:"KHM", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:"https://shop.khm.at/en/products?shop%5Bq%5D=", shopHome:"https://shop.khm.at/en/", listUrl:null },
   { id:"uffizi", english:false, short:"Uffizi", name:"Uffizi Galleries", city:"Florence", exBase:null, shopSearch:"https://shop.uffizi.it/en/?s=", shopHome:"https://shop.uffizi.it/en/", listUrl:null },
   { id:"dellav", english:false, short:"Accademia", name:"Gallerie dell'Accademia", city:"Venice", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
@@ -1110,7 +1113,9 @@ function readShowPage(res,url){
     if(!l||l===dateLine||l===heading)continue;
     raw+=(raw?"\n":"")+l;
   }
-  return{ok:true,base,between,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||host.replace(/^www\./,"")};
+  // The first line under the heading, for a venue whose subtitle sits there.
+  const under=lines.slice(h+1).map(stripMd).find(Boolean)||"";
+  return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||host.replace(/^www\./,"")};
 }
 
 // The title is WHAT THE CATALOGUE WOULD BE CALLED — her ruling, 3 Oct: a
@@ -1118,9 +1123,13 @@ function readShowPage(res,url){
 // of a Collector").
 // A subtitle that carries on the sentence — "and the Masters of Light" under
 // "Fra Angelico" (Jacquemart-André, 7 Oct) — joins with a space, not a colon.
+// Claude's subtitle is matched to the page's line with capitals and spacing
+// ignored, and the PAGE's spelling is kept (7 Oct: Botticelli's "Artist and
+// designer" lost, cause not recorded — a capitals-only miss is one).
 function linkTitle(base,subtitle,between){
-  const sub=String(subtitle||"").trim();
-  if(!sub||!(between||[]).includes(sub)||foldText(base).includes(foldText(sub)))return base;
+  const k=v=>foldText(v).replace(/\s+/g," ").trim();
+  const sub=(between||[]).find(l=>k(l)===k(subtitle))||"";
+  if(!sub||foldText(base).includes(foldText(sub)))return base;
   return base.replace(/[\s:.—-]+$/,"")+(/^(and|&)\s/.test(sub)?" ":": ")+sub;
 }
 
@@ -3550,7 +3559,10 @@ export default function App(){
         const ask=await readResults(linkPrompt(page));
         const a=linkAnswer(ask.ok?ask.data:null);
         if(isOcc(vc)&&venues[vc].english===undefined&&ask.ok){ venues={...venues,[vc]:{...venues[vc],english:a.englishSpeaking}}; venuesChanged=true; }
-        const title=linkTitle(page.base,a.subtitle,page.between);
+        // A venue whose subtitle sits under the heading: read by code. A line
+        // ending like a sentence is the text, not a subtitle.
+        const own=(MU[vc]||{}).subtitleUnderHeading&&page.under&&page.under.length<=120&&!/[.!?]$/.test(page.under)?page.under:"";
+        const title=linkTitle(page.base,own||a.subtitle,page.between);
         got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
           summary:a.summary?composeSummary(a.english,a.summary):"",url,
           notes:ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")});
