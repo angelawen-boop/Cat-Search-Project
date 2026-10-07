@@ -2735,6 +2735,36 @@ function bookLinkOnShelf(results,bookTitle,dom,opened){
   return found.size===1?[...found.values()][0]:null;
 }
 
+// Turn the connector's results into the few lines Claude is asked to read.
+// Trimmed hard: excerpts are long, and the prompt has a 64 KiB ceiling.
+// Trimmed hard for a SEARCH result, which is a headline and a line or two.
+// A shop page opened whole is a different size of thing \u2014 its product list
+// IS the answer \u2014 so step one raises the cap rather than cutting the list
+// off after the first few books.
+// Outside the component so a fixture can reach it (AL-022).
+const resultsForPrompt=(list,cap)=>list.slice(0,8).map((r,i)=>
+  (i+1)+". "+String(r.title||"(untitled)")+"\n   "+String(r.url||"")+"\n   "
+  +(Array.isArray(r.excerpts)?r.excerpts.join(" ").replace(/\s+/g," ").slice(0,cap||700):"")
+).join("\n\n");
+
+// A LINK LABELLED CATALOGUE, ONTO THE VENUE'S OWN SHOP — her Botticelli,
+// 7 Oct: the museum's show page in the web results carried "[Buy the
+// catalog](boutique…/230-special-issue-botticelli-artist-and-designer.html)".
+// Exactly one such address across the results, or none; never a ticket.
+function catalogueLinkOn(results,dom){
+  if(!dom)return null;
+  const found=new Map();
+  for(const r of (results||[])){
+    const text=Array.isArray(r&&r.excerpts)?r.excerpts.join("\n"):String((r&&r.full_content)||"");
+    for(const m of text.matchAll(/\[([^\]]*)\]\((https?:\/\/[^\s)]+)/g)){
+      if(!/catal[o\u00f3]g|katalog/i.test(m[1])||!shopLinkOf({shopUrl:m[2]},dom))continue;
+      const key=normalizeUrlKey(m[2]);
+      if(key)found.set(key,m[2]);
+    }
+  }
+  return found.size===1?[...found.values()][0]:null;
+}
+
 // The shop button's label. "(last seen)" is what tells her the page may be
 // dead or sold out while the link is still worth keeping.
 function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last seen)":"Museum shop"; }
@@ -3743,16 +3773,6 @@ export default function App(){
   // is a trap for whoever debugs this next; git holds it.
 
 
-  // Turn the connector's results into the few lines Claude is asked to read.
-  // Trimmed hard: excerpts are long, and the prompt has a 64 KiB ceiling.
-  // Trimmed hard for a SEARCH result, which is a headline and a line or two.
-  // A shop page opened whole is a different size of thing \u2014 its product list
-  // IS the answer \u2014 so step one raises the cap rather than cutting the list
-  // off after the first few books.
-  const resultsForPrompt=(list,cap)=>list.slice(0,8).map((r,i)=>
-    (i+1)+". "+String(r.title||"(untitled)")+"\n   "+String(r.url||"")+"\n   "
-    +(Array.isArray(r.excerpts)?r.excerpts.join(" ").replace(/\s+/g," ").slice(0,cap||700):"")
-  ).join("\n\n");
 
   const READ_RULES=
     "You are reading real web search results to find the PRINTED EXHIBITION CATALOGUE for one exhibition.\n"
@@ -4384,7 +4404,10 @@ export default function App(){
     if(!s2.results.length)return settle(row,{},dom,detail,false,blocked);
     const r2=await readResults(READ_RULES
       +"\nExhibition: "+title+"\nVenue: "+venue+(dom?"\nIts shop is at "+dom:"")+"\n\n"
-      +resultsForPrompt(s2.results)+READ_SHAPE);
+      // Read whole (the shop step's cap), never cut to 700 characters — her
+      // Botticelli, 7 Oct: the museum's own page said "Buy the catalog" at
+      // character ~1,970, after the curators' bios, and Claude never saw it.
+      +resultsForPrompt(s2.results,6000)+READ_SHAPE);
     detail=detail+"\n"+r2.detail;
     if(!r2.ok)return{row,detail,ok:false};
     // ANOTHER VENUE'S CATALOGUE IS NOT THIS SHOW'S — her ruling, 2 Oct (NG,
@@ -4395,6 +4418,11 @@ export default function App(){
     // anything short of a plain true is not found. The shop step needs no
     // such answer — a book on the venue's own shop is the venue's word.
     let d2=r2.data||{};
+    // A "catalog" link onto the venue's own shop, read off the results in
+    // code (catalogueLinkOn), goes to the check that opens shop links when the
+    // read found the book and gave no shop link of its own.
+    const catLink=catalogueLinkOn(s2.results,dom);
+    if(catLink&&d2.found&&!d2.shopUrl){ d2={...d2,shopUrl:catLink}; detail=detail+"\nA catalogue link onto the museum shop, read off the results: "+catLink; }
     if(d2.found&&d2.thisVenue!==true){
       detail=detail+"\nNot filed: \u201c"+(d2.catalogueTitle||"the book found")+"\u201d is not tied to this venue\u2019s show in the results.";
       d2={};

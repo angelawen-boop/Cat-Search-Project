@@ -272,6 +272,22 @@ function runtime() {
     const ham = read(P[urlOf('thyssen_hammershoi')], urlOf('thyssen_hammershoi'));
     ok(ham.base === 'Hammershøi. The Eye that Listens', 'AL-019c:  a title that only runs on past the heading keeps its subtitle (Thyssen)', ham.base);
   }
+  // ── AL-022: the web step reads results whole, and a catalogue link is kept ─
+  // Her Botticelli, 7 Oct: the app's own search (her keyed connector) returned
+  // the museum's page with "Buy the catalog" at character ~1,970; the read was
+  // handed 700 characters of each result. docs/lookup_results/.
+  {
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const saved = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'jacquemart_botticelli.json'), 'utf8'));
+    const forPrompt = fn('resultsForPrompt'), catLink = fn('catalogueLinkOn');
+    ok(forPrompt(saved.results, 6000).includes('Buy the catalog') && !forPrompt(saved.results).includes('Buy the catalog'),
+      'AL-022: the museum page\'s "Buy the catalog" reaches the read at the web step\'s cap; at 700 it did not');
+    ok(catLink(saved.results, 'boutique.musee-jacquemart-andre.com') === 'https://boutique.musee-jacquemart-andre.com/en/product/230-special-issue-botticelli-artist-and-designer.html',
+      'AL-022a:  the catalogue link onto the venue\'s own shop is read off the results in code');
+    ok(catLink(saved.results, 'shop.example.org') === null, 'AL-022b:  and only onto THAT venue\'s shop');
+    const lookup = fs.readFileSync(path.join(__dirname, '..', '..', 'Cat_Watch.jsx'), 'utf8');
+    ok(/resultsForPrompt\(s2\.results,6000\)/.test(lookup), 'AL-022c:  the web step asks for the whole excerpt (6,000)');
+  }
   // ── AL-001: Import opens ONE pop-up; nothing is added to the page ───────
   // Her ruling, 4 Oct: no new buttons and no text in the page's header.
   const dialog = () => win.document.querySelector('[role=dialog]');

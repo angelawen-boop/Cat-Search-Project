@@ -1,0 +1,31 @@
+{
+ "_note": "Her keyed Parallel Search, 7 Oct 2026, the app's own three queries for Botticelli at Musée Jacquemart-André (lookupCat's stage two). Ten results came back; kept here are the first three in order, the museum's page cut after its Photos heading, the bookseller's list trimmed. Read by scraper/fixtures/add_by_link.js, AL-022.",
+ "search_queries": [
+  "Botticelli exhibition catalogue ISBN publisher",
+  "Musée Jacquemart-André Botticelli catalogue book",
+  "Musée Jacquemart-André Botticelli press release catalogue"
+ ],
+ "results": [
+  {
+   "url": "https://www.artbook.com/catalog--art--monographs--botticelli--sandro.html",
+   "title": "Sandro Botticelli Art Monographs and Museum Exhibition Catalogs",
+   "excerpts": [
+    "[Botticelli](https://www.artbook.com/9783775724814.html)\n\n###### HATJE CANTZ\n\nHbk, 10 x 12.25 in. / 372 pgs / 294 color / 84 bw. | 3/31/2010 | Not available  \n$75.00\n\n### PUBLISHER  \n[Hatje Cantz](https://www.artbook.com/hacapu.html)\n\nPRODUCT DETAILS  \nISBN 9783775724814 TRADE"
+   ]
+  },
+  {
+   "url": "https://www.musee-jacquemart-andre.com/en/botticelli",
+   "title": "Exhibition Botticelli in Paris | Musée Jacquemart-André",
+   "excerpts": [
+    "She is curator at the Victoria and Albert Museum, and has been responsible for the collections of paintings, drawings, and miniatures since 2013. She has published many articles and essays on Renaissance art, philosophy, and poetry, her doctoral thesis explored the relationship between early artistic treatises and the Neoplatonic philosophy of Marsilio Ficino in fifteenth-century Florence. She was co-curator of the exhibitions ‘Constable: The Making of a Master’ (V&A, 2015) and ‘Botticelli Reimagined’ (V&A, 2016). She recently oversaw the refurbishment of the Raphael Court-home to Raphael’s Cartoons-at the V&A and published a book on the subject, The Raphael Cartoons (Nov. 2020). She is currently working on a catalogue of the French drawings at the V&A and a book, _Botticelli, Artist and Designer_ (Reaktion books, Nov. 2021).\n\n**Pierre Curie** is Chief Heritage Curator.\nA specialist in seventeenth-century Italian and Spanish painting, he has also studied nineteenth-century French painting in the Musée du Petit Palais, where he began his career as a curator. Subsequently responsible for painting in the Inventaire Général des Monuments et des Richesses Artistiques de la France, he co-authored and compiled the work Vocabulaire typologique et technique de la peinture et du dessin (published in 2009). Appointed head of the painting section in the restoration department of the Centre de Recherche et de Restauration des Musées de France in 2007, he has coordinated several major painting restoration projects in French national museums (Leonardo de Vinci, Titian, Rembrandt, Poussin, etc.). Pierre Curie has been curator at the Musée Jacquemart-André since January 2016.\n\n#### Exhibition\n\n**From 10 September 2021 to 24 January 2022**\n\nOpen every day from 10 a.m. to 6 p.m.  \nSaturdays and Sundays until 7:30 pm and Mondays until 8:30 pm\n_Last admission 30 minutes before closing._\n\nBotticelli\n\n##### Botticelli\n\nArtist and designer\n\n[Buy the catalog](https://boutique.musee-jacquemart-andre.com/en/product/230-special-issue-botticelli-artist-and-designer.html)\n\n### Photos"
+   ]
+  },
+  {
+   "url": "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs",
+   "title": "Exhibition catalogs - Page 1 · Musée Jacquemart-André",
+   "excerpts": [
+    "Exhibition catalogs - Page 1 · Musée Jacquemart-André\nReceive our newsletter Be informed of news, releases and upcoming events Subscribe to the newsletter Delivery Shipping within one week days according to the method of delivery chosen Returns 14 days to change your mind"
+   ]
+  }
+ ]
+}
