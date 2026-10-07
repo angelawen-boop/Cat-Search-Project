@@ -471,6 +471,13 @@ and do not flip to searching wide first.**
   the card prints the line as given. **A co-edition, "X / Venue", "X and
   Venue", "X with Venue": X is the publisher**, for every publisher verdict
   (her ruling, 7 Oct, Turner).
+- **The publisher is read off the ISBN, in code** (her ruling, 7 Oct —
+  Botticelli gave three publishers in three lookups): once the ISBN is known,
+  the labelled publisher in the results carrying it, two agreeing
+  (`publisherOnIsbnResults`), replaces one Claude read off general results.
+  No ISBN source depends on the publisher. At a non-English venue the search
+  is shared with the language check; elsewhere it runs only for a guessed or
+  missing publisher.
 - **An English edition must be the same catalogue** (her Botticelli, 7 Oct):
   the same publisher, or a result carrying its ISBN naming the venue
   (`sameCatalogue`); a curator's own monograph with the same title is refused.
