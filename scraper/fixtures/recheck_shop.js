@@ -145,7 +145,11 @@ const louLookalike = fresh('louvre-testlookalike', 'louvre', 'Test Louvre Lookal
 const louIsbnPub = fresh('louvre-testisbnpub', 'louvre', 'Test Louvre Isbn Publisher Show');
 const louStale = { ...fresh('louvre-teststale', 'louvre', 'Test Louvre Stale Check Show'), looked: true, hasCatalogue: 'yes',
   catalogueTitle: 'Test Stale Catalogue', isbn13: '9782359064612', shopState: 'shop', englishCheck: 'stopped' };
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, louPub, louStop, louStale, louLookalike, louIsbnPub, morganAssoc], ignored: [], lastRun: null };
+// Her Botticelli, 7 Oct: a FINISHED check made under a publisher the ISBN
+// later replaced is run again.
+const louOldPub = { ...fresh('louvre-testoldpub', 'louvre', 'Test Louvre Old Publisher Show'), looked: true, hasCatalogue: 'yes',
+  catalogueTitle: 'L\u2019Exp\u00e9rience de la nature. Les arts \u00e0 Prague \u00e0 la cour de Rodolphe II', isbn13: '9782359064612', publisher: 'Culturespaces', shopState: 'shop', englishCheck: 'shops' };
+const ledger = { rows: [louOldPub, miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, louPub, louStop, louStale, louLookalike, louIsbnPub, morganAssoc], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -908,6 +912,10 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     t = await run(louStop, { enFail: true });
     ok(/English edition not checked \u2014 the search stopped part-way\. Search again to retry\./.test(t), 'LG-014: a search that died says the check was not done', t.slice(0, 600));
 
+    ok(t.indexOf('978-2359064612') >= 0 && t.indexOf('978-2359064612') < t.indexOf('English edition not checked'), 'LG-013c:  the English line sits under the ISBN', t.slice(0, 600));
+    t = await run(louOldPub, { isbnPub: 'Lienart', pubPage: true });
+    ok(searches().some(q => q.some(x => /English edition/.test(x))) && t.includes("No English edition - checked publisher's site (Lienart) and bookshops.") && !/Culturespaces/.test(t),
+      'LG-018: a finished check made under a publisher the ISBN replaced is run again, under the new one', t.slice(0, 600));
     t = await run(louKnown);
     ok(!searches().some(q => q.some(x => /English edition/.test(x))) && /Test Known Catalogue/.test(t), 'LG-011: a book whose check FINISHED is never renamed (Search again)', t.slice(0, 400));
     t = await run(louStale);

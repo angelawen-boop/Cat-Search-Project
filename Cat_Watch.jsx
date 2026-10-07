@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "40.8";
+const APP_VERSION = "40.9";
 const APP_VERSION_DATE = "7 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -4192,13 +4192,17 @@ export default function App(){
     else{
       detail=detail+"\nPublisher from the ISBN: "+found+(r.publisher?" (replacing \u201c"+r.publisher+"\u201d, read off general results).":".");
       row={...r,publisher:found,publisherUrl:null,publisherResult:null};
+      // An English check done against the old publisher is not a check of
+      // this one: it runs again (her Botticelli, 7 Oct — "shops" checked under
+      // Culturespaces stood after the ISBN named Fonds Mercator).
+      return{...hit,detail,row,isbnResults:s.results,pubReplaced:true};
     }
     return{...hit,detail,row,isbnResults:s.results};
   };
 
   const fillLanguage=async(hit,venue,dom,mu,wasKnown)=>{
     const r=hit&&hit.row;
-    if(!r||!hit.ok||r.hasCatalogue!=="yes"||wasKnown||!mu||mu.english!==false)return hit;
+    if(!r||!hit.ok||r.hasCatalogue!=="yes"||(wasKnown&&!hit.pubReplaced)||!mu||mu.english!==false)return hit;
     const isbn=cleanIsbn(r.isbn13);
     const book=r.catalogueTitle||r.title;
     setLookPhase("web");
@@ -5318,10 +5322,10 @@ export default function App(){
                       </div>}
                       {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
                       {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
-                {englishLine(r)&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{englishLine(r)}</div>}
-                      <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",marginBottom:10,color:r.isbn13?C.ink:C.soft}}>
+                      <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",marginBottom:englishLine(r)?2:10,color:r.isbn13?C.ink:C.soft}}>
                         {r.isbn13?"ISBN "+fmtIsbn(r.isbn13):"ISBN not confirmed \u2014 verify before buying"}
                       </div>
+                      {englishLine(r)&&<div style={{fontSize:11,color:C.soft,marginBottom:10}}>{englishLine(r)}</div>}
                       <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
                         {isAcq?(
                           <>
