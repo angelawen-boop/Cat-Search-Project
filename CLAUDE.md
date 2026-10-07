@@ -470,6 +470,8 @@ and do not flip to searching wide first.**
   publisher's own page for the book, read whole; the card says how far it was
   checked (`englishCheck`, `englishLine`). It reads the page the publisher step found (that step
   runs first); the English edition's publisher is read off its ISBN in code.
+  At those venues the web search adds one query in the venue's language
+  (`localCatalogueQuery`; Hammershøi, listed only in French, 7 Oct).
 - **"X in association with Y" — Y is the publisher** (her ruling, 2 Oct):
   the publisher step and the self-publisher check use Y (`publisherToFind`);
   the card prints the line as given. **A co-edition, "X / Venue", "X and

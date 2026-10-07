@@ -2872,6 +2872,24 @@ function publisherOnIsbnResults(results,isbn){
   return [...count.entries()].sort((a,b)=>b[1]-a[1]||(a[0]===a[0].toUpperCase())-(b[0]===b[0].toUpperCase()))[0][0];
 }
 
+// THE SHOW'S CATALOGUE IN THE VENUE'S OWN LANGUAGE — her Hammershøi, 7 Oct.
+// The card's title is the venue's English one ("the master of danish
+// painting"); the book is listed only in French ("le maître de la peinture
+// danoise"), so a search on the English title found other venues' books and
+// never this one. The show's name before any colon, the venue's short name,
+// "exhibition catalogue" in its language and the opening year find it.
+// Non-English venues only; nothing for one whose language isn't written here.
+const CATALOGUE_WORDS={louvre:"catalogue exposition",orsay:"catalogue exposition",mad:"catalogue exposition",
+  jacquemart:"catalogue exposition",mam:"catalogue exposition",khm:"Ausstellungskatalog",rijks:"tentoonstellingscatalogus",
+  uffizi:"catalogo mostra",dellav:"catalogo mostra",borghese:"catalogo mostra",brera:"catalogo mostra",capo:"catalogo mostra"};
+function localCatalogueQuery(mu,row){
+  const word=mu&&mu.english===false&&CATALOGUE_WORDS[mu.id];
+  if(!word)return[];
+  const head=String(row.title||"").split(/\s*:\s*/)[0].trim();
+  const year=/^\d{4}/.test(String(row.startDate||""))?" "+String(row.startDate).slice(0,4):"";
+  return head?[head+" "+(mu.card||mu.short)+" "+word+year]:[];
+}
+
 // THE ENGLISH-EDITION LINE ON A CARD — her ruling, 7 Oct: a foreign book
 // says how far an English edition was looked for. Null: nothing to say.
 function englishLine(r){
@@ -4584,7 +4602,7 @@ export default function App(){
         +"press release; art-book publishers and booksellers list them too.",
       [title+" exhibition catalogue ISBN publisher",
        venue+" "+title+" catalogue book",
-       venue+" "+title+" press release catalogue"]);
+       venue+" "+title+" press release catalogue"].concat(localCatalogueQuery(mu,row)));
     detail=(detail?detail+"\n":"")+s2.detail;
     if(!s2.ok)return{row,detail,ok:false};
     if(!s2.results.length)return settle(row,{},dom,detail,false,blocked);
