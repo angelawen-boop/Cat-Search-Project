@@ -17,7 +17,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
 // 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
 // 34.14 → 35.3. Git keeps the old numbers.
-const APP_VERSION = "40.5";
+const APP_VERSION = "40.6";
 const APP_VERSION_DATE = "7 Oct 2026";
 
 // THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
@@ -3028,6 +3028,17 @@ function catalogueLinkOn(results,dom){
   return found.size===1?[...found.values()][0]:null;
 }
 
+// THE ENGLISH-EDITION LINE ON A CARD — her ruling, 7 Oct: a foreign book
+// says how far an English edition was looked for. Null: nothing to say.
+function englishLine(r){
+  const c=r&&r.englishCheck;
+  if(c==="publisher")return "No English edition \u2014 checked: the publisher\u2019s site"+(r.publisher?" ("+r.publisher+")":"")+" and bookshops.";
+  if(c==="shops")return "No English edition found in bookshops; the publisher\u2019s own page for this book wasn\u2019t found.";
+  if(c==="unknownlang")return "The book\u2019s language couldn\u2019t be confirmed, so no English edition was looked for.";
+  if(c==="stopped")return "English edition not checked \u2014 the search stopped part-way. Search again to retry.";
+  return null;
+}
+
 // The shop button's label. "(last seen)" is what tells her the page may be
 // dead or sold out while the link is still worth keeping.
 function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last seen)":"Museum shop"; }
@@ -3048,7 +3059,7 @@ function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last 
 // "Find catalogue" is then a first search, the whole route.
 function resetCard(r){
   return{...r,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,
-    publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null};
+    publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,englishCheck:null};
 }
 // The cards Reset cards can offer: searched ones whose title, catalogue title
 // or venue carry what she typed. Accents and capitals do not count.
@@ -4596,9 +4607,14 @@ export default function App(){
         +", the catalogue of the exhibition \u201c"+r.title+"\u201d at "+venue+".",
       isbn?[isbn,isbn+" "+book]:[book+" "+venue+" catalogue",book+" catalogue language"]);
     let detail=hit.detail+"\n"+s.detail;
-    const stopped=why=>({...hit,detail,trouble:why,troubleLang:true});
+    // WHAT WAS CHECKED GOES ON THE CARD — her ruling, 7 Oct: a foreign book with
+    // no English twin must say how far that "no" was looked for (englishCheck,
+    // englishLine). "stopped": a step died; "unknownlang": no result names
+    // the language; "publisher" / "shops": no English edition, and where.
+    const mark=(h,v)=>({...h,row:{...(h.row||r),englishCheck:v}});
+    const stopped=why=>mark({...hit,detail,trouble:why,troubleLang:true},"stopped");
     if(!s.ok)return stopped(s.detail);
-    if(!s.results.length)return{...hit,detail:detail+"\nLanguage check: nothing found, so the book stands as found."};
+    if(!s.results.length)return mark({...hit,detail:detail+"\nLanguage check: nothing found, so the book stands as found."},"unknownlang");
     const rd=await readResults(
       "You are reading real web search results about ONE book"+(isbn?", ISBN "+isbn:"")+": \u201c"+book+"\u201d.\n"
       +"Use ONLY what the results say. Never use outside knowledge.\n"
@@ -4610,7 +4626,7 @@ export default function App(){
     detail=detail+"\n"+rd.detail;
     if(!rd.ok)return stopped(rd.detail);
     const lang=rd.data&&rd.data.language;
-    if(!lang)return{...hit,detail:detail+"\nLanguage check: no result says, so the book stands as found."};
+    if(!lang)return mark({...hit,detail:detail+"\nLanguage check: no result says, so the book stands as found."},"unknownlang");
     if(isEnglishLang(lang))return{...hit,detail:detail+"\nLanguage check: "+lang+"."};
     // Not English. The book's own title, if the results print it.
     const own=rd.data.title?titleAsPrinted(rd.data.title,s.results):null;
@@ -4618,13 +4634,31 @@ export default function App(){
     if(own&&own.onPage)row.catalogueTitle=own.title;
     detail=detail+"\nLanguage check: "+lang+(own&&own.onPage?" \u2014 its own title \u201c"+own.title+"\u201d.":".");
     const orig=row.catalogueTitle||book;
+    // THE ENGLISH EDITION, LOOKED FOR WHERE IT WOULD BE LISTED — her ruling,
+    // 7 Oct. An English edition is sold under its English title, never as
+    // "English edition", so the show's English title is searched with the
+    // publisher; and the PUBLISHER lists every language it printed, so its own
+    // page for the book is found (in the same search) and read whole. Her
+    // Watteau, 7 Oct: Fonds Mercator's page lists the book in French only.
+    const pub=row.publisher&&!isSelfPublisher(row.publisher,row.museumId)?publisherToFind(row.publisher):"";
     const e=await searchWeb(
       "An ENGLISH-language edition of the exhibition catalogue \u201c"+orig+"\u201d ("+venue
-        +", exhibition \u201c"+r.title+"\u201d"+(isbn?", original ISBN "+isbn:"")+"): its English title and its own ISBN-13.",
-      [orig+" English edition",r.title+" "+venue+" catalogue English edition ISBN"]);
+        +", exhibition \u201c"+r.title+"\u201d"+(isbn?", original ISBN "+isbn:"")+(pub?", publisher "+pub:"")+"): its English title and its own ISBN-13.",
+      [r.title+" "+(pub||venue)+" ISBN",orig+" "+(pub||venue)+" catalogue",orig+" English edition"]);
     detail=detail+"\n"+e.detail;
-    if(!e.ok)return{...hit,row,detail,trouble:e.detail,troubleLang:true};
-    const none=()=>({...hit,row,detail:detail+"\nEnglish edition: none found."});
+    if(!e.ok)return{...hit,row:{...row,englishCheck:"stopped"},detail,trouble:e.detail,troubleLang:true};
+    // The publisher's own page for THIS book, if the search found it: on the
+    // publisher's site (publisherDomainFrom) and carrying the book's title.
+    const pubHost=pub?publisherDomainFrom(e.results,pub):null;
+    const pubPage=pubHost?resultsCarrying(e.results.filter(x=>hostOf(x.url)===pubHost),orig)[0]:null;
+    let pages=e.results;
+    if(pubPage){
+      const pf=await fetchPage(pubPage.url,"Every language edition of the book \u201c"+orig+"\u201d this publisher lists: titles, ISBNs, languages.",null,{full:true});
+      detail=detail+"\n"+pf.detail;
+      if(pf.ok&&pf.results.length)pages=[{...pf.results[0],url:pubPage.url,title:pubPage.title||pf.results[0].title,excerpts:[oneText(pf.results[0])]}].concat(e.results.filter(x=>x!==pubPage));
+    }
+    const checked=pubPage?"publisher":"shops";
+    const none=()=>({...hit,row:{...row,englishCheck:checked},detail:detail+"\nEnglish edition: none found"+(pubPage?" \u2014 the publisher\u2019s own page read ("+pubPage.url+").":"; the publisher\u2019s own page for it was not found.")});
     if(!e.results.length)return none();
     const re=await readResults(
       "You are reading real web search results, looking for an ENGLISH-language edition of the exhibition catalogue \u201c"
@@ -4632,13 +4666,13 @@ export default function App(){
       +"Use ONLY what the results say. Never use outside knowledge and never guess an ISBN.\n"
       +"found is true ONLY if a result shows an edition printed in English, with its OWN ISBN, different from the one above.\n"
       +"title: that edition's title exactly as printed. publisher: its publisher, never a shop or a seller.\n\n"
-      +resultsForPrompt(e.results,3000,{words:[orig,r.title]})
+      +resultsForPrompt(pages,3000,{words:[orig,r.title]})
       +'\n\nReply with ONLY this JSON object: {"found": true|false, "title": string|null, "isbn13": string|null, "language": string|null, "publisher": string|null}');
     detail=detail+"\n"+re.detail;
-    if(!re.ok)return{...hit,row,detail,trouble:re.detail,troubleLang:true};
+    if(!re.ok)return{...hit,row:{...row,englishCheck:"stopped"},detail,trouble:re.detail,troubleLang:true};
     const ed=re.data||{};
     const enIsbn=toIsbn13(ed.isbn13);
-    const printed=enIsbn&&e.results.some(x=>(String(x.url||"")+" "+oneText(x)).replace(/[^0-9Xx]/g,"").includes(enIsbn));
+    const printed=enIsbn&&pages.some(x=>(String(x.url||"")+" "+oneText(x)).replace(/[^0-9Xx]/g,"").includes(enIsbn));
     if(!ed.found||!enIsbn||enIsbn===isbn||!isEnglishLang(ed.language)||!printed||!ed.title)return none();
     return{...hit,pageUrl:null,detail:detail+"\nEnglish edition: \u201c"+ed.title+"\u201d, ISBN "+enIsbn+".",
       row:{...row,catalogueTitle:String(ed.title).trim(),isbn13:enIsbn,
@@ -5764,6 +5798,7 @@ export default function App(){
                       </div>}
                       {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
                       {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
+                {englishLine(r)&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{englishLine(r)}</div>}
                       <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",marginBottom:10,color:r.isbn13?C.ink:C.soft}}>
                         {r.isbn13?"ISBN "+fmtIsbn(r.isbn13):"ISBN not confirmed \u2014 verify before buying"}
                       </div>

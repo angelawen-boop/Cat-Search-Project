@@ -342,7 +342,7 @@ reopening, §7.1). Reasoning and the two rejected arguments: `docs/app.md` §4�
 ```
 id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
 acquiring, buyNext, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
-publisherUrl, publisherResult, shopUrl, shopState, shopChange, addedAt, editedAt
+publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, addedAt, editedAt
 ```
 
 Ledger backup is JSON; the sweep pro forma is CSV.
@@ -461,7 +461,10 @@ and do not flip to searching wide first.**
   found gets one search by ISBN for its language and own title; not English →
   one search for an English edition → filed as "Not in the museum shop". None →
   the book stays under its own title. A book already on a card is never renamed
-  (`fillLanguage`).
+  (`fillLanguage`). **The English edition is looked for where it is listed**
+  (her ruling, 7 Oct): the show's English title with the publisher, and the
+  publisher's own page for the book, read whole; the card says how far it was
+  checked (`englishCheck`, `englishLine`).
 - **"X in association with Y" — Y is the publisher** (her ruling, 2 Oct):
   the publisher step and the self-publisher check use Y (`publisherToFind`);
   the card prints the line as given.
