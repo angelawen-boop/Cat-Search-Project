@@ -415,14 +415,15 @@ So the app is kept, the data layer is swappable underneath, and neither
 
 ## 9. The cloud ledger — what's on screen (branch `claude/ledger-cloud`)
 
-Her wording and order, 26 Sep. The branch code holds the exact strings.
+Her wording and order, 26 Sep. The branch code holds the exact strings. The
+branch's original long comments: `git show fa02d50:Cat_Watch.jsx`.
 
 - **Times** read "Sep 26, 2026 1:22pm" (`localReadable` = `fmtRefresh`); file
   names keep the sortable stamp.
 - **Status lines, in order:** (1) the cloud line, green — "☁ Last cloud save: …
   (N minutes ago) · N exhibitions" — or the red "CLOUD COPY NOT SAVING" banner
   ending with the last save time; (2) a blank line; (3) the loading line, black,
-  dismissable, saying whether the loaded file differs from the last cloud save
+  dismissable (it stays until dismissed or the next Load — never fades), saying whether the loaded file differs from the last cloud save
   (with the count, and that a safety snapshot was taken) or matches it; (4) the
   saving line, message green and bold, file name plain.
 - "Loaded N exhibitions from your file" is not wired while the loading line
@@ -433,7 +434,8 @@ Her wording and order, 26 Sep. The branch code holds the exact strings.
 - **Cloud Saves tray**, beside Quarantine: 'Export: "**description**" · N
   exhibitions'; safety copies "Safety snapshot before
   Load" / "…Reset" / "…roll-back to <time>" (`snapTitle` renames old labels on
-  screen). Download, Roll back (asks first).
+  screen). Download, Roll back (asks first). Cloud Saves and Quarantine are
+  always drawn, so an empty tray says so.
 - After an Import: "Import complete. Save it now both offline and to the
   cloud.", a blank line, then the counts — until a Save delivers both.
 - **The amber "not saved to a file" banner is unwired, not deleted**

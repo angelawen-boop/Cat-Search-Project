@@ -1613,7 +1613,7 @@ async function writeQuarantine(next){
 //      Resolves "runtime"; a rejection throws its own error.
 //   2. An ordinary browser download: cannot tell arrived from cancelled.
 //      Resolves "browser"; if even starting it fails, throws {route:"browser"}.
-// Export and snapshot downloads both come through here.
+// Save's file and Cloud Saves' downloads both come through here.
 async function offerFile(filename,data){
   let dl=null;
   try{
@@ -1634,35 +1634,11 @@ async function offerFile(filename,data){
 }
 
 // ── THE CLOUD LEDGER — branch claude/ledger-cloud, in trial ───────────────────
-//
-// HER DESIGN, 24 Sep, after a long discussion (guide §7.1). The ledger moves
-// into this page's own store, and the store holds exactly two kinds of thing:
-//
-//   THE LIVE LEDGER — one copy, overwritten after every change, which is what
-//     the app will open. "Instant save": nothing to press.
-//   SNAPSHOTS ("Cloud Saves" on screen, 26 Sep) — whole copies: one each time
-//     she Saves with the cloud box ticked (the same file as her offline copy,
-//     same name), plus the automatic safety copies. Never overwritten, never
-//     pruned (her choice: keep every one and judge later).
-//
-// Her offline files stay exactly as they are — the copy that lives outside Claude.
-//
-// COMPRESSED, SO THE LEDGER IS ONE PIECE. The store caps a document at
-// 256 KiB; her 24 Sep ledger is 217 KiB as text and 45 KiB compressed. A
-// ledger that ever outgrows one piece is split into parts, by the same code,
-// so the path a two-part ledger takes is the path every save already takes.
-//
-// A SAVE CAN NEVER LEAVE HALF A LEDGER. The store has no transactions, so the
-// parts are written under a NEW name first and the live document — the one
-// small record saying which parts are current — is switched only once every
-// part has landed. A save that dies midway leaves the switch where it was,
-// pointing at the last complete ledger. The old parts go after the switch.
-//
-// EVERY PIECE CARRIES A FINGERPRINT (sha-256 of the text) and a read checks
-// it. A copy that does not match is refused, never shown.
-//
-// Kept OUT of the component, between prose anchors, so fixtures can drive it
-// against a stand-in store (scraper/fixtures/cloud_ledger.js).
+// Her design (CLAUDE.md §7.1; screen docs/app.md §9): the LIVE LEDGER, saved after every
+// change, and SNAPSHOTS ("Cloud Saves"), never overwritten or pruned. Parts are written
+// under a new name and the live record switched last, so a cut-off save leaves the last
+// complete ledger; every piece is fingerprinted (sha-256) and a mismatch is refused.
+// Out of the component so fixtures drive it against a stand-in store (cloud_ledger.js).
 const CLOUD_LIVE_DOC="ledger/live";
 const CLOUD_PARTS="ledgerParts";
 const SNAP_COLL="snapshots";
@@ -1670,10 +1646,8 @@ const SNAP_PARTS="snapshotParts";
 // Characters of compressed text per part. The store's cap is 256 KiB per
 // document; this leaves room for the field names and a margin.
 const CLOUD_PART_CHARS=180000;
-// THE TRIAL SWITCH. False: the app saves the live ledger and takes snapshots
-// but never OPENS from the cloud by itself — she imports her file as always,
-// and each import is checked against the cloud copy. True only when she says
-// the trial is over.
+// The trial switch: false = save and snapshot, but never open from the cloud by itself;
+// true only when she ends the trial.
 const CLOUD_OPENS=false;
 
 async function cloudGzip(text){
@@ -1738,11 +1712,8 @@ async function cloudReadLive(db){
   return {rec,text:await cloudReadParts(db,CLOUD_PARTS,rec)};
 }
 
-// SNAPSHOTS. The parts go first and the listing record last, so a snapshot
-// that died midway never appears in her list.
-// A copy made by Save carries the NAME of the file Save handed her, so the
-// offline file and its cloud twin match by name — her ruling, 26 Sep — and
-// the moment in both is the same one.
+// Snapshots: parts first, the listing record last, so a half-written one never appears.
+// A Save's copy carries the offline file's name and moment (her decision).
 async function cloudTakeSnapshot(db,text,info){
   const w=await cloudWriteParts(db,SNAP_PARTS,cloudNewId("s"),text);
   const rec={...w,at:info.at||new Date().toISOString(),label:String(info.label||"").slice(0,80),
@@ -1795,18 +1766,10 @@ function cloudTrouble(e,verb){
   if(code==="missing_part"||code==="fingerprint") return String(e.message);
   return "Couldn’t "+act+" the cloud copy ("+(code||String((e&&e.message)||e||"unknown"))+").";
 }
-// ONE COPY EDITS AT A TIME — her ruling, 1 Oct. Two open copies of the page
-// each save their own ledger over the other's. So the copy that opens while
-// another is open is READ ONLY: it shows the cloud copy and writes nothing.
-//
-// Each editing copy writes its id and the time into one small record every
-// SESSION_BEAT_MS. A copy opening finds a fresh record with another id → read
-// only. A record older than SESSION_STALE_MS is a copy that closed without
-// saying so (a browser gives a closing page no reliable time — §7.1), and is
-// taken over. A copy that wakes from sleep to find another one editing turns
-// read only itself; and every cloud save checks the record first, so a
-// sleeping copy's first act on waking can never be overwriting the live
-// ledger. Read only lasts until the page is reloaded.
+// ONE COPY EDITS AT A TIME (her decision; TC-001–010). The copy that opens while another
+// edits is READ ONLY until reloaded. Each editing copy beats its id into one record every
+// SESSION_BEAT_MS; a record older than SESSION_STALE_MS is a closed copy, taken over.
+// Every save checks the record first, so a copy waking from sleep never overwrites it.
 const CLOUD_SESSION_DOC="ledger/session";
 const RO_LINE="Read only — Cat Watch is open in another tab or device. Close it there, then reload this one.";
 const SESSION_BEAT_MS=20000;
@@ -1835,9 +1798,8 @@ async function cloudSessionClaim(db,now){
 async function rawStore(){
   try{ return (typeof window!=="undefined"&&window.claude&&window.claude.use)?await window.claude.use("db"):null; }catch{ return null; }
 }
-// The branch's own version series (her ruling, 24 Sep): main's number, then the
-// cloud count. The cloud count lives HERE, not on the APP_VERSION line, so that
-// line stays identical to main's and merging main in never clashes over it.
+// The branch's version series: main's number, then the cloud count — kept here so the
+// APP_VERSION line never clashes in a merge.
 const CLOUD_COUNT = "cloud 4";
 // ── END OF THE CLOUD LEDGER ──────────────────────────────────────────────────
 
@@ -2444,19 +2406,15 @@ let AUTOLOAD_FIRED=false; // module-level: survives a strict-mode remount so ope
 // Local 24hr timestamp (browser's timezone), e.g. 2026-08-23-2230 = 10:30pm local.
 // A description, as it goes into a file name: lower case, words joined by hyphens.
 function labelSlug(label){return String(label||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);}
-// WHAT A CLOUD SAVE IS CALLED IN THE LIST — her wording, 26 Sep. A copy made
-// by Save: 'Export: "her description"' (her wording, 30 Sep; was "Cloud copy of Export"). A safety copy: its own
-// label; older safety copies were stored under the first wording and are
-// renamed on screen here, never rewritten in the store.
+// A cloud save's name in the list (her wording): a Save's copy 'Export: "description"';
+// a safety copy, its own label. Older labels are renamed on screen, never in the store.
 function snapTitle(s,all){
   if(!s)return "";
   if(s.kind!=="safety")return "Export"+(s.label?": \u201c"+s.label+"\u201d":"");
   const l=String(s.label||"");
-  // ROLL-BACK COPIES NAME THE SAVE BY ITS TIME — her ask, 1 Oct:
-  // "Safety snapshot before roll-back to snapshot of Sep 26, 2026 1:16pm".
-  // Copies made before 30 Sep stored the target's NAME only ("Before rolling
-  // back to Cloud copy before Load"); its time is read off the one earlier
-  // save carrying that name. Two or none → the name, quoted, as before.
+  // Roll-back copies name the save by its time (her ask; CL-T1–3). Older copies stored
+  // only the target's name; its time is read off the one earlier save carrying that name
+  // — two or none, the name as before.
   const m=l.match(/^Before rolling back to (.*)$/);
   if(m){
     const was=m[1].replace(/^Cloud copy before /,"Safety snapshot before ");
@@ -2467,8 +2425,7 @@ function snapTitle(s,all){
   return l.replace(/^Cloud copy before /,"Safety snapshot before ").replace(/^(Safety snapshot before roll-back to )(?!snapshot of )/,"$1snapshot of ")||"Safety snapshot";
 }
 function localStamp(iso){const d=iso?new Date(iso):new Date(),p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes());}
-// ONE WAY TO WRITE A MOMENT, her ruling 26 Sep: "Sep 26, 2026 1:22pm", the
-// same as "Last refreshed". Every time on screen comes through here.
+// One way to write a moment (her decision): "Sep 26, 2026 1:22pm", as "Last refreshed".
 function localReadable(iso){return fmtRefresh(iso||new Date().toISOString());}
 
 // One instrumented call to Drive via the Anthropic API + MCP. Returns text + diagnostics.
@@ -2544,20 +2501,14 @@ export default function App(){
     return ignored.slice().sort((a,b)=>ord(a.venueId)-ord(b.venueId)||String(a.title||"").localeCompare(String(b.title||"")));
   },[ignored]);
   const[showIgnored,setShowIgnored]=useState(false);
-  // THE CLOUD LEDGER'S READOUT — her ask, 24 Sep: never silent, and permanent.
-  // saveState / lastSaved / saveErr are the Chat-era "last saved" readout's own
-  // names, dormant since v8 and brought back for the job they were made for.
-  //   saveState: idle | off | saving | saved | failed
-  //   lastSaved: the live record last written or read (time, counts, parts)
-  //   saveErr:   the sentence saying why it is not saving
-  // cloudLive: what the store held when the page opened — {rec,data} / {rec:null}
-  // / {why}. It is what the "Open the cloud copy" offer reads.
+  // The cloud readout, never silent (her ask). saveState: idle | off | saving | saved |
+  // failed; lastSaved: the live record last written or read; saveErr: why it is not
+  // saving. cloudLive: what the store held on open ({rec,data} / {rec:null} / {why}).
   const[cloudLive,setCloudLive]=useState(null);
   // A sentence from the last import's check against the cloud copy (trial).
   const[cloudCheck,setCloudCheck]=useState(null);
-  // SAVING IS ARMED ONLY ONCE A LEDGER HAS BEEN OPENED in this page load —
-  // imported, reset, opened from the cloud or rolled back to. An empty portal
-  // must never overwrite the cloud copy with nothing.
+  // Saving is armed only once a ledger is opened in this page load, so an empty portal
+  // never overwrites the cloud copy.
   const cloudArmed=useRef(false);
   // ONE COPY EDITS AT A TIME — see cloudSessionClaim. True for the rest of
   // this page load once another copy is found editing.
@@ -2574,9 +2525,8 @@ export default function App(){
   const[snapWhy,setSnapWhy]=useState(null);
   const[showSnaps,setShowSnaps]=useState(false);
   const[snapBusy,setSnapBusy]=useState(false);
-  // THE SAVE PANEL — her design, 26 Sep. Save = the offline file, plus (ticked
-  // by default, her ruling) a copy of the same file in Cloud Saves. The
-  // description names both.
+  // The Save panel (her design): the offline file plus, ticked by default, the same file
+  // in Cloud Saves.
   const[showSave,setShowSave]=useState(false);
   const[saveLabel,setSaveLabel]=useState("");
   const[saveCloud,setSaveCloud]=useState(true);
@@ -2684,9 +2634,7 @@ export default function App(){
     // they load here, before any file is opened. Read once, not subscribed.
     readSweepLog().then(({log,why})=>{ setVenueSeen(log); setFreshWhy(why); });
     readQuarantine().then(({map,why})=>{ setQuarantine(map); setQuarWhy(why); });
-    // THE CLOUD COPY IS READ ON OPEN, and during the trial only READ: the app
-    // still opens empty and waits for her file. After the trial (CLOUD_OPENS)
-    // it opens the cloud copy itself.
+    // The cloud copy is read on open; during the trial it is only read (CLOUD_OPENS).
     (async()=>{
       const raw=await rawStore();
       if(raw){ try{ if(await cloudSessionClaim(raw)==="other")goReadOnly(); }catch{} }
@@ -2698,8 +2646,8 @@ export default function App(){
         const data=JSON.parse(text);
         cloudPrev.current=rec; cloudFp.current=ledgerFingerprintText(data);
         setCloudLive({rec,data}); setLastSaved(rec);
-        // A READ-ONLY COPY OPENS NOTHING BY ITSELF — her ruling, 4 Oct. It opens
-        // empty like any copy; "Open it" shows the cloud copy when she asks.
+        // A read-only copy opens nothing by itself (her decision); "Open it" shows the
+        // cloud copy on request.
         if(CLOUD_OPENS&&!cloudReadOnly)openCloudData(rec,data);
       }catch(e){ setCloudLive({why:cloudTrouble(e,"read")}); }
     })();
@@ -2761,15 +2709,13 @@ export default function App(){
   },[]);
 
   // ── THE CLOUD LEDGER, INSIDE THE APP ──────────────────────────────────────
-  // What a save reads: the ledger as it stands on screen, the same three
-  // things an Export writes.
+  // What a save reads: the ledger as it stands on screen — the same three things Save's
+  // file holds.
   cloudLatest.current={rows,ignored,lastRun};
 
-  // THE SAVE. One at a time; a change arriving mid-save queues one more, which
-  // reads whatever is newest when it starts, so a burst of clicks costs two
-  // saves, not twenty. Nothing is written when nothing changed. One retry after
-  // a short pause, because the store's own advice for a passing fault is
-  // exactly that; a second failure is reported, never swallowed.
+  // The save: one at a time; a change mid-save queues one more, which reads the newest
+  // ledger. Nothing is written when nothing changed. One retry after a short pause; a
+  // second failure is reported, never swallowed.
   const cloudSaveNow=useCallback(async()=>{
     if(cloudReadOnly)return;
     if(cloudBusy.current){ cloudAgain.current=true; return; }
@@ -2808,13 +2754,10 @@ export default function App(){
     return()=>clearTimeout(t);
   },[rows,ignored,lastRun,cloudSaveNow]);
 
-  // BEFORE A WHOLE LEDGER REPLACES THE ONE IN THE CLOUD — an import, a Reset —
-  // the cloud copy is compared with what is arriving. The same: said so, and
-  // that sentence IS the trial's check. Different: the cloud copy is kept as a
-  // snapshot first, so nothing the store held can be lost by opening a file.
-  // Returns true when it put a line on screen about what was loaded — then the
-  // plain "Loaded N exhibitions" line is not needed (her ruling, 26 Sep).
-  // Returns only when that is done; the new ledger is armed after it.
+  // Before a whole ledger replaces the cloud copy (Load, Reset): the same → said so (the
+  // trial's check); different → the cloud copy is kept as a safety snapshot first, and if
+  // that fails nothing is replaced. Returns true when it put a line on screen about what
+  // was loaded (then "Loaded N exhibitions" is not shown — her decision).
   async function guardCloudBeforeReplace(incoming,reason){
     const db=await useCap("db");
     if(!db){ setCloudCheck(null); return false; }
@@ -2827,8 +2770,8 @@ export default function App(){
     const when=localReadable(live.rec.savedAt);
     const diff=ledgerDifference(data,incoming);
     if(!diff){ setCloudCheck("✓ The file you just loaded is identical to the last cloud save ("+when+"). No snapshot of the last cloud state was needed before loading your file."); return true; }
-    // HER FORMAT, 26 Sep: one count of differences, the cloud save's time,
-    // and what was done. The breakdown stays in the diagnostic, not lost.
+    // Her format: one count of differences, the cloud save's time, and what was done;
+    // the breakdown goes to the diagnostic.
     const bits=[];
     if(diff.onlyA)bits.push(diff.onlyA+" exhibition"+(diff.onlyA===1?"":"s")+" only in the cloud copy");
     if(diff.onlyB)bits.push(diff.onlyB+" only in "+(reason==="reset"?"the starter set":"this file"));
@@ -2859,8 +2802,7 @@ export default function App(){
     setLastSaved(rec); setSaveState("saved"); setSaveErr(null); setCloudCheck(null);
     cloudArmed.current=true;
   }
-  // Allowed in a read-only copy (her ruling, 4 Oct): it shows the cloud copy
-  // and writes nothing — openCloudData passes the read-only flag on to loadLedger.
+  // Allowed in a read-only copy (her decision): it shows the cloud copy, writes nothing.
   async function requestOpenCloud(){
     const go=async()=>{
       const db=await useCap("db"); if(!db)return;
@@ -2881,9 +2823,8 @@ export default function App(){
     try{ setSnaps(await cloudListSnapshots(db)); setSnapWhy(null); }
     catch(e){ setSnaps([]); setSnapWhy("Couldn’t read the cloud saves ("+cloudTrouble(e,"read")+")."); }
   }
-  // ROLL BACK: a snapshot becomes the ledger. The ledger it replaces is kept
-  // first as a safety snapshot — her ruling, 24 Sep — so a rollback can itself
-  // be undone. If that safety copy cannot be taken, nothing is replaced.
+  // Roll back: the ledger it replaces is kept first as a safety snapshot (her decision),
+  // so a roll-back can be undone; no safety copy, no roll-back.
   function requestRollback(s){
     if(roStop())return;
     setConfirmBox({title:"Roll back to this cloud save?",
@@ -4110,40 +4051,17 @@ export default function App(){
     else openFilePicker();
   }
   const doReset=async()=>{if(roStop())return;const seed=buildSeed();try{await guardCloudBeforeReplace({rows:seed,ignored},"reset");}catch{return;}cloudArmed.current=true;loadLedger(seed,null,"Starter set loaded ("+seed.length+" exhibitions) \u2014 not saved to a file.");setDebug("Reset: loaded the built-in starter set ("+seed.length+" exhibitions). It isn't in any file \u2014 Save if you want one.");};
-  // RESET TO SEED ALWAYS ASKS while a ledger is on screen — her ruling, 2 Oct:
-  // one tap beside "Reset cards" replaced her ledger with no question.
+  // Reset to Seed always asks while a ledger is on screen (her decision).
   function requestReset(){
     if(rows.length>0&&dirty&&cloudNotSaving){setConfirmBox({text:"This loads the built-in starter set and replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",act:doReset});}
     else if(rows.length>0){setConfirmBox({text:"This loads the seed set and replaces everything on screen. Continue?",act:doReset});}
     else doReset();
   }
 
-  // SAVING MUST NOT DEPEND ON THE SANDBOX ALLOWING A DOWNLOAD — 20 Sep 2026.
-  //
-  // It did, and the viewer withdrew the permission: "File downloads aren't
-  // available for this artifact." That took away THE ONLY ROUTE HER LEDGER HAD
-  // OUT OF THE APP, and the app said "Saved — safe to close" while it happened,
-  // because the old code treated clicking a link as evidence a file arrived.
-  //
-  // Two routes now, in order, and the difference between them is what is known:
-  //
-  //   1. The runtime's own file handoff. It asks her and then either SAVES or
-  //      REJECTS, so for the first time there is a real answer to hold the
-  //      green tick to.
-  //   2. An ordinary browser download, for a plain page or an older viewer.
-  //      This one cannot tell a finished download from a cancelled one from a
-  //      sandbox that refused silently — so it DOES NOT CLEAR THE UNSAVED
-  //      WARNING. Not knowing is reported as not knowing.
-  //
-  // The guide records her accepting a dishonest tick because Claude's download
-  // prompt had a Cancel the app could not see. That premise is gone on route 1.
-  // SAVE — her design, 26 Sep: the offline file AND, when ticked, the same
-  // file into Cloud Saves. One press, two copies, identical name and content.
-  //
-  // THE CLOUD COPY GOES FIRST, because the file waits on her answer in the
-  // viewer's dialog: a cancelled file must not take the cloud copy with it.
-  // EACH HALF REPORTS ITSELF — one tick for both would be the 20 Sep lie
-  // ("Saved — safe to close" while nothing was written) in a new place.
+  // Save (her design; docs/app.md §2): the offline file AND, when ticked, the same file in
+  // Cloud Saves — same name and content. The cloud copy goes first, so a cancelled file
+  // cannot take it with it. Each half reports itself; a plain browser download never
+  // clears the unsaved state. Never a click-triggered "Saved" tick.
   async function handleSave(){
     if(saveBusy||!rows.length)return;
     const at=new Date().toISOString();
@@ -4354,24 +4272,19 @@ export default function App(){
   };
   const{acceptedCount,undecidedCount,quarantinedCount,rejectedCount}=countDecisions(proposals,decisions);
 
-  // THE LINE UNDER THE BUTTONS. What the last Save did, in her words, until
-  // the next change; otherwise what was loaded. Whether the work is SAFE is
-  // the cloud line's job now, not this one's.
+  // The line under the buttons: what the last Save did, until the next change; otherwise
+  // what was loaded. Whether work is safe is the cloud line's job.
   const hasLedger=rows.length>0;
-  // THE "NOT SAVED TO A FILE" WARNING IS UNWIRED, NOT DELETED — her ruling,
-  // 26 Sep. With the cloud copy saving every change it would nag after every
-  // click; the cloud banner says when work is really at risk. If the cloud
-  // trial fails she goes back to Export by hand and needs it again: set true.
+  // The "not saved to a file" banner is unwired, not deleted (her decision): with the
+  // cloud copy saving every change it would nag. If the trial fails, set true.
   const FILE_UNSAVED_WARNING=false;
   const showUnsavedBanner=FILE_UNSAVED_WARNING&&hasLedger&&dirty;
   // THE LOAD LINE — what was opened, until the first change.
   let savedText=null;
   // No line at all with no ledger open (her decision).
   if(!hasLedger){savedText=null;}
-  // UNWIRED WHEN THE CLOUD CHECK SPEAKS — her ruling, 26 Sep: "Loaded N
-  // exhibitions from your file" repeated what the check line and the cloud
-  // line already say. It still shows when there is no check line (a page
-  // that cannot reach its store) and for Reset, roll-back and open-from-cloud.
+  // "Loaded N exhibitions" is not shown while the cloud check line speaks (her decision);
+  // it still shows with no check line, and for Reset, roll-back and open-from-cloud.
   else if(!dirty&&!saveNote&&loadedInfo){savedText=loadedInfo;}
 
   if(!loaded)return(<div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.soft,minHeight:"100vh",display:"grid",placeItems:"center",fontSize:13}}>Opening the ledger{"\u2026"}</div>);
@@ -4384,9 +4297,8 @@ export default function App(){
         <h1 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:36,lineHeight:1,fontWeight:500,margin:0,letterSpacing:"-0.02em"}}>Before it goes<span style={{color:C.accent}}> out of print</span></h1>
         <div style={{marginTop:14,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
           {/* Bulk "Find catalogues for N Wanted" removed to protect usage; findWantedCats stays dormant. */}
-          {/* LOAD AND IMPORT — renamed 25 Sep, her ruling: "Import" and "Import
-              Refresh" had become confusing. Load opens a ledger file; Import brings
-              in a sweep CSV as cards. */}
+          {/* Load and Import (her decision): Load opens a ledger file; Import brings in a
+              sweep CSV as cards. */}
           <button onClick={requestImport} style={sBtn}>Load</button>
           <button onClick={()=>setShowSave(v=>!v)} disabled={!hasLedger} style={{...pBtn,opacity:hasLedger?1:0.4,cursor:hasLedger?"pointer":"not-allowed"}}>Save</button>
           <input ref={fileRef} type="file" accept=".json" onChange={handleImport} style={{display:"none"}}/>
@@ -4397,8 +4309,8 @@ export default function App(){
           <button onClick={()=>{setLinkNote(null);setImportMode("choose");}} style={sBtn}>Import</button>
           <input ref={refreshFileRef} type="file" accept=".csv,text/csv" onChange={handleRefreshFile} style={{display:"none"}}/>
         </div>
-        {/* THE SAVE PANEL — her design, 26 Sep. The description names the
-            offline file AND its cloud twin; the tick starts on, her ruling. */}
+        {/* The Save panel (her design): the description names the offline file and its
+            cloud twin; the tick starts on. */}
         {showSave&&hasLedger&&<div style={{marginTop:8,padding:"10px 12px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
           <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
             <input value={saveLabel} onChange={e=>setSaveLabel(e.target.value)} maxLength={80} placeholder={"Description (optional) \u2014 e.g. after 30 lookups"}
@@ -4413,18 +4325,13 @@ export default function App(){
           </label>
           <div style={{marginTop:6,fontSize:11,color:C.soft,wordBreak:"break-all"}}>{"File name: "+LEDGER_PREFIX+localStamp()+(labelSlug(saveLabel)?"-"+labelSlug(saveLabel):"")+".json"}</div>
         </div>}
-        {/* THE STATUS LINES, IN HER ORDER — 26 Sep. The cloud line first, always
-            (green, or the red banner when saving has stopped); a line's space;
-            then what LOADING did (black, dismissable); then what SAVING did. */}
-        {/* THE CLOUD COPY'S LINE — permanent, never silent (her ask, 24 Sep).
-            One line when it is working; the warning banner when it is not,
-            because a save that has stopped is the one fact she must not have
-            to go looking for. */}
+        {/* The status lines, in her order (docs/app.md §9): the cloud line first, always —
+            green, or the red banner when saving has stopped; a line's space; what loading
+            did; what saving did. */}
         {(saveState==="failed"||saveState==="off")?
           <div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
             <span style={{fontSize:17,lineHeight:1.1}}>{"☁"}</span>
-            {/* WHEN IT LAST WORKED — her ask, 26 Sep: the banner says how far
-                back the cloud copy stands until a save lands and it goes. */}
+            {/* When it last worked (her ask): how far back the cloud copy stands. */}
             <span>{"CLOUD COPY NOT SAVING — "+(saveErr||"reason unknown.")
               +(lastSaved&&lastSaved.savedAt?" Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+")."
                 :" Nothing has been saved to the cloud yet.")
@@ -4442,9 +4349,8 @@ export default function App(){
         </div>}
         <div style={{marginTop:16}}>
           {savedText&&<div style={{fontSize:11,color:C.ink,lineHeight:1.45}}>{savedText}</div>}
-          {/* STAYS UNTIL SHE DISMISSES IT or the next Load replaces it — her
-              question, 26 Sep. Timed fading was the other option: a line that
-              can vanish before it is read is a negative nobody earned. */}
+          {/* Stays until she dismisses it or the next Load replaces it (her decision): a
+              line that fades can vanish unread. */}
           {cloudCheck&&<div style={{marginTop:2,fontSize:11,color:C.ink,lineHeight:1.45,display:"flex",gap:8,alignItems:"baseline"}}>
             <span style={{flex:1}}>{cloudCheck}</span>
             <button onClick={()=>setCloudCheck(null)} title="Dismiss" aria-label="Dismiss" style={{background:"none",border:"none",color:C.soft,fontSize:14,lineHeight:1,cursor:"pointer",padding:0}}>{"\u00d7"}</button>
@@ -4458,15 +4364,9 @@ export default function App(){
           {/* The icon sits on the first line of text (her ask): centred, it drifted when
               the banner wrapped. */}
           <span style={{fontSize:17,lineHeight:"17.5px"}}>{"\u21BB"}</span>
-          {/* EVERY CARD SHE LOOKED AT IS ACCOUNTED FOR IN THIS ONE SENTENCE,
-              which is the whole job of it. Partial apply put cards somewhere
-              the sentence did not name \u2014 neither applied nor refused \u2014 so the
-              arithmetic stopped closing and the bar quietly under-reported.
-              The clause below is not decoration: drop it and the numbers no
-              longer add up to the pile she started with. The way back for
-              them is on the partial-import confirm box.
-              TWO PARAGRAPHS, her wording, 30 Sep: the instruction, a blank
-              line, then the counts. */}
+          {/* Every card she looked at is accounted for in this sentence; the left-behind
+              clause keeps the numbers adding up (the way back is on the partial-import
+              confirm box). Two paragraphs, her wording: the instruction, then the counts. */}
           <span>
             <span style={{display:"block",marginBottom:"1.45em"}}>{"Import complete. Save it now both offline and to the cloud."}</span>
             <span style={{display:"block"}}>{refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated"+(refreshDone.never?", "+refreshDone.never+" quarantined":"")+(refreshDone.left?", "+refreshDone.left+" left undecided":"")+"."}</span>
@@ -4781,22 +4681,17 @@ export default function App(){
           <button onClick={()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset cards</button>
         </span>
         <span style={{marginLeft:"auto",display:"flex",gap:14}}>
-          {/* CLOUD SAVES SIT BESIDE QUARANTINE, in the same type — both are
-              drawers she opens on purpose, not part of the work. Always drawn:
-              a control that only appears once it has something to show can't
-              say "none yet" (guide §6). Renamed from Snapshots, her ruling
-              26 Sep; like Quarantine, the button is just the name. */}
+          {/* Cloud Saves sit beside Quarantine, in the same type, always drawn — a control
+              that appears only with something to show can't say "none yet" (her decision). */}
           <button onClick={()=>{setShowSnaps(v=>!v); if(!showSnaps)loadSnaps();}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{"Cloud Saves"}</button>
-          {/* ALWAYS DRAWN, like Cloud Saves — her catch, 25 Sep: on a page with an
-              empty quarantine the link vanished and read as "the tray is gone". */}
+          {/* Quarantine's link is always drawn too (her catch): an empty one vanished. */}
           {<button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{"Quarantine"}</button>}
         </span>
       </div>
       <div style={{maxWidth:760,margin:"0 auto"}}>
         {showSnaps&&<div style={{marginTop:6,padding:"10px 12px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
-          {/* A LIST, LIKE QUARANTINE — her design, 26 Sep. Copies are made by
-              Save (the tick) and by the two automatic safety copies; nothing
-              here makes one. */}
+          {/* A list, like Quarantine (her design): copies come from Save and the two
+              automatic safety copies. */}
           <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
             {snaps&&snaps.length>0&&<b>{snaps.length+" cloud save"+(snaps.length===1?"":"s")+". "}</b>}
             {"From exports also saved to the cloud and safety snapshots (taken before a Load, Reset or roll-back to an earlier snapshot)."}
@@ -4806,13 +4701,11 @@ export default function App(){
           :snaps.length===0?<div style={{fontSize:12,color:C.soft}}>{"No cloud saves yet."}</div>
           :snaps.map(s=>(
             <div key={s.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"5px 0",alignItems:"baseline",borderTop:"1px dotted "+C.rule,flexWrap:"wrap"}}>
-              {/* ONE WIDTH FOR EVERY TIME — her ask, 1 Oct. 120px was narrower than
-                  every time, so each description started where its own time
-                  ended ("10:49pm" wider than "11:59pm"). 15em fits the longest;
+              {/* One width for every time (her ask): 15em fits the longest, with
                   even-width digits. */}
               <span style={{flex:"0 0 auto",minWidth:"15em",fontWeight:600,whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums"}}>{localReadable(s.at)}</span>
-              {/* NO "AUTOMATIC" TAG — her ruling, 26 Sep: the copies SHE made are the
-                  ones marked, by her own description in bold. */}
+              {/* No "automatic" tag (her decision): her own copies are marked by her
+                  description in bold. */}
               <span style={{flex:"1 1 160px"}}>{s.kind!=="safety"&&s.label?<>{"Export: \u201c"}<b>{s.label}</b>{"\u201d"}</>:snapTitle(s,snaps)}<span style={{color:C.soft}}>{" · "+s.rows+" exhibitions"}</span>{s.filename&&<span style={{display:"block",fontSize:11,color:C.soft,wordBreak:"break-all"}}>{s.filename}</span>}</span>
               <button onClick={()=>downloadSnapshot(s)} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Download</button>
               <button onClick={()=>requestRollback(s)} disabled={snapBusy} style={{background:"none",border:"none",color:C.accent,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Roll back</button>
@@ -4844,7 +4737,7 @@ export default function App(){
           {/* Big enough to read (her decision): decisions she may need to undo, in body
               ink, at chip size or above. */}
           <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
-            {/* THE COUNT LIVES IN HERE — her ruling, 25 Sep; the footer button just says Quarantine. */}
+            {/* The count lives in here (her decision); the footer button just says Quarantine. */}
             <b>{ignored.length+" in quarantine. "}</b>{"Entries excluded from all future imports. Removing them from quarantine will re-offer them in future sweeps \u2014 it does not immediately add them to your ledger."}
           </div>
           {/* By venue only (her decision): venues in the app's order, titles A–Z. */}
