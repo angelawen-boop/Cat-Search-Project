@@ -2561,17 +2561,12 @@ export default function App(){
   const[loaded,setLoaded]=useState(false);
   const[busy,setBusy]=useState(false);
   const[busyId,setBusyId]=useState(null);
-  const[lookPhase,setLookPhase]=useState(null); // DIAGNOSTIC: "shop"|"web"|null — which lookup step is running (revert to plain "Searching…" later)
+  const[lookPhase,setLookPhase]=useState(null); // "shop"|"web"|null — which lookup step is running
   const[prog,setProg]=useState({done:0,total:0,label:""});
-  // ADD BY LINK — see the block above readShowPage. The box's text and the
-  // occasional venues live in the page's store, not the ledger.
-  // ONE POP-UP FOR BOTH WAYS IN — her ruling, 4 Oct: nothing added to the
-  // page itself. Import opens it small, with CSV and Links; Links opens the
-  // box below them. New venues' shops are a screen of their own, after the
-  // review (shopScreen).
-  // null · "choose" (CSV or Links) · "links" (the box open below them).
+  // Add by link: one pop-up for CSV and Links, nothing added to the page (her design).
+  // importMode: null · "choose" · "links" (the box open below them).
   const[importMode,setImportMode]=useState(null);
-  // The shop screen, after the review: {partial, ids}. Which venue is being
+  // The shop screen, after the review: {partial, ids}. shopLooking: the venue being
   // looked for again.
   const[shopScreen,setShopScreen]=useState(null);
   const[shopLooking,setShopLooking]=useState(null);
@@ -2580,9 +2575,8 @@ export default function App(){
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
   const[occVenues,setOccVenues]=useState({});
-  // WHAT THE STORE HOLDS for the new venues. occVenues is the working copy an
-  // import changes; the store is written only when the ledger moves (her rule,
-  // 4 Oct: nothing is kept from an import she did not finish).
+  // The stored copy of the new venues; occVenues is the working copy. The store is
+  // written only when the ledger moves — an unfinished import keeps nothing (her decision).
   const occSaved=useRef({});
   const[error,setError]=useState(null);
   const[rechecking,setRechecking]=useState(false);   // which of the card's two buttons is running
@@ -2593,15 +2587,9 @@ export default function App(){
   useEffect(()=>setCopySaid(null),[debug]); // a new diagnostic has not been copied
   const[showDebug,setShowDebug]=useState(false);
   const[lastRun,setLastRun]=useState(null);
-  // QUARANTINE — "this should never have been an entry". Not the same as
-  // dismiss, which is for a REAL exhibition she has looked at and passed on.
-  // Rejecting an Add card stores nothing, so junk returns on every future
-  // sweep forever; accepting then dismissing puts junk in the ledger
-  // permanently. This is the third outcome, and it is the only one that keeps
-  // the ledger clean. Entries: {key, venueId, title, at}.
-  // The MAP is what is stored (tombstones and all); the LIST is what she sees
-  // and what the export carries. Deriving one from the other means they cannot
-  // drift, which two pieces of state for one fact always eventually do.
+  // Quarantine (docs/app.md §4): the third outcome beside reject and dismiss. The MAP is
+  // stored (tombstones and all); the LIST is derived from it — what she sees and what
+  // the export carries.
   const[quarantine,setQuarantine]=useState({});
   const[quarWhy,setQuarWhy]=useState(null);
   const ignored=useMemo(()=>activeQuarantine(quarantine),[quarantine]);
@@ -2612,25 +2600,10 @@ export default function App(){
   const[showIgnored,setShowIgnored]=useState(false);
   const[showResetCards,setShowResetCards]=useState(false);
   const[resetQuery,setResetQuery]=useState("");
-  // PER-VENUE FRESHNESS, and it has to be TWO facts. One global lastRun cannot
-  // say "artic was tried today and last gave us rows on 13 Sep", which is the
-  // line that decides whether a solo re-run is worth it. Shape:
-  //   { [venueId]: { attempted: iso, returned: iso|null } }
+  // Per-venue freshness, two facts: { [venueId]: { attempted: iso, returned: iso|null } }.
   const[venueSeen,setVenueSeen]=useState({});
-  // THE ONE-LINE "LAST REFRESHED" IS DERIVED FROM THE SWEEP LOG, NOT STORED —
-  // her finding, 21 Sep, caught by wiping the store and reloading her export.
-  //
-  // IT USED TO SHOW `lastRun`, WHICH WAS WRONG TWICE OVER. It was stamped at
-  // the moment she pressed Apply, so it reported when she had last worked
-  // rather than when a venue was last swept — the exact fault that produced
-  // swept_at and this whole drawer on 20 Sep, left behind one line above the
-  // thing built to replace it. And it rode inside the LEDGER, so loading an
-  // older backup rolled the date back with it: a fact about the world kept in
-  // a document that rolls back, which is the ruling this app already has.
-  //
-  // Taking the LATEST attempt across all venues keeps the headline honest and
-  // costs nothing: the same store that fills the drawer fills this, so an
-  // empty store reads "never" instead of asserting a time nothing swept at.
+  // "Last refreshed" = the latest attempt in the sweep log, never the ledger's lastRun
+  // (docs/app.md §5). An empty store reads "Unknown".
   const lastSweep=useMemo(()=>{
     let out=null;
     for(const v of Object.values(venueSeen||{})){
@@ -2680,35 +2653,20 @@ export default function App(){
   // Listing pages the sweep could not read. NOT proposals — see isMarkerRow().
   const[coverage,setCoverage]=useState([]);
   const[tally,setTally]=useState(null);
-  // WHICH TRIAGE BANDS ARE OPEN. Most are empty on a healthy file, and the two
-  // that are not need nothing from her, so a permanently expanded band is a
-  // long scroll between her and the actual work. The default is set by WHAT A
-  // BAND ASKS OF HER, never by its size: one she cannot act on opens closed
-  // (markers, combined-for-you), one needing a look or a decision opens open.
-  // The count sits on the header either way, so collapsing hides the cards and
-  // never the fact that there are some.
+  // Which triage bands are open: set by what a band asks of her, never its size —
+  // markers and combined-for-you open closed; the count shows either way.
   const[openBands,setOpenBands]=useState({});
-  // WHICH VENUES ARE OPEN IN "NORMAL CASES". Same reasoning as the triage
-  // bands: 320 cards is a long scroll, and she works one venue at a time.
-  // Undefined means OPEN — the default is to show the work, not to hide it,
-  // so a venue can never go unnoticed because the app closed it on her.
-  // "Collapse all" writes false for every venue rather than flipping a single
-  // master flag, so opening one venue afterwards does not reopen the rest.
+  // Which venues are open in normal cases. Undefined = OPEN, so a venue is never hidden
+  // by default. "Collapse all" writes false for each venue, so opening one later does
+  // not reopen the rest.
   const[openVenues,setOpenVenues]=useState({});
   const[decisions,setDecisions]=useState({}); // proposal index -> "accept"|"reject"|"addnew"
   const[refreshDone,setRefreshDone]=useState(null); // {added,filled,changed} after applying
   const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
   const[pinTouched,setPinTouched]=useState(false); // pin those ids to the top this session
   const[showTop,setShowTop]=useState(false); // show the return-to-top button once scrolled down
-  // LIGHT OR DARK. Her choice is remembered in the browser, not in the ledger
-  // and not in the page's store: it is a per-device convenience, and the right
-  // answer on her laptop at 9pm is not necessarily the right one on another
-  // screen. Browser storage can throw outright (private window, blocked site
-  // data), so every touch is wrapped and the page renders fine without it.
-  //
-  // FIRST VISIT FOLLOWS THE OPERATING SYSTEM. If her machine is already in
-  // dark mode the app opens dark, which is the whole point of asking at 9pm.
-  // Once she picks, her pick wins on that device forever.
+  // Light or dark: remembered in browser storage (a per-device convenience, wrapped —
+  // storage can throw). First visit follows the machine; her pick then wins there.
   const[theme,setTheme]=useState(()=>{
     try{ const v=localStorage.getItem("cw-theme"); if(v==="dark"||v==="light")return v; }catch{}
     try{ if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)return "dark"; }catch{}
@@ -2719,10 +2677,8 @@ export default function App(){
     try{ localStorage.setItem("cw-theme",n); }catch{}
     return n;
   });
-  // The page around the component paints its own background before React runs,
-  // so it has to be told too — otherwise the margins stay cream around a dark
-  // app. Also sets color-scheme, which is what makes scrollbars and form
-  // controls follow.
+  // The page around the component paints its own ground before React runs, so tell it
+  // too; color-scheme makes scrollbars and form controls follow.
   useEffect(()=>{
     try{
       const d=document.documentElement;
@@ -2735,19 +2691,13 @@ export default function App(){
   useEffect(()=>{const onScroll=()=>setShowTop(window.scrollY>400);window.addEventListener("scroll",onScroll,{passive:true});onScroll();return()=>window.removeEventListener("scroll",onScroll);},[]);
 
   useEffect(()=>{
-    // v8.2 OPEN-EMPTY. The app is a workspace, like a word processor: it opens
-    // showing nothing and waits for you to Import your ledger file. It does NOT
-    // reach out to Google Drive or Claude storage on open. (The old Drive auto-load
-    // routine is retired; its helper functions remain dormant below, uncalled.)
+    // Opens empty: a workspace waiting for her ledger file (docs/app.md §2). Nothing
+    // is fetched on open.
     setRows([]);
     setLoaded(true);
-    // The sweep log is NOT part of the ledger, so it loads here rather than on
-    // Import — it is there before any file is opened and it survives Reset.
-    // Read ONCE, not subscribed: she is the only viewer and the only writer,
-    // and a subscription in a component body is how a page ends up in a loop.
+    // The sweep log, quarantine and Add-by-link state are not part of the ledger, so
+    // they load here, before any file is opened. Read once, not subscribed.
     readSweepLog().then(({log,why})=>{ setVenueSeen(log); setFreshWhy(why); });
-    // Quarantine loads here too, and for the same reason: it is not part of the
-    // ledger any more, so it has to be in force before any file is opened.
     readQuarantine().then(({map,why})=>{ setQuarantine(map); setQuarWhy(why); });
     // Add by link: the venues it has met, and links still waiting in the box.
     readOccasional().then(map=>{ occSaved.current=map; registerOccasional(map); setOccVenues(map); });
@@ -2772,18 +2722,12 @@ export default function App(){
   const loadLedger=useCallback((next,lr,info,extra)=>{
     setRows(next);
     setLastRun(lr!==undefined?lr:null);
-    // A LEDGER'S QUARANTINE IS MERGED IN, NEVER SWITCHED TO. The file is the
-    // backup copy; the page holds the working one. Latest decision wins, so an
-    // old backup cannot re-block a row she has since released, and a backup
-    // from another machine adds what it knows.
+    // A ledger's quarantine is merged in, never switched to (latest decision wins).
     const fromFile=quarantineFromList((extra&&extra.ignored)||[]);
     if(Object.keys(fromFile).length){
       setQuarantine(prev=>{ const merged=mergeQuarantine(prev,fromFile); writeQuarantine(merged); return merged; });
     }
-    // venueSeen is DELIBERATELY not read from the file. It lives in the page's
-    // own store now — see the sweep log note. Reading it here is exactly the
-    // bug she found: loading a two-day-old backup dragged the sweep dates back
-    // with it, as though opening an older document un-ran a sweep.
+    // venueSeen is never read from the file: the sweep log lives in the page's store.
     setFirstTime(false);
     setDirty(false);
     
@@ -2795,7 +2739,7 @@ export default function App(){
     setPinTouched(false); setRefreshTouched([]);
   },[]);
 
-  // Write a NEW timestamped ledger copy to Drive. Never overwrites; nothing deleted.
+  // DORMANT: nothing calls saveToDrive (the old Drive save). Kept until she says.
   const saveToDrive=useCallback(async()=>{
     if(driveState==="saving")return;
     setDriveState("saving");setError(null);
@@ -2820,12 +2764,8 @@ export default function App(){
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
   const clearFilters=()=>{setVenueF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqBuyNext(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setSearch("");setShowSearch(false);};
 
-  // WHAT A QUARANTINE REMEMBERS. The URL where there is one, because that is
-  // the only key that cannot be wrong; venue + title where there is not,
-  // accepting that a venue reusing a title would suppress the wrong row. The
-  // cost of that is bounded and visible — the list is on screen and every
-  // entry can be put back — whereas keying junk loosely and getting it wrong
-  // silently is not.
+  // WHAT A QUARANTINE REMEMBERS. The URL where there is one; venue + title where there
+  // is not (a reused title could block the wrong row — bounded, and visible on screen).
   const ignoreKeyFor=(venueId,url,title)=>
     venueId+"|"+(url?normalizeUrlKey(url):"t:"+normalizeTitle(title));
 
@@ -2864,53 +2804,23 @@ export default function App(){
     return false;
   };
 
-  // ---- v9 REFRESH ENGINE ----
-  // Reads a filled pro forma CSV, compares each row against the current ledger,
-  // and produces a list of proposals to review one at a time. Nothing is applied
-  // until "Go ahead and update the ledger". Anything the app can't use is not
-  // dropped silently — it becomes a plain note on the proposal card.
-  // The sentence the scraper stamps on every marker row, verbatim. A marker
-  // reports a LISTING PAGE it could not read — it is not an exhibition and was
-  // never a proposal. Until now the app had no idea, so each one became an
-  // ordinary Add card titled "[past page]"; rejecting is not remembered, so the
-  // same junk returned on every future sweep forever.
-  //
-  // Matched on the NOTES SENTINEL rather than the bracketed title. The scraper
-  // writes this sentence at every marker site, so this is the producer saying
-  // so — the strongest rung. A bracketed title is a guess about formatting, and
-  // a real exhibition could carry brackets.
+  // ---- REFRESH ENGINE ----
+  // Reads a pro forma CSV, compares each row with the ledger and proposes cards; nothing
+  // applies until she says. Unusable data becomes a note on the card, never dropped.
+  // Marker rows (a listing page the sweep could not read) are matched on the scraper's
+  // notes sentence, never on a bracketed title, and go to the coverage panel.
   const MARKER_SENTINEL = "Marker row, not an exhibition.";
   const isMarkerRow = note => String(note||"").trim().endsWith(MARKER_SENTINEL);
 
-  // Which of two values to offer first when a stitched file disagrees with
-  // itself. Her ruling: the FULLER one, clearly marked as a guess, with both
-  // shown and one click to switch. Never silent, never irreversible.
+  // Which of two values to offer first when a stitched file disagrees with itself: the
+  // FULLER one, marked as a guess, both shown (her decision).
   const fuller = (a,b) => (String(b||"").trim().length > String(a||"").trim().length) ? b : a;
 
   /**
-   * Fold rows that are the same exhibition BEFORE anything is compared to the
-   * ledger.
-   *
-   * One stitched file now carries every machine's output, so a venue swept in
-   * two places appears twice — one copy with dates and no summary because its
-   * detail page timed out, the other the reverse. analyzeProForma compares each
-   * row against the LEDGER only, never against the row beside it, so both would
-   * become separate Add cards for one exhibition.
-   *
-   * KEYED ON VENUE + URL, AND NOTHING ELSE. Same address is the same
-   * exhibition, always, with no interpretation — the scraper's own rule.
-   *
-   * ROWS WITH NO URL ARE NEVER FOLDED. The only other key is the title, and
-   * sameExhibition() matches on normalised title plus date overlap and returns
-   * true whenever EITHER side lacks dates. That is fine against the ledger,
-   * where she sees every proposal before it lands; here it would fire before
-   * she sees anything, and a title collision would silently fuse two different
-   * shows. That is the judgement that destroyed 29 National Gallery
-   * exhibitions. An unfolded duplicate costs one extra card she can see.
-   *
-   * Nothing is invented and nothing is dropped: a group yields exactly one row,
-   * built only from values that were in the file, and a genuine disagreement is
-   * carried forward as a CHOICE rather than resolved here.
+   * Fold rows that are the same exhibition before comparing with the ledger — a venue
+   * swept on two machines arrives twice. Keyed on venue + URL and nothing else; rows
+   * with no URL never fold (a title match once fused 29 National Gallery shows). Gaps
+   * fill; a real disagreement is carried forward as a CHOICE (docs/app.md §3).
    */
   function foldDuplicateRows(raws){
     const byKey=new Map(), out=[];
@@ -2947,42 +2857,25 @@ export default function App(){
     const props=[];
     const coverage=[];   // marker rows: listing pages that could not be read
     const parsed=[];
-    // WHICH VENUES THIS FILE TOUCHED, and whether they gave anything. Two
-    // different facts: a venue can be in the sweep and hand back nothing but
-    // marker rows, which is a refusal, not an absence. Read off the FILE, not
-    // off her decisions — a row she rejects was still collected.
-    // DATED BY THE SWEEP, NOT BY THIS MOMENT — her finding, 20 Sep. These used
-    // to be bare sets, and applyRefresh stamped "now" against them, so the
-    // drawer said a venue was tried at the instant she pressed Import. The file
-    // now carries swept_at per ROW, so each venue keeps the LATEST time it was
-    // seen. Per row and not per venue because a stitched file routinely holds
-    // two runs of one venue — which is exactly the case the drawer is for: a
-    // venue tried at 14:26 whose last real rows came at 02:04 is being refused.
+    // Which venues this file touched (attempted) and gave rows (returned), dated by the
+    // rows' swept_at, the latest per venue — never by the moment of import.
     const attempted={}, returned={};
     const later=(a,b)=>(!a||(b&&b>a))?b:a;
-    // COUNTS SHE CAN RECONCILE AGAINST THE FILE. A card total alone cannot be
-    // checked against anything: rows vanish for three innocent reasons — a
-    // marker row, a fold, an entry that already matches the ledger — and with
-    // 652 rows arriving as 319 cards there is no way to tell those apart from
-    // a row silently lost. Every row read is accounted for by one of these.
+    // Counts she can reconcile: every row read is accounted for (docs/app.md §3
+    // "Counts that reconcile").
     let silent=0, blocked=0;
     // Rows the sweep should never have produced. Collected, then the whole file
     // is refused — see the note at the check itself.
     const faults=[];
 
-    // ── PASS ONE: read the file. No comparison to anything yet. ──────────────
-    // Split out because one stitched file now holds every machine's output, so
-    // rows have to be reconciled against EACH OTHER before the ledger is
-    // consulted at all.
+    // ── PASS ONE: read the file; rows are reconciled with each other before the ledger.
     for(let k=1;k<table.length;k++){
       const r=table[k], line=k+1;
       const vc=get(r,"venue_code").toLowerCase();
       const title=get(r,"title");
       const rowNote=get(r,"notes");
 
-      // A LISTING PAGE THAT COULD NOT BE READ IS NOT A PROPOSAL. It goes to the
-      // coverage panel, where "we tried and were refused" is what it actually
-      // says — rather than becoming an exhibition she rejects on every sweep.
+      // A listing page that could not be read goes to the coverage panel, not a card.
       const sweptAt=get(r,"swept_at");
       if(KNOWN_VENUES.has(vc)) attempted[vc]=later(attempted[vc],sweptAt);
       if(isMarkerRow(rowNote)){
@@ -2992,27 +2885,16 @@ export default function App(){
       if(KNOWN_VENUES.has(vc)&&title) returned[vc]=later(returned[vc],sweptAt);
 
       const notes=[];
-      // A FAULTY ROW IS NOT HER PROBLEM — her ruling, 20 Sep 2026. A row with no
-      // title or no venue code is a DATA FAULT: there is no such thing as an
-      // exhibition with no name, and a row always came from somewhere, so a
-      // missing code means the file is malformed. Neither can be resolved by
-      // looking at a card, and the only outcome was ever "fix the sweep and
-      // feed it again" — a message to the session, printed on her screen.
-      //
-      // They used to be a band of their own. Now the file is REFUSED whole, so
-      // she never triages one, and `scraper/qc.js` stops it upstream: it runs
-      // at the end of every sweep and gates compress --apply, so the file she
-      // imports cannot contain one. This check stays as the last line, and it
-      // says WHICH LINES so the session can fix them without asking her.
+      // A row with no title or no known venue code is a data fault, not hers to fix (her
+      // decision): the whole file is refused, naming the lines. qc.js stops it upstream;
+      // this is the last line of defence.
       if(!vc||!KNOWN_VENUES.has(vc)){ faults.push("line "+line+": venue code "+(vc?("\u201c"+vc+"\u201d"):"is blank")+(vc?" isn\u2019t one of the venues":"")); continue; }
       if(!title){ faults.push("line "+line+": no exhibition title"+(get(r,"url")?" \u2014 "+get(r,"url"):"")); continue; }
       let sd=get(r,"start_date"), ed=get(r,"end_date"), url=get(r,"url");
       if(sd&&!isValidYMD(sd)){notes.push("Start date \u201c"+sd+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");sd="";}
       if(ed&&!isValidYMD(ed)){notes.push("End date \u201c"+ed+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");ed="";}
       if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
-      // QUARANTINED — she has already said this should never be an entry.
-      // Dropped here, before anything else looks at it, so it cannot fold with
-      // a real row or reach the ledger comparison. Counted, never silent.
+      // Quarantined: dropped before anything else sees it. Counted, never silent.
       if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
       parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,
                    rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:"Sweeper note: ")+rowNote]:[],parseNotes:notes,line});
@@ -3038,9 +2920,7 @@ export default function App(){
       if(!summary)notes.push("No description.");
       if(!url)notes.push("No exhibition link.");
       for(const n of p.rowNotes) notes.push(n);
-      // SAY WHEN ROWS WERE FOLDED. She is being shown one card for what was
-      // several lines in the file, and that has to be visible or the count on
-      // her approval pile will not match the file she fed in.
+      // Say when rows were folded, so the count matches the file.
       if(p.mergedFrom) notes.push("Rows "+p.mergedFrom.join(", ")+" of the file describe this same exhibition \u2014 combined into one.");
 
       const cand={museumId:vc,title,startDate:sd||null,endDate:ed||null,summary,exUrl:url};
@@ -3059,13 +2939,8 @@ export default function App(){
       if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line:p.line,choices,merged:!!p.mergedFrom}); continue; }
       const upd=[];
       const consider=(field,label,oldV,newV)=>{ const o=(oldV==null?"":String(oldV)), n=(newV==null?"":String(newV)); if(!n)return; if(!o)upd.push({field,label,oldVal:"",newVal:n,kind:"fill"}); else if(o!==n)upd.push({field,label,oldVal:o,newVal:n,kind:"change"}); };
-      // A CHANGED TITLE IS A CHANGE — her rulings, 23 Sep. Until then the
-      // title was never compared, so a venue renaming a show was silently
-      // ignored. Compared as written, spacing aside: a title that differs only
-      // in capitals is a card too, because that is how a title recorded in
-      // capitals is corrected in her ledger. She rejected masking capitals on
-      // screen — it would hide a scraper fault forever — so the data is fixed,
-      // and fixing it has to reach the ledger.
+      // A changed title is a Change card, capitals-only included (her decision): a title
+      // recorded in capitals is corrected in her ledger, never masked on screen.
       { const sq=v=>String(v||"").replace(/\s+/g," ").trim();
         if(title&&match.title&&sq(title)!==sq(match.title))
           upd.push({field:"title",label:"Title",oldVal:String(match.title),newVal:String(title),kind:"change"}); }
@@ -3090,11 +2965,9 @@ export default function App(){
     return {props,coverage,tally,seen:{attempted,returned}};
   }
 
-  // THE SWEEP LOG IS WRITTEN WHEN THE IMPORT FINISHES — her rule, 4 Oct: an
-  // import she does not finish keeps nothing. (20 Sep it moved to the moment
-  // the file was read; she has ruled the other way.) Held in seenInFile until
-  // the ledger moves; a file with nothing to propose has nothing to finish, so
-  // it is recorded at once.
+  // The sweep log is written when the import FINISHES (her decision: an unfinished
+  // import keeps nothing); held in seenInFile until then. A file with nothing to
+  // propose is recorded at once. AL-013.
   const recordSweep=(seen)=>{
     if(!seen) return;
     const vs=mergeSweepLog(venueSeen,seen);
@@ -3151,12 +3024,9 @@ export default function App(){
           vc=occVenueId(host);
           met.add(vc);
           const had=venues[vc];
-          // Looked for once and kept. Looked for again while she has not
-          // confirmed it AND it was found by the finder before 4 Oct's (which
-          // could hand back a front page, a post or one book), or its books
-          // section was not found — a miss is never kept as the answer.
-          // Once per venue in a Read, whatever it found (7 Oct: seven
-          // Jacquemart-André links, seven looks).
+          // A new venue's shop is looked for once per Read. On a later Read, again only
+          // while unconfirmed AND (found by the first finder, or no books section found)
+          // — a miss is never kept as the answer.
           if(!looked.has(vc)&&(!had||(!had.confirmed&&(!(had.finder>=2)||had.shop!=="found")))){
             looked.add(vc);
             setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+page.site+"\u2019s shop"});
@@ -3198,9 +3068,9 @@ export default function App(){
     // under the review, its lines waiting for her when the review closes.
     if(!fails.length)setImportMode(null);
   }
-  // THE SHOP SCREEN'S ANSWERS — held in the working copy, and stored with the
-  // ledger when it moves; Cancel import throws them away, Back keeps them (her
-  // rule, 4 Oct). A venue confirmed in a finished import is never asked again.
+  // The shop screen's answers are held in the working copy and stored when the ledger
+  // moves; Cancel import drops them, Back keeps them (her decision). Confirmed in a
+  // finished import → never asked again.
   function holdVenues(next){ registerOccasional(next); setOccVenues(next); }
   // Back to what the store holds: the import's venues and answers dropped.
   function dropHeldVenues(){
@@ -3211,9 +3081,8 @@ export default function App(){
   function confirmShop(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,confirmed:true}}); }
   // "No shop": the lookup goes straight to the web, as at Capodimonte.
   function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null}}); }
-  // "Look again": a new search NOW, skipping only the pages she turned down —
-  // never the shop's whole site (the old "Wrong shop" banned the site, which
-  // for the RA and the Courtauld was the right shop on the wrong page).
+  // "Look again": a new search NOW, skipping only the pages she turned down, never the
+  // whole site.
   async function lookAgain(id){
     const v=occVenues[id]; if(!v)return;
     const turnedDown=[...(v.turnedDown||[]),v.shopCatalogues].filter(Boolean);
@@ -3226,10 +3095,8 @@ export default function App(){
       const next={...prev,[id]:{...prev[id],shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,...shop,confirmed:false,turnedDown}};
       registerOccasional(next); return next; });
   }
-  // WHICH VENUES THE SHOP SCREEN ASKS ABOUT: every venue outside her 27 met
-  // in this read (or on a card) whose shop she has not confirmed — whatever she
-  // decided about its cards (her ruling, 4 Oct: the RA and the Courtauld were
-  // left off when their cards were not going in).
+  // The shop screen asks about every venue outside her list met in this Read (or on a
+  // card) whose shop is unconfirmed — whatever she decided about its cards (her decision).
   function venuesToConfirm(){
     const ids=new Set(readVenues);
     (proposals||[]).forEach(p=>{ const id=(p.cand||{}).museumId; if(isOcc(id))ids.add(id); });
@@ -3275,16 +3142,9 @@ export default function App(){
     return out;
   };
 
-  // PARTIAL IS A PARAMETER, NOT A SECOND COPY OF THIS FUNCTION. Applying what
-  // she has decided and applying everything are the same walk over the same
-  // cards — an undecided card was always skipped here, which is exactly what
-  // made the 20 Sep gate necessary. The only difference is whether the gate
-  // let her arrive, and how the result is reported afterwards.
-  //
-  // So `partial` changes NOTHING about what is written. It only counts what
-  // was left behind, so the green bar can say so. Copying this function to
-  // make a partial version would put the ledger write in two places, and the
-  // second copy drifts.
+  // PARTIAL IS A PARAMETER, NOT A SECOND COPY OF THIS FUNCTION. `partial` changes
+  // nothing about what is written; it only counts what was left behind for the green
+  // bar. One copy of the ledger write.
   function applyRefresh(partial){
     const byId=new Map(rows.map(r=>[r.id,r]));
     const now=new Date().toISOString();
@@ -3310,21 +3170,17 @@ export default function App(){
       p.upd.forEach((u,j)=>{ if((dec.fields||{})[j]==="accept"){ patch[u.field]=u.newVal; if(u.kind==="fill")filled++; else changed++; hit=true; } });
       if(hit){ patch.editedAt=now; byId.set(p.matchId,patch); touched.push(p.matchId); }
     });
-    // The import is finished: what it held back is stored now — the sweep log
-    // (a CSV's), and the paste box's unread links (a Read's).
-    // seenInFile is set by a CSV and only by a CSV: a link is not a sweep.
-    // A Read's REJECTED cards go back in the box with the unread links (her
-    // ask, 7 Oct: rejected for a fault, to be read again once it is fixed,
-    // without pasting them again). "Clear" in the box empties it.
+    // The import is finished, so what it held back is stored now: a CSV's sweep log
+    // (seenInFile — a link is not a sweep), or for a Read the box: unread links plus
+    // the links of rejected cards (her decision). "Clear" in the box empties it.
     if(seenInFile)recordSweep(seenInFile);
     else{
       const rejected=proposals.filter((p,i)=>cardOutcome(p,decisions[i])==="rejected").map(p=>(p.cand||{}).exUrl).filter(Boolean);
       const box=[...new Set([...linksIn(linkText),...rejected])].join("\n");
       setLinkText(box); writePendingLinks(box);
     }
-    // A NEW QUARANTINE GOES TO THE STORE, not into the ledger she is about to
-    // commit. Her export still carries the list, but the copy that does the
-    // blocking is the one that survives a Reset.
+    // A new quarantine goes to the store, the copy that survives a Reset; the export
+    // carries the list too.
     if(newlyIgnored.length){
       const add={};
       for(const x of newlyIgnored) add[x.key]={venueId:x.venueId,title:x.title,at:x.at,state:"blocked"};
@@ -3332,10 +3188,7 @@ export default function App(){
         writeQuarantine(merged).then(ok=>{ if(!ok) setQuarWhy("The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Export to keep it."); });
         return merged; });
     }
-    // COUNTED FROM THE CARDS, NOT FROM THE BUTTON. The figure that reaches the
-    // green bar is re-derived here from the same function the gate uses, so the
-    // sentence cannot claim a different number from the one she was just
-    // looking at. A count handed in from the caller is a second copy.
+    // Counted from the cards with the gate's own function, never handed in.
     const leftUndecided=proposals.filter((p,i)=>isUndecidedCard(p,decisions[i])).length;
     commit(Array.from(byId.values()),new Date().toISOString());
     if(occVenues!==occSaved.current){ writeOccasional(occVenues); occSaved.current=occVenues; }
@@ -3349,10 +3202,6 @@ export default function App(){
   function cancelRefresh(){ dropHeldVenues(); setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   const pickSort=k=>{setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
-  // refreshVenues() REMOVED 20 Sep 2026. It had the app gathering its own
-  // exhibition data — rejected long ago and wired to no button since — and it
-  // called askClaude(), which no longer exists. Dead code shaped like live code
-  // is a trap for whoever debugs this next; git holds it.
 
 
 
@@ -3391,27 +3240,11 @@ export default function App(){
    +'"shopUrl":null,"thisVenue":true}\n'
    +'Set "found" false and every other field null when these results show no catalogue.';
 
-  // TWO STAGES, HER DESIGN, UNCHANGED SINCE IT WAS TESTED.
-  //
-  // Stage one asks the venue's own shop and nothing else. Stage two, only if
-  // the shop had nothing, looks wider. Nothing found in either means no
-  // catalogue. The reason for the order is not cost, which is gone: a shop hit
-  // is the only result that gives her a real "buy it here" link.
-  //
-  // THE SHOP LINK IS STILL CHECKED, and it stays checked now that step one
-  // opens the shop directly. A shop page links outward — to a publisher, to a
-  // distributor, to another shop — so a link read off a shop page is not
-  // automatically ON that shop. A link that is not on the venue's shop is
-  // never filed as being in the venue's shop.
-  //
-  // A SHOP LINK FROM THE WEB SEARCH IS OPENED BEFORE IT IS BELIEVED — her yes,
-  // 25 Sep. A general index keeps addresses a shop has long since pulled: KHM's
-  // was a ticket, dead since the show closed, filed "In the museum shop"
-  // unopened. Such a link rides out as shopCandidate and confirmShopLink opens
-  // it; until then, and if it will not open, the book is "found on the web".
-  //
-  // `blocked`: the shop step was refused on every page. The row then says the
-  // shop is blocked instead of "not in the shop" or "no catalogue".
+  // Two stages (her design): the venue's own shop first, the wider web only if the shop
+  // had nothing — a shop hit is the only real "buy it here" link. A link is filed as in
+  // the shop only when it is on the venue's shop. A shop link from the web search is
+  // opened before it is believed (confirmShopLink): an old index kept KHM's dead ticket.
+  // `blocked`: the shop step was refused on every page; the row says so.
   const settle=(row,o,dom,detail,fromShopStage,blocked)=>{
     const link=isTicketLink(o.shopUrl)?null:(o.shopUrl||null);
     const onShop=!!shopLinkOf(o,dom);
@@ -3435,16 +3268,9 @@ export default function App(){
       shopUrl:null,shopChange:null}};
   };
 
-  // ── FILLING A MISSING ISBN FROM THE PAGE ITSELF \u2014 her finding, 20 Sep 2026 ──
-  //
-  // Runs ONLY when a catalogue was found, a page link came with it, and no
-  // ISBN did. It is not a third search: one page, read whole, because the
-  // number is printed there and the search excerpt simply stopped short of it.
-  //
-  // IT CAN ONLY EVER FILL A BLANK. An ISBN already read from the search
-  // results is never overwritten, and neither is a publisher we already have.
-  // If the page yields nothing the row comes back exactly as it was \u2014 the
-  // old answer, not a worse one.
+  // ── FILLING THE ISBN AND PUBLISHER FROM THE BOOK'S OWN PAGE ──────────────────
+  // Runs when a catalogue was found with a page link and the ISBN OR the publisher is
+  // missing (needsPageRead). One page, read whole. It fills blanks only (applyIsbnFill).
   const PAGE_RULES=
     "You are reading ONE web page in full: the page selling or describing a printed exhibition "
    +"catalogue. Read the ISBN, publisher and author off THIS PAGE only.\n"
@@ -3525,37 +3351,19 @@ export default function App(){
     return{...hit,detail,row:filled};
   };
 
-  // \u2500\u2500 THE SHOP FOUND THE BOOK AND NOTHING ELSE \u2014 her finding, 21 Sep \u2500\u2500\u2500\u2500\u2500
-  //
-  // A REGRESSION THIS SESSION CAUSED, and worth writing down because the shape
-  // repeats. Acquavella's page for its Matisse catalogue prints a title, a
-  // price and the exhibition's dates \u2014 no ISBN, no publisher. While step one
-  // was a general web search it picked the ISBN up from the publisher or a
-  // bookseller; now that step one goes to the shop, finding the book there
-  // ENDED the lookup and the wider search never ran. **Going to the right
-  // place made the answer smaller.**
-  //
-  // So when the shop route leaves the ISBN blank, the wide search runs after
-  // all. It is not "both stages every time", which is rejected: it fires only
-  // on a catalogue that was found and is still missing its number.
-  //
-  // IT FILLS GAPS AND CANNOT DO ANYTHING ELSE. The book has already been
-  // identified in the venue's own shop, so the title, the shop link and the
-  // "in the museum shop" verdict all stand; only blank fields are written.
-  // A wide search must never be able to rename or relocate a book the shop
-  // already named.
+  // ── THE SHOP FOUND THE BOOK, NOT ITS ISBN OR PUBLISHER → THE WIDER WEB (N-001) ──
+  // Runs only for a catalogue found and still missing its ISBN or publisher (her
+  // decision: a blank publisher is a gap too). It fills gaps only: the title, the shop
+  // link and the "in the museum shop" verdict stand. C-039 to C-042.
   const fillFromWeb=async(hit,venue,dom)=>{
     const r=hit&&hit.row;
-    // A BLANK PUBLISHER IS A GAP TOO — her NG van Hemessen, 2 Oct: the read
-    // brought the ISBN and no publisher, so this step never ran and the card
-    // said "No publisher was named". It runs while either is blank.
     if(!r||!hit.ok||r.hasCatalogue!=="yes"||(r.isbn13&&r.publisher))return hit;
     const book=r.catalogueTitle||r.title;
     setLookPhase("web");
     const s3=await searchWeb(
       "The ISBN-13 and publisher of the printed exhibition catalogue \u201c"+book+"\u201d"
         +(r.publisher?", published by "+r.publisher:"")+", for the exhibition at "+venue+".",
-      // The venue's name is in a query — her one Google search had it.
+      // The venue's name is in a query.
       [book+" "+venue+" catalogue ISBN",
        book+" "+(r.publisher||"exhibition catalogue")+" ISBN",
        book+" catalogue publisher"]);
@@ -3593,50 +3401,11 @@ export default function App(){
     return{...hit,detail,row:filled,...(rd.ok?{}:{trouble:rd.detail})};
   };
 
-  // \u2500\u2500 THE PUBLISHER\u2019S PAGE, LOOKED FOR PROPERLY \u2014 her ruling, 21 Sep \u2500\u2500\u2500\u2500
-  //
-  // The earlier steps find it only BY LUCK. When step two searches, the
-  // publisher is not known yet, so not one of its queries can name the
-  // publisher\u2019s website \u2014 Hannibal Books is stated all over the Rijksmuseum\u2019s
-  // press kit for Metamorphoses, and Hannibal\u2019s own site never appeared.
-  //
-  // So once the NAME is known, ask for the page by name. It fires only when a
-  // catalogue was found, its publisher is known, and no page came with it \u2014
-  // never to second-guess a link an earlier step already produced.
-  //
-  // WHY IT IS WORTH A SEARCH OF ITS OWN: the museum shop sells the book while
-  // the show is on, and the art-book house that printed it often lists it long
-  // after the shop has sold out. That is the window this whole app is about.
-  // BEFORE CHANGING THE LOOKUP CHAIN, READ docs/app.md SECTION 1. Four rebuilds
-  // are recorded there: why stage one must OPEN the shop rather than search for
-  // it, why a search result is opened before being believed, why each step fills
-  // a blank and can do nothing else, and why every step after the first stays
-  // conditional (every page read runs on her allowance).
-  // ── THE BOOK'S LANGUAGE, AND AN ENGLISH EDITION — her ruling, 2 Oct ─────
-  //
-  // HER LOUVRE EXPERIENCE OF NATURE. The Louvre's English shop gives French
-  // books English names and states no language, so the card offered a French
-  // book under an English title. She reads English: a French book is not one
-  // she can buy, and an English edition, if there is one, is the one she wants.
-  //
-  // ONLY AT A VENUE MARKED english:false (her ruling: non-English venues only)
-  // and only for a book found — every lookup starts from a blank card
-  // (lookupCat → resetCard), so Search again checks afresh too.
-  //
-  // ONE SEARCH by the ISBN (or the title, without one) reads the book's
-  // language and its title as printed. English, or unknown → nothing changes.
-  // Not English → the card takes the book's own title, and ONE more search
-  // looks for an English edition. Found — its own ISBN, different, printed in
-  // the results, and the read says English → the card carries the English
-  // edition, "Not in the museum shop", since the shop's book was the other.
-  // None → the original book stays, under its own title.
-  // STEP: THE PUBLISHER FROM THE ISBN (publisherOnIsbnResults). Runs only once
-  // the ISBN is known — every ISBN source comes before it and none depends on
-  // the publisher. A publisher Claude read off general results is a guess and
-  // is REPLACED; one read off the book's own shop page stands unless the ISBN
-  // says otherwise. At a non-English venue the search is the language check's
-  // own, reused (hit.isbnResults); elsewhere it runs only for a guessed or
-  // missing publisher.
+  // STEP: the publisher from the ISBN (her decision, Botticelli; publisherOnIsbnResults).
+  // Runs once the ISBN is known. A publisher Claude read off general results is a guess
+  // and is REPLACED; one read off the book's own shop page stands unless the ISBN says
+  // otherwise. At a non-English venue the language check's search is reused
+  // (hit.isbnResults); elsewhere it runs only for a guessed or missing publisher.
   const publisherFromIsbn=async(hit,venue,mu)=>{
     const r=hit&&hit.row;
     const isbn=r&&cleanIsbn(r.isbn13);
@@ -3659,6 +3428,12 @@ export default function App(){
     return{...hit,detail,row,isbnResults:s.results};
   };
 
+  // ── THE BOOK'S LANGUAGE, AND AN ENGLISH EDITION (her decision, Louvre Experience of
+  // Nature) — non-English venues only (english:false), for a book found. One search by
+  // ISBN (or title) reads its language and printed title; English or unknown → nothing
+  // changes. Not English → the card takes the book's own title, and one more search
+  // looks for an English edition of the same catalogue (sameCatalogue): found → filed
+  // as "Not in the museum shop"; none → the original stays.
   const fillLanguage=async(hit,venue,dom,mu)=>{
     const r=hit&&hit.row;
     if(!r||!hit.ok||r.hasCatalogue!=="yes"||!mu||mu.english!==false)return hit;
@@ -3671,10 +3446,9 @@ export default function App(){
         +", the catalogue of the exhibition \u201c"+r.title+"\u201d at "+venue+".",
       isbn?[isbn,isbn+" "+book]:[book+" "+venue+" catalogue",book+" catalogue language"]);
     let detail=hit.detail+"\n"+s.detail;
-    // WHAT WAS CHECKED GOES ON THE CARD — her ruling, 7 Oct: a foreign book with
-    // no English twin must say how far that "no" was looked for (englishCheck,
-    // englishLine). "stopped": a step died; "unknownlang": no result names
-    // the language; "publisher" / "shops": no English edition, and where.
+    // What was checked goes on the card (her decision; englishCheck, englishLine):
+    // "stopped" a step died; "unknownlang" no result names the language; "publisher" /
+    // "shops" no English edition, and where it was looked for.
     const mark=(h,v)=>({...h,row:{...(h.row||r),englishCheck:v}});
     const stopped=why=>mark({...hit,detail,trouble:why,troubleLang:true},"stopped");
     if(!s.ok)return stopped(s.detail);
@@ -3698,12 +3472,9 @@ export default function App(){
     if(own&&own.onPage)row.catalogueTitle=own.title;
     detail=detail+"\nLanguage check: "+lang+(own&&own.onPage?" \u2014 its own title \u201c"+own.title+"\u201d.":".");
     const orig=row.catalogueTitle||book;
-    // THE ENGLISH EDITION, LOOKED FOR WHERE IT WOULD BE LISTED — her ruling,
-    // 7 Oct. An English edition is sold under its English title, never as
-    // "English edition", so the show's English title is searched with the
-    // publisher; and the PUBLISHER lists every language it printed, so its own
-    // page for the book is found (in the same search) and read whole. Her
-    // Watteau, 7 Oct: Fonds Mercator's page lists the book in French only.
+    // The English edition, looked for where it is listed (her decision): the show's
+    // English title with the publisher, and the publisher's own page for the book, read
+    // whole — a publisher lists every language it printed (Watteau, Fonds Mercator).
     const pub=row.publisher&&!isSelfPublisher(row.publisher,row.museumId)?publisherToFind(row.publisher,row.museumId):"";
     const e=await searchWeb(
       "An ENGLISH-language edition of the exhibition catalogue \u201c"+orig+"\u201d ("+venue
@@ -3711,12 +3482,9 @@ export default function App(){
       [r.title+" "+(pub||venue)+" ISBN",orig+" "+(pub||venue)+" catalogue",orig+" English edition"]);
     detail=detail+"\n"+e.detail;
     if(!e.ok)return{...hit,row:{...row,englishCheck:"stopped"},detail,trouble:e.detail,troubleLang:true};
-    // The publisher's own page for THIS book. FIRST the one the publisher step
-    // already found and judged to be the book's page (publisherResult
-    // "product") \u2014 her Canaletto, 7 Oct: the card linked that page while this
-    // check said it wasn't found, because this check only looked in its own
-    // search. Else, if this search found it: on the publisher's site
-    // (publisherDomainFrom) and carrying the book's title.
+    // The publisher's own page for THIS book: first the one the publisher step judged
+    // to be the book's page (Canaletto), else one this search found on the publisher's
+    // site carrying the book's title.
     const known=row.publisherResult==="product"&&row.publisherUrl?{url:row.publisherUrl,title:null}:null;
     const pubHost=!known&&pub?publisherDomainFrom(e.results,pub):null;
     const pubPage=known||(pubHost?resultsCarrying(e.results.filter(x=>hostOf(x.url)===pubHost),orig)[0]:null);
@@ -3746,14 +3514,9 @@ export default function App(){
     const enIsbn=toIsbn13(ed.isbn13);
     const printed=enIsbn&&pages.some(x=>(String(x.url||"")+" "+oneText(x)).replace(/[^0-9Xx]/g,"").includes(enIsbn));
     if(!ed.found||!enIsbn||enIsbn===isbn||!isEnglishLang(ed.language)||!printed||!ed.title)return none();
-    // THE SAME BOOK, PROVED IN CODE — her Botticelli, 7 Oct: Reaktion's
-    // "Botticelli: Artist and Designer" (the curator's own life of the artist,
-    // English, its own ISBN) is not the catalogue's English edition. Taken only
-    // from the SAME publisher, or where a result carrying its ISBN names this
-    // venue. Anything else is a look-alike, and the original stands.
-    // ITS PUBLISHER IS READ OFF ITS ISBN, IN CODE \u2014 her ruling, 7 Oct, as for
-    // the original (publisherOnIsbnResults); Claude's read only where the
-    // results carrying the English ISBN don't agree on one.
+    // The same catalogue, proved in code (her decision, Botticelli): same publisher, or a
+    // result carrying its ISBN names this venue (sameCatalogue). Its publisher is read off
+    // its ISBN in code too; Claude's read only where those results disagree.
     const onEn=pages.filter(x=>(String(x.url||"")+" "+oneText(x)).replace(/[^0-9Xx]/g,"").includes(enIsbn));
     const enCoded=publisherOnIsbnResults(onEn,enIsbn);
     const enPub=enCoded||(ed.publisher?String(ed.publisher).trim():null);
@@ -3767,18 +3530,21 @@ export default function App(){
         shopState:"web",shopUrl:null,shopChange:null}};
   };
 
+  // ── THE PUBLISHER'S PAGE (docs/app.md §1) ───────────────────────────────────
+  // Once the publisher's NAME is known, go to them: find their site from the name,
+  // search inside it, open what that returns. Only for a catalogue found, a publisher
+  // named and no page yet. An art-book house often lists the book long after the shop
+  // sells out.
   const fillPublisherPage=async(hit,venue,dom)=>{
     const r=hit&&hit.row;
     if(!r||!hit.ok||r.hasCatalogue!=="yes")return hit;
-    // A NAMED MUSEUM PUBLISHING ARM — no searches at all, and no link: only
-    // the publisher is the publisher (her ruling, 1 Oct). See SELF_PUBLISHERS.
+    // A museum's own imprint: no searches and no link (her decision; SELF_PUBLISHERS).
     if(isSelfPublisher(r.publisher,r.museumId)){
       return{...hit,detail:hit.detail+"\n"+r.publisher+" is a museum’s own imprint — no publisher page to look for.",
         row:{...r,publisherUrl:null,publisherResult:"selfpublished"}};
     }
     if(r.publisherUrl)return hit;
-    // NO NAME, SO NOTHING WAS LOOKED FOR — and the card must say that rather
-    // than print the same sentence as a search that ran and found nothing.
+    // No name, so nothing was looked for — and the card says so.
     if(!r.publisher)return{...hit,row:{...r,publisherResult:"unnamed"}};
     const book=r.catalogueTitle||r.title;
     // The publisher looked for — "X in association with Y" is Y (publisherToFind).
@@ -3814,20 +3580,8 @@ export default function App(){
     const onSite=(sp.results||[]).filter(x=>{try{return new URL(x.url).hostname.toLowerCase()===pubHost;}catch{return false;}});
     if(!onSite.length)return onlyTheSite("Nothing for this book on "+pubHost+".");
 
-    // ── TWO CANDIDATES, NOT ONE — her question, 22 Sep ──────────────
-    //
-    // She asked what happens when the page we open turns out to have nothing
-    // to do with the book: did the model simply pick the wrong one of the
-    // eight results, and should we go back for another? Yes — and going back
-    // costs NO NEW SEARCH, because the results are already in hand. It is one
-    // more page opened, nothing else.
-    //
-    // WHAT BOUNDS IT IS THE LIST, NOT A COUNTER. The read hands back an
-    // ordered short list and the code walks it. Two is the cap and it is
-    // stated here rather than tuned: the results came back RANKED, so if the
-    // best two are both wrong the site does not have the book, and a third
-    // opening is spending her allowance on hope. The fallback below is better
-    // than a lucky third guess because it cannot be wrong.
+    // ── TWO CANDIDATES, THEN THE FALLBACK (her decision): the results are already
+    // ranked, so if the best two are wrong the site does not have the book. No new search.
     const rd=await readResults(
       "These are pages from ONE publisher’s own website. Put them in order, best first, "
      +"by how likely each is to BE the page for this book or to LEAD to it.\n"
@@ -3851,12 +3605,7 @@ export default function App(){
     }
     if(!candidates.length)return onlyTheSite("No page for this book on "+pubHost+".");
 
-    // ── NOW OPEN THEM. WHAT SEARCH HANDS BACK IS A GUESS, NOT AN ANSWER ──
-    //
-    // This is the step that was missing until 22 Sep, and its absence is why
-    // Rizzoli read as a success and Hannibal read as a success while one was
-    // the book and the other was a whole section of books. Search cannot tell
-    // us which it got, because the difference is INSIDE the page.
+    // ── NOW OPEN THEM: a search cannot tell a book's page from a section of books.
     for(let i=0;i<candidates.length;i++){
       const candidate=candidates[i];
       const fp=await fetchPage(candidate,
@@ -3865,10 +3614,8 @@ export default function App(){
       detail=detail+"\n"+fp.detail;
       if(!fp.ok)return{...hit,detail,trouble:fp.detail};
 
-      // THE SHELL CASE, AND IT IS THE HONEST FLOOR. Hannibal draws its book
-      // list by script after the page arrives, so the reader gets a sort
-      // control and a newsletter box. We cannot see the book and we must not
-      // pretend we looked: the link is kept, and kept LABELLED as the section.
+      // The shell case: a script-drawn list comes back empty, so the link is kept and
+      // labelled as the section, never claimed as the book.
       if(pageIsShell(fp.results)){
         return{...hit,detail:detail+"\nThat page came back empty — kept as the publisher’s section, not the book’s own page.",
           row:{...r,publisherUrl:candidate,publisherResult:"container"}};
@@ -3915,9 +3662,8 @@ export default function App(){
     return onlyTheSite("None of the pages on "+pubHost+" was this book.");
   };
 
-  // A VENUE MET BEFORE THE FINDER PROVED SEARCHES (finder 2: Detroit,
-  // Mauritshuis, the RA on 4 Oct) gets its search worked out once, at its
-  // first lookup, from its own shelf — then stored, like the venue itself.
+  // A link venue met before the finder proved searches (finder 2) gets its search
+  // worked out once, at its first lookup, from its own shelf — then stored.
   async function fillShopSearch(id){
     const mu=MU[id];
     if(!mu||!mu.occasional||mu.shopSearch||!mu.shopHome)return;
@@ -3951,20 +3697,14 @@ export default function App(){
         +"on this shop, its full title and its price.",
       [title+" exhibition catalogue book"]);
     if(!s1.ok)return{ran:true,ok:false,detail:s1.detail,data:null};
-    // EVERY PAGE REFUSED is not "nothing there" — her finding, 25 Sep (KHM:
-    // "0 page(s), 1 refused (307)"). The shop could not be read at all.
+    // Every page refused is not "nothing there": the shop could not be read (KHM).
     if(!s1.results.length&&(s1.errors||[]).length)
       return{ran:true,ok:true,blocked:true,detail:s1.detail+"\nThe museum shop refused every page, so it could not be searched.",data:null};
     if(!s1.results.length)return{ran:true,ok:true,detail:s1.detail,data:null};
-    // EVERY PAGE CAME BACK EMPTY is blocked too — her ruling, 1 Oct (MoMA
-    // Brancusi). MoMA's shelf answers, but its books are drawn by script after
-    // the page arrives: Parallel's copy is a membership pop-up and no books.
-    // "Not in the museum shop" off that would be a negative never earned.
-    // BUT SHORT EXCERPTS ARE NOT AN EMPTY PAGE — her Watteau, 7 Oct: the
-    // excerpts are the parts about THIS show, so a shelf without the book
-    // gives almost none, and Jacquemart-André read as blocked. The pages are
-    // opened once more, whole; blocked only if the whole pages are still
-    // empty or show no price anywhere (a shelf of books always prices them).
+    // Every page empty is blocked too (her decision, MoMA Brancusi: books drawn by
+    // script). But short excerpts are not an empty page (her Watteau): the pages are
+    // opened again whole, and the shop is blocked only if they are still empty or show
+    // no price anywhere.
     let shop=s1;
     if(s1.results.every(r=>pageIsShell([r]))){
       const whole=await fetchPage(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
@@ -3992,11 +3732,9 @@ export default function App(){
       else if(!tp.onPage)detail+="\nThe title the read gave is not on the shop\u2019s pages as written.";
       data.catalogueTitle=tp.title;
     }
-    // A LIST IS NOT THE BOOK — her KHM Canaletto, 26 Sep. The read handed back
-    // KHM's own search-results page as "the book's page". A link that is one of
-    // the pages this step itself opened is refused as a link; the book still
-    // counts as in the shop (it was read off the shop's own pages), and her
-    // Museum shop button falls back to the shop's search for the show.
+    // A list is not the book (her decision, KHM Canaletto): a link that is one of the
+    // pages this step opened is refused as a link; the book still counts as in the shop,
+    // and her shop button falls back to the shop's search for the show. L-020 to L-023.
     const opened=new Set(shopPages.map(normalizeUrlKey));
     // Before falling back: the book's own link may be on the shelf all the
     // same — bookLinkOnShelf. Also when Claude found the book and gave no link.
@@ -4015,13 +3753,14 @@ export default function App(){
     return{ran:true,ok:true,detail,data};
   }
 
-  // EVERY LOOKUP STARTS FROM A BLANK CARD — her ruling: "Search again
-  // literally means search again." Nothing already on the card is kept or
-  // skipped; the caller decides whether the result replaces the card.
-  // THE STEPS AFTER THE BOOK IS FOUND, in order. The publisher's page is
-  // found BEFORE the English check, so the check reads the same page the card
-  // links (her Canaletto, 7 Oct); found again only when an English edition
-  // replaced the book, since that edition's publisher is another page.
+  // Every lookup starts from a blank card (her decision: "Search again literally means
+  // search again"); the caller decides whether the result replaces the card.
+  // The steps after the book is found, in order. Each runs only if an earlier one left
+  // something missing. Most fill blanks only; publisherFromIsbn REPLACES a guessed
+  // publisher, and fillLanguage can REPLACE the book with its English edition. The
+  // publisher's page comes before the English check, so the check reads the page the
+  // card links (Canaletto); it runs again only when an English edition replaced the
+  // book. Read docs/app.md §1 before changing this chain.
   async function laterSteps(hit,venue,dom,mu){
     const h=await fillPublisherPage(await publisherFromIsbn(await fillFromWeb(await fillIsbn(hit,venue,dom),venue,dom),venue,mu),venue,dom);
     const e=await fillLanguage(h,venue,dom,mu);
@@ -4035,25 +3774,9 @@ export default function App(){
     const venue=mu?mu.name:"";
     let detail="";
 
-    // ── Stage one: GO TO THE SHOP ───────────────────────────────
-    //
-    // HER DESIGN, AND UNTIL 21 SEP 2026 IT WAS NOT WHAT THE CODE DID. The old
-    // tool took a locked list of websites and could not look anywhere else, so
-    // a search "at the shop" really was at the shop. The connector that
-    // replaced it has no lock — only a site: hint inside a query — and the
-    // rebuild kept the search and lost the lock. Step one became a general web
-    // search dragging the shop's address along with it.
-    //
-    // WHAT THAT COST, her finding: the National Gallery's Zurbaran. A general
-    // index ranks the shop's LIST of every catalogue above the one book's own
-    // page, so the read ran perfectly on a list, reported no ISBN, and filed
-    // the list as her "Museum shop" link. The book's own page was in the same
-    // results, five places down, printing the ISBN in plain sight.
-    //
-    // So step one OPENS the shop's own pages now. That is what she does by
-    // hand, and a shop's own search box knows what "catalogue" means at that
-    // shop, which no general index does. Only step two searches the open web,
-    // because "does this book exist anywhere" really is a search.
+    // ── Stage one: GO TO THE SHOP — open its own pages, as she does by hand; never a
+    // general web search, which filed the National Gallery's list of 32 books as the
+    // book (Zurbarán; docs/app.md §1).
     const s1=await shopStep(row);
     const blocked=!!(s1.ran&&s1.blocked);
     if(s1.ran){
@@ -4079,19 +3802,13 @@ export default function App(){
     if(!s2.results.length)return settle(row,{},dom,detail,false,blocked);
     const r2=await readResults(READ_RULES
       +"\nExhibition: "+title+"\nVenue: "+venue+(dom?"\nIts shop is at "+dom:"")+"\n\n"
-      // Read whole (the shop step's cap), never cut to 700 characters — her
-      // Botticelli, 7 Oct: the museum's own page said "Buy the catalog" at
-      // character ~1,970, after the curators' bios, and Claude never saw it.
+      // Read whole (the shop step's cap), never cut to 700 characters (Botticelli).
       +resultsForPrompt(s2.results,6000,{words:[title,venue],dom})+READ_SHAPE);
     detail=detail+"\n"+r2.detail;
     if(!r2.ok)return{row,detail,ok:false};
-    // ANOTHER VENUE'S CATALOGUE IS NOT THIS SHOW'S — her ruling, 2 Oct (NG,
-    // Catharina van Hemessen: Signature Works). The read filed Lannoo's Van
-    // Hemessen & Father, the catalogue of the Antwerp show that travels to
-    // London "in a modified form". The venue never named it. A book found on
-    // the web counts only when the read says it is tied to THIS venue's show;
-    // anything short of a plain true is not found. The shop step needs no
-    // such answer — a book on the venue's own shop is the venue's word.
+    // Another venue's catalogue is not this show's (her decision, NG van Hemessen): a
+    // book found on the web counts only when the read says it is tied to THIS venue's
+    // show. The shop step needs no such answer — the venue's own shop is its word.
     let d2=r2.data||{};
     // A "catalog" link onto the venue's own shop, read off the results in
     // code (catalogueLinkOn), goes to the check that opens shop links when the
@@ -4102,27 +3819,15 @@ export default function App(){
       detail=detail+"\nNot filed: \u201c"+(d2.catalogueTitle||"the book found")+"\u201d is not tied to this venue\u2019s show in the results.";
       d2={};
     }
-    // The dedicated ISBN search runs here too when the ISBN is still blank —
-    // her ruling, 1 Oct (Metamorphoses): until then only the shop route had it.
-    // A publisher read off these general results is a guess (pubGuess):
-    // publisherFromIsbn checks it against the ISBN.
+    // The ISBN search runs on this route too (her decision, Metamorphoses). A publisher
+    // read off these general results is a guess (pubGuess), checked against the ISBN.
     const webHit=await confirmShopLink(settle(row,d2,dom,detail,false,blocked));
     if(webHit&&d2.publisher)webHit.pubGuess=true;
     return await laterSteps(webHit,venue,dom,mu);
   }
 
-  // A STEP THAT DIED IS NOT AN ANSWER \u2014 her question, 21 Sep, and the fault was
-  // mine. Steps one and two fail the whole lookup and say so. The three later
-  // steps \u2014 reading the book\u2019s page, filling a missing ISBN, finding the
-  // publisher\u2019s page \u2014 were written to give back the row UNCHANGED when they
-  // fail, which is right for the row and wrong for the screen: the card then
-  // printed "ISBN not confirmed" and "No separate publisher page." as though
-  // those were findings. The connector\u2019s free tier rate-limits, so this is not
-  // hypothetical.
-  //
-  // They now carry WHY, and it is shown the moment it happens. It is not stored
-  // in the ledger: it is a fact about one attempt, not about the book, and the
-  // remedy is simply to press Search again.
+  // A step that died is not an answer: the card says why, and the reason is not
+  // stored — it is a fact about one attempt. C-043 to C-045.
   async function findOneCat(id){
     setBusy(true);setBusyId(id);setError(null);setRecheckSaid(null);
     const row=rows.find(r=>r.id===id);
@@ -4141,26 +3846,20 @@ export default function App(){
         +"stopped part-way, so the ISBN or the publisher\u2019s page may be missing when they "
         +"exist. "+out.trouble.split("[")[0].trim()+" Press \u201cSearch again\u201d.");
     } else {
-      // ON THE CARD, NOT IN A BANNER — her ruling, 30 Sep: Re-check's line
-      // word for word, "Re-check" swapped for "Search" or "Search again".
-      // The details stay in the diagnostic.
+      // On the card, not in a banner (her decision): Re-check's line word for word,
+      // "Re-check" swapped for "Search" or "Search again".
       const why=String(out.detail||"").split("\n").pop().split("[")[0].trim();
       setRecheckSaid({id,failed:true,text:(row.looked?"Search again":"Search")+" didn\u2019t run \u2014 "+why+" Nothing changed."});
     }
     setBusy(false);setBusyId(null);setLookPhase(null);
   }
 
-  // "RE-CHECK MUSEUM SHOP" — her design, 25 Sep. The design and its reasons are
-  // at shopHeadline, top of file. With a shop link on file it reads that one
-  // page (recheckLinkedPage); with none it runs the shop step alone. Its answer
-  // is printed ON THE CARD, under the button she pressed, not in the banner at
-  // the top of the page — she is looking at the card.
+  // "Re-check museum shop" (her design; see "A BOOK LEAVING THE SHOP" above): its answer
+  // is printed on the card, under the button she pressed.
   async function recheckShop(id){
     setBusy(true);setBusyId(id);setRechecking(true);setError(null);setRecheckSaid(null);
     const found=rows.find(r=>r.id===id);
-    // A TICKET ON FILE WAS NEVER THE BOOK (isTicketLink) — rows filed before
-    // that rule. The link is dropped and the shop searched afresh, as for a
-    // row with no link; if the shop is blocked the row says so.
+    // A ticket on file was never the book: dropped, and the shop searched afresh.
     const ticket=!!(found.shopUrl&&isTicketLink(found.shopUrl));
     const row=ticket?{...found,shopUrl:null,shopState:"web",shopChange:null}:found;
     let out;
@@ -4174,8 +3873,7 @@ export default function App(){
       const onShop=!!shopLinkOf(o,dom);
       // Not-there moves a "blocked" row on: the shop answered this time.
       const answered=row.shopState==="blocked"?{...row,shopState:row.hasCatalogue==="yes"?"web":"none"}:row;
-      // The ticket link is dropped silently — her ruling, 25 Sep: saying so
-      // crowded the one card it applied to, and the row is right either way.
+      // The ticket link is dropped silently (her decision).
       const dropped="";
       if(!s.ran)out={ok:false,detail:"",said:"This museum has no shop on file, so there is nothing to re-check."};
       else if(!s.ok)out={ok:false,detail:s.detail,said:"Re-check didn’t run — "+s.detail.split("\n").pop().split("[")[0].trim()+" Nothing changed."};
