@@ -2196,47 +2196,11 @@ async function recheckLinkedPage(row){
     said:(hadIt?"Re-checked: no longer for sale in the museum shop.":"Re-checked: still not for sale in the museum shop.")+(p.why?" "+p.why:"")};
 }
 
-const SKEY="cw-v3";
-// DORMANT: nothing calls safeSave, an old save to the page's storage. Kept, not deleted.
-async function safeSave(rows,lastRun,lastSaved){const data=JSON.stringify({rows,lastRun,lastSaved:lastSaved||new Date().toISOString()});for(let i=0;i<3;i++){try{const r=await window.storage.set(SKEY,data,false);if(r)return{ok:true};}catch{}await new Promise(r=>setTimeout(r,500*(i+1)));}return{ok:false};}
-
-// ---- DORMANT: the old Google Drive save route; nothing calls it. Kept until she says
-// (docs/app.md §1 "Which model"). ----------------------------------------------
-const DRIVE_MCP={type:"url",url:"https://drivemcp.googleapis.com/mcp/v1",name:"google-drive"};
 const LEDGER_PREFIX="cat-watch-ledger-";
-let AUTOLOAD_FIRED=false; // module-level: survives a strict-mode remount so open never costs two Drive calls
 
 // Local 24hr timestamp (browser's timezone), e.g. 2026-08-23-2230 = 10:30pm local.
 function localStamp(){const d=new Date(),p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes());}
 function localReadable(){const d=new Date(),p=n=>String(n).padStart(2,"0");return p(d.getHours())+":"+p(d.getMinutes())+" "+p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+d.getFullYear();}
-
-// One instrumented call to Drive via the Anthropic API + MCP. Returns text + diagnostics.
-async function askDrive(prompt){
-  let res,raw;
-  try{
-    res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1500,messages:[{role:"user",content:prompt}],mcp_servers:[DRIVE_MCP]})});
-  }catch(e){return{ok:false,usedTool:false,text:"",detail:"Could not reach Drive (network): "+(e&&e.message?e.message:String(e))};}
-  if(!res.ok){raw=await res.text().catch(()=>"");return{ok:false,usedTool:false,text:"",detail:"HTTP "+res.status+" "+raw.slice(0,300)};}
-  raw=await res.text();
-  let data;try{data=JSON.parse(raw);}catch{return{ok:false,usedTool:false,text:"",detail:"Drive reply was not JSON."};}
-  const blocks=Array.isArray(data.content)?data.content:[];
-  const text=blocks.filter(b=>b.type==="text").map(b=>b.text).join("\n");
-  const usedTool=blocks.some(b=>b.type==="mcp_tool_use");
-  const toolErr=blocks.some(b=>b.type==="mcp_tool_result"&&b.is_error===true);
-  return{ok:true,usedTool,toolErr,text,detail:"blocks: "+blocks.map(b=>b.type).join(", ")+"\n"+text.slice(0,400)};
-}
-
-// Pull the newest ledger JSON out of a Drive read reply.
-function extractLedgerJson(text){
-  if(!text)return null;
-  let depth=0,start=-1,inStr=false,esc=false,best=null;
-  for(let i=0;i<text.length;i++){const c=text[i];
-    if(inStr){if(esc)esc=false;else if(c==="\\")esc=true;else if(c==='"')inStr=false;continue;}
-    if(c==='"')inStr=true;else if(c==="{"){if(depth===0)start=i;depth++;}
-    else if(c==="}"){depth--;if(depth===0&&start!==-1){const chunk=text.slice(start,i+1);try{const o=JSON.parse(chunk);if(o&&Array.isArray(o.rows))best=o;}catch{}start=-1;}}}
-  return best;
-}
 
 export default function App(){
   const[rows,setRows]=useState([]);
@@ -2304,14 +2268,10 @@ export default function App(){
   const[unconfirmedSave,setUnconfirmedSave]=useState(null);
   const[lastSaved,setLastSaved]=useState(null);
   const[saveState,setSaveState]=useState("idle");
-  const[firstTime,setFirstTime]=useState(false);
   const[dirty,setDirty]=useState(false);
-  const[driveMsg,setDriveMsg]=useState(null);
   const[savedFile,setSavedFile]=useState(null);
   const[loadedInfo,setLoadedInfo]=useState(null);
   const[confirmBox,setConfirmBox]=useState(null); // {text, act} for confirm-before-replace
-  const[driveState,setDriveState]=useState("idle");
-  const driveStarted=useRef(false);
   const[,setTick]=useState(0);
   const[sortBy,setSortBy]=useState("date");
   const[venueF,setVenueF]=useState(new Set());
@@ -2396,7 +2356,6 @@ export default function App(){
   const commit=useCallback(async(next,lr)=>{
     setRows(next);
     if(lr!==undefined)setLastRun(lr);
-    setFirstTime(false);
     setDirty(true);
     
   },[]);
@@ -2413,7 +2372,6 @@ export default function App(){
       setQuarantine(prev=>{ const merged=mergeQuarantine(prev,fromFile); writeQuarantine(merged); return merged; });
     }
     // venueSeen is never read from the file: the sweep log lives in the page's store.
-    setFirstTime(false);
     setDirty(false);
     
     setSavedFile(null);
@@ -2424,28 +2382,6 @@ export default function App(){
     setPinTouched(false); setRefreshTouched([]);
   },[]);
 
-  // DORMANT: nothing calls saveToDrive (the old Drive save). Kept until she says.
-  const saveToDrive=useCallback(async()=>{
-    if(driveState==="saving")return;
-    setDriveState("saving");setError(null);
-    const fname=LEDGER_PREFIX+localStamp()+".json";
-    const payload=JSON.stringify({rows,ignored,lastRun,savedAt:new Date().toISOString(),savedLocal:localReadable()});
-    const prompt=
-      "Using Google Drive, create a NEW file named \""+fname+"\" whose entire text content is exactly this JSON:\n"+
-      payload+"\n"+
-      "Do NOT overwrite, modify, or delete any existing file \u2014 always create a new file. "+
-      "After saving, confirm the new file's name and its Drive file ID. Do not take any other action.";
-    const r=await askDrive(prompt);
-    if(r.ok&&r.usedTool&&!r.toolErr){
-      setDirty(false);setDriveState("saved");
-      setSavedFile(fname+"  ·  "+localReadable());
-      setDebug("Save to Drive OK.\n"+r.detail);
-    }else{
-      setDriveState("savefail");
-      setError("Save to Drive FAILED \u2014 your recent changes are NOT backed up. Try again, or use Export ledger to keep a local copy right now.");
-      setDebug("Save to Drive FAILED.\n"+r.detail);
-    }
-  },[rows,ignored,lastRun,driveState]);
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
   const clearFilters=()=>{setVenueF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqBuyNext(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setSearch("");setShowSearch(false);};
 
@@ -3582,8 +3518,6 @@ export default function App(){
     setBusy(false);setBusyId(null);setRechecking(false);setLookPhase(null);
   }
 
-  async function findWantedCats(){const targets=rows.filter(r=>r.acquiring==="yes"&&!r.looked&&r.interested);if(!targets.length)return;setBusy(true);setError(null);let next=[...rows];for(let i=0;i<targets.length;i++){setProg({done:i,total:targets.length,label:targets[i].title});const out=await lookupCat(targets[i]);if(out.ok){next=next.map(r=>r.id===out.row.id?out.row:r);setRows(next);}if(i===0)setDebug(out.detail);}await commit(next);setProg({done:targets.length,total:targets.length,label:"Done"});setBusy(false);setLookPhase(null);}
-
   const dismiss=id=>{commit(rows.map(r=>r.id===id?{...r,interested:false}:r));if(undoTimer.current)clearTimeout(undoTimer.current);setUndo({id});undoTimer.current=setTimeout(()=>setUndo(null),10000);};
   const undoDismiss=()=>{if(!undo)return;commit(rows.map(r=>r.id===undo.id?{...r,interested:true}:r));setUndo(null);if(undoTimer.current)clearTimeout(undoTimer.current);};
   const restore=id=>commit(rows.map(r=>r.id===id?{...r,interested:true}:r));
@@ -3662,8 +3596,6 @@ export default function App(){
       setError("Export failed: "+String(e?.message||e));
     }
   }
-
-  const wantedUnlooked=useMemo(()=>rows.filter(r=>r.acquiring==="yes"&&!r.looked&&r.interested).length,[rows]);
 
   const view=useMemo(()=>{
     const sq=search.toLowerCase().trim();
@@ -3829,7 +3761,6 @@ export default function App(){
         <div style={{fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.soft,marginBottom:4}}>Exhibition catalogues · acquisition window</div>
         <h1 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:36,lineHeight:1,fontWeight:500,margin:0,letterSpacing:"-0.02em"}}>Before it goes<span style={{color:C.accent}}> out of print</span></h1>
         <div style={{marginTop:14,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
-          {/* Bulk "Find catalogues for N Wanted" removed to protect usage; findWantedCats stays dormant. */}
           <button onClick={requestImport} style={sBtn}>Import</button>
           <button onClick={handleExport} disabled={!hasLedger} style={{...pBtn,opacity:hasLedger?1:0.4,cursor:hasLedger?"pointer":"not-allowed"}}>Export / Save</button>
           <input ref={fileRef} type="file" accept=".json" onChange={handleImport} style={{display:"none"}}/>
