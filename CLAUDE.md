@@ -501,6 +501,7 @@ and do not flip to searching wide first.**
 - **Go to the publisher, do not search for them.** Their site read off results
   already found, else one search for the name; the domain read off mechanically
   (books, press, publishing, editions, university dropped); candidates ranked in code.
+  Name finds no site → her short list (`PUBLISHER_SITES`), grown only on her ask.
 - **Every outcome says which negative it is** (`publisherResult`,
   `publisherNote`); **a step that died is not an answer** — later steps carry
   why it came back empty.
@@ -1120,7 +1121,8 @@ Not good → more work on the routine or the recipes.
 - **Process:** watching the sweeper and interrupting it. Firing a new JSX
   mid-discussion. A "GPT scrapes, Claude compresses" role split.
 - **Catalogue lookup:** splitting it from drawer output. A map of publisher
-  websites. A background shop check on every click. Linking straight to an
+  websites (her short list of joint publishers, `PUBLISHER_SITES`, is her
+  decision — never filled ahead). A background shop check on every click. Linking straight to an
   Amazon product page from an ISBN-10. Pointing the shop link at an ISBN search.
   **Asking a Shopify shop directly whether a book is for sale**:
   `.js` refused, `.oembed` 429, a product's `.json` has no availability; the

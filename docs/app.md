@@ -51,6 +51,13 @@ never opened twice; the diagnostic counts calls and times each step. Waits in a
 row, old → new: self-published 4 → 3; outside publisher 9 → 7; foreign, no
 English edition 13 → 7; edition swap 18 → 6–7; worst ~30 → 17.
 
+**The progress line** (her decision): at most four labels, in order, each once,
+never back — "Searching venue shop…", "Searching more broadly…" (shop had
+nothing), "Finding the ISBN and publisher…" (book's page and facts round; at
+`english:false` venues "…, publisher and English edition…"), "Looking for the
+publisher's page…". Re-check: "Re-reading the shop page…", or the first label
+alone. `lookupLabel`; PL-001 to PL-005.
+
 **Why the page uses a connector.** The viewer's sandbox blocks a page from
 reaching any outside address. The lookup runs through her keyed connector,
 "Parallel Search Key", with `sample` reading what it returns. Claude only reads
@@ -86,8 +93,11 @@ text handed to it, so it can never report a page that was not found.
   editions, university dropped). A page on that site already found and
   carrying the title or ISBN is opened directly; else a search inside the
   domain, ranked in code (`rankPublisherPages`), Claude only when code finds
-  none. C-046 to C-051. A map of publisher websites was declined; known gap: a
-  co-imprint such as Rizzoli Electa (rizzoliusa.com) is not recognised.
+  none. C-046 to C-051. A map of publisher websites was declined; a short list of
+  joint publishers whose name is not in their address is hers
+  (`PUBLISHER_SITES`: Rizzoli Electa, DelMonico · Prestel), used only when the
+  name finds no site. Grown only when her card says "Couldn't work out the
+  publisher's own website" for one that has a site, and she asks. PS-001 to PS-006.
 - **"Checked the publisher's site" only when read** (Canaletto): fetched, not
   empty, and the page the card links (`pubPageRead`). For a foreign book the
   judging read also lists the editions the page shows — a publisher lists every
