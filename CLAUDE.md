@@ -1094,9 +1094,9 @@ Not good → more work on the routine or the recipes.
 
 ### 6. Queued next
 
-- **Catalogue-search rebuild: published on the test page (41).** Open: her live
-  check of Hammershøi — does it reach the library record (978-0847899289) and
-  Rizzoli's page for the English edition?
+- **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
+  check of Hammershøi — the edition read now sees every result, so the library
+  record (978-0847899289) that came tenth should give the English edition (WL-060).
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 

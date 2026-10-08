@@ -203,6 +203,40 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq(labels, [L1, L3F, L4], 'PL-003: progress at a non-English venue, found in the shop — shop, facts with the English edition, publisher');
   }
 
+  // ── WL-060..WL-063: Hammershøi as her live search ran it ─────────────────────
+  // The English-edition search answer is real (docs/lookup_results/
+  // jacquemart_hammershoi_edition_search.json): ten results, the library record tenth.
+  // Claude is played honestly — it reports the edition only if its prompt shows it.
+  {
+    const live = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'jacquemart_hammershoi_edition_search.json'), 'utf8'));
+    const LIB = live.results[9];
+    const CAPS = 'HAMMERSHOI. LE MAÎTRE DE LA PEINTURE DANOISE';
+    const script = {
+      mcp: (tool, args) => {
+        if (tool === 'web_search') {
+          const q = args.search_queries.join(' | ');
+          if (/English edition/.test(q)) return { payload: { results: live.results } };
+          if (q.startsWith('9789462302495') || q.startsWith('Hammershøi: the master')) return { payload: { results: recorded.booksellers } };
+          return { payload: { results: [] } };
+        }
+        // The shop's shelf pages 2–5 do not exist (404), as in her live run.
+        const res = shelfOf(args.urls.filter(u => !/[?&]page=/.test(u)), '[Another catalogue €39](https://x.test/other)');
+        res.payload.errors = args.urls.filter(u => /[?&]page=/.test(u)).map(u => ({ url: u, http_status_code: 404 }));
+        return res;
+      },
+      sample: p => isShopRead(p) ? { found: false }
+        : /"found"/.test(p) ? { found: true, thisVenue: true, catalogueTitle: CAPS, isbn13: '9789462302495', publisher: null, publisherUrl: null, shopUrl: null }
+        : isFactsRead(p) ? { isbn13: '9789462302495', publisher: 'Fonds Mercator', language: 'French', title: CAPS,
+            editions: p.includes(LIB.url) ? [{ title: 'Hammershøi : painter of northern light', isbn13: '9780847899289', language: 'English', publisher: null, evidenceUrl: LIB.url }] : [] }
+        : {},
+    };
+    const { row: r } = await run(row('jacquemart', 'Hammershøi: the master of danish painting'), script);
+    eq([r.englishCheck, r.isbn13], ['english', '9780847899289'], 'WL-060: Hammershøi live — the library record that came tenth is read, and the card carries the English edition');
+    eq(r.catalogueTitle, 'Hammershøi : painter of northern light', 'WL-061:   its title as the record prints it');
+    eq(r.originalEdition, { title: CAPS, isbn13: '9789462302495', publisher: 'Fonds Mercator' }, 'WL-062:   with the French book as the original');
+    eq([r.publisher, r.publisherResult], [null, 'unnamed'], 'WL-063:   the record names no publisher for the English edition, so none is claimed');
+  }
+
   // ── WL-010..WL-012: an edition swap, publisher reachable — no second publisher step ─
   {
     const BOOK = 'https://boutique.musee-jacquemart-andre.com/en/products/test-swap';

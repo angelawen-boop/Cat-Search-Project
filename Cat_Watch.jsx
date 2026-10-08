@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "41";
+const APP_VERSION = "41.1";
 const APP_VERSION_DATE = "8 Oct 2026";
 
 // MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
@@ -2021,8 +2021,9 @@ function pickPassages(text,focus,cap){
   // Kept in page order, so a passage still reads where it stood.
   return [...used].sort((a,b)=>a-b).map(i=>lines[i]).join(" ").slice(0,cap);
 }
-// Outside the component so a fixture can reach it (AL-022, AL-023).
-const resultsForPrompt=(list,cap,focus)=>list.slice(0,8).map((r,i)=>
+// Outside the component so a fixture can reach it (AL-022, AL-023). Eight results
+// unless a caller asks for more (the edition search, WL-060).
+const resultsForPrompt=(list,cap,focus,most)=>list.slice(0,most||8).map((r,i)=>
   (i+1)+". "+String(r.title||"(untitled)")+"\n   "+String(r.url||"")+"\n   "
   +(Array.isArray(r.excerpts)?pickPassages(r.excerpts.join("\n"),focus,cap||700):"")
 ).join("\n\n");
@@ -2619,13 +2620,16 @@ function factsPrompt(q){
       +"title: this book's title EXACTLY as printed, in its own language — never translated. Null if not shown.\n"
       +"editions: every OTHER edition of this same book the text shows with its own ISBN — a translation, "
       +"such as an English edition, often recorded as “originally published in … as …”. Its title as "
-      +"printed, its ISBN, its language, its publisher and the address of the result that shows it. An empty list "
+      +"printed, its ISBN, its language, its publisher and the address of the result that shows it. Its publisher "
+      +"only where the text names the house that printed THAT edition, else null — “originally published … "
+      +"Fonds Mercator” names the original's house, not the translation's. An empty list "
       +"if none. Never invent one.\n":"")
     +"If the text is about a different book, answer null.\n"
     +(q.bookPage?"\nSECTION A — ONE web page in full: the book's own page.\n"+pageForPrompt(q.bookPage.results,12000)+"\n":"")
     +(q.facts.length?"\nSECTION B — web search results about this book.\n"+resultsForPrompt(q.facts,2500,{words:[q.book,q.isbn||""]})+"\n":"")
     +(q.editions.length?"\nSECTION C — web search results about editions of this book in other languages.\n"
-      +resultsForPrompt(q.editions,2000,{words:[q.book,q.show,"originally published","English edition"]})+"\n":"")
+      // Every result: Hammershøi's library record came tenth (WL-060).
+      +resultsForPrompt(q.editions,2000,{words:[q.book,q.show,"originally published","English edition"]},q.editions.length)+"\n":"")
     +"\nReply with ONLY this JSON object and nothing else:\n"+shape;
 }
 
