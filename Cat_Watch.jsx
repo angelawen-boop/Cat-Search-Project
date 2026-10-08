@@ -1,61 +1,23 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 
-// WHICH VERSION IS SHE LOOKING AT — her ruling, 22 Sep 2026. The number used to
-// live only in the guide and in chat, so the page in front of her carried no
-// way to tell itself apart from the one before it. It is printed in the footer
-// now: a number she can read off the screen instead of matching against a
-// conversation.
-//
-// THE DATE IS PART OF IT because the number alone cannot answer the only
-// question it is ever asked — is this older than the one just built. A date
-// answers that on sight.
-//
-// HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
-// for a small one. This is the ONLY place it is written down. Bump it in the
-// same breath as the change it describes, or it lies.
-// ONE NUMBER PER PUBLISH — her ruling, 27 Sep. Builds she never saw took
-// numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
-// 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
-// 34.14 → 35.3. Git keeps the old numbers.
+// The footer prints APP_VERSION and its date, so she can tell one build from the next.
+// Numbering, her decision: a whole number for a substantial change, a decimal for a
+// small one, one number per publish. Bump it with the change it describes.
 const APP_VERSION = "40.10";
 const APP_VERSION_DATE = "7 Oct 2026";
 
-// THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
-// size — it is the order she wants to WORK in. The venues she reads most come
-// first; the three Italian sites she finds hardest to check sit together near
-// the end; the three that refuse us outright sit last, because nothing there is
-// ever hers to decide.
+// MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
+// most first, the Italian sites together, the venues that refuse us last. Accademia
+// (dellav) sits with the Italian venues until she says otherwise.
+// It is the ONLY venue order in the app — drawer, chips and refresh headings all read
+// it. Never add a second hand-typed list of codes; one once hid two finished recipes.
 //
-// IT IS ALSO THE ONLY ORDER IN THE APP. The freshness drawer, the venue filter
-// chips and every venue heading on the refresh screen all read this array, so
-// moving a venue here moves it everywhere and they cannot drift apart. Adding a
-// second hand-typed list of codes is how two finished recipes once became
-// unselectable with nothing to say why.
-//
-// Accademia (dellav) was not in her list; it sits with the other Italian venues
-// until she says otherwise.
-// SHOP ADDRESSES — the search box, not the front door. Checked one by one,
-// 21 Sep 2026, by opening each and reading the results back. Step one OPENS
-// these; it no longer searches the open web hoping to land on the shop.
-//
-// shopSearch is the shop's own search box with the exhibition title tacked on.
-// shopCatalogues, where a shop has one, is its shelf of exhibition catalogues:
-// all books, no trinkets, but only what is in stock today, so it is looked at
-// FIRST and the search box still runs after it.
-//
-// KHM's search address is HERS, 25 Sep, read off her own search — the old
-// /en/search?q= was a 404. Its shop still answers this machine and the
-// connector with a waiting-room redirect, so the lookup reports it blocked;
-// the address is for her "Museum shop" link.
-// `card`, where a venue has one, is the name on its exhibition cards when the
-// chip's short name is not the one she wants there — her ruling, 25 Sep: the
-// chip reads "Levy Gorvy", the cards "Lévy Gorvy Dayan". Everything else
-// (chips, drawer, refresh headings) reads `short`.
+// shopCatalogues: the shop's catalogue shelf, opened first. shopSearch: its search box
+// plus the exhibition title, opened with it. Addresses: docs/app.md §1 "Shop addresses".
+// card: the name on exhibition cards where it differs from the chip's `short`.
+// english:false: only these venues get the language check and English-edition search
+// (fillLanguage).
 const MUSEUMS = [
-  // CHIP ORDER IS THIS ARRAY'S ORDER — hers, 27 Sep 2026.
-  // english:false — a venue whose books may not be in English. Only there does
-  // the lookup check a found book's language and look for an English edition
-  // (her ruling, 2 Oct: non-English venues only). See fillLanguage.
   { id:"met", short:"The Met", name:"The Metropolitan Museum of Art", city:"New York",
     exBase:"https://www.metmuseum.org/exhibitions/", shopSearch:"https://store.metmuseum.org/search?q=", shopCatalogues:"https://store.metmuseum.org/books-toys-games/exhibition-catalogues", shopHome:"https://store.metmuseum.org/", listUrl:"https://www.metmuseum.org/exhibitions" },
   { id:"rijks", english:false, short:"Rijksmuseum", name:"Rijksmuseum", city:"Amsterdam",
@@ -64,44 +26,32 @@ const MUSEUMS = [
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
   { id:"acq", short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
-  // Added 25 Sep 2026, her ruling: chip "Levy" (her ruling 27 Sep; the cards keep "L\u00e9vy Gorvy Dayan"), straight after Acquavella.
-  // Shopify, like Acquavella's: search box and "View all" read off the live shop.
+  // Shopify, like Acquavella's. Chip "Levy", cards "Lévy Gorvy Dayan" (her decision).
   { id:"lgd", short:"Levy", card:"Lévy Gorvy Dayan", name:"Lévy Gorvy Dayan", city:"New York / London",
     exBase:"https://www.levygorvydayan.com/exhibitions/", shopSearch:"https://shop.levygorvydayan.com/search?q=", shopCatalogues:"https://shop.levygorvydayan.com/collections/all", shopHome:"https://shop.levygorvydayan.com/", listUrl:"https://www.levygorvydayan.com/exhibitions" },
-  // Frick, 2 Oct: the whole Publications shelf, not its "Exhibition
-  // catalogues" corner — her finding: the Frick publishes books tied to a show
-  // that it does not file as catalogues. One page of about 40 today.
+  // The whole Publications shelf: the Frick files some show books outside "Exhibition catalogues" (her finding).
   { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopCatalogues:"https://shop.frick.org/publications/", shopHome:"https://shop.frick.org/", listUrl:null },
   { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopCatalogues:"https://bookstore.menil.org/collections/menil-publications", shopHome:"https://bookstore.menil.org/", listUrl:null },
   { id:"artic", short:"Artic", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
-  // Cincinnati Art Museum, 4 Oct 2026, her addition; chip name "Cincinnati"
-  // (her spelling ruling). After Artic — her ruling, 4 Oct.
-  // Shopify: search box and the Books shelf she sent (five pages on 4 Oct).
+  // Her addition, after Artic. Shopify: search box and her Books shelf.
   { id:"cincinnati", short:"Cincinnati", name:"Cincinnati Art Museum", city:"Cincinnati", exBase:null, shopSearch:"https://shop.cincinnatiartmuseum.org/search?q=", shopCatalogues:"https://shop.cincinnatiartmuseum.org/collections/books", shopHome:"https://shop.cincinnatiartmuseum.org/", listUrl:null },
   { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:"https://wallacecollectionshop.org/search?q=", shopCatalogues:"https://wallacecollectionshop.org/collections/wallace-collection-publications", shopHome:"https://wallacecollectionshop.org/", listUrl:null },
   { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
-  // The Ashmolean, 27 Sep 2026, her addition; chip after Tate Britain. Shopify:
-  // search checked once (it finds "Colonial Views of India"), and her
-  // exhibition-catalogues shelf.
+  // Her addition, after Tate Britain. Shopify: search box and her exhibition-catalogues shelf.
   { id:"ashmolean", short:"Ashmolean", name:"Ashmolean Museum", city:"Oxford", exBase:null, shopSearch:"https://shop.ashmolean.org/search?q=", shopCatalogues:"https://shop.ashmolean.org/collections/exhibition-catalogues", shopHome:"https://shop.ashmolean.org/", listUrl:null },
   { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:"https://www.vam.ac.uk/shop/search?q=", shopCatalogues:"https://www.vam.ac.uk/shop/books/exhibition-books.html", shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
   { id:"louvre", english:false, short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:"https://boutique.louvre.fr/en/search/products/?q=", shopCatalogues:"https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
-  // French venues added 25 Sep 2026, after the Louvre. Same shop system as the
-  // Louvre's: search box and "Exhibition catalogs" shelf, read off the live shop.
-  // d'Orsay, 25 Sep — her chip name "d'Orsay", "Orsay" everywhere from 30 Sep (her ruling). Its shop is the national museums'
-  // shared one; the catalogues shelf is her link with the tracking tags removed,
-  // and the search is the one she sent (it searches every museum on the site).
+  // The French venues below share the Louvre's shop system: search box and "Exhibition catalogs" shelf.
+  // Orsay: the national museums' shared shop; shelf and search are hers (the search covers every museum there).
   { id:"orsay", english:false, short:"Orsay", name:"Mus\u00e9e d'Orsay", city:"Paris", exBase:null, shopSearch:"https://www.boutiquesdemusees.fr/en/search/products/?q=", shopCatalogues:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", shopHome:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", listUrl:null },
-  // MAD Paris, 25 Sep. Its boutique has NO search box (her check, and none in
-  // the page she saved), so the publications shelf is the only route in: 68
-  // books over five pages, the newest first. It numbers pages in the PATH
-  // (/c462/2/), not ?page= — shelfPages counts that up. shopHome is the shelf
-  // too, so her "Museum shop" link lands on the books, not the front page.
+  // No search box, so the publications shelf is the only route in. Pages are numbered in the
+  // path (/c462/2/; shelfPages). shopHome is the shelf, so her shop link lands on the books.
   { id:"mad", english:false, short:"MAD Paris", name:"Mus\u00e9e des Arts D\u00e9coratifs", city:"Paris", exBase:null, shopSearch:null, shopCatalogues:"https://boutique.madparis.fr/en/mads-publications/c462/1/", shopHome:"https://boutique.madparis.fr/en/mads-publications/c462/1/", listUrl:null },
-  // subtitleUnderHeading: on its show pages the line straight under the
-  // heading IS the subtitle ("Botticelli" / "Artist and designer") — read by
-  // code for Add by link, never asked of Claude (her saved pages, 7 Oct).
+  // subtitleUnderHeading: the line under a show page's heading is its subtitle, read by code
+  // for Add by link (docs/link_pages/).
   { id:"jacquemart", subtitleUnderHeading:true, english:false, short:"Jacquemart-Andr\u00e9", name:"Mus\u00e9e Jacquemart-Andr\u00e9", city:"Paris", exBase:null, shopSearch:"https://boutique.musee-jacquemart-andre.com/en/search/products/?q=", shopCatalogues:"https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/", shopHome:"https://boutique.musee-jacquemart-andre.com/en/", listUrl:null },
+  // Search address is hers. The shop answers with a waiting room, so the lookup reports it
+  // blocked; the address stays for her shop link.
   { id:"khm", english:false, short:"KHM", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:"https://shop.khm.at/en/products?shop%5Bq%5D=", shopHome:"https://shop.khm.at/en/", listUrl:null },
   { id:"uffizi", english:false, short:"Uffizi", name:"Uffizi Galleries", city:"Florence", exBase:null, shopSearch:"https://shop.uffizi.it/en/?s=", shopHome:"https://shop.uffizi.it/en/", listUrl:null },
   { id:"dellav", english:false, short:"Accademia", name:"Gallerie dell'Accademia", city:"Venice", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
@@ -110,13 +60,10 @@ const MUSEUMS = [
   { id:"capo", english:false, short:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:"https://shop.themorgan.org/search?q=", shopCatalogues:"https://shop.themorgan.org/collections/exhibition-catalogs", shopHome:"https://shop.themorgan.org/", listUrl:null },
   { id:"brit", short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:"https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", shopCatalogues:"https://www.britishmuseumshoponline.org/books/exhibition-books.html", shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
-  { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search, 27 Sep */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
+  { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
   { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
-  // MAM Paris, 25 Sep. The search is the one she sent from her browser, its
-  // query moved last so the title can be tacked on. French only, no English
-  // version. Behind a Cloudflare check that refuses this machine AND the
-  // connector (403, 25 Sep) while her browser passes it unaided — so, like KHM,
-  // left wired: retried and visible, and her "Museum shop" link works.
+  // The search is hers, query moved last so the title can follow. A Cloudflare check refuses
+  // us, so the lookup reports it blocked; the address stays for her shop link.
   { id:"mam", english:false, short:"MAM Paris", name:"Mus\u00e9e d'Art Moderne de Paris", city:"Paris", exBase:null, shopSearch:"https://www.mamlibrairieboutique.fr/listeliv.php?flou&base=paper&mots_recherche=", shopHome:"https://www.mamlibrairieboutique.fr/", listUrl:null },
 ];
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
@@ -124,90 +71,42 @@ const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 // ===== SHARED WITH THE SCRAPER — written by `node build/sync_shared.js`; never edit between these markers. Edit scraper/dates.js or scraper/compress_prompt.md, then run it. =====
 const DATES=(()=>{
 // ── Date helpers ──────────────────────────────────────────────────────────────
-// Parse date strings like "March 2–July 26, 2026" or "April 16–July 19, 2026" or "July 2, 2022–June 28, 2026"
-// Returns { start: 'YYYY-MM-DD'|'', end: 'YYYY-MM-DD'|'', raw: original }
+// Every month spelling a venue has used, in one shared map (docs/scraper.md §3).
 const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
   july:7,august:8,september:9,october:10,november:11,december:12,
   jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12,
 
-  // ITALIAN. Five of the wired venues are Italian — capo, brera, borghese,
-  // dellav and uffizi — and their listings print dates in their own language:
-  // Capodimonte's read "(11 maggio-12 giugno 2025)". Without these the parser
-  // saw no month name at all, the plausible-year guard refused every bare
-  // number, and all 50 Capodimonte rows came out undated. Undated rows cannot
-  // be excluded by the lookback, so its entire history back to 2013 survived
-  // and she correctly spotted that 50 was too many for the museum.
-  //
-  // Deliberately in the SHARED map rather than a per-venue rule, like every
-  // other format: a month name learned at one venue is worth having at all of
-  // them. Note gennaio/giugno and marzo/maggio differ only late in the word,
-  // which is why abbreviations below stay long enough to stay unambiguous.
+  // Italian, for the five Italian venues ("11 maggio-12 giugno 2025"). gennaio/giugno
+  // and marzo/maggio differ late, so abbreviations stay long enough to be unambiguous.
   gennaio:1, febbraio:2, marzo:3, aprile:4, maggio:5, giugno:6,
   luglio:7, agosto:8, settembre:9, ottobre:10, novembre:11, dicembre:12,
   genn:1, febbr:2, magg:5, giu:6, lug:7, ago:8, sett:9, ott:10, dic:12,
 
-  // THE THREE-LETTER ITALIAN FORMS, added 12 Sep 2026 from the Gallerie
-  // dell'Accademia. Its ENGLISH exhibition page prints the run in abbreviated
-  // Italian — "10 set 2026 - 22 nov 2026" — so a row she could see dated on the
-  // site arrived with both columns blank and a note blaming the venue for
-  // publishing only "10 September". `nov` already matched as English, `set` did
-  // not: the map held `sett` but the site writes three letters.
-  //
-  // `gen` and `mag` are added with it rather than waiting to be caught by
-  // another venue's review. The rest of the three-letter forms — feb, mar, apr,
-  // giu, lug, ago, ott, dic — are already here or already English.
+  // Three-letter Italian forms ("10 set 2026 - 22 nov 2026", the Accademia).
   set:9, gen:1, mag:5,
 
-  // A VENUE'S OWN MISSPELLING, 25 Sep 2026. Jacquemart-André's past listing
-  // prints "From September 6, 2024 to Feburary 9, 2025"; without this the run
-  // lost its closing date and was stored as one day. Added to the shared map
-  // like every other spelling a venue has taught us.
+  // A venue's own misspelling (Jacquemart-André, "Feburary").
   feburary:2 };
 
 /**
- * One month pattern, shared by every date parser.
- *
- * It previously existed as two separate copies that listed only the FULL month
- * names, so Rijksmuseum's past listing — "12 SEP 2025 TO 25 JAN 2026" — parsed
- * to nothing at all. Long names come first in the alternation so "September"
- * is not matched as "Sep" followed by stray letters, and a trailing full stop
- * is allowed for venues that write "Sept.".
- */
-// The trailing (?![A-Za-z]) is load-bearing, not tidiness. Without it the
-// alternation backtracks into the abbreviation: "7 November 2025" can match as
-// "7 Nov" with "ember 2025" left over, which silently defeats any lookahead
-// that follows — a no-year test then passes on a date that plainly has one.
-/**
- * A weekday name sitting in front of a date, which every range pattern trips on.
- *
- * LONGEST ALTERNATIVE FIRST, the same trap as the Italian "al" / "all'": with
- * `sat` ahead of `saturday` the match stops after three letters, leaves "urday"
- * behind, and the strip silently does nothing. The first version of this had
- * exactly that bug and removed "Sunday" while leaving "Saturday" untouched.
- *
- * ANCHORED ON WHAT FOLLOWS, so it only fires where a date really comes next —
- * a day number or a month name. Without that, a bare "Sun " would be stripped
- * out of ordinary prose ("the Sun King, Louis XIV") whenever a page's text was
- * scanned for dates.
+ * A weekday in front of a date. Longest alternative first ("sat" before "saturday"
+ * leaves "urday"), and anchored on a following day or month, so "the Sun King" is safe.
  */
 const WEEKDAY_PREFIX_SRC =
   '\\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday' +
   '|thurs|thur|tues|weds|mon|tue|wed|thu|fri|sat|sun)\\.?,?\\s+';
 
-// ORDINAL DAYS — "From May 23rd to September 20th, 2026", "Until December
-// 06th, 2026" — every date on the Musée d'Orsay's cards, 25 Sep 2026. The
-// suffix defeats every pattern, so both parsers drop it first: a day number of
-// one or two digits followed by st/nd/rd/th and nothing else.
+// Ordinal days ("May 23rd", Orsay's cards): both parsers drop the suffix first.
 const ORDINAL_SUFFIX = /\b(\d{1,2})(?:st|nd|rd|th)\b/gi;
 
+// One month pattern for every parser; long names first, a trailing full stop allowed
+// ("Sept."). The (?![A-Za-z]) is load-bearing: without it "7 November 2025" can match
+// as "7 Nov" + "ember 2025", silently defeating any lookahead after it.
 const MONTH_PATTERN =
   '(?:January|February|Feburary|March|April|May|June|July|August|September|October|November|December' +
   '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre' +
   '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec' +
-  // LONGEST FIRST WITHIN EACH LANGUAGE: `sett` must precede `set`, `genn`
-  // precede `gen` and `magg` precede `mag`, or the match stops three letters in
-  // and leaves a stray "t" behind — the same trap as the Italian "al" before
-  // "all'" and as `sat` before `saturday`.
+  // Longest first within each language: sett before set, genn before gen, magg before mag.
   '|genn|febbr|magg|giu|lug|ago|sett|ott|dic|set|gen|mag)\\.?(?![A-Za-z])';
 
 // Month name to number, tolerating the trailing full stop the pattern allows.
@@ -216,14 +115,8 @@ function monthNum(name) {
 }
 
 /**
- * Build YYYY-MM-DD only when the calendar agrees the day exists.
- *
- * Returning '' rather than an impossible string is the whole point. JavaScript
- * rolls 2026-02-31 silently forward to 3 March, so an impossible date does not
- * announce itself — it becomes a plausible WRONG date further downstream, and
- * can then decide whether an exhibition passes the lookback. Her rule: where
- * the code has applicable logic it uses it, and where it does not the column
- * stays blank and the notes say why.
+ * YYYY-MM-DD only when the day exists: JavaScript rolls 2026-02-31 into March, a
+ * plausible wrong date. Otherwise '' and the notes say why.
  */
 function ymd(y, m, d) {
   const yy = parseInt(y, 10), mm = parseInt(m, 10), dd = parseInt(d, 10);
@@ -235,17 +128,9 @@ function ymd(y, m, d) {
 }
 
 /**
- * Which year does the opening date belong to, when the venue printed the year
- * only once, on the closing side?
- *
- * "December 5 - January 20, 2026" opened in December 2025. A range that runs
- * backwards inside a single year is a run that crosses new year, and there is
- * exactly ONE reading of it — so this is logic, not a guess, and the row keeps
- * its dates instead of being blanked.
- *
- * Before this, the start simply inherited the end's year, producing
- * 2026-12-05 → 2026-01-20: an exhibition ending seven weeks before it opened.
- * Museums run winter shows constantly, so this was not an edge case.
+ * The opening year when the venue printed the year only on the closing side: a range
+ * running backwards within one year crosses new year ("December 5 - January 20, 2026"
+ * opened in 2025).
  */
 function startYearFor(startMo, startDay, endMo, endDay, endYear) {
   const backwards = startMo > endMo || (startMo === endMo && startDay > endDay);
@@ -253,10 +138,8 @@ function startYearFor(startMo, startDay, endMo, endDay, endYear) {
 }
 
 function parseMonthDay(str, fallbackYear) {
-  // e.g. "March 2", "July 26, 2026", "Sept. 21, 2024".
-  // The trailing full stop is allowed because MONTH_PATTERN allows it: without
-  // it here, "Sept. 21, 2024 - Oct. 12, 2024" matched the range pattern and
-  // then produced no dates at all, silently.
+  // e.g. "March 2", "July 26, 2026", "Sept. 21, 2024" — the full stop allowed, as
+  // MONTH_PATTERN allows it.
   const m = str.trim().match(/^([A-Za-z]+\.?)\s+(\d{1,2})(?:,\s*(\d{4}))?$/);
   if (!m) return null;
   const mo = monthNum(m[1]);
@@ -266,89 +149,24 @@ function parseMonthDay(str, fallbackYear) {
   return ymd(yr, mo, m[2]) || null;
 }
 
-/**
- * Scan a blob of text for a date range appearing anywhere inside it.
- *
- * parseDateRange() is anchored (^...$) and only matches a string that is
- * nothing but a date. Listing pages rarely oblige — Acquavella renders
- * "NICOLE WITTENBERG ALL THE WAY NEW YORK OCTOBER 16 - DECEMBER 5, 2025",
- * where the date is buried after the title and the city. This searches
- * instead of matching, so those dates are recovered.
- */
-// Range separators. findDateRange (listing pages) and findDateRangeInProse
-// (page text) must agree on these — they had drifted, so the listing parser
-// read "From June 10 to September 14, 2025" as a closing date only, silently
-// losing the opening date.
-// "t/m" is Dutch — "tot en met", up to and including. The Rijksmuseum writes
-// its older runs that way: "11 Oct. 2019 t/m 19 Jan. 2020".
-//
-// ITALIAN, added 12 Sep 2026. Capodimonte publishes its runs only on the
-// exhibition's own page and only as a sentence: "Dal 16 ottobre 2025 al 6
-// gennaio 2026". Without "al" as a separator no pattern matched, all 50 rows
-// came out undated, and undated rows cannot be excluded by the lookback — so
-// the museum's entire history survived and she spotted the count was far too
-// high for the institution.
-//
-// "al" ELIDES before a vowel — "Dal 16 aprile all'8 settembre 2026" — in both
-// the typographic apostrophe and the plain one, so both are accepted. "alle"
-// and "allo" appear in the same position. This is spelling, not judgement.
-// LONGEST ALTERNATIVE FIRST: regex alternation takes the first that matches, so
-// a bare "al" listed before "all'" would match the first two letters of
-// "all'8 settembre" and leave "l'8", which is not a day.
-// A COMMA MAY SIT IN FRONT OF THE SEPARATOR, and leaving it out cost Brera two
-// rows. It writes "From May 16, 2025, to May 17, 2027" — the comma after the
-// opening year, before "to". Without this the range failed, the scan fell
-// through to a single date, and Pinacoteca viaggiante was stored as ENDING on
-// its opening day. The same break hid Giorgio Armani's opening date, whose page
-// reads "From September 24, 2025, to January 11, 2026".
+// Range separators, shared by both parsers (they once drifted): "-", "to", "till",
+// "until", "through", Dutch "t/m", Italian "al" and its elisions "all'"/"alle"/"allo".
+// Longest alternative first, or "al" eats "all'8". A comma may sit before the
+// separator ("From May 16, 2025, to May 17, 2027" — Brera).
 const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]|al)\\s*";
 
-/**
- * @param raw    the text to search
- * @param opts   { looseSingles }. A LISTING CARD is a short string about one
- *   exhibition, so a bare "March / 2026" in it is almost certainly that show's
- *   date. A whole PAGE is not: it carries navigation, photo captions, a footer
- *   and the museum's opening hours, and the loosest patterns then become a
- *   lottery. Pass looseSingles:false when scanning page text.
- *
- *   This is not hypothetical. The Rijksmuseum's "Express yourself" page prints
- *   its real run as "16 Feb - 9 June" with no year anywhere, so no pattern
- *   could use it — and the scan fell through to the bare month-and-year rule,
- *   which matched a PHOTO CAPTION: "Gerard Wessel, RoXY, Amsterdam, April
- *   1994". A 2024 exhibition was given a 1994 opening date, which would have
- *   ranked it as thirty years closed.
- */
 const WEEKDAY_PREFIX = new RegExp(WEEKDAY_PREFIX_SRC + '(?=\\d|' + MONTH_PATTERN + ')', 'gi');
 const stripWeekdays = t => String(t || '').replace(WEEKDAY_PREFIX, '');
 
 /**
- * A run that was EXTENDED after it was announced.
- *
- * The Uffizi's card for 1925-1955 Fashion in the Spotlight reads
- *   "From 18/06/2025 to 28/09/2025, extended to02/11/2025"
- * — note the missing space, which is theirs. Read as an ordinary range it closes
- * on 28 September and the extension is lost, so an exhibition she could still
- * have bought a catalogue for reads as five weeks more closed than it was. She
- * caught it on the listing page.
- *
- * NOT A UFFIZI RULE. Capodimonte writes the same thing in Italian — "prorogata
- * al 9 giugno 2026", "prorogata all'8 settembre 2026" — and its Samori row has
- * exactly this defect today. A venue that extends a show is a general fact
- * about museums, so it belongs in the shared parser like every other format.
- *
- * THE EXTENSION ONLY EVER MOVES THE CLOSING DATE LATER. If the phrase yields a
- * date that is not after the one already read, it is ignored rather than
- * trusted — that way a stray match cannot shorten a run or rewrite an opening.
+ * A run extended after it was announced ("extended to02/11/2025", Uffizi; "prorogata
+ * al 9 giugno 2026", Capodimonte) — a general museum fact, so in the shared parser.
  */
 const EXTENDED_TO = new RegExp(
-  // The trigger is the WORD, verb or noun: "extended", "extension",
-  // "prorogata". Borghese writes "with an extraordinary extension through
-  // October 11", so a few words are allowed between the trigger and the
-  // separator — but not a full stop, which would let it reach into the next
-  // sentence and pick up an unrelated date.
+  // The trigger is the word, verb or noun; a few words may sit between it and the
+  // separator, never a full stop.
   '(?:extend(?:ed|ing)?|extension|prorogat[ao])[^.]{0,30}?' +
-  // Longest alternative first, or a bare "al" matches the first two letters of
-  // "all\'8" — the elision trap from the Italian date formats.
+  // Longest alternative first, or "al" matches the start of "all'8".
   '(?:through|until|to|all[\'\u2019]|alla|al)\\s*' +
   '(' +
     '\\d{1,2}\\s*[/.]\\s*\\d{1,2}\\s*[/.]\\s*\\d{4}' +      // 02/11/2025
@@ -356,13 +174,7 @@ const EXTENDED_TO = new RegExp(
     '|' + MONTH_PATTERN + '\\s+\\d{1,2}(?:,?\\s*\\d{4})?' +        // October 11
   ')', 'i');
 
-/**
- * Apply an extension to a run that already has a closing date.
- *
- * THE EXTENSION ONLY EVER MOVES THE CLOSING DATE LATER. If the phrase yields a
- * date that is not after the one already read, it is ignored rather than
- * trusted — a stray match cannot shorten a run or rewrite an opening.
- */
+/** Apply an extension: it only ever moves the closing date LATER, so a stray match cannot shorten a run. */
 function applyExtension(range, text) {
   if (!range || !range.end || !text) return range;
   const t = String(text);
@@ -374,14 +186,10 @@ function applyExtension(range, text) {
   let { day, mon, year } = dm;
   const quote = frag(m);
 
-  // NO YEAR ON THE EXTENSION — the usual case in prose. It is derived from THE
-  // DATE IT EXTENDS: the closing date written just before the trigger, in the
-  // same passage. Capodimonte: "fino al 28 ottobre (prorogato fino al 11
-  // novembre)" extends 28 October, so it is 11 November of that year; "until
-  // 20 December, extended to 18 January" crosses into the next — the ONLY way
-  // a year is ever added. Never derived from the range's closing date and
-  // rolled forward: that date may already BE the extension (Capodimonte's
-  // header prints it), and rolling it on put Gricci and Lotto a year late.
+  // No year on the extension: take it from the closing date written just before the
+  // trigger, crossing into the next year only if earlier ("until 20 December, extended
+  // to 18 January"). Never roll the range's own closing date forward — it may already
+  // be the extension (Capodimonte's header put Gricci and Lotto a year late).
   if (!year) {
     const before = precedingDate(t.slice(0, m.index), range.end);
     if (before) {
@@ -454,11 +262,11 @@ function dayText(iso) {
   return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
 }
 
-// BEFORE CHANGING ANYTHING IN THIS PARSER, READ docs/scraper.md SECTION 3.
-// It holds every format found in the wild, the three guards that stop art
-// history being read as exhibition dates, and the reason `looseSingles` exists
-// — a rule that is safe on a listing card and a lottery on a whole page. Each
-// of those cost real rows, and several of them cost them twice.
+// Read docs/scraper.md §3 before changing this parser: every format found in the wild,
+// the guards against art-history dates, and why `looseSingles` exists.
+// opts.looseSingles: true for a listing card (a short string about one show); false for
+// page text, where loose patterns are a lottery (a 1994 photo caption once became a 2024
+// show's opening date).
 function findDateRange(raw, opts = {}) {
   return applyExtension(findDateRangeCore(raw, opts), raw);
 }
@@ -466,54 +274,17 @@ function findDateRange(raw, opts = {}) {
 function findDateRangeCore(raw, opts = {}) {
   const looseSingles = opts.looseSingles !== false;
   if (!raw) return { start: '', end: '', raw: '' };
-  // Normalise every dash a museum's typesetter might reach for. The National
-  // Gallery uses U+2012 FIGURE DASH on some cards and U+2013 EN DASH on
-  // others; with only the en dash normalised, "15 October 2026 - 7 February
-  // 2027" fell through the range patterns and came out as 1 October 2026.
+  // Normalise every dash (the National Gallery mixes U+2012 and U+2013).
   const s = String(raw).replace(/[\u2010-\u2015\u2212\u2043]/g, '-')
-    // WEEKDAY NAMES CARRY NO DATE AND BREAK EVERY RANGE PATTERN.
-    //
-    // The Wallace Collection prints "Saturday 23 May - Sunday 29 November
-    // 2026". Strip the two weekdays and that is an ordinary day-first range
-    // this parser reads correctly; leave them in and every pattern misses,
-    // the scan falls through to the bare month-and-year rule, and the row
-    // arrives with NO DATES and a note saying the venue published none — which
-    // was a lie about the venue, since it had published the run in full.
-    //
-    // Safe to remove universally: a weekday is derivable from the date, so it
-    // can never be the only source of anything. Abbreviations included, with
-    // the optional full stop and comma that follow them in the wild.
+    // Weekdays carry no date and break every range pattern (Wallace), so they go first.
     .replace(WEEKDAY_PREFIX, '')
     .replace(ORDINAL_SUFFIX, '$1')
     .replace(/\s+/g, ' ').trim();
   const M = MONTH_PATTERN;
 
-  // ALL-NUMERIC RANGE — and the order is PROVED from the numbers, never assumed.
-  //
-  // The Uffizi publishes "From 21/03/2024 to 28/04/2024" and nothing else, so
-  // 9 of its 16 rows had no closing date. The objection to reading these is
-  // that 03/04 could be 3 April or March 4th — but that objection does not
-  // apply to a string that answers the question itself: 21 cannot be a month,
-  // so THAT range is day-first, and the other end inherits the same order
-  // because one venue does not switch conventions mid-sentence.
-  //
-  // So: if either end has a first component above 12, the range is day-first.
-  // If either has a SECOND component above 12, it is month-first. If neither
-  // end proves anything, the range is genuinely ambiguous and is REFUSED
-  // rather than guessed — a wrong date here would be plausible, silent, and
-  // able to decide whether a show passes the lookback. Her standing rule: use
-  // the logic where it applies, leave the column blank where it does not.
-  //
-  // LISTING CARDS ONLY — and this was learned by breaking it. On a card the
-  // numbers are about the one exhibition; on a whole PAGE they are a lottery,
-  // exactly as the bare month-and-year rule is. Run unguarded, this branch gave
-  // two Uffizi exhibitions the run of "Vasari Corridor. Friday evening opening"
-  // — a related item in the page's sidebar — because it was simply the first
-  // numeric range in the text. That is the Waldmüller failure again, and the
-  // contradiction guard could not catch it because the listing had supplied no
-  // date to contradict. So it obeys looseSingles like every other loose rule,
-  // and a page that publishes its dates only in a sidebar now yields a blank
-  // column and a note, which is the honest answer.
+  // All-numeric range, its order PROVED from the numbers: a component over 12 decides
+  // day-first or month-first for both ends; neither proves it → refused (Uffizi).
+  // Listing cards only (looseSingles) — on a page it read a sidebar's dates.
   const num = looseSingles && s.match(new RegExp(
     `\\b(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})${RANGE_SEP}(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})\\b`));
   if (num) {
@@ -536,21 +307,8 @@ function findDateRangeCore(raw, opts = {}) {
     const sMo = monthNum(dm[2]), eMo = monthNum(dm[5]);
     if (sMo && eMo) {
       const sDay = parseInt(dm[1], 10), eDay = parseInt(dm[4], 10);
-      // A PUBLISHED OPENING YEAR THAT FAILS THE PLAUSIBILITY CHECK REFUSES THE
-      // WHOLE RANGE — it is never quietly swapped for the closing year.
-      //
-      // Capodimonte's page for its Mimmo Jodice memorial room says
-      //   "Mimmo Jodice ( Napoli 29 marzo 1934 - 27 ottobre 2025)"
-      // — the photographer's birth and death. 1934 is outside 1990-2035 and was
-      // therefore DISCARDED, after which the opening year was worked out from
-      // the closing one, and an artist's lifespan was stored as the
-      // exhibition's run: 29 Mar 2025 to 27 Oct 2025. The row looked perfectly
-      // healthy; only reading it against the site could show it.
-      //
-      // The old line treated "no year published" and "a year published that
-      // cannot be an exhibition year" as the same thing. They are opposites:
-      // the first is a gap to fill, the second is proof this sentence is not
-      // about an exhibition's run at all.
+      // A published opening year that fails the plausibility check refuses the WHOLE
+      // range, never swapped for the closing year (an artist's lifespan, Mimmo Jodice).
       if (dm[3] && !plausibleYear(dm[3])) return { start: '', end: '', raw: '' };
       const startYr = dm[3] ? parseInt(dm[3], 10)
                             : startYearFor(sMo, sDay, eMo, eDay, endYr);
@@ -562,9 +320,7 @@ function findDateRangeCore(raw, opts = {}) {
   let m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})${RANGE_SEP}(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
   if (m) return sane(parseMonthDay(titleCase(m[1]), null) || '', parseMonthDay(titleCase(m[2]), null) || '', frag(m));
 
-  // "Month D - Month D, YYYY" — year only on the end side.
-  // The opening year is worked out, not assumed: "December 5 - January 20,
-  // 2026" opened in December 2025. See startYearFor().
+  // "Month D - Month D, YYYY": the opening year is worked out (startYearFor).
   m = s.match(new RegExp(`(${M})\\s+(\\d{1,2})${RANGE_SEP}(${M})\\s+(\\d{1,2}),\\s*(\\d{4})`, 'i'));
   if (m && plausibleYear(m[5])) {
     const endYr = parseInt(m[5], 10);
@@ -576,34 +332,17 @@ function findDateRangeCore(raw, opts = {}) {
     }
   }
 
-  // "Month D - D, YYYY" — one month, day only on the closing side.
-  // Acquavella's archive prints "December 9 - 31, 2023" and
-  // "August 12 - 20, 2020". Without this the row came out undated, was kept by
-  // the lookback (an unknown date is never evidence of being too old) and
-  // arrived as a stray on the approval pile.
+  // "Month D - D, YYYY": one month, day only on the closing side (Acquavella).
   m = s.match(new RegExp(`(${M})\\s+(\\d{1,2})${RANGE_SEP}(\\d{1,2}),\\s*(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
     const mo = monthNum(m[1]);
     if (mo) return sane(ymd(m[4], mo, m[2]), ymd(m[4], mo, m[3]), frag(m));
   }
 
-  // ── A RANGE WHOSE CLOSING SIDE IS NOT A DATE ──────────────────────────────
-  //
-  // MoMA prints "Aug 1, 2026-Summer 2027", "Sep 3, 2026-Spring 2027" and
-  // "Mar 8, 2025-ongoing". Every one of those has a real, published OPENING
-  // date and a closing side the museum has deliberately left vague.
-  //
-  // These must be caught HERE, above the single-date rule below, and that
-  // placement is the whole point. Left to fall through, the single-date rule
-  // found "Aug 1, 2026", had no reason to think it was half of a range, and
-  // wrote it into the CLOSING column — so an exhibition opening in August 2026
-  // was recorded as having closed in August 2026. Not a gap: a wrong answer
-  // shaped exactly like a right one, in the column her whole out-of-print
-  // window is calculated from.
-  //
-  // What is written is what the venue actually published: the opening date,
-  // and NO closing date. The season's year is kept as `latestYear`, which is
-  // a genuine upper bound for the lookback without inventing a day.
+  // ── A range whose closing side is not a date ("Aug 1, 2026-Summer 2027", "-ongoing";
+  // MoMA). Caught HERE, above the single-date rule, which wrote the opening date into
+  // the closing column. Only the opening date is written; the season's year is kept as
+  // `latestYear`, a lookback bound. MO-001 to MO-010.
   m = s.match(new RegExp(
     `(${M}\\s+\\d{1,2},\\s*\\d{4})${RANGE_SEP}` +
     `(?:(spring|summer|autumn|fall|winter)\\s+(\\d{4})|(ongoing|present|tbc|tba))`, 'i'));
@@ -623,24 +362,9 @@ function findDateRangeCore(raw, opts = {}) {
     }
   }
 
-  // ── A MONTH AND DAY WITH NO YEAR, CARRYING A PREPOSITION ──────────────────
-  //
-  // MoMA's current shows print "Through Oct 4" and "Through Nov 29"; its
-  // rolling ones print "Ongoing from Oct 19". Month-first, and no year at all
-  // — the existing preposition rules are day-first and all require one, so
-  // every current MoMA exhibition came back with NO CLOSING DATE. That is the
-  // one column this project cannot do without.
-  //
-  // THE YEAR IS DERIVED, NOT GUESSED, and only in a case where the derivation
-  // has one answer. A listing of what is on now cannot be telling us about a
-  // show that closed last year, so the closing date is the next occurrence of
-  // that month and day: this year if it has not passed, otherwise next. That
-  // is the same reasoning startYearFor() already uses to put an opening year
-  // on "December 5 - January 20, 2026", and it is logic rather than a guess.
-  //
-  // `today` is a parameter with a real default so a fixture can pin it. A
-  // parser that silently consulted the clock would pass in September and fail
-  // in November, which is a test that cannot be trusted either way.
+  // ── A month and day, no year, with a preposition ("Through Oct 4", "Ongoing from Oct
+  // 19"; MoMA). The year is derived: the next occurrence of that day — a current listing
+  // cannot mean last year. `today` is a parameter so fixtures can pin it.
   if (looseSingles) {
     const today = opts.today instanceof Date ? opts.today : new Date();
     const nextOccurrence = (mo, day) => {
@@ -670,42 +394,30 @@ function findDateRangeCore(raw, opts = {}) {
     if (m) return { start: '', end: parseMonthDay(titleCase(m[1]), null) || '', raw: frag(m) };
   }
 
-  // A single day-first date carrying a preposition, as Rijksmuseum's cards do:
-  //   "WORN till 21 March 2027"          -> a closing date
-  //   "WILLEM DE KOONING from 9 October 2026" -> an opening date
-  // Placed after the range patterns so "from 25 October 2022 to 29 January
-  // 2023" is still read as a range rather than just its opening date.
+  // A single day-first date with a preposition (Rijksmuseum): "till 21 March 2027"
+  // closes, "from 9 October 2026" opens. After the range patterns, so a range still wins.
   m = s.match(new RegExp(`\\b(till|until|through|to)\\s+(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
     const mo = monthNum(m[3]);
     if (mo) return { start: '', end: ymd(m[4], mo, m[2]), raw: frag(m) };
   }
 
-  // "since" too, and a day written with a full stop the German way:
-  // KHM's "since 11. November 2025" (Head and Shoulders, 5 Oct). Only here,
-  // WITH a year: the yearless forms below guess the NEXT such date, which is
-  // right for "from"/"opens" and wrong for "since".
+  // "since", and a day written "11." the German way (KHM). Only WITH a year: the
+  // yearless forms below take the NEXT such date, right for "from", wrong for "since".
   m = s.match(new RegExp(`\\b(from|since|opens?|opening|dal|dall['\u2019]?)\\s*(\\d{1,2})\\.?\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (m && plausibleYear(m[4])) {
     const mo = monthNum(m[3]);
     if (mo) return { start: ymd(m[4], mo, m[2]), end: '', raw: frag(m) };
   }
 
-  // "Month YYYY" or "Month / YYYY" with no day — a start month, end unknown.
-  // Borghese's archive prints "March / 2026" and nothing else.
-  //
-  // The loosest rule in the file: one month name beside one year, anywhere.
-  // Safe on a listing card, which is a short string about a single show.
-  // Never applied to page text — see the header comment.
+  // "Month YYYY" / "Month / YYYY" (Borghese): a start month, end unknown. The loosest
+  // rule in the file — listing cards only.
   if (looseSingles) {
     m = s.match(new RegExp(`(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
     if (m && plausibleYear(m[2])) {
       const mo = monthNum(m[1]);
-      // NO DATE IS WRITTEN. This used to return the 1st of that month, which
-      // invented a day the venue never published — Acquavella's "SEPTEMBER
-      // 2026" became an opening date of 2026-09-01. Her rule: where the code
-      // has no applicable logic the column stays blank and the note says why.
-      // The year is still kept as a lookback bound, which is a real fact.
+      // No day is written (never the 1st — that invents a date); the year is kept as a
+      // lookback bound.
       if (mo) return {
         start: '', end: '', latestYear: +m[2],
         shownText: m[0].trim(),
@@ -715,11 +427,7 @@ function findDateRangeCore(raw, opts = {}) {
     }
   }
 
-  // A season and a year, no day at all: Acquavella's archive prints
-  // "Summer 2022". That is not a date and never becomes one — nothing is
-  // written to the date columns. But it IS a published bound: a show the
-  // gallery itself labels "Summer 2022" cannot still have been open in
-  // July 2024. See latestYear, below.
+  // A season and a year ("Summer 2022"): never a date, but a published bound (latestYear).
   if (looseSingles) {
     m = s.match(/\b(?:spring|summer|autumn|fall|winter)\s+(\d{4})\b/i);
     if (m && plausibleYear(m[1])) return {
@@ -733,33 +441,8 @@ function findDateRangeCore(raw, opts = {}) {
   return { start: '', end: '', raw: '' };
 }
 
-/**
- * Find an exhibition's run inside ordinary prose.
- *
- * Some venues never print dates in a field of their own. Borghese writes them
- * into the opening sentence: "From June 10 to September 14, 2025, Galleria
- * Borghese presents...", "On March 17, and running until May 10, 2026...".
- *
- * This is pattern-matching, not comprehension — but a date has a shape, and
- * that is enough. The danger is grabbing the WRONG date: these pages are full
- * of art-historical years ("Caravaggio (1571-1610)", "stayed in Italy in
- * 1629"). Two guards prevent that:
- *
- *   1. A month NAME must sit next to the number. Bare years never match.
- *   2. The year must be a plausible exhibition year, not a birth or a
- *      painting date.
- *
- * hintYear supplies the year when the sentence omits it entirely — Borghese's
- * Velazquez page says only "From March 26 to June 23", and the listing page
- * for that show says "March / 2024".
- *
- * Returns the matched sentence too, so a wrong grab is visible in the notes
- * rather than silently becoming an exhibition's dates.
- */
-// Wide enough to cover any exhibition a venue still lists in its archive
-// (Borghese's goes back to 2013, Acquavella's to 1999), narrow enough that an
-// artist's lifespan or a painting's date can never be mistaken for a run:
-// "Caravaggio (1571-1610)", "confiscated on 4 May 1607", "in 1629".
+// Plausible exhibition years: wide enough for any archive a venue still lists, narrow
+// enough that a lifespan ("Caravaggio (1571-1610)") never reads as a run.
 const PLAUSIBLE_YEAR_MIN = 1990;
 const PLAUSIBLE_YEAR_MAX = 2035;
 
@@ -768,51 +451,20 @@ function plausibleYear(y) {
   return n >= PLAUSIBLE_YEAR_MIN && n <= PLAUSIBLE_YEAR_MAX;
 }
 
-/**
- * Refuse a range that runs backwards.
- *
- * Without this, "From 8 October 2014 to 11 January 2015" produced a start of
- * 2015-10-08 — after its own end — because the start year had been rejected
- * and quietly replaced with the end year. Better to report the end date alone
- * than an impossible range: the lookback only tests the end date anyway.
- */
-// THE QUOTE IN HER NOTE IS THE FRAGMENT THE DATES CAME FROM, never the whole
-// input. findDateRange was written for a LISTING CARD, where the input is a
-// line or two, so returning the input as `raw` was indistinguishable from
-// returning the match. Then findDateRangeInProse started falling through to it
-// with a WHOLE PAGE as the input — and `raw` is quoted verbatim into the notes
-// column, which is shown verbatim on her approval card. Capodimonte's rows
-// averaged 6,709 characters of notes and one carried 17,734: the entire page,
-// navigation and ticket prices included, under the words "read from a
-// sentence". The Wallace's Churchill row did the same.
-//
-// The fault was not the fall-through, which is right and is there to stop the
-// two parsers drifting. It was that one parser's idea of "raw" only held while
-// its input stayed small. So every branch now quotes ITS OWN MATCH, capped,
-// exactly as the prose parser already did — the size of the input stops
-// mattering. A branch that returns no dates returns no quote either; nothing
-// downstream writes a note without a date to explain.
+// The note quotes each branch's own MATCH, capped (frag), never its input — a whole
+// page once landed in one note. Q-100 to Q-102.
 function frag(m) { return m && m[0] ? String(m[0]).replace(/\s+/g, ' ').trim().slice(0, 120) : ''; }
 
+// A range that runs backwards keeps only its end date (the lookback tests the end).
 function sane(start, end, raw) {
   if (start && end && start > end) return { start: '', end, raw };
   return { start, end, raw };
 }
 
 /**
- * A date the venue printed that nobody can use: a day and month with NO YEAR.
- *
- * The Rijksmuseum's past pages do this systematically — "Until 24 October",
- * "18 November - 6 March" — and there is nowhere to borrow a year from: the
- * listing card does not carry one and the site publishes no structured data.
- * So the date columns stay blank, which is right. But the note then said "No
- * closing date found anywhere on the venue's pages", which is simply FALSE:
- * she would open the page expecting nothing and find a date sitting there.
- *
- * Requiring the year to be ABSENT is what makes quoting this safe. A photo
- * caption reads "Amsterdam, April 1994" — month AND year — so it can never be
- * picked up here. That is the exact trap that once put a 1994 opening date on a
- * 2024 exhibition.
+ * A day and month printed with NO year (Rijksmuseum's past pages): unusable, but the
+ * note says it was there rather than "no date found". Requiring the year to be ABSENT
+ * keeps photo captions ("April 1994") out.
  */
 function unusableDateText(text) {
   if (!text) return '';
@@ -837,17 +489,15 @@ function unusableDateText(text) {
   return '';
 }
 
+/**
+ * Find an exhibition's run inside prose ("From June 10 to September 14, 2025, Galleria
+ * Borghese presents…"). Guards: a month NAME beside the number, and a plausible year.
+ * hintYear supplies a missing year from the listing. Returns the matched sentence, so a
+ * wrong grab shows in the notes.
+ */
 function findDateRangeInProse(text, hintYear) {
-  // THE TWO PARSERS MUST NOT DIVERGE — they have drifted twice before and each
-  // time silently lost dates. The extension rule is applied here as well, and
-  // Giorgio Armani is why it matters beyond tidiness.
-  //
-  // His page reads "From September 24, 2025, to January 11, 2026 Extended until
-  // May 3, 2026". The listing had already given the extended closing date, so a
-  // prose range ending 11 January CONTRADICTED it — and the guard that discards
-  // a contradictory range threw away the opening date with it. The row lost a
-  // date the page states plainly, because one parser knew about extensions and
-  // the other did not.
+  // The extension rule runs here too: the parsers must not diverge (Giorgio Armani's
+  // extended run lost its opening date when only one knew about extensions).
   return applyExtension(findDateRangeInProseCore(text, hintYear), text);
 }
 
@@ -857,11 +507,8 @@ function findDateRangeInProseCore(text, hintYear) {
   const M = MONTH_PATTERN;
   const SEP = '(?:\\s*(?:-|t/m|to|until|through|till)\\s*(?:running\\s+)?)';
 
-  // Day-first, the form Borghese actually uses in its prose:
-  //   "From 20 January to 22 February 2026, the Galleria Borghese..."
-  //   "from 25 October 2022 to 29 January 2023, curated by..."
-  //   "will open to the public on 1 November 2017 and will last until 20 February 2018"
-  // The year may sit on the end side only, or on both.
+  // Day-first, as Borghese writes its prose ("From 20 January to 22 February 2026");
+  // the year on the end side only, or on both.
   let dm = s.match(new RegExp(
     `(\\d{1,2})\\s+(${M})(?:\\s+(\\d{4}))?[^.]{0,40}?${SEP}(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (dm && plausibleYear(dm[6])) {
@@ -895,9 +542,8 @@ function findDateRangeInProseCore(text, hintYear) {
     }
   }
 
-  // Day-first with NO year anywhere: "5 June to 25 October".
-  // Rijksmuseum writes its current shows this way. Only usable when the
-  // listing page already told us which year this exhibition belongs to.
+  // Day-first, no year anywhere ("5 June to 25 October", Rijksmuseum): only with the
+  // listing's year.
   if (hintYear && plausibleYear(hintYear)) {
     dm = s.match(new RegExp(`(\\d{1,2})\\s+(${M})[^.]{0,40}?${SEP}(\\d{1,2})\\s+(${M})(?!\\s*,?\\s*\\d{4})`, 'i'));
     if (dm) {
@@ -955,14 +601,9 @@ function findDateRangeInProseCore(text, hintYear) {
     }
   }
 
-  // Last resort: hand it to the listing-page parser. The two have repeatedly
-  // drifted apart — one learned a format the other did not, and a venue whose
-  // dates lived on the detail page silently lost them. Falling through means
-  // any pattern either parser knows is available to both.
-  // Ranges and preposition-anchored dates only. The bare single-date rules are
-  // listing-card rules and would match a photo caption or a footer here.
-  // The CORE, not findDateRange: the wrapper below applies the extension, and
-  // applying it here too ran it twice — Gricci and Lotto each a year late.
+  // Last resort: the listing parser's CORE (ranges and preposition dates only), so any
+  // pattern either parser knows serves both. The core, not the wrapper — applying the
+  // extension twice put Gricci and Lotto a year late.
   const viaListing = findDateRangeCore(s, { looseSingles: false });
   if (viaListing.start || viaListing.end) return viaListing;
 
@@ -986,28 +627,13 @@ const VENUE_SITES=[{"id":"met","host":"metmuseum.org"},{"id":"ng","host":"nation
 const SUMMARY_EXAMPLES=[{"title":"German Expressionism","raw":"Across Germany’s major cities, a new generation of artists emerged between 1900 and 1918 to change the rules of painting. They were the German Expressionists. Made up of two pioneering groups – Die Brücke (The Bridge) and Der Blaue Reiter (The Blue Rider) – these young artists painted raw emotions on canvas with a new intensity. Die Brücke was formed by a group of self-taught artists. Rebelling against conservative society, they lived and worked together in the bohemian corners of Dresden and other cities, before moving to Berlin, Germany’s rapidly modernising capital. For them, colour became…","summary":"Fifty German Expressionist works."},{"title":"Asian Bronze","raw":"From Shiva and the Buddha to wine casks and weapons. Everything about bronze triggers your senses. For centuries, this material has played a central role in the traditions of Asia. Now you too can experience the beauty of bronze art at last.","summary":"Four thousand years of Asian bronze."},{"title":"Hockney and Piero: A Longer Look","raw":"David Hockney, in his own words, has always been a looker. Throughout his career, Hockney has found inspiration in the work of other artists. He never tires of looking at paintings. For him, there’s magic in it every time, whether that’s enjoying a picture in a gallery or a much-loved poster at home. This very personal show brings together two Hockney paintings, one showing his mother and father and the other depicting his friend, curator Henry Geldzahler. They are displayed with the thread that ties them together, Piero della Francesca’s ‘The Baptism of Christ’. ‘My Parents’ and ‘Looking at…","summary":"Hockney against Piero della Francesca."},{"title":"At Home in the 17th Century","raw":"What was life really like in the 17th century? That’s the museum’s most-asked question. Now, the time has come to find out. At Home in the 17th Century offers an up-close experience of daily life 400 years ago. Immerse yourself in a full day of the 17th century as you walk among the nine diorama-style displays that make up this exhibition — packed with personal stories and unique objects.","summary":"Domestic life with Rembrandt, Hals, Vermeer."},{"title":"José María Velasco","raw":"See the first UK exhibition of Mexico’s much-loved artist, José María Velasco. Velasco, working in Mexico in the 19th century, was a man of many interests. He was fascinated by advances in geology, the archaeology of his home country, the study of local flora, and the increasing presence of industrialisation. He painted the sweeping landscapes of the Valley of Mexico, the home of modern-day Mexico City, with exquisite detail. His impressive panoramic views of the valley reveal allusions to Mexico's historic past and its rapidly modernising present. Velasco was keenly aware of his country’s…","summary":"Mexico's landscape painter."},{"title":"Carel Visser in the Rijksmuseum Gardens","raw":"This summer, the Rijksmuseum Gardens are home to the work of Carel Visser, the most influential Dutch sculptor of the twentieth century. Visser's sculptures, some as tall as eight metres or as long as five metres, come from museums, private collections and public spaces. Now they are brought together for the very first time. Carel Visser (1928–2015) had little affinity with traditional sculptors' materials such as marble, stone or wood. Iron was his great love. With a cutting torch and welding equipment, he shaped his sculptures from steel plates and beams. Stacking, repetition and symmetry…","summary":"Most influential Dutch sculptor of the twentieth century."},{"title":"Millet: Life on the Land","raw":"The sower, the woodcutter, a shepherd girl. These are the subjects that made French artist Jean-Francois Millet famous. Marking the 150th anniversary of his death, this is an opportunity to see some of Millet’s best-loved paintings and drawings. Born into a farming family in Normandy, Millet moved to the village of Barbizon in 1849 where he put the people who spent their life working on the land, often the poorest of the poor in 19th-century France, at the heart of his work. He knew these people and his realistic, unsentimental approach to painting them was completely new. See his iconic…","summary":"The subjects that made Millet famous."},{"title":"Crossings","raw":"Discover how colonial and contemporary perspectives converge in photographs from the Indian subcontinent. Past meets present in the Crossings exhibition.","summary":"Photography from the Indian subcontinent."}];
 // ===== END SHARED =====
 
-// ── ADD BY LINK — her design, 3–4 Oct 2026 (docs/picked_shows.md) ───────────
-//
-// She pastes show links under Import; each page is read once through her
-// keyed connector and becomes an ordinary pro forma row, fed to the SAME
-// intake as a sweep file — so Add, Fill, Change, Reject and quarantine all
-// work exactly as they do for a CSV. Nothing here writes the ledger.
-//
-// CODE FIRST, THE MODEL ONLY FOR PROSE. Title and dates are read by code: the
-// title is the page's own (site name stripped), the dates are the FIRST date
-// line under the show's heading, read by the scraper's own date reader
-// (DATES, above). Tested 3 Oct on 10 pages at 6 venues: every page also
-// carried other dates — another venue's leg, other displays, events, a "More
-// exhibitions" strip — so "any date on the page" would have been wrong.
-// The model writes the short description, translates a non-English title,
-// and says whether a line between title and dates is the show's SUBTITLE —
-// and code checks that answer is one of those lines, word for word.
-//
-// A link that cannot be read is a LINE, never a card: a half-filled card is a
-// plausible wrong row. Unread links stay in the box, which is kept in the
-// page's store until she clears it.
-//
-// NO LOOKBACK for a link (her ruling, 4 Oct): she chose the show.
+// ── ADD BY LINK (docs/picked_shows.md) ──────────────────────────────────────
+// Each pasted show link is read once and becomes an ordinary pro forma row for the
+// SAME intake as a sweep file; nothing here writes the ledger. Code reads the title
+// and dates (the FIRST date line under the show's heading — show pages carry other
+// shows' dates too). The model writes only the description and the English title,
+// and picks the subtitle from the page's own lines. A link that cannot be read is a
+// line, never a card. No lookback for a link (her decision).
 const OCC_CHIP="occasional";
 const OCC_DOC="venues/occasional";
 const LINKS_DOC="links/pending";
@@ -1052,9 +678,8 @@ function stripMd(line){
 function splitPageTitle(t,host){
   const s=stripMd(t);
   if(!s)return{show:"",site:""};
-  // Several bars carry the site's own sections between show and site: "Venice:
-  // Canaletto and His Rivals | Past exhibitions | National Gallery" (her
-  // link, 6 Oct). The show is named first, the site last.
+  // Several bars: the show is named first, the site last ("Venice: Canaletto and
+  // His Rivals | Past exhibitions | National Gallery").
   const parts=s.split(" | ").map(x=>x.trim()).filter(Boolean);
   if(parts.length>1)return{show:parts[0],site:parts[parts.length-1]};
   const m=s.match(/^(.*\S)\s+[-–—]\s+([^-–—]+)$/);
@@ -1065,13 +690,9 @@ function splitPageTitle(t,host){
   return{show:s,site:""};
 }
 
-// THE SCRAPER'S CUT — her ruling 25 Sep: the description is read to about
-// 2,000 characters. Here it starts UNDER THE SHOW'S HEADING, so the page's
-// furniture above the show (menus) never reaches the model, and runs on past
-// the date line, which is left out. 7 Oct: it started after the date line, and
-// Jacquemart-André prints the dates at the FOOT of the page, under the text —
-// the model was handed opening hours and cookies, and two cards came with no
-// description.
+// The scraper's 2,000-character description cut (her decision). Read from under the
+// show's heading, skipping the date line: some venues print the dates at the foot of
+// the page (Jacquemart-André).
 const LINK_RAW_CHARS=2000;
 const LINK_DATE_LINES=40;
 
@@ -1095,14 +716,10 @@ function readShowPage(res,url){
     if(r.start||r.end){d=k;range=r;break;}
   }
   if(d<0)return{ok:false,why:"No dates found under the show’s title."};
-  // A show whose own name holds a bar — "Art in Dialogue: Duccio | Caro" (her
-  // NG link, 6 Oct): the page title cuts it at the bar, so the heading, which
-  // starts with the same words and goes on, is the name.
-  // A page title that WRAPS the heading — words before it — is dressed by the
-  // site: "Exhibition Giovanni Bellini in Paris" for the heading "Giovanni
-  // Bellini" (Jacquemart-André, 7 Oct). The heading is the name. A title that
-  // only runs on past the heading is a subtitle and stays: "Hammershøi. The
-  // Eye that Listens" for "Hammershøi" (Thyssen).
+  // The heading is the name when the page title cuts it at a bar inside the name
+  // ("Art in Dialogue: Duccio | Caro") or wraps it in site words ("Exhibition Giovanni
+  // Bellini in Paris"). A title that runs on past the heading keeps its subtitle
+  // ("Hammershøi. The Eye that Listens"). AL-015.
   const wrapped=show&&heading&&foldText(show).indexOf(foldText(heading))>0;
   const base=wrapped?heading:show&&heading.length>show.length&&heading.length<=200&&foldText(heading).startsWith(foldText(show))?heading:(show||heading);
   const between=lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l)));
@@ -1118,14 +735,10 @@ function readShowPage(res,url){
   return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||host.replace(/^www\./,"")};
 }
 
-// The title is WHAT THE CATALOGUE WOULD BE CALLED — her ruling, 3 Oct: a
-// subtitle the page prints is kept ("Peggy Guggenheim in London: The Making
-// of a Collector").
-// A subtitle that carries on the sentence — "and the Masters of Light" under
-// "Fra Angelico" (Jacquemart-André, 7 Oct) — joins with a space, not a colon.
-// Claude's subtitle is matched to the page's line with capitals and spacing
-// ignored, and the PAGE's spelling is kept (7 Oct: Botticelli's "Artist and
-// designer" lost, cause not recorded — a capitals-only miss is one).
+// The title is what the catalogue would be called (her decision): a printed subtitle
+// is kept. One that carries on the sentence ("and the Masters of Light") joins with a
+// space. Claude's subtitle must match one of the page's lines, capitals and spacing
+// ignored, and the page's spelling is kept.
 function linkTitle(base,subtitle,between){
   const k=v=>foldText(v).replace(/\s+/g," ").trim();
   const sub=(between||[]).find(l=>k(l)===k(subtitle))||"";
@@ -1160,11 +773,8 @@ function occVenueId(host){
   return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
 
-// A link to a venue the app already sweeps files under THAT venue — known by
-// its site, from the scraper's own recipes (VENUE_SITES, written by
-// sync_shared). 7 Oct: matched on exBase/listUrl, blank at 23 of the 28, her
-// Jacquemart-André links became a new venue. Two venues on one site (the
-// Tates) are told apart by the path the recipe gives.
+// A link to one of the swept venues files under it, matched by site from the scraper's
+// recipes (VENUE_SITES, written by sync_shared); the Tates are told apart by path.
 function knownVenueFor(url){
   const h=hostOf(url).replace(/^www\./,"");
   if(!h)return null;
@@ -1174,28 +784,24 @@ function knownVenueFor(url){
   return hit?hit.id:null;
 }
 
-// AN OCCASIONAL VENUE, AS THE APP USES IT. Kept in the page's store (a fact
-// about the world, like the sweep log), registered into MU so every card,
-// lookup and link reads it like any venue. One chip for all of them,
-// "Occasional" (her ruling, 4 Oct).
-//   shop: "found" (a books section, confirmed or not), "noshelf" (a shop but
-//   no books section found), "none" (no shop found; confirmed = her "No shop"),
-//   "failed" (a step died — not an answer), "unknown" (look again on the next
-//   link). "found" is used by the lookup, and "noshelf" when its search was
-//   proved; "none" confirmed sends it to the web, as at Capodimonte.
+// An occasional venue: kept in the page's store (a fact about the world, like the sweep
+// log) and registered into MU, so everything reads it like any venue. One chip,
+// "Occasional" (her decision).
+//   shop: "found" (books section), "noshelf" (a shop, no books section), "none" (no
+//   shop; confirmed = her "No shop", lookups go to the web), "failed" (a step died —
+//   not an answer), "unknown" (look again on the next link). Lookups use "found", and
+//   "noshelf" once its search is proved.
 function occEntry(v){
   const live=v.shop==="found"||(v.shop==="noshelf"&&!!v.shopSearch);
-  // `short` is HER name for the venue on its cards (4 Oct: "Royal Academy UK",
-  // "Detroit"…), written into the store by a session; the page title's name
-  // stands until she gives one.
+  // `short` is her name for the venue's cards, written into the store by a session;
+  // the page title's name stands until then.
   return{id:v.id,short:v.short||v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
     shopUnknown:!live&&!(v.shop==="none"&&v.confirmed)};
 }
-// Every venue a card can be filed under, in her order, the occasional ones
-// last (by name). The review walks THIS, not MUSEUMS — walking MUSEUMS alone,
-// a card from an occasional venue was counted and never drawn.
+// Every venue a card can be filed under: hers in order, then occasional ones by name.
+// The review walks THIS, not MUSEUMS, or occasional cards are counted and never drawn.
 function allVenues(){
   const occ=Object.values(MU).filter(m=>m&&m.occasional).sort((a,b)=>a.short.localeCompare(b.short));
   return MUSEUMS.concat(occ);
@@ -1237,22 +843,12 @@ async function writePendingLinks(text){
 }
 
 // ── FINDING A NEW VENUE'S SHOP SECTION — once per venue, then kept ─────────
-// Her design, 4 Oct. What is wanted is the shop's EXHIBITION CATALOGUES
-// section, else its BOOKS / PUBLICATIONS section — NEVER the front page (every
-// museum shop she has met has a books section) and never one book or a post.
-// Each step runs only if the one before found nothing:
-//   1. One search, "<venue> shop exhibition catalogues" — her own Google query.
-//      Parallel finds the right page but does not always rank it first
-//      (Cleveland's was 4th behind "Arts & Crafts", 4 Oct), so CODE reads all
-//      of the results and ranks them; the first is never simply taken.
-//   2. A Shopify shop's own list of its sections (collections.json) — Thyssen,
-//      whose search returned only single books.
-//   3. The shop's front page, its menu read for those sections.
-// Whatever wins is OPENED before she sees it and must read as a shelf of books
-// (book words and prices), unless the search excerpt already does. She
-// confirms; "Look again" re-runs this skipping only the PAGES she turned down,
-// never the shop's whole site (the shop was right for the RA and the
-// Courtauld — only the page was wrong). Evidence: docs/link_pages/shop_search/.
+// Wanted: the shop's exhibition-catalogues section, else books / publications; never
+// the front page, one book or a post (her decision; docs/picked_shows.md). Each step
+// runs only if the one before found nothing: 1. one search call, two queries, every
+// result ranked in code; 2. a Shopify shop's collections.json; 3. the shop's menu.
+// The pick is opened and must read as books with prices. "Look again" skips only the
+// pages she turned down, never the site. Evidence: docs/link_pages/shop_search/.
 const SHOP_WORDS=/^(?:the\s+)?(?:museum\s+|online\s+|gift\s+|book)?(?:shop|store|boutique|tienda|winkel|webshop|museumshop|negozio|librairie|bookshop)(?:\s+online)?$/i;
 const SHOP_HOST=/^(?:shop|store|boutique|tienda|winkel|webshop|bookshop|negozio|museumshop)\.|shop/i;
 const SHOP_PATH=/\/(?:shop|store|boutique|tienda|winkel|webshop|negozio|bookshop)(?:\/|$)/i;
@@ -1277,11 +873,9 @@ function shopLinkOnPage(text,museumHost){
   const byHost=links.find(l=>hostOf(l.url)!==museumHost&&SHOP_HOST.test(hostOf(l.url)));
   return byHost?originOf(byHost.url):"";
 }
-// IS THIS ADDRESS THE MUSEUM'S OWN SHOP? Its show page's shop link's site; or
-// a shop on the museum's own domain (shop.courtauld.ac.uk, a /shop path); or a
-// shop site carrying the museum's name (diashop.org for dia.org). A reseller's
-// shelf for the museum — Museum Bookstore's "Courtauld Gallery", 4 Oct — is
-// not, and neither is the museum's library page about catalogues.
+// The museum's own shop: its show page's shop link's site, a shop on the museum's own
+// domain (shop.courtauld.ac.uk, a /shop path), or a shop site carrying the museum's
+// name (diashop.org). A reseller's shelf for the museum is not.
 function isShopPlace(u,museumHost,pageShopHost){
   const h=hostOf(u).replace(/^www\./,"");
   if(!h)return false;
@@ -1290,22 +884,18 @@ function isShopPlace(u,museumHost,pageShopHost){
   if(hb===b){ let path=""; try{ path=new URL(u).pathname; }catch{} return SHOP_HOST.test(h)||SHOP_PATH.test(path); }
   return label.length>=3&&hl!==label&&hl.includes(label)&&SHOP_HOST.test(hl);
 }
-// A SECTION NAMES ITSELF IN THE PLURAL (her first run, 4 Oct: the RA's pick was
-// one book's page, the Courtauld's a "Book of the month" post). Read on the
-// words with accents folded: catálogos → catalogos.
+// A section names itself in the plural — one book's page or a blog post is not a
+// section. Words are read with accents folded.
 const SHELF_CATALOGUES=/\bcatalog(?:ue)?s\b|\bcatalogos\b|\bcatalogi\b|\bcataloghi\b|\bkataloge\b/;
 const SHELF_BOOKS=/\bbooks\b|\bpublications\b|\bpublicaciones\b|\bpublicaties\b|\bpubblicazioni\b|\blivres\b|\blibros\b|\bboeken\b|\bbucher\b|\blibri\b/;
-// "All Products (not Catalogues)" — Cleveland's, 4 Oct. A section that says
-// it is NOT books is not one.
+// A section that says it is NOT books ("All Products (not Catalogues)") is not one.
 const SHELF_NOT=/\b(?:not|non|sin|sans|ohne|niet|geen|zonder|except)\b\W+(?:\w+\W+)?(?:catalog|book|boek|libr|livre|public)/;
 // A sale or clearance section holds only some of the books ("Catálogos en
 // oferta", Thyssen): kept as a last resort, never ahead of a whole section.
 const SHELF_SALE=/\b(?:sale|clearance|offers?|outlet|ofertas?|rebajas|saldi|soldes|korting|aanbieding|black friday|promo\w*)\b/;
-// BOOKS AND ONLY BOOKS (her ruling, 4 Oct): a section that mixes books with
-// other goods — DIA's "Books & Stationery", six pages of pens and journals —
-// is never the shelf; every later lookup would wade through it. It is opened
-// instead for a books-only section inside it (DIA Publications). A museum's own
-// publications rank above a general books section.
+// Books and only books (her decision): a section mixing books with other goods
+// ("Books & Stationery") is never the shelf; it is opened for a books-only section
+// inside it. A museum's own publications rank above a general books section.
 const SHELF_PUBS=/\bpublications\b|\bpublicaciones\b|\bpublicaties\b|\bpubblicazioni\b/;
 const SHELF_GOODS=/\b(?:stationery|stationary|gifts?|toys|games|apparel|clothing|jewell?ery|accessories|homeware|home goods|decor|cards|notecards|journals|notebooks|prints|posters|supplies|merch\w*|souvenirs?|papeterie|cadeaux|jouets|regalos|papeleria|juguetes|cadeaus|speelgoed|regali|cartoleria|giochi)\b/;
 const NOT_A_SHELF=/\/(?:products?|p|blogs?|news|journal|articles?|stories|pages|account|cart)\/|[?&]q=|\/search/i;
@@ -1337,11 +927,8 @@ function looksLikeBookShelf(text){
   const t=foldText(text);
   return (t.match(BOOK_WORD)||[]).length>=3&&(t.match(PRICE)||[]).length>=2;
 }
-// A Shopify shop's list of its sections. Read as text, not parsed as JSON: a
-// long list can come back cut short, and the sections before the cut still
-// count. A section with nothing in it is skipped. Ranked on its TITLE, the
-// name her menu shows — never its handle, which can be a sentence (Thyssen's
-// Balenciaga section's ends "…productos-y-catalogos").
+// A Shopify shop's sections, read as text (a long list can come back cut short); empty
+// ones skipped; ranked on the TITLE her menu shows, never the handle.
 function shopifySections(text,root){
   const out=[];
   for(const chunk of String(text||"").split(/\{\s*"id"\s*:/).slice(1)){
@@ -1366,16 +953,11 @@ function searchFor(text,home){
   if(/catalogsearch/i.test(text))return o+"catalogsearch/result/?q=";
   return null;
 }
-// THE WHOLE SHOP'S SEARCH, PROVED — her rule, 6 Oct: a venue added by link is
-// looked up exactly as one of the 28 is, its books shelf AND its search box.
-// DIA gives a show's catalogue the show's own section ("Georgia O'Keeffe:
-// Architecture") and leaves it off "DIA Publications", so the shelf alone
-// missed it. Its shop is BigCommerce, which searchFor could not name.
-// NOT GUESSED: each common shop software's search is asked for a book just
-// seen on the shop's own pages (a link with its price beside it); the first
-// whose results carry that book's own page is kept. None does → null, and the
-// lookup reads the shelf alone, as before. A call that died → undefined: not
-// an answer, asked again next time.
+// The whole shop's search, proved (her decision: a link venue is looked up as the 28
+// are, shelf AND search — DIA files a show's book in the show's own section). Each
+// common shop search is asked for a book seen on the shop's pages; the first whose
+// results carry that book's page is kept. None → null (shelf alone); a call that
+// died → undefined, asked again next time. AL-008k, AL-014.
 const SEARCH_SHAPES=["search?q=","search.php?search_query=","catalogsearch/result/?q=","?post_type=product&s="];
 const PRICE_ONE=new RegExp(PRICE.source,"i");
 function booksSeenOn(text,host){
@@ -1437,10 +1019,8 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
     opens=keep;
     return r;
   };
-  // 1. The search.
-  // Two queries, ONE search call: her own, and the books section's — Detroit's
-  // "Books & Stationery - DIA Publications" (Google's 3rd, 4 Oct) never came
-  // back for the first alone.
+  // 1. The search: one call, two queries — hers and the books section's (Detroit's
+  // "DIA Publications" came back only with both).
   const s=await searchWeb("The museum shop's exhibition catalogues or books section of "+venueName+".",[venueName+" shop exhibition catalogues",venueName+" shop books publications"]);
   if(!s.ok)died=s.detail;
   const mine=(s.results||[]).filter(r=>r&&place(r.url));
@@ -1484,14 +1064,12 @@ function proFormaCsv(rows){
   return [cols.join(",")].concat(rows.map(r=>cols.map(c=>cell(r[c])).join(","))).join("\n")+"\n";
 }
 
-// ---- v9 pro forma helpers (pure) ----
+// ---- Pro forma helpers (pure) ----
 const KNOWN_VENUES = new Set(MUSEUMS.map(m=>m.id));
 function isValidYMD(s){ if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false; const d=new Date(s+"T00:00:00"); return !isNaN(d.getTime()); }
-// SAME ADDRESS MEANS SAME EXHIBITION — the one identity test with no
-// judgement in it, and the scraper's own settled rule. Scheme and host are
-// lowercased because hosts are case-insensitive by spec; THE PATH IS NOT
-// TOUCHED, because folding it merged two exhibitions that differed only in
-// capitalisation. A trailing slash and a #fragment are not part of identity.
+// Same address = same exhibition: scheme and host lowercased, the path never folded
+// (folding it merged two exhibitions differing only in capitals). A trailing slash
+// and a #fragment are not part of identity.
 function normalizeUrlKey(u){
   try{
     const x=new URL(String(u||"").trim());
@@ -1516,23 +1094,10 @@ function csvParse(text){
   return out.filter(r=>r.some(c=>String(c).trim()!==""));
 }
 
-// HOW MANY CARDS ARE DECIDED — and it is the gate on the ledger, so it lives
-// out here where a fixture can reach it. It used to be eight lines inside the
-// component, which is where the counting for a LABEL belongs; it stopped being
-// a label on 20 Sep, when her ruling made the button refuse to fire while
-// anything is undecided.
-//
-// WHAT COUNTS AS DECIDED, and the subtlety is the second half: REJECTING is
-// deciding. An Add card she turned down, and a Fill/Change card whose every
-// field she turned down, are finished work — they must not hold the gate shut.
-// Only a card she has not touched at all is undecided. Getting that backwards
-// would make the button unreachable for anyone who rejects anything, which is
-// most of a real sweep.
-// IS THIS ONE CARD STILL UNTOUCHED. The gate counts these and the "jump to the
-// next undecided" button finds them, and THOSE TWO MUST NEVER DISAGREE — a
-// button refusing to fire while the jump says there is nothing left is a dead
-// end with no way out of it. So there is one function and both call it. It was
-// briefly two, which is exactly how that pair of copies begins.
+// The ledger gate counts undecided cards; it lives outside the component so fixtures
+// reach it (docs/app.md §3). Rejecting IS deciding: only an untouched card is
+// undecided. The gate and the per-venue "N to decide" counts both call
+// isUndecidedCard, so they can never disagree.
 function isUndecidedCard(p,dec){
   dec=dec||{};
   if(p.type==="add")return !dec.mode;
@@ -1540,11 +1105,8 @@ function isUndecidedCard(p,dec){
   return !Object.values(dec.fields||{}).some(v=>v);
 }
 
-// EVERY DECIDED CARD LANDS IN ONE OF THREE COUNTS — her ask, 30 Sep: 53 cards
-// decided and the footer said 48, with nothing to say where the other 5 went.
-// Decided = to apply + quarantined + rejected, always, so the footer adds up.
-// One card's fate. The counts and the link box (rejected links go back in it)
-// both ask this, so they cannot disagree about what "rejected" is.
+// Every decided card lands in one count — to apply, quarantined or rejected — so the
+// footer adds up (her ask). The counts and the link box both use cardOutcome.
 function cardOutcome(p,dec){
   dec=dec||{};
   if(isUndecidedCard(p,dec))return"undecided";
@@ -1564,28 +1126,16 @@ function countDecisions(proposals,decisions){
   return {acceptedCount,undecidedCount,quarantinedCount,rejectedCount};
 }
 
-// ===== TEMPORARY, WITH countDecisions BECAUSE A FIXTURE MUST REACH IT =====
-// WHEN THE SIDE DOOR IS OFFERED — see the button itself for why it exists and
-// when to pull it out. The rule lives here, out of the component, for one
-// reason: written inline in the JSX it could only be tested by a second copy
-// of it in the test file, and a second copy drifts silently.
-//
-// BOTH HALVES MATTER. Nothing decided → nothing to apply, and offering a
-// button that would write an empty change is offering a dead control. Nothing
-// left undecided → the real button is already live, and a second way to do the
-// same thing is the kind of pair that ends up disagreeing. So it appears only
-// in the middle state, which is the only state it is for.
+// ===== PARTIAL APPLY — stays until she says (CLAUDE.md §4) =====
+// Offered only in the middle state: something decided AND something undecided. Out of
+// the component so fixture 18h tests this copy.
 function offerPartialApply(counts){
   const c=counts||{};
   return (c.acceptedCount||0)>0 && (c.undecidedCount||0)>0;
 }
 
-// MERGE, NEVER REPLACE — and this is the rule that stops the bug coming back
-// in a new place. Importing an OLD sweep file must not drag a venue's date
-// backwards, so a venue's line only moves when the incoming time is LATER.
-// The two halves move independently: a venue can be tried today and still show
-// an older date for its last real rows, which is the one line that says
-// "re-run this one on its own".
+// Merge, never replace: a venue's dates move only for a LATER time, so an old sweep
+// file cannot drag them backwards. Tried and brought-rows move independently.
 function mergeSweepLog(prev,seen){
   const out={...(prev||{})};
   const later=(a,b)=>(!a||(b&&b>a))?b:a;
@@ -1599,33 +1149,10 @@ function mergeSweepLog(prev,seen){
   return out;
 }
 
-// ── QUARANTINE — SAME THIRD PLACE AS THE SWEEP LOG, her ruling 20 Sep 2026 ──
-//
-// IT WAS IN THE LEDGER AND THAT WAS THE WRONG CONTAINER, decided in the same
-// session that moved the sweep log out and somehow not applied to the thing
-// sitting next to it. Her scenario is the whole argument: quarantine two junk
-// rows, Reset to the starter set, feed the SAME sweep file again — and every
-// piece of junk is back, because the only record of her decision went with the
-// ledger she just replaced. A feature whose entire promise is "never show me
-// this again" cannot depend on which file happens to be open.
-//
-// BUT IT IS NOT THE SWEEP LOG EITHER, and the difference decides the design.
-// The sweep log is safe living only here because it is DERIVABLE: every fact in
-// it comes from a sweep file, so losing it costs one re-import. Quarantine is
-// derivable from nothing — it is her judgement, and only she can rebuild it.
-// That is the same property that keeps her LEDGER out of this store.
-//
-// SO IT LIVES IN BOTH, WITH A RULE ABOUT WHICH WINS — her choice, C, taken over
-// her own objection that redundancy is lazy. It is not two hopeful copies: the
-// store is the working copy that always applies, the export is the backup, and
-// the rule below settles every disagreement between them. Her ledger already
-// has exactly this shape.
-//
-// THE RULE IS LATEST DECISION WINS, WHICH NEEDS TOMBSTONES. Taking a row out of
-// quarantine has to be RECORDED, not merely absent, or loading an older backup
-// would silently re-block something she released — the same bug the sweep log's
-// merge rule exists to prevent, one door along. So a released row stays in the
-// store as `released` with the time she released it.
+// ── QUARANTINE — in the page's store AND her export (docs/app.md §4) ────────
+// It is her judgement, derivable from nothing, so it cannot live only in the store;
+// in the ledger alone, a Reset brings the junk back. Latest decision wins, which needs
+// tombstones: a release is stored as `released`, or an older backup would re-block it.
 const QUARANTINE_DOC = "quarantine/rows";
 
 // Both sides are {key: {venueId, title, at, state}}. Nothing is dropped and
@@ -1656,12 +1183,8 @@ function quarantineFromList(list){
   return out;
 }
 
-// URGENCY COLOURS, ONE SET PER THEME — dark added 20 Sep 2026 at her request.
-//
-// The washes are not the light ones dimmed. A pale badge on a dark ground
-// glares, so each dark wash is a DEEP tint of the same hue and the ink becomes
-// the light end of it — the ladder keeps its meaning (cool blue for announced
-// through to deep red for long closed) while the page stays dark.
+// URGENCY COLOURS, ONE SET PER THEME. Dark washes are deep tints of the same hue, not
+// the light ones dimmed, so the ladder keeps its meaning.
 const TIER_SETS = {
   light: {
     upcoming: { ink: "#4A5A6B", wash: "#E1E5EB" },
@@ -1692,15 +1215,13 @@ const TIER_TEXT = {
     closing: { label: "Closed 3\u20136 months", note: "Shop stock thinning. Buy now if you want it.", time: "past", ord: 5 },
     urgent: { label: "Closed 6\u201312 months", note: "Final call. Reprints are rare.", time: "past", ord: 6 },
     lapsed: { label: "Closed over a year", note: "Assume out of print. Secondhand only.", time: "past", ord: 7 },
-    // After Announced — her ordering, 23 Sep.
+    // After Announced — her ordering.
     unknown: { label: "Dates unclear", note: "No reliable end date found.", time: "current", ord: 3 },
 };
 const tiersFor = mode => Object.fromEntries(Object.keys(TIER_TEXT).map(
   k => [k, { ...TIER_TEXT[k], ...TIER_SETS[mode][k] }]));
-// TIERS stays a module-level constant for everything that reads a LABEL or an
-// `ord` outside the component (sorting, band names). Colour is read from the
-// component's themed copy; these values are the light ones and are never used
-// to paint anything in dark mode.
+// TIERS (light values) serves labels and `ord` outside the component; colour comes
+// from the component's themed copy.
 const TIERS = tiersFor("light");
 
 function relTime(iso){if(!iso)return null;const d=new Date(iso);if(isNaN(d))return null;const s=Math.max(0,Math.floor((Date.now()-d.getTime())/1000));if(s<60)return"just now";const m=Math.floor(s/60);if(m<60)return m+" minute"+(m===1?"":"s")+" ago";const h=Math.floor(m/60);if(h<24)return h+" hour"+(h===1?"":"s")+" ago";const day=Math.floor(h/24);return day+" day"+(day===1?"":"s")+" ago";}
@@ -1709,17 +1230,8 @@ const MS_MO=1e3*60*60*24*30.44, MS_WK=1e3*60*60*24*7;
 const moSince=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");return isNaN(x)?null:(Date.now()-x)/MS_MO;};
 const wksSince=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");return isNaN(x)?null:(Date.now()-x)/MS_WK;};
 
-// "CLOSING WINDOW" ON THE COUNTS LINE — her ruling, 2 Oct: catalogues she has
-// said she wants (Yes) whose show closed 3–12 months ago. Nothing else.
-// THE BUY-NEXT DOT IS THE STAR'S SIZE — her ruling, 2 Oct. The star is a
-// font glyph, so its size and where it sits depend on the font each machine
-// falls back to; a fixed circle came out bigger than it and off its line. So
-// the star's own ink is measured, in the font a card's button uses, and the
-// dot is centred where the star's ink is. The canvas reports the ink rounded
-// outward and a disc reads larger than a star of equal height, so the dot is
-// 85% of that height: on screen the two then measure the same (11.5px at
-// 16px, checked on the rendered page). Measured once. No off-screen canvas
-// (the test harness) → an 11px dot centred on the line.
+// The buy-next dot matches the star's measured ink (her decision): 85% of its height,
+// centred on it, because a disc reads larger than a star. No canvas → an 11px dot.
 let starInkCache=null;
 function starInk(){
   if(starInkCache)return starInkCache;
@@ -1735,6 +1247,8 @@ function starInk(){
   return starInkCache={D,v:(out.a-out.d-D)/2};
 }
 
+// Closing Window on the counts line (her decision): Yes-wanted catalogues whose show
+// closed 3–12 months ago.
 function inClosingWindow(r){
   if(!r||!r.interested||r.acquiring!=="yes")return false;
   const t=tierFor(r);
@@ -1749,6 +1263,7 @@ function tierFor(r){
   return"unknown";
 }
 
+// The seed set: ~110 rows read before the scraper existed (docs/app.md §6).
 const S=[
 ["met","Musical Bodies","2026-06-07","2026-09-27","Instruments as sculptural and bodily objects from the Met's collection.","musical-bodies"],
 ["met","Costume Art","2026-05-10","2027-01-10","Costume Institute spring show. Inaugurates new fashion galleries.","costume-art"],
@@ -1869,24 +1384,9 @@ function mergeSeedInto(existing){const byId=new Map(existing.map(r=>[r.id,r]));f
 const cleanIsbn=v=>{if(!v)return null;const d=String(v).replace(/[^0-9]/g,"");return d.length===13?d:null;};
 const fmtIsbn=v=>{const c=cleanIsbn(v);return c?c.slice(0,3)+"-"+c.slice(3):null;};
 
-// ── A 10-DIGIT ISBN IS TAKEN, NOT THROWN AWAY \u2014 her ruling, 21 Sep 2026 ──
-//
-// There is nothing wrong with an ISBN-10. Every book printed before 2007 has
-// one and plenty of shop pages still show only that. The first version of the
-// page read refused them, which was a limit I put in rather than a fact about
-// the number, and it cost the row its ISBN for no reason: with no ISBN the
-// reseller links fall back to searching by TITLE, which is the failure that
-// sent Alibris to the wrong book.
-//
-// THE CONVERSION IS NOT FOR SEARCHING. All three resellers find a book from
-// either form. It is for HER SCREEN: the ledger has one field and one format,
-// 3 digits and 10, so a 10-digit number cannot be stored or shown in it. One
-// input, one correct answer, no judgement \u2014 which makes it code's job.
-//
-// 978 on the front, the first nine digits, and a fresh check digit. THE OLD
-// CHECK DIGIT IS VERIFIED FIRST, so a mangled or mistyped number is refused
-// rather than converted into a plausible wrong one \u2014 the same reasoning as
-// ymd() checking a date exists before it is stored.
+// ISBN-10 is taken, not thrown away (her decision): converted to 13 for her screen,
+// since the ledger stores one format. The old check digit is verified first, so a
+// mistyped number is refused rather than turned into a plausible wrong one.
 function isbn10to13(v){
   const t=String(v||"").replace(/[^0-9Xx]/g,"").toUpperCase();
   if(t.length!==10)return null;
@@ -1904,61 +1404,28 @@ function isbn10to13(v){
   return core+String((10-(s2%10))%10);
 }
 
-// WHAT THE LEDGER IS ALLOWED TO STORE. Thirteen digits if we were given
-// thirteen; a converted ten if we were given a valid ten; nothing otherwise.
-// Every place an ISBN ENTERS the app goes through here. cleanIsbn stays the
-// strict gate everything downstream reads, so nothing but a 13 can be
-// displayed or linked.
+// Every ISBN entering the app goes through toIsbn13: a valid 13, or a converted valid
+// 10, else nothing. cleanIsbn stays the strict 13-digit gate downstream.
 const toIsbn13=v=>cleanIsbn(v)||isbn10to13(v);
 const MON3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const fmtDate=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");if(isNaN(x))return d;return x.getDate()+" "+MON3[x.getMonth()]+" "+x.getFullYear();};
 function fmtRefresh(iso){if(!iso)return"never";const d=new Date(iso);if(isNaN(d))return"never";const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
 function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)return a+" \u2014 "+b;if(b)return"until "+b;if(a){const st=new Date(r.startDate+"T00:00:00");const past=!isNaN(st)&&st<=new Date();return(past?"open since ":"opens ")+a;}return"dates unknown";}
 
-// THE SHOP IS SEARCHED BY THE EXHIBITION'S TITLE — her ruling, 25 Sep. A shop
-// indexes the show's name; "Canaletto & Bellotto. Exhibition Catalogue 2026"
-// found nothing at KHM. The resellers keep the ISBN, or the book's title.
-// BOOKO AU — her ask, 30 Sep; shapes hers, 1 Oct. By ISBN: booko.au/<isbn>
-// fills in the title itself. With no ISBN, its title search (her finding:
-// poor, and quotation marks break it).
+// The shop link searches by the EXHIBITION's title (her decision): shops index the
+// show's name; resellers use the ISBN or the book's title. Booko AU: booko.au/<isbn>,
+// or its title search with no ISBN.
 function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+encodeURIComponent(r.title)});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q},{name:"Booko AU",href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
 
-// ── FINDING A CATALOGUE — rebuilt 20 Sep 2026 ────────────────────────────────
-//
-// WHAT BROKE. The old version called api.anthropic.com straight from the page.
-// The viewer's sandbox now blocks a page from reaching ANY outside address, so
-// the request never left: the diagnostic read "Network: Failed to fetch", which
-// is the browser refusing, not a server saying no. Nothing was wrong with the
-// key, the account or the prompt. The route closed.
-//
-// WHAT REPLACES IT, and why it is not the same mistake. A page may not reach
-// the internet, but it MAY call the viewer's own connectors, under the viewer's
-// credentials, with no key anywhere in this file. So:
-//
-//   1. SEARCH runs on her Parallel Search Key connector, and the page never
-//      touches the network itself.
-//   2. READING the results is Claude's job, through `sample`. Claude cannot
-//      browse, which is exactly why the two halves are separate: the connector
-//      finds pages, Claude only reads text we hand it. It can never invent a
-//      shop it did not see.
-//
-// The division is the same as before — search, then a model reads what came
-// back. Only the plumbing changed.
-//
-// NAMED CONSTANTS, because a typo here fails at the viewer, not here.
-//
-// HER OWN KEYED CONNECTOR, 1 Oct 2026 (version 36). claude.ai's built-in
-// "Parallel Search" is keyless and cannot be removed; on it her lookups kept
-// failing with upstream_error (the free tier the likely cause, not proven).
-// "Parallel Search Key" is a custom connector at
-// https://search.parallel.ai/mcp-oauth (claude.ai refuses a second connector at
-// /mcp), No sign-in, her Parallel API key in an `x-api-key` request header —
-// an `authorization: Bearer` header never reached Parallel. Billed to her
-// Parallel account. THIS NAME MUST MATCH the page's published `mcp` capability.
+// ── FINDING A CATALOGUE (docs/app.md §1; CLAUDE.md §4 "Catalogue lookup") ────
+// The page cannot reach the internet, so searching and reading go through her keyed
+// connector, and `sample` asks Claude to read only the text handed to it — it can
+// never report a page that was not found.
+// SEARCH_SERVER must match the connector name in the page's published `mcp`
+// capability (CLAUDE.md §4).
 const SEARCH_SERVER = "Parallel Search Key";
 const SEARCH_TOOL   = "web_search";
-// READING A WHOLE PAGE, not a snippet. Declared 21 Sep 2026 for the ISBN gap
-// below; the connector has always offered it and only web_search was wired.
+// Reads a whole page, not a snippet.
 const FETCH_TOOL    = "web_fetch";
 
 // The connector wants a stable id per conversation for its free-tier limits.
@@ -1975,9 +1442,8 @@ async function useCap(name){
   }catch{ return null; }
 }
 
-// Every failure code that has its OWN fix gets its own sentence. The capability
-// notes name a single catch-all banner as the anti-pattern: it hides the one
-// action that would fix the page.
+// Each failure code with its own fix gets its own sentence; one catch-all banner
+// would hide the fix.
 function mcpTrouble(e){
   const code=String((e&&e.code)||"");
   if(code==="server_not_connected")return "Add the \u201cParallel Search Key\u201d connector in claude.ai \u2192 Settings \u2192 Connectors, then try again.";
@@ -2010,30 +1476,11 @@ async function searchWeb(objective,queries){
   return{ok:true,results,detail:"search: "+results.length+" results for "+JSON.stringify(queries)};
 }
 
-// Read ONE page in full. Same connector, same failure sentences as searchWeb.
-//
-// WHY THIS EXISTS — her finding, 20 Sep 2026. A search result is an EXCERPT:
-// a headline and a line or two. An ISBN is printed in the small print at the
-// bottom of a shop page, so it is almost never inside the excerpt, and the
-// lookup reported no ISBN for books whose page prints one. With no ISBN the
-// reseller links fall back to searching by TITLE, and a title search misfires
-// \u2014 Alibris returned the wrong book for the Met's Musical Bodies.
-//
-// It reaches a COLLAPSED section, which is the case she asked about: the Met
-// store's "Details" panel is already in the page and the button only hides it,
-// so a full read sees it shut. Verified against that page, 21 Sep. A shop that
-// only goes and GETS those details when clicked would still come back empty
-// \u2014 no ISBN, noted, exactly as today. Never a wrong one.
-//
-// IT TAKES ONE PAGE OR SEVERAL. Step one opens a shop's catalogue shelf and
-// its search box together, in ONE call, because they answer the same question
-// and two calls would be two waits.
-//
-// ONE PAGE IS READ WHOLE — her ruling, 1 Oct. `{full:true}` asks for the
-// page in full (`full_content`); without it the connector hands back excerpts
-// it chose, and they dropped the Orsay Cassatt's folded tray holding the EAN.
-// Excerpts were never put to her. The shelf call stays excerpts until
-// measured: a call's whole answer is capped at ~25,000 characters.
+// Read one page or several (the shelf and the search box go in ONE call). An ISBN sits
+// in a page's small print, rarely in a search excerpt (docs/app.md §1 "The ISBN"). A
+// collapsed panel already in the page is read; details fetched on click are not.
+// {full:true} reads the page whole (her decision): excerpts dropped the Orsay
+// Cassatt's EAN. The shelf stays excerpts — a call is capped at ~25,000 characters.
 async function fetchPage(url,objective,queries,opts){
   const urls=Array.isArray(url)?url.filter(Boolean):[url];
   if(!urls.length)return{ok:false,results:[],detail:"No page to open."};
@@ -2060,30 +1507,14 @@ async function fetchPage(url,objective,queries,opts){
     +(errors.length?", "+errors.length+" refused ("+errors.map(e=>String((e&&e.http_status_code)||(e&&e.error_type)||"?")).join(", ")+")":"")};
 }
 
-// The shop pages step one opens for one exhibition: the catalogue shelf where
-// the shop has one, then its search box with the exhibition's title in it.
-// Nothing is guessed here \u2014 both addresses are the venue's own, written down
-// in MUSEUMS above.
-//
-// A SHELF THAT SCROLLS OR PAGINATES IS STILL JUST MORE ADDRESSES \u2014 her
-// question, 21 Sep, and the scraper learned the same thing at the Menil. The
-// Menil's shelf shows 16 books and has three numbered pages; the Morgan's
-// keeps growing as you scroll and has no buttons at all. Both answer
-// "?page=2" perfectly well, and Tate's endless scroll answers a size
-// parameter that is baked into its address above. Reading only what the
-// first screen shows would have taken 16 of the Menil's 47.
-//
-// THE DEPTH IS ONE NUMBER FOR EVERY SHOP, NEVER A COUNT PER VENUE \u2014 the
-// scraper's rule, and for the same reason: how many pages a shop has is the
-// shop's business and it changes. Asking for a page that does not exist costs
-// nothing and comes back empty, and all of them go in ONE call, so depth is
-// free. Today's largest shelf is MAD's 68, over five pages, and its shop
-// offers no "newest first" — only popularity, price, alphabet — so a recent
-// catalogue can sit on any page. Raised from 3 to 5, her question, 25 Sep.
+// The pages step one opens: the shelf where the shop has one, then its search box with
+// the exhibition's title, both from MUSEUMS. A shelf that scrolls or paginates is just
+// more addresses. Depth is one number for every shop, never a count per venue: a
+// missing page costs nothing and all go in one call. Five covers MAD's 68 books.
 const SHELF_DEPTH=5;
 
 // Shopify and most others take ?page=N. A shelf that already carries its own
-// size parameter (Tate) is left exactly as written \u2014 it serves the lot in one.
+// size parameter (Tate) is left exactly as written — it serves the lot in one.
 function shelfPages(url){
   if(!url)return[];
   if(/[?&]sz=|[?&]product_list_limit=/.test(url))return[url];
@@ -2099,7 +1530,7 @@ function shelfPages(url){
 function shopPagesFor(mu,title){
   const out=[];
   if(mu&&mu.shopCatalogues)out.push(...shelfPages(mu.shopCatalogues));
-  // Curly quotes straightened: "O’Keeffe" is filed as "O'Keeffe" (DIA, 6 Oct).
+  // Curly quotes straightened: shops file "O’Keeffe" with a straight one.
   if(mu&&mu.shopSearch)out.push(mu.shopSearch+encodeURIComponent(String(title).replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"')));
   return out;
 }
@@ -2124,28 +1555,9 @@ async function readResults(prompt){
 }
 
 
-// ── THE SWEEP LOG — kept OUTSIDE the ledger, her ruling 20 Sep 2026 ─────────
-//
-// IT USED TO LIVE IN THE LEDGER AND THAT WAS WRONG. Her test settles it:
-// open a backup from two days ago and the drawer said "the Met last brought
-// rows 18 Sep"; open today's and it said 20 Sep. Same world, two answers. A
-// sweep either ran or it did not — opening an older file cannot un-run it.
-//
-// THE DISTINCTION, and it is hers: CONTENT rolls back with a backup and that
-// is correct (fewer exhibitions, her marks as they stood — the document
-// genuinely was smaller then). A FACT ABOUT THE WORLD must not. "The Met was
-// swept on 13 Sep" is true whichever backup she has open. The sweep log is the
-// second kind and it was sitting in the first kind's container.
-//
-// SO IT LIVES IN THIS PAGE'S OWN STORE — one document, one line per venue,
-// twenty-one lines, never growing. It survives Reset, it is there before any
-// ledger is loaded, and loading an old backup does not move it.
-//
-// IT IS A CACHE, NOT A MASTER RECORD, and that is what makes it safe to keep
-// somewhere she cannot export. Every fact in it comes from swept_at in a sweep
-// file, so any sweep file rebuilds it. Losing it costs one re-import, not her
-// work. Her LEDGER could never live here for exactly that reason — it is not
-// derivable from anything.
+// ── THE SWEEP LOG — in the page's store, outside the ledger (docs/app.md §5) ──
+// A fact about the world must not roll back with a backup. One line per venue, never
+// growing; it survives Reset. A cache, not a master record: any sweep file rebuilds it.
 const SWEEP_LOG_DOC = "sweeps/venues";
 
 // Returns {log, why} — `why` is null on success and a sentence otherwise. The
@@ -2430,37 +1842,17 @@ const CLOUD_COUNT = "cloud 4";
 // ── END OF THE CLOUD LEDGER ──────────────────────────────────────────────────
 
 const today=()=>new Date().toISOString().slice(0,10);
-// ── THE ISBN FILL \u2014 the two decisions, kept OUT of the component ───────────
-//
-// They sit here, not inside App, for the reason countDecisions was moved out:
-// a rule a fixture cannot reach is a rule nobody checks. The component keeps
-// the plumbing (which page, which prompt); these two hold what may change.
+// ── THE ISBN FILL — its two decisions live outside the component so fixtures reach them.
 
-// OPEN THE BOOK'S OWN PAGE WHENEVER ANYTHING IS STILL MISSING \u2014 her ruling,
-// 21 Sep, and she was right that the old rule was decoration.
-//
-// It used to open the page only when the ISBN was missing. That gate saved
-// nothing: a shop's list of catalogues prints a cover, a title and a price,
-// and NEVER an ISBN \u2014 so after a shop lookup the ISBN is always missing and
-// the gate always opened. Her question: what is it for?
-//
-// And in the one case it stayed shut it did harm. It asked about the ISBN
-// alone, so a web result that happened to carry an ISBN but no publisher
-// never opened the book's page, and the PUBLISHER was lost for nothing.
-//
-// Now: a catalogue was found, a page came with it, and either the ISBN or the
-// publisher is still blank. Reading that page is the normal step, not the
-// exception.
+// Open the book's own page when a catalogue was found and the ISBN OR the publisher is
+// still blank (her decision; docs/app.md §1 "The ISBN"). C-009 to C-013a.
 function needsPageRead(hit){
   return !!(hit&&hit.ok&&hit.pageUrl&&hit.row&&hit.row.hasCatalogue==="yes"
             &&(!hit.row.isbn13||!hit.row.publisher));
 }
 
-// IT FILLS BLANKS AND NOTHING ELSE. A publisher already read from the search
-// results stands; a 10-digit ISBN is converted by toIsbn13 and anything that
-// is not a real ISBN is refused, so the row keeps its blank. A page that
-// yields nothing must leave the row exactly as it was \u2014 the old answer,
-// never a worse one.
+// Fills blanks only (docs/app.md §1 "The ISBN"): a value already on the row stands;
+// anything not a real ISBN is refused; a page yielding nothing leaves the row as it was.
 function applyIsbnFill(row,o,dom){
   const isbn=toIsbn13(o&&o.isbn13);
   const pub=(o&&o.publisher)?String(o.publisher).trim():"";
@@ -2474,20 +1866,9 @@ function applyIsbnFill(row,o,dom){
 
 function shopDomain(mu){if(!mu||!mu.shopHome)return null;try{return new URL(mu.shopHome).hostname;}catch{return null;}}
 
-// WHICH OF THESE RESULTS IS THE PUBLISHER\u2019S OWN SITE \u2014 answered in code.
-//
-// A publisher\u2019s name is in its hostname: Hannibal Books is hannibalbooks.be,
-// Thames & Hudson is thamesandhudson.com, Rizzoli is rizzoliusa.com. That is
-// one input with one correct answer, so it is code\u2019s job and not a model\u2019s.
-//
-// The words every publisher shares carry no information and are dropped, or
-// "Yale University Press" would match any university press. What is left must
-// ALL appear in the host, so "hannibal" finds hannibalbooks.be and does not
-// find hannibal-lecter fan sites, which are not publishers and have neither
-// the rest of the name nor a book on them.
-// "university" is dropped for the same reason as "press": Yale University
-// Press lives at yalebooks.yale.edu, which carries the distinctive word and
-// none of the shared ones. Checked against real publishers, not imagined ones.
+// Which result is the publisher's own site, in code: a publisher's name is in its
+// hostname (hannibalbooks.be). Shared words are dropped ("university" too: Yale
+// University Press is yalebooks.yale.edu); every remaining word must be in the host.
 const PUBLISHER_WORDS=new Set(["books","book","press","publishing","publishers","publisher",
   "editions","edition","verlag","publications","university","the","and","of","co","inc","ltd",
   "llc","bv","nv"]);
@@ -2504,73 +1885,34 @@ function publisherDomainFrom(results,name){
   return null;
 }
 
-// \u2500\u2500 A MUSEUM THAT PRINTS ITS OWN CATALOGUES HAS NO PUBLISHER PAGE TO FIND \u2500\u2500
-// Her ruling, 22 Sep 2026, after running the rebuilt lookup on real rows.
-//
-// The National Gallery's Zurbaran came back publisher "National Gallery
-// Global", and the step then spent two searches and a page read proving what
-// was already known: a museum's publishing arm has no separate site, because
-// its "publisher page" IS the museum shop, which `cleanPublisherUrl` refuses
-// by design. Two searches and a reading of her allowance, every time, for a
-// guaranteed nothing.
-//
-// IT IS KEYED ON THE PUBLISHER, NEVER ON THE VENUE \u2014 her correction, and the
-// first version got this wrong. I had matched the publisher's name against
-// the venue's, so ANY catalogue from the Met or the National Gallery would
-// have skipped the search. She named the two ways that breaks, and both are
-// ordinary:
-//
-//   * a blockbuster show whose catalogue the museum gives to a big art-book
-//     house to print, and
-//   * a show mounted jointly with another museum, where the OTHER museum
-//     prints it \u2014 a Met/Louvre co-production published by the Louvre.
-//
-// In both, a real third-party publisher page exists and my rule would have
-// suppressed the search that finds it. So the test is not "is the publisher
-// this venue" \u2014 it is "is this publisher one of the named few we have
-// actually seen self-publish".
-//
-// SO IT IS A SHORT LIST, AND IT GROWS ONLY WHEN SHE ADDS ONE. Her
-// instruction: these two now, more as she meets them. Nothing is inferred
-// from a name's shape, because inferring is precisely what went wrong.
-// A publisher not on this list is searched for exactly as before \u2014 the cost
-// of a miss is one search, the cost of a wrong entry is a lost buy link.
-//
-// ONE KNOWN LIMIT, STATED RATHER THAN ENGINEERED AROUND: the sentence says
-// "the venue", which is true for every case we have. A Met-published
-// catalogue for a show at the Louvre would read slightly wrong. It costs a
-// word on one card and no link, so it is not worth a venue comparison here \u2014
-// that comparison is the thing this note exists to avoid.
+// ── A MUSEUM'S OWN IMPRINT HAS NO PUBLISHER PAGE TO FIND (CLAUDE.md §4) ──────
+// Its "publisher page" is the museum shop, so looking costs searches for nothing.
+// SELF_PUBLISHERS is her list, grown only when she adds one. A blockbuster printed by
+// an art-book house, or a joint show printed by the other museum, is still looked for.
 const SELF_PUBLISHERS = new Set([
-  "national gallery global",              // ng \u2014 her row, Zurbaran
-  "national gallery london",              // ng — the same imprint as Yale (its distributor) names it, her addition 1 Oct (Millet)
+  "national gallery global",              // ng — her row, Zurbaran
+  "national gallery london",              // ng — the same imprint as Yale (its distributor) names it, her addition (Millet)
   "metropolitan museum of art",           // met
-  "british museum press",                 // brit — her addition, 30 Sep (Bayeux Tapestry)
-  "editions les arts decoratifs",         // mad — her addition, 30 Sep (Christofle); normPublisher drops the accents
-  "musee des arts decoratifs",            // mad — the same imprint under the museum's name, her addition 1 Oct (Christofle again)
-  "museum of modern art",                 // moma — her addition, 1 Oct (The Surrealist Book)
+  "british museum press",                 // brit — her addition (Bayeux Tapestry)
+  "editions les arts decoratifs",         // mad — her addition (Christofle); normPublisher drops the accents
+  "musee des arts decoratifs",            // mad — the same imprint under the museum's name, her addition (Christofle again)
+  "museum of modern art",                 // moma — her addition (The Surrealist Book)
   "museum of modern art new york",        // moma — the same, as the lookup also read it (Brancusi)
-  "art institute of chicago",             // artic — her addition, 2 Oct
-  "cincinnati art museum",                // cincinnati — her addition, 4 Oct
-  "frick collection new york",            // frick — her addition, 6 Oct (Ruffles & Ribbons)
-  "national gallery publications limited", // ng — her addition, 6 Oct (Venice: Canaletto and His Rivals)
-  "national gallery company",              // ng — her addition, 6 Oct (Ed Ruscha: Course of Empire)
+  "art institute of chicago",             // artic — her addition
+  "cincinnati art museum",                // cincinnati — her addition
+  "frick collection new york",            // frick — her addition (Ruffles & Ribbons)
+  "national gallery publications limited", // ng — her addition (Venice: Canaletto and His Rivals)
+  "national gallery company",              // ng — her addition (Ed Ruscha: Course of Empire)
 ]);
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){
   return String(name||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .replace(/[^a-z0-9]+/g," ").trim().replace(/^the\s+/,"");
 }
-// A PUBLISHER CARRYING THE VENUE'S OWN NAME IS THE VENUE — her ruling, 6 Oct,
-// after three National Gallery imprints in one day ("National Gallery
-// Company", "… Publications, Limited", "… Global"). The venue's FULL name,
-// whole words, "The" dropped; never its short chip name ("Met", "Brera").
-// Her own ruling of 22 Sep still holds: a book house or ANOTHER museum
-// carries no part of this venue's name and is still looked for.
-// Known misfire, accepted: a namesake museum ("National Gallery of Art",
-// Washington, at the London National Gallery) — she names it in
-// NOT_SELF_PUBLISHERS. If this misfires too often she goes back to the list
-// alone: delete the venue test below.
+// A publisher carrying the venue's FULL name, whole words, is the venue (her decision,
+// on trial; never the chip name). Known misfire: a namesake museum — she lists it in
+// NOT_SELF_PUBLISHERS. Too many misfires → back to her list alone (delete the venue
+// test in isVenueImprint). C-070 to C-078e.
 const NOT_SELF_PUBLISHERS = new Set([
   // her entries, normalised as normPublisher writes them
 ]);
@@ -2586,24 +1928,9 @@ function isVenueImprint(name,museumId){
   return v.length>=6&&(" "+n+" ").includes(" "+v+" ");
 }
 
-// THE PUBLISHER\u2019S OWN PAGE \u2014 restored 21 Sep 2026, her finding.
-//
-// The app has always had a Publisher button and the ledger has always had a
-// field for it. The 20 Sep rebuild asked neither prompt for it and wrote null
-// into the row every time, so the button became unreachable and nothing said
-// so \u2014 the same quiet loss in the same rewrite as the shop lock.
-//
-// IT MATTERS MORE THAN IT LOOKS. A museum shop sells its catalogue while the
-// show is on; the art-book house that printed it often still lists the book
-// long after the shop has sold out, which is the window this whole app is
-// about.
-//
-// CHECKED, NOT TRUSTED. A link is taken only if it is a real http address, and
-// never if it is on the venue\u2019s own shop \u2014 that is the shop link wearing the
-// wrong label, and it would send her to a page she already has a button for.
-// Everything else is left to her judgement, as it was before: there is no list
-// of art publishers to check against and inventing one would be the phrase-list
-// mistake again.
+// The publisher's own page: an art-book house often lists the book long after the shop
+// sells out. A link is taken only if it is a real address and not on the venue's own
+// shop. C-032 to C-038.
 function cleanPublisherUrl(u,dom){
   if(!u)return null;
   const t=String(u).trim();
@@ -2612,27 +1939,13 @@ function cleanPublisherUrl(u,dom){
   return t;
 }
 
-// ONLY THE PUBLISHER IS THE PUBLISHER — her ruling, 1 Oct (Millet). A read
-// of search results or of a shop's page will call a distributor's page the
-// publisher's: Millet, published by National Gallery Global, came back with
-// Yale's page for it. So a link a read hands over is filed only when it sits
-// on the publisher's own site — the name in the hostname, the same test the
-// publisher step uses (publisherDomainFrom). A self-published book has no
-// publisher link at all. Anything else is dropped, and the publisher step,
-// which goes to the publisher, runs.
-// "X IN ASSOCIATION WITH Y" — Y IS THE PUBLISHER. Her ruling, 2 Oct: "Morgan
-// Library & Museum in association with Rizzoli Electa" names the museum first
-// and the house that printed the book after, so the publisher step looks for
-// Rizzoli Electa. The card still prints the line as the book gives it; only
-// which publisher is looked for (and checked against SELF_PUBLISHERS) changes.
-// A CO-EDITION NAMES THE PUBLISHER BESIDE THE VENUE — her ruling, 7 Oct
-// (Turner: "Fonds Mercator / Musée Jacquemart-André" was taken as the museum's
-// own imprint, so no publisher was looked for). When the line pairs the venue
-// with another name — "X / Venue", "X and Venue", "X with Venue", "X & Venue"
-// — the other name is the publisher, for every publisher verdict. Split on
-// the strongest mark first, so "Thames & Hudson / Venue" keeps its "&". NOT a
-// comma: "The Museum of Modern Art, New York" is the venue and its city. Only
-// a line that is the venue and nothing else is the venue's imprint.
+// Only the publisher is the publisher (her decision, Millet): a link a read hands over
+// is filed only on the publisher's own site; a distributor's page is dropped and the
+// publisher step runs. Self-published → no link.
+// "X in association with Y": Y is the publisher (her decision). A co-edition — "X /
+// Venue", "X and Venue", "X with Venue", "X & Venue" — X is the publisher, for every
+// verdict (her decision, Turner). Strongest mark first, so "Thames & Hudson / Venue"
+// keeps its "&"; never a comma ("The Museum of Modern Art, New York" is one venue).
 const CO_EDITION_MARKS=[/\s*\/\s*/,/\s*;\s*/,/\s+with\s+/i,/\s+and\s+/i,/\s+&\s+/];
 function publisherToFind(name,museumId){
   const s=String(name||"").trim();
@@ -2658,39 +1971,13 @@ function publisherLinkOf(u,publisher,dom,museumId){
 }
 
 
-// ── A CONTAINER IS NOT THE BOOK, AND A SHELL IS NOT AN EMPTY SHELF ──────────
-// Her ruling, 22 Sep 2026, from her own diagnosis of two real lookups.
-//
-// WHAT WAS WRONG. The publisher step took whatever page the search returned
-// and filed it as "the publisher's page", full stop. For Rizzoli that was the
-// book itself — rizzoliusa.com/book/9780847877645 — and it looked like the
-// step working. It was not working; it was LUCKY. Rizzoli happens to key its
-// product addresses by ISBN, so a site: search matches the book directly.
-// Hannibal Books keys its books by a Dutch slug plus a #fragment, and a
-// fragment is never sent to a server and never indexed, so the deepest thing
-// any search can return for that book is the SECTION it sits in —
-// hannibalbooks.be/en/fine-art. The step returned that and called it the
-// book's page. The code could not tell the two outcomes apart.
-//
-// HER FIX, AND IT IS ONE STEP, NOT A BETTER QUERY: never accept a candidate
-// unseen. Open it. Either it IS the book (accept), or it LISTS the book
-// (take the link off it), or it came back empty (keep it, and say on screen
-// that it is the section and not the book).
-//
-// NO HEADLESS BROWSER. Her call, and the scope is why: only the buried-product
-// publishers reach this step at all, and only the client-rendered ones among
-// those come back empty. Building a rendering fetch for a handful of Belgian
-// art publishers is not worth it. The honest label is.
+// ── A CONTAINER IS NOT THE BOOK; A SHELL IS NOT AN EMPTY SHELF (docs/app.md §1) ──
+// A publisher candidate is opened before it is believed: it IS the book, it LISTS the
+// book (take the link off it), or it came back empty (keep it, labelled as the
+// section). No rendering fetch for the few script-drawn publisher sites (her decision).
 
-// How much text a fetched page must carry before we believe we saw it.
-//
-// MEASURED, NOT CHOSEN, 22 Sep 2026, against the two real pages this rule is
-// about. Hannibal's fine-art section returns 110 characters — a sort control,
-// a newsletter box and the web designer's credit, with all 200-odd books
-// missing because they are drawn by script after the page arrives. The Menil's
-// shelf, which is ordinary server-drawn HTML, returns several thousand with
-// every book's own address in it. There is no third case anywhere near the
-// line, which is what makes one number safe here.
+// Text a fetched page must carry before we believe we saw it — measured: Hannibal's
+// script-drawn section returns 110 characters, a real shelf thousands.
 const SHELL_CHARS=400;
 // A price on a shop page: a shelf of books always shows them (shopStep).
 const SHOP_PRICE=/(?:[\u20ac$\u00a3]\s?\d|\d(?:[.,]\d{1,2})?\s?(?:\u20ac|(?:EUR|USD|GBP)\b))/;
@@ -2705,14 +1992,9 @@ function pageTextOf(results){
   return (results||[]).map(oneText).join("\n").trim();
 }
 
-// THE TITLE AS PRINTED — her Louvre Experience of Nature, 2 Oct. The shop's
-// page said "Experience of Nature"; the read handed back "Experience of
-// Nature. Art in Prague at the Court of Rudolf II", the show's English
-// subtitle, which is on no page. A title is kept only as far as the pages
-// carry it: whole if they print it whole, else its longest leading part that
-// they do print (parts split at . : and dashes). None of it on the pages →
-// returned as given, and the caller says so. One answer from the inputs, so
-// code. Accents, capitals and punctuation do not count as differences.
+// The title as printed (her decision, Louvre Experience of Nature): kept only as far
+// as the pages print it — whole, else its longest leading part (split at . : and
+// dashes). Accents, capitals and punctuation do not count.
 function titleKey(t){
   return " "+String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .replace(/[^a-z0-9]+/g," ").trim()+" ";
@@ -2739,16 +2021,13 @@ function isEnglishLang(l){
   return /\b(english|anglais|inglese|englisch|engels|ingl[e\u00e9]s)\b/i.test(String(l||""));
 }
 
-// HOW MUCH OF ONE PAGE CLAUDE IS HANDED. Was 6,000 when pages were excerpts;
-// a whole page carries its menus too. The ISBN is read in code from the
-// uncut text (isbnOnPage), so this cap can only cost the publisher line.
+// How much of one page Claude is handed. The ISBN is read in code from the uncut text
+// (isbnOnPage), so this cap can only cost the publisher line.
 const PAGE_CHARS=20000;
 
-// THE ISBN, READ IN CODE FIRST — her yes, 1 Oct. One correct answer: a
-// 13-digit number starting 978 or 979, labelled ISBN or EAN, with a valid
-// check digit. Taken only when the page carries exactly ONE such number
-// (a shop's related-books strip can carry others); none, or two, and Claude
-// reads the page as before. Orsay prints it "EAN 9782754117425".
+// The ISBN, read in code first (her decision): a 978/979 number labelled ISBN or EAN
+// with a valid check digit, taken only when the page carries exactly ONE ("EAN
+// 9782754117425" at Orsay). None or two → Claude reads the page.
 function isbn13Checks(d){
   if(!/^97[89]\d{10}$/.test(d))return false;
   let sum=0;
@@ -2770,13 +2049,9 @@ function isbnOnPage(text){
   return found.size===1?[...found][0]:null;
 }
 
-// THE ISBN IN WEB SEARCH RESULTS, READ IN CODE — her Ashmolean In Bloom,
-// 30 Sep. The search handed back AbeBooks' "ISBN 13: 9781910807743", and
-// three booksellers' addresses carrying it, and the read still said none.
-// Only results whose headline or text carries the whole book title count — a
-// "related books" strip prints other numbers — and from those, the labelled
-// numbers in the text plus any valid 978/979 number in the address. Exactly
-// one distinct number, or nothing.
+// The ISBN in web search results, read in code (her Ashmolean In Bloom): only results
+// carrying the whole book title count; their labelled numbers plus any valid 978/979
+// number in their addresses. Exactly one distinct number, or nothing.
 function resultsCarrying(results,bookTitle){
   const norm=v=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
   const want=norm(bookTitle);
@@ -2793,23 +2068,13 @@ function isbnInResults(results,bookTitle){
   return found.size===1?[...found][0]:null;
 }
 
-// A page that came back empty is NOT a page with nothing on it. Saying which
-// is the whole point: an empty answer from a script-drawn page is our blind
-// spot, and reporting it as "this book is not on the publisher's site" would
-// be a finding we never earned.
+// An empty page is not a page with nothing on it: a script-drawn page is our blind
+// spot, never a finding.
 function pageIsShell(results){ return pageTextOf(results).length<SHELL_CHARS; }
 
-// A LINK READ OFF A LISTING IS CHECKED BEFORE IT IS BELIEVED.
-//
-// Two ways it can be wrong and both are mechanical, so both are code's. It
-// must be on the publisher's own site — a listing links out to Amazon, to
-// distributors, to the museum — and it must not be the listing itself, or
-// "the book's own page" is the container wearing a new label.
-//
-// A DIFFERING #FRAGMENT COUNTS AS A DIFFERENT ADDRESS, deliberately. That is
-// exactly how Hannibal addresses its books (#102642 is the English edition,
-// #102640 the Dutch), so folding on the fragment would throw away the one
-// case this whole step exists for.
+// A link read off a listing is checked: on the publisher's own host, and not the
+// listing itself. A differing #fragment is a different address — Hannibal addresses
+// its books by fragment.
 function sameAddress(a,b){
   const strip=u=>{try{const x=new URL(String(u));return (x.origin+x.pathname).replace(/\/+$/,"")+x.search;}catch{return String(u||"").trim();}};
   return strip(a)===strip(b);
@@ -2825,103 +2090,41 @@ function deepLinkOn(u,host,container){
 }
 
 
-// WHAT THE PUBLISHER BUTTON IS ALLOWED TO CLAIM — her ruling, 22 Sep 2026.
-//
-// A link the app verified against the book's own page and a link that is only
-// the section the book sits in are DIFFERENT THINGS, and until today the
-// button called both of them "Publisher". That is the same fault as a status
-// line reading "Saved" on a download nobody watched: the claim was never
-// earned, and she could only catch it by opening the link herself.
-//
-// So the label carries the difference. "Publisher" means the book's own page.
-// "Publisher's section" means the link lands her in the right part of the
-// publisher's site and the book is one scroll away — useful, and honestly
-// described. A link from an older ledger has no kind recorded; it keeps the
-// plain label, because inventing a claim about it either way would be worse
-// than making none.
+// The publisher button claims only what was verified (docs/app.md §1): "Publisher" =
+// the book's own page; "Publisher's section" = the section it sits in; "Publisher's
+// website" = the home page. An old row with no kind keeps the plain label.
 function publisherLinkLabel(kind){
   if(kind==="container")return "Publisher\u2019s section";
   if(kind==="site")return "Publisher\u2019s website";
   return "Publisher";
 }
 
-// THE SILENCE HAD TO END A SECOND TIME — her question, 22 Sep 2026.
-//
-// "No separate publisher page." was printed whether the step had searched the
-// publisher’s own site and found nothing, or had never fired at all. Her
-// words: the silence could be "search function didn’t even fire". So each
-// outcome now says which one it was, in one plain sentence.
-//
-// THE LADDER IS DELIBERATE, weakest answer last and each rung honest about
-// what it is: the book’s own page, then the section it sits in, then the
-// publisher’s front door, then no publisher website at all, then no
-// publisher name to go on.
-//
-// NO RESULT RECORDED SAYS NOTHING — her ruling, 25 Sep. A finished search
-// always records one of the outcomes above, so an empty result means the step
-// did not finish (the connector failed part-way — Jacquemart-André's Timeless
-// Tintoretto, "upstream_error") or the row predates 22 Sep. The old sentence
-// "No separate publisher page." was printed for both, a finding claimed for a
-// search that never completed. The red banner says what failed; the card
-// claims nothing.
+// Each publisher-step outcome says which one it was, in one sentence (C-052 to
+// C-069a). No result recorded says nothing: the step did not finish, or the row
+// predates outcomes (her decision). Self-published and the book's own page say nothing.
 function publisherNote(result,hasUrl){
   if(result==="container")return "Publisher\u2019s link opens the section this book sits in, not the book\u2019s own page.";
   if(result==="site")     return "The publisher\u2019s own site doesn\u2019t show this book — the link opens their home page.";
   if(result==="nosite")   return "Couldn\u2019t work out the publisher\u2019s own website, so there\u2019s no link to it.";
   if(result==="unnamed")  return "No publisher was named for this book, so none was looked for.";
-  // Self-published says nothing — her ruling, 6 Oct: no button is answer enough.
+  // Self-published: no button is answer enough (her decision).
   if(result==="selfpublished")return "";
   if(result==="product")  return "";
   return "";
 }
 
 
-// ── A BOOK LEAVES THE SHOP, AND THAT IS THE WHOLE POINT OF THE APP ─────
-// Her ruling, 22 Sep 2026, and she is right that the old screen could not say
-// it: a row that was ever found in the museum shop went on reading "In the
-// museum shop" forever, because nothing compared one lookup against the last.
-// Catalogues selling out is the thing this app exists to watch, so the one
-// event it most needs to show was the one it could not.
+// ── A BOOK LEAVING THE SHOP — "Re-check museum shop" (docs/app.md §1) ───────
+// Only Re-check moves the shop status; she presses it after seeing the change, so it
+// is not a monitor. With a link it re-reads that page (gone, redirected or sold out →
+// "No longer", link kept as "Museum shop (last seen)"; buyable again → "Back"). With
+// none it runs the shop step alone ("Now"). No history kept; a failed check changes
+// nothing. Pre-order counts as in the shop; sold out in any language counts as gone.
 //
-// THE LIMIT, which no design gets round: when she clicks the Museum shop
-// button and sees for herself that the book has gone, the app learns NOTHING.
-// A page cannot see what comes back in a tab it opened — a browser rule. So
-// the status moves only when the app itself re-opens the page.
-//
-// THE 22 SEP DESIGN MOVED IT ON SEARCH AGAIN, AND THAT COULD NOT WORK. Search
-// again searched the shop from scratch, and shops keep sold-out books listed,
-// so the listing put the green straight back; it cost a whole lookup to ask
-// one question; and it rebuilt the row, wiping what it did not re-find.
-//
-// HER DESIGN, 25 Sep — "Re-check museum shop". Reasoning in docs/app.md,
-// "A book leaving the shop". Fixtures C-079 to C-099.
-//
-//   * ONE BUTTON MOVES THE SHOP STATUS: "Re-check museum shop". Nothing else.
-//     Search again runs a whole fresh lookup (lookupCat) and replaces the card.
-//   * She presses it only AFTER she has seen the change for herself, so it is
-//     a way to make the screen agree with what she saw, not a monitor.
-//   * WITH A SHOP LINK ON FILE it re-reads THAT ONE PAGE, nothing else:
-//       gone (404), sent elsewhere, or sold out → "No longer in the museum
-//       shop.", red. The link STAYS, labelled "Museum shop (last seen)", in
-//       case the book comes back there.
-//       buyable again after being gone → "Back in the museum shop.", green.
-//   * WITH NO SHOP LINK it runs the shop step alone — never the web search,
-//     never the publisher — and a find reads "Now in the museum shop."
-//   * NO HISTORY IS KEPT — her ruling. The status implies it: "No longer"
-//     says it once was, "Back" says it went and returned.
-//   * A CHECK THAT FAILED SAYS SO AND CHANGES NOTHING. A refused connector is
-//     not evidence the book has gone.
-//
-// Pre-order and "available to order" count as in the shop; sold out, out of
-// stock and unavailable count as gone, in any language — her yes, 25 Sep.
-//
-// shopState: "shop" | "gone" | "web" | "none" | "blocked" | null.  "gone" keeps shopUrl.
-// "blocked": the museum shop refused every page the lookup opened, so whether
-// the book is there is UNKNOWN — never filed as "not in the shop". Her
-// finding, 25 Sep: KHM's shop redirects every request to a waiting room (307).
-// shopChange: "now" | "back" | null on a "shop" row — how it got there.
-// (The 22 Sep code could leave "gone" on a "web" row, with no link kept. That
-// is read as plain "web" now: not in the shop, and no page to re-check.)
+// shopState: "shop" | "gone" | "web" | "none" | "blocked" | null; "gone" keeps shopUrl.
+// "blocked": the shop refused every page opened, so whether the book is there is
+// UNKNOWN — never "not in the shop". shopChange: "now" | "back" | null on a "shop" row.
+// A legacy "gone" on a "web" row reads as plain "web".
 
 // The one line at the top of the catalogue panel. Outside the component so a
 // fixture can read the wording, for the reason countDecisions moved out.
@@ -2936,19 +2139,14 @@ function shopHeadline(shopState,shopChange){
   return null;
 }
 
-// A BLOCKED SHOP SAYS SO — her wording, 25 Sep. "Not in the museum shop" and
-// "no catalogue" are findings; a shop that refused to be read is not one, and
-// before this the card could not tell them apart.
-// Drawn in two parts, her ruling 25 Sep: the headline in the red and weight of
-// "No longer in the museum shop.", the rest in the ordinary grey.
+// A blocked shop says so, in her wording (CLAUDE.md §4): the headline in the red and
+// weight of "No longer in the museum shop.", the rest grey.
 const SHOP_BLOCKED_HEAD="The museum shop is blocked";
 const SHOP_BLOCKED_FOUND_REST=" - search it manually. The catalogue is stocked elsewhere.";
 const SHOP_BLOCKED_NONE_REST=". The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
 
-// A TICKET IS NOT A CATALOGUE — her ruling, 25 Sep. KHM's Canaletto & Bellotto
-// was filed "In the museum shop" with a link to /en/tickets/…, a ticket that
-// died with the show. A link with /ticket/ or /tickets/ in its path is never
-// taken as the book, whichever step produced it.
+// A ticket is never a catalogue (her decision, KHM Canaletto & Bellotto): a link with
+// /ticket/ or /tickets/ in its path is never taken as the book. L-001 to L-019.
 function isTicketLink(url){ return /\/tickets?\//i.test(String(url||"")); }
 
 // The link, only when it is really on the venue's shop and is not a ticket.
@@ -2961,17 +2159,9 @@ function shopLinkOf(o,dom){
   return String(u).toLowerCase().includes(String(dom).toLowerCase())?u:null;
 }
 
-// THE BOOK'S LINK, READ OFF THE SHELF IN CODE — her MAD Christofle, 1 Oct.
-// Parallel's copy of MAD's shelf carried the book's own link, written
-// [Christofle : A brilliant story … €55](…/christofle-brilliant-story/14474.html),
-// and Claude still handed back the shelf's address, so her Museum shop button
-// fell back to the shelf. Which link on a shelf names the book Claude just
-// read is one answer from the text, so it is code's job.
-//
-// Taken only when EXACTLY ONE address on the shop's own site carries the
-// whole catalogue title in its link words; two different ones, or none, and
-// nothing is taken — never a guess between candidates. Never a page this step
-// opened, never a ticket. Accents, capitals and punctuation are ignored.
+// The book's link on a shelf, read in code (her decision, MAD Christofle): exactly one
+// address on the shop's own site whose link words carry the whole catalogue title; two
+// or none → nothing. Never a page this step opened, never a ticket.
 function bookLinkOnShelf(results,bookTitle,dom,opened){
   const norm=v=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
   const want=norm(bookTitle);
@@ -2993,15 +2183,11 @@ function bookLinkOnShelf(results,bookTitle,dom,opened){
   return found.size===1?[...found.values()][0]:null;
 }
 
-// WHAT CLAUDE IS GIVEN TO READ — her ruling, 7 Oct. A result's text was cut
-// to its first N characters, blind: Botticelli's "Buy the catalog" sat at
-// ~1,970 and was cut off, while a curator's bio naming another book got in.
-// Now a result that fits is given whole; one that does not is given its
-// RELEVANT passages first — every line naming the show or book (its longer
-// words), a catalogue / ISBN / edition / price / sale word, or a link onto the
-// venue's shop, each with the line either side — then the rest in page order
-// until the cap. Never worse than the old cut, and the deep line arrives.
-// The cap keeps a read under its 64 KiB ceiling: eight results at most.
+// What Claude is given to read (her decision, Botticelli): a result that fits is given
+// whole; a longer one gets its RELEVANT lines first — naming the show or book, a
+// catalogue/ISBN/price word, or a link onto the venue's shop, each with its neighbours —
+// then the rest in page order up to the cap. At most eight results, under the 64 KiB
+// ceiling.
 const PASSAGE_CUES=/catal[o\u00f3]g|katalog|isbn|\bean\b|edition|\u00e9dition|edizione|ausgabe|publisher|\u00e9diteur|editore|verlag|uitgeverij|hardcover|hardback|paperback|softcover|\bpages\b|[$\u20ac\u00a3]\s?\d|\d\s?(?:\u20ac|eur\b)|sold out|out of stock|\u00e9puis\u00e9|esaurito|ausverkauft|uitverkocht|add to (?:cart|bag|basket)|pre-?order|english|anglais|inglese|englisch|engels/i;
 const FOCUS_STOP=new Set(["the","and","from","with","exhibition","catalogue","catalog","museum","musee","mus\u00e9e","paris","london","edition"]);
 function focusWords(words){
@@ -3033,10 +2219,8 @@ const resultsForPrompt=(list,cap,focus)=>list.slice(0,8).map((r,i)=>
   +(Array.isArray(r.excerpts)?pickPassages(r.excerpts.join("\n"),focus,cap||700):"")
 ).join("\n\n");
 
-// A LINK LABELLED CATALOGUE, ONTO THE VENUE'S OWN SHOP — her Botticelli,
-// 7 Oct: the museum's show page in the web results carried "[Buy the
-// catalog](boutique…/230-special-issue-botticelli-artist-and-designer.html)".
-// Exactly one such address across the results, or none; never a ticket.
+// A link labelled "catalog" onto the venue's own shop, in the web results (her
+// decision, Botticelli): exactly one such address, or none; never a ticket.
 function catalogueLinkOn(results,dom){
   if(!dom)return null;
   const found=new Map();
@@ -3051,13 +2235,10 @@ function catalogueLinkOn(results,dom){
   return found.size===1?[...found.values()][0]:null;
 }
 
-// IS THIS ENGLISH BOOK AN EDITION OF THE SAME CATALOGUE? One answer from
-// the inputs: its publisher shares the original's distinctive name words
-// (Fonds Mercator ~ Mercatorfonds), or a result carrying its ISBN names the
-// venue (its distinctive words, accents and "musée" aside). The venue by any
-// of its names — full, chip or card: the full name alone never matched at
-// Capodimonte ("… aka …") or the Uffizi ("Uffizi Galleries" vs "Gallerie
-// degli Uffizi").
+// Is this English book an edition of the same catalogue? (her decision, Botticelli;
+// CLAUDE.md §4) Its publisher shares the original's distinctive words (Fonds Mercator ~
+// Mercatorfonds), or a result carrying its ISBN names the venue by its full, chip or
+// card name.
 function sameCatalogue(edPublisher,origPublisher,isbnResults,museumId){
   const words=n=>normPublisher(n).split(" ").filter(w=>w.length>2&&!PUBLISHER_WORDS.has(w)&&!["fonds","musee","museum","museo","galleria","gallery"].includes(w));
   const a=words(edPublisher), b=words(origPublisher);
@@ -3068,14 +2249,11 @@ function sameCatalogue(edPublisher,origPublisher,isbnResults,museumId){
   return (isbnResults||[]).some(x=>{ const t=" "+normPublisher((x&&x.title||"")+" "+oneText(x))+" "; return names.some(v=>v.every(w=>t.includes(" "+w+" "))); });
 }
 
-// THE PUBLISHER, READ OFF THE ISBN — her ruling, 7 Oct (Botticelli: three
-// lookups, three publishers — Culturespaces off the museum's own page, Reaktion
-// off a curator's bio, Fonds Mercator off the bookshops). Only results that
-// carry the book's ISBN count, and only their LABELLED publisher ("Publisher:",
-// "Published by", "Éditeur :", "Edité par", "Editore", "Verlag"…). Each result
-// votes once; names of one house fold together (Fonds Mercator ~ Mercatorfonds).
-// The house at least two results name, ahead of any other, or nothing.
-// The label must not sit inside a longer word; an ASCII \b cannot see "É".
+// The publisher, read off the ISBN (her decision, Botticelli: three lookups gave three
+// publishers). Only results carrying the ISBN count, and only their LABELLED publisher;
+// each result votes once, and one house's names fold together. Two agreeing votes,
+// ahead of any other, or nothing. The label must not sit inside a longer word (an
+// ASCII \b cannot see "É").
 const PUBLISHER_LABEL=/(?<!\p{L})(?:publisher|published by|[ée]diteur|[ée]dit[ée] par|editore|editorial|verlag|uitgever(?:ij)?)\s*:?\s*\[?([^\]\n|(]{2,70}?)(?:\]|\s*,\s*(?:19|20)\d\d|\s*\(|\n|$)/giu;
 function houseWords(n){
   return normPublisher(n).split(" ").filter(w=>w.length>2&&!PUBLISHER_WORDS.has(w)&&!["fonds","editions","ed","sa","srl","gmbh"].includes(w));
@@ -3107,13 +2285,9 @@ function publisherOnIsbnResults(results,isbn){
   return [...count.entries()].sort((a,b)=>b[1]-a[1]||(a[0]===a[0].toUpperCase())-(b[0]===b[0].toUpperCase()))[0][0];
 }
 
-// THE SHOW'S CATALOGUE IN THE VENUE'S OWN LANGUAGE — her Hammershøi, 7 Oct.
-// The card's title is the venue's English one ("the master of danish
-// painting"); the book is listed only in French ("le maître de la peinture
-// danoise"), so a search on the English title found other venues' books and
-// never this one. The show's name before any colon, the venue's short name,
-// "exhibition catalogue" in its language and the opening year find it.
-// Non-English venues only; nothing for one whose language isn't written here.
+// The show's catalogue in the venue's own language (her decision, Hammershøi, listed
+// only in French): the show's name before any colon, the venue's name, "exhibition
+// catalogue" in its language and the opening year. Non-English venues only.
 const CATALOGUE_WORDS={louvre:"catalogue exposition",orsay:"catalogue exposition",mad:"catalogue exposition",
   jacquemart:"catalogue exposition",mam:"catalogue exposition",khm:"Ausstellungskatalog",rijks:"tentoonstellingscatalogus",
   uffizi:"catalogo mostra",dellav:"catalogo mostra",borghese:"catalogo mostra",brera:"catalogo mostra",capo:"catalogo mostra"};
@@ -3125,11 +2299,11 @@ function localCatalogueQuery(mu,row){
   return head?[head+" "+(mu.card||mu.short)+" "+word+year]:[];
 }
 
-// THE ENGLISH-EDITION LINE ON A CARD — her ruling, 7 Oct: a foreign book
-// says how far an English edition was looked for. Null: nothing to say.
+// The English-edition line on a foreign book: how far an English edition was looked
+// for (her decision). Null: nothing to say.
 function englishLine(r){
   const c=r&&r.englishCheck;
-  // Her wording, 7 Oct.
+  // Her wording.
   if(c==="publisher")return "No English edition - checked publisher's site"+(r.publisher?" ("+r.publisher+")":"")+" and bookshops.";
   if(c==="shops")return "No English edition found in bookshops; the publisher\u2019s own page for this book wasn\u2019t found.";
   if(c==="unknownlang")return "The book\u2019s language couldn\u2019t be confirmed, so no English edition was looked for.";
@@ -3141,9 +2315,8 @@ function englishLine(r){
 // dead or sold out while the link is still worth keeping.
 function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last seen)":"Museum shop"; }
 
-// RESET CARDS — her design, 2 Oct. The card as it was before any catalogue
-// search: every lookup field blank, everything she marked kept. The next
-// "Find catalogue" is then a first search, the whole route.
+// Reset cards (her design): every lookup field blank, her marks kept, so the next
+// "Find catalogue" runs the whole route.
 function resetCard(r){
   return{...r,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,
     publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,englishCheck:null};
@@ -3158,33 +2331,22 @@ function cardsToReset(rows,q){
     .some(t=>k(t).includes(want)));
 }
 
-// CASE 2 — the shop step found the book where no shop link was on file.
-// Fills blanks only, like everything else in the lookup. `o` is the read of
-// the shop's pages; `onShop` was checked by the caller (the link must really
-// be on the venue's shop). A catalogue the app had given up on becomes one.
+// Case 2 — the shop step found the book where no shop link was on file. Fills blanks
+// only; the caller has checked the link is on the venue's shop. A catalogue the app
+// had given up on becomes one.
 function foundInShop(row,o){
   return{...row,looked:true,hasCatalogue:"yes",
     catalogueTitle:row.catalogueTitle||o.catalogueTitle||null,
     isbn13:row.isbn13||toIsbn13(o.isbn13),
     publisher:row.publisher||(o.publisher?String(o.publisher).trim():null)||null,
-    // "Now" only for a book that was NOT in the shop before — her Christofle,
-    // 1 Oct: a row already "In the museum shop" without a link of its own
-    // read "Now in the museum shop" once Re-check found the link.
+    // "Now" only for a book that was NOT in the shop before.
     shopState:"shop",shopChange:row.shopState==="shop"?(row.shopChange||null):"now",shopUrl:o.shopUrl};
 }
 
-// CASES 1 AND 3 — re-read the ONE page on file. Returns
-//   {ok:true,  row, said}  the status the page supports, and what to tell her
-//   {ok:false, said}       the check did not happen; nothing may change
-//
-// A 404 OR 410 IS DECIDED IN CODE. The connector reports it as an error with
-// the status code (seen live on the Met's store, 25 Sep), so no model is
-// asked whether a missing page is missing. Every OTHER error, and a page that
-// comes back with nothing on it, is a failed check — never "gone".
-//
-// Everything else is one question to Claude about one page: is THIS book for
-// sale HERE, now? A redirect to the shop front is caught there, because the
-// page served is then not the book's own page.
+// Cases 1 and 3 — re-read the ONE page on file: {ok:true, row, said}, or {ok:false,
+// said} and nothing may change. 404/410 is decided in code from the connector's error;
+// any other error or an empty page is a failed check, never "gone". Otherwise one
+// question to Claude: is THIS book for sale HERE, now? A redirect fails that test.
 const GONE_HTTP=new Set([404,410]);
 
 // READ ONE SHOP PAGE AND ASK: is this book for sale HERE, now? One copy, used
@@ -3213,12 +2375,8 @@ async function readShopPage(book,url){
   const rd=await readResults(
     "You are reading ONE page from a museum shop. Decide whether the book named below can be bought "
    +"on it NOW.\nUse ONLY what this page says.\n"
-   // SOLD OUT OUTRANKS EVERYTHING — her Morgan Tarot, 30 Sep. The page said
-   // "SOLD OUT!", its price carried a Sold Out badge and its only button was a
-   // greyed-out "Sold out"; it ALSO told earlier buyers "if you pre-ordered a
-   // copy, shipments will begin soon". The read answered "pre-orders are being
-   // accepted, with an Add to cart option present" and Re-check said still
-   // for sale, because the old rule said pre-order counts as for sale.
+   // Sold out outranks "Add to cart" and notes to earlier pre-orderers (Morgan Tarot;
+   // docs/app.md §1).
    +'"forSale": true ONLY if this page IS that book’s own product page AND a NEW order can be '
    +"placed on it today: add to cart or bag, buy now, pre-order now, available to order.\n"
    +'"forSale": false if the page says sold out, out of stock, unavailable, no longer available, or '
@@ -3274,13 +2432,11 @@ async function recheckLinkedPage(row){
 }
 
 const SKEY="cw-v3";
-// DORMANT in v8: Claude cloud save is kept in the file but nothing calls it.
-// Drive is the single source of truth. Re-wire this only if Drive is retired.
+// DORMANT: nothing calls safeSave, an old save to the page's storage. Kept, not deleted.
 async function safeSave(rows,lastRun,lastSaved){const data=JSON.stringify({rows,lastRun,lastSaved:lastSaved||new Date().toISOString()});for(let i=0;i<3;i++){try{const r=await window.storage.set(SKEY,data,false);if(r)return{ok:true};}catch{}await new Promise(r=>setTimeout(r,500*(i+1)));}return{ok:false};}
 
-// ---- Google Drive spine (v8) ----------------------------------------------
-// Ledger files are saved as cat-watch-ledger-<localstamp>.json. Newest loads
-// on open; every save writes a NEW file (versioned backups, nothing deleted).
+// ---- DORMANT: the old Google Drive save route; nothing calls it. Kept until she says
+// (docs/app.md §1 "Which model"). ----------------------------------------------
 const DRIVE_MCP={type:"url",url:"https://drivemcp.googleapis.com/mcp/v1",name:"google-drive"};
 const LEDGER_PREFIX="cat-watch-ledger-";
 let AUTOLOAD_FIRED=false; // module-level: survives a strict-mode remount so open never costs two Drive calls
@@ -3351,17 +2507,12 @@ export default function App(){
   const[loaded,setLoaded]=useState(false);
   const[busy,setBusy]=useState(false);
   const[busyId,setBusyId]=useState(null);
-  const[lookPhase,setLookPhase]=useState(null); // DIAGNOSTIC: "shop"|"web"|null — which lookup step is running (revert to plain "Searching…" later)
+  const[lookPhase,setLookPhase]=useState(null); // "shop"|"web"|null — which lookup step is running
   const[prog,setProg]=useState({done:0,total:0,label:""});
-  // ADD BY LINK — see the block above readShowPage. The box's text and the
-  // occasional venues live in the page's store, not the ledger.
-  // ONE POP-UP FOR BOTH WAYS IN — her ruling, 4 Oct: nothing added to the
-  // page itself. Import opens it small, with CSV and Links; Links opens the
-  // box below them. New venues' shops are a screen of their own, after the
-  // review (shopScreen).
-  // null · "choose" (CSV or Links) · "links" (the box open below them).
+  // Add by link: one pop-up for CSV and Links, nothing added to the page (her design).
+  // importMode: null · "choose" · "links" (the box open below them).
   const[importMode,setImportMode]=useState(null);
-  // The shop screen, after the review: {partial, ids}. Which venue is being
+  // The shop screen, after the review: {partial, ids}. shopLooking: the venue being
   // looked for again.
   const[shopScreen,setShopScreen]=useState(null);
   const[shopLooking,setShopLooking]=useState(null);
@@ -3370,9 +2521,8 @@ export default function App(){
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
   const[occVenues,setOccVenues]=useState({});
-  // WHAT THE STORE HOLDS for the new venues. occVenues is the working copy an
-  // import changes; the store is written only when the ledger moves (her rule,
-  // 4 Oct: nothing is kept from an import she did not finish).
+  // The stored copy of the new venues; occVenues is the working copy. The store is
+  // written only when the ledger moves — an unfinished import keeps nothing (her decision).
   const occSaved=useRef({});
   const[error,setError]=useState(null);
   const[rechecking,setRechecking]=useState(false);   // which of the card's two buttons is running
@@ -3383,15 +2533,9 @@ export default function App(){
   useEffect(()=>setCopySaid(null),[debug]); // a new diagnostic has not been copied
   const[showDebug,setShowDebug]=useState(false);
   const[lastRun,setLastRun]=useState(null);
-  // QUARANTINE — "this should never have been an entry". Not the same as
-  // dismiss, which is for a REAL exhibition she has looked at and passed on.
-  // Rejecting an Add card stores nothing, so junk returns on every future
-  // sweep forever; accepting then dismissing puts junk in the ledger
-  // permanently. This is the third outcome, and it is the only one that keeps
-  // the ledger clean. Entries: {key, venueId, title, at}.
-  // The MAP is what is stored (tombstones and all); the LIST is what she sees
-  // and what the export carries. Deriving one from the other means they cannot
-  // drift, which two pieces of state for one fact always eventually do.
+  // Quarantine (docs/app.md §4): the third outcome beside reject and dismiss. The MAP is
+  // stored (tombstones and all); the LIST is derived from it — what she sees and what
+  // the export carries.
   const[quarantine,setQuarantine]=useState({});
   const[quarWhy,setQuarWhy]=useState(null);
   const ignored=useMemo(()=>activeQuarantine(quarantine),[quarantine]);
@@ -3440,25 +2584,10 @@ export default function App(){
   const[saveNote,setSaveNote]=useState(null);   // {text, ok} — what the last Save did
   const[showResetCards,setShowResetCards]=useState(false);
   const[resetQuery,setResetQuery]=useState("");
-  // PER-VENUE FRESHNESS, and it has to be TWO facts. One global lastRun cannot
-  // say "artic was tried today and last gave us rows on 13 Sep", which is the
-  // line that decides whether a solo re-run is worth it. Shape:
-  //   { [venueId]: { attempted: iso, returned: iso|null } }
+  // Per-venue freshness, two facts: { [venueId]: { attempted: iso, returned: iso|null } }.
   const[venueSeen,setVenueSeen]=useState({});
-  // THE ONE-LINE "LAST REFRESHED" IS DERIVED FROM THE SWEEP LOG, NOT STORED —
-  // her finding, 21 Sep, caught by wiping the store and reloading her export.
-  //
-  // IT USED TO SHOW `lastRun`, WHICH WAS WRONG TWICE OVER. It was stamped at
-  // the moment she pressed Apply, so it reported when she had last worked
-  // rather than when a venue was last swept — the exact fault that produced
-  // swept_at and this whole drawer on 20 Sep, left behind one line above the
-  // thing built to replace it. And it rode inside the LEDGER, so loading an
-  // older backup rolled the date back with it: a fact about the world kept in
-  // a document that rolls back, which is the ruling this app already has.
-  //
-  // Taking the LATEST attempt across all venues keeps the headline honest and
-  // costs nothing: the same store that fills the drawer fills this, so an
-  // empty store reads "never" instead of asserting a time nothing swept at.
+  // "Last refreshed" = the latest attempt in the sweep log, never the ledger's lastRun
+  // (docs/app.md §5). An empty store reads "Unknown".
   const lastSweep=useMemo(()=>{
     let out=null;
     for(const v of Object.values(venueSeen||{})){
@@ -3509,35 +2638,20 @@ export default function App(){
   // Listing pages the sweep could not read. NOT proposals — see isMarkerRow().
   const[coverage,setCoverage]=useState([]);
   const[tally,setTally]=useState(null);
-  // WHICH TRIAGE BANDS ARE OPEN. Most are empty on a healthy file, and the two
-  // that are not need nothing from her, so a permanently expanded band is a
-  // long scroll between her and the actual work. The default is set by WHAT A
-  // BAND ASKS OF HER, never by its size: one she cannot act on opens closed
-  // (markers, combined-for-you), one needing a look or a decision opens open.
-  // The count sits on the header either way, so collapsing hides the cards and
-  // never the fact that there are some.
+  // Which triage bands are open: set by what a band asks of her, never its size —
+  // markers and combined-for-you open closed; the count shows either way.
   const[openBands,setOpenBands]=useState({});
-  // WHICH VENUES ARE OPEN IN "NORMAL CASES". Same reasoning as the triage
-  // bands: 320 cards is a long scroll, and she works one venue at a time.
-  // Undefined means OPEN — the default is to show the work, not to hide it,
-  // so a venue can never go unnoticed because the app closed it on her.
-  // "Collapse all" writes false for every venue rather than flipping a single
-  // master flag, so opening one venue afterwards does not reopen the rest.
+  // Which venues are open in normal cases. Undefined = OPEN, so a venue is never hidden
+  // by default. "Collapse all" writes false for each venue, so opening one later does
+  // not reopen the rest.
   const[openVenues,setOpenVenues]=useState({});
   const[decisions,setDecisions]=useState({}); // proposal index -> "accept"|"reject"|"addnew"
   const[refreshDone,setRefreshDone]=useState(null); // {added,filled,changed} after applying
   const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
   const[pinTouched,setPinTouched]=useState(false); // pin those ids to the top this session
   const[showTop,setShowTop]=useState(false); // show the return-to-top button once scrolled down
-  // LIGHT OR DARK. Her choice is remembered in the browser, not in the ledger
-  // and not in the page's store: it is a per-device convenience, and the right
-  // answer on her laptop at 9pm is not necessarily the right one on another
-  // screen. Browser storage can throw outright (private window, blocked site
-  // data), so every touch is wrapped and the page renders fine without it.
-  //
-  // FIRST VISIT FOLLOWS THE OPERATING SYSTEM. If her machine is already in
-  // dark mode the app opens dark, which is the whole point of asking at 9pm.
-  // Once she picks, her pick wins on that device forever.
+  // Light or dark: remembered in browser storage (a per-device convenience, wrapped —
+  // storage can throw). First visit follows the machine; her pick then wins there.
   const[theme,setTheme]=useState(()=>{
     try{ const v=localStorage.getItem("cw-theme"); if(v==="dark"||v==="light")return v; }catch{}
     try{ if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)return "dark"; }catch{}
@@ -3548,10 +2662,8 @@ export default function App(){
     try{ localStorage.setItem("cw-theme",n); }catch{}
     return n;
   });
-  // The page around the component paints its own background before React runs,
-  // so it has to be told too — otherwise the margins stay cream around a dark
-  // app. Also sets color-scheme, which is what makes scrollbars and form
-  // controls follow.
+  // The page around the component paints its own ground before React runs, so tell it
+  // too; color-scheme makes scrollbars and form controls follow.
   useEffect(()=>{
     try{
       const d=document.documentElement;
@@ -3564,19 +2676,13 @@ export default function App(){
   useEffect(()=>{const onScroll=()=>setShowTop(window.scrollY>400);window.addEventListener("scroll",onScroll,{passive:true});onScroll();return()=>window.removeEventListener("scroll",onScroll);},[]);
 
   useEffect(()=>{
-    // v8.2 OPEN-EMPTY. The app is a workspace, like a word processor: it opens
-    // showing nothing and waits for you to Import your ledger file. It does NOT
-    // reach out to Google Drive or Claude storage on open. (The old Drive auto-load
-    // routine is retired; its helper functions remain dormant below, uncalled.)
+    // Opens empty: a workspace waiting for her ledger file (docs/app.md §2). Nothing
+    // is fetched on open.
     setRows([]);
     setLoaded(true);
-    // The sweep log is NOT part of the ledger, so it loads here rather than on
-    // Import — it is there before any file is opened and it survives Reset.
-    // Read ONCE, not subscribed: she is the only viewer and the only writer,
-    // and a subscription in a component body is how a page ends up in a loop.
+    // The sweep log, quarantine and Add-by-link state are not part of the ledger, so
+    // they load here, before any file is opened. Read once, not subscribed.
     readSweepLog().then(({log,why})=>{ setVenueSeen(log); setFreshWhy(why); });
-    // Quarantine loads here too, and for the same reason: it is not part of the
-    // ledger any more, so it has to be in force before any file is opened.
     readQuarantine().then(({map,why})=>{ setQuarantine(map); setQuarWhy(why); });
     // THE CLOUD COPY IS READ ON OPEN, and during the trial only READ: the app
     // still opens empty and waits for her file. After the trial (CLOUD_OPENS)
@@ -3637,18 +2743,12 @@ export default function App(){
     if(cloudReadOnly&&!display){ setError(RO_LINE); return; }
     setRows(next);
     setLastRun(lr!==undefined?lr:null);
-    // A LEDGER'S QUARANTINE IS MERGED IN, NEVER SWITCHED TO. The file is the
-    // backup copy; the page holds the working one. Latest decision wins, so an
-    // old backup cannot re-block a row she has since released, and a backup
-    // from another machine adds what it knows.
+    // A ledger's quarantine is merged in, never switched to (latest decision wins).
     const fromFile=quarantineFromList((extra&&extra.ignored)||[]);
     if(Object.keys(fromFile).length){
       setQuarantine(prev=>{ const merged=mergeQuarantine(prev,fromFile); writeQuarantine(merged); return merged; });
     }
-    // venueSeen is DELIBERATELY not read from the file. It lives in the page's
-    // own store now — see the sweep log note. Reading it here is exactly the
-    // bug she found: loading a two-day-old backup dragged the sweep dates back
-    // with it, as though opening an older document un-ran a sweep.
+    // venueSeen is never read from the file: the sweep log lives in the page's store.
     setFirstTime(false);
     setDirty(false);
     setSaveNote(null);
@@ -3826,7 +2926,7 @@ export default function App(){
     }
   }
 
-  // Write a NEW timestamped ledger copy to Drive. Never overwrites; nothing deleted.
+  // DORMANT: nothing calls saveToDrive (the old Drive save). Kept until she says.
   const saveToDrive=useCallback(async()=>{
     if(driveState==="saving")return;
     setDriveState("saving");setError(null);
@@ -3851,12 +2951,8 @@ export default function App(){
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
   const clearFilters=()=>{setVenueF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqBuyNext(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setSearch("");setShowSearch(false);};
 
-  // WHAT A QUARANTINE REMEMBERS. The URL where there is one, because that is
-  // the only key that cannot be wrong; venue + title where there is not,
-  // accepting that a venue reusing a title would suppress the wrong row. The
-  // cost of that is bounded and visible — the list is on screen and every
-  // entry can be put back — whereas keying junk loosely and getting it wrong
-  // silently is not.
+  // WHAT A QUARANTINE REMEMBERS. The URL where there is one; venue + title where there
+  // is not (a reused title could block the wrong row — bounded, and visible on screen).
   const ignoreKeyFor=(venueId,url,title)=>
     venueId+"|"+(url?normalizeUrlKey(url):"t:"+normalizeTitle(title));
 
@@ -3895,53 +2991,23 @@ export default function App(){
     return false;
   };
 
-  // ---- v9 REFRESH ENGINE ----
-  // Reads a filled pro forma CSV, compares each row against the current ledger,
-  // and produces a list of proposals to review one at a time. Nothing is applied
-  // until "Go ahead and update the ledger". Anything the app can't use is not
-  // dropped silently — it becomes a plain note on the proposal card.
-  // The sentence the scraper stamps on every marker row, verbatim. A marker
-  // reports a LISTING PAGE it could not read — it is not an exhibition and was
-  // never a proposal. Until now the app had no idea, so each one became an
-  // ordinary Add card titled "[past page]"; rejecting is not remembered, so the
-  // same junk returned on every future sweep forever.
-  //
-  // Matched on the NOTES SENTINEL rather than the bracketed title. The scraper
-  // writes this sentence at every marker site, so this is the producer saying
-  // so — the strongest rung. A bracketed title is a guess about formatting, and
-  // a real exhibition could carry brackets.
+  // ---- REFRESH ENGINE ----
+  // Reads a pro forma CSV, compares each row with the ledger and proposes cards; nothing
+  // applies until she says. Unusable data becomes a note on the card, never dropped.
+  // Marker rows (a listing page the sweep could not read) are matched on the scraper's
+  // notes sentence, never on a bracketed title, and go to the coverage panel.
   const MARKER_SENTINEL = "Marker row, not an exhibition.";
   const isMarkerRow = note => String(note||"").trim().endsWith(MARKER_SENTINEL);
 
-  // Which of two values to offer first when a stitched file disagrees with
-  // itself. Her ruling: the FULLER one, clearly marked as a guess, with both
-  // shown and one click to switch. Never silent, never irreversible.
+  // Which of two values to offer first when a stitched file disagrees with itself: the
+  // FULLER one, marked as a guess, both shown (her decision).
   const fuller = (a,b) => (String(b||"").trim().length > String(a||"").trim().length) ? b : a;
 
   /**
-   * Fold rows that are the same exhibition BEFORE anything is compared to the
-   * ledger.
-   *
-   * One stitched file now carries every machine's output, so a venue swept in
-   * two places appears twice — one copy with dates and no summary because its
-   * detail page timed out, the other the reverse. analyzeProForma compares each
-   * row against the LEDGER only, never against the row beside it, so both would
-   * become separate Add cards for one exhibition.
-   *
-   * KEYED ON VENUE + URL, AND NOTHING ELSE. Same address is the same
-   * exhibition, always, with no interpretation — the scraper's own rule.
-   *
-   * ROWS WITH NO URL ARE NEVER FOLDED. The only other key is the title, and
-   * sameExhibition() matches on normalised title plus date overlap and returns
-   * true whenever EITHER side lacks dates. That is fine against the ledger,
-   * where she sees every proposal before it lands; here it would fire before
-   * she sees anything, and a title collision would silently fuse two different
-   * shows. That is the judgement that destroyed 29 National Gallery
-   * exhibitions. An unfolded duplicate costs one extra card she can see.
-   *
-   * Nothing is invented and nothing is dropped: a group yields exactly one row,
-   * built only from values that were in the file, and a genuine disagreement is
-   * carried forward as a CHOICE rather than resolved here.
+   * Fold rows that are the same exhibition before comparing with the ledger — a venue
+   * swept on two machines arrives twice. Keyed on venue + URL and nothing else; rows
+   * with no URL never fold (a title match once fused 29 National Gallery shows). Gaps
+   * fill; a real disagreement is carried forward as a CHOICE (docs/app.md §3).
    */
   function foldDuplicateRows(raws){
     const byKey=new Map(), out=[];
@@ -3978,42 +3044,25 @@ export default function App(){
     const props=[];
     const coverage=[];   // marker rows: listing pages that could not be read
     const parsed=[];
-    // WHICH VENUES THIS FILE TOUCHED, and whether they gave anything. Two
-    // different facts: a venue can be in the sweep and hand back nothing but
-    // marker rows, which is a refusal, not an absence. Read off the FILE, not
-    // off her decisions — a row she rejects was still collected.
-    // DATED BY THE SWEEP, NOT BY THIS MOMENT — her finding, 20 Sep. These used
-    // to be bare sets, and applyRefresh stamped "now" against them, so the
-    // drawer said a venue was tried at the instant she pressed Import. The file
-    // now carries swept_at per ROW, so each venue keeps the LATEST time it was
-    // seen. Per row and not per venue because a stitched file routinely holds
-    // two runs of one venue — which is exactly the case the drawer is for: a
-    // venue tried at 14:26 whose last real rows came at 02:04 is being refused.
+    // Which venues this file touched (attempted) and gave rows (returned), dated by the
+    // rows' swept_at, the latest per venue — never by the moment of import.
     const attempted={}, returned={};
     const later=(a,b)=>(!a||(b&&b>a))?b:a;
-    // COUNTS SHE CAN RECONCILE AGAINST THE FILE. A card total alone cannot be
-    // checked against anything: rows vanish for three innocent reasons — a
-    // marker row, a fold, an entry that already matches the ledger — and with
-    // 652 rows arriving as 319 cards there is no way to tell those apart from
-    // a row silently lost. Every row read is accounted for by one of these.
+    // Counts she can reconcile: every row read is accounted for (docs/app.md §3
+    // "Counts that reconcile").
     let silent=0, blocked=0;
     // Rows the sweep should never have produced. Collected, then the whole file
     // is refused — see the note at the check itself.
     const faults=[];
 
-    // ── PASS ONE: read the file. No comparison to anything yet. ──────────────
-    // Split out because one stitched file now holds every machine's output, so
-    // rows have to be reconciled against EACH OTHER before the ledger is
-    // consulted at all.
+    // ── PASS ONE: read the file; rows are reconciled with each other before the ledger.
     for(let k=1;k<table.length;k++){
       const r=table[k], line=k+1;
       const vc=get(r,"venue_code").toLowerCase();
       const title=get(r,"title");
       const rowNote=get(r,"notes");
 
-      // A LISTING PAGE THAT COULD NOT BE READ IS NOT A PROPOSAL. It goes to the
-      // coverage panel, where "we tried and were refused" is what it actually
-      // says — rather than becoming an exhibition she rejects on every sweep.
+      // A listing page that could not be read goes to the coverage panel, not a card.
       const sweptAt=get(r,"swept_at");
       if(KNOWN_VENUES.has(vc)) attempted[vc]=later(attempted[vc],sweptAt);
       if(isMarkerRow(rowNote)){
@@ -4023,27 +3072,16 @@ export default function App(){
       if(KNOWN_VENUES.has(vc)&&title) returned[vc]=later(returned[vc],sweptAt);
 
       const notes=[];
-      // A FAULTY ROW IS NOT HER PROBLEM — her ruling, 20 Sep 2026. A row with no
-      // title or no venue code is a DATA FAULT: there is no such thing as an
-      // exhibition with no name, and a row always came from somewhere, so a
-      // missing code means the file is malformed. Neither can be resolved by
-      // looking at a card, and the only outcome was ever "fix the sweep and
-      // feed it again" — a message to the session, printed on her screen.
-      //
-      // They used to be a band of their own. Now the file is REFUSED whole, so
-      // she never triages one, and `scraper/qc.js` stops it upstream: it runs
-      // at the end of every sweep and gates compress --apply, so the file she
-      // imports cannot contain one. This check stays as the last line, and it
-      // says WHICH LINES so the session can fix them without asking her.
+      // A row with no title or no known venue code is a data fault, not hers to fix (her
+      // decision): the whole file is refused, naming the lines. qc.js stops it upstream;
+      // this is the last line of defence.
       if(!vc||!KNOWN_VENUES.has(vc)){ faults.push("line "+line+": venue code "+(vc?("\u201c"+vc+"\u201d"):"is blank")+(vc?" isn\u2019t one of the venues":"")); continue; }
       if(!title){ faults.push("line "+line+": no exhibition title"+(get(r,"url")?" \u2014 "+get(r,"url"):"")); continue; }
       let sd=get(r,"start_date"), ed=get(r,"end_date"), url=get(r,"url");
       if(sd&&!isValidYMD(sd)){notes.push("Start date \u201c"+sd+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");sd="";}
       if(ed&&!isValidYMD(ed)){notes.push("End date \u201c"+ed+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");ed="";}
       if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
-      // QUARANTINED — she has already said this should never be an entry.
-      // Dropped here, before anything else looks at it, so it cannot fold with
-      // a real row or reach the ledger comparison. Counted, never silent.
+      // Quarantined: dropped before anything else sees it. Counted, never silent.
       if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
       parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,
                    rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:"Sweeper note: ")+rowNote]:[],parseNotes:notes,line});
@@ -4069,9 +3107,7 @@ export default function App(){
       if(!summary)notes.push("No description.");
       if(!url)notes.push("No exhibition link.");
       for(const n of p.rowNotes) notes.push(n);
-      // SAY WHEN ROWS WERE FOLDED. She is being shown one card for what was
-      // several lines in the file, and that has to be visible or the count on
-      // her approval pile will not match the file she fed in.
+      // Say when rows were folded, so the count matches the file.
       if(p.mergedFrom) notes.push("Rows "+p.mergedFrom.join(", ")+" of the file describe this same exhibition \u2014 combined into one.");
 
       const cand={museumId:vc,title,startDate:sd||null,endDate:ed||null,summary,exUrl:url};
@@ -4090,13 +3126,8 @@ export default function App(){
       if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line:p.line,choices,merged:!!p.mergedFrom}); continue; }
       const upd=[];
       const consider=(field,label,oldV,newV)=>{ const o=(oldV==null?"":String(oldV)), n=(newV==null?"":String(newV)); if(!n)return; if(!o)upd.push({field,label,oldVal:"",newVal:n,kind:"fill"}); else if(o!==n)upd.push({field,label,oldVal:o,newVal:n,kind:"change"}); };
-      // A CHANGED TITLE IS A CHANGE — her rulings, 23 Sep. Until then the
-      // title was never compared, so a venue renaming a show was silently
-      // ignored. Compared as written, spacing aside: a title that differs only
-      // in capitals is a card too, because that is how a title recorded in
-      // capitals is corrected in her ledger. She rejected masking capitals on
-      // screen — it would hide a scraper fault forever — so the data is fixed,
-      // and fixing it has to reach the ledger.
+      // A changed title is a Change card, capitals-only included (her decision): a title
+      // recorded in capitals is corrected in her ledger, never masked on screen.
       { const sq=v=>String(v||"").replace(/\s+/g," ").trim();
         if(title&&match.title&&sq(title)!==sq(match.title))
           upd.push({field:"title",label:"Title",oldVal:String(match.title),newVal:String(title),kind:"change"}); }
@@ -4121,11 +3152,9 @@ export default function App(){
     return {props,coverage,tally,seen:{attempted,returned}};
   }
 
-  // THE SWEEP LOG IS WRITTEN WHEN THE IMPORT FINISHES — her rule, 4 Oct: an
-  // import she does not finish keeps nothing. (20 Sep it moved to the moment
-  // the file was read; she has ruled the other way.) Held in seenInFile until
-  // the ledger moves; a file with nothing to propose has nothing to finish, so
-  // it is recorded at once.
+  // The sweep log is written when the import FINISHES (her decision: an unfinished
+  // import keeps nothing); held in seenInFile until then. A file with nothing to
+  // propose is recorded at once. AL-013.
   const recordSweep=(seen)=>{
     if(!seen) return;
     const vs=mergeSweepLog(venueSeen,seen);
@@ -4183,12 +3212,9 @@ export default function App(){
           vc=occVenueId(host);
           met.add(vc);
           const had=venues[vc];
-          // Looked for once and kept. Looked for again while she has not
-          // confirmed it AND it was found by the finder before 4 Oct's (which
-          // could hand back a front page, a post or one book), or its books
-          // section was not found — a miss is never kept as the answer.
-          // Once per venue in a Read, whatever it found (7 Oct: seven
-          // Jacquemart-André links, seven looks).
+          // A new venue's shop is looked for once per Read. On a later Read, again only
+          // while unconfirmed AND (found by the first finder, or no books section found)
+          // — a miss is never kept as the answer.
           if(!looked.has(vc)&&(!had||(!had.confirmed&&(!(had.finder>=2)||had.shop!=="found")))){
             looked.add(vc);
             setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+page.site+"\u2019s shop"});
@@ -4230,9 +3256,9 @@ export default function App(){
     // under the review, its lines waiting for her when the review closes.
     if(!fails.length)setImportMode(null);
   }
-  // THE SHOP SCREEN'S ANSWERS — held in the working copy, and stored with the
-  // ledger when it moves; Cancel import throws them away, Back keeps them (her
-  // rule, 4 Oct). A venue confirmed in a finished import is never asked again.
+  // The shop screen's answers are held in the working copy and stored when the ledger
+  // moves; Cancel import drops them, Back keeps them (her decision). Confirmed in a
+  // finished import → never asked again.
   function holdVenues(next){ registerOccasional(next); setOccVenues(next); }
   // Back to what the store holds: the import's venues and answers dropped.
   function dropHeldVenues(){
@@ -4243,9 +3269,8 @@ export default function App(){
   function confirmShop(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,confirmed:true}}); }
   // "No shop": the lookup goes straight to the web, as at Capodimonte.
   function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null}}); }
-  // "Look again": a new search NOW, skipping only the pages she turned down —
-  // never the shop's whole site (the old "Wrong shop" banned the site, which
-  // for the RA and the Courtauld was the right shop on the wrong page).
+  // "Look again": a new search NOW, skipping only the pages she turned down, never the
+  // whole site.
   async function lookAgain(id){
     const v=occVenues[id]; if(!v)return;
     const turnedDown=[...(v.turnedDown||[]),v.shopCatalogues].filter(Boolean);
@@ -4258,10 +3283,8 @@ export default function App(){
       const next={...prev,[id]:{...prev[id],shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,...shop,confirmed:false,turnedDown}};
       registerOccasional(next); return next; });
   }
-  // WHICH VENUES THE SHOP SCREEN ASKS ABOUT: every venue outside her 27 met
-  // in this read (or on a card) whose shop she has not confirmed — whatever she
-  // decided about its cards (her ruling, 4 Oct: the RA and the Courtauld were
-  // left off when their cards were not going in).
+  // The shop screen asks about every venue outside her list met in this Read (or on a
+  // card) whose shop is unconfirmed — whatever she decided about its cards (her decision).
   function venuesToConfirm(){
     const ids=new Set(readVenues);
     (proposals||[]).forEach(p=>{ const id=(p.cand||{}).museumId; if(isOcc(id))ids.add(id); });
@@ -4307,16 +3330,9 @@ export default function App(){
     return out;
   };
 
-  // PARTIAL IS A PARAMETER, NOT A SECOND COPY OF THIS FUNCTION. Applying what
-  // she has decided and applying everything are the same walk over the same
-  // cards — an undecided card was always skipped here, which is exactly what
-  // made the 20 Sep gate necessary. The only difference is whether the gate
-  // let her arrive, and how the result is reported afterwards.
-  //
-  // So `partial` changes NOTHING about what is written. It only counts what
-  // was left behind, so the green bar can say so. Copying this function to
-  // make a partial version would put the ledger write in two places, and the
-  // second copy drifts.
+  // PARTIAL IS A PARAMETER, NOT A SECOND COPY OF THIS FUNCTION. `partial` changes
+  // nothing about what is written; it only counts what was left behind for the green
+  // bar. One copy of the ledger write.
   function applyRefresh(partial){
     const byId=new Map(rows.map(r=>[r.id,r]));
     const now=new Date().toISOString();
@@ -4342,21 +3358,17 @@ export default function App(){
       p.upd.forEach((u,j)=>{ if((dec.fields||{})[j]==="accept"){ patch[u.field]=u.newVal; if(u.kind==="fill")filled++; else changed++; hit=true; } });
       if(hit){ patch.editedAt=now; byId.set(p.matchId,patch); touched.push(p.matchId); }
     });
-    // The import is finished: what it held back is stored now — the sweep log
-    // (a CSV's), and the paste box's unread links (a Read's).
-    // seenInFile is set by a CSV and only by a CSV: a link is not a sweep.
-    // A Read's REJECTED cards go back in the box with the unread links (her
-    // ask, 7 Oct: rejected for a fault, to be read again once it is fixed,
-    // without pasting them again). "Clear" in the box empties it.
+    // The import is finished, so what it held back is stored now: a CSV's sweep log
+    // (seenInFile — a link is not a sweep), or for a Read the box: unread links plus
+    // the links of rejected cards (her decision). "Clear" in the box empties it.
     if(seenInFile)recordSweep(seenInFile);
     else{
       const rejected=proposals.filter((p,i)=>cardOutcome(p,decisions[i])==="rejected").map(p=>(p.cand||{}).exUrl).filter(Boolean);
       const box=[...new Set([...linksIn(linkText),...rejected])].join("\n");
       setLinkText(box); writePendingLinks(box);
     }
-    // A NEW QUARANTINE GOES TO THE STORE, not into the ledger she is about to
-    // commit. Her export still carries the list, but the copy that does the
-    // blocking is the one that survives a Reset.
+    // A new quarantine goes to the store, the copy that survives a Reset; the export
+    // carries the list too.
     if(newlyIgnored.length){
       const add={};
       for(const x of newlyIgnored) add[x.key]={venueId:x.venueId,title:x.title,at:x.at,state:"blocked"};
@@ -4364,10 +3376,7 @@ export default function App(){
         writeQuarantine(merged).then(ok=>{ if(!ok) setQuarWhy("The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Save to keep it."); });
         return merged; });
     }
-    // COUNTED FROM THE CARDS, NOT FROM THE BUTTON. The figure that reaches the
-    // green bar is re-derived here from the same function the gate uses, so the
-    // sentence cannot claim a different number from the one she was just
-    // looking at. A count handed in from the caller is a second copy.
+    // Counted from the cards with the gate's own function, never handed in.
     const leftUndecided=proposals.filter((p,i)=>isUndecidedCard(p,decisions[i])).length;
     commit(Array.from(byId.values()),new Date().toISOString());
     if(occVenues!==occSaved.current){ writeOccasional(occVenues); occSaved.current=occVenues; }
@@ -4381,10 +3390,6 @@ export default function App(){
   function cancelRefresh(){ dropHeldVenues(); setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   const pickSort=k=>{setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
-  // refreshVenues() REMOVED 20 Sep 2026. It had the app gathering its own
-  // exhibition data — rejected long ago and wired to no button since — and it
-  // called askClaude(), which no longer exists. Dead code shaped like live code
-  // is a trap for whoever debugs this next; git holds it.
 
 
 
@@ -4423,27 +3428,11 @@ export default function App(){
    +'"shopUrl":null,"thisVenue":true}\n'
    +'Set "found" false and every other field null when these results show no catalogue.';
 
-  // TWO STAGES, HER DESIGN, UNCHANGED SINCE IT WAS TESTED.
-  //
-  // Stage one asks the venue's own shop and nothing else. Stage two, only if
-  // the shop had nothing, looks wider. Nothing found in either means no
-  // catalogue. The reason for the order is not cost, which is gone: a shop hit
-  // is the only result that gives her a real "buy it here" link.
-  //
-  // THE SHOP LINK IS STILL CHECKED, and it stays checked now that step one
-  // opens the shop directly. A shop page links outward — to a publisher, to a
-  // distributor, to another shop — so a link read off a shop page is not
-  // automatically ON that shop. A link that is not on the venue's shop is
-  // never filed as being in the venue's shop.
-  //
-  // A SHOP LINK FROM THE WEB SEARCH IS OPENED BEFORE IT IS BELIEVED — her yes,
-  // 25 Sep. A general index keeps addresses a shop has long since pulled: KHM's
-  // was a ticket, dead since the show closed, filed "In the museum shop"
-  // unopened. Such a link rides out as shopCandidate and confirmShopLink opens
-  // it; until then, and if it will not open, the book is "found on the web".
-  //
-  // `blocked`: the shop step was refused on every page. The row then says the
-  // shop is blocked instead of "not in the shop" or "no catalogue".
+  // Two stages (her design): the venue's own shop first, the wider web only if the shop
+  // had nothing — a shop hit is the only real "buy it here" link. A link is filed as in
+  // the shop only when it is on the venue's shop. A shop link from the web search is
+  // opened before it is believed (confirmShopLink): an old index kept KHM's dead ticket.
+  // `blocked`: the shop step was refused on every page; the row says so.
   const settle=(row,o,dom,detail,fromShopStage,blocked)=>{
     const link=isTicketLink(o.shopUrl)?null:(o.shopUrl||null);
     const onShop=!!shopLinkOf(o,dom);
@@ -4467,16 +3456,9 @@ export default function App(){
       shopUrl:null,shopChange:null}};
   };
 
-  // ── FILLING A MISSING ISBN FROM THE PAGE ITSELF \u2014 her finding, 20 Sep 2026 ──
-  //
-  // Runs ONLY when a catalogue was found, a page link came with it, and no
-  // ISBN did. It is not a third search: one page, read whole, because the
-  // number is printed there and the search excerpt simply stopped short of it.
-  //
-  // IT CAN ONLY EVER FILL A BLANK. An ISBN already read from the search
-  // results is never overwritten, and neither is a publisher we already have.
-  // If the page yields nothing the row comes back exactly as it was \u2014 the
-  // old answer, not a worse one.
+  // ── FILLING THE ISBN AND PUBLISHER FROM THE BOOK'S OWN PAGE ──────────────────
+  // Runs when a catalogue was found with a page link and the ISBN OR the publisher is
+  // missing (needsPageRead). One page, read whole. It fills blanks only (applyIsbnFill).
   const PAGE_RULES=
     "You are reading ONE web page in full: the page selling or describing a printed exhibition "
    +"catalogue. Read the ISBN, publisher and author off THIS PAGE only.\n"
@@ -4557,37 +3539,19 @@ export default function App(){
     return{...hit,detail,row:filled};
   };
 
-  // \u2500\u2500 THE SHOP FOUND THE BOOK AND NOTHING ELSE \u2014 her finding, 21 Sep \u2500\u2500\u2500\u2500\u2500
-  //
-  // A REGRESSION THIS SESSION CAUSED, and worth writing down because the shape
-  // repeats. Acquavella's page for its Matisse catalogue prints a title, a
-  // price and the exhibition's dates \u2014 no ISBN, no publisher. While step one
-  // was a general web search it picked the ISBN up from the publisher or a
-  // bookseller; now that step one goes to the shop, finding the book there
-  // ENDED the lookup and the wider search never ran. **Going to the right
-  // place made the answer smaller.**
-  //
-  // So when the shop route leaves the ISBN blank, the wide search runs after
-  // all. It is not "both stages every time", which is rejected: it fires only
-  // on a catalogue that was found and is still missing its number.
-  //
-  // IT FILLS GAPS AND CANNOT DO ANYTHING ELSE. The book has already been
-  // identified in the venue's own shop, so the title, the shop link and the
-  // "in the museum shop" verdict all stand; only blank fields are written.
-  // A wide search must never be able to rename or relocate a book the shop
-  // already named.
+  // ── THE SHOP FOUND THE BOOK, NOT ITS ISBN OR PUBLISHER → THE WIDER WEB (N-001) ──
+  // Runs only for a catalogue found and still missing its ISBN or publisher (her
+  // decision: a blank publisher is a gap too). It fills gaps only: the title, the shop
+  // link and the "in the museum shop" verdict stand. C-039 to C-042.
   const fillFromWeb=async(hit,venue,dom)=>{
     const r=hit&&hit.row;
-    // A BLANK PUBLISHER IS A GAP TOO — her NG van Hemessen, 2 Oct: the read
-    // brought the ISBN and no publisher, so this step never ran and the card
-    // said "No publisher was named". It runs while either is blank.
     if(!r||!hit.ok||r.hasCatalogue!=="yes"||(r.isbn13&&r.publisher))return hit;
     const book=r.catalogueTitle||r.title;
     setLookPhase("web");
     const s3=await searchWeb(
       "The ISBN-13 and publisher of the printed exhibition catalogue \u201c"+book+"\u201d"
         +(r.publisher?", published by "+r.publisher:"")+", for the exhibition at "+venue+".",
-      // The venue's name is in a query — her one Google search had it.
+      // The venue's name is in a query.
       [book+" "+venue+" catalogue ISBN",
        book+" "+(r.publisher||"exhibition catalogue")+" ISBN",
        book+" catalogue publisher"]);
@@ -4625,50 +3589,11 @@ export default function App(){
     return{...hit,detail,row:filled,...(rd.ok?{}:{trouble:rd.detail})};
   };
 
-  // \u2500\u2500 THE PUBLISHER\u2019S PAGE, LOOKED FOR PROPERLY \u2014 her ruling, 21 Sep \u2500\u2500\u2500\u2500
-  //
-  // The earlier steps find it only BY LUCK. When step two searches, the
-  // publisher is not known yet, so not one of its queries can name the
-  // publisher\u2019s website \u2014 Hannibal Books is stated all over the Rijksmuseum\u2019s
-  // press kit for Metamorphoses, and Hannibal\u2019s own site never appeared.
-  //
-  // So once the NAME is known, ask for the page by name. It fires only when a
-  // catalogue was found, its publisher is known, and no page came with it \u2014
-  // never to second-guess a link an earlier step already produced.
-  //
-  // WHY IT IS WORTH A SEARCH OF ITS OWN: the museum shop sells the book while
-  // the show is on, and the art-book house that printed it often lists it long
-  // after the shop has sold out. That is the window this whole app is about.
-  // BEFORE CHANGING THE LOOKUP CHAIN, READ docs/app.md SECTION 1. Four rebuilds
-  // are recorded there: why stage one must OPEN the shop rather than search for
-  // it, why a search result is opened before being believed, why each step fills
-  // a blank and can do nothing else, and why every step after the first stays
-  // conditional (every page read runs on her allowance).
-  // ── THE BOOK'S LANGUAGE, AND AN ENGLISH EDITION — her ruling, 2 Oct ─────
-  //
-  // HER LOUVRE EXPERIENCE OF NATURE. The Louvre's English shop gives French
-  // books English names and states no language, so the card offered a French
-  // book under an English title. She reads English: a French book is not one
-  // she can buy, and an English edition, if there is one, is the one she wants.
-  //
-  // ONLY AT A VENUE MARKED english:false (her ruling: non-English venues only)
-  // and only for a book found — every lookup starts from a blank card
-  // (lookupCat → resetCard), so Search again checks afresh too.
-  //
-  // ONE SEARCH by the ISBN (or the title, without one) reads the book's
-  // language and its title as printed. English, or unknown → nothing changes.
-  // Not English → the card takes the book's own title, and ONE more search
-  // looks for an English edition. Found — its own ISBN, different, printed in
-  // the results, and the read says English → the card carries the English
-  // edition, "Not in the museum shop", since the shop's book was the other.
-  // None → the original book stays, under its own title.
-  // STEP: THE PUBLISHER FROM THE ISBN (publisherOnIsbnResults). Runs only once
-  // the ISBN is known — every ISBN source comes before it and none depends on
-  // the publisher. A publisher Claude read off general results is a guess and
-  // is REPLACED; one read off the book's own shop page stands unless the ISBN
-  // says otherwise. At a non-English venue the search is the language check's
-  // own, reused (hit.isbnResults); elsewhere it runs only for a guessed or
-  // missing publisher.
+  // STEP: the publisher from the ISBN (her decision, Botticelli; publisherOnIsbnResults).
+  // Runs once the ISBN is known. A publisher Claude read off general results is a guess
+  // and is REPLACED; one read off the book's own shop page stands unless the ISBN says
+  // otherwise. At a non-English venue the language check's search is reused
+  // (hit.isbnResults); elsewhere it runs only for a guessed or missing publisher.
   const publisherFromIsbn=async(hit,venue,mu)=>{
     const r=hit&&hit.row;
     const isbn=r&&cleanIsbn(r.isbn13);
@@ -4691,6 +3616,12 @@ export default function App(){
     return{...hit,detail,row,isbnResults:s.results};
   };
 
+  // ── THE BOOK'S LANGUAGE, AND AN ENGLISH EDITION (her decision, Louvre Experience of
+  // Nature) — non-English venues only (english:false), for a book found. One search by
+  // ISBN (or title) reads its language and printed title; English or unknown → nothing
+  // changes. Not English → the card takes the book's own title, and one more search
+  // looks for an English edition of the same catalogue (sameCatalogue): found → filed
+  // as "Not in the museum shop"; none → the original stays.
   const fillLanguage=async(hit,venue,dom,mu)=>{
     const r=hit&&hit.row;
     if(!r||!hit.ok||r.hasCatalogue!=="yes"||!mu||mu.english!==false)return hit;
@@ -4703,10 +3634,9 @@ export default function App(){
         +", the catalogue of the exhibition \u201c"+r.title+"\u201d at "+venue+".",
       isbn?[isbn,isbn+" "+book]:[book+" "+venue+" catalogue",book+" catalogue language"]);
     let detail=hit.detail+"\n"+s.detail;
-    // WHAT WAS CHECKED GOES ON THE CARD — her ruling, 7 Oct: a foreign book with
-    // no English twin must say how far that "no" was looked for (englishCheck,
-    // englishLine). "stopped": a step died; "unknownlang": no result names
-    // the language; "publisher" / "shops": no English edition, and where.
+    // What was checked goes on the card (her decision; englishCheck, englishLine):
+    // "stopped" a step died; "unknownlang" no result names the language; "publisher" /
+    // "shops" no English edition, and where it was looked for.
     const mark=(h,v)=>({...h,row:{...(h.row||r),englishCheck:v}});
     const stopped=why=>mark({...hit,detail,trouble:why,troubleLang:true},"stopped");
     if(!s.ok)return stopped(s.detail);
@@ -4730,12 +3660,9 @@ export default function App(){
     if(own&&own.onPage)row.catalogueTitle=own.title;
     detail=detail+"\nLanguage check: "+lang+(own&&own.onPage?" \u2014 its own title \u201c"+own.title+"\u201d.":".");
     const orig=row.catalogueTitle||book;
-    // THE ENGLISH EDITION, LOOKED FOR WHERE IT WOULD BE LISTED — her ruling,
-    // 7 Oct. An English edition is sold under its English title, never as
-    // "English edition", so the show's English title is searched with the
-    // publisher; and the PUBLISHER lists every language it printed, so its own
-    // page for the book is found (in the same search) and read whole. Her
-    // Watteau, 7 Oct: Fonds Mercator's page lists the book in French only.
+    // The English edition, looked for where it is listed (her decision): the show's
+    // English title with the publisher, and the publisher's own page for the book, read
+    // whole — a publisher lists every language it printed (Watteau, Fonds Mercator).
     const pub=row.publisher&&!isSelfPublisher(row.publisher,row.museumId)?publisherToFind(row.publisher,row.museumId):"";
     const e=await searchWeb(
       "An ENGLISH-language edition of the exhibition catalogue \u201c"+orig+"\u201d ("+venue
@@ -4743,12 +3670,9 @@ export default function App(){
       [r.title+" "+(pub||venue)+" ISBN",orig+" "+(pub||venue)+" catalogue",orig+" English edition"]);
     detail=detail+"\n"+e.detail;
     if(!e.ok)return{...hit,row:{...row,englishCheck:"stopped"},detail,trouble:e.detail,troubleLang:true};
-    // The publisher's own page for THIS book. FIRST the one the publisher step
-    // already found and judged to be the book's page (publisherResult
-    // "product") \u2014 her Canaletto, 7 Oct: the card linked that page while this
-    // check said it wasn't found, because this check only looked in its own
-    // search. Else, if this search found it: on the publisher's site
-    // (publisherDomainFrom) and carrying the book's title.
+    // The publisher's own page for THIS book: first the one the publisher step judged
+    // to be the book's page (Canaletto), else one this search found on the publisher's
+    // site carrying the book's title.
     const known=row.publisherResult==="product"&&row.publisherUrl?{url:row.publisherUrl,title:null}:null;
     const pubHost=!known&&pub?publisherDomainFrom(e.results,pub):null;
     const pubPage=known||(pubHost?resultsCarrying(e.results.filter(x=>hostOf(x.url)===pubHost),orig)[0]:null);
@@ -4778,14 +3702,9 @@ export default function App(){
     const enIsbn=toIsbn13(ed.isbn13);
     const printed=enIsbn&&pages.some(x=>(String(x.url||"")+" "+oneText(x)).replace(/[^0-9Xx]/g,"").includes(enIsbn));
     if(!ed.found||!enIsbn||enIsbn===isbn||!isEnglishLang(ed.language)||!printed||!ed.title)return none();
-    // THE SAME BOOK, PROVED IN CODE — her Botticelli, 7 Oct: Reaktion's
-    // "Botticelli: Artist and Designer" (the curator's own life of the artist,
-    // English, its own ISBN) is not the catalogue's English edition. Taken only
-    // from the SAME publisher, or where a result carrying its ISBN names this
-    // venue. Anything else is a look-alike, and the original stands.
-    // ITS PUBLISHER IS READ OFF ITS ISBN, IN CODE \u2014 her ruling, 7 Oct, as for
-    // the original (publisherOnIsbnResults); Claude's read only where the
-    // results carrying the English ISBN don't agree on one.
+    // The same catalogue, proved in code (her decision, Botticelli): same publisher, or a
+    // result carrying its ISBN names this venue (sameCatalogue). Its publisher is read off
+    // its ISBN in code too; Claude's read only where those results disagree.
     const onEn=pages.filter(x=>(String(x.url||"")+" "+oneText(x)).replace(/[^0-9Xx]/g,"").includes(enIsbn));
     const enCoded=publisherOnIsbnResults(onEn,enIsbn);
     const enPub=enCoded||(ed.publisher?String(ed.publisher).trim():null);
@@ -4799,18 +3718,21 @@ export default function App(){
         shopState:"web",shopUrl:null,shopChange:null}};
   };
 
+  // ── THE PUBLISHER'S PAGE (docs/app.md §1) ───────────────────────────────────
+  // Once the publisher's NAME is known, go to them: find their site from the name,
+  // search inside it, open what that returns. Only for a catalogue found, a publisher
+  // named and no page yet. An art-book house often lists the book long after the shop
+  // sells out.
   const fillPublisherPage=async(hit,venue,dom)=>{
     const r=hit&&hit.row;
     if(!r||!hit.ok||r.hasCatalogue!=="yes")return hit;
-    // A NAMED MUSEUM PUBLISHING ARM — no searches at all, and no link: only
-    // the publisher is the publisher (her ruling, 1 Oct). See SELF_PUBLISHERS.
+    // A museum's own imprint: no searches and no link (her decision; SELF_PUBLISHERS).
     if(isSelfPublisher(r.publisher,r.museumId)){
       return{...hit,detail:hit.detail+"\n"+r.publisher+" is a museum’s own imprint — no publisher page to look for.",
         row:{...r,publisherUrl:null,publisherResult:"selfpublished"}};
     }
     if(r.publisherUrl)return hit;
-    // NO NAME, SO NOTHING WAS LOOKED FOR — and the card must say that rather
-    // than print the same sentence as a search that ran and found nothing.
+    // No name, so nothing was looked for — and the card says so.
     if(!r.publisher)return{...hit,row:{...r,publisherResult:"unnamed"}};
     const book=r.catalogueTitle||r.title;
     // The publisher looked for — "X in association with Y" is Y (publisherToFind).
@@ -4846,20 +3768,8 @@ export default function App(){
     const onSite=(sp.results||[]).filter(x=>{try{return new URL(x.url).hostname.toLowerCase()===pubHost;}catch{return false;}});
     if(!onSite.length)return onlyTheSite("Nothing for this book on "+pubHost+".");
 
-    // ── TWO CANDIDATES, NOT ONE — her question, 22 Sep ──────────────
-    //
-    // She asked what happens when the page we open turns out to have nothing
-    // to do with the book: did the model simply pick the wrong one of the
-    // eight results, and should we go back for another? Yes — and going back
-    // costs NO NEW SEARCH, because the results are already in hand. It is one
-    // more page opened, nothing else.
-    //
-    // WHAT BOUNDS IT IS THE LIST, NOT A COUNTER. The read hands back an
-    // ordered short list and the code walks it. Two is the cap and it is
-    // stated here rather than tuned: the results came back RANKED, so if the
-    // best two are both wrong the site does not have the book, and a third
-    // opening is spending her allowance on hope. The fallback below is better
-    // than a lucky third guess because it cannot be wrong.
+    // ── TWO CANDIDATES, THEN THE FALLBACK (her decision): the results are already
+    // ranked, so if the best two are wrong the site does not have the book. No new search.
     const rd=await readResults(
       "These are pages from ONE publisher’s own website. Put them in order, best first, "
      +"by how likely each is to BE the page for this book or to LEAD to it.\n"
@@ -4883,12 +3793,7 @@ export default function App(){
     }
     if(!candidates.length)return onlyTheSite("No page for this book on "+pubHost+".");
 
-    // ── NOW OPEN THEM. WHAT SEARCH HANDS BACK IS A GUESS, NOT AN ANSWER ──
-    //
-    // This is the step that was missing until 22 Sep, and its absence is why
-    // Rizzoli read as a success and Hannibal read as a success while one was
-    // the book and the other was a whole section of books. Search cannot tell
-    // us which it got, because the difference is INSIDE the page.
+    // ── NOW OPEN THEM: a search cannot tell a book's page from a section of books.
     for(let i=0;i<candidates.length;i++){
       const candidate=candidates[i];
       const fp=await fetchPage(candidate,
@@ -4897,10 +3802,8 @@ export default function App(){
       detail=detail+"\n"+fp.detail;
       if(!fp.ok)return{...hit,detail,trouble:fp.detail};
 
-      // THE SHELL CASE, AND IT IS THE HONEST FLOOR. Hannibal draws its book
-      // list by script after the page arrives, so the reader gets a sort
-      // control and a newsletter box. We cannot see the book and we must not
-      // pretend we looked: the link is kept, and kept LABELLED as the section.
+      // The shell case: a script-drawn list comes back empty, so the link is kept and
+      // labelled as the section, never claimed as the book.
       if(pageIsShell(fp.results)){
         return{...hit,detail:detail+"\nThat page came back empty — kept as the publisher’s section, not the book’s own page.",
           row:{...r,publisherUrl:candidate,publisherResult:"container"}};
@@ -4947,9 +3850,8 @@ export default function App(){
     return onlyTheSite("None of the pages on "+pubHost+" was this book.");
   };
 
-  // A VENUE MET BEFORE THE FINDER PROVED SEARCHES (finder 2: Detroit,
-  // Mauritshuis, the RA on 4 Oct) gets its search worked out once, at its
-  // first lookup, from its own shelf — then stored, like the venue itself.
+  // A link venue met before the finder proved searches (finder 2) gets its search
+  // worked out once, at its first lookup, from its own shelf — then stored.
   async function fillShopSearch(id){
     const mu=MU[id];
     if(!mu||!mu.occasional||mu.shopSearch||!mu.shopHome)return;
@@ -4983,20 +3885,14 @@ export default function App(){
         +"on this shop, its full title and its price.",
       [title+" exhibition catalogue book"]);
     if(!s1.ok)return{ran:true,ok:false,detail:s1.detail,data:null};
-    // EVERY PAGE REFUSED is not "nothing there" — her finding, 25 Sep (KHM:
-    // "0 page(s), 1 refused (307)"). The shop could not be read at all.
+    // Every page refused is not "nothing there": the shop could not be read (KHM).
     if(!s1.results.length&&(s1.errors||[]).length)
       return{ran:true,ok:true,blocked:true,detail:s1.detail+"\nThe museum shop refused every page, so it could not be searched.",data:null};
     if(!s1.results.length)return{ran:true,ok:true,detail:s1.detail,data:null};
-    // EVERY PAGE CAME BACK EMPTY is blocked too — her ruling, 1 Oct (MoMA
-    // Brancusi). MoMA's shelf answers, but its books are drawn by script after
-    // the page arrives: Parallel's copy is a membership pop-up and no books.
-    // "Not in the museum shop" off that would be a negative never earned.
-    // BUT SHORT EXCERPTS ARE NOT AN EMPTY PAGE — her Watteau, 7 Oct: the
-    // excerpts are the parts about THIS show, so a shelf without the book
-    // gives almost none, and Jacquemart-André read as blocked. The pages are
-    // opened once more, whole; blocked only if the whole pages are still
-    // empty or show no price anywhere (a shelf of books always prices them).
+    // Every page empty is blocked too (her decision, MoMA Brancusi: books drawn by
+    // script). But short excerpts are not an empty page (her Watteau): the pages are
+    // opened again whole, and the shop is blocked only if they are still empty or show
+    // no price anywhere.
     let shop=s1;
     if(s1.results.every(r=>pageIsShell([r]))){
       const whole=await fetchPage(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
@@ -5024,11 +3920,9 @@ export default function App(){
       else if(!tp.onPage)detail+="\nThe title the read gave is not on the shop\u2019s pages as written.";
       data.catalogueTitle=tp.title;
     }
-    // A LIST IS NOT THE BOOK — her KHM Canaletto, 26 Sep. The read handed back
-    // KHM's own search-results page as "the book's page". A link that is one of
-    // the pages this step itself opened is refused as a link; the book still
-    // counts as in the shop (it was read off the shop's own pages), and her
-    // Museum shop button falls back to the shop's search for the show.
+    // A list is not the book (her decision, KHM Canaletto): a link that is one of the
+    // pages this step opened is refused as a link; the book still counts as in the shop,
+    // and her shop button falls back to the shop's search for the show. L-020 to L-023.
     const opened=new Set(shopPages.map(normalizeUrlKey));
     // Before falling back: the book's own link may be on the shelf all the
     // same — bookLinkOnShelf. Also when Claude found the book and gave no link.
@@ -5047,13 +3941,14 @@ export default function App(){
     return{ran:true,ok:true,detail,data};
   }
 
-  // EVERY LOOKUP STARTS FROM A BLANK CARD — her ruling: "Search again
-  // literally means search again." Nothing already on the card is kept or
-  // skipped; the caller decides whether the result replaces the card.
-  // THE STEPS AFTER THE BOOK IS FOUND, in order. The publisher's page is
-  // found BEFORE the English check, so the check reads the same page the card
-  // links (her Canaletto, 7 Oct); found again only when an English edition
-  // replaced the book, since that edition's publisher is another page.
+  // Every lookup starts from a blank card (her decision: "Search again literally means
+  // search again"); the caller decides whether the result replaces the card.
+  // The steps after the book is found, in order. Each runs only if an earlier one left
+  // something missing. Most fill blanks only; publisherFromIsbn REPLACES a guessed
+  // publisher, and fillLanguage can REPLACE the book with its English edition. The
+  // publisher's page comes before the English check, so the check reads the page the
+  // card links (Canaletto); it runs again only when an English edition replaced the
+  // book. Read docs/app.md §1 before changing this chain.
   async function laterSteps(hit,venue,dom,mu){
     const h=await fillPublisherPage(await publisherFromIsbn(await fillFromWeb(await fillIsbn(hit,venue,dom),venue,dom),venue,mu),venue,dom);
     const e=await fillLanguage(h,venue,dom,mu);
@@ -5067,25 +3962,9 @@ export default function App(){
     const venue=mu?mu.name:"";
     let detail="";
 
-    // ── Stage one: GO TO THE SHOP ───────────────────────────────
-    //
-    // HER DESIGN, AND UNTIL 21 SEP 2026 IT WAS NOT WHAT THE CODE DID. The old
-    // tool took a locked list of websites and could not look anywhere else, so
-    // a search "at the shop" really was at the shop. The connector that
-    // replaced it has no lock — only a site: hint inside a query — and the
-    // rebuild kept the search and lost the lock. Step one became a general web
-    // search dragging the shop's address along with it.
-    //
-    // WHAT THAT COST, her finding: the National Gallery's Zurbaran. A general
-    // index ranks the shop's LIST of every catalogue above the one book's own
-    // page, so the read ran perfectly on a list, reported no ISBN, and filed
-    // the list as her "Museum shop" link. The book's own page was in the same
-    // results, five places down, printing the ISBN in plain sight.
-    //
-    // So step one OPENS the shop's own pages now. That is what she does by
-    // hand, and a shop's own search box knows what "catalogue" means at that
-    // shop, which no general index does. Only step two searches the open web,
-    // because "does this book exist anywhere" really is a search.
+    // ── Stage one: GO TO THE SHOP — open its own pages, as she does by hand; never a
+    // general web search, which filed the National Gallery's list of 32 books as the
+    // book (Zurbarán; docs/app.md §1).
     const s1=await shopStep(row);
     const blocked=!!(s1.ran&&s1.blocked);
     if(s1.ran){
@@ -5111,19 +3990,13 @@ export default function App(){
     if(!s2.results.length)return settle(row,{},dom,detail,false,blocked);
     const r2=await readResults(READ_RULES
       +"\nExhibition: "+title+"\nVenue: "+venue+(dom?"\nIts shop is at "+dom:"")+"\n\n"
-      // Read whole (the shop step's cap), never cut to 700 characters — her
-      // Botticelli, 7 Oct: the museum's own page said "Buy the catalog" at
-      // character ~1,970, after the curators' bios, and Claude never saw it.
+      // Read whole (the shop step's cap), never cut to 700 characters (Botticelli).
       +resultsForPrompt(s2.results,6000,{words:[title,venue],dom})+READ_SHAPE);
     detail=detail+"\n"+r2.detail;
     if(!r2.ok)return{row,detail,ok:false};
-    // ANOTHER VENUE'S CATALOGUE IS NOT THIS SHOW'S — her ruling, 2 Oct (NG,
-    // Catharina van Hemessen: Signature Works). The read filed Lannoo's Van
-    // Hemessen & Father, the catalogue of the Antwerp show that travels to
-    // London "in a modified form". The venue never named it. A book found on
-    // the web counts only when the read says it is tied to THIS venue's show;
-    // anything short of a plain true is not found. The shop step needs no
-    // such answer — a book on the venue's own shop is the venue's word.
+    // Another venue's catalogue is not this show's (her decision, NG van Hemessen): a
+    // book found on the web counts only when the read says it is tied to THIS venue's
+    // show. The shop step needs no such answer — the venue's own shop is its word.
     let d2=r2.data||{};
     // A "catalog" link onto the venue's own shop, read off the results in
     // code (catalogueLinkOn), goes to the check that opens shop links when the
@@ -5134,27 +4007,15 @@ export default function App(){
       detail=detail+"\nNot filed: \u201c"+(d2.catalogueTitle||"the book found")+"\u201d is not tied to this venue\u2019s show in the results.";
       d2={};
     }
-    // The dedicated ISBN search runs here too when the ISBN is still blank —
-    // her ruling, 1 Oct (Metamorphoses): until then only the shop route had it.
-    // A publisher read off these general results is a guess (pubGuess):
-    // publisherFromIsbn checks it against the ISBN.
+    // The ISBN search runs on this route too (her decision, Metamorphoses). A publisher
+    // read off these general results is a guess (pubGuess), checked against the ISBN.
     const webHit=await confirmShopLink(settle(row,d2,dom,detail,false,blocked));
     if(webHit&&d2.publisher)webHit.pubGuess=true;
     return await laterSteps(webHit,venue,dom,mu);
   }
 
-  // A STEP THAT DIED IS NOT AN ANSWER \u2014 her question, 21 Sep, and the fault was
-  // mine. Steps one and two fail the whole lookup and say so. The three later
-  // steps \u2014 reading the book\u2019s page, filling a missing ISBN, finding the
-  // publisher\u2019s page \u2014 were written to give back the row UNCHANGED when they
-  // fail, which is right for the row and wrong for the screen: the card then
-  // printed "ISBN not confirmed" and "No separate publisher page." as though
-  // those were findings. The connector\u2019s free tier rate-limits, so this is not
-  // hypothetical.
-  //
-  // They now carry WHY, and it is shown the moment it happens. It is not stored
-  // in the ledger: it is a fact about one attempt, not about the book, and the
-  // remedy is simply to press Search again.
+  // A step that died is not an answer: the card says why, and the reason is not
+  // stored — it is a fact about one attempt. C-043 to C-045.
   async function findOneCat(id){
     if(roStop())return;
     setBusy(true);setBusyId(id);setError(null);setRecheckSaid(null);
@@ -5174,27 +4035,21 @@ export default function App(){
         +"stopped part-way, so the ISBN or the publisher\u2019s page may be missing when they "
         +"exist. "+out.trouble.split("[")[0].trim()+" Press \u201cSearch again\u201d.");
     } else {
-      // ON THE CARD, NOT IN A BANNER — her ruling, 30 Sep: Re-check's line
-      // word for word, "Re-check" swapped for "Search" or "Search again".
-      // The details stay in the diagnostic.
+      // On the card, not in a banner (her decision): Re-check's line word for word,
+      // "Re-check" swapped for "Search" or "Search again".
       const why=String(out.detail||"").split("\n").pop().split("[")[0].trim();
       setRecheckSaid({id,failed:true,text:(row.looked?"Search again":"Search")+" didn\u2019t run \u2014 "+why+" Nothing changed."});
     }
     setBusy(false);setBusyId(null);setLookPhase(null);
   }
 
-  // "RE-CHECK MUSEUM SHOP" — her design, 25 Sep. The design and its reasons are
-  // at shopHeadline, top of file. With a shop link on file it reads that one
-  // page (recheckLinkedPage); with none it runs the shop step alone. Its answer
-  // is printed ON THE CARD, under the button she pressed, not in the banner at
-  // the top of the page — she is looking at the card.
+  // "Re-check museum shop" (her design; see "A BOOK LEAVING THE SHOP" above): its answer
+  // is printed on the card, under the button she pressed.
   async function recheckShop(id){
     if(roStop())return;
     setBusy(true);setBusyId(id);setRechecking(true);setError(null);setRecheckSaid(null);
     const found=rows.find(r=>r.id===id);
-    // A TICKET ON FILE WAS NEVER THE BOOK (isTicketLink) — rows filed before
-    // that rule. The link is dropped and the shop searched afresh, as for a
-    // row with no link; if the shop is blocked the row says so.
+    // A ticket on file was never the book: dropped, and the shop searched afresh.
     const ticket=!!(found.shopUrl&&isTicketLink(found.shopUrl));
     const row=ticket?{...found,shopUrl:null,shopState:"web",shopChange:null}:found;
     let out;
@@ -5208,8 +4063,7 @@ export default function App(){
       const onShop=!!shopLinkOf(o,dom);
       // Not-there moves a "blocked" row on: the shop answered this time.
       const answered=row.shopState==="blocked"?{...row,shopState:row.hasCatalogue==="yes"?"web":"none"}:row;
-      // The ticket link is dropped silently — her ruling, 25 Sep: saying so
-      // crowded the one card it applied to, and the row is right either way.
+      // The ticket link is dropped silently (her decision).
       const dropped="";
       if(!s.ran)out={ok:false,detail:"",said:"This museum has no shop on file, so there is nothing to re-check."};
       else if(!s.ok)out={ok:false,detail:s.detail,said:"Re-check didn’t run — "+s.detail.split("\n").pop().split("[")[0].trim()+" Nothing changed."};
@@ -5359,16 +4213,10 @@ export default function App(){
   const view=useMemo(()=>{
     const sq=search.toLowerCase().trim();
     let out=rows.filter(r=>{
-      // THE SEARCH NARROWS, IT DOES NOT END THE CHECK — her finding, 25 Sep,
-      // the same fault as Dismissed below. It returned here, so with text in
-      // the box every filter was skipped: three shows called "Metamorphoses"
-      // could not be cut to one venue, or to Current, Watched, Wanted, Owned.
+      // The search narrows; it does not end the check, so every other filter applies.
       if(sq&&!(r.title.toLowerCase().includes(sq)||r.summary.toLowerCase().includes(sq)||(MU[r.museumId]?.name||"").toLowerCase().includes(sq)))return false;
-      // DISMISSED NARROWS, IT DOES NOT END THE CHECK — her finding, 24 Sep.
-      // It returned here, so a venue (or any other) filter beside it was
-      // never asked: Dismissed + Menil showed every venue's dismissed rows.
-      // A search still finds a dismissed show, as it always has, unless
-      // Dismissed is on — then only dismissed ones.
+      // Dismissed narrows too. A search still finds a dismissed show unless Dismissed
+      // is on.
       if(dismissedOnly){ if(r.interested)return false; }
       else if(!r.interested&&!showAll&&!sq)return false;
       if(venueF.size>0&&!venueF.has(r.museumId)&&!(venueF.has(OCC_CHIP)&&isOcc(r.museumId)))return false;
@@ -5401,22 +4249,9 @@ export default function App(){
 
   const counts=useMemo(()=>{const c={total:rows.length,dismissed:0,watched:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.watching)c.watched++;if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;if(inClosingWindow(r))c.pressing++;}return c;},[rows]);
 
-  // ── TWO PALETTES, ONE SET OF NAMES — dark added 20 Sep 2026, her request:
-  //    "it's 9pm and this cream background with light grey text is v difficult
-  //    to read."
-  //
-  // EVERY COLOUR THE APP PAINTS COMES FROM HERE OR FROM TIER_SETS. Hexes had
-  // been scattered through the render — drawer grounds, banner washes, one-off
-  // button inks — and each one left behind would have been a cream patch on a
-  // dark page. They are all named now, which is the only way a second theme
-  // can be trusted.
-  //
-  // THE DARK SET IS NOT THE LIGHT SET INVERTED. Pure white on pure black is
-  // harsh for long reading, and this is a screen she works down for an hour at
-  // a time, so the ground is a warm near-black and the text a warm off-white.
-  // `soft` is deliberately LIGHTER than a plain inversion would make it: her
-  // complaint was grey-on-cream, and the same mistake is easy to repeat in the
-  // other direction.
+  // Two palettes, one set of names (docs/app.md §3). Every colour the app paints comes
+  // from here or TIER_SETS — a stray hex would be a cream patch on a dark page. The dark
+  // set is designed, not inverted: a warm near-black ground, `soft` kept light.
   const PALETTES={
     light:{bg:"#E8E4DE",card:"#F5F2ED",ink:"#1E1B18",soft:"#78736C",rule:"#CBC5BB",
            action:"#2D4A3F",accent:"#A13823",owned:"#7B5EA7",muted:"#B5AFA6",
@@ -5442,7 +4277,7 @@ export default function App(){
   const pBtn={...sBtn,background:C.action,color:C.onAction,border:"none",opacity:busy?0.5:1,cursor:busy?"wait":"pointer"};
   const lnk={fontSize:11,fontWeight:500,color:C.ink,background:C.card,border:"1px solid "+C.rule,borderRadius:3,padding:"4px 9px",textDecoration:"none",display:"inline-block",whiteSpace:"nowrap"};
 
-  // ---- v9 approval-stage render helpers ----
+  // ---- Approval-stage render helpers ----
   const decBtn=(active,color)=>({padding:"3px 9px",borderRadius:4,border:"1px solid "+(active?color:C.rule),background:active?color:"transparent",color:active?C.onAction:C.soft,fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"});
   const isUndecided=(p,i)=>isUndecidedCard(p,decisions[i]);
 
@@ -5474,10 +4309,8 @@ export default function App(){
               );})}
         </div>}
 
-        {/* THE FILE DISAGREED WITH ITSELF about this exhibition — two rows, same
-            address, different values. Nothing is resolved silently: both are
-            shown, the fuller one is ticked as a starting point, one tap
-            switches. Her ruling, 13 Sep. */}
+        {/* The file disagreed with itself: both values shown, the fuller one ticked as
+            a starting point, one tap switches (her decision). */}
         {p.choices&&p.choices.length>0&&<div style={{marginTop:7,paddingTop:6,borderTop:"1px dotted "+C.rule}}>
           <div style={{fontSize:10.5,color:C.soft,lineHeight:1.5,marginBottom:5}}>The sweep file gave two different answers here. The longer one is picked for you {"\u2014"} change it if it{"\u2019"}s wrong.</div>
           {p.choices.map((ch,j)=>(
@@ -5499,13 +4332,10 @@ export default function App(){
 
         {p.notes&&p.notes.length>0&&<div style={{marginTop:6,fontSize:10.5,color:C.soft,lineHeight:1.5,borderTop:"1px dotted "+C.rule,paddingTop:5}}>{p.notes.map((n,j)=><div key={j}>{"\u00b7 "}{n}</div>)}</div>}
 
-        {/* THREE OUTCOMES, AND THE THIRD IS NOT A STRONGER REJECT. Reject
-            means "not now" and remembers nothing, so the row returns on every
-            future sweep. Never add this means the row should not be an entry
-            at all — a talk filed under an exhibitions address, a duplicate that
-            could not fold, a dead link. It is NOT for an exhibition she simply
-            is not interested in: that one is accepted and then dismissed, and
-            dismiss is not a rubbish chute. */}
+        {/* Three outcomes: Reject remembers nothing (the row returns next sweep). Never
+            add is for rows that should not be entries at all (a talk, an unfoldable
+            duplicate, a dead link) — not for a show she is not interested in, which is
+            accepted and then dismissed. */}
         {p.type==="add"&&<div style={{marginTop:8,display:"flex",gap:6,flexWrap:"wrap"}}>
           <button onClick={()=>setCardMode(i,"accept")} style={decBtn(dec.mode==="accept",C.okEdge)}>{dec.mode==="accept"?"\u2713 ":""}Add new entry</button>
           <button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject",C.rejectInk)}>{dec.mode==="reject"?"\u2713 ":""}Reject</button>
@@ -5536,7 +4366,7 @@ export default function App(){
   const showUnsavedBanner=FILE_UNSAVED_WARNING&&hasLedger&&dirty;
   // THE LOAD LINE — what was opened, until the first change.
   let savedText=null;
-  // No line at all with no ledger open — her ruling, 26 Sep: the empty page says enough.
+  // No line at all with no ledger open (her decision).
   if(!hasLedger){savedText=null;}
   // UNWIRED WHEN THE CLOUD CHECK SPEAKS — her ruling, 26 Sep: "Loaded N
   // exhibitions from your file" repeated what the check line and the cloud
@@ -5552,9 +4382,8 @@ export default function App(){
       <header style={{maxWidth:760,margin:"0 auto 14px"}}>
         <div style={{fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.soft,marginBottom:4}}>Exhibition catalogues · acquisition window</div>
         <h1 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:36,lineHeight:1,fontWeight:500,margin:0,letterSpacing:"-0.02em"}}>Before it goes<span style={{color:C.accent}}> out of print</span></h1>
-        {/* Venue refresh buttons removed to protect usage. refreshVenues() is kept dormant below and can be re-wired here later. */}
         <div style={{marginTop:14,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
-          {/* Bulk "Find catalogues for N Wanted" button removed to protect usage. findWantedCats() is kept dormant below. */}
+          {/* Bulk "Find catalogues for N Wanted" removed to protect usage; findWantedCats stays dormant. */}
           {/* LOAD AND IMPORT — renamed 25 Sep, her ruling: "Import" and "Import
               Refresh" had become confusing. Load opens a ledger file; Import brings
               in a sweep CSV as cards. */}
@@ -5626,8 +4455,8 @@ export default function App(){
           </div>}
         </div>
         {hasLedger&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.okBg,border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.okInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
-          {/* The icon sits on the FIRST line of text (her ask, 4 Oct): the
-              banner wraps, and centred it drifted between the lines. */}
+          {/* The icon sits on the first line of text (her ask): centred, it drifted when
+              the banner wrapped. */}
           <span style={{fontSize:17,lineHeight:"17.5px"}}>{"\u21BB"}</span>
           {/* EVERY CARD SHE LOOKED AT IS ACCOUNTED FOR IN THIS ONE SENTENCE,
               which is the whole job of it. Partial apply put cards somewhere
@@ -5651,15 +4480,8 @@ export default function App(){
           <span style={{fontSize:17,lineHeight:1}}>{"\u26A0"}</span>
           <span>{"UNSAVED CHANGES \u2014 what's on screen is not saved to a file. Tap \u201cSave\u201d before you close this tab or your work is lost."}</span>
         </div>}
-        {/* A QUARANTINE THAT ISN'T SAVING IS A BANNER, NOT A FOOTNOTE — her
-            ruling, 20 Sep. It used to print inside the quarantine panel, which
-            she would have to open to find: the rows sit on screen looking
-            normal while nothing is being written, and the one person who needs
-            to know is the one least likely to go looking. It borrows the
-            unsaved-changes banner because it means the same thing — a decision
-            you have made is not stored. NOT gated on a ledger being open: the
-            quarantine applies before any file is loaded, so its failures do
-            too. */}
+        {/* A quarantine that isn't saving is a banner, not a footnote (her decision),
+            shown with or without a ledger open. */}
         {quarWhy&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
           <span style={{fontSize:17,lineHeight:1.1}}>{"\u26A0"}</span>
           <span>{"QUARANTINE \u2014 "+quarWhy}</span>
@@ -5668,49 +4490,28 @@ export default function App(){
         {readOnly&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink,fontWeight:700}}>{RO_LINE}</div>}
         {error&&error!==RO_LINE&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
         {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>
-          {/* COPY — her ask, 30 Sep; an icon alone, inside the tray at its
-              bottom right (her ask, 1 Oct). A tick only if the copy happened:
-              a browser can refuse the clipboard to a page in a frame, and an
-              icon that always ticked would be the green tick again. A refusal
-              shows a cross. Back to the copy icon after two seconds. */}
+          {/* Copy: an icon alone, bottom right of the tray (her ask). A tick only if the
+              copy happened — a frame can refuse the clipboard — else a cross; back to
+              the icon after two seconds. */}
           {showDebug&&<div style={{position:"relative",marginTop:4}}>
             <pre style={{margin:0,padding:"7px 28px 7px 7px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>
             <button aria-label={copySaid==="ok"?"Copied":copySaid==="no"?"Couldn\u2019t copy":"Copy"} title={copySaid==="ok"?"Copied":copySaid==="no"?"Couldn\u2019t copy":"Copy"}
               onClick={async()=>{const r=await copyText(debug)?"ok":"no";setCopySaid(r);setTimeout(()=>setCopySaid(v=>v===r?null:v),2000);}}
               style={{position:"absolute",right:5,bottom:5,background:"none",border:"none",color:C.soft,fontSize:13,lineHeight:1,cursor:"pointer",padding:2}}>{copySaid==="ok"?"\u2713":copySaid==="no"?"\u2717":"\u29c9"}</button>
           </div>}</div>}
-        {/* NOT GATED ON A LEDGER EITHER, matching the panel below, whose own
-            comment has said so since 20 Sep while this row quietly required
-            one. When a sweep last ran is what the PAGE knows about the world,
-            not something her document tells it, so it is answerable before any
-            file is opened. */}
+        {/* Not gated on a ledger: when a sweep last ran is what the page knows. */}
         <div style={{marginTop:6,fontSize:10.5,color:C.soft,display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}>
-          {/* "UNKNOWN", NEVER "NEVER" — her ruling, 21 Sep. An empty store is
-              not evidence that no sweep ever ran: she can be looking at rows
-              she quarantined, which only ever come from a sweep. "Never" is a
-              claim about the world made from the absence of a record, which is
-              the same shape of error as dating a venue by the moment she
-              pressed a button. We know what we were told and nothing else. */}
+          {/* "Unknown", never "never" (her decision): an empty store is not evidence
+              that no sweep ran. */}
           <span>Last refreshed: {lastSweep?fmtRefresh(lastSweep):"Unknown"}</span>
-          {/* PER-VENUE FRESHNESS lives here because this is where she already
-              looks for "when was this last touched", next to the save state.
-              Collapsed by default: 21 venues is a wall, and the question is
-              occasional. */}
-          {/* ALWAYS SHOWN once a ledger is open, even with nothing in the
-              sweep log. It used to appear only when there was something to
-              list, so an emptied store removed the control itself and the
-              screen said nothing at all was wrong — which is precisely the
-              silence the panel's own "no sweeps yet" line exists to break.
-              A control that disappears cannot report anything. */}
+          {/* Per-venue freshness: collapsed by default, ALWAYS shown — a control that
+              disappears when the log is empty cannot report anything. */}
           <button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide details":"Details"}</button>
         </div>
 
-        {/* NOT GATED ON A LEDGER BEING OPEN. The sweep log is not part of her
-            document — it is what this page knows about the world, so it is
-            there on a fresh page and it survives Reset. */}
+        {/* Not gated on a ledger: the sweep log survives Reset. */}
         {showFresh&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
-          {/* TRACKED AND DISMISSED LIVE HERE — her ruling, 2 Oct: beside the point
-              on the counts line, so they open with Details, at the top. */}
+          {/* Tracked and Dismissed live here, at the top of Details (her decision). */}
           <div style={{display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",marginBottom:8}}>
             <span><b style={{color:C.ink}}>{counts.total}</b> Tracked</span>
             {counts.dismissed>0&&<span><b>{counts.dismissed}</b> Dismissed</span>}
@@ -5721,13 +4522,8 @@ export default function App(){
           {/* "NO SWEEPS YET" AND "COULDN'T READ THE STORE" LOOK IDENTICAL AND
               MEAN OPPOSITE THINGS, so an empty panel always says which. */}
           {freshWhy&&<div style={{fontSize:11,color:C.accent,marginBottom:6,lineHeight:1.5}}>{freshWhy}</div>}
-          {/* IT SAID "No sweep imported yet.", WHICH ASSERTS SOMETHING WE
-              CANNOT KNOW — her ruling, 21 Sep, same reasoning as the headline.
-              The store holding nothing is a fact about the RECORD. Whether a
-              sweep ran is a fact about the world, and the two are not the same
-              claim. Note this is NOT the same case as freshWhy above, which is
-              the store failing to answer at all: here it answered, and what it
-              answered was nothing. */}
+          {/* An empty store says nothing about whether a sweep ran (her decision), so no
+              "No sweep imported yet". Unlike freshWhy, here the store did answer. */}
           {!freshWhy&&Object.keys(venueSeen).length===0&&
             <div style={{fontSize:11,color:C.soft,marginBottom:6}}>{"The store holds no sweep dates, so when each venue was last swept is unknown."}</div>}
           {MUSEUMS.map(m=>{
@@ -5756,8 +4552,7 @@ export default function App(){
           <span><b style={{color:TH.urgent.ink}}>{counts.pressing}</b> Closing Window</span>
           <button onClick={()=>{if(showSearch)setSearch("");setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);}} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Search">{"\uD83D\uDD0D"}</button>
         </div>
-        {/* THE CROSS CLEARS WHAT SHE TYPED — her ask, 30 Sep: right-aligned inside
-            the box, there while there is text to clear. */}
+        {/* The cross clears what she typed (her ask): right-aligned, shown while there is text. */}
         {showSearch&&<div style={{marginTop:6,position:"relative"}}><input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder={"Search exhibitions\u2026"} style={{width:"100%",padding:"7px 30px 7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
           {search&&<button onClick={()=>{setSearch("");if(searchRef.current)searchRef.current.focus();}} aria-label="Clear search" title="Clear"
             style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:C.soft,fontSize:16,lineHeight:1,cursor:"pointer",padding:"2px 4px"}}>{"\u00d7"}</button>}</div>}
@@ -5822,8 +4617,8 @@ export default function App(){
           // Two buttons share one busy row; only the one pressed shows progress.
           const againLabel=isBusy&&!rechecking?searchingLabel:"Search again";
           const recheckLabel=isBusy&&rechecking?searchingLabel:"Re-check museum shop";
-          // NO SHOP AT ALL (Borghese, Capodimonte, the Accademia) — her ruling,
-          // 2 Oct: no Re-check button, and the line says only "Venue has no shop."
+          // No shop at all (Borghese, Capodimonte, the Accademia; her decision): no
+          // Re-check button, and the line says only "Venue has no shop."
           const noShop=!(MU[r.museumId]&&(MU[r.museumId].shopSearch||MU[r.museumId].shopHome));
           const said=recheckSaid&&recheckSaid.id===r.id?recheckSaid:null;
           if(dismissed)return(
@@ -5844,9 +4639,8 @@ export default function App(){
               <div style={{padding:"12px 14px"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
                   <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginTop:2}}>{mu?.card||mu?.short}</span>
-                  {/* NO "NO CATALOGUE" TAG — her ruling, 25 Sep. The corner says how long
-                      ago the show closed, which is its job; the Catalogue button below
-                      already carries the cross when none was found. */}
+                  {/* No "No catalogue" tag (her decision): the corner says how long ago the
+                      show closed; the Catalogue button carries the cross. */}
                   {isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:C.ownedBg,padding:"2px 7px",borderRadius:3}}>Owned</span>
                   :<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:tier.ink,background:tier.wash,padding:"2px 7px",borderRadius:3}}>{tier.label}</span>}
                 </div>
@@ -5909,34 +4703,24 @@ export default function App(){
                     </div>
                   ):(
                     <div>
-                      {/* A MISSING BUTTON CANNOT REPORT ANYTHING \u2014 her ruling, 21 Sep, and the
-                          third time this app has had to learn it. The Publisher button is drawn
-                          only when a link was found, so its absence read the same whether the
-                          step found nothing, or never ran. It says so now. Most catalogues are
-                          published by the museum itself, where the publisher\u2019s page IS the shop
-                          and is deliberately refused, so "none" is the ordinary answer rather
-                          than a fault \u2014 which is exactly why the silence had to end. */}
-                      {/* "Now" and "Back in the museum shop." are the SAME green as
-                          the plain sentence — her ruling. The word carries the news;
-                          a second colour would make a book coming back look like a
-                          different kind of thing from a book being there. */}
+                      {/* A missing button cannot report anything, so the card says what the
+                          publisher step concluded (publisherNote). "Now" and "Back" are the
+                          same green as the plain sentence (her decision): the word carries
+                          the news. */}
                       {r.shopState==="shop"&&<div style={{fontSize:11,marginBottom:6}}>
                         <span style={{color:C.action,fontWeight:600}}>{shopHeadline(r.shopState,r.shopChange)}</span>
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&<span style={{color:C.soft}}> {publisherNote(r.publisherResult,!!r.publisherUrl)}</span>}
                       </div>}
-                      {/* GONE, AND THE LINK KEPT — her design, 25 Sep. The link stays as
-                          "Museum shop (last seen)" because a restock usually comes back
-                          at the same address. A DARK RED, NOT A FIRE ENGINE — her words:
-                          it borrows the "closed over a year" ink, already muted, already
-                          with a dark-mode partner, no loose hex. */}
+                      {/* Gone, link kept as "Museum shop (last seen)" (her design): a restock
+                          usually returns to the same address. Dark red from the "closed over
+                          a year" ink, never a loose hex. */}
                       {r.shopState==="gone"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-                        {/* The headline alone — her ask, 1 Oct: the sentence after it is gone. */}
+                        {/* The headline alone (her ask). */}
                         <span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopHeadline(r.shopState,r.shopChange)}</span>
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
-                      {/* The dash is a STRING, not page text. Written as a bare
-                          \u2014 among the words it printed those six characters
-                          literally, and nothing caught it for weeks. */}
+                      {/* The dash is a JS string: a bare — in JSX text prints those
+                          six characters. */}
                       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
                         {noShop?(MU[r.museumId]&&MU[r.museumId].shopUnknown?"Museum shop not found.":"Venue has no shop.")
                           :"Not in the museum shop \u2014 shop link opens the general store."}
@@ -5974,8 +4758,7 @@ export default function App(){
           );
         });})()}
       </div>
-      {/* TOP ON THE LEFT, BOTTOM ON THE RIGHT — her layout, 30 Sep. A pair
-          centred on the page, both shown once she has scrolled down. */}
+      {/* Top on the left, bottom on the right (her layout), shown once she has scrolled down. */}
       {showTop&&(<>
         <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label="Return to top"
           style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(calc(-100% - 5px))",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>
@@ -5984,20 +4767,15 @@ export default function App(){
       </>)}
       {undo&&(
         <div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.onAction,borderRadius:4,padding:"7px 14px",fontSize:12,display:"flex",gap:10,alignItems:"center",zIndex:999,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
-          {/* THE ORIGINAL STYLE, ONE WORD CHANGED — her ruling, 24 Sep:
-              "Restore" became "Undo", both words the same larger size. A
-              <button> does not inherit the page's font, so it is told to, and
-              both carry the same line height so their baselines meet. */}
+          {/* "Undo", the same size as the word before it (her decision). A <button>
+              does not inherit the page's font, so it is told to. */}
           <span style={{fontSize:14,lineHeight:"20px"}}>Dismissed</span>
           <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:C.onAction,fontFamily:"inherit",fontSize:14,lineHeight:"20px",fontWeight:600,cursor:"pointer",padding:"1px 8px",margin:0}}>Undo</button>
         </div>
       )}
-      {/* QUARANTINE LIVES DOWN HERE — her ruling, 24 Sep. At eye level at the
-          top it read as an overflow bin. Right-aligned on the starter-set line,
-          in that line's own type; its drawer opens beneath. */}
+      {/* Quarantine lives down here, right-aligned on the starter-set line (her decision). */}
       <div style={{maxWidth:760,margin:"18px auto 0",paddingTop:10,borderTop:"1px solid "+C.rule,fontSize:10,color:C.soft,lineHeight:1.6,display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:12,flexWrap:"wrap"}}>
-        {/* TWO BUTTONS ON THE LEFT, NO SENTENCE — her ruling, 2 Oct. Spaced as
-            the two drawers on the right are. */}
+        {/* Two buttons on the left, no sentence (her decision), spaced like the drawers on the right. */}
         <span style={{display:"flex",gap:14}}>
           <button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset to Seed</button>
           <button onClick={()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset cards</button>
@@ -6044,11 +4822,9 @@ export default function App(){
       </div>
       <div style={{maxWidth:760,margin:"0 auto"}}>
         {showIgnored&&ignored.length===0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:12,color:C.soft}}>{quarWhy?"Quarantine can\u2019t be read: "+quarWhy:"Nothing in quarantine."}</div>}
-        {/* RESET CARDS — her design, 2 Oct. "Search again" only fills blanks, so
-            a card whose search went wrong could never start over. Here she finds
-            the card by typing, picks it, confirms; its catalogue result is
-            cleared and the card shows "Find catalogue" again. Her marks — star,
-            Yes/No/Acquired, Hide — stay. One card per confirm. */}
+        {/* Reset cards (her design): find a card by typing, pick it, confirm; its catalogue
+            result is cleared (resetCard) and it shows "Find catalogue" again. Her marks
+            stay. One card per confirm. */}
         {showResetCards&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
           <input value={resetQuery} onChange={e=>setResetQuery(e.target.value)} placeholder={"Search cards\u2026"} style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
           {resetQuery.trim()&&(()=>{
@@ -6065,17 +4841,13 @@ export default function App(){
           })()}
         </div>}
         {showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
-          {/* BIG ENOUGH TO READ — her finding, 20 Sep: "tiny AND faint". This
-              is a list of decisions she may need to UNDO, so it cannot be the
-              smallest, palest text on the screen. Set at or above the filter
-              chips below it, in the body ink rather than the muted grey. */}
+          {/* Big enough to read (her decision): decisions she may need to undo, in body
+              ink, at chip size or above. */}
           <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
             {/* THE COUNT LIVES IN HERE — her ruling, 25 Sep; the footer button just says Quarantine. */}
             <b>{ignored.length+" in quarantine. "}</b>{"Entries excluded from all future imports. Removing them from quarantine will re-offer them in future sweeps \u2014 it does not immediately add them to your ledger."}
           </div>
-          {/* BY VENUE ONLY — her ruling, 24 Sep. It listed newest decision
-              first, so each import session formed its own block. Venues in the
-              app's own order, titles A–Z within each. */}
+          {/* By venue only (her decision): venues in the app's order, titles A–Z. */}
           {ignoredByVenue.map(x=>(
             <div key={x.key} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
               <span style={{minWidth:130,fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
@@ -6091,27 +4863,20 @@ export default function App(){
           ))}
         </div>}
       </div>
-      {/* THE IMPORT POP-UP — her design, 4 Oct. Small: CSV and Links, and a
-          small Cancel styled as the footer's Quarantine link. CSV opens the
-          file picker, the sweep route as always. Links opens the box and Read
-          below them, on the same pop-up; reading's progress shows here too.
-          Nothing else: a new venue's shop is its own screen, after the review.
-          Under the review (1100) so the cards open on top; under the confirm
-          box (1200), like every overlay. */}
+      {/* The import pop-up (her design; docs/picked_shows.md): CSV and Links, and a small
+          Cancel. Under the review (1100) so cards open on top; under the confirm box (1200). */}
       {importMode&&(
         <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",justifyContent:"center",padding:16}}>
-          {/* Sized to what it holds: the two buttons alone, or the box too.
-              CSV and Links are Load and Save's size and style, both plain; the
-              one pressed turns green, as Save is (her design, 4 Oct). */}
+          {/* Sized to what it holds. CSV and Links match Load and Save; the one pressed
+              turns green (her design). */}
           <div style={{background:C.bg,borderRadius:8,...(importMode==="links"?{maxWidth:820,width:"100%"}:{width:"fit-content"}),margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px"}}>
             <div style={{display:"flex",gap:5,justifyContent:"center"}}>
               <button onClick={()=>{setImportMode(null);refreshFileRef.current?.click();}} disabled={busy} style={sBtn}>CSV</button>
               <button onClick={()=>setImportMode("links")} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>Links</button>
             </div>
             {importMode==="links"&&<div style={{marginTop:14}}>
-              {/* "Clear" sits inside the box, top right (her design, 7 Oct):
-                  links come back in it by themselves, so emptying it is one
-                  press, and stays emptied. */}
+              {/* "Clear" sits inside the box, top right (her design): one press empties
+                  it and the store. */}
               <div style={{position:"relative"}}>
                 <textarea value={linkText} onChange={e=>setLinkText(e.target.value)} rows={8} disabled={busy}
                   style={{width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"8px 52px 8px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,resize:"vertical",display:"block"}}/>
@@ -6142,20 +4907,9 @@ export default function App(){
           <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
             <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
               <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>{proposals.length} proposed change{proposals.length===1?"":"s"} found</div>
-              {/* THE COUNTS, AND WHY THEY EARN THEIR SPACE. A card total on
-                  its own cannot be checked against anything: rows leave the
-                  pile for four innocent reasons — a marker row, a quarantine,
-                  a fold, an entry that already matches — so 652 rows arriving
-                  as 319 cards is indistinguishable from the same with eleven
-                  quietly lost.
-
-                  REWRITTEN TO HER WORDING, 20 Sep. Two sentences, each ending
-                  in the number the next one starts from: the file narrows to
-                  the pile, the pile splits by what it does to her ledger. The
-                  old version put the split FIRST and the reconciliation
-                  second, so the two lines shared no number and nothing led
-                  anywhere. Every term stays — drop one and the arithmetic
-                  stops closing, which is the only thing these lines are for. */}
+              {/* The counts, her wording: two sentences, each ending in the number the
+                  next starts from (docs/app.md §3). Every term stays — drop one and the
+                  arithmetic stops closing. */}
               {tally&&(()=>{
                 const cards=tally.add+tally.fill+tally.change;
                 const n=(v,tone)=><b style={{color:tone||C.ink}}>{v}</b>;
@@ -6181,69 +4935,30 @@ export default function App(){
               <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.5}}>Review each one below.</div>
             </div>
             <div style={{overflow:"auto",padding:"12px 18px",flex:1}}>
-              {/* TRIAGE FIRST, THEN THE ORDINARY WORK — her ruling, 13 Sep.
-                  Odd cases were sprinkled through the venue groups, so every
-                  few cards she switched from approving to investigating. Her
-                  reason for the order INSIDE triage is hers and it is not the
-                  one an engine would pick: easiest first, hardest last. She is
-                  spending attention, not compute, and clearing the cards that
-                  need nothing leaves more of it for the ones that do.
-
-                  Batched by KIND, not by venue, which means a venue can appear
-                  twice on this screen — once in triage, once below. That is the
-                  accepted cost: she would rather finish one kind of thinking
-                  than keep switching. */}
+              {/* Triage first, then the ordinary work (her decision): odd cases batched
+                  by kind, easiest first, so she finishes one kind of thinking at a time.
+                  A venue can appear twice on this screen — accepted. */}
               {(()=>{
                 const at=proposals.map((p,i)=>({p,i}));
                 const vOrder=m=>{const k=MUSEUMS.findIndex(x=>x.id===m);return k<0?999:k;};
                 const byVenue=a=>a.slice().sort((x,y)=>vOrder(x.p.venueId)-vOrder(y.p.venueId));
-                // NO "UNUSABLE" BAND — her ruling 20 Sep. A row with no title
-                // or no venue code never gets this far: analyzeProForma refuses
-                // the whole file and names the lines for the session, and
-                // scraper/qc.js stops it upstream. Nothing faulty is triage.
+                // No "unusable" band: a faulty row refuses the whole file (analyzeProForma;
+                // qc.js upstream).
                 const real    = at;
-                // WAS THIS CARD BUILT FROM MORE THAN ONE ROW? Ask the fold
-                // itself, via the flag it sets. This used to search the notes
-                // for the words "same exhibition", and the sweeper writes those
-                // same words for a travelling show — "The same exhibition is
-                // also shown at Palm Beach." Acquavella's two runs of
-                // Portraiture were then filed under "combined for you" when
-                // nothing had been combined, under a heading that told her
-                // something untrue. A FACT THE CODE ALREADY KNOWS IS NEVER
-                // RE-DERIVED FROM PROSE WRITTEN FOR A HUMAN.
+                // Was this card built from more than one row? Ask the fold's own flag, never
+                // the notes — a travelling show's note says "same exhibition" too (fixture 16).
                 const isMerged=x=>!!x.p.merged;
                 const hasChoice=x=>!!x.p.choices;
                 const mergedOnly = byVenue(real.filter(x=>isMerged(x)&&!hasChoice(x)));
-                // A CONFLICT IS ALWAYS A FOLD, so there is no band for a
-                // disagreement that arrived on its own. There was one, and it
-                // was a PHANTOM: it never held a row and never could, because a
-                // disagreement is only ever found by holding two rows side by
-                // side, and foldDuplicateRows flags every card it builds. It
-                // shipped, this guide listed it as one of six bands, and nobody
-                // ran a file and asked why it was always empty. So the test is
-                // hasChoice alone — being a fold adds nothing to it.
+                // A conflict is always a fold, so there is no band for a lone disagreement
+                // (fixture 17).
                 const mergedConf = byVenue(real.filter(x=>hasChoice(x)));
                 const plain      = real.filter(x=>!isMerged(x)&&!hasChoice(x));
-                // NO LINK AT ALL — band 6, her ruling 13 Sep. These rows are
-                // perfectly usable: a title, dates and a description, and the
-                // card's arrow falls back to the venue's own listing. So they
-                // are NOT faulty: everything is present except the link.
-                //
-                // They are shown together because of what the missing link
-                // costs LATER, invisibly: it is the only key that can fold two
-                // copies of one exhibition, and the only key quarantine can use,
-                // so a no-link row arrives fresh on every future sweep. Her
-                // reason for grouping them: once she reaches the ordinary list
-                // she is no longer in "what is wrong with this one" mode, and
-                // these are the last rows that need that mode.
+                // No link at all: usable rows, grouped because the link is the only key for
+                // folding and quarantine, so they return fresh every sweep (her decision).
                 const noLink     = byVenue(plain.filter(x=>!x.p.cand||!x.p.cand.exUrl));
                 const ordinary   = plain.filter(x=>x.p.cand&&x.p.cand.exUrl);
-                // VENUE SUBHEADINGS INSIDE EACH BAND. Batching by kind removed
-                // the venue grouping, so a band read as one undifferentiated
-                // run of cards and the only way to tell which museum a show was
-                // at was to read its link. Same heading style and same venue
-                // order as the ordinary list below, so both halves of the
-                // screen read the same way round.
+                // Venue subheadings inside each band, in the same style and order as below.
                 const byVenueBlocks=list=>allVenues().map(m=>{
                   const grp=list.filter(x=>x.p.venueId===m.id);
                   if(!grp.length)return null;
@@ -6254,11 +4969,8 @@ export default function App(){
                     </div>
                   );
                 }).filter(Boolean);
-                // EVERY BAND CARRIES ITS OWN COUNT, AND ITS OWN DISCLOSURE.
-                // Without a count a band is an unbounded pile: no way to tell
-                // "two of these" from "eighty" before scrolling through them,
-                // and no way to check the bands add up to the header. The count
-                // lives ON the header, so collapsing can never hide it.
+                // Every band carries its own count on its header, so collapsing never
+                // hides it.
                 const bandOpen=(key,dflt)=>openBands[key]===undefined?dflt:openBands[key];
                 // A venue with no entry is OPEN. See the state declaration.
                 const venueOpen=id=>openVenues[id]!==false;
@@ -6277,10 +4989,7 @@ export default function App(){
                     </div>
                   );
                 };
-                // ODD CASES COUNTS THE MARKERS TOO. It used to add up only the
-                // five card bands, so the heading read "Odd cases first \u00b7 0"
-                // directly above a band of its own saying 9 \u2014 a total that
-                // left out one of the things it was totalling.
+                // The odd-cases total counts the markers too.
                 const oddCount=coverage.length+mergedOnly.length+mergedConf.length+noLink.length;
                 const markerBlocks=MUSEUMS.map(m=>{
                   const grp=coverage.filter(cv=>cv.venueId===m.id);
@@ -6308,10 +5017,8 @@ export default function App(){
                     </div>
                   )}
                 {ordinary.length>0&&(()=>{
-                    // Which venues actually have ordinary cards. The toggle must
-                    // act on THESE and not on all 21, or "collapse all" would
-                    // write keys for venues with nothing in them and the button
-                    // would read the wrong way on the next click.
+                    // Only venues with ordinary cards, or "Collapse all" would write keys
+                    // for empty venues and read the wrong way next click.
                     const venuesHere=allVenues().filter(m=>ordinary.some(x=>x.p.venueId===m.id)).map(m=>m.id);
                     const anyOpen=venuesHere.some(id=>venueOpen(id));
                     return(
@@ -6327,19 +5034,8 @@ export default function App(){
                         }} style={sBtn}>{anyOpen?"Collapse all venues":"Expand all venues"}</button>
                     </div>
                   );})()}
-                  {/* ORDER INSIDE A VENUE — her ruling 20 Sep. It was FILE
-                      ORDER, which is the order the scraper read the venue's
-                      pages, so an edit to something she owns sat between two
-                      brand-new shows and she switched between "is this change
-                      right?" and "do I want this?" every few cards. Same
-                      reasoning as batching the triage bands by kind.
-
-                      Fills, then edits, then new. Within each, NEWEST CLOSING
-                      DATE FIRST, because that is the field the whole app is
-                      about — how close the catalogue is to going out of print.
-                      A row with no closing date has nothing to sort on, so it
-                      sits at the BOTTOM of its group rather than being given a
-                      position it did not earn. */}
+                  {/* Order inside a venue (her decision): fills, then edits, then new;
+                      newest closing date first in each; no closing date last. */}
                   {allVenues().map(m=>{
                     const rank={fill:0,change:1,add:2};
                     const grp=ordinary.filter(x=>x.p.venueId===m.id).slice().sort((a,b)=>{
@@ -6349,13 +5045,7 @@ export default function App(){
                       return be.localeCompare(ae);
                     });
                     if(!grp.length)return null;
-                    // THE VENUE HEADING IS THE CONTROL. It used to be small grey
-                    // uppercase text that read as a label and was lost between
-                    // the cards — her finding. Now it carries the accent red,
-                    // a larger size, its own count, and the same disclosure
-                    // triangle as a triage band, so the one thing that separates
-                    // one venue's work from the next is the most visible line on
-                    // the screen rather than the least.
+                    // The venue heading is the control (docs/app.md §3 "Screen rulings").
                     const vOpen=venueOpen(m.id);
                     return(
                     <div key={m.id} style={{marginBottom:14}}>
@@ -6365,15 +5055,9 @@ export default function App(){
                         <span style={{fontSize:10,lineHeight:1,width:10,display:"inline-block",transform:vOpen?"rotate(90deg)":"none",transition:"transform .12s"}}>{"\u25B6"}</span>
                         <span style={{fontSize:14,letterSpacing:"0.01em",fontWeight:700}}>{m.short}</span>
                         <span style={{fontSize:12,fontWeight:700}}>{"\u00b7"} {grp.length}</span>
-                        {/* THE UNDECIDED COUNT PER VENUE. With a hard gate on
-                            the ledger, a number in the footer says how much is
-                            left but never WHERE, and a collapsed venue hides
-                            its own. Printed on the heading, a closed venue
-                            still declares what it is holding. */}
-                        {/* ONLY WHERE THERE IS WORK. A badge on every venue
-                            whatever its state is one more number to read past
-                            on a screen that already carries plenty — her
-                            warning. A venue with nothing left says nothing. */}
+                        {/* The undecided count per venue, only where there is work: a
+                            closed venue still declares what it holds; a "0" is clutter
+                            (her decision). */}
                         {(()=>{const u=grp.filter(({p,i})=>isUndecided(p,i)).length;
                           return u>0?<span style={{fontSize:11,fontWeight:600,color:C.soft}}>{"\u00b7 "+u+" to decide"}</span>:null;})()}
                       </button>
@@ -6385,65 +5069,19 @@ export default function App(){
             </div>
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
               <button onClick={cancelRefresh} style={sBtn}>Cancel import</button>
-              {/* Rejected and quarantined are named only when there is one
-                  (quarantined too, her ask 1 Oct): a "0" is one more number to
-                  read past. Whatever is named adds up to what is decided. */}
+              {/* Rejected and quarantined are named only when there is one (her ask);
+                  what is named adds up to what is decided. */}
               <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>
                 {(rejectedCount?rejectedCount+" rejected, ":"")+(quarantinedCount?quarantinedCount+" quarantined, ":"")+acceptedCount+" to apply"}</span>
-              {/* THE COUNT IS THE WAY TO REACH ONE — raised as the gap the
-                  block leaves and built at her ask. A number she cannot act on
-                  is the thing that makes a hard gate feel arbitrary. It opens
-                  the venue holding the first undecided card, because a
-                  collapsed venue would otherwise scroll to nothing.
-
-                  REMOVED 22 Sep 2026 — her ruling on seeing the finished
-                  footer: "clutter and duplication". Three things said the same
-                  number on one screen — this, the disabled button beside it,
-                  and the per-venue "N to decide" on every heading. The venue
-                  headings are the better answer, because they say WHERE as well
-                  as how many, and a closed venue still declares what it holds.
-
-                  DO NOT PUT IT BACK as a fix for "she cannot find the remaining
-                  cards" — she can, from the headings. Git holds it. */}
-              {/* EVERY CARD MUST BE DECIDED BEFORE THE LEDGER MOVES — her ruling,
-                  20 Sep. applyRefresh SKIPPED an undecided card silently: not
-                  applied, and not remembered either, so it returned on the next
-                  sweep with nothing on screen to say it had been passed over.
-                  With 320 cards that is a whole session's reading thrown away by
-                  one tap, and she had believed the guard was already there.
-
-                  A BLOCK, not a warning — her call, and her reason: "otherwise I
-                  envision total chaos if I can skip. this is SLOW mode at the
-                  moment." A warning she can wave through is the same failure one
-                  dialogue later.
-
-                  The button says WHAT IS MISSING rather than going quietly grey.
-                  A dead control with no reason attached is the thing she would
-                  be left staring at, and the count is the only clue to where the
-                  work is. */}
-              {/* ===== TEMPORARY — THE SIDE DOOR FOR THE 320-CARD IMPORT =====
-                  Her ask, 22 Sep 2026, and her words: the block above is the
-                  permanent design and STAYS. This is a way past it for one job
-                  — 320 cards is more than one sitting, and the gate makes a
-                  half-finished sitting worth nothing.
-
-                  UNWIRE THIS WHEN THAT IMPORT IS DONE. Delete this block and
-                  the `partial` parameter on applyRefresh; nothing else knows
-                  about it. It is deliberately one contiguous piece for that
-                  reason.
-
-                  IT CANNOT APPEAR INSTEAD OF THE BLOCK, only beside it. It is
-                  drawn when some cards are decided AND some are not — with
-                  nothing decided there is nothing to apply, and with everything
-                  decided the real button is live and this one would be a second
-                  way to do the same thing. So the gate is never the only thing
-                  on screen and never absent.
-
-                  IT ASKS FIRST. What is left behind is not remembered anywhere
-                  — that is not a fault to fix here, it is how refusing works
-                  today — so the confirm box says both numbers and the way back.
-                  Its wording is hers, 30 Sep. Her call to make with the facts
-                  in front of her, every time, not once. */}
+              {/* No separate "N to decide" link here (her decision: clutter) — the venue
+                  headings say where the cards are. */}
+              {/* Every card must be decided before the ledger moves — a hard block, her
+                  permanent design (docs/app.md §3). The button says what is missing. */}
+              {/* ===== PARTIAL APPLY — stays until she says (CLAUDE.md §4) =====
+                  Beside the block, never instead of it: drawn only when some cards are
+                  decided and some are not (offerPartialApply). It asks first, in her
+                  wording, naming what is left behind and the way back. To remove it: this
+                  block, `partial` on applyRefresh, offerPartialApply, fixture 18h. */}
               {offerPartialApply({acceptedCount,undecidedCount})&&<button
                 onClick={()=>setConfirmBox({
                   title:"Complete this partial import?",
@@ -6454,10 +5092,9 @@ export default function App(){
                 title={"Apply the "+acceptedCount+" you have decided and come back to the rest later."}
                 style={{...sBtn,borderColor:C.accent,color:C.accent,fontWeight:600}}>
                 Update with the {acceptedCount} I{"’"}ve decided</button>}
-              {/* ===== end temporary block ===== */}
-              {/* "NEXT" WHEN A NEW VENUE'S SHOP IS STILL TO CONFIRM — her
-                  design, 4 Oct: the shop screen comes between the review and
-                  the ledger, and the ledger moves only when it is done. */}
+              {/* ===== end partial apply block ===== */}
+              {/* "Next" when a new venue's shop is still to confirm (her design): the
+                  ledger moves only after the shop screen. */}
               <button onClick={()=>proceedRefresh(false)} disabled={undecidedCount>0}
                 title={undecidedCount>0?"Decide every card first — "+undecidedCount+" still undecided.":""}
                 style={{...pBtn,...(undecidedCount>0?{background:C.muted,cursor:"not-allowed",opacity:1}:{})}}>
@@ -6468,11 +5105,9 @@ export default function App(){
           </div>
         </div>
       )}
-      {/* THE SHOP SCREEN — her design, 4 Oct. After the review's "Next",
-          before the ledger moves: one card per new venue whose shop she has
-          not confirmed. The ledger is updated only when every card is
-          answered — Confirm, or No shop; Look again searches on the spot.
-          Over the review (1100), under the confirm box (1200). */}
+      {/* The shop screen (her design): one card per new venue with an unconfirmed shop;
+          the ledger moves only when every card is answered. Over the review (1100),
+          under the confirm box (1200). */}
       {shopScreen&&proposals&&(()=>{
         const left=shopScreen.ids.filter(id=>!(occVenues[id]||{}).confirmed||shopLooking===id).length;
         return <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1150,display:"flex",flexDirection:"column",padding:16}}>
@@ -6482,11 +5117,8 @@ export default function App(){
               <div style={{fontSize:11.5,color:C.soft,marginTop:4}}>Check and approve each shop link.</div>
             </div>
             <div style={{overflow:"auto",padding:"4px 18px 14px",flex:1}}>
-              {/* THE BUTTONS ARE THE REVIEW CARDS' (decBtn): the same size, and a
-                  decision turns solid with a tick — Confirm green as "Add new
-                  entry", No shop as "Reject". Always the same three in the same
-                  places (her ruling, 4 Oct); Confirm is greyed while there is
-                  no section to confirm. */}
+              {/* The review cards' buttons (decBtn), always the same three in the same
+                  places (her decision); Confirm greyed with no section to confirm. */}
               {shopScreen.ids.map(id=>{
                 const v=occVenues[id]||{}, link=v.shop==="found"?v.shopCatalogues:null, looking=shopLooking===id;
                 const home=v.shop==="noshelf"||v.shop==="failed"?v.shopHome:null;
@@ -6514,28 +5146,13 @@ export default function App(){
             </div>
           </div>
         </div>;})()}
-      {/* ABOVE THE REVIEW PANEL, NOT UNDER IT — her finding, 22 Sep 2026, on
-          the very first press of the partial-apply button.
-
-          It sat at 1000 while the refresh review sits at 1100, so a confirm
-          raised FROM inside the review painted behind it: the box was built,
-          the scrim was drawn, and every pixel of both was covered. The button
-          read as dead. Nothing was wrong with the button.
-
-          IT WENT UNSEEN BECAUSE OF WHERE IT USED TO BE RAISED FROM. Import and
-          Reset both live on the header, with no review open, so 1000 was above
-          everything that existed at the time and the gap could not show. The
-          first caller from inside the review found it immediately.
-
-          SO IT IS THE TOP LAYER NOW, which is what a confirm is: the thing
-          asked last is the thing answered first, whatever raised it. Any new
-          overlay belongs BELOW this number, never above it. */}
+      {/* ABOVE THE REVIEW PANEL, NOT UNDER IT: the confirm box is the TOP layer (1200),
+          because the thing asked last is answered first (fixture 18i). Any new overlay
+          goes below it. */}
       {confirmBox&&(
         <div style={{position:"fixed",inset:0,background:C.scrim,display:"grid",placeItems:"center",zIndex:1200,padding:16}}>
           <div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:8,maxWidth:420,padding:"18px 20px",boxShadow:"0 6px 24px rgba(0,0,0,0.25)"}}>
-            {/* The heading is now the CALLER'S, because this box no longer only
-                guards replacing the screen. The old wording stays as the
-                default so every existing caller reads exactly as it did. */}
+            {/* The heading is the caller's; the default keeps the old wording. */}
             <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:8}}>{confirmBox.title||"Replace what's on screen?"}</div>
             {confirmBox.text?<div style={{fontSize:12.5,color:C.body,lineHeight:1.5,marginBottom:16}}>{confirmBox.text}</div>:<div style={{height:8}}/>}
             <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
@@ -6545,10 +5162,8 @@ export default function App(){
           </div>
         </div>
       )}
-      {/* WHICH VERSION IS THIS — her ask, 22 Sep 2026. Small, grey, at the
-          bottom, out of the way of the work: it is not something she acts on,
-          it is something she checks when a page and a conversation disagree.
-          Reads APP_VERSION, so there is one copy of the number in the file. */}
+      {/* The version, small and grey: something she checks, not acts on. Reads
+          APP_VERSION, so there is one copy of the number. */}
       <footer style={{maxWidth:760,margin:"28px auto 0",fontSize:10.5,color:C.soft,textAlign:"center"}}>
         Cat Watch {"·"} version {APP_VERSION} {"·"} {CLOUD_COUNT} {"·"} {APP_VERSION_DATE}
       </footer>

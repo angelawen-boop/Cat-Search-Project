@@ -5,7 +5,7 @@ description: QC and diagnosis of ONE sweep run, container or home, and the repor
 
 # Sweep QC — one run, container or home
 
-**Her ruling, 5 Oct 2026: every run is QC'd the same way, and its faults
+**Her decision: every run is QC'd the same way, and its faults
 fixed, before it is stitched.** The container's run gets this from the
 monthly-sweep routine; her home run gets it in a session she starts after
 pushing it. Stitch and compress come only after both have passed.
@@ -24,11 +24,11 @@ settle something, name the one page that would; she saves it.
    Its second half, **CHANGES SINCE EACH VENUE'S LAST RUN**, is the
    comparison done for you, by address, with the cause read from the run's
    own log and notes. **Its causes are facts — repeat them, never re-guess
-   them.** A row it marks `excluded … (log)` was dropped by her ruling; a
+   them.** A row it marks `excluded … (log)` was dropped by her decision; a
    `MOVED` row is the same show at a new address; `KEPT BY RULE` is the
    lookback rule working; `SAME NAME` is the no-de-duplication rule working;
    `LOST TEXT … (note)` says why. None of these is junk or a fault.
-   **`RULE STOPPED` is always a fault**: a row her ruling excluded last run is
+   **`RULE STOPPED` is always a fault**: a row her decision excluded last run is
    back. Check the venue's other NEW rows for the same kind (a newly opened
    display has no earlier exclusion to match).
 2. **Your job is what the code could not settle:**
@@ -48,7 +48,7 @@ settle something, name the one page that would; she saves it.
      miss: cookie notices, prices, opening hours, breadcrumbs, menu text,
      whole pages, broken characters, halved or run-together titles, a show
      whose own dates put it before the lookback, notes quoting a page instead
-     of a match. `CLAUDE.md` §2 rulings decide what belongs; a row her ruling
+     of a match. `CLAUDE.md` §2 decisions decide what belongs; a row her decision
      excludes appearing is a fault.
    - The log's TITLES section (titles the page check changed or could not
      complete).
@@ -81,7 +81,7 @@ She works IN this session after reading it, so it must be ready to act on.
     kept page) or **guess** (and the one page that would settle it).
   - **Fix:** the change you propose, and whether it is code, a recipe, or a
     re-sweep (a re-sweep is always hers to call).
-- **Expected, not faults** — your rulings taking effect, rows kept by rule,
+- **Expected, not faults** — your decisions taking effect, rows kept by rule,
   refusals (marker rows), in one short list. Say which of them will reach her
   as cards: a MOVED show arrives as a NEW card, a title change as a Change
   card.
@@ -93,6 +93,6 @@ She works IN this session after reading it, so it must be ready to act on.
 (met, artic, mad, brit, orsay, morgan, moma — `route: 'local'`), and a home
 run never mentions a container venue, even where a script prints it
 (`venue_status.js` lists every venue): the two piles must not be confused
-(her ruling, 5 Oct).
+(her decision).
 
 Talk TO her ("you"), never about her.

@@ -4,7 +4,8 @@ How `scraper/sweep_prototype.js` reads a museum site and why each rule exists.
 `CLAUDE.md` §5 carries the commands and the shape. **Read the relevant section
 before changing that area** — almost every rule here replaced something that
 looked sensible and was silently wrong. Compressed 30 Sep; full history in git.
-Section numbers are referenced from the guide and code — keep them.
+Section numbers are referenced from the guide and code — keep them. The original
+long comments: `git show bea6dd7:scraper/dates.js` (and `…:scraper/sweep_prototype.js`).
 
 ---
 
@@ -112,6 +113,9 @@ Aug 1, 2026–Summer 2027              opens 1 Aug, no closing date, 2027 a boun
 Mar 8, 2025–ongoing                  still open
 Through Oct 4 / Ongoing from Oct 19  no year — derived
 23rd, "Feburary"                     ordinals; a common misspelling
+From May 16, 2025, to May 17, 2027   comma before the separator (Brera)
+since 11. November 2025              German day stop; read only with a year (KHM)
+…28/09/2025, extended to02/11/2025   an extension (Uffizi; "prorogata al…")
 ```
 
 - **A closing side that is not a date** (`–Summer 2027`, `–ongoing`) is read
@@ -126,6 +130,9 @@ Through Oct 4 / Ongoing from Oct 19  no year — derived
   component over 12); otherwise refused. Listing cards only.
 - **A backwards range crosses the new year** — the opening year is worked out.
 - **`ymd()` checks every date exists** — JavaScript rolls 31 Feb into March.
+- **An extension only moves the closing date later**, applied once by both parsers.
+  A yearless one takes its year from the closing date written just before it,
+  never by rolling the range's end forward (Gricci and Lotto went a year late).
 - **Every dash is normalised** (U+2010–U+2015, minus, maqaf).
 - **Two guards against art history:** a month NAME beside the number, and a year
   in 1990–2035. **A published opening year that fails the guard refuses the whole
