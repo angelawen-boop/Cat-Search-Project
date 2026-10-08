@@ -1922,11 +1922,8 @@ function needsPageRead(hit){
             &&(!hit.row.isbn13||!hit.row.publisher));
 }
 
-// IT FILLS BLANKS AND NOTHING ELSE. A publisher already read from the search
-// results stands; a 10-digit ISBN is converted by toIsbn13 and anything that
-// is not a real ISBN is refused, so the row keeps its blank. A page that
-// yields nothing must leave the row exactly as it was \u2014 the old answer,
-// never a worse one.
+// Fills blanks only (docs/app.md §1 "The ISBN"): a value already on the row stands;
+// anything not a real ISBN is refused; a page yielding nothing leaves the row as it was.
 function applyIsbnFill(row,o,dom){
   const isbn=toIsbn13(o&&o.isbn13);
   const pub=(o&&o.publisher)?String(o.publisher).trim():"";
@@ -1940,20 +1937,9 @@ function applyIsbnFill(row,o,dom){
 
 function shopDomain(mu){if(!mu||!mu.shopHome)return null;try{return new URL(mu.shopHome).hostname;}catch{return null;}}
 
-// WHICH OF THESE RESULTS IS THE PUBLISHER\u2019S OWN SITE \u2014 answered in code.
-//
-// A publisher\u2019s name is in its hostname: Hannibal Books is hannibalbooks.be,
-// Thames & Hudson is thamesandhudson.com, Rizzoli is rizzoliusa.com. That is
-// one input with one correct answer, so it is code\u2019s job and not a model\u2019s.
-//
-// The words every publisher shares carry no information and are dropped, or
-// "Yale University Press" would match any university press. What is left must
-// ALL appear in the host, so "hannibal" finds hannibalbooks.be and does not
-// find hannibal-lecter fan sites, which are not publishers and have neither
-// the rest of the name nor a book on them.
-// "university" is dropped for the same reason as "press": Yale University
-// Press lives at yalebooks.yale.edu, which carries the distinctive word and
-// none of the shared ones. Checked against real publishers, not imagined ones.
+// Which result is the publisher's own site, in code: a publisher's name is in its
+// hostname (hannibalbooks.be). Shared words are dropped ("university" too: Yale
+// University Press is yalebooks.yale.edu); every remaining word must be in the host.
 const PUBLISHER_WORDS=new Set(["books","book","press","publishing","publishers","publisher",
   "editions","edition","verlag","publications","university","the","and","of","co","inc","ltd",
   "llc","bv","nv"]);
@@ -1970,73 +1956,34 @@ function publisherDomainFrom(results,name){
   return null;
 }
 
-// \u2500\u2500 A MUSEUM THAT PRINTS ITS OWN CATALOGUES HAS NO PUBLISHER PAGE TO FIND \u2500\u2500
-// Her ruling, 22 Sep 2026, after running the rebuilt lookup on real rows.
-//
-// The National Gallery's Zurbaran came back publisher "National Gallery
-// Global", and the step then spent two searches and a page read proving what
-// was already known: a museum's publishing arm has no separate site, because
-// its "publisher page" IS the museum shop, which `cleanPublisherUrl` refuses
-// by design. Two searches and a reading of her allowance, every time, for a
-// guaranteed nothing.
-//
-// IT IS KEYED ON THE PUBLISHER, NEVER ON THE VENUE \u2014 her correction, and the
-// first version got this wrong. I had matched the publisher's name against
-// the venue's, so ANY catalogue from the Met or the National Gallery would
-// have skipped the search. She named the two ways that breaks, and both are
-// ordinary:
-//
-//   * a blockbuster show whose catalogue the museum gives to a big art-book
-//     house to print, and
-//   * a show mounted jointly with another museum, where the OTHER museum
-//     prints it \u2014 a Met/Louvre co-production published by the Louvre.
-//
-// In both, a real third-party publisher page exists and my rule would have
-// suppressed the search that finds it. So the test is not "is the publisher
-// this venue" \u2014 it is "is this publisher one of the named few we have
-// actually seen self-publish".
-//
-// SO IT IS A SHORT LIST, AND IT GROWS ONLY WHEN SHE ADDS ONE. Her
-// instruction: these two now, more as she meets them. Nothing is inferred
-// from a name's shape, because inferring is precisely what went wrong.
-// A publisher not on this list is searched for exactly as before \u2014 the cost
-// of a miss is one search, the cost of a wrong entry is a lost buy link.
-//
-// ONE KNOWN LIMIT, STATED RATHER THAN ENGINEERED AROUND: the sentence says
-// "the venue", which is true for every case we have. A Met-published
-// catalogue for a show at the Louvre would read slightly wrong. It costs a
-// word on one card and no link, so it is not worth a venue comparison here \u2014
-// that comparison is the thing this note exists to avoid.
+// ── A MUSEUM'S OWN IMPRINT HAS NO PUBLISHER PAGE TO FIND (CLAUDE.md §4) ──────
+// Its "publisher page" is the museum shop, so looking costs searches for nothing.
+// SELF_PUBLISHERS is her list, grown only when she adds one. A blockbuster printed by
+// an art-book house, or a joint show printed by the other museum, is still looked for.
 const SELF_PUBLISHERS = new Set([
   "national gallery global",              // ng \u2014 her row, Zurbaran
-  "national gallery london",              // ng — the same imprint as Yale (its distributor) names it, her addition 1 Oct (Millet)
+  "national gallery london",              // ng — the same imprint as Yale (its distributor) names it, her addition (Millet)
   "metropolitan museum of art",           // met
-  "british museum press",                 // brit — her addition, 30 Sep (Bayeux Tapestry)
-  "editions les arts decoratifs",         // mad — her addition, 30 Sep (Christofle); normPublisher drops the accents
-  "musee des arts decoratifs",            // mad — the same imprint under the museum's name, her addition 1 Oct (Christofle again)
-  "museum of modern art",                 // moma — her addition, 1 Oct (The Surrealist Book)
+  "british museum press",                 // brit — her addition (Bayeux Tapestry)
+  "editions les arts decoratifs",         // mad — her addition (Christofle); normPublisher drops the accents
+  "musee des arts decoratifs",            // mad — the same imprint under the museum's name, her addition (Christofle again)
+  "museum of modern art",                 // moma — her addition (The Surrealist Book)
   "museum of modern art new york",        // moma — the same, as the lookup also read it (Brancusi)
-  "art institute of chicago",             // artic — her addition, 2 Oct
-  "cincinnati art museum",                // cincinnati — her addition, 4 Oct
-  "frick collection new york",            // frick — her addition, 6 Oct (Ruffles & Ribbons)
-  "national gallery publications limited", // ng — her addition, 6 Oct (Venice: Canaletto and His Rivals)
-  "national gallery company",              // ng — her addition, 6 Oct (Ed Ruscha: Course of Empire)
+  "art institute of chicago",             // artic — her addition
+  "cincinnati art museum",                // cincinnati — her addition
+  "frick collection new york",            // frick — her addition (Ruffles & Ribbons)
+  "national gallery publications limited", // ng — her addition (Venice: Canaletto and His Rivals)
+  "national gallery company",              // ng — her addition (Ed Ruscha: Course of Empire)
 ]);
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){
   return String(name||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .replace(/[^a-z0-9]+/g," ").trim().replace(/^the\s+/,"");
 }
-// A PUBLISHER CARRYING THE VENUE'S OWN NAME IS THE VENUE — her ruling, 6 Oct,
-// after three National Gallery imprints in one day ("National Gallery
-// Company", "… Publications, Limited", "… Global"). The venue's FULL name,
-// whole words, "The" dropped; never its short chip name ("Met", "Brera").
-// Her own ruling of 22 Sep still holds: a book house or ANOTHER museum
-// carries no part of this venue's name and is still looked for.
-// Known misfire, accepted: a namesake museum ("National Gallery of Art",
-// Washington, at the London National Gallery) — she names it in
-// NOT_SELF_PUBLISHERS. If this misfires too often she goes back to the list
-// alone: delete the venue test below.
+// A publisher carrying the venue's FULL name, whole words, is the venue (her decision,
+// on trial; never the chip name). Known misfire: a namesake museum — she lists it in
+// NOT_SELF_PUBLISHERS. Too many misfires → back to her list alone (delete the venue
+// test in isVenueImprint). C-070 to C-078e.
 const NOT_SELF_PUBLISHERS = new Set([
   // her entries, normalised as normPublisher writes them
 ]);
@@ -2052,24 +1999,9 @@ function isVenueImprint(name,museumId){
   return v.length>=6&&(" "+n+" ").includes(" "+v+" ");
 }
 
-// THE PUBLISHER\u2019S OWN PAGE \u2014 restored 21 Sep 2026, her finding.
-//
-// The app has always had a Publisher button and the ledger has always had a
-// field for it. The 20 Sep rebuild asked neither prompt for it and wrote null
-// into the row every time, so the button became unreachable and nothing said
-// so \u2014 the same quiet loss in the same rewrite as the shop lock.
-//
-// IT MATTERS MORE THAN IT LOOKS. A museum shop sells its catalogue while the
-// show is on; the art-book house that printed it often still lists the book
-// long after the shop has sold out, which is the window this whole app is
-// about.
-//
-// CHECKED, NOT TRUSTED. A link is taken only if it is a real http address, and
-// never if it is on the venue\u2019s own shop \u2014 that is the shop link wearing the
-// wrong label, and it would send her to a page she already has a button for.
-// Everything else is left to her judgement, as it was before: there is no list
-// of art publishers to check against and inventing one would be the phrase-list
-// mistake again.
+// The publisher's own page: an art-book house often lists the book long after the shop
+// sells out. A link is taken only if it is a real address and not on the venue's own
+// shop. C-032 to C-038.
 function cleanPublisherUrl(u,dom){
   if(!u)return null;
   const t=String(u).trim();
@@ -2078,27 +2010,13 @@ function cleanPublisherUrl(u,dom){
   return t;
 }
 
-// ONLY THE PUBLISHER IS THE PUBLISHER — her ruling, 1 Oct (Millet). A read
-// of search results or of a shop's page will call a distributor's page the
-// publisher's: Millet, published by National Gallery Global, came back with
-// Yale's page for it. So a link a read hands over is filed only when it sits
-// on the publisher's own site — the name in the hostname, the same test the
-// publisher step uses (publisherDomainFrom). A self-published book has no
-// publisher link at all. Anything else is dropped, and the publisher step,
-// which goes to the publisher, runs.
-// "X IN ASSOCIATION WITH Y" — Y IS THE PUBLISHER. Her ruling, 2 Oct: "Morgan
-// Library & Museum in association with Rizzoli Electa" names the museum first
-// and the house that printed the book after, so the publisher step looks for
-// Rizzoli Electa. The card still prints the line as the book gives it; only
-// which publisher is looked for (and checked against SELF_PUBLISHERS) changes.
-// A CO-EDITION NAMES THE PUBLISHER BESIDE THE VENUE — her ruling, 7 Oct
-// (Turner: "Fonds Mercator / Musée Jacquemart-André" was taken as the museum's
-// own imprint, so no publisher was looked for). When the line pairs the venue
-// with another name — "X / Venue", "X and Venue", "X with Venue", "X & Venue"
-// — the other name is the publisher, for every publisher verdict. Split on
-// the strongest mark first, so "Thames & Hudson / Venue" keeps its "&". NOT a
-// comma: "The Museum of Modern Art, New York" is the venue and its city. Only
-// a line that is the venue and nothing else is the venue's imprint.
+// Only the publisher is the publisher (her decision, Millet): a link a read hands over
+// is filed only on the publisher's own site; a distributor's page is dropped and the
+// publisher step runs. Self-published → no link.
+// "X in association with Y": Y is the publisher (her decision). A co-edition — "X /
+// Venue", "X and Venue", "X with Venue", "X & Venue" — X is the publisher, for every
+// verdict (her decision, Turner). Strongest mark first, so "Thames & Hudson / Venue"
+// keeps its "&"; never a comma ("The Museum of Modern Art, New York" is one venue).
 const CO_EDITION_MARKS=[/\s*\/\s*/,/\s*;\s*/,/\s+with\s+/i,/\s+and\s+/i,/\s+&\s+/];
 function publisherToFind(name,museumId){
   const s=String(name||"").trim();
@@ -2124,39 +2042,13 @@ function publisherLinkOf(u,publisher,dom,museumId){
 }
 
 
-// ── A CONTAINER IS NOT THE BOOK, AND A SHELL IS NOT AN EMPTY SHELF ──────────
-// Her ruling, 22 Sep 2026, from her own diagnosis of two real lookups.
-//
-// WHAT WAS WRONG. The publisher step took whatever page the search returned
-// and filed it as "the publisher's page", full stop. For Rizzoli that was the
-// book itself — rizzoliusa.com/book/9780847877645 — and it looked like the
-// step working. It was not working; it was LUCKY. Rizzoli happens to key its
-// product addresses by ISBN, so a site: search matches the book directly.
-// Hannibal Books keys its books by a Dutch slug plus a #fragment, and a
-// fragment is never sent to a server and never indexed, so the deepest thing
-// any search can return for that book is the SECTION it sits in —
-// hannibalbooks.be/en/fine-art. The step returned that and called it the
-// book's page. The code could not tell the two outcomes apart.
-//
-// HER FIX, AND IT IS ONE STEP, NOT A BETTER QUERY: never accept a candidate
-// unseen. Open it. Either it IS the book (accept), or it LISTS the book
-// (take the link off it), or it came back empty (keep it, and say on screen
-// that it is the section and not the book).
-//
-// NO HEADLESS BROWSER. Her call, and the scope is why: only the buried-product
-// publishers reach this step at all, and only the client-rendered ones among
-// those come back empty. Building a rendering fetch for a handful of Belgian
-// art publishers is not worth it. The honest label is.
+// ── A CONTAINER IS NOT THE BOOK; A SHELL IS NOT AN EMPTY SHELF (docs/app.md §1) ──
+// A publisher candidate is opened before it is believed: it IS the book, it LISTS the
+// book (take the link off it), or it came back empty (keep it, labelled as the
+// section). No rendering fetch for the few script-drawn publisher sites (her decision).
 
-// How much text a fetched page must carry before we believe we saw it.
-//
-// MEASURED, NOT CHOSEN, 22 Sep 2026, against the two real pages this rule is
-// about. Hannibal's fine-art section returns 110 characters — a sort control,
-// a newsletter box and the web designer's credit, with all 200-odd books
-// missing because they are drawn by script after the page arrives. The Menil's
-// shelf, which is ordinary server-drawn HTML, returns several thousand with
-// every book's own address in it. There is no third case anywhere near the
-// line, which is what makes one number safe here.
+// Text a fetched page must carry before we believe we saw it — measured: Hannibal's
+// script-drawn section returns 110 characters, a real shelf thousands.
 const SHELL_CHARS=400;
 // A price on a shop page: a shelf of books always shows them (shopStep).
 const SHOP_PRICE=/(?:[\u20ac$\u00a3]\s?\d|\d(?:[.,]\d{1,2})?\s?(?:\u20ac|(?:EUR|USD|GBP)\b))/;
@@ -2171,14 +2063,9 @@ function pageTextOf(results){
   return (results||[]).map(oneText).join("\n").trim();
 }
 
-// THE TITLE AS PRINTED — her Louvre Experience of Nature, 2 Oct. The shop's
-// page said "Experience of Nature"; the read handed back "Experience of
-// Nature. Art in Prague at the Court of Rudolf II", the show's English
-// subtitle, which is on no page. A title is kept only as far as the pages
-// carry it: whole if they print it whole, else its longest leading part that
-// they do print (parts split at . : and dashes). None of it on the pages →
-// returned as given, and the caller says so. One answer from the inputs, so
-// code. Accents, capitals and punctuation do not count as differences.
+// The title as printed (her decision, Louvre Experience of Nature): kept only as far
+// as the pages print it — whole, else its longest leading part (split at . : and
+// dashes). Accents, capitals and punctuation do not count.
 function titleKey(t){
   return " "+String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .replace(/[^a-z0-9]+/g," ").trim()+" ";
@@ -2265,17 +2152,9 @@ function isbnInResults(results,bookTitle){
 // be a finding we never earned.
 function pageIsShell(results){ return pageTextOf(results).length<SHELL_CHARS; }
 
-// A LINK READ OFF A LISTING IS CHECKED BEFORE IT IS BELIEVED.
-//
-// Two ways it can be wrong and both are mechanical, so both are code's. It
-// must be on the publisher's own site — a listing links out to Amazon, to
-// distributors, to the museum — and it must not be the listing itself, or
-// "the book's own page" is the container wearing a new label.
-//
-// A DIFFERING #FRAGMENT COUNTS AS A DIFFERENT ADDRESS, deliberately. That is
-// exactly how Hannibal addresses its books (#102642 is the English edition,
-// #102640 the Dutch), so folding on the fragment would throw away the one
-// case this whole step exists for.
+// A link read off a listing is checked: on the publisher's own host, and not the
+// listing itself. A differing #fragment is a different address — Hannibal addresses
+// its books by fragment.
 function sameAddress(a,b){
   const strip=u=>{try{const x=new URL(String(u));return (x.origin+x.pathname).replace(/\/+$/,"")+x.search;}catch{return String(u||"").trim();}};
   return strip(a)===strip(b);
@@ -2291,103 +2170,41 @@ function deepLinkOn(u,host,container){
 }
 
 
-// WHAT THE PUBLISHER BUTTON IS ALLOWED TO CLAIM — her ruling, 22 Sep 2026.
-//
-// A link the app verified against the book's own page and a link that is only
-// the section the book sits in are DIFFERENT THINGS, and until today the
-// button called both of them "Publisher". That is the same fault as a status
-// line reading "Saved" on a download nobody watched: the claim was never
-// earned, and she could only catch it by opening the link herself.
-//
-// So the label carries the difference. "Publisher" means the book's own page.
-// "Publisher's section" means the link lands her in the right part of the
-// publisher's site and the book is one scroll away — useful, and honestly
-// described. A link from an older ledger has no kind recorded; it keeps the
-// plain label, because inventing a claim about it either way would be worse
-// than making none.
+// The publisher button claims only what was verified (docs/app.md §1): "Publisher" =
+// the book's own page; "Publisher's section" = the section it sits in; "Publisher's
+// website" = the home page. An old row with no kind keeps the plain label.
 function publisherLinkLabel(kind){
   if(kind==="container")return "Publisher\u2019s section";
   if(kind==="site")return "Publisher\u2019s website";
   return "Publisher";
 }
 
-// THE SILENCE HAD TO END A SECOND TIME — her question, 22 Sep 2026.
-//
-// "No separate publisher page." was printed whether the step had searched the
-// publisher’s own site and found nothing, or had never fired at all. Her
-// words: the silence could be "search function didn’t even fire". So each
-// outcome now says which one it was, in one plain sentence.
-//
-// THE LADDER IS DELIBERATE, weakest answer last and each rung honest about
-// what it is: the book’s own page, then the section it sits in, then the
-// publisher’s front door, then no publisher website at all, then no
-// publisher name to go on.
-//
-// NO RESULT RECORDED SAYS NOTHING — her ruling, 25 Sep. A finished search
-// always records one of the outcomes above, so an empty result means the step
-// did not finish (the connector failed part-way — Jacquemart-André's Timeless
-// Tintoretto, "upstream_error") or the row predates 22 Sep. The old sentence
-// "No separate publisher page." was printed for both, a finding claimed for a
-// search that never completed. The red banner says what failed; the card
-// claims nothing.
+// Each publisher-step outcome says which one it was, in one sentence (C-052 to
+// C-069a). No result recorded says nothing: the step did not finish, or the row
+// predates outcomes (her decision). Self-published and the book's own page say nothing.
 function publisherNote(result,hasUrl){
   if(result==="container")return "Publisher\u2019s link opens the section this book sits in, not the book\u2019s own page.";
   if(result==="site")     return "The publisher\u2019s own site doesn\u2019t show this book — the link opens their home page.";
   if(result==="nosite")   return "Couldn\u2019t work out the publisher\u2019s own website, so there\u2019s no link to it.";
   if(result==="unnamed")  return "No publisher was named for this book, so none was looked for.";
-  // Self-published says nothing — her ruling, 6 Oct: no button is answer enough.
+  // Self-published: no button is answer enough (her decision).
   if(result==="selfpublished")return "";
   if(result==="product")  return "";
   return "";
 }
 
 
-// ── A BOOK LEAVES THE SHOP, AND THAT IS THE WHOLE POINT OF THE APP ─────
-// Her ruling, 22 Sep 2026, and she is right that the old screen could not say
-// it: a row that was ever found in the museum shop went on reading "In the
-// museum shop" forever, because nothing compared one lookup against the last.
-// Catalogues selling out is the thing this app exists to watch, so the one
-// event it most needs to show was the one it could not.
+// ── A BOOK LEAVING THE SHOP — "Re-check museum shop" (docs/app.md §1) ───────
+// Only Re-check moves the shop status; she presses it after seeing the change, so it
+// is not a monitor. With a link it re-reads that page (gone, redirected or sold out →
+// "No longer", link kept as "Museum shop (last seen)"; buyable again → "Back"). With
+// none it runs the shop step alone ("Now"). No history kept; a failed check changes
+// nothing. Pre-order counts as in the shop; sold out in any language counts as gone.
 //
-// THE LIMIT, which no design gets round: when she clicks the Museum shop
-// button and sees for herself that the book has gone, the app learns NOTHING.
-// A page cannot see what comes back in a tab it opened — a browser rule. So
-// the status moves only when the app itself re-opens the page.
-//
-// THE 22 SEP DESIGN MOVED IT ON SEARCH AGAIN, AND THAT COULD NOT WORK. Search
-// again searched the shop from scratch, and shops keep sold-out books listed,
-// so the listing put the green straight back; it cost a whole lookup to ask
-// one question; and it rebuilt the row, wiping what it did not re-find.
-//
-// HER DESIGN, 25 Sep — "Re-check museum shop". Reasoning in docs/app.md,
-// "A book leaving the shop". Fixtures C-079 to C-099.
-//
-//   * ONE BUTTON MOVES THE SHOP STATUS: "Re-check museum shop". Nothing else.
-//     Search again runs a whole fresh lookup (lookupCat) and replaces the card.
-//   * She presses it only AFTER she has seen the change for herself, so it is
-//     a way to make the screen agree with what she saw, not a monitor.
-//   * WITH A SHOP LINK ON FILE it re-reads THAT ONE PAGE, nothing else:
-//       gone (404), sent elsewhere, or sold out → "No longer in the museum
-//       shop.", red. The link STAYS, labelled "Museum shop (last seen)", in
-//       case the book comes back there.
-//       buyable again after being gone → "Back in the museum shop.", green.
-//   * WITH NO SHOP LINK it runs the shop step alone — never the web search,
-//     never the publisher — and a find reads "Now in the museum shop."
-//   * NO HISTORY IS KEPT — her ruling. The status implies it: "No longer"
-//     says it once was, "Back" says it went and returned.
-//   * A CHECK THAT FAILED SAYS SO AND CHANGES NOTHING. A refused connector is
-//     not evidence the book has gone.
-//
-// Pre-order and "available to order" count as in the shop; sold out, out of
-// stock and unavailable count as gone, in any language — her yes, 25 Sep.
-//
-// shopState: "shop" | "gone" | "web" | "none" | "blocked" | null.  "gone" keeps shopUrl.
-// "blocked": the museum shop refused every page the lookup opened, so whether
-// the book is there is UNKNOWN — never filed as "not in the shop". Her
-// finding, 25 Sep: KHM's shop redirects every request to a waiting room (307).
-// shopChange: "now" | "back" | null on a "shop" row — how it got there.
-// (The 22 Sep code could leave "gone" on a "web" row, with no link kept. That
-// is read as plain "web" now: not in the shop, and no page to re-check.)
+// shopState: "shop" | "gone" | "web" | "none" | "blocked" | null; "gone" keeps shopUrl.
+// "blocked": the shop refused every page opened, so whether the book is there is
+// UNKNOWN — never "not in the shop". shopChange: "now" | "back" | null on a "shop" row.
+// A legacy "gone" on a "web" row reads as plain "web".
 
 // The one line at the top of the catalogue panel. Outside the component so a
 // fixture can read the wording, for the reason countDecisions moved out.
@@ -2402,19 +2219,14 @@ function shopHeadline(shopState,shopChange){
   return null;
 }
 
-// A BLOCKED SHOP SAYS SO — her wording, 25 Sep. "Not in the museum shop" and
-// "no catalogue" are findings; a shop that refused to be read is not one, and
-// before this the card could not tell them apart.
-// Drawn in two parts, her ruling 25 Sep: the headline in the red and weight of
-// "No longer in the museum shop.", the rest in the ordinary grey.
+// A blocked shop says so, in her wording (CLAUDE.md §4): the headline in the red and
+// weight of "No longer in the museum shop.", the rest grey.
 const SHOP_BLOCKED_HEAD="The museum shop is blocked";
 const SHOP_BLOCKED_FOUND_REST=" - search it manually. The catalogue is stocked elsewhere.";
 const SHOP_BLOCKED_NONE_REST=". The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
 
-// A TICKET IS NOT A CATALOGUE — her ruling, 25 Sep. KHM's Canaletto & Bellotto
-// was filed "In the museum shop" with a link to /en/tickets/…, a ticket that
-// died with the show. A link with /ticket/ or /tickets/ in its path is never
-// taken as the book, whichever step produced it.
+// A ticket is never a catalogue (her decision, KHM Canaletto & Bellotto): a link with
+// /ticket/ or /tickets/ in its path is never taken as the book. L-001 to L-019.
 function isTicketLink(url){ return /\/tickets?\//i.test(String(url||"")); }
 
 // The link, only when it is really on the venue's shop and is not a ticket.
@@ -2427,17 +2239,9 @@ function shopLinkOf(o,dom){
   return String(u).toLowerCase().includes(String(dom).toLowerCase())?u:null;
 }
 
-// THE BOOK'S LINK, READ OFF THE SHELF IN CODE — her MAD Christofle, 1 Oct.
-// Parallel's copy of MAD's shelf carried the book's own link, written
-// [Christofle : A brilliant story … €55](…/christofle-brilliant-story/14474.html),
-// and Claude still handed back the shelf's address, so her Museum shop button
-// fell back to the shelf. Which link on a shelf names the book Claude just
-// read is one answer from the text, so it is code's job.
-//
-// Taken only when EXACTLY ONE address on the shop's own site carries the
-// whole catalogue title in its link words; two different ones, or none, and
-// nothing is taken — never a guess between candidates. Never a page this step
-// opened, never a ticket. Accents, capitals and punctuation are ignored.
+// The book's link on a shelf, read in code (her decision, MAD Christofle): exactly one
+// address on the shop's own site whose link words carry the whole catalogue title; two
+// or none → nothing. Never a page this step opened, never a ticket.
 function bookLinkOnShelf(results,bookTitle,dom,opened){
   const norm=v=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
   const want=norm(bookTitle);
@@ -2459,15 +2263,11 @@ function bookLinkOnShelf(results,bookTitle,dom,opened){
   return found.size===1?[...found.values()][0]:null;
 }
 
-// WHAT CLAUDE IS GIVEN TO READ — her ruling, 7 Oct. A result's text was cut
-// to its first N characters, blind: Botticelli's "Buy the catalog" sat at
-// ~1,970 and was cut off, while a curator's bio naming another book got in.
-// Now a result that fits is given whole; one that does not is given its
-// RELEVANT passages first — every line naming the show or book (its longer
-// words), a catalogue / ISBN / edition / price / sale word, or a link onto the
-// venue's shop, each with the line either side — then the rest in page order
-// until the cap. Never worse than the old cut, and the deep line arrives.
-// The cap keeps a read under its 64 KiB ceiling: eight results at most.
+// What Claude is given to read (her decision, Botticelli): a result that fits is given
+// whole; a longer one gets its RELEVANT lines first — naming the show or book, a
+// catalogue/ISBN/price word, or a link onto the venue's shop, each with its neighbours —
+// then the rest in page order up to the cap. At most eight results, under the 64 KiB
+// ceiling.
 const PASSAGE_CUES=/catal[o\u00f3]g|katalog|isbn|\bean\b|edition|\u00e9dition|edizione|ausgabe|publisher|\u00e9diteur|editore|verlag|uitgeverij|hardcover|hardback|paperback|softcover|\bpages\b|[$\u20ac\u00a3]\s?\d|\d\s?(?:\u20ac|eur\b)|sold out|out of stock|\u00e9puis\u00e9|esaurito|ausverkauft|uitverkocht|add to (?:cart|bag|basket)|pre-?order|english|anglais|inglese|englisch|engels/i;
 const FOCUS_STOP=new Set(["the","and","from","with","exhibition","catalogue","catalog","museum","musee","mus\u00e9e","paris","london","edition"]);
 function focusWords(words){
@@ -2499,10 +2299,8 @@ const resultsForPrompt=(list,cap,focus)=>list.slice(0,8).map((r,i)=>
   +(Array.isArray(r.excerpts)?pickPassages(r.excerpts.join("\n"),focus,cap||700):"")
 ).join("\n\n");
 
-// A LINK LABELLED CATALOGUE, ONTO THE VENUE'S OWN SHOP — her Botticelli,
-// 7 Oct: the museum's show page in the web results carried "[Buy the
-// catalog](boutique…/230-special-issue-botticelli-artist-and-designer.html)".
-// Exactly one such address across the results, or none; never a ticket.
+// A link labelled "catalog" onto the venue's own shop, in the web results (her
+// decision, Botticelli): exactly one such address, or none; never a ticket.
 function catalogueLinkOn(results,dom){
   if(!dom)return null;
   const found=new Map();
@@ -2517,13 +2315,10 @@ function catalogueLinkOn(results,dom){
   return found.size===1?[...found.values()][0]:null;
 }
 
-// IS THIS ENGLISH BOOK AN EDITION OF THE SAME CATALOGUE? One answer from
-// the inputs: its publisher shares the original's distinctive name words
-// (Fonds Mercator ~ Mercatorfonds), or a result carrying its ISBN names the
-// venue (its distinctive words, accents and "musée" aside). The venue by any
-// of its names — full, chip or card: the full name alone never matched at
-// Capodimonte ("… aka …") or the Uffizi ("Uffizi Galleries" vs "Gallerie
-// degli Uffizi").
+// Is this English book an edition of the same catalogue? (her decision, Botticelli;
+// CLAUDE.md §4) Its publisher shares the original's distinctive words (Fonds Mercator ~
+// Mercatorfonds), or a result carrying its ISBN names the venue by its full, chip or
+// card name.
 function sameCatalogue(edPublisher,origPublisher,isbnResults,museumId){
   const words=n=>normPublisher(n).split(" ").filter(w=>w.length>2&&!PUBLISHER_WORDS.has(w)&&!["fonds","musee","museum","museo","galleria","gallery"].includes(w));
   const a=words(edPublisher), b=words(origPublisher);
@@ -2534,14 +2329,11 @@ function sameCatalogue(edPublisher,origPublisher,isbnResults,museumId){
   return (isbnResults||[]).some(x=>{ const t=" "+normPublisher((x&&x.title||"")+" "+oneText(x))+" "; return names.some(v=>v.every(w=>t.includes(" "+w+" "))); });
 }
 
-// THE PUBLISHER, READ OFF THE ISBN — her ruling, 7 Oct (Botticelli: three
-// lookups, three publishers — Culturespaces off the museum's own page, Reaktion
-// off a curator's bio, Fonds Mercator off the bookshops). Only results that
-// carry the book's ISBN count, and only their LABELLED publisher ("Publisher:",
-// "Published by", "Éditeur :", "Edité par", "Editore", "Verlag"…). Each result
-// votes once; names of one house fold together (Fonds Mercator ~ Mercatorfonds).
-// The house at least two results name, ahead of any other, or nothing.
-// The label must not sit inside a longer word; an ASCII \b cannot see "É".
+// The publisher, read off the ISBN (her decision, Botticelli: three lookups gave three
+// publishers). Only results carrying the ISBN count, and only their LABELLED publisher;
+// each result votes once, and one house's names fold together. Two agreeing votes,
+// ahead of any other, or nothing. The label must not sit inside a longer word (an
+// ASCII \b cannot see "É").
 const PUBLISHER_LABEL=/(?<!\p{L})(?:publisher|published by|[ée]diteur|[ée]dit[ée] par|editore|editorial|verlag|uitgever(?:ij)?)\s*:?\s*\[?([^\]\n|(]{2,70}?)(?:\]|\s*,\s*(?:19|20)\d\d|\s*\(|\n|$)/giu;
 function houseWords(n){
   return normPublisher(n).split(" ").filter(w=>w.length>2&&!PUBLISHER_WORDS.has(w)&&!["fonds","editions","ed","sa","srl","gmbh"].includes(w));
@@ -2573,13 +2365,9 @@ function publisherOnIsbnResults(results,isbn){
   return [...count.entries()].sort((a,b)=>b[1]-a[1]||(a[0]===a[0].toUpperCase())-(b[0]===b[0].toUpperCase()))[0][0];
 }
 
-// THE SHOW'S CATALOGUE IN THE VENUE'S OWN LANGUAGE — her Hammershøi, 7 Oct.
-// The card's title is the venue's English one ("the master of danish
-// painting"); the book is listed only in French ("le maître de la peinture
-// danoise"), so a search on the English title found other venues' books and
-// never this one. The show's name before any colon, the venue's short name,
-// "exhibition catalogue" in its language and the opening year find it.
-// Non-English venues only; nothing for one whose language isn't written here.
+// The show's catalogue in the venue's own language (her decision, Hammershøi, listed
+// only in French): the show's name before any colon, the venue's name, "exhibition
+// catalogue" in its language and the opening year. Non-English venues only.
 const CATALOGUE_WORDS={louvre:"catalogue exposition",orsay:"catalogue exposition",mad:"catalogue exposition",
   jacquemart:"catalogue exposition",mam:"catalogue exposition",khm:"Ausstellungskatalog",rijks:"tentoonstellingscatalogus",
   uffizi:"catalogo mostra",dellav:"catalogo mostra",borghese:"catalogo mostra",brera:"catalogo mostra",capo:"catalogo mostra"};
@@ -2591,11 +2379,11 @@ function localCatalogueQuery(mu,row){
   return head?[head+" "+(mu.card||mu.short)+" "+word+year]:[];
 }
 
-// THE ENGLISH-EDITION LINE ON A CARD — her ruling, 7 Oct: a foreign book
-// says how far an English edition was looked for. Null: nothing to say.
+// The English-edition line on a foreign book: how far an English edition was looked
+// for (her decision). Null: nothing to say.
 function englishLine(r){
   const c=r&&r.englishCheck;
-  // Her wording, 7 Oct.
+  // Her wording.
   if(c==="publisher")return "No English edition - checked publisher's site"+(r.publisher?" ("+r.publisher+")":"")+" and bookshops.";
   if(c==="shops")return "No English edition found in bookshops; the publisher\u2019s own page for this book wasn\u2019t found.";
   if(c==="unknownlang")return "The book\u2019s language couldn\u2019t be confirmed, so no English edition was looked for.";
@@ -2607,9 +2395,8 @@ function englishLine(r){
 // dead or sold out while the link is still worth keeping.
 function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last seen)":"Museum shop"; }
 
-// RESET CARDS — her design, 2 Oct. The card as it was before any catalogue
-// search: every lookup field blank, everything she marked kept. The next
-// "Find catalogue" is then a first search, the whole route.
+// Reset cards (her design): every lookup field blank, her marks kept, so the next
+// "Find catalogue" runs the whole route.
 function resetCard(r){
   return{...r,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,
     publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,englishCheck:null};
@@ -2624,33 +2411,22 @@ function cardsToReset(rows,q){
     .some(t=>k(t).includes(want)));
 }
 
-// CASE 2 — the shop step found the book where no shop link was on file.
-// Fills blanks only, like everything else in the lookup. `o` is the read of
-// the shop's pages; `onShop` was checked by the caller (the link must really
-// be on the venue's shop). A catalogue the app had given up on becomes one.
+// Case 2 — the shop step found the book where no shop link was on file. Fills blanks
+// only; the caller has checked the link is on the venue's shop. A catalogue the app
+// had given up on becomes one.
 function foundInShop(row,o){
   return{...row,looked:true,hasCatalogue:"yes",
     catalogueTitle:row.catalogueTitle||o.catalogueTitle||null,
     isbn13:row.isbn13||toIsbn13(o.isbn13),
     publisher:row.publisher||(o.publisher?String(o.publisher).trim():null)||null,
-    // "Now" only for a book that was NOT in the shop before — her Christofle,
-    // 1 Oct: a row already "In the museum shop" without a link of its own
-    // read "Now in the museum shop" once Re-check found the link.
+    // "Now" only for a book that was NOT in the shop before.
     shopState:"shop",shopChange:row.shopState==="shop"?(row.shopChange||null):"now",shopUrl:o.shopUrl};
 }
 
-// CASES 1 AND 3 — re-read the ONE page on file. Returns
-//   {ok:true,  row, said}  the status the page supports, and what to tell her
-//   {ok:false, said}       the check did not happen; nothing may change
-//
-// A 404 OR 410 IS DECIDED IN CODE. The connector reports it as an error with
-// the status code (seen live on the Met's store, 25 Sep), so no model is
-// asked whether a missing page is missing. Every OTHER error, and a page that
-// comes back with nothing on it, is a failed check — never "gone".
-//
-// Everything else is one question to Claude about one page: is THIS book for
-// sale HERE, now? A redirect to the shop front is caught there, because the
-// page served is then not the book's own page.
+// Cases 1 and 3 — re-read the ONE page on file: {ok:true, row, said}, or {ok:false,
+// said} and nothing may change. 404/410 is decided in code from the connector's error;
+// any other error or an empty page is a failed check, never "gone". Otherwise one
+// question to Claude: is THIS book for sale HERE, now? A redirect fails that test.
 const GONE_HTTP=new Set([404,410]);
 
 // READ ONE SHOP PAGE AND ASK: is this book for sale HERE, now? One copy, used
@@ -2679,12 +2455,8 @@ async function readShopPage(book,url){
   const rd=await readResults(
     "You are reading ONE page from a museum shop. Decide whether the book named below can be bought "
    +"on it NOW.\nUse ONLY what this page says.\n"
-   // SOLD OUT OUTRANKS EVERYTHING — her Morgan Tarot, 30 Sep. The page said
-   // "SOLD OUT!", its price carried a Sold Out badge and its only button was a
-   // greyed-out "Sold out"; it ALSO told earlier buyers "if you pre-ordered a
-   // copy, shipments will begin soon". The read answered "pre-orders are being
-   // accepted, with an Add to cart option present" and Re-check said still
-   // for sale, because the old rule said pre-order counts as for sale.
+   // Sold out outranks "Add to cart" and notes to earlier pre-orderers (Morgan Tarot;
+   // docs/app.md §1).
    +'"forSale": true ONLY if this page IS that book’s own product page AND a NEW order can be '
    +"placed on it today: add to cart or bag, buy now, pre-order now, available to order.\n"
    +'"forSale": false if the page says sold out, out of stock, unavailable, no longer available, or '
@@ -2740,13 +2512,11 @@ async function recheckLinkedPage(row){
 }
 
 const SKEY="cw-v3";
-// DORMANT in v8: Claude cloud save is kept in the file but nothing calls it.
-// Drive is the single source of truth. Re-wire this only if Drive is retired.
+// DORMANT: nothing calls safeSave, an old save to the page's storage. Kept, not deleted.
 async function safeSave(rows,lastRun,lastSaved){const data=JSON.stringify({rows,lastRun,lastSaved:lastSaved||new Date().toISOString()});for(let i=0;i<3;i++){try{const r=await window.storage.set(SKEY,data,false);if(r)return{ok:true};}catch{}await new Promise(r=>setTimeout(r,500*(i+1)));}return{ok:false};}
 
-// ---- Google Drive spine (v8) ----------------------------------------------
-// Ledger files are saved as cat-watch-ledger-<localstamp>.json. Newest loads
-// on open; every save writes a NEW file (versioned backups, nothing deleted).
+// ---- DORMANT: the old Google Drive save route; nothing calls it. Kept until she says
+// (docs/app.md §1 "Which model"). ----------------------------------------------
 const DRIVE_MCP={type:"url",url:"https://drivemcp.googleapis.com/mcp/v1",name:"google-drive"};
 const LEDGER_PREFIX="cat-watch-ledger-";
 let AUTOLOAD_FIRED=false; // module-level: survives a strict-mode remount so open never costs two Drive calls
