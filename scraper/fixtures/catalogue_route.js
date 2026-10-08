@@ -7,7 +7,8 @@
  * pieces the rebuild fixed: letters such as ø in title matching (LT-), a book the
  * shop step found filed as in the shop (BA-), an ISBN taken only with a valid check
  * digit and only when the fetched text prints it (IG-), and an English edition
- * accepted only when a record proves it is this catalogue's (ED-).
+ * accepted only when a record proves it is this catalogue's (ED-), her short list of
+ * joint publishers' sites (PS-), and the progress line on each main path (PL-).
  *
  * Hammershøi's library record is real (docs/lookup_results/jacquemart_hammershoi.json);
  * the shop, book and publisher pages are made for the test.
@@ -64,7 +65,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, englishEditionOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST };')(
+    code + '\n;return { lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, englishEditionOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -153,15 +154,20 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
 
   // ════ WHOLE LOOKUPS ════════════════════════════════════════════════════════════
   const run = async (r, script) => {
-    const calls = [];
-    const out = await lift(script, calls).lookupCatalogue(r, {});
-    return { out, calls, row: out.row };
+    const calls = [], labels = [];
+    const out = await lift(script, calls).lookupCatalogue(r, { label: l => labels.push(l) });
+    return { out, calls, row: out.row, labels };
   };
+  const L1 = 'Searching venue shop…', L2 = 'Searching more broadly…', L3 = 'Finding the ISBN and publisher…',
+    L3F = 'Finding the ISBN, publisher and English edition…', L4 = 'Looking for the publisher’s page…';
 
   // ── WL-001..WL-006: Hammershøi ends on the English edition ───────────────────
   {
     const BOOK = 'https://boutique.musee-jacquemart-andre.com/en/products/test-hammershoi-le-maitre';
     const FR = 'Hammershøi : le maître de la peinture danoise';
+    const EN = 'Hammershøi: Painter of Northern Light';
+    // Rizzoli's real page for the book, opened on 8 Oct 2026; its content here is made for the test.
+    const RZ = 'https://www.rizzoliusa.com/book/9780847899289/';
     const script = {
       mcp: (tool, args) => {
         if (tool === 'web_search') {
@@ -169,8 +175,11 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
           if (q.startsWith('9789462302495')) return { payload: { results: recorded.booksellers } };
           if (/English edition/.test(q)) return { payload: { results: [TUM, recorded.cinii] } };
           if (q.startsWith('Rizzoli Electa')) return { payload: { results: [{ url: 'https://www.rizzoliusa.com/', title: 'Rizzoli New York', excerpts: ['Rizzoli Electa'] }] } };
+          if (q.startsWith('site:www.rizzoliusa.com')) return { payload: { results: [{ url: RZ, title: EN + ' - Rizzoli New York', excerpts: [EN + '. ISBN 9780847899289'] }] } };
           return { payload: { results: [] } };
         }
+        if (args.urls.includes(RZ)) return { payload: { errors: [], results: [{ url: RZ, title: EN + ' - Rizzoli New York', excerpts: [],
+          full_content: '# ' + EN + '\nRizzoli Electa\nISBN 9780847899289\n' + 'The Danish painter Vilhelm Hammershøi. '.repeat(20) }] } };
         if (args.urls.includes(BOOK)) return { payload: { errors: [], results: [{ url: BOOK, title: FR, excerpts: [],
           full_content: '# ' + FR + '\nÉditeur : Fonds Mercator\nEAN 9789462302495\n€45.00\n' + 'Catalogue de l’exposition. '.repeat(30) }] } };
         return shelfOf(args.urls, '[' + FR + ' €45](' + BOOK + ')');
@@ -178,16 +187,20 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       sample: p => isShopRead(p) ? { found: true, thisVenue: true, catalogueTitle: FR, isbn13: null, publisher: null, publisherUrl: null, shopUrl: BOOK }
         : isFactsRead(p) ? { isbn13: null, publisher: null, pagePublisher: 'Fonds Mercator', pagePublisherUrl: null, language: 'French', title: FR,
             editions: [{ title: 'Hammershøi: Painter of Northern Light', isbn13: '9780847899289', language: 'English', publisher: 'Rizzoli Electa', evidenceUrl: TUM.url }] }
+        : isJudge(p) ? { kind: 'book', bookUrl: null }
         : {},
     };
-    const { out, calls, row: r } = await run(row('jacquemart', 'Hammershøi: the master of danish painting'), script);
+    const { out, calls, row: r, labels } = await run(row('jacquemart', 'Hammershøi: the master of danish painting'), script);
     eq([r.catalogueTitle, r.isbn13, r.publisher], ['Hammershøi: Painter of Northern Light', '9780847899289', 'Rizzoli Electa'], 'WL-001: Hammershøi — the card carries the English edition');
     eq(r.originalEdition, { title: FR, isbn13: '9789462302495', publisher: 'Fonds Mercator' }, 'WL-002:   with originalEdition set to the French book');
     eq([r.englishCheck, r.shopState, r.shopUrl], ['english', 'web', null], 'WL-003:   filed as found on the web, English');
     eq(api.englishLine(r), 'English edition of “' + FR + '” (Fonds Mercator).', 'WL-004:   and the English line names the original');
-    ok(!searches(calls).some(q => q[0] === 'Fonds Mercator') && searches(calls).filter(q => q[0] === 'Rizzoli Electa').length === 1,
+    ok(!searches(calls).some(q => q[0] === 'Fonds Mercator') && searches(calls).filter(q => q[0].startsWith('site:www.rizzoliusa.com')).length === 1,
       'WL-005:   the publisher step runs once, for the English edition only', JSON.stringify(searches(calls)));
-    eq([out.calls.calls, out.calls.waits], [7, 6], 'WL-006:   7 calls, 6 waits in a row (was 18 in a row, counted from the old code)');
+    eq([r.publisherUrl, r.publisherResult], [RZ, 'product'], 'WL-007:   Rizzoli’s own page for the book, its site from her list (PUBLISHER_SITES)');
+    ok(!searches(calls).some(q => q[0] === 'Rizzoli Electa'), 'WL-008:   the list answers where the site is, so no search for the publisher’s name', JSON.stringify(searches(calls)));
+    eq([out.calls.calls, out.calls.waits], [9, 8], 'WL-006:   9 calls, 8 waits in a row (was 18 in a row, counted from the old code)');
+    eq(labels, [L1, L3F, L4], 'PL-003: progress at a non-English venue, found in the shop — shop, facts with the English edition, publisher');
   }
 
   // ── WL-010..WL-012: an edition swap, publisher reachable — no second publisher step ─
@@ -257,10 +270,11 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       sample: p => isShopRead(p) ? { found: true, thisVenue: true, catalogueTitle: T, isbn13: null, publisher: 'Hannibal Books', publisherUrl: null, shopUrl: BOOK }
         : isJudge(p) ? { kind: 'book', bookUrl: null } : {},
     };
-    const { out, calls, row: r } = await run(row('ng', 'Test Hannibal Show'), script);
+    const { out, calls, row: r, labels } = await run(row('ng', 'Test Hannibal Show'), script);
     eq([r.isbn13, r.publisher, r.publisherUrl, r.publisherResult], ['9789493416543', 'Hannibal Books', PUB, 'product'], 'WL-030: a third-party publisher at an English venue — its page found');
     ok(!calls.some(c => c.kind === 'sample' && /"candidates": \[string\]/.test(c.prompt)), 'WL-031:   the site’s results ranked in code, Claude not asked');
     eq([out.calls.calls, out.calls.waits], [7, 7], 'WL-032:   7 calls in a row (was 9)');
+    eq(labels, [L1, L3, L4], 'PL-001: progress at an English venue, found in the shop — shop, the book’s page, publisher');
   }
 
   // ── WL-040..WL-048: a foreign book with no English edition ───────────────────
@@ -325,6 +339,62 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     ok(searches(calls).some(q => q[0] === 'Fonds Mercator') && r.publisherResult === 'nosite' && r.publisher === 'Fonds Mercator / Musée Jacquemart-André',
       'WL-050: her Turner — the publisher looked for is Fonds Mercator, and the card prints the line as given', JSON.stringify([searches(calls), r.publisherResult]));
     eq(r.publisherResult !== 'selfpublished', true, 'WL-051:   a co-edition is not the museum’s own imprint');
+  }
+
+  // ── PS-001..PS-006: her short list of joint publishers (PUBLISHER_SITES) ──────
+  {
+    const site = u => ({ url: u, title: 'x', excerpts: ['x'] });
+    eq(api.publisherDomainFrom([site('https://www.abebooks.com/x'), site('https://www.rizzoliusa.com/book/1')], 'Rizzoli Electa'), 'www.rizzoliusa.com',
+      'PS-001: Rizzoli Electa — its site, from her list, when the name is not in the address');
+    eq(api.publisherDomainFrom([site('https://www.rizzoliusa.com/'), site('https://www.rizzolielecta.test/')], 'Rizzoli Electa'), 'www.rizzolielecta.test',
+      'PS-002:   the list never overrides a site the name finds');
+    eq(['DelMonico Books · Prestel', 'DelMonico Books/Prestel', 'Delmonico Books Prestel'].map(n => api.publisherDomainFrom([site('https://delmonicobooks.com/book/x')], n)),
+      ['delmonicobooks.com', 'delmonicobooks.com', 'delmonicobooks.com'], 'PS-003: DelMonico · Prestel — its site, however the line is punctuated');
+    eq([api.publisherDomainFrom([site('https://www.rizzoliusa.com/')], 'Fonds Mercator'), api.publisherDomainFrom([site('https://www.rizzoliusa.com/')], 'Electa'),
+      api.publisherDomainFrom([site('https://hannibalbooks.be/en/about')], 'Hannibal Books')], [null, null, 'hannibalbooks.be'],
+      'PS-004: a publisher not on the list behaves as before — Electa alone is not Rizzoli Electa');
+    eq(api.publisherLinkOf('https://www.rizzoliusa.com/book/9780847899289/', 'Rizzoli Electa', null), 'https://www.rizzoliusa.com/book/9780847899289/',
+      'PS-005: a link a read gives on the listed site is the publisher’s own');
+    eq(api.publisherLinkOf('https://www.abebooks.com/9780847899289', 'Rizzoli Electa', null), null, 'PS-006:   a link anywhere else still is not');
+  }
+
+  // ── PL-001..PL-005: the progress line on each main path ──────────────────────
+  // PL-001 and PL-003 are with WL-030 and WL-001 above.
+  {
+    const RES = 'https://books.test/r/1';
+    const PUB = 'https://hannibalbooks.be/en/test-web-book';
+    const T = 'Test Web Book';
+    const web = ({ foreign }) => ({
+      mcp: (tool, args) => {
+        if (tool === 'web_search') {
+          const q = args.search_queries.join(' | ');
+          if (q.startsWith('Hannibal Books')) return { payload: { results: [{ url: 'https://hannibalbooks.be/en/about', title: 'Hannibal Books', excerpts: ['Hannibal'] }] } };
+          if (q.startsWith('site:hannibalbooks.be')) return { payload: { results: [{ url: PUB, title: T + ' | Hannibal', excerpts: [T] }] } };
+          if (q.startsWith('Test Web Show')) return { payload: { results: [{ url: RES, title: T, excerpts: [T + ', the catalogue of the show. Hannibal Books. ISBN 9789493416543.'] }] } };
+          return { payload: { results: [] } };
+        }
+        if (args.urls.includes(PUB)) return { payload: { errors: [], results: [{ url: PUB, title: T, excerpts: [], full_content: '# ' + T + '\nISBN 9789493416543\n' + 'Essays. '.repeat(80) }] } };
+        return shelfOf(args.urls, '[Another book €20](https://x.test/other)');
+      },
+      sample: p => isShopRead(p) ? { found: false }
+        : /"found"/.test(p) ? { found: true, thisVenue: true, catalogueTitle: T, isbn13: '9789493416543', publisher: 'Hannibal Books', publisherUrl: null, shopUrl: null }
+        : isFactsRead(p) ? { language: foreign ? 'English' : null, title: T, editions: [] }
+        : isJudge(p) ? { kind: 'book', bookUrl: null, editions: [] } : {},
+    });
+    let { row: r, labels } = await run(row('ng', 'Test Web Show'), web({ foreign: false }));
+    eq([r.hasCatalogue, r.shopState, r.publisherUrl], ['yes', 'web', PUB], 'PL-002a: (the English venue’s web path runs whole)');
+    eq(labels, [L1, L2, L3, L4], 'PL-002: progress at an English venue, found on the web — shop, broader, facts, publisher');
+    ({ row: r, labels } = await run(row('louvre', 'Test Web Show'), web({ foreign: true })));
+    eq([r.hasCatalogue, r.shopState, r.publisherUrl], ['yes', 'web', PUB], 'PL-004a: (the non-English venue’s web path runs whole)');
+    eq(labels, [L1, L2, L3F, L4], 'PL-004: progress at a non-English venue, found on the web — shop, broader, facts with the English edition, publisher');
+    // Re-check stops at the first label, whatever its steps (upTo).
+    const shown = [];
+    const io = api.lookupIo({ label: l => shown.push(l) }, { upTo: 1 });
+    ['shop', 'page', 'shop', 'facts', 'publisher'].forEach(p => io.phase(p));
+    const all = [];
+    const io2 = api.lookupIo({ label: l => all.push(l) }, {});
+    ['shop', 'web', 'page', 'shop', 'facts', 'web', 'publisher', 'page'].forEach(p => io2.phase(p));
+    eq([shown, all], [[L1], [L1, L2, L3, L4]], 'PL-005: a label is shown once and never goes back; Re-check’s shop step shows only the first');
   }
 
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');

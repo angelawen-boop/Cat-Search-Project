@@ -968,7 +968,8 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await openTray(morganAssoc.title);
     await click(button(card(morganAssoc.title), /Find catalogue/));
     const firsts = calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries[0]);
-    ok(firsts.includes('Rizzoli Electa') && !firsts.some(q => /in association with/.test(q)), 'PA-001: the publisher step looks for Rizzoli Electa, not the whole line', JSON.stringify(firsts));
+    // Rizzoli Electa's site comes from her list (PUBLISHER_SITES), so the step searches inside it.
+    ok(firsts.some(q => q.startsWith('site:www.rizzoliusa.com')) && !firsts.some(q => /in association with/.test(q)), 'PA-001: the publisher step looks for Rizzoli Electa, not the whole line', JSON.stringify(firsts));
     const t = card(morganAssoc.title) ? card(morganAssoc.title).textContent : '';
     ok(/Morgan Library & Museum in association with Rizzoli Electa/.test(t), 'PA-002:   the card still prints the line as the book gives it', t.slice(0, 400));
   }

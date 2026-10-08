@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "40.10";
-const APP_VERSION_DATE = "7 Oct 2026";
+const APP_VERSION = "41";
+const APP_VERSION_DATE = "8 Oct 2026";
 
 // MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
 // most first, the Italian sites together, the venues that refuse us last. Accademia
@@ -1665,16 +1665,19 @@ function shopDomain(mu){if(!mu||!mu.shopHome)return null;try{return new URL(mu.s
 const PUBLISHER_WORDS=new Set(["books","book","press","publishing","publishers","publisher",
   "editions","edition","verlag","publications","university","the","and","of","co","inc","ltd",
   "llc","bv","nv"]);
+// A joint publisher on her PUBLISHER_SITES list is used only when the name finds none.
+const publisherWords=name=>foldText(name).split(/[^a-z0-9]+/).filter(w=>w.length>2&&!PUBLISHER_WORDS.has(w));
 function publisherDomainFrom(results,name){
-  const words=foldText(name)
-    .split(/[^a-z0-9]+/).filter(w=>w.length>2&&!PUBLISHER_WORDS.has(w));
-  if(!words.length)return null;
+  const words=publisherWords(name);
+  const listed=listedPublisherSite(name);
   for(const r of (results||[])){
     let host;
     try{ host=new URL(String(r&&r.url||"")).hostname.toLowerCase(); }catch{ continue; }
     const flat=host.replace(/[^a-z0-9]/g,"");
-    if(words.every(w=>flat.includes(w)))return host;
+    if(words.length&&words.every(w=>flat.includes(w)))return host;
   }
+  const bare=h=>h.replace(/^www\./,"");
+  if(listed)for(const r of (results||[])){ const h=hostOf(String(r&&r.url||"")); if(h&&bare(h)===bare(listed))return h; }
   return null;
 }
 
@@ -1697,6 +1700,20 @@ const SELF_PUBLISHERS = new Set([
   "national gallery publications limited", // ng — her addition (Venice: Canaletto and His Rivals)
   "national gallery company",              // ng — her addition (Ed Ruscha: Course of Empire)
 ]);
+// JOINT PUBLISHERS WHOSE NAME IS NOT IN THEIR ADDRESS — her list, kept short. An entry
+// is added only when her card says "Couldn't work out the publisher's own website" for
+// a publisher that has one, and she asks; never from a general list. Matched on the
+// name's own words (publisherWords). Used only when the name finds no site. PS-001 to PS-006.
+const PUBLISHER_SITES={
+  "Rizzoli Electa":"https://www.rizzoliusa.com/",
+  "DelMonico Books · Prestel":"https://delmonicobooks.com/",
+};
+function listedPublisherSite(name){
+  const k=publisherWords(name).join(" ");
+  if(!k)return null;
+  for(const [n,u] of Object.entries(PUBLISHER_SITES))if(publisherWords(n).join(" ")===k)return hostOf(u);
+  return null;
+}
 // A leading "The" and any punctuation are noise, not a different publisher.
 function normPublisher(name){
   return foldText(name).replace(/[^a-z0-9]+/g," ").trim().replace(/^the\s+/,"");
@@ -2291,6 +2308,16 @@ const pageForPrompt=(list,cap)=>list.slice(0,2).map(r=>
   String(r.title||"")+"\n"+String(r.url||"")+"\n"+oneText(r).replace(/[ \t]+/g," ")
 ).join("\n\n").slice(0,cap||PAGE_CHARS);
 
+// THE PROGRESS LINE (her decision): at most four labels, in this order, each at most
+// once, never back to an earlier one. The book's page and the facts round share one.
+// Re-check stops at the first (upTo). PL-001 to PL-005.
+const LOOKUP_STAGE={shop:1,web:2,page:3,facts:3,publisher:4};
+function lookupLabel(n,foreign){
+  return n===1?"Searching venue shop\u2026":n===2?"Searching more broadly\u2026"
+    :n===3?(foreign?"Finding the ISBN, publisher and English edition\u2026":"Finding the ISBN and publisher\u2026")
+    :n===4?"Looking for the publisher\u2019s page\u2026":"";
+}
+
 // The lookup's calls, counted and timed for the diagnostic. At most three connector
 // calls and two Claude reads run at once.
 function slots(n){
@@ -2302,10 +2329,10 @@ function slots(n){
     finally{ busy--; const next=waiting.shift(); if(next)next(); }
   };
 }
-function lookupIo(hooks){
-  const h=hooks||{};
+function lookupIo(hooks,opts){
+  const h=hooks||{}, o=opts||{};
   const mcp=slots(3), claude=slots(2);
-  const st={search:0,fetch:0,read:0,waits:0,group:0,step:"",ms:{},order:[]};
+  const st={search:0,fetch:0,read:0,waits:0,group:0,step:"",ms:{},order:[],shown:0};
   const timed=async(kind,run)=>{
     st[kind]++; if(!st.group)st.waits++;
     const step=st.step||"start", t0=Date.now();
@@ -2313,7 +2340,11 @@ function lookupIo(hooks){
     finally{ if(!(step in st.ms))st.order.push(step); st.ms[step]=(st.ms[step]||0)+Date.now()-t0; }
   };
   return{
-    phase:p=>{ st.step=p; if(h.phase)h.phase(p); },
+    phase:p=>{
+      st.step=p;
+      const n=LOOKUP_STAGE[p]||0;
+      if(n>st.shown&&n<=(o.upTo||4)){ st.shown=n; if(h.label)h.label(lookupLabel(n,o.foreign)); }
+    },
     prepareShop:async id=>{ if(h.prepareShop)await h.prepareShop(id); },
     search:(o,q)=>timed("search",()=>mcp(()=>searchWeb(o,q))),
     fetch:(u,o,q,opts)=>timed("fetch",()=>mcp(()=>fetchPage(u,o,q,opts))),
@@ -2632,6 +2663,7 @@ async function findPublisherPage(F,c){
   } else {
     pubHost=publisherDomainFrom(c.found,pub);
     if(pubHost)log.push("The publisher’s site, read off the results already found: "+pubHost);
+    else if((pubHost=listedPublisherSite(pub)))log.push("The publisher’s site, from her list of joint publishers: "+pubHost);
     else{
       const d1=await io.search("The official website of the art-book publisher “"+pub+"”.",[pub,pub+" art book publisher"]);
       log.push(d1.detail);
@@ -2775,13 +2807,15 @@ function composeRow(row,F){
 // card. Resolves to {ok, row, detail, trouble?, troubleLang?, calls}.
 // Read docs/app.md §1 before changing the order of the phases.
 async function lookupCatalogue(row,hooks){
-  const io=lookupIo(hooks);
   row=resetCard(row);
   const mu=MU[row.museumId];
   const dom=shopDomain(mu);
   const title=String(row.title||"").trim();
   const venue=mu?mu.name:"";
   const foreign=!!(mu&&mu.english===false);
+  const io=lookupIo(hooks,{foreign});
+  // The first label is set before anything is awaited, so no other line shows first.
+  io.phase(dom?"shop":"web");
   const log=[];
   const done=o=>({...o,detail:[io.summary()].concat(log.filter(Boolean)).join("\n"),calls:io.counts()});
 
@@ -3026,7 +3060,7 @@ export default function App(){
   const[loaded,setLoaded]=useState(false);
   const[busy,setBusy]=useState(false);
   const[busyId,setBusyId]=useState(null);
-  const[lookPhase,setLookPhase]=useState(null); // "shop"|"web"|"page"|"facts"|"publisher"|"recheck"|null — which lookup step is running
+  const[lookLabel,setLookLabel]=useState(null); // the progress line while a lookup or Re-check runs (lookupLabel)
   const[prog,setProg]=useState({done:0,total:0,label:""});
   // Add by link: one pop-up for CSV and Links, nothing added to the page (her design).
   // importMode: null · "choose" · "links" (the box open below them).
@@ -3644,7 +3678,7 @@ export default function App(){
 
   // The lookup runs at top level (lookupCatalogue); the page hands it its progress
   // line and, for an occasional venue, the check that works out its shop search.
-  const lookHooks={phase:setLookPhase,prepareShop:fillShopSearch};
+  const lookHooks={label:setLookLabel,prepareShop:fillShopSearch};
   const lookupCat=row=>lookupCatalogue(row,lookHooks);
 
   // A link venue met before the finder proved searches (finder 2) gets its search
@@ -3688,7 +3722,7 @@ export default function App(){
       const why=String(out.detail||"").split("\n").pop().split("[")[0].trim();
       setRecheckSaid({id,failed:true,text:(row.looked?"Search again":"Search")+" didn\u2019t run \u2014 "+why+" Nothing changed."});
     }
-    setBusy(false);setBusyId(null);setLookPhase(null);
+    setBusy(false);setBusyId(null);setLookLabel(null);
   }
 
   // "Re-check museum shop" (her design; see "A BOOK LEAVING THE SHOP" above): its answer
@@ -3701,10 +3735,11 @@ export default function App(){
     const row=ticket?{...found,shopUrl:null,shopState:"web",shopChange:null}:found;
     let out;
     if(row.shopUrl&&(row.shopState==="shop"||row.shopState==="gone")){
-      setLookPhase("recheck");
+      setLookLabel("Re-reading the shop page\u2026");
       out=await recheckLinkedPage(row);
     } else {
-      const io=lookupIo(lookHooks);
+      const io=lookupIo(lookHooks,{upTo:1});
+      io.phase("shop");
       const s=await shopStep(row,io);
       const dom=shopDomain(MU[row.museumId]);
       const o=s.data||{};
@@ -3732,7 +3767,7 @@ export default function App(){
     setDebug(out.detail||null);
     if(out.ok&&out.row&&out.row!==found)await commit(rows.map(r=>r.id===id?out.row:r));
     setRecheckSaid({id,text:out.said,failed:!out.ok});
-    setBusy(false);setBusyId(null);setRechecking(false);setLookPhase(null);
+    setBusy(false);setBusyId(null);setRechecking(false);setLookLabel(null);
   }
 
   const dismiss=id=>{commit(rows.map(r=>r.id===id?{...r,interested:false}:r));if(undoTimer.current)clearTimeout(undoTimer.current);setUndo({id});undoTimer.current=setTimeout(()=>setUndo(null),10000);};
@@ -4138,7 +4173,7 @@ export default function App(){
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
           const lead=brk||header;
           const t=tierFor(r),tier=TH[t],mu=MU[r.museumId],mo=moSince(r.endDate),isOpen=openCards[r.id],noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested,isBusy=busyId===r.id;
-          const searchingLabel=lookPhase==="shop"?"Searching venue shop\u2026":lookPhase==="web"?"Searching more broadly\u2026":lookPhase==="page"?"Reading the book\u2019s page for its ISBN\u2026":lookPhase==="facts"?"Checking the book\u2019s details\u2026":lookPhase==="publisher"?"Looking for the publisher\u2019s page\u2026":lookPhase==="recheck"?"Re-reading the shop page\u2026":"Searching\u2026";
+          const searchingLabel=lookLabel||"Searching\u2026";
           // Two buttons share one busy row; only the one pressed shows progress.
           const againLabel=isBusy&&!rechecking?searchingLabel:"Search again";
           const recheckLabel=isBusy&&rechecking?searchingLabel:"Re-check museum shop";
