@@ -347,7 +347,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 40.10 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 41 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -939,7 +939,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **40.10 · cloud 4**. Cloud-only in it:
+live on the test page **41 · cloud 4**. Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
@@ -1094,10 +1094,9 @@ Not good → more work on the routine or the recipes.
 
 ### 6. Queued next
 
-- **Catalogue-search rebuild: built on `main`, awaiting her wording approval and
-  publish** (then merged into `claude/ledger-cloud`). Open: whether her live search
-  reaches Hammershøi's library record (978-0847899289); Rizzoli Electa's site is not
-  recognised (`publisherDomainFrom`), a co-imprint list being hers to decide.
+- **Catalogue-search rebuild: published on the test page (41).** Open: her live
+  check of Hammershøi — does it reach the library record (978-0847899289) and
+  Rizzoli's page for the English edition?
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 
