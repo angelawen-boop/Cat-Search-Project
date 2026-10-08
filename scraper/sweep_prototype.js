@@ -3563,44 +3563,21 @@ const TATE_NOISE = 'editorial-background|accordion|card-content';
 const VENUES = {
   met: {
     name: 'The Metropolitan Museum of Art',
-    // RECURRING SERIES AND COLLECTION ROTATIONS — her ruling, 24 Sep. Most of
-    // her Met quarantine was series that return every year at a NEW address
-    // (P.S. Art, Scholastic, the crèche, the Burdick baseball cards), which
-    // quarantine, keyed on the address, cannot hold. NOTHING is excluded for
-    // coming from a collection — "Selections from the Department of …", "from
-    // the Collection", "Recent Acquisitions", "… Gift" all stay: one great gift
-    // can make a major show with a catalogue. Every commission series is out (Facade, Great Hall,
-    // Roof Garden).
+    // Her decisions (CLAUDE.md §2): recurring series and every commission series out;
+    // nothing excluded for coming from a collection, a gift or acquisitions.
     excludeTitle: new RegExp([
       /^P\.\s?S\.\s?Art\b/, /\bScholastic Art (?:&|and) Writing\b/,
       /\bWatson Library\b/,
       /\bChristmas Tree and Neapolitan\b/,
       /\bCommission:/,
-      // Rotated every few months, a new address each time — she quarantined it
-      // three times. A named series, not a rule about collections.
+      // Rotated every few months at a new address — a named series.
       /\bBaseball Cards from the Collection of Jefferson R\. Burdick\b/,
     ].map(r => r.source).join('|'), 'i'),
     base: 'https://www.metmuseum.org',
-    // HER MACHINE ONLY — see machineVenues(). The container is answered 429 on
-    // every page here, so sweeping it from the container adds marker rows to a
-    // file where her own run already has all 106 real ones, and spends requests
-    // on a venue that rate-limits.
+    // Her machine only (machineVenues): the container is answered 429 here.
     route: 'local',
-    // The past archive serves ONE YEAR PER ADDRESS, so each year is its own page.
-    //
-    // She checked the live site on 11 Sep: picking a year from the menu changes
-    // the address bar to `/exhibitions/past?year=2025`. That makes it a
-    // SERVER-SIDE filter — the same shape as the Louvre's — and a server-side
-    // filter is simply a different URL, which needs no menu clicking at all.
-    //
-    // This is why driving the menu got the same 68 links three times: the click
-    // navigates, and the scraper read the page it was already on before the new
-    // one arrived. Asking for the address directly removes the race entirely.
-    //
-    // The years are NOT written down here. `yearArchive` expands to one page per
-    // year between the lookback floor and last year, worked out at run time —
-    // see expandYearArchive(). A hardcoded list is right the day it is typed and
-    // quietly wrong every year after.
+    // The past archive serves one year per address (?year=2025), so each year is a
+    // page; yearArchive derives the years at run time (expandYearArchive), never typed.
     pages: [
       { path: '/exhibitions',      ctx: 'current/upcoming' },
       { path: '/exhibitions/past', ctx: 'past' },
@@ -3611,20 +3588,8 @@ const VENUES = {
     title: { heading: true },
 
 
-    // HER RULING, 11 Sep 2026: collect temporary exhibitions only.
-    //
-    // The Met's own listing groups its permanent displays under an "Ongoing"
-    // heading and prints "Ongoing" in each card's date slot — sometimes alone,
-    // sometimes as the closing side of a range ("July 25, 2026–Ongoing"). Those
-    // 19 rows are why the 82-row local run had no closing date: The British
-    // Galleries, Cycladic Art, Art of Native America, Fabergé, and the Oceania /
-    // Africa / Ancient Americas reinstallations.
-    //
-    // Opt-in per venue rather than universal, because "Ongoing" is this site's
-    // wording and reading another venue's cards by the Met's habits is the
-    // mistake that has cost us most often (Borghese's title rule was wrong at
-    // the Rijksmuseum a day later). A venue that labels its permanent displays
-    // the same way turns this on in its own recipe.
+    // Temporary exhibitions only (her decision): the Met prints "Ongoing" for its
+    // permanent displays. Opt-in per venue — "Ongoing" is this site's wording.
     excludeOngoing: true,
   },
 
@@ -3645,13 +3610,8 @@ const VENUES = {
     // so far that does. Picked up automatically; nothing needed here.
     // The card's second title line has its own slot; see withPostTitle().
     title: { heading: true, postTitle: '.exhibition-post-title' },
-    // THE DESCRIPTION IS NAMED, because the shared ladder's
-    // '[class*="description"] p' rung now finds the wrong one. By 5 Oct a show
-    // with a published catalogue carries a promo panel whose container is
-    // classed "description" ("Explore the themes of 'Renoir and Love' further
-    // in the catalogue…"), and that rung outranks the bare <p> the real text
-    // was read through. The text lives in the page's exhibition-info block
-    // (docs/ng_pages/, her saves of 5 Oct).
+    // The description is named: a catalogue promo panel classed "description" outranks
+    // the real text in the shared ladder (docs/ng_pages/).
     description: '.exhibition-info .body-text',
     // Its last line credits the organising museums — a credit line, which no
     // row carries (CLAUDE.md §2).
@@ -3665,23 +3625,16 @@ const VENUES = {
       { path: '/en/whats-on/exhibitions/now-on-view', ctx: 'current/upcoming' },
       { path: '/en/whats-on/exhibitions/past',        ctx: 'past' },
     ],
-    // Some entries are linked to the DUTCH site even from the English
-    // listing — "tentoonstellingen" rather than "exhibitions". Stop Motion is
-    // one, and looking only for the English path missed it entirely.
+    // Some entries link to the Dutch site ("tentoonstellingen") even from the English
+    // listing.
     selector: 'a[href*="exhibitions/"], a[href*="tentoonstellingen/"]',
     isNav: href => /exhibitions\/?$/.test(href)
                 || /now-on-view\/?$/.test(href)
                 || /past\/?$/.test(href)
                 || /tentoonstellingen\/(afgelopen|nu-te-zien)?\/?$/.test(href),
-    // Two card layouts. The PAST page puts a heading inside the link
-    // ("METAMORPHOSES"). The now-on-view page wraps only the IMAGE, leaving
-    // the title two levels up: "LAST CHANCE ED VAN DER ELSKEN. UP CLOSE till
-    // 13 September 2026". Heading first, card as the fallback.
-    // A STATUS BADGE IS NOT A NAME. The Asian Pavilion's card carried
-    // "PARTIALLY CLOSED" as its heading, the heading was trusted, and the row
-    // reached her titled "PARTIALLY CLOSED" — her finding, 23 Sep. Its own page
-    // is headed "Asian Pavilion". Rejected in the heading branch, so the card
-    // is read instead, with the badge stripped off its front.
+    // Two card layouts: the past page puts a heading in the link; now-on-view links only
+    // the image, with the title two levels up. A status badge ("PARTIALLY CLOSED") is not
+    // a name — rejected in the heading branch, stripped off the card.
     title: {
       heading: true,
       notATitle: /^(?:(?:PARTIALLY|TEMPORARILY)\s+)?CLOSED$|^(?:LAST CHANCE|OPENING SOON|SOON|NEW)$/i,
@@ -3702,11 +3655,8 @@ const VENUES = {
     // live under /exhibitions/past/. They are navigation, not exhibitions;
     // following them dragged in the whole back catalogue to 1999.
     isNav: href => /\/exhibitions\/?$/.test(href) || /\/exhibitions\/past\//.test(href),
-    // No headings: the card holds name, subtitle and gallery in labelled
-    // pieces, read separately — see cardPartsTitle() and placeTravellingRuns().
-    // Read as one string they ran into "Matisse The Pursuit of Harmony New
-    // York". The gallery stays ONLY on a show running in both galleries, so
-    // its two runs still read as two rows on the approval cards.
+    // No headings: name, subtitle and gallery read separately (cardPartsTitle,
+    // placeTravellingRuns). The gallery stays only on a show run in both galleries.
     title: {
       heading: false,
       cardParts: { name: '.title', subtitle: '.subtitle:not(.subtitle2)', place: '.subtitle2' },
@@ -3715,10 +3665,8 @@ const VENUES = {
     locations: ['New York', 'Palm Beach'],
   },
 
-  // LÉVY GORVY DAYAN — her addition, 25 Sep. A gallery in New York and London;
-  // one page carries current and past (back to 2021), and upcoming shows are
-  // not announced. Every card is three lines inside the link — name, location,
-  // dates — so the title is the first line (linkLines).
+  // Lévy Gorvy Dayan, her addition. One page holds current and past; upcoming shows are
+  // not announced. Each card is three lines in the link; the title is the first.
   lgd: {
     name: 'Lévy Gorvy Dayan, New York and London',
     base: 'https://www.levygorvydayan.com',
@@ -3728,21 +3676,13 @@ const VENUES = {
     selector: 'a[href*="/exhibitions/"]',
     isNav: href => /\/exhibitions\/?$/.test(href),
     title: { heading: false, linkLines: true },
-    // THE HONG KONG PARTNERSHIP SHOWS ARE NOT HERS — her ruling, 25 Sep. The
-    // card's own location line says "Lévy Gorvy Dayan & Wei, Hong Kong".
+    // Hong Kong partnership shows are not hers (CLAUDE.md §2): the card's location line.
     otherBranch: /Hong Kong/i,
-    // A ONE-TIME EXCEPTION, HERS, 25 Sep: this show closed in May 2024, before
-    // the lookback, but its catalogue has only just been published. This one
-    // address only — the lookback stands for every other row.
+    // Her one exception to the lookback (CLAUDE.md §2): this address only.
     keepDespiteLookback: ['/exhibitions/yves-klein-and-the-tangible-world'],
-    // THE GALLERY'S AUCTIONS ARE NOT EXHIBITIONS — her ruling, 25 Sep. "LGD
-    // Hammer" is its sale series (hence the hammer), listed among the shows:
-    // "LGD Hammer: Willem de Kooning, Milkmaid (Untitled X) (1984)".
+    // "LGD Hammer" is the gallery's auction series, not an exhibition (her decision).
     excludeTitle: /^LGD\s+Hammer\b/i,
-    // THE GALLERY'S OWN TEXT ONLY. Its pages end with a press list — links to
-    // articles, one reading "Frieze Dish, The Lalanne Bounce, A $17.5M Hockney
-    // & An $8.5M Gorky" — built from the same text class inside <li>s, and the
-    // shared ladder took it as description. The description is the div.
+    // The gallery's own text only: its press list uses the same class inside <li>s.
     description: 'div.text-style-description p',
   },
 
@@ -3754,10 +3694,7 @@ const VENUES = {
       { path: '/en/mostre/future/',   ctx: 'upcoming' },
       { path: '/en/mostre/passate/',  ctx: 'past' },
     ],
-    // Its exhibitions do NOT live under /mostre/ — those three pages are the
-    // listings, and their only /mostre/ links are the site's own menu (ITA,
-    // Exhibitions, Current, Past, Upcoming). Looking for /mostre/ was why this
-    // venue returned exactly one row per page: it collected the menu bar.
+    // Exhibitions live under /exhibition/; the /mostre/ links are the listings and menu.
     selector: 'a[href*="/exhibition/"]',
     isNav: href => /\/exhibition\/?$/.test(href),
     // The heading holds only the first sentence, so use the full link text.
@@ -3767,42 +3704,20 @@ const VENUES = {
     // Listings carry only a start month ("March / 2026") and no closing date,
     // so the lookback cannot be decided before the detail pages are read.
     lookbackAfterDetail: true,
-    // See the note above capo: this venue's curatorial text is in divs, not
-    // paragraphs, so the shared ladder cannot reach it.
-    //
-    // `.entry` IS THE WHOLE POINT and a first attempt without it regressed four
-    // rows. Borghese wraps several blocks in the same `.limit` class — the
-    // breadcrumb ("HomeExhibitionsPast"), the in-page jump menu ("INTRO DISCOVER
-    // BIOGRAPHY"), the newsletter — and only the curatorial block also carries
-    // `entry`. Checked on two pages before trusting it.
+    // Curatorial text is in divs. `.entry` is the point: other `.limit` blocks hold the
+    // breadcrumb, the jump menu and the newsletter.
     description: '.section .limit.entry',
   },
 
   frick: {
     name: 'The Frick Collection, New York',
     base: 'https://www.frick.org',
-    // Two pages, and the archive is the bigger half: read 11 Sep 2026,
-    // /exhibitions carries 8 exhibition addresses and /exhibitions/past
-    // carries 12.
     pages: [
-      // ITS CARDS ONLY. Below them the page has its own "Past" section — the
-      // three latest closed shows — so Gainsborough, closed in May, was "found
-      // on" current/upcoming. They are on the past page anyway. Her saved
-      // page, 24 Sep: docs/listing_pages/frick_current.mhtml.
+      // Its cards only: below them a "Past" section repeats the latest closed shows
+      // (docs/listing_pages/frick_current.mhtml).
       { path: '/exhibitions',      ctx: 'current/upcoming', within: ['.paragraph-cards-layout__cards'] },
-      // ITS PAST ARCHIVE PAGINATES, and only page one was ever read. Found
-      // 13 Sep by the standing unwired-pagination check — the page publishes
-      // rel="next" outright — and confirmed with probe_pagination.js: page two
-      // holds 10 exhibitions this venue has never contributed.
-      //
-      // `from: 1` because THIS SITE IS 0-INDEXED: the bare address is page 0
-      // and its own next link points at ?page=1. The Menil is 1-indexed and
-      // starts at 2. Only the site can say which, so it is read off that next
-      // link rather than assumed.
-      //
-      // Her count of 10 was of page one, which is why it matched and why
-      // nothing caught this: a first page that reads perfectly looks identical
-      // to a complete archive.
+      // The past archive paginates (found by the standing check). `from: 1`: this site
+      // is 0-indexed — the bare address is page 0 (P-014).
       { path: '/exhibitions/past', ctx: 'past', paginate: { param: 'page', from: 1 } },
     ],
     selector: 'a[href*="/exhibitions/"]',
@@ -3811,15 +3726,8 @@ const VENUES = {
     isNav: href => /\/exhibitions\/?$/.test(href)
                 || /\/exhibitions\/past\/?$/.test(href)
                 || /\/exhibitions\/virtual\/?$/.test(href),
-    // Two layouts on the two pages, and they need opposite handling.
-    //
-    // The PAST cards put the name in the link text, so it is read directly.
-    // The CURRENT cards link only a "READ MORE" button — sometimes spelled
-    // "READ MORE ABOUT THE KENT MONKMAN EXHIBITION" — and write the name as
-    // the card's first line, in an <em> rather than a heading. So the button
-    // text is discarded whole (a partial strip would leave "KENT MONKMAN",
-    // which is not the exhibition's name), and the first line is taken from
-    // the card instead.
+    // Past cards name the show in the link; current cards link only a "READ MORE"
+    // button (discarded whole) and put the name in the card's first line.
     title: {
       heading: true,
       stripLeading: /^READ MORE\b.*$/i,
@@ -3829,80 +3737,50 @@ const VENUES = {
 
   morgan: {
     name: 'Morgan Library & Museum, New York',
-    // Headless has never got in; a visible Chrome with her history did, 22 Sep.
-    // Her ruling, 26 Sep: not attempted headless from her machine.
+    // Headed (her decision): headless has never got in; never headless from her machine.
     headed: true,
     base: 'https://www.themorgan.org',
 
-    // THREE DIFFERENT PAGES, NOT ONE LAYOUT REPEATED — read from the listings
-    // she saved on 22 Sep, which are committed in docs/morgan_pages/ with a
-    // README of what each settled. This venue runs Drupal and serves each
-    // listing from a separate view, so each needs its own way in.
+    // Three listings, three views (Drupal), each with its own way in — docs/morgan_pages/.
     pages: [
-      // CURRENT holds TWO blocks and only the first is wanted: the second is
-      // "Presentations from our Collection", which she excludes. That heading
-      // is a block boundary rather than a line of text, so scoping to the
-      // block skips the section outright — no searching prose for a heading.
+      // Current holds two blocks; only the first — the second is "Presentations from
+      // our Collection" (excluded). Scoped to the block.
       { path: '/exhibitions/current', ctx: 'current',
         selector: '.view-display-id-page_1 .views-field-field-teaser-image a[href]',
-        // Each card's dates in their own field: "June 26 through October 4,
-        // 2026", or "Ongoing" — which excludeOngoing drops before the page is
-        // opened. The general walk found none (MP-007, 28 Sep).
+        // Each card's dates have their own field; "Ongoing" is dropped by
+        // excludeOngoing (MP-007).
         datesAt: { within: '.thumbnail', sel: '.views-field-field-display-date' } },
 
-      // UPCOMING is the same card shape with one block — and it is page_2, not
-      // page_1. The id cannot be shared with the line above.
+      // Upcoming: the same card shape, but page_2.
       { path: '/exhibitions/upcoming', ctx: 'upcoming',
         selector: '.view-display-id-page_2 .views-field-field-teaser-image a[href]',
         datesAt: { within: '.thumbnail', sel: '.views-field-field-display-date' } },
 
-      // PAST is a different view entirely: rows down the page, each carrying
-      // its own title, dates and paragraph.
-      //
-      // SELECTED BY THE TITLE FIELD, NEVER BY THE ADDRESS. Nine of the ten rows
-      // on its first page are /exhibitions/<slug>; the tenth is
-      // /collections-spotlight-summer-2026, at the site root. A selector
-      // matching the path would have found nine and lost the tenth in silence
-      // — and the CURRENT listing's Collections Spotlight IS under
-      // /exhibitions/, so nothing about the venue warns you.
-      //
-      // The year-PAIRS are derived, never typed: see expandYearArchive().
+      // Past: rows down the page, each with title, dates and paragraph. Selected by the
+      // TITLE field, never the address — one row sits at the site root. Year-pairs are
+      // derived (expandYearArchive).
       { path: '/exhibitions/past', ctx: 'past', yearPath: '/',
         yearArchive: true, yearPair: true,
         carry: {
-          // Each year-pair runs to more than one page (2025-2026: three). The
-          // pager numbers from ZERO — the bare address is ?page=0, so the next
-          // is ?page=1 — read off her saved page's own pager links.
+          // Each year-pair runs to several pages; the pager numbers from zero.
           paginate: { param: 'page', from: 1 },
           selector: '.view-id-taxonomy_term .field--name-node-title h2 a[href]',
-          // HER RULING, 22 Sep: take the paragraph off the listing and do not
-          // open these pages. ~75 past exhibitions at a polite pace is over
-          // half an hour of requests at a venue that has already refused us
-          // once for going too fast; this way the whole archive costs eight
-          // page loads. The paragraph is a complete piece of curatorial prose,
-          // which is all compression needs.
-          // NO DESCRIPTION ON THE LISTING → THE PAGE IS OPENED — her ruling,
-          // 30 Sep. The Bellini row's body is a picture and its caption
-          // (`p.small`), nothing else; the caption is skipped, the row comes
-          // back empty, and the ordinary page pass reads its own page.
+          // Her decision: the paragraph is read off the listing and these pages are not
+          // opened (eight page loads for the whole archive) — unless the listing gives no
+          // description; then the page is opened (a caption, p.small, is not one).
           listingRow: {
             container: '.node--type-exhibitions',
             summary: '.field--name-body',
             skip: 'p.small, figcaption',
           },
-          // Each row's dates sit in their own field ("March 17 through June
-          // 28, 2026"). The row also holds the paragraph, too long for the
-          // general walk to reach them: every past row came out undated
-          // (MP-006, 28 Sep), which disables the lookback and the stop at the
-          // floor. Current and upcoming cards are short and read as before.
+          // Each row's dates sit in their own field, out of the general walk's reach
+          // (MP-006).
           datesAt: { within: '.node--type-exhibitions', sel: '.field--name-field-display-date' },
         } },
     ],
 
-    // The venue-wide fallback, used by any page that names no selector of its
-    // own. Every page above names one, so this only ever catches a page added
-    // later without one — in which case finding too much is safer than finding
-    // nothing, because the extra rows are visible on her approval pile.
+    // Fallback for a page added later without its own selector: too much is safer
+    // than nothing.
     selector: 'a[href*="/exhibitions/"]',
     isNav: href => /\/exhibitions\/(current|upcoming|past)\/?$/.test(href)
                 || /\/exhibitions\/past\/\d{4}-\d{4}\/?$/.test(href)
@@ -3913,33 +3791,20 @@ const VENUES = {
     // name sits beside them in its own field. Past links carry the name.
     title: { heading: true, cardName: { within: '.thumbnail', sel: '.views-field-title' } },
 
-    // THE BLURB, AND THE TRAP IN IT. `field--name-body` appears TWICE on every
-    // Morgan page, and the first one is 29,000 characters above the exhibition:
-    // it is the site header's Shop / Tickets / Search buttons. Named on its own
-    // it would put three buttons in the summary of every Morgan row, and the
-    // field would look filled rather than empty. Scoping to the article is the
-    // whole fix. Same shape as the Wallace's footer-spacer and the V&A's cookie
-    // panel: a class meaning "a field" in general, believed as though it meant
-    // this field in particular.
+    // `field--name-body` appears twice on every page; the first is the site header's
+    // buttons. Scoping to the article is the fix.
     description: 'article.exhibitions .field--name-body',
-    // The show page puts its pictures' captions INSIDE that field, each a
-    // `p.small` ("… Photography by …, courtesy of …"). Not description; taken
-    // out (the Bellini page, 30 Sep). Same marker as on the past listing.
+    // Captions inside that field (p.small) are not description.
     descriptionSkip: 'p.small, figcaption',
 
-    // A standing rotation of the Morgan's own holdings under several names —
-    // Summer 2026, Spring 2026, Fall 2026. Not a temporary exhibition, so no
-    // closing window and no catalogue to buy before one. Her ruling, 22 Sep.
-    // The venue labels none of them, so no site-stated rule can reach it.
+    // Collections Spotlight: a standing rotation, not a show (her decision, CLAUDE.md §2).
     excludeTitle: /^Collections?\s+Spotlight\b/i,
 
     // J. Pierpont Morgan's Library prints "Ongoing" where the others print a
     // range — a permanent display, said so by the venue itself.
     excludeOngoing: true,
 
-    // HER MACHINE ONLY — her rule, 26 Sep: moved after a complete, clean
-    // headed sweep from her laptop (30 Sep 16:07, mode B, 18 pages, no
-    // challenge, her count 3 + 5 + 20 + 3 + 8 = 39).
+    // Her machine only, after a complete clean headed sweep from her laptop (her decision).
     route: 'local',
   },
 
@@ -3947,74 +3812,31 @@ const VENUES = {
     name: 'The Menil Collection, Houston',
     // See excludeUndated in scrapeVenue — her ruling on its permanent galleries.
     excludeUndated: true,
-    // Its "Foyer Installation: …" rows are rotations from the permanent
-    // collection in the entrance hall, not temporary exhibitions. Her ruling,
-    // 23 Sep; she quarantined the ones already on her pile. Every one carries
-    // the prefix in its title, which is the venue's own label.
-    // AND ITS OWN COLLECTION — her ruling, 24 Sep, THIS VENUE ONLY: "… from
-    // the Collection" and "Recent Acquisitions". Not the Met: its own
-    // collection shows can be significant and carry catalogues.
+    // Her decisions, this venue only (CLAUDE.md §2): "Foyer Installation: …" rotations,
+    // "… from the Collection" and "Recent Acquisitions" excluded.
     excludeTitle: /^Foyer\s+Installation\b|\bfrom the Collection\b(?!\s+of\b)|\bRecent Acquisitions\b/i,
     base: 'https://www.menil.org',
     // The brief's /exhibitions/current 302s to /exhibitions, which is the
     // live address for what is on now.
     pages: [
-      // ITS CURRENT LISTING PAGINATES TOO. Found 13 Sep by the standing
-      // unwired-pagination check and confirmed by her: page two exists.
-      // Every current exhibition happens to sit on page one TODAY, which is
-      // why her count matched and why this was never caught — the threat is
-      // that the day a thirteenth opens it lands on page two and the sweep
-      // reports no error. The same shape as the 12 exhibitions this venue's
-      // PAST archive lost, and the same one-line answer.
+      // Its current listing paginates too (the standing check found page two).
       { path: '/exhibitions',          ctx: 'current', paginate: { param: 'page', from: 2 } },
-      // NOT given to `upcoming`, on purpose: no second page has ever been seen
-      // there, and the standing check reports it the day one appears. A
-      // speculative extra request every sweep is not evidence.
+      // Not on upcoming: no second page has ever been seen; the standing check would
+      // report one.
       { path: '/exhibitions/upcoming', ctx: 'upcoming' },
-      // ITS PAST ARCHIVE IS PAGINATED and only this first page was being read,
-      // losing 12 exhibitions outright — her count caught it, nothing in the
-      // output could have.
-      //
-      // `from: 2` because THIS SITE IS 1-INDEXED: probed 12 Sep, the bare
-      // address and ?page=1 return the identical 12 addresses, and ?page=2 is
-      // the first page with new ones. Sites disagree about this and only the
-      // site can settle it, so it is a stated fact like any other recipe line.
-      // Getting it wrong is not silent — a `from` one too low reads the first
-      // page twice and stops, which shows up as a short venue against her
-      // count; one too high would skip a page, which is why it was PROBED
-      // rather than assumed.
-      //
-      // HOW MANY PAGES THERE ARE IS NOT WRITTEN DOWN. followPagination() keeps
-      // asking until the venue stops answering with new exhibitions, so the
-      // archive growing costs no edit here.
+      // The past archive paginates (12 shows were once lost to page one). `from: 2`:
+      // this site is 1-indexed — the bare address and ?page=1 are the same page. Page
+      // counts are never written down (followPagination).
       { path: '/exhibitions/past',     ctx: 'past', paginate: { param: 'page', from: 2 } },
     ],
-    // SINGULAR, and this is the whole trap at this venue. Exhibitions live at
-    // /exhibition/<slug>; the PLURAL /exhibitions/<slug> addresses are the
-    // three listing tabs themselves ("ON VIEW", "UPCOMING", "PAST"), which
-    // appear on all three pages. Matching "/exhibition/" with the trailing
-    // slash excludes the plural cleanly, because "/exhibitions/" has an "s"
-    // where this pattern wants the slash.
+    // SINGULAR: exhibitions live at /exhibition/<slug>; the plural addresses are the
+    // listing tabs.
     selector: 'a[href*="/exhibition/"]',
     isNav: href => /\/exhibition\/?$/.test(href),
-    // Its cards wrap only the IMAGE in the link, so the link itself carries no
-    // text at all — the same layout as the Rijksmuseum's now-on-view page, and
-    // the reason that one once reported 10 exhibitions and 0 titles. The name
-    // is read from the card above, under the depth and length guards in
-    // readCardText().
-    // Its cards wrap only the IMAGE, so the link carries no text and the name
-    // comes from the card above — the Rijksmuseum's layout. The card reads
-    // NAME, then the run dates, then the building in capitals:
-    //   "Fragility September 10, 2026-January 24, 2027 MENIL DRAWING INSTITUTE"
-    // so the tail is cut at whichever comes first.
-    //
-    // CASE-SENSITIVE, deliberately, and that is what makes one rule do both
-    // jobs: MONTH_PATTERN is written in title case, which is how the Menil
-    // prints its dates, while the building is shouted in capitals. A dated row
-    // is cut at the month; an undated one — the permanent collection galleries,
-    // "Modern and Contemporary MAIN BUILDING" — is cut at the capitals. Two
-    // capitalised words are required, so a title ending in a single acronym
-    // survives.
+    // Its cards link only the image, so the name comes from the card above: NAME, run
+    // dates, then the building in capitals ("Fragility September 10, 2026-January 24,
+    // 2027 MENIL DRAWING INSTITUTE"). The tail is cut at the month (title case) or at
+    // two capitalised words, whichever comes first — CASE-SENSITIVE on purpose.
     title: {
       heading: true,
       card: {
@@ -4028,91 +3850,29 @@ const VENUES = {
   va: {
     name: 'Victoria and Albert Museum, London',
     base: 'https://www.vam.ac.uk',
-    // ONE page, and it carries current and upcoming together. /exhibitions
-    // shows only 5 items; the what's-on listing filtered to exhibitions shows
-    // 19, because its "type=exhibition" also returns the venue's Displays.
-    //
-    // THOSE DISPLAYS ARE NOT WANTED HERE — see excludeLabelled below. An
-    // earlier version of this comment said her venue list required them, which
-    // was wrong and is exactly the sort of line that gets a working filter
-    // removed by a later session.
-    //
-    // The venue publishes NO past archive. That is a site limit, not a gap in
-    // this recipe: the V&A contributes current and upcoming only.
+    // One page, current and upcoming together (the what's-on listing filtered to
+    // exhibitions also returns Displays — excluded below). The V&A publishes no past
+    // archive.
     pages: [
       { path: '/whatson?type=exhibition', ctx: 'current/upcoming' },
     ],
     selector: 'a[href*="/exhibitions/"]',
     isNav: href => /\/exhibitions\/?$/.test(href),
-    // Every card wraps a heading holding exactly the title, so the type badge
-    // ("Exhibition", "Upcoming Exhibition", "Display") and the trailing date,
-    // site and ticket price never reach the title column without a single
-    // strip rule.
+    // Each card's heading holds exactly the title.
     title: { heading: true },
-    // FOUR SITES ON ONE LISTING. Her venue list is South Kensington only, so
-    // the other three are excluded — each named in the log. Measured 12 Sep:
-    // 19 items, 15 of them South Kensington.
+    // Four sites on one listing; her list is South Kensington only.
     otherBranch: /V&A East|Young V&A/i,
-    // Cards carry ONE date each, "Closes Sunday, 15 November 2026" or "Opens
-    // Saturday, 7 November 2026", never a range. The other end comes from the
-    // exhibition's own page, which the engine already fetches whenever either
-    // date is missing.
+    // Cards carry one date each ("Closes …" / "Opens …"); the other end comes from the
+    // show's page.
     //
-    // ITS BLURB IS IN A DIV, NOT A PARAGRAPH. `qa-exhibition-description` is
-    // the site's own test hook on the element holding the curatorial text, and
-    // nothing else on the page carries it. Without this the shared ladder finds
-    // no paragraph worth having — the V&A's pages genuinely contain none — and
-    // falls to the bottom rung, which is how all 15 rows came back describing
-    // the membership scheme or the cookie policy.
+    // Its blurb is in a div; `qa-exhibition-description` is the site's own hook.
     description: '.qa-exhibition-description',
-    // THE VENUE SORTS ITS OWN LISTING: every card opens "Exhibition",
-    // "Upcoming Exhibition" or "Display". Her count of 12 Sep is 2 current and
-    // 4 upcoming, which is exactly the South Kensington cards labelled one of
-    // the first two; the other nine are Displays. Reading the tag is rung 1 of
-    // the ladder — the site's own label, not our judgement about what a thing
-    // is.
-    //
-    // WHETHER DISPLAYS ARE WANTED IS HERS, AND IT VARIES BY VENUE. Her ruling,
-    // 12 Sep 2026: different museums mean different things by the word, so it
-    // is her judgement each time and there is no rule for the scraper to work
-    // out. She does NOT want them at the V&A; she DOES want them at the Wallace
-    // Collection. Two venues differing here is the expected state, not a
-    // contradiction to tidy up — ask her rather than making them agree.
-    //
-    // ANCHORED AT THE START, because "Display" also occurs inside a title:
-    // "Adobe Creative Residents On Display". The badge is the first thing on
-    // the card, so only a leading match is the label; a featured card puts
-    // "Featured" before it. Read from the LINK's text — see excludeLinkLabelled
-    // where it is used; the date-side copy stopped working on 5 Oct.
+    // Displays excluded — her decision for THIS venue (the Wallace keeps them; CLAUDE.md
+    // §2). The site labels each card; anchored at the start ("… On Display" is a title),
+    // an optional "Featured" first, read from the link's text.
     excludeLinkLabelled: /^\s*(?:Featured\s+)?Display\b/i,
   },
 
-  // TATE — two venues in her list, one website, and the URL is what separates
-  // them. Kept as two recipes rather than one shared block because they are two
-  // entries in her ledger; merging them was rejected (CLAUDE.md §8).
-  //
-  // THE QUERY FILTERS ARE THE UNLOCK, and they were hiding in Tate's own
-  // navigation menu. The guide recorded that "venue-filtered query-param URLs
-  // couldn't be unlocked" and that the brief therefore used the bare what's-on
-  // address for both Tates. The menu links spell them out:
-  //   ?date_range=from_now&gallery_group=tate-modern&event_type=display&event_type=exhibition
-  // They are SERVER-SIDE, so each combination is simply a different page and
-  // there is no control to operate.
-  //
-  // event_type does the job known bug 2 has been waiting for. Tate lists talks,
-  // tours, workshops, films, courses and private views on the same page as its
-  // exhibitions; asking the site for one tag is rung 1 of the ladder — the
-  // venue's own tagging — rather than our guess about what a thing is.
-  //
-  // EXHIBITION ONLY, NEVER display — her ruling, 24 Sep. The menu link above
-  // asks for both, and was copied as it stood; nobody decided displays were
-  // wanted. Tate's collection displays are not shows she tracks.
-  //
-  // date_range=past is NOT an archive, despite its name: it means "has
-  // already opened", and everything it returns is also under from_now. NOT
-  // FETCHED since 24 Sep, her decision: it never contributed a row of its own,
-  // and its promo cards made shows "also listed" on it. Tate Britain's real
-  // archive is on the roadmap; Tate Modern's past, never (CLAUDE.md §2).
   louvre: {
     name: 'Louvre, Paris',
     base: 'https://www.louvre.fr',
@@ -4123,66 +3883,30 @@ const VENUES = {
       { path: '/en/exhibitions-and-events/past-exhibitions', ctx: 'past' },
       { path: '/en/exhibitions-and-events/past-exhibitions', ctx: 'past', param: 'date', yearArchive: true },
     ],
-    // NARROW, and the wide version cost real rows. "a[href*=/exhibitions-and-events/]"
-    // also matched the section's own tabs — /events-activities and
-    // /guided-tours — which arrived as two exhibitions called "Events &
-    // activities" and "Guided tours". Counted against the live page first:
-    // its current listing holds SEVEN exhibitions and four navigation links.
-    // Past exhibitions use this same /exhibitions/<slug> path, so one selector
-    // serves both.
+    // Narrow: the wider selector matched the section's own tabs.
     selector: 'a[href*="/exhibitions-and-events/exhibitions/"]',
-    // THE LISTING IS ONE GRID, and nothing outside it is an exhibition. The
-    // site's own menu — the "Exhibitions" dropdown in the header, on EVERY page
-    // — carries a promotional card for the current headline show. The selector
-    // matched it, so Primeval Waters was "also listed" on the past page and on
-    // the 2024 and 2025 archives, two years before it opened. Her finding,
-    // 23 Sep. Read off the live pages the same day: every exhibition card sits
-    // in div.Expositions_Grid on the current page and the year archives; the
-    // promo sits in div.Navigation_SubNavigation.
+    // The listing is one grid; the header's promo card for the headline show is outside
+    // it.
     within: ['.Expositions_Grid'],
     isNav: href => /\/exhibitions-and-events\/exhibitions\/?$/.test(href),
     title: { heading: true },
-    // SETTLED 12 Sep 2026, and the previous note here was wrong.
-    //
-    // It said the "load more" control did nothing when clicked. It had never
-    // been clicked: the Louvre's cookie popin sits over the page and swallowed
-    // it. Dismiss the banner first — dismissConsent() now does that on every
-    // listing page at every venue — and one press takes the 2025 archive from
-    // 7 links to 11, which is her count of 10 plus one repeat. 2024 holds only
-    // 4 and offers no control at all, which matches her reading of the site.
-    //
-    // CLICKING IS RIGHT HERE, and that is not in tension with the Met rule. The
-    // test is whether the address changes: the Met's year menu changes it, so
-    // each year was simply another page and clicking raced the navigation. This
-    // loader changes nothing in the address bar and has no address of its own
-    // that answers — /component/load-more/expositions 404s on both www and the
-    // API host — so there is no page to fetch instead.
+    // A "load more" control with no address of its own — clicked, after dismissConsent()
+    // clears the cookie popin that once swallowed it (docs/scraper.md §2).
     loadMore: 'a.LoadMoreList_button',
   },
 
-  // BORGHESE'S BLURB IS IN DIVS. Its Louise Bourgeois page carries the full
-  // curatorial text — six substantial passages — and not one <p> among them, so
-  // the shared ladder found nothing and the row reached her with an empty
-  // summary. Worse, this guide recorded that as a fact about the page ("no
-  // curatorial paragraph at all, only a ticket discount"), which was true of
-  // paragraphs and false of the page. She spotted the text was there.
-  //
-  // Same shape as the V&A and Capodimonte: where a venue writes its description
-  // into a div, the recipe has to name it.
   capo: {
     name: 'Capodimonte, Naples',
     base: 'https://capodimonte.cultura.gov.it',
-    // One page carries everything — 50 exhibitions read 12 Sep.
+    // One page carries everything.
     pages: [
       { path: '/mostre/', ctx: 'all (current/upcoming/past)' },
     ],
-    // SINGULAR /mostra/ for an exhibition while the listing is /mostre/ — the
-    // same trap as the Menil, read off the site rather than guessed.
+    // SINGULAR /mostra/ for an exhibition; the listing is /mostre/.
     selector: 'a[href*="/mostra/"]',
     isNav: href => /\/mostre\/?$/.test(href) || /\/mostra\/?$/.test(href),
-    // Cards read "Title (11 maggio-12 giugno 2025)" — the run in brackets on
-    // the end. Stripped from the title; see the note in the sweep report about
-    // ITALIAN month names, which the shared date parser does not yet know.
+    // Cards end with the run in brackets ("(11 maggio-12 giugno 2025)"), stripped from
+    // the title.
     title: { heading: true, stripTrailing: /\s*\([^()]*\d[^()]*\)\s*$/ },
     // ITS PRACTICAL-INFO BOX, which led 11 of its 18 summaries:
     //   "Apertura tutti i giorni tranne il mercoledì, la domenica e i festivi
