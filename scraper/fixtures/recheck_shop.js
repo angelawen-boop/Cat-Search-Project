@@ -811,7 +811,8 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   // ── VN-001..VN-006: her NG van Hemessen, 2 Oct ────────────────────────
   {
     const OTHER = 'Test Van Hemessen & Father';
-    const ANY = [{ url: 'https://publisher.test/van-hemessen', title: OTHER, excerpts: ['The catalogue of the Antwerp show, which travels to London in a modified form.'] }];
+    // The result prints the ISBN the read gives: an ISBN no fetched text carries is refused.
+    const ANY = [{ url: 'https://publisher.test/van-hemessen', title: OTHER, excerpts: ['The catalogue of the Antwerp show, which travels to London in a modified form. ISBN 9789059962514'] }];
     const run = async (row, read, fill) => {
       calls.length = 0;
       script.mcp = (tool, args) => tool === 'web_search'
@@ -831,7 +832,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/No catalogue found/.test(t) && !t.includes(OTHER), 'VN-002: a read that does not say this venue is not filed either', t.slice(0, 400));
     t = await run(vanHPub, { thisVenue: true }, { publisher: 'Test Lannoo Publishers' });
     const qs = calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries);
-    ok(qs.some(q => q.some(x => x.includes(OTHER) && /publisher/.test(x))), 'VN-003: ISBN found, publisher blank \u2014 the wider search runs for it', JSON.stringify(qs));
+    ok(qs.some(q => q[0] === '9789059962514' && q.some(x => x.includes(OTHER))), 'VN-003: ISBN found, publisher blank \u2014 the facts search runs for it, by its ISBN', JSON.stringify(qs));
     ok(/Test Lannoo Publishers/.test(t) && !/No publisher was named/.test(t), 'VN-004:   and the publisher reaches her card', t.slice(0, 400));
     ok(/978-9059962514/.test(t), 'VN-005:   the ISBN already found stands', t.slice(0, 400));
     await openTray(webLine.title);
@@ -877,7 +878,9 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       };
       script.sample = p => /OWN shop pages, opened directly/.test(p)
         ? { found: true, thisVenue: true, catalogueTitle: shopTitle, isbn13: null, publisher: null, publisherUrl: null, shopUrl: PAGE }
-        : /"language": string\|null, "title"/.test(p) ? { language: lang, title }
+        : /"kind": "book"\|"listing"\|"other"/.test(p) ? { kind: 'book', bookUrl: null, editions: [] }
+        : /"editions": \[/.test(p) ? { language: lang, title, pagePublisher: pub, isbn13: null, publisher: null,
+            editions: en ? [{ title: en, isbn13: EN, language: 'English', publisher: enPub, evidenceUrl: 'https://books.test/en' }] : [] }
         : /"candidates": \[string\]/.test(p) ? { candidates: [PUB_PAGE] }
         : /"kind": "book"\|"listing"\|"other"/.test(p) ? { kind: 'book', bookUrl: null }
         : /ENGLISH-language edition/.test(p) ? (en ? { found: true, title: en, isbn13: EN, language: 'English', publisher: enPub } : { found: false })
@@ -894,7 +897,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(!/Art in Prague at the Court/.test(t), 'LG-002:   never the show\u2019s English subtitle', t.slice(0, 400));
     ok(/978-2359064612/.test(t) && /In the museum shop/.test(t), 'LG-003:   no English edition \u2014 the shop\u2019s book stays, in the museum shop', t.slice(0, 400));
     ok(searches().some(q => q.some(x => /English edition/.test(x))), 'LG-004:   an English edition was looked for', JSON.stringify(searches()));
-    ok(/No English edition found in bookshops; the publisher\u2019s own page for this book wasn\u2019t found\./.test(t), 'LG-012:   the card says how far it was looked for: bookshops only', t.slice(0, 600));
+    ok(/No English edition found in bookshops\./.test(t) && !/publisher\u2019s own page/.test(t), 'LG-012:   the card says how far it was looked for: bookshops only', t.slice(0, 600));
 
     t = await run(louEnglish, { en: 'Test The Experience of Nature (English edition)' });
     ok(/Test The Experience of Nature \(English edition\)/.test(t) && /978-1234567897/.test(t), 'LG-005: an English edition exists \u2014 its title and ISBN on the card', t.slice(0, 400));
@@ -915,7 +918,8 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(!/Phantom/.test(t) && t.includes(OWN), 'LG-007: an English ISBN the results never print is not believed', t.slice(0, 400));
 
     t = await run(louSaysEn, { lang: 'English', title: 'Experience of Nature' });
-    ok(!searches().some(q => q.some(x => /English edition/.test(x))) && /In the museum shop/.test(t), 'LG-008: the book is English \u2014 nothing more is looked for', JSON.stringify(searches()));
+    // The edition search runs beside the facts search, before the language is known (her accepted trade).
+    ok(/In the museum shop/.test(t) && !/English edition/.test(t) && !calls.some(c => c.tool === 'web_fetch' && /lienart/.test(c.args.urls.join())), 'LG-008: the book is English \u2014 no English edition is claimed and the shop\u2019s book stands', t.slice(0, 400));
     ok(/Experience of Nature/.test(t) && !/Art in Prague at the Court/.test(t), 'LG-009:   and the title is cut to what the shop prints', t.slice(0, 400));
 
     await run(ngLang);
@@ -927,7 +931,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     t = await run(louPub, { pub: 'Lienart', pubPage: true });
     ok(calls.some(c => c.tool === 'web_fetch' && c.args.urls.includes(PUB_PAGE)), 'LG-013: the publisher\u2019s own page for the book, found in the search, is opened whole');
     ok(t.includes("No English edition - checked publisher's site (Lienart) and bookshops."), 'LG-013a:  and the card says so, naming the publisher', t.slice(0, 600));
-    ok(searches().some(q => q.some(x => /Lienart ISBN$/.test(x))), 'LG-013b:  the show\u2019s English title is searched with the publisher, not only "English edition"', JSON.stringify(searches()));
+    ok(searches().some(q => q.some(x => /^originally published in French as /.test(x))), 'LG-013b:  the edition search asks where a translation is recorded, not only "English edition"', JSON.stringify(searches()));
     // Her Canaletto, 7 Oct: the page the publisher step found is the one the
     // English check reads — and it is opened once.
     t = await run(louPubKnown, { pub: 'Lienart', pubFound: true });
@@ -964,7 +968,8 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await openTray(morganAssoc.title);
     await click(button(card(morganAssoc.title), /Find catalogue/));
     const firsts = calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries[0]);
-    ok(firsts.includes('Rizzoli Electa') && !firsts.some(q => /in association with/.test(q)), 'PA-001: the publisher step looks for Rizzoli Electa, not the whole line', JSON.stringify(firsts));
+    // Rizzoli Electa's site comes from her list (PUBLISHER_SITES), so the step searches inside it.
+    ok(firsts.some(q => q.startsWith('site:www.rizzoliusa.com')) && !firsts.some(q => /in association with/.test(q)), 'PA-001: the publisher step looks for Rizzoli Electa, not the whole line', JSON.stringify(firsts));
     const t = card(morganAssoc.title) ? card(morganAssoc.title).textContent : '';
     ok(/Morgan Library & Museum in association with Rizzoli Electa/.test(t), 'PA-002:   the card still prints the line as the book gives it', t.slice(0, 400));
   }
