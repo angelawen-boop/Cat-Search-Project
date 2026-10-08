@@ -1402,7 +1402,7 @@ function csvParse(text){
 
 // The ledger gate counts undecided cards; it lives outside the component so fixtures
 // reach it (docs/app.md §3). Rejecting IS deciding: only an untouched card is
-// undecided. The gate and the "jump to next undecided" button both call
+// undecided. The gate and the per-venue "N to decide" counts both call
 // isUndecidedCard, so they can never disagree.
 function isUndecidedCard(p,dec){
   dec=dec||{};
@@ -1818,7 +1818,7 @@ async function fetchPage(url,objective,queries,opts){
 const SHELF_DEPTH=5;
 
 // Shopify and most others take ?page=N. A shelf that already carries its own
-// size parameter (Tate) is left exactly as written \u2014 it serves the lot in one.
+// size parameter (Tate) is left exactly as written — it serves the lot in one.
 function shelfPages(url){
   if(!url)return[];
   if(/[?&]sz=|[?&]product_list_limit=/.test(url))return[url];
@@ -1961,7 +1961,7 @@ function publisherDomainFrom(results,name){
 // SELF_PUBLISHERS is her list, grown only when she adds one. A blockbuster printed by
 // an art-book house, or a joint show printed by the other museum, is still looked for.
 const SELF_PUBLISHERS = new Set([
-  "national gallery global",              // ng \u2014 her row, Zurbaran
+  "national gallery global",              // ng — her row, Zurbaran
   "national gallery london",              // ng — the same imprint as Yale (its distributor) names it, her addition (Millet)
   "metropolitan museum of art",           // met
   "british museum press",                 // brit — her addition (Bayeux Tapestry)
@@ -2092,16 +2092,13 @@ function isEnglishLang(l){
   return /\b(english|anglais|inglese|englisch|engels|ingl[e\u00e9]s)\b/i.test(String(l||""));
 }
 
-// HOW MUCH OF ONE PAGE CLAUDE IS HANDED. Was 6,000 when pages were excerpts;
-// a whole page carries its menus too. The ISBN is read in code from the
-// uncut text (isbnOnPage), so this cap can only cost the publisher line.
+// How much of one page Claude is handed. The ISBN is read in code from the uncut text
+// (isbnOnPage), so this cap can only cost the publisher line.
 const PAGE_CHARS=20000;
 
-// THE ISBN, READ IN CODE FIRST — her yes, 1 Oct. One correct answer: a
-// 13-digit number starting 978 or 979, labelled ISBN or EAN, with a valid
-// check digit. Taken only when the page carries exactly ONE such number
-// (a shop's related-books strip can carry others); none, or two, and Claude
-// reads the page as before. Orsay prints it "EAN 9782754117425".
+// The ISBN, read in code first (her decision): a 978/979 number labelled ISBN or EAN
+// with a valid check digit, taken only when the page carries exactly ONE ("EAN
+// 9782754117425" at Orsay). None or two → Claude reads the page.
 function isbn13Checks(d){
   if(!/^97[89]\d{10}$/.test(d))return false;
   let sum=0;
@@ -2123,13 +2120,9 @@ function isbnOnPage(text){
   return found.size===1?[...found][0]:null;
 }
 
-// THE ISBN IN WEB SEARCH RESULTS, READ IN CODE — her Ashmolean In Bloom,
-// 30 Sep. The search handed back AbeBooks' "ISBN 13: 9781910807743", and
-// three booksellers' addresses carrying it, and the read still said none.
-// Only results whose headline or text carries the whole book title count — a
-// "related books" strip prints other numbers — and from those, the labelled
-// numbers in the text plus any valid 978/979 number in the address. Exactly
-// one distinct number, or nothing.
+// The ISBN in web search results, read in code (her Ashmolean In Bloom): only results
+// carrying the whole book title count; their labelled numbers plus any valid 978/979
+// number in their addresses. Exactly one distinct number, or nothing.
 function resultsCarrying(results,bookTitle){
   const norm=v=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
   const want=norm(bookTitle);
@@ -2146,10 +2139,8 @@ function isbnInResults(results,bookTitle){
   return found.size===1?[...found][0]:null;
 }
 
-// A page that came back empty is NOT a page with nothing on it. Saying which
-// is the whole point: an empty answer from a script-drawn page is our blind
-// spot, and reporting it as "this book is not on the publisher's site" would
-// be a finding we never earned.
+// An empty page is not a page with nothing on it: a script-drawn page is our blind
+// spot, never a finding.
 function pageIsShell(results){ return pageTextOf(results).length<SHELL_CHARS; }
 
 // A link read off a listing is checked: on the publisher's own host, and not the
@@ -3917,33 +3908,17 @@ export default function App(){
     else openFilePicker();
   }
   const doReset=()=>{const seed=buildSeed();loadLedger(seed,null,"Starter set loaded ("+seed.length+" exhibitions) \u2014 not saved to a file.");setDebug("Reset: loaded the built-in starter set ("+seed.length+" exhibitions). It isn't in any file \u2014 Export / Save if you want to keep it.");};
-  // RESET TO SEED ALWAYS ASKS while a ledger is on screen — her ruling, 2 Oct:
-  // one tap beside "Reset cards" replaced her ledger with no question.
+  // Reset to Seed always asks while a ledger is on screen (her decision).
   function requestReset(){
     if(rows.length>0&&dirty){setConfirmBox({text:"This loads the built-in starter set and replaces everything on screen, which you haven't exported. Those changes will be lost. Continue?",act:doReset});}
     else if(rows.length>0){setConfirmBox({text:"This loads the seed set and replaces everything on screen. Continue?",act:doReset});}
     else doReset();
   }
 
-  // SAVING MUST NOT DEPEND ON THE SANDBOX ALLOWING A DOWNLOAD — 20 Sep 2026.
-  //
-  // It did, and the viewer withdrew the permission: "File downloads aren't
-  // available for this artifact." That took away THE ONLY ROUTE HER LEDGER HAD
-  // OUT OF THE APP, and the app said "Saved — safe to close" while it happened,
-  // because the old code treated clicking a link as evidence a file arrived.
-  //
-  // Two routes now, in order, and the difference between them is what is known:
-  //
-  //   1. The runtime's own file handoff. It asks her and then either SAVES or
-  //      REJECTS, so for the first time there is a real answer to hold the
-  //      green tick to.
-  //   2. An ordinary browser download, for a plain page or an older viewer.
-  //      This one cannot tell a finished download from a cancelled one from a
-  //      sandbox that refused silently — so it DOES NOT CLEAR THE UNSAVED
-  //      WARNING. Not knowing is reported as not knowing.
-  //
-  // The guide records her accepting a dishonest tick because Claude's download
-  // prompt had a Cancel the app could not see. That premise is gone on route 1.
+  // Saving (docs/app.md §2). Two routes, differing in what is known: 1. the runtime's
+  // file handoff saves or rejects, so it can clear the unsaved warning; 2. a plain
+  // browser download cannot tell finished from cancelled, so it never clears it. Never
+  // a click-triggered "Saved" tick.
   async function handleExport(){
     const stamp=localStamp();
     const filename=LEDGER_PREFIX+stamp+".json";
@@ -3999,16 +3974,10 @@ export default function App(){
   const view=useMemo(()=>{
     const sq=search.toLowerCase().trim();
     let out=rows.filter(r=>{
-      // THE SEARCH NARROWS, IT DOES NOT END THE CHECK — her finding, 25 Sep,
-      // the same fault as Dismissed below. It returned here, so with text in
-      // the box every filter was skipped: three shows called "Metamorphoses"
-      // could not be cut to one venue, or to Current, Watched, Wanted, Owned.
+      // The search narrows; it does not end the check, so every other filter applies.
       if(sq&&!(r.title.toLowerCase().includes(sq)||r.summary.toLowerCase().includes(sq)||(MU[r.museumId]?.name||"").toLowerCase().includes(sq)))return false;
-      // DISMISSED NARROWS, IT DOES NOT END THE CHECK — her finding, 24 Sep.
-      // It returned here, so a venue (or any other) filter beside it was
-      // never asked: Dismissed + Menil showed every venue's dismissed rows.
-      // A search still finds a dismissed show, as it always has, unless
-      // Dismissed is on — then only dismissed ones.
+      // Dismissed narrows too. A search still finds a dismissed show unless Dismissed
+      // is on.
       if(dismissedOnly){ if(r.interested)return false; }
       else if(!r.interested&&!showAll&&!sq)return false;
       if(venueF.size>0&&!venueF.has(r.museumId)&&!(venueF.has(OCC_CHIP)&&isOcc(r.museumId)))return false;
@@ -4041,22 +4010,9 @@ export default function App(){
 
   const counts=useMemo(()=>{const c={total:rows.length,dismissed:0,watched:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.watching)c.watched++;if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;if(inClosingWindow(r))c.pressing++;}return c;},[rows]);
 
-  // ── TWO PALETTES, ONE SET OF NAMES — dark added 20 Sep 2026, her request:
-  //    "it's 9pm and this cream background with light grey text is v difficult
-  //    to read."
-  //
-  // EVERY COLOUR THE APP PAINTS COMES FROM HERE OR FROM TIER_SETS. Hexes had
-  // been scattered through the render — drawer grounds, banner washes, one-off
-  // button inks — and each one left behind would have been a cream patch on a
-  // dark page. They are all named now, which is the only way a second theme
-  // can be trusted.
-  //
-  // THE DARK SET IS NOT THE LIGHT SET INVERTED. Pure white on pure black is
-  // harsh for long reading, and this is a screen she works down for an hour at
-  // a time, so the ground is a warm near-black and the text a warm off-white.
-  // `soft` is deliberately LIGHTER than a plain inversion would make it: her
-  // complaint was grey-on-cream, and the same mistake is easy to repeat in the
-  // other direction.
+  // Two palettes, one set of names (docs/app.md §3). Every colour the app paints comes
+  // from here or TIER_SETS — a stray hex would be a cream patch on a dark page. The dark
+  // set is designed, not inverted: a warm near-black ground, `soft` kept light.
   const PALETTES={
     light:{bg:"#E8E4DE",card:"#F5F2ED",ink:"#1E1B18",soft:"#78736C",rule:"#CBC5BB",
            action:"#2D4A3F",accent:"#A13823",owned:"#7B5EA7",muted:"#B5AFA6",
@@ -4082,7 +4038,7 @@ export default function App(){
   const pBtn={...sBtn,background:C.action,color:C.onAction,border:"none",opacity:busy?0.5:1,cursor:busy?"wait":"pointer"};
   const lnk={fontSize:11,fontWeight:500,color:C.ink,background:C.card,border:"1px solid "+C.rule,borderRadius:3,padding:"4px 9px",textDecoration:"none",display:"inline-block",whiteSpace:"nowrap"};
 
-  // ---- v9 approval-stage render helpers ----
+  // ---- Approval-stage render helpers ----
   const decBtn=(active,color)=>({padding:"3px 9px",borderRadius:4,border:"1px solid "+(active?color:C.rule),background:active?color:"transparent",color:active?C.onAction:C.soft,fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"});
   const isUndecided=(p,i)=>isUndecidedCard(p,decisions[i]);
 
@@ -4114,10 +4070,8 @@ export default function App(){
               );})}
         </div>}
 
-        {/* THE FILE DISAGREED WITH ITSELF about this exhibition — two rows, same
-            address, different values. Nothing is resolved silently: both are
-            shown, the fuller one is ticked as a starting point, one tap
-            switches. Her ruling, 13 Sep. */}
+        {/* The file disagreed with itself: both values shown, the fuller one ticked as
+            a starting point, one tap switches (her decision). */}
         {p.choices&&p.choices.length>0&&<div style={{marginTop:7,paddingTop:6,borderTop:"1px dotted "+C.rule}}>
           <div style={{fontSize:10.5,color:C.soft,lineHeight:1.5,marginBottom:5}}>The sweep file gave two different answers here. The longer one is picked for you {"\u2014"} change it if it{"\u2019"}s wrong.</div>
           {p.choices.map((ch,j)=>(
@@ -4139,13 +4093,10 @@ export default function App(){
 
         {p.notes&&p.notes.length>0&&<div style={{marginTop:6,fontSize:10.5,color:C.soft,lineHeight:1.5,borderTop:"1px dotted "+C.rule,paddingTop:5}}>{p.notes.map((n,j)=><div key={j}>{"\u00b7 "}{n}</div>)}</div>}
 
-        {/* THREE OUTCOMES, AND THE THIRD IS NOT A STRONGER REJECT. Reject
-            means "not now" and remembers nothing, so the row returns on every
-            future sweep. Never add this means the row should not be an entry
-            at all — a talk filed under an exhibitions address, a duplicate that
-            could not fold, a dead link. It is NOT for an exhibition she simply
-            is not interested in: that one is accepted and then dismissed, and
-            dismiss is not a rubbish chute. */}
+        {/* Three outcomes: Reject remembers nothing (the row returns next sweep). Never
+            add is for rows that should not be entries at all (a talk, an unfoldable
+            duplicate, a dead link) — not for a show she is not interested in, which is
+            accepted and then dismissed. */}
         {p.type==="add"&&<div style={{marginTop:8,display:"flex",gap:6,flexWrap:"wrap"}}>
           <button onClick={()=>setCardMode(i,"accept")} style={decBtn(dec.mode==="accept",C.okEdge)}>{dec.mode==="accept"?"\u2713 ":""}Add new entry</button>
           <button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject",C.rejectInk)}>{dec.mode==="reject"?"\u2713 ":""}Reject</button>
@@ -4164,13 +4115,12 @@ export default function App(){
   };
   const{acceptedCount,undecidedCount,quarantinedCount,rejectedCount}=countDecisions(proposals,decisions);
 
-  // v8.3 status, file model. Three states: fresh load = neutral line; your edits
-  // = loud red banner; after Export/Save = calm green line. Green only appears once
-  // you've actually exported this session (a reset seed is in no file, so it's neutral).
+  // Status line: a fresh load is neutral; edits bring the red unsaved banner; a
+  // confirmed save the green line (a reset seed is in no file, so it stays neutral).
   const hasLedger=rows.length>0;
   const showUnsavedBanner=hasLedger&&dirty;
   let savedText=null,savedCol=C.soft,savedWeight=500;
-  // No line at all with no ledger open — her ruling, 26 Sep: the empty page says enough.
+  // No line at all with no ledger open (her decision).
   if(!hasLedger){savedText=null;}
   else if(dirty){savedText=null;} // the red banner below covers this
   else if(savedFile){savedText="\u2713 Saved \u2014 safe to close  ("+savedFile+")";savedCol=C.okEdge;savedWeight=600;}
@@ -4184,9 +4134,8 @@ export default function App(){
       <header style={{maxWidth:760,margin:"0 auto 14px"}}>
         <div style={{fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.soft,marginBottom:4}}>Exhibition catalogues · acquisition window</div>
         <h1 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:36,lineHeight:1,fontWeight:500,margin:0,letterSpacing:"-0.02em"}}>Before it goes<span style={{color:C.accent}}> out of print</span></h1>
-        {/* Venue refresh buttons removed to protect usage. refreshVenues() is kept dormant below and can be re-wired here later. */}
         <div style={{marginTop:14,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
-          {/* Bulk "Find catalogues for N Wanted" button removed to protect usage. findWantedCats() is kept dormant below. */}
+          {/* Bulk "Find catalogues for N Wanted" removed to protect usage; findWantedCats stays dormant. */}
           <button onClick={requestImport} style={sBtn}>Import</button>
           <button onClick={handleExport} disabled={!hasLedger} style={{...pBtn,opacity:hasLedger?1:0.4,cursor:hasLedger?"pointer":"not-allowed"}}>Export / Save</button>
           <input ref={fileRef} type="file" accept=".json" onChange={handleImport} style={{display:"none"}}/>
@@ -4199,17 +4148,12 @@ export default function App(){
         </div>
         {savedText&&<div style={{marginTop:6,fontSize:11,color:savedCol,fontWeight:savedWeight}}>{savedText}</div>}
         {showUnsavedBanner&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.okBg,border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.okInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
-          {/* The icon sits on the FIRST line of text (her ask, 4 Oct): the
-              banner wraps, and centred it drifted between the lines. */}
+          {/* The icon sits on the first line of text (her ask): centred, it drifted when
+              the banner wrapped. */}
           <span style={{fontSize:17,lineHeight:"17.5px"}}>{"\u21BB"}</span>
-          {/* EVERY CARD SHE LOOKED AT IS ACCOUNTED FOR IN THIS ONE SENTENCE,
-              which is the whole job of it. Partial apply put cards somewhere
-              the sentence did not name \u2014 neither applied nor refused \u2014 so the
-              arithmetic stopped closing and the bar quietly under-reported.
-              The clause below is not decoration: drop it and the numbers no
-              longer add up to the pile she started with. It says HOW to get
-              them back too, because "left behind" with no next step reads as
-              lost. */}
+          {/* Every card she looked at is accounted for in this one sentence; the
+              left-behind clause keeps the numbers adding up and says how to get them
+              back. */}
           <span>{"Refresh applied \u2014 "+refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated"+(refreshDone.never?", "+refreshDone.never+" never to be offered again":"")+(refreshDone.left?", "+refreshDone.left+" left undecided \u2014 import the same sweep file again to carry on with them":"")+". Not saved yet \u2014 tap \u201cExport / Save\u201d now."}</span>
         </div>}
         {hasLedger&&unconfirmedSave&&<div style={{marginTop:8,padding:"9px 12px",background:C.holdBg,border:"2px solid "+C.soft,borderRadius:5,fontSize:12.5,color:C.ink,lineHeight:1.45,display:"flex",alignItems:"flex-start",gap:9}}>
@@ -4220,15 +4164,8 @@ export default function App(){
           <span style={{fontSize:17,lineHeight:1}}>{"\u26A0"}</span>
           <span>{"UNSAVED CHANGES \u2014 what's on screen is not saved to a file. Tap \u201cExport / Save\u201d before you close this tab or your work is lost."}</span>
         </div>}
-        {/* A QUARANTINE THAT ISN'T SAVING IS A BANNER, NOT A FOOTNOTE — her
-            ruling, 20 Sep. It used to print inside the quarantine panel, which
-            she would have to open to find: the rows sit on screen looking
-            normal while nothing is being written, and the one person who needs
-            to know is the one least likely to go looking. It borrows the
-            unsaved-changes banner because it means the same thing — a decision
-            you have made is not stored. NOT gated on a ledger being open: the
-            quarantine applies before any file is loaded, so its failures do
-            too. */}
+        {/* A quarantine that isn't saving is a banner, not a footnote (her decision),
+            shown with or without a ledger open. */}
         {quarWhy&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
           <span style={{fontSize:17,lineHeight:1.1}}>{"\u26A0"}</span>
           <span>{"QUARANTINE \u2014 "+quarWhy}</span>
@@ -4236,49 +4173,28 @@ export default function App(){
         {busy&&prog.total>0&&!importMode&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
         {error&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
         {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>
-          {/* COPY — her ask, 30 Sep; an icon alone, inside the tray at its
-              bottom right (her ask, 1 Oct). A tick only if the copy happened:
-              a browser can refuse the clipboard to a page in a frame, and an
-              icon that always ticked would be the green tick again. A refusal
-              shows a cross. Back to the copy icon after two seconds. */}
+          {/* Copy: an icon alone, bottom right of the tray (her ask). A tick only if the
+              copy happened — a frame can refuse the clipboard — else a cross; back to
+              the icon after two seconds. */}
           {showDebug&&<div style={{position:"relative",marginTop:4}}>
             <pre style={{margin:0,padding:"7px 28px 7px 7px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>
             <button aria-label={copySaid==="ok"?"Copied":copySaid==="no"?"Couldn\u2019t copy":"Copy"} title={copySaid==="ok"?"Copied":copySaid==="no"?"Couldn\u2019t copy":"Copy"}
               onClick={async()=>{const r=await copyText(debug)?"ok":"no";setCopySaid(r);setTimeout(()=>setCopySaid(v=>v===r?null:v),2000);}}
               style={{position:"absolute",right:5,bottom:5,background:"none",border:"none",color:C.soft,fontSize:13,lineHeight:1,cursor:"pointer",padding:2}}>{copySaid==="ok"?"\u2713":copySaid==="no"?"\u2717":"\u29c9"}</button>
           </div>}</div>}
-        {/* NOT GATED ON A LEDGER EITHER, matching the panel below, whose own
-            comment has said so since 20 Sep while this row quietly required
-            one. When a sweep last ran is what the PAGE knows about the world,
-            not something her document tells it, so it is answerable before any
-            file is opened. */}
+        {/* Not gated on a ledger: when a sweep last ran is what the page knows. */}
         <div style={{marginTop:6,fontSize:10.5,color:C.soft,display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}>
-          {/* "UNKNOWN", NEVER "NEVER" — her ruling, 21 Sep. An empty store is
-              not evidence that no sweep ever ran: she can be looking at rows
-              she quarantined, which only ever come from a sweep. "Never" is a
-              claim about the world made from the absence of a record, which is
-              the same shape of error as dating a venue by the moment she
-              pressed a button. We know what we were told and nothing else. */}
+          {/* "Unknown", never "never" (her decision): an empty store is not evidence
+              that no sweep ran. */}
           <span>Last refreshed: {lastSweep?fmtRefresh(lastSweep):"Unknown"}</span>
-          {/* PER-VENUE FRESHNESS lives here because this is where she already
-              looks for "when was this last touched", next to the save state.
-              Collapsed by default: 21 venues is a wall, and the question is
-              occasional. */}
-          {/* ALWAYS SHOWN once a ledger is open, even with nothing in the
-              sweep log. It used to appear only when there was something to
-              list, so an emptied store removed the control itself and the
-              screen said nothing at all was wrong — which is precisely the
-              silence the panel's own "no sweeps yet" line exists to break.
-              A control that disappears cannot report anything. */}
+          {/* Per-venue freshness: collapsed by default, ALWAYS shown — a control that
+              disappears when the log is empty cannot report anything. */}
           <button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide details":"Details"}</button>
         </div>
 
-        {/* NOT GATED ON A LEDGER BEING OPEN. The sweep log is not part of her
-            document — it is what this page knows about the world, so it is
-            there on a fresh page and it survives Reset. */}
+        {/* Not gated on a ledger: the sweep log survives Reset. */}
         {showFresh&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
-          {/* TRACKED AND DISMISSED LIVE HERE — her ruling, 2 Oct: beside the point
-              on the counts line, so they open with Details, at the top. */}
+          {/* Tracked and Dismissed live here, at the top of Details (her decision). */}
           <div style={{display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",marginBottom:8}}>
             <span><b style={{color:C.ink}}>{counts.total}</b> Tracked</span>
             {counts.dismissed>0&&<span><b>{counts.dismissed}</b> Dismissed</span>}
@@ -4289,13 +4205,8 @@ export default function App(){
           {/* "NO SWEEPS YET" AND "COULDN'T READ THE STORE" LOOK IDENTICAL AND
               MEAN OPPOSITE THINGS, so an empty panel always says which. */}
           {freshWhy&&<div style={{fontSize:11,color:C.accent,marginBottom:6,lineHeight:1.5}}>{freshWhy}</div>}
-          {/* IT SAID "No sweep imported yet.", WHICH ASSERTS SOMETHING WE
-              CANNOT KNOW — her ruling, 21 Sep, same reasoning as the headline.
-              The store holding nothing is a fact about the RECORD. Whether a
-              sweep ran is a fact about the world, and the two are not the same
-              claim. Note this is NOT the same case as freshWhy above, which is
-              the store failing to answer at all: here it answered, and what it
-              answered was nothing. */}
+          {/* An empty store says nothing about whether a sweep ran (her decision), so no
+              "No sweep imported yet". Unlike freshWhy, here the store did answer. */}
           {!freshWhy&&Object.keys(venueSeen).length===0&&
             <div style={{fontSize:11,color:C.soft,marginBottom:6}}>{"The store holds no sweep dates, so when each venue was last swept is unknown."}</div>}
           {MUSEUMS.map(m=>{
@@ -4324,8 +4235,7 @@ export default function App(){
           <span><b style={{color:TH.urgent.ink}}>{counts.pressing}</b> Closing Window</span>
           <button onClick={()=>{if(showSearch)setSearch("");setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);}} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Search">{"\uD83D\uDD0D"}</button>
         </div>
-        {/* THE CROSS CLEARS WHAT SHE TYPED — her ask, 30 Sep: right-aligned inside
-            the box, there while there is text to clear. */}
+        {/* The cross clears what she typed (her ask): right-aligned, shown while there is text. */}
         {showSearch&&<div style={{marginTop:6,position:"relative"}}><input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder={"Search exhibitions\u2026"} style={{width:"100%",padding:"7px 30px 7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
           {search&&<button onClick={()=>{setSearch("");if(searchRef.current)searchRef.current.focus();}} aria-label="Clear search" title="Clear"
             style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:C.soft,fontSize:16,lineHeight:1,cursor:"pointer",padding:"2px 4px"}}>{"\u00d7"}</button>}</div>}
@@ -4390,8 +4300,8 @@ export default function App(){
           // Two buttons share one busy row; only the one pressed shows progress.
           const againLabel=isBusy&&!rechecking?searchingLabel:"Search again";
           const recheckLabel=isBusy&&rechecking?searchingLabel:"Re-check museum shop";
-          // NO SHOP AT ALL (Borghese, Capodimonte, the Accademia) — her ruling,
-          // 2 Oct: no Re-check button, and the line says only "Venue has no shop."
+          // No shop at all (Borghese, Capodimonte, the Accademia; her decision): no
+          // Re-check button, and the line says only "Venue has no shop."
           const noShop=!(MU[r.museumId]&&(MU[r.museumId].shopSearch||MU[r.museumId].shopHome));
           const said=recheckSaid&&recheckSaid.id===r.id?recheckSaid:null;
           if(dismissed)return(
@@ -4412,9 +4322,8 @@ export default function App(){
               <div style={{padding:"12px 14px"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
                   <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginTop:2}}>{mu?.card||mu?.short}</span>
-                  {/* NO "NO CATALOGUE" TAG — her ruling, 25 Sep. The corner says how long
-                      ago the show closed, which is its job; the Catalogue button below
-                      already carries the cross when none was found. */}
+                  {/* No "No catalogue" tag (her decision): the corner says how long ago the
+                      show closed; the Catalogue button carries the cross. */}
                   {isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:C.ownedBg,padding:"2px 7px",borderRadius:3}}>Owned</span>
                   :<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:tier.ink,background:tier.wash,padding:"2px 7px",borderRadius:3}}>{tier.label}</span>}
                 </div>
@@ -4477,34 +4386,24 @@ export default function App(){
                     </div>
                   ):(
                     <div>
-                      {/* A MISSING BUTTON CANNOT REPORT ANYTHING \u2014 her ruling, 21 Sep, and the
-                          third time this app has had to learn it. The Publisher button is drawn
-                          only when a link was found, so its absence read the same whether the
-                          step found nothing, or never ran. It says so now. Most catalogues are
-                          published by the museum itself, where the publisher\u2019s page IS the shop
-                          and is deliberately refused, so "none" is the ordinary answer rather
-                          than a fault \u2014 which is exactly why the silence had to end. */}
-                      {/* "Now" and "Back in the museum shop." are the SAME green as
-                          the plain sentence — her ruling. The word carries the news;
-                          a second colour would make a book coming back look like a
-                          different kind of thing from a book being there. */}
+                      {/* A missing button cannot report anything, so the card says what the
+                          publisher step concluded (publisherNote). "Now" and "Back" are the
+                          same green as the plain sentence (her decision): the word carries
+                          the news. */}
                       {r.shopState==="shop"&&<div style={{fontSize:11,marginBottom:6}}>
                         <span style={{color:C.action,fontWeight:600}}>{shopHeadline(r.shopState,r.shopChange)}</span>
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&<span style={{color:C.soft}}> {publisherNote(r.publisherResult,!!r.publisherUrl)}</span>}
                       </div>}
-                      {/* GONE, AND THE LINK KEPT — her design, 25 Sep. The link stays as
-                          "Museum shop (last seen)" because a restock usually comes back
-                          at the same address. A DARK RED, NOT A FIRE ENGINE — her words:
-                          it borrows the "closed over a year" ink, already muted, already
-                          with a dark-mode partner, no loose hex. */}
+                      {/* Gone, link kept as "Museum shop (last seen)" (her design): a restock
+                          usually returns to the same address. Dark red from the "closed over
+                          a year" ink, never a loose hex. */}
                       {r.shopState==="gone"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-                        {/* The headline alone — her ask, 1 Oct: the sentence after it is gone. */}
+                        {/* The headline alone (her ask). */}
                         <span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopHeadline(r.shopState,r.shopChange)}</span>
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
-                      {/* The dash is a STRING, not page text. Written as a bare
-                          \u2014 among the words it printed those six characters
-                          literally, and nothing caught it for weeks. */}
+                      {/* The dash is a JS string: a bare — in JSX text prints those
+                          six characters. */}
                       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
                         {noShop?(MU[r.museumId]&&MU[r.museumId].shopUnknown?"Museum shop not found.":"Venue has no shop.")
                           :"Not in the museum shop \u2014 shop link opens the general store."}
@@ -4542,8 +4441,7 @@ export default function App(){
           );
         });})()}
       </div>
-      {/* TOP ON THE LEFT, BOTTOM ON THE RIGHT — her layout, 30 Sep. A pair
-          centred on the page, both shown once she has scrolled down. */}
+      {/* Top on the left, bottom on the right (her layout), shown once she has scrolled down. */}
       {showTop&&(<>
         <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label="Return to top"
           style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(calc(-100% - 5px))",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>
@@ -4552,20 +4450,15 @@ export default function App(){
       </>)}
       {undo&&(
         <div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.onAction,borderRadius:4,padding:"7px 14px",fontSize:12,display:"flex",gap:10,alignItems:"center",zIndex:999,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
-          {/* THE ORIGINAL STYLE, ONE WORD CHANGED — her ruling, 24 Sep:
-              "Restore" became "Undo", both words the same larger size. A
-              <button> does not inherit the page's font, so it is told to, and
-              both carry the same line height so their baselines meet. */}
+          {/* "Undo", the same size as the word before it (her decision). A <button>
+              does not inherit the page's font, so it is told to. */}
           <span style={{fontSize:14,lineHeight:"20px"}}>Dismissed</span>
           <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:C.onAction,fontFamily:"inherit",fontSize:14,lineHeight:"20px",fontWeight:600,cursor:"pointer",padding:"1px 8px",margin:0}}>Undo</button>
         </div>
       )}
-      {/* QUARANTINE LIVES DOWN HERE — her ruling, 24 Sep. At eye level at the
-          top it read as an overflow bin. Right-aligned on the starter-set line,
-          in that line's own type; its drawer opens beneath. */}
+      {/* Quarantine lives down here, right-aligned on the starter-set line (her decision). */}
       <div style={{maxWidth:760,margin:"18px auto 0",paddingTop:10,borderTop:"1px solid "+C.rule,fontSize:10,color:C.soft,lineHeight:1.6,display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:12,flexWrap:"wrap"}}>
-        {/* TWO BUTTONS ON THE LEFT, NO SENTENCE — her ruling, 2 Oct. Spaced as
-            the two drawers on the right are. */}
+        {/* Two buttons on the left, no sentence (her decision), spaced like the drawers on the right. */}
         <span style={{display:"flex",gap:14}}>
           <button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset to Seed</button>
           <button onClick={()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset cards</button>
@@ -4573,11 +4466,9 @@ export default function App(){
         {ignored.length>0&&<button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0,marginLeft:"auto"}}>{showIgnored?"Hide quarantine":"Quarantine - "+ignored.length}</button>}
       </div>
       <div style={{maxWidth:760,margin:"0 auto"}}>
-        {/* RESET CARDS — her design, 2 Oct. "Search again" only fills blanks, so
-            a card whose search went wrong could never start over. Here she finds
-            the card by typing, picks it, confirms; its catalogue result is
-            cleared and the card shows "Find catalogue" again. Her marks — star,
-            Yes/No/Acquired, Hide — stay. One card per confirm. */}
+        {/* Reset cards (her design): find a card by typing, pick it, confirm; its catalogue
+            result is cleared (resetCard) and it shows "Find catalogue" again. Her marks
+            stay. One card per confirm. */}
         {showResetCards&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
           <input value={resetQuery} onChange={e=>setResetQuery(e.target.value)} placeholder={"Search cards\u2026"} style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
           {resetQuery.trim()&&(()=>{
@@ -4594,16 +4485,12 @@ export default function App(){
           })()}
         </div>}
         {showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
-          {/* BIG ENOUGH TO READ — her finding, 20 Sep: "tiny AND faint". This
-              is a list of decisions she may need to UNDO, so it cannot be the
-              smallest, palest text on the screen. Set at or above the filter
-              chips below it, in the body ink rather than the muted grey. */}
+          {/* Big enough to read (her decision): decisions she may need to undo, in body
+              ink, at chip size or above. */}
           <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
             {"Entries excluded from all future imports. Removing them from quarantine will re-offer them in future sweeps \u2014 it does not immediately add them to your ledger."}
           </div>
-          {/* BY VENUE ONLY — her ruling, 24 Sep. It listed newest decision
-              first, so each import session formed its own block. Venues in the
-              app's own order, titles A–Z within each. */}
+          {/* By venue only (her decision): venues in the app's order, titles A–Z. */}
           {ignoredByVenue.map(x=>(
             <div key={x.key} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
               <span style={{minWidth:130,fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
@@ -4618,27 +4505,20 @@ export default function App(){
           ))}
         </div>}
       </div>
-      {/* THE IMPORT POP-UP — her design, 4 Oct. Small: CSV and Links, and a
-          small Cancel styled as the footer's Quarantine link. CSV opens the
-          file picker, the sweep route as always. Links opens the box and Read
-          below them, on the same pop-up; reading's progress shows here too.
-          Nothing else: a new venue's shop is its own screen, after the review.
-          Under the review (1100) so the cards open on top; under the confirm
-          box (1200), like every overlay. */}
+      {/* The import pop-up (her design; docs/picked_shows.md): CSV and Links, and a small
+          Cancel. Under the review (1100) so cards open on top; under the confirm box (1200). */}
       {importMode&&(
         <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",justifyContent:"center",padding:16}}>
-          {/* Sized to what it holds: the two buttons alone, or the box too.
-              CSV and Links are Load and Save's size and style, both plain; the
-              one pressed turns green, as Save is (her design, 4 Oct). */}
+          {/* Sized to what it holds. CSV and Links match Load and Save; the one pressed
+              turns green (her design). */}
           <div style={{background:C.bg,borderRadius:8,...(importMode==="links"?{maxWidth:820,width:"100%"}:{width:"fit-content"}),margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px"}}>
             <div style={{display:"flex",gap:5,justifyContent:"center"}}>
               <button onClick={()=>{setImportMode(null);refreshFileRef.current?.click();}} disabled={busy} style={sBtn}>CSV</button>
               <button onClick={()=>setImportMode("links")} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>Links</button>
             </div>
             {importMode==="links"&&<div style={{marginTop:14}}>
-              {/* "Clear" sits inside the box, top right (her design, 7 Oct):
-                  links come back in it by themselves, so emptying it is one
-                  press, and stays emptied. */}
+              {/* "Clear" sits inside the box, top right (her design): one press empties
+                  it and the store. */}
               <div style={{position:"relative"}}>
                 <textarea value={linkText} onChange={e=>setLinkText(e.target.value)} rows={8} disabled={busy}
                   style={{width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"8px 52px 8px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,resize:"vertical",display:"block"}}/>
@@ -4669,20 +4549,9 @@ export default function App(){
           <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
             <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
               <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>{proposals.length} proposed change{proposals.length===1?"":"s"} found</div>
-              {/* THE COUNTS, AND WHY THEY EARN THEIR SPACE. A card total on
-                  its own cannot be checked against anything: rows leave the
-                  pile for four innocent reasons — a marker row, a quarantine,
-                  a fold, an entry that already matches — so 652 rows arriving
-                  as 319 cards is indistinguishable from the same with eleven
-                  quietly lost.
-
-                  REWRITTEN TO HER WORDING, 20 Sep. Two sentences, each ending
-                  in the number the next one starts from: the file narrows to
-                  the pile, the pile splits by what it does to her ledger. The
-                  old version put the split FIRST and the reconciliation
-                  second, so the two lines shared no number and nothing led
-                  anywhere. Every term stays — drop one and the arithmetic
-                  stops closing, which is the only thing these lines are for. */}
+              {/* The counts, her wording: two sentences, each ending in the number the
+                  next starts from (docs/app.md §3). Every term stays — drop one and the
+                  arithmetic stops closing. */}
               {tally&&(()=>{
                 const cards=tally.add+tally.fill+tally.change;
                 const n=(v,tone)=><b style={{color:tone||C.ink}}>{v}</b>;
@@ -4708,69 +4577,30 @@ export default function App(){
               <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.5}}>Review each one below.</div>
             </div>
             <div style={{overflow:"auto",padding:"12px 18px",flex:1}}>
-              {/* TRIAGE FIRST, THEN THE ORDINARY WORK — her ruling, 13 Sep.
-                  Odd cases were sprinkled through the venue groups, so every
-                  few cards she switched from approving to investigating. Her
-                  reason for the order INSIDE triage is hers and it is not the
-                  one an engine would pick: easiest first, hardest last. She is
-                  spending attention, not compute, and clearing the cards that
-                  need nothing leaves more of it for the ones that do.
-
-                  Batched by KIND, not by venue, which means a venue can appear
-                  twice on this screen — once in triage, once below. That is the
-                  accepted cost: she would rather finish one kind of thinking
-                  than keep switching. */}
+              {/* Triage first, then the ordinary work (her decision): odd cases batched
+                  by kind, easiest first, so she finishes one kind of thinking at a time.
+                  A venue can appear twice on this screen — accepted. */}
               {(()=>{
                 const at=proposals.map((p,i)=>({p,i}));
                 const vOrder=m=>{const k=MUSEUMS.findIndex(x=>x.id===m);return k<0?999:k;};
                 const byVenue=a=>a.slice().sort((x,y)=>vOrder(x.p.venueId)-vOrder(y.p.venueId));
-                // NO "UNUSABLE" BAND — her ruling 20 Sep. A row with no title
-                // or no venue code never gets this far: analyzeProForma refuses
-                // the whole file and names the lines for the session, and
-                // scraper/qc.js stops it upstream. Nothing faulty is triage.
+                // No "unusable" band: a faulty row refuses the whole file (analyzeProForma;
+                // qc.js upstream).
                 const real    = at;
-                // WAS THIS CARD BUILT FROM MORE THAN ONE ROW? Ask the fold
-                // itself, via the flag it sets. This used to search the notes
-                // for the words "same exhibition", and the sweeper writes those
-                // same words for a travelling show — "The same exhibition is
-                // also shown at Palm Beach." Acquavella's two runs of
-                // Portraiture were then filed under "combined for you" when
-                // nothing had been combined, under a heading that told her
-                // something untrue. A FACT THE CODE ALREADY KNOWS IS NEVER
-                // RE-DERIVED FROM PROSE WRITTEN FOR A HUMAN.
+                // Was this card built from more than one row? Ask the fold's own flag, never
+                // the notes — a travelling show's note says "same exhibition" too (fixture 16).
                 const isMerged=x=>!!x.p.merged;
                 const hasChoice=x=>!!x.p.choices;
                 const mergedOnly = byVenue(real.filter(x=>isMerged(x)&&!hasChoice(x)));
-                // A CONFLICT IS ALWAYS A FOLD, so there is no band for a
-                // disagreement that arrived on its own. There was one, and it
-                // was a PHANTOM: it never held a row and never could, because a
-                // disagreement is only ever found by holding two rows side by
-                // side, and foldDuplicateRows flags every card it builds. It
-                // shipped, this guide listed it as one of six bands, and nobody
-                // ran a file and asked why it was always empty. So the test is
-                // hasChoice alone — being a fold adds nothing to it.
+                // A conflict is always a fold, so there is no band for a lone disagreement
+                // (fixture 17).
                 const mergedConf = byVenue(real.filter(x=>hasChoice(x)));
                 const plain      = real.filter(x=>!isMerged(x)&&!hasChoice(x));
-                // NO LINK AT ALL — band 6, her ruling 13 Sep. These rows are
-                // perfectly usable: a title, dates and a description, and the
-                // card's arrow falls back to the venue's own listing. So they
-                // are NOT faulty: everything is present except the link.
-                //
-                // They are shown together because of what the missing link
-                // costs LATER, invisibly: it is the only key that can fold two
-                // copies of one exhibition, and the only key quarantine can use,
-                // so a no-link row arrives fresh on every future sweep. Her
-                // reason for grouping them: once she reaches the ordinary list
-                // she is no longer in "what is wrong with this one" mode, and
-                // these are the last rows that need that mode.
+                // No link at all: usable rows, grouped because the link is the only key for
+                // folding and quarantine, so they return fresh every sweep (her decision).
                 const noLink     = byVenue(plain.filter(x=>!x.p.cand||!x.p.cand.exUrl));
                 const ordinary   = plain.filter(x=>x.p.cand&&x.p.cand.exUrl);
-                // VENUE SUBHEADINGS INSIDE EACH BAND. Batching by kind removed
-                // the venue grouping, so a band read as one undifferentiated
-                // run of cards and the only way to tell which museum a show was
-                // at was to read its link. Same heading style and same venue
-                // order as the ordinary list below, so both halves of the
-                // screen read the same way round.
+                // Venue subheadings inside each band, in the same style and order as below.
                 const byVenueBlocks=list=>allVenues().map(m=>{
                   const grp=list.filter(x=>x.p.venueId===m.id);
                   if(!grp.length)return null;
@@ -4781,11 +4611,8 @@ export default function App(){
                     </div>
                   );
                 }).filter(Boolean);
-                // EVERY BAND CARRIES ITS OWN COUNT, AND ITS OWN DISCLOSURE.
-                // Without a count a band is an unbounded pile: no way to tell
-                // "two of these" from "eighty" before scrolling through them,
-                // and no way to check the bands add up to the header. The count
-                // lives ON the header, so collapsing can never hide it.
+                // Every band carries its own count on its header, so collapsing never
+                // hides it.
                 const bandOpen=(key,dflt)=>openBands[key]===undefined?dflt:openBands[key];
                 // A venue with no entry is OPEN. See the state declaration.
                 const venueOpen=id=>openVenues[id]!==false;
@@ -4804,10 +4631,7 @@ export default function App(){
                     </div>
                   );
                 };
-                // ODD CASES COUNTS THE MARKERS TOO. It used to add up only the
-                // five card bands, so the heading read "Odd cases first \u00b7 0"
-                // directly above a band of its own saying 9 \u2014 a total that
-                // left out one of the things it was totalling.
+                // The odd-cases total counts the markers too.
                 const oddCount=coverage.length+mergedOnly.length+mergedConf.length+noLink.length;
                 const markerBlocks=MUSEUMS.map(m=>{
                   const grp=coverage.filter(cv=>cv.venueId===m.id);
@@ -4835,10 +4659,8 @@ export default function App(){
                     </div>
                   )}
                 {ordinary.length>0&&(()=>{
-                    // Which venues actually have ordinary cards. The toggle must
-                    // act on THESE and not on all 21, or "collapse all" would
-                    // write keys for venues with nothing in them and the button
-                    // would read the wrong way on the next click.
+                    // Only venues with ordinary cards, or "Collapse all" would write keys
+                    // for empty venues and read the wrong way next click.
                     const venuesHere=allVenues().filter(m=>ordinary.some(x=>x.p.venueId===m.id)).map(m=>m.id);
                     const anyOpen=venuesHere.some(id=>venueOpen(id));
                     return(
@@ -4854,19 +4676,8 @@ export default function App(){
                         }} style={sBtn}>{anyOpen?"Collapse all venues":"Expand all venues"}</button>
                     </div>
                   );})()}
-                  {/* ORDER INSIDE A VENUE — her ruling 20 Sep. It was FILE
-                      ORDER, which is the order the scraper read the venue's
-                      pages, so an edit to something she owns sat between two
-                      brand-new shows and she switched between "is this change
-                      right?" and "do I want this?" every few cards. Same
-                      reasoning as batching the triage bands by kind.
-
-                      Fills, then edits, then new. Within each, NEWEST CLOSING
-                      DATE FIRST, because that is the field the whole app is
-                      about — how close the catalogue is to going out of print.
-                      A row with no closing date has nothing to sort on, so it
-                      sits at the BOTTOM of its group rather than being given a
-                      position it did not earn. */}
+                  {/* Order inside a venue (her decision): fills, then edits, then new;
+                      newest closing date first in each; no closing date last. */}
                   {allVenues().map(m=>{
                     const rank={fill:0,change:1,add:2};
                     const grp=ordinary.filter(x=>x.p.venueId===m.id).slice().sort((a,b)=>{
@@ -4876,13 +4687,7 @@ export default function App(){
                       return be.localeCompare(ae);
                     });
                     if(!grp.length)return null;
-                    // THE VENUE HEADING IS THE CONTROL. It used to be small grey
-                    // uppercase text that read as a label and was lost between
-                    // the cards — her finding. Now it carries the accent red,
-                    // a larger size, its own count, and the same disclosure
-                    // triangle as a triage band, so the one thing that separates
-                    // one venue's work from the next is the most visible line on
-                    // the screen rather than the least.
+                    // The venue heading is the control (docs/app.md §3 "Screen rulings").
                     const vOpen=venueOpen(m.id);
                     return(
                     <div key={m.id} style={{marginBottom:14}}>
@@ -4892,15 +4697,9 @@ export default function App(){
                         <span style={{fontSize:10,lineHeight:1,width:10,display:"inline-block",transform:vOpen?"rotate(90deg)":"none",transition:"transform .12s"}}>{"\u25B6"}</span>
                         <span style={{fontSize:14,letterSpacing:"0.01em",fontWeight:700}}>{m.short}</span>
                         <span style={{fontSize:12,fontWeight:700}}>{"\u00b7"} {grp.length}</span>
-                        {/* THE UNDECIDED COUNT PER VENUE. With a hard gate on
-                            the ledger, a number in the footer says how much is
-                            left but never WHERE, and a collapsed venue hides
-                            its own. Printed on the heading, a closed venue
-                            still declares what it is holding. */}
-                        {/* ONLY WHERE THERE IS WORK. A badge on every venue
-                            whatever its state is one more number to read past
-                            on a screen that already carries plenty — her
-                            warning. A venue with nothing left says nothing. */}
+                        {/* The undecided count per venue, only where there is work: a
+                            closed venue still declares what it holds; a "0" is clutter
+                            (her decision). */}
                         {(()=>{const u=grp.filter(({p,i})=>isUndecided(p,i)).length;
                           return u>0?<span style={{fontSize:11,fontWeight:600,color:C.soft}}>{"\u00b7 "+u+" to decide"}</span>:null;})()}
                       </button>
@@ -4912,65 +4711,19 @@ export default function App(){
             </div>
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
               <button onClick={cancelRefresh} style={sBtn}>Cancel import</button>
-              {/* Rejected and quarantined are named only when there is one
-                  (quarantined too, her ask 1 Oct): a "0" is one more number to
-                  read past. Whatever is named adds up to what is decided. */}
+              {/* Rejected and quarantined are named only when there is one (her ask);
+                  what is named adds up to what is decided. */}
               <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>
                 {(rejectedCount?rejectedCount+" rejected, ":"")+(quarantinedCount?quarantinedCount+" quarantined, ":"")+acceptedCount+" to apply"}</span>
-              {/* THE COUNT IS THE WAY TO REACH ONE — raised as the gap the
-                  block leaves and built at her ask. A number she cannot act on
-                  is the thing that makes a hard gate feel arbitrary. It opens
-                  the venue holding the first undecided card, because a
-                  collapsed venue would otherwise scroll to nothing.
-
-                  REMOVED 22 Sep 2026 — her ruling on seeing the finished
-                  footer: "clutter and duplication". Three things said the same
-                  number on one screen — this, the disabled button beside it,
-                  and the per-venue "N to decide" on every heading. The venue
-                  headings are the better answer, because they say WHERE as well
-                  as how many, and a closed venue still declares what it holds.
-
-                  DO NOT PUT IT BACK as a fix for "she cannot find the remaining
-                  cards" — she can, from the headings. Git holds it. */}
-              {/* EVERY CARD MUST BE DECIDED BEFORE THE LEDGER MOVES — her ruling,
-                  20 Sep. applyRefresh SKIPPED an undecided card silently: not
-                  applied, and not remembered either, so it returned on the next
-                  sweep with nothing on screen to say it had been passed over.
-                  With 320 cards that is a whole session's reading thrown away by
-                  one tap, and she had believed the guard was already there.
-
-                  A BLOCK, not a warning — her call, and her reason: "otherwise I
-                  envision total chaos if I can skip. this is SLOW mode at the
-                  moment." A warning she can wave through is the same failure one
-                  dialogue later.
-
-                  The button says WHAT IS MISSING rather than going quietly grey.
-                  A dead control with no reason attached is the thing she would
-                  be left staring at, and the count is the only clue to where the
-                  work is. */}
-              {/* ===== TEMPORARY — THE SIDE DOOR FOR THE 320-CARD IMPORT =====
-                  Her ask, 22 Sep 2026, and her words: the block above is the
-                  permanent design and STAYS. This is a way past it for one job
-                  — 320 cards is more than one sitting, and the gate makes a
-                  half-finished sitting worth nothing.
-
-                  UNWIRE THIS WHEN THAT IMPORT IS DONE. Delete this block and
-                  the `partial` parameter on applyRefresh; nothing else knows
-                  about it. It is deliberately one contiguous piece for that
-                  reason.
-
-                  IT CANNOT APPEAR INSTEAD OF THE BLOCK, only beside it. It is
-                  drawn when some cards are decided AND some are not — with
-                  nothing decided there is nothing to apply, and with everything
-                  decided the real button is live and this one would be a second
-                  way to do the same thing. So the gate is never the only thing
-                  on screen and never absent.
-
-                  IT ASKS FIRST. What is left behind is not remembered anywhere
-                  — that is not a fault to fix here, it is how refusing works
-                  today — so the confirm box says both numbers and the way back.
-                  Its wording is hers, 30 Sep. Her call to make with the facts
-                  in front of her, every time, not once. */}
+              {/* No separate "N to decide" link here (her decision: clutter) — the venue
+                  headings say where the cards are. */}
+              {/* Every card must be decided before the ledger moves — a hard block, her
+                  permanent design (docs/app.md §3). The button says what is missing. */}
+              {/* ===== PARTIAL APPLY — stays until she says (CLAUDE.md §4) =====
+                  Beside the block, never instead of it: drawn only when some cards are
+                  decided and some are not (offerPartialApply). It asks first, in her
+                  wording, naming what is left behind and the way back. To remove it: this
+                  block, `partial` on applyRefresh, offerPartialApply, fixture 18h. */}
               {offerPartialApply({acceptedCount,undecidedCount})&&<button
                 onClick={()=>setConfirmBox({
                   title:"Complete this partial import?",
@@ -4981,10 +4734,9 @@ export default function App(){
                 title={"Apply the "+acceptedCount+" you have decided and come back to the rest later."}
                 style={{...sBtn,borderColor:C.accent,color:C.accent,fontWeight:600}}>
                 Update with the {acceptedCount} I{"’"}ve decided</button>}
-              {/* ===== end temporary block ===== */}
-              {/* "NEXT" WHEN A NEW VENUE'S SHOP IS STILL TO CONFIRM — her
-                  design, 4 Oct: the shop screen comes between the review and
-                  the ledger, and the ledger moves only when it is done. */}
+              {/* ===== end partial apply block ===== */}
+              {/* "Next" when a new venue's shop is still to confirm (her design): the
+                  ledger moves only after the shop screen. */}
               <button onClick={()=>proceedRefresh(false)} disabled={undecidedCount>0}
                 title={undecidedCount>0?"Decide every card first — "+undecidedCount+" still undecided.":""}
                 style={{...pBtn,...(undecidedCount>0?{background:C.muted,cursor:"not-allowed",opacity:1}:{})}}>
@@ -4995,11 +4747,9 @@ export default function App(){
           </div>
         </div>
       )}
-      {/* THE SHOP SCREEN — her design, 4 Oct. After the review's "Next",
-          before the ledger moves: one card per new venue whose shop she has
-          not confirmed. The ledger is updated only when every card is
-          answered — Confirm, or No shop; Look again searches on the spot.
-          Over the review (1100), under the confirm box (1200). */}
+      {/* The shop screen (her design): one card per new venue with an unconfirmed shop;
+          the ledger moves only when every card is answered. Over the review (1100),
+          under the confirm box (1200). */}
       {shopScreen&&proposals&&(()=>{
         const left=shopScreen.ids.filter(id=>!(occVenues[id]||{}).confirmed||shopLooking===id).length;
         return <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1150,display:"flex",flexDirection:"column",padding:16}}>
@@ -5009,11 +4759,8 @@ export default function App(){
               <div style={{fontSize:11.5,color:C.soft,marginTop:4}}>Check and approve each shop link.</div>
             </div>
             <div style={{overflow:"auto",padding:"4px 18px 14px",flex:1}}>
-              {/* THE BUTTONS ARE THE REVIEW CARDS' (decBtn): the same size, and a
-                  decision turns solid with a tick — Confirm green as "Add new
-                  entry", No shop as "Reject". Always the same three in the same
-                  places (her ruling, 4 Oct); Confirm is greyed while there is
-                  no section to confirm. */}
+              {/* The review cards' buttons (decBtn), always the same three in the same
+                  places (her decision); Confirm greyed with no section to confirm. */}
               {shopScreen.ids.map(id=>{
                 const v=occVenues[id]||{}, link=v.shop==="found"?v.shopCatalogues:null, looking=shopLooking===id;
                 const home=v.shop==="noshelf"||v.shop==="failed"?v.shopHome:null;
@@ -5041,28 +4788,13 @@ export default function App(){
             </div>
           </div>
         </div>;})()}
-      {/* ABOVE THE REVIEW PANEL, NOT UNDER IT — her finding, 22 Sep 2026, on
-          the very first press of the partial-apply button.
-
-          It sat at 1000 while the refresh review sits at 1100, so a confirm
-          raised FROM inside the review painted behind it: the box was built,
-          the scrim was drawn, and every pixel of both was covered. The button
-          read as dead. Nothing was wrong with the button.
-
-          IT WENT UNSEEN BECAUSE OF WHERE IT USED TO BE RAISED FROM. Import and
-          Reset both live on the header, with no review open, so 1000 was above
-          everything that existed at the time and the gap could not show. The
-          first caller from inside the review found it immediately.
-
-          SO IT IS THE TOP LAYER NOW, which is what a confirm is: the thing
-          asked last is the thing answered first, whatever raised it. Any new
-          overlay belongs BELOW this number, never above it. */}
+      {/* ABOVE THE REVIEW PANEL, NOT UNDER IT: the confirm box is the TOP layer (1200),
+          because the thing asked last is answered first (fixture 18i). Any new overlay
+          goes below it. */}
       {confirmBox&&(
         <div style={{position:"fixed",inset:0,background:C.scrim,display:"grid",placeItems:"center",zIndex:1200,padding:16}}>
           <div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:8,maxWidth:420,padding:"18px 20px",boxShadow:"0 6px 24px rgba(0,0,0,0.25)"}}>
-            {/* The heading is now the CALLER'S, because this box no longer only
-                guards replacing the screen. The old wording stays as the
-                default so every existing caller reads exactly as it did. */}
+            {/* The heading is the caller's; the default keeps the old wording. */}
             <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:8}}>{confirmBox.title||"Replace what's on screen?"}</div>
             {confirmBox.text?<div style={{fontSize:12.5,color:C.body,lineHeight:1.5,marginBottom:16}}>{confirmBox.text}</div>:<div style={{height:8}}/>}
             <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
@@ -5072,10 +4804,8 @@ export default function App(){
           </div>
         </div>
       )}
-      {/* WHICH VERSION IS THIS — her ask, 22 Sep 2026. Small, grey, at the
-          bottom, out of the way of the work: it is not something she acts on,
-          it is something she checks when a page and a conversation disagree.
-          Reads APP_VERSION, so there is one copy of the number in the file. */}
+      {/* The version, small and grey: something she checks, not acts on. Reads
+          APP_VERSION, so there is one copy of the number. */}
       <footer style={{maxWidth:760,margin:"28px auto 0",fontSize:10.5,color:C.soft,textAlign:"center"}}>
         Cat Watch {"·"} version {APP_VERSION} {"·"} {APP_VERSION_DATE}
       </footer>
