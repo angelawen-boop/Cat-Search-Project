@@ -143,6 +143,7 @@ async function mount({ save, db = true, starMetrics } = {}) {
     async unsaved() {
       if (!page.cloud()) return /UNSAVED CHANGES/.test(page.text());
       await page.press('Reset to Seed');
+      if (!page.confirmShowing()) throw new Error('Reset to Seed did not ask (AD-001), so unsaved work cannot be read here');
       const said = /changes since your last Save/.test(page.text());
       await page.press('Cancel');
       return said;
@@ -178,8 +179,7 @@ async function resetToSeedAsksFirst() {
       !page.confirmShowing() && /Starter set loaded/.test(page.text()));
 
     await page.loadFile(LEDGER);
-    check(NAME + ': (setup) her two-show ledger is open',
-      !!page.card(ALPHA) && !!page.card(BETA) && !(await page.unsaved()));
+    check(NAME + ': (setup) her two-show ledger is open', !!page.card(ALPHA) && !!page.card(BETA));
 
     await page.press('Reset to Seed');
     check(NAME + ': asks with no unsaved changes', page.confirmShowing());
