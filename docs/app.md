@@ -3,7 +3,7 @@
 `CLAUDE.md` §4 carries the rules. This carries the evidence behind them.
 **Read the relevant section before changing the catalogue lookup, the intake
 screen, quarantine, the sweep log or saving.** Compressed 30 Sep; the full
-history is in git.
+history is in git. The app's original long comments: `git show bea6dd7:Cat_Watch.jsx`.
 
 ---
 
@@ -141,7 +141,8 @@ seeing the change. It is not a monitor.
   timeout or empty page is never "gone".
 - 404/410 decided in code from the connector's error entry; anything else is one
   question to Claude about one page. Pre-order counts as in the shop; sold out /
-  unavailable in any language counts as gone.
+  unavailable in any language counts as gone. **Sold out anywhere on the page
+  outranks** "Add to cart", a price or a note to earlier pre-orderers (Morgan Tarot).
 - **Search again is a whole fresh lookup** (7 Oct, her ruling) and, when it
   finishes, replaces the card — shop status included. Re-check is unchanged.
 - Tested: C-079 to C-099, `recheck_shop.js` R-001 to R-023. **Not yet seen: how
