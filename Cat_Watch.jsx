@@ -1,61 +1,23 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 
-// WHICH VERSION IS SHE LOOKING AT — her ruling, 22 Sep 2026. The number used to
-// live only in the guide and in chat, so the page in front of her carried no
-// way to tell itself apart from the one before it. It is printed in the footer
-// now: a number she can read off the screen instead of matching against a
-// conversation.
-//
-// THE DATE IS PART OF IT because the number alone cannot answer the only
-// question it is ever asked — is this older than the one just built. A date
-// answers that on sight.
-//
-// HOW IT COUNTS, her rule: a whole number for a substantial change, a decimal
-// for a small one. This is the ONLY place it is written down. Bump it in the
-// same breath as the change it describes, or it lies.
-// ONE NUMBER PER PUBLISH — her ruling, 27 Sep. Builds she never saw took
-// numbers of their own (34.9, 34.10, 34.12), so the footer skipped. Renumbered:
-// 34.8 → 35 (five venues: a whole number), 34.11 → 35.1, 34.13 → 35.2,
-// 34.14 → 35.3. Git keeps the old numbers.
+// The footer prints APP_VERSION and its date, so she can tell one build from the next.
+// Numbering, her decision: a whole number for a substantial change, a decimal for a
+// small one, one number per publish. Bump it with the change it describes.
 const APP_VERSION = "40.10";
 const APP_VERSION_DATE = "7 Oct 2026";
 
-// THE ORDER IS HERS, 20 Sep 2026, and it is not alphabetical, geographic or by
-// size — it is the order she wants to WORK in. The venues she reads most come
-// first; the three Italian sites she finds hardest to check sit together near
-// the end; the three that refuse us outright sit last, because nothing there is
-// ever hers to decide.
+// MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
+// most first, the Italian sites together, the venues that refuse us last. Accademia
+// (dellav) sits with the Italian venues until she says otherwise.
+// It is the ONLY venue order in the app — drawer, chips and refresh headings all read
+// it. Never add a second hand-typed list of codes; one once hid two finished recipes.
 //
-// IT IS ALSO THE ONLY ORDER IN THE APP. The freshness drawer, the venue filter
-// chips and every venue heading on the refresh screen all read this array, so
-// moving a venue here moves it everywhere and they cannot drift apart. Adding a
-// second hand-typed list of codes is how two finished recipes once became
-// unselectable with nothing to say why.
-//
-// Accademia (dellav) was not in her list; it sits with the other Italian venues
-// until she says otherwise.
-// SHOP ADDRESSES — the search box, not the front door. Checked one by one,
-// 21 Sep 2026, by opening each and reading the results back. Step one OPENS
-// these; it no longer searches the open web hoping to land on the shop.
-//
-// shopSearch is the shop's own search box with the exhibition title tacked on.
-// shopCatalogues, where a shop has one, is its shelf of exhibition catalogues:
-// all books, no trinkets, but only what is in stock today, so it is looked at
-// FIRST and the search box still runs after it.
-//
-// KHM's search address is HERS, 25 Sep, read off her own search — the old
-// /en/search?q= was a 404. Its shop still answers this machine and the
-// connector with a waiting-room redirect, so the lookup reports it blocked;
-// the address is for her "Museum shop" link.
-// `card`, where a venue has one, is the name on its exhibition cards when the
-// chip's short name is not the one she wants there — her ruling, 25 Sep: the
-// chip reads "Levy Gorvy", the cards "Lévy Gorvy Dayan". Everything else
-// (chips, drawer, refresh headings) reads `short`.
+// shopCatalogues: the shop's catalogue shelf, opened first. shopSearch: its search box
+// plus the exhibition title, opened with it. Addresses: docs/app.md §1 "Shop addresses".
+// card: the name on exhibition cards where it differs from the chip's `short`.
+// english:false: only these venues get the language check and English-edition search
+// (fillLanguage).
 const MUSEUMS = [
-  // CHIP ORDER IS THIS ARRAY'S ORDER — hers, 27 Sep 2026.
-  // english:false — a venue whose books may not be in English. Only there does
-  // the lookup check a found book's language and look for an English edition
-  // (her ruling, 2 Oct: non-English venues only). See fillLanguage.
   { id:"met", short:"The Met", name:"The Metropolitan Museum of Art", city:"New York",
     exBase:"https://www.metmuseum.org/exhibitions/", shopSearch:"https://store.metmuseum.org/search?q=", shopCatalogues:"https://store.metmuseum.org/books-toys-games/exhibition-catalogues", shopHome:"https://store.metmuseum.org/", listUrl:"https://www.metmuseum.org/exhibitions" },
   { id:"rijks", english:false, short:"Rijksmuseum", name:"Rijksmuseum", city:"Amsterdam",
@@ -64,44 +26,32 @@ const MUSEUMS = [
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
   { id:"acq", short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
-  // Added 25 Sep 2026, her ruling: chip "Levy" (her ruling 27 Sep; the cards keep "L\u00e9vy Gorvy Dayan"), straight after Acquavella.
-  // Shopify, like Acquavella's: search box and "View all" read off the live shop.
+  // Shopify, like Acquavella's. Chip "Levy", cards "Lévy Gorvy Dayan" (her decision).
   { id:"lgd", short:"Levy", card:"Lévy Gorvy Dayan", name:"Lévy Gorvy Dayan", city:"New York / London",
     exBase:"https://www.levygorvydayan.com/exhibitions/", shopSearch:"https://shop.levygorvydayan.com/search?q=", shopCatalogues:"https://shop.levygorvydayan.com/collections/all", shopHome:"https://shop.levygorvydayan.com/", listUrl:"https://www.levygorvydayan.com/exhibitions" },
-  // Frick, 2 Oct: the whole Publications shelf, not its "Exhibition
-  // catalogues" corner — her finding: the Frick publishes books tied to a show
-  // that it does not file as catalogues. One page of about 40 today.
+  // The whole Publications shelf: the Frick files some show books outside "Exhibition catalogues" (her finding).
   { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopCatalogues:"https://shop.frick.org/publications/", shopHome:"https://shop.frick.org/", listUrl:null },
   { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopCatalogues:"https://bookstore.menil.org/collections/menil-publications", shopHome:"https://bookstore.menil.org/", listUrl:null },
   { id:"artic", short:"Artic", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
-  // Cincinnati Art Museum, 4 Oct 2026, her addition; chip name "Cincinnati"
-  // (her spelling ruling). After Artic — her ruling, 4 Oct.
-  // Shopify: search box and the Books shelf she sent (five pages on 4 Oct).
+  // Her addition, after Artic. Shopify: search box and her Books shelf.
   { id:"cincinnati", short:"Cincinnati", name:"Cincinnati Art Museum", city:"Cincinnati", exBase:null, shopSearch:"https://shop.cincinnatiartmuseum.org/search?q=", shopCatalogues:"https://shop.cincinnatiartmuseum.org/collections/books", shopHome:"https://shop.cincinnatiartmuseum.org/", listUrl:null },
   { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:"https://wallacecollectionshop.org/search?q=", shopCatalogues:"https://wallacecollectionshop.org/collections/wallace-collection-publications", shopHome:"https://wallacecollectionshop.org/", listUrl:null },
   { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
-  // The Ashmolean, 27 Sep 2026, her addition; chip after Tate Britain. Shopify:
-  // search checked once (it finds "Colonial Views of India"), and her
-  // exhibition-catalogues shelf.
+  // Her addition, after Tate Britain. Shopify: search box and her exhibition-catalogues shelf.
   { id:"ashmolean", short:"Ashmolean", name:"Ashmolean Museum", city:"Oxford", exBase:null, shopSearch:"https://shop.ashmolean.org/search?q=", shopCatalogues:"https://shop.ashmolean.org/collections/exhibition-catalogues", shopHome:"https://shop.ashmolean.org/", listUrl:null },
   { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:"https://www.vam.ac.uk/shop/search?q=", shopCatalogues:"https://www.vam.ac.uk/shop/books/exhibition-books.html", shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
   { id:"louvre", english:false, short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:"https://boutique.louvre.fr/en/search/products/?q=", shopCatalogues:"https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
-  // French venues added 25 Sep 2026, after the Louvre. Same shop system as the
-  // Louvre's: search box and "Exhibition catalogs" shelf, read off the live shop.
-  // d'Orsay, 25 Sep — her chip name "d'Orsay", "Orsay" everywhere from 30 Sep (her ruling). Its shop is the national museums'
-  // shared one; the catalogues shelf is her link with the tracking tags removed,
-  // and the search is the one she sent (it searches every museum on the site).
+  // The French venues below share the Louvre's shop system: search box and "Exhibition catalogs" shelf.
+  // Orsay: the national museums' shared shop; shelf and search are hers (the search covers every museum there).
   { id:"orsay", english:false, short:"Orsay", name:"Mus\u00e9e d'Orsay", city:"Paris", exBase:null, shopSearch:"https://www.boutiquesdemusees.fr/en/search/products/?q=", shopCatalogues:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", shopHome:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", listUrl:null },
-  // MAD Paris, 25 Sep. Its boutique has NO search box (her check, and none in
-  // the page she saved), so the publications shelf is the only route in: 68
-  // books over five pages, the newest first. It numbers pages in the PATH
-  // (/c462/2/), not ?page= — shelfPages counts that up. shopHome is the shelf
-  // too, so her "Museum shop" link lands on the books, not the front page.
+  // No search box, so the publications shelf is the only route in. Pages are numbered in the
+  // path (/c462/2/; shelfPages). shopHome is the shelf, so her shop link lands on the books.
   { id:"mad", english:false, short:"MAD Paris", name:"Mus\u00e9e des Arts D\u00e9coratifs", city:"Paris", exBase:null, shopSearch:null, shopCatalogues:"https://boutique.madparis.fr/en/mads-publications/c462/1/", shopHome:"https://boutique.madparis.fr/en/mads-publications/c462/1/", listUrl:null },
-  // subtitleUnderHeading: on its show pages the line straight under the
-  // heading IS the subtitle ("Botticelli" / "Artist and designer") — read by
-  // code for Add by link, never asked of Claude (her saved pages, 7 Oct).
+  // subtitleUnderHeading: the line under a show page's heading is its subtitle, read by code
+  // for Add by link (docs/link_pages/).
   { id:"jacquemart", subtitleUnderHeading:true, english:false, short:"Jacquemart-Andr\u00e9", name:"Mus\u00e9e Jacquemart-Andr\u00e9", city:"Paris", exBase:null, shopSearch:"https://boutique.musee-jacquemart-andre.com/en/search/products/?q=", shopCatalogues:"https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/", shopHome:"https://boutique.musee-jacquemart-andre.com/en/", listUrl:null },
+  // Search address is hers. The shop answers with a waiting room, so the lookup reports it
+  // blocked; the address stays for her shop link.
   { id:"khm", english:false, short:"KHM", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:"https://shop.khm.at/en/products?shop%5Bq%5D=", shopHome:"https://shop.khm.at/en/", listUrl:null },
   { id:"uffizi", english:false, short:"Uffizi", name:"Uffizi Galleries", city:"Florence", exBase:null, shopSearch:"https://shop.uffizi.it/en/?s=", shopHome:"https://shop.uffizi.it/en/", listUrl:null },
   { id:"dellav", english:false, short:"Accademia", name:"Gallerie dell'Accademia", city:"Venice", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
@@ -110,13 +60,10 @@ const MUSEUMS = [
   { id:"capo", english:false, short:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:"https://shop.themorgan.org/search?q=", shopCatalogues:"https://shop.themorgan.org/collections/exhibition-catalogs", shopHome:"https://shop.themorgan.org/", listUrl:null },
   { id:"brit", short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:"https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", shopCatalogues:"https://www.britishmuseumshoponline.org/books/exhibition-books.html", shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
-  { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search, 27 Sep */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
+  { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
   { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
-  // MAM Paris, 25 Sep. The search is the one she sent from her browser, its
-  // query moved last so the title can be tacked on. French only, no English
-  // version. Behind a Cloudflare check that refuses this machine AND the
-  // connector (403, 25 Sep) while her browser passes it unaided — so, like KHM,
-  // left wired: retried and visible, and her "Museum shop" link works.
+  // The search is hers, query moved last so the title can follow. A Cloudflare check refuses
+  // us, so the lookup reports it blocked; the address stays for her shop link.
   { id:"mam", english:false, short:"MAM Paris", name:"Mus\u00e9e d'Art Moderne de Paris", city:"Paris", exBase:null, shopSearch:"https://www.mamlibrairieboutique.fr/listeliv.php?flou&base=paper&mots_recherche=", shopHome:"https://www.mamlibrairieboutique.fr/", listUrl:null },
 ];
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
@@ -986,28 +933,13 @@ const VENUE_SITES=[{"id":"met","host":"metmuseum.org"},{"id":"ng","host":"nation
 const SUMMARY_EXAMPLES=[{"title":"German Expressionism","raw":"Across Germany’s major cities, a new generation of artists emerged between 1900 and 1918 to change the rules of painting. They were the German Expressionists. Made up of two pioneering groups – Die Brücke (The Bridge) and Der Blaue Reiter (The Blue Rider) – these young artists painted raw emotions on canvas with a new intensity. Die Brücke was formed by a group of self-taught artists. Rebelling against conservative society, they lived and worked together in the bohemian corners of Dresden and other cities, before moving to Berlin, Germany’s rapidly modernising capital. For them, colour became…","summary":"Fifty German Expressionist works."},{"title":"Asian Bronze","raw":"From Shiva and the Buddha to wine casks and weapons. Everything about bronze triggers your senses. For centuries, this material has played a central role in the traditions of Asia. Now you too can experience the beauty of bronze art at last.","summary":"Four thousand years of Asian bronze."},{"title":"Hockney and Piero: A Longer Look","raw":"David Hockney, in his own words, has always been a looker. Throughout his career, Hockney has found inspiration in the work of other artists. He never tires of looking at paintings. For him, there’s magic in it every time, whether that’s enjoying a picture in a gallery or a much-loved poster at home. This very personal show brings together two Hockney paintings, one showing his mother and father and the other depicting his friend, curator Henry Geldzahler. They are displayed with the thread that ties them together, Piero della Francesca’s ‘The Baptism of Christ’. ‘My Parents’ and ‘Looking at…","summary":"Hockney against Piero della Francesca."},{"title":"At Home in the 17th Century","raw":"What was life really like in the 17th century? That’s the museum’s most-asked question. Now, the time has come to find out. At Home in the 17th Century offers an up-close experience of daily life 400 years ago. Immerse yourself in a full day of the 17th century as you walk among the nine diorama-style displays that make up this exhibition — packed with personal stories and unique objects.","summary":"Domestic life with Rembrandt, Hals, Vermeer."},{"title":"José María Velasco","raw":"See the first UK exhibition of Mexico’s much-loved artist, José María Velasco. Velasco, working in Mexico in the 19th century, was a man of many interests. He was fascinated by advances in geology, the archaeology of his home country, the study of local flora, and the increasing presence of industrialisation. He painted the sweeping landscapes of the Valley of Mexico, the home of modern-day Mexico City, with exquisite detail. His impressive panoramic views of the valley reveal allusions to Mexico's historic past and its rapidly modernising present. Velasco was keenly aware of his country’s…","summary":"Mexico's landscape painter."},{"title":"Carel Visser in the Rijksmuseum Gardens","raw":"This summer, the Rijksmuseum Gardens are home to the work of Carel Visser, the most influential Dutch sculptor of the twentieth century. Visser's sculptures, some as tall as eight metres or as long as five metres, come from museums, private collections and public spaces. Now they are brought together for the very first time. Carel Visser (1928–2015) had little affinity with traditional sculptors' materials such as marble, stone or wood. Iron was his great love. With a cutting torch and welding equipment, he shaped his sculptures from steel plates and beams. Stacking, repetition and symmetry…","summary":"Most influential Dutch sculptor of the twentieth century."},{"title":"Millet: Life on the Land","raw":"The sower, the woodcutter, a shepherd girl. These are the subjects that made French artist Jean-Francois Millet famous. Marking the 150th anniversary of his death, this is an opportunity to see some of Millet’s best-loved paintings and drawings. Born into a farming family in Normandy, Millet moved to the village of Barbizon in 1849 where he put the people who spent their life working on the land, often the poorest of the poor in 19th-century France, at the heart of his work. He knew these people and his realistic, unsentimental approach to painting them was completely new. See his iconic…","summary":"The subjects that made Millet famous."},{"title":"Crossings","raw":"Discover how colonial and contemporary perspectives converge in photographs from the Indian subcontinent. Past meets present in the Crossings exhibition.","summary":"Photography from the Indian subcontinent."}];
 // ===== END SHARED =====
 
-// ── ADD BY LINK — her design, 3–4 Oct 2026 (docs/picked_shows.md) ───────────
-//
-// She pastes show links under Import; each page is read once through her
-// keyed connector and becomes an ordinary pro forma row, fed to the SAME
-// intake as a sweep file — so Add, Fill, Change, Reject and quarantine all
-// work exactly as they do for a CSV. Nothing here writes the ledger.
-//
-// CODE FIRST, THE MODEL ONLY FOR PROSE. Title and dates are read by code: the
-// title is the page's own (site name stripped), the dates are the FIRST date
-// line under the show's heading, read by the scraper's own date reader
-// (DATES, above). Tested 3 Oct on 10 pages at 6 venues: every page also
-// carried other dates — another venue's leg, other displays, events, a "More
-// exhibitions" strip — so "any date on the page" would have been wrong.
-// The model writes the short description, translates a non-English title,
-// and says whether a line between title and dates is the show's SUBTITLE —
-// and code checks that answer is one of those lines, word for word.
-//
-// A link that cannot be read is a LINE, never a card: a half-filled card is a
-// plausible wrong row. Unread links stay in the box, which is kept in the
-// page's store until she clears it.
-//
-// NO LOOKBACK for a link (her ruling, 4 Oct): she chose the show.
+// ── ADD BY LINK (docs/picked_shows.md) ──────────────────────────────────────
+// Each pasted show link is read once and becomes an ordinary pro forma row for the
+// SAME intake as a sweep file; nothing here writes the ledger. Code reads the title
+// and dates (the FIRST date line under the show's heading — show pages carry other
+// shows' dates too). The model writes only the description and the English title,
+// and picks the subtitle from the page's own lines. A link that cannot be read is a
+// line, never a card. No lookback for a link (her decision).
 const OCC_CHIP="occasional";
 const OCC_DOC="venues/occasional";
 const LINKS_DOC="links/pending";
@@ -1052,9 +984,8 @@ function stripMd(line){
 function splitPageTitle(t,host){
   const s=stripMd(t);
   if(!s)return{show:"",site:""};
-  // Several bars carry the site's own sections between show and site: "Venice:
-  // Canaletto and His Rivals | Past exhibitions | National Gallery" (her
-  // link, 6 Oct). The show is named first, the site last.
+  // Several bars: the show is named first, the site last ("Venice: Canaletto and
+  // His Rivals | Past exhibitions | National Gallery").
   const parts=s.split(" | ").map(x=>x.trim()).filter(Boolean);
   if(parts.length>1)return{show:parts[0],site:parts[parts.length-1]};
   const m=s.match(/^(.*\S)\s+[-–—]\s+([^-–—]+)$/);
@@ -1065,13 +996,9 @@ function splitPageTitle(t,host){
   return{show:s,site:""};
 }
 
-// THE SCRAPER'S CUT — her ruling 25 Sep: the description is read to about
-// 2,000 characters. Here it starts UNDER THE SHOW'S HEADING, so the page's
-// furniture above the show (menus) never reaches the model, and runs on past
-// the date line, which is left out. 7 Oct: it started after the date line, and
-// Jacquemart-André prints the dates at the FOOT of the page, under the text —
-// the model was handed opening hours and cookies, and two cards came with no
-// description.
+// The scraper's 2,000-character description cut (her decision). Read from under the
+// show's heading, skipping the date line: some venues print the dates at the foot of
+// the page (Jacquemart-André).
 const LINK_RAW_CHARS=2000;
 const LINK_DATE_LINES=40;
 
@@ -1095,14 +1022,10 @@ function readShowPage(res,url){
     if(r.start||r.end){d=k;range=r;break;}
   }
   if(d<0)return{ok:false,why:"No dates found under the show’s title."};
-  // A show whose own name holds a bar — "Art in Dialogue: Duccio | Caro" (her
-  // NG link, 6 Oct): the page title cuts it at the bar, so the heading, which
-  // starts with the same words and goes on, is the name.
-  // A page title that WRAPS the heading — words before it — is dressed by the
-  // site: "Exhibition Giovanni Bellini in Paris" for the heading "Giovanni
-  // Bellini" (Jacquemart-André, 7 Oct). The heading is the name. A title that
-  // only runs on past the heading is a subtitle and stays: "Hammershøi. The
-  // Eye that Listens" for "Hammershøi" (Thyssen).
+  // The heading is the name when the page title cuts it at a bar inside the name
+  // ("Art in Dialogue: Duccio | Caro") or wraps it in site words ("Exhibition Giovanni
+  // Bellini in Paris"). A title that runs on past the heading keeps its subtitle
+  // ("Hammershøi. The Eye that Listens"). AL-015.
   const wrapped=show&&heading&&foldText(show).indexOf(foldText(heading))>0;
   const base=wrapped?heading:show&&heading.length>show.length&&heading.length<=200&&foldText(heading).startsWith(foldText(show))?heading:(show||heading);
   const between=lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l)));
@@ -1118,14 +1041,10 @@ function readShowPage(res,url){
   return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||host.replace(/^www\./,"")};
 }
 
-// The title is WHAT THE CATALOGUE WOULD BE CALLED — her ruling, 3 Oct: a
-// subtitle the page prints is kept ("Peggy Guggenheim in London: The Making
-// of a Collector").
-// A subtitle that carries on the sentence — "and the Masters of Light" under
-// "Fra Angelico" (Jacquemart-André, 7 Oct) — joins with a space, not a colon.
-// Claude's subtitle is matched to the page's line with capitals and spacing
-// ignored, and the PAGE's spelling is kept (7 Oct: Botticelli's "Artist and
-// designer" lost, cause not recorded — a capitals-only miss is one).
+// The title is what the catalogue would be called (her decision): a printed subtitle
+// is kept. One that carries on the sentence ("and the Masters of Light") joins with a
+// space. Claude's subtitle must match one of the page's lines, capitals and spacing
+// ignored, and the page's spelling is kept.
 function linkTitle(base,subtitle,between){
   const k=v=>foldText(v).replace(/\s+/g," ").trim();
   const sub=(between||[]).find(l=>k(l)===k(subtitle))||"";
@@ -1160,11 +1079,8 @@ function occVenueId(host){
   return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
 
-// A link to a venue the app already sweeps files under THAT venue — known by
-// its site, from the scraper's own recipes (VENUE_SITES, written by
-// sync_shared). 7 Oct: matched on exBase/listUrl, blank at 23 of the 28, her
-// Jacquemart-André links became a new venue. Two venues on one site (the
-// Tates) are told apart by the path the recipe gives.
+// A link to one of the swept venues files under it, matched by site from the scraper's
+// recipes (VENUE_SITES, written by sync_shared); the Tates are told apart by path.
 function knownVenueFor(url){
   const h=hostOf(url).replace(/^www\./,"");
   if(!h)return null;
@@ -1174,28 +1090,24 @@ function knownVenueFor(url){
   return hit?hit.id:null;
 }
 
-// AN OCCASIONAL VENUE, AS THE APP USES IT. Kept in the page's store (a fact
-// about the world, like the sweep log), registered into MU so every card,
-// lookup and link reads it like any venue. One chip for all of them,
-// "Occasional" (her ruling, 4 Oct).
-//   shop: "found" (a books section, confirmed or not), "noshelf" (a shop but
-//   no books section found), "none" (no shop found; confirmed = her "No shop"),
-//   "failed" (a step died — not an answer), "unknown" (look again on the next
-//   link). "found" is used by the lookup, and "noshelf" when its search was
-//   proved; "none" confirmed sends it to the web, as at Capodimonte.
+// An occasional venue: kept in the page's store (a fact about the world, like the sweep
+// log) and registered into MU, so everything reads it like any venue. One chip,
+// "Occasional" (her decision).
+//   shop: "found" (books section), "noshelf" (a shop, no books section), "none" (no
+//   shop; confirmed = her "No shop", lookups go to the web), "failed" (a step died —
+//   not an answer), "unknown" (look again on the next link). Lookups use "found", and
+//   "noshelf" once its search is proved.
 function occEntry(v){
   const live=v.shop==="found"||(v.shop==="noshelf"&&!!v.shopSearch);
-  // `short` is HER name for the venue on its cards (4 Oct: "Royal Academy UK",
-  // "Detroit"…), written into the store by a session; the page title's name
-  // stands until she gives one.
+  // `short` is her name for the venue's cards, written into the store by a session;
+  // the page title's name stands until then.
   return{id:v.id,short:v.short||v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
     shopUnknown:!live&&!(v.shop==="none"&&v.confirmed)};
 }
-// Every venue a card can be filed under, in her order, the occasional ones
-// last (by name). The review walks THIS, not MUSEUMS — walking MUSEUMS alone,
-// a card from an occasional venue was counted and never drawn.
+// Every venue a card can be filed under: hers in order, then occasional ones by name.
+// The review walks THIS, not MUSEUMS, or occasional cards are counted and never drawn.
 function allVenues(){
   const occ=Object.values(MU).filter(m=>m&&m.occasional).sort((a,b)=>a.short.localeCompare(b.short));
   return MUSEUMS.concat(occ);
@@ -1237,22 +1149,12 @@ async function writePendingLinks(text){
 }
 
 // ── FINDING A NEW VENUE'S SHOP SECTION — once per venue, then kept ─────────
-// Her design, 4 Oct. What is wanted is the shop's EXHIBITION CATALOGUES
-// section, else its BOOKS / PUBLICATIONS section — NEVER the front page (every
-// museum shop she has met has a books section) and never one book or a post.
-// Each step runs only if the one before found nothing:
-//   1. One search, "<venue> shop exhibition catalogues" — her own Google query.
-//      Parallel finds the right page but does not always rank it first
-//      (Cleveland's was 4th behind "Arts & Crafts", 4 Oct), so CODE reads all
-//      of the results and ranks them; the first is never simply taken.
-//   2. A Shopify shop's own list of its sections (collections.json) — Thyssen,
-//      whose search returned only single books.
-//   3. The shop's front page, its menu read for those sections.
-// Whatever wins is OPENED before she sees it and must read as a shelf of books
-// (book words and prices), unless the search excerpt already does. She
-// confirms; "Look again" re-runs this skipping only the PAGES she turned down,
-// never the shop's whole site (the shop was right for the RA and the
-// Courtauld — only the page was wrong). Evidence: docs/link_pages/shop_search/.
+// Wanted: the shop's exhibition-catalogues section, else books / publications; never
+// the front page, one book or a post (her decision; docs/picked_shows.md). Each step
+// runs only if the one before found nothing: 1. one search call, two queries, every
+// result ranked in code; 2. a Shopify shop's collections.json; 3. the shop's menu.
+// The pick is opened and must read as books with prices. "Look again" skips only the
+// pages she turned down, never the site. Evidence: docs/link_pages/shop_search/.
 const SHOP_WORDS=/^(?:the\s+)?(?:museum\s+|online\s+|gift\s+|book)?(?:shop|store|boutique|tienda|winkel|webshop|museumshop|negozio|librairie|bookshop)(?:\s+online)?$/i;
 const SHOP_HOST=/^(?:shop|store|boutique|tienda|winkel|webshop|bookshop|negozio|museumshop)\.|shop/i;
 const SHOP_PATH=/\/(?:shop|store|boutique|tienda|winkel|webshop|negozio|bookshop)(?:\/|$)/i;
@@ -1277,11 +1179,9 @@ function shopLinkOnPage(text,museumHost){
   const byHost=links.find(l=>hostOf(l.url)!==museumHost&&SHOP_HOST.test(hostOf(l.url)));
   return byHost?originOf(byHost.url):"";
 }
-// IS THIS ADDRESS THE MUSEUM'S OWN SHOP? Its show page's shop link's site; or
-// a shop on the museum's own domain (shop.courtauld.ac.uk, a /shop path); or a
-// shop site carrying the museum's name (diashop.org for dia.org). A reseller's
-// shelf for the museum — Museum Bookstore's "Courtauld Gallery", 4 Oct — is
-// not, and neither is the museum's library page about catalogues.
+// The museum's own shop: its show page's shop link's site, a shop on the museum's own
+// domain (shop.courtauld.ac.uk, a /shop path), or a shop site carrying the museum's
+// name (diashop.org). A reseller's shelf for the museum is not.
 function isShopPlace(u,museumHost,pageShopHost){
   const h=hostOf(u).replace(/^www\./,"");
   if(!h)return false;
@@ -1290,22 +1190,18 @@ function isShopPlace(u,museumHost,pageShopHost){
   if(hb===b){ let path=""; try{ path=new URL(u).pathname; }catch{} return SHOP_HOST.test(h)||SHOP_PATH.test(path); }
   return label.length>=3&&hl!==label&&hl.includes(label)&&SHOP_HOST.test(hl);
 }
-// A SECTION NAMES ITSELF IN THE PLURAL (her first run, 4 Oct: the RA's pick was
-// one book's page, the Courtauld's a "Book of the month" post). Read on the
-// words with accents folded: catálogos → catalogos.
+// A section names itself in the plural — one book's page or a blog post is not a
+// section. Words are read with accents folded.
 const SHELF_CATALOGUES=/\bcatalog(?:ue)?s\b|\bcatalogos\b|\bcatalogi\b|\bcataloghi\b|\bkataloge\b/;
 const SHELF_BOOKS=/\bbooks\b|\bpublications\b|\bpublicaciones\b|\bpublicaties\b|\bpubblicazioni\b|\blivres\b|\blibros\b|\bboeken\b|\bbucher\b|\blibri\b/;
-// "All Products (not Catalogues)" — Cleveland's, 4 Oct. A section that says
-// it is NOT books is not one.
+// A section that says it is NOT books ("All Products (not Catalogues)") is not one.
 const SHELF_NOT=/\b(?:not|non|sin|sans|ohne|niet|geen|zonder|except)\b\W+(?:\w+\W+)?(?:catalog|book|boek|libr|livre|public)/;
 // A sale or clearance section holds only some of the books ("Catálogos en
 // oferta", Thyssen): kept as a last resort, never ahead of a whole section.
 const SHELF_SALE=/\b(?:sale|clearance|offers?|outlet|ofertas?|rebajas|saldi|soldes|korting|aanbieding|black friday|promo\w*)\b/;
-// BOOKS AND ONLY BOOKS (her ruling, 4 Oct): a section that mixes books with
-// other goods — DIA's "Books & Stationery", six pages of pens and journals —
-// is never the shelf; every later lookup would wade through it. It is opened
-// instead for a books-only section inside it (DIA Publications). A museum's own
-// publications rank above a general books section.
+// Books and only books (her decision): a section mixing books with other goods
+// ("Books & Stationery") is never the shelf; it is opened for a books-only section
+// inside it. A museum's own publications rank above a general books section.
 const SHELF_PUBS=/\bpublications\b|\bpublicaciones\b|\bpublicaties\b|\bpubblicazioni\b/;
 const SHELF_GOODS=/\b(?:stationery|stationary|gifts?|toys|games|apparel|clothing|jewell?ery|accessories|homeware|home goods|decor|cards|notecards|journals|notebooks|prints|posters|supplies|merch\w*|souvenirs?|papeterie|cadeaux|jouets|regalos|papeleria|juguetes|cadeaus|speelgoed|regali|cartoleria|giochi)\b/;
 const NOT_A_SHELF=/\/(?:products?|p|blogs?|news|journal|articles?|stories|pages|account|cart)\/|[?&]q=|\/search/i;
@@ -1337,11 +1233,8 @@ function looksLikeBookShelf(text){
   const t=foldText(text);
   return (t.match(BOOK_WORD)||[]).length>=3&&(t.match(PRICE)||[]).length>=2;
 }
-// A Shopify shop's list of its sections. Read as text, not parsed as JSON: a
-// long list can come back cut short, and the sections before the cut still
-// count. A section with nothing in it is skipped. Ranked on its TITLE, the
-// name her menu shows — never its handle, which can be a sentence (Thyssen's
-// Balenciaga section's ends "…productos-y-catalogos").
+// A Shopify shop's sections, read as text (a long list can come back cut short); empty
+// ones skipped; ranked on the TITLE her menu shows, never the handle.
 function shopifySections(text,root){
   const out=[];
   for(const chunk of String(text||"").split(/\{\s*"id"\s*:/).slice(1)){
@@ -1366,16 +1259,11 @@ function searchFor(text,home){
   if(/catalogsearch/i.test(text))return o+"catalogsearch/result/?q=";
   return null;
 }
-// THE WHOLE SHOP'S SEARCH, PROVED — her rule, 6 Oct: a venue added by link is
-// looked up exactly as one of the 28 is, its books shelf AND its search box.
-// DIA gives a show's catalogue the show's own section ("Georgia O'Keeffe:
-// Architecture") and leaves it off "DIA Publications", so the shelf alone
-// missed it. Its shop is BigCommerce, which searchFor could not name.
-// NOT GUESSED: each common shop software's search is asked for a book just
-// seen on the shop's own pages (a link with its price beside it); the first
-// whose results carry that book's own page is kept. None does → null, and the
-// lookup reads the shelf alone, as before. A call that died → undefined: not
-// an answer, asked again next time.
+// The whole shop's search, proved (her decision: a link venue is looked up as the 28
+// are, shelf AND search — DIA files a show's book in the show's own section). Each
+// common shop search is asked for a book seen on the shop's pages; the first whose
+// results carry that book's page is kept. None → null (shelf alone); a call that
+// died → undefined, asked again next time. AL-008k, AL-014.
 const SEARCH_SHAPES=["search?q=","search.php?search_query=","catalogsearch/result/?q=","?post_type=product&s="];
 const PRICE_ONE=new RegExp(PRICE.source,"i");
 function booksSeenOn(text,host){
@@ -1437,10 +1325,8 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
     opens=keep;
     return r;
   };
-  // 1. The search.
-  // Two queries, ONE search call: her own, and the books section's — Detroit's
-  // "Books & Stationery - DIA Publications" (Google's 3rd, 4 Oct) never came
-  // back for the first alone.
+  // 1. The search: one call, two queries — hers and the books section's (Detroit's
+  // "DIA Publications" came back only with both).
   const s=await searchWeb("The museum shop's exhibition catalogues or books section of "+venueName+".",[venueName+" shop exhibition catalogues",venueName+" shop books publications"]);
   if(!s.ok)died=s.detail;
   const mine=(s.results||[]).filter(r=>r&&place(r.url));
