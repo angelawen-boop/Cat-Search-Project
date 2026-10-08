@@ -1,0 +1,41 @@
+{
+ "about": "Hammershøi (Jacquemart-André, 14 Mar - 22 Jul 2019). Read with the free Parallel Search on 8 Oct 2026: the TUM library record by web_fetch, the rest from one web_search shaped like the edition search. Excerpts kept as returned, trimmed to the lines about this book. Library and bookseller pages only, never the venue's.",
+ "edition_record": {
+  "url": "https://search.ub.tum.de/vufind/Record/DE-604.BV049024447?lng=de",
+  "title": "Verfügbarkeit: Hammershøi | Technische Universität München",
+  "excerpts": [
+   "| Titel: | Hammershøi painter of northern light ; published on the occasion of the exhibition at the Musée Jacquemart-André, Institut de France, March 14, 2019 through July 22, 2019 |\n| von: | Jean-Loup Champion, Frank Claustrat, Pierre Curie, Marianne Saabye |\n| Veröffentlicht: | New York, NY [Rizzoli Electa](https://search.ub.tum.de/vufind/Search/Results?type=Publisher&lookfor=Rizzoli%20Electa) 2023 |\n| Ausgabe: | English edition |\n| Originally published in French as: Hammershøi : le maître de la peinture danoise. Bruxelles : Fonds Mercator, [2019] |  |\n| Umfang: | 175 Seiten 29 cm |\n| ISBN: | 9780847899289 |\n| 0847899284 |  |\n|240 |1 |0 |**|a** Hammershøi (le maître de la peinture danoise, 2019) |\n|250 | | |**|a** English edition |\n|264 | |1 |**|a** New York, NY **|b** Rizzoli Electa **|c** 2023 |\n|500 | | |**|a** Originally published in French as: Hammershøi : le maître de la peinture danoise. Bruxelles : Fonds Mercator, [2019] |\n| language | English |\n| publisher | Rizzoli Electa |"
+  ]
+ },
+ "cinii": {
+  "url": "https://ci.nii.ac.jp/author/DA04830101",
+  "title": "CiNii Books 著者 - Musée Jacquemart-André",
+  "excerpts": [
+   "Hammershøi : painter of northern light Jean-Loup Champion ... [et al.]\nRizzoli Electa 2023, c2019\n所蔵館7館"
+  ]
+ },
+ "booksellers": [
+  {
+   "url": "https://www.librest.com/livres/hammershoi--le-maitre-de-la-peinture-danoise-_0-5520845_9789462302495.html",
+   "title": "Livre : Hammershoi : le maître de la peinture danoise - Fonds Mercator - 9789462302495",
+   "excerpts": [
+    "Konstmuseum, ou encore le musée d'Orsay à Paris et la Tate à Londres. Ce catalogue accompagnant l'exposition éclaire l'art de Hammershøi d'un jour nouveau, en illustrant ses liens avec les artistes de son entourage."
+   ]
+  },
+  {
+   "url": "https://www.dessinoriginal.com/en/exhibition-catalogue/9906-hammershoi-le-maitre-de-la-peinture-danoise-9789462302495.html",
+   "title": "Hammershoi. Le maître de la peinture danoise - DessinOriginal.com",
+   "excerpts": [
+    "présentée au musée Jacquemart-André, Paris (14 mars - 22 juillet 2019). Les tableaux exposés, dont une partie n’a pas été présentée à la dernière exposition qui lui était consacrée au musée d'Orsay en 1997, évoquent l’ensemble de l’œuvre de Hammershøi."
+   ]
+  },
+  {
+   "url": "https://www.gleeph.com/book/hammershoi-le-maitre-de-la-peinture-danoise/ean/9789462302495",
+   "title": "Hammershoi : le maître de la peinture danoise -  | Gleeph",
+   "excerpts": [
+    "Pour la première fois, ses oeuvres sont confrontées à des tableaux de son frère Svend Hammershøi, de son beau-frère Peter Ilsted et de son ami Carl Holsøe."
+   ]
+  }
+ ],
+ "finding": "The search did not return the TUM record; CiNii listed the English edition with no ISBN in its excerpt. Whether the app's live edition search surfaces an ISBN-bearing record is not proven."
+}
