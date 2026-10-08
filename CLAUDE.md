@@ -103,6 +103,55 @@ time. It once grew to 2,905 lines, mostly run-by-run stories. The rules:
 - **Never duplicate a code comment into this guide.** One copy drifts, silently.
 - **Never use `@path` imports here** — Claude Code loads those eagerly.
 
+### Code comments and decision history
+
+Long dated comments ("her ruling, 22 Sep…", "WHAT BROKE…", "DO NOT PUT IT
+BACK…") make the code read as a case history, not steps to follow. These rules
+hold on every branch, `claude/ledger-cloud` included.
+
+**A comment may say only:**
+- What the block does, and any rule the code does not show. Present tense, a few lines.
+- A pointer to the decision behind a rule — the case, the date, where the reasoning lives:
+  `// Sold out outranks "Add to cart" (Morgan Tarot, 30 Sep; docs/app.md).`
+- A one-line warning where undoing it would bring back a known bug:
+  `// Lowercase scheme and host only: folding the path merged two exhibitions (docs/scraper.md).`
+- A short section label a test uses as an anchor (below).
+
+**Never:** how a problem was found, what was tried, or why an earlier version
+was wrong; her quotes or paragraphs of her reasoning; headings such as WHAT
+BROKE, WHY or HER RULING; anything over about five lines; code that is gone
+("this used to…") — git keeps it.
+
+**Where the history goes:** app decisions in `docs/app.md`, scraper decisions
+in `docs/scraper.md`, in the section for that code. Each as its conclusion: the
+rule, one sentence on why, the case and date, the functions it touches. One
+entry per decision — update an existing one, never add a second. Within budget
+and compressed first (above); the narrative stays in git.
+
+**Protect her decisions with tests, not prose.** When she decides how something
+behaves, add or update a fixture that fails if it is undone, named after the
+case ("Morgan Tarot: sold out beats Add to cart"). A comment can be overlooked;
+a failing test cannot.
+
+**Test anchors.** The harness finds its place in the JSX by comment text
+(`// URGENCY COLOURS, ONE SET PER THEME`, `// WHAT A QUARANTINE REMEMBERS.`; §4
+"Tests"). Before removing or rewording a comment, grep `scraper/fixtures/` for
+it. Keep an anchor as a short label, or move the test to a new anchor in the
+same change — never leave a test pointing at nothing.
+
+**When editing code:** update the comment already there rather than adding one
+beside it; delete any comment the code no longer matches; a long history
+comment on a function you change moves to the docs, compressed, in the same
+change. Leave comments elsewhere alone unless the task is a tidy-up. Behaviour
+changes and tidy-ups go in separate commits, so a tidy-up can never hide a
+change in behaviour.
+
+**Exceptions:** the numbering rule beside `APP_VERSION` stays, as short as
+possible. The SHARED block's comments come from the scraper (`dates.js`,
+`compress_prompt.md`, `compress.js`, `sweep_prototype.js`'s `VENUES`): apply
+these rules there, run `node build/sync_shared.js`, then the full `npm test`.
+Never edit the block directly (§4).
+
 ### Branching
 
 **`main` is the trunk and the source of truth for app, scraper and this guide.**
