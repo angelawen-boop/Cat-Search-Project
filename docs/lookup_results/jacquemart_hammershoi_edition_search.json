@@ -1,0 +1,63 @@
+{
+ "about": "Hammershøi (Jacquemart-André): the app's own English-edition search, replayed with the free Parallel Search on the same objective and the same five queries her live lookup sent (version 41). Ten results, in the order returned. The library record that proves the English edition came tenth, behind two unrelated records the 'originally published in French as' query pulled in. Excerpts trimmed to the lines about the book; the library record's kept whole.",
+ "objective": "An ENGLISH-language edition of the exhibition catalogue “HAMMERSHOI. LE MAÎTRE DE LA PEINTURE DANOISE” (Musée Jacquemart-André, original ISBN 9789462302495): its English title and its own ISBN, as library catalogues and publishers record it.",
+ "queries": [
+  "HAMMERSHOI. LE MAÎTRE DE LA PEINTURE DANOISE English edition",
+  "originally published in French as HAMMERSHOI. LE MAÎTRE DE LA PEINTURE DANOISE",
+  "9789462302495 English edition",
+  "Hammershøi Jacquemart-André catalogue English edition",
+  "Hammershøi: the master of danish painting Fonds Mercator ISBN"
+ ],
+ "results": [
+  {
+   "url": "https://datb.cerl.org/estc/N34780",
+   "title": "English Short Title Catalogue",
+   "excerpts": ["Le marchand de Venise, comedie traduite de l'anglais de Sharkespeare [sic].\nESTC No. N34780\nAuthor Shakespeare, William, 1564-1616.\nUniform title Merchant of Venice. French\nImprint Londres [i.e. Paris?] : et se trouve a Paris, chez Grangé. De La Lain[.] Valade, 1768."]
+  },
+  {
+   "url": "https://datb.cerl.org/estc/R29697",
+   "title": "English Short Title Catalogue",
+   "excerpts": ["A voyage to the world of Cartesius. Written originally in French. Translated into English by T. Taylor, M.A. of Magdalen Colledge in Oxford.\nESTC No. R29697\nAuthor Daniel, Gabriel, 1649-1728.\nUniform title Voyage du monde de Descartes. English\nNotes A translation of: Voyage du monde de Descartes."]
+  },
+  {
+   "url": "https://www.musee-jacquemart-andre.com/en/hammershoi",
+   "title": "Exhibition Hammershøi in Paris | Musée Jacquemart-André",
+   "excerpts": ["Exhibition Hammershøi in Paris | Musée Jacquemart-André\nSince 2000, he has been creating original scenographies for numerous exhibitions, including the Musée Jacquemart-André with Rembrandt intime (2016), De Zurbarán à Rothko, la collection Alicia Koplowitz (2017), Le jardin secret des Hansen, la collection Ordrupgaard (2017), Mary Cassatt, une impressionniste américaine à Paris (2018)"]
+  },
+  {
+   "url": "https://www.librest.com/livres/hammershoi--le-maitre-de-la-peinture-danoise-_0-5520845_9789462302495.html",
+   "title": "Livre : Hammershoi : le maître de la peinture danoise - Fonds Mercator - 9789462302495",
+   "excerpts": ["Ce catalogue accompagnant l'exposition éclaire l'art de Hammershøi d'un jour nouveau, en illustrant ses liens avec les artistes de son entourage."]
+  },
+  {
+   "url": "https://www.dessinoriginal.com/en/exhibition-catalogue/9906-hammershoi-le-maitre-de-la-peinture-danoise-9789462302495.html",
+   "title": "Hammershoi. Le maître de la peinture danoise - DessinOriginal.com",
+   "excerpts": ["présentée au musée Jacquemart-André, Paris (14 mars - 22 juillet 2019). Les tableaux exposés, dont une partie n’a pas été présentée à la dernière exposition qui lui était consacrée au musée d'Orsay en 1997, évoquent l’ensemble de l’œuvre de Hammershøi."]
+  },
+  {
+   "url": "https://www.librairie-oeilcacodylate.com/catalogues-d-exposition/catalogue-d-exposition/38496/hammershoi-le-maItre-de-la-peinture-danoise",
+   "title": "HAMMERSHOI. LE MAÎTRE DE LA PEINTURE DANOISE",
+   "excerpts": ["HAMMERSHOI. LE MAÎTRE DE LA PEINTURE DANOISE\nHAMMERSHOI. LE MAÎTRE DE LA PEINTURE DANOISE FONDS MERCATOR Catalogue d'exposition Livre rare. Hammershoi et son monde. Catalogue de l'exposition présentée au Musée Jacquemart André, Paris, du 14 mars au 22 juillet 2019."]
+  },
+  {
+   "url": "https://www.decitre.fr/livres/hammershoi-9789462302495.html",
+   "title": "Hammershoi. Le maître de la peinture danoise - Jean-Loup Champion | Decitre",
+   "excerpts": ["L'exposition \"Hammershoi, le maître de la peinture danoise\" présentée au musée Jacquemart-André est la première rétrospective qui lui est consacrée en France depuis plus de vingt ans"]
+  },
+  {
+   "url": "https://www.copyrightbookshop.be/en/shop/hammershoi-le-maitre-de-la-peinture-danoise",
+   "title": "Hammershøi: Le maître de la peinture danoise – COPYRIGHT Bookshop",
+   "excerpts": ["Hammershøi: Le maître de la peinture danoise – COPYRIGHT Bookshop\nHammershøi: Le maître de la peinture danoise CultureEspaces & Fonds Mercator, 2019 €95,00 Our copy is new and still in the original sealing."]
+  },
+  {
+   "url": "https://www.indigo.ca/en-ca/hammershoi-le-maitre-de-la-peinture-danoise/9782758008859.html",
+   "title": "Hammershoi: le maître de la peinture danoise | Indigo",
+   "excerpts": ["Hammershoi: le maître de la peinture danoise | Indigo\nBuy the book Hammershoi: le maître de la peinture danoise by connaissance des arts at Indigo"]
+  },
+  {
+   "url": "https://searchworks.stanford.edu/view/14740835",
+   "title": "Hammershøi : painter of northern light in SearchWorks catalog",
+   "excerpts": ["Hammershøi : painter of northern light in SearchWorks catalog\n\"Published on the occasion of the exhibition at the Musée Jacquemart-André, Institut de France, March 14, 2019 through July 22, 2019.\" \"Culturespaces, partager la culture.\" Originally published in French as: Hammershøi : le maître de la peinture danoise. Bruxelles : Fonds Mercator, [2019] ISBN 9780847899289 hardback 0847899284 hardback"]
+  }
+ ]
+}
