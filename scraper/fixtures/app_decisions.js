@@ -1,7 +1,9 @@
 /**
  * Her decisions about how the page behaves, each checked on the rendered page:
  * it is built as the build does, drawn in jsdom, and clicked. Each check is
- * named after the decision it protects (AD-001 onwards).
+ * named after the decision it protects (AD-001 onwards). It runs unchanged on
+ * `main` and `claude/ledger-cloud`: the few differences sit in one adapter
+ * inside mount().
  *
  *   node scraper/fixtures/app_decisions.js
  */
@@ -58,8 +60,9 @@ const GLOBALS = ['window', 'document', 'navigator', 'localStorage',
   'OffscreenCanvas', 'FileReader'];
 
 // save: undefined → no runtime (a plain browser); 'ok' → downloads.save
-// resolves; 'refuse' → it rejects, as a cancel or refusal does.
-async function mount({ save, starMetrics } = {}) {
+// resolves; 'refuse' → it rejects, as a cancel or refusal does. db: false →
+// the runtime has no store (on the cloud branch, the cloud copy is off).
+async function mount({ save, db = true, starMetrics } = {}) {
   const vc = new VirtualConsole();   // jsdom's "not implemented: navigation" is not the app's
   const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>',
     { pretendToBeVisual: true, url: 'https://claude.ai/', virtualConsole: vc });
@@ -69,7 +72,7 @@ async function mount({ save, starMetrics } = {}) {
     const store = new Map();
     win.claude = {
       use: async name => {
-        if (name === 'db') return { doc: key => ({
+        if (name === 'db' && db) return { doc: key => ({
           get: async () => ({ exists: store.has(key), data: () => store.get(key) }),
           set: async v => { store.set(key, v); } }) };
         if (name === 'downloads') return { save: async f => {
@@ -124,7 +127,26 @@ async function mount({ save, starMetrics } = {}) {
       for (let i = 0; i < 5; i++) await settle();   // FileReader answers a few ticks later
     },
     confirmShowing: () => page.buttons('Continue').length > 0 && page.buttons('Cancel').length > 0,
-    unsavedShowing: () => /UNSAVED CHANGES/.test(page.text()),
+    // The row holding Load/Import and Save; the theme switch sits in it on both branches.
+    buttonRow: () => doc.querySelector('button[title^="Switch to"]').parentElement,
+
+    // THE ADAPTER. Main: "Export / Save" and the red UNSAVED banner. The cloud
+    // branch: "Load", "Save" → "Save now", and the banner off (her decision), so
+    // unsaved work shows only in Reset to Seed's wording while the cloud copy is
+    // not saving.
+    cloud: () => page.buttons('Load').length > 0,
+    async save() {
+      if (!page.cloud()) return page.press('Export / Save');
+      await page.press('Save');
+      await page.press('Save now');
+    },
+    async unsaved() {
+      if (!page.cloud()) return /UNSAVED CHANGES/.test(page.text());
+      await page.press('Reset to Seed');
+      const said = /changes since your last Save/.test(page.text());
+      await page.press('Cancel');
+      return said;
+    },
     // The card whose heading is this title.
     card: title => [...doc.querySelectorAll('article')].find(a =>
       (a.querySelector('h3')?.textContent || '').includes(title)),
@@ -157,7 +179,7 @@ async function resetToSeedAsksFirst() {
 
     await page.loadFile(LEDGER);
     check(NAME + ': (setup) her two-show ledger is open',
-      !!page.card(ALPHA) && !!page.card(BETA) && !page.unsavedShowing());
+      !!page.card(ALPHA) && !!page.card(BETA) && !(await page.unsaved()));
 
     await page.press('Reset to Seed');
     check(NAME + ': asks with no unsaved changes', page.confirmShowing());
@@ -167,8 +189,9 @@ async function resetToSeedAsksFirst() {
     check(NAME + ': Cancel keeps her ledger', !!page.card(ALPHA) && !page.confirmShowing());
 
     await makeAnEdit(page, ALPHA);
+    check(NAME + ': (setup) the edit left unsaved changes', await page.unsaved());
     await page.press('Reset to Seed');
-    check(NAME + ': asks with unsaved changes', page.confirmShowing() && page.unsavedShowing());
+    check(NAME + ': asks with unsaved changes', page.confirmShowing());
     check(NAME + ': nothing replaced while it asks (unsaved changes)', !!page.card(ALPHA));
 
     await page.press('Continue');
@@ -182,19 +205,19 @@ async function plainDownloadNeverClearsUnsaved() {
   for (const [save, label] of [[undefined, 'plain browser download'],
                                ['refuse', 'refused or cancelled save'],
                                ['ok', 'save the viewer confirms']]) {
-    const page = await mount({ save });
+    const page = await mount({ save, db: false });
     try {
       await page.loadFile(LEDGER);
       await makeAnEdit(page, ALPHA);
-      const before = page.unsavedShowing();
-      await page.press('Export / Save');
+      const before = await page.unsaved();
+      await page.save();
       const tried = save ? page.saves.length === 1 : page.downloads.length === 1;
       if (save === 'ok') {
         check(NAME + ': only a save the viewer confirms clears it',
-          before && tried && !page.unsavedShowing() && /Saved/.test(page.text()));
+          before && tried && !(await page.unsaved()) && /Saved|saved/.test(page.text()));
       } else {
         check(NAME + ': a ' + label + ' leaves it in place',
-          before && tried && page.unsavedShowing() && !/Saved — safe to close/.test(page.text()));
+          before && tried && (await page.unsaved()) && !/Saved — safe to close/.test(page.text()));
       }
     } finally { await page.close(); }
   }
@@ -230,17 +253,22 @@ async function buyNextDot() {
 
 async function noStatusLineWithoutLedger() {
   const NAME = 'AD-004 No status line when no ledger is open';
-  // As her published page: nothing sits between the row holding Import and
-  // Export / Save and the "Last refreshed" line.
+  // As her published page: nothing with words in it sits between the button row
+  // and the "Last refreshed" line, except the cloud branch's own cloud line (☁).
   const page = await mount({ save: 'ok' });
-  const under = () => page.buttons('Export / Save')[0].parentElement.nextElementSibling;
+  const between = () => {
+    const out = [];
+    for (let n = page.buttonRow().nextElementSibling; n && !/^Last refreshed/.test(n.textContent.trim()); n = n.nextElementSibling) {
+      const t = n.textContent.trim();
+      if (t && !t.startsWith('☁')) out.push(t);
+    }
+    return out;
+  };
   try {
-    const next = under();
-    check(NAME, !!next && /^Last refreshed/.test(next.textContent.trim()),
-      next ? 'found: "' + next.textContent.trim().slice(0, 80) + '"' : 'nothing under the buttons');
+    const found = between();
+    check(NAME, found.length === 0, 'found: "' + (found[0] || '').slice(0, 80) + '"');
     await page.loadFile(LEDGER);
-    check(NAME + ': (control) a ledger open does show one',
-      !/^Last refreshed/.test(under().textContent.trim()));
+    check(NAME + ': (control) a ledger open does show one', between().length > 0);
   } finally { await page.close(); }
 }
 
