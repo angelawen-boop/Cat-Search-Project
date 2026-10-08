@@ -111,8 +111,8 @@ hold on every branch, `claude/ledger-cloud` included.
 
 **A comment may say only:**
 - What the block does, and any rule the code does not show. Present tense, a few lines.
-- A pointer to the decision behind a rule — the case, the date, where the reasoning lives:
-  `// Sold out outranks "Add to cart" (Morgan Tarot, 30 Sep; docs/app.md).`
+- A pointer to the decision behind a rule — the case and where the reasoning lives:
+  `// Sold out outranks "Add to cart" (Morgan Tarot; docs/app.md).`
 - A one-line warning where undoing it would bring back a known bug:
   `// Lowercase scheme and host only: folding the path merged two exhibitions (docs/scraper.md).`
 - A short section label a test uses as an anchor (below).
@@ -124,7 +124,7 @@ BROKE, WHY or HER RULING; anything over about five lines; code that is gone
 
 **Where the history goes:** app decisions in `docs/app.md`, scraper decisions
 in `docs/scraper.md`, in the section for that code. Each as its conclusion: the
-rule, one sentence on why, the case and date, the functions it touches. One
+rule, one sentence on why, the case, the functions it touches. One
 entry per decision — update an existing one, never add a second. Within budget
 and compressed first (above); the narrative stays in git.
 
