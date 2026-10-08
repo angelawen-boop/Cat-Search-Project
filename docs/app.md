@@ -2,51 +2,70 @@
 
 `CLAUDE.md` §4 carries the rules. This carries the evidence behind them.
 **Read the relevant section before changing the catalogue lookup, the intake
-screen, quarantine, the sweep log or saving.** Compressed 30 Sep; the full
-history is in git. The app's original long comments: `git show bea6dd7:Cat_Watch.jsx`.
+screen, quarantine, the sweep log or saving.** The full history is in git. The app's original long comments: `git show bea6dd7:Cat_Watch.jsx`.
 
 ---
 
 ## 1. Catalogue lookup
 
-### The route
+### The route — five phases (`lookupCatalogue`)
 
-Each step runs only if the one before left something missing.
+Top level, so `catalogue_route.js` runs it whole with the connector and Claude
+faked. Steps gather facts; code decides each fact in a set order of trust;
+`composeRow` writes the row once. No step writes card text.
 
-1. **The venue's shop** — its catalogues shelf and its search box for the
-   exhibition's title, opened together in one call. Take the book's own product
-   page, never a list.
-2. **Open that page** for the ISBN, the publisher and any publisher link
-   (`fillIsbn`).
-3. **ISBN still missing → search the open web**, gaps only (`fillFromWeb`). It
-   cannot rename the title, move the shop link or change the "in the shop"
-   verdict. C-039 to C-042.
-4. **No publisher page → go to the publisher** (`fillPublisherPage`): only for
-   a catalogue found, with a publisher named and no page yet.
+1. **Find the book.** The venue's shop first — its catalogues shelf and its
+   search box for the exhibition's title, in one call; the book's own product
+   page, never a list. A book the shop step found is in the shop; its link is
+   filed only when it is on the shop (BA-001 to BA-003). Only if the shop has
+   nothing: one web search and one read, tied to THIS venue's show
+   (`thisVenue`), a web-found shop link opened before it is believed.
+2. **Complete the record.** (a) The book's own page, if the ISBN or publisher is
+   missing: ISBN in code; at an English-speaking venue Claude reads it for what
+   is still missing. (b) The facts round — always at a non-English venue,
+   elsewhere only for a missing ISBN or a missing or guessed publisher: the
+   facts search and, at non-English venues, an edition search aimed at library
+   records, launched together; ONE read over both (and the book's page, at a
+   non-English venue). (c) ISBN still missing: up to two results about the
+   book opened whole.
+3. **Which book** (code only, non-English venue, book not in English): an
+   English edition is accepted only when a fetched result carries its ISBN and
+   shows the link — same house as the original or the venue named
+   (`sameCatalogue`), the original's ISBN, or a linking phrase ("originally
+   published", "édition anglaise"…) with every key word of the original title
+   (`englishEditionOf`). The card then carries it, `originalEdition` the
+   original. ED-001 to ED-005.
+4. **The publisher's page, once, for the final book** (`findPublisherPage`).
+5. **The row, once.** One owner per fact: shop line, `publisherNote`,
+   `englishLine`. A step that fails leaves its facts unknown, sets `trouble`
+   (`troubleLang` for the language step) and its sentence claims nothing.
 
-Nothing in the shop sends it to the open web to decide whether a catalogue
-exists at all. Results are tagged shop / web / none. Reseller links (Amazon AU,
-AbeBooks, Alibris) are built from the ISBN, or the title when there is none.
+**Trust order.** ISBN: the book's page in code (`isbnOnPage`), the results in
+code (`isbnInResults`), then Claude's. Publisher: read off the ISBN's results
+(`publisherOnIsbnResults`), then printed on the book's own shop or publisher
+page, then any read of general results — a guess wherever it came from. The
+diagnostic says which won. Title: `titleAsPrinted`.
+
+**Speed.** At most three connector calls and two Claude reads at once; a page is
+never opened twice; the diagnostic counts calls and times each step. Waits in a
+row, old → new: self-published 4 → 3; outside publisher 9 → 7; foreign, no
+English edition 13 → 7; edition swap 18 → 6–7; worst ~30 → 17.
 
 **Why the page uses a connector.** The viewer's sandbox blocks a page from
-reaching any outside address (`Network: Failed to fetch` is the browser
-refusing). Since 20 Sep the lookup runs through her Parallel Search connector
-(free, no key), with `sample` reading what it returns. Claude only reads text
-handed to it, so it can never report a page that was not found.
+reaching any outside address. The lookup runs through her keyed connector,
+"Parallel Search Key", with `sample` reading what it returns. Claude only reads
+text handed to it, so it can never report a page that was not found.
 
 ### Why each rule exists
 
-- **`web_fetch` to open a known address; `web_search` only for three real
-  searches** (does the book exist, where is its ISBN, where does the publisher
-  live). The connector has no way to lock a search to one site — `site:` is a
-  hint — so a search "of the shop" became a general web search still labelled
-  "shop". Result: the National Gallery's *Zurbarán* was filed as the shop's LIST
-  of 32 books while the book's own page, printing its ISBN, sat five results
-  lower. The model had both and chose the list: **a choosing failure, so the fix
-  is to stop choosing from a general index**, not to rank better.
+- **`web_fetch` to open a known address; `web_search` only for real searches.**
+  `site:` is a hint, so a search "of the shop" became a general search still
+  labelled "shop": the National Gallery's *Zurbarán* was filed as the shop's
+  LIST of 32 books while the book's page sat five results lower — a choosing
+  failure, so the fix is to stop choosing from a general index.
 - **Open the candidate before believing it.** A `site:` search returned the
   book at Rizzoli (ISBN in the address) and only a section at Hannibal (books
-  addressed by `#fragment`, never indexed). Same label, two different results.
+  addressed by `#fragment`, never indexed).
 
   | The opened page is | Kept | Button |
   |---|---|---|
@@ -56,76 +75,68 @@ handed to it, so it can never report a page that was not found.
   | not this book | next candidate, then the fallback | |
 
   - A link read off a list is checked (`deepLinkOn`): the publisher's own host,
-    not the list itself. A different `#fragment` is a different address — that
-    is how Hannibal addresses a book.
-  - "Empty" is measured (`pageIsShell`, 400 characters). Hannibal's section
-    returns 110; a real shelf returns thousands. `full_content` returns the same
-    110, so no cheaper route exists; a rendering fetch for a handful of
-    publishers is not worth building.
-  - **Two candidates, then the fallback** — the results are already ranked.
-    The fallback is `https://<publisher>/`, labelled **Publisher's website**
-    (her yes, 22 Sep) — matters most at Borghese, Capodimonte and the
-    Accademia, which have no shop.
-- **Go to the publisher, don't search for them** (her correction, 21 Sep).
-  Four tuned queries failed to surface `hannibalbooks.be`. Now: one search for
-  the publisher's NAME; the domain is read off the results in code, because a
-  publisher's name is in its hostname (`publisherDomainFrom`). Shared words —
-  books, press, publishing, editions, university — are dropped. Then search
-  INSIDE that domain for the title. C-046 to C-051. A map of publisher websites
-  was declined; if ever needed it is a short list of co-imprints (Rizzoli Electa,
-  DelMonico · Prestel).
-- **Every outcome says which one it was** (`publisherNote`; C-052 to C-069a,
-  C-069a asserts no two sentences match). `publisherResult` records what the
-  STEP concluded:
+    not the list itself. A different `#fragment` is a different address.
+  - "Empty" is measured (`pageIsShell`, 400 characters): Hannibal's section
+    returns 110; a real shelf thousands. No rendering fetch is worth building.
+  - **Two candidates, then the fallback**, `https://<publisher>/`, labelled
+    **Publisher's website** — matters most where a venue has no shop.
+- **Go to the publisher, don't search for them.** The site is read off results
+  already found, else one search for the publisher's NAME; the domain is read
+  off the results in code (`publisherDomainFrom`; books, press, publishing,
+  editions, university dropped). A page on that site already found and
+  carrying the title or ISBN is opened directly; else a search inside the
+  domain, ranked in code (`rankPublisherPages`), Claude only when code finds
+  none. C-046 to C-051. A map of publisher websites was declined; known gap: a
+  co-imprint such as Rizzoli Electa (rizzoliusa.com) is not recognised.
+- **"Checked the publisher's site" only when read** (Canaletto): fetched, not
+  empty, and the page the card links (`pubPageRead`). For a foreign book the
+  judging read also lists the editions the page shows — a publisher lists every
+  language it printed (Watteau); an English one with its own ISBN there is the
+  same house, so accepted.
+- **Every outcome says which one it was** (`publisherNote`; C-063 to C-069a):
 
   | Outcome | The card says |
   |---|---|
   | `product` | nothing — the button is the answer |
   | `container` | Publisher's link opens the section this book sits in, not the book's own page. |
-  | `site` | The publisher's own site doesn't show this book — the link opens their home page. |
+  | `site` | Couldn't find this book on the publisher's site — the link opens their home page. |
   | `nosite` | Couldn't work out the publisher's own website, so there's no link to it. |
   | `unnamed` | No publisher was named for this book, so none was looked for. |
-  | `selfpublished` | nothing — no publisher button is answer enough (her ruling, 6 Oct) |
-  | none recorded | nothing — the step did not finish (the banner says why), or the row is older than 22 Sep |
+  | `selfpublished` | nothing — no publisher button is answer enough (her decision) |
+  | none recorded | nothing — the step did not finish (the banner says why), or an older row |
 
-- **A museum's own imprint is skipped** (`isSelfPublisher`): a publisher
-  carrying THIS venue's full name, whole words (her rule, 6 Oct, on trial —
-  misfires → back to the list alone); her list `SELF_PUBLISHERS`; her
-  `NOT_SELF_PUBLISHERS` overrides both. A blockbuster handed to an art-book
-  house, or a joint show printed by the other museum, carries no part of this
-  venue's name and is still looked for (her 22 Sep cases). Known misfire: a
-  namesake ("National Gallery of Art" at the London NG). C-070 to C-078e.
-- **The publisher link is checked** (`cleanPublisherUrl`): a real address, not
-  the venue's own shop. C-032 to C-038.
-- **A step that died is not an answer.** Each later step carries why it came
-  back empty and the screen says so (search stopped part-way, press Search
-  again). Not stored in the ledger — a fact about one attempt. C-043 to C-045.
+- **A museum's own imprint is skipped** (`isSelfPublisher`): THIS venue's full
+  name, whole words (on trial), her `SELF_PUBLISHERS`, her
+  `NOT_SELF_PUBLISHERS` overriding both. Known misfire: a namesake. C-070 to
+  C-078e.
+- **The publisher link is checked** (`cleanPublisherUrl`, `publisherLinkOf`):
+  a real address on the publisher's own site. C-032 to C-038.
+- **One fold for matching** (`foldText`): accents dropped and ø æ œ ß ł đ ð þ ı
+  folded, so "Hammershøi" matches "Hammershoi". LT-001 to LT-004.
 
 ### The ISBN
 
-- **The book's page is read whenever the ISBN OR the publisher is blank**
-  (`needsPageRead`). The connector returns excerpts, so small print below the
-  fold was missed (the Met's *Musical Bodies*; Alibris then returned the wrong
-  book by title). A gate on the ISBN alone always opened after a shop hit and,
-  the one time it stayed shut, lost a publisher. C-009 to C-013a.
-- **It fills blanks only** (`applyIsbnFill`).
-- **A collapsed "Details" panel is read** — its text is in the page (Met store,
-  ISBN 978-1588398130, verified 21 Sep). A shop that fetches details on click
-  would still come back empty.
-- **ISBN-10 is taken and converted** (`isbn10to13`), old check digit verified
-  first. For her screen, not for searching — resellers find either. `toIsbn13`
-  is the only way in; `cleanIsbn` the strict 13-digit gate. Prompts ask for the
-  ISBN as printed and forbid the model converting it. C-017, C-019 to C-025.
+- **The book's page is read whenever the ISBN OR the publisher is blank** — the
+  connector returns excerpts, and small print was missed (the Met's *Musical
+  Bodies*). Read whole (her decision): excerpts dropped the Orsay Cassatt's
+  EAN. A collapsed "Details" panel already in the page is read; details fetched
+  on click are not. C-009 to C-013a, C-120 to C-129.
+- **`toIsbn13` is the only door**: a 13 whose check digit holds, or a valid 10
+  converted — and in a lookup only if its digits, 13 or 10, are printed in text
+  the app fetched (`isbnInText`). `cleanIsbn` stays as it was: it also shows
+  ISBNs already in her ledger. IG-001 to IG-006.
+- **Fills blanks only** (`applyIsbnFill`). Prompts ask for the ISBN as printed
+  and forbid converting it.
 
 ### The connector's limits and cost
 
-- The keyless tier refuses after roughly a dozen searches in quick succession;
-  the limit is published nowhere (600/min is for accounts with a key). It clears
-  in minutes.
-- Up to four searches and three readings. **Searches are free; readings run on
-  her allowance.** Every step after the first is conditional.
+- Her keyed "Parallel Search Key"; every search and page opened is billed to
+  her Parallel account. The keyless tier refused after roughly a dozen quick
+  searches (unpublished limit).
+- Up to five searches and seven page opens per lookup, plus Claude reads on her
+  allowance; every step after the first is conditional.
 
-### A book leaving the shop — "Re-check museum shop" (her design, 25 Sep)
+### A book leaving the shop — "Re-check museum shop" (her design)
 
 A page can't see what she saw in a tab it opened, so the status moves only when
 the app re-reads the page itself — and only when she presses the button, after
@@ -143,12 +154,12 @@ seeing the change. It is not a monitor.
   question to Claude about one page. Pre-order counts as in the shop; sold out /
   unavailable in any language counts as gone. **Sold out anywhere on the page
   outranks** "Add to cart", a price or a note to earlier pre-orderers (Morgan Tarot).
-- **Search again is a whole fresh lookup** (7 Oct, her ruling) and, when it
+- **Search again is a whole fresh lookup** (her decision) and, when it
   finishes, replaces the card — shop status included. Re-check is unchanged.
 - Tested: C-079 to C-099, `recheck_shop.js` R-001 to R-023. **Not yet seen: how
   a real shop words "sold out", or a real redirect.**
 
-### Blocked shops, tickets, web-found shop links (25 Sep)
+### Blocked shops, tickets, web-found shop links
 
 KHM's *Canaletto & Bellotto* was filed "In the museum shop" with a dead TICKET
 link. Three faults: the shop's waiting room (307 on every page) read as "not in
@@ -159,7 +170,7 @@ catalogue; a web-found shop link counts only once opened and shown to be the
 book for sale. Rows already carrying a ticket link lose it on Re-check. L-001 to
 L-019; L-020 to L-023 for `listedOnly`.
 
-### Shop addresses — checked by opening each, 21 Sep
+### Shop addresses — checked by opening each
 
 `shopCatalogues` (the shop's own shelf, named from its own navigation) is opened
 first, `shopSearch` (+ the exhibition title) in the same call. Both, because
@@ -190,17 +201,16 @@ filed on another shelf. **Sold-out books stay listed** on shelves (Menil 47 with
 No shop: borghese, capo, dellav. Venues added from 25 Sep: in `MUSEUMS`, a
 comment each.
 
-- **Shelf depth is one number for every shop**, three pages, read in the same
-  call. Menil and Morgan answer `?page=2`; Tate's `?sz=96` serves all at once.
-  C-026 to C-031. `mad` has no search box, so its shelf is read five deep
-  (`SHELF_DEPTH`).
+- **Shelf depth is one number for every shop**: `SHELF_DEPTH`, five pages, read
+  in the same call — five covers MAD's 68 books. Menil and Morgan answer
+  `?page=2`; Tate's `?sz=96` serves all at once. C-026 to C-031.
 - **A venue blocked for sweeping says nothing about its shop** — moma, brit,
   morgan, met and artic shops all answered the reader first time. KHM and MAM
   are the blocked shops.
 - **A thin answer from a page is not proof the page is thin** — the Met's
   results page first read as navigation only.
 
-### Which model — closed, her ruling 22 Sep
+### Which model — closed, her decision
 
 The app names no model. It asks the viewer's Claude through `sample`; every
 lookup read passes `modelTier: default`. `quick` risks exactly the misreadings
@@ -237,7 +247,9 @@ Deleted as uncalled; `git show b043a9b:Cat_Watch.jsx` has it all.
   through Parallel's.
 - **The old save to the page's storage.**
 - **"Find catalogues for all Wanted"**: lookups back to back. A new bulk search
-  must work within her Parallel and Claude allowance.
+  must work within her Parallel and Claude allowance, and on
+  `claude/ledger-cloud` must respect the read-only lock (a second copy open
+  writes nothing) — its old copy on the branch checked it.
 
 ---
 

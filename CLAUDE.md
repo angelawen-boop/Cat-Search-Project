@@ -400,7 +400,7 @@ reopening, §7.1). Reasoning and the two rejected arguments: `docs/app.md` §4�
 ```
 id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
 acquiring, buyNext, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
-publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, addedAt, editedAt
+publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, addedAt, editedAt
 ```
 
 Ledger backup is JSON; the sweep pro forma is CSV.
@@ -477,15 +477,15 @@ case where the app proposes Add but it is really an update.
 
 ### Catalogue lookup — the route
 
-Each step runs only if the one before left something missing.
-
-1. **The venue's shop** — its catalogues page and its search box, in one call.
-   Take **the book's own product page**, never a list.
-2. **Open that page** for the ISBN, the publisher and any publisher link.
-3. **ISBN still missing → search the open web.** Gaps only — whether or not
-   the shop had the book (N-001).
-4. **No publisher page → go to the publisher**: find their site from their
-   name, search inside it, **open what that returns**.
+Five phases (`lookupCatalogue`; `docs/app.md` §1): steps gather facts, code decides
+each, `composeRow` writes the row once — one owner per sentence on the card.
+1. **The venue's shop** (shelf and search box, one call; **the book's own product
+   page**, never a list) — found there = in the shop. Nothing there → the web.
+2. **Complete it:** the book's page; one facts round (facts search, plus an edition
+   search at non-English venues, together; ONE read); two results opened.
+3. **Which book**, in code (`englishEditionOf`). 4. **The publisher's page**, once,
+   for the final book: find their site, search inside it, **open what it returns**.
+5. **The row.**
 
 **Every step after the first is conditional — do not make them unconditional,
 and do not flip to searching wide first.**
@@ -498,9 +498,9 @@ and do not flip to searching wide first.**
 - **Never choose a page from a general index and build on it**, and **open a
   candidate before believing it** — a search cannot tell a book from a shelf.
   Two candidates, then the fallback.
-- **Go to the publisher, do not search for them.** One search for the name,
-  then read the domain off the results mechanically. Shared words (books, press,
-  publishing, editions, university) are dropped.
+- **Go to the publisher, do not search for them.** Their site read off results
+  already found, else one search for the name; the domain read off mechanically
+  (books, press, publishing, editions, university dropped); candidates ranked in code.
 - **Every outcome says which negative it is** (`publisherResult`,
   `publisherNote`); **a step that died is not an answer** — later steps carry
   why it came back empty.
@@ -514,14 +514,14 @@ and do not flip to searching wide first.**
   ISBN known runs the wider search too.
 - **The title as printed, and English first at non-English venues** (her
   decision): a shop title is kept only as far as the pages print it
-  (`titleAsPrinted`). At a venue marked `english:false`, a book this lookup
-  found gets one search by ISBN for its language and own title; not English →
-  one search for an English edition → filed as "Not in the museum shop". None →
-  the book stays under its own title (`fillLanguage`). **The English edition is looked for where it is listed**
-  (her decision): the show's English title with the publisher, and the
-  publisher's own page for the book, read whole; the card says how far it was
-  checked (`englishCheck`, `englishLine`). It reads the page the publisher step found (that step
-  runs first); the English edition's publisher is read off its ISBN in code.
+  (`titleAsPrinted`). At a venue marked `english:false` the facts round reads the
+  book's language and own title; the edition search runs beside it, aimed at
+  library records ("originally published in French as …"), plus the show's
+  English title with the publisher when that is known. An English edition proved
+  → filed as "Not in the museum shop", the original in `originalEdition`; none →
+  the book stays under its own title. **"Checked publisher's site" only when its
+  page was read** — once, the page the card links, listing its editions (Watteau,
+  Canaletto); `englishCheck`, `englishLine`. Its publisher is read off its ISBN.
   At those venues the web search adds one query in the venue's language
   (`localCatalogueQuery`; Hammershøi, listed only in French).
 - **"X in association with Y" — Y is the publisher** (her decision):
@@ -532,14 +532,14 @@ and do not flip to searching wide first.**
 - **The publisher is read off the ISBN, in code** (her decision —
   Botticelli gave three publishers in three lookups): once the ISBN is known,
   the labelled publisher in the results carrying it, two agreeing
-  (`publisherOnIsbnResults`), replaces one Claude read off general results.
-  No ISBN source depends on the publisher. At a non-English venue the search
-  is shared with the language check; elsewhere it runs only for a guessed or
-  missing publisher.
-- **An English edition must be the same catalogue** (her Botticelli case):
-  the same publisher, or a result carrying its ISBN naming the venue by its
-  full, chip or card name (`sameCatalogue`); a curator's own monograph with
-  the same title is refused.
+  (`publisherOnIsbnResults`), outranks the book's own page, which outranks any
+  read of general results (a guess, wherever read). The facts round runs always
+  at a non-English venue; elsewhere only for a missing ISBN or a missing or
+  guessed publisher.
+- **An English edition must be the same catalogue** (her Botticelli case): a
+  result carrying its ISBN shows the same publisher or names the venue
+  (`sameCatalogue`), carries the original's ISBN, or links it to the original's
+  title ("originally published as…"). Reaktion's monograph is refused (ED-004).
 - **A museum's own imprint is skipped**, no line on the card (her decision):
   a publisher carrying the **venue's full name** as whole words is the venue
   (`isSelfPublisher`), plus her list `SELF_PUBLISHERS`; her `NOT_SELF_PUBLISHERS`
@@ -550,8 +550,8 @@ and do not flip to searching wide first.**
   failed → the card is untouched and says "Search again didn't finish". The
   old "keep what's on the card" rule is gone; do not bring it back. Within one
   lookup, each step fills what earlier steps left blank.
-- **A 10-digit ISBN is taken and converted**, check digit verified. `toIsbn13`
-  is the only door; `cleanIsbn` the strict gate downstream.
+- **An ISBN enters only through `toIsbn13`**: check digit verified (a 10 converted),
+  and printed in text the app fetched. `cleanIsbn` shows ledger values as stored.
 - **"Re-check museum shop" checks the shop alone** (her design; untouched by Search again's change).
   With a link on file it re-reads that page (gone → "No longer", link kept as
   "Museum shop (last seen)"; buyable again → "Back"); with none it runs the shop
@@ -585,18 +585,18 @@ and do not flip to searching wide first.**
   on the shop whose words carry the whole catalogue title; two, or none, and
   nothing.
 - **One page is read whole** (`fetchPage` `{full:true}`, her decision): the
-  book's page, Re-check's page, the publisher's candidates. The shelf stays
+  book's page (at an `english:false` venue, in the facts round's read), Re-check's
+  page, the publisher's candidates. The shelf stays
   excerpts (a call is capped ~25,000 characters). **The ISBN is read in code
   first** (`isbnOnPage`): exactly one 978/979 number labelled ISBN or EAN, check
-  digit valid; Claude's only when code finds none. **"Sold by …" is the shop,
-  never the publisher.** Text a page hides until clicked is not in Parallel's
-  copy — the wider web is the route for it. Evidence: `docs/shop_pages/README.md`.
+  digit valid; Claude's only when code finds none. **"Sold by …" is the shop, never
+  the publisher.** Hidden-until-clicked text is not in Parallel's copy.
 - **The web ISBN search reads its results in code too** (`isbnInResults`): only
   results carrying the whole book title count; labelled numbers and valid
   978/979 numbers in their addresses; exactly one. None → the two results about
   the book are opened whole. Queries name the venue.
 
-**The cost:** up to four searches and three readings. **Every reading runs on
+**The cost:** up to five searches and seven page opens. **Every reading runs on
 her allowance.** The keyless tier refuses after roughly a dozen quick searches
 (observed; unpublished). A failed search shows one line on the card, Re-check's
 words with "Search"/"Search again" (her decision; no red banner). **Per
@@ -911,7 +911,7 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **When a tool is swapped, the route must not change with it.** A better source is not a complete one; open a candidate before filing it; go to an address you can build rather than tuning searches. Change one thing at a time.
 - **Scraper mechanics:** never `networkidle`; wrap `route.fulfill`/`abort`; a 404 is not a loaded page; retry a detail page once. `normalizeUrl` lowercases scheme and host only; resolve hrefs, never join by hand; keep every link to an address. Dates: never build strings by hand; every month spelling (`Sept.`, Italian `set`); normalise dashes; the year can sit on the closing side only. Listings: read every page and stop at the lookback floor; a load-more click must not follow its href. Titles: noise stripping is case-exact; never strip a location that tells two shows apart. `resolveChromium()` needs both halves. A blanket find-and-replace can eat definitions you just added.
 - **A container dry run with `--home` keeps the network bridge on.** Stub every venue it names.
-- **Two steps looking for the same thing will contradict each other on the card.** The later step reuses what the earlier found (Canaletto).
+- **One owner per fact.** Two steps looking for the same thing contradict each other on the card (Canaletto): one step finds it, code decides it, one sentence says it.
 - **An excerpt is what matches the query, not the page.** Short excerpts are not an empty page; judge emptiness on the whole page (Watteau).
 - **Subagents:** send only the rows and fields the question needs. Wording is not a control — remove the tool or check the answer.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
@@ -1093,11 +1093,10 @@ Not good → more work on the routine or the recipes.
 
 ### 6. Queued next
 
-- **Catalogue-search rebuild (next app job):** its steps overlap, run out of order and
-  contradict each other on the card. Plan: one fact-finding round per book; decide the
-  edition before the publisher step; one owner per sentence on the card. Covers
-  Hammershøi: French book and ISBN found right, but its English edition, *Hammershøi:
-  Painter of Northern Light* (Rizzoli Electa, 978-0847899289), is missed.
+- **Catalogue-search rebuild: built on `main`, awaiting her wording approval and
+  publish** (then merged into `claude/ledger-cloud`). Open: whether her live search
+  reaches Hammershøi's library record (978-0847899289); Rizzoli Electa's site is not
+  recognised (`publisherDomainFrom`), a co-imprint list being hers to decide.
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 
