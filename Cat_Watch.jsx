@@ -1370,14 +1370,12 @@ function proFormaCsv(rows){
   return [cols.join(",")].concat(rows.map(r=>cols.map(c=>cell(r[c])).join(","))).join("\n")+"\n";
 }
 
-// ---- v9 pro forma helpers (pure) ----
+// ---- Pro forma helpers (pure) ----
 const KNOWN_VENUES = new Set(MUSEUMS.map(m=>m.id));
 function isValidYMD(s){ if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false; const d=new Date(s+"T00:00:00"); return !isNaN(d.getTime()); }
-// SAME ADDRESS MEANS SAME EXHIBITION — the one identity test with no
-// judgement in it, and the scraper's own settled rule. Scheme and host are
-// lowercased because hosts are case-insensitive by spec; THE PATH IS NOT
-// TOUCHED, because folding it merged two exhibitions that differed only in
-// capitalisation. A trailing slash and a #fragment are not part of identity.
+// Same address = same exhibition: scheme and host lowercased, the path never folded
+// (folding it merged two exhibitions differing only in capitals). A trailing slash
+// and a #fragment are not part of identity.
 function normalizeUrlKey(u){
   try{
     const x=new URL(String(u||"").trim());
@@ -1402,23 +1400,10 @@ function csvParse(text){
   return out.filter(r=>r.some(c=>String(c).trim()!==""));
 }
 
-// HOW MANY CARDS ARE DECIDED — and it is the gate on the ledger, so it lives
-// out here where a fixture can reach it. It used to be eight lines inside the
-// component, which is where the counting for a LABEL belongs; it stopped being
-// a label on 20 Sep, when her ruling made the button refuse to fire while
-// anything is undecided.
-//
-// WHAT COUNTS AS DECIDED, and the subtlety is the second half: REJECTING is
-// deciding. An Add card she turned down, and a Fill/Change card whose every
-// field she turned down, are finished work — they must not hold the gate shut.
-// Only a card she has not touched at all is undecided. Getting that backwards
-// would make the button unreachable for anyone who rejects anything, which is
-// most of a real sweep.
-// IS THIS ONE CARD STILL UNTOUCHED. The gate counts these and the "jump to the
-// next undecided" button finds them, and THOSE TWO MUST NEVER DISAGREE — a
-// button refusing to fire while the jump says there is nothing left is a dead
-// end with no way out of it. So there is one function and both call it. It was
-// briefly two, which is exactly how that pair of copies begins.
+// The ledger gate counts undecided cards; it lives outside the component so fixtures
+// reach it (docs/app.md §3). Rejecting IS deciding: only an untouched card is
+// undecided. The gate and the "jump to next undecided" button both call
+// isUndecidedCard, so they can never disagree.
 function isUndecidedCard(p,dec){
   dec=dec||{};
   if(p.type==="add")return !dec.mode;
@@ -1426,11 +1411,8 @@ function isUndecidedCard(p,dec){
   return !Object.values(dec.fields||{}).some(v=>v);
 }
 
-// EVERY DECIDED CARD LANDS IN ONE OF THREE COUNTS — her ask, 30 Sep: 53 cards
-// decided and the footer said 48, with nothing to say where the other 5 went.
-// Decided = to apply + quarantined + rejected, always, so the footer adds up.
-// One card's fate. The counts and the link box (rejected links go back in it)
-// both ask this, so they cannot disagree about what "rejected" is.
+// Every decided card lands in one count — to apply, quarantined or rejected — so the
+// footer adds up (her ask). The counts and the link box both use cardOutcome.
 function cardOutcome(p,dec){
   dec=dec||{};
   if(isUndecidedCard(p,dec))return"undecided";
@@ -1450,28 +1432,16 @@ function countDecisions(proposals,decisions){
   return {acceptedCount,undecidedCount,quarantinedCount,rejectedCount};
 }
 
-// ===== TEMPORARY, WITH countDecisions BECAUSE A FIXTURE MUST REACH IT =====
-// WHEN THE SIDE DOOR IS OFFERED — see the button itself for why it exists and
-// when to pull it out. The rule lives here, out of the component, for one
-// reason: written inline in the JSX it could only be tested by a second copy
-// of it in the test file, and a second copy drifts silently.
-//
-// BOTH HALVES MATTER. Nothing decided → nothing to apply, and offering a
-// button that would write an empty change is offering a dead control. Nothing
-// left undecided → the real button is already live, and a second way to do the
-// same thing is the kind of pair that ends up disagreeing. So it appears only
-// in the middle state, which is the only state it is for.
+// ===== PARTIAL APPLY — stays until she says (CLAUDE.md §4) =====
+// Offered only in the middle state: something decided AND something undecided. Out of
+// the component so fixture 18h tests this copy.
 function offerPartialApply(counts){
   const c=counts||{};
   return (c.acceptedCount||0)>0 && (c.undecidedCount||0)>0;
 }
 
-// MERGE, NEVER REPLACE — and this is the rule that stops the bug coming back
-// in a new place. Importing an OLD sweep file must not drag a venue's date
-// backwards, so a venue's line only moves when the incoming time is LATER.
-// The two halves move independently: a venue can be tried today and still show
-// an older date for its last real rows, which is the one line that says
-// "re-run this one on its own".
+// Merge, never replace: a venue's dates move only for a LATER time, so an old sweep
+// file cannot drag them backwards. Tried and brought-rows move independently.
 function mergeSweepLog(prev,seen){
   const out={...(prev||{})};
   const later=(a,b)=>(!a||(b&&b>a))?b:a;
@@ -1485,33 +1455,10 @@ function mergeSweepLog(prev,seen){
   return out;
 }
 
-// ── QUARANTINE — SAME THIRD PLACE AS THE SWEEP LOG, her ruling 20 Sep 2026 ──
-//
-// IT WAS IN THE LEDGER AND THAT WAS THE WRONG CONTAINER, decided in the same
-// session that moved the sweep log out and somehow not applied to the thing
-// sitting next to it. Her scenario is the whole argument: quarantine two junk
-// rows, Reset to the starter set, feed the SAME sweep file again — and every
-// piece of junk is back, because the only record of her decision went with the
-// ledger she just replaced. A feature whose entire promise is "never show me
-// this again" cannot depend on which file happens to be open.
-//
-// BUT IT IS NOT THE SWEEP LOG EITHER, and the difference decides the design.
-// The sweep log is safe living only here because it is DERIVABLE: every fact in
-// it comes from a sweep file, so losing it costs one re-import. Quarantine is
-// derivable from nothing — it is her judgement, and only she can rebuild it.
-// That is the same property that keeps her LEDGER out of this store.
-//
-// SO IT LIVES IN BOTH, WITH A RULE ABOUT WHICH WINS — her choice, C, taken over
-// her own objection that redundancy is lazy. It is not two hopeful copies: the
-// store is the working copy that always applies, the export is the backup, and
-// the rule below settles every disagreement between them. Her ledger already
-// has exactly this shape.
-//
-// THE RULE IS LATEST DECISION WINS, WHICH NEEDS TOMBSTONES. Taking a row out of
-// quarantine has to be RECORDED, not merely absent, or loading an older backup
-// would silently re-block something she released — the same bug the sweep log's
-// merge rule exists to prevent, one door along. So a released row stays in the
-// store as `released` with the time she released it.
+// ── QUARANTINE — in the page's store AND her export (docs/app.md §4) ────────
+// It is her judgement, derivable from nothing, so it cannot live only in the store;
+// in the ledger alone, a Reset brings the junk back. Latest decision wins, which needs
+// tombstones: a release is stored as `released`, or an older backup would re-block it.
 const QUARANTINE_DOC = "quarantine/rows";
 
 // Both sides are {key: {venueId, title, at, state}}. Nothing is dropped and
@@ -1542,12 +1489,8 @@ function quarantineFromList(list){
   return out;
 }
 
-// URGENCY COLOURS, ONE SET PER THEME — dark added 20 Sep 2026 at her request.
-//
-// The washes are not the light ones dimmed. A pale badge on a dark ground
-// glares, so each dark wash is a DEEP tint of the same hue and the ink becomes
-// the light end of it — the ladder keeps its meaning (cool blue for announced
-// through to deep red for long closed) while the page stays dark.
+// URGENCY COLOURS, ONE SET PER THEME. Dark washes are deep tints of the same hue, not
+// the light ones dimmed, so the ladder keeps its meaning.
 const TIER_SETS = {
   light: {
     upcoming: { ink: "#4A5A6B", wash: "#E1E5EB" },
@@ -1578,15 +1521,13 @@ const TIER_TEXT = {
     closing: { label: "Closed 3\u20136 months", note: "Shop stock thinning. Buy now if you want it.", time: "past", ord: 5 },
     urgent: { label: "Closed 6\u201312 months", note: "Final call. Reprints are rare.", time: "past", ord: 6 },
     lapsed: { label: "Closed over a year", note: "Assume out of print. Secondhand only.", time: "past", ord: 7 },
-    // After Announced — her ordering, 23 Sep.
+    // After Announced — her ordering.
     unknown: { label: "Dates unclear", note: "No reliable end date found.", time: "current", ord: 3 },
 };
 const tiersFor = mode => Object.fromEntries(Object.keys(TIER_TEXT).map(
   k => [k, { ...TIER_TEXT[k], ...TIER_SETS[mode][k] }]));
-// TIERS stays a module-level constant for everything that reads a LABEL or an
-// `ord` outside the component (sorting, band names). Colour is read from the
-// component's themed copy; these values are the light ones and are never used
-// to paint anything in dark mode.
+// TIERS (light values) serves labels and `ord` outside the component; colour comes
+// from the component's themed copy.
 const TIERS = tiersFor("light");
 
 function relTime(iso){if(!iso)return null;const d=new Date(iso);if(isNaN(d))return null;const s=Math.max(0,Math.floor((Date.now()-d.getTime())/1000));if(s<60)return"just now";const m=Math.floor(s/60);if(m<60)return m+" minute"+(m===1?"":"s")+" ago";const h=Math.floor(m/60);if(h<24)return h+" hour"+(h===1?"":"s")+" ago";const day=Math.floor(h/24);return day+" day"+(day===1?"":"s")+" ago";}
@@ -1595,17 +1536,8 @@ const MS_MO=1e3*60*60*24*30.44, MS_WK=1e3*60*60*24*7;
 const moSince=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");return isNaN(x)?null:(Date.now()-x)/MS_MO;};
 const wksSince=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");return isNaN(x)?null:(Date.now()-x)/MS_WK;};
 
-// "CLOSING WINDOW" ON THE COUNTS LINE — her ruling, 2 Oct: catalogues she has
-// said she wants (Yes) whose show closed 3–12 months ago. Nothing else.
-// THE BUY-NEXT DOT IS THE STAR'S SIZE — her ruling, 2 Oct. The star is a
-// font glyph, so its size and where it sits depend on the font each machine
-// falls back to; a fixed circle came out bigger than it and off its line. So
-// the star's own ink is measured, in the font a card's button uses, and the
-// dot is centred where the star's ink is. The canvas reports the ink rounded
-// outward and a disc reads larger than a star of equal height, so the dot is
-// 85% of that height: on screen the two then measure the same (11.5px at
-// 16px, checked on the rendered page). Measured once. No off-screen canvas
-// (the test harness) → an 11px dot centred on the line.
+// The buy-next dot matches the star's measured ink (her decision): 85% of its height,
+// centred on it, because a disc reads larger than a star. No canvas → an 11px dot.
 let starInkCache=null;
 function starInk(){
   if(starInkCache)return starInkCache;
@@ -1621,6 +1553,8 @@ function starInk(){
   return starInkCache={D,v:(out.a-out.d-D)/2};
 }
 
+// Closing Window on the counts line (her decision): Yes-wanted catalogues whose show
+// closed 3–12 months ago.
 function inClosingWindow(r){
   if(!r||!r.interested||r.acquiring!=="yes")return false;
   const t=tierFor(r);
@@ -1635,6 +1569,7 @@ function tierFor(r){
   return"unknown";
 }
 
+// The seed set: ~110 rows read before the scraper existed (docs/app.md §6).
 const S=[
 ["met","Musical Bodies","2026-06-07","2026-09-27","Instruments as sculptural and bodily objects from the Met's collection.","musical-bodies"],
 ["met","Costume Art","2026-05-10","2027-01-10","Costume Institute spring show. Inaugurates new fashion galleries.","costume-art"],
@@ -1755,24 +1690,9 @@ function mergeSeedInto(existing){const byId=new Map(existing.map(r=>[r.id,r]));f
 const cleanIsbn=v=>{if(!v)return null;const d=String(v).replace(/[^0-9]/g,"");return d.length===13?d:null;};
 const fmtIsbn=v=>{const c=cleanIsbn(v);return c?c.slice(0,3)+"-"+c.slice(3):null;};
 
-// ── A 10-DIGIT ISBN IS TAKEN, NOT THROWN AWAY \u2014 her ruling, 21 Sep 2026 ──
-//
-// There is nothing wrong with an ISBN-10. Every book printed before 2007 has
-// one and plenty of shop pages still show only that. The first version of the
-// page read refused them, which was a limit I put in rather than a fact about
-// the number, and it cost the row its ISBN for no reason: with no ISBN the
-// reseller links fall back to searching by TITLE, which is the failure that
-// sent Alibris to the wrong book.
-//
-// THE CONVERSION IS NOT FOR SEARCHING. All three resellers find a book from
-// either form. It is for HER SCREEN: the ledger has one field and one format,
-// 3 digits and 10, so a 10-digit number cannot be stored or shown in it. One
-// input, one correct answer, no judgement \u2014 which makes it code's job.
-//
-// 978 on the front, the first nine digits, and a fresh check digit. THE OLD
-// CHECK DIGIT IS VERIFIED FIRST, so a mangled or mistyped number is refused
-// rather than converted into a plausible wrong one \u2014 the same reasoning as
-// ymd() checking a date exists before it is stored.
+// ISBN-10 is taken, not thrown away (her decision): converted to 13 for her screen,
+// since the ledger stores one format. The old check digit is verified first, so a
+// mistyped number is refused rather than turned into a plausible wrong one.
 function isbn10to13(v){
   const t=String(v||"").replace(/[^0-9Xx]/g,"").toUpperCase();
   if(t.length!==10)return null;
@@ -1790,61 +1710,28 @@ function isbn10to13(v){
   return core+String((10-(s2%10))%10);
 }
 
-// WHAT THE LEDGER IS ALLOWED TO STORE. Thirteen digits if we were given
-// thirteen; a converted ten if we were given a valid ten; nothing otherwise.
-// Every place an ISBN ENTERS the app goes through here. cleanIsbn stays the
-// strict gate everything downstream reads, so nothing but a 13 can be
-// displayed or linked.
+// Every ISBN entering the app goes through toIsbn13: a valid 13, or a converted valid
+// 10, else nothing. cleanIsbn stays the strict 13-digit gate downstream.
 const toIsbn13=v=>cleanIsbn(v)||isbn10to13(v);
 const MON3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const fmtDate=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");if(isNaN(x))return d;return x.getDate()+" "+MON3[x.getMonth()]+" "+x.getFullYear();};
 function fmtRefresh(iso){if(!iso)return"never";const d=new Date(iso);if(isNaN(d))return"never";const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
 function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)return a+" \u2014 "+b;if(b)return"until "+b;if(a){const st=new Date(r.startDate+"T00:00:00");const past=!isNaN(st)&&st<=new Date();return(past?"open since ":"opens ")+a;}return"dates unknown";}
 
-// THE SHOP IS SEARCHED BY THE EXHIBITION'S TITLE — her ruling, 25 Sep. A shop
-// indexes the show's name; "Canaletto & Bellotto. Exhibition Catalogue 2026"
-// found nothing at KHM. The resellers keep the ISBN, or the book's title.
-// BOOKO AU — her ask, 30 Sep; shapes hers, 1 Oct. By ISBN: booko.au/<isbn>
-// fills in the title itself. With no ISBN, its title search (her finding:
-// poor, and quotation marks break it).
+// The shop link searches by the EXHIBITION's title (her decision): shops index the
+// show's name; resellers use the ISBN or the book's title. Booko AU: booko.au/<isbn>,
+// or its title search with no ISBN.
 function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+encodeURIComponent(r.title)});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q},{name:"Booko AU",href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
 
-// ── FINDING A CATALOGUE — rebuilt 20 Sep 2026 ────────────────────────────────
-//
-// WHAT BROKE. The old version called api.anthropic.com straight from the page.
-// The viewer's sandbox now blocks a page from reaching ANY outside address, so
-// the request never left: the diagnostic read "Network: Failed to fetch", which
-// is the browser refusing, not a server saying no. Nothing was wrong with the
-// key, the account or the prompt. The route closed.
-//
-// WHAT REPLACES IT, and why it is not the same mistake. A page may not reach
-// the internet, but it MAY call the viewer's own connectors, under the viewer's
-// credentials, with no key anywhere in this file. So:
-//
-//   1. SEARCH runs on her Parallel Search Key connector, and the page never
-//      touches the network itself.
-//   2. READING the results is Claude's job, through `sample`. Claude cannot
-//      browse, which is exactly why the two halves are separate: the connector
-//      finds pages, Claude only reads text we hand it. It can never invent a
-//      shop it did not see.
-//
-// The division is the same as before — search, then a model reads what came
-// back. Only the plumbing changed.
-//
-// NAMED CONSTANTS, because a typo here fails at the viewer, not here.
-//
-// HER OWN KEYED CONNECTOR, 1 Oct 2026 (version 36). claude.ai's built-in
-// "Parallel Search" is keyless and cannot be removed; on it her lookups kept
-// failing with upstream_error (the free tier the likely cause, not proven).
-// "Parallel Search Key" is a custom connector at
-// https://search.parallel.ai/mcp-oauth (claude.ai refuses a second connector at
-// /mcp), No sign-in, her Parallel API key in an `x-api-key` request header —
-// an `authorization: Bearer` header never reached Parallel. Billed to her
-// Parallel account. THIS NAME MUST MATCH the page's published `mcp` capability.
+// ── FINDING A CATALOGUE (docs/app.md §1; CLAUDE.md §4 "Catalogue lookup") ────
+// The page cannot reach the internet, so searching and reading go through her keyed
+// connector, and `sample` asks Claude to read only the text handed to it — it can
+// never report a page that was not found.
+// SEARCH_SERVER must match the connector name in the page's published `mcp`
+// capability (CLAUDE.md §4).
 const SEARCH_SERVER = "Parallel Search Key";
 const SEARCH_TOOL   = "web_search";
-// READING A WHOLE PAGE, not a snippet. Declared 21 Sep 2026 for the ISBN gap
-// below; the connector has always offered it and only web_search was wired.
+// Reads a whole page, not a snippet.
 const FETCH_TOOL    = "web_fetch";
 
 // The connector wants a stable id per conversation for its free-tier limits.
@@ -1859,9 +1746,8 @@ async function useCap(name){
   }catch{ return null; }
 }
 
-// Every failure code that has its OWN fix gets its own sentence. The capability
-// notes name a single catch-all banner as the anti-pattern: it hides the one
-// action that would fix the page.
+// Each failure code with its own fix gets its own sentence; one catch-all banner
+// would hide the fix.
 function mcpTrouble(e){
   const code=String((e&&e.code)||"");
   if(code==="server_not_connected")return "Add the \u201cParallel Search Key\u201d connector in claude.ai \u2192 Settings \u2192 Connectors, then try again.";
@@ -1894,30 +1780,11 @@ async function searchWeb(objective,queries){
   return{ok:true,results,detail:"search: "+results.length+" results for "+JSON.stringify(queries)};
 }
 
-// Read ONE page in full. Same connector, same failure sentences as searchWeb.
-//
-// WHY THIS EXISTS — her finding, 20 Sep 2026. A search result is an EXCERPT:
-// a headline and a line or two. An ISBN is printed in the small print at the
-// bottom of a shop page, so it is almost never inside the excerpt, and the
-// lookup reported no ISBN for books whose page prints one. With no ISBN the
-// reseller links fall back to searching by TITLE, and a title search misfires
-// \u2014 Alibris returned the wrong book for the Met's Musical Bodies.
-//
-// It reaches a COLLAPSED section, which is the case she asked about: the Met
-// store's "Details" panel is already in the page and the button only hides it,
-// so a full read sees it shut. Verified against that page, 21 Sep. A shop that
-// only goes and GETS those details when clicked would still come back empty
-// \u2014 no ISBN, noted, exactly as today. Never a wrong one.
-//
-// IT TAKES ONE PAGE OR SEVERAL. Step one opens a shop's catalogue shelf and
-// its search box together, in ONE call, because they answer the same question
-// and two calls would be two waits.
-//
-// ONE PAGE IS READ WHOLE — her ruling, 1 Oct. `{full:true}` asks for the
-// page in full (`full_content`); without it the connector hands back excerpts
-// it chose, and they dropped the Orsay Cassatt's folded tray holding the EAN.
-// Excerpts were never put to her. The shelf call stays excerpts until
-// measured: a call's whole answer is capped at ~25,000 characters.
+// Read one page or several (the shelf and the search box go in ONE call). An ISBN sits
+// in a page's small print, rarely in a search excerpt (docs/app.md §1 "The ISBN"). A
+// collapsed panel already in the page is read; details fetched on click are not.
+// {full:true} reads the page whole (her decision): excerpts dropped the Orsay
+// Cassatt's EAN. The shelf stays excerpts — a call is capped at ~25,000 characters.
 async function fetchPage(url,objective,queries,opts){
   const urls=Array.isArray(url)?url.filter(Boolean):[url];
   if(!urls.length)return{ok:false,results:[],detail:"No page to open."};
@@ -1944,26 +1811,10 @@ async function fetchPage(url,objective,queries,opts){
     +(errors.length?", "+errors.length+" refused ("+errors.map(e=>String((e&&e.http_status_code)||(e&&e.error_type)||"?")).join(", ")+")":"")};
 }
 
-// The shop pages step one opens for one exhibition: the catalogue shelf where
-// the shop has one, then its search box with the exhibition's title in it.
-// Nothing is guessed here \u2014 both addresses are the venue's own, written down
-// in MUSEUMS above.
-//
-// A SHELF THAT SCROLLS OR PAGINATES IS STILL JUST MORE ADDRESSES \u2014 her
-// question, 21 Sep, and the scraper learned the same thing at the Menil. The
-// Menil's shelf shows 16 books and has three numbered pages; the Morgan's
-// keeps growing as you scroll and has no buttons at all. Both answer
-// "?page=2" perfectly well, and Tate's endless scroll answers a size
-// parameter that is baked into its address above. Reading only what the
-// first screen shows would have taken 16 of the Menil's 47.
-//
-// THE DEPTH IS ONE NUMBER FOR EVERY SHOP, NEVER A COUNT PER VENUE \u2014 the
-// scraper's rule, and for the same reason: how many pages a shop has is the
-// shop's business and it changes. Asking for a page that does not exist costs
-// nothing and comes back empty, and all of them go in ONE call, so depth is
-// free. Today's largest shelf is MAD's 68, over five pages, and its shop
-// offers no "newest first" — only popularity, price, alphabet — so a recent
-// catalogue can sit on any page. Raised from 3 to 5, her question, 25 Sep.
+// The pages step one opens: the shelf where the shop has one, then its search box with
+// the exhibition's title, both from MUSEUMS. A shelf that scrolls or paginates is just
+// more addresses. Depth is one number for every shop, never a count per venue: a
+// missing page costs nothing and all go in one call. Five covers MAD's 68 books.
 const SHELF_DEPTH=5;
 
 // Shopify and most others take ?page=N. A shelf that already carries its own
@@ -1983,7 +1834,7 @@ function shelfPages(url){
 function shopPagesFor(mu,title){
   const out=[];
   if(mu&&mu.shopCatalogues)out.push(...shelfPages(mu.shopCatalogues));
-  // Curly quotes straightened: "O’Keeffe" is filed as "O'Keeffe" (DIA, 6 Oct).
+  // Curly quotes straightened: shops file "O’Keeffe" with a straight one.
   if(mu&&mu.shopSearch)out.push(mu.shopSearch+encodeURIComponent(String(title).replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"')));
   return out;
 }
@@ -2008,28 +1859,9 @@ async function readResults(prompt){
 }
 
 
-// ── THE SWEEP LOG — kept OUTSIDE the ledger, her ruling 20 Sep 2026 ─────────
-//
-// IT USED TO LIVE IN THE LEDGER AND THAT WAS WRONG. Her test settles it:
-// open a backup from two days ago and the drawer said "the Met last brought
-// rows 18 Sep"; open today's and it said 20 Sep. Same world, two answers. A
-// sweep either ran or it did not — opening an older file cannot un-run it.
-//
-// THE DISTINCTION, and it is hers: CONTENT rolls back with a backup and that
-// is correct (fewer exhibitions, her marks as they stood — the document
-// genuinely was smaller then). A FACT ABOUT THE WORLD must not. "The Met was
-// swept on 13 Sep" is true whichever backup she has open. The sweep log is the
-// second kind and it was sitting in the first kind's container.
-//
-// SO IT LIVES IN THIS PAGE'S OWN STORE — one document, one line per venue,
-// twenty-one lines, never growing. It survives Reset, it is there before any
-// ledger is loaded, and loading an old backup does not move it.
-//
-// IT IS A CACHE, NOT A MASTER RECORD, and that is what makes it safe to keep
-// somewhere she cannot export. Every fact in it comes from swept_at in a sweep
-// file, so any sweep file rebuilds it. Losing it costs one re-import, not her
-// work. Her LEDGER could never live here for exactly that reason — it is not
-// derivable from anything.
+// ── THE SWEEP LOG — in the page's store, outside the ledger (docs/app.md §5) ──
+// A fact about the world must not roll back with a backup. One line per venue, never
+// growing; it survives Reset. A cache, not a master record: any sweep file rebuilds it.
 const SWEEP_LOG_DOC = "sweeps/venues";
 
 // Returns {log, why} — `why` is null on success and a sentence otherwise. The
@@ -2081,27 +1913,10 @@ async function writeQuarantine(next){
 }
 
 const today=()=>new Date().toISOString().slice(0,10);
-// ── THE ISBN FILL \u2014 the two decisions, kept OUT of the component ───────────
-//
-// They sit here, not inside App, for the reason countDecisions was moved out:
-// a rule a fixture cannot reach is a rule nobody checks. The component keeps
-// the plumbing (which page, which prompt); these two hold what may change.
+// ── THE ISBN FILL — its two decisions live outside the component so fixtures reach them.
 
-// OPEN THE BOOK'S OWN PAGE WHENEVER ANYTHING IS STILL MISSING \u2014 her ruling,
-// 21 Sep, and she was right that the old rule was decoration.
-//
-// It used to open the page only when the ISBN was missing. That gate saved
-// nothing: a shop's list of catalogues prints a cover, a title and a price,
-// and NEVER an ISBN \u2014 so after a shop lookup the ISBN is always missing and
-// the gate always opened. Her question: what is it for?
-//
-// And in the one case it stayed shut it did harm. It asked about the ISBN
-// alone, so a web result that happened to carry an ISBN but no publisher
-// never opened the book's page, and the PUBLISHER was lost for nothing.
-//
-// Now: a catalogue was found, a page came with it, and either the ISBN or the
-// publisher is still blank. Reading that page is the normal step, not the
-// exception.
+// Open the book's own page when a catalogue was found and the ISBN OR the publisher is
+// still blank (her decision; docs/app.md §1 "The ISBN"). C-009 to C-013a.
 function needsPageRead(hit){
   return !!(hit&&hit.ok&&hit.pageUrl&&hit.row&&hit.row.hasCatalogue==="yes"
             &&(!hit.row.isbn13||!hit.row.publisher));
