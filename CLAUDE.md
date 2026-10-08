@@ -1091,6 +1091,16 @@ Tates) were fixed from her saves the same day; Louvre refused 3 pages.
 fixed venues come back clean; nothing new broken. Good → she imports that run.
 Not good → more work on the routine or the recipes.
 
+### 6. Queued next
+
+- **Catalogue-search rebuild (next app job):** its steps overlap, run out of order and
+  contradict each other on the card. Plan: one fact-finding round per book; decide the
+  edition before the publisher step; one owner per sentence on the card. Covers
+  Hammershøi: French book and ISBN found right, but its English edition, *Hammershøi:
+  Painter of Northern Light* (Rizzoli Electa, 978-0847899289), is missed.
+- **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
+  decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
+
 ---
 
 ## 8. Rejected — do not re-propose

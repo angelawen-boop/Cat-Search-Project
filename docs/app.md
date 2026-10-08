@@ -208,11 +208,6 @@ this route was rebuilt to fix; `complex` costs more; nothing has misread, so
 there is nothing to tune against. Only one `.jsx` has ever existed in this repo
 — the "Sonnet copy" was a Chat artifact.
 
-**One model string survives in dormant code, and stays until she says:**
-`askDrive` (the Google Drive save routine, uncalled) carries
-`claude-sonnet-4-6`. A session once deleted that whole routine without asking;
-it was restored byte for byte. Unreachable is not unwanted.
-
 ---
 
 ## 2. Saving and loading (`main`)
@@ -231,6 +226,18 @@ available for this artifact"*). Two routes, differing in what is KNOWN:
 
 **Never put back a click-triggered green tick** — on 20 Sep it read "Saved —
 safe to close" while nothing was written.
+
+### Removed unused code — in git at `b043a9b`, her decision
+
+Deleted as uncalled; `git show b043a9b:Cat_Watch.jsx` has it all.
+- **Google Drive save and load**, auto-load on open included. It called
+  Claude's servers straight from the page, which the viewer's sandbox now
+  blocks: **never restore it as it was.** A Drive backup button (CLAUDE.md
+  §7.1) goes through a Google Drive connector, as the catalogue lookup goes
+  through Parallel's.
+- **The old save to the page's storage.**
+- **"Find catalogues for all Wanted"**: lookups back to back. A new bulk search
+  must work within her Parallel and Claude allowance.
 
 ---
 

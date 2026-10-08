@@ -30,6 +30,7 @@ const SUITES = [
   [BOTH,    'node scraper/fixtures/intake_cases.js'],
   [APP,     'node scraper/fixtures/page_loads.js'],
   [APP,     'node scraper/fixtures/page_renders.js'],
+  [APP,     'node scraper/fixtures/app_decisions.js'],
   [APP,     'node scraper/fixtures/catalogue_lookup.js'],
   [APP,     'node scraper/fixtures/recheck_shop.js'],
   [SCRAPER, 'node scraper/fixtures/summary_pages.js'],
