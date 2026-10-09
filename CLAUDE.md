@@ -1031,7 +1031,7 @@ archives.
   `subtitleUnderHeading`), never in the scraper — the scraper never runs them
   (her decision). A rule both use (the date reader) stays in `dates.js`.
 - **acq, louvre, artic, brit have venue link rules** (`linkRead` on their
-  `MUSEUMS` entries; `docs/picked_shows.md`, "Venue link rules"), proved on four
+  `MUSEUMS` entries; met's reads dates off its "on view" line anywhere on the page, 42.2, unpublished; `docs/picked_shows.md`, "Venue link rules"), proved on four
   live archive pages each; nothing else moved. Published in 42 (test page).
   A line opening "In collaboration with" under Acquavella's name is a credit,
   never a subtitle (her decision; *Calder | Miró*).

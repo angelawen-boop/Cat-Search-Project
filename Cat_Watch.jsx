@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "42.1";
+const APP_VERSION = "42.2";
 const APP_VERSION_DATE = "9 Oct 2026";
 
 // MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
@@ -18,13 +18,14 @@ const APP_VERSION_DATE = "9 Oct 2026";
 // english:false: only these venues get the language check and English-edition search
 // (lookupCatalogue, phases 2b and 3).
 const MUSEUMS = [
-  { id:"met", short:"The Met", name:"The Metropolitan Museum of Art", city:"New York",
+  // The Met prints a show's dates on its "on view" line: below a podcast transcript (Manet/Degas), or above the only line naming the show (Impossible Conversations).
+  { id:"met", linkRead:{ dateLine:/\bon view\b/i }, short:"The Met", name:"The Metropolitan Museum of Art", city:"New York",
     exBase:"https://www.metmuseum.org/exhibitions/", shopSearch:"https://store.metmuseum.org/search?q=", shopCatalogues:"https://store.metmuseum.org/books-toys-games/exhibition-catalogues", shopHome:"https://store.metmuseum.org/", listUrl:"https://www.metmuseum.org/exhibitions" },
   { id:"rijks", english:false, short:"Rijksmuseum", name:"Rijksmuseum", city:"Amsterdam",
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopCatalogues:"https://www.rijksmuseumshop.nl/en/books/exhibition-books", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
   { id:"ng", short:"National Gallery", name:"The National Gallery", city:"London",
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
-  // linkRead: Add by link options for acq, louvre, artic, brit (docs/picked_shows.md, "Venue link rules").
+  // linkRead: Add by link options for met, acq, louvre, artic, brit (docs/picked_shows.md, "Venue link rules").
   // No apostrophe or double quote inside a linkRead pattern (write \x27): compress.js seedMemory scans this list as text.
   { id:"acq", linkRead:{ title:"subtitle", places:["New York","Palm Beach"], credit:/^In collaboration with\b/i, dashAfterColon:true, from:/^Press Release$/, minLine:60, skip:/^Gallery Hours:|\bImage Courtesy\b/, skipEntities:true, cleanLink:true }, short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
@@ -769,6 +770,14 @@ function readShowPage(res,url,vc){
   }
   if(!cands.length)return{ok:false,why:"Couldn’t find the show’s title on the page."};
   const datesUnder=h=>{
+    // A venue that labels its date line (linkRead.dateLine) is read there, anywhere on the page.
+    if(lr&&lr.dateLine){
+      for(let k=0;k<lines.length;k++){
+        const l=stripMd(lines[k]); if(!l||!lr.dateLine.test(l))continue;
+        const r=DATES.findDateRange(l,{looseSingles:false});
+        if(r.start||r.end)return{d:k,range:r};
+      }
+    }
     for(let k=h+1,seen=0;k<lines.length&&seen<LINK_DATE_LINES;k++){
       const l=stripMd(lines[k]); if(!l)continue; seen++;
       const r=DATES.findDateRange(l,{looseSingles:false});
