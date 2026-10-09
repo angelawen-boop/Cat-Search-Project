@@ -361,7 +361,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 42 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 42.1 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -954,7 +954,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **42 · cloud 4**. Cloud-only in it:
+live on the test page **42.1 · cloud 4**. Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
@@ -1041,11 +1041,12 @@ archives.
 
 Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`):
 - **An import she does not finish keeps NOTHING** — CSV or links: new venues
-  and shops, Confirm / No shop / Look again, a CSV's sweep log, the paste box.
-  All stored when the ledger moves; Cancel import drops them; Back keeps them.
+  and shops, Confirm / No shop / Look again, a CSV's sweep log. All stored when
+  the ledger moves; Cancel import drops them; Back keeps them. **Except the
+  links:** Cancel import puts every link read back in the box, stored.
   A file or Read with nothing to propose counts as finished.
 - **A rejected link goes back in the box** when the import finishes, with the
-  unread ones; "Clear", inside the box, empties it and the store.
+  unread ones and, after a partial apply, the undecided ones; "Clear", inside the box, empties it and the store.
 - **Books and ONLY books** — a section mixing books with other goods is never
   taken; the finder looks inside it for a books-only one. Catalogues ›
   publications › books. Never a front page.

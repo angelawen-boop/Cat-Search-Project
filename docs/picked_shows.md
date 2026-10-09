@@ -29,6 +29,9 @@ dismissed. She would rather pick the shows and add one the moment she meets it.
 - **A link it cannot read is a line, never a card** — the full link and why
   (empty page, refused, no dates). Unread links **stay in the paste box**,
   stored when the import finishes (her rule, 4 Oct), until read or cleared.
+  **Links come back to the box** (her decision): a rejected card's, an
+  undecided card's after a partial apply, and on Cancel import every link the
+  Read took — each stored at once. AL-012c, AL-024.
 - **No lookback cutoff** for anything added by link (her ruling).
 - **Chip: one "Occasional"** for every venue added this way (her ruling); each
   venue keeps its own name and shop behind it. A link to a venue already
