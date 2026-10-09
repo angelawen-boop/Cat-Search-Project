@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "41.1";
-const APP_VERSION_DATE = "8 Oct 2026";
+const APP_VERSION = "42";
+const APP_VERSION_DATE = "9 Oct 2026";
 
 // MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
 // most first, the Italian sites together, the venues that refuse us last. Accademia
@@ -26,7 +26,7 @@ const MUSEUMS = [
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
   // linkRead: Add by link options for acq, louvre, artic, brit (docs/picked_shows.md, "Venue link rules").
   // No apostrophe or double quote inside a linkRead pattern (write \x27): compress.js seedMemory scans this list as text.
-  { id:"acq", linkRead:{ title:"subtitle", places:["New York","Palm Beach"], dashAfterColon:true, from:/^Press Release$/, minLine:60, skip:/^Gallery Hours:|\bImage Courtesy\b/, skipEntities:true, cleanLink:true }, short:"Acquavella", name:"Acquavella Galleries", city:"New York",
+  { id:"acq", linkRead:{ title:"subtitle", places:["New York","Palm Beach"], credit:/^In collaboration with\b/i, dashAfterColon:true, from:/^Press Release$/, minLine:60, skip:/^Gallery Hours:|\bImage Courtesy\b/, skipEntities:true, cleanLink:true }, short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
   // Shopify, like Acquavella's. Chip "Levy", cards "Lévy Gorvy Dayan" (her decision).
   { id:"lgd", short:"Levy", card:"Lévy Gorvy Dayan", name:"Lévy Gorvy Dayan", city:"New York / London",
@@ -831,7 +831,7 @@ function readShowPage(res,url,vc){
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
 // and "###" lines run together, joined as the scraper joins them. "subtitle": the "##" line
-// under the heading, unless it names one of linkRead.places.
+// under the heading, unless it names one of linkRead.places or is a credit (linkRead.credit).
 function venueTitle(lines,h,heading,lr,words){
   const near=[];
   for(let k=h+1;k<lines.length&&near.length<40;k++){ if(lines[k].trim())near.push(lines[k]); }
@@ -842,7 +842,7 @@ function venueTitle(lines,h,heading,lr,words){
     return words(name+" "+sub)===words(heading)?joinTitle(name,sub,lr.dashAfterColon):"";
   }
   const sub=/^\s*##\s+\S/.test(near[0]||"")?stripMd(near[0]):"";
-  if(!sub||(lr.places||[]).some(p=>foldText(p)===foldText(sub)))return heading.trim();
+  if(!sub||(lr.places||[]).some(p=>foldText(p)===foldText(sub))||(lr.credit&&lr.credit.test(sub)))return heading.trim();
   return joinTitle(heading.trim(),sub,lr.dashAfterColon);
 }
 
