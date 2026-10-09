@@ -52,8 +52,12 @@ is why they live in one repo, on one branch.
 - **A guess is labelled a guess.** Say what is proven, what is not, and what one
   request would settle.
 - **Parallel:** a session's own calls use the free "Parallel Search". Her keyed
-  "Parallel Search Key" only with a reason (e.g. ten pages at once, which would
-  hit the free limit), and only after asking and explaining clearly.
+  "Parallel Search Key" needs her yes — ask up front, with the reason, when the
+  work will clearly need it. Once she has said yes, switch to the key as soon as
+  the free tier refuses; never sit waiting for it to reopen. Later in the same
+  session, after time has passed, try the free tier again first. A sub-agent
+  cannot spend the key (permissions block it), so the main session does keyed
+  fetches; a large reply is saved to a file — extract it by script, never retype.
 - **Builds and fixes she starts go through `/orchestrate`**
   (`.claude/skills/orchestrate/`): diagnose, brief, a builder on the model and
   effort she approves, an independent check, a plain report. Third patch →
@@ -922,6 +926,7 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **One owner per fact.** Two steps looking for the same thing contradict each other on the card (Canaletto): one step finds it, code decides it, one sentence says it.
 - **An excerpt is what matches the query, not the page.** Short excerpts are not an empty page; judge emptiness on the whole page (Watteau).
 - **Subagents:** send only the rows and fields the question needs. Wording is not a control — remove the tool or check the answer.
+- **A general rule ships only if no page gets worse.** Try it against every live page in hand, old reader beside new; a rule that fixes ten and breaks one is a venue rule, not a general one.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ---
@@ -1003,6 +1008,31 @@ stale after a minute; every save checks it first. A republish while her page is 
 better; catalogue lookups at Thyssen and Mauritshuis found the catalogue. Left
 here for now. **Open:** how the finder does on a venue it has never met — she
 will see when she next adds one by link. A miss is a finder bug (below).
+
+**What links are for at a swept venue (her account):** only shows before the
+1 July 2024 lookback, or a venue she has stopped sweeping (too few keepers per
+sweep). Never a show the scraper has or will have. Otherwise, occasional venues.
+**No exclusions apply to a link** — whatever she pastes is added, displays and
+collection shows included (her decision).
+
+**The reader at the 28, checked on 67 live pages** (one archive, one current
+each, plus her 10 occasional links): the general reader works at 17 venues once
+the eight general-reader rules are in (on `main`; `docs/picked_shows.md`, "The
+general reader — eight rules"; proved on 37 fresh live pages). Still short: acq,
+rijks, borghese, louvre, uffizi, mam, mad, ashmolean, artic, brit, dellav. **Her
+choice: only acq, louvre, artic and brit get work** (deep archives); the others
+may never come into play. A page printing no year ("5 June to 25 October") still
+fails — blank dates instead is NOT approved; "current year" would misdate
+archives.
+- **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry (like
+  `subtitleUnderHeading`), never in the scraper — the scraper never runs them
+  (her decision). A rule both use (the date reader) stays in `dates.js`.
+- **OPEN — mini recipes for acq, louvre, artic, brit**, written from four live
+  archive pages each (fetched 9 Oct, keyed); proof = those 16 pages plus no
+  change on the 37. Then commit; publishing is her call.
+- **Junk at the end of a link's description is tolerated** (her decision) — act
+  only if it starts reaching Claude's compressed descriptions. Not so for the
+  scraper: venues swept repeatedly are kept precise.
 
 Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`):
 - **An import she does not finish keeps NOTHING** — CSV or links: new venues
