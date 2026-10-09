@@ -18,8 +18,8 @@ const APP_VERSION_DATE = "9 Oct 2026";
 // english:false: only these venues get the language check and English-edition search
 // (lookupCatalogue, phases 2b and 3).
 const MUSEUMS = [
-  // The Met prints a show's dates on its "on view at" line, often below a podcast transcript (Manet/Degas).
-  { id:"met", linkRead:{ dateLine:/\bon view at\b/i }, short:"The Met", name:"The Metropolitan Museum of Art", city:"New York",
+  // The Met prints a show's dates on its "on view" line: below a podcast transcript (Manet/Degas), or above the only line naming the show (Impossible Conversations).
+  { id:"met", linkRead:{ dateLine:/\bon view\b/i }, short:"The Met", name:"The Metropolitan Museum of Art", city:"New York",
     exBase:"https://www.metmuseum.org/exhibitions/", shopSearch:"https://store.metmuseum.org/search?q=", shopCatalogues:"https://store.metmuseum.org/books-toys-games/exhibition-catalogues", shopHome:"https://store.metmuseum.org/", listUrl:"https://www.metmuseum.org/exhibitions" },
   { id:"rijks", english:false, short:"Rijksmuseum", name:"Rijksmuseum", city:"Amsterdam",
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopCatalogues:"https://www.rijksmuseumshop.nl/en/books/exhibition-books", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
@@ -770,9 +770,9 @@ function readShowPage(res,url,vc){
   }
   if(!cands.length)return{ok:false,why:"Couldn’t find the show’s title on the page."};
   const datesUnder=h=>{
-    // A venue that labels its date line (linkRead.dateLine) is read there, however far down.
+    // A venue that labels its date line (linkRead.dateLine) is read there, anywhere on the page.
     if(lr&&lr.dateLine){
-      for(let k=h+1;k<lines.length;k++){
+      for(let k=0;k<lines.length;k++){
         const l=stripMd(lines[k]); if(!l||!lr.dateLine.test(l))continue;
         const r=DATES.findDateRange(l,{looseSingles:false});
         if(r.start||r.end)return{d:k,range:r};
