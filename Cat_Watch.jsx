@@ -24,7 +24,8 @@ const MUSEUMS = [
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopCatalogues:"https://www.rijksmuseumshop.nl/en/books/exhibition-books", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
   { id:"ng", short:"National Gallery", name:"The National Gallery", city:"London",
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
-  { id:"acq", short:"Acquavella", name:"Acquavella Galleries", city:"New York",
+  // linkRead: Add by link options for acq, louvre, artic, brit (docs/picked_shows.md, "Venue link rules").
+  { id:"acq", linkRead:{ title:"subtitle", places:["New York","Palm Beach"], dashAfterColon:true, from:/^Press Release$/, minLine:60, skip:/^Gallery Hours:|\bImage Courtesy\b/, skipEntities:true, cleanLink:true }, short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
   // Shopify, like Acquavella's. Chip "Levy", cards "Lévy Gorvy Dayan" (her decision).
   { id:"lgd", short:"Levy", card:"Lévy Gorvy Dayan", name:"Lévy Gorvy Dayan", city:"New York / London",
@@ -32,7 +33,7 @@ const MUSEUMS = [
   // The whole Publications shelf: the Frick files some show books outside "Exhibition catalogues" (her finding).
   { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopCatalogues:"https://shop.frick.org/publications/", shopHome:"https://shop.frick.org/", listUrl:null },
   { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopCatalogues:"https://bookstore.menil.org/collections/menil-publications", shopHome:"https://bookstore.menil.org/", listUrl:null },
-  { id:"artic", short:"Artic", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
+  { id:"artic", linkRead:{ from:/^Share$/, minLine:60, skip:/\u00a9|Press 300ppi|Image CC|Photo courtesy|^(?:an?|the)\s+(?:[\w,\x27-]+\s+){0,5}?(?:painting|poster|drawing|photograph|photomontage|statuette|cover|print)\b,?\s+(?:of|with|reads|that|in|featuring|showing)\b/i }, short:"Artic", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
   // Her addition, after Artic. Shopify: search box and her Books shelf.
   { id:"cincinnati", short:"Cincinnati", name:"Cincinnati Art Museum", city:"Cincinnati", exBase:null, shopSearch:"https://shop.cincinnatiartmuseum.org/search?q=", shopCatalogues:"https://shop.cincinnatiartmuseum.org/collections/books", shopHome:"https://shop.cincinnatiartmuseum.org/", listUrl:null },
   { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:"https://wallacecollectionshop.org/search?q=", shopCatalogues:"https://wallacecollectionshop.org/collections/wallace-collection-publications", shopHome:"https://wallacecollectionshop.org/", listUrl:null },
@@ -40,7 +41,7 @@ const MUSEUMS = [
   // Her addition, after Tate Britain. Shopify: search box and her exhibition-catalogues shelf.
   { id:"ashmolean", short:"Ashmolean", name:"Ashmolean Museum", city:"Oxford", exBase:null, shopSearch:"https://shop.ashmolean.org/search?q=", shopCatalogues:"https://shop.ashmolean.org/collections/exhibition-catalogues", shopHome:"https://shop.ashmolean.org/", listUrl:null },
   { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:"https://www.vam.ac.uk/shop/search?q=", shopCatalogues:"https://www.vam.ac.uk/shop/books/exhibition-books.html", shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
-  { id:"louvre", english:false, short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:"https://boutique.louvre.fr/en/search/products/?q=", shopCatalogues:"https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
+  { id:"louvre", linkRead:{ title:"pieces", minLine:60, skip:/\bclosed\b|remain open|apologis|pleasant visit/i }, english:false, short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:"https://boutique.louvre.fr/en/search/products/?q=", shopCatalogues:"https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
   // The French venues below share the Louvre's shop system: search box and "Exhibition catalogs" shelf.
   // Orsay: the national museums' shared shop; shelf and search are hers (the search covers every museum there).
   { id:"orsay", english:false, short:"Orsay", name:"Mus\u00e9e d'Orsay", city:"Paris", exBase:null, shopSearch:"https://www.boutiquesdemusees.fr/en/search/products/?q=", shopCatalogues:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", shopHome:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", listUrl:null },
@@ -59,7 +60,7 @@ const MUSEUMS = [
   { id:"brera", english:false, short:"Brera", name:"Pinacoteca di Brera", city:"Milan", exBase:null, shopSearch:"https://bottegabrera.org/en/search?q=", shopCatalogues:"https://bottegabrera.org/en/collections/guide-e-cataloghi", shopHome:"https://bottegabrera.org/en/", listUrl:null },
   { id:"capo", english:false, short:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:"https://shop.themorgan.org/search?q=", shopCatalogues:"https://shop.themorgan.org/collections/exhibition-catalogs", shopHome:"https://shop.themorgan.org/", listUrl:null },
-  { id:"brit", short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:"https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", shopCatalogues:"https://www.britishmuseumshoponline.org/books/exhibition-books.html", shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
+  { id:"brit", linkRead:{ from:/^(?:For the catalogue, homewares and gifts from the exhibition|Book tickets$)/ }, short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:"https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", shopCatalogues:"https://www.britishmuseumshoponline.org/books/exhibition-books.html", shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
   { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
   { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
   // The search is hers, query moved last so the title can follow. A Cloudflare check refuses
@@ -736,9 +737,18 @@ function decodeEntities(t){
   });
 }
 
-// One page → {ok, base, between, start, end, raw, site} or {ok:false, why}.
+// A venue's own link options (its MUSEUMS entry's `linkRead`). Cases: docs/picked_shows.md,
+// "Venue link rules".
+function linkOptions(vc){ return (vc&&MU[vc]&&MU[vc].linkRead)||null; }
+function joinTitle(name,sub,dashAfterColon){
+  if(/[:.!?]\s*$/.test(name))return name+" "+sub;
+  return name+(dashAfterColon&&name.includes(":")?" – ":": ")+sub;
+}
+
+// One page → {ok, base, between, start, end, raw, site, link} or {ok:false, why}.
 // Rules and the cases they came from: docs/picked_shows.md, "The general reader".
-function readShowPage(res,url){
+function readShowPage(res,url,vc){
+  const lr=linkOptions(vc);
   const text=String(oneText(res)||"");
   if(text.trim().length<SHELL_CHARS)return{ok:false,why:"The page came back empty."};
   const host=hostOf(url);
@@ -793,21 +803,46 @@ function readShowPage(res,url){
       if(/^\s+[-–—·]\s/.test(rest)||/^\s+exhibitions?\s*$/i.test(rest))base=heading.trim();
     }
   }
-  const between=lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l)));
+  if(lr&&lr.title)base=venueTitle(lines,h,heading,lr,words)||base;
+  const between=lr&&lr.title?[]:lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l)));
   const dateLine=decodeEntities(stripMd(lines[d])).replace(/\s+/g," ").trim();
   const keepDateLine=dateLine.length>LINK_DATE_LINE_MAX;
   const headingText=decodeEntities(heading).replace(/\s+/g," ").trim();
   let raw="";
   const seenLines=new Set();
-  for(let k=h+1;k<lines.length&&raw.length<LINK_RAW_CHARS;k++){
-    const l=decodeEntities(stripMd(lines[k])).replace(/\s+/g," ").trim();
-    if(!l||(l===dateLine&&!keepDateLine)||l===headingText||seenLines.has(l))continue;
+  let from=h+1;
+  if(lr&&lr.from){
+    for(let k=h+1;k<lines.length;k++){ if(lr.from.test(stripMd(lines[k]))){ from=k+1; break; } }
+  }
+  for(let k=from;k<lines.length&&raw.length<LINK_RAW_CHARS;k++){
+    const own=stripMd(lines[k]);
+    if(lr&&((lr.skip&&lr.skip.test(own))||(lr.skipEntities&&/&#?\w+;/.test(own))))continue;
+    const l=decodeEntities(own).replace(/\s+/g," ").trim();
+    if(!l||(l===dateLine&&!keepDateLine)||l===headingText||seenLines.has(l)||(lr&&lr.minLine&&l.length<lr.minLine))continue;
     seenLines.add(l);
     raw+=(raw?"\n":"")+l;
   }
   // The first line under the heading, for a venue whose subtitle sits there.
   const under=lines.slice(h+1).map(stripMd).find(Boolean)||"";
-  return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||host.replace(/^www\./,"")};
+  const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:url;
+  return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||host.replace(/^www\./,""),link};
+}
+
+// A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
+// and "###" lines run together, joined as the scraper joins them. "subtitle": the "##" line
+// under the heading, unless it names one of linkRead.places.
+function venueTitle(lines,h,heading,lr,words){
+  const near=[];
+  for(let k=h+1;k<lines.length&&near.length<40;k++){ if(lines[k].trim())near.push(lines[k]); }
+  if(lr.title==="pieces"){
+    const a=near.findIndex(l=>/^\s*##\s+\S/.test(l));
+    if(a<0||!/^\s*###\s+\S/.test(near[a+1]||""))return"";
+    const name=stripMd(near[a]),sub=stripMd(near[a+1]);
+    return words(name+" "+sub)===words(heading)?joinTitle(name,sub,lr.dashAfterColon):"";
+  }
+  const sub=/^\s*##\s+\S/.test(near[0]||"")?stripMd(near[0]):"";
+  if(!sub||(lr.places||[]).some(p=>foldText(p)===foldText(sub)))return heading.trim();
+  return joinTitle(heading.trim(),sub,lr.dashAfterColon);
 }
 
 // The title is what the catalogue would be called (her decision): a printed subtitle
@@ -3563,10 +3598,10 @@ export default function App(){
           fails.push({url,why:e?"The museum refused the page ("+String(e.http_status_code||e.error_type||"no reason given")+").":"The page came back empty."});
           continue;
         }
-        const page=readShowPage(res,url);
+        let vc=knownVenueFor(url);
+        const page=readShowPage(res,url,vc);
         if(!page.ok){ fails.push({url,why:page.why}); continue; }
         const host=hostOf(url);
-        let vc=knownVenueFor(url);
         if(!vc){
           vc=occVenueId(host);
           met.add(vc);
@@ -3593,7 +3628,7 @@ export default function App(){
         const own=(MU[vc]||{}).subtitleUnderHeading&&page.under&&page.under.length<=120&&!/[.!?]$/.test(page.under)?page.under:"";
         const title=linkTitle(page.base,own||a.subtitle,page.between);
         got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
-          summary:a.summary?composeSummary(a.english,a.summary):"",url,
+          summary:a.summary?composeSummary(a.english,a.summary):"",url:page.link,
           notes:ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")});
       }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
     }

@@ -126,6 +126,43 @@ with no dates still fails (blank dates are not approved).
   *Sarmi* repeated ten), and HTML character codes (named HTML 4 set, numeric)
   become characters (Acquavella "Mir&oacute;"). `decodeEntities`.
 
+## Venue link rules
+
+A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her
+decision: Parallel-only rules live in the app, never the scraper). They only
+tidy what Claude is handed; other venues and occasional ones are untouched.
+Options: `title` (built from the page's headings), `from` (the passage starts after
+the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
+`cleanLink` (stored address loses its query and fragment). Read by `readShowPage(res,url,vc)`,
+`venueTitle`. Junk at the end of a passage is tolerated (her decision).
+
+- **acq** — description = the "Press Release" text (`from`), headings and short
+  caption lines dropped. Title = `# name` + the `##` line under it unless that is a
+  place (New York, Palm Beach), joined as the scraper joins a card (`: `, a dash
+  after a name with a colon). The gallery in brackets is not added: the scraper
+  adds it only when one show ran in both galleries. Stored address is the show
+  page without `?view=…#…`. Proved: *Bonnard*, *James Rosenquist* (Painting Below
+  Zero), *Lucian Freud* (Monumental), *Calder | Miró* and the pasted *From Cézanne
+  to Rosenquist* (no Press Release on that layout: lines with unread HTML codes,
+  the caption blobs, are skipped). Breaks the pattern: *Calder | Miró*'s `##` line
+  is a credit ("In collaboration with the Pace Gallery") and becomes a subtitle
+  (the scraper's card would too, unproven: no scraper row for that show).
+- **louvre** — title = the `##` and `###` lines joined (the `#` heading is those
+  two run together); one `##` alone (*Golden Age of the Portuguese Renaissance*) is
+  the title. Passage: lines of 60+ characters, closure and late-opening notices
+  skipped. Proved: *Naples in Paris*, *Things*, *Pharaoh of the two lands*, *The
+  Golden Age of the Portuguese Renaissance*.
+- **artic** — passage starts after the first "Share" heading, lines of 60+
+  characters, credit lines (©, "Photo courtesy", "Press 300ppi") and picture
+  descriptions that open "A/An/The … painting/poster/cover … of/with/…" skipped.
+  Other picture descriptions stay (*Van Gogh and the Avant-Garde*: two).
+  Proved: *Christina Ramberg*, *Hito Steyerl*, *Van Gogh and the Avant-Garde*,
+  *Revoliutsiia! Demonstratsiia!*.
+- **brit** — passage starts after the shop line ("For the catalogue, homewares and
+  gifts…", archive pages) or "Book tickets" (current pages). Proved:
+  *Michelangelo: the last decades*, *China's hidden century*, *Burma to
+  Myanmar*, *The world of Stonehenge*, and current *Korea*.
+
 ## Fallback — a link the app cannot read
 
 The scraper reads that one page (a small recipe on pages she saves; robots.txt
