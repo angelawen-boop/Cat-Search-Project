@@ -147,6 +147,8 @@ the first line matching), `until` (it ends at the first line matching), `skip` /
   no dates in its text at all.
 - **frick** — a leading "Special Loan:" is the Frick's label, not the show's name
   (`titleDrop`; *Parmigianino's Antea*). Proved live with *Siena* unchanged.
+- **menil** — a leading "Collection Close-Up:" dropped (`titleDrop`, her ask;
+  *Of Heaven and Earth*, *The Graphic Work of Dorothea Tanning*).
 - **acq** — description = the "Press Release" text (`from`), headings and short
   caption lines dropped. Title = `# name` + the `##` line under it unless that is a
   place (New York, Palm Beach), joined as the scraper joins a card (`: `, a dash
