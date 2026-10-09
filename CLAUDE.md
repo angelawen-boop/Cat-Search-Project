@@ -361,7 +361,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 42.3 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 42.4 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -954,7 +954,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **42.3 · cloud 4**. Cloud-only in it:
+live on the test page **42.4 · cloud 4**. Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
@@ -1033,7 +1033,15 @@ archives.
 - **Venue link rules** (`linkRead` on the `MUSEUMS` entry; `docs/picked_shows.md`,
   "Venue link rules"): acq, louvre, artic, brit (four live archive pages each);
   met — dates from its "on view" line anywhere on the page; frick — a leading
-  "Special Loan:" dropped. Each proved live; all on `docs/link_proof_pages.json`.
+  "Special Loan:" dropped; menil — "Collection Close-Up:" dropped; artic — the
+  description stops at a "Related" box (a photos-only page took another show's
+  card). Each proved live; all on `docs/link_proof_pages.json`, which can also
+  require no description (`noDescription`).
+- **NGA (National Gallery of Art) — her deep-archive link venue**: an occasional
+  venue with its own "NGA" chip and card name, and a leading "Exhibition:"
+  dropped (`OWN_CHIP`, `linkReadVenue`; AL-030). Proved live on five archive
+  pages; descriptions carry menu and caption junk around the real text, left
+  alone until her cards show it reaching Claude's descriptions.
   A line opening "In collaboration with" under Acquavella's name is a credit,
   never a subtitle (her decision; *Calder | Miró*).
 - **Old-layout Met pages that print no dates in their text** (*Matisse*, 2012,
