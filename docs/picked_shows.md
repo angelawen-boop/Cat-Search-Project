@@ -163,6 +163,21 @@ the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
   *Michelangelo: the last decades*, *China's hidden century*, *Burma to
   Myanmar*, *The world of Stonehenge*, and current *Korea*.
 
+## Re-checking the proof pages
+
+Her decision: proof is always against the live internet; no page text is kept in
+the repo and no test is built from a saved page. `docs/link_proof_pages.json` lists
+each proof page (`url`, `venue`, and the `title`, `start`, `end` the reader gave
+when signed off; `note` where a field is knowingly imperfect). The title is the
+reader's own, before any subtitle Claude picks. To re-check: the main session
+fetches every listed address live through Parallel (the keyed connector only with
+her yes, if the free tier refuses), saves each reply as `{url,title,full_content}`
+in a folder by script (never retyped), and runs
+`node scraper/link_proof_check.js <folder>` (`--all` also fails on a listed page
+with no reply). It prints each page beside the list and exits 1 on any
+difference. Not in `npm test`: it needs live replies. A difference is either a
+reader change to sign off (update the list) or a site that changed.
+
 ## Fallback — a link the app cannot read
 
 The scraper reads that one page (a small recipe on pages she saves; robots.txt
