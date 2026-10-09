@@ -1030,9 +1030,12 @@ archives.
 - **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry (like
   `subtitleUnderHeading`), never in the scraper — the scraper never runs them
   (her decision). A rule both use (the date reader) stays in `dates.js`.
-- **OPEN — mini recipes for acq, louvre, artic, brit**, written from four live
-  archive pages each (fetched 9 Oct, keyed); proof = those 16 pages plus no
-  change on the 37. Then commit; publishing is her call.
+- **acq, louvre, artic, brit have venue link rules** (`linkRead` on their
+  `MUSEUMS` entries; `docs/picked_shows.md`, "Venue link rules"), proved on four
+  live archive pages each; nothing else moved. Unpublished; on `main` and
+  `claude/ledger-cloud`. **Open, her call:** Acquavella *Calder | Miró* takes the
+  credit "In collaboration with the Pace Gallery" as its subtitle — recommended:
+  such a line is a credit, never a subtitle.
 - **Junk at the end of a link's description is tolerated** (her decision) — act
   only if it starts reaching Claude's compressed descriptions. Not so for the
   scraper: venues swept repeatedly are kept precise.

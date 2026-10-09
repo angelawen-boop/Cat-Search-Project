@@ -144,9 +144,8 @@ the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
   page without `?view=…#…`. Proved: *Bonnard*, *James Rosenquist* (Painting Below
   Zero), *Lucian Freud* (Monumental), *Calder | Miró* and the pasted *From Cézanne
   to Rosenquist* (no Press Release on that layout: lines with unread HTML codes,
-  the caption blobs, are skipped). Breaks the pattern: *Calder | Miró*'s `##` line
-  is a credit ("In collaboration with the Pace Gallery") and becomes a subtitle
-  (the scraper's card would too, unproven: no scraper row for that show).
+  the caption blobs, are skipped). A `##` line opening "In collaboration with" is
+  a credit, never a subtitle (her decision; *Calder | Miró*, `linkRead.credit`).
 - **louvre** — title = the `##` and `###` lines joined (the `#` heading is those
   two run together); one `##` alone (*Golden Age of the Portuguese Renaissance*) is
   the title. Passage: lines of 60+ characters, closure and late-opening notices
