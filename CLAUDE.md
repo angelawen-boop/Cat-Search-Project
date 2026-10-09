@@ -36,9 +36,13 @@ is why they live in one repo, on one branch.
   conservatively.** Every page a sweep fetches counts towards the venue's rate
   limit. Use saved pages first, with no network. Never a blanket re-sweep.
 - **For work not relating to the scraper and which uses Parallel's features —
-  must be tested on pages live-fetched using Parallel.** Do not test on saved
-  pages and do not invent test pages. Parallel's text is not returned to the
-  app and to Claude in the same format as browser-rendered pages.
+  testing is always against the live internet, as it is at that time**: pages
+  fetched live through Parallel. Do not test on saved pages and do not invent
+  test pages. Parallel's text is not returned to the app and to Claude in the
+  same format as browser-rendered pages. A feature keeps a list of where its
+  tests live on the internet — addresses and the signed-off result for each —
+  so any later change is re-checked by fetching that list live. Add by link's:
+  `docs/link_proof_pages.json`, checked by `scraper/link_proof_check.js`.
 - **Raise a past decision by its reason, never its date.** She keeps no log,
   and a date tells her nothing. Say it as: "Because of X, you decided Y. Would
   you like to reconsider? / If this changes your decision, we can do Z." Call
@@ -58,10 +62,9 @@ is why they live in one repo, on one branch.
   session, after time has passed, try the free tier again first. A sub-agent
   cannot spend the key (permissions block it), so the main session does keyed
   fetches; a large reply is saved to a file — extract it by script, never retype.
-- **Builds and fixes she starts go through `/orchestrate`**
-  (`.claude/skills/orchestrate/`): diagnose, brief, a builder on the model and
-  effort she approves, an independent check, a plain report. Third patch →
-  review the feature; every fix gets a whole-path test. Never in a routine.
+- **`/orchestrate` runs only when she types it** (her decision). No session
+  routes work through it, or follows its steps, unless she has typed
+  `/orchestrate` in that session.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
 
 ### Put it in code — her decision

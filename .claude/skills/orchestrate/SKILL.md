@@ -1,6 +1,7 @@
 ---
 name: orchestrate
-description: Build or fix something in Cat Watch's app or scraper the careful way — diagnose, write a brief, hand the build to a builder subagent she approves, check its work, report in plain English with only the real decisions. ONLY when she types /orchestrate or, in a session she started, clearly asks for something to be built, fixed or diagnosed. Never for a question or "talk to me about X", and never from a routine (guide review, monthly sweep, sweep QC).
+description: Build or fix something in Cat Watch's app or scraper the careful way — diagnose, write a brief, hand the build to a builder subagent she approves, check its work, report in plain English with only the real decisions. ONLY when she types /orchestrate — never started by a session on its own, never because a build was asked for, never from a routine.
+disable-model-invocation: true
 ---
 
 # Orchestrate — diagnose, brief, build, check, report
@@ -11,6 +12,8 @@ know. Keep your context light: read what the problem needs, never page all of
 `Cat_Watch.jsx`.
 
 ## 0. Is this a build?
+- This skill runs only because she typed `/orchestrate`. Asked to build without
+  it, a session works as CLAUDE.md says, not by these steps.
 - A question, or "talk to me about X", is a discussion: answer it and stop.
   Nothing is built until she says.
 - Routines never use this skill. They work as their own skills say.
@@ -26,9 +29,9 @@ know. Keep your context light: read what the problem needs, never page all of
   - **Scraper:** saved pages and kept pages, no network. Never a sweep to
     diagnose; a sweep is hers to call.
   - **Anything that uses Parallel** (catalogue lookup, Add by link, the shop
-    finder): pages fetched live through Parallel now — never saved pages, never
-    pages made up for a test. The free "Parallel Search" first; her "Parallel
-    Search Key" only after asking her and saying why.
+    finder): the live internet as it is now — pages fetched live through
+    Parallel, never saved pages, never pages made up for a test. The free
+    "Parallel Search" first; her "Parallel Search Key" as CLAUDE.md §1 says.
 - Name the cause in one sentence, with the function. Say what is proven, what
   is a guess, and what one request would settle it.
 - Check CLAUDE.md §8 and her decisions. Never re-propose a rejected idea, and
@@ -54,8 +57,9 @@ In your scratch area, never committed. It holds:
 - tests:
   - the **whole-path test**: the case that showed the problem, run start to
     finish, failing before the fix and passing after. For Parallel work it is
-    built from the text the live fetch actually returned (saved under
-    `docs/lookup_results/`), never from made-up pages
+    run on a fresh live fetch, and the case's address and signed-off result
+    join the feature's list of live proof pages (CLAUDE.md §1; Add by link:
+    `docs/link_proof_pages.json`)
   - single-function tests, named after her case when they protect her decision
   - each new test shown to fail when its fix is undone
 - the proofs (§5) and what the builder must report back
@@ -84,8 +88,9 @@ the change and run every check in §5.
 - `general-purpose`, `isolation: "worktree"`, the whole brief in its prompt.
 - Its description says in plain words what it builds. One approval per job:
   send fixes back with `SendMessage`, which asks nothing.
-- The builder may use the free "Parallel Search" for live fetches; needing her
-  key, it stops and says why.
+- The builder may use the free "Parallel Search" for live fetches. It cannot
+  spend her key (permissions block it): when keyed fetches are needed, the
+  orchestrator fetches and hands the builder the replies.
 - The builder commits on its own worktree branch. It never pushes, merges,
   publishes, sweeps, uses her key or changes `APP_VERSION`.
 
@@ -99,7 +104,8 @@ Never take the builder's report on trust.
   for each new test's name.
 - Run the whole-path test yourself, and the undo check on at least one fix:
   undo the fix, the test must fail, put it back.
-- Parallel work: the real case passes on a fresh live fetch.
+- Parallel work: the real case passes on a fresh live fetch, and so does the
+  feature's live proof-page list.
 - Comments follow CLAUDE.md's comment rules; no dates on her decisions. Before
   rewording a comment, grep `scraper/fixtures/` for it (test anchors). Never
   edit between the SHARED markers — `node build/sync_shared.js`. A behaviour
