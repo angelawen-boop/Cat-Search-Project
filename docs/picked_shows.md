@@ -141,7 +141,7 @@ the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
 `venueTitle`. Junk at the end of a passage is tolerated (her decision).
 
 - **met** — dates from the "on view at" line (`dateLine`): a podcast transcript
-  can push it past 60 lines (*Manet/Degas*).
+  can push it past 60 lines (*Manet/Degas*). Proved live with *Costume Art* and *Harlem Renaissance* unchanged.
 - **acq** — description = the "Press Release" text (`from`), headings and short
   caption lines dropped. Title = `# name` + the `##` line under it unless that is a
   place (New York, Palm Beach), joined as the scraper joins a card (`: `, a dash
