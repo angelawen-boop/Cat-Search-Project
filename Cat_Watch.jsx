@@ -649,6 +649,9 @@ const OCC_CHIP="occasional";
 const OCC_DOC="venues/occasional";
 const LINKS_DOC="links/pending";
 const isOcc=id=>String(id||"").startsWith("occ-");
+// Occasional venues with a chip of their own and her name for their cards (her decision; NGA).
+const OWN_CHIP={"occ-nga-gov":"NGA"};
+const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 
 // Every address in whatever she pasted — commas, spaces, lines, or mixed in
 // with other words. A repeat is read once (same finished address).
@@ -919,7 +922,7 @@ function occEntry(v){
   const live=v.shop==="found"||(v.shop==="noshelf"&&!!v.shopSearch);
   // `short` is her name for the venue's cards, written into the store by a session;
   // the page title's name stands until then.
-  return{id:v.id,short:v.short||v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
+  return{id:v.id,short:OWN_CHIP[v.id]||v.short||v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
     shopUnknown:!live&&!(v.shop==="none"&&v.confirmed)};
@@ -940,7 +943,7 @@ function registerUnseenOccasional(rows){
   for(const r of rows||[]){
     if(!isOcc(r.museumId)||MU[r.museumId])continue;
     const name=hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4);
-    MU[r.museumId]={id:r.museumId,short:name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
+    MU[r.museumId]={id:r.museumId,short:OWN_CHIP[r.museumId]||name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
     KNOWN_VENUES.add(r.museumId);
   }
 }
@@ -3994,7 +3997,7 @@ export default function App(){
       // is on.
       if(dismissedOnly){ if(r.interested)return false; }
       else if(!r.interested&&!showAll&&!sq)return false;
-      if(venueF.size>0&&!venueF.has(r.museumId)&&!(venueF.has(OCC_CHIP)&&isOcc(r.museumId)))return false;
+      if(venueF.size>0&&!venueF.has(r.museumId)&&!(venueF.has(OCC_CHIP)&&isOcc(r.museumId)&&!ownChip(r.museumId)))return false;
       const t=tierFor(r),ts=TIERS[t]?.time||"current";
       if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
       if(watchedF&&!r.watching)return false;
@@ -4267,6 +4270,7 @@ export default function App(){
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
           {MUSEUMS.map(m=><button key={m.id} onClick={()=>toggleSet(setVenueF,m.id)} style={chip(venueF.has(m.id))}>{m.short}</button>)}
+          {Object.entries(OWN_CHIP).map(([id,short])=><button key={id} onClick={()=>toggleSet(setVenueF,id)} style={chip(venueF.has(id))}>{short}</button>)}
           <button onClick={()=>toggleSet(setVenueF,OCC_CHIP)} style={chip(venueF.has(OCC_CHIP))}>Occasional</button>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>

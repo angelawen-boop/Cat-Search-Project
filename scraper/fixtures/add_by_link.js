@@ -86,6 +86,10 @@ const ledger = { rows: [{ id: 'occ-mauritshuis-nl-thegrandtourdestinationitaly',
   catalogueTitle: null, isbn13: null, publisher: null, publisherUrl: null, publisherResult: null,
   shopUrl: null, shopState: null, shopChange: null, addedAt: '2026-10-01T00:00:00.000Z', editedAt: null }],
   ignored: [], lastRun: null };
+// An NGA show already in her ledger: its own chip, never the Occasional pile (AL-030).
+const NGA_URL = 'https://www.nga.gov/exhibitions/nga-chip-show';
+ledger.rows.push({ ...ledger.rows[0], id: 'occ-nga-gov-ngachipshow', museumId: 'occ-nga-gov', title: 'NGA Chip Show',
+  summary: 'A show at the National Gallery of Art.', exUrl: NGA_URL });
 
 // ── the shops: real searches, and pages made to real shapes ─────────────────
 const SEARCH = name => JSON.parse(fs.readFileSync(path.join(PAGES, 'shop_search', name + '.json'), 'utf8'));
@@ -533,6 +537,17 @@ function runtime() {
   const dia = arts.find(a => a.textContent.includes('Caravaggio'));
   ok(dia && /^Detroit/.test(dia.textContent) && !/^Detroit Institute/.test(dia.textContent), 'AL-011: a venue\'s short name, hers, heads its cards', dia && dia.textContent.slice(0, 40));
   ok((((store.get('venues/occasional') || {}).venues || {})['occ-dia-org'] || {}).short === 'Detroit', 'AL-011a:   and survives its shop being looked for again');
+  ok(!arts.some(a => a.textContent.includes('NGA Chip Show')), 'AL-030: NGA: an NGA show is not in the Occasional pile');
+  await click(chip);
+  const nga = buttons(/^NGA$/)[0];
+  ok(!!nga, 'AL-030a:  NGA has a chip of its own');
+  if (nga) {
+    await click(nga);
+    const shown = [...win.document.querySelectorAll('article')];
+    ok(shown.length === 1 && /^NGA/.test(shown[0].textContent) && shown[0].textContent.includes('NGA Chip Show'),
+      'AL-030b:  pressed, it shows the NGA show alone, its card headed "NGA"', shown.map(a => a.textContent.slice(0, 40)));
+    await click(nga);
+  }
   // ── AL-020: a rejected card's link goes back in the box (her ask, 7 Oct) ─
   {
     await click(importBtn());

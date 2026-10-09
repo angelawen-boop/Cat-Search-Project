@@ -465,7 +465,7 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   to the page itself**. Each link is read
   once by code (title, dates) and the model (prose, always English), then the
   same intake as a sweep; no lookback. New venues file under one "Occasional"
-  chip; their shop sections confirmed on a screen after the review (39.2).
+  chip (NGA has its own, her decision); their shop sections confirmed on a screen after the review (39.2).
   **The date reader and summary rules are the scraper's own**, written into the
   JSX by `node build/sync_shared.js` — never edit between its SHARED markers.
   `docs/picked_shows.md`.

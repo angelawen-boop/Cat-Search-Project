@@ -131,6 +131,11 @@ with no dates still fails (blank dates are not approved).
 
 ## Venue link rules
 
+**NGA has its own chip** (her decision): National Gallery of Art links (`occ-nga-gov`)
+are an occasional venue in every other way, but sit under an "NGA" chip, never
+"Occasional", and their cards say NGA (`OWN_CHIP`; AL-030). Proved live: four archive
+pages, title and dates (on `docs/link_proof_pages.json`).
+
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her
 decision: Parallel-only rules live in the app, never the scraper). They only
 tidy what Claude is handed; other venues and occasional ones are untouched.
