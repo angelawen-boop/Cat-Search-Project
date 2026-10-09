@@ -396,10 +396,18 @@ function findDateRangeCore(raw, opts = {}) {
 
   // A single day-first date with a preposition (Rijksmuseum): "till 21 March 2027"
   // closes, "from 9 October 2026" opens. After the range patterns, so a range still wins.
-  m = s.match(new RegExp(`\\b(till|until|through|to)\\s+(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
-  if (m && plausibleYear(m[4])) {
-    const mo = monthNum(m[3]);
-    if (mo) return { start: '', end: ymd(m[4], mo, m[2]), raw: frag(m) };
+  // "Closes 15 November 2026" and Italian "fino al 24 aprile 2026" close too.
+  m = s.match(new RegExp(`\\b(?:(?:till|until|through|to|closes?|closing|fino\\s+al)\\s+|fino\\s+all['\u2019]\\s*)(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  if (m && plausibleYear(m[3])) {
+    const mo = monthNum(m[2]);
+    if (mo) return { start: '', end: ymd(m[3], mo, m[1]), raw: frag(m) };
+  }
+
+  // The same, month first: "Through January 10, 2027", "Closes November 15, 2026".
+  m = s.match(new RegExp(`\\b(?:till|until|through|thru|closes?|closing)\\s+(${M})\\s+(\\d{1,2}),?\\s*(\\d{4})`, 'i'));
+  if (m && plausibleYear(m[3])) {
+    const mo = monthNum(m[1]);
+    if (mo) return { start: '', end: ymd(m[3], mo, m[2]), raw: frag(m) };
   }
 
   // "since", and a day written "11." the German way (KHM). Only WITH a year: the
@@ -688,7 +696,10 @@ function splitPageTitle(t,host){
   const m=s.match(/^(.*\S)\s+[-–—]\s+([^-–—]+)$/);
   if(m){
     const h=foldText(host);
-    if(foldText(m[2]).split(/[^a-z0-9]+/).some(w=>w.length>=4&&h.includes(w)))return{show:m[1].trim(),site:m[2].trim()};
+    // The tail may be the site's own address ("… - KHM.at"): picked-shows R1.
+    const flat=x=>foldText(x).replace(/[^a-z0-9]/g,"");
+    const bare=h.replace(/^www\./,"");
+    if(foldText(m[2]).split(/[^a-z0-9]+/).some(w=>w.length>=4&&h.includes(w))||flat(m[2])===flat(bare)||flat(m[2])===flat(bare.split(".")[0]))return{show:m[1].trim(),site:m[2].trim()};
   }
   return{show:s,site:""};
 }
@@ -697,40 +708,101 @@ function splitPageTitle(t,host){
 // show's heading, skipping the date line: some venues print the dates at the foot of
 // the page (Jacquemart-André).
 const LINK_RAW_CHARS=2000;
-const LINK_DATE_LINES=40;
+const LINK_DATE_LINES=60;
+// A date line longer than this is a paragraph that carries the dates; it stays in the passage.
+const LINK_DATE_LINE_MAX=150;
+
+// HTML character codes in page text, named (the HTML 4 set) and numeric: "&ecirc;" → "ê".
+const HTML_ENTITIES=(()=>{
+  const e={quot:'"',amp:"&",lt:"<",gt:">",apos:"'",OElig:"\u0152",oelig:"\u0153",Scaron:"\u0160",scaron:"\u0161",Yuml:"\u0178",
+    circ:"\u02c6",tilde:"\u02dc",ensp:" ",emsp:" ",thinsp:" ",zwnj:"",zwj:"",lrm:"",rlm:"",ndash:"\u2013",mdash:"\u2014",
+    lsquo:"\u2018",rsquo:"\u2019",sbquo:"\u201a",ldquo:"\u201c",rdquo:"\u201d",bdquo:"\u201e",dagger:"\u2020",Dagger:"\u2021",
+    bull:"\u2022",hellip:"\u2026",permil:"\u2030",prime:"\u2032",Prime:"\u2033",lsaquo:"\u2039",rsaquo:"\u203a",oline:"\u203e",
+    frasl:"\u2044",euro:"\u20ac",trade:"\u2122",larr:"\u2190",uarr:"\u2191",rarr:"\u2192",darr:"\u2193",harr:"\u2194",
+    minus:"\u2212",lowast:"\u2217",ne:"\u2260",le:"\u2264",ge:"\u2265",infin:"\u221e"};
+  ("nbsp iexcl cent pound curren yen brvbar sect uml copy ordf laquo not shy reg macr deg plusmn sup2 sup3 acute micro para middot cedil sup1 ordm raquo frac14 frac12 frac34 iquest "
+   +"Agrave Aacute Acirc Atilde Auml Aring AElig Ccedil Egrave Eacute Ecirc Euml Igrave Iacute Icirc Iuml ETH Ntilde Ograve Oacute Ocirc Otilde Ouml times Oslash Ugrave Uacute Ucirc Uuml Yacute THORN szlig "
+   +"agrave aacute acirc atilde auml aring aelig ccedil egrave eacute ecirc euml igrave iacute icirc iuml eth ntilde ograve oacute ocirc otilde ouml divide oslash ugrave uacute ucirc uuml yacute thorn yuml")
+    .split(" ").forEach((n,i)=>{ e[n]=String.fromCharCode(160+i); });
+  e.nbsp=" "; e.shy="";
+  return e;
+})();
+function decodeEntities(t){
+  const cp=n=>{ try{ return n>0&&n<=0x10ffff?String.fromCodePoint(n):null; }catch{ return null; } };
+  return String(t||"").replace(/&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6})|([A-Za-z][A-Za-z0-9]{1,8}));/g,(x,d,h,n)=>{
+    if(n)return Object.prototype.hasOwnProperty.call(HTML_ENTITIES,n)?HTML_ENTITIES[n]:x;
+    const c=cp(d?+d:parseInt(h,16));
+    return c===null?x:c;
+  });
+}
 
 // One page → {ok, base, between, start, end, raw, site} or {ok:false, why}.
+// Rules and the cases they came from: docs/picked_shows.md, "The general reader".
 function readShowPage(res,url){
   const text=String(oneText(res)||"");
   if(text.trim().length<SHELL_CHARS)return{ok:false,why:"The page came back empty."};
   const host=hostOf(url);
   const{show,site}=splitPageTitle(res&&res.title,host);
   const lines=text.split("\n");
-  // The show's heading: the page's first top-level heading, else the line
-  // carrying the page title's words.
-  let h=lines.findIndex(l=>/^\s*#\s+\S/.test(l));
-  if(h<0&&show)h=lines.findIndex(l=>foldText(stripMd(l)).includes(foldText(show)));
-  if(h<0)return{ok:false,why:"Couldn’t find the show’s title on the page."};
-  const heading=stripMd(lines[h]);
-  let d=-1,range=null;
-  for(let k=h+1,seen=0;k<lines.length&&seen<LINK_DATE_LINES;k++){
-    const l=stripMd(lines[k]); if(!l)continue; seen++;
-    const r=DATES.findDateRange(l,{looseSingles:false});
-    if(r.start||r.end){d=k;range=r;break;}
+  // Candidate title lines, in order; the heading is the first with dates under it.
+  const words=l=>foldText(stripMd(l)).replace(/[^a-z0-9]+/g," ").trim();
+  const cands=[];
+  const add=i=>{ if(i>=0&&!cands.includes(i))cands.push(i); };
+  add(lines.findIndex(l=>/^\s*#\s+\S/.test(l)));
+  if(show){
+    const fs=foldText(show);
+    add(lines.findIndex(l=>/^\s*#{2,3}\s+\S/.test(l)&&foldText(stripMd(l)).includes(fs)));
+    add(lines.findIndex(l=>foldText(stripMd(l)).includes(fs)));
+    const piece=" "+words(show)+" ";
+    add(lines.findIndex(l=>{ const w=words(l); return w.split(" ").length>=2&&w.length<=80&&piece.includes(" "+w+" "); }));
   }
-  if(d<0)return{ok:false,why:"No dates found under the show’s title."};
+  if(!cands.length)return{ok:false,why:"Couldn’t find the show’s title on the page."};
+  const datesUnder=h=>{
+    for(let k=h+1,seen=0;k<lines.length&&seen<LINK_DATE_LINES;k++){
+      const l=stripMd(lines[k]); if(!l)continue; seen++;
+      const r=DATES.findDateRange(l,{looseSingles:false});
+      if(r.start||r.end)return{d:k,range:r};
+    }
+    return null;
+  };
+  let h=cands[0],found=null;
+  for(const i of cands){ found=datesUnder(i); if(found){ h=i; break; } }
+  if(!found)return{ok:false,why:"No dates found under the show’s title."};
+  const heading=stripMd(lines[h]);
+  const d=found.d;
+  let range=found.range;
+  // One side only: a full range further down that shares that date completes it. A range
+  // ending on another day never does.
+  if(!range.start||!range.end){
+    for(let k=d+1;k<lines.length;k++){
+      const r=DATES.findDateRange(stripMd(lines[k]),{looseSingles:false});
+      if(r.start&&r.end&&((range.end&&r.end===range.end)||(range.start&&r.start===range.start))){ range={...range,start:r.start,end:r.end}; break; }
+    }
+  }
   // The heading is the name when the page title cuts it at a bar inside the name
   // ("Art in Dialogue: Duccio | Caro") or wraps it in site words ("Exhibition Giovanni
   // Bellini in Paris"). A title that runs on past the heading keeps its subtitle
   // ("Hammershøi. The Eye that Listens"). AL-015.
   const wrapped=show&&heading&&foldText(show).indexOf(foldText(heading))>0;
-  const base=wrapped?heading:show&&heading.length>show.length&&heading.length<=200&&foldText(heading).startsWith(foldText(show))?heading:(show||heading);
+  let base=wrapped?heading:show&&heading.length>show.length&&heading.length<=200&&foldText(heading).startsWith(foldText(show))?heading:(show||heading);
+  // A page title that is the heading plus a dash-led tail or the word "Exhibition" gives way to the heading.
+  if(show&&heading&&base===show){
+    const fh=foldText(heading).replace(/\s+/g," ").trim();
+    if(fh.length>=3&&foldText(show).startsWith(fh)){
+      const rest=show.slice(heading.trim().length);
+      if(/^\s+[-–—·]\s/.test(rest)||/^\s+exhibitions?\s*$/i.test(rest))base=heading.trim();
+    }
+  }
   const between=lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l)));
-  const dateLine=stripMd(lines[d]);
+  const dateLine=decodeEntities(stripMd(lines[d])).replace(/\s+/g," ").trim();
+  const keepDateLine=dateLine.length>LINK_DATE_LINE_MAX;
+  const headingText=decodeEntities(heading).replace(/\s+/g," ").trim();
   let raw="";
+  const seenLines=new Set();
   for(let k=h+1;k<lines.length&&raw.length<LINK_RAW_CHARS;k++){
-    const l=stripMd(lines[k]);
-    if(!l||l===dateLine||l===heading)continue;
+    const l=decodeEntities(stripMd(lines[k])).replace(/\s+/g," ").trim();
+    if(!l||(l===dateLine&&!keepDateLine)||l===headingText||seenLines.has(l))continue;
+    seenLines.add(l);
     raw+=(raw?"\n":"")+l;
   }
   // The first line under the heading, for a venue whose subtitle sits there.

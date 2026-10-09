@@ -2021,3 +2021,25 @@ test('DS-001: "since" with a full date is an opening date, German dotted day too
   // With no year, "since" names a past date the reader cannot place: nothing is guessed.
   assert.strictEqual(findDateRange('Since November 11').start, '');
 });
+
+test('DS-002: a closing date alone, month first or after "Closes" / "fino al" (Add by link; docs/picked_shows.md)', () => {
+  const { findDateRange } = require('./dates.js');
+  const want = {
+    'Through January 10, 2027':            '2027-01-10',
+    'Through Jan 2, 2027':                 '2027-01-02',
+    'Until January 17, 2027':              '2027-01-17',
+    'Closes Sunday, 15 November 2026':     '2026-11-15',
+    'Closes 15 November 2026':             '2026-11-15',
+    'fino al 24 aprile 2026':              '2026-04-24',
+    "fino all'8 maggio 2026":              '2026-05-08',
+  };
+  for (const [text, end] of Object.entries(want)) {
+    const r = findDateRange(text, { looseSingles: false });
+    assert.deepStrictEqual([r.start, r.end], ['', end], text);
+  }
+  // A range still wins over the closing-only rules.
+  const r = findDateRange('Through January 10, 2027. 5 March 2026 to 6 April 2026', { looseSingles: false });
+  assert.deepStrictEqual([r.start, r.end], ['2026-03-05', '2026-04-06']);
+  // No year, no date.
+  assert.strictEqual(findDateRange('Closes 15 November', { looseSingles: false }).end, '');
+});

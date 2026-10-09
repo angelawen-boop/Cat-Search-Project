@@ -88,6 +88,44 @@ show's own section. A search is kept only if it finds a book the finder saw
 10 pages, 6 venues: all full text; dates rule right 10/10. No JSON-LD comes
 through Parallel. Pages are the fixtures (`docs/link_pages/`).
 
+## The general reader — eight rules
+
+From a read of 67 pages at 28 venues. Code: `readShowPage`, `splitPageTitle`,
+`DATES.findDateRange`. Proved on fresh Parallel fetches, not fixtures (her rule for
+Parallel work); only the date phrases are unit-tested (`date.test.js`, DS-002). A page
+with no dates still fails (blank dates are not approved).
+
+- **R1 Site address tail** — a dash tail that is the site's own address is the
+  site, not the title (KHM "Cleopatra & Rome – Crime Scene Ephesus - KHM.at").
+  `splitPageTitle`.
+- **R2 Heading over tab title** — a tab title that is the heading plus a
+  dash-led tail, or plus "Exhibition(s)", gives way to the heading (Acquavella
+  "- New York - Exhibitions"; V&A "- Exhibition at V&A South Kensington · V&A";
+  MAD "- du 10 April au …"; British Museum "Korea exhibition"). `readShowPage`.
+- **R3 Closing-only dates** — "Through January 10, 2027", "Until …", "Closes
+  Sunday, 15 November 2026", "fino al 24 aprile 2026" (Met *Costume Art*, V&A
+  *Schiaparelli*, MoMA *Architects of Liberation*). In the shared `dates.js`,
+  after the ranges so a range still wins; the scraper reads them too.
+  `date.test.js` DS-002.
+- **R9 One side completed** — a one-sided first date takes a full range
+  further down the page that shares that date on the same side (Tate Modern
+  *Ana Mendieta* "Until 17 January 2027"; Rijksmuseum *Frans Hals*). Never a
+  range ending on another day: National Gallery *Renoir and Love* "Until 31
+  January 2027" must not take "23 October 2026 to 15 January 2027".
+- **R5 Title line** — candidates in order: first `# `; first `##`/`###` holding
+  the show's title; first line holding it; first short line (2+ words, 80
+  characters at most) that is a whole-word piece of it. The heading is the first
+  with dates under it (Cincinnati *Rexroth*, whose `# ` is another show; Orsay
+  *Cassatt*, no `# `).
+- **R6 Sixty lines** — dates are looked for in 60 non-empty lines under the
+  title, not 40 (`LINK_DATE_LINES`; Met *Harlem Renaissance*).
+- **R4 Long date line stays** — a date line over 150 characters is a paragraph
+  that carries the dates; it stays in the passage (Borghese *Metamorphoses*,
+  Uffizi *Sarmi*).
+- **R7 Clean passage** — a line repeated word for word is kept once (Uffizi
+  *Sarmi* repeated ten), and HTML character codes (named HTML 4 set, numeric)
+  become characters (Acquavella "Mir&oacute;"). `decodeEntities`.
+
 ## Fallback — a link the app cannot read
 
 The scraper reads that one page (a small recipe on pages she saves; robots.txt

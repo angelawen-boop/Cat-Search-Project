@@ -96,7 +96,8 @@ description.
   answer and write nothing.
 - **Process is enforced by a hook:** `.claude/hooks/confirm-subagent.sh` asks
   before any subagent spawns, matching both `Task` and `Agent`, and rewrites the
-  approval text to lead with the MODEL ("SESSION DEFAULT" when none was set).
+  approval text to lead with the MODEL and its effort ("SESSION DEFAULT" when
+  none was set).
 
 ## Rejected — do not re-propose
 
