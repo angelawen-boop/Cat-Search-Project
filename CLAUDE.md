@@ -32,10 +32,13 @@ is why they live in one repo, on one branch.
 - **Her report and output first, the guide after.** Send the report and
   anything for her review, then update this guide in a background job, so she
   never waits on guide updates.
-- **Test conservatively.** Every page fetched from a venue counts toward its
-  rate limit, and hitting a limit stops work. Before touching the network, work
-  out the fewest venues, and the fewest pages at each, that answer the question.
-  Saved pages and fixtures first. Never a blanket re-sweep because it is quick.
+- **Applying to the scraper and scraper-related work only — test
+  conservatively.** Every page a sweep fetches counts towards the venue's rate
+  limit. Use saved pages first, with no network. Never a blanket re-sweep.
+- **For work not relating to the scraper and which uses Parallel's features —
+  must be tested on pages live-fetched using Parallel.** Do not test on saved
+  pages and do not invent test pages. Parallel's text is not returned to the
+  app and to Claude in the same format as browser-rendered pages.
 - **Raise a past decision by its reason, never its date.** She keeps no log,
   and a date tells her nothing. Say it as: "Because of X, you decided Y. Would
   you like to reconsider? / If this changes your decision, we can do Z." Call
