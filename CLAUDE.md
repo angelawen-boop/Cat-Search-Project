@@ -54,6 +54,10 @@ is why they live in one repo, on one branch.
 - **Parallel:** a session's own calls use the free "Parallel Search". Her keyed
   "Parallel Search Key" only with a reason (e.g. ten pages at once, which would
   hit the free limit), and only after asking and explaining clearly.
+- **Builds and fixes she starts go through `/orchestrate`**
+  (`.claude/skills/orchestrate/`): diagnose, brief, a builder on the model and
+  effort she approves, an independent check, a plain report. Third patch →
+  review the feature; every fix gets a whole-path test. Never in a routine.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
 
 ### Put it in code — her decision
