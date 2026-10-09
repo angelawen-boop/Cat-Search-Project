@@ -42,7 +42,7 @@ function loadReader() {
   const hook = () => {};
   const React = { createElement() {}, Fragment: null, useState: () => [], useEffect: hook, useMemo: f => f(), useCallback: f => f, useRef: () => ({}) };
   return new Function('React', 'window', 'document', 'localStorage',
-    fs.readFileSync(built, 'utf8') + '\n;return {readShowPage,knownVenueFor,occVenueId,hostOf};')(React, {}, {}, {});
+    fs.readFileSync(built, 'utf8') + '\n;return {readShowPage,knownVenueFor,linkReadVenue,occVenueId,hostOf};')(React, {}, {}, {});
 }
 
 function main() {
@@ -63,7 +63,7 @@ function main() {
     if (!res || !res.url || !(res.full_content || res.content)) { console.log('DIFF  ' + f + ': no url or no page text'); diffs++; continue; }
     const want = byUrl.get(res.url);
     const venue = reader.knownVenueFor(res.url) || reader.occVenueId(reader.hostOf(res.url));
-    const got = reader.readShowPage(res, res.url, reader.knownVenueFor(res.url));
+    const got = reader.readShowPage(res, res.url, reader.linkReadVenue(res.url));
     const row = got.ok ? { title: got.base, start: got.start, end: got.end, raw: got.raw } : { title: '', start: '', end: '', why: got.why };
     checked++;
     if (!want) { console.log('DIFF  ' + f + ': ' + res.url + ' is not on the list\n        got   ' + JSON.stringify({ venue, title: row.title, start: row.start, end: row.end })); diffs++; continue; }

@@ -649,8 +649,9 @@ const OCC_CHIP="occasional";
 const OCC_DOC="venues/occasional";
 const LINKS_DOC="links/pending";
 const isOcc=id=>String(id||"").startsWith("occ-");
-// Occasional venues with a chip of their own and her name for their cards (her decision; NGA).
-const OWN_CHIP={"occ-nga-gov":"NGA"};
+// Occasional venues with a chip of their own and her name for their cards (her decision; NGA),
+// plus any link options of their own (linkRead, as on a MUSEUMS entry).
+const OWN_CHIP={"occ-nga-gov":{short:"NGA",linkRead:{titleDrop:/^Exhibition:\s*/i}}};
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 
 // Every address in whatever she pasted — commas, spaces, lines, or mixed in
@@ -744,7 +745,7 @@ function decodeEntities(t){
 
 // A venue's own link options (its MUSEUMS entry's `linkRead`). Cases: docs/picked_shows.md,
 // "Venue link rules".
-function linkOptions(vc){ return (vc&&MU[vc]&&MU[vc].linkRead)||null; }
+function linkOptions(vc){ return (vc&&MU[vc]&&MU[vc].linkRead)||(vc&&OWN_CHIP[vc]&&OWN_CHIP[vc].linkRead)||null; }
 function joinTitle(name,sub,dashAfterColon){
   if(/[:.!?]\s*$/.test(name))return name+" "+sub;
   return name+(dashAfterColon&&name.includes(":")?" – ":": ")+sub;
@@ -900,6 +901,12 @@ function occVenueId(host){
   return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
 
+// The venue whose link options read a page: a swept venue, or an occasional one with its own chip.
+function linkReadVenue(url){
+  const occ=occVenueId(hostOf(url));
+  return knownVenueFor(url)||(ownChip(occ)?occ:null);
+}
+
 // A link to one of the swept venues files under it, matched by site from the scraper's
 // recipes (VENUE_SITES, written by sync_shared); the Tates are told apart by path.
 function knownVenueFor(url){
@@ -922,7 +929,7 @@ function occEntry(v){
   const live=v.shop==="found"||(v.shop==="noshelf"&&!!v.shopSearch);
   // `short` is her name for the venue's cards, written into the store by a session;
   // the page title's name stands until then.
-  return{id:v.id,short:OWN_CHIP[v.id]||v.short||v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
+  return{id:v.id,short:(OWN_CHIP[v.id]||{}).short||v.short||v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
     shopUnknown:!live&&!(v.shop==="none"&&v.confirmed)};
@@ -943,7 +950,7 @@ function registerUnseenOccasional(rows){
   for(const r of rows||[]){
     if(!isOcc(r.museumId)||MU[r.museumId])continue;
     const name=hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4);
-    MU[r.museumId]={id:r.museumId,short:OWN_CHIP[r.museumId]||name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
+    MU[r.museumId]={id:r.museumId,short:(OWN_CHIP[r.museumId]||{}).short||name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
     KNOWN_VENUES.add(r.museumId);
   }
 }
@@ -3617,7 +3624,7 @@ export default function App(){
           continue;
         }
         let vc=knownVenueFor(url);
-        const page=readShowPage(res,url,vc);
+        const page=readShowPage(res,url,linkReadVenue(url));
         if(!page.ok){ fails.push({url,why:page.why}); continue; }
         const host=hostOf(url);
         if(!vc){
@@ -4270,7 +4277,7 @@ export default function App(){
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
           {MUSEUMS.map(m=><button key={m.id} onClick={()=>toggleSet(setVenueF,m.id)} style={chip(venueF.has(m.id))}>{m.short}</button>)}
-          {Object.entries(OWN_CHIP).map(([id,short])=><button key={id} onClick={()=>toggleSet(setVenueF,id)} style={chip(venueF.has(id))}>{short}</button>)}
+          {Object.entries(OWN_CHIP).map(([id,v])=><button key={id} onClick={()=>toggleSet(setVenueF,id)} style={chip(venueF.has(id))}>{v.short}</button>)}
           <button onClick={()=>toggleSet(setVenueF,OCC_CHIP)} style={chip(venueF.has(OCC_CHIP))}>Occasional</button>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
