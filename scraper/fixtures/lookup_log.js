@@ -6,7 +6,9 @@
  * exact answer (LL-001, LL-002); the card before and after (LL-003); a large record
  * splits under the store's cap and reads back whole (LL-004); only the newest 50 are
  * kept, pieces included (LL-005); no store, or a failing one, never breaks a lookup
- * (LL-006, LL-007); calls outside a lookup are not recorded (LL-008).
+ * (LL-006, LL-007); calls outside a lookup are not recorded (LL-008); Add by link
+ * saves one record per link, with what code read off the page and the title made,
+ * and one for a link that failed (LL-009, run on the page itself).
  *
  *   node scraper/fixtures/lookup_log.js
  */
@@ -180,6 +182,69 @@ const script = {
     await api3.saveLookupTape(t3, { ok: true, row, detail: '' });
     await api3.searchWeb('after', ['after']);
     eq(t3.calls.length, 0, 'LL-008: a call after the lookup ended is not recorded');
+  }
+
+  // ── LL-009: Add by link — one record per link, read on the page itself ──────
+  {
+    const { JSDOM } = require('jsdom');
+    const { createRoot } = require('react-dom/client');
+    const { act } = require('react');
+    const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'https://claude.ai/' });
+    const win = dom.window;
+    const store = fakeDb();
+    const GOOD = 'https://www.nationalgallery.org.uk/exhibitions/past/venice-canaletto-and-his-rivals';
+    const BAD = 'https://www.nationalgallery.org.uk/exhibitions/past/refused-show';
+    const body = '\n\nPast exhibition\n\n20 October 2010 - 16 January 2011\n\nAdmission charged\n\n'
+      + 'Canaletto and his rivals painted Venice for the visitors of the Grand Tour. '.repeat(6);
+    win.claude = { use: async name => {
+      if (name === 'mcp') return { callTool: async (server, tool, args) => {
+        if (tool === 'web_fetch' && args.urls[0] === GOOD) return { payload: { results: [{ url: GOOD,
+          title: 'Venice: Canaletto and His Rivals | Past exhibitions | National Gallery', full_content: '# Venice: Canaletto and His Rivals' + body }], errors: [] } };
+        return { payload: { results: [], errors: [{ url: args.urls[0], http_status_code: 403 }] } };
+      } };
+      if (name === 'sample') return { json: async () => ({ summary: 'Venice painted for Grand Tour visitors.', english: true, englishSpeaking: true, subtitle: null }) };
+      if (name === 'db') return store.api;
+      return null;
+    } };
+    const globals = ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame', 'cancelAnimationFrame',
+      'MutationObserver', 'Node', 'Element', 'HTMLElement', 'Event', 'CustomEvent', 'getComputedStyle'];
+    const saved = {};
+    for (const k of globals) { saved[k] = global[k]; try { global[k] = win[k]; } catch {} }
+    global.IS_REACT_ACT_ENVIRONMENT = true;
+    const realError = console.error; console.error = () => {};
+    let root;
+    try {
+      const App = new Function('React', 'window', 'document', 'localStorage', code + '\n;return App;')(React, win, win.document, win.localStorage);
+      root = createRoot(win.document.getElementById('root'));
+      await act(async () => { root.render(React.createElement(App)); });
+      const button = t => [...win.document.querySelectorAll('button')].find(b => b.textContent.trim() === t);
+      await act(async () => { button('Import Refresh').click(); });
+      await act(async () => { button('Links').click(); });
+      const box = win.document.querySelector('textarea');
+      // Typed through the box's own handler: jsdom's input events do not reach React here.
+      const props = box[Object.keys(box).find(k => k.startsWith('__reactProps'))];
+      await act(async () => { props.onChange({ target: { value: GOOD + '\n' + BAD } }); });
+      await act(async () => { button('Read').click(); });
+      for (let i = 0; i < 50 && [...store.docs.values()].filter(v => v.complete).length < 2; i++)
+        await act(async () => { await new Promise(r => setTimeout(r, 20)); });
+      const dir = saveToDir(store.docs);
+      const recs = reader.listRecords(dir).filter(r => r.action === 'Add by link');
+      eq(recs.length, 2, 'LL-009: one record per link read');
+      const all = recs.map(r => reader.readRecord(dir, r.id).record);
+      const good = all.find(r => r.link && r.link.url === GOOD), bad = all.find(r => r.link && r.link.url === BAD);
+      ok(good && good.ok && good.link.title === 'Venice: Canaletto and His Rivals' && good.link.page && good.link.page.base
+        && good.link.answer && good.calls.some(c => c.kind === 'open') && good.calls.some(c => c.kind === 'claude'),
+        'LL-009: the read link — the page as code read it, Claude’s answer, the title made, every call', good && JSON.stringify(good.link.title));
+      ok(bad && !bad.ok && /refused/.test(bad.said || ''), 'LL-009: the refused link — recorded, with why', bad && bad.said);
+      ok(/Link reading/.test(reader.describe(good)), 'LL-009: the reader writes the link reading out');
+    } catch (e) {
+      fail('LL-009: the page threw — ' + (e && e.stack));
+    } finally {
+      try { if (root) await act(async () => root.unmount()); } catch {}
+      console.error = realError;
+      for (const k of globals) { try { if (saved[k] === undefined) delete global[k]; else global[k] = saved[k]; } catch {} }
+      win.close();
+    }
   }
 
   console.log(failures ? '\n' + failures + ' FAILED' : '\nAll lookup-log checks passed.');

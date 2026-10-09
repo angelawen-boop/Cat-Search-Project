@@ -53,12 +53,13 @@ function resultText(r, i) {
 
 function describe(rec) {
   const out = [];
-  out.push(rec.action + ' — “' + rec.card.title + '” at ' + rec.card.venue + ' (' + rec.card.museumId + ')');
+  out.push(rec.action + ' — “' + rec.card.title + '”' + (rec.card.museumId ? ' at ' + (rec.card.venue || rec.card.museumId) + ' (' + rec.card.museumId + ')' : ''));
   out.push('Started ' + rec.at + ', app ' + rec.version + ', ' + (rec.ms / 1000).toFixed(1) + 's, '
     + rec.calls.length + ' calls. Finished: ' + (rec.ok ? 'yes' : 'no') + '.');
   if (rec.said) out.push('Card said: ' + rec.said);
   if (rec.trouble) out.push('Trouble: ' + rec.trouble);
-  out.push('', block('Card before', rec.before), block('Card after', rec.after), block('Panel', rec.panel || '(none)'));
+  if (rec.link) out.push('', block('Link reading — what code read off the page, Claude’s answer, the title made', rec.link));
+  else out.push('', block('Card before', rec.before), block('Card after', rec.after), block('Panel', rec.panel || '(none)'));
   for (const c of rec.calls) {
     out.push('━━ ' + c.n + '. ' + c.kind.toUpperCase() + ' at +' + (c.at / 1000).toFixed(1) + 's, took '
       + (c.ms / 1000).toFixed(1) + 's ━━');

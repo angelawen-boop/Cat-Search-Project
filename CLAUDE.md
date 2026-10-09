@@ -1152,7 +1152,7 @@ Not good → more work on the routine or the recipes.
   *Hubert Robert, 1733–1808* (NGA) said no catalogue, though a live re-run of its
   search returns NGA's page ("Catalog: Hubert Robert…") and press release ("in
   association with Lund Humphries"). Cause unproven: read its record after a
-  Search again. Not logged yet: Add by link reads.
+  Search again. Add by link's reading of each link is logged too.
 
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library

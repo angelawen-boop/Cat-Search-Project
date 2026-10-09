@@ -1726,11 +1726,12 @@ async function readResultsCall(prompt){
 }
 
 // ── THE LOOKUP LOG — every catalogue lookup, recorded whole (docs/app.md §1) ──
-// Find catalogue, Search again and Re-check each save one record to the page's store:
-// every call's input and full answer, Claude's answers, and the card before and after.
+// Find catalogue, Search again, Re-check and each link an Add by link reads save one
+// record to the page's store: every call's input and full answer, Claude's answers,
+// the card before and after, and for a link what code read off its page.
 // Nothing shows on the page; Claude reads it with build/lookup_log.js. The newest 50
 // are kept. A record is gzipped and split under the store's size cap; it is marked
-// complete only after every piece is written. LL-001 to LL-008.
+// complete only after every piece is written. LL-001 to LL-009.
 const LOOKUP_LOG="lookups", LOOKUP_KEEP=50, LOOKUP_PIECE=180000;
 const CARD_FIELDS=["hasCatalogue","catalogueTitle","isbn13","publisher","publisherUrl","publisherResult",
   "shopUrl","shopState","shopChange","englishCheck","originalEdition"];
@@ -1765,7 +1766,7 @@ async function saveLookupTape(tape,out){
         startDate:row.startDate||null,endDate:row.endDate||null,exUrl:row.exUrl||null},
       before:cardFields(row),after:out&&out.row?cardFields(out.row):null,
       ok:!!(out&&out.ok),said:(out&&out.said)||null,trouble:(out&&out.trouble)||null,
-      panel:(out&&out.detail)||null,calls:tape.calls});
+      panel:(out&&out.detail)||null,link:tape.link||null,calls:tape.calls});
     const z=await gzipBase64(body);
     const enc=z?"gzip-base64":"json", text=z||body;
     const pieces=[];
@@ -3693,6 +3694,10 @@ export default function App(){
     for(let n=0;n<urls.length;n++){
       const url=urls[n];
       setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026"});
+      // Each link's reading is one record in the lookup log: what code read off the
+      // page, Claude's answer and the title made from them.
+      const tape=tapeStart("Add by link",{title:url,exUrl:url}), seen={url};
+      const failsBefore=fails.length;
       try{
         const f=await fetchPage(url,"The exhibition's title, dates and description.",null,{full:true});
         if(!f.ok){ fails.push({url,why:f.detail}); continue; }
@@ -3704,6 +3709,7 @@ export default function App(){
         }
         let vc=knownVenueFor(url);
         const page=readShowPage(res,url,linkReadVenue(url));
+        seen.venue=vc||null; seen.page=page;
         if(!page.ok){ fails.push({url,why:page.why}); continue; }
         const host=hostOf(url);
         if(!vc){
@@ -3731,10 +3737,17 @@ export default function App(){
         // ending like a sentence is the text, not a subtitle.
         const own=(MU[vc]||{}).subtitleUnderHeading&&page.under&&page.under.length<=120&&!/[.!?]$/.test(page.under)?page.under:"";
         const title=linkTitle(page.base,own||a.subtitle,page.between);
+        Object.assign(seen,{venue:vc,answer:a,subtitleUnderHeading:own||null,title});
+        tape.row={title,museumId:vc,exUrl:url};
         got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
           summary:a.summary?composeSummary(a.english,a.summary):"",url:page.link,
           notes:ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")});
       }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
+      finally{
+        const failed=fails.length>failsBefore;
+        tape.link={...seen,row:failed?null:got[got.length-1]};
+        saveLookupTape(tape,{ok:!failed,said:failed?fails[fails.length-1].why:null});
+      }
     }
     if(venuesChanged){ registerOccasional(venues); setOccVenues(venues); }   // held, not stored: see occSaved
     setProg({done:0,total:0,label:""}); setBusy(false); setReadVenues([...met]);

@@ -51,14 +51,16 @@ never opened twice; the diagnostic counts calls and times each step. Waits in a
 row, old → new: self-published 4 → 3; outside publisher 9 → 7; foreign, no
 English edition 13 → 7; edition swap 18 → 6–7; worst ~30 → 17.
 
-**The lookup log** (her decision): Find catalogue, Search again and Re-check each
-save one record to the page's store (`lookups`, newest 50), so a miss is diagnosed
-without her pasting the panel. It holds every call's input and full answer, what
-Claude was sent and its exact answer, and the card before and after; gzipped, split
+**The lookup log** (her decision): Find catalogue, Search again, Re-check and each
+link Add by link reads save one record to the page's store (`lookups`, newest 50),
+so a miss or an untidy title is diagnosed without her pasting the panel. It holds
+every call's input and full answer, what Claude was sent and its exact answer, the
+card before and after, and for a link what code read off the page and the title
+made; gzipped, split
 into `pieces` under the 256 KiB cap. Nothing shows on the page; the panel is
 unchanged. A session reads it: ArtifactData `list` of `lookups`, then of
 `lookups/<id>/pieces`, with `out_dir`; then `node build/lookup_log.js <dir> <id>`.
-`saveLookupTape`; LL-001 to LL-008.
+`saveLookupTape`; LL-001 to LL-009.
 
 **The progress line** (her decision): at most four labels, in order, each once,
 never back — "Searching venue shop…", "Searching more broadly…" (shop had
