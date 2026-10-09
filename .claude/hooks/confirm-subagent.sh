@@ -9,9 +9,9 @@
 # field and nothing else — not the model, not the reason string this hook
 # returns. A session that writes "Compress acq run with Prompt A" produces a
 # prompt nobody can act on, because "Prompt A" means nothing at the moment you
-# are being asked. So the description is rewritten to lead with the MODEL, which
-# is the thing actually being decided, and internal prompt names are expanded
-# into what they do.
+# are being asked. So the description is rewritten to lead with the MODEL and
+# its EFFORT, which are what is actually being decided, and internal prompt
+# names are expanded into what they do.
 #
 # Every other field of tool_input is passed through untouched.
 
@@ -22,6 +22,7 @@ payload="$(cat)"
 jq -c '
   .tool_input as $in
   | ($in.model // "SESSION DEFAULT" | ascii_upcase) as $model
+  | (if $in.effort then ", \($in.effort | ascii_upcase) effort" else ", default effort" end) as $effort
   | ($in.description // "no description given") as $desc
   # Expand the internal prompt names — they are meaningless in a dialog.
   # Strip the internal prompt name out of the sentence, then say plainly what
@@ -35,8 +36,8 @@ jq -c '
       hookSpecificOutput: {
         hookEventName: "PreToolUse",
         permissionDecision: "ask",
-        permissionDecisionReason: ("Spawning a \($model) subagent. Approve one per JOB, never one per row."),
-        updatedInput: ($in + { description: "\($model) subagent — \($plain)" })
+        permissionDecisionReason: ("Spawning a \($model) subagent\($effort). Approve one per JOB, never one per row."),
+        updatedInput: ($in + { description: "\($model) subagent\($effort) — \($plain)" })
       }
     }
 ' <<< "$payload"
