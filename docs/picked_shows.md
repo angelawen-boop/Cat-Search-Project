@@ -134,11 +134,14 @@ with no dates still fails (blank dates are not approved).
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her
 decision: Parallel-only rules live in the app, never the scraper). They only
 tidy what Claude is handed; other venues and occasional ones are untouched.
-Options: `title` (built from the page's headings), `from` (the passage starts after
+Options: `title` (built from the page's headings), `dateLine` (dates read from the first
+line matching, however far under the heading; else the usual 60 lines), `from` (the passage starts after
 the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
 `cleanLink` (stored address loses its query and fragment). Read by `readShowPage(res,url,vc)`,
 `venueTitle`. Junk at the end of a passage is tolerated (her decision).
 
+- **met** — dates from the "on view at" line (`dateLine`): a podcast transcript
+  can push it past 60 lines (*Manet/Degas*).
 - **acq** — description = the "Press Release" text (`from`), headings and short
   caption lines dropped. Title = `# name` + the `##` line under it unless that is a
   place (New York, Palm Beach), joined as the scraper joins a card (`: `, a dash
