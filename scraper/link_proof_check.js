@@ -14,7 +14,8 @@
  * Exit 1 on any difference, a reply not on the list, or a page the reader refuses that
  * the list does not expect to fail. --all also fails on a listed page with no reply.
  * The title compared is the reader's own (before any subtitle Claude picks from the
- * lines between title and dates). Not part of npm test: it needs live replies.
+ * lines between title and dates). A page listed with "noDescription" must also give
+ * no description. Not part of npm test: it needs live replies.
  */
 'use strict';
 const fs = require('fs');
@@ -63,17 +64,18 @@ function main() {
     const want = byUrl.get(res.url);
     const venue = reader.knownVenueFor(res.url) || reader.occVenueId(reader.hostOf(res.url));
     const got = reader.readShowPage(res, res.url, reader.knownVenueFor(res.url));
-    const row = got.ok ? { title: got.base, start: got.start, end: got.end } : { title: '', start: '', end: '', why: got.why };
+    const row = got.ok ? { title: got.base, start: got.start, end: got.end, raw: got.raw } : { title: '', start: '', end: '', why: got.why };
     checked++;
-    if (!want) { console.log('DIFF  ' + f + ': ' + res.url + ' is not on the list\n        got   ' + JSON.stringify({ venue, ...row })); diffs++; continue; }
+    if (!want) { console.log('DIFF  ' + f + ': ' + res.url + ' is not on the list\n        got   ' + JSON.stringify({ venue, title: row.title, start: row.start, end: row.end })); diffs++; continue; }
     seen.add(res.url);
     const bad = ['venue', 'title', 'start', 'end'].filter(k => (k === 'venue' ? venue : row[k]) !== want[k]);
     if (!got.ok && want.title) bad.push('why');
+    if (want.noDescription && row.raw) bad.push('description');
     if (!bad.length) { console.log('ok    ' + f + '  ' + want.venue + '  ' + (row.start || '-') + ' -> ' + (row.end || '-') + '  ' + row.title); continue; }
     diffs++;
     console.log('DIFF  ' + f + '  (' + bad.join(', ') + ')  ' + res.url);
     console.log('        list  ' + JSON.stringify({ venue: want.venue, title: want.title, start: want.start, end: want.end }));
-    console.log('        live  ' + JSON.stringify({ venue, title: row.title, start: row.start, end: row.end, ...(row.why ? { why: row.why } : {}) }));
+    console.log('        live  ' + JSON.stringify({ venue, title: row.title, start: row.start, end: row.end, ...(row.why ? { why: row.why } : {}), ...(want.noDescription && row.raw ? { description: row.raw.slice(0, 120) } : {}) }));
   }
 
   const missing = list.filter(e => !seen.has(e.url));

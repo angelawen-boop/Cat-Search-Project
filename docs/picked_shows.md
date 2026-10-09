@@ -136,7 +136,7 @@ decision: Parallel-only rules live in the app, never the scraper). They only
 tidy what Claude is handed; other venues and occasional ones are untouched.
 Options: `title` (built from the page's headings), `titleDrop` (a label before the show's name, dropped), `dateLine` (dates read from the first
 line matching, anywhere on the page; else the usual 60 lines under the heading), `from` (the passage starts after
-the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
+the first line matching), `until` (it ends at the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
 `cleanLink` (stored address loses its query and fragment). Read by `readShowPage(res,url,vc)`,
 `venueTitle`. Junk at the end of a passage is tolerated (her decision).
 
@@ -166,8 +166,11 @@ the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
   characters, credit lines (©, "Photo courtesy", "Press 300ppi") and picture
   descriptions that open "A/An/The … painting/poster/cover … of/with/…" skipped.
   Other picture descriptions stay (*Van Gogh and the Avant-Garde*: two).
-  Proved: *Christina Ramberg*, *Hito Steyerl*, *Van Gogh and the Avant-Garde*,
-  *Revoliutsiia! Demonstratsiia!*.
+  Passage ends at the closing "Share", a "Related" box or the newsletter
+  (`until`): a page of photos only otherwise took another show's card as its
+  description (*Violence and Virtue*). Proved: *Christina Ramberg*, *Hito
+  Steyerl*, *Van Gogh and the Avant-Garde*, *Revoliutsiia! Demonstratsiia!*;
+  no description: *Violence and Virtue*, *Nilima Sheikh* (`noDescription`).
 - **brit** — passage starts after the shop line ("For the catalogue, homewares and
   gifts…", archive pages) or "Book tickets" (current pages). Proved:
   *Michelangelo: the last decades*, *China's hidden century*, *Burma to
