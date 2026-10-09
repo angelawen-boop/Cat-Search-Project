@@ -1615,6 +1615,11 @@ function mcpTrouble(e){
 
 // Ask the connector. Returns {ok, results, detail} — never throws.
 async function searchWeb(objective,queries){
+  const t0=Date.now(), out=await searchWebCall(objective,queries);
+  tapeCall("search",{objective,queries},out,t0);
+  return out;
+}
+async function searchWebCall(objective,queries){
   const mcp=await useCap("mcp");
   if(!mcp)return{ok:false,results:[],detail:"No connector access in this viewer. The page must be opened from its claude.ai link."};
   let res;
@@ -1638,6 +1643,11 @@ async function searchWeb(objective,queries){
 // {full:true} reads the page whole (her decision): excerpts dropped the Orsay
 // Cassatt's EAN. The shelf stays excerpts — a call is capped at ~25,000 characters.
 async function fetchPage(url,objective,queries,opts){
+  const t0=Date.now(), out=await fetchPageCall(url,objective,queries,opts);
+  tapeCall("open",{urls:Array.isArray(url)?url:[url],objective,queries,full:!!(opts&&opts.full)},out,t0);
+  return out;
+}
+async function fetchPageCall(url,objective,queries,opts){
   const urls=Array.isArray(url)?url.filter(Boolean):[url];
   if(!urls.length)return{ok:false,results:[],detail:"No page to open."};
   const mcp=await useCap("mcp");
@@ -1695,6 +1705,11 @@ function shopPagesFor(mu,title){
 // It sees ONLY these excerpts, so it cannot report a shop page that was not
 // found. Returns {ok, data, detail}.
 async function readResults(prompt){
+  const t0=Date.now(), out=await readResultsCall(prompt);
+  tapeCall("claude",{prompt},out,t0);
+  return out;
+}
+async function readResultsCall(prompt){
   const sample=await useCap("sample");
   if(!sample)return{ok:false,data:null,detail:"Claude isn\u2019t available to this page in this viewer."};
   try{
@@ -1706,7 +1721,71 @@ async function readResults(prompt){
     if(code==="not_granted")       why="You declined to let this page use Claude. Reload and allow it to search.";
     else if(code==="rate_limited") why="Claude is rate-limited right now \u2014 leave it a minute.";
     else if(code==="invalid_json") why="Claude\u2019s answer came back unreadable. Try again.";
-    return{ok:false,data:null,detail:why+"  ["+String((e&&e.message)||e)+"]"};
+    return{ok:false,data:null,partial:(e&&e.text)||null,detail:why+"  ["+String((e&&e.message)||e)+"]"};
+  }
+}
+
+// ── THE LOOKUP LOG — every catalogue lookup, recorded whole (docs/app.md §1) ──
+// Find catalogue, Search again and Re-check each save one record to the page's store:
+// every call's input and full answer, Claude's answers, and the card before and after.
+// Nothing shows on the page; Claude reads it with build/lookup_log.js. The newest 50
+// are kept. A record is gzipped and split under the store's size cap; it is marked
+// complete only after every piece is written. LL-001 to LL-008.
+const LOOKUP_LOG="lookups", LOOKUP_KEEP=50, LOOKUP_PIECE=180000;
+const CARD_FIELDS=["hasCatalogue","catalogueTitle","isbn13","publisher","publisherUrl","publisherResult",
+  "shopUrl","shopState","shopChange","englishCheck","originalEdition"];
+let lookupTape=null;
+function tapeStart(action,row){
+  lookupTape={t0:Date.now(),action,row,calls:[]};
+  return lookupTape;
+}
+function tapeCall(kind,input,output,t0){
+  const t=lookupTape;
+  if(t)t.calls.push({n:t.calls.length+1,kind,at:t0-t.t0,ms:Date.now()-t0,input,output});
+}
+const cardFields=r=>Object.fromEntries(CARD_FIELDS.map(k=>[k,r?(r[k]===undefined?null:r[k]):null]));
+async function gzipBase64(text){
+  if(typeof CompressionStream==="undefined")return null;
+  const buf=await new Response(new Blob([text]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer();
+  const bytes=new Uint8Array(buf); let bin="";
+  for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));
+  return btoa(bin);
+}
+// Ends the tape and saves it. Never throws, and a lookup never waits on it.
+async function saveLookupTape(tape,out){
+  if(lookupTape===tape)lookupTape=null;
+  try{
+    const db=await useCap("db");
+    if(!db||!tape)return false;
+    const row=tape.row||{}, mu=MU[row.museumId];
+    const at=new Date(tape.t0).toISOString();
+    const body=JSON.stringify({
+      action:tape.action,at,version:APP_VERSION,ms:Date.now()-tape.t0,
+      card:{id:row.id,title:row.title,museumId:row.museumId,venue:mu?mu.name:null,
+        startDate:row.startDate||null,endDate:row.endDate||null,exUrl:row.exUrl||null},
+      before:cardFields(row),after:out&&out.row?cardFields(out.row):null,
+      ok:!!(out&&out.ok),said:(out&&out.said)||null,trouble:(out&&out.trouble)||null,
+      panel:(out&&out.detail)||null,calls:tape.calls});
+    const z=await gzipBase64(body);
+    const enc=z?"gzip-base64":"json", text=z||body;
+    const pieces=[];
+    for(let i=0;i<text.length;i+=LOOKUP_PIECE)pieces.push(text.slice(i,i+LOOKUP_PIECE));
+    const id="L"+tape.t0+Math.random().toString(36).slice(2,6);
+    const rec=db.doc(LOOKUP_LOG+"/"+id);
+    await rec.set({at,action:tape.action,title:row.title||null,venue:mu?mu.name:null,museumId:row.museumId||null,
+      version:APP_VERSION,calls:tape.calls.length,enc,pieces:pieces.length,complete:false});
+    for(let i=0;i<pieces.length;i++)await rec.collection("pieces").doc(String(i)).set({text:pieces[i]});
+    await rec.update({complete:true});
+    await pruneLookupLog(db);
+    return true;
+  }catch{ return false; }
+}
+async function pruneLookupLog(db){
+  const snap=await db.collection(LOOKUP_LOG).orderBy("at","desc").limit(1000).get();
+  for(const d of snap.docs.slice(LOOKUP_KEEP)){
+    const n=Number((d.data()||{}).pieces)||0, rec=db.doc(LOOKUP_LOG+"/"+d.id);
+    for(let i=0;i<n;i++)await rec.collection("pieces").doc(String(i)).delete();
+    await rec.delete();
   }
 }
 
@@ -3848,7 +3927,9 @@ export default function App(){
   async function findOneCat(id){
     setBusy(true);setBusyId(id);setError(null);setRecheckSaid(null);
     const row=rows.find(r=>r.id===id);
+    const tape=tapeStart(row.looked?"Search again":"Find catalogue",row);
     const out=await lookupCat(row);
+    saveLookupTape(tape,out);
     setDebug(out.detail);
     // SEARCH AGAIN REPLACES THE CARD ONLY WHEN IT FINISHED. Any step that
     // failed → the card stays as it was, and says so.
@@ -3880,6 +3961,7 @@ export default function App(){
     const ticket=!!(found.shopUrl&&isTicketLink(found.shopUrl));
     const row=ticket?{...found,shopUrl:null,shopState:"web",shopChange:null}:found;
     let out;
+    const tape=tapeStart("Re-check museum shop",found);
     if(row.shopUrl&&(row.shopState==="shop"||row.shopState==="gone")){
       setLookLabel("Re-reading the shop page\u2026");
       out=await recheckLinkedPage(row);
@@ -3910,6 +3992,7 @@ export default function App(){
       }
       else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked the museum shop: this book isn’t there."};
     }
+    saveLookupTape(tape,out);
     setDebug(out.detail||null);
     if(out.ok&&out.row&&out.row!==found)await commit(rows.map(r=>r.id===id?out.row:r));
     setRecheckSaid({id,text:out.said,failed:!out.ok});

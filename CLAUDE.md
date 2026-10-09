@@ -357,7 +357,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > from a session that did not publish it, pass it as `url`. It carries **four
 > capabilities**, each load-bearing: `downloads` (Export), `mcp` (her **Parallel
 > Search Key** connector, by name), `sample` (Claude reading what the connector found), `db`
-> (the sweep log and quarantine — the two things that survive a Reset). A publish
+> (the sweep log, quarantine and lookup log — they survive a Reset). A publish
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
@@ -1111,8 +1111,7 @@ She is noting issues as she uses it, for a later debugging session.
   (Hannibal), two fresh lookups, same code: "Publisher's section", then
   "Publisher" (right). Cause unproven — a different candidate page, the page
   returning empty (`pageIsShell`), or the read judging one page differently.
-  Only that lookup's log settles it ("Show diagnostic" keeps the last action's
-  only); if it recurs, get the log first. A log per card: offered, not built.
+  Its record in the lookup log settles it (`docs/app.md` §1, "The lookup log").
 - **OPEN — 40.10's fixes, unchecked in the app**. Her next lookups
   settle each: *Hammershøi* (Jacquemart-André) finds *Hammershøi : le maître
   de la peinture danoise*, ISBN 978-9462302495; *Watteau* no longer reads the
@@ -1148,6 +1147,12 @@ fixed venues come back clean; nothing new broken. Good → she imports that run.
 Not good → more work on the routine or the recipes.
 
 ### 6. Queued next
+
+- **The lookup log — built on `main`, not published (her call).** First use:
+  *Hubert Robert, 1733–1808* (NGA) said no catalogue, though a live re-run of its
+  search returns NGA's page ("Catalog: Hubert Robert…") and press release ("in
+  association with Lund Humphries"). Cause unproven: read its record after a
+  Search again. Not logged yet: Add by link reads.
 
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library
