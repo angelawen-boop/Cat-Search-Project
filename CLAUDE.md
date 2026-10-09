@@ -1030,11 +1030,15 @@ archives.
 - **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry (like
   `subtitleUnderHeading`), never in the scraper — the scraper never runs them
   (her decision). A rule both use (the date reader) stays in `dates.js`.
-- **acq, louvre, artic, brit have venue link rules** (`linkRead` on their
-  `MUSEUMS` entries; met's reads dates off its "on view" line anywhere on the page; frick's drops a leading "Special Loan:"; `docs/picked_shows.md`, "Venue link rules"), proved on four
-  live archive pages each; nothing else moved. Published in 42 (test page).
+- **Venue link rules** (`linkRead` on the `MUSEUMS` entry; `docs/picked_shows.md`,
+  "Venue link rules"): acq, louvre, artic, brit (four live archive pages each);
+  met — dates from its "on view" line anywhere on the page; frick — a leading
+  "Special Loan:" dropped. Each proved live; all on `docs/link_proof_pages.json`.
   A line opening "In collaboration with" under Acquavella's name is a credit,
   never a subtitle (her decision; *Calder | Miró*).
+- **Old-layout Met pages that print no dates in their text** (*Matisse*, 2012,
+  dates only in the banner) stay a failed link — no new code for them (her
+  decision: her Met deep-archive work is done).
 - **Junk at the end of a link's description is tolerated** (her decision) — act
   only if it starts reaching Claude's compressed descriptions. Not so for the
   scraper: venues swept repeatedly are kept precise.
