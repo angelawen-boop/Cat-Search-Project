@@ -390,6 +390,12 @@ function runtime() {
     await click([...scr().querySelectorAll('button')].find(b => b.textContent === 'Back'));
     await click(buttons(/^Cancel import$/)[0]);
     ok(!scr() && JSON.stringify(occStored()) === before12, 'AL-012b:  Cancel import: the store is as it was before the Read');
+    {
+      const want = [...new Set(showFetches.map(c => c.args.urls[0]))];
+      const box = win.document.querySelector('textarea').value.split('\n').filter(Boolean);
+      ok(want.length === 12 && want.every(u => box.includes(u)) && (store.get('links/pending') || {}).text === box.join('\n'),
+        'AL-012c:  Cancel import puts every link read back in the box, and stores it (her decision, 9 Oct)', JSON.stringify(box));
+    }
     // The same links again, from the start: every venue is asked about again.
     const box2 = dialog().querySelector('textarea');
     await act(async () => { setter.call(box2, pasted); box2.dispatchEvent(new win.Event('input', { bubbles: true })); });
@@ -629,6 +635,22 @@ function runtime() {
     // still carry the line under the heading.
     const titled = [...win.document.querySelectorAll('div')].filter(d => d.textContent === 'From Watteau to Fragonard: les fêtes galantes').length;
     ok(titled === 7, 'AL-021: seven Jacquemart-André cards titled with the line under the heading, Claude giving none', titled);
+    // ── AL-024: a partial apply puts the rejected AND the undecided links back in the box (her decision, 9 Oct) ─
+    const cardOf = b => { let el = b.parentElement; while (el.parentElement && el.parentElement.querySelectorAll('button').length <= 3) el = el.parentElement; return el; };
+    const addBtns = buttons(/^Add new entry$/);
+    await click(addBtns[0]);
+    await click([...cardOf(buttons(/^Add new entry$/)[1]).querySelectorAll('button')].find(b => /Reject$/.test(b.textContent.trim())));
+    const before24 = ledgerCards();
+    await click(buttons(/^Update with the 1 I.ve decided$/)[0]);
+    await click(buttons(/^Continue$/)[0]);
+    const scr = () => [...win.document.querySelectorAll('[role=dialog]')].find(d => /New Venue Shops/.test(d.textContent));
+    if (scr()) {
+      for (const b of [...scr().querySelectorAll('button')].filter(b => b.textContent === 'No shop')) await click(b);
+      await click([...scr().querySelectorAll('button')].pop());
+    }
+    const kept = ((store.get('links/pending') || {}).text || '').split('\n').filter(Boolean);
+    ok(ledgerCards() === before24 + 1 && kept.length === 8,
+      'AL-024: one accepted, one rejected, seven undecided: the ledger gains one, the box keeps the other eight links', JSON.stringify(kept));
   }
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) fail('React complained: ' + shouted.find(s => /Warning/.test(s)));
   console.log(failures ? '\n' + failures + ' FAILED' : '\nadd_by_link: all passed');

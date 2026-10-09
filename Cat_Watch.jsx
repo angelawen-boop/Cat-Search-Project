@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "42";
+const APP_VERSION = "42.1";
 const APP_VERSION_DATE = "9 Oct 2026";
 
 // MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
@@ -3403,6 +3403,7 @@ export default function App(){
   const[linkNote,setLinkNote]=useState(null);
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
+  const linksAtRead=useRef(null);   // the links the open review was read from; Cancel import puts them back
   const[occVenues,setOccVenues]=useState({});
   // The stored copy of the new venues; occVenues is the working copy. The store is
   // written only when the ledger moves — an unfinished import keeps nothing (her decision).
@@ -4081,6 +4082,7 @@ export default function App(){
     setProg({done:0,total:0,label:""}); setBusy(false); setReadVenues([...met]);
     const left=fails.map(x=>x.url).join("\n");
     setLinkText(left); setLinkFails(fails);   // the box is stored when the import finishes
+    linksAtRead.current=null;
     if(!got.length)return;
     const res=analyzeProForma(proFormaCsv(got),new Set(ignored.map(x=>x.key)),{notePrefix:""});
     if(res.error){ setLinkNote(res.error); return; }
@@ -4091,6 +4093,7 @@ export default function App(){
       return;
     }
     setProposals(res.props); setCoverage([]); setTally(res.tally||null); setSeenInFile(null); setDecisions({});
+    linksAtRead.current=urls;
     // Done with the pop-up — unless a link could not be read: then it stays
     // under the review, its lines waiting for her when the review closes.
     if(!fails.length)setImportMode(null);
@@ -4199,13 +4202,15 @@ export default function App(){
     });
     // The import is finished, so what it held back is stored now: a CSV's sweep log
     // (seenInFile — a link is not a sweep), or for a Read the box: unread links plus
-    // the links of rejected cards (her decision). "Clear" in the box empties it.
+    // the links of rejected cards, and of cards a partial apply left undecided (her
+    // decision). "Clear" in the box empties it.
     if(seenInFile)recordSweep(seenInFile);
     else{
-      const rejected=proposals.filter((p,i)=>cardOutcome(p,decisions[i])==="rejected").map(p=>(p.cand||{}).exUrl).filter(Boolean);
-      const box=[...new Set([...linksIn(linkText),...rejected])].join("\n");
+      const back=proposals.filter((p,i)=>/^(rejected|undecided)$/.test(cardOutcome(p,decisions[i]))).map(p=>(p.cand||{}).exUrl).filter(Boolean);
+      const box=[...new Set([...linksIn(linkText),...back])].join("\n");
       setLinkText(box); writePendingLinks(box);
     }
+    linksAtRead.current=null;
     // A new quarantine goes to the store, the copy that survives a Reset; the export
     // carries the list too.
     if(newlyIgnored.length){
@@ -4226,7 +4231,13 @@ export default function App(){
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqBuyNext(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
-  function cancelRefresh(){ dropHeldVenues(); setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
+  // Cancel import after a Read puts every link it read back in the box, stored (her decision).
+  function cancelRefresh(){
+    if(linksAtRead.current){
+      const box=[...new Set([...linksIn(linkText),...linksAtRead.current])].join("\n");
+      setLinkText(box); writePendingLinks(box); linksAtRead.current=null;
+    }
+    dropHeldVenues(); setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   const pickSort=k=>{setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
 
