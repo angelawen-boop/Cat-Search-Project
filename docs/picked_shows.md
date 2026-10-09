@@ -131,12 +131,19 @@ with no dates still fails (blank dates are not approved).
 
 ## Venue link rules
 
+**NGA has its own chip** (her decision): National Gallery of Art links (`occ-nga-gov`)
+are an occasional venue in every other way, but sit under an "NGA" chip, never
+"Occasional", and their cards say NGA (`OWN_CHIP`; AL-030). A leading "Exhibition:" is
+dropped from titles (her ask; *Hubert Robert, 1733–1808*): an `OWN_CHIP` entry can carry
+`linkRead`, found by `linkReadVenue`. Proved live: five archive pages, title and dates
+(on `docs/link_proof_pages.json`).
+
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her
 decision: Parallel-only rules live in the app, never the scraper). They only
 tidy what Claude is handed; other venues and occasional ones are untouched.
 Options: `title` (built from the page's headings), `titleDrop` (a label before the show's name, dropped), `dateLine` (dates read from the first
 line matching, anywhere on the page; else the usual 60 lines under the heading), `from` (the passage starts after
-the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
+the first line matching), `until` (it ends at the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
 `cleanLink` (stored address loses its query and fragment). Read by `readShowPage(res,url,vc)`,
 `venueTitle`. Junk at the end of a passage is tolerated (her decision).
 
@@ -147,6 +154,8 @@ the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
   no dates in its text at all.
 - **frick** — a leading "Special Loan:" is the Frick's label, not the show's name
   (`titleDrop`; *Parmigianino's Antea*). Proved live with *Siena* unchanged.
+- **menil** — a leading "Collection Close-Up:" dropped (`titleDrop`, her ask;
+  *Of Heaven and Earth*, *The Graphic Work of Dorothea Tanning*).
 - **acq** — description = the "Press Release" text (`from`), headings and short
   caption lines dropped. Title = `# name` + the `##` line under it unless that is a
   place (New York, Palm Beach), joined as the scraper joins a card (`: `, a dash
@@ -166,8 +175,11 @@ the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
   characters, credit lines (©, "Photo courtesy", "Press 300ppi") and picture
   descriptions that open "A/An/The … painting/poster/cover … of/with/…" skipped.
   Other picture descriptions stay (*Van Gogh and the Avant-Garde*: two).
-  Proved: *Christina Ramberg*, *Hito Steyerl*, *Van Gogh and the Avant-Garde*,
-  *Revoliutsiia! Demonstratsiia!*.
+  Passage ends at the closing "Share", a "Related" box or the newsletter
+  (`until`): a page of photos only otherwise took another show's card as its
+  description (*Violence and Virtue*). Proved: *Christina Ramberg*, *Hito
+  Steyerl*, *Van Gogh and the Avant-Garde*, *Revoliutsiia! Demonstratsiia!*;
+  no description: *Violence and Virtue*, *Nilima Sheikh* (`noDescription`).
 - **brit** — passage starts after the shop line ("For the catalogue, homewares and
   gifts…", archive pages) or "Book tickets" (current pages). Proved:
   *Michelangelo: the last decades*, *China's hidden century*, *Burma to

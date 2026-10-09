@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "42.3";
+const APP_VERSION = "42.4";
 const APP_VERSION_DATE = "9 Oct 2026";
 
 // MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
@@ -25,7 +25,7 @@ const MUSEUMS = [
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopCatalogues:"https://www.rijksmuseumshop.nl/en/books/exhibition-books", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
   { id:"ng", short:"National Gallery", name:"The National Gallery", city:"London",
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
-  // linkRead: Add by link options for met, acq, frick, louvre, artic, brit (docs/picked_shows.md, "Venue link rules").
+  // linkRead: Add by link options for met, acq, frick, menil, louvre, artic, brit (docs/picked_shows.md, "Venue link rules").
   // No apostrophe or double quote inside a linkRead pattern (write \x27): compress.js seedMemory scans this list as text.
   { id:"acq", linkRead:{ title:"subtitle", places:["New York","Palm Beach"], credit:/^In collaboration with\b/i, dashAfterColon:true, from:/^Press Release$/, minLine:60, skip:/^Gallery Hours:|\bImage Courtesy\b/, skipEntities:true, cleanLink:true }, short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
@@ -34,8 +34,8 @@ const MUSEUMS = [
     exBase:"https://www.levygorvydayan.com/exhibitions/", shopSearch:"https://shop.levygorvydayan.com/search?q=", shopCatalogues:"https://shop.levygorvydayan.com/collections/all", shopHome:"https://shop.levygorvydayan.com/", listUrl:"https://www.levygorvydayan.com/exhibitions" },
   // The whole Publications shelf: the Frick files some show books outside "Exhibition catalogues" (her finding).
   { id:"frick", linkRead:{ titleDrop:/^Special Loan:\s*/i }, short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopCatalogues:"https://shop.frick.org/publications/", shopHome:"https://shop.frick.org/", listUrl:null },
-  { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopCatalogues:"https://bookstore.menil.org/collections/menil-publications", shopHome:"https://bookstore.menil.org/", listUrl:null },
-  { id:"artic", linkRead:{ from:/^Share$/, minLine:60, skip:/\u00a9|Press 300ppi|Image CC|Photo courtesy|^(?:an?|the)\s+(?:[\w,\x27-]+\s+){0,5}?(?:painting|poster|drawing|photograph|photomontage|statuette|cover|print)\b,?\s+(?:of|with|reads|that|in|featuring|showing)\b/i }, short:"Artic", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
+  { id:"menil", linkRead:{ titleDrop:/^Collection Close-Up:\s*/i }, short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopCatalogues:"https://bookstore.menil.org/collections/menil-publications", shopHome:"https://bookstore.menil.org/", listUrl:null },
+  { id:"artic", linkRead:{ from:/^Share$/, until:/^(?:Share|Related(?: Exhibitions| Products)?|Sign up for our enewsletter\b.*)$/, minLine:60, skip:/\u00a9|Press 300ppi|Image CC|Photo courtesy|^(?:an?|the)\s+(?:[\w,\x27-]+\s+){0,5}?(?:painting|poster|drawing|photograph|photomontage|statuette|cover|print)\b,?\s+(?:of|with|reads|that|in|featuring|showing)\b/i }, short:"Artic", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
   // Her addition, after Artic. Shopify: search box and her Books shelf.
   { id:"cincinnati", short:"Cincinnati", name:"Cincinnati Art Museum", city:"Cincinnati", exBase:null, shopSearch:"https://shop.cincinnatiartmuseum.org/search?q=", shopCatalogues:"https://shop.cincinnatiartmuseum.org/collections/books", shopHome:"https://shop.cincinnatiartmuseum.org/", listUrl:null },
   { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:"https://wallacecollectionshop.org/search?q=", shopCatalogues:"https://wallacecollectionshop.org/collections/wallace-collection-publications", shopHome:"https://wallacecollectionshop.org/", listUrl:null },
@@ -649,6 +649,10 @@ const OCC_CHIP="occasional";
 const OCC_DOC="venues/occasional";
 const LINKS_DOC="links/pending";
 const isOcc=id=>String(id||"").startsWith("occ-");
+// Occasional venues with a chip of their own and her name for their cards (her decision; NGA),
+// plus any link options of their own (linkRead, as on a MUSEUMS entry).
+const OWN_CHIP={"occ-nga-gov":{short:"NGA",linkRead:{titleDrop:/^Exhibition:\s*/i}}};
+const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 
 // Every address in whatever she pasted — commas, spaces, lines, or mixed in
 // with other words. A repeat is read once (same finished address).
@@ -741,7 +745,7 @@ function decodeEntities(t){
 
 // A venue's own link options (its MUSEUMS entry's `linkRead`). Cases: docs/picked_shows.md,
 // "Venue link rules".
-function linkOptions(vc){ return (vc&&MU[vc]&&MU[vc].linkRead)||null; }
+function linkOptions(vc){ return (vc&&MU[vc]&&MU[vc].linkRead)||(vc&&OWN_CHIP[vc]&&OWN_CHIP[vc].linkRead)||null; }
 function joinTitle(name,sub,dashAfterColon){
   if(/[:.!?]\s*$/.test(name))return name+" "+sub;
   return name+(dashAfterColon&&name.includes(":")?" – ":": ")+sub;
@@ -828,6 +832,8 @@ function readShowPage(res,url,vc){
   }
   for(let k=from;k<lines.length&&raw.length<LINK_RAW_CHARS;k++){
     const own=stripMd(lines[k]);
+    // The passage ends at the first line matching linkRead.until (a box for other shows).
+    if(lr&&lr.until&&lr.until.test(own))break;
     if(lr&&((lr.skip&&lr.skip.test(own))||(lr.skipEntities&&/&#?\w+;/.test(own))))continue;
     const l=decodeEntities(own).replace(/\s+/g," ").trim();
     if(!l||(l===dateLine&&!keepDateLine)||l===headingText||seenLines.has(l)||(lr&&lr.minLine&&l.length<lr.minLine))continue;
@@ -895,6 +901,12 @@ function occVenueId(host){
   return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
 
+// The venue whose link options read a page: a swept venue, or an occasional one with its own chip.
+function linkReadVenue(url){
+  const occ=occVenueId(hostOf(url));
+  return knownVenueFor(url)||(ownChip(occ)?occ:null);
+}
+
 // A link to one of the swept venues files under it, matched by site from the scraper's
 // recipes (VENUE_SITES, written by sync_shared); the Tates are told apart by path.
 function knownVenueFor(url){
@@ -917,7 +929,7 @@ function occEntry(v){
   const live=v.shop==="found"||(v.shop==="noshelf"&&!!v.shopSearch);
   // `short` is her name for the venue's cards, written into the store by a session;
   // the page title's name stands until then.
-  return{id:v.id,short:v.short||v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
+  return{id:v.id,short:(OWN_CHIP[v.id]||{}).short||v.short||v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
     shopUnknown:!live&&!(v.shop==="none"&&v.confirmed)};
@@ -938,7 +950,7 @@ function registerUnseenOccasional(rows){
   for(const r of rows||[]){
     if(!isOcc(r.museumId)||MU[r.museumId])continue;
     const name=hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4);
-    MU[r.museumId]={id:r.museumId,short:name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
+    MU[r.museumId]={id:r.museumId,short:(OWN_CHIP[r.museumId]||{}).short||name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
     KNOWN_VENUES.add(r.museumId);
   }
 }
@@ -4056,7 +4068,7 @@ export default function App(){
           continue;
         }
         let vc=knownVenueFor(url);
-        const page=readShowPage(res,url,vc);
+        const page=readShowPage(res,url,linkReadVenue(url));
         if(!page.ok){ fails.push({url,why:page.why}); continue; }
         const host=hostOf(url);
         if(!vc){
@@ -4455,7 +4467,7 @@ export default function App(){
       // is on.
       if(dismissedOnly){ if(r.interested)return false; }
       else if(!r.interested&&!showAll&&!sq)return false;
-      if(venueF.size>0&&!venueF.has(r.museumId)&&!(venueF.has(OCC_CHIP)&&isOcc(r.museumId)))return false;
+      if(venueF.size>0&&!venueF.has(r.museumId)&&!(venueF.has(OCC_CHIP)&&isOcc(r.museumId)&&!ownChip(r.museumId)))return false;
       const t=tierFor(r),ts=TIERS[t]?.time||"current";
       if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
       if(watchedF&&!r.watching)return false;
@@ -4788,6 +4800,7 @@ export default function App(){
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
           {MUSEUMS.map(m=><button key={m.id} onClick={()=>toggleSet(setVenueF,m.id)} style={chip(venueF.has(m.id))}>{m.short}</button>)}
+          {Object.entries(OWN_CHIP).map(([id,v])=><button key={id} onClick={()=>toggleSet(setVenueF,id)} style={chip(venueF.has(id))}>{v.short}</button>)}
           <button onClick={()=>toggleSet(setVenueF,OCC_CHIP)} style={chip(venueF.has(OCC_CHIP))}>Occasional</button>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>

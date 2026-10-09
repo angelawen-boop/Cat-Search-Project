@@ -361,7 +361,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 42.2 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 42.3 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -465,7 +465,7 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   to the page itself**. Each link is read
   once by code (title, dates) and the model (prose, always English), then the
   same intake as a sweep; no lookback. New venues file under one "Occasional"
-  chip; their shop sections confirmed on a screen after the review (39.2).
+  chip (NGA has its own, her decision); their shop sections confirmed on a screen after the review (39.2).
   **The date reader and summary rules are the scraper's own**, written into the
   JSX by `node build/sync_shared.js` — never edit between its SHARED markers.
   `docs/picked_shows.md`.
@@ -954,7 +954,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **42.2 · cloud 4**. Cloud-only in it:
+live on the test page **42.3 · cloud 4**. Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
@@ -1030,11 +1030,15 @@ archives.
 - **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry (like
   `subtitleUnderHeading`), never in the scraper — the scraper never runs them
   (her decision). A rule both use (the date reader) stays in `dates.js`.
-- **acq, louvre, artic, brit have venue link rules** (`linkRead` on their
-  `MUSEUMS` entries; met's reads dates off its "on view" line anywhere on the page, 42.2; `docs/picked_shows.md`, "Venue link rules"), proved on four
-  live archive pages each; nothing else moved. Published in 42 (test page).
+- **Venue link rules** (`linkRead` on the `MUSEUMS` entry; `docs/picked_shows.md`,
+  "Venue link rules"): acq, louvre, artic, brit (four live archive pages each);
+  met — dates from its "on view" line anywhere on the page; frick — a leading
+  "Special Loan:" dropped. Each proved live; all on `docs/link_proof_pages.json`.
   A line opening "In collaboration with" under Acquavella's name is a credit,
   never a subtitle (her decision; *Calder | Miró*).
+- **Old-layout Met pages that print no dates in their text** (*Matisse*, 2012,
+  dates only in the banner) stay a failed link — no new code for them (her
+  decision: her Met deep-archive work is done).
 - **Junk at the end of a link's description is tolerated** (her decision) — act
   only if it starts reaching Claude's compressed descriptions. Not so for the
   scraper: venues swept repeatedly are kept precise.
