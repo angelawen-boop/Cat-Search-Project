@@ -361,7 +361,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 42.1 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 42.2 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -954,7 +954,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **42.1 · cloud 4**. Cloud-only in it:
+live on the test page **42.2 · cloud 4**. Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
@@ -1031,7 +1031,7 @@ archives.
   `subtitleUnderHeading`), never in the scraper — the scraper never runs them
   (her decision). A rule both use (the date reader) stays in `dates.js`.
 - **acq, louvre, artic, brit have venue link rules** (`linkRead` on their
-  `MUSEUMS` entries; met's reads dates off its "on view" line anywhere on the page, 42.2, unpublished; `docs/picked_shows.md`, "Venue link rules"), proved on four
+  `MUSEUMS` entries; met's reads dates off its "on view" line anywhere on the page, 42.2; `docs/picked_shows.md`, "Venue link rules"), proved on four
   live archive pages each; nothing else moved. Published in 42 (test page).
   A line opening "In collaboration with" under Acquavella's name is a credit,
   never a subtitle (her decision; *Calder | Miró*).

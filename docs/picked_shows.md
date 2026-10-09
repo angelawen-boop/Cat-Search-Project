@@ -134,7 +134,7 @@ with no dates still fails (blank dates are not approved).
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her
 decision: Parallel-only rules live in the app, never the scraper). They only
 tidy what Claude is handed; other venues and occasional ones are untouched.
-Options: `title` (built from the page's headings), `dateLine` (dates read from the first
+Options: `title` (built from the page's headings), `titleDrop` (a label before the show's name, dropped), `dateLine` (dates read from the first
 line matching, anywhere on the page; else the usual 60 lines under the heading), `from` (the passage starts after
 the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
 `cleanLink` (stored address loses its query and fragment). Read by `readShowPage(res,url,vc)`,
@@ -145,6 +145,8 @@ the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
   prints it above the only line naming the show (*Impossible Conversations*). Proved
   live with *Costume Art* and *Harlem Renaissance* unchanged. *Matisse* (2012) prints
   no dates in its text at all.
+- **frick** — a leading "Special Loan:" is the Frick's label, not the show's name
+  (`titleDrop`; *Parmigianino's Antea*). Proved live with *Siena* unchanged.
 - **acq** — description = the "Press Release" text (`from`), headings and short
   caption lines dropped. Title = `# name` + the `##` line under it unless that is a
   place (New York, Palm Beach), joined as the scraper joins a card (`: `, a dash
