@@ -1032,6 +1032,9 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
 - **Claude reads relevant passages, not the first N characters** (`pickPassages`): lines naming the book or show, catalogue/ISBN/price words,
   or a link onto the venue's shop come first. A link labelled "catalog" onto
   the venue's shop, in the web results, is taken in code (`catalogueLinkOn`).
+- **A swept venue's links are fixed only where saved pages prove the reader
+  wrong** (her decision; `node scraper/link_vs_sweep.js`). One with no saved
+  show page waits until she adds a link from it.
 
 ### 3. Fixes not yet checked in the cases they were written for
 
