@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "42.2";
+const APP_VERSION = "42.3";
 const APP_VERSION_DATE = "9 Oct 2026";
 
 // MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
@@ -25,7 +25,7 @@ const MUSEUMS = [
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopCatalogues:"https://www.rijksmuseumshop.nl/en/books/exhibition-books", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
   { id:"ng", short:"National Gallery", name:"The National Gallery", city:"London",
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
-  // linkRead: Add by link options for met, acq, louvre, artic, brit (docs/picked_shows.md, "Venue link rules").
+  // linkRead: Add by link options for met, acq, frick, louvre, artic, brit (docs/picked_shows.md, "Venue link rules").
   // No apostrophe or double quote inside a linkRead pattern (write \x27): compress.js seedMemory scans this list as text.
   { id:"acq", linkRead:{ title:"subtitle", places:["New York","Palm Beach"], credit:/^In collaboration with\b/i, dashAfterColon:true, from:/^Press Release$/, minLine:60, skip:/^Gallery Hours:|\bImage Courtesy\b/, skipEntities:true, cleanLink:true }, short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
@@ -33,7 +33,7 @@ const MUSEUMS = [
   { id:"lgd", short:"Levy", card:"Lévy Gorvy Dayan", name:"Lévy Gorvy Dayan", city:"New York / London",
     exBase:"https://www.levygorvydayan.com/exhibitions/", shopSearch:"https://shop.levygorvydayan.com/search?q=", shopCatalogues:"https://shop.levygorvydayan.com/collections/all", shopHome:"https://shop.levygorvydayan.com/", listUrl:"https://www.levygorvydayan.com/exhibitions" },
   // The whole Publications shelf: the Frick files some show books outside "Exhibition catalogues" (her finding).
-  { id:"frick", short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopCatalogues:"https://shop.frick.org/publications/", shopHome:"https://shop.frick.org/", listUrl:null },
+  { id:"frick", linkRead:{ titleDrop:/^Special Loan:\s*/i }, short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopCatalogues:"https://shop.frick.org/publications/", shopHome:"https://shop.frick.org/", listUrl:null },
   { id:"menil", short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopCatalogues:"https://bookstore.menil.org/collections/menil-publications", shopHome:"https://bookstore.menil.org/", listUrl:null },
   { id:"artic", linkRead:{ from:/^Share$/, minLine:60, skip:/\u00a9|Press 300ppi|Image CC|Photo courtesy|^(?:an?|the)\s+(?:[\w,\x27-]+\s+){0,5}?(?:painting|poster|drawing|photograph|photomontage|statuette|cover|print)\b,?\s+(?:of|with|reads|that|in|featuring|showing)\b/i }, short:"Artic", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
   // Her addition, after Artic. Shopify: search box and her Books shelf.
@@ -814,6 +814,8 @@ function readShowPage(res,url,vc){
     }
   }
   if(lr&&lr.title)base=venueTitle(lines,h,heading,lr,words)||base;
+  // A label the venue puts before the show's own name (linkRead.titleDrop).
+  if(lr&&lr.titleDrop)base=base.replace(lr.titleDrop,"").trim()||base;
   const between=lr&&lr.title?[]:lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l)));
   const dateLine=decodeEntities(stripMd(lines[d])).replace(/\s+/g," ").trim();
   const keepDateLine=dateLine.length>LINK_DATE_LINE_MAX;
