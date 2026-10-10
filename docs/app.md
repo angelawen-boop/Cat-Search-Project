@@ -54,7 +54,9 @@ faked. Steps gather facts; code decides each fact in a set order of trust;
 **Trust order.** ISBN: the book's page in code (`isbnOnPage`), the results in
 code (`isbnInResults`, on the book's title once known, never the show's), then
 Claude's. One book per card: a guessed publisher the ISBN's own records
-contradict gives way to theirs (`oneBook`). Publisher: read off the ISBN's results
+contradict gives way to theirs (`oneBook`); an ISBN whose records print far fewer
+pages than the catalogue is a booklet — another ISBN printed with the catalogue's
+count replaces it, else none is filed (`notABooklet`; Hubert Robert's album; BK-). Publisher: read off the ISBN's results
 (`publisherOnIsbnResults`), then printed on the book's own shop or publisher
 page, then any read of general results — a guess wherever it came from. The
 diagnostic says which won. Title: `titleAsPrinted`.
