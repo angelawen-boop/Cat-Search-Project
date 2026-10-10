@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "42.9";
+const APP_VERSION = "43";
 const APP_VERSION_DATE = "10 Oct 2026";
 
 // MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
@@ -3389,7 +3389,7 @@ function versionText(vs,i,row,showPages){
   const note=versionNote(vs,i,row);
   // A later English edition names its year beside the publisher (Hammershøi).
   const pub=v.publisher&&note==="the English edition, published later"&&v.year?v.publisher+", "+v.year:v.publisher;
-  return [v.lang,bind,pub,isbn].filter(Boolean).join(" · ")+(note?" — "+note:"")+".";
+  return [v.lang,v.title,bind,pub,isbn].filter(Boolean).join(" · ")+(note?" — "+note:"")+".";
 }
 // An ISBN never breaks across lines; the characters copied stay the same.
 function nowrapIsbns(text){
@@ -5605,13 +5605,15 @@ export default function App(){
                       {vl?(
                         <div style={{marginBottom:10}}>
                           {vl.lines.map((l,k)=>(
-                            <div key={k} style={{fontSize:11.5,lineHeight:1.45,color:C.ink,marginBottom:3}}>
-                              {/* A span, not a button, so the source flows on after the words. */}
-                              <span role="button" tabIndex={0} aria-pressed={l.picked} title={l.picked?"Picked":"Pick this version"} onClick={()=>setPick(r.id,k)}
-                                onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setPick(r.id,k); } }} style={{cursor:l.picked?"default":"pointer"}}>
-                                {l.picked?"●":"○"} {nowrapIsbns(l.text)}
+                            <div key={k} role="button" tabIndex={0} aria-pressed={l.picked} title={l.picked?"Picked":"Pick this version"} onClick={()=>setPick(r.id,k)}
+                              onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setPick(r.id,k); } }}
+                              style={{display:"flex",alignItems:"baseline",gap:"0.6em",fontSize:11.5,lineHeight:1.45,color:C.ink,marginBottom:3,cursor:l.picked?"default":"pointer"}}>
+                              {/* The marker in its own column: wrapped lines stay clear of it, as under a bullet. */}
+                              <span style={{flex:"none"}}>{l.picked?"●":"○"}</span>
+                              <span style={{flex:1,minWidth:0}}>
+                                {nowrapIsbns(l.text)}
+                                {l.source&&<span style={{color:C.soft}}> (source: <a href={l.source.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:C.soft}}>{l.source.host}</a>)</span>}
                               </span>
-                              {l.source&&<span style={{color:C.soft}}> (source: <a href={l.source.url} target="_blank" rel="noopener noreferrer" style={{color:C.soft}}>{l.source.host}</a>)</span>}
                             </div>
                           ))}
                           {vl.shared&&<div style={{fontSize:11.5,color:C.soft}}>(source for all {vl.shared.count}: <a href={vl.shared.url} target="_blank" rel="noopener noreferrer" style={{color:C.soft}}>{vl.shared.host}</a>)</div>}
@@ -5634,7 +5636,6 @@ export default function App(){
                           ):buyLinks(r).map(l=><a key={l.name} href={l.href} target="_blank" rel="noopener noreferrer" style={lnk}>{l.name} {"\u2197"}</a>)}
                         </div>
                       </>):(<>
-                        <div style={{fontSize:11,color:C.soft,marginBottom:6}}>Pick a version to see where to buy it.</div>
                         {mu&&(mu.shopSearch||mu.shopHome)&&<div style={{display:"flex",flexWrap:"wrap",gap:5}}><a href={mu.shopSearch?mu.shopSearch+encodeURIComponent(r.title):mu.shopHome} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a></div>}
                       </>)}
                       <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:14}}>

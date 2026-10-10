@@ -318,7 +318,7 @@ async function openCard(page, title) {
   if (b) await page.click(b);
   return page.card(title);
 }
-const versionLinesOn = card => [...card.querySelectorAll('[aria-pressed]')].map(b => b.parentElement.textContent.trim());
+const versionLinesOn = card => [...card.querySelectorAll('[aria-pressed]')].map(b => b.children[0].textContent + ' ' + b.children[1].textContent.trim());
 const linksOn = card => [...card.querySelectorAll('a')].map(a => a.textContent.replace(/\s*\u2197$/, '').trim());
 // The buy buttons: the links that end in an arrow.
 const buttonsOn = card => [...card.querySelectorAll('a')].filter(a => /\u2197$/.test(a.textContent.trim())).map(a => a.textContent.replace(/\s*\u2197$/, '').trim()).filter(Boolean);
@@ -331,9 +331,9 @@ async function versionCards() {
     await page.loadFile({ rows: [vasari, hrL, hrN, ham, met], ignored: [] });
     let card = await openCard(page, vasari.title);
     check(NAME + ': Vasari — three lines in her words, the Louvre’s own number on the French, ● on Lienart’s English', JSON.stringify(versionLinesOn(card)) === JSON.stringify([
-      '○ French · Louvre Éditions / Lienart · 978-2359063721 · also 978-2350317441 (the Louvre\'s own number for the same book) — the original edition. (source: louvre.fr)',
-      '● English · paperback · Louvre Éditions / Lienart · 978-2359063738 — this venue\'s English edition. (source: lienarteditions.com)',
-      '○ English · hardcover · Nationalmuseum · 978-9171009166 — from the show\'s Stockholm exhibition. (source: nationalmuseum.bokorder.se)']),
+      '○ French · Giorgio Vasari. Le Livre des dessins. Destinées d\'une collection mythique · Louvre Éditions / Lienart · 978-2359063721 · also 978-2350317441 (the Louvre\'s own number for the same book) — the original edition. (source: louvre.fr)',
+      '● English · Giorgio Vasari, the Book of Drawings · paperback · Louvre Éditions / Lienart · 978-2359063738 — this venue\'s English edition. (source: lienarteditions.com)',
+      '○ English · Giorgio Vasari The Book of Drawings – The fate of a mythical collection · hardcover · Nationalmuseum · 978-9171009166 — from the show\'s Stockholm exhibition. (source: nationalmuseum.bokorder.se)']),
       JSON.stringify(versionLinesOn(card)));
     check(NAME + ': Vasari — each source is a link to the page that proved it, its host as the words',
       [...card.querySelectorAll('a')].filter(a => a.textContent === 'lienarteditions.com').every(a => a.href === PROOF[1][1]) && linksOn(card).includes('nationalmuseum.bokorder.se'));
@@ -360,29 +360,29 @@ async function versionCards() {
       JSON.stringify(changed));
 
     card = await openCard(page, hrL.title);
-    check(NAME + ': Hubert Robert, Louvre card — nothing picked: the list, her grey line, and only the Museum shop button',
-      versionLinesOn(card).every(l => l[0] === '○') && card.textContent.includes('Pick a version to see where to buy it.')
+    check(NAME + ': Hubert Robert, Louvre card — nothing picked: the list and only the Museum shop button, no line asking her to pick',
+      versionLinesOn(card).every(l => l[0] === '○') && !card.textContent.includes('Pick a version')
       && JSON.stringify(buttonsOn(card)) === JSON.stringify(['Museum shop']), JSON.stringify(buttonsOn(card)));
     check(NAME + ': Hubert Robert, Louvre card — the Museum shop button searches the exhibition’s title, and no status line shows for a book not picked',
       [...card.querySelectorAll('a')].some(a => a.textContent.startsWith('Museum shop') && a.href.endsWith(encodeURIComponent(hrL.title)))
       && !/Not in the museum shop|In the museum shop/.test(card.textContent));
     check(NAME + ': Hubert Robert, Louvre card — her two lines', JSON.stringify(versionLinesOn(card)) === JSON.stringify([
-      '○ French · hardcover, 544 pp · Louvre Éditions / Somogy · 978-2757210642 · also 978-2350315355 (the Louvre\'s own number for the same book) — this showing\'s catalogue. (source: mini-site.louvre.fr)',
-      '○ English · hardcover, 288 pp · National Gallery of Art / Lund Humphries · 978-1848221918 — a notably different book, from the show\'s Washington exhibition. (source: nga.gov)']),
+      '○ French · Hubert Robert, 1733-1808 : un peintre visionnaire · hardcover, 544 pp · Louvre Éditions / Somogy · 978-2757210642 · also 978-2350315355 (the Louvre\'s own number for the same book) — this showing\'s catalogue. (source: mini-site.louvre.fr)',
+      '○ English · Hubert Robert · hardcover, 288 pp · National Gallery of Art / Lund Humphries · 978-1848221918 — a notably different book, from the show\'s Washington exhibition. (source: nga.gov)']),
       JSON.stringify(versionLinesOn(card)));
     card = await openCard(page, hrN.title);
     check(NAME + ': Hubert Robert, NGA card — its own book picked, the Paris book a notably different one', JSON.stringify(versionLinesOn(card)) === JSON.stringify([
-      '● English · hardcover, 288 pp · National Gallery of Art / Lund Humphries · 978-1848221918 — this showing\'s catalogue. (source: nga.gov)',
-      '○ French · hardcover, 544 pp · Louvre Éditions / Somogy · 978-2757210642 · also 978-2350315355 (the Louvre\'s own number for the same book) — a notably different book, from the show\'s Paris exhibition. (source: mini-site.louvre.fr)']),
+      '● English · Hubert Robert · hardcover, 288 pp · National Gallery of Art / Lund Humphries · 978-1848221918 — this showing\'s catalogue. (source: nga.gov)',
+      '○ French · Hubert Robert, 1733-1808 : un peintre visionnaire · hardcover, 544 pp · Louvre Éditions / Somogy · 978-2757210642 · also 978-2350315355 (the Louvre\'s own number for the same book) — a notably different book, from the show\'s Paris exhibition. (source: mini-site.louvre.fr)']),
       JSON.stringify(versionLinesOn(card)));
     card = await openCard(page, ham.title);
     check(NAME + ': Hammershøi — the original, and the English edition published later, picked', JSON.stringify(versionLinesOn(card)) === JSON.stringify([
-      '○ French · Culturespaces / Fonds Mercator · 978-9462302495 — the original edition. (source: leslibraires.ca)',
-      '● English · Rizzoli Electa, 2023 · 978-0847899289 — the English edition, published later. (source: rizzoliusa.com)']),
+      '○ French · Hammershøi : le maître de la peinture danoise · Culturespaces / Fonds Mercator · 978-9462302495 — the original edition. (source: leslibraires.ca)',
+      '● English · Hammershøi: Painter of Northern Light · Rizzoli Electa, 2023 · 978-0847899289 — the English edition, published later. (source: rizzoliusa.com)']),
       JSON.stringify(versionLinesOn(card)));
     card = await openCard(page, met.title);
     check(NAME + ': Metamorphoses — no notes, and one shared source line after the list',
-      JSON.stringify(versionLinesOn(card)) === JSON.stringify(['● English · paperback · Hannibal · 978-9493416543.', '○ Dutch · Hannibal · 978-9493416550.', '○ Italian · Hannibal · 978-9493416857.'])
+      JSON.stringify(versionLinesOn(card)) === JSON.stringify(['● English · Metamorphoses: Ovid and the Arts · paperback · Hannibal · 978-9493416543.', '○ Dutch · Metamorfosen – Ovidius en de kunsten · Hannibal · 978-9493416550.', '○ Italian · Hannibal · 978-9493416857.'])
       && card.textContent.includes('(source for all three: hannibalbooks.be)') && !/\(source: /.test(card.textContent), JSON.stringify(versionLinesOn(card)));
   } finally { await page.close(); }
 }

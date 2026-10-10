@@ -900,8 +900,8 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/No English edition found in bookshops\./.test(t) && !/publisher\u2019s own page/.test(t), 'LG-012:   the card says how far it was looked for: bookshops only', t.slice(0, 600));
 
     t = await run(louEnglish, { en: 'Test The Experience of Nature (English edition)' });
-    // Two versions: her version lines replace the book block (no title; docs/catalogue_versions.md).
-    ok(/● English · 978-1234567897/.test(t) && /○ French · 978-2359064612 — the original edition\./.test(t), 'LG-005: an English edition exists — picked (●) on its own line beside the French original (was: its title and ISBN on the card)', t.slice(0, 600));
+    // Two versions: her version lines, each with its book's title, replace the book block.
+    ok(/●English · Test The Experience of Nature \(English edition\) · 978-1234567897/.test(t) && /○French · L’Expérience de la nature\. Les arts à Prague à la cour de Rodolphe II · 978-2359064612 — the original edition\./.test(t), 'LG-005: an English edition exists — picked (●) on its own line beside the French original (was: its title and ISBN on the card)', t.slice(0, 600));
     ok(/Not in the museum shop/.test(t) && !/● French/.test(t), 'LG-006:   "Not in the museum shop", and the French book listed, not picked (was: the French ISBN gone)', t.slice(0, 600));
 
     // Her Botticelli, 7 Oct: an English book with a near-identical title, from
