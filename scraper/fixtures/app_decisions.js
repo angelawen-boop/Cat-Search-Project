@@ -67,7 +67,7 @@ async function mount({ save, db = true, starMetrics } = {}) {
   const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>',
     { pretendToBeVisual: true, url: 'https://claude.ai/', virtualConsole: vc });
   const win = dom.window;
-  const saves = [];
+  const saves = [], files = [];
   if (save) {
     const store = new Map();
     win.claude = {
@@ -76,7 +76,7 @@ async function mount({ save, db = true, starMetrics } = {}) {
           get: async () => ({ exists: store.has(key), data: () => store.get(key) }),
           set: async v => { store.set(key, v); } }) };
         if (name === 'downloads') return { save: async f => {
-          saves.push(f.filename);
+          saves.push(f.filename); files.push(f);
           if (save === 'refuse') { const e = new Error('cancelled'); e.code = 'cancelled'; throw e; }
           return { ok: true }; } };
         return null;
@@ -107,7 +107,7 @@ async function mount({ save, db = true, starMetrics } = {}) {
 
   const doc = win.document;
   const page = {
-    win, doc, saves, downloads,
+    win, doc, saves, files, downloads,
     text: () => doc.getElementById('root').textContent,
     buttons: label => [...doc.querySelectorAll('button')].filter(b =>
       b.textContent.trim() === label || b.getAttribute('title') === label),
@@ -289,11 +289,50 @@ async function dismissToast() {
   } finally { await page.close(); }
 }
 
+// Rows saved before catalogue versions: the old fields, no `editions`. Her real ledger
+// holds rows like these; loading and saving must leave them byte for byte as they were.
+async function oldRowsUntouched() {
+  const NAME = 'AD-006 An old row (originalEdition, otherVenueBook, alsoVersion, no editions) loads, shows and saves exactly as before';
+  const found = { looked: true, hasCatalogue: 'yes', shopState: 'web', shopUrl: null, publisherUrl: null, publisherResult: null };
+  const EN = show('fx-old-en', 'Fixture Old English Edition', { ...found, museumId: 'jacquemart',
+    catalogueTitle: 'Hammershøi: Painter of Northern Light', isbn13: '9780847899289', publisher: 'Rizzoli Electa', englishCheck: 'english',
+    originalEdition: { title: 'Hammershøi : le maître de la peinture danoise', isbn13: '9789462302495', publisher: 'Fonds Mercator' },
+    otherVenueBook: null, alsoVersion: null });
+  const ALSO = show('fx-old-also', 'Fixture Old Also Version', { ...found, museumId: 'louvre',
+    catalogueTitle: 'Giorgio Vasari, the Book of Drawings', isbn13: '9789171009166', publisher: 'Nationalmuseum', englishCheck: 'english',
+    originalEdition: { title: 'Giorgio Vasari, le Livre des dessins', isbn13: null, publisher: 'Musée du Louvre Editions / Lienart' },
+    otherVenueBook: null, alsoVersion: { isbn13: '9782359063738', binding: 'paperback', publisher: 'Lienart' } });
+  const OTHER = show('fx-old-other', 'Fixture Old Other Venue Book', { ...found, museumId: 'louvre',
+    catalogueTitle: 'Hubert Robert, 1733-1808 : un peintre visionnaire', isbn13: '9782757210642', publisher: 'Somogy éditions d\'art', englishCheck: 'shops',
+    originalEdition: null, otherVenueBook: { title: 'Hubert Robert', isbn13: '9781848221918', publisher: 'Lund Humphries' }, alsoVersion: null });
+  const rows = [EN, ALSO, OTHER];
+  const page = await mount({ save: 'ok', db: false });
+  try {
+    await page.loadFile({ rows, ignored: [] });
+    const lines = {
+      'Fixture Old English Edition': 'English edition of “Hammershøi : le maître de la peinture danoise” (Fonds Mercator).',
+      'Fixture Old Also Version': 'ISBN 978-9171009166 · also 978-2359063738 (paperback, Lienart)',
+      'Fixture Old Other Venue Book': 'No English edition. An English catalogue from the show’s other venue is a different book: Hubert Robert, Lund Humphries, ISBN 978-1848221918.',
+    };
+    for (const [title, line] of Object.entries(lines)) {
+      const open = [...(page.card(title) || { querySelectorAll: () => [] }).querySelectorAll('button')].find(b => /Catalogue$/.test(b.textContent.trim()));
+      if (open) await page.click(open);
+      check(NAME + ': its card shows as before — ' + title, (page.card(title)?.textContent || '').includes(line), 'wanted: ' + line);
+    }
+    await page.save();
+    const saved = page.files.length ? JSON.parse(page.files[page.files.length - 1].data).rows : [];
+    const same = rows.every(r => { const s = saved.find(x => x.id === r.id); return s && JSON.stringify(s) === JSON.stringify(r); });
+    check(NAME + ': saved byte for byte as loaded, no editions added', same && saved.every(s => !('editions' in s) && !('editionPick' in s)),
+      JSON.stringify(saved.find(s => s.id === ALSO.id)));
+  } finally { await page.close(); }
+}
+
 (async () => {
   for (const [tag, t] of [['AD-001', resetToSeedAsksFirst], ['AD-002', plainDownloadNeverClearsUnsaved],
-                          ['AD-003', buyNextDot], ['AD-004', noStatusLineWithoutLedger], ['AD-005', dismissToast]]) {
+                          ['AD-003', buyNextDot], ['AD-004', noStatusLineWithoutLedger], ['AD-005', dismissToast],
+                          ['AD-006', oldRowsUntouched]]) {
     try { await t(); } catch (e) { check(tag + ' ran to the end', false, e && e.message); }
   }
-  console.log(failures ? failures + ' failed' : 'her five page decisions hold');
+  console.log(failures ? failures + ' failed' : 'her six page decisions hold');
   process.exit(failures ? 1 : 0);
 })();
