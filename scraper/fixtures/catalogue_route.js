@@ -65,7 +65,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, englishEditionOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, englishEditionOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -86,6 +86,21 @@ const isJudge = p => /"kind": "book"\|"listing"\|"other"/.test(p);
 const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries);
 
 (async () => {
+  // ── TW-001..TW-004: a reply holding two answers — the last is taken ──────────
+  // Her Louvre links: Claude answered, wrote "Wait — …", and answered again (the lookup log).
+  {
+    const HR = '{"summary": "Hubert Robert\'s visionary poetic images, first monograph since 1933.", "english": "", "englishSpeaking": false}\n\nWait — the summary should use the surname alone and stay within the rules, so here is the corrected object:\n\n{"summary": "Robert, visionary of ruins, gardens and Enlightenment Paris.", "english": "", "englishSpeaking": false}';
+    const BS = '{"summary": "Donatello to Michelangelo: bodies and emotions in sculpture.", "english": "", "englishSpeaking": false}\n\nWait, that summary uses a colon, so here is the corrected output:\n\n{"summary": "Donatello to Michelangelo, bodies and emotions in sculpture.", "english": "", "englishSpeaking": false}';
+    const refuse = text => ({ mcp: () => ({}), sample: () => { const e = new Error('the reply held no JSON value'); e.code = 'invalid_json'; e.text = text; throw e; } });
+    let r = await lift(refuse(HR), []).readResults('x');
+    eq([r.ok, r.data && r.data.summary], [true, 'Robert, visionary of ruins, gardens and Enlightenment Paris.'], 'TW-001: Hubert Robert — two answers in one reply, Claude’s corrected last one is taken');
+    r = await lift(refuse(BS), []).readResults('x');
+    eq(r.data && r.data.summary, 'Donatello to Michelangelo, bodies and emotions in sculpture.', 'TW-002: Body and Soul — the same');
+    r = await lift(refuse('Sorry, I cannot read this page.'), []).readResults('x');
+    eq([r.ok, /unreadable/.test(r.detail)], [false, true], 'TW-003: a reply with no answer in it still fails, as before');
+    eq(api.lastJsonObject('{"a": "a } brace in a string"} then {"b": 2, "c": {"d": 1}}'), { b: 2, c: { d: 1 } }, 'TW-004: braces inside a string are not counted; nested objects kept whole');
+  }
+
   // ── LT-001..LT-004: special letters fold, so titles match ───────────────────
   {
     eq(api.titleKey('Hammershøi'), api.titleKey('Hammershoi'), 'LT-001: Hammershøi and Hammershoi match');
