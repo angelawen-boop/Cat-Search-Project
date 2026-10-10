@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "42.7";
+const APP_VERSION = "42.8";
 const APP_VERSION_DATE = "10 Oct 2026";
 
 // MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
@@ -1760,7 +1760,7 @@ function lastJsonObject(text){
 // complete only after every piece is written. LL-001 to LL-009.
 const LOOKUP_LOG="lookups", LOOKUP_KEEP=50, LOOKUP_PIECE=180000;
 const CARD_FIELDS=["hasCatalogue","catalogueTitle","isbn13","publisher","publisherUrl","publisherResult",
-  "shopUrl","shopState","shopChange","englishCheck","originalEdition","otherVenueBook"];
+  "shopUrl","shopState","shopChange","englishCheck","originalEdition","otherVenueBook","alsoVersion"];
 let lookupTape=null;
 function tapeStart(action,row){
   lookupTape={t0:Date.now(),action,row,calls:[]};
@@ -2395,7 +2395,7 @@ function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last 
 // "Find catalogue" runs the whole route.
 function resetCard(r){
   return{...r,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,
-    publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,englishCheck:null,originalEdition:null,otherVenueBook:null};
+    publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,englishCheck:null,originalEdition:null,otherVenueBook:null,alsoVersion:null};
 }
 // The cards Reset cards can offer: searched ones whose title, catalogue title
 // or venue carry what she typed. Accents and capitals do not count.
@@ -2852,6 +2852,66 @@ function notABooklet(F,results,bookPages,log){
   F.isbn=swap;
 }
 
+// ── TWO VERSIONS OF ONE BOOK (her decision, Vasari) ──────────────────────────
+// Hardcover and paperback, or a museum's own edition beside a co-publisher's: one leads
+// the card, the other is named after its ISBN ("also 978-… (hardcover, X)"). Same book =
+// its own ISBN printed, the title's key words shared, page counts printed and agreeing.
+// Hardcover leads; else an external publisher leads a museum's own imprint. VS-001 to VS-008.
+const HARD_WORDS=/(?<!\p{L})(?:hardcover|hardback|hard cover|reli[ée]|rilegato|gebunden|gebonden|cartonn[ée])(?!\p{L})/iu;
+const SOFT_WORDS=/(?<!\p{L})(?:paperback|softcover|soft cover|softback|broch[ée]|brossura|kartoniert|ingenaaid)(?!\p{L})/iu;
+function bindingOfIsbn(results,isbn){
+  let hard=false, soft=false;
+  for(const x of (results||[])){
+    if(!isbnInText(isbn,resultText(x))||[...isbnsIn(x)].some(d=>d!==isbn))continue;
+    const t=resultText(x);
+    if(HARD_WORDS.test(t))hard=true;
+    if(SOFT_WORDS.test(t))soft=true;
+  }
+  return hard===soft?null:hard?"hardcover":"paperback";
+}
+const MUSEUM_WORDS=/(?<!\p{L})(?:museum|nationalmuseum|mus[ée]e|museo|museu|gallery|galleria|galerie|gallerie|kunsthalle|pinacoteca|rijksmuseum|louvre)(?!\p{L})/iu;
+// A museum's own imprint: every house named is a museum (isVenueImprint, or a museum word).
+function museumImprintOnly(name,museumId){
+  const parts=String(name||"").split(/\s*(?:\/|;|&|\s+and\s+|\s+with\s+|,)\s*/i).map(x=>x.trim()).filter(Boolean);
+  return parts.length>0&&parts.every(p=>isVenueImprint(p,museumId)||MUSEUM_WORDS.test(p));
+}
+function sameBookTitle(a,b){
+  const x=titleWords(a), y=titleWords(b);
+  const [small,big]=x.length<=y.length?[x,y]:[y,x];
+  return small.length>=2&&small.filter(w=>big.includes(w)).length>=Math.ceil(small.length*0.75);
+}
+// The other version, or null. `card`: {isbn, title, pages, original}.
+function otherVersionOf(cands,card,results,museumId){
+  const cardPages=pagesOfIsbn(results,card.isbn)||card.pages||null;
+  for(const c of (Array.isArray(cands)?cands:[])){
+    if(!c||!c.title)continue;
+    const isbn=toIsbn13(c.isbn13,results);
+    if(!isbn||isbn===card.isbn||isbn===card.original)continue;
+    if(c.language&&card.english!==undefined&&isEnglishLang(c.language)!==card.english)continue;
+    if(!sameBookTitle(c.title,card.title))continue;
+    const pages=pagesOfIsbn(results,isbn)||pagesPrinted(c.pages,results);
+    if(!pages||!cardPages||differentBook(pages,cardPages))continue;
+    const onV=(results||[]).filter(x=>isbnInText(isbn,resultText(x)));
+    const said=c.publisher&&onV.some(x=>foldText(resultText(x)).includes(foldText(c.publisher)))?String(c.publisher).trim():null;
+    const coded=publisherOnIsbnResults(onV,isbn);
+    return{isbn13:isbn,title:titleAsPrinted(c.title,onV).title,binding:bindingOfIsbn(results,isbn),
+      publisher:coded||said,pubCoded:!!coded};
+  }
+  return null;
+}
+// Does version a lead over version b? (her decision)
+function leadsOver(a,b,museumId){
+  if(a.binding==="hardcover"&&b.binding==="paperback")return true;
+  if(a.binding==="paperback"&&b.binding==="hardcover")return false;
+  return !!(a.publisher&&b.publisher&&!museumImprintOnly(a.publisher,museumId)&&museumImprintOnly(b.publisher,museumId));
+}
+// The note after the ISBN: "also 978-… (hardcover, Nationalmuseum)".
+function alsoLine(v){
+  if(!v||!v.isbn13)return "";
+  const bits=[v.binding,v.publisher].filter(Boolean);
+  return "also "+fmtIsbn(v.isbn13)+(bits.length?" ("+bits.join(", ")+")":"");
+}
+
 // Everything a result carries: its title, its address and its text, whole and excerpted.
 function resultText(x){
   return [x&&x.title,x&&x.url,x&&typeof x.full_content==="string"?x.full_content:"",
@@ -2933,7 +2993,7 @@ function carriesBook(x,book,isbn){ return !!((isbn&&isbnInText(isbn,resultText(x
 // The facts round's one read: the book's own page (at a non-English venue, read here
 // rather than on its own), the facts search and the edition search.
 function factsPrompt(q){
-  const shape='{"isbn13": string|null, "publisher": string|null, "pages": string|null'
+  const shape='{"isbn13": string|null, "publisher": string|null, "pages": string|null, "versions": [{"title": string, "isbn13": string, "language": string, "publisher": string|null, "pages": string|null, "evidenceUrl": string}]'
     +(q.bookPage?', "pagePublisher": string|null, "pagePublisherUrl": string|null':'')
     +(q.foreign?', "language": string|null, "title": string|null, "editions": [{"title": string, "isbn13": string, "language": string, "publisher": string|null, "pages": string|null, "evidenceUrl": string}]'
       :q.needTitle?', "title": string|null':'')+'}';
@@ -2947,6 +3007,10 @@ function factsPrompt(q){
     +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n"
     +"isbn13: this book's own ISBN, or null.\n"
     +"pages: the number of pages the text prints for THIS book (\"544 pages\", \"281 pp.\"), digits only, or null.\n"
+    +"versions: other printings of THIS SAME book in the SAME language that the text shows with their own ISBN — "
+    +"a hardcover beside a paperback, or the same book under another publisher's imprint (a museum's own edition "
+    +"beside a co-publisher's). Its title, ISBN, language, publisher and pages as printed, and the address of the "
+    +"result that shows it. Never a translation, never a different book. An empty list if none.\n"
     +"publisher: the house that printed THIS book, as the search results name it — never a shop or a seller. Null if none says.\n"
     +(q.bookPage?"pagePublisher, pagePublisherUrl: the publisher SECTION A prints for this book, and any link there to the "
       +"PUBLISHER'S OWN page for it (not this shop, not a bookseller). Null if it shows none.\n":"")
@@ -3137,12 +3201,12 @@ function siteOnly(F,pubHost,log,why){
 function composeRow(row,F){
   if(!F||!F.found)return{...row,looked:true,hasCatalogue:"no",shopState:F&&F.blocked?"blocked":"none",
     catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,
-    shopUrl:null,shopChange:null,englishCheck:null,originalEdition:null,otherVenueBook:null};
+    shopUrl:null,shopChange:null,englishCheck:null,originalEdition:null,otherVenueBook:null,alsoVersion:null};
   return{...row,looked:true,hasCatalogue:"yes",
     catalogueTitle:F.title||null,isbn13:F.isbn||null,publisher:F.publisher||null,
     publisherUrl:F.publisherUrl||null,publisherResult:F.publisherResult||null,
     shopState:F.shopState,shopUrl:F.shopUrl||null,shopChange:null,
-    englishCheck:F.englishCheck||null,originalEdition:F.original||null,otherVenueBook:F.otherVenueBook||null};
+    englishCheck:F.englishCheck||null,originalEdition:F.original||null,otherVenueBook:F.otherVenueBook||null,alsoVersion:F.alsoVersion||null};
 }
 
 // THE LOOKUP. Every lookup starts from a blank card (her decision: "Search again
@@ -3399,6 +3463,41 @@ async function lookupCatalogue(row,hooks){
     }
   }
 
+  // ── PHASE 3b: ONE BOOK — ITS PUBLISHER AND ITS OTHER VERSION (her decisions, Vasari).
+  const everything=[...(bookPage?bookPage.results:[]),...factsRes,...edRes,...webRes,...[...pages.values()].flat()];
+  // An English edition named by no house takes the original's, when a page on that
+  // house's own site carries the edition's ISBN (Lienart's page for Vasari).
+  if(F.isbn&&!F.publisher&&F.original&&F.original.publisher){
+    for(const part of String(F.original.publisher).split(/\s*(?:\/|;|&|\s+and\s+|\s+with\s+)\s*/i).filter(Boolean)){
+      const page=everything.find(x=>isbnInText(F.isbn,resultText(x))&&publisherDomainFrom([x],part));
+      if(page){
+        F.publisher=part.trim(); F.pubFrom="the book’s page"; F.publisherUrl=page.url; F.publisherResult="product";
+        log.push("Publisher: "+F.publisher+" — its own page carries this ISBN ("+page.url+").");
+        break;
+      }
+    }
+  }
+  if(F.isbn&&read){
+    const english=F.englishCheck==="english"||!foreign;
+    const v=otherVersionOf(F.original?read.editions:read.versions,
+      {isbn:F.isbn,title:F.title||title,pages:pagesPrinted(read.pages,everything),original:F.original&&F.original.isbn13,english},
+      everything,row.museumId);
+    if(v){
+      const mine={isbn13:F.isbn,binding:bindingOfIsbn(everything,F.isbn),publisher:F.publisher||null};
+      // A book in the museum shop keeps leading: the shop link is to that version.
+      if(F.shopState!=="shop"&&leadsOver(v,mine,row.museumId)){
+        log.push("Two versions: ISBN "+v.isbn13+" ("+[v.binding,v.publisher].filter(Boolean).join(", ")+") leads; "+mine.isbn13+" is named after it.");
+        F.alsoVersion=mine;
+        F.isbn=v.isbn13; F.title=v.title; F.publisher=v.publisher;
+        F.pubFrom=v.publisher?(v.pubCoded?"the ISBN’s results":"general results"):null;
+        F.publisherUrl=null; F.publisherResult=null;
+      } else{
+        log.push("Another version: ISBN "+v.isbn13+", named after the card’s ISBN.");
+        F.alsoVersion={isbn13:v.isbn13,binding:v.binding,publisher:v.publisher};
+      }
+    }
+  }
+
   // ── PHASE 4: THE PUBLISHER'S PAGE, ONCE, FOR THE FINAL BOOK.
   const wantEditions=notEnglish&&!F.original;
   const p4=await findPublisherPage(F,{io,log,row,dom,venue,found:found2,pages,wantEditions});
@@ -3406,7 +3505,7 @@ async function lookupCatalogue(row,hooks){
   if(p4.edition){
     const ed=p4.edition;
     log.push("English edition on the publisher’s own page: “"+ed.title+"”, ISBN "+ed.isbn13+".");
-    F.otherVenueBook=null;
+    F.otherVenueBook=null; F.alsoVersion=null;
     F.original={title:F.title||null,isbn13:F.isbn||null,publisher:F.publisher||null};
     F.title=ed.title; F.isbn=ed.isbn13;
     F.publisherUrl=ed.link; F.publisherResult=ed.linkResult;
@@ -4696,7 +4795,7 @@ export default function App(){
                       {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
                       {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
                       <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",marginBottom:englishLine(r)?2:10,color:r.isbn13?C.ink:C.soft}}>
-                        {r.isbn13?"ISBN "+fmtIsbn(r.isbn13):"ISBN not confirmed \u2014 verify before buying"}
+                        {r.isbn13?"ISBN "+fmtIsbn(r.isbn13)+(r.alsoVersion?" \u00b7 "+alsoLine(r.alsoVersion):""):"ISBN not confirmed \u2014 verify before buying"}
                       </div>
                       {englishLine(r)&&<div style={{fontSize:11,color:C.soft,marginBottom:10}}>{englishLine(r)}</div>}
                       <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
