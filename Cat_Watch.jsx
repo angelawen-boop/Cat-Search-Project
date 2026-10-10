@@ -2946,6 +2946,48 @@ async function readBookPage(hit,venue,dom,io){
   return{...hit,detail,row:filled};
 }
 
+// ── THE LANGUAGE OF THE BOOK IN HAND, read in code off the records carrying its ISBN ─
+// A labelled language ("Langue: anglais", "Language | English"), one value only; or a
+// library record's "Translation of: <original>" with a title in English words (Vasari).
+// Both read within 400 characters of the ISBN.
+// {lang, why, translationOf} or null. EL-001 to EL-005.
+const LANG_LABEL=/(?<!\p{L})(?:language|langue|lingua|sprache|taal|idioma)\s*[:|]?\s*\|?\s*(\p{L}+)/giu;
+const LANG_NAMES={english:"English",anglais:"English",inglese:"English",englisch:"English",engels:"English",ingles:"English",
+  french:"French",francais:"French",francese:"French",franzosisch:"French",frans:"French",
+  italian:"Italian",italien:"Italian",italiano:"Italian",german:"German",allemand:"German",deutsch:"German",
+  dutch:"Dutch",neerlandais:"Dutch",nederlands:"Dutch"};
+const EN_WORDS=new Set(["the","of","and","from","in","to","with","at","on","for","an","book"]);
+const OTHER_WORDS=new Set(["le","la","les","des","du","de","et","un","une","il","lo","della","delle","di","e","der","die","das","und","het","een","van","en","el","los","las","y","au","aux"]);
+function looksEnglish(title){
+  const w=foldText(title).split(/[^a-z]+/).filter(Boolean);
+  return w.some(x=>EN_WORDS.has(x))&&!w.some(x=>OTHER_WORDS.has(x));
+}
+function languageOnIsbn(results,isbn,title){
+  const on=(results||[]).filter(x=>isbnInText(isbn,resultText(x)));
+  if(!on.length)return null;
+  const named=new Set();
+  let translationOf=null;
+  // Only the text around the ISBN: a site's own "Language: English" menu is not the book's.
+  const digits=String(isbn).replace(/\D/g,""), alt=isbn13to10(digits);
+  const near=t=>{
+    const out=[];
+    for(const f of [digits,alt].filter(Boolean)){
+      const re=new RegExp(f.split("").join("[\\s\\u2010-\\u2015-]?"),"gi");
+      for(const m of t.matchAll(re))out.push(t.slice(Math.max(0,m.index-400),m.index+m[0].length+400));
+    }
+    return out.join("\n");
+  };
+  for(const x of on){
+    const t=near(resultText(x));
+    for(const m of t.matchAll(LANG_LABEL)){ const n=LANG_NAMES[foldText(m[1])]; if(n)named.add(n); }
+    const tr=t.match(/\btranslation of\s*:?\s*([^\n]{4,200}?)\s*(?:\.\s*\/|\/|\n|$)/i);
+    if(tr&&!translationOf)translationOf=tr[1].replace(/[\s.]+$/,"").trim();
+  }
+  if(named.size===1){ const lang=[...named][0]; return{lang,why:"labelled "+lang,translationOf:lang==="English"?translationOf:null}; }
+  if(translationOf&&looksEnglish(title))return{lang:"English",why:"a record names it a translation of “"+translationOf+"”",translationOf};
+  return null;
+}
+
 // ── WHERE AN ENGLISH EDITION IS RECORDED ─────────────────────────────────────
 // The venue's language, for the library-record wording "originally published in
 // French as …". Non-English venues only, beside CATALOGUE_WORDS.
@@ -3462,10 +3504,18 @@ async function lookupCatalogue(row,hooks){
   // not printed in English: an English edition replaces it only when proved.
   let notEnglish=false;
   if(foreign){
-    const lang=read&&read.language?String(read.language):"";
+    let lang=read&&read.language?String(read.language):"";
+    // What the records carrying this ISBN say outranks the read (Vasari: the read
+    // took the Louvre page's "(In French)" for the English edition in hand).
+    const onIsbn=!langStopped&&F.isbn?languageOnIsbn([...(bookPage?bookPage.results:[]),...factsRes,...edRes],F.isbn,F.title):null;
+    if(onIsbn&&onIsbn.lang&&onIsbn.lang!==lang){ log.push("Language from the records carrying ISBN "+F.isbn+": "+onIsbn.lang+" ("+onIsbn.why+")"+(lang?", not "+lang+" as read":"")+"."); lang=onIsbn.lang; }
     if(langStopped){ F.englishCheck="stopped"; troubleLang=true; }
     else if(!lang){ F.englishCheck="unknownlang"; log.push("Language check: nothing says, so the book stands as found."); }
-    else if(isEnglishLang(lang)){ F.englishCheck="english"; log.push("Language check: "+lang+"."); }
+    else if(isEnglishLang(lang)){
+      F.englishCheck="english"; log.push("Language check: "+lang+".");
+      // The record names the original it translates: the card says which.
+      if(onIsbn&&onIsbn.translationOf)F.original={title:onIsbn.translationOf,isbn13:null,publisher:F.publisher||null};
+    }
     else{
       notEnglish=true;
       // The book's own title, if the results print it.
