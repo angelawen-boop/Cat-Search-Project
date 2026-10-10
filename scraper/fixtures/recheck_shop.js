@@ -855,7 +855,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const PAGE = 'https://boutique.louvre.fr/en/product/61740-test-experience-de-la-nature-fra.html';
     const OWN = 'L\u2019Exp\u00e9rience de la nature. Les arts \u00e0 Prague \u00e0 la cour de Rodolphe II';
     const PUB_PAGE = 'https://www.lienart.fr/livre/test-experience-de-la-nature';
-    const run = async (row, { lang = 'French', title = OWN, en = null, enPrinted = true, shopTitle = 'Experience of Nature. Art in Prague at the Court of Rudolf II', pub = null, pubPage = false, enFail = false, enVenue = true, enPub = null, isbnPub = null, pubFound = false, enIsbnPub = null } = {}) => {
+    const run = async (row, { lang = 'French', title = OWN, en = null, enPrinted = true, shopTitle = 'Experience of Nature. Art in Prague at the Court of Rudolf II', pub = null, pubPage = false, enFail = false, enVenue = true, enPub = null, isbnPub = null, pubFound = false, enIsbnPub = null, frLabel = true } = {}) => {
       calls.length = 0;
       script.mcp = (tool, args) => {
         if (tool === 'web_search') {
@@ -863,7 +863,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
           if (q.startsWith(FR) && isbnPub) return { payload: { results: [
             { url: 'https://books.test/a/' + FR, title: OWN, excerpts: ['ISBN 13: ' + FR + '\nPublisher: ' + isbnPub + ', 2025\nLangue : fran\u00e7ais'] },
             { url: 'https://books.test/b', title: OWN, excerpts: ['EAN ' + FR + '\n\u00c9diteur : ' + isbnPub + ', 2025'] }] } };
-          if (q.startsWith(FR)) return { payload: { results: [{ url: 'https://www.louvre.fr/editions/catalogue/test', title: OWN, excerpts: [OWN + ' \u2014 Lienart, 2025. EAN ' + FR + '. Langue : fran\u00e7ais.'] }] } };
+          if (q.startsWith(FR)) return { payload: { results: [{ url: 'https://www.louvre.fr/editions/catalogue/test', title: OWN, excerpts: [OWN + ' \u2014 Lienart, 2025. EAN ' + FR + (frLabel ? '. Langue : fran\u00e7ais.' : '.')] }] } };
           if (pubFound && q.startsWith('Lienart')) return { payload: { results: [{ url: 'https://www.lienart.fr/', title: 'Lienart \u00e9ditions', excerpts: ['Lienart \u00e9ditions'] }] } };
           if (pubFound && q.startsWith('site:www.lienart.fr')) return { payload: { results: [{ url: PUB_PAGE, title: OWN, excerpts: [OWN] }] } };
           if (/English edition/.test(q) && en && enIsbnPub) return { payload: { results: ['a', 'b'].map(k => ({ url: 'https://books.test/en-' + k, title: en, excerpts: [en + '. ISBN ' + EN + '\nPublisher: ' + enIsbnPub + ', 2025'] })) } };
@@ -917,7 +917,8 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     t = await run(louUnprinted, { en: 'Test Phantom English Edition', enPrinted: false });
     ok(!/Phantom/.test(t) && t.includes(OWN), 'LG-007: an English ISBN the results never print is not believed', t.slice(0, 400));
 
-    t = await run(louSaysEn, { lang: 'English', title: 'Experience of Nature' });
+    // No record labels the book French here: a labelled language outranks the read (EL-001).
+    t = await run(louSaysEn, { lang: 'English', title: 'Experience of Nature', frLabel: false });
     // The edition search runs beside the facts search, before the language is known (her accepted trade).
     ok(/In the museum shop/.test(t) && !/English edition/.test(t) && !calls.some(c => c.tool === 'web_fetch' && /lienart/.test(c.args.urls.join())), 'LG-008: the book is English \u2014 no English edition is claimed and the shop\u2019s book stands', t.slice(0, 400));
     ok(/Experience of Nature/.test(t) && !/Art in Prague at the Court/.test(t), 'LG-009:   and the title is cut to what the shop prints', t.slice(0, 400));
