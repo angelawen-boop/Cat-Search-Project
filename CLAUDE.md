@@ -62,9 +62,11 @@ is why they live in one repo, on one branch.
   session, after time has passed, try the free tier again first. A sub-agent
   cannot spend the key (permissions block it), so the main session does keyed
   fetches; a large reply is saved to a file — extract it by script, never retype.
-- **`/orchestrate` runs only when she types it** (her decision). No session
+- **`/orch` runs only when she types it** (her decision). No session
   routes work through it, or follows its steps, unless she has typed
-  `/orchestrate` in that session.
+  `/orch` in that session.
+- **`/close` ends a session** (her design): guide update, clear up, a fixed
+  four-part summary. Never archives the session. Runs only when she types it.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
 
 ### Put it in code — her decision
@@ -1105,6 +1107,29 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
    `docs/khm_pages/`). Check the 15 Oct run has 2025-11-11.
 
 ### 4. Catalogue lookup generally
+
+**PAUSED — no lookup patches until the redesign below is agreed** (her
+decision: past the third-patch limit — `lookupCatalogue` changed 10 times in
+three days). **Redesign, agreed in outline:** find → choose → tell, as three
+separate steps. The lookup keeps EVERY version it finds (language, binding,
+publisher, which showing it belongs to, the page that proved it); nothing is
+chosen or dropped mid-search; booklets are left off. One version → the card as
+now. Several → one line each, labelled with why it exists and a link to the page
+that proved it; she picks one; the same buy buttons rebuild for her pick, which
+becomes the card's book in the ledger (the list stored beside it; replaces
+`originalEdition`, `otherVenueBook`, `alsoVersion`). Search again starts fresh.
+**Starting pick, her rules, in order:** only this showing's catalogue (any
+language or printing) may start picked; English first (any publisher, any time
+— Hammershøi); then this venue's own printing (Vasari: the Louvre's English
+paperback over Stockholm's hardcover; NGA's card: NGA's book); then hardcover
+when only the binding differs; nothing picked when this showing has no English
+but another showing's different book is English (Hubert Robert, Louvre), or when
+the rules do not settle it. More rules only once she has used the cards. These
+replace "hardcover leads" and one-book-per-card.
+**Next:** live research of the agreed case set — Vasari, Hubert Robert (Louvre,
+NGA), Hammershøi, Watteau, Canaletto – Guardi, Botticelli, *Metamorphoses*,
+Millet — and the card each should show; then one design doc for her approval;
+no code before. Every later change is checked against that set.
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,

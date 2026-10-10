@@ -8,7 +8,9 @@
  * kept, pieces included (LL-005); no store, or a failing one, never breaks a lookup
  * (LL-006, LL-007); calls outside a lookup are not recorded (LL-008); Add by link
  * saves one record per link, with what code read off the page and the title made,
- * and one for a link that failed (LL-009, run on the page itself).
+ * and one for a link that failed (LL-009, run on the page itself); the card after a
+ * lookup carries its versions and pick (LL-010), which build/lookup_proof_check.js
+ * compares with her nine cases (PC-001 to PC-003).
  *
  *   node scraper/fixtures/lookup_log.js
  */
@@ -182,6 +184,52 @@ const script = {
     await api3.saveLookupTape(t3, { ok: true, row, detail: '' });
     await api3.searchWeb('after', ['after']);
     eq(t3.calls.length, 0, 'LL-008: a call after the lookup ended is not recorded');
+  }
+
+  // ── LL-010, PC-001..PC-003: versions in the record, checked against her nine cases ─
+  // A Millet lookup run whole and recorded; a Vasari record saved from a card whose versions
+  // are wrong. build/lookup_proof_check.js reads the saved log as a session saves it.
+  {
+    const { spawnSync } = require('child_process');
+    const BOOK = 'https://shop.nationalgallery.org.uk/test-millet.html';
+    const T = 'Millet: Life on the Land';
+    const millet = {
+      mcp: (tool, args) => tool === 'web_search' ? { payload: { results: [] } }
+        : args.urls.includes(BOOK) ? { payload: { errors: [], results: [{ url: BOOK, title: T, excerpts: [], full_content: '# ' + T + '\nISBN 978-1-85709-738-2\n£30\n' + 'x '.repeat(300) }] } }
+        : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Exhibition catalogues', excerpts: ['[' + T + ' £30](' + BOOK + ')\n' + 'Another catalogue · £35. '.repeat(20)] })) } },
+      sample: p => /venue’s OWN shop pages/.test(p) ? { found: true, thisVenue: true, catalogueTitle: T, isbn13: null, publisher: 'National Gallery Global', publisherUrl: null, shopUrl: BOOK } : {},
+    };
+    const store = fakeDb();
+    const api = lift(millet, store.api);
+    const mRow = { ...row, id: 'ng-millet', museumId: 'ng', title: 'Millet: Life on the Land' };
+    let tape = api.tapeStart('Find catalogue', mRow);
+    await api.saveLookupTape(tape, await api.lookupCatalogue(mRow, {}));
+    const vRow = { ...row, id: 'louvre-vasari', museumId: 'louvre', title: 'Giorgio Vasari: The Book of Drawings' };
+    const wrong = { ...vRow, looked: true, hasCatalogue: 'yes', editionPick: 2, editions: [
+      { title: 'Le Livre des dessins', lang: 'French', binding: null, pages: null, publisher: 'Lienart', isbn13: '9782359063721', alsoIsbn13: null, showing: 'this', proofUrl: null, note: null },
+      { title: 'The Book of Drawings', lang: 'English', binding: 'paperback', pages: null, publisher: 'Lienart', isbn13: '9782359063738', alsoIsbn13: null, showing: 'this', proofUrl: null, note: null },
+      { title: 'The Book of Drawings', lang: 'English', binding: 'hardcover', pages: null, publisher: 'Nationalmuseum', isbn13: '9789171009166', alsoIsbn13: null, showing: 'this', proofUrl: null, note: null }] };
+    const dirOf = () => saveToDir(store.docs);
+    let dir = dirOf();
+    const millRec = reader.readRecord(dir, reader.listRecords(dir)[0].id).record;
+    eq([millRec.after.editions.map(v => [v.lang, v.isbn13, v.showing]), millRec.after.editionPick], [[['English', '9781857097382', 'this']], 0],
+      'LL-010: the card after a lookup carries its versions and its pick');
+    const check = d => spawnSync(process.execPath, [path.join(__dirname, '..', '..', 'build', 'lookup_proof_check.js'), d], { encoding: 'utf8' });
+    let res = check(dir);
+    ok(res.status === 0 && /Case 9 — Millet: Life on the Land \(ng\): as agreed/.test(res.stdout) && /Case 1 — .*: no lookup in the log/.test(res.stdout),
+      'PC-001: a lookup as agreed passes; a case with no lookup is listed, not counted', res.stdout + res.stderr);
+    tape = api.tapeStart('Search again', vRow);
+    await api.saveLookupTape(tape, { ok: true, row: wrong, detail: '' });
+    dir = dirOf();
+    res = check(dir);
+    ok(res.status === 1 && /picked 9789171009166, wanted 9782359063738/.test(res.stdout) && /9782359063721: also null, wanted 9782350317441/.test(res.stdout),
+      'PC-002: Vasari with Stockholm’s hardcover picked and the Louvre’s own number missing — each difference printed, exit 1', res.stdout + res.stderr);
+    const { compare } = require('../../build/lookup_proof_check.js');
+    const cards = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_proof_cards.json'), 'utf8')).cards;
+    const c2 = cards.find(c => c.case === 2);
+    const asAgreed = c2.versions.map(v => ({ ...v, publisher: v.showing === 'this' ? 'Somogy, Editions du' : 'Lund Humphries' }));
+    eq([compare(c2, { editions: asAgreed, editionPick: null }), compare(c2, { editions: [...asAgreed, { lang: 'French', isbn13: '9782757210659', showing: 'this' }], editionPick: null }).length > 0],
+      [[], true], 'PC-003: a publisher written another way is the same house; the 48-page album listed is a difference');
   }
 
   // ── LL-009: Add by link — one record per link, read on the page itself ──────

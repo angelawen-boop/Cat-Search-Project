@@ -1,0 +1,75 @@
+{
+  "_about": "Her nine agreed catalogue-version cases (docs/catalogue_versions.md), as data. Every later change to the catalogue lookup is checked against this list: CV- tests in scraper/fixtures/catalogue_route.js build each case's versions and check the starting pick; build/lookup_proof_check.js compares live lookup-log records with it. A card is matched to a record by venue and every word in `match`. A version's binding or pages null = not compared. leftOff: ISBNs that must never be a version. `pick` names the picked version by its isbn13 (the ledger's editionPick is its index).",
+  "cards": [
+    {
+      "case": 1, "venue": "louvre", "title": "Giorgio Vasari: The Book of Drawings", "match": ["vasari"],
+      "versions": [
+        { "lang": "French", "binding": null, "pages": null, "publisher": "Louvre Éditions / Lienart", "isbn13": "9782359063721", "alsoIsbn13": "9782350317441", "showing": "this" },
+        { "lang": "English", "binding": "paperback", "pages": null, "publisher": "Louvre Éditions / Lienart", "isbn13": "9782359063738", "alsoIsbn13": null, "showing": "this" },
+        { "lang": "English", "binding": "hardcover", "pages": null, "publisher": "Nationalmuseum", "isbn13": "9789171009166", "alsoIsbn13": null, "showing": "this" }
+      ],
+      "pick": "9782359063738", "leftOff": []
+    },
+    {
+      "case": 2, "venue": "louvre", "title": "Hubert Robert (1733–1808). A Visionary Painter", "match": ["hubert", "robert"],
+      "versions": [
+        { "lang": "French", "binding": "hardcover", "pages": 544, "publisher": "Louvre Éditions / Somogy", "isbn13": "9782757210642", "alsoIsbn13": "9782350315355", "showing": "this" },
+        { "lang": "English", "binding": "hardcover", "pages": 288, "publisher": "National Gallery of Art / Lund Humphries", "isbn13": "9781848221918", "alsoIsbn13": null, "showing": "other" }
+      ],
+      "pick": null, "leftOff": ["9782757210659"]
+    },
+    {
+      "case": 3, "venue": "occ-nga-gov", "title": "Hubert Robert, 1733–1808", "match": ["hubert", "robert"],
+      "versions": [
+        { "lang": "English", "binding": "hardcover", "pages": 288, "publisher": "National Gallery of Art / Lund Humphries", "isbn13": "9781848221918", "alsoIsbn13": null, "showing": "this" },
+        { "lang": "French", "binding": "hardcover", "pages": 544, "publisher": "Louvre Éditions / Somogy", "isbn13": "9782757210642", "alsoIsbn13": "9782350315355", "showing": "other" }
+      ],
+      "pick": "9781848221918", "leftOff": ["9782757210659"]
+    },
+    {
+      "case": 4, "venue": "jacquemart", "title": "Hammershøi: the master of danish painting", "match": ["hammershoi"],
+      "versions": [
+        { "lang": "French", "binding": null, "pages": null, "publisher": "Culturespaces / Fonds Mercator", "isbn13": "9789462302495", "alsoIsbn13": null, "showing": "this" },
+        { "lang": "English", "binding": null, "pages": null, "publisher": "Rizzoli Electa", "isbn13": "9780847899289", "alsoIsbn13": null, "showing": "this" }
+      ],
+      "pick": "9780847899289", "leftOff": []
+    },
+    {
+      "case": 5, "venue": "louvre", "title": "Pierrot, dit le Gilles", "match": ["pierrot"],
+      "versions": [
+        { "lang": "French", "binding": "paperback", "pages": null, "publisher": "Louvre Éditions / Lienart", "isbn13": "9782359064476", "alsoIsbn13": null, "showing": "this" }
+      ],
+      "pick": "9782359064476", "leftOff": []
+    },
+    {
+      "case": 6, "venue": "jacquemart", "title": "Canaletto – Guardi", "match": ["canaletto", "guardi"],
+      "versions": [
+        { "lang": "French", "binding": "hardcover", "pages": null, "publisher": "Fonds Mercator", "isbn13": "9789061538226", "alsoIsbn13": null, "showing": "this" }
+      ],
+      "pick": "9789061538226", "leftOff": ["9782758004158"]
+    },
+    {
+      "case": 7, "venue": "jacquemart", "title": "Botticelli, artiste et designer", "match": ["botticelli"],
+      "versions": [
+        { "lang": "French", "binding": null, "pages": null, "publisher": "Culturespaces / Fonds Mercator", "isbn13": "9789462302815", "alsoIsbn13": null, "showing": "this" }
+      ],
+      "pick": "9789462302815", "leftOff": ["9781789144383"]
+    },
+    {
+      "case": 8, "venue": "rijks", "title": "Metamorphoses", "match": ["metamorphoses"],
+      "versions": [
+        { "lang": "English", "binding": "paperback", "pages": null, "publisher": "Hannibal", "isbn13": "9789493416543", "alsoIsbn13": null, "showing": "this" },
+        { "lang": "Dutch", "binding": null, "pages": null, "publisher": "Hannibal", "isbn13": "9789493416550", "alsoIsbn13": null, "showing": "this" },
+        { "lang": "Italian", "binding": null, "pages": null, "publisher": "Hannibal", "isbn13": "9789493416857", "alsoIsbn13": null, "showing": "this" }
+      ],
+      "pick": "9789493416543", "leftOff": []
+    },
+    {
+      "case": 9, "venue": "ng", "title": "Millet: Life on the Land", "match": ["millet"],
+      "versions": [
+        { "lang": "English", "binding": null, "pages": null, "publisher": "National Gallery", "isbn13": "9781857097382", "alsoIsbn13": null, "showing": "this" }
+      ],
+      "pick": "9781857097382", "leftOff": []
+    }
+  ]
+}
