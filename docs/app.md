@@ -55,6 +55,10 @@ never opened twice; the diagnostic counts calls and times each step. Waits in a
 row, old → new: self-published 4 → 3; outside publisher 9 → 7; foreign, no
 English edition 13 → 7; edition swap 18 → 6–7; worst ~30 → 17.
 
+**A reply holding two answers** ("Wait — here is the corrected object", her Louvre
+links Hubert Robert and Body and Soul): Claude's last answer, its own correction, is
+taken (`lastJsonObject` in `readResults`; every read). TW-001 to TW-004.
+
 **The lookup log** (her decision): Find catalogue, Search again, Re-check and each
 link Add by link reads save one record to the page's store (`lookups`, newest 50),
 so a miss or an untidy title is diagnosed without her pasting the panel. It holds
