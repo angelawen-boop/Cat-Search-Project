@@ -3179,8 +3179,9 @@ function versionNote(vs,i,row){
   if(vs.some(x=>x.showing==="other"))return "this showing's catalogue";
   const english=isEnglishLang(v.lang), hasEnglish=mine.some(x=>isEnglishLang(x.lang)), hasOriginal=mine.some(x=>x.lang&&!isEnglishLang(x.lang));
   if(!english&&v.lang&&hasEnglish)return "the original edition";
+  // The venue's own English printing says so whether or not its original was found.
+  if(english&&mu&&mu.english===false&&venuePrinting(v.publisher,id))return "this venue's English edition";
   if(english&&hasOriginal){
-    if(venuePrinting(v.publisher,id))return "this venue's English edition";
     const start=parseInt(String(row.startDate||"").slice(0,4),10);
     return v.year&&start&&v.year>start?"the English edition, published later":"the English edition";
   }

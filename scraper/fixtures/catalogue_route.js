@@ -841,6 +841,9 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       '● English · Giorgio Vasari. The Book of Drawings · Musée du Louvre Editions / Lienart · 978-2359063738 — this venue\'s English edition. (source: amazon.com)',
       '○ French · Giorgio Vasari. Le Livre des dessins · Musée du Louvre Editions / Lienart · 978-2359063721 — the original edition. (source: louvre.fr)'],
       'VL-013: Vasari, two versions from the Louvre\'s own house — her notes stay: "this venue\'s English edition", "the original edition"');
+    eq(shown({ ...vas2, editions: [vas2.editions[0], { title: 'Giorgio Vasari The Book of Drawings', lang: 'English', binding: 'hardcover', pages: 240, publisher: 'Nationalmuseum', isbn13: '9789171009166', alsoIsbn13: null, showing: 'this', proofUrl: 'https://nationalmuseum.bokorder.se/p', note: null, city: 'Stockholm', year: 2022, card: null }] })[0],
+      '● English · Giorgio Vasari. The Book of Drawings · Musée du Louvre Editions / Lienart · 978-2359063738 — this venue\'s English edition. (source: amazon.com)',
+      'VL-014: Vasari, the French not found — the Louvre\'s English book still says "this venue\'s English edition"');
     eq([5, 6, 7, 9].map(n => shown(caseRow(n, '2024-01-01', []))), [null, null, null, null],
       'VL-007: Watteau, Canaletto – Guardi, Botticelli, Millet — one version: no version lines, the card as now');
     eq(api.versionLines({ museumId: 'louvre', editions: null }), null, 'VL-008: an old row with no versions has no version lines');
