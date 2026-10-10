@@ -2549,8 +2549,8 @@ function englishLine(r){
   const c=r&&r.englishCheck;
   const o=r&&r.originalEdition;
   if(c==="english"&&o&&o.title)return "English edition of \u201c"+o.title+"\u201d"+(o.publisher?" ("+o.publisher+")":"")+".";
-  // Her wording.
-  if(c==="publisher")return "No English edition - checked publisher's site"+(r.publisher?" ("+r.publisher+")":"")+" and bookshops.";
+  // Her wording; the publisher is printed above, so not again here (her decision).
+  if(c==="publisher")return "No English edition - checked publisher's site and bookshops.";
   if(c==="shops")return "No English edition found in bookshops.";
   if(c==="unknownlang")return "The book\u2019s language couldn\u2019t be confirmed, so no English edition was looked for.";
   if(c==="stopped")return "English edition not checked \u2014 the search stopped part-way. Search again to retry.";
