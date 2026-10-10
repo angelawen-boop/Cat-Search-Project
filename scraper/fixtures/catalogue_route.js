@@ -392,6 +392,34 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq(api.publisherLinkOf('https://www.abebooks.com/9780847899289', 'Rizzoli Electa', null), null, 'PS-006:   a link anywhere else still is not');
   }
 
+  // ── UN-001..UN-003: Hubert Robert — a press release names the catalogue, not its title ─
+  {
+    const PRESS = 'https://www.nationalgallery.org.uk/press/test-hubert-robert';
+    const ISBN = '9781848221956';
+    const searchPlan = (factsResults, failFacts) => (tool, args) => {
+      if (tool !== 'web_search') return shelfOf(args.urls, '[Another catalogue £30](https://shop.nationalgallery.org.uk/other.html)');
+      const q = args.search_queries.join(' | ');
+      if (/press release catalogue/.test(q)) return { payload: { results: [{ url: PRESS, title: 'Test Hubert Robert press release',
+        excerpts: ['Published in association with Lund Humphries, the accompanying catalog richly illuminates Robert.'] }] } };
+      if (/catalogue ISBN/.test(q)) { if (failFacts) { const e = new Error('x'); e.code = 'server_unavailable'; throw e; } return { payload: { results: factsResults } }; }
+      return { payload: { results: [] } };
+    };
+    const webRead = { found: true, thisVenue: true, catalogueTitle: null, isbn13: null, publisher: 'Lund Humphries', publisherUrl: null, shopUrl: null };
+    const sample = factsAnswer => p => isShopRead(p) ? { found: false } : /"thisVenue": true\|false/.test(p) ? webRead : isFactsRead(p) ? factsAnswer : {};
+    const book = [{ url: 'https://www.lundhumphries.com/products/hubert-robert', title: 'Hubert Robert | Lund Humphries',
+      excerpts: ['Hubert Robert. Margaret Morgan Grasselli and Yuriko Jackall. Published in association with the National Gallery of Art. ISBN ' + ISBN] }];
+    let { out, calls, row: r } = await run(row('ng', 'Test Hubert Robert, 1733–1808'), { mcp: searchPlan(book), sample: sample({ isbn13: ISBN, publisher: 'Lund Humphries', title: 'Hubert Robert' }) });
+    eq([r.hasCatalogue, r.catalogueTitle, r.isbn13, r.publisher], ['yes', 'Hubert Robert', ISBN, 'Lund Humphries'],
+      'UN-001: Hubert Robert — a catalogue named only as "the accompanying catalog" goes on to the facts round, which finds its title and ISBN');
+    ok(calls.some(c => c.kind === 'sample' && isFactsRead(c.prompt) && /Its own title is not known yet/.test(c.prompt) && /"title": string\|null/.test(c.prompt)),
+      'UN-001a:  the facts read is asked for the book’s title');
+    ({ out, row: r } = await run(row('ng', 'Test Hubert Robert, 1733–1808'), { mcp: searchPlan([]), sample: sample({}) }));
+    eq([r.hasCatalogue, out.ok, !!out.trouble], ['no', true, false], 'UN-002: no title or ISBN found for it — no catalogue, as before');
+    ok(/not filed/.test(out.detail), 'UN-002a:  the diagnostic says why', out.detail.split('\n').pop());
+    ({ out } = await run(row('ng', 'Test Hubert Robert, 1733–1808'), { mcp: searchPlan([], true), sample: sample({}) }));
+    ok(out.ok && !!out.trouble, 'UN-003: the facts search failed — the lookup says it did not finish, so Search again leaves the card alone');
+  }
+
   // ── PL-001..PL-005: the progress line on each main path ──────────────────────
   // PL-001 and PL-003 are with WL-030 and WL-001 above.
   {

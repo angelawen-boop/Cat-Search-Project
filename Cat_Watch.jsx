@@ -3014,9 +3014,12 @@ function carriesBook(x,book,isbn){ return !!((isbn&&isbnInText(isbn,resultText(x
 function factsPrompt(q){
   const shape='{"isbn13": string|null, "publisher": string|null'
     +(q.bookPage?', "pagePublisher": string|null, "pagePublisherUrl": string|null':'')
-    +(q.foreign?', "language": string|null, "title": string|null, "editions": [{"title": string, "isbn13": string, "language": string, "publisher": string|null, "evidenceUrl": string}]':'')+'}';
-  return "You are reading real web text about ONE printed exhibition catalogue: “"+q.book+"”"
-    +(q.isbn?", ISBN "+q.isbn:"")+", the catalogue of the exhibition “"+q.show+"” at "+q.venue+".\n"
+    +(q.foreign?', "language": string|null, "title": string|null, "editions": [{"title": string, "isbn13": string, "language": string, "publisher": string|null, "evidenceUrl": string}]'
+      :q.needTitle?', "title": string|null':'')+'}';
+  // needTitle: the book is known so far only as "the catalogue" (unnamed in lookupCatalogue).
+  return "You are reading real web text about ONE printed exhibition catalogue: "
+    +(q.needTitle?"the catalogue of the exhibition “"+q.show+"” at "+q.venue+". Its own title is not known yet and may differ from the exhibition's"
+      :"“"+q.book+"”"+(q.isbn?", ISBN "+q.isbn:"")+", the catalogue of the exhibition “"+q.show+"” at "+q.venue)+".\n"
     +"Use ONLY what the text below says. Never use outside knowledge, never guess an ISBN and never invent a link.\n"
     +"Give every ISBN EXACTLY as printed — a 10-digit one as it stands, never converted.\n"
     +"\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
@@ -3033,7 +3036,8 @@ function factsPrompt(q){
       +"printed, its ISBN, its language, its publisher and the address of the result that shows it. Its publisher "
       +"only where the text names the house that printed THAT edition, else null — “originally published … "
       +"Fonds Mercator” names the original's house, not the translation's. An empty list "
-      +"if none. Never invent one.\n":"")
+      +"if none. Never invent one.\n"
+      :q.needTitle?"title: this book's title EXACTLY as the text prints it, only where the text ties it to this exhibition at this venue. Null if not shown.\n":"")
     +"If the text is about a different book, answer null.\n"
     +(q.bookPage?"\nSECTION A — ONE web page in full: the book's own page.\n"+pageForPrompt(q.bookPage.results,12000)+"\n":"")
     +(q.facts.length?"\nSECTION B — web search results about this book.\n"+resultsForPrompt(q.facts,2500,{words:[q.book,q.isbn||""]})+"\n":"")
@@ -3236,7 +3240,7 @@ async function lookupCatalogue(row,hooks){
   // ── PHASE 1: FIND THE BOOK. Go to the shop — open its own pages, as she does by hand;
   // never a general web search, which filed the National Gallery's list of 32 books as
   // the book (Zurbarán). The wider web only because the shop had nothing.
-  let hit=null, fromShop=false, blocked=false;
+  let hit=null, fromShop=false, blocked=false, unnamed=false;
   const s1=await shopStep(row,io);
   if(s1.ran){
     log.push(s1.detail);
@@ -3274,9 +3278,20 @@ async function lookupCatalogue(row,hooks){
       log.push("Not filed: “"+(d2.catalogueTitle||"the book found")+"” is not tied to this venue’s show in the results.");
       d2={};
     }
-    hit=await confirmShopLink(settle(row,d2,dom,"",false,blocked,s2.results),io);
-    if(hit&&hit.detail)log.push(hit.detail.trim());
-    if(!hit||!hit.row||hit.row.hasCatalogue!=="yes")return done({ok:true,row:composeRow(row,{found:false,blocked})});
+    // A catalogue tied to this venue but named by neither title nor ISBN (a press release's
+    // "the accompanying catalog", Hubert Robert) goes on to the facts round, which looks
+    // for both; neither found there → no catalogue. UN-001 to UN-003.
+    if(d2.found&&d2.thisVenue===true&&!d2.catalogueTitle&&!d2.isbn13){
+      unnamed=true;
+      log.push("The results say a catalogue exists"+(d2.publisher?" ("+d2.publisher+")":"")+" but give no title or ISBN — looking for them.");
+      hit={ok:true,pageUrl:null,row:{...row,looked:true,hasCatalogue:"yes",shopState:blocked?"blocked":"web",shopChange:null,
+        catalogueTitle:null,isbn13:null,publisher:d2.publisher||null,
+        publisherUrl:publisherLinkOf(d2.publisherUrl,d2.publisher,dom,row.museumId),publisherResult:null,shopUrl:null}};
+    }else{
+      hit=await confirmShopLink(settle(row,d2,dom,"",false,blocked,s2.results),io);
+      if(hit&&hit.detail)log.push(hit.detail.trim());
+      if(!hit||!hit.row||hit.row.hasCatalogue!=="yes")return done({ok:true,row:composeRow(row,{found:false,blocked})});
+    }
   }
 
   const r=hit.row;
@@ -3366,13 +3381,18 @@ async function lookupCatalogue(row,hooks){
     if(!fs.ok&&foreign)langStopped=true;
     const page=foreign?bookPage:null;
     if(factsRes.length||edRes.length||page){
-      const rd=await io.read(factsPrompt({book,show:title,venue,isbn:F.isbn,bookPage:page,facts:factsRes,editions:edRes,foreign}));
+      const rd=await io.read(factsPrompt({book,show:title,venue,isbn:F.isbn,bookPage:page,facts:factsRes,editions:edRes,foreign,needTitle:unnamed}));
       log.push(rd.detail);
       if(rd.ok)read=rd.data||{};
       else{ fault(rd.detail); if(foreign)langStopped=true; }
     }
     found2.push(...factsRes,...edRes);
     const given=[...(page?page.results:[]),...factsRes,...edRes];
+    // The book's own title, for a catalogue known so far by no title (unnamed), as printed.
+    if(unnamed&&!F.title&&!foreign&&read&&read.title){
+      const tp=titleAsPrinted(read.title,given);
+      if(tp.onPage){ F.title=tp.title; log.push("The book’s title, from the results: “"+tp.title+"”."); }
+    }
     // The ISBN: the book's page in code (above), the results in code, then Claude's —
     // only if the text it was given prints it.
     if(!F.isbn){ const c=isbnInResults(factsRes,book); if(c){ F.isbn=c; log.push("ISBN read off the search results in code: "+c); } }
@@ -3407,6 +3427,10 @@ async function lookupCatalogue(row,hooks){
       if(p)offerPublisher(p,"the ISBN’s results");
     }
     else log.push("No ISBN in the web search, or on the pages it found about this book.");
+  }
+  if(unnamed&&!F.title&&!F.isbn){
+    log.push("No title or ISBN found for the catalogue the results mention, so it is not filed.");
+    return done({ok:true,row:composeRow(row,{found:false,blocked}),...(trouble?{trouble}:{})});
   }
   if(F.publisher)log.push("Publisher: "+F.publisher+" — from "+F.pubFrom+(F.pubFrom==="general results"?" (a guess).":"."));
 
