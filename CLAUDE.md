@@ -1152,13 +1152,13 @@ it whole before touching versions.
     Canaletto – Guardi, Botticelli, Metamorphoses, Millet, Hubert Robert at NGA) never
     run on it; another museum's shop finder live beyond two fetches (Nationalmuseum);
     per-version Re-check live; the `shops/museums` store; the page as she sees it.
-- **Next: the live check page** (her design): a separate artifact running the app's real
-  `lookupCatalogue` (generated from `Cat_Watch.jsx` by a committed build script) with
-  her connector and the in-page Claude; all nine cases built in; ONE Run button, saving
-  each case to its own store as it finishes; pass/fail per field against the cases'
-  right answers (a field the search can't reach fails, e.g. Hammershøi's Rizzoli). A
-  new session builds it; she taps Run once, the session reads the store. Never her app,
-  test page or ledger.
+- **The live check page — built; baseline 2 of 9 pass** (Canaletto, Millet; one run
+  each): https://claude.ai/artifact/KrnwLxC6YdZkd3QyFW4wmy. The app's real
+  `lookupCatalogue`, her connector and the in-page Claude on all nine cases, graded per
+  field; its own store, never her app, test page or ledger. Build `node
+  build/live_check.js`, republish `build/dist/live_check.html` to that url; she taps
+  Run once, the session reads `checks` and `lookups` with ArtifactData. Baseline,
+  how to read it, and what to follow up: `docs/live_check_report.md`.
 - **Still hers to answer:** another showing's museum worked out from its city
   (Washington → NGA), else no shop line on that block; Re-check with nothing picked
   re-checks the venue's own versions. Two small fixes waiting (publisher step on " : "
@@ -1292,6 +1292,7 @@ price, her decision).
 | `docs/venue_urls.md` | The original 21 venues' addresses from the Sweeper Brief, and which of its notes still hold | Wiring or re-checking one of those venues |
 | `docs/listing_pages/`, `docs/*_pages/` | Pages she saved, with a README of what each settled | Changing that venue's recipe — before asking her for anything |
 | `docs/compression.md` | Compression design, model split, eval, rejected alternatives | Changing compression — otherwise don't |
+| `docs/live_check_report.md` | The live check page: how to run and read it, the baseline, follow-up | Changing the catalogue lookup |
 | `docs/picked_shows.md` | Add by link — design, decisions, store, shelf rule, first test | Changing Add by link |
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review | Before touching a reviewed venue |

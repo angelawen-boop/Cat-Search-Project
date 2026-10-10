@@ -3,7 +3,8 @@
 Status: **published in 43; her three live searches (Vasari, Hubert Robert, Hammershøi)
 came back wrong. Layout and finding rules re-agreed (below) and REBUILT on `main`
 and `claude/ledger-cloud` (not published). Replayed on her three real lookups
-(`scraper/fixtures/catalogue_versions.js`, VR-/VN-/SH-/RV-). Open below.** Every change is checked LIVE against her cases before
+(`scraper/fixtures/catalogue_versions.js`, VR-/VN-/SH-/RV-). Live check baseline: 2 of
+9 pass (Open, 5).** Every change is checked LIVE against her cases before
 it reaches her (CLAUDE.md §1).
 
 ## The design
@@ -252,7 +253,8 @@ Humphries'; Hammershøi's English block with no publisher or year.
    whole** and found no site; her co-edition rule says look for the outside house.
    `publisherToFind` / `siteOfHouses` do not split on " : " yet — fix with a live run.
 4. **Progress label** reads "Searching venue shop…" while checking another museum's.
-5. **The live check page, then publish** (her design; CLAUDE.md §7.4): all nine cases
-   run by the real code, her connector and the in-page Claude, one Run tap, graded per
-   field. Nothing here is "fixed" until it passes. Publish only when she says and her
-   page is closed. Cards searched on 43 need a Search again.
+5. **The live check page — built; baseline 2 of 9 pass** (Canaletto, Millet; one run
+   each): https://claude.ai/artifact/KrnwLxC6YdZkd3QyFW4wmy. Failures per case and
+   follow-up: `docs/live_check_report.md`. Nothing here is "fixed" until it passes.
+   Publish only when she says and her page is closed. Cards searched on 43 need a
+   Search again.
