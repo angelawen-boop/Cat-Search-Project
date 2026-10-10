@@ -1,5 +1,5 @@
 {
-  "_about": "Her nine agreed catalogue-version cases (docs/catalogue_versions.md), as data. Every later change to the catalogue lookup is checked against this list: CV- tests in scraper/fixtures/catalogue_route.js build each case's versions and check the starting pick; build/lookup_proof_check.js compares live lookup-log records with it. A card is matched to a record by venue and every word in `match`. A version's binding or pages null = not compared. leftOff: ISBNs that must never be a version.",
+  "_about": "Her nine agreed catalogue-version cases (docs/catalogue_versions.md), as data. Every later change to the catalogue lookup is checked against this list: CV- tests in scraper/fixtures/catalogue_route.js build each case's versions and check the starting pick; build/lookup_proof_check.js compares live lookup-log records with it. A card is matched to a record by venue and every word in `match`. A version's binding or pages null = not compared. leftOff: ISBNs that must never be a version. `pick` names the picked version by its isbn13 (the ledger's editionPick is its index).",
   "cards": [
     {
       "case": 1, "venue": "louvre", "title": "Giorgio Vasari: The Book of Drawings", "match": ["vasari"],

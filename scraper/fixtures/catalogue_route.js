@@ -70,7 +70,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -215,7 +215,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const { out, calls, row: r, labels } = await run(row('jacquemart', 'Hammershøi: the master of danish painting'), script);
     eq([r.catalogueTitle, r.isbn13, r.publisher], ['Hammershøi: Painter of Northern Light', '9780847899289', 'Rizzoli Electa'], 'WL-001: Hammershøi — the card carries the English edition');
     eq([r.editions.map(v => [v.lang, v.isbn13, v.showing, v.title]), r.editionPick, r.originalEdition],
-      [[['French', '9789462302495', 'this', FR], ['English', '9780847899289', 'this', 'Hammershøi: Painter of Northern Light']], '9780847899289', null],
+      [[['French', '9789462302495', 'this', FR], ['English', '9780847899289', 'this', 'Hammershøi: Painter of Northern Light']], 1, null],
       'WL-002:   the French book kept as a version beside the English one, which is picked (no longer written as originalEdition)');
     eq([r.englishCheck, r.shopState, r.shopUrl], ['english', 'web', null], 'WL-003:   filed as found on the web, English');
     eq(api.englishLine(r), null, 'WL-004:   no English line on a card with several versions — her version lines say it (stage 2; was "English edition of …")');
@@ -258,7 +258,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq([r.englishCheck, r.isbn13], ['english', '9780847899289'], 'WL-060: Hammershøi live — the library record that came tenth is read, and the card carries the English edition');
     eq(r.catalogueTitle, 'Hammershøi : painter of northern light', 'WL-061:   its title as the record prints it');
     eq([r.editions.map(v => [v.lang, v.isbn13, v.showing, v.publisher]), r.editionPick],
-      [[['French', '9789462302495', 'this', 'Fonds Mercator'], ['English', '9780847899289', 'this', null]], '9780847899289'],
+      [[['French', '9789462302495', 'this', 'Fonds Mercator'], ['English', '9780847899289', 'this', null]], 1],
       'WL-062:   her case 4 — the French original and the English edition both kept, the English picked (the record names no English publisher)');
     eq([r.publisher, r.publisherResult], [null, 'unnamed'], 'WL-063:   the record names no publisher for the English edition, so none is claimed');
   }
@@ -516,7 +516,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       facts: { isbn13: EN_ISBN, publisher: 'National Gallery of Art', title: 'Hubert Robert' } }));
     eq([r.catalogueTitle, r.isbn13], ['Hubert Robert', EN_ISBN], 'HR-002: NGA — the English book’s own ISBN, never the French one beside its English publisher');
     ok(!/Somogy/i.test(r.publisher || ''), 'HR-003:   and its publisher is the English book’s', r.publisher);
-    eq([r.editions.map(v => [v.lang, v.isbn13, v.showing]), r.editionPick], [[['English', EN_ISBN, 'this']], EN_ISBN],
+    eq([r.editions.map(v => [v.lang, v.isbn13, v.showing]), r.editionPick], [[['English', EN_ISBN, 'this']], 0],
       'HR-015: NGA, her case 3 — its own English catalogue is picked; the Paris book is not among the versions, because this recording’s facts read names no French edition');
 
     // Louvre: the French book stands; the English book is a different one (her case three).
@@ -572,10 +572,12 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       'HR-008: two English editions, neither the Louvre’s own printing — both kept, and her rules leave the pick open (no longer "same publisher first")');
     vs = withEds([...eds].reverse(), 'Somogy éditions d\'art / Louvre éditions');
     const own = vs.find(v => v.isbn13 === '9780847899289');
-    eq([own && own.publisher, vs[api.pickEdition(vs, 'louvre')].isbn13], ['Louvre éditions / Somogy éditions d\'art', '9780847899289'],
+    // An undone rule leaves nothing picked: read as null, a FAIL, never a crash.
+    const pickedIsbn = (list, mid) => { const i = api.pickEdition(list, mid); return list[i] ? list[i].isbn13 : null; };
+    eq([own && own.publisher, pickedIsbn(vs, 'louvre')], ['Louvre éditions / Somogy éditions d\'art', '9780847899289'],
       'HR-008a: printed by the original’s house, it shows the original’s publishers, venue first, and starts picked as the Louvre’s own printing, whatever order they come in');
     vs = withEds([eds[0]], 'Somogy éditions d\'art');
-    eq(vs[api.pickEdition(vs, 'louvre')].isbn13, EN_ISBN, 'HR-009:   with one English edition, the translation published elsewhere starts picked');
+    eq(pickedIsbn(vs, 'louvre'), EN_ISBN, 'HR-009:   with one English edition, the translation published elsewhere starts picked');
 
     eq([api.pagesPrinted('544', HR.louvre_web), api.pagesPrinted('600', HR.louvre_web), api.pagesPrinted('281', HR.louvre_facts)], [544, null, 281],
       'HR-010: a page count is kept only where the results print it');
@@ -608,7 +610,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       sample: p => isShopRead(p) ? reads[0] : /"found"/.test(p) ? reads[1] : isFactsRead(p) ? reads[2] : isJudge(p) ? { kind: 'other', bookUrl: null } : {},
     };
     const { out, row: r } = await run(row('louvre', 'Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection'), script);
-    eq([r.isbn13, r.editionPick, r.publisher], ['9782359063738', '9782359063738', 'Lienart'],
+    eq([r.isbn13, r.editionPick, r.publisher], ['9782359063738', 1, 'Lienart'],
       'VS-001: Vasari — the Louvre’s English paperback starts picked and fills the card, not the Nationalmuseum’s hardcover (was: hardcover leads)');
     eq(brief(r.editions), [['French', null, null, 'this'], ['English', '9782359063738', null, 'this'], ['English', '9789171009166', null, 'this']],
       'VS-002:   every version kept — the French original (this recording prints no labelled ISBN for it), Lienart’s English and the Nationalmuseum’s English', out.detail);
@@ -656,7 +658,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       'R8-008:   nothing picked — no English version of this showing, and the other showing’s book is English; the card’s book fields stay blank');
     eq([r.hasCatalogue, api.englishLine(r)], ['yes', null], 'R8-009:   still a catalogue; no English line on a card with several versions (its lines come with stage 2)');
     ({ out, row: r } = await run(row('louvre', 'Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection'), replay('louvre_vasari_42_8.json')));
-    eq([r.isbn13, r.editionPick], ['9782359063738', '9782359063738'], 'R8-004: Vasari — the Lienart edition starts picked (the Louvre’s own printing)');
+    eq([r.isbn13, r.editionPick], ['9782359063738', 0], 'R8-004: Vasari — the Lienart edition starts picked (the Louvre’s own printing)');
     eq(brief(r.editions), [['English', '9782359063738', null, 'this'], ['English', '9789171009166', null, 'this']],
       'R8-005:   the Nationalmuseum’s English book is a version of its own, never folded into Lienart’s; the French original is missing — this recording’s facts read lists no French edition', out.detail.split('\n').filter(l => /version|numbers/.test(l)).join(' | '));
     ok(/lienarteditions\.com/.test(r.publisherUrl || '') || r.publisherResult !== 'nosite', 'R8-006:   the co-edition’s site found by its outside house, Lienart', [r.publisherUrl, r.publisherResult].join(' '));
@@ -683,9 +685,12 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
             editions: [{ title: 'Botticelli: Artist and Designer', isbn13: '9781789144383', language: 'English', publisher: 'Reaktion Books', evidenceUrl: web[1].url }] }
         : {},
     };
-    const { row: r } = await run(row('jacquemart', 'Botticelli, artist and designer'), script);
+    const { calls, row: r } = await run(row('jacquemart', 'Botticelli, artist and designer'), script);
+    const factsPromptSent = calls.filter(c => c.kind === 'sample' && isFactsRead(c.prompt)).map(c => c.prompt)[0] || '';
+    ok((factsPromptSent.match(/"year": string\|null, "venueCity": string\|null/g) || []).length === 2,
+      'CY-004: the facts read asks each version and edition for its year and the other showing’s city, in the one read it already makes');
     eq(brief(r.editions), [['French', '9789462302815', null, 'this']], 'BT-001: Botticelli — one version, Fonds Mercator’s French catalogue');
-    eq([r.editionPick, r.isbn13], ['9789462302815', '9789462302815'], 'BT-002:   one version only, so it is picked and fills the card');
+    eq([r.editionPick, r.isbn13], [0, '9789462302815'], 'BT-002:   one version only, so it is picked and fills the card');
     eq(api.englishLine(r), 'No English edition found in bookshops.', 'BT-003:   a one-version foreign card keeps today’s English line; Reaktion’s book is left off (this recording prints no ISBN for it — ED-004 proves the refusal)');
   }
 
@@ -771,10 +776,20 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       ['Louvre éditions / Somogy éditions d\'art', 'Musée Jacquemart-André / Fonds Mercator', 'Hannibal Books', 'Rizzoli Electa'],
       'VF-001: publisher names lead with the venue’s own house; a name without one is unchanged');
     eq(Object.keys(api.storedVersion({ title: 't', lang: 'French', isbn13: '1', showing: 'this', _pub: 'x', _found: true })),
-      ['title', 'lang', 'binding', 'pages', 'publisher', 'isbn13', 'alsoIsbn13', 'showing', 'proofUrl', 'note'],
-      'VF-002: a stored version has exactly her ten fields, the lookup’s own dropped');
+      ['title', 'lang', 'binding', 'pages', 'publisher', 'isbn13', 'alsoIsbn13', 'showing', 'proofUrl', 'note', 'city', 'year'],
+      'VF-002: a stored version keeps her fields, the other showing’s city and its year; the lookup’s own are dropped');
     eq([api.englishLine({ englishCheck: 'shops', editions: [{}] }), api.englishLine({ englishCheck: 'shops', editions: [{}, {}] })],
       ['No English edition found in bookshops.', null], 'VF-003: a one-version card keeps today’s English line; a card with several has none until her version lines');
+  }
+
+  // ── CY-001..CY-003: the other showing's city and an edition's year ─────────
+  {
+    const rec = [{ url: 'https://bokorder.test/vasari', title: 'Giorgio Vasari', excerpts: ['Published for the exhibition at the Nationalmuseum, Stockholm, 2022. ISBN 9789171009166'] }];
+    eq([api.cityOf('Stockholm', 'Nationalmuseum', rec, 'louvre'), api.cityOf('Uppsala', 'Nationalmuseum', rec, 'louvre')], ['Stockholm', null],
+      'CY-001: Vasari — the read’s city is kept only where the text prints it');
+    eq([api.cityOf(null, 'Musée du Louvre / Somogy', [], 'occ-nga-gov'), api.cityOf(null, 'National Gallery of Art / Lund Humphries', [], 'louvre')], ['Paris', null],
+      'CY-002: a publisher that is one of her venues gives that venue’s city; “National Gallery of Art” is not the National Gallery, London');
+    eq([api.yearOf('2023', [TUM]), api.yearOf('2021', [TUM]), api.yearOf(null, [TUM])], [2023, null, null], 'CY-003: Hammershøi — Rizzoli’s 2023 is kept only where a record carrying its ISBN prints it');
   }
 
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');

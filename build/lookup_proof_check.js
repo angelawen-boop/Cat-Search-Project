@@ -6,8 +6,8 @@
 //
 // For each case, the newest finished lookup whose card is at that venue and carries every
 // `match` word is compared with the case: the versions found (card after, `editions`) and
-// the pick (`editionPick`). Prints each difference; exit 1 on any. A case with no lookup
-// in the log is listed and is not a difference.
+// the pick (`editionPick`, an index into `editions`). Prints each difference; exit 1 on
+// any. A case with no lookup in the log is listed and is not a difference.
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -43,7 +43,9 @@ function compare(card, after) {
   }
   for (const v of got) if (!used.has(v)) out.push('unexpected version: ' + v.lang + ' ' + v.isbn13 + ' (' + v.publisher + ', ' + v.showing + ')');
   for (const n of card.leftOff || []) if (got.some(v => v && (v.isbn13 === n || v.alsoIsbn13 === n))) out.push('left-off book listed: ' + n);
-  const pick = after.editionPick === undefined ? null : after.editionPick;
+  // editionPick is an index into editions; the case names the picked version by its ISBN.
+  const i = after.editionPick;
+  const pick = Number.isInteger(i) ? (got[i] ? got[i].isbn13 || 'version ' + i + ' (no ISBN)' : 'version ' + i + ' (missing)') : null;
   if (pick !== card.pick) out.push('picked ' + pick + ', wanted ' + card.pick);
   return out;
 }

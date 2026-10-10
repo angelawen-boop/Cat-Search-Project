@@ -2945,13 +2945,34 @@ function aMagazine(title,publisher,onV){
 // A different book counts as another showing's catalogue only where a result carrying
 // its ISBN speaks of an exhibition or a catalogue (Reaktion's Botticelli does not).
 const SHOW_WORDS=/catalog|exhibition|exposition|mostra|esposizione|ausstellung|tentoonstelling/i;
+// The other showing's city, kept only where the text prints it; else, when its publisher
+// is one of the app's venues, that venue's city.
+function cityOf(said,pub,results,museumId){
+  const c=String(said||"").trim();
+  if(c&&(results||[]).some(x=>foldText(resultText(x)).includes(foldText(c))))return c;
+  // Its whole name, or every distinctive word of its short name ("Musée du Louvre");
+  // never a name merely containing another's ("National Gallery of Art").
+  const parts=String(pub||"").split(HOUSE_SPLIT).map(normPublisher).filter(Boolean);
+  for(const m of Object.values(MU)){
+    if(!m||m.id===museumId||!m.city)continue;
+    const w=normPublisher(m.short).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t));
+    if(parts.some(p=>p===normPublisher(m.name)||(w.length&&w.every(t=>(" "+p+" ").includes(" "+t+" ")))))return m.city;
+  }
+  return null;
+}
+// A version's year, kept only where a result carrying its ISBN prints it.
+function yearOf(said,onV){
+  const y=String(said||"").match(/(?<![0-9])(?:19|20)\d\d(?![0-9])/);
+  return y&&onV.some(x=>new RegExp("(?<![0-9])"+y[0]+"(?![0-9])").test(resultText(x)))?+y[0]:null;
+}
 
 // The book found so far: this showing's catalogue.
 function foundVersion(F,lang,pages,results,museumId,pageUrl){
   const onV=onIsbn(results,F.isbn);
   return{title:F.title||null,lang:lang||null,binding:F.isbn?bindingOfIsbn(results,F.isbn):null,
     pages:(F.isbn&&pagesOfIsbn(results,F.isbn))||pages||null,publisher:venueFirst(F.publisher,museumId),
-    isbn13:F.isbn||null,alsoIsbn13:null,showing:"this",proofUrl:proofOf(onV,null)||pageUrl||null,note:null,_found:true};
+    isbn13:F.isbn||null,alsoIsbn13:null,showing:"this",proofUrl:proofOf(onV,null)||pageUrl||null,note:null,
+    city:null,year:null,_found:true};
 }
 // Other printings in the found book's language (her decision, Vasari): its own ISBN
 // printed, the title's key words shared, page counts agreeing where printed — else the
@@ -2975,7 +2996,8 @@ function printingsOf(cands,card,results,museumId){
     if(aMagazine(c.title,pub,onV))continue;
     out.push({title:titleAsPrinted(c.title,onV).title,lang:card.lang||null,binding:bindingOfIsbn(results,isbn),pages:pages||null,
       publisher:venueFirst(pub,museumId),isbn13:isbn,alsoIsbn13:null,showing:"this",proofUrl:proofOf(onV,c.evidenceUrl),
-      note:"another printing",_pub:pub,_pubFrom:coded?"the ISBN’s results":"general results"});
+      note:"another printing",city:cityOf(c.venueCity,pub,results,museumId),year:yearOf(c.year,onV),
+      _pub:pub,_pubFrom:coded?"the ISBN’s results":"general results"});
   }
   return out;
 }
@@ -3006,7 +3028,8 @@ function editionsOf(editions,orig,results,museumId,log){
     const title=titleAsPrinted(ed.title,onV).title;
     if(aMagazine(ed.title,pub,onV))continue;
     const v={title,lang:langName(ed.language),binding:bindingOfIsbn(results,isbn),pages,publisher:null,isbn13:isbn,
-      alsoIsbn13:null,showing:"this",proofUrl:proofOf(onV,ed.evidenceUrl),note:null};
+      alsoIsbn13:null,showing:"this",proofUrl:proofOf(onV,ed.evidenceUrl),note:null,
+      city:cityOf(ed.venueCity,pub,results,museumId),year:yearOf(ed.year,onV)};
     if(differentBook(pages,orig.pages)){
       const said=onV.some(x=>SHOW_WORDS.test(resultText(x)));
       if(log)log.push("“"+ed.title+"” (ISBN "+isbn+", "+pages+" pages) is a different book from this one ("+orig.pages+" pages)"
@@ -3103,7 +3126,7 @@ function pickEdition(versions,museumId){
 // A version as the ledger keeps it: the lookup's own fields dropped.
 function storedVersion(v){
   const o={};
-  for(const k of ["title","lang","binding","pages","publisher","isbn13","alsoIsbn13","showing","proofUrl","note"])o[k]=v[k]===undefined?null:v[k];
+  for(const k of ["title","lang","binding","pages","publisher","isbn13","alsoIsbn13","showing","proofUrl","note","city","year"])o[k]=v[k]===undefined?null:v[k];
   return o;
 }
 // The picked version becomes the card's book, as a found book does.
@@ -3154,10 +3177,11 @@ function carriesBook(x,book,isbn){ return !!((isbn&&isbnInText(isbn,resultText(x
 // The facts round's one read: the book's own page (at a non-English venue, read here
 // rather than on its own), the facts search and the edition search.
 function factsPrompt(q){
-  const shape='{"isbn13": string|null, "publisher": string|null, "pages": string|null, "versions": [{"title": string, "isbn13": string, "language": string, "publisher": string|null, "pages": string|null, "evidenceUrl": string}]'
+  const item='{"title": string, "isbn13": string, "language": string, "publisher": string|null, "pages": string|null, "year": string|null, "venueCity": string|null, "evidenceUrl": string}';
+  const shape='{"isbn13": string|null, "publisher": string|null, "pages": string|null, "versions": ['+item+']'
     +(q.bookPage?', "pagePublisher": string|null, "pagePublisherUrl": string|null':'')
     +(q.foreign?', "language": string|null, "title": string|null':q.needTitle?', "title": string|null':'')
-    +', "editions": [{"title": string, "isbn13": string, "language": string, "publisher": string|null, "pages": string|null, "evidenceUrl": string}]}';
+    +', "editions": ['+item+']}';
   // needTitle: the book is known so far only as "the catalogue" (unnamed in lookupCatalogue).
   return "You are reading real web text about ONE printed exhibition catalogue: "
     +(q.needTitle?"the catalogue of the exhibition “"+q.show+"” at "+q.venue+". Its own title is not known yet and may differ from the exhibition's"
@@ -3186,6 +3210,10 @@ function factsPrompt(q){
       +"only where the text names the house that printed THAT edition, else null — “originally published … "
       +"Fonds Mercator” names the original's house, not the translation's. Its pages as for this book. An empty list "
       +"if none. Never invent one.\n")
+    // Her version lines name the other showing's city and an English edition's year.
+    +"For each version and edition: year — the year THAT one was published, as printed, else null; venueCity — "
+    +"when the text says it was printed for a showing of the exhibition at ANOTHER venue, that venue's city in "
+    +"English (Stockholm, Washington), else null.\n"
     +"If the text is about a different book, answer null.\n"
     +(q.bookPage?"\nSECTION A — ONE web page in full: the book's own page.\n"+pageForPrompt(q.bookPage.results,12000)+"\n":"")
     +(q.facts.length?"\nSECTION B — web search results about this book.\n"+resultsForPrompt(q.facts,2500,{words:[q.book,q.isbn||""]},q.facts.length)+"\n":"")
@@ -3372,7 +3400,7 @@ function siteOnly(F,pubHost,log,why){
 // ── PHASE 5: THE ROW, WRITTEN ONCE ───────────────────────────────────────────
 // Each fact has one owner on the card: shopState the shop line, publisherResult the
 // publisher sentence (publisherNote), englishCheck the English line. The versions found
-// (editions) and the pick (editionPick) sit beside the card's book; originalEdition,
+// (editions) and the picked one's index (editionPick) sit beside the card's book; originalEdition,
 // otherVenueBook and alsoVersion stay on old rows only and are never written again.
 function composeRow(row,F){
   if(!F||!F.found)return{...row,looked:true,hasCatalogue:"no",shopState:F&&F.blocked?"blocked":"none",
@@ -3384,7 +3412,7 @@ function composeRow(row,F){
     publisherUrl:F.publisherUrl||null,publisherResult:F.publisherResult||null,
     shopState:F.shopState,shopUrl:F.shopUrl||null,shopChange:null,
     englishCheck:F.englishCheck||null,originalEdition:null,otherVenueBook:null,alsoVersion:null,
-    editions:F.editions||[],editionPick:F.editionPick||null};
+    editions:F.editions||[],editionPick:Number.isInteger(F.editionPick)?F.editionPick:null};
 }
 
 // THE LOOKUP. Every lookup starts from a blank card (her decision: "Search again
@@ -3678,7 +3706,7 @@ async function lookupCatalogue(row,hooks){
   // Nothing picked: the versions are kept, the card's book fields left blank.
   if(pick<0){ F.title=null; F.isbn=null; F.publisher=null; F.publisherUrl=null; F.publisherResult=null; }
   F.editions=versions.map(storedVersion);
-  F.editionPick=pick>=0?versions[pick].isbn13||null:null;
+  F.editionPick=pick>=0?pick:null;
 
   // ── PHASE 5: THE ROW, ONCE.
   return done({ok:true,row:composeRow(row,F),...(trouble?{trouble}:{}),...(troubleLang?{troubleLang:true}:{})});

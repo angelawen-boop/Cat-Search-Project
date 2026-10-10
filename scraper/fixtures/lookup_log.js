@@ -205,14 +205,14 @@ const script = {
     let tape = api.tapeStart('Find catalogue', mRow);
     await api.saveLookupTape(tape, await api.lookupCatalogue(mRow, {}));
     const vRow = { ...row, id: 'louvre-vasari', museumId: 'louvre', title: 'Giorgio Vasari: The Book of Drawings' };
-    const wrong = { ...vRow, looked: true, hasCatalogue: 'yes', editionPick: '9789171009166', editions: [
+    const wrong = { ...vRow, looked: true, hasCatalogue: 'yes', editionPick: 2, editions: [
       { title: 'Le Livre des dessins', lang: 'French', binding: null, pages: null, publisher: 'Lienart', isbn13: '9782359063721', alsoIsbn13: null, showing: 'this', proofUrl: null, note: null },
       { title: 'The Book of Drawings', lang: 'English', binding: 'paperback', pages: null, publisher: 'Lienart', isbn13: '9782359063738', alsoIsbn13: null, showing: 'this', proofUrl: null, note: null },
       { title: 'The Book of Drawings', lang: 'English', binding: 'hardcover', pages: null, publisher: 'Nationalmuseum', isbn13: '9789171009166', alsoIsbn13: null, showing: 'this', proofUrl: null, note: null }] };
     const dirOf = () => saveToDir(store.docs);
     let dir = dirOf();
     const millRec = reader.readRecord(dir, reader.listRecords(dir)[0].id).record;
-    eq([millRec.after.editions.map(v => [v.lang, v.isbn13, v.showing]), millRec.after.editionPick], [[['English', '9781857097382', 'this']], '9781857097382'],
+    eq([millRec.after.editions.map(v => [v.lang, v.isbn13, v.showing]), millRec.after.editionPick], [[['English', '9781857097382', 'this']], 0],
       'LL-010: the card after a lookup carries its versions and its pick');
     const check = d => spawnSync(process.execPath, [path.join(__dirname, '..', '..', 'build', 'lookup_proof_check.js'), d], { encoding: 'utf8' });
     let res = check(dir);
