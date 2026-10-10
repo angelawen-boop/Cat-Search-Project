@@ -820,6 +820,8 @@ function readShowPage(res,url,vc){
   if(lr&&lr.title)base=venueTitle(lines,h,heading,lr,words)||base;
   // A label the venue puts before the show's own name (linkRead.titleDrop).
   if(lr&&lr.titleDrop)base=base.replace(lr.titleDrop,"").trim()||base;
+  // A doubled colon is the venue's typo (NGA, Souvenirs of the Gilded Age).
+  base=base.replace(/\s*:{2,}/g,":");
   const between=lr&&lr.title?[]:lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l)));
   const dateLine=decodeEntities(stripMd(lines[d])).replace(/\s+/g," ").trim();
   const keepDateLine=dateLine.length>LINK_DATE_LINE_MAX;
