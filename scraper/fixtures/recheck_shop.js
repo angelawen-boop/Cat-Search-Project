@@ -930,12 +930,12 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     // Her ruling, 7 Oct (Watteau): the publisher lists every edition it printed.
     t = await run(louPub, { pub: 'Lienart', pubPage: true });
     ok(calls.some(c => c.tool === 'web_fetch' && c.args.urls.includes(PUB_PAGE)), 'LG-013: the publisher\u2019s own page for the book, found in the search, is opened whole');
-    ok(t.includes("No English edition - checked publisher's site (Lienart) and bookshops."), 'LG-013a:  and the card says so, naming the publisher', t.slice(0, 600));
+    ok(t.includes("No English edition - checked publisher's site and bookshops."), 'LG-013a:  and the card says so', t.slice(0, 600));
     ok(searches().some(q => q.some(x => /^originally published in French as /.test(x))), 'LG-013b:  the edition search asks where a translation is recorded, not only "English edition"', JSON.stringify(searches()));
     // Her Canaletto, 7 Oct: the page the publisher step found is the one the
     // English check reads — and it is opened once.
     t = await run(louPubKnown, { pub: 'Lienart', pubFound: true });
-    ok(t.includes("No English edition - checked publisher's site (Lienart) and bookshops."), 'LG-020: the publisher\u2019s page the card links is the one the English check read', t.slice(0, 600));
+    ok(t.includes("No English edition - checked publisher's site and bookshops."), 'LG-020: the publisher\u2019s page the card links is the one the English check read', t.slice(0, 600));
     ok(calls.filter(c => c.tool === 'web_fetch' && c.args.urls.includes(PUB_PAGE)).length === 1, 'LG-020a:  opened once, not twice');
     // Her ruling, 7 Oct: an English edition's publisher is read off its ISBN in
     // code. Claude naming the original's publisher does not get a look-alike in.

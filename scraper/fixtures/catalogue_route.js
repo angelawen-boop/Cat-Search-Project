@@ -356,7 +356,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     let { out, calls, row: r } = await run(row('louvre', 'Test Nature Show'), make());
     eq([r.catalogueTitle, r.isbn13, r.publisher, r.shopState], [OWN, '9782359064612', 'Lienart', 'shop'], 'WL-040: a foreign book — its own title, its ISBN, still in the museum shop');
     eq([r.englishCheck, r.publisherUrl, r.publisherResult], ['publisher', PUB_PAGE, 'product'], 'WL-041:   no English edition, the publisher’s page read and linked');
-    eq(api.englishLine(r), "No English edition - checked publisher's site (Lienart) and bookshops.", 'WL-042:   the card says the publisher’s site was checked');
+    eq(api.englishLine(r), "No English edition - checked publisher's site and bookshops.", 'WL-042:   the card says the publisher’s site was checked, without repeating the publisher printed above');
     ok(!calls.some(c => c.kind === 'sample' && isPageRead(c.prompt)), 'WL-043:   the book’s page read in the facts round’s one read, not on its own');
     eq([out.calls.calls, out.calls.waits], [8, 7], 'WL-044:   8 calls, 7 waits in a row (was 13)');
 
