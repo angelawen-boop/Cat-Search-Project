@@ -1,0 +1,121 @@
+{
+ "_about": "Live replies (free Parallel Search MCP, fetched by script on 2026-10-10) to the calls the rebuilt lookup makes that her Vasari 43 record (louvre_vasari_43.json) lacks: the shop finder for the Nationalmuseum (discoverShop). Replayed by scraper/fixtures/catalogue_versions.js.",
+ "calls": [
+  {
+   "kind": "search",
+   "objective": "The museum shop's exhibition catalogues or books section of Nationalmuseum.",
+   "queries": [
+    "Nationalmuseum shop exhibition catalogues",
+    "Nationalmuseum shop books publications"
+   ],
+   "urls": null,
+   "full": false,
+   "at": "2026-10-10T12:13:42.086Z",
+   "results": [
+    {
+     "url": "https://nmwa.org/learn/publications/books-catalogues",
+     "title": "Books & Catalogues | NMWA",
+     "publish_date": "2026-03-03",
+     "excerpts": [
+      "Supplementary Museum Info\n* Host an Event\n* Work with Us\n* About\n* Blog\n* Press\n* Contact\n  Get Our Newsletter\n  National Museum of Women in the Arts\nBooks & Catalogues\nBrowse the museum’s special exhibition catalogues and books that highlight the legacies of acclaimed women artists, past and present.\nShop Exhibition Catalogues , opens in new tab\nFeatured Publications\nCollection Highlights\nThe cover of the exhibition catalogue Suchitra Mattai: Myth from Matter shows a close-up of one of Mattai’s layered textile and needlepoint artworks: a profile of a seated young girl in a yellow dress reading a book, with a halo-like arrangement of black beads around her head, set against a vibrant patchwork background.\nNew Worlds: Women to Watch 2024\nFeaturing full-color images and statements from the exhibition’s 28 artists, this catalogue presents works that reflect our extraordinary times, exploring themes of displacement, belonging, and ecological crisis.\nBuy New Worlds , opens in new tab\nThe Sky’s the Limit\nNMWA’s inaugural reopening exhibition features large-scale contemporary sculpture and immersive installations. Giving primacy to artists’ voices, the publication shares artists’ essays and poetry on the inspirations behind their work.\nBuy The Sky’s the Limit , opens in new tab\nA book cover features the image of a sculpture on a white base.\nPaper Routes—Women to Watch 2020\nThis fully illustrated catalogue features personal statements by the exhibition’s twenty-two featured artists, who turn paper into innovative, complex works of art.\nBuy Paper Routes , opens in new tab\nBook cover features bright red stacks of crinkled paper radiating from the left side.\nThe books title 'Paper Routes Women to Watch 2020' is in white text.\nThe book's title \"Marguerite Gerard\" is in white lettering at the top of the book.of Marguerite Gérard: 1761–1837 Catalogue"
+     ]
+    },
+    {
+     "url": "https://shop.nmwa.org/",
+     "title": "\n    Museum Shop: National Museum of Women in the Arts\n\n    \n\n    \n\n    \n      – NMWA Shop\n    \n  ",
+     "publish_date": null,
+     "excerpts": [
+      "Your cart\nDiscover the Collection\nThis catalogue showcases a carefully curated selection of captivating pieces from the museum's collection.\nExplore the Catalogue\nChampion Women Through the Arts\nProud to support women owned and operated businesses.\nExhibition Catalogues Browse > Art & Artists Browse > Apparel Browse\nExplore Books about Women Artists\n* Why Have There Been No Great Women Artists?: 50th Anniversary Edition  Quickshop\nWhy Have There Been No Great Women Artists?: 50th Anniversary Edition\n$16.95\nWhy Have There Been No Great Women Artists?: 50th Anniversary Edition\n$16.95\n* The Short Story of Women Artists  Quickshop\nExhibition Catalogues Browse > Art & Artists Browse > Apparel Browse\nThe Short Story of Women Artists\n$21.99\nThe Short Story of Women Artists\n$21.99\n* The Trouble with Women Artists: Reframing the History of Art  Quickshop\nThe Trouble with Women Artists: Reframing the History of Art\n$35.00\nThe Trouble with Women Artists: Reframing the History of Art\n$35.00\nExhibition Catalogues Browse > Art & Artists Browse > Apparel Browse\n* Women, Art, and Society (6th Edition) Women, Art, and Society (6th Edition)  Quickshop\nWomen, Art, and Society (6th Edition)\n$34.95\nWomen, Art, and Society (6th Edition)\n$34.95"
+     ]
+    },
+    {
+     "url": "https://shop.nationalgallery.org.uk/eu/books/exhibition-catalogues.html",
+     "title": "Exhibition Catalogues - Books | National Gallery Shop",
+     "publish_date": null,
+     "excerpts": [
+      "1. A book cover showing a woman wearing a long orange and silver brocade dress and a silver cloak. Zurbarán, the title of the book, is printed on the orange book binding cloth\nZurbarán Exhibition Catalogue\n£35.00\nAdd to Basket\nAdd to Wish List\n2. Van Eyck portrait Pre-order\nVan Eyck: The Portraits\n£35.00\nAdd to Basket\nAdd to Wish List\n3.\nMain image of the Pesellino: A Renaissance Master Revealed Exhibition Catalogue.\nPesellino: A Renaissance Master Revealed Exhibition Catalogue\n£14.95\nAdd to Basket\nAdd to Wish List\n8. Main image of the Saint Francis of Assisi Exhibition Catalogue\nSaint Francis of Assisi Exhibition Catalogue\n£20.00\nAdd to Basket\nAdd to Wish List\n9.\nAdd to Wish List\n11. A book cover with yellow and white text, showing a painted mountain landscape in the background.\nWaldmüller: Landscapes Exhibition Catalogue\n£12.00\nAdd to Basket\nAdd to Wish List\n12. Main image of Ali Cherri catalogue.\n2021 National Gallery Artist in Residence: Ali Cherri\nRegular Price £20.00 £5.00\nAdd to Basket\nSiena: The Rise of Painting, 1300–1350 Exhibition Catalogue\n£35.00\nAdd to Basket\nAdd to Wish List\n15. exhibition catalogue cover showing Picasso's 'A woman with a book'\nPicasso Ingres: Face to Face Catalogue\nRegular Price £12.95 £6.50\nAdd to Basket\nAdd to Wish List\n16. Main image of the Paula Rego: Crivelli’s Garden Exhibition Catalogue.\nA book cover with a yellow background showing and upside down winged horse. It reads: 'Dance of the un on the water - Saltatio solis in aqua' ming wong\n2025 National Gallery Artist in Residence: Ming Wong\n£15.00\nAdd to Basket\nAdd to Wish List\n19. Main image for Winslow Homer, Force of Nature.\nWinslow Homer: Force of Nature Catalogue\nAdd to Wish List\n26. Main image of the Hockney and Piero: A Longer Look Exhibition Catalogue.\nHockney and Piero: A Longer Look Exhibition Catalogue\n£14.95\nAdd to Basket\nAdd to Wish List\n27. Main image of the 2024 National Gallery Artist in Residence: Katrina Palmer Exhibition Catalogue.\n2024 Artist in Residence: Katrina Palmer Exhibition Catalogue\nA book cover showing a painting scene set in a dark room lit by a single candle with two girls and a man gathered around a lecturer performing an experiment with a white cockatoo placed in a glass container.\nWright of Derby: From the Shadows Exhibition Catalogue\n£16.95\nAdd to Basket\nAdd to Wish List\n32."
+     ]
+    },
+    {
+     "url": "https://www.nationalmuseum.se/en/visit/nationalmuseum-shop",
+     "title": "Nationalmuseum | Nationalmuseum shop",
+     "publish_date": "2017-11-09",
+     "excerpts": [
+      "Home / Visit / Museum shop\nIn Nationalmuseum's shop, classic meets contemporary in carefully selected products of the highest quality. We offer a range of products connected to our temporary exhibitions, the museum itself, and our vast collections of art, applied arts and design. There's something for most tastes, ages, and budgets.\nJust in time for the opening of the exhibitions Fantasy and Reality – The Art of Johan Tobias Sergel and Badin – Beyond Surface and Mask at the end of February, the museum shop was given a refresh, featuring new comfortable seating for those who want to rest for a while or browse through books, as well as even better opportunities to showcase our\nart and design-related selection. You can see a few glimpses of the new interior below.\nNationalmuseum Shop. Photo: Anna Danielsson/Nationalmuseum.\nNationalmuseum Shop. Photo: Anna Danielsson/Nationalmuseum.\nNationalmuseum Shop. Photo: Anna Danielsson/Nationalmuseum.\nNationalmuseum Shop. Photo: Anna Danielsson/Nationalmuseum.\nNationalmuseum Shop.\nOur online bookshop carries a wide selection of art and design books published by Nationalmuseum, including exhibition catalogues and research publications. We also have a marvellous range of books for children.\nContact the shop\nE-mail: shop@nationalmuseum.se\nNote that the shop closes 15 minutes before the rest of the museum closes.\nContact us"
+     ]
+    },
+    {
+     "url": "https://www.narahaku.go.jp/english/about/guide/museum",
+     "title": "Museum Shop / Café & Restaurant - NARA NATIONAL MUSEUM",
+     "publish_date": null,
+     "excerpts": [
+      "Museum Shop / Café & Restaurant - NARA NATIONAL MUSEUM\nThe Museum Shop offers a wide selection of products including exhibition catalogues and research bulletins published by the Nara National Museum, general books related to art and history, and merchandise based on art in the Museum’s collection as well as the Museum’s official characters."
+     ]
+    },
+    {
+     "url": "https://shop.nationalgallery.org.uk/eu/books.html",
+     "title": "Books | National Gallery Shop",
+     "publish_date": null,
+     "excerpts": [
+      "1. A women dressed in pink and red dances romantically in a garden with a man dressed in blue with a yellow hat.\nRenoir & Love Exhibition Catalogue\n£35.00\nAdd to Basket\nAdd to Wish List\n2. Van Eyck portrait\nVan Eyck: The Portraits\n£35.00\nAdd to Basket\nAdd to Wish List\n3.\nA book cover with yellow and white text, showing a painted mountain landscape in the background.\nWaldmüller: Landscapes Exhibition Catalogue\n£12.00\nNotify me when back in stock\nAdd to Wish List\n4. A book cover showing a woman wearing a long orange and silver brocade dress and a silver cloak.\nZurbarán, the title of the book, is printed on the orange book binding cloth\nZurbarán Exhibition Catalogue\n£35.00\nAdd to Basket\nAdd to Wish List\n5. The Wonder of Art: Fashion\nThe Wonder of Art: Fashion\n£15.00\nAdd to Basket\nAdd to Wish List\n6.\nA book cover showing a painting scene set in a dark room lit by a single candle with two girls and a man gathered around a lecturer performing an experiment with a white cockatoo placed in a glass container.\nWright of Derby: From the Shadows Exhibition Catalogue\n£16.95\nAdd to Basket\nAdd to Wish List\n14.\nSeurat: Bathers at Asnières (One Painting, One Story)\n£10.00\nAdd to Basket\nAdd to Wish List\n19. Main image of the Siena: The Rise of Painting, 1300–1350 Exhibition Catalogue.\nSiena: The Rise of Painting, 1300–1350 Exhibition Catalogue\n£35.00\nAdd to Basket\nAdd to Wish List\n20. Main image of the National Gallery Companion Guide\nTurner on Tour Exhibition Catalogue\n£12.95\nAdd to Basket\nAdd to Wish List\n28. A book cover with a yellow background showing and upside down winged horse. It reads: 'Dance of the un on the water - Saltatio solis in aqua' ming wong\n2025 National Gallery Artist in Residence: Ming Wong\n£15.00\nAdd to Basket\nAdd to Wish List\n29.\nMain image of the National Gallery Companion Guide (Mandarin language)\nThe National Gallery Companion Guide (Mandarin)\n£22.00\nAdd to Basket\nAdd to Wish List\n34. Main image of the Van Gogh: Poets & Lovers Exhibition Catalogue.\nVan Gogh: Poets & Lovers Exhibition Catalogue\n£35.00\nAdd to Basket\nAdd to Wish List\n35."
+     ]
+    },
+    {
+     "url": "https://www.nmwa.go.jp/en/shop-cafe",
+     "title": "Shop｜The National Museum of Western Art",
+     "publish_date": null,
+     "excerpts": [
+      "Shop｜The National Museum of Western Art\nVarious stationary and sundry goods featuring images from NMWA works, such as Monet's Water Lilies, catalogues of the NMWA collection, and exhibition catalogues\n > \nShop｜The National Museum of Western Art\nThe Book Corner features some 2,000 titles on art subjects, suitable for readers from elementary school to specialist art research levels. There are some books"
+     ]
+    },
+    {
+     "url": "https://nationalmuseumindia.gov.in/en/products?cat_id=MQ%3D%3D",
+     "title": "Books - National Museum, New Delhi",
+     "publish_date": null,
+     "excerpts": [
+      "National Museum Publications & Merchandise\nMuseum Shop Publications & Merchandise\n* Home\n* Publication/Merchandise List\n* Books\n* Buddhist of Art of India from Indian Museum Kolkata\nBuddhist of Art of India from Indian Museum Kolkata\nBooks\n300\n* Ramayana: Peotic Expressions on Temple Hangings\nRamayana: Peotic Expressions on Temple Hangings\nBooks\n130\n* Ecstasy of Classical Art : Indian Bronze\nEcstasy of Classical Art : Indian Bronze\nBooks\n230\n* Purapashan Kal Mein Manav\nPurapashan Kal Mein Manav\nBooks\n50\n* Yogini Cult and Temples - A Tantric Tradition\nYogini Cult and Temples - A Tantric Tradition\nBooks\n255\n* Wall Paintings of Rajasthan\nWall Paintings of Rajasthan\nBooks\n3000\n* Thanjavur Paintings - Materials, Technique & Conservation\nThanjavur Paintings - Materials, Technique & Conservation\nBooks\n300\n* Paintings of Baburnama (Hindi)\nPaintings of Baburnama (Hindi)\nBooks\n440\n* Pre-Columbian Gold and Silver Objects in the National Museum\nPre-Columbian Gold and Silver Objects in the National Museum\nBooks\n140\n* Pahari Paintings of the Nala - Damayanti Theme\nPahari Paintings of the Nala - Damayanti Theme\nBooks\n0\nLimit :\n10 25 50 100\nFirst Prev\nPage : of 5\nNext Last\nDownload the NM information Brochure here\nDownload Brochures Download eBooks\nConnect with us\n* twitter\n* facebook\n* youtube\n* instagram\nSubscribe\nNewsletter Subscription subscribe\n© Copyright © 2019 National Museum, New Delhi (India)."
+     ]
+    },
+    {
+     "url": "https://www.nationalmuseum.se/en/exhibitions",
+     "title": "Nationalmuseum | Art exhibition in Stockholm",
+     "publish_date": null,
+     "excerpts": [
+      "Nationalmuseum | Art exhibition in Stockholm\nExhibitions ; To the Sea! 24 September 2026–7 February 2027. To the Sea! ; The Timeline. The Collections. The Timeline ; Wilhelm Kåge & Shōji Hamada. 23 April 2026"
+     ]
+    },
+    {
+     "url": "https://mnm.hu/en/museum-shop",
+     "title": "Museum shop | MNM - Nemzeti Múzeum",
+     "publish_date": null,
+     "excerpts": [
+      "The museum shop is located on the left-hand side of the lobby. Opening hours: Tuesday - Sunday, 10 am - 6 pm\nPublications related to various exhibitions and collections of the Hungarian National Museum, Hungarian and foreign language books, postcards and a high-quality assortment of souvenirs is offered to the visitors.\nMuseum shop\nMuseum shop\nImage\nMuseum shop\nMuseum shop\nImage\nMuseum shop\nOpens in a new window Opens in a new window Opens in a new window\nSubscribe to our newsletter and be the first to hear about our events and exhibitions.\nSubscribe\nEmail Address\nNév\nHozzájárulás az adatvédelmi irányelvekhez*\nMegértettem és elfogadom Csoportok\nMagyar Nemzeti Múzeum hírlevele"
+     ]
+    }
+   ],
+   "errors": []
+  },
+  {
+   "kind": "open",
+   "objective": "The shop's menu: its exhibition catalogues and books sections.",
+   "queries": null,
+   "urls": [
+    "https://nationalmuseum.bokorder.se/en-us/"
+   ],
+   "full": true,
+   "at": "2026-10-10T12:13:42.411Z",
+   "results": [
+    {
+     "url": "https://nationalmuseum.bokorder.se/en-us/",
+     "title": "Nationalmuseum bokhandel | Home",
+     "publish_date": null,
+     "excerpts": [
+      "# Nationalmuseum's bookshop\nWelcome to the Nationalmuseum’s bookshop. Here you will find the museum’s entire publishing of books on photography, arts and crafts, form and design, painting and sculpture, drawing and graphics.\nThere is something here for everyone: Art books for children, beautiful picture books for adults, books relating to temporary exhibitions and books presenting the museum’s research on the collections.\n\n...\n\n# Explore our books\n[Categories](https://nationalmuseum.bokorder.se/en-us/shop)\n\n# Till havet!\n[Stranden som gränsland och semesterdröm](https://nationalmuseum.bokorder.se/en-us/shop/book/5655)\n\n...\n\n# Wilhelm Kåge & Shoji Hamada\n[](https://nationalmuseum.bokorder.se/en-us/shop/book/5620)\n\n# Kattresan\n[](https://nationalmuseum.bokorder.se/en-us/shop/book/5604)\n\n# Book of the month\n[Beauty and the unexpected](https://nationalmuseum.bokorder.se/en-us/shop/book/4771)"
+     ],
+     "full_content": "# Nationalmuseum's bookshop\n\nWelcome to the Nationalmuseum’s bookshop. Here you will find the museum’s entire publishing of books on photography, arts and crafts, form and design, painting and sculpture, drawing and graphics.\n\nThere is something here for everyone: Art books for children, beautiful picture books for adults, books relating to temporary exhibitions and books presenting the museum’s research on the collections.\n\nYou can easily order the titles wherever you are, we will dispatch within three business days. The books are sold and distributed by eddy.se AB.\n\n# Explore our books\n\n[Categories](https://nationalmuseum.bokorder.se/en-us/shop)\n\n# Till havet!\n\n[Stranden som gränsland och semesterdröm](https://nationalmuseum.bokorder.se/en-us/shop/book/5655)\n\n# 20 erotiska planscher\n\n[](https://nationalmuseum.bokorder.se/en-us/shop/book/5586)\n\n# Wilhelm Kåge & Shoji Hamada\n\n[](https://nationalmuseum.bokorder.se/en-us/shop/book/5620)\n\n# Kattresan\n\n[](https://nationalmuseum.bokorder.se/en-us/shop/book/5604)\n\n# Book of the month\n\n[Beauty and the unexpected](https://nationalmuseum.bokorder.se/en-us/shop/book/4771)\n\n#### Publications published by Nationalmuseum  \nis distributed by eddy.se ab\n\neddy.se ab  \nBox 1310  \n62124 Visby  \nSweden\n\n#### Contact\n\n[order@bokorder.se](mailto:order@bokorder.se)  \n\\+46 498 253900\n\n#### Nationalmuseum\n\nAddress: Södra Blasieholmshamnen, Stockholm  \n[Contact us](https://www.nationalmuseum.se/om-nationalmuseum/kontakta-nationalmuseum)"
+    }
+   ],
+   "errors": []
+  }
+ ]
+}
