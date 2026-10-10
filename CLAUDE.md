@@ -1135,11 +1135,16 @@ it whole before touching versions.
   filter menu read as a binding; the first result in search order taken as the
   source; " : " between co-publishers not split; Rizzoli and 2023 never in the app's
   results; the card's top lines and version lines written by two separate writers.
-- **Next, in order:** (1) what the lookup must find and record per version, agreed
-  with her finding by finding; (2) every agreed case checked against the app's OWN
-  live results; (3) the build via `/orch`, a live run of all nine, publish only when
-  she says and her page is closed. Fixes already on `main` since 43 (VL-009, VL-013,
-  VL-014) are line-design fixes the new layout supersedes.
+- **Finding rules: agreed** (the doc's "What the lookup finds and records"): facts are
+  recorded only to tell editions apart, never guessed; two numbers share a block only
+  with proof, else two blocks; each block's facts only from pages about that one
+  number; each block's shop line from searching THAT book's own museum shop (another
+  museum's found by `discoverShop`), and the Museum shop button follows the pick there.
+- **Next:** the rebuild under `/orch` (whole-path tests replay her three 43 lookups,
+  `docs/lookup_results/*_43.json`); every agreed case checked against the app's OWN
+  live results; a live run of all nine; publish only when she says and her page is
+  closed. Fixes on `main` since 43 (VL-009, VL-013, VL-014) are line-design fixes the
+  new layout supersedes.
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,

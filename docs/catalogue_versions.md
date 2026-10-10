@@ -1,9 +1,8 @@
 # Catalogue versions — the design and its agreed cases
 
 Status: **published in 43; her three live searches (Vasari, Hubert Robert, Hammershøi)
-came back wrong. The card's layout has been redesigned and agreed (below); the code
-has not been touched since. Next: what the lookup must find and record correctly —
-"Diagnosis" and "Open" below.** Every change is checked LIVE against her cases before
+came back wrong. Layout and finding rules re-agreed (below); being rebuilt under
+`/orch`.** Every change is checked LIVE against her cases before
 it reaches her (CLAUDE.md §1).
 
 ## The design
@@ -72,6 +71,38 @@ Notes, in her wording: "The original edition.", "This venue's English edition.",
 "The English edition, published later.", "This show's catalogue.", "A different book,
 from the show's <city> exhibition." ("notably" dropped, her decision).
 
+## What the lookup finds and records — her rules
+
+The facts on a block exist for ONE job: to tell editions apart. They are RECORDED as
+the pages found state them; nothing is guessed, and a fact no page states is simply
+absent ("English · 288 pp" — no binding found).
+
+1. **Two numbers are one book only with proof.** In order: (a) their own pages
+   disagree on binding, page count, language or title → two books; (b) both numbers
+   were issued by the same publisher (the ISBN agency's range table, in code) → two
+   books, since a co-edition gives each house its own number; (c) a page pairs each
+   number with a different publisher for the same title (the book's copyright page,
+   a publisher's catalogue, a library record labelling each number by publisher) →
+   one book, one block; (d) nothing settles it → two blocks. A bare list of numbers
+   (WorldCat) proves nothing.
+2. **Each block's facts come only from pages about that one number** — the
+   publisher's page for it, a shop's page for that book, a library record for that
+   number; never a page covering several books, never menus or filters ("Hardcover
+   (0)"). Disagreement: the publisher's own page, then a shop's book page, then a
+   library record. The publisher's name otherwise follows the single-book rule
+   (labelled pages first, Claude's reading as fallback).
+3. **Source** — the most authoritative page about that book, in the same order.
+4. **Co-publishers** — every separator sources use ("/", ";", " : ", "&", "and",
+   "with") recognised, shown "Venue's house / Other house", capitalised.
+5. **One writer** — every line in a block comes from that block's own facts.
+6. **Each block's shop line comes from searching THAT book's own museum shop** —
+   the venue's shop for the venue's versions; another museum's shop (found by Add by
+   link's shop finder, `discoverShop`) for its own book. "No shop found" is never an
+   answer from a museum that has one: a finder or shop check that fails is a step
+   that did not finish — the block says so and the next Search again looks again.
+   With that version picked, the Museum shop button opens that museum's shop (its
+   page for the book, else its search) — never the card venue's shop.
+
 ## Starting pick — her rules, in order
 
 1. Only **this show's catalogue** (any language, any printing) may start picked. A
@@ -91,8 +122,9 @@ More rules are added only once she has used the cards and knows her preference.
 be checked against what the app's OWN live searches return** (Hammershøi's Rizzoli and
 2023 never appeared in them — "Diagnosis").
 
-1. **Vasari — Louvre, 2022.** ○ French · Louvre Éditions / Lienart · 978-2359063721;
-   978-2350317441 (Louvre's own number) — the original edition
+1. **Vasari — Louvre, 2022.** ○ French · Louvre Éditions / Lienart · 978-2359063721
+   — the original edition (978-2350317441, once listed as the Louvre's own number,
+   is printed on no page today — dropped, her decision)
    ([louvre.fr](https://www.louvre.fr/editions/catalogue/giorgio-vasari-le-livre-des-dessins)).
    ● English · paperback · Louvre Éditions / Lienart · 978-2359063738 — this venue's
    English edition ([lienarteditions.com](https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings)).
@@ -112,6 +144,9 @@ be checked against what the app's OWN live searches return** (Hammershøi's Rizz
    ([leslibraires.ca](https://www.leslibraires.ca/en/livres/hammershoi-jean-loup-champion-9789462302495.html)).
    ● English · Rizzoli Electa · 2023 · 978-0847899289 — the English edition,
    published later ([rizzoliusa.com](https://www.rizzoliusa.com/book/9780847899289)).
+   The app's own searches reached only Stanford's record, which prints neither
+   Rizzoli nor 2023: until a page found states them, this block shows no publisher
+   or year (rule 2) and reads "The English edition."
 5. **Watteau — Louvre, 2024–25.** One version, French · paperback · Louvre Éditions /
    Lienart · 978-2359064476. "No English edition found." The card as now.
 6. **Canaletto – Guardi — Jacquemart-André, 2012.** One version, French · hardcover ·
@@ -194,12 +229,10 @@ She settled the layout first (above); the findings come next.
 
 ## Open
 
-1. **What the lookup must find and record, per version** — reviewed whole, not patched:
-   facts read only from pages about that one number; one owner per fact, which every
-   line on the card reads; the shop and publisher facts per version (layout above).
-   Each finding agreed with her before code.
-2. **Every agreed case re-checked against the app's own live search results**, flagging
-   any agreed fact the searches cannot support (Hammershøi's publisher and year) for her.
-3. **Then the build** (`/orch`), whole-path tests on her real records, a live run of
-   all nine cases, and publish only when she says and her page is closed. Cards
-   searched on 43 need a Search again (their versions carry no per-version shop facts).
+1. **The rebuild, under `/orch`** — layout and rules above; whole-path tests replay
+   her three 43 lookups (`docs/lookup_results/*_43.json`, real results and Claude's
+   answers), with live fetches for any new call.
+2. **Every agreed case re-checked against the app's own live results**, flagging any
+   fact the searches cannot support for her.
+3. **A live run of all nine cases before any publish;** publish only when she says
+   and her page is closed. Cards searched on 43 need a Search again.
