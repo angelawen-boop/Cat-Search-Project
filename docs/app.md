@@ -55,6 +55,13 @@ never opened twice; the diagnostic counts calls and times each step. Waits in a
 row, old → new: self-published 4 → 3; outside publisher 9 → 7; foreign, no
 English edition 13 → 7; edition swap 18 → 6–7; worst ~30 → 17.
 
+**The book's language, off the records carrying its ISBN** (her Vasari: the read
+said French, taking the Louvre page's "(In French)", for the English edition in
+hand): a language labelled within 400 characters of the ISBN, one value only, or a
+library record's "Translation of: <original>" with a title in English words,
+outranks the read; the original it names goes on the card (`languageOnIsbn`).
+EL-001 to EL-007.
+
 **A reply holding two answers** ("Wait — here is the corrected object", her Louvre
 links Hubert Robert and Body and Soul): Claude's last answer, its own correction, is
 taken (`lastJsonObject` in `readResults`; every read). TW-001 to TW-004.

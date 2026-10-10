@@ -65,7 +65,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, englishEditionOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST };')(
+    code + '\n;return { readResults, lastJsonObject, languageOnIsbn, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, englishEditionOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -324,6 +324,56 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     ok(!calls.some(c => c.kind === 'sample' && /"candidates": \[string\]/.test(c.prompt)), 'WL-031:   the site’s results ranked in code, Claude not asked');
     eq([out.calls.calls, out.calls.waits], [7, 7], 'WL-032:   7 calls in a row (was 9)');
     eq(labels, [L1, L3, L4], 'PL-001: progress at an English venue, found in the shop — shop, the book’s page, publisher');
+  }
+
+  // ── EL-001..EL-005: the language of the book in hand, off the records carrying its ISBN ─
+  // Vasari: the read said French; the library record carrying the ISBN says it is a
+  // translation of the French original. Excerpts as her lookup received them (the lookup log).
+  {
+    const ISBN = '9782359063738';
+    const ABE = { url: 'https://www.abebooks.co.uk/9782359063738/Giorgio-Vasari-Book-drawings-fate-2359063731/plp', title: 'Giorgio Vasari, the Book of drawings: The fate of a mythical ...',
+      excerpts: ['Published on the occasion of an exhibition held at the Nationalmuseum, Stockholm, Sweden, October 6, 2022-January 8, 2023; previously held at the Musée du Louvre, Paris, France, March 30-July 18, 2022./ Translation of: Giorgio Vasari, le livre des dessins : destinées d\'un collection mythique./ Includes bibliographical references (pages 232-238). ISBN: ' + ISBN] };
+    const LOUVRE = { url: 'https://www.louvre.fr/en/exhibitions-and-events/exhibitions/giorgio-vasari', title: 'Giorgio Vasari - The Book of Drawings',
+      excerpts: ['Giorgio Vasari. The Book of Drawings\n(In French) Edited by L. Frank and C. Fryklund. Co-publication: Musée du Louvre Editions / Lienart, 240 pages, €29'] };
+    const el = api.languageOnIsbn([LOUVRE, ABE], ISBN, 'Giorgio Vasari. The Book of Drawings');
+    eq([el && el.lang, el && el.translationOf], ['English', 'Giorgio Vasari, le livre des dessins : destinées d\'un collection mythique'],
+      'EL-001: Vasari — a record carrying the ISBN calls it a translation and its title is English: English, and the original named');
+    const shop = { url: 'https://www.leslibraires.fr/livre/20269501', title: 'Giorgio Vasari, the Book of drawings', excerpts: ['EAN13 | 9782359063738\nISBN | 978-2-35906-373-8\nÉditeur | Lienart éditions\nLangue | anglais'] };
+    eq(api.languageOnIsbn([shop], ISBN, 'x') && api.languageOnIsbn([shop], ISBN, 'x').lang, 'English', 'EL-002: a bookshop labelling the ISBN "Langue | anglais" — English');
+    const fr = { url: 'https://books.test/fr', title: 'Les choses', excerpts: ['EAN 9782359063837. Langue : français.'] };
+    eq(api.languageOnIsbn([fr], '9782359063837', 'Les choses. Une histoire de la nature morte').lang, 'French', 'EL-003: Things — labelled French stays French');
+    const menu = { url: 'https://shop.test/b', title: 'Book', excerpts: ['Language: English · Currency: EUR · Delivery' + ' x'.repeat(400) + '\nISBN 9782359063837'] };
+    eq(api.languageOnIsbn([menu], '9782359063837', 'Les choses'), null, 'EL-004: a site’s own language menu far from the ISBN is not the book’s');
+    const frTitle = { ...ABE, excerpts: [ABE.excerpts[0]] };
+    eq(api.languageOnIsbn([frTitle], ISBN, 'Le livre des dessins'), null, 'EL-005: "Translation of" with a title not in English words decides nothing');
+  }
+
+  // ── EL-006..EL-007: Vasari, run whole — the card no longer says "No English edition" ─
+  {
+    const ISBN = '9782359063738';
+    const ABE = { url: 'https://www.abebooks.co.uk/9782359063738/Giorgio-Vasari-Book-drawings-fate-2359063731/plp', title: 'Giorgio Vasari, the Book of drawings: The fate of a mythical ...',
+      excerpts: ['Giorgio Vasari, the Book of Drawings. Published on the occasion of an exhibition held at the Nationalmuseum, Stockholm; previously held at the Musée du Louvre, Paris./ Translation of: Giorgio Vasari, le livre des dessins : destinées d\'un collection mythique./ ISBN: ' + ISBN] };
+    const T = 'Giorgio Vasari. The Book of Drawings';
+    const script = {
+      mcp: (tool, args) => {
+        if (tool === 'web_search') {
+          const q = args.search_queries.join(' | ');
+          if (/catalogue ISBN|ISBN publisher/.test(q)) return { payload: { results: [ABE] } };
+          return { payload: { results: [{ url: 'https://www.louvre.fr/en/exhibitions-and-events/exhibitions/giorgio-vasari', title: 'Giorgio Vasari',
+            excerpts: [T + '\n(In French) Edited by L. Frank and C. Fryklund. Co-publication: Musée du Louvre Editions / Lienart'] }] } };
+        }
+        return shelfOf(args.urls, '[Another catalogue €30](https://boutique.louvre.fr/en/other.html)');
+      },
+      sample: p => isShopRead(p) ? { found: false }
+        : /"thisVenue": true\|false/.test(p) ? { found: true, thisVenue: true, catalogueTitle: T, isbn13: null, publisher: 'Musée du Louvre Editions / Lienart', publisherUrl: null, shopUrl: null }
+        : isFactsRead(p) ? { isbn13: null, publisher: 'Musée du Louvre Editions / Lienart', language: 'French', title: T, editions: [] } : {},
+    };
+    const { out, row: r } = await run(row('louvre', 'Test Giorgio Vasari: The Book of Drawings'), script);
+    eq([r.isbn13, r.englishCheck, r.originalEdition && r.originalEdition.title], [ISBN, 'english', 'Giorgio Vasari, le livre des dessins : destinées d\'un collection mythique'],
+      'EL-006: Vasari — the English edition in hand is recorded as English, with the French original it translates');
+    ok(/^English edition of “Giorgio Vasari, le livre des dessins/.test(api.englishLine(r) || '') && !/No English edition/.test(api.englishLine(r) || ''),
+      'EL-007:   the card names the original, never "No English edition"', api.englishLine(r));
+    ok(/Language from the records carrying ISBN/.test(out.detail), 'EL-007a:  the diagnostic says why the read’s French was overruled');
   }
 
   // ── WL-040..WL-048: a foreign book with no English edition ───────────────────
