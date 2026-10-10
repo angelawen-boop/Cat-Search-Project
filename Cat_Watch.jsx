@@ -3168,9 +3168,11 @@ function versionNote(vs,i,row){
   const where=vc?"from the show's "+vc+" exhibition":"from the show's other exhibition";
   if(v.showing==="other")return "a notably different book, "+where;
   const mine=vs.filter(x=>x.showing==="this");
-  // One house, the versions differing only in language (Metamorphoses): no notes.
+  // One outside house, the versions differing only in language (Metamorphoses): no notes.
+  // Never when that house is this venue's own: her Vasari lines keep their notes.
   const langs=new Set(mine.map(x=>foldText(x.lang||"")));
-  if(mine.length===vs.length&&langs.size===mine.length&&mine.every(x=>x.publisher&&sameHouse(x.publisher,mine[0].publisher)))return null;
+  if(mine.length===vs.length&&langs.size===mine.length&&mine.every(x=>x.publisher&&sameHouse(x.publisher,mine[0].publisher))
+    &&!venuePrinting(mine[0].publisher,id))return null;
   // Printed for another showing: another museum's own, or a city not this venue's.
   const city=mu&&mu.city?foldText(mu.city):"";
   if(!venuePrinting(v.publisher,id)&&((vc&&foldText(vc)!==city)||(v.publisher&&museumImprintOnly(v.publisher,id))))return where;

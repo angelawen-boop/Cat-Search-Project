@@ -833,6 +833,14 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const met = caseRow(8, '2026-02-20', [{ proofUrl: HAN }, { proofUrl: HAN }, { proofUrl: HAN }]);
     eq(shown(met), ['● English · Metamorphoses: Ovid and the Arts · paperback · Hannibal · 978-9493416543.', '○ Dutch · Metamorfosen – Ovidius en de kunsten · Hannibal · 978-9493416550.', '○ Italian · Hannibal · 978-9493416857.',
       '(source for all three: hannibalbooks.be)'], 'VL-006: Metamorphoses — one house, only the language differs: no notes, one shared source line');
+    // Her live Vasari search on 43: two versions, both the Louvre's own house.
+    const vas2 = { id: 'vl-vas2', museumId: 'louvre', title: 'Giorgio Vasari', startDate: '2022-03-31', looked: true, hasCatalogue: 'yes', editionPick: 0, editions: [
+      { title: 'Giorgio Vasari. The Book of Drawings', lang: 'English', binding: null, pages: 240, publisher: 'Musée du Louvre Editions / Lienart', isbn13: '9782359063738', alsoIsbn13: null, showing: 'this', proofUrl: 'https://www.amazon.com/dp/2359063731', note: null, city: null, year: null, card: null },
+      { title: 'Giorgio Vasari. Le Livre des dessins', lang: 'French', binding: null, pages: 240, publisher: 'Musée du Louvre Editions / Lienart', isbn13: '9782359063721', alsoIsbn13: null, showing: 'this', proofUrl: 'https://www.louvre.fr/editions/catalogue/giorgio-vasari-le-livre-des-dessins', note: null, city: null, year: 2022, card: null }] };
+    eq(shown(vas2), [
+      '● English · Giorgio Vasari. The Book of Drawings · Musée du Louvre Editions / Lienart · 978-2359063738 — this venue\'s English edition. (source: amazon.com)',
+      '○ French · Giorgio Vasari. Le Livre des dessins · Musée du Louvre Editions / Lienart · 978-2359063721 — the original edition. (source: louvre.fr)'],
+      'VL-013: Vasari, two versions from the Louvre\'s own house — her notes stay: "this venue\'s English edition", "the original edition"');
     eq([5, 6, 7, 9].map(n => shown(caseRow(n, '2024-01-01', []))), [null, null, null, null],
       'VL-007: Watteau, Canaletto – Guardi, Botticelli, Millet — one version: no version lines, the card as now');
     eq(api.versionLines({ museumId: 'louvre', editions: null }), null, 'VL-008: an old row with no versions has no version lines');
