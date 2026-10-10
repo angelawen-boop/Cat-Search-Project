@@ -29,7 +29,7 @@ model). Each verdict rests on ONE run; results vary between runs.
 | 1 Vasari | Fail | French 978-2359063721 and Stockholm 978-9171009166 not listed; English block has no language. The facts read answered all-empty; the publisher-site search died (`upstream_error`) |
 | 2 Hubert Robert, Louvre | Fail | French block's publisher "Somogy éditions d'art" (Louvre not joined); Lund Humphries block has no publisher |
 | 3 Hubert Robert, NGA | Fail | French book not listed; publisher "Lund Humphries" — Claude's facts read said "National Gallery of Art/Lund Humphries" and the card dropped NGA |
-| 4 Hammershøi | Fail | French publisher "Fonds Mercator" (no Culturespaces). English publisher disputed, not graded |
+| 4 Hammershøi | Fail | French publisher "Fonds Mercator" (no Culturespaces); English block has no publisher (her card: Rizzoli Electa) |
 | 5 Watteau | Fail | No publisher — Claude named "Musée du Louvre Éditions / Liénart Éditions", then "Lienart éditions"; the card kept neither |
 | 6 Canaletto – Guardi | **Pass** | |
 | 7 Botticelli | Fail | Publisher "Fonds Mercator" (no Culturespaces). Graded from its lookup record: the case record did not save |
@@ -53,17 +53,17 @@ Metamorphoses `L17916396765747elm`, Millet `L1791639703068rbam`.
    cause unknown. The page still said "Every case is saved" and the run's `done` read
    9 (case 8 wrote it), since `rec.saveError` is never shown or counted. Fix, rebuild,
    republish.
-2. **Raise with her, not settled:** (a) Hammershøi English publisher — the cards file
-   says Rizzoli Electa, `catalogue_versions.md` says none until a page found states it;
-   (b) the cards file still lists Vasari's 978-2350317441 (dropped, her decision);
-   (c) the cards file names Watteau's card "Pierrot, dit le Gilles", match "pierrot",
-   but her card is "A new look at Watteau", so `lookup_proof_check.js` cannot match it;
-   (d) whether "Culturespaces / Fonds Mercator" should be required for the French
-   Jacquemart-André books (graded strictly here).
+2. **Nothing to raise with her — her agreed cards (`catalogue_versions.md`, "The agreed
+   cases") settle every answer.** Botticelli and Hammershøi's French book are
+   "Culturespaces / Fonds Mercator", so the strict grade is right; Hammershøi's English
+   is Rizzoli Electa, so "none" fails (the page wrongly marks it "disputed": drop that
+   from `live_check_cases.json`). Vasari's 978-2350317441 is dropped (her decision) and
+   Watteau's card is "A new look at Watteau": correct both in the cards file.
 3. **A failure is the baseline, not a fix list.** Diagnose from the lookup records
    above before changing anything; strongest leads: Watteau's and Metamorphoses'
    publisher (Claude's name not kept / "Publication" read off a label), NGA's name
    dropped from "National Gallery of Art/Lund Humphries", the facts read finding no
    other editions at Vasari, Hubert NGA and Metamorphoses.
-4. **More runs before any verdict is trusted** — ask her to tap Run again on a
-   different day; compare runs case by case.
+4. **Repeat runs measure how stable the lookup is, and can be back to back** — the
+   search and Claude's reading vary call to call, not day to day. A case that changes
+   between two runs is itself a fault in the lookup.
