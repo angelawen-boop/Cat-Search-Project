@@ -1567,6 +1567,27 @@ function isbnInText(isbn,text){
   const b=a.replace(/(\d) (?=[\dXx])/g,"$1");
   return [d,isbn13to10(d)].filter(Boolean).some(f=>{ const re=new RegExp("(?<![0-9])"+f+"(?![0-9Xx])","i"); return re.test(a)||re.test(b); });
 }
+// ===== ISBN RANGES — written by `node build/isbn_ranges.js <RangeMessage.xml>` (see that file); never edit between these markers. =====
+// The agency's table of Sat, 10 Oct 2026 11:24:26 UTC.
+const ISBN_RANGES={"978":"0/1,6/3,65/2,66/2,67/0,6999/5,7/1,8/2,95/3,99/4,999/5","979":"0/0,1/2,16/0,8/1,9/0","978-0":"0/2,2/3,228/4,229/3,369/4,37/3,639/4,6398/7,64/3,645/7,646/3,648/7,649/3,655/4,656/3,7/4,85/5,9/6,900371/7,900372/6,95/7","978-1":"0/3,01/2,03/3,035/4,04/3,046/4,047/3,048/4,05/2,06/0,064375/7,065375/7,07/4,1/3,398/4,55/5,65/4,68/5,686/4,714/3,717/4,732/7,74/5,762/4,7635/7,765/5,775/7,7754/5,7764/7,7765/5,777/7,7783/5,79/4,8/5,8005/5,805/5,838/7,8385/5,8672/4,8676/5,8698/6,916/7,916506/6,91687/7,916908/6,919164/7,919565/6,9196/7,919655/6,973/4,9878/6,99115/7,9912/6,99899/7","978-2":"0/2,2/3,35/5,4/3,487/6,495/3,496/4,4967/5,497/3,528/4,53/3,7/4,84/5,9/6,9198/5,91981/6,919943/7,919969/6,95/7","978-3":"0/2,03/3,034/4,037/5,04/2,2/3,313/4,314/3,39/2,4/3,676/5,688/3,689/5,695/4,85/5,9/6,95/7,954/5,97/7,985/5,9996/4","978-4":"0/2,2/3,7/4,85/5,9/6,95/7","978-5":"0/5,005/4,01/2,2/3,362/4,3624/5,363/3,421/4,43/3,431/4,44/3,441/4,45/3,603/7,605/3,7/4,85/5,9/6,91/5,92/4,93/5,95/7,9501/4,98/5,99/7,991/4","978-600":"0/2,1/3,5/4,9/5,9868/4,993/3,996/5","978-601":"0/2,2/3,7/4,8/5,85/2","978-602":"0/2,07/4,14/5,15/4,17/5,2/3,5/5,54/4,6/5,62/4,7/5,75/4,95/5","978-603":"0/2,05/2,5/3,8/4,9/5","978-604":"0/1,3/3,4/2,47/3,498/4,5/2,9/3,98/4","978-605":"0/2,03/3,04/2,06/5,07/2,1/3,2/4,24/3,4/4,6/5,75/4,8/5,9/4","978-606":"0/3,1/2,5/3,8/4,91/3,92/5,96/4,975/3","978-607":"0/2,26/4,265/5,27/2,4/3,589/4,593/5,6/3,68/2,69/3,692/5,7/3,75/4,95/5","978-608":"0/1,1/2,2/3,45/4,65/5,7/1","978-609":"0/2,4/3,8/4,95/5","978-611":"0/0","978-612":"0/2,3/3,4/4,45/5,5/4,53/0,99/5","978-613":"0/1","978-614":"0/2,4/3,8/4,95/5","978-615":"0/2,1/3,5/4,8/5,9/0","978-616":"0/2,2/3,7/4,9/5","978-617":"0/2,5/3,7/4,9/4,905/5","978-618":"0/2,2/3,5/4,8/5","978-619":"0/2,15/3,7/4,9/5","978-620":"0/1","978-621":"0/2,3/0,4/3,6/0,8/4,9/0,95/5","978-622":"0/2,11/3,13/4,18/3,183/4,19/3,195/5,2/3,46/4,875/5","978-623":"0/2,11/3,525/4,88/5","978-624":"0/2,05/0,2/3,25/0,485/4,72/0,91/5","978-625":"0/2,02/0,32/3,443/5,445/3,45/0,5/4,7794/5,7795/4,9/5","978-626":"0/2,05/0,3/3,5/0,65/4,8/0,925/5","978-627":"0/0,28/2,32/0,5/3,55/0,72/4,8/0,945/5,9555/0","978-628":"0/2,1/0,5/3,55/0,75/4,85/0,95/5","978-629":"0/2,03/0,455/3,5/0,71/4,8/0,92/5","978-630":"0/0,3/3,45/0,65/4,7/0,95/5","978-631":"0/2,1/0,3/3,4/0,65/4,75/0,9/5","978-632":"0/2,12/0,6/3,68/0","978-633":"0/2,02/0,3/3,35/0,825/4,9/0,995/5","978-634":"0/2,06/0,2/3,4/0,7/4,85/0,96/5","978-635":"0/2,05/0,25/3,325/0,58/4,7/0,96/5","978-65":"0/2,03/0,25/3,3/3,303/0,5/4,635/0,8/5,81825/0,82/5,9/6,90245/0,9755/6","978-66":"0/0,3/2,31/0,85/3,851/0","978-69990":"0/0,5/2,53/0,98/3","978-7":"0/2,1/3,5/4,8/5,9/6","978-80":"0/2,2/3,53/5,55/3,69/5,7/4,85/5,9/6,999/5","978-81":"0/2,17/5,18/6,19/5,2/3,648/4,67/4,68/5,685/6,69/5,7/4,85/5,9/6","978-82":"0/2,2/3,69/6,7/4,9/5,99/6","978-83":"0/2,2/3,6/5,7/4,85/5,9/6","978-84":"0/2,1/5,105/4,12/6,13/4,14/3,15/5,2/3,7/4,85/5,9/4,92/6,924/5,93/6,95/5,97/4","978-85":"0/2,2/3,455/6,4553/5,456/3,529/5,532/4,534/3,54/5,5403/5,5404/6,5405/5,5409/6,541/5,544/4,548/5,55/4,6/5,7/4,85/5,9/6,925/5,945/4,96/2,98/5","978-86":"0/2,3/3,6/4,8/5,9/6","978-87":"0/2,3/0,4/3,65/0,7/4,8/0,85/5,95/0,97/6","978-88":"0/2,2/3,312/5,315/3,319/5,323/3,327/4,339/3,361/4,363/3,549/4,555/3,6/4,85/5,9/6,91/3,927/4,94/6,948/5","978-89":"0/2,25/3,55/4,85/5,95/6,97/5,99/3","978-90":"0/2,2/3,5/4,7/5,8/6,85/4,9/2,91/0,94/2,95/0","978-91":"0/1,2/2,5/3,65/0,685/4,82/0,85/5,95/0,97/6","978-92":"0/1,6/2,8/3,9/4,95/5,99/6","978-93":"0/2,09/4,1/3,47/5,48/5,5/4,8/5,96/6","978-94":"0/3,6/4,6388/6,63881/5,63882/6,63884/5,63886/6,63887/5,6389/4,6396/6,63961/5,63963/6,63964/5,63965/6,63966/5,6397/4,64/6,64001/5,64005/6,64006/5,64007/6,64009/5,6401/4,6407/6,64074/5,64075/6,64076/5,64078/6,6408/4,642/5,64202/6,64203/5,64204/6,64205/5,64207/6,64208/5,64209/6,6421/4,6433/5,64332/6,64333/5,64334/6,64336/5,64337/6,64338/5,6434/4,6436/6,64361/5,64364/6,64366/5,64367/6,64368/5,6437/4,6444/6,64441/5,64442/6,64443/5,64444/6,64445/5,64447/6,64449/5,6445/4,6451/5,64513/6,64514/5,64516/6,6452/4,6459/6,64591/5,64593/6,64595/5,64597/6,64599/5,646/4,6466/6,64661/5,64663/6,64666/5,64667/6,64669/5,6467/4,6475/5,64752/6,64754/5,64755/6,64756/5,64758/6,64759/5,6476/4,6477/6,647709/0,64771/5,64772/0,647723/6,64773/5,64774/6,64777/5,6478/6,64781/5,64782/6,64783/5,64787/6,64788/5,6479/4,6494/6,64941/5,64943/6,64945/5,64947/6,64948/5,64949/6,6495/4,6498/5,64981/6,64983/5,64985/6,64987/5,64988/6,6499/4,9/5","978-950":"0/2,5/3,9/4,99/5","978-951":"0/1,2/2,55/3,89/4,95/5","978-952":"0/2,18/3,19/0,195/5,2/3,5/4,6/2,65/5,66/4,67/5,7/4,8/2,95/4,99/5","978-953":"0/1,1/2,15/3,46/5,5/3,501/5,51/2,55/5,6/4,95/5","978-954":"0/2,29/4,3/3,8/4,9/5,93/4","978-955":"0/4,2/2,34/4,355/5,36/4,38/5,39/4,41/5,45/4,5/5,55/3,711/5,715/4,95/5","978-956":"0/2,08/5,1/2,2/3,6/4,7/4","978-957":"0/2,03/4,05/2,2/4,21/2,28/5,31/2,44/3,82/4,97/5","978-958":"0/2,5/3,51/4,52/5,54/4,56/5,6/3,8/4,95/5","978-959":"0/2,2/3,7/4,85/5","978-960":"0/2,2/3,66/4,69/3,7/4,85/5,93/2,94/4,98/5","978-961":"0/2,2/3,6/4,9/5,98/0","978-962":"0/2,2/3,7/4,85/5,87/4,9/3","978-963":"0/2,2/3,7/4,85/5,9/4","978-964":"0/2,15/3,25/4,3/3,55/4,9/5,97/3,99/4","978-965":"0/2,2/3,6/0,7/4,8/0,9/5","978-966":"0/2,13/3,14/2,15/4,17/3,2/4,279/3,29/4,3/3,7/4,9/5,91/3,95/5,98/3","978-967":"0/4,1/5,2/4,25/3,255/5,27/4,28/4,3/3,5/4,6/2,9/3,99/4,999/5","978-968":"0/0,01/2,4/3,5/4,8/3,9/4","978-969":"0/1,2/2,21/3,22/4,23/5,24/2,4/3,75/4","978-970":"0/0,01/2,6/3,9/4,91/5,97/4","978-971":"0/3,016/4,02/2,03/4,06/2,5/3,85/4,91/5,96/4,97/2,99/4","978-972":"0/1,2/2,55/3,8/4,95/5","978-973":"0/1,1/3,17/4,2/2,55/3,76/4,85/5,89/4,95/5","978-974":"0/2,2/3,7/4,85/5,9/5,95/4","978-975":"0/5,02/2,24/4,25/3,6/4,92/5,99/3","978-976":"0/1,4/2,6/3,8/4,95/5","978-977":"0/2,2/3,5/4,7/3,85/5,874/4,89/3,895/4,9/2,96/4,97/3","978-978":"0/3,2/4,3/5,67/2,69/3,7/0,765/3,8/4,9/3","978-979":"0/3,1/4,15/5,2/2,3/4,4/3,8/4,95/5","978-980":"0/2,2/3,6/4","978-981":"0/2,17/5,18/2,2/3,3/4,31/3,4/4,6/0,91/5,92/2","978-982":"0/2,1/3,7/2,9/4,98/5","978-983":"0/2,02/3,2/4,4/5,45/2,5/2,8/3,9/4,99/5","978-984":"0/2,22/3,225/4,26/2,29/5,3/2,39/4,4/3,8/4,9/5","978-985":"0/2,4/3,6/4,88/3,9/5","978-986":"0/2,06/5,07/4,08/2,12/3,54/4,8/5","978-987":"0/2,1/4,2/5,3/2,36/4,42/2,44/4,45/5,49/4,5/3,825/4,828/5,83/4,85/2,89/4,95/5","978-988":"0/2,12/5,2/3,7/5,8/4,97/5","978-989":"0/1,1/0,2/2,35/5,37/2,47/3,49/5,5/2,53/5,55/3,8/4,95/5","978-9905":"0/1,1/0,2/2,24/0,6/3,625/0,98/4","978-9906":"0/0,2/2,23/0,7/3,725/0,99/4","978-9907":"0/1,1/0,5/2,65/0,8/3,875/0,95/4","978-9908":"0/1,4/2,7/1,8/2,82/0,825/3,9/2,93/0,96/4,97/4","978-9909":"0/2,2/0,75/3,85/0,98/4","978-9910":"0/0,01/2,19/0,225/3,375/0,45/4,55/3,8/4","978-9911":"0/0,2/2,25/0,55/3,75/0,95/4","978-9912":"0/0,4/2,45/0,75/3,8/0,97/4","978-9913":"0/2,1/0,6/3,71/0,95/4","978-9914":"0/0,24/2,56/0,7/3,8/0,9/4","978-9915":"0/0,4/2,6/0,65/3,8/0,93/4","978-9916":"0/1,1/2,4/1,6/3,79/2,92/4,94/2,95/4","978-9917":"0/1,1/0,3/2,35/0,6/3,7/0,9625/4","978-9918":"0/1,1/0,2/2,3/0,6/3,8/0,95/4","978-9919":"0/1,1/0,2/2,3/0,5/3,6/0,9/4","978-9920":"0/2,03/0,13/3,2/3,23/2,43/3,8/0,83/4,855/4","978-9921":"0/1,1/0,3/2,4/0,7/3,9/0,97/4","978-9922":"0/0,15/2,3/0,5/3,55/4,6/3,8/4","978-9923":"0/1,1/2,7/3,9/0,94/4","978-9924":"0/0,28/2,4/0,5/3,66/0,895/4","978-9925":"0/1,3/2,55/3,735/4","978-9926":"0/1,2/2,4/3,8/4","978-9927":"0/2,1/3,4/4,5/0","978-9928":"0/2,1/3,4/4,5/0,8/3,9/2","978-9929":"0/1,4/2,55/3,8/4,98/3","978-9930":"0/2,5/3,94/4","978-9931":"0/2,24/3,9/4","978-9932":"0/2,4/3,85/4","978-9933":"0/1,1/2,4/3,87/2,9/4","978-9934":"0/1,1/2,5/3,8/4","978-9935":"0/1,1/2,4/3,9/4","978-9936":"0/1,2/2,4/3,8/4","978-9937":"0/1,3/2,5/3,8/4","978-9938":"0/2,8/3,95/4,975/3,991/4","978-9939":"0/1,4/2,48/3,5/2,8/3,9/4,96/3,98/2","978-9940":"0/1,2/2,5/3,84/2,87/4","978-9941":"0/1,1/2,4/3,75/2,79/4,8/1,9/4","978-9942":"0/2,56/3,7/4,75/3,85/4,9/3,985/4","978-9943":"0/2,3/3,4/4,975/3","978-9944":"0/4,1/3,5/4,6/2,7/3,8/2,9/3","978-9945":"0/2,01/3,08/2,4/3,57/2,58/3,8/2,81/3,85/4","978-9946":"0/1,2/2,4/3,9/4","978-9947":"0/1,2/2,8/3","978-9948":"0/2,4/3,52/2,54/3,6/3,61/3,62/3,85/4,9925/4,995/4,9975/4","978-9949":"0/2,09/3,1/2,4/3,7/2,72/4,75/2,9/4","978-9950":"0/2,3/3,85/4","978-9951":"0/2,39/3,85/4,98/3","978-9952":"0/1,1/0,15/2,4/3,8/4","978-9953":"0/1,1/2,4/3,6/2,9/4,93/2,97/3","978-9954":"0/1,2/2,4/3,8/4,99/2","978-9955":"0/2,4/3,93/4","978-9956":"0/1,1/2,4/3,9/4","978-9957":"0/2,4/3,65/2,68/3,7/2,85/4,88/2","978-9958":"0/2,02/3,03/4,04/3,09/4,1/2,19/4,2/2,5/3,9/4","978-9959":"0/1,2/2,8/3,95/4,97/3,98/2","978-9960":"0/2,6/3,9/4","978-9961":"0/1,3/2,7/3,95/4","978-9962":"0/2,55/4,56/2,6/3,85/4","978-9963":"0/1,2/4,25/3,28/4,3/2,55/3,735/4,75/4","978-9964":"0/1,7/2,95/3","978-9965":"0/2,4/3,9/4","978-9966":"0/3,14/2,15/4,2/2,7/4,75/3,821/4,825/3,826/4,829/3,96/4","978-9967":"0/2,4/3,9/4","978-9968":"0/2,5/3,94/4","978-9969":"0/2,2/0,5/3,75/0,93/4","978-9970":"0/2,4/3,9/4","978-9971":"0/1,6/2,9/3,99/4","978-9972":"0/2,1/1,2/3,25/4,3/2,6/3,9/4","978-9973":"0/2,06/3,09/4,1/2,7/3,97/4","978-9974":"0/1,3/2,55/3,75/4,88/3,91/2,95/2","978-9975":"0/1,1/3,3/4,4/4,45/2,9/3,95/4","978-9976":"0/1,5/4,58/3,59/2,9/3,99/4","978-9977":"0/2,9/3,99/4","978-9978":"0/2,3/3,4/2,95/3,99/4","978-9979":"0/1,5/2,65/3,66/2,76/3,9/4","978-9980":"0/1,4/2,9/3,99/4","978-9981":"0/2,1/3,16/4,2/2,8/3,95/4","978-9982":"0/2,8/3,99/4","978-9983":"0/0,8/2,95/3,99/4","978-9984":"0/2,5/3,9/4","978-9985":"0/1,5/2,8/3,9/4","978-9986":"0/2,4/3,9/4,94/3,97/2","978-9987":"0/2,4/3,88/4","978-9988":"0/1,4/2,55/3,75/4","978-9989":"0/1,1/3,2/4,3/2,6/3,95/4","978-99901":"0/2,5/3,8/2","978-99902":"0/0","978-99903":"0/1,2/2,9/3","978-99904":"0/1,6/2,9/3","978-99905":"0/1,4/2,8/3","978-99906":"0/1,3/2,6/3,7/2,9/2,95/3","978-99908":"0/1,1/2,9/3","978-99909":"0/1,4/2,95/3","978-99910":"0/1,3/2,9/3","978-99911":"0/2,47/3,48/2,6/3","978-99912":"0/1,4/3,6/2,9/3","978-99913":"0/1,3/2,36/0,6/3,605/0","978-99914":"0/1,5/2,7/1,8/2,87/3,88/2,9/3","978-99915":"0/1,5/2,8/3","978-99916":"0/1,3/2,7/3","978-99917":"0/1,3/2,89/3","978-99918":"0/1,4/2,8/3","978-99919":"0/1,3/3,4/2,8/3","978-99920":"0/1,5/2,9/3","978-99921":"0/1,2/2,7/3,8/1,9/2","978-99922":"0/1,4/2,7/3","978-99923":"0/1,2/2,8/3","978-99924":"0/1,2/2,8/3","978-99925":"0/1,1/2,2/3,3/1,4/2,8/3","978-99926":"0/1,1/2,6/3,87/2,9/2","978-99927":"0/1,3/2,6/3","978-99928":"0/1,1/2,8/3","978-99929":"0/1,5/2,8/3","978-99930":"0/1,5/2,8/3","978-99931":"0/1,5/2,8/3","978-99932":"0/1,1/2,6/3,7/1,8/2","978-99933":"0/1,3/2,6/3","978-99934":"0/1,2/2,8/3","978-99935":"0/1,3/2,6/3,7/1,9/2","978-99936":"0/1,1/2,6/3","978-99937":"0/1,2/2,6/3","978-99938":"0/1,2/2,6/3,9/2","978-99939":"0/1,3/2,6/2,9/3","978-99940":"0/1,1/2,7/3","978-99941":"0/1,3/2,8/3","978-99942":"0/1,5/2,8/3","978-99943":"0/1,3/2,6/3","978-99944":"0/1,5/2,8/3","978-99945":"0/1,5/2,9/3,98/2","978-99946":"0/1,3/2,6/3","978-99947":"0/1,3/2,7/3","978-99948":"0/1,5/2,8/3","978-99949":"0/1,2/2,8/1,9/3,99/2","978-99950":"0/1,5/2,8/3","978-99951":"0/0","978-99952":"0/1,4/2,43/3,5/2,8/3","978-99953":"0/1,3/2,8/3,94/2","978-99954":"0/1,3/2,7/3,88/2","978-99955":"0/1,2/2,6/3,8/2","978-99956":"0/2,6/3,86/2","978-99957":"0/1,2/2,8/3,95/2","978-99958":"0/1,5/2,94/3,95/3","978-99959":"0/1,3/2,6/3","978-99960":"0/0,07/3,1/2,95/3","978-99961":"0/1,3/3,37/2,9/3","978-99962":"0/1,5/2,8/3","978-99963":"0/2,5/3,92/2","978-99964":"0/1,2/2,8/3","978-99965":"0/1,3/3,36/2,63/3","978-99966":"0/1,3/2,7/3,8/2,97/3","978-99967":"0/1,1/2,6/3","978-99968":"0/1,4/3,6/2,9/3","978-99969":"0/1,5/2,8/3,95/2","978-99970":"0/1,5/2,9/3","978-99971":"0/1,4/2,85/3","978-99972":"0/1,5/2,9/3","978-99973":"0/1,4/2,8/3","978-99974":"0/1,1/2,26/3,4/2,64/3,65/2,8/3","978-99975":"0/1,3/3,4/2,8/3","978-99976":"0/2,04/3,1/2,16/3,2/2,6/3,82/2,9/3","978-99977":"0/1,2/0,4/2,7/3,8/0,9/3,925/0,975/3","978-99978":"0/1,5/2,7/3","978-99979":"0/1,4/2,8/3","978-99980":"0/1,1/0,2/3,25/2,67/3","978-99981":"0/1,1/2,11/3,15/2,2/3,22/2,75/3","978-99982":"0/1,5/2,8/0,845/3","978-99983":"0/1,1/0,35/2,7/0,85/3","978-99984":"0/1,1/0,5/2,7/0,95/3","978-99985":"0/1,2/3,23/2,8/3","978-99986":"0/1,1/0,5/2,7/0,95/3","978-99987":"0/0,4/3","978-99988":"0/1,1/2,12/0,5/2,55/0,8/3,825/0","978-99989":"0/1,2/0,45/2,5/2,8/0,875/3,9/3","978-99990":"0/1,2/0,45/2,61/0,92/3","978-99991":"0/1,1/0,5/2,61/0,96/3","978-99992":"0/1,3/0,5/2,7/0,9/3","978-99993":"0/1,5/2,55/0,98/3","978-99994":"0/1,1/0,5/2,57/0,96/3","978-99995":"0/0,5/2,56/0,975/3","978-99996":"0/1,2/0,4/2,6/0,9/3","978-99997":"0/1,1/0,4/2,62/0,92/3","978-99998":"0/0,8/2,9/0","979-10":"0/2,2/3,7/4,9/5,976/6","979-11":"0/2,22/6,23/5,25/3,55/4,85/5,95/6","979-12":"0/0,2/3,3/0,545/4,6/0,8/5,85/0,985/6","979-13":"0/2,01/0,6/3,605/0,7/4,735/0,875/5,9/0,99/6","979-8":"0/0,03/3,035/0,16/4,17/4,18/4,195/4,2/3,24/4,26/4,28/4,3/4,885/5,9/5,91/0,945/5,95/6,97/0,982/7,985/7,993/7,996/7,9985/7"};
+// ===== END ISBN RANGES =====
+// The publisher's prefix an ISBN-13 was issued under ("978-2-35906"), read off the
+// agency's range table; null where the table does not say.
+function registrantOf(isbn){
+  const d=String(isbn||"").replace(/\D/g,"");
+  if(d.length!==13)return null;
+  const width=(rules,digits)=>{
+    const seven=digits.padEnd(7,"0").slice(0,7);
+    let n=0;
+    for(const p of String(rules||"").split(",")){ const [from,len]=p.split("/"); if(from.padEnd(7,"0")<=seven)n=+len; else break; }
+    return n;
+  };
+  const g=width(ISBN_RANGES[d.slice(0,3)],d.slice(3,12));
+  if(!g)return null;
+  const group=d.slice(0,3)+"-"+d.slice(3,3+g);
+  const r=width(ISBN_RANGES[group],d.slice(3+g,12));
+  return r?group+"-"+d.slice(3+g,3+g+r):null;
+}
 const MON3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const fmtDate=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");if(isNaN(x))return d;return x.getDate()+" "+MON3[x.getMonth()]+" "+x.getFullYear();};
 function fmtRefresh(iso){if(!iso)return"never";const d=new Date(iso);if(isNaN(d))return"never";const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
@@ -1574,8 +1595,10 @@ function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)
 
 // The shop link searches by the EXHIBITION's title (her decision): shops index the
 // show's name; resellers use the ISBN or the book's title. Booko AU: booko.au/<isbn>,
-// or its title search with no ISBN.
-function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+encodeURIComponent(r.title)});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q},{name:"Booko AU",href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
+// or its title search with no ISBN. A picked version from another museum's shop links
+// that museum's shop — its page for the book, else its search for the book's title, else
+// its home — never this venue's (her rule 6).
+function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];const pv=pickedVersion(r),om=pv&&pv.shop&&pv.shop.museum;if(om){const href=r.shopUrl||(om.search?om.search+encodeURIComponent(pv.title||title):om.home);if(href)out.push({name:shopLinkLabel(r.shopState),href});}else if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+encodeURIComponent(r.title)});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q},{name:"Booko AU",href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
 
 // ── FINDING A CATALOGUE (docs/app.md §1; CLAUDE.md §4 "Catalogue lookup") ────
 // The page cannot reach the internet, so searching and reading go through her keyed
@@ -2386,6 +2409,10 @@ function shopHeadline(shopState,shopChange){
 const SHOP_BLOCKED_HEAD="The museum shop is blocked";
 const SHOP_BLOCKED_FOUND_REST=" - search it manually. The catalogue is stocked elsewhere.";
 const SHOP_BLOCKED_NONE_REST=". The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
+// The grey line for a book not in the shop, and a block whose museum shop could not be
+// checked (her rule 6: a check that did not finish is never "not there").
+const NOT_IN_SHOP="Not in the museum shop \u2014 shop link opens the general store.";
+const SHOP_CHECK_UNFINISHED="The museum shop check didn\u2019t finish.";
 
 // A ticket is never a catalogue (her decision, KHM Canaletto & Bellotto): a link with
 // /ticket/ or /tickets/ in its path is never taken as the book. L-001 to L-019.
@@ -2709,6 +2736,59 @@ async function recheckLinkedPage(row){
   }
   return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
     said:(hadIt?"Re-checked: no longer for sale in the museum shop.":"Re-checked: still not for sale in the museum shop.")+(p.why?" "+p.why:"")};
+}
+
+// RE-CHECK ON A CARD WITH SEVERAL VERSIONS (her rule 6): the picked version only, in its
+// own museum's shop — its page on file re-read as above, else that shop looked through
+// again; nothing picked → this venue's own versions, from one shop step, each decided in
+// code. Updates the versions' shops and, for the pick, the card's. Same answer shape as
+// recheckLinkedPage. RV-001 onwards.
+async function recheckVersions(row,hooks){
+  const vs=row.editions.map(v=>({...v}));
+  const pick=Number.isInteger(row.editionPick)&&vs[row.editionPick]?row.editionPick:-1;
+  const io=lookupIo(hooks,{upTo:1});
+  const set=(i,shop)=>{ vs[i]={...vs[i],shop,card:{...(vs[i].card||{}),shopState:shop.state==="shop"||shop.state==="gone"||shop.state==="blocked"?shop.state:"web",shopUrl:shop.url||null}}; };
+  const done=(ok,said,detail)=>{
+    if(!ok)return{ok:false,said,detail};
+    const next={...row,editions:vs};
+    if(pick>=0){ const c=vs[pick].card; next.shopState=c.shopState; next.shopUrl=c.shopUrl; next.shopChange=vs[pick].shop.change||null; }
+    return{ok:true,row:next,said,detail};
+  };
+  const v=pick>=0?vs[pick]:null, was=v&&v.shop?v.shop:{state:v&&v.card?v.card.shopState:null,url:v&&v.card?v.card.shopUrl:null,museum:null};
+  if(v&&was.url&&(was.state==="shop"||was.state==="gone")){
+    if(hooks&&hooks.label)hooks.label("Re-reading the shop page\u2026");
+    const out=await recheckLinkedPage({...row,catalogueTitle:v.title||row.catalogueTitle,shopUrl:was.url,shopState:was.state,shopChange:was.change||null});
+    if(!out.ok)return done(false,out.said,out.detail);
+    set(pick,{state:out.row.shopState,url:was.url,change:out.row.shopChange||null,museum:was.museum||null});
+    return done(true,out.said,out.detail);
+  }
+  if(v&&was.museum){
+    io.phase("shop");
+    const m=was.museum;
+    const got=await otherShopFacts(v,{id:m.id,name:m.name,page:null,home:m.home,search:m.search,catalogues:m.catalogues},[],io);
+    if(got.state==="unfinished")return done(false,"Re-check didn\u2019t finish \u2014 the museum shop couldn\u2019t be checked. Nothing changed.","");
+    const had=was.state==="shop";
+    set(pick,{...got,change:got.state==="shop"?(had?was.change||null:"now"):null});
+    return done(true,got.state==="shop"?(had?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop."):"Re-checked the museum shop: this book isn\u2019t there.","");
+  }
+  io.phase("shop");
+  const st=await shopStep(row,io);
+  const dom=shopDomain(MU[row.museumId]);
+  if(!st.ran)return done(false,"This museum has no shop on file, so there is nothing to re-check.","");
+  if(!st.ok)return done(false,"Re-check didn\u2019t run \u2014 "+st.detail.split("\n").pop().split("[")[0].trim()+" Nothing changed.",st.detail);
+  if(st.blocked)return done(false,"Re-check didn\u2019t work \u2014 the museum shop is blocked. Nothing changed.",st.detail);
+  const o=st.data||{};
+  const targets=pick>=0?[pick]:vs.map((x,i)=>i).filter(i=>!(vs[i].shop&&vs[i].shop.museum));
+  let any=false, still=false;
+  for(const i of targets){
+    const x=vs[i], prev=x.shop||{state:x.card?x.card.shopState:null,change:null};
+    const read=o.found&&((o.isbn13&&[x.isbn13,x.alsoIsbn13].includes(cleanIsbn(toIsbn13(o.isbn13))))||(o.catalogueTitle&&x.title&&sameWords(o.catalogueTitle,x.title)));
+    const link=(read&&shopLinkOf(o,dom))||bookOnShop(st.results||[],x,dom);
+    const inShop=!!link||(read&&!!o.listedOnly);
+    if(inShop){ any=true; if(prev.state==="shop")still=true; }
+    set(i,{state:inShop?"shop":"web",url:inShop?link||null:null,change:inShop?(prev.state==="shop"?prev.change||null:"now"):null,museum:null});
+  }
+  return done(true,any?(still?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop."):"Re-checked the museum shop: this book isn\u2019t there.",st.detail);
 }
 
 // ── THE CATALOGUE LOOKUP (docs/app.md §1; CLAUDE.md §4 "Catalogue lookup") ─────
@@ -3057,26 +3137,31 @@ function notABooklet(F,results,bookPages,log){
 }
 
 // ── EVERY VERSION OF THE CATALOGUE (docs/catalogue_versions.md) ──────────────
-// A version: {title, lang, binding, pages, publisher, isbn13, alsoIsbn13, showing,
-// proofUrl, note}. showing "this": this showing's catalogue, any language or printing;
-// "other": a different book from another showing, listed and never picked. Fields
-// starting "_" are the lookup's own and never stored (storedVersion).
+// A version: {title, lang, binding, pages, publisher, isbn13, alsoIsbn13, alsoOf, showing,
+// proofUrl, city, year, shop, card}. showing "this": this showing's catalogue, any language
+// or printing; "other": a different book from another showing, listed and never picked.
+// Found in three steps: who the versions are (foundVersion, printingsOf, editionsOf), which
+// numbers share a block (foldCoEditions), then each block's facts (versionFacts) and shop
+// (versionShops). Fields starting "_" are the lookup's own and never stored (storedVersion).
 const HARD_WORDS=/(?<!\p{L})(?:hardcover|hardback|hard cover|reli[ée]|rilegato|gebunden|gebonden|cartonn[ée])(?!\p{L})/iu;
 const SOFT_WORDS=/(?<!\p{L})(?:paperback|softcover|soft cover|softback|broch[ée]|brossura|kartoniert|ingenaaid)(?!\p{L})/iu;
-function bindingOfIsbn(results,isbn){
-  let hard=false, soft=false;
-  for(const x of (results||[])){
-    if(!isbnInText(isbn,resultText(x))||[...isbnsIn(x)].some(d=>d!==isbn))continue;
-    const t=resultText(x);
-    if(HARD_WORDS.test(t))hard=true;
-    if(SOFT_WORDS.test(t))soft=true;
-  }
+// A shop's filter menu counts books, it does not describe one ("Softcover (0) Hardcover
+// (0)", AbeBooks on Vasari): such entries are not read.
+const FACET_COUNT=/(?<!\p{L})(?:hard ?cover|hardback|soft ?cover|paperback|softback|first edition|signed|dust jacket)\s*\(\d{1,6}\)/giu;
+function bindingOn(text){
+  const t=String(text||"").replace(FACET_COUNT," ");
+  const hard=HARD_WORDS.test(t), soft=SOFT_WORDS.test(t);
   return hard===soft?null:hard?"hardcover":"paperback";
+}
+// One page's page count: every count it prints the same, else none.
+function pagesOn(text){
+  const counts=[...String(text||"").matchAll(/(?<![0-9])(\d{2,4})\s*(?:pages|pp\b|p\.|pagine|seiten|blz)/gi)].map(m=>+m[1]).filter(n=>n>=8);
+  return counts.length&&counts.every(c=>c===counts[0])?counts[0]:null;
 }
 const MUSEUM_WORDS=/(?<!\p{L})(?:museum|nationalmuseum|mus[ée]e|museo|museu|gallery|galleria|galerie|gallerie|kunsthalle|pinacoteca|rijksmuseum|louvre)(?!\p{L})/iu;
 // A museum's own imprint: every house named is a museum (isVenueImprint, or a museum word).
 function museumImprintOnly(name,museumId){
-  const parts=String(name||"").split(/\s*(?:\/|;|&|\s+and\s+|\s+with\s+|,)\s*/i).map(x=>x.trim()).filter(Boolean);
+  const parts=String(name||"").split(HOUSE_SPLIT_COMMA).map(x=>x.trim()).filter(Boolean);
   return parts.length>0&&parts.every(p=>isVenueImprint(p,museumId)||MUSEUM_WORDS.test(p));
 }
 function sameBookTitle(a,b){
@@ -3098,11 +3183,6 @@ function sameLang(a,b){
   return isEnglishLang(a)===isEnglishLang(b)&&(isEnglishLang(a)||foldText(a)===foldText(b));
 }
 function onIsbn(results,isbn){ return isbn?(results||[]).filter(x=>isbnInText(isbn,resultText(x))):[]; }
-// The page proving a version: the read's own page when it carries the ISBN, else the first that does.
-function proofOf(onV,given){
-  const g=given&&onV.find(x=>normalizeUrlKey(x&&x.url)===normalizeUrlKey(given));
-  return String((g||onV[0]||{}).url||"")||null;
-}
 // The venue's own house: its imprint (isVenueImprint), or a name carrying every
 // distinctive word of the venue's short name ("Louvre éditions").
 const VENUE_GENERIC=new Set(["national","art","arts","fine","modern","royal","musee","museum","museo","museu",
@@ -3114,17 +3194,22 @@ function venueHouse(name,museumId){
   const n=" "+normPublisher(name)+" ";
   return v.length>0&&v.every(t=>n.includes(" "+t+" "));
 }
-const HOUSE_SPLIT=/\s*(?:\/|;|&|\s+and\s+|\s+with\s+)\s*/i;
+// Co-publishers, as sources write them (her rule 4): "/", ";", " : ", "&", "and", "with" —
+// never a comma, which sits inside one name ("The Museum of Modern Art, New York").
+const HOUSE_SPLIT=/\s*(?:\/|;|&)\s*|\s+:\s+|\s+and\s+|\s+with\s+/i;
+const HOUSE_SPLIT_COMMA=/\s*(?:\/|;|&|,)\s*|\s+:\s+|\s+and\s+|\s+with\s+/i;
+function housesOf(name){ return String(name||"").split(HOUSE_SPLIT).map(x=>x.trim()).filter(Boolean); }
 function venuePrinting(name,museumId){
   const s=String(name||"").trim();
-  return !!s&&[s,...s.split(HOUSE_SPLIT)].some(p=>p.trim()&&venueHouse(p.trim(),museumId));
+  return !!s&&[s,...housesOf(s)].some(p=>venueHouse(p,museumId));
 }
 // Publisher names lead with the venue's own house (her rule, display only: the publisher
-// step still looks for the outside house, publisherToFind).
+// step still looks for the outside house, publisherToFind, which does not split " : ").
+const VENUE_FIRST_MARKS=[/\s*\/\s*/,/\s*;\s*/,/\s+:\s+/,/\s+with\s+/i,/\s+and\s+/i,/\s+&\s+/];
 function venueFirst(name,museumId){
   const s=String(name||"").trim();
   if(!s)return null;
-  for(const mark of CO_EDITION_MARKS){
+  for(const mark of VENUE_FIRST_MARKS){
     const parts=s.split(mark).map(x=>x.trim()).filter(Boolean);
     if(parts.length<2)continue;
     const own=parts.filter(p=>venueHouse(p,museumId));
@@ -3132,6 +3217,24 @@ function venueFirst(name,museumId){
     return [...own,...parts.filter(p=>!venueHouse(p,museumId))].join(" / ");
   }
   return s;
+}
+// A publisher as a block shows it (her layout): co-publishers "Venue's house / Other
+// house", each word capitalised except small joining words; nothing lowercased, renamed
+// or shortened ("Somogy éditions d'art" → "Somogy Éditions d'Art").
+const SMALL_WORDS=new Set(["de","du","des","d","la","le","les","l","et","of","the","and","für","und","di","del","della","delle",
+  "dei","degli","da","van","von","der","den","het","en","y","e","à","au","aux","for","in","on","at","a","an","zu","zur","im"]);
+function capitalWords(name){
+  return String(name||"").split(/(\s+)/).map((w,i)=>{
+    if(/^\s+$/.test(w))return w;
+    const m=w.match(/^([\p{L}]+)(['\u2019])(.*)$/u);
+    if(m&&SMALL_WORDS.has(m[1].toLowerCase()))return m[1]+m[2]+capitalWords(m[3]);
+    if(i>0&&SMALL_WORDS.has(w.toLowerCase()))return w;
+    return w.charAt(0).toUpperCase()+w.slice(1);
+  }).join("");
+}
+function publisherShown(name,museumId){
+  const s=venueFirst(name,museumId);
+  return s?housesOf(s).length>1?housesOf(s).map(capitalWords).join(" / "):capitalWords(s):null;
 }
 // Never a version: a magazine's special issue (Canaletto – Guardi, Connaissance des Arts).
 const MAGAZINE_WORDS=/hors[- ]s[ée]rie|special issue|num[ée]ro sp[ée]cial|sonderheft|numero speciale|(?<!\p{L})magazine(?!\p{L})|connaissance des arts/iu;
@@ -3154,7 +3257,7 @@ function cityOf(said,pub,results,museumId){
 // its short name ("Musée du Louvre"); never a name merely containing another's
 // ("National Gallery of Art" is not the National Gallery).
 function venueNamedIn(pub,except){
-  const parts=String(pub||"").split(HOUSE_SPLIT).map(normPublisher).filter(Boolean);
+  const parts=housesOf(pub).map(normPublisher).filter(Boolean);
   for(const m of Object.values(MU)){
     if(!m||m.id===except)continue;
     const w=normPublisher(m.short).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t));
@@ -3162,144 +3265,257 @@ function venueNamedIn(pub,except){
   }
   return null;
 }
-// A version's year, kept only where a result carrying its ISBN prints it.
+// A version's year, kept only where a page about that book prints it.
 function yearOf(said,onV){
   const y=String(said||"").match(/(?<![0-9])(?:19|20)\d\d(?![0-9])/);
   return y&&onV.some(x=>new RegExp("(?<![0-9])"+y[0]+"(?![0-9])").test(resultText(x)))?+y[0]:null;
-}
-
-// The book found so far: this showing's catalogue.
-function foundVersion(F,lang,pages,results,museumId,pageUrl){
-  const onV=onIsbn(results,F.isbn);
-  return{title:F.title||null,lang:lang||null,binding:F.isbn?bindingOfIsbn(results,F.isbn):null,
-    pages:(F.isbn&&pagesOfIsbn(results,F.isbn))||pages||null,publisher:venueFirst(F.publisher,museumId),
-    isbn13:F.isbn||null,alsoIsbn13:null,showing:"this",proofUrl:proofOf(onV,null)||pageUrl||null,note:null,
-    city:null,year:null,_found:true};
-}
-// Other printings in the found book's language (her decision, Vasari): its own ISBN
-// printed, the title's key words shared, page counts agreeing where printed — else the
-// very same title words. A far shorter or longer one is not kept. VS-001 to VS-008.
-function printingsOf(cands,card,results,museumId){
-  const cardPages=pagesOfIsbn(results,card.isbn)||card.pages||null;
-  const out=[];
-  for(const c of (Array.isArray(cands)?cands:[])){
-    if(!c||!c.title)continue;
-    const isbn=toIsbn13(c.isbn13,results);
-    if(!isbn||isbn===card.isbn||out.some(v=>v.isbn13===isbn))continue;
-    if(c.language&&card.lang&&!sameLang(c.language,card.lang))continue;
-    const titles=[card.title,...(card.titles||[])].filter(Boolean);
-    if(!titles.some(t=>sameBookTitle(c.title,t)))continue;
-    const pages=pagesOfIsbn(results,isbn)||pagesPrinted(c.pages,results);
-    if(pages&&cardPages?differentBook(pages,cardPages):!titles.some(t=>sameWords(c.title,t)))continue;
-    const onV=onIsbn(results,isbn);
-    const said=c.publisher&&onV.some(x=>foldText(resultText(x)).includes(foldText(c.publisher)))?String(c.publisher).trim():null;
-    const coded=publisherOnIsbnResults(onV,isbn);
-    const pub=coded||said;
-    if(aMagazine(c.title,pub,onV))continue;
-    out.push({title:titleAsPrinted(c.title,onV).title,lang:card.lang||null,binding:bindingOfIsbn(results,isbn),pages:pages||null,
-      publisher:venueFirst(pub,museumId),isbn13:isbn,alsoIsbn13:null,showing:"this",proofUrl:proofOf(onV,c.evidenceUrl),
-      note:"another printing",city:cityOf(c.venueCity,pub,results,museumId),year:yearOf(c.year,onV),
-      _pub:pub,_pubFrom:coded?"the ISBN’s results":"general results"});
-  }
-  return out;
 }
 // Everything a result carries: its title, its address and its text, whole and excerpted.
 function resultText(x){
   return [x&&x.title,x&&x.url,x&&typeof x.full_content==="string"?x.full_content:"",
     Array.isArray(x&&x.excerpts)?x.excerpts.join("\n"):""].filter(Boolean).join("\n");
 }
+
+// ── PAGES ABOUT ONE BOOK (her rule 2) ────────────────────────────────────────
+// A page is about a number when its own address carries it (13 or 10 digits), when every
+// 978/979 number it prints is that block's own (numbers inside link addresses are not
+// printed), or when the publisher step confirmed it as that book's page. A page listing
+// two books (a WorldCat record of two printings) is about neither. One page per address,
+// its excerpts joined.
+function printedIsbns(x){
+  const t=[x&&x.title,x&&typeof x.full_content==="string"?x.full_content:"",Array.isArray(x&&x.excerpts)?x.excerpts.join("\n"):""].join("\n")
+    .replace(/\]\([^)\s]*(?:\s+"[^"]*")?\)/g,"]").replace(/https?:\/\/\S+/g," ").replace(/(\d)[\u2010-\u2015-](?=\d)/g,"$1");
+  return new Set([...t.matchAll(/(?<![0-9])(97[89]\d{10})(?![0-9])/g)].map(m=>m[1]).filter(isbn13Checks));
+}
+function addressCarries(u,isbn){
+  const ten=isbn13to10(isbn);
+  return new RegExp("(?<![0-9])(?:"+isbn+(ten?"|"+ten:"")+")(?![0-9])","i").test(String(u||""));
+}
+function pagesByAddress(results){
+  const by=new Map();
+  for(const x of (results||[])){
+    const k=normalizeUrlKey(x&&x.url);
+    if(!k)continue;
+    const text=[x.full_content,...(Array.isArray(x.excerpts)?x.excerpts:[])].filter(t=>typeof t==="string"&&t).join("\n");
+    const p=by.get(k);
+    if(p){ if(text&&!p.excerpts[0].includes(text))p.excerpts[0]+="\n"+text; }
+    else by.set(k,{url:x.url,title:x.title||"",excerpts:[text]});
+  }
+  return [...by.values()];
+}
+function aboutBook(x,nums,confirmed){
+  if(!nums.length)return false;
+  if(confirmed&&confirmed.has(normalizeUrlKey(x.url)))return true;
+  if(nums.some(n=>addressCarries(x.url,n)))return true;
+  const p=printedIsbns(x);
+  return p.size>0&&[...p].every(d=>nums.includes(d));
+}
+// Trust, her order: the publisher's own page 3, a shop's page for the book 2, a library
+// record 1. A publisher's own page: confirmed by the publisher step, on the venue's own
+// site for the venue's house, or on a site carrying an outside house's name.
+const LIBRARY_RECORD=/worldcat|searchworks|sudoc|catalogue\.bnf|ccfr\.|openlibrary|hathitrust|bibliot|bibliograph|\blibrary\b|\blibraries\b|\/ark:\/|opac|catalog\.loc\.gov|copac|cinii|\bnii\.ac\b|dnb\.de|libris/i;
+function siteOfVenue(id){ const s=VENUE_SITES.find(v=>v.id===id); return s?s.host:null; }
+function onHouseSite(u,publisher,museumId){
+  const h=hostOf(u);
+  if(!h)return false;
+  return housesOf(publisher).some(part=>{
+    const m=venueHouse(part,museumId)?{id:museumId}:venueNamedIn(part);
+    if(m){ const s=siteOfVenue(m.id); return !!s&&baseDomain(h)===baseDomain(s); }
+    return !!publisherDomainFrom([{url:u}],part);
+  });
+}
+function pageRank(x,v,museumId,confirmed){
+  if(confirmed&&confirmed.has(normalizeUrlKey(x.url)))return 3;
+  if(onHouseSite(x.url,v.publisher,museumId))return 3;
+  let path=""; try{ path=new URL(x.url).pathname; }catch{}
+  return LIBRARY_RECORD.test(hostOf(x.url)+path)?1:2;
+}
+// Pages about a block's numbers, most trusted first; among equals the page that proved
+// the version, then the order found.
+function pagesAbout(v,pages,museumId,confirmed){
+  const nums=[v.isbn13,v.alsoIsbn13].filter(Boolean);
+  const mine=new Set(nums.map(n=>confirmed&&confirmed.get(n)).filter(Boolean).map(normalizeUrlKey));
+  const proof=v._proof?normalizeUrlKey(v._proof):null;
+  return pages.filter(x=>aboutBook(x,nums,mine)).map((x,i)=>({x,i:normalizeUrlKey(x.url)===proof?-1:i,rank:pageRank(x,v,museumId,mine)}))
+    .sort((a,b)=>b.rank-a.rank||a.i-b.i);
+}
+// One fact from the most trusted pages that state it, else none; pages of equal trust
+// that disagree state nothing.
+function factFrom(ranked,read,same){
+  for(const r of [3,2,1]){
+    const vals=ranked.filter(p=>p.rank===r).map(p=>read(oneText(p.x))).filter(v=>v!==null&&v!==undefined);
+    if(vals.length)return vals.every(v=>same(v,vals[0]))?vals[0]:null;
+  }
+  return null;
+}
+// EACH BLOCK'S FACTS AND SOURCE (her rules 2 and 3): binding, page count, year and the
+// source, from the pages about that book alone. `confirmed`: ISBN → the page the
+// publisher step judged that book's own. No page about it → the page that proved it.
+function versionFacts(v,pages,museumId,confirmed){
+  const ranked=pagesAbout(v,pages,museumId,confirmed);
+  v.binding=factFrom(ranked,bindingOn,(a,b)=>a===b);
+  v.pages=factFrom(ranked,pagesOn,(a,b)=>a===b);
+  v.year=v._year?yearOf(v._year,ranked.map(p=>p.x)):v.year||null;
+  v.proofUrl=ranked.length?String(ranked[0].x.url):v._proof||null;
+  return ranked;
+}
+
+// ── WHO THE VERSIONS ARE ─────────────────────────────────────────────────────
+// The book found so far: this showing's catalogue.
+function foundVersion(F,lang,museumId,pageUrl){
+  return{title:F.title||null,lang:lang||null,binding:null,pages:null,publisher:venueFirst(F.publisher,museumId),
+    isbn13:F.isbn||null,alsoIsbn13:null,alsoOf:null,showing:"this",proofUrl:null,city:null,year:null,
+    _found:true,_proof:pageUrl||null};
+}
+// A version's publisher (her rule 2; the single-book rule otherwise): labelled on the pages
+// about that one book, two agreeing; else the read's name where such a page prints it.
+function publisherAbout(about,isbn,said){
+  const coded=publisherOnIsbnResults(about,isbn);
+  if(coded)return{pub:coded,from:"the ISBN’s results"};
+  const s=String(said||"").trim();
+  if(s&&about.some(x=>foldText(resultText(x)).includes(foldText(s))))return{pub:s,from:"general results"};
+  return{pub:null,from:null};
+}
+// Other printings in the found book's language (her decision, Vasari): its own ISBN
+// printed, the title's key words shared, page counts agreeing where printed — else the
+// very same title words. A far shorter or longer one is not kept. VS-001 to VS-008.
+function printingsOf(cands,card,pages,museumId){
+  const cardPages=card.pages||null;
+  const out=[];
+  for(const c of (Array.isArray(cands)?cands:[])){
+    if(!c||!c.title)continue;
+    const isbn=toIsbn13(c.isbn13,pages);
+    if(!isbn||isbn===card.isbn||out.some(v=>v.isbn13===isbn))continue;
+    if(c.language&&card.lang&&!sameLang(c.language,card.lang))continue;
+    const titles=[card.title,...(card.titles||[])].filter(Boolean);
+    if(!titles.some(t=>sameBookTitle(c.title,t)))continue;
+    const about=pages.filter(x=>aboutBook(x,[isbn]));
+    const n=factFrom(about.map((x,i)=>({x,i,rank:2})),pagesOn,(a,b)=>!differentBook(a,b))||pagesPrinted(c.pages,pages);
+    if(n&&cardPages?differentBook(n,cardPages):!titles.some(t=>sameWords(c.title,t)))continue;
+    const {pub,from}=publisherAbout(about,isbn,c.publisher);
+    if(aMagazine(c.title,pub,onIsbn(pages,isbn)))continue;
+    out.push({title:titleAsPrinted(c.title,onIsbn(pages,isbn)).title,lang:card.lang||null,binding:null,pages:null,
+      publisher:venueFirst(pub,museumId),isbn13:isbn,alsoIsbn13:null,alsoOf:null,showing:"this",proofUrl:null,
+      city:cityOf(c.venueCity,pub,pages,museumId),year:null,
+      _year:c.year,_proof:c.evidenceUrl&&isbnInText(isbn,resultText(about.find(x=>sameAddress(x.url,c.evidenceUrl))||{}))?c.evidenceUrl:null,
+      _pub:pub,_pubFrom:from});
+  }
+  return out;
+}
 // Editions in another language, decided in code (her Botticelli and Hubert Robert;
 // CLAUDE.md §4). A fetched result must carry its ISBN and show the link: the original's
 // house (any outside house of a co-edition), the venue named (sameCatalogue), the original's ISBN, or a linking phrase with
 // every key word of the original's title (Hammershøi's library record). Page counts far
 // apart: a different book, kept as "other". `orig`: the found version, pages printed.
-function editionsOf(editions,orig,results,museumId,log){
+function editionsOf(editions,orig,pages,museumId,log){
   const origPub=orig.publisher?publisherToFind(orig.publisher,museumId):null;
   // A co-edition's outside houses, each one the original's publisher ("… / Lienart").
-  const houses=String(orig.publisher||"").split(HOUSE_SPLIT).map(x=>x.trim()).filter(p=>p&&!venueHouse(p,museumId));
+  const houses=housesOf(orig.publisher).filter(p=>!venueHouse(p,museumId));
   const keys=titleWords(orig.title);
   const out=[];
   for(const ed of (Array.isArray(editions)?editions:[])){
     if(!ed||!ed.title||!ed.language||(orig.lang&&sameLang(ed.language,orig.lang)))continue;
-    const isbn=toIsbn13(ed.isbn13,results||[]);
+    const isbn=toIsbn13(ed.isbn13,pages||[]);
     if(!isbn||isbn===orig.isbn13||out.some(v=>v.isbn13===isbn))continue;
-    const onV=onIsbn(results,isbn);
-    const coded=publisherOnIsbnResults(onV,isbn);
-    let pub=coded||(ed.publisher?String(ed.publisher).trim():null), from=coded?"the ISBN’s results":"general results", pubUrl=null;
-    const pages=pagesPrinted(ed.pages,results);
+    const onV=onIsbn(pages,isbn), about=pages.filter(x=>aboutBook(x,[isbn]));
+    let {pub,from}=publisherAbout(about,isbn,ed.publisher), pubUrl=null;
+    const n=pagesPrinted(ed.pages,pages);
     const title=titleAsPrinted(ed.title,onV).title;
     if(aMagazine(ed.title,pub,onV))continue;
-    const v={title,lang:langName(ed.language),binding:bindingOfIsbn(results,isbn),pages,publisher:null,isbn13:isbn,
-      alsoIsbn13:null,showing:"this",proofUrl:proofOf(onV,ed.evidenceUrl),note:null,
-      city:cityOf(ed.venueCity,pub,results,museumId),year:yearOf(ed.year,onV)};
-    if(differentBook(pages,orig.pages)){
+    const proof=ed.evidenceUrl&&onV.some(x=>sameAddress(x.url,ed.evidenceUrl))?ed.evidenceUrl:(onV[0]&&onV[0].url)||null;
+    const v={title,lang:langName(ed.language),binding:null,pages:null,publisher:null,isbn13:isbn,alsoIsbn13:null,alsoOf:null,
+      showing:"this",proofUrl:null,city:cityOf(ed.venueCity,pub,pages,museumId),year:null,_year:ed.year,_proof:proof,_why:null};
+    if(differentBook(n,orig._pages)){
       const said=onV.some(x=>SHOW_WORDS.test(resultText(x)));
-      if(log)log.push("“"+ed.title+"” (ISBN "+isbn+", "+pages+" pages) is a different book from this one ("+orig.pages+" pages)"
+      if(log)log.push("“"+ed.title+"” (ISBN "+isbn+", "+n+" pages) is a different book from this one ("+orig._pages+" pages)"
         +(said?" — listed as another showing’s.":" — and nothing calls it a catalogue, so it is left off."));
-      if(said)out.push({...v,publisher:venueFirst(pub,museumId),showing:"other",note:"a different book: "+pages+" pages against "+orig.pages,_pub:pub,_pubFrom:from});
+      if(said)out.push({...v,publisher:venueFirst(pub,museumId),showing:"other",_pub:pub,_pubFrom:from});
       continue;
     }
     let why=null;
-    if(sameCatalogue(pub,origPub,[],museumId)||houses.some(h=>sameCatalogue(pub,h,[],museumId)))why="the same publisher as the original";
-    else if(sameCatalogue(pub,origPub,onV,museumId))why="the venue named";
+    // Which house it is, for the proof: read off its ISBN first, else as the read named it.
+    const named=publisherOnIsbnResults(about,isbn)||String(ed.publisher||"").trim()||null;
+    if(sameCatalogue(named,origPub,[],museumId)||houses.some(h=>sameCatalogue(named,h,[],museumId)))why="the same publisher as the original";
+    else if(sameCatalogue(named,origPub,onV,museumId))why="the venue named";
     else if(orig.isbn13&&onV.some(x=>isbnInText(orig.isbn13,resultText(x))))why="a record carrying both ISBNs";
     else if(keys.length&&onV.some(x=>{ const t=foldText(resultText(x)); return EDITION_LINK.test(t)&&keys.every(w=>t.includes(w)); }))
       why="a record naming it a translation of the original";
     if(!why)continue;
-    // Named by no house: the original's, when a page on that house's own site carries
-    // this ISBN (Lienart's page for Vasari).
+    // Printed by the original's house: shown with the original's publishers. Named by no
+    // house: the original's, when a page on that house's own site carries its number.
     let inherit=why==="the same publisher as the original";
     if(!pub&&orig.publisher){
-      for(const part of String(orig.publisher).split(HOUSE_SPLIT).filter(Boolean)){
+      for(const part of housesOf(orig.publisher)){
         const page=onV.find(x=>publisherDomainFrom([x],part));
-        if(page){ pub=part.trim(); from="the book’s page"; pubUrl=page.url; inherit=true;
+        if(page){ pub=part; from="the book’s page"; pubUrl=page.url; inherit=true;
           if(log)log.push("Publisher of “"+title+"”: "+pub+" — its own page carries this ISBN ("+page.url+")."); break; }
       }
     }
-    if(log)log.push("Edition: “"+title+"”, "+v.lang+", ISBN "+isbn+" — "+why+" ("+v.proofUrl+").");
-    // Printed by the original's house: shown with the original's publishers.
-    out.push({...v,publisher:venueFirst(inherit?orig.publisher:pub,museumId),note:why,_pub:pub,_pubFrom:pub?from:null,_pubUrl:pubUrl});
+    if(log)log.push("Edition: “"+title+"”, "+v.lang+", ISBN "+isbn+" — "+why+(proof?" ("+proof+")":"")+".");
+    out.push({...v,publisher:venueFirst(inherit?orig.publisher:pub,museumId),_why:why,_pub:pub,_pubFrom:pub?from:null,_pubUrl:pubUrl});
   }
   return out;
 }
 
-// ONE BOOK, TWO NUMBERS (her decision, Vasari and Hubert Robert): a co-edition given an
-// ISBN by each publisher folds into one version — only where a record lists both under
-// one ISBN label ("ISBN : 978-2-7572-1064-2. - 978-2-35031-535-5"). The outside house's
-// number leads; the museum's own goes in alsoIsbn13. Bindings or page counts that
-// differ are two books, never folded. FO-001 to FO-006.
-const ISBN_PAIR=/ISBN[\s:*_.]{0,12}(97[89]\d{10})(?:\s*[.;,]?\s*[-\u2013\u2014;,\/]\s*|\s*[.;,]\s+)(97[89]\d{10})(?![0-9])/gi;
-function isbnPairs(results){
-  const pairs=[];
-  for(const x of (results||[])){
-    const t=resultText(x).replace(/(\d)[\u2010-\u2015-](?=\d)/g,"$1");
-    for(const m of t.matchAll(ISBN_PAIR))if(m[1]!==m[2]&&isbn13Checks(m[1])&&isbn13Checks(m[2]))pairs.push([m[1],m[2]]);
-  }
-  return pairs;
-}
-function foldCoEditions(versions,results,museumId,log){
-  const own=n=>{ const p=publisherOnIsbnResults(onIsbn(results,n),n); return !!p&&museumImprintOnly(p,museumId); };
-  const apart=(a,b)=>{
-    const ba=bindingOfIsbn(results,a), bb=bindingOfIsbn(results,b);
-    return !!(ba&&bb&&ba!==bb)||differentBook(pagesOfIsbn(results,a),pagesOfIsbn(results,b));
+// ── ONE BOOK, TWO NUMBERS — only with proof (her rule 1) ────────────────────
+// Two numbers share a block only where a page pairs each with a different publisher for
+// the same title: a copyright page ("ISBN musée du Louvre : 978-2-35031-535-5 ISBN Somogy
+// éditions d'art: 978-2-7572-1064-2", OCR noise and all), or a record ("ISBN 978-… (Somogy)").
+// Never when their own pages disagree on binding, page count, language or title, nor when
+// the agency's table gives both numbers to one publisher. A bare list of numbers proves
+// nothing (a WorldCat record of Lienart's and the Nationalmuseum's printings). The outside
+// house's number leads; the museum's own goes in alsoIsbn13, alsoOf naming the museum.
+const ISBN_DIGITS="97[89](?:[\\s\\u2010-\\u2015-]?\\d){10}";
+const LABEL_BEFORE=new RegExp("ISBN\\s+([^\\d:\\n()\\[\\]]{3,50}?)\\s*:\\s*("+ISBN_DIGITS+")(?![0-9])","gi");
+const LABEL_AFTER=new RegExp("ISBN\\s*:?\\s*("+ISBN_DIGITS+")\\s*\\(([^\\d()\\n]{3,50})\\)","gi");
+function labelledIsbns(text){
+  const out=[], t=String(text||"");
+  const keep=(label,num)=>{
+    const d=String(num).replace(/\D/g,""), l=stripMd(label).replace(/[\s.,;:#*]+$/,"").replace(/^[\s#*]+/,"").trim();
+    if(isbn13Checks(d)&&/\p{L}{3}/u.test(l)&&!/^(?:ean|isbn|br|rel|pbk|hbk)\b/i.test(l))out.push({isbn:d,label:l});
   };
-  for(const [a,b] of isbnPairs(results)){
-    const v=versions.find(x=>x.isbn13===a||x.isbn13===b);
-    if(!v||v.alsoIsbn13||apart(a,b))continue;
-    const n=v.isbn13===a?b:a;
-    const w=versions.find(x=>x!==v&&(x.isbn13===n||x.alsoIsbn13===n));
-    if(w&&(w.alsoIsbn13||w.showing!==v.showing||!sameLang(w.lang,v.lang)))continue;
-    // One number must be the same house's or this venue's own: another house's printing
-    // is a version of its own (Vasari: the Nationalmuseum's English book, listed with
-    // Lienart's in one library record).
-    const house=w?w.publisher:publisherOnIsbnResults(onIsbn(results,n),n);
-    const venueOnly=p=>String(p).split(HOUSE_SPLIT).every(x=>!x.trim()||venueHouse(x.trim(),museumId));
-    if(house&&v.publisher&&!sameHouse(house,v.publisher)&&!venueOnly(house)&&!venueOnly(v.publisher))continue;
-    if(w)versions.splice(versions.indexOf(w),1);
-    const swap=own(v.isbn13)&&!own(n);
-    v.alsoIsbn13=swap?v.isbn13:n;
-    v.isbn13=swap?n:v.isbn13;
-    if(log)log.push("One book, two numbers: ISBN "+v.isbn13+", also "+v.alsoIsbn13+" — a record lists both.");
+  for(const m of t.matchAll(LABEL_BEFORE))keep(m[1],m[2]);
+  for(const m of t.matchAll(LABEL_AFTER))keep(m[2],m[1]);
+  return out;
+}
+function pageCarriesTitle(x,title){
+  const w=titleWords(title), t=foldText(resultText(x));
+  return w.length>=2&&w.filter(k=>t.includes(k)).length>=Math.ceil(w.length*0.75);
+}
+// A house that is a museum: the venue's own, one of her venues, or a museum word.
+function museumHouse(name,museumId){ return venueHouse(name,museumId)||!!venueNamedIn(name)||MUSEUM_WORDS.test(String(name||"")); }
+function houseOwner(label,museumId){
+  if(venueHouse(label,museumId))return MU[museumId]?MU[museumId].short:capitalWords(label);
+  const m=venueNamedIn(label);
+  return m?m.short:capitalWords(label);
+}
+function foldCoEditions(versions,pages,museumId,log){
+  const factsOfNum=n=>{ const r=pagesAbout({isbn13:n,publisher:null},pages,museumId,null); return{binding:factFrom(r,bindingOn,(a,b)=>a===b),pages:factFrom(r,pagesOn,(a,b)=>!differentBook(a,b))}; };
+  for(const x of pages){
+    const labelled=labelledIsbns(oneText(x)+"\n"+String(x.title||""));
+    for(let i=0;i<labelled.length;i++)for(let j=i+1;j<labelled.length;j++){
+      const a=labelled[i], b=labelled[j];
+      if(a.isbn===b.isbn||sameHouse(a.label,b.label))continue;
+      const v=versions.find(y=>!y.alsoIsbn13&&(y.isbn13===a.isbn||y.isbn13===b.isbn));
+      if(!v||!pageCarriesTitle(x,v.title))continue;
+      const mine=v.isbn13===a.isbn?a:b, other=mine===a?b:a;
+      const w=versions.find(y=>y!==v&&(y.isbn13===other.isbn||y.alsoIsbn13===other.isbn));
+      if(w&&(w.alsoIsbn13||w.showing!==v.showing||!sameLang(w.lang,v.lang)||(w.title&&v.title&&!sameBookTitle(w.title,v.title))))continue;
+      const fa=factsOfNum(mine.isbn), fb=factsOfNum(other.isbn);
+      if((fa.binding&&fb.binding&&fa.binding!==fb.binding)||differentBook(fa.pages,fb.pages)){
+        if(log)log.push("ISBN "+mine.isbn+" and "+other.isbn+": their own pages disagree, so two books.");
+        continue;
+      }
+      const ra=registrantOf(mine.isbn);
+      if(ra&&ra===registrantOf(other.isbn)){
+        if(log)log.push("ISBN "+mine.isbn+" and "+other.isbn+": one publisher issued both ("+ra+"), so two books.");
+        continue;
+      }
+      if(w){ versions.splice(versions.indexOf(w),1); if(w._found)v._found=true; }
+      const [lead,also]=museumHouse(mine.label,museumId)&&!museumHouse(other.label,museumId)?[other,mine]:[mine,other];
+      v.isbn13=lead.isbn; v.alsoIsbn13=also.isbn; v.alsoOf=houseOwner(also.label,museumId);
+      if(log)log.push("One book, two numbers: ISBN "+lead.isbn+" ("+lead.label+"), also "+also.isbn+" ("+also.label+") — "+x.url+".");
+    }
   }
 }
 
@@ -3325,11 +3541,107 @@ function pickEdition(versions,museumId){
   }
   return pool.length===1?pool[0]:-1;
 }
+
+// ── EACH BLOCK'S SHOP (her rule 6) ───────────────────────────────────────────
+// The museum a version belongs to, when it is not the venue's: one of her venues named as
+// its publisher, or a museum house named on it — with a page about the book on a site
+// carrying that museum's name, where its shop is looked for. A commercial publisher's
+// version, or one naming the venue's own house, is the venue's (null).
+function museumOf(v,museumId,about){
+  if(!v.publisher||venuePrinting(v.publisher,museumId))return null;
+  const parts=housesOf(v.publisher);
+  for(const p of parts){ const m=venueNamedIn(p,museumId); if(m)return{id:m.id,name:m.short}; }
+  for(const p of parts){
+    if(!MUSEUM_WORDS.test(p))continue;
+    const page=about.find(x=>publisherDomainFrom([x],p));
+    return{name:p,page:page?String(page.url):null};
+  }
+  return null;
+}
+// The book on a shop's pages, read in code: a page on the shop about that book, showing a
+// price or a basket; else the one link on the shop whose words carry the book's whole
+// title or whose address carries its ISBN; only when none does, the one whose words are
+// the title's lead before a subtitle, no more. Two links, or none: none.
+const BASKET=/add to (?:cart|bag|basket)|buy now|pre-?order|l[äa]gg i varukorg|\bk[öo]p\b|ajouter au panier|in den warenkorb|aggiungi al carrello|in winkelwagen/i;
+function bookOnShop(results,v,host){
+  const nums=[v.isbn13,v.alsoIsbn13].filter(Boolean);
+  const pages=pagesByAddress(results).filter(x=>hostOf(x.url)===host);
+  const own=pages.find(x=>aboutBook(x,nums)&&(BASKET.test(oneText(x))||SHOP_PRICE.test(oneText(x))||/\b(?:SEK|NOK|DKK|CHF)\s?\d/.test(oneText(x))));
+  if(own)return String(own.url);
+  const whole=titleKey(v.title), lead=titleKey(String(v.title||"").split(/\s*(?:[.:]|\s[\u2013\u2014-])\s+/)[0]);
+  const full=new Map(), part=new Map();
+  for(const x of pages)for(const m of oneText(x).matchAll(/\[([^\]]*)\]\((https?:\/\/[^\s)]+)/g)){
+    if(hostOf(m[2])!==host||isTicketLink(m[2]))continue;
+    const words=titleKey(m[1]);
+    if((whole.length>8&&words.includes(whole))||nums.some(n=>addressCarries(m[2],n)))full.set(normalizeUrlKey(m[2]),m[2]);
+    else if(lead.length>12&&lead!==whole&&words===lead)part.set(normalizeUrlKey(m[2]),m[2]);
+  }
+  const pick=full.size?full:part;
+  return pick.size===1?[...pick.values()][0]:null;
+}
+// The venue's own versions, decided from the pages the shop step opened: the found book as
+// the shop step found it; each other version by its own link on those pages.
+function venueShopFacts(v,step,F0,dom){
+  if(!step.ran)return{state:"noshop",url:null,museum:null};
+  if(step.blocked)return{state:"blocked",url:null,museum:null};
+  if(v._found)return{state:F0.shopState==="shop"?"shop":F0.shopState==="blocked"?"blocked":"web",url:F0.shopState==="shop"?F0.shopUrl||null:null,museum:null};
+  const link=dom&&step.results?bookOnShop(step.results,v,dom):null;
+  return{state:link?"shop":"web",url:link,museum:null};
+}
+// Another museum's shop, found by Add by link's shop finder once per museum and kept
+// in the page's store ("shops/museums"; no venue chip, no Occasional card).
+const MUSEUM_SHOPS_DOC="shops/museums";
+const museumShops=new Map();
+const museumKey=m=>m.id||normPublisher(m.name);
+async function readMuseumShops(){
+  const db=await useCap("db");
+  if(!db)return{};
+  try{ const s=await db.doc(MUSEUM_SHOPS_DOC).get(); return s.exists?((s.data()||{}).shops||{}):{}; }catch{ return {}; }
+}
+async function writeMuseumShop(key,shop){
+  const db=await useCap("db");
+  if(!db)return false;
+  try{ const all=await readMuseumShops(); all[key]=shop; await db.doc(MUSEUM_SHOPS_DOC).set({shops:all,updatedAt:new Date().toISOString()}); return true; }catch{ return false; }
+}
+async function shopOfMuseum(m){
+  if(m.id){ const mu=MU[m.id]; return mu&&mu.shopHome?{home:mu.shopHome,search:mu.shopSearch||null,catalogues:mu.shopCatalogues||null}:null; }
+  const key=museumKey(m);
+  if(museumShops.has(key))return museumShops.get(key);
+  // Already found and kept on the version (Re-check): not looked for again.
+  if(m.home)return{home:m.home,search:m.search||null,catalogues:m.catalogues||null};
+  const kept=(await readMuseumShops())[key];
+  if(kept&&kept.home){ museumShops.set(key,kept); return kept; }
+  if(!m.page)return null;
+  const d=await discoverShop(m.page,hostOf(m.page),m.name,[]);
+  // A shop with no books section or search is still a shop: its pages in hand count.
+  if(!d||!(d.shop==="found"||d.shop==="noshelf")||!d.shopHome)return null;
+  const shop={home:d.shopHome,search:d.shopSearch||null,catalogues:d.shopCatalogues||null};
+  museumShops.set(key,shop); writeMuseumShop(key,shop);
+  return shop;
+}
+// THAT book's own museum shop, checked in code: its shelf and its search for the book's
+// title, in one call, plus any page about the book on that shop already in hand. A finder
+// or a check that does not finish is said so ("unfinished"), never "not there".
+async function otherShopFacts(v,m,inHand,io){
+  const shop=await shopOfMuseum(m);
+  const museum={id:m.id||null,name:m.name,home:shop?shop.home:null,search:shop?shop.search:null,catalogues:shop?shop.catalogues:null};
+  if(!shop)return{state:"unfinished",url:null,museum};
+  const host=hostOf(shop.catalogues||shop.search||shop.home);
+  const held=bookOnShop(inHand.filter(x=>hostOf(x.url)===host),v,host);
+  const urls=shopPagesFor({shopCatalogues:shop.catalogues,shopSearch:shop.search},v.title||"");
+  if(!urls.length)return held?{state:"shop",url:held,museum}:{state:"unfinished",url:null,museum};
+  const f=await io.fetch(urls,"The book “"+(v.title||"")+"” in this museum shop: its own product page and price.",[(v.title||"")+" book"]);
+  if(!f.ok||!f.results.length)return held?{state:"shop",url:held,museum}:{state:"unfinished",url:null,museum};
+  const link=bookOnShop(f.results,v,host)||held;
+  return{state:link?"shop":"web",url:link,museum};
+}
+
 // A version as the ledger keeps it: the lookup's own fields dropped. `card` holds the
-// card's book fields for that version, so a change of pick refills the card (pickRow).
+// card's book fields for that version, so a change of pick refills the card (pickRow);
+// `shop` its own museum shop: {state, url, change, museum}.
 function storedVersion(v){
   const o={};
-  for(const k of ["title","lang","binding","pages","publisher","isbn13","alsoIsbn13","showing","proofUrl","note","city","year","card"])o[k]=v[k]===undefined?null:v[k];
+  for(const k of ["title","lang","binding","pages","publisher","isbn13","alsoIsbn13","alsoOf","showing","proofUrl","city","year","shop","card"])o[k]=v[k]===undefined?null:v[k];
   return o;
 }
 // The picked version becomes the card's book, as a found book does.
@@ -3349,64 +3661,72 @@ function bookFieldsOf(F){
 function pickRow(row,i,now){
   const v=Array.isArray(row&&row.editions)?row.editions[i]:null;
   if(!v||!v.card||row.editionPick===i)return row;
-  return{...row,...v.card,editionPick:i,editedAt:now};
+  return{...row,...v.card,...(v.shop?{shopChange:v.shop.change||null}:{}),editionPick:i,editedAt:now};
+}
+// The picked version on a card with several, or null.
+function pickedVersion(r){
+  const vs=Array.isArray(r&&r.editions)?r.editions:[];
+  return vs.length>1&&Number.isInteger(r.editionPick)&&vs[r.editionPick]?vs[r.editionPick]:null;
 }
 
-// ── HER VERSION LINES (docs/catalogue_versions.md, her wording) ──────────────
-// One line per version, in order, on a card with two or more; a card with one looks
-// as it always has. Notes are decided here, first rule that fits. VL-001 to VL-012.
-const COUNT_WORDS=["","one","two","three","four","five","six","seven","eight","nine","ten"];
+// ── HER VERSION BLOCKS (docs/catalogue_versions.md, her layout and wording) ──
+// A card with two or more versions draws one block per version, each a copy of the
+// single-book block, every line from that version's own stored facts. Notes are decided
+// here, first rule that fits. VB-001 onwards.
 function sourceOf(u){
   try{ const h=new URL(String(u||"")).hostname.replace(/^www\./,""); return h?{url:String(u),host:h}:null; }catch{ return null; }
 }
 function versionNote(vs,i,row){
   const v=vs[i], mu=MU[row.museumId], id=row.museumId;
   const vc=v.city||(venueNamedIn(v.publisher,id)||{}).city||null;
-  const where=vc?"from the show's "+vc+" exhibition":"from the show's other exhibition";
-  if(v.showing==="other")return "a notably different book, "+where;
+  const where="from the show's "+(vc||"other")+" exhibition.";
+  if(v.showing==="other")return "A different book, "+where;
   const mine=vs.filter(x=>x.showing==="this");
   // One outside house, the versions differing only in language (Metamorphoses): no notes.
-  // Never when that house is this venue's own: her Vasari lines keep their notes.
+  // Never when that house is this venue's own: her Vasari blocks keep their notes.
   const langs=new Set(mine.map(x=>foldText(x.lang||"")));
   if(mine.length===vs.length&&langs.size===mine.length&&mine.every(x=>x.publisher&&sameHouse(x.publisher,mine[0].publisher))
     &&!venuePrinting(mine[0].publisher,id))return null;
   // Printed for another showing: another museum's own, or a city not this venue's.
   const city=mu&&mu.city?foldText(mu.city):"";
-  if(!venuePrinting(v.publisher,id)&&((vc&&foldText(vc)!==city)||(v.publisher&&museumImprintOnly(v.publisher,id))))return where;
-  if(vs.some(x=>x.showing==="other"))return "this showing's catalogue";
+  if(!venuePrinting(v.publisher,id)&&((vc&&foldText(vc)!==city)||(v.publisher&&museumImprintOnly(v.publisher,id))))
+    return "From the show's "+(vc||"other")+" exhibition.";
+  if(vs.some(x=>x.showing==="other"))return "This show's catalogue.";
   const english=isEnglishLang(v.lang), hasEnglish=mine.some(x=>isEnglishLang(x.lang)), hasOriginal=mine.some(x=>x.lang&&!isEnglishLang(x.lang));
-  if(!english&&v.lang&&hasEnglish)return "the original edition";
+  if(!english&&v.lang&&hasEnglish)return "The original edition.";
   // The venue's own English printing says so whether or not its original was found.
-  if(english&&mu&&mu.english===false&&venuePrinting(v.publisher,id))return "this venue's English edition";
+  if(english&&mu&&mu.english===false&&venuePrinting(v.publisher,id))return "This venue's English edition.";
   if(english&&hasOriginal){
     const start=parseInt(String(row.startDate||"").slice(0,4),10);
-    return v.year&&start&&v.year>start?"the English edition, published later":"the English edition";
+    return v.year&&start&&v.year>start?"The English edition, published later.":"The English edition.";
   }
   return null;
-}
-function versionText(vs,i,row,showPages){
-  // The second number is the museum's that printed the book (the Louvre's, on the NGA's card too).
-  const v=vs[i], mu=venueNamedIn(v.publisher)||MU[row.museumId];
-  const bind=[v.binding==="hardcover"||v.binding==="paperback"?v.binding:null,showPages&&v.pages?v.pages+" pp":null].filter(Boolean).join(", ");
-  const isbn=v.isbn13?fmtIsbn(v.isbn13)+(v.alsoIsbn13?" · also "+fmtIsbn(v.alsoIsbn13)+" (the "+(mu?mu.short:"venue")+"'s own number for the same book)":""):null;
-  const note=versionNote(vs,i,row);
-  // A later English edition names its year beside the publisher (Hammershøi).
-  const pub=v.publisher&&note==="the English edition, published later"&&v.year?v.publisher+", "+v.year:v.publisher;
-  return [v.lang,v.title,bind,pub,isbn].filter(Boolean).join(" · ")+(note?" — "+note:"")+".";
 }
 // An ISBN never breaks across lines; the characters copied stay the same.
 function nowrapIsbns(text){
   return String(text).split(/(97[89]-\d{10})/).map((p,k)=>k%2?<span key={k} style={{whiteSpace:"nowrap"}}>{p}</span>:p);
 }
-// Null for a card with fewer than two versions. Page counts show on every line when
-// they tell two versions apart; one shared source replaces the per-line ones.
-function versionLines(row){
+// Null for a card with fewer than two versions. Each block, top to bottom: its shop line
+// (state; the publisher note on the version the publisher step ran for), title, publisher
+// (a later edition's year after a dot), facts, ISBN, why it is listed and its source. A
+// version saved before blocks had shops (43) has no shop line.
+function versionBlocks(row){
   const vs=Array.isArray(row&&row.editions)?row.editions.filter(Boolean):[];
   if(vs.length<2)return null;
-  const showPages=vs.some((a,i)=>vs.some((b,j)=>j>i&&differentBook(a.pages,b.pages)));
-  const one=vs.every(v=>v.proofUrl&&v.proofUrl===vs[0].proofUrl)?sourceOf(vs[0].proofUrl):null;
-  return{lines:vs.map((v,i)=>({picked:row.editionPick===i,text:versionText(vs,i,row,showPages),source:one?null:sourceOf(v.proofUrl)})),
-    shared:one?{...one,count:vs.length===2?"both":"all "+(COUNT_WORDS[vs.length]||String(vs.length))}:null};
+  return vs.map((v,i)=>{
+    const why=versionNote(vs,i,row);
+    const pub=publisherShown(v.publisher,row.museumId);
+    const later=why==="The English edition, published later."&&v.year;
+    const owner=v.alsoOf||((venueNamedIn(v.publisher)||MU[row.museumId]||{}).short)||"venue";
+    return{picked:row.editionPick===i,
+      shop:v.shop?{state:v.shop.state,change:v.shop.change||null,other:!!v.shop.museum,
+        note:publisherNote(v.card&&v.card.publisherResult,!!(v.card&&v.card.publisherUrl))}:null,
+      title:v.title||null,
+      publisher:pub?pub+(later?" · "+v.year:""):(later?String(v.year):null),
+      facts:[langName(v.lang),v.binding==="hardcover"?"Hardcover":v.binding==="paperback"?"Paperback":null,v.pages?v.pages+" pp":null].filter(Boolean).join(" · ")||null,
+      isbn:v.isbn13?"ISBN "+fmtIsbn(v.isbn13)+(v.alsoIsbn13?"; "+fmtIsbn(v.alsoIsbn13)+" ("+owner+"'s own number for the same book)":""):null,
+      why,source:sourceOf(v.proofUrl)};
+  });
 }
 // The note after an old row's ISBN: "also 978-… (hardcover, Nationalmuseum)".
 function alsoLine(v){
@@ -3547,6 +3867,7 @@ async function findPublisherPage(F,c){
     else{
       const d1=await io.search("The official website of the art-book publisher “"+pub+"”.",[pub,pub+" art book publisher"]);
       log.push(d1.detail);
+      if(d1.ok&&c.seen)c.seen.push(...d1.results);
       if(!d1.ok)return{trouble:d1.detail};
       pubHost=siteOfHouses(d1.results,pub,row.museumId);
       if(!pubHost){ log.push("Couldn’t identify the publisher’s own website."); F.publisherResult="nosite"; return{}; }
@@ -3561,6 +3882,7 @@ async function findPublisherPage(F,c){
         isbn?["site:"+pubHost+" "+book,"site:"+pubHost+" "+isbn,"site:"+pubHost+" "+book.split(/[:–—-]/)[0].trim()]
             :["site:"+pubHost+" "+book,"site:"+pubHost+" "+book.split(/[:–—-]/)[0].trim()]);
       log.push(sp.detail);
+      if(sp.ok&&c.seen)c.seen.push(...sp.results);
       if(!sp.ok)return{trouble:sp.detail};
       const onSite=onHost(sp.results,pubHost);
       if(!onSite.length)return siteOnly(F,pubHost,log,"Nothing for this book on "+pubHost+".");
@@ -3910,8 +4232,10 @@ async function lookupCatalogue(row,hooks){
 
   // ── PHASE 3: EVERY VERSION, THEN ONE PICKED (code only; docs/catalogue_versions.md).
   // The book found so far is this showing's catalogue; the read's other printings and
-  // editions join it only when proved. pickEdition applies her starting-pick rules.
+  // editions join it only when proved; two numbers share a block only with proof; each
+  // block's facts come from the pages about that book. pickEdition applies her rules.
   const everything=[...(bookPage?bookPage.results:[]),...factsRes,...edRes,...webRes,...[...pages.values()].flat()];
+  let inHand=pagesByAddress(everything);
   const said=read&&read.language?String(read.language):"";
   const lang=foreign?langName(said):"English";
   if(foreign){
@@ -3925,20 +4249,29 @@ async function lookupCatalogue(row,hooks){
       log.push("Language check: "+said+(own&&own.onPage?" — its own title “"+own.title+"”.":"."));
     }
   }
-  const found=foundVersion(F,foreign&&langStopped?null:lang,read?pagesPrinted(read.pages,everything):null,everything,row.museumId,hit.pageUrl||F.shopUrl);
+  const found=foundVersion(F,foreign&&langStopped?null:lang,row.museumId,hit.pageUrl||F.shopUrl);
+  versionFacts(found,inHand,row.museumId,null);
+  found._pages=found.pages||(read?pagesPrinted(read.pages,everything):null);
   const versions=[found];
   const add=list=>{ for(const v of list)if(!versions.some(x=>x.isbn13===v.isbn13))versions.push(v); };
   if(F.isbn&&read)add(printingsOf(read.versions,
-    {isbn:F.isbn,title:F.title||title,titles:[read.title],pages:found.pages,lang:found.lang},everything,row.museumId));
+    {isbn:F.isbn,title:F.title||title,titles:[read.title],pages:found._pages,lang:found.lang},inHand,row.museumId));
   // Editions in other languages only once the book's own language is known; then the
-  // other printings of each edition proved (Vasari: the Nationalmuseum's English book).
+  // other printings of each edition proved.
   if(read&&found.lang){
-    const eds=editionsOf(read.editions,found,everything,row.museumId,log);
+    const eds=editionsOf(read.editions,found,inHand,row.museumId,log);
     add(eds);
-    for(const e of eds.filter(e=>e.showing==="this"))
-      add(printingsOf(read.editions,{isbn:e.isbn13,title:e.title,pages:e.pages,lang:e.lang},everything,row.museumId));
+    for(const e of eds.filter(e=>e.showing==="this")){
+      versionFacts(e,inHand,row.museumId,null);
+      add(printingsOf(read.editions,{isbn:e.isbn13,title:e.title,pages:e.pages,lang:e.lang},inHand,row.museumId));
+    }
   }
-  foldCoEditions(versions,everything,row.museumId,log);
+  foldCoEditions(versions,inHand,row.museumId,log);
+  // Fixed order (her layout; never moved by a pick): this showing's books, the original
+  // edition before the English, then another showing's.
+  const place=v=>(v.showing==="other"?2:0)+(v.showing!=="other"&&isEnglishLang(v.lang)&&versions.some(x=>x.showing!=="other"&&x.lang&&!isEnglishLang(x.lang))?1:0);
+  versions.sort((a,b)=>place(a)-place(b));
+  for(const v of versions)versionFacts(v,inHand,row.museumId,null);
   const thisEnglish=()=>versions.some(v=>v.showing==="this"&&isEnglishLang(v.lang));
   const notEnglish=foreign&&!!found.lang&&!isEnglishLang(found.lang);
   if(notEnglish){
@@ -3954,19 +4287,22 @@ async function lookupCatalogue(row,hooks){
   // ── PHASE 4: THE PUBLISHER'S PAGE, ONCE, FOR THE PICKED BOOK — or for the book found,
   // when nothing is picked and its publisher's page may list an English edition.
   const wantEditions=notEnglish&&!thisEnglish();
+  const seen=[];        // the publisher step's search results, for the blocks' sources
+  let stepFor=pick>=0?versions[pick]:wantEditions?found:null;
   if(pick>=0||wantEditions){
-    const p4=await findPublisherPage(F,{io,log,row,dom,venue,found:found2,pages,wantEditions});
+    const p4=await findPublisherPage(F,{io,log,row,dom,venue,found:found2,pages,wantEditions,seen});
     if(p4.trouble)fault(p4.trouble);
     const ed=p4.edition;
     if(ed&&!versions.some(v=>v.isbn13===ed.isbn13||v.alsoIsbn13===ed.isbn13)){
       log.push("English edition on the publisher’s own page: “"+ed.title+"”, ISBN "+ed.isbn13+".");
       versions.push({title:ed.title,lang:"English",binding:null,pages:null,publisher:found.publisher,isbn13:ed.isbn13,
-        alsoIsbn13:null,showing:"this",proofUrl:ed.link,note:"the publisher’s own page lists it",_pub:F.publisher});
+        alsoIsbn13:null,alsoOf:null,showing:"this",proofUrl:null,city:null,year:null,_proof:ed.link,_pub:F.publisher});
       pick=pickEdition(versions,row.museumId);
       if(pick===versions.length-1){
         F.title=ed.title; F.isbn=ed.isbn13;
         F.publisherUrl=ed.link; F.publisherResult=ed.linkResult;
         F.shopState="web"; F.shopUrl=null;
+        stepFor=versions[pick];
       }
       F.englishCheck="english";
     } else if(wantEditions){
@@ -3975,9 +4311,28 @@ async function lookupCatalogue(row,hooks){
       log.push("English edition: none found"+(F.pubPageRead?" — the publisher’s own page read ("+F.publisherUrl+").":"; the publisher’s own page for it was not read."));
     }
   }
-  // Each version's book fields, for a change of pick on the card; the pick's are final.
+  // Each block's facts and source from every page in hand by now, the publisher's own
+  // included (her rule 3): the page the publisher step judged the book's own counts.
+  inHand=pagesByAddress([...everything,...seen,...[...pages.values()].flat()]);
+  const confirmed=new Map();
+  if(F.publisherResult==="product"&&F.pubPageRead&&F.publisherUrl&&F.isbn)confirmed.set(F.isbn,F.publisherUrl);
+  for(const v of versions)versionFacts(v,inHand,row.museumId,confirmed);
+  // Each version's book fields, for a change of pick on the card; the pick's are final,
+  // and the publisher step's answer sits on the version it ran for.
   for(const v of versions){ const G={...F0}; takeVersion(G,v,[]); v.card=bookFieldsOf(G); }
   if(pick>=0)versions[pick].card=bookFieldsOf(F);
+  else if(stepFor)stepFor.card={...stepFor.card,publisherUrl:F.publisherUrl||null,publisherResult:F.publisherResult||null};
+  // Each block's own museum shop (her rule 6) — on a card with several versions only.
+  if(versions.length>1){
+    const step={ran:!!s1.ran,blocked:!!s1.blocked,results:s1.results||[]};
+    for(const v of versions){
+      const m=museumOf(v,row.museumId,pagesAbout(v,inHand,row.museumId,confirmed).map(p=>p.x));
+      v.shop=m?await otherShopFacts(v,m,inHand,io):venueShopFacts(v,step,F0,dom);
+      if(m)log.push("“"+(v.title||v.isbn13)+"” is "+m.name+"’s: its museum shop "+(v.shop.state==="shop"?"has it ("+v.shop.url+").":v.shop.state==="web"?"doesn’t have it.":"check didn’t finish."));
+      v.card={...v.card,shopState:v.shop.state==="shop"||v.shop.state==="blocked"?v.shop.state:"web",shopUrl:v.shop.url||null};
+    }
+    if(pick>=0){ F.shopState=versions[pick].card.shopState; F.shopUrl=versions[pick].card.shopUrl; }
+  }
   // Nothing picked: the versions are kept, the card's book fields left blank.
   if(pick<0){ F.title=null; F.isbn=null; F.publisher=null; F.publisherUrl=null; F.publisherResult=null; }
   F.editions=versions.map(storedVersion);
@@ -4950,7 +5305,9 @@ export default function App(){
     const row=ticket?{...found,shopUrl:null,shopState:"web",shopChange:null}:found;
     let out;
     const tape=tapeStart("Re-check museum shop",found);
-    if(row.shopUrl&&(row.shopState==="shop"||row.shopState==="gone")){
+    if(versionBlocks(found)){
+      out=await recheckVersions(found,lookHooks);
+    } else if(row.shopUrl&&(row.shopState==="shop"||row.shopState==="gone")){
       setLookLabel("Re-reading the shop page\u2026");
       out=await recheckLinkedPage(row);
     } else {
@@ -5489,10 +5846,19 @@ export default function App(){
           // No shop at all (Borghese, Capodimonte, the Accademia; her decision): no
           // Re-check button, and the line says only "Venue has no shop."
           const noShop=!(MU[r.museumId]&&(MU[r.museumId].shopSearch||MU[r.museumId].shopHome));
-          // Her version lines, on a card with two or more versions (versionLines); with
-          // nothing picked the card shows no book, no status lines and only the shop button.
-          const vl=r.looked&&r.hasCatalogue==="yes"?versionLines(r):null;
-          const picked=!vl||(Number.isInteger(r.editionPick)&&!!r.editions[r.editionPick]);
+          // Her version blocks, on a card with two or more versions (versionBlocks): the
+          // card's own status lines are not drawn; nothing picked → only the shop button.
+          const vb=r.looked&&r.hasCatalogue==="yes"?versionBlocks(r):null;
+          const picked=!vb||(Number.isInteger(r.editionPick)&&!!r.editions[r.editionPick]);
+          // A block's shop line, in the single-book card's wording and styling.
+          const blockShop=s=>{
+            const note=s.note?" "+s.note:"";
+            if(s.state==="shop")return <div style={{fontSize:11,marginBottom:6}}><span style={{color:C.action,fontWeight:600}}>{shopHeadline("shop",s.change)}</span>{s.note&&<span style={{color:C.soft}}> {s.note}</span>}</div>;
+            if(s.state==="gone")return <div style={{fontSize:11,color:C.soft,marginBottom:6}}><span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopHeadline("gone",null)}</span>{note}</div>;
+            if(s.state==="blocked")return <div style={{fontSize:11,color:C.soft,marginBottom:6}}><span style={{color:TH.lapsed.ink,fontWeight:700}}>{SHOP_BLOCKED_HEAD}</span>{SHOP_BLOCKED_FOUND_REST}{note}</div>;
+            const text=s.state==="unfinished"?SHOP_CHECK_UNFINISHED:s.state==="noshop"?(MU[r.museumId]&&MU[r.museumId].shopUnknown?"Museum shop not found.":"Venue has no shop."):NOT_IN_SHOP;
+            return <div style={{fontSize:11,color:C.soft,marginBottom:6}}>{text}{note}</div>;
+          };
           const said=recheckSaid&&recheckSaid.id===r.id?recheckSaid:null;
           if(dismissed)return(
             <React.Fragment key={r.id}>{lead}
@@ -5580,7 +5946,7 @@ export default function App(){
                           publisher step concluded (publisherNote). "Now" and "Back" are the
                           same green as the plain sentence (her decision): the word carries
                           the news. */}
-                      {picked&&<>
+                      {!vb&&<>
                       {r.shopState==="shop"&&<div style={{fontSize:11,marginBottom:6}}>
                         <span style={{color:C.action,fontWeight:600}}>{shopHeadline(r.shopState,r.shopChange)}</span>
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&<span style={{color:C.soft}}> {publisherNote(r.publisherResult,!!r.publisherUrl)}</span>}
@@ -5597,7 +5963,7 @@ export default function App(){
                           six characters. */}
                       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
                         {noShop?(MU[r.museumId]&&MU[r.museumId].shopUnknown?"Museum shop not found.":"Venue has no shop.")
-                          :"Not in the museum shop \u2014 shop link opens the general store."}
+                          :NOT_IN_SHOP}
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
                       {r.shopState==="blocked"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
@@ -5605,21 +5971,26 @@ export default function App(){
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
                       </>}
-                      {vl?(
-                        <div style={{marginBottom:10}}>
-                          {vl.lines.map((l,k)=>(
-                            <div key={k} role="button" tabIndex={0} aria-pressed={l.picked} title={l.picked?"Picked":"Pick this version"} onClick={()=>setPick(r.id,k)}
+                      {vb?(
+                        <div role="radiogroup" aria-label="Versions" style={{display:"flex",flexDirection:"column",marginBottom:10}}>
+                          {vb.map((b,k)=>(
+                            <div key={k} role="radio" tabIndex={0} aria-checked={b.picked} title={b.picked?"Picked":"Pick this version"} onClick={()=>setPick(r.id,k)}
                               onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setPick(r.id,k); } }}
-                              style={{display:"flex",alignItems:"baseline",gap:"0.6em",fontSize:11.5,lineHeight:1.45,color:C.ink,marginBottom:3,cursor:l.picked?"default":"pointer"}}>
-                              {/* The marker in its own column: wrapped lines stay clear of it, as under a bullet. */}
-                              <span style={{flex:"none"}}>{l.picked?"●":"○"}</span>
+                              style={{display:"flex",gap:10,alignItems:"flex-start",padding:k?"11px 0":"2px 0 11px",borderTop:k?"1px solid "+C.rule:"none",cursor:b.picked?"default":"pointer"}}>
+                              {/* The marker in its own column (her layout); the block is the single-book block. */}
+                              <span style={{flex:"none",width:14,fontSize:13,lineHeight:1.3,color:C.ink}}>{b.picked?"\u25cf":"\u25cb"}</span>
                               <span style={{flex:1,minWidth:0}}>
-                                {nowrapIsbns(l.text)}
-                                {l.source&&<span style={{color:C.soft}}> (source: <a href={l.source.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:C.soft}}>{l.source.host}</a>)</span>}
+                                {b.shop&&blockShop(b.shop)}
+                                {b.title&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{b.title}</div>}
+                                {b.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{b.publisher}</div>}
+                                {b.facts&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{b.facts}</div>}
+                                <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",color:b.isbn?C.ink:C.soft}}>{b.isbn?nowrapIsbns(b.isbn):"ISBN not confirmed \u2014 verify before buying"}</div>
+                                {(b.why||b.source)&&<div style={{fontSize:11,color:C.soft,marginTop:3,lineHeight:1.45}}>
+                                  {b.why}{b.why&&b.source?" ":""}{b.source&&<>Source: <a href={b.source.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:C.soft}}>{b.source.host}</a></>}
+                                </div>}
                               </span>
                             </div>
                           ))}
-                          {vl.shared&&<div style={{fontSize:11.5,color:C.soft}}>(source for {vl.shared.count}: <a href={vl.shared.url} target="_blank" rel="noopener noreferrer" style={{color:C.soft}}>{vl.shared.host}</a>)</div>}
                         </div>
                       ):(<>
                         {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}

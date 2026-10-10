@@ -47,6 +47,8 @@ is why they live in one repo, on one branch.
   and a date tells her nothing. Say it as: "Because of X, you decided Y. Would
   you like to reconsider? / If this changes your decision, we can do Z." Call
   it her decision or her judgement call — never a "ruling" or a "rule".
+- **Whatever she does not disagree with, she agrees with.** Never re-ask what her
+  words or an agreed mockup already settle; list only what is genuinely open.
 - **A question gets an answer first.** "Talk to me about X" means discuss;
   nothing is built until she says.
 - **Respect UI simplicity and specific UI instructions.** Build what she named,
@@ -913,6 +915,10 @@ junk in summaries, failure handling, compression, the blocked venues — is in
 Each line came from a real failure. Details are in git history and `docs/`.
 
 - **Parallel work is proved live before it reaches her.** 43 shipped on tests fed the agreed data and failed on her first live search (Vasari). A test that is handed the answer proves only the rendering.
+- **An agreed card's facts must come from the app's own live results**, not a session's hand searches. Hammershøi's agreed "Rizzoli Electa, 2023" never appeared in anything the app found, so its wording could never fire.
+- **A record about two books is evidence about neither.** One WorldCat record listing Lienart's and Stockholm's printings both joined them and lent Stockholm Lienart's publisher. Read a fact only from a page about that one number; a shop's filter menu ("Hardcover (0)") is not a binding.
+- **One card, one writer.** 43's top lines came from the single-book fields and its version lines from `editions`; the publisher note named no book. Every line reads from the same per-version facts.
+- **Build a new display from the existing one.** 43's run-on version lines, with page count glued to binding, were rejected; her design copies the single-book block per version.
 - **Tests can pass and prove nothing.** Check the exit code and grep the output
   for the new test's own name; a suite can be skipped silently (code after
   `process.exit`, a missing harness, an early `return` — use `await`).
@@ -1109,19 +1115,36 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
 
 ### 4. Catalogue lookup generally
 
-**Catalogue versions — published in 43; her live Vasari search FAILED; fixes on
-`main`, unpublished.** Spec, her nine cases and the open items:
-`docs/catalogue_versions.md` (cases as data: `docs/lookup_proof_cards.json`). The
-lookup keeps every version (`editions`, `editionPick` an index), picks by her rules
-(`pickEdition`), and a card with two or more versions shows her lines
-(`versionLines`); rows searched before 43 render as before.
-**Fixed on `main` since 43:** her Vasari notes were wiped by a no-notes rule written
-for Metamorphoses (VL-013, VL-014); "(source for both: …)" (VL-009).
-**OPEN, in order:** (1) the joining of two numbers misfires — Stockholm's hardcover
-shown as "the Louvre's own number" on the Lienart line (the doc's "Open"); fix to be
-agreed with her. (2) **A live run of all nine cases on the current code, before any
-publish** — 43 went out on tests fed the agreed data, against §1's live rule. (3)
-Publish only after both, when she says and her page is closed.
+**Catalogue versions — published in 43; her three live searches (Vasari, Hubert
+Robert, Hammershøi) came back wrong. Under review as a whole feature, not patched**
+(the third-patch rule: `editionsOf` changed 6 times in days, `composeRow` 5,
+`printingsOf` 4). Everything — her layout, her pick rules, the nine cases, the proven
+causes of each wrong card, the open items — is in `docs/catalogue_versions.md`. Read
+it whole before touching versions.
+- **Layout: agreed, not built** — on the mockup
+  https://claude.ai/artifact/Hy7wFw63YA5fJTCDry2dki. Each version is a copy of the
+  single-book block (its own shop line, title, publisher, a facts line, ISBN, why it
+  is listed and its source); the blocks are fixed text with a selection marker; ONE
+  row of Museum shop, Publisher and bookstore buttons follows the pick (links change,
+  never names). Single-version cards do not change.
+- **Publisher pages (her decision):** the name on every block; no extra searches for
+  a page per version; a Publisher button only where that version's page is already
+  in hand. Per-version links wait for her publisher list (§7.6).
+- **Proven causes, from replaying her records:** a library record listing two
+  printings joined Stockholm's hardcover to Lienart's and lent it Lienart's name; a
+  filter menu read as a binding; the first result in search order taken as the
+  source; " : " between co-publishers not split; Rizzoli and 2023 never in the app's
+  results; the card's top lines and version lines written by two separate writers.
+- **Finding rules: agreed** (the doc's "What the lookup finds and records"): facts are
+  recorded only to tell editions apart, never guessed; two numbers share a block only
+  with proof, else two blocks; each block's facts only from pages about that one
+  number; each block's shop line from searching THAT book's own museum shop (another
+  museum's found by `discoverShop`), and the Museum shop button follows the pick there.
+- **Next:** the rebuild under `/orch` (whole-path tests replay her three 43 lookups,
+  `docs/lookup_results/*_43.json`); every agreed case checked against the app's OWN
+  live results; a live run of all nine; publish only when she says and her page is
+  closed. Fixes on `main` since 43 (VL-009, VL-013, VL-014) are line-design fixes the
+  new layout supersedes.
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
@@ -1132,11 +1155,11 @@ She is noting issues as she uses it, for a later debugging session.
   "Publisher" (right). Cause unproven — a different candidate page, the page
   returning empty (`pageIsShell`), or the read judging one page differently.
   Its record in the lookup log settles it (`docs/app.md` §1, "The lookup log").
-- **OPEN — 40.10's fixes, unchecked in the app**. Her next lookups
-  settle each: *Hammershøi* (Jacquemart-André) finds *Hammershøi : le maître
-  de la peinture danoise*, ISBN 978-9462302495; *Watteau* no longer reads the
-  shop as blocked; *Canaletto - Guardi*'s English line names the publisher's
-  page; a MoMA lookup still reads its shop as blocked under the whole-page test.
+- **OPEN — 40.10's fixes, partly checked.** *Hammershøi* finds *Hammershoi. Le
+  maître de la peinture danoise*, 978-9462302495 — confirmed in her 43 lookup.
+  Still unchecked: *Watteau* no longer reads the shop as blocked; *Canaletto -
+  Guardi*'s English line names the publisher's page; a MoMA lookup still reads its
+  shop as blocked under the whole-page test.
 - **Diagnose a lookup from its record, never a pasted panel.** Every Find
   catalogue, Search again, Re-check and link reading is recorded whole in the
   test page's store — every call, what Claude was sent and answered, the card
@@ -1147,22 +1170,14 @@ She is noting issues as she uses it, for a later debugging session.
   now goes on to the facts round instead of being dropped (`unnamed`, UN-001–003);
   a reply holding two answers takes Claude's last (`lastJsonObject`, TW-001–004 —
   her Louvre links' "unreadable" descriptions).
-- **OPEN — the English-edition and versions rebuild, 42.7–42.9; her re-run of
-  Hubert Robert (Louvre, NGA) and Vasari on 42.9 confirms.** Built: one book per
-  card (ISBN read on the book's title; a guessed publisher the ISBN's records
-  contradict gives way); her three English-edition cases, a different book named
-  on the English line only (`otherVenueBook`); a booklet's ISBN refused
-  (`notABooklet`); two versions of one book, "also 978-… (paperback, X)" after the
-  ISBN (`alsoVersion`; hardcover leads, else an outside publisher over a museum's
-  own imprint — when both apply, hardcover wins, her rules in the order she gave
-  them); publisher labels never read out of a link's address; a co-edition's site
-  found by any one of its houses. Rules: `docs/app.md` §1. Tests HR-, BK-, VS-,
-  R8- (R8 replays her 42.8 runs). Known limits: a different book or a booklet is
-  caught only when page counts are printed; which version leads depends on what
-  each search turns up (Vasari leads with Lienart unless a result says the
-  Nationalmuseum book is hardcover). Vasari's English editions are scarce, not
-  missing: Lienart 978-2359063738 (€29), the Nationalmuseum's hardcover
-  978-9171009166 (bokorder.se, also free open access); AbeBooks has neither.
+- **42.7–42.9's rebuild is superseded by catalogue versions** (above): "one book per
+  card", `alsoVersion` and "hardcover leads" give way to her pick rules and one block
+  per version. What stays: a booklet's ISBN refused (`notABooklet`; caught only when
+  page counts are printed); publisher labels never read out of a link's address; a
+  co-edition's site found by any one of its houses. Tests HR-, BK-, VS-, R8- (R8
+  replays her 42.8 runs). Vasari's English editions are scarce, not missing: Lienart
+  978-2359063738 (€29), the Nationalmuseum's hardcover 978-9171009166 (bokorder.se,
+  also free open access); AbeBooks has neither.
 - **Search again and Reset card + Find catalogue run the same lookup** (checked
   on the live page). They differ only when a step fails part-way: Search
   again then leaves the card untouched. Otherwise a different result is the
@@ -1194,13 +1209,11 @@ Not good → more work on the routine or the recipes.
 
 ### 6. Queued next
 
-- **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
-  check of Hammershøi — the edition read now sees every result, so the library
-  record (978-0847899289) that came tenth should give the English edition (WL-060).
 - **Roadmap — a list of publishers and their websites** (her ask), so the card stops
   saying "Couldn't work out the publisher's own website" (Somogy, Hubert Robert).
   It replaces her decision to keep `PUBLISHER_SITES` short and never fill it ahead
-  (§8); how the list is built is to be agreed with her first.
+  (§8); how the list is built is to be agreed with her first. It also unlocks a
+  Publisher button on every catalogue version (§7.4).
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 

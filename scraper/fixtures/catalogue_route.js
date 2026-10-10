@@ -12,9 +12,9 @@
  * card with her three English-edition cases (HR-), a booklet's ISBN refused (BK-), two versions of one book (VS-), her 42.8 runs replayed (R8-, Hubert Robert, real results in
  * docs/lookup_results/hubert_robert.json). Catalogue versions (docs/catalogue_versions.md):
  * her starting pick on her nine cases (CV-, docs/lookup_proof_cards.json), a co-edition's
- * two numbers folded (FO-), names venue first and the stored shape (VF-), Botticelli
- * replayed (BT-), her version lines word for word (VL-), a change of pick (PK-), the
- * other showing's city and an edition's year (CY-).
+ * two numbers joined only with proof (FO-), names venue first and the stored shape (VF-), Botticelli
+ * replayed (BT-), a change of pick (PK-), the
+ * other showing's city and an edition's year (CY-). Her blocks on the card: catalogue_versions.js.
  *
  * Hammershøi's library record is real (docs/lookup_results/jacquemart_hammershoi.json);
  * the shop, book and publisher pages are made for the test.
@@ -71,7 +71,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionLines, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, versionFacts, pagesByAddress, pagesAbout, bindingOn, labelledIsbns, registrantOf, publisherShown, bookOnShop, museumOf, recheckVersions, buyLinks, pickedVersion, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, museumImprintOnly };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -149,10 +149,10 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     // Without the venue named, the record's "Originally published in French as …" still proves it.
     const bare = { ...TUM, excerpts: [TUM.excerpts[0].replace(/Musée Jacquemart-André, Institut de France, /g, '')] };
     const ed2 = one(claimed, orig, [bare], 'jacquemart');
-    ok(ed2 && /translation/.test(ed2.note), 'ED-002: the linking phrase and the original title’s words prove it on their own', ed2 && ed2.note);
+    ok(ed2 && /translation/.test(ed2._why), 'ED-002: the linking phrase and the original title’s words prove it on their own', ed2 && ed2._why);
     const both = [{ url: 'https://lib.test/r', title: 'Record', excerpts: ['English edition. ISBN 9780847899289. Original: ISBN 9789462302495.'] }];
     const ed3 = one(claimed, { ...orig, title: 'Something else entirely' }, both, 'louvre');
-    ok(ed3 && /both ISBNs/.test(ed3.note), 'ED-003: a record carrying both ISBNs proves it', ed3 && ed3.note);
+    ok(ed3 && /both ISBNs/.test(ed3._why), 'ED-003: a record carrying both ISBNs proves it', ed3 && ed3._why);
     // CE-002 carried over: Reaktion's Botticelli is not the Fonds Mercator catalogue's English edition.
     const reaktion = [{ url: 'https://www.amazon.com/dp/1789144388', title: 'Botticelli: Artist and Designer (Renaissance Lives)', excerpts: ['Ana Debenedetti examines the life and work of Renaissance artist Sandro Botticelli. ISBN 9781789144383. Reaktion Books.'] }];
     eq(api.editionsOf([{ title: 'Botticelli: Artist and Designer', isbn13: '9781789144383', language: 'English', publisher: 'Reaktion Books' }],
@@ -626,7 +626,8 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq([api.museumImprintOnly('Musée du Louvre Editions', 'louvre'), api.museumImprintOnly('Musée du Louvre Editions / Lienart', 'louvre')], [true, false],
       'VS-007: a co-edition with an outside house is not a museum’s own imprint');
     const HR = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'hubert_robert.json'), 'utf8'));
-    eq([api.bindingOfIsbn(HR.louvre2_facts, '9782757210642')], ['hardcover'], 'VS-008: binding read off the records of that one ISBN (Hubert Robert, the full catalogue)');
+    const hv = { isbn13: '9782757210642', publisher: null }; api.versionFacts(hv, api.pagesByAddress(HR.louvre2_facts), 'louvre', null);
+    eq([hv.binding], ['hardcover'], 'VS-008: binding read off the pages about that one ISBN (Hubert Robert, the full catalogue)');
     eq(api.alsoLine({ isbn13: '9782359063738', binding: 'paperback', publisher: 'Lienart' }), 'also 978-2359063738 (paperback, Lienart)',
       'VS-009: an old row’s also-line still prints in her words after the ISBN');
   }
@@ -653,8 +654,8 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq([fr.isbn13, fr.binding, fr.pages], ['9782757210642', 'hardcover', 544], 'R8-002:   the full catalogue’s ISBN, on the French version (hardcover, 544 pages)');
     eq((r.editions || []).filter(v => v.showing === 'other').map(v => [v.isbn13, v.lang, v.pages]), [['9781848221918', 'English', 288]],
       'R8-003:   the NGA book kept as another showing’s different book, though no result ties its ISBN to the Louvre', out.detail.split('\n').filter(l => /English|different/.test(l)).join(' | '));
-    eq(brief(r.editions), [['French', '9782757210642', '9782350315355', 'this'], ['English', '9781848221918', null, 'other']],
-      'R8-007:   Hubert Robert, her case 2 — the Paris Musées record folds the Louvre’s own number into the French book');
+    eq(brief(r.editions), [['French', '9782757210642', null, 'this'], ['English', '9781848221918', null, 'other']],
+      'R8-007:   Hubert Robert, her 42.8 run — the Paris Musées record lists both numbers bare, which proves nothing (her rule 1); no page in this run pairs them by publisher (her 43 run does: VR-021)');
     eq([r.editionPick, r.catalogueTitle, r.isbn13, r.publisher, r.publisherUrl], [null, null, null, null, null],
       'R8-008:   nothing picked — no English version of this showing, and the other showing’s book is English; the card’s book fields stay blank');
     eq([r.hasCatalogue, api.englishLine(r)], ['yes', null], 'R8-009:   still a catalogue; no English line on a card with several versions (its lines come with stage 2)');
@@ -734,43 +735,52 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       'CV-014: another showing’s book that is not English does not stop the pick');
   }
 
-  // ── FO-001..FO-006: one book, two numbers — a co-edition folds into one version ─
+  // ── FO-001..FO-009: one book, two numbers — only with proof (her rule 1) ────
   {
-    const ver = (lang, publisher, isbn13, showing = 'this') => ({ title: 'x', lang, publisher, isbn13, alsoIsbn13: null, showing, binding: null, pages: null });
-    const rec = (url, text) => ({ url, title: 'Record', excerpts: [text] });
-    // Vasari French: the record's form as she found it (docs/catalogue_versions.md).
-    let vs = [ver('French', 'Musée du Louvre Editions / Lienart', '9782359063721'), ver('English', 'Musée du Louvre Editions / Lienart', '9782359063738')];
-    api.foldCoEditions(vs, [rec('https://lib.test/vasari', 'Giorgio Vasari, le Livre des dessins. 240 p. ISBN : 978-2-35906-372-1. - 978-2-35031-744-1')], 'louvre', []);
-    eq(brief(vs), [['French', '9782359063721', '9782350317441', 'this'], ['English', '9782359063738', null, 'this']],
-      'FO-001: Vasari French — the Louvre’s own number folds into Lienart’s book, which leads');
-    // Hubert Robert French: the real Paris Musées record (louvre_hubert_42_8.json).
+    const ver = (lang, publisher, isbn13, showing = 'this', title = 'Hubert Robert, 1733-1808 : un peintre visionnaire') => ({ title, lang, publisher, isbn13, alsoIsbn13: null, showing, binding: null, pages: null });
+    const rec = (url, text) => ({ url, title: 'Hubert Robert, 1733-1808 : un peintre visionnaire', excerpts: [text] });
+    // A bare list of numbers proves nothing, however it is punctuated.
+    let vs = [ver('French', 'Musée du Louvre Editions / Lienart', '9782359063721', 'this', 'Giorgio Vasari. Le Livre des dessins')];
+    api.foldCoEditions(vs, [{ url: 'https://lib.test/vasari', title: 'Giorgio Vasari, le Livre des dessins', excerpts: ['Giorgio Vasari, le Livre des dessins. 240 p. ISBN : 978-2-35906-372-1. - 978-2-35031-744-1'] }], 'louvre', []);
+    eq(brief(vs), [['French', '9782359063721', null, 'this']], 'FO-001: Vasari French — a record listing two numbers bare ("ISBN : 978-… - 978-…") no longer folds them (her rule 1)');
     const HRV = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'louvre_hubert_42_8.json'), 'utf8')).calls;
     const paris = HRV.flatMap(c => c.results || []).filter(x => /parismuseescollections/.test(x.url) && /978-2-35031-535-5/.test(JSON.stringify(x)));
-    vs = [ver('French', 'Somogy', '9782757210642'), ver('English', 'Lund Humphries', '9781848221918', 'other')];
+    vs = [ver('French', 'Somogy', '9782757210642'), ver('English', 'Lund Humphries', '9781848221918', 'other', 'Hubert Robert')];
     api.foldCoEditions(vs, paris, 'louvre', []);
-    eq(brief(vs), [['French', '9782757210642', '9782350315355', 'this'], ['English', '9781848221918', null, 'other']],
-      'FO-002: Hubert Robert French — Somogy’s number leads, the Louvre’s own folded in, from the real library record');
+    eq(brief(vs), [['French', '9782757210642', null, 'this'], ['English', '9781848221918', null, 'other']],
+      'FO-002: Hubert Robert — the real Paris Musées record lists both numbers bare: nothing folds');
     // The museum's own number found first: the outside house's number takes the lead.
-    const lab = (n, pub) => [1, 2].map(k => rec('https://shop' + k + '.test/' + n, 'Publisher: ' + pub + '\nISBN ' + n));
-    vs = [ver('French', 'Musée du Louvre Editions', '9782350317441')];
-    api.foldCoEditions(vs, [rec('https://lib.test/v', 'ISBN : 978-2-35031-744-1. - 978-2-35906-372-1'), ...lab('9782350317441', 'Musée du Louvre éditions'), ...lab('9782359063721', 'Lienart')], 'louvre', []);
-    eq([vs[0].isbn13, vs[0].alsoIsbn13], ['9782359063721', '9782350317441'], 'FO-003: found by the museum’s own number, the outside house’s number still leads');
-    // Two books never fold: bindings that differ, or page counts far apart.
-    const pair = rec('https://lib.test/two', 'ISBN 9789462302495 ; 9780847899289');
-    vs = [ver('French', 'Fonds Mercator', '9789462302495')];
-    api.foldCoEditions(vs, [pair, rec('https://a.test/1', 'Relié. ISBN 9789462302495'), rec('https://b.test/2', 'Broché. ISBN 9780847899289')], 'jacquemart', []);
+    vs = [ver('French', 'Louvre éditions', '9782350315355')];
+    api.foldCoEditions(vs, [rec('https://book.test/colophon', 'Hubert Robert, 1733-1808 : un peintre visionnaire. ISBN musée du Louvre : 978-2-35031-535-5 ISBN Somogy éditions d’art : 978-2-7572-1064-2')], 'louvre', []);
+    eq([vs[0].isbn13, vs[0].alsoIsbn13, vs[0].alsoOf], ['9782757210642', '9782350315355', 'Louvre'], 'FO-003: found by the museum’s own number, the outside house’s number leads and the second is named the Louvre’s');
+    // Two books never fold, even labelled by publisher: their own pages disagree.
+    const paired = rec('https://book.test/pair', 'Hubert Robert, 1733-1808 : un peintre visionnaire. ISBN Somogy : 978-2-7572-1064-2 ISBN Louvre éditions : 978-2-35031-535-5');
+    vs = [ver('French', 'Somogy', '9782757210642')];
+    api.foldCoEditions(vs, [paired, rec('https://a.test/9782757210642', 'Relié, 544 pages.'), rec('https://b.test/9782350315355', 'Broché, 544 pages.')], 'louvre', []);
     const bindings = vs[0].alsoIsbn13;
-    vs = [ver('French', 'Fonds Mercator', '9789462302495')];
-    api.foldCoEditions(vs, [pair, rec('https://a.test/1', '256 pages. ISBN 9789462302495'), rec('https://b.test/2', '175 pages. ISBN 9780847899289')], 'jacquemart', []);
-    eq([bindings, vs[0].alsoIsbn13], [null, null], 'FO-004: two different books never fold — a hardcover and a paperback, or 256 pages against 175');
+    vs = [ver('French', 'Somogy', '9782757210642')];
+    api.foldCoEditions(vs, [paired, rec('https://a.test/9782757210642', '544 pages.'), rec('https://b.test/9782350315355', '48 pages.')], 'louvre', []);
+    eq([bindings, vs[0].alsoIsbn13], [null, null], 'FO-004: two different books never fold — a hardcover and a paperback, or 544 pages against 48, on each number’s own page');
     // Vasari English: one library record lists Lienart's and the Nationalmuseum's numbers.
-    vs = [ver('English', 'Musée du Louvre Editions / Lienart', '9782359063738'), ver('English', 'Nationalmuseum', '9789171009166')];
-    api.foldCoEditions(vs, [rec('https://lib.test/en', 'Giorgio Vasari, the book of drawings. ISBN 9789171009166 ; 9782359063738')], 'louvre', []);
+    vs = [ver('English', 'Musée du Louvre Editions / Lienart', '9782359063738', 'this', 'Giorgio Vasari, the book of drawings'), ver('English', 'Nationalmuseum', '9789171009166', 'this', 'Giorgio Vasari, the book of drawings')];
+    api.foldCoEditions(vs, [{ url: 'https://lib.test/en', title: 'Giorgio Vasari, the book of drawings', excerpts: ['Giorgio Vasari, the book of drawings. Publisher: LienArt ; Nationalmuseum. ISBN: 9789171009166, 9782359063738'] }], 'louvre', []);
     eq(brief(vs).map(x => x[1] + '/' + x[2]), ['9782359063738/null', '9789171009166/null'], 'FO-005: another house’s own printing is never folded in (the Nationalmuseum’s English book)');
     // Two numbers side by side with no ISBN label are not a record of one book.
     vs = [ver('French', 'Somogy', '9782757210642')];
-    api.foldCoEditions(vs, [rec('https://ccfr.test/n', 'Notice 1 sur 1\n978-2-35031-535-5 978-2-7572-1064-2 français Hubert Robert')], 'louvre', []);
+    api.foldCoEditions(vs, [rec('https://ccfr.test/n', 'Notice 1 sur 1\n978-2-35031-535-5 978-2-7572-1064-2 français Hubert Robert, 1733-1808 : un peintre visionnaire')], 'louvre', []);
     eq(vs[0].alsoIsbn13, null, 'FO-006: two numbers side by side with no ISBN label are not evidence — nothing folds');
+    // A library record labelling each number by publisher in brackets.
+    vs = [ver('French', 'Somogy', '9782757210642')];
+    api.foldCoEditions(vs, [rec('https://lib.test/brackets', 'Hubert Robert, 1733-1808 : un peintre visionnaire. ISBN 978-2-7572-1064-2 (Somogy). - ISBN 978-2-35031-535-5 (Musée du Louvre) (rel.)')], 'louvre', []);
+    eq([vs[0].isbn13, vs[0].alsoIsbn13], ['9782757210642', '9782350315355'], 'FO-007: a record labelling each number by its publisher ("(Somogy)", "(Musée du Louvre)") folds them');
+    // Both numbers under one registrant (the agency's table): two books of one house.
+    vs = [ver('French', 'Lienart', '9782359063721', 'this', 'Giorgio Vasari. Le Livre des dessins')];
+    api.foldCoEditions(vs, [{ url: 'https://lib.test/one-house', title: 'Giorgio Vasari. Le Livre des dessins', excerpts: ['Giorgio Vasari. Le Livre des dessins. ISBN Lienart : 978-2-35906-372-1 ISBN Musée du Louvre : 978-2-35906-373-8'] }], 'louvre', []);
+    eq([vs[0].alsoIsbn13, api.registrantOf('9782359063721'), api.registrantOf('9782359063738')], [null, '978-2-35906', '978-2-35906'],
+      'FO-008: two numbers one publisher was issued (978-2-35906, read off the agency’s range table) are two books, whatever the labels say');
+    vs = [ver('French', 'Somogy', '9782757210642', 'this', 'Something else entirely')];
+    api.foldCoEditions(vs, [paired], 'louvre', []);
+    eq(vs[0].alsoIsbn13, null, 'FO-009: the page pairing them must carry the version’s own title');
   }
 
   // ── VF-001..VF-003: names, venue first; versions stored without the lookup's own fields ─
@@ -780,83 +790,24 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       ['Louvre éditions / Somogy éditions d\'art', 'Musée Jacquemart-André / Fonds Mercator', 'Hannibal Books', 'Rizzoli Electa'],
       'VF-001: publisher names lead with the venue’s own house; a name without one is unchanged');
     eq(Object.keys(api.storedVersion({ title: 't', lang: 'French', isbn13: '1', showing: 'this', _pub: 'x', _found: true })),
-      ['title', 'lang', 'binding', 'pages', 'publisher', 'isbn13', 'alsoIsbn13', 'showing', 'proofUrl', 'note', 'city', 'year', 'card'],
-      'VF-002: a stored version keeps her fields, the other showing’s city and its year; the lookup’s own are dropped');
+      ['title', 'lang', 'binding', 'pages', 'publisher', 'isbn13', 'alsoIsbn13', 'alsoOf', 'showing', 'proofUrl', 'city', 'year', 'shop', 'card'],
+      'VF-002: a stored version keeps her fields, the second number’s museum, the other showing’s city, its year and its shop; the lookup’s own are dropped');
     eq([api.englishLine({ englishCheck: 'shops', editions: [{}] }), api.englishLine({ englishCheck: 'shops', editions: [{}, {}] })],
-      ['No English edition found in bookshops.', null], 'VF-003: a one-version card keeps today’s English line; a card with several has none until her version lines');
+      ['No English edition found in bookshops.', null], 'VF-003: a one-version card keeps today’s English line; a card with several has none — her blocks say it');
   }
 
 
-  // ── VL-001..VL-012: her version lines, word for word (docs/catalogue_versions.md) ─
-  // Rows built from her cases (docs/lookup_proof_cards.json) with the city, year and
-  // proving page her cases give.
+  // ── PK-001..PK-003: her pick moves; the card's book follows it, nothing else changes
+  // Rows built from her cases (docs/lookup_proof_cards.json). Her blocks: catalogue_versions.js.
   {
     const CARDS = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_proof_cards.json'), 'utf8')).cards;
     const caseRow = (n, start, extra) => {
       const c = CARDS.find(x => x.case === n);
-      const editions = c.versions.map((v, i) => ({ title: c.title, note: null, city: null, year: null, proofUrl: null, card: null, ...v, ...(extra[i] || {}) }));
+      const editions = c.versions.map((v, i) => ({ title: c.title, city: null, year: null, proofUrl: null, card: null, ...v, ...(extra[i] || {}) }));
       const pick = editions.findIndex(v => v.isbn13 === c.pick);
       return { id: 'vl-' + n, museumId: c.venue, title: c.title, startDate: start, looked: true, hasCatalogue: 'yes', editions, editionPick: pick < 0 ? null : pick };
     };
-    const shown = r => { const vl = api.versionLines(r);
-      return vl ? vl.lines.map(l => (l.picked ? '● ' : '○ ') + l.text + (l.source ? ' (source: ' + l.source.host + ')' : ''))
-        .concat(vl.shared ? ['(source for ' + vl.shared.count + ': ' + vl.shared.host + ')'] : []) : null; };
-    const LOUVRE_ED = 'https://www.louvre.fr/editions/catalogue/giorgio-vasari-le-livre-des-dessins';
-    const PDF = 'https://mini-site.louvre.fr/trimestriel/2016/Catalogue_Editions_2016/files/assets/common/downloads/publication.pdf';
-    const NGA = 'https://www.nga.gov/sites/default/files/migrate_images/content/dam/ngaweb/research/gallery-archives/pressreleases/2012-2010/2016/14a11_108163_20160615.pdf';
-    const vasari = caseRow(1, '2022-03-31', [{ proofUrl: LOUVRE_ED }, { proofUrl: 'https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings' },
-      { proofUrl: 'https://nationalmuseum.bokorder.se/en-us/shop/book/4580?slug=giorgio-vasari-the-book-of-drawings', city: 'Stockholm' }]);
-    eq(shown(vasari), [
-      '○ French · Giorgio Vasari. Le Livre des dessins. Destinées d\'une collection mythique · Louvre Éditions / Lienart · 978-2359063721 · also 978-2350317441 (the Louvre\'s own number for the same book) — the original edition. (source: louvre.fr)',
-      '● English · Giorgio Vasari, the Book of Drawings · paperback · Louvre Éditions / Lienart · 978-2359063738 — this venue\'s English edition. (source: lienarteditions.com)',
-      '○ English · Giorgio Vasari The Book of Drawings – The fate of a mythical collection · hardcover · Nationalmuseum · 978-9171009166 — from the show\'s Stockholm exhibition. (source: nationalmuseum.bokorder.se)'],
-      'VL-001: Vasari — three lines in her words, the Louvre’s own number on the French, ● on Lienart’s English');
-    const hrL = caseRow(2, '2016-03-08', [{ proofUrl: PDF }, { proofUrl: NGA, city: 'Washington' }]);
-    eq(shown(hrL), [
-      '○ French · Hubert Robert, 1733-1808 : un peintre visionnaire · hardcover, 544 pp · Louvre Éditions / Somogy · 978-2757210642 · also 978-2350315355 (the Louvre\'s own number for the same book) — this showing\'s catalogue. (source: mini-site.louvre.fr)',
-      '○ English · Hubert Robert · hardcover, 288 pp · National Gallery of Art / Lund Humphries · 978-1848221918 — a notably different book, from the show\'s Washington exhibition. (source: nga.gov)'],
-      'VL-002: Hubert Robert, Louvre card — nothing picked, page counts on both lines because they tell the books apart');
-    const hrN = caseRow(3, '2016-06-26', [{ proofUrl: NGA }, { proofUrl: PDF }]);
-    eq(shown(hrN), [
-      '● English · Hubert Robert · hardcover, 288 pp · National Gallery of Art / Lund Humphries · 978-1848221918 — this showing\'s catalogue. (source: nga.gov)',
-      '○ French · Hubert Robert, 1733-1808 : un peintre visionnaire · hardcover, 544 pp · Louvre Éditions / Somogy · 978-2757210642 · also 978-2350315355 (the Louvre\'s own number for the same book) — a notably different book, from the show\'s Paris exhibition. (source: mini-site.louvre.fr)'],
-      'VL-003: Hubert Robert, NGA card — the Paris city from the Louvre being one of her venues; the second number still the Louvre’s');
-    const ham = caseRow(4, '2019-03-14', [{ proofUrl: 'https://www.leslibraires.ca/en/livres/hammershoi-jean-loup-champion-9789462302495.html' },
-      { proofUrl: 'https://www.rizzoliusa.com/book/9780847899289', year: 2023 }]);
-    eq(shown(ham), [
-      '○ French · Hammershøi : le maître de la peinture danoise · Culturespaces / Fonds Mercator · 978-9462302495 — the original edition. (source: leslibraires.ca)',
-      '● English · Hammershøi: Painter of Northern Light · Rizzoli Electa, 2023 · 978-0847899289 — the English edition, published later. (source: rizzoliusa.com)'],
-      'VL-004: Hammershøi — the original, and the English edition published later, its year beside the publisher');
-    ham.editions[1].year = null;
-    eq(shown(ham)[1], '● English · Hammershøi: Painter of Northern Light · Rizzoli Electa · 978-0847899289 — the English edition. (source: rizzoliusa.com)', 'VL-005:   its year not known — "the English edition"');
-    const HAN = 'https://hannibalbooks.be/uploads/images/covers/2026_ENG_VOORJAAR_DRUK_compressed.pdf';
-    const met = caseRow(8, '2026-02-20', [{ proofUrl: HAN }, { proofUrl: HAN }, { proofUrl: HAN }]);
-    eq(shown(met), ['● English · Metamorphoses: Ovid and the Arts · paperback · Hannibal · 978-9493416543.', '○ Dutch · Metamorfosen – Ovidius en de kunsten · Hannibal · 978-9493416550.', '○ Italian · Hannibal · 978-9493416857.',
-      '(source for all three: hannibalbooks.be)'], 'VL-006: Metamorphoses — one house, only the language differs: no notes, one shared source line');
-    // Her live Vasari search on 43: two versions, both the Louvre's own house.
-    const vas2 = { id: 'vl-vas2', museumId: 'louvre', title: 'Giorgio Vasari', startDate: '2022-03-31', looked: true, hasCatalogue: 'yes', editionPick: 0, editions: [
-      { title: 'Giorgio Vasari. The Book of Drawings', lang: 'English', binding: null, pages: 240, publisher: 'Musée du Louvre Editions / Lienart', isbn13: '9782359063738', alsoIsbn13: null, showing: 'this', proofUrl: 'https://www.amazon.com/dp/2359063731', note: null, city: null, year: null, card: null },
-      { title: 'Giorgio Vasari. Le Livre des dessins', lang: 'French', binding: null, pages: 240, publisher: 'Musée du Louvre Editions / Lienart', isbn13: '9782359063721', alsoIsbn13: null, showing: 'this', proofUrl: 'https://www.louvre.fr/editions/catalogue/giorgio-vasari-le-livre-des-dessins', note: null, city: null, year: 2022, card: null }] };
-    eq(shown(vas2), [
-      '● English · Giorgio Vasari. The Book of Drawings · Musée du Louvre Editions / Lienart · 978-2359063738 — this venue\'s English edition. (source: amazon.com)',
-      '○ French · Giorgio Vasari. Le Livre des dessins · Musée du Louvre Editions / Lienart · 978-2359063721 — the original edition. (source: louvre.fr)'],
-      'VL-013: Vasari, two versions from the Louvre\'s own house — her notes stay: "this venue\'s English edition", "the original edition"');
-    eq(shown({ ...vas2, editions: [vas2.editions[0], { title: 'Giorgio Vasari The Book of Drawings', lang: 'English', binding: 'hardcover', pages: 240, publisher: 'Nationalmuseum', isbn13: '9789171009166', alsoIsbn13: null, showing: 'this', proofUrl: 'https://nationalmuseum.bokorder.se/p', note: null, city: 'Stockholm', year: 2022, card: null }] })[0],
-      '● English · Giorgio Vasari. The Book of Drawings · Musée du Louvre Editions / Lienart · 978-2359063738 — this venue\'s English edition. (source: amazon.com)',
-      'VL-014: Vasari, the French not found — the Louvre\'s English book still says "this venue\'s English edition"');
-    eq([5, 6, 7, 9].map(n => shown(caseRow(n, '2024-01-01', []))), [null, null, null, null],
-      'VL-007: Watteau, Canaletto – Guardi, Botticelli, Millet — one version: no version lines, the card as now');
-    eq(api.versionLines({ museumId: 'louvre', editions: null }), null, 'VL-008: an old row with no versions has no version lines');
-    const two = caseRow(1, '2022-03-31', [{ proofUrl: LOUVRE_ED }, { proofUrl: LOUVRE_ED }]);
-    two.editions = two.editions.slice(0, 2);
-    eq(shown(two).slice(-1), ['(source for both: louvre.fr)'], 'VL-009: two versions from one page — "(source for both: …)", her word');
-    const bound = { ...vasari, editions: vasari.editions.map((v, i) => ({ ...v, binding: i === 0 ? 'with flaps' : v.binding })) };
-    ok(!/flaps/.test(shown(bound)[0]), 'VL-010: binding is "hardcover" or "paperback" only — never "with flaps"', shown(bound)[0]);
-    const noCity = caseRow(2, '2016-03-08', [{ proofUrl: PDF }, { proofUrl: NGA }]);
-    ok(/a notably different book, from the show's other exhibition\./.test(shown(noCity)[1]), 'VL-011: another showing’s book with no city known — "from the show\'s other exhibition"', shown(noCity)[1]);
-    ok(shown(vasari).every(l => /978-\d{10}/.test(l) && !/978\d{10}/.test(l)), 'VL-012: every ISBN-13 is shown 978-xxxxxxxxxx');
-
-    // ── PK-001..PK-003: her pick moves; the card's book follows it, nothing else changes
+    const vasari = caseRow(1, '2022-03-31', [{}, {}, { city: 'Stockholm' }]);
     const card = (title, isbn13, publisher) => ({ catalogueTitle: title, isbn13, publisher, publisherUrl: null, publisherResult: null, shopState: 'web', shopUrl: null });
     const row0 = { ...vasari, catalogueTitle: 'The Book of Drawings', isbn13: '9782359063738', publisher: 'Lienart', publisherUrl: 'https://www.lienarteditions.com/', publisherResult: 'site',
       shopState: 'web', shopUrl: null, interested: true, acquiring: 'yes', editedAt: null,
