@@ -178,7 +178,7 @@ Branches separate in-progress work from known-good work, never components.
 | Branch | What it is |
 |---|---|
 | `claude/ledger-cloud` | **Live trial — §7.1.** Merged to `main` only on her call |
-| `parked` | Work held for another session (below). Deleted once on `main`. **Holds the unfinished Vasari English-edition fix (§7.4)** |
+| `parked` | Work held for another session (below). Deleted once on `main`. Currently holds only the abandoned Vasari fix — to be deleted on GitHub (her decision) |
 | `claude/jsx-stitched-intake`, `claude/blissful-volta-jxj5c0` | Merged into `main`; kept as history |
 | `claude/quiet-user-agent` | Parked, her decision — do not merge or re-open |
 | `claude/personal-tracking-ledgers-z49s2h` | Dead — do not merge |
@@ -1135,25 +1135,12 @@ She is noting issues as she uses it, for a later debugging session.
   title, a booklet's ISBN refused (BK-). A different book is caught only when both page counts are printed — a
   partner venue's book with none, naming the venue, can still pass. Her re-run of
   both cards confirms.
-- **OPEN — Vasari: "No English edition" on a book that IS the English edition.**
-  *Giorgio Vasari: The Book of Drawings* (Louvre). The card holds ISBN
-  978-2359063738 — the real English edition (Lienart, Sept 2022, for the show's
-  Stockholm leg); French original 978-2359063721. The facts read said the book
-  was French (it took the Louvre page's "(In French)", which describes the
-  original), so `englishCheck` became "shops". Her four buy links finding nothing
-  is the book being scarce, not a fault (her acceptance).
-  **Fix, unfinished, on branch `parked` — NOT on `main`, NOT published (her
-  decision: not verified):** `languageOnIsbn` reads the language off results
-  carrying the ISBN — a label within 400 characters of it ("Langue: anglais",
-  "Language: | eng", "Text in English") or a library record's "Translation of:
-  <original>" with an English title — and outranks the read; the original goes
-  in `originalEdition`. Tests EL-001–009 (LG-008's fixture adjusted). Proved on
-  the results her lookup received (record `L17915952125267zcl`) and on today's
-  live edition search; *Things* and *Van Eyck* records unchanged.
-  **Not verified:** the whole lookup end to end — its Claude reads run only in
-  her app, and the live web varies (one day the facts search printed no ISBN).
-  **Next session:** bring `parked` onto `main` (merge, `npm run test:app`), agree
-  with her how it is verified before publishing, then delete `parked`.
+- **Vasari — closed, her decision.** The card now files the English edition
+  978-2359063738 (Lienart) by the route in 42.7; the `parked` fix was abandoned
+  unmerged. Her four buy links find nothing because neither English edition is
+  listed there (AbeBooks has neither); the Nationalmuseum's own hardcover,
+  978-9171009166, sells at bokorder.se and is free as open access. Open: the
+  card names no publisher though Lienart's own page carrying the ISBN was opened.
 - **Search again and Reset card + Find catalogue run the same lookup** (checked
   on the live page). They differ only when a step fails part-way: Search
   again then leaves the card untouched. Otherwise a different result is the
