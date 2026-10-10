@@ -8,7 +8,9 @@
  * shop step found filed as in the shop (BA-), an ISBN taken only with a valid check
  * digit and only when the fetched text prints it (IG-), and an English edition
  * accepted only when a record proves it is this catalogue's (ED-), her short list of
- * joint publishers' sites (PS-), and the progress line on each main path (PL-).
+ * joint publishers' sites (PS-), the progress line on each main path (PL-), and one book per
+ * card with her three English-edition cases (HR-, Hubert Robert, real results in
+ * docs/lookup_results/hubert_robert.json).
  *
  * Hammershøi's library record is real (docs/lookup_results/jacquemart_hammershoi.json);
  * the shop, book and publisher pages are made for the test.
@@ -65,7 +67,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, englishEditionOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, englishEditionOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -472,6 +474,74 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const io2 = api.lookupIo({ label: l => all.push(l) }, {});
     ['shop', 'web', 'page', 'shop', 'facts', 'web', 'publisher', 'page'].forEach(p => io2.phase(p));
     eq([shown, all], [[L1], [L1, L2, L3, L4]], 'PL-005: a label is shown once and never goes back; Re-check’s shop step shows only the first');
+  }
+
+  // ── HR-001..HR-009: Hubert Robert — one book per card, and her English-edition cases ─
+  // Real results from two lookups (docs/lookup_results/hubert_robert.json); Claude's
+  // reads are the answers it gave there. French: Somogy, 544 pages, 978-2757210659.
+  // English: NGA / Lund Humphries, 288 pages, 978-1848221918 — a different book.
+  {
+    const HR = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'hubert_robert.json'), 'utf8'));
+    const FR_ISBN = '9782757210659', EN_ISBN = '9781848221918';
+    const FR = 'Hubert Robert (1733-1808) : Un peintre visionnaire';
+    const NYRB = 'https://www.nybooks.com/articles/2016/10/13/hubert-robert-the-joy-of-ruins';
+    const script = (web, facts, editions, reads) => ({
+      mcp: (tool, args) => {
+        if (tool !== 'web_search') return shelfOf(args.urls, '[Another book €30](https://x.test/other)');
+        const o = String(args.objective || '');
+        if (/^Confirm whether/.test(o)) return { payload: { results: web } };
+        if (/^An ENGLISH-language edition/.test(o)) return { payload: { results: editions } };
+        if (/^The ISBN-13, publisher/.test(o)) return { payload: { results: facts } };
+        return { payload: { results: [] } };
+      },
+      sample: p => isShopRead(p) ? { found: false } : /"found"/.test(p) ? reads.web : isFactsRead(p) ? reads.facts : isJudge(p) ? { kind: 'other', bookUrl: null } : {},
+    });
+
+    eq([api.isbnInResults(HR.nga_facts, 'Hubert Robert, 1733–1808'), api.isbnInResults(HR.nga_facts, 'Hubert Robert')], [FR_ISBN, null],
+      'HR-001: matched on the show’s dates only the French bookseller carries; on the book’s title the results hold two numbers');
+
+    // NGA, an English venue (run as one the harness knows): the read's English ISBN stands.
+    let { out, calls, row: r } = await run(row('ng', 'Hubert Robert, 1733–1808'), script(HR.nga_web, HR.nga_facts, [], {
+      web: { found: true, catalogueTitle: null, isbn13: null, publisher: 'Lund Humphries', publisherUrl: null, shopUrl: null, thisVenue: true },
+      facts: { isbn13: EN_ISBN, publisher: 'National Gallery of Art', title: 'Hubert Robert' } }));
+    eq([r.catalogueTitle, r.isbn13], ['Hubert Robert', EN_ISBN], 'HR-002: NGA — the English book’s own ISBN, never the French one beside its English publisher');
+    ok(!/Somogy/i.test(r.publisher || ''), 'HR-003:   and its publisher is the English book’s', r.publisher);
+
+    // Louvre: the French book stands; the English book is a different one (her case three).
+    const louvre = (editions) => script(HR.louvre_web, HR.louvre_facts, HR.louvre_editions, {
+      web: { found: true, catalogueTitle: FR, isbn13: FR_ISBN, publisher: 'Somogy éditions d\'art', publisherUrl: null, shopUrl: null, thisVenue: true },
+      facts: { isbn13: FR_ISBN, publisher: 'Somogy éditions d\'art', language: 'French', title: FR, pages: '544', editions } });
+    const LH = { title: 'Hubert Robert', isbn13: EN_ISBN, language: 'English', publisher: 'Lund Humphries', pages: '281', evidenceUrl: NYRB };
+    ({ out, calls, row: r } = await run(row('louvre', 'Hubert Robert (1733–1808). A Visionary Painter'), louvre([LH])));
+    eq([r.catalogueTitle, r.isbn13, r.originalEdition], [FR, FR_ISBN, null], 'HR-004: Louvre — the 281-page English book is not the 544-page French one’s edition; the French book stands');
+    ok(/different book/.test(out.detail) && r.englishCheck !== 'english', 'HR-005:   the lookup says why', out.detail.split('\n').find(l => /English/.test(l)));
+    const prompts = calls.filter(c => c.kind === 'sample').map(c => c.prompt);
+    ok(prompts.some(p => /"found"/.test(p) && /venue's own language — an English edition is checked separately/.test(p)),
+      'HR-006:   at a non-English venue the web read takes the venue’s own book; the English edition is decided once, later');
+    ok(prompts.some(p => isFactsRead(p) && /SECTION D/.test(p) && p.includes('enfilade18thc.com')),
+      'HR-007:   the facts read sees the first web search’s results again (Enfilade’s line about the English book)');
+
+    // Her cases one and two: the venue's own English edition outranks a translation published elsewhere.
+    const res = [
+      { url: 'https://library.test/a', title: 'Hubert Robert: a translation', excerpts: ['Translation of ' + FR + '. ISBN ' + EN_ISBN + ' and the original, ISBN ' + FR_ISBN] },
+      { url: 'https://somogy.test/b', title: 'Hubert Robert, English edition', excerpts: ['Publisher: Somogy éditions d\'art. ISBN 9780847899289'] },
+    ];
+    const eds = [{ title: 'Hubert Robert: a translation', isbn13: EN_ISBN, language: 'English', publisher: 'Elsewhere Press', evidenceUrl: res[0].url },
+      { title: 'Hubert Robert, English edition', isbn13: '9780847899289', language: 'English', publisher: 'Somogy éditions d\'art', evidenceUrl: res[1].url }];
+    const best = api.englishEditionOf(eds, { title: FR, isbn13: FR_ISBN, publisher: 'Somogy éditions d\'art' }, res, 'louvre');
+    eq(best && best.isbn13, '9780847899289', 'HR-008: the venue’s own English edition (same publisher) is taken before a translation published elsewhere, whatever order they come in');
+    eq(api.englishEditionOf([eds[0]], { title: FR, isbn13: FR_ISBN, publisher: 'Somogy éditions d\'art' }, res, 'louvre').isbn13, EN_ISBN,
+      'HR-009:   with no edition of its own, the translation published elsewhere is taken');
+
+    eq([api.pagesPrinted('544', HR.louvre_web), api.pagesPrinted('600', HR.louvre_web), api.pagesPrinted('281', HR.louvre_facts)], [544, null, 281],
+      'HR-010: a page count is kept only where the results print it');
+    eq([api.differentBook(544, 288), api.differentBook(544, 543), api.differentBook(544, null)], [true, false, false],
+      'HR-011: page counts far apart are two books; close or unknown, no verdict');
+
+    // A guessed publisher that contradicts the ISBN's own records gives way to them.
+    const F = { isbn: FR_ISBN, publisher: 'Lund Humphries', pubFrom: 'general results', publisherUrl: null };
+    api.oneBook(F, [{ url: 'https://shop.test/x', title: FR, excerpts: ['ISBN ' + FR_ISBN + '\nPublisher: Somogy éditions d\'art'] }], [], '', 'louvre');
+    eq(F.publisher, 'Somogy éditions d\'art', 'HR-012: a guessed publisher the ISBN’s records contradict is replaced by theirs — one book per card');
   }
 
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');

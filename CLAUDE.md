@@ -361,7 +361,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 42.6 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 42.6 · cloud 5 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -956,8 +956,10 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **42.6 · cloud 4**. Cloud-only in it:
-the read-only lock (below); a roll-back's safety copy names the save by its
+live on the test page **42.6 · cloud 5**. Cloud-only in it:
+the read-only lock (below); Import on an empty page offers only "Open last
+cloud save" and Load, and Save asks before writing fewer exhibitions than the
+cloud holds (EI-001–007; `docs/app.md` §9); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
 title is "Cat Watch Cloud Test" — set it in `build/dist/index.html` before
@@ -1129,6 +1131,11 @@ She is noting issues as she uses it, for a later debugging session.
   now goes on to the facts round instead of being dropped (`unnamed`, UN-001–003);
   a reply holding two answers takes Claude's last (`lastJsonObject`, TW-001–004 —
   her Louvre links' "unreadable" descriptions).
+- **OPEN — Hubert Robert, rebuilt, not yet published.** Her three English-edition
+  cases (`docs/app.md` §1, step 3), one book per card, the ISBN read on the book's
+  title. A different book is caught only when both page counts are printed — a
+  partner venue's book with none, naming the venue, can still pass. Her re-run of
+  both cards confirms.
 - **OPEN — Vasari: "No English edition" on a book that IS the English edition.**
   *Giorgio Vasari: The Book of Drawings* (Louvre). The card holds ISBN
   978-2359063738 — the real English edition (Lienart, Sept 2022, for the show's
