@@ -1,6 +1,6 @@
 # Catalogue versions — the redesign and its agreed cases
 
-Status: **design for her approval. No code yet.** The catalogue lookup is paused
+Status: **design agreed with her; awaiting her approval to build.** The catalogue lookup is paused
 until this is agreed (CLAUDE.md §7.4). Every later change to the lookup is
 checked live against the cases below.
 
@@ -77,14 +77,14 @@ These replace "hardcover leads" and "one book per card".
   by an AbeBooks record.
 - Card says: "No English edition found."
 - Left off: *Connaissance des Arts*' special issue (978-2758004158), a
-  magazine, not the catalogue (question 2).
+  magazine, not the catalogue (settled below).
 
 ### 7. Botticelli, artiste et designer — Jacquemart-André, 2021–22
 - ● French · Fonds Mercator / Culturespaces · 978-9462302815. Proved by the
   Paris Musées library record.
 - Card says: "No English edition found."
 - Left off: Reaktion's *Botticelli: Artist and Designer* (Debenedetti) — the
-  curator's own book, not a catalogue (question 1).
+  curator's own book, not a catalogue (settled below).
 
 ### 8. Metamorphoses — Rijksmuseum, 2026 (travels to Galleria Borghese)
 - ● English · softcover with flaps · Hannibal · 978-9493416543
@@ -97,20 +97,18 @@ These replace "hardcover leads" and "one book per card".
   One version: the card as now. Publisher is the National Gallery — Yale only
   distributes it.
 
-## Found while researching
+## Settled with her
 
-- **A co-edition can carry two ISBNs for one physical book** — one per
-  publisher. Vasari's French edition: 978-2359063721 and 978-2350317441;
-  Hubert Robert's: 978-2757210642 and 978-2350315355. Find must fold them
-  into one version, or she sees the same book twice (question 3).
+- **Not catalogues, left off** like booklets: a same-titled book by the curator
+  (Botticelli — Reaktion's *Botticelli: Artist and Designer*), and a magazine's
+  special issue on the show (Canaletto – Guardi, *Connaissance des Arts*).
+- **A co-edition's two ISBNs** — one per publisher for one printed book (Vasari
+  French: 978-2359063721 Lienart, 978-2350317441 Louvre; Hubert Robert:
+  978-2757210642 Somogy, 978-2350315355 Louvre). Find folds them into one
+  version. The card shows both on one line, the publishing house's number first:
+  `ISBN 978-2359063721 · also 978-2350317441 (the Louvre's own number for the
+  same book)`. Buy buttons use the first; the second is there to copy. Her
+  reason: she uses an ISBN to search, so a hidden one is useless.
 - **"Not found" is not "does not exist".** No English edition was found for
-  Watteau, Canaletto – Guardi or Botticelli; the card must say "found".
-
-## Open questions for her
-
-1. A same-titled book by the curator that is not a catalogue (Botticelli,
-   Reaktion): left off? *Recommended: yes.*
-2. A magazine's special issue on the show (Canaletto – Guardi): left off, like
-   booklets? *Recommended: yes.*
-3. A co-edition's second ISBN: one line, one ISBN shown, both used behind the
-   scenes? *Recommended: yes.*
+  Watteau, Canaletto – Guardi or Botticelli; the card says "No English edition
+  found."
