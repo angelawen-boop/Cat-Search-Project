@@ -47,6 +47,9 @@ is why they live in one repo, on one branch.
   and a date tells her nothing. Say it as: "Because of X, you decided Y. Would
   you like to reconsider? / If this changes your decision, we can do Z." Call
   it her decision or her judgement call — never a "ruling" or a "rule".
+- **"Fixed" means proven live** (her decision): a catalogue-lookup change is "fixed"
+  only after the live check page passes (§7.4); until then it is "changed, not yet
+  proven live". Fixture tests only guard against breaking what already worked.
 - **Whatever she does not disagree with, she agrees with.** Never re-ask what her
   words or an agreed mockup already settle; list only what is genuinely open.
 - **A question gets an answer first.** "Talk to me about X" means discuss;
@@ -1140,11 +1143,26 @@ it whole before touching versions.
   with proof, else two blocks; each block's facts only from pages about that one
   number; each block's shop line from searching THAT book's own museum shop (another
   museum's found by `discoverShop`), and the Museum shop button follows the pick there.
-- **Rebuilt to her layout and rules — on `main` and `claude/ledger-cloud`, NOT
-  published.** Her three 43 lookups replay to the agreed blocks
-  (`catalogue_versions.js`). **Next:** her answers on the doc's two open questions
-  (another showing's museum from its city; Re-check with nothing picked), two small
-  fixes, a live run of all nine, then publish when she says and her page is closed.
+- **Rebuilt to her layout and rules — on `main` and `claude/ledger-cloud`. Changed,
+  NOT proven live, NOT published.**
+  - **Proven:** on her three lookups recorded on 43 (the app's own searches and its
+    own Claude's answers, replayed), the new code draws the agreed blocks
+    (`catalogue_versions.js`); single-version cards unchanged (19 compared).
+  - **Not proven:** any live search on the new code; the other six cases (Watteau,
+    Canaletto – Guardi, Botticelli, Metamorphoses, Millet, Hubert Robert at NGA) never
+    run on it; another museum's shop finder live beyond two fetches (Nationalmuseum);
+    per-version Re-check live; the `shops/museums` store; the page as she sees it.
+- **Next: the live check page** (her design): a separate artifact running the app's real
+  `lookupCatalogue` (generated from `Cat_Watch.jsx` by a committed build script) with
+  her connector and the in-page Claude; all nine cases built in; ONE Run button, saving
+  each case to its own store as it finishes; pass/fail per field against the cases'
+  right answers (a field the search can't reach fails, e.g. Hammershøi's Rizzoli). A
+  new session builds it; she taps Run once, the session reads the store. Never her app,
+  test page or ledger.
+- **Still hers to answer:** another showing's museum worked out from its city
+  (Washington → NGA), else no shop line on that block; Re-check with nothing picked
+  re-checks the venue's own versions. Two small fixes waiting (publisher step on " : "
+  co-publishers; the progress label for another museum's shop).
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,

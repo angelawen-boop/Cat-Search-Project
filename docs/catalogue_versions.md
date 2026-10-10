@@ -252,5 +252,7 @@ Humphries'; Hammershøi's English block with no publisher or year.
    whole** and found no site; her co-edition rule says look for the outside house.
    `publisherToFind` / `siteOfHouses` do not split on " : " yet — fix with a live run.
 4. **Progress label** reads "Searching venue shop…" while checking another museum's.
-5. **A live run of all nine cases before any publish;** publish only when she says and
-   her page is closed. Cards searched on 43 need a Search again.
+5. **The live check page, then publish** (her design; CLAUDE.md §7.4): all nine cases
+   run by the real code, her connector and the in-page Claude, one Run tap, graded per
+   field. Nothing here is "fixed" until it passes. Publish only when she says and her
+   page is closed. Cards searched on 43 need a Search again.
