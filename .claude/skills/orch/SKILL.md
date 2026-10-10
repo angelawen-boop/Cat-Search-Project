@@ -1,6 +1,6 @@
 ---
 name: orch
-description: Build or fix something in Cat Watch's app or scraper the careful way — diagnose, write a brief, hand the build to a builder subagent she approves, check its work, report in plain English with only the real decisions. ONLY when she types /orchestrate — never started by a session on its own, never because a build was asked for, never from a routine.
+description: Build or fix something in Cat Watch's app or scraper the careful way — diagnose, write a brief, hand the build to a builder subagent she approves, check its work, report in plain English with only the real decisions. ONLY when she types /orch — never started by a session on its own, never because a build was asked for, never from a routine.
 disable-model-invocation: true
 ---
 
