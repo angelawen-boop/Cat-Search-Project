@@ -417,7 +417,7 @@ reopening, §7.1). Reasoning and the two rejected arguments: `docs/app.md` §4�
 ```
 id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
 acquiring, buyNext, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
-publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, addedAt, editedAt
+publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, editions, editionPick, addedAt, editedAt
 ```
 
 Ledger backup is JSON; the sweep pro forma is CSV.
@@ -912,6 +912,7 @@ junk in summaries, failure handling, compression, the blocked venues — is in
 
 Each line came from a real failure. Details are in git history and `docs/`.
 
+- **Parallel work is proved live before it reaches her.** 43 shipped on tests fed the agreed data and failed on her first live search (Vasari). A test that is handed the answer proves only the rendering.
 - **Tests can pass and prove nothing.** Check the exit code and grep the output
   for the new test's own name; a suite can be skipped silently (code after
   `process.exit`, a missing harness, an early `return` — use `await`).
@@ -1108,17 +1109,19 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
 
 ### 4. Catalogue lookup generally
 
-**Catalogue versions — built and published in 43; her live check OPEN.** The
-spec, her rules and her nine cases: `docs/catalogue_versions.md`; the cases as
-data: `docs/lookup_proof_cards.json`. Find → choose → tell: the lookup keeps every
-version (`editions` on the row, `editionPick` its index), her starting-pick rules
-pick (`pickEdition`), a card with two or more versions shows her lines
-(`versionLines`). Rows searched before 43 render as before. **Every later lookup
-change is checked against the nine cases** — CV-, VL-, AD-007 tests, and live with
-`node build/lookup_proof_check.js <dir of lookup-log records>`.
-**Next:** she presses Search again on Vasari, both Hubert Robert cards and
-Hammershøi; read their records (`docs/app.md` §1, "The lookup log") and run the
-proof check. A miss is a finder bug against the nine, never a new rule.
+**Catalogue versions — published in 43; her live Vasari search FAILED; fixes on
+`main`, unpublished.** Spec, her nine cases and the open items:
+`docs/catalogue_versions.md` (cases as data: `docs/lookup_proof_cards.json`). The
+lookup keeps every version (`editions`, `editionPick` an index), picks by her rules
+(`pickEdition`), and a card with two or more versions shows her lines
+(`versionLines`); rows searched before 43 render as before.
+**Fixed on `main` since 43:** her Vasari notes were wiped by a no-notes rule written
+for Metamorphoses (VL-013, VL-014); "(source for both: …)" (VL-009).
+**OPEN, in order:** (1) the joining of two numbers misfires — Stockholm's hardcover
+shown as "the Louvre's own number" on the Lienart line (the doc's "Open"); fix to be
+agreed with her. (2) **A live run of all nine cases on the current code, before any
+publish** — 43 went out on tests fed the agreed data, against §1's live rule. (3)
+Publish only after both, when she says and her page is closed.
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
