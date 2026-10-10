@@ -800,7 +800,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     };
     const shown = r => { const vl = api.versionLines(r);
       return vl ? vl.lines.map(l => (l.picked ? '● ' : '○ ') + l.text + (l.source ? ' (source: ' + l.source.host + ')' : ''))
-        .concat(vl.shared ? ['(source for all ' + vl.shared.count + ': ' + vl.shared.host + ')'] : []) : null; };
+        .concat(vl.shared ? ['(source for ' + vl.shared.count + ': ' + vl.shared.host + ')'] : []) : null; };
     const LOUVRE_ED = 'https://www.louvre.fr/editions/catalogue/giorgio-vasari-le-livre-des-dessins';
     const PDF = 'https://mini-site.louvre.fr/trimestriel/2016/Catalogue_Editions_2016/files/assets/common/downloads/publication.pdf';
     const NGA = 'https://www.nga.gov/sites/default/files/migrate_images/content/dam/ngaweb/research/gallery-archives/pressreleases/2012-2010/2016/14a11_108163_20160615.pdf';
@@ -849,7 +849,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq(api.versionLines({ museumId: 'louvre', editions: null }), null, 'VL-008: an old row with no versions has no version lines');
     const two = caseRow(1, '2022-03-31', [{ proofUrl: LOUVRE_ED }, { proofUrl: LOUVRE_ED }]);
     two.editions = two.editions.slice(0, 2);
-    eq(shown(two).slice(-1), ['(source for all two: louvre.fr)'], 'VL-009: two versions from one page — "(source for all two: …)"');
+    eq(shown(two).slice(-1), ['(source for both: louvre.fr)'], 'VL-009: two versions from one page — "(source for both: …)", her word');
     const bound = { ...vasari, editions: vasari.editions.map((v, i) => ({ ...v, binding: i === 0 ? 'with flaps' : v.binding })) };
     ok(!/flaps/.test(shown(bound)[0]), 'VL-010: binding is "hardcover" or "paperback" only — never "with flaps"', shown(bound)[0]);
     const noCity = caseRow(2, '2016-03-08', [{ proofUrl: PDF }, { proofUrl: NGA }]);

@@ -3209,7 +3209,7 @@ function versionLines(row){
   const showPages=vs.some((a,i)=>vs.some((b,j)=>j>i&&differentBook(a.pages,b.pages)));
   const one=vs.every(v=>v.proofUrl&&v.proofUrl===vs[0].proofUrl)?sourceOf(vs[0].proofUrl):null;
   return{lines:vs.map((v,i)=>({picked:row.editionPick===i,text:versionText(vs,i,row,showPages),source:one?null:sourceOf(v.proofUrl)})),
-    shared:one?{...one,count:COUNT_WORDS[vs.length]||String(vs.length)}:null};
+    shared:one?{...one,count:vs.length===2?"both":"all "+(COUNT_WORDS[vs.length]||String(vs.length))}:null};
 }
 // The note after an old row's ISBN: "also 978-… (hardcover, Nationalmuseum)".
 function alsoLine(v){
@@ -5084,7 +5084,7 @@ export default function App(){
                               </span>
                             </div>
                           ))}
-                          {vl.shared&&<div style={{fontSize:11.5,color:C.soft}}>(source for all {vl.shared.count}: <a href={vl.shared.url} target="_blank" rel="noopener noreferrer" style={{color:C.soft}}>{vl.shared.host}</a>)</div>}
+                          {vl.shared&&<div style={{fontSize:11.5,color:C.soft}}>(source for {vl.shared.count}: <a href={vl.shared.url} target="_blank" rel="noopener noreferrer" style={{color:C.soft}}>{vl.shared.host}</a>)</div>}
                         </div>
                       ):(<>
                         {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
