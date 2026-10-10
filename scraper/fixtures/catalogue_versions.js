@@ -146,7 +146,7 @@ const brief = vs => vs.map(v => [v.lang, v.isbn13, v.alsoIsbn13, v.showing]);
   const ham = await replay('jacquemart_hammershoi_43.json');
   for (const [name, r] of [['Vasari', vas], ['Hubert Robert', hub], ['Hammershøi', ham]])
     eq([r.script.misses, r.script.unusedRecorded(), r.script.unusedLive()], [[], 0, 0],
-      'VR-000: ' + name + ' — every call her record holds is replayed, and nothing else is asked (the Nationalmuseum’s finder from its saved live replies)');
+      'VR-000: ' + name + ' — every call her record holds is replayed, and nothing else is asked' + (r === vas ? ' (the Nationalmuseum’s shop finder answered by its saved live replies)' : ''));
 
   await drawn([vas.row, hub.row, ham.row], async ({ open, card, click }) => {
     // Vasari, Louvre 2022.
