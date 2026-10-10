@@ -9,7 +9,7 @@
  * digit and only when the fetched text prints it (IG-), and an English edition
  * accepted only when a record proves it is this catalogue's (ED-), her short list of
  * joint publishers' sites (PS-), the progress line on each main path (PL-), and one book per
- * card with her three English-edition cases (HR-, Hubert Robert, real results in
+ * card with her three English-edition cases (HR-), a booklet's ISBN refused (BK-, Hubert Robert, real results in
  * docs/lookup_results/hubert_robert.json).
  *
  * Hammershøi's library record is real (docs/lookup_results/jacquemart_hammershoi.json);
@@ -67,7 +67,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, englishEditionOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, englishEditionOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -478,7 +478,8 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
 
   // ── HR-001..HR-009: Hubert Robert — one book per card, and her English-edition cases ─
   // Real results from two lookups (docs/lookup_results/hubert_robert.json); Claude's
-  // reads are the answers it gave there. French: Somogy, 544 pages, 978-2757210659.
+  // reads are the answers it gave there. French: Somogy, 544 pages, 978-2757210642 (its
+  // 48-page album, 978-2757210659, is what the earlier run filed — FR_ISBN here).
   // English: NGA / Lund Humphries, 288 pages, 978-1848221918 — a different book.
   {
     const HR = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'hubert_robert.json'), 'utf8'));
@@ -513,11 +514,30 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       facts: { isbn13: FR_ISBN, publisher: 'Somogy éditions d\'art', language: 'French', title: FR, pages: '544', editions } });
     const LH = { title: 'Hubert Robert', isbn13: EN_ISBN, language: 'English', publisher: 'Lund Humphries', pages: '281', evidenceUrl: NYRB };
     ({ out, calls, row: r } = await run(row('louvre', 'Hubert Robert (1733–1808). A Visionary Painter'), louvre([LH])));
-    eq([r.catalogueTitle, r.isbn13, r.originalEdition], [FR, FR_ISBN, null], 'HR-004: Louvre — the 281-page English book is not the 544-page French one’s edition; the French book stands');
+    eq([r.catalogueTitle, r.originalEdition], [FR, null], 'HR-004: Louvre — the 281-page English book is not the 544-page French one’s edition; the French book stands');
     ok(/different book/.test(out.detail) && r.englishCheck !== 'english', 'HR-005:   the lookup says why', out.detail.split('\n').find(l => /English/.test(l)));
     eq(api.englishLine(r), 'No English edition. An English catalogue from the show\u2019s other venue is a different book: Hubert Robert, Lund Humphries, ISBN 978-1848221918.',
       'HR-013:   and the card names that other book in her words, as a line only');
-    eq([r.otherVenueBook && r.otherVenueBook.isbn13, r.isbn13], [EN_ISBN, FR_ISBN], 'HR-014:   kept beside the card’s own book, never in its place');
+    eq([r.otherVenueBook && r.otherVenueBook.isbn13, r.isbn13 === EN_ISBN], [EN_ISBN, false], 'HR-014:   kept beside the card’s own book, never in its place');
+
+    // ── BK-001..BK-005: a booklet's ISBN is not the catalogue's (the 48-page album, 978-2757210659)
+    const ALBUM = FR_ISBN, FULL = '9782757210642';
+    eq([api.pagesOfIsbn([...HR.louvre_web, ...HR.louvre_facts, ...HR.louvre_editions], ALBUM), api.pagesOfIsbn(HR.louvre2_facts, FULL)], [47, 544],
+      'BK-001: the album’s records print 47 pages, the full catalogue’s 544 — read off results carrying that one ISBN only');
+    eq([r.isbn13, /47-page book; the catalogue has 544 pages — no ISBN for the catalogue itself/.test(out.detail)], [null, true],
+      'BK-002: the earlier Louvre run — the album’s ISBN is refused and, with no other ISBN printed with 544 pages, none is filed');
+    const fullRec = HR.louvre2_facts.find(x => /32222598974/.test(x.url));
+    const withFull = script(HR.louvre_web, [...HR.louvre_facts, fullRec], HR.louvre_editions, {
+      web: { found: true, catalogueTitle: FR, isbn13: ALBUM, publisher: 'Somogy éditions d\'art', publisherUrl: null, shopUrl: null, thisVenue: true },
+      facts: { isbn13: ALBUM, publisher: 'Somogy éditions d\'art', language: 'French', title: FR, pages: '544', editions: [] } });
+    ({ row: r } = await run(row('louvre', 'Hubert Robert (1733–1808). A Visionary Painter'), withFull));
+    eq(r.isbn13, FULL, 'BK-003: with the full catalogue’s record among the results, its ISBN replaces the album’s');
+    const F2 = { isbn: FULL, title: 'Hubert Robert, 1733-1808 : un peintre visionnaire' };
+    api.notABooklet(F2, [...HR.louvre2_web, ...HR.louvre2_facts, ...HR.louvre2_editions], 544, []);
+    eq(F2.isbn, FULL, 'BK-004: today’s Louvre run — the full catalogue’s ISBN stands');
+    const F3 = { isbn: ALBUM, title: FR };
+    api.notABooklet(F3, [...HR.louvre_web, ...HR.louvre_facts], null, []);
+    eq(F3.isbn, ALBUM, 'BK-005: no page count for the catalogue — no verdict, the ISBN stands (a small catalogue is never judged on size alone)');
     const prompts = calls.filter(c => c.kind === 'sample').map(c => c.prompt);
     ok(prompts.some(p => /"found"/.test(p) && /venue's own language — an English edition is checked separately/.test(p)),
       'HR-006:   at a non-English venue the web read takes the venue’s own book; the English edition is decided once, later');

@@ -2819,6 +2819,38 @@ function pagesPrinted(n,results){
 // Two page counts this far apart are two books, not one translated (her decision,
 // Hubert Robert: Somogy's 544 pages against Lund Humphries' 288).
 function differentBook(a,b){ return !!(a&&b&&Math.abs(a-b)/Math.max(a,b)>0.15); }
+// The page count the records of ONE ISBN print: results carrying that number and no other
+// ISBN, their counts agreeing; else null. Every valid 978/979 number in a result counts.
+function isbnsIn(x){
+  const t=resultText(x).replace(/(\d)[\u2010-\u2015-](?=\d)/g,"$1");
+  return new Set([...t.matchAll(/(?<![0-9])(97[89]\d{10})(?![0-9])/g)].map(m=>m[1]).filter(isbn13Checks));
+}
+function pagesOfIsbn(results,isbn){
+  const counts=[];
+  for(const x of (results||[])){
+    const own=isbnsIn(x);
+    if(!isbnInText(isbn,resultText(x))||[...own].some(d=>d!==isbn))continue;
+    for(const m of resultText(x).matchAll(/(?<![0-9])(\d{2,4})\s*(?:pages|pp\b|p\.|pagine|seiten|blz)/gi))counts.push(+m[1]);
+  }
+  if(!counts.length||counts.some(c=>differentBook(c,counts[0])))return null;
+  return counts[0];
+}
+// A BOOKLET IS NOT THE CATALOGUE (her decision, Hubert Robert: the 48-page album's ISBN
+// filed for the 544-page catalogue). The ISBN's own records print far fewer pages than
+// the catalogue has: another ISBN for the book whose records print the catalogue's count
+// replaces it — exactly one — else no ISBN is filed. BK-001 to BK-004.
+function notABooklet(F,results,bookPages,log){
+  const own=F.isbn?pagesOfIsbn(results,F.isbn):null;
+  if(!own||!bookPages||!(own<bookPages)||!differentBook(own,bookPages))return;
+  const other=new Set();
+  for(const x of resultsCarrying(results,F.title))for(const d of isbnsIn(x))
+    if(d!==F.isbn){ const n=pagesOfIsbn(results,d); if(n&&!differentBook(n,bookPages))other.add(d); }
+  const swap=other.size===1?[...other][0]:null;
+  log.push("ISBN "+F.isbn+" is a "+own+"-page book; the catalogue has "+bookPages+" pages"
+    +(swap?" — ISBN "+swap+", printed with "+bookPages+" pages, taken.":" — no ISBN for the catalogue itself found, so none is filed."));
+  F.notIsbn=F.isbn;
+  F.isbn=swap;
+}
 
 // Everything a result carries: its title, its address and its text, whole and excerpted.
 function resultText(x){
@@ -2901,9 +2933,9 @@ function carriesBook(x,book,isbn){ return !!((isbn&&isbnInText(isbn,resultText(x
 // The facts round's one read: the book's own page (at a non-English venue, read here
 // rather than on its own), the facts search and the edition search.
 function factsPrompt(q){
-  const shape='{"isbn13": string|null, "publisher": string|null'
+  const shape='{"isbn13": string|null, "publisher": string|null, "pages": string|null'
     +(q.bookPage?', "pagePublisher": string|null, "pagePublisherUrl": string|null':'')
-    +(q.foreign?', "language": string|null, "title": string|null, "pages": string|null, "editions": [{"title": string, "isbn13": string, "language": string, "publisher": string|null, "pages": string|null, "evidenceUrl": string}]'
+    +(q.foreign?', "language": string|null, "title": string|null, "editions": [{"title": string, "isbn13": string, "language": string, "publisher": string|null, "pages": string|null, "evidenceUrl": string}]'
       :q.needTitle?', "title": string|null':'')+'}';
   // needTitle: the book is known so far only as "the catalogue" (unnamed in lookupCatalogue).
   return "You are reading real web text about ONE printed exhibition catalogue: "
@@ -2914,13 +2946,13 @@ function factsPrompt(q){
     +"\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
     +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n"
     +"isbn13: this book's own ISBN, or null.\n"
+    +"pages: the number of pages the text prints for THIS book (\"544 pages\", \"281 pp.\"), digits only, or null.\n"
     +"publisher: the house that printed THIS book, as the search results name it — never a shop or a seller. Null if none says.\n"
     +(q.bookPage?"pagePublisher, pagePublisherUrl: the publisher SECTION A prints for this book, and any link there to the "
       +"PUBLISHER'S OWN page for it (not this shop, not a bookseller). Null if it shows none.\n":"")
     +(q.foreign?"language: the language this book's text is printed in, named in English (French, Italian…), or null if "
       +"nothing says. A bilingual book: name both.\n"
       +"title: this book's title EXACTLY as printed, in its own language — never translated. Null if not shown.\n"
-      +"pages: the number of pages the text prints for THIS book (\"544 pages\", \"281 pp.\"), digits only, or null.\n"
       +"editions: every OTHER edition of this same book the text shows with its own ISBN — a translation, "
       +"such as an English edition, often recorded as “originally published in … as …”. Its title as "
       +"printed, its ISBN, its language, its publisher and the address of the result that shows it. Its publisher "
@@ -3295,6 +3327,7 @@ async function lookupCatalogue(row,hooks){
     // show's dates matched only a French bookseller's listing).
     if(!F.isbn){ const c=isbnInResults(factsRes,F.title||book); if(c){ F.isbn=c; log.push("ISBN read off the search results in code: "+c); } }
     if(!F.isbn&&read){ const c=toIsbn13(read.isbn13,given); if(c){ F.isbn=c; log.push("ISBN from the read, printed in the results: "+c); } }
+    if(read)notABooklet(F,given,pagesPrinted(read.pages,given),log);
     // The publisher, in order of trust (her decision, Botticelli).
     const onIsbn=F.isbn?publisherOnIsbnResults(given,F.isbn):null;
     if(onIsbn)offerPublisher(onIsbn,"the ISBN’s results");
@@ -3320,6 +3353,7 @@ async function lookupCatalogue(row,hooks){
       if(!fp.ok)fault(fp.detail);
       else{ for(const x of fp.results){ pages.set(normalizeUrlKey(x.url),[x]); opened.push(x); } onPages=isbnInResults(fp.results,F.title||title); }
     }
+    if(onPages&&onPages===F.notIsbn){ log.push("The pages found give the booklet’s ISBN again — not filed."); onPages=null; }
     if(onPages){
       F.isbn=onPages; log.push("ISBN read off the pages about this book, in code: "+onPages);
       const p=publisherOnIsbnResults([...found2,...opened],onPages);

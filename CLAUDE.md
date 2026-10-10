@@ -1132,7 +1132,7 @@ She is noting issues as she uses it, for a later debugging session.
   her Louvre links' "unreadable" descriptions).
 - **OPEN — Hubert Robert, rebuilt, published as 42.7.** Her three English-edition
   cases (`docs/app.md` §1, step 3), one book per card, the ISBN read on the book's
-  title. A different book is caught only when both page counts are printed — a
+  title, a booklet's ISBN refused (BK-). A different book is caught only when both page counts are printed — a
   partner venue's book with none, naming the venue, can still pass. Her re-run of
   both cards confirms.
 - **OPEN — Vasari: "No English edition" on a book that IS the English edition.**
