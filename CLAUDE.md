@@ -361,7 +361,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 42.6 · cloud 5 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 42.7 · cloud 5 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -381,11 +381,11 @@ the committed shell (`build/shell_head.html`, `build/shell_tail.html`), proves i
 parses, writes `build/dist/index.html`. `--shell-from <saved live page>` says
 whether the committed shell still matches.
 
-**Publishing cannot be automated and the order matters.** The service refuses a
-publish from a session that has not read the live version in full, and then
-refuses the same bytes resent. So: **read the URL (the service then counts it
-as viewed), build, diff the saved live file against the build in code, publish.**
-Never page the 6,700 lines into context — it filled whole sessions. `build_app.js` prints the steps.
+**To publish, run `node build/build_app.js` and follow what it prints** — nothing
+else. Built on `main` it says how to get to `claude/ledger-cloud`; built there it
+sets the test page's title and prints the read, read-every-line, publish order.
+The service refuses a session that has not Read the live page in full, so that
+reading (~11 Read calls) is required, not optional.
 
 ### The mental model, load-bearing
 
@@ -956,14 +956,12 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **42.6 · cloud 5**. Cloud-only in it:
+live on the test page **42.7 · cloud 5**. Cloud-only in it:
 the read-only lock (below); Import on an empty page offers only "Open last
 cloud save" and Load, and Save asks before writing fewer exhibitions than the
 cloud holds (EI-001–007; `docs/app.md` §9); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
-when she says. Merge `main` in again before the page is rebuilt. The page's
-title is "Cat Watch Cloud Test" — set it in `build/dist/index.html` before
-publishing (the shell says "Cat Watch").
+when she says. Publishing: `build_app.js` prints the steps (§4).
 
 **What the store holds:**
 - **The live ledger** — the only thing the app reads and writes as she works.
@@ -1131,7 +1129,7 @@ She is noting issues as she uses it, for a later debugging session.
   now goes on to the facts round instead of being dropped (`unnamed`, UN-001–003);
   a reply holding two answers takes Claude's last (`lastJsonObject`, TW-001–004 —
   her Louvre links' "unreadable" descriptions).
-- **OPEN — Hubert Robert, rebuilt, not yet published.** Her three English-edition
+- **OPEN — Hubert Robert, rebuilt, published as 42.7.** Her three English-edition
   cases (`docs/app.md` §1, step 3), one book per card, the ISBN read on the book's
   title. A different book is caught only when both page counts are printed — a
   partner venue's book with none, naming the venue, can still pass. Her re-run of
@@ -1189,6 +1187,10 @@ Not good → more work on the routine or the recipes.
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library
   record (978-0847899289) that came tenth should give the English edition (WL-060).
+- **Roadmap — a list of publishers and their websites** (her ask), so the card stops
+  saying "Couldn't work out the publisher's own website" (Somogy, Hubert Robert).
+  It replaces her decision to keep `PUBLISHER_SITES` short and never fill it ahead
+  (§8); how the list is built is to be agreed with her first.
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 
@@ -1211,9 +1213,8 @@ Not good → more work on the routine or the recipes.
   seed. The separate readout doc.
 - **Process:** watching the sweeper and interrupting it. Firing a new JSX
   mid-discussion. A "GPT scrapes, Claude compresses" role split.
-- **Catalogue lookup:** splitting it from drawer output. A map of publisher
-  websites (her short list of joint publishers, `PUBLISHER_SITES`, is her
-  decision — never filled ahead). A background shop check on every click. Linking straight to an
+- **Catalogue lookup:** splitting it from drawer output. (A map of publisher
+  websites is no longer rejected — her roadmap, §7.6.) A background shop check on every click. Linking straight to an
   Amazon product page from an ISBN-10. Pointing the shop link at an ISBN search.
   **Asking a Shopify shop directly whether a book is for sale**:
   `.js` refused, `.oembed` 429, a product's `.json` has no availability; the

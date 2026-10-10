@@ -19,7 +19,7 @@
  *
  *   PUBLISHING cannot be automated away. The artifact service refuses a
  *   publish from a session that has not VIEWED the live version, and viewing
- *   means reading every line of the saved copy — roughly 3,000 lines. No hook
+ *   means reading every line of the saved copy — about 6,600 lines. No hook
  *   and no script can do that reading; only the session can. What a script CAN
  *   do is make sure the session reads it FIRST, in one pass, instead of
  *   discovering the rule by being refused. So this file ends by printing the
@@ -33,7 +33,7 @@
  *
  *   1. Artifact action:"read" on the artifact URL.
  *   2. Read EVERY LINE of the saved .html file that read names, in chunks of
- *      about 400 lines. Refusal one is skipping this.
+ *      about 600 lines (the Read tool's size cap). Refusal one is skipping this.
  *   3. node build/build_app.js
  *   4. Artifact action:"publish" with `url` set to the artifact URL and
  *      `file_path` set to build/dist/index.html.
@@ -136,23 +136,42 @@ const js = fs.readFileSync(built, 'utf8').replace(/\n*$/, '\n') + MOUNT + '\n';
 try { new Function(js); } catch (e) { die('the stitched page does not parse — ' + e.message); }
 if (!/function App\(/.test(js)) die('the built page has no App component in it');
 
+// Only the cloud test page is published (her decision), built from its branch, under its
+// own title. Built anywhere else, the page is not for publishing and the steps say so.
+const TEST_PAGE = 'https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf';
+const TEST_BRANCH = 'claude/ledger-cloud';
+let branch = '';
+try { branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: ROOT }).toString().trim(); } catch { /* not a checkout */ }
+const forTest = branch === TEST_BRANCH;
+let head = fs.readFileSync(HEAD, 'utf8');
+if (forTest) head = head.replace('<title>Cat Watch</title>', '<title>Cat Watch Cloud Test</title>');
+
 fs.mkdirSync(OUT_DIR, { recursive: true });
-fs.writeFileSync(OUT, fs.readFileSync(HEAD, 'utf8') + js + fs.readFileSync(TAIL, 'utf8'));
+fs.writeFileSync(OUT, head + js + fs.readFileSync(TAIL, 'utf8'));
 
 const kb = (fs.statSync(OUT).size / 1024).toFixed(0);
 console.log('built ' + path.relative(ROOT, OUT) + ' — ' + kb + ' KB, parses, App present.');
 console.log('');
-console.log('PUBLISHING IS NOT AUTOMATABLE. The artifact service refuses a publish from a');
-console.log('session that has not viewed the live version, and only the session can do that');
-console.log('reading. In this order, it works first time:');
+if (!forTest) {
+  console.log('NOT FOR PUBLISHING: built on "' + (branch || '?') + '". Only the cloud test page is published,');
+  console.log('from ' + TEST_BRANCH + '. To publish: bump APP_VERSION on main, commit and push; then');
+  console.log('  git checkout ' + TEST_BRANCH + ' && git merge main && npm run test:app && node build/build_app.js');
+  console.log('and follow the steps it prints.');
+  process.exit(0);
+}
+console.log('FOR THE CLOUD TEST PAGE — title set to "Cat Watch Cloud Test". Publishing is not');
+console.log('automatable: the service refuses a session that has not viewed the live page. In order:');
 console.log('');
-console.log('  1. Artifact action:"read" url:"https://claude.ai/artifact/E2WjpRgr4W5eSzYtxyfrt5"');
-console.log('  2. Read EVERY LINE of the saved .html it names (~3,000 lines, ~400 at a time).');
-console.log('  3. node build/build_app.js          <- you are here');
-console.log('  4. Artifact action:"publish" url:<same url> file_path:"build/dist/index.html"');
+console.log('  1. Artifact action:"read" url:"' + TEST_PAGE + '"');
+console.log('  2. Read EVERY LINE of the saved .html it names (~6,600 lines), ~600 lines per Read');
+console.log('     call (the tool\'s size cap) — about 11 calls. Required; there is no shortcut.');
+console.log('     Diff it against build/dist/index.html in code first: only your change should differ.');
+console.log('  3. node build/build_app.js          <- done');
+console.log('  4. Artifact action:"publish" url:"' + TEST_PAGE + '" file_path:"build/dist/index.html"');
+console.log('     No `capabilities` (omitting carries all four forward). Push ' + TEST_BRANCH + '.');
 console.log('');
-console.log('  Skipping 1-2 is refused. Re-sending the same bytes after a refusal is refused');
-console.log('  again as "resent unchanged" — read the url once more, then publish.');
+console.log('  Re-sending the same bytes after a refusal is refused again as "resent unchanged" —');
+console.log('  read the url once more, then publish.');
 console.log('');
 console.log('  NEVER REPUBLISH WHILE SHE HAS THE PAGE OPEN (CLAUDE.md §1). Ask first.');
 console.log('  Run `npm run test:app` before publishing: page_renders.js is the only check that');
