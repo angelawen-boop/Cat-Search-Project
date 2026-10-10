@@ -59,7 +59,10 @@ pages than the catalogue is a booklet — another ISBN printed with the catalogu
 count replaces it, else none is filed (`notABooklet`; Hubert Robert's album; BK-).
 Two versions of one book (same key words, page counts agreeing): hardcover leads,
 else an outside publisher over a museum's own imprint; the other is named after the
-ISBN, "also 978-… (paperback, X)" (`otherVersionOf`, `leadsOver`; Vasari; VS-). Publisher: read off the ISBN's results
+ISBN, "also 978-… (paperback, X)" (`otherVersionOf`, `leadsOver`; Vasari; VS-);
+with a page count missing, only the very same title words count. Publisher labels
+are read with links reduced to their words; a co-edition's site is found by any one
+house, outside houses first (`siteOfHouses`; R8-). Publisher: read off the ISBN's results
 (`publisherOnIsbnResults`), then printed on the book's own shop or publisher
 page, then any read of general results — a guess wherever it came from. The
 diagnostic says which won. Title: `titleAsPrinted`.

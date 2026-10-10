@@ -178,7 +178,7 @@ Branches separate in-progress work from known-good work, never components.
 | Branch | What it is |
 |---|---|
 | `claude/ledger-cloud` | **Live trial — §7.1.** Merged to `main` only on her call |
-| `parked` | Work held for another session (below). Deleted once on `main`. Currently holds only the abandoned Vasari fix — to be deleted on GitHub (her decision) |
+| `parked` | Work held for another session (below). Deleted once on `main`. Holds only the abandoned Vasari fix; she deletes it on GitHub (a session cannot delete a branch) |
 | `claude/jsx-stitched-intake`, `claude/blissful-volta-jxj5c0` | Merged into `main`; kept as history |
 | `claude/quiet-user-agent` | Parked, her decision — do not merge or re-open |
 | `claude/personal-tracking-ledgers-z49s2h` | Dead — do not merge |
@@ -1130,19 +1130,22 @@ She is noting issues as she uses it, for a later debugging session.
   now goes on to the facts round instead of being dropped (`unnamed`, UN-001–003);
   a reply holding two answers takes Claude's last (`lastJsonObject`, TW-001–004 —
   her Louvre links' "unreadable" descriptions).
-- **OPEN — Hubert Robert, rebuilt, published as 42.7.** Her three English-edition
-  cases (`docs/app.md` §1, step 3), one book per card, the ISBN read on the book's
-  title, a booklet's ISBN refused (BK-). A different book is caught only when both page counts are printed — a
-  partner venue's book with none, naming the venue, can still pass. Her re-run of
-  both cards confirms.
-- **Vasari — closed, her decision.** The card now files the English edition
-  978-2359063738 (Lienart) by the route in 42.7; the `parked` fix was abandoned
-  unmerged. Her four buy links find nothing because neither English edition is
-  listed there (AbeBooks has neither); the Nationalmuseum's own hardcover,
-  978-9171009166, sells at bokorder.se and is free as open access. 42.8 leads
-  with that hardcover, "also 978-2359063738 (paperback, Lienart)" after the ISBN
-  (her decision: hardcover leads, else an outside publisher over a museum's own
-  imprint; VS-001–008). Her re-run confirms.
+- **OPEN — the English-edition and versions rebuild, 42.7–42.9; her re-run of
+  Hubert Robert (Louvre, NGA) and Vasari on 42.9 confirms.** Built: one book per
+  card (ISBN read on the book's title; a guessed publisher the ISBN's records
+  contradict gives way); her three English-edition cases, a different book named
+  on the English line only (`otherVenueBook`); a booklet's ISBN refused
+  (`notABooklet`); two versions of one book, "also 978-… (paperback, X)" after the
+  ISBN (`alsoVersion`; hardcover leads, else an outside publisher over a museum's
+  own imprint — when both apply, hardcover wins, her rules in the order she gave
+  them); publisher labels never read out of a link's address; a co-edition's site
+  found by any one of its houses. Rules: `docs/app.md` §1. Tests HR-, BK-, VS-,
+  R8- (R8 replays her 42.8 runs). Known limits: a different book or a booklet is
+  caught only when page counts are printed; which version leads depends on what
+  each search turns up (Vasari leads with Lienart unless a result says the
+  Nationalmuseum book is hardcover). Vasari's English editions are scarce, not
+  missing: Lienart 978-2359063738 (€29), the Nationalmuseum's hardcover
+  978-9171009166 (bokorder.se, also free open access); AbeBooks has neither.
 - **Search again and Reset card + Find catalogue run the same lookup** (checked
   on the live page). They differ only when a step fails part-way: Search
   again then leaves the card untouched. Otherwise a different result is the
