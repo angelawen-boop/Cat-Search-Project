@@ -3190,7 +3190,13 @@ function versionText(vs,i,row,showPages){
   const bind=[v.binding==="hardcover"||v.binding==="paperback"?v.binding:null,showPages&&v.pages?v.pages+" pp":null].filter(Boolean).join(", ");
   const isbn=v.isbn13?fmtIsbn(v.isbn13)+(v.alsoIsbn13?" · also "+fmtIsbn(v.alsoIsbn13)+" (the "+(mu?mu.short:"venue")+"'s own number for the same book)":""):null;
   const note=versionNote(vs,i,row);
-  return [v.lang,bind,v.publisher,isbn].filter(Boolean).join(" · ")+(note?" — "+note:"")+".";
+  // A later English edition names its year beside the publisher (Hammershøi).
+  const pub=v.publisher&&note==="the English edition, published later"&&v.year?v.publisher+", "+v.year:v.publisher;
+  return [v.lang,bind,pub,isbn].filter(Boolean).join(" · ")+(note?" — "+note:"")+".";
+}
+// An ISBN never breaks across lines; the characters copied stay the same.
+function nowrapIsbns(text){
+  return String(text).split(/(97[89]-\d{10})/).map((p,k)=>k%2?<span key={k} style={{whiteSpace:"nowrap"}}>{p}</span>:p);
 }
 // Null for a card with fewer than two versions. Page counts show on every line when
 // they tell two versions apart; one shared source replaces the per-line ones.
@@ -5068,7 +5074,7 @@ export default function App(){
                               {/* A span, not a button, so the source flows on after the words. */}
                               <span role="button" tabIndex={0} aria-pressed={l.picked} title={l.picked?"Picked":"Pick this version"} onClick={()=>setPick(r.id,k)}
                                 onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setPick(r.id,k); } }} style={{cursor:l.picked?"default":"pointer"}}>
-                                {l.picked?"●":"○"} {l.text}
+                                {l.picked?"●":"○"} {nowrapIsbns(l.text)}
                               </span>
                               {l.source&&<span style={{color:C.soft}}> (source: <a href={l.source.url} target="_blank" rel="noopener noreferrer" style={{color:C.soft}}>{l.source.host}</a>)</span>}
                             </div>

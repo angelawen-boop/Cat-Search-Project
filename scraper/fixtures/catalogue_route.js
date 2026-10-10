@@ -825,8 +825,8 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       { proofUrl: 'https://www.rizzoliusa.com/book/9780847899289', year: 2023 }]);
     eq(shown(ham), [
       '○ French · Culturespaces / Fonds Mercator · 978-9462302495 — the original edition. (source: leslibraires.ca)',
-      '● English · Rizzoli Electa · 978-0847899289 — the English edition, published later. (source: rizzoliusa.com)'],
-      'VL-004: Hammershøi — the original, and the English edition published later');
+      '● English · Rizzoli Electa, 2023 · 978-0847899289 — the English edition, published later. (source: rizzoliusa.com)'],
+      'VL-004: Hammershøi — the original, and the English edition published later, its year beside the publisher');
     ham.editions[1].year = null;
     eq(shown(ham)[1], '● English · Rizzoli Electa · 978-0847899289 — the English edition. (source: rizzoliusa.com)', 'VL-005:   its year not known — "the English edition"');
     const HAN = 'https://hannibalbooks.be/uploads/images/covers/2026_ENG_VOORJAAR_DRUK_compressed.pdf';

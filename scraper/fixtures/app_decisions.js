@@ -339,6 +339,9 @@ async function versionCards() {
       [...card.querySelectorAll('a')].filter(a => a.textContent === 'lienarteditions.com').every(a => a.href === PROOF[1][1]) && linksOn(card).includes('nationalmuseum.bokorder.se'));
     check(NAME + ': Vasari — no book title, publisher line, ISBN line or English line beside the list',
       !/ISBN 978|ISBN not confirmed/.test(card.textContent) && !card.textContent.includes(vasari.catalogueTitle));
+    check(NAME + ': Vasari — every ISBN on the list sits whole on one line',
+      [...card.querySelectorAll('span')].filter(x => /^97[89]-\d{10}$/.test(x.textContent)).length === 4
+      && [...card.querySelectorAll('span')].filter(x => /^97[89]-\d{10}$/.test(x.textContent)).every(x => x.style.whiteSpace === 'nowrap'));
     check(NAME + ': Vasari — buy buttons built from the picked book', [...card.querySelectorAll('a')].some(a => a.href === 'https://booko.au/9782359063738'));
 
     // Tapping ○ on the hardcover.
@@ -375,7 +378,7 @@ async function versionCards() {
     card = await openCard(page, ham.title);
     check(NAME + ': Hammershøi — the original, and the English edition published later, picked', JSON.stringify(versionLinesOn(card)) === JSON.stringify([
       '○ French · Culturespaces / Fonds Mercator · 978-9462302495 — the original edition. (source: leslibraires.ca)',
-      '● English · Rizzoli Electa · 978-0847899289 — the English edition, published later. (source: rizzoliusa.com)']),
+      '● English · Rizzoli Electa, 2023 · 978-0847899289 — the English edition, published later. (source: rizzoliusa.com)']),
       JSON.stringify(versionLinesOn(card)));
     card = await openCard(page, met.title);
     check(NAME + ': Metamorphoses — no notes, and one shared source line after the list',
