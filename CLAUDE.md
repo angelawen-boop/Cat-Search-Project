@@ -361,7 +361,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 42.8 · cloud 5 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 42.9 · cloud 5 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -957,7 +957,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **42.8 · cloud 5**. Cloud-only in it:
+live on the test page **42.9 · cloud 5**. Cloud-only in it:
 the read-only lock (below); Import on an empty page offers only "Open last
 cloud save" and Load, and Save asks before writing fewer exhibitions than the
 cloud holds (EI-001–007; `docs/app.md` §9); a roll-back's safety copy names the save by its
