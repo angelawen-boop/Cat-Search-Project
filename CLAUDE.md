@@ -178,7 +178,7 @@ Branches separate in-progress work from known-good work, never components.
 | Branch | What it is |
 |---|---|
 | `claude/ledger-cloud` | **Live trial — §7.1.** Merged to `main` only on her call |
-| `parked` | Work held for another session (below). Deleted once on `main` |
+| `parked` | Work held for another session (below). Deleted once on `main`. **Holds the unfinished Vasari English-edition fix (§7.4)** |
 | `claude/jsx-stitched-intake`, `claude/blissful-volta-jxj5c0` | Merged into `main`; kept as history |
 | `claude/quiet-user-agent` | Parked, her decision — do not merge or re-open |
 | `claude/personal-tracking-ledgers-z49s2h` | Dead — do not merge |
@@ -361,7 +361,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 42.5 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 42.6 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -536,7 +536,8 @@ and do not flip to searching wide first.**
   → filed as "Not in the museum shop", the original in `originalEdition`; none →
   the book stays under its own title. **"Checked publisher's site" only when its
   page was read** — once, the page the card links, listing its editions (Watteau,
-  Canaletto); `englishCheck`, `englishLine`. Its publisher is read off its ISBN.
+  Canaletto); `englishCheck`, `englishLine`; the line never repeats the publisher
+  printed above it (her decision). Its publisher is read off its ISBN.
   At those venues the web search adds one query in the venue's language
   (`localCatalogueQuery`; Hammershøi, listed only in French).
 - **"X in association with Y" — Y is the publisher** (her decision):
@@ -911,6 +912,7 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **Tests can pass and prove nothing.** Check the exit code and grep the output
   for the new test's own name; a suite can be skipped silently (code after
   `process.exit`, a missing harness, an early `return` — use `await`).
+- **A command chain that pushes must stop on a failed test** — `grep` of the test output succeeds either way; gate the push on the test's own exit code (`R=$?; [ $R = 0 ] && git push`).
 - **Render the page** (`page_renders.js`). `tsc`, unit tests and string greps can all pass on a blank page.
 - **Test the real thing.** A fixture must serve the address the recipe asks for now, and must run the step that writes the output. Name a test for what the code does.
 - **A count can hide errors.** Read the cards, titles and descriptions, and check titles against the museum's own spelling. Read the page, not a search excerpt of it.
@@ -954,7 +956,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **42.5 · cloud 4**. Cloud-only in it:
+live on the test page **42.6 · cloud 4**. Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
@@ -1117,6 +1119,35 @@ She is noting issues as she uses it, for a later debugging session.
   de la peinture danoise*, ISBN 978-9462302495; *Watteau* no longer reads the
   shop as blocked; *Canaletto - Guardi*'s English line names the publisher's
   page; a MoMA lookup still reads its shop as blocked under the whole-page test.
+- **Diagnose a lookup from its record, never a pasted panel.** Every Find
+  catalogue, Search again, Re-check and link reading is recorded whole in the
+  test page's store — every call, what Claude was sent and answered, the card
+  before and after (`docs/app.md` §1, "The lookup log"; read it with ArtifactData
+  `list` + `out_dir`, then `node build/lookup_log.js <dir> [<id>]`).
+- **Fixed in 42.6, her next lookups confirm:** *Hubert Robert* (NGA) — a catalogue
+  the read finds with no title or ISBN (press release: "the accompanying catalog")
+  now goes on to the facts round instead of being dropped (`unnamed`, UN-001–003);
+  a reply holding two answers takes Claude's last (`lastJsonObject`, TW-001–004 —
+  her Louvre links' "unreadable" descriptions).
+- **OPEN — Vasari: "No English edition" on a book that IS the English edition.**
+  *Giorgio Vasari: The Book of Drawings* (Louvre). The card holds ISBN
+  978-2359063738 — the real English edition (Lienart, Sept 2022, for the show's
+  Stockholm leg); French original 978-2359063721. The facts read said the book
+  was French (it took the Louvre page's "(In French)", which describes the
+  original), so `englishCheck` became "shops". Her four buy links finding nothing
+  is the book being scarce, not a fault (her acceptance).
+  **Fix, unfinished, on branch `parked` — NOT on `main`, NOT published (her
+  decision: not verified):** `languageOnIsbn` reads the language off results
+  carrying the ISBN — a label within 400 characters of it ("Langue: anglais",
+  "Language: | eng", "Text in English") or a library record's "Translation of:
+  <original>" with an English title — and outranks the read; the original goes
+  in `originalEdition`. Tests EL-001–009 (LG-008's fixture adjusted). Proved on
+  the results her lookup received (record `L17915952125267zcl`) and on today's
+  live edition search; *Things* and *Van Eyck* records unchanged.
+  **Not verified:** the whole lookup end to end — its Claude reads run only in
+  her app, and the live web varies (one day the facts search printed no ISBN).
+  **Next session:** bring `parked` onto `main` (merge, `npm run test:app`), agree
+  with her how it is verified before publishing, then delete `parked`.
 - **Search again and Reset card + Find catalogue run the same lookup** (checked
   on the live page). They differ only when a step fails part-way: Search
   again then leaves the card untouched. Otherwise a different result is the
@@ -1147,12 +1178,6 @@ fixed venues come back clean; nothing new broken. Good → she imports that run.
 Not good → more work on the routine or the recipes.
 
 ### 6. Queued next
-
-- **The lookup log — live on the test page (42.5).** First use:
-  *Hubert Robert* (NGA): its record showed the read found the catalogue (Lund
-  Humphries) from the press release but no title or ISBN, and code dropped it.
-  Fixed on `main` (`unnamed`, docs/app.md §1), not yet published; her next
-  Search again checks it. Add by link's reading of each link is logged too.
 
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library
