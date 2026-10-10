@@ -1,8 +1,9 @@
 # Catalogue versions — the design and its agreed cases
 
 Status: **published in 43; her three live searches (Vasari, Hubert Robert, Hammershøi)
-came back wrong. Layout and finding rules re-agreed (below); being rebuilt under
-`/orch`.** Every change is checked LIVE against her cases before
+came back wrong. Layout and finding rules re-agreed (below) and REBUILT on `main`
+and `claude/ledger-cloud` (not published). Replayed on her three real lookups
+(`scraper/fixtures/catalogue_versions.js`, VR-/VN-/SH-/RV-). Open below.** Every change is checked LIVE against her cases before
 it reaches her (CLAUDE.md §1).
 
 ## The design
@@ -227,12 +228,29 @@ was changed 6 times, `composeRow` 5, `printingsOf` 4, `foldCoEditions` 3, `versi
 twice for Vasari's notes alone. So no further patching: the feature is reviewed whole.
 She settled the layout first (above); the findings come next.
 
+## Built (on `main`, unpublished)
+
+Code: `versionBlocks` (each block from its version's own facts), `foldCoEditions` with
+`labelledIsbns` and `registrantOf` (rule 1; the agency's table, `ISBN_RANGES`, written by
+`build/isbn_ranges.js`), `versionFacts` / `pageRank` (rules 2–3; equal-trust pages that
+disagree state nothing; facts recomputed after the publisher step), `bindingOn` (filter
+counts dropped), `publisherShown` (rule 4), `museumOf` / `venueShopFacts` /
+`otherShopFacts` / `shopOfMuseum` (rule 6; another museum's shop remembered in the
+store doc `shops/museums`), `recheckVersions` (the picked version only). Her three cards
+as replayed: Vasari three blocks (Stockholm's hardcover its own, "In the museum shop.",
+button to the Nationalmuseum shop); Hubert Robert one co-edition block plus Lund
+Humphries'; Hammershøi's English block with no publisher or year.
+
 ## Open
 
-1. **The rebuild, under `/orch`** — layout and rules above; whole-path tests replay
-   her three 43 lookups (`docs/lookup_results/*_43.json`, real results and Claude's
-   answers), with live fetches for any new call.
-2. **Every agreed case re-checked against the app's own live results**, flagging any
-   fact the searches cannot support for her.
-3. **A live run of all nine cases before any publish;** publish only when she says
-   and her page is closed. Cards searched on 43 need a Search again.
+1. **Lund Humphries' block (another showing's book) carries the Louvre's shop line** —
+   no page found names its museum. Proposed to her: the museum from the show's city
+   when the app knows it (Washington → NGA), else no shop line. Awaiting her answer.
+2. **Re-check with nothing picked** re-checks the venue's own versions — proposed to
+   keep; awaiting her answer.
+3. **Hubert's publisher step searched "Somogy éditions d'art : Louvre éditions"
+   whole** and found no site; her co-edition rule says look for the outside house.
+   `publisherToFind` / `siteOfHouses` do not split on " : " yet — fix with a live run.
+4. **Progress label** reads "Searching venue shop…" while checking another museum's.
+5. **A live run of all nine cases before any publish;** publish only when she says and
+   her page is closed. Cards searched on 43 need a Search again.

@@ -1012,7 +1012,7 @@ stale after a minute; every save checks it first. A republish while her page is 
 2. `CLOUD_OPENS=true` once Loads have matched every time — her call. **Load
    stays for good** — it is how she opens a backup.
 3. Merge to `main` and publish to her app — her call; §4's rules apply. **First
-   copy the test page's `sweeps/venues`, `quarantine/rows`, `venues/occasional` and `links/pending` into her app's
+   copy the test page's `sweeps/venues`, `quarantine/rows`, `venues/occasional`, `links/pending` and `shops/museums` into her app's
    store** (quarantine merged latest-wins, never replaced).
 4. Google Drive backup by button — on the table, never automatic.
 
@@ -1140,11 +1140,11 @@ it whole before touching versions.
   with proof, else two blocks; each block's facts only from pages about that one
   number; each block's shop line from searching THAT book's own museum shop (another
   museum's found by `discoverShop`), and the Museum shop button follows the pick there.
-- **Next:** the rebuild under `/orch` (whole-path tests replay her three 43 lookups,
-  `docs/lookup_results/*_43.json`); every agreed case checked against the app's OWN
-  live results; a live run of all nine; publish only when she says and her page is
-  closed. Fixes on `main` since 43 (VL-009, VL-013, VL-014) are line-design fixes the
-  new layout supersedes.
+- **Rebuilt to her layout and rules — on `main` and `claude/ledger-cloud`, NOT
+  published.** Her three 43 lookups replay to the agreed blocks
+  (`catalogue_versions.js`). **Next:** her answers on the doc's two open questions
+  (another showing's museum from its city; Re-check with nothing picked), two small
+  fixes, a live run of all nine, then publish when she says and her page is closed.
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
