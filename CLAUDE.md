@@ -357,11 +357,11 @@ this one alone. `stitch` and `compress` carry it untouched.
 > from a session that did not publish it, pass it as `url`. It carries **four
 > capabilities**, each load-bearing: `downloads` (Export), `mcp` (her **Parallel
 > Search Key** connector, by name), `sample` (Claude reading what the connector found), `db`
-> (the sweep log and quarantine — the two things that survive a Reset). A publish
+> (the sweep log, quarantine and lookup log — they survive a Reset). A publish
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 42.3 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 42.4 · cloud 4 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -954,7 +954,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **42.3 · cloud 4**. Cloud-only in it:
+live on the test page **42.4 · cloud 4**. Cloud-only in it:
 the read-only lock (below); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
 when she says. Merge `main` in again before the page is rebuilt. The page's
@@ -1033,7 +1033,15 @@ archives.
 - **Venue link rules** (`linkRead` on the `MUSEUMS` entry; `docs/picked_shows.md`,
   "Venue link rules"): acq, louvre, artic, brit (four live archive pages each);
   met — dates from its "on view" line anywhere on the page; frick — a leading
-  "Special Loan:" dropped. Each proved live; all on `docs/link_proof_pages.json`.
+  "Special Loan:" dropped; menil — "Collection Close-Up:" dropped; artic — the
+  description stops at a "Related" box (a photos-only page took another show's
+  card). Each proved live; all on `docs/link_proof_pages.json`, which can also
+  require no description (`noDescription`).
+- **NGA (National Gallery of Art) — her deep-archive link venue**: an occasional
+  venue with its own "NGA" chip and card name, and a leading "Exhibition:"
+  dropped (`OWN_CHIP`, `linkReadVenue`; AL-030). Proved live on five archive
+  pages; descriptions carry menu and caption junk around the real text, left
+  alone until her cards show it reaching Claude's descriptions.
   A line opening "In collaboration with" under Acquavella's name is a credit,
   never a subtitle (her decision; *Calder | Miró*).
 - **Old-layout Met pages that print no dates in their text** (*Matisse*, 2012,
@@ -1103,8 +1111,7 @@ She is noting issues as she uses it, for a later debugging session.
   (Hannibal), two fresh lookups, same code: "Publisher's section", then
   "Publisher" (right). Cause unproven — a different candidate page, the page
   returning empty (`pageIsShell`), or the read judging one page differently.
-  Only that lookup's log settles it ("Show diagnostic" keeps the last action's
-  only); if it recurs, get the log first. A log per card: offered, not built.
+  Its record in the lookup log settles it (`docs/app.md` §1, "The lookup log").
 - **OPEN — 40.10's fixes, unchecked in the app**. Her next lookups
   settle each: *Hammershøi* (Jacquemart-André) finds *Hammershøi : le maître
   de la peinture danoise*, ISBN 978-9462302495; *Watteau* no longer reads the
@@ -1140,6 +1147,12 @@ fixed venues come back clean; nothing new broken. Good → she imports that run.
 Not good → more work on the routine or the recipes.
 
 ### 6. Queued next
+
+- **The lookup log — built on `main`, not published (her call).** First use:
+  *Hubert Robert, 1733–1808* (NGA) said no catalogue, though a live re-run of its
+  search returns NGA's page ("Catalog: Hubert Robert…") and press release ("in
+  association with Lund Humphries"). Cause unproven: read its record after a
+  Search again. Add by link's reading of each link is logged too.
 
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library

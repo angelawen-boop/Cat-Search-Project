@@ -259,6 +259,17 @@ function runtime() {
       'AL-017a:  the text handed to Claude is the show\'s, from under its heading — not the hours, prices and cookies under the dates', r.raw && r.raw.slice(0, 120));
     ok(r.ok && !r.raw.includes('From 14 March to 21 July 2014') && !/^From Watteau to Fragonard$/m.test(r.raw), 'AL-017b:  the date line and the heading are not repeated in it');
   }
+  // ── AL-031: NGA Souvenirs of the Gilded Age — a doubled colon becomes one ─
+  // Live page on docs/link_proof_pages.json; its page title reads "Age:: French".
+  {
+    const read = new Function('React', 'window', 'document', 'localStorage', code + '\n;return readShowPage;')(React, win, win.document, win.localStorage);
+    const r = read({ title: 'Souvenirs of the Gilded Age:: French Landscapes from the Corcoran Collection | National Gallery of Art',
+      full_content: '# Souvenirs of the Gilded Age:\n\nFrench Landscapes from the Corcoran Collection\n\n## Details\n\n* ### Dates\n\n  March 13, 2027 \\- January 17, 2028\n\n'
+        + 'Once coveted by America’s wealthy, these landscape paintings were eclipsed by the rising popularity of impressionism. '.repeat(4) },
+      'https://www.nga.gov/exhibitions/souvenirs-gilded-age');
+    ok(r.ok && r.base === 'Souvenirs of the Gilded Age: French Landscapes from the Corcoran Collection',
+      'AL-031: NGA Souvenirs of the Gilded Age — the venue’s doubled colon becomes one', JSON.stringify(r.base));
+  }
   // ── AL-019: a page title that dresses the show's name — the heading wins ─
   // 7 Oct, her cards: "Exhibition Fra Angelico in Paris: and the Masters of Light".
   {
