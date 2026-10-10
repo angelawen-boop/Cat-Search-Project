@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "42.6";
+const APP_VERSION = "42.7";
 const APP_VERSION_DATE = "10 Oct 2026";
 
 // MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
