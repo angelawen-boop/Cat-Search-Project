@@ -515,6 +515,9 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     ({ out, calls, row: r } = await run(row('louvre', 'Hubert Robert (1733–1808). A Visionary Painter'), louvre([LH])));
     eq([r.catalogueTitle, r.isbn13, r.originalEdition], [FR, FR_ISBN, null], 'HR-004: Louvre — the 281-page English book is not the 544-page French one’s edition; the French book stands');
     ok(/different book/.test(out.detail) && r.englishCheck !== 'english', 'HR-005:   the lookup says why', out.detail.split('\n').find(l => /English/.test(l)));
+    eq(api.englishLine(r), 'No English edition. An English catalogue from the show\u2019s other venue is a different book: Hubert Robert, Lund Humphries, ISBN 978-1848221918.',
+      'HR-013:   and the card names that other book in her words, as a line only');
+    eq([r.otherVenueBook && r.otherVenueBook.isbn13, r.isbn13], [EN_ISBN, FR_ISBN], 'HR-014:   kept beside the card’s own book, never in its place');
     const prompts = calls.filter(c => c.kind === 'sample').map(c => c.prompt);
     ok(prompts.some(p => /"found"/.test(p) && /venue's own language — an English edition is checked separately/.test(p)),
       'HR-006:   at a non-English venue the web read takes the venue’s own book; the English edition is decided once, later');

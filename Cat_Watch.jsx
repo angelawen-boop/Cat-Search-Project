@@ -1762,7 +1762,7 @@ function lastJsonObject(text){
 // complete only after every piece is written. LL-001 to LL-009.
 const LOOKUP_LOG="lookups", LOOKUP_KEEP=50, LOOKUP_PIECE=180000;
 const CARD_FIELDS=["hasCatalogue","catalogueTitle","isbn13","publisher","publisherUrl","publisherResult",
-  "shopUrl","shopState","shopChange","englishCheck","originalEdition"];
+  "shopUrl","shopState","shopChange","englishCheck","originalEdition","otherVenueBook"];
 let lookupTape=null;
 function tapeStart(action,row){
   lookupTape={t0:Date.now(),action,row,calls:[]};
@@ -2569,6 +2569,12 @@ function localCatalogueQuery(mu,row){
 function englishLine(r){
   const c=r&&r.englishCheck;
   const o=r&&r.originalEdition;
+  // An English book of the show refused as a different book (her wording, Hubert Robert):
+  // named for her, never filed as the card's book, no buy links.
+  const b=r&&r.otherVenueBook;
+  if((c==="publisher"||c==="shops")&&b&&b.title&&b.isbn13)
+    return "No English edition. An English catalogue from the show’s other venue is a different book: "
+      +b.title+(b.publisher?", "+b.publisher:"")+", ISBN "+fmtIsbn(b.isbn13)+".";
   if(c==="english"&&o&&o.title)return "English edition of \u201c"+o.title+"\u201d"+(o.publisher?" ("+o.publisher+")":"")+".";
   // Her wording; the publisher is printed above, so not again here (her decision).
   if(c==="publisher")return "No English edition - checked publisher's site and bookshops.";
@@ -2586,7 +2592,7 @@ function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last 
 // "Find catalogue" runs the whole route.
 function resetCard(r){
   return{...r,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,
-    publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,englishCheck:null,originalEdition:null};
+    publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,englishCheck:null,originalEdition:null,otherVenueBook:null};
 }
 // The cards Reset cards can offer: searched ones whose title, catalogue title
 // or venue carry what she typed. Accents and capitals do not count.
@@ -3024,7 +3030,7 @@ function resultText(x){
 // word of the original's title (Hammershøi's library record). Page counts far apart
 // make it a different book, refused. The venue's own English edition (same house)
 // outranks one named with the venue, which outranks a translation published elsewhere.
-function englishEditionOf(editions,orig,results,museumId,log){
+function englishEditionOf(editions,orig,results,museumId,log,different){
   const origPub=orig&&orig.publisher?publisherToFind(orig.publisher,museumId):null;
   const keys=titleWords(orig&&orig.title);
   const origPages=pagesPrinted(orig&&orig.pages,results);
@@ -3046,6 +3052,7 @@ function englishEditionOf(editions,orig,results,museumId,log){
     const pages=pagesPrinted(ed.pages,results);
     if(differentBook(pages,origPages)){
       if(log)log.push("English book “"+ed.title+"” (ISBN "+en+", "+pages+" pages) is a different book from the original ("+origPages+" pages) — not its English edition.");
+      if(different&&!different.length)different.push({title:titleAsPrinted(ed.title,onEn).title,isbn13:en,publisher:pub||null});
       continue;
     }
     const tp=titleAsPrinted(ed.title,onEn);
@@ -3295,12 +3302,12 @@ function siteOnly(F,pubHost,log,why){
 function composeRow(row,F){
   if(!F||!F.found)return{...row,looked:true,hasCatalogue:"no",shopState:F&&F.blocked?"blocked":"none",
     catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,
-    shopUrl:null,shopChange:null,englishCheck:null,originalEdition:null};
+    shopUrl:null,shopChange:null,englishCheck:null,originalEdition:null,otherVenueBook:null};
   return{...row,looked:true,hasCatalogue:"yes",
     catalogueTitle:F.title||null,isbn13:F.isbn||null,publisher:F.publisher||null,
     publisherUrl:F.publisherUrl||null,publisherResult:F.publisherResult||null,
     shopState:F.shopState,shopUrl:F.shopUrl||null,shopChange:null,
-    englishCheck:F.englishCheck||null,originalEdition:F.original||null};
+    englishCheck:F.englishCheck||null,originalEdition:F.original||null,otherVenueBook:F.otherVenueBook||null};
 }
 
 // THE LOOKUP. Every lookup starts from a blank card (her decision: "Search again
@@ -3538,8 +3545,10 @@ async function lookupCatalogue(row,hooks){
       if(own&&own.onPage)F.title=own.title;
       log.push("Language check: "+lang+(own&&own.onPage?" — its own title “"+own.title+"”.":"."));
       const all=[...(bookPage?bookPage.results:[]),...factsRes,...edRes,...webRes];
+      const different=[];
       const ed=englishEditionOf(read.editions,{title:F.title,isbn13:F.isbn,publisher:F.publisher,pages:read.pages},
-        all,row.museumId,log);
+        all,row.museumId,log,different);
+      if(!ed&&different.length)F.otherVenueBook=different[0];
       if(ed){
         log.push("English edition: “"+ed.title+"”, ISBN "+ed.isbn13+" — "+ed.why+" ("+ed.evidenceUrl+").");
         F.original={title:F.title||null,isbn13:F.isbn||null,publisher:F.publisher||null};
@@ -3560,6 +3569,7 @@ async function lookupCatalogue(row,hooks){
   if(p4.edition){
     const ed=p4.edition;
     log.push("English edition on the publisher’s own page: “"+ed.title+"”, ISBN "+ed.isbn13+".");
+    F.otherVenueBook=null;
     F.original={title:F.title||null,isbn13:F.isbn||null,publisher:F.publisher||null};
     F.title=ed.title; F.isbn=ed.isbn13;
     F.publisherUrl=ed.link; F.publisherResult=ed.linkResult;
