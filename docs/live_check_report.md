@@ -47,9 +47,12 @@ Metamorphoses `L17916396765747elm`, Millet `L1791639703068rbam`.
 ## Follow up — next session
 
 1. **Two page bugs (not search code):** the drawn blocks print "Source: [object
-   Object]" (`lcDrawn` uses `sourceOf`'s result as text); Botticelli's case record did
-   not save (cause unknown — likely a write over the store's 256 KiB cap; check
-   `rec.saveError` handling and split the record). Fix, rebuild, republish.
+   Object]" (`lcDrawn` uses `sourceOf`'s result as text; cases 2 and 4); Botticelli's
+   case record did not save. Not size: its last read's prompt (10 KB) and answer
+   saved, then that read's small header (`reads/13`) and the case record did not —
+   cause unknown. The page still said "Every case is saved" and the run's `done` read
+   9 (case 8 wrote it), since `rec.saveError` is never shown or counted. Fix, rebuild,
+   republish.
 2. **Raise with her, not settled:** (a) Hammershøi English publisher — the cards file
    says Rizzoli Electa, `catalogue_versions.md` says none until a page found states it;
    (b) the cards file still lists Vasari's 978-2350317441 (dropped, her decision);
