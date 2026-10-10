@@ -2750,15 +2750,16 @@ async function readBookPage(hit,venue,dom,io){
 }
 
 // ── THE LANGUAGE OF THE BOOK IN HAND, read in code off the records carrying its ISBN ─
-// A labelled language ("Langue: anglais", "Language | English"), one value only; or a
+// A labelled language ("Langue: anglais", "Language | eng", "Text in English"), one value only; or a
 // library record's "Translation of: <original>" with a title in English words (Vasari).
 // Both read within 400 characters of the ISBN.
 // {lang, why, translationOf} or null. EL-001 to EL-005.
-const LANG_LABEL=/(?<!\p{L})(?:language|langue|lingua|sprache|taal|idioma)\s*[:|]?\s*\|?\s*(\p{L}+)/giu;
+const LANG_LABEL=/(?<!\p{L})(?:language|langue|lingua|sprache|taal|idioma|text in|texte en|testo in)\s*[:|]?\s*\|?\s*(\p{L}+)/giu;
 const LANG_NAMES={english:"English",anglais:"English",inglese:"English",englisch:"English",engels:"English",ingles:"English",
   french:"French",francais:"French",francese:"French",franzosisch:"French",frans:"French",
   italian:"Italian",italien:"Italian",italiano:"Italian",german:"German",allemand:"German",deutsch:"German",
-  dutch:"Dutch",neerlandais:"Dutch",nederlands:"Dutch"};
+  dutch:"Dutch",neerlandais:"Dutch",nederlands:"Dutch",
+  eng:"English",fre:"French",fra:"French",ita:"Italian",ger:"German",deu:"German",dut:"Dutch",nld:"Dutch"};
 const EN_WORDS=new Set(["the","of","and","from","in","to","with","at","on","for","an","book"]);
 const OTHER_WORDS=new Set(["le","la","les","des","du","de","et","un","une","il","lo","della","delle","di","e","der","die","das","und","het","een","van","en","el","los","las","y","au","aux"]);
 function looksEnglish(title){

@@ -348,6 +348,18 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq(api.languageOnIsbn([frTitle], ISBN, 'Le livre des dessins'), null, 'EL-005: "Translation of" with a title not in English words decides nothing');
   }
 
+  // ── EL-008..EL-009: Vasari as the live edition search returned it on a later day ─
+  {
+    const DO = { url: 'https://www.dessinoriginal.com/en/exhibition-catalogues-in-english/12952-giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-9782359063738.html?post=1',
+      title: 'Giorgio Vasari, the book of drawings - The fate of a mythical collection - DessinOriginal.com',
+      excerpts: ['Giorgio Vasari, the book of drawings - The fate of a mythical collection\nGiorgio Vasari - Publisher Lienart éditions / Louvre éditions / Nationalmuseum, Stockholm - Paperback with flap - 240 pages - Text in English - Published in 2022 In Florence in 1568, Giorgio Vasari publishes the second version of The Lives of the Most Eminent Painters, Sculptors and Architects, a work destined to lay the foundations of the historiography of Italian Renaissance art. Product not available 29,00 € Add to cart Only 0,01 € for Shipping on any order over 35€ in France My Account Contact English English\nEnglish English\nFrançais Français'] };
+    const NM = { url: 'https://nationalmuseum.bokorder.se/en-us/article/4580/giorgio-vasari-the-book-of-drawings', title: 'Nationalmuseum bokhandel | Giorgio Vasari The Book of Drawings',
+      excerpts: ['ISBN: | 9789171009166\nHard cover: | 240 pages\nPublished: | 2022\nLanguage: | eng SEK 425 Add to cart Louis Frank, Carina Fryklund'] };
+    eq(api.languageOnIsbn([DO, NM], '9782359063738', 'Giorgio Vasari. The Book of Drawings') && api.languageOnIsbn([DO, NM], '9782359063738', 'x').lang, 'English',
+      'EL-008: Vasari, a later day — the bookshop carrying the ISBN says "Text in English": English');
+    eq(api.languageOnIsbn([NM], '9789171009166', 'x').lang, 'English', 'EL-009: "Language: | eng" — a three-letter code counts');
+  }
+
   // ── EL-006..EL-007: Vasari, run whole — the card no longer says "No English edition" ─
   {
     const ISBN = '9782359063738';
