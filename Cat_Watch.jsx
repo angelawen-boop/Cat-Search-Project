@@ -2312,8 +2312,12 @@ function publisherGroups(results,isbn){
     const text=(r&&r.title||"")+"\n"+oneText(r);
     if(!text.replace(/[^0-9]/g,"").includes(d)&&!String((r&&r.url)||"").includes(d))continue;
     const seen=new Set();
-    for(const m of text.matchAll(PUBLISHER_LABEL)){
+    // Links read as their words, addresses dropped: "/editeur-imprimeur/…" in a link is
+    // not a label (Hubert Robert, Paris Musées).
+    const words=text.replace(/\[([^\]]*)\]\([^)]*\)/g,"$1").replace(/https?:\/\/\S+/g," ");
+    for(const m of words.matchAll(PUBLISHER_LABEL)){
       const name=stripMd(m[1]).replace(/[\s.,;:]+$/,"").trim();
+      if(/[%[\]()]|\/\S/.test(name))continue;
       const w=houseWords(name);
       if(!w.length)continue;
       let g=groups.find(g=>w.some(x=>g.words.some(y=>x.includes(y)||y.includes(x))));
@@ -2881,6 +2885,10 @@ function sameBookTitle(a,b){
   return small.length>=2&&small.filter(w=>big.includes(w)).length>=Math.ceil(small.length*0.75);
 }
 // The other version, or null. `card`: {isbn, title, pages, original}.
+function sameWords(a,b){
+  const x=titleWords(a), y=titleWords(b);
+  return x.length>=2&&x.length===y.length&&x.every(w=>y.includes(w));
+}
 function otherVersionOf(cands,card,results,museumId){
   const cardPages=pagesOfIsbn(results,card.isbn)||card.pages||null;
   for(const c of (Array.isArray(cands)?cands:[])){
@@ -2888,9 +2896,11 @@ function otherVersionOf(cands,card,results,museumId){
     const isbn=toIsbn13(c.isbn13,results);
     if(!isbn||isbn===card.isbn||isbn===card.original)continue;
     if(c.language&&card.english!==undefined&&isEnglishLang(c.language)!==card.english)continue;
-    if(!sameBookTitle(c.title,card.title))continue;
+    const titles=[card.title,...(card.titles||[])].filter(Boolean);
+    if(!titles.some(t=>sameBookTitle(c.title,t)))continue;
+    // Page counts agreeing, or — where either is not printed — the very same title words.
     const pages=pagesOfIsbn(results,isbn)||pagesPrinted(c.pages,results);
-    if(!pages||!cardPages||differentBook(pages,cardPages))continue;
+    if(pages&&cardPages?differentBook(pages,cardPages):!titles.some(t=>sameWords(c.title,t)))continue;
     const onV=(results||[]).filter(x=>isbnInText(isbn,resultText(x)));
     const said=c.publisher&&onV.some(x=>foldText(resultText(x)).includes(foldText(c.publisher)))?String(c.publisher).trim():null;
     const coded=publisherOnIsbnResults(onV,isbn);
@@ -2937,6 +2947,12 @@ function englishEditionOf(editions,orig,results,museumId,log,different){
     const onEn=(results||[]).filter(x=>isbnInText(en,resultText(x)));
     const coded=publisherOnIsbnResults(onEn,en);
     const pub=coded||(ed.publisher?String(ed.publisher).trim():null);
+    const pages=pagesPrinted(ed.pages,results);
+    if(differentBook(pages,origPages)){
+      if(log)log.push("English book “"+ed.title+"” (ISBN "+en+", "+pages+" pages) is a different book from the original ("+origPages+" pages) — not its English edition.");
+      if(different&&!different.length)different.push({title:titleAsPrinted(ed.title,onEn).title,isbn13:en,publisher:pub||null});
+      continue;
+    }
     let why=null, rank=0;
     if(sameCatalogue(pub,origPub,[],museumId)){ why="the same publisher as the original"; rank=3; }
     else if(sameCatalogue(pub,origPub,onEn,museumId)){ why="the venue named"; rank=2; }
@@ -2944,12 +2960,6 @@ function englishEditionOf(editions,orig,results,museumId,log,different){
     else if(keys.length&&onEn.some(x=>{ const t=foldText(resultText(x)); return EDITION_LINK.test(t)&&keys.every(w=>t.includes(w)); })){
       why="a record naming it a translation of the original"; rank=1; }
     if(!why)continue;
-    const pages=pagesPrinted(ed.pages,results);
-    if(differentBook(pages,origPages)){
-      if(log)log.push("English book “"+ed.title+"” (ISBN "+en+", "+pages+" pages) is a different book from the original ("+origPages+" pages) — not its English edition.");
-      if(different&&!different.length)different.push({title:titleAsPrinted(ed.title,onEn).title,isbn13:en,publisher:pub||null});
-      continue;
-    }
     const tp=titleAsPrinted(ed.title,onEn);
     found.push({title:tp.title,isbn13:en,publisher:pub,pubFromIsbn:!!coded,why,rank,
       evidenceUrl:String((onEn[0]&&onEn[0].url)||ed.evidenceUrl||"")});
@@ -3044,6 +3054,18 @@ function sameHouse(a,b){
   return x.some(p=>y.some(q=>p.includes(q)||q.includes(p)));
 }
 
+// A co-edition's site, by the whole name or any one house in it, outside houses first
+// ("Musée du Louvre Editions / Lienart" → lienarteditions.com, Vasari).
+function siteOfHouses(results,pub,museumId){
+  const whole=publisherDomainFrom(results,pub);
+  if(whole)return whole;
+  const parts=String(pub||"").split(/\s*(?:\/|;|&|\s+and\s+|\s+with\s+)\s*/i).map(x=>x.trim()).filter(Boolean);
+  if(parts.length<2)return null;
+  parts.sort((a,b)=>museumImprintOnly(a,museumId)-museumImprintOnly(b,museumId));
+  for(const p of parts){ const h=publisherDomainFrom(results,p); if(h)return h; }
+  return null;
+}
+
 // ── PHASE 4: THE PUBLISHER'S PAGE, ONCE, FOR THE FINAL BOOK ──────────────────
 // Go to the publisher: their site read off the results already found, else one search
 // for their name; a page already found on it, else a search inside it; open up to two
@@ -3068,14 +3090,14 @@ async function findPublisherPage(F,c){
     if(!c.wantEditions){ log.push("Publisher’s page, given by a read: "+given); return{}; }
     pubHost=hostOf(given); candidates=[given];
   } else {
-    pubHost=publisherDomainFrom(c.found,pub);
+    pubHost=siteOfHouses(c.found,pub,row.museumId);
     if(pubHost)log.push("The publisher’s site, read off the results already found: "+pubHost);
     else if((pubHost=listedPublisherSite(pub)))log.push("The publisher’s site, from her list of joint publishers: "+pubHost);
     else{
       const d1=await io.search("The official website of the art-book publisher “"+pub+"”.",[pub,pub+" art book publisher"]);
       log.push(d1.detail);
       if(!d1.ok)return{trouble:d1.detail};
-      pubHost=publisherDomainFrom(d1.results,pub);
+      pubHost=siteOfHouses(d1.results,pub,row.museumId);
       if(!pubHost){ log.push("Couldn’t identify the publisher’s own website."); F.publisherResult="nosite"; return{}; }
     }
     const known=onHost(c.found,pubHost).filter(x=>carriesBook(x,book,isbn)).map(x=>cleanPublisherUrl(x.url,dom)).filter(Boolean);
@@ -3480,7 +3502,7 @@ async function lookupCatalogue(row,hooks){
   if(F.isbn&&read){
     const english=F.englishCheck==="english"||!foreign;
     const v=otherVersionOf(F.original?read.editions:read.versions,
-      {isbn:F.isbn,title:F.title||title,pages:pagesPrinted(read.pages,everything),original:F.original&&F.original.isbn13,english},
+      {isbn:F.isbn,title:F.title||title,titles:[read.title],pages:pagesPrinted(read.pages,everything),original:F.original&&F.original.isbn13,english},
       everything,row.museumId);
     if(v){
       const mine={isbn13:F.isbn,binding:bindingOfIsbn(everything,F.isbn),publisher:F.publisher||null};

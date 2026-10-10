@@ -9,7 +9,7 @@
  * digit and only when the fetched text prints it (IG-), and an English edition
  * accepted only when a record proves it is this catalogue's (ED-), her short list of
  * joint publishers' sites (PS-), the progress line on each main path (PL-), and one book per
- * card with her three English-edition cases (HR-), a booklet's ISBN refused (BK-), two versions of one book (VS-, Hubert Robert, real results in
+ * card with her three English-edition cases (HR-), a booklet's ISBN refused (BK-), two versions of one book (VS-), her 42.8 runs replayed (R8-, Hubert Robert, real results in
  * docs/lookup_results/hubert_robert.json).
  *
  * Hammershøi's library record is real (docs/lookup_results/jacquemart_hammershoi.json);
@@ -598,6 +598,32 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       'VS-007: a co-edition with an outside house is not a museum’s own imprint');
     const HR = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'hubert_robert.json'), 'utf8'));
     eq([api.bindingOfIsbn(HR.louvre2_facts, '9782757210642')], ['hardcover'], 'VS-008: binding read off the records of that one ISBN (Hubert Robert, the full catalogue)');
+  }
+
+  // ── R8-001..R8-006: her two Search again runs on 42.8, replayed ──────────────
+  // Real results and Claude's answers (docs/lookup_results/louvre_*_42_8.json).
+  {
+    const replay = file => {
+      const V = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', file), 'utf8')).calls;
+      const reads = V.filter(c => c.kind === 'claude').map(c => c.data);
+      return {
+        mcp: (tool, args) => {
+          const o = String(args.objective || '');
+          const c = tool === 'web_search' ? V.find(c => c.kind === 'search' && c.objective && c.objective.slice(0, 30) === o.slice(0, 30))
+            : V.find(c => c.kind === 'open' && c.urls && c.urls.join() === args.urls.join());
+          return { payload: { results: (c && c.results) || [], errors: (c && c.errors) || [] } };
+        },
+        sample: p => isShopRead(p) ? reads[0] : /"found"/.test(p) ? reads[1] : isFactsRead(p) ? reads[2] : isJudge(p) ? { kind: 'other', bookUrl: null } : {},
+      };
+    };
+    let { out, row: r } = await run(row('louvre', 'Hubert Robert (1733–1808). A Visionary Painter'), replay('louvre_hubert_42_8.json'));
+    ok(r.publisher && !/[%[\]()]|imprimeur/.test(r.publisher), 'R8-001: Hubert Robert — no publisher read out of a link’s address (“-imprimeur/Louvre%20…”)', r.publisher);
+    eq(r.isbn13, '9782757210642', 'R8-002:   the full catalogue’s ISBN');
+    eq(r.otherVenueBook && r.otherVenueBook.isbn13, '9781848221918', 'R8-003:   the NGA book named as a different book, though no result ties its ISBN to the Louvre', out.detail.split('\n').filter(l => /English/.test(l)).join(' | '));
+    ({ out, row: r } = await run(row('louvre', 'Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection'), replay('louvre_vasari_42_8.json')));
+    eq(r.isbn13, '9782359063738', 'R8-004: Vasari — the Lienart edition stands (nothing here says the other is hardcover)');
+    eq(r.alsoVersion && r.alsoVersion.isbn13, '9789171009166', 'R8-005:   the Nationalmuseum’s version named after it — same title words, its page count not printed', out.detail.split('\n').filter(l => /version|Publisher/.test(l)).join(' | '));
+    ok(/lienarteditions\.com/.test(r.publisherUrl || '') || r.publisherResult !== 'nosite', 'R8-006:   the co-edition’s site found by its outside house, Lienart', [r.publisherUrl, r.publisherResult].join(' '));
   }
 
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');
