@@ -34,68 +34,74 @@ checked live against the cases below.
 More rules are added only once she has used the cards and knows her preference.
 These replace "hardcover leads" and "one book per card".
 
-## The agreed cases — found live, 10 Oct 2026
+## The agreed cases — found live, 10 Oct 2026, her wording
 
-● = starts picked. "Proved by" is the page each line would link.
+● = starts picked. A card with one version looks as it does now.
 
-### 1. Vasari — Louvre, 2022 (travelled to Nationalmuseum, Stockholm)
-- ○ French · Louvre Éditions / Lienart · 978-2359063721 — the original
-  edition. Proved by louvre.fr/editions.
-- ● English · paperback with flaps · Lienart / Louvre Éditions ·
-  978-2359063738 — this venue's English edition. Proved by lienarteditions.com.
-- ○ English · hardcover · Nationalmuseum · 978-9171009166 — printed for the
-  show's Stockholm venue. Proved by nationalmuseum.bokorder.se.
+### 1. Vasari — Louvre, 2022
+- ○ French · Louvre Éditions / Lienart · 978-2359063721 · also 978-2350317441
+  (the Louvre's own number for the same book) — the original edition.
+  (source: [louvre.fr/editions](https://www.louvre.fr/editions/catalogue/giorgio-vasari-le-livre-des-dessins))
+- ● English · paperback · Louvre Éditions / Lienart · 978-2359063738 — this
+  venue's English edition.
+  (source: [lienarteditions.com](https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings))
+- ○ English · hardcover · Nationalmuseum · 978-9171009166 — by the show's
+  Stockholm exhibition.
+  (source: [nationalmuseum.bokorder.se](https://nationalmuseum.bokorder.se/en-us/shop/book/4580?slug=giorgio-vasari-the-book-of-drawings))
 
 ### 2. Hubert Robert — Louvre card, 2016
-- ○ French · hardcover, 544 pp · Somogy / Louvre Éditions · 978-2757210642 —
-  this showing's catalogue. Proved by the Louvre éditions 2016 catalogue (PDF).
+- ○ French · hardcover, 544 pp · Louvre Éditions / Somogy · 978-2757210642 ·
+  also 978-2350315355 (the Louvre's own number for the same book) — this
+  showing's catalogue.
+  (source: [Louvre éditions 2016 catalogue (PDF)](https://mini-site.louvre.fr/trimestriel/2016/Catalogue_Editions_2016/files/assets/common/downloads/publication.pdf))
 - ○ English · hardcover, 288 pp · National Gallery of Art / Lund Humphries ·
-  978-1848221918 — a different book, from the show's Washington venue.
-  Proved by the NGA press release.
-- Nothing picked (rule 5). The 48-page album (978-2757210659) is left off.
+  978-1848221918 — a notably different book, by the show's Washington
+  exhibition.
+  (source: [NGA press release](https://www.nga.gov/sites/default/files/migrate_images/content/dam/ngaweb/research/gallery-archives/pressreleases/2012-2010/2016/14a11_108163_20160615.pdf))
+- Nothing picked. The 48-page album is left off.
 
 ### 3. Hubert Robert — NGA card, 2016
 - ● English · hardcover · National Gallery of Art / Lund Humphries ·
   978-1848221918 — this showing's catalogue.
-- ○ French · hardcover · Somogy / Louvre Éditions · 978-2757210642 — a
-  different book, from the show's Paris venue.
+- ○ French · hardcover · Louvre Éditions / Somogy · 978-2757210642 · also
+  978-2350315355 (the Louvre's own number for the same book) — a notably
+  different book, from the show's Paris exhibition.
 
 ### 4. Hammershøi — Jacquemart-André, 2019
-- ○ French · Fonds Mercator / Culturespaces · 978-9462302495 — the show's
-  catalogue.
-- ● English · Rizzoli Electa, 2023 · 978-0847899289 — the English edition of
-  the show's catalogue, published later. Proved by rizzoliusa.com (same authors:
-  Champion, Claustrat, Curie, Saabye).
+- ○ French · Culturespaces / Fonds Mercator · 978-9462302495 — the original
+  edition.
+- ● English · Rizzoli Electa, 2023 · 978-0847899289 — the English edition,
+  published later.
+  (source: [rizzoliusa.com](https://www.rizzoliusa.com/book/9780847899289);
+  same authors: Champion, Claustrat, Curie, Saabye)
 
 ### 5. Watteau — Louvre, 2024–25 (*Pierrot, dit le Gilles*)
-- ● French · paperback with flaps · Lienart / Louvre Éditions ·
-  978-2359064476. Proved by boutique.louvre.fr.
+- ● French · paperback · Louvre Éditions / Lienart · 978-2359064476.
+  (source: [boutique.louvre.fr](https://boutique.louvre.fr/en/product/60080-pierrot-know-as-gilles.html))
 - Card says: "No English edition found." One version: the card as now.
 
 ### 6. Canaletto – Guardi — Jacquemart-André, 2012
-- ● French · hardcover with jacket · Fonds Mercator · 978-9061538226. Proved
-  by an AbeBooks record.
-- Card says: "No English edition found."
-- Left off: *Connaissance des Arts*' special issue (978-2758004158), a
-  magazine, not the catalogue (settled below).
+- ● French · hardcover · Fonds Mercator · 978-9061538226.
+- Card says: "No English edition found." One version: the card as now.
+- Left off: *Connaissance des Arts*' special issue (978-2758004158), a magazine,
+  not the catalogue.
 
 ### 7. Botticelli, artiste et designer — Jacquemart-André, 2021–22
-- ● French · Fonds Mercator / Culturespaces · 978-9462302815. Proved by the
-  Paris Musées library record.
-- Card says: "No English edition found."
-- Left off: Reaktion's *Botticelli: Artist and Designer* (Debenedetti) — the
-  curator's own book, not a catalogue (settled below).
+- As Canaletto – Guardi: one French edition, Culturespaces / Fonds Mercator,
+  978-9462302815. Card says: "No English edition found." The card as now.
+- Left off: Reaktion's *Botticelli: Artist and Designer*, the curator's own
+  book, not a catalogue.
 
-### 8. Metamorphoses — Rijksmuseum, 2026 (travels to Galleria Borghese)
-- ● English · softcover with flaps · Hannibal · 978-9493416543
+### 8. Metamorphoses — Rijksmuseum, 2026
+- ● English · paperback · Hannibal · 978-9493416543
 - ○ Dutch · Hannibal · 978-9493416550
 - ○ Italian · Hannibal · 978-9493416857
-- All three proved by Hannibal's spring 2026 catalogue (PDF).
+- (source for all three: [Hannibal's spring 2026 catalogue (PDF)](https://hannibalbooks.be/uploads/images/covers/2026_ENG_VOORJAAR_DRUK_compressed.pdf))
 
 ### 9. Millet: Life on the Land — National Gallery, 2025
-- ● English · paperback with flaps · National Gallery Global · 978-1857097382.
-  One version: the card as now. Publisher is the National Gallery — Yale only
-  distributes it.
+- The standard case: one English book (National Gallery, 978-1857097382).
+  **The card does not change.** No language, no bullet. Most of her cards are
+  this case.
 
 ## Settled with her
 
