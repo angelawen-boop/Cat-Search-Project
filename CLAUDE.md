@@ -1149,10 +1149,10 @@ Not good → more work on the routine or the recipes.
 ### 6. Queued next
 
 - **The lookup log — live on the test page (42.5).** First use:
-  *Hubert Robert, 1733–1808* (NGA) said no catalogue, though a live re-run of its
-  search returns NGA's page ("Catalog: Hubert Robert…") and press release ("in
-  association with Lund Humphries"). Cause unproven: read its record after a
-  Search again. Add by link's reading of each link is logged too.
+  *Hubert Robert* (NGA): its record showed the read found the catalogue (Lund
+  Humphries) from the press release but no title or ISBN, and code dropped it.
+  Fixed on `main` (`unnamed`, docs/app.md §1), not yet published; her next
+  Search again checks it. Add by link's reading of each link is logged too.
 
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library

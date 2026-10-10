@@ -20,6 +20,10 @@ faked. Steps gather facts; code decides each fact in a set order of trust;
    filed only when it is on the shop (BA-001 to BA-003). Only if the shop has
    nothing: one web search and one read, tied to THIS venue's show
    (`thisVenue`), a web-found shop link opened before it is believed.
+   A catalogue the read ties to this venue but names by neither title nor ISBN
+   (a press release's "the accompanying catalog", her Hubert Robert) goes on to
+   the facts round, which is asked its title; neither found there → no catalogue,
+   said in the diagnostic (`unnamed`; UN-001 to UN-003).
 2. **Complete the record.** (a) The book's own page, if the ISBN or publisher is
    missing: ISBN in code; at an English-speaking venue Claude reads it for what
    is still missing. (b) The facts round — always at a non-English venue,
