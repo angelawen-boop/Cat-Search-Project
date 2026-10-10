@@ -2304,9 +2304,9 @@ const PUBLISHER_LABEL=/(?<!\p{L})(?:publisher|published by|[ée]diteur|[ée]dit[
 function houseWords(n){
   return normPublisher(n).split(" ").filter(w=>w.length>2&&!PUBLISHER_WORDS.has(w)&&!["fonds","editions","ed","sa","srl","gmbh"].includes(w));
 }
-function publisherOnIsbnResults(results,isbn){
+function publisherGroups(results,isbn){
   const d=String(isbn||"").replace(/\D/g,"");
-  if(d.length!==13)return null;
+  if(d.length!==13)return [];
   const groups=[];
   for(const r of (results||[])){
     const text=(r&&r.title||"")+"\n"+oneText(r);
@@ -2322,13 +2322,34 @@ function publisherOnIsbnResults(results,isbn){
       seen.add(g); g.votes++; g.names.push(name);
     }
   }
-  groups.sort((a,b)=>b.votes-a.votes);
-  const top=groups[0];
-  if(!top||top.votes<2||(groups[1]&&groups[1].votes===top.votes))return null;
-  // The spelling most results use, ordinary capitals preferred over SHOUTING.
+  return groups.sort((a,b)=>b.votes-a.votes);
+}
+// The spelling most results use, ordinary capitals preferred over SHOUTING.
+function groupName(g){
   const count=new Map();
-  for(const n of top.names)count.set(n,(count.get(n)||0)+1);
+  for(const n of g.names)count.set(n,(count.get(n)||0)+1);
   return [...count.entries()].sort((a,b)=>b[1]-a[1]||(a[0]===a[0].toUpperCase())-(b[0]===b[0].toUpperCase()))[0][0];
+}
+function publisherOnIsbnResults(results,isbn){
+  const groups=publisherGroups(results,isbn), top=groups[0];
+  if(!top||top.votes<2||(groups[1]&&groups[1].votes===top.votes))return null;
+  return groupName(top);
+}
+
+// ONE BOOK ON A CARD (Hubert Robert: an English publisher beside a French ISBN). A
+// publisher guessed from general results must be one the ISBN's own records name,
+// when they name any; else the one they name replaces it, or none if they disagree.
+function oneBook(F,results,log,dom,museumId){
+  if(!F.isbn||!F.publisher||F.pubFrom!=="general results")return;
+  const groups=publisherGroups(results,F.isbn);
+  if(!groups.length||groups.some(g=>g.names.some(n=>sameHouse(n,F.publisher))))return;
+  const top=groups[0], tied=groups[1]&&groups[1].votes===top.votes;
+  const name=tied?null:groupName(top);
+  log.push("Publisher “"+F.publisher+"” is not the one the ISBN’s records name ("+groups.map(groupName).join(", ")+")"
+    +(name?" — "+name+" taken.":" — no publisher filed."));
+  F.publisher=name;
+  F.publisherUrl=name?publisherLinkOf(F.publisherUrl,name,dom,museumId):null;
+  if(!name)F.pubFrom=null;
 }
 
 // The show's catalogue in the venue's own language (her decision, Hammershøi, listed
@@ -2509,6 +2530,11 @@ const READ_RULES=
  +"catalogueTitle is the book's title EXACTLY as the results print it — never translated, and never "
  +"completed with words from the exhibition's title.\n"
  +"If the same catalogue is sold in more than one language, take the ENGLISH edition.\n";
+// At a non-English venue the web read takes the venue's own book; whether an English
+// edition is the same catalogue is decided once, in code (englishEditionOf; Hubert Robert).
+const READ_RULES_FOREIGN=READ_RULES.replace(/If the same catalogue is sold in more than one language, take the ENGLISH edition\.\n$/,
+  "If the catalogue is sold in more than one language, take the edition in the venue's own language — "
+ +"an English edition is checked separately.\n");
 
 const READ_SHAPE=
   "\nReply with ONLY this JSON object and nothing else:\n"
@@ -2772,6 +2798,22 @@ const TITLE_STOP=new Set([...FOCUS_STOP,"dans","pour","avec","della","delle","de
 function titleWords(t){
   return [...new Set(foldText(t).split(/[^a-z0-9]+/).filter(w=>w.length>=4&&!TITLE_STOP.has(w)))];
 }
+// Results not already in a list, by address.
+function notIn(list,already){
+  const seen=new Set((already||[]).map(x=>normalizeUrlKey(x&&x.url)));
+  return (list||[]).filter(x=>!seen.has(normalizeUrlKey(x&&x.url)));
+}
+// A page count Claude reports, kept only when the text prints it ("544 pages", "281 pp.").
+function pagesPrinted(n,results){
+  const v=parseInt(String(n||"").replace(/[^0-9]/g,""),10);
+  if(!(v>=8&&v<=3000))return null;
+  const re=new RegExp("(?<![0-9])"+v+"\\s*(?:pages|pp\\b|p\\.|pagine|seiten|s\\.|blz|bladzijden)","i");
+  return (results||[]).some(x=>re.test(resultText(x)))?v:null;
+}
+// Two page counts this far apart are two books, not one translated (her decision,
+// Hubert Robert: Somogy's 544 pages against Lund Humphries' 288).
+function differentBook(a,b){ return !!(a&&b&&Math.abs(a-b)/Math.max(a,b)>0.15); }
+
 // Everything a result carries: its title, its address and its text, whole and excerpted.
 function resultText(x){
   return [x&&x.title,x&&x.url,x&&typeof x.full_content==="string"?x.full_content:"",
@@ -2779,31 +2821,44 @@ function resultText(x){
 }
 
 // Is one of Claude's editions an English edition of THIS catalogue? Decided in code
-// (her Botticelli; CLAUDE.md §4). A fetched result must carry its ISBN, and that same
-// result must show the link: the same house as the original or the venue named
-// (sameCatalogue), the original's ISBN, or a linking phrase with every key word of
-// the original's title (Hammershøi's library record).
-function englishEditionOf(editions,orig,results,museumId){
+// (her Botticelli and Hubert Robert; CLAUDE.md §4). A fetched result must carry its
+// ISBN, and that same result must show the link: the same house as the original, the
+// venue named (sameCatalogue), the original's ISBN, or a linking phrase with every key
+// word of the original's title (Hammershøi's library record). Page counts far apart
+// make it a different book, refused. The venue's own English edition (same house)
+// outranks one named with the venue, which outranks a translation published elsewhere.
+function englishEditionOf(editions,orig,results,museumId,log){
   const origPub=orig&&orig.publisher?publisherToFind(orig.publisher,museumId):null;
   const keys=titleWords(orig&&orig.title);
+  const origPages=pagesPrinted(orig&&orig.pages,results);
+  const found=[];
   for(const ed of (Array.isArray(editions)?editions:[])){
     if(!ed||!ed.title||!isEnglishLang(ed.language))continue;
     const en=toIsbn13(ed.isbn13,results||[]);
-    if(!en||en===(orig&&orig.isbn13))continue;
+    if(!en||en===(orig&&orig.isbn13)||found.some(f=>f.isbn13===en))continue;
     const onEn=(results||[]).filter(x=>isbnInText(en,resultText(x)));
     const coded=publisherOnIsbnResults(onEn,en);
     const pub=coded||(ed.publisher?String(ed.publisher).trim():null);
-    let why=null;
-    if(sameCatalogue(pub,origPub,onEn,museumId))why="the same publisher as the original, or the venue named";
-    else if(orig&&orig.isbn13&&onEn.some(x=>isbnInText(orig.isbn13,resultText(x))))why="a record carrying both ISBNs";
-    else if(keys.length&&onEn.some(x=>{ const t=foldText(resultText(x)); return EDITION_LINK.test(t)&&keys.every(w=>t.includes(w)); }))
-      why="a record naming it a translation of the original";
+    let why=null, rank=0;
+    if(sameCatalogue(pub,origPub,[],museumId)){ why="the same publisher as the original"; rank=3; }
+    else if(sameCatalogue(pub,origPub,onEn,museumId)){ why="the venue named"; rank=2; }
+    else if(orig&&orig.isbn13&&onEn.some(x=>isbnInText(orig.isbn13,resultText(x)))){ why="a record carrying both ISBNs"; rank=1; }
+    else if(keys.length&&onEn.some(x=>{ const t=foldText(resultText(x)); return EDITION_LINK.test(t)&&keys.every(w=>t.includes(w)); })){
+      why="a record naming it a translation of the original"; rank=1; }
     if(!why)continue;
+    const pages=pagesPrinted(ed.pages,results);
+    if(differentBook(pages,origPages)){
+      if(log)log.push("English book “"+ed.title+"” (ISBN "+en+", "+pages+" pages) is a different book from the original ("+origPages+" pages) — not its English edition.");
+      continue;
+    }
     const tp=titleAsPrinted(ed.title,onEn);
-    return{title:tp.title,isbn13:en,publisher:pub,pubFromIsbn:!!coded,why,
-      evidenceUrl:String((onEn[0]&&onEn[0].url)||ed.evidenceUrl||"")};
+    found.push({title:tp.title,isbn13:en,publisher:pub,pubFromIsbn:!!coded,why,rank,
+      evidenceUrl:String((onEn[0]&&onEn[0].url)||ed.evidenceUrl||"")});
   }
-  return null;
+  found.sort((a,b)=>b.rank-a.rank);
+  if(!found.length)return null;
+  const {rank,...best}=found[0];
+  return best;
 }
 
 // An English edition the publisher's own page lists with its own ISBN: the same house
@@ -2841,7 +2896,7 @@ function carriesBook(x,book,isbn){ return !!((isbn&&isbnInText(isbn,resultText(x
 function factsPrompt(q){
   const shape='{"isbn13": string|null, "publisher": string|null'
     +(q.bookPage?', "pagePublisher": string|null, "pagePublisherUrl": string|null':'')
-    +(q.foreign?', "language": string|null, "title": string|null, "editions": [{"title": string, "isbn13": string, "language": string, "publisher": string|null, "evidenceUrl": string}]'
+    +(q.foreign?', "language": string|null, "title": string|null, "pages": string|null, "editions": [{"title": string, "isbn13": string, "language": string, "publisher": string|null, "pages": string|null, "evidenceUrl": string}]'
       :q.needTitle?', "title": string|null':'')+'}';
   // needTitle: the book is known so far only as "the catalogue" (unnamed in lookupCatalogue).
   return "You are reading real web text about ONE printed exhibition catalogue: "
@@ -2858,19 +2913,23 @@ function factsPrompt(q){
     +(q.foreign?"language: the language this book's text is printed in, named in English (French, Italian…), or null if "
       +"nothing says. A bilingual book: name both.\n"
       +"title: this book's title EXACTLY as printed, in its own language — never translated. Null if not shown.\n"
+      +"pages: the number of pages the text prints for THIS book (\"544 pages\", \"281 pp.\"), digits only, or null.\n"
       +"editions: every OTHER edition of this same book the text shows with its own ISBN — a translation, "
       +"such as an English edition, often recorded as “originally published in … as …”. Its title as "
       +"printed, its ISBN, its language, its publisher and the address of the result that shows it. Its publisher "
       +"only where the text names the house that printed THAT edition, else null — “originally published … "
-      +"Fonds Mercator” names the original's house, not the translation's. An empty list "
+      +"Fonds Mercator” names the original's house, not the translation's. Its pages as for this book. An empty list "
       +"if none. Never invent one.\n"
       :q.needTitle?"title: this book's title EXACTLY as the text prints it, only where the text ties it to this exhibition at this venue. Null if not shown.\n":"")
     +"If the text is about a different book, answer null.\n"
     +(q.bookPage?"\nSECTION A — ONE web page in full: the book's own page.\n"+pageForPrompt(q.bookPage.results,12000)+"\n":"")
-    +(q.facts.length?"\nSECTION B — web search results about this book.\n"+resultsForPrompt(q.facts,2500,{words:[q.book,q.isbn||""]})+"\n":"")
+    +(q.facts.length?"\nSECTION B — web search results about this book.\n"+resultsForPrompt(q.facts,2500,{words:[q.book,q.isbn||""]},q.facts.length)+"\n":"")
     +(q.editions.length?"\nSECTION C — web search results about editions of this book in other languages.\n"
       // Every result: Hammershøi's library record came tenth (WL-060).
       +resultsForPrompt(q.editions,2000,{words:[q.book,q.show,"originally published","English edition"]},q.editions.length)+"\n":"")
+    // The first web search's results, read again (Hubert Robert: its English book was there).
+    +(q.earlier&&q.earlier.length?"\nSECTION D — earlier web search results about this exhibition's catalogue.\n"
+      +resultsForPrompt(q.earlier,2000,{words:[q.book,q.show,"edition","catalogue"]},q.earlier.length)+"\n":"")
     +"\nReply with ONLY this JSON object and nothing else:\n"+shape;
 }
 
@@ -3068,6 +3127,7 @@ async function lookupCatalogue(row,hooks){
   // never a general web search, which filed the National Gallery's list of 32 books as
   // the book (Zurbarán). The wider web only because the shop had nothing.
   let hit=null, fromShop=false, blocked=false, unnamed=false;
+  let webRes=[];        // the web search's results, read again by every later step
   const s1=await shopStep(row,io);
   if(s1.ran){
     log.push(s1.detail);
@@ -3086,8 +3146,9 @@ async function lookupCatalogue(row,hooks){
        venue+" "+title+" press release catalogue"].concat(localCatalogueQuery(mu,row)));
     log.push(s2.detail);
     if(!s2.ok)return done({row,ok:false});
+    webRes=s2.results||[];
     if(!s2.results.length)return done({ok:true,row:composeRow(row,{found:false,blocked})});
-    const r2=await io.read(READ_RULES
+    const r2=await io.read((foreign?READ_RULES_FOREIGN:READ_RULES)
       +"\nExhibition: "+title+"\nVenue: "+venue+(dom?"\nIts shop is at "+dom:"")+"\n\n"
       // Read whole (the shop step's cap), never cut to 700 characters (Botticelli).
       +resultsForPrompt(s2.results,6000,{words:[title,venue],dom})+READ_SHAPE);
@@ -3208,13 +3269,14 @@ async function lookupCatalogue(row,hooks){
     if(!fs.ok&&foreign)langStopped=true;
     const page=foreign?bookPage:null;
     if(factsRes.length||edRes.length||page){
-      const rd=await io.read(factsPrompt({book,show:title,venue,isbn:F.isbn,bookPage:page,facts:factsRes,editions:edRes,foreign,needTitle:unnamed}));
+      const rd=await io.read(factsPrompt({book,show:title,venue,isbn:F.isbn,bookPage:page,facts:factsRes,editions:edRes,
+        earlier:notIn(webRes,[...factsRes,...edRes]),foreign,needTitle:unnamed}));
       log.push(rd.detail);
       if(rd.ok)read=rd.data||{};
       else{ fault(rd.detail); if(foreign)langStopped=true; }
     }
     found2.push(...factsRes,...edRes);
-    const given=[...(page?page.results:[]),...factsRes,...edRes];
+    const given=[...(page?page.results:[]),...factsRes,...edRes,...webRes];
     // The book's own title, for a catalogue known so far by no title (unnamed), as printed.
     if(unnamed&&!F.title&&!foreign&&read&&read.title){
       const tp=titleAsPrinted(read.title,given);
@@ -3222,10 +3284,12 @@ async function lookupCatalogue(row,hooks){
     }
     // The ISBN: the book's page in code (above), the results in code, then Claude's —
     // only if the text it was given prints it.
-    if(!F.isbn){ const c=isbnInResults(factsRes,book); if(c){ F.isbn=c; log.push("ISBN read off the search results in code: "+c); } }
+    // Matched on the book's title once it is known, never the show's (Hubert Robert: the
+    // show's dates matched only a French bookseller's listing).
+    if(!F.isbn){ const c=isbnInResults(factsRes,F.title||book); if(c){ F.isbn=c; log.push("ISBN read off the search results in code: "+c); } }
     if(!F.isbn&&read){ const c=toIsbn13(read.isbn13,given); if(c){ F.isbn=c; log.push("ISBN from the read, printed in the results: "+c); } }
     // The publisher, in order of trust (her decision, Botticelli).
-    const onIsbn=F.isbn?publisherOnIsbnResults([...(bookPage?bookPage.results:[]),...factsRes,...edRes],F.isbn):null;
+    const onIsbn=F.isbn?publisherOnIsbnResults(given,F.isbn):null;
     if(onIsbn)offerPublisher(onIsbn,"the ISBN’s results");
     else if(F.isbn&&factsOk)log.push("Publisher from the ISBN: the results carrying it don’t agree on one.");
     if(read){
@@ -3233,6 +3297,7 @@ async function lookupCatalogue(row,hooks){
       offerPublisher(read.publisher,"general results");
       if(!F.publisherUrl&&read.pagePublisherUrl)F.publisherUrl=publisherLinkOf(read.pagePublisherUrl,F.publisher,dom,row.museumId);
     }
+    oneBook(F,given,log,dom,row.museumId);
   }
 
   // ── PHASE 2c: LAST TRY FOR THE ISBN — open up to two results about the book, whole.
@@ -3275,8 +3340,9 @@ async function lookupCatalogue(row,hooks){
       const own=read.title?titleAsPrinted(read.title,[...(bookPage?bookPage.results:[]),...factsRes,...edRes]):null;
       if(own&&own.onPage)F.title=own.title;
       log.push("Language check: "+lang+(own&&own.onPage?" — its own title “"+own.title+"”.":"."));
-      const ed=englishEditionOf(read.editions,{title:F.title,isbn13:F.isbn,publisher:F.publisher},
-        [...(bookPage?bookPage.results:[]),...factsRes,...edRes],row.museumId);
+      const all=[...(bookPage?bookPage.results:[]),...factsRes,...edRes,...webRes];
+      const ed=englishEditionOf(read.editions,{title:F.title,isbn13:F.isbn,publisher:F.publisher,pages:read.pages},
+        all,row.museumId,log);
       if(ed){
         log.push("English edition: “"+ed.title+"”, ISBN "+ed.isbn13+" — "+ed.why+" ("+ed.evidenceUrl+").");
         F.original={title:F.title||null,isbn13:F.isbn||null,publisher:F.publisher||null};

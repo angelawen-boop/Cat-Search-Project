@@ -38,14 +38,22 @@ faked. Steps gather facts; code decides each fact in a set order of trust;
    (`sameCatalogue`), the original's ISBN, or a linking phrase ("originally
    published", "édition anglaise"…) with every key word of the original title
    (`englishEditionOf`). The card then carries it, `originalEdition` the
-   original. ED-001 to ED-005.
+   original. ED-001 to ED-005. **Her three cases (Hubert Robert):** the
+   venue's own English edition (same house) wins; a pure translation published
+   elsewhere counts only when there is none; a different book never crosses
+   to the other venue's card — page counts more than 15% apart, each printed
+   in the results, mark a different book (`pagesPrinted`, `differentBook`;
+   Somogy 544 vs Lund Humphries 288). A non-English venue's web read takes
+   its own book; later steps re-read the first web search. HR-001 to HR-012.
 4. **The publisher's page, once, for the final book** (`findPublisherPage`).
 5. **The row, once.** One owner per fact: shop line, `publisherNote`,
    `englishLine`. A step that fails leaves its facts unknown, sets `trouble`
    (`troubleLang` for the language step) and its sentence claims nothing.
 
 **Trust order.** ISBN: the book's page in code (`isbnOnPage`), the results in
-code (`isbnInResults`), then Claude's. Publisher: read off the ISBN's results
+code (`isbnInResults`, on the book's title once known, never the show's), then
+Claude's. One book per card: a guessed publisher the ISBN's own records
+contradict gives way to theirs (`oneBook`). Publisher: read off the ISBN's results
 (`publisherOnIsbnResults`), then printed on the book's own shop or publisher
 page, then any read of general results — a guess wherever it came from. The
 diagnostic says which won. Title: `titleAsPrinted`.

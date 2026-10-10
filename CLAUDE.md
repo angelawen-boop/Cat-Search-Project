@@ -1131,6 +1131,11 @@ She is noting issues as she uses it, for a later debugging session.
   now goes on to the facts round instead of being dropped (`unnamed`, UN-001–003);
   a reply holding two answers takes Claude's last (`lastJsonObject`, TW-001–004 —
   her Louvre links' "unreadable" descriptions).
+- **OPEN — Hubert Robert, rebuilt, not yet published.** Her three English-edition
+  cases (`docs/app.md` §1, step 3), one book per card, the ISBN read on the book's
+  title. A different book is caught only when both page counts are printed — a
+  partner venue's book with none, naming the venue, can still pass. Her re-run of
+  both cards confirms.
 - **OPEN — Vasari: "No English edition" on a book that IS the English edition.**
   *Giorgio Vasari: The Book of Drawings* (Louvre). The card holds ISBN
   978-2359063738 — the real English edition (Lienart, Sept 2022, for the show's
