@@ -289,6 +289,120 @@ async function dismissToast() {
   } finally { await page.close(); }
 }
 
+
+// Her catalogue versions on the card (docs/catalogue_versions.md): rows built from her
+// cases (docs/lookup_proof_cards.json), as a lookup stores them.
+const CASES = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_proof_cards.json'), 'utf8')).cards;
+const PROOF = {
+  1: ['https://www.louvre.fr/editions/catalogue/giorgio-vasari-le-livre-des-dessins', 'https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings',
+      'https://nationalmuseum.bokorder.se/en-us/shop/book/4580?slug=giorgio-vasari-the-book-of-drawings'],
+  2: ['https://mini-site.louvre.fr/trimestriel/2016/publication.pdf', 'https://www.nga.gov/press/hubert-robert.pdf'],
+  3: ['https://www.nga.gov/press/hubert-robert.pdf', 'https://mini-site.louvre.fr/trimestriel/2016/publication.pdf'],
+  4: ['https://www.leslibraires.ca/en/livres/hammershoi-9789462302495.html', 'https://www.rizzoliusa.com/book/9780847899289'],
+  8: ['https://hannibalbooks.be/2026.pdf', 'https://hannibalbooks.be/2026.pdf', 'https://hannibalbooks.be/2026.pdf'],
+};
+const EXTRA = { 1: [{}, {}, { city: 'Stockholm' }], 2: [{}, { city: 'Washington' }], 4: [{}, { year: 2023 }] };
+function caseRow(n, start, versions) {
+  const c = CASES.find(x => x.case === n);
+  const vs = versions || c.versions;
+  const editions = vs.map((v, i) => ({ title: c.title + ' (' + v.isbn13 + ')', note: null, city: null, year: null, ...v,
+    proofUrl: (PROOF[n] || [])[i] || null, ...((EXTRA[n] || [])[i] || {}),
+    card: { catalogueTitle: c.title + ' (' + v.isbn13 + ')', isbn13: v.isbn13, publisher: v.publisher, publisherUrl: null, publisherResult: null, shopState: 'web', shopUrl: null } }));
+  const pick = editions.findIndex(v => v.isbn13 === c.pick);
+  const book = pick < 0 ? { catalogueTitle: null, isbn13: null, publisher: null, publisherUrl: null, publisherResult: null, shopState: 'web', shopUrl: null } : editions[pick].card;
+  return show('case-' + n, 'Case ' + n + ' ' + c.title, { museumId: c.venue, startDate: start, acquiring: 'yes', buyNext: false, looked: true, hasCatalogue: 'yes',
+    englishCheck: null, editions: versions && versions.length < 2 ? editions.slice(0, versions.length) : editions, editionPick: pick < 0 ? null : pick, ...book });
+}
+async function openCard(page, title) {
+  const b = [...(page.card(title) || { querySelectorAll: () => [] }).querySelectorAll('button')].find(x => /Catalogue$/.test(x.textContent.trim()));
+  if (b) await page.click(b);
+  return page.card(title);
+}
+const versionLinesOn = card => [...card.querySelectorAll('[aria-pressed]')].map(b => b.parentElement.textContent.trim());
+const linksOn = card => [...card.querySelectorAll('a')].map(a => a.textContent.replace(/\s*\u2197$/, '').trim());
+// The buy buttons: the links that end in an arrow.
+const buttonsOn = card => [...card.querySelectorAll('a')].filter(a => /\u2197$/.test(a.textContent.trim())).map(a => a.textContent.replace(/\s*\u2197$/, '').trim()).filter(Boolean);
+
+async function versionCards() {
+  const NAME = 'AD-007 Her catalogue versions on the card';
+  const vasari = caseRow(1, '2022-03-31'), hrL = caseRow(2, '2016-03-08'), hrN = caseRow(3, '2016-06-26'), ham = caseRow(4, '2019-03-14'), met = caseRow(8, '2026-02-20');
+  const page = await mount({ save: 'ok', db: false });
+  try {
+    await page.loadFile({ rows: [vasari, hrL, hrN, ham, met], ignored: [] });
+    let card = await openCard(page, vasari.title);
+    check(NAME + ': Vasari — three lines in her words, the Louvre’s own number on the French, ● on Lienart’s English', JSON.stringify(versionLinesOn(card)) === JSON.stringify([
+      '○ French · Louvre Éditions / Lienart · 978-2359063721 · also 978-2350317441 (the Louvre\'s own number for the same book) — the original edition. (source: louvre.fr)',
+      '● English · paperback · Louvre Éditions / Lienart · 978-2359063738 — this venue\'s English edition. (source: lienarteditions.com)',
+      '○ English · hardcover · Nationalmuseum · 978-9171009166 — from the show\'s Stockholm exhibition. (source: nationalmuseum.bokorder.se)']),
+      JSON.stringify(versionLinesOn(card)));
+    check(NAME + ': Vasari — each source is a link to the page that proved it, its host as the words',
+      [...card.querySelectorAll('a')].filter(a => a.textContent === 'lienarteditions.com').every(a => a.href === PROOF[1][1]) && linksOn(card).includes('nationalmuseum.bokorder.se'));
+    check(NAME + ': Vasari — no book title, publisher line, ISBN line or English line beside the list',
+      !/ISBN 978|ISBN not confirmed/.test(card.textContent) && !card.textContent.includes(vasari.catalogueTitle));
+    check(NAME + ': Vasari — buy buttons built from the picked book', [...card.querySelectorAll('a')].some(a => a.href === 'https://booko.au/9782359063738'));
+
+    // Tapping ○ on the hardcover.
+    const before = JSON.parse(JSON.stringify(vasari));
+    await page.click(card.querySelectorAll('[aria-pressed]')[2]);
+    card = page.card(vasari.title);
+    const marks = versionLinesOn(card).map(l => l[0]).join('');
+    check(NAME + ': Vasari — tapping ○ on Stockholm’s hardcover moves ●', marks === '○○●', marks);
+    check(NAME + ': Vasari — the buy links now use 978-9171009166', [...card.querySelectorAll('a')].some(a => a.href === 'https://booko.au/9789171009166')
+      && ![...card.querySelectorAll('a')].some(a => /9782359063738/.test(a.href)));
+    await page.save();
+    const saved = JSON.parse(page.files[page.files.length - 1].data).rows.find(x => x.id === vasari.id);
+    const changed = Object.keys(saved).filter(k => JSON.stringify(saved[k]) !== JSON.stringify(before[k])).sort();
+    check(NAME + ': Vasari — the ledger row’s editionPick is 2 and its book is the hardcover; nothing else in the row changes',
+      saved.editionPick === 2 && saved.isbn13 === '9789171009166' && JSON.stringify(changed) === JSON.stringify(['catalogueTitle', 'editedAt', 'editionPick', 'isbn13', 'publisher']),
+      JSON.stringify(changed));
+
+    card = await openCard(page, hrL.title);
+    check(NAME + ': Hubert Robert, Louvre card — nothing picked: the list, her grey line, and only the Museum shop button',
+      versionLinesOn(card).every(l => l[0] === '○') && card.textContent.includes('Pick a version to see where to buy it.')
+      && JSON.stringify(buttonsOn(card)) === JSON.stringify(['Museum shop']), JSON.stringify(buttonsOn(card)));
+    check(NAME + ': Hubert Robert, Louvre card — the Museum shop button searches the exhibition’s title, and no status line shows for a book not picked',
+      [...card.querySelectorAll('a')].some(a => a.textContent.startsWith('Museum shop') && a.href.endsWith(encodeURIComponent(hrL.title)))
+      && !/Not in the museum shop|In the museum shop/.test(card.textContent));
+    check(NAME + ': Hubert Robert, Louvre card — her two lines', JSON.stringify(versionLinesOn(card)) === JSON.stringify([
+      '○ French · hardcover, 544 pp · Louvre Éditions / Somogy · 978-2757210642 · also 978-2350315355 (the Louvre\'s own number for the same book) — this showing\'s catalogue. (source: mini-site.louvre.fr)',
+      '○ English · hardcover, 288 pp · National Gallery of Art / Lund Humphries · 978-1848221918 — a notably different book, from the show\'s Washington exhibition. (source: nga.gov)']),
+      JSON.stringify(versionLinesOn(card)));
+    card = await openCard(page, hrN.title);
+    check(NAME + ': Hubert Robert, NGA card — its own book picked, the Paris book a notably different one', JSON.stringify(versionLinesOn(card)) === JSON.stringify([
+      '● English · hardcover, 288 pp · National Gallery of Art / Lund Humphries · 978-1848221918 — this showing\'s catalogue. (source: nga.gov)',
+      '○ French · hardcover, 544 pp · Louvre Éditions / Somogy · 978-2757210642 · also 978-2350315355 (the Louvre\'s own number for the same book) — a notably different book, from the show\'s Paris exhibition. (source: mini-site.louvre.fr)']),
+      JSON.stringify(versionLinesOn(card)));
+    card = await openCard(page, ham.title);
+    check(NAME + ': Hammershøi — the original, and the English edition published later, picked', JSON.stringify(versionLinesOn(card)) === JSON.stringify([
+      '○ French · Culturespaces / Fonds Mercator · 978-9462302495 — the original edition. (source: leslibraires.ca)',
+      '● English · Rizzoli Electa · 978-0847899289 — the English edition, published later. (source: rizzoliusa.com)']),
+      JSON.stringify(versionLinesOn(card)));
+    card = await openCard(page, met.title);
+    check(NAME + ': Metamorphoses — no notes, and one shared source line after the list',
+      JSON.stringify(versionLinesOn(card)) === JSON.stringify(['● English · paperback · Hannibal · 978-9493416543.', '○ Dutch · Hannibal · 978-9493416550.', '○ Italian · Hannibal · 978-9493416857.'])
+      && card.textContent.includes('(source for all three: hannibalbooks.be)') && !/\(source: /.test(card.textContent), JSON.stringify(versionLinesOn(card)));
+  } finally { await page.close(); }
+}
+
+// A card with one version, or none, is drawn exactly as before versions existed.
+async function oneVersionUnchanged() {
+  const NAME = 'AD-008 A card with one version looks as it does now';
+  const one = n => { const c = CASES.find(x => x.case === n); return caseRow(n, '2025-01-01', c.versions); };
+  const millet = one(9), watteau = one(5);
+  const strip = r => { const o = { ...r, id: r.id + '-old', title: r.title + ' (old)' }; delete o.editions; delete o.editionPick; return o; };
+  const page = await mount({ save: 'ok', db: false });
+  try {
+    await page.loadFile({ rows: [millet, strip(millet), watteau, strip(watteau)], ignored: [] });
+    for (const r of [millet, watteau]) {
+      const a = await openCard(page, r.title), b = await openCard(page, strip(r).title);
+      const html = el => el.innerHTML.split(encodeURIComponent(strip(r).title)).join(encodeURIComponent(r.title)).split(strip(r).title).join(r.title).split(strip(r).id).join(r.id);
+      check(NAME + ': ' + r.title.replace(/^Case \d+ /, '') + ' — the same card as a row with no versions, no markers',
+        !!a && !!b && html(a) === html(b) && !a.querySelector('[aria-pressed]') && a.textContent.includes('ISBN ' + r.isbn13.slice(0, 3) + '-' + r.isbn13.slice(3)),
+        a && b ? (() => { const x = html(a), y = html(b); let k = 0; while (k < x.length && x[k] === y[k]) k++; return x.slice(k - 80, k + 80) + ' ≠ ' + y.slice(k - 80, k + 80); })() : 'no card');
+    }
+  } finally { await page.close(); }
+}
+
 // Rows saved before catalogue versions: the old fields, no `editions`. Her real ledger
 // holds rows like these; loading and saving must leave them byte for byte as they were.
 async function oldRowsUntouched() {
@@ -330,9 +444,9 @@ async function oldRowsUntouched() {
 (async () => {
   for (const [tag, t] of [['AD-001', resetToSeedAsksFirst], ['AD-002', plainDownloadNeverClearsUnsaved],
                           ['AD-003', buyNextDot], ['AD-004', noStatusLineWithoutLedger], ['AD-005', dismissToast],
-                          ['AD-006', oldRowsUntouched]]) {
+                          ['AD-006', oldRowsUntouched], ['AD-007', versionCards], ['AD-008', oneVersionUnchanged]]) {
     try { await t(); } catch (e) { check(tag + ' ran to the end', false, e && e.message); }
   }
-  console.log(failures ? failures + ' failed' : 'her six page decisions hold');
+  console.log(failures ? failures + ' failed' : 'her page decisions hold');
   process.exit(failures ? 1 : 0);
 })();

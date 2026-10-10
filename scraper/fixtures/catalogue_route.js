@@ -13,7 +13,8 @@
  * docs/lookup_results/hubert_robert.json). Catalogue versions (docs/catalogue_versions.md):
  * her starting pick on her nine cases (CV-, docs/lookup_proof_cards.json), a co-edition's
  * two numbers folded (FO-), names venue first and the stored shape (VF-), Botticelli
- * replayed (BT-).
+ * replayed (BT-), her version lines word for word (VL-), a change of pick (PK-), the
+ * other showing's city and an edition's year (CY-).
  *
  * Hammershøi's library record is real (docs/lookup_results/jacquemart_hammershoi.json);
  * the shop, book and publisher pages are made for the test.
@@ -70,7 +71,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionLines, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -663,6 +664,9 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       'R8-005:   the Nationalmuseum’s English book is a version of its own, never folded into Lienart’s; the French original is missing — this recording’s facts read lists no French edition', out.detail.split('\n').filter(l => /version|numbers/.test(l)).join(' | '));
     ok(/lienarteditions\.com/.test(r.publisherUrl || '') || r.publisherResult !== 'nosite', 'R8-006:   the co-edition’s site found by its outside house, Lienart', [r.publisherUrl, r.publisherResult].join(' '));
     eq(r.editions[0].publisher, 'Musée du Louvre Editions / Lienart', 'R8-010:   publisher names lead with the venue’s own house');
+    const book = x => ({ catalogueTitle: x.catalogueTitle, isbn13: x.isbn13, publisher: x.publisher, publisherUrl: x.publisherUrl, publisherResult: x.publisherResult, shopState: x.shopState, shopUrl: x.shopUrl });
+    eq([r.editions.every(v => v.card && v.card.isbn13 === v.isbn13), r.editions[r.editionPick].card], [true, book(r)],
+      'R8-011:   every version keeps the card’s book fields for it; the picked one’s are the card’s own, publisher page included');
   }
 
   // ── BT-001..BT-003: Botticelli, artiste et designer, replayed (her case 7) ────
@@ -776,10 +780,83 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       ['Louvre éditions / Somogy éditions d\'art', 'Musée Jacquemart-André / Fonds Mercator', 'Hannibal Books', 'Rizzoli Electa'],
       'VF-001: publisher names lead with the venue’s own house; a name without one is unchanged');
     eq(Object.keys(api.storedVersion({ title: 't', lang: 'French', isbn13: '1', showing: 'this', _pub: 'x', _found: true })),
-      ['title', 'lang', 'binding', 'pages', 'publisher', 'isbn13', 'alsoIsbn13', 'showing', 'proofUrl', 'note', 'city', 'year'],
+      ['title', 'lang', 'binding', 'pages', 'publisher', 'isbn13', 'alsoIsbn13', 'showing', 'proofUrl', 'note', 'city', 'year', 'card'],
       'VF-002: a stored version keeps her fields, the other showing’s city and its year; the lookup’s own are dropped');
     eq([api.englishLine({ englishCheck: 'shops', editions: [{}] }), api.englishLine({ englishCheck: 'shops', editions: [{}, {}] })],
       ['No English edition found in bookshops.', null], 'VF-003: a one-version card keeps today’s English line; a card with several has none until her version lines');
+  }
+
+
+  // ── VL-001..VL-012: her version lines, word for word (docs/catalogue_versions.md) ─
+  // Rows built from her cases (docs/lookup_proof_cards.json) with the city, year and
+  // proving page her cases give.
+  {
+    const CARDS = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_proof_cards.json'), 'utf8')).cards;
+    const caseRow = (n, start, extra) => {
+      const c = CARDS.find(x => x.case === n);
+      const editions = c.versions.map((v, i) => ({ title: c.title, note: null, city: null, year: null, proofUrl: null, card: null, ...v, ...(extra[i] || {}) }));
+      const pick = editions.findIndex(v => v.isbn13 === c.pick);
+      return { id: 'vl-' + n, museumId: c.venue, title: c.title, startDate: start, looked: true, hasCatalogue: 'yes', editions, editionPick: pick < 0 ? null : pick };
+    };
+    const shown = r => { const vl = api.versionLines(r);
+      return vl ? vl.lines.map(l => (l.picked ? '● ' : '○ ') + l.text + (l.source ? ' (source: ' + l.source.host + ')' : ''))
+        .concat(vl.shared ? ['(source for all ' + vl.shared.count + ': ' + vl.shared.host + ')'] : []) : null; };
+    const LOUVRE_ED = 'https://www.louvre.fr/editions/catalogue/giorgio-vasari-le-livre-des-dessins';
+    const PDF = 'https://mini-site.louvre.fr/trimestriel/2016/Catalogue_Editions_2016/files/assets/common/downloads/publication.pdf';
+    const NGA = 'https://www.nga.gov/sites/default/files/migrate_images/content/dam/ngaweb/research/gallery-archives/pressreleases/2012-2010/2016/14a11_108163_20160615.pdf';
+    const vasari = caseRow(1, '2022-03-31', [{ proofUrl: LOUVRE_ED }, { proofUrl: 'https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings' },
+      { proofUrl: 'https://nationalmuseum.bokorder.se/en-us/shop/book/4580?slug=giorgio-vasari-the-book-of-drawings', city: 'Stockholm' }]);
+    eq(shown(vasari), [
+      '○ French · Louvre Éditions / Lienart · 978-2359063721 · also 978-2350317441 (the Louvre\'s own number for the same book) — the original edition. (source: louvre.fr)',
+      '● English · paperback · Louvre Éditions / Lienart · 978-2359063738 — this venue\'s English edition. (source: lienarteditions.com)',
+      '○ English · hardcover · Nationalmuseum · 978-9171009166 — from the show\'s Stockholm exhibition. (source: nationalmuseum.bokorder.se)'],
+      'VL-001: Vasari — three lines in her words, the Louvre’s own number on the French, ● on Lienart’s English');
+    const hrL = caseRow(2, '2016-03-08', [{ proofUrl: PDF }, { proofUrl: NGA, city: 'Washington' }]);
+    eq(shown(hrL), [
+      '○ French · hardcover, 544 pp · Louvre Éditions / Somogy · 978-2757210642 · also 978-2350315355 (the Louvre\'s own number for the same book) — this showing\'s catalogue. (source: mini-site.louvre.fr)',
+      '○ English · hardcover, 288 pp · National Gallery of Art / Lund Humphries · 978-1848221918 — a notably different book, from the show\'s Washington exhibition. (source: nga.gov)'],
+      'VL-002: Hubert Robert, Louvre card — nothing picked, page counts on both lines because they tell the books apart');
+    const hrN = caseRow(3, '2016-06-26', [{ proofUrl: NGA }, { proofUrl: PDF }]);
+    eq(shown(hrN), [
+      '● English · hardcover, 288 pp · National Gallery of Art / Lund Humphries · 978-1848221918 — this showing\'s catalogue. (source: nga.gov)',
+      '○ French · hardcover, 544 pp · Louvre Éditions / Somogy · 978-2757210642 · also 978-2350315355 (the Louvre\'s own number for the same book) — a notably different book, from the show\'s Paris exhibition. (source: mini-site.louvre.fr)'],
+      'VL-003: Hubert Robert, NGA card — the Paris city from the Louvre being one of her venues; the second number still the Louvre’s');
+    const ham = caseRow(4, '2019-03-14', [{ proofUrl: 'https://www.leslibraires.ca/en/livres/hammershoi-jean-loup-champion-9789462302495.html' },
+      { proofUrl: 'https://www.rizzoliusa.com/book/9780847899289', year: 2023 }]);
+    eq(shown(ham), [
+      '○ French · Culturespaces / Fonds Mercator · 978-9462302495 — the original edition. (source: leslibraires.ca)',
+      '● English · Rizzoli Electa · 978-0847899289 — the English edition, published later. (source: rizzoliusa.com)'],
+      'VL-004: Hammershøi — the original, and the English edition published later');
+    ham.editions[1].year = null;
+    eq(shown(ham)[1], '● English · Rizzoli Electa · 978-0847899289 — the English edition. (source: rizzoliusa.com)', 'VL-005:   its year not known — "the English edition"');
+    const HAN = 'https://hannibalbooks.be/uploads/images/covers/2026_ENG_VOORJAAR_DRUK_compressed.pdf';
+    const met = caseRow(8, '2026-02-20', [{ proofUrl: HAN }, { proofUrl: HAN }, { proofUrl: HAN }]);
+    eq(shown(met), ['● English · paperback · Hannibal · 978-9493416543.', '○ Dutch · Hannibal · 978-9493416550.', '○ Italian · Hannibal · 978-9493416857.',
+      '(source for all three: hannibalbooks.be)'], 'VL-006: Metamorphoses — one house, only the language differs: no notes, one shared source line');
+    eq([5, 6, 7, 9].map(n => shown(caseRow(n, '2024-01-01', []))), [null, null, null, null],
+      'VL-007: Watteau, Canaletto – Guardi, Botticelli, Millet — one version: no version lines, the card as now');
+    eq(api.versionLines({ museumId: 'louvre', editions: null }), null, 'VL-008: an old row with no versions has no version lines');
+    const two = caseRow(1, '2022-03-31', [{ proofUrl: LOUVRE_ED }, { proofUrl: LOUVRE_ED }]);
+    two.editions = two.editions.slice(0, 2);
+    eq(shown(two).slice(-1), ['(source for all two: louvre.fr)'], 'VL-009: two versions from one page — "(source for all two: …)"');
+    const bound = { ...vasari, editions: vasari.editions.map((v, i) => ({ ...v, binding: i === 0 ? 'with flaps' : v.binding })) };
+    ok(!/flaps/.test(shown(bound)[0]), 'VL-010: binding is "hardcover" or "paperback" only — never "with flaps"', shown(bound)[0]);
+    const noCity = caseRow(2, '2016-03-08', [{ proofUrl: PDF }, { proofUrl: NGA }]);
+    ok(/a notably different book, from the show's other exhibition\./.test(shown(noCity)[1]), 'VL-011: another showing’s book with no city known — "from the show\'s other exhibition"', shown(noCity)[1]);
+    ok(shown(vasari).every(l => /978-\d{10}/.test(l) && !/978\d{10}/.test(l)), 'VL-012: every ISBN-13 is shown 978-xxxxxxxxxx');
+
+    // ── PK-001..PK-003: her pick moves; the card's book follows it, nothing else changes
+    const card = (title, isbn13, publisher) => ({ catalogueTitle: title, isbn13, publisher, publisherUrl: null, publisherResult: null, shopState: 'web', shopUrl: null });
+    const row0 = { ...vasari, catalogueTitle: 'The Book of Drawings', isbn13: '9782359063738', publisher: 'Lienart', publisherUrl: 'https://www.lienarteditions.com/', publisherResult: 'site',
+      shopState: 'web', shopUrl: null, interested: true, acquiring: 'yes', editedAt: null,
+      editions: vasari.editions.map((v, i) => ({ ...v, card: card('Book ' + i, v.isbn13, v.publisher) })) };
+    row0.editions[1].card = { catalogueTitle: 'The Book of Drawings', isbn13: '9782359063738', publisher: 'Lienart', publisherUrl: 'https://www.lienarteditions.com/', publisherResult: 'site', shopState: 'web', shopUrl: null };
+    const moved = api.pickRow(row0, 2, '2026-10-10T00:00:00.000Z');
+    const changed = Object.keys(moved).filter(k => JSON.stringify(moved[k]) !== JSON.stringify(row0[k])).sort();
+    eq([moved.editionPick, moved.isbn13, changed], [2, '9789171009166', ['catalogueTitle', 'editedAt', 'editionPick', 'isbn13', 'publisher', 'publisherResult', 'publisherUrl']],
+      'PK-001: Vasari — picking Stockholm’s hardcover moves the pick and fills the card’s book from it; nothing else in the row changes');
+    eq(api.pickRow(moved, 1, 'later'), { ...row0, editedAt: 'later' }, 'PK-002:   picking Lienart’s again restores its book, its publisher page included');
+    eq(api.pickRow(row0, 1, 'x'), row0, 'PK-003:   tapping the version already picked changes nothing');
   }
 
   // ── CY-001..CY-003: the other showing's city and an edition's year ─────────
