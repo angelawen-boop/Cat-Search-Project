@@ -62,9 +62,9 @@ is why they live in one repo, on one branch.
   session, after time has passed, try the free tier again first. A sub-agent
   cannot spend the key (permissions block it), so the main session does keyed
   fetches; a large reply is saved to a file — extract it by script, never retype.
-- **`/orchestrate` runs only when she types it** (her decision). No session
+- **`/orch` runs only when she types it** (her decision). No session
   routes work through it, or follows its steps, unless she has typed
-  `/orchestrate` in that session.
+  `/orch` in that session.
 - **`/close` ends a session** (her design): guide update, clear up, a fixed
   four-part summary. Never archives the session. Runs only when she types it.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).

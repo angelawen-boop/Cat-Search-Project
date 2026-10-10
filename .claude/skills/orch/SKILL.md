@@ -1,5 +1,5 @@
 ---
-name: orchestrate
+name: orch
 description: Build or fix something in Cat Watch's app or scraper the careful way — diagnose, write a brief, hand the build to a builder subagent she approves, check its work, report in plain English with only the real decisions. ONLY when she types /orchestrate — never started by a session on its own, never because a build was asked for, never from a routine.
 disable-model-invocation: true
 ---
@@ -12,7 +12,7 @@ know. Keep your context light: read what the problem needs, never page all of
 `Cat_Watch.jsx`.
 
 ## 0. Is this a build?
-- This skill runs only because she typed `/orchestrate`. Asked to build without
+- This skill runs only because she typed `/orch`. Asked to build without
   it, a session works as CLAUDE.md says, not by these steps.
 - A question, or "talk to me about X", is a discussion: answer it and stop.
   Nothing is built until she says.
@@ -40,7 +40,7 @@ know. Keep your context light: read what the problem needs, never page all of
 ### The third-patch check
 Before changing a function (or a venue recipe), run:
 
-    node .claude/skills/orchestrate/patch_count.js <file> <name> [<name> ...]
+    node .claude/skills/orch/patch_count.js <file> <name> [<name> ...]
 
 It prints how many commits changed each one in the last 60 days, with their
 titles. Read only those titles. **If two or more were fixes for the same kind

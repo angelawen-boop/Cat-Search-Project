@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /*
- * patch_count.js — the third-patch check (her decision; .claude/skills/orchestrate/SKILL.md).
+ * patch_count.js — the third-patch check (her decision; .claude/skills/orch/SKILL.md).
  *
  * For each named function (or venue recipe, e.g. `ng`) in a file, prints how many
  * commits changed it in the last 60 days, with each commit's date and title.
  * Git follows the code back through moves, so a rename or a shift in line numbers
  * still counts. A shallow clone is deepened to 60 days first, quietly.
  *
- *   node .claude/skills/orchestrate/patch_count.js <file> <name> [<name> ...]
+ *   node .claude/skills/orch/patch_count.js <file> <name> [<name> ...]
  */
 'use strict';
 const fs = require('fs');
@@ -18,7 +18,7 @@ const git = (args) => execFileSync('git', args, { encoding: 'utf8', stdio: ['ign
 
 const [file, ...names] = process.argv.slice(2);
 if (!file || !names.length) {
-  console.error('usage: node .claude/skills/orchestrate/patch_count.js <file> <name> [<name> ...]');
+  console.error('usage: node .claude/skills/orch/patch_count.js <file> <name> [<name> ...]');
   process.exit(2);
 }
 
