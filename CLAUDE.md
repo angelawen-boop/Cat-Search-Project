@@ -384,8 +384,9 @@ whether the committed shell still matches.
 **To publish, run `node build/build_app.js` and follow what it prints** — nothing
 else. Built on `main` it says how to get to `claude/ledger-cloud`; built there it
 sets the test page's title and prints the read, read-every-line, publish order.
-The service refuses a session that has not Read the live page in full, so that
-reading (~11 Read calls) is required, not optional.
+Only a session's FIRST publish needs a read; later ones resend the same file.
+Whether that read must page every line (~11 Read calls) is unproven — it once was
+not needed, and the service now says it is; the printed steps try without it first.
 
 ### The mental model, load-bearing
 
