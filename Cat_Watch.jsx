@@ -1986,8 +1986,8 @@ async function cloudTakeSnapshot(db,text,info){
   await db.doc(SNAP_COLL+"/"+w.id).set(rec);
   return rec;
 }
-async function cloudListSnapshots(db){
-  const q=await db.collection(SNAP_COLL).orderBy("at","desc").limit(1000).get();
+async function cloudListSnapshots(db,n){
+  const q=await db.collection(SNAP_COLL).orderBy("at","desc").limit(n||1000).get();
   return q.docs.map(d=>d.data());
 }
 async function cloudReadSnapshot(db,rec){ return cloudReadParts(db,SNAP_PARTS,rec); }
@@ -2064,7 +2064,7 @@ async function rawStore(){
 }
 // The branch's version series: main's number, then the cloud count — kept here so the
 // APP_VERSION line never clashes in a merge.
-const CLOUD_COUNT = "cloud 4";
+const CLOUD_COUNT = "cloud 5";
 // ── END OF THE CLOUD LEDGER ──────────────────────────────────────────────────
 
 const today=()=>new Date().toISOString().slice(0,10);
@@ -3546,7 +3546,7 @@ export default function App(){
   const[lookLabel,setLookLabel]=useState(null); // the progress line while a lookup or Re-check runs (lookupLabel)
   const[prog,setProg]=useState({done:0,total:0,label:""});
   // Add by link: one pop-up for CSV and Links, nothing added to the page (her design).
-  // importMode: null · "choose" · "links" (the box open below them).
+  // importMode: null · "choose" · "links" (the box open below them) · "needLedger" (empty page).
   const[importMode,setImportMode]=useState(null);
   // The shop screen, after the review: {partial, ids}. shopLooking: the venue being
   // looked for again.
@@ -4540,7 +4540,19 @@ export default function App(){
   // Cloud Saves — same name and content. The cloud copy goes first, so a cancelled file
   // cannot take it with it. Each half reports itself; a plain browser download never
   // clears the unsaved state. Never a click-triggered "Saved" tick.
+  // SAVE ASKS BEFORE IT SHRINKS THE LEDGER: fewer exhibitions on screen than the
+  // cloud copy or the newest Cloud Save holds (her ledger lost to an import onto an
+  // empty page; docs/app.md §9). A store that cannot be read never blocks a Save.
   async function handleSave(){
+    if(saveBusy||!rows.length)return;
+    let most=0;
+    if(!cloudReadOnly){ const db=await useCap("db");
+      if(db){ try{ const live=(await cloudReadLive(db)).rec; const snap=(await cloudListSnapshots(db,1))[0];
+        most=Math.max(live?live.rows||0:0,snap?snap.rows||0:0); }catch{} } }
+    if(rows.length<most){ setConfirmBox({title:"Save a smaller ledger?",text:"You\u2019re saving "+rows.length+" exhibition"+(rows.length===1?"":"s")+"; your last cloud save has "+most+". Save anyway?",yes:"Save anyway",act:saveNow}); return; }
+    saveNow();
+  }
+  async function saveNow(){
     if(saveBusy||!rows.length)return;
     const at=new Date().toISOString();
     const label=saveLabel.trim().slice(0,80);
@@ -4781,7 +4793,7 @@ export default function App(){
               work. Says what it will DO, not what is currently on. */}
           <button onClick={toggleTheme} title={theme==="dark"?"Switch to light":"Switch to dark"}
             style={{...sBtn,marginLeft:"auto",padding:"5px 9px"}}>{theme==="dark"?"\u2600 Light":"\u263D Dark"}</button>
-          <button onClick={()=>{setLinkNote(null);setImportMode("choose");}} style={sBtn}>Import</button>
+          <button onClick={()=>{setLinkNote(null);setImportMode(hasLedger?"choose":"needLedger");}} style={sBtn}>Import</button>
           <input ref={refreshFileRef} type="file" accept=".csv,text/csv" onChange={handleRefreshFile} style={{display:"none"}}/>
         </div>
         {/* The Save panel (her design): the description names the offline file and its
@@ -5239,10 +5251,19 @@ export default function App(){
           {/* Sized to what it holds. CSV and Links match Load and Save; the one pressed
               turns green (her design). */}
           <div style={{background:C.bg,borderRadius:8,...(importMode==="links"?{maxWidth:820,width:"100%"}:{width:"fit-content"}),margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px"}}>
-            <div style={{display:"flex",gap:5,justifyContent:"center"}}>
+            {/* IMPORT NEEDS A LEDGER OPEN: on an empty page it offers only the ways to open
+                one (her design), so an import can never become the whole ledger. */}
+            {importMode==="needLedger"&&<div style={{textAlign:"center"}}>
+              <div style={{fontSize:13,color:C.ink,marginBottom:10}}>Your ledger needs to be opened first.</div>
+              <div style={{display:"flex",gap:5,justifyContent:"center"}}>
+                <button onClick={()=>{setImportMode(null);requestOpenCloud();}} style={sBtn}>Open last cloud save</button>
+                <button onClick={()=>{setImportMode(null);requestImport();}} style={sBtn}>Load</button>
+              </div>
+            </div>}
+            {importMode!=="needLedger"&&<div style={{display:"flex",gap:5,justifyContent:"center"}}>
               <button onClick={()=>{setImportMode(null);refreshFileRef.current?.click();}} disabled={busy} style={sBtn}>CSV</button>
               <button onClick={()=>setImportMode("links")} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>Links</button>
-            </div>
+            </div>}
             {importMode==="links"&&<div style={{marginTop:14}}>
               {/* "Clear" sits inside the box, top right (her design): one press empties
                   it and the store. */}

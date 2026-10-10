@@ -486,6 +486,14 @@ branch's original long comments: `git show fa02d50:Cat_Watch.jsx`.
   always drawn, so an empty tray says so.
 - After an Import: "Import complete. Save it now both offline and to the
   cloud.", a blank line, then the counts — until a Save delivers both.
+- **Import needs a ledger open; Save asks before it shrinks** (her decision).
+  On an empty page Import says "Your ledger needs to be opened first." with
+  "Open last cloud save" (the live cloud copy) and Load — no CSV or Links. Save
+  asks "You're saving N exhibitions; your last cloud save has M. Save anyway?"
+  when the screen holds fewer than the cloud copy or the newest Cloud Save. Why:
+  an import onto the empty page became the whole ledger, and Save wrote that
+  2-row ledger as a file and a Cloud Save. `handleSave`, `importMode`
+  "needLedger"; `cloud_empty_import.js`, EI-001–007.
 - **The amber "not saved to a file" banner is unwired, not deleted**
   (`FILE_UNSAVED_WARNING`) — needed again if the trial fails. Load and Reset ask
   first only while the red banner shows.

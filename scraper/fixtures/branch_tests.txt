@@ -4,3 +4,4 @@
 node scraper/fixtures/cloud_ledger.js
 node scraper/fixtures/cloud_app.js
 node scraper/fixtures/cloud_two_copies.js
+node scraper/fixtures/cloud_empty_import.js

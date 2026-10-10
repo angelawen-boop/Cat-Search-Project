@@ -220,6 +220,14 @@ const script = {
       const button = t => [...win.document.querySelectorAll('button')].find(b => b.textContent.trim() === t);
       // "Import Refresh" on main; "Import" on the cloud-ledger branch.
       await act(async () => { (button('Import Refresh') || button('Import')).click(); });
+      // The cloud-ledger branch: Import on an empty page asks for a ledger first.
+      if (button('Open last cloud save')) {
+        await act(async () => { button('Cancel').click(); });
+        await act(async () => { button('Reset to Seed').click(); });
+        for (let i = 0; i < 50 && !/Starter set loaded/.test(win.document.body.textContent); i++)
+          await act(async () => { await new Promise(r => setTimeout(r, 20)); });
+        await act(async () => { button('Import').click(); });
+      }
       await act(async () => { button('Links').click(); });
       const box = win.document.querySelector('textarea');
       // Typed through the box's own handler: jsdom's input events do not reach React here.
