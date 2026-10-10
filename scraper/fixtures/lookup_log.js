@@ -218,7 +218,8 @@ const script = {
       root = createRoot(win.document.getElementById('root'));
       await act(async () => { root.render(React.createElement(App)); });
       const button = t => [...win.document.querySelectorAll('button')].find(b => b.textContent.trim() === t);
-      await act(async () => { button('Import Refresh').click(); });
+      // "Import Refresh" on main; "Import" on the cloud-ledger branch.
+      await act(async () => { (button('Import Refresh') || button('Import')).click(); });
       await act(async () => { button('Links').click(); });
       const box = win.document.querySelector('textarea');
       // Typed through the box's own handler: jsdom's input events do not reach React here.
