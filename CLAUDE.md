@@ -65,6 +65,8 @@ is why they live in one repo, on one branch.
 - **`/orchestrate` runs only when she types it** (her decision). No session
   routes work through it, or follows its steps, unless she has typed
   `/orchestrate` in that session.
+- **`/close` ends a session** (her design): guide update, clear up, a fixed
+  four-part summary. Never archives the session. Runs only when she types it.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
 
 ### Put it in code — her decision
