@@ -9,7 +9,7 @@
  * digit and only when the fetched text prints it (IG-), and an English edition
  * accepted only when a record proves it is this catalogue's (ED-), her short list of
  * joint publishers' sites (PS-), the progress line on each main path (PL-), and one book per
- * card with her three English-edition cases (HR-), a booklet's ISBN refused (BK-, Hubert Robert, real results in
+ * card with her three English-edition cases (HR-), a booklet's ISBN refused (BK-), two versions of one book (VS-, Hubert Robert, real results in
  * docs/lookup_results/hubert_robert.json).
  *
  * Hammershøi's library record is real (docs/lookup_results/jacquemart_hammershoi.json);
@@ -67,7 +67,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, englishEditionOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, englishEditionOf, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, leadsOver, bindingOfIsbn, museumImprintOnly };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -565,6 +565,39 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const F = { isbn: FR_ISBN, publisher: 'Lund Humphries', pubFrom: 'general results', publisherUrl: null };
     api.oneBook(F, [{ url: 'https://shop.test/x', title: FR, excerpts: ['ISBN ' + FR_ISBN + '\nPublisher: Somogy éditions d\'art'] }], [], '', 'louvre');
     eq(F.publisher, 'Somogy éditions d\'art', 'HR-012: a guessed publisher the ISBN’s records contradict is replaced by theirs — one book per card');
+  }
+
+  // ── VS-001..VS-008: two versions of one book (her decision, Vasari) ──────────
+  // The real Vasari lookup replayed: its results and Claude's answers
+  // (docs/lookup_results/louvre_vasari.json). Lienart's paperback 978-2359063738 and
+  // the Nationalmuseum's hardcover 978-9171009166, both 240 pages, both English.
+  {
+    const V = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'louvre_vasari.json'), 'utf8')).calls;
+    const pick = (kind, re) => V.find(c => c.kind === kind && re.test(c.objective || ''));
+    const reads = V.filter(c => c.kind === 'claude').map(c => c.data);
+    const script = {
+      mcp: (tool, args) => {
+        const o = String(args.objective || '');
+        const c = tool === 'web_search'
+          ? [pick('search', /^Confirm whether/), pick('search', /^The ISBN-13, publisher/), pick('search', /^An ENGLISH/)].find(c => c && o.slice(0, 30) === c.objective.slice(0, 30))
+          : V.find(c => c.kind === 'open' && c.urls && c.urls.join() === args.urls.join());
+        return c ? { payload: { results: c.results || [], errors: c.errors || [] } } : { payload: { results: [], errors: [] } };
+      },
+      sample: p => isShopRead(p) ? reads[0] : /"found"/.test(p) ? reads[1] : isFactsRead(p) ? reads[2] : isJudge(p) ? { kind: 'other', bookUrl: null } : {},
+    };
+    const { out, row: r } = await run(row('louvre', 'Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection'), script);
+    eq([r.isbn13, r.publisher], ['9789171009166', 'Nationalmuseum'], 'VS-001: Vasari — the hardcover (Nationalmuseum) leads the card');
+    eq(r.alsoVersion, { isbn13: '9782359063738', binding: 'paperback', publisher: 'Lienart' }, 'VS-002:   the paperback is named after it, its publisher read off Lienart’s own page carrying its ISBN');
+    eq(api.alsoLine(r.alsoVersion), 'also 978-2359063738 (paperback, Lienart)', 'VS-003:   in her words after the ISBN');
+    eq([r.englishCheck, r.originalEdition && r.originalEdition.title], ['english', 'Giorgio Vasari, le Livre des dessins'], 'VS-004:   still the English edition of the French book', out.detail);
+    eq([api.leadsOver({ binding: 'hardcover' }, { binding: 'paperback' }, 'louvre'), api.leadsOver({ binding: 'paperback', publisher: 'Lienart' }, { binding: 'hardcover', publisher: 'Nationalmuseum' }, 'louvre')],
+      [true, false], 'VS-005: hardcover leads, even over an external publisher’s paperback');
+    eq([api.leadsOver({ publisher: 'Thames & Hudson' }, { publisher: 'Nationalmuseum' }, 'louvre'), api.leadsOver({ publisher: 'Nationalmuseum' }, { publisher: 'Thames & Hudson' }, 'louvre')],
+      [true, false], 'VS-006: binding unknown — an external publisher leads a museum’s own imprint');
+    eq([api.museumImprintOnly('Musée du Louvre Editions', 'louvre'), api.museumImprintOnly('Musée du Louvre Editions / Lienart', 'louvre')], [true, false],
+      'VS-007: a co-edition with an outside house is not a museum’s own imprint');
+    const HR = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'hubert_robert.json'), 'utf8'));
+    eq([api.bindingOfIsbn(HR.louvre2_facts, '9782757210642')], ['hardcover'], 'VS-008: binding read off the records of that one ISBN (Hubert Robert, the full catalogue)');
   }
 
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');

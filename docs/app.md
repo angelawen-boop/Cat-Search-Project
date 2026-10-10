@@ -56,7 +56,10 @@ code (`isbnInResults`, on the book's title once known, never the show's), then
 Claude's. One book per card: a guessed publisher the ISBN's own records
 contradict gives way to theirs (`oneBook`); an ISBN whose records print far fewer
 pages than the catalogue is a booklet — another ISBN printed with the catalogue's
-count replaces it, else none is filed (`notABooklet`; Hubert Robert's album; BK-). Publisher: read off the ISBN's results
+count replaces it, else none is filed (`notABooklet`; Hubert Robert's album; BK-).
+Two versions of one book (same key words, page counts agreeing): hardcover leads,
+else an outside publisher over a museum's own imprint; the other is named after the
+ISBN, "also 978-… (paperback, X)" (`otherVersionOf`, `leadsOver`; Vasari; VS-). Publisher: read off the ISBN's results
 (`publisherOnIsbnResults`), then printed on the book's own shop or publisher
 page, then any read of general results — a guess wherever it came from. The
 diagnostic says which won. Title: `titleAsPrinted`.

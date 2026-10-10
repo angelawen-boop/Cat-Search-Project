@@ -1,0 +1,403 @@
+{
+ "_about": "Real results the app received in the Vasari lookup (record L179160176655035ye, Louvre), and Claude’s answers there. Used by catalogue_route.js VS- tests.",
+ "calls": [
+  {
+   "n": 1,
+   "kind": "open",
+   "objective": "The printed exhibition catalogue for “Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection”: the book’s own product page on this shop, its full title and its price.",
+   "urls": [
+    "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/",
+    "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2",
+    "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3",
+    "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4",
+    "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5",
+    "https://boutique.louvre.fr/en/search/products/?q=Giorgio%20Vasari%3A%20The%20Book%20of%20Drawings.%20The%20Fate%20of%20a%20Legendary%20Collection"
+   ],
+   "results": [
+    {
+     "url": "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/",
+     "title": "\n\t\t\t\tExhibition catalogues - Page 1 · Louvre Shop\t\t\n\t",
+     "excerpts": [
+      "# Exhibition catalogues\n## Your experience at the louvre\n* [Book your ticket](https://ticket.louvre.fr/en)\n* [Discover the latest news and practical information about the museum](https://www.louvre.fr/en/visit)\n* [Become a Friend of the Louvre](https://www.amisdulouvre.fr/adhesion)"
+     ]
+    },
+    {
+     "url": "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2",
+     "title": "\n\t\t\t\tExhibition catalogues - Page 2 · Louvre Shop\t\t\n\t",
+     "excerpts": [
+      "# Exhibition catalogues\n## Your experience at the louvre\n* [Book your ticket](https://ticket.louvre.fr/en)\n* [Discover the latest news and practical information about the museum](https://www.louvre.fr/en/visit)\n* [Become a Friend of the Louvre](https://www.amisdulouvre.fr/adhesion)"
+     ]
+    },
+    {
+     "url": "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3",
+     "title": "\n\t\t\t\tExhibition catalogues - Page 3 · Louvre Shop\t\t\n\t",
+     "excerpts": [
+      "# Exhibition catalogues\nDrawing mainly on the collections of the Musée du Louvre and the Château de Versailles, the publication traces the birth of the Musée du Louvre in Paris in the eighteenth century and sheds light on the way a public collection is formed.\nFrench\n[More Details](https://boutique.louvre.fr/en/product/13227-un-louvre-autre-ouvrir-un-musee-pour-tous.html \"More info about Exhibition Catalogue D'un Louvre à l'autre - Ouvrir un musée pour tous\")\n\n...\n\n## Your experience at the louvre\n* [Book your ticket](https://ticket.louvre.fr/en)\n* [Discover the latest news and practical information about the museum](https://www.louvre.fr/en/visit)\n* [Become a Friend of the Louvre](https://www.amisdulouvre.fr/adhesion)"
+     ]
+    },
+    {
+     "url": "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4",
+     "title": "\n\t\t\t\tExhibition catalogues - Page 4 · Louvre Shop\t\t\n\t",
+     "excerpts": [
+      "# Exhibition catalogues\n+ Current price € 10\nExhibition of drawings and paintings dedicated to the now-defunct Arcueil estate, created in the 1740s by four artists: Jean-Baptiste Oudry, François Boucher, Jacques-André Portail and Charles-Joseph Natoire.\nFor the first time, the present work brings together almost all the known drawings, i.e. just over sixty sheets.\n\n...\n\n## Your experience at the louvre\n* [Book your ticket](https://ticket.louvre.fr/en)\n* [Discover the latest news and practical information about the museum](https://www.louvre.fr/en/visit)\n* [Become a Friend of the Louvre](https://www.amisdulouvre.fr/adhesion)"
+     ]
+    },
+    {
+     "url": "https://boutique.louvre.fr/en/search/products/?q=Giorgio%20Vasari%3A%20The%20Book%20of%20Drawings.%20The%20Fate%20of%20a%20Legendary%20Collection",
+     "title": "\n\t\t\t\tGiorgio Vasari The Book Of Drawings The Fate Of A Legendary Collection Products Search - Page 1 · Louvre Shop\t\t\n\t",
+     "excerpts": [
+      "# Search results for \"Giorgio Vasari The Book of Drawings The Fate of a Legendary Collection\"\n## Find us in store\nAllée du Grand Louvre – access under the Pyramid or from the Carrousel du Louvre\n75001 Paris"
+     ]
+    }
+   ],
+   "errors": [
+    {
+     "url": "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5",
+     "error_type": "http_error",
+     "http_status_code": 404,
+     "content": null
+    }
+   ]
+  },
+  {
+   "n": 2,
+   "kind": "claude",
+   "objective": null,
+   "urls": null,
+   "data": {
+    "found": false,
+    "catalogueTitle": null,
+    "isbn13": null,
+    "publisher": null,
+    "publisherUrl": null,
+    "shopUrl": null,
+    "thisVenue": false
+   }
+  },
+  {
+   "n": 3,
+   "kind": "search",
+   "objective": "Confirm whether a printed catalogue was published for the exhibition “Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection” at Louvre Museum, and give its exact title, ISBN-13 and publisher. Museums often state these in a press release; art-book publishers and booksellers list them too.",
+   "urls": null,
+   "results": [
+    {
+     "url": "https://www.bmvr.marseille.fr/ark:/20868/pf0002780340",
+     "title": "Giorgio Vasari, the \"Book of drawings\" : the fate of a ...",
+     "excerpts": [
+      "Giorgio Vasari, the \"Book of drawings\" : the fate of a ...\nGiorgio Vasari, the \"Book of drawings\" [Texte imprimé] : the fate of a mythical collection : [exhibition, Stockholm, Nationalmuseum, 6 October 2022-8 January 2023] / [jointly organised by the Musée du Louvre] ; [catalogue by] Louis Frank and Carina Fryklund"
+     ]
+    },
+    {
+     "url": "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/giorgio-vasari",
+     "title": "Giorgio Vasari - The Book of Drawings. The Fate of a Legendary Collection",
+     "excerpts": [
+      "Giorgio Vasari - The Book of Drawings. The Fate of a Legendary Collection\n\nAller au contenu\n\n* Visit\n* Exhibitions and Events\n* Explore\n* See more\n\nprevious navigation element next navigation item\n\n# Giorgio Vasari The Book of Drawings. The Fate of a Legendary Collection\n\nPast\n\n31 March – 18 July 2022\n\n* Exhibition Overview\n* Giorgio Vasari. The Book of Drawings\n* Selected Works\n\nfollowing sections previous sections\n\n## Giorgio Vasari\n\n### The Book of Drawings. The Fate of a Legendary Collection\n\n31 March – 18 July 2022\n\n|Average duration of the visit |1H |\n| --- | --- |\n|Location |Rotonde Sully |\n\nShare article\n\nGiorgio Vasari created what was probably the first collection of drawings based on a historicising logic: the legendary _Libro de’ disegni_ , widely mentioned in the second edition of _The Lives of the Most Excellent Painters, Sculptors and Architects_ , published in Florence in 1568 by the Giunti house. On 29 June 1574, two days after the death of Vasari, his heirs handed over the Book to the Grand Duke of Tuscany, Francesco I, who had sent for it. After that, it disappeared.\n\nThe great 17th- and 18th-century collectors and connoisseurs all dreamed of acquiring and believed they owned drawings from the Book. The most famous among them, Pierre-Jean Mariette, sparked a tradition viewing a certain type of decorative and architectural mount as indicating a sheet’s former belonging to Vasari’s legendary collection.\n\nIt is now known, however, since in 1950 two great scholars, Arthur Popham and Philip Pouncey, noticed a mysterious emblem on a ‘Vasari mount’, that things are not as simple as that. This exhibition, organised by the Louvre and the Nationalmuseum in Stockholm, focuses on the unexpected consequences of that discovery made over half a century ago.\n\n## Organised by:\n\nLouis Frank, Musée du Louvre, and Carina Fryklund, Nationalmuseum, Stockholm.\n\n## Acknowledgements\n\nThe exhibition is sponsored by **Canson** .\n\n## Giorgio Vasari. The Book of Drawings\n\n### Giorgio Vasari. The Book of Drawings\n\n(In French)  \nEdited by L. Frank and C. Fryklund. Co-publication: Musée du Louvre Editions / Lienart, 240 pages, 130 illustrations, €29\n\n[Find out more](http://editions.louvre.fr/en/titles/exhibition-catalogs/artists/giorgio-vasari-le-livre-des-dessins.html)\n\n## Selected Works\n\nAttributed to Leonardo da Vinci, Seven Studies of Heads Saint John the Baptist as a Child\n\nFelice Pinariccio, The Mystical Marriage of Saint Catherine of Alexandria\n\nMarco del Moro, Diana and Endymion\n\nGiulio Clovio, The Dead Christ Held Up by Saint John and Lamented by the Holy Women\n\nGirolamo Siciolante da Sermoneta, Pepin the Younger Leading Captive Lombard King Aistulf and Restoring the Exarchate of Ravenna to the Church\n\nSofonisba Anguissola, Young Woman Smiling at a Child Bitten by a Crayfish, Naples Museo e Real Bosco di Capodimonte\n\nprev next\n\nLet’s stay in touch\n\nGet updates from the Louvre in your inbox according to your preferences (French only).\n\n[Subscribe](https://lettredinformation.louvre.fr/gerico/louvre_profile_edit.fl)\n\n* [Legal Notice](https://www.louvre.fr/en/legal-information-and-terms-of-use)\n* [Privacy policy](https://www.louvre.fr/en/data-protection-policy)\n* [Cookies](https://www.louvre.fr/en/cookie-management-and-policy)\n* [Credits (in French)](https://www.louvre.fr/credits)\n* Copyrights"
+     ]
+    },
+    {
+     "url": "https://ccbmn.culture.gouv.fr/Default/doc/SYRACUSE/1115112/giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-exhibition-stockholm-nationalm?_lg=fr-FR",
+     "title": "Giorgio Vasari, the \"Book of drawings\" : the fate of a ...",
+     "excerpts": [
+      "Giorgio Vasari, the \"Book of drawings\" : the fate of a ...\nGiorgio Vasari, the \"Book of drawings\" : the fate of a mythical collection : [exhibition, Stockholm, Nationalmuseum, 6 October 2022-8 January 2023] / [jointly organised by the Musée du Louvre] - [catalogue by] Louis Frank and Carina Fryklund Auteur (s)"
+     ]
+    },
+    {
+     "url": "https://www.livre-rare-book.com/book/20578314/123134",
+     "title": "Giorgio Vasari - Frank, Louis, and Carina Fryklund - Giorgio ...",
+     "excerpts": [
+      "Giorgio Vasari - Frank, Louis, and Carina Fryklund - Giorgio ...\n‎Frank, Louis, and Carina Fryklund: Giorgio Vasari: The Book of Drawings. The Fate of a Mythical Collection. Exhibition: Paris, MusÃe du Louvre and Stockholm, Nationalmuseum, 2022. 240 pages, over 100 colour and black and white illustrations. Paperback. 25 x 20cms. A study and recreation of Giorgio Vasari's 'Libro de' disegni', his lost collection of drawings accompanying his 'Lives of the"
+     ]
+    },
+    {
+     "url": "https://presse.louvre.fr/giorgio-vasari-le-livre-des-dessins-2-2",
+     "title": "Giorgio Vasari : The Book of Drawings - Espace presse du ...",
+     "excerpts": [
+      "Giorgio Vasari : The Book of Drawings - Espace presse du ...\nThe great 17th- and 18th-century collectors and connoisseurs all dreamed of acquiring and believed they owned drawings from the Book. The most famous among them, Pierre-Jean Mariette, sparked a tradition viewing a certain type of decorative and architectural mount as indicating a sheet’s former belonging to Vasari’s legendary collection."
+     ]
+    },
+    {
+     "url": "https://heneage.com/books/new-titles/giorgio-vasari-book-drawings-fate-mythical-collection",
+     "title": "Giorgio Vasari: The Book of Drawings. The Fate of a Mythical ...",
+     "excerpts": [
+      "Giorgio Vasari: The Book of Drawings. The Fate of a Mythical ...\nExhibition: Paris, Musée du Louvre and Stockholm, Nationalmuseum, 2022 240 pages, over 100 colour and black and white illustrations. Paperback. 25 x 20cms. A study and recreation of Giorgio Vasari's 'Libro de' disegni', his lost collection of drawings accompanying his 'Lives of the Most Eminent Painters, Sculptors and Architects'."
+     ]
+    },
+    {
+     "url": "https://arthive.com/exhibitions/6323",
+     "title": "Giorgio Vasari. Book of drawings. The fate of a legendary ...",
+     "excerpts": [
+      "Giorgio Vasari. Book of drawings. The fate of a legendary ...\nThe Louvre is holding an exhibition \"Giorgio Vasari. Book of Drawings. The fate of a legendary collection\". Giorgio Vasari created what was probably the first collection of drawings based on the logic of historicization: the legendary \"Libro de' designi\" - the widely acclaimed \"Vitae descriptions of outstanding painters, sculptors and architects. on June 29, 1574, two days after Vasari's death"
+     ]
+    },
+    {
+     "url": "https://www.iberlibro.com/9782359063738/Giorgio-Vasari-book-drawings-fate-2359063731/plp",
+     "title": "Giorgio vasari, book of drawings: The fate of a mythical ...",
+     "excerpts": [
+      "Giorgio vasari, book of drawings: The fate of a mythical ...\nGiorgio Vasari, The book of drawings ; the fate of a mythical collection / Louis Frank and Carina Fryklund ; authors: Helen Evans, Louis Frank, Carina Fryklund, Tom Sandström, Stefania Tullio Cataldo, Karin Wretstrand; [published to accompany the exhibition \"Giorgio Vasari, The Book of Drawings: The Fate of a Mythical Collection\", shown in Stockholm, at the Nationalmuseum from 6 October 2022"
+     ]
+    },
+    {
+     "url": "https://www.amazon.com/Giorgio-Vasari-Book-of-drawings/dp/2359063731",
+     "title": "Giorgio Vasari, the Book of drawings: The fate of a mythical ...",
+     "excerpts": [
+      "Giorgio Vasari, the Book of drawings: The fate of a mythical ...\nGiorgio Vasari a réuni ce qui fut probablement la première collection de dessins fondée sur une logique historisante : le légendaire Libro de' disegni, conçu comme parallèle à la seconde édition des Vies des plus excellents peintres, sculpteurs et architectes, parue à Florence, en 1568, chez les Giunti."
+     ]
+    },
+    {
+     "url": "https://www.louvre.fr/expositions-et-evenements/expositions/giorgio-vasari",
+     "title": "Giorgio Vasari - Le Livre des dessins. Destinées d’une collection mythique",
+     "excerpts": [
+      "Giorgio Vasari - Le Livre des dessins. Destinées d’une collection mythique\n\nAller au contenu\n\n* Visiter\n* Expositions et événements\n* Découvrir\n* Voir plus\n\nprevious navigation element next navigation item\n\n# Giorgio Vasari Le Livre des dessins. Destinées d’une collection mythique\n\nPassée\n\n31 mars – 18 juillet 2022\n\n* Présentation\n* Giorgio Vasari, le Livre des dessins\n* Sélection d'œuvres\n\nfollowing sections sections précédentes\n\n## Giorgio Vasari\n\n### Le Livre des dessins. Destinées d’une collection mythique\n\n31 mars – 18 juillet 2022\n\n|Durée moyenne |1 h |\n| --- | --- |\n|Lieu |Rotonde Sully |\n\nPartager cet article\n\nGiorgio Vasari a réuni ce qui fut probablement la première collection de dessins fondée sur une logique historisante : le légendaire _Libro de’ disegni_ , qui fait son apparition dans la seconde édition des _Vies des plus excellents peintres, sculpteurs et architectes_ , parue à Florence, en 1568, chez les Giunti.\n\nLe 29 juin 1574, deux jours après la mort de Vasari, le Libro fut remis par ses héritiers au grand-duc de Toscane, Francesco I, qui l’avait envoyé chercher. Ensuite, il disparaît. Les grands collectionneurs et connaisseurs des 17e et 18e siècles ont tous rêvé d’acquérir et cru qu’ils possédaient des dessins du _Libro_ . Le plus  élèbre de tous, Pierre-Jean Mariette, fut à la source d’une tradition historiographique qui voyait dans un certain type de montage, ornemental et architecturé, le signe de l’appartenance passée d’une feuille au mythique recueil vasarien. Mais on sait, depuis qu’en 1950 deux grands savants, Arthur Popham et Philip Pouncey, ont remarqué sur un « montage Vasari » la présence d’un mystérieux emblème, que les choses ne sont pas aussi simples.\n\nC’est aux conséquences inattendues de cette découverte, vieille de plus d’un demi-siècle, qu’est consacrée cette exposition.\n\n## Commissaires\n\nLouis Frank, musée du Louvre, et Carina Fryklund, Nationalmuseum, Stockholm.\n\n## Remerciements\n\nCette exposition bénéficie du soutien de **Canson** .\n\n## Giorgio Vasari, le Livre des dessins\n\n### Giorgio Vasari, le Livre des dessins\n\nSous la direction de L. Frank et de C. Fryklund.  \nCoédition musée du Louvre éditions / Lienart, 240 p., 130 ill., 29 €\n\n[En savoir plus](http://editions.louvre.fr/fr/les-ouvrages/catalogues-dexposition/artistes/giorgio-vasari-le-livre-des-dessins.html)\n\n## Sélection d'œuvres\n\nAttribué à Léonard de Vinci, Sept études de têtes Saint Jean Baptiste enfant\n\nFelice Pinariccio, Le Mariage mystique de sainte Catherine d’Alexandrie\n\nMarco del Moro, Diane et Endymion\n\nGiulio Clovio, Le Christ mort soutenu par saint Jean et pleuré par les Saintes Femmes\n\nGirolamo Siciolante da Sermoneta, Pépin le Bref menant captif Astolphe, roi des Lombards et remettant à l'Eglise l'exarchat de Ravenne\n\nSofonisba Anguissola, Jeune fille se riant d'un enfant mordu par une écrevisse, Naples Museo e Real Bosco di Capodimonte\n\nprev next\n\nRestons en contact\n\nRecevez des nouvelles du Louvre selon vos goûts !\n\n[Inscrivez-vous](https://lettredinformation.louvre.fr/gerico/louvre_profile_edit.fl)\n\n* [Mentions légales](https://www.louvre.fr/mentions-legales)\n* [Données personnelles](https://www.louvre.fr/politique-de-protection-des-donnees-personnelles)\n* [Cookies](https://www.louvre.fr/gestion-et-politique-des-cookies)\n* [Accessibilité : partiellement conforme](https://www.louvre.fr/accessibilite-numerique)\n* [Crédits](https://www.louvre.fr/credits)\n* Crédits photographiques"
+     ]
+    }
+   ]
+  },
+  {
+   "n": 4,
+   "kind": "claude",
+   "objective": null,
+   "urls": null,
+   "data": {
+    "found": true,
+    "catalogueTitle": "Giorgio Vasari. The Book of Drawings",
+    "isbn13": null,
+    "publisher": "Musée du Louvre Editions / Lienart",
+    "publisherUrl": null,
+    "shopUrl": "http://editions.louvre.fr/en/titles/exhibition-catalogs/artists/giorgio-vasari-le-livre-des-dessins.html",
+    "thisVenue": true
+   }
+  },
+  {
+   "n": 5,
+   "kind": "open",
+   "objective": "The ISBN-13, the publisher, and any link to the publisher’s own page for the book “Giorgio Vasari. The Book of Drawings”, including any details or specification panel on the page.",
+   "urls": [
+    "http://editions.louvre.fr/en/titles/exhibition-catalogs/artists/giorgio-vasari-le-livre-des-dessins.html"
+   ],
+   "results": [],
+   "errors": [
+    {
+     "url": "http://editions.louvre.fr/en/titles/exhibition-catalogs/artists/giorgio-vasari-le-livre-des-dessins.html",
+     "error_type": "http_error",
+     "http_status_code": 403,
+     "content": null
+    }
+   ]
+  },
+  {
+   "n": 6,
+   "kind": "search",
+   "objective": "The ISBN-13, publisher, language and exact printed title of the exhibition catalogue “Giorgio Vasari. The Book of Drawings”, published by Musée du Louvre Editions / Lienart, for the exhibition at Louvre Museum.",
+   "urls": null,
+   "results": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Libro_de%27_Disegni",
+     "title": "Libro de' Disegni - Wikipedia",
+     "excerpts": [
+      "Libro de' Disegni - Wikipedia\nThe Libro de' Disegni (Italian for Book of Drawings) was a collection of drawings gathered, sorted, and grouped by Giorgio Vasari whilst writing his Lives of the Most Excellent Painters, Sculptors, and Architects."
+     ]
+    },
+    {
+     "url": "https://heneage.com/books/new-titles/giorgio-vasari-book-drawings-fate-mythical-collection",
+     "title": "Giorgio Vasari: The Book of Drawings. The Fate of a Mythical ...",
+     "excerpts": [
+      "Giorgio Vasari: The Book of Drawings. The Fate of a Mythical ...\nExhibition: Paris, Musée du Louvre and Stockholm, Nationalmuseum, 2022 240 pages, over 100 colour and black and white illustrations. Paperback. 25 x 20cms. A study and recreation of Giorgio Vasari's 'Libro de' disegni', his lost collection of drawings accompanying his 'Lives of the Most Eminent Painters, Sculptors and Architects'."
+     ]
+    },
+    {
+     "url": "https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings",
+     "title": "Giorgio Vasari, the Book of Drawings - lienarteditions",
+     "excerpts": [
+      "PARUTION En librairie le 29 septembre 2022. • Cet ouvrage est publié à l’occasion de l’exposition Giorgio Vasari, le Livre des dessins, présentée du 31 mars au 18 juillet 2022, au musée du Louvre, Rotonde de Sully, puis du 29 septembre 2022 au 8 janvier 2023 au Nationalmuseum de Stockholm."
+     ]
+    },
+    {
+     "url": "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/giorgio-vasari",
+     "title": "Giorgio Vasari - The Book of Drawings. The Fate of a Legendary Collection",
+     "excerpts": [
+      "... Acknowledgements\n\nThe exhibition is sponsored by **Canson** .\n\n## Giorgio Vasari. The Book of Drawings\n\n### Giorgio Vasari. The Book of Drawings\n\n(In French)  \nEdited by L. Frank and C. Fryklund. Co-publication: Musée du Louvre Editions / Lienart"
+     ]
+    },
+    {
+     "url": "https://catalogue.bnf.fr/ark:/12148/cb47129059v",
+     "title": "Notice bibliographique Giorgio Vasari, the \"Book of drawings ...",
+     "excerpts": [
+      "Titre (s) :Giorgio Vasari, the \"Book of drawings\" [Texte imprimé] : the fate of a mythical collection : [exhibition, Stockholm, Nationalmuseum, 6 October 2022-8 January 2023] / [jointly organised by the Musée du Louvre] ; [catalogue by] Louis Frank and Carina Fryklund"
+     ]
+    },
+    {
+     "url": "https://www.bmvr.marseille.fr/ark:/20868/pf0002780340",
+     "title": "Giorgio Vasari, the \"Book of drawings\" : the fate of a ...",
+     "excerpts": [
+      "Giorgio Vasari, the \"Book of drawings\" : the fate of a ...\nGiorgio Vasari, the \"Book of drawings\" [Texte imprimé] : the fate of a mythical collection : [exhibition, Stockholm, Nationalmuseum, 6 October 2022-8 January 2023] / [jointly organised by the Musée du Louvre] ; [catalogue by] Louis Frank and Carina Fryklund"
+     ]
+    },
+    {
+     "url": "https://ccbmn.culture.gouv.fr/Default/doc/SYRACUSE/1115112/giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-exhibition-stockholm-nationalm?_lg=fr-FR",
+     "title": "Giorgio Vasari, the \"Book of drawings\" : the fate of a ...",
+     "excerpts": [
+      "Giorgio Vasari, the \"Book of drawings\" : the fate of a ...\nGiorgio Vasari, the \"Book of drawings\" : the fate of a mythical collection : [exhibition, Stockholm, Nationalmuseum, 6 October 2022-8 January 2023] / [jointly organised by the Musée du Louvre] - [catalogue by] Louis Frank and Carina Fryklund Auteur (s)"
+     ]
+    },
+    {
+     "url": "https://www.livre-rare-book.com/book/20578314/123134",
+     "title": "Giorgio Vasari - Frank, Louis, and Carina Fryklund - Giorgio ...",
+     "excerpts": [
+      "Giorgio Vasari - Frank, Louis, and Carina Fryklund - Giorgio ...\n‎Frank, Louis, and Carina Fryklund: Giorgio Vasari: The Book of Drawings. The Fate of a Mythical Collection. Exhibition: Paris, MusÃe du Louvre and Stockholm, Nationalmuseum, 2022. 240 pages, over 100 colour and black and white illustrations. Paperback. 25 x 20cms. A study and recreation of Giorgio Vasari's 'Libro de' disegni', his lost collection of drawings accompanying his 'Lives of the"
+     ]
+    },
+    {
+     "url": "https://presse.louvre.fr/giorgio-vasari-le-livre-des-dessins-2-2",
+     "title": "Giorgio Vasari : The Book of Drawings - Espace presse du ...",
+     "excerpts": [
+      "Giorgio Vasari : The Book of Drawings - Espace presse du ...\nThis exhibition, organised by the Louvre and the Nationalmuseum in Stockholm, focuses on the unexpected consequences of that discovery made over half a century ago."
+     ]
+    },
+    {
+     "url": "https://www.ugobozzieditore.it/volume/giorgio-vasari1511-1574",
+     "title": "Ugo Bozzi Editore | Catalogo",
+     "excerpts": [
+      "Ugo Bozzi Editore | Catalogo\nThis is the first catalogue raisonné of the drawings of Giorgio Vasari, Florentine Renaissance painter, architect, and author of the Lives of the Artists. With over 500 sheets surviving in numerous public and private collections, Vasari’s drawings oeuvre is among the largest of any mid-16 th century Florentine artist. Almost all his drawings are studies for frescoes, altarpieces, easel"
+     ]
+    }
+   ]
+  },
+  {
+   "n": 7,
+   "kind": "search",
+   "objective": "An ENGLISH-language edition of the exhibition catalogue “Giorgio Vasari. The Book of Drawings” (Louvre Museum): its English title and its own ISBN, as library catalogues and publishers record it.",
+   "urls": null,
+   "results": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Libro_de%27_Disegni",
+     "title": "Libro de' Disegni - Wikipedia",
+     "excerpts": [
+      "Stockholm](https://en.wikipedia.org/wiki/Nationalmuseum,_Stockholm \"Nationalmuseum, Stockholm\") . [[ 1 ]]() There are also drawings from the _Libro_ in the prints and drawings departments of the [Uffizi](https://en.wikipedia.org/wiki/Uffizi \"Uffizi\") , the [British Museum](https://en.wikipedia.org/wiki/British_Museum \"British Museum\") , the [Albertina](https://en.wikipedia.org/wiki/Albertina \"Albertina\") , the [National Gallery of Art](https://en.wikipedia.org/wiki/National_Gallery_of_Art \"National Gallery of Art\") and other institutions.\n\n## Origins and dispersal\n\n[ [edit](https://en.wikipedia.org/w/index.php?title=Libro_de%27_Disegni&action=edit&section=1 \"Edit section: Origins and dispersal\") ]\n\nSome art historians believe they were gathered to illustrate Vasari's _Lives_ directly, as a visual index of the artists' works, whilst others believe it was a separate document in its own right. In his preface to the _Lives_ , Vasari described his reasons for writing:\n\n...\n\n3. ↑ Liana de Girolami Cheney, _The Homes of Giorgio Vasari_ , p. 5-20 , Peter Lang Publishing, New York, 2006 [ISBN](https://en.wikipedia.org/wiki/ISBN_\\(identifier\\) \"ISBN (identifier)\") [0-8204-7494-0](https://en.wikipedia.org/wiki/Special:BookSources/0-8204-7494-0 \"Special:BookSources/0-8204-7494-0\") [( _sample_ )](https://books.google.com/books?id=4crgY-AN2mUC&pg=PA5)\n4. ↑ Liana de Girolami Cheney, _Giorgio Vasari's Teachers : Sacred & Profane Art_ , p.250, note 10, Peter Lang Publishing, New York, 2007 [ISBN](https://en.wikipedia.org/wiki/ISBN_\\(identifier\\) \"ISBN (identifier)\") [978-0-8204-8813-4](https://en.wikipedia.org/wiki/Special:BookSources/978-0-8204-8813-4 \"Special:BookSources/978-0-8204-8813-4\") [( _read online_ )](https://books.google.com/books?id=Edi7bg9V3aEC&pg=PA250)\n5. ↑ [(in Italian) Vanna Arrighi, _Niccolò Gaddi_ , Dizionario Biografico degli\n\n...\n\n↑ (in French) [Guy-Michel Leproux, _La corporation romaine des peintres « et autres » de 1548 à 1574_ , dans _Bibliothèque de l'école des chartes_ , 1991, Volume 149, no. 2, p. 293-348](http://www.persee.fr/doc/bec_0373-6237_1991_num_149_2_450618)\n12. ↑ [Musée du Louvre - Département des arts graphiques : Serafino da Verona](http://arts-graphiques.louvre.fr/detail/artistes/2/3045-SERAFINO-DA-VERONA)\n13. ↑ [\"Domenico Ghirlandaio, _Portrait of an old man_ , in a border by Giorgio Vasari\"](https://web.archive.org/web/20151117032019/http://www.nationalmuseum.se/sv/English-startpage/Collections/Teckningar-och-grafik-hojdpunkter-i-samlingarna/Portratt-av-en-gammal-man/) . Archived from [the original](http://www.nationalmuseum.se/sv/English-startpage/Collections/Teckningar-och-grafik-hojdpunkter-i-samlingarna/Portratt-av-en-gammal-man/) on 2015-11-17 . Retrieved 2018-02-18 .\n14. ↑ (in Italian) Bernard Berenson, _I disegni dei pittori fiorentini_ , Milano, Electa\n\n...\n\ntitle=Libro_de%27_Disegni&action=edit&section=17 \"Edit section: Bibliography\") ]\n\n* Otto Kurz, _Giorgio Vasari's Libro de'Disegni_ , Old Masters Drawings, 1937\n* Arthur Ewart Popham, _Drawings from the collection of Giorgio Vasari_ , p. 153-155 , _[British Museum Quarterly](https://en.wikipedia.org/wiki/British_Museum_Quarterly \"British Museum Quarterly\")_ , 1936\n* Per Bjurstrom, _Italian Drawings from the Collection of Giorgio Vasari_ , National Museum, Stockholm, 2001 [ISBN](https://en.wikipedia.org/wiki/ISBN_\\(identifier\\) \"ISBN (identifier)\") [9789171006264](https://en.wikipedia.org/wiki/Special:BookSources/9789171006264 \"Special:BookSources/9789171006264\")\n* Andrew Morrogh, _Vasari's Libro de' Disegni and Niccolò Gaddi's Collection of Drawings: The Work of Gaddi's \"Chief Framer\"_ , conference paper at the RSA Annual Meeting, New York, NY, Hilton New York, 2014\n* (in French) Stéfania Caliandro, _Le Libro de' Disegni de Giorgio Vasari: un métatexte visuel_ , Presses universitaires de l'université de Limoges, 1999 [ISBN](https://en.wikipedia.org/wiki/ISBN_\\(identifier\\) \"ISBN (identifier)\") [2-84287-128-6](https://en.wikipedia.org/wiki/Special:BookSources/2-84287-128-6 \"Special:BookSources/2-84287-128-6\") [_Sample_](https://books.google.com/books?id=Ele7hUzV-lsC&pg=PA56)\n* (in French) Giorgio Vasari, _Les vies des meilleurs peintres, sculpteurs et architectes_ , édition commentée sous la direction d' [André Chastel](https://en.wikipedia.org/wiki/André_Chastel \"André Chastel\") , _Du texte à l'image. Dessins du \"Libro\"_ , Berger-Levrault, Paris, 1989 [ISBN](https://en.wikipedia.org/wiki/ISBN_\\(identifier\\) \"ISBN (identifier)\") [978-2-701307541](https://en.wikipedia.org/wiki/Special:BookSources/978-2-701307541 \"Special:BookSources/978-2-701307541\")\n\n...\n\n74978.html)\n* (in French) Musée du Louvre - Département des Arts graphiques : [Exposition : _Giorgio Vasari : dessinateur et collectionneur. XXXVIe exposition du Cabinet des Dessins_ (1965)](http://arts-graphiques.louvre.fr/detail/expositions/7/2565-Giorgio-Vasari-dessinateur-et-collectionneur-XXXVIe-exposition-du-Cabinet-des-Dessins)\n* (in French) Base Joconde : [Les 162 dessins de la collection de Vasari du cabinet des dessins](http://www.culture.gouv.fr/public/mistral/joconde_fr?ACTION=CHERCHER&FIELD_98=APTN&VALUE_98=%20Vasari&DOM=All&REL_SPECIFIC=3)\n\n|* [v](https://en.wikipedia.org/wiki/Template:Giorgio_Vasari \"Template:Giorgio Vasari\")\n* [t](https://en.wikipedia.org/wiki/Template_talk:Giorgio_Vasari \"Template talk:Giorgio Vasari\")\n* [e](https://en.wikipedia.org/wiki/Special:EditPage/Template:Giorgio_Vasari \"Special:EditPage/Template:Giorgio Vasari\")\n\n[Giorgio Vasari](https://en.wikipedia.org/wiki/Giorgio_Vasari \"Giorgio Vasari\") |\n| --- | --- |"
+     ]
+    },
+    {
+     "url": "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/giorgio-vasari",
+     "title": "Giorgio Vasari - The Book of Drawings. The Fate of a Legendary Collection",
+     "excerpts": [
+      "Giorgio Vasari - The Book of Drawings. The Fate of a Legendary Collection\n\nAller au contenu\n\n* Visit\n* Exhibitions and Events\n* Explore\n* See more\n\nprevious navigation element next navigation item\n\n# Giorgio Vasari The Book of Drawings. The Fate of a Legendary Collection\n\nPast\n\n31 March – 18 July 2022\n\n* Exhibition Overview\n* Giorgio Vasari. The Book of Drawings\n* Selected Works\n\nfollowing sections previous sections\n\n## Giorgio Vasari\n\n### The Book of Drawings. The Fate of a Legendary Collection\n\n31 March – 18 July 2022\n\n|Average duration of the visit |1H |\n| --- | --- |\n|Location |Rotonde Sully |\n\nShare article\n\nGiorgio Vasari created what was probably the first collection of drawings based on a historicising logic: the legendary _Libro de’ disegni_ , widely mentioned in the second edition of _The Lives of the Most Excellent Painters, Sculptors and Architects_ , published in Florence in 1568 by the Giunti house.\nOn 29 June 1574, two days after the death of Vasari, his heirs handed over the Book to the Grand Duke of Tuscany, Francesco I, who had sent for it. After that, it disappeared.\n\nThe great 17th- and 18th-century collectors and connoisseurs all dreamed of acquiring and believed they owned drawings from the Book. The most famous among them, Pierre-Jean Mariette, sparked a tradition viewing a certain type of decorative and architectural mount as indicating a sheet’s former belonging to Vasari’s legendary collection.\n\nIt is now known, however, since in 1950 two great scholars, Arthur Popham and Philip Pouncey, noticed a mysterious emblem on a ‘Vasari mount’, that things are not as simple as that. This exhibition, organised by the Louvre and the Nationalmuseum in Stockholm, focuses on the unexpected consequences of that discovery made over half a century ago.\n\n## Organised by:\n\nLouis Frank, Musée du Louvre, and Carina Fryklund, Nationalmuseum, Stockholm.\n\n## Acknowledgements\nThe exhibition is sponsored by **Canson** .\n\n## Giorgio Vasari. The Book of Drawings\n\n### Giorgio Vasari. The Book of Drawings\n\n(In French)  \nEdited by L. Frank and C. Fryklund. Co-publication: Musée du Louvre Editions / Lienart, 240 pages, 130 illustrations, €29\n\n[Find out more](http://editions.louvre.fr/en/titles/exhibition-catalogs/artists/giorgio-vasari-le-livre-des-dessins.html)\n\n## Selected Works\n\nAttributed to Leonardo da Vinci, Seven Studies of Heads Saint John the Baptist as a Child\n\nFelice Pinariccio, The Mystical Marriage of Saint Catherine of Alexandria\n\nMarco del Moro, Diana and Endymion\n\nGiulio Clovio, The Dead Christ Held Up by Saint John and Lamented by the Holy Women\n\nGirolamo Siciolante da Sermoneta, Pepin the Younger Leading Captive Lombard King Aistulf and Restoring the Exarchate of Ravenna to the Church\n\nSofonisba Anguissola, Young Woman Smiling at a Child Bitten by a Crayfish, Naples Museo e Real Bosco di Capodimonte\n\nprev next\n\nLet’s stay in touch"
+     ]
+    },
+    {
+     "url": "https://presse.louvre.fr/giorgio-vasari-le-livre-des-dessins-2-2",
+     "title": "Giorgio Vasari : The Book of Drawings - Espace presse du musée du Louvre",
+     "excerpts": [
+      "[](https://www.facebook.com/museedulouvre) [](https://twitter.com/museelouvre) [](https://www.instagram.com/museelouvre/) [](https://fr.pinterest.com/museedulouvre/) [](https://www.youtube.com/user/louvre)\n\n[English](https://presse.louvre.fr/giorgio-vasari-le-livre-des-dessins-2-2/?lang=en \"English\") [Français](https://presse.louvre.fr/giorgio-vasari-le-livre-des-dessins-2/?lang=fr \"Français\")\n\nPress\n\n or \n\n[](https://presse.louvre.fr)\n\n# Welcome to the Musée du Louvre’s Press Room\n\n[English](https://presse.louvre.fr/giorgio-vasari-le-livre-des-dessins-2-2/?lang=en \"English\") [Français](https://presse.louvre.fr/giorgio-vasari-le-livre-des-dessins-2/?lang=fr \"Français\")\n\n* [Acccueil](https://presse.louvre.fr/section/acccueil/?lang=en)\n* [Exhibitions & Program](https://presse.louvre.fr/section/exposition-programmation/?lang=en)\n* [Collections](https://presse.louvre.fr/section/vie-des-collections/?lang=en)\n* [The museum](https://presse.louvre.fr/section/institution/?lang=en)\n* [Contact us](https://presse.louvre.fr/press-contacts/?lang=en)\n\n[](https://www.facebook.com/museedulouvre) [](https://twitter.com/museelouvre) [](https://www.instagram.com/museelouvre/) [](https://fr.pinterest.com/museedulouvre/) [](https://www.youtube.com/user/louvre)\n\n# Giorgio Vasari : The Book of Drawings\n\n## The fate of a legendary collection\n\n31 March - 18 July 2022\n\n[](https://twitter.com/intent/tweet?original_referer=https://presse.louvre.fr&text=Giorgio%20Vasari%20:%20The%20Book%20of%20Drawings&url=https://presse.louvre.fr/?p=1063000204301) [](https://www.facebook.com/sharer/sharer.php?u=https://presse.louvre.fr/?p=1063000204301) [](https://www.linkedin.com/shareArticle?source=&title=Giorgio%20Vasari%20:%20The%20Book%20of%20Drawings&summary=Giorgio+Vasari+created+what+was+probably+the+first+collection+of+drawings+based+on+a+historicising+logic%3A+the+legendary+Libro+de%E2%80%99+disegni%2C+widely+mentioned+in&mini=true&url=https%3A%2F%2Fpresse.louvre.fr%2F%3Fp%3D1063000204301)\n**Giorgio Vasari created what was probably the first collection of drawings based on a historicising logic: the legendary _Libro de’ disegni_ , widely mentioned in the second edition of _The Lives of the Most Excellent Painters_ , _Sculptors and Architects,_ published in Florence in 1568 by the Giunti house. On 29 June 1574, two days after the death of Vasari, his heirs handed over the Book to the Grand Duke of Tuscany, Francesco I, who had sent for it. After that, it disappeared.**  \n  \nThe great 17th- and 18th-century collectors and connoisseurs all dreamed of acquiring and believed they owned drawings from the Book. The most famous among them, Pierre-Jean Mariette, sparked a tradition viewing a certain type of decorative and architectural mount as indicating a sheet’s former belonging to Vasari’s legendary collection."
+     ]
+    },
+    {
+     "url": "https://www.dessinoriginal.com/en/exhibition-catalogues-in-english/12952-giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-9782359063738.html?post=1",
+     "title": "Giorgio Vasari, the book of drawings - The fate of a mythical collection - DessinOriginal.com",
+     "excerpts": [
+      "[Contact](https://www.dessinoriginal.com/en/contact-us \"Contact Us\")\n\nEnglish English\n\n* [English English](https://www.dessinoriginal.com/en/exhibition-catalogues-in-english/12952-giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-9782359063738.html \"English\")\n* [Français Français](https://www.dessinoriginal.com/fr/editions-bilingues-inter/12952-giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-9782359063738.html \"Français\")\n\n[News](https://www.dessinoriginal.com/news)\n\nSearch\n\n[DessinOriginal.com](http://www.dessinoriginal.com/ \"DessinOriginal.com\")\n\nOnline Art Bookstore\n\n[**Cart** 0 Product Products (empty)](https://www.dessinoriginal.com/en/order \"View my shopping cart\")\n\nNo products\n\nFree shipping! Shipping\n\n0,00 € Total\n\n[Check out](https://www.dessinoriginal.com/en/order \"Check out\")\n\n## Product successfully added to your shopping cart\n\n**Quantity**\n\n**Total**\n\n## There are 0 items in your cart. There is 1 item in your cart.\n**Total products (tax incl.)**\n\n**Total shipping TTC** Free shipping!\n\n**Total (tax incl.)**\n\nContinue shopping [Proceed to checkout](https://www.dessinoriginal.com/en/order \"Proceed to checkout\")\n\nOur webstore uses cookies to offer a better user experience and we consider that you are accepting their use if you keep browsing the website.\n\nclose\n\n[](https://www.dessinoriginal.com/ \"Return to Home\") | [Bilingual art books and foreign editions](https://www.dessinoriginal.com/en/230-exhibition-catalogues-in-english \"Bilingual art books and foreign editions\") | Giorgio Vasari, the book of drawings - The fate of a mythical collection\n\n* [New Art Books](https://www.dessinoriginal.com/en/131-new-art-books)\n  \n    + [Notre sélection](https://www.dessinoriginal.com/en/270-notre-selection)\n    + [Grandes expositions](https://www.dessinoriginal.com/en/271-grandes-expositions)\n* [Exhibition catalogue](https://www.dessinoriginal.com/en/216-exhibition-catalogue)\n*\n[Highlights](https://www.dessinoriginal.com/en/263-highlights)\n* [Art Book Sale](https://www.dessinoriginal.com/en/264-art-book-sale)\n* [Museum's Shop & Gifts](https://www.dessinoriginal.com/en/235-objets-design \"We made a special selection of Gifts & Souvenirs from the French museums stores...\")\n  \n    + [Jewellery](https://www.dessinoriginal.com/en/244-jewellery \"Discover a collection of contemporary jewellery that combines creativity and elegance. \")\n    + [Art et Bande dessinée](https://www.dessinoriginal.com/en/296-art-et-bande-dessinee)\n    + [Livraison cadeau Livre d'art](https://www.dessinoriginal.com/en/233-livraison-cadeau-livre-d-art \"Looking for an original gift? Discover our unique selection of art books to give as gifts.\")\n    + [Sélection pour enfants](https://www.dessinoriginal.com/en/236-selection-pour-enfants \"A selection of art books, colouring and activity books to give to children and teenagers.\")\n    + [Gift Cards and Boxes](https://www.dessinoriginal.com/en/242-gift-cards-and-boxes)\n* [Bilingual art books and foreign editions](https://www.dessinoriginal.com/en/230-exhibition-catalogues-in-english \"French art books and exhibition catalogues in English\")\n* [Children's Books](https://www.dessinoriginal.com/en/143-children-s-books)\n* [Art History](https://www.dessinoriginal.com/en/160-art-history-book)\n  \n    + [Museum & Collections](https://www.dessinoriginal.com/en/146-museum-collections)\n    + [Catalogues raisonnés](https://www.dessinoriginal.com/en/166-catalogues-raisonnes)\n    + [Art Essays](https://www.dessinoriginal.com/en/137-art-essays)\n    + [Généralités](https://www.dessinoriginal.com/en/129--)\n    + [Art History References](https://www.dessinoriginal.com/en/124-art-history-references)\n    + [Annual Publications](https://www.dessinoriginal.com/en/140-annual-publications)\n    + [Patrimoine religieux](https://www.dessinoriginal.com/en/294-patrimoine-religieux)\n* [Architecture](https://www.dessinoriginal.com/en/134-architecture-book)\n\n...\n\n+ [African & Oceanian Art](https://www.dessinoriginal.com/en/139-african-oceanian-art)\n    + [Asian Art](https://www.dessinoriginal.com/en/119-asian-art)\n    + [Primive Arts](https://www.dessinoriginal.com/en/149-primive-arts)\n* [Partners Reviews](https://www.dessinoriginal.com/en/223-partners-reviews)\n  \n    + [Médiologie](https://www.dessinoriginal.com/en/224-mediologie-medium-regis-debray)\n    + [ACSEL](https://www.dessinoriginal.com/en/222-acsel)\n\nGiorgio Vasari, the book of drawings - The fate of a mythical collection\n\n* [Giorgio Vasari, the book of drawings - The fate of a mythical collection](https://www.dessinoriginal.com/21751-thickbox_default/giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection.jpg \"Giorgio Vasari, the book of drawings - The fate of a mythical collection\")\n\n# Giorgio Vasari, the book of drawings - The fate of a mythical collection\n\n[Giorgio Vasari](https://www.dessinoriginal.com/en/recherche?\ncontroller=search&orderby=position&orderway=desc&search_query=Giorgio+Vasari&submit_search=) \\- Publisher [Lienart éditions / Louvre éditions / Nationalmuseum, Stockholm](https://www.dessinoriginal.com/en/editeur/479-a) \\- Paperback with flap \\- 240 pages - Text in English \\- Published in 2022\n\nIn Florence in 1568, Giorgio Vasari publishes the second version of The Lives of the Most Eminent Painters, Sculptors and Architects, a work destined to lay the foundations of the historiography of Italian Renaissance art.\n\nProduct not available\n\n29,00 €\n\nAdd to cart\n\nOnly 0,01 € for Shipping on any order over 35€ in France\n\n* ### Description\n* ### Product Details\n\n|Model |9782359063738 |\n| --- | --- |\n|Artist |[Giorgio Vasari](https://www.dessinoriginal.com/en/recherche?controller=search&orderby=position&orderway=desc&search_query=Giorgio+Vasari&submit_search=) |\n|Author |[Louis Frank, Carina Fryklund](https://www.dessinoriginal.com/en/recherche?\ncontroller=search&orderby=position&orderway=desc&search_query=Louis+Frank,+Carina+Fryklund&submit_search=) |\n|Publisher |[Lienart éditions / Louvre éditions / Nationalmuseum, Stockholm](https://www.dessinoriginal.com/en/editeur/479-a) |\n|Format |Paperback with flap |\n|Number of pages |240 |\n|Language |English |\n|Dimensions |250x 200 |\n|Technique(s) |130 illustrations |\n|Published |2022 |\n|Museum |Louvre Museum, Paris / Nationalmuseum, Stockholm |\n\nIn The Lives of the Most Eminent Painters, Sculptors and Architects, Giorgio Vasari continually cites a « Book of Drawings » - the graphic reflection of his literary Lives - in which he had assembled the most beautiful sheets of the masters who.se biographies and artworks he describes.  \n  \nVasari's Book disappears in the days following the death of its creator, only to become an object of fascination for collectors of the seventeenth and eighteenth centuries.\nThe image which these connoisseurs formed of the great lost collection has until recently dominated historical studies. But the discovery, in 1950, on a sheet thought to have belonged to the Book, of an emblem which until that time had gone unnoticed, has today come to shatter this age-old tradition. Through this metamorphosis emerges the figure of an extraordinary collector : Niccolò di Sinibaldo Gaddi.  \n  \nAmong the many artists encountered in Vasari's Book and in the Gaddi collection, we find Cimabue, Luca della Robbia, Paolo Uccello, Mantegna, Leonardo, Raphael, Andrea del Sarto, Sodoma, Rosso, Parmigianino - and the fascinating Sofonisba Anguissola.  \n  \n_> Exhibition at the musée du Louvre (from 31 March to 18 July 2022) and at the Nationalmuseum, Stockholm (_ 6 October 2022–8 January 2023).\n\n_  \n  \n_\n\nRecently viewed items\n\n* [Giorgio Vasari, the book of drawings - The fate of a mythical\ncollection](https://www.dessinoriginal.com/en/exhibition-catalogues-in-english/12952-giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-9782359063738.html \"More about Giorgio Vasari, the book of drawings - The fate of a mythical collection\")\n  \n  ##### [Giorgio Vasari, the book of drawings...](https://www.dessinoriginal.com/en/exhibition-catalogues-in-english/12952-giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-9782359063738.html \"More about Giorgio Vasari, the book of drawings - The fate of a mythical collection\")\n\nPLANETE"
+     ]
+    },
+    {
+     "url": "https://www.bmvr.marseille.fr/ark:/20868/pf0002780340",
+     "title": "Giorgio Vasari, the \"Book of drawings\" : the fate of a ...",
+     "excerpts": [
+      "[](https://www.linkedin.com/company/biblioth%C3%A8ques-de-marseille/?viewAsMember=true)\n\n[](https://www.instagram.com/marseillebiblio/?hl=fr)\n\n[](https://www.youtube.com/channel/UCeSoFCnwBQAO5lzHBtmMETw?fbclid=IwAR2eaRENssf98WoxeyMZvturDPtNqFPSLg_bq2_rmcafHo03w_Obk1CuGsI)\n\n# Giorgio Vasari, the \"Book of drawings\" : the fate of a mythical collection : [exhibition, Stockholm, Nationalmuseum, 6 October 2022-8 January 2023]\n\n## Entête de la notice\n\nLivre\n\nGiorgio Vasari, the \"Book of drawings\" : the fate of a mythical collection : [exhibition, Stockholm, Nationalmuseum, 6 October 2022-8 January 2023]\n\nÉditeurs :\n\n[Lienart](https://www.bmvr.marseille.fr/query?"
+     ]
+    },
+    {
+     "url": "https://catalog.hathitrust.org/Record/100687535",
+     "title": "Catalog Record: Vasari's lives of the most eminent painters,... | HathiTrust Digital Library",
+     "excerpts": [
+      "### Lives of the most eminent painters, sculptors and architects: tr. from the Italian of Giorgio Vasari\n\nAuthor\n    Vasari, Giorgio, 1511-1574\nPublished\n    1907\n\n### Lives of the most eminent painters, sculptors, and architects\n\nAuthor\n    Vasari, Giorgio, 1511-1574.\nPublished\n    1892\n\n### Lives of the most eminent painters, sculptors, and architects\n\nAuthor\n    Vasari, Giorgio, 1511-1574.\nPublished\n    1850\n\n### Stories & studies from English history\n\nAuthor\n    Hall, S. C., Mrs., 1800-1881.\nPublished\n    1871\n\n### Lives of the most eminent painters\n\nAuthor\n    Vasari, Giorgio, 1511-1574.\nPublished\n    1967\n\n### Vasari's Lives of the artists; biographies of the most eminent architects, painters, and sculptors of Italy\n\nAuthor\n    Vasari, Giorgio, 1511-1574\nPublished\n    1946\n\n### History of the dominion of the Arabs in Spain\n\nAuthor\n    Conde, José Antonio, 1765-1820.\nPublished\n    1909\n\n### Lives of the most eminent painters, sculptors, and architects\n\nAuthor"
+     ]
+    },
+    {
+     "url": "https://ccbmn.culture.gouv.fr/Default/doc/SYRACUSE/1115112/giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-exhibition-stockholm-nationalm?_lg=fr-FR",
+     "title": "Giorgio Vasari, the \"Book of drawings\" : the fate of a ...",
+     "excerpts": [
+      "Giorgio Vasari, the \"Book of drawings\" : the fate of a ...\nGiorgio Vasari, the \"Book of drawings\" : the fate of a mythical collection : [exhibition, Stockholm, Nationalmuseum, 6 October 2022-8 January 2023] / [jointly organised by the Musée du Louvre] - [catalogue by] Louis Frank and Carina Fryklund Auteur (s)"
+     ]
+    },
+    {
+     "url": "https://archive.org/stream/englishcatalogu06lowgoog/englishcatalogu06lowgoog_djvu.txt",
+     "title": "Full text of \"The English Catalogue of Books ...\"",
+     "excerpts": [
+      "Skip to main content\nKeep the news in the Wayback Machine. Sign Fight for the Future's letter .\nFull text of \" The English Catalogue of Books ... \"\nSee other formats\nGoogle\nThis is a digital copy of a book lhal w;ls preserved for general ions on library shelves before il was carefully scanned by Google as pari of a project\n3 3433 07591426 1\n^^.;s^\nv.: «\nw\n^%?^\nTHK\nENGLISH CATALOGUE\nOF BOOKS\nMPRISING THE CONTENTS OF THE 'LONDON 1 AND THE 'BRITISH 1 CATALOGUES,\nAND THE PRINCIPAL WORKS PUBLISHED IN THE UNITED STATES OF\nAMERICA AND CONTINENTAL EUROPE,\nWITH THE DATES OP PUBLICATION, IN ADDITION TO THE SIZE,\nPRICE, EDITION, AND PUBLISHER'S NAME.\nvol n.\nThe Second Volume of the Index is in courso of Preparation — 185C to 1872\ninclusive — and it is hoped may bo ready about the closo of tho present year.\n188 Flkot Stiiket: Office of tho Publishers* Circular.\nTHE ENGLISH CATALOGUE:\ncoMPRisnro\nBOOKS PUBLISHED IN GREAT BRITAIN\n1863 — 1871\nAND THE PRINCIPAL BOOKS IMPORTED FROM THE UNITED\nWomen of Israel, Sketches, 6th edit, post 8vo, 6s Groombridge ... 1870\nAhn(F.H.) Class-book of English Poetry and Prose, post 8vo, 10s 6d Low 1870\n■ Familiar French Conversations and Vocabulary, 12mo, 2s Williams § ft. ,.1865\n— — — — First French Grammar, by Frederic, new edit. 12mo, Is 6d Allman 1864\n■ Reader, 12mo, reduced to Is 6d Thimm 1864\n- (May) Concord Sketches, 12 Photographs from drawings, 4to, 45s Boston, US.,. ~.l$70\nAlden (Joseph) Christian Ethics, 12mo, 6s New York 1866\nElements of Intellectual Philosophy, 12 mo, 6s 64 New York 1866\n■ Science of Government, 12mo, Is 64 ; New York ....1866\n. Text Book of Ethics for Bible Classes, 18mo, 3s New York 1867"
+     ]
+    },
+    {
+     "url": "https://www.bokorder.se/en/books-4580/giorgio-vasari-the-book-of-drawings",
+     "title": "Giorgio Vasari The Book of Drawings - www.bokorder.se",
+     "excerpts": [
+      "Prices incl. VAT\n\nShopping cart\n\n#### Shopping cart\n\nYour shopping cart is empty.\n\nGiorgio Vasari The Book of Drawings\n\n[Printed book #### 425 SEK](https://www.bokorder.se/en/shop/add/4580?type=print)\n\nPDF\n\nEPUB\n\nRead sample\n\nOpen Access\n\n## Giorgio Vasari The Book of Drawings – The fate of a mythical collection\n\nLouis Frank, Carina Fryklund\n\nPublisher [Nationalmuseum](https://www.bokorder.se/en/publishers-10013)\n\n[Buy](https://www.bokorder.se/en/shop/add/4580?type=print) 425 SEK\n\n* Published 2022\n* Isbn 9789171009166\n* Type Hardcover\n* 240 pages\n* English\n\n[](https://www.bokorder.se/en/publishers-10013/nationalmuseum)\n\nIn Florence in 1568, Giorgio Vasari publishes the second version of the Lives of the Eminent Painters, Sculptors, and Architects, a work destined to lay the foundations of the historiography of Italian Renaissance art.\nIn it continually cities a \"Book of Drawings\"-the graphic reflection of his literary Lives-in which he had assembled the most beutiful sheets of the masters whose biographies and artworks he describes.\n\nShare book Copy link\n\n#### Address\n\neddy.se ab  \nBox 1310  \n62124 Visby\n\n#### Contact\n\n[order@bokorder.se](mailto:order@bokorder.se)  \nphone +46 498-25 39 00\n\n#### Website\n\n[http://www.eddy.se](http://www.eddy.se/)  \n[http://www.bokorder.se](http://www.bokorder.se/)\n\n##### [Title]\n\n×\n\n[Body]\n\n[Action] Close"
+     ]
+    },
+    {
+     "url": "https://arthive.com/exhibitions/6323",
+     "title": "Giorgio Vasari. Book of drawings. The fate of a legendary ...",
+     "excerpts": [
+      "Giorgio Vasari. Book of drawings. The fate of a legendary ...\nThe Louvre is holding an exhibition \"Giorgio Vasari. Book of Drawings. The fate of a legendary collection\". Giorgio Vasari created what was probably the first collection of drawings based on the logic of historicization: the legendary \"Libro de' designi\" - the widely acclaimed \"Vitae descriptions of outstanding painters, sculptors and architects. on June 29, 1574, two days after Vasari's death"
+     ]
+    }
+   ]
+  },
+  {
+   "n": 8,
+   "kind": "claude",
+   "objective": null,
+   "urls": null,
+   "data": {
+    "isbn13": null,
+    "publisher": "Musée du Louvre Editions / Lienart",
+    "language": "French",
+    "title": "Giorgio Vasari, le Livre des dessins",
+    "pages": "240",
+    "editions": [
+     {
+      "title": "Giorgio Vasari, the book of drawings - The fate of a mythical collection",
+      "isbn13": "9782359063738",
+      "language": "English",
+      "publisher": null,
+      "pages": null,
+      "evidenceUrl": "https://www.dessinoriginal.com/en/exhibition-catalogues-in-english/12952-giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-9782359063738.html?post=1"
+     },
+     {
+      "title": "Giorgio Vasari The Book of Drawings – The fate of a mythical collection",
+      "isbn13": "9789171009166",
+      "language": "English",
+      "publisher": "Nationalmuseum",
+      "pages": "240",
+      "evidenceUrl": "https://www.bokorder.se/en/books-4580/giorgio-vasari-the-book-of-drawings"
+     }
+    ]
+   }
+  },
+  {
+   "n": 9,
+   "kind": "open",
+   "objective": "The ISBN of the book “Giorgio Vasari. The Book of Drawings”.",
+   "urls": [
+    "https://heneage.com/books/new-titles/giorgio-vasari-book-drawings-fate-mythical-collection",
+    "https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings"
+   ],
+   "results": [
+    {
+     "url": "https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings",
+     "title": "Giorgio Vasari, the Book of Drawings | lienarteditions",
+     "excerpts": [
+      "# Giorgio Vasari, the Book of Drawings\n* DESCRIPTIF TECHNIQUE\n19,7 x 25 cm, 240 pages, 130 illustrations, broché avec grands rabats\n29 € – ISBN : 978-2-35906-373-8\nÉgalement disponible en version française : 978-2-35906-372-1\n* AUTEURS\nSous la direction de Louis Frank, conservateur général au département des Arts graphiques, musée du Louvre, et Carina Fryklund, conservatrice chargée des dessins, Nationalmuseum de Stockholm.\n* COÉDITEUR\n\n...\n\n• L’exposition a pour ambition de réunir une partie des dessins qui constituaient ce fameux _Livre des dessins_ .\n• Également disponible en version française [ISBN : 978-2-35906-372-1]."
+     ],
+     "full_content": "top of page\n\n# [LIENART](https://www.lienarteditions.com/)\n\nGiorgio Vasari, the Book of Drawings\n\n```\nGiorgio Vasari a réuni ce qui fut probablement la première collection de dessins fondée sur une logique historisante : le légendaire _Libro de’ disegni_ , conçu comme parallèle à la seconde édition des _Vies des plus excellents peintres, sculpteurs et architectes_ , parue à Florence, en 1568, chez les Giunti.  \nVasari ne cesse de mentionner, dans cette seconde édition des _Vies_ , qu’il possède dans son _Livre des dessins_ – _ in nostro Libro de’ disegni _ – des feuilles de l’artiste dont il est en train de rapporter la biographie et l’œuvre, et décrit certaines d’entre elles avec plus ou moins de précision. Mais les cas dans lesquels il a été possible de leur faire correspondre une œuvre conservée de nos jours sont relativement rares. Ainsi, dans la Vie de Giulio Romano, Vasari décrit-il, au plafond de l’une des salles du Palazzo Te de Mantoue, une peinture à l’huile représentant la Chute d’Icare, dont il indique, pour finir : « Et dans notre Livre des dessins de différents peintres, est le dessin même de cette fort belle histoire, de la propre main de Giulio ». Le dessin se trouve aujourd’hui dans la collection du Louvre.  \nActuellement sont recensés, au total, seize de ces dessins identifiés grâce au témoignage de Vasari, dont : le _Projet pour le monument équestre_ de Francesco Sforza par Piero del Pollaiuolo (Albertina), la _Judith_ de Mantegna (Offices), la _Tête de femme_ attribuée à Verrocchio (Louvre), le _Mercure purgé_ de Peruzzi (Louvre), le _Jeune garçon pincé par une écrevisse_ de Sophonisba Anguissola (Naples, Capodimonte), la _Vierge de Miséricorde_ de Rosso (Louvre), la _Pietà de Clovio_ (Louvre) et _Pépin triomphant d’Astolphe, roi des Lombards_ de Girolamo Siciolante da Sermoneta (Louvre).\n```\n\n# Giorgio Vasari, the Book of Drawings\n\n* ## DESCRIPTIF TECHNIQUE\n  \n  19,7 x 25 cm, 240 pages, 130 illustrations, broché avec grands rabats\n  \n  29 € – ISBN : 978-2-35906-373-8\n  \n  Également disponible en version française : 978-2-35906-372-1\n* ## AUTEURS\n  \n  Sous la direction de Louis Frank, conservateur général au département des Arts graphiques, musée du Louvre, et Carina Fryklund, conservatrice chargée des dessins, Nationalmuseum de Stockholm.\n* ## COÉDITEUR\n  \n  Coédité avec le musée du Louvre, Paris, et le Nationalmuseum, Stockholm\n* ## PARUTION\n  \n  En librairie le 29 septembre 2022.\n  \n  • Cet ouvrage est publié à l’occasion de l’exposition _Giorgio Vasari, le Livre des dessins_ , présentée du 31 mars au 18 juillet 2022, au musée du Louvre, Rotonde de Sully, puis du 29 septembre 2022 au 8 janvier 2023 au Nationalmuseum de Stockholm.  \n  • L’exposition a pour ambition de réunir une partie des dessins qui constituaient ce fameux _Livre des dessins_ .  \n  • Également disponible en version française [ISBN : 978-2-35906-372-1].\n\nNous contacter\n\n01 45 63 96 50\n\n​\n\n60, boulevard de Sébastopol\n\n75003 Paris\n\nRetrouvez-nous sur\n\n​\n\n* [Facebook Clean](https://www.facebook.com/Lienarteditions/)\n* [Instagram - Cercle blanc](https://www.instagram.com/lienart_editions/?hl=fr)\n\nbottom of page"
+    },
+    {
+     "url": "https://heneage.com/books/new-titles/giorgio-vasari-book-drawings-fate-mythical-collection",
+     "title": "Giorgio Vasari: The Book of Drawings. The Fate of a Mythical Collection | Thomas Heneage Art Books",
+     "excerpts": [
+      "# Giorgio Vasari: The Book of Drawings. The Fate of a Mythical Collection\nby Louis Frank and Carina Fryklund\nExhibition: Paris, Musée du Louvre and Stockholm, Nationalmuseum, 2022\n240 pages, over 100 colour and black and white illustrations. Paperback. 25 x 20cms.\nA study and recreation of Giorgio Vasari's 'Libro de' disegni', his lost collection of drawings accompanying his 'Lives of the Most Eminent Painters, Sculptors and Architects'. Ten essays discuss the historiography of Vasari's lost book of drawings, his classification system, the collection's dispersal, figures like Niccolo di Sinibaldo Gaddi, and includes a technical analysis of extant mounts.\nAppendices include excerpts from Vasari's 'Lives' written in Italian.\nRef: 123134\n£ 55.00\n**to order you can call the shop at +44 (0)20 7930 9223**\n**or email us at [artbooks@heneage.com](mailto:artbooks@heneage.com)**\nBack\n\n...\n\nRegistered Address: 42 Duke Street St. James's London SW1Y 6DJ\nRegistered Company No: 00657656\n\n...\n\n## Footer menu\n* [](https://www.linkedin.com/company/thomas-heneage-art-books \"Follow on LinkedIn\")\n×\n\n## Subscribe\n×\nWhat are you looking for?\nSearch\n×"
+     ],
+     "full_content": "# Giorgio Vasari: The Book of Drawings. The Fate of a Mythical Collection\n\nby Louis Frank and Carina Fryklund\n\nExhibition: Paris, Musée du Louvre and Stockholm, Nationalmuseum, 2022\n\n240 pages, over 100 colour and black and white illustrations. Paperback. 25 x 20cms.\n\nA study and recreation of Giorgio Vasari's 'Libro de' disegni', his lost collection of drawings accompanying his 'Lives of the Most Eminent Painters, Sculptors and Architects'. Ten essays discuss the historiography of Vasari's lost book of drawings, his classification system, the collection's dispersal, figures like Niccolo di Sinibaldo Gaddi, and includes a technical analysis of extant mounts. Appendices include excerpts from Vasari's 'Lives' written in Italian.\n\nRef: 123134\n\n£ 55.00\n\n**to order you can call the shop at +44 (0)20 7930 9223**\n\n**or email us at [artbooks@heneage.com](mailto:artbooks@heneage.com)**\n\nBack\n\nLAPADA - THE ASSOCIATION OF ART & ANTIQUES DEALERS ILAB - INTERNATIONAL LEAGUE OF ANTQUARIAN BOOKSELLERS ANTQUARIAN BOOKSELLERS ASSOCIATION\n\nRegistered Address: 42 Duke Street St. James's London SW1Y 6DJ  \nRegistered Company No: 00657656\n\n## Footer menu\n\n* [Customer Services](https://heneage.com/customer-services)\n* [Terms](https://heneage.com/customer-services/terms)\n* [Privacy](https://heneage.com/customer-services/privacy)\n* [Sitemap](https://heneage.com/sitemap)\n\n* [](https://twitter.com/THeneageArtBook \"Follow on Twitter\")\n* [](https://www.facebook.com/Thomas-Heneage-Art-Books-782944828498133/)\n* [](https://www.instagram.com/thomasheneageartbooks/ \"Follow on Instagram\")\n* [](https://www.linkedin.com/company/thomas-heneage-art-books \"Follow on LinkedIn\")\n\n×\n\n## Subscribe\n\n×\n\nWhat are you looking for?\n\nSearch\n\n×\n\n## Share"
+    }
+   ],
+   "errors": []
+  }
+ ]
+}
