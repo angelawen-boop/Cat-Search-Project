@@ -363,7 +363,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 42.9 · cloud 5 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 43 · cloud 5 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -387,8 +387,8 @@ whether the committed shell still matches.
 else. Built on `main` it says how to get to `claude/ledger-cloud`; built there it
 sets the test page's title and prints the read, read-every-line, publish order.
 Only a session's FIRST publish needs a read; later ones resend the same file.
-Whether that read must page every line (~11 Read calls) is unproven — it once was
-not needed, and the service now says it is; the printed steps try without it first.
+The read must page every line (~11 Read calls): a publish without it was refused
+(43). The printed steps still try without it first.
 
 ### The mental model, load-bearing
 
@@ -417,7 +417,7 @@ reopening, §7.1). Reasoning and the two rejected arguments: `docs/app.md` §4�
 ```
 id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
 acquiring, buyNext, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
-publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, addedAt, editedAt
+publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, editions, editionPick, addedAt, editedAt
 ```
 
 Ledger backup is JSON; the sweep pro forma is CSV.
@@ -912,6 +912,7 @@ junk in summaries, failure handling, compression, the blocked venues — is in
 
 Each line came from a real failure. Details are in git history and `docs/`.
 
+- **Parallel work is proved live before it reaches her.** 43 shipped on tests fed the agreed data and failed on her first live search (Vasari). A test that is handed the answer proves only the rendering.
 - **Tests can pass and prove nothing.** Check the exit code and grep the output
   for the new test's own name; a suite can be skipped silently (code after
   `process.exit`, a missing harness, an early `return` — use `await`).
@@ -959,7 +960,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **42.9 · cloud 5**. Cloud-only in it:
+live on the test page **43 · cloud 5**. Cloud-only in it:
 the read-only lock (below); Import on an empty page offers only "Open last
 cloud save" and Load, and Save asks before writing fewer exhibitions than the
 cloud holds (EI-001–007; `docs/app.md` §9); a roll-back's safety copy names the save by its
@@ -1108,28 +1109,19 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
 
 ### 4. Catalogue lookup generally
 
-**PAUSED — no lookup patches until the redesign below is agreed** (her
-decision: past the third-patch limit — `lookupCatalogue` changed 10 times in
-three days). **Redesign, agreed in outline:** find → choose → tell, as three
-separate steps. The lookup keeps EVERY version it finds (language, binding,
-publisher, which showing it belongs to, the page that proved it); nothing is
-chosen or dropped mid-search; booklets are left off. One version → the card as
-now. Several → one line each, labelled with why it exists and a link to the page
-that proved it; she picks one; the same buy buttons rebuild for her pick, which
-becomes the card's book in the ledger (the list stored beside it; replaces
-`originalEdition`, `otherVenueBook`, `alsoVersion`). Search again starts fresh.
-**Starting pick, her rules, in order:** only this showing's catalogue (any
-language or printing) may start picked; English first (any publisher, any time
-— Hammershøi); then this venue's own printing (Vasari: the Louvre's English
-paperback over Stockholm's hardcover; NGA's card: NGA's book); then hardcover
-when only the binding differs; nothing picked when this showing has no English
-but another showing's different book is English (Hubert Robert, Louvre), or when
-the rules do not settle it. More rules only once she has used the cards. These
-replace "hardcover leads" and one-book-per-card.
-**Next:** live research of the agreed case set — Vasari, Hubert Robert (Louvre,
-NGA), Hammershøi, Watteau, Canaletto – Guardi, Botticelli, *Metamorphoses*,
-Millet — and the card each should show; then one design doc for her approval;
-no code before. Every later change is checked against that set.
+**Catalogue versions — published in 43; her live Vasari search FAILED; fixes on
+`main`, unpublished.** Spec, her nine cases and the open items:
+`docs/catalogue_versions.md` (cases as data: `docs/lookup_proof_cards.json`). The
+lookup keeps every version (`editions`, `editionPick` an index), picks by her rules
+(`pickEdition`), and a card with two or more versions shows her lines
+(`versionLines`); rows searched before 43 render as before.
+**Fixed on `main` since 43:** her Vasari notes were wiped by a no-notes rule written
+for Metamorphoses (VL-013, VL-014); "(source for both: …)" (VL-009).
+**OPEN, in order:** (1) the joining of two numbers misfires — Stockholm's hardcover
+shown as "the Louvre's own number" on the Lienart line (the doc's "Open"); fix to be
+agreed with her. (2) **A live run of all nine cases on the current code, before any
+publish** — 43 went out on tests fed the agreed data, against §1's live rule. (3)
+Publish only after both, when she says and her page is closed.
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,

@@ -3365,17 +3365,20 @@ function versionNote(vs,i,row){
   const where=vc?"from the show's "+vc+" exhibition":"from the show's other exhibition";
   if(v.showing==="other")return "a notably different book, "+where;
   const mine=vs.filter(x=>x.showing==="this");
-  // One house, the versions differing only in language (Metamorphoses): no notes.
+  // One outside house, the versions differing only in language (Metamorphoses): no notes.
+  // Never when that house is this venue's own: her Vasari lines keep their notes.
   const langs=new Set(mine.map(x=>foldText(x.lang||"")));
-  if(mine.length===vs.length&&langs.size===mine.length&&mine.every(x=>x.publisher&&sameHouse(x.publisher,mine[0].publisher)))return null;
+  if(mine.length===vs.length&&langs.size===mine.length&&mine.every(x=>x.publisher&&sameHouse(x.publisher,mine[0].publisher))
+    &&!venuePrinting(mine[0].publisher,id))return null;
   // Printed for another showing: another museum's own, or a city not this venue's.
   const city=mu&&mu.city?foldText(mu.city):"";
   if(!venuePrinting(v.publisher,id)&&((vc&&foldText(vc)!==city)||(v.publisher&&museumImprintOnly(v.publisher,id))))return where;
   if(vs.some(x=>x.showing==="other"))return "this showing's catalogue";
   const english=isEnglishLang(v.lang), hasEnglish=mine.some(x=>isEnglishLang(x.lang)), hasOriginal=mine.some(x=>x.lang&&!isEnglishLang(x.lang));
   if(!english&&v.lang&&hasEnglish)return "the original edition";
+  // The venue's own English printing says so whether or not its original was found.
+  if(english&&mu&&mu.english===false&&venuePrinting(v.publisher,id))return "this venue's English edition";
   if(english&&hasOriginal){
-    if(venuePrinting(v.publisher,id))return "this venue's English edition";
     const start=parseInt(String(row.startDate||"").slice(0,4),10);
     return v.year&&start&&v.year>start?"the English edition, published later":"the English edition";
   }
@@ -3403,7 +3406,7 @@ function versionLines(row){
   const showPages=vs.some((a,i)=>vs.some((b,j)=>j>i&&differentBook(a.pages,b.pages)));
   const one=vs.every(v=>v.proofUrl&&v.proofUrl===vs[0].proofUrl)?sourceOf(vs[0].proofUrl):null;
   return{lines:vs.map((v,i)=>({picked:row.editionPick===i,text:versionText(vs,i,row,showPages),source:one?null:sourceOf(v.proofUrl)})),
-    shared:one?{...one,count:COUNT_WORDS[vs.length]||String(vs.length)}:null};
+    shared:one?{...one,count:vs.length===2?"both":"all "+(COUNT_WORDS[vs.length]||String(vs.length))}:null};
 }
 // The note after an old row's ISBN: "also 978-… (hardcover, Nationalmuseum)".
 function alsoLine(v){
@@ -5616,7 +5619,7 @@ export default function App(){
                               </span>
                             </div>
                           ))}
-                          {vl.shared&&<div style={{fontSize:11.5,color:C.soft}}>(source for all {vl.shared.count}: <a href={vl.shared.url} target="_blank" rel="noopener noreferrer" style={{color:C.soft}}>{vl.shared.host}</a>)</div>}
+                          {vl.shared&&<div style={{fontSize:11.5,color:C.soft}}>(source for {vl.shared.count}: <a href={vl.shared.url} target="_blank" rel="noopener noreferrer" style={{color:C.soft}}>{vl.shared.host}</a>)</div>}
                         </div>
                       ):(<>
                         {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}

@@ -1,8 +1,8 @@
 # Catalogue versions — the redesign and its agreed cases
 
-Status: **design agreed with her; awaiting her approval to build.** The catalogue lookup is paused
-until this is agreed (CLAUDE.md §7.4). Every later change to the lookup is
-checked live against the cases below.
+Status: **built and published in 43; her first live search (Vasari) failed — see
+"Open" below.** Every change to the lookup is checked LIVE against the cases below
+before it reaches her (CLAUDE.md §1).
 
 ## The design
 
@@ -132,6 +132,32 @@ source link.
   `ISBN 978-2359063721 · also 978-2350317441 (the Louvre's own number for the
   same book)`. Buy buttons use the first; the second is there to copy. Her
   reason: she uses an ISBN to search, so a hidden one is useless.
+- **Each line names its book's title** after the language; the marker sits in its own
+  column with wrapped lines aligned clear of it; no line asking her to pick.
+- **Two versions from one page:** "(source for both: …)"; three or more: "(source for
+  all three: …)".
+- **Notes stay with the venue's own house** (her Vasari wording): "this venue's
+  English edition" whenever the venue's house printed the English book, its original
+  found or not; the no-notes rule (one house, only the language differs —
+  Metamorphoses) applies only when that house is NOT the venue's own. VL-013, VL-014.
+- **Hammershøi's "same authors: …"** is not on the card: the lookup does not work it
+  out (she acknowledged).
 - **"Not found" is not "does not exist".** No English edition was found for
   Watteau, Canaletto – Guardi or Botticelli; the card says "No English edition
   found."
+
+## Open
+
+- **The joining of two numbers misfires** (her Vasari search on 43, record
+  `L1791620627801aujh`): a WorldCat record lists "LienArt ; Nationalmuseum … ISBN
+  9782359063738, 9789171009166", so `foldCoEditions` joined Stockholm's hardcover into
+  the Lienart line as "also … (the Louvre's own number for the same book)" — false; it
+  must be its own line. A library record lists different printings together, so it is
+  no proof of one book. Proposed (not yet agreed): join only when the second number's
+  own records name the venue's own imprint as publisher; otherwise its own line. Its
+  test: that real record, failing before the fix.
+- **No live run of the nine cases has been done on the current code.** 43 shipped on
+  tests fed the agreed version lists and old recordings — against her live-testing
+  rule — and failed on her first live search. Before any publish: each case looked up
+  live, the app's own code run on the replies (lifted from the session record by
+  script, never retyped), every card compared with the lines above.
