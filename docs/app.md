@@ -44,7 +44,8 @@ faked. Steps gather facts; code decides each fact in a set order of trust;
    to the other venue's card — page counts more than 15% apart, each printed
    in the results, mark a different book (`pagesPrinted`, `differentBook`;
    Somogy 544 vs Lund Humphries 288). A non-English venue's web read takes
-   its own book; later steps re-read the first web search. HR-001 to HR-012.
+   its own book; later steps re-read the first web search. A book refused as
+   different is named on the English line, no links (`otherVenueBook`). HR-001 to HR-014.
 4. **The publisher's page, once, for the final book** (`findPublisherPage`).
 5. **The row, once.** One owner per fact: shop line, `publisherNote`,
    `englishLine`. A step that fails leaves its facts unknown, sets `trouble`
