@@ -1,0 +1,346 @@
+{
+  "calls": [
+    {
+      "asked": [
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5",
+        "https://boutique.louvre.fr/en/search/products/?q=Hubert%20Robert%20(1733%E2%80%931808).%20A%20Visionary%20Painter"
+      ],
+      "detail": "opened https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/ + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5 + https://boutique.louvre.fr/en/search/products/?q=Hubert%20Robert%20(1733%E2%80%931808).%20A%20Visionary%20Painter: 5 page(s), 1 refused (404)",
+      "kind": "open page",
+      "n": 1,
+      "objective": "The printed exhibition catalogue for “Hubert Robert (1733–1808). A Visionary Painter”: the book’s own product page on this shop, its full title and its price.",
+      "ok": true,
+      "queries": [
+        "Hubert Robert (1733–1808). A Visionary Painter exhibition catalogue book"
+      ],
+      "refused": [
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5 404"
+      ],
+      "results": [
+        "https://boutique.louvre.fr/en/search/products/?q=Hubert%20Robert%20(1733%E2%80%931808).%20A%20Visionary%20Painter",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Hubert Robert (1733–1808). A Visionary Painter exhibition catalogue ISBN publisher\",\"Louvre Museum Hubert Robert (1733–1808). A Visionary Painter catalogue book\",\"Louvre Museum Hubert Robert (1733–1808). A Visionary Painter press release catalogue\",\"Hubert Robert (1733–1808). A Visionary Painter Louvre catalogue exposition 2016\"]",
+      "kind": "search",
+      "n": 3,
+      "objective": "Confirm whether a printed catalogue was published for the exhibition “Hubert Robert (1733–1808). A Visionary Painter” at Louvre Museum, and give its exact title, ISBN-13 and publisher. Museums often state these in a press release; art-book publishers and booksellers list them too.",
+      "ok": true,
+      "queries": [
+        "Hubert Robert (1733–1808). A Visionary Painter exhibition catalogue ISBN publisher",
+        "Louvre Museum Hubert Robert (1733–1808). A Visionary Painter catalogue book",
+        "Louvre Museum Hubert Robert (1733–1808). A Visionary Painter press release catalogue",
+        "Hubert Robert (1733–1808). A Visionary Painter Louvre catalogue exposition 2016"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/hubert-robert-1733-1808-a-visionary-painter",
+        "https://collections.louvre.fr/en/ark:/53355/cl010063384",
+        "https://enfilade18thc.com/2016/01/29/exhibition-hubert-robert-1733-1808/",
+        "https://www.parismuseescollections.paris.fr/fr/ressources-bibliographiques/hubert-robert-1733-1808-un-peintre-visionnaire-exposition-paris-musee-du",
+        "https://www.livre-rare-book.com/book/5472583/31607",
+        "https://www.abebooks.com/9782757210659/Hubert-Robert-1733-1808-peintre-visionnaire-2757210653/plp",
+        "https://catalogue.bnf.fr/ark:/12148/cb44527189v",
+        "https://www.louvre.fr/expositions-et-evenements/expositions/hubert-robert-1733-1808-un-peintre-visionnaire",
+        "https://archive.org/download/hubert-robert-1733-1808.-un-peintre-visionnaire./Hubert%20Robert%201733-1808.%20Un%20peintre%20visionnaire._text.pdf",
+        "https://presse.louvre.fr/wp-content/uploads/2016/03/61648.pdf"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Hubert Robert (1733-1808) : Un peintre visionnaire English edition\",\"originally published in French as Hubert Robert (1733-1808) : Un peintre visionnaire\",\"Hubert Robert (1733–1808). A Visionary Painter Louvre catalogue English edition\",\"Hubert Robert (1733–1808). A Visionary Painter Somogy ISBN\"]",
+      "kind": "search",
+      "n": 5,
+      "objective": "An ENGLISH-language edition of the exhibition catalogue “Hubert Robert (1733-1808) : Un peintre visionnaire” (Louvre Museum): its English title and its own ISBN, as library catalogues and publishers record it.",
+      "ok": true,
+      "queries": [
+        "Hubert Robert (1733-1808) : Un peintre visionnaire English edition",
+        "originally published in French as Hubert Robert (1733-1808) : Un peintre visionnaire",
+        "Hubert Robert (1733–1808). A Visionary Painter Louvre catalogue English edition",
+        "Hubert Robert (1733–1808). A Visionary Painter Somogy ISBN"
+      ],
+      "refused": [],
+      "results": [
+        "https://archive.org/download/hubert-robert-1733-1808.-un-peintre-visionnaire./Hubert%20Robert%201733-1808.%20Un%20peintre%20visionnaire._text.pdf",
+        "https://archive.org/details/hubert-robert-1733-1808.-un-peintre-visionnaire.",
+        "https://collections.louvre.fr/en/ark:/53355/cl010063384",
+        "https://www.parismuseescollections.paris.fr/fr/ressources-bibliographiques/hubert-robert-1733-1808-un-peintre-visionnaire-exposition-paris-musee-du",
+        "https://ccfr.bnf.fr/portailccfr/ark:/16871/00111739698",
+        "https://www.dessinoriginal.com/en/18th-century-painting/7448-catalogue-d-exposition-hubert-robert-1733-1808-un-peintre-visionnaire-9782757210642.html",
+        "https://www.louvre.fr/expositions-et-evenements/expositions/hubert-robert-1733-1808-un-peintre-visionnaire",
+        "https://www.abebooks.com/Hubert-Robert-1733-1808-peintre-visionnaire-Faroul/32222598974/bd",
+        "https://www.louvre.fr/editions/catalogue/hubert-robert-0",
+        "https://collections.louvre.fr/ark:/53355/cl010063384"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Hubert Robert (1733-1808) : Un peintre visionnaire Louvre Museum catalogue ISBN\",\"Hubert Robert (1733-1808) : Un peintre visionnaire Somogy ISBN\",\"Hubert Robert (1733-1808) : Un peintre visionnaire catalogue publisher\"]",
+      "kind": "search",
+      "n": 6,
+      "objective": "The ISBN-13, publisher, language and exact printed title of the exhibition catalogue “Hubert Robert (1733-1808) : Un peintre visionnaire”, published by Somogy, for the exhibition at Louvre Museum.",
+      "ok": true,
+      "queries": [
+        "Hubert Robert (1733-1808) : Un peintre visionnaire Louvre Museum catalogue ISBN",
+        "Hubert Robert (1733-1808) : Un peintre visionnaire Somogy ISBN",
+        "Hubert Robert (1733-1808) : Un peintre visionnaire catalogue publisher"
+      ],
+      "refused": [],
+      "results": [
+        "https://archive.org/details/hubert-robert-1733-1808.-un-peintre-visionnaire.",
+        "https://collections.louvre.fr/ark:/53355/cl010063384",
+        "https://archive.org/download/hubert-robert-1733-1808.-un-peintre-visionnaire./Hubert%20Robert%201733-1808.%20Un%20peintre%20visionnaire._text.pdf",
+        "https://www.louvre.fr/expositions-et-evenements/expositions/hubert-robert-1733-1808-un-peintre-visionnaire",
+        "https://www.parismuseescollections.paris.fr/fr/ressources-bibliographiques/hubert-robert-1733-1808-un-peintre-visionnaire-exposition-paris-musee-du",
+        "https://www.dessinoriginal.com/en/18th-century-painting/7448-catalogue-d-exposition-hubert-robert-1733-1808-un-peintre-visionnaire-9782757210642.html",
+        "https://www.parismuseescollections.paris.fr/de/node/389419",
+        "https://www.abebooks.fr/9782757210659/Hubert-Robert-1733-1808-peintre-visionnaire-2757210653/plp",
+        "https://catalogue.bnf.fr/ark:/12148/cb450000303",
+        "https://catalogue.bnf.fr/ark:/12148/cb44527189v"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Somogy\",\"Somogy art book publisher\"]",
+      "kind": "search",
+      "n": 8,
+      "objective": "The official website of the art-book publisher “Somogy”.",
+      "ok": true,
+      "queries": [
+        "Somogy",
+        "Somogy art book publisher"
+      ],
+      "refused": [],
+      "results": [
+        "https://en.wikipedia.org/wiki/Somogy_County",
+        "https://www.ipgbook.com/somogy-art-publishers-publisher-SME.php",
+        "https://www.amazon.com/stores/author/B0H85JLKC2",
+        "https://openlibrary.org/publishers/Somogy_Art_Publishers",
+        "https://www.abebooks.com/book-search/publisher/somogy-art-publishers/",
+        "https://bookscouter.com/publisher/somogy-art-publishers",
+        "https://bookscouter.com/publisher/somogy-editions-d-art",
+        "https://www.thriftbooks.com/a/somogy-art-publishers/2964217/",
+        "https://openlibrary.org/publishers/Somogy",
+        "https://openlibrary.org/publishers/Somogy_%C3%A9ditions_d%27art"
+      ]
+    }
+  ],
+  "case": 2,
+  "drawn": {
+    "blocks": [
+      {
+        "lines": [
+          "Not in the museum shop — shop link opens the general store. Couldn’t work out the publisher’s own website, so there’s no link to it.",
+          "Hubert Robert, 1733-1808. Un peintre visionnaire",
+          "Somogy",
+          "French · Hardcover",
+          "ISBN 978-2757210642; 978-2350315355 (Louvre's own number for the same book)",
+          "This show's catalogue. Source: archive.org"
+        ],
+        "picked": false
+      },
+      {
+        "lines": [
+          "Not in the museum shop — shop link opens the general store.",
+          "Hubert Robert",
+          "Lund Humphries",
+          "English · 288 pp",
+          "ISBN 978-1848221918",
+          "A different book, from the show's Washington exhibition. Source: enfilade18thc.com"
+        ],
+        "picked": false
+      }
+    ],
+    "kind": "blocks"
+  },
+  "grades": [
+    {
+      "field": "French 978-2757210642 — listed as a version",
+      "got": "listed",
+      "verdict": "pass",
+      "want": "listed",
+      "why": null
+    },
+    {
+      "field": "French 978-2757210642 — second number on the block",
+      "got": "978-2350315355",
+      "verdict": "pass",
+      "want": "978-2350315355",
+      "why": null
+    },
+    {
+      "field": "French 978-2757210642 — language",
+      "got": "French",
+      "verdict": "pass",
+      "want": "French",
+      "why": null
+    },
+    {
+      "field": "French 978-2757210642 — publisher",
+      "got": "Somogy",
+      "verdict": "fail",
+      "want": "Louvre Éditions / Somogy",
+      "why": null
+    },
+    {
+      "field": "French 978-2757210642 — showing",
+      "got": "this show",
+      "verdict": "pass",
+      "want": "this show",
+      "why": null
+    },
+    {
+      "field": "English 978-1848221918 — listed as a version",
+      "got": "listed",
+      "verdict": "pass",
+      "want": "listed",
+      "why": null
+    },
+    {
+      "field": "English 978-1848221918 — second number on the block",
+      "got": "none",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "English 978-1848221918 — language",
+      "got": "English",
+      "verdict": "pass",
+      "want": "English",
+      "why": null
+    },
+    {
+      "field": "English 978-1848221918 — publisher",
+      "got": "Lund Humphries",
+      "verdict": "fail",
+      "want": "National Gallery of Art / Lund Humphries",
+      "why": null
+    },
+    {
+      "field": "English 978-1848221918 — showing",
+      "got": "another showing",
+      "verdict": "pass",
+      "want": "another showing",
+      "why": null
+    },
+    {
+      "field": "No other versions listed",
+      "got": "none",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "Left off: 978-2757210659",
+      "got": "left off",
+      "verdict": "pass",
+      "want": "left off",
+      "why": null
+    },
+    {
+      "field": "Starting pick",
+      "got": "nothing picked",
+      "verdict": "pass",
+      "want": "nothing picked",
+      "why": null
+    }
+  ],
+  "lookupAt": "2026-10-11T00:25:35.150Z",
+  "ms": 25703,
+  "museumId": "louvre",
+  "ok": true,
+  "panel": "Lookup: 8 calls (4 searches, 1 page opens, 3 Claude reads), 7 waits in a row. Time in calls: shop 8.1s, web 7.2s, facts 8.5s, publisher 2.1s.\nopened https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/ + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5 + https://boutique.louvre.fr/en/search/products/?q=Hubert%20Robert%20(1733%E2%80%931808).%20A%20Visionary%20Painter: 5 page(s), 1 refused (404)\nread the results\nsearch: 10 results for [\"Hubert Robert (1733–1808). A Visionary Painter exhibition catalogue ISBN publisher\",\"Louvre Museum Hubert Robert (1733–1808). A Visionary Painter catalogue book\",\"Louvre Museum Hubert Robert (1733–1808). A Visionary Painter press release catalogue\",\"Hubert Robert (1733–1808). A Visionary Painter Louvre catalogue exposition 2016\"]\nread the results\nsearch: 10 results for [\"Hubert Robert (1733-1808) : Un peintre visionnaire Louvre Museum catalogue ISBN\",\"Hubert Robert (1733-1808) : Un peintre visionnaire Somogy ISBN\",\"Hubert Robert (1733-1808) : Un peintre visionnaire catalogue publisher\"]\nsearch: 10 results for [\"Hubert Robert (1733-1808) : Un peintre visionnaire English edition\",\"originally published in French as Hubert Robert (1733-1808) : Un peintre visionnaire\",\"Hubert Robert (1733–1808). A Visionary Painter Louvre catalogue English edition\",\"Hubert Robert (1733–1808). A Visionary Painter Somogy ISBN\"]\nread the results\nISBN from the read, printed in the results: 9782757210642\nPublisher: Somogy — from the ISBN’s results.\nLanguage check: French — its own title “Hubert Robert, 1733-1808. Un peintre visionnaire”.\n“Hubert Robert” (ISBN 9781848221918, 288 pages) is a different book from this one (544 pages) — listed as another showing’s.\nOne book, two numbers: ISBN 9782757210642 (Somogy éditions dare), also 9782350315355 (murée du Louvre) — https://archive.org/download/hubert-robert-1733-1808.-un-peintre-visionnaire./Hubert%20Robert%201733-1808.%20Un%20peintre%20visionnaire._text.pdf.\nEnglish edition: none proved to be this catalogue's.\n2 versions found; none picked — her rules do not settle it.\nsearch: 10 results for [\"Somogy\",\"Somogy art book publisher\"]\nCouldn’t identify the publisher’s own website.\nEnglish edition: none found; the publisher’s own page for it was not read.",
+  "reads": [
+    2,
+    4,
+    7
+  ],
+  "row": {
+    "alsoVersion": null,
+    "catalogueTitle": null,
+    "editionPick": null,
+    "editions": [
+      {
+        "alsoIsbn13": "9782350315355",
+        "alsoOf": "Louvre",
+        "binding": "hardcover",
+        "card": {
+          "catalogueTitle": "Hubert Robert, 1733-1808. Un peintre visionnaire",
+          "isbn13": "9782757210642",
+          "publisher": "Somogy",
+          "publisherResult": "nosite",
+          "publisherUrl": null,
+          "shopState": "web",
+          "shopUrl": null
+        },
+        "city": null,
+        "isbn13": "9782757210642",
+        "lang": "French",
+        "pages": null,
+        "proofUrl": "https://archive.org/download/hubert-robert-1733-1808.-un-peintre-visionnaire./Hubert%20Robert%201733-1808.%20Un%20peintre%20visionnaire._text.pdf",
+        "publisher": "Somogy",
+        "shop": {
+          "museum": null,
+          "state": "web",
+          "url": null
+        },
+        "showing": "this",
+        "title": "Hubert Robert, 1733-1808. Un peintre visionnaire",
+        "year": null
+      },
+      {
+        "alsoIsbn13": null,
+        "alsoOf": null,
+        "binding": null,
+        "card": {
+          "catalogueTitle": "Hubert Robert",
+          "isbn13": "9781848221918",
+          "publisher": "Lund Humphries",
+          "publisherResult": null,
+          "publisherUrl": null,
+          "shopState": "web",
+          "shopUrl": null
+        },
+        "city": "Washington",
+        "isbn13": "9781848221918",
+        "lang": "English",
+        "pages": 288,
+        "proofUrl": "https://enfilade18thc.com/2016/01/29/exhibition-hubert-robert-1733-1808/",
+        "publisher": "Lund Humphries",
+        "shop": {
+          "museum": null,
+          "state": "web",
+          "url": null
+        },
+        "showing": "other",
+        "title": "Hubert Robert",
+        "year": 2016
+      }
+    ],
+    "englishCheck": "shops",
+    "hasCatalogue": "yes",
+    "isbn13": null,
+    "originalEdition": null,
+    "otherVenueBook": null,
+    "publisher": null,
+    "publisherResult": null,
+    "publisherUrl": null,
+    "shopChange": null,
+    "shopState": "web",
+    "shopUrl": null
+  },
+  "title": "Hubert Robert (1733–1808). A Visionary Painter",
+  "trouble": null,
+  "venue": "Louvre Museum",
+  "verdict": "2 of 13 checks failed."
+}

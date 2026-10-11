@@ -49,14 +49,27 @@ function lcSameLang(got,want){
   const w=lcLangWord(want), g=lcLangWord(got);
   return (LC_LANG_ALIASES[w]||[w]).includes(g);
 }
-// Every house the answer names must be in the publisher found; accents, capitals and
-// "éditions"/"editions" do not count.
-const LC_SKIP=["editions","edition","the","and","books","publishing","press","d","de","art","of"];
-const lcWords=s=>lcFold(s).split(/[^a-z0-9]+/).filter(w=>w.length>1&&!LC_SKIP.includes(w));
+// A publisher is its SET of houses. Each side is split where the app recognises a
+// separator, each house folded (accents, capitals, punctuation, a leading "the", trailing
+// generic words only), and the sets must match both ways: no missing house, no extra one.
+// Two names are one house only when folded equal or listed in the cards' `aka` map.
+const LC_HOUSE_SPLIT=/\s*[\/;&]\s*|\s+:\s+|\s+(?:and|with)\s+/i;
+const LC_HOUSE_TAILS=["editions d art","editions","edition","books","publishing","publishers","publications","ltd","limited","inc"];
+function lcFoldHouse(s){
+  let t=lcFold(s).replace(/[^a-z0-9]+/g," ").trim().replace(/^the /,"");
+  for(;;){
+    const hit=LC_HOUSE_TAILS.find(x=>t.length>x.length&&t.endsWith(" "+x));
+    if(!hit)return t;
+    t=t.slice(0,t.length-hit.length-1).trim();
+  }
+}
+const lcHousesOf=s=>String(s==null?"":s).split(LC_HOUSE_SPLIT).map(lcFoldHouse).filter(Boolean);
+const LC_AKA_PAIRS=Object.entries(LC_AKA).filter(([k])=>!k.startsWith("_")).flatMap(([k,others])=>others.map(o=>[lcFoldHouse(k),lcFoldHouse(o)]));
+const lcSameHouse=(a,b)=>a===b||LC_AKA_PAIRS.some(([x,y])=>(x===a&&y===b)||(x===b&&y===a));
 function lcSamePublisher(got,want){
-  const g=lcWords(got);
-  if(!g.length)return false;
-  return String(want).split(/\s*\/\s*/).every(house=>lcWords(house).every(w=>g.includes(w)));
+  const g=lcHousesOf(got), w=lcHousesOf(want);
+  if(!g.length||!w.length)return false;
+  return g.every(a=>w.some(b=>lcSameHouse(a,b)))&&w.every(b=>g.some(a=>lcSameHouse(a,b)));
 }
 const lcIsbn=n=>n?fmtIsbn(n):"none";
 const lcLangOf=v=>v?(langName(v.lang)||v.lang||"no language"):"";

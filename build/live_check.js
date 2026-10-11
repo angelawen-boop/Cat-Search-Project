@@ -44,11 +44,13 @@ function prepare(build = {}) {
   const branch = build.branch || git(['rev-parse', '--abbrev-ref', 'HEAD']) || 'unknown';
 
   const cases = JSON.parse(fs.readFileSync(CASES, 'utf8'));
-  const cards = JSON.parse(fs.readFileSync(CARDS, 'utf8')).cards;
+  const proof = JSON.parse(fs.readFileSync(CARDS, 'utf8'));
+  const cards = proof.cards, aka = proof.aka || {};
   for (const c of cases.cases) if (!cards.some(k => k.case === c.case)) throw new Error('case ' + c.case + ' has no right answers in docs/lookup_proof_cards.json');
 
   const consts = 'const LC_CASES = ' + JSON.stringify(cases.cases) + ';\n'
     + 'const LC_CARDS = ' + JSON.stringify(cards) + ';\n'
+    + 'const LC_AKA = ' + JSON.stringify(aka) + ';\n'
     + 'const LC_VENUES = ' + JSON.stringify(cases.venues || {}) + ';\n'
     + 'const LC_BUILD = ' + JSON.stringify({ branch, commit, appVersion, builtAt: build.builtAt || new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' }) + ';\n';
 

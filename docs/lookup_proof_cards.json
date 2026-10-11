@@ -71,5 +71,10 @@
       ],
       "pick": "9781857097382", "leftOff": []
     }
-  ]
+  ],
+  "aka": {
+    "_about": "Other names for one publishing house, written exactly as the lookup may print them. The page grades a publisher by its set of houses (live_check_page.jsx, lcSamePublisher): two houses match when their folded names are equal or one is listed here as another name for the other. Nothing else is treated as the same house.",
+    "Louvre Éditions": ["Musée du Louvre Éditions"],
+    "National Gallery": ["National Gallery Global", "National Gallery Company", "National Gallery Publications"]
+  }
 }

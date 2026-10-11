@@ -29,6 +29,7 @@ const { prepare } = require('../../build/live_check.js');
 
 const ROOT = path.join(__dirname, '..', '..');
 const RUN = path.join(ROOT, 'docs', 'live_check_runs', 'R1791639137375lahf');
+const RUN2 = path.join(ROOT, 'docs', 'live_check_runs', 'R1791678301243iwuh');
 const CARDS = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs', 'lookup_proof_cards.json'), 'utf8')).cards;
 
 let failures = 0;
@@ -57,7 +58,7 @@ for (const k of ['window', 'document', 'navigator', 'localStorage', 'requestAnim
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
 // The page's own functions. `stub` replaces the lookup (the one thing that would reach the network).
-const NAMES = 'LiveCheck, lcGrade, lcDrawn, LC_CARDS, LC_CASES, versionBlocks, tapeCall, pruneLookupLog';
+const NAMES = 'LiveCheck, lcGrade, lcDrawn, lcSamePublisher, LC_CARDS, LC_CASES, versionBlocks, tapeCall, pruneLookupLog';
 const lift = () => new Function('React', 'window', 'document', 'localStorage', '__stub', '__sleep',
   built.js + '\n;lookupCatalogue = __stub;\nlcSleep = __sleep;\nreturn { ' + NAMES + ' };')(React, win, win.document, win.localStorage, (...a) => stubLookup(...a), ms => curSleep(ms));
 let stubLookup = async () => ({ ok: false, row: null, detail: 'no stub' });
@@ -141,6 +142,34 @@ for (const c of CARDS) {
     if (n === 4) eq(now.find(g => g.field === 'English 978-0847899289 — publisher').verdict, 'fail', 'LC-010: Hammershøi — the English publisher is graded "fail", no longer "disputed"');
   }
   ok(regraded > 50, 'LC-010: the regrade read the saved rows (' + regraded + ' checks)');
+}
+
+// ── LC-041: the second live run's nine records, regraded ─────────────────────
+{
+  // Graded by the page of the day with the old publisher rule; the set-equality rule changes none of them.
+  let regraded = 0, same = 0;
+  for (let n = 1; n <= 9; n++) {
+    const rec = JSON.parse(fs.readFileSync(path.join(RUN2, n + '.json'), 'utf8'));
+    const now = grade(n, rec.row);
+    const was = Object.fromEntries(rec.grades.map(g => [g.field, g.verdict]));
+    const diffs = now.filter(g => was[g.field] !== g.verdict).map(g => g.field + ': ' + was[g.field] + ' → ' + g.verdict);
+    const sameFields = JSON.stringify(now.map(g => g.field)) === JSON.stringify(rec.grades.map(g => g.field));
+    regraded += now.length; if (!diffs.length) same++;
+    ok(sameFields && !diffs.length, 'LC-041: run 2, case ' + n + ' regraded with the set-equality publisher rule — every verdict as stored', JSON.stringify({ sameFields, diffs }));
+  }
+  ok(regraded > 60 && same === 9, 'LC-041: the regrade read nine saved records (' + regraded + ' checks)');
+}
+
+// ── LC-034..LC-040: a publisher is its set of houses (Hole A) ────────────────
+{
+  const same = (got, want) => api.lcSamePublisher(got, want);
+  eq(same('The National Gallery / Lund Humphries', 'National Gallery of Art / Lund Humphries'), false, 'LC-034: "The National Gallery" is not "National Gallery of Art" — the wrong museum fails');
+  eq(same('Musée du Louvre Editions / Lienart', 'Louvre Éditions / Lienart'), true, 'LC-035: "Musée du Louvre Editions" and "Louvre Éditions" are one house (listed in aka)');
+  eq(same('Lienart', 'Louvre Éditions / Lienart'), false, 'LC-036: "Lienart" alone fails "Louvre Éditions / Lienart" — a house is missing');
+  eq(same('Hannibal Books', 'Hannibal'), true, 'LC-037: a trailing "Books" is dropped');
+  eq(same('Somogy éditions d\'art', 'Somogy'), true, 'LC-038: a trailing "éditions d\'art" is dropped');
+  eq(same('National Gallery Global Ltd', 'National Gallery'), true, 'LC-039: "National Gallery Global Ltd" is "National Gallery" (Ltd dropped, Global listed in aka)');
+  eq(same('Fonds Mercator / Lund Humphries', 'Fonds Mercator'), false, 'LC-040: an extra house fails — the sets must be the same');
 }
 
 // ── The page, run with a store played by a script ───────────────────────────
