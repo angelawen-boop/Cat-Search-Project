@@ -4,7 +4,7 @@
     {
       "case": 1, "venue": "louvre", "title": "Giorgio Vasari: The Book of Drawings", "match": ["vasari"],
       "versions": [
-        { "title": "Giorgio Vasari. Le Livre des dessins. Destinées d'une collection mythique", "lang": "French", "binding": null, "pages": null, "publisher": "Louvre Éditions / Lienart", "isbn13": "9782359063721", "alsoIsbn13": "9782350317441", "showing": "this" },
+        { "title": "Giorgio Vasari. Le Livre des dessins. Destinées d'une collection mythique", "lang": "French", "binding": null, "pages": null, "publisher": "Louvre Éditions / Lienart", "isbn13": "9782359063721", "alsoIsbn13": null, "showing": "this" },
         { "title": "Giorgio Vasari, the Book of Drawings", "lang": "English", "binding": "paperback", "pages": null, "publisher": "Louvre Éditions / Lienart", "isbn13": "9782359063738", "alsoIsbn13": null, "showing": "this" },
         { "title": "Giorgio Vasari The Book of Drawings – The fate of a mythical collection", "lang": "English", "binding": "hardcover", "pages": null, "publisher": "Nationalmuseum", "isbn13": "9789171009166", "alsoIsbn13": null, "showing": "this" }
       ],
@@ -35,7 +35,7 @@
       "pick": "9780847899289", "leftOff": []
     },
     {
-      "case": 5, "venue": "louvre", "title": "Pierrot, dit le Gilles", "match": ["pierrot"],
+      "case": 5, "venue": "louvre", "title": "A new look at Watteau", "match": ["watteau"],
       "versions": [
         { "title": "Pierrot, dit le Gilles, de Watteau. Un comédien sans réplique", "lang": "French", "binding": "paperback", "pages": null, "publisher": "Louvre Éditions / Lienart", "isbn13": "9782359064476", "alsoIsbn13": null, "showing": "this" }
       ],

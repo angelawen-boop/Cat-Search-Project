@@ -345,7 +345,7 @@ async function versionCards() {
     const T = i => vasari.editions[i].title;
     check(NAME + ': Vasari — three blocks, each the single-book block in her order: shop line, title, publisher, facts, ISBN, why and source',
       JSON.stringify(blocksOn(card)) === JSON.stringify([
-        ['○', NOT_IN, T(0), 'Louvre Éditions / Lienart', 'French', 'ISBN 978-2359063721; 978-2350317441 (Louvre\'s own number for the same book)', 'The original edition. Source: louvre.fr'],
+        ['○', NOT_IN, T(0), 'Louvre Éditions / Lienart', 'French', 'ISBN 978-2359063721', 'The original edition. Source: louvre.fr'],
         ['●', NOT_IN, T(1), 'Louvre Éditions / Lienart', 'English · Paperback', 'ISBN 978-2359063738', 'This venue\'s English edition. Source: lienarteditions.com'],
         ['○', 'In the museum shop.', T(2), 'Nationalmuseum', 'English · Hardcover', 'ISBN 978-9171009166', 'From the show\'s Stockholm exhibition. Source: nationalmuseum.bokorder.se']]),
       JSON.stringify(blocksOn(card)));
@@ -355,7 +355,7 @@ async function versionCards() {
     check(NAME + ': Vasari — no status line, book title or ISBN line outside the blocks',
       !/ISBN|museum shop\.|Not in the museum shop/.test(outside) && !outside.includes(vasari.catalogueTitle), outside.slice(-300));
     const isbnSpans = [...card.querySelectorAll('span')].filter(x => /^97[89]-\d{10}$/.test(x.textContent));
-    check(NAME + ': Vasari — every ISBN sits whole on one line', isbnSpans.length === 4 && isbnSpans.every(x => x.style.whiteSpace === 'nowrap'), String(isbnSpans.length));
+    check(NAME + ': Vasari — every ISBN sits whole on one line', isbnSpans.length === 3 && isbnSpans.every(x => x.style.whiteSpace === 'nowrap'), String(isbnSpans.length));
     check(NAME + ': Vasari — the block marker sits in its own column and the block is tappable by keyboard',
       [...card.querySelectorAll('[role=radio]')].every(b => b.getAttribute('tabindex') === '0' && /flex: (?:none|0 0 auto)/.test(b.children[0].getAttribute('style') || '')),
       [...card.querySelectorAll('[role=radio]')].map(b => b.getAttribute('tabindex') + ' ' + b.children[0].getAttribute('style')).join(' | '));
