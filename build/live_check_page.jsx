@@ -53,11 +53,10 @@ function lcSamePublisher(got,want){
 const lcIsbn=n=>n?fmtIsbn(n):"none";
 const lcLangOf=v=>v?(langName(v.lang)||v.lang||"no language"):"";
 
-function lcGrade(card,extra,row){
+function lcGrade(card,row){
   const out=[];
   const add=(field,verdict,got,want,why)=>out.push({field,verdict,got:got==null?"":String(got),want:want==null?"":String(want),why:why||null});
   const vs=Array.isArray(row&&row.editions)?row.editions.filter(Boolean):[];
-  const skip=(list,isbn,field)=>(list||[]).find(x=>x.isbn13===isbn&&x.field===field);
   const used=new Set();
   for(const want of card.versions){
     const label=want.lang+" "+lcIsbn(want.isbn13);
@@ -65,15 +64,11 @@ function lcGrade(card,extra,row){
     add(label+" — listed as a version",v?"pass":"fail",v?"listed":"not listed","listed");
     if(!v)continue;
     used.add(v);
-    const ng=skip(extra.notGraded,want.isbn13,"also"), dp=skip(extra.disputed,want.isbn13,"also");
     const gotAlso=v.isbn13===want.isbn13?v.alsoIsbn13:v.isbn13;
-    if(ng||dp)add(label+" — second number on the block",ng?"not graded":"disputed",lcIsbn(gotAlso),lcIsbn(want.alsoIsbn13),(ng||dp).why);
-    else add(label+" — second number on the block",(gotAlso||null)===(want.alsoIsbn13||null)?"pass":"fail",lcIsbn(gotAlso),lcIsbn(want.alsoIsbn13));
+    add(label+" — second number on the block",(gotAlso||null)===(want.alsoIsbn13||null)?"pass":"fail",lcIsbn(gotAlso),lcIsbn(want.alsoIsbn13));
     if(v.isbn13!==want.isbn13)add(label+" — number the block leads with","fail",lcIsbn(v.isbn13),lcIsbn(want.isbn13));
     add(label+" — language",lcSameLang(v.lang,want.lang)?"pass":"fail",lcLangOf(v),want.lang);
-    const pd=skip(extra.disputed,want.isbn13,"publisher");
-    if(pd)add(label+" — publisher","disputed",v.publisher||"none",want.publisher,pd.why);
-    else add(label+" — publisher",lcSamePublisher(v.publisher,want.publisher)?"pass":"fail",v.publisher||"none",want.publisher);
+    add(label+" — publisher",lcSamePublisher(v.publisher,want.publisher)?"pass":"fail",v.publisher||"none",want.publisher);
     add(label+" — showing",v.showing===want.showing?"pass":"fail",v.showing==="other"?"another showing":"this show",want.showing==="other"?"another showing":"this show");
   }
   const extras=vs.filter(v=>!used.has(v));
@@ -101,13 +96,27 @@ function lcShopLine(s){
 }
 function lcDrawn(row){
   const vb=row&&row.hasCatalogue==="yes"?versionBlocks(row):null;
-  if(vb)return{kind:"blocks",blocks:vb.map(b=>({picked:b.picked,lines:[lcShopLine(b.shop),b.title,b.publisher,b.facts,b.isbn,[b.why,b.source?"Source: "+b.source:null].filter(Boolean).join(" ")||null].filter(Boolean)}))};
+  if(vb)return{kind:"blocks",blocks:vb.map(b=>({picked:b.picked,lines:[lcShopLine(b.shop),b.title,b.publisher,b.facts,b.isbn,[b.why,b.source?"Source: "+b.source.host:null].filter(Boolean).join(" ")||null].filter(Boolean)}))};
   if(!row||row.hasCatalogue!=="yes")return{kind:"none",blocks:[{picked:false,lines:[row&&row.hasCatalogue==="no"?"No catalogue found.":"No catalogue on the card."]}]};
   return{kind:"single",blocks:[{picked:true,lines:[lcShopLine({state:row.shopState,change:row.shopChange}),row.catalogueTitle,row.publisher,row.isbn13?"ISBN "+fmtIsbn(row.isbn13):null].filter(Boolean)}]};
 }
 
 // ── SAVING — every case to the page's own store as it finishes ─────────────────
+// A write that throws is tried once more; the error it ends on (or null) comes back.
 const LC_RUNS="checks", LC_PIECE=150000;
+async function lcTwice(fn){
+  for(let k=0;k<2;k++){ try{ await fn(); return null; }catch(e){ if(k)return String((e&&e.message)||e); } }
+  return null;
+}
+// The last line: "Every case is saved" only when every case and the header's final update were written.
+function lcFinalLine(hasStore,unsaved,headerErr){
+  if(!hasStore)return "Finished, but this page couldn’t reach its store, so nothing was saved.";
+  if(!unsaved.length&&!headerErr)return "Finished. Every case is saved.";
+  const ns=unsaved.map(u=>u.case);
+  const cases=ns.length?(ns.length===1?"case "+ns[0]:"cases "+ns.join(", "))+" did not save":"";
+  const head=headerErr?"the run’s header did not save":"";
+  return "Finished, but "+[cases,head].filter(Boolean).join(" and ")+".";
+}
 async function lcPutText(db,path,text){
   const t=String(text==null?"":text), n=Math.max(1,Math.ceil(t.length/LC_PIECE));
   for(let i=0;i<n;i++)await db.doc(path+"/"+i).set({text:t.slice(i*LC_PIECE,(i+1)*LC_PIECE),i,of:n});
@@ -161,7 +170,7 @@ const LC_STYLE=`
   .lc .status{font-weight:600}
   @media (max-width:560px){.lc td:nth-child(3),.lc th:nth-child(3){display:none}}
 `;
-const LC_MARK={"pass":"✓ Pass","fail":"✗ Fail","not graded":"– Not graded","disputed":"? Disputed, not graded"};
+const LC_MARK={"pass":"✓ Pass","fail":"✗ Fail"};
 
 function LcCase({c}){
   return(
@@ -169,6 +178,7 @@ function LcCase({c}){
       <h2>{c.case}. {c.title} <span className="soft">({c.venue})</span></h2>
       <div className="status">{c.verdict}</div>
       {c.trouble&&<div className="soft">The lookup said: {c.trouble}</div>}
+      {c.saveError&&<div className="status">This case did not save: {c.saveError}</div>}
       <table><thead><tr><th style={{width:"42%"}}>What is checked</th><th style={{width:"18%"}}>Result</th><th>Came back</th><th>Right answer</th></tr></thead>
         <tbody>{c.grades.map((g,k)=>(
           <tr key={k} className={g.verdict==="fail"?"fail":""}><td>{g.field}{g.why&&<div className="soft">{g.why}</div>}</td><td className="v">{LC_MARK[g.verdict]}</td><td>{g.got}</td><td>{g.want}</td></tr>))}
@@ -201,12 +211,13 @@ function LiveCheck(){
       if(!s)tier.error="Claude isn’t available to this page.";
       else{ const r=await s("Reply with the one word: ready",{modelTier:"default",cache:false}); tier={modelTierApplied:r.modelTierApplied||null,modelApplied:r.modelApplied||null,error:null}; }
     }catch(e){ tier.error=String((e&&e.code)||e); }
-    const head={at,version:LC_BUILD.version,commit:LC_BUILD.commit,builtAt:LC_BUILD.builtAt,
+    const head={at,branch:LC_BUILD.branch,commit:LC_BUILD.commit,builtAt:LC_BUILD.builtAt,appVersionInCode:LC_BUILD.appVersion,
       modelTierAsked:"default",modelTierApplied:tier.modelTierApplied,modelApplied:tier.modelApplied,
       modelNote:tier.modelApplied?null:"modelApplied is reported only when a page names a model; the app asks by modelTier only.",
-      tierError:tier.error,cases:LC_CASES.length,done:0,finished:false,saved:!!db};
-    try{ if(db)await db.doc(LC_RUNS+"/"+runId).set(head); }catch{}
-    const all=[];
+      tierError:tier.error,cases:LC_CASES.length,done:0,savedCases:[],unsavedCases:[],finished:false,saved:!!db};
+    const runDoc=db?db.doc(LC_RUNS+"/"+runId):null;
+    let headerErr=db?await lcTwice(()=>runDoc.set(head)):null;
+    const all=[], saved=[], unsaved=[];
     for(const x of LC_CASES){
       const card=LC_CARDS.find(c=>c.case===x.case);
       const mu=MU[x.row.museumId];
@@ -221,19 +232,23 @@ function LiveCheck(){
       const calls=lcCallsOf(tape);
       await saveLookupTape(tape,out);
       const row=out&&out.row;
-      const grades=row?lcGrade(card,x,row):[{field:"The lookup finished",verdict:"fail",got:"no",want:"yes",why:null}];
+      const grades=row?lcGrade(card,row):[{field:"The lookup finished",verdict:"fail",got:"no",want:"yes",why:null}];
       const fails=grades.filter(g=>g.verdict==="fail").length;
       const rec={case:x.case,title:x.row.title,venue:mu?mu.name:x.row.museumId,museumId:x.row.museumId,
         lookupAt:new Date(tape.t0).toISOString(),ms:Date.now()-tape.t0,
         ok:!!(out&&out.ok),trouble:(out&&out.trouble)||null,panel:(out&&out.detail)||null,
         verdict:(out&&out.ok?"":"The lookup did not finish. ")+(fails?fails+" of "+grades.filter(g=>g.verdict==="pass"||g.verdict==="fail").length+" checks failed.":"Every graded check passed."),
         grades,drawn:lcDrawn(row),row:row?cardFields(row):null,calls};
-      try{ if(db){ await lcSaveCase(db,runId,rec,reads); await db.doc(LC_RUNS+"/"+runId).update({done:all.length+1}); } }catch(e){ rec.saveError=String((e&&e.message)||e); }
+      if(db){
+        const err=await lcTwice(()=>lcSaveCase(db,runId,rec,reads));
+        if(err){ rec.saveError=err; unsaved.push({case:x.case,error:err}); } else saved.push(x.case);
+        headerErr=await lcTwice(()=>runDoc.update({done:saved.length,savedCases:saved,unsavedCases:unsaved}));
+      }
       all.push(rec); setDone(all.slice());
     }
-    try{ if(db)await db.doc(LC_RUNS+"/"+runId).update({finished:true,endedAt:new Date().toISOString(),
-      failedCases:all.filter(r=>r.grades.some(g=>g.verdict==="fail")).map(r=>r.case)}); }catch{}
-    setStatus(""); setFinished(db?"Finished. Every case is saved.":"Finished, but this page couldn’t reach its store, so nothing was saved.");
+    if(db)headerErr=await lcTwice(()=>runDoc.update({finished:true,endedAt:new Date().toISOString(),done:saved.length,savedCases:saved,unsavedCases:unsaved,
+      failedCases:all.filter(r=>r.grades.some(g=>g.verdict==="fail")).map(r=>r.case)}));
+    setStatus(""); setFinished(lcFinalLine(!!db,unsaved,headerErr));
     setRunning(false);
   }
 
@@ -241,7 +256,7 @@ function LiveCheck(){
     <div className="lc">
       <style>{LC_STYLE}</style>
       <h1>Cat Watch live check</h1>
-      <div className="soft">Code under test: version {LC_BUILD.version} {"·"} commit {LC_BUILD.commit} {"·"} built {LC_BUILD.builtAt}</div>
+      <div className="soft">Code under test: {LC_BUILD.branch} {"·"} commit {LC_BUILD.commit} {"·"} built {LC_BUILD.builtAt}</div>
       <div className="soft">{LC_CASES.length} cases, searched live through Parallel Search Key and read by Claude, as the app does.</div>
       <button className="run" onClick={run} disabled={running}>{running?"Running…":"Run"}</button>
       {status&&<div className="status">{status}</div>}

@@ -1,0 +1,251 @@
+{
+  "calls": [
+    {
+      "asked": [
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5",
+        "https://boutique.louvre.fr/en/search/products/?q=A%20new%20look%20at%20Watteau"
+      ],
+      "detail": "opened https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/ + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5 + https://boutique.louvre.fr/en/search/products/?q=A%20new%20look%20at%20Watteau: 5 page(s), 1 refused (404)",
+      "kind": "open page",
+      "n": 1,
+      "objective": "The printed exhibition catalogue for “A new look at Watteau”: the book’s own product page on this shop, its full title and its price.",
+      "ok": true,
+      "queries": [
+        "A new look at Watteau exhibition catalogue book"
+      ],
+      "refused": [
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5 404"
+      ],
+      "results": [
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/",
+        "https://boutique.louvre.fr/en/search/products/?q=A%20new%20look%20at%20Watteau",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"A new look at Watteau exhibition catalogue ISBN publisher\",\"Louvre Museum A new look at Watteau catalogue book\",\"Louvre Museum A new look at Watteau press release catalogue\",\"A new look at Watteau Louvre catalogue exposition 2024\"]",
+      "kind": "search",
+      "n": 3,
+      "objective": "Confirm whether a printed catalogue was published for the exhibition “A new look at Watteau” at Louvre Museum, and give its exact title, ISBN-13 and publisher. Museums often state these in a press release; art-book publishers and booksellers list them too.",
+      "ok": true,
+      "queries": [
+        "A new look at Watteau exhibition catalogue ISBN publisher",
+        "Louvre Museum A new look at Watteau catalogue book",
+        "Louvre Museum A new look at Watteau press release catalogue",
+        "A new look at Watteau Louvre catalogue exposition 2024"
+      ],
+      "refused": [],
+      "results": [
+        "https://presse.louvre.fr/revoir-watteau-1063000220568",
+        "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/a-new-look-at-watteau",
+        "https://presse.louvre.fr/wp-content/uploads/2024/08/99d6899f54dabe94b4dd2ec16b2160d2.pdf",
+        "https://boutique.louvre.fr/en/products/400716-new-look-at-watteau",
+        "https://presse.louvre.fr/revoir-watteau-1063000220568?lang=en",
+        "https://www.meer.com/en/84378-a-new-look-at-watteau",
+        "https://gutenberg.org/cache/epub/41621/pg41621-images.html",
+        "https://archive.org/details/catalogueraisonn00watt",
+        "https://presse.louvre.fr/wp-content/uploads/2023/05/73bcdd9b106f0d80d5154af2bfbac125.pdf",
+        "https://onlinebooks.library.upenn.edu/webbin/book/browse?c=x&key=Exhibition%20catalogs&type=lcsubc"
+      ]
+    },
+    {
+      "asked": [
+        "https://boutique.louvre.fr/en/product/60080-pierrot-know-as-gilles.html"
+      ],
+      "detail": "opened https://boutique.louvre.fr/en/product/60080-pierrot-know-as-gilles.html: 1 page(s)",
+      "kind": "open page",
+      "n": 5,
+      "objective": "Whether the book “Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique” can be bought on this page now: its product page, price, add to cart, pre-order, sold out, out of stock, unavailable.",
+      "ok": true,
+      "queries": [
+        "Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique add to cart sold out"
+      ],
+      "refused": [],
+      "results": [
+        "https://boutique.louvre.fr/en/product/60080-pierrot-know-as-gilles.html"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique English edition\",\"originally published in French as Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique\",\"A new look at Watteau Louvre catalogue English edition\",\"A new look at Watteau Musée du Louvre Éditions / Liénart Éditions ISBN\"]",
+      "kind": "search",
+      "n": 7,
+      "objective": "An ENGLISH-language edition of the exhibition catalogue “Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique” (Louvre Museum): its English title and its own ISBN, as library catalogues and publishers record it.",
+      "ok": true,
+      "queries": [
+        "Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique English edition",
+        "originally published in French as Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique",
+        "A new look at Watteau Louvre catalogue English edition",
+        "A new look at Watteau Musée du Louvre Éditions / Liénart Éditions ISBN"
+      ],
+      "refused": [],
+      "results": [
+        "https://boutique.louvre.fr/en/products/400716-new-look-at-watteau/",
+        "https://en.wikipedia.org/wiki/Pierrot_(Watteau)",
+        "https://www.amazon.com/Pierrot-Gilles-Watteau-com%C3%A9dien-r%C3%A9plique/dp/2359064479",
+        "https://www.boutiquesdemusees.fr/en/product/60080-pierrot-know-as-gilles.html",
+        "https://boutique.louvre.fr/fr/products/400716-revoir-watteau",
+        "https://boutique.louvre.fr/en/product/60080-pierrot-know-as-gilles.html",
+        "https://www.louvre.fr/editions/catalogue/pierrot-dit-le-gilles-de-watteau",
+        "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/a-new-look-at-watteau",
+        "https://collections.louvre.fr/en/ark:/53355/cl010062129",
+        "https://www.louvre.fr/expositions-et-evenements/expositions/revoir-watteau"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique Louvre Museum catalogue ISBN\",\"Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique Musée du Louvre Éditions / Liénart Éditions ISBN\",\"Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique catalogue publisher\"]",
+      "kind": "search",
+      "n": 8,
+      "objective": "The ISBN-13, publisher, language and exact printed title of the exhibition catalogue “Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique”, published by Musée du Louvre Éditions / Liénart Éditions, for the exhibition at Louvre Museum.",
+      "ok": true,
+      "queries": [
+        "Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique Louvre Museum catalogue ISBN",
+        "Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique Musée du Louvre Éditions / Liénart Éditions ISBN",
+        "Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique catalogue publisher"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.louvre.fr/editions/catalogue/pierrot-dit-le-gilles-de-watteau",
+        "https://boutique.louvre.fr/en/product/60080-pierrot-know-as-gilles.html",
+        "https://boutique.louvre.fr/fr/product/60080-pierrot-dit-le-gilles-de-watteau-un-comedien-sans-replique.html",
+        "https://www.parismuseescollections.paris.fr/fr/ressources-bibliographiques/pierrot-dit-le-gilles-de-watteau-un-comedien-sans-replique-catalogue-de",
+        "https://www.louvre.fr/expositions-et-evenements/expositions/revoir-watteau",
+        "https://www.amazon.com/Pierrot-Gilles-Watteau-com%C3%A9dien-r%C3%A9plique/dp/2359064479",
+        "https://catalogue.bnf.fr/ark:/12148/cb475964790",
+        "https://boutique.louvre.fr/fr/products/400716-revoir-watteau",
+        "https://www.lardanchet.fr/en/pierrot-dit-le-gilles-de-watteau-un-comedien-sans-replique",
+        "https://www.louvre.fr/expositions-et-evenements/evenements-activites/presentation-de-l-exposition-revoir-watteau-un-comedien-sans-replique-pierrot-dit-le-gilles"
+      ]
+    }
+  ],
+  "case": 5,
+  "drawn": {
+    "blocks": [
+      {
+        "lines": [
+          "Not in the museum shop — shop link opens the general store.",
+          "Pierrot, dit le Gilles, de Watteau. Un comédien sans réplique",
+          "ISBN 978-2359064476"
+        ],
+        "picked": true
+      }
+    ],
+    "kind": "single"
+  },
+  "grades": [
+    {
+      "field": "French 978-2359064476 — listed as a version",
+      "got": "listed",
+      "verdict": "pass",
+      "want": "listed",
+      "why": null
+    },
+    {
+      "field": "French 978-2359064476 — second number on the block",
+      "got": "none",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "French 978-2359064476 — language",
+      "got": "French",
+      "verdict": "pass",
+      "want": "French",
+      "why": null
+    },
+    {
+      "field": "French 978-2359064476 — publisher",
+      "got": "none",
+      "verdict": "fail",
+      "want": "Louvre Éditions / Lienart",
+      "why": null
+    },
+    {
+      "field": "French 978-2359064476 — showing",
+      "got": "this show",
+      "verdict": "pass",
+      "want": "this show",
+      "why": null
+    },
+    {
+      "field": "No other versions listed",
+      "got": "none",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "Starting pick",
+      "got": "978-2359064476",
+      "verdict": "pass",
+      "want": "978-2359064476",
+      "why": null
+    }
+  ],
+  "lookupAt": "2026-10-10T13:35:09.446Z",
+  "ms": 27437,
+  "museumId": "louvre",
+  "ok": true,
+  "panel": "Lookup: 9 calls (3 searches, 2 page opens, 4 Claude reads), 8 waits in a row. Time in calls: shop 12.4s, web 4.8s, page 4.0s, facts 6.5s.\nopened https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/ + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5 + https://boutique.louvre.fr/en/search/products/?q=A%20new%20look%20at%20Watteau: 5 page(s), 1 refused (404)\nread the results\nsearch: 10 results for [\"A new look at Watteau exhibition catalogue ISBN publisher\",\"Louvre Museum A new look at Watteau catalogue book\",\"Louvre Museum A new look at Watteau press release catalogue\",\"A new look at Watteau Louvre catalogue exposition 2024\"]\nread the results\nopened https://boutique.louvre.fr/en/product/60080-pierrot-know-as-gilles.html: 1 page(s)\nread the results\nThis is the book's own product page, but the page text is ambiguous. It contains template strings for both 'Add to cart' and 'Item unavailable / Get alerted when it comes back in stock', plus 'Last available items'. No price is rendered and no variant is selected, so the page does not clearly show that a new order can be placed today.\nThe shop link from the web search isn’t this book for sale (This is the book's own product page, but the page text is ambiguous. It contains template strings for both 'Add to cart' and 'Item unavailable / Get alerted when it comes back in stock', plus 'Last available items'. No price is rendered and no variant is selected, so the page does not clearly show that a new order can be placed today.), so it is not filed as in the museum shop.\nsearch: 10 results for [\"Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique Louvre Museum catalogue ISBN\",\"Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique Musée du Louvre Éditions / Liénart Éditions ISBN\",\"Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique catalogue publisher\"]\nsearch: 10 results for [\"Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique English edition\",\"originally published in French as Pierrot, dit Le Gilles, de Watteau. Un comédien sans réplique\",\"A new look at Watteau Louvre catalogue English edition\",\"A new look at Watteau Musée du Louvre Éditions / Liénart Éditions ISBN\"]\nread the results\nISBN read off the search results in code: 9782359064476\nPublisher from the ISBN: the results carrying it don’t agree on one.\nPublisher “Musée du Louvre Éditions / Liénart Éditions” is not the one the ISBN’s records name (scientifique, / Imprimeur) — no publisher filed.\nLanguage check: French — its own title “Pierrot, dit le Gilles, de Watteau. Un comédien sans réplique”.\n1 version found; picked: 9782359064476.\nEnglish edition: none found; the publisher’s own page for it was not read.",
+  "reads": [
+    2,
+    4,
+    6,
+    9
+  ],
+  "row": {
+    "alsoVersion": null,
+    "catalogueTitle": "Pierrot, dit le Gilles, de Watteau. Un comédien sans réplique",
+    "editionPick": 0,
+    "editions": [
+      {
+        "alsoIsbn13": null,
+        "alsoOf": null,
+        "binding": "paperback",
+        "card": {
+          "catalogueTitle": "Pierrot, dit le Gilles, de Watteau. Un comédien sans réplique",
+          "isbn13": "9782359064476",
+          "publisher": null,
+          "publisherResult": "unnamed",
+          "publisherUrl": null,
+          "shopState": "web",
+          "shopUrl": null
+        },
+        "city": null,
+        "isbn13": "9782359064476",
+        "lang": "French",
+        "pages": 240,
+        "proofUrl": "https://www.louvre.fr/editions/catalogue/pierrot-dit-le-gilles-de-watteau",
+        "publisher": null,
+        "shop": null,
+        "showing": "this",
+        "title": "Pierrot, dit le Gilles, de Watteau. Un comédien sans réplique",
+        "year": null
+      }
+    ],
+    "englishCheck": "shops",
+    "hasCatalogue": "yes",
+    "isbn13": "9782359064476",
+    "originalEdition": null,
+    "otherVenueBook": null,
+    "publisher": null,
+    "publisherResult": "unnamed",
+    "publisherUrl": null,
+    "shopChange": null,
+    "shopState": "web",
+    "shopUrl": null
+  },
+  "title": "A new look at Watteau",
+  "trouble": null,
+  "venue": "Louvre Museum",
+  "verdict": "1 of 7 checks failed."
+}
