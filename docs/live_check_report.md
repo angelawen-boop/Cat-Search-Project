@@ -46,19 +46,18 @@ Metamorphoses `L17916396765747elm`, Millet `L1791639703068rbam`.
 
 ## Follow up — next session
 
-1. **Two page bugs (not search code):** the drawn blocks print "Source: [object
-   Object]" (`lcDrawn` uses `sourceOf`'s result as text; cases 2 and 4); Botticelli's
-   case record did not save. Not size: its last read's prompt (10 KB) and answer
-   saved, then that read's small header (`reads/13`) and the case record did not —
-   cause unknown. The page still said "Every case is saved" and the run's `done` read
-   9 (case 8 wrote it), since `rec.saveError` is never shown or counted. Fix, rebuild,
-   republish.
-2. **Nothing to raise with her — her agreed cards (`catalogue_versions.md`, "The agreed
-   cases") settle every answer.** Botticelli and Hammershøi's French book are
-   "Culturespaces / Fonds Mercator", so the strict grade is right; Hammershøi's English
-   is Rizzoli Electa, so "none" fails (the page wrongly marks it "disputed": drop that
-   from `live_check_cases.json`). Vasari's 978-2350317441 is dropped (her decision) and
-   Watteau's card is "A new look at Watteau": correct both in the cards file.
+1. **The page is fixed (live as version 2, commit e837c72): run it again first.** Every
+   write is recorded with the store's code and message, on the page ("Problems during
+   this run") and in the run record's `problems`; the app's own writes are watched
+   (its `saveLookupTape` hides failures). Retries follow the store's contract per code:
+   `unavailable` waits 1–3 s, `resource_exhausted` 20–40 s then spaces later writes 1 s
+   (both windows are judgement), the rest are not retried. "Saved" is read back from the
+   store. The page no longer prunes the lookup log (the app keeps 50). Answers follow
+   her agreed cards; Hammershøi's English publisher is graded. Botticelli's lost record
+   stays unexplained — its code was never kept; the next failure names its cause.
+   Tests: `scraper/fixtures/live_check_page.js`, LC-001 to LC-033.
+2. **Regraded baseline:** still 2 of 9 (`docs/live_check_runs/`); Hammershøi's English
+   publisher is now a fail, not "disputed".
 3. **A failure is the baseline, not a fix list.** Diagnose from the lookup records
    above before changing anything; strongest leads: Watteau's and Metamorphoses'
    publisher (Claude's name not kept / "Publication" read off a label), NGA's name
