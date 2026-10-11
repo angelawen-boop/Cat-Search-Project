@@ -44,6 +44,10 @@ const BUILD = { branch: 'main', commit: '12bfa1e', builtAt: '2026-10-10 00:00 UT
 let built;
 try { built = prepare(BUILD); } catch (e) { console.log('FAIL  the live check page did not build — ' + e.message); process.exit(1); }
 
+// A run that never finishes empties the event loop and Node exits 0: count that as a failure.
+let reachedEnd = false;
+process.on('exit', () => { if (!reachedEnd) { console.log('FAIL  the suite stopped before its end — a page run never finished'); process.exitCode = 1; } });
+
 const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'https://claude.ai/' });
 const win = dom.window;
 for (const k of ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame', 'cancelAnimationFrame',
@@ -53,7 +57,7 @@ for (const k of ['window', 'document', 'navigator', 'localStorage', 'requestAnim
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
 // The page's own functions. `stub` replaces the lookup (the one thing that would reach the network).
-const NAMES = 'LiveCheck, lcGrade, lcDrawn, LC_CARDS, LC_CASES, versionBlocks, tapeCall';
+const NAMES = 'LiveCheck, lcGrade, lcDrawn, LC_CARDS, LC_CASES, versionBlocks, tapeCall, pruneLookupLog';
 const lift = () => new Function('React', 'window', 'document', 'localStorage', '__stub', '__sleep',
   built.js + '\n;lookupCatalogue = __stub;\nlcSleep = __sleep;\nreturn { ' + NAMES + ' };')(React, win, win.document, win.localStorage, (...a) => stubLookup(...a), ms => curSleep(ms));
 let stubLookup = async () => ({ ok: false, row: null, detail: 'no stub' });
@@ -245,7 +249,7 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
     eq([p.length, p[0] && [p[0].what, p[0].code, p[0].attempt, p[0].retried, p[0].outcome], store.attempts[p[0] && p[0].path]],
       [1, ['the header of Claude’s read 1', 'unavailable', 1, true, 'saved on retry'], 2], 'LC-018: recorded as retried and "saved on retry"; that one write was tried twice');
     ok([...store.docs.keys()].some(k => /cases\/7\/reads\/1$/.test(k)) && r.finalLine === CLEAN && /saved on retry/.test(r.boxes[7]) && !/Did not save/.test(r.boxes[7]),
-      'LC-019: the header landed, case 7\'s box shows the retry, and the last line is the clean one', r.finalLine);
+      'LC-032: the header landed, case 7\'s box shows the retry, and the last line is the clean one', r.finalLine);
   }
   // LC-020: a code outside the contract is treated as unavailable.
   {
@@ -318,6 +322,15 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
       'LC-031: the saved run header carries branch, commit and appVersionInCode, no "version"');
   }
 
+  // LC-033: the check page never prunes the lookup log (the app keeps 50 records).
+  {
+    const touched = [];
+    const spy = new Proxy({}, { get: (t, k) => { touched.push(String(k)); return () => spy; } });
+    await api.pruneLookupLog(spy);
+    eq(touched, [], 'LC-033: the check page keeps every lookup record — the app\'s pruning of the lookup log never runs');
+  }
+
+  reachedEnd = true;
   console.log(failures ? failures + ' failed' : 'the live check page holds');
   process.exit(failures ? 1 : 0);
 })();

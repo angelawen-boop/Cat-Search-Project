@@ -30,6 +30,11 @@ useCap=async function(name){
   return ns;
 };
 
+// The check page keeps every lookup record: the app keeps 50, which would delete earlier
+// runs' records after about five runs.
+// eslint-disable-next-line no-func-assign
+pruneLookupLog=async function(){};
+
 // NGA is an occasional venue: its entry, copied from her test page's store, is
 // registered as the app registers one it reads from its own store.
 registerOccasional(LC_VENUES);
@@ -156,7 +161,7 @@ function lcWatchDb(raw){
   const note=(op,path,e)=>{
     if(!lcRun.active)return;
     lcRun.appError=e;
-    lcRecord({what:"the app's write",path,op,code:lcCodeOf(e),message:lcMsgOf(e)});
+    lcRecord({what:op==="get"?"the app's read":"the app's write",path,op,code:lcCodeOf(e),message:lcMsgOf(e)});
   };
   const watch=(op,path,fn)=>async(...a)=>{ try{ return await fn(...a); }catch(e){ note(op,path,e); throw e; } };
   const query=(q,path)=>({
