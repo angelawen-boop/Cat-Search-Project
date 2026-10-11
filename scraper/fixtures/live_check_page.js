@@ -7,11 +7,14 @@
  * and Hammershøi publishers, an extra version, a left-off book, the wrong pick, a version
  * not listed).
  * LC-010: the first live run's eight saved records (docs/live_check_runs/), regraded.
- * LC-011..LC-016: a case whose save fails twice is reported on the page and in the run
- * header, and never ends "Every case is saved"; one failure then success is saved; a
- * failed header write is reported.
- * LC-017/LC-018: the source line prints the host, and the header line names branch and
- * commit, never "version".
+ * LC-011..LC-031: the page's writes, on a store played by a script that refuses calls with
+ * a given code. By code: invalid_argument is tried once; unavailable and unlisted codes
+ * wait 1–3 s and retry; resource_exhausted waits 20–40 s, retries, then spaces every page
+ * write by 1 s. Every failure is recorded whole (case box, Problems section, run record);
+ * the app's own refused writes are recorded, never retried; a refused part does not stop
+ * the case's other writes; "saved" is said only when the store read back holds every case
+ * and lookup record. Also: the source line prints the host, the header line names branch
+ * and commit, never "version".
  *
  *   node scraper/fixtures/live_check_page.js
  */
@@ -50,9 +53,9 @@ for (const k of ['window', 'document', 'navigator', 'localStorage', 'requestAnim
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
 // The page's own functions. `stub` replaces the lookup (the one thing that would reach the network).
-const NAMES = 'LiveCheck, lcGrade, lcDrawn, lcFinalLine, LC_CARDS, LC_CASES, versionBlocks';
-const lift = () => new Function('React', 'window', 'document', 'localStorage', '__stub',
-  built.js + '\n;lookupCatalogue = __stub;\nreturn { ' + NAMES + ' };')(React, win, win.document, win.localStorage, (...a) => stubLookup(...a));
+const NAMES = 'LiveCheck, lcGrade, lcDrawn, LC_CARDS, LC_CASES, versionBlocks, tapeCall';
+const lift = () => new Function('React', 'window', 'document', 'localStorage', '__stub', '__sleep',
+  built.js + '\n;lookupCatalogue = __stub;\nlcSleep = __sleep;\nreturn { ' + NAMES + ' };')(React, win, win.document, win.localStorage, (...a) => stubLookup(...a), ms => curSleep(ms));
 let stubLookup = async () => ({ ok: false, row: null, detail: 'no stub' });
 const api = lift();
 
@@ -137,106 +140,182 @@ for (const c of CARDS) {
 }
 
 // ── The page, run with a store played by a script ───────────────────────────
-function makeStore(failOn) {
+// rules: [{ path: RegExp, op?, times, code, message }] make matching calls reject with
+// {code, message}. hideInList: case numbers the store's list leaves out. `log` holds every
+// call and every wait in order.
+function makeStore({ rules = [], hideInList = [] } = {}) {
   const docs = new Map();
-  const attempts = {}, doneWrites = [];
-  const guard = p => {
-    const m = failOn && failOn(p);
-    if (!m) return;
-    attempts[m.key] = (attempts[m.key] || 0) + 1;
-    if (attempts[m.key] <= m.times) throw new Error('store refused ' + p);
+  const attempts = {}, doneWrites = [], log = [];
+  const hits = rules.map(() => 0);
+  const guard = (op, p) => {
+    log.push({ op, path: p });
+    attempts[p] = (attempts[p] || 0) + 1;
+    rules.forEach((r, i) => {
+      if (r.path.test(p) && (!r.op || r.op === op) && hits[i] < r.times) {
+        hits[i]++;
+        if (r.code === 'TypeError') throw new TypeError(r.message);
+        throw { code: r.code, message: r.message };
+      }
+    });
   };
   const doc = p => ({
-    set: async d => { guard(p); docs.set(p, { ...d }); },
-    update: async d => { guard(p); if ('done' in d) doneWrites.push(d.done); docs.set(p, { ...(docs.get(p) || {}), ...d }); },
-    delete: async () => { docs.delete(p); },
-    get: async () => ({ exists: docs.has(p), data: () => docs.get(p) }),
-    collection: n => ({ doc: id => doc(p + '/' + n + '/' + id) })
+    id: p.split('/').pop(), path: p,
+    set: async d => { guard('set', p); docs.set(p, { ...d }); },
+    update: async d => { guard('update', p); if ('done' in d) doneWrites.push(d.done); docs.set(p, { ...(docs.get(p) || {}), ...d }); },
+    delete: async () => { guard('delete', p); docs.delete(p); },
+    get: async () => { guard('get', p); return { exists: docs.has(p), data: () => docs.get(p) }; },
+    collection: n => col(p + '/' + n)
   });
-  const db = { doc, collection: () => ({ orderBy: () => ({ limit: () => ({ get: async () => ({ docs: [] }) }) }) }) };
-  return { db, docs, doneWrites };
+  const col = p => {
+    const q = { path: p, doc: id => doc(p + '/' + id),
+      get: async () => {
+        guard('list', p);
+        const ids = [...docs.keys()].filter(k => k.startsWith(p + '/') && !k.slice(p.length + 1).includes('/')).map(k => k.slice(p.length + 1));
+        return { docs: ids.filter(id => !(/\/cases$/.test(p) && hideInList.includes(Number(id)))).map(id => ({ id, data: () => docs.get(p + '/' + id) })) };
+      } };
+    q.orderBy = () => ({ limit: () => ({ get: async () => ({ docs: [] }) }) });
+    return q;
+  };
+  const db = { doc, collection: col };
+  return { db, docs, doneWrites, log, attempts };
 }
 const text = () => win.document.getElementById('root').textContent || '';
 const statusLines = () => [...win.document.querySelectorAll('.status')].map(e => e.textContent);
+let curSleep = async () => {};
+const LCASES = JSON.parse(fs.readFileSync(path.join(ROOT, 'build', 'live_check_cases.json'), 'utf8')).cases;
+const caseOf = row => LCASES.find(c => c.row.id === row.id).case;
 
 async function runPage(store) {
-  win.claude = { use: async name => name === 'db' ? store.db : name === 'sample' ? async () => ({ modelTierApplied: 'default', modelApplied: null }) : null };
+  const sleeps = [];
+  curSleep = async ms => { sleeps.push(ms); if (store) store.log.push({ sleep: ms }); };
+  win.claude = { use: async name => name === 'db' ? (store ? store.db : null) : name === 'sample' ? async () => ({ modelTierApplied: 'default', modelApplied: null }) : null };
+  // The lookup is the one thing stubbed: each case answers as her card says, with two Claude reads on the tape.
+  const inst = lift();
   stubLookup = async row => {
-    const n = CARDS.find(c => c.case === built_caseOf(row)).case;
+    const n = caseOf(row);
+    for (let k = 0; k < 2; k++) inst.tapeCall('claude', { prompt: 'case ' + n + ' read ' + k }, { ok: true, detail: '', data: {} }, Date.now());
     return { ok: true, row: { ...row, ...rowOf(cardOf(n)) }, detail: '' };
   };
   win.document.getElementById('root').innerHTML = '';
   const root = createRoot(win.document.getElementById('root'));
-  const { LiveCheck } = lift();
+  const { LiveCheck } = inst;
   await act(async () => { root.render(React.createElement(LiveCheck)); });
   const before = text();
   await act(async () => { win.document.querySelector('button.run').click(); });
-  for (let i = 0; i < 400 && !statusLines().some(s => s.startsWith('Finished')); i++) {
+  for (let i = 0; i < 600 && !statusLines().some(s => s.startsWith('Finished')); i++) {
     await act(async () => { await new Promise(r => setTimeout(r, 25)); });
   }
   const boxes = {};
-  for (const e of win.document.querySelectorAll('.case')) boxes[parseInt(e.querySelector('h2').textContent, 10)] = e.textContent;
+  for (const e of win.document.querySelectorAll('.case:not(.problems)')) boxes[parseInt(e.querySelector('h2').textContent, 10)] = e.textContent;
+  const probBox = win.document.querySelector('.case.problems');
   const headerLine = [...win.document.querySelectorAll('.soft')].map(e => e.textContent).find(t => t.startsWith('Code under test')) || '';
-  const out = { before, boxes, headerLine, finalLine: statusLines().find(s => s.startsWith('Finished')) || null, text: text() };
-  const headKey = [...store.docs.keys()].find(k => /^checks\/[^/]+$/.test(k));
+  const out = { before, boxes, headerLine, sleeps, problemsText: probBox ? probBox.textContent : '', finalLine: statusLines().find(s => s.startsWith('Finished')) || null, text: text() };
+  const headKey = store && [...store.docs.keys()].find(k => /^checks\/[^/]+$/.test(k));
   out.header = headKey ? store.docs.get(headKey) : null;
   await act(async () => root.unmount());
   return out;
 }
-const LCASES = JSON.parse(fs.readFileSync(path.join(ROOT, 'build', 'live_check_cases.json'), 'utf8')).cases;
-function built_caseOf(row) { return LCASES.find(c => c.row.id === row.id).case; }
+const inRange = (v, a, b) => v >= a && v <= b;
+const CLEAN = 'Finished. Every case and every lookup record is saved.';
 
 (async () => {
-  // LC-011..LC-013: case 7's writes throw every time.
+  // LC-011..LC-016: the store refuses case 7's record with invalid_argument — one attempt, no wait.
   {
-    const store = makeStore(p => /\/cases\/7(\/|$)/.test(p) ? { key: 'c7', times: 99 } : null);
+    const store = makeStore({ rules: [{ path: /^checks\/[^/]+\/cases\/7$/, op: 'set', times: Infinity, code: 'invalid_argument', message: 'document too deep' }] });
     const r = await runPage(store);
-    const box = r.boxes[7] || '';
-    ok(/This case did not save: store refused/.test(box) && !/This case did not save/.test(r.boxes[6] || ''), 'LC-011: case 7\'s box says it did not save, with the error; case 6\'s does not', box.slice(0, 200));
-    ok(r.finalLine && !/Every case is saved/.test(r.finalLine) && /case 7 did not save/.test(r.finalLine), 'LC-012: the last line does not say every case is saved — it names case 7', r.finalLine);
-    eq([r.header && r.header.done, r.header && r.header.savedCases, r.header && r.header.unsavedCases.map(u => u.case), r.header && /store refused/.test(r.header.unsavedCases[0].error)],
-      [8, [1, 2, 3, 4, 5, 6, 8, 9], [7], true], 'LC-013: the run header counts saved cases only, and lists case 7 with its error');
-    eq(store.doneWrites, [1, 2, 3, 4, 5, 6, 6, 7, 8, 8], 'LC-013: `done` counts saved cases only at every update (case 7 leaves it at 6; the last is 8)');
-    const written = n => [...store.docs.keys()].some(k => k.endsWith('/cases/' + n));
-    eq([written(7), [1, 2, 3, 4, 5, 6, 8, 9].every(written)], [false, true], 'LC-013: case 7\'s record was not written; the other eight were');
+    const p7 = r.header.problems.filter(p => p.case === 7);
+    eq([store.log.filter(l => /\/cases\/7$/.test(l.path || '')).length, r.sleeps], [1, []], 'LC-011: invalid_argument — exactly one attempt on case 7\'s record, no wait, no retry');
+    eq([p7.length, p7[0] && [p7[0].what, p7[0].op, p7[0].code, p7[0].message, p7[0].attempt, p7[0].retried, p7[0].outcome], p7[0] && /cases\/7$/.test(p7[0].path)],
+      [1, ['the case record', 'set', 'invalid_argument', 'document too deep', 1, false, 'not saved'], true], 'LC-012: the problem is recorded whole — what, path, op, code, message, attempt, retried, outcome — in the run record');
+    ok(/Did not save: the case record/.test(r.boxes[7]) && /invalid_argument: document too deep/.test(r.boxes[7]) && !/Did not save/.test(r.boxes[6]), 'LC-013: case 7\'s box shows what did not save, with code and message; case 6\'s shows nothing', r.boxes[7].slice(0, 200));
+    ok(/Case 7: the case record — invalid_argument: document too deep/.test(r.problemsText) && !/None\./.test(r.problemsText), 'LC-013: the Problems section lists it');
+    ok(r.finalLine === 'Finished, but case 7\'s record is missing from the store.', 'LC-014: the last line names what is missing, never "saved"', r.finalLine);
+    eq([r.header.done, r.header.savedCases, r.header.unsavedCases.map(u => u.case), /invalid_argument/.test(r.header.unsavedCases[0].error)],
+      [8, [1, 2, 3, 4, 5, 6, 8, 9], [7], true], 'LC-015: the run header counts saved cases only, and lists case 7 with its code');
+    eq(store.doneWrites, [1, 2, 3, 4, 5, 6, 6, 7, 8, 8], 'LC-015: `done` counts saved cases only at every update');
+    ok([...store.docs.keys()].some(k => /cases\/7\/reads\/1$/.test(k)) && [...store.docs.keys()].some(k => /cases\/7\/reads\/2\/answer\/0$/.test(k)),
+      'LC-016: a refused case record does not stop that case\'s other writes');
   }
-  // LC-014: one failure, then success — saved.
+  // LC-017..LC-019: unavailable once on a read's header — one wait of 1–3 s, then saved.
   {
-    const store = makeStore(p => /\/cases\/7$/.test(p) ? { key: 'c7', times: 1 } : null);
+    const store = makeStore({ rules: [{ path: /cases\/7\/reads\/1$/, op: 'set', times: 1, code: 'unavailable', message: 'try again' }] });
     const r = await runPage(store);
-    eq([r.finalLine, r.header && r.header.done, r.header && r.header.unsavedCases], ['Finished. Every case is saved.', 9, []], 'LC-014: a write failing once and then succeeding is saved — "Every case is saved", done 9');
-    ok(!/did not save/.test(r.text), 'LC-014: no case box says it did not save');
+    ok(r.sleeps.length === 1 && inRange(r.sleeps[0], 1000, 3000), 'LC-017: unavailable — one wait in 1–3 s before the retry', JSON.stringify(r.sleeps));
+    const p = r.header.problems;
+    eq([p.length, p[0] && [p[0].what, p[0].code, p[0].attempt, p[0].retried, p[0].outcome], store.attempts[p[0] && p[0].path]],
+      [1, ['the header of Claude’s read 1', 'unavailable', 1, true, 'saved on retry'], 2], 'LC-018: recorded as retried and "saved on retry"; that one write was tried twice');
+    ok([...store.docs.keys()].some(k => /cases\/7\/reads\/1$/.test(k)) && r.finalLine === CLEAN && /saved on retry/.test(r.boxes[7]) && !/Did not save/.test(r.boxes[7]),
+      'LC-019: the header landed, case 7\'s box shows the retry, and the last line is the clean one', r.finalLine);
   }
-  // LC-015: the header's final update fails.
+  // LC-020: a code outside the contract is treated as unavailable.
   {
-    const store = makeStore(null);
-    let finalWrites = 0;
-    const real = store.db.doc;
-    store.db.doc = p => {
-      const d = real(p);
-      if (/^checks\/[^/]+$/.test(p)) { const u = d.update; d.update = async x => { if (x.finished) { finalWrites++; throw new Error('header refused'); } return u(x); }; }
-      return d;
-    };
+    const store = makeStore({ rules: [{ path: /cases\/2$/, op: 'set', times: 1, code: 'queue_overflow', message: 'queued out' }] });
     const r = await runPage(store);
-    ok(finalWrites === 2 && r.finalLine && !/Every case is saved/.test(r.finalLine) && /header did not save/.test(r.finalLine), 'LC-015: a failed header write (tried twice) is reported, not swallowed', r.finalLine);
+    ok(r.sleeps.length === 1 && inRange(r.sleeps[0], 1000, 3000) && r.header.problems[0].outcome === 'saved on retry', 'LC-020: a code the contract does not list waits 1–3 s and retries once', JSON.stringify(r.sleeps));
   }
-  // LC-016: no store at all.
+  // LC-021..LC-022: resource_exhausted once — 20–40 s, retried, then every later page write 1 s apart.
   {
-    const store = makeStore(null);
-    win.claude = null;
-    const r = await runPage({ ...store, db: null });
-    ok(r.finalLine && /nothing was saved/.test(r.finalLine), 'LC-016: no store — the last line says nothing was saved', r.finalLine);
-  }
-  // LC-017: the source line.
-  {
-    const store = makeStore(null);
+    const store = makeStore({ rules: [{ path: /cases\/3\/reads\/1$/, op: 'set', times: 1, code: 'resource_exhausted', message: 'too many calls' }] });
     const r = await runPage(store);
-    ok(!/\[object Object\]/.test(r.text) && /Source: louvre\.fr/.test(r.text), 'LC-017: the drawn source reads "Source: louvre.fr", never [object Object]');
-    // LC-018: the header line.
+    ok(inRange(r.sleeps[0], 20000, 40000) && r.header.problems[0].code === 'resource_exhausted' && r.header.problems[0].outcome === 'saved on retry', 'LC-021: resource_exhausted — a wait of 20–40 s, one retry, saved', JSON.stringify(r.sleeps.slice(0, 3)));
+    const i = store.log.findIndex(l => l.sleep >= 20000);
+    const later = store.log.map((l, j) => ({ l, j })).filter(x => x.j > i + 1 && x.l.path && x.l.path.startsWith('checks/'));
+    ok(later.length > 20 && later.every(x => store.log[x.j - 1].sleep === 1000), 'LC-022: every page write after it is preceded by a 1 s wait (' + later.length + ' writes)',
+      JSON.stringify(later.filter(x => store.log[x.j - 1].sleep !== 1000).slice(0, 2)));
+    ok(store.log.slice(0, i).every(l => l.sleep === undefined), 'LC-022: no wait before it');
+  }
+  // LC-023: the app's own write refused — recorded with path and code, never retried by the page.
+  {
+    const store = makeStore({ rules: [{ path: /^lookups\/[^/]+$/, op: 'set', times: 1, code: 'quota_exceeded', message: 'database full' }] });
+    const r = await runPage(store);
+    const app = r.header.problems.filter(p => p.what === 'the app\'s write');
+    eq([app.length, app[0] && [app[0].op, app[0].code, app[0].message, app[0].retried, app[0].case], app[0] && /^lookups\//.test(app[0].path) && store.log.filter(l => l.op === 'set' && l.path === app[0].path).length],
+      [1, ['set', 'quota_exceeded', 'database full', false, 1], 1], 'LC-023: the app\'s refused write is recorded with path and code, and tried once (no retry of the app\'s write)');
+    ok(/the lookup record — quota_exceeded: the lookup record did not save \(database full\)/.test(r.boxes[1]) && r.sleeps.length === 0, 'LC-023: case 1 shows "the lookup record did not save"', r.boxes[1].slice(0, 300));
+    ok(r.finalLine === 'Finished, but case 1\'s lookup record is missing from the store.', 'LC-023: the last line names the lookup record', r.finalLine);
+  }
+  // LC-024: the app answers false with no store error (its gzip throws) — said plainly.
+  {
+    const real = global.CompressionStream;
+    global.CompressionStream = function () { throw new Error('gzip broke'); };
+    let r;
+    try { r = await runPage(makeStore()); } finally { global.CompressionStream = real; }
+    ok(/the lookup record — none: no store error was raised; the app returned false/.test(r.boxes[1]) && /lookup record/.test(r.finalLine) && !/is saved/.test(r.finalLine),
+      'LC-024: a false return with no store error says "no store error was raised; the app returned false"', r.boxes[1].slice(0, 300) + ' | ' + r.finalLine);
+  }
+  // LC-025: every write resolves but the list leaves out case 3.
+  {
+    const store = makeStore({ hideInList: [3] });
+    const r = await runPage(store);
+    ok(r.finalLine === 'Finished, but case 3\'s record is missing from the store.' && !/is saved/.test(r.finalLine) && /None\./.test(r.problemsText), 'LC-025: the read-back finds case 3 missing — the last line names it though no write failed', r.finalLine);
+  }
+  // LC-026: the read-back itself fails.
+  {
+    const store = makeStore({ rules: [{ path: /\/cases$/, op: 'list', times: Infinity, code: 'unavailable', message: 'list down' }] });
+    const r = await runPage(store);
+    ok(/couldn’t read the store back/.test(r.finalLine) && /unavailable: list down/.test(r.finalLine) && !/is saved/.test(r.finalLine), 'LC-026: a failed read-back is said, with its code', r.finalLine);
+  }
+  // LC-027: the run record's updates refused — not "saved".
+  {
+    const store = makeStore({ rules: [{ path: /^checks\/[^/]+$/, op: 'update', times: Infinity, code: 'invalid_argument', message: 'no' }] });
+    const r = await runPage(store);
+    ok(!/is saved\./.test(r.finalLine) && /did not save/.test(r.finalLine), 'LC-027: a run record that cannot be updated is reported, not swallowed', r.finalLine);
+  }
+  // LC-028: no store at all.
+  {
+    const r = await runPage(null);
+    ok(r.finalLine && /nothing was saved/.test(r.finalLine), 'LC-028: no store — the last line says nothing was saved', r.finalLine);
+  }
+  // LC-029..LC-031: a clean run.
+  {
+    const store = makeStore();
+    const r = await runPage(store);
+    eq([r.finalLine, /None\./.test(r.problemsText), r.header.problems, r.header.done, r.header.finished, r.sleeps], [CLEAN, true, [], 9, true, []], 'LC-029: a clean run — the read-back finds everything, "None.", an empty problems array, no waits');
+    ok(!/\[object Object\]/.test(r.text) && /Source: louvre\.fr/.test(r.text), 'LC-030: the drawn source reads "Source: louvre.fr", never [object Object]');
     ok(r.before.includes('Code under test: main · commit 12bfa1e · built 2026-10-10 00:00 UTC') && !/version/i.test(r.headerLine),
-      'LC-018: the page header names branch and commit, never "version"', r.before.slice(0, 160));
+      'LC-031: the page header names branch and commit, never "version"', r.before.slice(0, 160));
     eq([r.header.branch, r.header.commit, 'version' in r.header, typeof r.header.appVersionInCode], ['main', '12bfa1e', false, 'string'],
-      'LC-018: the saved run header carries branch, commit and appVersionInCode, no "version"');
+      'LC-031: the saved run header carries branch, commit and appVersionInCode, no "version"');
   }
 
   console.log(failures ? failures + ' failed' : 'the live check page holds');

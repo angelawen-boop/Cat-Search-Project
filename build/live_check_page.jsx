@@ -22,9 +22,12 @@ function lcWrapSample(ns){
   return w;
 }
 // eslint-disable-next-line no-func-assign
+const lcWatched=new WeakMap();
 useCap=async function(name){
   const ns=await lcRealUseCap(name);
-  return name==="sample"&&ns?lcWrapSample(ns):ns;
+  if(name==="sample"&&ns)return lcWrapSample(ns);
+  if(name==="db"&&ns){ if(!lcWatched.has(ns))lcWatched.set(ns,lcWatchDb(ns)); return lcWatched.get(ns); }
+  return ns;
 };
 
 // NGA is an occasional venue: its entry, copied from her test page's store, is
@@ -101,27 +104,90 @@ function lcDrawn(row){
   return{kind:"single",blocks:[{picked:true,lines:[lcShopLine({state:row.shopState,change:row.shopChange}),row.catalogueTitle,row.publisher,row.isbn13?"ISBN "+fmtIsbn(row.isbn13):null].filter(Boolean)}]};
 }
 
-// ── SAVING — every case to the page's own store as it finishes ─────────────────
-// A write that throws is tried once more; the error it ends on (or null) comes back.
+// ── SAVING — every write goes through lcWrite; the app's own writes are watched ───
 const LC_RUNS="checks", LC_PIECE=150000;
-async function lcTwice(fn){
-  for(let k=0;k<2;k++){ try{ await fn(); return null; }catch(e){ if(k)return String((e&&e.message)||e); } }
-  return null;
+// Waits are injectable so tests never sleep. The 20–40 s and 1 s windows are judgement:
+// the store's contract gives none.
+let lcSleep=ms=>new Promise(r=>setTimeout(r,ms));
+const lcBetween=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const LC_NO_RETRY=["invalid_argument","quota_exceeded","revoked","transform_error","not_granted","capability_disabled","capability_removed","TypeError"];
+const LC_KNOWN=[...LC_NO_RETRY,"resource_exhausted","unavailable"];
+const lcCodeOf=e=>e&&e.code?String(e.code):(e&&e.name==="TypeError"?"TypeError":"unknown");
+const lcMsgOf=e=>String((e&&e.message)||e||"");
+const lcErr=e=>lcCodeOf(e)+": "+lcMsgOf(e);
+
+// One run's state: the raw store, every problem so far, and whether writes are spaced.
+let lcRun={db:null,problems:[],spaced:false,caseNo:null,lookupPath:null,appError:null,active:false};
+function lcRecord(p){
+  const rec={at:new Date().toISOString(),case:lcRun.caseNo,what:"",path:"",op:"",code:"",message:"",attempt:1,retried:false,outcome:"not saved",...p};
+  lcRun.problems.push(rec);
+  return rec;
 }
-// The last line: "Every case is saved" only when every case and the header's final update were written.
-function lcFinalLine(hasStore,unsaved,headerErr){
-  if(!hasStore)return "Finished, but this page couldn’t reach its store, so nothing was saved.";
-  if(!unsaved.length&&!headerErr)return "Finished. Every case is saved.";
-  const ns=unsaved.map(u=>u.case);
-  const cases=ns.length?(ns.length===1?"case "+ns[0]:"cases "+ns.join(", "))+" did not save":"";
-  const head=headerErr?"the run’s header did not save":"";
-  return "Finished, but "+[cases,head].filter(Boolean).join(" and ")+".";
+
+// The store's own instructions by code: a transient code waits 1–3 s and retries that one
+// write; the per-viewer call rate waits longer, retries, then spaces every later write;
+// every other code cannot succeed again. Never throws: {ok, value} or {ok:false, error}.
+async function lcWrite(op,path,data,what){
+  let first=null;
+  for(let attempt=1;;attempt++){
+    if(lcRun.spaced&&attempt===1)await lcSleep(1000);
+    try{
+      const db=lcRun.db;
+      let value;
+      if(op==="list")value=await db.collection(path).get();
+      else{ const ref=db.doc(path); value=await (op==="get"?ref.get():op==="delete"?ref.delete():ref[op](data)); }
+      if(first)first.outcome="saved on retry";
+      return{ok:true,value};
+    }catch(e){
+      const code=lcCodeOf(e);
+      const retry=attempt===1&&!LC_NO_RETRY.includes(code);
+      const rec=lcRecord({what,path,op,code,message:lcMsgOf(e),attempt,retried:retry,outcome:retry?"pending":"not saved"});
+      if(attempt===2){ if(first)first.outcome="not saved"; return{ok:false,error:e}; }
+      if(!retry)return{ok:false,error:e};
+      first=rec;
+      if(code==="resource_exhausted"){ await lcSleep(lcBetween(20000,40000)); lcRun.spaced=true; }
+      else await lcSleep(lcBetween(1000,3000));
+    }
+  }
 }
-async function lcPutText(db,path,text){
+
+// The app's writes, watched and never changed: a rejection is recorded, then rethrown.
+function lcWatchDb(raw){
+  const note=(op,path,e)=>{
+    if(!lcRun.active)return;
+    lcRun.appError=e;
+    lcRecord({what:"the app's write",path,op,code:lcCodeOf(e),message:lcMsgOf(e)});
+  };
+  const watch=(op,path,fn)=>async(...a)=>{ try{ return await fn(...a); }catch(e){ note(op,path,e); throw e; } };
+  const query=(q,path)=>({
+    where:(...a)=>query(q.where(...a),path), orderBy:(...a)=>query(q.orderBy(...a),path), limit:(...a)=>query(q.limit(...a),path),
+    get:watch("get",path,()=>q.get()), onSnapshot:(...a)=>q.onSnapshot(...a)});
+  const col=(c,path)=>({...query(c,path),path,
+    doc:id=>docRef(c.doc(id),id===undefined?c.doc(id).path:path+"/"+id),
+    add:watch("set",path,d=>c.add(d))});
+  const docRef=(r,path)=>({id:r.id,path,
+    get:watch("get",path,()=>r.get()),
+    set:watch("set",path,d=>{ if(new RegExp("^"+LOOKUP_LOG+"/[^/]+$").test(path))lcRun.lookupPath=path; return r.set(d); }),
+    update:watch("update",path,d=>r.update(d)),
+    delete:watch("delete",path,()=>r.delete()),
+    collection:n=>col(r.collection(n),path+"/"+n),
+    onSnapshot:(...a)=>r.onSnapshot(...a)});
+  return{doc:p=>docRef(raw.doc(p),p),collection:p=>col(raw.collection(p),p)};
+}
+
+// Why a case's parts did not save, and what each problem line says.
+const lcUnsavedOf=(problems,n)=>[...new Set(problems.filter(p=>p.case===n&&p.outcome==="not saved").map(p=>p.what))];
+const lcLine=(p,withPath)=>p.what+" — "+p.code+": "+p.message+" — "+(p.retried?"retried, ":"not retried, ")+p.outcome+(withPath&&p.path?" ("+p.op+" "+p.path+")":"");
+
+async function lcPutText(path,text,what,ok){
   const t=String(text==null?"":text), n=Math.max(1,Math.ceil(t.length/LC_PIECE));
-  for(let i=0;i<n;i++)await db.doc(path+"/"+i).set({text:t.slice(i*LC_PIECE,(i+1)*LC_PIECE),i,of:n});
+  for(let i=0;i<n;i++){
+    const r=await lcWrite("set",path+"/"+i,{text:t.slice(i*LC_PIECE,(i+1)*LC_PIECE),i,of:n},what+(n>1?" (piece "+(i+1)+" of "+n+")":""));
+    if(!r.ok)ok.value=false;
+  }
   return n;
 }
+function lcPiecesOf(text){ return Math.max(1,Math.ceil(String(text==null?"":text).length/LC_PIECE)); }
 function lcCallsOf(tape){
   return (tape.calls||[]).filter(c=>c.kind!=="claude").map(c=>({n:c.n,kind:c.kind==="open"?"open page":"search",
     queries:(c.input&&c.input.queries)||null,objective:(c.input&&c.input.objective)||null,
@@ -140,15 +206,53 @@ function lcReadsOf(tape,raws){
       parsed:c.output&&c.output.data!==undefined?JSON.stringify(c.output.data):null};
   });
 }
-async function lcSaveCase(db,runId,rec,reads){
+// Save order loses the least: the case record, then each read's header, then its prompt and
+// answer. A failed write does not stop the rest. True when every write landed.
+async function lcSaveCase(runId,rec,reads){
   const base=LC_RUNS+"/"+runId+"/cases/"+rec.case;
+  const head=await lcWrite("set",base,{...rec,reads:reads.map(r=>r.n)},"the case record");
+  let all=head.ok;
   for(const r of reads){
-    const rp=base+"/reads/"+r.n;
-    const pp=await lcPutText(db,rp+"/prompt",r.prompt);
-    const ap=await lcPutText(db,rp+"/answer",r.raw);
-    await db.doc(rp).set({n:r.n,ok:r.ok,detail:r.detail,parsed:r.parsed,promptPieces:pp,answerPieces:ap});
+    const h=await lcWrite("set",base+"/reads/"+r.n,{n:r.n,ok:r.ok,detail:r.detail,parsed:r.parsed,promptPieces:lcPiecesOf(r.prompt),answerPieces:lcPiecesOf(r.raw)},"the header of Claude’s read "+r.n);
+    if(!h.ok)all=false;
   }
-  await db.doc(base).set({...rec,reads:reads.map(r=>r.n)});
+  const ok={value:true};
+  for(const r of reads){
+    await lcPutText(base+"/reads/"+r.n+"/prompt",r.prompt,"Claude’s prompt, read "+r.n,ok);
+    await lcPutText(base+"/reads/"+r.n+"/answer",r.raw,"Claude’s answer, read "+r.n,ok);
+  }
+  return{caseWritten:head.ok,all:all&&ok.value};
+}
+
+// Reads the store back: the run record, its cases, and each case's lookup record.
+// Returns {failed} when a read fails, else {missing:[sentence parts]}.
+async function lcReadBack(runPath,cases){
+  const list=await lcWrite("list",runPath+"/cases",null,"the read-back of the cases");
+  if(!list.ok)return{failed:list.error};
+  const run=await lcWrite("get",runPath,null,"the read-back of the run record");
+  if(!run.ok)return{failed:run.error};
+  const have=new Set(list.value.docs.map(d=>String(d.id)));
+  const missing=[];
+  if(!run.value.exists)missing.push("the run record");
+  for(const c of cases){
+    let lookupMissing=true;
+    if(c.lookupPath){
+      const l=await lcWrite("get",c.lookupPath,null,"the read-back of the lookup record");
+      if(!l.ok)return{failed:l.error};
+      lookupMissing=!(l.value.exists&&(l.value.data()||{}).complete===true);
+    }
+    const recMissing=!have.has(String(c.case));
+    if(recMissing||lookupMissing)missing.push("case "+c.case+"'s "+[recMissing?"record":null,lookupMissing?"lookup record":null].filter(Boolean).join(" and its "));
+  }
+  return{missing};
+}
+// "Saved" only when the read-back found everything.
+function lcFinalLine(hasStore,back,unsavedParts){
+  if(!hasStore)return "Finished, but this page couldn’t reach its store, so nothing was saved.";
+  if(back.failed)return "Finished, but this page couldn’t read the store back to check what saved ("+lcErr(back.failed)+").";
+  if(back.missing.length)return "Finished, but "+back.missing.join("; ")+(back.missing.length>1||/ and /.test(back.missing[0])?" are":" is")+" missing from the store.";
+  if(unsavedParts)return "Finished. Every case and every lookup record is in the store, but "+unsavedParts+" other write"+(unsavedParts===1?"":"s")+" did not save — see Problems.";
+  return "Finished. Every case and every lookup record is saved.";
 }
 
 // ── THE PAGE ────────────────────────────────────────────────────────────────
@@ -172,13 +276,16 @@ const LC_STYLE=`
 `;
 const LC_MARK={"pass":"✓ Pass","fail":"✗ Fail"};
 
-function LcCase({c}){
+function LcCase({c,problems}){
+  const mine=problems.filter(p=>p.case===c.case);
+  const lost=lcUnsavedOf(problems,c.case);
   return(
     <div className="case">
       <h2>{c.case}. {c.title} <span className="soft">({c.venue})</span></h2>
       <div className="status">{c.verdict}</div>
       {c.trouble&&<div className="soft">The lookup said: {c.trouble}</div>}
-      {c.saveError&&<div className="status">This case did not save: {c.saveError}</div>}
+      {lost.length>0&&<div className="status">Did not save: {lost.join("; ")}.</div>}
+      {mine.map((p,k)=><div key={k} className="soft">{lcLine(p,false)}</div>)}
       <table><thead><tr><th style={{width:"42%"}}>What is checked</th><th style={{width:"18%"}}>Result</th><th>Came back</th><th>Right answer</th></tr></thead>
         <tbody>{c.grades.map((g,k)=>(
           <tr key={k} className={g.verdict==="fail"?"fail":""}><td>{g.field}{g.why&&<div className="soft">{g.why}</div>}</td><td className="v">{LC_MARK[g.verdict]}</td><td>{g.got}</td><td>{g.want}</td></tr>))}
@@ -197,11 +304,15 @@ function LiveCheck(){
   const [status,setStatus]=useState("");
   const [done,setDone]=useState([]);
   const [finished,setFinished]=useState(null);
+  const [problems,setProblems]=useState([]);
 
   async function run(){
-    setRunning(true); setDone([]); setFinished(null);
-    const db=await lcRealUseCap("db");
+    setRunning(true); setDone([]); setFinished(null); setProblems([]);
+    const rawDb=await lcRealUseCap("db");
     const runId="R"+Date.now()+Math.random().toString(36).slice(2,6);
+    const runPath=LC_RUNS+"/"+runId;
+    lcRun={db:rawDb,problems:[],spaced:false,caseNo:null,lookupPath:null,appError:null,active:true};
+    const shown=()=>setProblems(lcRun.problems.slice());
     const at=new Date().toISOString();
     // Which tier answers the app's modelTier:"default" (sample.json does not say).
     setStatus("Asking Claude which model tier answers…");
@@ -210,27 +321,33 @@ function LiveCheck(){
       const s=await lcRealUseCap("sample");
       if(!s)tier.error="Claude isn’t available to this page.";
       else{ const r=await s("Reply with the one word: ready",{modelTier:"default",cache:false}); tier={modelTierApplied:r.modelTierApplied||null,modelApplied:r.modelApplied||null,error:null}; }
-    }catch(e){ tier.error=String((e&&e.code)||e); }
+    }catch(e){ tier.error=lcErr(e); }
     const head={at,branch:LC_BUILD.branch,commit:LC_BUILD.commit,builtAt:LC_BUILD.builtAt,appVersionInCode:LC_BUILD.appVersion,
       modelTierAsked:"default",modelTierApplied:tier.modelTierApplied,modelApplied:tier.modelApplied,
       modelNote:tier.modelApplied?null:"modelApplied is reported only when a page names a model; the app asks by modelTier only.",
-      tierError:tier.error,cases:LC_CASES.length,done:0,savedCases:[],unsavedCases:[],finished:false,saved:!!db};
-    const runDoc=db?db.doc(LC_RUNS+"/"+runId):null;
-    let headerErr=db?await lcTwice(()=>runDoc.set(head)):null;
-    const all=[], saved=[], unsaved=[];
+      tierError:tier.error,cases:LC_CASES.length,done:0,savedCases:[],unsavedCases:[],problems:[],finished:false,saved:!!rawDb};
+    if(rawDb)await lcWrite("set",runPath,head,"the run record");
+    const all=[], saved=[], unsaved=[], lookups=[];
     for(const x of LC_CASES){
       const card=LC_CARDS.find(c=>c.case===x.case);
       const mu=MU[x.row.museumId];
       setStatus("Case "+x.case+" of "+LC_CASES.length+": "+x.row.title+" — searching…");
       lcReads.length=0;
+      lcRun.caseNo=x.case; lcRun.lookupPath=null; lcRun.appError=null;
       const tape=tapeStart("Live check",x.row);
       let out;
       try{
         out=await lookupCatalogue(x.row,{label:l=>setStatus("Case "+x.case+" of "+LC_CASES.length+": "+x.row.title+" — "+l),prepareShop:async()=>{}});
-      }catch(e){ out={ok:false,row:null,detail:"The lookup threw: "+String((e&&e.message)||e)}; }
+      }catch(e){ out={ok:false,row:null,detail:"The lookup threw: "+lcErr(e)}; }
       const reads=lcReadsOf(tape,lcReads.splice(0));
       const calls=lcCallsOf(tape);
-      await saveLookupTape(tape,out);
+      const tapeSaved=await saveLookupTape(tape,out);
+      if(rawDb&&!tapeSaved){
+        const e=lcRun.appError;
+        lcRecord({what:"the lookup record",path:lcRun.lookupPath||"",op:"set",code:e?lcCodeOf(e):"none",
+          message:e?"the lookup record did not save ("+lcMsgOf(e)+")":"no store error was raised; the app returned false"});
+      }
+      lookups.push({case:x.case,lookupPath:lcRun.lookupPath});
       const row=out&&out.row;
       const grades=row?lcGrade(card,row):[{field:"The lookup finished",verdict:"fail",got:"no",want:"yes",why:null}];
       const fails=grades.filter(g=>g.verdict==="fail").length;
@@ -239,17 +356,22 @@ function LiveCheck(){
         ok:!!(out&&out.ok),trouble:(out&&out.trouble)||null,panel:(out&&out.detail)||null,
         verdict:(out&&out.ok?"":"The lookup did not finish. ")+(fails?fails+" of "+grades.filter(g=>g.verdict==="pass"||g.verdict==="fail").length+" checks failed.":"Every graded check passed."),
         grades,drawn:lcDrawn(row),row:row?cardFields(row):null,calls};
-      if(db){
-        const err=await lcTwice(()=>lcSaveCase(db,runId,rec,reads));
-        if(err){ rec.saveError=err; unsaved.push({case:x.case,error:err}); } else saved.push(x.case);
-        headerErr=await lcTwice(()=>runDoc.update({done:saved.length,savedCases:saved,unsavedCases:unsaved}));
+      if(rawDb){
+        const r=await lcSaveCase(runId,rec,reads);
+        if(r.caseWritten)saved.push(x.case);
+        else{ const p=lcRun.problems.filter(q=>q.case===x.case&&q.what==="the case record").pop(); unsaved.push({case:x.case,error:p?p.code+": "+p.message:"not written"}); }
+        await lcWrite("update",runPath,{done:saved.length,savedCases:saved,unsavedCases:unsaved,problems:lcRun.problems.slice()},"the run record");
       }
-      all.push(rec); setDone(all.slice());
+      all.push(rec); setDone(all.slice()); shown();
     }
-    if(db)headerErr=await lcTwice(()=>runDoc.update({finished:true,endedAt:new Date().toISOString(),done:saved.length,savedCases:saved,unsavedCases:unsaved,
-      failedCases:all.filter(r=>r.grades.some(g=>g.verdict==="fail")).map(r=>r.case)}));
-    setStatus(""); setFinished(lcFinalLine(!!db,unsaved,headerErr));
-    setRunning(false);
+    lcRun.caseNo=null;
+    if(rawDb)await lcWrite("update",runPath,{finished:true,endedAt:new Date().toISOString(),done:saved.length,savedCases:saved,unsavedCases:unsaved,problems:lcRun.problems.slice(),
+      failedCases:all.filter(r=>r.grades.some(g=>g.verdict==="fail")).map(r=>r.case)},"the run record");
+    const back=rawDb?await lcReadBack(runPath,lookups):null;
+    lcRun.active=false;
+    setStatus("");
+    setFinished(lcFinalLine(!!rawDb,back,lcRun.problems.filter(p=>p.outcome==="not saved"&&(!p.retried||p.attempt===2)).length));
+    shown(); setRunning(false);
   }
 
   return(
@@ -261,6 +383,10 @@ function LiveCheck(){
       <button className="run" onClick={run} disabled={running}>{running?"Running…":"Run"}</button>
       {status&&<div className="status">{status}</div>}
       {finished&&<div className="status">{finished}</div>}
-      {done.map(c=><LcCase key={c.case} c={c}/>)}
+      {done.map(c=><LcCase key={c.case} c={c} problems={problems}/>)}
+      {(done.length>0||finished)&&<div className="case problems">
+        <h2>Problems during this run</h2>
+        {problems.length?problems.map((p,k)=><div key={k}>{(p.case?"Case "+p.case+": ":"")+lcLine(p,true)}</div>):<div>None.</div>}
+      </div>}
     </div>);
 }
