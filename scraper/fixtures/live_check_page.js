@@ -351,6 +351,20 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
       'LC-031: the saved run header carries branch, commit and appVersionInCode, no "version"');
   }
 
+  // LC-042: each case record names the lookup record the app wrote for that case (Hole B).
+  {
+    const store = makeStore();
+    const r = await runPage(store);
+    const runKey = [...store.docs.keys()].find(k => /^checks\/[^/]+$/.test(k));
+    const written = [...store.docs.entries()].filter(([k]) => /^lookups\/[^/]+$/.test(k)).map(([k, d]) => ({ id: k.split('/')[1], title: d.title }));
+    const want = LCASES.map(c => ({ case: c.case, lookupId: (written.find(w => w.title === c.row.title) || {}).id }));
+    const recs = LCASES.map(c => store.docs.get(runKey + '/cases/' + c.case));
+    eq([written.length, want.every(w => w.lookupId)], [9, true], 'LC-042: the app wrote one lookup record per case');
+    eq(recs.map(x => [x.lookupId, x.lookupPath]), want.map(w => [w.lookupId, 'lookups/' + w.lookupId]), 'LC-042: every case record carries the id and path of the lookup document actually written for that case');
+    eq(r.header.lookups.map(l => [l.case, l.lookupId, l.lookupPath]), want.map(w => [w.case, w.lookupId, 'lookups/' + w.lookupId]), 'LC-042: the run record lists the lookup ids by case');
+    ok(want.every(w => r.boxes[w.case].includes('Lookup record: ' + w.lookupId)), 'LC-042: each case box shows its lookup record id', r.boxes[1].slice(0, 200));
+  }
+
   // LC-033: the check page never prunes the lookup log (the app keeps 50 records).
   {
     const touched = [];

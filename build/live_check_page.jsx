@@ -301,6 +301,7 @@ function LcCase({c,problems}){
     <div className="case">
       <h2>{c.case}. {c.title} <span className="soft">({c.venue})</span></h2>
       <div className="status">{c.verdict}</div>
+      <div className="soft" style={{fontSize:11.5}}>Lookup record: {c.lookupId?c.lookupId+" ("+c.lookupPath+")":"none written"}</div>
       {c.trouble&&<div className="soft">The lookup said: {c.trouble}</div>}
       {lost.length>0&&<div className="status">Did not save: {lost.join("; ")}.</div>}
       {mine.map((p,k)=><div key={k} className="soft">{lcLine(p,false)}</div>)}
@@ -365,12 +366,13 @@ function LiveCheck(){
         lcRecord({what:"the lookup record",path:lcRun.lookupPath||"",op:"set",code:e?lcCodeOf(e):"none",
           message:e?"the lookup record did not save ("+lcMsgOf(e)+")":"no store error was raised; the app returned false"});
       }
-      lookups.push({case:x.case,lookupPath:lcRun.lookupPath});
+      const lookupPath=lcRun.lookupPath, lookupId=lookupPath?lookupPath.split("/").pop():null;
+      lookups.push({case:x.case,lookupId,lookupPath});
       const row=out&&out.row;
       const grades=row?lcGrade(card,row):[{field:"The lookup finished",verdict:"fail",got:"no",want:"yes",why:null}];
       const fails=grades.filter(g=>g.verdict==="fail").length;
       const rec={case:x.case,title:x.row.title,venue:mu?mu.name:x.row.museumId,museumId:x.row.museumId,
-        lookupAt:new Date(tape.t0).toISOString(),ms:Date.now()-tape.t0,
+        lookupAt:new Date(tape.t0).toISOString(),ms:Date.now()-tape.t0,lookupId,lookupPath,
         ok:!!(out&&out.ok),trouble:(out&&out.trouble)||null,panel:(out&&out.detail)||null,
         verdict:(out&&out.ok?"":"The lookup did not finish. ")+(fails?fails+" of "+grades.filter(g=>g.verdict==="pass"||g.verdict==="fail").length+" checks failed.":"Every graded check passed."),
         grades,drawn:lcDrawn(row),row:row?cardFields(row):null,calls};
@@ -378,12 +380,12 @@ function LiveCheck(){
         const r=await lcSaveCase(runId,rec,reads);
         if(r.caseWritten)saved.push(x.case);
         else{ const p=lcRun.problems.filter(q=>q.case===x.case&&q.what==="the case record").pop(); unsaved.push({case:x.case,error:p?p.code+": "+p.message:"not written"}); }
-        await lcWrite("update",runPath,{done:saved.length,savedCases:saved,unsavedCases:unsaved,problems:lcRun.problems.slice()},"the run record");
+        await lcWrite("update",runPath,{done:saved.length,savedCases:saved,unsavedCases:unsaved,lookups,problems:lcRun.problems.slice()},"the run record");
       }
       all.push(rec); setDone(all.slice()); shown();
     }
     lcRun.caseNo=null;
-    if(rawDb)await lcWrite("update",runPath,{finished:true,endedAt:new Date().toISOString(),done:saved.length,savedCases:saved,unsavedCases:unsaved,problems:lcRun.problems.slice(),
+    if(rawDb)await lcWrite("update",runPath,{finished:true,endedAt:new Date().toISOString(),done:saved.length,savedCases:saved,unsavedCases:unsaved,lookups,problems:lcRun.problems.slice(),
       failedCases:all.filter(r=>r.grades.some(g=>g.verdict==="fail")).map(r=>r.case)},"the run record");
     const back=rawDb?await lcReadBack(runPath,lookups):null;
     lcRun.active=false;
