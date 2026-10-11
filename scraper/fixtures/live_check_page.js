@@ -7,6 +7,14 @@
  * and Hammershøi publishers, an extra version, a left-off book, the wrong pick, a version
  * not listed).
  * LC-010: the first live run's eight saved records (docs/live_check_runs/), regraded.
+ * LC-034..LC-040: a publisher is its set of houses (the wrong museum, a missing or an extra house fail).
+ * LC-041: the second live run's nine saved records, regraded: no verdict changes.
+ * LC-042: each case record names the lookup record the app wrote for it.
+ * LC-043..LC-048: the REAL App is mounted for each case, the row loaded through Load, its Catalogue
+ * section read as rendered: what the app does with the store while mounted, every stated fact graded
+ * on its block, a one-book card, lines no fact accounts for ("not checked"), one count per fact.
+ * LC-049..LC-050: the same with Cat_Watch.jsx altered in the test only (a line added, the facts line
+ * removed): what is checked follows the card.
  * LC-011..LC-031: the page's writes, on a store played by a script that refuses calls with
  * a given code. By code: invalid_argument is tried once; unavailable and unlisted codes
  * wait 1–3 s and retry; resource_exhausted waits 20–40 s, retries, then spaces every page
@@ -52,27 +60,34 @@ process.on('exit', () => { if (!reachedEnd) { console.log('FAIL  the suite stopp
 const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'https://claude.ai/' });
 const win = dom.window;
 for (const k of ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame', 'cancelAnimationFrame',
-  'MutationObserver', 'Node', 'Element', 'HTMLElement', 'Event', 'CustomEvent', 'getComputedStyle']) {
+  'MutationObserver', 'Node', 'Element', 'HTMLElement', 'Event', 'CustomEvent', 'getComputedStyle', 'FileReader', 'File', 'MouseEvent']) {
   try { global[k] = win[k]; } catch { /* read-only on this Node */ }
 }
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
 // The page's own functions. `stub` replaces the lookup (the one thing that would reach the network).
-const NAMES = 'LiveCheck, lcGrade, lcDrawn, lcSamePublisher, LC_CARDS, LC_CASES, versionBlocks, tapeCall, pruneLookupLog';
-const lift = () => new Function('React', 'window', 'document', 'localStorage', '__stub', '__sleep',
-  built.js + '\n;lookupCatalogue = __stub;\nlcSleep = __sleep;\nreturn { ' + NAMES + ' };')(React, win, win.document, win.localStorage, (...a) => stubLookup(...a), ms => curSleep(ms));
+const NAMES = 'LiveCheck, lcGrade, lcGradeCard, lcCount, lcSamePublisher, LC_CARDS, LC_CASES, versionBlocks, tapeCall, pruneLookupLog';
+const lift = (b = built) => new Function('React', 'ReactDOM', 'window', 'document', 'localStorage', '__stub', '__sleep',
+  b.js + '\n;lookupCatalogue = __stub;\nlcSleep = __sleep;\nreturn { ' + NAMES + ' };')(React, { createRoot }, win, win.document, win.localStorage, (...a) => stubLookup(...a), ms => curSleep(ms));
 let stubLookup = async () => ({ ok: false, row: null, detail: 'no stub' });
 const api = lift();
 
 // ── Her card as a row the lookup could have returned ─────────────────────────
+// A real lookup also stores what a card does not state: the city of another showing, a later
+// edition's year, the one book's own fields, and how far an English edition was looked for.
+const STUB_FACTS = { 1: { '9789171009166': { city: 'Stockholm' } }, 2: { '9781848221918': { city: 'Washington' } },
+  3: { '9782757210642': { city: 'Paris' } }, 4: { '9780847899289': { year: 2023 } } };
+const STUB_ENGLISH_CHECK = { 5: 'publisher', 6: 'publisher', 7: 'publisher' };
 function rowOf(card) {
   const editions = card.versions.map(v => ({
     title: v.title, lang: v.lang, binding: v.binding, pages: v.pages, publisher: v.publisher,
     isbn13: v.isbn13, alsoIsbn13: v.alsoIsbn13, alsoOf: null, showing: v.showing,
     proofUrl: 'https://www.louvre.fr/en/proof-' + v.isbn13, city: null, year: null,
-    shop: { state: 'web', url: null, museum: null }, card: {}, note: null }));
+    shop: { state: 'web', url: null, museum: null }, card: {}, note: null, ...((STUB_FACTS[card.case] || {})[v.isbn13] || {}) }));
   const i = card.pick ? card.versions.findIndex(v => v.isbn13 === card.pick) : -1;
-  return { hasCatalogue: 'yes', editions, editionPick: i < 0 ? null : i, shopState: 'web', shopUrl: null };
+  const book = card.versions[i < 0 ? 0 : i];
+  return { hasCatalogue: 'yes', looked: true, editions, editionPick: i < 0 ? null : i, shopState: 'web', shopUrl: null,
+    catalogueTitle: book.title, isbn13: book.isbn13, publisher: book.publisher, englishCheck: STUB_ENGLISH_CHECK[card.case] || null };
 }
 const cardOf = n => CARDS.find(c => c.case === n);
 const failing = g => g.filter(x => x.verdict === 'fail').map(x => x.field);
@@ -218,25 +233,28 @@ let curSleep = async () => {};
 const LCASES = JSON.parse(fs.readFileSync(path.join(ROOT, 'build', 'live_check_cases.json'), 'utf8')).cases;
 const caseOf = row => LCASES.find(c => c.row.id === row.id).case;
 
-async function runPage(store) {
+// opts.built: another build of the page; opts.rowFor(n, row): the row a case's lookup returns.
+async function runPage(store, opts = {}) {
   const sleeps = [];
   curSleep = async ms => { sleeps.push(ms); if (store) store.log.push({ sleep: ms }); };
   win.claude = { use: async name => name === 'db' ? (store ? store.db : null) : name === 'sample' ? async () => ({ modelTierApplied: 'default', modelApplied: null }) : null };
   // The lookup is the one thing stubbed: each case answers as her card says, with two Claude reads on the tape.
-  const inst = lift();
+  const inst = lift(opts.built);
   stubLookup = async row => {
     const n = caseOf(row);
     for (let k = 0; k < 2; k++) inst.tapeCall('claude', { prompt: 'case ' + n + ' read ' + k }, { ok: true, detail: '', data: {} }, Date.now());
-    return { ok: true, row: { ...row, ...rowOf(cardOf(n)) }, detail: '' };
+    const got = { ...row, ...rowOf(cardOf(n)) };
+    return { ok: true, row: opts.rowFor ? opts.rowFor(n, got) : got, detail: '' };
   };
   win.document.getElementById('root').innerHTML = '';
   const root = createRoot(win.document.getElementById('root'));
   const { LiveCheck } = inst;
   await act(async () => { root.render(React.createElement(LiveCheck)); });
   const before = text();
+  const bodyBefore = [win.document.body.getAttribute('style'), win.document.documentElement.getAttribute('style'), win.document.documentElement.getAttribute('data-theme')];
   await act(async () => { win.document.querySelector('button.run').click(); });
-  for (let i = 0; i < 600 && !statusLines().some(s => s.startsWith('Finished')); i++) {
-    await act(async () => { await new Promise(r => setTimeout(r, 25)); });
+  for (let i = 0; i < 12000 && !statusLines().some(s => s.startsWith('Finished')); i++) {
+    await act(async () => { await new Promise(r => setTimeout(r, 4)); });
   }
   const boxes = {};
   for (const e of win.document.querySelectorAll('.case:not(.problems)')) boxes[parseInt(e.querySelector('h2').textContent, 10)] = e.textContent;
@@ -245,6 +263,10 @@ async function runPage(store) {
   const out = { before, boxes, headerLine, sleeps, problemsText: probBox ? probBox.textContent : '', finalLine: statusLines().find(s => s.startsWith('Finished')) || null, text: text() };
   const headKey = store && [...store.docs.keys()].find(k => /^checks\/[^/]+$/.test(k));
   out.header = headKey ? store.docs.get(headKey) : null;
+  out.bodyBefore = bodyBefore;
+  out.bodyAfter = [win.document.body.getAttribute('style'), win.document.documentElement.getAttribute('style'), win.document.documentElement.getAttribute('data-theme')];
+  out.hostsLeft = win.document.querySelectorAll('body > div[aria-hidden]').length;
+  out.records = store ? Object.fromEntries(LCASES.map(c => [c.case, store.docs.get(headKey + '/cases/' + c.case)])) : null;
   await act(async () => root.unmount());
   return out;
 }
@@ -349,6 +371,98 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
       'LC-031: the page header names branch and commit, never "version"', r.before.slice(0, 160));
     eq([r.header.branch, r.header.commit, 'version' in r.header, typeof r.header.appVersionInCode], ['main', '12bfa1e', false, 'string'],
       'LC-031: the saved run header carries branch, commit and appVersionInCode, no "version"');
+  }
+
+  // LC-043..LC-048: the card the app really draws (the REAL App, mounted in a hidden box,
+  // the case's row loaded through its Load button, its Catalogue section read as rendered).
+  const MULTI = [1, 2, 3, 4, 8], SINGLE = [5, 6, 7, 9];
+  const gradesOf = rec => rec.cardGrades;
+  const failsOf = rec => gradesOf(rec).filter(g => g.verdict === 'fail').map(g => g.field);
+  {
+    const store = makeStore();
+    const r = await runPage(store);
+    const R = r.records;
+    eq(Object.fromEntries(LCASES.map(c => [c.case, [R[c.case].card.ok, R[c.case].card.kind]])),
+      Object.fromEntries(LCASES.map(c => [c.case, [true, MULTI.includes(c.case) ? 'blocks' : 'single']])),
+      'LC-043: the real App drew every card — versions as blocks (1, 2, 3, 4, 8), one book as one section (5, 6, 7, 9)');
+    eq(LCASES.map(c => R[c.case].card.blocks.length), [3, 2, 2, 2, 1, 1, 1, 3, 1], 'LC-043: and the blocks read are the ones on the card (3, 2, 2, 2, 1, 1, 1, 3, 1)');
+
+    // What the app does with the store while it is mounted and loading a ledger.
+    const appReads = ['sweeps/venues', 'quarantine/rows', 'venues/occasional', 'links/pending'];
+    eq(LCASES.map(c => R[c.case].card.appStore), LCASES.map(() => ({ reads: appReads, writes: [] })),
+      'LC-044: while mounted and loading a ledger, the app READS its sweep log, quarantine, occasional venues and pending links, and WRITES nothing');
+    const writesElsewhere = store.log.filter(l => l.op && !['get', 'list'].includes(l.op) && !/^(checks|lookups)\//.test(l.path));
+    eq(writesElsewhere, [], 'LC-044: the store itself saw no write outside the page\'s own checks/ and lookups/ documents');
+    eq(r.bodyAfter, r.bodyBefore, 'LC-044: the mounted app\'s paint on <html> and <body> is put back');
+    eq(r.hostsLeft, 0, 'LC-044: its hidden box is removed after each case');
+
+    // Versions: every stated fact on the card passes, in her words.
+    for (const n of MULTI) {
+      const rec = R[n];
+      eq([failsOf(rec), rec.card.blocks.every(b => b.version)], [[], true], 'LC-045: case ' + n + ' — every stated fact is on its block and right; every block matched to a version by its ISBN');
+    }
+    eq(gradesOf(R[1]).filter(g => /note$/.test(g.field)).map(g => g.got), ['The original edition.', "This venue's English edition.", "From the show's Stockholm exhibition."],
+      'LC-045: Vasari — her three notes, as the card prints them');
+    eq(gradesOf(R[2]).filter(g => /second ISBN$/.test(g.field)).map(g => [g.verdict, g.got]), [['pass', '978-2350315355']], 'LC-045: Hubert Robert — the second number is on the French block');
+    eq(gradesOf(R[3]).find(g => g.field === 'Starting pick (the ● marker)').got + ' / ' + gradesOf(R[2]).find(g => g.field === 'Starting pick (the ● marker)').got,
+      '978-1848221918 / nothing picked', 'LC-045: the ● marker is graded: NGA picks the English, the Louvre card picks nothing');
+
+    // One book: only what the card prints can pass.
+    const WANT_FAILS = { 5: ['French 978-2359064476 — language', 'French 978-2359064476 — binding', 'French 978-2359064476 — note'],
+      6: ['French 978-9061538226 — language', 'French 978-9061538226 — binding', 'French 978-9061538226 — note'],
+      7: ['French 978-9462302815 — language', 'French 978-9462302815 — note'], 9: ['English 978-1857097382 — language'] };
+    for (const n of SINGLE) eq(failsOf(R[n]), WANT_FAILS[n], 'LC-046: case ' + n + ' — a one-book card prints its ISBN and publisher (pass) and prints no language' + (n === 9 ? '' : ', no binding where one is stated') + (n === 9 ? '' : ' and not her "No English edition found."') + ': those fail');
+    eq(gradesOf(R[5]).filter(g => g.verdict === 'fail').map(g => [g.got, g.why]),
+      [['', 'not shown on the card'], ['', 'not shown on the card'], ["No English edition - checked publisher's site and bookshops.", null]],
+      'LC-046: a fact the card does not print fails "not shown on the card"; the note it prints in other words fails with that line as the value');
+
+    // Lines no stated fact accounts for.
+    const unchecked = rec => gradesOf(rec).filter(g => g.verdict === 'unchecked');
+    eq(unchecked(R[1]).map(g => g.field.replace(/^Block \d \(.*?\) — /, '')), ['shop line', 'title', 'note or source', 'shop line', 'title', 'note or source', 'shop line', 'title', 'note or source'],
+      'LC-047: Vasari — each block\'s shop line, title and source are reported "not checked", nothing silently skipped');
+    ok(unchecked(R[1]).every(g => g.why === 'not checked — no right answer recorded' && g.got) && unchecked(R[1]).some(g => g.got === 'Source: louvre.fr') && unchecked(R[1]).some(g => /^Giorgio Vasari, the Book of Drawings$/.test(g.got)),
+      'LC-047: each says "not checked — no right answer recorded" and carries the line\'s text');
+    eq(unchecked(R[4]).map(g => g.got).filter(t => t === '2023'), ['2023'], 'LC-047: Hammershøi — the year after the English publisher ("Rizzoli Electa · 2023") is its own part, reported not checked');
+    eq(R[1].card.blocks[1].lines.map(l => [l.text, l.verdict]).slice(2, 4), [['Louvre Éditions / Lienart', 'pass'], ['English · Paperback', 'pass']],
+      'LC-047: the stored card carries each line\'s verdict');
+    ok(R[1].verdict === 'Every graded check passed. 9 lines or parts on the card not checked.' && /Each fact is counted once/.test(r.boxes[1]) && /On the card/.test(r.boxes[1]) && /not checked/.test(r.boxes[1]),
+      'LC-047: the case box says how many are not checked, and shows "On the card" and "The card as the app shows it"', R[1].verdict);
+  }
+  // LC-048: a fact that fails both in the lookup's data and on the card counts once.
+  {
+    eq(api.lcCount([{ verdict: 'fail', key: 'a' }, { verdict: 'pass', key: 'b' }], [{ verdict: 'fail', key: 'a' }, { verdict: 'unchecked', key: null }, { verdict: 'pass', key: 'c' }]),
+      { checks: 3, fails: 1, unchecked: 1 }, 'LC-048: the same fact failing in both tables is one failed check, unchecked parts are counted apart');
+    const store = makeStore();
+    const r = await runPage(store, { rowFor: (n, row) => n === 7 ? { ...row, editions: [{ ...row.editions[0], publisher: 'Fonds Mercator' }], publisher: 'Fonds Mercator' } : row });
+    const rec = r.records[7];
+    const pub = 'French 978-9462302815 — publisher';
+    eq([rec.grades.find(g => g.field === pub).verdict, rec.cardGrades.find(g => g.field === pub).verdict, rec.counted],
+      ['fail', 'fail', { checks: 9, fails: 3, unchecked: 3 }],
+      'LC-048: Botticelli with only "Fonds Mercator" — the publisher fails in the data and on the card and is counted once (3 failures with language and note, not 4)');
+  }
+  // LC-049..LC-050: what is checked follows the card. The app's source is altered here, in the test only.
+  {
+    const FACTS = '{b.facts&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{b.facts}</div>}';
+    const SINGLE_PUB = '{r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}';
+    const anchored = (src, a, b) => { if (src.split(a).length !== 2) throw new Error('the anchor moved in Cat_Watch.jsx: ' + a); return src.replace(a, b); };
+    const added = prepare(BUILD, { edit: src => anchored(anchored(src, FACTS, FACTS + '<div style={{fontSize:11,color:C.soft,marginBottom:2}}>A LINE THE APP ADDED</div>'),
+      SINGLE_PUB, SINGLE_PUB + '<div style={{fontSize:11,color:C.soft,marginBottom:2}}>A LINE ON THE SINGLE CARD</div>') });
+    const removed = prepare(BUILD, { edit: src => anchored(src, FACTS, '') });
+
+    const a = (await runPage(makeStore(), { built: added })).records;
+    const addedOn = rec => rec.cardGrades.filter(g => g.verdict === 'unchecked' && /^A LINE/.test(g.got));
+    eq([addedOn(a[1]).map(g => g.field), a[1].verdict], [['Block 1 (French 978-2359063721) — publisher line', 'Block 2 (English 978-2359063738) — publisher line', 'Block 3 (English 978-9171009166) — publisher line'].map(f => f), 'Every graded check passed. 12 lines or parts on the card not checked.'],
+      'LC-049: a line the app adds to every version block is reported "not checked — no right answer recorded", and every stated fact still passes');
+    ok(addedOn(a[1]).every(g => g.why === 'not checked — no right answer recorded' && g.got === 'A LINE THE APP ADDED'), 'LC-049: with its own text');
+    eq([addedOn(a[9]).map(g => g.got), failsOf(a[9])], [['A LINE ON THE SINGLE CARD'], ['English 978-1857097382 — language']], 'LC-049: the same on a one-book card — the added line is reported and nothing else moves');
+
+    const b = (await runPage(makeStore(), { built: removed })).records;
+    eq(failsOf(b[2]), ['French 978-2757210642 — language', 'French 978-2757210642 — binding', 'French 978-2757210642 — pages',
+      'English 978-1848221918 — language', 'English 978-1848221918 — binding', 'English 978-1848221918 — pages'],
+      'LC-050: with the facts line gone from the app, language, binding and pages fail on every block — the rest still passes');
+    ok(b[2].cardGrades.filter(g => g.verdict === 'fail').every(g => g.why === 'not shown on the card' && g.got === '') && b[2].grades.every(g => g.verdict === 'pass'),
+      'LC-050: each fails "not shown on the card", while what the lookup returned is untouched (the data-level table still passes)');
+    eq(b[2].counted, { checks: 19, fails: 6, unchecked: 6 }, 'LC-050: and the case counts 6 of 19 failed');
   }
 
   // LC-042: each case record names the lookup record the app wrote for that case (Hole B).

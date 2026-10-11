@@ -35,8 +35,9 @@ const git = a => { try { return execFileSync('git', a, { cwd: ROOT }).toString()
 
 // Cat_Watch.jsx and the page, transpiled and parsed, without the mount line. `build`
 // overrides the branch, commit and time written in as LC_BUILD (tests pass their own).
-function prepare(build = {}) {
-  const app = fs.readFileSync(JSX, 'utf8');
+// `opts.edit(source)` returns an altered copy of Cat_Watch.jsx for a test; the file is never written.
+function prepare(build = {}, opts = {}) {
+  const app = opts.edit ? opts.edit(fs.readFileSync(JSX, 'utf8')) : fs.readFileSync(JSX, 'utf8');
   const appVersion = (app.match(/^const APP_VERSION = "([^"]+)"/m) || [])[1];
   if (!appVersion) throw new Error('no APP_VERSION in Cat_Watch.jsx');
   const dirty = git(['status', '--porcelain', '--', 'Cat_Watch.jsx']) ? ' + uncommitted changes to Cat_Watch.jsx' : '';
