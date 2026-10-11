@@ -13,8 +13,10 @@
  * LC-043..LC-048: the REAL App is mounted for each case, the row loaded through Load, its Catalogue
  * section read as rendered: what the app does with the store while mounted, every stated fact graded
  * on its block, a one-book card, lines no fact accounts for ("not checked"), one count per fact.
+ * LC-046: a one-book card has no facts line: language, binding and pages are "not applicable" (not counted).
  * LC-049..LC-050: the same with Cat_Watch.jsx altered in the test only (a line added, the facts line
  * removed): what is checked follows the card.
+ * LC-051: a one-book card altered to print a facts line is graded on it, with no change to the page.
  * LC-011..LC-031: the page's writes, on a store played by a script that refuses calls with
  * a given code. By code: invalid_argument is tried once; unavailable and unlisted codes
  * wait 1–3 s and retry; resource_exhausted waits 20–40 s, retries, then spaces every page
@@ -407,14 +409,23 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
     eq(gradesOf(R[3]).find(g => g.field === 'Starting pick (the ● marker)').got + ' / ' + gradesOf(R[2]).find(g => g.field === 'Starting pick (the ● marker)').got,
       '978-1848221918 / nothing picked', 'LC-045: the ● marker is graded: NGA picks the English, the Louvre card picks nothing');
 
-    // One book: only what the card prints can pass.
-    const WANT_FAILS = { 5: ['French 978-2359064476 — language', 'French 978-2359064476 — binding', 'French 978-2359064476 — note'],
-      6: ['French 978-9061538226 — language', 'French 978-9061538226 — binding', 'French 978-9061538226 — note'],
-      7: ['French 978-9462302815 — language', 'French 978-9462302815 — note'], 9: ['English 978-1857097382 — language'] };
-    for (const n of SINGLE) eq(failsOf(R[n]), WANT_FAILS[n], 'LC-046: case ' + n + ' — a one-book card prints its ISBN and publisher (pass) and prints no language' + (n === 9 ? '' : ', no binding where one is stated') + (n === 9 ? '' : ' and not her "No English edition found."') + ': those fail');
-    eq(gradesOf(R[5]).filter(g => g.verdict === 'fail').map(g => [g.got, g.why]),
-      [['', 'not shown on the card'], ['', 'not shown on the card'], ["No English edition - checked publisher's site and bookshops.", null]],
-      'LC-046: a fact the card does not print fails "not shown on the card"; the note it prints in other words fails with that line as the value');
+    // One book ("the card as now"): it prints no facts line, so language, binding and pages are
+    // not applicable; no failure, nothing counted. Its English line stays "not checked".
+    const NA = 'not applicable — this card has no facts line';
+    for (const n of SINGLE) {
+      const na = gradesOf(R[n]).filter(g => g.verdict === 'na');
+      const stated = cardOf(n).versions[0];
+      eq([failsOf(R[n]), na.map(g => g.field.replace(/^.* — /, '')), na.every(g => g.why === NA && g.got === ''), R[n].counted.fails],
+        [[], ['language'].concat(stated.binding ? ['binding'] : []).concat(stated.pages ? ['pages'] : []), true, 0],
+        'LC-046: case ' + n + ' — an agreed one-book card shows no failure: its ISBN and publisher pass, its facts are "not applicable", and none is "not shown on the card"');
+    }
+    ok([5, 6, 7].every(n => R[n].verdict === 'Every graded check passed. 4 lines or parts on the card not checked.') && R[9].verdict === 'Every graded check passed. 3 lines or parts on the card not checked.',
+      'LC-046: Watteau, Canaletto – Guardi, Botticelli and Millet — "Every graded check passed"; not checked: the pick marker, the shop line, the title and (not Millet) the English line', JSON.stringify([5, 6, 7, 9].map(n => R[n].verdict)));
+    eq([5, 6, 7].map(n => gradesOf(R[n]).filter(g => g.verdict === 'unchecked' && /^The card — /.test(g.field)).map(g => g.field.replace('The card — ', ''))), [5, 6, 7].map(() => ['shop line', 'title', 'note or source']),
+      'LC-046: their English line ("No English edition - checked publisher\'s site and bookshops.") is reported "not checked", with the shop line and the title');
+    ok(gradesOf(R[5]).some(g => g.verdict === 'unchecked' && g.got === "No English edition - checked publisher's site and bookshops."), 'LC-046: and it carries the line\'s text');
+    eq([R[5].counted.checks, gradesOf(R[5]).filter(g => g.verdict === 'na').length], [api.lcCount(R[5].grades).checks, 2],
+      'LC-046: a not-applicable row is not counted — Watteau\'s two not-applicable rows (language, binding) add nothing: its 7 checks are the lookup data\'s alone');
 
     // Lines no stated fact accounts for.
     const unchecked = rec => gradesOf(rec).filter(g => g.verdict === 'unchecked');
@@ -437,8 +448,8 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
     const rec = r.records[7];
     const pub = 'French 978-9462302815 — publisher';
     eq([rec.grades.find(g => g.field === pub).verdict, rec.cardGrades.find(g => g.field === pub).verdict, rec.counted],
-      ['fail', 'fail', { checks: 9, fails: 3, unchecked: 3 }],
-      'LC-048: Botticelli with only "Fonds Mercator" — the publisher fails in the data and on the card and is counted once (3 failures with language and note, not 4)');
+      ['fail', 'fail', { checks: 8, fails: 1, unchecked: 4 }],
+      'LC-048: Botticelli with only "Fonds Mercator" — the publisher fails in the data and on the card and is counted once (1 failure, not 2)');
   }
   // LC-049..LC-050: what is checked follows the card. The app's source is altered here, in the test only.
   {
@@ -454,7 +465,7 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
     eq([addedOn(a[1]).map(g => g.field), a[1].verdict], [['Block 1 (French 978-2359063721) — publisher line', 'Block 2 (English 978-2359063738) — publisher line', 'Block 3 (English 978-9171009166) — publisher line'].map(f => f), 'Every graded check passed. 12 lines or parts on the card not checked.'],
       'LC-049: a line the app adds to every version block is reported "not checked — no right answer recorded", and every stated fact still passes');
     ok(addedOn(a[1]).every(g => g.why === 'not checked — no right answer recorded' && g.got === 'A LINE THE APP ADDED'), 'LC-049: with its own text');
-    eq([addedOn(a[9]).map(g => g.got), failsOf(a[9])], [['A LINE ON THE SINGLE CARD'], ['English 978-1857097382 — language']], 'LC-049: the same on a one-book card — the added line is reported and nothing else moves');
+    eq([addedOn(a[9]).map(g => g.got), failsOf(a[9])], [['A LINE ON THE SINGLE CARD'], []], 'LC-049: the same on a one-book card — the added line is reported and nothing else moves');
 
     const b = (await runPage(makeStore(), { built: removed })).records;
     eq(failsOf(b[2]), ['French 978-2757210642 — language', 'French 978-2757210642 — binding', 'French 978-2757210642 — pages',
@@ -463,6 +474,18 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
     ok(b[2].cardGrades.filter(g => g.verdict === 'fail').every(g => g.why === 'not shown on the card' && g.got === '') && b[2].grades.every(g => g.verdict === 'pass'),
       'LC-050: each fails "not shown on the card", while what the lookup returned is untouched (the data-level table still passes)');
     eq(b[2].counted, { checks: 19, fails: 6, unchecked: 6 }, 'LC-050: and the case counts 6 of 19 failed');
+
+    // LC-051: a one-book card that gains a facts line is graded on it, with no change to the page's code.
+    const FACTS_ON_ONE = '{r.editions&&r.editions[0]&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{[langName(r.editions[0].lang),r.editions[0].binding==="hardcover"?"Hardcover":r.editions[0].binding==="paperback"?"Paperback":null].filter(Boolean).join(" \\u00b7 ")}</div>}';
+    const withFacts = prepare(BUILD, { edit: src => anchored(src, SINGLE_PUB, SINGLE_PUB + FACTS_ON_ONE) });
+    const f = (await runPage(makeStore(), { built: withFacts, rowFor: (n, row) => n === 5 ? { ...row, editions: [{ ...row.editions[0], binding: 'hardcover' }] } : row })).records;
+    const factRows = (rec, k) => rec.cardGrades.filter(g => /— (language|binding|pages)$/.test(g.field)).map(g => [g.field.replace(/^.* — /, ''), g.verdict, g.got]);
+    eq([6, 7, 9].map(n => factRows(f[n])),
+      [[['language', 'pass', 'French'], ['binding', 'pass', 'Hardcover']], [['language', 'pass', 'French']], [['language', 'pass', 'English']]],
+      'LC-051: a one-book card that prints a facts line is graded on it — language and binding pass, none is "not applicable"');
+    eq([factRows(f[5]), failsOf(f[5]), f[5].counted.fails], [[['language', 'pass', 'French'], ['binding', 'fail', 'Hardcover']], ['French 978-2359064476 — binding'], 1],
+      'LC-051: and a wrong fact on it fails (Watteau printed as hardcover, agreed paperback) and is counted');
+    ok(!f[6].cardGrades.some(g => g.verdict === 'unchecked' && g.got === 'French \u00b7 Hardcover'), 'LC-051: the facts line is graded, no longer reported "not checked"');
   }
 
   // LC-042: each case record names the lookup record the app wrote for that case (Hole B).

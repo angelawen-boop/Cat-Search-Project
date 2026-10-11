@@ -37,21 +37,21 @@
     {
       "case": 5, "venue": "louvre", "title": "A new look at Watteau", "match": ["watteau"],
       "versions": [
-        { "title": "Pierrot, dit le Gilles, de Watteau. Un comédien sans réplique", "lang": "French", "binding": "paperback", "pages": null, "publisher": "Louvre Éditions / Lienart", "isbn13": "9782359064476", "alsoIsbn13": null, "note": "No English edition found.", "showing": "this" }
+        { "title": "Pierrot, dit le Gilles, de Watteau. Un comédien sans réplique", "lang": "French", "binding": "paperback", "pages": null, "publisher": "Louvre Éditions / Lienart", "isbn13": "9782359064476", "alsoIsbn13": null, "note": null, "showing": "this" }
       ],
       "pick": "9782359064476", "leftOff": []
     },
     {
       "case": 6, "venue": "jacquemart", "title": "Canaletto – Guardi", "match": ["canaletto", "guardi"],
       "versions": [
-        { "title": "Canaletto – Guardi, les deux maîtres de Venise", "lang": "French", "binding": "hardcover", "pages": null, "publisher": "Fonds Mercator", "isbn13": "9789061538226", "alsoIsbn13": null, "note": "No English edition found.", "showing": "this" }
+        { "title": "Canaletto – Guardi, les deux maîtres de Venise", "lang": "French", "binding": "hardcover", "pages": null, "publisher": "Fonds Mercator", "isbn13": "9789061538226", "alsoIsbn13": null, "note": null, "showing": "this" }
       ],
       "pick": "9789061538226", "leftOff": ["9782758004158"]
     },
     {
       "case": 7, "venue": "jacquemart", "title": "Botticelli, artiste et designer", "match": ["botticelli"],
       "versions": [
-        { "title": "Botticelli : artiste & designer", "lang": "French", "binding": null, "pages": null, "publisher": "Culturespaces / Fonds Mercator", "isbn13": "9789462302815", "alsoIsbn13": null, "note": "No English edition found.", "showing": "this" }
+        { "title": "Botticelli : artiste & designer", "lang": "French", "binding": null, "pages": null, "publisher": "Culturespaces / Fonds Mercator", "isbn13": "9789462302815", "alsoIsbn13": null, "note": null, "showing": "this" }
       ],
       "pick": "9789462302815", "leftOff": ["9781789144383"]
     },

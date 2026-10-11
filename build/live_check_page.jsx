@@ -190,6 +190,7 @@ async function lcReadRealCard(row){
 // the ISBN line are the note and source.
 const LC_NOT_SHOWN="not shown on the card";
 const LC_UNCHECKED="not checked — no right answer recorded";
+const LC_NO_FACTS_LINE="not applicable — this card has no facts line";
 const LC_LANGUAGES=["english","french","dutch","italian","german","spanish","portuguese","swedish","danish","norwegian","finnish","russian","polish","czech","hungarian","greek","latin","japanese","chinese","korean","turkish","arabic","catalan"];
 const lcBindPart=t=>/^(hardcover|paperback)$/i.test(t);
 const lcPagesPart=t=>/^\d+ pp$/.test(t);
@@ -252,17 +253,18 @@ function lcGradeCard(want,drawn){
       if(second&&nums[1]===wantAlso)grade("second ISBN","pass",nums[1],wantAlso,second,key("alsoIsbn"));
       else grade("second ISBN","fail",second?second.text:"",wantAlso,second,key("alsoIsbn"));
     }
-    // Language, binding, pages — the facts line
-    const lang=partsOf("facts",p=>isLang(p.text))[0];
-    grade("language",lang&&lcSameLang(lang.text,w.lang)?"pass":"fail",lang?lang.text:"",w.lang,lang||null,key("language"));
-    if(w.binding){
-      const b=partsOf("facts",p=>lcBindPart(p.text))[0];
-      grade("binding",b&&b.text.toLowerCase()===w.binding?"pass":"fail",b?b.text:"",w.binding,b||null);
-    }
-    if(w.pages){
-      const pg=partsOf("facts",p=>lcPagesPart(p.text))[0];
-      grade("pages",pg&&parseInt(pg.text,10)===w.pages?"pass":"fail",pg?pg.text:"",w.pages+" pp",pg||null);
-    }
+    // Language, binding, pages — the facts line. A one-book card has none ("the card as now"):
+    // those facts are not applicable, neither pass nor fail and not counted. The moment such a
+    // card prints a facts line they are graded as usual. A version block without one fails.
+    const notApplicable=m&&drawn.kind!=="blocks"&&!m.parts.some(p=>p.role==="facts");
+    const factsLine=(fact,test,ok,wanted)=>{
+      if(notApplicable)return add({field:label+" — "+fact,verdict:"na",got:"",want:wanted,why:LC_NO_FACTS_LINE});
+      const hit=partsOf("facts",p=>test(p.text))[0];
+      grade(fact,hit&&ok(hit.text)?"pass":"fail",hit?hit.text:"",wanted,hit||null);
+    };
+    factsLine("language",t=>isLang(t),t=>lcSameLang(t,w.lang),w.lang);
+    if(w.binding)factsLine("binding",lcBindPart,t=>t.toLowerCase()===w.binding,w.binding);
+    if(w.pages)factsLine("pages",lcPagesPart,t=>parseInt(t,10)===w.pages,w.pages+" pp");
     // Publisher — the text before any " · " on the publisher line
     if(w.publisher){
       const cands=partsOf("pub",p=>p.first);
@@ -485,7 +487,7 @@ const LC_STYLE=`
   .lc .tag.fail{font-weight:700}
   @media (max-width:560px){.lc td:nth-child(3),.lc th:nth-child(3){display:none}}
 `;
-const LC_MARK={"pass":"✓ Pass","fail":"✗ Fail","unchecked":"– Not checked"};
+const LC_MARK={"pass":"✓ Pass","fail":"✗ Fail","unchecked":"– Not checked","na":"– Not applicable"};
 
 function LcTable({title,grades}){
   return(<>
