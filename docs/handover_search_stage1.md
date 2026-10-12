@@ -24,8 +24,9 @@ test page and that page passes on all three cases.** This is her decision.
 - **Stage 3: Selection.** With the right blocks on the card, picking a block works and the
   buttons follow the pick: Museum shop, Publisher and the bookstores.
 
-**Only Stage 1 is open.** No test page has ever been built for Stage 1 alone; that is the next
-job.
+**Only Stage 1 is open.** The Stage 1 test page is built and published (version 4 of the live
+check page, commit 7980379; `docs/live_check_report.md`). Next: she runs it; the session regrades
+with `node build/stage1_check.js`.
 
 ## The lesson: never mix Stage 1 with what the card says
 
