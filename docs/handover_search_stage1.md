@@ -14,10 +14,10 @@ She has three exhibitions where the app's catalogue search does not find the rig
 The work is done in three stages. **Do not start a stage until the one before it has a working
 test page and that page passes on all three cases.** This is her decision.
 
-- **Stage 1: Search.** For each case, the LIVE app's search finds every relevant book (each
-  language, earlier and later editions, different publishers, another showing's book). No
-  relevant book is missing, and no junk is picked up. **That is all Stage 1 is.** It is a
-  question about which books were found. It has nothing to do with cards.
+- **Stage 1: Search.** For each case, the LIVE app's search finds this show's catalogue,
+  looks for its English edition by her rules (below), and keeps every book it comes
+  across that is not junk or an excluded type. **That is all Stage 1 is.** It is a
+  question about which books were found and kept. It has nothing to do with cards.
 - **Stage 2: Cards.** Once the right books are found, the card shows the right information
   about them: one block per version, language, the different ISBNs, the different publishers,
   and so on (her block layout, `docs/catalogue_versions.md`, "Her layout").
@@ -46,74 +46,124 @@ Every diagnosis so far mixed the two, and it has to stop.
   answers (version 3 grades "On the card"). That cannot say whether the search found the right
   books. Its card grading is parked. Do not use it, extend it, or report from it until Stage 2.
 
+## Her rules for Stage 1 — the intent
+
+Each card is about its own exhibition: the venue's show, never another showing of it.
+
+**Finding and the English edition.**
+- No catalogue for this show → the search stops; no searching for other showings. A book
+  for another showing that the results happen to mention is kept, as that showing's.
+- This show's English edition found first → done. No search for the foreign-language
+  version.
+- This show's catalogue found in another language → always look for this show's English
+  edition. None → say so. Found → its details are found too. A bilingual book made for
+  this show counts as its English edition (no English search).
+- **Another showing's book is never searched for, and its details are never completed by
+  further searches** — whatever the results already say (even a title alone) is written
+  down.
+
+**Keeping.** Every book the search comes across is kept — title, publisher, language,
+binding, page count, ISBN, as the pages state them — except:
+- **junk**: a book with nothing to do with the exhibition;
+- **her excluded types**: a book its pages call an album or a booklet; a magazine's
+  special issue.
+
+Keeping is a judgement, so **err on the side of keeping**; a wrong book shown beats a right
+one thrown away. Definite yes: the same title (in meaning, any language) and it names the
+exhibition; it says it is a translation; the same authors; it names the exhibition or the
+venue. Same title and year: good enough. Same title, no mention of the exhibition:
+suspicious, kept. **Page count decides nothing** (no one can say how short a short version
+is); it is written down so she can see it.
+
+**A pass**, per run, needs all three: this show's catalogue found; its English edition
+found if one exists; nothing the search saw dropped except junk and excluded types. A run
+whose results never mention another showing is not wrong for lacking its book.
+
+## What throws books away today (from the nine records and the code)
+
+All four go against her rules; fix them one at a time.
+1. Claude's first read has room for one book; any other book in those results is never
+   recorded.
+2. The facts read is asked only for other printings and translations of the same book,
+   never another showing's book, and is told "if the text is about a different book,
+   answer null".
+3. Code drops more: `editionsOf`'s proof (Vasari run 3: Stockholm's 978-9171009166 was in
+   Claude's text all three runs, reported once, dropped here — its page names the same
+   authors, which her rule keeps); different page counts (`differentBook`, 15%); a book
+   the read says is not this venue's (`thisVenue`) dropped rather than kept as another
+   showing's. The magazine drop stays.
+4. Pages opened in later steps (publisher, shop) are never read for other books.
+
+Also against her rules: with this show's English edition already found (Vasari runs 1–2),
+the English-edition search still runs.
+
+**Still open after those fixes — do not forget (her decision):** a book can be never seen
+at all. The app reads only search snippets, never whole result pages; Parallel returned
+different results and snippets for identical requests (Hubert Robert run 3: Enfilade's
+snippet gave the French sentence, not the English one; Hammershøi runs 2 and 3: identical
+edition searches, only run 3 got Stanford's and Rizzoli's pages). Claude's reads also
+answer differently on the same text (Vasari's facts read: none, one, then all three
+books). If results still flip-flop once nothing is thrown away, she decides whether the
+search always reads whole pages.
+
 ## The rules for the Stage 1 test page
 
 - **It runs the live app's own search:** `lookupCatalogue` from `Cat_Watch.jsx`, unchanged,
   with her Parallel Search Key connector and the in-page Claude. It never uses a session's hand
   searches, saved pages, or made-up test pages (CLAUDE.md §1).
-- **It runs her three cases only.** The other six cases on today's page (Watteau, Canaletto –
-  Guardi, Botticelli, Metamorphoses, Millet, Hubert Robert at NGA) were never search failures
-  she reported; a session added them as card examples. They come back only after a Stage 1
-  fix, as a check that searches that already worked still work.
+- **It runs her three cases**, plus any other case directly affected by what the search
+  FINDS (never by what a card shows, nor buttons or links). The other six on today's page
+  (Watteau, Canaletto – Guardi, Botticelli, Metamorphoses, Millet, Hubert Robert at NGA)
+  were never search failures she reported; include one only on that test.
+- **Back to back means a loop over the cases** — all of them, then all again — never one
+  case three times, then the next.
 - **Its readout per case has no card in it:**
-  - Each relevant book: found, or missing.
-  - Each book found that is not relevant: junk, and where it came from.
-  - For each missing book, the step where it was lost (the trace, below).
-  - A verdict: **Stage 1 passes** only when every relevant book is found and nothing else is.
+  - This show's catalogue and its English edition: found, or missing.
+  - Every book the search saw: kept, or dropped — and for a dropped one, the step that
+    dropped it (the trace, below).
+  - A verdict: **pass** only on her three conditions (above).
 - **It keeps every lookup's full record.** The app's lookup log already records every call:
   each search sent, everything Parallel handed back, each page opened, exactly what Claude was
   sent and what it answered, and what the app kept. Sessions read it themselves from the page's
   store, so she never copies anything. Nothing is guessed.
-- **Results vary between runs** because the web and Claude answer differently each time. Run
-  the three cases more than once, back to back. A case that passes once and fails the next time
-  is not passing.
+- **Results vary between runs** because the web and Claude answer differently each time. A
+  case that passes once and fails the next time is not passing.
 
-## The trace: where each missing book was lost
+## The trace: where each book was dropped
 
-The trace is code (there is one right answer), not a session reading logs by eye. For each
-relevant book, it follows the lookup record step by step and reports the first step where the
-book was lost:
+The trace is code (there is one right answer), not a session reading logs by eye. For every
+book the lookup record shows the search saw — and for this show's catalogue and English
+edition even when unseen — it reports the first step where the book was lost:
 
-1. **Never seen:** the book appears in nothing Parallel returned (no search result, no page). The
-   search asked the wrong questions, or the web does not show the book that way.
-2. **Seen, not shown to Claude:** it was in a result or a page, but the part passed to Claude
-   left it out (for example `pickPassages`, or excerpts cut short).
-3. **Shown to Claude, not reported:** Claude was given it and left it out of its answer
-   (the prompt).
-4. **Reported by Claude, dropped by the app:** Claude named it, and one of the app's own rules
-   threw it away (for example `sameCatalogue`, `thisVenue`, or how editions are joined).
+1. **Never seen:** in nothing Parallel returned (no search result, no page).
+2. **Seen, not shown to Claude:** in a result or page, but left out of what Claude was sent
+   (`pickPassages`, snippets cut short).
+3. **Shown to Claude, not reported:** Claude was given it and left it out of its answer.
+4. **Reported by Claude, dropped by the app:** one of the app's own rules threw it away.
 5. **Kept:** it reached the lookup's final result.
 
 Match a book by its ISBN; also by its title and publisher, since a page may print no number.
-Run it the other way for junk: where each unwanted book first came in.
+A dropped book is a fail unless it is junk or an excluded type. "Never seen" fails only for
+this show's catalogue or its English edition — another showing's book is not searched for.
 
-Then **fix by cause, not by case.** If several books are "never seen", the problem is how the app
-searches; if several are "shown to Claude, not reported", it is what Claude is asked. Prove each
-fix by re-running the Stage 1 page, several times. The versions code has been patched many times
-(`editionsOf`, `composeRow`, `printingsOf`; the third-patch rule, CLAUDE.md §7.4). Do not patch
-it again for one case without her review.
+Then **fix by cause, not by case**, and prove each fix by re-running the Stage 1 page. The
+versions code has been patched many times (`editionsOf`, `composeRow`, `printingsOf`; the
+third-patch rule, CLAUDE.md §7.4). Do not patch it again for one case without her review.
 
-## The relevant books per case (Stage 1 answers)
+## The books per case, under her rules
 
-From her agreed cases in `docs/catalogue_versions.md`. Some facts came from a session's hand
-searches, not from anything the app found. **Confirm this list with her before the page grades
-against it**, and settle each open point with evidence from the records.
+From her agreed cases in `docs/catalogue_versions.md`; some facts came from a session's hand
+searches, not from anything the app found.
 
-| Case | Relevant books (ISBN, what it is) | Must NOT be found |
+| Case | Must be found | Kept if the search sees it |
 |---|---|---|
-| Vasari | 978-2359063721, French original (Louvre Éditions / Lienart); 978-2359063738, English paperback (Lienart); 978-9171009166, English hardcover (Nationalmuseum, the Stockholm showing) | 978-2350317441, an old number dropped by her decision |
-| Hubert Robert | 978-2757210642, French catalogue (Louvre Éditions / Somogy; the Louvre's own number for the same book is 978-2350315355); 978-1848221918, English, a different book from the Washington showing (NGA / Lund Humphries) | 978-2757210659, the 48-page album |
-| Hammershøi | 978-9462302495, French original (Culturespaces / Fonds Mercator); 978-0847899289, English (Rizzoli Electa, 2023) | — |
+| Vasari (Louvre) | French 978-2359063721 (Louvre Éditions / Lienart) — unless the English is found first; English 978-2359063738 (Lienart) | Stockholm's English hardcover 978-9171009166 (Nationalmuseum); the French book whenever seen |
+| Hubert Robert (Louvre) | French 978-2757210642 (Somogy), the same printed book as the Louvre's 978-2350315355 — either number counts; no English edition for this show | Washington's English book 978-1848221918 (NGA / Lund Humphries); the 48-page 978-2757210659 unless its pages call it an album |
+| Hammershøi (Jacquemart-André) | French 978-9462302495 (Fonds Mercator); English 978-0847899289 (Rizzoli Electa, 2023) | 978-9462301290 (Fonds Mercator, French, 175 pp, mullenbooks.com; runs 2–3) — kept, whatever it turns out to be |
 
-**Open points for her, each with its evidence:**
-- **Hammershøi 978-9462301290:** found in runs 2 and 3 (Fonds Mercator, French, 175 pp, source
-  mullenbooks.com), not in run 1. Her agreed French book is 978-9462302495 (hardcover, 176 pp).
-  Is it another relevant book (another printing or binding) or junk? Settle from its source page
-  and a library record for that number, then ask her.
-- **Hammershøi's English book:** Rizzoli and 2023 never appeared in what the app found in her
-  43 lookup. Check whether the app's searches can reach a page stating them.
-- **Hubert Robert's second number (978-2350315355):** the same printed book as 978-2757210642.
-  Decide with her whether Stage 1 counts it as a separate book or as part of that one.
+**Watch:** 978-2350317441 — once written into her Vasari case by a session's hand search; no
+page the app or a live search reached prints it (Louvre prefix 978-2-35031; checked live,
+12 Oct). Ditched. If any future test run's records show it, tell her, with the page.
 
 ## What the three runs found so far
 
