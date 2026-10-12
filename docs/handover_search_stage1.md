@@ -32,28 +32,40 @@ check page, commit 7980379; `docs/live_check_report.md`).
 Run records `R17917823099072hxi`, `R1791782625135xfpr`, `R17917829470726084` (store `checks`,
 `stage: 1`, one loop); every case and lookup record saved, no problems.
 
-| Case | R1 | R2 | R3 | Why it failed (from the case records) |
+| Case | R1 | R2 | R3 | Cause (diagnosed with her from the lookup records) |
 |---|---|---|---|---|
 | 1 Vasari | Pass | Pass | Pass | — French, English and Stockholm all kept, every round |
 | 2 Hubert Robert (Louvre) | Pass | Pass | Pass | — Washington book never in the results any round (allowed: not searched for) |
 | 4 Hammershøi | Pass | Pass | Pass | — French, Rizzoli English and 1290 kept, every round |
-| 3 Hubert Robert (NGA) | Fail | Fail | Fail | The lookup found the NGA book ("Hubert Robert", National Gallery of Art) but never its ISBN 978-1848221918 — never in any result. The pass test matches by ISBN only, so it counts as missing. Two causes to separate: the search never sees the ISBN; the grader has no title match |
-| 7 Botticelli | Fail | Fail | Pass | Reaktion's 978-1789144383 shown to Claude, not reported (R1, R2). Also 978-2758010685 named by Claude and dropped by the app: prefix 978-2-7580 is Connaissance des Arts' (as Canaletto's magazine 978-2758004158) — **a guess**: a magazine issue, correctly left off; add it to the case's `excluded` once its page is read |
-| 8 Metamorphoses | Fail | Fail | Fail | English found first (no English search, correct). Dutch 6550 and Italian 6857 were in the text Claude was given every round and never reported in `otherBooks` |
+| 3 Hubert Robert (NGA) | Fail | Fail | Fail | Book found, ISBN 978-1848221918 not. The ISBN search is built from the publisher; Claude answered "National Gallery of Art", never Lund Humphries. R2: the press release ("Published in association with Lund Humphries") was in Claude's text and Claude did not name Lund — her "in association with" decision is only in code, never told to Claude. R3: the search returned the press release 9th; the app shows the first read only 8 results. R1: the search never returned the press release — not a fault (nothing seen, nothing to record) |
+| 7 Botticelli | Fail | Fail | Fail | R1, R2: Reaktion's ISBN 978-1789144383 shown, not listed — the books request asks only for "catalogues of this exhibition", narrower than her keep rule. 978-2758010685 is Connaissance des Arts' hors-série (the venue's shop filed it as "hors-serie-botticelli…"; lireka: paperback, 9 Sep 2021), her excluded type: left off R1, R2; kept R3 because the magazine check reads only Claude's publisher answer, and Claude left it blank though the text printed "Connaissance des arts" beside the ISBN. R3 passed only because the test's answer list lacked it (added, commit 384cde6) |
+| 8 Metamorphoses | Fail | Fail | Fail | English found first (correct). Dutch 6550 and Italian 6857 were printed only in Hannibal's catalogue PDF, read by the step that picks the publisher's pages, which is never asked about books. Dutch kept by title without its ISBN; Italian lost |
 | 5, 6, 9 | Pass | Pass | Pass | — |
 
-**Her three cases pass every round.** Before the Stage 1 changes they passed 4 of 9 lookups.
+**Agreed fixes — for the next session to build, then prove on the Stage 1 page (her decisions):**
+1. **Every step that reads results asks Claude to write down every book in them**, in her keep
+   rule's terms: any book that could be this show's catalogue or a version of it, same title
+   with no mention of the show included; left out only junk, albums, booklets and magazine
+   special issues; when unsure, keep. Today `OTHER_BOOKS_RULE` asks only for "catalogues of this
+   exhibition", and the publisher-candidates read and the shop-page read (`readShopPage`) ask
+   nothing about books.
+2. **Her "in association with" decision goes into Claude's instructions**: the publisher is
+   reported as the whole printed line ("… in association with Lund Humphries"), so the code's
+   existing rule (`publisherToFind`) can take Y.
+3. **Show Claude every result of every search, in every step** — never the first N. Not a
+   patch for the step where it was caught: across the whole lookup.
+4. **Magazine issues judged from the text, in code**: the magazine's name or "hors-série"
+   printed beside the ISBN leaves it out, whatever Claude answers. And Claude is told to give
+   the publisher whenever the text names who put the book out, even in the author's place.
+5. **The test page's own faults**: rebuild it with the corrected answer list; and it must see a
+   book kept without its ISBN — failing it only where the ISBN was printed in something the
+   search saw (information thrown away), passing it where no text printed one.
 
-**Next, in order:**
-1. Tell her this run, in plain words (not yet done when she compacted).
-2. Case 8 and case 7's Reaktion: the same cause, "shown to Claude, not reported" — the read
-   leaves books out of `otherBooks`. A prompt question; diagnose from the reads in the case
-   records before changing anything.
-3. Case 3: why the ISBN is never seen (the search's queries at an English venue), and whether
-   the pass test should match a kept book by title when it has no ISBN — her call.
-4. Case 7's 978-2758010685: read its page (lireka.com) and settle it.
-5. The open snippets-versus-whole-pages question (below) still stands; her three cases did not
-   flip-flop this run.
+**Stage 2, for a later session:** Botticelli R1, R2 show Reaktion's book twice on the card
+(two copies, title only, no ISBN). Investigate or repair with the card work.
+
+**Still open:** the snippets-versus-whole-pages question (below); her three cases did not
+flip-flop this run.
 
 ## The lesson: never mix Stage 1 with what the card says
 
