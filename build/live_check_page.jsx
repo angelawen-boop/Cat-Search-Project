@@ -1,8 +1,9 @@
 // live_check_page.jsx — the root of the "Cat Watch live check" page. build/live_check.js
 // appends this to Cat_Watch.jsx and mounts LiveCheck instead of App, so every lookup
 // below is the app's own code: lookupCatalogue, its connector and Claude calls, the
-// lookup log (saveLookupTape) and versionBlocks. Nothing here searches or reads.
-// LC_CASES, LC_CARDS, LC_VENUES and LC_BUILD are written in by the build.
+// lookup log (saveLookupTape). The card is the app's own too: App is mounted per case and
+// its Catalogue section read as drawn. Nothing here searches, reads or draws a card.
+// LC_CASES, LC_CARDS, LC_AKA, LC_VENUES, LC_BUILD and build/publisher_match.js are written in by the build.
 
 // Claude's raw answer and the tier that answered. The app calls sample.json, which
 // resolves to the parsed answer only, so the page hands the app a sample that is the
@@ -40,7 +41,7 @@ pruneLookupLog=async function(){};
 registerOccasional(LC_VENUES);
 
 // ── GRADING — only the fields docs/lookup_proof_cards.json states ──────────────
-const lcFold=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ø/g,"o").toLowerCase();
+const lcFold=pmFold;
 const lcIsEnglish=l=>/\b(english|anglais|inglese|englisch|engels)\b/i.test(String(l||""));
 const lcLangWord=l=>lcFold(l).split(/[^a-z]+/).filter(Boolean)[0]||"";
 const LC_LANG_ALIASES={french:["french","francais","fr"],dutch:["dutch","nederlands","nl"],italian:["italian","italiano","it"],english:["english","en"]};
@@ -49,64 +50,250 @@ function lcSameLang(got,want){
   const w=lcLangWord(want), g=lcLangWord(got);
   return (LC_LANG_ALIASES[w]||[w]).includes(g);
 }
-// Every house the answer names must be in the publisher found; accents, capitals and
-// "éditions"/"editions" do not count.
-const LC_SKIP=["editions","edition","the","and","books","publishing","press","d","de","art","of"];
-const lcWords=s=>lcFold(s).split(/[^a-z0-9]+/).filter(w=>w.length>1&&!LC_SKIP.includes(w));
-function lcSamePublisher(got,want){
-  const g=lcWords(got);
-  if(!g.length)return false;
-  return String(want).split(/\s*\/\s*/).every(house=>lcWords(house).every(w=>g.includes(w)));
-}
+// A publisher is its set of houses: the one rule is build/publisher_match.js, written in
+// ahead of this file; `aka` (other names for one house) comes from the cards.
+const lcSamePublisher=(got,want)=>pmSamePublisher(got,want,LC_AKA);
 const lcIsbn=n=>n?fmtIsbn(n):"none";
 const lcLangOf=v=>v?(langName(v.lang)||v.lang||"no language"):"";
 
+// What the lookup returned, graded. `key` names the fact graded ("<isbn>|<fact>"): the
+// card grades below use the same keys, so one fact failing in both tables counts once.
 function lcGrade(card,row){
   const out=[];
-  const add=(field,verdict,got,want,why)=>out.push({field,verdict,got:got==null?"":String(got),want:want==null?"":String(want),why:why||null});
+  const add=(field,verdict,got,want,why,key)=>out.push({field,verdict,got:got==null?"":String(got),want:want==null?"":String(want),why:why||null,key:key||"row:"+field});
   const vs=Array.isArray(row&&row.editions)?row.editions.filter(Boolean):[];
   const used=new Set();
   for(const want of card.versions){
     const label=want.lang+" "+lcIsbn(want.isbn13);
     const v=vs.find(x=>x.isbn13===want.isbn13||x.alsoIsbn13===want.isbn13);
-    add(label+" — listed as a version",v?"pass":"fail",v?"listed":"not listed","listed");
+    const k=f=>want.isbn13+"|"+f;
+    add(label+" — listed as a version",v?"pass":"fail",v?"listed":"not listed","listed",null,k("listed"));
     if(!v)continue;
     used.add(v);
     const gotAlso=v.isbn13===want.isbn13?v.alsoIsbn13:v.isbn13;
-    add(label+" — second number on the block",(gotAlso||null)===(want.alsoIsbn13||null)?"pass":"fail",lcIsbn(gotAlso),lcIsbn(want.alsoIsbn13));
-    if(v.isbn13!==want.isbn13)add(label+" — number the block leads with","fail",lcIsbn(v.isbn13),lcIsbn(want.isbn13));
-    add(label+" — language",lcSameLang(v.lang,want.lang)?"pass":"fail",lcLangOf(v),want.lang);
-    add(label+" — publisher",lcSamePublisher(v.publisher,want.publisher)?"pass":"fail",v.publisher||"none",want.publisher);
-    add(label+" — showing",v.showing===want.showing?"pass":"fail",v.showing==="other"?"another showing":"this show",want.showing==="other"?"another showing":"this show");
+    add(label+" — second number on the block",(gotAlso||null)===(want.alsoIsbn13||null)?"pass":"fail",lcIsbn(gotAlso),lcIsbn(want.alsoIsbn13),null,k("alsoIsbn"));
+    if(v.isbn13!==want.isbn13)add(label+" — number the block leads with","fail",lcIsbn(v.isbn13),lcIsbn(want.isbn13),null,k("leads"));
+    add(label+" — language",lcSameLang(v.lang,want.lang)?"pass":"fail",lcLangOf(v),want.lang,null,k("language"));
+    add(label+" — publisher",lcSamePublisher(v.publisher,want.publisher)?"pass":"fail",v.publisher||"none",want.publisher,null,k("publisher"));
+    add(label+" — showing",v.showing===want.showing?"pass":"fail",v.showing==="other"?"another showing":"this show",want.showing==="other"?"another showing":"this show",null,k("showing"));
   }
   const extras=vs.filter(v=>!used.has(v));
-  add("No other versions listed",extras.length?"fail":"pass",extras.length?extras.map(v=>lcLangOf(v)+" "+lcIsbn(v.isbn13)+(v.publisher?" ("+v.publisher+")":"")).join("; "):"none","none");
+  add("No other versions listed",extras.length?"fail":"pass",extras.length?extras.map(v=>lcLangOf(v)+" "+lcIsbn(v.isbn13)+(v.publisher?" ("+v.publisher+")":"")).join("; "):"none","none",null,"extras");
   const left=(card.leftOff||[]).filter(n=>vs.some(v=>v.isbn13===n||v.alsoIsbn13===n));
-  if((card.leftOff||[]).length)add("Left off: "+card.leftOff.map(lcIsbn).join(", "),left.length?"fail":"pass",left.length?"listed: "+left.map(lcIsbn).join(", "):"left off","left off");
+  if((card.leftOff||[]).length)add("Left off: "+card.leftOff.map(lcIsbn).join(", "),left.length?"fail":"pass",left.length?"listed: "+left.map(lcIsbn).join(", "):"left off","left off",null,"leftoff");
   const i=row&&row.editionPick;
   const picked=Number.isInteger(i)&&vs[i]?vs[i]:null;
   // A single-version card has no pick of its own: its one book is the pick.
   const pickIsbn=picked?picked.isbn13:(vs.length===1&&!Number.isInteger(i)?vs[0].isbn13:null);
-  add("Starting pick",pickIsbn===card.pick?"pass":"fail",pickIsbn?lcIsbn(pickIsbn):"nothing picked",card.pick?lcIsbn(card.pick):"nothing picked");
+  add("Starting pick",pickIsbn===card.pick?"pass":"fail",pickIsbn?lcIsbn(pickIsbn):"nothing picked",card.pick?lcIsbn(card.pick):"nothing picked",null,"pick");
   return out;
 }
 
-// The card's catalogue section as text: her blocks for two or more versions
-// (versionBlocks), else the single-book fields.
-function lcShopLine(s){
-  if(!s)return null;
-  const note=s.note?" "+s.note:"";
-  if(s.state==="shop")return shopHeadline("shop",s.change)+note;
-  if(s.state==="gone")return shopHeadline("gone",null)+note;
-  if(s.state==="blocked")return SHOP_BLOCKED_HEAD+SHOP_BLOCKED_FOUND_REST+note;
-  if(s.state==="unfinished")return SHOP_CHECK_UNFINISHED+note;
-  return NOT_IN_SHOP+note;
+// ── THE CARD AS THE APP DRAWS IT ─────────────────────────────────────────────
+// The app's own App is mounted in a hidden box, the case's returned row goes in through
+// its Load button (a File on the .json input), the card's Catalogue section is opened and
+// read as rendered, and the app is unmounted. Nothing here draws a card. The app's store
+// calls while it is mounted are recorded (lcRun.appOps).
+const lcPause=ms=>new Promise(r=>setTimeout(r,ms));
+async function lcUntil(find,what,ms=10000){
+  const t0=Date.now();
+  for(;;){
+    const v=find();
+    if(v)return v;
+    if(Date.now()-t0>ms)throw new Error("timed out waiting for "+what);
+    await lcPause(8);
+  }
 }
-function lcDrawn(row){
-  const vb=row&&row.hasCatalogue==="yes"?versionBlocks(row):null;
-  if(vb)return{kind:"blocks",blocks:vb.map(b=>({picked:b.picked,lines:[lcShopLine(b.shop),b.title,b.publisher,b.facts,b.isbn,[b.why,b.source?"Source: "+b.source.host:null].filter(Boolean).join(" ")||null].filter(Boolean)}))};
-  if(!row||row.hasCatalogue!=="yes")return{kind:"none",blocks:[{picked:false,lines:[row&&row.hasCatalogue==="no"?"No catalogue found.":"No catalogue on the card."]}]};
-  return{kind:"single",blocks:[{picked:true,lines:[lcShopLine({state:row.shopState,change:row.shopChange}),row.catalogueTitle,row.publisher,row.isbn13?"ISBN "+fmtIsbn(row.isbn13):null].filter(Boolean)}]};
+// The mounted app paints the page's theme on <html> and <body>; put back what was there.
+function lcGround(){
+  const d=document.documentElement, b=document.body;
+  const was={theme:d.getAttribute("data-theme"),scheme:d.style.colorScheme,bg:b.style.background,fg:b.style.color};
+  return()=>{
+    if(was.theme===null)d.removeAttribute("data-theme"); else d.setAttribute("data-theme",was.theme);
+    d.style.colorScheme=was.scheme; b.style.background=was.bg; b.style.color=was.fg;
+  };
+}
+function lcSetFile(input,file){
+  try{ const dt=new window.DataTransfer(); dt.items.add(file); input.files=dt.files; }
+  catch{
+    Object.defineProperty(input,"files",{value:[file],configurable:true});
+    Object.defineProperty(input,"value",{get:()=>"",set(){},configurable:true});
+  }
+}
+const lcIsAction=el=>el.tagName==="BUTTON"||el.tagName==="A"||(el.children.length>0&&[...el.children].every(c=>c.tagName==="A"||c.tagName==="BUTTON"));
+const lcLineOf=el=>({text:el.textContent.replace(/\s+/g," ").trim(),title:/Fraunces/.test(el.getAttribute("style")||"")});
+// A card with versions: each [role=radio] block (marker, then its lines). Any other card
+// (one book, no catalogue, not searched): the section's lines above its buttons, as ONE block.
+function lcReadSection(article){
+  const panel=article.children[1];
+  if(!panel)return null;
+  const radios=[...panel.querySelectorAll("[role=radio]")];
+  if(radios.length)return{kind:"blocks",blocks:radios.map(b=>({marker:b.children[0].textContent.trim(),picked:b.getAttribute("aria-checked")==="true",lines:[...b.children[1].children].map(lcLineOf)}))};
+  const kids=panel.children[0]?[...panel.children[0].children]:[];
+  const end=kids.findIndex(lcIsAction);
+  return{kind:"single",blocks:[{marker:null,picked:true,lines:(end<0?kids:kids.slice(0,end)).map(lcLineOf).filter(l=>l.text)}]};
+}
+async function lcReadRealCard(row){
+  const restore=lcGround();
+  const host=document.createElement("div");
+  host.setAttribute("aria-hidden","true");
+  host.style.cssText="position:absolute;left:-10000px;top:0;width:820px;height:1px;overflow:hidden;visibility:hidden";
+  document.body.appendChild(host);
+  const root=ReactDOM.createRoot(host);
+  const ops=[]; lcRun.appOps=ops;
+  let card;
+  try{
+    root.render(<App/>);
+    const input=await lcUntil(()=>host.querySelector('input[type=file][accept=".json"]'),"the app's Load button");
+    const ledgerRow={interested:true,watching:false,acquiring:"yes",buyNext:false,looked:true,...row};
+    lcSetFile(input,new window.File([JSON.stringify({rows:[ledgerRow],ignored:[]})],"case.json",{type:"application/json"}));
+    input.dispatchEvent(new window.Event("change",{bubbles:true}));
+    const find=()=>[...host.querySelectorAll("article")].find(a=>((a.querySelector("h3")||{}).textContent||"").includes(row.title));
+    const art=await lcUntil(find,"the card after Load");
+    const open=[...art.querySelectorAll("button")].find(b=>/Catalogue$/.test(b.textContent.trim()));
+    if(!open)throw new Error("the card has no Catalogue button");
+    open.click();
+    await lcUntil(()=>{ const a=find(); return a&&a.children[1]; },"the card's Catalogue section");
+    card={ok:true,error:null,...lcReadSection(find())};
+  }catch(e){ card={ok:false,error:lcMsgOf(e),kind:"none",blocks:[]}; }
+  finally{ try{ root.unmount(); }catch{} host.remove(); restore(); lcRun.appOps=null; }
+  card.appStore={reads:ops.filter(o=>o.op==="get").map(o=>o.path),writes:ops.filter(o=>o.op!=="get").map(o=>o.op+" "+o.path)};
+  return card;
+}
+
+// ── GRADING THE CARD AS DRAWN ────────────────────────────────────────────────
+// Blocks are matched to versions by the ISBN on the block's ISBN line. Each stated fact
+// (language, binding, pages, publisher, ISBN, second ISBN, note) must be on a line of its
+// block: right → pass, a different value → fail, absent → fail "not shown on the card".
+// Every line, or part of a line (split on " · "), that no stated fact accounts for is
+// "unchecked": titles, shop lines and sources have no recorded answer. Roles come from
+// the text (ISBN line, facts line, shop line) and the title's own font; the lines after
+// the ISBN line are the note and source.
+const LC_NOT_SHOWN="not shown on the card";
+const LC_UNCHECKED="not checked — no right answer recorded";
+const LC_NO_FACTS_LINE="not applicable — this card has no facts line";
+const LC_LANGUAGES=["english","french","dutch","italian","german","spanish","portuguese","swedish","danish","norwegian","finnish","russian","polish","czech","hungarian","greek","latin","japanese","chinese","korean","turkish","arabic","catalan"];
+const lcBindPart=t=>/^(hardcover|paperback)$/i.test(t);
+const lcPagesPart=t=>/^\d+ pp$/.test(t);
+const lcShopLeads=()=>[shopHeadline("shop",null),shopHeadline("shop","now"),shopHeadline("shop","back"),shopHeadline("gone",null),
+  NOT_IN_SHOP.split(" —")[0],SHOP_BLOCKED_HEAD,SHOP_CHECK_UNFINISHED,"Venue has no shop","Museum shop not found"];
+const lcStraight=s=>String(s==null?"":s).replace(/[‘’]/g,"'");
+const lcNoteForm=s=>lcFold(lcStraight(s)).replace(/\s+/g," ").trim().replace(/\.$/,"");
+const lcISBNS=/97[89]-\d{10}/g;
+
+function lcPartsOf(lines,isLang){
+  const isFacts=t=>{ const p=t.split(" · "); return p.every((x,i)=>(i===0&&isLang(x))||lcBindPart(x)||lcPagesPart(x)); };
+  const leads=lcShopLeads();
+  const isbnAt=lines.findIndex(l=>/^ISBN\b/.test(l.text));
+  const parts=[];
+  lines.forEach((l,i)=>{
+    let role, texts;
+    if(i===isbnAt){ role="isbn"; texts=l.text.split(/ · |; /); }
+    else if(isbnAt>=0&&i>isbnAt){ role="tail"; texts=l.text.split(/\s+(?=Source: )/); }
+    else if(l.title){ role="title"; texts=[l.text]; }
+    else if(leads.some(x=>l.text.startsWith(x))){ role="shop"; texts=[l.text]; }
+    else if(isFacts(l.text)){ role="facts"; texts=l.text.split(" · "); }
+    else{ role="pub"; texts=l.text.split(" · "); }
+    texts.forEach((t,j)=>parts.push({line:i,role,text:t,first:j===0,fact:null,verdict:null}));
+  });
+  return{parts,isbnLine:lines[isbnAt]||null};
+}
+const LC_ROLE_NAME={isbn:"ISBN line",tail:"note or source",title:"title",shop:"shop line",facts:"facts line",pub:"publisher line"};
+
+function lcGradeCard(want,drawn){
+  const rows=[], unchecked=[];
+  const add=r=>rows.push({why:null,got:"",want:"",key:null,...r});
+  if(!drawn.ok){
+    add({field:"The app drew the card",verdict:"fail",got:drawn.error||"no card",want:"a card",key:"drawn"});
+    return{grades:rows,card:{...drawn,blocks:[]}};
+  }
+  const langs=want.versions.map(v=>lcFold(v.lang));
+  const isLang=t=>LC_LANGUAGES.includes(lcFold(t))||langs.includes(lcFold(t));
+  const blocks=drawn.blocks.map(b=>({...b,...lcPartsOf(b.lines,isLang),version:null}));
+  const numsOf=b=>b.isbnLine?(b.isbnLine.text.match(lcISBNS)||[]):[];
+  for(const w of want.versions){
+    const label=w.lang+" "+lcIsbn(w.isbn13);
+    const m=blocks.find(b=>!b.version&&numsOf(b).includes(fmtIsbn(w.isbn13)));
+    if(m)m.version=label;
+    const key=f=>w.isbn13+"|"+f;
+    const grade=(fact,verdict,got,wanted,part,k)=>{
+      add({field:label+" — "+fact,verdict,got,want:wanted,why:got===""?LC_NOT_SHOWN:null,key:k||key(fact)});
+      if(part){ part.verdict=verdict; part.fact=fact; }
+    };
+    const partsOf=(role,test)=>m?m.parts.filter(p=>p.role===role&&test(p)):[];
+    // ISBN
+    const nums=m?numsOf(m):[];
+    const isbnPart=m?m.parts.find(p=>p.role==="isbn"&&p.first):null;
+    if(!m)grade("ISBN","fail","",fmtIsbn(w.isbn13),null,key("listed"));
+    else if(nums[0]===fmtIsbn(w.isbn13))grade("ISBN","pass",nums[0],fmtIsbn(w.isbn13),isbnPart,key("listed"));
+    else grade("ISBN","fail",nums[0]||m.isbnLine.text,fmtIsbn(w.isbn13),isbnPart,key("leads"));
+    // Second ISBN
+    if(w.alsoIsbn13){
+      const second=m?m.parts.filter(p=>p.role==="isbn")[1]:null;
+      const wantAlso=fmtIsbn(w.alsoIsbn13);
+      if(second&&nums[1]===wantAlso)grade("second ISBN","pass",nums[1],wantAlso,second,key("alsoIsbn"));
+      else grade("second ISBN","fail",second?second.text:"",wantAlso,second,key("alsoIsbn"));
+    }
+    // Language, binding, pages — the facts line. A one-book card has none ("the card as now"):
+    // those facts are not applicable, neither pass nor fail and not counted. The moment such a
+    // card prints a facts line they are graded as usual. A version block without one fails.
+    const notApplicable=m&&drawn.kind!=="blocks"&&!m.parts.some(p=>p.role==="facts");
+    const factsLine=(fact,test,ok,wanted)=>{
+      if(notApplicable)return add({field:label+" — "+fact,verdict:"na",got:"",want:wanted,why:LC_NO_FACTS_LINE});
+      const hit=partsOf("facts",p=>test(p.text))[0];
+      grade(fact,hit&&ok(hit.text)?"pass":"fail",hit?hit.text:"",wanted,hit||null);
+    };
+    factsLine("language",t=>isLang(t),t=>lcSameLang(t,w.lang),w.lang);
+    if(w.binding)factsLine("binding",lcBindPart,t=>t.toLowerCase()===w.binding,w.binding);
+    if(w.pages)factsLine("pages",lcPagesPart,t=>parseInt(t,10)===w.pages,w.pages+" pp");
+    // Publisher — the text before any " · " on the publisher line
+    if(w.publisher){
+      const cands=partsOf("pub",p=>p.first);
+      const hit=cands.find(p=>lcSamePublisher(p.text,w.publisher))||cands[0];
+      grade("publisher",hit&&lcSamePublisher(hit.text,w.publisher)?"pass":"fail",hit?hit.text:"",w.publisher,hit||null);
+    }
+    // Note — the line that says why this version is listed
+    if(typeof w.note==="string"){
+      const notes=partsOf("tail",p=>!/^Source: /.test(p.text));
+      const hit=notes.find(p=>lcNoteForm(p.text)===lcNoteForm(w.note))||notes[0];
+      grade("note",hit&&lcNoteForm(hit.text)===lcNoteForm(w.note)?"pass":"fail",hit?hit.text:"",w.note,hit||null);
+    }
+  }
+  // The pick: the ● marker.
+  if(drawn.kind==="blocks"){
+    const first=b=>numsOf(b)[0]||"no ISBN";
+    const marked=blocks.filter(b=>b.picked).map(first);
+    const wantPick=want.pick?fmtIsbn(want.pick):null;
+    const right=wantPick?(marked.length===1&&marked[0]===wantPick):marked.length===0;
+    add({field:"Starting pick (the ● marker)",verdict:right?"pass":"fail",got:marked.length?marked.join(", "):"nothing picked",want:wantPick||"nothing picked",key:"pick"});
+  }else{
+    unchecked.push({field:"Starting pick (the ● marker)",got:"a card with one book draws no marker",why:"not checked — its one book is the pick"});
+  }
+  // Everything no stated fact accounted for.
+  blocks.forEach((b,k)=>{
+    const where=drawn.kind==="blocks"?"Block "+(k+1)+(b.version?" ("+b.version+")":" (no stated version has this ISBN)"):"The card";
+    b.parts.forEach(p=>{ if(!p.verdict)unchecked.push({field:where+" — "+LC_ROLE_NAME[p.role],got:p.text,why:LC_UNCHECKED}); });
+  });
+  for(const u of unchecked)add({field:u.field,verdict:"unchecked",got:u.got,want:"",why:u.why});
+  // The card as it is stored: every line with the verdict of each of its parts.
+  const out={...drawn,blocks:blocks.map(b=>({marker:b.marker,picked:b.picked,version:b.version,lines:b.lines.map((l,i)=>{
+    const ps=b.parts.filter(p=>p.line===i).map(p=>({text:p.text,fact:p.fact,verdict:p.verdict||"unchecked"}));
+    return{text:l.text,verdict:ps.some(p=>p.verdict==="fail")?"fail":ps.every(p=>p.verdict==="pass")?"pass":"unchecked",parts:ps};
+  })}))};
+  return{grades:rows,card:out};
+}
+
+// One count for a case: each fact once, even when it fails in both tables.
+function lcCount(...tables){
+  const seen=new Map();
+  let unchecked=0;
+  for(const g of tables.flat()){
+    if(g.verdict==="unchecked"){ unchecked++; continue; }
+    if(g.verdict!=="pass"&&g.verdict!=="fail")continue;
+    const k=g.key||"row:"+g.field;
+    seen.set(k,seen.get(k)==="fail"||g.verdict==="fail"?"fail":"pass");
+  }
+  return{checks:seen.size,fails:[...seen.values()].filter(v=>v==="fail").length,unchecked};
 }
 
 // ── SAVING — every write goes through lcWrite; the app's own writes are watched ───
@@ -122,7 +309,7 @@ const lcMsgOf=e=>String((e&&e.message)||e||"");
 const lcErr=e=>lcCodeOf(e)+": "+lcMsgOf(e);
 
 // One run's state: the raw store, every problem so far, and whether writes are spaced.
-let lcRun={db:null,problems:[],spaced:false,caseNo:null,lookupPath:null,appError:null,active:false};
+let lcRun={db:null,problems:[],spaced:false,caseNo:null,lookupPath:null,appError:null,active:false,appOps:null};
 function lcRecord(p){
   const rec={at:new Date().toISOString(),case:lcRun.caseNo,what:"",path:"",op:"",code:"",message:"",attempt:1,retried:false,outcome:"not saved",...p};
   lcRun.problems.push(rec);
@@ -163,7 +350,7 @@ function lcWatchDb(raw){
     lcRun.appError=e;
     lcRecord({what:op==="get"?"the app's read":"the app's write",path,op,code:lcCodeOf(e),message:lcMsgOf(e)});
   };
-  const watch=(op,path,fn)=>async(...a)=>{ try{ return await fn(...a); }catch(e){ note(op,path,e); throw e; } };
+  const watch=(op,path,fn)=>async(...a)=>{ if(lcRun.appOps)lcRun.appOps.push({op,path}); try{ return await fn(...a); }catch(e){ note(op,path,e); throw e; } };
   const query=(q,path)=>({
     where:(...a)=>query(q.where(...a),path), orderBy:(...a)=>query(q.orderBy(...a),path), limit:(...a)=>query(q.limit(...a),path),
     get:watch("get",path,()=>q.get()), onSnapshot:(...a)=>q.onSnapshot(...a)});
@@ -277,9 +464,21 @@ const LC_STYLE=`
   .lc .block{border-left:3px solid color-mix(in srgb,var(--ink) 30%,transparent);padding:4px 10px;margin:6px 0;font-size:12.5px}
   .lc .block.picked{border-left-width:6px}
   .lc .status{font-weight:600}
+  .lc .tag{font-size:10.5px}
+  .lc .tag.fail{font-weight:700}
   @media (max-width:560px){.lc td:nth-child(3),.lc th:nth-child(3){display:none}}
 `;
-const LC_MARK={"pass":"✓ Pass","fail":"✗ Fail"};
+const LC_MARK={"pass":"✓ Pass","fail":"✗ Fail","unchecked":"– Not checked","na":"– Not applicable"};
+
+function LcTable({title,grades}){
+  return(<>
+    <div style={{marginTop:10,fontWeight:600,fontSize:12.5}}>{title}</div>
+    <table><thead><tr><th style={{width:"42%"}}>What is checked</th><th style={{width:"18%"}}>Result</th><th>Came back</th><th>Right answer</th></tr></thead>
+      <tbody>{grades.map((g,k)=>(
+        <tr key={k} className={g.verdict==="fail"?"fail":""}><td>{g.field}{g.why&&<div className="soft">{g.why}</div>}</td><td className="v">{LC_MARK[g.verdict]}</td><td>{g.got}</td><td>{g.want}</td></tr>))}
+      </tbody></table>
+  </>);
+}
 
 function LcCase({c,problems}){
   const mine=problems.filter(p=>p.case===c.case);
@@ -288,18 +487,20 @@ function LcCase({c,problems}){
     <div className="case">
       <h2>{c.case}. {c.title} <span className="soft">({c.venue})</span></h2>
       <div className="status">{c.verdict}</div>
+      <div className="soft" style={{fontSize:11.5}}>Lookup record: {c.lookupId?c.lookupId+" ("+c.lookupPath+")":"none written"}</div>
       {c.trouble&&<div className="soft">The lookup said: {c.trouble}</div>}
       {lost.length>0&&<div className="status">Did not save: {lost.join("; ")}.</div>}
       {mine.map((p,k)=><div key={k} className="soft">{lcLine(p,false)}</div>)}
-      <table><thead><tr><th style={{width:"42%"}}>What is checked</th><th style={{width:"18%"}}>Result</th><th>Came back</th><th>Right answer</th></tr></thead>
-        <tbody>{c.grades.map((g,k)=>(
-          <tr key={k} className={g.verdict==="fail"?"fail":""}><td>{g.field}{g.why&&<div className="soft">{g.why}</div>}</td><td className="v">{LC_MARK[g.verdict]}</td><td>{g.got}</td><td>{g.want}</td></tr>))}
-        </tbody></table>
-      <div style={{marginTop:10,fontWeight:600,fontSize:12.5}}>The card as the app draws it</div>
-      {c.drawn.blocks.map((b,k)=>(
+      <div className="soft" style={{fontSize:11.5}}>Each fact is counted once, even when it fails both in what the lookup returned and on the card.</div>
+      <LcTable title="What the lookup returned" grades={c.grades}/>
+      <LcTable title="On the card" grades={c.cardGrades}/>
+      <div style={{marginTop:10,fontWeight:600,fontSize:12.5}}>The card as the app shows it</div>
+      {c.card.ok===false&&<div className="soft">Not drawn: {c.card.error}</div>}
+      {c.card.appStore&&<div className="soft" style={{fontSize:11.5}}>While the app was open it read {c.card.appStore.reads.length?c.card.appStore.reads.join(", "):"nothing"} from the store and wrote {c.card.appStore.writes.length?c.card.appStore.writes.join(", "):"nothing"}.</div>}
+      {c.card.blocks.map((b,k)=>(
         <div key={k} className={"block"+(b.picked?" picked":"")}>
-          {c.drawn.kind==="blocks"&&<div className="soft">{b.picked?"● picked":"○"}</div>}
-          {b.lines.map((l,j)=><div key={j}>{l}</div>)}
+          {c.card.kind==="blocks"&&<div className="soft">{b.picked?"● picked":"○"}</div>}
+          {b.lines.map((l,j)=><div key={j}>{l.parts.map((p,i)=><span key={i}>{i?" · ":""}{p.text} <span className={"soft tag "+p.verdict}>{p.verdict==="pass"?"✓":p.verdict==="fail"?"✗":"not checked"}</span></span>)}</div>)}
         </div>))}
     </div>);
 }
@@ -316,7 +517,7 @@ function LiveCheck(){
     const rawDb=await lcRealUseCap("db");
     const runId="R"+Date.now()+Math.random().toString(36).slice(2,6);
     const runPath=LC_RUNS+"/"+runId;
-    lcRun={db:rawDb,problems:[],spaced:false,caseNo:null,lookupPath:null,appError:null,active:true};
+    lcRun={db:rawDb,problems:[],spaced:false,caseNo:null,lookupPath:null,appError:null,active:true,appOps:null};
     const shown=()=>setProblems(lcRun.problems.slice());
     const at=new Date().toISOString();
     // Which tier answers the app's modelTier:"default" (sample.json does not say).
@@ -352,26 +553,30 @@ function LiveCheck(){
         lcRecord({what:"the lookup record",path:lcRun.lookupPath||"",op:"set",code:e?lcCodeOf(e):"none",
           message:e?"the lookup record did not save ("+lcMsgOf(e)+")":"no store error was raised; the app returned false"});
       }
-      lookups.push({case:x.case,lookupPath:lcRun.lookupPath});
+      const lookupPath=lcRun.lookupPath, lookupId=lookupPath?lookupPath.split("/").pop():null;
+      lookups.push({case:x.case,lookupId,lookupPath});
       const row=out&&out.row;
-      const grades=row?lcGrade(card,row):[{field:"The lookup finished",verdict:"fail",got:"no",want:"yes",why:null}];
-      const fails=grades.filter(g=>g.verdict==="fail").length;
+      // What the lookup returned, then the card the app draws from it.
+      const grades=row?lcGrade(card,row):[{field:"The lookup finished",verdict:"fail",got:"no",want:"yes",why:null,key:"row:finished"}];
+      if(row)setStatus("Case "+x.case+" of "+LC_CASES.length+": "+x.row.title+" — reading the card the app draws…");
+      const onCard=row?lcGradeCard(card,await lcReadRealCard(row)):{grades:[],card:{ok:false,error:"The lookup returned no row, so no card was drawn.",kind:"none",blocks:[],appStore:null}};
+      const n=lcCount(grades,onCard.grades);
       const rec={case:x.case,title:x.row.title,venue:mu?mu.name:x.row.museumId,museumId:x.row.museumId,
-        lookupAt:new Date(tape.t0).toISOString(),ms:Date.now()-tape.t0,
+        lookupAt:new Date(tape.t0).toISOString(),ms:Date.now()-tape.t0,lookupId,lookupPath,
         ok:!!(out&&out.ok),trouble:(out&&out.trouble)||null,panel:(out&&out.detail)||null,
-        verdict:(out&&out.ok?"":"The lookup did not finish. ")+(fails?fails+" of "+grades.filter(g=>g.verdict==="pass"||g.verdict==="fail").length+" checks failed.":"Every graded check passed."),
-        grades,drawn:lcDrawn(row),row:row?cardFields(row):null,calls};
+        verdict:(out&&out.ok?"":"The lookup did not finish. ")+(n.fails?n.fails+" of "+n.checks+" checks failed.":"Every graded check passed.")+(n.unchecked?" "+n.unchecked+" lines or parts on the card not checked.":""),
+        counted:n,grades,cardGrades:onCard.grades,card:onCard.card,row:row?cardFields(row):null,calls};
       if(rawDb){
         const r=await lcSaveCase(runId,rec,reads);
         if(r.caseWritten)saved.push(x.case);
         else{ const p=lcRun.problems.filter(q=>q.case===x.case&&q.what==="the case record").pop(); unsaved.push({case:x.case,error:p?p.code+": "+p.message:"not written"}); }
-        await lcWrite("update",runPath,{done:saved.length,savedCases:saved,unsavedCases:unsaved,problems:lcRun.problems.slice()},"the run record");
+        await lcWrite("update",runPath,{done:saved.length,savedCases:saved,unsavedCases:unsaved,lookups,problems:lcRun.problems.slice()},"the run record");
       }
       all.push(rec); setDone(all.slice()); shown();
     }
     lcRun.caseNo=null;
-    if(rawDb)await lcWrite("update",runPath,{finished:true,endedAt:new Date().toISOString(),done:saved.length,savedCases:saved,unsavedCases:unsaved,problems:lcRun.problems.slice(),
-      failedCases:all.filter(r=>r.grades.some(g=>g.verdict==="fail")).map(r=>r.case)},"the run record");
+    if(rawDb)await lcWrite("update",runPath,{finished:true,endedAt:new Date().toISOString(),done:saved.length,savedCases:saved,unsavedCases:unsaved,lookups,problems:lcRun.problems.slice(),
+      failedCases:all.filter(r=>r.counted.fails>0).map(r=>r.case)},"the run record");
     const back=rawDb?await lcReadBack(runPath,lookups):null;
     lcRun.active=false;
     setStatus("");

@@ -7,7 +7,7 @@
  * docs/lookup_proof_cards.json. A catalogue-lookup change is "fixed" only when it passes.
  *
  * Cat_Watch.jsx is bundled whole, prepared exactly as build_app.js prepares it, with
- * build/live_check_page.jsx appended; LiveCheck is mounted instead of App. No app
+ * build/publisher_match.js and build/live_check_page.jsx appended; LiveCheck is mounted instead of App. No app
  * function is copied. The cards (build/live_check_cases.json), the right answers, the
  * git branch and commit it was built from are written in as constants.
  *
@@ -28,6 +28,7 @@ const JSX = path.join(ROOT, 'Cat_Watch.jsx');
 const PAGE = path.join(__dirname, 'live_check_page.jsx');
 const CASES = path.join(__dirname, 'live_check_cases.json');
 const CARDS = path.join(ROOT, 'docs', 'lookup_proof_cards.json');
+const MATCH = path.join(__dirname, 'publisher_match.js');
 const OUT = path.join(__dirname, 'dist', 'live_check.html');
 const MOUNT = 'ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(LiveCheck));';
 
@@ -35,8 +36,9 @@ const git = a => { try { return execFileSync('git', a, { cwd: ROOT }).toString()
 
 // Cat_Watch.jsx and the page, transpiled and parsed, without the mount line. `build`
 // overrides the branch, commit and time written in as LC_BUILD (tests pass their own).
-function prepare(build = {}) {
-  const app = fs.readFileSync(JSX, 'utf8');
+// `opts.edit(source)` returns an altered copy of Cat_Watch.jsx for a test; the file is never written.
+function prepare(build = {}, opts = {}) {
+  const app = opts.edit ? opts.edit(fs.readFileSync(JSX, 'utf8')) : fs.readFileSync(JSX, 'utf8');
   const appVersion = (app.match(/^const APP_VERSION = "([^"]+)"/m) || [])[1];
   if (!appVersion) throw new Error('no APP_VERSION in Cat_Watch.jsx');
   const dirty = git(['status', '--porcelain', '--', 'Cat_Watch.jsx']) ? ' + uncommitted changes to Cat_Watch.jsx' : '';
@@ -44,18 +46,20 @@ function prepare(build = {}) {
   const branch = build.branch || git(['rev-parse', '--abbrev-ref', 'HEAD']) || 'unknown';
 
   const cases = JSON.parse(fs.readFileSync(CASES, 'utf8'));
-  const cards = JSON.parse(fs.readFileSync(CARDS, 'utf8')).cards;
+  const proof = JSON.parse(fs.readFileSync(CARDS, 'utf8'));
+  const cards = proof.cards, aka = proof.aka || {};
   for (const c of cases.cases) if (!cards.some(k => k.case === c.case)) throw new Error('case ' + c.case + ' has no right answers in docs/lookup_proof_cards.json');
 
   const consts = 'const LC_CASES = ' + JSON.stringify(cases.cases) + ';\n'
     + 'const LC_CARDS = ' + JSON.stringify(cards) + ';\n'
+    + 'const LC_AKA = ' + JSON.stringify(aka) + ';\n'
     + 'const LC_VENUES = ' + JSON.stringify(cases.venues || {}) + ';\n'
     + 'const LC_BUILD = ' + JSON.stringify({ branch, commit, appVersion, builtAt: build.builtAt || new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' }) + ';\n';
 
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-live-'));
   const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = React;\n'
     + app.replace(/^import React.*$/m, '').replace(/^export default function App\(\)\{/m, 'function App(){')
-    + '\n' + consts + fs.readFileSync(PAGE, 'utf8');
+    + '\n' + consts + fs.readFileSync(MATCH, 'utf8') + '\n' + fs.readFileSync(PAGE, 'utf8');
   fs.writeFileSync(path.join(tmp, 'page.tsx'), prepared);
   try {
     execFileSync('npx', ['tsc', path.join(tmp, 'page.tsx'), '--jsx', 'react',

@@ -1,0 +1,303 @@
+{
+  "calls": [
+    {
+      "asked": [
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=2",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=3",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=4",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=5",
+        "https://boutique.musee-jacquemart-andre.com/en/search/products/?q=Canaletto%20-%20Guardi%3A%20The%20two%20masters%20of%20Venice"
+      ],
+      "detail": "opened https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/ + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=2 + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=3 + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=4 + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=5 + https://boutique.musee-jacquemart-andre.com/en/search/products/?q=Canaletto%20-%20Guardi%3A%20The%20two%20masters%20of%20Venice: 2 page(s), 4 refused (404, 404, 404, 404)",
+      "kind": "open page",
+      "n": 1,
+      "objective": "The printed exhibition catalogue for “Canaletto - Guardi: The two masters of Venice”: the book’s own product page on this shop, its full title and its price.",
+      "ok": true,
+      "queries": [
+        "Canaletto - Guardi: The two masters of Venice exhibition catalogue book"
+      ],
+      "refused": [
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=2 404",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=3 404",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=4 404",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=5 404"
+      ],
+      "results": [
+        "https://boutique.musee-jacquemart-andre.com/en/search/products/?q=Canaletto%20-%20Guardi%3A%20The%20two%20masters%20of%20Venice",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Canaletto - Guardi: The two masters of Venice exhibition catalogue ISBN publisher\",\"Musée Jacquemart-André Canaletto - Guardi: The two masters of Venice catalogue book\",\"Musée Jacquemart-André Canaletto - Guardi: The two masters of Venice press release catalogue\",\"Canaletto - Guardi Jacquemart-André catalogue exposition 2012\"]",
+      "kind": "search",
+      "n": 3,
+      "objective": "Confirm whether a printed catalogue was published for the exhibition “Canaletto - Guardi: The two masters of Venice” at Musée Jacquemart-André, and give its exact title, ISBN-13 and publisher. Museums often state these in a press release; art-book publishers and booksellers list them too.",
+      "ok": true,
+      "queries": [
+        "Canaletto - Guardi: The two masters of Venice exhibition catalogue ISBN publisher",
+        "Musée Jacquemart-André Canaletto - Guardi: The two masters of Venice catalogue book",
+        "Musée Jacquemart-André Canaletto - Guardi: The two masters of Venice press release catalogue",
+        "Canaletto - Guardi Jacquemart-André catalogue exposition 2012"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.musee-jacquemart-andre.com/en/canaletto-guardi-0",
+        "https://exhibitioncatalogs.com/product/splendour-in-venice-from-canaletto-to-guardi-9789899119208/",
+        "https://www.petrarchs.com.au/product/splendour-in-venice-from-canaletto-to-guardi/",
+        "https://www.musee-jacquemart-andre.com/fr/canaletto-guardi",
+        "https://www.dessinoriginal.com/en/exhibition-catalogue/4592-de-canaletto-a-guardi-les-deux-maitres-de-venise-catalogue-d-exposition-9789061538226.html",
+        "https://www.nationalgallery.org.uk/about-us/press-and-media/press-releases-archive/venice-canaletto-and-his-rivals",
+        "https://searchworks.stanford.edu/view/9749163",
+        "https://bmvr.nice.fr/Default/doc/SYRACUSE/4020751/canaletto-guardi-les-deux-maitres-de-venise-ouvrage-publie-a-l-occasion-de-l-exposition-au-musee-jac?_lg=fr-FR",
+        "https://www.heidiffusion.ch/Detail/Editions/livre/fonds-mercator/canaletto-guardi-les-deux-maitres-de-venise-exposition-paris-musee-jacquemart-andre-du-14-septembre-2012-au-14/9789061538226",
+        "https://www.wikidata.org/wiki/Q780605"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"9789061538226\",\"9789061538226 De Canaletto à Guardi , les deux maîtres de Venise\",\"De Canaletto à Guardi , les deux maîtres de Venise Musée Jacquemart-André catalogue\"]",
+      "kind": "search",
+      "n": 5,
+      "objective": "The ISBN-13, publisher, language and exact printed title of the exhibition catalogue “De Canaletto à Guardi , les deux maîtres de Venise”, ISBN 9789061538226, published by Fonds Mercator, for the exhibition at Musée Jacquemart-André.",
+      "ok": true,
+      "queries": [
+        "9789061538226",
+        "9789061538226 De Canaletto à Guardi , les deux maîtres de Venise",
+        "De Canaletto à Guardi , les deux maîtres de Venise Musée Jacquemart-André catalogue"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.amazon.ca/Canaletto-Guardi-deux-ma%C3%AEtres-Venise/dp/906153822X",
+        "https://www.amazon.com/Canaletto-Guardi-deux-ma%C3%AEtres-Venise/dp/906153822X",
+        "https://www.musee-jacquemart-andre.com/fr/canaletto-guardi",
+        "https://www.abebooks.com/9789061538226/Canaletto-Guardi-deux-ma%C3%AEtres-Venise-906153822X/plp",
+        "https://www.sudoc.fr/164252274",
+        "https://www.eyrolles.com/Arts-Loisirs/Livre/canaletto-guardi-9789061538226/",
+        "https://www.musee-jacquemart-andre.com/en/canaletto-guardi-0",
+        "https://www.dessinoriginal.com/en/exhibition-catalogue/4592-de-canaletto-a-guardi-les-deux-maitres-de-venise-catalogue-d-exposition-9789061538226.html",
+        "https://www.leslibraires.ca/en/books/canaletto-guardi-les-deux-maitres-de-bruno-monnier-9789061538226.html",
+        "https://searchworks-lb.stanford.edu/view/9749163"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"De Canaletto à Guardi , les deux maîtres de Venise English edition\",\"originally published in French as De Canaletto à Guardi , les deux maîtres de Venise\",\"9789061538226 English edition\",\"Canaletto - Guardi Jacquemart-André catalogue English edition\",\"Canaletto - Guardi: The two masters of Venice Fonds Mercator ISBN\"]",
+      "kind": "search",
+      "n": 6,
+      "objective": "An ENGLISH-language edition of the exhibition catalogue “De Canaletto à Guardi , les deux maîtres de Venise” (Musée Jacquemart-André, original ISBN 9789061538226): its English title and its own ISBN, as library catalogues and publishers record it.",
+      "ok": true,
+      "queries": [
+        "De Canaletto à Guardi , les deux maîtres de Venise English edition",
+        "originally published in French as De Canaletto à Guardi , les deux maîtres de Venise",
+        "9789061538226 English edition",
+        "Canaletto - Guardi Jacquemart-André catalogue English edition",
+        "Canaletto - Guardi: The two masters of Venice Fonds Mercator ISBN"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.abebooks.com/Canaletto-Guardi-Deux-Maitres-Venise-Musee/12736132315/bd",
+        "https://www.amazon.ca/Canaletto-Guardi-deux-ma%C3%AEtres-Venise/dp/906153822X",
+        "https://www.ghamu.org/canaletto-guardi-les-deux-maitres-de-venise/",
+        "https://www.musee-jacquemart-andre.com/fr/canaletto-guardi",
+        "https://www.zvab.com/9789061538226/Canaletto-Guardi-deux-ma%C3%AEtres-Venise-Exposition-906153822X/plp",
+        "https://www.decitre.fr/livres/canaletto-guardi-9789061538226.html",
+        "https://www.abebooks.com/9789061538226/Canaletto-Guardi-deux-ma%C3%AEtres-Venise-906153822X/plp",
+        "https://www.indigo.ca/en-ca/canaletto-guardi-les-deux-maitres-de-venise/9789061538226.html",
+        "https://boutique.connaissancedesarts.com/produit/canaletto-guardi-les-deux-maitres-de-venise",
+        "https://enfilade18thc.com/2012/07/13/exhibition-canaletto-and-guardi"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Fonds Mercator\",\"Fonds Mercator art book publisher\"]",
+      "kind": "search",
+      "n": 8,
+      "objective": "The official website of the art-book publisher “Fonds Mercator”.",
+      "ok": true,
+      "queries": [
+        "Fonds Mercator",
+        "Fonds Mercator art book publisher"
+      ],
+      "refused": [],
+      "results": [
+        "https://mercatorfonds.be/en/",
+        "https://mercatorfonds.be/fr/",
+        "https://twelve-books.com/collections/mercatorfonds",
+        "https://www.book-info.com/publisher/Fonds+Mercator.htm",
+        "https://databank.kunsten.be/en/audiovisual-and-visual-arts/sector/art-book-publishers/ent:kwb:age:Q171739/mercatorfonds",
+        "https://mercatorfonds.be/",
+        "https://www.chasse-aux-livres.fr/editeurs/fonds-mercator",
+        "https://www.mercatorfonds.be/fr/product/fabrice-samyn-i-am-limited-collector-s-edition-signed-and-numbered-1-to-24",
+        "https://isbndb.com/publisher/fonds_mercator",
+        "https://www.facebook.com/mercatorfonds/"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 1 results for [\"site:mercatorfonds.be Canaletto - Guardi, les deux maîtres de Venise\",\"site:mercatorfonds.be 9789061538226\",\"site:mercatorfonds.be Canaletto\"]",
+      "kind": "search",
+      "n": 9,
+      "objective": "The page on mercatorfonds.be for the book “Canaletto - Guardi, les deux maîtres de Venise”, ISBN 9789061538226.",
+      "ok": true,
+      "queries": [
+        "site:mercatorfonds.be Canaletto - Guardi, les deux maîtres de Venise",
+        "site:mercatorfonds.be 9789061538226",
+        "site:mercatorfonds.be Canaletto"
+      ],
+      "refused": [],
+      "results": [
+        "https://mercatorfonds.be/fr/product/canaletto-guardi"
+      ]
+    },
+    {
+      "asked": [
+        "https://mercatorfonds.be/fr/product/canaletto-guardi"
+      ],
+      "detail": "opened https://mercatorfonds.be/fr/product/canaletto-guardi: 1 page(s)",
+      "kind": "open page",
+      "n": 10,
+      "objective": "Whether this page is the book “Canaletto - Guardi, les deux maîtres de Venise” itself, and any link on it to that book. Every language edition of it this page lists, with ISBNs.",
+      "ok": true,
+      "queries": [
+        "Canaletto - Guardi, les deux maîtres de Venise",
+        "9789061538226"
+      ],
+      "refused": [],
+      "results": [
+        "https://mercatorfonds.be/fr/product/canaletto-guardi"
+      ]
+    }
+  ],
+  "case": 6,
+  "drawn": {
+    "blocks": [
+      {
+        "lines": [
+          "Not in the museum shop — shop link opens the general store.",
+          "Canaletto - Guardi, les deux maîtres de Venise",
+          "Fonds Mercator",
+          "ISBN 978-9061538226"
+        ],
+        "picked": true
+      }
+    ],
+    "kind": "single"
+  },
+  "grades": [
+    {
+      "field": "French 978-9061538226 — listed as a version",
+      "got": "listed",
+      "verdict": "pass",
+      "want": "listed",
+      "why": null
+    },
+    {
+      "field": "French 978-9061538226 — second number on the block",
+      "got": "none",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "French 978-9061538226 — language",
+      "got": "French",
+      "verdict": "pass",
+      "want": "French",
+      "why": null
+    },
+    {
+      "field": "French 978-9061538226 — publisher",
+      "got": "Fonds Mercator",
+      "verdict": "pass",
+      "want": "Fonds Mercator",
+      "why": null
+    },
+    {
+      "field": "French 978-9061538226 — showing",
+      "got": "this show",
+      "verdict": "pass",
+      "want": "this show",
+      "why": null
+    },
+    {
+      "field": "No other versions listed",
+      "got": "none",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "Left off: 978-2758004158",
+      "got": "left off",
+      "verdict": "pass",
+      "want": "left off",
+      "why": null
+    },
+    {
+      "field": "Starting pick",
+      "got": "978-9061538226",
+      "verdict": "pass",
+      "want": "978-9061538226",
+      "why": null
+    }
+  ],
+  "lookupAt": "2026-10-11T00:27:48.261Z",
+  "ms": 41637,
+  "museumId": "jacquemart",
+  "ok": true,
+  "panel": "Lookup: 11 calls (5 searches, 2 page opens, 4 Claude reads), 10 waits in a row. Time in calls: shop 21.3s, web 4.4s, facts 10.0s, publisher 6.9s.\nopened https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/ + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=2 + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=3 + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=4 + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=5 + https://boutique.musee-jacquemart-andre.com/en/search/products/?q=Canaletto%20-%20Guardi%3A%20The%20two%20masters%20of%20Venice: 2 page(s), 4 refused (404, 404, 404, 404)\nread the results\nsearch: 10 results for [\"Canaletto - Guardi: The two masters of Venice exhibition catalogue ISBN publisher\",\"Musée Jacquemart-André Canaletto - Guardi: The two masters of Venice catalogue book\",\"Musée Jacquemart-André Canaletto - Guardi: The two masters of Venice press release catalogue\",\"Canaletto - Guardi Jacquemart-André catalogue exposition 2012\"]\nread the results\nsearch: 10 results for [\"9789061538226\",\"9789061538226 De Canaletto à Guardi , les deux maîtres de Venise\",\"De Canaletto à Guardi , les deux maîtres de Venise Musée Jacquemart-André catalogue\"]\nsearch: 10 results for [\"De Canaletto à Guardi , les deux maîtres de Venise English edition\",\"originally published in French as De Canaletto à Guardi , les deux maîtres de Venise\",\"9789061538226 English edition\",\"Canaletto - Guardi Jacquemart-André catalogue English edition\",\"Canaletto - Guardi: The two masters of Venice Fonds Mercator ISBN\"]\nread the results\nPublisher: Fonds Mercator — from the ISBN’s results.\nLanguage check: French — its own title “Canaletto - Guardi, les deux maîtres de Venise”.\n1 version found; picked: 9789061538226.\nsearch: 10 results for [\"Fonds Mercator\",\"Fonds Mercator art book publisher\"]\nsearch: 1 results for [\"site:mercatorfonds.be Canaletto - Guardi, les deux maîtres de Venise\",\"site:mercatorfonds.be 9789061538226\",\"site:mercatorfonds.be Canaletto\"]\nRanked in code: https://mercatorfonds.be/fr/product/canaletto-guardi\nopened https://mercatorfonds.be/fr/product/canaletto-guardi: 1 page(s)\nread the results\nPublisher’s page for the book: https://mercatorfonds.be/fr/product/canaletto-guardi\nEnglish edition: none found — the publisher’s own page read (https://mercatorfonds.be/fr/product/canaletto-guardi).",
+  "reads": [
+    2,
+    4,
+    7,
+    11
+  ],
+  "row": {
+    "alsoVersion": null,
+    "catalogueTitle": "Canaletto - Guardi, les deux maîtres de Venise",
+    "editionPick": 0,
+    "editions": [
+      {
+        "alsoIsbn13": null,
+        "alsoOf": null,
+        "binding": "hardcover",
+        "card": {
+          "catalogueTitle": "Canaletto - Guardi, les deux maîtres de Venise",
+          "isbn13": "9789061538226",
+          "publisher": "Fonds Mercator",
+          "publisherResult": "product",
+          "publisherUrl": "https://mercatorfonds.be/fr/product/canaletto-guardi",
+          "shopState": "web",
+          "shopUrl": null
+        },
+        "city": null,
+        "isbn13": "9789061538226",
+        "lang": "French",
+        "pages": 95,
+        "proofUrl": "https://mercatorfonds.be/fr/product/canaletto-guardi",
+        "publisher": "Fonds Mercator",
+        "shop": null,
+        "showing": "this",
+        "title": "Canaletto - Guardi, les deux maîtres de Venise",
+        "year": null
+      }
+    ],
+    "englishCheck": "publisher",
+    "hasCatalogue": "yes",
+    "isbn13": "9789061538226",
+    "originalEdition": null,
+    "otherVenueBook": null,
+    "publisher": "Fonds Mercator",
+    "publisherResult": "product",
+    "publisherUrl": "https://mercatorfonds.be/fr/product/canaletto-guardi",
+    "shopChange": null,
+    "shopState": "web",
+    "shopUrl": null
+  },
+  "title": "Canaletto - Guardi: The two masters of Venice",
+  "trouble": null,
+  "venue": "Musée Jacquemart-André",
+  "verdict": "Every graded check passed."
+}
