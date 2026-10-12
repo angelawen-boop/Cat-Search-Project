@@ -336,6 +336,12 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
     g = api.s1Grade(ANSWERS[9], [search(res('https://shop.test/x', 'Test Lone Volume, Testhouse. ISBN 9781588398130.'))], rowWith(ed('9781857097382'), { title: 'Test Lone Volume', isbn13: null }), true);
     eq([g.pass, lines(g).pop()], [false, '✗ “Test Lone Volume” kept without an ISBN, though https://shop.test/x prints 978-1588398130 with its title — probably its own (check).'],
       'S1P-011b:  any other book kept without an ISBN, a lone number printed with its whole title: fails, naming where');
+    // Canaletto R3: a bookseller's page prints the kept book's number and a "You may also
+    // like" link's; with the kept one left out, the link's number looked like a lone one.
+    g = api.s1Grade(ANSWERS[9], [search(res('https://shop.test/y', 'Test Lone Volume, Testhouse. ISBN 9781857097382. You may also like: ISBN 9781588398130.'))],
+      rowWith(ed('9781857097382'), { title: 'Test Lone Volume', isbn13: null }), true);
+    eq([g.pass, lines(g).pop()], [true, '✓ “Test Lone Volume” kept without an ISBN; no text the search saw printed one for it.'],
+      'S1P-011c:  a page printing two valid numbers is no evidence for either, even when one is kept (Canaletto R3)');
   }
 
   // ── S1P-007: her nine real lookups, regraded — the baseline (old code, three runs) ──

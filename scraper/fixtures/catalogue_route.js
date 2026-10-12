@@ -71,7 +71,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, versionFacts, pagesByAddress, pagesAbout, bindingOn, labelledIsbns, registrantOf, publisherShown, bookOnShop, museumOf, recheckVersions, buyLinks, pickedVersion, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, museumImprintOnly, aMagazine, resultsForPrompt, pageForPrompt };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, versionFacts, pagesByAddress, pagesAbout, bindingOn, labelledIsbns, registrantOf, publisherShown, bookOnShop, museumOf, recheckVersions, buyLinks, pickedVersion, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, museumImprintOnly, aMagazine, resultsForPrompt, pageForPrompt, keptVersions, isbnInAddress };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -958,6 +958,52 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq([api.aMagazine('Botticelli : artiste & designer', null, [lireka], HS), api.aMagazine('Botticelli : artiste & designer', null, [near], HS),
       api.aMagazine('Botticelli : artiste & designer', 'Fonds Mercator', [book], '9789462302815')], [true, true, false],
       'S1-013: Botticelli — the magazine named on the page about that number, or beside it, leaves it out in code; a menu\'s "Magazine" does not');
+  }
+
+  // ── S1-014..S1-017: her second Stage 1 run — a number seen is never thrown away ──
+  {
+    // Hammershøi R2: two reads list the book by title only, the facts read with its ISBN.
+    const T = 'Test Hammershoi, le maître de la peinture danoise', N = '9789462301290';
+    const pg = [{ url: 'https://www.fonds.test/h', title: T, excerpts: [T + '. Fonds Mercator. 175 pages. ISBN ' + N + '.'] }];
+    const it = (isbn13, extra) => ({ item: { title: T, language: 'French', isbn13, ...(extra || {}) }, given: pg, showing: null });
+    const vs = api.keptVersions([it(null), it(null), it(N, { publisher: 'Fonds Mercator', pages: '175' })], 'jacquemart', []);
+    eq(vs.map(v => [v.isbn13, v.publisher, String(v.pages)]), [[N, 'Fonds Mercator', '175']],
+      'S1-014: Hammershøi R2 — a book seen by title, then with its ISBN: one copy kept, with the ISBN and the facts');
+
+    // Canaletto R1: the read gives no ISBN; the result it cites carries one in its address.
+    const L = 'Test Splendour in Venice', u = 'https://www.exhibitioncatalogs.test/splendour-in-venice-9789899119208';
+    const lis = [{ url: u, title: L, excerpts: [L + '. Calouste Gulbenkian Museum, Lisbon.'] }];
+    const one = (url, given) => api.keptVersions([{ item: { title: L, language: 'English', isbn13: null, evidenceUrl: url }, given, showing: null }], 'acq', []);
+    eq([one(u, lis).map(v => v.isbn13), api.isbnInAddress(u + '-9781588398130'), one('https://elsewhere.test/9789899119208', lis).map(v => v.isbn13)],
+      [['9789899119208'], null, [null]],
+      'S1-015: Canaletto R1 — the one valid number in the cited result\'s address is its ISBN; two numbers, or an address the search never returned, give none');
+  }
+  {
+    // Metamorphoses R3: the web read lists the Dutch book by title only; the
+    // publisher-candidates read lists it with its number, printed only in the PDF.
+    const EN = 'Test Metamorphoses. Ovid and the Arts', EN_ISBN = '9789493416543', NL_ISBN = '9789493416550', NL = 'Test Metamorfosen';
+    const PDF = { url: 'https://hannibalbooks.be/uploads/test_VOORJAAR.pdf', title: 'test_VOORJAAR',
+      excerpts: ['Spring list. English edition ISBN 978 94 9341 654 3. Dutch edition ' + NL + ', ISBN 978 94 9341 655 0. Softcover, 352 pages.'] };
+    const isRank = p => /Put them in order, best first/.test(p);
+    const mcp = (tool, args) => {
+      if (tool !== 'web_search') return shelfOf(args.urls, '[Another catalogue €30](https://shop.test/other)');
+      const q = args.search_queries.join(' | ');
+      if (q.startsWith('site:hannibalbooks.be')) return { payload: { results: [PDF] } };
+      if (/^Hannibal Books/.test(q)) return { payload: { results: [{ url: 'https://hannibalbooks.be/', title: 'Hannibal Books', excerpts: ['Hannibal Books, art book publisher.'] }] } };
+      if (/exhibition catalogue ISBN publisher/.test(q)) return { payload: { results: [{ url: 'https://www.museum.test/metamorphoses', title: EN,
+        excerpts: [EN + ', the catalogue of the exhibition. Hannibal Books. ISBN ' + EN_ISBN + '. Also in Dutch: ' + NL + '.'] }] } };
+      return { payload: { results: [] } };
+    };
+    const sample = p => isShopRead(p) ? { found: false }
+      : /"thisVenue": true\|false/.test(p) ? { found: true, thisVenue: true, catalogueTitle: EN, isbn13: EN_ISBN, publisher: 'Hannibal Books', language: 'English',
+        otherBooks: [{ title: NL, isbn13: null, language: 'Dutch', publisher: 'Hannibal Books' }] }
+      : isRank(p) ? { candidates: [], otherBooks: [{ title: NL, isbn13: NL_ISBN, language: 'Dutch', publisher: 'Hannibal Books' }] }
+      : {};
+    const { row: r } = await run(row('ng', 'Test Metamorphoses'), { mcp, sample });
+    const dutch = (r.editions || []).filter(v => /Metamorfosen/.test(v.title || ''));
+    eq(dutch.map(v => v.isbn13), [NL_ISBN],
+      'S1-016: Metamorphoses R3 — the Dutch book kept by title from the web read takes the number the publisher-candidates read found', JSON.stringify((r.editions || []).map(v => [v.title, v.isbn13])));
+    ok(r.editionPick != null && r.editions[r.editionPick].isbn13 === EN_ISBN, 'S1-017:   and the English book stays picked — filling a copy never moves the pick', JSON.stringify([r.editionPick, (r.editions || []).map(v => v.isbn13)]));
   }
 
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');

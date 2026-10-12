@@ -108,7 +108,8 @@ function s1Grade(answers,calls,row,finished){
   }
   for(const n of dropped)lines.push({ok:false,text:"Another book Claude named, "+s1Fmt(n)+", was dropped by the app."});
   // Every other book kept with no ISBN: a fail only where a result carrying its whole title
-  // printed exactly one number nothing else accounts for — probably its own, thrown away.
+  // prints exactly one valid number (a "You may also like" link makes two) that nothing
+  // else accounts for — probably its own, thrown away.
   const accounted=new Set([...known,...kept]);
   for(const t of new Set(unnumbered)){
     if(books.some(b=>b.byTitle===t))continue;
@@ -116,8 +117,8 @@ function s1Grade(answers,calls,row,finished){
     if(w.length>=2)for(const c of calls||[])for(const r of ((c.output&&c.output.results)||[])){
       const txt=s1ResultText(r), f=s1Fold(txt);
       if(!w.every(x=>f.includes(x)))continue;
-      const ns=s1IsbnsIn(txt).filter(n=>!accounted.has(n));
-      if(ns.length===1&&!cands.has(ns[0]))cands.set(ns[0],r.url);
+      const ns=[...new Set(s1IsbnsIn(txt))];
+      if(ns.length===1&&!accounted.has(ns[0])&&!cands.has(ns[0]))cands.set(ns[0],r.url);
     }
     if(cands.size===1){ const [n,u]=[...cands][0]; lines.push({ok:false,text:"“"+t+"” kept without an ISBN, though "+u+" prints "+s1Fmt(n)+" with its title — probably its own (check)."}); }
     else lines.push({ok:true,text:"“"+t+"” kept without an ISBN; no text the search saw printed one for it."});

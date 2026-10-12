@@ -3347,10 +3347,23 @@ function sameVersion(a,b){
 function keepSeen(kept,list,given,showing){
   for(const item of (Array.isArray(list)?list:[]))if(item&&(item.title||item.isbn13))kept.push({item,given:given||[],showing:showing||null});
 }
+// The one valid 978/979 number in a result's address, or nothing (Lisbon's Splendour in Venice).
+function isbnInAddress(u){
+  const found=new Set([...String(u||"").matchAll(/(?:^|[^0-9])(97[89]\d{10})(?![0-9])/g)].map(m=>m[1]).filter(isbn13Checks));
+  return found.size===1?[...found][0]:null;
+}
+// A copy kept by title only takes the number and blank facts of a later copy of the same book.
+function fillVersion(x,v){
+  if(x.isbn13||!v.isbn13||!x._kept)return false;
+  for(const k of ["isbn13","lang","binding","pages","publisher","city","_year","_proof","_pub","_pubFrom"])if(x[k]==null&&v[k]!=null)x[k]=v[k];
+  if(x._stated&&v._stated)for(const k of ["binding","pages"])if(x._stated[k]==null)x._stated[k]=v._stated[k];
+  return true;
+}
 function keptVersions(kept,museumId,log){
   const out=[];
   for(const {item,given,showing} of kept){
-    const isbn=toIsbn13(item.isbn13,given);
+    const ev=item.evidenceUrl&&given.find(x=>sameAddress(x.url,item.evidenceUrl));
+    const isbn=toIsbn13(item.isbn13,given)||(!item.isbn13&&ev?isbnInAddress(ev.url):null);
     const tp=item.title?titleAsPrinted(item.title,given):null;
     if(!isbn&&!(tp&&tp.onPage))continue;
     const pub=String(item.publisher||"").trim()||null;
@@ -3362,7 +3375,8 @@ function keptVersions(kept,museumId,log){
       _unproven:true,_kept:true,_pub:pub,_pubFrom:pub?"general results":null};
     v._stated={binding:v.binding,pages:v.pages};
     if(excludedBook(v,given)){ if(log)log.push("Left off: “"+(v.title||v.isbn13)+"” — an album, booklet or magazine."); continue; }
-    if(!out.some(x=>sameVersion(x,v)))out.push(v);
+    const same=out.find(x=>sameVersion(x,v));
+    if(!same)out.push(v); else fillVersion(same,v);
   }
   return out;
 }
@@ -4193,7 +4207,11 @@ async function lookupCatalogue(row,hooks){
   versionFacts(found,inHand,row.museumId,null);
   found._pages=found.pages||(read?pagesPrinted(read.pages,everything):null);
   const versions=[found];
-  const add=list=>{ for(const v of list)if(!versions.some(x=>sameVersion(x,v))&&!excludedBook(v,inHand))versions.push(v); };
+  const add=list=>{ for(const v of list){
+    if(excludedBook(v,inHand))continue;
+    const same=versions.find(x=>sameVersion(x,v));
+    if(!same)versions.push(v); else fillVersion(same,v);
+  } };
   if(F.isbn&&read)add(printingsOf(read.versions,
     {isbn:F.isbn,title:F.title||title,titles:[read.title],pages:found._pages,lang:found.lang},inHand,row.museumId));
   // Editions in other languages only once the book's own language is known; then the
