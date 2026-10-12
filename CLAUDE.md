@@ -1166,8 +1166,8 @@ it whole before touching versions.
 - **The live check page is the Stage 1 page** (version 4): the app's real lookup on nine
   cases, in rounds, graded by her pass test (`build/stage1_grade.js`,
   `docs/stage1_answers.json`): https://claude.ai/artifact/KrnwLxC6YdZkd3QyFW4wmy. First run:
-  her five agreed fixes on it, her second run passed 25 of 27 lookups. **Next: three
-  recommended fixes, awaiting her go** — `docs/handover_search_stage1.md`, "START HERE";
+  her five agreed fixes on it, her second run passed 25 of 27 lookups. **Her three
+  fixes from it are built and on the page, not yet proven live; next is her third run** — `docs/handover_search_stage1.md`, "START HERE";
   how to run and regrade: `docs/live_check_report.md`. Card grading parked until Stage 2.
 - **Still hers to answer:** another showing's museum worked out from its city
   (Washington → NGA), else no shop line on that block; Re-check with nothing picked
