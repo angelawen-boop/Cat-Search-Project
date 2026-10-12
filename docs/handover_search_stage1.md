@@ -5,10 +5,19 @@ It replaces any plan in `docs/live_check_report.md` where the two disagree.
 
 ## START HERE — the next session's job
 
-**Her third run, code 27f264d (her three fixes): 26 of 27 lookups pass.** Records
-`R17917918897420acl`, `R17917922677782eus` (rounds 1–2), `R1791805156533znma` (round 3;
-`R17917925914628tgi` was refused by Claude's rate limit throughout and is not a result).
-Hammershøi, Canaletto and Metamorphoses passed every round: her three fixes are proven live.
+**Stage 1b is built and on the test page (commit 65a10a9), not yet proven live.** Her run
+(Rounds 1, after a quiet spell — Claude's rate limit refused a whole third round before),
+then grade. Causes, from the records: Claude was told to include books "even when the text
+never mentions the exhibition … When unsure, include it" (junk); code called a book "this
+show's" whenever Claude left the other venue's city blank (wrong show); Claude named a
+French title English from an English bookseller's listing (wrong language); Claude left out
+*Botticelli Reimagined*'s printed ISBN. Fixed in the prompts to her intent: the job is the
+catalogue's facts (and its English edition at a non-English venue); anything else is recorded
+only where the text shows it, with every fact printed for it; only books tied to this show or
+carrying its catalogue's title; the book's own language; the read says which show. The grader
+now fails junk, a wrong language, a wrong show and a book kept twice; regraded, her three
+earlier rounds fail on exactly the problems she named. Hammershøi's Rizzoli was never in
+anything the search returned (round 1) — not a reading error.
 
 **Stage 1 (finding every relevant book) is DONE** — her call, on the third run.
 
