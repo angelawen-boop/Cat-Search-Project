@@ -1163,13 +1163,11 @@ it whole before touching versions.
     Canaletto – Guardi, Botticelli, Metamorphoses, Millet, Hubert Robert at NGA) never
     run on it; another museum's shop finder live beyond two fetches (Nationalmuseum);
     per-version Re-check live; the `shops/museums` store; the page as she sees it.
-- **The live check page — grades the app's real card; checks follow the card (v3); baseline 2 of 9 pass** (Canaletto, Millet; one run
-  each): https://claude.ai/artifact/KrnwLxC6YdZkd3QyFW4wmy. The app's real
-  `lookupCatalogue`, her connector and the in-page Claude on all nine cases, graded per
-  field; its own store, never her app, test page or ledger. Build `node
-  build/live_check.js`, republish `build/dist/live_check.html` to that url; she taps
-  Run once, the session reads `checks` and `lookups` with ArtifactData. Baseline,
-  how to read it, and what to follow up: `docs/live_check_report.md`.
+- **The live check page is the Stage 1 page** (version 4): the app's real lookup on nine
+  cases, in rounds, graded by her pass test (`build/stage1_grade.js`,
+  `docs/stage1_answers.json`): https://claude.ai/artifact/KrnwLxC6YdZkd3QyFW4wmy. First run:
+  her three cases pass every round. Results and next steps: `docs/handover_search_stage1.md`;
+  how to run and regrade: `docs/live_check_report.md`. Card grading parked until Stage 2.
 - **Still hers to answer:** another showing's museum worked out from its city
   (Washington → NGA), else no shop line on that block; Re-check with nothing picked
   re-checks the venue's own versions. Two small fixes waiting (publisher step on " : "
