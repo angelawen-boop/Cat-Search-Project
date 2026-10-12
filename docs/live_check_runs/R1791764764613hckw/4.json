@@ -1,0 +1,803 @@
+{
+  "calls": [
+    {
+      "asked": [
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=2",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=3",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=4",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=5",
+        "https://boutique.musee-jacquemart-andre.com/en/search/products/?q=Hammersh%C3%B8i%3A%20the%20master%20of%20danish%20painting"
+      ],
+      "detail": "opened https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/ + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=2 + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=3 + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=4 + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=5 + https://boutique.musee-jacquemart-andre.com/en/search/products/?q=Hammersh%C3%B8i%3A%20the%20master%20of%20danish%20painting: 2 page(s), 4 refused (404, 404, 404, 404)",
+      "kind": "open page",
+      "n": 1,
+      "objective": "The printed exhibition catalogue for “Hammershøi: the master of danish painting”: the book’s own product page on this shop, its full title and its price.",
+      "ok": true,
+      "queries": [
+        "Hammershøi: the master of danish painting exhibition catalogue book"
+      ],
+      "refused": [
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=2 404",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=3 404",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=4 404",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=5 404"
+      ],
+      "results": [
+        "https://boutique.musee-jacquemart-andre.com/en/search/products/?q=Hammersh%C3%B8i%3A%20the%20master%20of%20danish%20painting",
+        "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Hammershøi: the master of danish painting exhibition catalogue ISBN publisher\",\"Musée Jacquemart-André Hammershøi: the master of danish painting catalogue book\",\"Musée Jacquemart-André Hammershøi: the master of danish painting press release catalogue\",\"Hammershøi Jacquemart-André catalogue exposition 2019\"]",
+      "kind": "search",
+      "n": 3,
+      "objective": "Confirm whether a printed catalogue was published for the exhibition “Hammershøi: the master of danish painting” at Musée Jacquemart-André, and give its exact title, ISBN-13 and publisher. Museums often state these in a press release; art-book publishers and booksellers list them too.",
+      "ok": true,
+      "queries": [
+        "Hammershøi: the master of danish painting exhibition catalogue ISBN publisher",
+        "Musée Jacquemart-André Hammershøi: the master of danish painting catalogue book",
+        "Musée Jacquemart-André Hammershøi: the master of danish painting press release catalogue",
+        "Hammershøi Jacquemart-André catalogue exposition 2019"
+      ],
+      "refused": [],
+      "results": [
+        "https://japan.us.mercari.com/en/items/9ef2c0cc-fbaf-4e7e-8f48-072718875fe6",
+        "https://www.copyrightbookshop.be/en/shop/hammershoi-le-maitre-de-la-peinture-danoise/",
+        "https://www.musee-jacquemart-andre.com/en/hammershoi",
+        "https://searchworks.stanford.edu/view/14740835",
+        "https://www.librairie-oeilcacodylate.com/catalogues-d-exposition/catalogue-d-exposition/38496/hammershoi-le-maItre-de-la-peinture-danoise",
+        "https://catalogue.bnf.fr/ark:/12148/cb45708722j",
+        "https://hatjecantz.de/en/products/9783775763806",
+        "https://www.musee-jacquemart-andre.com/fr/hammershoi",
+        "https://www.abebooks.com/Hammersh%C3%B8i-Vilhelm-Royal-Academy-Arts/32528737512/bd",
+        "https://www.dessinoriginal.com/en/exhibition-catalogue/9906-hammershoi-le-maitre-de-la-peinture-danoise-9789462302495.html"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"9789462301290\",\"9789462301290 Hammershøi : le maître de la peinture danoise\",\"Hammershøi : le maître de la peinture danoise Musée Jacquemart-André catalogue\"]",
+      "kind": "search",
+      "n": 5,
+      "objective": "The ISBN-13, publisher, language and exact printed title of the exhibition catalogue “Hammershøi : le maître de la peinture danoise”, ISBN 9789462301290, for the exhibition at Musée Jacquemart-André.",
+      "ok": true,
+      "queries": [
+        "9789462301290",
+        "9789462301290 Hammershøi : le maître de la peinture danoise",
+        "Hammershøi : le maître de la peinture danoise Musée Jacquemart-André catalogue"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.mullenbooks.com/pages/books/172909/jean-loup-champion-frank-claustrat-pierre-curie/hammershoi-le-maitre-de-la-peinture-danoise",
+        "https://www.musee-jacquemart-andre.com/fr/hammershoi",
+        "https://www.musee-jacquemart-andre.com/en/hammershoi",
+        "https://www.recyclivre.com/boutique/produit/livre/9789462302495-hammershoi-le-maitre-de-la-peinture-danoise/d299b69d-5105-40f9-8cde-0bf5dc271807",
+        "https://catalogue-pp.bpi.fr/fr/document/ark:/34201/nptfl0001546042?searchToken=e3069619b7d4c642f53e8259ea19548af42cddcd",
+        "https://www.librairie-oeilcacodylate.com/catalogues-d-exposition/catalogue-d-exposition/38496/hammershoi-le-maItre-de-la-peinture-danoise",
+        "https://gleeph.com/book/hammershoi-le-maitre-de-la-peinture-danoise/ean/9789462302495",
+        "https://www.copyrightbookshop.be/en/shop/hammershoi-le-maitre-de-la-peinture-danoise",
+        "https://librairie-aucoeuralouvrage.fr/produit/hammershoi-le-maitre-de-la-peinture-danoise-musee-jacquemart-andre-catalogue-exposition-2019/",
+        "https://www.copyrightbookshop.be/shop/hammershoi-le-maitre-de-la-peinture-danoise"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Hammershøi : le maître de la peinture danoise English edition\",\"originally published in French as Hammershøi : le maître de la peinture danoise\",\"9789462301290 English edition\",\"Hammershøi Jacquemart-André catalogue English edition\"]",
+      "kind": "search",
+      "n": 6,
+      "objective": "An ENGLISH-language edition of the exhibition catalogue “Hammershøi : le maître de la peinture danoise” (Musée Jacquemart-André, original ISBN 9789462301290): its English title and its own ISBN, as library catalogues and publishers record it.",
+      "ok": true,
+      "queries": [
+        "Hammershøi : le maître de la peinture danoise English edition",
+        "originally published in French as Hammershøi : le maître de la peinture danoise",
+        "9789462301290 English edition",
+        "Hammershøi Jacquemart-André catalogue English edition"
+      ],
+      "refused": [],
+      "results": [
+        "https://searchworks.stanford.edu/view/14740835",
+        "https://www.rizzoliusa.com/book/9780847899289",
+        "https://www.abebooks.com/Hammersh%C3%B8i-Vilhelm-Royal-Academy-Arts/32528737512/bd",
+        "https://catalogue.bnf.fr/ark:/12148/cb45708722j",
+        "https://bibliotheques-specialisees.paris.fr/ark:/73873/pf0002235793",
+        "https://www.copyrightbookshop.be/shop/hammershoi-le-maitre-de-la-peinture-danoise",
+        "https://www.abebooks.com/Hammersh%C3%B8i-Dreyer-Spanish-English-Edition-Almonacid/32222595257/bd",
+        "https://fr.wikipedia.org/wiki/Mus%C3%A9e_Jacquemart-Andr%C3%A9",
+        "https://fr.wikipedia.org/wiki/Vilhelm_Hammersh%C3%B8i",
+        "https://www.gettextbooks.ca/isbn/9788498031386"
+      ]
+    }
+  ],
+  "card": {
+    "appStore": {
+      "reads": [
+        "sweeps/venues",
+        "quarantine/rows",
+        "venues/occasional",
+        "links/pending"
+      ],
+      "writes": []
+    },
+    "blocks": [
+      {
+        "lines": [
+          {
+            "parts": [
+              {
+                "fact": null,
+                "text": "Not in the museum shop — shop link opens the general store.",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "Not in the museum shop — shop link opens the general store.",
+            "verdict": "unchecked"
+          },
+          {
+            "parts": [
+              {
+                "fact": null,
+                "text": "Hammershoi : le maître de la peinture danoise",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "Hammershoi : le maître de la peinture danoise",
+            "verdict": "unchecked"
+          },
+          {
+            "parts": [
+              {
+                "fact": null,
+                "text": "Fonds Mercator",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "Fonds Mercator",
+            "verdict": "unchecked"
+          },
+          {
+            "parts": [
+              {
+                "fact": null,
+                "text": "French",
+                "verdict": "unchecked"
+              },
+              {
+                "fact": null,
+                "text": "175 pp",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "French · 175 pp",
+            "verdict": "unchecked"
+          },
+          {
+            "parts": [
+              {
+                "fact": null,
+                "text": "ISBN 978-9462301290",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "ISBN 978-9462301290",
+            "verdict": "unchecked"
+          },
+          {
+            "parts": [
+              {
+                "fact": null,
+                "text": "The original edition.",
+                "verdict": "unchecked"
+              },
+              {
+                "fact": null,
+                "text": "Source: mullenbooks.com",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "The original edition. Source: mullenbooks.com",
+            "verdict": "unchecked"
+          }
+        ],
+        "marker": "○",
+        "picked": false,
+        "version": null
+      },
+      {
+        "lines": [
+          {
+            "parts": [
+              {
+                "fact": null,
+                "text": "Not in the museum shop — shop link opens the general store.",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "Not in the museum shop — shop link opens the general store.",
+            "verdict": "unchecked"
+          },
+          {
+            "parts": [
+              {
+                "fact": null,
+                "text": "Hammershoi : le maître de la peinture danoise",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "Hammershoi : le maître de la peinture danoise",
+            "verdict": "unchecked"
+          },
+          {
+            "parts": [
+              {
+                "fact": "publisher",
+                "text": "Fonds Mercator",
+                "verdict": "fail"
+              }
+            ],
+            "text": "Fonds Mercator",
+            "verdict": "fail"
+          },
+          {
+            "parts": [
+              {
+                "fact": "language",
+                "text": "French",
+                "verdict": "pass"
+              },
+              {
+                "fact": null,
+                "text": "Hardcover",
+                "verdict": "unchecked"
+              },
+              {
+                "fact": null,
+                "text": "176 pp",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "French · Hardcover · 176 pp",
+            "verdict": "unchecked"
+          },
+          {
+            "parts": [
+              {
+                "fact": "ISBN",
+                "text": "ISBN 978-9462302495",
+                "verdict": "pass"
+              }
+            ],
+            "text": "ISBN 978-9462302495",
+            "verdict": "pass"
+          },
+          {
+            "parts": [
+              {
+                "fact": "note",
+                "text": "The original edition.",
+                "verdict": "pass"
+              },
+              {
+                "fact": null,
+                "text": "Source: librairie-oeilcacodylate.com",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "The original edition. Source: librairie-oeilcacodylate.com",
+            "verdict": "unchecked"
+          }
+        ],
+        "marker": "○",
+        "picked": false,
+        "version": "French 978-9462302495"
+      },
+      {
+        "lines": [
+          {
+            "parts": [
+              {
+                "fact": null,
+                "text": "Not in the museum shop — shop link opens the general store. No publisher was named for this book, so none was looked for.",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "Not in the museum shop — shop link opens the general store. No publisher was named for this book, so none was looked for.",
+            "verdict": "unchecked"
+          },
+          {
+            "parts": [
+              {
+                "fact": null,
+                "text": "Hammershøi : painter of northern light",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "Hammershøi : painter of northern light",
+            "verdict": "unchecked"
+          },
+          {
+            "parts": [
+              {
+                "fact": "language",
+                "text": "English",
+                "verdict": "pass"
+              },
+              {
+                "fact": null,
+                "text": "Hardcover",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "English · Hardcover",
+            "verdict": "unchecked"
+          },
+          {
+            "parts": [
+              {
+                "fact": "ISBN",
+                "text": "ISBN 978-0847899289",
+                "verdict": "pass"
+              }
+            ],
+            "text": "ISBN 978-0847899289",
+            "verdict": "pass"
+          },
+          {
+            "parts": [
+              {
+                "fact": "note",
+                "text": "The English edition.",
+                "verdict": "fail"
+              },
+              {
+                "fact": null,
+                "text": "Source: rizzoliusa.com",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "The English edition. Source: rizzoliusa.com",
+            "verdict": "fail"
+          }
+        ],
+        "marker": "●",
+        "picked": true,
+        "version": "English 978-0847899289"
+      }
+    ],
+    "error": null,
+    "kind": "blocks",
+    "ok": true
+  },
+  "cardGrades": [
+    {
+      "field": "French 978-9462302495 — ISBN",
+      "got": "978-9462302495",
+      "key": "9789462302495|listed",
+      "verdict": "pass",
+      "want": "978-9462302495",
+      "why": null
+    },
+    {
+      "field": "French 978-9462302495 — language",
+      "got": "French",
+      "key": "9789462302495|language",
+      "verdict": "pass",
+      "want": "French",
+      "why": null
+    },
+    {
+      "field": "French 978-9462302495 — publisher",
+      "got": "Fonds Mercator",
+      "key": "9789462302495|publisher",
+      "verdict": "fail",
+      "want": "Culturespaces / Fonds Mercator",
+      "why": null
+    },
+    {
+      "field": "French 978-9462302495 — note",
+      "got": "The original edition.",
+      "key": "9789462302495|note",
+      "verdict": "pass",
+      "want": "The original edition.",
+      "why": null
+    },
+    {
+      "field": "English 978-0847899289 — ISBN",
+      "got": "978-0847899289",
+      "key": "9780847899289|listed",
+      "verdict": "pass",
+      "want": "978-0847899289",
+      "why": null
+    },
+    {
+      "field": "English 978-0847899289 — language",
+      "got": "English",
+      "key": "9780847899289|language",
+      "verdict": "pass",
+      "want": "English",
+      "why": null
+    },
+    {
+      "field": "English 978-0847899289 — publisher",
+      "got": "",
+      "key": "9780847899289|publisher",
+      "verdict": "fail",
+      "want": "Rizzoli Electa",
+      "why": "not shown on the card"
+    },
+    {
+      "field": "English 978-0847899289 — note",
+      "got": "The English edition.",
+      "key": "9780847899289|note",
+      "verdict": "fail",
+      "want": "The English edition, published later.",
+      "why": null
+    },
+    {
+      "field": "Starting pick (the ● marker)",
+      "got": "978-0847899289",
+      "key": "pick",
+      "verdict": "pass",
+      "want": "978-0847899289",
+      "why": null
+    },
+    {
+      "field": "Block 1 (no stated version has this ISBN) — shop line",
+      "got": "Not in the museum shop — shop link opens the general store.",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 1 (no stated version has this ISBN) — title",
+      "got": "Hammershoi : le maître de la peinture danoise",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 1 (no stated version has this ISBN) — publisher line",
+      "got": "Fonds Mercator",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 1 (no stated version has this ISBN) — facts line",
+      "got": "French",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 1 (no stated version has this ISBN) — facts line",
+      "got": "175 pp",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 1 (no stated version has this ISBN) — ISBN line",
+      "got": "ISBN 978-9462301290",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 1 (no stated version has this ISBN) — note or source",
+      "got": "The original edition.",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 1 (no stated version has this ISBN) — note or source",
+      "got": "Source: mullenbooks.com",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 2 (French 978-9462302495) — shop line",
+      "got": "Not in the museum shop — shop link opens the general store.",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 2 (French 978-9462302495) — title",
+      "got": "Hammershoi : le maître de la peinture danoise",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 2 (French 978-9462302495) — facts line",
+      "got": "Hardcover",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 2 (French 978-9462302495) — facts line",
+      "got": "176 pp",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 2 (French 978-9462302495) — note or source",
+      "got": "Source: librairie-oeilcacodylate.com",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 3 (English 978-0847899289) — shop line",
+      "got": "Not in the museum shop — shop link opens the general store. No publisher was named for this book, so none was looked for.",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 3 (English 978-0847899289) — title",
+      "got": "Hammershøi : painter of northern light",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 3 (English 978-0847899289) — facts line",
+      "got": "Hardcover",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "Block 3 (English 978-0847899289) — note or source",
+      "got": "Source: rizzoliusa.com",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    }
+  ],
+  "case": 4,
+  "counted": {
+    "checks": 14,
+    "fails": 4,
+    "unchecked": 17
+  },
+  "grades": [
+    {
+      "field": "French 978-9462302495 — listed as a version",
+      "got": "listed",
+      "key": "9789462302495|listed",
+      "verdict": "pass",
+      "want": "listed",
+      "why": null
+    },
+    {
+      "field": "French 978-9462302495 — second number on the block",
+      "got": "none",
+      "key": "9789462302495|alsoIsbn",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "French 978-9462302495 — language",
+      "got": "French",
+      "key": "9789462302495|language",
+      "verdict": "pass",
+      "want": "French",
+      "why": null
+    },
+    {
+      "field": "French 978-9462302495 — publisher",
+      "got": "Fonds Mercator",
+      "key": "9789462302495|publisher",
+      "verdict": "fail",
+      "want": "Culturespaces / Fonds Mercator",
+      "why": null
+    },
+    {
+      "field": "French 978-9462302495 — showing",
+      "got": "this show",
+      "key": "9789462302495|showing",
+      "verdict": "pass",
+      "want": "this show",
+      "why": null
+    },
+    {
+      "field": "English 978-0847899289 — listed as a version",
+      "got": "listed",
+      "key": "9780847899289|listed",
+      "verdict": "pass",
+      "want": "listed",
+      "why": null
+    },
+    {
+      "field": "English 978-0847899289 — second number on the block",
+      "got": "none",
+      "key": "9780847899289|alsoIsbn",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "English 978-0847899289 — language",
+      "got": "English",
+      "key": "9780847899289|language",
+      "verdict": "pass",
+      "want": "English",
+      "why": null
+    },
+    {
+      "field": "English 978-0847899289 — publisher",
+      "got": "none",
+      "key": "9780847899289|publisher",
+      "verdict": "fail",
+      "want": "Rizzoli Electa",
+      "why": null
+    },
+    {
+      "field": "English 978-0847899289 — showing",
+      "got": "this show",
+      "key": "9780847899289|showing",
+      "verdict": "pass",
+      "want": "this show",
+      "why": null
+    },
+    {
+      "field": "No other versions listed",
+      "got": "French 978-9462301290 (Fonds Mercator)",
+      "key": "extras",
+      "verdict": "fail",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "Starting pick",
+      "got": "978-0847899289",
+      "key": "pick",
+      "verdict": "pass",
+      "want": "978-0847899289",
+      "why": null
+    }
+  ],
+  "lookupAt": "2026-10-12T00:27:26.956Z",
+  "lookupId": "L1791764846956ug8h",
+  "lookupPath": "lookups/L1791764846956ug8h",
+  "ms": 18844,
+  "museumId": "jacquemart",
+  "ok": true,
+  "panel": "Lookup: 7 calls (3 searches, 1 page opens, 3 Claude reads), 6 waits in a row. Time in calls: shop 8.1s, web 4.2s, facts 7.7s.\nopened https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/ + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=2 + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=3 + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=4 + https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/?page=5 + https://boutique.musee-jacquemart-andre.com/en/search/products/?q=Hammersh%C3%B8i%3A%20the%20master%20of%20danish%20painting: 2 page(s), 4 refused (404, 404, 404, 404)\nread the results\nsearch: 10 results for [\"Hammershøi: the master of danish painting exhibition catalogue ISBN publisher\",\"Musée Jacquemart-André Hammershøi: the master of danish painting catalogue book\",\"Musée Jacquemart-André Hammershøi: the master of danish painting press release catalogue\",\"Hammershøi Jacquemart-André catalogue exposition 2019\"]\nread the results\nsearch: 10 results for [\"9789462301290\",\"9789462301290 Hammershøi : le maître de la peinture danoise\",\"Hammershøi : le maître de la peinture danoise Musée Jacquemart-André catalogue\"]\nsearch: 10 results for [\"Hammershøi : le maître de la peinture danoise English edition\",\"originally published in French as Hammershøi : le maître de la peinture danoise\",\"9789462301290 English edition\",\"Hammershøi Jacquemart-André catalogue English edition\"]\nread the results\nPublisher from the ISBN: the results carrying it don’t agree on one.\nPublisher: Fonds Mercator — from general results (a guess).\nLanguage check: French — its own title “Hammershoi : le maître de la peinture danoise”.\nEdition: “Hammershøi : painter of northern light”, English, ISBN 9780847899289 — the venue named (https://searchworks.stanford.edu/view/14740835).\n3 versions found; picked: 9780847899289.\nThe card’s book: “Hammershøi : painter of northern light”, ISBN 9780847899289.",
+  "reads": [
+    2,
+    4,
+    7
+  ],
+  "row": {
+    "alsoVersion": null,
+    "catalogueTitle": "Hammershøi : painter of northern light",
+    "editionPick": 2,
+    "editions": [
+      {
+        "alsoIsbn13": null,
+        "alsoOf": null,
+        "binding": null,
+        "card": {
+          "catalogueTitle": "Hammershoi : le maître de la peinture danoise",
+          "isbn13": "9789462301290",
+          "publisher": "Fonds Mercator",
+          "publisherResult": null,
+          "publisherUrl": null,
+          "shopState": "web",
+          "shopUrl": null
+        },
+        "city": null,
+        "isbn13": "9789462301290",
+        "lang": "French",
+        "pages": 175,
+        "proofUrl": "https://www.mullenbooks.com/pages/books/172909/jean-loup-champion-frank-claustrat-pierre-curie/hammershoi-le-maitre-de-la-peinture-danoise",
+        "publisher": "Fonds Mercator",
+        "shop": {
+          "museum": null,
+          "state": "web",
+          "url": null
+        },
+        "showing": "this",
+        "title": "Hammershoi : le maître de la peinture danoise",
+        "year": null
+      },
+      {
+        "alsoIsbn13": null,
+        "alsoOf": null,
+        "binding": "hardcover",
+        "card": {
+          "catalogueTitle": "Hammershoi : le maître de la peinture danoise",
+          "isbn13": "9789462302495",
+          "publisher": "Fonds Mercator",
+          "publisherResult": null,
+          "publisherUrl": null,
+          "shopState": "web",
+          "shopUrl": null
+        },
+        "city": null,
+        "isbn13": "9789462302495",
+        "lang": "French",
+        "pages": 176,
+        "proofUrl": "https://www.librairie-oeilcacodylate.com/catalogues-d-exposition/catalogue-d-exposition/38496/hammershoi-le-maItre-de-la-peinture-danoise",
+        "publisher": "Fonds Mercator",
+        "shop": {
+          "museum": null,
+          "state": "web",
+          "url": null
+        },
+        "showing": "this",
+        "title": "Hammershoi : le maître de la peinture danoise",
+        "year": 2019
+      },
+      {
+        "alsoIsbn13": null,
+        "alsoOf": null,
+        "binding": "hardcover",
+        "card": {
+          "catalogueTitle": "Hammershøi : painter of northern light",
+          "isbn13": "9780847899289",
+          "publisher": null,
+          "publisherResult": "unnamed",
+          "publisherUrl": null,
+          "shopState": "web",
+          "shopUrl": null
+        },
+        "city": null,
+        "isbn13": "9780847899289",
+        "lang": "English",
+        "pages": null,
+        "proofUrl": "https://www.rizzoliusa.com/book/9780847899289",
+        "publisher": null,
+        "shop": {
+          "museum": null,
+          "state": "web",
+          "url": null
+        },
+        "showing": "this",
+        "title": "Hammershøi : painter of northern light",
+        "year": null
+      }
+    ],
+    "englishCheck": "english",
+    "hasCatalogue": "yes",
+    "isbn13": "9780847899289",
+    "originalEdition": null,
+    "otherVenueBook": null,
+    "publisher": null,
+    "publisherResult": "unnamed",
+    "publisherUrl": null,
+    "shopChange": null,
+    "shopState": "web",
+    "shopUrl": null
+  },
+  "title": "Hammershøi: the master of danish painting",
+  "trouble": null,
+  "venue": "Musée Jacquemart-André",
+  "verdict": "4 of 14 checks failed. 17 lines or parts on the card not checked."
+}

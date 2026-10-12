@@ -1,0 +1,322 @@
+{
+  "calls": [
+    {
+      "asked": [
+        "https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html",
+        "https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=2",
+        "https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=3",
+        "https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=4",
+        "https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=5",
+        "https://shop.nationalgallery.org.uk/catalogsearch/result/?q=Millet%3A%20Life%20on%20the%20Land"
+      ],
+      "detail": "opened https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html + https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=2 + https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=3 + https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=4 + https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=5 + https://shop.nationalgallery.org.uk/catalogsearch/result/?q=Millet%3A%20Life%20on%20the%20Land: 6 page(s)",
+      "kind": "open page",
+      "n": 1,
+      "objective": "The printed exhibition catalogue for “Millet: Life on the Land”: the book’s own product page on this shop, its full title and its price.",
+      "ok": true,
+      "queries": [
+        "Millet: Life on the Land exhibition catalogue book"
+      ],
+      "refused": [],
+      "results": [
+        "https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=2",
+        "https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=4",
+        "https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html",
+        "https://shop.nationalgallery.org.uk/catalogsearch/result/?q=Millet%3A%20Life%20on%20the%20Land",
+        "https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=3",
+        "https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=5"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Millet: Life on the Land exhibition catalogue ISBN publisher\",\"The National Gallery Millet: Life on the Land catalogue book\",\"The National Gallery Millet: Life on the Land press release catalogue\"]",
+      "kind": "search",
+      "n": 3,
+      "objective": "Confirm whether a printed catalogue was published for the exhibition “Millet: Life on the Land” at The National Gallery, and give its exact title, ISBN-13 and publisher. Museums often state these in a press release; art-book publishers and booksellers list them too.",
+      "ok": true,
+      "queries": [
+        "Millet: Life on the Land exhibition catalogue ISBN publisher",
+        "The National Gallery Millet: Life on the Land catalogue book",
+        "The National Gallery Millet: Life on the Land press release catalogue"
+      ],
+      "refused": [],
+      "results": [
+        "https://yalebooks.co.uk/book/9781857097382/millet",
+        "https://www.museumbookstore.com/products/millet-life-on-the-land",
+        "https://www.amazon.co.uk/Millet-Life-Land-Sarah-Herring/dp/1857097386",
+        "https://www.abebooks.com/Millet-Life-Land-Herring-Sarah-Kelly/32263386579/bd",
+        "https://www.19thc-artworldwide.org/spring26/gallati-reviews-millet-life-on-the-land",
+        "https://www.nationalgallery.org.uk/about-us/press-and-media/press-releases-archive/millet-life-on-the-land",
+        "https://www.nationalgallery.org.uk/about-us/press-and-media/press-releases/millet-life-on-the-land-1",
+        "https://www.nationalgallery.org.uk/about-us/press-and-media/press-releases-archive/millet-life-on-the-land-1",
+        "https://www.nationalgallery.org.uk/about-us/press-and-media/press-releases/millet-life-on-the-land",
+        "https://www.nationalgallery.org.uk/about-us/press-and-media/press-releases/a-200th-birthday-present-for-everyone"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"9781857097382\",\"9781857097382 Millet: Life on the Land\",\"Millet: Life on the Land The National Gallery catalogue\"]",
+      "kind": "search",
+      "n": 5,
+      "objective": "The ISBN-13, publisher, language and exact printed title of the exhibition catalogue “Millet: Life on the Land”, ISBN 9781857097382, published by National Gallery Global Ltd, for the exhibition at The National Gallery.",
+      "ok": true,
+      "queries": [
+        "9781857097382",
+        "9781857097382 Millet: Life on the Land",
+        "Millet: Life on the Land The National Gallery catalogue"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.museumbookstore.com/products/millet-life-on-the-land",
+        "https://yalebooks.co.uk/book/9781857097382/millet",
+        "https://www.amazon.co.uk/Millet-Life-Land-Sarah-Herring/dp/1857097386",
+        "https://www.19thc-artworldwide.org/spring26/gallati-reviews-millet-life-on-the-land",
+        "https://www.nationalgallery.org.uk/about-us/press-and-media/press-releases-archive/millet-life-on-the-land",
+        "https://www.nationalgallery.org.uk/exhibitions/past/millet-life-on-the-land",
+        "https://www.abebooks.com/Millet-Life-Land-Herring-Sarah-Kelly/32263386579/bd",
+        "https://www.nationalgallery.org.uk/about-us/press-and-media/press-releases/millet-life-on-the-land",
+        "https://theartwolf.com/exhibitions/millet-london-2025",
+        "https://www.abebooks.com/book-search/isbn/9781857097382/used"
+      ]
+    }
+  ],
+  "card": {
+    "appStore": {
+      "reads": [
+        "sweeps/venues",
+        "quarantine/rows",
+        "venues/occasional",
+        "links/pending"
+      ],
+      "writes": []
+    },
+    "blocks": [
+      {
+        "lines": [
+          {
+            "parts": [
+              {
+                "fact": null,
+                "text": "Not in the museum shop — shop link opens the general store.",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "Not in the museum shop — shop link opens the general store.",
+            "verdict": "unchecked"
+          },
+          {
+            "parts": [
+              {
+                "fact": null,
+                "text": "Millet: Life on the Land",
+                "verdict": "unchecked"
+              }
+            ],
+            "text": "Millet: Life on the Land",
+            "verdict": "unchecked"
+          },
+          {
+            "parts": [
+              {
+                "fact": "publisher",
+                "text": "National Gallery Global Ltd",
+                "verdict": "pass"
+              }
+            ],
+            "text": "National Gallery Global Ltd",
+            "verdict": "pass"
+          },
+          {
+            "parts": [
+              {
+                "fact": "ISBN",
+                "text": "ISBN 978-1857097382",
+                "verdict": "pass"
+              }
+            ],
+            "text": "ISBN 978-1857097382",
+            "verdict": "pass"
+          }
+        ],
+        "marker": null,
+        "picked": true,
+        "version": "English 978-1857097382"
+      }
+    ],
+    "error": null,
+    "kind": "single",
+    "ok": true
+  },
+  "cardGrades": [
+    {
+      "field": "English 978-1857097382 — ISBN",
+      "got": "978-1857097382",
+      "key": "9781857097382|listed",
+      "verdict": "pass",
+      "want": "978-1857097382",
+      "why": null
+    },
+    {
+      "field": "English 978-1857097382 — language",
+      "got": "",
+      "key": null,
+      "verdict": "na",
+      "want": "English",
+      "why": "not applicable — this card has no facts line"
+    },
+    {
+      "field": "English 978-1857097382 — publisher",
+      "got": "National Gallery Global Ltd",
+      "key": "9781857097382|publisher",
+      "verdict": "pass",
+      "want": "National Gallery",
+      "why": null
+    },
+    {
+      "field": "Starting pick (the ● marker)",
+      "got": "a card with one book draws no marker",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — its one book is the pick"
+    },
+    {
+      "field": "The card — shop line",
+      "got": "Not in the museum shop — shop link opens the general store.",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    },
+    {
+      "field": "The card — title",
+      "got": "Millet: Life on the Land",
+      "key": null,
+      "verdict": "unchecked",
+      "want": "",
+      "why": "not checked — no right answer recorded"
+    }
+  ],
+  "case": 9,
+  "counted": {
+    "checks": 7,
+    "fails": 0,
+    "unchecked": 3
+  },
+  "grades": [
+    {
+      "field": "English 978-1857097382 — listed as a version",
+      "got": "listed",
+      "key": "9781857097382|listed",
+      "verdict": "pass",
+      "want": "listed",
+      "why": null
+    },
+    {
+      "field": "English 978-1857097382 — second number on the block",
+      "got": "none",
+      "key": "9781857097382|alsoIsbn",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "English 978-1857097382 — language",
+      "got": "English",
+      "key": "9781857097382|language",
+      "verdict": "pass",
+      "want": "English",
+      "why": null
+    },
+    {
+      "field": "English 978-1857097382 — publisher",
+      "got": "National Gallery Global Ltd",
+      "key": "9781857097382|publisher",
+      "verdict": "pass",
+      "want": "National Gallery",
+      "why": null
+    },
+    {
+      "field": "English 978-1857097382 — showing",
+      "got": "this show",
+      "key": "9781857097382|showing",
+      "verdict": "pass",
+      "want": "this show",
+      "why": null
+    },
+    {
+      "field": "No other versions listed",
+      "got": "none",
+      "key": "extras",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "Starting pick",
+      "got": "978-1857097382",
+      "key": "pick",
+      "verdict": "pass",
+      "want": "978-1857097382",
+      "why": null
+    }
+  ],
+  "lookupAt": "2026-10-12T00:30:00.463Z",
+  "lookupId": "L1791765000463zybw",
+  "lookupPath": "lookups/L1791765000463zybw",
+  "ms": 16974,
+  "museumId": "ng",
+  "ok": true,
+  "panel": "Lookup: 6 calls (2 searches, 1 page opens, 3 Claude reads), 6 waits in a row. Time in calls: shop 4.8s, web 6.6s, facts 4.1s.\nopened https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html + https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=2 + https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=3 + https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=4 + https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html?page=5 + https://shop.nationalgallery.org.uk/catalogsearch/result/?q=Millet%3A%20Life%20on%20the%20Land: 6 page(s)\nread the results\nsearch: 10 results for [\"Millet: Life on the Land exhibition catalogue ISBN publisher\",\"The National Gallery Millet: Life on the Land catalogue book\",\"The National Gallery Millet: Life on the Land press release catalogue\"]\nread the results\nsearch: 10 results for [\"9781857097382\",\"9781857097382 Millet: Life on the Land\",\"Millet: Life on the Land The National Gallery catalogue\"]\nread the results\nPublisher: National Gallery Global Ltd — from the ISBN’s results.\n1 version found; picked: 9781857097382.\nNational Gallery Global Ltd is a museum’s own imprint — no publisher page to look for.",
+  "reads": [
+    2,
+    4,
+    6
+  ],
+  "row": {
+    "alsoVersion": null,
+    "catalogueTitle": "Millet: Life on the Land",
+    "editionPick": 0,
+    "editions": [
+      {
+        "alsoIsbn13": null,
+        "alsoOf": null,
+        "binding": "paperback",
+        "card": {
+          "catalogueTitle": "Millet: Life on the Land",
+          "isbn13": "9781857097382",
+          "publisher": "National Gallery Global Ltd",
+          "publisherResult": "selfpublished",
+          "publisherUrl": null,
+          "shopState": "web",
+          "shopUrl": null
+        },
+        "city": null,
+        "isbn13": "9781857097382",
+        "lang": "English",
+        "pages": 64,
+        "proofUrl": "https://www.museumbookstore.com/products/millet-life-on-the-land",
+        "publisher": "National Gallery Global Ltd",
+        "shop": null,
+        "showing": "this",
+        "title": "Millet: Life on the Land",
+        "year": null
+      }
+    ],
+    "englishCheck": null,
+    "hasCatalogue": "yes",
+    "isbn13": "9781857097382",
+    "originalEdition": null,
+    "otherVenueBook": null,
+    "publisher": "National Gallery Global Ltd",
+    "publisherResult": "selfpublished",
+    "publisherUrl": null,
+    "shopChange": null,
+    "shopState": "web",
+    "shopUrl": null
+  },
+  "title": "Millet: Life on the Land",
+  "trouble": null,
+  "venue": "The National Gallery",
+  "verdict": "Every graded check passed. 3 lines or parts on the card not checked."
+}

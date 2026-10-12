@@ -1118,6 +1118,9 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
 
 ### 4. Catalogue lookup generally
 
+**START HERE: `docs/handover_search_stage1.md`** — Stage 1 (does the live search find the
+right books, and only them, for her three cases) before any card work; never judge it by card lines.
+
 **Catalogue versions — published in 43; her three live searches (Vasari, Hubert
 Robert, Hammershøi) came back wrong. Under review as a whole feature, not patched**
 (the third-patch rule: `editionsOf` changed 6 times in days, `composeRow` 5,
