@@ -73,8 +73,9 @@
     }
   ],
   "aka": {
-    "_about": "Other names for one publishing house, written exactly as the lookup may print them. The page grades a publisher by its set of houses (live_check_page.jsx, lcSamePublisher): two houses match when their folded names are equal or one is listed here as another name for the other. Nothing else is treated as the same house.",
+    "_about": "Other names for one publishing house, written exactly as the lookup may print them. The page grades a publisher by its set of houses (build/publisher_match.js, used by the live check page and build/lookup_proof_check.js): two houses match when their folded names are equal or one is listed here as another name for the other. Nothing else is treated as the same house.",
     "Louvre Éditions": ["Musée du Louvre Éditions"],
-    "National Gallery": ["National Gallery Global", "National Gallery Company", "National Gallery Publications"]
+    "National Gallery": ["National Gallery Global", "National Gallery Company", "National Gallery Publications"],
+    "Somogy": ["Somogy, Éditions du"]
   }
 }

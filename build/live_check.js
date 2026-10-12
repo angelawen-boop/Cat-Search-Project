@@ -7,7 +7,7 @@
  * docs/lookup_proof_cards.json. A catalogue-lookup change is "fixed" only when it passes.
  *
  * Cat_Watch.jsx is bundled whole, prepared exactly as build_app.js prepares it, with
- * build/live_check_page.jsx appended; LiveCheck is mounted instead of App. No app
+ * build/publisher_match.js and build/live_check_page.jsx appended; LiveCheck is mounted instead of App. No app
  * function is copied. The cards (build/live_check_cases.json), the right answers, the
  * git branch and commit it was built from are written in as constants.
  *
@@ -28,6 +28,7 @@ const JSX = path.join(ROOT, 'Cat_Watch.jsx');
 const PAGE = path.join(__dirname, 'live_check_page.jsx');
 const CASES = path.join(__dirname, 'live_check_cases.json');
 const CARDS = path.join(ROOT, 'docs', 'lookup_proof_cards.json');
+const MATCH = path.join(__dirname, 'publisher_match.js');
 const OUT = path.join(__dirname, 'dist', 'live_check.html');
 const MOUNT = 'ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(LiveCheck));';
 
@@ -58,7 +59,7 @@ function prepare(build = {}, opts = {}) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-live-'));
   const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = React;\n'
     + app.replace(/^import React.*$/m, '').replace(/^export default function App\(\)\{/m, 'function App(){')
-    + '\n' + consts + fs.readFileSync(PAGE, 'utf8');
+    + '\n' + consts + fs.readFileSync(MATCH, 'utf8') + '\n' + fs.readFileSync(PAGE, 'utf8');
   fs.writeFileSync(path.join(tmp, 'page.tsx'), prepared);
   try {
     execFileSync('npx', ['tsc', path.join(tmp, 'page.tsx'), '--jsx', 'react',

@@ -3,7 +3,7 @@
 // below is the app's own code: lookupCatalogue, its connector and Claude calls, the
 // lookup log (saveLookupTape). The card is the app's own too: App is mounted per case and
 // its Catalogue section read as drawn. Nothing here searches, reads or draws a card.
-// LC_CASES, LC_CARDS, LC_AKA, LC_VENUES and LC_BUILD are written in by the build.
+// LC_CASES, LC_CARDS, LC_AKA, LC_VENUES, LC_BUILD and build/publisher_match.js are written in by the build.
 
 // Claude's raw answer and the tier that answered. The app calls sample.json, which
 // resolves to the parsed answer only, so the page hands the app a sample that is the
@@ -41,7 +41,7 @@ pruneLookupLog=async function(){};
 registerOccasional(LC_VENUES);
 
 // ── GRADING — only the fields docs/lookup_proof_cards.json states ──────────────
-const lcFold=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ø/g,"o").toLowerCase();
+const lcFold=pmFold;
 const lcIsEnglish=l=>/\b(english|anglais|inglese|englisch|engels)\b/i.test(String(l||""));
 const lcLangWord=l=>lcFold(l).split(/[^a-z]+/).filter(Boolean)[0]||"";
 const LC_LANG_ALIASES={french:["french","francais","fr"],dutch:["dutch","nederlands","nl"],italian:["italian","italiano","it"],english:["english","en"]};
@@ -50,28 +50,9 @@ function lcSameLang(got,want){
   const w=lcLangWord(want), g=lcLangWord(got);
   return (LC_LANG_ALIASES[w]||[w]).includes(g);
 }
-// A publisher is its SET of houses. Each side is split where the app recognises a
-// separator, each house folded (accents, capitals, punctuation, a leading "the", trailing
-// generic words only), and the sets must match both ways: no missing house, no extra one.
-// Two names are one house only when folded equal or listed in the cards' `aka` map.
-const LC_HOUSE_SPLIT=/\s*[\/;&]\s*|\s+:\s+|\s+(?:and|with)\s+/i;
-const LC_HOUSE_TAILS=["editions d art","editions","edition","books","publishing","publishers","publications","ltd","limited","inc"];
-function lcFoldHouse(s){
-  let t=lcFold(s).replace(/[^a-z0-9]+/g," ").trim().replace(/^the /,"");
-  for(;;){
-    const hit=LC_HOUSE_TAILS.find(x=>t.length>x.length&&t.endsWith(" "+x));
-    if(!hit)return t;
-    t=t.slice(0,t.length-hit.length-1).trim();
-  }
-}
-const lcHousesOf=s=>String(s==null?"":s).split(LC_HOUSE_SPLIT).map(lcFoldHouse).filter(Boolean);
-const LC_AKA_PAIRS=Object.entries(LC_AKA).filter(([k])=>!k.startsWith("_")).flatMap(([k,others])=>others.map(o=>[lcFoldHouse(k),lcFoldHouse(o)]));
-const lcSameHouse=(a,b)=>a===b||LC_AKA_PAIRS.some(([x,y])=>(x===a&&y===b)||(x===b&&y===a));
-function lcSamePublisher(got,want){
-  const g=lcHousesOf(got), w=lcHousesOf(want);
-  if(!g.length||!w.length)return false;
-  return g.every(a=>w.some(b=>lcSameHouse(a,b)))&&w.every(b=>g.some(a=>lcSameHouse(a,b)));
-}
+// A publisher is its set of houses: the one rule is build/publisher_match.js, written in
+// ahead of this file; `aka` (other names for one house) comes from the cards.
+const lcSamePublisher=(got,want)=>pmSamePublisher(got,want,LC_AKA);
 const lcIsbn=n=>n?fmtIsbn(n):"none";
 const lcLangOf=v=>v?(langName(v.lang)||v.lang||"no language"):"";
 

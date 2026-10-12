@@ -187,6 +187,17 @@ for (const c of CARDS) {
   eq(same('Somogy éditions d\'art', 'Somogy'), true, 'LC-038: a trailing "éditions d\'art" is dropped');
   eq(same('National Gallery Global Ltd', 'National Gallery'), true, 'LC-039: "National Gallery Global Ltd" is "National Gallery" (Ltd dropped, Global listed in aka)');
   eq(same('Fonds Mercator / Lund Humphries', 'Fonds Mercator'), false, 'LC-040: an extra house fails — the sets must be the same');
+  // LC-052: one rule, one copy — build/lookup_proof_check.js and the page give the same answers.
+  const { pmSamePublisher } = require('../../build/publisher_match.js');
+  const aka = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_proof_cards.json'), 'utf8')).aka;
+  const pairs = [['The National Gallery / Lund Humphries', 'National Gallery of Art / Lund Humphries'], ['Musée du Louvre Editions / Lienart', 'Louvre Éditions / Lienart'],
+    ['Lienart', 'Louvre Éditions / Lienart'], ['Hannibal Books', 'Hannibal'], ['Somogy éditions d\'art', 'Somogy'], ['National Gallery Global Ltd', 'National Gallery'],
+    ['Fonds Mercator / Lund Humphries', 'Fonds Mercator'], ['Somogy, Editions du', 'Somogy']];
+  eq(pairs.map(([g, w]) => pmSamePublisher(g, w, aka)), pairs.map(([g, w]) => same(g, w)),
+    'LC-052: the page and build/lookup_proof_check.js use the one publisher rule (build/publisher_match.js)');
+  ok(!/LC_HOUSE_SPLIT|function lcFoldHouse/.test(fs.readFileSync(path.join(__dirname, '..', '..', 'build', 'live_check_page.jsx'), 'utf8'))
+    && /require\('\.\/publisher_match\.js'\)/.test(fs.readFileSync(path.join(__dirname, '..', '..', 'build', 'lookup_proof_check.js'), 'utf8')),
+    'LC-052: no second copy of the rule in the page; lookup_proof_check.js requires the shared file');
 }
 
 // ── The page, run with a store played by a script ───────────────────────────
