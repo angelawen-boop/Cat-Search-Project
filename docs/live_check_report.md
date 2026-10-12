@@ -46,23 +46,19 @@ Metamorphoses `L17916396765747elm`, Millet `L1791639703068rbam`.
 
 ## Follow up — next session
 
-1. **The page is fixed (live as version 2, commit e837c72): run it again first.** Every
-   write is recorded with the store's code and message, on the page ("Problems during
-   this run") and in the run record's `problems`; the app's own writes are watched
-   (its `saveLookupTape` hides failures). Retries follow the store's contract per code:
-   `unavailable` waits 1–3 s, `resource_exhausted` 20–40 s then spaces later writes 1 s
-   (both windows are judgement), the rest are not retried. "Saved" is read back from the
-   store. The page no longer prunes the lookup log (the app keeps 50). Answers follow
-   her agreed cards; Hammershøi's English publisher is graded. Botticelli's lost record
-   stays unexplained — its code was never kept; the next failure names its cause.
-   Tests: `scraper/fixtures/live_check_page.js`, LC-001 to LC-033.
-2. **Regraded baseline:** still 2 of 9 (`docs/live_check_runs/`); Hammershøi's English
-   publisher is now a fail, not "disputed".
-3. **A failure is the baseline, not a fix list.** Diagnose from the lookup records
-   above before changing anything; strongest leads: Watteau's and Metamorphoses'
-   publisher (Claude's name not kept / "Publication" read off a label), NGA's name
-   dropped from "National Gallery of Art/Lund Humphries", the facts read finding no
-   other editions at Vasari, Hubert NGA and Metamorphoses.
-4. **Repeat runs measure how stable the lookup is, and can be back to back** — the
-   search and Claude's reading vary call to call, not day to day. A case that changes
-   between two runs is itself a fault in the lookup.
+1. **Version 3 (commit 395a6c2) — run it and read the run first.** The page now mounts the
+   app's real App per case, loads the returned row through Load and grades the card as drawn
+   ("On the card"), beside the lookup's data ("What the lookup returned"); a fact failing in
+   both counts once. Lines with no stated answer are "not checked"; a one-book card's missing
+   facts line is "not applicable" (her decision: single-version cards do not change). One
+   publisher rule, `build/publisher_match.js` (same set of houses; `aka` in
+   `docs/lookup_proof_cards.json`), used by the page and `build/lookup_proof_check.js`. Each
+   case names its lookup record. Tests LC-001 to LC-052.
+2. **Unproven until a live run:** loading a row into the hidden App through a real browser's
+   file input (tests use a stand-in), and card grading on live-search cards.
+3. **A failure is the baseline, not a fix list.** Diagnose from the lookup records before
+   changing anything; strongest leads: Watteau's and Metamorphoses' publisher, NGA's name
+   dropped from "National Gallery of Art/Lund Humphries", the facts read finding no other
+   editions at Vasari, Hubert NGA and Metamorphoses.
+4. **Repeat runs measure how stable the lookup is, and can be back to back.** A case that
+   changes between two runs is itself a fault in the lookup.
