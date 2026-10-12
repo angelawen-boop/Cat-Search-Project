@@ -71,7 +71,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, versionFacts, pagesByAddress, pagesAbout, bindingOn, labelledIsbns, registrantOf, publisherShown, bookOnShop, museumOf, recheckVersions, buyLinks, pickedVersion, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, museumImprintOnly, aMagazine, resultsForPrompt, pageForPrompt, keptVersions, isbnInAddress };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, versionFacts, pagesByAddress, pagesAbout, bindingOn, labelledIsbns, registrantOf, publisherShown, bookOnShop, museumOf, recheckVersions, buyLinks, pickedVersion, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, museumImprintOnly, aMagazine, resultsForPrompt, pageForPrompt, keptVersions, isbnInAddress, factsPrompt };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -700,7 +700,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     };
     const { calls, row: r } = await run(row('jacquemart', 'Botticelli, artist and designer'), script);
     const factsPromptSent = calls.filter(c => c.kind === 'sample' && isFactsRead(c.prompt)).map(c => c.prompt)[0] || '';
-    ok((factsPromptSent.match(/"year": string\|null, "venueCity": string\|null/g) || []).length === 3,
+    ok((factsPromptSent.match(/"year": string\|null, (?:"showing": "this"\|"other", )?"venueCity": string\|null/g) || []).length === 3,
       'CY-004: the facts read asks each version, edition and other book seen for its year and the other showing’s city, in the one read it already makes');
     eq(brief(r.editions), [['French', '9789462302815', null, 'this'], ['English', null, null, 'this']],
       'BT-001: Botticelli — Fonds Mercator’s French catalogue, and Reaktion’s book kept beside it with its title alone (this recording prints no ISBN for it; her decision: keep when in doubt)');
@@ -919,11 +919,11 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       : {};
     const { calls, row: r } = await run(row('ng', 'Test Metamorphoses'), { mcp, sample });
     const rank = calls.find(c => c.kind === 'sample' && isRank(c.prompt));
-    ok(!!rank && /otherBooks: EVERY OTHER BOOK/.test(rank.prompt), 'S1-008: Metamorphoses — the publisher-candidates read is asked for every book in its results', rank && rank.prompt.slice(0, 200));
+    ok(!!rank && /otherBooks: NOT something to look for/.test(rank.prompt), 'S1-008: Metamorphoses — the publisher-candidates read records the books its results show', rank && rank.prompt.slice(0, 200));
     ok((r.editions || []).some(v => v.isbn13 === NL_ISBN), 'S1-009:   and the Dutch edition it names, printed only in the PDF, is kept', JSON.stringify((r.editions || []).map(v => v.isbn13)));
     const reads = calls.filter(c => c.kind === 'sample').map(c => c.prompt);
-    ok(reads.length > 1 && reads.every(p => /any book with the same title, in any language/.test(p) && /in association with/.test(p)),
-      'S1-010: every read carries her keep rule (same title, no mention of the show, kept) and her "in association with" line', reads.length);
+    ok(reads.length > 1 && reads.every(p => /a book carrying this catalogue's own title, in any\s+language/.test(p) && /NEVER record: a book about a different exhibition or a different artist/.test(p) && /in association with/.test(p) && !/When unsure|even when the text never mentions/.test(p)),
+      'S1-010: every read records books tied to this exhibition or carrying its catalogue’s title, never a different show’s (her decision), and carries her "in association with" line', reads.length);
   }
   {
     // Hubert Robert (NGA): the publisher printed "… in association with Lund Humphries" is
@@ -1004,6 +1004,24 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq(dutch.map(v => v.isbn13), [NL_ISBN],
       'S1-016: Metamorphoses R3 — the Dutch book kept by title from the web read takes the number the publisher-candidates read found', JSON.stringify((r.editions || []).map(v => [v.title, v.isbn13])));
     ok(r.editionPick != null && r.editions[r.editionPick].isbn13 === EN_ISBN, 'S1-017:   and the English book stays picked — filling a copy never moves the pick', JSON.stringify([r.editionPick, (r.editions || []).map(v => v.isbn13)]));
+  }
+
+  // ── S1B-001..S1B-004: Stage 1b — the read's conclusions are its own; nothing it states is discarded ──
+  {
+    const pg = [{ url: 'https://lib.test/r', title: 'Record', excerpts: ['Test Botticelli Reimagined. V&A Publications, 2016. ISBN-13: 978-1851778706. Hardcover.'] }];
+    const one = item => api.keptVersions([{ item: { title: 'Test Botticelli Reimagined', isbn13: '9781851778706', ...item }, given: pg, showing: null }], 'jacquemart', [])[0];
+    eq([one({ showing: 'other' }).showing, one({ showing: 'this' }).showing, one({ venueCity: 'London' }).showing], ['other', 'this', 'other'],
+      'S1B-001: which show a book belongs to is the read\'s answer — never "this show" by code because a city was left blank');
+    const T = 'Test Hammershoi le maitre de la peinture danoise', N = '9789462301290';
+    const pg2 = [{ url: 'https://shop.test/h', title: T, excerpts: [T + '. Fonds Mercator. Hardcover. 175 pages. ISBN ' + N + '.'] }];
+    const vs = api.keptVersions([{ item: { title: T, isbn13: N, language: 'French' }, given: pg2, showing: null },
+      { item: { title: T, isbn13: N, language: 'French', publisher: 'Fonds Mercator', binding: 'hardcover', pages: '175' }, given: pg2, showing: null }], 'jacquemart', []);
+    eq(vs.map(v => [v.isbn13, v.publisher, v.binding, String(v.pages)]), [[N, 'Fonds Mercator', 'hardcover', '175']],
+      'S1B-002: a second copy of the same book fills every fact the first lacked — publisher, binding, pages — nothing a read stated is discarded');
+    const prompt = api.factsPrompt({ book: 'Test Book', show: 'Test Show', venue: 'Test Venue', isbn: null, bookPage: null, facts: [], editions: [], earlier: [], foreign: true });
+    ok(/YOUR JOB/.test(prompt) && /ALSO RECORD — only what the text shows; never look for it/.test(prompt) && /never the language of the website listing it/.test(prompt),
+      'S1B-003: the facts read asks only for the catalogue\'s facts (and its English edition at a non-English venue); everything else only where the text shows it; a book\'s language is its own, never the website\'s');
+    ok(!/When unsure|Never leave a book out/.test(prompt), 'S1B-004: no read tells Claude to include a book it is unsure of');
   }
 
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');

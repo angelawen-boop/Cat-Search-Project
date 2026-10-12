@@ -306,7 +306,7 @@ function LiveCheck(){
         const rec={case:x.case,round,loop:loopId,title:x.row.title,venue:mu?mu.name:x.row.museumId,museumId:x.row.museumId,
           lookupAt:new Date(tape.t0).toISOString(),ms:Date.now()-tape.t0,lookupId,lookupPath,
           ok:!!(out&&out.ok),trouble:(out&&out.trouble)||null,panel:(out&&out.detail)||null,
-          verdict:"Stage 1: "+(stage1.pass?"pass.":"fail."),stage1,keptBooks,row:row?cardFields(row):null,calls};
+          verdict:"Stage 1b: "+(stage1.pass?"pass.":"fail."),stage1,keptBooks,row:row?cardFields(row):null,calls};
         if(rawDb){
           const r=await lcSaveCase(runId,rec,reads);
           if(r.caseWritten)saved.push(x.case);
@@ -330,7 +330,7 @@ function LiveCheck(){
   return(
     <div className="lc">
       <style>{LC_STYLE}</style>
-      <h1>Cat Watch live check — Stage 1</h1>
+      <h1>Cat Watch live check — Stage 1b</h1>
       <div className="soft">Code under test: {LC_BUILD.branch} {"·"} commit {LC_BUILD.commit} {"·"} built {LC_BUILD.builtAt}</div>
       <div className="soft">{LC_CASES.length} cases, searched live through Parallel Search Key and read by Claude, as the app does. Each round runs every case once.</div>
       <button className="run" onClick={run} disabled={running}>{running?"Running…":"Run"}</button>

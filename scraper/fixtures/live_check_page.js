@@ -320,7 +320,7 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
     eq([g.pass, lines(g).pop()], [false, '✗ 978-2757210659 (the album of the exhibition) is an excluded type but was kept.'], 'S1P-005: Hubert Robert — the album kept fails');
     g = api.s1Grade(ANSWERS[9], [read('Another book ISBN 9781588398130', { otherBooks: [{ isbn13: '9781588398130' }] })], rowWith(ed('9781857097382')), true);
     eq([g.pass, g.dropped], [false, ['9781588398130']], 'S1P-006: a book Claude named, printed in what it was given, and not kept — fails as dropped');
-    g = api.s1Grade(A, [search(res('https://x.test', 'ISBN 9782350317441'))], rowWith(ed('9782359063738')), true);
+    g = api.s1Grade({ ...A, keptIfSeen: A.keptIfSeen.filter(b => b.isbn !== '9782350317441'), watch: [{ isbn: '9782350317441', what: 'a watched number' }] }, [search(res('https://x.test', 'ISBN 9782350317441'))], rowWith(ed('9782359063738')), true);
     ok(g.pass && g.lines.some(l => l.watch && /2350317441/.test(l.text)), 'S1P-006a: the watched number 978-2350317441 is reported when it appears, without failing', JSON.stringify(g.lines));
     // A book kept with no ISBN (her fix 5): matched by its answer's title; it fails only
     // where its number was printed in something the search saw (Metamorphoses, the Dutch).
@@ -334,14 +334,30 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
     eq([g.pass, lines(g)[2]], [true, '✓ 978-9493416550 (Dutch, Hannibal) kept by title, “Metamorfosen – Ovidius en de kunsten”; no text printed its ISBN.'],
       'S1P-011a:  and kept by title where no text printed its number: passes');
     g = api.s1Grade(ANSWERS[9], [search(res('https://shop.test/x', 'Test Lone Volume, Testhouse. ISBN 9781588398130.'))], rowWith(ed('9781857097382'), { title: 'Test Lone Volume', isbn13: null }), true);
-    eq([g.pass, lines(g).pop()], [false, '✗ “Test Lone Volume” kept without an ISBN, though https://shop.test/x prints 978-1588398130 with its title — probably its own (check).'],
+    eq([g.pass, lines(g).find(l => /without an ISBN/.test(l))], [false, '✗ “Test Lone Volume” kept without an ISBN, though https://shop.test/x prints 978-1588398130 with its title — probably its own (check).'],
       'S1P-011b:  any other book kept without an ISBN, a lone number printed with its whole title: fails, naming where');
     // Canaletto R3: a bookseller's page prints the kept book's number and a "You may also
     // like" link's; with the kept one left out, the link's number looked like a lone one.
     g = api.s1Grade(ANSWERS[9], [search(res('https://shop.test/y', 'Test Lone Volume, Testhouse. ISBN 9781857097382. You may also like: ISBN 9781588398130.'))],
       rowWith(ed('9781857097382'), { title: 'Test Lone Volume', isbn13: null }), true);
-    eq([g.pass, lines(g).pop()], [true, '✓ “Test Lone Volume” kept without an ISBN; no text the search saw printed one for it.'],
+    eq(lines(g).find(l => /without an ISBN/.test(l)), '✓ “Test Lone Volume” kept without an ISBN; no text the search saw printed one for it.',
       'S1P-011c:  a page printing two valid numbers is no evidence for either, even when one is kept (Canaletto R3)');
+    // Stage 1b (her decision): every kept book is one the answers name, with the right language and show.
+    const C6 = ANSWERS[6], ed6 = (isbn, title, lang, showing) => ({ isbn13: isbn, title, lang, showing });
+    g = api.s1Grade(C6, [], rowWith(ed6('9789061538226', 'Canaletto - Guardi, les deux maîtres de Venise', 'French', 'this'),
+      ed6('9789899119208', 'Splendour in Venice: From Canaletto to Guardi', 'English', 'other')), true);
+    ok(!g.pass && g.lines.some(l => /9789899119208|978-9899119208/.test(l.text) && /not in the answers/.test(l.text)),
+      'S1B-P01: Canaletto — another show’s book kept (Lisbon’s Splendour in Venice) fails, named', JSON.stringify(g.lines));
+    g = api.s1Grade(C6, [], rowWith(ed6('9789061538226', 'Canaletto - Guardi, les deux maîtres de Venise', 'English', 'this')), true);
+    ok(!g.pass && g.lines.some(l => /recorded as English; it is French/.test(l.text)), 'S1B-P02: a French book recorded as English fails');
+    g = api.s1Grade(ANSWERS[1], [], rowWith(ed6('9782359063721', 'Le Livre des dessins', 'French', 'this'), ed6('9782359063738', 'The Book of Drawings', 'English', 'this'),
+      ed6('9789171009166', 'The Book of Drawings', 'English', 'this')), true);
+    ok(!g.pass && g.lines.some(l => /recorded as this show’s; it is another showing’s/.test(l.text)), 'S1B-P03: Stockholm’s book recorded as this show’s fails');
+    g = api.s1Grade(C6, [], rowWith(ed6('9789061538226', 'Canaletto - Guardi, les deux maîtres de Venise', 'French', 'this'),
+      ed6(null, 'Canaletto - Guardi, les deux maîtres de Venise', 'English', 'this')), true);
+    ok(!g.pass && g.lines.some(l => /kept twice/.test(l.text)), 'S1B-P04: the same book kept a second time without its ISBN fails');
+    g = api.s1Grade(C6, [], rowWith(ed6('9789061538226', 'Canaletto - Guardi, les deux maîtres de Venise', 'French', 'this')), true);
+    ok(g.pass, 'S1B-P05: the right book, language and show passes', JSON.stringify(g.lines));
   }
 
   // ── S1P-007: her nine real lookups, regraded — the baseline (old code, three runs) ──
@@ -366,7 +382,7 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
       [2, 1, [1, 2], true], 'S1P-009: one run record per round, both naming the same loop, each finished with all nine cases saved');
     ok(r.finals && /^Round 1: Finished\. Every case and every lookup record is saved\. Round 2: Finished\. Every case and every lookup record is saved\.$/.test(r.finals), 'S1P-009a: the last line says each round saved', r.finals);
     const box = [...win.document.querySelectorAll('.case')].length;
-    ok(/Stage 1: pass\./.test(r.text) && /This show's catalogue found: 978-2359063721/.test(r.text) && /Every book the lookup kept/.test(r.text) && /Round 2/.test(r.text),
+    ok(/Stage 1b: pass\./.test(r.text) && /This show's catalogue found: 978-2359063721/.test(r.text) && /Every book the lookup kept/.test(r.text) && /Round 2/.test(r.text),
       'S1P-010: each case box shows its Stage 1 verdict, its lines and the books kept; the grid shows both rounds', r.text.slice(0, 500));
   }
 

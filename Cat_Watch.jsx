@@ -2644,24 +2644,28 @@ const READ_RULES_FOREIGN=READ_RULES.replace(/If the same catalogue is sold in mo
   "If the catalogue is sold in more than one language, take the edition in the venue's own language — "
  +"an English edition is checked separately.\n");
 
-// EVERY BOOK SEEN IS WRITTEN DOWN (her keep rule; docs/handover_search_stage1.md): every
-// read lists every book in its text that could be this show's catalogue or a version of it.
+// BOOKS THE TEXT SHOWS, RECORDED — NEVER SEARCHED FOR (her intent; docs/handover_search_stage1.md):
+// only books the text ties to THIS exhibition, each with every fact the text prints for it.
 const OTHER_ITEM='{"title": string|null, "isbn13": string|null, "language": string|null, "publisher": string|null, '
-  +'"binding": string|null, "pages": string|null, "year": string|null, "venueCity": string|null, "evidenceUrl": string|null}';
+  +'"binding": string|null, "pages": string|null, "year": string|null, "showing": "this"|"other", "venueCity": string|null, "evidenceUrl": string|null}';
 const OTHER_BOOKS_RULE=
-  "otherBooks: EVERY OTHER BOOK in this text that could be this exhibition's catalogue or a version of it — "
- +"another language, printing, binding or edition of it; the catalogue made for a showing of this exhibition at "
- +"ANOTHER venue; and any book with the same title, in any language, even when the text never mentions the "
- +"exhibition. Each with whatever the text states about it, and null for anything it does not state: its title as "
- +"printed, its ISBN as printed (wherever the text prints it, a catalogue or a list included), language, publisher, "
- +"binding (hardcover or paperback), pages, year; venueCity — the other venue's city, in English, when it was made "
- +"for a showing elsewhere, else null; evidenceUrl — the address of the result that shows it. Leave out ONLY: books "
- +"with nothing to do with this exhibition, a book the text calls an album or a booklet, and a magazine's special "
- +"issue (hors-série). When unsure, include it. An empty list if none.\n"
+  "otherBooks: NOT something to look for — only books this text itself shows. Record any OTHER book the text "
+ +"ties to THIS exhibition: another language, printing or binding of its catalogue; the catalogue made for a "
+ +"showing of this same exhibition at ANOTHER venue; or a book carrying this catalogue's own title, in any "
+ +"language. NEVER record: a book about a different exhibition or a different artist, a book from an earlier "
+ +"show, a heading or page title that is not a book's title, a book the text calls an album or a booklet, or a "
+ +"magazine's special issue (hors-série).\n"
+ +"For each book you record, give EVERY fact the text prints for that book and leave none out: its title as "
+ +"printed; its ISBN as printed (wherever the text prints it — a record, a list, a catalogue, a product page); "
+ +"publisher; binding (hardcover or paperback); pages; year; language — the language the BOOK ITSELF is printed "
+ +"in, as the text states it, never the language of the website listing it; showing — \"this\" when it was made "
+ +"for this exhibition at this venue, \"other\" when it was made for a showing of this exhibition at another "
+ +"venue; venueCity — that other venue's city, in English, else null; evidenceUrl — the address of the result "
+ +"that shows it. Null only for a fact the text does not print. An empty list if none.\n"
  +PUBLISHER_LINE;
 const READ_SHAPE=
   "\nlanguage: the language this catalogue's text is printed in, named in English (a bilingual book: name both), "
- +"or null if the results do not say.\n"
+ +"as the results state it — never the language of the website listing it; null if the results do not say.\n"
  +OTHER_BOOKS_RULE
  +"\nReply with ONLY this JSON object and nothing else:\n"
  +'{"found": true|false, "catalogueTitle": string|null, "isbn13": string|null, '
@@ -3211,9 +3215,9 @@ function factFrom(ranked,read,same){
 // publisher step judged that book's own. No page about it → the page that proved it.
 function versionFacts(v,pages,museumId,confirmed){
   const ranked=pagesAbout(v,pages,museumId,confirmed);
-  // A book only written down keeps what its read stated when no page about it says.
-  v.binding=factFrom(ranked,bindingOn,(a,b)=>a===b)||(v._kept?v._stated.binding:null);
-  v.pages=factFrom(ranked,pagesOn,(a,b)=>a===b)||(v._kept?v._stated.pages:null);
+  // What a read stated stands where no page about the book states it.
+  v.binding=factFrom(ranked,bindingOn,(a,b)=>a===b)||(v._stated?v._stated.binding:null);
+  v.pages=factFrom(ranked,pagesOn,(a,b)=>a===b)||(v._stated?v._stated.pages:null);
   v.year=v._year?yearOf(v._year,ranked.map(p=>p.x)):v.year||null;
   v.proofUrl=ranked.length?String(ranked[0].x.url):v._proof||null;
   return ranked;
@@ -3257,7 +3261,7 @@ function printingsOf(cands,card,pages,museumId){
       publisher:venueFirst(pub,museumId),isbn13:isbn,alsoIsbn13:null,alsoOf:null,showing:"this",proofUrl:null,
       city:cityOf(c.venueCity,pub,pages,museumId),year:null,
       _year:c.year,_proof:c.evidenceUrl&&isbnInText(isbn,resultText(about.find(x=>sameAddress(x.url,c.evidenceUrl))||{}))?c.evidenceUrl:null,
-      _pub:pub,_pubFrom:from});
+      _pub:pub,_pubFrom:from,_stated:{binding:bindingOn(c.binding),pages:pagesPrinted(c.pages,pages)}});
   }
   return out;
 }
@@ -3283,7 +3287,8 @@ function editionsOf(editions,orig,pages,museumId,log){
     if(aMagazine(ed.title,pub,onV,isbn))continue;
     const proof=ed.evidenceUrl&&onV.some(x=>sameAddress(x.url,ed.evidenceUrl))?ed.evidenceUrl:(onV[0]&&onV[0].url)||null;
     const v={title,lang:langName(ed.language),binding:null,pages:null,publisher:null,isbn13:isbn,alsoIsbn13:null,alsoOf:null,
-      showing:"this",proofUrl:null,city:cityOf(ed.venueCity,pub,pages,museumId),year:null,_year:ed.year,_proof:proof,_why:null};
+      showing:"this",proofUrl:null,city:cityOf(ed.venueCity,pub,pages,museumId),year:null,_year:ed.year,_proof:proof,_why:null,
+      _stated:{binding:bindingOn(ed.binding),pages:n}};
     // Kept whatever its page count (her decision: page count decides nothing). Unproven
     // books are kept too, never picked (_unproven).
     if(differentBook(n,orig._pages)){
@@ -3352,11 +3357,14 @@ function isbnInAddress(u){
   const found=new Set([...String(u||"").matchAll(/(?:^|[^0-9])(97[89]\d{10})(?![0-9])/g)].map(m=>m[1]).filter(isbn13Checks));
   return found.size===1?[...found][0]:null;
 }
-// A copy kept by title only takes the number and blank facts of a later copy of the same book.
+// Two copies of one book: every fact the later copy carries fills a blank on the kept one —
+// nothing a read stated is discarded. An ISBN is filled only on a copy kept by title alone.
 function fillVersion(x,v){
-  if(x.isbn13||!v.isbn13||!x._kept)return false;
-  for(const k of ["isbn13","lang","binding","pages","publisher","city","_year","_proof","_pub","_pubFrom"])if(x[k]==null&&v[k]!=null)x[k]=v[k];
-  if(x._stated&&v._stated)for(const k of ["binding","pages"])if(x._stated[k]==null)x._stated[k]=v._stated[k];
+  if(!x.isbn13&&v.isbn13&&x._kept)x.isbn13=v.isbn13;
+  for(const k of ["lang","binding","pages","publisher","city","_year","_proof","_pub","_pubFrom"])if(x[k]==null&&v[k]!=null)x[k]=v[k];
+  const st=v._stated||{binding:v.binding,pages:v.pages};
+  x._stated=x._stated||{binding:null,pages:null};
+  for(const k of ["binding","pages"])if(x._stated[k]==null&&st[k]!=null)x._stated[k]=st[k];
   return true;
 }
 function keptVersions(kept,museumId,log){
@@ -3370,7 +3378,7 @@ function keptVersions(kept,museumId,log){
     const city=cityOf(item.venueCity,pub,given,museumId);
     const v={title:tp?tp.title:null,lang:langName(item.language),binding:bindingOn(item.binding),
       pages:pagesPrinted(item.pages,given),publisher:venueFirst(pub,museumId),isbn13:isbn,alsoIsbn13:null,alsoOf:null,
-      showing:showing||(item.venueCity?"other":"this"),proofUrl:null,city,year:null,_year:item.year,
+      showing:showing||(item.showing==="this"||item.showing==="other"?item.showing:item.venueCity?"other":"this"),proofUrl:null,city,year:null,_year:item.year,
       _proof:item.evidenceUrl&&given.some(x=>sameAddress(x.url,item.evidenceUrl))?item.evidenceUrl:null,
       _unproven:true,_kept:true,_pub:pub,_pubFrom:pub?"general results":null};
     v._stated={binding:v.binding,pages:v.pages};
@@ -3693,12 +3701,14 @@ function carriesBook(x,book,isbn){ return !!((isbn&&isbnInText(isbn,resultText(x
 // The facts round's one read: the book's own page (at a non-English venue, read here
 // rather than on its own), the facts search and the edition search.
 function factsPrompt(q){
-  const item='{"title": string, "isbn13": string, "language": string, "publisher": string|null, "pages": string|null, "year": string|null, "venueCity": string|null, "evidenceUrl": string}';
+  const item='{"title": string, "isbn13": string, "language": string|null, "publisher": string|null, "binding": string|null, "pages": string|null, "year": string|null, "venueCity": string|null, "evidenceUrl": string}';
   const shape='{"isbn13": string|null, "publisher": string|null, "pages": string|null, "versions": ['+item+']'
     +(q.bookPage?', "pagePublisher": string|null, "pagePublisherUrl": string|null':'')
     +(q.foreign?', "language": string|null, "title": string|null':q.needTitle?', "title": string|null':'')
     +', "editions": ['+item+'], "otherBooks": ['+OTHER_ITEM+']}';
   // needTitle: the book is known so far only as "the catalogue" (unnamed in lookupCatalogue).
+  // Her intent: the job is this book's ISBN and publisher (and, at a non-English venue, its
+  // language and its English edition); everything else is recorded only where the text shows it.
   return "You are reading real web text about ONE printed exhibition catalogue: "
     +(q.needTitle?"the catalogue of the exhibition “"+q.show+"” at "+q.venue+". Its own title is not known yet and may differ from the exhibition's"
       :"“"+q.book+"”"+(q.isbn?", ISBN "+q.isbn:"")+", the catalogue of the exhibition “"+q.show+"” at "+q.venue)+".\n"
@@ -3706,33 +3716,31 @@ function factsPrompt(q){
     +"Give every ISBN EXACTLY as printed — a 10-digit one as it stands, never converted.\n"
     +"\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
     +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n"
+    +"\nYOUR JOB — this catalogue's facts:\n"
     +"isbn13: this book's own ISBN, or null.\n"
-    +"pages: the number of pages the text prints for THIS book (\"544 pages\", \"281 pp.\"), digits only, or null.\n"
-    +"versions: other printings of THIS SAME book in the SAME language that the text shows with their own ISBN — "
-    +"a hardcover beside a paperback, or the same book under another publisher's imprint (a museum's own edition "
-    +"beside a co-publisher's). Its title, ISBN, language, publisher and pages as printed, and the address of the "
-    +"result that shows it. Never a translation, never a different book. An empty list if none.\n"
     +"publisher: the house that printed THIS book, as the search results name it — never a shop or a seller. Null if none says.\n"
     +(q.bookPage?"pagePublisher, pagePublisherUrl: the publisher SECTION A prints for this book, and any link there to the "
       +"PUBLISHER'S OWN page for it (not this shop, not a bookseller). Null if it shows none.\n":"")
-    +(q.foreign?"language: the language this book's text is printed in, named in English (French, Italian…), or null if "
-      +"nothing says. A bilingual book: name both.\n"
+    +(q.foreign?"language: the language this book's text is printed in, named in English (French, Italian…), as the text "
+      +"states it — never the language of the website listing it; null if nothing says. A bilingual book: name both.\n"
       +"title: this book's title EXACTLY as printed, in its own language — never translated. Null if not shown.\n"
+      +"editions: this catalogue's ENGLISH edition, if the text shows one — often recorded as “originally published in … "
+      +"as …”: its title as printed, its ISBN, its publisher and the address of the result that shows it. Its publisher "
+      +"only where the text names the house that printed THAT edition, else null — “originally published … Fonds "
+      +"Mercator” names the original's house, not the translation's.\n"
       :q.needTitle?"title: this book's title EXACTLY as the text prints it, only where the text ties it to this exhibition at this venue. Null if not shown.\n":"")
-    // Every venue: an English venue's book may have a translation too (Hubert Robert, NGA).
-    +("editions: every OTHER edition of this same book the text shows with its own ISBN — a translation, "
-      +"such as an English edition, often recorded as “originally published in … as …”. Its title as "
-      +"printed, its ISBN, its language, its publisher and the address of the result that shows it. Its publisher "
-      +"only where the text names the house that printed THAT edition, else null — “originally published … "
-      +"Fonds Mercator” names the original's house, not the translation's. Its pages as for this book. An empty list "
-      +"if none. Never invent one.\n")
-    // Her version lines name the other showing's city and an English edition's year.
-    +"For each version and edition: year — the year THAT one was published, as printed, else null; venueCity — "
-    +"when the text says it was printed for a showing of the exhibition at ANOTHER venue, that venue's city in "
-    +"English (Stockholm, Washington), else null.\n"
+    +"\nALSO RECORD — only what the text shows; never look for it, never guess it:\n"
+    +"pages: the number of pages the text prints for THIS book (\"544 pages\", \"281 pp.\"), digits only, else null.\n"
+    +"versions: other printings of THIS SAME book in the SAME language the text shows with their own ISBN — "
+    +"a hardcover beside a paperback, or the same book under another publisher's imprint (a museum's own edition "
+    +"beside a co-publisher's). Never a translation, never a different book. An empty list if none.\n"
+    +(q.foreign?"":"editions: any edition of this book in another language the text shows with its own ISBN, such as a "
+      +"translation recorded as “originally published in … as …”. An empty list if none.\n")
+    +"For each version and edition, every fact the text prints for it: title, ISBN, language (of the book itself), "
+    +"publisher, binding, pages, year, and the address of the result that shows it; venueCity — when the text says it "
+    +"was printed for a showing of the exhibition at ANOTHER venue, that venue's city in English (Stockholm, "
+    +"Washington), else null.\n"
     +OTHER_BOOKS_RULE
-    +"Facts about THIS book come only from text about it; any you cannot find are null. Never leave a book out "
-    +"of versions, editions or otherBooks because you are unsure of it — include it.\n"
     +(q.bookPage?"\nSECTION A — ONE web page in full: the book's own page.\n"+pageForPrompt(q.bookPage.results,12000)+"\n":"")
     +(q.facts.length?"\nSECTION B — web search results about this book.\n"+resultsForPrompt(q.facts,2500,{words:[q.book,q.isbn||""]},50000)+"\n":"")
     +(q.editions.length?"\nSECTION C — web search results about editions of this book in other languages.\n"

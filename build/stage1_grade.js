@@ -1,4 +1,4 @@
-// stage1_grade.js — her Stage 1 pass test (docs/handover_search_stage1.md), one copy.
+// stage1_grade.js — her Stage 1 and 1b pass test (docs/handover_search_stage1.md), one copy.
 // Written into the live check page by build/live_check.js and required by
 // build/stage1_check.js, which regrades saved lookup records. No app code is used: it
 // reads the lookup's calls (the lookup log's tape) and the row it returned.
@@ -122,6 +122,27 @@ function s1Grade(answers,calls,row,finished){
     }
     if(cands.size===1){ const [n,u]=[...cands][0]; lines.push({ok:false,text:"“"+t+"” kept without an ISBN, though "+u+" prints "+s1Fmt(n)+" with its title — probably its own (check)."}); }
     else lines.push({ok:true,text:"“"+t+"” kept without an ISBN; no text the search saw printed one for it."});
+  }
+  // ── STAGE 1B: THE CONCLUSIONS (her decision) — every kept book is one the answers name,
+  // with the right language and the right show; a book kept twice is the same book read twice.
+  const named=[...(answers.thisShow||[]),...(answers.english?[answers.english]:[]),...(answers.keptIfSeen||[])];
+  const eds=(Array.isArray(row&&row.editions)?row.editions:[]).filter(Boolean);
+  const langOk=(want,got)=>{ const w=s1Fold(want), g=s1Fold(got); return !g||g.split(/[^a-z]+/).includes(w); };
+  for(const v of eds){
+    const label=(v.isbn13?s1Fmt(v.isbn13)+" ":"")+"“"+(v.title||"untitled")+"”";
+    if(!v.isbn13&&eds.some(o=>o!==v&&o.isbn13&&o.title&&s1Words(v.title).length&&s1TitleMatch(v.title,o.title))){
+      lines.push({ok:false,stage:"1b",text:label+" kept twice — once without its ISBN, as a separate book."});
+      continue;
+    }
+    const b=v.isbn13?named.find(x=>nums(x).map(s1Digits).includes(s1Digits(v.isbn13)))
+      :named.find(x=>x.title&&s1TitleMatch(x.title,v.title||""));
+    if(!b){
+      if(!(answers.excluded||[]).some(x=>v.isbn13&&nums(x).map(s1Digits).includes(s1Digits(v.isbn13))))
+        lines.push({ok:false,stage:"1b",text:label+" kept, but it is not in the answers — another show’s book or junk (if it belongs, add it to the answers)."});
+      continue;
+    }
+    if(b.lang&&v.lang&&!langOk(b.lang,v.lang))lines.push({ok:false,stage:"1b",text:label+" recorded as "+v.lang+"; it is "+b.lang+"."});
+    if(b.showing&&(v.showing||"this")!==b.showing)lines.push({ok:false,stage:"1b",text:label+" recorded as "+((v.showing||"this")==="this"?"this show’s":"another showing’s")+"; it is "+(b.showing==="this"?"this show’s":"another showing’s")+"."});
   }
   return{pass:finished!==false&&lines.every(l=>l.ok),lines,books,dropped,kept:[...kept]};
 }
