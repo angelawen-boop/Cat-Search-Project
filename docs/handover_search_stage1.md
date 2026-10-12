@@ -10,18 +10,25 @@ It replaces any plan in `docs/live_check_report.md` where the two disagree.
 `R17917925914628tgi` was refused by Claude's rate limit throughout and is not a result).
 Hammershøi, Canaletto and Metamorphoses passed every round: her three fixes are proven live.
 
-**Her decisions on the third run (settled — never ask again):**
+**Stage 1 (finding every relevant book) is DONE** — her call, on the third run.
+
+**Stage 1b — correct conclusions — is next (her definition).** New problems since her five
+agreed fixes: junk books now kept, and books misread (a French book called English, another
+show's book called this show's). Stage 1b's test page must grade CONCLUSIONS, per book: this
+show / another showing / junk; language; publisher; ISBN; binding. Stage 2 (printing correct
+information) cannot start until 1b passes.
+
+**Her decisions (settled — never ask again):**
 1. **No fact is ever discarded from any result Claude reads**: title, ISBN, publisher,
-   binding, language. Botticelli R3 (`L1791805389183mk3a`) broke this: *Botticelli
-   Reimagined* reported with no ISBN though its cited result printed 978-1851778706.
-2. **A book clearly for a different show is junk, not "unsure"**: a different artist, a
-   different title, an old show. Filter out: *Botticelli Reimagined* (V&A 2016), *Gauguin:
-   Metamorphoses* (MoMA), 5 Continents' *Giorgio Vasari*, NGA's 1984 *Watteau*,
-   "Publicatie | Metamorphoses" (a page title, not a book).
-3. **Stage 1 is the information, not just which books.** A wrong language (Canaletto's
-   French title kept as English), a wrong "this show / another showing" label, a junk
-   book kept, a missing publisher — all Stage 1. **Stage 2 is only display**: with correct
-   information in hand, the card prints every fact it has, in the right block and sentence.
+   binding, language. Botticelli R3 (`L1791805389183mk3a`): *Botticelli Reimagined* reported
+   with no ISBN though its cited result printed 978-1851778706.
+2. **A book clearly for a different show is junk, never "unsure"**: *Botticelli Reimagined*,
+   *Gauguin: Metamorphoses*, 5 Continents' *Giorgio Vasari*, NGA's 1984 *Watteau*,
+   "Publicatie | Metamorphoses" (a page title, not a book), Lisbon's *Splendour in Venice*.
+3. **Never decide "this show's book" by matching titles** — the catalogue and its editions
+   carry titles in different languages. Whether a book belongs to this show is a reading
+   judgement (Claude's), checked by code only where a fact has a fixed shape.
+4. **Nothing goes under "build" without a traced cause.**
 
 Also seen: 978-2350317441 is printed beside 978-2359063721 on Paris Musées' library record
 (parismuseescollections.paris.fr/en/node/995149) and BnF's — likely the Louvre's own number
