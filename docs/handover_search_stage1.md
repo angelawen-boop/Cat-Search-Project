@@ -79,9 +79,10 @@ is); it is written down so she can see it.
 found if one exists; nothing the search saw dropped except junk and excluded types. A run
 whose results never mention another showing is not wrong for lacking its book.
 
-## What throws books away today (from the nine records and the code)
+## What threw books away (from the nine records and the code)
 
-All four go against her rules; fix them one at a time.
+**Changed on `main` (commit 5f3f0a6), not yet proven live:** all four below and the English
+stop rule; tests S1-001 to S1-007. Proof is the Stage 1 test page, run in a loop.
 1. Claude's first read has room for one book; any other book in those results is never
    recorded.
 2. The facts read is asked only for other printings and translations of the same book,
