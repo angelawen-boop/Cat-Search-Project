@@ -5,18 +5,23 @@ It replaces any plan in `docs/live_check_report.md` where the two disagree.
 
 ## START HERE — the next session's job
 
-**Her three fixes from her second run are built and on the test page** (commit 27f264d,
-tests S1-014 to S1-017, S1P-011c). Changed, not yet proven live:
-1. Same book seen twice: the copy kept by title takes the later copy's ISBN and blank
-   facts (`fillVersion`, in `keptVersions` and `add` in `lookupCatalogue`; the pick's index
-   never moves). Hammershøi R2, Metamorphoses R3.
-2. No ISBN from the read: the one valid 978/979 number in the address of the result it
-   cites (`isbnInAddress`). Canaletto R1.
-3. Grader: a result printing two valid numbers is no evidence for either. Canaletto R3.
+**Her third run, code 27f264d (her three fixes): 26 of 27 lookups pass.** Records
+`R17917918897420acl`, `R17917922677782eus` (rounds 1–2), `R1791805156533znma` (round 3;
+`R17917925914628tgi` was refused by Claude's rate limit throughout and is not a result).
+Hammershøi, Canaletto and Metamorphoses passed every round: her three fixes are proven live.
 
-**Next:** she taps Run (3 rounds) on https://claude.ai/artifact/KrnwLxC6YdZkd3QyFW4wmy.
-Read the records from the page's store and grade them (below). "Fixed" only when every
-case passes, every round.
+**One failure, Botticelli round 3** (`L1791805389183mk3a`): the facts read listed *Botticelli
+Reimagined* (V&A 2016) with no ISBN although its prompt printed 978-1851778706 on the cited
+result (yahcs.york.ac.uk). Not the address case fix 2 covers. Open, her call: (a) take the one
+valid ISBN printed in the cited result's TEXT, as fix 2 does for its address; (b) whether a
+different show's catalogue with a different title is junk.
+
+**Also seen, for her (not Stage 1 failures):** 978-2350317441 is printed beside 978-2359063721 on
+Paris Musées' library record (parismuseescollections.paris.fr/en/node/995149) and BnF's — the
+Louvre's own number for the French Vasari, kept as a separate block (a bare list proves nothing).
+Canaletto round 1 picked nothing: Lisbon's English *Splendour in Venice*, now kept with its ISBN,
+triggered her pick rule 5. Kept books vary run to run (Watteau's NGA 1984 book, Hammershøi's RA
+book, junk such as "Gauguin: Metamorphoses"); "this"/"other" labels vary — Stage 2.
 
 **Still open, her call (nothing failed on it yet):** two places where Claude never sees what
 the search found — (a) when code ranks the publisher's pages itself
