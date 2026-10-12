@@ -1,181 +1,163 @@
-# Handover: catalogue search, Stage 1 (finding the right books)
+# Handover: catalogue search — Stage 1 done, Stage 1b in progress
 
-Read this whole note before touching catalogue search, the live check page, or her cases.
+Read this whole note before touching catalogue search, the live check page or her cases.
 It replaces any plan in `docs/live_check_report.md` where the two disagree.
 
 ## START HERE — the next session's job
 
-**Stage 1b's second round of fixes is on the test page (commit 8fed6ff), not yet proven live.**
-Her run at 65a10a9 (`R1791808388866icp3`, `R1791808766721qft7`, `R17918091268442cny`): 24 of 27;
-junk and wrong languages gone in every round. Failures, causes from the records, each fixed:
-- Canaletto R1: SUDOC printed the catalogue's two numbers; the answer had one ISBN slot →
-  `otherIsbns` on every answer, each further number kept as the same book.
-- Botticelli R2: Parallel glued Reaktion's two numbers ("97817891492899781789144383") →
-  `unglueIsbns` splits two valid ISBNs run together.
-- Botticelli R1: a read kept Reaktion's book by title; a later read saw its number but never
-  listed it → `recordedNote`: later reads are told which recorded books still lack facts.
-- Hubert Robert (NGA) R3: Claude cut "in association with Lund Humphries" despite the rule,
-  so the ISBN search missed it → the whole-line rule now sits beside each publisher field.
-- Metamorphoses R3 passed wrongly (the Dutch book under a list heading, and again by title)
-  → the grader now fails both.
-Next: her run (3 rounds), then grade.
+**She has run (or is running) the live check page on commit 8fed6ff.** Read that run's
+records, grade them, and report to her (format below). Nothing is built before she sees
+the report.
 
-**Stage 1 (finding every relevant book) is DONE** — her call, on the third run.
+1. Find the run: ArtifactData `list` collection `checks` (url
+   https://claude.ai/artifact/KrnwLxC6YdZkd3QyFW4wmy, `query.limit` 1000, `out_dir` in the
+   scratchpad). The run records with `"commit": "8fed6ff"` are hers; one record per round,
+   all sharing one `loop`. Each lists its `lookups[]` (case → lookup id) and
+   `passedCases` / `failedCases`.
+2. Per round: `list` collection `checks/<run id>/cases` → each case's `stage1.lines` (the
+   grade the page computed live), `keptBooks`, `row`, `trouble`, `ok`.
+3. For any failure, the lookup record: `list` collection `lookups` (headers) and
+   `lookups/<id>/pieces`, both into one `out_dir`; then `node build/lookup_log.js <dir> <id>`
+   prints every call, every Claude prompt and answer. Trace each failure to the read that
+   made it: was the fact in that read's prompt, and what did Claude answer?
+4. **A round where every lookup says "Claude is rate-limited … sampling too often" is not a
+   result** — the page asked Claude too often; it says nothing about the code. She reruns.
 
-**Stage 1b — correct conclusions — is next (her definition).** New problems since her five
-agreed fixes: junk books now kept, and books misread (a French book called English, another
-show's book called this show's). Stage 1b's test page must grade CONCLUSIONS, per book: this
-show / another showing / junk; language; publisher; ISBN; binding. Stage 2 (printing correct
-information) cannot start until 1b passes.
+**How to report (her standard):** combined results across rounds, not only pass/fail —
+read every line the grade printed, compare the kept books and conclusions round by round,
+say what varies. For each failure, its own cause from the record (step, what Claude was
+shown, what it answered), labelled proven or guess. Never lump failures under one cause.
 
-**Her decisions (settled — never ask again):**
-1. **No fact is ever discarded from any result Claude reads**: title, ISBN, publisher,
-   binding, language. Botticelli R3 (`L1791805389183mk3a`): *Botticelli Reimagined* reported
-   with no ISBN though its cited result printed 978-1851778706.
-2. **A book clearly for a different show is junk, never "unsure"**: *Botticelli Reimagined*,
-   *Gauguin: Metamorphoses*, 5 Continents' *Giorgio Vasari*, NGA's 1984 *Watteau*,
-   "Publicatie | Metamorphoses" (a page title, not a book), Lisbon's *Splendour in Venice*.
-3. **Never decide "this show's book" by matching titles** — the catalogue and its editions
-   carry titles in different languages. Whether a book belongs to this show is a reading
-   judgement (Claude's), checked by code only where a fact has a fixed shape.
-4. **Nothing goes under "build" without a traced cause.**
+**"Fixed" means the live page passes every case, every round** (CLAUDE.md §1).
 
-Also seen: 978-2350317441 is printed beside 978-2359063721 on Paris Musées' library record
-(parismuseescollections.paris.fr/en/node/995149) and BnF's — likely the Louvre's own number
-for the French Vasari (a guess); kept as a separate block. Canaletto R1 picked nothing:
-Lisbon's *Splendour in Venice* (a different show, so junk under decision 2) triggered pick rule 5.
+## What is on the page now (commit 8fed6ff) — changed, not yet proven live
 
-**Still open, her call (nothing failed on it yet):** two places where Claude never sees what
-the search found — (a) when code ranks the publisher's pages itself
-(`rankPublisherPages`), the site search's results reach no read; (b) the pages opened in
-phase 2c (last try for the ISBN) are read for numbers by code only. Covering both costs
-one more Claude read per lookup. Recommendation: wait for a failure that shows it.
+Her previous run, commit 65a10a9 (`R1791808388866icp3`, `R1791808766721qft7`,
+`R17918091268442cny`): **24 of 27; no junk book and no wrong language in any round** (the
+65a10a9 prompt rewrite worked for both). Each failure, its proven cause, and the fix in 8fed6ff:
 
-## Where it stands
+| Failure | Cause (from the record) | Fix |
+|---|---|---|
+| Canaletto R1 — 978-9061538448 dropped | SUDOC prints "ISBN : 9789061538226 ISBN : 9789061538448" for the catalogue; the answer had ONE ISBN slot | `otherIsbns` on every answer; each further number kept as the same book (`keepSeen`, `keepMoreNumbers`) |
+| Botticelli R2 — 978-1789149289 dropped | Parallel's copy of the Chicago press page glued Reaktion's numbers: "97817891492899781789144383" | `unglueIsbns` splits two valid ISBNs run together, in `oneText`, `resultText` and every result shown to Claude |
+| Botticelli R1 — 978-1789144383 dropped | one read kept Reaktion's book by title (no number in its text); a later read had the number but never listed the book | `recordedNote`: the facts read and both publisher reads are told which recorded books still lack facts, and list them again with what their text prints |
+| Hubert Robert (NGA) R3 — catalogue never found | the text said "Published in association with Lund Humphries"; Claude answered "National Gallery of Art", so the ISBN search never named Lund Humphries and code took it for the museum's own imprint | the whole-publisher-line rule (`PUBLISHER_LINE`) now sits beside every catalogue publisher field (READ_RULES, PAGE_RULES, the facts read), not only after the other-books rule — **why Claude cut it is a guess** |
+| Metamorphoses R3 — passed wrongly | the Dutch book kept under a list heading ("Metamorphoses", with its ISBN) and again by its own title without one | grader: a book kept again by title beside its numbered copy, or under a title not its own, fails |
 
-**Her second Stage 1 run, code cf96c50 (her five agreed fixes): 25 of 27 lookups pass.**
-Run records `R17917887620071hpx`, `R1791789125415oirj`, `R1791789421363ubw1` (one loop).
+Tests: S1B-001 to S1B-008 (`scraper/fixtures/catalogue_route.js`), S1B-P01 to S1B-P06
+(`scraper/fixtures/live_check_page.js`). `npm run test:app` passes.
 
-| Case | R1 | R2 | R3 |
+**Earlier on 65a10a9 (proven live in her run):** every read follows her intent below;
+"When unsure, include it" and "even when the text never mentions the exhibition" are gone;
+each book's language is the book's own, never the listing site's; Claude says which show
+each book belongs to (`showing`) — code no longer calls a book "this show's" when a city is
+left blank; a second copy of a book fills every fact the first lacked (`fillVersion`); a
+fact a read stated stands where no page states it (`_stated`, `versionFacts`).
+
+## Her intent for the search (settled — never re-ask; the prompts must realise it)
+
+- **Required, at most two books:** this show's catalogue — title, publisher, ISBN, link to
+  the book on the publisher's site. If that catalogue is not in English: its English edition
+  too, the same four facts. **Nothing else is required — page count never.**
+- **Everything else only if Claude comes across it:** any other fact about those books
+  (language, binding, pages, year), and any other book the text ties to THIS exhibition (a
+  printing, binding or language of its catalogue; another showing's catalogue; a book with the
+  catalogue's own title). **Never searched for; never thrown away once seen** — every title,
+  ISBN, publisher, binding and language in any result Claude reads is recorded.
+- **Claude's work is fixed in Claude's prompt**, never by code patches around a wrong
+  answer. Code checks only facts with a fixed shape (an ISBN's digits and check digit).
+
+## Her decisions (settled — never ask again)
+
+1. **No fact is ever discarded from any result Claude reads.** Asking her whether to keep a
+   seen fact is itself a mistake.
+2. **A book clearly for a different show is junk, never "unsure":** a different artist, a
+   different title, an earlier show, a page heading. Known junk: *Botticelli Reimagined*
+   (V&A 2016), *Gauguin: Metamorphoses* (MoMA), 5 Continents' *Giorgio Vasari* (2011), NGA's
+   1984 *Watteau: 1684-1721*, "Publicatie | Metamorphoses", Lisbon's *Splendour in Venice*,
+   Hatje Cantz's *Vilhelm Hammershøi. Maler des stillen Klangs*, the RA's 2008 *Hammershøi*.
+3. **Never decide which show a book belongs to by matching titles** — the catalogue and its
+   editions carry titles in different languages. It is Claude's reading judgement.
+4. **Nothing is proposed for building without a traced cause.**
+
+## The stages, strictly in order (her definitions)
+
+- **Stage 1 — finding every relevant book. DONE** (her call, on the 27f264d run).
+- **Stage 1b — correct conclusions. IN PROGRESS.** Every kept book is right: this show /
+  another showing / junk left out; its language; publisher; ISBN; binding; no book kept
+  twice or under another's title. A wrong language, a wrong show, a junk book, a dropped
+  ISBN — all Stage 1b (information), never "card problems".
+- **Stage 2 — printing.** With correct information in hand, the card prints every fact it
+  has, in the right block and the right sentence (title + ISBN + hardcover → all three
+  printed; title + "French" → both printed). Layout: `docs/catalogue_versions.md`, "Her
+  layout". Starts only when 1b passes every round.
+- **Stage 3 — selection.** Picking a block works and the buttons follow the pick.
+
+## The test page and its grade
+
+- **It runs the live app's own lookup** (`lookupCatalogue`) with her Parallel Search Key
+  connector and the in-page Claude — never hand searches or saved pages. Nine cases
+  (`build/live_check_cases.json`). Rounds run back to back; 3 rounds of 9 can hit Claude's
+  rate limit — if so she reruns after a quiet spell.
+- **The grade is code** (`build/stage1_grade.js`, answers `docs/stage1_answers.json`):
+  - Stage 1: this show's catalogue kept; its English edition kept when one exists; every
+    "kept if seen" book kept whenever the search saw it; excluded types left off; any ISBN
+    Claude named that was printed in its prompt and not kept fails. Each book's trace names
+    the first step it was lost at (never seen → seen, not shown to Claude → shown, not
+    reported → reported, dropped by the app → kept).
+  - Stage 1b: every kept book is one the answers name (else "another show's book or junk");
+    its `lang` and `showing` match the answers where set; no book kept twice; no numbered
+    book under a title not its own.
+- **Regrade saved records:** `node build/stage1_check.js <dir> [<id> …]`.
+
+## The books per case (`docs/stage1_answers.json` is the copy the grade reads)
+
+| Case | This show (must be found) | Kept if the search sees it | Excluded |
 |---|---|---|---|
-| 1 Vasari, 2 Hubert Robert (Louvre), 3 Hubert Robert (NGA), 5 Watteau, 7 Botticelli, 9 Millet | ✓ | ✓ | ✓ |
-| 4 Hammershøi | ✓ | ✗ fix 1 | ✓ |
-| 6 Canaletto – Guardi | ✗ fix 2 | ✓ | ✗ fix 3 |
-| 8 Metamorphoses | ✓ | ✓ | ✗ fix 1 |
+| 1 Vasari (Louvre) | French 978-2359063721; English 978-2359063738 (Lienart) | Stockholm's English 978-9171009166 (another showing); 978-2350317441 (French, the Louvre's own number, printed beside 978-2359063721 on BnF and Paris Musées records — likely the same book, a guess) | — |
+| 2 Hubert Robert (Louvre) | French 978-2757210642 (Somogy; Louvre's 978-2350315355); no English edition | Washington's English 978-1848221918 (another showing) | album 978-2757210659 |
+| 3 Hubert Robert (NGA) | English 978-1848221918 (NGA in association with Lund Humphries) | Paris's French 978-2757210642 (another showing) | the album |
+| 4 Hammershøi (Jacquemart-André) | French 978-9462302495 (Fonds Mercator); English 978-0847899289 (Rizzoli Electa) | French 978-9462301290 (Fonds Mercator, 175 pp) | — |
+| 5 Watteau (Louvre) | French 978-2359064476 | — | — |
+| 6 Canaletto – Guardi | French 978-9061538226 (Fonds Mercator) | French 978-9061538448 (same catalogue, second number, SUDOC) | Connaissance des Arts 978-2758004158 |
+| 7 Botticelli | French 978-9462302815 (Fonds Mercator) | Reaktion's same-titled English 978-1789144383 and 978-1789149289 (no show graded) | Connaissance des Arts 978-2758010685 |
+| 8 Metamorphoses (Rijksmuseum) | English 978-9493416543 (Hannibal) | Dutch 978-9493416550 (*Metamorfosen – Ovidius en de kunsten*); Italian 978-9493416857 (no show graded) | — |
+| 9 Millet (National Gallery) | English 978-1857097382 | — | — |
 
-Her first run (code 5f3f0a6) failed cases 3, 7 and 8 every round; her five agreed fixes
-(commit cf96c50, tests S1-008 to S1-013, S1P-011) turned them into passes:
-1. Every read lists every book in its text that could be this show's catalogue or a version
-   of it, the same title with no mention of the show included (`OTHER_BOOKS_RULE`) — the
-   publisher-candidates read and `readShopPage` included, both kept (`keepSeen`).
-2. Claude reports the publisher as the whole printed line (`PUBLISHER_LINE`, inside
-   `OTHER_BOOKS_RULE`), so "X in association with Y" is searched under Y
-   (`publisherToFind`, also in the facts search's query).
-3. Every result of every search reaches Claude, sharing a character budget
-   (`resultsForPrompt`, `pageForPrompt`; a result too long to cut into lines shows its
-   opening — `pickPassages`).
-4. A magazine's special issue is ruled out in code from the text (`issueBeside` in
-   `aMagazine`): the magazine named on the page about that number, or beside it.
-5. The grader sees a book kept without its ISBN (`title` in `docs/stage1_answers.json`):
-   it fails only where that number was printed in something the search saw.
+**Not yet hers to settle, raise only if a run turns on it:** which show Reaktion's
+*Botticelli* and Hannibal's Italian *Metamorphoses* belong to (the answers grade no show for
+them; runs have labelled the Italian one Rome's).
 
-## The goal, in three stages, strictly in order (her decision)
+## Known, not Stage 1b failures (do not chase unless a run fails on them)
 
-**Do not start a stage until the one before has a working test page that passes on all
-cases.**
-- **Stage 1: Search.** The LIVE app's search finds this show's catalogue, looks for its
-  English edition by her rules, and keeps every book it comes across that is not junk or an
-  excluded type. Which books were found and kept — nothing to do with cards.
-- **Stage 2: Cards.** The card shows the right information about those books: one block per
-  version (`docs/catalogue_versions.md`, "Her layout"). Known: Botticelli shows Reaktion's
-  book twice (title only); Metamorphoses R3 filed the Italian edition as "another showing".
-- **Stage 3: Selection.** Picking a block works and the buttons follow the pick.
-
-**Never mix Stage 1 with what the card says.** A card line is the app reporting what the
-search found; a book never found is a Stage 1 failure — fix the search, not the line. Card
-grading on the check page is parked until Stage 2.
-
-## Her rules for Stage 1
-
-Each card is about its own exhibition: the venue's show, never another showing of it.
-
-**Finding and the English edition.**
-- No catalogue for this show → the search stops. A book for another showing that the
-  results mention is kept, as that showing's.
-- This show's English edition found first → done; no search for the foreign one.
-- This show's catalogue found in another language → always look for this show's English
-  edition. None → say so. A bilingual book made for this show counts as its English edition.
-- **Another showing's book is never searched for, and its details never completed by
-  further searches** — whatever the results already say is written down.
-
-**Keeping.** Every book the search comes across is kept — title, publisher, language,
-binding, page count, ISBN, as the pages state them — except **junk** (nothing to do with the
-exhibition) and **her excluded types** (a book its pages call an album or a booklet; a
-magazine's special issue). **Err on the side of keeping.** Definite yes: the same title (in
-any language) naming the exhibition; a stated translation; the same authors; naming the
-exhibition or venue. Same title and year: good enough. Same title, no mention of the show:
-suspicious, kept. **Page count decides nothing.**
-
-**A pass**, per lookup, needs all three: this show's catalogue found; its English edition
-found if one exists; nothing the search saw dropped except junk and excluded types. A
-lookup whose results never mention another showing is not wrong for lacking its book.
-**Results vary between runs** (the web and Claude answer differently): a case that passes
-once and fails the next time is not passing. If results still flip-flop once nothing is
-thrown away, she decides whether the search always reads whole pages.
-
-## The test page and the trace
-
-- **It runs the live app's own search** (`lookupCatalogue`, unchanged) with her Parallel
-  Search Key connector and the in-page Claude — never a session's hand searches, saved pages
-  or made-up pages (CLAUDE.md §1). Nine cases (`build/live_check_cases.json`): her three
-  (1, 2, 4) plus six regression cases. Rounds loop over every case, then again.
-- **The grade is code** (`build/stage1_grade.js`, answers `docs/stage1_answers.json`). For
-  each book it gives the first step where it was lost: never seen → seen, not shown to
-  Claude → shown, not reported → reported by Claude, dropped by the app → kept. Matched by
-  ISBN; a book kept with no ISBN by its answer's `title`. "Never seen" fails only for this
-  show's catalogue or English edition. It also fails any other ISBN Claude named that was
-  printed in its prompt and not kept.
-- **Fix by cause, not by case**, and prove each fix by re-running the page. The versions
-  code has been patched many times (`editionsOf`, `composeRow`, `printingsOf`; the
-  third-patch rule, CLAUDE.md §7.4): no patch for one case without her review.
-
-**Reading a run (no copying for her):**
-1. ArtifactData `list` collection `checks` with `out_dir` → each round's record names its
-   lookup ids (`lookups[]`).
-2. ArtifactData `list` collection `lookups` and `lookups/<id>/pieces` with `out_dir`.
-3. `node build/stage1_check.js <dir> [<id> …]` grades; `node build/lookup_log.js <dir> <id>
-   [--json]` prints one lookup whole (every call, Claude's prompts and answers, the card
-   before and after, the panel log).
-
-## The books per case (her rules)
-
-| Case | Must be found | Kept if the search sees it | Excluded |
-|---|---|---|---|
-| 1 Vasari (Louvre) | French 978-2359063721 (Louvre Éditions / Lienart) unless the English is found first; English 978-2359063738 (Lienart) | Stockholm's English hardcover 978-9171009166 (Nationalmuseum) | — |
-| 2 Hubert Robert (Louvre) | French 978-2757210642 (Somogy) = the Louvre's 978-2350315355; no English edition for this show | Washington's 978-1848221918 (NGA / Lund Humphries) | the album 978-2757210659 |
-| 3 Hubert Robert (NGA) | 978-1848221918 (NGA in association with Lund Humphries) | Paris's 978-2757210642 | the album |
-| 4 Hammershøi (Jacquemart-André) | French 978-9462302495 (Fonds Mercator); English 978-0847899289 (Rizzoli Electa) | 978-9462301290 (Fonds Mercator, French, 175 pp) | — |
-| 6 Canaletto – Guardi | 978-9061538226 (Fonds Mercator) | — | Connaissance des Arts 978-2758004158 |
-| 7 Botticelli | 978-9462302815 (Fonds Mercator) | Reaktion's same-titled 978-1789144383 | Connaissance des Arts hors-série 978-2758010685 |
-| 8 Metamorphoses (Rijksmuseum) | English 978-9493416543 (Hannibal) | Dutch 978-9493416550, Italian 978-9493416857 (printed in Hannibal's catalogue PDF) | — |
-| 5 Watteau, 9 Millet | 978-2359064476; 978-1857097382 | — | — |
-
-**Watch:** 978-2350317441 — once written into her Vasari case by a session's hand search; no
-page the app reached prints it. If any run's records show it, tell her, with the page.
+- **Hammershøi's English publisher:** Rizzoli appeared in the search results in one round of
+  three; in the others it was in nothing the search returned (a search result, not a
+  reading error).
+- **Hubert Robert (Louvre):** the publisher step cannot find Somogy's website ("nosite") —
+  her roadmap's publisher list (CLAUDE.md §7.6) is the remedy.
+- **Two places Claude never sees what the search found** (her call, nothing has failed on
+  it): code ranks the publisher's pages itself (`rankPublisherPages`), and the pages opened
+  in phase 2c are read for numbers by code only.
 
 ## The tools
 
 - **The check page:** https://claude.ai/artifact/KrnwLxC6YdZkd3QyFW4wmy, built by
-  `node build/live_check.js` from `build/live_check_page.jsx`; tests
-  `scraper/fixtures/live_check_page.js` (S1P-), the lookup's Stage 1 tests in
-  `scraper/fixtures/catalogue_route.js` (S1-). Publishing it never touches her ledger.
-- **The lookup log:** "THE LOOKUP LOG" in `Cat_Watch.jsx`; `docs/app.md` §1.
-- Earlier runs' records: `docs/live_check_runs/`; the store keeps every lookup (no pruning).
+  `node build/live_check.js` from `build/live_check_page.jsx`. Publish: build, then publish
+  `build/dist/live_check.html` to that url (capabilities carried forward); a session's first
+  publish needs the live page read in full first. Never touches her app or her cloud page.
+- **The prompts:** `OTHER_BOOKS_RULE`, `OTHER_ITEM`, `PUBLISHER_LINE`, `READ_RULES`,
+  `READ_SHAPE`, `PAGE_RULES`, `PAGE_SHAPE`, `factsPrompt` and the two reads in
+  `findPublisherPage`, all in `Cat_Watch.jsx`.
+- **The lookup log:** "THE LOOKUP LOG" in `Cat_Watch.jsx`; `docs/app.md` §1. The check page
+  keeps every lookup (no pruning). Earlier runs' records: `docs/live_check_runs/`.
 
-## How she wants this worked
+## How she wants this worked (learned the hard way this session)
 
-- Plain English; answer her question first; build nothing until she says go.
-- Keep Stage 1 and the cards apart in every sentence of a diagnosis.
-- No guessing: a cause is named only from a record, with the step and the evidence.
-- "Fixed" means the live Stage 1 page passes, every round.
-- Never republish her app or her cloud test page for this work.
+- Her job is to state the intent; realising it in the prompts is ours. If the intent is
+  unclear, ask her then; never ask her to decide something her stated intent already settles.
+- Answer her question first, plainly. Build nothing until she says go.
+- Diagnose from the records only: which read, what text it was shown, what it answered.
+  Say who produced each error — Claude's answer, the prompt, or code — and never call an
+  information error a "card problem".
+- Never put an item under "what I'll build" that has not been traced to a cause.
+- Never propose title matching to decide a book's show.
