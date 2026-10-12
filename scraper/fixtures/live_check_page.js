@@ -358,6 +358,10 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
     ok(!g.pass && g.lines.some(l => /kept twice/.test(l.text)), 'S1B-P04: the same book kept a second time without its ISBN fails');
     g = api.s1Grade(C6, [], rowWith(ed6('9789061538226', 'Canaletto - Guardi, les deux maîtres de Venise', 'French', 'this')), true);
     ok(g.pass, 'S1B-P05: the right book, language and show passes', JSON.stringify(g.lines));
+    const M8 = ANSWERS[8], E8 = ed6('9789493416543', 'Metamorphoses: Ovid and the Arts', 'English', 'this');
+    g = api.s1Grade(M8, [], rowWith(E8, ed6('9789493416550', 'Metamorphoses', 'Dutch', 'this'), ed6(null, 'Metamorfosen – Ovidius en de kunsten', 'Dutch', 'this')), true);
+    ok(!g.pass && g.lines.some(l => /recorded under a title that is not its own/.test(l.text)) && g.lines.some(l => /kept twice/.test(l.text)),
+      'S1B-P06: Metamorphoses R3 — the Dutch book under a list heading, and again by its own title without its ISBN, fails twice', JSON.stringify(g.lines));
   }
 
   // ── S1P-007: her nine real lookups, regraded — the baseline (old code, three runs) ──

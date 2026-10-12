@@ -136,6 +136,14 @@ function s1Grade(answers,calls,row,finished){
     }
     const b=v.isbn13?named.find(x=>nums(x).map(s1Digits).includes(s1Digits(v.isbn13)))
       :named.find(x=>x.title&&s1TitleMatch(x.title,v.title||""));
+    // Kept by title while its numbered copy is kept too: one book recorded twice.
+    if(b&&!v.isbn13&&nums(b).some(n=>kept.has(s1Digits(n)))){
+      lines.push({ok:false,stage:"1b",text:label+" kept twice — once without its ISBN, as a separate book."});
+      continue;
+    }
+    // A numbered book under a title not its own (a list's heading).
+    if(b&&v.isbn13&&b.title&&v.title&&!s1TitleMatch(b.title,v.title))
+      lines.push({ok:false,stage:"1b",text:label+" recorded under a title that is not its own."});
     if(!b){
       if(!(answers.excluded||[]).some(x=>v.isbn13&&nums(x).map(s1Digits).includes(s1Digits(v.isbn13))))
         lines.push({ok:false,stage:"1b",text:label+" kept, but it is not in the answers — another show’s book or junk (if it belongs, add it to the answers)."});

@@ -71,7 +71,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, versionFacts, pagesByAddress, pagesAbout, bindingOn, labelledIsbns, registrantOf, publisherShown, bookOnShop, museumOf, recheckVersions, buyLinks, pickedVersion, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, museumImprintOnly, aMagazine, resultsForPrompt, pageForPrompt, keptVersions, isbnInAddress, factsPrompt };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, versionFacts, pagesByAddress, pagesAbout, bindingOn, labelledIsbns, registrantOf, publisherShown, bookOnShop, museumOf, recheckVersions, buyLinks, pickedVersion, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, museumImprintOnly, aMagazine, resultsForPrompt, pageForPrompt, keptVersions, isbnInAddress, factsPrompt, unglueIsbns, resultText, keepSeen, recordedNote };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -86,7 +86,7 @@ const row = (museumId, title) => ({ id: museumId + '-test', museumId, title, sta
 const shelfOf = (urls, tile) => ({ payload: { errors: [], results: urls.map(u => ({ url: u, title: 'Exhibition catalogues',
   excerpts: [tile + '\n' + 'Another catalogue · €35. '.repeat(20)] })) } });
 const isShopRead = p => /venue’s OWN shop pages/.test(p);
-const isFactsRead = p => /SECTION B|SECTION A|SECTION C/.test(p) && /"isbn13": string\|null, "publisher": string\|null/.test(p) && !/"found"/.test(p);
+const isFactsRead = p => /SECTION B|SECTION A|SECTION C/.test(p) && /"isbn13": string\|null, (?:"otherIsbns": \[string\], )?"publisher": string\|null/.test(p) && !/"found"/.test(p);
 const isPageRead = p => /^\{"isbn13": string\|null, "publisher": string\|null, "publisherUrl": string\|null[,}]/m.test(p) && /ONE web page in full: the page selling/.test(p);
 const isJudge = p => /"kind": "book"\|"listing"\|"other"/.test(p);
 const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries);
@@ -1022,6 +1022,23 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     ok(/YOUR JOB/.test(prompt) && /ALSO RECORD — only what the text shows; never look for it/.test(prompt) && /never the language of the website listing it/.test(prompt),
       'S1B-003: the facts read asks only for the catalogue\'s facts (and its English edition at a non-English venue); everything else only where the text shows it; a book\'s language is its own, never the website\'s');
     ok(!/When unsure|Never leave a book out/.test(prompt), 'S1B-004: no read tells Claude to include a book it is unsure of');
+    // Botticelli R2: Parallel's copy printed Reaktion's two numbers run together.
+    eq([api.unglueIsbns('97817891492899781789144383'), api.unglueIsbns('978949341655099'), api.isbnInText('9781789149289', api.resultText({ excerpts: ['ISBN 97817891492899781789144383'] }))],
+      ['9781789149289 9781789144383', '978949341655099', true],
+      'S1B-005: Botticelli R2 — two valid ISBNs printed with nothing between them are read as two; any other run of digits is left alone');
+    // Canaletto R1: a record printing two numbers for the catalogue — every number kept.
+    const C = 'Test Canaletto Guardi les deux maitres de Venise';
+    const sud = [{ url: 'https://www.sudoc.test/164252274', title: C, excerpts: [C + '. ISBN : 9789061538226 ISBN : 9789061538448'] }];
+    const kept = []; api.keepSeen(kept, [{ title: C, isbn13: '9789061538226', otherIsbns: ['9789061538448'], language: 'French' }], sud);
+    eq(api.keptVersions(kept, 'jacquemart', []).map(v => v.isbn13), ['9789061538226', '9789061538448'],
+      'S1B-006: Canaletto R1 — a book the text prints with two ISBNs keeps both; no answer has room for only one');
+    const k2 = []; api.keepSeen(k2, [{ title: 'Test Botticelli Artist and Designer', isbn13: null, language: null, publisher: 'Reaktion Books' }],
+      [{ url: 'https://x.test/b', title: 'Test Botticelli Artist and Designer', excerpts: ['Test Botticelli Artist and Designer. Reaktion Books.'] }]);
+    const p2 = api.factsPrompt({ book: 'B', show: 'S', venue: 'V', isbn: null, bookPage: null, facts: [], editions: [], earlier: [], foreign: false, recorded: api.recordedNote(k2, 'jacquemart') });
+    ok(/BOOKS ALREADY RECORDED, STILL MISSING FACTS/.test(p2) && /“Test Botticelli Artist and Designer” — missing: ISBN, language, binding/.test(p2),
+      'S1B-007: Botticelli R1 — a later read is told which recorded books still lack facts, so it fills them', p2.slice(p2.indexOf('BOOKS ALREADY'), p2.indexOf('BOOKS ALREADY') + 200));
+    ok(/publisher: the house that printed THIS book[^\n]*A publisher is reported as the WHOLE line/.test(p2),
+      'S1B-008: Hubert Robert (NGA) R3 — "the whole publisher line" sits beside the catalogue\u2019s own publisher field');
   }
 
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');
