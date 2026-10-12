@@ -5,35 +5,18 @@ It replaces any plan in `docs/live_check_report.md` where the two disagree.
 
 ## START HERE — the next session's job
 
-1. **Ask her for go on the three fixes below** (recommended, not yet agreed), then build
-   them. App tests: `npm run test:app`.
-2. Push to `main`, rebuild the test page (`node build/live_check.js`), read the live page
-   in full, republish `build/dist/live_check.html` to
-   https://claude.ai/artifact/KrnwLxC6YdZkd3QyFW4wmy (capabilities carried forward; never
-   her app or her cloud test page).
-3. She taps Run (3 rounds). Read the records from the page's store and grade them
-   (below). "Fixed" only when every case passes, every round.
+**Her three fixes from her second run are built and on the test page** (commit 27f264d,
+tests S1-014 to S1-017, S1P-011c). Changed, not yet proven live:
+1. Same book seen twice: the copy kept by title takes the later copy's ISBN and blank
+   facts (`fillVersion`, in `keptVersions` and `add` in `lookupCatalogue`; the pick's index
+   never moves). Hammershøi R2, Metamorphoses R3.
+2. No ISBN from the read: the one valid 978/979 number in the address of the result it
+   cites (`isbnInAddress`). Canaletto R1.
+3. Grader: a result printing two valid numbers is no evidence for either. Canaletto R3.
 
-### The three recommended fixes (from her second run; causes proven from the records)
-
-1. **Same book seen twice: keep the copy with the ISBN.** One read lists a book by title
-   only, a later read lists it with its ISBN; `keptVersions` keeps the first and drops the
-   second as a duplicate (`sameVersion` matches by title when one side has no ISBN). Fill
-   the missing ISBN (and blank facts) instead — in `keptVersions` and in the `add` helper
-   in `lookupCatalogue`, which must not move the pick's index.
-   Cases: Hammershøi R2 (`L1791789213694gycv`: 978-9462301290 from the facts read lost to
-   two earlier title-only copies); Metamorphoses R3 (`L1791789627974q18w`: Dutch
-   978-9493416550 from the publisher-candidates read lost to the web read's title-only copy).
-2. **The ISBN in the book's own page address, read in code.** When a read gives a book no
-   ISBN but its `evidenceUrl` is a result the search returned and that address carries
-   exactly one valid 978/979 number, take it (`addressCarries`, `isbn13Checks`).
-   Case: Canaletto R1 (`L1791788968240bxw7`: Lisbon's *Splendour in Venice*,
-   `exhibitioncatalogs.com/…-9789899119208`, kept without its number).
-3. **The grader's own fault (the test page, not the search).** Its check on "another book
-   kept without an ISBN" took a number from a "You may also like" link on a bookseller's
-   page. Count a number only when it is the only valid ISBN that result prints (before
-   leaving out kept numbers); `build/stage1_grade.js`, the loop over `unnumbered`.
-   Case: Canaletto R3 (`L17917895591237ekn`, dessinoriginal.com, 978-0714894317).
+**Next:** she taps Run (3 rounds) on https://claude.ai/artifact/KrnwLxC6YdZkd3QyFW4wmy.
+Read the records from the page's store and grade them (below). "Fixed" only when every
+case passes, every round.
 
 **Still open, her call (nothing failed on it yet):** two places where Claude never sees what
 the search found — (a) when code ranks the publisher's pages itself
