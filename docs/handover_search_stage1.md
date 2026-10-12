@@ -5,19 +5,20 @@ It replaces any plan in `docs/live_check_report.md` where the two disagree.
 
 ## START HERE — the next session's job
 
-**Stage 1b is built and on the test page (commit 65a10a9), not yet proven live.** Her run
-(Rounds 1, after a quiet spell — Claude's rate limit refused a whole third round before),
-then grade. Causes, from the records: Claude was told to include books "even when the text
-never mentions the exhibition … When unsure, include it" (junk); code called a book "this
-show's" whenever Claude left the other venue's city blank (wrong show); Claude named a
-French title English from an English bookseller's listing (wrong language); Claude left out
-*Botticelli Reimagined*'s printed ISBN. Fixed in the prompts to her intent: the job is the
-catalogue's facts (and its English edition at a non-English venue); anything else is recorded
-only where the text shows it, with every fact printed for it; only books tied to this show or
-carrying its catalogue's title; the book's own language; the read says which show. The grader
-now fails junk, a wrong language, a wrong show and a book kept twice; regraded, her three
-earlier rounds fail on exactly the problems she named. Hammershøi's Rizzoli was never in
-anything the search returned (round 1) — not a reading error.
+**Stage 1b's second round of fixes is on the test page (commit 8fed6ff), not yet proven live.**
+Her run at 65a10a9 (`R1791808388866icp3`, `R1791808766721qft7`, `R17918091268442cny`): 24 of 27;
+junk and wrong languages gone in every round. Failures, causes from the records, each fixed:
+- Canaletto R1: SUDOC printed the catalogue's two numbers; the answer had one ISBN slot →
+  `otherIsbns` on every answer, each further number kept as the same book.
+- Botticelli R2: Parallel glued Reaktion's two numbers ("97817891492899781789144383") →
+  `unglueIsbns` splits two valid ISBNs run together.
+- Botticelli R1: a read kept Reaktion's book by title; a later read saw its number but never
+  listed it → `recordedNote`: later reads are told which recorded books still lack facts.
+- Hubert Robert (NGA) R3: Claude cut "in association with Lund Humphries" despite the rule,
+  so the ISBN search missed it → the whole-line rule now sits beside each publisher field.
+- Metamorphoses R3 passed wrongly (the Dutch book under a list heading, and again by title)
+  → the grader now fails both.
+Next: her run (3 rounds), then grade.
 
 **Stage 1 (finding every relevant book) is DONE** — her call, on the third run.
 
