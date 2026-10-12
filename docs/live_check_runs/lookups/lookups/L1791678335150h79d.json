@@ -1,0 +1,12 @@
+{
+  "action": "Live check",
+  "at": "2026-10-11T00:25:35.150Z",
+  "calls": 8,
+  "complete": true,
+  "enc": "gzip-base64",
+  "museumId": "louvre",
+  "pieces": 1,
+  "title": "Hubert Robert (1733–1808). A Visionary Painter",
+  "venue": "Louvre Museum",
+  "version": "43"
+}
