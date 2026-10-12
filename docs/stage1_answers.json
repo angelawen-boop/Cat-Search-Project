@@ -33,7 +33,7 @@
       "thisShow": [ { "isbn": "9789462302815", "what": "French, Culturespaces / Fonds Mercator" } ],
       "english": null,
       "keptIfSeen": [ { "isbn": "9781789144383", "what": "Reaktion's same-titled book (suspicious, kept)" } ],
-      "excluded": [] },
+      "excluded": [ { "isbn": "9782758010685", "what": "Connaissance des Arts special issue (the venue's shop filed it as hors-série)" } ] },
     "8": { "title": "Metamorphoses (Rijksmuseum)",
       "thisShow": [ { "isbn": "9789493416543", "what": "English, Hannibal" } ],
       "english": { "isbn": "9789493416543", "what": "English, Hannibal" },
