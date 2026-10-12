@@ -5,9 +5,8 @@ It replaces any plan in `docs/live_check_report.md` where the two disagree.
 
 ## START HERE — the next session's job
 
-**She has run (or is running) the live check page on commit 8fed6ff.** Read that run's
-records, grade them, and report to her (format below). Nothing is built before she sees
-the report.
+**Her 8fed6ff run is graded and reported (below, "Her run on 8fed6ff").** Wait for her
+go on the recommendations; nothing is built before it. For any later run, the steps:
 
 1. Find the run: ArtifactData `list` collection `checks` (url
    https://claude.ai/artifact/KrnwLxC6YdZkd3QyFW4wmy, `query.limit` 1000, `out_dir` in the
@@ -29,6 +28,24 @@ say what varies. For each failure, its own cause from the record (step, what Cla
 shown, what it answered), labelled proven or guess. Never lump failures under one cause.
 
 **"Fixed" means the live page passes every case, every round** (CLAUDE.md §1).
+
+## Her run on 8fed6ff — 20 of 27, graded and reported; nothing built yet
+
+Loop `P1791810419826reaq` (R1 `R17918104211370ooa`, R2 `R1791810764358j538`, R3
+`R17918110805611oh2`). Passed every round: cases 2, 4, 5, 6, 8, 9 (Canaletto's second number and
+Metamorphoses fixed). Failures, each from its record:
+
+| Failure | Cause (proven from the record unless marked) | Who |
+|---|---|---|
+| Vasari R1 | the read had "Exhibition: Paris, Musée du Louvre and Stockholm, Nationalmuseum" and still said `thisVenue:false` → lookup stopped after 4 calls, French edition never searched | Claude / thisVenue rule |
+| NGA R1 | the press release excerpt said "the catalog includes five scholarly essays…"; read said `found:false` → stopped after 4 calls | Claude, against "a press release stating the book counts" |
+| NGA R2 | text: "Published in association with Lund Humphries"; read said "National Gallery of Art" → own-imprint → Lund Humphries never searched, ISBN never seen. `PUBLISHER_LINE` asks for "the whole line the text prints"; no line here prints both names | prompt wording |
+| NGA R3 | `isbnInResults` took 978-2757210659 (the album) from a result titled "…L'album de l'exposition", because "Hubert Robert" is in it; album not left off (why `calledAlbum` missed it: guess) | code |
+| Botticelli R1 | facts read was shown "9781789149289 9781789144383" (unglued — fix works) and listed no Reaktion book | Claude |
+| Botticelli R2, R3 | read listed Reaktion's book once with 978-1789144383 only, never 9289; another read gave it no ISBN as "Botticelli: Artist and Designer (Renaissance Lives)", which `titleAsPrinted` cut to "Botticelli" → kept apart from the numbered copy, twice. R2: that copy's address held ISBN-10 1789149282 (= 9289); `isbnInAddress` reads 13 digits only | Claude + code |
+
+Also found: `PUBLISHER_LINE`'s example is case 3's own answer ("National Gallery of Art in
+association with Lund Humphries") — a test answer inside the prompt.
 
 ## What is on the page now (commit 8fed6ff) — changed, not yet proven live
 
