@@ -1,5 +1,5 @@
 {
-  "_about": "Stage 1 answers per live check case (docs/handover_search_stage1.md, her rules). thisShow: this show's catalogue — any one kept passes (English found first is enough); `also`: another number for the same printed book. english: this show's English edition, which must be kept; null when none exists. keptIfSeen: books never searched for, which must be kept whenever the search saw them. excluded: her excluded types, which must not be kept. watch: numbers she asked to be told about if they ever appear. Cases 1, 2, 4 are her three; the rest are from her agreed cases (docs/catalogue_versions.md), regression checks.",
+  "_about": "Stage 1 answers per live check case (docs/handover_search_stage1.md, her rules). thisShow: this show's catalogue — any one kept passes (English found first is enough); `also`: another number for the same printed book. english: this show's English edition, which must be kept; null when none exists. keptIfSeen: books never searched for, which must be kept whenever the search saw them. title: the words a book kept with no ISBN is matched by (every word, whole); kept without its ISBN passes only where no text the search saw printed the number. excluded: her excluded types, which must not be kept. watch: numbers she asked to be told about if they ever appear. Cases 1, 2, 4 are her three; the rest are from her agreed cases (docs/catalogue_versions.md), regression checks.",
   "cases": {
     "1": { "title": "Vasari (Louvre)",
       "thisShow": [ { "isbn": "9782359063721", "what": "French original, Louvre Éditions / Lienart" }, { "isbn": "9782359063738", "what": "English paperback, Lienart" } ],
@@ -32,12 +32,12 @@
     "7": { "title": "Botticelli (Jacquemart-André)",
       "thisShow": [ { "isbn": "9789462302815", "what": "French, Culturespaces / Fonds Mercator" } ],
       "english": null,
-      "keptIfSeen": [ { "isbn": "9781789144383", "what": "Reaktion's same-titled book (suspicious, kept)" } ],
+      "keptIfSeen": [ { "isbn": "9781789144383", "title": "Botticelli Artist Designer", "what": "Reaktion's same-titled book (suspicious, kept)" } ],
       "excluded": [ { "isbn": "9782758010685", "what": "Connaissance des Arts special issue (the venue's shop filed it as hors-série)" } ] },
     "8": { "title": "Metamorphoses (Rijksmuseum)",
       "thisShow": [ { "isbn": "9789493416543", "what": "English, Hannibal" } ],
       "english": { "isbn": "9789493416543", "what": "English, Hannibal" },
-      "keptIfSeen": [ { "isbn": "9789493416550", "what": "Dutch, Hannibal" }, { "isbn": "9789493416857", "what": "Italian, Hannibal" } ],
+      "keptIfSeen": [ { "isbn": "9789493416550", "title": "Metamorfosen Ovidius kunsten", "what": "Dutch, Hannibal" }, { "isbn": "9789493416857", "what": "Italian, Hannibal" } ],
       "excluded": [] },
     "9": { "title": "Millet (National Gallery)",
       "thisShow": [ { "isbn": "9781857097382", "what": "English, National Gallery" } ],

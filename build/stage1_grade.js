@@ -7,7 +7,9 @@
 // exists; no book the search saw dropped, except her excluded types. For each book in the
 // answers, the trace names the first step where it was lost: never seen (in nothing
 // Parallel returned), seen but not shown to Claude, shown but not reported, reported but
-// dropped by the app, or kept. Matched by ISBN.
+// dropped by the app, or kept. Matched by ISBN; a book kept with no ISBN is matched by
+// its answer's `title` (every word, whole). Kept without its ISBN fails only where the
+// number was printed in something the search saw (information thrown away).
 
 function s1Digits(s){ return String(s||"").replace(/[^0-9Xx]/g,""); }
 function s1Checks(d){
@@ -33,8 +35,19 @@ function s1Kept(row){
   for(const v of (Array.isArray(row.editions)?row.editions:[]))for(const n of [v&&v.isbn13,v&&v.alsoIsbn13])if(n)out.add(s1Digits(n));
   return out;
 }
+// The books kept with no ISBN: their titles.
+function s1KeptUnnumbered(row){
+  return (Array.isArray(row&&row.editions)?row.editions:[]).filter(v=>v&&v.title&&!v.isbn13&&!v.alsoIsbn13).map(v=>String(v.title));
+}
+const s1Fold=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+function s1Words(t){ return [...new Set(s1Fold(t).split(/[^a-z0-9]+/).filter(w=>w.length>=4))]; }
+// A kept title carrying every word of the answer's title, each whole.
+function s1TitleMatch(want,title){
+  const w=s1Words(want), have=new Set(s1Fold(title).split(/[^a-z0-9]+/));
+  return w.length>0&&w.every(x=>have.has(x));
+}
 // Where one book (any of its numbers) went, step by step.
-function s1Trace(nums,calls,kept){
+function s1Trace(nums,calls,kept,title,unnumbered){
   const res=nums.map(s1Re);
   const any=t=>res.some(r=>r.test(t));
   const where=[];
@@ -48,29 +61,31 @@ function s1Trace(nums,calls,kept){
     }
   }
   const isKept=nums.some(n=>kept.has(s1Digits(n)));
-  const step=isKept?"kept":reported?"reported by Claude, dropped by the app":shown?"shown to Claude, not reported"
+  const byTitle=!isKept&&title&&(unnumbered||[]).find(t=>s1TitleMatch(title,t))||null;
+  const step=isKept?"kept":byTitle?(seen?"kept without its ISBN, though the search saw it printed":"kept by title; no text printed its ISBN"):reported?"reported by Claude, dropped by the app":shown?"shown to Claude, not reported"
     :seen?"seen, not shown to Claude":"never seen";
-  return{step,kept:isKept,seen,where:[...new Set(where)].slice(0,3)};
+  return{step,kept:isKept||(!!byTitle&&!seen),byTitle,seen,where:[...new Set(where)].slice(0,3)};
 }
 const s1Fmt=n=>{ const d=s1Digits(n); return d.length===13?d.slice(0,3)+"-"+d.slice(3):d; };
 // `answers`: one case from docs/stage1_answers.json. Returns {pass, lines, books, dropped}.
 function s1Grade(answers,calls,row,finished){
-  const kept=s1Kept(row);
+  const kept=s1Kept(row), unnumbered=s1KeptUnnumbered(row);
   const lines=[], books=[];
   const nums=b=>[b.isbn].concat(b.also||[]);
-  const book=(b,role)=>{ const t=s1Trace(nums(b),calls,kept); const x={role,isbn:b.isbn,what:b.what,...t}; books.push(x); return x; };
+  const book=(b,role)=>{ const t=s1Trace(nums(b),calls,kept,b.title,unnumbered); const x={role,isbn:b.isbn,what:b.what,...t}; books.push(x); return x; };
+  const how=x=>x.byTitle?" (kept by title, “"+x.byTitle+"”; no text printed its ISBN)":"";
   if(finished===false)lines.push({ok:false,text:"The lookup did not finish."});
   const own=(answers.thisShow||[]).map(b=>book(b,"this show's catalogue"));
   const ownOk=own.some(b=>b.kept);
-  lines.push({ok:ownOk,text:ownOk?"This show's catalogue found: "+own.filter(b=>b.kept).map(b=>s1Fmt(b.isbn)).join(", ")+"."
+  lines.push({ok:ownOk,text:ownOk?"This show's catalogue found: "+own.filter(b=>b.kept).map(b=>s1Fmt(b.isbn)+how(b)).join(", ")+"."
     :"This show's catalogue not found ("+own.map(b=>s1Fmt(b.isbn)+": "+b.step).join("; ")+")."});
   if(answers.english){
     const e=books.find(b=>b.isbn===answers.english.isbn)||book(answers.english,"English edition");
-    lines.push({ok:e.kept,text:e.kept?"English edition found: "+s1Fmt(e.isbn)+".":"English edition "+s1Fmt(e.isbn)+" missing — "+e.step+"."});
+    lines.push({ok:e.kept,text:e.kept?"English edition found: "+s1Fmt(e.isbn)+how(e)+".":"English edition "+s1Fmt(e.isbn)+" missing — "+e.step+"."});
   } else lines.push({ok:true,text:"No English edition exists for this show — none needed."});
   for(const b of (answers.keptIfSeen||[])){
     const x=book(b,"kept if seen");
-    if(x.kept)lines.push({ok:true,text:s1Fmt(b.isbn)+" ("+b.what+") seen and kept."});
+    if(x.kept)lines.push({ok:true,text:s1Fmt(b.isbn)+" ("+b.what+") "+(x.byTitle?"kept by title, “"+x.byTitle+"”; no text printed its ISBN.":"seen and kept.")});
     else if(x.step==="never seen")lines.push({ok:true,text:s1Fmt(b.isbn)+" ("+b.what+") not in these results — nothing to keep."});
     else lines.push({ok:false,text:s1Fmt(b.isbn)+" ("+b.what+") seen but dropped — "+x.step+"."});
   }
@@ -79,7 +94,7 @@ function s1Grade(answers,calls,row,finished){
     lines.push({ok:!x.kept,text:x.kept?s1Fmt(b.isbn)+" ("+b.what+") is an excluded type but was kept.":s1Fmt(b.isbn)+" ("+b.what+") left off, as it should be."});
   }
   for(const b of (answers.watch||[])){
-    const x=s1Trace(nums(b),calls,kept);
+    const x=s1Trace(nums(b),calls,kept,null,[]);
     if(x.seen)lines.push({ok:true,watch:true,text:"WATCH: "+s1Fmt(b.isbn)+" ("+b.what+") appeared — "+x.where.join(", ")+"."});
   }
   // Any other book Claude named, printed in the text it was given, and not kept: dropped.
@@ -92,6 +107,21 @@ function s1Grade(answers,calls,row,finished){
       if(!known.has(n)&&!kept.has(n)&&prompt.includes(n)&&!dropped.includes(n))dropped.push(n);
   }
   for(const n of dropped)lines.push({ok:false,text:"Another book Claude named, "+s1Fmt(n)+", was dropped by the app."});
+  // Every other book kept with no ISBN: a fail only where a result carrying its whole title
+  // printed exactly one number nothing else accounts for — probably its own, thrown away.
+  const accounted=new Set([...known,...kept]);
+  for(const t of new Set(unnumbered)){
+    if(books.some(b=>b.byTitle===t))continue;
+    const w=s1Words(t), cands=new Map();
+    if(w.length>=2)for(const c of calls||[])for(const r of ((c.output&&c.output.results)||[])){
+      const txt=s1ResultText(r), f=s1Fold(txt);
+      if(!w.every(x=>f.includes(x)))continue;
+      const ns=s1IsbnsIn(txt).filter(n=>!accounted.has(n));
+      if(ns.length===1&&!cands.has(ns[0]))cands.set(ns[0],r.url);
+    }
+    if(cands.size===1){ const [n,u]=[...cands][0]; lines.push({ok:false,text:"“"+t+"” kept without an ISBN, though "+u+" prints "+s1Fmt(n)+" with its title — probably its own (check)."}); }
+    else lines.push({ok:true,text:"“"+t+"” kept without an ISBN; no text the search saw printed one for it."});
+  }
   return{pass:finished!==false&&lines.every(l=>l.ok),lines,books,dropped,kept:[...kept]};
 }
-if(typeof module!=="undefined"&&module.exports)module.exports={s1Grade,s1Trace,s1Kept,s1IsbnsIn,s1Checks};
+if(typeof module!=="undefined"&&module.exports)module.exports={s1Grade,s1Trace,s1Kept,s1KeptUnnumbered,s1TitleMatch,s1IsbnsIn,s1Checks};

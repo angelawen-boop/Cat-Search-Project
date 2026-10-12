@@ -6,6 +6,8 @@
  * build/stage1_grade.js, against docs/stage1_answers.json, in rounds.
  * S1P-001..S1P-006: the pass test on made-up lookups — each condition, the trace's steps, a
  * dropped book Claude named, an excluded book kept, the watch list.
+ * S1P-011: a book kept with no ISBN — fails only where its number was printed in what the
+ * search saw (her fix 5, Metamorphoses).
  * S1P-007: her nine real lookups (docs/live_check_runs/lookups/), regraded: the baseline.
  * S1P-008..S1P-010: the page — rounds loop over every case, one run record per round naming
  * the loop, each case box showing its Stage 1 lines and the books kept.
@@ -320,6 +322,20 @@ const CLEAN = 'Finished. Every case and every lookup record is saved.';
     eq([g.pass, g.dropped], [false, ['9781588398130']], 'S1P-006: a book Claude named, printed in what it was given, and not kept — fails as dropped');
     g = api.s1Grade(A, [search(res('https://x.test', 'ISBN 9782350317441'))], rowWith(ed('9782359063738')), true);
     ok(g.pass && g.lines.some(l => l.watch && /2350317441/.test(l.text)), 'S1P-006a: the watched number 978-2350317441 is reported when it appears, without failing', JSON.stringify(g.lines));
+    // A book kept with no ISBN (her fix 5): matched by its answer's title; it fails only
+    // where its number was printed in something the search saw (Metamorphoses, the Dutch).
+    const M = ANSWERS[8], EN8 = ed('9789493416543'), it = ed('9789493416857');
+    const nl = { title: 'Metamorfosen – Ovidius en de kunsten', isbn13: null, showing: 'this' };
+    const pdf = search(res('https://hannibal.test/list.pdf', 'Dutch edition ISBN 978 94 9341 655 0. Italian edition ISBN 978 94 9341 685 7.'));
+    g = api.s1Grade(M, [pdf], rowWith(EN8, it, nl), true);
+    eq([g.pass, g.books.find(b => b.isbn === '9789493416550').step], [false, 'kept without its ISBN, though the search saw it printed'],
+      'S1P-011: Metamorphoses — the Dutch book kept by title, its ISBN printed in what the search saw: fails (information thrown away)');
+    g = api.s1Grade(M, [search(res('https://hannibal.test/list.pdf', 'Italian edition ISBN 978 94 9341 685 7.'))], rowWith(EN8, it, nl), true);
+    eq([g.pass, lines(g)[2]], [true, '✓ 978-9493416550 (Dutch, Hannibal) kept by title, “Metamorfosen – Ovidius en de kunsten”; no text printed its ISBN.'],
+      'S1P-011a:  and kept by title where no text printed its number: passes');
+    g = api.s1Grade(ANSWERS[9], [search(res('https://shop.test/x', 'Test Lone Volume, Testhouse. ISBN 9781588398130.'))], rowWith(ed('9781857097382'), { title: 'Test Lone Volume', isbn13: null }), true);
+    eq([g.pass, lines(g).pop()], [false, '✗ “Test Lone Volume” kept without an ISBN, though https://shop.test/x prints 978-1588398130 with its title — probably its own (check).'],
+      'S1P-011b:  any other book kept without an ISBN, a lone number printed with its whole title: fails, naming where');
   }
 
   // ── S1P-007: her nine real lookups, regraded — the baseline (old code, three runs) ──

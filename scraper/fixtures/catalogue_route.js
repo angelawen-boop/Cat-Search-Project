@@ -71,7 +71,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, versionFacts, pagesByAddress, pagesAbout, bindingOn, labelledIsbns, registrantOf, publisherShown, bookOnShop, museumOf, recheckVersions, buyLinks, pickedVersion, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, museumImprintOnly };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, versionFacts, pagesByAddress, pagesAbout, bindingOn, labelledIsbns, registrantOf, publisherShown, bookOnShop, museumOf, recheckVersions, buyLinks, pickedVersion, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, museumImprintOnly, aMagazine, resultsForPrompt, pageForPrompt };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -894,6 +894,70 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
         editions: [{ title: 'Test The Book of Drawings (Stockholm edition)', isbn13: SE_ISBN, language: 'English', publisher: 'Nationalmuseum', pages: '240', venueCity: 'Stockholm', evidenceUrl: bok.url }] }) }));
     eq([(r.editions || []).map(v => [v.isbn13, v.showing]), r.editionPick], [[[FR_ISBN, 'this'], [SE_ISBN, 'other']], null],
       'S1-007: Vasari run 3 — the Stockholm edition, proved by nothing, is kept as the other showing’s (it was dropped); nothing picked, by her pick rule 5');
+  }
+
+  // ── S1-008..S1-013: her five agreed fixes after the first Stage 1 run ───────────
+  {
+    // Metamorphoses: the Dutch ISBN was printed only in Hannibal's catalogue PDF, which only
+    // the publisher-candidates read saw — and that read was never asked about books.
+    const EN = 'Test Metamorphoses. Ovid and the Arts', EN_ISBN = '9789493416543', NL_ISBN = '9789493416550';
+    const PDF = { url: 'https://hannibalbooks.be/uploads/test_VOORJAAR.pdf', title: 'test_VOORJAAR',
+      excerpts: ['Spring list. English edition ISBN 978 94 9341 654 3. Dutch edition ISBN 978 94 9341 655 0. Softcover, 352 pages.'] };
+    const isRank = p => /Put them in order, best first/.test(p);
+    const mcp = (tool, args) => {
+      if (tool !== 'web_search') return shelfOf(args.urls, '[Another catalogue €30](https://shop.test/other)');
+      const q = args.search_queries.join(' | ');
+      if (q.startsWith('site:hannibalbooks.be')) return { payload: { results: [PDF] } };
+      if (/^Hannibal Books/.test(q)) return { payload: { results: [{ url: 'https://hannibalbooks.be/', title: 'Hannibal Books', excerpts: ['Hannibal Books, art book publisher.'] }] } };
+      if (/exhibition catalogue ISBN publisher/.test(q)) return { payload: { results: [{ url: 'https://www.museum.test/metamorphoses', title: EN,
+        excerpts: [EN + ', the catalogue of the exhibition. Hannibal Books. ISBN ' + EN_ISBN + '.'] }] } };
+      return { payload: { results: [] } };
+    };
+    const sample = p => isShopRead(p) ? { found: false }
+      : /"thisVenue": true\|false/.test(p) ? { found: true, thisVenue: true, catalogueTitle: EN, isbn13: EN_ISBN, publisher: 'Hannibal Books', language: 'English', otherBooks: [] }
+      : isRank(p) ? { candidates: [], otherBooks: [{ title: 'Test Metamorfosen', isbn13: NL_ISBN, language: 'Dutch', publisher: 'Hannibal Books' }] }
+      : {};
+    const { calls, row: r } = await run(row('ng', 'Test Metamorphoses'), { mcp, sample });
+    const rank = calls.find(c => c.kind === 'sample' && isRank(c.prompt));
+    ok(!!rank && /otherBooks: EVERY OTHER BOOK/.test(rank.prompt), 'S1-008: Metamorphoses — the publisher-candidates read is asked for every book in its results', rank && rank.prompt.slice(0, 200));
+    ok((r.editions || []).some(v => v.isbn13 === NL_ISBN), 'S1-009:   and the Dutch edition it names, printed only in the PDF, is kept', JSON.stringify((r.editions || []).map(v => v.isbn13)));
+    const reads = calls.filter(c => c.kind === 'sample').map(c => c.prompt);
+    ok(reads.length > 1 && reads.every(p => /any book with the same title, in any language/.test(p) && /in association with/.test(p)),
+      'S1-010: every read carries her keep rule (same title, no mention of the show, kept) and her "in association with" line', reads.length);
+  }
+  {
+    // Hubert Robert (NGA): the publisher printed "… in association with Lund Humphries" is
+    // searched under Lund Humphries.
+    const T = 'Test Hubert Robert, 1733-1808';
+    const mcp = (tool, args) => tool === 'web_search' ? { payload: { results: /exhibition catalogue ISBN publisher/.test(args.search_queries.join(' ')) ? [{ url: 'https://www.museum.test/press', title: 'Press release',
+      excerpts: ['The accompanying catalogue, ' + T + ', is published by the National Gallery of Art in association with Lund Humphries.'] }] : [] } }
+      : shelfOf(args.urls, '[Another catalogue €30](https://shop.test/other)');
+    const sample = p => isShopRead(p) ? { found: false }
+      : /"thisVenue": true\|false/.test(p) ? { found: true, thisVenue: true, catalogueTitle: T, isbn13: null, publisher: 'National Gallery of Art in association with Lund Humphries', language: 'English', otherBooks: [] }
+      : {};
+    const { calls } = await run(row('ng', 'Test Hubert Robert'), { mcp, sample });
+    ok(searches(calls).some(q => q.includes(T + ' Lund Humphries ISBN')), 'S1-011: Hubert Robert (NGA) — "X in association with Y" is searched for its ISBN under Y', JSON.stringify(searches(calls)));
+  }
+  {
+    // Every result reaches Claude, never the first eight; a long list shares one budget.
+    const list = Array.from({ length: 12 }, (_, i) => ({ url: 'https://r.test/' + i, title: 'Result ' + (i + 1), excerpts: ['Text of result ' + (i + 1) + '. ' + 'x'.repeat(9000)] }));
+    const shown = api.resultsForPrompt(list, 6000, {});
+    ok(shown.includes('Result 12') && shown.includes('Text of result 12') && shown.length < 90000, 'S1-012: Hubert Robert (NGA), press release ninth — all twelve results are shown, inside the budget', shown.length);
+    const pages = [1, 2, 3].map(i => ({ url: 'https://p.test/' + i, title: 'Page ' + i, full_content: 'Body ' + i + ' ' + 'y'.repeat(30000) }));
+    ok(api.pageForPrompt(pages).includes('Page 3'), 'S1-012a:  and every page opened is shown, none cut off by an earlier one');
+  }
+  {
+    // Botticelli: Connaissance des Arts' hors-série, named in the author's place on a
+    // bookseller's page whose address carries its number — left off whatever Claude answers.
+    const HS = '9782758010685';
+    const lireka = { url: 'https://www.lireka.test/en/pp/' + HS + '-botticelli-artiste-designer', title: 'Botticelli : artiste & designer : musée Jacquemart-André',
+      excerpts: ['# Botticelli : artiste & designer (French edition) ## [Connaissance des arts](https://www.lireka.test/en/author/1907956-connaissance-des-arts) Paperback - new (Sep 9, 2021)'] };
+    const book = { url: 'https://www.bookshop.test/9789462302815', title: 'Botticelli : artiste & designer',
+      excerpts: ['Botticelli : artiste & designer. Fonds Mercator. ISBN 9789462302815. Menu: Books · Magazine · Gifts'] };
+    const near = { url: 'https://list.test/b', title: 'Botticelli', excerpts: ['Botticelli : artiste & designer, hors-série, ISBN ' + HS + ', 17 €.'] };
+    eq([api.aMagazine('Botticelli : artiste & designer', null, [lireka], HS), api.aMagazine('Botticelli : artiste & designer', null, [near], HS),
+      api.aMagazine('Botticelli : artiste & designer', 'Fonds Mercator', [book], '9789462302815')], [true, true, false],
+      'S1-013: Botticelli — the magazine named on the page about that number, or beside it, leaves it out in code; a menu\'s "Magazine" does not');
   }
 
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');

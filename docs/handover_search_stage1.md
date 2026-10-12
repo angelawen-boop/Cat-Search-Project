@@ -42,7 +42,8 @@ Run records `R17917823099072hxi`, `R1791782625135xfpr`, `R17917829470726084` (st
 | 8 Metamorphoses | Fail | Fail | Fail | English found first (correct). Dutch 6550 and Italian 6857 were printed only in Hannibal's catalogue PDF, read by the step that picks the publisher's pages, which is never asked about books. Dutch kept by title without its ISBN; Italian lost |
 | 5, 6, 9 | Pass | Pass | Pass | — |
 
-**Agreed fixes — for the next session to build, then prove on the Stage 1 page (her decisions):**
+**Her five agreed fixes — built and on the Stage 1 page; changed, not yet proven live** (tests S1-008 to
+S1-013, S1P-011):
 1. **Every step that reads results asks Claude to write down every book in them**, in her keep
    rule's terms: any book that could be this show's catalogue or a version of it, same title
    with no mention of the show included; left out only junk, albums, booklets and magazine
@@ -60,6 +61,15 @@ Run records `R17917823099072hxi`, `R1791782625135xfpr`, `R17917829470726084` (st
 5. **The test page's own faults**: rebuild it with the corrected answer list; and it must see a
    book kept without its ISBN — failing it only where the ISBN was printed in something the
    search saw (information thrown away), passing it where no text printed one.
+
+How each is built: (1) `OTHER_BOOKS_RULE` reworded to her keep rule and added to the
+publisher-candidates read and `readShopPage`, both kept (`keepSeen`); (2) `PUBLISHER_LINE`,
+inside `OTHER_BOOKS_RULE`, so every read carries it; the ISBN search uses `publisherToFind`;
+(3) `resultsForPrompt` and `pageForPrompt` show every result, sharing a character budget;
+(4) `issueBeside` in `aMagazine` — checked on all eleven saved lookups of the last run, it
+flags only 978-2758010685; (5) `stage1_grade.js` matches a book kept with no ISBN by its
+answer's `title`. **Not covered, for her:** when code ranks the publisher's pages itself, the
+site search's results reach no read at all — the trace would show "seen, not shown to Claude".
 
 **Stage 2, for a later session:** Botticelli R1, R2 show Reaktion's book twice on the card
 (two copies, title only, no ISBN). Investigate or repair with the card work.
