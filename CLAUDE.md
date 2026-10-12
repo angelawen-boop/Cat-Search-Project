@@ -531,10 +531,17 @@ and do not flip to searching wide first.**
   read hands over is filed only on the publisher's own site (`publisherLinkOf`);
   a distributor's page never. Self-published → no link at all.
 - **Another venue's catalogue is not this show's** (her decision): a book
-  found on the web is filed only when the read says it is the catalogue of the
-  show AT THIS VENUE (`thisVenue`); a show that travels here "in modified form"
-  does not count. The shop step needs no such answer. A blank publisher with the
-  ISBN known runs the wider search too.
+  found on the web is this show's only when the read says it is the catalogue of
+  the show AT THIS VENUE (`thisVenue`); a show that travels here "in modified form"
+  does not count — that book is kept as another showing's, never searched for.
+  The shop step needs no such answer. A blank publisher with the ISBN known runs
+  the wider search too.
+- **Every book the search comes across is kept** (her decision, Stage 1;
+  `docs/handover_search_stage1.md`): each read lists `otherBooks`, kept with what
+  its text states (`keepSeen`, `keptVersions`); left off only junk, a book its
+  records call an album or booklet (`calledAlbum` — page count decides nothing)
+  and a magazine's issue. This show's English edition found first → no English
+  search. S1-001 to S1-007.
 - **The title as printed, and English first at non-English venues** (her
   decision): a shop title is kept only as far as the pages print it
   (`titleAsPrinted`). At a venue marked `english:false` the facts round reads the
@@ -560,10 +567,11 @@ and do not flip to searching wide first.**
   read of general results (a guess, wherever read). The facts round runs always
   at a non-English venue; elsewhere only for a missing ISBN or a missing or
   guessed publisher.
-- **An English edition must be the same catalogue** (her Botticelli case): a
+- **An English edition is proven the same catalogue** (her Botticelli case) when a
   result carrying its ISBN shows the same publisher or names the venue
   (`sameCatalogue`), carries the original's ISBN, or links it to the original's
-  title ("originally published as…"). Reaktion's monograph is refused (ED-004).
+  title ("originally published as…"). Unproven ones are kept, never picked
+  (`_unproven`; Reaktion's monograph, ED-004).
 - **A museum's own imprint is skipped**, no line on the card (her decision):
   a publisher carrying the **venue's full name** as whole words is the venue
   (`isSelfPublisher`), plus her list `SELF_PUBLISHERS`; her `NOT_SELF_PUBLISHERS`

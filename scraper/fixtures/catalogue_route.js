@@ -87,7 +87,7 @@ const shelfOf = (urls, tile) => ({ payload: { errors: [], results: urls.map(u =>
   excerpts: [tile + '\n' + 'Another catalogue · €35. '.repeat(20)] })) } });
 const isShopRead = p => /venue’s OWN shop pages/.test(p);
 const isFactsRead = p => /SECTION B|SECTION A|SECTION C/.test(p) && /"isbn13": string\|null, "publisher": string\|null/.test(p) && !/"found"/.test(p);
-const isPageRead = p => /^\{"isbn13": string\|null, "publisher": string\|null, "publisherUrl": string\|null\}/m.test(p) && /ONE web page in full: the page selling/.test(p);
+const isPageRead = p => /^\{"isbn13": string\|null, "publisher": string\|null, "publisherUrl": string\|null[,}]/m.test(p) && /ONE web page in full: the page selling/.test(p);
 const isJudge = p => /"kind": "book"\|"listing"\|"other"/.test(p);
 const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries);
 
@@ -153,11 +153,13 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const both = [{ url: 'https://lib.test/r', title: 'Record', excerpts: ['English edition. ISBN 9780847899289. Original: ISBN 9789462302495.'] }];
     const ed3 = one(claimed, { ...orig, title: 'Something else entirely' }, both, 'louvre');
     ok(ed3 && /both ISBNs/.test(ed3._why), 'ED-003: a record carrying both ISBNs proves it', ed3 && ed3._why);
-    // CE-002 carried over: Reaktion's Botticelli is not the Fonds Mercator catalogue's English edition.
+    // Her decision, Stage 1: keep when in doubt. Reaktion's Botticelli proves no link to the
+    // Fonds Mercator catalogue, so it is kept unproven — listed, never picked.
     const reaktion = [{ url: 'https://www.amazon.com/dp/1789144388', title: 'Botticelli: Artist and Designer (Renaissance Lives)', excerpts: ['Ana Debenedetti examines the life and work of Renaissance artist Sandro Botticelli. ISBN 9781789144383. Reaktion Books.'] }];
     eq(api.editionsOf([{ title: 'Botticelli: Artist and Designer', isbn13: '9781789144383', language: 'English', publisher: 'Reaktion Books' }],
-      { title: 'Botticelli, artiste et designer', isbn13: '9789462302815', publisher: 'Fonds Mercator', lang: 'French', pages: null }, reaktion, 'jacquemart', []), [],
-      'ED-004: Botticelli — Reaktion’s monograph is refused (CE-002), never a version');
+      { title: 'Botticelli, artiste et designer', isbn13: '9789462302815', publisher: 'Fonds Mercator', lang: 'French', pages: null }, reaktion, 'jacquemart', [])
+      .map(v => [v.isbn13, v.showing, v._unproven]), [['9781789144383', 'this', true]],
+      'ED-004: Botticelli — Reaktion’s monograph, unproven, is kept (her decision: keep when in doubt), marked unproven so it is never picked');
     eq(api.editionsOf([{ ...claimed[0], isbn13: '9781588398130' }], orig, [TUM], 'jacquemart', []), [],
       'ED-005: an edition whose ISBN no fetched result prints is refused');
   }
@@ -539,8 +541,8 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const ALBUM = FR_ISBN, FULL = '9782757210642';
     eq([api.pagesOfIsbn([...HR.louvre_web, ...HR.louvre_facts, ...HR.louvre_editions], ALBUM), api.pagesOfIsbn(HR.louvre2_facts, FULL)], [47, 544],
       'BK-001: the album’s records print 47 pages, the full catalogue’s 544 — read off results carrying that one ISBN only');
-    eq([r.editions.map(v => v.isbn13), /47-page book; the catalogue has 544 pages — no ISBN for the catalogue itself/.test(out.detail)], [[null, EN_ISBN], true],
-      'BK-002: the earlier Louvre run — the album’s ISBN is refused and, with no other ISBN printed with 544 pages, none is filed on the French version (the album is never a version)');
+    eq([r.editions.map(v => v.isbn13), /is called an album or booklet \(47 pages\) — no ISBN for the catalogue itself/.test(out.detail)], [[null, EN_ISBN], true],
+      'BK-002: the earlier Louvre run — the album’s own records call it an album, so its ISBN is refused and, with no other ISBN printed with 544 pages, none is filed on the French version (the album is never a version)');
     const fullRec = HR.louvre2_facts.find(x => /32222598974/.test(x.url));
     const withFull = script(HR.louvre_web, [...HR.louvre_facts, fullRec], HR.louvre_editions, {
       web: { found: true, catalogueTitle: FR, isbn13: ALBUM, publisher: 'Somogy éditions d\'art', publisherUrl: null, shopUrl: null, thisVenue: true },
@@ -552,7 +554,13 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq(F2.isbn, FULL, 'BK-004: today’s Louvre run — the full catalogue’s ISBN stands');
     const F3 = { isbn: ALBUM, title: FR };
     api.notABooklet(F3, [...HR.louvre_web, ...HR.louvre_facts], null, []);
-    eq(F3.isbn, ALBUM, 'BK-005: no page count for the catalogue — no verdict, the ISBN stands (a small catalogue is never judged on size alone)');
+    eq(F3.isbn, null, 'BK-005: called an album, it is refused even with no page count for the catalogue (her decision: being called an album decides, page count does not)');
+    const SHORT = '9781588398130';
+    const shortRes = [{ url: 'https://shop.test/short', title: 'Test Catalogue', excerpts: ['Test Catalogue. 48 pages. Paperback. ISBN ' + SHORT + '.'] },
+      { url: 'https://shop.test/long', title: 'Test Catalogue', excerpts: ['Test Catalogue. 544 pages. ISBN 9782757210642.'] }];
+    const F4 = { isbn: SHORT, title: 'Test Catalogue' };
+    api.notABooklet(F4, shortRes, 544, []);
+    eq(F4.isbn, SHORT, 'BK-006: a 48-page book nothing calls an album or booklet is kept, beside a 544-page one (her decision: page count decides nothing)');
     const prompts = calls.filter(c => c.kind === 'sample').map(c => c.prompt);
     ok(prompts.some(p => /"found"/.test(p) && /venue's own language — an English edition is checked separately/.test(p)),
       'HR-006:   at a non-English venue the web read takes the venue’s own book; the English edition is decided once, later');
@@ -692,11 +700,13 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     };
     const { calls, row: r } = await run(row('jacquemart', 'Botticelli, artist and designer'), script);
     const factsPromptSent = calls.filter(c => c.kind === 'sample' && isFactsRead(c.prompt)).map(c => c.prompt)[0] || '';
-    ok((factsPromptSent.match(/"year": string\|null, "venueCity": string\|null/g) || []).length === 2,
-      'CY-004: the facts read asks each version and edition for its year and the other showing’s city, in the one read it already makes');
-    eq(brief(r.editions), [['French', '9789462302815', null, 'this']], 'BT-001: Botticelli — one version, Fonds Mercator’s French catalogue');
+    ok((factsPromptSent.match(/"year": string\|null, "venueCity": string\|null/g) || []).length === 3,
+      'CY-004: the facts read asks each version, edition and other book seen for its year and the other showing’s city, in the one read it already makes');
+    eq(brief(r.editions), [['French', '9789462302815', null, 'this'], ['English', null, null, 'this']],
+      'BT-001: Botticelli — Fonds Mercator’s French catalogue, and Reaktion’s book kept beside it with its title alone (this recording prints no ISBN for it; her decision: keep when in doubt)');
     eq([r.editionPick, r.isbn13], [0, '9789462302815'], 'BT-002:   one version only, so it is picked and fills the card');
-    eq(api.englishLine(r), 'No English edition found in bookshops.', 'BT-003:   a one-version foreign card keeps today’s English line; Reaktion’s book is left off (this recording prints no ISBN for it — ED-004 proves the refusal)');
+    eq([r.englishCheck, r.editions[1] && r.editions[1].title], ['shops', 'Botticelli: Artist and Designer'],
+      'BT-003:   Reaktion’s book is kept unproven, so it never counts as this show’s English edition: the lookup still records none found');
   }
 
   // ── CV-001..CV-014: her starting pick, on her nine cases (docs/lookup_proof_cards.json) ─
@@ -829,6 +839,61 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq([api.cityOf(null, 'Musée du Louvre / Somogy', [], 'occ-nga-gov'), api.cityOf(null, 'National Gallery of Art / Lund Humphries', [], 'louvre')], ['Paris', null],
       'CY-002: a publisher that is one of her venues gives that venue’s city; “National Gallery of Art” is not the National Gallery, London');
     eq([api.yearOf('2023', [TUM]), api.yearOf('2021', [TUM]), api.yearOf(null, [TUM])], [2023, null, null], 'CY-003: Hammershøi — Rizzoli’s 2023 is kept only where a record carrying its ISBN prints it');
+  }
+
+  // ── S1-001..S1-007: her Stage 1 rules (docs/handover_search_stage1.md) ────────
+  // Every book the search comes across is kept; the English edition is searched for only
+  // while this show's catalogue is known in another language.
+  {
+    const FR = 'Test Le Livre des dessins', FR_ISBN = '9782359063721', EN_ISBN = '9782359063738', SE_ISBN = '9789171009166';
+    const web = [{ url: 'https://www.louvre.fr/editions/test-livre', title: FR + ' | Louvre éditions',
+      excerpts: [FR + '. Louvre éditions / Lienart, 2022. 240 pages. ISBN ' + FR_ISBN + '. Also shown at the Nationalmuseum, Stockholm, '
+        + 'with its own catalogue, Test The Book of Drawings (Stockholm edition), hardcover, ISBN ' + SE_ISBN + '. '
+        + 'Test Hubert Robert : l\'album de l\'exposition, 48 pages.'] }];
+    const enWeb = [{ url: 'https://www.lienarteditions.com/test-book', title: 'Test The Book of Drawings | Lienart',
+      excerpts: ['Test The Book of Drawings. Lienart, 2022. Paperback, 240 pages. ISBN ' + EN_ISBN + '.'] }];
+    const plan = results => (tool, args) => tool === 'web_search' ? { payload: { results } }
+      : shelfOf(args.urls, '[Another catalogue €30](https://boutique.louvre.fr/en/product/1-other.html)');
+    const isWebRead = p => /"thisVenue": true\|false/.test(p) && !isShopRead(p);
+    const sampleOf = (first, facts) => p => isShopRead(p) ? { found: false } : isWebRead(p) ? first : isFactsRead(p) ? (facts || {}) : {};
+    const enQueries = calls => searches(calls).filter(q => q.some(x => /English edition/.test(x)));
+
+    // This show's English edition found first: done — no search for it.
+    let { calls, row: r } = await run(row('louvre', 'Test Book of Drawings'), { mcp: plan(enWeb), sample: sampleOf(
+      { found: true, thisVenue: true, catalogueTitle: 'Test The Book of Drawings', isbn13: EN_ISBN, publisher: 'Lienart', language: 'English', otherBooks: [] },
+      { isbn13: EN_ISBN, publisher: 'Lienart', language: 'English', title: 'Test The Book of Drawings', pages: '240', versions: [], editions: [] }) });
+    eq([r.isbn13, enQueries(calls).length], [EN_ISBN, 0], 'S1-001: at a non-English venue, this show’s English edition found first — no English-edition search is made');
+
+    // The French book found first: the English edition is looked for.
+    const frFirst = { found: true, thisVenue: true, catalogueTitle: FR, isbn13: FR_ISBN, publisher: 'Louvre éditions / Lienart', language: 'French',
+      otherBooks: [{ title: 'Test The Book of Drawings (Stockholm edition)', isbn13: SE_ISBN, publisher: 'Nationalmuseum', binding: 'hardcover', venueCity: 'Stockholm', evidenceUrl: web[0].url },
+        { title: 'Test Hubert Robert : l\'album de l\'exposition', pages: '48' },
+        { title: 'A book these results never mention', isbn13: null }] };
+    ({ calls, row: r } = await run(row('louvre', 'Test Book of Drawings'), { mcp: plan(web), sample: sampleOf(frFirst,
+      { isbn13: FR_ISBN, publisher: 'Lienart', language: 'French', title: FR, pages: '240', versions: [], editions: [] }) }));
+    ok(enQueries(calls).length === 1, 'S1-002: the French book found first — the English edition is searched for', JSON.stringify(searches(calls)));
+    const se = (r.editions || []).find(v => v.isbn13 === SE_ISBN);
+    eq(se && [se.showing, se.city, se.publisher, se.binding], ['other', 'Stockholm', 'Nationalmuseum', 'hardcover'],
+      'S1-003: another showing’s book the first read saw is written down with what the results state (Vasari’s Stockholm book)');
+    ok(!searches(calls).some(q => q.some(x => /Stockholm|Nationalmuseum|9789171009166/.test(x))), 'S1-004:   and never searched for', JSON.stringify(searches(calls)));
+    eq([(r.editions || []).some(v => /album/i.test(v.title || '')), (r.editions || []).some(v => /never mention/.test(v.title || '')), r.editions[r.editionPick] && r.editions[r.editionPick].isbn13],
+      [false, false, FR_ISBN], 'S1-005:   an album is left off; a book with neither a title the results print nor an ISBN is not written down; the French book stays picked');
+
+    // No catalogue for this show: another showing's book the results mention is still kept.
+    ({ row: r } = await run(row('louvre', 'Test Book of Drawings'), { mcp: plan(web), sample: sampleOf(
+      { found: true, thisVenue: false, catalogueTitle: 'Test The Book of Drawings (Stockholm edition)', isbn13: SE_ISBN, publisher: 'Nationalmuseum', language: 'English', otherBooks: [] }) }));
+    eq([r.hasCatalogue, (r.editions || []).map(v => [v.isbn13, v.showing])], ['no', [[SE_ISBN, 'other']]],
+      'S1-006: no catalogue for this show — the other showing’s book the read named is kept, as that showing’s');
+
+    // The facts read's edition with nothing proving it this catalogue's: kept, never picked.
+    // Its page names only its own publisher (bokorder.se, her Vasari case).
+    const bok = { url: 'https://www.bokorder.test/books-4580', title: 'Giorgio Vasari The Book of Drawings - bokorder',
+      excerpts: ['Test The Book of Drawings (Stockholm edition). Publisher Nationalmuseum, Stockholm. Isbn ' + SE_ISBN + '. Hardcover. 240 pages. English.'] };
+    ({ row: r } = await run(row('louvre', 'Test Book of Drawings'), { mcp: plan([{ ...web[0], excerpts: [FR + '. Louvre éditions / Lienart, 2022. 240 pages. ISBN ' + FR_ISBN + '.'] }, bok]), sample: sampleOf({ ...frFirst, otherBooks: [] },
+      { isbn13: FR_ISBN, publisher: 'Lienart', language: 'French', title: FR, pages: '240', versions: [],
+        editions: [{ title: 'Test The Book of Drawings (Stockholm edition)', isbn13: SE_ISBN, language: 'English', publisher: 'Nationalmuseum', pages: '240', venueCity: 'Stockholm', evidenceUrl: bok.url }] }) }));
+    eq([(r.editions || []).map(v => [v.isbn13, v.showing]), r.editionPick], [[[FR_ISBN, 'this'], [SE_ISBN, 'other']], null],
+      'S1-007: Vasari run 3 — the Stockholm edition, proved by nothing, is kept as the other showing’s (it was dropped); nothing picked, by her pick rule 5');
   }
 
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');
