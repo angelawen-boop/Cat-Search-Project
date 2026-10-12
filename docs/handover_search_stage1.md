@@ -25,8 +25,35 @@ test page and that page passes on all three cases.** This is her decision.
   buttons follow the pick: Museum shop, Publisher and the bookstores.
 
 **Only Stage 1 is open.** The Stage 1 test page is built and published (version 4 of the live
-check page, commit 7980379; `docs/live_check_report.md`). Next: she runs it; the session regrades
-with `node build/stage1_check.js`.
+check page, commit 7980379; `docs/live_check_report.md`).
+
+## Her first Stage 1 run — three rounds, code 5f3f0a6 (read from the page's store)
+
+Run records `R17917823099072hxi`, `R1791782625135xfpr`, `R17917829470726084` (store `checks`,
+`stage: 1`, one loop); every case and lookup record saved, no problems.
+
+| Case | R1 | R2 | R3 | Why it failed (from the case records) |
+|---|---|---|---|---|
+| 1 Vasari | Pass | Pass | Pass | — French, English and Stockholm all kept, every round |
+| 2 Hubert Robert (Louvre) | Pass | Pass | Pass | — Washington book never in the results any round (allowed: not searched for) |
+| 4 Hammershøi | Pass | Pass | Pass | — French, Rizzoli English and 1290 kept, every round |
+| 3 Hubert Robert (NGA) | Fail | Fail | Fail | The lookup found the NGA book ("Hubert Robert", National Gallery of Art) but never its ISBN 978-1848221918 — never in any result. The pass test matches by ISBN only, so it counts as missing. Two causes to separate: the search never sees the ISBN; the grader has no title match |
+| 7 Botticelli | Fail | Fail | Pass | Reaktion's 978-1789144383 shown to Claude, not reported (R1, R2). Also 978-2758010685 named by Claude and dropped by the app: prefix 978-2-7580 is Connaissance des Arts' (as Canaletto's magazine 978-2758004158) — **a guess**: a magazine issue, correctly left off; add it to the case's `excluded` once its page is read |
+| 8 Metamorphoses | Fail | Fail | Fail | English found first (no English search, correct). Dutch 6550 and Italian 6857 were in the text Claude was given every round and never reported in `otherBooks` |
+| 5, 6, 9 | Pass | Pass | Pass | — |
+
+**Her three cases pass every round.** Before the Stage 1 changes they passed 4 of 9 lookups.
+
+**Next, in order:**
+1. Tell her this run, in plain words (not yet done when she compacted).
+2. Case 8 and case 7's Reaktion: the same cause, "shown to Claude, not reported" — the read
+   leaves books out of `otherBooks`. A prompt question; diagnose from the reads in the case
+   records before changing anything.
+3. Case 3: why the ISBN is never seen (the search's queries at an English venue), and whether
+   the pass test should match a kept book by title when it has no ISBN — her call.
+4. Case 7's 978-2758010685: read its page (lireka.com) and settle it.
+5. The open snippets-versus-whole-pages question (below) still stands; her three cases did not
+   flip-flop this run.
 
 ## The lesson: never mix Stage 1 with what the card says
 
