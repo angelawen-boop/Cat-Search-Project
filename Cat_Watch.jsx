@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "43";
-const APP_VERSION_DATE = "10 Oct 2026";
+const APP_VERSION = "43.1";
+const APP_VERSION_DATE = "13 Oct 2026";
 
 // MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
 // most first, the Italian sites together, the venues that refuse us last. Accademia
@@ -649,9 +649,13 @@ const OCC_CHIP="occasional";
 const OCC_DOC="venues/occasional";
 const LINKS_DOC="links/pending";
 const isOcc=id=>String(id||"").startsWith("occ-");
-// Occasional venues with a chip of their own and her name for their cards (her decision; NGA),
-// plus any link options of their own (linkRead, as on a MUSEUMS entry).
-const OWN_CHIP={"occ-nga-gov":{short:"NGA",linkRead:{titleDrop:/^Exhibition:\s*/i}}};
+// Occasional venues with a chip of their own and her name for their cards (her decision; NGA, Mia),
+// plus any link options of their own (linkRead, as on a MUSEUMS entry). `name`: the venue's
+// full name where its page titles do not give it. Mia's page titles end "–– Minneapolis Institute of Art".
+const OWN_CHIP={
+  "occ-nga-gov":{short:"NGA",linkRead:{titleDrop:/^Exhibition:\s*/i}},
+  "occ-new-artsmia-org":{short:"Mia",name:"Minneapolis Institute of Art",linkRead:{titleDrop:/\s+[-–—]+\s+Minneapolis Institute of Art$/i}},
+};
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 
 // Every address in whatever she pasted — commas, spaces, lines, or mixed in
@@ -694,7 +698,8 @@ function stripMd(line){
 // it are the site's own (Courtauld) — Mauritshuis titles a show "The Grand
 // Tour - Destination Italy", and that dash belongs to the title.
 function splitPageTitle(t,host){
-  const s=stripMd(t);
+  // HTML codes in a page title are decoded ("Chagall&#039;s", Mia).
+  const s=decodeEntities(stripMd(t));
   if(!s)return{show:"",site:""};
   // Several bars: the show is named first, the site last ("Venice: Canaletto and
   // His Rivals | Past exhibitions | National Gallery").
@@ -845,7 +850,7 @@ function readShowPage(res,url,vc){
   // The first line under the heading, for a venue whose subtitle sits there.
   const under=lines.slice(h+1).map(stripMd).find(Boolean)||"";
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:url;
-  return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||host.replace(/^www\./,""),link};
+  return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||(OWN_CHIP[vc]||{}).name||host.replace(/^www\./,""),link};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -931,7 +936,7 @@ function occEntry(v){
   const live=v.shop==="found"||(v.shop==="noshelf"&&!!v.shopSearch);
   // `short` is her name for the venue's cards, written into the store by a session;
   // the page title's name stands until then.
-  return{id:v.id,short:(OWN_CHIP[v.id]||{}).short||v.short||v.name,name:v.name,occasional:true,english:v.english===false?false:undefined,
+  return{id:v.id,short:(OWN_CHIP[v.id]||{}).short||v.short||v.name,name:(OWN_CHIP[v.id]||{}).name||v.name,occasional:true,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
     shopUnknown:!live&&!(v.shop==="none"&&v.confirmed)};
@@ -951,7 +956,7 @@ function registerOccasional(map){
 function registerUnseenOccasional(rows){
   for(const r of rows||[]){
     if(!isOcc(r.museumId)||MU[r.museumId])continue;
-    const name=hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4);
+    const name=(OWN_CHIP[r.museumId]||{}).name||hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4);
     MU[r.museumId]={id:r.museumId,short:(OWN_CHIP[r.museumId]||{}).short||name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
     KNOWN_VENUES.add(r.museumId);
   }
