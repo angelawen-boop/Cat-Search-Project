@@ -95,9 +95,15 @@ ledger.rows.push({ ...ledger.rows[0], id: 'occ-nga-gov-ngachipshow', museumId: '
 const SEARCH = name => JSON.parse(fs.readFileSync(path.join(PAGES, 'shop_search', name + '.json'), 'utf8'));
 const DIA_MIXED_ONLY = { results: [SEARCH('detroit').results[2]] };   // made: the reply with only "Books & Stationery" in it
 const SEARCHES = [[/DIA only mixed/, DIA_MIXED_ONLY], [/Courtauld/, SEARCH('courtauld')], [/Cleveland/, SEARCH('cleveland')],
-  [/Mauritshuis/, SEARCH('mauritshuis')], [/Thyssen/, SEARCH('thyssen')], [/Detroit/, SEARCH('detroit')]];
+  [/Mauritshuis/, SEARCH('mauritshuis')], [/Thyssen/, SEARCH('thyssen')], [/Detroit/, SEARCH('detroit')],
+  // Made from her keyed search's live reply (13 Oct): its first result, Mia's own Catalogues shelf.
+  [/Minneapolis/, { results: [{ url: 'https://shop.artsmia.org/collections/exhibition-catalogues', title: 'Exhibition Catalogues - The Store at Mia - Minneapolis Institute of Art',
+    excerpts: ['Menu\nContinue Shopping\nYour Cart is Empty\nOnly at Mia\nMia Merchandise\nCatalogues\nArt & Stationery\nKid\'s Books\nToys\nSale'] }] }]];
 const books = ' Hardcover. 240 pages. € 34,95 — Paperback catalogue. € 24,95 — Exhibition catalogue, hardcover. € 49,95.';
 const SHOPS = {
+  // Mia's shelf as the connector copies it (13 Oct): the menu only, its books drawn by script.
+  'https://shop.artsmia.org/collections/exhibition-catalogues': 'Menu\n* [Catalogues](https://shop.artsmia.org/collections/exhibition-catalogues)\n* [Kid\'s Books](https://shop.artsmia.org/collections/kids-books)\n* [Sale](https://shop.artsmia.org/collections/sale)\n[The Store at Mia - Minneapolis Institute of Art](https://shop.artsmia.org/)',
+  'https://shop.artsmia.org/collections/exhibition-catalogues/products.json?limit=8': SEARCH('mia_catalogues_products').full_content,
   'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi': 'Catalogi' + books,
   'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi': 'Boeken & Catalogi' + books,
   'https://tienda.museothyssen.org/collections.json?limit=250': SEARCH('thyssen_collections').full_content,
@@ -458,6 +464,17 @@ function runtime() {
     const probe = calls.find(c => c.kind === 'mcp' && c.tool === 'web_fetch' && c.args.urls.length > 1);
     ok(probe && probe.args.urls.length === 8 && probe.args.urls.every(u => u.startsWith('https://diashop.org/')),
       'AL-008k2:  the proof is ONE call: four shop softwares × two books seen, all on DIA\'s own shop', probe && JSON.stringify(probe.args.urls));
+  }
+
+  // ── AL-033: Mia — a Shopify shelf whose books the connector cannot see ──
+  {
+    const r = await discoverShop('', 'new.artsmia.org', 'Minneapolis Institute of Art', []);
+    ok(r.shop === 'found' && r.shopCatalogues === 'https://shop.artsmia.org/collections/exhibition-catalogues' && r.shopSearch === 'https://shop.artsmia.org/search?q='
+      && fetched('https://shop.artsmia.org/collections/exhibition-catalogues/products.json?limit=8'),
+      'AL-033: Mia: its Catalogues shelf shows only a menu, so its own product list decides — books, so it is taken', JSON.stringify(r));
+    const s = new Function('React', 'window', 'document', 'localStorage', code + '\n;return shopifyShelfIsBooks;')(React, win, win.document, win.localStorage);
+    ok(!s('{"products":[{"id":1,"title":"Tote","product_type":"Bags","variants":[{"price":"20.00"}]},{"id":2,"title":"Mug","product_type":"Home","variants":[{"price":"15.00"}]}]}'),
+      'AL-033a:  a product list of bags and mugs is not a books shelf');
   }
 
   // ── AL-009: the shop screen, between the review and the ledger ───────────

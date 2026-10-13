@@ -19,3 +19,7 @@ shape by code, broken accents mended by hand. The traps: the dates sit at the
 FOOT, under the description and the curators (AL-017); the page title dresses
 the show's name — "Exhibition Fra Angelico in Paris" for the heading "Fra
 Angelico" (AL-019).
+
+`shop_search/mia_catalogues_products.json` (13 Oct): Mia's Catalogues shelf's own
+product list (`products.json`), the connector's live answer cut to its first eight
+products by code. The shelf page itself comes back as a menu only (AL-033).

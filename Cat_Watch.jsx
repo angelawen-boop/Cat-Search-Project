@@ -1068,6 +1068,19 @@ function looksLikeBookShelf(text){
   const t=foldText(text);
   return (t.match(BOOK_WORD)||[]).length>=3&&(t.match(PRICE)||[]).length>=2;
 }
+// A Shopify section whose page shows no books (drawn by script, out of the connector's
+// copy; Mia): its own product list, read as text. Books when at least two products carry
+// a price and most carry a book type ("Books", "Art Book", "Catalogue").
+function shopifyShelfIsBooks(text){
+  const t=String(text||"");
+  const types=[...t.matchAll(/"product_type"\s*:\s*"((?:[^"\\]|\\.)*)"/g)].map(m=>m[1]);
+  const prices=(t.match(/"price"\s*:\s*"?\d/g)||[]).length;
+  const bookish=types.filter(x=>/\bbooks?\b|\bcatalog(?:ue|o)?s?\b|\bpublications?\b/i.test(x)).length;
+  return types.length>=2&&prices>=2&&bookish*2>types.length;
+}
+function shopifyProductsUrl(u){
+  try{ const x=new URL(u); return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?collections\/[^/]+\/?$/i.test(x.pathname)?x.origin+x.pathname.replace(/\/$/,"")+"/products.json?limit=8":""; }catch{ return ""; }
+}
 // A Shopify shop's sections, read as text (a long list can come back cut short); empty
 // ones skipped; ranked on the TITLE her menu shows, never the handle.
 function shopifySections(text,root){
@@ -1145,6 +1158,11 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
       if(!f.ok){ died=f.detail; continue; }
       const t=pageTextOf(f.results); seenText+="\n"+t;
       if(looksLikeBookShelf(t))return{...c,how};
+      const pj=shopifyProductsUrl(c.url);
+      if(pj){
+        const j=await fetchPage(pj,"The products in this section: titles, types and prices.",null,{full:true});
+        if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results)))return{...c,how};
+      }
     }
     // Nothing books-only: open the first mixed section and try the sections
     // listed inside it. One level down, once.
