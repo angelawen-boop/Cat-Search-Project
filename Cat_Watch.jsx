@@ -4782,7 +4782,7 @@ export default function App(){
     const turnedDown=[...(v.turnedDown||[]),v.shopCatalogues].filter(Boolean);
     setShopLooking(id);
     let shop;
-    try{ shop=await discoverShop(v.pageShop||"",v.host,v.name,turnedDown); }
+    try{ shop=await discoverShop(v.pageShop||"",v.host,(OWN_CHIP[v.id]||{}).name||v.name,turnedDown); }
     catch(e){ shop={shop:"failed",why:"Couldn\u2019t look ("+String((e&&e.message)||e)+")."}; }
     setShopLooking(null);
     setOccVenues(prev=>{
