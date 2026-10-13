@@ -3868,6 +3868,7 @@ export default function App(){
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
   const linksAtRead=useRef(null);   // the links the open review was read from; Cancel import puts them back
+  const linkRead=useRef({on:false,stop:false});   // a Read under way; Cancel mid-Read stops it after the link in hand
   const[occVenues,setOccVenues]=useState({});
   // The stored copy of the new venues; occVenues is the working copy. The store is
   // written only when the ledger moves — an unfinished import keeps nothing (her decision).
@@ -4268,9 +4269,11 @@ export default function App(){
     const urls=linksIn(linkText);
     if(!urls.length){ setLinkFails([{url:"",why:"No links found in the box."}]); return; }
     setBusy(true); setLinkNote(null); setLinkFails([]);
+    linkRead.current={on:true,stop:false};
     const got=[], fails=[], met=new Set(), looked=new Set();
     let venues={...occVenues}, venuesChanged=false;
     for(let n=0;n<urls.length;n++){
+      if(linkRead.current.stop)break;
       const url=urls[n];
       setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026"});
       // Each link's reading is one record in the lookup log: what code read off the
@@ -4328,6 +4331,9 @@ export default function App(){
         saveLookupTape(tape,{ok:!failed,said:failed?fails[fails.length-1].why:null});
       }
     }
+    // Cancelled mid-Read: nothing from this Read is kept; every link stays in the box.
+    if(linkRead.current.stop){ linkRead.current={on:false,stop:false}; setProg({done:0,total:0,label:""}); setBusy(false); setImportMode(null); return; }
+    linkRead.current={on:false,stop:false};
     if(venuesChanged){ registerOccasional(venues); setOccVenues(venues); }   // held, not stored: see occSaved
     setProg({done:0,total:0,label:""}); setBusy(false); setReadVenues([...met]);
     const left=fails.map(x=>x.url).join("\n");
@@ -5268,7 +5274,7 @@ export default function App(){
               </div>)}
             </div>}
             <div style={{textAlign:"center",marginTop:10}}>
-              <button onClick={()=>{ if(!proposals)dropHeldVenues(); setImportMode(null); }} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
+              <button onClick={()=>{ if(linkRead.current.on){ linkRead.current.stop=true; setProg(p=>({...p,label:"Stopping after this link\u2026"})); return; } if(!proposals)dropHeldVenues(); setImportMode(null); }} disabled={busy&&!linkRead.current.on} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
             </div>
           </div>
         </div>

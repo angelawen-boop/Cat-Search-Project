@@ -77,6 +77,10 @@ const urlOf = name => page(name).url;
 const GRAND = urlOf('mauritshuis_grand_tour');
 const REFUSED = 'https://www.example-museum.org/exhibitions/refused-show';
 const EMPTY = 'https://www.example-museum.org/exhibitions/empty-show';
+// A link whose page arrives only when the test lets it (AL-035: Cancel mid-Read).
+const HELD = 'https://www.example-museum.org/exhibitions/held-show';
+let release = null;
+const held = new Promise(r => { release = r; });
 
 // Her ledger already holds the Grand Tour exactly as the link reads it: no card.
 const GRAND_SUMMARY = 'British Grand Tour souvenirs from country houses.';
@@ -162,6 +166,7 @@ function runtime() {
         // Several addresses in one call (the search proof): each answered alone.
         if (args.urls.length > 1) return { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', full_content: DIA_SEARCH(u) || SHOPS[u] || '' })), errors: [] } };
         const u = args.urls[0];
+        if (u === HELD) { await held; return { payload: { results: [{ url: u, title: 'Held', full_content: '' }], errors: [] } }; }
         if (u === REFUSED) return { payload: { results: [], errors: [{ url: u, error_type: 'http_error', http_status_code: 403 }] } };
         if (u === EMPTY) return { payload: { results: [{ url: u, title: 'Empty', full_content: 'Loading…' }], errors: [] } };
         if (P[u]) return { payload: { results: [P[u]], errors: [] } };
@@ -613,6 +618,30 @@ function runtime() {
     ok(dialog().querySelector('textarea').value === '' && (store.get('links/pending') || {}).text === '',
       'AL-020b:  pressed, the box is empty and stays empty — the store emptied too', JSON.stringify(store.get('links/pending')));
     ok(!inDialog('Clear'), 'AL-020c:  and with nothing in the box, no Clear');
+    await act(async () => { setter.call(dialog().querySelector('textarea'), REFUSED + '\n' + EMPTY); dialog().querySelector('textarea').dispatchEvent(new win.Event('input', { bubbles: true })); });
+    await settle();
+    await click(inDialog('Cancel'));
+  }
+  // ── AL-035: Cancel during a Read stops it; nothing kept, every link left in the box ─
+  {
+    await click(importBtn());
+    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    const three = HELD + '\n' + REFUSED + '\n' + EMPTY;
+    await act(async () => { setter.call(dialog().querySelector('textarea'), three); dialog().querySelector('textarea').dispatchEvent(new win.Event('input', { bubbles: true })); });
+    await settle();
+    const before = calls.length;
+    await click(inDialog('Read'));
+    const cancel = inDialog('Cancel');
+    ok(!!cancel && !cancel.disabled, 'AL-035: while links are being read, Cancel can be pressed');
+    if (cancel) await click(cancel);
+    release();
+    await settle(10);
+    const after = calls.slice(before).filter(c => c.kind === 'mcp' && c.tool === 'web_fetch').map(c => c.args.urls[0]);
+    ok(!dialog() && !/proposed change/.test(win.document.body.textContent) && !after.includes(REFUSED) && !after.includes(EMPTY),
+      'AL-035a:  it stops after the link in hand: no more pages read, no review, the pop-up closed', JSON.stringify(after));
+    await click(importBtn());
+    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    ok(dialog().querySelector('textarea').value === three, 'AL-035b:  and every link is still in the box', JSON.stringify(dialog().querySelector('textarea').value));
     await act(async () => { setter.call(dialog().querySelector('textarea'), REFUSED + '\n' + EMPTY); dialog().querySelector('textarea').dispatchEvent(new win.Event('input', { bubbles: true })); });
     await settle();
     await click(inDialog('Cancel'));
