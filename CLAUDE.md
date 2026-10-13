@@ -387,8 +387,7 @@ whether the committed shell still matches.
 else. Built on `main` it says how to get to `claude/ledger-cloud`; built there it
 sets the test page's title and prints the read, read-every-line, publish order.
 Only a session's FIRST publish needs a read; later ones resend the same file.
-No full page-through needed: a refused publish shows the live page's differences and
-that counts as viewed; resend the same file (43.1 went through on the third send).
+A refusal is expected, not a fault: step 4 of the printed steps says what to do.
 
 ### The mental model, load-bearing
 

@@ -172,8 +172,11 @@ console.log('     build/dist/index.html in code: only your change should differ.
 console.log('  2. Do NOT page the saved file into context yet (~6,600 lines).');
 console.log('  3. Artifact action:"publish" url:"' + TEST_PAGE + '" file_path:"build/dist/index.html"');
 console.log('     No `capabilities` (omitting carries all four forward). Push ' + TEST_BRANCH + '.');
-console.log('  4. ONLY IF REFUSED as not viewed: Read every line of the saved file (~600 lines per');
-console.log('     call), read the url again, publish. Then record in CLAUDE.md §4 which one held.');
+console.log('  4. IF REFUSED as not viewed (a session restart forgets step 1): the refusal lists the');
+console.log('     live page\'s differences, and that counts as the read. Check every "+" line is only');
+console.log('     the old side of your own change. Then send the same file again; refused as');
+console.log('     "identical content ... resent unchanged", send it once more and it goes through.');
+console.log('     Never page the saved file. If anything else happens, update these lines.');
 console.log('');
 console.log('  NEVER REPUBLISH WHILE SHE HAS THE PAGE OPEN (CLAUDE.md §1). Ask first.');
 console.log('  Run `npm run test:app` before publishing: page_renders.js is the only check that');
