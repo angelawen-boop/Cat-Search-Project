@@ -1,0 +1,361 @@
+{
+  "calls": [
+    {
+      "asked": [
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=2",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=3",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=4",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=5",
+        "https://www.rijksmuseumshop.nl/en/search?q=Metamorphoses"
+      ],
+      "detail": "opened https://www.rijksmuseumshop.nl/en/books/exhibition-books + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=2 + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=3 + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=4 + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=5 + https://www.rijksmuseumshop.nl/en/search?q=Metamorphoses: 6 page(s)",
+      "kind": "open page",
+      "n": 1,
+      "objective": "The printed exhibition catalogue for “Metamorphoses”: the book’s own product page on this shop, its full title and its price.",
+      "ok": true,
+      "queries": [
+        "Metamorphoses exhibition catalogue book"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=5",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=4",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=2",
+        "https://www.rijksmuseumshop.nl/en/search?q=Metamorphoses",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=3"
+      ]
+    },
+    {
+      "asked": [
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=2",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=3",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=4",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=5",
+        "https://www.rijksmuseumshop.nl/en/search?q=Metamorphoses"
+      ],
+      "detail": "opened https://www.rijksmuseumshop.nl/en/books/exhibition-books + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=2 + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=3 + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=4 + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=5 + https://www.rijksmuseumshop.nl/en/search?q=Metamorphoses: 6 page(s)",
+      "kind": "open page",
+      "n": 2,
+      "objective": "The books in this section of the shop, with their prices.",
+      "ok": true,
+      "queries": null,
+      "refused": [],
+      "results": [
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=5",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=4",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=2",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=3",
+        "https://www.rijksmuseumshop.nl/en/search?q=Metamorphoses"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Metamorphoses exhibition catalogue ISBN publisher\",\"Rijksmuseum Metamorphoses catalogue book\",\"Rijksmuseum Metamorphoses press release catalogue\",\"Metamorphoses Rijksmuseum tentoonstellingscatalogus 2026\"]",
+      "kind": "search",
+      "n": 4,
+      "objective": "Confirm whether a printed catalogue was published for the exhibition “Metamorphoses” at Rijksmuseum, and give its exact title, ISBN-13 and publisher. Museums often state these in a press release; art-book publishers and booksellers list them too.",
+      "ok": true,
+      "queries": [
+        "Metamorphoses exhibition catalogue ISBN publisher",
+        "Rijksmuseum Metamorphoses catalogue book",
+        "Rijksmuseum Metamorphoses press release catalogue",
+        "Metamorphoses Rijksmuseum tentoonstellingscatalogus 2026"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.rijksmuseum.nl/en/press/press-releases/rijksmuseum-and-galleria-borghese-present-metamorphoses",
+        "https://exhibitioncatalogs.com/product/metamorphoses-ovid-and-the-arts-9789493416543",
+        "https://www.rijksmuseumshop.nl/en/books/exhibition-books",
+        "https://www.rijksmuseum.nl/en/press/press-releases/press-kit-metamorphoses/publication",
+        "https://www.rijksmuseum.nl/en/press/press-releases/press-kit-metamorphoses",
+        "https://www.rijksmuseum.nl/en/whats-on/exhibitions/metamorphoses",
+        "https://www.rijksmuseum.nl/en/press/press-releases/press-kit-metamorphoses/press-releases-metamorphoses",
+        "https://www.rijksmuseum.nl/nl/zien-en-doen/tentoonstellingen/afgelopen/metamorfosen",
+        "https://www.rijksmuseum.nl/en/collection/publication/Metamorphoses-Ovid-and-the-arts--15fc492ccaead4d8bed01ef7275afb47",
+        "https://www.rijksmuseumshop.nl/en/current/exhibition-metamorphoses"
+      ]
+    },
+    {
+      "asked": [
+        "https://www.rijksmuseumshop.nl/en/catalogue-metamorphoses"
+      ],
+      "detail": "opened https://www.rijksmuseumshop.nl/en/catalogue-metamorphoses: 1 page(s)",
+      "kind": "open page",
+      "n": 6,
+      "objective": "Whether the book “Metamorphoses: Ovid and the Arts” can be bought on this page now: its product page, price, add to cart, pre-order, sold out, out of stock, unavailable.",
+      "ok": true,
+      "queries": [
+        "Metamorphoses: Ovid and the Arts add to cart sold out"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.rijksmuseumshop.nl/en/catalogue-metamorphoses"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Metamorphoses: Ovid and the Arts English edition\",\"originally published in Dutch as Metamorphoses: Ovid and the Arts\",\"9789493416543 English edition\",\"Metamorphoses Rijksmuseum catalogue English edition\",\"Metamorphoses Hannibal Books ISBN\"]",
+      "kind": "search",
+      "n": 7,
+      "objective": "An ENGLISH-language edition of the exhibition catalogue “Metamorphoses: Ovid and the Arts” (Rijksmuseum, original ISBN 9789493416543): its English title and its own ISBN, as library catalogues and publishers record it.",
+      "ok": true,
+      "queries": [
+        "Metamorphoses: Ovid and the Arts English edition",
+        "originally published in Dutch as Metamorphoses: Ovid and the Arts",
+        "9789493416543 English edition",
+        "Metamorphoses Rijksmuseum catalogue English edition",
+        "Metamorphoses Hannibal Books ISBN"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.poetryintranslation.com/PITBR/Latin/Ovhome.php",
+        "https://www.abebooks.com/9789493416543/Metamorphoses-Ovid-Arts-9493416542/plp",
+        "https://www.amazon.com/Ovids-Metamorphoses-English-Construction-Comprehensive/dp/1036863018",
+        "https://www.rijksmuseum.nl/en/collection/publication/Metamorphoses-Ovid-and-the-arts--15fc492ccaead4d8bed01ef7275afb47",
+        "https://www.abebooks.com/first-edition/Metamorphoses-Ovid-Arts-Scholten-Frits-Hannibal/32423532923/bd",
+        "https://www.rijksmuseum.nl/en/whats-on/exhibitions/metamorphoses",
+        "https://datb.cerl.org/estc/T99433",
+        "https://catalog.hathitrust.org/Record/012315187",
+        "https://catalog.hathitrust.org/Record/100881955.marc",
+        "https://archive.org/details/metamorphosestra00oviduoft"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"9789493416543\",\"9789493416543 Metamorphoses: Ovid and the Arts\",\"Metamorphoses: Ovid and the Arts Rijksmuseum catalogue\"]",
+      "kind": "search",
+      "n": 8,
+      "objective": "The ISBN-13, publisher, language and exact printed title of the exhibition catalogue “Metamorphoses: Ovid and the Arts”, ISBN 9789493416543, published by Hannibal Books, for the exhibition at Rijksmuseum.",
+      "ok": true,
+      "queries": [
+        "9789493416543",
+        "9789493416543 Metamorphoses: Ovid and the Arts",
+        "Metamorphoses: Ovid and the Arts Rijksmuseum catalogue"
+      ],
+      "refused": [],
+      "results": [
+        "http://rijksmuseum.nl/en/whats-on/exhibitions/metamorphoses",
+        "https://www.abebooks.com/9789493416543/Metamorphoses-Ovid-Arts-9493416542/plp",
+        "https://www.ebay.com/itm/358640318407",
+        "https://www.rijksmuseum.nl/en/collection/publication/Metamorphoses-Ovid-and-the-arts--15fc492ccaead4d8bed01ef7275afb47",
+        "https://find.library.upenn.edu/catalog/9979893867803681",
+        "https://www.iberlibro.com/9789493416543/Metamorphoses-Ovid-Arts-9493416542/plp",
+        "https://exhibitioncatalogs.com/product/metamorphoses-ovid-and-the-arts-9789493416543",
+        "https://www.rijksmuseum.nl/en/press/press-releases/rijksmuseum-and-galleria-borghese-present-metamorphoses",
+        "https://www.toppingbooks.co.uk/books/frits-scholten-and-francesca-cappelletti/metamorphoses/9789493416543",
+        "https://www.rijksmuseum.nl/en/press/press-releases/press-kit-metamorphoses/publication"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Hannibal Books\",\"Hannibal Books art book publisher\"]",
+      "kind": "search",
+      "n": 10,
+      "objective": "The official website of the art-book publisher “Hannibal Books”.",
+      "ok": true,
+      "queries": [
+        "Hannibal Books",
+        "Hannibal Books art book publisher"
+      ],
+      "refused": [],
+      "results": [
+        "https://en.wikipedia.org/wiki/Hannibal_(Harris_novel)",
+        "https://www.goodreads.com/shelf/show/hannibal",
+        "https://hannibalbooks.be/en",
+        "https://hannibalbooks.be/en/about-us",
+        "https://twelve-books.com/collections/hannibal-books",
+        "https://aboutphotography.blog/hannibal-books",
+        "https://www.simonandschuster.com/books/Hannibal/Patrick-N-Hunt/9781439102183",
+        "https://event.buchmesse.de/de/exhibitor/hannibal-books",
+        "https://z-lib.tv/publisher/Hannibal",
+        "https://www.accartbooks.com/us/books/publisher/hannibal-books"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"site:hannibalbooks.be Metamorphoses: Ovid and the Arts\",\"site:hannibalbooks.be 9789493416543\",\"site:hannibalbooks.be Metamorphoses\"]",
+      "kind": "search",
+      "n": 11,
+      "objective": "The page on hannibalbooks.be for the book “Metamorphoses: Ovid and the Arts”, ISBN 9789493416543.",
+      "ok": true,
+      "queries": [
+        "site:hannibalbooks.be Metamorphoses: Ovid and the Arts",
+        "site:hannibalbooks.be 9789493416543",
+        "site:hannibalbooks.be Metamorphoses"
+      ],
+      "refused": [],
+      "results": [
+        "https://hannibalbooks.be/metamorfosen-ovidius-en-de-kunsten",
+        "https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten",
+        "https://hannibalbooks.be/en/new",
+        "https://hannibalbooks.be/en",
+        "https://hannibalbooks.be/uploads/images/covers/2026_ENG_VOORJAAR_DRUK_compressed.pdf",
+        "https://hannibalbooks.be/boeken",
+        "https://hannibalbooks.be/en/zoeken",
+        "https://hannibalbooks.be/",
+        "https://hannibalbooks.be/en/van-cleef-arpels-mak-en",
+        "https://hannibalbooks.be/en/about-us"
+      ]
+    },
+    {
+      "asked": [
+        "https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten"
+      ],
+      "detail": "opened https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten: 1 page(s)",
+      "kind": "open page",
+      "n": 13,
+      "objective": "Whether this page is the book “Metamorphoses: Ovid and the Arts” itself, and any link on it to that book.",
+      "ok": true,
+      "queries": [
+        "Metamorphoses: Ovid and the Arts",
+        "9789493416543"
+      ],
+      "refused": [],
+      "results": [
+        "https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten"
+      ]
+    }
+  ],
+  "case": 8,
+  "drawn": {
+    "blocks": [
+      {
+        "lines": [
+          "Not in the museum shop — shop link opens the general store.",
+          "Metamorphoses: Ovid and the Arts",
+          "Hannibal Books",
+          "ISBN 978-9493416543"
+        ],
+        "picked": true
+      }
+    ],
+    "kind": "single"
+  },
+  "grades": [
+    {
+      "field": "English 978-9493416543 — listed as a version",
+      "got": "listed",
+      "verdict": "pass",
+      "want": "listed",
+      "why": null
+    },
+    {
+      "field": "English 978-9493416543 — second number on the block",
+      "got": "none",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "English 978-9493416543 — language",
+      "got": "English",
+      "verdict": "pass",
+      "want": "English",
+      "why": null
+    },
+    {
+      "field": "English 978-9493416543 — publisher",
+      "got": "Hannibal Books",
+      "verdict": "pass",
+      "want": "Hannibal",
+      "why": null
+    },
+    {
+      "field": "English 978-9493416543 — showing",
+      "got": "this show",
+      "verdict": "pass",
+      "want": "this show",
+      "why": null
+    },
+    {
+      "field": "Dutch 978-9493416550 — listed as a version",
+      "got": "not listed",
+      "verdict": "fail",
+      "want": "listed",
+      "why": null
+    },
+    {
+      "field": "Italian 978-9493416857 — listed as a version",
+      "got": "not listed",
+      "verdict": "fail",
+      "want": "listed",
+      "why": null
+    },
+    {
+      "field": "No other versions listed",
+      "got": "none",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "Starting pick",
+      "got": "978-9493416543",
+      "verdict": "pass",
+      "want": "978-9493416543",
+      "why": null
+    }
+  ],
+  "lookupAt": "2026-10-11T00:29:23.565Z",
+  "ms": 23965,
+  "museumId": "rijks",
+  "ok": true,
+  "panel": "Lookup: 14 calls (5 searches, 4 page opens, 5 Claude reads), 13 waits in a row. Time in calls: shop 3.8s, web 3.6s, page 1.0s, facts 6.4s, publisher 9.6s.\nopened https://www.rijksmuseumshop.nl/en/books/exhibition-books + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=2 + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=3 + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=4 + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=5 + https://www.rijksmuseumshop.nl/en/search?q=Metamorphoses: 6 page(s)\nopened https://www.rijksmuseumshop.nl/en/books/exhibition-books + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=2 + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=3 + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=4 + https://www.rijksmuseumshop.nl/en/books/exhibition-books?page=5 + https://www.rijksmuseumshop.nl/en/search?q=Metamorphoses: 6 page(s)\nThe shop’s pages, read whole: books on them, none about this show in the excerpts.\nread the results\nsearch: 10 results for [\"Metamorphoses exhibition catalogue ISBN publisher\",\"Rijksmuseum Metamorphoses catalogue book\",\"Rijksmuseum Metamorphoses press release catalogue\",\"Metamorphoses Rijksmuseum tentoonstellingscatalogus 2026\"]\nread the results\nopened https://www.rijksmuseumshop.nl/en/catalogue-metamorphoses: 1 page(s)\nThe shop link from the web search didn’t open, so it is not filed as in the museum shop.\nsearch: 10 results for [\"9789493416543\",\"9789493416543 Metamorphoses: Ovid and the Arts\",\"Metamorphoses: Ovid and the Arts Rijksmuseum catalogue\"]\nsearch: 10 results for [\"Metamorphoses: Ovid and the Arts English edition\",\"originally published in Dutch as Metamorphoses: Ovid and the Arts\",\"9789493416543 English edition\",\"Metamorphoses Rijksmuseum catalogue English edition\",\"Metamorphoses Hannibal Books ISBN\"]\nread the results\nPublisher: Hannibal Books — from the ISBN’s results.\nLanguage check: English.\n1 version found; picked: 9789493416543.\nsearch: 10 results for [\"Hannibal Books\",\"Hannibal Books art book publisher\"]\nsearch: 10 results for [\"site:hannibalbooks.be Metamorphoses: Ovid and the Arts\",\"site:hannibalbooks.be 9789493416543\",\"site:hannibalbooks.be Metamorphoses\"]\nread the results\nopened https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten: 1 page(s)\nread the results\nPublisher’s page for the book: https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten",
+  "reads": [
+    3,
+    5,
+    9,
+    12,
+    14
+  ],
+  "row": {
+    "alsoVersion": null,
+    "catalogueTitle": "Metamorphoses: Ovid and the Arts",
+    "editionPick": 0,
+    "editions": [
+      {
+        "alsoIsbn13": null,
+        "alsoOf": null,
+        "binding": "paperback",
+        "card": {
+          "catalogueTitle": "Metamorphoses: Ovid and the Arts",
+          "isbn13": "9789493416543",
+          "publisher": "Hannibal Books",
+          "publisherResult": "product",
+          "publisherUrl": "https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten",
+          "shopState": "web",
+          "shopUrl": null
+        },
+        "city": null,
+        "isbn13": "9789493416543",
+        "lang": "English",
+        "pages": null,
+        "proofUrl": "https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten",
+        "publisher": "Hannibal Books",
+        "shop": null,
+        "showing": "this",
+        "title": "Metamorphoses: Ovid and the Arts",
+        "year": null
+      }
+    ],
+    "englishCheck": "english",
+    "hasCatalogue": "yes",
+    "isbn13": "9789493416543",
+    "originalEdition": null,
+    "otherVenueBook": null,
+    "publisher": "Hannibal Books",
+    "publisherResult": "product",
+    "publisherUrl": "https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten",
+    "shopChange": null,
+    "shopState": "web",
+    "shopUrl": null
+  },
+  "title": "Metamorphoses",
+  "trouble": null,
+  "venue": "Rijksmuseum",
+  "verdict": "2 of 9 checks failed."
+}

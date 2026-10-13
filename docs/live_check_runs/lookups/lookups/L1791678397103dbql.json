@@ -1,0 +1,12 @@
+{
+  "action": "Live check",
+  "at": "2026-10-11T00:26:37.103Z",
+  "calls": 9,
+  "complete": true,
+  "enc": "gzip-base64",
+  "museumId": "jacquemart",
+  "pieces": 1,
+  "title": "Hammershøi: the master of danish painting",
+  "venue": "Musée Jacquemart-André",
+  "version": "43"
+}

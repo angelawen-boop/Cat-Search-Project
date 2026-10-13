@@ -1,0 +1,311 @@
+{
+  "calls": [
+    {
+      "asked": [
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5",
+        "https://boutique.louvre.fr/en/search/products/?q=Giorgio%20Vasari%3A%20The%20Book%20of%20Drawings.%20The%20Fate%20of%20a%20Legendary%20Collection"
+      ],
+      "detail": "opened https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/ + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5 + https://boutique.louvre.fr/en/search/products/?q=Giorgio%20Vasari%3A%20The%20Book%20of%20Drawings.%20The%20Fate%20of%20a%20Legendary%20Collection: 5 page(s), 1 refused (404)",
+      "kind": "open page",
+      "n": 1,
+      "objective": "The printed exhibition catalogue for “Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection”: the book’s own product page on this shop, its full title and its price.",
+      "ok": true,
+      "queries": [
+        "Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection exhibition catalogue book"
+      ],
+      "refused": [
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5 404"
+      ],
+      "results": [
+        "https://boutique.louvre.fr/en/search/products/?q=Giorgio%20Vasari%3A%20The%20Book%20of%20Drawings.%20The%20Fate%20of%20a%20Legendary%20Collection",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3",
+        "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection exhibition catalogue ISBN publisher\",\"Louvre Museum Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection catalogue book\",\"Louvre Museum Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection press release catalogue\",\"Giorgio Vasari Louvre catalogue exposition 2022\"]",
+      "kind": "search",
+      "n": 3,
+      "objective": "Confirm whether a printed catalogue was published for the exhibition “Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection” at Louvre Museum, and give its exact title, ISBN-13 and publisher. Museums often state these in a press release; art-book publishers and booksellers list them too.",
+      "ok": true,
+      "queries": [
+        "Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection exhibition catalogue ISBN publisher",
+        "Louvre Museum Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection catalogue book",
+        "Louvre Museum Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection press release catalogue",
+        "Giorgio Vasari Louvre catalogue exposition 2022"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/giorgio-vasari",
+        "https://ccbmn.culture.gouv.fr/Default/doc/SYRACUSE/1115112/giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-exhibition-stockholm-nationalm?_lg=fr-FR",
+        "https://presse.louvre.fr/giorgio-vasari-le-livre-des-dessins-2-2",
+        "https://www.bmvr.marseille.fr/ark:/20868/pf0002780340",
+        "https://www.dessinoriginal.com/en/exhibition-catalogues-in-english/12952-giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-9782359063738.html?post=1",
+        "https://www.louvre.fr/expositions-et-evenements/expositions/giorgio-vasari",
+        "https://heneage.com/books/new-titles/giorgio-vasari-book-drawings-fate-mythical-collection",
+        "https://www.iberlibro.com/9782359063738/Giorgio-Vasari-book-drawings-fate-2359063731/plp",
+        "https://arthive.com/exhibitions/6323",
+        "https://www.mullenbooks.com/pages/books/195751/louis-frank-carina-fryklund-tom-sandstrom-karin-wretstrand-helen-evans-stefania-tullio-cataldo/giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"9782359063738\",\"9782359063738 Giorgio Vasari. The Book of Drawings\",\"Giorgio Vasari. The Book of Drawings Louvre Museum catalogue\"]",
+      "kind": "search",
+      "n": 5,
+      "objective": "The ISBN-13, publisher, language and exact printed title of the exhibition catalogue “Giorgio Vasari. The Book of Drawings”, ISBN 9782359063738, published by Lienart, for the exhibition at Louvre Museum.",
+      "ok": true,
+      "queries": [
+        "9782359063738",
+        "9782359063738 Giorgio Vasari. The Book of Drawings",
+        "Giorgio Vasari. The Book of Drawings Louvre Museum catalogue"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.amazon.com/Giorgio-Vasari-Book-of-drawings/dp/2359063731",
+        "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/giorgio-vasari",
+        "https://www.amazon.co.uk/Giorgio-Vasari-drawings-Carina-Fryklund/dp/2359063731",
+        "https://catalogue.bnf.fr/ark:/12148/cb47129059v",
+        "https://www.abebooks.com/9782359063738/Giorgio-Vasari-Book-Drawings-Fate-2359063731/plp",
+        "https://www.dessinoriginal.com/en/exhibition-catalogues-in-english/12952-giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-9782359063738.html?post=1",
+        "https://presse.louvre.fr/giorgio-vasari-le-livre-des-dessins-2-2",
+        "https://www.bmvr.marseille.fr/ark:/20868/pf0002780340",
+        "https://www.louvre.fr/editions/catalogue/giorgio-vasari-le-livre-des-dessins",
+        "https://www.decitre.fr/livres/giorgio-vasari-the-book-of-drawings-9782359063738.html"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Giorgio Vasari. The Book of Drawings English edition\",\"originally published in French as Giorgio Vasari. The Book of Drawings\",\"9782359063738 English edition\",\"Giorgio Vasari Louvre catalogue English edition\",\"Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection Lienart ISBN\"]",
+      "kind": "search",
+      "n": 6,
+      "objective": "An ENGLISH-language edition of the exhibition catalogue “Giorgio Vasari. The Book of Drawings” (Louvre Museum, original ISBN 9782359063738): its English title and its own ISBN, as library catalogues and publishers record it.",
+      "ok": true,
+      "queries": [
+        "Giorgio Vasari. The Book of Drawings English edition",
+        "originally published in French as Giorgio Vasari. The Book of Drawings",
+        "9782359063738 English edition",
+        "Giorgio Vasari Louvre catalogue English edition",
+        "Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection Lienart ISBN"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.amazon.com/Giorgio-Vasari-Book-of-drawings/dp/2359063731",
+        "https://www.amazon.co.uk/Giorgio-Vasari-drawings-Carina-Fryklund/dp/2359063731",
+        "https://www.abebooks.com/9782359063738/Giorgio-Vasari-Book-Drawings-Fate-2359063731/plp",
+        "https://search.worldcat.org/title/Giorgio-Vasari-the-book-of-drawings-:-the-fate-of-a-mythical-collection/oclc/1317682129",
+        "https://www.dessinoriginal.com/en/exhibition-catalogues-in-english/12952-giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-9782359063738.html",
+        "https://www.dessinoriginal.com/en/exhibition-catalogues-in-english/12952-giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-9782359063738.html?post=1",
+        "https://www.louvre.fr/en/exhibitions-and-events/exhibitions/giorgio-vasari",
+        "https://www.louvre.fr/editions/catalogue/giorgio-vasari-le-livre-des-dessins",
+        "https://ccbmn.culture.gouv.fr/Default/doc/SYRACUSE/1115112/giorgio-vasari-the-book-of-drawings-the-fate-of-a-mythical-collection-exhibition-stockholm-nationalm?_lg=fr-FR",
+        "https://presse.louvre.fr/giorgio-vasari-le-livre-des-dessins-2-2"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 10 results for [\"Lienart\",\"Lienart art book publisher\"]",
+      "kind": "search",
+      "n": 8,
+      "objective": "The official website of the art-book publisher “Lienart”.",
+      "ok": true,
+      "queries": [
+        "Lienart",
+        "Lienart art book publisher"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.lienarteditions.com/",
+        "https://www.lienarteditions.com/nouveautes",
+        "https://www.lienarteditions.com/catalogue",
+        "https://www.lienarteditions.com/blank-c1bea",
+        "https://openlibrary.org/publishers/Lienart",
+        "https://www.abebooks.com/book-search/publisher/lienart",
+        "http://www.lineart.be/",
+        "https://nicolas.lienart.net/",
+        "https://twelve-books.com/collections/lienart",
+        "https://www.mayoclinic.org/es/diseases-conditions/tuberculosis/symptoms-causes/syc-20351250"
+      ]
+    },
+    {
+      "asked": null,
+      "detail": "search: 2 results for [\"site:www.lienarteditions.com Giorgio Vasari. The Book of Drawings\",\"site:www.lienarteditions.com 9782359063738\",\"site:www.lienarteditions.com Giorgio Vasari. The Book of Drawings\"]",
+      "kind": "search",
+      "n": 9,
+      "objective": "The page on www.lienarteditions.com for the book “Giorgio Vasari. The Book of Drawings”, ISBN 9782359063738.",
+      "ok": true,
+      "queries": [
+        "site:www.lienarteditions.com Giorgio Vasari. The Book of Drawings",
+        "site:www.lienarteditions.com 9782359063738",
+        "site:www.lienarteditions.com Giorgio Vasari. The Book of Drawings"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings",
+        "https://www.lienarteditions.com/product-page/giorgio-vasari-le-livre-des-dessins"
+      ]
+    },
+    {
+      "asked": [
+        "https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings"
+      ],
+      "detail": "opened https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings: 1 page(s)",
+      "kind": "open page",
+      "n": 10,
+      "objective": "Whether this page is the book “Giorgio Vasari. The Book of Drawings” itself, and any link on it to that book.",
+      "ok": true,
+      "queries": [
+        "Giorgio Vasari. The Book of Drawings",
+        "9782359063738"
+      ],
+      "refused": [],
+      "results": [
+        "https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings"
+      ]
+    }
+  ],
+  "case": 1,
+  "drawn": {
+    "blocks": [
+      {
+        "lines": [
+          "Not in the museum shop — shop link opens the general store.",
+          "Giorgio Vasari. The Book of Drawings",
+          "Lienart",
+          "ISBN 978-2359063738"
+        ],
+        "picked": true
+      }
+    ],
+    "kind": "single"
+  },
+  "grades": [
+    {
+      "field": "French 978-2359063721 — listed as a version",
+      "got": "not listed",
+      "verdict": "fail",
+      "want": "listed",
+      "why": null
+    },
+    {
+      "field": "English 978-2359063738 — listed as a version",
+      "got": "listed",
+      "verdict": "pass",
+      "want": "listed",
+      "why": null
+    },
+    {
+      "field": "English 978-2359063738 — second number on the block",
+      "got": "none",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "English 978-2359063738 — language",
+      "got": "English",
+      "verdict": "pass",
+      "want": "English",
+      "why": null
+    },
+    {
+      "field": "English 978-2359063738 — publisher",
+      "got": "Lienart",
+      "verdict": "fail",
+      "want": "Louvre Éditions / Lienart",
+      "why": null
+    },
+    {
+      "field": "English 978-2359063738 — showing",
+      "got": "this show",
+      "verdict": "pass",
+      "want": "this show",
+      "why": null
+    },
+    {
+      "field": "English 978-9171009166 — listed as a version",
+      "got": "not listed",
+      "verdict": "fail",
+      "want": "listed",
+      "why": null
+    },
+    {
+      "field": "No other versions listed",
+      "got": "none",
+      "verdict": "pass",
+      "want": "none",
+      "why": null
+    },
+    {
+      "field": "Starting pick",
+      "got": "978-2359063738",
+      "verdict": "pass",
+      "want": "978-2359063738",
+      "why": null
+    }
+  ],
+  "lookupAt": "2026-10-11T00:25:02.989Z",
+  "ms": 25699,
+  "museumId": "louvre",
+  "ok": true,
+  "panel": "Lookup: 11 calls (5 searches, 2 page opens, 4 Claude reads), 10 waits in a row. Time in calls: shop 6.4s, web 4.3s, facts 6.7s, publisher 9.2s.\nopened https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/ + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=2 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=3 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=4 + https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/?page=5 + https://boutique.louvre.fr/en/search/products/?q=Giorgio%20Vasari%3A%20The%20Book%20of%20Drawings.%20The%20Fate%20of%20a%20Legendary%20Collection: 5 page(s), 1 refused (404)\nread the results\nsearch: 10 results for [\"Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection exhibition catalogue ISBN publisher\",\"Louvre Museum Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection catalogue book\",\"Louvre Museum Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection press release catalogue\",\"Giorgio Vasari Louvre catalogue exposition 2022\"]\nread the results\nsearch: 10 results for [\"9782359063738\",\"9782359063738 Giorgio Vasari. The Book of Drawings\",\"Giorgio Vasari. The Book of Drawings Louvre Museum catalogue\"]\nsearch: 10 results for [\"Giorgio Vasari. The Book of Drawings English edition\",\"originally published in French as Giorgio Vasari. The Book of Drawings\",\"9782359063738 English edition\",\"Giorgio Vasari Louvre catalogue English edition\",\"Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection Lienart ISBN\"]\nread the results\nPublisher: Lienart — from the ISBN’s results.\nLanguage check: English.\n1 version found; picked: 9782359063738.\nsearch: 10 results for [\"Lienart\",\"Lienart art book publisher\"]\nsearch: 2 results for [\"site:www.lienarteditions.com Giorgio Vasari. The Book of Drawings\",\"site:www.lienarteditions.com 9782359063738\",\"site:www.lienarteditions.com Giorgio Vasari. The Book of Drawings\"]\nRanked in code: https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings + https://www.lienarteditions.com/product-page/giorgio-vasari-le-livre-des-dessins\nopened https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings: 1 page(s)\nread the results\nPublisher’s page for the book: https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings",
+  "reads": [
+    2,
+    4,
+    7,
+    11
+  ],
+  "row": {
+    "alsoVersion": null,
+    "catalogueTitle": "Giorgio Vasari. The Book of Drawings",
+    "editionPick": 0,
+    "editions": [
+      {
+        "alsoIsbn13": null,
+        "alsoOf": null,
+        "binding": "paperback",
+        "card": {
+          "catalogueTitle": "Giorgio Vasari. The Book of Drawings",
+          "isbn13": "9782359063738",
+          "publisher": "Lienart",
+          "publisherResult": "product",
+          "publisherUrl": "https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings",
+          "shopState": "web",
+          "shopUrl": null
+        },
+        "city": null,
+        "isbn13": "9782359063738",
+        "lang": "English",
+        "pages": 240,
+        "proofUrl": "https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings",
+        "publisher": "Lienart",
+        "shop": null,
+        "showing": "this",
+        "title": "Giorgio Vasari. The Book of Drawings",
+        "year": null
+      }
+    ],
+    "englishCheck": "english",
+    "hasCatalogue": "yes",
+    "isbn13": "9782359063738",
+    "originalEdition": null,
+    "otherVenueBook": null,
+    "publisher": "Lienart",
+    "publisherResult": "product",
+    "publisherUrl": "https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings",
+    "shopChange": null,
+    "shopState": "web",
+    "shopUrl": null
+  },
+  "title": "Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection",
+  "trouble": null,
+  "venue": "Louvre Museum",
+  "verdict": "3 of 9 checks failed."
+}

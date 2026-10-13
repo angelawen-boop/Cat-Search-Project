@@ -47,6 +47,9 @@ is why they live in one repo, on one branch.
   and a date tells her nothing. Say it as: "Because of X, you decided Y. Would
   you like to reconsider? / If this changes your decision, we can do Z." Call
   it her decision or her judgement call — never a "ruling" or a "rule".
+- **"Fixed" means proven live** (her decision): a catalogue-lookup change is "fixed"
+  only after the live check page passes (§7.4); until then it is "changed, not yet
+  proven live". Fixture tests only guard against breaking what already worked.
 - **Whatever she does not disagree with, she agrees with.** Never re-ask what her
   words or an agreed mockup already settle; list only what is genuinely open.
 - **A question gets an answer first.** "Talk to me about X" means discuss;
@@ -528,10 +531,17 @@ and do not flip to searching wide first.**
   read hands over is filed only on the publisher's own site (`publisherLinkOf`);
   a distributor's page never. Self-published → no link at all.
 - **Another venue's catalogue is not this show's** (her decision): a book
-  found on the web is filed only when the read says it is the catalogue of the
-  show AT THIS VENUE (`thisVenue`); a show that travels here "in modified form"
-  does not count. The shop step needs no such answer. A blank publisher with the
-  ISBN known runs the wider search too.
+  found on the web is this show's only when the read says it is the catalogue of
+  the show AT THIS VENUE (`thisVenue`); a show that travels here "in modified form"
+  does not count — that book is kept as another showing's, never searched for.
+  The shop step needs no such answer. A blank publisher with the ISBN known runs
+  the wider search too.
+- **Every book the search comes across is kept** (her decision, Stage 1;
+  `docs/handover_search_stage1.md`): each read lists `otherBooks`, kept with what
+  its text states (`keepSeen`, `keptVersions`); left off only junk, a book its
+  records call an album or booklet (`calledAlbum` — page count decides nothing)
+  and a magazine's issue. This show's English edition found first → no English
+  search. S1-001 to S1-007.
 - **The title as printed, and English first at non-English venues** (her
   decision): a shop title is kept only as far as the pages print it
   (`titleAsPrinted`). At a venue marked `english:false` the facts round reads the
@@ -557,10 +567,11 @@ and do not flip to searching wide first.**
   read of general results (a guess, wherever read). The facts round runs always
   at a non-English venue; elsewhere only for a missing ISBN or a missing or
   guessed publisher.
-- **An English edition must be the same catalogue** (her Botticelli case): a
+- **An English edition is proven the same catalogue** (her Botticelli case) when a
   result carrying its ISBN shows the same publisher or names the venue
   (`sameCatalogue`), carries the original's ISBN, or links it to the original's
-  title ("originally published as…"). Reaktion's monograph is refused (ED-004).
+  title ("originally published as…"). Unproven ones are kept, never picked
+  (`_unproven`; Reaktion's monograph, ED-004).
 - **A museum's own imprint is skipped**, no line on the card (her decision):
   a publisher carrying the **venue's full name** as whole words is the venue
   (`isSelfPublisher`), plus her list `SELF_PUBLISHERS`; her `NOT_SELF_PUBLISHERS`
@@ -1012,7 +1023,7 @@ stale after a minute; every save checks it first. A republish while her page is 
 2. `CLOUD_OPENS=true` once Loads have matched every time — her call. **Load
    stays for good** — it is how she opens a backup.
 3. Merge to `main` and publish to her app — her call; §4's rules apply. **First
-   copy the test page's `sweeps/venues`, `quarantine/rows`, `venues/occasional` and `links/pending` into her app's
+   copy the test page's `sweeps/venues`, `quarantine/rows`, `venues/occasional`, `links/pending` and `shops/museums` into her app's
    store** (quarantine merged latest-wins, never replaced).
 4. Google Drive backup by button — on the table, never automatic.
 
@@ -1115,6 +1126,9 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
 
 ### 4. Catalogue lookup generally
 
+**START HERE: `docs/handover_search_stage1.md`** — Stage 1 (does the live search find the
+right books, and only them, for her three cases) before any card work; never judge it by card lines.
+
 **Catalogue versions — published in 43; her three live searches (Vasari, Hubert
 Robert, Hammershøi) came back wrong. Under review as a whole feature, not patched**
 (the third-patch rule: `editionsOf` changed 6 times in days, `composeRow` 5,
@@ -1140,11 +1154,25 @@ it whole before touching versions.
   with proof, else two blocks; each block's facts only from pages about that one
   number; each block's shop line from searching THAT book's own museum shop (another
   museum's found by `discoverShop`), and the Museum shop button follows the pick there.
-- **Next:** the rebuild under `/orch` (whole-path tests replay her three 43 lookups,
-  `docs/lookup_results/*_43.json`); every agreed case checked against the app's OWN
-  live results; a live run of all nine; publish only when she says and her page is
-  closed. Fixes on `main` since 43 (VL-009, VL-013, VL-014) are line-design fixes the
-  new layout supersedes.
+- **Rebuilt to her layout and rules — on `main` and `claude/ledger-cloud`. Changed,
+  NOT proven live, NOT published.**
+  - **Proven:** on her three lookups recorded on 43 (the app's own searches and its
+    own Claude's answers, replayed), the new code draws the agreed blocks
+    (`catalogue_versions.js`); single-version cards unchanged (19 compared).
+  - **Not proven:** any live search on the new code; the other six cases (Watteau,
+    Canaletto – Guardi, Botticelli, Metamorphoses, Millet, Hubert Robert at NGA) never
+    run on it; another museum's shop finder live beyond two fetches (Nationalmuseum);
+    per-version Re-check live; the `shops/museums` store; the page as she sees it.
+- **The live check page is the Stage 1 page** (version 4): the app's real lookup on nine
+  cases, in rounds, graded by her pass test (`build/stage1_grade.js`,
+  `docs/stage1_answers.json`): https://claude.ai/artifact/KrnwLxC6YdZkd3QyFW4wmy. First run:
+  her five agreed fixes on it, her second run passed 25 of 27 lookups. **Stage 1
+  (finding) is done; Stage 1b (correct conclusions) is on the page, not yet proven live; next is reading her run** — `docs/handover_search_stage1.md`, "START HERE";
+  how to run and regrade: `docs/live_check_report.md`. Card grading parked until Stage 2.
+- **Still hers to answer:** another showing's museum worked out from its city
+  (Washington → NGA), else no shop line on that block; Re-check with nothing picked
+  re-checks the venue's own versions. Two small fixes waiting (publisher step on " : "
+  co-publishers; the progress label for another museum's shop).
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
@@ -1274,6 +1302,7 @@ price, her decision).
 | `docs/venue_urls.md` | The original 21 venues' addresses from the Sweeper Brief, and which of its notes still hold | Wiring or re-checking one of those venues |
 | `docs/listing_pages/`, `docs/*_pages/` | Pages she saved, with a README of what each settled | Changing that venue's recipe — before asking her for anything |
 | `docs/compression.md` | Compression design, model split, eval, rejected alternatives | Changing compression — otherwise don't |
+| `docs/live_check_report.md` | The live check page: how to run and read it, the baseline, follow-up | Changing the catalogue lookup |
 | `docs/picked_shows.md` | Add by link — design, decisions, store, shelf rule, first test | Changing Add by link |
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review | Before touching a reviewed venue |

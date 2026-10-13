@@ -222,14 +222,16 @@ const script = {
     await api.saveLookupTape(tape, { ok: true, row: wrong, detail: '' });
     dir = dirOf();
     res = check(dir);
-    ok(res.status === 1 && /picked 9789171009166, wanted 9782359063738/.test(res.stdout) && /9782359063721: also null, wanted 9782350317441/.test(res.stdout),
-      'PC-002: Vasari with Stockholm’s hardcover picked and the Louvre’s own number missing — each difference printed, exit 1', res.stdout + res.stderr);
+    ok(res.status === 1 && /picked 9789171009166, wanted 9782359063738/.test(res.stdout) && !/also /.test(res.stdout),
+      'PC-002: Vasari with Stockholm’s hardcover picked — the difference printed, exit 1; the French block carries no second number (dropped, her decision)', res.stdout + res.stderr);
     const { compare } = require('../../build/lookup_proof_check.js');
     const cards = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_proof_cards.json'), 'utf8')).cards;
     const c2 = cards.find(c => c.case === 2);
-    const asAgreed = c2.versions.map(v => ({ ...v, publisher: v.showing === 'this' ? 'Somogy, Editions du' : 'Lund Humphries' }));
-    eq([compare(c2, { editions: asAgreed, editionPick: null }), compare(c2, { editions: [...asAgreed, { lang: 'French', isbn13: '9782757210659', showing: 'this' }], editionPick: null }).length > 0],
-      [[], true], 'PC-003: a publisher written another way is the same house; the 48-page album listed is a difference');
+    const asAgreed = c2.versions.map(v => ({ ...v, publisher: v.showing === 'this' ? 'Musée du Louvre Éditions / Somogy, Editions du' : 'National Gallery of Art / Lund Humphries' }));
+    const missingHouse = asAgreed.map(v => ({ ...v, publisher: v.showing === 'this' ? 'Somogy, Editions du' : 'Lund Humphries' }));
+    eq([compare(c2, { editions: asAgreed, editionPick: null }), compare(c2, { editions: [...asAgreed, { lang: 'French', isbn13: '9782757210659', showing: 'this' }], editionPick: null }).length > 0,
+      compare(c2, { editions: missingHouse, editionPick: null }).length],
+      [[], true, 2], 'PC-003: a house written another way is the same house; a missing house is a difference (build/publisher_match.js, the page\'s rule); the 48-page album listed is a difference');
   }
 
   // ── LL-009: Add by link — one record per link, read on the page itself ──────
