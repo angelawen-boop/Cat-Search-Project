@@ -900,17 +900,14 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/No English edition found in bookshops\./.test(t) && !/publisher\u2019s own page/.test(t), 'LG-012:   the card says how far it was looked for: bookshops only', t.slice(0, 600));
 
     t = await run(louEnglish, { en: 'Test The Experience of Nature (English edition)' });
-    // Two versions: her version blocks, each with its book's title, replace the book block.
-    ok(/●Not in the museum shop[^●○]*Test The Experience of Nature \(English edition\)English[^●○]*ISBN 978-1234567897The English edition\./.test(t)
-      && /○In the museum shop\.L’Expérience de la nature\. Les arts à Prague à la cour de Rodolphe IIFrench[^●○]*ISBN 978-2359064612The original edition\./.test(t),
-      'LG-005: an English edition exists — its block picked (●) beside the French original’s, each with its own shop line (her blocks; was: one line each)', t.slice(0, 900));
+    // Two versions: her version lines, each with its book's title, replace the book block.
+    ok(/●English · Test The Experience of Nature \(English edition\) · 978-1234567897/.test(t) && /○French · L’Expérience de la nature\. Les arts à Prague à la cour de Rodolphe II · 978-2359064612 — the original edition\./.test(t), 'LG-005: an English edition exists — picked (●) on its own line beside the French original (was: its title and ISBN on the card)', t.slice(0, 600));
     ok(/Not in the museum shop/.test(t) && !/● French/.test(t), 'LG-006:   "Not in the museum shop", and the French book listed, not picked (was: the French ISBN gone)', t.slice(0, 600));
 
     // Her Botticelli, 7 Oct: an English book with a near-identical title, from
     // another publisher and naming no venue, is a look-alike, not the edition.
     t = await run(louLookalike, { en: 'Test Look-alike Monograph', enVenue: false, enPub: 'Reaktion Books', pub: 'Lienart' });
-    // Her decision, Stage 1: keep when in doubt — the look-alike is listed, never picked.
-    ok(/○[^●○]*Test Look-alike Monograph/.test(t) && /●[^●○]*L’Expérience de la nature/.test(t), 'LG-016: a look-alike English book (other publisher, no venue named) is kept but never picked; the original stays picked', t.slice(0, 600));
+    ok(!/Test Look-alike Monograph/.test(t) && t.includes(OWN) && /No English edition/.test(t), 'LG-016: a look-alike English book (other publisher, no venue named) is refused; the original stands', t.slice(0, 600));
 
     // Her ruling, 7 Oct: the publisher is read off the ISBN's results in code,
     // replacing one read off general results.
@@ -919,7 +916,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(calls.filter(c => c.tool === 'web_search' && c.args.search_queries[0] === FR).length === 1, 'LG-017a:  one ISBN search, shared by the publisher and the language check', JSON.stringify(calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries)));
 
     t = await run(louUnprinted, { en: 'Test Phantom English Edition', enPrinted: false });
-    ok(/Phantom/.test(t) && !/978-1234567897/.test(t) && t.includes(OWN), 'LG-007: an English ISBN the results never print is not believed — the book is kept with its title alone (her decision: write down whatever the results state)', t.slice(0, 600));
+    ok(!/Phantom/.test(t) && t.includes(OWN), 'LG-007: an English ISBN the results never print is not believed', t.slice(0, 400));
 
     t = await run(louSaysEn, { lang: 'English', title: 'Experience of Nature' });
     // The edition search runs beside the facts search, before the language is known (her accepted trade).
@@ -944,7 +941,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     // Her ruling, 7 Oct: an English edition's publisher is read off its ISBN in
     // code. Claude naming the original's publisher does not get a look-alike in.
     t = await run(louEnClaim, { en: 'Test Claimed Monograph', enVenue: false, enPub: 'Lienart', pub: 'Lienart', enIsbnPub: 'Reaktion Books' });
-    ok(/○[^●○]*Test Claimed Monograph[^●○]*Reaktion Books/.test(t) && /●[^●○]*L’Expérience de la nature/.test(t), 'LG-021: an English book whose ISBN names another publisher is not proved this catalogue’s, whatever the read said — kept under that publisher, never picked (her decision: keep when in doubt)', t.slice(0, 600));
+    ok(!/Test Claimed Monograph/.test(t) && t.includes(OWN), 'LG-021: an English book whose ISBN names another publisher is refused, whatever the read said', t.slice(0, 600));
     t = await run(louStop, { enFail: true });
     ok(/English edition not checked \u2014 the search stopped part-way\. Search again to retry\./.test(t), 'LG-014: a search that died says the check was not done', t.slice(0, 600));
     t = await run(louStop, { enFail: true, shopTitle: 'Test Changed Shop Title' });

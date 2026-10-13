@@ -12,15 +12,14 @@
 const fs = require('fs');
 const path = require('path');
 const { readRecord, listRecords } = require('./lookup_log.js');
-const { pmSamePublisher } = require('./publisher_match.js');
 
 const CARDS = path.join(__dirname, '..', 'docs', 'lookup_proof_cards.json');
 const fold = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\u00f8/g, 'o').toLowerCase();
+const words = s => fold(s).split(/[^a-z0-9]+/).filter(w => w.length > 2 && !['editions', 'edition', 'the', 'and', 'books', 'musee', 'museum'].includes(w));
 const isEnglish = l => /\b(english|anglais|inglese|englisch|engels)\b/i.test(String(l || ''));
 const sameLang = (a, b) => isEnglish(a) === isEnglish(b) && (isEnglish(a) || fold(a).split(/[^a-z]+/)[0] === fold(b).split(/[^a-z]+/)[0]);
-// The one publisher rule (build/publisher_match.js): the same set of houses, `aka` names allowed.
-const AKA = JSON.parse(fs.readFileSync(CARDS, 'utf8')).aka;
-const samePublisher = (want, got) => !want || pmSamePublisher(got, want, AKA);
+// One house in common is enough: a publisher's name is written many ways.
+const samePublisher = (want, got) => !want || words(want).some(w => words(got).some(g => g.includes(w) || w.includes(g)));
 
 // The differences between one case and one record's card after the lookup.
 function compare(card, after) {
