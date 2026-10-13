@@ -270,6 +270,17 @@ function runtime() {
     ok(r.ok && r.base === 'Souvenirs of the Gilded Age: French Landscapes from the Corcoran Collection',
       'AL-031: NGA Souvenirs of the Gilded Age — the venue’s doubled colon becomes one', JSON.stringify(r.base));
   }
+  // ── AL-032: Mia — the "––" site tail dropped, HTML codes decoded, its full name ─
+  // Live pages on docs/link_proof_pages.json.
+  {
+    const read = new Function('React', 'window', 'document', 'localStorage', code + '\n;return readShowPage;')(React, win, win.document, win.localStorage);
+    const r = read({ title: 'Matrimonial Bliss: Chagall&#039;s Double Portrait with Wine Glass –– Minneapolis Institute of Art',
+      full_content: "# Matrimonial Bliss: Chagall's Double Portrait with Wine Glass\n\n### May 21, 2017 - July 30, 2017  \nCargillGallery  \nFree Exhibition\n\n"
+        + 'Amid the hardships of World War I, Marc Chagall eagerly married the beautiful and well-educated Bella Rosenfeld in 1914. '.repeat(4) },
+      'https://new.artsmia.org/exhibition/matrimonial-bliss-chagalls-double-portrait-with-wineglass-2', 'occ-new-artsmia-org');
+    ok(r.ok && r.base === "Matrimonial Bliss: Chagall's Double Portrait with Wine Glass" && r.site === 'Minneapolis Institute of Art',
+      'AL-032: Mia: no "–– Minneapolis Institute of Art" tail, no "&#039;", the venue named in full', JSON.stringify([r.base, r.site]));
+  }
   // ── AL-019: a page title that dresses the show's name — the heading wins ─
   // 7 Oct, her cards: "Exhibition Fra Angelico in Paris: and the Masters of Light".
   {

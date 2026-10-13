@@ -47,8 +47,6 @@ is why they live in one repo, on one branch.
   and a date tells her nothing. Say it as: "Because of X, you decided Y. Would
   you like to reconsider? / If this changes your decision, we can do Z." Call
   it her decision or her judgement call — never a "ruling" or a "rule".
-- **Whatever she does not disagree with, she agrees with.** Never re-ask what her
-  words or an agreed mockup already settle; list only what is genuinely open.
 - **A question gets an answer first.** "Talk to me about X" means discuss;
   nothing is built until she says.
 - **Respect UI simplicity and specific UI instructions.** Build what she named,
@@ -182,7 +180,7 @@ Branches separate in-progress work from known-good work, never components.
 | Branch | What it is |
 |---|---|
 | `claude/ledger-cloud` | **Live trial — §7.1.** Merged to `main` only on her call |
-| `parked` | Work held for another session (below). Deleted once on `main`. Holds only the abandoned Vasari fix; she deletes it on GitHub (a session cannot delete a branch) |
+| `parked` | **The unpublished search work after 43** (catalogue versions as blocks, Stage 1/1b, the live check page's code), from `main` and `claude/ledger-cloud`; also the old abandoned Vasari fix. Never published, never merged back without her say (her decision) |
 | `claude/jsx-stitched-intake`, `claude/blissful-volta-jxj5c0` | Merged into `main`; kept as history |
 | `claude/quiet-user-agent` | Parked, her decision — do not merge or re-open |
 | `claude/personal-tracking-ledgers-z49s2h` | Dead — do not merge |
@@ -365,7 +363,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 43 · cloud 5 on the test page**; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 43.1 · cloud 5 on the test page** (43 plus Mia's link fix; the search work after 43 is on `parked`, her decision); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -389,8 +387,8 @@ whether the committed shell still matches.
 else. Built on `main` it says how to get to `claude/ledger-cloud`; built there it
 sets the test page's title and prints the read, read-every-line, publish order.
 Only a session's FIRST publish needs a read; later ones resend the same file.
-The read must page every line (~11 Read calls): a publish without it was refused
-(43). The printed steps still try without it first.
+Whether that read must page every line (~11 Read calls) is unproven — it once was
+not needed, and the service now says it is; the printed steps try without it first.
 
 ### The mental model, load-bearing
 
@@ -419,7 +417,7 @@ reopening, §7.1). Reasoning and the two rejected arguments: `docs/app.md` §4�
 ```
 id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
 acquiring, buyNext, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
-publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, editions, editionPick, addedAt, editedAt
+publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, addedAt, editedAt
 ```
 
 Ledger backup is JSON; the sweep pro forma is CSV.
@@ -914,11 +912,6 @@ junk in summaries, failure handling, compression, the blocked venues — is in
 
 Each line came from a real failure. Details are in git history and `docs/`.
 
-- **Parallel work is proved live before it reaches her.** 43 shipped on tests fed the agreed data and failed on her first live search (Vasari). A test that is handed the answer proves only the rendering.
-- **An agreed card's facts must come from the app's own live results**, not a session's hand searches. Hammershøi's agreed "Rizzoli Electa, 2023" never appeared in anything the app found, so its wording could never fire.
-- **A record about two books is evidence about neither.** One WorldCat record listing Lienart's and Stockholm's printings both joined them and lent Stockholm Lienart's publisher. Read a fact only from a page about that one number; a shop's filter menu ("Hardcover (0)") is not a binding.
-- **One card, one writer.** 43's top lines came from the single-book fields and its version lines from `editions`; the publisher note named no book. Every line reads from the same per-version facts.
-- **Build a new display from the existing one.** 43's run-on version lines, with page count glued to binding, were rejected; her design copies the single-book block per version.
 - **Tests can pass and prove nothing.** Check the exit code and grep the output
   for the new test's own name; a suite can be skipped silently (code after
   `process.exit`, a missing harness, an early `return` — use `await`).
@@ -966,7 +959,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **43 · cloud 5**. Cloud-only in it:
+live on the test page **42.9 · cloud 5**. Cloud-only in it:
 the read-only lock (below); Import on an empty page offers only "Open last
 cloud save" and Load, and Save asks before writing fewer exhibitions than the
 cloud holds (EI-001–007; `docs/app.md` §9); a roll-back's safety copy names the save by its
@@ -1115,36 +1108,32 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
 
 ### 4. Catalogue lookup generally
 
-**Catalogue versions — published in 43; her three live searches (Vasari, Hubert
-Robert, Hammershøi) came back wrong. Under review as a whole feature, not patched**
-(the third-patch rule: `editionsOf` changed 6 times in days, `composeRow` 5,
-`printingsOf` 4). Everything — her layout, her pick rules, the nine cases, the proven
-causes of each wrong card, the open items — is in `docs/catalogue_versions.md`. Read
-it whole before touching versions.
-- **Layout: agreed, not built** — on the mockup
-  https://claude.ai/artifact/Hy7wFw63YA5fJTCDry2dki. Each version is a copy of the
-  single-book block (its own shop line, title, publisher, a facts line, ISBN, why it
-  is listed and its source); the blocks are fixed text with a selection marker; ONE
-  row of Museum shop, Publisher and bookstore buttons follows the pick (links change,
-  never names). Single-version cards do not change.
-- **Publisher pages (her decision):** the name on every block; no extra searches for
-  a page per version; a Publisher button only where that version's page is already
-  in hand. Per-version links wait for her publisher list (§7.6).
-- **Proven causes, from replaying her records:** a library record listing two
-  printings joined Stockholm's hardcover to Lienart's and lent it Lienart's name; a
-  filter menu read as a binding; the first result in search order taken as the
-  source; " : " between co-publishers not split; Rizzoli and 2023 never in the app's
-  results; the card's top lines and version lines written by two separate writers.
-- **Finding rules: agreed** (the doc's "What the lookup finds and records"): facts are
-  recorded only to tell editions apart, never guessed; two numbers share a block only
-  with proof, else two blocks; each block's facts only from pages about that one
-  number; each block's shop line from searching THAT book's own museum shop (another
-  museum's found by `discoverShop`), and the Museum shop button follows the pick there.
-- **Next:** the rebuild under `/orch` (whole-path tests replay her three 43 lookups,
-  `docs/lookup_results/*_43.json`); every agreed case checked against the app's OWN
-  live results; a live run of all nine; publish only when she says and her page is
-  closed. Fixes on `main` since 43 (VL-009, VL-013, VL-014) are line-design fixes the
-  new layout supersedes.
+**All search work after 43 is on `parked`, unpublished** (her decision) — its own
+CLAUDE.md §7.4 and `docs/handover_search_stage1.md` there say where it stands.
+The text below is as it stood at 43.
+
+**PAUSED — no lookup patches until the redesign below is agreed** (her
+decision: past the third-patch limit — `lookupCatalogue` changed 10 times in
+three days). **Redesign, agreed in outline:** find → choose → tell, as three
+separate steps. The lookup keeps EVERY version it finds (language, binding,
+publisher, which showing it belongs to, the page that proved it); nothing is
+chosen or dropped mid-search; booklets are left off. One version → the card as
+now. Several → one line each, labelled with why it exists and a link to the page
+that proved it; she picks one; the same buy buttons rebuild for her pick, which
+becomes the card's book in the ledger (the list stored beside it; replaces
+`originalEdition`, `otherVenueBook`, `alsoVersion`). Search again starts fresh.
+**Starting pick, her rules, in order:** only this showing's catalogue (any
+language or printing) may start picked; English first (any publisher, any time
+— Hammershøi); then this venue's own printing (Vasari: the Louvre's English
+paperback over Stockholm's hardcover; NGA's card: NGA's book); then hardcover
+when only the binding differs; nothing picked when this showing has no English
+but another showing's different book is English (Hubert Robert, Louvre), or when
+the rules do not settle it. More rules only once she has used the cards. These
+replace "hardcover leads" and one-book-per-card.
+**Next:** live research of the agreed case set — Vasari, Hubert Robert (Louvre,
+NGA), Hammershøi, Watteau, Canaletto – Guardi, Botticelli, *Metamorphoses*,
+Millet — and the card each should show; then one design doc for her approval;
+no code before. Every later change is checked against that set.
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
@@ -1155,11 +1144,11 @@ She is noting issues as she uses it, for a later debugging session.
   "Publisher" (right). Cause unproven — a different candidate page, the page
   returning empty (`pageIsShell`), or the read judging one page differently.
   Its record in the lookup log settles it (`docs/app.md` §1, "The lookup log").
-- **OPEN — 40.10's fixes, partly checked.** *Hammershøi* finds *Hammershoi. Le
-  maître de la peinture danoise*, 978-9462302495 — confirmed in her 43 lookup.
-  Still unchecked: *Watteau* no longer reads the shop as blocked; *Canaletto -
-  Guardi*'s English line names the publisher's page; a MoMA lookup still reads its
-  shop as blocked under the whole-page test.
+- **OPEN — 40.10's fixes, unchecked in the app**. Her next lookups
+  settle each: *Hammershøi* (Jacquemart-André) finds *Hammershøi : le maître
+  de la peinture danoise*, ISBN 978-9462302495; *Watteau* no longer reads the
+  shop as blocked; *Canaletto - Guardi*'s English line names the publisher's
+  page; a MoMA lookup still reads its shop as blocked under the whole-page test.
 - **Diagnose a lookup from its record, never a pasted panel.** Every Find
   catalogue, Search again, Re-check and link reading is recorded whole in the
   test page's store — every call, what Claude was sent and answered, the card
@@ -1170,14 +1159,22 @@ She is noting issues as she uses it, for a later debugging session.
   now goes on to the facts round instead of being dropped (`unnamed`, UN-001–003);
   a reply holding two answers takes Claude's last (`lastJsonObject`, TW-001–004 —
   her Louvre links' "unreadable" descriptions).
-- **42.7–42.9's rebuild is superseded by catalogue versions** (above): "one book per
-  card", `alsoVersion` and "hardcover leads" give way to her pick rules and one block
-  per version. What stays: a booklet's ISBN refused (`notABooklet`; caught only when
-  page counts are printed); publisher labels never read out of a link's address; a
-  co-edition's site found by any one of its houses. Tests HR-, BK-, VS-, R8- (R8
-  replays her 42.8 runs). Vasari's English editions are scarce, not missing: Lienart
-  978-2359063738 (€29), the Nationalmuseum's hardcover 978-9171009166 (bokorder.se,
-  also free open access); AbeBooks has neither.
+- **OPEN — the English-edition and versions rebuild, 42.7–42.9; her re-run of
+  Hubert Robert (Louvre, NGA) and Vasari on 42.9 confirms.** Built: one book per
+  card (ISBN read on the book's title; a guessed publisher the ISBN's records
+  contradict gives way); her three English-edition cases, a different book named
+  on the English line only (`otherVenueBook`); a booklet's ISBN refused
+  (`notABooklet`); two versions of one book, "also 978-… (paperback, X)" after the
+  ISBN (`alsoVersion`; hardcover leads, else an outside publisher over a museum's
+  own imprint — when both apply, hardcover wins, her rules in the order she gave
+  them); publisher labels never read out of a link's address; a co-edition's site
+  found by any one of its houses. Rules: `docs/app.md` §1. Tests HR-, BK-, VS-,
+  R8- (R8 replays her 42.8 runs). Known limits: a different book or a booklet is
+  caught only when page counts are printed; which version leads depends on what
+  each search turns up (Vasari leads with Lienart unless a result says the
+  Nationalmuseum book is hardcover). Vasari's English editions are scarce, not
+  missing: Lienart 978-2359063738 (€29), the Nationalmuseum's hardcover
+  978-9171009166 (bokorder.se, also free open access); AbeBooks has neither.
 - **Search again and Reset card + Find catalogue run the same lookup** (checked
   on the live page). They differ only when a step fails part-way: Search
   again then leaves the card untouched. Otherwise a different result is the
@@ -1209,11 +1206,13 @@ Not good → more work on the routine or the recipes.
 
 ### 6. Queued next
 
+- **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
+  check of Hammershøi — the edition read now sees every result, so the library
+  record (978-0847899289) that came tenth should give the English edition (WL-060).
 - **Roadmap — a list of publishers and their websites** (her ask), so the card stops
   saying "Couldn't work out the publisher's own website" (Somogy, Hubert Robert).
   It replaces her decision to keep `PUBLISHER_SITES` short and never fill it ahead
-  (§8); how the list is built is to be agreed with her first. It also unlocks a
-  Publisher button on every catalogue version (§7.4).
+  (§8); how the list is built is to be agreed with her first.
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 
