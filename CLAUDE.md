@@ -387,8 +387,8 @@ whether the committed shell still matches.
 else. Built on `main` it says how to get to `claude/ledger-cloud`; built there it
 sets the test page's title and prints the read, read-every-line, publish order.
 Only a session's FIRST publish needs a read; later ones resend the same file.
-Whether that read must page every line (~11 Read calls) is unproven — it once was
-not needed, and the service now says it is; the printed steps try without it first.
+No full page-through needed: a refused publish shows the live page's differences and
+that counts as viewed; resend the same file (43.1 went through on the third send).
 
 ### The mental model, load-bearing
 
@@ -959,7 +959,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **42.9 · cloud 5**. Cloud-only in it:
+live on the test page **43.1 · cloud 5**. Cloud-only in it:
 the read-only lock (below); Import on an empty page offers only "Open last
 cloud save" and Load, and Save asks before writing fewer exhibitions than the
 cloud holds (EI-001–007; `docs/app.md` §9); a roll-back's safety copy names the save by its
