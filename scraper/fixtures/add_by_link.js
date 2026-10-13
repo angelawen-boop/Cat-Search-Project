@@ -96,11 +96,18 @@ const SEARCH = name => JSON.parse(fs.readFileSync(path.join(PAGES, 'shop_search'
 const DIA_MIXED_ONLY = { results: [SEARCH('detroit').results[2]] };   // made: the reply with only "Books & Stationery" in it
 const SEARCHES = [[/DIA only mixed/, DIA_MIXED_ONLY], [/Courtauld/, SEARCH('courtauld')], [/Cleveland/, SEARCH('cleveland')],
   [/Mauritshuis/, SEARCH('mauritshuis')], [/Thyssen/, SEARCH('thyssen')], [/Detroit/, SEARCH('detroit')],
+  // Made from the live search (13 Oct): only the museum's own Shop page, which sends visitors elsewhere.
+  [/Worcester/, { results: [{ url: 'http://worcesterart.org/visit/shop', title: 'Shop | Worcester Art Museum',
+    excerpts: ['Online shop\nThe online shop currently offers a limited but exciting range of merchandise, including arts and crafts, WAM-branded goods, books, and exhibition catalogs.\nShop now'] }] }],
   // Made from her keyed search's live reply (13 Oct): its first result, Mia's own Catalogues shelf.
   [/Minneapolis/, { results: [{ url: 'https://shop.artsmia.org/collections/exhibition-catalogues', title: 'Exhibition Catalogues - The Store at Mia - Minneapolis Institute of Art',
     excerpts: ['Menu\nContinue Shopping\nYour Cart is Empty\nOnly at Mia\nMia Merchandise\nCatalogues\nArt & Stationery\nKid\'s Books\nToys\nSale'] }] }]];
 const books = ' Hardcover. 240 pages. € 34,95 — Paperback catalogue. € 24,95 — Exhibition catalogue, hardcover. € 49,95.';
 const SHOPS = {
+  // Worcester (13 Oct, live, trimmed): the Shop page's "Shop now" leads to another site.
+  'http://worcesterart.org/visit/shop': '# Shop\n\n## Online shop\n\nThe online shop currently offers a limited but exciting range of merchandise, including arts and crafts, WAM-branded goods, books, and exhibition catalogs.\n\n[Shop now](https://the-museum-shop-at-wam.myshopify.com/)\n\nOrder custom prints of artworks through [RequestAPrint](https://www.requestaprint.net/worcester/index.php) .',
+  'https://the-museum-shop-at-wam.myshopify.com/collections.json?limit=250': '{"collections":[{"id":388308795645,"title":"Books - Non Catalog","handle":"books-non-catalog","products_count":152},{"id":387956080893,"title":"Catalogs","handle":"catalogs","description":"<p>Exhibition Catalogs; Past and Present.</p>","products_count":41},{"id":388296442109,"title":"Jewelry","handle":"jewelry","products_count":60}]}',
+  'https://the-museum-shop-at-wam.myshopify.com/collections/catalogs': '30 products\n* ### [Japanese Woodblock Prints](https://the-museum-shop-at-wam.myshopify.com/products/jap-woodblock-prints)\n  Regular price $39.99 USD\n* ### [JEWELS OF THE NILE HARDCOVER PUBLICATION](https://the-museum-shop-at-wam.myshopify.com/products/jewels-of-the-nile-hardcover-publication)\n  Regular price $49.95 USD\n* ### [THE ICONIC JERSEY CATALOGUE](https://the-museum-shop-at-wam.myshopify.com/products/the-iconic-jersey-catalogue)\n  Regular price $34.95 USD\n# Collection: Catalogs\nExhibition Catalogs; Past and Present.',
   // Mia's shelf as the connector copies it (13 Oct): the menu only, its books drawn by script.
   'https://shop.artsmia.org/collections/exhibition-catalogues': 'Menu\n* [Catalogues](https://shop.artsmia.org/collections/exhibition-catalogues)\n* [Kid\'s Books](https://shop.artsmia.org/collections/kids-books)\n* [Sale](https://shop.artsmia.org/collections/sale)\n[The Store at Mia - Minneapolis Institute of Art](https://shop.artsmia.org/)',
   'https://shop.artsmia.org/collections/exhibition-catalogues/products.json?limit=8': SEARCH('mia_catalogues_products').full_content,
@@ -475,6 +482,13 @@ function runtime() {
     const s = new Function('React', 'window', 'document', 'localStorage', code + '\n;return shopifyShelfIsBooks;')(React, win, win.document, win.localStorage);
     ok(!s('{"products":[{"id":1,"title":"Tote","product_type":"Bags","variants":[{"price":"20.00"}]},{"id":2,"title":"Mug","product_type":"Home","variants":[{"price":"15.00"}]}]}'),
       'AL-033a:  a product list of bags and mugs is not a books shelf');
+  }
+
+  // ── AL-034: Worcester — the museum's Shop page sends visitors to another site ──
+  {
+    const r = await discoverShop('https://archive.worcesterart.org/visit/shop/', 'archive.worcesterart.org', 'Worcester Art Museum', []);
+    ok(r.shop === 'found' && r.shopHome === 'https://the-museum-shop-at-wam.myshopify.com/' && r.shopCatalogues === 'https://the-museum-shop-at-wam.myshopify.com/collections/catalogs',
+      'AL-034: Worcester: its Shop page\'s "Shop now" is followed to the shop on another site, and its Catalogs section taken', JSON.stringify(r));
   }
 
   // ── AL-009: the shop screen, between the review and the ledger ───────────

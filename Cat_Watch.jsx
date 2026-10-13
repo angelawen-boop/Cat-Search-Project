@@ -1139,12 +1139,35 @@ async function proveShopSearch(text,home){
   }
   return null;
 }
+// The museum's own Shop page (its own site, a /shop path) and the link on it to a shop on
+// another site: one labelled as the shop ("Shop now", "Online shop") or a shop's address.
+// At most two such pages opened. → {url, text} or {died}.
+const SHOP_AWAY_LABEL=/^(?:shop|buy|order)(?:\s+(?:now|online|here))?$|\bonline\s+(?:shop|store)\b|\bvisit\s+(?:the|our)\s+(?:online\s+)?(?:shop|store)\b/i;
+async function shopElsewhere(urls,museumHost){
+  const b=baseDomain(museumHost), seen=new Set();
+  let opened=0, died=null;
+  for(const u of urls){
+    const h=hostOf(u);
+    if(!u||!h||baseDomain(h)!==b||SHOP_HOST.test(h))continue;
+    let path=""; try{ path=new URL(u).pathname; }catch{}
+    if(!SHOP_PATH.test(path)||seen.has(normalizeUrlKey(u)))continue;
+    seen.add(normalizeUrlKey(u));
+    if(opened>=2)break;
+    opened++;
+    const f=await fetchPage(u,"The link to the museum's online shop.",null,{full:true});
+    if(!f.ok){ died=f.detail; continue; }
+    const t=pageTextOf(f.results);
+    const out=mdLinks(t).find(l=>{ const lh=hostOf(l.url); return lh&&baseDomain(lh)!==b&&(SHOP_AWAY_LABEL.test(l.label)||SHOP_HOST.test(lh)||/\.myshopify\.com$/i.test(lh)); });
+    if(out)return{url:out.url,text:t};
+  }
+  return{died};
+}
 const SHELF_OPENS=2;   // at most two candidates opened to check, then the next step
 // pageShop: the show page's own shop link (shopLinkOnPage), kept on the venue
 // so "Look again" has it without reading the show page twice.
 async function discoverShop(pageShop,museumHost,venueName,turnedDown){
   const no=new Set((turnedDown||[]).map(normalizeUrlKey));
-  const pageShopHost=hostOf(pageShop);
+  let pageShopHost=hostOf(pageShop);
   const place=u=>isShopPlace(u,museumHost,pageShopHost);
   let opens=0, seenText="", died=null;
   const tryCands=async(cands,how,inside)=>{
@@ -1184,11 +1207,18 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
   if(!s.ok)died=s.detail;
   const mine=(s.results||[]).filter(r=>r&&place(r.url));
   seenText+="\n"+mine.map(r=>r.url).join("\n");
-  const root=pageShop?shopRootOf(pageShop):mine.length?shopRootOf(mine[0].url):"";
+  let root=pageShop?shopRootOf(pageShop):mine.length?shopRootOf(mine[0].url):"";
   opens=0;
   let pick=await tryCands(mine.map(r=>({url:r.url,words:(r.title||"")+" "+pathWords(r.url),proof:(r.excerpts||[]).join("\n")})),"a search");
+  // 1b. The museum's own Shop page sending visitors to a shop on another site ("Shop now"
+  // → the-museum-shop-at-wam.myshopify.com; Worcester): that shop is the one searched.
+  if(!pick){
+    const away=await shopElsewhere([pageShop,...mine.map(r=>r.url)],museumHost);
+    if(away.died)died=away.died;
+    if(away.url){ root=shopRootOf(away.url); pageShopHost=hostOf(away.url); seenText+="\n"+away.text; }
+  }
   // 2. A Shopify shop's list of its sections.
-  if(!pick&&root&&/\/(?:collections|products)\//i.test(seenText)){
+  if(!pick&&root&&/\/(?:collections|products)\/|\.myshopify\.com/i.test(seenText+"\n"+root)){
     const f=await fetchPage(originOf(root)+"collections.json?limit=250","The shop's sections: titles and handles.",null,{full:true});
     if(f.ok){ opens=0; pick=await tryCands(shopifySections(pageTextOf(f.results),root),"the shop's list of sections"); }
     else died=f.detail;
