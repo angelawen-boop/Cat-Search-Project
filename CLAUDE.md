@@ -363,7 +363,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 43.1 · cloud 5 on the test page** (43 plus Mia's link fix; the search work after 43 is on `parked`, her decision); her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 43.1 · cloud 5 on the test page** (43 plus Mia's titles and chip and two shop-finder fixes, proven live by her; the search work after 43 is on `parked`, her decision). **Held for the next publish, her decision: Cancel works during a Read** (AL-035; on `main` and `claude/ledger-cloud`) — it goes out as 43.2 · cloud 5 whenever she next asks to publish; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -1013,8 +1013,10 @@ stale after a minute; every save checks it first. A republish while her page is 
 
 **Her test of 39.5:** all 10 original links imported; the shop finder
 better; catalogue lookups at Thyssen and Mauritshuis found the catalogue. Left
-here for now. **Open:** how the finder does on a venue it has never met — she
-will see when she next adds one by link. A miss is a finder bug (below).
+here for now. **First venues it had never met — Mia and Worcester — both missed,
+fixed in code and proven live** (43.1): the venue's own name for the search, a Shopify
+section judged on its product list, and a museum's "Shop now" followed to a shop on
+another site (`docs/picked_shows.md`, "A venue the app has not seen"; AL-033, AL-034).
 
 **What links are for at a swept venue (her account):** only shows before the
 1 July 2024 lookback, or a venue she has stopped sweeping (too few keepers per
@@ -1046,6 +1048,10 @@ archives.
   dropped (`OWN_CHIP`, `linkReadVenue`; AL-030). Proved live on five archive
   pages; descriptions carry menu and caption junk around the real text, left
   alone until her cards show it reaching Claude's descriptions.
+- **Mia (Minneapolis Institute of Art)**: its own chip "Mia", cards print "MIA" (her
+  decision); its full name and the "–– Minneapolis Institute of Art" title tail dropped
+  (`OWN_CHIP`; AL-032, three pages on `docs/link_proof_pages.json`). HTML codes in any
+  page title are decoded ("Chagall&#039;s").
   A line opening "In collaboration with" under Acquavella's name is a credit,
   never a subtitle (her decision; *Calder | Miró*).
 - **Old-layout Met pages that print no dates in their text** (*Matisse*, 2012,
@@ -1205,6 +1211,9 @@ Not good → more work on the routine or the recipes.
 
 ### 6. Queued next
 
+- **Discuss with her: the ledger's size** (her ask) — 851 exhibitions at 43.1 and
+  nearing 1,000. What it means for the page's speed, the cloud store and its saves,
+  Load and Save, before it gets there. Discussion first; nothing built until she says.
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library
   record (978-0847899289) that came tenth should give the English edition (WL-060).

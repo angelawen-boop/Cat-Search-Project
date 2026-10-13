@@ -74,6 +74,18 @@ it taken. **Nothing found is stored until the import finishes.** Code: "FINDING 
    4 Oct) — Thyssen's search held only single books. Ranked on titles.
 3. **The shop's menu.**
 
+**Three fixes from the first venues it had never met (proven live, 43.1):**
+- **The venue's own name drives the search.** A page title whose site name the reader
+  cannot match to the address (Mia: "–– Minneapolis Institute of Art" on new.artsmia.org)
+  left the search looking for "new.artsmia.org" and finding other museums' shops; a
+  venue rule now names it (`OWN_CHIP` `name`), Look again included.
+- **A Shopify section that opens with no books** (drawn by script; Mia's Catalogues
+  shows only its menu) is judged on its `products.json`: two priced products, most with
+  a book type (`shopifyShelfIsBooks`; AL-033).
+- **The museum's own Shop page pointing elsewhere** (Worcester: "Shop now" →
+  the-museum-shop-at-wam.myshopify.com, the show page linking only an old Shop page)
+  is followed when the search finds no section (`shopElsewhere`; AL-034).
+
 A pick is **opened and must read as books with prices** (unless its excerpt
 already does). Nothing → "Shop found, but not its books section: <shop>" /
 "No museum shop found." / "Search failed." — and **a miss is a finder bug,
