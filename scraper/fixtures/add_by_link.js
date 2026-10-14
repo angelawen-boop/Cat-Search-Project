@@ -297,6 +297,17 @@ function runtime() {
     ok(site('https://web.archive.org/') === 'https://web.archive.org/' && site('https://www.metmuseum.org/x') === 'https://www.metmuseum.org/x',
       'AL-037b:  any other address is left as it is');
   }
+  // ── AL-038: NGV's two-digit years (shortYear) ─
+  {
+    const read = new Function('React', 'window', 'document', 'localStorage', code + '\n;return readShowPage;')(React, win, win.document, win.localStorage);
+    const body = '\n\n**The Ian Potter Centre: NGV Australia, Fed Square**\n\nLevel 3\n\n**4 Sep 26 – 31 Jan 27, ticketed**\n\nOpen daily 10am–5pm\n\n' + 'The art of Margaret Preston has shaped the cultural and aesthetic landscape of Australia. '.repeat(6);
+    const r = read({ title: 'Margaret Preston | NGV', full_content: '# Margaret Preston' + body }, 'https://www.ngv.vic.gov.au/exhibition/margaret-preston/', 'occ-ngv-vic-gov-au');
+    ok(r.ok && r.start === '2026-09-04' && r.end === '2027-01-31', 'AL-038: NGV Margaret Preston: "4 Sep 26 – 31 Jan 27" read as 2026 to 2027', JSON.stringify([r.start, r.end, r.why]));
+    const b = read({ title: 'Pierre Bonnard: Designed by India Mahdavi | NGV', full_content: '# Pierre Bonnard\n\n#### Designed by India Mahdavi\n\n**NGV International**\n\n**9 Jun – 7 Oct 23**' + body.slice(body.indexOf('The art')) }, 'https://www.ngv.vic.gov.au/exhibition/pierre-bonnard-archive/', 'occ-ngv-vic-gov-au');
+    ok(b.ok && b.start === '2023-06-09' && b.end === '2023-10-07', 'AL-038a:  NGV Pierre Bonnard: the year on the closing side only, "9 Jun – 7 Oct 23"', JSON.stringify([b.start, b.end, b.why]));
+    const other = read({ title: 'Some show | Elsewhere', full_content: '# Some show' + body }, 'https://example.org/show', null);
+    ok(!other.ok, 'AL-038b:  two-digit years are read at NGV only', JSON.stringify([other.start, other.end]));
+  }
   // ── AL-031: NGA Souvenirs of the Gilded Age — a doubled colon becomes one ─
   // Live page on docs/link_proof_pages.json; its page title reads "Age:: French".
   {

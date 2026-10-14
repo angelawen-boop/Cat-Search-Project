@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "44.3";
+const APP_VERSION = "44.4";
 const APP_VERSION_DATE = "14 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -672,8 +672,13 @@ const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worceste
 // Her names on the cards of occasional venues, where they differ from the short name.
 const OCC_CARD={"occ-mfa-org":"Boston MFA"};
 // Link options for occasional venues under "Occasional" (as linkRead on a MUSEUMS entry).
-// Boston MFA prints the dates on the line above the show's title.
-const OCC_LINK_READ={"occ-mfa-org":{datesAbove:2}};
+// Boston MFA prints the dates on the line above the show's title. NGV writes two-digit
+// years ("4 Sep 26 – 31 Jan 27"; shortYear).
+const OCC_LINK_READ={"occ-mfa-org":{datesAbove:2},"occ-ngv-vic-gov-au":{shortYear:true}};
+// "4 Sep 26" → "4 Sep 2026": a two-digit year after a day and month, for a venue with shortYear.
+function withLongYears(l){
+  return String(l).replace(/\b(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)[a-z]*\.?)\s+(\d{2})(?![\d:])/gi,"$1 20$2");
+}
 
 // Every address in whatever she pasted — commas, spaces, lines, or mixed in
 // with other words, tracking tags dropped. A repeat is read once (same finished address).
@@ -813,12 +818,13 @@ function readShowPage(res,url,vc){
     add(lines.findIndex(l=>{ const w=words(l); return w.split(" ").length>=2&&w.length<=80&&piece.includes(" "+w+" "); }));
   }
   if(!cands.length)return{ok:false,why:"Couldn’t find the show’s title on the page."};
+  const dateText=l=>lr&&lr.shortYear?withLongYears(l):l;
   const datesUnder=h=>{
     // A venue that labels its date line (linkRead.dateLine) is read there, anywhere on the page.
     if(lr&&lr.dateLine){
       for(let k=0;k<lines.length;k++){
         const l=stripMd(lines[k]); if(!l||!lr.dateLine.test(l))continue;
-        const r=DATES.findDateRange(l,{looseSingles:false});
+        const r=DATES.findDateRange(dateText(l),{looseSingles:false});
         if(r.start||r.end)return{d:k,range:r};
       }
     }
@@ -826,13 +832,13 @@ function readShowPage(res,url,vc){
     if(lr&&lr.datesAbove){
       for(let k=h-1,seen=0;k>=0&&seen<lr.datesAbove;k--){
         const l=stripMd(lines[k]); if(!l)continue; seen++;
-        const r=DATES.findDateRange(l,{looseSingles:false});
+        const r=DATES.findDateRange(dateText(l),{looseSingles:false});
         if(r.start||r.end)return{d:k,range:r};
       }
     }
     for(let k=h+1,seen=0;k<lines.length&&seen<LINK_DATE_LINES;k++){
       const l=stripMd(lines[k]); if(!l)continue; seen++;
-      const r=DATES.findDateRange(l,{looseSingles:false});
+      const r=DATES.findDateRange(dateText(l),{looseSingles:false});
       if(r.start||r.end)return{d:k,range:r};
     }
     return null;
@@ -847,7 +853,7 @@ function readShowPage(res,url,vc){
   // ending on another day never does.
   if(!range.start||!range.end){
     for(let k=d+1;k<lines.length;k++){
-      const r=DATES.findDateRange(stripMd(lines[k]),{looseSingles:false});
+      const r=DATES.findDateRange(dateText(stripMd(lines[k])),{looseSingles:false});
       if(r.start&&r.end&&((range.end&&r.end===range.end)||(range.start&&r.start===range.start))){ range={...range,start:r.start,end:r.end}; break; }
     }
   }
