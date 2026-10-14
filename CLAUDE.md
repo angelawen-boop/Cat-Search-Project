@@ -1052,6 +1052,9 @@ archives.
   decision); its full name and the "–– Minneapolis Institute of Art" title tail dropped
   (`OWN_CHIP`; AL-032, three pages on `docs/link_proof_pages.json`). HTML codes in any
   page title are decoded ("Chagall&#039;s").
+- **Boston MFA**: under "Occasional", chip "Boston", cards "Boston MFA" (her decision);
+  dates sit on the line above the title (`OCC_LINK_READ` `datesAbove`). Proved live on
+  four pages; Legacy Illuminated, Degas and Sargent unchecked (free tier refused).
   A line opening "In collaboration with" under Acquavella's name is a credit,
   never a subtitle (her decision; *Calder | Miró*).
 - **Old-layout Met pages that print no dates in their text** (*Matisse*, 2012,
