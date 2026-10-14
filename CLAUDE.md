@@ -363,7 +363,7 @@ this one alone. `stitch` and `compress` carry it untouched.
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 43.1 · cloud 5 on the test page** (43 plus Mia's titles and chip and two shop-finder fixes, proven live by her; the search work after 43 is on `parked`, her decision). **Held for the next publish, her decision: Cancel works during a Read** (AL-035; on `main` and `claude/ledger-cloud`) — it goes out as 43.2 · cloud 5 whenever she next asks to publish; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+**Live: 44 · cloud 5 on the test page** — her venue names, chips and order (`VENUE_ORDER` sorts every venue list; the lookup still searches with the old names, `lookupName`, her decision), shorter Re-check lines with no "Nothing changed" anywhere (her wording, `recheckLinkedPage`, `recheckShop`), and Cancel during a Read (AL-035). The search work after 43 is on `parked`, her decision; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
 keeps up with it, merged, so her main app never falls behind — it is not
 republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
 Closing Window (Yes-wanted catalogues closed 3–12 months ago,
@@ -958,7 +958,7 @@ only, below). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **43.1 · cloud 5**. Cloud-only in it:
+live on the test page **44 · cloud 5**. Cloud-only in it:
 the read-only lock (below); Import on an empty page offers only "Open last
 cloud save" and Load, and Save asks before writing fewer exhibitions than the
 cloud holds (EI-001–007; `docs/app.md` §9); a roll-back's safety copy names the save by its
