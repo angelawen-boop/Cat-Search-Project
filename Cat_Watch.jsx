@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "44.2";
+const APP_VERSION = "44.3";
 const APP_VERSION_DATE = "14 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -699,6 +699,14 @@ function withoutTracking(u){
   }catch{ return u; }
 }
 function hostOf(u){ try{ return new URL(u).hostname.toLowerCase(); }catch{ return ""; } }
+// A Wayback Machine copy files under the museum it copied: the original address is
+// the venue's site; the copy is still what is read and linked (Sargent and the Sea, RA).
+function siteUrlOf(u){
+  const m=/^https?:\/\/web\.archive\.org\/web\/\d{1,14}[a-z_]*\/(.+)$/i.exec(String(u||"").trim());
+  if(!m)return u;
+  const orig=/^https?:\/\//i.test(m[1])?m[1]:"http://"+m[1];
+  try{ new URL(orig); return orig; }catch{ return u; }
+}
 function originOf(u){ try{ return new URL(u).origin+"/"; }catch{ return ""; } }
 // Accents dropped, and the letters that are not accented ones folded too: ø, æ, œ, ß, ł,
 // đ, ð, þ and dotless ı ("Hammershøi" matches "Hammershoi"). One fold for all matching.
@@ -789,7 +797,7 @@ function readShowPage(res,url,vc){
   const lr=linkOptions(vc);
   const text=String(oneText(res)||"");
   if(text.trim().length<SHELL_CHARS)return{ok:false,why:"The page came back empty."};
-  const host=hostOf(url);
+  const host=hostOf(siteUrlOf(url));
   const{show,site}=splitPageTitle(res&&res.title,host);
   const lines=text.split("\n");
   // Candidate title lines, in order; the heading is the first with dates under it.
@@ -945,17 +953,18 @@ function occVenueId(host){
 
 // The venue whose link options read a page: a swept venue, or an occasional one with options of its own.
 function linkReadVenue(url){
-  const occ=occVenueId(hostOf(url));
+  const occ=occVenueId(hostOf(siteUrlOf(url)));
   return knownVenueFor(url)||(ownChip(occ)||OCC_LINK_READ[occ]?occ:null);
 }
 
 // A link to one of the swept venues files under it, matched by site from the scraper's
 // recipes (VENUE_SITES, written by sync_shared); the Tates are told apart by path.
 function knownVenueFor(url){
-  const h=hostOf(url).replace(/^www\./,"");
+  const site=siteUrlOf(url);
+  const h=hostOf(site).replace(/^www\./,"");
   if(!h)return null;
   let path="";
-  try{ path=new URL(url).pathname; }catch{}
+  try{ path=new URL(site).pathname; }catch{}
   const hit=VENUE_SITES.find(v=>v.host===h&&(!v.path||path.startsWith(v.path)));
   return hit?hit.id:null;
 }
@@ -4774,7 +4783,7 @@ export default function App(){
         const page=readShowPage(res,url,linkReadVenue(url));
         seen.venue=vc||null; seen.page=page;
         if(!page.ok){ fails.push({url,why:page.why}); continue; }
-        const host=hostOf(url);
+        const host=hostOf(siteUrlOf(url));
         if(!vc){
           vc=occVenueId(host);
           met.add(vc);
