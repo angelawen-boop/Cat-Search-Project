@@ -3,18 +3,16 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "43.1";
-const APP_VERSION_DATE = "13 Oct 2026";
+const APP_VERSION = "44";
+const APP_VERSION_DATE = "14 Oct 2026";
 
-// MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
-// most first, the Italian sites together, the venues that refuse us last. Accademia
-// (dellav) sits with the Italian venues until she says otherwise.
-// It is the ONLY venue order in the app — drawer, chips and refresh headings all read
-// it. Never add a second hand-typed list of codes; one once hid two finished recipes.
+// The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
+// Sort by Venue and refresh headings all follow it.
 //
 // shopCatalogues: the shop's catalogue shelf, opened first. shopSearch: its search box
 // plus the exhibition title, opened with it. Addresses: docs/app.md §1 "Shop addresses".
 // card: the name on exhibition cards where it differs from the chip's `short`.
+// lookupName: the name the catalogue lookup searches with, where `short` is only a label.
 // english:false: only these venues get the language check and English-edition search
 // (lookupCatalogue, phases 2b and 3).
 const MUSEUMS = [
@@ -23,14 +21,14 @@ const MUSEUMS = [
     exBase:"https://www.metmuseum.org/exhibitions/", shopSearch:"https://store.metmuseum.org/search?q=", shopCatalogues:"https://store.metmuseum.org/books-toys-games/exhibition-catalogues", shopHome:"https://store.metmuseum.org/", listUrl:"https://www.metmuseum.org/exhibitions" },
   { id:"rijks", english:false, short:"Rijksmuseum", name:"Rijksmuseum", city:"Amsterdam",
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopCatalogues:"https://www.rijksmuseumshop.nl/en/books/exhibition-books", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
-  { id:"ng", short:"National Gallery", name:"The National Gallery", city:"London",
+  { id:"ng", short:"NG UK", lookupName:"National Gallery", name:"The National Gallery", city:"London",
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
   // linkRead: Add by link options for met, acq, frick, menil, louvre, artic, brit (docs/picked_shows.md, "Venue link rules").
   // No apostrophe or double quote inside a linkRead pattern (write \x27): compress.js seedMemory scans this list as text.
   { id:"acq", linkRead:{ title:"subtitle", places:["New York","Palm Beach"], credit:/^In collaboration with\b/i, dashAfterColon:true, from:/^Press Release$/, minLine:60, skip:/^Gallery Hours:|\bImage Courtesy\b/, skipEntities:true, cleanLink:true }, short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
   // Shopify, like Acquavella's. Chip "Levy", cards "Lévy Gorvy Dayan" (her decision).
-  { id:"lgd", short:"Levy", card:"Lévy Gorvy Dayan", name:"Lévy Gorvy Dayan", city:"New York / London",
+  { id:"lgd", short:"Levy", name:"Lévy Gorvy Dayan", city:"New York / London",
     exBase:"https://www.levygorvydayan.com/exhibitions/", shopSearch:"https://shop.levygorvydayan.com/search?q=", shopCatalogues:"https://shop.levygorvydayan.com/collections/all", shopHome:"https://shop.levygorvydayan.com/", listUrl:"https://www.levygorvydayan.com/exhibitions" },
   // The whole Publications shelf: the Frick files some show books outside "Exhibition catalogues" (her finding).
   { id:"frick", linkRead:{ titleDrop:/^Special Loan:\s*/i }, short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopCatalogues:"https://shop.frick.org/publications/", shopHome:"https://shop.frick.org/", listUrl:null },
@@ -60,7 +58,7 @@ const MUSEUMS = [
   { id:"dellav", english:false, short:"Accademia", name:"Gallerie dell'Accademia", city:"Venice", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"borghese", english:false, short:"Borghese", name:"Galleria Borghese", city:"Rome", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"brera", english:false, short:"Brera", name:"Pinacoteca di Brera", city:"Milan", exBase:null, shopSearch:"https://bottegabrera.org/en/search?q=", shopCatalogues:"https://bottegabrera.org/en/collections/guide-e-cataloghi", shopHome:"https://bottegabrera.org/en/", listUrl:null },
-  { id:"capo", english:false, short:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
+  { id:"capo", english:false, short:"Capo", card:"Capodimonte", lookupName:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:"https://shop.themorgan.org/search?q=", shopCatalogues:"https://shop.themorgan.org/collections/exhibition-catalogs", shopHome:"https://shop.themorgan.org/", listUrl:null },
   { id:"brit", linkRead:{ from:/^(?:For the catalogue, homewares and gifts from the exhibition|Book tickets$)/ }, short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:"https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", shopCatalogues:"https://www.britishmuseumshoponline.org/books/exhibition-books.html", shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
   { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
@@ -69,6 +67,17 @@ const MUSEUMS = [
   // us, so the lookup reports it blocked; the address stays for her shop link.
   { id:"mam", english:false, short:"MAM Paris", name:"Mus\u00e9e d'Art Moderne de Paris", city:"Paris", exBase:null, shopSearch:"https://www.mamlibrairieboutique.fr/listeliv.php?flou&base=paper&mots_recherche=", shopHome:"https://www.mamlibrairieboutique.fr/", listUrl:null },
 ];
+// Her order for every venue list: chips, Sort by Venue, the freshness drawer and the
+// refresh screen. A venue not named here goes last, by name.
+const VENUE_ORDER=["met","ng","occ-nga-gov","occ-nationalgalleries-org","frick","morgan","artic","menil",
+  "acq","lgd","occ-new-artsmia-org","cincinnati","brit","tate-britain","wallace","va","ashmolean",
+  "louvre","orsay","mad","jacquemart","khm","rijks","uffizi","dellav","borghese","brera","capo","moma",
+  "tate-modern","mam",
+  "occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
+  "occ-royalacademy-org-uk","occ-museothyssen-org","occ-mauritshuis-nl"];
+const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); return i<0?1e6:i; };
+MUSEUMS.sort((a,b)=>orderOf(a.id)-orderOf(b.id));
+const lookupName=mu=>mu.lookupName||mu.short;
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 
 // ===== SHARED WITH THE SCRAPER — written by `node build/sync_shared.js`; never edit between these markers. Edit scraper/dates.js or scraper/compress_prompt.md, then run it. =====
@@ -649,14 +658,17 @@ const OCC_CHIP="occasional";
 const OCC_DOC="venues/occasional";
 const LINKS_DOC="links/pending";
 const isOcc=id=>String(id||"").startsWith("occ-");
-// Occasional venues with a chip of their own and her name for their cards (her decision; NGA, Mia),
+// Occasional venues with a chip of their own and her name for their cards (her decision; NGA, NGS, Mia),
 // plus any link options of their own (linkRead, as on a MUSEUMS entry). `name`: the venue's
 // full name where its page titles do not give it. Mia's page titles end "–– Minneapolis Institute of Art".
 const OWN_CHIP={
-  "occ-nga-gov":{short:"NGA",linkRead:{titleDrop:/^Exhibition:\s*/i}},
-  "occ-new-artsmia-org":{short:"Mia",name:"Minneapolis Institute of Art",linkRead:{titleDrop:/\s+[-–—]+\s+Minneapolis Institute of Art$/i}},
+  "occ-nga-gov":{short:"NG Washington",lookupName:"NGA",linkRead:{titleDrop:/^Exhibition:\s*/i}},
+  "occ-nationalgalleries-org":{short:"NG Scotland"},
+  "occ-new-artsmia-org":{short:"Mia",lookupName:"Mia",name:"Minneapolis Institute of Art",linkRead:{titleDrop:/\s+[-–—]+\s+Minneapolis Institute of Art$/i}},
 };
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
+// Her names for occasional venues filed under "Occasional", where the store's name is longer.
+const OCC_SHORT={"occ-archive-worcesterart-org":"Worcester"};
 
 // Every address in whatever she pasted — commas, spaces, lines, or mixed in
 // with other words. A repeat is read once (same finished address).
@@ -936,16 +948,17 @@ function occEntry(v){
   const live=v.shop==="found"||(v.shop==="noshelf"&&!!v.shopSearch);
   // `short` is her name for the venue's cards, written into the store by a session;
   // the page title's name stands until then.
-  return{id:v.id,short:(OWN_CHIP[v.id]||{}).short||v.short||v.name,name:(OWN_CHIP[v.id]||{}).name||v.name,occasional:true,english:v.english===false?false:undefined,
+  const own=OWN_CHIP[v.id]||{};
+  return{id:v.id,short:own.short||OCC_SHORT[v.id]||v.short||v.name,lookupName:own.lookupName||v.short||v.name,name:(OWN_CHIP[v.id]||{}).name||v.name,occasional:true,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
     shopUnknown:!live&&!(v.shop==="none"&&v.confirmed)};
 }
-// Every venue a card can be filed under: hers in order, then occasional ones by name.
+// Every venue a card can be filed under, in VENUE_ORDER; the rest by name.
 // The review walks THIS, not MUSEUMS, or occasional cards are counted and never drawn.
 function allVenues(){
-  const occ=Object.values(MU).filter(m=>m&&m.occasional).sort((a,b)=>a.short.localeCompare(b.short));
-  return MUSEUMS.concat(occ);
+  const occ=Object.values(MU).filter(m=>m&&m.occasional);
+  return MUSEUMS.concat(occ).sort((a,b)=>orderOf(a.id)-orderOf(b.id)||a.short.localeCompare(b.short));
 }
 function venueRank(id){ const i=allVenues().findIndex(m=>m.id===id); return i<0?1e6:i; }
 function registerOccasional(map){
@@ -957,7 +970,8 @@ function registerUnseenOccasional(rows){
   for(const r of rows||[]){
     if(!isOcc(r.museumId)||MU[r.museumId])continue;
     const name=(OWN_CHIP[r.museumId]||{}).name||hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4);
-    MU[r.museumId]={id:r.museumId,short:(OWN_CHIP[r.museumId]||{}).short||name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
+    const own=OWN_CHIP[r.museumId]||{};
+    MU[r.museumId]={id:r.museumId,short:own.short||OCC_SHORT[r.museumId]||name,lookupName:own.lookupName||name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
     KNOWN_VENUES.add(r.museumId);
   }
 }
@@ -1665,7 +1679,6 @@ function mcpTrouble(e){
   if(code==="selection_required") return "You have more than one \u201cParallel Search Key\u201d connector. Pick one when Claude asks, then try again.";
   if(code==="blocked_by_policy")  return "Your organisation blocks this connector.";
   if(code==="server_unavailable") return "The search service didn\u2019t answer. Worth one more try in a moment.";
-  if(code==="rate_limited")       return "Too many searches just now. Leave it a minute.";
   if(code==="cancelled")          return "Search stopped.";
   return "Search failed ("+(code||"unknown")+").";
 }
@@ -1782,7 +1795,7 @@ async function readResultsCall(prompt){
     }
     let why="Couldn\u2019t read the search results ("+(code||"unknown")+").";
     if(code==="not_granted")       why="You declined to let this page use Claude. Reload and allow it to search.";
-    else if(code==="rate_limited") why="Claude is rate-limited right now \u2014 leave it a minute.";
+    else if(code==="rate_limited") why="Claude is rate-limited.";
     else if(code==="invalid_json") why="Claude\u2019s answer came back unreadable. Try again.";
     return{ok:false,data:null,partial:(e&&e.text)||null,detail:why+"  ["+String((e&&e.message)||e)+"]"};
   }
@@ -2540,7 +2553,7 @@ function sameCatalogue(edPublisher,origPublisher,isbnResults,museumId){
   const a=words(edPublisher), b=words(origPublisher);
   if(a.length&&b.length&&b.every(w=>a.some(x=>x.includes(w)||w.includes(x))))return true;
   const mu=MU[museumId];
-  const names=(mu?[mu.name,mu.short,mu.card]:[]).map(words).filter(v=>v.length);
+  const names=(mu?[mu.name,lookupName(mu),mu.card]:[]).map(words).filter(v=>v.length);
   if(!names.length)return false;
   return (isbnResults||[]).some(x=>{ const t=" "+normPublisher((x&&x.title||"")+" "+oneText(x))+" "; return names.some(v=>v.every(w=>t.includes(" "+w+" "))); });
 }
@@ -2617,7 +2630,7 @@ function localCatalogueQuery(mu,row){
   if(!word)return[];
   const head=String(row.title||"").split(/\s*:\s*/)[0].trim();
   const year=/^\d{4}/.test(String(row.startDate||""))?" "+String(row.startDate).slice(0,4):"";
-  return head?[head+" "+(mu.card||mu.short)+" "+word+year]:[];
+  return head?[head+" "+lookupName(mu)+" "+word+year]:[];
 }
 
 // The English-edition line on a foreign book: how far an English edition was looked
@@ -2748,20 +2761,20 @@ async function recheckLinkedPage(row){
   const book=row.catalogueTitle||row.title;
   const p=await readShopPage(book,row.shopUrl);
   const hadIt=row.shopState==="shop";
-  if(p.kind==="norun")return{ok:false,detail:p.detail,said:"Re-check didn’t run — "+p.why+" Nothing changed."};
+  if(p.kind==="norun")return{ok:false,detail:p.detail,said:"Re-check didn’t run — "+p.why};
   if(p.kind==="gone")return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
-    said:hadIt?"Re-checked: that shop page no longer exists. Marked no longer in the museum shop."
-              :"Re-checked: that shop page still doesn’t exist. Still no longer in the museum shop."};
+    said:hadIt?"Re-checked: page no longer exists."
+              :"Re-checked: shop page has not returned. Still no longer in the museum shop."};
   if(p.kind==="unreadable")return{ok:false,detail:p.detail,
-    said:"Re-check didn’t work — the shop page couldn’t be read"+(p.why?" ("+p.why+")":"")+". Nothing changed."};
-  if(p.kind==="noread")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — "+p.why+" Nothing changed."};
-  if(p.kind==="badanswer")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — the answer came back unreadable. Nothing changed."};
+    said:"Re-check didn’t work — shop page couldn’t be read"+(p.why?" ("+p.why+")":"")+"."};
+  if(p.kind==="noread")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — "+p.why};
+  if(p.kind==="badanswer")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — answer came back unreadable."};
   if(p.forSale){
-    if(hadIt)return{ok:true,detail:p.detail,row,said:"Re-checked: still for sale in the museum shop. Nothing changed."};
+    if(hadIt)return{ok:true,detail:p.detail,row,said:"Re-checked: still for sale in the museum shop."};
     return{ok:true,detail:p.detail,row:{...row,shopState:"shop",shopChange:"back"},said:"Re-checked: back in the museum shop."};
   }
   return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
-    said:(hadIt?"Re-checked: no longer for sale in the museum shop.":"Re-checked: still not for sale in the museum shop.")+(p.why?" "+p.why:"")};
+    said:hadIt?"Re-checked: no longer for sale in the museum shop."+(p.why?" "+p.why:""):"Re-checked: still not for sale in the museum shop."};
 }
 
 // ── THE CATALOGUE LOOKUP (docs/app.md §1; CLAUDE.md §4 "Catalogue lookup") ─────
@@ -3051,7 +3064,7 @@ function editionQueries(mu,row,book,isbn,pub){
   return [book+" English edition"]
     .concat(lang?["originally published in "+lang+" as "+book]:[])
     .concat(isbn?[isbn+" English edition"]:[])
-    .concat(head&&mu?[head+" "+(mu.short||mu.card||mu.name)+" catalogue English edition"]:[])
+    .concat(head&&mu?[head+" "+(lookupName(mu)||mu.card||mu.name)+" catalogue English edition"]:[])
     .concat(pub?[String(row.title||"").trim()+" "+pub+" ISBN"]:[]);
 }
 
@@ -3163,7 +3176,7 @@ const VENUE_GENERIC=new Set(["national","art","arts","fine","modern","royal","mu
 function venueHouse(name,museumId){
   if(isVenueImprint(name,museumId))return true;
   const mu=MU[museumId];
-  const v=mu?normPublisher(mu.short).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t)):[];
+  const v=mu?normPublisher(lookupName(mu)).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t)):[];
   const n=" "+normPublisher(name)+" ";
   return v.length>0&&v.every(t=>n.includes(" "+t+" "));
 }
@@ -3210,7 +3223,7 @@ function venueNamedIn(pub,except){
   const parts=String(pub||"").split(HOUSE_SPLIT).map(normPublisher).filter(Boolean);
   for(const m of Object.values(MU)){
     if(!m||m.id===except)continue;
-    const w=normPublisher(m.short).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t));
+    const w=normPublisher(lookupName(m)).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t));
     if(parts.some(p=>p===normPublisher(m.name)||(w.length&&w.every(t=>(" "+p+" ").includes(" "+t+" ")))))return m;
   }
   return null;
@@ -4977,7 +4990,7 @@ export default function App(){
     // SEARCH AGAIN REPLACES THE CARD ONLY WHEN IT FINISHED. Any step that
     // failed → the card stays as it was, and says so.
     if(row.looked&&out.ok&&out.trouble){
-      setRecheckSaid({id,failed:true,text:"Search again didn\u2019t finish \u2014 "+out.trouble.split("[")[0].trim()+" Nothing changed."});
+      setRecheckSaid({id,failed:true,text:"Search again didn\u2019t finish \u2014 "+out.trouble.split("[")[0].trim()});
     } else if(out.ok){
       await commit(rows.map(r=>r.id===id?out.row:r));
       if(out.trouble&&out.troubleLang)setError("Found the catalogue for \u201c"+row.title+"\u201d, but the language check "
@@ -4990,7 +5003,7 @@ export default function App(){
       // On the card, not in a banner (her decision): Re-check's line word for word,
       // "Re-check" swapped for "Search" or "Search again".
       const why=String(out.detail||"").split("\n").pop().split("[")[0].trim();
-      setRecheckSaid({id,failed:true,text:(row.looked?"Search again":"Search")+" didn\u2019t run \u2014 "+why+" Nothing changed."});
+      setRecheckSaid({id,failed:true,text:(row.looked?"Search again":"Search")+" didn\u2019t run \u2014 "+why});
     }
     setBusy(false);setBusyId(null);setLookLabel(null);
   }
@@ -5020,13 +5033,13 @@ export default function App(){
       const answered=row.shopState==="blocked"?{...row,shopState:row.hasCatalogue==="yes"?"web":"none"}:row;
       // The ticket link is dropped silently (her decision).
       const dropped="";
-      if(!s.ran)out={ok:false,detail:"",said:"This museum has no shop on file, so there is nothing to re-check."};
-      else if(!s.ok)out={ok:false,detail:s.detail,said:"Re-check didn’t run — "+s.detail.split("\n").pop().split("[")[0].trim()+" Nothing changed."};
+      if(!s.ran)out={ok:false,detail:"",said:"Re-check didn’t run — venue has no shop."};
+      else if(!s.ok)out={ok:false,detail:s.detail,said:"Re-check didn’t run — "+s.detail.split("\n").pop().split("[")[0].trim()};
       // A blocked shop is a failed check and changes nothing — except a ticket
       // link, which was wrong whatever the shop says.
       else if(s.blocked)out=ticket
-        ?{ok:true,detail:s.detail,row:{...row,shopState:"blocked"},said:dropped+"The museum shop is blocked, so it couldn’t be re-checked."}
-        :{ok:false,detail:s.detail,said:"Re-check didn’t work — the museum shop is blocked. Nothing changed."};
+        ?{ok:true,detail:s.detail,row:{...row,shopState:"blocked"},said:dropped+"Re-check didn’t work — museum shop is blocked."}
+        :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop is blocked."};
       else if(o.found&&(o.catalogueTitle||o.isbn13)&&(onShop||o.listedOnly)){
         // Reading the book's page for a blank ISBN is part of the shop step —
         // the page IS the shop's. Web search and the publisher are never run.
@@ -5034,7 +5047,7 @@ export default function App(){
           MU[row.museumId]?.name||"",dom,io);
         out={ok:true,detail:hit.detail,row:hit.row,said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")};
       }
-      else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked the museum shop: this book isn’t there."};
+      else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked: not in the museum shop."};
     }
     saveLookupTape(tape,out);
     setDebug(out.detail||null);
@@ -5494,8 +5507,7 @@ export default function App(){
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
-          {MUSEUMS.map(m=><button key={m.id} onClick={()=>toggleSet(setVenueF,m.id)} style={chip(venueF.has(m.id))}>{m.short}</button>)}
-          {Object.entries(OWN_CHIP).map(([id,v])=><button key={id} onClick={()=>toggleSet(setVenueF,id)} style={chip(venueF.has(id))}>{v.short}</button>)}
+          {MUSEUMS.map(m=>m.id).concat(Object.keys(OWN_CHIP)).sort((a,b)=>orderOf(a)-orderOf(b)).map(id=><button key={id} onClick={()=>toggleSet(setVenueF,id)} style={chip(venueF.has(id))}>{(MU[id]||OWN_CHIP[id]).short}</button>)}
           <button onClick={()=>toggleSet(setVenueF,OCC_CHIP)} style={chip(venueF.has(OCC_CHIP))}>Occasional</button>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>

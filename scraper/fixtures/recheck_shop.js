@@ -223,12 +223,11 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await click(button(c, /Catalogue/));
   }
 
-  // ── V-001: a Levy Gorvy card carries the gallery's full name, her ruling
-  // 25 Sep; its chip keeps the short one.
+  // ── V-001: Levy on its chip and its cards (her decision).
   {
     const c = card(lgdRow.title);
-    ok(c && c.textContent.startsWith('Lévy Gorvy Dayan'), 'V-001: a Levy Gorvy card is headed "Lévy Gorvy Dayan"', c && c.textContent.slice(0, 40));
-    ok([...win.document.querySelectorAll('button')].some(b => b.textContent === 'Levy'), 'V-001a:   while its chip reads "Levy" (her ruling, 27 Sep)');
+    ok(c && c.textContent.startsWith('Levy'), 'V-001: a Levy Gorvy card is headed "Levy"', c && c.textContent.slice(0, 40));
+    ok([...win.document.querySelectorAll('button')].some(b => b.textContent === 'Levy'), 'V-001a:   and its chip reads "Levy"');
   }
 
   // ── V-002: no "No catalogue" corner tag — the corner keeps the time tag.
@@ -277,12 +276,12 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
 
   // ── R-008..R-010: a check that FAILED says so and changes nothing ────────
   {
-    script.mcp = () => { throw refused('rate_limited'); };
+    script.mcp = () => { throw refused('server_unavailable'); };
     script.sample = () => ({ forSale: false, why: 'should never be asked' });
     await click(button(card(miller.title), /^Re-check museum shop$/));
     const t = card(miller.title).textContent;
     ok(/Re-check didn’t run/.test(t), 'R-008: a refused connector says the re-check didn’t run', t.slice(0, 300));
-    ok(/Nothing changed\./.test(t), 'R-009:   and that nothing changed');
+    ok(/Re-check didn’t run — The search service didn’t answer\. Worth one more try in a moment\.$/.test(t) && !/Nothing changed/.test(t), 'R-009:   and the line stops at the reason', t.slice(-200));
     ok(/Back in the museum shop\./.test(t) && !/No longer/.test(t), 'R-010: the status is exactly as before, not red');
   }
 
@@ -325,11 +324,11 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   // Re-check's words — her ask, 30 Sep. And the diagnostic's copy icon says
   // whether the copy happened, tick or cross, no words (R-011d, R-011e).
   {
-    script.mcp = () => { throw refused('rate_limited'); };
+    script.mcp = () => { throw refused('server_unavailable'); };
     script.sample = () => { throw new Error('Claude must not be asked when the connector refused'); };
     await click(button(card(miller.title), /^Search again$/));
     const t = card(miller.title).textContent;
-    ok(/Search again didn’t run — Too many searches just now\. Leave it a minute\. Nothing changed\./.test(t),
+    ok(/Search again didn’t run — The search service didn’t answer\. Worth one more try in a moment\.$/.test(t),
       'R-011c: a Search again that didn’t run says so on the card', t.slice(-200));
     ok(!/Catalogue search failed/.test(win.document.body.textContent),
       'R-011c:   and no red banner at the top of the page — her ruling, 30 Sep');
@@ -349,7 +348,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       for (const nav of [win.navigator, globalThis.navigator].filter(Boolean))
         Object.defineProperty(nav, 'clipboard', { value: { writeText: async x => { got = x; } }, configurable: true });
       await click(copy);
-      ok(copy.textContent === '\u2713' && got && /Too many searches/.test(got),
+      ok(copy.textContent === '\u2713' && got && /didn’t answer/.test(got),
         'R-011e:   with a clipboard it copies the diagnostic’s text and the icon turns to a tick', String(got).slice(0, 80));
     }
   }
@@ -384,7 +383,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(!!btn, 'R-018: a "no catalogue" tray has the button too');
     if (btn) await click(btn);
     const t = card(noCatRow.title).textContent;
-    ok(/this book isn’t there/.test(t) && /No catalogue found/.test(t), 'R-019: nothing found says so, and the card is unchanged', t.slice(0, 200));
+    ok(/Re-checked: not in the museum shop\./.test(t) && /No catalogue found/.test(t), 'R-019: nothing found says so, and the card is unchanged', t.slice(0, 200));
   }
 
   // ── R-020..R-023: Search again is a whole fresh lookup. Finished, it
@@ -397,7 +396,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     let t = card(webRow.title).textContent;
     ok(/978-1857096972/.test(t) && t.includes('Hannibal Books') && /Now in the museum shop\./.test(before) && /Now in the museum shop\./.test(t),
       'R-020: a Search again that fails changes nothing on the card', t.slice(0, 300));
-    ok(/Search again didn\u2019t (run|finish)/.test(t) && /Nothing changed/.test(t), 'R-021:   and says so on the card', t.slice(0, 400));
+    ok(/Search again didn\u2019t (run|finish)/.test(t) && !/Nothing changed/.test(t), 'R-021:   and says so on the card', t.slice(0, 400));
 
     script.mcp = (tool, args) => tool === 'web_search'
       ? { payload: { results: [{ url: 'https://bookseller.test/x', title: 'Test Show', excerpts: ['Test Show catalogue ISBN 9780300000009'] }] } }
@@ -582,7 +581,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     script.sample = () => { throw new Error('Claude must not be asked'); };
     await click(button(card(khmBad.title), /^Re-check museum shop$/));
     const c = card(khmBad.title), t = c ? c.textContent : '';
-    ok(!/ticket/.test(t) && t.includes(BLOCKED_FOUND) && /couldn’t be re-checked/.test(t), 'L-014: the ticket link is removed without a word about it, and the card says the shop is blocked', t.slice(0, 400));
+    ok(!/ticket/.test(t) && t.includes(BLOCKED_FOUND) && /Re-check didn’t work — museum shop is blocked\./.test(t), 'L-014: the ticket link is removed without a word about it, and the card says the shop is blocked', t.slice(0, 400));
     ok(shopLink(c) && shopLink(c).getAttribute('href') === 'https://shop.khm.at/en/products?shop%5Bq%5D=Canaletto%20%26%20Bellotto',
        'L-015: her card’s Museum shop link is KHM’s own search for "Canaletto & Bellotto" — not the ticket, not the book title', shopLink(c) && shopLink(c).getAttribute('href'));
     ok(!calls.some(x => x.tool === 'web_fetch' && x.args.urls.includes(TICKET)), 'L-016: the ticket page is not re-read');
@@ -609,7 +608,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     // reads that page; use noCatRow, which has none.
     await click(button(card(noCatRow.title), /^Re-check museum shop$/));
     const t = card(noCatRow.title).textContent;
-    ok(/museum shop is blocked\. Nothing changed\./.test(t) && /No catalogue found for this exhibition/.test(t),
+    ok(/Re-check didn’t work — museum shop is blocked\./.test(t) && /No catalogue found for this exhibition/.test(t),
        'L-019: a re-check refused by the shop says so and changes nothing', t.slice(0, 300));
     ok(card(webRow.title).textContent === before, 'L-019a: other cards untouched');
   }
@@ -945,7 +944,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     t = await run(louStop, { enFail: true });
     ok(/English edition not checked \u2014 the search stopped part-way\. Search again to retry\./.test(t), 'LG-014: a search that died says the check was not done', t.slice(0, 600));
     t = await run(louStop, { enFail: true, shopTitle: 'Test Changed Shop Title' });
-    ok(!t.includes('Test Changed Shop Title') && /Search again didn\u2019t finish/.test(t) && /Nothing changed/.test(t),
+    ok(!t.includes('Test Changed Shop Title') && /Search again didn\u2019t finish/.test(t) && !/Nothing changed/.test(t),
       'LG-019: a Search again where a later step fails changes nothing, and says it didn\u2019t finish', t.slice(0, 600));
 
     ok(t.indexOf('978-2359064612') >= 0 && t.indexOf('978-2359064612') < t.indexOf('English edition not checked'), 'LG-013c:  the English line sits under the ISBN', t.slice(0, 600));
@@ -1064,7 +1063,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const khmOnly = titles();
     ok(khmOnly.length === 4 && khmOnly.every(x => /Test KHM /.test(x)), 'S-002: with the search on, the KHM chip cuts it to KHM’s four test shows', khmOnly.length + ': ' + khmOnly.map(x => x.slice(0, 40)).join(' | '));
     await click(chip);
-    await click([...doc.querySelectorAll('button')].find(b => b.textContent === 'NG' || b.textContent === 'National Gallery'));
+    await click([...doc.querySelectorAll('button')].find(b => b.textContent === 'NG UK'));
     const ng = titles();
     ok(ng.length > 0 && ng.every(x => /Test/.test(x)) && !ng.some(x => /KHM/.test(x)), 'S-003: and another venue’s chip cuts it to that venue', ng.length);
     // S-004: the cross inside the box clears what she typed — her ask, 30 Sep.

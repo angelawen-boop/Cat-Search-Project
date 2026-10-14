@@ -106,14 +106,14 @@ function runtime(answer, log) {
   // ── C-006, C-007: a refusal is a sentence, never a thrown page ────────────
   {
     const log = [];
-    const e = new Error('nope'); e.code = 'rate_limited';
+    const e = new Error('nope'); e.code = 'server_unavailable';
     const { window } = runtime(e, log);
     const api = lift(window);
     let out;
     try { out = await api.fetchPage('https://x.test/b', 'isbn', ['isbn']); }
     catch { fail('C-006: a refused fetch threw at the page instead of being reported'); return; }
     eq(out.ok, false, 'C-006: a refused fetch is reported, not thrown');
-    if (/minute/i.test(out.detail)) pass('C-007: and it says what happened in her words');
+    if (/didn\u2019t answer/.test(out.detail)) pass('C-007: and it says what happened in her words');
     else fail('C-007: the refusal reads "' + out.detail + '"');
   }
 
@@ -376,12 +376,12 @@ function runtime(answer, log) {
   // project has now recorded four times. Await, never return.
   {
     const limited = new Error('slow down');
-    limited.code = 'rate_limited';
+    limited.code = 'server_unavailable';
     const { window } = runtime(limited, []);
     const api = lift(window);
     const out = await api.fetchPage('https://shop.test/book', 'its ISBN', ['x']);
     eq(out.ok, false, 'C-043: a refused read is reported, not swallowed');
-    eq(/many searches/i.test(out.detail), true,
+    eq(/didn\u2019t answer/.test(out.detail), true,
        'C-044: and it says the connector refused, in her words');
     eq(out.results.length, 0, 'C-045: with nothing invented to fill the gap');
   }
@@ -608,9 +608,9 @@ function runtime(answer, log) {
     eq(r.out.ok, false, 'C-091: a timeout is a failed check, never "gone"');
     r = await run(inShop, err('http_error', 500), null);
     eq(r.out.ok, false, 'C-092: so is a server error');
-    const e = new Error('x'); e.code = 'rate_limited';
+    const e = new Error('x'); e.code = 'server_unavailable';
     r = await run(inShop, e, null);
-    eq(r.out.ok + '|' + /Nothing changed/.test(r.out.said), 'false|true', 'C-093: a refused connector says nothing changed');
+    eq(r.out.ok + '|' + r.out.said, 'false|Re-check didn\u2019t run \u2014 The search service didn\u2019t answer. Worth one more try in a moment.', 'C-093: a refused connector says the re-check didn\u2019t run, and stops there');
     r = await run(inShop, { payload: { results: [{ url: 'https://shop.test/x', excerpts: ['menu'] }], errors: [] } }, null);
     eq(r.out.ok, false, 'C-094: a page that came back empty is a failed check, not "gone"');
     r = await run(inShop, page, { forSale: false, why: 'Sold out.' });

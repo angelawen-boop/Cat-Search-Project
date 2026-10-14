@@ -393,21 +393,21 @@ check('18f: the real sample file starts with every card undecided',
     {confirm: confirmZ, highestOther, all});
 }
 
-// 19. THE VENUE ORDER IS HERS, and one array drives all three places it shows
-// (the freshness drawer, the filter chips, the venue headings on the refresh
-// screen). Written down here so a later session reshuffling the array for
-// tidiness has to answer to her list rather than to its own taste, and so a
-// venue cannot be dropped from it by an edit that looks harmless.
-// Lévy Gorvy Dayan (lgd) added 25 Sep — her ruling: always after Acquavella.
-// French venues, her order 25 Sep: louvre, orsay, mam, mad, jacquemart.
-// Her order of 27 Sep replaces both: the Ashmolean after Tate Britain; Tate
-// Modern and MAM Paris last; the headed venues before them.
+// 19. THE VENUE ORDER IS HERS: VENUE_ORDER sorts MUSEUMS, so chips, Sort by Venue,
+// the freshness drawer and the refresh screen's headings all follow her list.
 {
-  const want=['met','rijks','ng','acq','lgd','frick','menil','artic','cincinnati','wallace',
-    'tate-britain','ashmolean','va','louvre','orsay','mad','jacquemart','khm','uffizi','dellav',
-    'borghese','brera','capo','morgan','brit','moma','tate-modern','mam'];
+  const want=['met','ng','frick','morgan','artic','menil','acq','lgd','cincinnati','brit',
+    'tate-britain','wallace','va','ashmolean','louvre','orsay','mad','jacquemart','khm','rijks',
+    'uffizi','dellav','borghese','brera','capo','moma','tate-modern','mam'];
   const got=H.MUSEUMS.map(m=>m.id);
   check('19: the venues are in her order', got.join()===want.join(), {got});
+  const chips=['met','ng','occ-nga-gov','occ-nationalgalleries-org','frick','morgan','artic','menil',
+    'acq','lgd','occ-new-artsmia-org','cincinnati','brit','tate-britain','wallace','va','ashmolean',
+    'louvre','orsay','mad','jacquemart','khm','rijks','uffizi','dellav','borghese','brera','capo','moma',
+    'tate-modern','mam','occ-clevelandart-org','occ-dia-org','occ-archive-worcesterart-org',
+    'occ-courtauld-ac-uk','occ-royalacademy-org-uk','occ-museothyssen-org','occ-mauritshuis-nl'];
+  check('19c: chips and Sort by Venue follow her list', H.VENUE_ORDER.join()===chips.join(), {got:H.VENUE_ORDER});
+  check('19d: and it names all 28', got.every(id=>H.VENUE_ORDER.includes(id)), {});
   check('19a: and all 28 are still there', got.length===28, {count:got.length});
   // 19b. A venue in MUSEUMS is a venue the import files — Cincinnati, 4 Oct.
   H.setRows([]);
