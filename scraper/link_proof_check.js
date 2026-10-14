@@ -42,7 +42,7 @@ function loadReader() {
   const hook = () => {};
   const React = { createElement() {}, Fragment: null, useState: () => [], useEffect: hook, useMemo: f => f(), useCallback: f => f, useRef: () => ({}) };
   return new Function('React', 'window', 'document', 'localStorage',
-    fs.readFileSync(built, 'utf8') + '\n;return {readShowPage,knownVenueFor,linkReadVenue,occVenueId,hostOf};')(React, {}, {}, {});
+    fs.readFileSync(built, 'utf8') + '\n;return {readShowPage,knownVenueFor,linkReadVenue,occVenueId,hostOf,siteUrlOf};')(React, {}, {}, {});
 }
 
 function main() {
@@ -62,7 +62,7 @@ function main() {
     try { res = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); } catch { console.log('DIFF  ' + f + ': not JSON'); diffs++; continue; }
     if (!res || !res.url || !(res.full_content || res.content)) { console.log('DIFF  ' + f + ': no url or no page text'); diffs++; continue; }
     const want = byUrl.get(res.url);
-    const venue = reader.knownVenueFor(res.url) || reader.occVenueId(reader.hostOf(res.url));
+    const venue = reader.knownVenueFor(res.url) || reader.occVenueId(reader.hostOf(reader.siteUrlOf(res.url)));
     const got = reader.readShowPage(res, res.url, reader.linkReadVenue(res.url));
     const row = got.ok ? { title: got.base, start: got.start, end: got.end, raw: got.raw } : { title: '', start: '', end: '', why: got.why };
     checked++;

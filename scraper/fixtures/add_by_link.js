@@ -284,6 +284,19 @@ function runtime() {
     ok(got.join() === 'https://www.metmuseum.org/exhibitions/listings/2000/john-singer-sargent,https://example.org/show?id=4#top',
       'AL-036: Met Sargent: "?utm_source=chatgpt.com" dropped from the link; the page\'s own query kept', JSON.stringify(got));
   }
+  // ── AL-037: a Wayback Machine copy files under the museum it copied ─
+  {
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const site = fn('siteUrlOf'), known = fn('knownVenueFor'), occ = fn('occVenueId'), host = fn('hostOf');
+    const ra = 'https://web.archive.org/web/2010/http://www.royalacademy.org.uk/exhibitions/sargent-and-the-sea/';
+    ok(occ(host(site(ra))) === 'occ-royalacademy-org-uk' && known(ra) === null,
+      'AL-037: RA Sargent and the Sea: an archived copy files under the Royal Academy, not web.archive.org', occ(host(site(ra))));
+    ok(known('https://web.archive.org/web/20100720000000id_/https://www.metmuseum.org/exhibitions/x') === 'met'
+      && known('https://web.archive.org/web/2015/www.tate.org.uk/whats-on/tate-britain/x') === 'tate-britain',
+      'AL-037a:  a copy of one of the 28 files under that venue, with or without a scheme or "id_"');
+    ok(site('https://web.archive.org/') === 'https://web.archive.org/' && site('https://www.metmuseum.org/x') === 'https://www.metmuseum.org/x',
+      'AL-037b:  any other address is left as it is');
+  }
   // ── AL-031: NGA Souvenirs of the Gilded Age — a doubled colon becomes one ─
   // Live page on docs/link_proof_pages.json; its page title reads "Age:: French".
   {
