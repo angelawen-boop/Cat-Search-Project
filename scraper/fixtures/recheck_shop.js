@@ -384,7 +384,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(!!btn, 'R-018: a "no catalogue" tray has the button too');
     if (btn) await click(btn);
     const t = card(noCatRow.title).textContent;
-    ok(/this book isn’t there/.test(t) && /No catalogue found/.test(t), 'R-019: nothing found says so, and the card is unchanged', t.slice(0, 200));
+    ok(/Re-checked: not in the museum shop\./.test(t) && /No catalogue found/.test(t), 'R-019: nothing found says so, and the card is unchanged', t.slice(0, 200));
   }
 
   // ── R-020..R-023: Search again is a whole fresh lookup. Finished, it
@@ -582,7 +582,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     script.sample = () => { throw new Error('Claude must not be asked'); };
     await click(button(card(khmBad.title), /^Re-check museum shop$/));
     const c = card(khmBad.title), t = c ? c.textContent : '';
-    ok(!/ticket/.test(t) && t.includes(BLOCKED_FOUND) && /couldn’t be re-checked/.test(t), 'L-014: the ticket link is removed without a word about it, and the card says the shop is blocked', t.slice(0, 400));
+    ok(!/ticket/.test(t) && t.includes(BLOCKED_FOUND) && /Re-check didn’t work — museum shop is blocked\./.test(t), 'L-014: the ticket link is removed without a word about it, and the card says the shop is blocked', t.slice(0, 400));
     ok(shopLink(c) && shopLink(c).getAttribute('href') === 'https://shop.khm.at/en/products?shop%5Bq%5D=Canaletto%20%26%20Bellotto',
        'L-015: her card’s Museum shop link is KHM’s own search for "Canaletto & Bellotto" — not the ticket, not the book title', shopLink(c) && shopLink(c).getAttribute('href'));
     ok(!calls.some(x => x.tool === 'web_fetch' && x.args.urls.includes(TICKET)), 'L-016: the ticket page is not re-read');

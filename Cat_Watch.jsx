@@ -2553,7 +2553,7 @@ async function recheckLinkedPage(row){
   if(p.kind==="norun")return{ok:false,detail:p.detail,said:"Re-check didn’t run — "+p.why};
   if(p.kind==="gone")return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
     said:hadIt?"Re-checked: page no longer exists."
-              :"Re-checked: that shop page still doesn’t exist. Still no longer in the museum shop."};
+              :"Re-checked: shop page has not returned. Still no longer in the museum shop."};
   if(p.kind==="unreadable")return{ok:false,detail:p.detail,
     said:"Re-check didn’t work — shop page couldn’t be read"+(p.why?" ("+p.why+")":"")+"."};
   if(p.kind==="noread")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — "+p.why};
@@ -4578,7 +4578,7 @@ export default function App(){
       // A blocked shop is a failed check and changes nothing — except a ticket
       // link, which was wrong whatever the shop says.
       else if(s.blocked)out=ticket
-        ?{ok:true,detail:s.detail,row:{...row,shopState:"blocked"},said:dropped+"The museum shop is blocked, so it couldn’t be re-checked."}
+        ?{ok:true,detail:s.detail,row:{...row,shopState:"blocked"},said:dropped+"Re-check didn’t work — museum shop is blocked."}
         :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop is blocked."};
       else if(o.found&&(o.catalogueTitle||o.isbn13)&&(onShop||o.listedOnly)){
         // Reading the book's page for a blank ISBN is part of the shop step —
@@ -4587,7 +4587,7 @@ export default function App(){
           MU[row.museumId]?.name||"",dom,io);
         out={ok:true,detail:hit.detail,row:hit.row,said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")};
       }
-      else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked the museum shop: this book isn’t there."};
+      else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked: not in the museum shop."};
     }
     saveLookupTape(tape,out);
     setDebug(out.detail||null);
