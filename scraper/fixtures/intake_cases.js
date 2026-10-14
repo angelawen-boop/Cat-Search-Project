@@ -398,14 +398,11 @@ check('18f: the real sample file starts with every card undecided',
 // screen). Written down here so a later session reshuffling the array for
 // tidiness has to answer to her list rather than to its own taste, and so a
 // venue cannot be dropped from it by an edit that looks harmless.
-// Lévy Gorvy Dayan (lgd) added 25 Sep — her ruling: always after Acquavella.
-// French venues, her order 25 Sep: louvre, orsay, mam, mad, jacquemart.
-// Her order of 27 Sep replaces both: the Ashmolean after Tate Britain; Tate
-// Modern and MAM Paris last; the headed venues before them.
+// Her order (VENUE_ORDER), the 28 swept venues only.
 {
-  const want=['met','rijks','ng','acq','lgd','frick','menil','artic','cincinnati','wallace',
-    'tate-britain','ashmolean','va','louvre','orsay','mad','jacquemart','khm','uffizi','dellav',
-    'borghese','brera','capo','morgan','brit','moma','tate-modern','mam'];
+  const want=['met','ng','frick','morgan','artic','menil','acq','lgd','cincinnati','brit',
+    'tate-britain','wallace','va','ashmolean','louvre','orsay','mad','jacquemart','khm','rijks',
+    'uffizi','dellav','borghese','brera','capo','moma','tate-modern','mam'];
   const got=H.MUSEUMS.map(m=>m.id);
   check('19: the venues are in her order', got.join()===want.join(), {got});
   check('19a: and all 28 are still there', got.length===28, {count:got.length});

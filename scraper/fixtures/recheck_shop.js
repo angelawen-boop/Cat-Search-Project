@@ -223,12 +223,11 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await click(button(c, /Catalogue/));
   }
 
-  // ── V-001: a Levy Gorvy card carries the gallery's full name, her ruling
-  // 25 Sep; its chip keeps the short one.
+  // ── V-001: Levy on its chip and its cards (her decision).
   {
     const c = card(lgdRow.title);
-    ok(c && c.textContent.startsWith('Lévy Gorvy Dayan'), 'V-001: a Levy Gorvy card is headed "Lévy Gorvy Dayan"', c && c.textContent.slice(0, 40));
-    ok([...win.document.querySelectorAll('button')].some(b => b.textContent === 'Levy'), 'V-001a:   while its chip reads "Levy" (her ruling, 27 Sep)');
+    ok(c && c.textContent.startsWith('Levy'), 'V-001: a Levy Gorvy card is headed "Levy"', c && c.textContent.slice(0, 40));
+    ok([...win.document.querySelectorAll('button')].some(b => b.textContent === 'Levy'), 'V-001a:   and its chip reads "Levy"');
   }
 
   // ── V-002: no "No catalogue" corner tag — the corner keeps the time tag.
@@ -1064,7 +1063,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const khmOnly = titles();
     ok(khmOnly.length === 4 && khmOnly.every(x => /Test KHM /.test(x)), 'S-002: with the search on, the KHM chip cuts it to KHM’s four test shows', khmOnly.length + ': ' + khmOnly.map(x => x.slice(0, 40)).join(' | '));
     await click(chip);
-    await click([...doc.querySelectorAll('button')].find(b => b.textContent === 'NG' || b.textContent === 'National Gallery'));
+    await click([...doc.querySelectorAll('button')].find(b => b.textContent === 'NG UK'));
     const ng = titles();
     ok(ng.length > 0 && ng.every(x => /Test/.test(x)) && !ng.some(x => /KHM/.test(x)), 'S-003: and another venue’s chip cuts it to that venue', ng.length);
     // S-004: the cross inside the box clears what she typed — her ask, 30 Sep.

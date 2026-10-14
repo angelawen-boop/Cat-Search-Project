@@ -597,13 +597,13 @@ function runtime() {
   ok((((store.get('venues/occasional') || {}).venues || {})['occ-dia-org'] || {}).short === 'Detroit', 'AL-011a:   and survives its shop being looked for again');
   ok(!arts.some(a => a.textContent.includes('NGA Chip Show')), 'AL-030: NGA: an NGA show is not in the Occasional pile');
   await click(chip);
-  const nga = buttons(/^NGA$/)[0];
-  ok(!!nga, 'AL-030a:  NGA has a chip of its own');
+  const nga = buttons(/^NG Washington$/)[0];
+  ok(!!nga, 'AL-030a:  NGA has a chip of its own, "NG Washington"');
   if (nga) {
     await click(nga);
     const shown = [...win.document.querySelectorAll('article')];
-    ok(shown.length === 1 && /^NGA/.test(shown[0].textContent) && shown[0].textContent.includes('NGA Chip Show'),
-      'AL-030b:  pressed, it shows the NGA show alone, its card headed "NGA"', shown.map(a => a.textContent.slice(0, 40)));
+    ok(shown.length === 1 && /^NG Washington/.test(shown[0].textContent) && shown[0].textContent.includes('NGA Chip Show'),
+      'AL-030b:  pressed, it shows the NGA show alone, its card headed "NG Washington"', shown.map(a => a.textContent.slice(0, 40)));
     await click(nga);
   }
   // ── AL-020: a rejected card's link goes back in the box (her ask, 7 Oct) ─
