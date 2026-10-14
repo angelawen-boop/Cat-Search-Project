@@ -4508,7 +4508,7 @@ export default function App(){
       setLinkText(box); writePendingLinks(box); linksAtRead.current=null;
     }
     dropHeldVenues(); setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
-  // A second tap on Date reverses it; any other tap starts Date over in its usual order.
+  // A second tap on Date shows oldest first; a third goes back to the usual order.
   const pickSort=k=>{setDateReversed(k==="date"&&sortBy==="date"&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
 
@@ -4720,12 +4720,13 @@ export default function App(){
       if(sortBy==="venue"){const d=venueRank(a.museumId)-venueRank(b.museumId);if(d!==0)return d;}
       const ta=tierFor(a),tb=tierFor(b);
       if(acqWanted&&(ta==="upcoming")!==(tb==="upcoming"))return ta==="upcoming"?1:-1; // Wanted view: Announced drops to the bottom (nothing to buy yet)
-      const flip=sortBy==="date"&&dateReversed?-1:1;
-      const oa=TIERS[ta]?.ord??9,ob=TIERS[tb]?.ord??9;
-      if(oa!==ob)return flip*(oa-ob);
       const da=a.startDate||a.endDate||"",db=b.startDate||b.endDate||"";
-      if(ta==="upcoming")return flip*da.localeCompare(db);
-      return flip*db.localeCompare(da);
+      // Date's second tap: oldest first by opening date, undated last.
+      if(sortBy==="date"&&dateReversed){if(!da!==!db)return da?-1:1;return da.localeCompare(db);}
+      const oa=TIERS[ta]?.ord??9,ob=TIERS[tb]?.ord??9;
+      if(oa!==ob)return oa-ob;
+      if(ta==="upcoming")return da.localeCompare(db);
+      return db.localeCompare(da);
     });
     return out;
   },[rows,sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched,dateReversed]);
