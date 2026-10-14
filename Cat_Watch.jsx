@@ -71,9 +71,9 @@ const MUSEUMS = [
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","occ-nationalgalleries-org","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","brit","tate-britain","wallace","va","ashmolean",
-  "louvre","orsay","mad","jacquemart","khm","rijks","uffizi","dellav","borghese","brera","capo","moma",
+  "louvre","orsay","jacquemart","mad","khm","rijks","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
-  "occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
+  "occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
   "occ-royalacademy-org-uk","occ-museothyssen-org","occ-mauritshuis-nl"];
 const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); return i<0?1e6:i; };
 MUSEUMS.sort((a,b)=>orderOf(a.id)-orderOf(b.id));
@@ -668,7 +668,7 @@ const OWN_CHIP={
 };
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 // Her names for occasional venues filed under "Occasional", where the store's name is longer.
-const OCC_SHORT={"occ-archive-worcesterart-org":"Worcester"};
+const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worcester"};
 
 // Every address in whatever she pasted — commas, spaces, lines, or mixed in
 // with other words. A repeat is read once (same finished address).
@@ -3933,6 +3933,7 @@ export default function App(){
   const[confirmBox,setConfirmBox]=useState(null); // {text, act} for confirm-before-replace
   const[,setTick]=useState(0);
   const[sortBy,setSortBy]=useState("date");
+  const[dateReversed,setDateReversed]=useState(false);
   const[venueF,setVenueF]=useState(new Set());
   const[timeF,setTimeF]=useState(new Set());
   const[acqWanted,setAcqWanted]=useState(false);
@@ -4507,7 +4508,8 @@ export default function App(){
       setLinkText(box); writePendingLinks(box); linksAtRead.current=null;
     }
     dropHeldVenues(); setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
-  const pickSort=k=>{setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
+  // A second tap on Date reverses it; any other tap starts Date over in its usual order.
+  const pickSort=k=>{setDateReversed(k==="date"&&sortBy==="date"&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
 
 
@@ -4716,17 +4718,17 @@ export default function App(){
       if(sortBy==="added"){const d=String(b.addedAt||"").localeCompare(String(a.addedAt||""));if(d!==0)return d;}
       if(sortBy==="edited"){const d=String(b.editedAt||"").localeCompare(String(a.editedAt||""));if(d!==0)return d;if(!a.editedAt&&!b.editedAt){const aH=a.addedAt?1:0,bH=b.addedAt?1:0;if(aH!==bH)return bH-aH;}}
       if(sortBy==="venue"){const d=venueRank(a.museumId)-venueRank(b.museumId);if(d!==0)return d;}
-      if(sortBy==="acquiring"){const w={acquired:0,yes:1,no:3};const d=(w[a.acquiring]??2)-(w[b.acquiring]??2);if(d!==0)return d;}
       const ta=tierFor(a),tb=tierFor(b);
-      let oa=TIERS[ta]?.ord??9,ob=TIERS[tb]?.ord??9;
-      if(acqWanted){if(ta==="upcoming")oa=99;if(tb==="upcoming")ob=99;} // Wanted view: Announced drops to the bottom (nothing to buy yet)
-      if(oa!==ob)return oa-ob;
+      if(acqWanted&&(ta==="upcoming")!==(tb==="upcoming"))return ta==="upcoming"?1:-1; // Wanted view: Announced drops to the bottom (nothing to buy yet)
+      const flip=sortBy==="date"&&dateReversed?-1:1;
+      const oa=TIERS[ta]?.ord??9,ob=TIERS[tb]?.ord??9;
+      if(oa!==ob)return flip*(oa-ob);
       const da=a.startDate||a.endDate||"",db=b.startDate||b.endDate||"";
-      if(ta==="upcoming")return da.localeCompare(db);
-      return db.localeCompare(da);
+      if(ta==="upcoming")return flip*da.localeCompare(db);
+      return flip*db.localeCompare(da);
     });
     return out;
-  },[rows,sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched]);
+  },[rows,sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched,dateReversed]);
 
   const counts=useMemo(()=>{const c={total:rows.length,dismissed:0,watched:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.watching)c.watched++;if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;if(inClosingWindow(r))c.pressing++;}return c;},[rows]);
 
@@ -4963,12 +4965,12 @@ export default function App(){
       <div style={{maxWidth:760,margin:"0 auto 12px",display:"flex",flexDirection:"column",gap:5}}>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Sort</span>
-          {[["date","Date"],["venue","Venue"],["acquiring","Acquiring"],["added","Recently added"],["edited","Recently edited"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(sortBy===k&&!pinTouched)}>{l}</button>)}
+          {[["date","Date"],["venue","Venue"],["added","Recently added"],["edited","Recently edited"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(sortBy===k&&!pinTouched)}>{l}</button>)}
           {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{"\u2191 just-refreshed entries shown first"}</span>}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>When</span>
-          {[["upcoming","Upcoming"],["current","Current"],["past","Past"],["recent","Recently opened"]].map(([k,l])=><button key={k} onClick={()=>toggleSet(setTimeF,k)} style={chip(timeF.has(k))}>{l}</button>)}
+          {[["current","Current"],["upcoming","Upcoming"],["past","Past"],["recent","Recently opened"]].map(([k,l])=><button key={k} onClick={()=>toggleSet(setTimeF,k)} style={chip(timeF.has(k))}>{l}</button>)}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
