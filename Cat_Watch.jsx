@@ -70,8 +70,8 @@ const MUSEUMS = [
   // us, so the lookup reports it blocked; the address stays for her shop link.
   { id:"mam", english:false, short:"MAM Paris", name:"Mus\u00e9e d'Art Moderne de Paris", city:"Paris", exBase:null, shopSearch:"https://www.mamlibrairieboutique.fr/listeliv.php?flou&base=paper&mots_recherche=", shopHome:"https://www.mamlibrairieboutique.fr/", listUrl:null },
 ];
-// Her order for the Venue chips and the Venue sort; occasional venues follow, then any
-// venue not named here, by name.
+// Her order for the Venue chips and the Venue sort only (her decision); any venue not
+// named here goes last, by name. Everywhere else keeps MUSEUMS order.
 const VENUE_ORDER=["met","ng","occ-nga-gov","occ-nationalgalleries-org","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","brit","tate-britain","wallace","va","ashmolean",
   "louvre","orsay","mad","jacquemart","khm","rijks","uffizi","dellav","borghese","brera","capo","moma",
@@ -79,7 +79,6 @@ const VENUE_ORDER=["met","ng","occ-nga-gov","occ-nationalgalleries-org","frick",
   "occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
   "occ-royalacademy-org-uk","occ-museothyssen-org"];
 const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); return i<0?1e6:i; };
-MUSEUMS.sort((a,b)=>orderOf(a.id)-orderOf(b.id));
 const lookupName=mu=>mu.lookupName||mu.short;
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 
@@ -957,13 +956,17 @@ function occEntry(v){
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
     shopUnknown:!live&&!(v.shop==="none"&&v.confirmed)};
 }
-// Every venue a card can be filed under, in VENUE_ORDER; the rest by name.
+// Every venue a card can be filed under: hers in order, then occasional ones by name.
 // The review walks THIS, not MUSEUMS, or occasional cards are counted and never drawn.
 function allVenues(){
-  const occ=Object.values(MU).filter(m=>m&&m.occasional);
-  return MUSEUMS.concat(occ).sort((a,b)=>orderOf(a.id)-orderOf(b.id)||a.short.localeCompare(b.short));
+  const occ=Object.values(MU).filter(m=>m&&m.occasional).sort((a,b)=>a.short.localeCompare(b.short));
+  return MUSEUMS.concat(occ);
 }
-function venueRank(id){ const i=allVenues().findIndex(m=>m.id===id); return i<0?1e6:i; }
+// Sort by Venue: VENUE_ORDER, then the rest by name.
+function venueRank(id){
+  const sorted=allVenues().slice().sort((a,b)=>orderOf(a.id)-orderOf(b.id)||a.short.localeCompare(b.short));
+  const i=sorted.findIndex(m=>m.id===id); return i<0?1e6:i;
+}
 function registerOccasional(map){
   for(const v of Object.values(map||{})){ if(!v||!isOcc(v.id))continue; MU[v.id]=occEntry(v); KNOWN_VENUES.add(v.id); }
 }
