@@ -405,7 +405,7 @@ check('18f: the real sample file starts with every card undecided',
     'acq','lgd','occ-new-artsmia-org','cincinnati','brit','tate-britain','wallace','va','ashmolean',
     'louvre','orsay','jacquemart','mad','khm','rijks','uffizi','dellav','borghese','brera','capo','moma',
     'tate-modern','mam','occ-mfa-org','occ-clevelandart-org','occ-dia-org','occ-archive-worcesterart-org',
-    'occ-courtauld-ac-uk','occ-royalacademy-org-uk','occ-museothyssen-org','occ-mauritshuis-nl'];
+    'occ-courtauld-ac-uk','occ-royalacademy-org-uk','occ-museothyssen-org','occ-mauritshuis-nl','occ-ngv-vic-gov-au'];
   check('19c: chips and Sort by Venue follow her list', H.VENUE_ORDER.join()===chips.join(), {got:H.VENUE_ORDER});
   check('19d: and it names all 28', got.every(id=>H.VENUE_ORDER.includes(id)), {});
   check('19a: and all 28 are still there', got.length===28, {count:got.length});
