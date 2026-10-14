@@ -1214,6 +1214,10 @@ Not good → more work on the routine or the recipes.
 - **The ledger's size** — ~850 exhibitions, nearing 1,000; 2,000 possible. Discussed;
   findings and two parked items (a faster list; whether to clear old Cloud Saves) in
   `docs/ledger_size.md`. Nothing built until she says.
+- **Parked — cards for dismissed exhibitions.** A sweep gives dismissed shows Fill
+  and Change cards like any other, unmarked (the intake never reads `interested`).
+  Her choice: if her next import brings a bothersome number, build "Dismissed" on
+  those cards, grouped last in each venue — nothing skipped, nothing auto-applied.
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library
   record (978-0847899289) that came tenth should give the English edition (WL-060).
