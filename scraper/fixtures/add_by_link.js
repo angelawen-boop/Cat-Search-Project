@@ -277,6 +277,13 @@ function runtime() {
       'AL-017a:  the text handed to Claude is the show\'s, from under its heading — not the hours, prices and cookies under the dates', r.raw && r.raw.slice(0, 120));
     ok(r.ok && !r.raw.includes('From 14 March to 21 July 2014') && !/^From Watteau to Fragonard$/m.test(r.raw), 'AL-017b:  the date line and the heading are not repeated in it');
   }
+  // ── AL-036: a link's tracking tags are dropped before it is read ─
+  {
+    const links = new Function('React', 'window', 'document', 'localStorage', code + '\n;return linksIn;')(React, win, win.document, win.localStorage);
+    const got = links('https://www.metmuseum.org/exhibitions/listings/2000/john-singer-sargent?utm_source=chatgpt.com\nhttps://example.org/show?id=4&utm_medium=x#top');
+    ok(got.join() === 'https://www.metmuseum.org/exhibitions/listings/2000/john-singer-sargent,https://example.org/show?id=4#top',
+      'AL-036: Met Sargent: "?utm_source=chatgpt.com" dropped from the link; the page\'s own query kept', JSON.stringify(got));
+  }
   // ── AL-031: NGA Souvenirs of the Gilded Age — a doubled colon becomes one ─
   // Live page on docs/link_proof_pages.json; its page title reads "Age:: French".
   {
