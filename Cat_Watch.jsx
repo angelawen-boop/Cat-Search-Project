@@ -676,11 +676,11 @@ const OCC_CARD={"occ-mfa-org":"Boston MFA"};
 const OCC_LINK_READ={"occ-mfa-org":{datesAbove:2}};
 
 // Every address in whatever she pasted — commas, spaces, lines, or mixed in
-// with other words. A repeat is read once (same finished address).
+// with other words, tracking tags dropped. A repeat is read once (same finished address).
 function linksIn(text){
   const out=[],seen=new Set();
   for(const m of String(text||"").matchAll(/https?:\/\/[^\s,;<>"'\]\[]+/gi)){
-    const u=m[0].replace(/[.,;:!?)\]]+$/,"");
+    const u=withoutTracking(m[0].replace(/[.,;:!?)\]]+$/,""));
     const k=normalizeUrlKey(u);
     if(!k||seen.has(k))continue;
     seen.add(k); out.push(u);
@@ -688,6 +688,16 @@ function linksIn(text){
   return out;
 }
 
+// Tracking tags a link picks up on the way (?utm_source=chatgpt.com) say nothing about the page.
+const TRACKING_PARAM=/^(?:utm_\w+|fbclid|gclid|msclkid|mc_cid|mc_eid)$/i;
+function withoutTracking(u){
+  try{
+    const x=new URL(u);
+    for(const k of [...x.searchParams.keys()])if(TRACKING_PARAM.test(k))x.searchParams.delete(k);
+    if(!x.search.replace(/^\?/,""))x.search="";
+    return x.toString();
+  }catch{ return u; }
+}
 function hostOf(u){ try{ return new URL(u).hostname.toLowerCase(); }catch{ return ""; } }
 function originOf(u){ try{ return new URL(u).origin+"/"; }catch{ return ""; } }
 // Accents dropped, and the letters that are not accented ones folded too: ø, æ, œ, ß, ł,
@@ -4979,7 +4989,7 @@ export default function App(){
       <div style={{maxWidth:760,margin:"0 auto 12px",display:"flex",flexDirection:"column",gap:5}}>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Sort</span>
-          {[["date","Date"],["venue","Venue"],["added","Recently added"],["edited","Recently edited"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(sortBy===k&&!pinTouched)}>{l}</button>)}
+          {[["date","Date"],["venue","Venue"],["added","Recently added"],["edited","Recently edited"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(sortBy===k&&!pinTouched)}>{l}{k==="date"&&sortBy==="date"&&!pinTouched?(dateReversed?" \u2191":" \u2193"):""}</button>)}
           {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{"\u2191 just-refreshed entries shown first"}</span>}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
