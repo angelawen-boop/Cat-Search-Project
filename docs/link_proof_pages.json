@@ -71,5 +71,7 @@
   {"url":"https://www.mfa.org/exhibition/monet-and-boston-lasting-impression","venue":"occ-mfa-org","title":"Monet and Boston: Lasting Impression","start":"2020-11-15","end":"2021-03-28"},
   {"url":"https://www.mfa.org/exhibition/rachel-ruysch-artist-naturalist-and-pioneer","venue":"occ-mfa-org","title":"Rachel Ruysch: Artist, Naturalist, and Pioneer","start":"2025-08-23","end":"2025-12-07"},
   {"url":"https://www.mfa.org/exhibitions/visiting-masterpiece-piero-della-francescas-senigallia-madonna","venue":"occ-mfa-org","title":"Visiting Masterpiece: Piero della Francesca’s Senigallia Madonna","start":"2013-09-13","end":"2014-01-06"},
-  {"url":"https://web.archive.org/web/2010/http://www.royalacademy.org.uk/exhibitions/sargent-and-the-sea/","venue":"occ-royalacademy-org-uk","title":"Sargent and the Sea","start":"2010-07-10","end":"2010-09-26","note":"A Wayback Machine copy; files under the Royal Academy."}
+  {"url":"https://web.archive.org/web/2010/http://www.royalacademy.org.uk/exhibitions/sargent-and-the-sea/","venue":"occ-royalacademy-org-uk","title":"Sargent and the Sea","start":"2010-07-10","end":"2010-09-26","note":"A Wayback Machine copy; files under the Royal Academy."},
+  {"url":"https://www.ngv.vic.gov.au/exhibition/margaret-preston/","venue":"occ-ngv-vic-gov-au","title":"Margaret Preston","start":"2026-09-04","end":"2027-01-31","note":"Two-digit years (shortYear)."},
+  {"url":"https://www.ngv.vic.gov.au/exhibition/pierre-bonnard-archive/","venue":"occ-ngv-vic-gov-au","title":"Pierre Bonnard: Designed by India Mahdavi","start":"2023-06-09","end":"2023-10-07","note":"Two-digit year on the closing side only."}
 ]

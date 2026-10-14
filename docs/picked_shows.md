@@ -94,6 +94,10 @@ skips only the pages she turned down, never the site. **No shop** → lookups go
 Capodimonte. Venues found by the old finder and never confirmed are looked
 for again on their next link. Evidence: `docs/link_pages/shop_search/`.
 
+**NGV writes two-digit years** ("4 Sep 26 – 31 Jan 27"): read as 20YY at NGV only
+(`shortYear` in `OCC_LINK_READ`, `withLongYears`; AL-038, both her links on
+`docs/link_proof_pages.json`). A general rule would read "Jun 23" as a year anywhere.
+
 **A Wayback Machine copy files under the museum it copied** (her decision; *Sargent and
 the Sea*, RA 2010, the show's page long gone): the venue, its shop and the page title's
 site name come from the address inside the copy; the copy is what is read and what the
