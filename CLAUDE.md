@@ -1211,9 +1211,9 @@ Not good → more work on the routine or the recipes.
 
 ### 6. Queued next
 
-- **Discuss with her: the ledger's size** (her ask) — 851 exhibitions at 43.1 and
-  nearing 1,000. What it means for the page's speed, the cloud store and its saves,
-  Load and Save, before it gets there. Discussion first; nothing built until she says.
+- **The ledger's size** — ~850 exhibitions, nearing 1,000; 2,000 possible. Discussed;
+  findings and two parked items (a faster list; whether to clear old Cloud Saves) in
+  `docs/ledger_size.md`. Nothing built until she says.
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library
   record (978-0847899289) that came tenth should give the English edition (WL-060).
@@ -1281,6 +1281,7 @@ price, her decision).
 | `docs/venue_urls.md` | The original 21 venues' addresses from the Sweeper Brief, and which of its notes still hold | Wiring or re-checking one of those venues |
 | `docs/listing_pages/`, `docs/*_pages/` | Pages she saved, with a README of what each settled | Changing that venue's recipe — before asking her for anything |
 | `docs/compression.md` | Compression design, model split, eval, rejected alternatives | Changing compression — otherwise don't |
+| `docs/ledger_size.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
 | `docs/picked_shows.md` | Add by link — design, decisions, store, shelf rule, first test | Changing Add by link |
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review | Before touching a reviewed venue |
