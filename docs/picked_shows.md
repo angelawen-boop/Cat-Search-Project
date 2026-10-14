@@ -156,7 +156,7 @@ tidy what Claude is handed; other venues and occasional ones are untouched.
 Options: `title` (built from the page's headings), `titleDrop` (a label before the show's name, dropped), `dateLine` (dates read from the first
 line matching, anywhere on the page; else the usual 60 lines under the heading), `from` (the passage starts after
 the first line matching), `until` (it ends at the first line matching), `skip` / `skipEntities` / `minLine` (lines left out),
-`cleanLink` (stored address loses its query and fragment). Read by `readShowPage(res,url,vc)`,
+`cleanLink` (stored address loses its query and fragment), `datesAbove` (dates read from up to N lines above the heading first). An occasional venue under "Occasional" takes options from `OCC_LINK_READ`. Read by `readShowPage(res,url,vc)`,
 `venueTitle`. Junk at the end of a passage is tolerated (her decision).
 
 - **met** — dates from the "on view" line (`dateLine`), anywhere on the page: a
@@ -164,6 +164,9 @@ the first line matching), `until` (it ends at the first line matching), `skip` /
   prints it above the only line naming the show (*Impossible Conversations*). Proved
   live with *Costume Art* and *Harlem Renaissance* unchanged. *Matisse* (2012) prints
   no dates in its text at all.
+- **Boston MFA** (`occ-mfa-org`, chip under "Occasional" as "Boston", cards "Boston MFA",
+  her decision) — dates printed on the line above the title (`datesAbove`). Proved live
+  on four pages (Rothko, Monet, Ruysch, Piero).
 - **frick** — a leading "Special Loan:" is the Frick's label, not the show's name
   (`titleDrop`; *Parmigianino's Antea*). Proved live with *Siena* unchanged.
 - **menil** — a leading "Collection Close-Up:" dropped (`titleDrop`, her ask;

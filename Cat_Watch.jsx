@@ -669,6 +669,11 @@ const OWN_CHIP={
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 // Her names for occasional venues filed under "Occasional", where the store's name is longer.
 const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worcester"};
+// Her names on the cards of occasional venues, where they differ from the short name.
+const OCC_CARD={"occ-mfa-org":"Boston MFA"};
+// Link options for occasional venues under "Occasional" (as linkRead on a MUSEUMS entry).
+// Boston MFA prints the dates on the line above the show's title.
+const OCC_LINK_READ={"occ-mfa-org":{datesAbove:2}};
 
 // Every address in whatever she pasted — commas, spaces, lines, or mixed in
 // with other words. A repeat is read once (same finished address).
@@ -762,7 +767,7 @@ function decodeEntities(t){
 
 // A venue's own link options (its MUSEUMS entry's `linkRead`). Cases: docs/picked_shows.md,
 // "Venue link rules".
-function linkOptions(vc){ return (vc&&MU[vc]&&MU[vc].linkRead)||(vc&&OWN_CHIP[vc]&&OWN_CHIP[vc].linkRead)||null; }
+function linkOptions(vc){ return (vc&&MU[vc]&&MU[vc].linkRead)||(vc&&OWN_CHIP[vc]&&OWN_CHIP[vc].linkRead)||(vc&&OCC_LINK_READ[vc])||null; }
 function joinTitle(name,sub,dashAfterColon){
   if(/[:.!?]\s*$/.test(name))return name+" "+sub;
   return name+(dashAfterColon&&name.includes(":")?" – ":": ")+sub;
@@ -795,6 +800,14 @@ function readShowPage(res,url,vc){
     if(lr&&lr.dateLine){
       for(let k=0;k<lines.length;k++){
         const l=stripMd(lines[k]); if(!l||!lr.dateLine.test(l))continue;
+        const r=DATES.findDateRange(l,{looseSingles:false});
+        if(r.start||r.end)return{d:k,range:r};
+      }
+    }
+    // A venue that prints the dates above the title (linkRead.datesAbove: how many lines up).
+    if(lr&&lr.datesAbove){
+      for(let k=h-1,seen=0;k>=0&&seen<lr.datesAbove;k--){
+        const l=stripMd(lines[k]); if(!l)continue; seen++;
         const r=DATES.findDateRange(l,{looseSingles:false});
         if(r.start||r.end)return{d:k,range:r};
       }
@@ -920,10 +933,10 @@ function occVenueId(host){
   return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
 
-// The venue whose link options read a page: a swept venue, or an occasional one with its own chip.
+// The venue whose link options read a page: a swept venue, or an occasional one with options of its own.
 function linkReadVenue(url){
   const occ=occVenueId(hostOf(url));
-  return knownVenueFor(url)||(ownChip(occ)?occ:null);
+  return knownVenueFor(url)||(ownChip(occ)||OCC_LINK_READ[occ]?occ:null);
 }
 
 // A link to one of the swept venues files under it, matched by site from the scraper's
@@ -949,7 +962,7 @@ function occEntry(v){
   // `short` is her name for the venue's cards, written into the store by a session;
   // the page title's name stands until then.
   const own=OWN_CHIP[v.id]||{};
-  return{id:v.id,short:own.short||OCC_SHORT[v.id]||v.short||v.name,lookupName:own.lookupName||v.short||v.name,name:(OWN_CHIP[v.id]||{}).name||v.name,occasional:true,english:v.english===false?false:undefined,
+  return{id:v.id,short:own.short||OCC_SHORT[v.id]||v.short||v.name,card:OCC_CARD[v.id],lookupName:own.lookupName||v.short||v.name,name:(OWN_CHIP[v.id]||{}).name||v.name,occasional:true,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
     shopUnknown:!live&&!(v.shop==="none"&&v.confirmed)};
@@ -971,7 +984,7 @@ function registerUnseenOccasional(rows){
     if(!isOcc(r.museumId)||MU[r.museumId])continue;
     const name=(OWN_CHIP[r.museumId]||{}).name||hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4);
     const own=OWN_CHIP[r.museumId]||{};
-    MU[r.museumId]={id:r.museumId,short:own.short||OCC_SHORT[r.museumId]||name,lookupName:own.lookupName||name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
+    MU[r.museumId]={id:r.museumId,short:own.short||OCC_SHORT[r.museumId]||name,card:OCC_CARD[r.museumId],lookupName:own.lookupName||name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
     KNOWN_VENUES.add(r.museumId);
   }
 }
@@ -4508,7 +4521,7 @@ export default function App(){
       setLinkText(box); writePendingLinks(box); linksAtRead.current=null;
     }
     dropHeldVenues(); setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
-  // A second tap on Date shows oldest first; a third goes back to the usual order.
+  // A second tap on Date reverses it; a third goes back to the usual order.
   const pickSort=k=>{setDateReversed(k==="date"&&sortBy==="date"&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
 
@@ -4718,15 +4731,15 @@ export default function App(){
       if(sortBy==="added"){const d=String(b.addedAt||"").localeCompare(String(a.addedAt||""));if(d!==0)return d;}
       if(sortBy==="edited"){const d=String(b.editedAt||"").localeCompare(String(a.editedAt||""));if(d!==0)return d;if(!a.editedAt&&!b.editedAt){const aH=a.addedAt?1:0,bH=b.addedAt?1:0;if(aH!==bH)return bH-aH;}}
       if(sortBy==="venue"){const d=venueRank(a.museumId)-venueRank(b.museumId);if(d!==0)return d;}
+      // Date's second tap turns this whole order upside down, Wanted view included.
+      const flip=sortBy==="date"&&dateReversed?-1:1;
       const ta=tierFor(a),tb=tierFor(b);
-      if(acqWanted&&(ta==="upcoming")!==(tb==="upcoming"))return ta==="upcoming"?1:-1; // Wanted view: Announced drops to the bottom (nothing to buy yet)
-      const da=a.startDate||a.endDate||"",db=b.startDate||b.endDate||"";
-      // Date's second tap: oldest first by opening date, undated last.
-      if(sortBy==="date"&&dateReversed){if(!da!==!db)return da?-1:1;return da.localeCompare(db);}
+      if(acqWanted&&(ta==="upcoming")!==(tb==="upcoming"))return flip*(ta==="upcoming"?1:-1); // Wanted view: Announced drops to the bottom (nothing to buy yet)
       const oa=TIERS[ta]?.ord??9,ob=TIERS[tb]?.ord??9;
-      if(oa!==ob)return oa-ob;
-      if(ta==="upcoming")return da.localeCompare(db);
-      return db.localeCompare(da);
+      if(oa!==ob)return flip*(oa-ob);
+      const da=a.startDate||a.endDate||"",db=b.startDate||b.endDate||"";
+      if(ta==="upcoming")return flip*da.localeCompare(db);
+      return flip*db.localeCompare(da);
     });
     return out;
   },[rows,sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched,dateReversed]);
