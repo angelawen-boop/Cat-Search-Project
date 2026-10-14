@@ -66,5 +66,9 @@
   {"url":"https://www.louvre.fr/en/exhibitions-and-events/exhibitions/things","venue":"louvre","title":"Things: A History of Still Life","start":"2022-10-12","end":"2023-01-23"},
   {"url":"https://new.artsmia.org/exhibition/back-from-the-underworld-mias-dante-tapestry-restored","venue":"occ-new-artsmia-org","title":"Back from the Underworld: Mia’s Dante Tapestry Restored","start":"2026-07-11","end":"2027-01-31"},
   {"url":"https://new.artsmia.org/exhibition/mary","venue":"occ-new-artsmia-org","title":"Mary","start":"2026-06-13","end":"2026-12-06"},
-  {"url":"https://new.artsmia.org/exhibition/matrimonial-bliss-chagalls-double-portrait-with-wineglass-2","venue":"occ-new-artsmia-org","title":"Matrimonial Bliss: Chagall's Double Portrait with Wine Glass","start":"2017-05-21","end":"2017-07-30"}
+  {"url":"https://new.artsmia.org/exhibition/matrimonial-bliss-chagalls-double-portrait-with-wineglass-2","venue":"occ-new-artsmia-org","title":"Matrimonial Bliss: Chagall's Double Portrait with Wine Glass","start":"2017-05-21","end":"2017-07-30"},
+  {"url":"https://www.mfa.org/exhibitions/mark-rothko-reflection","venue":"occ-mfa-org","title":"Mark Rothko: Reflection","start":"2017-09-24","end":"2018-09-03","note":"Boston MFA prints the dates above the title."},
+  {"url":"https://www.mfa.org/exhibition/monet-and-boston-lasting-impression","venue":"occ-mfa-org","title":"Monet and Boston: Lasting Impression","start":"2020-11-15","end":"2021-03-28"},
+  {"url":"https://www.mfa.org/exhibition/rachel-ruysch-artist-naturalist-and-pioneer","venue":"occ-mfa-org","title":"Rachel Ruysch: Artist, Naturalist, and Pioneer","start":"2025-08-23","end":"2025-12-07"},
+  {"url":"https://www.mfa.org/exhibitions/visiting-masterpiece-piero-della-francescas-senigallia-madonna","venue":"occ-mfa-org","title":"Visiting Masterpiece: Piero della Francesca’s Senigallia Madonna","start":"2013-09-13","end":"2014-01-06"}
 ]
