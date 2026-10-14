@@ -1115,9 +1115,6 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
    them in capitals needs one saved listing and one show page.
 2. **Title check not yet run** at `met`, `artic` (home venues). Ran at `capo` and
    `borghese` on 5 Oct, changing nothing.
-3. **KHM: *Head and Shoulders* lost its opening date on 5 Oct** — the page
-   says "since 11. November 2025"; the date reader now reads "since" (DS-001,
-   `docs/khm_pages/`). Check the 15 Oct run has 2025-11-11.
 
 ### 4. Catalogue lookup generally
 
@@ -1295,6 +1292,7 @@ price, her decision).
 | `docs/compression.md` | Compression design, model split, eval, rejected alternatives | Changing compression — otherwise don't |
 | `docs/ledger_size.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
 | `docs/picked_shows.md` | Add by link — design, decisions, store, shelf rule, first test | Changing Add by link |
+| `docs/catalogue_versions.md` | The catalogue-versions redesign and its agreed cases | Changing the catalogue lookup's design |
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review | Before touching a reviewed venue |
 | `docs/review-log.md` | Independent review findings and decisions | A reviewer raises something |
