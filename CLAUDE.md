@@ -385,9 +385,9 @@ whether the committed shell still matches.
 
 **To publish, run `node build/build_app.js` and follow what it prints** — nothing
 else. Built on `main` it says how to get to `claude/ledger-cloud`; built there it
-sets the test page's title and prints the read, read-every-line, publish order.
-Only a session's FIRST publish needs a read; later ones resend the same file.
-A refusal is expected, not a fault: step 4 of the printed steps says what to do.
+sets the test page's title and prints the publish steps.
+No read first. A session's first publish is refused twice (not viewed, then
+resent unchanged), by design; the third goes through. Later ones go straight through.
 
 ### The mental model, load-bearing
 
