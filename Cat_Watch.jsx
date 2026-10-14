@@ -3,14 +3,11 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "43.1";
-const APP_VERSION_DATE = "13 Oct 2026";
+const APP_VERSION = "44";
+const APP_VERSION_DATE = "14 Oct 2026";
 
-// MUSEUMS is her working order, not alphabetical or geographic: the venues she reads
-// most first, the Italian sites together, the venues that refuse us last. Accademia
-// (dellav) sits with the Italian venues until she says otherwise.
-// It is the ONLY venue order in the app — drawer, chips and refresh headings all read
-// it. Never add a second hand-typed list of codes; one once hid two finished recipes.
+// The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
+// Sort by Venue and refresh headings all follow it.
 //
 // shopCatalogues: the shop's catalogue shelf, opened first. shopSearch: its search box
 // plus the exhibition title, opened with it. Addresses: docs/app.md §1 "Shop addresses".
