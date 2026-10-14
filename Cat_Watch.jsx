@@ -1663,7 +1663,6 @@ function mcpTrouble(e){
   if(code==="selection_required") return "You have more than one \u201cParallel Search Key\u201d connector. Pick one when Claude asks, then try again.";
   if(code==="blocked_by_policy")  return "Your organisation blocks this connector.";
   if(code==="server_unavailable") return "The search service didn\u2019t answer. Worth one more try in a moment.";
-  if(code==="rate_limited")       return "Too many searches just now. Leave it a minute.";
   if(code==="cancelled")          return "Search stopped.";
   return "Search failed ("+(code||"unknown")+").";
 }
@@ -1780,7 +1779,7 @@ async function readResultsCall(prompt){
     }
     let why="Couldn\u2019t read the search results ("+(code||"unknown")+").";
     if(code==="not_granted")       why="You declined to let this page use Claude. Reload and allow it to search.";
-    else if(code==="rate_limited") why="Claude is rate-limited right now \u2014 leave it a minute.";
+    else if(code==="rate_limited") why="Claude is rate-limited.";
     else if(code==="invalid_json") why="Claude\u2019s answer came back unreadable. Try again.";
     return{ok:false,data:null,partial:(e&&e.text)||null,detail:why+"  ["+String((e&&e.message)||e)+"]"};
   }
@@ -2551,20 +2550,20 @@ async function recheckLinkedPage(row){
   const book=row.catalogueTitle||row.title;
   const p=await readShopPage(book,row.shopUrl);
   const hadIt=row.shopState==="shop";
-  if(p.kind==="norun")return{ok:false,detail:p.detail,said:"Re-check didn’t run — "+p.why+" Nothing changed."};
+  if(p.kind==="norun")return{ok:false,detail:p.detail,said:"Re-check didn’t run — "+p.why};
   if(p.kind==="gone")return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
-    said:hadIt?"Re-checked: that shop page no longer exists. Marked no longer in the museum shop."
+    said:hadIt?"Re-checked: page no longer exists."
               :"Re-checked: that shop page still doesn’t exist. Still no longer in the museum shop."};
   if(p.kind==="unreadable")return{ok:false,detail:p.detail,
-    said:"Re-check didn’t work — the shop page couldn’t be read"+(p.why?" ("+p.why+")":"")+". Nothing changed."};
-  if(p.kind==="noread")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — "+p.why+" Nothing changed."};
-  if(p.kind==="badanswer")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — the answer came back unreadable. Nothing changed."};
+    said:"Re-check didn’t work — shop page couldn’t be read"+(p.why?" ("+p.why+")":"")+"."};
+  if(p.kind==="noread")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — "+p.why};
+  if(p.kind==="badanswer")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — answer came back unreadable."};
   if(p.forSale){
-    if(hadIt)return{ok:true,detail:p.detail,row,said:"Re-checked: still for sale in the museum shop. Nothing changed."};
+    if(hadIt)return{ok:true,detail:p.detail,row,said:"Re-checked: still for sale in the museum shop."};
     return{ok:true,detail:p.detail,row:{...row,shopState:"shop",shopChange:"back"},said:"Re-checked: back in the museum shop."};
   }
   return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
-    said:(hadIt?"Re-checked: no longer for sale in the museum shop.":"Re-checked: still not for sale in the museum shop.")+(p.why?" "+p.why:"")};
+    said:hadIt?"Re-checked: no longer for sale in the museum shop."+(p.why?" "+p.why:""):"Re-checked: still not for sale in the museum shop."};
 }
 
 // ── THE CATALOGUE LOOKUP (docs/app.md §1; CLAUDE.md §4 "Catalogue lookup") ─────
@@ -4532,7 +4531,7 @@ export default function App(){
     // SEARCH AGAIN REPLACES THE CARD ONLY WHEN IT FINISHED. Any step that
     // failed → the card stays as it was, and says so.
     if(row.looked&&out.ok&&out.trouble){
-      setRecheckSaid({id,failed:true,text:"Search again didn\u2019t finish \u2014 "+out.trouble.split("[")[0].trim()+" Nothing changed."});
+      setRecheckSaid({id,failed:true,text:"Search again didn\u2019t finish \u2014 "+out.trouble.split("[")[0].trim()});
     } else if(out.ok){
       await commit(rows.map(r=>r.id===id?out.row:r));
       if(out.trouble&&out.troubleLang)setError("Found the catalogue for \u201c"+row.title+"\u201d, but the language check "
@@ -4545,7 +4544,7 @@ export default function App(){
       // On the card, not in a banner (her decision): Re-check's line word for word,
       // "Re-check" swapped for "Search" or "Search again".
       const why=String(out.detail||"").split("\n").pop().split("[")[0].trim();
-      setRecheckSaid({id,failed:true,text:(row.looked?"Search again":"Search")+" didn\u2019t run \u2014 "+why+" Nothing changed."});
+      setRecheckSaid({id,failed:true,text:(row.looked?"Search again":"Search")+" didn\u2019t run \u2014 "+why});
     }
     setBusy(false);setBusyId(null);setLookLabel(null);
   }
@@ -4574,13 +4573,13 @@ export default function App(){
       const answered=row.shopState==="blocked"?{...row,shopState:row.hasCatalogue==="yes"?"web":"none"}:row;
       // The ticket link is dropped silently (her decision).
       const dropped="";
-      if(!s.ran)out={ok:false,detail:"",said:"This museum has no shop on file, so there is nothing to re-check."};
-      else if(!s.ok)out={ok:false,detail:s.detail,said:"Re-check didn’t run — "+s.detail.split("\n").pop().split("[")[0].trim()+" Nothing changed."};
+      if(!s.ran)out={ok:false,detail:"",said:"Re-check didn’t run — venue has no shop."};
+      else if(!s.ok)out={ok:false,detail:s.detail,said:"Re-check didn’t run — "+s.detail.split("\n").pop().split("[")[0].trim()};
       // A blocked shop is a failed check and changes nothing — except a ticket
       // link, which was wrong whatever the shop says.
       else if(s.blocked)out=ticket
         ?{ok:true,detail:s.detail,row:{...row,shopState:"blocked"},said:dropped+"The museum shop is blocked, so it couldn’t be re-checked."}
-        :{ok:false,detail:s.detail,said:"Re-check didn’t work — the museum shop is blocked. Nothing changed."};
+        :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop is blocked."};
       else if(o.found&&(o.catalogueTitle||o.isbn13)&&(onShop||o.listedOnly)){
         // Reading the book's page for a blank ISBN is part of the shop step —
         // the page IS the shop's. Web search and the publisher are never run.
