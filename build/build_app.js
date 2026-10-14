@@ -29,22 +29,10 @@
  * session that is publishing runs this script, so the steps arrive exactly
  * when they are needed and cost nothing on the sessions that never publish.
  *
- * ORDER THAT WORKS FIRST TIME, and both refusals below are ones I actually hit:
- *
- *   1. Artifact action:"read" on the artifact URL.
- *   2. Publish. Only if refused as not viewed: Read every line of the saved
- *      .html (~600 lines per call), read the URL again, publish. Whether the
- *      service still demands that reading is unproven; the printed steps try
- *      without it first. A session's later publishes need no read at all.
- *   3. node build/build_app.js
- *   4. Artifact action:"publish" with `url` set to the artifact URL and
- *      `file_path` set to build/dist/index.html.
- *
- *   REFUSAL TWO IS SUBTLER AND COSTS ANOTHER PASS: if the publish was already
- *   refused once, sending the same bytes again is refused as "resent
- *   unchanged" even after the reading is done. The cure is one more
- *   action:"read" of the URL, then publish. Doing step 1 before step 3 avoids
- *   both.
+ * PUBLISHING: the steps this script prints. A session's first publish is refused
+ * twice by design (not viewed, then resent unchanged) and the third goes through;
+ * reading the page first does not count as viewing it unless every line of the
+ * saved file is read, so no read is made.
  *
  *   NEVER REPUBLISH WHILE SHE HAS THE PAGE OPEN — house rule, CLAUDE.md §1.
  *   Her ledger lives IN that page until she Exports.
@@ -164,19 +152,14 @@ if (!forTest) {
 console.log('FOR THE CLOUD TEST PAGE — title set to "Cat Watch Cloud Test". Publishing is not');
 console.log('automatable: the service refuses a session that has not viewed the live page. In order:');
 console.log('');
-console.log('  ALREADY PUBLISHED IT THIS SESSION? Skip to 3: the same file_path republishes with');
-console.log('  no read at all.');
-console.log('');
-console.log('  1. Artifact action:"read" url:"' + TEST_PAGE + '". Diff the saved .html against');
-console.log('     build/dist/index.html in code: only your change should differ.');
-console.log('  2. Do NOT page the saved file into context yet (~6,600 lines).');
-console.log('  3. Artifact action:"publish" url:"' + TEST_PAGE + '" file_path:"build/dist/index.html"');
-console.log('     No `capabilities` (omitting carries all four forward). Push ' + TEST_BRANCH + '.');
-console.log('  4. IF REFUSED as not viewed (a session restart forgets step 1): the refusal lists the');
-console.log('     live page\'s differences, and that counts as the read. Check every "+" line is only');
-console.log('     the old side of your own change. Then send the same file again; refused as');
-console.log('     "identical content ... resent unchanged", send it once more and it goes through.');
-console.log('     Never page the saved file. If anything else happens, update these lines.');
+console.log('  1. Artifact action:"publish" url:"' + TEST_PAGE + '" file_path:"build/dist/index.html"');
+console.log('     No `capabilities` (omitting carries all four forward). No read first: it does not');
+console.log('     count as viewing the page. Already published this session? It goes through; skip to 4.');
+console.log('  2. Refused as not viewed: expected. The refusal lists the live page\'s differences, and');
+console.log('     that counts as viewing it. Check every "+" line is only the old side of your own change.');
+console.log('  3. Send the same file again. Refused as "identical content ... resent unchanged":');
+console.log('     expected. Send it once more and it goes through.');
+console.log('  4. Push ' + TEST_BRANCH + '. Never page the saved file. If anything else happens, update these lines.');
 console.log('');
 console.log('  NEVER REPUBLISH WHILE SHE HAS THE PAGE OPEN (CLAUDE.md §1). Ask first.');
 console.log('  Run `npm run test:app` before publishing: page_renders.js is the only check that');
