@@ -74,7 +74,7 @@ const VENUE_ORDER=["met","ng","occ-nga-gov","occ-nationalgalleries-org","frick",
   "louvre","orsay","jacquemart","mad","khm","rijks","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
   "occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
-  "occ-royalacademy-org-uk","occ-museothyssen-org","occ-mauritshuis-nl"];
+  "occ-royalacademy-org-uk","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
 const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); return i<0?1e6:i; };
 MUSEUMS.sort((a,b)=>orderOf(a.id)-orderOf(b.id));
 const lookupName=mu=>mu.lookupName||mu.short;
@@ -670,7 +670,7 @@ const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 // Her names for occasional venues filed under "Occasional", where the store's name is longer.
 const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worcester"};
 // Her names on the cards of occasional venues, where they differ from the short name.
-const OCC_CARD={"occ-mfa-org":"Boston MFA"};
+const OCC_CARD={"occ-mfa-org":"Boston MFA","occ-ngv-vic-gov-au":"National Gallery Victoria"};
 // Link options for occasional venues under "Occasional" (as linkRead on a MUSEUMS entry).
 // Boston MFA prints the dates on the line above the show's title. NGV writes two-digit
 // years ("4 Sep 26 – 31 Jan 27"; shortYear).

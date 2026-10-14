@@ -307,6 +307,10 @@ function runtime() {
     ok(b.ok && b.start === '2023-06-09' && b.end === '2023-10-07', 'AL-038a:  NGV Pierre Bonnard: the year on the closing side only, "9 Jun – 7 Oct 23"', JSON.stringify([b.start, b.end, b.why]));
     const other = read({ title: 'Some show | Elsewhere', full_content: '# Some show' + body }, 'https://example.org/show', null);
     ok(!other.ok, 'AL-038b:  two-digit years are read at NGV only', JSON.stringify([other.start, other.end]));
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const order = fn('VENUE_ORDER'), card = fn('OCC_CARD');
+    ok(order[order.length - 1] === 'occ-ngv-vic-gov-au' && card['occ-ngv-vic-gov-au'] === 'National Gallery Victoria',
+      'AL-038c:  NGV goes last in the Occasional group; its cards say "National Gallery Victoria" (her decision)', JSON.stringify([order[order.length - 1], card['occ-ngv-vic-gov-au']]));
   }
   // ── AL-031: NGA Souvenirs of the Gilded Age — a doubled colon becomes one ─
   // Live page on docs/link_proof_pages.json; its page title reads "Age:: French".
