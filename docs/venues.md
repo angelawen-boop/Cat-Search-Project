@@ -189,7 +189,9 @@ is its only wait.
   then, with a `cmplz-` class on `<body>`, every paragraph excluded. The ancestor
   walk stops before `<body>`.
 - Site moved to `galleriaborghese.cultura.gov.it`; down 8–11 Sep for everyone.
-- Open: 7 titles still in capitals (`CLAUDE.md` §2.2.2).
+- **Titles typed in capitals everywhere** (her saves, `docs/borghese_pages/`): code writes
+  ordinary capitals and turns the name/subtitle full stop into an em dash (her decision;
+  `capsTitles`, `stopToDash`, BT-001).
 
 ---
 

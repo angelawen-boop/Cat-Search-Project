@@ -139,13 +139,14 @@ CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
 #### 2.2.2 Fixes not yet checked in the cases they were written for
 
-1. **Borghese: 7 titles still in capitals.** The site answered on 5 Oct and the
-   sweep still wrote all 7 in capitals; the title check changed none. Her import
-   file has them corrected by hand (2 from the venue's text, 5 by hand),
-   so each sweep proposes 7 capitals-only Change cards. Whether the venue TYPES
-   them in capitals needs one saved listing and one show page.
-2. **Title check not yet run** at `met`, `artic` (home venues). Ran at `capo` and
-   `borghese` on 5 Oct, changing nothing.
+**The 15 Oct sweep's fixes — in code for the next sweep; this month's runs were imported as the
+scraper wrote them (her decision: a fix never changes a run already swept).** Her next sweep checks
+each: the Met's excluded series (P.S. Art, Scholastic, commissions, Burdick, crèche) stay out, now
+checked on the name the show's page gives; no credit lines at Met, Art Institute, MAD, Rijksmuseum
+(the Rijksmuseum rule has no saved page to test on); no "page couldn't be read" card for an empty
+Art Institute page 2; Brera keeps bold words mid-sentence and stops before its info block; Borghese
+titles arrive in ordinary capitals with an em dash between name and subtitle — one round of title
+Change cards against her hand-corrected 7. Expect ~45 one-time compression re-checks.
 
 #### 2.2.3 Catalogue lookup generally
 
@@ -192,16 +193,18 @@ She is noting issues as she uses it, for a later debugging session.
   again then leaves the card untouched. Otherwise a different result is the
   web answering differently — get that run's log.
 
-#### 2.2.4 The monthly container sweep — 15 Oct re-run pending her review
+#### 2.2.4 The monthly container sweep — 15 Oct runs compressed, ready for her import
 
 **First run, 5 Oct — a test, not imported** (`run_2026-10-05_015417`, 359
 rows). `sweep_diff.js` now works out each change's cause; the skill asks only
 for the UNEXPLAINED pile. Its faults (V&A, National Gallery, Cincinnati, Brera,
 Tates) were fixed from her saves the same day; Louvre refused 3 pages.
 
-**Re-run 15 Oct — ran (`run_2026-10-15_015539`), pending her review.** Her test: it pushes and
-reports in the new format; the five fixed venues come back clean; nothing new broken. Good →
-she imports that run. Not good → more work on the routine or the recipes.
+**15 Oct — container re-run passed her test** (pushed, reported, the five fixes held); her home
+sweep (met, artic, mad only — she checks the headed four by eye and sweeps them only for new shows)
+QC'd. Stitched and compressed as swept: `stitch_20261015_0920/sweep_compressed.csv`, 536 rows,
+sent to her. She rejects on import: the Met's 18 excluded-series rows, the Art Institute's empty
+page-2 card, the Ashmolean title change. Faults found are fixed in code (§2.2.2).
 
 #### 2.2.5 Queued next
 

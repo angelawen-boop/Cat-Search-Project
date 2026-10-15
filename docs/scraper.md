@@ -435,7 +435,6 @@ Her instruction: no probes for hypothetical problems.
 
 | Open | Why |
 |---|---|
-| `artic` — a year needing page three? | Recipe reads pages 1–2; the standing check reports it |
 | The load-more fix beyond the Louvre | No other venue has such a control |
 
 ---
