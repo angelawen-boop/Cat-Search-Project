@@ -557,5 +557,8 @@ Ideas not yet built — none is open work, and none is proposed unless she raise
   saying "Couldn't work out the publisher's own website" (Somogy, Hubert Robert).
   It replaces her decision to keep `PUBLISHER_SITES` short and never fill it ahead
   (§4.2); how the list is built is to be agreed with her first.
+- **To discuss with her (raised 15 Oct):** (1) a shorter home sweep even with only the headless
+  venues — less pacing, a shorter lookback than July 2024, other ideas; (2) leaving out topics she
+  always quarantines (e.g. Japanese, Chinese art) before they reach her cards.
 - **Library — purchase tracking and a Library tab** (`docs/library.md`): future consideration, never
   propose.
