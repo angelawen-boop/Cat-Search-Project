@@ -271,8 +271,17 @@ const venueIsDone = code => fs.existsSync(venueCsvPath(code));
  * quietly.
  */
 function machineVenues() {
-  return VENUE_ORDER.filter(c =>
-    (VENUES[c].route === 'local' ? 'home' : 'container') === MACHINE);
+  return VENUE_ORDER.filter(c => machineOf(c) === MACHINE);
+}
+
+/**
+ * Which machine sweeps a venue: 'home', 'container', or 'none' — a venue she
+ * adds by link only (`route: 'none'`, the Ashmolean; docs/venues.md). Its recipe
+ * stays and naming it by hand still sweeps it.
+ */
+function machineOf(c) {
+  const r = VENUES[c].route;
+  return r === 'local' ? 'home' : r === 'none' ? 'none' : 'container';
 }
 
 function venuesForThisRun() {
@@ -4054,6 +4063,9 @@ const VENUES = {
   ashmolean: {
     name: 'Ashmolean Museum, Oxford',
     base: 'https://www.ashmolean.org',
+    // Not swept: she adds its shows by link (her decision, docs/venues.md). The
+    // recipe is kept, so naming it by hand still sweeps it.
+    route: 'none',
     // Pages kept as read, in the container too (her decision): its pages drop out — one
     // sweep lost 13 of its first 20.
     keepPages: true,
@@ -5765,8 +5777,7 @@ async function main() {
         : PROXY_URL ? ' (proxy present, so this is the container)'
                     : ' (no proxy, so this is not the container)'}`);
   if (WANTED.length) {
-    const foreign = RUN_VENUES.filter(c =>
-      (VENUES[c].route === 'local' ? 'home' : 'container') !== MACHINE);
+    const foreign = RUN_VENUES.filter(c => machineOf(c) !== MACHINE);
     if (foreign.length) {
       log(`NAMED BY HAND, and not this machine's job: ${foreign.join(', ')}.`);
       log('Running them anyway — naming a venue always wins. Both machines');
@@ -5776,7 +5787,9 @@ async function main() {
   } else {
     log(`Sweeping this machine's ${RUN_VENUES.length} venues. `
       + `The other machine has: ${VENUE_ORDER.filter(c =>
-          (VENUES[c].route === 'local' ? 'home' : 'container') !== MACHINE).join(', ')}.`);
+          !['none', MACHINE].includes(machineOf(c))).join(', ')}.`
+      + (VENUE_ORDER.some(c => machineOf(c) === 'none')
+        ? ` Not swept (added by link): ${VENUE_ORDER.filter(c => machineOf(c) === 'none').join(', ')}.` : ''));
   }
   log(`Venues this run: ${RUN_VENUES.join(', ') || '(none)'}`);
   const already = VENUE_ORDER.filter(venueIsDone);
@@ -6272,6 +6285,7 @@ module.exports = {
   useFixtureWaits,
   // HEADED: pure, or a path — pacing.test.js H-001 to H-003; mode B, H-005 to H-007.
   splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome, HEADED_DEBUG_PORT, attachHeadedContext,
+  machineOf,
   saysOngoing, applyLookback, expandYearArchive, expandDateRange, expandFromToday, keptDespiteLookback, withoutQuery, listingPages, followPagination,
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way

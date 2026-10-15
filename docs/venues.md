@@ -39,7 +39,7 @@ should reach the app.
 | `rijks` | 37 rows, not chased further. *Asian Pavilion* was pulled by the venue |
 | `capo` | **Not count-verified and never will be** — see below |
 | `brera`, `borghese` | Their single extra row is a marker for a genuinely empty upcoming page |
-| `ashmolean` | **Everything kept** — major, free and displays, past included. Her count: current 0 major + 4 free, upcoming 2 + 1, past 4 + 13. **Titles: the full name from the show's page header, ordinary capitals written by code** — the venue types capitals everywhere (`capsTitles`, `titleFromCaps`, `pageTitle`) |
+| `ashmolean` | **Not swept — added by link only** (her decision): `route: 'none'`, recipe kept, so naming it by hand still sweeps it; the app keeps its chip for now. When it was swept: **everything kept** — major, free and displays, past included. Her count: current 0 major + 4 free, upcoming 2 + 1, past 4 + 13. **Titles: the full name from the show's page header, ordinary capitals written by code** — the venue types capitals everywhere (`capsTitles`, `titleFromCaps`, `pageTitle`) |
 | `cincinnati` | Nothing excluded. Her count: current 2, upcoming 2, past 2026 **4**, 2025 **14**, 2024 **9** — 31. Pages saved by the container, her yes for this venue only. **Never swept yet** |
 
 **Whether displays count is HERS, and varies by venue.** Two venues disagreeing

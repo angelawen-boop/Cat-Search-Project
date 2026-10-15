@@ -82,6 +82,7 @@ Per venue: rows from the last run that brought any, the last run that held the
 venue at all, which machine sweeps it, and — read from the marker rows — why the
 last attempt brought nothing. When the two runs differ, that venue has stopped
 answering. **Every venue has returned rows at least once** — except `cincinnati`, never swept.
+**`ashmolean` is no longer swept** — added by link only (her decision; `docs/venues.md`).
 
 **Access and pace — settled for the four Cloudflare venues.** A blank browser
 profile is refused; a visible Chrome on a profile she has browsed in gets in

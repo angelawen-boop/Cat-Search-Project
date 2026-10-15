@@ -1322,7 +1322,7 @@ const routeOf = code => {
   const rest = SWEEP_SRC.slice(at + 1);
   const next = rest.search(/\n  '?[a-z-]+'?: \{\n    name: /);
   const block = next > -1 ? rest.slice(0, next) : rest;
-  return /route:\s*'local'/.test(block) ? 'home' : 'container';
+  return /route:\s*'local'/.test(block) ? 'home' : /route:\s*'none'/.test(block) ? 'none' : 'container';
 };
 
 test('R-001: met, artic, mad, brit, orsay, morgan and moma are HERS — the container must not touch them', () => {
@@ -1408,19 +1408,29 @@ test('R-003: every other venue is the container\'s', () => {
   for (const c of ['ng', 'rijks', 'acq', 'frick', 'menil', 'va', 'louvre', 'capo',
                    'uffizi', 'brera', 'khm', 'dellav', 'wallace', 'borghese',
                    'tate-modern', 'tate-britain', 'lgd', 'jacquemart', 'mam',
-                   'ashmolean', 'cincinnati']) {
+                   'cincinnati']) {
     assert.strictEqual(routeOf(c), 'container', c + ' should be the container\'s');
   }
 });
 
-test('R-004: the two sets do not overlap and cover every venue', () => {
+test('R-004: home, container and not-swept do not overlap and cover every venue', () => {
   const codes = [...SWEEP_SRC.matchAll(RECIPE_KEY)].map(m => m[1]);
   assert.strictEqual(codes.length, 28, 'expected 28 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
   assert.deepStrictEqual(home.sort(), ['artic', 'brit', 'mad', 'met', 'moma', 'morgan', 'orsay']);
-  assert.strictEqual(container.length, 21);
-  assert.strictEqual(home.length + container.length, codes.length);
+  const none = codes.filter(c => routeOf(c) === 'none');
+  assert.deepStrictEqual(none, ['ashmolean']);
+  assert.strictEqual(container.length, 20);
+  assert.strictEqual(home.length + container.length + none.length, codes.length);
+});
+
+test('R-024: the Ashmolean is added by link only — no machine sweeps it, and the recipe is kept (her decision, 15 Oct)', () => {
+  const S = require('./sweep_prototype.js');
+  assert.strictEqual(routeOf('ashmolean'), 'none');
+  assert.strictEqual(S.machineOf('ashmolean'), 'none');
+  assert.strictEqual(S.machineOf('met'), 'home');
+  assert.strictEqual(S.machineOf('ng'), 'container');
 });
 
 // ── THE MORGAN ────────────────────────────────────────────────────────────

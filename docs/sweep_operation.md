@@ -72,8 +72,9 @@ scraper/output/run_2026-09-10_183045/
 
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
-announces which it thinks it is. **Container: 21. Her laptop: 7** — `met`,
-`artic`, `mad`, `brit`, `orsay`, `morgan`, `moma` (`route: 'local'`). Naming
+announces which it thinks it is. **Container: 20. Her laptop: 7** — `met`,
+`artic`, `mad`, `brit`, `orsay`, `morgan`, `moma` (`route: 'local'`). **Neither: `ashmolean`**
+(`route: 'none'`, added by link only — her decision; `machineOf`, R-024). Naming
 venues by hand overrides it, and says so in the log. R-001 to R-005.
 
 - **A venue moves to her laptop only after a COMPLETE, CLEAN sweep from there**
@@ -186,7 +187,7 @@ sweep, and a session with her stitches and compresses (her design).
 and has its faults fixed before anything is stitched** (her decision):
 the routine runs it on its own run; she starts a session for her home run.
 **The routine has the repo attached** (her setting) — without it the
-session clones read-only and cannot push. It sweeps only the container's 21;
+session clones read-only and cannot push. It sweeps only the container's 20;
 its report never names a home venue (her decision).
 **The report's Changes are grouped by kind, not by venue (her decision)** so she
 sees at a glance what kind of trouble a run has: your fixes/decisions reflected,
