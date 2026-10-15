@@ -214,6 +214,27 @@ page-2 card, the Ashmolean title change. Faults found are fixed in code (§2.2.2
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 
+#### 2.2.7 "Probably not for you" — her design, agreed; not built
+
+New shows in topics she always quarantines are labelled and set aside on the import screen.
+- **Groups (start wide, narrow later):** collection rotations and acquisitions (not at the Met —
+  she reviews those by hand); Asian art (Japanese, Chinese, Korean, South Asian); contemporary
+  single-artist, film, video, performance (riskiest — may need narrowing); children's, students',
+  staff and recurring series; pop-culture oddities; galleries and rotations that are not shows.
+- **Compression labels new shows only** (`fresh` rows), choosing from that fixed list; code writes
+  it into the row's notes ("Topic: Asian art.") — CSV columns unchanged, and she sees it in the
+  scraper note on the card.
+- **The app:** a section after Odd cases, before the rest, headed only by its title and count
+  ("Probably not for you · 12") — no instruction sentence. Each card shows its label and comes
+  pre-set to **Never add** (not Reject, which is not remembered); she clicks Add to keep one.
+- **Before building, test the labeller on her own decisions:** her 86 quarantined shows (test page
+  store, `quarantine/rows`) should mostly be caught; her watched and want-catalogue shows should
+  almost never be. Show her the result first.
+- **Her test in the app:** a rehearsal file of ~15 quarantined and ~10 kept real shows, each web
+  address carrying a test marker so they read as new; she checks the section, its pre-set Never
+  add, the labels in the notes and that kept shows are absent — then Cancel import. The real test
+  is her next monthly import. App publish rules apply (`docs/publishing.md`).
+
 #### 2.2.6 Tests that fail under load
 
 **OPEN — RB-016 and RB-020** (robots wait, scraper) fail under load: run ten at
@@ -557,8 +578,7 @@ Ideas not yet built — none is open work, and none is proposed unless she raise
   saying "Couldn't work out the publisher's own website" (Somogy, Hubert Robert).
   It replaces her decision to keep `PUBLISHER_SITES` short and never fill it ahead
   (§4.2); how the list is built is to be agreed with her first.
-- **To discuss with her (raised 15 Oct):** (1) a shorter home sweep even with only the headless
-  venues — less pacing, a shorter lookback than July 2024, other ideas; (2) leaving out topics she
-  always quarantines (e.g. Japanese, Chinese art) before they reach her cards.
+- **To discuss with her (raised 15 Oct):** a shorter home sweep even with only the headless
+  venues — less pacing, a shorter lookback than July 2024, other ideas.
 - **Library — purchase tracking and a Library tab** (`docs/library.md`): future consideration, never
   propose.
