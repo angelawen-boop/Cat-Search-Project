@@ -41,20 +41,17 @@ is why they live in one repo, on one branch.
 
 ### Put it in code — her decision
 
-**Hard code beats a Claude Code session, and a session beats Chat Claude.** Push
-every job as far up that order as it goes. The test:
+**Hard code beats a Claude Code session.** Push every job as far toward code as it goes. The test:
 
 > **Does the task have exactly one correct answer, derivable from the inputs?**
 
 - **One correct answer → code.** Merging files, choosing which venues still need
   running, validating a date, resolving a link, rebuilding a lost cache. Never
   prose rules a session re-derives — that is how a CSV gets mangled, invisibly.
-- **Many acceptable answers, or judgement about the outside world → a model.**
+- **Many acceptable answers, or judgement about the outside world → Claude.**
   Compressing curatorial prose into a six-word teaser.
-- **Even then, a model touches strings, never files.** A script owns the CSV and
-  asks for a value; the model never sees a comma or a column.
-
-Chat Claude has no project context and cannot read this guide. Last resort.
+- **Even then, Claude touches strings, never files.** A script owns the CSV and
+  asks for a value; Claude never sees a comma or a column.
 
 ### Procedures — in side docs
 
@@ -129,35 +126,17 @@ there, on her real ledger, in ONE tab on ONE device** (a second copy is read
 only — `docs/cloud_storage.md`). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
 CSV) — `main`'s Import, Export and Import Refresh, renamed.
 
+**Trial basically over — ready to merge, in a separate session.**
+
 **Next:**
-1. Her normal use, over several sessions; she reports what surfaces. On request,
-   read the store and check it against her file. Loads were never checked
-   (she opened the cloud copy and did not export on leaving). **Until 11 Oct:**
-   export on every exit, Load that file next time, read the match line.
-2. `CLOUD_OPENS=true` once Loads have matched every time — her call. **Load
-   stays for good** — it is how she opens a backup.
-3. Merge to `main` and publish to her app — her call; `docs/publishing.md` applies. **First
+1. Merge to `main` and publish to her app — her call; `docs/publishing.md` applies. **First
    copy the test page's `sweeps/venues`, `quarantine/rows`, `venues/occasional` and `links/pending` into her app's
    store** (quarantine merged latest-wins, never replaced).
-4. Google Drive backup by button — on the table, never automatic.
+2. `CLOUD_OPENS=true` — her call. **Load stays for good** — it is how she opens a backup.
+3. Google Drive backup by button — on the table, never automatic.
 
 
-#### 2.2.2 Add by link — 39.5 signed off on her 10 links; a new venue still to see
-
-**Design, decisions, venue link rules and the proof pages: `docs/add_by_link.md`.** Her
-test of 39.5: all 10 original links imported; the shop finder better; catalogue lookups at
-Thyssen and Mauritshuis found the catalogue. First venues it had never met — Mia and
-Worcester — both missed, fixed in code and proven live (43.1). Current additions: Boston
-MFA, NGV, Wayback Machine copies, tracking tags dropped (44–44.4).
-
-- **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).**
-  Detroit files a show's book in the show's own shop section. Her next lookups settle:
-  O'Keeffe found at Detroit? Did Mauritshuis and the RA get a search?
-- **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the
-  scraper (her decision); a rule both use (the date reader) stays in `dates.js`. Live
-  proof of every link venue: `docs/link_proof_pages.json`.
-
-#### 2.2.3 Fixes not yet checked in the cases they were written for
+#### 2.2.2 Fixes not yet checked in the cases they were written for
 
 1. **Borghese: 7 titles still in capitals.** The site answered on 5 Oct and the
    sweep still wrote all 7 in capitals; the title check changed none. Her import
@@ -167,7 +146,7 @@ MFA, NGV, Wayback Machine copies, tracking tags dropped (44–44.4).
 2. **Title check not yet run** at `met`, `artic` (home venues). Ran at `capo` and
    `borghese` on 5 Oct, changing nothing.
 
-#### 2.2.4 Catalogue lookup generally
+#### 2.2.3 Catalogue lookup generally
 
 **All search work after 43 is on `parked`, unpublished** (her decision) — its own
 CLAUDE.md §7.4 and `docs/handover_search_stage1.md` there say where it stands.
@@ -212,31 +191,18 @@ She is noting issues as she uses it, for a later debugging session.
   again then leaves the card untouched. Otherwise a different result is the
   web answering differently — get that run's log.
 
-#### 2.2.5 The monthly container sweep — confirmation re-run 15 Oct
-
-**She sweeps no more than once a month.** The container's half runs itself:
-the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
-`.claude/skills/monthly-sweep/SKILL.md` — sweep, QC, push, report; anything
-needing a re-sweep or a code change waits for her. She then does the home
-sweep, and a session with her stitches and compresses (her design).
-**Every run — container and home — goes through `.claude/skills/sweep-qc/`
-and has its faults fixed before anything is stitched** (her decision):
-the routine runs it on its own run; she starts a session for her home run.
-**The routine has the repo attached** (her setting) — without it the
-session clones read-only and cannot push. It sweeps only the container's 21;
-its report never names a home venue (her decision).
+#### 2.2.4 The monthly container sweep — 15 Oct re-run pending her review
 
 **First run, 5 Oct — a test, not imported** (`run_2026-10-05_015417`, 359
 rows). `sweep_diff.js` now works out each change's cause; the skill asks only
 for the UNEXPLAINED pile. Its faults (V&A, National Gallery, Cincinnati, Brera,
 Tates) were fixed from her saves the same day; Louvre refused 3 pages.
 
-**Re-run 15 Oct, 1:53am Sydney** — this session fires the routine (a
-`send_later`). Her test: it pushes and reports in the new format; the five
-fixed venues come back clean; nothing new broken. Good → she imports that run.
-Not good → more work on the routine or the recipes.
+**Re-run 15 Oct — ran (`run_2026-10-15_015539`), pending her review.** Her test: it pushes and
+reports in the new format; the five fixed venues come back clean; nothing new broken. Good →
+she imports that run. Not good → more work on the routine or the recipes.
 
-#### 2.2.6 Queued next
+#### 2.2.5 Queued next
 
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library
@@ -244,7 +210,7 @@ Not good → more work on the routine or the recipes.
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 
-#### 2.2.7 Tests that fail under load
+#### 2.2.6 Tests that fail under load
 
 **OPEN — RB-016 and RB-020** (robots wait, scraper) fail under load: run ten at
 once, RB-016 read 1148–1293ms against 1450 in 5 of 10, RB-020 over
@@ -271,7 +237,7 @@ work in hand.
 | File | What is in it | Read it when |
 |---|---|---|
 | `docs/scraper.md` | The scraper's evidence: listings, pagination, the date parser, junk in summaries, failure handling, blocked venues, and the steps for adding a venue | Changing anything in the scraper, or wiring a venue |
-| `docs/sweep_operation.md` | Running the scraper: commands, files, run directories, who sweeps what, headed venues, pacing, robots.txt, the network bridge, and what to send her when a sweep ends | Running a sweep, or changing how one runs |
+| `docs/sweep_operation.md` | Running the scraper: commands, files, run directories, who sweeps what, headed venues, pacing, robots.txt, the network bridge, what to send her when a sweep ends, and the monthly container routine | Running a sweep, or changing how one runs |
 | `docs/compression.md`, `scraper/compress_prompt.md` | Compression design, model split, eval and rejected alternatives; the prompts and their tuning | Changing compression or summary wording — otherwise don't |
 | `docs/import_csv.md` | The pro forma CSV: lookback, never de-duplicate, the notes column, `swept_at` | Changing what the scraper writes or what the app reads |
 
@@ -560,8 +526,8 @@ makes fabrication structurally impossible.
 #### Running the scraper — `docs/sweep_operation.md`
 
 The commands, the files table, a run's directory, who sweeps what (container or her laptop),
-the headed venues, pacing and kept pages, what each site's robots.txt asks, and the network
-bridge are in `docs/sweep_operation.md`. **Read it before running a sweep or changing how one
+the headed venues, pacing and kept pages, what each site's robots.txt asks, the network
+bridge, and the monthly container routine are in `docs/sweep_operation.md`. **Read it before running a sweep or changing how one
 runs.**
 
 #### Adding a venue — `docs/scraper.md` §12
@@ -601,6 +567,19 @@ junk in summaries, failure handling, compression, the blocked venues — is in
 
 Design, decisions, the store, the shelf rule and the venue link rules: `docs/add_by_link.md`;
 the live proof pages: `docs/link_proof_pages.json`.
+
+**Status: stable** — signed off at 39.5 on her 10 links (all imported; the shop finder better;
+catalogue lookups at Thyssen and Mauritshuis found the catalogue). **One weak spot: a link from a
+venue the app has never seen needs a fix about half the time** — the exhibition info is not read
+correctly off the page, the venue's shop is not found, and so on (Mia and Worcester both missed
+and were fixed in code, proven live).
+
+- **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).**
+  Detroit files a show's book in the show's own shop section. Her next lookups settle:
+  O'Keeffe found at Detroit? Did Mauritshuis and the RA get a search?
+- **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the
+  scraper (her decision); a rule both use (the date reader) stays in `dates.js`. Live
+  proof of every link venue: `docs/link_proof_pages.json`.
 
 - **Add by link** (39–39.5, her design; signed off on her 10 links): Import opens a small pop-up — CSV · Links, Cancel; **nothing added
   to the page itself**. Each link is read

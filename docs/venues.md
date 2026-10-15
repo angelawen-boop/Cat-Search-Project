@@ -189,7 +189,7 @@ is its only wait.
   then, with a `cmplz-` class on `<body>`, every paragraph excluded. The ancestor
   walk stops before `<body>`.
 - Site moved to `galleriaborghese.cultura.gov.it`; down 8–11 Sep for everyone.
-- Open: 7 titles still in capitals (`CLAUDE.md` §2.2.3).
+- Open: 7 titles still in capitals (`CLAUDE.md` §2.2.2).
 
 ---
 

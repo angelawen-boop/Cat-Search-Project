@@ -174,3 +174,17 @@ finishes, saying how many rows and how many summaries were reused versus written
 **One file only** — never `sweep.csv`, which holds raw text. **If compression has
 not been run, the run is not finished.** Run the file through the app's intake
 and READ the cards before sending (§4.1).
+
+## The monthly routine
+
+**She sweeps no more than once a month.** The container's half runs itself:
+the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
+`.claude/skills/monthly-sweep/SKILL.md` — sweep, QC, push, report; anything
+needing a re-sweep or a code change waits for her. She then does the home
+sweep, and a session with her stitches and compresses (her design).
+**Every run — container and home — goes through `.claude/skills/sweep-qc/`
+and has its faults fixed before anything is stitched** (her decision):
+the routine runs it on its own run; she starts a session for her home run.
+**The routine has the repo attached** (her setting) — without it the
+session clones read-only and cannot push. It sweeps only the container's 21;
+its report never names a home venue (her decision).
