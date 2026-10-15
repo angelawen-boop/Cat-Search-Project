@@ -470,7 +470,7 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   chip (NG Washington, NG Scotland and Mia have their own; chip and sort order is `VENUE_ORDER`, her decision); their shop sections confirmed on a screen after the review (39.2).
   **The date reader and summary rules are the scraper's own**, written into the
   JSX by `node build/sync_shared.js` — never edit between its SHARED markers.
-  `docs/picked_shows.md`.
+  `docs/add_by_link.md`.
 - **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
   at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.
 - **Dark mode**, every colour named; the shell paints a ground before React runs.
@@ -887,7 +887,7 @@ stale after a minute; every save checks it first. A republish while her page is 
 
 ### 2. Add by link — 39.5 signed off on her 10 links; a new venue still to see
 
-**Design, decisions, venue link rules and the proof pages: `docs/picked_shows.md`.** Her
+**Design, decisions, venue link rules and the proof pages: `docs/add_by_link.md`.** Her
 test of 39.5: all 10 original links imported; the shop finder better; catalogue lookups at
 Thyssen and Mauritshuis found the catalogue. First venues it had never met — Mia and
 Worcester — both missed, fixed in code and proven live (43.1). Current additions: Boston
@@ -1056,7 +1056,7 @@ price, her decision).
 | `docs/listing_pages/`, `docs/*_pages/` | Pages she saved, with a README of what each settled | Changing that venue's recipe — before asking her for anything |
 | `docs/compression.md` | Compression design, model split, eval, rejected alternatives | Changing compression — otherwise don't |
 | `docs/ledger_size.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
-| `docs/picked_shows.md` | Add by link — design, decisions, store, shelf rule, first test | Changing Add by link |
+| `docs/add_by_link.md` | Add by link — design, decisions, store, shelf rule, first test | Changing Add by link |
 | `docs/catalogue_versions.md` | The catalogue-versions redesign and its agreed cases | Changing the catalogue lookup's design |
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review | Before touching a reviewed venue |

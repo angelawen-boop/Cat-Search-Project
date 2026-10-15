@@ -1,4 +1,4 @@
-# Picked shows — "Add by link" in the app
+# Add by link — design, decisions and venue link rules
 
 **Her design; signed off at 39.5.** Code: "ADD BY LINK" in `Cat_Watch.jsx`; test
 `scraper/fixtures/add_by_link.js` (AL-). A scraper-side plan (the scraper reading one pasted page) was once considered and is

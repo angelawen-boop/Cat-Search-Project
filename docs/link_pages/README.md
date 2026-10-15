@@ -2,7 +2,7 @@
 
 Ten show pages at six venues, read once each through her keyed "Parallel
 Search Key" connector (`web_fetch`, full content) — the test that decided the
-app could read show pages without a browser (docs/picked_shows.md).
+app could read show pages without a browser (docs/add_by_link.md).
 
 - `dia_*.json` are the connector's answers byte for byte.
 - The other eight were written down from the same answers by hand, **trimmed

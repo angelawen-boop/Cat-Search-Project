@@ -2,7 +2,7 @@
 /*
  * sync_shared.js — write the scraper's shared pieces into Cat_Watch.jsx.
  *
- * WHY THIS EXISTS — "Add by link", 4 Oct 2026 (docs/picked_shows.md). The app
+ * WHY THIS EXISTS — "Add by link", 4 Oct 2026 (docs/add_by_link.md). The app
  * now reads show pages itself, so it needs the scraper's DATE READER and the
  * compression prompt's SUMMARY RULES. Copying them by hand makes two copies,
  * and two date parsers have drifted apart twice before, each time losing dates

@@ -23,7 +23,7 @@ const MUSEUMS = [
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopCatalogues:"https://www.rijksmuseumshop.nl/en/books/exhibition-books", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
   { id:"ng", short:"NG UK", lookupName:"National Gallery", name:"The National Gallery", city:"London",
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
-  // linkRead: Add by link options for met, acq, frick, menil, louvre, artic, brit (docs/picked_shows.md, "Venue link rules").
+  // linkRead: Add by link options for met, acq, frick, menil, louvre, artic, brit (docs/add_by_link.md, "Venue link rules").
   // No apostrophe or double quote inside a linkRead pattern (write \x27): compress.js seedMemory scans this list as text.
   { id:"acq", linkRead:{ title:"subtitle", places:["New York","Palm Beach"], credit:/^In collaboration with\b/i, dashAfterColon:true, from:/^Press Release$/, minLine:60, skip:/^Gallery Hours:|\bImage Courtesy\b/, skipEntities:true, cleanLink:true }, short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
@@ -647,7 +647,7 @@ const VENUE_SITES=[{"id":"met","host":"metmuseum.org"},{"id":"ng","host":"nation
 const SUMMARY_EXAMPLES=[{"title":"German Expressionism","raw":"Across Germany’s major cities, a new generation of artists emerged between 1900 and 1918 to change the rules of painting. They were the German Expressionists. Made up of two pioneering groups – Die Brücke (The Bridge) and Der Blaue Reiter (The Blue Rider) – these young artists painted raw emotions on canvas with a new intensity. Die Brücke was formed by a group of self-taught artists. Rebelling against conservative society, they lived and worked together in the bohemian corners of Dresden and other cities, before moving to Berlin, Germany’s rapidly modernising capital. For them, colour became…","summary":"Fifty German Expressionist works."},{"title":"Asian Bronze","raw":"From Shiva and the Buddha to wine casks and weapons. Everything about bronze triggers your senses. For centuries, this material has played a central role in the traditions of Asia. Now you too can experience the beauty of bronze art at last.","summary":"Four thousand years of Asian bronze."},{"title":"Hockney and Piero: A Longer Look","raw":"David Hockney, in his own words, has always been a looker. Throughout his career, Hockney has found inspiration in the work of other artists. He never tires of looking at paintings. For him, there’s magic in it every time, whether that’s enjoying a picture in a gallery or a much-loved poster at home. This very personal show brings together two Hockney paintings, one showing his mother and father and the other depicting his friend, curator Henry Geldzahler. They are displayed with the thread that ties them together, Piero della Francesca’s ‘The Baptism of Christ’. ‘My Parents’ and ‘Looking at…","summary":"Hockney against Piero della Francesca."},{"title":"At Home in the 17th Century","raw":"What was life really like in the 17th century? That’s the museum’s most-asked question. Now, the time has come to find out. At Home in the 17th Century offers an up-close experience of daily life 400 years ago. Immerse yourself in a full day of the 17th century as you walk among the nine diorama-style displays that make up this exhibition — packed with personal stories and unique objects.","summary":"Domestic life with Rembrandt, Hals, Vermeer."},{"title":"José María Velasco","raw":"See the first UK exhibition of Mexico’s much-loved artist, José María Velasco. Velasco, working in Mexico in the 19th century, was a man of many interests. He was fascinated by advances in geology, the archaeology of his home country, the study of local flora, and the increasing presence of industrialisation. He painted the sweeping landscapes of the Valley of Mexico, the home of modern-day Mexico City, with exquisite detail. His impressive panoramic views of the valley reveal allusions to Mexico's historic past and its rapidly modernising present. Velasco was keenly aware of his country’s…","summary":"Mexico's landscape painter."},{"title":"Carel Visser in the Rijksmuseum Gardens","raw":"This summer, the Rijksmuseum Gardens are home to the work of Carel Visser, the most influential Dutch sculptor of the twentieth century. Visser's sculptures, some as tall as eight metres or as long as five metres, come from museums, private collections and public spaces. Now they are brought together for the very first time. Carel Visser (1928–2015) had little affinity with traditional sculptors' materials such as marble, stone or wood. Iron was his great love. With a cutting torch and welding equipment, he shaped his sculptures from steel plates and beams. Stacking, repetition and symmetry…","summary":"Most influential Dutch sculptor of the twentieth century."},{"title":"Millet: Life on the Land","raw":"The sower, the woodcutter, a shepherd girl. These are the subjects that made French artist Jean-Francois Millet famous. Marking the 150th anniversary of his death, this is an opportunity to see some of Millet’s best-loved paintings and drawings. Born into a farming family in Normandy, Millet moved to the village of Barbizon in 1849 where he put the people who spent their life working on the land, often the poorest of the poor in 19th-century France, at the heart of his work. He knew these people and his realistic, unsentimental approach to painting them was completely new. See his iconic…","summary":"The subjects that made Millet famous."},{"title":"Crossings","raw":"Discover how colonial and contemporary perspectives converge in photographs from the Indian subcontinent. Past meets present in the Crossings exhibition.","summary":"Photography from the Indian subcontinent."}];
 // ===== END SHARED =====
 
-// ── ADD BY LINK (docs/picked_shows.md) ──────────────────────────────────────
+// ── ADD BY LINK (docs/add_by_link.md) ──────────────────────────────────────
 // Each pasted show link is read once and becomes an ordinary pro forma row for the
 // SAME intake as a sweep file; nothing here writes the ledger. Code reads the title
 // and dates (the FIRST date line under the show's heading — show pages carry other
@@ -788,7 +788,7 @@ function decodeEntities(t){
   });
 }
 
-// A venue's own link options (its MUSEUMS entry's `linkRead`). Cases: docs/picked_shows.md,
+// A venue's own link options (its MUSEUMS entry's `linkRead`). Cases: docs/add_by_link.md,
 // "Venue link rules".
 function linkOptions(vc){ return (vc&&MU[vc]&&MU[vc].linkRead)||(vc&&OWN_CHIP[vc]&&OWN_CHIP[vc].linkRead)||(vc&&OCC_LINK_READ[vc])||null; }
 function joinTitle(name,sub,dashAfterColon){
@@ -797,7 +797,7 @@ function joinTitle(name,sub,dashAfterColon){
 }
 
 // One page → {ok, base, between, start, end, raw, site, link} or {ok:false, why}.
-// Rules and the cases they came from: docs/picked_shows.md, "The general reader".
+// Rules and the cases they came from: docs/add_by_link.md, "The general reader".
 function readShowPage(res,url,vc){
   const lr=linkOptions(vc);
   const text=String(oneText(res)||"");
@@ -1037,7 +1037,7 @@ async function writePendingLinks(text){
 
 // ── FINDING A NEW VENUE'S SHOP SECTION — once per venue, then kept ─────────
 // Wanted: the shop's exhibition-catalogues section, else books / publications; never
-// the front page, one book or a post (her decision; docs/picked_shows.md). Each step
+// the front page, one book or a post (her decision; docs/add_by_link.md). Each step
 // runs only if the one before found nothing: 1. one search call, two queries, every
 // result ranked in code; 2. a Shopify shop's collections.json; 3. the shop's menu.
 // The pick is opened and must read as books with prices. "Look again" skips only the
@@ -5293,7 +5293,7 @@ export default function App(){
           ))}
         </div>}
       </div>
-      {/* The import pop-up (her design; docs/picked_shows.md): CSV and Links, and a small
+      {/* The import pop-up (her design; docs/add_by_link.md): CSV and Links, and a small
           Cancel. Under the review (1100) so cards open on top; under the confirm box (1200). */}
       {importMode&&(
         <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",justifyContent:"center",padding:16}}>
