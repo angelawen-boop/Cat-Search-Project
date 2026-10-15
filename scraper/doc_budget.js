@@ -26,6 +26,7 @@ const BUDGETS = {
   'docs/venues.md': 300,
   'docs/import_csv.md': 100,
   'docs/sweep_operation.md': 200,
+  'docs/cloud_storage.md': 50,
   'docs/compression.md': 130,
   'docs/library.md': 110,
   'docs/add_by_link.md': 200,
