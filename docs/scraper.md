@@ -357,8 +357,7 @@ is what headed exists to run.
 
 Also:
 
-- **Her count first; the sweep must return it.** Her counts caught two errors the
-  output could not show.
+- **Why her count comes first (steps 1 and 6):** it caught two errors the output could not show.
 - **Two rounds of fix-and-sweep per venue, then stop and ask** — after checking
   the limit is real (KHM "published two links" because it lazy-loads).
 - Diagnose one VENUE at a time: getting data → the right data → recorded right.
