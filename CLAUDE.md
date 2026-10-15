@@ -215,7 +215,7 @@ Faults found are fixed in code (§2.2.2).
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 
-#### 2.2.7 "Probably not for you" — her design, agreed; not built
+#### 2.2.7 "Probably not for you" — built on `main`, not published; her verification next
 
 New shows in topics she always quarantines are labelled and set aside on the import screen.
 - **Groups (start wide, narrow later):** collection rotations and acquisitions (not at the Met —
@@ -228,13 +228,13 @@ New shows in topics she always quarantines are labelled and set aside on the imp
 - **The app:** a section after Odd cases, before the rest, headed only by its title and count
   ("Probably not for you · 12") — no instruction sentence. Each card shows its label and comes
   pre-set to **Never add** (not Reject, which is not remembered); she clicks Add to keep one.
-- **Three parts, in order.** (1) **The labeller** — compression's part, above. (2) **Test it**
-  (the session tests; she does not): her 86 quarantined shows (test page store, `quarantine/rows`)
-  plus **about 40 kept shows** (watching, want-catalogue or acquired; spread across venues) — about
-  125 shows, **at most two model calls**, never her whole ledger. Report how many quarantined it
-  catches and every kept show it labels; narrow a group only if she says. (3) **The app part** —
-  on import, read "Topic: …" from a new show's notes, put those cards in the section, pre-set
-  Never add, show the label.
+- **Built:** the labeller (Prompt D, `TOPICS` in `scraper/compress.js`, TP-001–010); the app
+  part (`topicOf`, `isTopicCard`, `topicPresets`; TP-A1–A8, AD-009). Odd cases stay odd; a show
+  already in the ledger is never set aside. Not published; `APP_VERSION` moves with the publish.
+- **Tested on her decisions** (`node scraper/topic_eval.js`; her 86 quarantined + 40 kept, two
+  calls): 65 of 86 caught (4 more are Met rotations, left out by her decision); 5 of 40 kept
+  labelled — four as contemporary (Flora Yukhnovich, Carroll Dunham, Harumi Klossowska de Rola,
+  TransLucent), one as series (Capodimonte's L'Ospite). Narrow a group only if she says.
 - **Her verification in the app:** a rehearsal file of ~15 quarantined and ~10 kept real shows, each web
   address carrying a test marker so they read as new; she checks the section, its pre-set Never
   add, the labels in the notes and that kept shows are absent — then Cancel import. The real test
