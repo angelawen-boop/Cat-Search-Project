@@ -205,8 +205,7 @@ Tates) were fixed from her saves the same day; Louvre refused 3 pages.
 **15 Oct — container re-run passed her test** (pushed, reported, the five fixes held); her home
 sweep (met, artic, mad only — she checks the headed four by eye and sweeps them only for new shows)
 QC'd. Stitched and compressed as swept (`stitch_20261015_0920`, 536 rows) and **imported**.
-Faults found are fixed in code (§2.2.2). **Open: Tate Britain's Whistler** (closed 27 Sep) was on
-the listing's unread page 2 — her choice: add by link, or let the next sweep bring it.
+Faults found are fixed in code (§2.2.2).
 
 #### 2.2.5 Queued next
 
