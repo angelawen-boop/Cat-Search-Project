@@ -28,6 +28,7 @@ const BUDGETS = {
   'docs/library.md': 110,
   'docs/venue_urls.md': 90,
   'docs/picked_shows.md': 200,
+  'docs/catalogue_versions.md': 150,
   'docs/import-file.md': 80,
   'docs/review-2026-09-12.md': 70,
   'docs/review-log.md': 60,
