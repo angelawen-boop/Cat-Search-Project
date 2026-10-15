@@ -16,8 +16,7 @@ whether everything run passed.**
 
 The suite list, and which half each belongs to, is `scraper/run_tests.js`,
 never retyped here; a suite only a branch has goes in that branch's
-`scraper/fixtures/branch_tests.txt` and runs with the app half
-(`claude/ledger-cloud`: `cloud_ledger.js`, `cloud_app.js`, `cloud_two_copies.js`).
+`scraper/fixtures/branch_tests.txt` and runs with the app half (none today).
 Each fixture file opens with what it proves; case IDs (AL-, C-, R-, KP-…) are
 found by grep. Per-venue `*_pages.js` run a recipe on saved pages, no network,
 against her counts, dates, titles and descriptions. `page_loads.js` asks whether the

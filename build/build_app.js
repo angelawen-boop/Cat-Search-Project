@@ -126,13 +126,16 @@ const js = fs.readFileSync(built, 'utf8').replace(/\n*$/, '\n') + MOUNT + '\n';
 try { new Function(js); } catch (e) { die('the stitched page does not parse — ' + e.message); }
 if (!/function App\(/.test(js)) die('the built page has no App component in it');
 
-// Only the cloud test page is published (her decision), built from its branch, under its
-// own title. Built anywhere else, the page is not for publishing and the steps say so.
+// Built on main, the page is her app; built on the cloud test branch, the test page
+// under its own title (her decision when the cloud ledger merged). Anywhere else the
+// page is not for publishing and the steps say so.
+const HER_APP = 'https://claude.ai/artifact/E2WjpRgr4W5eSzYtxyfrt5';
 const TEST_PAGE = 'https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf';
 const TEST_BRANCH = 'claude/ledger-cloud';
 let branch = '';
 try { branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: ROOT }).toString().trim(); } catch { /* not a checkout */ }
 const forTest = branch === TEST_BRANCH;
+const target = branch === 'main' ? HER_APP : forTest ? TEST_PAGE : null;
 let head = fs.readFileSync(HEAD, 'utf8');
 if (forTest) head = head.replace('<title>Cat Watch</title>', '<title>Cat Watch Cloud Test</title>');
 
@@ -142,24 +145,21 @@ fs.writeFileSync(OUT, head + js + fs.readFileSync(TAIL, 'utf8'));
 const kb = (fs.statSync(OUT).size / 1024).toFixed(0);
 console.log('built ' + path.relative(ROOT, OUT) + ' — ' + kb + ' KB, parses, App present.');
 console.log('');
-if (!forTest) {
-  console.log('NOT FOR PUBLISHING: built on "' + (branch || '?') + '". Only the cloud test page is published,');
-  console.log('from ' + TEST_BRANCH + '. To publish: bump APP_VERSION on main, commit and push; then');
-  console.log('  git checkout ' + TEST_BRANCH + ' && git merge main && npm run test:app && node build/build_app.js');
-  console.log('and follow the steps it prints.');
+if (!target) {
+  console.log('NOT FOR PUBLISHING: built on "' + (branch || '?') + '". Her app is published from main.');
   process.exit(0);
 }
-console.log('FOR THE CLOUD TEST PAGE — title set to "Cat Watch Cloud Test". Publishing is not');
+console.log((forTest ? 'FOR THE CLOUD TEST PAGE — title set to "Cat Watch Cloud Test".' : 'FOR HER APP.') + ' Publishing is not');
 console.log('automatable: the service refuses a session that has not viewed the live page. In order:');
 console.log('');
-console.log('  1. Artifact action:"publish" url:"' + TEST_PAGE + '" file_path:"build/dist/index.html"');
+console.log('  1. Artifact action:"publish" url:"' + target + '" file_path:"build/dist/index.html"');
 console.log('     No `capabilities` (omitting carries all four forward). No read first: it does not');
 console.log('     count as viewing the page. Already published this session? It goes through; skip to 4.');
 console.log('  2. Refused as not viewed: expected. The refusal lists the live page\'s differences, and');
 console.log('     that counts as viewing it. Check every "+" line is only the old side of your own change.');
 console.log('  3. Send the same file again. Refused as "identical content ... resent unchanged":');
 console.log('     expected. Send it once more and it goes through.');
-console.log('  4. Push ' + TEST_BRANCH + '. Never page the saved file. If anything else happens, update these lines.');
+console.log('  4. Push ' + branch + '. Never page the saved file. If anything else happens, update these lines.');
 console.log('');
 console.log('  NEVER REPUBLISH WHILE SHE HAS THE PAGE OPEN (CLAUDE.md §1). Ask first.');
 console.log('  Run `npm run test:app` before publishing: page_renders.js is the only check that');

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "45.1";
+const APP_VERSION = "46";
 const APP_VERSION_DATE = "15 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -2184,9 +2184,6 @@ async function cloudSessionClaim(db,now){
 async function rawStore(){
   try{ return (typeof window!=="undefined"&&window.claude&&window.claude.use)?await window.claude.use("db"):null; }catch{ return null; }
 }
-// The branch's version series: main's number, then the cloud count — kept here so the
-// APP_VERSION line never clashes in a merge.
-const CLOUD_COUNT = "cloud 5";
 // ── END OF THE CLOUD LEDGER ──────────────────────────────────────────────────
 
 const today=()=>new Date().toISOString().slice(0,10);
@@ -6198,7 +6195,7 @@ export default function App(){
       {/* The version, small and grey: something she checks, not acts on. Reads
           APP_VERSION, so there is one copy of the number. */}
       <footer style={{maxWidth:760,margin:"28px auto 0",fontSize:10.5,color:C.soft,textAlign:"center"}}>
-        Cat Watch {"·"} version {APP_VERSION} {"·"} {CLOUD_COUNT} {"·"} {APP_VERSION_DATE}
+        Cat Watch {"·"} version {APP_VERSION} {"·"} {APP_VERSION_DATE}
       </footer>
     </div>
   );

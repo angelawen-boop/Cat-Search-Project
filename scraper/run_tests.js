@@ -14,7 +14,7 @@
 // A suite only one branch has goes in scraper/fixtures/branch_tests.txt on that
 // branch (one command per line) — never in this list. Main never touches that
 // file, so merging main into a branch never clashes over the test list. Those
-// suites run with the app half (today they are the cloud ledger's).
+// suites run with the app half (today there are none).
 
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -35,6 +35,10 @@ const SUITES = [
   [APP,     'node scraper/fixtures/catalogue_route.js'],
   [APP,     'node scraper/fixtures/recheck_shop.js'],
   [APP,     'node scraper/fixtures/lookup_log.js'],
+  [APP,     'node scraper/fixtures/cloud_ledger.js'],
+  [APP,     'node scraper/fixtures/cloud_app.js'],
+  [APP,     'node scraper/fixtures/cloud_two_copies.js'],
+  [APP,     'node scraper/fixtures/cloud_empty_import.js'],
   [SCRAPER, 'node scraper/fixtures/summary_pages.js'],
   [SCRAPER, 'node scraper/fixtures/orsay_pages.js'],
   [SCRAPER, 'node scraper/fixtures/pacing_pages.js'],
