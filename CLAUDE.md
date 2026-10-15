@@ -266,7 +266,7 @@ monitor. **Blocks are not permanent facts** — venues have gone down and come
 back within days.
 
 **The original venues were reviewed by her against the live site and re-swept**
-— `docs/review-2026-09-12.md`. Read it before touching a venue listed
+— `docs/scraper-verification-2026-09-12.md`. Read it before touching a venue listed
 there. The nine venues added since were checked against her counts at intake.
 
 No row carries a credit line, star rating, ticket price, funder list, opening
@@ -1058,7 +1058,7 @@ price, her decision).
 | `docs/add_by_link.md` | Add by link — design, decisions, store, shelf rule, first test | Changing Add by link |
 | `docs/catalogue_versions.md` | The catalogue-versions redesign and its agreed cases | Changing the catalogue lookup's design |
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
-| `docs/review-2026-09-12.md` | Her venue-by-venue review | Before touching a reviewed venue |
+| `docs/scraper-verification-2026-09-12.md` | Her venue-by-venue review | Before touching a reviewed venue |
 | `docs/code-review.md` | Every code review of the project, this one and all future ones: each finding and what was decided (fixed, rejected, deferred) | A reviewer raises something, or after any new code review |
 | `docs/store_backup_2026-09-21/` | A read-out of the page's store, as insurance | Only if the store is lost AND `sweep_log.js` cannot rebuild it |
 | `scraper/compress_prompt.md` | Compression prompts and tuning | Changing summary wording |

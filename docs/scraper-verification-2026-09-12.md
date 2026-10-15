@@ -1,4 +1,4 @@
-# Her review of the original venues — 12 Sep 2026
+# Scraper verification — her review of the original venues, 12 Sep 2026
 
 She checked the scraper's output against the live sites herself. **Her
 findings, not a session's guesses. Do not ask her to re-review a venue here.**

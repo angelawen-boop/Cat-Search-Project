@@ -29,7 +29,7 @@ const BUDGETS = {
   'docs/add_by_link.md': 200,
   'docs/catalogue_versions.md': 150,
   'docs/import-repair-320.md': 80,
-  'docs/review-2026-09-12.md': 70,
+  'docs/scraper-verification-2026-09-12.md': 70,
   'docs/code-review.md': 60,
   'docs/morgan_pages/README.md': 80,
 };
