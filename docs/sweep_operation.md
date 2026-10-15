@@ -188,3 +188,9 @@ the routine runs it on its own run; she starts a session for her home run.
 **The routine has the repo attached** (her setting) — without it the
 session clones read-only and cannot push. It sweeps only the container's 21;
 its report never names a home venue (her decision).
+**The report's Changes are grouped by kind, not by venue (her decision)** so she
+sees at a glance what kind of trouble a run has: your fixes/decisions reflected,
+missing shows, changed titles, changed links, new dates, changed dates,
+description problems, new shows, others. `sweep_diff.js` (`groupChanges`) does
+the grouping; the same report for container and home runs; unchanged venues
+are not named.

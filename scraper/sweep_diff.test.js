@@ -116,3 +116,52 @@ test('SD-012: a description that shrank to junk is WORSE TEXT, a fault (National
 test('SD-013: a restaurant line in a description is flagged (Tate Modern 5 Oct)', () => {
   assert.ok(D.junkIn('…photography as a medium. Experience the exhibition then enjoy two courses from our set menu.').includes('restaurant or visiting line'));
 });
+
+test('SD-014: changes are grouped in her order — decisions, missing, titles, links, new dates, changed dates, descriptions, new shows, others', () => {
+  const v = D.diffVenue('v',
+    [row({ title:'Kept', url:'https://t/k', start_date:'2026-01-01', end_date:'2026-12-01' }),
+     row({ title:'Head and Shoulders', url:'https://t/h', start_date:'2025-11-11' }),
+     row({ title:'Munch', url:'https://t/m', start_date:'2027-11-11', end_date:'2028-04-16' }),
+     row({ title:'Brand New', url:'https://t/n', start_date:'2026-10-01', end_date:'2027-01-01' }),
+     row({ title:'Short', url:'https://t/s', summary:'' })],
+    prev([row({ title:'Old Name', url:'https://t/k', start_date:'2026-01-01', end_date:'2026-12-01' }),
+          row({ title:'Head and Shoulders', url:'https://t/h' }),
+          row({ title:'Munch', url:'https://t/m', start_date:'2027-11-11', end_date:'2028-04-23' }),
+          row({ title:'A Display', url:'https://t/d', end_date:'2027-01-01' }),
+          row({ title:'Whistler', url:'https://t/w', end_date:'2027-01-01' }),
+          row({ title:'Short', url:'https://t/s', summary:'' })]),
+    log({ v: [{ reason:'a display (her ruling)', title:'A Display' }] }), '2026-10-15');
+  const g = D.groupChanges({ venues: [v] });
+  assert.deepStrictEqual(g.map(x => x.n), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  const where = t => g.filter(x => x.lines.some(l => l.includes(t))).map(x => x.n);
+  assert.deepStrictEqual(where('A Display'), [1]);
+  assert.deepStrictEqual(where('Whistler'), [2]);
+  assert.deepStrictEqual(where('Old Name'), [3]);
+  assert.deepStrictEqual(where('Head and Shoulders'), [5]);
+  assert.deepStrictEqual(where('Munch'), [6]);
+  assert.deepStrictEqual(where('"Short"'), [7]);
+  assert.deepStrictEqual(where('Brand New'), [8]);
+});
+
+test('SD-015: a moved show with the same name and overlapping dates expects a Change card for the link, not a New card (National Gallery 15 Oct)', () => {
+  const same = D.diffVenue('v',
+    [row({ title:'Monet and Renoir', url:'https://n/past/mr', start_date:'2026-03-01', end_date:'2026-09-01' })],
+    prev([row({ title:'Monet and Renoir', url:'https://n/mr', start_date:'2026-03-01', end_date:'2026-09-01' })]), log());
+  assert.strictEqual(same.moved[0].card, 'change');
+  const g = D.groupChanges({ venues: [same] });
+  assert.ok(g[3].lines.some(l => /Change card for the link/.test(l)));
+  const renamed = D.diffVenue('v',
+    [row({ title:'Fiep Westendorp: Illustrator', url:'https://r/past/fiep', start_date:'2026-03-01', end_date:'2026-09-01' })],
+    prev([row({ title:'Fiep Westendorp', url:'https://r/fiep', start_date:'2026-03-01', end_date:'2026-09-01' })]), log());
+  assert.strictEqual(renamed.moved[0].card, 'new');
+});
+
+test('SD-016: a show at two addresses losing one is ADDRESS LEFT under Others, never UNEXPLAINED (Brera 15 Oct)', () => {
+  const out = D.diffVenue('v',
+    [row({ title:'Giovanni Agostino da Lodi', url:'https://b/traveling' })],
+    prev([row({ title:'Giovanni Agostino da Lodi', url:'https://b/itinerant' }), row({ title:'Giovanni Agostino da Lodi', url:'https://b/traveling' })]), log());
+  assert.strictEqual(out.gone.length, 0);
+  assert.strictEqual(out.addressLeft.length, 1);
+  assert.strictEqual(out.addressLeft[0].stays, 'https://b/traveling');
+  assert.ok(D.groupChanges({ venues: [out] })[8].lines.some(l => l.includes('ADDRESS LEFT')));
+});

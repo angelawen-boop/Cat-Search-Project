@@ -121,7 +121,7 @@ function diffVenue(venue, nowRows, prev, log, runDate = '') {
   const markers = nowRows.filter(isMarker);
   const out = { venue, now: now.length, prevRun: prev && prev.run, prev: null,
     gone: [], added: [], moved: [], renamed: [], redated: [], lostSummary: [], noSummary: [],
-    keptNoEnd: [], sameName: [], junk: [], emptiedPages: [], ruleStopped: [], worseText: [] };
+    keptNoEnd: [], sameName: [], junk: [], emptiedPages: [], ruleStopped: [], worseText: [], addressLeft: [] };
 
   for (const r of now) {
     if (!s(r.summary)) out.noSummary.push({ title: r.title, url: r.url, why: pageFailure(r.notes) });
@@ -166,9 +166,13 @@ function diffVenue(venue, nowRows, prev, log, runDate = '') {
     }
     const ex = excl.find(e => sameName(e.title, p.title));
     const mv = newOnes.find(r => !pairedNew.has(r) && sameName(r.title, p.title));
+    // The show is still in at an address it already had: one of its two addresses left (Brera 15 Oct).
+    const twin = now.find(r => byUrlPrev.has(s(r.url)) && squash(r.title) === squash(p.title));
     let cause, proven = true;
     if (ex) cause = `excluded this run — "${ex.reason}" (log)`;
-    else if (mv) { pairedNew.add(mv); out.moved.push({ title: mv.title, from: p.url, to: mv.url, prevTitle: p.title }); continue; }
+    else if (mv) { pairedNew.add(mv); out.moved.push({ title: mv.title, from: p.url, to: mv.url, prevTitle: p.title,
+      card: linkCardFor(p, mv) }); continue; }
+    else if (twin) { out.addressLeft.push({ title: p.title, url: p.url, stays: twin.url }); continue; }
     else if (s(p.end_date) && runDate && s(p.end_date) < runDate && !venueReadsPast) cause = `closed ${p.end_date}; this venue's recipe reads no past listing, so a closed show leaves`;
     else { cause = 'UNEXPLAINED'; proven = false; }
     out.gone.push({ title: p.title, url: p.url, start: p.start_date, end: p.end_date, cause, proven });
@@ -199,6 +203,18 @@ function diffVenue(venue, nowRows, prev, log, runDate = '') {
   return out;
 }
 
+/**
+ * Which card a moved show should bring: the app pairs a row with the same name and
+ * overlapping dates (sameExhibition in Cat_Watch.jsx) and offers its new link as a
+ * Change. Judged against the last run's row — her ledger is not read here.
+ */
+function linkCardFor(p, n) {
+  if (squash(p.title) !== squash(n.title)) return 'new';
+  const full = r => s(r.start_date) && s(r.end_date);
+  if (full(p) && full(n)) return s(p.start_date) <= s(n.end_date) && s(n.start_date) <= s(p.end_date) ? 'change' : 'new';
+  return full(p) || full(n) ? 'change' : 'new';
+}
+
 /** "run_2026-10-05_015417" → "2026-10-05". */
 function runDateOf(name) { const m = String(name).match(/(\d{4}-\d{2}-\d{2})/); return m ? m[1] : ''; }
 
@@ -220,33 +236,63 @@ function withLog(prev) {
   return prev;
 }
 
+/** "2025-11-11 → ?" → ['2025-11-11', '']. */
+const datePair = t => String(t).split(' → ').map(x => (x === '?' ? '' : x));
+
+/**
+ * Every change, sorted into the report's nine groups (her order, docs/sweep_operation.md).
+ * Each line starts with its venue and keeps its tag (GONE, TITLE…) for the QC step.
+ */
+function groupChanges(res) {
+  const G = [
+    [1, 'YOUR FIXES / DECISIONS NOW REFLECTED'], [2, 'MISSING SHOWS'], [3, 'CHANGED TITLES'],
+    [4, 'CHANGED LINKS'], [5, 'NEW DATES'], [6, 'CHANGED DATES'], [7, 'DESCRIPTION PROBLEMS'],
+    [8, 'NEW SHOWS'], [9, 'OTHERS'],
+  ].map(([n, heading]) => ({ n, heading, lines: [] }));
+  const put = (n, v, text) => G[n - 1].lines.push(`  ${v.venue.padEnd(13)} ${text}`);
+  for (const v of res.venues) {
+    for (const g of v.gone) put(/excluded this run/.test(g.cause) ? 1 : 2, v,
+      `GONE      "${g.title}" (${g.start || '?'} → ${g.end || '?'}) — ${g.cause}\n                ${g.url}`);
+    for (const e of v.emptiedPages) put(2, v, typeof e.linksSeen === 'string' && e.linksSeen.startsWith('none')
+      ? `EMPTY PAGE "${e.ctx}" brought rows last run; this run ${e.linksSeen.replace('none — ', '')} (log) — a refusal, not an empty page`
+      : `EMPTY PAGE "${e.ctx}" brought rows last run, a marker now; links seen this run: ${e.linksSeen}. Either the venue has nothing there now or the page changed — one look at the page settles it.`);
+    for (const r of v.renamed) put(3, v, `TITLE     "${r.from}" → "${r.to}"${r.onlyCase ? ' (capitals only)' : ''} — a Change card in the app`);
+    for (const m of v.moved) put(4, v, `MOVED     "${m.prevTitle}"${m.prevTitle !== m.title ? ` → "${m.title}"` : ''} — new address; ${m.card === 'change'
+      ? 'expect a Change card for the link (same name, dates overlap)'
+      : 'expect a NEW card (the name or dates no longer pair it)'}\n                ${m.from}\n             -> ${m.to}`);
+    for (const d of v.redated) {
+      const [a, b] = [datePair(d.from), datePair(d.to)];
+      const onlyFilled = [0, 1].every(i => !a[i] || a[i] === b[i]) && [0, 1].some(i => !a[i] && b[i]);
+      put(onlyFilled ? 5 : 6, v, `DATES     "${d.title}" ${d.from}  ⇒  ${d.to}`);
+    }
+    for (const w of v.worseText) put(7, v, `WORSE TEXT "${w.title}" — description ${w.from} → ${w.to} characters${w.turned.length ? '; now reads as ' + w.turned.join(', ') : ''}. A fault: last run had better text`);
+    for (const l of v.lostSummary) put(7, v, `LOST TEXT "${l.title}" — ${l.why ? 'its page: ' + l.why + ' (note)' : 'UNEXPLAINED: the note gives no page failure'}`);
+    for (const n of v.noSummary) if (!v.lostSummary.some(l => l.url === n.url)) put(7, v, `NO TEXT   "${n.title}" — ${n.why ? 'its page: ' + n.why + ' (note)' : 'never had a description'}`);
+    for (const j of v.junk) put(7, v, `JUNK?     "${j.title}" — ${j.kinds.join(', ')}: "${j.text}${j.text.length >= 160 ? '…' : ''}"`);
+    for (const a of v.added) put(8, v, `NEW       "${a.title}" (${a.start || '?'} → ${a.end || '?'}) — ${a.note}`);
+    for (const x of v.ruleStopped) put(8, v, `RULE STOPPED "${x.title}" — EXCLUDED last run ("${x.reason}", log), let through now: the rule stopped firing. A fault.`);
+    for (const x of v.addressLeft) put(9, v, `ADDRESS LEFT "${x.title}" — last run had it at two addresses; one left, the show is still in\n                gone: ${x.url}\n                stays: ${x.stays}`);
+    for (const k of v.keptNoEnd) put(9, v, `KEPT BY RULE "${k.title}" opened ${k.start}, no closing date — kept and flagged under the lookback rule (docs/import_csv.md), not junk`);
+    for (const d of v.sameName) put(9, v, `SAME NAME "${d.title}" at two addresses — kept by design (no de-duplication); the app shows both\n                ${d.urls.join('\n                ')}`);
+  }
+  return G;
+}
+
 function report(res, say = console.log) {
   if (res.error) { say(res.error); return; }
   const all = res.venues;
   const unexplained = all.flatMap(v => v.gone.filter(g => !g.proven).map(g => ({ v: v.venue, ...g })));
   const stopped = all.flatMap(v => v.ruleStopped.map(x => ({ v: v.venue, ...x })));
   say(`\nCHANGES SINCE EACH VENUE'S LAST RUN — ${res.run}`);
-  say(`Matched by address. A cause marked (log) or (note) is read from the run itself; UNEXPLAINED needs a session.\n`);
-  for (const v of all) {
-    const head = v.prevRun ? `${v.prev} → ${v.now} rows (last: ${v.prevRun})` : `${v.now} rows (first run with rows)`;
-    const lines = [];
-    for (const g of v.gone) lines.push(`  GONE      "${g.title}" (${g.start || '?'} → ${g.end || '?'}) — ${g.cause}\n            ${g.url}`);
-    for (const m of v.moved) lines.push(`  MOVED     "${m.prevTitle}"${m.prevTitle !== m.title ? ` → "${m.title}"` : ''} — new address; the app will see a NEW row\n            ${m.from}\n         -> ${m.to}`);
-    for (const x of v.ruleStopped) lines.push(`  RULE STOPPED "${x.title}" — EXCLUDED last run ("${x.reason}", log), let through now: the rule stopped firing. A fault.`);
-    for (const a of v.added) lines.push(`  NEW       "${a.title}" (${a.start || '?'} → ${a.end || '?'}) — ${a.note}`);
-    for (const r of v.renamed) lines.push(`  TITLE     "${r.from}" → "${r.to}"${r.onlyCase ? ' (capitals only)' : ''} — a Change card in the app`);
-    for (const d of v.redated) lines.push(`  DATES     "${d.title}" ${d.from}  ⇒  ${d.to}`);
-    for (const w of v.worseText) lines.push(`  WORSE TEXT "${w.title}" — description ${w.from} → ${w.to} characters${w.turned.length ? '; now reads as ' + w.turned.join(', ') : ''}. A fault: last run had better text`);
-    for (const l of v.lostSummary) lines.push(`  LOST TEXT "${l.title}" — ${l.why ? 'its page: ' + l.why + ' (note)' : 'UNEXPLAINED: the note gives no page failure'}`);
-    for (const n of v.noSummary) if (!v.lostSummary.some(l => l.url === n.url)) lines.push(`  NO TEXT   "${n.title}" — ${n.why ? 'its page: ' + n.why + ' (note)' : 'never had a description'}`);
-    for (const e of v.emptiedPages) lines.push(typeof e.linksSeen === 'string' && e.linksSeen.startsWith('none')
-      ? `  EMPTY PAGE "${e.ctx}" brought rows last run; this run ${e.linksSeen.replace('none — ', '')} (log) — a refusal, not an empty page`
-      : `  EMPTY PAGE "${e.ctx}" brought rows last run, a marker now; links seen this run: ${e.linksSeen}. Either the venue has nothing there now or the page changed — one look at the page settles it.`);
-    for (const k of v.keptNoEnd) lines.push(`  KEPT BY RULE "${k.title}" opened ${k.start}, no closing date — kept and flagged under the lookback rule (docs/import_csv.md), not junk`);
-    for (const d of v.sameName) lines.push(`  SAME NAME "${d.title}" at two addresses — kept by design (no de-duplication); the app shows both\n            ${d.urls.join('\n            ')}`);
-    for (const j of v.junk) lines.push(`  JUNK?     "${j.title}" — ${j.kinds.join(', ')}: "${j.text}${j.text.length >= 160 ? '…' : ''}"`);
-    say(`${v.venue.padEnd(14)} ${head}${lines.length ? '' : ' — nothing changed'}`);
-    for (const l of lines) say(l);
+  say(`Matched by address. A cause marked (log) or (note) is read from the run itself; UNEXPLAINED needs a session.`);
+  const changed = all.filter(v => v.prevRun && v.prev !== v.now).map(v => `${v.venue} ${v.prev} → ${v.now}`);
+  const fresh = all.filter(v => !v.prevRun).map(v => `${v.venue} ${v.now} (first run with rows)`);
+  say(`Row counts that moved: ${[...changed, ...fresh].join(', ') || 'none'}.\n`);
+  for (const g of groupChanges(res)) {
+    if (!g.lines.length) continue;
+    say(`${g.n}. ${g.heading}`);
+    for (const l of g.lines) say(l);
+    say('');
   }
   if (stopped.length) say(`\nRULE STOPPED FIRING — ${stopped.length} row(s) a ruling excluded last run are back. A fault at each venue:\n`
     + [...new Set(stopped.map(x => x.v))].map(v => `  ${v.padEnd(14)} ${stopped.filter(x => x.v === v).length} row(s)`).join('\n'));
@@ -255,7 +301,7 @@ function report(res, say = console.log) {
     : '\nUNEXPLAINED — none: every row that left has a cause from the run itself.');
 }
 
-module.exports = { diffRun, diffVenue, readLogs, junkIn, sameName, pageFailure, report };
+module.exports = { diffRun, diffVenue, readLogs, junkIn, sameName, pageFailure, groupChanges, report };
 
 if (require.main === module) {
   const dir = process.argv[2];

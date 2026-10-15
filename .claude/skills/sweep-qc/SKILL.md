@@ -25,7 +25,8 @@ settle something, name the one page that would; she saves it.
    comparison done for you, by address, with the cause read from the run's
    own log and notes. **Its causes are facts — repeat them, never re-guess
    them.** A row it marks `excluded … (log)` was dropped by her decision; a
-   `MOVED` row is the same show at a new address; `KEPT BY RULE` is the
+   `MOVED` row is the same show at a new address; `ADDRESS LEFT` is a show
+   the last run had at two addresses, still in at one; `KEPT BY RULE` is the
    lookback rule working; `SAME NAME` is the no-de-duplication rule working;
    `LOST TEXT … (note)` says why. None of these is junk or a fault.
    **`RULE STOPPED` is always a fault**: a row her decision excluded last run is
@@ -71,20 +72,28 @@ settle something, name the one page that would; she saves it.
 She works IN this session after reading it, so it must be ready to act on.
 
 - The run folder, and done / done with faults.
-- **Changes** — one line per venue that changed in ANY way QC lists (rows,
-  titles, dates, moves, lost text — not only the count): before → now, and
-  the cause in a few words. Venues QC says "nothing changed": one line
-  naming them.
+- **Changes** — grouped by kind (her decision), in QC's own numbered order,
+  each heading followed by short bullets: venue, before → now where the count
+  moved, what changed in a few words, and "(Fault N)" where it is one.
+  Skip a group with nothing in it; never name unchanged venues.
+  1. **Your fixes / decisions now reflected** — rows her decisions excluded,
+     and each fix this run was asked to confirm that held.
+  2. **Missing shows**
+  3. **Changed titles**
+  4. **Changed links** — say which card QC expects (a Change card for the
+     link, or a New card). Both come from the last run, not her ledger.
+  5. **New dates** — a blank date now filled.
+  6. **Changed dates**
+  7. **Description problems** — worse, lost or missing text, and junk.
+  8. **New shows**
+  9. **Others** — anything that fits none of the above (rows kept by rule,
+     refusals and their marker rows, a show losing one of two addresses).
 - **Faults** — numbered, each in this shape:
   - **What:** the rows, by title.
   - **Cause:** what you found — **proven** (say from what: log line, note,
     kept page) or **guess** (and the one page that would settle it).
   - **Fix:** the change you propose, and whether it is code, a recipe, or a
     re-sweep (a re-sweep is always hers to call).
-- **Expected, not faults** — your decisions taking effect, rows kept by rule,
-  refusals (marker rows), in one short list. Say which of them will reach her
-  as cards: a MOVED show arrives as a NEW card, a title change as a Change
-  card.
 - Last lines: "Say which faults to fix." then the next step: after the
   container run, "Next: your home sweep, then stitch and compress."; after a
   home run, "Next: stitch and compress, once the faults are fixed."
