@@ -1,8 +1,8 @@
 # Picked shows — "Add by link" in the app
 
 **Her design; signed off at 39.5.** Code: "ADD BY LINK" in `Cat_Watch.jsx`; test
-`scraper/fixtures/add_by_link.js` (AL-). Replaces the earlier scraper-side plan (in git), which survives only
-as the fallback below.
+`scraper/fixtures/add_by_link.js` (AL-). A scraper-side plan (the scraper reading one pasted page) was once considered and is
+redundant; the app handles unreadable links itself.
 
 ## The problem
 
@@ -168,8 +168,3 @@ Parallel (keyed connector only with her yes), save each reply as `{url,title,ful
 `node scraper/link_proof_check.js <folder>` (`--all` also fails on a listed page with no reply); exit 1 on any
 difference. Not in `npm test`. A difference is a reader change to sign off (update the list) or a site that
 changed.
-
-## Fallback — a link the app cannot read
-
-The scraper reads that one page (a small recipe on pages she saves; robots.txt first), output the ordinary
-CSV.
