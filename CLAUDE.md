@@ -1059,7 +1059,7 @@ price, her decision).
 | `docs/catalogue_versions.md` | The catalogue-versions redesign and its agreed cases | Changing the catalogue lookup's design |
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 | `docs/review-2026-09-12.md` | Her venue-by-venue review | Before touching a reviewed venue |
-| `docs/review-log.md` | Independent review findings and decisions | A reviewer raises something |
+| `docs/code-review.md` | Every code review of the project, this one and all future ones: each finding and what was decided (fixed, rejected, deferred) | A reviewer raises something, or after any new code review |
 | `docs/store_backup_2026-09-21/` | A read-out of the page's store, as insurance | Only if the store is lost AND `sweep_log.js` cannot rebuild it |
 | `scraper/compress_prompt.md` | Compression prompts and tuning | Changing summary wording |
 | `docs/Cat_Watch_Sweeper_Brief_v2.docx` | The original Chat-Claude brief | Rarely |

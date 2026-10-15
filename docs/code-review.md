@@ -1,6 +1,6 @@
-# Independent review log
+# Code reviews — findings and decisions
 
-**Read this when a reviewer raises a finding**, to check whether it was already
+**Every code review of this project, this one and all future ones, is logged here**, one section per review. **Read this when a reviewer raises a finding**, to check whether it was already
 decided. A **Reject** is not revisited without new evidence — point the reviewer
 at the row. A **Defer** must name its trigger. Findings are judged against the
 code, not the guide.
