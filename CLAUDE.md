@@ -235,6 +235,22 @@ New shows in topics she always quarantines are labelled and set aside on the imp
   add, the labels in the notes and that kept shows are absent — then Cancel import. The real test
   is her next monthly import. App publish rules apply (`docs/publishing.md`).
 
+#### 2.2.8 A shorter home sweep — her plan, agreed; not built (scraper session)
+
+**Home venues only (met, artic, mad); the container changes nothing.** Listings are still read in
+full back to 1 July 2024, so a missed or new show is still opened. A show's own page is re-read
+only if it is on, upcoming, or **closed within the 6 months before the sweep date** (it may gain
+its opening date, or move to a "past" address — a new address is a new row and is read anyway).
+Older closed shows are not re-opened; how their rows are carried is the session's design to agree
+with her. On the 15 Oct numbers: Met 108 → 41 pages, Art Institute 63 → 21, MAD 22 → 8; about
+30 minutes instead of an hour at the current pace. **Pacing stays at 30s.** If she wants it
+faster: a trial at 20s for met and mad only, outside the monthly routine (artic is Cloudflare —
+leave it).
+
+**Her monthly order:** container routine sweeps unsupervised → she reviews it with a session,
+fixes are discussed, and her home sweep runs meanwhile → stitch, compress, import **one file**
+(her decision: one import, not two).
+
 #### 2.2.6 Tests that fail under load
 
 **OPEN — RB-016 and RB-020** (robots wait, scraper) fail under load: run ten at
@@ -578,7 +594,5 @@ Ideas not yet built — none is open work, and none is proposed unless she raise
   saying "Couldn't work out the publisher's own website" (Somogy, Hubert Robert).
   It replaces her decision to keep `PUBLISHER_SITES` short and never fill it ahead
   (§4.2); how the list is built is to be agreed with her first.
-- **To discuss with her (raised 15 Oct):** a shorter home sweep even with only the headless
-  venues — less pacing, a shorter lookback than July 2024, other ideas.
 - **Library — purchase tracking and a Library tab** (`docs/library.md`): future consideration, never
   propose.
