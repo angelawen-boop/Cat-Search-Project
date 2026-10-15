@@ -7,7 +7,7 @@ it.** Code: "THE CLOUD LEDGER" in `Cat_Watch.jsx` on the branch. Screen spec:
 `docs/app.md` §9.
 
 **Versions** (the branch's own series: `main`'s number, then the cloud count):
-live on the test page **44.4 · cloud 5**. Cloud-only in it:
+live on the test page **45 · cloud 5**. Cloud-only in it:
 the read-only lock (below); Import on an empty page offers only "Open last
 cloud save" and Load, and Save asks before writing fewer exhibitions than the
 cloud holds (EI-001–007; `docs/app.md` §9); a roll-back's safety copy names the save by its
