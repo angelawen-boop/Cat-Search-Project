@@ -230,6 +230,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 | `docs/app.md` | The app's evidence: catalogue lookup, shop addresses, saving, intake bands, quarantine, sweep log, seed, the cloud ledger's screen | Changing anything in the app |
 | `docs/cloud_storage.md` | The cloud ledger trial: what the page's store holds, Save and the safety copies, the trial switch, the safety proofs, the read-only lock for a second copy | Changing anything about saving to the page's own store |
 | `docs/store_backup_2026-09-21/` | A read-out of the page's store, as insurance | Only if the store is lost AND `sweep_log.js` cannot rebuild it |
+| `docs/ledger_2026-09-24/` | Her real ledger as exported on 24 Sep, kept as test data for the cloud-store and scalability work — **never load it into her published app** | Testing saving or sizing against a real ledger |
 | `docs/scalability.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
 
 **Import 1: the scraper** — getting exhibitions from the venues into a CSV

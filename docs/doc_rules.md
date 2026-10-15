@@ -21,6 +21,10 @@ time. It once grew to 2,905 lines, mostly run-by-run stories. The rules:
   runs at the end of `npm test`). Over budget warns and never fails a
   test: the clean-up is a separate session, away from active work — never the
   session that tripped it, mid-task. Raising a budget is her call.
+- **The guide check** — `node scraper/guide_check.js` (runs at the end of `npm test`, warns, never
+  fails): every `docs/` path named anywhere exists, every `§` pointer lands on a real heading,
+  every side doc is in the §3 index, the guide's sections are present and in order. Run it after
+  moving, renaming or renumbering anything.
 - **The clean-up is the "Guide review" routine** — a fresh session on the 15th
   and 30th (28th in February — a second routine), 7:50am Sydney, push to her; it follows
   `.claude/skills/guide-review/SKILL.md` (fix what has one answer, ask her

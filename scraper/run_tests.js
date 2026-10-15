@@ -68,10 +68,10 @@ const branchSuites = fs.existsSync(branchFile)
   ? fs.readFileSync(branchFile, 'utf8').split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'))
   : [];
 
-// The doc budget warns and never fails; it runs last, on its own, so its
-// report is the final thing printed.
+// The doc budget and the guide check warn and never fail; they run last, on their
+// own, so their report is the final thing printed.
 const all = [...picked, ...(half === SCRAPER ? [] : branchSuites)];
-const LAST = 'node scraper/doc_budget.js';
+const LAST = 'node scraper/doc_budget.js && node scraper/guide_check.js';
 
 function run(cmd) {
   return new Promise(resolve => {

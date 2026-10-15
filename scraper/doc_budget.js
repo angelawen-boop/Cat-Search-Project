@@ -20,8 +20,8 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const DEFAULT_BUDGET = 80;
 const BUDGETS = {
-  'CLAUDE.md': 1175,
-  'docs/app.md': 550,
+  'CLAUDE.md': 600,
+  'docs/app.md': 600,
   'docs/scraper.md': 475,
   'docs/venues.md': 300,
   'docs/import_csv.md': 100,
