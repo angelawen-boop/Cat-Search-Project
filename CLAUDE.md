@@ -81,7 +81,7 @@ node scraper/venue_status.js
 Per venue: rows from the last run that brought any, the last run that held the
 venue at all, which machine sweeps it, and — read from the marker rows — why the
 last attempt brought nothing. When the two runs differ, that venue has stopped
-answering. **Every venue has returned rows at least once** — except `cincinnati`, never swept.
+answering. **Every venue has returned rows at least once.**
 **`ashmolean` is no longer swept** — added by link only (her decision; `docs/venues.md`).
 
 **Access and pace — settled for the four Cloudflare venues.** A blank browser
@@ -146,7 +146,9 @@ checked on the name the show's page gives; no credit lines at Met, Art Institute
 (the Rijksmuseum rule has no saved page to test on); no "page couldn't be read" card for an empty
 Art Institute page 2; Brera keeps bold words mid-sentence and stops before its info block; Borghese
 titles arrive in ordinary capitals with an em dash between name and subtitle — one round of title
-Change cards against her hand-corrected 7. Expect ~45 one-time compression re-checks.
+Change cards against her hand-corrected 7; Acquavella's "– Acquavella Palm Beach" leaves the title
+(she accepts that Change card); Tate Britain's listing page 2 is read; the report names every
+refused or empty page. Expect ~45 one-time compression re-checks.
 
 #### 2.2.3 Catalogue lookup generally
 
@@ -193,7 +195,7 @@ She is noting issues as she uses it, for a later debugging session.
   again then leaves the card untouched. Otherwise a different result is the
   web answering differently — get that run's log.
 
-#### 2.2.4 The monthly container sweep — 15 Oct runs compressed, ready for her import
+#### 2.2.4 The monthly sweep — 15 Oct imported
 
 **First run, 5 Oct — a test, not imported** (`run_2026-10-05_015417`, 359
 rows). `sweep_diff.js` now works out each change's cause; the skill asks only
@@ -202,9 +204,9 @@ Tates) were fixed from her saves the same day; Louvre refused 3 pages.
 
 **15 Oct — container re-run passed her test** (pushed, reported, the five fixes held); her home
 sweep (met, artic, mad only — she checks the headed four by eye and sweeps them only for new shows)
-QC'd. Stitched and compressed as swept: `stitch_20261015_0920/sweep_compressed.csv`, 536 rows,
-sent to her. She rejects on import: the Met's 18 excluded-series rows, the Art Institute's empty
-page-2 card, the Ashmolean title change. Faults found are fixed in code (§2.2.2).
+QC'd. Stitched and compressed as swept (`stitch_20261015_0920`, 536 rows) and **imported**.
+Faults found are fixed in code (§2.2.2). **Open: Tate Britain's Whistler** (closed 27 Sep) was on
+the listing's unread page 2 — her choice: add by link, or let the next sweep bring it.
 
 #### 2.2.5 Queued next
 
