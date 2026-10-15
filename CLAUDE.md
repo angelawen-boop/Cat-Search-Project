@@ -470,31 +470,10 @@ the headed venues, pacing and kept pages, what each site's robots.txt asks, and 
 bridge are in `docs/sweep_operation.md`. **Read it before running a sweep or changing how one
 runs.**
 
-### Adding a venue — the intake, in this order (her decision)
+### Adding a venue — `docs/scraper.md` §12
 
-**No show page is asked for before step 6.**
-
-1. **Her count and her decisions** (`docs/venues.md`).
-2. **Pages SHE saves**: the listings, and one show page of EVERY address shape.
-   **One complete list**, addresses copied from a record, never typed from
-   memory. Any question about what a page says is answered by opening it, never
-   by asking her. **Saved pages are a recipe's guide and its offline test, never
-   the data. Page layout comes from HER, never from a probe.**
-3. **What the site asks** — `node scraper/robots.js`. Anything needed that is
-   off-limits goes to her.
-4. **The recipe, offline**, on her pages: her count, dates, titles, and the
-   descriptions READ.
-5. **The time, worked out**: pages × the wait, written down.
-6. **One sweep, when she says go**, with every question answered. It passes only
-   if every page is read and her count holds. **A failure is diagnosed offline
-   from its log** (reply labels, stall report, kept pages), never by sweeping
-   again; the next attempt is hers to call.
-
-**Reading the page alone (`pageOnly`) — Ashmolean only.** Only for a venue
-whose PAGES HANG (the stall report: the page answered, its files did not): she
-saves view-source of its show pages and `pageOnly` is tested on those. **Never
-on a headed venue** — it strips the page's programs, bot check included, which
-is what headed exists to run.
+The intake, in order, is in `docs/scraper.md` §12, "Her rules for wiring a venue". **Read it
+before wiring a new venue.**
 
 ### Then hand her the file — she must never have to ask
 
