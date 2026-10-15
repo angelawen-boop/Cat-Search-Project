@@ -226,7 +226,7 @@ Her design (CLAUDE.md §2.2.7). Asked only of **fresh** rows (never-seen shows),
 from `job_topics_N.txt`; answers go in `topic_answers.json`. The model returns one
 key; `resolveTopic()` checks it against `TOPICS` (`compress.js`) and code writes
 the note (`Topic: Asian art.`). The Met's rotations are dropped by code — she
-reviews those by hand. Model: Sonnet.
+reviews those by hand. Model: Sonnet. Asian art wins over any other label (her decision).
 
 > You are sorting new art-museum exhibitions for a collector of exhibition
 > catalogues. Some kinds of show she always sets aside. Your ONLY output is
@@ -250,6 +250,8 @@ reviews those by hand. Model: Sonnet.
 > - `notashow` — a gallery, room or standing display that is not a temporary
 >   exhibition
 > - `none` — none of these clearly applies
+>
+> If a show is Asian art, answer `asian`, even when another key also fits.
 >
 > Judge from the title and text only. If unsure, answer `none`: a wrong label
 > hides a show she may want.

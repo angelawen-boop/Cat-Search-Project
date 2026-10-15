@@ -474,6 +474,10 @@ async function probablyNotForYou() {
     // The labelled card's Add is the first: its section comes before Normal cases.
     await page.click(add[0]);
     check(NAME + ': Add keeps it', page.buttons('✓ Add new entry').length === 1 && page.buttons('✓ Never add this').length === 0);
+    // Her ask: the Link on a new show's card opens the show's page.
+    const a = [...page.doc.querySelectorAll('a')].find(x => x.getAttribute('href') === 'https://www.metmuseum.org/exhibitions/fx-hok');
+    check('AD-010 A new show\'s Link on its approval card is a clickable link, in a new tab',
+      !!a && a.getAttribute('target') === '_blank' && a.textContent === 'https://www.metmuseum.org/exhibitions/fx-hok');
   } finally { await page.close(); }
 }
 

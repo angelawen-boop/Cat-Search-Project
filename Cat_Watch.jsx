@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "45";
+const APP_VERSION = "45.1";
 const APP_VERSION_DATE = "15 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -5308,7 +5308,7 @@ export default function App(){
           <div style={{fontWeight:700,marginBottom:3}}>{"New show \u2014 not in your ledger yet."}</div>
           {infoRow("Dates",dateRange(p.cand))}
           {infoRow("Description",p.cand.summary)}
-          {infoRow("Link",p.cand.exUrl)}
+          {infoRow("Link",p.cand.exUrl&&<a href={p.cand.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.ink}}>{p.cand.exUrl}</a>)}
         </div>}
 
         {(p.type==="fill"||p.type==="change")&&<div style={{fontSize:11.5,color:C.ink}}>
