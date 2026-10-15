@@ -228,10 +228,14 @@ New shows in topics she always quarantines are labelled and set aside on the imp
 - **The app:** a section after Odd cases, before the rest, headed only by its title and count
   ("Probably not for you · 12") — no instruction sentence. Each card shows its label and comes
   pre-set to **Never add** (not Reject, which is not remembered); she clicks Add to keep one.
-- **Before building, test the labeller on her own decisions:** her 86 quarantined shows (test page
-  store, `quarantine/rows`) should mostly be caught; her watched and want-catalogue shows should
-  almost never be. Show her the result first.
-- **Her test in the app:** a rehearsal file of ~15 quarantined and ~10 kept real shows, each web
+- **Three parts, in order.** (1) **The labeller** — compression's part, above. (2) **Test it**
+  (the session tests; she does not): her 86 quarantined shows (test page store, `quarantine/rows`)
+  plus **about 40 kept shows** (watching, want-catalogue or acquired; spread across venues) — about
+  125 shows, **at most two model calls**, never her whole ledger. Report how many quarantined it
+  catches and every kept show it labels; narrow a group only if she says. (3) **The app part** —
+  on import, read "Topic: …" from a new show's notes, put those cards in the section, pre-set
+  Never add, show the label.
+- **Her verification in the app:** a rehearsal file of ~15 quarantined and ~10 kept real shows, each web
   address carrying a test marker so they read as new; she checks the section, its pre-set Never
   add, the labels in the notes and that kept shows are absent — then Cancel import. The real test
   is her next monthly import. App publish rules apply (`docs/publishing.md`).
