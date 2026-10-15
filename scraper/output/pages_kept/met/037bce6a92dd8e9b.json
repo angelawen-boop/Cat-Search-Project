@@ -1,0 +1,19 @@
+{
+  "url": "https://www.metmuseum.org/exhibitions/flip-sides-seeing-korean-art-anew",
+  "savedAt": "2026-10-15T08:24:59.721Z",
+  "outcome": "text",
+  "changes": {
+    "start_date": "2026-03-16",
+    "summary": "Most objects are displayed to show their “best” angle meant to impress, sometimes hiding intriguing details. Flip Sides: Seeing Korean Art Anew invites close looking and offers multiple views of the inside, reverse, or hard-to-see aspects of objects. Bringing together approximately 50 objects from The Met collection, with more than half displayed for the first time, this exhibition, with a rotation, shows treasured Korean traditions. By presenting them in ways that give us a fuller picture into each object’s unique form, Flip Sides provides insight into the construction and function of works in metal, wood, ceramic, textiles, and lacquer. A Buddhist sculpture that held offerings inside, a porcelain jar of striking openwork that conceals an inner chamber, a bronze mirror with a delicately incised image, and a king’s lacquer letter box with linings featuring impressive calligraphy are among the featured objects in Flip Sides. During the exhibition, a selection of artworks will come off view and be replaced by new works: Rotation 1: March 16–October 18, 2026 Rotation 2: October 31, 2026–May 31, 2027 The exhibition is made possible by The Kun-Hee Lee Fund for Korean Art.",
+    "notes": "Opening date taken from the site's structured data, not its visible page."
+  },
+  "titleReport": [
+    {
+      "venue": "met",
+      "kind": "unplaced",
+      "from": "Flip Sides: Seeing Korean Art Anew",
+      "to": "Flip Sides: See Korean Art Anew",
+      "url": "https://www.metmuseum.org/exhibitions/flip-sides-seeing-korean-art-anew"
+    }
+  ]
+}
