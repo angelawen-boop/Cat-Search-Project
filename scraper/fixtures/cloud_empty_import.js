@@ -48,7 +48,7 @@ const hers = JSON.parse(HERS_TEXT);
 // The storage code, lifted the same way cloud_ledger.js lifts it, to READ
 // what the page wrote.
 const src = fs.readFileSync(path.join(ROOT, 'Cat_Watch.jsx'), 'utf8');
-const sec = src.slice(src.indexOf('// ── THE CLOUD LEDGER — branch claude/ledger-cloud'), src.indexOf('// ── END OF THE CLOUD LEDGER'));
+const sec = src.slice(src.indexOf('// ── THE CLOUD LEDGER — storage'), src.indexOf('// ── END OF THE CLOUD LEDGER'));
 const C = new Function(sec + '\nreturn {cloudReadLive,cloudSaveLive,cloudListSnapshots};')();
 
 const settle = async (ms = 50) => { await new Promise(r => setTimeout(r, ms)); };

@@ -17,7 +17,7 @@ const fs = require('fs');
 const path = require('path');
 
 const src = fs.readFileSync(path.join(__dirname, '..', '..', 'Cat_Watch.jsx'), 'utf8');
-const A = '// ── THE CLOUD LEDGER — branch claude/ledger-cloud';
+const A = '// ── THE CLOUD LEDGER — storage';
 const B = '// ── END OF THE CLOUD LEDGER';
 const a = src.indexOf(A), b = src.indexOf(B, a);
 if (a < 0 || b < 0) throw new Error('cloud_ledger: anchors not found');

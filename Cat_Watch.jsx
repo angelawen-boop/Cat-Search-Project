@@ -2019,8 +2019,8 @@ async function offerFile(filename,data){
   }catch(e){ throw {route:"browser",cause:e}; }
 }
 
-// ── THE CLOUD LEDGER — branch claude/ledger-cloud, in trial ───────────────────
-// Her design (CLAUDE.md §2.2.1; design docs/cloud_storage.md; screen docs/app.md §9): the LIVE LEDGER, saved after every
+// ── THE CLOUD LEDGER — storage ────────────────────────────────────────────────
+// Her design (docs/cloud_storage.md; screen docs/app.md §9): the LIVE LEDGER, saved after every
 // change, and SNAPSHOTS ("Cloud Saves"), never overwritten or pruned. Parts are written
 // under a new name and the live record switched last, so a cut-off save leaves the last
 // complete ledger; every piece is fingerprinted (sha-256) and a mismatch is refused.
@@ -2032,8 +2032,8 @@ const SNAP_PARTS="snapshotParts";
 // Characters of compressed text per part. The store's cap is 256 KiB per
 // document; this leaves room for the field names and a margin.
 const CLOUD_PART_CHARS=180000;
-// The trial switch: false = save and snapshot, but never open from the cloud by itself;
-// true only when she ends the trial.
+// false = save and snapshot, but never open from the cloud by itself; she Loads her file
+// (her decision).
 const CLOUD_OPENS=false;
 
 async function cloudGzip(text){
