@@ -32,6 +32,7 @@ const fs = require('fs');
 const path = require('path');
 const C = require('./compress.js');
 const { pagesFromNote, archiveYear } = require('./listing_note.js');
+const W = require('./routine_window.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const RAW_CSV = 'sweep.csv';
@@ -126,7 +127,11 @@ function previousShapeFor(dir, venue) {
   const before = allRuns().filter(r => r.name < self);
   for (let i = before.length - 1; i >= 0; i--) {
     const shape = venueShape(C.readProForma(path.join(OUTPUT_DIR, before[i].rel, RAW_CSV))).get(venue);
-    if (shape && shape.rows) return { dir: before[i].name, shape };
+    if (!shape || !shape.rows) continue;
+    // Counted as KNOWN rows: older shows a routine run did not sweep still count (routine_window.js).
+    const known = W.knownRows(venue, before.slice(0, i + 1).map(r => ({ abs: path.join(OUTPUT_DIR, r.rel) })),
+      abs => C.readProForma(path.join(abs, RAW_CSV)));
+    return { dir: before[i].name, shape: known ? { ...shape, ...venueShape(known).get(venue) } : shape, known };
   }
   return null;
 }
@@ -135,13 +140,18 @@ function previousShapeFor(dir, venue) {
 function exceptions(dir, rows) {
   const out = [];
   const now = venueShape(rows);
-  for (const [venue, s] of now) {
+  const windows = W.readWindow(path.join(OUTPUT_DIR, dir));
+  for (const [venue, read] of now) {
     if (venue === '(blank)') continue;
-    if (s.real && s.summaries < s.real) {
-      out.push({ venue, what: `${s.real - s.summaries} of ${s.real} rows have no description.` });
+    if (read.real && read.summaries < read.real) {
+      out.push({ venue, what: `${read.real - read.summaries} of ${read.real} rows have no description.` });
     }
     const prev = previousShapeFor(dir, venue);
     if (!prev) continue;
+    // A routine run is compared on known rows: what it read plus the older shows it did not sweep.
+    const from = windows[venue];
+    const s = from && read.real ? { ...read, ...venueShape(W.knownAfter(prev.known,
+      rows.filter(r => String(r.venue_code || '').trim() === venue), from)).get(venue) } : read;
     const p = prev.shape;
     if (p.real > 0 && s.real === 0) {
       out.push({ venue, what: `returned NO exhibitions — ${p.real} in ${prev.dir}. Marker rows only now.` });

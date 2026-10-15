@@ -6,6 +6,7 @@
 node scraper/sweep_prototype.js              everything for this machine
 node scraper/sweep_prototype.js ng rijks     named venues only
 node scraper/sweep_prototype.js --continue   finish the newest run
+node scraper/sweep_prototype.js --full       home venues back to 1 July 2024, outside the routine
 node scraper/sweep_prototype.js --jobs=6     venues at once (default 4)
 node scraper/sweep_prototype.js --budget-mins=3   abandon a venue after N min
 node scraper/sweep_prototype.js --pace=30    her machine: seconds between pages (default 30)
@@ -176,13 +177,22 @@ finishes, saying how many rows and how many summaries were reused versus written
 not been run, the run is not finished.** Run the file through the app's intake
 and READ the cards before sending (§4.1).
 
+### Routine and full sweeps — home venues (her decision)
+
+**A home sweep is routine unless `--full`.** Listings are read back to 1 July 2024, but only
+shows on, upcoming, undated, or closed in the 6 months before the sweep date are opened and
+written; older ones are not swept, even if never read before. `--full` (her call, now and then)
+reads all. The run's `window.json` records each routine venue's window; QC, `sweep_diff.js` and
+`venue_status.js` count a venue's older shows from earlier runs, so 200 + 3 new reads 203.
+`routine_window.js`; RW-001 to RW-010. The container is unchanged. Pace stays at 30s.
+
 ## The monthly routine
 
 **She sweeps no more than once a month.** The container's half runs itself:
 the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
 `.claude/skills/monthly-sweep/SKILL.md` — sweep, QC, push, report; anything
-needing a re-sweep or a code change waits for her. She then does the home
-sweep, and a session with her stitches and compresses (her design).
+needing a re-sweep or a code change waits for her. She reviews it with a session while her
+home sweep runs; then stitch, compress, import **one file** (her decision).
 **Every run — container and home — goes through `.claude/skills/sweep-qc/`
 and has its faults fixed before anything is stitched** (her decision):
 the routine runs it on its own run; she starts a session for her home run.

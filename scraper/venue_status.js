@@ -35,6 +35,7 @@ const { venueShape, isMarker } = require('./qc.js');
 // venue codes has already cost this project once — two finished recipes could
 // not be selected and nothing said why — so there is no copy here to drift.
 const { VENUES, machineOf } = require('./sweep_prototype.js');
+const W = require('./routine_window.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const RAW_CSV = 'sweep.csv';
@@ -124,14 +125,17 @@ function collect() {
       // The scraper already wrote the reason on the marker row, so it is read,
       // never inferred from the fact that the count was zero.
       v.why = s.real === 0 ? whyFrom(rows, code) : null;
+      // Rows are KNOWN rows: a routine run's older shows, not swept, still count (routine_window.js).
       if (s.real > 0) {
-        v.rows = s.real;
-        v.summaries = s.summaries;
+        v.known = W.knownAfter(v.known, rows.filter(r => String(r.venue_code || '').trim() === code),
+          W.readWindow(path.join(OUTPUT_DIR, run.rel))[code] || null);
+        v.rows = v.known.length;
+        v.summaries = v.known.filter(r => String(r.summary || '').trim()).length;
         v.rowsFrom = run.name;
       }
     }
   }
-  return [...state.values()];
+  return [...state.values()].map(({ known, ...v }) => v);
 }
 
 function report(venues) {

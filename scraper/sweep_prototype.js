@@ -31,6 +31,7 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
 const fs = require('fs');
 const path = require('path');
 const { seenOn, listingNote } = require('./listing_note.js');
+const { windowFrom, outsideWindow, recordWindow } = require('./routine_window.js');
 
 // ── Proxy setup ───────────────────────────────────────────────────────────────
 const PROXY_URL = process.env.HTTPS_PROXY || process.env.https_proxy;
@@ -102,6 +103,8 @@ const OUT_DIR = path.join(__dirname, 'output');
 
 const ARGS = process.argv.slice(2).map(a => a.toLowerCase()).filter(Boolean);
 const CONTINUE = ARGS.includes('--continue');
+// A routine sweep is the default; --full reads every home venue back to the floor.
+const FULL = ARGS.includes('--full');
 const WANTED = ARGS.filter(a => !a.startsWith('--'));
 
 // WHICH MACHINE IS THIS, and therefore which venues are ITS job. Overridable
@@ -292,6 +295,29 @@ function venuesForThisRun() {
 }
 
 const LOOKBACK = new Date('2024-07-01');
+
+/**
+ * THE ROUTINE WINDOW (routine_window.js; her decision): a sweep of a home venue,
+ * unless --full, opens and writes only shows not known to have closed before
+ * windowFrom(the sweep date). Sweeps only — saved pages and fixtures read in full.
+ * Fixed once per venue per invocation, so the log, the cut and window.json agree.
+ */
+const ROUTINE_FROM = new Map();
+function routineFrom(code, { asSweep = require.main === module, full = FULL, today = runStamp().slice(0, 10) } = {}) {
+  if (!asSweep || full || machineOf(code) !== 'home') return null;
+  if (!ROUTINE_FROM.has(code)) ROUTINE_FROM.set(code, windowFrom(today));
+  return ROUTINE_FROM.get(code);
+}
+
+/** Drop rows closed before the routine window, before their pages are opened. Marker rows stay. */
+function applyRoutineWindow(rows, from) {
+  if (!from) return rows;
+  const kept = rows.filter(r => (r.title && r.title.startsWith('[')) || !outsideWindow(r, from));
+  if (kept.length !== rows.length) {
+    log(`  routine sweep: ${rows.length - kept.length} show(s) closed before ${from} not swept (--full reads them)`);
+  }
+  return kept;
+}
 
 /**
  * Expand a venue's year-filtered archive into one page per year.
@@ -4811,7 +4837,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
 
   // Cut before opening detail pages where the listing gave us enough to judge.
   // `toFetch` is every row that goes on from here — and what is WRITTEN.
-  const toFetch = v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing');
+  const toFetch = applyRoutineWindow(v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing'), routineFrom(code));
   // A ROW WHOSE BLURB CAME OFF THE LISTING NEEDS NO PAGE OPENED — but it is
   // still a row. Only rows from a page whose recipe named a `listingRow` carry
   // a summary here, so only those skip the fetch; they stay in `toFetch`.
@@ -5849,6 +5875,11 @@ async function main() {
 
   log('Cat Watch Sweep Prototype — starting');
   log(`Lookback floor: ${LOOKBACK.toISOString().slice(0,10)}`);
+  {
+    const routine = RUN_VENUES.filter(c => routineFrom(c));
+    if (routine.length) log(`Routine sweep: ${routine.join(', ')} read shows on, upcoming or closed since ${routineFrom(routine[0])} (--full for everything back to the floor).`);
+    else if (FULL) log('Full sweep (--full): every venue back to the lookback floor.');
+  }
   log(`Run directory: ${RUN_DIR}${CONTINUE ? ' (continuing)' : ''}`);
   // SAY WHICH MACHINE THIS IS BEFORE ANYTHING IS FETCHED. The guess is made from
   // the proxy, which exists in the container and not on her laptop — good, but a
@@ -6035,6 +6066,7 @@ async function main() {
     // any point before this line, the venue simply has no file and is picked
     // up by the next --continue. There is never a half-scraped venue on disk.
     writeVenueCsv(code, rows);
+    recordWindow(RUN_DIR, code, routineFrom(code));
     // PAGES KEPT: a venue swept to the end with nothing refused is finished,
     // so its next sweep reads everything fresh. One refused on its first
     // request is written (its refusal record) but NOT finished — the pages kept
@@ -6385,7 +6417,7 @@ module.exports = {
   // Not pure — exported so a check can run the real detail-page pass offline.
   fetchIndividualPages,
   // For from_saved_pages.js: the sweep's own finish, over pages she saved.
-  noteTravellingRuns, writeVenueCsv, rebuildSweepCsv, RUN_DIR,
+  noteTravellingRuns, writeVenueCsv, rebuildSweepCsv, RUN_DIR, routineFrom, applyRoutineWindow,
   // Pure — asked directly by the fixtures.
   addNote, finishNotes, scopeSelector,
   // Exported so compress.js's mirrored location list can be checked against the

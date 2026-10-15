@@ -130,6 +130,16 @@ fs.writeFileSync(out, [COLS.join(','), ...rows.map(r => r.map(q).join(','))].joi
 fs.writeFileSync(path.join(outDir, 'sources.txt'),
   names.join('\n') + '\n', 'utf8');
 
+// Each source run's routine windows travel with its rows, so QC of the stitch counts
+// a routine venue's unswept older shows too (routine_window.js).
+{
+  const W = require('./routine_window.js');
+  for (const name of names) {
+    const dir = path.isAbsolute(name) ? name : path.join(OUT_DIR, name);
+    for (const [venue, from] of Object.entries(W.readWindow(dir))) W.recordWindow(outDir, venue, from);
+  }
+}
+
 const pad = (s, n) => String(s).padEnd(n);
 console.log(`\nStitched ${rows.length} rows from ${names.length} folder${names.length === 1 ? '' : 's'}.\n`);
 console.log('  ' + pad('venue', 14) + 'rows   from');

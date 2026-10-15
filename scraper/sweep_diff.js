@@ -21,6 +21,7 @@ const fs = require('fs');
 const path = require('path');
 const C = require('./compress.js');
 const { pagesFromNote } = require('./listing_note.js');
+const W = require('./routine_window.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const RAW_CSV = 'sweep.csv';
@@ -55,12 +56,18 @@ function allRuns() {
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-/** The last run started before this one in which the venue brought REAL rows. */
+/**
+ * The last run started before this one in which the venue brought REAL rows,
+ * with its KNOWN rows: older shows a routine run did not sweep still count
+ * (routine_window.js), so a full run after routine ones finds nothing new in them.
+ */
 function previousRowsFor(selfName, venue, runs = allRuns()) {
   const before = runs.filter(r => r.name < selfName);
+  const read = abs => C.readProForma(path.join(abs, RAW_CSV));
   for (let i = before.length - 1; i >= 0; i--) {
-    const rows = C.readProForma(path.join(before[i].abs, RAW_CSV)).filter(r => s(r.venue_code) === venue);
-    if (rows.some(r => !isMarker(r))) return { run: before[i].name, abs: before[i].abs, rows };
+    const rows = read(before[i].abs).filter(r => s(r.venue_code) === venue);
+    if (rows.some(r => !isMarker(r))) return { run: before[i].name, abs: before[i].abs,
+      rows: W.knownRows(venue, before.slice(0, i + 1), read) };
   }
   return null;
 }
@@ -116,10 +123,11 @@ function junkIn(summary) {
 }
 
 /** Everything the diff says about one venue. */
-function diffVenue(venue, nowRows, prev, log, runDate = '') {
+function diffVenue(venue, nowRows, prev, log, runDate = '', windowFrom = null) {
   const now = nowRows.filter(r => !isMarker(r));
   const markers = nowRows.filter(isMarker);
-  const out = { venue, now: now.length, prevRun: prev && prev.run, prev: null,
+  // notSwept: last run's shows closed before a routine run's window — not read, still counted.
+  const out = { venue, now: now.length, prevRun: prev && prev.run, prev: null, windowFrom, notSwept: 0,
     gone: [], added: [], moved: [], renamed: [], redated: [], lostSummary: [], noSummary: [],
     keptNoEnd: [], sameName: [], junk: [], emptiedPages: [], ruleStopped: [], worseText: [], addressLeft: [],
     // Every marker row, whatever the last run brought (Frick 15 Oct: a refused page that had none).
@@ -150,6 +158,7 @@ function diffVenue(venue, nowRows, prev, log, runDate = '') {
 
   for (const p of before) {
     const n = byUrlNow.get(s(p.url));
+    if (!n && W.outsideWindow(p, windowFrom)) { out.notSwept++; continue; }
     if (n) {
       if (s(n.title) !== s(p.title)) out.renamed.push({ from: p.title, to: n.title, url: n.url,
         onlyCase: s(n.title).toLowerCase() === s(p.title).toLowerCase() });
@@ -229,9 +238,11 @@ function diffRun(dirName) {
   if (!fs.existsSync(file)) return { error: `No ${RAW_CSV} in ${dirName}.` };
   const rows = C.readProForma(file);
   const log = readLogs(abs);
+  const windows = W.readWindow(abs);
   const venues = [...new Set(rows.map(r => s(r.venue_code)).filter(Boolean))];
   return { run: dirName, venues: venues.map(v =>
-    diffVenue(v, rows.filter(r => s(r.venue_code) === v), withLog(previousRowsFor(path.basename(abs), v, runs)), log, runDateOf(dirName))) };
+    diffVenue(v, rows.filter(r => s(r.venue_code) === v), withLog(previousRowsFor(path.basename(abs), v, runs)), log, runDateOf(dirName),
+      windows[v] || null)) };
 }
 function withLog(prev) {
   if (prev && prev.abs) prev.log = readLogs(prev.abs);
@@ -288,9 +299,12 @@ function report(res, say = console.log) {
   const stopped = all.flatMap(v => v.ruleStopped.map(x => ({ v: v.venue, ...x })));
   say(`\nCHANGES SINCE EACH VENUE'S LAST RUN — ${res.run}`);
   say(`Matched by address. A cause marked (log) or (note) is read from the run itself; UNEXPLAINED needs a session.`);
-  const changed = all.filter(v => v.prevRun && v.prev !== v.now).map(v => `${v.venue} ${v.prev} → ${v.now}`);
+  const changed = all.filter(v => v.prevRun && v.prev !== v.now + v.notSwept).map(v => `${v.venue} ${v.prev} → ${v.now + v.notSwept}`);
   const fresh = all.filter(v => !v.prevRun).map(v => `${v.venue} ${v.now} (first run with rows)`);
-  say(`Row counts that moved: ${[...changed, ...fresh].join(', ') || 'none'}.\n`);
+  say(`Row counts that moved: ${[...changed, ...fresh].join(', ') || 'none'}.`);
+  const routine = all.filter(v => v.windowFrom).map(v => `${v.venue} (${v.notSwept} older shows not swept, still counted)`);
+  if (routine.length) say(`Routine sweep — shows closed before ${all.find(v => v.windowFrom).windowFrom} not read: ${routine.join(', ')}.`);
+  say('');
   for (const g of groupChanges(res)) {
     if (!g.lines.length) continue;
     say(`${g.n}. ${g.heading}`);
