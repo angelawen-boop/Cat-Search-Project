@@ -121,7 +121,9 @@ function diffVenue(venue, nowRows, prev, log, runDate = '') {
   const markers = nowRows.filter(isMarker);
   const out = { venue, now: now.length, prevRun: prev && prev.run, prev: null,
     gone: [], added: [], moved: [], renamed: [], redated: [], lostSummary: [], noSummary: [],
-    keptNoEnd: [], sameName: [], junk: [], emptiedPages: [], ruleStopped: [], worseText: [], addressLeft: [] };
+    keptNoEnd: [], sameName: [], junk: [], emptiedPages: [], ruleStopped: [], worseText: [], addressLeft: [],
+    // Every marker row, whatever the last run brought (Frick 15 Oct: a refused page that had none).
+    markers: markers.map(m => ({ title: m.title, url: m.url, note: s(m.notes).replace(MARKER_SENTINEL, '').trim() })) };
 
   for (const r of now) {
     if (!s(r.summary)) out.noSummary.push({ title: r.title, url: r.url, why: pageFailure(r.notes) });
@@ -271,6 +273,7 @@ function groupChanges(res) {
     for (const j of v.junk) put(8, v, `JUNK?     "${j.title}" — ${j.kinds.join(', ')}: "${j.text}${j.text.length >= 160 ? '…' : ''}"`);
     for (const a of v.added) put(1, v, `NEW       "${a.title}" (${a.start || '?'} → ${a.end || '?'}) — ${a.note}`);
     for (const x of v.ruleStopped) put(1, v, `RULE STOPPED "${x.title}" — EXCLUDED last run ("${x.reason}", log), let through now: the rule stopped firing. A fault.`);
+    for (const m of v.markers) if (!v.emptiedPages.some(e => e.url === m.url)) put(9, v, `MARKER    ${m.title} — ${m.note}`);
     for (const x of v.addressLeft) put(9, v, `ADDRESS LEFT "${x.title}" — last run had it at two addresses; one left, the show is still in\n                gone: ${x.url}\n                stays: ${x.stays}`);
     for (const k of v.keptNoEnd) put(9, v, `KEPT BY RULE "${k.title}" opened ${k.start}, no closing date — kept and flagged under the lookback rule (docs/import_csv.md), not junk`);
     for (const d of v.sameName) put(9, v, `SAME NAME "${d.title}" at two addresses — kept by design (no de-duplication); the app shows both\n                ${d.urls.join('\n                ')}`);

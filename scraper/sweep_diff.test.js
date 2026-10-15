@@ -165,3 +165,12 @@ test('SD-016: a show at two addresses losing one is ADDRESS LEFT under Others, n
   assert.strictEqual(out.addressLeft[0].stays, 'https://b/traveling');
   assert.ok(D.groupChanges({ venues: [out] })[8].lines.some(l => l.includes('ADDRESS LEFT')));
 });
+
+test('SD-017: every refused or empty listing page is named under Others, even one that brought no rows last run (Frick 15 Oct)', () => {
+  const out = D.diffVenue('v',
+    [row({ title:'Kept', url:'https://f/k', start_date:'2026-01-01', end_date:'2026-12-01' }),
+     row({ title:'[past p1 page]', url:'https://f/past?page=1', notes:"The venue's \"past p1\" listing page could not be read: the venue’s site refused us (HTTP 403). " + MARK })],
+    prev([row({ title:'Kept', url:'https://f/k', start_date:'2026-01-01', end_date:'2026-12-01' })]), log());
+  const others = D.groupChanges({ venues: [out] })[8].lines.join('\n');
+  assert.match(others, /MARKER\s+\[past p1 page\].*HTTP 403/);
+});
