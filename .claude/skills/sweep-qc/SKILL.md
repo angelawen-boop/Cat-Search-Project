@@ -39,7 +39,7 @@ settle something, name the one page that would; she saves it.
      Find the cause. No network request — if only the live site can settle
      it, say exactly which one page would.
    - **Every `JUNK?` row**: confirm or clear it by reading the whole summary.
-     `CLAUDE.md` §2: no row carries a credit line, star rating, ticket price,
+     `CLAUDE.md` §2.1: no row carries a credit line, star rating, ticket price,
      funder list, opening hours, breadcrumb or cookie notice — ANYWHERE in the
      summary. One of these present is a fault, never "fine".
    - **Every `WORSE TEXT` row** is a fault (the last run had more or cleaner

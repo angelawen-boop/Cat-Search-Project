@@ -12,7 +12,7 @@ the read-only lock (below); Import on an empty page offers only "Open last
 cloud save" and Load, and Save asks before writing fewer exhibitions than the
 cloud holds (EI-001–007; `docs/app.md` §9); a roll-back's safety copy names the save by its
 time (CL-T1–3); Cloud Saves' times share one width. The cloud count moves only
-when she says. Publishing: `build_app.js` prints the steps (§4).
+when she says. Publishing: `build_app.js` prints the steps (`docs/publishing.md`).
 
 **What the store holds:**
 - **The live ledger** — the only thing the app reads and writes as she works.

@@ -34,7 +34,7 @@ meets it.
   shop behind it. A link to a venue already swept files under that venue. **Card names are hers** (`short` in
   the store, written by a session); the page title's name until she gives one.
 - **Store:** `venues/occasional` (venues, shops, her confirmations) and `links/pending` (the box). Copy both
-  when the cloud page merges (CLAUDE.md §7.1). A ledger row whose venue a page's store has not met shows under
+  when the cloud page merges (CLAUDE.md §2.2.1). A ledger row whose venue a page's store has not met shows under
   its web address, shop "not found".
 
 ## Per link — code first, model only for prose

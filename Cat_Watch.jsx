@@ -1367,7 +1367,7 @@ function countDecisions(proposals,decisions){
   return {acceptedCount,undecidedCount,quarantinedCount,rejectedCount};
 }
 
-// ===== PARTIAL APPLY — stays until she says (CLAUDE.md §4) =====
+// ===== PARTIAL APPLY — stays until she says (CLAUDE.md §5.1) =====
 // Offered only in the middle state: something decided AND something undecided. Out of
 // the component so fixture 18h tests this copy.
 function offerPartialApply(counts){
@@ -1682,12 +1682,12 @@ function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)
 // or its title search with no ISBN.
 function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+encodeURIComponent(r.title)});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q},{name:"Booko AU",href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
 
-// ── FINDING A CATALOGUE (docs/app.md §1; CLAUDE.md §4 "Catalogue lookup") ────
+// ── FINDING A CATALOGUE (docs/app.md §1; CLAUDE.md §5.1 "Catalogue lookup") ────
 // The page cannot reach the internet, so searching and reading go through her keyed
 // connector, and `sample` asks Claude to read only the text handed to it — it can
 // never report a page that was not found.
 // SEARCH_SERVER must match the connector name in the page's published `mcp`
-// capability (CLAUDE.md §4).
+// capability (docs/app.md §1).
 const SEARCH_SERVER = "Parallel Search Key";
 const SEARCH_TOOL   = "web_search";
 // Reads a whole page, not a snippet.
@@ -2022,7 +2022,7 @@ function publisherDomainFrom(results,name){
   return null;
 }
 
-// ── A MUSEUM'S OWN IMPRINT HAS NO PUBLISHER PAGE TO FIND (CLAUDE.md §4) ──────
+// ── A MUSEUM'S OWN IMPRINT HAS NO PUBLISHER PAGE TO FIND (docs/app.md §1) ──────
 // Its "publisher page" is the museum shop, so looking costs searches for nothing.
 // SELF_PUBLISHERS is her list, grown only when she adds one. A blockbuster printed by
 // an art-book house, or a joint show printed by the other museum, is still looked for.
@@ -2288,7 +2288,7 @@ function shopHeadline(shopState,shopChange){
   return null;
 }
 
-// A blocked shop says so, in her wording (CLAUDE.md §4): the headline in the red and
+// A blocked shop says so, in her wording (docs/app.md §1): the headline in the red and
 // weight of "No longer in the museum shop.", the rest grey.
 const SHOP_BLOCKED_HEAD="The museum shop is blocked";
 const SHOP_BLOCKED_FOUND_REST=" - search it manually. The catalogue is stocked elsewhere.";
@@ -2386,7 +2386,7 @@ function catalogueLinkOn(results,dom){
 }
 
 // Is this English book an edition of the same catalogue? (her decision, Botticelli;
-// CLAUDE.md §4) Its publisher shares the original's distinctive words (Fonds Mercator ~
+// docs/app.md §1) Its publisher shares the original's distinctive words (Fonds Mercator ~
 // Mercatorfonds), or a result carrying its ISBN names the venue by its full, chip or
 // card name.
 function sameCatalogue(edPublisher,origPublisher,isbnResults,museumId){
@@ -2618,7 +2618,7 @@ async function recheckLinkedPage(row){
     said:hadIt?"Re-checked: no longer for sale in the museum shop."+(p.why?" "+p.why:""):"Re-checked: still not for sale in the museum shop."};
 }
 
-// ── THE CATALOGUE LOOKUP (docs/app.md §1; CLAUDE.md §4 "Catalogue lookup") ─────
+// ── THE CATALOGUE LOOKUP (docs/app.md §1; CLAUDE.md §5.1 "Catalogue lookup") ─────
 // At top level so a fixture can run it whole with the connector and Claude faked.
 // Steps gather facts; code decides each fact in a set order of trust; composeRow
 // writes the row once. No step writes card text; the card reads the row.
@@ -3116,7 +3116,7 @@ function resultText(x){
     Array.isArray(x&&x.excerpts)?x.excerpts.join("\n"):""].filter(Boolean).join("\n");
 }
 // Editions in another language, decided in code (her Botticelli and Hubert Robert;
-// CLAUDE.md §4). A fetched result must carry its ISBN and show the link: the original's
+// docs/app.md §1). A fetched result must carry its ISBN and show the link: the original's
 // house (any outside house of a co-edition), the venue named (sameCatalogue), the original's ISBN, or a linking phrase with
 // every key word of the original's title (Hammershøi's library record). Page counts far
 // apart: a different book, kept as "other". `orig`: the found version, pages printed.
@@ -5507,7 +5507,7 @@ export default function App(){
                   headings say where the cards are. */}
               {/* Every card must be decided before the ledger moves — a hard block, her
                   permanent design (docs/app.md §3). The button says what is missing. */}
-              {/* ===== PARTIAL APPLY — stays until she says (CLAUDE.md §4) =====
+              {/* ===== PARTIAL APPLY — stays until she says (CLAUDE.md §5.1) =====
                   Beside the block, never instead of it: drawn only when some cards are
                   decided and some are not (offerPartialApply). It asks first, in her
                   wording, naming what is left behind and the way back. To remove it: this

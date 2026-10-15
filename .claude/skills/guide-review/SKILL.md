@@ -41,7 +41,7 @@ you renumbered.
    `git ls-remote --heads origin`; counts and run folders named in open work
    exist under `scraper/output/`; section cross-references (guide ↔ docs ↔
    code comments) point at sections that exist.
-3. **Open work (§7):** for each item, look at the commits since the last review.
+3. **Open work (§2.2):** for each item, look at the commits since the last review.
    Finished → cut to its one-line result or remove it. Still open → keep its
    backstory, enough for a cold session to pick it up.
 4. **Contradictions:** the same fact stated two ways (in the guide, between the
@@ -54,7 +54,7 @@ you renumbered.
 6. **Hand-typed things a script prints:** tables of venues, counts, fixtures,
    commands that drift. Point to the script instead, or report it if no
    script exists yet.
-7. **"Do not re-break" (§6):** merge new entries into the lesson they
+7. **"Do not re-break" (§4.1):** merge new entries into the lesson they
    illustrate; one lesson, one line where possible. Never drop a lesson.
 8. **Budgets:** every file within `scraper/doc_budget.js`. Getting there is the
    finish line, not a reason to cut substance — if a file cannot fit without
@@ -85,7 +85,7 @@ a session DOES next, it is not your question.
 
 **Dates on decisions:** remove any date stamped on one of her decisions
 ("her decision, 2 Oct"), and any "ruling"/"rule" wording for her choices —
-CLAUDE.md §1. Keep a date only where an open item's story needs the
+docs/doc_rules.md. Keep a date only where an open item's story needs the
 sequence, it names a run, or it is a deadline.
 
 **Fix it yourself** when the repo gives exactly one right answer: a stale

@@ -3614,7 +3614,7 @@ const VENUES = {
     // the real text in the shared ladder (docs/ng_pages/).
     description: '.exhibition-info .body-text',
     // Its last line credits the organising museums — a credit line, which no
-    // row carries (CLAUDE.md §2).
+    // row carries (CLAUDE.md §2.1).
     dropSentence: /Exhibition organised by\b/,
   },
 
@@ -4180,7 +4180,7 @@ const VENUES = {
   },
 
   // ── VENUES THAT REFUSE THE CONTAINER ──────────────────────────────────────────
-  // Wired anyway (CLAUDE.md §2): a refusal costs half a second, leaves marker rows and
+  // Wired anyway (CLAUDE.md §2.1): a refusal costs half a second, leaves marker rows and
   // makes every sweep a monitor; blocks come and go. One attempt per page, never a retry.
   moma: {
     name: 'Museum of Modern Art, New York',
@@ -4289,7 +4289,7 @@ const VENUES = {
   },
 
   // TATE — two venues, one website; the URL separates them (two recipes: merging was
-  // rejected, CLAUDE.md §8). The query filters in Tate's own menu are server-side, so each
+  // rejected, CLAUDE.md §4.2). The query filters in Tate's own menu are server-side, so each
   // combination is just a page. event_type=exhibition only, never display (her decision).
   // date_range=past is not an archive and is not fetched. Tate Britain's past comes from
   // the calendar (expandDateRange); Tate Modern's past, never (docs/venues.md).
@@ -4420,7 +4420,7 @@ const VENUES = {
     // "Thursday, January 16: Open until 9 p.m. …", "*Not a member? …".
     creditPara: /^(?:Due to popular demand\b|\*?Not a member\?|(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day, [A-Z][a-z]+ \d{1,2}:)/,
     // Organiser credits and catalogue-sales lines go: no row carries a credit line
-    // (CLAUDE.md §2).
+    // (CLAUDE.md §2.1).
     dropSentence: /[^.!?]*\bis organized by\b|[^.!?]*\bcatalogue is available for purchase\b/,
   },
 };

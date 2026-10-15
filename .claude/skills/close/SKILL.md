@@ -19,7 +19,7 @@ Runs only because she typed `/close`. Same steps, same summary, every time.
 1. **Finish what is in hand.** Commit any finished work. Half-done work is
    not finished here: name it under "Open for next session".
 2. **Update the guide for this session's work** — `CLAUDE.md` and the
-   `docs/` file for the area touched. Its own rules ("Editing this guide"):
+   `docs/` file for the area touched. Its own rules (`docs/doc_rules.md`):
    record conclusions, not the story; cut a closed item down to its result;
    leave an open item enough backstory to be picked up cold; no dates on
    decisions. Commit it on its own.

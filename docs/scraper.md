@@ -421,7 +421,7 @@ visibly mangled and uses the app's URL button with Chrome's translation.
   carries the show's own address; five have no closing date, accepted.
 - **The summary must arrive in English** — the prompt now requires it
   (`compress_prompt.md`); the English translation of Italian titles opens the
-  description (`CLAUDE.md` §4).
+  description (`CLAUDE.md` §5.1).
 
 ---
 

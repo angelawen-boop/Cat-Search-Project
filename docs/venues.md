@@ -109,7 +109,7 @@ Chrome on the seeded profile.
 |---|---|---|
 | A (`--launch-chrome`) | The sweep launches Chrome on the seeded profile | MoMA stopped at page 19 after 18 clean (27 Sep). d'Orsay 403 at 18 after 17 (29 Sep). British Museum 41 clean (28 Sep). All at 30s |
 | **B (default)** | She opens Chrome, warms it up, leaves it open; the sweep attaches | 30 Sep: d'Orsay 54 pages, Morgan 18 (twice), MoMA 25, British Museum 37. No challenge, four venues back to back with `--ignore-cooldown` |
-| C | Her everyday Chrome and profile | Rejected (`CLAUDE.md` §8) |
+| C | Her everyday Chrome and profile | Rejected (`CLAUDE.md` §4.2) |
 
 Mode A's stops can't show whether pages or minutes triggered them. That mode B is
 WHY 30 Sep was clean is likely, not proven.
@@ -189,7 +189,7 @@ is its only wait.
   then, with a `cmplz-` class on `<body>`, every paragraph excluded. The ancestor
   walk stops before `<body>`.
 - Site moved to `galleriaborghese.cultura.gov.it`; down 8–11 Sep for everyone.
-- Open: 7 titles still in capitals (`CLAUDE.md` §7.3).
+- Open: 7 titles still in capitals (`CLAUDE.md` §2.2.3).
 
 ---
 

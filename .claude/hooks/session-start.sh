@@ -4,8 +4,7 @@
 # Two jobs:
 #   1. Put the session on `main`. Claude Code web hands every session its own
 #      branch, and that instruction outranks CLAUDE.md, so the branching policy
-#      has to be enforced here rather than written down. See CLAUDE.md,
-#      "Branching policy — read this first".
+#      has to be enforced here rather than written down. See docs/branches.md.
 #   2. Install dependencies, so `npm test` works without a manual step.
 #
 # Safe by design: it refuses to move if the working tree is dirty or if the

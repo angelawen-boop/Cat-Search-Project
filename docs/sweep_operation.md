@@ -33,7 +33,7 @@ npm run test:scraper                         scraper tests (npm test: app and sc
 | `dates.js` | THE date reader — the app gets it via `node build/sync_shared.js` (with compression's rules); `npm test` fails if they differ |
 | `compress.js` / `compress_cli.js` | Raw text → the summary she reads |
 | `qc.js` | Exceptions report **and the gate in front of her import file**. A faulty row (no title, no venue code) BLOCKS `--apply`; an exception warns and never acts |
-| `sweep_log.js`, `venue_status.js` | Freshness drawer rebuilt from disk; CLAUDE.md §2's printed venue status |
+| `sweep_log.js`, `venue_status.js` | Freshness drawer rebuilt from disk; CLAUDE.md §2.1's printed venue status |
 | `reread_kept.js` | **A fault in a sweep's rows is fixed from the pages it kept, never by sweeping again** (her decision). Prints every changed field; `--write` corrects the run, `swept_at` kept |
 | `from_saved_pages.js` | A venue's real recipe over `.mhtml` pages she saved, no network |
 | `page_keep.js`, `robots.js` | Pages kept as read; each site's robots.txt |
@@ -96,7 +96,7 @@ Design: the HEADED block in `sweep_prototype.js`; H-001 to H-007.
   back to A. **Clean at all four.**
 - **A — `--launch-chrome`.** The sweep launches Chrome, which announces it is
   driven by a program. Stopped part-way at MoMA and d'Orsay; kept, not default.
-- **C — her everyday Chrome and profile. Rejected** (§8).
+- **C — her everyday Chrome and profile. Rejected** (§4.2).
 
 **Her steps for a headed run:**
 1. `git pull`.
@@ -173,4 +173,4 @@ Send `sweep_compressed.csv` with the file-sending tool as soon as compression
 finishes, saying how many rows and how many summaries were reused versus written.
 **One file only** — never `sweep.csv`, which holds raw text. **If compression has
 not been run, the run is not finished.** Run the file through the app's intake
-and READ the cards before sending (§6).
+and READ the cards before sending (§4.1).

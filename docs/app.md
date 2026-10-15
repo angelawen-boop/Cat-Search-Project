@@ -1,6 +1,6 @@
 # The app — evidence and design
 
-`CLAUDE.md` §4 carries the rules. This carries the evidence behind them.
+`CLAUDE.md` §5.1 carries the rules. This carries the evidence behind them.
 **Read the relevant section before changing the catalogue lookup, the intake
 screen, quarantine, the sweep log or saving.** The full history is in git. The app's original long comments: `git show bea6dd7:Cat_Watch.jsx`.
 
@@ -267,7 +267,7 @@ seeing the change. It is not a monitor.
 Three rules (KHM *Canaletto & Bellotto*, filed "In the museum shop" with a dead TICKET
 link): a shop's waiting room (307 on every page) is not "not in the shop"; a ticket is
 never a catalogue; a web-found shop link counts only once opened and shown to be the
-book for sale. A blocked shop says so (her wording, `CLAUDE.md` §4). Rows already
+book for sale. A blocked shop says so (her wording, "Rules her decisions settled"). Rows already
 carrying a ticket link lose it on Re-check. L-001 to L-019; L-020 to L-023 for
 `listedOnly`.
 
@@ -323,7 +323,7 @@ close" while nothing was written.
 
 - **Never restore the Google Drive save and load as it was**: it called Claude's
   servers straight from the page, which the viewer's sandbox blocks. A Drive backup
-  button (CLAUDE.md §7.1) goes through a Google Drive connector, as the catalogue
+  button (CLAUDE.md §2.2.1) goes through a Google Drive connector, as the catalogue
   lookup goes through Parallel's.
 - **A new "find catalogues for all Wanted"** must work within her Parallel and
   Claude allowance and, on `claude/ledger-cloud`, respect the read-only lock.
@@ -375,7 +375,7 @@ A hard block (her decision): skipping undecided cards silently loses a session's
 reading. **Rejecting is deciding.** The button says what is missing ("323 still
 to decide"). `countDecisions` lives outside the component so fixtures reach it;
 it and the jump-to-undecided button share `isUndecidedCard` (18g). Fixtures 18
-to 18g. The partial-apply button beside it: `CLAUDE.md` §4, fixture 18h.
+to 18g. The partial-apply button beside it: `CLAUDE.md` §5.1, fixture 18h.
 
 ### Counts that reconcile
 
@@ -486,7 +486,7 @@ matching failure.**
 
 ## 7. Tests
 
-In `CLAUDE.md` §4, "Tests".
+In `docs/testing.md`.
 
 ---
 

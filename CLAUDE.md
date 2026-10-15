@@ -12,7 +12,7 @@ Two components, and they are **coupled**:
 1. **The app** — `Cat_Watch.jsx`, a React page published on her Claude account.
 2. **The scraper** — `scraper/`, which produces the CSV the app eats.
 
-They agree on the pro forma CSV columns (§3). If the scraper changes what it
+They agree on the pro forma CSV columns (§5.2). If the scraper changes what it
 writes, the app has to agree in the same breath. That coupling — not tidiness —
 is why they live in one repo, on one branch.
 
@@ -86,124 +86,26 @@ every job as far up that order as it goes. The test:
 
 Chat Claude has no project context and cannot read this guide. Last resort.
 
-### Editing this guide — and the side docs
+### Procedures — in side docs
 
-Loaded in full at the start of every session, so every line costs something every
-time. It once grew to 2,905 lines, mostly run-by-run stories. The rules:
+`main` is the trunk and the source of truth for app, scraper and this guide; work there.
 
-- **Record the conclusion, not the journey.** Results, decisions and the lesson —
-  never the order things happened in. When a finding is overturned, replace the
-  passage; git is the archive.
-- **Only OPEN work carries its backstory** — enough for the next session to pick
-  it up cold. When the item closes, cut it to its result.
-- **No dates on decisions.** Write "her decision" or "her judgement call",
-  never a date. A date stays only where an open item's story needs the
-  sequence (what happened, then what was decided a week later), names a run,
-  or is a deadline.
-- **Moving text to `docs/` is not a way to keep it.** Compress it first, in
-  place, then move it. A side doc holds evidence a future session will need,
-  never a transcript.
-- **Every file has a line budget** — `node scraper/doc_budget.js` (her decision;
-  runs at the end of `npm test`). Over budget warns and never fails a
-  test: the clean-up is a separate session, away from active work — never the
-  session that tripped it, mid-task. Raising a budget is her call.
-- **The clean-up is the "Guide review" routine** — a fresh session on the 15th
-  and 30th (28th in February — a second routine), 7:50am Sydney, push to her; it follows
-  `.claude/skills/guide-review/SKILL.md` (fix what has one answer, ask her
-  about her decisions and anything untraceable). She can also ask for it any time.
-- **Anything derivable from the repo is printed by a script, not typed here**
-  (`scraper/venue_status.js` replaced the venue table).
-- **Put the trigger next to the code, not in an index here.** A comment above the
-  date parser saying "read `docs/scraper.md` first" fires because the session is
-  already looking at that line.
-- **Never duplicate a code comment into this guide.** One copy drifts, silently.
-- **Never use `@path` imports here** — Claude Code loads those eagerly.
-
-### Code comments and decision history
-
-Long dated comments ("her ruling, 22 Sep…", "WHAT BROKE…", "DO NOT PUT IT
-BACK…") make the code read as a case history, not steps to follow. These rules
-hold on every branch, `claude/ledger-cloud` included.
-
-**A comment may say only:**
-- What the block does, and any rule the code does not show. Present tense, a few lines.
-- A pointer to the decision behind a rule — the case and where the reasoning lives:
-  `// Sold out outranks "Add to cart" (Morgan Tarot; docs/app.md).`
-- A one-line warning where undoing it would bring back a known bug:
-  `// Lowercase scheme and host only: folding the path merged two exhibitions (docs/scraper.md).`
-- A short section label a test uses as an anchor (below).
-
-**Never:** how a problem was found, what was tried, or why an earlier version
-was wrong; her quotes or paragraphs of her reasoning; headings such as WHAT
-BROKE, WHY or HER RULING; anything over about five lines; code that is gone
-("this used to…") — git keeps it.
-
-**Where the history goes:** app decisions in `docs/app.md`, scraper decisions
-in `docs/scraper.md`, in the section for that code. Each as its conclusion: the
-rule, one sentence on why, the case, the functions it touches. One
-entry per decision — update an existing one, never add a second. Within budget
-and compressed first (above); the narrative stays in git.
-
-**Protect her decisions with tests, not prose.** When she decides how something
-behaves, add or update a fixture that fails if it is undone, named after the
-case ("Morgan Tarot: sold out beats Add to cart"). A comment can be overlooked;
-a failing test cannot.
-
-**Test anchors.** The harness finds its place in the JSX by comment text
-(`// URGENCY COLOURS, ONE SET PER THEME`, `// WHAT A QUARANTINE REMEMBERS.`; §4
-"Tests"). Before removing or rewording a comment, grep `scraper/fixtures/` for
-it. Keep an anchor as a short label, or move the test to a new anchor in the
-same change — never leave a test pointing at nothing.
-
-**When editing code:** update the comment already there rather than adding one
-beside it; delete any comment the code no longer matches; a long history
-comment on a function you change moves to the docs, compressed, in the same
-change. Leave comments elsewhere alone unless the task is a tidy-up. Behaviour
-changes and tidy-ups go in separate commits, so a tidy-up can never hide a
-change in behaviour.
-
-**Exceptions:** the numbering rule beside `APP_VERSION` stays, as short as
-possible. The SHARED block's comments come from the scraper (`dates.js`,
-`compress_prompt.md`, `compress.js`, `sweep_prototype.js`'s `VENUES`): apply
-these rules there, run `node build/sync_shared.js`, then the full `npm test`.
-Never edit the block directly (§4).
-
-### Branching
-
-**`main` is the trunk and the source of truth for app, scraper and this guide.**
-Work there. `.claude/hooks/session-start.sh` switches a web session's
-auto-assigned branch to `main` before work begins; it refuses if the tree is
-dirty or the branch carries unmerged commits, and it fetches first.
-
-Branches separate in-progress work from known-good work, never components.
-
-| Branch | What it is |
-|---|---|
-| `claude/ledger-cloud` | **Live trial — §7.1.** Merged to `main` only on her call |
-| `parked` | **The unpublished search work after 43** (catalogue versions as blocks, Stage 1/1b, the live check page's code), from `main` and `claude/ledger-cloud`; also the old abandoned Vasari fix. Never published, never merged back without her say (her decision) |
-| `claude/jsx-stitched-intake`, `claude/blissful-volta-jxj5c0` | Merged into `main`; kept as history |
-| `claude/quiet-user-agent` | Parked, her decision — do not merge or re-open |
-| `claude/personal-tracking-ledgers-z49s2h` | Dead — do not merge |
-| `claude/blissful-knuth-snbqci`, `claude/design-questions-87gj6w`, `claude/headless-chromium-claude-code-wl94l0` | Dead — early 7–10 Sep work from before `main` was the trunk (no shared history with it); superseded, do not merge. Kept on GitHub, her decision — never raise deleting them |
-| `claude/met-connection-experiments` | Abandoned — do not merge |
-| `claude/playwright-scraper-prototype-z68iko` | Abandoned — merging it would undo the current scraper |
-
-**Holding a push for another session — her decision.** When she says a
-session must wait for another:
-- **The waiting session** commits locally, pushes nothing and does not ask about
-  it. It waits for a message from the named session (cross-session
-  `send_message`), then pulls `main`, merges, runs `npm test` and pushes to `main`.
-- **The finishing session**, once its work is on `main`, messages the waiting
-  session by the title she gave (`list_sessions` finds it) that it may push.
-- Unpushed work is lost if an idle container is reclaimed. Only if that is a
-  real worry: push to `parked` — that branch, never a new one; delete it once
-  the work is on `main`.
+- **Editing this guide or a side doc, and the rules for code comments and decision history:**
+  `docs/doc_rules.md`. **Read it before editing this guide or any code comment.**
+- **Branches, and holding a push for another session:** `docs/branches.md`. **Read it before
+  creating, merging or pushing a branch.**
+- **Publishing the app** (version numbers, building, the publish steps): `docs/publishing.md`.
+  **Read it before publishing.**
+- **Tests** (which half to run, the suite list, test anchors, JSX validation): `docs/testing.md`.
+  **Read it before running or writing tests.**
 
 ---
 
-## 2. Where things stand
+## 2. Where things stand and open work
 
-### Run the script, do not read a table
+### 2.1 Where things stand
+
+#### Run the script, do not read a table
 
 ```
 node scraper/venue_status.js
@@ -221,7 +123,7 @@ judgement follows to the next Cloudflare venue. Paced sweeps from her laptop in
 mode B have been clean at all four (`docs/sweep_operation.md`). Evidence: `docs/venues.md`,
 "The headed venues".
 
-### Her decisions, per venue — `docs/venues.md`
+#### Her decisions, per venue — `docs/venues.md`
 
 What is excluded or kept at each venue, her counts, and the Capodimonte arrangement are in
 `docs/venues.md`, "Her decisions, per venue". **Read it before touching a venue's recipe, rows or
@@ -240,308 +142,12 @@ No row carries a credit line, star rating, ticket price, funder list, opening
 hours, breadcrumb or cookie notice. Empty summaries: three Rijksmuseum rows whose
 pages return 404, plus occasional page timeouts — which say so on the row.
 
----
-
-## 3. The contract — the pro forma CSV
-
-The only file the app ingests, with columns exactly in this order:
-
-```
-venue_code, title, start_date, end_date, summary, url, notes, swept_at
-```
-
-**Sweep lookback is 1 July 2024, permanently.** The rest of the contract — what the lookback
-means, the scraper must never de-duplicate, the notes column, `swept_at` — is in
-`docs/import_csv.md`. **Read it before changing what the scraper writes or what the app reads.**
-
----
-
-## 4. The app
-
-> ### https://claude.ai/artifact/E2WjpRgr4W5eSzYtxyfrt5
->
-> **Republish to THAT url** or a new page is created and hers stops updating;
-> from a session that did not publish it, pass it as `url`. It carries **four
-> capabilities**, each load-bearing: `downloads` (Export), `mcp` (her **Parallel
-> Search Key** connector, by name), `sample` (Claude reading what the connector found), `db`
-> (the sweep log, quarantine and lookup log — they survive a Reset). A publish
-> restating `capabilities` must restate all four; omitting it carries them
-> forward. **Renaming the connector means restating them.**
-
-**Live: 44.4 · cloud 5 on the test page** — NGV (National Gallery of Victoria) as a link venue, last under Occasional, its two-digit years read (`shortYear`, AL-038); a Wayback Machine link files under the museum it copied (`siteUrlOf`, AL-037); pasted links lose tracking tags (`withoutTracking`, AL-036); Date shows ↓/↑; Date sort's second tap reverses the list, no Acquiring sort, Boston MFA (chip "Boston" under Occasional, dates read above the title, `OCC_LINK_READ`); before that 44: her venue names, chips and order (`VENUE_ORDER` sorts every venue list; the lookup still searches with the old names, `lookupName`, her decision), shorter Re-check lines with no "Nothing changed" anywhere (her wording, `recheckLinkedPage`, `recheckShop`), and Cancel during a Read (AL-035). The search work after 43 is on `parked`, her decision; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
-keeps up with it, merged, so her main app never falls behind — it is not
-republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
-Closing Window (Yes-wanted catalogues closed 3–12 months ago,
-`inClosingWindow`), Tracked and Dismissed inside "Details"; footer "Reset to
-Seed" and "Reset cards" (clears one card's lookup). Older numbers are in git.
-
-- **The number lives in `APP_VERSION`; the footer prints it with the date.**
-  Bump it in the same breath as the change.
-- **Her numbering:** whole number for a substantial change (adding venues is
-  one), decimal for a small one. **One number per PUBLISH**, never per build.
-  Bump it only when a publish is under way — never turn by turn while one
-  issue is still being worked on (her ask).
-- The file is `Cat_Watch.jsx` — no version number in the name, ever.
-
-**Building is code's job — `node build/build_app.js`**: transpiles, wraps it in
-the committed shell (`build/shell_head.html`, `build/shell_tail.html`), proves it
-parses, writes `build/dist/index.html`. `--shell-from <saved live page>` says
-whether the committed shell still matches.
-
-**To publish, run `node build/build_app.js` and follow what it prints** — nothing
-else. Built on `main` it says how to get to `claude/ledger-cloud`; built there it
-sets the test page's title and prints the publish steps.
-No read first. A session's first publish is refused twice (not viewed, then
-resent unchanged), by design; the third goes through. Later ones go straight through.
-
-### The mental model, load-bearing
-
-**On `main`, her data is NOT hosted — the page is.** The app is the *tool*, the
-ledger is the *document*, like a word processor and a file. Opening the link
-gives an empty portal. *(The cloud-ledger trial, §7.1, changes this on its
-branch only.)*
-
-Losing or silently corrupting the ledger is the worst outcome the design guards
-against; it holds every tracked exhibition plus her marks (watching / dismissed /
-want-catalogue / acquired / catalogue details). **She keeps a real ledger** — changes touching it need the care of any user data.
-
-**Three containers, decided by what the fact is:**
-
-| | Lives in | Because |
-|---|---|---|
-| **The ledger** (her file) | her export, hers alone | Derivable from nothing. Rolls back with a backup, correctly |
-| **The sweep log** | the page's own store | A FACT ABOUT THE WORLD — must not roll back. Any sweep file rebuilds it |
-| **The quarantine** | the store AND her export | A fact about the world derivable from nothing — so both, with one merge rule |
-
-**Do not propose moving any of the three** (the cloud ledger is her own
-reopening, §7.1). Reasoning and the two rejected arguments: `docs/app.md` §4–5.
-
-### Ledger row shape
-
-```
-id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
-acquiring, buyNext, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
-publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, addedAt, editedAt
-```
-
-Ledger backup is JSON; the sweep pro forma is CSV.
-
-**JSX validation:** `tsc check.tsx --jsx preserve --noEmit --skipLibCheck
---allowJs --target esnext`, filtering for `error TS1[0-9]{3}[^0-9]`.
-
-### What is built and signed off
-
-Confirmed by her on real files, not only by fixtures. **Design and evidence:
-`docs/app.md`.**
-
-- **Loading and saving.** Open → empty portal; Import → pick file. **Export IS
-  Save.** Two save routes, differing in what is KNOWN — the runtime's file
-  handoff resolves or throws; a plain browser download cannot tell finished from
-  cancelled, so it does not clear the unsaved warning. **Never put back a
-  click-triggered green tick** — it once read "Saved — safe to close" while
-  nothing was written.
-- **Refreshing.** A sweep CSV goes in via Import Refresh; the app compares it
-  against the ledger with no internet access and shows proposals as cards grouped
-  by venue: Add / Fill / Change / Couldn't be filed. Bad data is always surfaced,
-  never dropped.
-- **Reading a stitched file.** Four bands for the odd cases; duplicate rows fold
-  on venue + URL and nothing else; rows with no URL never fold; marker rows
-  become a coverage panel, never proposals.
-- **The ledger will not move until every card is decided** — a hard block.
-  Rejecting counts as deciding. **Permanent design.** Beside it sits the
-  **partial-apply button** (applies only the cards decided so far, asks first,
-  says what it leaves behind) — **stays until she says, her decision:** she
-  imports new venues in batches of 50–100 cards and needs to work them in
-  sittings. The way back is re-importing the same file; rejections do not
-  survive the round trip, which she accepted. It is not confirm-and-continue
-  (§8). To remove it one day: the marked block in `Cat_Watch.jsx`, `partial` on
-  `applyRefresh`, `offerPartialApply` and its harness export, fixture 18h.
-- **Counts that reconcile.** One line accounts for every row read, two sentences
-  each ending in the number the next starts from. **Every term stays.**
-- **Quarantine ("never add this")**, keyed on normalised URL. Latest decision
-  wins, which needs tombstones — a release is RECORDED, not merely absent.
-- **Reject and quarantine are different jobs.** Quarantine: never show me this
-  again. Reject: *this entry is wrong* — fix it at the source. **A rejected card
-  coming back is correct.** Never propose remembering rejections.
-- **Buy next** (her design): on a Yes card, a dot left of the star, drawn
-  to the star's measured size (`starInk`) — hollow off, red on. Leaving Yes clears
-  it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
-  anywhere.** Closing the search bar or Reset cards empties its box.
-- **Per-venue freshness**, two dates, from `swept_at`.
-- **Add by link** (39–39.5, her design; signed off on her 10 links): Import opens a small pop-up — CSV · Links, Cancel; **nothing added
-  to the page itself**. Each link is read
-  once by code (title, dates) and the model (prose, always English), then the
-  same intake as a sweep; no lookback. New venues file under one "Occasional"
-  chip (NG Washington, NG Scotland and Mia have their own; chip and sort order is `VENUE_ORDER`, her decision); their shop sections confirmed on a screen after the review (39.2).
-  **The date reader and summary rules are the scraper's own**, written into the
-  JSX by `node build/sync_shared.js` — never edit between its SHARED markers.
-  `docs/add_by_link.md`.
-- **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
-  at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.
-- **Dark mode**, every colour named; the shell paints a ground before React runs.
-- **Sorting, timestamps and dividers** — the only way to tell this import from
-  earlier ones from the seed. **Do NOT "simplify" it.**
-- **Seed set**, ~110 exhibitions read before the scraper existed, met / ng / rijks / acq only.
-  Thin on history at met and rijks by design of the tool that read it. **Nothing
-  to fix; do not re-diagnose this as a matching failure.**
-- **Titles.** A changed title is a Change card — a rename or only capitals.
-  Nothing masked; the scraper records the venue's own letters (`restoreCase`).
-  **A changed description is a Change card too** (`consider`), so descriptions
-  must be stable from sweep to sweep.
-- **Italian titles** (`capo`, `brera`, `uffizi`): title stays the museum's own
-  (the lookup searches by it); an English translation opens the description —
-  `In English: "…". Sixteen works…`. The model returns plain strings; code
-  writes the line (`composeSummary`). `compress_prompt.md`, "Italian titles".
-
-**Deliberately not built:** bulk-approve, in-app field editing, and the mirror
-case where the app proposes Add but it is really an update.
-
-### Catalogue lookup — the route
-
-**Design, rules and the case behind each: `docs/app.md` §1. Read it before changing the
-lookup.** Five phases (`lookupCatalogue`): the venue's shop; complete the record;
-which book (in code); the publisher's page, once; the row, once. Steps gather facts,
-code decides each, `composeRow` writes the row once.
-
-- **Every step after the first is conditional — do not make them unconditional, and do
-  not flip to searching wide first.**
-- **Search again means search again** (her decision): a whole fresh lookup from a blank
-  card. The old "keep what's on the card" rule is gone; do not bring it back.
-- **Which model — CLOSED, her decision.** The page asks the viewer's Claude through
-  `sample` at `modelTier: default`. Do not re-open without a real misread.
-- **Every reading runs on her allowance** (up to five searches and seven page opens);
-  her keyed connector is "Parallel Search Key" (`docs/app.md` §1, "The connector's
-  limits and cost").
-- **Shop addresses** are printed from `MUSEUMS` by `node scraper/shop_addresses.js`.
-
-### Tests
-
-**Test the half you changed — her decision.** A plumber does not test the
-wiring.
-
-- App work (`Cat_Watch.jsx`, `build/`) → `npm run test:app`.
-- Scraper work (`scraper/`) → `npm run test:scraper`.
-- `npm test` (both) only when a change touches both halves.
-
-Where the halves meet — importing a scraper CSV, the shared date reader and
-summary rules — those tests run in both halves already. A test failing in the
-other half is reported in one line and left alone. **The exit code says
-whether everything run passed.**
-
-The suite list, and which half each belongs to, is `scraper/run_tests.js`,
-never retyped here; a suite only a branch has goes in that branch's
-`scraper/fixtures/branch_tests.txt` and runs with the app half
-(`claude/ledger-cloud`: `cloud_ledger.js`, `cloud_app.js`, `cloud_two_copies.js`).
-Each fixture file opens with what it proves; case IDs (AL-, C-, R-, KP-…) are
-found by grep. Per-venue `*_pages.js` run a recipe on saved pages, no network,
-against her counts, dates, titles and descriptions. `page_loads.js` asks whether the
-app page LOADS, `page_renders.js` whether it DRAWS (jsdom, plain and with the runtime
-answering) — the load check once passed while the live page was black.
-`intake_cases.js` holds the merges that must not happen, quarantine, freshness, row
-identity, whole-file refusal, the ledger gate and the sweep-log merge, on
-`intake_sample.csv` (76 rows, 8 venues, every conflict shape).
-
-**OPEN — RB-016 and RB-020** (robots wait, scraper) fail under load: run ten at
-once, RB-016 read 1148–1293ms against 1450 in 5 of 10, RB-020 over
-1400ms in 2. Not investigated. A scraper session's job — not an app one's.
-
-The harness lifts the intake out of the JSX by **anchors on prose, never line
-numbers**. An early `return` in a fixture file exits the whole suite silently —
-**await, never return.**
-
----
-
-## 5. The scraper
-
-### Why it exists
-
-Chat Claude's fetch tool **retrieves a page before its JavaScript runs**; museum
-sites are shell-plus-database, so it sees an empty frame. Architectural — no
-prompt fixes it. **A headless browser fixes it at the root.**
-
-**Target output:** the pro forma CSV, **summary carrying the raw curatorial
-text**. Compression turns that into her teaser. Keeping the raw text is what
-makes fabrication structurally impossible.
-
-### Running the scraper — `docs/sweep_operation.md`
-
-The commands, the files table, a run's directory, who sweeps what (container or her laptop),
-the headed venues, pacing and kept pages, what each site's robots.txt asks, and the network
-bridge are in `docs/sweep_operation.md`. **Read it before running a sweep or changing how one
-runs.**
-
-### Adding a venue — `docs/scraper.md` §12
-
-The intake, in order, is in `docs/scraper.md` §12, "Her rules for wiring a venue". **Read it
-before wiring a new venue.**
-
-### Then hand her the file — `docs/sweep_operation.md`
-
-When a sweep finishes, what to send her and how is in `docs/sweep_operation.md`. **Read it before
-ending a sweep run.**
-
-### How it is organised
-
-**One engine, one recipe per venue.** Universal logic in the engine — fetching,
-counters, the URL guard, the lookback, structured-data-first, date parsing,
-writing the CSV. Per venue in `VENUES` — which pages, which links are
-exhibitions, where title and dates sit, what boilerplate to strip. **There is no
-clever general rule for the second list; every attempt has cost us.** A venue
-writes down only what differs. Each recipe option is documented where it is
-defined in `sweep_prototype.js`.
-
-**The 4-paragraph / 2,000-character description cut stays — her decision.**
-Tested on a 3,360-character page: the cut and the full text gave the same teaser
-in substance; raising it would send every long row back for a model review.
-
-**Two recipe options carry a trap:** `notATitle` must be checked in the heading
-branch too, and **`yearArchive` never writes the years down** —
-`expandYearArchive()` derives them at run time, or a 2028 sweep is quietly
-missing two years.
-
-**Everything else — reading a listing, pagination and load-more, the date parser,
-junk in summaries, failure handling, compression, the blocked venues — is in
-`docs/scraper.md`.** Read the relevant section before changing that area.
-
----
-
-## 6. Lessons — mistakes not to repeat
-
-Each line came from a real failure. Details are in git history and `docs/`.
-
-- **Tests can pass and prove nothing.** Check the exit code and grep the output
-  for the new test's own name; a suite can be skipped silently (code after
-  `process.exit`, a missing harness, an early `return` — use `await`).
-- **A command chain that pushes must stop on a failed test** — `grep` of the test output succeeds either way; gate the push on the test's own exit code (`R=$?; [ $R = 0 ] && git push`).
-- **Render the page** (`page_renders.js`). `tsc`, unit tests and string greps can all pass on a blank page.
-- **Test the real thing.** A fixture must serve the address the recipe asks for now, and must run the step that writes the output. Name a test for what the code does.
-- **A count can hide errors.** Read the cards, titles and descriptions, and check titles against the museum's own spelling. Read the page, not a search excerpt of it.
-- **A probe answers only the request it made.** One page read says nothing about the venue; do not invent causes when a sweep fails. Free checks first (robots.txt, reply labels, her saved pages), then at most one sweep.
-- **Say which "nothing" it is:** found nothing, never ran, or was refused. An empty page is not an empty venue. Say what is unknown instead of printing a default.
-- **Never report success because a button was clicked.** Count from the data after the change, not from the list of marks. A control that only appears when it has something to show cannot report "nothing".
-- **Never drop a row on a judgement.** No de-duplicating by title (it deleted 29 National Gallery shows); undecided cards are never skipped on apply; a data fault means "re-run", never a card for her.
-- **Code owns anything with one right answer**, and anything derivable is never re-derived from prose written for a human. Do not delete dormant code, change more than asked, or invent a constraint she did not state.
-- **Quote the match, never the input** (a whole page once landed in one note). Loose rules apply to a listing card, not whole-page text. Ancestor walks stop before `<body>`.
-- **One copy of every fact.** Two date parsers, two venue lists and two month patterns each lost data silently. Delete the dead copy; when you fix a fact, fix every place that shows it.
-- **Run the whole chain end to end** (stitch → compress → app). Match on the key the data carries (URL, not title). A repair is a flag, not a rule that always wins. Inserting a check into a block can split it; the unit suite has no browser.
-- **Where the listing labels a thing, filter on the listing** rather than opening every page.
-- **When a tool is swapped, the route must not change with it.** A better source is not a complete one; open a candidate before filing it; go to an address you can build rather than tuning searches. Change one thing at a time.
-- **Scraper mechanics:** never `networkidle`; wrap `route.fulfill`/`abort`; a 404 is not a loaded page; retry a detail page once. `normalizeUrl` lowercases scheme and host only; resolve hrefs, never join by hand; keep every link to an address. Dates: never build strings by hand; every month spelling (`Sept.`, Italian `set`); normalise dashes; the year can sit on the closing side only. Listings: read every page and stop at the lookback floor; a load-more click must not follow its href. Titles: noise stripping is case-exact; never strip a location that tells two shows apart. `resolveChromium()` needs both halves. A blanket find-and-replace can eat definitions you just added.
-- **A container dry run with `--home` keeps the network bridge on.** Stub every venue it names.
-- **One owner per fact.** Two steps looking for the same thing contradict each other on the card (Canaletto): one step finds it, code decides it, one sentence says it.
-- **An excerpt is what matches the query, not the page.** Short excerpts are not an empty page; judge emptiness on the whole page (Watteau).
-- **Subagents:** send only the rows and fields the question needs. Wording is not a control — remove the tool or check the answer.
-- **A general rule ships only if no page gets worse.** Try it against every live page in hand, old reader beside new; a rule that fixes ten and breaks one is a venue rule, not a general one.
-- **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
-
----
-
-## 7. Open work
+### 2.2 Open work
 
 Everything not listed here is finished. Do not reopen a closed item without a
 new fact.
 
-### 1. The cloud ledger — on branch `claude/ledger-cloud`, in trial
+#### 2.2.1 The cloud ledger — on branch `claude/ledger-cloud`, in trial
 
 **Design, what the store holds, saving, the safety proofs, the trial switch and the two-copies lock:
 `docs/cloud_storage.md`. Read it before changing anything about saving to the page's own store.**
@@ -560,13 +166,13 @@ CSV) — `main`'s Import, Export and Import Refresh, renamed.
    export on every exit, Load that file next time, read the match line.
 2. `CLOUD_OPENS=true` once Loads have matched every time — her call. **Load
    stays for good** — it is how she opens a backup.
-3. Merge to `main` and publish to her app — her call; §4's rules apply. **First
+3. Merge to `main` and publish to her app — her call; `docs/publishing.md` applies. **First
    copy the test page's `sweeps/venues`, `quarantine/rows`, `venues/occasional` and `links/pending` into her app's
    store** (quarantine merged latest-wins, never replaced).
 4. Google Drive backup by button — on the table, never automatic.
 
 
-### 2. Add by link — 39.5 signed off on her 10 links; a new venue still to see
+#### 2.2.2 Add by link — 39.5 signed off on her 10 links; a new venue still to see
 
 **Design, decisions, venue link rules and the proof pages: `docs/add_by_link.md`.** Her
 test of 39.5: all 10 original links imported; the shop finder better; catalogue lookups at
@@ -581,7 +187,7 @@ MFA, NGV, Wayback Machine copies, tracking tags dropped (44–44.4).
   scraper (her decision); a rule both use (the date reader) stays in `dates.js`. Live
   proof of every link venue: `docs/link_proof_pages.json`.
 
-### 3. Fixes not yet checked in the cases they were written for
+#### 2.2.3 Fixes not yet checked in the cases they were written for
 
 1. **Borghese: 7 titles still in capitals.** The site answered on 5 Oct and the
    sweep still wrote all 7 in capitals; the title check changed none. Her import
@@ -591,7 +197,7 @@ MFA, NGV, Wayback Machine copies, tracking tags dropped (44–44.4).
 2. **Title check not yet run** at `met`, `artic` (home venues). Ran at `capo` and
    `borghese` on 5 Oct, changing nothing.
 
-### 4. Catalogue lookup generally
+#### 2.2.4 Catalogue lookup generally
 
 **All search work after 43 is on `parked`, unpublished** (her decision) — its own
 CLAUDE.md §7.4 and `docs/handover_search_stage1.md` there say where it stands.
@@ -636,7 +242,7 @@ She is noting issues as she uses it, for a later debugging session.
   again then leaves the card untouched. Otherwise a different result is the
   web answering differently — get that run's log.
 
-### 5. The monthly container sweep — confirmation re-run 15 Oct
+#### 2.2.5 The monthly container sweep — confirmation re-run 15 Oct
 
 **She sweeps no more than once a month.** The container's half runs itself:
 the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
@@ -660,72 +266,23 @@ Tates) were fixed from her saves the same day; Louvre refused 3 pages.
 fixed venues come back clean; nothing new broken. Good → she imports that run.
 Not good → more work on the routine or the recipes.
 
-### 6. Queued next
+#### 2.2.6 Queued next
 
-- **The ledger's size** — ~850 exhibitions, nearing 1,000; 2,000 possible. Discussed;
-  findings and two parked items (a faster list; whether to clear old Cloud Saves) in
-  `docs/scalability.md`. Nothing built until she says.
-- **Parked — cards for dismissed exhibitions.** A sweep gives dismissed shows Fill
-  and Change cards like any other, unmarked (the intake never reads `interested`).
-  Her choice: if her next import brings a bothersome number, build "Dismissed" on
-  those cards, grouped last in each venue — nothing skipped, nothing auto-applied.
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library
   record (978-0847899289) that came tenth should give the English edition (WL-060).
-- **Roadmap — a list of publishers and their websites** (her ask), so the card stops
-  saying "Couldn't work out the publisher's own website" (Somogy, Hubert Robert).
-  It replaces her decision to keep `PUBLISHER_SITES` short and never fill it ahead
-  (§8); how the list is built is to be agreed with her first.
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 
----
+#### 2.2.7 Tests that fail under load
 
-## 8. Rejected — do not re-propose
-
-**Proposing "drop the feature" as a fix — rejected as an approach entirely.**
-
-- **Announcing "this row used to have a catalogue"** when a later lookup finds
-  none anywhere.
-- **Storage and saving:** the sweep log inside her export. Google Drive auto-load
-  on open. Automatic saving to Drive (a button is on the table, §7.1). The app
-  gathering its own exhibition data. Auto-save to her FILE on every change (the
-  cloud ledger's live save is a different thing, §7.1). A confirm-tap after
-  download. A backup in the browser's own storage. A snapshot on closing the page.
-- **The intake:** bulk-approve. In-app field editing. Confirm-and-continue past
-  undecided cards. Remembering rejections. Ticking nothing on a date conflict.
-- **Data:** Excel as the sweep format. Merging the two Tates. Stripping the 110
-  seed. The separate readout doc.
-- **Process:** watching the sweeper and interrupting it. Firing a new JSX
-  mid-discussion. A "GPT scrapes, Claude compresses" role split.
-- **Catalogue lookup:** splitting it from drawer output. (A map of publisher
-  websites is no longer rejected — her roadmap, §7.6.) A background shop check on every click. Linking straight to an
-  Amazon product page from an ISBN-10. Pointing the shop link at an ISBN search.
-  **Asking a Shopify shop directly whether a book is for sale**:
-  `.js` refused, `.oembed` 429, a product's `.json` has no availability; the
-  search answer's `available` counts pre-orders and omits the sold-out Tarot.
-  **Reading the exhibition's own page for a catalogue when the shop is blocked**
-  — a model read and a new step for two shops (KHM, MAM); the card already links
-  the shop's search.
-- **Scraper:** blocking scripts and trackers in the bridge (IR-13). Splitting the
-  scraper into modules (IR-14). **Fetching several pages at once within one
-  venue (IR-15) — never.** Dropping an undated row because its start date is old
-  (IR-18). A default wait on top of robots.txt in the container.
-- **Blocked venues:** **sweeping in her everyday Chrome on her own profile**
-  — Chrome refuses a program attaching to its main profile, her personal
-  browsing stays out of this, and the Morgan checks her own browser every visit
-  while the seeded profile is not checked. **Fetching a blocked venue through the
-  Parallel connector** — no more new methods to chase a venue.
-  **Splitting one venue across days, or a slower pace**.
-
-**Corrected along the way:** Chat can **not** fetch any URL cold. The Italian
-venues are four different situations. The AbeBooks link is
-`/servlet/SearchResults?ds=30&dym=on&kn=…&rollup=on&sortby=17` (lowest total
-price, her decision).
+**OPEN — RB-016 and RB-020** (robots wait, scraper) fail under load: run ten at
+once, RB-016 read 1148–1293ms against 1450 in 5 of 10, RB-020 over
+1400ms in 2. Not investigated. A scraper session's job — not an app one's.
 
 ---
 
-## 9. Where the rest lives
+## 3. Where the rest lives
 
 Every side doc is one step from this guide; none depends on another. Read the one for the
 work in hand.
@@ -746,7 +303,7 @@ work in hand.
 | `docs/scraper.md` | The scraper's evidence: listings, pagination, the date parser, junk in summaries, failure handling, blocked venues, and the steps for adding a venue | Changing anything in the scraper, or wiring a venue |
 | `docs/sweep_operation.md` | Running the scraper: commands, files, run directories, who sweeps what, headed venues, pacing, robots.txt, the network bridge, and what to send her when a sweep ends | Running a sweep, or changing how one runs |
 | `docs/compression.md`, `scraper/compress_prompt.md` | Compression design, model split, eval and rejected alternatives; the prompts and their tuning | Changing compression or summary wording — otherwise don't |
-| `docs/import_csv.md` | The pro forma CSV contract: lookback, never de-duplicate, the notes column, `swept_at` | Changing what the scraper writes or what the app reads |
+| `docs/import_csv.md` | The pro forma CSV: lookback, never de-duplicate, the notes column, `swept_at` | Changing what the scraper writes or what the app reads |
 
 **Import 2: the venues** — what each museum does and what she decided about it
 
@@ -774,6 +331,15 @@ work in hand.
 |---|---|---|
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 
+**Procedures** — how to do the recurring jobs
+
+| File | What is in it | Read it when |
+|---|---|---|
+| `docs/doc_rules.md` | How to edit this guide and the side docs, and the rules for code comments and decision history | Editing this guide, a side doc or a code comment |
+| `docs/branches.md` | The branch table and holding a push for another session | Creating, merging or pushing a branch |
+| `docs/publishing.md` | Version numbering, building the app and the publish steps | Publishing the app |
+| `docs/testing.md` | Which half to test, the suite list, test anchors, JSX validation | Running or writing tests |
+
 **Reviews**
 
 | File | What is in it | Read it when |
@@ -789,3 +355,308 @@ work in hand.
 
 Git holds the full text of everything compressed out of this guide —
 `git log -- CLAUDE.md`.
+
+---
+
+## 4. Guardrails — what not to do
+
+### 4.1 Lessons — mistakes not to repeat
+
+Each line came from a real failure. Details are in git history and `docs/`.
+
+- **Tests can pass and prove nothing.** Check the exit code and grep the output
+  for the new test's own name; a suite can be skipped silently (code after
+  `process.exit`, a missing harness, an early `return` — use `await`).
+- **A command chain that pushes must stop on a failed test** — `grep` of the test output succeeds either way; gate the push on the test's own exit code (`R=$?; [ $R = 0 ] && git push`).
+- **Render the page** (`page_renders.js`). `tsc`, unit tests and string greps can all pass on a blank page.
+- **Test the real thing.** A fixture must serve the address the recipe asks for now, and must run the step that writes the output. Name a test for what the code does.
+- **A count can hide errors.** Read the cards, titles and descriptions, and check titles against the museum's own spelling. Read the page, not a search excerpt of it.
+- **A probe answers only the request it made.** One page read says nothing about the venue; do not invent causes when a sweep fails. Free checks first (robots.txt, reply labels, her saved pages), then at most one sweep.
+- **Say which "nothing" it is:** found nothing, never ran, or was refused. An empty page is not an empty venue. Say what is unknown instead of printing a default.
+- **Never report success because a button was clicked.** Count from the data after the change, not from the list of marks. A control that only appears when it has something to show cannot report "nothing".
+- **Never drop a row on a judgement.** No de-duplicating by title (it deleted 29 National Gallery shows); undecided cards are never skipped on apply; a data fault means "re-run", never a card for her.
+- **Code owns anything with one right answer**, and anything derivable is never re-derived from prose written for a human. Do not delete dormant code, change more than asked, or invent a constraint she did not state.
+- **Quote the match, never the input** (a whole page once landed in one note). Loose rules apply to a listing card, not whole-page text. Ancestor walks stop before `<body>`.
+- **One copy of every fact.** Two date parsers, two venue lists and two month patterns each lost data silently. Delete the dead copy; when you fix a fact, fix every place that shows it.
+- **Run the whole chain end to end** (stitch → compress → app). Match on the key the data carries (URL, not title). A repair is a flag, not a rule that always wins. Inserting a check into a block can split it; the unit suite has no browser.
+- **Where the listing labels a thing, filter on the listing** rather than opening every page.
+- **When a tool is swapped, the route must not change with it.** A better source is not a complete one; open a candidate before filing it; go to an address you can build rather than tuning searches. Change one thing at a time.
+- **Scraper mechanics:** never `networkidle`; wrap `route.fulfill`/`abort`; a 404 is not a loaded page; retry a detail page once. `normalizeUrl` lowercases scheme and host only; resolve hrefs, never join by hand; keep every link to an address. Dates: never build strings by hand; every month spelling (`Sept.`, Italian `set`); normalise dashes; the year can sit on the closing side only. Listings: read every page and stop at the lookback floor; a load-more click must not follow its href. Titles: noise stripping is case-exact; never strip a location that tells two shows apart. `resolveChromium()` needs both halves. A blanket find-and-replace can eat definitions you just added.
+- **A container dry run with `--home` keeps the network bridge on.** Stub every venue it names.
+- **One owner per fact.** Two steps looking for the same thing contradict each other on the card (Canaletto): one step finds it, code decides it, one sentence says it.
+- **An excerpt is what matches the query, not the page.** Short excerpts are not an empty page; judge emptiness on the whole page (Watteau).
+- **Subagents:** send only the rows and fields the question needs. Wording is not a control — remove the tool or check the answer.
+- **A general rule ships only if no page gets worse.** Try it against every live page in hand, old reader beside new; a rule that fixes ten and breaks one is a venue rule, not a general one.
+- **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
+
+### 4.2 Rejected — do not re-propose
+
+**Proposing "drop the feature" as a fix — rejected as an approach entirely.**
+
+- **Announcing "this row used to have a catalogue"** when a later lookup finds
+  none anywhere.
+- **Storage and saving:** the sweep log inside her export. Google Drive auto-load
+  on open. Automatic saving to Drive (a button is on the table, §2.2.1). The app
+  gathering its own exhibition data. Auto-save to her FILE on every change (the
+  cloud ledger's live save is a different thing, §2.2.1). A confirm-tap after
+  download. A backup in the browser's own storage. A snapshot on closing the page.
+- **The intake:** bulk-approve. In-app field editing. Confirm-and-continue past
+  undecided cards. Remembering rejections. Ticking nothing on a date conflict.
+- **Data:** Excel as the sweep format. Merging the two Tates. Stripping the 110
+  seed. The separate readout doc.
+- **Process:** watching the sweeper and interrupting it. Firing a new JSX
+  mid-discussion. A "GPT scrapes, Claude compresses" role split.
+- **Catalogue lookup:** splitting it from drawer output. (A map of publisher
+  websites is no longer rejected — her roadmap, §6.) A background shop check on every click. Linking straight to an
+  Amazon product page from an ISBN-10. Pointing the shop link at an ISBN search.
+  **Asking a Shopify shop directly whether a book is for sale**:
+  `.js` refused, `.oembed` 429, a product's `.json` has no availability; the
+  search answer's `available` counts pre-orders and omits the sold-out Tarot.
+  **Reading the exhibition's own page for a catalogue when the shop is blocked**
+  — a model read and a new step for two shops (KHM, MAM); the card already links
+  the shop's search.
+- **Scraper:** blocking scripts and trackers in the bridge (IR-13). Splitting the
+  scraper into modules (IR-14). **Fetching several pages at once within one
+  venue (IR-15) — never.** Dropping an undated row because its start date is old
+  (IR-18). A default wait on top of robots.txt in the container.
+- **Blocked venues:** **sweeping in her everyday Chrome on her own profile**
+  — Chrome refuses a program attaching to its main profile, her personal
+  browsing stays out of this, and the Morgan checks her own browser every visit
+  while the seeded profile is not checked. **Fetching a blocked venue through the
+  Parallel connector** — no more new methods to chase a venue.
+  **Splitting one venue across days, or a slower pace**.
+
+**Corrected along the way:** Chat can **not** fetch any URL cold. The Italian
+venues are four different situations. The AbeBooks link is
+`/servlet/SearchResults?ds=30&dym=on&kn=…&rollup=on&sortby=17` (lowest total
+price, her decision).
+
+---
+
+## 5. The app
+
+### 5.1 The app itself
+
+> ### https://claude.ai/artifact/E2WjpRgr4W5eSzYtxyfrt5
+>
+> **Republish to THAT url** or a new page is created and hers stops updating;
+> from a session that did not publish it, pass it as `url`. It carries **four
+> capabilities**, each load-bearing: `downloads` (Export), `mcp` (her **Parallel
+> Search Key** connector, by name), `sample` (Claude reading what the connector found), `db`
+> (the sweep log, quarantine and lookup log — they survive a Reset). A publish
+> restating `capabilities` must restate all four; omitting it carries them
+> forward. **Renaming the connector means restating them.**
+
+**Live: 44.4 · cloud 5 on the test page** — NGV (National Gallery of Victoria) as a link venue, last under Occasional, its two-digit years read (`shortYear`, AL-038); a Wayback Machine link files under the museum it copied (`siteUrlOf`, AL-037); pasted links lose tracking tags (`withoutTracking`, AL-036); Date shows ↓/↑; Date sort's second tap reverses the list, no Acquiring sort, Boston MFA (chip "Boston" under Occasional, dates read above the title, `OCC_LINK_READ`); before that 44: her venue names, chips and order (`VENUE_ORDER` sorts every venue list; the lookup still searches with the old names, `lookupName`, her decision), shorter Re-check lines with no "Nothing changed" anywhere (her wording, `recheckLinkedPage`, `recheckShop`), and Cancel during a Read (AL-035). The search work after 43 is on `parked`, her decision; her main app shows 39.2, its code on `main` current. **Only the cloud test page is published** (her decision): `main`'s code
+keeps up with it, merged, so her main app never falls behind — it is not
+republished each time. Reset to Seed always asks; the counts line is Watched · Wanted · Owned ·
+Closing Window (Yes-wanted catalogues closed 3–12 months ago,
+`inClosingWindow`), Tracked and Dismissed inside "Details"; footer "Reset to
+Seed" and "Reset cards" (clears one card's lookup). Older numbers are in git.
+
+#### The mental model, load-bearing
+
+**On `main`, her data is NOT hosted — the page is.** The app is the *tool*, the
+ledger is the *document*, like a word processor and a file. Opening the link
+gives an empty portal. *(The cloud-ledger trial, §2.2.1, changes this on its
+branch only.)*
+
+Losing or silently corrupting the ledger is the worst outcome the design guards
+against; it holds every tracked exhibition plus her marks (watching / dismissed /
+want-catalogue / acquired / catalogue details). **She keeps a real ledger** — changes touching it need the care of any user data.
+
+**Three containers, decided by what the fact is:**
+
+| | Lives in | Because |
+|---|---|---|
+| **The ledger** (her file) | her export, hers alone | Derivable from nothing. Rolls back with a backup, correctly |
+| **The sweep log** | the page's own store | A FACT ABOUT THE WORLD — must not roll back. Any sweep file rebuilds it |
+| **The quarantine** | the store AND her export | A fact about the world derivable from nothing — so both, with one merge rule |
+
+**Do not propose moving any of the three** (the cloud ledger is her own
+reopening, §2.2.1). Reasoning and the two rejected arguments: `docs/app.md` §4–5.
+
+#### Ledger row shape
+
+```
+id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
+acquiring, buyNext, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
+publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, addedAt, editedAt
+```
+
+Ledger backup is JSON; the sweep pro forma is CSV.
+
+#### What is built and signed off
+
+Confirmed by her on real files, not only by fixtures. **Design and evidence:
+`docs/app.md`.**
+
+- **Loading and saving.** Open → empty portal; Import → pick file. **Export IS
+  Save.** Two save routes, differing in what is KNOWN — the runtime's file
+  handoff resolves or throws; a plain browser download cannot tell finished from
+  cancelled, so it does not clear the unsaved warning. **Never put back a
+  click-triggered green tick** — it once read "Saved — safe to close" while
+  nothing was written.
+- **Refreshing.** A sweep CSV goes in via Import Refresh; the app compares it
+  against the ledger with no internet access and shows proposals as cards grouped
+  by venue: Add / Fill / Change / Couldn't be filed. Bad data is always surfaced,
+  never dropped.
+- **Reading a stitched file.** Four bands for the odd cases; duplicate rows fold
+  on venue + URL and nothing else; rows with no URL never fold; marker rows
+  become a coverage panel, never proposals.
+- **The ledger will not move until every card is decided** — a hard block.
+  Rejecting counts as deciding. **Permanent design.** Beside it sits the
+  **partial-apply button** (applies only the cards decided so far, asks first,
+  says what it leaves behind) — **stays until she says, her decision:** she
+  imports new venues in batches of 50–100 cards and needs to work them in
+  sittings. The way back is re-importing the same file; rejections do not
+  survive the round trip, which she accepted. It is not confirm-and-continue
+  (§4.2). To remove it one day: the marked block in `Cat_Watch.jsx`, `partial` on
+  `applyRefresh`, `offerPartialApply` and its harness export, fixture 18h.
+- **Counts that reconcile.** One line accounts for every row read, two sentences
+  each ending in the number the next starts from. **Every term stays.**
+- **Quarantine ("never add this")**, keyed on normalised URL. Latest decision
+  wins, which needs tombstones — a release is RECORDED, not merely absent.
+- **Reject and quarantine are different jobs.** Quarantine: never show me this
+  again. Reject: *this entry is wrong* — fix it at the source. **A rejected card
+  coming back is correct.** Never propose remembering rejections.
+- **Buy next** (her design): on a Yes card, a dot left of the star, drawn
+  to the star's measured size (`starInk`) — hollow off, red on. Leaving Yes clears
+  it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
+  anywhere.** Closing the search bar or Reset cards empties its box.
+- **Per-venue freshness**, two dates, from `swept_at`.
+- **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
+  at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.
+- **Dark mode**, every colour named; the shell paints a ground before React runs.
+- **Sorting, timestamps and dividers** — the only way to tell this import from
+  earlier ones from the seed. **Do NOT "simplify" it.**
+- **Seed set**, ~110 exhibitions read before the scraper existed, met / ng / rijks / acq only.
+  Thin on history at met and rijks by design of the tool that read it. **Nothing
+  to fix; do not re-diagnose this as a matching failure.**
+- **Titles.** A changed title is a Change card — a rename or only capitals.
+  Nothing masked; the scraper records the venue's own letters (`restoreCase`).
+  **A changed description is a Change card too** (`consider`), so descriptions
+  must be stable from sweep to sweep.
+- **Italian titles** (`capo`, `brera`, `uffizi`): title stays the museum's own
+  (the lookup searches by it); an English translation opens the description —
+  `In English: "…". Sixteen works…`. The model returns plain strings; code
+  writes the line (`composeSummary`). `compress_prompt.md`, "Italian titles".
+
+**Deliberately not built:** bulk-approve, in-app field editing, and the mirror
+case where the app proposes Add but it is really an update.
+
+#### Catalogue lookup — the route
+
+**Design, rules and the case behind each: `docs/app.md` §1. Read it before changing the
+lookup.** Five phases (`lookupCatalogue`): the venue's shop; complete the record;
+which book (in code); the publisher's page, once; the row, once. Steps gather facts,
+code decides each, `composeRow` writes the row once.
+
+- **Every step after the first is conditional — do not make them unconditional, and do
+  not flip to searching wide first.**
+- **Search again means search again** (her decision): a whole fresh lookup from a blank
+  card. The old "keep what's on the card" rule is gone; do not bring it back.
+- **Which model — CLOSED, her decision.** The page asks the viewer's Claude through
+  `sample` at `modelTier: default`. Do not re-open without a real misread.
+- **Every reading runs on her allowance** (up to five searches and seven page opens);
+  her keyed connector is "Parallel Search Key" (`docs/app.md` §1, "The connector's
+  limits and cost").
+- **Shop addresses** are printed from `MUSEUMS` by `node scraper/shop_addresses.js`.
+
+### 5.2 Import csv
+
+The only file the app ingests, with columns exactly in this order:
+
+```
+venue_code, title, start_date, end_date, summary, url, notes, swept_at
+```
+
+**Sweep lookback is 1 July 2024, permanently.** The rest of the import csv — what the lookback
+means, the scraper must never de-duplicate, the notes column, `swept_at` — is in
+`docs/import_csv.md`. **Read it before changing what the scraper writes or what the app reads.**
+
+### 5.3 The scraper
+
+#### Why it exists
+
+Chat Claude's fetch tool **retrieves a page before its JavaScript runs**; museum
+sites are shell-plus-database, so it sees an empty frame. Architectural — no
+prompt fixes it. **A headless browser fixes it at the root.**
+
+**Target output:** the pro forma CSV, **summary carrying the raw curatorial
+text**. Compression turns that into her teaser. Keeping the raw text is what
+makes fabrication structurally impossible.
+
+#### Running the scraper — `docs/sweep_operation.md`
+
+The commands, the files table, a run's directory, who sweeps what (container or her laptop),
+the headed venues, pacing and kept pages, what each site's robots.txt asks, and the network
+bridge are in `docs/sweep_operation.md`. **Read it before running a sweep or changing how one
+runs.**
+
+#### Adding a venue — `docs/scraper.md` §12
+
+The intake, in order, is in `docs/scraper.md` §12, "Her rules for wiring a venue". **Read it
+before wiring a new venue.**
+
+#### Then hand her the file — `docs/sweep_operation.md`
+
+When a sweep finishes, what to send her and how is in `docs/sweep_operation.md`. **Read it before
+ending a sweep run.**
+
+#### How it is organised
+
+**One engine, one recipe per venue.** Universal logic in the engine — fetching,
+counters, the URL guard, the lookback, structured-data-first, date parsing,
+writing the CSV. Per venue in `VENUES` — which pages, which links are
+exhibitions, where title and dates sit, what boilerplate to strip. **There is no
+clever general rule for the second list; every attempt has cost us.** A venue
+writes down only what differs. Each recipe option is documented where it is
+defined in `sweep_prototype.js`.
+
+**The 4-paragraph / 2,000-character description cut stays — her decision.**
+Tested on a 3,360-character page: the cut and the full text gave the same teaser
+in substance; raising it would send every long row back for a model review.
+
+**Two recipe options carry a trap:** `notATitle` must be checked in the heading
+branch too, and **`yearArchive` never writes the years down** —
+`expandYearArchive()` derives them at run time, or a 2028 sweep is quietly
+missing two years.
+
+**Everything else — reading a listing, pagination and load-more, the date parser,
+junk in summaries, failure handling, compression, the blocked venues — is in
+`docs/scraper.md`.** Read the relevant section before changing that area.
+
+### 5.4 Add by link
+
+Design, decisions, the store, the shelf rule and the venue link rules: `docs/add_by_link.md`;
+the live proof pages: `docs/link_proof_pages.json`.
+
+- **Add by link** (39–39.5, her design; signed off on her 10 links): Import opens a small pop-up — CSV · Links, Cancel; **nothing added
+  to the page itself**. Each link is read
+  once by code (title, dates) and the model (prose, always English), then the
+  same intake as a sweep; no lookback. New venues file under one "Occasional"
+  chip (NG Washington, NG Scotland and Mia have their own; chip and sort order is `VENUE_ORDER`, her decision); their shop sections confirmed on a screen after the review (39.2).
+  **The date reader and summary rules are the scraper's own**, written into the
+  JSX by `node build/sync_shared.js` — never edit between its SHARED markers.
+  `docs/add_by_link.md`.
+
+---
+
+## 6. Future considerations
+
+Ideas not yet built — none is open work, and none is proposed unless she raises it.
+
+- **The ledger's size** — ~850 exhibitions, nearing 1,000; 2,000 possible. Discussed;
+  findings and two parked items (a faster list; whether to clear old Cloud Saves) in
+  `docs/scalability.md`. Nothing built until she says.
+- **Parked — cards for dismissed exhibitions.** A sweep gives dismissed shows Fill
+  and Change cards like any other, unmarked (the intake never reads `interested`).
+  Her choice: if her next import brings a bothersome number, build "Dismissed" on
+  those cards, grouped last in each venue — nothing skipped, nothing auto-applied.
+- **Roadmap — a list of publishers and their websites** (her ask), so the card stops
+  saying "Couldn't work out the publisher's own website" (Somogy, Hubert Robert).
+  It replaces her decision to keep `PUBLISHER_SITES` short and never fill it ahead
+  (§4.2); how the list is built is to be agreed with her first.
+- **Library — purchase tracking and a Library tab** (`docs/library.md`): future consideration, never
+  propose.
