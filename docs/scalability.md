@@ -1,4 +1,4 @@
-# Ledger size — what grows, and what to do about it
+# Scalability — what grows as the ledger grows, and what to do about it
 
 Her ledger is about 850 exhibitions and nearing 1,000; 2,000 would not surprise
 her. This doc tracks what that means and the work parked for when she decides

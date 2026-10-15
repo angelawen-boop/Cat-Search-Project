@@ -983,7 +983,7 @@ Not good → more work on the routine or the recipes.
 
 - **The ledger's size** — ~850 exhibitions, nearing 1,000; 2,000 possible. Discussed;
   findings and two parked items (a faster list; whether to clear old Cloud Saves) in
-  `docs/ledger_size.md`. Nothing built until she says.
+  `docs/scalability.md`. Nothing built until she says.
 - **Parked — cards for dismissed exhibitions.** A sweep gives dismissed shows Fill
   and Change cards like any other, unmarked (the intake never reads `interested`).
   Her choice: if her next import brings a bothersome number, build "Dismissed" on
@@ -1055,7 +1055,7 @@ price, her decision).
 | `docs/venue_urls.md` | The original 21 venues' addresses from the Sweeper Brief, and which of its notes still hold | Wiring or re-checking one of those venues |
 | `docs/listing_pages/`, `docs/*_pages/` | Pages she saved, with a README of what each settled | Changing that venue's recipe — before asking her for anything |
 | `docs/compression.md` | Compression design, model split, eval, rejected alternatives | Changing compression — otherwise don't |
-| `docs/ledger_size.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
+| `docs/scalability.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
 | `docs/add_by_link.md` | Add by link — design, decisions, store, shelf rule, first test | Changing Add by link |
 | `docs/catalogue_versions.md` | The catalogue-versions redesign and its agreed cases | Changing the catalogue lookup's design |
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
