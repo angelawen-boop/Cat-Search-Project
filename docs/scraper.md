@@ -1,7 +1,7 @@
 # The scraper — evidence and design
 
 How `scraper/sweep_prototype.js` reads a museum site and why each rule exists.
-`CLAUDE.md` §5 carries the commands and the shape. **Read the relevant section
+`docs/sweep_operation.md` carries the commands and the shape. **Read the relevant section
 before changing that area** — almost every rule here replaced something that
 looked sensible and was silently wrong. Compressed 30 Sep; full history in git.
 Section numbers are referenced from the guide and code — keep them. The original
@@ -255,7 +255,7 @@ settings don't help). **`installNetworkBridge()`**: Chromium does no network I/O
 Node answers every request through the proxy. Images, media and fonts are dropped
 on purpose. The TLS fingerprint no longer matches the user-agent. **A raw egress
 path around the proxy exists — do not use or build on it.** File reuse and reply
-labels: `CLAUDE.md` §5.
+labels: `docs/sweep_operation.md`.
 
 ---
 
@@ -350,7 +350,7 @@ The intake order is `CLAUDE.md` §5. Also:
 
 **Her ruling, 12 Sep:** only `EXHIBITION` and `TICKETED EXHIBITION`; every
 `… INSTALLATION` and `COLLECTION ROTATION` is out — filtered, not just stripped
-from the title. Further exclusions: `CLAUDE.md` §2.
+from the title. Further exclusions: `docs/venues.md`.
 
 - **The tag is on the show's own page**, not on archive cards.
 - **Year pages group by OPENING date**, so the year before the floor is read too.

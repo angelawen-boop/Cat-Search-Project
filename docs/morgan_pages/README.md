@@ -45,7 +45,7 @@ dates and a paragraph each.
   and today, never typed.
 - **Past blurbs are read off the listing; pages are not opened** (her ruling) —
   eight listing loads instead of dozens of show pages. Collections Spotlight is
-  excluded (§2 of the guide).
+  excluded (docs/venues.md).
 - **Unless the listing has no description — then the page IS opened** (her
   ruling, 30 Sep). The Bellini row's body is a picture and its caption only;
   captions are `p.small`, skipped (`listingRow.skip`), so the row comes back

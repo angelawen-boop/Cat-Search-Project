@@ -3563,7 +3563,7 @@ const TATE_NOISE = 'editorial-background|accordion|card-content';
 const VENUES = {
   met: {
     name: 'The Metropolitan Museum of Art',
-    // Her decisions (CLAUDE.md §2): recurring series and every commission series out;
+    // Her decisions (docs/venues.md): recurring series and every commission series out;
     // nothing excluded for coming from a collection, a gift or acquisitions.
     excludeTitle: new RegExp([
       /^P\.\s?S\.\s?Art\b/, /\bScholastic Art (?:&|and) Writing\b/,
@@ -3676,9 +3676,9 @@ const VENUES = {
     selector: 'a[href*="/exhibitions/"]',
     isNav: href => /\/exhibitions\/?$/.test(href),
     title: { heading: false, linkLines: true },
-    // Hong Kong partnership shows are not hers (CLAUDE.md §2): the card's location line.
+    // Hong Kong partnership shows are not hers (docs/venues.md): the card's location line.
     otherBranch: /Hong Kong/i,
-    // Her one exception to the lookback (CLAUDE.md §2): this address only.
+    // Her one exception to the lookback (docs/venues.md): this address only.
     keepDespiteLookback: ['/exhibitions/yves-klein-and-the-tangible-world'],
     // "LGD Hammer" is the gallery's auction series, not an exhibition (her decision).
     excludeTitle: /^LGD\s+Hammer\b/i,
@@ -3797,7 +3797,7 @@ const VENUES = {
     // Captions inside that field (p.small) are not description.
     descriptionSkip: 'p.small, figcaption',
 
-    // Collections Spotlight: a standing rotation, not a show (her decision, CLAUDE.md §2).
+    // Collections Spotlight: a standing rotation, not a show (her decision, docs/venues.md).
     excludeTitle: /^Collections?\s+Spotlight\b/i,
 
     // J. Pierpont Morgan's Library prints "Ongoing" where the others print a
@@ -3812,7 +3812,7 @@ const VENUES = {
     name: 'The Menil Collection, Houston',
     // See excludeUndated in scrapeVenue — her decision on its permanent galleries.
     excludeUndated: true,
-    // Her decisions, this venue only (CLAUDE.md §2): "Foyer Installation: …" rotations,
+    // Her decisions, this venue only (docs/venues.md): "Foyer Installation: …" rotations,
     // "… from the Collection" and "Recent Acquisitions" excluded.
     excludeTitle: /^Foyer\s+Installation\b|\bfrom the Collection\b(?!\s+of\b)|\bRecent Acquisitions\b/i,
     base: 'https://www.menil.org',
@@ -3867,8 +3867,8 @@ const VENUES = {
     //
     // Its blurb is in a div; `qa-exhibition-description` is the site's own hook.
     description: '.qa-exhibition-description',
-    // Displays excluded — her decision for THIS venue (the Wallace keeps them; CLAUDE.md
-    // §2). The site labels each card; anchored at the start ("… On Display" is a title),
+    // Displays excluded — her decision for THIS venue (the Wallace keeps them; docs/venues.md
+    // ). The site labels each card; anchored at the start ("… On Display" is a title),
     // an optional "Featured" first, read from the link's text.
     excludeLinkLabelled: /^\s*(?:Featured\s+)?Display\b/i,
   },
@@ -3935,7 +3935,7 @@ const VENUES = {
     title: { heading: true, notATitle: /^Upcoming events$/i },
     // A one-day event is not an exhibition: its card carries ONE date, an exhibition's
     // a "From … to …" range or none. The lookbehind keeps ranges; undated rows are kept
-    // (her decision, CLAUDE.md §2).
+    // (her decision, docs/venues.md).
     excludeLabelled: /(?<!to\s?)\b\d{1,2}\/\d{1,2}\/\d{4}\s*$/,
   },
 
@@ -3964,7 +3964,7 @@ const VENUES = {
   // Musée d'Orsay, her addition. Written from her saved pages (docs/orsay_pages/). Two
   // listings: what's on (one page) and the past archive (?page=1 is its second page). The
   // link wraps only the title; the tag (.surtitle2) and dates (.surtitle) sit beside it.
-  // Her decisions (CLAUDE.md §2): displays and off-site shows always kept; Parcours,
+  // Her decisions (docs/venues.md): displays and off-site shows always kept; Parcours,
   // Immersive experience and Invitation dropped; an unseen tag is kept and named.
   orsay: {
     name: "Musée d'Orsay, Paris",
@@ -4016,7 +4016,7 @@ const VENUES = {
       // The date line is ALSO a <p> after the <h2> on the current and upcoming
       // cards — the Prix Marcel Duchamp came out "…: From the 2 October 2026".
       subtitle: 'h2.post-summary-title .small, h2.post-summary-title + p:not(.post-summary-date)' } },
-    // Her decisions (CLAUDE.md §2): collection displays, the Prix Marcel Duchamp and
+    // Her decisions (docs/venues.md): collection displays, the Prix Marcel Duchamp and
     // Oliver Beer's films excluded. docs/mam_pages/, MM-*.
     excludeTitle: /(?:^|:\s*)Permanent collections?\s*$|^New acquisitions\b|^Prix Marcel Duchamp\b|^Oliver Beer\b/i,
   },
@@ -4024,7 +4024,7 @@ const VENUES = {
   // Musée des Arts Décoratifs, her addition. Written from her saved pages
   // (docs/mad_pages/), MD-*. A SPIP site: a show's address is a bare /<Slug>, like every
   // menu link, so only the listings' cards are read (.titre, .dates, .descriptif).
-  // Nothing excluded (CLAUDE.md §2).
+  // Nothing excluded (docs/venues.md).
   mad: {
     name: 'Musée des Arts Décoratifs, Paris',
     base: 'https://madparis.fr',
@@ -4059,7 +4059,7 @@ const VENUES = {
     keepPages: true,
     // Show pages read ALONE (pageOnly, her go-ahead), proven on docs/ashmolean_pages/raw/.
     pageOnly: true,
-    // Everything kept (her decision, CLAUDE.md §2). docs/ashmolean_pages/, fixture
+    // Everything kept (her decision, docs/venues.md). docs/ashmolean_pages/, fixture
     // ashmolean_pages.js. The past page draws two lists; the majors' first page already
     // reaches past the floor, so only the free list is followed.
     pages: [
@@ -4131,7 +4131,7 @@ const VENUES = {
   artic: {
     name: 'Art Institute of Chicago',
     base: 'https://www.artic.edu',
-    // Her decisions (CLAUDE.md §2): a bare "from the Collection" (always its own) and
+    // Her decisions (docs/venues.md): a bare "from the Collection" (always its own) and
     // "Film Series" excluded; family, named and lent collections kept.
     excludeTitle: /\bfrom the Collection\b(?!\s+of\b)|\bFilm Series\b/i,
     // HER MACHINE ONLY — see machineVenues(). Same reasoning as met.
@@ -4292,7 +4292,7 @@ const VENUES = {
   // rejected, CLAUDE.md §8). The query filters in Tate's own menu are server-side, so each
   // combination is just a page. event_type=exhibition only, never display (her decision).
   // date_range=past is not an archive and is not fetched. Tate Britain's past comes from
-  // the calendar (expandDateRange); Tate Modern's past, never (CLAUDE.md §2).
+  // the calendar (expandDateRange); Tate Modern's past, never (docs/venues.md).
   'tate-modern': {
     name: 'Tate Modern, London',
     base: 'https://www.tate.org.uk',
@@ -4381,12 +4381,12 @@ const VENUES = {
     // Every card's heading holds exactly the title, skipping the type badge and dates.
     title: { heading: true },
     // Each past item is tagged EXHIBITION, DISPLAY or TRAIL; all are kept (her decision,
-    // CLAUDE.md §2).
+    // docs/venues.md).
   },
 
   // Cincinnati Art Museum, her addition. Behind Cloudflare, yet the container's headless
   // browser was let in; pages saved by the container, her yes for this venue
-  // (docs/cincinnati_pages/), CI-*. Nothing excluded (CLAUDE.md §2). Umbraco: each card
+  // (docs/cincinnati_pages/), CI-*. Nothing excluded (docs/venues.md). Umbraco: each card
   // is its own .thumbnailCallouts.vertical; the plain ones under them are "Explore more"
   // tiles and year links.
   cincinnati: {

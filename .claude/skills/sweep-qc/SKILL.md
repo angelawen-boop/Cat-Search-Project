@@ -48,7 +48,7 @@ settle something, name the one page that would; she saves it.
      miss: cookie notices, prices, opening hours, breadcrumbs, menu text,
      whole pages, broken characters, halved or run-together titles, a show
      whose own dates put it before the lookback, notes quoting a page instead
-     of a match. `CLAUDE.md` §2 decisions decide what belongs; a row her decision
+     of a match. `docs/venues.md` decisions decide what belongs; a row her decision
      excludes appearing is a fault.
    - The log's TITLES section (titles the page check changed or could not
      complete).

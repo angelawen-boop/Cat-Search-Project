@@ -24,7 +24,7 @@ const { pagesFromNote } = require('./listing_note.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const RAW_CSV = 'sweep.csv';
-const FLOOR = '2024-07-01';                         // CLAUDE.md §3, the lookback
+const FLOOR = '2024-07-01';                         // docs/import_csv.md, the lookback
 const MARKER_SENTINEL = 'Marker row, not an exhibition.';
 
 const isMarker = r => String(r.notes || '').trim().endsWith(MARKER_SENTINEL);
@@ -242,7 +242,7 @@ function report(res, say = console.log) {
     for (const e of v.emptiedPages) lines.push(typeof e.linksSeen === 'string' && e.linksSeen.startsWith('none')
       ? `  EMPTY PAGE "${e.ctx}" brought rows last run; this run ${e.linksSeen.replace('none — ', '')} (log) — a refusal, not an empty page`
       : `  EMPTY PAGE "${e.ctx}" brought rows last run, a marker now; links seen this run: ${e.linksSeen}. Either the venue has nothing there now or the page changed — one look at the page settles it.`);
-    for (const k of v.keptNoEnd) lines.push(`  KEPT BY RULE "${k.title}" opened ${k.start}, no closing date — kept and flagged under the lookback rule (§3), not junk`);
+    for (const k of v.keptNoEnd) lines.push(`  KEPT BY RULE "${k.title}" opened ${k.start}, no closing date — kept and flagged under the lookback rule (docs/import_csv.md), not junk`);
     for (const d of v.sameName) lines.push(`  SAME NAME "${d.title}" at two addresses — kept by design (no de-duplication); the app shows both\n            ${d.urls.join('\n            ')}`);
     for (const j of v.junk) lines.push(`  JUNK?     "${j.title}" — ${j.kinds.join(', ')}: "${j.text}${j.text.length >= 160 ? '…' : ''}"`);
     say(`${v.venue.padEnd(14)} ${head}${lines.length ? '' : ' — nothing changed'}`);

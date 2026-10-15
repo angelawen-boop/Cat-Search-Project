@@ -1,12 +1,55 @@
 # Venues — evidence per venue
 
-**Read this when working a specific venue**, not before. Her decisions per venue are in
-`CLAUDE.md` §2; current yields come from `node scraper/venue_status.js`. Listing addresses
+**Read this when working a specific venue**, not before. Her decisions per venue are
+below; current yields come from `node scraper/venue_status.js`. Listing addresses
 live in each recipe in `VENUES` (`sweep_prototype.js`) — the code is the record, not this
 file. The original 21 venues' addresses came from the Sweeper Brief
 (`Cat_Watch_Sweeper_Brief_v2.docx` beside this file); **those addresses are hers** — changing
 one is her call, and a session fetches the exact address, never one built from a pattern.
 Full history in git.
+
+---
+
+## Her decisions, per venue
+
+### What the script cannot derive — her decisions, per venue
+
+Judgement about the outside world is not in any file. Her counts are always what
+should reach the app.
+
+| Venue | Her decision |
+|---|---|
+| `va` | Displays excluded — **this venue only** |
+| `wallace` | Displays and trails KEPT — **this venue only** |
+| `menil` | 7 permanent galleries excluded; "Foyer Installation: …", "… from the Collection", "Recent Acquisitions" excluded — **this venue only** |
+| `tate-modern`, `tate-britain` | Exhibitions only, never collection displays. The "recently opened" page is not an archive and is not fetched |
+| `tate-britain` | Ofili excluded, on the venue's own ONGOING label. Turner Prize and the Tate Britain Commission excluded. Past exhibitions from the What's On calendar, 1 Jul 2024 to the day of the run — `expandDateRange`. A session nested under a show is not a show |
+| `tate-modern` | **Never its past exhibitions**, though she knows where they are |
+| `uffizi` | Headlines kept as titles; undated rows kept |
+| `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — `docs/scraper.md` §13. Bare "from the Collection" and "Film Series" titles excluded; family, named and lent collections KEPT. No note on the card for films or installations; no model judging rows |
+| `met` | Recurring series (P.S. Art, Scholastic, crèche, Burdick baseball cards) and every commission series excluded. **Nothing excluded for coming from a collection, a gift or acquisitions** — they can be major |
+| `moma` | **Current and upcoming only** — never its past. **Exhibitions only**: the listing's "Installations and projects" section is dropped on the listing, never opened (MM-001–003). Her count: 9 + 5 = 14 |
+| `brit` | Current/upcoming asks for **Exhibition AND Experience** — the Bayeux Tapestry is filed as an Experience (BM-012); only `/exhibitions/` pages kept. Past read in the listing's year sections only (a heading is the year a show OPENED); nothing under 2023 opened (BM-013–015). Her count: current + upcoming 5 (*Multiplied wonders* newly listed), past 2026 **9**, 2025 **12**, 2024 **10** (*Legion*, closed 23 Jun 2024, out) — **34 rows**, because *Admonitions* is listed under every year at one address and is one row |
+| `mam` | Collection displays excluded — "Permanent collection" subtitle and "New acquisitions…"; also the Prix Marcel Duchamp and Oliver Beer's films. Her count: 3 current, 0 upcoming, 13 past |
+| `mad` | Nothing excluded. Her count: 2 current, 2 upcoming, 16 past. Musée Nissim de Camondo ignored — closed until 2030 |
+| `jacquemart` | Exhibitions only — the card's own tag; operas, costume balls and other events refused |
+| `orsay` | **Displays always kept**, "Focus on our collections" included — its collection is deep, like the Met's. **Every off-site show kept.** "Exceptional presentation" kept for now. Parcours, Immersive experience, Invitation dropped; an unseen tag is kept and named. Her count: 13 + 45 = 58 |
+| `lgd` | New York and London only — Hong Kong partnership shows ("& Wei, Hong Kong") and "LGD Hammer" auctions excluded. One exception to the lookback: *Yves Klein and the Tangible World*, its catalogue only just published — `keepDespiteLookback`, that one address |
+| `morgan` | *Collections Spotlight* excluded — a standing rotation, not a show. Past blurbs read off the listing, pages not opened — **unless the listing gives no description; then the page is opened**. A picture caption (`p.small`) is not a description. Her count: current 3, upcoming 5; past 2025-26 **20**, 2024-25 **3**, 2023-24 **8** — 39 |
+| `rijks` | 37 rows, not chased further. *Asian Pavilion* was pulled by the venue |
+| `capo` | **Not count-verified and never will be** — see below |
+| `brera`, `borghese` | Their single extra row is a marker for a genuinely empty upcoming page |
+| `ashmolean` | **Everything kept** — major, free and displays, past included. Her count: current 0 major + 4 free, upcoming 2 + 1, past 4 + 13. **Titles: the full name from the show's page header, ordinary capitals written by code** — the venue types capitals everywhere (`capsTitles`, `titleFromCaps`, `pageTitle`) |
+| `cincinnati` | Nothing excluded. Her count: current 2, upcoming 2, past 2026 **4**, 2025 **14**, 2024 **9** — 31. Pages saved by the container, her yes for this venue only. **Never swept yet** |
+
+**Whether displays count is HERS, and varies by venue.** Two venues disagreeing
+is the expected state, not a contradiction.
+
+**Capodimonte is closed differently.** Italian only, so checking a row against
+the site is uselessly slow. Her decision: import every row unless visibly
+mangled, then use the app's URL button and let Chrome translate. So **the `url`
+column is the load-bearing field there**, and **the summary must arrive in
+English**. `docs/scraper.md` §15.
 
 ---
 
@@ -113,7 +156,7 @@ is its only wait.
   decision, named in the log. Don't copy it to a venue not checked for the
   same wording.
 - *Baseball Cards … Burdick* has no closing date anywhere; she confirmed it.
-  (It is now excluded as a recurring series — `CLAUDE.md` §2.)
+  (It is now excluded as a recurring series — see "Her decisions, per venue" above.)
 - Summaries: every real exhibition has curatorial text, 612–2,000 characters.
 - `collectionapi.metmuseum.org` covers objects, not exhibitions.
 

@@ -2,7 +2,7 @@
 
 She checked the scraper's output against the live sites herself. **Her
 findings, not a session's guesses. Do not ask her to re-review a venue here.**
-Counts are as of 12 Sep; later rulings (`CLAUDE.md` §2) have changed some since
+Counts are as of 12 Sep; later rulings (`docs/venues.md`) have changed some since
 (e.g. Tate Britain's past exhibitions). Compressed 30 Sep; full text in git.
 
 ## Her overall verdict
