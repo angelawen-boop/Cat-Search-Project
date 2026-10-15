@@ -24,7 +24,7 @@ is why they live in one repo, on one branch.
 
 - **Plain English, ELI5.**
 - **Short and concise.**
-- **Work quietly** - surface only what needs her.
+- **Suppress most of thinking output. Work quietly** - surface only what needs her.
 - **Destructive actions need a confirmed backup or an explicit yes.**
 - **Never republish the app before confirming it is safe to do so** - republishing in the background can cause loss of unsaved ledger.
 - **Her report and output first** - update the guide only after you have responded to the rest of her request.
