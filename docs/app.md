@@ -382,7 +382,7 @@ close" while nothing was written.
 
 - **Never restore the Google Drive save and load as it was**: it called Claude's
   servers straight from the page, which the viewer's sandbox blocks. A Drive backup
-  button (CLAUDE.md §2.2.1) goes through a Google Drive connector, as the catalogue
+  button (CLAUDE.md §6) goes through a Google Drive connector, as the catalogue
   lookup goes through Parallel's.
 - **A new "find catalogues for all Wanted"** must work within her Parallel and
   Claude allowance and respect the read-only lock.

@@ -115,22 +115,6 @@ pages return 404, plus occasional page timeouts — which say so on the row.
 Everything not listed here is finished. Do not reopen a closed item without a
 new fact.
 
-#### 2.2.1 The cloud ledger — merged and live in her app
-
-**Design, what the store holds, saving, the safety proofs, the switch and the two-copies lock:
-`docs/cloud_storage.md`. Read it before changing anything about saving to the page's own store.**
-
-Merged to `main` and published to her app at 45.1 after a long trial on the test page (her
-decision). The test page's sweep log, quarantine, Occasional venues and pending links were copied
-into her app's store. She works in her app, ONE tab on ONE device (a second copy is read only).
-The test page **https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf** is retired; its store keeps
-her trial Cloud Saves and the lookup log up to the merge.
-
-**Still open:**
-- `CLOUD_OPENS` stays `false` — the app opens empty and she Loads her file (her decision). **Load
-  stays for good** — it is how she opens a backup.
-- Google Drive backup by button — on the table, never automatic.
-
 #### 2.2.2 Fixes not yet checked in the cases they were written for
 
 **The 15 Oct sweep's fixes — in code for the next sweep; this month's runs were imported as the
@@ -345,9 +329,9 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **Announcing "this row used to have a catalogue"** when a later lookup finds
   none anywhere.
 - **Storage and saving:** the sweep log inside her export. Google Drive auto-load
-  on open. Automatic saving to Drive (a button is on the table, §2.2.1). The app
+  on open. Automatic saving to Drive (a button is on the table, §6). The app
   gathering its own exhibition data. Auto-save to her FILE on every change (the
-  cloud ledger's live save is a different thing, §2.2.1). A confirm-tap after
+  cloud ledger's live save is a different thing, `docs/cloud_storage.md`). A confirm-tap after
   download. A backup in the browser's own storage. A snapshot on closing the page.
 - **The intake:** bulk-approve. In-app field editing. Confirm-and-continue past
   undecided cards. Remembering rejections. Ticking nothing on a date conflict.
@@ -403,7 +387,8 @@ price, her decision).
 
 **Her file is still the document; the page's store now keeps a live copy of it.** The app is
 the *tool*, the ledger the *document*, like a word processor and a file. Opening the link gives
-an empty page until she Loads (§2.2.1); from then on every change is saved to the store as well.
+an empty page until she Loads (her decision); from then on every change is saved to the store as
+well (`docs/cloud_storage.md`). She works in ONE tab on ONE device; a second copy is read only.
 
 Losing or silently corrupting the ledger is the worst outcome the design guards
 against; it holds every tracked exhibition plus her marks (watching / dismissed /
@@ -418,7 +403,7 @@ want-catalogue / acquired / catalogue details). **She keeps a real ledger** — 
 | **The quarantine** | the store AND her export | A fact about the world derivable from nothing — so both, with one merge rule |
 
 **Do not propose moving any of the three** (the cloud ledger is her own
-reopening, §2.2.1). Reasoning and the two rejected arguments: `docs/app.md` §4–5.
+reopening, now live — `docs/cloud_storage.md`). Reasoning and the two rejected arguments: `docs/app.md` §4–5.
 
 #### Ledger row shape
 
@@ -563,5 +548,7 @@ Ideas not yet built — none is open work, and none is proposed unless she raise
   saying "Couldn't work out the publisher's own website" (Somogy, Hubert Robert).
   It replaces her decision to keep `PUBLISHER_SITES` short and never fill it ahead
   (§4.2); how the list is built is to be agreed with her first.
+- **Google Drive backup by button** — on the table, never automatic; through a Google Drive
+  connector (`docs/app.md`).
 - **Library — purchase tracking and a Library tab** (`docs/library.md`): future consideration, never
   propose.

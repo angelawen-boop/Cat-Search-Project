@@ -2,10 +2,9 @@
 
 **Her idea, brainstormed 27 Sep 2026. Not open work.** She may build it or
 may not. **Never propose it, list it among open items, or start it** — she
-raises it when she wants it. If she does: build only after the cloud-ledger
-trial (§2.2.1 of CLAUDE.md) has merged to `main`, because this adds fields to
-the ledger and two branches changing the ledger shape at once is what she
-ruled out.
+raises it when she wants it. If she does: the cloud ledger has merged to
+`main`, so nothing waits on it; this adds fields to the ledger, so build it on one
+branch only.
 
 ## What she wants
 

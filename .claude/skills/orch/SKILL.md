@@ -115,11 +115,6 @@ Never take the builder's report on trust.
 ## 6. Land it
 - Merge the builder's branch into `main`, test again, push `main`. Delete the
   builder's branch; never push it.
-- **App changes reach her cloud test copy the same day:** check out
-  `claude/ledger-cloud`, merge `main`, run `npm run test:app` there (it adds the
-  cloud suites), push. Proof: `git diff --stat main claude/ledger-cloud` reads
-  the same after the merge as before it — the fix is on both, nothing else
-  moved. A conflict where both sides changed the same logic → ask her. Cloud-only code never goes to `main`; that merge is her call (CLAUDE.md §2.2.1).
 - She has said this session waits for another → commit, push nothing, and
   follow `docs/branches.md` "Holding a push for another session".
 
