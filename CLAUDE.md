@@ -727,26 +727,60 @@ price, her decision).
 
 ## 9. Where the rest lives
 
+Every side doc is one step from this guide; none depends on another. Read the one for the
+work in hand.
+
+**App** — the page, how it saves, and how it scales
+
 | File | What is in it | Read it when |
 |---|---|---|
 | `docs/app.md` | The app's evidence: catalogue lookup, shop addresses, saving, intake bands, quarantine, sweep log, seed, the cloud ledger's screen | Changing anything in the app |
-| `docs/scraper.md` | The scraper's evidence: listings, pagination, the date parser, junk in summaries, failure handling, compression, blocked venues | Changing anything in the scraper |
-| `docs/import-repair-320.md` | How her first big import files (the 320-card import and the new-venues import) were repaired and built | Touching those files, or explaining their dates |
-| `docs/venues.md` | Her decisions per venue (what is excluded or kept, her counts); per-venue evidence: refusals, the headed venues' runs, each venue's quirks, the original 21 venues' address traps from the Sweeper Brief | Working one specific venue |
-| `docs/import_csv.md` | The pro forma CSV contract: lookback, never de-duplicate, the notes column, `swept_at` | Changing what the scraper writes or what the app reads |
-| `docs/sweep_operation.md` | Running the scraper: commands, files, run directories, who sweeps what, headed venues, pacing, robots.txt, the network bridge | Running a sweep, or changing how one runs |
 | `docs/cloud_storage.md` | The cloud ledger trial: what the page's store holds, Save and the safety copies, the trial switch, the safety proofs, the read-only lock for a second copy | Changing anything about saving to the page's own store |
-| `docs/listing_pages/`, `docs/*_pages/` | Pages she saved, with a README of what each settled | Changing that venue's recipe — before asking her for anything |
-| `docs/compression.md` | Compression design, model split, eval, rejected alternatives | Changing compression — otherwise don't |
-| `docs/scalability.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
-| `docs/add_by_link.md` | Add by link — design, decisions, store, shelf rule, first test | Changing Add by link |
-| `docs/catalogue_versions.md` | The catalogue-versions redesign and its agreed cases | Changing the catalogue lookup's design |
-| `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
-| `docs/scraper-verification-2026-09-12.md` | Her venue-by-venue review | Before touching a reviewed venue |
-| `docs/code-review.md` | Every code review of the project, this one and all future ones: each finding and what was decided (fixed, rejected, deferred) | A reviewer raises something, or after any new code review |
 | `docs/store_backup_2026-09-21/` | A read-out of the page's store, as insurance | Only if the store is lost AND `sweep_log.js` cannot rebuild it |
-| `scraper/compress_prompt.md` | Compression prompts and tuning | Changing summary wording |
+| `docs/scalability.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
+| `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
+
+**Import 1: the scraper** — getting exhibitions from the venues into a CSV
+
+| File | What is in it | Read it when |
+|---|---|---|
+| `docs/scraper.md` | The scraper's evidence: listings, pagination, the date parser, junk in summaries, failure handling, blocked venues, and the steps for adding a venue | Changing anything in the scraper, or wiring a venue |
+| `docs/sweep_operation.md` | Running the scraper: commands, files, run directories, who sweeps what, headed venues, pacing, robots.txt, the network bridge, and what to send her when a sweep ends | Running a sweep, or changing how one runs |
+| `docs/compression.md`, `scraper/compress_prompt.md` | Compression design, model split, eval and rejected alternatives; the prompts and their tuning | Changing compression or summary wording — otherwise don't |
+| `docs/import_csv.md` | The pro forma CSV contract: lookback, never de-duplicate, the notes column, `swept_at` | Changing what the scraper writes or what the app reads |
+
+**Import 2: the venues** — what each museum does and what she decided about it
+
+| File | What is in it | Read it when |
+|---|---|---|
+| `docs/venues.md` | Her decisions per venue (what is excluded or kept, her counts); per-venue evidence: refusals, the headed venues' runs, each venue's quirks, the original 21 venues' address traps | Working one specific venue |
+| `docs/listing_pages/`, `docs/*_pages/` | Pages she saved, with a README of what each settled | Changing that venue's recipe — before asking her for anything |
 | `docs/Cat_Watch_Sweeper_Brief_v2.docx` | The original Chat-Claude brief | Rarely |
+
+**Import 3: Add by link** — getting one show in from a pasted address
+
+| File | What is in it | Read it when |
+|---|---|---|
+| `docs/add_by_link.md`, `docs/link_proof_pages.json` | Design, decisions, store, shelf rule, venue link rules; the live proof pages for them | Changing Add by link |
+
+**Search** — finding a show's catalogue
+
+| File | What is in it | Read it when |
+|---|---|---|
+| `docs/catalogue_versions.md` | The catalogue-versions redesign (paused) and its agreed cases | Changing the catalogue lookup's design |
+
+**Reviews**
+
+| File | What is in it | Read it when |
+|---|---|---|
+| `docs/code-review.md` | Every code review of the project, this one and all future ones: each finding and what was decided (fixed, rejected, deferred) | A reviewer raises something, or after any new code review |
+
+**Records** — kept as evidence, rarely needed
+
+| File | What is in it | Read it when |
+|---|---|---|
+| `docs/scraper-verification-2026-09-12.md` | Her venue-by-venue review of the original venues | Before touching a reviewed venue |
+| `docs/import-repair-320.md` | How her first big import files (the 320-card import and the new-venues import) were repaired and built | Touching those files, or explaining their dates |
 
 Git holds the full text of everything compressed out of this guide —
 `git log -- CLAUDE.md`.
