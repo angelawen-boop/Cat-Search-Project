@@ -475,16 +475,10 @@ runs.**
 The intake, in order, is in `docs/scraper.md` §12, "Her rules for wiring a venue". **Read it
 before wiring a new venue.**
 
-### Then hand her the file — she must never have to ask
+### Then hand her the file — `docs/sweep_operation.md`
 
-**Before sending, read the run summary's TITLES list** — every title the page
-check (`titleFromPage`) changed, and every name it could not complete.
-
-Send `sweep_compressed.csv` with the file-sending tool as soon as compression
-finishes, saying how many rows and how many summaries were reused versus written.
-**One file only** — never `sweep.csv`, which holds raw text. **If compression has
-not been run, the run is not finished.** Run the file through the app's intake
-and READ the cards before sending (§6).
+When a sweep finishes, what to send her and how is in `docs/sweep_operation.md`. **Read it before
+ending a sweep run.**
 
 ### How it is organised
 

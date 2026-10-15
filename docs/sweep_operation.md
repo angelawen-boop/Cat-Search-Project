@@ -163,3 +163,14 @@ exists. Do not use it and do not build on it.**
   the page itself arrived and which files were outstanding (`stallReport`;
   ST-001/002).
 
+
+### Then hand her the file — she must never have to ask
+
+**Before sending, read the run summary's TITLES list** — every title the page
+check (`titleFromPage`) changed, and every name it could not complete.
+
+Send `sweep_compressed.csv` with the file-sending tool as soon as compression
+finishes, saying how many rows and how many summaries were reused versus written.
+**One file only** — never `sweep.csv`, which holds raw text. **If compression has
+not been run, the run is not finished.** Run the file through the app's intake
+and READ the cards before sending (§6).
