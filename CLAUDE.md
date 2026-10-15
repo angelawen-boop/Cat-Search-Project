@@ -215,32 +215,18 @@ Faults found are fixed in code (§2.2.2).
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 
-#### 2.2.7 "Probably not for you" — published at 45.1 on the test page; her verification next
+#### 2.2.7 "Probably not for you" — built, published at 45.1; her next monthly import checks it
 
-New shows in topics she always quarantines are labelled and set aside on the import screen.
-- **Groups (start wide, narrow later):** collection rotations and acquisitions (not at the Met —
-  she reviews those by hand); Asian art (Japanese, Chinese, Korean, South Asian); contemporary
-  single-artist, film, video, performance (riskiest — may need narrowing); children's, students',
-  staff and recurring series; pop-culture oddities; galleries and rotations that are not shows.
-- **Compression labels new shows only** (`fresh` rows), choosing from that fixed list; code writes
-  it into the row's notes ("Topic: Asian art.") — CSV columns unchanged, and she sees it in the
-  scraper note on the card.
-- **The app:** a section after Odd cases, before the rest, headed only by its title and count
-  ("Probably not for you · 12") — no instruction sentence. Each card shows its label and comes
-  pre-set to **Never add** (not Reject, which is not remembered); she clicks Add to keep one.
-- **Built:** the labeller (Prompt D, `TOPICS` in `scraper/compress.js`, TP-001–010); the app
-  part (`topicOf`, `isTopicCard`, `topicPresets`; TP-A1–A8, AD-009). Odd cases stay odd; a show
-  already in the ledger is never set aside. Published at 45.
-- **Tested on her decisions** (`node scraper/topic_eval.js`; her 86 quarantined + 40 kept, two
-  calls). With Asian art winning over any other label (her decision): 69 of 86 caught (4 more are
-  Met rotations, left out by her decision); 8 of 40 kept labelled — Flora Yukhnovich, Carroll
-  Dunham, Harumi Klossowska de Rola, TransLucent (contemporary); L'Ospite bolognese, Art in
-  Dialogue: Duccio | Caro (series); Cosimo I de' Medici (rotation); Chintz (Asian art). Labels
-  at the edges differ between runs. Narrow a group only if she says.
-- **Her verification in the app:** a rehearsal file of ~15 quarantined and ~10 kept real shows, each web
-  address carrying a test marker so they read as new; she checks the section, its pre-set Never
-  add, the labels in the notes and that kept shows are absent — then Cancel import. The real test
-  is her next monthly import. App publish rules apply (`docs/publishing.md`).
+Compression labels a NEW show in a topic she always quarantines (Prompt D, `TOPICS` in
+`scraper/compress.js`; Asian art wins over any other label; the Met's rotations are never
+labelled — her decisions). Code writes "Topic: …" into the notes. On import those cards go in
+"Probably not for you · N", after Odd cases, pre-set to Never add; Add keeps one. Approval-card
+links are clickable. Tests: TP-, TP-A, AD-009–010; `scraper/topic_eval.js` re-scores the labeller
+on her decisions (last run: 69 of 86 quarantined caught; 8 of 40 kept wrongly labelled, mostly
+contemporary; labels at the edges differ between runs). Her rehearsal in the app passed.
+- **OPEN — her next monthly import:** are too many wanted shows pre-set to Never add
+  (contemporary the likeliest), and does any always-quarantined show slip through? Narrow a group
+  only if she says.
 
 #### 2.2.6 Tests that fail under load
 
