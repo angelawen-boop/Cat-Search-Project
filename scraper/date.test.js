@@ -21,7 +21,7 @@ const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
   classifyLoadError, isOwnListingPage, saysOngoing,
-  expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination, VENUES, pickTitleLine, venueTitle,
+  expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination, VENUES, pickTitleLine, venueTitle, isPlace, placesOf,
   stripWeekdays,
   addNote, filledDatesNote, finishNotes, scopeSelector, extensionNote, applyLookback,
 } = require('./sweep_prototype.js');
@@ -2070,4 +2070,14 @@ test('BT-001: Borghese titles typed in capitals reach her in ordinary capitals, 
   // Only Borghese turns a full stop into a dash.
   assert.equal(venueTitle('ashmolean', 'IN BLOOM. HOW PLANTS CHANGED OUR WORLD'), 'In Bloom. How Plants Changed Our World');
   assert.equal(venueTitle('ng', 'Hello. World'), 'Hello. World');
+});
+
+test('AQ-001: Acquavella\'s card line "Acquavella Palm Beach" is the gallery, never part of the title (15 Oct import)', () => {
+  const L = placesOf('acq');
+  assert.equal(isPlace('Acquavella Palm Beach', L), 'Palm Beach');
+  assert.equal(isPlace('Acquavella New York', L), 'New York');
+  assert.equal(isPlace('Palm Beach', L), 'Palm Beach');
+  assert.equal(isPlace('Curated by Todd Bradway', L), undefined);
+  // Only Acquavella's own name is taken off the front.
+  assert.equal(isPlace('Gallery Palm Beach', L), undefined);
 });

@@ -2577,7 +2577,14 @@ async function readCardPieces(link, rule) {
     return { name: sel.nameOwnText ? own(sel.name) : one(sel.name), subtitle: one(sel.subtitle), place: one(sel.place) };
   }, rule.cardParts).catch(() => ({ name: '', subtitle: '', place: '' }));
 }
-const isPlace = (text, locations) => (locations || []).find(l => l.toLowerCase() === String(text).trim().toLowerCase());
+// A gallery may be written with the venue's own name in front ("Acquavella Palm Beach"):
+// `locationOwner` on the recipe, carried on the list by placesOf().
+const isPlace = (text, locations) => {
+  const own = locations && locations.owner ? new RegExp(`^${locations.owner}\\s+`, 'i') : null;
+  const t = String(text).trim().replace(own || /^$/, '').toLowerCase();
+  return (locations || []).find(l => l.toLowerCase() === t);
+};
+const placesOf = code => Object.assign(((VENUES[code] || {}).locations || []).slice(), { owner: (VENUES[code] || {}).locationOwner || '' });
 
 async function cardPartsTitle(link, rule, locations) {
   const { name, subtitle } = await readCardPieces(link, rule);
@@ -2644,7 +2651,7 @@ const TRAVEL_GAP_DAYS = 183;
 
 async function extractTitle(link, venueCode) {
   const rule = titleRule(venueCode);
-  if (rule.cardParts) return cardPartsTitle(link, rule, (VENUES[venueCode] || {}).locations);
+  if (rule.cardParts) return cardPartsTitle(link, rule, placesOf(venueCode));
   const title = await restoreCase(link, await extractTitleAsShown(link, venueCode));
   return withPostTitle(link, titleRule(venueCode), title);
 }
@@ -3486,7 +3493,7 @@ async function collectFromListing(page, opts) {
       venue_code: venueCode, title,
       // Internal, never a CSV column: the gallery a card names, for a venue
       // with several (see cardPartsTitle / placeTravellingRuns).
-      _place: await readCardPlace(link, titleRule(venueCode), (VENUES[venueCode] || {}).locations),
+      _place: await readCardPlace(link, titleRule(venueCode), placesOf(venueCode)),
       // Internal, never a CSV column: which listing pages this row was seen
       // on (listing_note.js), and the note to withdraw if a later link
       // supplies the missing name.
@@ -3706,6 +3713,8 @@ const VENUES = {
     },
     // Its two galleries. Used to cross-reference a show that ran in both.
     locations: ['New York', 'Palm Beach'],
+    // A card can name the gallery as "Acquavella Palm Beach" — still a gallery, never a subtitle.
+    locationOwner: 'Acquavella',
   },
 
   // Lévy Gorvy Dayan, her addition. One page holds current and past; upcoming shows are
@@ -6372,7 +6381,7 @@ module.exports = {
   scrapeVenue,
   // Pure — the line-by-line title pick, so a venue reachable only from her
   // laptop can still be covered by a fixture here.
-  pickTitleLine, titleFromPage, readPageNameParts, titleFromCaps, venueTitle,
+  pickTitleLine, titleFromPage, readPageNameParts, titleFromCaps, venueTitle, isPlace, placesOf,
   // Not pure — exported so a check can run the real detail-page pass offline.
   fetchIndividualPages,
   // For from_saved_pages.js: the sweep's own finish, over pages she saved.
