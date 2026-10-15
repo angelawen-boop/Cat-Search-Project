@@ -3311,7 +3311,7 @@ async function collectFromListing(page, opts) {
     //
     // The V&A runs four: South Kensington, V&A East Museum, V&A East Storehouse
     // and Young V&A, and its listing mixes all four on one page. Her venue list
-    // (docs/venue_urls.md) says South Kensington only, so the other three are hers to
+    // (docs/venues.md) says South Kensington only, so the other three are hers to
     // exclude, already ruled, and the card states which site it is.
     //
     // Same footing as excludeOngoing and permitted for the same reason: the

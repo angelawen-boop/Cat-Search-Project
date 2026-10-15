@@ -30,7 +30,7 @@ const {
   installNetworkBridge, resolveChromium, safeGoto, runStamp,
 } = require('./sweep_prototype.js');
 
-// Addresses are HERS, from docs/venue_urls.md — never constructed from a
+// Addresses are HERS, from docs/venues.md — never constructed from a
 // pattern. Where the brief and CLAUDE.md Section 6c disagree, BOTH are listed
 // and both are probed, so the run settles the conflict instead of guessing.
 // Every listing page of every venue, LABELLED by which state it serves.

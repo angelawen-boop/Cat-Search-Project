@@ -1,9 +1,12 @@
-# Venue sites — evidence per venue
+# Venues — evidence per venue
 
-**Read this when working a specific venue**, not before. Her rulings per venue
-are in `CLAUDE.md` §2; current yields come from `node scraper/venue_status.js`.
-Listing addresses live in each recipe in `VENUES` (`sweep_prototype.js`) — the
-code is the record, not this file. Compressed 30 Sep; full history in git.
+**Read this when working a specific venue**, not before. Her decisions per venue are in
+`CLAUDE.md` §2; current yields come from `node scraper/venue_status.js`. Listing addresses
+live in each recipe in `VENUES` (`sweep_prototype.js`) — the code is the record, not this
+file. The original 21 venues' addresses came from the Sweeper Brief
+(`Cat_Watch_Sweeper_Brief_v2.docx` beside this file); **those addresses are hers** — changing
+one is her call, and a session fetches the exact address, never one built from a pattern.
+Full history in git.
 
 ---
 
@@ -21,15 +24,15 @@ person opening the site in an ordinary browser.
 | Plain 403 | no challenge | `mad` (container, robots.txt included) |
 | Waiting room | 307 | KHM's shop |
 
-- **A challenge is a gate, not a wall**: a real browser passes it. Her line
-  (22 Sep): the only thing out of bounds is taking information a site does not
+- **A challenge is a gate, not a wall**: a real browser passes it. Her line:
+  the only thing out of bounds is taking information a site does not
   publish; these are public listings. **Be the thing, don't claim to be it** — a
   real browser with a history passes; a disguised one fails harder.
 - **A cached page can hide a gate.** The British Museum's current page once
   answered 200 from Cloudflare's cache (`cf-cache-status: HIT`) while its archive
   was challenged; once the cache expired, it was challenged too.
 - **Blank browser profiles are refused; a profile she has browsed in is not**
-  (22 Sep, `probe_headed.js`). Never install anything into the seeded profile —
+  (`probe_headed.js`). Never install anything into the seeded profile —
   her own browser, with six extensions, gets the Morgan's check every visit; the
   bare profile gets none (a reading, not a measurement).
 - **Pace is the other half:** five pages back to back were all challenged after
@@ -54,7 +57,7 @@ person opening the site in an ordinary browser.
 
 ---
 
-## 2. The headed venues — `brit`, `orsay`, `morgan`, `moma` (22–30 Sep)
+## 2. The headed venues — `brit`, `orsay`, `morgan`, `moma`
 
 All behind Cloudflare, one pacing lane, all swept from her laptop in a visible
 Chrome on the seeded profile.
@@ -63,7 +66,7 @@ Chrome on the seeded profile.
 |---|---|---|
 | A (`--launch-chrome`) | The sweep launches Chrome on the seeded profile | MoMA stopped at page 19 after 18 clean (27 Sep). d'Orsay 403 at 18 after 17 (29 Sep). British Museum 41 clean (28 Sep). All at 30s |
 | **B (default)** | She opens Chrome, warms it up, leaves it open; the sweep attaches | 30 Sep: d'Orsay 54 pages, Morgan 18 (twice), MoMA 25, British Museum 37. No challenge, four venues back to back with `--ignore-cooldown` |
-| C | Her everyday Chrome and profile | Rejected 28 Sep (`CLAUDE.md` §8) |
+| C | Her everyday Chrome and profile | Rejected (`CLAUDE.md` §8) |
 
 Mode A's stops can't show whether pages or minutes triggered them. That mode B is
 WHY 30 Sep was clean is likely, not proven.
@@ -76,7 +79,7 @@ WHY 30 Sep was clean is likely, not proven.
   wrote 8 — the engine dropped rows whose text came off the listing (MP-009/010).
   The re-run re-asked 8 pages: kept pages aren't reused once a venue has written
   a file, even a wrong one. *Giovanni Bellini's "Pietà" Restored*: the listing's
-  only text is a caption and photo credit; the page isn't opened (her ruling).
+  only text is a caption and photo credit; the page isn't opened (her decision).
 - **MoMA** `run_2026-09-30_162442`: 14 (9 + 5). It opened all 24 listed pages
   because the recipe missed the listing's section headings — fixed
   (MM-001–003). Lost colons (MM-004) and a gallery-closure notice (MM-005)
@@ -97,7 +100,7 @@ is its only wait.
 
 ## 3. The Met
 
-- **Her conclusion, 11 Sep:** the Met doesn't block Claude; it dislikes the
+- **Her conclusion:** the Met doesn't block Claude; it dislikes the
   connection type the container is forced to use. **Swept from her laptop.**
 - **The archive is one page per year** — the year menu changes the address
   (`/exhibitions/past?year=2025`). Driving the menu returned the same 68 links
@@ -107,7 +110,7 @@ is its only wait.
   navigation for every venue.
 - **`excludeOngoing`** drops permanent displays on the Met's own "Ongoing" label
   (whole line, or the closing side of a range) — the one silent drop, her explicit
-  ruling 11 Sep, named in the log. Don't copy it to a venue not checked for the
+  decision, named in the log. Don't copy it to a venue not checked for the
   same wording.
 - *Baseball Cards … Burdick* has no closing date anywhere; she confirmed it.
   (It is now excluded as a recurring series — `CLAUDE.md` §2.)
@@ -176,27 +179,34 @@ use it for this code.
 
 ---
 
-## 8. Addresses from the brief — the traps
+## 8. The brief's addresses — traps and what changed
 
-`docs/venue_urls.md` holds the original 21 venues' addresses from the Sweeper
-Brief. Where the live site differed (read off the site, 12 Sep):
+The Sweeper Brief was written for Chat Claude driving a fetch tool; **the recipes in `VENUES` are
+what is swept**, and where they differ from the brief the difference was read off the live site.
+A URL the brief repeated across columns means the venue puts all three states on one page.
 
 | Venue | Trap |
 |---|---|
 | `wallace` | `/whats-on/` is a two-tile hub, not a listing |
-| `menil`, `capo` | show pages are SINGULAR (`/exhibition/`, `/mostra/`) |
-| `tate-*` | the filters work — `gallery_group` separates the Tates, `event_type` asks for exhibitions; `date_range=past` means "already opened", not an archive |
-| `louvre` | the selector needs the full `/exhibitions/` path or the tabs come in as shows; past years are `?date=YYYY` |
-| `uffizi` | the year is in the PATH |
+| `menil`, `capo` | show pages are SINGULAR (`/exhibition/`, `/mostra/`); the Menil's address was corrected when wired |
+| `tate-*` | one shared What's On page; its filters work — `gallery_group` separates the Tates, `event_type` asks for exhibitions; `date_range=past` means "already opened", not an archive. `tate-modern` has no past archive; Tate Britain's past is read from its calendar (her decision) |
+| `louvre` | the selector needs the full `/exhibitions/` path or the tabs come in as shows; past years are `?date=YYYY`; the address was corrected when wired |
+| `uffizi` | works (the brief doubted it); the year is in the PATH |
 | `brera` | shows are filed under `/en/news/mostra/` |
-| `khm` | lazy-loads; mixes permanent collections in |
+| `khm` | lazy-loads; mixes permanent collections in; no past archive, so an empty past page is correct |
+| `va` | no past archive; South Kensington only |
 | `acq` | one page carries all three states; its year-range filter links are navigation (following them reached 1999) |
 | `frick` | any `?` query once returned 403 |
 | `artic` | the archive is `history?year=` and paginates |
+| `brit` | the current page mixes exhibitions with events |
+| `moma` | main MoMA only, never PS1 |
+| `met` | the brief said older years were unreachable; they are (one page per year, §3) |
+| `dellav` | see §7 |
 
-**Anything the project depends on belongs in the repo** — the brief's addresses
-once existed only inside a Chat Claude conversation.
+**Not carried over from the brief:** the unlock rule, the greenlight, the hand-brake (the scraper
+logs a failure and steps past it), the 12-word cap (superseded by ten, measured) and the file
+naming. Its remaining value is as a fallback procedure for venues the scraper cannot reach.
 
-**Legacy note:** what Chat Claude's fetch tool could see (Sept, pre-scraper) is
-superseded by the scraper; the one lasting lesson is that sites which build
-their pages with JavaScript look empty to a tool that doesn't run it.
+**Anything the project depends on belongs in the repo** — the brief's addresses once existed only
+inside a Chat Claude conversation. The one lasting lesson from what that fetch tool could see:
+sites that build their pages with JavaScript look empty to a tool that doesn't run it.

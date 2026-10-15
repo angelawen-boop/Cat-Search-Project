@@ -1051,8 +1051,7 @@ price, her decision).
 | `docs/app.md` | The app's evidence: catalogue lookup, shop addresses, saving, intake bands, quarantine, sweep log, seed, the cloud ledger's screen | Changing anything in the app |
 | `docs/scraper.md` | The scraper's evidence: listings, pagination, the date parser, junk in summaries, failure handling, compression, blocked venues | Changing anything in the scraper |
 | `docs/import-file.md` | How each file she imported was built | Touching that file, or explaining its dates |
-| `docs/venues.md` | Per-venue evidence: refusals, listing URLs, the headed venues' runs | Working one specific venue |
-| `docs/venue_urls.md` | The original 21 venues' addresses from the Sweeper Brief, and which of its notes still hold | Wiring or re-checking one of those venues |
+| `docs/venues.md` | Per-venue evidence: refusals, the headed venues' runs, each venue's quirks, the original 21 venues' address traps from the Sweeper Brief | Working one specific venue |
 | `docs/listing_pages/`, `docs/*_pages/` | Pages she saved, with a README of what each settled | Changing that venue's recipe — before asking her for anything |
 | `docs/compression.md` | Compression design, model split, eval, rejected alternatives | Changing compression — otherwise don't |
 | `docs/scalability.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
