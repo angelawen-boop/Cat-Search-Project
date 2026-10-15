@@ -23,50 +23,20 @@ is why they live in one repo, on one branch.
 ### House rules
 
 - **Plain English, ELI5.**
-- **Be concise, then cut another 30%.**
-- **Suppress most visible thinking.** Work quietly and surface only what needs her.
+- **Short and concise.**
+- **Work quietly** - surface only what needs her.
 - **Destructive actions need a confirmed backup or an explicit yes.**
-- **NEVER REPUBLISH THE APP WHILE SHE HAS IT OPEN.** Her ledger lives IN that
-  page until she Exports, so a publish landing mid-review can take unsaved work
-  with it.
-- **Her report and output first, the guide after.** Send the report and
-  anything for her review, then update this guide in a background job, so she
-  never waits on guide updates.
-- **Applying to the scraper and scraper-related work only — test
-  conservatively.** Every page a sweep fetches counts towards the venue's rate
-  limit. Use saved pages first, with no network. Never a blanket re-sweep.
-- **For work not relating to the scraper and which uses Parallel's features —
-  testing is always against the live internet, as it is at that time**: pages
-  fetched live through Parallel. Do not test on saved pages and do not invent
-  test pages. Parallel's text is not returned to the app and to Claude in the
-  same format as browser-rendered pages. A feature keeps a list of where its
-  tests live on the internet — addresses and the signed-off result for each —
-  so any later change is re-checked by fetching that list live. Add by link's:
-  `docs/link_proof_pages.json`, checked by `scraper/link_proof_check.js`.
-- **Raise a past decision by its reason, never its date.** She keeps no log,
-  and a date tells her nothing. Say it as: "Because of X, you decided Y. Would
-  you like to reconsider? / If this changes your decision, we can do Z." Call
-  it her decision or her judgement call — never a "ruling" or a "rule".
-- **A question gets an answer first.** "Talk to me about X" means discuss;
-  nothing is built until she says.
-- **Respect UI simplicity and specific UI instructions.** Build what she named,
-  nothing added. "Add a copy icon" = an icon, not an icon plus the word "Copy".
-  "Copy this line for case X and Y" = the same line with only the words naming
-  X and Y swapped, never a new, longer line.
-- **A guess is labelled a guess.** Say what is proven, what is not, and what one
-  request would settle.
-- **Parallel:** a session's own calls use the free "Parallel Search". Her keyed
-  "Parallel Search Key" needs her yes — ask up front, with the reason, when the
-  work will clearly need it. Once she has said yes, switch to the key as soon as
-  the free tier refuses; never sit waiting for it to reopen. Later in the same
-  session, after time has passed, try the free tier again first. A sub-agent
-  cannot spend the key (permissions block it), so the main session does keyed
-  fetches; a large reply is saved to a file — extract it by script, never retype.
-- **`/orch` runs only when she types it** (her decision). No session
-  routes work through it, or follows its steps, unless she has typed
-  `/orch` in that session.
-- **`/close` ends a session** (her design): guide update, clear up, a fixed
-  four-part summary. Never archives the session. Runs only when she types it.
+- **Never republish the app before confirming it is safe to do so** - republishing in the background can cause loss of unsaved ledger.
+- **Her report and output first** - update the guide only after you have responded to the rest of her request.
+- **Applying to the scraper and scraper-related work only — test conservatively.** Every page a sweep fetches counts towards the venue's rate limit. Use saved pages first, with no network. Never a blanket re-sweep.
+- **For work not relating to the scraper and which uses Parallel's features — testing is always against the live internet**, ie. pages fetched live through Parallel. Do not test on saved pages and do not invent test pages. A feature keeps a list of where its tests live on the internet — addresses and the signed-off result for each — so any later change is re-checked by fetching that list live. Add by link's: `docs/link_proof_pages.json`, checked by `scraper/link_proof_check.js`.
+- **Raise a past decision by describing the context, not by reference to a date.** She keeps no log and a date tells her nothing. Say it as: "Because of X, you decided Y. Would you like to reconsider? / If this changes your decision, we can do Z." Call it her decision or her judgement call — never a "ruling" or a "rule".
+- **A question gets an answer first.** "Talk to me about X" means discuss; nothing is built until she says.
+- **Respect UI simplicity and specific UI instructions.** Build what she named, nothing added. "Add a copy icon" = an icon, not an icon plus the word "Copy". "Copy this line for case X and Y" = the same line with only the words naming X and Y swapped, never a new, longer line.
+- **Label a guess as exactly that** - say what is not proven and what would be settled by a check.
+- **Parallel:** a session's own calls use the free "Parallel Search". Her keyed "Parallel Search Key" needs her yes — ask up front, with the reason, when the work will clearly need it. Once she has said yes, switch to the key as soon as the free tier refuses - no need to hang the task hoping for the free tier to resume access. Later in the same session, after time has passed, try the free tier again first. A sub-agent cannot spend the key (permissions block it), so the main session does keyed fetches; a large reply is saved to a file — extract it by script, never retype.
+- **`/orch` runs only when she types it** (her decision). No session routes work through it, or follows its steps, unless she has typed `/orch` in that session.
+- **`/close` ends a session** (her design): guide update, clear up, a fixed four-part summary. Never archives the session. Runs only when she types it.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
 
 ### Put it in code — her decision
