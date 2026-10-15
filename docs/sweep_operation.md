@@ -190,8 +190,9 @@ the routine runs it on its own run; she starts a session for her home run.
 session clones read-only and cannot push. It sweeps only the container's 20;
 its report never names a home venue (her decision).
 **The report's Changes are grouped by kind, not by venue (her decision)** so she
-sees at a glance what kind of trouble a run has: your fixes/decisions reflected,
-missing shows, changed titles, changed links, new dates, changed dates,
-description problems, new shows, others. `sweep_diff.js` (`groupChanges`) does
+sees at a glance what kind of trouble a run has: new shows, your fixes/decisions
+reflected, missing shows, changed titles, changed links, new dates, changed dates,
+description problems, others — one table, heading and number in column 1, bullets in
+column 2. `sweep_diff.js` (`groupChanges`) does
 the grouping; the same report for container and home runs; unchanged venues
 are not named.

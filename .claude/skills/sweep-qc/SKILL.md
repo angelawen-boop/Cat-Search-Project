@@ -72,20 +72,22 @@ settle something, name the one page that would; she saves it.
 She works IN this session after reading it, so it must be ready to act on.
 
 - The run folder, and done / done with faults.
-- **Changes** — grouped by kind (her decision), in QC's own numbered order,
-  each heading followed by short bullets: venue, before → now where the count
-  moved, what changed in a few words, and "(Fault N)" where it is one.
-  Skip a group with nothing in it; never name unchanged venues.
-  1. **Your fixes / decisions now reflected** — rows her decisions excluded,
+- **Changes** — ONE TABLE, grouped by kind (her decision), in QC's own numbered
+  order. Column 1: the group's number and heading ("1. New shows"). Column 2:
+  that group's short bullets, one per line (`<br>` between them, each starting
+  "• "): venue, before → now where the count moved, what changed in a few
+  words, and "(Fault N)" where it is one. Skip a group with nothing in it;
+  never name unchanged venues.
+  1. **New shows**
+  2. **Your fixes / decisions now reflected** — rows her decisions excluded,
      and each fix this run was asked to confirm that held.
-  2. **Missing shows**
-  3. **Changed titles**
-  4. **Changed links** — say which card QC expects (a Change card for the
+  3. **Missing shows**
+  4. **Changed titles**
+  5. **Changed links** — say which card QC expects (a Change card for the
      link, or a New card). Both come from the last run, not her ledger.
-  5. **New dates** — a blank date now filled.
-  6. **Changed dates**
-  7. **Description problems** — worse, lost or missing text, and junk.
-  8. **New shows**
+  6. **New dates** — a blank date now filled.
+  7. **Changed dates**
+  8. **Description problems** — worse, lost or missing text, and junk.
   9. **Others** — anything that fits none of the above (rows kept by rule,
      refusals and their marker rows, a show losing one of two addresses).
 - **Faults** — numbered, each in this shape:

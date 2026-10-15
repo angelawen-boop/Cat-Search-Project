@@ -117,7 +117,7 @@ test('SD-013: a restaurant line in a description is flagged (Tate Modern 5 Oct)'
   assert.ok(D.junkIn('…photography as a medium. Experience the exhibition then enjoy two courses from our set menu.').includes('restaurant or visiting line'));
 });
 
-test('SD-014: changes are grouped in her order — decisions, missing, titles, links, new dates, changed dates, descriptions, new shows, others', () => {
+test('SD-014: changes are grouped in her order — new shows, decisions, missing, titles, links, new dates, changed dates, descriptions, others', () => {
   const v = D.diffVenue('v',
     [row({ title:'Kept', url:'https://t/k', start_date:'2026-01-01', end_date:'2026-12-01' }),
      row({ title:'Head and Shoulders', url:'https://t/h', start_date:'2025-11-11' }),
@@ -134,13 +134,13 @@ test('SD-014: changes are grouped in her order — decisions, missing, titles, l
   const g = D.groupChanges({ venues: [v] });
   assert.deepStrictEqual(g.map(x => x.n), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
   const where = t => g.filter(x => x.lines.some(l => l.includes(t))).map(x => x.n);
-  assert.deepStrictEqual(where('A Display'), [1]);
-  assert.deepStrictEqual(where('Whistler'), [2]);
-  assert.deepStrictEqual(where('Old Name'), [3]);
-  assert.deepStrictEqual(where('Head and Shoulders'), [5]);
-  assert.deepStrictEqual(where('Munch'), [6]);
-  assert.deepStrictEqual(where('"Short"'), [7]);
-  assert.deepStrictEqual(where('Brand New'), [8]);
+  assert.deepStrictEqual(where('A Display'), [2]);
+  assert.deepStrictEqual(where('Whistler'), [3]);
+  assert.deepStrictEqual(where('Old Name'), [4]);
+  assert.deepStrictEqual(where('Head and Shoulders'), [6]);
+  assert.deepStrictEqual(where('Munch'), [7]);
+  assert.deepStrictEqual(where('"Short"'), [8]);
+  assert.deepStrictEqual(where('Brand New'), [1]);
 });
 
 test('SD-015: a moved show with the same name and overlapping dates expects a Change card for the link, not a New card (National Gallery 15 Oct)', () => {
@@ -149,7 +149,7 @@ test('SD-015: a moved show with the same name and overlapping dates expects a Ch
     prev([row({ title:'Monet and Renoir', url:'https://n/mr', start_date:'2026-03-01', end_date:'2026-09-01' })]), log());
   assert.strictEqual(same.moved[0].card, 'change');
   const g = D.groupChanges({ venues: [same] });
-  assert.ok(g[3].lines.some(l => /Change card for the link/.test(l)));
+  assert.ok(g[4].lines.some(l => /Change card for the link/.test(l)));
   const renamed = D.diffVenue('v',
     [row({ title:'Fiep Westendorp: Illustrator', url:'https://r/past/fiep', start_date:'2026-03-01', end_date:'2026-09-01' })],
     prev([row({ title:'Fiep Westendorp', url:'https://r/fiep', start_date:'2026-03-01', end_date:'2026-09-01' })]), log());

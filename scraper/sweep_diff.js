@@ -245,32 +245,32 @@ const datePair = t => String(t).split(' → ').map(x => (x === '?' ? '' : x));
  */
 function groupChanges(res) {
   const G = [
-    [1, 'YOUR FIXES / DECISIONS NOW REFLECTED'], [2, 'MISSING SHOWS'], [3, 'CHANGED TITLES'],
-    [4, 'CHANGED LINKS'], [5, 'NEW DATES'], [6, 'CHANGED DATES'], [7, 'DESCRIPTION PROBLEMS'],
-    [8, 'NEW SHOWS'], [9, 'OTHERS'],
+    [1, 'NEW SHOWS'], [2, 'YOUR FIXES / DECISIONS NOW REFLECTED'], [3, 'MISSING SHOWS'],
+    [4, 'CHANGED TITLES'], [5, 'CHANGED LINKS'], [6, 'NEW DATES'], [7, 'CHANGED DATES'],
+    [8, 'DESCRIPTION PROBLEMS'], [9, 'OTHERS'],
   ].map(([n, heading]) => ({ n, heading, lines: [] }));
   const put = (n, v, text) => G[n - 1].lines.push(`  ${v.venue.padEnd(13)} ${text}`);
   for (const v of res.venues) {
-    for (const g of v.gone) put(/excluded this run/.test(g.cause) ? 1 : 2, v,
+    for (const g of v.gone) put(/excluded this run/.test(g.cause) ? 2 : 3, v,
       `GONE      "${g.title}" (${g.start || '?'} → ${g.end || '?'}) — ${g.cause}\n                ${g.url}`);
-    for (const e of v.emptiedPages) put(2, v, typeof e.linksSeen === 'string' && e.linksSeen.startsWith('none')
+    for (const e of v.emptiedPages) put(3, v, typeof e.linksSeen === 'string' && e.linksSeen.startsWith('none')
       ? `EMPTY PAGE "${e.ctx}" brought rows last run; this run ${e.linksSeen.replace('none — ', '')} (log) — a refusal, not an empty page`
       : `EMPTY PAGE "${e.ctx}" brought rows last run, a marker now; links seen this run: ${e.linksSeen}. Either the venue has nothing there now or the page changed — one look at the page settles it.`);
-    for (const r of v.renamed) put(3, v, `TITLE     "${r.from}" → "${r.to}"${r.onlyCase ? ' (capitals only)' : ''} — a Change card in the app`);
-    for (const m of v.moved) put(4, v, `MOVED     "${m.prevTitle}"${m.prevTitle !== m.title ? ` → "${m.title}"` : ''} — new address; ${m.card === 'change'
+    for (const r of v.renamed) put(4, v, `TITLE     "${r.from}" → "${r.to}"${r.onlyCase ? ' (capitals only)' : ''} — a Change card in the app`);
+    for (const m of v.moved) put(5, v, `MOVED     "${m.prevTitle}"${m.prevTitle !== m.title ? ` → "${m.title}"` : ''} — new address; ${m.card === 'change'
       ? 'expect a Change card for the link (same name, dates overlap)'
       : 'expect a NEW card (the name or dates no longer pair it)'}\n                ${m.from}\n             -> ${m.to}`);
     for (const d of v.redated) {
       const [a, b] = [datePair(d.from), datePair(d.to)];
       const onlyFilled = [0, 1].every(i => !a[i] || a[i] === b[i]) && [0, 1].some(i => !a[i] && b[i]);
-      put(onlyFilled ? 5 : 6, v, `DATES     "${d.title}" ${d.from}  ⇒  ${d.to}`);
+      put(onlyFilled ? 6 : 7, v, `DATES     "${d.title}" ${d.from}  ⇒  ${d.to}`);
     }
-    for (const w of v.worseText) put(7, v, `WORSE TEXT "${w.title}" — description ${w.from} → ${w.to} characters${w.turned.length ? '; now reads as ' + w.turned.join(', ') : ''}. A fault: last run had better text`);
-    for (const l of v.lostSummary) put(7, v, `LOST TEXT "${l.title}" — ${l.why ? 'its page: ' + l.why + ' (note)' : 'UNEXPLAINED: the note gives no page failure'}`);
-    for (const n of v.noSummary) if (!v.lostSummary.some(l => l.url === n.url)) put(7, v, `NO TEXT   "${n.title}" — ${n.why ? 'its page: ' + n.why + ' (note)' : 'never had a description'}`);
-    for (const j of v.junk) put(7, v, `JUNK?     "${j.title}" — ${j.kinds.join(', ')}: "${j.text}${j.text.length >= 160 ? '…' : ''}"`);
-    for (const a of v.added) put(8, v, `NEW       "${a.title}" (${a.start || '?'} → ${a.end || '?'}) — ${a.note}`);
-    for (const x of v.ruleStopped) put(8, v, `RULE STOPPED "${x.title}" — EXCLUDED last run ("${x.reason}", log), let through now: the rule stopped firing. A fault.`);
+    for (const w of v.worseText) put(8, v, `WORSE TEXT "${w.title}" — description ${w.from} → ${w.to} characters${w.turned.length ? '; now reads as ' + w.turned.join(', ') : ''}. A fault: last run had better text`);
+    for (const l of v.lostSummary) put(8, v, `LOST TEXT "${l.title}" — ${l.why ? 'its page: ' + l.why + ' (note)' : 'UNEXPLAINED: the note gives no page failure'}`);
+    for (const n of v.noSummary) if (!v.lostSummary.some(l => l.url === n.url)) put(8, v, `NO TEXT   "${n.title}" — ${n.why ? 'its page: ' + n.why + ' (note)' : 'never had a description'}`);
+    for (const j of v.junk) put(8, v, `JUNK?     "${j.title}" — ${j.kinds.join(', ')}: "${j.text}${j.text.length >= 160 ? '…' : ''}"`);
+    for (const a of v.added) put(1, v, `NEW       "${a.title}" (${a.start || '?'} → ${a.end || '?'}) — ${a.note}`);
+    for (const x of v.ruleStopped) put(1, v, `RULE STOPPED "${x.title}" — EXCLUDED last run ("${x.reason}", log), let through now: the rule stopped firing. A fault.`);
     for (const x of v.addressLeft) put(9, v, `ADDRESS LEFT "${x.title}" — last run had it at two addresses; one left, the show is still in\n                gone: ${x.url}\n                stays: ${x.stays}`);
     for (const k of v.keptNoEnd) put(9, v, `KEPT BY RULE "${k.title}" opened ${k.start}, no closing date — kept and flagged under the lookback rule (docs/import_csv.md), not junk`);
     for (const d of v.sameName) put(9, v, `SAME NAME "${d.title}" at two addresses — kept by design (no de-duplication); the app shows both\n                ${d.urls.join('\n                ')}`);

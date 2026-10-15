@@ -53,6 +53,25 @@ const check = (name, ok, got) => {
       check('DO-006: Brera — a bold lead-in name (no line break after it) stays', /Giovanni Agostino da Lodi\. Nato a Lodi/.test(t), t);
     }
     {
+      // The 15 Oct shapes, rebuilt from the run's rows (no saved page holds them):
+      // bold words mid-sentence or before more text are not labels; the info block
+      // ("Where", "Hours") ends the description.
+      const v = S.VENUES.brera;
+      const P = s => `<p class="wp-block-paragraph">${s}</p>`;
+      await page.setContent(`<div class="wp-block-columns">${[
+        P('La Pinacoteca di Brera presenta una mostra eccezionale che riunisce per la prima volta <strong>25</strong> dipinti di maestri del secondo Novecento, provenienti da una vasta operazione.<br>Seguono altre parole.'),
+        P('<strong>Giovanni Agostino da Lodi</strong>. Born in Lodi, he trained in Milan in the circle of Bramante and Bramantino before moving to Venice.<br>More of his story.'),
+        P('Una mostra di tavole originali e copertine iconiche. a cura di <strong>Elisabetta Sgarbi, Marcello Garofalo</strong> con la collaborazione di Igort.<br>Il Cortile d’Onore si apre.'),
+        P('<strong>Where</strong><br>Biblioteca Nazionale Braidense, Sala Maria Teresa, in the heart of the Brera district of Milan.'),
+        P('<strong>Hours</strong><br>Monday: 9:30 AM – 6:00 PM (access via the Library only; last admission at 5:30 PM).'),
+      ].join('')}</div>`);
+      const t = await S.getCuratorialText(page, v.description, v.noise, v.noiseExempt, v.creditPara, v.keepBold, v.dropSentence, v.descriptionSkip, v.descriptionUntil);
+      check('DO-009: Brera — a bold number mid-sentence stays ("25 dipinti")', /prima volta 25 dipinti/.test(t), t);
+      check('DO-010: Brera — a bold name followed by more text stays', /Giovanni Agostino da Lodi\. Born in Lodi/.test(t), t);
+      check('DO-011: Brera — bold curators\' names inside a sentence stay', /a cura di Elisabetta Sgarbi, Marcello Garofalo con/.test(t), t);
+      check('DO-012: Brera — the info block (where, hours) ends the description', !/Biblioteca Nazionale|9:30|Where|Hours/.test(t), t);
+    }
+    {
       const t = await read('tate_pages/light_and_magic.html', 'tate-modern');
       check('DO-007: Tate Modern — the show\'s own text is read', /^Light and Magic is the first major exhibition/.test(t) && /medium\.$/.test(t), t);
       check('DO-008: Tate Modern — no dining offer, time slots or event card', !/set menu|time slot|lunch|Relaxed Hours|quieter time/i.test(t), t);

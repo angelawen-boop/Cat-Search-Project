@@ -68,15 +68,23 @@ async function reread(runDir, venue, { S = require('./sweep_prototype.js'), kept
         const t = listingName.get(row.url);
         if (t && t.to === row.title) row.title = t.from;
         await S.fetchIndividualPages(page, [row], venue);
+        // A row the page pass now excludes leaves the run, named — as the sweep drops it.
+        if (row._dropByTitle || row._dropByPageLabel) {
+          changes.push({ url: row.url, field: 'excluded', from: before.title, to: row._dropByPageLabel || 'venue rule (title)' });
+          row._drop = true;
+          continue;
+        }
         row.notes = before.notes;                              // the sweep's notes stand
         for (const k of ['title', 'start_date', 'end_date', 'summary']) {
+          // A space at either end is not a change (the 2,000-character cut can leave one).
+          if (String(row[k] || '').trim() === String(before[k] || '').trim()) row[k] = before[k];
           if ((row[k] || '') !== (before[k] || '')) changes.push({ url: row.url, field: k, from: before[k] || '', to: row[k] || '' });
         }
       }
     } finally { console.log = quiet; }
     await ctx.close();
   } finally { await browser.close(); }
-  return { rows, changes, missing, kept: kept.size, csv };
+  return { rows: rows.filter(r => !r._drop), changes, missing, kept: kept.size, csv };
 }
 
 // The run folder's own name is its start, Sydney time (run_YYYY-MM-DD_HHMMSS).

@@ -2043,9 +2043,13 @@ const CURATORIAL_SELECTORS = [
 ];
 
 async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, creditPara, keepBold, dropSentence, descriptionSkip, descriptionUntil) {
+  // `descriptionSkip` is a selector (captions), or `{ label, stop }` for a venue that
+  // opens paragraphs with a bold label and a line break (Brera).
+  const skip = typeof descriptionSkip === 'string' ? { sel: descriptionSkip } : (descriptionSkip || {});
   try {
-    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe, keepBold, dropRe, skipSel, untilRe }) => {
+    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe, keepBold, dropRe, skipSel, labelSel, stopLabelRe, untilRe }) => {
       const CREDIT = creditRe ? new RegExp(creditRe, 'i') : null;
+      const STOPLABEL = stopLabelRe ? new RegExp(stopLabelRe, 'i') : null;
       const ALWAYS = new RegExp(alwaysRe, 'i');
       const NOISE = new RegExp(noiseRe, 'i');
       const clean = (t) => String(t || '').replace(/\s+/g, ' ').trim();
@@ -2215,6 +2219,21 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, cr
             const c = clean(s.innerText);
             if (c) raw = clean(raw.split(c).join(' '));
           }
+          // A LABEL: bold, nothing before it, a line break straight after. CSS's
+          // `:first-child` and `+` ignore text, so this is checked node by node —
+          // the selector alone took a bold "25" mid-sentence (Brera, 15 Oct).
+          // A `stop` label (where, when, hours, tickets) ends the description.
+          const lab = labelSel ? el.querySelector(labelSel) : null;
+          if (lab) {
+            const blank = n => n.nodeType === 3 && !n.textContent.trim();
+            let before = lab.previousSibling; while (before && blank(before)) before = before.previousSibling;
+            let after = lab.nextSibling; while (after && blank(after)) after = after.nextSibling;
+            const c = clean(lab.innerText);
+            if (!before && after && after.nodeName === 'BR' && c && raw.startsWith(c)) {
+              if (STOPLABEL && STOPLABEL.test(c)) break;
+              raw = clean(raw.slice(c.length));
+            }
+          }
           const t = stripBoilerplate(raw);
           if (t.length > 60) out.push(t);
         }
@@ -2230,7 +2249,9 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, cr
          creditRe: creditPara ? creditPara.source : null,
          keepBold: !!keepBold,
          dropRe: dropSentence ? dropSentence.source : null,
-         skipSel: descriptionSkip || null,
+         skipSel: skip.sel || null,
+         labelSel: skip.label || null,
+         stopLabelRe: skip.stop ? skip.stop.source : null,
          untilRe: descriptionUntil ? descriptionUntil.source : null });
   } catch {
     return '';
@@ -3591,6 +3612,9 @@ const VENUES = {
       /\bBaseball Cards from the Collection of Jefferson R\. Burdick\b/,
     ].map(r => r.source).join('|'), 'i'),
     base: 'https://www.metmuseum.org',
+    // After the show's text: sponsors and accessibility (emptyAside), press quotes,
+    // the catalogue's blurb (withVerticalCenter) — none is the show (docs/met_pages/).
+    noise: 'sponsors|emptyAside|quotesModule|withVerticalCenter',
     // Her machine only (machineVenues): the container is answered 429 here.
     route: 'local',
     // The past archive serves one year per address (?year=2025), so each year is a
@@ -3638,6 +3662,8 @@ const VENUES = {
   rijks: {
     name: 'Rijksmuseum, Amsterdam',
     base: 'https://www.rijksmuseum.nl',
+    // A funder credit inside the text.
+    dropSentence: /(?:This|The) exhibition is made possible\b/,
     pages: [
       { path: '/en/whats-on/exhibitions/now-on-view', ctx: 'current/upcoming' },
       { path: '/en/whats-on/exhibitions/past',        ctx: 'past' },
@@ -3706,6 +3732,10 @@ const VENUES = {
   borghese: {
     name: 'Galleria Borghese, Rome',
     base: 'https://galleriaborghese.cultura.gov.it',
+    // Titles typed in capitals everywhere (docs/borghese_pages/): ordinary capitals by
+    // code, the name/subtitle full stop as an em dash (her decision).
+    capsTitles: true,
+    stopToDash: true,
     pages: [
       { path: '/en/mostre/presenti/', ctx: 'current' },
       { path: '/en/mostre/future/',   ctx: 'upcoming' },
@@ -3972,10 +4002,11 @@ const VENUES = {
     // Its lead-in is an h4, not a paragraph; scoped to the column blocks, which leaves
     // out the "Info utili" block. Both tags in one selector, so they keep page order.
     description: 'div.wp-block-columns h4.wp-block-heading, div.wp-block-columns p.wp-block-paragraph',
-    // A credit LABEL opening a paragraph (a bold run, then a line break: "Comitato
-    // scientifico: …") — only the label goes, never the prose after the break
-    // (docs/brera_pages/).
-    descriptionSkip: 'p.wp-block-paragraph > strong:first-child:has(+ br)',
+    // A bold LABEL opening a paragraph, then a line break ("Comitato scientifico: …"):
+    // only the label goes, never the prose after the break. The info block's labels
+    // end the description (opening hours, tickets). docs/brera_pages/.
+    descriptionSkip: { label: 'p.wp-block-paragraph > strong',
+      stop: /^(?:Where|When|Hours|Opening hours|Tickets|Dove|Quando|Orari|Biglietti)\b/i },
   },
 
   // Musée d'Orsay, her addition. Written from her saved pages (docs/orsay_pages/). Two
@@ -4065,7 +4096,7 @@ const VENUES = {
     noise: 'col_annexe',
     // A sponsor's thanks, not the show (her decision) — MAD only; elsewhere the phrase
     // opens real sentences.
-    dropSentence: /With the support of\b/,
+    dropSentence: /With the support of\b|The exhibition is curated by\b/,
   },
 
   ashmolean: {
@@ -4151,6 +4182,8 @@ const VENUES = {
   artic: {
     name: 'Art Institute of Chicago',
     base: 'https://www.artic.edu',
+    // A curator or organiser credit is its own paragraph ("X is curated by …").
+    creditPara: /^(?:[^.]{0,160}\bis curated by\b|It is curated by\b|(?:This|The) exhibition is (?:co-)?organized by\b)/,
     // Her decisions (docs/venues.md): a bare "from the Collection" (always its own) and
     // "Film Series" excluded; family, named and lent collections kept.
     excludeTitle: /\bfrom the Collection\b(?!\s+of\b)|\bFilm Series\b/i,
@@ -4167,7 +4200,9 @@ const VENUES = {
       // stops at the floor by CLOSING date and would lose a year's second page. A third
       // page would be reported by detectUnwiredPagination.
       { path: '/exhibitions/history', ctx: 'past', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true },
-      { path: '/exhibitions/history', ctx: 'past p2', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true, suffix: '&page=2' },
+      // A year whose shows fit on page 1 serves an empty page 2: no marker (`mayBeEmpty`).
+      { path: '/exhibitions/history', ctx: 'past p2', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true, suffix: '&page=2',
+        carry: { mayBeEmpty: true } },
     ],
     // Exhibitions sit at /exhibitions/<slug>, not beneath /exhibitions/history.
     selector: 'a[href*="/exhibitions/"]',
@@ -4527,11 +4562,21 @@ function titleFromCaps(title) {
     .replace(/^(\p{Ll})/u, c => c.toUpperCase());
 }
 
+/**
+ * A venue's typed-capitals title in ordinary capitals (`capsTitles`); with
+ * `stopToDash`, the full stop between name and subtitle becomes an em dash first
+ * (Borghese, her decision: "Louise Bourgeois — Unconscious Memories").
+ */
+function venueTitle(code, title) {
+  const v = VENUES[code] || {};
+  if (!title || title.startsWith('[') || !v.capsTitles) return title;
+  const t = v.stopToDash ? String(title).replace(/\.\s+(?=\S)/g, ' — ') : title;
+  return titleFromCaps(t);
+}
+
 async function scrapeVenue(page, code, opts = {}) {
   const rows = await scrapeVenueRows(page, code, opts);
-  if ((VENUES[code] || {}).capsTitles) {
-    for (const r of rows) if (r.title && !r.title.startsWith('[')) r.title = titleFromCaps(r.title);
-  }
+  for (const r of rows) r.title = venueTitle(code, r.title);
   return rows;
 }
 
@@ -4724,7 +4769,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
       const excluded = cov
         ? (cov.dupUrl || 0) + (cov.ongoing || 0) + (cov.branch || 0) + (cov.labelled || 0) + (cov.otherKind || 0) + (cov.offsite || 0)
         : 0;
-      if (rows.length === rowsBefore && !excluded && !pg.discovered) {
+      if (rows.length === rowsBefore && !excluded && !pg.discovered && !pg.mayBeEmpty) {
         log(`  NO EXHIBITIONS ${pg.ctx}: page loaded and was read, but nothing matched`);
         rows.push({
           venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
@@ -4792,12 +4837,13 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
   const before = toFetch.length;
   for (let i = toFetch.length - 1; i >= 0; i--) {
     const r = toFetch[i];
-    if (!r._dropByPageLabel) continue;
-    log(`    the venue's own page labels this a ${r._dropByPageLabel}, excluded: ${r.title || r.url}`);
+    if (r._dropByTitle) log(`    not a temporary exhibition (venue rule), excluded: ${r.title}`);
+    else if (r._dropByPageLabel) log(`    the venue's own page labels this a ${r._dropByPageLabel}, excluded: ${r.title || r.url}`);
+    else continue;
     toFetch.splice(i, 1);
   }
   if (toFetch.length !== before) {
-    log(`  ${before - toFetch.length} row(s) excluded on the type printed on their own page`);
+    log(`  ${before - toFetch.length} row(s) excluded on their own page (type printed there, or the name it gave)`);
   }
 
   // HER RULING FOR THE MENIL, 12 Sep 2026: drop its permanent collection
@@ -4957,6 +5003,8 @@ function recipeDrivenParams(v) {
   const names = new Set();
   for (const pg of v.pages) {
     if (pg.param) names.add(pg.param);
+    // A page number the recipe writes itself (artic's `suffix: '&page=2'`) is wired, not a missed page.
+    for (const kv of String(pg.suffix || '').replace(/^[?&]/, '').split('&')) names.add(kv.split('=')[0]);
     const q = (pg.path || '').split('?')[1];
     if (q) for (const kv of q.split('&')) names.add(kv.split('=')[0]);
   }
@@ -5391,6 +5439,14 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
         }
       }
 
+      // `excludeTitle` again, on the name the page gave: a listing card with no
+      // readable name (the Met's) never met the listing's check (her decisions,
+      // docs/venues.md).
+      if (vrec.excludeTitle && row.title && vrec.excludeTitle.test(row.title)) {
+        row._dropByTitle = true;
+        continue;
+      }
+
       const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt, vrec.creditPara, vrec.keepBold, vrec.dropSentence, vrec.descriptionSkip, vrec.descriptionUntil);
       if (text) {
         row.summary = text;
@@ -5544,7 +5600,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
       // already holds — no request is made to keep a page.
       if (keepFrom && landed && !broke) {
         const html = await page.content().catch(() => '');
-        const outcome = row._dropByPageLabel ? 'dropped'
+        const outcome = row._dropByPageLabel || row._dropByTitle ? 'dropped'
           : fetched > keepFrom.fetched ? 'text'
           : noText > keepFrom.noText ? 'noText' : 'other';
         if (PAGE_KEEP.save(venueCode, row.url, {
@@ -6316,7 +6372,7 @@ module.exports = {
   scrapeVenue,
   // Pure — the line-by-line title pick, so a venue reachable only from her
   // laptop can still be covered by a fixture here.
-  pickTitleLine, titleFromPage, readPageNameParts, titleFromCaps,
+  pickTitleLine, titleFromPage, readPageNameParts, titleFromCaps, venueTitle,
   // Not pure — exported so a check can run the real detail-page pass offline.
   fetchIndividualPages,
   // For from_saved_pages.js: the sweep's own finish, over pages she saved.

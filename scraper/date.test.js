@@ -21,7 +21,7 @@ const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
   classifyLoadError, isOwnListingPage, saysOngoing,
-  expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination, VENUES, pickTitleLine,
+  expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination, VENUES, pickTitleLine, venueTitle,
   stripWeekdays,
   addNote, filledDatesNote, finishNotes, scopeSelector, extensionNote, applyLookback,
 } = require('./sweep_prototype.js');
@@ -2052,4 +2052,22 @@ test('DS-002: a closing date alone, month first or after "Closes" / "fino al" (A
   assert.deepStrictEqual([r.start, r.end], ['2026-03-05', '2026-04-06']);
   // No year, no date.
   assert.strictEqual(findDateRange('Closes 15 November', { looseSingles: false }).end, '');
+});
+
+test('P-015: the Art Institute\'s page 2 of a year may be empty and is wired — no marker card, no unwired-page warning (15 Oct home sweep)', () => {
+  const p2 = listingPages(VENUES.artic).filter(p => /p2/.test(p.ctx));
+  assert.ok(p2.length >= 4);
+  for (const p of p2) assert.equal(p.mayBeEmpty, true, p.ctx + ' should be allowed to come back empty');
+  for (const p of listingPages(VENUES.artic).filter(p => !/p2/.test(p.ctx))) assert.ok(!p.mayBeEmpty, p.ctx + ' must still leave a marker when empty');
+  assert.ok(recipeDrivenParams(VENUES.artic).includes('page'), 'artic writes ?page=2 itself, so it is not an unwired page');
+});
+
+test('BT-001: Borghese titles typed in capitals reach her in ordinary capitals, name and subtitle joined by an em dash (her decision)', () => {
+  assert.equal(venueTitle('borghese', 'LOUISE BOURGEOIS. UNCONSCIOUS MEMORIES'), 'Louise Bourgeois — Unconscious Memories');
+  assert.equal(venueTitle('borghese', 'ZANABAZAR AT THE GALLERIA BORGHESE. FROM MONGOLIA TO THE GLOBAL BAROQUE'),
+    'Zanabazar at the Galleria Borghese — From Mongolia to the Global Baroque');
+  assert.equal(venueTitle('borghese', 'WANGECHI MUTU – BLACK SOIL POEMS'), 'Wangechi Mutu – Black Soil Poems');
+  // Only Borghese turns a full stop into a dash.
+  assert.equal(venueTitle('ashmolean', 'IN BLOOM. HOW PLANTS CHANGED OUR WORLD'), 'In Bloom. How Plants Changed Our World');
+  assert.equal(venueTitle('ng', 'Hello. World'), 'Hello. World');
 });
