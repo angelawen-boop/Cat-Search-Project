@@ -4,6 +4,65 @@
 **Read the relevant section before changing the catalogue lookup, the intake
 screen, quarantine, the sweep log or saving.** The full history is in git. The app's original long comments: `git show bea6dd7:Cat_Watch.jsx`.
 
+## What is built and signed off
+
+Confirmed by her on real files, not only by fixtures. **Design and evidence:
+`docs/app.md`.**
+
+- **Loading and saving.** Open → empty portal; Import → pick file. **Export IS
+  Save.** Two save routes, differing in what is KNOWN — the runtime's file
+  handoff resolves or throws; a plain browser download cannot tell finished from
+  cancelled, so it does not clear the unsaved warning. **Never put back a
+  click-triggered green tick** — it once read "Saved — safe to close" while
+  nothing was written.
+- **Refreshing.** A sweep CSV goes in via Import Refresh; the app compares it
+  against the ledger with no internet access and shows proposals as cards grouped
+  by venue: Add / Fill / Change / Couldn't be filed. Bad data is always surfaced,
+  never dropped.
+- **Reading a stitched file.** Four bands for the odd cases; duplicate rows fold
+  on venue + URL and nothing else; rows with no URL never fold; marker rows
+  become a coverage panel, never proposals.
+- **The ledger will not move until every card is decided** — a hard block.
+  Rejecting counts as deciding. **Permanent design.** Beside it sits the
+  **partial-apply button** (applies only the cards decided so far, asks first,
+  says what it leaves behind) — **stays until she says, her decision:** she
+  imports new venues in batches of 50–100 cards and needs to work them in
+  sittings. The way back is re-importing the same file; rejections do not
+  survive the round trip, which she accepted. It is not confirm-and-continue
+  (§4.2). To remove it one day: the marked block in `Cat_Watch.jsx`, `partial` on
+  `applyRefresh`, `offerPartialApply` and its harness export, fixture 18h.
+- **Counts that reconcile.** One line accounts for every row read, two sentences
+  each ending in the number the next starts from. **Every term stays.**
+- **Quarantine ("never add this")**, keyed on normalised URL. Latest decision
+  wins, which needs tombstones — a release is RECORDED, not merely absent.
+- **Reject and quarantine are different jobs.** Quarantine: never show me this
+  again. Reject: *this entry is wrong* — fix it at the source. **A rejected card
+  coming back is correct.** Never propose remembering rejections.
+- **Buy next** (her design): on a Yes card, a dot left of the star, drawn
+  to the star's measured size (`starInk`) — hollow off, red on. Leaving Yes clears
+  it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
+  anywhere.** Closing the search bar or Reset cards empties its box.
+- **Per-venue freshness**, two dates, from `swept_at`.
+- **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
+  at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.
+- **Dark mode**, every colour named; the shell paints a ground before React runs.
+- **Sorting, timestamps and dividers** — the only way to tell this import from
+  earlier ones from the seed. **Do NOT "simplify" it.**
+- **Seed set**, ~110 exhibitions read before the scraper existed, met / ng / rijks / acq only.
+  Thin on history at met and rijks by design of the tool that read it. **Nothing
+  to fix; do not re-diagnose this as a matching failure.**
+- **Titles.** A changed title is a Change card — a rename or only capitals.
+  Nothing masked; the scraper records the venue's own letters (`restoreCase`).
+  **A changed description is a Change card too** (`consider`), so descriptions
+  must be stable from sweep to sweep.
+- **Italian titles** (`capo`, `brera`, `uffizi`): title stays the museum's own
+  (the lookup searches by it); an English translation opens the description —
+  `In English: "…". Sixteen works…`. The model returns plain strings; code
+  writes the line (`composeSummary`). `compress_prompt.md`, "Italian titles".
+
+**Deliberately not built:** bulk-approve, in-app field editing, and the mirror
+case where the app proposes Add but it is really an update.
+
 ---
 
 ## 1. Catalogue lookup
@@ -486,7 +545,7 @@ matching failure.**
 
 ## 7. Tests
 
-In `docs/testing.md`.
+In `CLAUDE.md` §1, "Procedures".
 
 ---
 
