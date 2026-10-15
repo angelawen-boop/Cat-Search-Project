@@ -160,74 +160,56 @@ text handed to it, so it can never report a page that was not found.
 
 ### Rules her decisions settled
 
-Each replaced a real failure. Wording of the card lines is in the code.
+Each replaced a real failure. Card wording is in the code.
 
-- **Only the publisher is the publisher** (Millet): a link a read hands over is filed
-  only on the publisher's own site (`publisherLinkOf`); a distributor's page never.
-  Self-published → no link at all.
-- **Another venue's catalogue is not this show's**: a book found on the web is filed
-  only when the read says it is the catalogue of the show AT THIS VENUE (`thisVenue`);
-  a show that travels here "in modified form" does not count. The shop step needs no
-  such answer. A blank publisher with the ISBN known runs the wider search too.
-- **The title as printed, English first at non-English venues**: a shop title is kept
-  only as far as the pages print it (`titleAsPrinted`). At an `english:false` venue the
-  facts round reads the book's language and own title, and the edition search (aimed
-  at library records — "originally published in French as …" — plus the show's English
-  title with the publisher when known) runs beside it, with one web query in the
-  venue's language (`localCatalogueQuery`; Hammershøi, listed only in French). An
-  English edition proved → filed as "Not in the museum shop", the original in
-  `originalEdition`; none → the book stays under its own title. "Checked publisher's
-  site" only when its page was read, once, the page the card links, listing its
-  editions (Watteau, Canaletto): `englishCheck`, `englishLine`; the line never repeats
-  the publisher printed above it.
-- **"X in association with Y" — Y is the publisher** (`publisherToFind`); the card
-  prints the line as given. **A co-edition, "X / Venue", "X and Venue", "X with
-  Venue": X is the publisher**, for every publisher verdict (Turner).
-- **The publisher is read off the ISBN, in code** (Botticelli gave three publishers in
-  three lookups): once the ISBN is known, the labelled publisher in results carrying it,
-  two agreeing (`publisherOnIsbnResults`), outranks the book's own page, which outranks
-  any read of general results. The facts round runs always at a non-English venue;
-  elsewhere only for a missing ISBN or a missing or guessed publisher.
-- **An English edition must be the same catalogue** (Botticelli): a result carrying its
-  ISBN shows the same publisher or names the venue (`sameCatalogue`), carries the
-  original's ISBN, or links it to the original's title. Reaktion's monograph is refused
-  (ED-004).
+- **Only the publisher is the publisher** (Millet): a link is filed only on the
+  publisher's own site (`publisherLinkOf`), never a distributor's. Self-published → no
+  link. **"X in association with Y": Y is the publisher** (`publisherToFind`). **A
+  co-edition, "X / Venue", "X and Venue", "X with Venue": X is** (Turner).
+- **Another venue's catalogue is not this show's**: a web-found book is filed only when
+  the read says it is the catalogue of the show AT THIS VENUE (`thisVenue`); "in modified
+  form" does not count. The shop step needs no such answer.
+- **Non-English venues: the title as printed, English first.** A shop title is kept only
+  as far as the pages print it (`titleAsPrinted`). The facts round reads the book's
+  language and own title; the edition search (library records — "originally published
+  in French as …") and one query in the venue's language (`localCatalogueQuery`;
+  Hammershøi) run beside it. English edition proved → filed as "Not in the museum shop",
+  original in `originalEdition`; none → the book keeps its own title. "Checked
+  publisher's site" only when its page was read, once, listing its editions (Watteau,
+  Canaletto): `englishCheck`, `englishLine`, never repeating the publisher above it.
+- **Publisher and edition are read off the ISBN, in code** (Botticelli gave three
+  publishers in three lookups; order of trust: "Trust order" above). An English edition
+  must be the same catalogue (`sameCatalogue`; Reaktion's monograph refused, ED-004). The
+  facts round runs always at a non-English venue, elsewhere only for a missing ISBN or a
+  missing or guessed publisher.
 - **Search again means search again**: a whole fresh lookup from a blank card (`lookupCat`
-  → `resetCard`), nothing kept or skipped. Finished → it replaces the card's catalogue
-  details; any step failed → the card is untouched and says "Search again didn't
-  finish". The old "keep what's on the card" rule is gone; do not bring it back. Within
-  one lookup, each step fills what earlier steps left blank.
+  → `resetCard`). Finished → replaces the card's catalogue details; any step failed → the
+  card is untouched, "Search again didn't finish". The old "keep what's on the card" rule
+  is gone; do not bring it back.
 - **A blocked shop says so** (`shopState: "blocked"`): *"The museum shop is blocked -
-  search it manually. The catalogue is stocked elsewhere."* / *"The museum shop is
-  blocked. The catalogue also does not appear to exist elsewhere. Search manually to
-  confirm."* Headline red and bold, the rest grey. Blocked: KHM, MAM. A shop whose every
-  page comes back empty is blocked too — MoMA's shelf is drawn by script and its search
-  and `products.json` answer 403. Judged on the WHOLE page, opened again when the
-  excerpts are short; no price anywhere = empty (Watteau).
+  search it manually. The catalogue is stocked elsewhere."* / *"…The catalogue also does
+  not appear to exist elsewhere. Search manually to confirm."* Headline red and bold, the
+  rest grey. Blocked: KHM, MAM. A shop whose every page comes back empty is blocked too —
+  MoMA's shelf is drawn by script and its search and `products.json` answer 403. Judged
+  on the WHOLE page, reopened when excerpts are short; no price anywhere = empty
+  (Watteau).
 - **The Museum shop link searches the shop for the EXHIBITION's title** when no book page
   is on file (`buyLinks`) — resellers keep the book's title, the shop keeps the show's.
-  A search or shelf page is never filed as the book's page (`listedOnly`). KHM opening
-  its search is the design working. A ticket is never a catalogue (`isTicketLink`); a
-  shop link from the web search is opened before it is filed as in the shop
-  (`confirmShopLink`).
-- **Under a book not in the shop** — "Not in the museum shop — shop link opens the
-  general store." for every venue with a shop. **A venue with no shop** (`borghese`,
-  `capo`, `dellav`) reads only "Venue has no shop.", grey, with no shop link and no
-  Re-check button; its lookup goes straight to the web.
-- **Booko AU** (last buy link) is `booko.au/<isbn>`; with no ISBN, its title search. It
-  works well on the ISBN; the messier title-search results are accepted.
-- **A book's link on a shelf is read in code** (`bookLinkOnShelf`): the one link whose
-  words carry the whole catalogue title; two, or none, and nothing.
-- **One page is read whole** (`fetchPage` `{full:true}`): the book's page, Re-check's
-  page, the publisher's candidates. The shelf stays excerpts (a call is capped ~25,000
-  characters). The ISBN is read in code first (`isbnOnPage`: exactly one 978/979
-  number labelled ISBN or EAN, check digit valid); Claude's only when code finds none.
-  "Sold by …" is the shop, never the publisher. Hidden-until-clicked text is not in
-  Parallel's copy.
-- **The web ISBN search reads its results in code too** (`isbnInResults`): only results
-  carrying the whole book title count; labelled numbers and valid 978/979 numbers in
-  their addresses; exactly one. None → the two results about the book are opened whole.
-  Queries name the venue.
+  A search or shelf page is never a book page (`listedOnly`); KHM opening its search is
+  the design working. A ticket is never a catalogue (`isTicketLink`); a web-found shop
+  link is opened before it is filed (`confirmShopLink`).
+- **Not in the shop** reads "Not in the museum shop — shop link opens the general store."
+  at every venue with a shop. A venue with none (`borghese`, `capo`, `dellav`) reads only
+  "Venue has no shop.", grey, no shop link, no Re-check; its lookup goes straight to the
+  web. **Booko AU** (last buy link) is `booko.au/<isbn>`, else its title search.
+- **Read in code before Claude:** a book's link on a shelf (`bookLinkOnShelf`: the one
+  link whose words carry the whole catalogue title); the ISBN on a page (`isbnOnPage`:
+  exactly one 978/979 labelled ISBN or EAN, valid check digit); the ISBN in web results
+  (`isbnInResults`: only results carrying the whole book title, exactly one number; none →
+  the two results about the book are opened whole). "Sold by …" is the shop, never the
+  publisher. Pages are read whole (`fetchPage` `{full:true}`) except the shelf, which
+  stays excerpts (a call is capped ~25,000 characters); hidden-until-clicked text is not
+  in Parallel's copy.
 
 ### The ISBN
 
@@ -245,17 +227,15 @@ Each replaced a real failure. Wording of the card lines is in the code.
 
 ### The connector's limits and cost
 
-- Her keyed connector, **"Parallel Search Key"**: custom, at
-  `https://search.parallel.ai/mcp-oauth`, No sign-in, her key in an `x-api-key` header
-  (`authorization: Bearer` never reached Parallel). Every search and page opened is
-  billed to her Parallel account ($20 credit for 60 days, then $5 a month, auto-reload
-  off). The built-in keyless "Parallel Search" cannot be removed; a second connector at
-  `/mcp` is refused. About 30–50 lookups so far with only brief connection errors.
-- The keyless tier refuses after roughly a dozen quick searches (observed, unpublished).
-  Per `mcp.d.ts`, `rate_limited` is never returned and `upstream_error` is the catch-all,
-  so its refusal is most likely "Search failed (upstream_error)" in the app (not
-  proven). A failed search shows one line on the card (Re-check's words with
-  "Search"/"Search again"); no red banner.
+- Her keyed connector, **"Parallel Search Key"**: custom, `https://search.parallel.ai/mcp-oauth`,
+  No sign-in, key in an `x-api-key` header (`authorization: Bearer` never reached
+  Parallel). Billed to her Parallel account ($20 credit for 60 days, then $5 a month,
+  auto-reload off). The built-in keyless "Parallel Search" cannot be removed; a second
+  connector at `/mcp` is refused.
+- The keyless tier refuses after roughly a dozen quick searches (unpublished). Per
+  `mcp.d.ts` `rate_limited` is never returned and `upstream_error` is the catch-all, so
+  its refusal most likely shows as "Search failed (upstream_error)" (not proven). A
+  failed search shows one line on the card, Re-check's words; no red banner.
 - Up to five searches and seven page opens per lookup, plus Claude reads on her
   allowance; every step after the first is conditional.
 
