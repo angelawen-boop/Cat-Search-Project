@@ -68,9 +68,7 @@ page, then any read of general results — a guess wherever it came from. The
 diagnostic says which won. Title: `titleAsPrinted`.
 
 **Speed.** At most three connector calls and two Claude reads at once; a page is
-never opened twice; the diagnostic counts calls and times each step. Waits in a
-row, old → new: self-published 4 → 3; outside publisher 9 → 7; foreign, no
-English edition 13 → 7; edition swap 18 → 6–7; worst ~30 → 17.
+never opened twice; the diagnostic counts calls and times each step.
 
 **A reply holding two answers** ("Wait — here is the corrected object", her Louvre
 links Hubert Robert and Body and Soul): Claude's last answer, its own correction, is
@@ -153,12 +151,83 @@ text handed to it, so it can never report a page that was not found.
 
 - **A museum's own imprint is skipped** (`isSelfPublisher`): THIS venue's full
   name, whole words (on trial), her `SELF_PUBLISHERS`, her
-  `NOT_SELF_PUBLISHERS` overriding both. Known misfire: a namesake. C-070 to
-  C-078e.
+  `NOT_SELF_PUBLISHERS` overriding both. On trial: too many misfires → back to
+  her list alone (known misfire: a namesake). C-070 to C-078e.
 - **The publisher link is checked** (`cleanPublisherUrl`, `publisherLinkOf`):
   a real address on the publisher's own site. C-032 to C-038.
 - **One fold for matching** (`foldText`): accents dropped and ø æ œ ß ł đ ð þ ı
   folded, so "Hammershøi" matches "Hammershoi". LT-001 to LT-004.
+
+### Rules her decisions settled
+
+Each replaced a real failure. Wording of the card lines is in the code.
+
+- **Only the publisher is the publisher** (Millet): a link a read hands over is filed
+  only on the publisher's own site (`publisherLinkOf`); a distributor's page never.
+  Self-published → no link at all.
+- **Another venue's catalogue is not this show's**: a book found on the web is filed
+  only when the read says it is the catalogue of the show AT THIS VENUE (`thisVenue`);
+  a show that travels here "in modified form" does not count. The shop step needs no
+  such answer. A blank publisher with the ISBN known runs the wider search too.
+- **The title as printed, English first at non-English venues**: a shop title is kept
+  only as far as the pages print it (`titleAsPrinted`). At an `english:false` venue the
+  facts round reads the book's language and own title, and the edition search (aimed
+  at library records — "originally published in French as …" — plus the show's English
+  title with the publisher when known) runs beside it, with one web query in the
+  venue's language (`localCatalogueQuery`; Hammershøi, listed only in French). An
+  English edition proved → filed as "Not in the museum shop", the original in
+  `originalEdition`; none → the book stays under its own title. "Checked publisher's
+  site" only when its page was read, once, the page the card links, listing its
+  editions (Watteau, Canaletto): `englishCheck`, `englishLine`; the line never repeats
+  the publisher printed above it.
+- **"X in association with Y" — Y is the publisher** (`publisherToFind`); the card
+  prints the line as given. **A co-edition, "X / Venue", "X and Venue", "X with
+  Venue": X is the publisher**, for every publisher verdict (Turner).
+- **The publisher is read off the ISBN, in code** (Botticelli gave three publishers in
+  three lookups): once the ISBN is known, the labelled publisher in results carrying it,
+  two agreeing (`publisherOnIsbnResults`), outranks the book's own page, which outranks
+  any read of general results. The facts round runs always at a non-English venue;
+  elsewhere only for a missing ISBN or a missing or guessed publisher.
+- **An English edition must be the same catalogue** (Botticelli): a result carrying its
+  ISBN shows the same publisher or names the venue (`sameCatalogue`), carries the
+  original's ISBN, or links it to the original's title. Reaktion's monograph is refused
+  (ED-004).
+- **Search again means search again**: a whole fresh lookup from a blank card (`lookupCat`
+  → `resetCard`), nothing kept or skipped. Finished → it replaces the card's catalogue
+  details; any step failed → the card is untouched and says "Search again didn't
+  finish". The old "keep what's on the card" rule is gone; do not bring it back. Within
+  one lookup, each step fills what earlier steps left blank.
+- **A blocked shop says so** (`shopState: "blocked"`): *"The museum shop is blocked -
+  search it manually. The catalogue is stocked elsewhere."* / *"The museum shop is
+  blocked. The catalogue also does not appear to exist elsewhere. Search manually to
+  confirm."* Headline red and bold, the rest grey. Blocked: KHM, MAM. A shop whose every
+  page comes back empty is blocked too — MoMA's shelf is drawn by script and its search
+  and `products.json` answer 403. Judged on the WHOLE page, opened again when the
+  excerpts are short; no price anywhere = empty (Watteau).
+- **The Museum shop link searches the shop for the EXHIBITION's title** when no book page
+  is on file (`buyLinks`) — resellers keep the book's title, the shop keeps the show's.
+  A search or shelf page is never filed as the book's page (`listedOnly`). KHM opening
+  its search is the design working. A ticket is never a catalogue (`isTicketLink`); a
+  shop link from the web search is opened before it is filed as in the shop
+  (`confirmShopLink`).
+- **Under a book not in the shop** — "Not in the museum shop — shop link opens the
+  general store." for every venue with a shop. **A venue with no shop** (`borghese`,
+  `capo`, `dellav`) reads only "Venue has no shop.", grey, with no shop link and no
+  Re-check button; its lookup goes straight to the web.
+- **Booko AU** (last buy link) is `booko.au/<isbn>`; with no ISBN, its title search. It
+  works well on the ISBN; the messier title-search results are accepted.
+- **A book's link on a shelf is read in code** (`bookLinkOnShelf`): the one link whose
+  words carry the whole catalogue title; two, or none, and nothing.
+- **One page is read whole** (`fetchPage` `{full:true}`): the book's page, Re-check's
+  page, the publisher's candidates. The shelf stays excerpts (a call is capped ~25,000
+  characters). The ISBN is read in code first (`isbnOnPage`: exactly one 978/979
+  number labelled ISBN or EAN, check digit valid); Claude's only when code finds none.
+  "Sold by …" is the shop, never the publisher. Hidden-until-clicked text is not in
+  Parallel's copy.
+- **The web ISBN search reads its results in code too** (`isbnInResults`): only results
+  carrying the whole book title count; labelled numbers and valid 978/979 numbers in
+  their addresses; exactly one. None → the two results about the book are opened whole.
+  Queries name the venue.
 
 ### The ISBN
 
@@ -176,9 +245,17 @@ text handed to it, so it can never report a page that was not found.
 
 ### The connector's limits and cost
 
-- Her keyed "Parallel Search Key"; every search and page opened is billed to
-  her Parallel account. The keyless tier refused after roughly a dozen quick
-  searches (unpublished limit).
+- Her keyed connector, **"Parallel Search Key"**: custom, at
+  `https://search.parallel.ai/mcp-oauth`, No sign-in, her key in an `x-api-key` header
+  (`authorization: Bearer` never reached Parallel). Every search and page opened is
+  billed to her Parallel account ($20 credit for 60 days, then $5 a month, auto-reload
+  off). The built-in keyless "Parallel Search" cannot be removed; a second connector at
+  `/mcp` is refused. About 30–50 lookups so far with only brief connection errors.
+- The keyless tier refuses after roughly a dozen quick searches (observed, unpublished).
+  Per `mcp.d.ts`, `rate_limited` is never returned and `upstream_error` is the catch-all,
+  so its refusal is most likely "Search failed (upstream_error)" in the app (not
+  proven). A failed search shows one line on the card (Re-check's words with
+  "Search"/"Search again"); no red banner.
 - Up to five searches and seven page opens per lookup, plus Claude reads on her
   allowance; every step after the first is conditional.
 
@@ -194,7 +271,7 @@ seeing the change. It is not a monitor.
 | a shop link, red | re-reads THAT page | buyable → **Back in the museum shop.** |
 | no shop link | the shop step alone | found → **Now in the museum shop.** |
 
-- No history kept (her ruling). A failed check changes nothing — a refusal,
+- No history kept (her decision). A failed check changes nothing — a refusal,
   timeout or empty page is never "gone".
 - 404/410 decided in code from the connector's error entry; anything else is one
   question to Claude about one page. Pre-order counts as in the shop; sold out /
@@ -207,45 +284,24 @@ seeing the change. It is not a monitor.
 
 ### Blocked shops, tickets, web-found shop links
 
-KHM's *Canaletto & Bellotto* was filed "In the museum shop" with a dead TICKET
-link. Three faults: the shop's waiting room (307 on every page) read as "not in
-the shop"; the web search offered a ticket address from an old index; a link on
-the shop's host was filed as in the shop without being opened. Her rulings: a
-blocked shop says so (her wording, `CLAUDE.md` §4); a ticket is never a
-catalogue; a web-found shop link counts only once opened and shown to be the
-book for sale. Rows already carrying a ticket link lose it on Re-check. L-001 to
-L-019; L-020 to L-023 for `listedOnly`.
+Three rules (KHM *Canaletto & Bellotto*, filed "In the museum shop" with a dead TICKET
+link): a shop's waiting room (307 on every page) is not "not in the shop"; a ticket is
+never a catalogue; a web-found shop link counts only once opened and shown to be the
+book for sale. A blocked shop says so (her wording, `CLAUDE.md` §4). Rows already
+carrying a ticket link lose it on Re-check. L-001 to L-019; L-020 to L-023 for
+`listedOnly`.
 
 ### Shop addresses — checked by opening each
 
 `shopCatalogues` (the shop's own shelf, named from its own navigation) is opened
-first, `shopSearch` (+ the exhibition title) in the same call. Both, because
-`uffizi` and `khm` have no shelf, and elsewhere the search box catches a book
-filed on another shelf. **Sold-out books stay listed** on shelves (Menil 47 with
-4 sold out; National Gallery back to 2019).
+first, `shopSearch` (+ the exhibition title) in the same call. Both, because `uffizi`
+and `khm` have no shelf, and elsewhere the search box catches a book filed on another
+shelf. **Sold-out books stay listed** on shelves (Menil 47 with 4 sold out; National
+Gallery back to 2019).
 
-| Venue | Catalogue shelf | Search box |
-|---|---|---|
-| met | `store.metmuseum.org/books-toys-games/exhibition-catalogues` | `/search?q=` |
-| rijks | `rijksmuseumshop.nl/en/books/exhibition-books` | `/en/search?q=` |
-| ng | `shop.nationalgallery.org.uk/books/exhibition-catalogues.html` | `/catalogsearch/result/?q=` |
-| acq | `acquavellagalleries.myshopify.com/collections/all` — the whole shop is catalogues | `/search?q=` |
-| frick | `shop.frick.org/publications/` (whole shelf, 2 Oct) | `/search.php?search_query=` |
-| menil | `bookstore.menil.org/collections/menil-publications` | `/search?q=` |
-| artic | `shop.artic.edu/collections/exhibition-catalogues` | `/search?q=` |
-| wallace | `wallacecollectionshop.org/collections/wallace-collection-publications` | `/search?q=` |
-| both Tates | `shop.tate.org.uk/books/exhibition-books?sz=96` | `/search?q=` |
-| va | `vam.ac.uk/shop/books/exhibition-books.html` | `/shop/search?q=` |
-| louvre | `boutique.louvre.fr/en/products/400001-exhibition-catalogues/` | `/en/search/products/?q=` |
-| brera | `bottegabrera.org/en/collections/guide-e-cataloghi` | `/en/search?q=` |
-| moma | `store.moma.org/collections/exhibition-catalogues` | `/collections/shop?q=` (her search, app 35.4) |
-| brit | `britishmuseumshoponline.org/books/exhibition-books.html` | `/catalogsearch/result/?q=` |
-| morgan | `shop.themorgan.org/collections/exhibition-catalogs` | `/search?q=` |
-| uffizi | none — sells no books (her check, 25 Sep) | `shop.uffizi.it/en/?s=` |
-| khm | none | `shop.khm.at/en/products?shop%5Bq%5D=` (her search, 25 Sep) |
-
-No shop: borghese, capo, dellav. Venues added from 25 Sep: in `MUSEUMS`, a
-comment each.
+**The addresses are printed from `MUSEUMS` by `node scraper/shop_addresses.js`** — the
+code is the one copy. No shop: borghese, capo, dellav (`uffizi` sells no books; `khm`
+has no shelf).
 
 - **Shelf depth is one number for every shop**: `SHELF_DEPTH`, five pages, read
   in the same call — five covers MAD's 68 books. Menil and Morgan answer
@@ -280,22 +336,17 @@ available for this artifact"*). Two routes, differing in what is KNOWN:
 2. **An ordinary browser download.** Cannot tell finished from cancelled, so it
    does not clear the unsaved warning.
 
-**Never put back a click-triggered green tick** — on 20 Sep it read "Saved —
-safe to close" while nothing was written.
+**Never put back a click-triggered green tick** — it once read "Saved — safe to
+close" while nothing was written.
 
-### Removed unused code — in git at `b043a9b`, her decision
+### Removed code — warnings that outlive it (git `b043a9b` has the rest)
 
-Deleted as uncalled; `git show b043a9b:Cat_Watch.jsx` has it all.
-- **Google Drive save and load**, auto-load on open included. It called
-  Claude's servers straight from the page, which the viewer's sandbox now
-  blocks: **never restore it as it was.** A Drive backup button (CLAUDE.md
-  §7.1) goes through a Google Drive connector, as the catalogue lookup goes
-  through Parallel's.
-- **The old save to the page's storage.**
-- **"Find catalogues for all Wanted"**: lookups back to back. A new bulk search
-  must work within her Parallel and Claude allowance, and on
-  `claude/ledger-cloud` must respect the read-only lock (a second copy open
-  writes nothing) — its old copy on the branch checked it.
+- **Never restore the Google Drive save and load as it was**: it called Claude's
+  servers straight from the page, which the viewer's sandbox blocks. A Drive backup
+  button (CLAUDE.md §7.1) goes through a Google Drive connector, as the catalogue
+  lookup goes through Parallel's.
+- **A new "find catalogues for all Wanted"** must work within her Parallel and
+  Claude allowance and, on `claude/ledger-cloud`, respect the read-only lock.
 
 ---
 
@@ -320,7 +371,7 @@ The stitch stays dumb; all judgement is in the app, where she sees it.
   side lacks dates. An unfolded duplicate costs one card; a wrong fold costs an
   exhibition.
 
-**Four bands for odd cases, easiest first** (her ruling, cut from six):
+**Four bands for odd cases, easiest first** (her decision):
 1. Marker rows · 2. Combined rows, reconciled · 3. Combined rows, conflicted —
 yours to choose · 4. No exhibition url.
 
@@ -330,18 +381,17 @@ reconciled start closed); the count sits on the header.
 - **Band membership is the fold's own flag** (`merged`, from `mergedFrom`), never
   words in the notes — note-searching filed Acquavella's two real *Portraiture*
   runs as "combined". Fixture 16.
-- **Two bands deleted:** "Two different answers" could never hold a row (fixture
-  17 asserts every conflict comes from a fold); "Unusable rows" was a data fault
-  — `qc.js` stops it upstream and the app refuses the WHOLE file, naming the
-  lines. A bad DATE is still an exhibition: blanked and noted.
+- **No "Unusable rows" band:** a data fault is stopped upstream by `qc.js`, and the app
+  refuses the WHOLE file, naming the lines. A bad DATE is still an exhibition: blanked
+  and noted.
 - **Conflict pre-pick is `fuller()`** — meaningless for two dates (a tie keeps
-  file order). Her ruling: leave it.
+  file order). Her decision: leave it.
 - **Order within a venue:** fills, then edits, then new; newest closing date
   first in each; no closing date last.
 
 ### The ledger will not move until every card is decided
 
-A hard block (her ruling): skipping undecided cards silently loses a session's
+A hard block (her decision): skipping undecided cards silently loses a session's
 reading. **Rejecting is deciding.** The button says what is missing ("323 still
 to decide"). `countDecisions` lives outside the component so fixtures reach it;
 it and the jump-to-undecided button share `isUndecidedCard` (18g). Fixtures 18
@@ -374,7 +424,7 @@ Quarantine adds a "you'd said never to add" term. **Every term stays.**
   across axes, OR within one.
 - Urgency tiers are computed live (`tierFor`); nothing stored.
 
-### Screen rulings
+### Screen decisions
 
 - Venue headings are the control: accent red, larger, own count, disclosure
   triangle, sentence case; one Collapse all / Expand all. "n to decide" sits
@@ -398,7 +448,7 @@ the third option.
 - **Keyed on normalised URL** (venue + title with no URL). Dropped in
   `analyzeProForma`'s first pass. A venue retitling a show does not undo it
   (fixtures 10–13).
-- **Lives in the page's store AND her export** (her ruling, 20 Sep). Her case:
+- **Lives in the page's store AND her export** (her decision). Her case:
   quarantine two rows, Reset, feed the same file — with one home in the ledger,
   the junk is back. But it can't live only in the store like the sweep log,
   because it is derivable from nothing. Not two hopeful copies: the store is the
@@ -414,7 +464,7 @@ the third option.
 
 ## 5. The sweep log
 
-**Lives OUTSIDE the ledger** (her ruling): a sweep either ran or didn't, and
+**Lives OUTSIDE the ledger** (her decision): a sweep either ran or didn't, and
 opening an older backup can't un-run it. Content rolls back with a backup; a
 fact about the world must not. Rejected arguments for the ledger: "a republish
 could destroy it" (it can wipe the seed too); "the shell has nowhere to keep
@@ -426,7 +476,7 @@ anything" (false — the page has its own store).
 - **Rebuilding it is code's job** — `scraper/sweep_log.js` prints the document
   from every sweep file on disk; a session writes it with `ArtifactData`.
   Fixtures S-001 to S-006 (S-004 holds it against the JSX's `mergeSweepLog`).
-- **Written when the import FINISHES** (her rule, 4 Oct: an import she does
+- **Written when the import FINISHES** (her decision: an import she does
   not finish keeps nothing); a file with nothing to propose is recorded at once.
   AL-013.
 - **Merge, never replace** — a venue's line moves only for a LATER sweep; tried
@@ -435,14 +485,12 @@ anything" (false — the page has its own store).
   `lastRun` (still written to exports for old builds, drives nothing).
 - **"Unknown", never "never"** for an empty store; an unreachable store has its
   own sentence. `page_renders.js` checks both.
-- **The export will not carry it** — her ruling, 20 Sep.
+- **The export will not carry it** — her decision.
 
-**The wipe-and-restore drill, passed 21 Sep for real:** the store was emptied
-from outside; quarantine came back from her export (by her), sweep dates from
-the sweep files via `sweep_log.js` (by the session — never her job: she can't
-know which file holds the picture). A released tombstone doesn't survive an
-export, correctly. The drill found the headline line reading the ledger. Store
-read-out kept in `docs/store_backup_2026-09-21/`.
+**The wipe-and-restore drill passed:** with the store emptied from outside, quarantine
+comes back from her export (by her) and sweep dates from the sweep files via
+`sweep_log.js` (by the session — never her job). A released tombstone doesn't survive an
+export, correctly. Store read-out kept in `docs/store_backup_2026-09-21/`.
 
 ---
 
@@ -458,14 +506,7 @@ matching failure.**
 
 ## 7. Tests
 
-- **`page_loads.js` asks whether the page LOADS; `page_renders.js` whether it
-  DRAWS** — renders into jsdom twice, plain and with the runtime answering. The
-  load check passed twice while the live page was black.
-- `scraper/fixtures/intake_cases.js`: merges that must not happen, quarantine,
-  freshness, row identity, whole-file refusal, the ledger gate, the sweep-log
-  merge. Sample file `intake_sample.csv`: 76 rows, 8 venues, every conflict
-  shape.
-- The harness lifts the intake out of the JSX by prose anchors, not line numbers.
+In `CLAUDE.md` §4, "Tests".
 
 ---
 
@@ -480,7 +521,7 @@ So the app is kept, the data layer is swappable underneath, and neither
 
 ## 9. The cloud ledger — what's on screen (branch `claude/ledger-cloud`)
 
-Her wording and order, 26 Sep. The branch code holds the exact strings.
+Her wording and order. The branch code holds the exact strings.
 
 - **Times** read "Sep 26, 2026 1:22pm" (`localReadable` = `fmtRefresh`); file
   names keep the sortable stamp.
@@ -504,5 +545,5 @@ Her wording and order, 26 Sep. The branch code holds the exact strings.
 - **The amber "not saved to a file" banner is unwired, not deleted**
   (`FILE_UNSAVED_WARNING`) — needed again if the trial fails. Load and Reset ask
   first only while the red banner shows.
-- **Storage, proven 25 Sep:** 352 rows, 217 KiB → 46 KiB compressed, one
-  piece; 180 KB read back identical; 270 KB refused at the 256 KiB limit.
+- **Storage limit:** a record over 256 KiB is refused; a large ledger splits into
+  compressed pieces (a 352-row ledger is one piece) and reads back identical.

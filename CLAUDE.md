@@ -493,150 +493,21 @@ case where the app proposes Add but it is really an update.
 
 ### Catalogue lookup — the route
 
-Five phases (`lookupCatalogue`; `docs/app.md` §1): steps gather facts, code decides
-each, `composeRow` writes the row once — one owner per sentence on the card.
-1. **The venue's shop** (shelf and search box, one call; **the book's own product
-   page**, never a list) — found there = in the shop. Nothing there → the web.
-2. **Complete it:** the book's page; one facts round (facts search, plus an edition
-   search at non-English venues, together; ONE read); two results opened.
-3. **Which book**, in code (`englishEditionOf`). 4. **The publisher's page**, once,
-   for the final book: find their site, search inside it, **open what it returns**.
-5. **The row.**
+**Design, rules and the case behind each: `docs/app.md` §1. Read it before changing the
+lookup.** Five phases (`lookupCatalogue`): the venue's shop; complete the record;
+which book (in code); the publisher's page, once; the row, once. Steps gather facts,
+code decides each, `composeRow` writes the row once.
 
-**Every step after the first is conditional — do not make them unconditional,
-and do not flip to searching wide first.**
-
-**The rules, each of which replaced a real failure:**
-
-- **`web_fetch` for a page whose address we have or can work out; `web_search`
-  only for the three real searches** — does this book exist, where is its ISBN,
-  where does this publisher live.
-- **Never choose a page from a general index and build on it**, and **open a
-  candidate before believing it** — a search cannot tell a book from a shelf.
-  Two candidates, then the fallback.
-- **Go to the publisher, do not search for them.** Their site read off results
-  already found, else one search for the name; the domain read off mechanically
-  (books, press, publishing, editions, university dropped); candidates ranked in code.
-  Name finds no site → her short list (`PUBLISHER_SITES`), grown only on her ask.
-- **Every outcome says which negative it is** (`publisherResult`,
-  `publisherNote`); **a step that died is not an answer** — later steps carry
-  why it came back empty.
-- **Only the publisher is the publisher** (her decision, Millet): a link a
-  read hands over is filed only on the publisher's own site (`publisherLinkOf`);
-  a distributor's page never. Self-published → no link at all.
-- **Another venue's catalogue is not this show's** (her decision): a book
-  found on the web is filed only when the read says it is the catalogue of the
-  show AT THIS VENUE (`thisVenue`); a show that travels here "in modified form"
-  does not count. The shop step needs no such answer. A blank publisher with the
-  ISBN known runs the wider search too.
-- **The title as printed, and English first at non-English venues** (her
-  decision): a shop title is kept only as far as the pages print it
-  (`titleAsPrinted`). At a venue marked `english:false` the facts round reads the
-  book's language and own title; the edition search runs beside it, aimed at
-  library records ("originally published in French as …"), plus the show's
-  English title with the publisher when that is known. An English edition proved
-  → filed as "Not in the museum shop", the original in `originalEdition`; none →
-  the book stays under its own title. **"Checked publisher's site" only when its
-  page was read** — once, the page the card links, listing its editions (Watteau,
-  Canaletto); `englishCheck`, `englishLine`; the line never repeats the publisher
-  printed above it (her decision). Its publisher is read off its ISBN.
-  At those venues the web search adds one query in the venue's language
-  (`localCatalogueQuery`; Hammershøi, listed only in French).
-- **"X in association with Y" — Y is the publisher** (her decision):
-  the publisher step and the self-publisher check use Y (`publisherToFind`);
-  the card prints the line as given. **A co-edition, "X / Venue", "X and
-  Venue", "X with Venue": X is the publisher**, for every publisher verdict
-  (her decision, Turner).
-- **The publisher is read off the ISBN, in code** (her decision —
-  Botticelli gave three publishers in three lookups): once the ISBN is known,
-  the labelled publisher in the results carrying it, two agreeing
-  (`publisherOnIsbnResults`), outranks the book's own page, which outranks any
-  read of general results (a guess, wherever read). The facts round runs always
-  at a non-English venue; elsewhere only for a missing ISBN or a missing or
-  guessed publisher.
-- **An English edition must be the same catalogue** (her Botticelli case): a
-  result carrying its ISBN shows the same publisher or names the venue
-  (`sameCatalogue`), carries the original's ISBN, or links it to the original's
-  title ("originally published as…"). Reaktion's monograph is refused (ED-004).
-- **A museum's own imprint is skipped**, no line on the card (her decision):
-  a publisher carrying the **venue's full name** as whole words is the venue
-  (`isSelfPublisher`), plus her list `SELF_PUBLISHERS`; her `NOT_SELF_PUBLISHERS`
-  overrides both. On trial: too many misfires → back to her list alone.
-- **Search again means search again** (her decision): a whole fresh
-  lookup from a blank card (`lookupCat` → `resetCard`), nothing kept or
-  skipped. Finished → it replaces the card's catalogue details. Any step
-  failed → the card is untouched and says "Search again didn't finish". The
-  old "keep what's on the card" rule is gone; do not bring it back. Within one
-  lookup, each step fills what earlier steps left blank.
-- **An ISBN enters only through `toIsbn13`**: check digit verified (a 10 converted),
-  and printed in text the app fetched. `cleanIsbn` shows ledger values as stored.
-- **"Re-check museum shop" checks the shop alone** (her design; untouched by Search again's change).
-  With a link on file it re-reads that page (gone → "No longer", link kept as
-  "Museum shop (last seen)"; buyable again → "Back"); with none it runs the shop
-  step alone ("Now"; a book already in the shop stays "In the museum shop",
-  "Re-checked: still in the museum shop."). A failed check changes nothing.
-  `docs/app.md`, "A book leaving the shop".
-- **A blocked shop says so** — `shopState: "blocked"`, her wording: *"The
-  museum shop is blocked - search it manually. The catalogue is stocked
-  elsewhere."* / *"The museum shop is blocked. The catalogue also does not
-  appear to exist elsewhere. Search manually to confirm."* Headline red and
-  bold, the rest grey. Blocked today: KHM, MAM. **A shop whose every page comes
-  back empty is blocked too** (her decision) — MoMA's shelf is drawn by
-  script and its search and `products.json` answer 403. Judged on the WHOLE page, opened
-  again when the excerpts are short; no price anywhere = empty (Watteau).
-- **The Museum shop link searches the shop for the EXHIBITION's title** when
-  no book page is on file (`buyLinks`) — resellers keep the book's title, the
-  shop keeps the show's. A search or shelf page is never filed as the book's
-  page (`listedOnly`). KHM opening its search is the design working.
-- **The line under a book not in the shop** reads "Not in the museum shop —
-  shop link opens the general store." for every venue with a shop (her decision;
-  no per-venue wording). **A venue with no shop**
-  (`borghese`, `capo`, `dellav`) reads only "Venue has no shop.", grey, with
-  no shop link and no Re-check button; its lookup goes straight to the web.
-- **Booko AU** (last buy link) is `booko.au/<isbn>`; with no ISBN, its title
-  search. Her verdict: works well on the ISBN, which the lookup now finds
-  far more often; the messier title-search results are accepted.
-- **A ticket is never a catalogue** (`isTicketLink`).
-- **A shop link from the web search is opened before it is filed as in the
-  shop** (`confirmShopLink`).
-- **A book's link on a shelf is read in code** (`bookLinkOnShelf`): the one link
-  on the shop whose words carry the whole catalogue title; two, or none, and
-  nothing.
-- **One page is read whole** (`fetchPage` `{full:true}`, her decision): the
-  book's page (at an `english:false` venue, in the facts round's read), Re-check's
-  page, the publisher's candidates. The shelf stays
-  excerpts (a call is capped ~25,000 characters). **The ISBN is read in code
-  first** (`isbnOnPage`): exactly one 978/979 number labelled ISBN or EAN, check
-  digit valid; Claude's only when code finds none. **"Sold by …" is the shop, never
-  the publisher.** Hidden-until-clicked text is not in Parallel's copy.
-- **The web ISBN search reads its results in code too** (`isbnInResults`): only
-  results carrying the whole book title count; labelled numbers and valid
-  978/979 numbers in their addresses; exactly one. None → the two results about
-  the book are opened whole. Queries name the venue.
-
-**The cost:** up to five searches and seven page opens. **Every reading runs on
-her allowance.** The keyless tier refuses after roughly a dozen quick searches
-(observed; unpublished). A failed search shows one line on the card, Re-check's
-words with "Search"/"Search again" (her decision; no red banner). **Per
-`mcp.d.ts`: `rate_limited` is never returned; `upstream_error` is the catch-all
-and Parallel's words never reach the page** — so its free-tier refusal is most
-likely "Search failed (upstream_error)" in the app (not proven).
-
-**Her keyed connector since 36: "Parallel Search Key"** — custom, at
-`https://search.parallel.ai/mcp-oauth`, No sign-in, her key in an **`x-api-key`**
-header (`authorization: Bearer` never reached Parallel); billed to her Parallel
-account ($20 credit for 60 days, $5 a month, auto-reload off). The built-in
-keyless "Parallel Search" cannot be removed; a second connector at `/mcp` is
-refused. The key has been used for ~30–50 lookups with only brief connection
-errors.
-
-**Shop addresses:** all 18 original venues checked, `docs/app.md` §1;
-`borghese`, `capo`, `dellav` have none. Newer venues: in `MUSEUMS`, a comment
-each. `mad` has no search box — its publications shelf is read five pages deep
-(`SHELF_DEPTH`).
-
-**Which model — CLOSED, her decision.** The page asks the viewer's Claude
-through `sample` at `modelTier: default`. Do not re-open without a real misread.
+- **Every step after the first is conditional — do not make them unconditional, and do
+  not flip to searching wide first.**
+- **Search again means search again** (her decision): a whole fresh lookup from a blank
+  card. The old "keep what's on the card" rule is gone; do not bring it back.
+- **Which model — CLOSED, her decision.** The page asks the viewer's Claude through
+  `sample` at `modelTier: default`. Do not re-open without a real misread.
+- **Every reading runs on her allowance** (up to five searches and seven page opens);
+  her keyed connector is "Parallel Search Key" (`docs/app.md` §1, "The connector's
+  limits and cost").
+- **Shop addresses** are printed from `MUSEUMS` by `node scraper/shop_addresses.js`.
 
 ### Tests
 
@@ -658,7 +529,12 @@ never retyped here; a suite only a branch has goes in that branch's
 (`claude/ledger-cloud`: `cloud_ledger.js`, `cloud_app.js`, `cloud_two_copies.js`).
 Each fixture file opens with what it proves; case IDs (AL-, C-, R-, KP-…) are
 found by grep. Per-venue `*_pages.js` run a recipe on saved pages, no network,
-against her counts, dates, titles and descriptions.
+against her counts, dates, titles and descriptions. `page_loads.js` asks whether the
+app page LOADS, `page_renders.js` whether it DRAWS (jsdom, plain and with the runtime
+answering) — the load check once passed while the live page was black.
+`intake_cases.js` holds the merges that must not happen, quarantine, freshness, row
+identity, whole-file refusal, the ledger gate and the sweep-log merge, on
+`intake_sample.csv` (76 rows, 8 venues, every conflict shape).
 
 **OPEN — RB-016 and RB-020** (robots wait, scraper) fail under load: run ten at
 once, RB-016 read 1148–1293ms against 1450 in 5 of 10, RB-020 over
@@ -1169,22 +1045,10 @@ She is noting issues as she uses it, for a later debugging session.
   now goes on to the facts round instead of being dropped (`unnamed`, UN-001–003);
   a reply holding two answers takes Claude's last (`lastJsonObject`, TW-001–004 —
   her Louvre links' "unreadable" descriptions).
-- **OPEN — the English-edition and versions rebuild, 42.7–42.9; her re-run of
-  Hubert Robert (Louvre, NGA) and Vasari on 42.9 confirms.** Built: one book per
-  card (ISBN read on the book's title; a guessed publisher the ISBN's records
-  contradict gives way); her three English-edition cases, a different book named
-  on the English line only (`otherVenueBook`); a booklet's ISBN refused
-  (`notABooklet`); two versions of one book, "also 978-… (paperback, X)" after the
-  ISBN (`alsoVersion`; hardcover leads, else an outside publisher over a museum's
-  own imprint — when both apply, hardcover wins, her rules in the order she gave
-  them); publisher labels never read out of a link's address; a co-edition's site
-  found by any one of its houses. Rules: `docs/app.md` §1. Tests HR-, BK-, VS-,
-  R8- (R8 replays her 42.8 runs). Known limits: a different book or a booklet is
-  caught only when page counts are printed; which version leads depends on what
-  each search turns up (Vasari leads with Lienart unless a result says the
-  Nationalmuseum book is hardcover). Vasari's English editions are scarce, not
-  missing: Lienart 978-2359063738 (€29), the Nationalmuseum's hardcover
-  978-9171009166 (bokorder.se, also free open access); AbeBooks has neither.
+- **OPEN — the English-edition and versions rebuild, 42.7–42.9; her re-run of Hubert
+  Robert (Louvre, NGA) and Vasari on 42.9 confirms.** What was built, its rules and
+  known limits: `docs/app.md` §1, "The route" (Trust order). Tests HR-, BK-, VS-, R8-.
+
 - **Search again and Reset card + Find catalogue run the same lookup** (checked
   on the live page). They differ only when a step fails part-way: Search
   again then leaves the card untouched. Otherwise a different result is the
