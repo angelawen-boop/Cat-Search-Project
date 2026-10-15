@@ -119,7 +119,7 @@ new fact.
 
 **Design, what the store holds, saving, the safety proofs, the trial switch and the two-copies lock:
 `docs/cloud_storage.md`. Read it before changing anything about saving to the page's own store.**
-Live on the test page: **45 · cloud 5**.
+Live on the test page: **45.1 · cloud 5**.
 
 **Where:** test page **https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf**, its
 own store, all four capabilities. **Her working app: she works ONLY
@@ -215,7 +215,7 @@ Faults found are fixed in code (§2.2.2).
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 
-#### 2.2.7 "Probably not for you" — published at 45 on the test page; her verification next
+#### 2.2.7 "Probably not for you" — published at 45.1 on the test page; her verification next
 
 New shows in topics she always quarantines are labelled and set aside on the import screen.
 - **Groups (start wide, narrow later):** collection rotations and acquisitions (not at the Met —
@@ -232,9 +232,11 @@ New shows in topics she always quarantines are labelled and set aside on the imp
   part (`topicOf`, `isTopicCard`, `topicPresets`; TP-A1–A8, AD-009). Odd cases stay odd; a show
   already in the ledger is never set aside. Published at 45.
 - **Tested on her decisions** (`node scraper/topic_eval.js`; her 86 quarantined + 40 kept, two
-  calls): 65 of 86 caught (4 more are Met rotations, left out by her decision); 5 of 40 kept
-  labelled — four as contemporary (Flora Yukhnovich, Carroll Dunham, Harumi Klossowska de Rola,
-  TransLucent), one as series (Capodimonte's L'Ospite). Narrow a group only if she says.
+  calls). With Asian art winning over any other label (her decision): 69 of 86 caught (4 more are
+  Met rotations, left out by her decision); 8 of 40 kept labelled — Flora Yukhnovich, Carroll
+  Dunham, Harumi Klossowska de Rola, TransLucent (contemporary); L'Ospite bolognese, Art in
+  Dialogue: Duccio | Caro (series); Cosimo I de' Medici (rotation); Chintz (Asian art). Labels
+  at the edges differ between runs. Narrow a group only if she says.
 - **Her verification in the app:** a rehearsal file of ~15 quarantined and ~10 kept real shows, each web
   address carrying a test marker so they read as new; she checks the section, its pre-set Never
   add, the labels in the notes and that kept shows are absent — then Cancel import. The real test
@@ -414,7 +416,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 45 · cloud 5 on the test page; her main app shows 39.2.** **Only the cloud test page is
+**Live: 45.1 · cloud 5 on the test page; her main app shows 39.2.** **Only the cloud test page is
 published** (her decision). What each recent version changed, and what is published where, is
 in `docs/publishing.md`, "What is live now".
 
