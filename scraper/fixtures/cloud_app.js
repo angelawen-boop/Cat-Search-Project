@@ -55,7 +55,7 @@ const sec = src.slice(src.indexOf('// ── THE CLOUD LEDGER — branch claude/
 const C = new Function(sec + '\nreturn {cloudReadLive,cloudListSnapshots,cloudReadSnapshot,ledgerFingerprintText};')();
 
 const settle = async (ms = 50) => { await new Promise(r => setTimeout(r, ms)); };
-// WAIT FOR THE OUTCOME, NEVER A FIXED PAUSE (guide §6: a fixed pause answers
+// WAIT FOR THE OUTCOME, NEVER A FIXED PAUSE (guide §4.1: a fixed pause answers
 // "has it arrived" and "is there more" at once). Polls until true or 8 s.
 const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now() - t < ms) { if (await fn()) return true; await settle(40); } return false; };
 

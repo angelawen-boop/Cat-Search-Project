@@ -2002,7 +2002,7 @@ async function offerFile(filename,data){
 }
 
 // ── THE CLOUD LEDGER — branch claude/ledger-cloud, in trial ───────────────────
-// Her design (CLAUDE.md §7.1; screen docs/app.md §9): the LIVE LEDGER, saved after every
+// Her design (CLAUDE.md §2.2.1; design docs/cloud_storage.md; screen docs/app.md §9): the LIVE LEDGER, saved after every
 // change, and SNAPSHOTS ("Cloud Saves"), never overwritten or pruned. Parts are written
 // under a new name and the live record switched last, so a cut-off save leaves the last
 // complete ledger; every piece is fingerprinted (sha-256) and a mismatch is refused.
