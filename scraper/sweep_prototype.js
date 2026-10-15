@@ -449,13 +449,18 @@ function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
 // pages a site has is never written into a recipe, and the press is followed by
 // a WATCH rather than a sleep — a fixed pause cost 4 Louvre exhibitions and made
 // the row count depend on how busy the machine was.
-function followPagination(queue, pg, newRows, rows, code, v) {
+function followPagination(queue, pg, newRows, rows, code, v, moreShown = true) {
   const spec = pg.paginate;
   if (!spec) return;
 
   // The site has told us there is nothing after this page.
   if (newRows.length === 0) {
     if (pg.discovered) log(`  PAGINATION end: ${pg.ctx} added no new exhibitions`);
+    return;
+  }
+  // `whileMore`: the venue's own "more" control is gone, so this is its last page.
+  if (!moreShown) {
+    log(`  PAGINATION end: ${pg.ctx} shows no "more" control`);
     return;
   }
 
@@ -3568,6 +3573,9 @@ const ARTIC_NOT_AN_EXHIBITION = new RegExp([
 // of them (Light and Magic, 5 Oct; docs/tate_pages/). Matched as noise
 // containers by class.
 const TATE_NOISE = 'editorial-background|accordion|card-content';
+// Tate's What's On shows 20 cards a page; "Load N more" fetches ?page=2 and is absent
+// on the last page (docs/tate_pages/).
+const TATE_PAGES = { param: 'page', from: 2, whileMore: 'a[data-ajax-type="load-more"]' };
 
 const VENUES = {
   met: {
@@ -4311,7 +4319,8 @@ const VENUES = {
     // No excludeOngoing, unlike Tate Britain: nothing here is labelled ongoing, and her
     // count holds. Add it on evidence, never for symmetry.
     pages: [
-      { path: '/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=exhibition', ctx: 'current/upcoming' },
+      { path: '/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=exhibition', ctx: 'current/upcoming',
+        paginate: TATE_PAGES },
     ],
     // The path carries the gallery, so Tate St Ives and Liverpool (cross-promoted) are
     // excluded.
@@ -4347,11 +4356,13 @@ const VENUES = {
     excludeTitle: /^(?:Tate\s+Britain\s+)?Commission\b|^Turner\s+Prize\b/i,
     noise: TATE_NOISE,   // see Tate Modern
     pages: [
-      { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition', ctx: 'current/upcoming' },
+      { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition', ctx: 'current/upcoming',
+        paginate: TATE_PAGES },
       // Past exhibitions via the calendar (her finding): a custom from/until range derived
-      // at run time (expandDateRange), one page. Shows on now appear on both pages.
+      // at run time (expandDateRange). Shows on now appear on both pages.
       { path: '/whats-on?date_range=custom&gallery_group=tate-britain&event_type=exhibition',
-        ctx: 'past and current', dateRange: true, rangeFrom: 'date_a', rangeTo: 'date_b' },
+        ctx: 'past and current', dateRange: true, rangeFrom: 'date_a', rangeTo: 'date_b',
+        carry: { paginate: TATE_PAGES } },
     ],
     selector: 'a[href*="/whats-on/tate-britain/"]',
     // The app's Add by link: see tate-modern's showPath.
@@ -4722,7 +4733,12 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
         });
       }
 
-      followPagination(queue, pg, rows.slice(rowsBefore), rows, code, v);
+      // `whileMore`: the next page is asked for only while this one shows the venue's
+      // "more" control — Tate's page after the last is dead, and a dead page leaves a
+      // marker on every sweep (docs/scraper.md §2).
+      const whileMore = pg.paginate && pg.paginate.whileMore;
+      const moreShown = whileMore ? !!(await page.$(whileMore)) : true;
+      followPagination(queue, pg, rows.slice(rowsBefore), rows, code, v, moreShown);
 
     } catch (e) {
       rethrowIfAborted(e);

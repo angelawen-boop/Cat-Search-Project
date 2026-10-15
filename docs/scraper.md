@@ -51,6 +51,10 @@ are never written into a recipe.**
   to the end.
 - **The index base is the site's:** Menil's bare page is page 1 (`from: 2`), the
   Frick's is page 0 (`from: 1`). P-014.
+- **Where the page after the last is dead, the site's own "more" control decides**
+  (`whileMore`): the next page is asked for only while this one shows it. Tate's
+  "Load N more" fetches `?page=2`; its `page=3` is dead, and a dead page leaves a
+  marker every sweep. `TATE_PAGES`, LP-tate-britain (`docs/tate_pages/`).
 
 ### A "load more" button is a control
 

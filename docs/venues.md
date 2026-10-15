@@ -23,7 +23,7 @@ should reach the app.
 | `wallace` | Displays and trails KEPT — **this venue only** |
 | `menil` | 7 permanent galleries excluded; "Foyer Installation: …", "… from the Collection", "Recent Acquisitions" excluded — **this venue only** |
 | `tate-modern`, `tate-britain` | Exhibitions only, never collection displays. The "recently opened" page is not an archive and is not fetched |
-| `tate-britain` | Ofili excluded, on the venue's own ONGOING label. Turner Prize and the Tate Britain Commission excluded. Past exhibitions from the What's On calendar, 1 Jul 2024 to the day of the run — `expandDateRange`. A session nested under a show is not a show |
+| `tate-britain` | Ofili excluded, on the venue's own ONGOING label. Turner Prize and the Tate Britain Commission excluded. Past exhibitions from the What's On calendar, 1 Jul 2024 to the day of the run — `expandDateRange`; 20 a page, every page read (`TATE_PAGES`; Whistler sat on page 2). A session nested under a show is not a show |
 | `tate-modern` | **Never its past exhibitions**, though she knows where they are |
 | `uffizi` | Headlines kept as titles; undated rows kept |
 | `artic` | Only `EXHIBITION` and `TICKETED EXHIBITION` — `docs/scraper.md` §13. Bare "from the Collection" and "Film Series" titles excluded; family, named and lent collections KEPT. No note on the card for films or installations; no model judging rows |
