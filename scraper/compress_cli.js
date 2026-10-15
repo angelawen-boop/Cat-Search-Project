@@ -22,6 +22,7 @@ const RAW_CSV = 'sweep.csv';
 const COMPRESSED_CSV = 'sweep_compressed.csv';
 const PENDING_JSON = 'compress_pending.json';
 const ANSWERS_JSON = 'compress_answers.json';
+const TOPIC_ANSWERS_JSON = 'topic_answers.json';
 
 const say = (...a) => console.log(...a);
 
@@ -313,6 +314,15 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   for (let i = 0; i < freshRows.length; i += CHUNK_ROWS) {
     writeJob(`job_sonnet_${i / CHUNK_ROWS + 1}.txt`, freshRows.slice(i, i + CHUNK_ROWS));
   }
+  // "PROBABLY NOT FOR YOU" — new shows only (CLAUDE.md §2.2.7). A separate
+  // question, so the summary answers keep their shape. No examples: one label.
+  const topicRows = asked.filter(p => p.action === 'fresh');
+  for (let i = 0; i < topicRows.length; i += CHUNK_ROWS) {
+    const name = `job_topics_${i / CHUNK_ROWS + 1}.txt`;
+    const file = path.join(runPath, name);
+    fs.writeFileSync(file, C.topicJobLines(topicRows.slice(i, i + CHUNK_ROWS)).join('\n'), 'utf8');
+    jobs.push({ name, rows: Math.min(CHUNK_ROWS, topicRows.length - i), kb: Math.max(1, Math.round(fs.statSync(file).size / 1024)) });
+  }
 
   say(`${asked.length} rows need a summary, split into ${jobs.length} job${jobs.length === 1 ? '' : 's'}:`);
   for (const j of jobs) say(`  ${j.name.padEnd(20)} ${String(j.rows).padStart(3)} rows   ${j.kb} KB`);
@@ -334,6 +344,7 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   if (needsTitles) say('       job_titles.txt     Prompt C — English titles only            → SONNET');
   if (needsReview) say('       job_haiku.txt      Prompt B — is the old summary now false?  → HAIKU');
   if (needsFresh)  say('       job_sonnet_N.txt   Prompt A — write a fresh summary          → SONNET');
+  if (needsFresh)  say('       job_topics_N.txt   Prompt D — topic label, new shows only    → SONNET');
   say('');
   say('     READ-ONLY MATTERS. Told not to write files, a subagent wrote one');
   say('     anyway — 35k tokens to copy its own input. Told to read once, two');
@@ -357,6 +368,7 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   say('     summary verbatim to keep it, null to refuse. Rows marked englishTitle');
   say('     answer {"summary": "...", "english": "..." or ""}; job_titles rows');
   say('     answer {"english": "..." or ""}. Strings only: code writes the line.');
+  if (needsFresh) say(`     Topic labels go in ${TOPIC_ANSWERS_JSON}: {"<index>": "asian" | ... | "none"}.`);
   say('     Then check before applying:');
   say(`         node scraper/compress.js ${dir} --check`);
   say('     It reports any index missing, unexpected, over the word cap, or still');
@@ -408,6 +420,25 @@ function check(dir) {
     if (strings.some(x => /^\s*```/.test(x))) problems.push(`row ${k}: carries a code fence — ${shown}`);
   }
 
+  // Topic labels: every fresh row asked, each one key from the fixed list.
+  const fresh = pending.rows.filter(r => r.action === 'fresh');
+  if (fresh.length) {
+    const tp = path.join(runPath, TOPIC_ANSWERS_JSON);
+    const topics = fs.existsSync(tp) ? JSON.parse(fs.readFileSync(tp, 'utf8')) : null;
+    if (!topics) problems.push(`no ${TOPIC_ANSWERS_JSON} — ${fresh.length} new shows need a topic label`);
+    else {
+      const wantT = new Set(fresh.map(r => String(r.index)));
+      for (const k of wantT) if (!Object.prototype.hasOwnProperty.call(topics, k)) problems.push(`row ${k}: no topic label`);
+      for (const k of Object.keys(topics)) if (!wantT.has(k)) problems.push(`row ${k}: topic label for a row that is not new`);
+      for (const r of fresh) {
+        const k = String(r.index);
+        if (!Object.prototype.hasOwnProperty.call(topics, k)) continue;
+        const t = C.resolveTopic(topics[k], r.venue_code);
+        if (!t.ok) problems.push(`row ${k}: ${t.reason}`);
+      }
+    }
+  }
+
   if (problems.length) {
     say(`\n${problems.length} problem${problems.length === 1 ? '' : 's'} — nothing was written.\n`);
     for (const p of problems.slice(0, 40)) say('  ' + p);
@@ -433,6 +464,9 @@ function apply(dir) {
   const answers = JSON.parse(fs.readFileSync(answersPath, 'utf8'));
   const done = JSON.parse(fs.readFileSync(donePath, 'utf8'));
   const rows = C.readProForma(path.join(runPath, RAW_CSV));
+  const tp = path.join(runPath, TOPIC_ANSWERS_JSON);
+  const topics = fs.existsSync(tp) ? JSON.parse(fs.readFileSync(tp, 'utf8')) : {};
+  let labelled = 0;
 
   const bad = [];
   const filled = [];
@@ -446,15 +480,18 @@ function apply(dir) {
     }
     const v = C.resolveAnswer(answers[String(p.index)], p);
     if (!v.ok) { bad.push({ index: p.index, title: p.title, reason: v.reason }); continue; }
+    // check() has already refused a missing or unknown label on a new show.
+    const topic = p.action === 'fresh' ? C.resolveTopic(topics[String(p.index)], p.venue_code) : { note: '' };
+    if (topic.note) labelled++;
     if (v.skip) {
       skipped++;
       for (const idx of [p.index, ...(p.appliesAlsoTo || [])]) {
-        filled.push({ ...rows[idx], summary: '', notes: C.addNote(rows[idx].notes, C.SKIP_NOTE), _row: idx });
+        filled.push({ ...rows[idx], summary: '', notes: C.addNote(C.addNote(rows[idx].notes, C.SKIP_NOTE), topic.note), _row: idx });
       }
       continue;
     }
     for (const idx of [p.index, ...(p.appliesAlsoTo || [])]) {
-      filled.push({ ...rows[idx], summary: v.text, _row: idx });
+      filled.push({ ...rows[idx], summary: v.text, notes: C.addNote(rows[idx].notes, topic.note), _row: idx });
     }
   }
 
@@ -489,6 +526,7 @@ function apply(dir) {
   fs.unlinkSync(donePath);
   say(`Wrote ${COMPRESSED_CSV} — ${out.length} rows, ${filled.length - skipped} newly written` +
       (skipped ? `, ${skipped} left blank because the page text was not a description.` : '.'));
+  if (labelled) say(`${labelled} new show${labelled === 1 ? '' : 's'} labelled "Probably not for you" (a Topic note).`);
   say('This is the file to feed into Import Refresh.');
 }
 
