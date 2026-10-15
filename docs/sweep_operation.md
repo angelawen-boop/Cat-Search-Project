@@ -184,7 +184,8 @@ shows on, upcoming, undated, or closed in the 6 months before the sweep date are
 written; older ones are not swept, even if never read before. `--full` (her call, now and then)
 reads all. The run's `window.json` records each routine venue's window; QC, `sweep_diff.js` and
 `venue_status.js` count a venue's older shows from earlier runs, so 200 + 3 new reads 203.
-`routine_window.js`; RW-001 to RW-010. The container is unchanged. Pace stays at 30s.
+`routine_window.js`; RW-001 to RW-010. Proven live on MAD: 8 pages of 22, count held at 22.
+The container is unchanged. Pace stays at 30s.
 
 ## The monthly routine
 
