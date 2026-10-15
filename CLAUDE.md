@@ -115,27 +115,21 @@ pages return 404, plus occasional page timeouts — which say so on the row.
 Everything not listed here is finished. Do not reopen a closed item without a
 new fact.
 
-#### 2.2.1 The cloud ledger — on branch `claude/ledger-cloud`, ready to merge
+#### 2.2.1 The cloud ledger — merged and live in her app
 
-**Design, what the store holds, saving, the safety proofs, the trial switch and the two-copies lock:
+**Design, what the store holds, saving, the safety proofs, the switch and the two-copies lock:
 `docs/cloud_storage.md`. Read it before changing anything about saving to the page's own store.**
-Live on the test page: **45.1 · cloud 5**.
 
-**Where:** test page **https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf**, its
-own store, all four capabilities. **Her working app: she works ONLY
-there, on her real ledger, in ONE tab on ONE device** (a second copy is read
-only — `docs/cloud_storage.md`). Buttons: **Load** (a ledger file), **Save**, **Import** (a sweep
-CSV) — `main`'s Import, Export and Import Refresh, renamed.
+Merged to `main` and published to her app at 45.1 after a long trial on the test page (her
+decision). The test page's sweep log, quarantine, Occasional venues and pending links were copied
+into her app's store. She works in her app, ONE tab on ONE device (a second copy is read only).
+The test page **https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf** is retired; its store keeps
+her trial Cloud Saves and the lookup log up to the merge.
 
-**Trial basically over — ready to merge, in a separate session.**
-
-**Next:**
-1. Merge to `main` and publish to her app — her call; `docs/publishing.md` applies. **First
-   copy the test page's `sweeps/venues`, `quarantine/rows`, `venues/occasional` and `links/pending` into her app's
-   store** (quarantine merged latest-wins, never replaced).
-2. `CLOUD_OPENS=true` — her call. **Load stays for good** — it is how she opens a backup.
-3. Google Drive backup by button — on the table, never automatic.
-
+**Still open:**
+- `CLOUD_OPENS` stays `false` — the app opens empty and she Loads her file (her decision). **Load
+  stays for good** — it is how she opens a backup.
+- Google Drive backup by button — on the table, never automatic.
 
 #### 2.2.2 Fixes not yet checked in the cases they were written for
 
@@ -178,7 +172,7 @@ She is noting issues as she uses it, for a later debugging session.
   page; a MoMA lookup still reads its shop as blocked under the whole-page test.
 - **Diagnose a lookup from its record, never a pasted panel.** Every Find
   catalogue, Search again, Re-check and link reading is recorded whole in the
-  test page's store — every call, what Claude was sent and answered, the card
+  app's store (the test page's, before the merge) — every call, what Claude was sent and answered, the card
   before and after (`docs/app.md` §1, "The lookup log"; read it with ArtifactData
   `list` + `out_dir`, then `node build/lookup_log.js <dir> [<id>]`).
 - **Fixed in 42.6, her next lookups confirm:** *Hubert Robert* (NGA) — a catalogue
@@ -246,7 +240,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 | File | What is in it | Read it when |
 |---|---|---|
 | `docs/app.md` | The app's evidence: catalogue lookup, shop addresses, saving, intake bands, quarantine, sweep log, seed, the cloud ledger's screen | Changing anything in the app |
-| `docs/cloud_storage.md` | The cloud ledger trial: what the page's store holds, Save and the safety copies, the trial switch, the safety proofs, the read-only lock for a second copy | Changing anything about saving to the page's own store |
+| `docs/cloud_storage.md` | The cloud ledger: what the page's store holds, Save and the safety copies, the opening switch, the safety proofs, the read-only lock for a second copy | Changing anything about saving to the page's own store |
 | `docs/store_backup_2026-09-21/` | A read-out of the page's store, as insurance | Only if the store is lost AND `sweep_log.js` cannot rebuild it |
 | `docs/ledger_2026-09-24/` | Her real ledger as exported on 24 Sep, kept as test data for the cloud-store and scalability work — **never load it into her published app** | Testing saving or sizing against a real ledger |
 | `docs/scalability.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
@@ -402,16 +396,14 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 45.1 · cloud 5 on the test page; her main app shows 39.2.** **Only the cloud test page is
-published** (her decision). What each recent version changed, and what is published where, is
-in `docs/publishing.md`, "What is live now".
+**Live: 45.1 in her app**, with the cloud ledger. What each recent version changed is in
+`docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
 
-**On `main`, her data is NOT hosted — the page is.** The app is the *tool*, the
-ledger is the *document*, like a word processor and a file. Opening the link
-gives an empty portal. *(The cloud-ledger trial, §2.2.1, changes this on its
-branch only.)*
+**Her file is still the document; the page's store now keeps a live copy of it.** The app is
+the *tool*, the ledger the *document*, like a word processor and a file. Opening the link gives
+an empty page until she Loads (§2.2.1); from then on every change is saved to the store as well.
 
 Losing or silently corrupting the ledger is the worst outcome the design guards
 against; it holds every tracked exhibition plus her marks (watching / dismissed /

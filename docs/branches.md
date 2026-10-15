@@ -11,7 +11,7 @@ Branches separate in-progress work from known-good work, never components.
 
 | Branch | What it is |
 |---|---|
-| `claude/ledger-cloud` | **Live trial — `CLAUDE.md` §2.2.1.** Merged to `main` only on her call |
+| `claude/ledger-cloud` | The cloud ledger trial — merged into `main`; kept as history |
 | `parked` | **The unpublished search work after 43** (catalogue versions as blocks, Stage 1/1b, the live check page's code), from `main` and `claude/ledger-cloud`; also the old abandoned Vasari fix. Never published, never merged back without her say (her decision) |
 | `claude/jsx-stitched-intake`, `claude/blissful-volta-jxj5c0` | Merged into `main`; kept as history |
 | `claude/quiet-user-agent` | Parked, her decision — do not merge or re-open |

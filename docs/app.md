@@ -385,7 +385,7 @@ close" while nothing was written.
   button (CLAUDE.md §2.2.1) goes through a Google Drive connector, as the catalogue
   lookup goes through Parallel's.
 - **A new "find catalogues for all Wanted"** must work within her Parallel and
-  Claude allowance and, on `claude/ledger-cloud`, respect the read-only lock.
+  Claude allowance and respect the read-only lock.
 
 ---
 
@@ -558,7 +558,7 @@ So the app is kept, the data layer is swappable underneath, and neither
 
 ---
 
-## 9. The cloud ledger — what's on screen (branch `claude/ledger-cloud`)
+## 9. The cloud ledger — what's on screen
 
 Her wording and order. The branch code holds the exact strings.
 
