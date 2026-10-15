@@ -1346,6 +1346,24 @@ function isUndecidedCard(p,dec){
   return !Object.values(dec.fields||{}).some(v=>v);
 }
 
+// ===== "PROBABLY NOT FOR YOU" — her design (CLAUDE.md §2.2.7) =====
+// Compression labels a NEW show in a topic she always quarantines, writing one
+// sentence into the row's notes ("Topic: Asian art."; TOPICS in scraper/compress.js).
+// Such a new show, with nothing odd about it, goes in its own section, pre-set to
+// Never add; she clicks Add to keep one. Odd cases stay odd: they need her eye.
+function topicOf(note){
+  const m=/(?:^|\s)Topic: ([^.]+)\./.exec(String(note||""));
+  return m?m[1]:null;
+}
+function isTopicCard(p){
+  return !!(p&&p.type==="add"&&p.topic&&!p.merged&&!p.choices&&p.cand&&p.cand.exUrl);
+}
+function topicPresets(props){
+  const d={};
+  (props||[]).forEach((p,i)=>{ if(isTopicCard(p))d[i]={mode:"never"}; });
+  return d;
+}
+
 // Every decided card lands in one count — to apply, quarantined or rejected — so the
 // footer adds up (her ask). The counts and the link box both use cardOutcome.
 function cardOutcome(p,dec){
@@ -4215,7 +4233,7 @@ export default function App(){
       if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
       // Quarantined: dropped before anything else sees it. Counted, never silent.
       if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
-      parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,
+      parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,topic:topicOf(rowNote),
                    rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:"Sweeper note: ")+rowNote]:[],parseNotes:notes,line});
     }
 
@@ -4255,7 +4273,7 @@ export default function App(){
         picked:p[f],
       })):null;
 
-      if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line:p.line,choices,merged:!!p.mergedFrom}); continue; }
+      if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line:p.line,choices,merged:!!p.mergedFrom,topic:p.topic||null}); continue; }
       const upd=[];
       const consider=(field,label,oldV,newV)=>{ const o=(oldV==null?"":String(oldV)), n=(newV==null?"":String(newV)); if(!n)return; if(!o)upd.push({field,label,oldVal:"",newVal:n,kind:"fill"}); else if(o!==n)upd.push({field,label,oldVal:o,newVal:n,kind:"change"}); };
       // A changed title is a Change card, capitals-only included (her decision): a title
@@ -4307,7 +4325,7 @@ export default function App(){
         setError("Read the refresh file, but nothing new to propose \u2014 your ledger already matches it."+((res.coverage||[]).length?" ("+res.coverage.length+" listing page"+(res.coverage.length===1?"":"s")+" couldn\u2019t be read \u2014 see below.)":""));
         return;
       }
-      setError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions({});
+      setError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions(topicPresets(res.props));
     };
     reader.readAsText(file); e.target.value="";
   }
@@ -4400,7 +4418,7 @@ export default function App(){
       setLinkNote("Read "+got.length+" link"+(got.length===1?"":"s")+", but nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+".");
       return;
     }
-    setProposals(res.props); setCoverage([]); setTally(res.tally||null); setSeenInFile(null); setDecisions({});
+    setProposals(res.props); setCoverage([]); setTally(res.tally||null); setSeenInFile(null); setDecisions(topicPresets(res.props));
     linksAtRead.current=urls;
     // Done with the pop-up — unless a link could not be read: then it stays
     // under the review, its lines waiting for her when the review closes.
@@ -5387,7 +5405,8 @@ export default function App(){
                 // No link at all: usable rows, grouped because the link is the only key for
                 // folding and quarantine, so they return fresh every sweep (her decision).
                 const noLink     = byVenue(plain.filter(x=>!x.p.cand||!x.p.cand.exUrl));
-                const ordinary   = plain.filter(x=>x.p.cand&&x.p.cand.exUrl);
+                const notForYou  = byVenue(plain.filter(x=>isTopicCard(x.p)));
+                const ordinary   = plain.filter(x=>x.p.cand&&x.p.cand.exUrl&&!isTopicCard(x.p));
                 // Venue subheadings inside each band, in the same style and order as below.
                 const byVenueBlocks=list=>allVenues().map(m=>{
                   const grp=list.filter(x=>x.p.venueId===m.id);
@@ -5444,6 +5463,12 @@ export default function App(){
                       {mergedOnly.length>0&&band("merged","2. Combined rows \u00b7 identical rows were de-duped or reconciled",undefined,mergedOnly.length,false,byVenueBlocks(mergedOnly))}
                       {mergedConf.length>0&&band("mergedconf","3. Combined rows \u00b7 identical rows produced conflicts \u2014 yours to choose",C.accent,mergedConf.length,true,byVenueBlocks(mergedConf))}
                       {noLink.length>0&&band("nolink","4. No exhibition url \u00b7 link goes to venue\u2019s listing page",undefined,noLink.length,true,byVenueBlocks(noLink))}
+                    </div>
+                  )}
+                  {notForYou.length>0&&(
+                    <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
+                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>Probably not for you {"\u00b7"} {notForYou.length}</div>
+                      {byVenueBlocks(notForYou)}
                     </div>
                   )}
                 {ordinary.length>0&&(()=>{

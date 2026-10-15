@@ -485,4 +485,29 @@ check('18f: the real sample file starts with every card undecided',
   check('21d: nothing in the app rewrites a title for display', !("displayTitle" in H));
 }
 
+// "PROBABLY NOT FOR YOU" — her design, CLAUDE.md §2.2.7. Compression writes
+// "Topic: <label>." into a NEW show's notes; the intake reads it, sets the card
+// aside and pre-sets Never add. Only a new show with nothing odd about it.
+{
+  H.setRows([{id:"x",museumId:"louvre",title:"Known",startDate:"2025-01-01",endDate:"2025-05-01",summary:"Old.",exUrl:"https://louvre.fr/known"}]);
+  const t=H.analyzeProForma(hdr
+    +row(['louvre','Hokusai','2025-01-01','2025-05-01','Prints.','https://louvre.fr/hok','Found on the listing. Topic: Asian art.'])
+    +row(['louvre','Rubens','2025-01-01','2025-05-01','Paintings.','https://louvre.fr/rub','Found on the listing.'])
+    +row(['louvre','Known','2025-01-01','2025-05-01','New words.','https://louvre.fr/known','Topic: Asian art.'])
+    +row(['louvre','No link','2025-01-01','2025-05-01','Prints.','','Topic: Asian art.']));
+  const by=n=>t.props.find(p=>p.title===n);
+  check('TP-A1: the label is read off a new show\'s notes', by('Hokusai').topic==='Asian art', by('Hokusai'));
+  check('TP-A2: the note itself still shows on the card', by('Hokusai').notes.some(n=>/Topic: Asian art\./.test(n)), by('Hokusai').notes);
+  check('TP-A3: a new show with a label is set aside; one without is not',
+    H.isTopicCard(by('Hokusai')) && !H.isTopicCard(by('Rubens')));
+  check('TP-A4: a show already in the ledger is never set aside', !H.isTopicCard(by('Known')), by('Known'));
+  check('TP-A5: an odd case (no link) stays an odd case', !H.isTopicCard(by('No link')), by('No link'));
+  const pre=H.topicPresets(t.props), hi=t.props.indexOf(by('Hokusai'));
+  check('TP-A6: only the set-aside card comes pre-set, and to Never add (not Reject)',
+    Object.keys(pre).length===1 && pre[hi] && pre[hi].mode==='never', pre);
+  const c=H.countDecisions(t.props,pre);
+  check('TP-A7: the pre-set card counts as quarantined, not undecided', c.quarantinedCount===1, c);
+  check('TP-A8: no label, no set-aside', H.topicOf('Found on the listing.')===null && H.topicOf('')===null);
+}
+
 process.exit(fails?1:0);

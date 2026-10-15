@@ -444,10 +444,44 @@ async function oldRowsUntouched() {
   } finally { await page.close(); }
 }
 
+async function probablyNotForYou() {
+  const NAME = 'AD-009 "Probably not for you": its own section, pre-set to Never add';
+  // Her design, CLAUDE.md §2.2.7: a new show whose notes carry "Topic: …" is set
+  // aside after Odd cases, before the rest, headed by title and count only, and
+  // comes pre-set to Never add; she clicks Add to keep it.
+  const page = await mount({ save: 'ok' });
+  try {
+    await page.loadFile(LEDGER);
+    const csv = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at\n'
+      + 'met,Fixture Hokusai,2026-09-01,2027-03-01,Prints.,https://www.metmuseum.org/exhibitions/fx-hok,Topic: Asian art.,2026-10-15T00:00:00Z\n'
+      + 'met,Fixture Rubens,2026-09-01,2027-03-01,Paintings.,https://www.metmuseum.org/exhibitions/fx-rub,,2026-10-15T00:00:00Z\n';
+    const input = page.doc.querySelector('input[type=file][accept=".csv,text/csv"]');
+    const file = new page.win.File([csv], 'sweep.csv', { type: 'text/csv' });
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    Object.defineProperty(input, 'value', { get: () => 'C:\\fakepath\\sweep.csv', set() {}, configurable: true });
+    await act(async () => { input.dispatchEvent(new page.win.Event('change', { bubbles: true })); });
+    for (let i = 0; i < 5; i++) await act(async () => { await new Promise(r => setTimeout(r, 0)); });
+    const text = page.text();
+    const at = text.indexOf('Probably not for you · 1'), normal = text.indexOf('Normal cases · 1');
+    check(NAME + ': headed by its title and count', at >= 0, text.slice(0, 300));
+    check(NAME + ': before the rest', at >= 0 && normal > at);
+    check(NAME + ': only the labelled show is in it',
+      at >= 0 && text.slice(at, normal).includes('Fixture Hokusai') && !text.slice(at, normal).includes('Fixture Rubens'));
+    check(NAME + ': the label shows on the card', text.slice(at, normal).includes('Topic: Asian art.'));
+    const never = page.buttons('✓ Never add this');
+    check(NAME + ': pre-set to Never add, and only that card', never.length === 1);
+    const add = [...page.doc.querySelectorAll('button')].filter(b => /Add new entry$/.test(b.textContent.trim()));
+    // The labelled card's Add is the first: its section comes before Normal cases.
+    await page.click(add[0]);
+    check(NAME + ': Add keeps it', page.buttons('✓ Add new entry').length === 1 && page.buttons('✓ Never add this').length === 0);
+  } finally { await page.close(); }
+}
+
 (async () => {
   for (const [tag, t] of [['AD-001', resetToSeedAsksFirst], ['AD-002', plainDownloadNeverClearsUnsaved],
                           ['AD-003', buyNextDot], ['AD-004', noStatusLineWithoutLedger], ['AD-005', dismissToast],
-                          ['AD-006', oldRowsUntouched], ['AD-007', versionCards], ['AD-008', oneVersionUnchanged]]) {
+                          ['AD-006', oldRowsUntouched], ['AD-007', versionCards], ['AD-008', oneVersionUnchanged],
+                          ['AD-009', probablyNotForYou]]) {
     try { await t(); } catch (e) { check(tag + ' ran to the end', false, e && e.message); }
   }
   console.log(failures ? failures + ' failed' : 'her page decisions hold');
