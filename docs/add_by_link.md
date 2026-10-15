@@ -1,8 +1,7 @@
 # Add by link — design, decisions and venue link rules
 
 **Her design; signed off at 39.5.** Code: "ADD BY LINK" in `Cat_Watch.jsx`; test
-`scraper/fixtures/add_by_link.js` (AL-). A scraper-side plan (the scraper reading one pasted page) was once considered and is
-redundant; the app handles unreadable links itself.
+`scraper/fixtures/add_by_link.js` (AL-). The app handles unreadable links itself; no scraper-side reader.
 
 ## The problem
 
@@ -26,7 +25,7 @@ meets it.
   Look again, a CSV's sweep log: all stored when the ledger moves. Cancel import drops them; Back
   keeps them. A file or Read with nothing to propose counts as finished.
 - **A link it cannot read is a line, never a card** — the full link and why (empty page, refused, no dates).
-  Unread links **stay in the paste box**, stored when the import finishes, until read or cleared. **Links come
+  Unread links **stay in the paste box**, stored when the import finishes, until read or cleared ("Clear", inside the box, empties it and the store). **Links come
   back to the box** (her decision): a rejected card's, an undecided card's after a partial apply, and on
   Cancel import every link the Read took — each stored at once. AL-012c, AL-024.
 - **No lookback cutoff** for anything added by link (her decision).
@@ -91,11 +90,6 @@ read and what the card links (`siteUrlOf`; AL-037).
 **Shelf AND whole-shop search, as the 28 (her decision)** — DIA files a show's book in the show's own section.
 A search is kept only if it finds a book the finder saw (`proveShopSearch`; AL-008k, AL-014); older venues
 work it out at first lookup.
-
-## First test
-
-10 pages, 6 venues: all full text, dates right 10/10; no JSON-LD comes through Parallel. Pages are the
-fixtures (`docs/link_pages/`).
 
 ## The general reader — eight rules
 
@@ -192,8 +186,6 @@ Proof pages for every rule above: `docs/link_proof_pages.json`.
   naming the book or show, catalogue/ISBN/price words, or a link onto the venue's shop come
   first. A link labelled "catalog" onto the venue's shop, in web results, is taken in code
   (`catalogueLinkOn`).
-- **A rejected link goes back in the box** with the unread ones and, after a partial apply,
-  the undecided ones; "Clear", inside the box, empties it and the store.
 
 ## Re-checking the proof pages
 
