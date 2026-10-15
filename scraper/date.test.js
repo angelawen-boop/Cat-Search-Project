@@ -21,7 +21,7 @@ const {
   findDateRange, findDateRangeInProse, ymd, startYearFor,
   normalizeUrl, resolveHref, pickStructuredEvent, isoDay, unusableDateText,
   classifyLoadError, isOwnListingPage, saysOngoing,
-  expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination, VENUES, pickTitleLine,
+  expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination, VENUES, pickTitleLine, venueTitle, isPlace, placesOf,
   stripWeekdays,
   addNote, filledDatesNote, finishNotes, scopeSelector, extensionNote, applyLookback,
 } = require('./sweep_prototype.js');
@@ -1322,7 +1322,7 @@ const routeOf = code => {
   const rest = SWEEP_SRC.slice(at + 1);
   const next = rest.search(/\n  '?[a-z-]+'?: \{\n    name: /);
   const block = next > -1 ? rest.slice(0, next) : rest;
-  return /route:\s*'local'/.test(block) ? 'home' : 'container';
+  return /route:\s*'local'/.test(block) ? 'home' : /route:\s*'none'/.test(block) ? 'none' : 'container';
 };
 
 test('R-001: met, artic, mad, brit, orsay, morgan and moma are HERS — the container must not touch them', () => {
@@ -1408,19 +1408,29 @@ test('R-003: every other venue is the container\'s', () => {
   for (const c of ['ng', 'rijks', 'acq', 'frick', 'menil', 'va', 'louvre', 'capo',
                    'uffizi', 'brera', 'khm', 'dellav', 'wallace', 'borghese',
                    'tate-modern', 'tate-britain', 'lgd', 'jacquemart', 'mam',
-                   'ashmolean', 'cincinnati']) {
+                   'cincinnati']) {
     assert.strictEqual(routeOf(c), 'container', c + ' should be the container\'s');
   }
 });
 
-test('R-004: the two sets do not overlap and cover every venue', () => {
+test('R-004: home, container and not-swept do not overlap and cover every venue', () => {
   const codes = [...SWEEP_SRC.matchAll(RECIPE_KEY)].map(m => m[1]);
   assert.strictEqual(codes.length, 28, 'expected 28 recipes, found ' + codes.length);
   const home = codes.filter(c => routeOf(c) === 'home');
   const container = codes.filter(c => routeOf(c) === 'container');
   assert.deepStrictEqual(home.sort(), ['artic', 'brit', 'mad', 'met', 'moma', 'morgan', 'orsay']);
-  assert.strictEqual(container.length, 21);
-  assert.strictEqual(home.length + container.length, codes.length);
+  const none = codes.filter(c => routeOf(c) === 'none');
+  assert.deepStrictEqual(none, ['ashmolean']);
+  assert.strictEqual(container.length, 20);
+  assert.strictEqual(home.length + container.length + none.length, codes.length);
+});
+
+test('R-024: the Ashmolean is added by link only — no machine sweeps it, and the recipe is kept (her decision, 15 Oct)', () => {
+  const S = require('./sweep_prototype.js');
+  assert.strictEqual(routeOf('ashmolean'), 'none');
+  assert.strictEqual(S.machineOf('ashmolean'), 'none');
+  assert.strictEqual(S.machineOf('met'), 'home');
+  assert.strictEqual(S.machineOf('ng'), 'container');
 });
 
 // ── THE MORGAN ────────────────────────────────────────────────────────────
@@ -2022,7 +2032,7 @@ test('DS-001: "since" with a full date is an opening date, German dotted day too
   assert.strictEqual(findDateRange('Since November 11').start, '');
 });
 
-test('DS-002: a closing date alone, month first or after "Closes" / "fino al" (Add by link; docs/picked_shows.md)', () => {
+test('DS-002: a closing date alone, month first or after "Closes" / "fino al" (Add by link; docs/add_by_link.md)', () => {
   const { findDateRange } = require('./dates.js');
   const want = {
     'Through January 10, 2027':            '2027-01-10',
@@ -2042,4 +2052,32 @@ test('DS-002: a closing date alone, month first or after "Closes" / "fino al" (A
   assert.deepStrictEqual([r.start, r.end], ['2026-03-05', '2026-04-06']);
   // No year, no date.
   assert.strictEqual(findDateRange('Closes 15 November', { looseSingles: false }).end, '');
+});
+
+test('P-015: the Art Institute\'s page 2 of a year may be empty and is wired — no marker card, no unwired-page warning (15 Oct home sweep)', () => {
+  const p2 = listingPages(VENUES.artic).filter(p => /p2/.test(p.ctx));
+  assert.ok(p2.length >= 4);
+  for (const p of p2) assert.equal(p.mayBeEmpty, true, p.ctx + ' should be allowed to come back empty');
+  for (const p of listingPages(VENUES.artic).filter(p => !/p2/.test(p.ctx))) assert.ok(!p.mayBeEmpty, p.ctx + ' must still leave a marker when empty');
+  assert.ok(recipeDrivenParams(VENUES.artic).includes('page'), 'artic writes ?page=2 itself, so it is not an unwired page');
+});
+
+test('BT-001: Borghese titles typed in capitals reach her in ordinary capitals, name and subtitle joined by an em dash (her decision)', () => {
+  assert.equal(venueTitle('borghese', 'LOUISE BOURGEOIS. UNCONSCIOUS MEMORIES'), 'Louise Bourgeois — Unconscious Memories');
+  assert.equal(venueTitle('borghese', 'ZANABAZAR AT THE GALLERIA BORGHESE. FROM MONGOLIA TO THE GLOBAL BAROQUE'),
+    'Zanabazar at the Galleria Borghese — From Mongolia to the Global Baroque');
+  assert.equal(venueTitle('borghese', 'WANGECHI MUTU – BLACK SOIL POEMS'), 'Wangechi Mutu – Black Soil Poems');
+  // Only Borghese turns a full stop into a dash.
+  assert.equal(venueTitle('ashmolean', 'IN BLOOM. HOW PLANTS CHANGED OUR WORLD'), 'In Bloom. How Plants Changed Our World');
+  assert.equal(venueTitle('ng', 'Hello. World'), 'Hello. World');
+});
+
+test('AQ-001: Acquavella\'s card line "Acquavella Palm Beach" is the gallery, never part of the title (15 Oct import)', () => {
+  const L = placesOf('acq');
+  assert.equal(isPlace('Acquavella Palm Beach', L), 'Palm Beach');
+  assert.equal(isPlace('Acquavella New York', L), 'New York');
+  assert.equal(isPlace('Palm Beach', L), 'Palm Beach');
+  assert.equal(isPlace('Curated by Todd Bradway', L), undefined);
+  // Only Acquavella's own name is taken off the front.
+  assert.equal(isPlace('Gallery Palm Beach', L), undefined);
 });

@@ -1,7 +1,7 @@
 # Catalogue versions — the redesign and its agreed cases
 
 Status: **design agreed with her; awaiting her approval to build.** The catalogue lookup is paused
-until this is agreed (CLAUDE.md §7.4). Every later change to the lookup is
+until this is agreed (CLAUDE.md §2.2.3). Every later change to the lookup is
 checked live against the cases below.
 
 ## The design

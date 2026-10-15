@@ -1,0 +1,497 @@
+[2026-10-15T08:16:00.880Z] Could not tidy old runs (ENOTEMPTY: directory not empty, rename '/home/awen/Cat-Search-Project/scraper/ou) — carrying on.
+[2026-10-15T08:16:00.883Z] Cat Watch Sweep Prototype — starting
+[2026-10-15T08:16:00.883Z] Lookback floor: 2024-07-01
+[2026-10-15T08:16:00.883Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-10-15_191600
+[2026-10-15T08:16:00.883Z] Machine: home (no proxy, so this is not the container)
+[2026-10-15T08:16:00.884Z] Venues this run: met, mad, artic
+[2026-10-15T08:16:00.885Z] 
+[2026-10-15T08:16:00.885Z] ────────────────────────────────────────────────────────────
+[2026-10-15T08:16:00.885Z]   PACING — her machine
+[2026-10-15T08:16:00.886Z] ────────────────────────────────────────────────────────────
+[2026-10-15T08:16:00.886Z]   Gap between pages: about 30s, varied 75–125%, per gatekeeper.
+[2026-10-15T08:16:00.886Z]   One venue at a time behind each gatekeeper; different gatekeepers side by side.
+[2026-10-15T08:16:00.887Z]   The first refusal or bot check stops that gatekeeper for the rest of the run.
+[2026-10-15T08:16:00.900Z]   met: gatekeeper not known yet — read off its first reply.
+[2026-10-15T08:16:00.901Z]   mad: behind site:madparis.fr, from an earlier run.
+[2026-10-15T08:16:00.902Z]   artic: gatekeeper not known yet — read off its first reply.
+[2026-10-15T08:16:00.904Z]   Venues this run: met, mad, artic
+[2026-10-15T08:16:00.905Z] Proxy: (none — direct egress assumed)
+[2026-10-15T08:16:00.906Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-10-15T08:16:00.907Z]   In a Claude Code container this means every venue will fail to load.
+[2026-10-15T08:16:00.911Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-10-15T08:16:02.012Z] Running 3 venue(s) headless, 3 at a time (one page at a time within each venue)
+[2026-10-15T08:16:02.050Z] No proxy set — Chromium is making its own requests (network bridge off)
+[2026-10-15T08:16:02.420Z] [met] 
+[2026-10-15T08:16:02.420Z] [met] ────────────────────────────────────────────────────────────
+[2026-10-15T08:16:02.420Z] [met]   MET — The Metropolitan Museum of Art
+[2026-10-15T08:16:02.421Z] [met] ────────────────────────────────────────────────────────────
+[2026-10-15T08:16:02.424Z] [met]   Fetching current/upcoming: https://www.metmuseum.org/exhibitions
+[2026-10-15T08:16:02.509Z] [mad] 
+[2026-10-15T08:16:02.510Z] [mad] ────────────────────────────────────────────────────────────
+[2026-10-15T08:16:02.510Z] [mad]   MAD — Musée des Arts Décoratifs, Paris
+[2026-10-15T08:16:02.510Z] [mad] ────────────────────────────────────────────────────────────
+[2026-10-15T08:16:02.510Z] [mad]   Fetching current: https://madparis.fr/?page=expo-actu-en
+[2026-10-15T08:16:02.528Z] [artic] 
+[2026-10-15T08:16:02.529Z] [artic] ────────────────────────────────────────────────────────────
+[2026-10-15T08:16:02.529Z] [artic]   ARTIC — Art Institute of Chicago
+[2026-10-15T08:16:02.529Z] [artic] ────────────────────────────────────────────────────────────
+[2026-10-15T08:16:02.529Z] [artic]   Fetching current: https://www.artic.edu/exhibitions
+[2026-10-15T08:16:02.610Z] [met]   robots.txt (www.metmuseum.org, read now): unreadable (HTTP 429) — asks nothing we can see
+[2026-10-15T08:16:02.612Z] [met]   paced: request 1, gatekeeper not yet known — every lane paused for it
+[2026-10-15T08:16:03.317Z] [met]   gatekeeper: Vercel — read off its reply; this venue is paced in that lane
+[2026-10-15T08:16:03.377Z] [artic]   robots.txt (www.artic.edu, read now): states no delay, 7 path(s) off-limits
+[2026-10-15T08:16:05.652Z] [mad]   robots.txt (madparis.fr, read now): asks 1s between requests, 6 path(s) off-limits — pages at least 1s apart
+[2026-10-15T08:16:06.735Z] [met]     ongoing (permanent), excluded: The Face Of Life Modern Portraits At The Met
+[2026-10-15T08:16:08.916Z] [met]     ongoing (permanent), excluded: Decorative Arts In China 1000 To The Present
+[2026-10-15T08:16:08.982Z] [met]     ongoing (permanent), excluded: A Lasting Legacy Chinese Jades From New York Collections
+[2026-10-15T08:16:09.063Z] [met]     ongoing (permanent), excluded: Wedding Attire Three Cultures One Celebration
+[2026-10-15T08:16:09.126Z] [met]     ongoing (permanent), excluded: Arts Of Oceania
+[2026-10-15T08:16:09.190Z] [met]     ongoing (permanent), excluded: Arts Of The Ancient Americas
+[2026-10-15T08:16:09.254Z] [met]     ongoing (permanent), excluded: Arts Of Africa
+[2026-10-15T08:16:09.327Z] [met]     ongoing (permanent), excluded: Defensive Display Shields From The Met Collection
+[2026-10-15T08:16:09.391Z] [met]     ongoing (permanent), excluded: The American Wing At 100
+[2026-10-15T08:16:09.455Z] [met]     ongoing (permanent), excluded: The Calculated Curve Eighteenth Century American Furniture
+[2026-10-15T08:16:09.519Z] [met]     ongoing (permanent), excluded: Cycladic Art
+[2026-10-15T08:16:09.585Z] [met]     ongoing (permanent), excluded: Look Again European Paintings 1300 1800
+[2026-10-15T08:16:09.651Z] [met]     ongoing (permanent), excluded: Layered Narratives The Northern Renaissance Gallery
+[2026-10-15T08:16:09.711Z] [met]     ongoing (permanent), excluded: Art Of Native America Diker Collection
+[2026-10-15T08:16:09.776Z] [met]     ongoing (permanent), excluded: Renaissance Masterpieces
+[2026-10-15T08:16:09.846Z] [met]     ongoing (permanent), excluded: Michael Lin Pentachrome
+[2026-10-15T08:16:09.914Z] [met]     ongoing (permanent), excluded: Afrofuturist Period Room
+[2026-10-15T08:16:09.988Z] [met]     ongoing (permanent), excluded: British Galleries
+[2026-10-15T08:16:10.054Z] [met]     ongoing (permanent), excluded: Faberge
+[2026-10-15T08:16:10.369Z] [met]     ongoing (permanent), excluded: The American Guitar A Twentieth Century Icon
+[2026-10-15T08:16:10.462Z] [met]   current/upcoming: 96 links seen -> 2 navigation, 50 already-seen URL, 20 ongoing/permanent -> 24 collected (0 of them with no readable title)
+[2026-10-15T08:16:10.473Z] [met]   Fetching past: https://www.metmuseum.org/exhibitions/past
+[2026-10-15T08:16:32.641Z] [artic]   paced: request 1, gatekeeper not yet known — every lane paused for it
+[2026-10-15T08:16:33.340Z] [artic]   gatekeeper: Cloudflare — read off its reply; this venue is paced in that lane
+[2026-10-15T08:16:33.341Z] [mad]   paced: request 1 via site:madparis.fr
+[2026-10-15T08:16:33.341Z] [met]   paced: request 2 via Vercel, after 21s
+[2026-10-15T08:16:37.422Z] [artic]     the venue labels this a permanent installation, excluded: New Galleries for European Design
+[2026-10-15T08:16:37.535Z] [artic]     the venue labels this a permanent installation, excluded: New Gallery for the Arts of Korea
+[2026-10-15T08:16:37.651Z] [artic]     the venue labels this a permanent installation, excluded: A New View of 20th- and 21st-Century Architecture and Design
+[2026-10-15T08:16:37.764Z] [artic]     the venue labels this a permanent installation, excluded: Double Feature with Short Subject
+[2026-10-15T08:16:37.861Z] [artic]     the venue labels this a permanent installation, excluded: Architectural Fragments from Chicago
+[2026-10-15T08:16:37.951Z] [artic]     the venue labels this a permanent installation, excluded: Life and Afterlife in Ancient Egypt
+[2026-10-15T08:16:38.035Z] [artic]     the venue labels this a permanent installation, excluded: Landscape in Light: The Tiffany Window at the Art Institute of Chicago
+[2026-10-15T08:16:38.123Z] [artic]     the venue labels this a permanent installation, excluded: The Deering Family Galleries of Medieval and Renaissance Art, Arms, and Armor
+[2026-10-15T08:16:38.134Z] [artic]   current: 23 links seen -> 3 navigation, 0 already-seen URL, 8 labelled permanent by the venue -> 12 collected (0 of them with no readable title)
+[2026-10-15T08:16:38.149Z] [artic]   Fetching upcoming: https://www.artic.edu/exhibitions/upcoming
+[2026-10-15T08:16:38.381Z] [mad]   current: 4 links seen -> 0 navigation, 0 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-10-15T08:16:38.388Z] [mad]   Fetching upcoming: https://madparis.fr/?page=expo-avenir-en
+[2026-10-15T08:16:40.510Z] [met]   past: 72 links seen -> 10 navigation, 31 already-seen URL -> 31 collected (0 of them with no readable title)
+[2026-10-15T08:16:40.515Z] [met]   Fetching past 2025: https://www.metmuseum.org/exhibitions/past?year=2025
+[2026-10-15T08:17:01.520Z] [mad]   paced: request 2 via site:madparis.fr, after 23s
+[2026-10-15T08:17:04.562Z] [mad]   upcoming: 1 links seen -> 0 navigation, 0 already-seen URL -> 1 collected (0 of them with no readable title)
+[2026-10-15T08:17:04.567Z] [mad]   Fetching past: https://madparis.fr/?page=expo-archives-en
+[2026-10-15T08:17:06.913Z] [met]   paced: request 3 via Vercel, after 26s
+[2026-10-15T08:17:08.071Z] [artic]   paced: request 2 via Cloudflare, after 30s
+[2026-10-15T08:17:11.370Z] [artic]   upcoming: 6 links seen -> 2 navigation, 0 already-seen URL -> 4 collected (0 of them with no readable title)
+[2026-10-15T08:17:11.377Z] [artic]   Fetching past 2026: https://www.artic.edu/exhibitions/history?year=2026
+[2026-10-15T08:17:13.969Z] [met]   past 2025: 128 links seen -> 10 navigation, 81 already-seen URL -> 37 collected (0 of them with no readable title)
+[2026-10-15T08:17:13.975Z] [met]   Fetching past 2024: https://www.metmuseum.org/exhibitions/past?year=2024
+[2026-10-15T08:17:30.879Z] [met]   paced: request 4 via Vercel, after 17s
+[2026-10-15T08:17:35.492Z] [mad]   paced: request 3 via site:madparis.fr, after 31s
+[2026-10-15T08:17:38.344Z] [artic]   paced: request 3 via Cloudflare, after 27s
+[2026-10-15T08:17:39.036Z] [met]   past 2024: 144 links seen -> 10 navigation, 93 already-seen URL -> 41 collected (0 of them with no readable title)
+[2026-10-15T08:17:39.064Z] [met]   lookback (listing): kept 108, dropped 25 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-10-15T08:17:39.068Z] [met]   reading 108 individual page(s)…
+[2026-10-15T08:17:39.068Z] [met]     page 1 of 108
+[2026-10-15T08:17:42.577Z] [artic]   past 2026: 36 links seen -> 23 navigation, 0 already-seen URL -> 13 collected (0 of them with no readable title)
+[2026-10-15T08:17:42.585Z] [artic]   Fetching past 2025: https://www.artic.edu/exhibitions/history?year=2025
+[2026-10-15T08:17:42.721Z] [mad]   past: 77 links seen -> 0 navigation, 0 already-seen URL -> 77 collected (0 of them with no readable title)
+[2026-10-15T08:17:42.738Z] [mad]   lookback (listing): kept 22, dropped 60 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-10-15T08:17:42.738Z] [mad]   reading 22 individual page(s)…
+[2026-10-15T08:17:42.739Z] [mad]     page 1 of 22
+[2026-10-15T08:17:59.914Z] [met]   paced: request 5 via Vercel, after 21s
+[2026-10-15T08:18:10.046Z] [mad]   paced: request 4 via site:madparis.fr, after 27s
+[2026-10-15T08:18:10.377Z] [mad]   CONNECTION_CLOSED on https://madparis.fr/Marion-Delarue-Pen-Pencil-Scissors — retrying once
+[2026-10-15T08:18:15.650Z] [artic]   paced: request 4 via Cloudflare, after 33s
+[2026-10-15T08:18:19.668Z] [artic]   past 2025: 46 links seen -> 26 navigation, 0 already-seen URL -> 20 collected (0 of them with no readable title)
+[2026-10-15T08:18:19.675Z] [artic]   UNWIRED PAGINATION past 2025: this page links another page and no recipe follows it — page=2 -> https://www.artic.edu/exhibitions/history?year=2025&page=2 | page=1 -> https://www.artic.edu/exhibitions/history?year=2025&page=1
+[2026-10-15T08:18:19.675Z] [artic]   Fetching past 2024: https://www.artic.edu/exhibitions/history?year=2024
+[2026-10-15T08:18:31.668Z] [met]   paced: request 6 via Vercel, after 31s
+[2026-10-15T08:18:32.902Z] [mad]   paced: request 5 via site:madparis.fr, after 21s
+[2026-10-15T08:18:44.722Z] [artic]   paced: request 5 via Cloudflare, after 25s
+[2026-10-15T08:18:48.766Z] [artic]     not a temporary exhibition (venue rule), excluded: Threaded Visions: Contemporary Weavings from the Collection
+[2026-10-15T08:18:49.103Z] [artic]     not a temporary exhibition (venue rule), excluded: Screens: A Panafrica Film Series
+[2026-10-15T08:18:49.305Z] [artic]   past 2024: 46 links seen -> 26 navigation, 0 already-seen URL, 2 labelled permanent by the venue -> 18 collected (0 of them with no readable title)
+[2026-10-15T08:18:49.312Z] [artic]   UNWIRED PAGINATION past 2024: this page links another page and no recipe follows it — page=2 -> https://www.artic.edu/exhibitions/history?year=2024&page=2 | page=1 -> https://www.artic.edu/exhibitions/history?year=2024&page=1
+[2026-10-15T08:18:49.313Z] [artic]   Fetching past 2023: https://www.artic.edu/exhibitions/history?year=2023
+[2026-10-15T08:18:58.244Z] [mad]   paced: request 6 via site:madparis.fr, after 24s
+[2026-10-15T08:18:59.651Z] [met]   paced: request 7 via Vercel, after 27s
+[2026-10-15T08:19:07.831Z] [artic]   paced: request 6 via Cloudflare, after 19s
+[2026-10-15T08:19:11.863Z] [artic]   past 2023: 46 links seen -> 26 navigation, 0 already-seen URL -> 20 collected (0 of them with no readable title)
+[2026-10-15T08:19:11.872Z] [artic]   UNWIRED PAGINATION past 2023: this page links another page and no recipe follows it — page=2 -> https://www.artic.edu/exhibitions/history?year=2023&page=2 | page=1 -> https://www.artic.edu/exhibitions/history?year=2023&page=1
+[2026-10-15T08:19:11.873Z] [artic]   Fetching past p2 2026: https://www.artic.edu/exhibitions/history?year=2026&page=2
+[2026-10-15T08:19:32.182Z] [met]   paced: request 8 via Vercel, after 32s
+[2026-10-15T08:19:32.918Z] [mad]   paced: request 7 via site:madparis.fr, after 33s
+[2026-10-15T08:19:41.212Z] [artic]   paced: request 7 via Cloudflare, after 29s
+[2026-10-15T08:19:44.287Z] [artic]   past p2 2026: 25 links seen -> 25 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-10-15T08:19:44.302Z] [artic]   UNWIRED PAGINATION past p2 2026: this page links another page and no recipe follows it — page=1 -> https://www.artic.edu/exhibitions/history?year=2026&page=1
+[2026-10-15T08:19:44.302Z] [artic]   NO EXHIBITIONS past p2 2026: page loaded and was read, but nothing matched
+[2026-10-15T08:19:44.302Z] [artic]   Fetching past p2 2025: https://www.artic.edu/exhibitions/history?year=2025&page=2
+[2026-10-15T08:20:01.267Z] [mad]   paced: request 8 via site:madparis.fr, after 26s
+[2026-10-15T08:20:05.562Z] [met]   paced: request 9 via Vercel, after 33s
+[2026-10-15T08:20:06.703Z] [artic]   paced: request 8 via Cloudflare, after 22s
+[2026-10-15T08:20:10.165Z] [artic]   past p2 2025: 31 links seen -> 26 navigation, 0 already-seen URL -> 5 collected (0 of them with no readable title)
+[2026-10-15T08:20:10.173Z] [artic]   UNWIRED PAGINATION past p2 2025: this page links another page and no recipe follows it — page=1 -> https://www.artic.edu/exhibitions/history?year=2025&page=1
+[2026-10-15T08:20:10.173Z] [artic]   Fetching past p2 2024: https://www.artic.edu/exhibitions/history?year=2024&page=2
+[2026-10-15T08:20:29.334Z] [artic]   paced: request 9 via Cloudflare, after 19s
+[2026-10-15T08:20:32.690Z] [artic]   past p2 2024: 33 links seen -> 26 navigation, 0 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-10-15T08:20:32.699Z] [artic]   UNWIRED PAGINATION past p2 2024: this page links another page and no recipe follows it — page=1 -> https://www.artic.edu/exhibitions/history?year=2024&page=1
+[2026-10-15T08:20:32.700Z] [artic]   Fetching past p2 2023: https://www.artic.edu/exhibitions/history?year=2023&page=2
+[2026-10-15T08:20:33.925Z] [met]   paced: request 10 via Vercel, after 27s
+[2026-10-15T08:20:35.467Z] [mad]   paced: request 9 via site:madparis.fr, after 32s
+[2026-10-15T08:21:03.081Z] [mad]   paced: request 10 via site:madparis.fr, after 26s
+[2026-10-15T08:21:06.001Z] [artic]   paced: request 10 via Cloudflare, after 33s
+[2026-10-15T08:21:09.507Z] [met]   paced: request 11 via Vercel, after 35s
+[2026-10-15T08:21:09.935Z] [artic]   past p2 2023: 39 links seen -> 26 navigation, 0 already-seen URL -> 13 collected (0 of them with no readable title)
+[2026-10-15T08:21:09.944Z] [artic]   UNWIRED PAGINATION past p2 2023: this page links another page and no recipe follows it — page=1 -> https://www.artic.edu/exhibitions/history?year=2023&page=1
+[2026-10-15T08:21:09.945Z] [artic]   lookback (listing): kept 79, dropped 34 closed before 2024-07-01, 0 with no closing date, 0 with no opening date
+[2026-10-15T08:21:09.947Z] [artic]   reading 78 individual page(s)…
+[2026-10-15T08:21:09.947Z] [artic]     page 1 of 78
+[2026-10-15T08:21:32.683Z] [artic]   paced: request 11 via Cloudflare, after 23s
+[2026-10-15T08:21:33.471Z] [mad]   paced: request 11 via site:madparis.fr, after 28s
+[2026-10-15T08:21:42.733Z] [met]   paced: request 12 via Vercel, after 33s
+[2026-10-15T08:22:01.678Z] [artic]   paced: request 12 via Cloudflare, after 26s
+[2026-10-15T08:22:05.674Z] [met]   paced: request 13 via Vercel, after 21s
+[2026-10-15T08:22:06.676Z] [met]     page 10 of 108
+[2026-10-15T08:22:10.955Z] [mad]   paced: request 12 via site:madparis.fr, after 36s
+[2026-10-15T08:22:26.496Z] [artic]   paced: request 13 via Cloudflare, after 22s
+[2026-10-15T08:22:38.425Z] [met]   paced: request 14 via Vercel, after 32s
+[2026-10-15T08:22:39.428Z] [mad]   paced: request 13 via site:madparis.fr, after 27s
+[2026-10-15T08:22:42.411Z] [mad]     page 10 of 22
+[2026-10-15T08:23:03.622Z] [artic]   paced: request 14 via Cloudflare, after 36s
+[2026-10-15T08:23:11.725Z] [met]   paced: request 15 via Vercel, after 32s
+[2026-10-15T08:23:15.252Z] [mad]   paced: request 14 via site:madparis.fr, after 33s
+[2026-10-15T08:23:30.328Z] [artic]   paced: request 15 via Cloudflare, after 25s
+[2026-10-15T08:23:36.492Z] [met]   paced: request 16 via Vercel, after 24s
+[2026-10-15T08:23:43.758Z] [mad]   paced: request 15 via site:madparis.fr, after 26s
+[2026-10-15T08:23:59.455Z] [met]   paced: request 17 via Vercel, after 22s
+[2026-10-15T08:24:06.704Z] [artic]   paced: request 16 via Cloudflare, after 34s
+[2026-10-15T08:24:12.582Z] [mad]   paced: request 16 via site:madparis.fr, after 27s
+[2026-10-15T08:24:31.699Z] [met]   paced: request 18 via Vercel, after 31s
+[2026-10-15T08:24:31.734Z] [artic]   paced: request 17 via Cloudflare, after 23s
+[2026-10-15T08:24:40.177Z] [mad]   paced: request 17 via site:madparis.fr, after 26s
+[2026-10-15T08:24:58.788Z] [met]   paced: request 19 via Vercel, after 26s
+[2026-10-15T08:25:04.116Z] [mad]   paced: request 18 via site:madparis.fr, after 23s
+[2026-10-15T08:25:07.999Z] [artic]   paced: request 18 via Cloudflare, after 34s
+[2026-10-15T08:25:22.369Z] [met]   paced: request 20 via Vercel, after 23s
+[2026-10-15T08:25:31.046Z] [artic]   paced: request 19 via Cloudflare, after 22s
+[2026-10-15T08:25:32.617Z] [artic]     page 10 of 78
+[2026-10-15T08:25:34.394Z] [mad]   paced: request 19 via site:madparis.fr, after 29s
+[2026-10-15T08:25:59.634Z] [met]   paced: request 21 via Vercel, after 36s
+[2026-10-15T08:26:02.232Z] [artic]   paced: request 20 via Cloudflare, after 30s
+[2026-10-15T08:26:09.161Z] [mad]   paced: request 20 via site:madparis.fr, after 34s
+[2026-10-15T08:26:24.974Z] [met]   paced: request 22 via Vercel, after 24s
+[2026-10-15T08:26:38.188Z] [artic]   paced: request 21 via Cloudflare, after 34s
+[2026-10-15T08:26:41.216Z] [mad]   paced: request 21 via site:madparis.fr, after 28s
+[2026-10-15T08:26:49.941Z] [met]   paced: request 23 via Vercel, after 24s
+[2026-10-15T08:26:51.011Z] [met]     page 20 of 108
+[2026-10-15T08:27:07.116Z] [artic]   paced: request 22 via Cloudflare, after 26s
+[2026-10-15T08:27:16.025Z] [mad]   paced: request 22 via site:madparis.fr, after 33s
+[2026-10-15T08:27:20.914Z] [met]   paced: request 24 via Vercel, after 30s
+[2026-10-15T08:27:30.495Z] [artic]   paced: request 23 via Cloudflare, after 22s
+[2026-10-15T08:27:44.953Z] [mad]   paced: request 23 via site:madparis.fr, after 27s
+[2026-10-15T08:27:46.497Z] [mad]     page 20 of 22
+[2026-10-15T08:27:49.123Z] [met]   paced: request 25 via Vercel, after 27s
+[2026-10-15T08:27:59.796Z] [artic]   paced: request 24 via Cloudflare, after 28s
+[2026-10-15T08:28:12.328Z] [met]   paced: request 26 via Vercel, after 22s
+[2026-10-15T08:28:12.606Z] [mad]   paced: request 24 via site:madparis.fr, after 26s
+[2026-10-15T08:28:22.454Z] [artic]   paced: request 25 via Cloudflare, after 21s
+[2026-10-15T08:28:41.243Z] [mad]   paced: request 25 via site:madparis.fr, after 27s
+[2026-10-15T08:28:45.738Z] [met]   paced: request 27 via Vercel, after 33s
+[2026-10-15T08:28:59.604Z] [artic]   paced: request 26 via Cloudflare, after 35s
+[2026-10-15T08:29:17.185Z] [mad]   paced: request 26 via site:madparis.fr, after 35s
+[2026-10-15T08:29:18.363Z] [met]   paced: request 28 via Vercel, after 32s
+[2026-10-15T08:29:20.161Z] [mad]   Individual pages: 22 got text, 0 no curatorial text, 0 failed
+[2026-10-15T08:29:20.161Z] [mad]   22 page(s) kept on disk as read (pages_kept/mad)
+[2026-10-15T08:29:20.162Z] [mad]   lookback (final): kept 22, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-10-15T08:29:20.168Z] [mad]   → 22 exhibitions, 22 with curatorial text → mad.csv
+[2026-10-15T08:29:30.274Z] [artic]   paced: request 27 via Cloudflare, after 29s
+[2026-10-15T08:29:46.245Z] [met]   paced: request 29 via Vercel, after 27s
+[2026-10-15T08:29:54.266Z] [artic]   paced: request 28 via Cloudflare, after 22s
+[2026-10-15T08:30:17.217Z] [met]   paced: request 30 via Vercel, after 30s
+[2026-10-15T08:30:26.214Z] [artic]   paced: request 29 via Cloudflare, after 30s
+[2026-10-15T08:30:27.997Z] [artic]     page 20 of 78
+[2026-10-15T08:30:45.790Z] [met]   paced: request 31 via Vercel, after 28s
+[2026-10-15T08:30:55.404Z] [artic]   paced: request 30 via Cloudflare, after 27s
+[2026-10-15T08:31:16.271Z] [met]   paced: request 32 via Vercel, after 30s
+[2026-10-15T08:31:30.707Z] [artic]   paced: request 31 via Cloudflare, after 33s
+[2026-10-15T08:31:46.751Z] [met]   paced: request 33 via Vercel, after 30s
+[2026-10-15T08:31:47.616Z] [met]     page 30 of 108
+[2026-10-15T08:32:08.062Z] [artic]   paced: request 32 via Cloudflare, after 34s
+[2026-10-15T08:32:20.399Z] [met]   paced: request 34 via Vercel, after 33s
+[2026-10-15T08:32:41.251Z] [artic]   paced: request 33 via Cloudflare, after 31s
+[2026-10-15T08:32:53.490Z] [met]   paced: request 35 via Vercel, after 32s
+[2026-10-15T08:33:14.558Z] [artic]   paced: request 34 via Cloudflare, after 30s
+[2026-10-15T08:33:25.182Z] [met]   paced: request 36 via Vercel, after 31s
+[2026-10-15T08:33:50.908Z] [artic]   paced: request 35 via Cloudflare, after 34s
+[2026-10-15T08:34:01.019Z] [met]   paced: request 37 via Vercel, after 35s
+[2026-10-15T08:34:16.450Z] [artic]   paced: request 36 via Cloudflare, after 24s
+[2026-10-15T08:34:31.769Z] [met]   paced: request 38 via Vercel, after 30s
+[2026-10-15T08:34:51.710Z] [artic]   paced: request 37 via Cloudflare, after 32s
+[2026-10-15T08:35:01.689Z] [met]   paced: request 39 via Vercel, after 29s
+[2026-10-15T08:35:25.369Z] [artic]   paced: request 38 via Cloudflare, after 32s
+[2026-10-15T08:35:34.879Z] [met]   paced: request 40 via Vercel, after 32s
+[2026-10-15T08:35:49.672Z] [artic]   paced: request 39 via Cloudflare, after 22s
+[2026-10-15T08:35:51.803Z] [artic]     page 30 of 78
+[2026-10-15T08:36:11.446Z] [met]   paced: request 41 via Vercel, after 36s
+[2026-10-15T08:36:22.133Z] [artic]   paced: request 40 via Cloudflare, after 30s
+[2026-10-15T08:36:46.530Z] [artic]   paced: request 41 via Cloudflare, after 22s
+[2026-10-15T08:36:46.904Z] [met]   paced: request 42 via Vercel, after 34s
+[2026-10-15T08:37:10.984Z] [met]   paced: request 43 via Vercel, after 23s
+[2026-10-15T08:37:12.236Z] [met]     page 40 of 108
+[2026-10-15T08:37:14.882Z] [artic]   paced: request 42 via Cloudflare, after 26s
+[2026-10-15T08:37:41.344Z] [artic]   paced: request 43 via Cloudflare, after 24s
+[2026-10-15T08:37:45.350Z] [met]   paced: request 44 via Vercel, after 33s
+[2026-10-15T08:38:03.958Z] [artic]   paced: request 44 via Cloudflare, after 21s
+[2026-10-15T08:38:19.452Z] [met]   paced: request 45 via Vercel, after 33s
+[2026-10-15T08:38:34.872Z] [artic]   paced: request 45 via Cloudflare, after 29s
+[2026-10-15T08:38:55.932Z] [met]   paced: request 46 via Vercel, after 36s
+[2026-10-15T08:39:03.876Z] [artic]   paced: request 46 via Cloudflare, after 27s
+[2026-10-15T08:39:32.231Z] [met]   paced: request 47 via Vercel, after 35s
+[2026-10-15T08:39:36.519Z] [artic]   paced: request 47 via Cloudflare, after 30s
+[2026-10-15T08:40:00.028Z] [met]   paced: request 48 via Vercel, after 27s
+[2026-10-15T08:40:06.994Z] [artic]   paced: request 48 via Cloudflare, after 29s
+[2026-10-15T08:40:24.421Z] [met]   paced: request 49 via Vercel, after 24s
+[2026-10-15T08:40:40.260Z] [artic]   paced: request 49 via Cloudflare, after 31s
+[2026-10-15T08:40:42.290Z] [artic]     page 40 of 78
+[2026-10-15T08:40:53.941Z] [met]   paced: request 50 via Vercel, after 29s
+[2026-10-15T08:41:14.055Z] [artic]   paced: request 50 via Cloudflare, after 32s
+[2026-10-15T08:41:29.846Z] [met]   paced: request 51 via Vercel, after 35s
+[2026-10-15T08:41:48.093Z] [artic]   paced: request 51 via Cloudflare, after 32s
+[2026-10-15T08:41:53.959Z] [met]   paced: request 52 via Vercel, after 23s
+[2026-10-15T08:42:21.516Z] [artic]   paced: request 52 via Cloudflare, after 31s
+[2026-10-15T08:42:24.118Z] [met]   paced: request 53 via Vercel, after 29s
+[2026-10-15T08:42:25.174Z] [met]     page 50 of 108
+[2026-10-15T08:42:47.661Z] [artic]   paced: request 53 via Cloudflare, after 24s
+[2026-10-15T08:42:50.328Z] [met]   paced: request 54 via Vercel, after 25s
+[2026-10-15T08:43:12.836Z] [artic]   paced: request 54 via Cloudflare, after 23s
+[2026-10-15T08:43:18.691Z] [met]   paced: request 55 via Vercel, after 27s
+[2026-10-15T08:43:45.565Z] [met]   paced: request 56 via Vercel, after 26s
+[2026-10-15T08:43:48.437Z] [artic]   paced: request 55 via Cloudflare, after 34s
+[2026-10-15T08:44:12.666Z] [met]   paced: request 57 via Vercel, after 26s
+[2026-10-15T08:44:14.786Z] [artic]   paced: request 56 via Cloudflare, after 24s
+[2026-10-15T08:44:48.784Z] [met]   paced: request 58 via Vercel, after 36s
+[2026-10-15T08:44:49.320Z] [artic]   paced: request 57 via Cloudflare, after 33s
+[2026-10-15T08:45:14.449Z] [met]   paced: request 59 via Vercel, after 25s
+[2026-10-15T08:45:21.148Z] [artic]   paced: request 58 via Cloudflare, after 30s
+[2026-10-15T08:45:48.745Z] [met]   paced: request 60 via Vercel, after 34s
+[2026-10-15T08:45:54.667Z] [artic]   paced: request 59 via Cloudflare, after 31s
+[2026-10-15T08:45:57.477Z] [artic]     page 50 of 78
+[2026-10-15T08:46:15.538Z] [met]   paced: request 61 via Vercel, after 26s
+[2026-10-15T08:46:22.675Z] [artic]   paced: request 60 via Cloudflare, after 25s
+[2026-10-15T08:46:47.724Z] [artic]   paced: request 61 via Cloudflare, after 24s
+[2026-10-15T08:46:48.190Z] [met]   paced: request 62 via Vercel, after 32s
+[2026-10-15T08:47:18.391Z] [artic]   paced: request 62 via Cloudflare, after 28s
+[2026-10-15T08:47:21.440Z] [met]   paced: request 63 via Vercel, after 33s
+[2026-10-15T08:47:22.358Z] [met]     page 60 of 108
+[2026-10-15T08:47:48.350Z] [met]   paced: request 64 via Vercel, after 26s
+[2026-10-15T08:47:50.218Z] [artic]   paced: request 63 via Cloudflare, after 29s
+[2026-10-15T08:48:14.074Z] [artic]   paced: request 64 via Cloudflare, after 22s
+[2026-10-15T08:48:14.277Z] [met]   paced: request 65 via Vercel, after 25s
+[2026-10-15T08:48:44.437Z] [artic]   paced: request 65 via Cloudflare, after 28s
+[2026-10-15T08:48:50.797Z] [met]   paced: request 66 via Vercel, after 36s
+[2026-10-15T08:49:15.537Z] [artic]   paced: request 66 via Cloudflare, after 28s
+[2026-10-15T08:49:28.099Z] [met]   paced: request 67 via Vercel, after 36s
+[2026-10-15T08:49:39.246Z] [artic]   paced: request 67 via Cloudflare, after 21s
+[2026-10-15T08:49:58.793Z] [met]   paced: request 68 via Vercel, after 30s
+[2026-10-15T08:50:10.416Z] [artic]   paced: request 68 via Cloudflare, after 29s
+[2026-10-15T08:50:33.465Z] [artic]   paced: request 69 via Cloudflare, after 21s
+[2026-10-15T08:50:35.144Z] [met]   paced: request 69 via Vercel, after 35s
+[2026-10-15T08:50:36.192Z] [artic]     page 60 of 78
+[2026-10-15T08:50:58.741Z] [met]   paced: request 70 via Vercel, after 23s
+[2026-10-15T08:51:08.064Z] [artic]   paced: request 70 via Cloudflare, after 32s
+[2026-10-15T08:51:21.815Z] [met]   paced: request 71 via Vercel, after 22s
+[2026-10-15T08:51:40.023Z] [artic]   paced: request 71 via Cloudflare, after 29s
+[2026-10-15T08:51:52.148Z] [met]   paced: request 72 via Vercel, after 29s
+[2026-10-15T08:52:04.521Z] [artic]   paced: request 72 via Cloudflare, after 23s
+[2026-10-15T08:52:27.276Z] [met]   paced: request 73 via Vercel, after 34s
+[2026-10-15T08:52:28.158Z] [met]     page 70 of 108
+[2026-10-15T08:52:35.918Z] [artic]   paced: request 73 via Cloudflare, after 29s
+[2026-10-15T08:53:03.982Z] [met]   paced: request 74 via Vercel, after 36s
+[2026-10-15T08:53:05.685Z] [artic]   paced: request 74 via Cloudflare, after 28s
+[2026-10-15T08:53:30.242Z] [met]   paced: request 75 via Vercel, after 25s
+[2026-10-15T08:53:36.935Z] [artic]   paced: request 75 via Cloudflare, after 28s
+[2026-10-15T08:53:55.599Z] [met]   paced: request 76 via Vercel, after 24s
+[2026-10-15T08:54:02.178Z] [artic]   paced: request 76 via Cloudflare, after 23s
+[2026-10-15T08:54:23.309Z] [met]   paced: request 77 via Vercel, after 27s
+[2026-10-15T08:54:27.836Z] [artic]   paced: request 77 via Cloudflare, after 24s
+[2026-10-15T08:54:54.052Z] [met]   paced: request 78 via Vercel, after 30s
+[2026-10-15T08:55:05.156Z] [artic]   paced: request 78 via Cloudflare, after 35s
+[2026-10-15T08:55:28.926Z] [met]   paced: request 79 via Vercel, after 34s
+[2026-10-15T08:55:38.851Z] [artic]   paced: request 79 via Cloudflare, after 31s
+[2026-10-15T08:55:40.891Z] [artic]     page 70 of 78
+[2026-10-15T08:56:01.384Z] [met]   paced: request 80 via Vercel, after 32s
+[2026-10-15T08:56:06.263Z] [artic]   paced: request 80 via Cloudflare, after 25s
+[2026-10-15T08:56:31.764Z] [met]   paced: request 81 via Vercel, after 30s
+[2026-10-15T08:56:38.111Z] [artic]   paced: request 81 via Cloudflare, after 30s
+[2026-10-15T08:57:04.467Z] [met]   paced: request 82 via Vercel, after 32s
+[2026-10-15T08:57:04.549Z] [artic]   paced: request 82 via Cloudflare, after 24s
+[2026-10-15T08:57:27.641Z] [artic]   paced: request 83 via Cloudflare, after 21s
+[2026-10-15T08:57:36.077Z] [met]   paced: request 83 via Vercel, after 31s
+[2026-10-15T08:57:36.857Z] [met]     page 80 of 108
+[2026-10-15T08:58:03.586Z] [artic]   paced: request 84 via Cloudflare, after 34s
+[2026-10-15T08:58:05.297Z] [met]   paced: request 84 via Vercel, after 28s
+[2026-10-15T08:58:31.085Z] [artic]   paced: request 85 via Cloudflare, after 26s
+[2026-10-15T08:58:32.380Z] [met]   paced: request 85 via Vercel, after 26s
+[2026-10-15T08:59:05.981Z] [met]   paced: request 86 via Vercel, after 32s
+[2026-10-15T08:59:07.964Z] [artic]   paced: request 86 via Cloudflare, after 35s
+[2026-10-15T08:59:33.279Z] [artic]   paced: request 87 via Cloudflare, after 22s
+[2026-10-15T08:59:42.207Z] [met]   paced: request 87 via Vercel, after 35s
+[2026-10-15T08:59:58.351Z] [artic]   paced: request 88 via Cloudflare, after 23s
+[2026-10-15T09:00:00.153Z] [artic]   Individual pages: 63 got text, 0 no curatorial text, 0 failed
+[2026-10-15T09:00:00.154Z] [artic]   78 page(s) kept on disk as read (pages_kept/artic)
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a HOLIDAY INSTALLATION, excluded: Neapolitan Crèche
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a COLLECTION INSTALLATION, excluded: Critical Fabulation
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a G239 Rotation, excluded: G239 Rotation -
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a COLLECTION INSTALLATION, excluded: Coco Fusco: Your Eyes Will Be an Empty Word
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a COLLECTION ROTATION, excluded: The Floating World Emerges: Japanese Prints from the Clarence Buckingham Collection
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a VIDEO INSTALLATION, excluded: Nora Turato: I hear you, I hear you.
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a COLLECTION ROTATION, excluded: Emerging from Darkness: Prints by Hamanishi Katsunori
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a COLLECTION INSTALLATION, excluded: Barbara Hammer: Sanctus
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a COLLECTION ROTATION, excluded: Japanese Prints from the Collection of Bruce Goff
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a COLLECTION INSTALLATION, excluded: Janna Ireland: A Goff House in Los Angeles
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a COLLECTION INSTALLATION, excluded: New Affiliates on Goff’s Domestic Matter
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a COLLECTION ROTATION, excluded: Body and Being in African Art
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a SPECIAL LOAN INSTALLATION, excluded: Saint-Porchaire Ceramics: Rediscovered Treasures of the French Renaissance
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a VIDEO INSTALLATION, excluded: Karimah Ashadu: Machine Boys
+[2026-10-15T09:00:00.154Z] [artic]     the venue's own page labels this a COLLECTION ROTATION, excluded: Utamaro: Elements of Beauty
+[2026-10-15T09:00:00.154Z] [artic]   15 row(s) excluded on the type printed on their own page
+[2026-10-15T09:00:00.170Z] [artic]   → 63 exhibitions, 63 with curatorial text → artic.csv
+[2026-10-15T09:00:13.321Z] [met]   paced: request 88 via Vercel, after 30s
+[2026-10-15T09:00:50.115Z] [met]   paced: request 89 via Vercel, after 36s
+[2026-10-15T09:01:24.601Z] [met]   paced: request 90 via Vercel, after 33s
+[2026-10-15T09:01:50.015Z] [met]   paced: request 91 via Vercel, after 24s
+[2026-10-15T09:02:26.991Z] [met]   paced: request 92 via Vercel, after 37s
+[2026-10-15T09:02:58.240Z] [met]   paced: request 93 via Vercel, after 30s
+[2026-10-15T09:02:59.300Z] [met]     page 90 of 108
+[2026-10-15T09:03:32.516Z] [met]   paced: request 94 via Vercel, after 33s
+[2026-10-15T09:04:08.213Z] [met]   paced: request 95 via Vercel, after 35s
+[2026-10-15T09:04:45.007Z] [met]   paced: request 96 via Vercel, after 36s
+[2026-10-15T09:05:12.227Z] [met]   paced: request 97 via Vercel, after 26s
+[2026-10-15T09:05:44.656Z] [met]   paced: request 98 via Vercel, after 32s
+[2026-10-15T09:06:21.987Z] [met]   paced: request 99 via Vercel, after 37s
+[2026-10-15T09:06:51.090Z] [met]   paced: request 100 via Vercel, after 28s
+[2026-10-15T09:07:27.110Z] [met]   paced: request 101 via Vercel, after 35s
+[2026-10-15T09:08:02.156Z] [met]   paced: request 102 via Vercel, after 34s
+[2026-10-15T09:08:38.056Z] [met]   paced: request 103 via Vercel, after 34s
+[2026-10-15T09:08:39.120Z] [met]     page 100 of 108
+[2026-10-15T09:09:15.304Z] [met]   paced: request 104 via Vercel, after 36s
+[2026-10-15T09:09:50.402Z] [met]   paced: request 105 via Vercel, after 34s
+[2026-10-15T09:10:13.727Z] [met]   paced: request 106 via Vercel, after 22s
+[2026-10-15T09:10:46.400Z] [met]   paced: request 107 via Vercel, after 32s
+[2026-10-15T09:11:14.636Z] [met]   paced: request 108 via Vercel, after 27s
+[2026-10-15T09:11:38.758Z] [met]   paced: request 109 via Vercel, after 23s
+[2026-10-15T09:12:07.583Z] [met]   paced: request 110 via Vercel, after 28s
+[2026-10-15T09:12:30.959Z] [met]   paced: request 111 via Vercel, after 23s
+[2026-10-15T09:13:00.339Z] [met]   paced: request 112 via Vercel, after 28s
+[2026-10-15T09:13:01.250Z] [met]   Individual pages: 108 got text, 0 no curatorial text, 0 failed
+[2026-10-15T09:13:01.251Z] [met]   108 page(s) kept on disk as read (pages_kept/met)
+[2026-10-15T09:13:01.254Z] [met]   lookback (final): kept 108, dropped 0 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-10-15T09:13:01.278Z] [met]   → 108 exhibitions, 108 with curatorial text → met.csv
+[2026-10-15T09:13:02.648Z] 
+[2026-10-15T09:13:02.649Z] ────────────────────────────────────────────────────────────
+[2026-10-15T09:13:02.649Z]   QC — faulty rows and exceptions
+[2026-10-15T09:13:02.649Z] ────────────────────────────────────────────────────────────
+[2026-10-15T09:13:02.649Z]   No faulty rows: every row has a title and a known venue code.
+[2026-10-15T09:13:02.649Z]   No exceptions: every venue looks like the last run that had it.
+[2026-10-15T09:13:02.649Z] 
+[2026-10-15T09:13:02.649Z] ────────────────────────────────────────────────────────────
+[2026-10-15T09:13:02.649Z]   SWEEP COMPLETE — SUMMARY
+[2026-10-15T09:13:02.649Z] ────────────────────────────────────────────────────────────
+[2026-10-15T09:13:02.649Z]   MAD: 22 exhibitions | 22 with text
+[2026-10-15T09:13:02.649Z]   ARTIC: 63 exhibitions | 63 with text | 1 page(s) blocked/empty
+[2026-10-15T09:13:02.649Z]   MET: 108 exhibitions | 108 with text
+[2026-10-15T09:13:02.649Z] 
+[2026-10-15T09:13:02.649Z] ────────────────────────────────────────────────────────────
+[2026-10-15T09:13:02.649Z]   PACING — where each gatekeeper got to
+[2026-10-15T09:13:02.649Z] ────────────────────────────────────────────────────────────
+[2026-10-15T09:13:02.650Z]   Vercel: met — 112 clean page(s)
+[2026-10-15T09:13:02.650Z]   site:madparis.fr: mad — 25 clean page(s)
+[2026-10-15T09:13:02.650Z]   Cloudflare: artic — 88 clean page(s)
+[2026-10-15T09:13:02.650Z] 
+[2026-10-15T09:13:02.650Z] ────────────────────────────────────────────────────────────
+[2026-10-15T09:13:02.650Z]   COVERAGE — every link accounted for
+[2026-10-15T09:13:02.650Z] ────────────────────────────────────────────────────────────
+[2026-10-15T09:13:02.650Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-10-15T09:13:02.650Z]   -----------------------------------------------------------------------------------------------
+[2026-10-15T09:13:02.651Z]   met        current/upcoming                96     2       0    50       20        0         24
+[2026-10-15T09:13:02.651Z]   artic      current                         23     3       0     0        0        0         12
+[2026-10-15T09:13:02.652Z]   mad        current                          4     0       0     0        0        0          4
+[2026-10-15T09:13:02.652Z]   met        past                            72    10       0    31        0        0         31
+[2026-10-15T09:13:02.652Z]   mad        upcoming                         1     0       0     0        0        0          1
+[2026-10-15T09:13:02.652Z]   artic      upcoming                         6     2       0     0        0        0          4
+[2026-10-15T09:13:02.653Z]   met        past 2025                      128    10       0    81        0        0         37
+[2026-10-15T09:13:02.654Z]   met        past 2024                      144    10       0    93        0        0         41
+[2026-10-15T09:13:02.654Z]   artic      past 2026                       36    23       0     0        0        0         13
+[2026-10-15T09:13:02.654Z]   mad        past                            77     0       0     0        0        0         77
+[2026-10-15T09:13:02.654Z]   artic      past 2025                       46    26       0     0        0        0         20
+[2026-10-15T09:13:02.655Z]   artic      past 2024                       46    26       0     0        0        0         18
+[2026-10-15T09:13:02.655Z]   artic      past 2023                       46    26       0     0        0        0         20
+[2026-10-15T09:13:02.655Z]   artic      past p2 2026                    25    25       0     0        0        0          0
+[2026-10-15T09:13:02.655Z]   artic      past p2 2025                    31    26       0     0        0        0          5
+[2026-10-15T09:13:02.655Z]   artic      past p2 2024                    33    26       0     0        0        0          7
+[2026-10-15T09:13:02.656Z]   artic      past p2 2023                    39    26       0     0        0        0         13
+[2026-10-15T09:13:02.656Z] 
+[2026-10-15T09:13:02.656Z] 
+[2026-10-15T09:13:02.656Z] ────────────────────────────────────────────────────────────
+[2026-10-15T09:13:02.656Z]   MORE PAGES OFFERED THAN TAKEN — CHECK THESE
+[2026-10-15T09:13:02.656Z] ────────────────────────────────────────────────────────────
+[2026-10-15T09:13:02.656Z]   Each page below links to another page of itself, and no recipe follows it.
+[2026-10-15T09:13:02.657Z]   Exhibitions may be missing from the CSV with nothing else to show it.
+[2026-10-15T09:13:02.657Z] 
+[2026-10-15T09:13:02.657Z]   artic / past 2025
+[2026-10-15T09:13:02.657Z]     https://www.artic.edu/exhibitions/history?year=2025
+[2026-10-15T09:13:02.658Z]     offers: page=2 -> https://www.artic.edu/exhibitions/history?year=2025&page=2
+[2026-10-15T09:13:02.659Z]     offers: page=1 -> https://www.artic.edu/exhibitions/history?year=2025&page=1
+[2026-10-15T09:13:02.659Z]   artic / past 2024
+[2026-10-15T09:13:02.660Z]     https://www.artic.edu/exhibitions/history?year=2024
+[2026-10-15T09:13:02.660Z]     offers: page=2 -> https://www.artic.edu/exhibitions/history?year=2024&page=2
+[2026-10-15T09:13:02.660Z]     offers: page=1 -> https://www.artic.edu/exhibitions/history?year=2024&page=1
+[2026-10-15T09:13:02.660Z]   artic / past 2023
+[2026-10-15T09:13:02.660Z]     https://www.artic.edu/exhibitions/history?year=2023
+[2026-10-15T09:13:02.660Z]     offers: page=2 -> https://www.artic.edu/exhibitions/history?year=2023&page=2
+[2026-10-15T09:13:02.660Z]     offers: page=1 -> https://www.artic.edu/exhibitions/history?year=2023&page=1
+[2026-10-15T09:13:02.660Z]   artic / past p2 2026
+[2026-10-15T09:13:02.660Z]     https://www.artic.edu/exhibitions/history?year=2026&page=2
+[2026-10-15T09:13:02.660Z]     offers: page=1 -> https://www.artic.edu/exhibitions/history?year=2026&page=1
+[2026-10-15T09:13:02.660Z]   artic / past p2 2025
+[2026-10-15T09:13:02.660Z]     https://www.artic.edu/exhibitions/history?year=2025&page=2
+[2026-10-15T09:13:02.660Z]     offers: page=1 -> https://www.artic.edu/exhibitions/history?year=2025&page=1
+[2026-10-15T09:13:02.660Z]   artic / past p2 2024
+[2026-10-15T09:13:02.660Z]     https://www.artic.edu/exhibitions/history?year=2024&page=2
+[2026-10-15T09:13:02.661Z]     offers: page=1 -> https://www.artic.edu/exhibitions/history?year=2024&page=1
+[2026-10-15T09:13:02.661Z]   artic / past p2 2023
+[2026-10-15T09:13:02.661Z]     https://www.artic.edu/exhibitions/history?year=2023&page=2
+[2026-10-15T09:13:02.662Z]     offers: page=1 -> https://www.artic.edu/exhibitions/history?year=2023&page=1
+[2026-10-15T09:13:02.663Z] 
+[2026-10-15T09:13:02.663Z] 
+[2026-10-15T09:13:02.663Z] ────────────────────────────────────────────────────────────
+[2026-10-15T09:13:02.663Z]   TITLES TAKEN FROM THE EXHIBITION'S OWN PAGE — READ BEFORE SENDING
+[2026-10-15T09:13:02.664Z] ────────────────────────────────────────────────────────────
+[2026-10-15T09:13:02.664Z] 
+[2026-10-15T09:13:02.665Z]   NAMES STILL MISSING WORDS — the tab title carries words the page does not hold where the check looks:
+[2026-10-15T09:13:02.665Z]   met: recorded "Flip Sides: Seeing Korean Art Anew", tab says "Flip Sides: See Korean Art Anew"
+    https://www.metmuseum.org/exhibitions/flip-sides-seeing-korean-art-anew
+[2026-10-15T09:13:02.665Z]   artic: recorded "One Hundred Famous Views of Edo", tab says "Hiroshige’s One Hundred Famous Views of Edo"
+    https://www.artic.edu/exhibitions/10753/hiroshiges-one-hundred-famous-views-of-edo
+[2026-10-15T09:13:02.665Z] 
+[2026-10-15T09:13:02.666Z]   seen      = links matching the venue's selector on that page
+[2026-10-15T09:13:02.666Z]   nav       = site navigation and filter links, not exhibitions
+[2026-10-15T09:13:02.666Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-10-15T09:13:02.666Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-10-15T09:13:02.666Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-10-15T09:13:02.666Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-10-15T09:13:02.666Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-10-15T09:13:02.667Z] 
+[2026-10-15T09:13:02.667Z] Network bridge: 0 requests served, 0 handed back from files already fetched (not asked again), 0 skipped (image/media/font), 0 failed
+[2026-10-15T09:13:02.667Z] 
+[2026-10-15T09:13:02.668Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-10-15_191600
+[2026-10-15T09:13:02.668Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-10-15_191600/sweep.csv  (194 rows — met:108, mad:22, artic:64)
+[2026-10-15T09:13:02.668Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-10-15_191600/log_2026-10-15_191600.txt
+[2026-10-15T09:13:02.668Z] Not yet in this run: ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, orsay, mam, ashmolean, jacquemart, khm, moma, brit, dellav, tate-modern, tate-britain, wallace, cincinnati
+[2026-10-15T09:13:02.668Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-10-15T09:13:02.668Z] No de-duplication is applied — see passThrough.

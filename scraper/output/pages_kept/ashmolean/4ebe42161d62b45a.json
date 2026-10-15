@@ -1,15 +1,19 @@
 {
   "url": "https://www.ashmolean.org/exhibition/aphrodite-the-making-of-a-goddess",
-  "savedAt": "2026-09-27T09:29:34.910Z",
+  "savedAt": "2026-10-14T15:01:08.750Z",
   "outcome": "text",
   "changes": {
     "title": "Aphrodite: The Making of a Goddess",
-    "start_date": "2026-10-08",
-    "end_date": "2027-04-11",
-    "summary": "Step into the world of Aphrodite, the Greek goddess of love, beauty, and desire – later worshipped by the Romans as Venus. Today she is thought of as a symbol of passion and beauty, but her story is far older and more complex. This major exhibition will explore Aphrodite’s beginnings on the island of Cyprus, where she was worshipped as an all-powerful goddess over 3,000 years ago, and will trace her journey through the Greek and into the Roman world, where she became Venus. The exhibition will reveal how, over the centuries, Aphrodite evolved into an iconic figure symbolising love and beauty as her myths and images flourished – inspiring art, literature, and imagination from the Renaissance to the present day.",
-    "notes": "opening and closing date read from a sentence, not a date field: \"8 Oct 2026 - 11 Apr 2027\"."
+    "summary": "The civilisations that first created Aphrodite disappeared long ago. Her image never did. Step into the world of Aphrodite, the Greek goddess of love, beauty and desire – later worshipped by the Romans as Venus – in this major exhibition. Few figures in human history, and fewer women still, have remained so influential for more than 5,000 years. From her earliest origins on the island of Cyprus to her enduring presence in art, fashion and popular culture, Aphrodite has been continually reimagined across the centuries. Bringing together archaeology, sculpture, painting, contemporary art and fashion, the exhibition traces Aphrodite's remarkable journey through the ancient Greek and Roman worlds, Renaissance Europe, and into the present day. Discover the myths, images and ideas that transformed an ancient deity into one of the most recognisable figures in Western culture."
   },
   "titleReport": [
+    {
+      "venue": "khm",
+      "kind": "changed",
+      "from": "Crime Scene Ephesus",
+      "to": "Cleopatra and Rome. Crime Scene Ephesus",
+      "url": "https://www.khm.at/en/exhibitions/crime-scene-ephesus"
+    },
     {
       "venue": "ashmolean",
       "kind": "changed",

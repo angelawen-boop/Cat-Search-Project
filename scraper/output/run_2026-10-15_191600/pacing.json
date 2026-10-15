@@ -1,0 +1,39 @@
+{
+  "machine": "home",
+  "savedAt": "2026-10-15T09:13:01.282Z",
+  "paceSeconds": 30,
+  "gatekeepers": {
+    "met": "Vercel",
+    "artic": "Cloudflare",
+    "mad": "site:madparis.fr"
+  },
+  "lanes": {
+    "Vercel": {
+      "venues": [
+        "met"
+      ],
+      "clean": 112,
+      "firstAt": "2026-10-15T08:16:02.612Z",
+      "lastAt": "2026-10-15T09:13:00.339Z",
+      "stopped": null
+    },
+    "site:madparis.fr": {
+      "venues": [
+        "mad"
+      ],
+      "clean": 25,
+      "firstAt": "2026-10-15T08:16:33.341Z",
+      "lastAt": "2026-10-15T08:29:17.185Z",
+      "stopped": null
+    },
+    "Cloudflare": {
+      "venues": [
+        "artic"
+      ],
+      "clean": 88,
+      "firstAt": "2026-10-15T08:16:32.641Z",
+      "lastAt": "2026-10-15T08:59:58.351Z",
+      "stopped": null
+    }
+  }
+}

@@ -116,3 +116,61 @@ test('SD-012: a description that shrank to junk is WORSE TEXT, a fault (National
 test('SD-013: a restaurant line in a description is flagged (Tate Modern 5 Oct)', () => {
   assert.ok(D.junkIn('…photography as a medium. Experience the exhibition then enjoy two courses from our set menu.').includes('restaurant or visiting line'));
 });
+
+test('SD-014: changes are grouped in her order — new shows, decisions, missing, titles, links, new dates, changed dates, descriptions, others', () => {
+  const v = D.diffVenue('v',
+    [row({ title:'Kept', url:'https://t/k', start_date:'2026-01-01', end_date:'2026-12-01' }),
+     row({ title:'Head and Shoulders', url:'https://t/h', start_date:'2025-11-11' }),
+     row({ title:'Munch', url:'https://t/m', start_date:'2027-11-11', end_date:'2028-04-16' }),
+     row({ title:'Brand New', url:'https://t/n', start_date:'2026-10-01', end_date:'2027-01-01' }),
+     row({ title:'Short', url:'https://t/s', summary:'' })],
+    prev([row({ title:'Old Name', url:'https://t/k', start_date:'2026-01-01', end_date:'2026-12-01' }),
+          row({ title:'Head and Shoulders', url:'https://t/h' }),
+          row({ title:'Munch', url:'https://t/m', start_date:'2027-11-11', end_date:'2028-04-23' }),
+          row({ title:'A Display', url:'https://t/d', end_date:'2027-01-01' }),
+          row({ title:'Whistler', url:'https://t/w', end_date:'2027-01-01' }),
+          row({ title:'Short', url:'https://t/s', summary:'' })]),
+    log({ v: [{ reason:'a display (her ruling)', title:'A Display' }] }), '2026-10-15');
+  const g = D.groupChanges({ venues: [v] });
+  assert.deepStrictEqual(g.map(x => x.n), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  const where = t => g.filter(x => x.lines.some(l => l.includes(t))).map(x => x.n);
+  assert.deepStrictEqual(where('A Display'), [2]);
+  assert.deepStrictEqual(where('Whistler'), [3]);
+  assert.deepStrictEqual(where('Old Name'), [4]);
+  assert.deepStrictEqual(where('Head and Shoulders'), [6]);
+  assert.deepStrictEqual(where('Munch'), [7]);
+  assert.deepStrictEqual(where('"Short"'), [8]);
+  assert.deepStrictEqual(where('Brand New'), [1]);
+});
+
+test('SD-015: a moved show with the same name and overlapping dates expects a Change card for the link, not a New card (National Gallery 15 Oct)', () => {
+  const same = D.diffVenue('v',
+    [row({ title:'Monet and Renoir', url:'https://n/past/mr', start_date:'2026-03-01', end_date:'2026-09-01' })],
+    prev([row({ title:'Monet and Renoir', url:'https://n/mr', start_date:'2026-03-01', end_date:'2026-09-01' })]), log());
+  assert.strictEqual(same.moved[0].card, 'change');
+  const g = D.groupChanges({ venues: [same] });
+  assert.ok(g[4].lines.some(l => /Change card for the link/.test(l)));
+  const renamed = D.diffVenue('v',
+    [row({ title:'Fiep Westendorp: Illustrator', url:'https://r/past/fiep', start_date:'2026-03-01', end_date:'2026-09-01' })],
+    prev([row({ title:'Fiep Westendorp', url:'https://r/fiep', start_date:'2026-03-01', end_date:'2026-09-01' })]), log());
+  assert.strictEqual(renamed.moved[0].card, 'new');
+});
+
+test('SD-016: a show at two addresses losing one is ADDRESS LEFT under Others, never UNEXPLAINED (Brera 15 Oct)', () => {
+  const out = D.diffVenue('v',
+    [row({ title:'Giovanni Agostino da Lodi', url:'https://b/traveling' })],
+    prev([row({ title:'Giovanni Agostino da Lodi', url:'https://b/itinerant' }), row({ title:'Giovanni Agostino da Lodi', url:'https://b/traveling' })]), log());
+  assert.strictEqual(out.gone.length, 0);
+  assert.strictEqual(out.addressLeft.length, 1);
+  assert.strictEqual(out.addressLeft[0].stays, 'https://b/traveling');
+  assert.ok(D.groupChanges({ venues: [out] })[8].lines.some(l => l.includes('ADDRESS LEFT')));
+});
+
+test('SD-017: every refused or empty listing page is named under Others, even one that brought no rows last run (Frick 15 Oct)', () => {
+  const out = D.diffVenue('v',
+    [row({ title:'Kept', url:'https://f/k', start_date:'2026-01-01', end_date:'2026-12-01' }),
+     row({ title:'[past p1 page]', url:'https://f/past?page=1', notes:"The venue's \"past p1\" listing page could not be read: the venue’s site refused us (HTTP 403). " + MARK })],
+    prev([row({ title:'Kept', url:'https://f/k', start_date:'2026-01-01', end_date:'2026-12-01' })]), log());
+  const others = D.groupChanges({ venues: [out] })[8].lines.join('\n');
+  assert.match(others, /MARKER\s+\[past p1 page\].*HTTP 403/);
+});

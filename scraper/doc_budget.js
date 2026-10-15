@@ -20,17 +20,24 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const DEFAULT_BUDGET = 80;
 const BUDGETS = {
-  'CLAUDE.md': 1175,
-  'docs/app.md': 500,
+  'CLAUDE.md': 600,
+  'docs/app.md': 600,
   'docs/scraper.md': 475,
-  'docs/venues.md': 250,
+  'docs/venues.md': 300,
+  'docs/import_csv.md': 100,
+  'docs/sweep_operation.md': 200,
+  'docs/cloud_storage.md': 50,
+  'docs/doc_rules.md': 100,
+  'docs/branches.md': 50,
+  'docs/publishing.md': 50,
+  'docs/testing.md': 50,
   'docs/compression.md': 130,
   'docs/library.md': 110,
-  'docs/venue_urls.md': 90,
-  'docs/picked_shows.md': 95,
-  'docs/import-file.md': 80,
-  'docs/review-2026-09-12.md': 70,
-  'docs/review-log.md': 60,
+  'docs/add_by_link.md': 200,
+  'docs/catalogue_versions.md': 150,
+  'docs/import-repair-320.md': 80,
+  'docs/scraper-verification-2026-09-12.md': 70,
+  'docs/code-review.md': 60,
   'docs/morgan_pages/README.md': 80,
 };
 

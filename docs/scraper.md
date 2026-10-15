@@ -1,7 +1,7 @@
 # The scraper — evidence and design
 
 How `scraper/sweep_prototype.js` reads a museum site and why each rule exists.
-`CLAUDE.md` §5 carries the commands and the shape. **Read the relevant section
+`docs/sweep_operation.md` carries the commands and the shape. **Read the relevant section
 before changing that area** — almost every rule here replaced something that
 looked sensible and was silently wrong. Compressed 30 Sep; full history in git.
 Section numbers are referenced from the guide and code — keep them. The original
@@ -51,6 +51,10 @@ are never written into a recipe.**
   to the end.
 - **The index base is the site's:** Menil's bare page is page 1 (`from: 2`), the
   Frick's is page 0 (`from: 1`). P-014.
+- **Where the page after the last is dead, the site's own "more" control decides**
+  (`whileMore`): the next page is asked for only while this one shows it. Tate's
+  "Load N more" fetches `?page=2`; its `page=3` is dead, and a dead page leaves a
+  marker every sweep. `TATE_PAGES`, LP-tate-britain (`docs/tate_pages/`).
 
 ### A "load more" button is a control
 
@@ -255,7 +259,7 @@ settings don't help). **`installNetworkBridge()`**: Chromium does no network I/O
 Node answers every request through the proxy. Images, media and fonts are dropped
 on purpose. The TLS fingerprint no longer matches the user-agent. **A raw egress
 path around the proxy exists — do not use or build on it.** File reuse and reply
-labels: `CLAUDE.md` §5.
+labels: `docs/sweep_operation.md`.
 
 ---
 
@@ -329,10 +333,35 @@ to a show run in both within six months.
 
 ## 12. Her rules for wiring a venue
 
-The intake order is `CLAUDE.md` §5. Also:
+### Adding a venue — the intake, in this order (her decision)
 
-- **Her count first; the sweep must return it.** Her counts caught two errors the
-  output could not show.
+**No show page is asked for before step 6.**
+
+1. **Her count and her decisions** (`docs/venues.md`).
+2. **Pages SHE saves**: the listings, and one show page of EVERY address shape.
+   **One complete list**, addresses copied from a record, never typed from
+   memory. Any question about what a page says is answered by opening it, never
+   by asking her. **Saved pages are a recipe's guide and its offline test, never
+   the data. Page layout comes from HER, never from a probe.**
+3. **What the site asks** — `node scraper/robots.js`. Anything needed that is
+   off-limits goes to her.
+4. **The recipe, offline**, on her pages: her count, dates, titles, and the
+   descriptions READ.
+5. **The time, worked out**: pages × the wait, written down.
+6. **One sweep, when she says go**, with every question answered. It passes only
+   if every page is read and her count holds. **A failure is diagnosed offline
+   from its log** (reply labels, stall report, kept pages), never by sweeping
+   again; the next attempt is hers to call.
+
+**Reading the page alone (`pageOnly`) — Ashmolean only.** Only for a venue
+whose PAGES HANG (the stall report: the page answered, its files did not): she
+saves view-source of its show pages and `pageOnly` is tested on those. **Never
+on a headed venue** — it strips the page's programs, bot check included, which
+is what headed exists to run.
+
+Also:
+
+- **Why her count comes first (steps 1 and 6):** it caught two errors the output could not show.
 - **Two rounds of fix-and-sweep per venue, then stop and ask** — after checking
   the limit is real (KHM "published two links" because it lazy-loads).
 - Diagnose one VENUE at a time: getting data → the right data → recorded right.
@@ -350,7 +379,7 @@ The intake order is `CLAUDE.md` §5. Also:
 
 **Her ruling, 12 Sep:** only `EXHIBITION` and `TICKETED EXHIBITION`; every
 `… INSTALLATION` and `COLLECTION ROTATION` is out — filtered, not just stripped
-from the title. Further exclusions: `CLAUDE.md` §2.
+from the title. Further exclusions: `docs/venues.md`.
 
 - **The tag is on the show's own page**, not on archive cards.
 - **Year pages group by OPENING date**, so the year before the floor is read too.
@@ -396,7 +425,7 @@ visibly mangled and uses the app's URL button with Chrome's translation.
   carries the show's own address; five have no closing date, accepted.
 - **The summary must arrive in English** — the prompt now requires it
   (`compress_prompt.md`); the English translation of Italian titles opens the
-  description (`CLAUDE.md` §4).
+  description (`CLAUDE.md` §5.1).
 
 ---
 
@@ -406,7 +435,6 @@ Her instruction: no probes for hypothetical problems.
 
 | Open | Why |
 |---|---|
-| `artic` — a year needing page three? | Recipe reads pages 1–2; the standing check reports it |
 | The load-more fix beyond the Louvre | No other venue has such a control |
 
 ---

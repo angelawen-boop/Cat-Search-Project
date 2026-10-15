@@ -1,6 +1,6 @@
 # Store snapshot, 21 Sep 2026 — taken for the wipe-and-restore drill
 
-The app keeps two documents in the published page's own store (§4):
+The app keeps two documents in the published page's own store (CLAUDE.md §5.1):
 `quarantine/rows` and `sweeps/venues`. This folder holds both exactly as
 they stood immediately before the drill emptied them.
 

@@ -34,7 +34,7 @@ know. Keep your context light: read what the problem needs, never page all of
     "Parallel Search" first; her "Parallel Search Key" as CLAUDE.md §1 says.
 - Name the cause in one sentence, with the function. Say what is proven, what
   is a guess, and what one request would settle it.
-- Check CLAUDE.md §8 and her decisions. Never re-propose a rejected idea, and
+- Check CLAUDE.md §4.2 and her decisions. Never re-propose a rejected idea, and
   never propose dropping a feature as a fix.
 
 ### The third-patch check
@@ -119,9 +119,9 @@ Never take the builder's report on trust.
   `claude/ledger-cloud`, merge `main`, run `npm run test:app` there (it adds the
   cloud suites), push. Proof: `git diff --stat main claude/ledger-cloud` reads
   the same after the merge as before it — the fix is on both, nothing else
-  moved. A conflict where both sides changed the same logic → ask her. Cloud-only code never goes to `main`; that merge is her call (§7.1).
+  moved. A conflict where both sides changed the same logic → ask her. Cloud-only code never goes to `main`; that merge is her call (CLAUDE.md §2.2.1).
 - She has said this session waits for another → commit, push nothing, and
-  follow CLAUDE.md §1 "Holding a push for another session".
+  follow `docs/branches.md` "Holding a push for another session".
 
 ## 7. Report to her
 House rules: plain English, short, spoken to her.
@@ -134,11 +134,11 @@ Then, after the report and never before, update `docs/` and CLAUDE.md as
 conclusions.
 
 Publishing is a separate step: only when she says, only after she has closed
-the page, following `node build/build_app.js` (CLAUDE.md §1, §4). `APP_VERSION`
+the page, following `node build/build_app.js` (CLAUDE.md §1; `docs/publishing.md`). `APP_VERSION`
 moves then.
 
 One job per session where possible. A job that ends with something still open
-goes into CLAUDE.md §7, so a fresh session can pick it up.
+goes into CLAUDE.md §2.2, so a fresh session can pick it up.
 
 ## The two rules that stop the spaghetti
 1. **Third patch → review the feature.** Code already fixed twice for the same

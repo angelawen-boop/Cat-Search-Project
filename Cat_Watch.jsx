@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "44.4";
-const APP_VERSION_DATE = "14 Oct 2026";
+const APP_VERSION = "45";
+const APP_VERSION_DATE = "15 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
 // Sort by Venue and refresh headings all follow it.
@@ -23,7 +23,7 @@ const MUSEUMS = [
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopCatalogues:"https://www.rijksmuseumshop.nl/en/books/exhibition-books", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
   { id:"ng", short:"NG UK", lookupName:"National Gallery", name:"The National Gallery", city:"London",
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
-  // linkRead: Add by link options for met, acq, frick, menil, louvre, artic, brit (docs/picked_shows.md, "Venue link rules").
+  // linkRead: Add by link options for met, acq, frick, menil, louvre, artic, brit (docs/add_by_link.md, "Venue link rules").
   // No apostrophe or double quote inside a linkRead pattern (write \x27): compress.js seedMemory scans this list as text.
   { id:"acq", linkRead:{ title:"subtitle", places:["New York","Palm Beach"], credit:/^In collaboration with\b/i, dashAfterColon:true, from:/^Press Release$/, minLine:60, skip:/^Gallery Hours:|\bImage Courtesy\b/, skipEntities:true, cleanLink:true }, short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
@@ -647,7 +647,7 @@ const VENUE_SITES=[{"id":"met","host":"metmuseum.org"},{"id":"ng","host":"nation
 const SUMMARY_EXAMPLES=[{"title":"German Expressionism","raw":"Across Germany’s major cities, a new generation of artists emerged between 1900 and 1918 to change the rules of painting. They were the German Expressionists. Made up of two pioneering groups – Die Brücke (The Bridge) and Der Blaue Reiter (The Blue Rider) – these young artists painted raw emotions on canvas with a new intensity. Die Brücke was formed by a group of self-taught artists. Rebelling against conservative society, they lived and worked together in the bohemian corners of Dresden and other cities, before moving to Berlin, Germany’s rapidly modernising capital. For them, colour became…","summary":"Fifty German Expressionist works."},{"title":"Asian Bronze","raw":"From Shiva and the Buddha to wine casks and weapons. Everything about bronze triggers your senses. For centuries, this material has played a central role in the traditions of Asia. Now you too can experience the beauty of bronze art at last.","summary":"Four thousand years of Asian bronze."},{"title":"Hockney and Piero: A Longer Look","raw":"David Hockney, in his own words, has always been a looker. Throughout his career, Hockney has found inspiration in the work of other artists. He never tires of looking at paintings. For him, there’s magic in it every time, whether that’s enjoying a picture in a gallery or a much-loved poster at home. This very personal show brings together two Hockney paintings, one showing his mother and father and the other depicting his friend, curator Henry Geldzahler. They are displayed with the thread that ties them together, Piero della Francesca’s ‘The Baptism of Christ’. ‘My Parents’ and ‘Looking at…","summary":"Hockney against Piero della Francesca."},{"title":"At Home in the 17th Century","raw":"What was life really like in the 17th century? That’s the museum’s most-asked question. Now, the time has come to find out. At Home in the 17th Century offers an up-close experience of daily life 400 years ago. Immerse yourself in a full day of the 17th century as you walk among the nine diorama-style displays that make up this exhibition — packed with personal stories and unique objects.","summary":"Domestic life with Rembrandt, Hals, Vermeer."},{"title":"José María Velasco","raw":"See the first UK exhibition of Mexico’s much-loved artist, José María Velasco. Velasco, working in Mexico in the 19th century, was a man of many interests. He was fascinated by advances in geology, the archaeology of his home country, the study of local flora, and the increasing presence of industrialisation. He painted the sweeping landscapes of the Valley of Mexico, the home of modern-day Mexico City, with exquisite detail. His impressive panoramic views of the valley reveal allusions to Mexico's historic past and its rapidly modernising present. Velasco was keenly aware of his country’s…","summary":"Mexico's landscape painter."},{"title":"Carel Visser in the Rijksmuseum Gardens","raw":"This summer, the Rijksmuseum Gardens are home to the work of Carel Visser, the most influential Dutch sculptor of the twentieth century. Visser's sculptures, some as tall as eight metres or as long as five metres, come from museums, private collections and public spaces. Now they are brought together for the very first time. Carel Visser (1928–2015) had little affinity with traditional sculptors' materials such as marble, stone or wood. Iron was his great love. With a cutting torch and welding equipment, he shaped his sculptures from steel plates and beams. Stacking, repetition and symmetry…","summary":"Most influential Dutch sculptor of the twentieth century."},{"title":"Millet: Life on the Land","raw":"The sower, the woodcutter, a shepherd girl. These are the subjects that made French artist Jean-Francois Millet famous. Marking the 150th anniversary of his death, this is an opportunity to see some of Millet’s best-loved paintings and drawings. Born into a farming family in Normandy, Millet moved to the village of Barbizon in 1849 where he put the people who spent their life working on the land, often the poorest of the poor in 19th-century France, at the heart of his work. He knew these people and his realistic, unsentimental approach to painting them was completely new. See his iconic…","summary":"The subjects that made Millet famous."},{"title":"Crossings","raw":"Discover how colonial and contemporary perspectives converge in photographs from the Indian subcontinent. Past meets present in the Crossings exhibition.","summary":"Photography from the Indian subcontinent."}];
 // ===== END SHARED =====
 
-// ── ADD BY LINK (docs/picked_shows.md) ──────────────────────────────────────
+// ── ADD BY LINK (docs/add_by_link.md) ──────────────────────────────────────
 // Each pasted show link is read once and becomes an ordinary pro forma row for the
 // SAME intake as a sweep file; nothing here writes the ledger. Code reads the title
 // and dates (the FIRST date line under the show's heading — show pages carry other
@@ -788,7 +788,7 @@ function decodeEntities(t){
   });
 }
 
-// A venue's own link options (its MUSEUMS entry's `linkRead`). Cases: docs/picked_shows.md,
+// A venue's own link options (its MUSEUMS entry's `linkRead`). Cases: docs/add_by_link.md,
 // "Venue link rules".
 function linkOptions(vc){ return (vc&&MU[vc]&&MU[vc].linkRead)||(vc&&OWN_CHIP[vc]&&OWN_CHIP[vc].linkRead)||(vc&&OCC_LINK_READ[vc])||null; }
 function joinTitle(name,sub,dashAfterColon){
@@ -797,7 +797,7 @@ function joinTitle(name,sub,dashAfterColon){
 }
 
 // One page → {ok, base, between, start, end, raw, site, link} or {ok:false, why}.
-// Rules and the cases they came from: docs/picked_shows.md, "The general reader".
+// Rules and the cases they came from: docs/add_by_link.md, "The general reader".
 function readShowPage(res,url,vc){
   const lr=linkOptions(vc);
   const text=String(oneText(res)||"");
@@ -1037,7 +1037,7 @@ async function writePendingLinks(text){
 
 // ── FINDING A NEW VENUE'S SHOP SECTION — once per venue, then kept ─────────
 // Wanted: the shop's exhibition-catalogues section, else books / publications; never
-// the front page, one book or a post (her decision; docs/picked_shows.md). Each step
+// the front page, one book or a post (her decision; docs/add_by_link.md). Each step
 // runs only if the one before found nothing: 1. one search call, two queries, every
 // result ranked in code; 2. a Shopify shop's collections.json; 3. the shop's menu.
 // The pick is opened and must read as books with prices. "Look again" skips only the
@@ -1346,6 +1346,24 @@ function isUndecidedCard(p,dec){
   return !Object.values(dec.fields||{}).some(v=>v);
 }
 
+// ===== "PROBABLY NOT FOR YOU" — her design (CLAUDE.md §2.2.7) =====
+// Compression labels a NEW show in a topic she always quarantines, writing one
+// sentence into the row's notes ("Topic: Asian art."; TOPICS in scraper/compress.js).
+// Such a new show, with nothing odd about it, goes in its own section, pre-set to
+// Never add; she clicks Add to keep one. Odd cases stay odd: they need her eye.
+function topicOf(note){
+  const m=/(?:^|\s)Topic: ([^.]+)\./.exec(String(note||""));
+  return m?m[1]:null;
+}
+function isTopicCard(p){
+  return !!(p&&p.type==="add"&&p.topic&&!p.merged&&!p.choices&&p.cand&&p.cand.exUrl);
+}
+function topicPresets(props){
+  const d={};
+  (props||[]).forEach((p,i)=>{ if(isTopicCard(p))d[i]={mode:"never"}; });
+  return d;
+}
+
 // Every decided card lands in one count — to apply, quarantined or rejected — so the
 // footer adds up (her ask). The counts and the link box both use cardOutcome.
 function cardOutcome(p,dec){
@@ -1367,7 +1385,7 @@ function countDecisions(proposals,decisions){
   return {acceptedCount,undecidedCount,quarantinedCount,rejectedCount};
 }
 
-// ===== PARTIAL APPLY — stays until she says (CLAUDE.md §4) =====
+// ===== PARTIAL APPLY — stays until she says (CLAUDE.md §5.1) =====
 // Offered only in the middle state: something decided AND something undecided. Out of
 // the component so fixture 18h tests this copy.
 function offerPartialApply(counts){
@@ -1682,12 +1700,12 @@ function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)
 // or its title search with no ISBN.
 function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+encodeURIComponent(r.title)});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q},{name:"Booko AU",href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
 
-// ── FINDING A CATALOGUE (docs/app.md §1; CLAUDE.md §4 "Catalogue lookup") ────
+// ── FINDING A CATALOGUE (docs/app.md §1; CLAUDE.md §5.1 "Catalogue lookup") ────
 // The page cannot reach the internet, so searching and reading go through her keyed
 // connector, and `sample` asks Claude to read only the text handed to it — it can
 // never report a page that was not found.
 // SEARCH_SERVER must match the connector name in the page's published `mcp`
-// capability (CLAUDE.md §4).
+// capability (docs/app.md §1).
 const SEARCH_SERVER = "Parallel Search Key";
 const SEARCH_TOOL   = "web_search";
 // Reads a whole page, not a snippet.
@@ -2219,7 +2237,7 @@ function publisherDomainFrom(results,name){
   return null;
 }
 
-// ── A MUSEUM'S OWN IMPRINT HAS NO PUBLISHER PAGE TO FIND (CLAUDE.md §4) ──────
+// ── A MUSEUM'S OWN IMPRINT HAS NO PUBLISHER PAGE TO FIND (docs/app.md §1) ──────
 // Its "publisher page" is the museum shop, so looking costs searches for nothing.
 // SELF_PUBLISHERS is her list, grown only when she adds one. A blockbuster printed by
 // an art-book house, or a joint show printed by the other museum, is still looked for.
@@ -2485,7 +2503,7 @@ function shopHeadline(shopState,shopChange){
   return null;
 }
 
-// A blocked shop says so, in her wording (CLAUDE.md §4): the headline in the red and
+// A blocked shop says so, in her wording (docs/app.md §1): the headline in the red and
 // weight of "No longer in the museum shop.", the rest grey.
 const SHOP_BLOCKED_HEAD="The museum shop is blocked";
 const SHOP_BLOCKED_FOUND_REST=" - search it manually. The catalogue is stocked elsewhere.";
@@ -2583,7 +2601,7 @@ function catalogueLinkOn(results,dom){
 }
 
 // Is this English book an edition of the same catalogue? (her decision, Botticelli;
-// CLAUDE.md §4) Its publisher shares the original's distinctive words (Fonds Mercator ~
+// docs/app.md §1) Its publisher shares the original's distinctive words (Fonds Mercator ~
 // Mercatorfonds), or a result carrying its ISBN names the venue by its full, chip or
 // card name.
 function sameCatalogue(edPublisher,origPublisher,isbnResults,museumId){
@@ -2815,7 +2833,7 @@ async function recheckLinkedPage(row){
     said:hadIt?"Re-checked: no longer for sale in the museum shop."+(p.why?" "+p.why:""):"Re-checked: still not for sale in the museum shop."};
 }
 
-// ── THE CATALOGUE LOOKUP (docs/app.md §1; CLAUDE.md §4 "Catalogue lookup") ─────
+// ── THE CATALOGUE LOOKUP (docs/app.md §1; CLAUDE.md §5.1 "Catalogue lookup") ─────
 // At top level so a fixture can run it whole with the connector and Claude faked.
 // Steps gather facts; code decides each fact in a set order of trust; composeRow
 // writes the row once. No step writes card text; the card reads the row.
@@ -3313,7 +3331,7 @@ function resultText(x){
     Array.isArray(x&&x.excerpts)?x.excerpts.join("\n"):""].filter(Boolean).join("\n");
 }
 // Editions in another language, decided in code (her Botticelli and Hubert Robert;
-// CLAUDE.md §4). A fetched result must carry its ISBN and show the link: the original's
+// docs/app.md §1). A fetched result must carry its ISBN and show the link: the original's
 // house (any outside house of a co-edition), the venue named (sameCatalogue), the original's ISBN, or a linking phrase with
 // every key word of the original's title (Hammershøi's library record). Page counts far
 // apart: a different book, kept as "other". `orig`: the found version, pages printed.
@@ -4658,7 +4676,7 @@ export default function App(){
       if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
       // Quarantined: dropped before anything else sees it. Counted, never silent.
       if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
-      parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,
+      parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,topic:topicOf(rowNote),
                    rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:"Sweeper note: ")+rowNote]:[],parseNotes:notes,line});
     }
 
@@ -4698,7 +4716,7 @@ export default function App(){
         picked:p[f],
       })):null;
 
-      if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line:p.line,choices,merged:!!p.mergedFrom}); continue; }
+      if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line:p.line,choices,merged:!!p.mergedFrom,topic:p.topic||null}); continue; }
       const upd=[];
       const consider=(field,label,oldV,newV)=>{ const o=(oldV==null?"":String(oldV)), n=(newV==null?"":String(newV)); if(!n)return; if(!o)upd.push({field,label,oldVal:"",newVal:n,kind:"fill"}); else if(o!==n)upd.push({field,label,oldVal:o,newVal:n,kind:"change"}); };
       // A changed title is a Change card, capitals-only included (her decision): a title
@@ -4751,7 +4769,7 @@ export default function App(){
         setError("Read the refresh file, but nothing new to propose \u2014 your ledger already matches it."+((res.coverage||[]).length?" ("+res.coverage.length+" listing page"+(res.coverage.length===1?"":"s")+" couldn\u2019t be read \u2014 see below.)":""));
         return;
       }
-      setError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions({});
+      setError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions(topicPresets(res.props));
     };
     reader.readAsText(file); e.target.value="";
   }
@@ -4844,7 +4862,7 @@ export default function App(){
       setLinkNote("Read "+got.length+" link"+(got.length===1?"":"s")+", but nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+".");
       return;
     }
-    setProposals(res.props); setCoverage([]); setTally(res.tally||null); setSeenInFile(null); setDecisions({});
+    setProposals(res.props); setCoverage([]); setTally(res.tally||null); setSeenInFile(null); setDecisions(topicPresets(res.props));
     linksAtRead.current=urls;
     // Done with the pop-up — unless a link could not be read: then it stays
     // under the review, its lines waiting for her when the review closes.
@@ -5862,7 +5880,7 @@ export default function App(){
           ))}
         </div>}
       </div>
-      {/* The import pop-up (her design; docs/picked_shows.md): CSV and Links, and a small
+      {/* The import pop-up (her design; docs/add_by_link.md): CSV and Links, and a small
           Cancel. Under the review (1100) so cards open on top; under the confirm box (1200). */}
       {importMode&&(
         <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",justifyContent:"center",padding:16}}>
@@ -5965,7 +5983,8 @@ export default function App(){
                 // No link at all: usable rows, grouped because the link is the only key for
                 // folding and quarantine, so they return fresh every sweep (her decision).
                 const noLink     = byVenue(plain.filter(x=>!x.p.cand||!x.p.cand.exUrl));
-                const ordinary   = plain.filter(x=>x.p.cand&&x.p.cand.exUrl);
+                const notForYou  = byVenue(plain.filter(x=>isTopicCard(x.p)));
+                const ordinary   = plain.filter(x=>x.p.cand&&x.p.cand.exUrl&&!isTopicCard(x.p));
                 // Venue subheadings inside each band, in the same style and order as below.
                 const byVenueBlocks=list=>allVenues().map(m=>{
                   const grp=list.filter(x=>x.p.venueId===m.id);
@@ -6022,6 +6041,12 @@ export default function App(){
                       {mergedOnly.length>0&&band("merged","2. Combined rows \u00b7 identical rows were de-duped or reconciled",undefined,mergedOnly.length,false,byVenueBlocks(mergedOnly))}
                       {mergedConf.length>0&&band("mergedconf","3. Combined rows \u00b7 identical rows produced conflicts \u2014 yours to choose",C.accent,mergedConf.length,true,byVenueBlocks(mergedConf))}
                       {noLink.length>0&&band("nolink","4. No exhibition url \u00b7 link goes to venue\u2019s listing page",undefined,noLink.length,true,byVenueBlocks(noLink))}
+                    </div>
+                  )}
+                  {notForYou.length>0&&(
+                    <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
+                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>Probably not for you {"\u00b7"} {notForYou.length}</div>
+                      {byVenueBlocks(notForYou)}
                     </div>
                   )}
                 {ordinary.length>0&&(()=>{
@@ -6085,7 +6110,7 @@ export default function App(){
                   headings say where the cards are. */}
               {/* Every card must be decided before the ledger moves — a hard block, her
                   permanent design (docs/app.md §3). The button says what is missing. */}
-              {/* ===== PARTIAL APPLY — stays until she says (CLAUDE.md §4) =====
+              {/* ===== PARTIAL APPLY — stays until she says (CLAUDE.md §5.1) =====
                   Beside the block, never instead of it: drawn only when some cards are
                   decided and some are not (offerPartialApply). It asks first, in her
                   wording, naming what is left behind and the way back. To remove it: this

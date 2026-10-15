@@ -798,3 +798,70 @@ test('SM-100: the seed is read from the real Cat_Watch.jsx, all 110 rows with th
   assert.strictEqual(rows.length, 110);
   assert.ok(rows.every(r => r.url.startsWith('https://')), 'every seed row has its exhibition link');
 });
+
+// ── TP: "Probably not for you" — the topic label (CLAUDE.md §2.2.7) ──────────
+// The model answers one key; code checks it and writes the one note the app reads.
+const T = require('./compress.js');
+
+test('TP-001: a key on the list becomes its note; "none" adds nothing', () => {
+  assert.deepStrictEqual(T.resolveTopic('asian', 'brit'), { ok: true, note: 'Topic: Asian art.' });
+  assert.deepStrictEqual(T.resolveTopic(' Asian ', 'brit'), { ok: true, note: 'Topic: Asian art.' });
+  assert.deepStrictEqual(T.resolveTopic('none', 'brit'), { ok: true, note: '' });
+});
+
+test('TP-002: anything off the list is refused, never guessed', () => {
+  for (const v of ['Asian art', 'japanese', '', null, undefined, 'Topic: Asian art.']) {
+    assert.strictEqual(T.resolveTopic(v, 'brit').ok, false, JSON.stringify(v));
+  }
+});
+
+test('TP-003: the Met\'s rotations are not labelled — she reviews those by hand', () => {
+  assert.deepStrictEqual(T.resolveTopic('rotation', 'met'), { ok: true, note: '' });
+  assert.deepStrictEqual(T.resolveTopic('asian', 'met'), { ok: true, note: 'Topic: Asian art.' });
+  assert.ok(T.resolveTopic('rotation', 'artic').note.startsWith(T.TOPIC_PREFIX));
+});
+
+test('TP-004: every note is one sentence the app can read back', () => {
+  for (const k of Object.keys(T.TOPICS)) {
+    const n = T.topicNote(k);
+    assert.match(n, /^Topic: [^.]+\.$/, n);
+  }
+});
+
+// End to end through the real CLI: plan writes the topic job for new shows only,
+// check refuses a missing or unknown label, apply writes the note into `notes`.
+test('TP-010: plan → check → apply carries the topic note onto new shows only', () => {
+  const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
+  const out = path.join(__dirname, 'output');
+  // Not run_: the sweeper's tidy-up moves old run_ folders while a test is using them.
+  const dir = 'test_topic_tp010';
+  const run = path.join(out, dir);
+  fs.rmSync(run, { recursive: true, force: true });
+  fs.mkdirSync(run);
+  try {
+    const rows = [
+      { venue_code: 'brit', title: 'Hokusai prints TP', start_date: '2026-01-01', end_date: '2026-02-01',
+        summary: 'Woodblock prints by Hokusai from the museum collection, shown together.', url: 'https://example.test/tp-hokusai', notes: '', swept_at: '1999-01-01T00:00:00Z' },
+      { venue_code: 'met', title: 'New hang TP', start_date: '2026-01-01', end_date: '2026-02-01',
+        summary: 'A rotation of recent acquisitions from the collection.', url: 'https://example.test/tp-met', notes: '', swept_at: '1999-01-01T00:00:00Z' },
+    ];
+    T.writeCsv(path.join(run, 'sweep.csv'), rows);
+    const cli = (...a) => { try { return execFileSync('node', [path.join(__dirname, 'compress.js'), dir, ...a], { encoding: 'utf8' }); } catch (e) { return 'EXIT ' + e.status + '\n' + e.stdout; } };
+    const planned = cli('--recompress');
+    assert.match(planned, /job_topics_1\.txt/);
+    const job = fs.readFileSync(path.join(run, 'job_topics_1.txt'), 'utf8').split('\n').map(l => JSON.parse(l));
+    assert.deepStrictEqual(job.map(j => j.i), [0, 1]);
+    fs.writeFileSync(path.join(run, 'compress_answers.json'), JSON.stringify({ 0: 'Hokusai woodblock prints.', 1: 'Recent acquisitions.' }));
+    assert.match(cli('--apply'), /no topic_answers\.json/);
+    fs.writeFileSync(path.join(run, 'topic_answers.json'), JSON.stringify({ 0: 'Japanese', 1: 'rotation' }));
+    assert.match(cli('--apply'), /not on the topic list/);
+    fs.writeFileSync(path.join(run, 'topic_answers.json'), JSON.stringify({ 0: 'asian', 1: 'rotation' }));
+    const applied = cli('--apply');
+    assert.match(applied, /1 new show labelled/);
+    const got = T.readProForma(path.join(run, 'sweep_compressed.csv'));
+    assert.strictEqual(got[0].notes, 'Topic: Asian art.');
+    assert.strictEqual(got[1].notes, '', 'the Met\'s rotation carries no label');
+  } finally {
+    fs.rmSync(run, { recursive: true, force: true });
+  }
+});

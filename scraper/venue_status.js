@@ -34,7 +34,8 @@ const { venueShape, isMarker } = require('./qc.js');
 // The venue list comes from the recipes themselves. A second hand-typed list of
 // venue codes has already cost this project once — two finished recipes could
 // not be selected and nothing said why — so there is no copy here to drift.
-const { VENUES } = require('./sweep_prototype.js');
+const { VENUES, machineOf } = require('./sweep_prototype.js');
+const W = require('./routine_window.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const RAW_CSV = 'sweep.csv';
@@ -102,7 +103,7 @@ function collect() {
   const state = new Map();
   for (const code of Object.keys(VENUES)) {
     state.set(code, { code, name: VENUES[code].name,
-      machine: VENUES[code].route === 'local' ? 'her laptop' : 'container',
+      machine: { home: 'her laptop', container: 'container', none: 'not swept (by link)' }[machineOf(code)],
       rows: null, rowsFrom: null, summaries: 0, triedFrom: null, markersOnly: false,
       why: null });
   }
@@ -124,14 +125,17 @@ function collect() {
       // The scraper already wrote the reason on the marker row, so it is read,
       // never inferred from the fact that the count was zero.
       v.why = s.real === 0 ? whyFrom(rows, code) : null;
+      // Rows are KNOWN rows: a routine run's older shows, not swept, still count (routine_window.js).
       if (s.real > 0) {
-        v.rows = s.real;
-        v.summaries = s.summaries;
+        v.known = W.knownAfter(v.known, rows.filter(r => String(r.venue_code || '').trim() === code),
+          W.readWindow(path.join(OUTPUT_DIR, run.rel))[code] || null);
+        v.rows = v.known.length;
+        v.summaries = v.known.filter(r => String(r.summary || '').trim()).length;
         v.rowsFrom = run.name;
       }
     }
   }
-  return [...state.values()];
+  return [...state.values()].map(({ known, ...v }) => v);
 }
 
 function report(venues) {

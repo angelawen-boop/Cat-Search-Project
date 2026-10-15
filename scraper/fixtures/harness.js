@@ -80,6 +80,9 @@ return {
   quarantineFromList,
   isUndecidedCard,
   offerPartialApply,
+  topicOf,
+  isTopicCard,
+  topicPresets,
   MUSEUMS, MU, KNOWN_VENUES, VENUE_ORDER,
 };
 `;

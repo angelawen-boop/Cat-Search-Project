@@ -89,6 +89,20 @@ const CASES = [
   },
 ];
 
+// Tate Britain's past listing carries today's date in its address, so it is built
+// the way the sweep builds it. 21 shows, 20 a page: Whistler is on page 2 only, and
+// the dead page 3 must never be asked for.
+{
+  const S0 = require('../sweep_prototype.js');
+  const past = 'https://www.tate.org.uk' + S0.listingPages(S0.VENUES['tate-britain']).find(p => p.dateRange || /date_range=custom/.test(p.path)).path;
+  CASES.push({
+    venue: 'tate-britain',
+    pages: { [past]: 'tate_pages/tate_britain_past_p1.html', [past + '&page=2']: 'tate_pages/tate_britain_past_p2.html' },
+    only: [['/whats-on/tate-britain/whistler', ['past and current p2']]],
+    neverAsked: [past + '&page=3'],
+  });
+}
+
 let pass = 0, fail = 0;
 const ok = (cond, name, detail) => {
   if (cond) { pass++; console.log(`PASS  ${name}`); }
@@ -104,7 +118,8 @@ const ok = (cond, name, detail) => {
     const goto = page.goto.bind(page);
 
     for (const c of CASES) {
-      page.goto = (url, o) => c.pages[url]
+      const asked = [];
+      page.goto = (url, o) => (asked.push(url), c.pages[url])
         ? goto('file://' + path.join(DOCS, c.pages[url]), { ...o, waitUntil: 'load' })
         : goto('about:blank');
 
@@ -128,6 +143,9 @@ const ok = (cond, name, detail) => {
         ok(r && JSON.stringify(pagesOf(r)) === JSON.stringify(want),
           `LP-${c.venue}-only: ${end} is listed on ${want.join(', ')} and nowhere else`,
           r ? `got ${pagesOf(r).join(', ')}` : 'row missing');
+      }
+      for (const url of c.neverAsked || []) {
+        ok(!asked.includes(url), `LP-${c.venue}-stop: the page after the last is never asked for`, url);
       }
       for (const end of c.absent || []) {
         ok(!find(end), `LP-${c.venue}-absent: ${end} is not read from a page it is only promoted on`);

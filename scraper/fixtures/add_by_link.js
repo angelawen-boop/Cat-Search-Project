@@ -1,5 +1,5 @@
 /**
- * "ADD BY LINK", PRESSED — her design, 3–4 Oct 2026 (docs/picked_shows.md).
+ * "ADD BY LINK", PRESSED — her design, 3–4 Oct 2026 (docs/add_by_link.md).
  *
  * Renders the real app, loads a ledger through the real Load input, opens
  * Import, pastes links into its pop-up the careless way she will, and

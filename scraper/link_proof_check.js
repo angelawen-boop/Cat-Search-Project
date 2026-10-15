@@ -1,5 +1,5 @@
 /**
- * LINK PROOF CHECK — Add by link's reader against live pages (docs/picked_shows.md,
+ * LINK PROOF CHECK — Add by link's reader against live pages (docs/add_by_link.md,
  * "Re-checking the proof pages").
  *
  * Her decision: proof is always against the live internet, so no page text is kept

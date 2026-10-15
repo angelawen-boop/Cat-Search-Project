@@ -599,6 +599,41 @@ function addNote(existing, note) {
   return cur ? `${cur} ${note}` : note;
 }
 
+// ── "Probably not for you" — the topic label ────────────────────────────────
+//
+// Her design (CLAUDE.md §2.2.7): new shows in topics she always quarantines are
+// labelled and set aside on the import screen. Only FRESH rows are asked — a
+// show she has already decided on is never relabelled. The model answers one
+// key from this fixed list; code writes the note, so the app reads one exact
+// sentence. Groups start wide, to be narrowed later.
+const TOPICS = {
+  rotation:     'Collection rotation or acquisitions',
+  asian:        'Asian art',
+  contemporary: 'Contemporary single artist, film, video or performance',
+  series:       "Children's, students', staff or recurring series",
+  popculture:   'Pop-culture oddity',
+  notashow:     'Gallery or display, not a show',
+};
+const NO_TOPIC = 'none';
+const TOPIC_PREFIX = 'Topic: ';
+// Her decision: she reviews the Met's rotations and acquisitions by hand.
+const TOPIC_EXEMPT = { met: new Set(['rotation']) };
+
+/** One topic answer, checked. Returns the note to add ('' for none). */
+function resolveTopic(value, venue) {
+  const k = String(value == null ? '' : value).trim().toLowerCase();
+  if (k === NO_TOPIC) return { ok: true, note: '' };
+  if (!Object.prototype.hasOwnProperty.call(TOPICS, k)) return { ok: false, reason: `"${value}" is not on the topic list` };
+  if (TOPIC_EXEMPT[venue] && TOPIC_EXEMPT[venue].has(k)) return { ok: true, note: '' };
+  return { ok: true, note: topicNote(k) };
+}
+const topicNote = k => `${TOPIC_PREFIX}${TOPICS[k]}.`;
+
+/** The topic job: one compact line per show, title and text only. */
+function topicJobLines(rows) {
+  return rows.map(r => JSON.stringify({ i: r.index, title: r.title, raw: String(r.raw || '').split(/\s+/).join(' ') }));
+}
+
 // ── Memory: every finished compression before this one ──────────────────────
 //
 // FIXED 23 Sep — MEMORY USED TO SEE ONLY run_ FOLDERS. The real chain is sweep →
@@ -923,6 +958,7 @@ module.exports = {
   completedCompressions, loadMemory, memoryRows, dirInstant, titleJudgedIn, MEMORY_CSVS, RUN_TZ, seedMemory, MAX_WORDS, SKIP_NOTE,
   ENGLISH_TITLE_VENUES, EN_PREFIX, ENGLISH_TITLE_MARKER, asksEnglishTitle, splitEnglishTitle,
   composeSummary, validateEnglish, resolveAnswer,
+  TOPICS, NO_TOPIC, TOPIC_PREFIX, TOPIC_EXEMPT, resolveTopic, topicNote, topicJobLines,
   TRAVELLING_LOCATIONS, travellingKey, groupTravellingRuns, groupIdenticalRaw,
 };
 

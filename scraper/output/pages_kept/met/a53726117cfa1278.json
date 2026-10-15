@@ -1,0 +1,11 @@
+{
+  "url": "https://www.metmuseum.org/exhibitions/chasing-clouds",
+  "savedAt": "2026-10-15T08:21:10.220Z",
+  "outcome": "text",
+  "changes": {
+    "start_date": "2026-09-14",
+    "summary": "Sublime symbols of changing weather, clouds have long been a source of fascination for artists and scientists alike. In the early 1800s, landscape painters used clouds as visual proof of their ability to capture the fleeting effects of nature in sketches made outdoors, or en plein air, while meteorologists began to study and, for the first time, classify clouds. Beginning in the 1830s, photography promised to capture the sky with unprecedented immediacy and detail, yet early technical limitations fell short of that promise. Photographers responded by painting in skies or manually combining negatives, until chemical and optical advances at the start of the 20th century made possible cloudscape photographs that rivaled paintings. Chasing Clouds follows the remarkable story of how the sky was represented during this period, tracing the depiction of clouds in works that balanced changing artistic conventions with scientific discoveries and new technologies. Opening with oil sketches from the start of the 19th century, and including paintings, drawings, and photographs from the following decades, it comes full circle in the 1920s with American photographer Alfred Stieglitz’s Equivalents, a series of cloud studies that reconciles poetic feeling and naturalistic depiction. The exhibition is made possible by The Robert Mapplethorpe Foundation, Inc.",
+    "notes": "Opening date taken from the site's structured data, not its visible page."
+  },
+  "titleReport": []
+}

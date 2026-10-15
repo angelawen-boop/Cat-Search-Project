@@ -1,0 +1,53 @@
+# Scraper verification — her review of the original venues, 12 Sep 2026
+
+She checked the scraper's output against the live sites herself. **Her
+findings, not a session's guesses. Do not ask her to re-review a venue here.**
+Counts are as of 12 Sep; later rulings (`docs/venues.md`) have changed some since
+(e.g. Tate Britain's past exhibitions). Compressed 30 Sep; full text in git.
+
+## Her overall verdict
+
+- Dates, titles, and keeping non-exhibitions out: generally good.
+- Pagination: isolated misses (below). Her worry that year archives were typed
+  by hand was already solved — `expandYearArchive()`, Y-001 to Y-005.
+- **Biggest issue: junk in summaries** — captions, "join us for the opening
+  talk", ticketing; some summaries were nothing else. **The dangerous kind: an
+  artist named in a caption reads exactly like one named in the blurb**, so
+  compression can state something false.
+
+## Per venue
+
+| Venue | Her count, 12 Sep | What was wrong → the fix |
+|---|---|---|
+| `frick` | 10 (0 current, 3 upcoming, 7 past) | Nothing. Recently closed shows stay on `/exhibitions`, so "found on" differs from state — not a defect. Her laptop browser sees an intermittent 418; mobile doesn't |
+| `menil` | 32 (5 + 4 + 23) | Past archive paginated, page one only (12 lost) → `followPagination()`, stopping at the lookback floor (walking to the end added 13 undated decades-old rows). Undated rows = her permanent galleries, excluded. **A row whose page FAILED to load is never excluded as permanent** |
+| `va` | 6 (2 + 4, no archive) | 9 Displays → dropped on the card's own `Display` label. Summaries were all marketing: the blurb is a `div` (`qa-exhibition-description`) → a recipe can name its description container; a named consent manager is never layout, whatever its share of the page |
+| `tate-modern` | 13 (4 + 9, no archive) | Hero-image credit glued to the blurb → `caption`/`credit` containers are noise |
+| `tate-britain` | 9 (3 + 6) | Same credit; *Chris Ofili: Requiem* printed `ONGOING` → `excludeOngoing` set here only (Tate Modern's count was correct, so not touched) |
+| `wallace` | 11 (2 + 2 + 7) | Every summary opened on the bold dates/tickets line → a paragraph bold end to end is a label (guarded); a plain-text tickets line caught by its wording; **weekday names broke every date range** (Churchill arrived undated) → stripped first, W-001 to W-005. Displays and trails kept, her ruling |
+| `louvre` | 22 | "Load more" never reached (cookie popin) and, once pressed past the end, its href replaced the listing with a 404 → consent dismissed, default action cancelled before each press. Visitor notices (`div.Alert`) excluded by container. 2024: three closed before the floor, correctly dropped |
+| `uffizi` | 13 | A one-day event in upcoming → excluded by its card shape (a single date); "extended to02/11/2025" lost → extensions read in the SHARED parser. A page whose links were all deliberately excluded is not an empty page. Headlines kept as titles; undated rows kept (her rulings) |
+| `brera` | 8 (7 + marker) | "From May 16, 2025, to May 17, 2027" — the comma broke the range; a listing's extended date made the prose guard discard an opening date → both parsers apply extensions. Lead-ins are `h4`s → read with paragraphs |
+| `borghese` | 8 (7 + marker) | "extraordinary extension through October 11" → wider extension rule (year inferred: an extension is later). Louise Bourgeois's blurb in divs, then vetoed whole by one ticket sentence → **boilerplate is stripped by the sentence, not the block** |
+| `capo` | 18, not count-verified | Her ruling: `docs/scraper.md` §15 |
+
+**Engine changes were re-verified against the reviewed venues in the same
+sitting** (her rule), and it paid: clearing Tate's caption pulled funder lists
+into the Menil's summaries → funder lists are boilerplate.
+
+## Final state, 12 Sep
+
+ng 27 · rijks 37 · acq 15 · va 6 · tate-modern 13 · tate-britain 9 · frick 10
+· menil 32 · wallace 11 · louvre 22 · dellav 2 · khm 6 · uffizi 13 · brera 8
+· capo 18 · borghese 8. No credit line, star rating, ticket price, funder list,
+opening hours, breadcrumb or cookie notice anywhere.
+
+## The lessons
+
+- **Three rows looked like a venue publishing badly when it had published in
+  full** — Wallace's weekday dates, dellav's three-letter Italian months,
+  Borghese's blurb. **When a row says the venue published nothing, check the page
+  before believing it.**
+- **A count agreeing is not proof a mechanism works** — the Louvre's plain past
+  page covered for its broken load-more.
+- **Her count is the only check that can say "your number is wrong."**

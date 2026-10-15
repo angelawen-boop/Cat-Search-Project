@@ -1,0 +1,15 @@
+User-agent: *
+
+Disallow: /umbraco/
+
+Disallow: /umbraco_client/
+
+Disallow: /App_Plugins/
+
+Disallow: /bin/
+
+Disallow: /config/
+
+Disallow: /install/
+
+Allow: /media/

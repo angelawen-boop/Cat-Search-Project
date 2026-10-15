@@ -31,6 +31,7 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
 const fs = require('fs');
 const path = require('path');
 const { seenOn, listingNote } = require('./listing_note.js');
+const { windowFrom, outsideWindow, recordWindow } = require('./routine_window.js');
 
 // ── Proxy setup ───────────────────────────────────────────────────────────────
 const PROXY_URL = process.env.HTTPS_PROXY || process.env.https_proxy;
@@ -102,6 +103,8 @@ const OUT_DIR = path.join(__dirname, 'output');
 
 const ARGS = process.argv.slice(2).map(a => a.toLowerCase()).filter(Boolean);
 const CONTINUE = ARGS.includes('--continue');
+// A routine sweep is the default; --full reads every home venue back to the floor.
+const FULL = ARGS.includes('--full');
 const WANTED = ARGS.filter(a => !a.startsWith('--'));
 
 // WHICH MACHINE IS THIS, and therefore which venues are ITS job. Overridable
@@ -271,8 +274,17 @@ const venueIsDone = code => fs.existsSync(venueCsvPath(code));
  * quietly.
  */
 function machineVenues() {
-  return VENUE_ORDER.filter(c =>
-    (VENUES[c].route === 'local' ? 'home' : 'container') === MACHINE);
+  return VENUE_ORDER.filter(c => machineOf(c) === MACHINE);
+}
+
+/**
+ * Which machine sweeps a venue: 'home', 'container', or 'none' — a venue she
+ * adds by link only (`route: 'none'`, the Ashmolean; docs/venues.md). Its recipe
+ * stays and naming it by hand still sweeps it.
+ */
+function machineOf(c) {
+  const r = VENUES[c].route;
+  return r === 'local' ? 'home' : r === 'none' ? 'none' : 'container';
 }
 
 function venuesForThisRun() {
@@ -283,6 +295,29 @@ function venuesForThisRun() {
 }
 
 const LOOKBACK = new Date('2024-07-01');
+
+/**
+ * THE ROUTINE WINDOW (routine_window.js; her decision): a sweep of a home venue,
+ * unless --full, opens and writes only shows not known to have closed before
+ * windowFrom(the sweep date). Sweeps only — saved pages and fixtures read in full.
+ * Fixed once per venue per invocation, so the log, the cut and window.json agree.
+ */
+const ROUTINE_FROM = new Map();
+function routineFrom(code, { asSweep = require.main === module, full = FULL, today = runStamp().slice(0, 10) } = {}) {
+  if (!asSweep || full || machineOf(code) !== 'home') return null;
+  if (!ROUTINE_FROM.has(code)) ROUTINE_FROM.set(code, windowFrom(today));
+  return ROUTINE_FROM.get(code);
+}
+
+/** Drop rows closed before the routine window, before their pages are opened. Marker rows stay. */
+function applyRoutineWindow(rows, from) {
+  if (!from) return rows;
+  const kept = rows.filter(r => (r.title && r.title.startsWith('[')) || !outsideWindow(r, from));
+  if (kept.length !== rows.length) {
+    log(`  routine sweep: ${rows.length - kept.length} show(s) closed before ${from} not swept (--full reads them)`);
+  }
+  return kept;
+}
 
 /**
  * Expand a venue's year-filtered archive into one page per year.
@@ -440,13 +475,18 @@ function expandYearArchive(entry, floor = LOOKBACK, today = new Date()) {
 // pages a site has is never written into a recipe, and the press is followed by
 // a WATCH rather than a sleep — a fixed pause cost 4 Louvre exhibitions and made
 // the row count depend on how busy the machine was.
-function followPagination(queue, pg, newRows, rows, code, v) {
+function followPagination(queue, pg, newRows, rows, code, v, moreShown = true) {
   const spec = pg.paginate;
   if (!spec) return;
 
   // The site has told us there is nothing after this page.
   if (newRows.length === 0) {
     if (pg.discovered) log(`  PAGINATION end: ${pg.ctx} added no new exhibitions`);
+    return;
+  }
+  // `whileMore`: the venue's own "more" control is gone, so this is its last page.
+  if (!moreShown) {
+    log(`  PAGINATION end: ${pg.ctx} shows no "more" control`);
     return;
   }
 
@@ -2029,9 +2069,13 @@ const CURATORIAL_SELECTORS = [
 ];
 
 async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, creditPara, keepBold, dropSentence, descriptionSkip, descriptionUntil) {
+  // `descriptionSkip` is a selector (captions), or `{ label, stop }` for a venue that
+  // opens paragraphs with a bold label and a line break (Brera).
+  const skip = typeof descriptionSkip === 'string' ? { sel: descriptionSkip } : (descriptionSkip || {});
   try {
-    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe, keepBold, dropRe, skipSel, untilRe }) => {
+    return await page.evaluate(({ alwaysRe, noiseRe, exemptRe, boilerplate, selectors, MIN_WRAPPER_PARAS, creditRe, keepBold, dropRe, skipSel, labelSel, stopLabelRe, untilRe }) => {
       const CREDIT = creditRe ? new RegExp(creditRe, 'i') : null;
+      const STOPLABEL = stopLabelRe ? new RegExp(stopLabelRe, 'i') : null;
       const ALWAYS = new RegExp(alwaysRe, 'i');
       const NOISE = new RegExp(noiseRe, 'i');
       const clean = (t) => String(t || '').replace(/\s+/g, ' ').trim();
@@ -2201,6 +2245,21 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, cr
             const c = clean(s.innerText);
             if (c) raw = clean(raw.split(c).join(' '));
           }
+          // A LABEL: bold, nothing before it, a line break straight after. CSS's
+          // `:first-child` and `+` ignore text, so this is checked node by node —
+          // the selector alone took a bold "25" mid-sentence (Brera, 15 Oct).
+          // A `stop` label (where, when, hours, tickets) ends the description.
+          const lab = labelSel ? el.querySelector(labelSel) : null;
+          if (lab) {
+            const blank = n => n.nodeType === 3 && !n.textContent.trim();
+            let before = lab.previousSibling; while (before && blank(before)) before = before.previousSibling;
+            let after = lab.nextSibling; while (after && blank(after)) after = after.nextSibling;
+            const c = clean(lab.innerText);
+            if (!before && after && after.nodeName === 'BR' && c && raw.startsWith(c)) {
+              if (STOPLABEL && STOPLABEL.test(c)) break;
+              raw = clean(raw.slice(c.length));
+            }
+          }
           const t = stripBoilerplate(raw);
           if (t.length > 60) out.push(t);
         }
@@ -2216,7 +2275,9 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, cr
          creditRe: creditPara ? creditPara.source : null,
          keepBold: !!keepBold,
          dropRe: dropSentence ? dropSentence.source : null,
-         skipSel: descriptionSkip || null,
+         skipSel: skip.sel || null,
+         labelSel: skip.label || null,
+         stopLabelRe: skip.stop ? skip.stop.source : null,
          untilRe: descriptionUntil ? descriptionUntil.source : null });
   } catch {
     return '';
@@ -2542,7 +2603,14 @@ async function readCardPieces(link, rule) {
     return { name: sel.nameOwnText ? own(sel.name) : one(sel.name), subtitle: one(sel.subtitle), place: one(sel.place) };
   }, rule.cardParts).catch(() => ({ name: '', subtitle: '', place: '' }));
 }
-const isPlace = (text, locations) => (locations || []).find(l => l.toLowerCase() === String(text).trim().toLowerCase());
+// A gallery may be written with the venue's own name in front ("Acquavella Palm Beach"):
+// `locationOwner` on the recipe, carried on the list by placesOf().
+const isPlace = (text, locations) => {
+  const own = locations && locations.owner ? new RegExp(`^${locations.owner}\\s+`, 'i') : null;
+  const t = String(text).trim().replace(own || /^$/, '').toLowerCase();
+  return (locations || []).find(l => l.toLowerCase() === t);
+};
+const placesOf = code => Object.assign(((VENUES[code] || {}).locations || []).slice(), { owner: (VENUES[code] || {}).locationOwner || '' });
 
 async function cardPartsTitle(link, rule, locations) {
   const { name, subtitle } = await readCardPieces(link, rule);
@@ -2609,7 +2677,7 @@ const TRAVEL_GAP_DAYS = 183;
 
 async function extractTitle(link, venueCode) {
   const rule = titleRule(venueCode);
-  if (rule.cardParts) return cardPartsTitle(link, rule, (VENUES[venueCode] || {}).locations);
+  if (rule.cardParts) return cardPartsTitle(link, rule, placesOf(venueCode));
   const title = await restoreCase(link, await extractTitleAsShown(link, venueCode));
   return withPostTitle(link, titleRule(venueCode), title);
 }
@@ -3311,7 +3379,7 @@ async function collectFromListing(page, opts) {
     //
     // The V&A runs four: South Kensington, V&A East Museum, V&A East Storehouse
     // and Young V&A, and its listing mixes all four on one page. Her venue list
-    // (docs/venue_urls.md) says South Kensington only, so the other three are hers to
+    // (docs/venues.md) says South Kensington only, so the other three are hers to
     // exclude, already ruled, and the card states which site it is.
     //
     // Same footing as excludeOngoing and permitted for the same reason: the
@@ -3451,7 +3519,7 @@ async function collectFromListing(page, opts) {
       venue_code: venueCode, title,
       // Internal, never a CSV column: the gallery a card names, for a venue
       // with several (see cardPartsTitle / placeTravellingRuns).
-      _place: await readCardPlace(link, titleRule(venueCode), (VENUES[venueCode] || {}).locations),
+      _place: await readCardPlace(link, titleRule(venueCode), placesOf(venueCode)),
       // Internal, never a CSV column: which listing pages this row was seen
       // on (listing_note.js), and the note to withdraw if a later link
       // supplies the missing name.
@@ -3559,11 +3627,14 @@ const ARTIC_NOT_AN_EXHIBITION = new RegExp([
 // of them (Light and Magic, 5 Oct; docs/tate_pages/). Matched as noise
 // containers by class.
 const TATE_NOISE = 'editorial-background|accordion|card-content';
+// Tate's What's On shows 20 cards a page; "Load N more" fetches ?page=2 and is absent
+// on the last page (docs/tate_pages/).
+const TATE_PAGES = { param: 'page', from: 2, whileMore: 'a[data-ajax-type="load-more"]' };
 
 const VENUES = {
   met: {
     name: 'The Metropolitan Museum of Art',
-    // Her decisions (CLAUDE.md §2): recurring series and every commission series out;
+    // Her decisions (docs/venues.md): recurring series and every commission series out;
     // nothing excluded for coming from a collection, a gift or acquisitions.
     excludeTitle: new RegExp([
       /^P\.\s?S\.\s?Art\b/, /\bScholastic Art (?:&|and) Writing\b/,
@@ -3574,6 +3645,9 @@ const VENUES = {
       /\bBaseball Cards from the Collection of Jefferson R\. Burdick\b/,
     ].map(r => r.source).join('|'), 'i'),
     base: 'https://www.metmuseum.org',
+    // After the show's text: sponsors and accessibility (emptyAside), press quotes,
+    // the catalogue's blurb (withVerticalCenter) — none is the show (docs/met_pages/).
+    noise: 'sponsors|emptyAside|quotesModule|withVerticalCenter',
     // Her machine only (machineVenues): the container is answered 429 here.
     route: 'local',
     // The past archive serves one year per address (?year=2025), so each year is a
@@ -3614,13 +3688,15 @@ const VENUES = {
     // the real text in the shared ladder (docs/ng_pages/).
     description: '.exhibition-info .body-text',
     // Its last line credits the organising museums — a credit line, which no
-    // row carries (CLAUDE.md §2).
+    // row carries (CLAUDE.md §2.1).
     dropSentence: /Exhibition organised by\b/,
   },
 
   rijks: {
     name: 'Rijksmuseum, Amsterdam',
     base: 'https://www.rijksmuseum.nl',
+    // A funder credit inside the text.
+    dropSentence: /(?:This|The) exhibition is made possible\b/,
     pages: [
       { path: '/en/whats-on/exhibitions/now-on-view', ctx: 'current/upcoming' },
       { path: '/en/whats-on/exhibitions/past',        ctx: 'past' },
@@ -3663,6 +3739,8 @@ const VENUES = {
     },
     // Its two galleries. Used to cross-reference a show that ran in both.
     locations: ['New York', 'Palm Beach'],
+    // A card can name the gallery as "Acquavella Palm Beach" — still a gallery, never a subtitle.
+    locationOwner: 'Acquavella',
   },
 
   // Lévy Gorvy Dayan, her addition. One page holds current and past; upcoming shows are
@@ -3676,9 +3754,9 @@ const VENUES = {
     selector: 'a[href*="/exhibitions/"]',
     isNav: href => /\/exhibitions\/?$/.test(href),
     title: { heading: false, linkLines: true },
-    // Hong Kong partnership shows are not hers (CLAUDE.md §2): the card's location line.
+    // Hong Kong partnership shows are not hers (docs/venues.md): the card's location line.
     otherBranch: /Hong Kong/i,
-    // Her one exception to the lookback (CLAUDE.md §2): this address only.
+    // Her one exception to the lookback (docs/venues.md): this address only.
     keepDespiteLookback: ['/exhibitions/yves-klein-and-the-tangible-world'],
     // "LGD Hammer" is the gallery's auction series, not an exhibition (her decision).
     excludeTitle: /^LGD\s+Hammer\b/i,
@@ -3689,6 +3767,10 @@ const VENUES = {
   borghese: {
     name: 'Galleria Borghese, Rome',
     base: 'https://galleriaborghese.cultura.gov.it',
+    // Titles typed in capitals everywhere (docs/borghese_pages/): ordinary capitals by
+    // code, the name/subtitle full stop as an em dash (her decision).
+    capsTitles: true,
+    stopToDash: true,
     pages: [
       { path: '/en/mostre/presenti/', ctx: 'current' },
       { path: '/en/mostre/future/',   ctx: 'upcoming' },
@@ -3797,7 +3879,7 @@ const VENUES = {
     // Captions inside that field (p.small) are not description.
     descriptionSkip: 'p.small, figcaption',
 
-    // Collections Spotlight: a standing rotation, not a show (her decision, CLAUDE.md §2).
+    // Collections Spotlight: a standing rotation, not a show (her decision, docs/venues.md).
     excludeTitle: /^Collections?\s+Spotlight\b/i,
 
     // J. Pierpont Morgan's Library prints "Ongoing" where the others print a
@@ -3812,7 +3894,7 @@ const VENUES = {
     name: 'The Menil Collection, Houston',
     // See excludeUndated in scrapeVenue — her decision on its permanent galleries.
     excludeUndated: true,
-    // Her decisions, this venue only (CLAUDE.md §2): "Foyer Installation: …" rotations,
+    // Her decisions, this venue only (docs/venues.md): "Foyer Installation: …" rotations,
     // "… from the Collection" and "Recent Acquisitions" excluded.
     excludeTitle: /^Foyer\s+Installation\b|\bfrom the Collection\b(?!\s+of\b)|\bRecent Acquisitions\b/i,
     base: 'https://www.menil.org',
@@ -3867,8 +3949,8 @@ const VENUES = {
     //
     // Its blurb is in a div; `qa-exhibition-description` is the site's own hook.
     description: '.qa-exhibition-description',
-    // Displays excluded — her decision for THIS venue (the Wallace keeps them; CLAUDE.md
-    // §2). The site labels each card; anchored at the start ("… On Display" is a title),
+    // Displays excluded — her decision for THIS venue (the Wallace keeps them; docs/venues.md
+    // ). The site labels each card; anchored at the start ("… On Display" is a title),
     // an optional "Featured" first, read from the link's text.
     excludeLinkLabelled: /^\s*(?:Featured\s+)?Display\b/i,
   },
@@ -3935,7 +4017,7 @@ const VENUES = {
     title: { heading: true, notATitle: /^Upcoming events$/i },
     // A one-day event is not an exhibition: its card carries ONE date, an exhibition's
     // a "From … to …" range or none. The lookbehind keeps ranges; undated rows are kept
-    // (her decision, CLAUDE.md §2).
+    // (her decision, docs/venues.md).
     excludeLabelled: /(?<!to\s?)\b\d{1,2}\/\d{1,2}\/\d{4}\s*$/,
   },
 
@@ -3955,16 +4037,17 @@ const VENUES = {
     // Its lead-in is an h4, not a paragraph; scoped to the column blocks, which leaves
     // out the "Info utili" block. Both tags in one selector, so they keep page order.
     description: 'div.wp-block-columns h4.wp-block-heading, div.wp-block-columns p.wp-block-paragraph',
-    // A credit LABEL opening a paragraph (a bold run, then a line break: "Comitato
-    // scientifico: …") — only the label goes, never the prose after the break
-    // (docs/brera_pages/).
-    descriptionSkip: 'p.wp-block-paragraph > strong:first-child:has(+ br)',
+    // A bold LABEL opening a paragraph, then a line break ("Comitato scientifico: …"):
+    // only the label goes, never the prose after the break. The info block's labels
+    // end the description (opening hours, tickets). docs/brera_pages/.
+    descriptionSkip: { label: 'p.wp-block-paragraph > strong',
+      stop: /^(?:Where|When|Hours|Opening hours|Tickets|Dove|Quando|Orari|Biglietti)\b/i },
   },
 
   // Musée d'Orsay, her addition. Written from her saved pages (docs/orsay_pages/). Two
   // listings: what's on (one page) and the past archive (?page=1 is its second page). The
   // link wraps only the title; the tag (.surtitle2) and dates (.surtitle) sit beside it.
-  // Her decisions (CLAUDE.md §2): displays and off-site shows always kept; Parcours,
+  // Her decisions (docs/venues.md): displays and off-site shows always kept; Parcours,
   // Immersive experience and Invitation dropped; an unseen tag is kept and named.
   orsay: {
     name: "Musée d'Orsay, Paris",
@@ -4016,7 +4099,7 @@ const VENUES = {
       // The date line is ALSO a <p> after the <h2> on the current and upcoming
       // cards — the Prix Marcel Duchamp came out "…: From the 2 October 2026".
       subtitle: 'h2.post-summary-title .small, h2.post-summary-title + p:not(.post-summary-date)' } },
-    // Her decisions (CLAUDE.md §2): collection displays, the Prix Marcel Duchamp and
+    // Her decisions (docs/venues.md): collection displays, the Prix Marcel Duchamp and
     // Oliver Beer's films excluded. docs/mam_pages/, MM-*.
     excludeTitle: /(?:^|:\s*)Permanent collections?\s*$|^New acquisitions\b|^Prix Marcel Duchamp\b|^Oliver Beer\b/i,
   },
@@ -4024,7 +4107,7 @@ const VENUES = {
   // Musée des Arts Décoratifs, her addition. Written from her saved pages
   // (docs/mad_pages/), MD-*. A SPIP site: a show's address is a bare /<Slug>, like every
   // menu link, so only the listings' cards are read (.titre, .dates, .descriptif).
-  // Nothing excluded (CLAUDE.md §2).
+  // Nothing excluded (docs/venues.md).
   mad: {
     name: 'Musée des Arts Décoratifs, Paris',
     base: 'https://madparis.fr',
@@ -4048,18 +4131,21 @@ const VENUES = {
     noise: 'col_annexe',
     // A sponsor's thanks, not the show (her decision) — MAD only; elsewhere the phrase
     // opens real sentences.
-    dropSentence: /With the support of\b/,
+    dropSentence: /With the support of\b|The exhibition is curated by\b/,
   },
 
   ashmolean: {
     name: 'Ashmolean Museum, Oxford',
     base: 'https://www.ashmolean.org',
+    // Not swept: she adds its shows by link (her decision, docs/venues.md). The
+    // recipe is kept, so naming it by hand still sweeps it.
+    route: 'none',
     // Pages kept as read, in the container too (her decision): its pages drop out — one
     // sweep lost 13 of its first 20.
     keepPages: true,
     // Show pages read ALONE (pageOnly, her go-ahead), proven on docs/ashmolean_pages/raw/.
     pageOnly: true,
-    // Everything kept (her decision, CLAUDE.md §2). docs/ashmolean_pages/, fixture
+    // Everything kept (her decision, docs/venues.md). docs/ashmolean_pages/, fixture
     // ashmolean_pages.js. The past page draws two lists; the majors' first page already
     // reaches past the floor, so only the free list is followed.
     pages: [
@@ -4131,7 +4217,9 @@ const VENUES = {
   artic: {
     name: 'Art Institute of Chicago',
     base: 'https://www.artic.edu',
-    // Her decisions (CLAUDE.md §2): a bare "from the Collection" (always its own) and
+    // A curator or organiser credit is its own paragraph ("X is curated by …").
+    creditPara: /^(?:[^.]{0,160}\bis curated by\b|It is curated by\b|(?:This|The) exhibition is (?:co-)?organized by\b)/,
+    // Her decisions (docs/venues.md): a bare "from the Collection" (always its own) and
     // "Film Series" excluded; family, named and lent collections kept.
     excludeTitle: /\bfrom the Collection\b(?!\s+of\b)|\bFilm Series\b/i,
     // HER MACHINE ONLY — see machineVenues(). Same reasoning as met.
@@ -4147,7 +4235,9 @@ const VENUES = {
       // stops at the floor by CLOSING date and would lose a year's second page. A third
       // page would be reported by detectUnwiredPagination.
       { path: '/exhibitions/history', ctx: 'past', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true },
-      { path: '/exhibitions/history', ctx: 'past p2', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true, suffix: '&page=2' },
+      // A year whose shows fit on page 1 serves an empty page 2: no marker (`mayBeEmpty`).
+      { path: '/exhibitions/history', ctx: 'past p2', param: 'year', yearArchive: true, includeCurrentYear: true, yearByStartDate: true, suffix: '&page=2',
+        carry: { mayBeEmpty: true } },
     ],
     // Exhibitions sit at /exhibitions/<slug>, not beneath /exhibitions/history.
     selector: 'a[href*="/exhibitions/"]',
@@ -4180,7 +4270,7 @@ const VENUES = {
   },
 
   // ── VENUES THAT REFUSE THE CONTAINER ──────────────────────────────────────────
-  // Wired anyway (CLAUDE.md §2): a refusal costs half a second, leaves marker rows and
+  // Wired anyway (CLAUDE.md §2.1): a refusal costs half a second, leaves marker rows and
   // makes every sweep a monitor; blocks come and go. One attempt per page, never a retry.
   moma: {
     name: 'Museum of Modern Art, New York',
@@ -4289,17 +4379,18 @@ const VENUES = {
   },
 
   // TATE — two venues, one website; the URL separates them (two recipes: merging was
-  // rejected, CLAUDE.md §8). The query filters in Tate's own menu are server-side, so each
+  // rejected, CLAUDE.md §4.2). The query filters in Tate's own menu are server-side, so each
   // combination is just a page. event_type=exhibition only, never display (her decision).
   // date_range=past is not an archive and is not fetched. Tate Britain's past comes from
-  // the calendar (expandDateRange); Tate Modern's past, never (CLAUDE.md §2).
+  // the calendar (expandDateRange); Tate Modern's past, never (docs/venues.md).
   'tate-modern': {
     name: 'Tate Modern, London',
     base: 'https://www.tate.org.uk',
     // No excludeOngoing, unlike Tate Britain: nothing here is labelled ongoing, and her
     // count holds. Add it on evidence, never for symmetry.
     pages: [
-      { path: '/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=exhibition', ctx: 'current/upcoming' },
+      { path: '/whats-on?date_range=from_now&gallery_group=tate-modern&event_type=exhibition', ctx: 'current/upcoming',
+        paginate: TATE_PAGES },
     ],
     // The path carries the gallery, so Tate St Ives and Liverpool (cross-promoted) are
     // excluded.
@@ -4335,11 +4426,13 @@ const VENUES = {
     excludeTitle: /^(?:Tate\s+Britain\s+)?Commission\b|^Turner\s+Prize\b/i,
     noise: TATE_NOISE,   // see Tate Modern
     pages: [
-      { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition', ctx: 'current/upcoming' },
+      { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition', ctx: 'current/upcoming',
+        paginate: TATE_PAGES },
       // Past exhibitions via the calendar (her finding): a custom from/until range derived
-      // at run time (expandDateRange), one page. Shows on now appear on both pages.
+      // at run time (expandDateRange). Shows on now appear on both pages.
       { path: '/whats-on?date_range=custom&gallery_group=tate-britain&event_type=exhibition',
-        ctx: 'past and current', dateRange: true, rangeFrom: 'date_a', rangeTo: 'date_b' },
+        ctx: 'past and current', dateRange: true, rangeFrom: 'date_a', rangeTo: 'date_b',
+        carry: { paginate: TATE_PAGES } },
     ],
     selector: 'a[href*="/whats-on/tate-britain/"]',
     // The app's Add by link: see tate-modern's showPath.
@@ -4381,12 +4474,12 @@ const VENUES = {
     // Every card's heading holds exactly the title, skipping the type badge and dates.
     title: { heading: true },
     // Each past item is tagged EXHIBITION, DISPLAY or TRAIL; all are kept (her decision,
-    // CLAUDE.md §2).
+    // docs/venues.md).
   },
 
   // Cincinnati Art Museum, her addition. Behind Cloudflare, yet the container's headless
   // browser was let in; pages saved by the container, her yes for this venue
-  // (docs/cincinnati_pages/), CI-*. Nothing excluded (CLAUDE.md §2). Umbraco: each card
+  // (docs/cincinnati_pages/), CI-*. Nothing excluded (docs/venues.md). Umbraco: each card
   // is its own .thumbnailCallouts.vertical; the plain ones under them are "Explore more"
   // tiles and year links.
   cincinnati: {
@@ -4420,7 +4513,7 @@ const VENUES = {
     // "Thursday, January 16: Open until 9 p.m. …", "*Not a member? …".
     creditPara: /^(?:Due to popular demand\b|\*?Not a member\?|(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day, [A-Z][a-z]+ \d{1,2}:)/,
     // Organiser credits and catalogue-sales lines go: no row carries a credit line
-    // (CLAUDE.md §2).
+    // (CLAUDE.md §2.1).
     dropSentence: /[^.!?]*\bis organized by\b|[^.!?]*\bcatalogue is available for purchase\b/,
   },
 };
@@ -4504,11 +4597,21 @@ function titleFromCaps(title) {
     .replace(/^(\p{Ll})/u, c => c.toUpperCase());
 }
 
+/**
+ * A venue's typed-capitals title in ordinary capitals (`capsTitles`); with
+ * `stopToDash`, the full stop between name and subtitle becomes an em dash first
+ * (Borghese, her decision: "Louise Bourgeois — Unconscious Memories").
+ */
+function venueTitle(code, title) {
+  const v = VENUES[code] || {};
+  if (!title || title.startsWith('[') || !v.capsTitles) return title;
+  const t = v.stopToDash ? String(title).replace(/\.\s+(?=\S)/g, ' — ') : title;
+  return titleFromCaps(t);
+}
+
 async function scrapeVenue(page, code, opts = {}) {
   const rows = await scrapeVenueRows(page, code, opts);
-  if ((VENUES[code] || {}).capsTitles) {
-    for (const r of rows) if (r.title && !r.title.startsWith('[')) r.title = titleFromCaps(r.title);
-  }
+  for (const r of rows) r.title = venueTitle(code, r.title);
   return rows;
 }
 
@@ -4701,7 +4804,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
       const excluded = cov
         ? (cov.dupUrl || 0) + (cov.ongoing || 0) + (cov.branch || 0) + (cov.labelled || 0) + (cov.otherKind || 0) + (cov.offsite || 0)
         : 0;
-      if (rows.length === rowsBefore && !excluded && !pg.discovered) {
+      if (rows.length === rowsBefore && !excluded && !pg.discovered && !pg.mayBeEmpty) {
         log(`  NO EXHIBITIONS ${pg.ctx}: page loaded and was read, but nothing matched`);
         rows.push({
           venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
@@ -4710,7 +4813,12 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
         });
       }
 
-      followPagination(queue, pg, rows.slice(rowsBefore), rows, code, v);
+      // `whileMore`: the next page is asked for only while this one shows the venue's
+      // "more" control — Tate's page after the last is dead, and a dead page leaves a
+      // marker on every sweep (docs/scraper.md §2).
+      const whileMore = pg.paginate && pg.paginate.whileMore;
+      const moreShown = whileMore ? !!(await page.$(whileMore)) : true;
+      followPagination(queue, pg, rows.slice(rowsBefore), rows, code, v, moreShown);
 
     } catch (e) {
       rethrowIfAborted(e);
@@ -4729,7 +4837,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
 
   // Cut before opening detail pages where the listing gave us enough to judge.
   // `toFetch` is every row that goes on from here — and what is WRITTEN.
-  const toFetch = v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing');
+  const toFetch = applyRoutineWindow(v.lookbackAfterDetail ? rows : applyLookback(rows, code, 'listing'), routineFrom(code));
   // A ROW WHOSE BLURB CAME OFF THE LISTING NEEDS NO PAGE OPENED — but it is
   // still a row. Only rows from a page whose recipe named a `listingRow` carry
   // a summary here, so only those skip the fetch; they stay in `toFetch`.
@@ -4764,12 +4872,13 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
   const before = toFetch.length;
   for (let i = toFetch.length - 1; i >= 0; i--) {
     const r = toFetch[i];
-    if (!r._dropByPageLabel) continue;
-    log(`    the venue's own page labels this a ${r._dropByPageLabel}, excluded: ${r.title || r.url}`);
+    if (r._dropByTitle) log(`    not a temporary exhibition (venue rule), excluded: ${r.title}`);
+    else if (r._dropByPageLabel) log(`    the venue's own page labels this a ${r._dropByPageLabel}, excluded: ${r.title || r.url}`);
+    else continue;
     toFetch.splice(i, 1);
   }
   if (toFetch.length !== before) {
-    log(`  ${before - toFetch.length} row(s) excluded on the type printed on their own page`);
+    log(`  ${before - toFetch.length} row(s) excluded on their own page (type printed there, or the name it gave)`);
   }
 
   // HER RULING FOR THE MENIL, 12 Sep 2026: drop its permanent collection
@@ -4929,6 +5038,8 @@ function recipeDrivenParams(v) {
   const names = new Set();
   for (const pg of v.pages) {
     if (pg.param) names.add(pg.param);
+    // A page number the recipe writes itself (artic's `suffix: '&page=2'`) is wired, not a missed page.
+    for (const kv of String(pg.suffix || '').replace(/^[?&]/, '').split('&')) names.add(kv.split('=')[0]);
     const q = (pg.path || '').split('?')[1];
     if (q) for (const kv of q.split('&')) names.add(kv.split('=')[0]);
   }
@@ -5363,6 +5474,14 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
         }
       }
 
+      // `excludeTitle` again, on the name the page gave: a listing card with no
+      // readable name (the Met's) never met the listing's check (her decisions,
+      // docs/venues.md).
+      if (vrec.excludeTitle && row.title && vrec.excludeTitle.test(row.title)) {
+        row._dropByTitle = true;
+        continue;
+      }
+
       const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt, vrec.creditPara, vrec.keepBold, vrec.dropSentence, vrec.descriptionSkip, vrec.descriptionUntil);
       if (text) {
         row.summary = text;
@@ -5516,7 +5635,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
       // already holds — no request is made to keep a page.
       if (keepFrom && landed && !broke) {
         const html = await page.content().catch(() => '');
-        const outcome = row._dropByPageLabel ? 'dropped'
+        const outcome = row._dropByPageLabel || row._dropByTitle ? 'dropped'
           : fetched > keepFrom.fetched ? 'text'
           : noText > keepFrom.noText ? 'noText' : 'other';
         if (PAGE_KEEP.save(venueCode, row.url, {
@@ -5756,6 +5875,11 @@ async function main() {
 
   log('Cat Watch Sweep Prototype — starting');
   log(`Lookback floor: ${LOOKBACK.toISOString().slice(0,10)}`);
+  {
+    const routine = RUN_VENUES.filter(c => routineFrom(c));
+    if (routine.length) log(`Routine sweep: ${routine.join(', ')} read shows on, upcoming or closed since ${routineFrom(routine[0])} (--full for everything back to the floor).`);
+    else if (FULL) log('Full sweep (--full): every venue back to the lookback floor.');
+  }
   log(`Run directory: ${RUN_DIR}${CONTINUE ? ' (continuing)' : ''}`);
   // SAY WHICH MACHINE THIS IS BEFORE ANYTHING IS FETCHED. The guess is made from
   // the proxy, which exists in the container and not on her laptop — good, but a
@@ -5765,8 +5889,7 @@ async function main() {
         : PROXY_URL ? ' (proxy present, so this is the container)'
                     : ' (no proxy, so this is not the container)'}`);
   if (WANTED.length) {
-    const foreign = RUN_VENUES.filter(c =>
-      (VENUES[c].route === 'local' ? 'home' : 'container') !== MACHINE);
+    const foreign = RUN_VENUES.filter(c => machineOf(c) !== MACHINE);
     if (foreign.length) {
       log(`NAMED BY HAND, and not this machine's job: ${foreign.join(', ')}.`);
       log('Running them anyway — naming a venue always wins. Both machines');
@@ -5776,7 +5899,9 @@ async function main() {
   } else {
     log(`Sweeping this machine's ${RUN_VENUES.length} venues. `
       + `The other machine has: ${VENUE_ORDER.filter(c =>
-          (VENUES[c].route === 'local' ? 'home' : 'container') !== MACHINE).join(', ')}.`);
+          !['none', MACHINE].includes(machineOf(c))).join(', ')}.`
+      + (VENUE_ORDER.some(c => machineOf(c) === 'none')
+        ? ` Not swept (added by link): ${VENUE_ORDER.filter(c => machineOf(c) === 'none').join(', ')}.` : ''));
   }
   log(`Venues this run: ${RUN_VENUES.join(', ') || '(none)'}`);
   const already = VENUE_ORDER.filter(venueIsDone);
@@ -5941,6 +6066,7 @@ async function main() {
     // any point before this line, the venue simply has no file and is picked
     // up by the next --continue. There is never a half-scraped venue on disk.
     writeVenueCsv(code, rows);
+    recordWindow(RUN_DIR, code, routineFrom(code));
     // PAGES KEPT: a venue swept to the end with nothing refused is finished,
     // so its next sweep reads everything fresh. One refused on its first
     // request is written (its refusal record) but NOT finished — the pages kept
@@ -6272,6 +6398,7 @@ module.exports = {
   useFixtureWaits,
   // HEADED: pure, or a path — pacing.test.js H-001 to H-003; mode B, H-005 to H-007.
   splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome, HEADED_DEBUG_PORT, attachHeadedContext,
+  machineOf,
   saysOngoing, applyLookback, expandYearArchive, expandDateRange, expandFromToday, keptDespiteLookback, withoutQuery, listingPages, followPagination,
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
@@ -6286,11 +6413,11 @@ module.exports = {
   scrapeVenue,
   // Pure — the line-by-line title pick, so a venue reachable only from her
   // laptop can still be covered by a fixture here.
-  pickTitleLine, titleFromPage, readPageNameParts, titleFromCaps,
+  pickTitleLine, titleFromPage, readPageNameParts, titleFromCaps, venueTitle, isPlace, placesOf,
   // Not pure — exported so a check can run the real detail-page pass offline.
   fetchIndividualPages,
   // For from_saved_pages.js: the sweep's own finish, over pages she saved.
-  noteTravellingRuns, writeVenueCsv, rebuildSweepCsv, RUN_DIR,
+  noteTravellingRuns, writeVenueCsv, rebuildSweepCsv, RUN_DIR, routineFrom, applyRoutineWindow,
   // Pure — asked directly by the fixtures.
   addNote, finishNotes, scopeSelector,
   // Exported so compress.js's mirrored location list can be checked against the
