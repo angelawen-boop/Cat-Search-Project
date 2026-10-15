@@ -22,6 +22,9 @@ meets it.
   to the review. Confirmed once, never asked again.
 - **The ordinary review.** Each link becomes a pro forma row fed to the existing intake: Add / Fill / Change /
   Reject / quarantine all as now.
+- **An import she does not finish keeps NOTHING** — new venues and shops, Confirm / No shop /
+  Look again, a CSV's sweep log: all stored when the ledger moves. Cancel import drops them; Back
+  keeps them. A file or Read with nothing to propose counts as finished.
 - **A link it cannot read is a line, never a card** — the full link and why (empty page, refused, no dates).
   Unread links **stay in the paste box**, stored when the import finishes, until read or cleared. **Links come
   back to the box** (her decision): a rejected card's, an undecided card's after a partial apply, and on
@@ -122,10 +125,16 @@ fresh Parallel fetches (her decision for Parallel work); only the date phrases a
 ## Venue link rules
 
 **NGA has its own chip** (her decision): National Gallery of Art links (`occ-nga-gov`) are an occasional venue
-in every other way, but sit under an "NGA" chip, never "Occasional", and their cards say NGA (`OWN_CHIP`;
+in every other way, but sit under an "NG Washington" chip, never "Occasional", and their cards say NG Washington (`OWN_CHIP`;
 AL-030). A leading "Exhibition:" is dropped from titles (her ask; *Hubert Robert, 1733–1808*): an `OWN_CHIP`
 entry can carry `linkRead`, found by `linkReadVenue`. Proved live: five archive pages, title and dates (on
-`docs/link_proof_pages.json`).
+`docs/link_proof_pages.json`); descriptions carry menu and caption junk, left alone until it reaches Claude's.
+
+**Mia** (Minneapolis Institute of Art): its own chip "Mia", cards print "MIA" (her decision); the full name and the
+"–– Minneapolis Institute of Art" title tail are dropped (`OWN_CHIP`; AL-032, three pages on the proof list). HTML
+codes in any page title are decoded ("Chagall&#039;s"). **Jacquemart-André**: the line under the heading is the
+subtitle, read by code (`subtitleUnderHeading`); the dates sit at the page's foot, so the description is read
+from under the heading.
 
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her decision: Parallel-only rules
 live in the app, never the scraper). They only tidy what Claude is handed. Options: `title`, `titleDrop` (a
@@ -139,7 +148,8 @@ passage is tolerated (her decision).
   past 60 lines, and an old-layout page prints it above the only line naming the show. *Matisse* (2012) prints
   no dates in its text at all.
 - **Boston MFA** (`occ-mfa-org`, chip "Boston" under "Occasional", cards "Boston MFA", her decision) — dates
-  printed on the line above the title (`datesAbove`).
+  printed on the line above the title (`datesAbove`). Legacy Illuminated, Degas and Sargent are unchecked
+  (the free tier refused).
 - **frick** — a leading "Special Loan:" is the Frick's label, not the show's name (`titleDrop`).
 - **menil** — a leading "Collection Close-Up:" dropped (`titleDrop`, her ask).
 - **acq** — description = the "Press Release" text (`from`), headings and short caption lines dropped. Title =
@@ -158,6 +168,32 @@ passage is tolerated (her decision).
   "Book tickets" (current pages).
 
 Proof pages for every rule above: `docs/link_proof_pages.json`.
+
+## What links are for, and how far the reader reaches
+
+- **At a swept venue** a link is for shows before the 1 July 2024 lookback, or a venue she
+  has stopped sweeping (too few keepers per sweep) — never a show the scraper has or will
+  have. Otherwise, occasional venues. **No exclusions apply to a link** (her decision):
+  displays and collection shows are added too.
+- **The general reader works at 17 of the 28** once the eight rules are in (checked on 67
+  live pages: one archive, one current each, plus her 10 occasional links). Still short:
+  acq, rijks, borghese, louvre, uffizi, mam, mad, ashmolean, artic, brit, dellav. **Her
+  choice: only acq, louvre, artic and brit get work** (deep archives); the others may never
+  come into play. A page printing no year ("5 June to 25 October") still fails — blank
+  dates are NOT approved, and "current year" would misdate archives.
+- **Titles from a page title** (AL-015): the show is the first part of a barred title, the
+  site the last; a bar inside the show's own name ("Duccio | Caro") is kept, read off the
+  page's heading. A page title that dresses the heading ("Exhibition Giovanni Bellini in
+  Paris") gives way to the heading.
+- **A link from one of the 28 files under that venue**, known by its site from the
+  scraper's recipes (`VENUE_SITES`, written by `build/sync_shared.js`; the Tates told apart
+  by path). A new venue's shop is looked for once per Read, never once per link.
+- **Claude reads relevant passages, not the first N characters** (`pickPassages`): lines
+  naming the book or show, catalogue/ISBN/price words, or a link onto the venue's shop come
+  first. A link labelled "catalog" onto the venue's shop, in web results, is taken in code
+  (`catalogueLinkOn`).
+- **A rejected link goes back in the box** with the unread ones and, after a partial apply,
+  the undecided ones; "Clear", inside the box, empties it and the store.
 
 ## Re-checking the proof pages
 

@@ -887,100 +887,18 @@ stale after a minute; every save checks it first. A republish while her page is 
 
 ### 2. Add by link — 39.5 signed off on her 10 links; a new venue still to see
 
-**Her test of 39.5:** all 10 original links imported; the shop finder
-better; catalogue lookups at Thyssen and Mauritshuis found the catalogue. Left
-here for now. **First venues it had never met — Mia and Worcester — both missed,
-fixed in code and proven live** (43.1): the venue's own name for the search, a Shopify
-section judged on its product list, and a museum's "Shop now" followed to a shop on
-another site (`docs/picked_shows.md`, "A venue the app has not seen"; AL-033, AL-034).
+**Design, decisions, venue link rules and the proof pages: `docs/picked_shows.md`.** Her
+test of 39.5: all 10 original links imported; the shop finder better; catalogue lookups at
+Thyssen and Mauritshuis found the catalogue. First venues it had never met — Mia and
+Worcester — both missed, fixed in code and proven live (43.1). Current additions: Boston
+MFA, NGV, Wayback Machine copies, tracking tags dropped (44–44.4).
 
-**What links are for at a swept venue (her account):** only shows before the
-1 July 2024 lookback, or a venue she has stopped sweeping (too few keepers per
-sweep). Never a show the scraper has or will have. Otherwise, occasional venues.
-**No exclusions apply to a link** — whatever she pastes is added, displays and
-collection shows included (her decision).
-
-**The reader at the 28, checked on 67 live pages** (one archive, one current
-each, plus her 10 occasional links): the general reader works at 17 venues once
-the eight general-reader rules are in (on `main`; `docs/picked_shows.md`, "The
-general reader — eight rules"; proved on 37 fresh live pages). Still short: acq,
-rijks, borghese, louvre, uffizi, mam, mad, ashmolean, artic, brit, dellav. **Her
-choice: only acq, louvre, artic and brit get work** (deep archives); the others
-may never come into play. A page printing no year ("5 June to 25 October") still
-fails — blank dates instead is NOT approved; "current year" would misdate
-archives.
-- **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry (like
-  `subtitleUnderHeading`), never in the scraper — the scraper never runs them
-  (her decision). A rule both use (the date reader) stays in `dates.js`.
-- **Venue link rules** (`linkRead` on the `MUSEUMS` entry; `docs/picked_shows.md`,
-  "Venue link rules"): acq, louvre, artic, brit (four live archive pages each);
-  met — dates from its "on view" line anywhere on the page; frick — a leading
-  "Special Loan:" dropped; menil — "Collection Close-Up:" dropped; artic — the
-  description stops at a "Related" box (a photos-only page took another show's
-  card). Each proved live; all on `docs/link_proof_pages.json`, which can also
-  require no description (`noDescription`).
-- **NGA (National Gallery of Art) — her deep-archive link venue**: an occasional
-  venue with its own "NG Washington" chip and card name, and a leading "Exhibition:"
-  dropped (`OWN_CHIP`, `linkReadVenue`; AL-030). Proved live on five archive
-  pages; descriptions carry menu and caption junk around the real text, left
-  alone until her cards show it reaching Claude's descriptions.
-- **Mia (Minneapolis Institute of Art)**: its own chip "Mia", cards print "MIA" (her
-  decision); its full name and the "–– Minneapolis Institute of Art" title tail dropped
-  (`OWN_CHIP`; AL-032, three pages on `docs/link_proof_pages.json`). HTML codes in any
-  page title are decoded ("Chagall&#039;s").
-- **Boston MFA**: under "Occasional", chip "Boston", cards "Boston MFA" (her decision);
-  dates sit on the line above the title (`OCC_LINK_READ` `datesAbove`). Proved live on
-  four pages; Legacy Illuminated, Degas and Sargent unchecked (free tier refused).
-  A line opening "In collaboration with" under Acquavella's name is a credit,
-  never a subtitle (her decision; *Calder | Miró*).
-- **A show no museum page links any more** (her *Sargent and the Sea*, RA 2010):
-  paste its Wayback Machine copy; it files under the museum it copied, that venue's
-  shop (`siteUrlOf`; `docs/picked_shows.md`).
-- **NGV**: cards "National Gallery Victoria", last in the Occasional group (her
-  decision); its "4 Sep 26" years read at NGV only (`shortYear`).
-- **Old-layout Met pages that print no dates in their text** (*Matisse*, 2012,
-  dates only in the banner) stay a failed link — no new code for them (her
-  decision: her Met deep-archive work is done).
-- **Junk at the end of a link's description is tolerated** (her decision) — act
-  only if it starts reaching Claude's compressed descriptions. Not so for the
-  scraper: venues swept repeatedly are kept precise.
-
-Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`):
-- **An import she does not finish keeps NOTHING** — CSV or links: new venues
-  and shops, Confirm / No shop / Look again, a CSV's sweep log. All stored when
-  the ledger moves; Cancel import drops them; Back keeps them. **Except the
-  links:** Cancel import puts every link read back in the box, stored.
-  A file or Read with nothing to propose counts as finished.
-- **A rejected link goes back in the box** when the import finishes, with the
-  unread ones and, after a partial apply, the undecided ones; "Clear", inside the box, empties it and the store.
-- **Books and ONLY books** — a section mixing books with other goods is never
-  taken; the finder looks inside it for a books-only one. Catalogues ›
-  publications › books. Never a front page.
-- **She never feeds the app a shop link**, and "no shop found" is not an answer
-  from a museum that has one.
-- **The finder's search sends two queries in one call** — hers and "<venue>
-  shop books publications" (Detroit's "DIA Publications" came only with both;
-  her keyed connector).
-- **A link venue is looked up exactly as the 28 are — shelf AND whole-shop
-  search** (her decision). DIA files a show's book in the show's own shop
-  section, not its shelf. The finder keeps a search only if it finds a book it
-  saw (`proveShopSearch`); venues met before (finder 2) work it out at their
-  first lookup. **Open:** O'Keeffe found at Detroit? Did Mauritshuis and the RA
-  get a search? Her next lookups there say.
-- **Titles from a page title**: the show is the first part of a barred
-  title, the site the last; a bar inside the show's own name ("Duccio | Caro")
-  is kept, read off the page's heading. AL-015. A page title that dresses the
-  heading ("Exhibition Giovanni Bellini in Paris") gives way to the heading.
-- **A link from one of the 28 files under that venue**: known by its
-  site, from the scraper's recipes (`VENUE_SITES`, written by
-  `build/sync_shared.js`; the Tates told apart by path). A new venue's shop is
-  looked for once per Read, never once per link.
-- **Jacquemart-André** (her saved pages, `docs/link_pages/`): the line under the
-  heading is the subtitle, read by code (`subtitleUnderHeading`); the dates
-  sit at the page's foot, so the description is read from under the heading.
-- **Claude reads relevant passages, not the first N characters** (`pickPassages`): lines naming the book or show, catalogue/ISBN/price words,
-  or a link onto the venue's shop come first. A link labelled "catalog" onto
-  the venue's shop, in the web results, is taken in code (`catalogueLinkOn`).
+- **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).**
+  Detroit files a show's book in the show's own shop section. Her next lookups settle:
+  O'Keeffe found at Detroit? Did Mauritshuis and the RA get a search?
+- **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the
+  scraper (her decision); a rule both use (the date reader) stays in `dates.js`. Live
+  proof of every link venue: `docs/link_proof_pages.json`.
 
 ### 3. Fixes not yet checked in the cases they were written for
 
@@ -998,28 +916,11 @@ Rules this work settled (code and tests carry the detail; `docs/picked_shows.md`
 CLAUDE.md §7.4 and `docs/handover_search_stage1.md` there say where it stands.
 The text below is as it stood at 43.
 
-**PAUSED — no lookup patches until the redesign below is agreed** (her
-decision: past the third-patch limit — `lookupCatalogue` changed 10 times in
-three days). **Redesign, agreed in outline:** find → choose → tell, as three
-separate steps. The lookup keeps EVERY version it finds (language, binding,
-publisher, which showing it belongs to, the page that proved it); nothing is
-chosen or dropped mid-search; booklets are left off. One version → the card as
-now. Several → one line each, labelled with why it exists and a link to the page
-that proved it; she picks one; the same buy buttons rebuild for her pick, which
-becomes the card's book in the ledger (the list stored beside it; replaces
-`originalEdition`, `otherVenueBook`, `alsoVersion`). Search again starts fresh.
-**Starting pick, her rules, in order:** only this showing's catalogue (any
-language or printing) may start picked; English first (any publisher, any time
-— Hammershøi); then this venue's own printing (Vasari: the Louvre's English
-paperback over Stockholm's hardcover; NGA's card: NGA's book); then hardcover
-when only the binding differs; nothing picked when this showing has no English
-but another showing's different book is English (Hubert Robert, Louvre), or when
-the rules do not settle it. More rules only once she has used the cards. These
-replace "hardcover leads" and one-book-per-card.
-**Next:** live research of the agreed case set — Vasari, Hubert Robert (Louvre,
-NGA), Hammershøi, Watteau, Canaletto – Guardi, Botticelli, *Metamorphoses*,
-Millet — and the card each should show; then one design doc for her approval;
-no code before. Every later change is checked against that set.
+**PAUSED — no lookup patches until the redesign is agreed** (her decision: past the
+third-patch limit — `lookupCatalogue` changed 10 times in three days). The redesign (find →
+choose → tell, every version kept, her starting-pick rules) and its nine agreed cases are in
+`docs/catalogue_versions.md`; every later change is checked against them. Awaiting her
+approval to build; no code before.
 
 She is noting issues as she uses it, for a later debugging session.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
