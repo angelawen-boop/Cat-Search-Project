@@ -738,7 +738,6 @@ work in hand.
 | `docs/cloud_storage.md` | The cloud ledger trial: what the page's store holds, Save and the safety copies, the trial switch, the safety proofs, the read-only lock for a second copy | Changing anything about saving to the page's own store |
 | `docs/store_backup_2026-09-21/` | A read-out of the page's store, as insurance | Only if the store is lost AND `sweep_log.js` cannot rebuild it |
 | `docs/scalability.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
-| `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 
 **Import 1: the scraper** — getting exhibitions from the venues into a CSV
 
@@ -768,6 +767,12 @@ work in hand.
 | File | What is in it | Read it when |
 |---|---|---|
 | `docs/catalogue_versions.md` | The catalogue-versions redesign (paused) and its agreed cases | Changing the catalogue lookup's design |
+
+**Features** — ideas not yet built
+
+| File | What is in it | Read it when |
+|---|---|---|
+| `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 
 **Reviews**
 
