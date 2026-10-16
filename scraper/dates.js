@@ -333,15 +333,16 @@ function findDateRangeCore(raw, opts = {}) {
 
   // A single day-first date with a preposition (Rijksmuseum): "till 21 March 2027"
   // closes, "from 9 October 2026" opens. After the range patterns, so a range still wins.
-  // "Closes 15 November 2026" and Italian "fino al 24 aprile 2026" close too.
-  m = s.match(new RegExp(`\\b(?:(?:till|until|through|to|closes?|closing|fino\\s+al)\\s+|fino\\s+all['\u2019]\\s*)(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  // "Closes 15 November 2026" and Italian "fino al 24 aprile 2026" close too, and so does
+  // "Now–" (Cincinnati, Anila Quayyum Agha: the show is already open, its start unprinted).
+  m = s.match(new RegExp(`\\b(?:(?:till|until|through|to|closes?|closing|fino\\s+al)\\s+|fino\\s+all['\u2019]\\s*|now\\s*-\\s*)(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (m && plausibleYear(m[3])) {
     const mo = monthNum(m[2]);
     if (mo) return { start: '', end: ymd(m[3], mo, m[1]), raw: frag(m) };
   }
 
   // The same, month first: "Through January 10, 2027", "Closes November 15, 2026".
-  m = s.match(new RegExp(`\\b(?:till|until|through|thru|closes?|closing)\\s+(${M})\\s+(\\d{1,2}),?\\s*(\\d{4})`, 'i'));
+  m = s.match(new RegExp(`\\b(?:(?:till|until|through|thru|closes?|closing)\\s+|now\\s*-\\s*)(${M})\\s+(\\d{1,2}),?\\s*(\\d{4})`, 'i'));
   if (m && plausibleYear(m[3])) {
     const mo = monthNum(m[1]);
     if (mo) return { start: '', end: ymd(m[3], mo, m[2]), raw: frag(m) };

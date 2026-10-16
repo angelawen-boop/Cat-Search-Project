@@ -23,7 +23,7 @@ const MUSEUMS = [
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopCatalogues:"https://www.rijksmuseumshop.nl/en/books/exhibition-books", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
   { id:"ng", short:"NG UK", lookupName:"National Gallery", name:"The National Gallery", city:"London",
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
-  // linkRead: Add by link options for met, acq, frick, menil, louvre, artic, brit (docs/add_by_link.md, "Venue link rules").
+  // linkRead: Add by link options for met, acq, frick, menil, louvre, artic, brit, cincinnati (docs/add_by_link.md, "Venue link rules").
   // No apostrophe or double quote inside a linkRead pattern (write \x27): compress.js seedMemory scans this list as text.
   { id:"acq", linkRead:{ title:"subtitle", places:["New York","Palm Beach"], credit:/^In collaboration with\b/i, dashAfterColon:true, from:/^Press Release$/, minLine:60, skip:/^Gallery Hours:|\bImage Courtesy\b/, skipEntities:true, cleanLink:true }, short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
@@ -35,7 +35,7 @@ const MUSEUMS = [
   { id:"menil", linkRead:{ titleDrop:/^Collection Close-Up:\s*/i }, short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopCatalogues:"https://bookstore.menil.org/collections/menil-publications", shopHome:"https://bookstore.menil.org/", listUrl:null },
   { id:"artic", linkRead:{ from:/^Share$/, until:/^(?:Share|Related(?: Exhibitions| Products)?|Sign up for our enewsletter\b.*)$/, minLine:60, skip:/\u00a9|Press 300ppi|Image CC|Photo courtesy|^(?:an?|the)\s+(?:[\w,\x27-]+\s+){0,5}?(?:painting|poster|drawing|photograph|photomontage|statuette|cover|print)\b,?\s+(?:of|with|reads|that|in|featuring|showing)\b/i }, short:"Artic", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
   // Her addition, after Artic. Shopify: search box and her Books shelf.
-  { id:"cincinnati", short:"Cincinnati", name:"Cincinnati Art Museum", city:"Cincinnati", exBase:null, shopSearch:"https://shop.cincinnatiartmuseum.org/search?q=", shopCatalogues:"https://shop.cincinnatiartmuseum.org/collections/books", shopHome:"https://shop.cincinnatiartmuseum.org/", listUrl:null },
+  { id:"cincinnati", linkRead:{ crumb:true }, short:"Cincinnati", name:"Cincinnati Art Museum", city:"Cincinnati", exBase:null, shopSearch:"https://shop.cincinnatiartmuseum.org/search?q=", shopCatalogues:"https://shop.cincinnatiartmuseum.org/collections/books", shopHome:"https://shop.cincinnatiartmuseum.org/", listUrl:null },
   { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:"https://wallacecollectionshop.org/search?q=", shopCatalogues:"https://wallacecollectionshop.org/collections/wallace-collection-publications", shopHome:"https://wallacecollectionshop.org/", listUrl:null },
   { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
   // Her addition, after Tate Britain. Shopify: search box and her exhibition-catalogues shelf.
@@ -408,15 +408,16 @@ function findDateRangeCore(raw, opts = {}) {
 
   // A single day-first date with a preposition (Rijksmuseum): "till 21 March 2027"
   // closes, "from 9 October 2026" opens. After the range patterns, so a range still wins.
-  // "Closes 15 November 2026" and Italian "fino al 24 aprile 2026" close too.
-  m = s.match(new RegExp(`\\b(?:(?:till|until|through|to|closes?|closing|fino\\s+al)\\s+|fino\\s+all['\u2019]\\s*)(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
+  // "Closes 15 November 2026" and Italian "fino al 24 aprile 2026" close too, and so does
+  // "Now–" (Cincinnati, Anila Quayyum Agha: the show is already open, its start unprinted).
+  m = s.match(new RegExp(`\\b(?:(?:till|until|through|to|closes?|closing|fino\\s+al)\\s+|fino\\s+all['\u2019]\\s*|now\\s*-\\s*)(\\d{1,2})\\s+(${M})\\s+(\\d{4})`, 'i'));
   if (m && plausibleYear(m[3])) {
     const mo = monthNum(m[2]);
     if (mo) return { start: '', end: ymd(m[3], mo, m[1]), raw: frag(m) };
   }
 
   // The same, month first: "Through January 10, 2027", "Closes November 15, 2026".
-  m = s.match(new RegExp(`\\b(?:till|until|through|thru|closes?|closing)\\s+(${M})\\s+(\\d{1,2}),?\\s*(\\d{4})`, 'i'));
+  m = s.match(new RegExp(`\\b(?:(?:till|until|through|thru|closes?|closing)\\s+|now\\s*-\\s*)(${M})\\s+(\\d{1,2}),?\\s*(\\d{4})`, 'i'));
   if (m && plausibleYear(m[3])) {
     const mo = monthNum(m[1]);
     if (mo) return { start: '', end: ymd(m[3], mo, m[2]), raw: frag(m) };
@@ -803,8 +804,16 @@ function readShowPage(res,url,vc){
   const text=String(oneText(res)||"");
   if(text.trim().length<SHELL_CHARS)return{ok:false,why:"The page came back empty."};
   const host=hostOf(siteUrlOf(url));
-  const{show,site}=splitPageTitle(res&&res.title,host);
+  let{show,site}=splitPageTitle(res&&res.title,host);
   const lines=text.split("\n");
+  // A page title the page never prints can be a sentence (Cincinnati, Cagnacci: "Guido
+  // Cagnacci’s Death of Cleopatra will be the centerpiece…"): the breadcrumb's last step
+  // names the show instead (linkRead.crumb).
+  if(lr&&lr.crumb&&!(show&&lines.some(l=>foldText(stripMd(l)).includes(foldText(show))))){
+    const crumb=lines.map(stripMd).find(l=>/^\s*Home\s*»/.test(l));
+    const last=crumb?crumb.split("»").pop().trim():"";
+    if(last)show=last;
+  }
   // Candidate title lines, in order; the heading is the first with dates under it.
   const words=l=>foldText(stripMd(l)).replace(/[^a-z0-9]+/g," ").trim();
   const cands=[];

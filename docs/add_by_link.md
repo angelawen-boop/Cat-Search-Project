@@ -101,7 +101,7 @@ fresh Parallel fetches (her decision for Parallel work); only the date phrases a
   `splitPageTitle`.
 - **R2 Heading over tab title** — a tab title that is the heading plus a dash-led tail, or plus
   "Exhibition(s)", gives way to the heading (Acquavella, V&A, MAD, British Museum). `readShowPage`.
-- **R3 Closing-only dates** — "Through …", "Until …", "Closes …", "fino al …", in the shared `dates.js` after
+- **R3 Closing-only dates** — "Through …", "Until …", "Closes …", "fino al …", "Now–…", in the shared `dates.js` after
   the ranges, so a range still wins; the scraper reads them too. DS-002.
 - **R9 One side completed** — a one-sided first date takes a full range further down that shares the date on
   the same side (Tate Modern *Ana Mendieta*); never a range ending on another day (National Gallery *Renoir
@@ -134,7 +134,7 @@ A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her
 live in the app, never the scraper). They only tidy what Claude is handed. Options: `title`, `titleDrop` (a
 label before the show's name), `dateLine` (dates from the first line matching, anywhere), `from` / `until`
 (passage starts after / ends at a matching line), `skip` / `skipEntities` / `minLine` (lines left out),
-`cleanLink` (address loses query and fragment), `datesAbove` (dates up to N lines above the heading). An
+`cleanLink` (address loses query and fragment), `datesAbove` (dates up to N lines above the heading), `crumb` (title from the breadcrumb when the page never prints its tab title). An
 occasional venue takes them from `OCC_LINK_READ`; read by `readShowPage`, `venueTitle`. Junk at the end of a
 passage is tolerated (her decision).
 
@@ -158,6 +158,7 @@ passage is tolerated (her decision).
   courtesy", "Press 300ppi") and picture descriptions opening "A/An/The … painting/poster/cover … of/with/…"
   skipped. Passage ends at the closing "Share", a "Related" box or the newsletter (`until`): a photos-only
   page otherwise took another show's card as its description (*Violence and Virtue*; `noDescription`).
+- **cincinnati** — a tab title the page never prints (a sentence: *Cagnacci*) gives way to the breadcrumb's last step (`crumb`). "Now–May 30, 2021" (*Anila Quayyum Agha*) is a closing date only, no opening date (her decision; the shared `dates.js`, DS-002).
 - **brit** — passage starts after the shop line ("For the catalogue, homewares and gifts…", archive pages) or
   "Book tickets" (current pages).
 

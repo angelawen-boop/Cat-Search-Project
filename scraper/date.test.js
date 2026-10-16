@@ -2032,7 +2032,7 @@ test('DS-001: "since" with a full date is an opening date, German dotted day too
   assert.strictEqual(findDateRange('Since November 11').start, '');
 });
 
-test('DS-002: a closing date alone, month first or after "Closes" / "fino al" (Add by link; docs/add_by_link.md)', () => {
+test('DS-002: a closing date alone, month first or after "Closes" / "fino al" / "Now–" (Add by link; docs/add_by_link.md)', () => {
   const { findDateRange } = require('./dates.js');
   const want = {
     'Through January 10, 2027':            '2027-01-10',
@@ -2042,6 +2042,8 @@ test('DS-002: a closing date alone, month first or after "Closes" / "fino al" (A
     'Closes 15 November 2026':             '2026-11-15',
     'fino al 24 aprile 2026':              '2026-04-24',
     "fino all'8 maggio 2026":              '2026-05-08',
+    'Now\u2013May 30, 2021':                  '2021-05-30',
+    'Now - 30 May 2021':                   '2021-05-30',
   };
   for (const [text, end] of Object.entries(want)) {
     const r = findDateRange(text, { looseSingles: false });
