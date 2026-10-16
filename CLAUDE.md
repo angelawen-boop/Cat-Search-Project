@@ -212,6 +212,9 @@ contemporary; labels at the edges differ between runs). Her rehearsal in the app
 once, RB-016 read 1148–1293ms against 1450 in 5 of 10, RB-020 over
 1400ms in 2. Not investigated. A scraper session's job — not an app one's.
 
+**OPEN — V-003** (`venue_status.test.js`) fails on `main`: mad reports 22 rows but
+`run_2026-10-15_230242` holds 8. Not investigated; a scraper session's job.
+
 ---
 
 ## 3. Where the rest lives
