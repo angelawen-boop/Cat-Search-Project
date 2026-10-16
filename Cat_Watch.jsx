@@ -5928,8 +5928,10 @@ export default function App(){
                 {f.url&&<a href={f.url} target="_blank" rel="noopener noreferrer" style={{color:TH.urgent.ink}}>{f.url}</a>}{f.url?" \u2014 ":""}{f.why}
               </div>)}
             </div>}
+            {/* Cancel always answers: a catalogue search also sets busy, and once locked the
+                pop-up out until the search ended (her report). */}
             <div style={{textAlign:"center",marginTop:10}}>
-              <button onClick={()=>{ if(linkRead.current.on){ linkRead.current.stop=true; setProg(p=>({...p,label:"Stopping after this link\u2026"})); return; } if(!proposals)dropHeldVenues(); setImportMode(null); }} disabled={busy&&!linkRead.current.on} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
+              <button onClick={()=>{ if(linkRead.current.on){ linkRead.current.stop=true; setProg(p=>({...p,label:"Stopping after this link\u2026"})); return; } if(!proposals)dropHeldVenues(); setImportMode(null); }} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
             </div>
           </div>
         </div>
