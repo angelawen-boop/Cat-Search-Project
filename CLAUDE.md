@@ -380,7 +380,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 45.1 in her app**, with the cloud ledger. What each recent version changed is in
+**Live: 45.2 in her app**, with the cloud ledger. What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
