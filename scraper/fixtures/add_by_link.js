@@ -108,9 +108,17 @@ const SEARCHES = [[/DIA only mixed/, DIA_MIXED_ONLY], [/Courtauld/, SEARCH('cour
     excerpts: ['Online shop\nThe online shop currently offers a limited but exciting range of merchandise, including arts and crafts, WAM-branded goods, books, and exhibition catalogs.\nShop now'] }] }],
   // Made from her keyed search's live reply (13 Oct): its first result, Mia's own Catalogues shelf.
   [/Minneapolis/, { results: [{ url: 'https://shop.artsmia.org/collections/exhibition-catalogues', title: 'Exhibition Catalogues - The Store at Mia - Minneapolis Institute of Art',
-    excerpts: ['Menu\nContinue Shopping\nYour Cart is Empty\nOnly at Mia\nMia Merchandise\nCatalogues\nArt & Stationery\nKid\'s Books\nToys\nSale'] }] }]];
+    excerpts: ['Menu\nContinue Shopping\nYour Cart is Empty\nOnly at Mia\nMia Merchandise\nCatalogues\nArt & Stationery\nKid\'s Books\nToys\nSale'] }] }],
+  // Made from her keyed search's live reply (17 Oct, trimmed): Yale's own "Museum Bookshop" page among its results.
+  [/Yale Center for British Art/, { results: [
+    { url: 'https://britishart.yale.edu/publications', title: 'Publications - Yale Center for British Art', excerpts: ['# Publications\n\n### The Yale Center for British Art produces books that complement and augment its architecture, collections, exhibitions, programs, and other collaborative research projects.'] },
+    { url: 'https://britishart.yale.edu/museum-shop', title: 'Museum Bookshop - Yale Center for British Art', excerpts: ['# Museum Bookshop\n\nBrowse our offerings and make purchases [online](https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true "Museum Shop") . All proceeds support the YCBA’s educational mission and programs.\n\n## [Shop online](https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true)'] }] }]];
 const books = ' Hardcover. 240 pages. € 34,95 — Paperback catalogue. € 24,95 — Exhibition catalogue, hardcover. € 49,95.';
 const SHOPS = {
+  // Yale (17 Oct, live, trimmed): its Museum Bookshop page links to a shop on Yale's payment
+  // site, which the connector reads as two words.
+  'https://britishart.yale.edu/museum-shop': '## Main navigation\n\nExhibitions and programs Collections Research and learning Plan your visit About us\n\n# Museum Bookshop\n\nBrowse our offerings and make purchases [online](https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true "Museum Shop") . All proceeds support the YCBA’s educational mission and programs.\n\nBrowse a wide variety of books on British art and culture, as well as publications related to the museum’s collections, exhibitions, and architecture.\n\n## [Shop online](https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true)\n\n## Free Membership',
+  'https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true': 'YCBA Home',
   // Worcester (13 Oct, live, trimmed): the Shop page's "Shop now" leads to another site.
   'http://worcesterart.org/visit/shop': '# Shop\n\n## Online shop\n\nThe online shop currently offers a limited but exciting range of merchandise, including arts and crafts, WAM-branded goods, books, and exhibition catalogs.\n\n[Shop now](https://the-museum-shop-at-wam.myshopify.com/)\n\nOrder custom prints of artworks through [RequestAPrint](https://www.requestaprint.net/worcester/index.php) .',
   'https://the-museum-shop-at-wam.myshopify.com/collections.json?limit=250': '{"collections":[{"id":388308795645,"title":"Books - Non Catalog","handle":"books-non-catalog","products_count":152},{"id":387956080893,"title":"Catalogs","handle":"catalogs","description":"<p>Exhibition Catalogs; Past and Present.</p>","products_count":41},{"id":388296442109,"title":"Jewelry","handle":"jewelry","products_count":60}]}',
@@ -337,7 +345,7 @@ function runtime() {
     ok(r.ok && r.base === "Matrimonial Bliss: Chagall's Double Portrait with Wine Glass" && r.site === 'Minneapolis Institute of Art',
       'AL-032: Mia: no "–– Minneapolis Institute of Art" tail, no "&#039;", the venue named in full', JSON.stringify([r.base, r.site]));
   }
-  // ── AL-040: Yale CBA — clock times between the dates (the shared reader, DS-003); its own shop ─
+  // ── AL-040: Yale CBA — clock times between the dates (the shared reader, DS-003) ─
   // Made from the live pages (17 Oct); all three on docs/link_proof_pages.json.
   {
     const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
@@ -352,10 +360,6 @@ function runtime() {
     const l = read(page('Edward Lear and the Art of Travel', 'Wednesday, September 20, 2000, 10:00 am ET–Sunday, January 14, 2001, 5:00 pm ET'),
       'https://britishart.yale.edu/exhibitions-programs/edward-lear-and-art-travel', YALE);
     ok(l.ok && l.start === '2000-09-20' && l.end === '2001-01-14', 'AL-040a:  Yale Edward Lear: across a year end, 20 Sep 2000 to 14 Jan 2001', JSON.stringify([l.start, l.end, l.why]));
-    const shop = fn('fixedShop')(YALE);
-    ok(shop && shop.shop === 'found' && shop.shopCatalogues === 'https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true' && !shop.shopSearch,
-      'AL-040b:  Yale\'s bookshop (on Yale\'s payment site, blank to the reader) is filed as found, for her to confirm', JSON.stringify(shop));
-    ok(fn('fixedShop')('occ-new-artsmia-org') === null, 'AL-040c:  a venue with no shop of its own is looked for as before');
   }
   // ── AL-019: a page title that dresses the show's name — the heading wins ─
   // 7 Oct, her cards: "Exhibition Fra Angelico in Paris: and the Masters of Light".
@@ -536,6 +540,16 @@ function runtime() {
       'AL-008k2:  the proof is ONE call: four shop softwares × two books seen, all on DIA\'s own shop', probe && JSON.stringify(probe.args.urls));
   }
 
+  // ── AL-041: Yale — a museum's own "Bookshop" page leading to a shop that reads blank ──
+  {
+    const r = await discoverShop('', 'britishart.yale.edu', 'Yale Center for British Art', []);
+    ok(r.shop === 'found' && r.shopCatalogues === 'https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true' && r.shopHome === r.shopCatalogues && !r.shopSearch
+      && fetched('https://britishart.yale.edu/museum-shop') && fetched('https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true'),
+      'AL-041: Yale: its "Museum Bookshop" page (a /museum-shop address) is followed to the shop on Yale\'s payment site; blank, it is taken as the books shop, full address kept', JSON.stringify(r));
+    const w = await discoverShop('', 'worcesterart.org', 'Worcester Art Museum', []);
+    ok(w.shop === 'found' && w.foundBy !== 'the museum\u2019s bookshop page' && w.shopCatalogues === 'https://the-museum-shop-at-wam.myshopify.com/collections/catalogs',
+      'AL-041a:  a Shop page not headed "Bookshop" (Worcester) is not taken this way', JSON.stringify(w));
+  }
   // ── AL-033: Mia — a Shopify shelf whose books the connector cannot see ──
   {
     const r = await discoverShop('', 'new.artsmia.org', 'Minneapolis Institute of Art', []);

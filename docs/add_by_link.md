@@ -71,6 +71,10 @@ the import finishes.** Code: "FINDING A NEW VENUE'S SHOP SECTION".
   `products.json`: two priced products, most with a book type (`shopifyShelfIsBooks`; AL-033).
 - **The museum's own Shop page pointing elsewhere** (Worcester's "Shop now" → a myshopify.com shop) is
   followed when the search finds no section (`shopElsewhere`; AL-034).
+- **A museum's own Bookshop page** (its heading says "Bookshop"; Yale's /museum-shop) whose shop on another
+  site reads blank: that shop's full address is taken as the books shop, for her to confirm; lookups then find
+  it blocked (AL-041). A /museum-shop address counts as a shop page (`SHOP_PATH`). Checked on every saved page:
+  no other venue's page is headed "Bookshop".
 
 A pick is **opened and must read as books with prices** (unless its excerpt already does). Nothing → "Shop
 found, but not its books section: <shop>" / "No museum shop found." / "Search failed." — and **a miss is a
@@ -129,10 +133,8 @@ entry can carry `linkRead`, found by `linkReadVenue`. Proved live: five archive 
 codes in any page title are decoded ("Chagall&#039;s"). **Yale CBA** (Yale Center for British Art, `occ-britishart-yale-edu`): its own chip
 and cards "Yale CBA", after Cincinnati (her decision); the lookup searches by the full name (`OWN_CHIP`; AL-039).
 Its dates carry clock times ("February 7, 2008, 10:00 am ET–Sunday, April 27, 2008, 5:00 pm ET"): the shared date reader drops them (`CLOCK_TIME`, DS-003).
-Its bookshop is on Yale's payment site (secure.touchnet.net), which the connector reads as blank. **The shop address is
-HARD-CODED** (`OWN_CHIP` `shop`, `fixedShop`; AL-040), not found by the finder. OPEN, to discuss with her: the finder
-could reach it — Yale's /museum-shop page (missed: `SHOP_PATH` has no "museum-shop") links "Shop online" to the store,
-which `shopElsewhere` would follow — but would keep only the site root and cannot read a blank shop to prove books. **Jacquemart-André**: the line under the heading is the
+Its bookshop is on Yale's payment site, which the connector reads as blank: found by the finder (below,
+"A museum's own Bookshop page"), so Find catalogue reports it blocked, as MoMA's. **Jacquemart-André**: the line under the heading is the
 subtitle, read by code (`subtitleUnderHeading`); the dates sit at the page's foot, so the description is read
 from under the heading.
 

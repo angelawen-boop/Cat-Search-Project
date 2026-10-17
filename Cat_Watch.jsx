@@ -667,18 +667,13 @@ const isOcc=id=>String(id||"").startsWith("occ-");
 // Occasional venues with a chip of their own and her name for their cards (her decision; NGA, NGS, Mia, Yale CBA),
 // plus any link options of their own (linkRead, as on a MUSEUMS entry). `name`: the venue's
 // full name where its page titles do not give it. Mia's page titles end "–– Minneapolis Institute of Art".
-// `shop`: the venue's shop, where the finder cannot read it (Yale's bookshop is on Yale's
-// payment site, which reads as blank): filed as found, for her to confirm.
 const OWN_CHIP={
   "occ-nga-gov":{short:"NG Washington",lookupName:"NGA",linkRead:{titleDrop:/^Exhibition:\s*/i}},
   "occ-nationalgalleries-org":{short:"NG Scotland"},
   "occ-new-artsmia-org":{short:"Mia",lookupName:"Mia",name:"Minneapolis Institute of Art",linkRead:{titleDrop:/\s+[-–—]+\s+Minneapolis Institute of Art$/i}},
-  "occ-britishart-yale-edu":{short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art",
-    shop:"https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true"},
+  "occ-britishart-yale-edu":{short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art"},
 };
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
-// A venue's own shop (OWN_CHIP `shop`), in the shape discoverShop answers with.
-const fixedShop=id=>{ const u=(OWN_CHIP[id]||{}).shop; return u?{shop:"found",shopHome:u,shopCatalogues:u,shelfKind:"books",shopSearch:null,foundBy:"the venue's own rule",finder:3}:null; };
 // Her names for occasional venues filed under "Occasional", where the store's name is longer.
 const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worcester"};
 // Her names on the cards of occasional venues, where they differ from the short name.
@@ -1064,7 +1059,7 @@ async function writePendingLinks(text){
 // pages she turned down, never the site. Evidence: docs/link_pages/shop_search/.
 const SHOP_WORDS=/^(?:the\s+)?(?:museum\s+|online\s+|gift\s+|book)?(?:shop|store|boutique|tienda|winkel|webshop|museumshop|negozio|librairie|bookshop)(?:\s+online)?$/i;
 const SHOP_HOST=/^(?:shop|store|boutique|tienda|winkel|webshop|bookshop|negozio|museumshop)\.|shop/i;
-const SHOP_PATH=/\/(?:shop|store|boutique|tienda|winkel|webshop|negozio|bookshop)(?:\/|$)/i;
+const SHOP_PATH=/\/(?:museum-?)?(?:shop|store|boutique|tienda|winkel|webshop|negozio|bookshop)(?:\/|$)/i;
 function mdLinks(text){
   const out=[];
   for(const m of String(text||"").matchAll(/\[([^\]]*)\]\((https?:\/\/[^)\s]+)/g))out.push({label:stripMd(m[1]),url:m[2]});
@@ -1214,6 +1209,7 @@ async function proveShopSearch(text,home){
 // The museum's own Shop page (its own site, a /shop path) and the link on it to a shop on
 // another site: one labelled as the shop ("Shop now", "Online shop") or a shop's address.
 // At most two such pages opened. → {url, text} or {died}.
+const BOOKSHOP_WORD=/\bbook\s?(?:shop|store)\b/i;
 const SHOP_AWAY_LABEL=/^(?:shop|buy|order)(?:\s+(?:now|online|here))?$|\bonline\s+(?:shop|store)\b|\bvisit\s+(?:the|our)\s+(?:online\s+)?(?:shop|store)\b/i;
 async function shopElsewhere(urls,museumHost){
   const b=baseDomain(museumHost), seen=new Set();
@@ -1230,7 +1226,9 @@ async function shopElsewhere(urls,museumHost){
     if(!f.ok){ died=f.detail; continue; }
     const t=pageTextOf(f.results);
     const out=mdLinks(t).find(l=>{ const lh=hostOf(l.url); return lh&&baseDomain(lh)!==b&&(SHOP_AWAY_LABEL.test(l.label)||SHOP_HOST.test(lh)||/\.myshopify\.com$/i.test(lh)); });
-    if(out)return{url:out.url,text:t};
+    // The page's own heading names a bookshop (Yale: "# Museum Bookshop").
+    const head=(t.split("\n").find(l=>/^#\s+\S/.test(l))||"");
+    if(out)return{url:out.url,text:t,bookshop:BOOKSHOP_WORD.test(head)};
   }
   return{died};
 }
@@ -1288,6 +1286,13 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
     const away=await shopElsewhere([pageShop,...mine.map(r=>r.url)],museumHost);
     if(away.died)died=away.died;
     if(away.url){ root=shopRootOf(away.url); pageShopHost=hostOf(away.url); seenText+="\n"+away.text; }
+    // A bookshop by the museum's own name whose shop reads blank (Yale's, on Yale's payment
+    // site): the address its own page links to is the books shop. Lookups find it blocked.
+    if(away.url&&away.bookshop){
+      const f=await fetchPage(away.url,"The books in this shop, with their prices.",null,{full:true});
+      if(f.ok&&pageIsShell(f.results))return{shop:"found",shopHome:away.url,shopCatalogues:away.url,shelfKind:"books",shopSearch:null,foundBy:"the museum\u2019s bookshop page",finder:3};
+      if(!f.ok)died=f.detail;
+    }
   }
   // 2. A Shopify shop's list of its sections.
   if(!pick&&root&&/\/(?:collections|products)\/|\.myshopify\.com/i.test(seenText+"\n"+root)){
@@ -4836,7 +4841,7 @@ export default function App(){
             looked.add(vc);
             setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+page.site+"\u2019s shop"});
             const pageShop=shopLinkOnPage(oneText(res),host);
-            const shop=fixedShop(vc)||await discoverShop(pageShop,host,page.site,had?had.turnedDown:[]);
+            const shop=await discoverShop(pageShop,host,page.site,had?had.turnedDown:[]);
             venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:page.site,host,english:had?had.english:undefined,
               shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,
               ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
