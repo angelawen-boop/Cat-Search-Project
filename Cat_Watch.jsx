@@ -2939,9 +2939,10 @@ async function recheckShopCore(found,hooks){
     else if(pickedVersion(row)&&!(o.found&&o.isbn13&&[pickedVersion(row).isbn13,pickedVersion(row).alsoIsbn13].includes(o.isbn13))){
       const v=pickedVersion(row), log=[];
       const F={title:row.catalogueTitle||v.title,isbn:row.isbn13||v.isbn13,publisher:row.publisher||v.publisher};
-      const url=await bookOnShelfAfterWeb(F,v,s.results,dom,new Set(shopPagesFor(MU[row.museumId],String(row.title||"").trim()).map(normalizeUrlKey)),io,log);
+      const {url,failed}=await bookOnShelfAfterWeb(F,v,s.results,dom,new Set(shopPagesFor(MU[row.museumId],String(row.title||"").trim()).map(normalizeUrlKey)),io,log);
       const detail=[s.detail].concat(log).join("\n");
-      out=url?{ok:true,detail,row:{...answered,shopState:"shop",shopUrl:url,shopChange:null},said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")}
+      out=failed?{ok:false,detail,said:"Re-check didn’t work — shop page couldn’t be read."}
+        :url?{ok:true,detail,row:{...answered,shopState:"shop",shopUrl:url,shopChange:null},said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")}
         :{ok:true,detail,row:{...answered,shopState:"web",shopUrl:null},said:dropped+"Re-checked: not in the museum shop."};
     }
     else if(o.found&&(o.catalogueTitle||o.isbn13)&&(onShop||o.listedOnly)){
@@ -2960,8 +2961,9 @@ async function recheckShopCore(found,hooks){
 // Constable): every link on the shelf already read whose words carry the book's whole
 // title is opened, in shelf order. It is this book when its page prints the same ISBN;
 // with no ISBN on the page, when its page count or publisher agrees and the page count
-// does not disagree. Then it must be for sale (readShopPage). → the link, or null.
-// SB-001 to SB-008.
+// does not disagree. Then it must be for sale (readShopPage). → {url} when found;
+// {url:null, failed} when it was not found and a page that might be it could not be read —
+// a failed read is never "not in the shop" (her decision, Yale Constable). SB-001 to SB-011.
 function sameBookOnPage(results,F,v){
   const text=pageTextOf(results);
   const isbns=isbnsLabelled(text);
@@ -2977,7 +2979,9 @@ function sameBookOnPage(results,F,v){
 // carrying two books' titles is opened once.
 async function bookOnShelfAfterWeb(F,v,shelf,dom,opened,io,log,seen){
   const links=shelfLinksFor(shelf,F.title,dom,opened)||[];
-  if(!links.length)return null;
+  if(!links.length)return{url:null,failed:null};
+  let failed=null;
+  const miss=(url,why)=>{ if(!failed)failed="couldn’t read "+url+(why?" ("+why+")":""); };
   log.push("The book found on the web, looked for on the shop’s own list: "+links.length+" link"+(links.length===1?"":"s")+" carrying “"+F.title+"”.");
   for(const url of links){
     const key=normalizeUrlKey(url), had=seen&&seen.get(key);
@@ -2986,16 +2990,18 @@ async function bookOnShelfAfterWeb(F,v,shelf,dom,opened,io,log,seen){
       [F.title+" ISBN add to cart"],{full:true});
     if(seen&&!had)seen.set(key,{f});
     if(!had)log.push(f.detail);
-    if(!f.ok||!f.results.length||pageIsShell(f.results))continue;
+    if(!f.ok||!f.results.length||pageIsShell(f.results)){ miss(url,f.ok?"blank page":f.detail.split("\n").pop().split("[")[0].trim()); continue; }
     const same=sameBookOnPage(f.results,F,v);
     if(!same){ log.push("Not this book: "+url); continue; }
     const mem=seen&&seen.get(key);
     const p=mem&&mem.p?mem.p:await readShopPage(F.title,url,io,f);
     if(mem&&!mem.p)mem.p=p;
     log.push(p.detail);
-    if(p.kind==="read"&&p.forSale){ log.push("In the museum shop ("+same+"): "+url); return url; }
+    if(p.kind==="read"&&p.forSale){ log.push("In the museum shop ("+same+"): "+url); return{url,failed:null}; }
+    if(p.kind!=="read"&&p.kind!=="gone")miss(url,p.why);
   }
-  return null;
+  if(failed)log.push("Not settled: "+failed+".");
+  return{url:null,failed};
 }
 
 // ── THE CATALOGUE LOOKUP (docs/app.md §1; CLAUDE.md §5.1 "Catalogue lookup") ─────
@@ -4267,8 +4273,10 @@ async function lookupCatalogue(row,hooks){
   const onShelf=async(G,v)=>{
     if(!(G.title&&G.shopState==="web"&&s1.ran&&(s1.results||[]).length))return;
     io.phase("page");
-    const url=await bookOnShelfAfterWeb(G,v,s1.results,dom,shelfSkip,io,log,shelfSeen);
+    const {url,failed}=await bookOnShelfAfterWeb(G,v,s1.results,dom,shelfSkip,io,log,shelfSeen);
     if(url){ G.shopState="shop"; G.shopUrl=url; }
+    // Not known: no shop answer for this book, and the lookup did not finish.
+    else if(failed){ G.shopState=null; fault("The museum shop’s page for “"+G.title+"” couldn’t be read — "+failed+"."); }
   };
   await onShelf(F,versions[pick]);
   // Each version's book fields, for a change of pick on the card; the pick's are final.

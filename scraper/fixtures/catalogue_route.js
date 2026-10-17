@@ -920,7 +920,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const BOOK = (title, isbn, price, pages) => '# ' + title + '\n\n1. [YCBA Home](' + T + 'store_main.jsp?STOREID=7&SINGLESTORE=true)\n2. [Publications](' + PUBS + ')\n\n'
       + 'Description ' + 'A generously illustrated volume from the YCBA Collection Series. '.repeat(6) + 'Published by the Yale Center for British Art Hardcover ' + pages + ' Pages'
       + (isbn ? ' ISBN ' + isbn : '') + '\n\nPrice:\n\n' + price + '\n\nQuantity:\n\nAdd to Basket';
-    const make = ({ constableIsbn = '9780300284669', constablePages = 128, forSale = true } = {}) => {
+    const make = ({ constableIsbn = '9780300284669', constablePages = 128, forSale = true, readFails = false, pageFails = false } = {}) => {
       const page = u => {
         if (u === P2564 + '&page=1') return BOOK('Painters, Ports, and Profits', '9780300286540', '$65.00', 280);
         if (u === P900 + '&page=1') return BOOK('Constable: Drawings', '9780300111118', '$30.00', 96);
@@ -935,8 +935,10 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
         mcp: (tool, args) => tool === 'web_search'
           ? { payload: { results: [{ url: 'https://britishart.yale.edu/exhibitions-programs/john-constable-landscape-reimagined', title: 'John Constable: The Landscape Reimagined',
               excerpts: ['Accompanying Publication: Constable, the third installment in YCBA’s Collection Series. Hardcover, 128 pages. ISBN 9780300284669. Published by the Yale Center for British Art.'] }] } }
+          : pageFails && args.urls.includes(P2409 + '&page=1') ? (() => { const e = new Error('upstream'); e.code = 'upstream_error'; throw e; })()
           : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Store', excerpts: [page(u)], ...(args.full_content ? { full_content: page(u) } : {}) })) } },
-        sample: p => /"forSale"/.test(p) ? { forSale, why: forSale ? 'Add to Basket, $40.00.' : 'Out of Stock.' }
+        sample: p => /"forSale"/.test(p) ? (readFails ? (() => { const e = new Error('upstream'); e.code = 'upstream_error'; throw e; })()
+            : { forSale, why: forSale ? 'Add to Basket, $40.00.' : 'Out of Stock.' })
           : isShopRead(p) ? { found: false }
           : isFactsRead(p) ? { isbn13: '9780300284669', publisher: 'Yale Center for British Art', pages: '128', language: 'English', title: 'Constable' }
           : /"found"/.test(p) ? { found: true, thisVenue: true, catalogueTitle: 'Constable', isbn13: '9780300284669', publisher: 'Yale Center for British Art', publisherUrl: null, shopUrl: null }
@@ -973,6 +975,20 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       const r = (await y.lookupCatalogue(yrow, { label: () => {} })).row;
       eq([r.shopState, r.shopUrl], ['web', null], 'SB-007: the right book but not for sale — not filed as in the shop');
     }
+    // A failed read is never "not in the shop" (her decision, her Blocks Check run of Constable:
+    // the product page opened, then the read failed upstream, and the card said not in the shop).
+    {
+      const { y } = make({ readFails: true });
+      const out = await y.lookupCatalogue(yrow, { label: () => {} });
+      eq([out.row.shopState, out.row.shopUrl, !!out.trouble], [null, null, true], 'SB-009: the book’s page opened but its read failed — no shop answer, and the lookup did not finish', JSON.stringify([out.row.shopState, out.trouble]));
+      const v = out.row.editions[out.row.editionPick];
+      eq(v && v.card && v.card.shopState, null, 'SB-010:   the picked book’s stored answer is the same: not known');
+    }
+    {
+      const { y } = make({ pageFails: true });
+      const out = await y.lookupCatalogue(yrow, { label: () => {} });
+      eq([out.row.shopState, !!out.trouble], [null, true], 'SB-011: the book’s page would not open — the same: no shop answer, lookup not finished', JSON.stringify([out.row.shopState, out.trouble]));
+    }
     {
       const F = { isbn: '9780300284669', publisher: 'Yale Center for British Art' };
       const res = text => [{ url: 'x', full_content: text }];
@@ -992,7 +1008,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       + '[Blake Blake](' + T + 'product_detail.jsp?PRODUCTID=2406&SINGLESTORE=true)\n\n[Endless Forms: Charles Darwin, Natural Science, and the Visual Arts Endless Forms: Charles Darwin, Natural Science, and the Visual Arts](' + T + 'product_detail.jsp?PRODUCTID=42&SINGLESTORE=true)\n\n[Yale](http://www.yale.edu/)';
     const PAGE = (title, isbn, price, kind) => '# ' + title + '\n\n1. [YCBA Home](' + T + 'store_main.jsp?STOREID=7&SINGLESTORE=true)\n2. [Publications](' + PUBS + ')\n\n'
       + 'Description ' + 'A generously illustrated volume from the YCBA Collection Series. '.repeat(6) + kind + ' 200 Pages ISBN ' + isbn + '\n\nPrice:\n\n' + price + '\n\nQuantity:\n\nAdd to Basket';
-    const make = ({ shelfIsbn = SOFT, refuse = false } = {}) => {
+    const make = ({ shelfIsbn = SOFT, refuse = false, readFails = false } = {}) => {
       const page = u => {
         if (u === P0 + '&page=1') return PAGE('Painters, Ports, and Profits', '9780300286540', '$65.00', 'Hardcover');
         if (u === P1 + '&page=1') return PAGE(BOOK, shelfIsbn, '$45.00', 'Paperback');
@@ -1010,7 +1026,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
         mcp: (tool, args) => tool === 'web_search' ? { payload: { results: WEB } }
           : refuse ? { payload: { errors: args.urls.map(u => ({ url: u, error_type: 'fetch_error', http_status_code: 403 })), results: [] } }
           : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Store', excerpts: [page(u)], ...(args.full_content ? { full_content: page(u) } : {}) })) } },
-        sample: p => /"forSale"/.test(p) ? { forSale: true, why: 'Add to Basket, $45.00.' }
+        sample: p => /"forSale"/.test(p) ? (readFails && /ONE page from a museum shop/.test(p) ? (() => { const e = new Error('upstream'); e.code = 'upstream_error'; throw e; })() : { forSale: true, why: 'Add to Basket, $45.00.' })
           : isShopRead(p) ? { found: false }
           : isFactsRead(p) ? { isbn13: HARD, publisher: 'Yale Center for British Art', pages: '200', language: 'English', title: BOOK,
               versions: [{ title: BOOK, isbn13: SOFT, language: 'English', publisher: 'Yale University Press', pages: '200', year: null, venueCity: null, evidenceUrl: WEB[0].url }] }
@@ -1042,6 +1058,14 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const b = make({ refuse: true });
     const rb = (await b.y.lookupCatalogue(yrow, { label: () => {} })).row;
     eq([rb.shopState, ...rb.editions.map(v => v.card.shopState)], ['blocked', 'blocked', 'blocked'], 'SV-009: a shop that refuses every page is unread for every book, never "not in the museum shop"');
+    // A failed read settles nothing, for one book only (her decision, Yale Constable).
+    const f = make({ readFails: true });
+    const of = await f.y.lookupCatalogue(yrow, { label: () => {} }), rf = of.row;
+    eq([rf.editions[0].card.shopState, rf.editions[1].card.shopState, !!of.trouble], ['web', null, true],
+      'SV-010: the paperback’s page read fails — its shop answer is not known; the hardcover’s (its page prints the other ISBN) still settled', JSON.stringify([rf.editions.map(v => v.card.shopState), of.trouble]));
+    const rr = await f.y.recheckShopRow({ ...picked, shopState: 'web', shopUrl: null }, { label: () => {} });
+    eq([rr.ok, !!rr.row, rr.said], [false, false, 'Re-check didn’t work — shop page couldn’t be read.'],
+      'SV-011: Re-check with the paperback picked and its read failing — says so, and the card is left as it was', JSON.stringify([rr.ok, rr.said]));
   }
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');
   process.exit(failures ? 1 : 0);
