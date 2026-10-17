@@ -402,7 +402,7 @@ check('18f: the real sample file starts with every card undecided',
   const got=H.MUSEUMS.map(m=>m.id);
   check('19: the venues are in her order', got.join()===want.join(), {got});
   const chips=['met','ng','occ-nga-gov','frick','morgan','artic','menil',
-    'acq','lgd','occ-new-artsmia-org','cincinnati','brit','tate-britain','wallace','va','occ-nationalgalleries-org',
+    'acq','lgd','occ-new-artsmia-org','occ-britishart-yale-edu','cincinnati','brit','tate-britain','wallace','va','occ-nationalgalleries-org',
     'louvre','orsay','jacquemart','mad','rijks','khm','uffizi','dellav','borghese','brera','capo','moma',
     'tate-modern','mam','occ-mfa-org','occ-clevelandart-org','occ-dia-org','occ-archive-worcesterart-org',
     'occ-courtauld-ac-uk','occ-royalacademy-org-uk','ashmolean','occ-museothyssen-org','occ-mauritshuis-nl','occ-ngv-vic-gov-au'];

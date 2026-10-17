@@ -71,7 +71,7 @@ const MUSEUMS = [
 // Her order for every venue list: chips, Sort by Venue, the freshness drawer and the
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
-  "acq","lgd","occ-new-artsmia-org","cincinnati","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
+  "acq","lgd","occ-new-artsmia-org","occ-britishart-yale-edu","cincinnati","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
   "louvre","orsay","jacquemart","mad","rijks","khm","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
   "occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
@@ -660,13 +660,14 @@ const OCC_CHIP="occasional";
 const OCC_DOC="venues/occasional";
 const LINKS_DOC="links/pending";
 const isOcc=id=>String(id||"").startsWith("occ-");
-// Occasional venues with a chip of their own and her name for their cards (her decision; NGA, NGS, Mia),
+// Occasional venues with a chip of their own and her name for their cards (her decision; NGA, NGS, Mia, Yale CBA),
 // plus any link options of their own (linkRead, as on a MUSEUMS entry). `name`: the venue's
 // full name where its page titles do not give it. Mia's page titles end "–– Minneapolis Institute of Art".
 const OWN_CHIP={
   "occ-nga-gov":{short:"NG Washington",lookupName:"NGA",linkRead:{titleDrop:/^Exhibition:\s*/i}},
   "occ-nationalgalleries-org":{short:"NG Scotland"},
   "occ-new-artsmia-org":{short:"Mia",lookupName:"Mia",name:"Minneapolis Institute of Art",linkRead:{titleDrop:/\s+[-–—]+\s+Minneapolis Institute of Art$/i}},
+  "occ-britishart-yale-edu":{short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art"},
 };
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 // Her names for occasional venues filed under "Occasional", where the store's name is longer.

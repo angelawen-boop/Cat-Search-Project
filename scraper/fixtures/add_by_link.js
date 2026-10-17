@@ -94,6 +94,9 @@ const ledger = { rows: [{ id: 'occ-mauritshuis-nl-thegrandtourdestinationitaly',
 const NGA_URL = 'https://www.nga.gov/exhibitions/nga-chip-show';
 ledger.rows.push({ ...ledger.rows[0], id: 'occ-nga-gov-ngachipshow', museumId: 'occ-nga-gov', title: 'NGA Chip Show',
   summary: 'A show at the National Gallery of Art.', exUrl: NGA_URL });
+// A Yale Center for British Art show: its own chip, "Yale CBA" (AL-039).
+ledger.rows.push({ ...ledger.rows[0], id: 'occ-britishart-yale-edu-yalechipshow', museumId: 'occ-britishart-yale-edu', title: 'Yale Chip Show',
+  summary: 'A show at the Yale Center for British Art.', exUrl: 'https://britishart.yale.edu/exhibitions-programs/yale-chip-show' });
 
 // ── the shops: real searches, and pages made to real shapes ─────────────────
 const SEARCH = name => JSON.parse(fs.readFileSync(path.join(PAGES, 'shop_search', name + '.json'), 'utf8'));
@@ -640,6 +643,17 @@ function runtime() {
     ok(shown.length === 1 && /^NG Washington/.test(shown[0].textContent) && shown[0].textContent.includes('NGA Chip Show'),
       'AL-030b:  pressed, it shows the NGA show alone, its card headed "NG Washington"', shown.map(a => a.textContent.slice(0, 40)));
     await click(nga);
+  }
+  // ── AL-039: Yale Center for British Art — its own chip and cards, "Yale CBA" (her decision) ─
+  ok(!arts.some(a => a.textContent.includes('Yale Chip Show')), 'AL-039: Yale CBA: a Yale show is not in the Occasional pile');
+  const ycba = buttons(/^Yale CBA$/)[0];
+  ok(!!ycba, 'AL-039a:  Yale has a chip of its own, "Yale CBA"');
+  if (ycba) {
+    await click(ycba);
+    const shown = [...win.document.querySelectorAll('article')];
+    ok(shown.length === 1 && /^Yale CBA/.test(shown[0].textContent) && shown[0].textContent.includes('Yale Chip Show'),
+      'AL-039b:  pressed, it shows the Yale show alone, its card headed "Yale CBA"', shown.map(a => a.textContent.slice(0, 40)));
+    await click(ycba);
   }
   // ── AL-020: a rejected card's link goes back in the box (her ask, 7 Oct) ─
   {
