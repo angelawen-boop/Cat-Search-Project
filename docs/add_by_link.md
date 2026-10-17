@@ -133,8 +133,7 @@ entry can carry `linkRead`, found by `linkReadVenue`. Proved live: five archive 
 codes in any page title are decoded ("Chagall&#039;s"). **Yale CBA** (Yale Center for British Art, `occ-britishart-yale-edu`): its own chip
 and cards "Yale CBA", after Cincinnati (her decision); the lookup searches by the full name (`OWN_CHIP`; AL-039).
 Its dates carry clock times ("February 7, 2008, 10:00 am ET–Sunday, April 27, 2008, 5:00 pm ET"): the shared date reader drops them (`CLOCK_TIME`, DS-003).
-Its bookshop is on Yale's payment site, which the connector reads as blank: found by the finder (below,
-"A museum's own Bookshop page"), so Find catalogue reports it blocked, as MoMA's. **Jacquemart-André**: the line under the heading is the
+OPEN — its shop: `docs/handover_yale_shop.md` (the "reads blank" belief below was wrong). **Jacquemart-André**: the line under the heading is the
 subtitle, read by code (`subtitleUnderHeading`); the dates sit at the page's foot, so the description is read
 from under the heading.
 

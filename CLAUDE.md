@@ -258,6 +258,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 | File | What is in it | Read it when |
 |---|---|---|
 | `docs/add_by_link.md`, `docs/link_proof_pages.json` | Design, decisions, store, shelf rule, venue link rules; the live proof pages for them | Changing Add by link |
+| `docs/handover_yale_shop.md` | Yale CBA's shop: what is live, what is wrong, the options for her (open) | Picking up the Yale shop issue |
 
 **Search** — finding a show's catalogue
 
@@ -525,6 +526,9 @@ and were fixed in code, proven live).
 - **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).**
   Detroit files a show's book in the show's own shop section. Her next lookups settle:
   O'Keeffe found at Detroit? Did Mauritshuis and the RA get a search?
+- **OPEN — Yale CBA's shop:** the finder takes its shop's front page on the false belief that the
+  shop reads blank; its Publications section is readable. Nothing built until she agrees an
+  approach: `docs/handover_yale_shop.md`.
 - **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the
   scraper (her decision); a rule both use (the date reader) stays in `dates.js`. Live
   proof of every link venue: `docs/link_proof_pages.json`.
