@@ -146,7 +146,7 @@ record — the search's purpose, the trace, where `parked` stands and her logic 
 `docs/catalogue_versions.md`, "Search: every catalogue of the exhibition". Read it before any
 search work.**
 
-**OPEN — the catalogue blocks on today's search, on the Catalogue Blocks Check page, unpublished** (her
+**OPEN — the catalogue blocks on today's search, published at 47; her use in the app checks them** (her
 decision: the search stays as it is; Stage 1/1b waits on `parked`). Her order, the first book
 picked, one block per book, a shop line true for whichever book she picks, Re-check for the picked
 book: `docs/catalogue_versions.md`. Where it stands and the next job: `docs/handover_catalogue_display.md`. Noted for the
@@ -404,7 +404,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 46.4 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 47 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

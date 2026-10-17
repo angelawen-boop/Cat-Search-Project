@@ -1,7 +1,7 @@
 # Handover: catalogue blocks on today's search (Stage 2 display), and its test page
 
 Read this whole note, CLAUDE.md §1 (house rules) and `docs/catalogue_versions.md` before
-touching anything. Nothing here is published to her app (still 46.4).
+touching anything. Published to her app at 47.
 
 ## What she asked for (her decisions — never re-ask)
 
