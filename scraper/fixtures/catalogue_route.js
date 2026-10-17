@@ -53,13 +53,6 @@ function eq(got, want, m) {
 }
 function ok(cond, m, got) { if (cond) pass(m); else fail(m + (got !== undefined ? ' — got: ' + got : '')); }
 
-// Claude played honestly on the tie (TIE_RULES, her decision on Yale Turner): a web read
-// or a tie read quotes the first words in the results that say the book goes with the
-// show, else null. A script that gives its own tie keeps it.
-const tieOf = p => { const m = p.slice(p.indexOf('\nExhibition: '), p.lastIndexOf('\nReply with ONLY')).replace(/\]\([^)\s]*\)/g, ' ').match(/[^.\n]*(?:accompa[ng]|catalogue of the|published for|exhibition catalogue|catalogue d(?:e l|')exposition|catalogo della mostra|zur ausstellung)[^.\n]*/i); return m ? m[0].trim() : null; };
-const isTieRead = p => /\{"tie": string\|null\}\s*$/.test(p);
-const withTie = (p, ans) => isTieRead(p) && (!ans || !('tie' in ans)) ? { tie: tieOf(p) }
-  : /"tie": string\|null/.test(p) && ans && ans.found && !('tie' in ans) ? { ...ans, tie: tieOf(p) } : ans;
 // The page's own functions, lifted with a runtime that plays the connector and Claude.
 // `script.mcp(tool, args)` answers a connector call (throw to refuse);
 // `script.sample(prompt)` answers a Claude read.
@@ -73,12 +66,12 @@ function lift(script, calls) {
     if (name === 'sample') return { json: async prompt => {
       calls.push({ kind: 'sample', prompt });
       await new Promise(r => setTimeout(r, 2));
-      return withTie(prompt, script.sample(prompt));
+      return script.sample(prompt);
     } };
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, versionOrder, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly, registerOccasional, recheckShopRow, sameBookOnPage, tieIn };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, versionOrder, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly, registerOccasional, recheckShopRow, sameBookOnPage };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -1049,61 +1042,6 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const b = make({ refuse: true });
     const rb = (await b.y.lookupCatalogue(yrow, { label: () => {} })).row;
     eq([rb.shopState, ...rb.editions.map(v => v.card.shopState)], ['blocked', 'blocked', 'blocked'], 'SV-009: a shop that refuses every page is unread for every book, never "not in the museum shop"');
-  }
-
-  // ── TI-001..TI-009: the tie — a book found on the web needs words linking it to the show ─
-  // Her Yale Turner: the exhibition page lists the Collection Series "Turner" under
-  // "Related Publications" and never says it goes with the show; Gwen John's page says the
-  // show "will be accompanied by" its catalogue; Constable's heads its book "Accompanying
-  // Publication". Wording as read live on 17 Oct 2026. Claude is played honestly (tieOf).
-  {
-    const EX = 'https://britishart.yale.edu/exhibitions-programs/';
-    const turnerWeb = [{ url: EX + 'j-m-w-turner-romance-and-reality', title: 'J. M. W. Turner: Romance and Reality | Yale Center for British Art',
-      excerpts: ['# J. M. W. Turner: Romance and Reality\nSaturday, March 29, 2025–Sunday, July 27, 2025\nThe year 2025 marks the 250th anniversary of the birth of Joseph Mallord William Turner.\n### Related Publications\n[_Turner_ ,](https://britishart.yale.edu/publications/turner) the inaugural installment in the YCBA’s Collection Series of illustrated books, explores the museum’s outstanding Turner holdings in a manner that engages the general reader and expert alike.'] }];
-    const turnerBook = [{ url: 'https://britishart.yale.edu/publications/turner', title: 'Turner | Yale Center for British Art',
-      excerpts: ['# Turner\n## Description\nThis richly illustrated volume explores the Yale Center for British Art’s renowned Turner holdings—the largest outside the United Kingdom. Engaging texts by Ian Warrell and Gillian Forrester immerse the reader in the artist’s career.'] },
-      { url: 'https://yalebooks.yale.edu/book/9780300279719/turner/', title: 'Turner', excerpts: ['# Turner\nby Ian Warrell\nSeries: YCBA Collection Series\n144 Pages\nHardcover 9780300279719'] }];
-    const yale = (web, tieResults, read) => ({
-      mcp: (tool, args) => {
-        if (tool !== 'web_search') return shelfOf(args.urls, '[Another catalogue £30](https://shop.nationalgallery.org.uk/other.html)');
-        const o = String(args.objective || '');
-        if (/^Confirm whether/.test(o)) return { payload: { results: web } };
-        if (/^Whether the book/.test(o)) return { payload: { results: tieResults } };
-        return { payload: { results: [] } };
-      },
-      sample: p => isShopRead(p) ? { found: false } : /"found"/.test(p) ? read : {},
-    });
-    const turnerRead = { found: true, thisVenue: true, catalogueTitle: 'Turner', isbn13: null, publisher: null, publisherUrl: null, shopUrl: null };
-
-    let { out, calls, row: r } = await run(row('ng', 'J. M. W. Turner: Romance and Reality'), yale(turnerWeb, turnerBook, turnerRead));
-    eq([r.hasCatalogue, r.catalogueTitle, r.isbn13], ['no', null, null], 'TI-001: Turner — listed under “Related Publications” with no words tying it to the show: not filed');
-    ok(/No sentence in the results ties “Turner”/.test(out.detail) && /Not filed: no sentence ties “Turner” to this show/.test(out.detail), 'TI-002:   the lookup says why, in two lines', out.detail);
-    const tieSearch = calls.filter(c => c.tool === 'web_search' && /^Whether the book/.test(c.args.objective));
-    eq([tieSearch.length, calls.filter(c => c.kind === 'sample' && /\{"tie": string\|null\}\s*$/.test(c.prompt)).length], [1, 1], 'TI-003:   asked again once: one search, one read');
-
-    const gwenWeb = [{ url: EX + 'gwen-john-strange-beauties', title: 'Gwen John: Strange Beauties | Yale Center for British Art',
-      excerpts: ['# Gwen John: Strange Beauties\nThe exhibition is organized by Amgueddfa Cymru in partnership with National Galleries of Scotland, the Yale Center for British Art, and National Museum of Women in the Arts. It will be accompanied by a fully illustrated scholarly catalogue.\n### Related Publications\n[_Gwen John: Strange Beauties_](https://britishart.yale.edu/publications/gwen-john)'] }];
-    ({ out, calls, row: r } = await run(row('ng', 'Gwen John: Strange Beauties'), yale(gwenWeb, [],
-      { found: true, thisVenue: true, catalogueTitle: 'Gwen John: Strange Beauties', isbn13: null, publisher: null, publisherUrl: null, shopUrl: null })));
-    eq([r.hasCatalogue, r.catalogueTitle], ['yes', 'Gwen John: Strange Beauties'], 'TI-004: Gwen John — the same heading, but the page says the show is accompanied by a catalogue: filed');
-    ok(/Tied to this show: “It will be accompanied by a fully illustrated scholarly catalogue”/.test(out.detail) && !calls.some(c => /^Whether the book/.test(String(c.args && c.args.objective))),
-      'TI-005:   the sentence is in the log, and nothing is asked again', out.detail);
-
-    const constableWeb = [{ url: EX + 'john-constable-landscape-reimagined', title: 'John Constable: The Landscape Reimagined | Yale Center for British Art',
-      excerpts: ['# John Constable: The Landscape Reimagined\n## Accompanying Publication\n[_Constable_](https://britishart.yale.edu/publications/constable) , the third installment in YCBA’s Collection Series, celebrates one of England’s greatest landscape painters, John Constable (1776–1837)'] }];
-    ({ out, row: r } = await run(row('ng', 'John Constable: The Landscape Reimagined'), yale(constableWeb, [],
-      { found: true, thisVenue: true, catalogueTitle: 'Constable', isbn13: null, publisher: null, publisherUrl: null, shopUrl: null })));
-    eq([r.hasCatalogue, r.catalogueTitle], ['yes', 'Constable'], 'TI-006: Constable — a Collection Series book too, but headed “Accompanying Publication”: filed');
-
-    ({ out, row: r } = await run(row('ng', 'J. M. W. Turner: Romance and Reality'), yale(turnerWeb,
-      [{ url: 'https://press.test/turner', title: 'Turner', excerpts: ['Turner was published to accompany the exhibition J. M. W. Turner: Romance and Reality.'] }], turnerRead)));
-    eq([r.hasCatalogue, r.catalogueTitle], ['yes', 'Turner'], 'TI-007: asked again, a sentence that ties it is found: filed');
-
-    ({ row: r } = await run(row('ng', 'J. M. W. Turner: Romance and Reality'), yale(turnerWeb, turnerBook,
-      { ...turnerRead, tie: 'Turner was published to accompany this exhibition.' })));
-    eq(r.hasCatalogue, 'no', 'TI-008: a quoted sentence that is not in the results is refused — the book is asked about again, and not filed');
-    eq([api.tieIn('Turner, the inaugural installment', turnerWeb[0].excerpts[0]), api.tieIn('Turner', 'Turner'), api.tieIn('', 'x')],
-      ['Turner, the inaugural installment', null, null], 'TI-009: a quote is matched across a link’s address; one word, or none, is never a tie');
   }
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');
   process.exit(failures ? 1 : 0);

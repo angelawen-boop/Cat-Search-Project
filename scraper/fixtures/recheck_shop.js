@@ -154,13 +154,6 @@ const louStale = { ...fresh('louvre-teststale', 'louvre', 'Test Louvre Stale Che
 const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, louPub, louStop, louStale, louLookalike, louIsbnPub, louPubKnown, louEnClaim, jqWatteau, morganAssoc], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
-// Claude played honestly on the tie (TIE_RULES, her decision on Yale Turner): a web read
-// or a tie read quotes the first words in the results that say the book goes with the
-// show, else null. A script that gives its own tie keeps it.
-const tieOf = p => { const m = p.slice(p.indexOf('\nExhibition: '), p.lastIndexOf('\nReply with ONLY')).replace(/\]\([^)\s]*\)/g, ' ').match(/[^.\n]*(?:accompa[ng]|catalogue of the|published for|exhibition catalogue|catalogue d(?:e l|')exposition|catalogo della mostra|zur ausstellung)[^.\n]*/i); return m ? m[0].trim() : null; };
-const isTieRead = p => /\{"tie": string\|null\}\s*$/.test(p);
-const withTie = (p, ans) => isTieRead(p) && (!ans || !('tie' in ans)) ? { tie: tieOf(p) }
-  : /"tie": string\|null/.test(p) && ans && ans.found && !('tie' in ans) ? { ...ans, tie: tieOf(p) } : ans;
 const script = { mcp: null, sample: null };
 const calls = [];
 function runtime() {
@@ -179,7 +172,7 @@ function runtime() {
       } };
       if (name === 'sample') return { json: async prompt => {
         calls.push({ kind: 'sample', prompt });
-        return withTie(prompt, script.sample(prompt));
+        return script.sample(prompt);
       } };
       return null;
     },
@@ -406,7 +399,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/Search again didn\u2019t (run|finish)/.test(t) && !/Nothing changed/.test(t), 'R-021:   and says so on the card', t.slice(0, 400));
 
     script.mcp = (tool, args) => tool === 'web_search'
-      ? { payload: { results: [{ url: 'https://bookseller.test/x', title: 'Test Show', excerpts: ['Test Show catalogue ISBN 9780300000009. Published to accompany the exhibition.'] }] } }
+      ? { payload: { results: [{ url: 'https://bookseller.test/x', title: 'Test Show', excerpts: ['Test Show catalogue ISBN 9780300000009'] }] } }
       : { payload: { results: [], errors: [] } };
     script.sample = () => ({ found: true, thisVenue: true, catalogueTitle: 'Test Show (bookseller)', isbn13: '9780300000009',
       publisher: 'Yale', publisherUrl: null, shopUrl: 'https://bookseller.test/x' });
@@ -464,7 +457,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     calls.length = 0;
     await openTray(khmB.title);
     script.mcp = (tool, args) => tool === 'web_search'
-      ? { payload: { results: [{ url: PRODUCT, title: 'Ausstellungskatalog 2026', excerpts: ['Catalogue. Published to accompany the exhibition.'] }] } }
+      ? { payload: { results: [{ url: PRODUCT, title: 'Ausstellungskatalog 2026', excerpts: ['Catalogue'] }] } }
       : { payload: { results: [], errors: args.urls.map(r307) } };
     script.sample = p => kind(p) === 'web'
       ? { found: true, thisVenue: true, catalogueTitle: 'Test KHM Show Beta: The Catalogue', isbn13: '9781857096972', publisher: null, publisherUrl: null, shopUrl: PRODUCT }
@@ -497,7 +490,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await openTray(ngA.title);
     const link = 'https://shop.nationalgallery.org.uk/test-ng-show-opens.html';
     script.mcp = (tool, args) => tool === 'web_search'
-      ? { payload: { results: [{ url: link, title: 'Test', excerpts: ['Test NG Show Opens catalogue. Published to accompany the exhibition.'] }] } }
+      ? { payload: { results: [{ url: link, title: 'Test', excerpts: ['Test NG Show Opens catalogue'] }] } }
       : args.urls.includes(link)
         ? { payload: { results: [{ url: link, title: 'Test NG Show Opens', excerpts: ['Hardback £40. Add to basket. Publisher: Yale. ' + 'Details. '.repeat(80)] }], errors: [] } }
         : { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Other books.')] })), errors: [] } };
@@ -516,7 +509,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await openTray(ngB.title);
     const link = 'https://shop.nationalgallery.org.uk/test-ng-show-dead.html';
     script.mcp = (tool, args) => tool === 'web_search'
-      ? { payload: { results: [{ url: link, title: 'Test', excerpts: ['Test NG Show Dead Link catalogue. Published to accompany the exhibition.'] }] } }
+      ? { payload: { results: [{ url: link, title: 'Test', excerpts: ['Test NG Show Dead Link catalogue'] }] } }
       : args.urls.includes(link)
         ? { payload: { results: [], errors: [{ url: link, error_type: 'http_error', http_status_code: 404, content: null }] } }
         : { payload: { results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Other books.')] })), errors: [] } };
@@ -704,7 +697,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const popup = '# Exhibition Catalogues\n## Become a Member\n### Join now to save 20% off your first order. All Member categories enjoy:\n'
       + 'Add Membership Cancel\n[View All Memberships](https://store.moma.org/pages/memberships)\nAdditional membership categories for artists and students are available.';
     script.mcp = (tool, args) => tool === 'web_search'
-      ? { payload: { results: [{ url: 'https://bookseller.test/brancusi', title: 'Brancusi', excerpts: ['Test MoMA Brancusi Show ISBN 9781633451971. Published to accompany the exhibition.'] }] } }
+      ? { payload: { results: [{ url: 'https://bookseller.test/brancusi', title: 'Brancusi', excerpts: ['Test MoMA Brancusi Show ISBN 9781633451971'] }] } }
       : { payload: { results: args.urls.filter(u => !/[?&]q=/.test(u)).map(u => ({ url: u, title: 'Exhibition Catalogues – MoMA Design Store', excerpts: [popup] })),
           errors: args.urls.filter(u => /[?&]q=/.test(u)).map(u => ({ url: u, error_type: 'http_error', http_status_code: 403, content: null })) } };
     script.sample = () => ({ found: true, thisVenue: true, catalogueTitle: 'Test MoMA Brancusi Show', isbn13: '9781633451971', publisher: 'The Museum of Modern Art', publisherUrl: null, shopUrl: null });
@@ -783,7 +776,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   // ── N-001..N-007: not in the shop — the ISBN search, and only the publisher is the publisher
   {
     const YALE = 'https://yalebooks.co.uk/book/9781857097382/millet';
-    const ANY = [{ url: 'https://news.test/review', title: 'A review', excerpts: ['A review of the show. Its book was published to accompany the exhibition.'] }];
+    const ANY = [{ url: 'https://news.test/review', title: 'A review', excerpts: ['A review of the show.'] }];
     const run = async (row, book, read, results) => {
       calls.length = 0;
       script.mcp = (tool, args) => tool === 'web_search'
@@ -800,7 +793,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
 
     const META = 'Test Metamorphoses: Ovid and the Arts';
     let r = await run(metaRow, META, { isbn13: null, publisher: 'Hannibal Books', publisherUrl: 'https://hannibalbooks.be/test-metamorphoses' },
-      [{ url: 'https://www.amazon.com.au/dp/9493416542', title: META, excerpts: ['ISBN-10 : 9493416542 ISBN-13 : 978-9493416543. Published to accompany the exhibition.'] }]);
+      [{ url: 'https://www.amazon.com.au/dp/9493416542', title: META, excerpts: ['ISBN-10 : 9493416542 ISBN-13 : 978-9493416543'] }]);
     const qs = calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries);
     ok(qs.some(q => q.some(x => x.includes(META) && /ISBN/.test(x))), 'N-001: not in the shop — the dedicated ISBN search runs', JSON.stringify(qs));
     ok(/978-9493416543/.test(r.t), 'N-002:   and its ISBN reaches her card', r.t.slice(0, 400));
@@ -971,7 +964,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   {
     calls.length = 0;
     script.mcp = (tool, args) => tool === 'web_search'
-      ? { payload: { results: [{ url: 'https://news.test/x', title: 'x', excerpts: ['x. Published to accompany the exhibition.'] }] } }
+      ? { payload: { results: [{ url: 'https://news.test/x', title: 'x', excerpts: ['x'] }] } }
       : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Shop', excerpts: [shelf('Some other book \u00b7 $20')] })) } };
     script.sample = p => /OWN shop pages, opened directly/.test(p) ? { found: false }
       : /"found"/.test(p) ? { found: true, thisVenue: true, catalogueTitle: 'Test Association Book', isbn13: '9780847877645', publisher: 'Morgan Library & Museum in association with Rizzoli Electa', publisherUrl: null, shopUrl: null }
