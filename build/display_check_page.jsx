@@ -60,7 +60,7 @@ function DisplayCheck(){
     try{ out=await lookupCatalogue(row,{label:l=>setLabel(l||""),prepareShop:async()=>{}}); }
     catch(e){ out={ok:false,detail:"The lookup stopped: "+String((e&&e.message)||e)}; }
     await saveLookupTape(tape,out);
-    setCalls(c=>({...c,[row.id]:out.calls||null}));
+    setCalls(c=>({...c,[row.id]:out.calls||{calls:0,search:0,fetch:0,read:0}}));
     if(row.looked&&out.ok&&out.trouble)setSaid(s=>({...s,[row.id]:{failed:true,text:"Search again didn’t finish — "+out.trouble.split("[")[0].trim()}}));
     else if(out.ok)put(out.row);
     else setSaid(s=>({...s,[row.id]:{failed:true,text:"Search again didn’t run — "+String(out.detail||"").split("\n").pop().split("[")[0].trim()}}));
@@ -92,7 +92,8 @@ function DisplayCheck(){
       const picked=!vl||(Number.isInteger(r.editionPick)&&!!r.editions[r.editionPick]);
       const noShop=!(mu&&(mu.shopSearch||mu.shopHome));
       const isBusy=busy===r.id, s=said[r.id], k=calls[r.id];
-      const lines=dcGrade(r,yale||[]);
+      // Graded only once she has run Search again on this card.
+      const lines=k?dcGrade(r,yale||[]):[];
       const actions=<>
         <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:14}}>
           <button onClick={()=>searchAgain(r)} disabled={!!busy} style={sm}>{isBusy?label||"Searching…":"Search again"}</button>
