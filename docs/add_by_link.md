@@ -128,7 +128,7 @@ entry can carry `linkRead`, found by `linkReadVenue`. Proved live: five archive 
 "–– Minneapolis Institute of Art" title tail are dropped (`OWN_CHIP`; AL-032, three pages on the proof list). HTML
 codes in any page title are decoded ("Chagall&#039;s"). **Yale CBA** (Yale Center for British Art, `occ-britishart-yale-edu`): its own chip
 and cards "Yale CBA", after Cincinnati (her decision); the lookup searches by the full name (`OWN_CHIP`; AL-039).
-Clock times between its dates are dropped (`dropTimes`: "February 7, 2008, 10:00 am ET–Sunday, April 27, 2008, 5:00 pm ET").
+Its dates carry clock times ("February 7, 2008, 10:00 am ET–Sunday, April 27, 2008, 5:00 pm ET"): the shared date reader drops them (`CLOCK_TIME`, DS-003).
 Its bookshop is on Yale's payment site (secure.touchnet.net), which the connector reads as blank. **The shop address is
 HARD-CODED** (`OWN_CHIP` `shop`, `fixedShop`; AL-040), not found by the finder. OPEN, to discuss with her: the finder
 could reach it — Yale's /museum-shop page (missed: `SHOP_PATH` has no "museum-shop") links "Shop online" to the store,

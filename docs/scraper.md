@@ -138,6 +138,8 @@ since 11. November 2025              German day stop; read only with a year (KHM
   A yearless one takes its year from the closing date written just before it,
   never by rolling the range's end forward (Gricci and Lotto went a year late).
 - **Every dash is normalised** (U+2010–U+2015, minus, maqaf).
+- **Clock times are dropped** ("10:00 am ET", "5pm"; am/pm required) — Yale prints one beside
+  each date. Checked on every saved page: only Yale's dates changed (DS-003).
 - **Two guards against art history:** a month NAME beside the number, and a year
   in 1990–2035. **A published opening year that fails the guard refuses the whole
   range** — never swapped for the closing year (Mimmo Jodice's lifespan was once

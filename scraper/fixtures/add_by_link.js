@@ -337,7 +337,7 @@ function runtime() {
     ok(r.ok && r.base === "Matrimonial Bliss: Chagall's Double Portrait with Wine Glass" && r.site === 'Minneapolis Institute of Art',
       'AL-032: Mia: no "–– Minneapolis Institute of Art" tail, no "&#039;", the venue named in full', JSON.stringify([r.base, r.site]));
   }
-  // ── AL-040: Yale CBA — clock times between the dates (dropTimes); its own shop ─
+  // ── AL-040: Yale CBA — clock times between the dates (the shared reader, DS-003); its own shop ─
   // Made from the live pages (17 Oct); all three on docs/link_proof_pages.json.
   {
     const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);

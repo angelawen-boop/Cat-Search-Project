@@ -170,6 +170,9 @@ const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]
 
 const WEEKDAY_PREFIX = new RegExp(WEEKDAY_PREFIX_SRC + '(?=\\d|' + MONTH_PATTERN + ')', 'gi');
 const stripWeekdays = t => String(t || '').replace(WEEKDAY_PREFIX, '');
+// A clock time, with any time zone: "10:00 am ET", "5pm", "10:30–11 a.m." (Yale prints
+// one beside each date, which broke the range). am/pm is required, so a year never matches.
+const CLOCK_TIME = /,?\s*\b\d{1,2}(?::\d{2})?\s*(?:-\s*\d{1,2}(?::\d{2})?\s*)?[ap]\.?m\b\.?(?:\s+(?:[ECMP][SD]?T|GMT|BST|CES?T)\b)?/gi;
 
 /**
  * A run extended after it was announced ("extended to02/11/2025", Uffizi; "prorogata
@@ -289,6 +292,7 @@ function findDateRangeCore(raw, opts = {}) {
   if (!raw) return { start: '', end: '', raw: '' };
   // Normalise every dash (the National Gallery mixes U+2012 and U+2013).
   const s = String(raw).replace(/[\u2010-\u2015\u2212\u2043]/g, '-')
+    .replace(CLOCK_TIME, '')
     // Weekdays carry no date and break every range pattern (Wallace), so they go first.
     .replace(WEEKDAY_PREFIX, '')
     .replace(ORDINAL_SUFFIX, '$1')
@@ -670,7 +674,7 @@ const OWN_CHIP={
   "occ-nationalgalleries-org":{short:"NG Scotland"},
   "occ-new-artsmia-org":{short:"Mia",lookupName:"Mia",name:"Minneapolis Institute of Art",linkRead:{titleDrop:/\s+[-–—]+\s+Minneapolis Institute of Art$/i}},
   "occ-britishart-yale-edu":{short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art",
-    shop:"https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true",linkRead:{dropTimes:true}},
+    shop:"https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true"},
 };
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 // A venue's own shop (OWN_CHIP `shop`), in the shape discoverShop answers with.
@@ -834,9 +838,7 @@ function readShowPage(res,url,vc){
     add(lines.findIndex(l=>{ const w=words(l); return w.split(" ").length>=2&&w.length<=80&&piece.includes(" "+w+" "); }));
   }
   if(!cands.length)return{ok:false,why:"Couldn’t find the show’s title on the page."};
-  // linkRead.dropTimes: clock times between the dates go ("February 7, 2008, 10:00 am ET–Sunday,
-  // April 27, 2008, 5:00 pm ET"; Yale).
-  const dateText=l=>{ if(lr&&lr.dropTimes)l=l.replace(/,?\s*\d{1,2}(?::\d{2})?\s*(?:[-–]\s*\d{1,2}(?::\d{2})?\s*)?[ap]\.?m\.?(?:\s+[A-Z]{2,4}\b)?/gi,""); return lr&&lr.shortYear?withLongYears(l):l; };
+  const dateText=l=>lr&&lr.shortYear?withLongYears(l):l;
   const datesUnder=h=>{
     // A venue that labels its date line (linkRead.dateLine) is read there, anywhere on the page.
     if(lr&&lr.dateLine){

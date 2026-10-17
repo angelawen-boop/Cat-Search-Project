@@ -2083,3 +2083,13 @@ test('AQ-001: Acquavella\'s card line "Acquavella Palm Beach" is the gallery, ne
   // Only Acquavella's own name is taken off the front.
   assert.equal(isPlace('Gallery Palm Beach', L), undefined);
 });
+
+test('DS-003: a clock time beside each date is dropped, so the range reads (Yale CBA, "10:00 am ET"); a time is never a date', () => {
+  const r = findDateRange('Thursday, February 7, 2008, 10:00 am ET\u2013Sunday, April 27, 2008, 5:00 pm ET', { looseSingles: false });
+  assert.equal(r.start, '2008-02-07'); assert.equal(r.end, '2008-04-27');
+  const l = findDateRange('Wednesday, September 20, 2000, 10:00 am ET\u2013Sunday, January 14, 2001, 5:00 pm ET', { looseSingles: false });
+  assert.equal(l.start, '2000-09-20'); assert.equal(l.end, '2001-01-14');
+  assert.equal(findDateRange('Open daily 10am\u20135pm', { looseSingles: false }).start, '');
+  const a = findDateRange('Amsterdam 2 May 2026 \u2013 3 June 2026', { looseSingles: false });
+  assert.equal(a.start, '2026-05-02'); assert.equal(a.end, '2026-06-03');
+});
