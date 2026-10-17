@@ -11,12 +11,12 @@ touching anything. Nothing here is published to her app (still 46.4).
   English from anyone else (another museum, another showing, an outside house — no order
   between those); then other languages. Within each: hardcover, then paperback, then binding
   unknown. **The first book starts picked**; the old starting-pick rules are gone.
-- **Order, two refinements (her decisions, not yet built):**
+- **Order, two refinements (her decisions; built — VO-007/008, SV-001–012):**
   - **Non-English venues** (`english:false`): any English book comes before any other language —
     KHM's English edition before its German; another showing's English catalogue (the Met's)
     before the venue's own German one. (Today's order already does this; keep it.)
   - **English-language venues:** a book that is **in the venue's museum shop always comes first**,
-    ahead of the rest of her order. The rest keep her order.
+    ahead of the rest of her order. The rest keep her order. Set once by the lookup (`shopFirst`), so a Re-check never moves a block.
 - **Single-book cards: no change at all** (no binding, pages or source added). *Beauty of
   Life* included.
 - **Blocks:** her agreed layout (`docs/catalogue_versions.md`, "Her layout"), one block per book.
@@ -31,7 +31,7 @@ touching anything. Nothing here is published to her app (still 46.4).
 **Yale's two imprints — settled (her decision):** "Yale Center for British Art" and "Yale
 University Press" rank the same for Yale cards; neither leads because of its imprint. Between them
 the other rules decide (in the museum shop first, then hardcover before paperback, and so on).
-Not built: today `venuePrinting` counts only the Yale Center as Yale's own.
+Built: `rankAsOwn` on Yale's `OWN_CHIP` entry, read only by her order (`rankedOwn`), VO-009 — a venue rule written into the app, display only; the search's own idea of the venue's house is unchanged.
 
 ## What is built and pushed on `main` (tests: `npm run test:app`, 15 of 15 pass)
 
