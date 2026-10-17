@@ -141,8 +141,10 @@ The text below is as it stood at 43.
 **OPEN — search for every catalogue of the exhibition, at any showing** (her decision; search logic,
 kept apart from the display work; build with `parked` Stage 1/1b). Today the first read names one
 book and throws it away unless Claude ties it to this venue (the van Hemessen fix), and other
-versions are listed only after a book passes — *Victorian Radicals* lost both its books. Her logic
-and the trace: `docs/catalogue_versions.md`, "Search: every catalogue of the exhibition".
+versions are listed only after a book passes — *Victorian Radicals* lost both its books. **The full
+record — the search's purpose, the trace, where `parked` stands and her logic — is in
+`docs/catalogue_versions.md`, "Search: every catalogue of the exhibition". Read it before any
+search work.**
 
 **OPEN — the catalogue blocks on today's search, on the Catalogue Blocks Check page, unpublished** (her
 decision: the search stays as it is; Stage 1/1b waits on `parked`). Her order, the first book
