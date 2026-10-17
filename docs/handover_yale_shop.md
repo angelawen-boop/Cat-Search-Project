@@ -2,7 +2,7 @@
 
 OPEN until her Yale lookup confirms it.
 
-## What is built (AL-042; not yet published)
+## What is built (AL-042, YS-, SB-; published 46.4)
 
 Every Touchnet page reads blank unless its address names a page: checked live, the bare address and the
 same address reordered both blank; `&page=1` gives the full page (front page menu, Publications list,
@@ -29,6 +29,8 @@ The "Bookshop that reads blank" rule (AL-041) is removed. The 48 saved pages: no
 
 ## Left to do
 
+0. **Passed live, 5 of 5** (her run on the check page, commit 66a8e59): Publications; In the museum shop;
+   Constable's own page; ISBN 978-0300284669; Re-check "still for sale". Published to her app as 46.4.
 1. **The check page** (her decision: a test page, not a republish of her app):
    https://claude.ai/artifact/ETa9sqoU2fCfxkW2kHz2et — built by `node build/shop_check.js` (the app's
    code whole, `build/shop_check_page.jsx` mounted instead of App; the finder, Confirm and Find catalogue

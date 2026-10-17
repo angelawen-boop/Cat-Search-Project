@@ -388,7 +388,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 46.3 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 46.4 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -526,9 +526,9 @@ and were fixed in code, proven live).
 - **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).**
   Detroit files a show's book in the show's own shop section. Her next lookups settle:
   O'Keeffe found at Detroit? Did Mauritshuis and the RA get a search?
-- **OPEN — Yale CBA's shop:** the finder now reads Touchnet (blank unless the address names a page) and
-  takes its Publications section (AL-042); not yet published, and her store's old pick must be unconfirmed
-  first: `docs/handover_yale_shop.md`.
+- **OPEN — Yale CBA's shop: published 46.4, proved live on the Yale Shop Check page (5 of 5).** Her store's Yale
+  entry is reset, so her next Yale link runs the new finder; she confirms Publications on the shop screen:
+  `docs/handover_yale_shop.md`.
 - **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the
   scraper (her decision); a rule both use (the date reader) stays in `dates.js`. Live
   proof of every link venue: `docs/link_proof_pages.json`.
