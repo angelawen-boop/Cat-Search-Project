@@ -1,8 +1,8 @@
 # Catalogue versions — the redesign and its agreed cases
 
-Status: **the display half is built on the current search, unpublished; on the display test page
-(https://claude.ai/artifact/N38mVKw5iZMm1f7aN9nD6G, `node build/build_app.js --test-page`) for her
-check.** Her decision: the search itself stays as it is (the Stage 1/1b rebuild is on `parked`);
+Status: **the display half is built on the current search, unpublished; on the Catalogue Display Check
+page (https://claude.ai/artifact/E7uMEQVMoSFrx3EiJXwBe9, `node build/display_check.js`: her test
+cards in the app's own code, a panel watching Yale's stored shop record and each lookup's calls).** Her decision: the search itself stays as it is (the Stage 1/1b rebuild is on `parked`);
 only how the versions are ordered, drawn and picked changes.
 
 ## The design

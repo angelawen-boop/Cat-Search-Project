@@ -138,7 +138,7 @@ refused or empty page. Expect ~45 one-time compression re-checks.
 branch's own CLAUDE.md (§7.4 there) and `docs/handover_search_stage1.md` say where it stands.
 The text below is as it stood at 43.
 
-**OPEN — the catalogue blocks on today's search, on the display test page, unpublished** (her
+**OPEN — the catalogue blocks on today's search, on the Catalogue Display Check page, unpublished** (her
 decision: the search stays as it is; Stage 1/1b waits on `parked`). Her order, the first book
 picked, one block per book, a shop line true for whichever book she picks, Re-check for the picked
 book: `docs/catalogue_versions.md`. Her check: her Yale cards after a Search again. Noted for the

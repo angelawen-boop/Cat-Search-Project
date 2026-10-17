@@ -39,9 +39,6 @@
  *
  * Usage:
  *   node build/build_app.js
- *   node build/build_app.js --test-page
- *       The same build, titled "Cat Watch Display Test", to build/dist/test.html, for
- *       the display test page (TEST_DISPLAY below). Never her app.
  *   node build/build_app.js --shell-from <saved-live-page.html>
  *       Re-reads the shell out of a live page saved by Artifact action:"read"
  *       and says whether the committed one still matches. Run it if the page
@@ -68,7 +65,6 @@ const MOUNT = 'ReactDOM.createRoot(document.getElementById("root")).render(React
 const args = process.argv.slice(2);
 const shellFrom = (() => { const i = args.indexOf('--shell-from'); return i < 0 ? null : args[i + 1]; })();
 const writeShell = args.includes('--write-shell');
-const testPage = args.includes('--test-page');
 
 function die(m) { console.error('BUILD FAILED — ' + m); process.exit(1); }
 
@@ -140,26 +136,15 @@ let branch = '';
 try { branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: ROOT }).toString().trim(); } catch { /* not a checkout */ }
 const forTest = branch === TEST_BRANCH;
 const target = branch === 'main' ? HER_APP : forTest ? TEST_PAGE : null;
-// The display test page: her app's code byte for byte, its own store, her app's four
-// capabilities and runtime version (0.2.52).
-const TEST_DISPLAY = 'https://claude.ai/artifact/N38mVKw5iZMm1f7aN9nD6G';
 let head = fs.readFileSync(HEAD, 'utf8');
 if (forTest) head = head.replace('<title>Cat Watch</title>', '<title>Cat Watch Cloud Test</title>');
-if (testPage) head = head.replace('<title>Cat Watch</title>', '<title>Cat Watch Display Test</title>');
-const outFile = testPage ? path.join(OUT_DIR, 'test.html') : OUT;
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
-fs.writeFileSync(outFile, head + js + fs.readFileSync(TAIL, 'utf8'));
+fs.writeFileSync(OUT, head + js + fs.readFileSync(TAIL, 'utf8'));
 
-const kb = (fs.statSync(outFile).size / 1024).toFixed(0);
-console.log('built ' + path.relative(ROOT, outFile) + ' — ' + kb + ' KB, parses, App present.');
+const kb = (fs.statSync(OUT).size / 1024).toFixed(0);
+console.log('built ' + path.relative(ROOT, OUT) + ' — ' + kb + ' KB, parses, App present.');
 console.log('');
-if (testPage) {
-  console.log('FOR THE DISPLAY TEST PAGE, never her app: Artifact publish file_path "build/dist/test.html"'
-    + (TEST_DISPLAY ? ' url "' + TEST_DISPLAY + '" (capabilities carried forward).'
-      : ' with her app\'s four capabilities and contract "0.2.52"; then write its url into TEST_DISPLAY.'));
-  process.exit(0);
-}
 if (!target) {
   console.log('NOT FOR PUBLISHING: built on "' + (branch || '?') + '". Her app is published from main.');
   process.exit(0);
