@@ -12,6 +12,7 @@ const APP_VERSION_DATE = "15 Oct 2026";
 // shopCatalogues: the shop's catalogue shelf, opened first. shopSearch: its search box
 // plus the exhibition title, opened with it. Addresses: docs/app.md §1 "Shop addresses".
 // card: the name on exhibition cards where it differs from the chip's `short`.
+// underOcc: no chip of its own; its cards file under "Occasional" (her decision; Ashmolean).
 // lookupName: the name the catalogue lookup searches with, where `short` is only a label.
 // english:false: only these venues get the language check and English-edition search
 // (lookupCatalogue, phases 2b and 3).
@@ -39,7 +40,7 @@ const MUSEUMS = [
   { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:"https://wallacecollectionshop.org/search?q=", shopCatalogues:"https://wallacecollectionshop.org/collections/wallace-collection-publications", shopHome:"https://wallacecollectionshop.org/", listUrl:null },
   { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
   // Her addition, after Tate Britain. Shopify: search box and her exhibition-catalogues shelf.
-  { id:"ashmolean", short:"Ashmolean", name:"Ashmolean Museum", city:"Oxford", exBase:null, shopSearch:"https://shop.ashmolean.org/search?q=", shopCatalogues:"https://shop.ashmolean.org/collections/exhibition-catalogues", shopHome:"https://shop.ashmolean.org/", listUrl:null },
+  { id:"ashmolean", underOcc:true, short:"Ashmolean", name:"Ashmolean Museum", city:"Oxford", exBase:null, shopSearch:"https://shop.ashmolean.org/search?q=", shopCatalogues:"https://shop.ashmolean.org/collections/exhibition-catalogues", shopHome:"https://shop.ashmolean.org/", listUrl:null },
   { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:"https://www.vam.ac.uk/shop/search?q=", shopCatalogues:"https://www.vam.ac.uk/shop/books/exhibition-books.html", shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
   { id:"louvre", linkRead:{ title:"pieces", minLine:60, skip:/\bclosed\b|remain open|apologis|pleasant visit/i }, english:false, short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:"https://boutique.louvre.fr/en/search/products/?q=", shopCatalogues:"https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
   // The French venues below share the Louvre's shop system: search box and "Exhibition catalogs" shelf.
@@ -69,12 +70,12 @@ const MUSEUMS = [
 ];
 // Her order for every venue list: chips, Sort by Venue, the freshness drawer and the
 // refresh screen. A venue not named here goes last, by name.
-const VENUE_ORDER=["met","ng","occ-nga-gov","occ-nationalgalleries-org","frick","morgan","artic","menil",
-  "acq","lgd","occ-new-artsmia-org","cincinnati","brit","tate-britain","wallace","va","ashmolean",
-  "louvre","orsay","jacquemart","mad","khm","rijks","uffizi","dellav","borghese","brera","capo","moma",
+const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
+  "acq","lgd","occ-new-artsmia-org","cincinnati","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
+  "louvre","orsay","jacquemart","mad","rijks","khm","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
   "occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
-  "occ-royalacademy-org-uk","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
+  "occ-royalacademy-org-uk","ashmolean","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
 const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); return i<0?1e6:i; };
 MUSEUMS.sort((a,b)=>orderOf(a.id)-orderOf(b.id));
 const lookupName=mu=>mu.lookupName||mu.short;
@@ -5239,7 +5240,7 @@ export default function App(){
       // is on.
       if(dismissedOnly){ if(r.interested)return false; }
       else if(!r.interested&&!showAll&&!sq)return false;
-      if(venueF.size>0&&!venueF.has(r.museumId)&&!(venueF.has(OCC_CHIP)&&isOcc(r.museumId)&&!ownChip(r.museumId)))return false;
+      if(venueF.size>0&&!venueF.has(r.museumId)&&!(venueF.has(OCC_CHIP)&&((isOcc(r.museumId)&&!ownChip(r.museumId))||(MU[r.museumId]||{}).underOcc)))return false;
       const t=tierFor(r),ts=TIERS[t]?.time||"current";
       if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
       if(watchedF&&!r.watching)return false;
@@ -5572,7 +5573,7 @@ export default function App(){
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
-          {MUSEUMS.map(m=>m.id).concat(Object.keys(OWN_CHIP)).sort((a,b)=>orderOf(a)-orderOf(b)).map(id=><button key={id} onClick={()=>toggleSet(setVenueF,id)} style={chip(venueF.has(id))}>{(MU[id]||OWN_CHIP[id]).short}</button>)}
+          {MUSEUMS.filter(m=>!m.underOcc).map(m=>m.id).concat(Object.keys(OWN_CHIP)).sort((a,b)=>orderOf(a)-orderOf(b)).map(id=><button key={id} onClick={()=>toggleSet(setVenueF,id)} style={chip(venueF.has(id))}>{(MU[id]||OWN_CHIP[id]).short}</button>)}
           <button onClick={()=>toggleSet(setVenueF,OCC_CHIP)} style={chip(venueF.has(OCC_CHIP))}>Occasional</button>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>

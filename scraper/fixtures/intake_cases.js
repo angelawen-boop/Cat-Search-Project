@@ -397,15 +397,15 @@ check('18f: the real sample file starts with every card undecided',
 // the freshness drawer and the refresh screen's headings all follow her list.
 {
   const want=['met','ng','frick','morgan','artic','menil','acq','lgd','cincinnati','brit',
-    'tate-britain','wallace','va','ashmolean','louvre','orsay','jacquemart','mad','khm','rijks',
-    'uffizi','dellav','borghese','brera','capo','moma','tate-modern','mam'];
+    'tate-britain','wallace','va','louvre','orsay','jacquemart','mad','rijks','khm',
+    'uffizi','dellav','borghese','brera','capo','moma','tate-modern','mam','ashmolean'];
   const got=H.MUSEUMS.map(m=>m.id);
   check('19: the venues are in her order', got.join()===want.join(), {got});
-  const chips=['met','ng','occ-nga-gov','occ-nationalgalleries-org','frick','morgan','artic','menil',
-    'acq','lgd','occ-new-artsmia-org','cincinnati','brit','tate-britain','wallace','va','ashmolean',
-    'louvre','orsay','jacquemart','mad','khm','rijks','uffizi','dellav','borghese','brera','capo','moma',
+  const chips=['met','ng','occ-nga-gov','frick','morgan','artic','menil',
+    'acq','lgd','occ-new-artsmia-org','cincinnati','brit','tate-britain','wallace','va','occ-nationalgalleries-org',
+    'louvre','orsay','jacquemart','mad','rijks','khm','uffizi','dellav','borghese','brera','capo','moma',
     'tate-modern','mam','occ-mfa-org','occ-clevelandart-org','occ-dia-org','occ-archive-worcesterart-org',
-    'occ-courtauld-ac-uk','occ-royalacademy-org-uk','occ-museothyssen-org','occ-mauritshuis-nl','occ-ngv-vic-gov-au'];
+    'occ-courtauld-ac-uk','occ-royalacademy-org-uk','ashmolean','occ-museothyssen-org','occ-mauritshuis-nl','occ-ngv-vic-gov-au'];
   check('19c: chips and Sort by Venue follow her list', H.VENUE_ORDER.join()===chips.join(), {got:H.VENUE_ORDER});
   check('19d: and it names all 28', got.every(id=>H.VENUE_ORDER.includes(id)), {});
   check('19a: and all 28 are still there', got.length===28, {count:got.length});
