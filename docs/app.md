@@ -241,6 +241,13 @@ Each replaced a real failure. Card wording is in the code.
   must be the same catalogue (`sameCatalogue`; Reaktion's monograph refused, ED-004). The
   facts round runs always at a non-English venue, elsewhere only for a missing ISBN or a
   missing or guessed publisher.
+- **A book found on the web is looked for again on the shop's list read first** (her decision,
+  Yale *Constable*: the list says only "Constable", so the shelf read cannot tie it to the show;
+  the web can). Phase 4b, `bookOnShelfAfterWeb`: EVERY shelf link carrying the book's whole
+  title is opened (her decision: all, not only one); the page is this book when it prints the
+  same ISBN, else when its page count or publisher agrees and the page count does not disagree
+  (`sameBookOnPage`); then it must be for sale (`readShopPage`). Only a picked book filed as
+  found on the web. SB-001 to SB-008.
 - **Search again means search again**: a whole fresh lookup from a blank card (`lookupCat`
   → `resetCard`). Finished → replaces the card's catalogue details; any step failed → the
   card is untouched, "Search again didn't finish". The old "keep what's on the card" rule

@@ -2578,6 +2578,11 @@ function shopLinkOf(o,dom){
 // address on the shop's own site whose link words carry the whole catalogue title; two
 // or none → nothing. Never a page this step opened, never a ticket.
 function bookLinkOnShelf(results,bookTitle,dom,opened){
+  const all=shelfLinksFor(results,bookTitle,dom,opened);
+  return all.length===1?all[0]:null;
+}
+// Every such address, in the order the shelf lists them.
+function shelfLinksFor(results,bookTitle,dom,opened){
   const norm=v=>foldText(v).replace(/[^a-z0-9]+/g," ").trim();
   const want=norm(bookTitle);
   if(want.length<6||!dom)return null;
@@ -2595,7 +2600,7 @@ function bookLinkOnShelf(results,bookTitle,dom,opened){
       found.set(key,url);
     }
   }
-  return found.size===1?[...found.values()][0]:null;
+  return [...found.values()];
 }
 
 // What Claude is given to read (her decision, Botticelli): a result that fits is given
@@ -2811,8 +2816,8 @@ const GONE_HTTP=new Set([404,410]);
 //   "noread"     Claude could not be asked; `why`
 //   "badanswer"  Claude's answer was not a yes or no
 //   "read"       `forSale` true or false, `why` Claude's reason, `results` the page
-async function readShopPage(book,url,io){
-  const f=await openShopPage(io?io.fetch:fetchPage,url,
+async function readShopPage(book,url,io,opened){
+  const f=opened||await openShopPage(io?io.fetch:fetchPage,url,
     "Whether the book “"+book+"” can be bought on this page now: its product page, price, "
       +"add to cart, pre-order, sold out, out of stock, unavailable.",
     [book+" add to cart sold out"],{full:true});
@@ -2922,6 +2927,42 @@ async function recheckShopRow(found,hooks){
     else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked: not in the museum shop."};
   }
   return out;
+}
+
+// THE BOOK FOUND ON THE WEB, LOOKED FOR AGAIN ON THE SHOP'S OWN LIST (her decision, Yale
+// Constable): every link on the shelf already read whose words carry the book's whole
+// title is opened, in shelf order. It is this book when its page prints the same ISBN;
+// with no ISBN on the page, when its page count or publisher agrees and the page count
+// does not disagree. Then it must be for sale (readShopPage). → the link, or null.
+// SB-001 to SB-008.
+function sameBookOnPage(results,F,v){
+  const text=pageTextOf(results);
+  const isbns=isbnsLabelled(text);
+  if(isbns.size)return [F.isbn,v&&v.alsoIsbn13].filter(Boolean).some(i=>isbns.has(i))?"the same ISBN":null;
+  const printed=(text.match(/(?<![0-9])(\d{2,4})\s*(?:pages|pp\b)/i)||[])[1];
+  if(v&&v.pages&&printed&&Number(printed)!==Number(v.pages))return null;
+  if(v&&v.pages&&printed)return "the same page count";
+  const pub=F.publisher?normPublisher(F.publisher):"";
+  if(pub.length>=4&&(" "+normPublisher(text)+" ").includes(" "+pub+" "))return "the same publisher";
+  return null;
+}
+async function bookOnShelfAfterWeb(F,v,shelf,dom,opened,io,log){
+  const links=shelfLinksFor(shelf,F.title,dom,opened);
+  if(!links.length)return null;
+  log.push("The book found on the web, looked for on the shop’s own list: "+links.length+" link"+(links.length===1?"":"s")+" carrying “"+F.title+"”.");
+  for(const url of links){
+    const f=await openShopPage(io.fetch,url,
+      "Whether the book “"+F.title+"” can be bought on this page now: its ISBN, pages, publisher, price, add to cart, sold out.",
+      [F.title+" ISBN add to cart"],{full:true});
+    log.push(f.detail);
+    if(!f.ok||!f.results.length||pageIsShell(f.results))continue;
+    const same=sameBookOnPage(f.results,F,v);
+    if(!same){ log.push("Not this book: "+url); continue; }
+    const p=await readShopPage(F.title,url,io,f);
+    log.push(p.detail);
+    if(p.kind==="read"&&p.forSale){ log.push("In the museum shop ("+same+"): "+url); return url; }
+  }
+  return null;
 }
 
 // ── THE CATALOGUE LOOKUP (docs/app.md §1; CLAUDE.md §5.1 "Catalogue lookup") ─────
@@ -4190,6 +4231,13 @@ async function lookupCatalogue(row,hooks){
       F.englishCheck=F.pubPageRead?"publisher":"shops";
       log.push("English edition: none found"+(F.pubPageRead?" — the publisher’s own page read ("+F.publisherUrl+").":"; the publisher’s own page for it was not read."));
     }
+  }
+  // ── PHASE 4b: A BOOK FOUND ON THE WEB, LOOKED FOR AGAIN ON THE SHOP'S LIST READ IN
+  // PHASE 1 (bookOnShelfAfterWeb). Only for a picked book filed as found on the web.
+  if(pick>=0&&F.title&&F.shopState==="web"&&s1.ran&&(s1.results||[]).length){
+    io.phase("page");
+    const url=await bookOnShelfAfterWeb(F,versions[pick],s1.results,dom,new Set(shopPagesFor(mu,title).map(normalizeUrlKey)),io,log);
+    if(url){ F.shopState="shop"; F.shopUrl=url; }
   }
   // Each version's book fields, for a change of pick on the card; the pick's are final.
   for(const v of versions){ const G={...F0}; takeVersion(G,v,[]); v.card=bookFieldsOf(G); }

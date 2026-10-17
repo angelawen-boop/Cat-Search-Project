@@ -71,7 +71,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionLines, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly, registerOccasional, recheckShopRow };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionLines, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly, registerOccasional, recheckShopRow, sameBookOnPage };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -921,6 +921,81 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       shop: 'found', confirmed: true, finder: 3, shopHome: 'https://store.test/', shopCatalogues: 'https://store.test/collections/books', shelfKind: 'books', shopSearch: null } });
     const m = await y3.lookupCatalogue(row('occ-britishart-yale-edu', 'Test Show'), { label: () => {} });
     eq(m.row.shopState, 'script', 'YS-005: a shelf with neither prices nor product links (MoMA’s pop-up) is still JS-rendered', JSON.stringify(m.row.shopState));
+  }
+
+  // ── SB-001..SB-008: the book found on the web, looked for again on the shop's own list
+  // (her decision, Yale Constable). The shelf read says "not this show's" — as Claude did
+  // live — and the web names the book; every shelf link carrying its title is opened.
+  {
+    const T = 'https://secure.touchnet.net/C20510_ustores/web/';
+    const PUBS = T + 'store_cat.jsp?STOREID=7&CATID=16&SINGLESTORE=true';
+    const P2564 = T + 'product_detail.jsp?PRODUCTID=2564&SINGLESTORE=true', P2409 = T + 'product_detail.jsp?PRODUCTID=2409&SINGLESTORE=true';
+    const P900 = T + 'product_detail.jsp?PRODUCTID=900&SINGLESTORE=true';
+    const LIST = '# Publications\n\n[Painters, Ports, and Profits Painters, Ports, and Profits](' + P2564 + ')\n\n[Constable: Drawings Constable: Drawings](' + P900 + ')\n\n'
+      + '[Constable Constable](' + P2409 + ')\n\n[Blake Blake](' + T + 'product_detail.jsp?PRODUCTID=2406&SINGLESTORE=true)\n\n[Yale](http://www.yale.edu/)';
+    const BOOK = (title, isbn, price, pages) => '# ' + title + '\n\n1. [YCBA Home](' + T + 'store_main.jsp?STOREID=7&SINGLESTORE=true)\n2. [Publications](' + PUBS + ')\n\n'
+      + 'Description ' + 'A generously illustrated volume from the YCBA Collection Series. '.repeat(6) + 'Published by the Yale Center for British Art Hardcover ' + pages + ' Pages'
+      + (isbn ? ' ISBN ' + isbn : '') + '\n\nPrice:\n\n' + price + '\n\nQuantity:\n\nAdd to Basket';
+    const make = ({ constableIsbn = '9780300284669', constablePages = 128, forSale = true } = {}) => {
+      const page = u => {
+        if (u === P2564 + '&page=1') return BOOK('Painters, Ports, and Profits', '9780300286540', '$65.00', 280);
+        if (u === P900 + '&page=1') return BOOK('Constable: Drawings', '9780300111118', '$30.00', 96);
+        if (u === P2409 + '&page=1') return BOOK('Constable', constableIsbn, '$40.00', constablePages);
+        if ([P2564, P900, P2409].includes(u)) return 'Product Detail';
+        if (u === PUBS) return 'YCBA Home - Publications';
+        if (u.startsWith(PUBS + '&page=')) return LIST;
+        return '';
+      };
+      const calls = [];
+      const y = lift({
+        mcp: (tool, args) => tool === 'web_search'
+          ? { payload: { results: [{ url: 'https://britishart.yale.edu/exhibitions-programs/john-constable-landscape-reimagined', title: 'John Constable: The Landscape Reimagined',
+              excerpts: ['Accompanying Publication: Constable, the third installment in YCBA’s Collection Series. Hardcover, 128 pages. ISBN 9780300284669. Published by the Yale Center for British Art.'] }] } }
+          : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Store', excerpts: [page(u)], ...(args.full_content ? { full_content: page(u) } : {}) })) } },
+        sample: p => /"forSale"/.test(p) ? { forSale, why: forSale ? 'Add to Basket, $40.00.' : 'Out of Stock.' }
+          : isShopRead(p) ? { found: false }
+          : isFactsRead(p) ? { isbn13: '9780300284669', publisher: 'Yale Center for British Art', pages: '128', language: 'English', title: 'Constable' }
+          : /"found"/.test(p) ? { found: true, thisVenue: true, catalogueTitle: 'Constable', isbn13: '9780300284669', publisher: 'Yale Center for British Art', publisherUrl: null, shopUrl: null }
+          : {},
+      }, calls);
+      y.registerOccasional({ 'occ-britishart-yale-edu': { id: 'occ-britishart-yale-edu', name: 'Yale Center for British Art', host: 'britishart.yale.edu',
+        shop: 'found', confirmed: true, finder: 3, shopHome: T + 'store_main.jsp?STOREID=7&SINGLESTORE=true', shopCatalogues: PUBS, shelfKind: 'publications', shopSearch: null } });
+      return { y, calls, opened: u => calls.some(c => c.tool === 'web_fetch' && c.args.urls.includes(u)) };
+    };
+    const yrow = row('occ-britishart-yale-edu', 'John Constable: The Landscape Reimagined');
+    {
+      const { y, calls, opened } = make();
+      const out = await y.lookupCatalogue(yrow, { label: () => {} });
+      const r = out.row;
+      eq([r.shopState, r.shopUrl, r.isbn13], ['shop', P2409, '9780300284669'], 'SB-001: Yale Constable — not taken off the list, found on the web, then found on the list by its ISBN: In the museum shop', JSON.stringify([r.shopState, r.shopUrl, out.detail.split('\n').slice(-6)]));
+      ok(opened(P900 + '&page=1') && opened(P2409 + '&page=1'), 'SB-002:   every link carrying "Constable" is opened — two, not refused as ambiguous');
+      ok(/Not this book: .*PRODUCTID=900/.test(out.detail), 'SB-003:   "Constable: Drawings" prints another ISBN — not this book', out.detail.split('\n').slice(-8).join(' | '));
+      calls.length = 0;
+      const re = await y.recheckShopRow(r, { label: () => {} });
+      ok(re.ok && re.said === 'Re-checked: still for sale in the museum shop.', 'SB-004: Re-check then reads Constable’s page and finds it still for sale', JSON.stringify(re.said));
+    }
+    {
+      const { y } = make({ constableIsbn: null });
+      const r = (await y.lookupCatalogue(yrow, { label: () => {} })).row;
+      eq([r.shopState, r.shopUrl], ['shop', P2409], 'SB-005: no ISBN on the shop’s page — the same page count (128) settles it');
+    }
+    {
+      const { y } = make({ constableIsbn: null, constablePages: 240 });
+      const r = (await y.lookupCatalogue(yrow, { label: () => {} })).row;
+      eq([r.shopState, r.shopUrl], ['web', null], 'SB-006: no ISBN and a different page count — not this book; stays found on the web');
+    }
+    {
+      const { y } = make({ forSale: false });
+      const r = (await y.lookupCatalogue(yrow, { label: () => {} })).row;
+      eq([r.shopState, r.shopUrl], ['web', null], 'SB-007: the right book but not for sale — not filed as in the shop');
+    }
+    {
+      const F = { isbn: '9780300284669', publisher: 'Yale Center for British Art' };
+      const res = text => [{ url: 'x', full_content: text }];
+      eq([api.sameBookOnPage(res('Published by the Yale Center for British Art. $40.00'), F, { pages: null }),
+          api.sameBookOnPage(res('Published by Thames & Hudson. $40.00'), F, { pages: null })],
+        ['the same publisher', null], 'SB-008: with no ISBN and no page count, the publisher decides');
+    }
   }
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');
   process.exit(failures ? 1 : 0);
