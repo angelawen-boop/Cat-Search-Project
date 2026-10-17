@@ -3042,6 +3042,32 @@ const READ_SHAPE=
  +'"shopUrl":null,"thisVenue":true}\n'
  +'Set "found" false and every other field null when these results show no catalogue.';
 
+// THE TIE (her decision, Yale Turner): a book found on the web is this show's only when
+// a sentence says so — the read quotes it, code checks the quote is in the results. A
+// book listed under "Related Publications" is not tied by the listing: Yale's page put
+// the collection handbook there for Turner, and the real catalogue there for Gwen John,
+// whose page also says the show "will be accompanied by a … catalogue"; Constable's
+// heading "Accompanying Publication" is a tie in its own words. TI- tests.
+const TIE_RULES=
+  "tie is the words, copied exactly from the results, that link THIS book to THIS exhibition: a "
+ +"sentence saying the book accompanies the show, is its catalogue or was published for it; a "
+ +"heading over the book that says so (“Accompanying publication”, “Exhibition catalogue”); or a "
+ +"sentence saying the show is accompanied by a catalogue, on a page that names this book. "
+ +"A heading that does not say so (“Related publications”, “Further reading”, “Shop”) is NOT a tie, "
+ +"and nor is text that only describes the artist, the collection or the book's contents. "
+ +"tie is null when nothing in the results links the book to this show.\n";
+const READ_SHAPE_WEB=READ_SHAPE
+  .replace('"thisVenue": true|false}','"thisVenue": true|false, "tie": string|null}')
+  .replace('"thisVenue":true}','"thisVenue":true,"tie":"Published to accompany the exhibition Metamorphoses at the Bozar."}');
+// A quote and the text it came from, compared as titles are (titleKey), with markdown
+// link targets dropped: a page prints "[_Turner_ ,](https://…) the inaugural…".
+const tieKey=s=>titleKey(String(s||"").replace(/\]\([^)\s]*\)/g," "));
+function tieIn(quote,text){
+  const q=String(quote||"").trim();
+  if(q.split(/\s+/).length<2)return null;
+  return tieKey(text).includes(tieKey(q))?q:null;
+}
+
 // The book's own page, read once: the ISBN, the publisher and any publisher link.
 const PAGE_RULES=
   "You are reading ONE web page in full: the page selling or describing a printed exhibition "
@@ -3243,6 +3269,29 @@ async function confirmShopLink(hit,io){
   return{...hit,shopCandidate:null,pageUrl:null,
     detail:hit.detail+"\n"+p.detail+"\nThe shop link from the web search "+why+", so it is not filed as in the museum shop.",
     trouble:(p.kind==="norun"||p.kind==="noread")?p.detail:hit.trouble};
+}
+
+// THE TIE, ASKED AGAIN — see TIE_RULES. The read named a book but quoted no sentence
+// tying it to this show: one search for that sentence, one read asking whether the
+// results hold it. None → the book is not this show's (Yale Turner). Returns {ok, tie, detail}.
+async function tieStep(io,book,isbn,show,venue,foreign){
+  const s=await io.search(
+    "Whether the book “"+book+"”"+(isbn?" (ISBN "+isbn+")":"")+" is the catalogue of the exhibition “"
+      +show+"” at "+venue+": a sentence saying it accompanies the show or was published for it.",
+    [book+" "+show+" catalogue",
+     venue+" "+show+" accompanied by catalogue"].concat(isbn?[isbn+" exhibition"]:[]));
+  if(!s.ok)return{ok:false,tie:null,detail:s.detail};
+  if(!s.results.length)return{ok:true,tie:null,detail:s.detail};
+  const text=resultsForPrompt(s.results,6000,{words:[book,show,venue]});
+  const rd=await io.read((foreign?READ_RULES_FOREIGN:READ_RULES)+TIE_RULES
+    +"\nIs there a sentence in these results that links this book to this exhibition? "
+    +"Answer only from what the results say.\n"
+    +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nExhibition: "+show+"\nVenue: "+venue+"\n\n"
+    +text
+    +'\nReply with ONLY this JSON object and nothing else:\n{"tie": string|null}');
+  const detail=s.detail+"\n"+rd.detail;
+  if(!rd.ok)return{ok:false,tie:null,detail};
+  return{ok:true,tie:tieIn(rd.data&&rd.data.tie,text),detail};
 }
 
 // Re-check's read of the book's shop page for a blank ISBN or publisher: one page,
@@ -4011,10 +4060,11 @@ async function lookupCatalogue(row,hooks){
     if(!s2.ok)return done({row,ok:false});
     webRes=s2.results||[];
     if(!s2.results.length)return done({ok:true,row:composeRow(row,{found:false,blocked})});
-    const r2=await io.read((foreign?READ_RULES_FOREIGN:READ_RULES)
+    // Read whole (the shop step's cap), never cut to 700 characters (Botticelli).
+    const webText=resultsForPrompt(s2.results,6000,{words:[title,venue],dom});
+    const r2=await io.read((foreign?READ_RULES_FOREIGN:READ_RULES)+TIE_RULES
       +"\nExhibition: "+title+"\nVenue: "+venue+(dom?"\nIts shop is at "+dom:"")+"\n\n"
-      // Read whole (the shop step's cap), never cut to 700 characters (Botticelli).
-      +resultsForPrompt(s2.results,6000,{words:[title,venue],dom})+READ_SHAPE);
+      +webText+READ_SHAPE_WEB);
     log.push(r2.detail);
     if(!r2.ok)return done({row,ok:false});
     let d2=r2.data||{};
@@ -4028,6 +4078,21 @@ async function lookupCatalogue(row,hooks){
     if(d2.found&&d2.thisVenue!==true){
       log.push("Not filed: “"+(d2.catalogueTitle||"the book found")+"” is not tied to this venue’s show in the results.");
       d2={};
+    }
+    // A named book needs a sentence tying it to this show (TIE_RULES): quoted by the read
+    // and found in the results, else asked for once more (tieStep), else not filed.
+    if(d2.found&&d2.thisVenue===true&&(d2.catalogueTitle||d2.isbn13)){
+      let tie=tieIn(d2.tie,webText);
+      if(!tie){
+        const book=d2.catalogueTitle||d2.isbn13;
+        log.push("No sentence in the results ties “"+book+"” to this show"+(d2.tie?" (the sentence quoted is not in them)":"")+" — asking again.");
+        const t=await tieStep(io,book,cleanIsbn(d2.isbn13),title,venue,foreign);
+        log.push(t.detail);
+        if(!t.ok)return done({row,ok:false});
+        tie=t.tie;
+        if(!tie){ log.push("Not filed: no sentence ties “"+book+"” to this show."); d2={}; }
+      }
+      if(tie)log.push("Tied to this show: “"+tie+"”");
     }
     // A catalogue tied to this venue but named by neither title nor ISBN (a press release's
     // "the accompanying catalog", Hubert Robert) goes on to the facts round, which looks
