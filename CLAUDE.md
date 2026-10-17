@@ -193,7 +193,7 @@ Faults found are fixed in code (§2.2.2).
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 
-#### 2.2.7 "Probably not for you" — built, published at 45.1; her next monthly import checks it
+#### 2.2.7 "Probably not for you" — built, published at 46 (shown then as 45.1); her next monthly import checks it
 
 Compression labels a NEW show in a topic she always quarantines (Prompt D, `TOPICS` in
 `scraper/compress.js`; Asian art wins over any other label; the Met's rotations are never
@@ -383,7 +383,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 45.2 in her app**, with the cloud ledger. What each recent version changed is in
+**Live: 46.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -529,7 +529,7 @@ and were fixed in code, proven live).
   to the page itself**. Each link is read
   once by code (title, dates) and the model (prose, always English), then the
   same intake as a sweep; no lookback. New venues file under one "Occasional"
-  chip (NG Washington, NG Scotland, Mia and Yale CBA have their own; the Ashmolean, a swept venue, files under Occasional — `underOcc`, on `main`, not yet published; chip and sort order is `VENUE_ORDER`, her decision); their shop sections confirmed on a screen after the review (39.2).
+  chip (NG Washington, NG Scotland, Mia and Yale CBA have their own; the Ashmolean, a swept venue, files under Occasional — `underOcc`; chip and sort order is `VENUE_ORDER`, her decision); their shop sections confirmed on a screen after the review (39.2).
   **The date reader and summary rules are the scraper's own**, written into the
   JSX by `node build/sync_shared.js` — never edit between its SHARED markers.
   `docs/add_by_link.md`.

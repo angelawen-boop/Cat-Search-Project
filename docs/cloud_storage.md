@@ -2,7 +2,7 @@
 
 **What it is:** the ledger kept in the page's own store, saved about a second
 after every change, instead of living only in her exported file. She reopened
-this idea herself. Trialled on a test page, then merged and published to her app at 45.1 (her
+this idea herself. Trialled on a test page, then merged and published to her app at 46 (shown then as 45.1; her
 decision); the test page is retired, its store keeping her trial Cloud Saves and the lookup log
 to the merge. She checked the merge in her app: Load, Save, reopen, quarantine, Add by link,
 a second tab. Code: "THE CLOUD LEDGER" in `Cat_Watch.jsx`. Screen spec: `docs/app.md` §9.
