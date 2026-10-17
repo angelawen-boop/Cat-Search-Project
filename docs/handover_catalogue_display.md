@@ -39,32 +39,22 @@ Center's printing comes first. Ask once, briefly, only when it matters.
   (web path: READ_RULES, TIE_RULES, tieIn, tieStep; its own test page `build/tie_check.js`),
   merged on top. Whichever session publishes to her app first must say so to the other.
 
-## The test page — Catalogue Display Check
+## The test page — Catalogue Blocks Check
 
-https://claude.ai/artifact/E7uMEQVMoSFrx3EiJXwBe9 — built by
-`node build/display_check.js --ledger <her ledger json> --venues <her venues/occasional json> --seed <dir>`,
-then publish `build/dist/display_check.html` to that url (capabilities carried forward;
-runtime version 0.2.52 like her app). Her 8 test cards are written into the page from her
-ledger (Sensation and Sensibility, Constable, Gwen John, Victorian Radicals, Canaletto in
-England, Beauty of Life, Pearls to Pyramids — all Yale — and KHM's Canaletto & Bellotto for a
-blocked shop). Its store holds a copy of her link venues (`venues/occasional`, seeded) and its
-own cards (`check/display`); it never reads or writes her app's store.
+https://claude.ai/artifact/TCGZyPJgUJmNS9bueC2Rds — built by
+`node build/blocks_check.js --ledger <her ledger json> --venues <her venues/occasional json>`,
+then publish `build/dist/blocks_check.html` to that url (capabilities carried forward; runtime
+0.2.52 like her app). It replaces the Catalogue Display Check page (dysfunctional, her verdict;
+its build files removed). Each case is a BLANK card (only the show's facts from her ledger):
+Run is a fresh Find catalogue; the drawer is the app's own CatalogueBox / CatalogueNone (the
+no-catalogue drawer now shared, app output unchanged); taps use pickRow; Re-check museum shop
+is recheckShopRow. Each result is kept in the page's store (`checks/<case id>`) the moment it
+arrives. PASS/FAIL lines (bcGrade) appear only for a case she has run.
 
-Inputs for the build: her live ledger is in her app's store (`ledger/live` → `ledgerParts/<id>-0`,
-gzip-base64, sha-256 checked); her venues in `venues/occasional`. Read them with ArtifactData
-(read only) from https://claude.ai/artifact/E2WjpRgr4W5eSzYtxyfrt5.
+### Next job
 
-### Unfinished — the next job
-
-1. **The no-catalogue card on the test page shows invented wording** ("No catalogue on file").
-   It must be the app's own: move the app's no-catalogue drawer (the `noCat` branch in App)
-   into a shared component the page draws, exactly as `CatalogueBox` was done. The edit was
-   written but not tested: `docs/handover_catalogue_display.patch` (`git apply` it, run
-   `npm run test:app`, rebuild, publish, delete the patch and this item). The page must show
-   nothing that is not the app's own output, other than its PASS/FAIL lines and Yale's address
-   line.
-2. **Then her check on the page**, Search again on each card. The pass lines appear only after
-   a Search again on that card.
+**Her run of each case on the page.** Read its results with ArtifactData `list` of `checks`,
+and each run's record from its lookup log (`lookups`).
 
 **Not this job — she said do not touch:** Constable's Search again on the test page found no
 catalogue ("Not filed: “Constable” is not tied to this venue’s show"; its record:

@@ -4337,7 +4337,7 @@ const PALETTES={
 const linkButton=C=>({fontSize:11,fontWeight:500,color:C.ink,background:C.card,border:"1px solid "+C.rule,borderRadius:3,padding:"4px 9px",textDecoration:"none",display:"inline-block",whiteSpace:"nowrap"});
 
 // THE CATALOGUE BOX: a found catalogue in the card's drawer — the shop line, the book (or her
-// version blocks) and the buy buttons. One copy, drawn by the app and by the Catalogue Display
+// version blocks) and the buy buttons. One copy, drawn by the app and by the Catalogue Blocks
 // Check page; `actions` is the Search again / Re-check row the caller draws.
 function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
   return(
@@ -4415,6 +4415,24 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
       </>):(<>
         {mu&&(mu.shopSearch||mu.shopHome)&&<div style={{display:"flex",flexWrap:"wrap",gap:5}}><a href={mu.shopSearch?mu.shopSearch+encodeURIComponent(r.title):mu.shopHome} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a></div>}
       </>)}
+      {actions}
+    </div>
+  );
+}
+
+// The drawer of a card whose search found no catalogue: one copy, drawn by the app and by
+// the Catalogue Blocks Check page; `actions` is the Search again / Re-check row.
+function CatalogueNone({r,mu,C,TH,lnk,actions}){
+  return(
+    <div>
+      {shopUnread(r.shopState)?(
+        <div style={{margin:"0 0 8px"}}>
+          <p style={{fontSize:12,color:C.soft,margin:"0 0 6px"}}><span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopUnreadHead(r.shopState)}</span>{SHOP_BLOCKED_NONE_REST}</p>
+          {/* "Search manually" needs somewhere to press: the shop's own
+              search with the title in it, as on a found card. */}
+          {mu&&(mu.shopSearch||mu.shopHome)&&<a href={mu.shopSearch?mu.shopSearch+encodeURIComponent(r.title):mu.shopHome} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
+        </div>
+      ):<p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>}
       {actions}
     </div>
   );
@@ -5920,21 +5938,13 @@ export default function App(){
                       {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
                     </div>
                   ):noCat?(
-                    <div>
-                      {shopUnread(r.shopState)?(
-                        <div style={{margin:"0 0 8px"}}>
-                          <p style={{fontSize:12,color:C.soft,margin:"0 0 6px"}}><span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopUnreadHead(r.shopState)}</span>{SHOP_BLOCKED_NONE_REST}</p>
-                          {/* "Search manually" needs somewhere to press: the shop's own
-                              search with the title in it, as on a found card. */}
-                          {mu&&(mu.shopSearch||mu.shopHome)&&<a href={mu.shopSearch?mu.shopSearch+encodeURIComponent(r.title):mu.shopHome} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
-                        </div>
-                      ):<p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>}
+                    <CatalogueNone r={r} mu={mu} C={C} TH={TH} lnk={lnk} actions={<>
                       <div style={{display:"flex",flexWrap:"wrap",gap:14}}>
                         <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
                         {!noShop&&<button onClick={()=>recheckShop(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
                       </div>
                       {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
-                    </div>
+                      </>}/>
                   ):(
                     <CatalogueBox r={r} mu={mu} C={C} TH={TH} lnk={lnk} isAcq={isAcq} noShop={noShop} vl={vl} picked={picked}
                       onPick={i=>setPick(r.id,i)} actions={<>
