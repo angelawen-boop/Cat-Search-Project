@@ -258,7 +258,6 @@ a session needs lives only behind such a link. Read the one for the work in hand
 | File | What is in it | Read it when |
 |---|---|---|
 | `docs/add_by_link.md`, `docs/link_proof_pages.json` | Design, decisions, store, shelf rule, venue link rules; the live proof pages for them | Changing Add by link |
-| `docs/handover_yale_shop.md` | Yale CBA's shop: what is built, what is left (open) | Picking up the Yale shop issue |
 
 **Search** — finding a show's catalogue
 
@@ -328,6 +327,9 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **An excerpt is what matches the query, not the page.** Short excerpts are not an empty page; judge emptiness on the whole page (Watteau).
 - **Subagents:** send only the rows and fields the question needs. Wording is not a control — remove the tool or check the answer.
 - **A general rule ships only if no page gets worse.** Try it against every live page in hand, old reader beside new; a rule that fixes ten and breaks one is a venue rule, not a general one.
+- **Before resetting stored data, trace every path that reads it** (Yale's shop, cleared, left every Yale card
+  shopless until a link was read). **Copy a fixture's reply shape from a live reply, never assume it**, and search
+  for every copy of a rule before calling it fixed (the lookup kept its own "books need prices" check).
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose
@@ -526,9 +528,6 @@ and were fixed in code, proven live).
 - **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).**
   Detroit files a show's book in the show's own shop section. Her next lookups settle:
   O'Keeffe found at Detroit? Did Mauritshuis and the RA get a search?
-- **OPEN — Yale CBA's shop: published 46.4, proved live on the Yale Shop Check page (5 of 5).** Her store's Yale
-  entry is reset, so her next Yale link runs the new finder; she confirms Publications on the shop screen:
-  `docs/handover_yale_shop.md`.
 - **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the
   scraper (her decision); a rule both use (the date reader) stays in `dates.js`. Live
   proof of every link venue: `docs/link_proof_pages.json`.

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
  * shop_check.js — builds the "Yale Shop Check" page: the app's shop finder and Find
- * catalogue run live on one case (docs/handover_yale_shop.md).
+ * catalogue run live on one case (docs/add_by_link.md, Yale CBA).
  *
  * Cat_Watch.jsx is bundled whole, prepared exactly as build_app.js prepares it, with
  * build/shop_check_page.jsx appended; ShopCheck is mounted instead of App. No app function
@@ -9,7 +9,7 @@
  *
  *   node build/shop_check.js      → build/dist/shop_check.html
  *
- * Publish to the check page only (its url: docs/handover_yale_shop.md), never her app.
+ * Publish to the check page only (its url: docs/add_by_link.md, Yale CBA), never her app.
  * Capabilities: mcp (Parallel Search Key: web_search, web_fetch), sample, db.
  */
 'use strict';
