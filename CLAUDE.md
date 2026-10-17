@@ -141,7 +141,7 @@ The text below is as it stood at 43.
 **OPEN — the catalogue blocks on today's search, on the Catalogue Display Check page, unpublished** (her
 decision: the search stays as it is; Stage 1/1b waits on `parked`). Her order, the first book
 picked, one block per book, a shop line true for whichever book she picks, Re-check for the picked
-book: `docs/catalogue_versions.md`. Her check: her Yale cards after a Search again. Noted for the
+book: `docs/catalogue_versions.md`. Where it stands and the next job: `docs/handover_catalogue_display.md`. Noted for the
 search work later: *Pearls to Pyramids* (Yale) kept a 21-page pamphlet as its book.
 
 **PAUSED — no lookup patches until the redesign is agreed** (her decision: past the

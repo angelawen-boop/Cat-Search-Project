@@ -1,0 +1,67 @@
+diff --git a/Cat_Watch.jsx b/Cat_Watch.jsx
+index 7f7421a..75927d1 100644
+--- a/Cat_Watch.jsx
++++ b/Cat_Watch.jsx
+@@ -4485,6 +4485,24 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
+   );
+ }
+ 
++// The drawer of a card whose search found no catalogue: one copy, drawn by the app and by
++// the Catalogue Display Check page; `actions` is the Search again / Re-check row.
++function CatalogueNone({r,mu,C,TH,lnk,actions}){
++  return(
++    <div>
++      {shopUnread(r.shopState)?(
++        <div style={{margin:"0 0 8px"}}>
++          <p style={{fontSize:12,color:C.soft,margin:"0 0 6px"}}><span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopUnreadHead(r.shopState)}</span>{SHOP_BLOCKED_NONE_REST}</p>
++          {/* "Search manually" needs somewhere to press: the shop's own
++              search with the title in it, as on a found card. */}
++          {mu&&(mu.shopSearch||mu.shopHome)&&<a href={mu.shopSearch?mu.shopSearch+encodeURIComponent(r.title):mu.shopHome} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
++        </div>
++      ):<p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>}
++      {actions}
++    </div>
++  );
++}
++
+ export default function App(){
+   const[rows,setRows]=useState([]);
+   // A row from an occasional venue this page's store has not met still files
+@@ -5985,21 +6003,13 @@ export default function App(){
+                       {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
+                     </div>
+                   ):noCat?(
+-                    <div>
+-                      {shopUnread(r.shopState)?(
+-                        <div style={{margin:"0 0 8px"}}>
+-                          <p style={{fontSize:12,color:C.soft,margin:"0 0 6px"}}><span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopUnreadHead(r.shopState)}</span>{SHOP_BLOCKED_NONE_REST}</p>
+-                          {/* "Search manually" needs somewhere to press: the shop's own
+-                              search with the title in it, as on a found card. */}
+-                          {mu&&(mu.shopSearch||mu.shopHome)&&<a href={mu.shopSearch?mu.shopSearch+encodeURIComponent(r.title):mu.shopHome} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
+-                        </div>
+-                      ):<p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>}
++                    <CatalogueNone r={r} mu={mu} C={C} TH={TH} lnk={lnk} actions={<>
+                       <div style={{display:"flex",flexWrap:"wrap",gap:14}}>
+                         <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
+                         {!noShop&&<button onClick={()=>recheckShop(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
+                       </div>
+                       {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
+-                    </div>
++                      </>}/>
+                   ):(
+                     <CatalogueBox r={r} mu={mu} C={C} TH={TH} lnk={lnk} isAcq={isAcq} noShop={noShop} vl={vl} picked={picked}
+                       onPick={i=>setPick(r.id,i)} actions={<>
+diff --git a/build/display_check_page.jsx b/build/display_check_page.jsx
+index 7bbaace..025c1a1 100644
+--- a/build/display_check_page.jsx
++++ b/build/display_check_page.jsx
+@@ -118,7 +118,8 @@ function DisplayCheck(){
+         <div style={{background:C.drawer,margin:"10px -14px",padding:"12px 14px"}}>
+           {found?<CatalogueBox r={r} mu={mu} C={C} TH={TH} lnk={lnk} isAcq={r.acquiring==="acquired"} noShop={noShop} vl={vl} picked={picked}
+             onPick={i=>put(pickRow(r,i,new Date().toISOString()))} actions={actions}/>
+-            :<div><div style={{fontSize:12,color:C.soft}}>No catalogue on file.</div>{actions}</div>}
++            :r.looked?<CatalogueNone r={r} mu={mu} C={C} TH={TH} lnk={lnk} actions={actions}/>
++            :<div>{actions}</div>}
+         </div>
+         {lines.map((l,i)=><div className="row" key={i}>
+           <span className="mark" style={{color:l.ok?C.okInk:TH.urgent.ink}}>{l.ok?"PASS":"FAIL"}</span>
