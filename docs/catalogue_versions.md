@@ -124,3 +124,26 @@ source link.
 - **"Not found" is not "does not exist".** No English edition was found for
   Watteau, Canaletto – Guardi or Botticelli; the card says "No English edition
   found."
+
+## Search: every catalogue of the exhibition — OPEN, not built
+
+Her decision. Search logic, apart from the display work: build it with `parked` Stage 1/1b
+(`docs/handover_search_stage1.md` there), never as a patch on today's search.
+
+**Today (traced):** the first web read names ONE book (built when a card held one); the NG van
+Hemessen fix files it only on a plain `thisVenue` yes — a no throws it away and ends the lookup —
+and its rule ("A catalogue of a show at ANOTHER venue is false — even when that show travels
+here") hits every search to force one case; other versions are listed only in the facts round
+(added for Vasari), after a book passes. So *Sensation and Sensibility* kept the Huntington's book
+(found off the Yale book), and *Victorian Radicals* lost both — 978-1885444479 (on Yale's own
+publications page) and 978-3791357638 (Blocks Check run, lookup L1792239623555414n).
+
+**Her logic:**
+- Search for every catalogue of THIS EXHIBITION at any showing, whoever printed it; a tour's one
+  catalogue is found from every venue's card.
+- Delete the van Hemessen fix: another showing's book is kept, as that showing's (Antwerp's on NG's).
+- Listing every book moves to the first round; every book gets the same check and facts. Only
+  this exhibition's books: never another show's, a same-titled unrelated book or litter (`parked`).
+- Being this venue's own decides only a book's label and place, never whether it is kept.
+- Order (display work): non-English venue — English first, always; English-language venue — the
+  card's own showing's book first, one in its shop first of all. Rest: `docs/handover_catalogue_display.md`.

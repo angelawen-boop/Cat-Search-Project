@@ -138,7 +138,13 @@ refused or empty page. Expect ~45 one-time compression re-checks.
 branch's own CLAUDE.md (§7.4 there) and `docs/handover_search_stage1.md` say where it stands.
 The text below is as it stood at 43.
 
-**OPEN — the catalogue blocks on today's search, on the Catalogue Display Check page, unpublished** (her
+**OPEN — search for every catalogue of the exhibition, at any showing** (her decision; search logic,
+kept apart from the display work; build with `parked` Stage 1/1b). Today the first read names one
+book and throws it away unless Claude ties it to this venue (the van Hemessen fix), and other
+versions are listed only after a book passes — *Victorian Radicals* lost both its books. Her logic
+and the trace: `docs/catalogue_versions.md`, "Search: every catalogue of the exhibition".
+
+**OPEN — the catalogue blocks on today's search, on the Catalogue Blocks Check page, unpublished** (her
 decision: the search stays as it is; Stage 1/1b waits on `parked`). Her order, the first book
 picked, one block per book, a shop line true for whichever book she picks, Re-check for the picked
 book: `docs/catalogue_versions.md`. Where it stands and the next job: `docs/handover_catalogue_display.md`. Noted for the
