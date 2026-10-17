@@ -228,7 +228,7 @@ const script = {
     const cards = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_proof_cards.json'), 'utf8')).cards;
     const c2 = cards.find(c => c.case === 2);
     const asAgreed = c2.versions.map(v => ({ ...v, publisher: v.showing === 'this' ? 'Somogy, Editions du' : 'Lund Humphries' }));
-    eq([compare(c2, { editions: asAgreed, editionPick: null }), compare(c2, { editions: [...asAgreed, { lang: 'French', isbn13: '9782757210659', showing: 'this' }], editionPick: null }).length > 0],
+    eq([compare(c2, { editions: asAgreed, editionPick: 1 }), compare(c2, { editions: [...asAgreed, { lang: 'French', isbn13: '9782757210659', showing: 'this' }], editionPick: 1 }).length > 0],
       [[], true], 'PC-003: a publisher written another way is the same house; the 48-page album listed is a difference');
   }
 

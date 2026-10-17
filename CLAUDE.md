@@ -138,6 +138,12 @@ refused or empty page. Expect ~45 one-time compression re-checks.
 branch's own CLAUDE.md (§7.4 there) and `docs/handover_search_stage1.md` say where it stands.
 The text below is as it stood at 43.
 
+**OPEN — the catalogue blocks on today's search, on the display test page, unpublished** (her
+decision: the search stays as it is; Stage 1/1b waits on `parked`). Her order, the first book
+picked, one block per book, a shop line true for whichever book she picks, Re-check for the picked
+book: `docs/catalogue_versions.md`. Her check: her Yale cards after a Search again. Noted for the
+search work later: *Pearls to Pyramids* (Yale) kept a 21-page pamphlet as its book.
+
 **PAUSED — no lookup patches until the redesign is agreed** (her decision: past the
 third-patch limit — `lookupCatalogue` changed 10 times in three days). The redesign (find →
 choose → tell, every version kept, her starting-pick rules) and its nine agreed cases are in
@@ -263,7 +269,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 
 | File | What is in it | Read it when |
 |---|---|---|
-| `docs/catalogue_versions.md` | The catalogue-versions redesign (paused) and its agreed cases | Changing the catalogue lookup's design |
+| `docs/catalogue_versions.md` | The catalogue versions: her order, her block layout, the shop line, and the agreed cases | Changing the catalogue lookup's design |
 
 **Features** — ideas not yet built
 

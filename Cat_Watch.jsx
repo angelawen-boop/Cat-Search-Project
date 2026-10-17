@@ -2891,7 +2891,24 @@ async function recheckLinkedPage(row){
 
 // "Re-check museum shop" on one card → {ok, detail, row?, said}. At top level so the
 // shop check page runs the same code; the page's recheckShop prints its answer.
+// A card with several books: Re-check is about the picked one only, and that book's own
+// stored fields follow the card (pickRow reads them back). SV-006 to SV-008.
+function pickedVersion(row){
+  const vs=Array.isArray(row&&row.editions)?row.editions:[];
+  return vs.length>1&&Number.isInteger(row.editionPick)?vs[row.editionPick]||null:null;
+}
+function withPickedCard(row){
+  const v=pickedVersion(row);
+  if(!v)return row;
+  const card={catalogueTitle:row.catalogueTitle||null,isbn13:row.isbn13||null,publisher:row.publisher||null,publisherUrl:row.publisherUrl||null,
+    publisherResult:row.publisherResult||null,shopState:row.shopState||null,shopUrl:row.shopUrl||null};
+  return{...row,editions:row.editions.map(x=>x===v?{...v,card}:x)};
+}
 async function recheckShopRow(found,hooks){
+  const out=await recheckShopCore(found,hooks);
+  return out.row?{...out,row:withPickedCard(out.row)}:out;
+}
+async function recheckShopCore(found,hooks){
   // A ticket on file was never the book: dropped, and the shop searched afresh.
   const ticket=!!(found.shopUrl&&isTicketLink(found.shopUrl));
   const row=ticket?{...found,shopUrl:null,shopState:"web",shopChange:null}:found;
@@ -2917,6 +2934,16 @@ async function recheckShopRow(found,hooks){
     else if(s.blocked)out=ticket
       ?{ok:true,detail:s.detail,row:{...row,shopState:s.blocked},said:dropped+"Re-check didn’t work — museum shop is "+(s.blocked==="script"?"JS-rendered":"blocked")+"."}
       :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop is "+(s.blocked==="script"?"JS-rendered":"blocked")+"."};
+    // The shop's book is the picked one only when its ISBN says so; otherwise the picked
+    // book is looked for on the list the shop step read, as the lookup does.
+    else if(pickedVersion(row)&&!(o.found&&o.isbn13&&[pickedVersion(row).isbn13,pickedVersion(row).alsoIsbn13].includes(o.isbn13))){
+      const v=pickedVersion(row), log=[];
+      const F={title:row.catalogueTitle||v.title,isbn:row.isbn13||v.isbn13,publisher:row.publisher||v.publisher};
+      const url=await bookOnShelfAfterWeb(F,v,s.results,dom,new Set(shopPagesFor(MU[row.museumId],String(row.title||"").trim()).map(normalizeUrlKey)),io,log);
+      const detail=[s.detail].concat(log).join("\n");
+      out=url?{ok:true,detail,row:{...answered,shopState:"shop",shopUrl:url,shopChange:null},said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")}
+        :{ok:true,detail,row:{...answered,shopState:"web",shopUrl:null},said:dropped+"Re-checked: not in the museum shop."};
+    }
     else if(o.found&&(o.catalogueTitle||o.isbn13)&&(onShop||o.listedOnly)){
       // Reading the book's page for a blank ISBN is part of the shop step —
       // the page IS the shop's. Web search and the publisher are never run.
@@ -2946,19 +2973,25 @@ function sameBookOnPage(results,F,v){
   if(pub.length>=4&&(" "+normPublisher(text)+" ").includes(" "+pub+" "))return "the same publisher";
   return null;
 }
-async function bookOnShelfAfterWeb(F,v,shelf,dom,opened,io,log){
-  const links=shelfLinksFor(shelf,F.title,dom,opened);
+// `seen` (optional): pages already opened and read in this lookup, by address, so a page
+// carrying two books' titles is opened once.
+async function bookOnShelfAfterWeb(F,v,shelf,dom,opened,io,log,seen){
+  const links=shelfLinksFor(shelf,F.title,dom,opened)||[];
   if(!links.length)return null;
   log.push("The book found on the web, looked for on the shop’s own list: "+links.length+" link"+(links.length===1?"":"s")+" carrying “"+F.title+"”.");
   for(const url of links){
-    const f=await openShopPage(io.fetch,url,
+    const key=normalizeUrlKey(url), had=seen&&seen.get(key);
+    const f=had?had.f:await openShopPage(io.fetch,url,
       "Whether the book “"+F.title+"” can be bought on this page now: its ISBN, pages, publisher, price, add to cart, sold out.",
       [F.title+" ISBN add to cart"],{full:true});
-    log.push(f.detail);
+    if(seen&&!had)seen.set(key,{f});
+    if(!had)log.push(f.detail);
     if(!f.ok||!f.results.length||pageIsShell(f.results))continue;
     const same=sameBookOnPage(f.results,F,v);
     if(!same){ log.push("Not this book: "+url); continue; }
-    const p=await readShopPage(F.title,url,io,f);
+    const mem=seen&&seen.get(key);
+    const p=mem&&mem.p?mem.p:await readShopPage(F.title,url,io,f);
+    if(mem&&!mem.p)mem.p=p;
     log.push(p.detail);
     if(p.kind==="read"&&p.forSale){ log.push("In the museum shop ("+same+"): "+url); return url; }
   }
@@ -3562,27 +3595,23 @@ function foldCoEditions(versions,results,museumId,log){
   }
 }
 
-// HER STARTING PICK (docs/catalogue_versions.md), in order: only this showing's
-// catalogue; English first; then this venue's own printing; then hardcover when only
-// the binding differs. Nothing picked when this showing has no English version but
-// another showing's book is English, or when the rules leave more than one. Pure:
-// returns the picked version's index, or -1. CV-001 to CV-012.
-function pickEdition(versions,museumId){
+// HER ORDER (docs/catalogue_versions.md): English in the venue's own imprint; then English
+// from anyone else; then other languages. Within each, hardcover, then paperback, then a
+// binding not known; otherwise as found. The first is the starting pick. VO-001 to VO-006.
+function versionRank(v,museumId){
+  const en=isEnglishLang(v&&v.lang);
+  const group=en&&venuePrinting(v.publisher,museumId)?0:en?1:2;
+  return group*3+(v.binding==="hardcover"?0:v.binding==="paperback"?1:2);
+}
+// The versions' indexes in her order.
+function versionOrder(versions,museumId){
   const vs=Array.isArray(versions)?versions:[];
-  let pool=vs.map((v,i)=>i).filter(i=>vs[i]&&vs[i].showing==="this");
-  const english=pool.filter(i=>isEnglishLang(vs[i].lang));
-  if(!english.length&&vs.some(v=>v&&v.showing==="other"&&isEnglishLang(v.lang)))return -1;
-  if(english.length)pool=english;
-  if(pool.length>1){ const own=pool.filter(i=>venuePrinting(vs[i].publisher,museumId)); if(own.length)pool=own; }
-  if(pool.length>1){
-    const a=vs[pool[0]];
-    const onlyBinding=pool.every(i=>{ const v=vs[i];
-      return !!v.binding&&sameLang(v.lang,a.lang)&&(v.publisher&&a.publisher?sameHouse(v.publisher,a.publisher):!v.publisher&&!a.publisher)
-        &&!differentBook(v.pages,a.pages); });
-    const hard=pool.filter(i=>vs[i].binding==="hardcover");
-    if(onlyBinding&&hard.length&&hard.length<pool.length)pool=hard;
-  }
-  return pool.length===1?pool[0]:-1;
+  return vs.map((v,i)=>i).sort((a,b)=>versionRank(vs[a]||{},museumId)-versionRank(vs[b]||{},museumId)||a-b);
+}
+// The lookup keeps its versions in her order, so the starting pick is always 0.
+function putInOrder(versions,museumId){
+  const sorted=versionOrder(versions,museumId).map(i=>versions[i]);
+  versions.splice(0,versions.length,...sorted);
 }
 // A version as the ledger keeps it: the lookup's own fields dropped. `card` holds the
 // card's book fields for that version, so a change of pick refills the card (pickRow).
@@ -3597,7 +3626,8 @@ function takeVersion(F,v,log){
   log.push("The card’s book: “"+v.title+"”"+(v.isbn13?", ISBN "+v.isbn13:"")+".");
   F.title=v.title; F.isbn=v.isbn13; F.publisher=v._pub||null; F.pubFrom=v._pub?v._pubFrom:null;
   F.publisherUrl=v._pubUrl||null; F.publisherResult=v._pubUrl?"product":null;
-  F.shopState="web"; F.shopUrl=null;
+  // A shop that could not be read stays unread for every book.
+  F.shopState=F.blocked||"web"; F.shopUrl=null;
 }
 function bookFieldsOf(F){
   return{catalogueTitle:F.title||null,isbn13:F.isbn||null,publisher:F.publisher||null,publisherUrl:F.publisherUrl||null,
@@ -3611,10 +3641,9 @@ function pickRow(row,i,now){
   return{...row,...v.card,editionPick:i,editedAt:now};
 }
 
-// ── HER VERSION LINES (docs/catalogue_versions.md, her wording) ──────────────
-// One line per version, in order, on a card with two or more; a card with one looks
-// as it always has. Notes are decided here, first rule that fits. VL-001 to VL-012.
-const COUNT_WORDS=["","one","two","three","four","five","six","seven","eight","nine","ten"];
+// ── HER VERSION BLOCKS (docs/catalogue_versions.md, "Her layout") ──────────────
+// One block per version, in her order, on a card with two or more; a card with one looks
+// as it always has. Notes are decided here, first rule that fits. VB-001 to VB-010.
 function sourceOf(u){
   try{ const h=new URL(String(u||"")).hostname.replace(/^www\./,""); return h?{url:String(u),host:h}:null; }catch{ return null; }
 }
@@ -3622,7 +3651,7 @@ function versionNote(vs,i,row){
   const v=vs[i], mu=MU[row.museumId], id=row.museumId;
   const vc=v.city||(venueNamedIn(v.publisher,id)||{}).city||null;
   const where=vc?"from the show's "+vc+" exhibition":"from the show's other exhibition";
-  if(v.showing==="other")return "a notably different book, "+where;
+  if(v.showing==="other")return "a different book, "+where;
   const mine=vs.filter(x=>x.showing==="this");
   // One house, the versions differing only in language (Metamorphoses): no notes.
   const langs=new Set(mine.map(x=>foldText(x.lang||"")));
@@ -3640,29 +3669,27 @@ function versionNote(vs,i,row){
   }
   return null;
 }
-function versionText(vs,i,row,showPages){
-  // The second number is the museum's that printed the book (the Louvre's, on the NGA's card too).
+// A block's facts, each its own item: the title, publisher (a later English edition's year
+// after a dot), language · binding · pages, the ISBN and any second number, why it is
+// listed, and the page that proved it.
+function versionBlock(vs,i,row){
   const v=vs[i], mu=venueNamedIn(v.publisher)||MU[row.museumId];
-  const bind=[v.binding==="hardcover"||v.binding==="paperback"?v.binding:null,showPages&&v.pages?v.pages+" pp":null].filter(Boolean).join(", ");
-  const isbn=v.isbn13?fmtIsbn(v.isbn13)+(v.alsoIsbn13?" · also "+fmtIsbn(v.alsoIsbn13)+" (the "+(mu?mu.short:"venue")+"'s own number for the same book)":""):null;
   const note=versionNote(vs,i,row);
-  // A later English edition names its year beside the publisher (Hammershøi).
-  const pub=v.publisher&&note==="the English edition, published later"&&v.year?v.publisher+", "+v.year:v.publisher;
-  return [v.lang,v.title,bind,pub,isbn].filter(Boolean).join(" · ")+(note?" — "+note:"")+".";
+  const later=note==="the English edition, published later"&&v.year;
+  const bind=v.binding==="hardcover"?"Hardcover":v.binding==="paperback"?"Paperback":null;
+  const facts=[v.lang,bind,v.pages?v.pages+" pp":null].filter(Boolean).join(" \u00b7 ");
+  return{i,picked:row.editionPick===i,title:v.title||null,
+    publisher:v.publisher?v.publisher+(later?" \u00b7 "+v.year:""):null,facts:facts||null,
+    isbn:v.isbn13?fmtIsbn(v.isbn13):null,
+    also:v.isbn13&&v.alsoIsbn13?{isbn:fmtIsbn(v.alsoIsbn13),whose:(mu?mu.short:"venue")+"\u2019s own number for the same book"}:null,
+    why:note?note.charAt(0).toUpperCase()+note.slice(1)+".":null,source:sourceOf(v.proofUrl)};
 }
-// An ISBN never breaks across lines; the characters copied stay the same.
-function nowrapIsbns(text){
-  return String(text).split(/(97[89]-\d{10})/).map((p,k)=>k%2?<span key={k} style={{whiteSpace:"nowrap"}}>{p}</span>:p);
-}
-// Null for a card with fewer than two versions. Page counts show on every line when
-// they tell two versions apart; one shared source replaces the per-line ones.
-function versionLines(row){
-  const vs=Array.isArray(row&&row.editions)?row.editions.filter(Boolean):[];
-  if(vs.length<2)return null;
-  const showPages=vs.some((a,i)=>vs.some((b,j)=>j>i&&differentBook(a.pages,b.pages)));
-  const one=vs.every(v=>v.proofUrl&&v.proofUrl===vs[0].proofUrl)?sourceOf(vs[0].proofUrl):null;
-  return{lines:vs.map((v,i)=>({picked:row.editionPick===i,text:versionText(vs,i,row,showPages),source:one?null:sourceOf(v.proofUrl)})),
-    shared:one?{...one,count:COUNT_WORDS[vs.length]||String(vs.length)}:null};
+// Null for a card with fewer than two versions.
+function versionBlocks(row){
+  const all=Array.isArray(row&&row.editions)?row.editions:[];
+  if(all.filter(Boolean).length<2)return null;
+  const vs=all.map(v=>v||{});
+  return versionOrder(vs,row.museumId).filter(i=>all[i]).map(i=>versionBlock(vs,i,row));
 }
 // The note after an old row's ISBN: "also 978-… (hardcover, Nationalmuseum)".
 function alsoLine(v){
@@ -4165,9 +4192,9 @@ async function lookupCatalogue(row,hooks){
   }
   if(F.publisher)log.push("Publisher: "+F.publisher+" — from "+F.pubFrom+(F.pubFrom==="general results"?" (a guess).":"."));
 
-  // ── PHASE 3: EVERY VERSION, THEN ONE PICKED (code only; docs/catalogue_versions.md).
+  // ── PHASE 3: EVERY VERSION, IN HER ORDER (code only; docs/catalogue_versions.md).
   // The book found so far is this showing's catalogue; the read's other printings and
-  // editions join it only when proved. pickEdition applies her starting-pick rules.
+  // editions join it only when proved. putInOrder sorts them; the first starts picked.
   const everything=[...(bookPage?bookPage.results:[]),...factsRes,...edRes,...webRes,...[...pages.values()].flat()];
   const said=read&&read.language?String(read.language):"";
   const lang=foreign?langName(said):"English";
@@ -4203,27 +4230,28 @@ async function lookupCatalogue(row,hooks){
     if(!thisEnglish()&&Array.isArray(read.editions)&&read.editions.length)log.push("English edition: none proved to be this catalogue's.");
   }
   const F0={...F};   // the book as found, before any pick
-  let pick=pickEdition(versions,row.museumId);
-  log.push(versions.length+" version"+(versions.length===1?"":"s")+" found; "
-    +(pick<0?"none picked — her rules do not settle it.":"picked: "+(versions[pick].isbn13||"the book found")+"."));
-  if(pick>=0)takeVersion(F,versions[pick],log);
+  putInOrder(versions,row.museumId);
+  const pick=0;
+  log.push(versions.length+" version"+(versions.length===1?"":"s")+" found; first in her order: "+(versions[0].isbn13||"the book found")+".");
+  takeVersion(F,versions[0],log);
 
-  // ── PHASE 4: THE PUBLISHER'S PAGE, ONCE, FOR THE PICKED BOOK — or for the book found,
-  // when nothing is picked and its publisher's page may list an English edition.
-  const wantEditions=notEnglish&&!thisEnglish();
-  if(pick>=0||wantEditions){
+  // ── PHASE 4: THE PUBLISHER'S PAGE, ONCE, FOR THE PICKED BOOK. When it is this show's
+  // book and no English version is known, its publisher's page may list an English edition.
+  const wantEditions=notEnglish&&!thisEnglish()&&versions[0].showing==="this";
+  {
     const p4=await findPublisherPage(F,{io,log,row,dom,venue,found:found2,pages,wantEditions});
     if(p4.trouble)fault(p4.trouble);
     const ed=p4.edition;
     if(ed&&!versions.some(v=>v.isbn13===ed.isbn13||v.alsoIsbn13===ed.isbn13)){
       log.push("English edition on the publisher’s own page: “"+ed.title+"”, ISBN "+ed.isbn13+".");
-      versions.push({title:ed.title,lang:"English",binding:null,pages:null,publisher:found.publisher,isbn13:ed.isbn13,
-        alsoIsbn13:null,showing:"this",proofUrl:ed.link,note:"the publisher’s own page lists it",_pub:F.publisher});
-      pick=pickEdition(versions,row.museumId);
-      if(pick===versions.length-1){
+      const en={title:ed.title,lang:"English",binding:null,pages:null,publisher:found.publisher,isbn13:ed.isbn13,
+        alsoIsbn13:null,showing:"this",proofUrl:ed.link,note:"the publisher’s own page lists it",_pub:F.publisher};
+      versions.push(en);
+      putInOrder(versions,row.museumId);
+      if(versions[0]===en){
         F.title=ed.title; F.isbn=ed.isbn13;
         F.publisherUrl=ed.link; F.publisherResult=ed.linkResult;
-        F.shopState="web"; F.shopUrl=null;
+        F.shopState=F.blocked||"web"; F.shopUrl=null;
       }
       F.englishCheck="english";
     } else if(wantEditions){
@@ -4232,20 +4260,26 @@ async function lookupCatalogue(row,hooks){
       log.push("English edition: none found"+(F.pubPageRead?" — the publisher’s own page read ("+F.publisherUrl+").":"; the publisher’s own page for it was not read."));
     }
   }
-  // ── PHASE 4b: A BOOK FOUND ON THE WEB, LOOKED FOR AGAIN ON THE SHOP'S LIST READ IN
-  // PHASE 1 (bookOnShelfAfterWeb). Only for a picked book filed as found on the web.
-  if(pick>=0&&F.title&&F.shopState==="web"&&s1.ran&&(s1.results||[]).length){
+  // ── PHASE 4b: EVERY BOOK FOUND ON THE WEB, LOOKED FOR AGAIN ON THE SHOP'S LIST READ IN
+  // PHASE 1 (bookOnShelfAfterWeb), so the shop line is true whichever she picks (her
+  // decision). A page opened for one book is not opened again for the next. SV-001 to SV-005.
+  const shelfSkip=new Set(shopPagesFor(mu,title).map(normalizeUrlKey)), shelfSeen=new Map();
+  const onShelf=async(G,v)=>{
+    if(!(G.title&&G.shopState==="web"&&s1.ran&&(s1.results||[]).length))return;
     io.phase("page");
-    const url=await bookOnShelfAfterWeb(F,versions[pick],s1.results,dom,new Set(shopPagesFor(mu,title).map(normalizeUrlKey)),io,log);
-    if(url){ F.shopState="shop"; F.shopUrl=url; }
-  }
+    const url=await bookOnShelfAfterWeb(G,v,s1.results,dom,shelfSkip,io,log,shelfSeen);
+    if(url){ G.shopState="shop"; G.shopUrl=url; }
+  };
+  await onShelf(F,versions[pick]);
   // Each version's book fields, for a change of pick on the card; the pick's are final.
-  for(const v of versions){ const G={...F0}; takeVersion(G,v,[]); v.card=bookFieldsOf(G); }
-  if(pick>=0)versions[pick].card=bookFieldsOf(F);
-  // Nothing picked: the versions are kept, the card's book fields left blank.
-  if(pick<0){ F.title=null; F.isbn=null; F.publisher=null; F.publisherUrl=null; F.publisherResult=null; }
+  for(const v of versions){
+    if(v===versions[pick]){ v.card=bookFieldsOf(F); continue; }
+    const G={...F0}; takeVersion(G,v,[]);
+    await onShelf(G,v);
+    v.card=bookFieldsOf(G);
+  }
   F.editions=versions.map(storedVersion);
-  F.editionPick=pick>=0?pick:null;
+  F.editionPick=pick;
 
   // ── PHASE 5: THE ROW, ONCE.
   return done({ok:true,row:composeRow(row,F),...(trouble?{trouble}:{}),...(troubleLang?{troubleLang:true}:{})});
@@ -5728,9 +5762,10 @@ export default function App(){
           // No shop at all (Borghese, Capodimonte, the Accademia; her decision): no
           // Re-check button, and the line says only "Venue has no shop."
           const noShop=!(MU[r.museumId]&&(MU[r.museumId].shopSearch||MU[r.museumId].shopHome));
-          // Her version lines, on a card with two or more versions (versionLines); with
-          // nothing picked the card shows no book, no status lines and only the shop button.
-          const vl=r.looked&&r.hasCatalogue==="yes"?versionLines(r):null;
+          // Her version blocks, on a card with two or more versions (versionBlocks); with
+          // nothing picked (a card searched before her order) the card shows no book, no
+          // status lines and only the shop button.
+          const vl=r.looked&&r.hasCatalogue==="yes"?versionBlocks(r):null;
           const picked=!vl||(Number.isInteger(r.editionPick)&&!!r.editions[r.editionPick]);
           const said=recheckSaid&&recheckSaid.id===r.id?recheckSaid:null;
           if(dismissed)return(
@@ -5845,20 +5880,28 @@ export default function App(){
                       </div>}
                       </>}
                       {vl?(
-                        <div style={{marginBottom:10}}>
-                          {vl.lines.map((l,k)=>(
-                            <div key={k} role="button" tabIndex={0} aria-pressed={l.picked} title={l.picked?"Picked":"Pick this version"} onClick={()=>setPick(r.id,k)}
-                              onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setPick(r.id,k); } }}
-                              style={{display:"flex",alignItems:"baseline",gap:"0.6em",fontSize:11.5,lineHeight:1.45,color:C.ink,marginBottom:3,cursor:l.picked?"default":"pointer"}}>
-                              {/* The marker in its own column: wrapped lines stay clear of it, as under a bullet. */}
-                              <span style={{flex:"none"}}>{l.picked?"●":"○"}</span>
-                              <span style={{flex:1,minWidth:0}}>
-                                {nowrapIsbns(l.text)}
-                                {l.source&&<span style={{color:C.soft}}> (source: <a href={l.source.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:C.soft}}>{l.source.host}</a>)</span>}
-                              </span>
+                        // Each block is the single-book block, the marker in its own column; the
+                        // whole block picks it. Blocks never move when she picks.
+                        <div role="radiogroup" aria-label="Versions" style={{marginBottom:10}}>
+                          {vl.map((b,k)=>(
+                            <div key={b.i} role="radio" aria-checked={b.picked} tabIndex={0} onClick={()=>setPick(r.id,b.i)}
+                              onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setPick(r.id,b.i); } }}
+                              style={{display:"flex",alignItems:"flex-start",gap:10,padding:k?"11px 0":"2px 0 11px",borderTop:k?"1px solid "+C.rule:"none",cursor:b.picked?"default":"pointer"}}>
+                              <span style={{flex:"none",width:14,fontSize:13,lineHeight:1.3,color:C.ink}}>{b.picked?"\u25cf":"\u25cb"}</span>
+                              <div style={{flex:1,minWidth:0}}>
+                                {b.title&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{b.title}</div>}
+                                {b.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2,lineHeight:1.4}}>{b.publisher}</div>}
+                                {b.facts&&<div style={{fontSize:11,color:C.soft,marginBottom:2,lineHeight:1.4}}>{b.facts}</div>}
+                                <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",lineHeight:1.5,color:b.isbn?C.ink:C.soft}}>
+                                  {b.isbn?<>ISBN <span style={{whiteSpace:"nowrap"}}>{b.isbn}</span>{b.also&&<>; <span style={{whiteSpace:"nowrap"}}>{b.also.isbn}</span> ({b.also.whose})</>}</>
+                                    :"ISBN not confirmed \u2014 verify before buying"}
+                                </div>
+                                {(b.why||b.source)&&<div style={{fontSize:11,color:C.soft,marginTop:3,lineHeight:1.45}}>
+                                  {b.why}{b.source&&<>{b.why?" ":""}Source: <a href={b.source.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:C.soft}}>{b.source.host}</a></>}
+                                </div>}
+                              </div>
                             </div>
                           ))}
-                          {vl.shared&&<div style={{fontSize:11.5,color:C.soft}}>(source for all {vl.shared.count}: <a href={vl.shared.url} target="_blank" rel="noopener noreferrer" style={{color:C.soft}}>{vl.shared.host}</a>)</div>}
                         </div>
                       ):(<>
                         {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}

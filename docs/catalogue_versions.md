@@ -1,52 +1,41 @@
 # Catalogue versions — the redesign and its agreed cases
 
-Status: **design agreed with her; awaiting her approval to build.** The catalogue lookup is paused
-until this is agreed (CLAUDE.md §2.2.3). Every later change to the lookup is
-checked live against the cases below.
+Status: **the display half is built on the current search, unpublished; on the display test page
+(https://claude.ai/artifact/N38mVKw5iZMm1f7aN9nD6G, `node build/build_app.js --test-page`) for her
+check.** Her decision: the search itself stays as it is (the Stage 1/1b rebuild is on `parked`);
+only how the versions are ordered, drawn and picked changes.
 
 ## The design
 
-**Find, choose, tell — three separate steps.**
+**Find, order, tell.**
 
-1. **Find.** The lookup keeps every version of the catalogue it finds. Each
-   version records: title, language, binding, publisher, which showing it
-   belongs to, its ISBN, and the page that proved it. Nothing is chosen or
-   dropped part-way. Booklets and albums are left off.
-2. **Choose.** Code applies her starting-pick rules (below). She can change the
-   pick at any time.
-3. **Tell.** One version: the card looks as it does now. Several: one line per
-   version, each saying why it exists, with a link to the page that proved it.
-   The buy buttons are built for the picked version; changing the pick rebuilds
-   the same buttons. The pick is the card's book in the ledger; the list is kept
-   beside it. Search again starts fresh.
+1. **Find.** The lookup keeps every version of the catalogue it finds (as today's search finds
+   them): title, language, binding, pages, publisher, which showing, ISBN, the page that proved it.
+2. **Order** (`versionOrder`, VO-): English in the venue's own imprint; then English from anyone
+   else (another museum, another showing, an outside house — no order between those); then other
+   languages. Within each, hardcover, then paperback, then binding not known; otherwise as found.
+   **The first starts picked** — her decision, replacing the starting-pick rules, so the ● is never
+   halfway down the list. Cards searched before this keep their saved ● until a Search again.
+3. **Tell.** One version: the card exactly as before (no binding, pages or source added — her
+   decision). Several: one block per version, in her order (VB-).
 
-## How each version line reads — her rules
+## The card with several versions — her layout
 
-- **Sources:** a single-version card has none. On a card with several versions,
-  every line has one — or one shared "(source for all three: …)" when they come
-  from the same page.
-- **Another showing's book:** "from the show's <city> exhibition".
-- **Page counts:** always shown where they help tell editions apart.
-- **Binding:** hardcover or paperback only — never "with flaps" or "with jacket".
-- **Publisher names lead with the venue** or the venue's own publisher
-  ("Louvre Éditions / Lienart"). Display only: the lookup still searches the
-  outside publisher, where there is one — more likely to give an accurate result.
-- **A co-edition's second ISBN** follows the first: "also 978-… (the Louvre's
-  own number for the same book)".
+Agreed on a mockup: https://claude.ai/artifact/Hy7wFw63YA5fJTCDry2dki. Each block is the
+single-book block in its styling, a thin rule between, ●/○ in its own column, the whole block
+tappable; blocks never move when she picks. Top to bottom: title; publisher as found (a later
+English edition's year after a dot, "Rizzoli Electa · 2023"); language · binding (Hardcover or
+Paperback only) · pages; ISBN, a co-edition's second number after it ("; 978-… (Louvre's own
+number for the same book)"); why it is listed and its source ("The original edition. Source:
+louvre.fr"; another showing's book: "A different book, from the show's <city> exhibition").
 
-## Starting pick — her rules, in order
-
-1. Only **this showing's catalogue** (any language, any printing) may start
-   picked. A different book from another showing is listed, never picked.
-2. **English first** — any English version of this showing's catalogue,
-   whoever printed it and however much later.
-3. Then **this venue's own printing**.
-4. Then **hardcover**, when only the binding differs.
-5. **Nothing picked** when this showing has no English version but another
-   showing's different book is English — or when the rules do not settle it.
-
-More rules are added only once she has used the cards and knows her preference.
-These replace "hardcover leads" and "one book per card".
+**One shop line for the card, above the blocks** (her decision): it says whether the PICKED book is
+in this venue's shop — the venue's shop only, never another museum's. Every book on the card is
+looked for on the shop list the lookup already read (phase 4b, SV-), so the line is true whichever
+she picks; a shop that cannot be read is unread for every book. Below the blocks, once: Museum
+shop, Publisher and the bookstore buttons, built for the picked book; the Publisher button only
+where that book's publisher page was found (the publisher step runs for the first book only).
+**Re-check museum shop** checks the picked book only and keeps that book's stored answer.
 
 ## The agreed cases — found live, 10 Oct 2026, her wording
 

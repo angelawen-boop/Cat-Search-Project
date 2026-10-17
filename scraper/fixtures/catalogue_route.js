@@ -71,7 +71,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionLines, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly, registerOccasional, recheckShopRow, sameBookOnPage };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, versionOrder, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly, registerOccasional, recheckShopRow, sameBookOnPage };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -216,8 +216,8 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const { out, calls, row: r, labels } = await run(row('jacquemart', 'Hammershøi: the master of danish painting'), script);
     eq([r.catalogueTitle, r.isbn13, r.publisher], ['Hammershøi: Painter of Northern Light', '9780847899289', 'Rizzoli Electa'], 'WL-001: Hammershøi — the card carries the English edition');
     eq([r.editions.map(v => [v.lang, v.isbn13, v.showing, v.title]), r.editionPick, r.originalEdition],
-      [[['French', '9789462302495', 'this', FR], ['English', '9780847899289', 'this', 'Hammershøi: Painter of Northern Light']], 1, null],
-      'WL-002:   the French book kept as a version beside the English one, which is picked (no longer written as originalEdition)');
+      [[['English', '9780847899289', 'this', 'Hammershøi: Painter of Northern Light'], ['French', '9789462302495', 'this', FR]], 0, null],
+      'WL-002:   the French book kept as a version after the English one, which comes first and is picked (no longer written as originalEdition)');
     eq([r.englishCheck, r.shopState, r.shopUrl], ['english', 'web', null], 'WL-003:   filed as found on the web, English');
     eq(api.englishLine(r), null, 'WL-004:   no English line on a card with several versions — her version lines say it (stage 2; was "English edition of …")');
     ok(!searches(calls).some(q => q[0] === 'Fonds Mercator') && searches(calls).filter(q => q[0].startsWith('site:www.rizzoliusa.com')).length === 1,
@@ -259,8 +259,8 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq([r.englishCheck, r.isbn13], ['english', '9780847899289'], 'WL-060: Hammershøi live — the library record that came tenth is read, and the card carries the English edition');
     eq(r.catalogueTitle, 'Hammershøi : painter of northern light', 'WL-061:   its title as the record prints it');
     eq([r.editions.map(v => [v.lang, v.isbn13, v.showing, v.publisher]), r.editionPick],
-      [[['French', '9789462302495', 'this', 'Fonds Mercator'], ['English', '9780847899289', 'this', null]], 1],
-      'WL-062:   her case 4 — the French original and the English edition both kept, the English picked (the record names no English publisher)');
+      [[['English', '9780847899289', 'this', null], ['French', '9789462302495', 'this', 'Fonds Mercator']], 0],
+      'WL-062:   her case 4 — the French original and the English edition both kept, the English first and picked (the record names no English publisher)');
     eq([r.publisher, r.publisherResult], [null, 'unnamed'], 'WL-063:   the record names no publisher for the English edition, so none is claimed');
   }
 
@@ -527,19 +527,19 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const LH = { title: 'Hubert Robert', isbn13: EN_ISBN, language: 'English', publisher: 'Lund Humphries', pages: '281', evidenceUrl: NYRB };
     ({ out, calls, row: r } = await run(row('louvre', 'Hubert Robert (1733–1808). A Visionary Painter'), louvre([LH])));
     eq([r.editions.map(v => [v.lang, v.showing, v.title]), r.editionPick, r.catalogueTitle],
-      [[['French', 'this', FR], ['English', 'other', 'Hubert Robert']], null, null],
-      'HR-004: Louvre — the 281-page English book is not the 544-page French one’s edition; the French book is this showing’s version, but with only another showing’s book in English nothing is picked (was: the French book filled the card)');
+      [[['English', 'other', 'Hubert Robert'], ['French', 'this', FR]], 0, 'Hubert Robert'],
+      'HR-004: Louvre — the 281-page English book is not the 544-page French one’s edition; kept as another showing’s book, it comes first in her order and is picked');
     ok(/different book/.test(out.detail) && r.englishCheck !== 'english', 'HR-005:   the lookup says why', out.detail.split('\n').find(l => /English/.test(l)));
     eq(api.englishLine(r), null,
       'HR-013:   no English line on a card with several versions — the other book is named by her version lines (stage 2; was "No English edition. An English catalogue from the show’s other venue …")');
     eq([r.editions.filter(v => v.showing === 'other').map(v => [v.isbn13, v.publisher]), r.otherVenueBook, r.isbn13 === EN_ISBN],
-      [[[EN_ISBN, 'Lund Humphries']], null, false], 'HR-014:   kept as another showing’s version, never in the card’s place (no longer written as otherVenueBook)');
+      [[[EN_ISBN, 'Lund Humphries']], null, true], 'HR-014:   kept as another showing’s version, and as the first it is the card’s book (no longer written as otherVenueBook)');
 
     // ── BK-001..BK-005: a booklet's ISBN is not the catalogue's (the 48-page album, 978-2757210659)
     const ALBUM = FR_ISBN, FULL = '9782757210642';
     eq([api.pagesOfIsbn([...HR.louvre_web, ...HR.louvre_facts, ...HR.louvre_editions], ALBUM), api.pagesOfIsbn(HR.louvre2_facts, FULL)], [47, 544],
       'BK-001: the album’s records print 47 pages, the full catalogue’s 544 — read off results carrying that one ISBN only');
-    eq([r.editions.map(v => v.isbn13), /47-page book; the catalogue has 544 pages — no ISBN for the catalogue itself/.test(out.detail)], [[null, EN_ISBN], true],
+    eq([r.editions.map(v => v.isbn13), /47-page book; the catalogue has 544 pages — no ISBN for the catalogue itself/.test(out.detail)], [[EN_ISBN, null], true],
       'BK-002: the earlier Louvre run — the album’s ISBN is refused and, with no other ISBN printed with 544 pages, none is filed on the French version (the album is never a version)');
     const fullRec = HR.louvre2_facts.find(x => /32222598974/.test(x.url));
     const withFull = script(HR.louvre_web, [...HR.louvre_facts, fullRec], HR.louvre_editions, {
@@ -559,7 +559,8 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     ok(prompts.some(p => isFactsRead(p) && /SECTION D/.test(p) && p.includes('enfilade18thc.com')),
       'HR-007:   the facts read sees the first web search’s results again (Enfilade’s line about the English book)');
 
-    // Two English editions: both kept; her rules pick the venue's own printing, else none.
+    // Two English editions: both kept; her order puts the venue's own printing first, else as found.
+    const first = (list, mid) => { const o = api.versionOrder(list, mid); return list[o[0]] ? list[o[0]].isbn13 : null; };
     const res = [
       { url: 'https://library.test/a', title: 'Hubert Robert: a translation', excerpts: ['Translation of ' + FR + '. ISBN ' + EN_ISBN + ' and the original, ISBN ' + FR_ISBN] },
       { url: 'https://somogy.test/b', title: 'Hubert Robert, English edition', excerpts: ['Publisher: Somogy éditions d\'art. ISBN 9780847899289'] },
@@ -569,16 +570,14 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const frV = pub => ({ title: FR, lang: 'French', pages: null, publisher: pub, isbn13: FR_ISBN, showing: 'this' });
     const withEds = (list, pub) => { const o = frV(pub); return [o, ...api.editionsOf(list, o, res, 'louvre', [])]; };
     let vs = withEds(eds, 'Somogy éditions d\'art');
-    eq([vs.filter(v => v.showing === 'this').map(v => v.isbn13).sort(), api.pickEdition(vs, 'louvre')], [[EN_ISBN, '9780847899289', FR_ISBN].sort(), -1],
-      'HR-008: two English editions, neither the Louvre’s own printing — both kept, and her rules leave the pick open (no longer "same publisher first")');
+    eq([vs.filter(v => v.showing === 'this').map(v => v.isbn13).sort(), first(vs, 'louvre')], [[EN_ISBN, '9780847899289', FR_ISBN].sort(), EN_ISBN],
+      'HR-008: two English editions, neither the Louvre’s own printing — both kept, the one found first leads');
     vs = withEds([...eds].reverse(), 'Somogy éditions d\'art / Louvre éditions');
     const own = vs.find(v => v.isbn13 === '9780847899289');
-    // An undone rule leaves nothing picked: read as null, a FAIL, never a crash.
-    const pickedIsbn = (list, mid) => { const i = api.pickEdition(list, mid); return list[i] ? list[i].isbn13 : null; };
-    eq([own && own.publisher, pickedIsbn(vs, 'louvre')], ['Louvre éditions / Somogy éditions d\'art', '9780847899289'],
-      'HR-008a: printed by the original’s house, it shows the original’s publishers, venue first, and starts picked as the Louvre’s own printing, whatever order they come in');
+    eq([own && own.publisher, first(vs, 'louvre')], ['Louvre éditions / Somogy éditions d\'art', '9780847899289'],
+      'HR-008a: printed by the original’s house, it shows the original’s publishers, venue first, and comes first as the Louvre’s own printing, whatever order they come in');
     vs = withEds([eds[0]], 'Somogy éditions d\'art');
-    eq(pickedIsbn(vs, 'louvre'), EN_ISBN, 'HR-009:   with one English edition, the translation published elsewhere starts picked');
+    eq(first(vs, 'louvre'), EN_ISBN, 'HR-009:   with one English edition, the translation published elsewhere comes before the French original');
 
     eq([api.pagesPrinted('544', HR.louvre_web), api.pagesPrinted('600', HR.louvre_web), api.pagesPrinted('281', HR.louvre_facts)], [544, null, 281],
       'HR-010: a page count is kept only where the results print it');
@@ -611,18 +610,18 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       sample: p => isShopRead(p) ? reads[0] : /"found"/.test(p) ? reads[1] : isFactsRead(p) ? reads[2] : isJudge(p) ? { kind: 'other', bookUrl: null } : {},
     };
     const { out, row: r } = await run(row('louvre', 'Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection'), script);
-    eq([r.isbn13, r.editionPick, r.publisher], ['9782359063738', 1, 'Lienart'],
-      'VS-001: Vasari — the Louvre’s English paperback starts picked and fills the card, not the Nationalmuseum’s hardcover (was: hardcover leads)');
-    eq(brief(r.editions), [['French', null, null, 'this'], ['English', '9782359063738', null, 'this'], ['English', '9789171009166', null, 'this']],
-      'VS-002:   every version kept — the French original (this recording prints no labelled ISBN for it), Lienart’s English and the Nationalmuseum’s English', out.detail);
-    eq(r.editions.slice(1).map(v => [v.binding, v.publisher]), [['paperback', 'Musée du Louvre Editions / Lienart'], ['hardcover', 'Nationalmuseum']],
+    eq([r.isbn13, r.editionPick, r.publisher], ['9782359063738', 0, 'Lienart'],
+      'VS-001: Vasari — the Louvre’s English paperback comes first, picked, and fills the card, not the Nationalmuseum’s hardcover');
+    eq(brief(r.editions), [['English', '9782359063738', null, 'this'], ['English', '9789171009166', null, 'this'], ['French', null, null, 'this']],
+      'VS-002:   every version kept, in her order — Lienart’s English (the venue’s own), the Nationalmuseum’s English, the French original (this recording prints no labelled ISBN for it)', out.detail);
+    eq(r.editions.slice(0, 2).map(v => [v.binding, v.publisher]), [['paperback', 'Musée du Louvre Editions / Lienart'], ['hardcover', 'Nationalmuseum']],
       'VS-003:   Lienart’s, read off its own page carrying the ISBN, shows the original’s publishers, venue first; the Nationalmuseum’s is the hardcover');
     eq([r.englishCheck, r.originalEdition, r.otherVenueBook, r.alsoVersion], ['english', null, null, null],
       'VS-004:   a new row never writes originalEdition, otherVenueBook or alsoVersion');
-    eq(api.pickEdition([{ ...r.editions[2] }, { ...r.editions[1] }], 'louvre'), 1,
-      'VS-005: hardcover no longer leads by itself — this venue’s own printing comes first (her rule 3 before rule 4)');
-    eq(api.pickEdition([{ lang: 'English', publisher: 'Thames & Hudson', showing: 'this', isbn13: '1' }, { lang: 'English', publisher: 'Nationalmuseum', showing: 'this', isbn13: '2' }], 'louvre'), -1,
-      'VS-006: binding unknown — an outside publisher no longer leads a museum’s own imprint; neither is this venue’s, so nothing is picked');
+    eq(api.versionOrder([{ ...r.editions[1] }, { ...r.editions[0] }], 'louvre'), [1, 0],
+      'VS-005: hardcover does not lead by itself — the venue’s own English printing comes first');
+    eq(api.versionOrder([{ lang: 'English', publisher: 'Thames & Hudson', showing: 'this', isbn13: '1' }, { lang: 'English', publisher: 'Nationalmuseum', showing: 'this', isbn13: '2' }], 'louvre'), [0, 1],
+      'VS-006: two English books from outside houses, bindings unknown — as found');
     eq([api.museumImprintOnly('Musée du Louvre Editions', 'louvre'), api.museumImprintOnly('Musée du Louvre Editions / Lienart', 'louvre')], [true, false],
       'VS-007: a co-edition with an outside house is not a museum’s own imprint');
     const HR = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_results', 'hubert_robert.json'), 'utf8'));
@@ -648,15 +647,15 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       };
     };
     let { out, row: r } = await run(row('louvre', 'Hubert Robert (1733–1808). A Visionary Painter'), replay('louvre_hubert_42_8.json'));
-    const fr = (r.editions || [])[0] || {};
+    const fr = (r.editions || []).find(v => v.lang === 'French') || {};
     ok(fr.publisher && !/[%[\]()]|imprimeur/.test(fr.publisher), 'R8-001: Hubert Robert — no publisher read out of a link’s address (“-imprimeur/Louvre%20…”)', fr.publisher);
     eq([fr.isbn13, fr.binding, fr.pages], ['9782757210642', 'hardcover', 544], 'R8-002:   the full catalogue’s ISBN, on the French version (hardcover, 544 pages)');
     eq((r.editions || []).filter(v => v.showing === 'other').map(v => [v.isbn13, v.lang, v.pages]), [['9781848221918', 'English', 288]],
       'R8-003:   the NGA book kept as another showing’s different book, though no result ties its ISBN to the Louvre', out.detail.split('\n').filter(l => /English|different/.test(l)).join(' | '));
-    eq(brief(r.editions), [['French', '9782757210642', '9782350315355', 'this'], ['English', '9781848221918', null, 'other']],
-      'R8-007:   Hubert Robert, her case 2 — the Paris Musées record folds the Louvre’s own number into the French book');
-    eq([r.editionPick, r.catalogueTitle, r.isbn13, r.publisher, r.publisherUrl], [null, null, null, null, null],
-      'R8-008:   nothing picked — no English version of this showing, and the other showing’s book is English; the card’s book fields stay blank');
+    eq(brief(r.editions), [['English', '9781848221918', null, 'other'], ['French', '9782757210642', '9782350315355', 'this']],
+      'R8-007:   Hubert Robert, her case 2 — the Paris Musées record folds the Louvre’s own number into the French book; the English book comes first (her order)');
+    eq([r.editionPick, r.isbn13], [0, '9781848221918'],
+      'R8-008:   the first book, the NGA’s English one, starts picked and fills the card (her decision: an English book from another showing is still the one to buy)');
     eq([r.hasCatalogue, api.englishLine(r)], ['yes', null], 'R8-009:   still a catalogue; no English line on a card with several versions (its lines come with stage 2)');
     ({ out, row: r } = await run(row('louvre', 'Giorgio Vasari: The Book of Drawings. The Fate of a Legendary Collection'), replay('louvre_vasari_42_8.json')));
     eq([r.isbn13, r.editionPick], ['9782359063738', 0], 'R8-004: Vasari — the Lienart edition starts picked (the Louvre’s own printing)');
@@ -698,40 +697,32 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq(api.englishLine(r), 'No English edition found in bookshops.', 'BT-003:   a one-version foreign card keeps today’s English line; Reaktion’s book is left off (this recording prints no ISBN for it — ED-004 proves the refusal)');
   }
 
-  // ── CV-001..CV-014: her starting pick, on her nine cases (docs/lookup_proof_cards.json) ─
+  // ── VO-001..VO-006: her order, on her nine cases (docs/lookup_proof_cards.json) and her Yale cards ─
   {
     const CARDS = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_proof_cards.json'), 'utf8')).cards;
-    const NAME = {
-      1: 'CV-001: Vasari — the Louvre’s English paperback starts picked, not Stockholm’s hardcover',
-      2: 'CV-002: Hubert Robert, Louvre card — nothing picked: no English version of this showing, and the NGA’s English book is a different one',
-      3: 'CV-003: Hubert Robert, NGA card — its own English catalogue starts picked; the Paris book is listed, never picked',
-      4: 'CV-004: Hammershøi — Rizzoli’s later English edition starts picked over the French original',
-      5: 'CV-005: Watteau — one French version, picked; the card as now',
-      6: 'CV-006: Canaletto – Guardi — one French version, picked; the card as now',
-      7: 'CV-007: Botticelli — one French version, picked; the card as now',
-      8: 'CV-008: Metamorphoses — the English paperback starts picked over the Dutch and Italian',
-      9: 'CV-009: Millet — one English book, picked; the card does not change',
-    };
     const versionsOf = c => c.versions.map(v => ({ ...v, title: c.title }));
-    for (const c of CARDS) {
-      const vs = versionsOf(c), i = api.pickEdition(vs, c.venue);
-      eq(i < 0 ? null : vs[i].isbn13, c.pick, NAME[c.case]);
-    }
-    const allOrders = CARDS.every(c => { const vs = versionsOf(c).reverse(), i = api.pickEdition(vs, c.venue); return (i < 0 ? null : vs[i].isbn13) === c.pick; });
-    ok(allOrders, 'CV-010: the pick does not depend on the order the versions were found in');
+    const firstOf = (vs, mid) => vs[api.versionOrder(vs, mid)[0]].isbn13;
+    eq(CARDS.map(c => firstOf(versionsOf(c), c.venue)), CARDS.map(c => c.pick),
+      'VO-001: her nine cases — the first in her order is each card’s starting pick (Hubert Robert, Louvre: the NGA’s English book)');
+    eq(CARDS.every(c => firstOf(versionsOf(c).reverse(), c.venue) === c.pick), true, 'VO-002: the first does not depend on the order the versions were found in, where her order separates them');
     const v = (lang, binding, publisher, isbn13, showing = 'this') => ({ lang, binding, publisher, isbn13, showing, pages: null });
-    const at = (vs, mid) => { const i = api.pickEdition(vs, mid); return i < 0 ? null : vs[i].isbn13; };
-    eq([at([v('French', 'paperback', 'Fonds Mercator', 'P'), v('French', 'hardcover', 'Fonds Mercator', 'H')], 'jacquemart'),
-        at([v('French', null, 'Fonds Mercator', 'P'), v('French', 'hardcover', 'Fonds Mercator', 'H')], 'jacquemart'),
-        at([v('French', 'paperback', 'Fonds Mercator', 'P'), v('French', 'hardcover', 'Hazan', 'H')], 'jacquemart')],
-      ['H', null, null], 'CV-011: hardcover only when the binding is all that differs — one binding unknown, or another house, and nothing is picked');
-    eq(at([v('English', null, 'Rizzoli Electa', 'A'), v('English', null, 'Thames & Hudson', 'B'), v('French', null, 'Fonds Mercator', 'F')], 'jacquemart'), null,
-      'CV-012: two English versions, neither this venue’s own printing nor told apart by binding — nothing picked');
-    eq([at([v('English', null, 'Lund Humphries', 'O', 'other')], 'louvre'), at([v(null, null, null, 'U')], 'louvre'),
-        at([v('French', null, 'Hazan', 'F'), v('Italian', null, 'Electa', 'I')], 'louvre')],
-      [null, 'U', null], 'CV-013: another showing’s book is never picked; a lone version of unknown language is; two non-English versions with nothing between them are not');
-    eq(at([v('French', null, 'Fonds Mercator', 'F'), v('German', null, 'Hirmer', 'G', 'other')], 'jacquemart'), 'F',
-      'CV-014: another showing’s book that is not English does not stop the pick');
+    const order = (vs, mid) => api.versionOrder(vs, mid).map(i => vs[i].isbn13).join(' ');
+    eq(order([v('French', null, 'Fonds Mercator', 'F'), v('English', null, 'Rizzoli Electa', 'E'), v('English', null, 'Louvre éditions', 'O')], 'louvre'), 'O E F',
+      'VO-003: English in the venue’s own imprint, then English from anyone else, then other languages');
+    eq([order([v('French', 'paperback', 'Hazan', 'P'), v('French', null, 'Hazan', 'U'), v('French', 'hardcover', 'Hazan', 'H')], 'louvre'),
+        order([v('English', 'paperback', 'Lund Humphries', 'P', 'other'), v('English', 'hardcover', 'Rizzoli', 'H')], 'louvre')], ['H P U', 'H P'],
+      'VO-004: within a group, hardcover, then paperback, then a binding not known; another showing’s book is ordered like any other');
+    eq(order([v('English', null, 'Thames & Hudson', 'A'), v('English', null, 'Rizzoli', 'B'), v(null, null, null, 'N')], 'louvre'), 'A B N',
+      'VO-005: otherwise as found; a book of unknown language goes with the other languages');
+    api.registerOccasional({ 'occ-britishart-yale-edu': { id: 'occ-britishart-yale-edu', name: 'Yale Center for British Art', host: 'britishart.yale.edu', shop: 'found', confirmed: true, finder: 3,
+      shopHome: 'https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true', shopCatalogues: null, shopSearch: null } });
+    const Y = 'occ-britishart-yale-edu';
+    eq([order([v('English', 'paperback', 'Yale University Press', '9780300125009'), v('English', 'paperback', 'Yale Center For British Art', '9780300119695')], Y),
+        order([v('English', 'hardcover', 'Henry E. Huntington Library And Art Gallery', '9780930606992', 'other'),
+          v('English', 'hardcover', 'Yale Center for British Art and the Huntington Library, Art Collections, and Botanical Gardens in association with / Yale University Press', '9780300110029')], Y),
+        order([v('English', 'paperback', 'American Federation of Arts & DelMonico Books, Prestel', '9781885444479'), v('English', null, 'DelMonico Books', '9783791357638')], Y)],
+      ['9780300119695 9780300125009', '9780300110029 9780930606992', '9781885444479 9783791357638'],
+      'VO-006: her Yale cards — Canaletto in England: the Yale Center’s own printing first; Sensation and Sensibility: Yale’s own before San Marino’s; Victorian Radicals: the paperback before the binding not known');
   }
 
   // ── FO-001..FO-006: one book, two numbers — a co-edition folds into one version ─
@@ -787,9 +778,9 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
   }
 
 
-  // ── VL-001..VL-012: her version lines, word for word (docs/catalogue_versions.md) ─
+  // ── VB-001..VB-010: her version blocks, word for word (docs/catalogue_versions.md, "Her layout") ─
   // Rows built from her cases (docs/lookup_proof_cards.json) with the city, year and
-  // proving page her cases give.
+  // proving page her cases give. A block reads: marker | title | publisher | facts | ISBN | why and source.
   {
     const CARDS = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'lookup_proof_cards.json'), 'utf8')).cards;
     const caseRow = (n, start, extra) => {
@@ -798,52 +789,45 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       const pick = editions.findIndex(v => v.isbn13 === c.pick);
       return { id: 'vl-' + n, museumId: c.venue, title: c.title, startDate: start, looked: true, hasCatalogue: 'yes', editions, editionPick: pick < 0 ? null : pick };
     };
-    const shown = r => { const vl = api.versionLines(r);
-      return vl ? vl.lines.map(l => (l.picked ? '● ' : '○ ') + l.text + (l.source ? ' (source: ' + l.source.host + ')' : ''))
-        .concat(vl.shared ? ['(source for all ' + vl.shared.count + ': ' + vl.shared.host + ')'] : []) : null; };
+    const shown = r => { const vb = api.versionBlocks(r);
+      return vb ? vb.map(b => [b.picked ? '●' : '○', b.title, b.publisher, b.facts,
+        b.isbn ? 'ISBN ' + b.isbn + (b.also ? '; ' + b.also.isbn + ' (' + b.also.whose + ')' : '') : 'ISBN not confirmed',
+        [b.why, b.source ? 'Source: ' + b.source.host : null].filter(Boolean).join(' ') || null].filter(Boolean).join(' | ')) : null; };
     const LOUVRE_ED = 'https://www.louvre.fr/editions/catalogue/giorgio-vasari-le-livre-des-dessins';
     const PDF = 'https://mini-site.louvre.fr/trimestriel/2016/Catalogue_Editions_2016/files/assets/common/downloads/publication.pdf';
     const NGA = 'https://www.nga.gov/sites/default/files/migrate_images/content/dam/ngaweb/research/gallery-archives/pressreleases/2012-2010/2016/14a11_108163_20160615.pdf';
     const vasari = caseRow(1, '2022-03-31', [{ proofUrl: LOUVRE_ED }, { proofUrl: 'https://www.lienarteditions.com/product-page/giorgio-vasari-the-book-of-drawings' },
       { proofUrl: 'https://nationalmuseum.bokorder.se/en-us/shop/book/4580?slug=giorgio-vasari-the-book-of-drawings', city: 'Stockholm' }]);
     eq(shown(vasari), [
-      '○ French · Giorgio Vasari. Le Livre des dessins. Destinées d\'une collection mythique · Louvre Éditions / Lienart · 978-2359063721 · also 978-2350317441 (the Louvre\'s own number for the same book) — the original edition. (source: louvre.fr)',
-      '● English · Giorgio Vasari, the Book of Drawings · paperback · Louvre Éditions / Lienart · 978-2359063738 — this venue\'s English edition. (source: lienarteditions.com)',
-      '○ English · Giorgio Vasari The Book of Drawings – The fate of a mythical collection · hardcover · Nationalmuseum · 978-9171009166 — from the show\'s Stockholm exhibition. (source: nationalmuseum.bokorder.se)'],
-      'VL-001: Vasari — three lines in her words, the Louvre’s own number on the French, ● on Lienart’s English');
+      '● | Giorgio Vasari, the Book of Drawings | Louvre Éditions / Lienart | English · Paperback | ISBN 978-2359063738 | This venue\'s English edition. Source: lienarteditions.com',
+      '○ | Giorgio Vasari The Book of Drawings – The fate of a mythical collection | Nationalmuseum | English · Hardcover | ISBN 978-9171009166 | From the show\'s Stockholm exhibition. Source: nationalmuseum.bokorder.se',
+      '○ | Giorgio Vasari. Le Livre des dessins. Destinées d\'une collection mythique | Louvre Éditions / Lienart | French | ISBN 978-2359063721; 978-2350317441 (Louvre’s own number for the same book) | The original edition. Source: louvre.fr'],
+      'VB-001: Vasari — three blocks in her order, ● on Lienart’s English, the Louvre’s own number on the French');
+    eq(api.versionBlocks(vasari).map(b => b.i), [1, 2, 0], 'VB-002:   each block knows its version’s place in the ledger, so a tap picks the right one');
     const hrL = caseRow(2, '2016-03-08', [{ proofUrl: PDF }, { proofUrl: NGA, city: 'Washington' }]);
     eq(shown(hrL), [
-      '○ French · Hubert Robert, 1733-1808 : un peintre visionnaire · hardcover, 544 pp · Louvre Éditions / Somogy · 978-2757210642 · also 978-2350315355 (the Louvre\'s own number for the same book) — this showing\'s catalogue. (source: mini-site.louvre.fr)',
-      '○ English · Hubert Robert · hardcover, 288 pp · National Gallery of Art / Lund Humphries · 978-1848221918 — a notably different book, from the show\'s Washington exhibition. (source: nga.gov)'],
-      'VL-002: Hubert Robert, Louvre card — nothing picked, page counts on both lines because they tell the books apart');
-    const hrN = caseRow(3, '2016-06-26', [{ proofUrl: NGA }, { proofUrl: PDF }]);
-    eq(shown(hrN), [
-      '● English · Hubert Robert · hardcover, 288 pp · National Gallery of Art / Lund Humphries · 978-1848221918 — this showing\'s catalogue. (source: nga.gov)',
-      '○ French · Hubert Robert, 1733-1808 : un peintre visionnaire · hardcover, 544 pp · Louvre Éditions / Somogy · 978-2757210642 · also 978-2350315355 (the Louvre\'s own number for the same book) — a notably different book, from the show\'s Paris exhibition. (source: mini-site.louvre.fr)'],
-      'VL-003: Hubert Robert, NGA card — the Paris city from the Louvre being one of her venues; the second number still the Louvre’s');
+      '● | Hubert Robert | National Gallery of Art / Lund Humphries | English · Hardcover · 288 pp | ISBN 978-1848221918 | A different book, from the show\'s Washington exhibition. Source: nga.gov',
+      '○ | Hubert Robert, 1733-1808 : un peintre visionnaire | Louvre Éditions / Somogy | French · Hardcover · 544 pp | ISBN 978-2757210642; 978-2350315355 (Louvre’s own number for the same book) | This showing\'s catalogue. Source: mini-site.louvre.fr'],
+      'VB-003: Hubert Robert, Louvre card — the English book first; "notably" gone from her note');
     const ham = caseRow(4, '2019-03-14', [{ proofUrl: 'https://www.leslibraires.ca/en/livres/hammershoi-jean-loup-champion-9789462302495.html' },
       { proofUrl: 'https://www.rizzoliusa.com/book/9780847899289', year: 2023 }]);
     eq(shown(ham), [
-      '○ French · Hammershøi : le maître de la peinture danoise · Culturespaces / Fonds Mercator · 978-9462302495 — the original edition. (source: leslibraires.ca)',
-      '● English · Hammershøi: Painter of Northern Light · Rizzoli Electa, 2023 · 978-0847899289 — the English edition, published later. (source: rizzoliusa.com)'],
-      'VL-004: Hammershøi — the original, and the English edition published later, its year beside the publisher');
-    ham.editions[1].year = null;
-    eq(shown(ham)[1], '● English · Hammershøi: Painter of Northern Light · Rizzoli Electa · 978-0847899289 — the English edition. (source: rizzoliusa.com)', 'VL-005:   its year not known — "the English edition"');
+      '● | Hammershøi: Painter of Northern Light | Rizzoli Electa · 2023 | English | ISBN 978-0847899289 | The English edition, published later. Source: rizzoliusa.com',
+      '○ | Hammershøi : le maître de la peinture danoise | Culturespaces / Fonds Mercator | French | ISBN 978-9462302495 | The original edition. Source: leslibraires.ca'],
+      'VB-004: Hammershøi — the later English edition first, its year after the publisher');
     const HAN = 'https://hannibalbooks.be/uploads/images/covers/2026_ENG_VOORJAAR_DRUK_compressed.pdf';
     const met = caseRow(8, '2026-02-20', [{ proofUrl: HAN }, { proofUrl: HAN }, { proofUrl: HAN }]);
-    eq(shown(met), ['● English · Metamorphoses: Ovid and the Arts · paperback · Hannibal · 978-9493416543.', '○ Dutch · Metamorfosen – Ovidius en de kunsten · Hannibal · 978-9493416550.', '○ Italian · Hannibal · 978-9493416857.',
-      '(source for all three: hannibalbooks.be)'], 'VL-006: Metamorphoses — one house, only the language differs: no notes, one shared source line');
+    eq(shown(met), ['● | Metamorphoses: Ovid and the Arts | Hannibal | English · Paperback | ISBN 978-9493416543 | Source: hannibalbooks.be',
+      '○ | Metamorfosen – Ovidius en de kunsten | Hannibal | Dutch | ISBN 978-9493416550 | Source: hannibalbooks.be', '○ | Hannibal | Italian | ISBN 978-9493416857 | Source: hannibalbooks.be'],
+      'VB-005: Metamorphoses — one house, only the language differs: no notes; every block carries its own source');
     eq([5, 6, 7, 9].map(n => shown(caseRow(n, '2024-01-01', []))), [null, null, null, null],
-      'VL-007: Watteau, Canaletto – Guardi, Botticelli, Millet — one version: no version lines, the card as now');
-    eq(api.versionLines({ museumId: 'louvre', editions: null }), null, 'VL-008: an old row with no versions has no version lines');
-    const two = caseRow(1, '2022-03-31', [{ proofUrl: LOUVRE_ED }, { proofUrl: LOUVRE_ED }]);
-    two.editions = two.editions.slice(0, 2);
-    eq(shown(two).slice(-1), ['(source for all two: louvre.fr)'], 'VL-009: two versions from one page — "(source for all two: …)"');
+      'VB-006: Watteau, Canaletto – Guardi, Botticelli, Millet — one version: no blocks, the card as now');
+    eq(api.versionBlocks({ museumId: 'louvre', editions: null }), null, 'VB-007: an old row with no versions has no blocks');
     const bound = { ...vasari, editions: vasari.editions.map((v, i) => ({ ...v, binding: i === 0 ? 'with flaps' : v.binding })) };
-    ok(!/flaps/.test(shown(bound)[0]), 'VL-010: binding is "hardcover" or "paperback" only — never "with flaps"', shown(bound)[0]);
+    ok(!/flaps/i.test(shown(bound).join(' ')), 'VB-008: binding is Hardcover or Paperback only — never "with flaps"', shown(bound).join(' / '));
     const noCity = caseRow(2, '2016-03-08', [{ proofUrl: PDF }, { proofUrl: NGA }]);
-    ok(/a notably different book, from the show's other exhibition\./.test(shown(noCity)[1]), 'VL-011: another showing’s book with no city known — "from the show\'s other exhibition"', shown(noCity)[1]);
-    ok(shown(vasari).every(l => /978-\d{10}/.test(l) && !/978\d{10}/.test(l)), 'VL-012: every ISBN-13 is shown 978-xxxxxxxxxx');
+    ok(/A different book, from the show's other exhibition\./.test(shown(noCity)[0]), 'VB-009: another showing’s book with no city known — "from the show\'s other exhibition"', shown(noCity)[0]);
+    ok(shown(vasari).every(l => /978-\d{10}/.test(l) && !/978\d{10}/.test(l)), 'VB-010: every ISBN-13 is shown 978-xxxxxxxxxx');
 
     // ── PK-001..PK-003: her pick moves; the card's book follows it, nothing else changes
     const card = (title, isbn13, publisher) => ({ catalogueTitle: title, isbn13, publisher, publisherUrl: null, publisherResult: null, shopState: 'web', shopUrl: null });
@@ -996,6 +980,68 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
           api.sameBookOnPage(res('Published by Thames & Hudson. $40.00'), F, { pages: null })],
         ['the same publisher', null], 'SB-008: with no ISBN and no page count, the publisher decides');
     }
+  }
+  // ── SV-001..SV-008: every book on a card looked for on the shop's list, so the shop line
+  // is true whichever she picks (her decision); Re-check checks the picked book only.
+  {
+    const T = 'https://secure.touchnet.net/C20510_ustores/web/';
+    const PUBS = T + 'store_cat.jsp?STOREID=7&CATID=16&SINGLESTORE=true';
+    const P1 = T + 'product_detail.jsp?PRODUCTID=2565&SINGLESTORE=true', P0 = T + 'product_detail.jsp?PRODUCTID=2564&SINGLESTORE=true';
+    const HARD = '9780300281019', SOFT = '9780300281026', BOOK = 'Gwen John: Strange Beauties';
+    const LIST = '# Publications\n\n[Painters, Ports, and Profits Painters, Ports, and Profits](' + P0 + ')\n\n[' + BOOK + ' ' + BOOK + '](' + P1 + ')\n\n'
+      + '[Blake Blake](' + T + 'product_detail.jsp?PRODUCTID=2406&SINGLESTORE=true)\n\n[Endless Forms: Charles Darwin, Natural Science, and the Visual Arts Endless Forms: Charles Darwin, Natural Science, and the Visual Arts](' + T + 'product_detail.jsp?PRODUCTID=42&SINGLESTORE=true)\n\n[Yale](http://www.yale.edu/)';
+    const PAGE = (title, isbn, price, kind) => '# ' + title + '\n\n1. [YCBA Home](' + T + 'store_main.jsp?STOREID=7&SINGLESTORE=true)\n2. [Publications](' + PUBS + ')\n\n'
+      + 'Description ' + 'A generously illustrated volume from the YCBA Collection Series. '.repeat(6) + kind + ' 200 Pages ISBN ' + isbn + '\n\nPrice:\n\n' + price + '\n\nQuantity:\n\nAdd to Basket';
+    const make = ({ shelfIsbn = SOFT, refuse = false } = {}) => {
+      const page = u => {
+        if (u === P0 + '&page=1') return PAGE('Painters, Ports, and Profits', '9780300286540', '$65.00', 'Hardcover');
+        if (u === P1 + '&page=1') return PAGE(BOOK, shelfIsbn, '$45.00', 'Paperback');
+        if ([P0, P1].includes(u)) return 'Product Detail';
+        if (u === PUBS) return 'YCBA Home - Publications';
+        if (u.startsWith(PUBS + '&page=')) return LIST;
+        return '';
+      };
+      const WEB = [{ url: 'https://britishart.yale.edu/exhibitions-programs/gwen-john', title: BOOK,
+        excerpts: ['Accompanying publication: ' + BOOK + ', 200 pages, ISBN ' + HARD + ', Yale Center for British Art; also ISBN ' + SOFT + ', Yale University Press.'] },
+        { url: 'https://books.test/hard', title: BOOK, excerpts: [BOOK + '. Hardcover. 200 pages. ISBN ' + HARD + '. Yale Center for British Art.'] },
+        { url: 'https://books.test/soft', title: BOOK, excerpts: [BOOK + '. Paperback. 200 pages. ISBN ' + SOFT + '. Yale University Press.'] }];
+      const calls = [];
+      const y = lift({
+        mcp: (tool, args) => tool === 'web_search' ? { payload: { results: WEB } }
+          : refuse ? { payload: { errors: args.urls.map(u => ({ url: u, error_type: 'fetch_error', http_status_code: 403 })), results: [] } }
+          : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Store', excerpts: [page(u)], ...(args.full_content ? { full_content: page(u) } : {}) })) } },
+        sample: p => /"forSale"/.test(p) ? { forSale: true, why: 'Add to Basket, $45.00.' }
+          : isShopRead(p) ? { found: false }
+          : isFactsRead(p) ? { isbn13: HARD, publisher: 'Yale Center for British Art', pages: '200', language: 'English', title: BOOK,
+              versions: [{ title: BOOK, isbn13: SOFT, language: 'English', publisher: 'Yale University Press', pages: '200', year: null, venueCity: null, evidenceUrl: WEB[0].url }] }
+          : /"found"/.test(p) ? { found: true, thisVenue: true, catalogueTitle: BOOK, isbn13: HARD, publisher: 'Yale Center for British Art', publisherUrl: null, shopUrl: null }
+          : {},
+      }, calls);
+      y.registerOccasional({ 'occ-britishart-yale-edu': { id: 'occ-britishart-yale-edu', name: 'Yale Center for British Art', host: 'britishart.yale.edu',
+        shop: 'found', confirmed: true, finder: 3, shopHome: T + 'store_main.jsp?STOREID=7&SINGLESTORE=true', shopCatalogues: PUBS, shelfKind: 'publications', shopSearch: null } });
+      return { y, calls, opens: u => calls.filter(c => c.tool === 'web_fetch' && c.args.urls.includes(u)).length };
+    };
+    const yrow = row('occ-britishart-yale-edu', 'Gwen John: Strange Beauties');
+    const { y, calls, opens } = make();
+    const out = await y.lookupCatalogue(yrow, { label: () => {} });
+    const r = out.row, card = i => r.editions[i] && r.editions[i].card || {};
+    eq(r.editions.map(v => [v.isbn13, v.binding]), [[HARD, 'hardcover'], [SOFT, 'paperback']], 'SV-001: Gwen John — the Yale Center’s hardcover first, the Yale University Press paperback second', out.detail.split('\n').slice(-12).join(' | '));
+    eq([r.editionPick, r.shopState, r.shopUrl], [0, 'web', null], 'SV-002:   the hardcover, picked, is not on the shop’s list (its page prints the paperback’s ISBN): not in the museum shop');
+    eq([card(1).shopState, card(1).shopUrl], ['shop', P1], 'SV-003:   the paperback is looked for too, and its page proves it: in the museum shop', JSON.stringify(card(1)));
+    eq(opens(P1 + '&page=1'), 1, 'SV-004:   the shop page carrying both titles is opened once');
+    const picked = y.pickRow(r, 1, 'now');
+    eq([picked.shopState, picked.shopUrl, picked.isbn13], ['shop', P1, SOFT], 'SV-005:   picking the paperback shows its own shop answer and link');
+    calls.length = 0;
+    const re = await y.recheckShopRow({ ...picked, shopState: 'web', shopUrl: null }, { label: () => {} });
+    eq([re.ok, re.row && re.row.shopState, re.row && re.row.shopUrl, re.said], [true, 'shop', P1, 'Re-checked: now in the museum shop.'],
+      'SV-006: Re-check with the paperback picked looks for the paperback on the shop’s list', JSON.stringify([re.said, re.detail && re.detail.split('\n').slice(-4)]));
+    eq([re.row.editions[1].card.shopState, re.row.editions[1].card.shopUrl], ['shop', P1], 'SV-007:   and the paperback’s own stored answer follows, so picking away and back keeps it');
+    const re2 = await y.recheckShopRow(r, { label: () => {} });
+    eq([re2.row && re2.row.shopState, re2.said, re2.row && re2.row.editions[0].card.shopState, re2.row && re2.row.editions[1].card.shopState], ['web', 'Re-checked: not in the museum shop.', 'web', 'shop'],
+      'SV-008: Re-check with the hardcover picked: still not in the shop, and the paperback’s answer is left as it was');
+    const b = make({ refuse: true });
+    const rb = (await b.y.lookupCatalogue(yrow, { label: () => {} })).row;
+    eq([rb.shopState, ...rb.editions.map(v => v.card.shopState)], ['blocked', 'blocked', 'blocked'], 'SV-009: a shop that refuses every page is unread for every book, never "not in the museum shop"');
   }
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');
   process.exit(failures ? 1 : 0);

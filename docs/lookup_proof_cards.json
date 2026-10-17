@@ -1,5 +1,5 @@
 {
-  "_about": "Her nine agreed catalogue-version cases (docs/catalogue_versions.md), as data. Every later change to the catalogue lookup is checked against this list: CV- tests in scraper/fixtures/catalogue_route.js build each case's versions and check the starting pick; build/lookup_proof_check.js compares live lookup-log records with it. A card is matched to a record by venue and every word in `match`. A version's binding or pages null = not compared. leftOff: ISBNs that must never be a version. `pick` names the picked version by its isbn13 (the ledger's editionPick is its index).",
+  "_about": "Her nine agreed catalogue-version cases (docs/catalogue_versions.md), as data. Every later change to the catalogue lookup is checked against this list: VO- tests in scraper/fixtures/catalogue_route.js build each case's versions and check the starting pick (the first in her order); build/lookup_proof_check.js compares live lookup-log records with it. A card is matched to a record by venue and every word in `match`. A version's binding or pages null = not compared. leftOff: ISBNs that must never be a version. `pick` names the picked version by its isbn13 (the ledger's editionPick is its index).",
   "cards": [
     {
       "case": 1, "venue": "louvre", "title": "Giorgio Vasari: The Book of Drawings", "match": ["vasari"],
@@ -16,7 +16,7 @@
         { "title": "Hubert Robert, 1733-1808 : un peintre visionnaire", "lang": "French", "binding": "hardcover", "pages": 544, "publisher": "Louvre Éditions / Somogy", "isbn13": "9782757210642", "alsoIsbn13": "9782350315355", "showing": "this" },
         { "title": "Hubert Robert", "lang": "English", "binding": "hardcover", "pages": 288, "publisher": "National Gallery of Art / Lund Humphries", "isbn13": "9781848221918", "alsoIsbn13": null, "showing": "other" }
       ],
-      "pick": null, "leftOff": ["9782757210659"]
+      "pick": "9781848221918", "leftOff": ["9782757210659"]
     },
     {
       "case": 3, "venue": "occ-nga-gov", "title": "Hubert Robert, 1733–1808", "match": ["hubert", "robert"],
