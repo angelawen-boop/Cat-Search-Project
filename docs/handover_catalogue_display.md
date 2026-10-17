@@ -28,9 +28,10 @@ touching anything. Nothing here is published to her app (still 46.4).
 - **Pamphlet** (*Pearls to Pyramids*, a 21-page pamphlet kept as the book) — noted for the
   later search work only; do nothing now.
 
-**Open question to her, unanswered:** only "Yale Center for British Art" counts as Yale's own
-imprint, not "Yale University Press", so on *Canaletto in England* and *Edward Lear* the Yale
-Center's printing comes first. Ask once, briefly, only when it matters.
+**Yale's two imprints — settled (her decision):** "Yale Center for British Art" and "Yale
+University Press" rank the same for Yale cards; neither leads because of its imprint. Between them
+the other rules decide (in the museum shop first, then hardcover before paperback, and so on).
+Not built: today `venuePrinting` counts only the Yale Center as Yale's own.
 
 ## What is built and pushed on `main` (tests: `npm run test:app`, 15 of 15 pass)
 
