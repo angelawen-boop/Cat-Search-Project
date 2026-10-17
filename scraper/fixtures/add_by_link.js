@@ -337,6 +337,26 @@ function runtime() {
     ok(r.ok && r.base === "Matrimonial Bliss: Chagall's Double Portrait with Wine Glass" && r.site === 'Minneapolis Institute of Art',
       'AL-032: Mia: no "–– Minneapolis Institute of Art" tail, no "&#039;", the venue named in full', JSON.stringify([r.base, r.site]));
   }
+  // ── AL-040: Yale CBA — clock times between the dates (dropTimes); its own shop ─
+  // Made from the live pages (17 Oct); all three on docs/link_proof_pages.json.
+  {
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const read = fn('readShowPage'), YALE = 'occ-britishart-yale-edu';
+    const page = (title, when) => ({ title: title + ' | Yale Center for British Art',
+      full_content: '## Main navigation\n\nExhibitions and programs Collections Research and learning Plan your visit About us\n\nExhibition\n\n# ' + title + '\n\n' + when + '\n\n'
+        + 'This exhibition situated the work within the great outpouring of images of foreign lands produced by British artists. '.repeat(4) });
+    const r = read(page('Pearls to Pyramids: British Visual Culture and the Levant, 1600–1830', 'Thursday, February 7, 2008, 10:00 am ET–Sunday, April 27, 2008, 5:00 pm ET'),
+      'https://britishart.yale.edu/exhibitions-programs/pearls-pyramids-british-visual-culture-and-levant-1600-1830', YALE);
+    ok(r.ok && r.start === '2008-02-07' && r.end === '2008-04-27' && r.base === 'Pearls to Pyramids: British Visual Culture and the Levant, 1600–1830',
+      'AL-040: Yale Pearls to Pyramids: "February 7, 2008, 10:00 am ET–Sunday, April 27, 2008, 5:00 pm ET" read as 7 Feb to 27 Apr 2008', JSON.stringify([r.start, r.end, r.base, r.why]));
+    const l = read(page('Edward Lear and the Art of Travel', 'Wednesday, September 20, 2000, 10:00 am ET–Sunday, January 14, 2001, 5:00 pm ET'),
+      'https://britishart.yale.edu/exhibitions-programs/edward-lear-and-art-travel', YALE);
+    ok(l.ok && l.start === '2000-09-20' && l.end === '2001-01-14', 'AL-040a:  Yale Edward Lear: across a year end, 20 Sep 2000 to 14 Jan 2001', JSON.stringify([l.start, l.end, l.why]));
+    const shop = fn('fixedShop')(YALE);
+    ok(shop && shop.shop === 'found' && shop.shopCatalogues === 'https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true' && !shop.shopSearch,
+      'AL-040b:  Yale\'s bookshop (on Yale\'s payment site, blank to the reader) is filed as found, for her to confirm', JSON.stringify(shop));
+    ok(fn('fixedShop')('occ-new-artsmia-org') === null, 'AL-040c:  a venue with no shop of its own is looked for as before');
+  }
   // ── AL-019: a page title that dresses the show's name — the heading wins ─
   // 7 Oct, her cards: "Exhibition Fra Angelico in Paris: and the Masters of Light".
   {

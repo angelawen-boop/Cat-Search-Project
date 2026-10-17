@@ -127,7 +127,10 @@ entry can carry `linkRead`, found by `linkReadVenue`. Proved live: five archive 
 **Mia** (Minneapolis Institute of Art): its own chip "Mia", cards print "MIA" (her decision); the full name and the
 "–– Minneapolis Institute of Art" title tail are dropped (`OWN_CHIP`; AL-032, three pages on the proof list). HTML
 codes in any page title are decoded ("Chagall&#039;s"). **Yale CBA** (Yale Center for British Art, `occ-britishart-yale-edu`): its own chip
-and cards "Yale CBA", after Mia (her decision); the lookup searches by the full name (`OWN_CHIP`; AL-039). **Jacquemart-André**: the line under the heading is the
+and cards "Yale CBA", after Cincinnati (her decision); the lookup searches by the full name (`OWN_CHIP`; AL-039).
+Clock times between its dates are dropped (`dropTimes`: "February 7, 2008, 10:00 am ET–Sunday, April 27, 2008, 5:00 pm ET").
+Its bookshop is on Yale's payment site (secure.touchnet.net), which the connector reads as blank, so no finder can
+find it: an `OWN_CHIP` `shop` files it as found, for her to confirm (`fixedShop`; AL-040, three pages on the proof list). **Jacquemart-André**: the line under the heading is the
 subtitle, read by code (`subtitleUnderHeading`); the dates sit at the page's foot, so the description is read
 from under the heading.
 

@@ -71,7 +71,7 @@ const MUSEUMS = [
 // Her order for every venue list: chips, Sort by Venue, the freshness drawer and the
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
-  "acq","lgd","occ-new-artsmia-org","occ-britishart-yale-edu","cincinnati","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
+  "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
   "louvre","orsay","jacquemart","mad","rijks","khm","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
   "occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
@@ -663,13 +663,18 @@ const isOcc=id=>String(id||"").startsWith("occ-");
 // Occasional venues with a chip of their own and her name for their cards (her decision; NGA, NGS, Mia, Yale CBA),
 // plus any link options of their own (linkRead, as on a MUSEUMS entry). `name`: the venue's
 // full name where its page titles do not give it. Mia's page titles end "–– Minneapolis Institute of Art".
+// `shop`: the venue's shop, where the finder cannot read it (Yale's bookshop is on Yale's
+// payment site, which reads as blank): filed as found, for her to confirm.
 const OWN_CHIP={
   "occ-nga-gov":{short:"NG Washington",lookupName:"NGA",linkRead:{titleDrop:/^Exhibition:\s*/i}},
   "occ-nationalgalleries-org":{short:"NG Scotland"},
   "occ-new-artsmia-org":{short:"Mia",lookupName:"Mia",name:"Minneapolis Institute of Art",linkRead:{titleDrop:/\s+[-–—]+\s+Minneapolis Institute of Art$/i}},
-  "occ-britishart-yale-edu":{short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art"},
+  "occ-britishart-yale-edu":{short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art",
+    shop:"https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true",linkRead:{dropTimes:true}},
 };
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
+// A venue's own shop (OWN_CHIP `shop`), in the shape discoverShop answers with.
+const fixedShop=id=>{ const u=(OWN_CHIP[id]||{}).shop; return u?{shop:"found",shopHome:u,shopCatalogues:u,shelfKind:"books",shopSearch:null,foundBy:"the venue's own rule",finder:3}:null; };
 // Her names for occasional venues filed under "Occasional", where the store's name is longer.
 const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worcester"};
 // Her names on the cards of occasional venues, where they differ from the short name.
@@ -829,7 +834,9 @@ function readShowPage(res,url,vc){
     add(lines.findIndex(l=>{ const w=words(l); return w.split(" ").length>=2&&w.length<=80&&piece.includes(" "+w+" "); }));
   }
   if(!cands.length)return{ok:false,why:"Couldn’t find the show’s title on the page."};
-  const dateText=l=>lr&&lr.shortYear?withLongYears(l):l;
+  // linkRead.dropTimes: clock times between the dates go ("February 7, 2008, 10:00 am ET–Sunday,
+  // April 27, 2008, 5:00 pm ET"; Yale).
+  const dateText=l=>{ if(lr&&lr.dropTimes)l=l.replace(/,?\s*\d{1,2}(?::\d{2})?\s*(?:[-–]\s*\d{1,2}(?::\d{2})?\s*)?[ap]\.?m\.?(?:\s+[A-Z]{2,4}\b)?/gi,""); return lr&&lr.shortYear?withLongYears(l):l; };
   const datesUnder=h=>{
     // A venue that labels its date line (linkRead.dateLine) is read there, anywhere on the page.
     if(lr&&lr.dateLine){
@@ -4827,7 +4834,7 @@ export default function App(){
             looked.add(vc);
             setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+page.site+"\u2019s shop"});
             const pageShop=shopLinkOnPage(oneText(res),host);
-            const shop=await discoverShop(pageShop,host,page.site,had?had.turnedDown:[]);
+            const shop=fixedShop(vc)||await discoverShop(pageShop,host,page.site,had?had.turnedDown:[]);
             venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:page.site,host,english:had?had.english:undefined,
               shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,
               ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
