@@ -9,6 +9,7 @@
 //   every action's record goes to this page's lookup log (tapeStart, saveLookupTape).
 // The pass lines are code, below. DC_BASE is Yale's stored shop record as it stood at build.
 
+const DC_DOC="check/display";
 const DC_STYLE=`
 .dc{max-width:760px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font:14px/1.5 -apple-system,BlinkMacSystemFont,sans-serif}
 .dc h1{font:500 22px Georgia,serif;margin:0 0 4px}
@@ -51,8 +52,16 @@ function DisplayCheck(){
   const [calls,setCalls]=useState({});
   const [yale,setYale]=useState(null);
   const readYale=async()=>{ const m=await readOccasional(); setYale(dcYaleDiff(m[DC_BASE.id])); return m; };
-  useEffect(()=>{ readYale().then(m=>{ registerOccasional(m); setReady(true); }); },[]);
-  const put=row=>setRows(prev=>prev.map(x=>x.id===row.id?row:x));
+  // The page's cards as she last left them, kept in this page's own store (never her app's);
+  // the written-in copy only until her first change here.
+  useEffect(()=>{ (async()=>{
+    const m=await readOccasional(); registerOccasional(m); setYale(dcYaleDiff(m[DC_BASE.id]));
+    try{ const db=await useCap("db"); const d=db&&await db.doc(DC_DOC).get();
+      const kept=d&&d.exists?(d.data()||{}):null;
+      if(kept&&Array.isArray(kept.rows)){ setRows(kept.rows); setCalls(kept.calls||{}); } }catch{}
+    setReady(true); })(); },[]);
+  const keep=async(next,c)=>{ try{ const db=await useCap("db"); if(db)await db.doc(DC_DOC).set({rows:next,calls:c||{},at:new Date().toISOString()}); }catch{} };
+  const put=(row,c)=>setRows(prev=>{ const next=prev.map(x=>x.id===row.id?row:x); setCalls(cur=>{ const cc=c?{...cur,...c}:cur; keep(next,cc); return cc; }); return next; });
   async function searchAgain(row){
     setBusy(row.id); setSaid(s=>({...s,[row.id]:null}));
     const tape=tapeStart(row.looked?"Search again":"Find catalogue",row);
@@ -60,9 +69,10 @@ function DisplayCheck(){
     try{ out=await lookupCatalogue(row,{label:l=>setLabel(l||""),prepareShop:async()=>{}}); }
     catch(e){ out={ok:false,detail:"The lookup stopped: "+String((e&&e.message)||e)}; }
     await saveLookupTape(tape,out);
-    setCalls(c=>({...c,[row.id]:out.calls||{calls:0,search:0,fetch:0,read:0}}));
+    const ran={[row.id]:out.calls||{calls:0,search:0,fetch:0,read:0}};
+    if(!(out.ok&&!(row.looked&&out.trouble)))setCalls(c=>({...c,...ran}));
     if(row.looked&&out.ok&&out.trouble)setSaid(s=>({...s,[row.id]:{failed:true,text:"Search again didn’t finish — "+out.trouble.split("[")[0].trim()}}));
-    else if(out.ok)put(out.row);
+    else if(out.ok)put(out.row,ran);
     else setSaid(s=>({...s,[row.id]:{failed:true,text:"Search again didn’t run — "+String(out.detail||"").split("\n").pop().split("[")[0].trim()}}));
     await readYale(); setBusy(null); setLabel("");
   }
