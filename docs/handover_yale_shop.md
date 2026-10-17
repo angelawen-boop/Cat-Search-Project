@@ -21,10 +21,14 @@ The "Bookshop that reads blank" rule (AL-041) is removed. The 48 saved pages: no
 
 ## Left to do
 
-1. Publish (her yes first).
-2. Her store still holds the old pick, confirmed (`venues/occasional`, `occ-britishart-yale-edu`: the
-   front page). A confirmed venue is never looked for again, so the new finder reaches Yale only once that
-   entry is unconfirmed — a store write, her yes first.
+1. **The check page** (her decision: a test page, not a republish of her app):
+   https://claude.ai/artifact/ETa9sqoU2fCfxkW2kHz2et — built by `node build/shop_check.js` (the app's
+   code whole, `build/shop_check_page.jsx` mounted instead of App; the finder, Confirm and Find catalogue
+   called as the app calls them; pass test in code). Each run is saved in its store (`checks/`, and the
+   lookup log `lookups/`, read with `node build/lookup_log.js`). She runs it; publish her app only after
+   it passes and she says yes.
+2. Her store's Yale entry is reset (her yes): `shop:"unknown"`, unconfirmed, the old pick cleared, so her
+   next Yale link looks for the shop from scratch.
 3. Her next Yale link: the shop screen should offer Publications; her Find catalogue on *John Constable:
    The Landscape Reimagined* should say "In the museum shop" (lookup reads the shelf's `page=2…5`, which
    read live). A guess until her lookup shows it.
