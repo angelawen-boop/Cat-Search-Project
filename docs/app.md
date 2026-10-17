@@ -248,10 +248,12 @@ Each replaced a real failure. Card wording is in the code.
 - **A blocked shop says so** (`shopState: "blocked"`): *"The museum shop is blocked -
   search it manually. The catalogue is stocked elsewhere."* / *"…The catalogue also does
   not appear to exist elsewhere. Search manually to confirm."* Headline red and bold, the
-  rest grey. Blocked: KHM, MAM. A shop whose every page comes back empty is blocked too —
-  MoMA's shelf is drawn by script and its search and `products.json` answer 403. Judged
-  on the WHOLE page, reopened when excerpts are short; no price anywhere = empty
-  (Watteau).
+  rest grey. Blocked (refused every page): KHM, MAM. **A shop whose every page comes back
+  empty is "JS-rendered"** (`shopState: "script"`; her wording, the same line with
+  "JS-rendered" for "blocked", Re-check's line too; B-001, B-003a) — MoMA's shelf is drawn
+  by script and its search and `products.json` answer 403. Judged on the WHOLE page,
+  reopened when excerpts are short; no price anywhere = empty (Watteau). Rows filed before
+  keep "blocked" until looked up again.
 - **The Museum shop link searches the shop for the EXHIBITION's title** when no book page
   is on file (`buyLinks`) — resellers keep the book's title, the shop keeps the show's.
   A search or shelf page is never a book page (`listedOnly`); KHM opening its search is

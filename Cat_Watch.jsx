@@ -2524,8 +2524,9 @@ function publisherNote(result,hasUrl){
 // none it runs the shop step alone ("Now"). No history kept; a failed check changes
 // nothing. Pre-order counts as in the shop; sold out in any language counts as gone.
 //
-// shopState: "shop" | "gone" | "web" | "none" | "blocked" | null; "gone" keeps shopUrl.
-// "blocked": the shop refused every page opened, so whether the book is there is
+// shopState: "shop" | "gone" | "web" | "none" | "blocked" | "script" | null; "gone" keeps shopUrl.
+// "blocked": the shop refused every page opened (KHM). "script": its pages opened with no
+// books on them, drawn by script (MoMA). Either way whether the book is there is
 // UNKNOWN — never "not in the shop". shopChange: "now" | "back" | null on a "shop" row.
 // A legacy "gone" on a "web" row reads as plain "web".
 
@@ -2545,6 +2546,10 @@ function shopHeadline(shopState,shopChange){
 // A blocked shop says so, in her wording (docs/app.md §1): the headline in the red and
 // weight of "No longer in the museum shop.", the rest grey.
 const SHOP_BLOCKED_HEAD="The museum shop is blocked";
+const SHOP_SCRIPT_HEAD="The museum shop is JS-rendered";
+// A shop the lookup could not read: refused, or drawn by script (her wording for each).
+const shopUnread=s=>s==="blocked"||s==="script";
+const shopUnreadHead=s=>s==="script"?SHOP_SCRIPT_HEAD:SHOP_BLOCKED_HEAD;
 const SHOP_BLOCKED_FOUND_REST=" - search it manually. The catalogue is stocked elsewhere.";
 const SHOP_BLOCKED_NONE_REST=". The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
 
@@ -2996,7 +3001,8 @@ function lookupIo(hooks,opts){
 // A book the shop step found is in the museum shop; its link is filed only when it is
 // on the shop (shopLinkOf) — shopStep has already refused the pages it opened.
 // `seen`: the text the read was given, which an ISBN must appear in (toIsbn13).
-// `blocked`: the shop step was refused on every page; the row says so.
+// `blocked`: false, or why the shop step could not read the shop ("blocked" or "script");
+// the row says so.
 function settle(row,o,dom,detail,fromShopStage,blocked,seen){
   const link=isTicketLink(o.shopUrl)?null:(o.shopUrl||null);
   const onShop=!!shopLinkOf(o,dom);
@@ -3006,7 +3012,7 @@ function settle(row,o,dom,detail,fromShopStage,blocked,seen){
     return{ok:true,detail,pageUrl:link,
       shopCandidate:(!fromShopStage&&onShop)?link:null,
       row:{...row,looked:true,hasCatalogue:"yes",
-      shopState:fromShopStage?"shop":blocked?"blocked":"web",shopChange:null,
+      shopState:fromShopStage?"shop":blocked||"web",shopChange:null,
       catalogueTitle:o.catalogueTitle||null,isbn13:toIsbn13(o.isbn13,seen||""),
       publisher:o.publisher||null,publisherUrl:publisherLinkOf(o.publisherUrl,row.publisher||o.publisher,dom,row.museumId),
       publisherResult:null,
@@ -3037,11 +3043,10 @@ async function shopStep(row,io){
   if(!s1.ok)return{ran:true,ok:false,detail:s1.detail,data:null};
   // Every page refused is not "nothing there": the shop could not be read (KHM).
   if(!s1.results.length&&(s1.errors||[]).length)
-    return{ran:true,ok:true,blocked:true,detail:s1.detail+"\nThe museum shop refused every page, so it could not be searched.",data:null};
+    return{ran:true,ok:true,blocked:"blocked",detail:s1.detail+"\nThe museum shop refused every page, so it could not be searched.",data:null};
   if(!s1.results.length)return{ran:true,ok:true,detail:s1.detail,data:null};
-  // Every page empty is blocked too (her decision, MoMA Brancusi: books drawn by
-  // script). But short excerpts are not an empty page (her Watteau): the pages are
-  // opened again whole, and the shop is blocked only if they are still empty or show
+  // Every page empty: drawn by script (her decision, MoMA Brancusi), "script". But short excerpts are not an empty page (her Watteau): the pages are
+  // opened again whole, and the shop is unread only if they are still empty or show
   // no price anywhere.
   let shop=s1;
   if(s1.results.every(r=>pageIsShell([r]))){
@@ -3049,7 +3054,7 @@ async function shopStep(row,io){
     if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
     const books=whole.results.filter(r=>!pageIsShell([r])&&SHOP_PRICE.test(oneText(r)));
     if(!books.length)
-      return{ran:true,ok:true,blocked:true,detail:s1.detail+"\n"+whole.detail+"\nThe museum shop’s pages came back with no books on them, so it could not be searched.",data:null};
+      return{ran:true,ok:true,blocked:"script",detail:s1.detail+"\n"+whole.detail+"\nThe museum shop’s pages came back with no books on them, so it could not be searched.",data:null};
     shop={...whole,detail:s1.detail+"\n"+whole.detail+"\nThe shop’s pages, read whole: books on them, none about this show in the excerpts."};
   }
   const r1=await io.read(READ_RULES
@@ -3832,7 +3837,7 @@ function siteOnly(F,pubHost,log,why){
 // (editions) and the picked one's index (editionPick) sit beside the card's book; originalEdition,
 // otherVenueBook and alsoVersion stay on old rows only and are never written again.
 function composeRow(row,F){
-  if(!F||!F.found)return{...row,looked:true,hasCatalogue:"no",shopState:F&&F.blocked?"blocked":"none",
+  if(!F||!F.found)return{...row,looked:true,hasCatalogue:"no",shopState:(F&&F.blocked)||"none",
     catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,
     shopUrl:null,shopChange:null,englishCheck:null,originalEdition:null,otherVenueBook:null,alsoVersion:null,
     editions:[],editionPick:null};
@@ -3870,7 +3875,7 @@ async function lookupCatalogue(row,hooks){
   if(s1.ran){
     log.push(s1.detail);
     if(!s1.ok)return done({row,ok:false});
-    blocked=!!s1.blocked;
+    blocked=s1.blocked||false;
     if(s1.data){ hit=settle(row,s1.data,dom,"",true,false,s1.results); fromShop=!!hit; }
   }
   if(!hit){
@@ -3910,7 +3915,7 @@ async function lookupCatalogue(row,hooks){
     if(d2.found&&d2.thisVenue===true&&!d2.catalogueTitle&&!d2.isbn13){
       unnamed=true;
       log.push("The results say a catalogue exists"+(d2.publisher?" ("+d2.publisher+")":"")+" but give no title or ISBN — looking for them.");
-      hit={ok:true,pageUrl:null,row:{...row,looked:true,hasCatalogue:"yes",shopState:blocked?"blocked":"web",shopChange:null,
+      hit={ok:true,pageUrl:null,row:{...row,looked:true,hasCatalogue:"yes",shopState:blocked||"web",shopChange:null,
         catalogueTitle:null,isbn13:null,publisher:d2.publisher||null,
         publisherUrl:publisherLinkOf(d2.publisherUrl,d2.publisher,dom,row.museumId),publisherResult:null,shopUrl:null}};
     }else{
@@ -5126,8 +5131,8 @@ export default function App(){
       const dom=shopDomain(MU[row.museumId]);
       const o=s.data||{};
       const onShop=!!shopLinkOf(o,dom);
-      // Not-there moves a "blocked" row on: the shop answered this time.
-      const answered=row.shopState==="blocked"?{...row,shopState:row.hasCatalogue==="yes"?"web":"none"}:row;
+      // Not-there moves an unread row on: the shop answered this time.
+      const answered=shopUnread(row.shopState)?{...row,shopState:row.hasCatalogue==="yes"?"web":"none"}:row;
       // The ticket link is dropped silently (her decision).
       const dropped="";
       if(!s.ran)out={ok:false,detail:"",said:"Re-check didn’t run — venue has no shop."};
@@ -5135,8 +5140,8 @@ export default function App(){
       // A blocked shop is a failed check and changes nothing — except a ticket
       // link, which was wrong whatever the shop says.
       else if(s.blocked)out=ticket
-        ?{ok:true,detail:s.detail,row:{...row,shopState:"blocked"},said:dropped+"Re-check didn’t work — museum shop is blocked."}
-        :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop is blocked."};
+        ?{ok:true,detail:s.detail,row:{...row,shopState:s.blocked},said:dropped+"Re-check didn’t work — museum shop is "+(s.blocked==="script"?"JS-rendered":"blocked")+"."}
+        :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop is "+(s.blocked==="script"?"JS-rendered":"blocked")+"."};
       else if(o.found&&(o.catalogueTitle||o.isbn13)&&(onShop||o.listedOnly)){
         // Reading the book's page for a blank ISBN is part of the shop step —
         // the page IS the shop's. Web search and the publisher are never run.
@@ -5726,9 +5731,9 @@ export default function App(){
                     </div>
                   ):noCat?(
                     <div>
-                      {r.shopState==="blocked"?(
+                      {shopUnread(r.shopState)?(
                         <div style={{margin:"0 0 8px"}}>
-                          <p style={{fontSize:12,color:C.soft,margin:"0 0 6px"}}><span style={{color:TH.lapsed.ink,fontWeight:700}}>{SHOP_BLOCKED_HEAD}</span>{SHOP_BLOCKED_NONE_REST}</p>
+                          <p style={{fontSize:12,color:C.soft,margin:"0 0 6px"}}><span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopUnreadHead(r.shopState)}</span>{SHOP_BLOCKED_NONE_REST}</p>
                           {/* "Search manually" needs somewhere to press: the shop's own
                               search with the title in it, as on a found card. */}
                           {mu&&(mu.shopSearch||mu.shopHome)&&<a href={mu.shopSearch?mu.shopSearch+encodeURIComponent(r.title):mu.shopHome} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
@@ -5766,8 +5771,8 @@ export default function App(){
                           :"Not in the museum shop \u2014 shop link opens the general store."}
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
-                      {r.shopState==="blocked"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-                        <span style={{color:TH.lapsed.ink,fontWeight:700}}>{SHOP_BLOCKED_HEAD}</span>{SHOP_BLOCKED_FOUND_REST}
+                      {shopUnread(r.shopState)&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
+                        <span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopUnreadHead(r.shopState)}</span>{SHOP_BLOCKED_FOUND_REST}
                         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
                       </div>}
                       </>}
