@@ -15,6 +15,10 @@ a book's own page with price and ISBN). The finder now:
 - proves a list of titles without prices by opening its first product: one book with a price
   (`looksLikeOneBook`; her decision).
 
+The lookup and Re-check use the same two rules (`firstProductIsBook` in the shop step;
+`openShopPage` for the book's page and Re-check; YS-001–005); Re-check's core is `recheckShopRow`,
+which the check page runs.
+
 Result: the books section is **Publications**,
 `https://secure.touchnet.net/C20510_ustores/web/store_cat.jsp?STOREID=7&CATID=16&SINGLESTORE=true`.
 The "Bookshop that reads blank" rule (AL-041) is removed. The 48 saved pages: no menu ranks differently.

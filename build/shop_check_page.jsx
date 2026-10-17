@@ -7,6 +7,7 @@
 //      (registerOccasional → occEntry).
 //   3. Find catalogue (findOneCat): lookupCatalogue on the show's card, with the app's
 //      hooks (fillShopSearch does nothing for a venue found by finder 3).
+//   4. Re-check museum shop (recheckShop): recheckShopRow on the card the lookup wrote.
 // Each step's record goes to this page's own lookup log (saveLookupTape), read by
 // node build/lookup_log.js. The pass test is code, below; nothing here searches or reads.
 // The case is SC_CASE, written in by the build with SC_BUILD.
@@ -33,7 +34,7 @@ body{background:var(--sc-bg);color:var(--sc-ink)}
 
 // The pass test: one line per thing the fix must do, each worked out from what the app
 // returned. A step that did not finish fails its lines, saying why.
-function scGrade(finder,lookup){
+function scGrade(finder,lookup,recheck){
   const c=SC_CASE, out=[];
   const f=finder||{};
   out.push({ok:f.shop==="found"&&f.shopCatalogues===c.wantShelf,
@@ -49,6 +50,9 @@ function scGrade(finder,lookup){
   out.push({ok:!!(lookup&&lookup.ok)&&cleanIsbn(r.isbn13)===c.wantIsbn,
     what:"ISBN "+c.wantIsbn.slice(0,3)+"-"+c.wantIsbn.slice(3),
     got:lookup&&lookup.ok?(r.isbn13||"none"):"—"});
+  out.push({ok:!!(recheck&&recheck.ok)&&recheck.said==="Re-checked: still for sale in the museum shop.",
+    what:"Re-check museum shop finds it still for sale",
+    got:recheck?(recheck.said||"no answer"):"did not run"});
   return out;
 }
 
@@ -57,7 +61,7 @@ function ShopCheck(){
   async function run(){
     const c=SC_CASE;
     setState({running:true,label:"Reading the show page…",lines:null,finder:null,lookup:null,saved:null});
-    let finder=null, lookup=null, venue=null;
+    let finder=null, lookup=null, recheck=null, venue=null;
     // 1. As readLinks does for one link from a venue the store has never met.
     const tape=tapeStart("Add by link",{title:c.showUrl,exUrl:c.showUrl});
     try{
@@ -91,14 +95,23 @@ function ShopCheck(){
       try{ lookup=await lookupCatalogue(row,{label:l=>setState(s=>({...s,label:l||s.label})),prepareShop:async()=>{}}); }
       catch(e){ lookup={ok:false,detail:"The lookup stopped: "+String((e&&e.message)||e)}; }
       await saveLookupTape(t2,lookup);
+      // 4. Re-check, on the card the lookup wrote — only when it was filed in the shop.
+      if(lookup&&lookup.ok&&lookup.row&&lookup.row.shopState==="shop"){
+        setState(s=>({...s,label:"Re-checking the museum shop\u2026"}));
+        const t3=tapeStart("Re-check museum shop",lookup.row);
+        try{ recheck=await recheckShopRow(lookup.row,{label:l=>setState(s=>({...s,label:l||s.label})),prepareShop:async()=>{}}); }
+        catch(e){ recheck={ok:false,said:"Re-check stopped: "+String((e&&e.message)||e)}; }
+        await saveLookupTape(t3,recheck);
+      }
     }
-    const lines=scGrade(finder,lookup);
+    const lines=scGrade(finder,lookup,recheck);
     // The run, kept in this page's store for the session that reads it.
     let saved=false;
     try{
       const db=await useCap("db");
       if(db){ await db.doc("checks/R"+Date.now()).set({at:new Date().toISOString(),build:SC_BUILD,finder,lines,
-        card:lookup&&lookup.row?cardFields(lookup.row):null,panel:lookup?lookup.detail||null:null}); saved=true; }
+        card:lookup&&lookup.row?cardFields(lookup.row):null,panel:lookup?lookup.detail||null:null,
+        recheck:recheck?{ok:!!recheck.ok,said:recheck.said||null,detail:recheck.detail||null}:null}); saved=true; }
     }catch{}
     setState({running:false,label:"",lines,finder,lookup,saved});
   }
@@ -107,7 +120,7 @@ function ShopCheck(){
     <style>{SC_STYLE}</style>
     <h1>Yale Shop Check</h1>
     <div className="soft">Cat Watch {SC_BUILD.appVersion} code, built from {SC_BUILD.branch} at {SC_BUILD.commit}, {SC_BUILD.builtAt}.
-      Runs the app's own shop finder and Find catalogue on one case. Uses your Parallel Search Key and Claude, as a lookup in the app does.</div>
+      Runs the app's own shop finder, Find catalogue and Re-check museum shop on one case. Uses your Parallel Search Key and Claude, as a lookup in the app does.</div>
     <div className="box">
       <div><b>{SC_CASE.title}</b> — Yale Center for British Art</div>
       <div className="soft" style={{overflowWrap:"anywhere"}}>{SC_CASE.showUrl}</div>

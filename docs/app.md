@@ -252,7 +252,9 @@ Each replaced a real failure. Card wording is in the code.
   empty is "JS-rendered"** (`shopState: "script"`; her wording, the same line with
   "JS-rendered" for "blocked", Re-check's line too; B-001, B-003a) — MoMA's shelf is drawn
   by script and its search and `products.json` answer 403. Judged on the WHOLE page,
-  reopened when excerpts are short; no price anywhere = empty (Watteau). Rows filed before
+  reopened when excerpts are short; no price anywhere = empty (Watteau), unless the list's
+  first product opens as one book with a price (`firstProductIsBook`, Yale's Publications;
+  YS-001–005). Rows filed before
   keep "blocked" until looked up again.
 - **The Museum shop link searches the shop for the EXHIBITION's title** when no book page
   is on file (`buyLinks`) — resellers keep the book's title, the shop keeps the show's.

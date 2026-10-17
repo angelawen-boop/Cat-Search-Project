@@ -71,7 +71,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionLines, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, pickEdition, venueFirst, storedVersion, cityOf, yearOf, versionLines, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly, registerOccasional, recheckShopRow };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -869,6 +869,59 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq([api.yearOf('2023', [TUM]), api.yearOf('2021', [TUM]), api.yearOf(null, [TUM])], [2023, null, null], 'CY-003: Hammershøi — Rizzoli’s 2023 is kept only where a record carrying its ISBN prints it');
   }
 
+
+  // ── YS-001..YS-006: Yale — a shelf of titles without prices, every page blank unless
+  // its address names a page. Made from the live replies of 17 Oct (trimmed).
+  {
+    const T = 'https://secure.touchnet.net/C20510_ustores/web/';
+    const PUBS = T + 'store_cat.jsp?STOREID=7&CATID=16&SINGLESTORE=true';
+    const P2564 = T + 'product_detail.jsp?PRODUCTID=2564&SINGLESTORE=true', P2409 = T + 'product_detail.jsp?PRODUCTID=2409&SINGLESTORE=true';
+    const LIST = 'YCBA Home - Publications Skip to Main Content\n\n# Publications\n\n1. [YCBA Home](' + T + 'store_main.jsp?STOREID=7&SINGLESTORE=true)\n2. Publications\n\n'
+      + '[Painters, Ports, and Profits: Arts and the East India Company, 1750-1850 Painters, Ports, and Profits: Arts and the East India Company, 1750-1850](' + P2564 + ')\n\n'
+      + '[Gwen John: Strange Beauties Gwen John: Strange Beauties](' + T + 'product_detail.jsp?PRODUCTID=2565&SINGLESTORE=true)\n\n'
+      + '[Constable Constable](' + P2409 + ')\n\n[Blake Blake](' + T + 'product_detail.jsp?PRODUCTID=2406&SINGLESTORE=true)\n\n'
+      + '[Endless Forms: Charles Darwin, Natural Science, and the Visual Arts Endless Forms: Charles Darwin, Natural Science, and the Visual Arts](' + T + 'product_detail.jsp?PRODUCTID=42&SINGLESTORE=true)\n\n[Yale](http://www.yale.edu/)';
+    const BOOK = (title, isbn, price) => '# ' + title + '\n\n1. [YCBA Home](' + T + 'store_main.jsp?STOREID=7&SINGLESTORE=true)\n2. [Publications](' + PUBS + ')\n\n'
+      + 'Description ' + 'A generously illustrated volume from the YCBA Collection Series. '.repeat(6) + 'Published by the Yale Center for British Art Hardcover 128 Pages ISBN ' + isbn + '\n\nPrice:\n\n' + price + '\n\nQuantity:\n\nAdd to Basket';
+    const page = u => {
+      if (u === P2564 + '&page=1') return BOOK('Painters, Ports, and Profits', '9780300286540', '$65.00');
+      if (u === P2409 + '&page=1') return BOOK('Constable', '9780300284669', '$40.00');
+      if (u === P2564 || u === P2409) return u === P2409 ? 'Constable' : 'Painters, Ports, and Profits';
+      if (u === PUBS) return 'YCBA Home - Publications';
+      if (u.startsWith(PUBS + '&page=')) return LIST;
+      return '';
+    };
+    const calls = [];
+    const y = lift({
+      mcp: (tool, args) => tool === 'web_search' ? { payload: { results: [] } }
+        : { payload: { errors: [], results: args.urls.map(u => args.full_content ? { url: u, title: 'Store', excerpts: [page(u)], full_content: page(u) }
+          : { url: u, title: 'Store Cat', excerpts: [u.startsWith(PUBS + '&page=') ? '# Publications\n[Constable Constable](' + P2409 + ')' : page(u).slice(0, 60)] }) } },
+      sample: p => /"forSale"/.test(p) ? { forSale: true, why: 'Add to Basket, $40.00.' }
+        : isShopRead(p) ? (/Constable Constable/.test(p) ? { found: true, thisVenue: true, catalogueTitle: 'Constable', isbn13: null, publisher: null, publisherUrl: null, shopUrl: P2409 } : { found: false })
+        : isPageRead(p) ? { isbn13: '9780300284669', publisher: 'Yale Center for British Art', publisherUrl: null }
+        : {},
+    }, calls);
+    y.registerOccasional({ 'occ-britishart-yale-edu': { id: 'occ-britishart-yale-edu', name: 'Yale Center for British Art', host: 'britishart.yale.edu',
+      shop: 'found', confirmed: true, finder: 3, shopHome: T + 'store_main.jsp?STOREID=7&SINGLESTORE=true', shopCatalogues: PUBS, shelfKind: 'publications', shopSearch: null } });
+    const out = await y.lookupCatalogue(row('occ-britishart-yale-edu', 'John Constable: The Landscape Reimagined'), { label: () => {} });
+    const r = out.row, opened = u => calls.some(c => c.tool === 'web_fetch' && c.args.urls.includes(u));
+        eq([r.shopState, r.shopUrl], ['shop', P2409], 'YS-001: Yale Constable — a shelf of titles without prices is read: In the museum shop, its own page linked', JSON.stringify([r.shopState, r.shopUrl, out.detail]));
+    ok(opened(P2564 + '&page=1'), 'YS-002:   the shelf proved books by its first product, read with "page=1" when blank (one copy with the finder)');
+    ok(opened(P2409 + '&page=1') && r.isbn13 === '9780300284669', 'YS-003:   Constable’s own page read for its ISBN, with "page=1" when blank', JSON.stringify([r.isbn13]));
+    calls.length = 0;
+    const re = await y.recheckShopRow(r, { label: () => {} });
+    ok(re.ok && re.said === 'Re-checked: still for sale in the museum shop.' && opened(P2409 + '&page=1'),
+      'YS-004: Re-check museum shop reads Constable’s page (blank, then "page=1") and finds it still for sale', JSON.stringify([re.ok, re.said]));
+    const POPUP = '# Membership\n' + 'Join now to save 20% on your first order. '.repeat(15) + '[View All Memberships](https://store.test/pages/memberships)';
+    const shelf = args => ({ payload: { errors: [], results: args.urls.map(u => args.full_content ? { url: u, title: 'Store', excerpts: [POPUP], full_content: POPUP }
+      : { url: u, title: 'Store', excerpts: ['# Membership'] }) } });
+    const calls2 = [];
+    const y3 = lift({ mcp: (tool, args) => tool === 'web_search' ? { payload: { results: [] } } : shelf(args), sample: () => ({ found: false }) }, calls2);
+    y3.registerOccasional({ 'occ-britishart-yale-edu': { id: 'occ-britishart-yale-edu', name: 'Yale Center for British Art', host: 'britishart.yale.edu',
+      shop: 'found', confirmed: true, finder: 3, shopHome: 'https://store.test/', shopCatalogues: 'https://store.test/collections/books', shelfKind: 'books', shopSearch: null } });
+    const m = await y3.lookupCatalogue(row('occ-britishart-yale-edu', 'Test Show'), { label: () => {} });
+    eq(m.row.shopState, 'script', 'YS-005: a shelf with neither prices nor product links (MoMA’s pop-up) is still JS-rendered', JSON.stringify(m.row.shopState));
+  }
   console.log(failures ? failures + ' failed' : 'the catalogue route holds');
   process.exit(failures ? 1 : 0);
 })();

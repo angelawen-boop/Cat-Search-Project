@@ -73,14 +73,15 @@ the import finishes.** Code: "FINDING A NEW VENUE'S SHOP SECTION".
   followed when the search finds no section (`shopElsewhere`; AL-034).
 - **A shop on a site shared by many shops** (Yale's, on Touchnet): its menu is read on the exact page the
   museum links to, never the site's root, and that page is its shop link. A /museum-shop address counts as a
-  shop page (`SHOP_PATH`). **A shop page that reads blank is opened once more with `page=1` added**
-  (`fetchShopPage`): Touchnet sends its menu, lists and books only then. **A menu label is read by its first six
+  shop page (`SHOP_PATH`). **A shop page that comes back as its title alone (one line) is opened once
+  more with `page=1` added** (`openShopPage`; finder, the lookup's book page, Re-check): Touchnet sends its
+  menu, lists and books only then. A short page of several lines is never retried (Louvre, LG-). **A menu label is read by its first six
   words** (`menuLinks`; Touchnet adds "The number of products in this category is"). Checked on the 48 saved
   pages: no menu ranks differently. AL-042.
 
 A pick is **opened and must read as books with prices** (unless its excerpt already does), **or its first
 product must read as one book with a price** — her decision, for a list of titles only (Yale's Publications;
-`looksLikeOneBook`, AL-042). Nothing → "Shop
+`firstProductIsBook`, one copy with the lookup's shop step, AL-042, YS-001–005). Nothing → "Shop
 found, but not its books section: <shop>" / "No museum shop found." / "Search failed." — and **a miss is a
 finder bug, fixed in code: she never pastes a shop link** (her decision). **Look again** skips only the pages
 she turned down, never the site. **No shop** → lookups go to the web, as at Capodimonte. Venues found by the

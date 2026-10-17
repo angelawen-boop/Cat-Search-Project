@@ -1136,21 +1136,32 @@ function looksLikeBookShelf(text){
   const t=foldText(text);
   return (t.match(BOOK_WORD)||[]).length>=3&&(t.match(PRICE)||[]).length>=2;
 }
-// A section that lists titles without prices: its first product is opened, and must read
-// as one book with a price (her decision; Yale's Publications, AL-042).
 const PRODUCT_LINK=/\/products?\/[^/?#]|\/p\/[^/?#]|product_?detail|[?&]product_?id=/i;
 function productLinksOn(text,host){ return [...new Set(mdLinks(text).filter(l=>hostOf(l.url)===host&&PRODUCT_LINK.test(l.url)).map(l=>l.url))]; }
 function looksLikeOneBook(text){
   const t=foldText(text);
   return /\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b/.test(t)&&new RegExp(PRICE.source).test(t);
 }
-// A shop page that reads blank is opened once more with "page=1" added: Yale's shop (on
-// Touchnet) sends its menu, lists and books only when the address names a page (AL-042).
-async function fetchShopPage(url,objective){
-  const f=await fetchPage(url,objective,null,{full:true});
-  if(!f.ok||!pageIsShell(f.results)||/[?&]page=/i.test(url))return f;
-  const again=await fetchPage(url+(url.includes("?")?"&":"?")+"page=1",objective,null,{full:true});
-  return again.ok&&!pageIsShell(again.results)?again:f;
+// A shop page that comes back as one line, its title alone, is opened once more with
+// "page=1" added: Yale's shop (on Touchnet) sends its menu, lists and books only when the
+// address names a page (AL-042). A short page of several lines is a page, never retried
+// (a Louvre book page: title, seller, EAN). One copy: the finder, the lookup's book page
+// and Re-check. `open` is fetchPage, or a lookup's io.fetch, which counts the call.
+const titleOnly=results=>{ const t=pageTextOf(results); return !!t&&!t.includes("\n")&&pageIsShell(results); };
+async function openShopPage(open,url,objective,queries,opts){
+  const f=await open(url,objective,queries,opts);
+  if(!f.ok||!f.results.length||(f.errors||[]).length||!titleOnly(f.results)||/[?&]page=/i.test(url))return f;
+  const again=await open(url+(url.includes("?")?"&":"?")+"page=1",objective,queries,opts);
+  return again.ok&&again.results.length&&!pageIsShell(again.results)?again:f;
+}
+// A list of titles without prices (Yale's Publications): its first product is opened, and
+// must read as one book with a price (her decision; AL-042). One copy: the finder and the
+// lookup's shop step.
+async function firstProductIsBook(open,text,host){
+  const items=productLinksOn(text,host);
+  if(items.length<2)return false;
+  const b=await openShopPage(open,items[0],"This book's title, price and ISBN.",null,{full:true});
+  return b.ok&&looksLikeOneBook(pageTextOf(b.results));
 }
 // A page's links on the shop's own site, as menu entries. A long label is read by its first
 // six words: Touchnet adds "The number of products in this category is" to each (Yale).
@@ -1266,7 +1277,7 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
       if(c.proof&&looksLikeBookShelf(c.proof))return{...c,how};
       if(opens>=SHELF_OPENS)return null;
       opens++;
-      const f=await fetchShopPage(c.url,"The books in this section of the shop, with their prices.");
+      const f=await openShopPage(fetchPage,c.url,"The books in this section of the shop, with their prices.",null,{full:true});
       if(!f.ok){ died=f.detail; continue; }
       const t=pageTextOf(f.results); seenText+="\n"+t;
       if(looksLikeBookShelf(t))return{...c,how};
@@ -1275,17 +1286,13 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
         const j=await fetchPage(pj,"The products in this section: titles, types and prices.",null,{full:true});
         if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results)))return{...c,how};
       }
-      const items=productLinksOn(t,hostOf(c.url));
-      if(items.length>=2){
-        const b=await fetchShopPage(items[0],"This book's title, price and ISBN.");
-        if(b.ok&&looksLikeOneBook(pageTextOf(b.results)))return{...c,how};
-      }
+      if(await firstProductIsBook(fetchPage,t,hostOf(c.url)))return{...c,how};
     }
     // Nothing books-only: open the first mixed section and try the sections
     // listed inside it. One level down, once.
     if(inside||!ranked.mixed.length)return null;
     const m=ranked.mixed[0];
-    const f=await fetchShopPage(m.url,"The sections listed on this page: their names and links.");
+    const f=await openShopPage(fetchPage,m.url,"The sections listed on this page: their names and links.",null,{full:true});
     if(!f.ok){ died=f.detail; return null; }
     const t=pageTextOf(f.results); seenText+="\n"+t;
     const subs=menuLinks(t,hostOf(m.url));
@@ -1321,7 +1328,7 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
   }
   // 3. The front page's menu.
   if(!pick&&root){
-    const f=await fetchShopPage(front||root,"The shop's menu: its exhibition catalogues and books sections.");
+    const f=await openShopPage(fetchPage,front||root,"The shop's menu: its exhibition catalogues and books sections.",null,{full:true});
     if(f.ok){
       const t=pageTextOf(f.results); seenText+="\n"+t;
       opens=0; pick=await tryCands(menuLinks(t,hostOf(root)),"the shop's menu");
@@ -2805,7 +2812,7 @@ const GONE_HTTP=new Set([404,410]);
 //   "badanswer"  Claude's answer was not a yes or no
 //   "read"       `forSale` true or false, `why` Claude's reason, `results` the page
 async function readShopPage(book,url,io){
-  const f=await (io?io.fetch:fetchPage)(url,
+  const f=await openShopPage(io?io.fetch:fetchPage,url,
     "Whether the book “"+book+"” can be bought on this page now: its product page, price, "
       +"add to cart, pre-order, sold out, out of stock, unavailable.",
     [book+" add to cart sold out"],{full:true});
@@ -2875,6 +2882,46 @@ async function recheckLinkedPage(row){
   }
   return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
     said:hadIt?"Re-checked: no longer for sale in the museum shop."+(p.why?" "+p.why:""):"Re-checked: still not for sale in the museum shop."};
+}
+
+// "Re-check museum shop" on one card → {ok, detail, row?, said}. At top level so the
+// shop check page runs the same code; the page's recheckShop prints its answer.
+async function recheckShopRow(found,hooks){
+  // A ticket on file was never the book: dropped, and the shop searched afresh.
+  const ticket=!!(found.shopUrl&&isTicketLink(found.shopUrl));
+  const row=ticket?{...found,shopUrl:null,shopState:"web",shopChange:null}:found;
+  let out;
+  if(row.shopUrl&&(row.shopState==="shop"||row.shopState==="gone")){
+    if(hooks&&hooks.label)hooks.label("Re-reading the shop page\u2026");
+    out=await recheckLinkedPage(row);
+  } else {
+    const io=lookupIo(hooks,{upTo:1});
+    io.phase("shop");
+    const s=await shopStep(row,io);
+    const dom=shopDomain(MU[row.museumId]);
+    const o=s.data||{};
+    const onShop=!!shopLinkOf(o,dom);
+    // Not-there moves an unread row on: the shop answered this time.
+    const answered=shopUnread(row.shopState)?{...row,shopState:row.hasCatalogue==="yes"?"web":"none"}:row;
+    // The ticket link is dropped silently (her decision).
+    const dropped="";
+    if(!s.ran)out={ok:false,detail:"",said:"Re-check didn’t run — venue has no shop."};
+    else if(!s.ok)out={ok:false,detail:s.detail,said:"Re-check didn’t run — "+s.detail.split("\n").pop().split("[")[0].trim()};
+    // A blocked shop is a failed check and changes nothing — except a ticket
+    // link, which was wrong whatever the shop says.
+    else if(s.blocked)out=ticket
+      ?{ok:true,detail:s.detail,row:{...row,shopState:s.blocked},said:dropped+"Re-check didn’t work — museum shop is "+(s.blocked==="script"?"JS-rendered":"blocked")+"."}
+      :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop is "+(s.blocked==="script"?"JS-rendered":"blocked")+"."};
+    else if(o.found&&(o.catalogueTitle||o.isbn13)&&(onShop||o.listedOnly)){
+      // Reading the book's page for a blank ISBN is part of the shop step —
+      // the page IS the shop's. Web search and the publisher are never run.
+      const hit=await readBookPage({ok:true,detail:s.detail,pageUrl:o.shopUrl,row:foundInShop(row,o)},
+        MU[row.museumId]?.name||"",dom,io);
+      out={ok:true,detail:hit.detail,row:hit.row,said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")};
+    }
+    else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked: not in the museum shop."};
+  }
+  return out;
 }
 
 // ── THE CATALOGUE LOOKUP (docs/app.md §1; CLAUDE.md §5.1 "Catalogue lookup") ─────
@@ -3052,7 +3099,11 @@ async function shopStep(row,io){
   if(s1.results.every(r=>pageIsShell([r]))){
     const whole=await io.fetch(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
     if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
-    const books=whole.results.filter(r=>!pageIsShell([r])&&SHOP_PRICE.test(oneText(r)));
+    let books=whole.results.filter(r=>!pageIsShell([r])&&SHOP_PRICE.test(oneText(r)));
+    // No price on any page: a list of titles is books when its first product is one
+    // (firstProductIsBook, Yale's Publications).
+    const listed=books.length?null:whole.results.find(r=>!pageIsShell([r]));
+    if(listed&&await firstProductIsBook(io.fetch,oneText(listed),dom))books=[listed];
     if(!books.length)
       return{ran:true,ok:true,blocked:"script",detail:s1.detail+"\n"+whole.detail+"\nThe museum shop’s pages came back with no books on them, so it could not be searched.",data:null};
     shop={...whole,detail:s1.detail+"\n"+whole.detail+"\nThe shop’s pages, read whole: books on them, none about this show in the excerpts."};
@@ -3127,7 +3178,8 @@ async function readBookPage(hit,venue,dom,io){
   const r=hit.row;
   const book=r.catalogueTitle||r.title;
   io.phase("page");
-  const f=await io.fetch(hit.pageUrl,
+  // The venue's own shop page gets the blank-page retry (openShopPage); a publisher's does not.
+  const f=await (shopLinkOf({shopUrl:hit.pageUrl},dom)?(...a)=>openShopPage(io.fetch,...a):io.fetch)(hit.pageUrl,
     "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
       +"“"+book+"”, including any details or specification panel on the page.",
     [book+" ISBN publisher details"],{full:true});
@@ -3959,7 +4011,8 @@ async function lookupCatalogue(row,hooks){
     let res=pages.get(key);
     if(res)log.push("The book’s page, already open.");
     else{
-      const f=await io.fetch(hit.pageUrl,
+      // The venue's own shop page gets the blank-page retry (openShopPage); a publisher's does not.
+      const f=await (shopLinkOf({shopUrl:hit.pageUrl},dom)?(...a)=>openShopPage(io.fetch,...a):io.fetch)(hit.pageUrl,
         "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
           +"“"+(F.title||title)+"”, including any details or specification panel on the page.",
         [(F.title||title)+" ISBN publisher details"],{full:true});
@@ -5116,41 +5169,8 @@ export default function App(){
     if(roStop())return;
     setBusy(true);setBusyId(id);setRechecking(true);setError(null);setRecheckSaid(null);
     const found=rows.find(r=>r.id===id);
-    // A ticket on file was never the book: dropped, and the shop searched afresh.
-    const ticket=!!(found.shopUrl&&isTicketLink(found.shopUrl));
-    const row=ticket?{...found,shopUrl:null,shopState:"web",shopChange:null}:found;
-    let out;
     const tape=tapeStart("Re-check museum shop",found);
-    if(row.shopUrl&&(row.shopState==="shop"||row.shopState==="gone")){
-      setLookLabel("Re-reading the shop page\u2026");
-      out=await recheckLinkedPage(row);
-    } else {
-      const io=lookupIo(lookHooks,{upTo:1});
-      io.phase("shop");
-      const s=await shopStep(row,io);
-      const dom=shopDomain(MU[row.museumId]);
-      const o=s.data||{};
-      const onShop=!!shopLinkOf(o,dom);
-      // Not-there moves an unread row on: the shop answered this time.
-      const answered=shopUnread(row.shopState)?{...row,shopState:row.hasCatalogue==="yes"?"web":"none"}:row;
-      // The ticket link is dropped silently (her decision).
-      const dropped="";
-      if(!s.ran)out={ok:false,detail:"",said:"Re-check didn’t run — venue has no shop."};
-      else if(!s.ok)out={ok:false,detail:s.detail,said:"Re-check didn’t run — "+s.detail.split("\n").pop().split("[")[0].trim()};
-      // A blocked shop is a failed check and changes nothing — except a ticket
-      // link, which was wrong whatever the shop says.
-      else if(s.blocked)out=ticket
-        ?{ok:true,detail:s.detail,row:{...row,shopState:s.blocked},said:dropped+"Re-check didn’t work — museum shop is "+(s.blocked==="script"?"JS-rendered":"blocked")+"."}
-        :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop is "+(s.blocked==="script"?"JS-rendered":"blocked")+"."};
-      else if(o.found&&(o.catalogueTitle||o.isbn13)&&(onShop||o.listedOnly)){
-        // Reading the book's page for a blank ISBN is part of the shop step —
-        // the page IS the shop's. Web search and the publisher are never run.
-        const hit=await readBookPage({ok:true,detail:s.detail,pageUrl:o.shopUrl,row:foundInShop(row,o)},
-          MU[row.museumId]?.name||"",dom,io);
-        out={ok:true,detail:hit.detail,row:hit.row,said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")};
-      }
-      else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked: not in the museum shop."};
-    }
+    const out=await recheckShopRow(found,lookHooks);
     saveLookupTape(tape,out);
     setDebug(out.detail||null);
     if(out.ok&&out.row&&out.row!==found)await commit(rows.map(r=>r.id===id?out.row:r));
