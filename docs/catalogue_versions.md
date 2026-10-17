@@ -1,9 +1,11 @@
 # Catalogue versions — the redesign and its agreed cases
 
-Status: **the display half is built on the current search, unpublished; on the Catalogue Blocks Check
-page (https://claude.ai/artifact/TCGZyPJgUJmNS9bueC2Rds, `node build/blocks_check.js`: her test
-cards run from blank through the app's own Find catalogue and drawer, graded in code).** Her decision: the search itself stays as it is (the Stage 1/1b rebuild is on `parked`);
-only how the versions are ordered, drawn and picked changes.
+Status: **the display half is done, live at 47.1 (her call: done unless she finds bugs).** It runs on
+the current search; the search's own rebuild is the open item at the end of this file. Test page for
+the display: the Catalogue Blocks Check (https://claude.ai/artifact/TCGZyPJgUJmNS9bueC2Rds,
+`node build/blocks_check.js --ledger <her ledger json> --venues <her venues/occasional json>`): her
+named Yale cases and KHM's Canaletto & Bellotto, each run from a blank card through the app's own
+Find catalogue and drawer, graded in code, each result kept in the page's store.
 
 ## The design
 
@@ -11,9 +13,13 @@ only how the versions are ordered, drawn and picked changes.
 
 1. **Find.** The lookup keeps every version of the catalogue it finds (as today's search finds
    them): title, language, binding, pages, publisher, which showing, ISBN, the page that proved it.
-2. **Order** (`versionOrder`, VO-): English in the venue's own imprint; then English from anyone
-   else (another museum, another showing, an outside house — no order between those); then other
-   languages. Within each, hardcover, then paperback, then binding not known; otherwise as found.
+2. **Order** (`versionOrder`, VO-): at an English-language venue, a book in its museum shop first of
+   all (`shopFirst`, set once by the lookup, so a Re-check never moves a block); then English in the
+   venue's own imprint; then English from anyone else (another museum, another showing, an outside
+   house — no order between those); then other languages. At a non-English venue English always
+   leads. Within each, hardcover, then paperback, then binding not known; otherwise as found. On Yale
+   cards Yale University Press ranks as the Yale Center does (`rankAsOwn` on Yale's `OWN_CHIP` entry,
+   a venue rule written into the app, display only).
    **The first starts picked** — her decision, replacing the starting-pick rules, so the ● is never
    halfway down the list. Cards searched before this keep their saved ● until a Search again.
 3. **Tell.** One version: the card exactly as before (no binding, pages or source added — her
@@ -204,4 +210,4 @@ instead of throwing it away. Still to change there:
 - **English-language venue:** the book of the card's own showing comes first, and one in that
   venue's museum shop first of all — on a Yale card, Yale's book first; on a National Gallery
   card, the National Gallery's.
-- The rest of her order and its other decisions: `docs/handover_catalogue_display.md`.
+- The rest of her order: "The design", above.

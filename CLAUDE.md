@@ -146,11 +146,10 @@ record — the search's purpose, the trace, where `parked` stands and her logic 
 `docs/catalogue_versions.md`, "Search: every catalogue of the exhibition". Read it before any
 search work.**
 
-**OPEN — the catalogue blocks on today's search, published at 47.1; her use in the app checks them** (her
-decision: the search stays as it is; Stage 1/1b waits on `parked`). Her order, the first book
-picked, one block per book, a shop line true for whichever book she picks, Re-check for the picked
-book: `docs/catalogue_versions.md`. Where it stands and the next job: `docs/handover_catalogue_display.md`. Noted for the
-search work later: *Pearls to Pyramids* (Yale) kept a 21-page pamphlet as its book.
+**Done — the catalogue blocks on today's search, live at 47.1** (her call: done unless she finds bugs).
+Her order, the first book picked, one block per book, a shop line true for whichever book she picks,
+Re-check for the picked book: `docs/catalogue_versions.md`. Noted for the search work later: *Pearls
+to Pyramids* (Yale) kept a 21-page pamphlet as its book.
 
 **PAUSED — no lookup patches until the redesign is agreed** (her decision: past the
 third-patch limit — `lookupCatalogue` changed 10 times in three days). The redesign (find →

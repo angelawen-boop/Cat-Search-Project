@@ -28,7 +28,7 @@ const OUT = path.join(__dirname, 'dist', 'blocks_check.html');
 const MOUNT = 'ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(BlocksCheck));';
 const BLOCKS_CHECK = 'https://claude.ai/artifact/TCGZyPJgUJmNS9bueC2Rds';
 
-// Her named cases (docs/handover_catalogue_display.md), by ledger id.
+// Her named cases (docs/catalogue_versions.md, status line), by ledger id.
 const CASES = [
   'occ-britishart-yale-edu-sensationandsensibilityviewinggainsboroughscottage',
   'occ-britishart-yale-edu-johnconstablethelandscapereimagined',
