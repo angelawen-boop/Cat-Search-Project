@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "47";
+const APP_VERSION = "47.1";
 const APP_VERSION_DATE = "17 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -4411,11 +4411,11 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
               <div style={{flex:1,minWidth:0}}>
                 {b.title&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{b.title}</div>}
                 {b.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2,lineHeight:1.4}}>{b.publisher}</div>}
-                {b.facts&&<div style={{fontSize:11,color:C.soft,marginBottom:2,lineHeight:1.4}}>{b.facts}</div>}
                 <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",lineHeight:1.5,color:b.isbn?C.ink:C.soft}}>
                   {b.isbn?<>ISBN <span style={{whiteSpace:"nowrap"}}>{b.isbn}</span>{b.also&&<>; <span style={{whiteSpace:"nowrap"}}>{b.also.isbn}</span> ({b.also.whose})</>}</>
                     :"ISBN not confirmed \u2014 verify before buying"}
                 </div>
+                {b.facts&&<div style={{fontSize:11,color:C.soft,marginTop:2,marginBottom:2,lineHeight:1.4}}>{b.facts}</div>}
                 {(b.why||b.source)&&<div style={{fontSize:11,color:C.soft,marginTop:3,lineHeight:1.45}}>
                   {b.why}{b.source&&<>{b.why?" ":""}Source: <a href={b.source.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:C.soft}}>{b.source.host}</a></>}
                 </div>}

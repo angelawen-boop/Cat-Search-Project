@@ -904,7 +904,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
 
     t = await run(louEnglish, { en: 'Test The Experience of Nature (English edition)' });
     // Two versions: her version blocks, English first, replace the book block.
-    ok(/●Test The Experience of Nature \(English edition\)EnglishISBN 978-1234567897/.test(t) && /○L’Expérience de la nature\. Les arts à Prague à la cour de Rodolphe IIFrenchISBN 978-2359064612The original edition\./.test(t), 'LG-005: an English edition exists — first and picked (●), its own block above the French original', t.slice(0, 600));
+    ok(/●Test The Experience of Nature \(English edition\)ISBN 978-1234567897English/.test(t) && /○L’Expérience de la nature\. Les arts à Prague à la cour de Rodolphe IIISBN 978-2359064612FrenchThe original edition\./.test(t), 'LG-005: an English edition exists — first and picked (●), its own block above the French original; the ISBN the third line, as on a single-book card', t.slice(0, 600));
     ok(/Not in the museum shop/.test(t) && !/●L’Expérience/.test(t), 'LG-006:   "Not in the museum shop", and the French book listed, not picked', t.slice(0, 600));
 
     // Her Botticelli, 7 Oct: an English book with a near-identical title, from

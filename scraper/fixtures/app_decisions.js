@@ -336,9 +336,9 @@ async function versionCards() {
     let card = await openCard(page, vasari.title);
     const V = vasari.editions;
     check(NAME + ': Vasari — three blocks in her order, ● on Lienart’s English, the Louvre’s own number on the French', JSON.stringify(versionLinesOn(card)) === JSON.stringify([
-      '● | ' + V[1].title + ' | Louvre Éditions / Lienart | English · Paperback | ISBN 978-2359063738 | This venue\'s English edition. Source: lienarteditions.com',
-      '○ | ' + V[2].title + ' | Nationalmuseum | English · Hardcover | ISBN 978-9171009166 | From the show\'s Stockholm exhibition. Source: nationalmuseum.bokorder.se',
-      '○ | ' + V[0].title + ' | Louvre Éditions / Lienart | French | ISBN 978-2359063721; 978-2350317441 (Louvre’s own number for the same book) | The original edition. Source: louvre.fr']),
+      '● | ' + V[1].title + ' | Louvre Éditions / Lienart | ISBN 978-2359063738 | English · Paperback | This venue\'s English edition. Source: lienarteditions.com',
+      '○ | ' + V[2].title + ' | Nationalmuseum | ISBN 978-9171009166 | English · Hardcover | From the show\'s Stockholm exhibition. Source: nationalmuseum.bokorder.se',
+      '○ | ' + V[0].title + ' | Louvre Éditions / Lienart | ISBN 978-2359063721; 978-2350317441 (Louvre’s own number for the same book) | French | The original edition. Source: louvre.fr']),
       JSON.stringify(versionLinesOn(card)));
     check(NAME + ': Vasari — each source is a link to the page that proved it, its host as the words',
       [...card.querySelectorAll('a')].filter(a => a.textContent === 'lienarteditions.com').every(a => a.href === PROOF[1][1]) && linksOn(card).includes('nationalmuseum.bokorder.se'));
@@ -374,8 +374,8 @@ async function versionCards() {
     const H = hrL.editions;
     card = await openCard(page, hrL.title);
     check(NAME + ': Hubert Robert, Louvre card — the NGA’s English book first and picked, the French catalogue after', JSON.stringify(versionLinesOn(card)) === JSON.stringify([
-      '● | ' + H[1].title + ' | National Gallery of Art / Lund Humphries | English · Hardcover · 288 pp | ISBN 978-1848221918 | A different book, from the show\'s Washington exhibition. Source: nga.gov',
-      '○ | ' + H[0].title + ' | Louvre Éditions / Somogy | French · Hardcover · 544 pp | ISBN 978-2757210642; 978-2350315355 (Louvre’s own number for the same book) | This showing\'s catalogue. Source: mini-site.louvre.fr']),
+      '● | ' + H[1].title + ' | National Gallery of Art / Lund Humphries | ISBN 978-1848221918 | English · Hardcover · 288 pp | A different book, from the show\'s Washington exhibition. Source: nga.gov',
+      '○ | ' + H[0].title + ' | Louvre Éditions / Somogy | ISBN 978-2757210642; 978-2350315355 (Louvre’s own number for the same book) | French · Hardcover · 544 pp | This showing\'s catalogue. Source: mini-site.louvre.fr']),
       JSON.stringify(versionLinesOn(card)));
     card = await openCard(page, hrN.title);
     check(NAME + ': Hubert Robert, NGA card — its own book first and picked, the Paris book a different one', JSON.stringify(versionLinesOn(card).map(l => l.split(' | ').slice(-1)[0])) === JSON.stringify([
@@ -383,8 +383,8 @@ async function versionCards() {
       JSON.stringify(versionLinesOn(card)));
     card = await openCard(page, ham.title);
     check(NAME + ': Hammershøi — the English edition published later first, its year after the publisher', JSON.stringify(versionLinesOn(card).map(l => l.split(' | ').slice(2).join(' | '))) === JSON.stringify([
-      'Rizzoli Electa · 2023 | English | ISBN 978-0847899289 | The English edition, published later. Source: rizzoliusa.com',
-      'Culturespaces / Fonds Mercator | French | ISBN 978-9462302495 | The original edition. Source: leslibraires.ca']),
+      'Rizzoli Electa · 2023 | ISBN 978-0847899289 | English | The English edition, published later. Source: rizzoliusa.com',
+      'Culturespaces / Fonds Mercator | ISBN 978-9462302495 | French | The original edition. Source: leslibraires.ca']),
       JSON.stringify(versionLinesOn(card)));
     card = await openCard(page, met.title);
     check(NAME + ': Metamorphoses — no notes, every block its own source', versionLinesOn(card).length === 3

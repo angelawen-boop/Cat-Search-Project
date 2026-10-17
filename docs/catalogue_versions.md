@@ -24,9 +24,9 @@ only how the versions are ordered, drawn and picked changes.
 Agreed on a mockup: https://claude.ai/artifact/Hy7wFw63YA5fJTCDry2dki. Each block is the
 single-book block in its styling, a thin rule between, ●/○ in its own column, the whole block
 tappable; blocks never move when she picks. Top to bottom: title; publisher as found (a later
-English edition's year after a dot, "Rizzoli Electa · 2023"); language · binding (Hardcover or
-Paperback only) · pages; ISBN, a co-edition's second number after it ("; 978-… (Louvre's own
-number for the same book)"); why it is listed and its source ("The original edition. Source:
+English edition's year after a dot, "Rizzoli Electa · 2023"); ISBN third, as on a single-book card
+(her decision), a co-edition's second number after it ("; 978-… (Louvre's own number for the same
+book)"); language · binding (Hardcover or Paperback only) · pages; why it is listed and its source ("The original edition. Source:
 louvre.fr"; another showing's book: "A different book, from the show's <city> exhibition").
 
 **One shop line for the card, above the blocks** (her decision): it says whether the PICKED book is
