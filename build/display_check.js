@@ -4,13 +4,13 @@
  * app itself (docs/catalogue_versions.md), plus a panel that watches what the change reaches.
  *
  * Cat_Watch.jsx is bundled whole, prepared exactly as build_app.js prepares it, with
- * build/display_check_page.jsx appended; DisplayCheck (the panel, then App) is mounted. No app
- * function is copied.
+ * build/display_check_page.jsx appended; DisplayCheck is mounted instead of App. Her test cards
+ * are written in as her ledger holds them. No app function is copied.
  *
  *   node build/display_check.js --ledger <her ledger.json> --venues <venues/occasional.json> --seed <dir>
- *       → build/dist/display_check.html, and in <dir> the store documents to seed the page with:
- *         her test cards as the page's cloud save (ledger/live, ledgerParts/…) and a copy of her
- *         link venues' records (venues/occasional). Her files are read, never written.
+ *       → build/dist/display_check.html, and in <dir> the one store document to seed the page
+ *         with: a copy of her link venues' records (venues/occasional). Her files are read, never
+ *         written.
  *
  * Publish to the check page only (DISPLAY_CHECK), never her app; capabilities as her app's
  * (db, downloads, mcp Parallel Search Key, sample) and its runtime version 0.2.52.
@@ -30,7 +30,7 @@ const OUT = path.join(__dirname, 'dist', 'display_check.html');
 const MOUNT = 'ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(DisplayCheck));';
 const DISPLAY_CHECK = 'https://claude.ai/artifact/E7uMEQVMoSFrx3EiJXwBe9';
 
-// Her cases, by ledger id. Edward Lear (Yale) is left out on purpose: she adds it by link.
+// Her cases, by ledger id.
 const CASES = [
   'occ-britishart-yale-edu-sensationandsensibilityviewinggainsboroughscottage',
   'occ-britishart-yale-edu-johnconstablethelandscapereimagined',
@@ -67,7 +67,7 @@ const base = { id: YALE, fields: WATCHED, venue: Object.fromEntries(WATCHED.map(
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-display-'));
 const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = React;\n'
   + fs.readFileSync(JSX, 'utf8').replace(/^import React.*$/m, '').replace(/^export default function App\(\)\{/m, 'function App(){')
-  + '\nconst DC_BASE = ' + JSON.stringify(base) + ';\nconst DC_BUILD = ' + JSON.stringify(build) + ';\n'
+  + '\nconst DC_BASE = ' + JSON.stringify(base) + ';\nconst DC_BUILD = ' + JSON.stringify(build) + ';\nconst DC_CASES = ' + JSON.stringify(rows) + ';\n'
   + fs.readFileSync(PAGE, 'utf8');
 fs.writeFileSync(path.join(tmp, 'page.tsx'), prepared);
 try {
@@ -83,25 +83,13 @@ const head = fs.readFileSync(path.join(__dirname, 'shell_head.html'), 'utf8').re
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, head + js + MOUNT + '\n' + fs.readFileSync(path.join(__dirname, 'shell_tail.html'), 'utf8'));
 
-// ── the store documents: a cloud save as the app writes one (cloudSaveLive) ──
-const text = JSON.stringify({ rows, ignored: [], lastRun: null, exportedAt: new Date().toISOString() }, null, 2);
-const z = zlib.gzipSync(Buffer.from(text, 'utf8')).toString('base64');
-const PART = 180000, id = 'gdisplay' + Date.now().toString(36), parts = Math.max(1, Math.ceil(z.length / PART));
+// ── the store document: her link venues' records, as the app stores them ──
 fs.mkdirSync(seedDir, { recursive: true });
-const seed = [];
-for (let i = 0; i < parts; i++) {
-  const f = path.join(seedDir, 'ledgerParts__' + id + '-' + i + '.json');
-  fs.writeFileSync(f, JSON.stringify({ z: z.slice(i * PART, (i + 1) * PART), i, of: parts }));
-  seed.push({ collection: 'ledgerParts', doc_id: id + '-' + i, file: f });
-}
-const live = path.join(seedDir, 'ledger__live.json');
-fs.writeFileSync(live, JSON.stringify({ id, parts, sha: crypto.createHash('sha256').update(text).digest('hex'), bytes: text.length,
-  zbytes: z.length, savedAt: new Date().toISOString(), rows: rows.length, quarantined: 0 }));
 const occ = path.join(seedDir, 'venues__occasional.json');
 fs.writeFileSync(occ, JSON.stringify({ venues: venues.venues, updatedAt: venues.updatedAt || new Date().toISOString() }));
-seed.push({ collection: 'venues', doc_id: 'occasional', file: occ }, { collection: 'ledger', doc_id: 'live', file: live });
+const seed = [{ collection: 'venues', doc_id: 'occasional', file: occ }];
 
 console.log('built ' + path.relative(ROOT, OUT) + ' — ' + build.branch + ' ' + build.commit + ', '
   + (fs.statSync(OUT).size / 1024).toFixed(0) + ' KB, ' + rows.length + ' cases.');
-console.log('Publish to ' + DISPLAY_CHECK + ' only. Then seed its store, in this order (parts before the live record):');
+console.log('Publish to ' + DISPLAY_CHECK + ' only, then seed its store:');
 for (const s of seed) console.log('  ' + s.collection + '/' + s.doc_id + '  ←  ' + s.file);

@@ -4377,6 +4377,114 @@ function localStamp(iso){const d=iso?new Date(iso):new Date(),p=n=>String(n).pad
 // One way to write a moment (her decision): "Sep 26, 2026 1:22pm", as "Last refreshed".
 function localReadable(iso){return fmtRefresh(iso||new Date().toISOString());}
 
+// Two palettes, one set of names (docs/app.md §3). Every colour the app paints comes
+// from here or TIER_SETS — a stray hex would be a cream patch on a dark page. The dark
+// set is designed, not inverted: a warm near-black ground, `soft` kept light.
+const PALETTES={
+  light:{bg:"#E8E4DE",card:"#F5F2ED",ink:"#1E1B18",soft:"#78736C",rule:"#CBC5BB",
+         action:"#2D4A3F",accent:"#A13823",owned:"#7B5EA7",muted:"#B5AFA6",
+         drawer:"#DDD8D0",body:"#3D3730",dim:"#ECEAE6",panel:"#ECE8E1",
+         warnBg:"#F7E4C4",warnEdge:"#B5791A",warnInk:"#6B4A1E",
+         okBg:"#D8EAE4",okEdge:"#2D6B5A",okInk:"#1F4C40",
+         holdBg:"#E8E2D6",ownedBg:"#EDE5F5",
+         rejectInk:"#8A6D3B",neverInk:"#7A4A4A",star:"#B8860B",buyNext:"#C0281E",onAction:"#fff",
+         scrim:"rgba(20,18,16,0.45)"},
+  dark: {bg:"#1A1815",card:"#232019",ink:"#EDE8E0",soft:"#A8A29A",rule:"#3A352E",
+         action:"#5E9E85",accent:"#E2735A",owned:"#B79BE0",muted:"#6A645C",
+         drawer:"#2A2620",body:"#D6D0C6",dim:"#201D18",panel:"#262219",
+         warnBg:"#3A2E14",warnEdge:"#C79A3E",warnInk:"#F0D9A4",
+         okBg:"#16302A",okEdge:"#4E9B80",okInk:"#A6DCC6",
+         holdBg:"#32291C",ownedBg:"#2B2136",
+         rejectInk:"#D6B87A",neverInk:"#E0A3A3",star:"#E0B45C",buyNext:"#F0705F",onAction:"#12100E",
+         scrim:"rgba(0,0,0,0.6)"},
+};
+// The card's link buttons (Museum shop, Publisher, the bookstores), in a palette's colours.
+const linkButton=C=>({fontSize:11,fontWeight:500,color:C.ink,background:C.card,border:"1px solid "+C.rule,borderRadius:3,padding:"4px 9px",textDecoration:"none",display:"inline-block",whiteSpace:"nowrap"});
+
+// THE CATALOGUE BOX: a found catalogue in the card's drawer — the shop line, the book (or her
+// version blocks) and the buy buttons. One copy, drawn by the app and by the Catalogue Display
+// Check page; `actions` is the Search again / Re-check row the caller draws.
+function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
+  return(
+    <div>
+      {/* A missing button cannot report anything, so the card says what the
+          publisher step concluded (publisherNote). "Now" and "Back" are the
+          same green as the plain sentence (her decision): the word carries
+          the news. */}
+      {picked&&<>
+      {r.shopState==="shop"&&<div style={{fontSize:11,marginBottom:6}}>
+        <span style={{color:C.action,fontWeight:600}}>{shopHeadline(r.shopState,r.shopChange)}</span>
+        {publisherNote(r.publisherResult,!!r.publisherUrl)&&<span style={{color:C.soft}}> {publisherNote(r.publisherResult,!!r.publisherUrl)}</span>}
+      </div>}
+      {/* Gone, link kept as "Museum shop (last seen)" (her design): a restock
+          usually returns to the same address. Dark red from the "closed over
+          a year" ink, never a loose hex. */}
+      {r.shopState==="gone"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
+        {/* The headline alone (her ask). */}
+        <span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopHeadline(r.shopState,r.shopChange)}</span>
+        {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
+      </div>}
+      {/* The dash is a JS string: a bare — in JSX text prints those
+          six characters. */}
+      {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
+        {noShop?(MU[r.museumId]&&MU[r.museumId].shopUnknown?"Museum shop not found.":"Venue has no shop.")
+          :"Not in the museum shop \u2014 shop link opens the general store."}
+        {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
+      </div>}
+      {shopUnread(r.shopState)&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
+        <span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopUnreadHead(r.shopState)}</span>{SHOP_BLOCKED_FOUND_REST}
+        {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
+      </div>}
+      </>}
+      {vl?(
+        // Each block is the single-book block, the marker in its own column; the
+        // whole block picks it. Blocks never move when she picks.
+        <div role="radiogroup" aria-label="Versions" style={{marginBottom:10}}>
+          {vl.map((b,k)=>(
+            <div key={b.i} role="radio" aria-checked={b.picked} tabIndex={0} onClick={()=>onPick(b.i)}
+              onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); onPick(b.i); } }}
+              style={{display:"flex",alignItems:"flex-start",gap:10,padding:k?"11px 0":"2px 0 11px",borderTop:k?"1px solid "+C.rule:"none",cursor:b.picked?"default":"pointer"}}>
+              <span style={{flex:"none",width:14,fontSize:13,lineHeight:1.3,color:C.ink}}>{b.picked?"\u25cf":"\u25cb"}</span>
+              <div style={{flex:1,minWidth:0}}>
+                {b.title&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{b.title}</div>}
+                {b.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2,lineHeight:1.4}}>{b.publisher}</div>}
+                {b.facts&&<div style={{fontSize:11,color:C.soft,marginBottom:2,lineHeight:1.4}}>{b.facts}</div>}
+                <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",lineHeight:1.5,color:b.isbn?C.ink:C.soft}}>
+                  {b.isbn?<>ISBN <span style={{whiteSpace:"nowrap"}}>{b.isbn}</span>{b.also&&<>; <span style={{whiteSpace:"nowrap"}}>{b.also.isbn}</span> ({b.also.whose})</>}</>
+                    :"ISBN not confirmed \u2014 verify before buying"}
+                </div>
+                {(b.why||b.source)&&<div style={{fontSize:11,color:C.soft,marginTop:3,lineHeight:1.45}}>
+                  {b.why}{b.source&&<>{b.why?" ":""}Source: <a href={b.source.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:C.soft}}>{b.source.host}</a></>}
+                </div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      ):(<>
+        {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
+        {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
+        <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",marginBottom:englishLine(r)?2:10,color:r.isbn13?C.ink:C.soft}}>
+          {r.isbn13?"ISBN "+fmtIsbn(r.isbn13)+(r.alsoVersion?" \u00b7 "+alsoLine(r.alsoVersion):""):"ISBN not confirmed \u2014 verify before buying"}
+        </div>
+        {englishLine(r)&&<div style={{fontSize:11,color:C.soft,marginBottom:10}}>{englishLine(r)}</div>}
+      </>)}
+      {picked?(<>
+        <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+          {isAcq?(
+            <>
+              {r.shopUrl&&<a href={r.shopUrl} target="_blank" rel="noopener noreferrer" style={lnk}>{shopLinkLabel(r.shopState)} {"\u2197"}</a>}
+              {r.publisherUrl&&<a href={r.publisherUrl} target="_blank" rel="noopener noreferrer" style={lnk}>{publisherLinkLabel(r.publisherResult)} {"\u2197"}</a>}
+            </>
+          ):buyLinks(r).map(l=><a key={l.name} href={l.href} target="_blank" rel="noopener noreferrer" style={lnk}>{l.name} {"\u2197"}</a>)}
+        </div>
+      </>):(<>
+        {mu&&(mu.shopSearch||mu.shopHome)&&<div style={{display:"flex",flexWrap:"wrap",gap:5}}><a href={mu.shopSearch?mu.shopSearch+encodeURIComponent(r.title):mu.shopHome} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a></div>}
+      </>)}
+      {actions}
+    </div>
+  );
+}
+
 export default function App(){
   const[rows,setRows]=useState([]);
   // A row from an occasional venue this page's store has not met still files
@@ -5475,33 +5583,12 @@ export default function App(){
 
   const counts=useMemo(()=>{const c={total:rows.length,dismissed:0,watched:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.watching)c.watched++;if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;if(inClosingWindow(r))c.pressing++;}return c;},[rows]);
 
-  // Two palettes, one set of names (docs/app.md §3). Every colour the app paints comes
-  // from here or TIER_SETS — a stray hex would be a cream patch on a dark page. The dark
-  // set is designed, not inverted: a warm near-black ground, `soft` kept light.
-  const PALETTES={
-    light:{bg:"#E8E4DE",card:"#F5F2ED",ink:"#1E1B18",soft:"#78736C",rule:"#CBC5BB",
-           action:"#2D4A3F",accent:"#A13823",owned:"#7B5EA7",muted:"#B5AFA6",
-           drawer:"#DDD8D0",body:"#3D3730",dim:"#ECEAE6",panel:"#ECE8E1",
-           warnBg:"#F7E4C4",warnEdge:"#B5791A",warnInk:"#6B4A1E",
-           okBg:"#D8EAE4",okEdge:"#2D6B5A",okInk:"#1F4C40",
-           holdBg:"#E8E2D6",ownedBg:"#EDE5F5",
-           rejectInk:"#8A6D3B",neverInk:"#7A4A4A",star:"#B8860B",buyNext:"#C0281E",onAction:"#fff",
-           scrim:"rgba(20,18,16,0.45)"},
-    dark: {bg:"#1A1815",card:"#232019",ink:"#EDE8E0",soft:"#A8A29A",rule:"#3A352E",
-           action:"#5E9E85",accent:"#E2735A",owned:"#B79BE0",muted:"#6A645C",
-           drawer:"#2A2620",body:"#D6D0C6",dim:"#201D18",panel:"#262219",
-           warnBg:"#3A2E14",warnEdge:"#C79A3E",warnInk:"#F0D9A4",
-           okBg:"#16302A",okEdge:"#4E9B80",okInk:"#A6DCC6",
-           holdBg:"#32291C",ownedBg:"#2B2136",
-           rejectInk:"#D6B87A",neverInk:"#E0A3A3",star:"#E0B45C",buyNext:"#F0705F",onAction:"#12100E",
-           scrim:"rgba(0,0,0,0.6)"},
-  };
   const C=PALETTES[theme];
   const TH=tiersFor(theme);          // the tier colours for THIS theme
   const chip=on=>({padding:"4px 10px",borderRadius:999,border:"1px solid "+(on?C.ink:C.rule),background:on?C.ink:"transparent",color:on?C.onAction:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap"});
   const sBtn={padding:"5px 12px",borderRadius:4,border:"1px solid "+C.rule,background:"transparent",color:C.soft,fontSize:11,fontWeight:500,cursor:"pointer"};
   const pBtn={...sBtn,background:C.action,color:C.onAction,border:"none",opacity:busy?0.5:1,cursor:busy?"wait":"pointer"};
-  const lnk={fontSize:11,fontWeight:500,color:C.ink,background:C.card,border:"1px solid "+C.rule,borderRadius:3,padding:"4px 9px",textDecoration:"none",display:"inline-block",whiteSpace:"nowrap"};
+  const lnk=linkButton(C);
 
   // ---- Approval-stage render helpers ----
   const decBtn=(active,color)=>({padding:"3px 9px",borderRadius:4,border:"1px solid "+(active?color:C.rule),background:active?color:"transparent",color:active?C.onAction:C.soft,fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"});
@@ -5914,86 +6001,14 @@ export default function App(){
                       {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
                     </div>
                   ):(
-                    <div>
-                      {/* A missing button cannot report anything, so the card says what the
-                          publisher step concluded (publisherNote). "Now" and "Back" are the
-                          same green as the plain sentence (her decision): the word carries
-                          the news. */}
-                      {picked&&<>
-                      {r.shopState==="shop"&&<div style={{fontSize:11,marginBottom:6}}>
-                        <span style={{color:C.action,fontWeight:600}}>{shopHeadline(r.shopState,r.shopChange)}</span>
-                        {publisherNote(r.publisherResult,!!r.publisherUrl)&&<span style={{color:C.soft}}> {publisherNote(r.publisherResult,!!r.publisherUrl)}</span>}
-                      </div>}
-                      {/* Gone, link kept as "Museum shop (last seen)" (her design): a restock
-                          usually returns to the same address. Dark red from the "closed over
-                          a year" ink, never a loose hex. */}
-                      {r.shopState==="gone"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-                        {/* The headline alone (her ask). */}
-                        <span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopHeadline(r.shopState,r.shopChange)}</span>
-                        {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
-                      </div>}
-                      {/* The dash is a JS string: a bare — in JSX text prints those
-                          six characters. */}
-                      {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-                        {noShop?(MU[r.museumId]&&MU[r.museumId].shopUnknown?"Museum shop not found.":"Venue has no shop.")
-                          :"Not in the museum shop \u2014 shop link opens the general store."}
-                        {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
-                      </div>}
-                      {shopUnread(r.shopState)&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-                        <span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopUnreadHead(r.shopState)}</span>{SHOP_BLOCKED_FOUND_REST}
-                        {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
-                      </div>}
-                      </>}
-                      {vl?(
-                        // Each block is the single-book block, the marker in its own column; the
-                        // whole block picks it. Blocks never move when she picks.
-                        <div role="radiogroup" aria-label="Versions" style={{marginBottom:10}}>
-                          {vl.map((b,k)=>(
-                            <div key={b.i} role="radio" aria-checked={b.picked} tabIndex={0} onClick={()=>setPick(r.id,b.i)}
-                              onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setPick(r.id,b.i); } }}
-                              style={{display:"flex",alignItems:"flex-start",gap:10,padding:k?"11px 0":"2px 0 11px",borderTop:k?"1px solid "+C.rule:"none",cursor:b.picked?"default":"pointer"}}>
-                              <span style={{flex:"none",width:14,fontSize:13,lineHeight:1.3,color:C.ink}}>{b.picked?"\u25cf":"\u25cb"}</span>
-                              <div style={{flex:1,minWidth:0}}>
-                                {b.title&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{b.title}</div>}
-                                {b.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2,lineHeight:1.4}}>{b.publisher}</div>}
-                                {b.facts&&<div style={{fontSize:11,color:C.soft,marginBottom:2,lineHeight:1.4}}>{b.facts}</div>}
-                                <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",lineHeight:1.5,color:b.isbn?C.ink:C.soft}}>
-                                  {b.isbn?<>ISBN <span style={{whiteSpace:"nowrap"}}>{b.isbn}</span>{b.also&&<>; <span style={{whiteSpace:"nowrap"}}>{b.also.isbn}</span> ({b.also.whose})</>}</>
-                                    :"ISBN not confirmed \u2014 verify before buying"}
-                                </div>
-                                {(b.why||b.source)&&<div style={{fontSize:11,color:C.soft,marginTop:3,lineHeight:1.45}}>
-                                  {b.why}{b.source&&<>{b.why?" ":""}Source: <a href={b.source.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:C.soft}}>{b.source.host}</a></>}
-                                </div>}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ):(<>
-                        {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
-                        {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
-                        <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",marginBottom:englishLine(r)?2:10,color:r.isbn13?C.ink:C.soft}}>
-                          {r.isbn13?"ISBN "+fmtIsbn(r.isbn13)+(r.alsoVersion?" \u00b7 "+alsoLine(r.alsoVersion):""):"ISBN not confirmed \u2014 verify before buying"}
-                        </div>
-                        {englishLine(r)&&<div style={{fontSize:11,color:C.soft,marginBottom:10}}>{englishLine(r)}</div>}
-                      </>)}
-                      {picked?(<>
-                        <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                          {isAcq?(
-                            <>
-                              {r.shopUrl&&<a href={r.shopUrl} target="_blank" rel="noopener noreferrer" style={lnk}>{shopLinkLabel(r.shopState)} {"\u2197"}</a>}
-                              {r.publisherUrl&&<a href={r.publisherUrl} target="_blank" rel="noopener noreferrer" style={lnk}>{publisherLinkLabel(r.publisherResult)} {"\u2197"}</a>}
-                            </>
-                          ):buyLinks(r).map(l=><a key={l.name} href={l.href} target="_blank" rel="noopener noreferrer" style={lnk}>{l.name} {"\u2197"}</a>)}
-                        </div>
-                      </>):(<>
-                        {mu&&(mu.shopSearch||mu.shopHome)&&<div style={{display:"flex",flexWrap:"wrap",gap:5}}><a href={mu.shopSearch?mu.shopSearch+encodeURIComponent(r.title):mu.shopHome} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a></div>}
-                      </>)}
+                    <CatalogueBox r={r} mu={mu} C={C} TH={TH} lnk={lnk} isAcq={isAcq} noShop={noShop} vl={vl} picked={picked}
+                      onPick={i=>setPick(r.id,i)} actions={<>
                       <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:14}}>
                         <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
                         {!noShop&&<button onClick={()=>recheckShop(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
                       </div>
                       {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
-                    </div>
+                      </>}/>
                   )}
                 </div>
               )}
