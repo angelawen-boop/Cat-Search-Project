@@ -34,6 +34,10 @@ is why they live in one repo, on one branch.
 - **A question gets an answer first.** "Talk to me about X" means discuss; nothing is built until she says.
 - **Respect UI simplicity and specific UI instructions.** Build what she named, nothing added. "Add a copy icon" = an icon, not an icon plus the word "Copy". "Copy this line for case X and Y" = the same line with only the words naming X and Y swapped, never a new, longer line.
 - **Label a guess as exactly that** - say what is not proven and what would be settled by a check.
+- **Never hide a hard-coded answer.** If a fix writes the answer into the app (an address, a value, a
+  venue rule) instead of making the feature work it out, say so plainly and up front, never as
+  "fixed". If the app could reach the answer itself, tell her how, and discuss it with her before
+  building either way.
 - **Parallel:** a session's own calls use the free "Parallel Search". Her keyed "Parallel Search Key" needs her yes — ask up front, with the reason, when the work will clearly need it. Once she has said yes, switch to the key as soon as the free tier refuses - no need to hang the task hoping for the free tier to resume access. Later in the same session, after time has passed, try the free tier again first. A sub-agent cannot spend the key (permissions block it), so the main session does keyed fetches; a large reply is saved to a file — extract it by script, never retype.
 - **`/orch` runs only when she types it** (her decision). No session routes work through it, or follows its steps, unless she has typed `/orch` in that session.
 - **`/close` ends a session** (her design): guide update, clear up, a fixed four-part summary. Never archives the session. Runs only when she types it.
