@@ -71,12 +71,16 @@ the import finishes.** Code: "FINDING A NEW VENUE'S SHOP SECTION".
   `products.json`: two priced products, most with a book type (`shopifyShelfIsBooks`; AL-033).
 - **The museum's own Shop page pointing elsewhere** (Worcester's "Shop now" → a myshopify.com shop) is
   followed when the search finds no section (`shopElsewhere`; AL-034).
-- **A museum's own Bookshop page** (its heading says "Bookshop"; Yale's /museum-shop) whose shop on another
-  site reads blank: that shop's full address is taken as the books shop, for her to confirm; lookups then find
-  it blocked (AL-041). A /museum-shop address counts as a shop page (`SHOP_PATH`). Checked on every saved page:
-  no other venue's page is headed "Bookshop".
+- **A shop on a site shared by many shops** (Yale's, on Touchnet): its menu is read on the exact page the
+  museum links to, never the site's root, and that page is its shop link. A /museum-shop address counts as a
+  shop page (`SHOP_PATH`). **A shop page that reads blank is opened once more with `page=1` added**
+  (`fetchShopPage`): Touchnet sends its menu, lists and books only then. **A menu label is read by its first six
+  words** (`menuLinks`; Touchnet adds "The number of products in this category is"). Checked on the 48 saved
+  pages: no menu ranks differently. AL-042.
 
-A pick is **opened and must read as books with prices** (unless its excerpt already does). Nothing → "Shop
+A pick is **opened and must read as books with prices** (unless its excerpt already does), **or its first
+product must read as one book with a price** — her decision, for a list of titles only (Yale's Publications;
+`looksLikeOneBook`, AL-042). Nothing → "Shop
 found, but not its books section: <shop>" / "No museum shop found." / "Search failed." — and **a miss is a
 finder bug, fixed in code: she never pastes a shop link** (her decision). **Look again** skips only the pages
 she turned down, never the site. **No shop** → lookups go to the web, as at Capodimonte. Venues found by the
@@ -133,7 +137,7 @@ entry can carry `linkRead`, found by `linkReadVenue`. Proved live: five archive 
 codes in any page title are decoded ("Chagall&#039;s"). **Yale CBA** (Yale Center for British Art, `occ-britishart-yale-edu`): its own chip
 and cards "Yale CBA", after Cincinnati (her decision); the lookup searches by the full name (`OWN_CHIP`; AL-039).
 Its dates carry clock times ("February 7, 2008, 10:00 am ET–Sunday, April 27, 2008, 5:00 pm ET"): the shared date reader drops them (`CLOCK_TIME`, DS-003).
-OPEN — its shop: `docs/handover_yale_shop.md` (the "reads blank" belief below was wrong). **Jacquemart-André**: the line under the heading is the
+Its shop: the Publications section on Touchnet (AL-042, above). **Jacquemart-André**: the line under the heading is the
 subtitle, read by code (`subtitleUnderHeading`); the dates sit at the page's foot, so the description is read
 from under the heading.
 
