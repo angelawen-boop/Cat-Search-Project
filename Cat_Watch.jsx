@@ -3049,17 +3049,12 @@ const READ_SHAPE=
 // whose page also says the show "will be accompanied by a … catalogue"; Constable's
 // heading "Accompanying Publication" is a tie in its own words. TI- tests.
 const TIE_RULES=
-  "tie is ONLY the few words, copied exactly from the results, that link THIS book to THIS exhibition: "
- +"words saying the book accompanies the show, is its catalogue or was published for it; a heading "
- +"over the book that says so (“Accompanying publication”, “Exhibition catalogue”); or a sentence "
- +"saying the show is accompanied by a catalogue, on a page that names this book. Quote those words, "
- +"never the paragraph around them.\n"
- +"Then test your quote: read it on its own. Does it say this book goes with this exhibition? If it only "
- +"describes the book, the artist or the collection, it is NOT a tie — whatever page or heading it sits "
- +"under (“Related publications”, “Further reading”, “Shop”).\n"
- +"Not a tie: “the third installment in the YCBA Collection Series … considers his rich legacy through "
- +"the museum’s extensive holdings”. A tie: “Accompanying Publication” heading the book; “It will be "
- +"accompanied by a fully illustrated scholarly catalogue.”\n"
+  "tie is the words, copied exactly from the results, that link THIS book to THIS exhibition: a "
+ +"sentence saying the book accompanies the show, is its catalogue or was published for it; a "
+ +"heading over the book that says so (“Accompanying publication”, “Exhibition catalogue”); or a "
+ +"sentence saying the show is accompanied by a catalogue, on a page that names this book. "
+ +"A heading that does not say so (“Related publications”, “Further reading”, “Shop”) is NOT a tie, "
+ +"and nor is text that only describes the artist, the collection or the book's contents. "
  +"tie is null when nothing in the results links the book to this show.\n";
 const READ_SHAPE_WEB=READ_SHAPE
   .replace('"thisVenue": true|false}','"thisVenue": true|false, "tie": string|null}')
