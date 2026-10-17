@@ -671,7 +671,9 @@ const OWN_CHIP={
   "occ-nga-gov":{short:"NG Washington",lookupName:"NGA",linkRead:{titleDrop:/^Exhibition:\s*/i}},
   "occ-nationalgalleries-org":{short:"NG Scotland"},
   "occ-new-artsmia-org":{short:"Mia",lookupName:"Mia",name:"Minneapolis Institute of Art",linkRead:{titleDrop:/\s+[-–—]+\s+Minneapolis Institute of Art$/i}},
-  "occ-britishart-yale-edu":{short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art"},
+  // rankAsOwn: other houses ranked as the venue's own in her order, display only (her decision:
+  // Yale's two imprints rank the same).
+  "occ-britishart-yale-edu":{short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art",rankAsOwn:["Yale University Press"]},
 };
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 // Her names for occasional venues filed under "Occasional", where the store's name is longer.
@@ -3601,13 +3603,20 @@ function foldCoEditions(versions,results,museumId,log){
   }
 }
 
-// HER ORDER (docs/catalogue_versions.md): English in the venue's own imprint; then English
-// from anyone else; then other languages. Within each, hardcover, then paperback, then a
-// binding not known; otherwise as found. The first is the starting pick. VO-001 to VO-006.
+// HER ORDER (docs/catalogue_versions.md): at an English-language venue, a book found in its
+// museum shop first of all (`shopFirst`, set once by the lookup, so a Re-check never moves a
+// block); then English in the venue's own imprint (or a house ranked as its own, `rankAsOwn`);
+// then English from anyone else; then other languages. Within each, hardcover, then paperback,
+// then a binding not known; otherwise as found. The first is the starting pick. VO-001 to VO-009.
+function rankedOwn(name,museumId){
+  const extra=(OWN_CHIP[museumId]||{}).rankAsOwn||[];
+  return venuePrinting(name,museumId)||extra.some(h=>String(name||"").split(HOUSE_SPLIT).some(p=>sameHouse(p.trim(),h)));
+}
 function versionRank(v,museumId){
-  const en=isEnglishLang(v&&v.lang);
-  const group=en&&venuePrinting(v.publisher,museumId)?0:en?1:2;
-  return group*3+(v.binding==="hardcover"?0:v.binding==="paperback"?1:2);
+  const en=isEnglishLang(v&&v.lang), mu=MU[museumId];
+  const shop=!!(v&&v.shopFirst)&&!(mu&&mu.english===false);
+  const group=en&&rankedOwn(v.publisher,museumId)?0:en?1:2;
+  return (shop?0:9)+group*3+(v.binding==="hardcover"?0:v.binding==="paperback"?1:2);
 }
 // The versions' indexes in her order.
 function versionOrder(versions,museumId){
@@ -3623,7 +3632,7 @@ function putInOrder(versions,museumId){
 // card's book fields for that version, so a change of pick refills the card (pickRow).
 function storedVersion(v){
   const o={};
-  for(const k of ["title","lang","binding","pages","publisher","isbn13","alsoIsbn13","showing","proofUrl","note","city","year","card"])o[k]=v[k]===undefined?null:v[k];
+  for(const k of ["title","lang","binding","pages","publisher","isbn13","alsoIsbn13","showing","proofUrl","note","city","year","card","shopFirst"])o[k]=v[k]===undefined?null:v[k];
   return o;
 }
 // The picked version becomes the card's book, as a found book does.
@@ -4285,6 +4294,17 @@ async function lookupCatalogue(row,hooks){
     const G={...F0}; takeVersion(G,v,[]);
     await onShelf(G,v);
     v.card=bookFieldsOf(G);
+  }
+  // A book in the museum shop goes first at an English-language venue (her decision); if that
+  // moves another book first, its own stored fields become the card's.
+  for(const v of versions)if(v.card&&v.card.shopState==="shop")v.shopFirst=true;
+  const was=versions[pick];
+  putInOrder(versions,row.museumId);
+  if(versions[pick]!==was){
+    const c=versions[pick].card;
+    log.push("In the museum shop, so first: “"+c.catalogueTitle+"”"+(c.isbn13?", ISBN "+c.isbn13:"")+".");
+    F.title=c.catalogueTitle; F.isbn=c.isbn13; F.publisher=c.publisher; F.publisherUrl=c.publisherUrl;
+    F.publisherResult=c.publisherResult; F.shopState=c.shopState; F.shopUrl=c.shopUrl;
   }
   F.editions=versions.map(storedVersion);
   F.editionPick=pick;

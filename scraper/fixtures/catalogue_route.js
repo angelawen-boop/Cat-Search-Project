@@ -721,8 +721,21 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
         order([v('English', 'hardcover', 'Henry E. Huntington Library And Art Gallery', '9780930606992', 'other'),
           v('English', 'hardcover', 'Yale Center for British Art and the Huntington Library, Art Collections, and Botanical Gardens in association with / Yale University Press', '9780300110029')], Y),
         order([v('English', 'paperback', 'American Federation of Arts & DelMonico Books, Prestel', '9781885444479'), v('English', null, 'DelMonico Books', '9783791357638')], Y)],
-      ['9780300119695 9780300125009', '9780300110029 9780930606992', '9781885444479 9783791357638'],
-      'VO-006: her Yale cards — Canaletto in England: the Yale Center’s own printing first; Sensation and Sensibility: Yale’s own before San Marino’s; Victorian Radicals: the paperback before the binding not known');
+      ['9780300125009 9780300119695', '9780300110029 9780930606992', '9781885444479 9783791357638'],
+      'VO-006: her Yale cards — Canaletto in England: Yale University Press and the Yale Center rank the same, so as found; Sensation and Sensibility: Yale’s own before San Marino’s; Victorian Radicals: the paperback before the binding not known');
+    // Her decisions: in the museum shop first at an English-language venue; Yale's two imprints rank the same.
+    const sv = (lang, binding, publisher, isbn13, shopFirst) => ({ ...v(lang, binding, publisher, isbn13), shopFirst });
+    eq([order([v('English', 'hardcover', 'Yale Center for British Art', 'H'), sv('English', 'paperback', 'Yale University Press', 'P', true)], Y),
+        order([v('English', 'hardcover', 'National Gallery Company', 'N'), sv('French', null, 'Hazan', 'F', true), sv('English', null, 'Rizzoli', 'R', true)], 'ng')],
+      ['P H', 'R F N'],
+      'VO-007: at an English-language venue a book in its museum shop comes first; two in the shop keep her order between them');
+    eq(order([sv('German', 'hardcover', 'KHM-Museumsverband', 'G', true), v('English', null, 'Yale University Press', 'E')], 'khm'), 'E G',
+      'VO-008: at a non-English venue English comes first, always — a book in the shop does not jump it');
+    eq([order([v('English', 'paperback', 'Yale University Press', 'U'), v('English', 'hardcover', 'Yale Center for British Art', 'C')], Y),
+        order([v('English', 'hardcover', 'Yale University Press', 'U'), v('English', 'hardcover', 'Thames & Hudson', 'T')], Y),
+        order([v('English', 'hardcover', 'Thames & Hudson', 'T'), v('English', 'hardcover', 'Yale University Press', 'U')], 'ng')],
+      ['C U', 'U T', 'T U'],
+      'VO-009: on a Yale card Yale University Press ranks as the Yale Center does — hardcover decides between them, and it leads an outside house; on another venue’s card it does not');
   }
 
   // ── FO-001..FO-006: one book, two numbers — a co-edition folds into one version ─
@@ -771,8 +784,8 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       ['Louvre éditions / Somogy éditions d\'art', 'Musée Jacquemart-André / Fonds Mercator', 'Hannibal Books', 'Rizzoli Electa'],
       'VF-001: publisher names lead with the venue’s own house; a name without one is unchanged');
     eq(Object.keys(api.storedVersion({ title: 't', lang: 'French', isbn13: '1', showing: 'this', _pub: 'x', _found: true })),
-      ['title', 'lang', 'binding', 'pages', 'publisher', 'isbn13', 'alsoIsbn13', 'showing', 'proofUrl', 'note', 'city', 'year', 'card'],
-      'VF-002: a stored version keeps her fields, the other showing’s city and its year; the lookup’s own are dropped');
+      ['title', 'lang', 'binding', 'pages', 'publisher', 'isbn13', 'alsoIsbn13', 'showing', 'proofUrl', 'note', 'city', 'year', 'card', 'shopFirst'],
+      'VF-002: a stored version keeps her fields, the other showing’s city, its year and whether it was found in the shop; the lookup’s own are dropped');
     eq([api.englishLine({ englishCheck: 'shops', editions: [{}] }), api.englishLine({ englishCheck: 'shops', editions: [{}, {}] })],
       ['No English edition found in bookshops.', null], 'VF-003: a one-version card keeps today’s English line; a card with several has none until her version lines');
   }
@@ -1040,21 +1053,23 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const yrow = row('occ-britishart-yale-edu', 'Gwen John: Strange Beauties');
     const { y, calls, opens } = make();
     const out = await y.lookupCatalogue(yrow, { label: () => {} });
+    // The paperback is in Yale's shop, so it comes first (her decision: in the museum shop first).
     const r = out.row, card = i => r.editions[i] && r.editions[i].card || {};
-    eq(r.editions.map(v => [v.isbn13, v.binding]), [[HARD, 'hardcover'], [SOFT, 'paperback']], 'SV-001: Gwen John — the Yale Center’s hardcover first, the Yale University Press paperback second', out.detail.split('\n').slice(-12).join(' | '));
-    eq([r.editionPick, r.shopState, r.shopUrl], [0, 'web', null], 'SV-002:   the hardcover, picked, is not on the shop’s list (its page prints the paperback’s ISBN): not in the museum shop');
-    eq([card(1).shopState, card(1).shopUrl], ['shop', P1], 'SV-003:   the paperback is looked for too, and its page proves it: in the museum shop', JSON.stringify(card(1)));
+    eq(r.editions.map(v => [v.isbn13, v.binding]), [[SOFT, 'paperback'], [HARD, 'hardcover']], 'SV-001: Gwen John — the paperback, found in Yale’s shop, first; the hardcover second', out.detail.split('\n').slice(-12).join(' | '));
+    eq([r.editionPick, r.shopState, r.shopUrl, r.isbn13], [0, 'shop', P1, SOFT], 'SV-002:   the paperback starts picked, and the card is its own: in the museum shop');
+    eq([card(1).shopState, card(1).shopUrl], ['web', null], 'SV-003:   the hardcover is looked for too — its page prints the paperback’s ISBN: not in the museum shop', JSON.stringify(card(1)));
     eq(opens(P1 + '&page=1'), 1, 'SV-004:   the shop page carrying both titles is opened once');
-    const picked = y.pickRow(r, 1, 'now');
-    eq([picked.shopState, picked.shopUrl, picked.isbn13], ['shop', P1, SOFT], 'SV-005:   picking the paperback shows its own shop answer and link');
+    const picked = y.pickRow(y.pickRow(r, 1, 'now'), 0, 'now');
+    eq([picked.shopState, picked.shopUrl, picked.isbn13], ['shop', P1, SOFT], 'SV-005:   picking the hardcover and back again shows the paperback’s own shop answer and link');
     calls.length = 0;
     const re = await y.recheckShopRow({ ...picked, shopState: 'web', shopUrl: null }, { label: () => {} });
     eq([re.ok, re.row && re.row.shopState, re.row && re.row.shopUrl, re.said], [true, 'shop', P1, 'Re-checked: now in the museum shop.'],
       'SV-006: Re-check with the paperback picked looks for the paperback on the shop’s list', JSON.stringify([re.said, re.detail && re.detail.split('\n').slice(-4)]));
-    eq([re.row.editions[1].card.shopState, re.row.editions[1].card.shopUrl], ['shop', P1], 'SV-007:   and the paperback’s own stored answer follows, so picking away and back keeps it');
-    const re2 = await y.recheckShopRow(r, { label: () => {} });
-    eq([re2.row && re2.row.shopState, re2.said, re2.row && re2.row.editions[0].card.shopState, re2.row && re2.row.editions[1].card.shopState], ['web', 'Re-checked: not in the museum shop.', 'web', 'shop'],
+    eq([re.row.editions[0].card.shopState, re.row.editions[0].card.shopUrl], ['shop', P1], 'SV-007:   and the paperback’s own stored answer follows, so picking away and back keeps it');
+    const re2 = await y.recheckShopRow(y.pickRow(r, 1, 'now'), { label: () => {} });
+    eq([re2.row && re2.row.shopState, re2.said, re2.row && re2.row.editions[1].card.shopState, re2.row && re2.row.editions[0].card.shopState], ['web', 'Re-checked: not in the museum shop.', 'web', 'shop'],
       'SV-008: Re-check with the hardcover picked: still not in the shop, and the paperback’s answer is left as it was');
+    eq(re2.row && re2.row.editions.map(v => v.isbn13), [SOFT, HARD], 'SV-012:   a Re-check never moves a block: the order stays as the lookup set it');
     const b = make({ refuse: true });
     const rb = (await b.y.lookupCatalogue(yrow, { label: () => {} })).row;
     eq([rb.shopState, ...rb.editions.map(v => v.card.shopState)], ['blocked', 'blocked', 'blocked'], 'SV-009: a shop that refuses every page is unread for every book, never "not in the museum shop"');

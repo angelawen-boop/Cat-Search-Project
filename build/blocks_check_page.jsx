@@ -44,6 +44,8 @@ function bcGrade(r,k){
   if(vs.some(v=>v.card&&shopUnread(v.card.shopState)))
     out.push({ok:vs.every(v=>v.card&&shopUnread(v.card.shopState)),what:"Shop unreadable: unreadable for every book",
       got:vs.map(v=>BC_LABEL(v.card&&v.card.shopState)).join(" · ")});
+  if(!(mu&&mu.english===false)&&vs.some(v=>v.shopFirst))
+    out.push({ok:!!vs[0].shopFirst,what:"A book in the museum shop comes first",got:"book 1: "+BC_LABEL(vs[0].card&&vs[0].card.shopState)});
   const p=vs[r.editionPick], keys=["catalogueTitle","isbn13","publisherUrl","shopState","shopUrl"];
   out.push({ok:!!(p&&p.card)&&keys.every(x=>(r[x]||null)===(p.card[x]||null)),what:"The card follows your pick",
     got:p?"book "+(r.editionPick+1)+" picked":"no book picked"});
