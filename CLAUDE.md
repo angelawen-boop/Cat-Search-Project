@@ -246,9 +246,9 @@ checks waiting 8 seconds for an automatic save (CA-002, CA-005d, CA-006, TC-001)
 now run alone (her decision; the 8 seconds kept). If one still fails when run alone, record it here — that
 is a real fault, not crowding.
 
-**OPEN — RB-016 and RB-020** (robots wait, scraper) fail under load: run ten at
-once, RB-016 read 1148–1293ms against 1450 in 5 of 10, RB-020 over
-1400ms in 2. Not investigated. A scraper session's job — not an app one's.
+**OPEN — P-005** (`pacing.test.js`, the pacer on her laptop) failed once in a full scraper run: a gap between
+pages read 52ms; passed when run alone, with and without the RB-016 fix (which does not touch the pacer).
+Possibly crowding; needs investigation — a short gap would mean her laptop fetches faster than paced.
 
 **OPEN — V-003** (`venue_status.test.js`) fails on `main`: mad reports 22 rows but
 `run_2026-10-15_230242` holds 8. Not investigated; a scraper session's job.

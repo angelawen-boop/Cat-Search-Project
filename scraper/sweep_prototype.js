@@ -1221,6 +1221,12 @@ async function robotsBefore(venue, url) {
   st.lastAt = Date.now();
   return null;
 }
+// After a page, loaded or not: the wait runs from when it finished, so the site
+// never sees two pages closer than it asked (RB-016).
+function robotsAfter(venue) {
+  const st = ROBOTS.get(venue);
+  if (st) st.lastAt = Date.now();
+}
 const robotsWaited = venue => (ROBOTS.get(venue) || {}).waited || 0;
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1376,6 +1382,8 @@ async function safeGoto(page, url, venue, context, attempt = 0) {
 
     log(`  ${reason}: ${url} — ${e.message.slice(0, 120)}${stall ? ` — ${stall}` : ''}${reason === 'TIMEOUT' && !/answered in/.test(stall) ? ' (no reply, so no labels to say who was in front of the site)' : ''}`);
     return { ok: false, reason };
+  } finally {
+    robotsAfter(venue);
   }
 }
 
@@ -6346,7 +6354,7 @@ module.exports = {
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way
   // the sweep does, rather than reimplementing the bridge and drifting from it.
-  installNetworkBridge, reusableFile, replyLabels, useRobotsForFixtures, trackRequests, stallReport, failureProse, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
+  installNetworkBridge, reusableFile, replyLabels, useRobotsForFixtures, robotsWaited, trackRequests, stallReport, failureProse, resolveChromium, safeGoto, classifyLoadError, datesNearLink,
   // Exported for the same reason as safeGoto: so a diagnostic can run the REAL
   // extractor against a page instead of reimplementing it and drifting from it.
   getCuratorialText,

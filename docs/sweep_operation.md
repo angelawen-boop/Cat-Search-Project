@@ -139,7 +139,7 @@ needed, never on her laptop, deletable outright; here they bloat every clone.
 ### What each site asks — robots.txt, both machines
 
 **Every sweep obeys each site's robots.txt** (`robots.js`): pages at least its
-stated wait apart; an off-limits address never asked for — a marker row says
+stated wait apart, counted from when the last page finished (RB-016); an off-limits address never asked for — a marker row says
 why. Kept in `scraper/robots/`, re-read after a week. Waits do not count against
 a venue's budget. Fixtures and probes never read it.
 `node scraper/robots.js --report` prints each site's wait and paths.

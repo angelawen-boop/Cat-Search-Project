@@ -86,7 +86,7 @@ const kept = host => R.interpret(R.readKept(host));
       r3 = await S.safeGoto(page, 'https://ex.org/private/x', 'test', 'individual');
     } finally { console.log = log; }
     const one = hits.find(h => h.u.endsWith('/one')), two = hits.find(h => h.u.endsWith('/two'));
-    check('RB-016: pages are at least the stated wait apart', r1.ok && r2.ok && two.at - one.at >= 1450, two && one && (two.at - one.at) + 'ms');
+    check('RB-016: pages are at least the stated wait apart', r1.ok && r2.ok && two.at - one.at >= 1500, two && one && (two.at - one.at) + 'ms');
     check('RB-017: an off-limits address is never asked for', r3.reason === 'ROBOTS_OFF_LIMITS' && !hits.some(h => h.u.includes('/private/')), JSON.stringify(r3));
     check('RB-018: …and says why, in words for her card', /robots\.txt/.test(S.failureProse('ROBOTS_OFF_LIMITS')));
     check('RB-019: the log names the rule', lines.some(l => /NOT ASKED — robots\.txt rules it out \(Disallow: \/private\/\)/.test(l)), lines.join(' | '));
@@ -105,11 +105,11 @@ const kept = host => R.interpret(R.readKept(host));
       b3.reason === 'ROBOTS_OFF_LIMITS' && !hits.some(h => h.u.includes('family-events')), JSON.stringify(b3));
 
     S.useRobotsForFixtures(null);
-    const t0 = Date.now();
     console.log = () => {};
     try { await S.safeGoto(page, 'https://ex.org/three', 'test', 'individual'); await S.safeGoto(page, 'https://ex.org/four', 'test', 'individual'); }
     finally { console.log = log; }
-    check('RB-020: a fixture or probe never reads robots.txt, so never waits', Date.now() - t0 < 1400, (Date.now() - t0) + 'ms');
+    // The scraper's own count of time waited, not the clock: a crowded machine is slow, not waiting.
+    check('RB-020: a fixture or probe never reads robots.txt, so never waits', S.robotsWaited('test') === 0, S.robotsWaited('test') + 'ms waited');
 
     // --- what a timeout was waiting for -----------------------------------------
     const t = S.trackRequests(page);
