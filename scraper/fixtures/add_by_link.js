@@ -579,6 +579,34 @@ function runtime() {
       'AL-034: Worcester: its Shop page\'s "Shop now" is followed to the shop on another site, and its Catalogs section taken', JSON.stringify(r));
   }
 
+  // ── AL-043: Munich — two houses on one site, each its own venue and shop (her decision) ──
+  // Pages and shop searches are proved live (docs/add_by_link.md, "Munich"); this holds the rules.
+  {
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const linkVenue = fn('linkVenue'), namesVenue = fn('namesVenue'), own = fn('OWN_CHIP'), order = fn('VENUE_ORDER');
+    const A = 'occ-alte-pinakothek', M = 'occ-pinakothek-der-moderne';
+    const alte = linkVenue('https://www.pinakothek.de/de/von-turner-bis-van-gogh', { between: ['Meisterwerke der Neuen Pinakothek in der Alten Pinakothek', 'Alte Pinakothek'] });
+    const mod = linkVenue('https://www.pinakothek.de/en/exhibition/between-and-beyond', { between: ['INTERSPACES AND TRANSITIONS IN ART SINCE 1960', 'Pinakothek der Moderne | Art'] });
+    ok(alte.id === A && alte.line === 'Alte Pinakothek' && mod.id === M && mod.line === 'Pinakothek der Moderne | Art',
+      'AL-043: a pinakothek.de show files under the house its page names between title and dates', JSON.stringify([alte, mod]));
+    ok(linkVenue('https://www.pinakothek-der-moderne.de/en/exhibitions/dana-schutz-trouble-and-appearance/', { between: [] }).id === M,
+      'AL-043a:  a show on the Pinakothek der Moderne\'s own site files under it');
+    const none = linkVenue('https://www.pinakothek.de/de/ausstellung/spitzentreffen', { between: ['Sammlung Schack'] });
+    ok(none.id === null && /Munich Alte Pinakothek or Munich der Moderne/.test(none.why), 'AL-043b:  a page naming neither house is a line, never a card', JSON.stringify(none));
+    ok(own[A].group === own[M].group && own[A].chip === 'Munich Pinakotheken' && own[A].short === 'Munich Alte Pinakothek'
+      && own[M].short === 'Munich der Moderne' && order.indexOf(A) + 1 === order.indexOf(M),
+      'AL-043c:  one chip "Munich Pinakotheken", the Alte first; cards "Munich Alte Pinakothek" and "Munich der Moderne"');
+    ok(/Museumsshop/.test(own[A].shopQueries[0]) && /Museumsshop/.test(own[M].shopQueries[0]), 'AL-043d:  both shops are searched in German');
+    const cedon = 'https://www.museumsshop.cedon.de/Kataloge/';
+    ok(namesVenue(cedon + 'Alte-Pinakothek-Muenchen', 'Alte Pinakothek') && !namesVenue(cedon + 'Pinakothek-der-Moderne-Muenchen', 'Alte Pinakothek')
+      && namesVenue(cedon + 'Pinakothek-der-Moderne-Muenchen', 'Pinakothek der Moderne') && !namesVenue(cedon + 'Alte-Pinakothek-Muenchen', 'Pinakothek der Moderne'),
+      'AL-043e:  CEDON\'s section named for the house is its shop; the other house\'s section is not');
+    ok(!namesVenue('https://www.amazon.de/Alte-Pinakothek-Muenchen/dp/1', 'Alte Pinakothek') && !namesVenue(cedon + 'Alte-Pinakothek-Muenchen', undefined),
+      'AL-043f:  only a shop site counts, and only for a venue that names its section');
+    const chips = [...win.document.querySelectorAll('button')].map(b => b.textContent.trim()).filter(t => /^Munich/.test(t));
+    ok(chips.join() === 'Munich Pinakotheken', 'AL-043g:  the chip row draws one "Munich Pinakotheken" chip for both', JSON.stringify(chips));
+  }
+
   // ── AL-009: the shop screen, between the review and the ledger ───────────
   ok(!/Confirm|Wrong shop|Look again/.test(dialog() ? dialog().textContent : ''), 'AL-009: the import pop-up asks nothing about shops');
   // Her 4 Oct run: the RA's and the Courtauld's cards were not going in, and

@@ -162,10 +162,25 @@ from under the heading.
 "Berlin Gemäldegalerie" (her decision); its shop is searched as "Staatliche Museen zu Berlin" (`OWN_CHIP`,
 `OCC_CARD`). Dates are numbers with dots, day first (DS-004). Eleven pages on the proof list.
 
-**Munich** (Bayerische Staatsgemäldesammlungen, `occ-pinakothek-de`): its own chip "Munich", before Berlin;
-everywhere else "Munich Pinakotheken" (her decision; `chip` on `OWN_CHIP`). Read by the general reader (two
-proof pages). **Open: its shop.** Sold by CEDON (`museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen`),
-linked only from the museum's house pages, never a show page: the finder answers "No museum shop found".
+**Munich** — two venues, each its own cards and shop, under one chip "Munich Pinakotheken", the Alte first,
+before Berlin (her decision; `group` on `OWN_CHIP`, `chipKey`): **Munich Alte Pinakothek**
+(`occ-alte-pinakothek`) and **Munich der Moderne** (`occ-pinakothek-der-moderne`). The Neue is left out (her
+decision): its pictures hang in the Alte while it is closed, and their pages name the Alte.
+- **Which house** (`HOUSES`, `linkVenue`): a pinakothek.de show page prints its house on the line between title
+  and dates ("Alte Pinakothek", "Pinakothek der Moderne | Art"); that line files the show and is never offered as
+  a subtitle. A page naming neither is a line, not a card. The Pinakothek der Moderne's own site files under it;
+  it prints "10/07/2026 - 04/10/2026" above the title, day first (`OCC_LINK_READ` `datesAbove`, `slashDayFirst`).
+- **Shops: CEDON**, a company running several museums' shops, a section per house
+  (`museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen`, `…/Pinakothek-der-Moderne-Muenchen`), linked only
+  from the museums' house pages. Searched in German, one query per house (`shopQueries`: "<house> München
+  Museumsshop Kataloge"; live: Alte's section 1st in 3 of 3, der Moderne's 4th in 6 of 7; the English queries
+  never found der Moderne's). A shop site outside the museum's domain counts when its own address names the
+  house (`shopNamed`, `namesVenue`) — the other house's section there does not. On for these two venues only:
+  a general rule needs every link venue's shop search re-checked live first. CEDON's own search is not known
+  (`shopSearch` null): lookups read the section. AL-043.
+- Proved live: six show pages on the proof list (both sites, both houses), and the app's own finder run on
+  the live searches with excerpts withheld, so it opened each pick: both sections found, the Dana Schutz page's
+  ticket-shop link (`pinakothek.shop`) not taken.
 
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her decision: Parallel-only rules
 live in the app, never the scraper). They only tidy what Claude is handed. Options: `title`, `titleDrop` (a

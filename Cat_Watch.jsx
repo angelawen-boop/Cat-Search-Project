@@ -73,7 +73,7 @@ const MUSEUMS = [
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
-  "louvre","orsay","jacquemart","mad","rijks","khm","occ-pinakothek-de","occ-smb-museum","uffizi","dellav","borghese","brera","capo","moma",
+  "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-smb-museum","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
   "occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
   "occ-royalacademy-org-uk","ashmolean","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
@@ -681,20 +681,29 @@ const OWN_CHIP={
   "occ-britishart-yale-edu":{short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art",rankAsOwn:["Yale University Press"]},
   // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin
   // Gemäldegalerie" (her decision, OCC_CARD).
-  // Bayerische Staatsgemäldesammlungen (pinakothek.de): chip "Munich" before Berlin, every
-  // other place "Munich Pinakotheken" (her decision).
-  "occ-pinakothek-de":{short:"Munich Pinakotheken",chip:"Munich",lookupName:"Pinakothek M\u00fcnchen",name:"Pinakotheken M\u00fcnchen"},
+  // Munich's Alte Pinakothek and Pinakothek der Moderne: two venues, each its own shop, one
+  // chip "Munich Pinakotheken", the Alte first (her decision; `group`). Shops searched in
+  // German (`shopQueries`); CEDON sells for both, its sections named for each house
+  // (`shopNamed`, namesVenue). Which house a show is in: HOUSES.
+  "occ-alte-pinakothek":{short:"Munich Alte Pinakothek",chip:"Munich Pinakotheken",group:"munich-pinakotheken",lookupName:"Alte Pinakothek",name:"Alte Pinakothek M\u00fcnchen",
+    shopQueries:["Alte Pinakothek M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Alte Pinakothek"},
+  "occ-pinakothek-der-moderne":{short:"Munich der Moderne",chip:"Munich Pinakotheken",group:"munich-pinakotheken",lookupName:"Pinakothek der Moderne",name:"Pinakothek der Moderne M\u00fcnchen",
+    shopQueries:["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Pinakothek der Moderne"},
   "occ-smb-museum":{short:"Berlin",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
 };
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
+// The chip a venue's cards sit under: its group's, where it has one.
+const chipKey=id=>(OWN_CHIP[id]||{}).group||id;
 // Her names for occasional venues filed under "Occasional", where the store's name is longer.
 const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worcester"};
 // Her names on the cards of occasional venues, where they differ from the short name.
 const OCC_CARD={"occ-mfa-org":"Boston MFA","occ-ngv-vic-gov-au":"National Gallery Victoria","occ-smb-museum":"Berlin Gem\u00e4ldegalerie"};
-// Link options for occasional venues under "Occasional" (as linkRead on a MUSEUMS entry).
+// Link options for occasional venues (as linkRead on a MUSEUMS entry), by the site's id.
 // Boston MFA prints the dates on the line above the show's title. NGV writes two-digit
-// years ("4 Sep 26 – 31 Jan 27"; shortYear).
-const OCC_LINK_READ={"occ-mfa-org":{datesAbove:2},"occ-ngv-vic-gov-au":{shortYear:true}};
+// years ("4 Sep 26 – 31 Jan 27"; shortYear). The Pinakothek der Moderne's own site prints
+// "10/07/2026 - 04/10/2026" above the title, day first (slashDayFirst).
+const OCC_LINK_READ={"occ-mfa-org":{datesAbove:2},"occ-ngv-vic-gov-au":{shortYear:true},
+  "occ-pinakothek-der-moderne-de":{datesAbove:1,slashDayFirst:true}};
 // "4 Sep 26" → "4 Sep 2026": a two-digit year after a day and month, for a venue with shortYear.
 function withLongYears(l){
   return String(l).replace(/\b(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)[a-z]*\.?)\s+(\d{2})(?![\d:])/gi,"$1 20$2");
@@ -863,7 +872,7 @@ function readShowPage(res,url,vc){
     add(lines.findIndex(l=>{ const w=words(l); return w.split(" ").length>=2&&w.length<=80&&piece.includes(" "+w+" "); }));
   }
   if(!cands.length)return{ok:false,why:"Couldn’t find the show’s title on the page."};
-  const dateText=l=>lr&&lr.shortYear?withLongYears(l):l;
+  const dateText=l=>lr&&lr.shortYear?withLongYears(l):lr&&lr.slashDayFirst?String(l).replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g,"$1.$2.$3"):l;
   const datesUnder=h=>{
     // A venue that labels its date line (linkRead.dateLine) is read there, anywhere on the page.
     if(lr&&lr.dateLine){
@@ -1011,6 +1020,25 @@ function occVenueId(host){
   return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
 
+// Houses sharing one site, each its own venue (her decision; Munich): the line naming the
+// house between the show's title and its dates says which ("Alte Pinakothek", "Pinakothek
+// der Moderne | Art"). A house with a site of its own files under that house.
+const HOUSES={
+  "occ-pinakothek-de":[["occ-alte-pinakothek",/^Alte Pinakothek\b/i],["occ-pinakothek-der-moderne",/^Pinakothek der Moderne\b/i]],
+  "occ-pinakothek-der-moderne-de":"occ-pinakothek-der-moderne",
+};
+// The venue a read page files under → {id, line} (line: the house line, not a subtitle),
+// or {id:null, why} for a shared site's page naming none of its houses.
+function linkVenue(url,page){
+  const known=knownVenueFor(url);
+  if(known)return{id:known};
+  const occ=occVenueId(hostOf(siteUrlOf(url))), h=HOUSES[occ];
+  if(!h)return{id:occ};
+  if(typeof h==="string")return{id:h};
+  for(const l of (page&&page.between)||[]) for(const [id,re] of h) if(re.test(l.trim()))return{id,line:l};
+  return{id:null,why:"The page doesn’t say which museum the show is in ("+h.map(([id])=>OWN_CHIP[id].short).join(" or ")+")."};
+}
+
 // The venue whose link options read a page: a swept venue, or an occasional one with options of its own.
 function linkReadVenue(url){
   const occ=occVenueId(hostOf(siteUrlOf(url)));
@@ -1131,6 +1159,14 @@ function isShopPlace(u,museumHost,pageShopHost){
   const b=baseDomain(museumHost), hb=baseDomain(h), label=b.split(".")[0], hl=hb.split(".")[0];
   if(hb===b){ let path=""; try{ path=new URL(u).pathname; }catch{} return SHOP_HOST.test(h)||SHOP_PATH.test(path); }
   return label.length>=3&&hl!==label&&hl.includes(label)&&SHOP_HOST.test(hl);
+}
+// A shop company selling for several museums, on its own site: the section whose address
+// names the venue (CEDON's "/Kataloge/Alte-Pinakothek-Muenchen"), for a venue with
+// `shopNamed`. Another house's section there is not its shop.
+function namesVenue(u,named){
+  if(!named||!SHOP_HOST.test(hostOf(u)))return false;
+  const w=s=>" "+foldText(s).replace(/[^a-z0-9]+/g," ").trim()+" ";
+  return w(pathWords(u)).includes(w(named));
 }
 // A section names itself in the plural — one book's page or a blog post is not a
 // section. Words are read with accents folded.
@@ -1324,8 +1360,9 @@ async function shopElsewhere(urls,museumHost){
 const SHELF_OPENS=2;   // at most two candidates opened to check, then the next step
 // pageShop: the show page's own shop link (shopLinkOnPage), kept on the venue
 // so "Look again" has it without reading the show page twice.
-async function discoverShop(pageShop,museumHost,venueName,turnedDown){
+async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId){
   const no=new Set((turnedDown||[]).map(normalizeUrlKey));
+  const own=OWN_CHIP[venueId]||{};
   // A Shop button on the museum's own site (Berlin's smb.museum/webshop) vouches for that
   // page, not the whole site: "Online Catalogues & Databases" there is no shop.
   let pageShopHost=baseDomain(hostOf(pageShop))===baseDomain(museumHost)?"":hostOf(pageShop);
@@ -1363,14 +1400,17 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
     return r;
   };
   // 1. The search: one call, two queries — hers and the books section's (Detroit's
-  // "DIA Publications" came back only with both).
-  const s=await searchWeb("The museum shop's exhibition catalogues or books section of "+venueName+".",[venueName+" shop exhibition catalogues",venueName+" shop books publications"]);
+  // "DIA Publications" came back only with both); a venue's own (`shopQueries`) instead.
+  const s=await searchWeb("The museum shop's exhibition catalogues or books section of "+(own.shopQueries?own.name:venueName)+".",own.shopQueries||[venueName+" shop exhibition catalogues",venueName+" shop books publications"]);
   if(!s.ok)died=s.detail;
-  const mine=(s.results||[]).filter(r=>r&&place(r.url));
+  const named=r=>!place(r.url)&&namesVenue(r.url,own.shopNamed);
+  const mine=(s.results||[]).filter(r=>r&&(place(r.url)||named(r)));
   seenText+="\n"+mine.map(r=>r.url).join("\n");
   let root=pageShop?shopRootOf(pageShop):mine.length?shopRootOf(mine[0].url):"";
   opens=0;
-  let pick=await tryCands(mine.map(r=>({url:r.url,words:(r.title||"")+" "+pathWords(r.url),proof:(r.excerpts||[]).join("\n")})),"a search");
+  let pick=await tryCands(mine.map(r=>({url:r.url,words:(r.title||"")+" "+pathWords(r.url),proof:(r.excerpts||[]).join("\n"),named:named(r)})),"a search");
+  // A named section is on the shop company's site: that site is its shop, whatever the page linked.
+  if(pick&&pick.named)root=shopRootOf(pick.url);
   // 1b. The museum's own Shop page sending visitors to a shop on another site ("Shop now"
   // → the-museum-shop-at-wam.myshopify.com; Worcester): that shop is the one searched.
   // Its menu is read on the exact page linked, never the site's root: Yale's shop is one of
@@ -5195,13 +5235,16 @@ export default function App(){
           fails.push({url,why:e?"The museum refused the page ("+String(e.http_status_code||e.error_type||"no reason given")+").":"The page came back empty."});
           continue;
         }
-        let vc=knownVenueFor(url);
         const page=readShowPage(res,url,linkReadVenue(url));
-        seen.venue=vc||null; seen.page=page;
+        seen.venue=knownVenueFor(url)||null; seen.page=page;
         if(!page.ok){ fails.push({url,why:page.why}); continue; }
+        const lv=linkVenue(url,page);
+        let vc=lv.id;
+        seen.venue=vc||null;
+        if(!vc){ fails.push({url,why:lv.why}); continue; }
+        if(lv.line)page.between=page.between.filter(l=>l!==lv.line);
         const host=hostOf(siteUrlOf(url));
-        if(!vc){
-          vc=occVenueId(host);
+        if(isOcc(vc)){
           met.add(vc);
           const had=venues[vc];
           // A new venue's shop is looked for once per Read. On a later Read, again only
@@ -5211,7 +5254,7 @@ export default function App(){
             looked.add(vc);
             setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+page.site+"\u2019s shop"});
             const pageShop=shopLinkOnPage(oneText(res),host);
-            const shop=await discoverShop(pageShop,host,page.site,had?had.turnedDown:[]);
+            const shop=await discoverShop(pageShop,host,page.site,had?had.turnedDown:[],vc);
             venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:page.site,host,english:had?had.english:undefined,
               shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,
               ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
@@ -5280,7 +5323,7 @@ export default function App(){
     const turnedDown=[...(v.turnedDown||[]),v.shopCatalogues].filter(Boolean);
     setShopLooking(id);
     let shop;
-    try{ shop=await discoverShop(v.pageShop||"",v.host,(OWN_CHIP[v.id]||{}).name||v.name,turnedDown); }
+    try{ shop=await discoverShop(v.pageShop||"",v.host,(OWN_CHIP[v.id]||{}).name||v.name,turnedDown,v.id); }
     catch(e){ shop={shop:"failed",why:"Couldn\u2019t look ("+String((e&&e.message)||e)+")."}; }
     setShopLooking(null);
     setOccVenues(prev=>{
@@ -5592,7 +5635,7 @@ export default function App(){
       // is on.
       if(dismissedOnly){ if(r.interested)return false; }
       else if(!r.interested&&!showAll&&!sq)return false;
-      if(venueF.size>0&&!venueF.has(r.museumId)&&!(venueF.has(OCC_CHIP)&&((isOcc(r.museumId)&&!ownChip(r.museumId))||(MU[r.museumId]||{}).underOcc)))return false;
+      if(venueF.size>0&&!venueF.has(chipKey(r.museumId))&&!(venueF.has(OCC_CHIP)&&((isOcc(r.museumId)&&!ownChip(r.museumId))||(MU[r.museumId]||{}).underOcc)))return false;
       const t=tierFor(r),ts=TIERS[t]?.time||"current";
       if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
       if(watchedF&&!r.watching)return false;
@@ -5904,7 +5947,7 @@ export default function App(){
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
-          {MUSEUMS.filter(m=>!m.underOcc).map(m=>m.id).concat(Object.keys(OWN_CHIP)).sort((a,b)=>orderOf(a)-orderOf(b)).map(id=><button key={id} onClick={()=>toggleSet(setVenueF,id)} style={chip(venueF.has(id))}>{(x=>x.chip||x.short)(MU[id]||OWN_CHIP[id])}</button>)}
+          {MUSEUMS.filter(m=>!m.underOcc).map(m=>m.id).concat(Object.keys(OWN_CHIP)).sort((a,b)=>orderOf(a)-orderOf(b)).filter((id,i,all)=>all.findIndex(x=>chipKey(x)===chipKey(id))===i).map(id=><button key={chipKey(id)} onClick={()=>toggleSet(setVenueF,chipKey(id))} style={chip(venueF.has(chipKey(id)))}>{(x=>x.chip||x.short)(MU[id]||OWN_CHIP[id])}</button>)}
           <button onClick={()=>toggleSet(setVenueF,OCC_CHIP)} style={chip(venueF.has(OCC_CHIP))}>Occasional</button>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>

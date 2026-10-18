@@ -543,10 +543,10 @@ and were fixed in code, proven live).
 
 - **OPEN — on `main`, not yet published (she held publishing): Berlin and Munich by link.** Dotted dates
   day first (DS-004), headings over two lines, ranges over three lines, Berlin's shop found (German compounds,
-  a book's address stands for its section); chips "Munich" and "Berlin" after KHM, "Rijks" for the
-  Rijksmuseum's chip. Munich's shop (CEDON, linked only inline on the museum's house pages) is NOT found: a
-  fix was built and reversed (her decision) — it chose pages by search snippet. Design to agree with her
-  first. `docs/add_by_link.md`, "Munich" and "Berlin".
+  a book's address stands for its section); chips "Munich Pinakotheken" and "Berlin" after KHM, "Rijks" for
+  the Rijksmuseum's chip. Munich is two venues (her decision): Munich Alte Pinakothek and Munich der Moderne,
+  filed by the house line on the show page, each shop CEDON's section for that house, searched in German —
+  proved live; the Neue left out. `docs/add_by_link.md`, "Munich" and "Berlin".
 - **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).**
   Detroit files a show's book in the show's own shop section. Her next lookups settle:
   O'Keeffe found at Detroit? Did Mauritshuis and the RA get a search?
