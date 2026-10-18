@@ -346,6 +346,7 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **Before resetting stored data, trace every path that reads it** (Yale's shop, cleared, left every Yale card
   shopless until a link was read). **Copy a fixture's reply shape from a live reply, never assume it**, and search
   for every copy of a rule before calling it fixed (the lookup kept its own "books need prices" check).
+- **A search is proved only by a page for that book alone** — a page that ignores the words (a home page, a fixed listing) shows the book too (Berlin, CEDON). Run a venue's whole chain live, not one step: Berlin's cut-short titles showed only then.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose
@@ -550,7 +551,8 @@ and were fixed in code, proven live).
   `docs/add_by_link.md`, "Munich" and "Berlin".
 - **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).**
   Detroit files a show's book in the show's own shop section. Her next lookups settle:
-  O'Keeffe found at Detroit? Did Mauritshuis and the RA get a search?
+  O'Keeffe found at Detroit? The RA's search (`catalogsearch/result/?q=`, proved live) is stored at its next
+  lookup; Mauritshuis and Yale show no priced book on their shelf, so stay shelf-only.
 - **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the
   scraper (her decision); a rule both use (the date reader) stays in `dates.js`. Live
   proof of every link venue: `docs/link_proof_pages.json`.
