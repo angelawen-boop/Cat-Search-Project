@@ -1321,37 +1321,6 @@ async function shopElsewhere(urls,museumHost){
   }
   return{died};
 }
-// A MUSEUM PAGE THAT NAMES ITS SHOP. A shop run by another firm on its own site (Munich's
-// CEDON, museumsshop.cedon.de) is linked inline on the museum's house pages, never on a show
-// page: the museum's own pages whose search passage mentions a shop are opened (two at most;
-// one more search when the first had none) and their off-site links labelled as a shop
-// taken. Ticket shops are not. Evidence: docs/add_by_link.md, "Munich".
-const SHOP_MENTION=/\b(?:museum\s?shop|museumsshop|shop|bookshop|book\s?shop|boutique|librairie|buchhandlung|tienda|negozio|winkel)\b/i;
-const SHOP_LABEL=/\b(?:museum\s?shop|museumsshop|shop|store|bookshop|boutique|librairie|buchhandlung|tienda|negozio|winkel)\b/i;
-async function shopNamedOnMuseumPages(results,museumHost,venueName){
-  const b=baseDomain(museumHost);
-  const own=rs=>(rs||[]).filter(r=>r&&baseDomain(hostOf(r.url))===b&&SHOP_MENTION.test((r.excerpts||[]).join("\n")));
-  let pages=own(results), died=null;
-  if(!pages.length){
-    const s=await searchWeb("Where the museum's own website says its publications and catalogues are sold: "+venueName+".",[venueName+" museum shop publications",venueName+" museum shop catalogues"]);
-    if(!s.ok)died=s.detail;
-    pages=own(s.results);
-  }
-  const links=[], seen=new Set();
-  for(const r of pages.slice(0,2)){
-    const f=await fetchPage(r.url,"Where the museum's publications and catalogues are sold: the museum shop's link.",null,{full:true});
-    if(!f.ok){ died=f.detail; continue; }
-    // The shop is named by the link's words or just before it ("Museumsshop [Cedon]").
-    for(const line of pageTextOf(f.results).split("\n")){
-      for(const m of line.matchAll(/\[([^\]]*)\]\((https?:\/\/[^)\s]+)/g)){
-        const l={label:stripMd(m[1]),url:m[2]}, h=hostOf(l.url), before=stripMd(line.slice(Math.max(0,m.index-40),m.index));
-        if(!h||baseDomain(h)===b||!SHOP_LABEL.test(l.label+" "+before)||/ticket/i.test(l.label+" "+l.url)||seen.has(normalizeUrlKey(l.url)))continue;
-        seen.add(normalizeUrlKey(l.url)); links.push(l);
-      }
-    }
-  }
-  return{links,died};
-}
 const SHELF_OPENS=2;   // at most two candidates opened to check, then the next step
 // pageShop: the show page's own shop link (shopLinkOnPage), kept on the venue
 // so "Look again" has it without reading the show page twice.
@@ -1411,17 +1380,6 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown){
     const away=await shopElsewhere([pageShop,...mine.map(r=>r.url)],museumHost);
     if(away.died)died=away.died;
     if(away.url){ root=shopRootOf(away.url); front=away.url; pageShopHost=hostOf(away.url); seenText+="\n"+away.text; }
-  }
-  // 1c. No shop yet: the museum's own pages that name its shop. A link that is itself a
-  // section is checked as one; else that shop's menu is read (step 3).
-  if(!pick&&!root){
-    const named=await shopNamedOnMuseumPages(s.results,museumHost,venueName);
-    if(named.died)died=named.died;
-    if(named.links.length){
-      opens=0;
-      pick=await tryCands(named.links.map(l=>({url:l.url,words:l.label+" "+pathWords(l.url)})),"the museum's own page");
-      if(!pick){ root=shopRootOf(named.links[0].url); front=named.links[0].url; pageShopHost=hostOf(front); }
-    }
   }
   // 2. A Shopify shop's list of its sections.
   if(!pick&&root&&/\/(?:collections|products)\/|\.myshopify\.com/i.test(seenText+"\n"+root)){

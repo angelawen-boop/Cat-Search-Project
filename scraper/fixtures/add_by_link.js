@@ -817,9 +817,7 @@ function runtime() {
     await settle(30);
     const shopSearches = calls.filter(c => c.kind === 'mcp' && c.tool === 'web_search');
     ok(!shopSearches.some(c => /Jacquemart/i.test(c.args.search_queries.join(' '))), 'AL-018: seven Jacquemart-André links: no shop looked for — it is one of her 28', JSON.stringify(shopSearches.map(c => c.args.search_queries)));
-    // The finder's own first search, once; a finder that finds nothing searches once more for the
-    // museum's pages that name its shop (step 1c), within that one look.
-    ok(shopSearches.filter(c => /Royal Academy.* shop exhibition catalogues/i.test(c.args.search_queries.join(' '))).length === 1,
+    ok(shopSearches.filter(c => /Royal Academy/i.test(c.args.search_queries.join(' '))).length === 1,
       'AL-018a:  two links from a new venue whose shop is not found: looked for ONCE', shopSearches.length);
     const jqCards = [...win.document.querySelectorAll('button')].filter(b => /^Add new entry$/.test(b.textContent.trim())).length;
     ok(jqCards === 9, 'AL-018b:  and all nine links come to a card', jqCards);

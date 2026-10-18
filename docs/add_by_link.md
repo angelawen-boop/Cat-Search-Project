@@ -91,11 +91,6 @@ the import finishes.** Code: "FINDING A NEW VENUE'S SHOP SECTION".
 Found: `smb-webshop.de/buecher-und-medien/ausstellungskataloge/`, by the shop's menu. Proven by running the app's
 own finder with every call answered by a live Parallel fetch. The site itself often hangs (her own browser too).
 
-**1c. No shop found by then (her design): the museum's own pages that name its shop.** The search's own
-results on the museum's site whose passage mentions a shop (else one more search for them); two opened at most;
-an off-site link named as the shop by its words or the words just before it ("Museumsshop [Cedon]") is taken,
-ticket shops never; checked as a section, else that shop's menu is read (`shopNamedOnMuseumPages`; Munich).
-
 A pick is **opened and must read as books with prices** (unless its excerpt already does), **or its first
 product must read as one book with a price** — her decision, for a list of titles only (Yale's Publications;
 `firstProductIsBook`, one copy with the lookup's shop step, AL-042, YS-001–005). Nothing → "Shop
@@ -169,9 +164,8 @@ from under the heading.
 
 **Munich** (Bayerische Staatsgemäldesammlungen, `occ-pinakothek-de`): its own chip "Munich", before Berlin;
 everywhere else "Munich Pinakotheken" (her decision; `chip` on `OWN_CHIP`). Read by the general reader (two
-proof pages). Its shop is CEDON's, another firm's site, linked only inline on the museum's house pages
-(`pinakothek.de/en/alte-pinakothek`, "museum shop Cedon"): found by step 1c below as
-`museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen` (one CEDON section per house; this one is linked).
+proof pages). **Open: its shop.** Sold by CEDON (`museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen`),
+linked only from the museum's house pages, never a show page: the finder answers "No museum shop found".
 
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her decision: Parallel-only rules
 live in the app, never the scraper). They only tidy what Claude is handed. Options: `title`, `titleDrop` (a
