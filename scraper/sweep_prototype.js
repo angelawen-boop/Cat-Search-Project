@@ -1714,8 +1714,16 @@ function makePacer({ gapMs, known = {}, logFn = () => {}, isStopping = () => fal
     if (v.pendingDiscovery) { const d = v.pendingDiscovery; v.pendingDiscovery = null; d(); }
   }
 
+  // A page has finished (answered or failed): the next gap runs from now, so the
+  // site never sees two requests closer than the gap (P-005b).
+  function finished(v) {
+    lastAny = Math.max(lastAny, Date.now());
+    if (v.lane) { const l = laneOf(v.lane); l.lastAt = Math.max(l.lastAt, lastAny); }
+  }
+
   async function after(code, url, status, headers, title) {
     const v = venueOf(code);
+    finished(v);
     const gk = gatekeeperFrom(headers, url);
     if (!v.lane) {
       v.lane = gk;
@@ -1749,7 +1757,7 @@ function makePacer({ gapMs, known = {}, logFn = () => {}, isStopping = () => fal
     return objection;
   }
 
-  function failed(code) { finishDiscovery(venueOf(code)); }
+  function failed(code) { const v = venueOf(code); finished(v); finishDiscovery(v); }
 
   function release(code) {
     const v = venues.get(code);

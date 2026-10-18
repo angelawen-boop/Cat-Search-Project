@@ -88,6 +88,24 @@ test('P-005 behind one gatekeeper: one venue at a time, and a gap between pages'
   assert.ok(p.waited('artic') >= 2 * GAP - 10, 'artic\'s wait for the lane is counted as waiting, not work');
 });
 
+test('P-005b the gap runs from when a page finished, so the site never sees two closer than the gap', async () => {
+  // The museum's side: when each request ARRIVES. Page 1 is slow to leave (a crowded
+  // machine) and slow to load; page 2 leaves at once. Counted from when page 1 was
+  // asked for, page 2 arrived 30ms short.
+  const p = pacer({ orsay: 'Cloudflare' });
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const arrived = [];
+  for (const lag of [30, 0]) {
+    assert.strictEqual(await p.before('orsay', 'https://x/orsay'), null);
+    await sleep(lag);
+    arrived.push(Date.now());
+    await sleep(20);
+    await p.after('orsay', 'https://x/orsay', 200, CF, 'A page');
+  }
+  p.release('orsay');
+  assert.ok(arrived[1] - arrived[0] >= GAP, `the site saw them ${arrived[1] - arrived[0]}ms apart`);
+});
+
 test('P-006 different gatekeepers run side by side', async () => {
   const p = pacer({ orsay: 'Cloudflare', mad: 'site:madparis.fr' });
   // Warm both lanes so the next request of each needs the full gap.

@@ -246,10 +246,6 @@ checks waiting 8 seconds for an automatic save (CA-002, CA-005d, CA-006, TC-001)
 now run alone (her decision; the 8 seconds kept). If one still fails when run alone, record it here — that
 is a real fault, not crowding.
 
-**OPEN — P-005** (`pacing.test.js`, the pacer on her laptop) failed once in a full scraper run: a gap between
-pages read 52ms; passed when run alone, with and without the RB-016 fix (which does not touch the pacer).
-Possibly crowding; needs investigation — a short gap would mean her laptop fetches faster than paced.
-
 ---
 
 ## 3. Where the rest lives

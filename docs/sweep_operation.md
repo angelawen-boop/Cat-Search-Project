@@ -119,7 +119,7 @@ Design: the HEADED block in `sweep_prototype.js`; H-001 to H-007.
 **The limit belongs to the gatekeeper, not the venue.** On her machine every
 venue is paced in **lanes by gatekeeper, read off the reply** (never typed in;
 kept in the run's `pacing.json`): one venue at a time per lane, ~30s varied
-between pages, lanes side by side. **The first refusal or bot check stops the
+between pages, counted from when the last page finished (P-005b), lanes side by side. **The first refusal or bot check stops the
 whole lane for the run** — no retry. A refused lane is not asked for a day, a
 clean one gets an hour's quiet. A venue cut short is NOT written, so
 `--continue` redoes it. Design: the PACING block; P-001 to P-010, PC-001 to
