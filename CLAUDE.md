@@ -419,7 +419,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 48.1 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 48.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -576,7 +576,7 @@ and were fixed in code, proven live).
   Import → CSV · Links · Pages, behaving as Links). Proved on her two Palazzo Reale Milano pages (council
   site); her other six pages there confirm. `docs/add_by_link.md`, "Saved pages". 48.1: months-only dates
   there read first-to-last day; capitals recased there and at San Marco; San Marco titles its headline's first
-  sentence (her decisions).
+  sentence (her decisions). 48.2: its "Royal Palace of Milan" pages and their "as of" dates.
 - **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the
   scraper (her decision); a rule both use (the date reader) stays in `dates.js`. Live
   proof of every link venue: `docs/link_proof_pages.json`.
