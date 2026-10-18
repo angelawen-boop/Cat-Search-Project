@@ -159,7 +159,7 @@ source link.
 - **Must fix:** a shop page with a language choice counts as in the shop for every edition it offers;
   `PUBLISHER_LABEL` must not match inside "Publishers"/"Verlagshaus" (a word end after the label).
 
-### 12. Paradise on Earth — Dresden Gemäldegalerie, 2016–17 (added later: to fix)
+### 12. Paradise on Earth — Dresden Gemäldegalerie, 2016–17; also Correggio (added later: to fix)
 - German · Sandstein · 978-3954982523 — *Das Paradies auf Erden: Flämische Landschaften von Bruegel bis
   Rubens*, 368 pp (the museum's show page gives this ISBN; Stanford, SLUB and AbeBooks agree). No English
   edition found; no live Sandstein page for it (the museum's link, verlag.sandstein.de, is dead).
@@ -170,8 +170,17 @@ source link.
   books, this one among them. On them `PUBLISHER_LABEL` matches "Verlag" in another book's line ("Verlag
   Gunter Oettel, ISBN: …, 60 €") and takes what follows. Two pages = two votes, so it replaced Claude's
   correct "Sandstein Verlag" ("Publisher: … from the ISBN's results, replacing …").
+- **Same bug, third card — Correggio, Dresden (lookup log record L1792303360912nj6q):** the publisher reads
+  **"Suchdialog öffnen"** ("open search dialog", a button). Sandstein's page menu prints "Agentur und Verlag",
+  then on the next line "* Suchdialog öffnen"; `PUBLISHER_LABEL` matches "Verlag", its `\s*` runs over the line
+  break, and it takes the next line as the name. The page came back in two searches (two votes), so it beat
+  "Sandstein Kultur", and the publisher step then searched for "Suchdialog öffnen".
+- **The fault, all three cards (Vrel "s, Munich", Paradise "Gunter Oettel, ISBN: …, 60 €", Correggio
+  "Suchdialog öffnen"): junk text written onto the card as the publisher**, by `PUBLISHER_LABEL` /
+  `publisherGroups` (`publisherOnIsbnResults`), which outvotes Claude's correct name.
 - **Must fix:** a publisher label counts only on the line that holds the ISBN (never anywhere on a page
-  listing many books), and the name it takes stops at the first comma / "ISBN" / price.
+  listing many books, never a site's menu), never across a line break or inside a longer word
+  ("Publishers"), and the name it takes stops at the first comma / "ISBN" / price.
 
 ## Settled with her
 

@@ -166,7 +166,8 @@ cases 10–12): Munich's shop (CEDON) sells the German and English editions on O
 a language choice. *Venezia 500* holds the English ISBN labelled German and says no English edition;
 *Jacobus Vrel*'s English edition says "not in the museum shop", and its publisher reads "s, Munich"
 (proven: `PUBLISHER_LABEL` matches inside "Publishers"); Dresden's *Paradise on Earth* has the right book
-but publisher "Gunter Oettel, ISBN: …" (same rule, read off the museum's list of many books). Each case
+but publisher "Gunter Oettel, ISBN: …", and Correggio's reads "Suchdialog öffnen" (same rule: junk text
+written onto the card as the publisher). Each case
 holds its full trace and lookup-log id.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
 `moma`.** `uffizi`'s shop sells no books — settled.
