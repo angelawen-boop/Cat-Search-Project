@@ -607,6 +607,30 @@ function runtime() {
     ok(chips.join() === 'Munich Pinakotheken', 'AL-043g:  the chip row draws one "Munich Pinakotheken" chip for both', JSON.stringify(chips));
   }
 
+  // ── AL-044: a shop's search proved where the old rules found no book (her decision) ──
+  // Live replies, saved untrimmed: docs/link_pages/shop_search/search_proof_live.json.
+  {
+    const LIVE = JSON.parse(fs.readFileSync(path.join(PAGES, 'shop_search', 'search_proof_live.json'), 'utf8')).pages;
+    const asked = [];
+    const own = { claude: { use: async n => n === 'mcp' ? { callTool: async (s, t, a) => { asked.push(a.urls.length);
+      return { payload: { results: a.urls.filter(u => LIVE[u] !== undefined).map(u => ({ url: u, title: '', full_content: LIVE[u] })), errors: [] } }; } } : null } };
+    const A = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {booksSeenOn, proveShopSearch};')(React, own, win.document, win.localStorage);
+    const labels = (u, h) => A.booksSeenOn(LIVE[u], h).map(b => b.label);
+    const berlin = labels('https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/', 'www.smb-webshop.de');
+    ok(berlin[0] === 'Saâdane Afif: Five Preludes' && !berlin.includes('Merkzettel'),
+      'AL-044: Berlin: a book whose price sits lines below its title is taken; the wishlist link beside the empty basket\'s "0,00 €" is not', JSON.stringify(berlin.slice(0, 3)));
+    const cedon = labels('https://www.museumsshop.cedon.de/Kataloge/Pinakothek-der-Moderne-Muenchen', 'www.museumsshop.cedon.de');
+    ok(cedon[0] === '25 + Highlights', 'AL-044a:  CEDON: title, description, then "Regulärer Preis" — the title is the book', JSON.stringify(cedon.slice(0, 2)));
+    const cle = labels('https://shop.clevelandart.org/collections/exhibitions', 'shop.clevelandart.org');
+    ok(!cle.includes('Reset') && cle[0] === 'The Jazz Age: American Style in the 1920s', 'AL-044b:  a filter\'s "Reset" beside a price is not a book', JSON.stringify(cle.slice(0, 2)));
+    const b = await A.proveShopSearch(LIVE['https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/'], 'https://www.smb-webshop.de/');
+    ok(b === 'https://www.smb-webshop.de/search?sSearch=', 'AL-044c:  Berlin\'s search proved at "search?sSearch=" (Shopware), its home page at "?post_type=product&s=" turned down', b);
+    asked.length = 0;
+    const m = await A.proveShopSearch(LIVE['https://www.museumsshop.cedon.de/Kataloge/Pinakothek-der-Moderne-Muenchen'], 'https://www.museumsshop.cedon.de/');
+    ok(m === 'https://www.museumsshop.cedon.de/search?search=', 'AL-044d:  CEDON\'s search proved at "search?search="; "search?q=", the same page whatever is asked, turned down', m);
+    ok(asked.join() === '8,4', 'AL-044e:  today\'s call unchanged (four searches); the Shopware two only in a second call when it proves nothing', asked.join());
+  }
+
   // ── AL-009: the shop screen, between the review and the ledger ───────────
   ok(!/Confirm|Wrong shop|Look again/.test(dialog() ? dialog().textContent : ''), 'AL-009: the import pop-up asks nothing about shops');
   // Her 4 Oct run: the RA's and the Courtauld's cards were not going in, and

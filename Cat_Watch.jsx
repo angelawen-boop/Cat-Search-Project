@@ -1304,31 +1304,70 @@ function searchFor(text,home){
 // are, shelf AND search — DIA files a show's book in the show's own section). Each
 // common shop search is asked for a book seen on the shop's pages; the first whose
 // results carry that book's page is kept. None → null (shelf alone); a call that
-// died → undefined, asked again next time. AL-008k, AL-014.
+// died → undefined, asked again next time. AL-008k, AL-014. Each fallback below runs
+// only where the rule before it finds nothing (her decision; CEDON, AL-044).
+// The search proof's version: a venue stored under an older one is proved again once.
+const SEARCH_RULE=2;
 const SEARCH_SHAPES=["search?q=","search.php?search_query=","catalogsearch/result/?q=","?post_type=product&s="];
+// Shopware's two searches (CEDON "search?search=", Berlin "search?sSearch="): a second call,
+// made only when the first proves nothing — one call carries 20 addresses at most.
+const SEARCH_SHAPES_LATER=["search?search=","search?sSearch="];
 const PRICE_ONE=new RegExp(PRICE.source,"i");
-function booksSeenOn(text,host){
+const NOT_A_BOOK_LINK=/cart|wishlist|account|login/i;
+const BLOCK_LINES=6;   // lines of a link's block read for its price
+// A shop's buttons beside a price are not books (Cleveland's filter "Reset", the RA's "Shop now").
+const BUTTON_LABEL=/^(?:reset|clear(?: all)?|shop(?: now| all)?|details|view(?: all| more)?|more|quick view|add to (?:cart|basket|bag)|buy(?: now)?|zum produkt|jetzt bestellen|optionen w\u00e4hlen|in den warenkorb)$/i;
+// "0,00 €" is an empty basket's total, never a book's price (Berlin's "Merkzettel").
+const realPrice=l=>PRICE_ONE.test(l)&&!/(?:^|[^\d.,])0[.,]00\s?(?:€|eur\b)|[$£€]\s?0[.,]00\b/i.test(l);
+// A book on the shop's pages: a link with its price right after it; failing that, a link
+// whose own block (to the next link on the shop) holds a price within a few lines — CEDON
+// prints title, description, then "Regulärer Preis: 34,90 €".
+function booksSeenOn(text,host,both){
   const out=[], seen=new Set();
+  const add=(label,url)=>{
+    let path=""; try{ path=new URL(url).pathname; }catch{ return; }
+    if(path.length<3||NOT_A_BOOK_LINK.test(url)||seen.has(path))return;
+    seen.add(path); out.push({label:stripMd(label),path});
+  };
   for(const m of String(text||"").matchAll(/\[([^\]\[]{3,160})\]\((https?:\/\/[^)\s]+)\)([^\[\n]{0,40})/g)){
-    if(!PRICE_ONE.test(m[3])||hostOf(m[2])!==host)continue;
-    let path=""; try{ path=new URL(m[2]).pathname; }catch{ continue; }
-    if(path.length<3||/cart|wishlist|account|login/i.test(m[2])||seen.has(path))continue;
-    seen.add(path); out.push({label:stripMd(m[1]),path});
+    if(PRICE_ONE.test(m[3])&&hostOf(m[2])===host)add(m[1],m[2]);
   }
+  if(out.length&&!both)return out;
+  const links=[...String(text||"").matchAll(/\[([^\]\[]{3,160})\]\((https?:\/\/[^)\s]+)(?:\s+"[^"]*")?\)/g)].filter(m=>hostOf(m[2])===host);
+  links.forEach((m,i)=>{
+    const end=i+1<links.length?links[i+1].index:undefined;
+    const block=String(text).slice(m.index+m[0].length,end).split("\n").map(l=>l.trim()).filter(Boolean).slice(0,BLOCK_LINES);
+    if(!BUTTON_LABEL.test(stripMd(m[1]).trim())&&block.some(realPrice))add(m[1],m[2]);
+  });
   return out;
 }
 async function proveShopSearch(text,home){
   const host=hostOf(home), books=booksSeenOn(text,host).slice(0,2);
   if(!host||!books.length)return null;
   const bases=[...new Set([originOf(home),shopRootOf(home)])].filter(Boolean);
-  const tries=[];
-  for(const b of bases)for(const sh of SEARCH_SHAPES)for(const bk of books)tries.push({search:b+sh,path:bk.path,url:b+sh+encodeURIComponent(bk.label)});
-  const f=await fetchPage(tries.map(t=>t.url),"The products this shop search returns: their names and links.",null,{full:true});
-  if(!f.ok)return undefined;
   const key=u=>{ try{ return decodeURIComponent(normalizeUrlKey(u)).replace(/\+/g," "); }catch{ return normalizeUrlKey(u); } };
-  for(const t of tries){
-    const r=f.results.find(x=>x&&key(x.url)===key(t.url));
-    if(r&&pageTextOf([r]).includes(t.path))return t.search;
+  const same=s=>foldText(s).replace(/[^a-z0-9]+/g," ").trim();
+  for(const shapes of [SEARCH_SHAPES,SEARCH_SHAPES_LATER]){
+    const tries=[];
+    for(const b of bases)for(const sh of shapes)for(const bk of books)tries.push({search:b+sh,path:bk.path,label:bk.label,url:b+sh+encodeURIComponent(bk.label)});
+    const f=await fetchPage(tries.map(t=>t.url),"The products this shop search returns: their names and links.",null,{full:true});
+    if(!f.ok)return undefined;
+    const answer=t=>f.results.find(x=>x&&key(x.url)===key(t.url));
+    // A page that is the same whatever was asked is not a search (CEDON's "search?q=").
+    const fixed=t=>tries.filter(x=>x.search===t.search&&x!==t).some(x=>{ const a=answer(x), b=answer(t); return a&&b&&pageTextOf([a])===pageTextOf([b]); });
+    for(const t of tries){ const r=answer(t); if(r&&pageTextOf([r]).includes(t.path)&&!fixed(t))return t.search; }
+    // The book under another address in the results (CEDON's /detail/<id>, Berlin's other
+    // category): its title, priced — on a page for that book alone. A page that ignores the
+    // words lists both books, or the same page for both (Berlin's home page, CEDON's
+    // "search?q="), and proves nothing; so two books are needed.
+    const shows=(r,label)=>booksSeenOn(pageTextOf([r]),host,true).some(b=>same(b.label)===same(label));
+    const bySearch=new Map();
+    for(const t of tries){ if(!bySearch.has(t.search))bySearch.set(t.search,[]); bySearch.get(t.search).push(t); }
+    for(const [search,[a,b]] of bySearch){
+      const ra=a&&answer(a), rb=b&&answer(b);
+      if(!ra||!rb||pageTextOf([ra])===pageTextOf([rb]))continue;
+      if((shows(ra,a.label)&&!shows(ra,b.label))||(shows(rb,b.label)&&!shows(rb,a.label)))return search;
+    }
   }
   return null;
 }
@@ -1368,13 +1407,14 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId){
   let pageShopHost=baseDomain(hostOf(pageShop))===baseDomain(museumHost)?"":hostOf(pageShop);
   const place=u=>isShopPlace(u,museumHost,pageShopHost);
   let opens=0, seenText="", died=null;
+  const opened=new Set();
   const tryCands=async(cands,how,inside)=>{
     const ranked=rankShelves(cands);
     for(const c of ranked){
       if(no.has(normalizeUrlKey(c.url)))continue;
       if(c.proof&&looksLikeBookShelf(c.proof))return{...c,how};
       if(opens>=SHELF_OPENS)return null;
-      opens++;
+      opens++; opened.add(c.url);
       const f=await openShopPage(fetchPage,c.url,"The books in this section of the shop, with their prices.",null,{full:true});
       if(!f.ok){ died=f.detail; continue; }
       const t=pageTextOf(f.results); seenText+="\n"+t;
@@ -1436,14 +1476,22 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId){
     }else died=f.detail;
   }
   if(pick){
-    const home=root||pick.url, seen=seenText+"\n"+(pick.proof||"");
+    const home=root||pick.url;
+    let seen=seenText+"\n"+(pick.proof||"");
+    let search=searchFor(seen+"\n"+pick.url,home);
+    // A pick taken on its search excerpt has no book links to prove a search with: its page
+    // is opened once, unless already opened (CEDON; AL-044).
+    if(!search&&!booksSeenOn(seen,hostOf(home)).length&&!opened.has(pick.url)){
+      const f=await openShopPage(fetchPage,pick.url,"The books in this section of the shop, with their prices.",null,{full:true});
+      if(f.ok)seen+="\n"+pageTextOf(f.results);
+    }
     return{shop:"found",shopHome:front||originOf(home),shopCatalogues:pick.url,shelfKind:pick.kind,
-      shopSearch:searchFor(seen+"\n"+pick.url,home)||(await proveShopSearch(seen,home))||null,foundBy:pick.how,finder:3};
+      shopSearch:search||(await proveShopSearch(seen,home))||null,foundBy:pick.how,finder:3,searchRule:SEARCH_RULE};
   }
   // A step that died is not an answer: said as such, not as "nothing found".
   if(died)return{shop:"failed",shopHome:front||(root?originOf(root):null),why:died,finder:3};
   // A shop with no books section is still searched, as KHM's is.
-  return root?{shop:"noshelf",shopHome:front||originOf(root),shopSearch:searchFor(seenText,root)||(await proveShopSearch(seenText,root))||null,finder:3}:{shop:"none",finder:3};
+  return root?{shop:"noshelf",shopHome:front||originOf(root),shopSearch:searchFor(seenText,root)||(await proveShopSearch(seenText,root))||null,finder:3,searchRule:SEARCH_RULE}:{shop:"none",finder:3};
 }
 
 // One pro forma file, built in memory, so a link goes through the very same
@@ -5454,21 +5502,22 @@ export default function App(){
   const lookHooks={label:setLookLabel,prepareShop:fillShopSearch};
   const lookupCat=row=>lookupCatalogue(row,lookHooks);
 
-  // A link venue met before the finder proved searches (finder 2) gets its search
-  // worked out once, at its first lookup, from its own shelf — then stored.
+  // A link venue met before the finder proved searches (finder 2), or before today's search
+  // proof (SEARCH_RULE: the RA's search was missed), gets its search worked out once, at its
+  // first lookup, from its own shelf — then stored.
   async function fillShopSearch(id){
     const mu=MU[id];
     if(!mu||!mu.occasional||mu.shopSearch||!mu.shopHome)return;
     const v=occVenues[id]||occSaved.current[id];
-    if(!v||v.finder>=3)return;
+    if(!v||(v.finder>=3&&v.searchRule>=SEARCH_RULE))return;
     let found;
     const f=mu.shopCatalogues?await fetchPage(mu.shopCatalogues,"The books in this section of the shop, with their prices.",null,{full:true}):{ok:true,results:[]};
     if(f.ok)found=await proveShopSearch(pageTextOf(f.results),mu.shopCatalogues||mu.shopHome);
     if(found===undefined||!f.ok)return;   // a call that died is not an answer
-    const add=x=>x?{...x,shopSearch:found,finder:3}:x;
+    const add=x=>x?{...x,shopSearch:found,finder:3,searchRule:SEARCH_RULE}:x;
     if(occSaved.current[id]){ const saved={...occSaved.current,[id]:add(occSaved.current[id])}; occSaved.current=saved; writeOccasional(saved); }
     setOccVenues(prev=>{ const next=prev[id]?{...prev,[id]:add(prev[id])}:prev; registerOccasional(next); return next; });
-    MU[id]={...MU[id],...occEntry({...v,shopSearch:found,finder:3})};
+    MU[id]={...MU[id],...occEntry({...v,shopSearch:found,finder:3,searchRule:SEARCH_RULE})};
   }
   // A step that died is not an answer: the card says why, and the reason is not
   // stored — it is a fact about one attempt. C-043 to C-045.

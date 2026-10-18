@@ -110,7 +110,15 @@ read and what the card links (`siteUrlOf`; AL-037).
 
 **Shelf AND whole-shop search, as the 28 (her decision)** — DIA files a show's book in the show's own section.
 A search is kept only if it finds a book the finder saw (`proveShopSearch`; AL-008k, AL-014); older venues
-work it out at first lookup.
+work it out at first lookup. **Where those rules found nothing, three fallbacks (her decision, every venue; AL-044):**
+a book whose price sits a few lines below its title link, in its own block (CEDON, Berlin; not a button like "Reset"
+or "Shop now", not an empty basket's "0,00 €"); Shopware's two searches (`search?search=`, `search?sSearch=`) in a
+second call, so the first call is unchanged; and the book found in the results by its title when its address differs
+— only on a page for that book alone, so a page that ignores the words (Berlin's home page, CEDON's `search?q=`) proves
+nothing. A section taken on its excerpt is opened once for its books. Venues stored before (`SEARCH_RULE`) are proved
+once more at their next lookup. Live check, every link venue's shelf: venues the old rule served pick the same books;
+new searches proved for the Royal Academy (`catalogsearch/result/?q=`), Berlin (`search?sSearch=`) and both CEDON
+houses (`search?search=`); Yale, Mauritshuis, Thyssen, NGA, NGV and Mia still show no book in their shelf text.
 
 ## The general reader — ten rules
 
@@ -176,8 +184,8 @@ decision): its pictures hang in the Alte while it is closed, and their pages nam
   Museumsshop Kataloge"; live: Alte's section 1st in 3 of 3, der Moderne's 4th in 6 of 7; the English queries
   never found der Moderne's). A shop site outside the museum's domain counts when its own address names the
   house (`shopNamed`, `namesVenue`) — the other house's section there does not. On for these two venues only:
-  a general rule needs every link venue's shop search re-checked live first. CEDON's own search is not known
-  (`shopSearch` null): lookups read the section. AL-043.
+  a general rule needs every link venue's shop search re-checked live first. CEDON's search: `search?search=` (AL-044).
+  AL-043.
 - Proved live: six show pages on the proof list (both sites, both houses), and the app's own finder run on
   the live searches with excerpts withheld, so it opened each pick: both sections found, the Dana Schutz page's
   ticket-shop link (`pinakothek.shop`) not taken.
