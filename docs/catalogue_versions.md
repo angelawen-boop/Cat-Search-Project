@@ -115,6 +115,29 @@ source link.
   **The card does not change.** No language, no bullet. Most of her cards are
   this case.
 
+### 10. Venezia 500 — Munich Alte Pinakothek, 2023–24 (added later: to fix, picks not yet agreed)
+- English · Hirmer · 978-3777441764 — *Venezia 500: The Gentle Revolution of Venetian Painting*
+  (sources: Amazon.com, Stanford, BnF and the Rijksmuseum library, which records it as English).
+- German · Hirmer · ISBN not yet found — *Venezia 500: Die sanfte Revolution der venezianischen Malerei*.
+- **Both in the museum shop, on ONE page**: CEDON's
+  [Venezia 500](https://www.museumsshop.cedon.de/Venezia-500/M1054023) has a "Sprache auswählen:
+  deutsch / englisch" choice and says "in deutscher oder in englischer Sprache erhältlich".
+- **Wrong today (lookup L1792302063097axpb):** the card holds the English ISBN labelled German (the
+  language read off the German shop page and the short title), so it says no English edition, and
+  the German edition is never found. Must fix: a book's language comes from its own records, never
+  from the shop page's language; a shop page selling two languages holds both editions.
+
+### 11. Jacobus Vrel — Munich Alte Pinakothek, 2025 (added later: to fix, picks not yet agreed)
+- English · Hirmer · 978-3777435879 — *Jacobus Vrel: Looking for Clues of an Enigmatic Painter*.
+- German · Hirmer · 978-3777435862 — *Jacobus Vrel: Auf den Spuren eines rätselhaften Malers*.
+- **Both in the museum shop, on ONE page**: CEDON's
+  [Jacobus Vrel](https://www.museumsshop.cedon.de/Jacobus-Vrel/M1051492), the same language choice
+  ("in deutscher und englischer Sprache erhältlich").
+- **Wrong today (lookup L1792302083097mica):** the shop page is tied to the German book only, so the
+  English one, found on the web, says "not in the museum shop". Its publisher came out as
+  "s, Munich" (a cut-off name), and the publisher step searched munich50years.com. Must fix: a
+  shop page selling both languages counts as in the shop for both; the publisher name is whole.
+
 ## Settled with her
 
 - **Not catalogues, left off** like booklets: a same-titled book by the curator

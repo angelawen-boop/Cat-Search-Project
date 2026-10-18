@@ -192,6 +192,8 @@ CT-001). "Venezia 500<<" is the museum's own title.
   never found der Moderne's). A shop site outside the museum's domain counts when its own address names the
   house (`shopNamed`, `namesVenue`) — the other house's section there does not. On for these two venues only:
   a general rule needs every link venue's shop search re-checked live first. CEDON's search: `search?search=` (AL-044).
+  A CEDON book page often sells German and English on one page, with a language choice — the lookup
+  does not yet know this (`docs/catalogue_versions.md`, cases 10–11).
   AL-043.
 - Proved live: six show pages on the proof list (both sites, both houses), and the app's own finder run on
   the live searches with excerpts withheld, so it opened each pick: both sections found, the Dana Schutz page's

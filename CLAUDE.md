@@ -161,6 +161,10 @@ choose → tell, every version kept, her starting-pick rules) and its nine agree
 approval to build; no code before.
 
 She is noting issues as she uses it, for a later debugging session.
+**OPEN — two cases any search debugging must fix** (her decision; `docs/catalogue_versions.md`,
+cases 10–11): Munich's shop (CEDON) sells the German and English editions on ONE product page with
+a language choice. *Venezia 500* holds the English ISBN labelled German and says no English edition;
+*Jacobus Vrel*'s English edition says "not in the museum shop", and its publisher reads "s, Munich".
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
 `moma`.** `uffizi`'s shop sells no books — settled.
 
