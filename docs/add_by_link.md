@@ -163,8 +163,8 @@ from under the heading.
 `OCC_CARD`). Dates are numbers with dots, day first (DS-004). Eleven pages on the proof list.
 
 **Munich** (Bayerische Staatsgemäldesammlungen, `occ-pinakothek-de`): its own chip "Munich", before Berlin;
-everywhere else "Munich Pinakotheken" (her decision; `chip` on `OWN_CHIP`). Read by the general reader (one
-proof page). **Open: its shop.** Sold by CEDON (`museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen`),
+everywhere else "Munich Pinakotheken" (her decision; `chip` on `OWN_CHIP`). Read by the general reader (two
+proof pages). **Open: its shop.** Sold by CEDON (`museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen`),
 linked only from the museum's house pages, never a show page: the finder answers "No museum shop found".
 
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her decision: Parallel-only rules
