@@ -131,7 +131,8 @@ since 11. November 2025              German day stop; read only with a year (KHM
 - **Italian is in the shared month map**, three-letter forms included (`set`);
   longest alternative first so "al" doesn't eat "all'8".
 - **All-numeric ranges are read only when the numbers prove their order** (a
-  component over 12); otherwise refused. Listing cards only.
+  component over 12); otherwise refused. Listing cards only. **With dots on both
+  sides they are day first, page text too** (her decision; Berlin, DS-004).
 - **A backwards range crosses the new year** — the opening year is worked out.
 - **`ymd()` checks every date exists** — JavaScript rolls 31 Feb into March.
 - **An extension only moves the closing date later**, applied once by both parsers.

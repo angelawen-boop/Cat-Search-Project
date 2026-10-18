@@ -2093,3 +2093,12 @@ test('DS-003: a clock time beside each date is dropped, so the range reads (Yale
   const a = findDateRange('Amsterdam 2 May 2026 \u2013 3 June 2026', { looseSingles: false });
   assert.equal(a.start, '2026-05-02'); assert.equal(a.end, '2026-06-03');
 });
+
+test('DS-004: numbers with dots are day first, on a page too (Berlin, her decision); slashes still need the numbers to prove it', () => {
+  const d = findDateRange('02.09.2022 to 08.01.2023', { looseSingles: false });
+  assert.equal(d.start, '2022-09-02'); assert.equal(d.end, '2023-01-08');
+  const m = findDateRange('01.03.2019 \u2013 30.06.2019');
+  assert.equal(m.start, '2019-03-01'); assert.equal(m.end, '2019-06-30');
+  assert.equal(findDateRange('02/09/2022 to 08/01/2023').start, '');
+  assert.equal(findDateRange('02.09.2022 to 08.01.2023 extra', { looseSingles: false }).end, '2023-01-08');
+});

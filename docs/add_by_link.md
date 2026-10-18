@@ -79,6 +79,18 @@ the import finishes.** Code: "FINDING A NEW VENUE'S SHOP SECTION".
   words** (`menuLinks`; Touchnet adds "The number of products in this category is"). Checked on the 48 saved
   pages: no menu ranks differently. AL-042.
 
+**Fixes from Berlin (Staatliche Museen zu Berlin; proven live on its shop):**
+- **A Shop button on the museum's own site** (smb.museum/webshop) vouches for that page, never the whole site
+  ("Online Catalogues & Databases" there is no shop).
+- **A Shop page that shows the shop itself** links one book first: the book's site is taken, not the book
+  (`shopElsewhere`).
+- **A book's own address in a menu** ("/buecher-und-medien/ausstellungskataloge/6442/brancusi") stands for the
+  section it sits in (`menuLinks`).
+- **German joins its words**: "Ausstellungskataloge" is a catalogues section, "Bücher" (`buecher`) books
+  (`SHELF_CATALOGUES`, `SHELF_BOOKS`, `BOOK_WORD`).
+Found: `smb-webshop.de/buecher-und-medien/ausstellungskataloge/`, by the shop's menu. Proven by running the app's
+own finder with every call answered by a live Parallel fetch. The site itself often hangs (her own browser too).
+
 A pick is **opened and must read as books with prices** (unless its excerpt already does), **or its first
 product must read as one book with a price** — her decision, for a list of titles only (Yale's Publications;
 `firstProductIsBook`, one copy with the lookup's shop step, AL-042, YS-001–005). Nothing → "Shop
@@ -100,7 +112,7 @@ read and what the card links (`siteUrlOf`; AL-037).
 A search is kept only if it finds a book the finder saw (`proveShopSearch`; AL-008k, AL-014); older venues
 work it out at first lookup.
 
-## The general reader — eight rules
+## The general reader — ten rules
 
 From a read of 67 pages at 28 venues. Code: `readShowPage`, `splitPageTitle`, `DATES.findDateRange`. Proved on
 fresh Parallel fetches (her decision for Parallel work); only the date phrases are unit-tested
@@ -122,6 +134,10 @@ fresh Parallel fetches (her decision for Parallel work); only the date phrases a
   *Harlem Renaissance*).
 - **R4 Long date line stays** — a date line over 150 characters is a paragraph carrying the dates; it stays in
   the passage (Borghese, Uffizi).
+- **R10 Heading over two lines** — a heading ending in a line break, then a plain line, is one heading and the
+  title, over the tab title (Berlin: "## Donatello" / "Inventor of the Renaissance"; its tab titles can be
+  misspelt or German). Joined with the tab title's own mark when it reads the same, else as the scraper joins.
+- **R11 Range over three lines** — a date, a line holding only "to" or a dash, a date (Berlin).
 - **R7 Clean passage** — a repeated line is kept once; HTML character codes become characters (Acquavella
   "Mir&oacute;"). `decodeEntities`.
 
@@ -141,6 +157,10 @@ Its dates carry clock times ("February 7, 2008, 10:00 am ET–Sunday, April 27, 
 Its shop: the Publications section on Touchnet (AL-042, above), confirmed in her app; *Constable* filed In the museum shop by phase 4b (SB-, `docs/app.md`). Proved live on the **Yale Shop Check** page, https://claude.ai/artifact/ETa9sqoU2fCfxkW2kHz2et (`node build/shop_check.js`: the app's code whole, the finder, Find catalogue and Re-check run on the case, graded in code). **Jacquemart-André**: the line under the heading is the
 subtitle, read by code (`subtitleUnderHeading`); the dates sit at the page's foot, so the description is read
 from under the heading.
+
+**Berlin** (Staatliche Museen zu Berlin, `occ-smb-museum`): its own chip "Berlin", after KHM; cards say
+"Berlin Gemäldegalerie" (her decision); its shop is searched as "Staatliche Museen zu Berlin" (`OWN_CHIP`,
+`OCC_CARD`). Dates are numbers with dots, day first (DS-004). Eleven pages on the proof list.
 
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her decision: Parallel-only rules
 live in the app, never the scraper). They only tidy what Claude is handed. Options: `title`, `titleDrop` (a

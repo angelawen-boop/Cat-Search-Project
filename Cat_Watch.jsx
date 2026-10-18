@@ -12,6 +12,7 @@ const APP_VERSION_DATE = "17 Oct 2026";
 // shopCatalogues: the shop's catalogue shelf, opened first. shopSearch: its search box
 // plus the exhibition title, opened with it. Addresses: docs/app.md §1 "Shop addresses".
 // card: the name on exhibition cards where it differs from the chip's `short`.
+// chip: the Venue chip's label alone, where shorter than `short` (her decision: "Rijks").
 // underOcc: no chip of its own; its cards file under "Occasional" (her decision; Ashmolean).
 // lookupName: the name the catalogue lookup searches with, where `short` is only a label.
 // english:false: only these venues get the language check and English-edition search
@@ -20,7 +21,7 @@ const MUSEUMS = [
   // The Met prints a show's dates on its "on view" line: below a podcast transcript (Manet/Degas), or above the only line naming the show (Impossible Conversations).
   { id:"met", linkRead:{ dateLine:/\bon view\b/i }, short:"The Met", name:"The Metropolitan Museum of Art", city:"New York",
     exBase:"https://www.metmuseum.org/exhibitions/", shopSearch:"https://store.metmuseum.org/search?q=", shopCatalogues:"https://store.metmuseum.org/books-toys-games/exhibition-catalogues", shopHome:"https://store.metmuseum.org/", listUrl:"https://www.metmuseum.org/exhibitions" },
-  { id:"rijks", english:false, short:"Rijksmuseum", name:"Rijksmuseum", city:"Amsterdam",
+  { id:"rijks", english:false, short:"Rijksmuseum", chip:"Rijks", name:"Rijksmuseum", city:"Amsterdam",
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopCatalogues:"https://www.rijksmuseumshop.nl/en/books/exhibition-books", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
   { id:"ng", short:"NG UK", lookupName:"National Gallery", name:"The National Gallery", city:"London",
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
@@ -72,7 +73,7 @@ const MUSEUMS = [
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
-  "louvre","orsay","jacquemart","mad","rijks","khm","uffizi","dellav","borghese","brera","capo","moma",
+  "louvre","orsay","jacquemart","mad","rijks","khm","occ-smb-museum","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
   "occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
   "occ-royalacademy-org-uk","ashmolean","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
@@ -301,13 +302,17 @@ function findDateRangeCore(raw, opts = {}) {
 
   // All-numeric range, its order PROVED from the numbers: a component over 12 decides
   // day-first or month-first for both ends; neither proves it → refused (Uffizi).
-  // Listing cards only (looseSingles) — on a page it read a sidebar's dates.
-  const num = looseSingles && s.match(new RegExp(
-    `\\b(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})${RANGE_SEP}(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})\\b`));
+  // Written with dots on both sides it is day-first, page text included (her decision;
+  // Berlin's "02.09.2022 to 08.01.2023"). Slashes: listing cards only — on a page it read
+  // a sidebar's dates.
+  const dotted = s.match(new RegExp(
+    `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
+  const num = dotted || (looseSingles && s.match(new RegExp(
+    `\\b(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})${RANGE_SEP}(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})\\b`)));
   if (num) {
     const [a1, b1, y1, a2, b2, y2] = [1,2,3,4,5,6].map(i => Number(num[i]));
-    const dayFirst   = a1 > 12 || a2 > 12;
-    const monthFirst = b1 > 12 || b2 > 12;
+    const dayFirst   = !!dotted || a1 > 12 || a2 > 12;
+    const monthFirst = !dotted && (b1 > 12 || b2 > 12);
     if (dayFirst !== monthFirst && plausibleYear(y1) && plausibleYear(y2)) {
       const start = dayFirst ? ymd(y1, b1, a1) : ymd(y1, a1, b1);
       const end   = dayFirst ? ymd(y2, b2, a2) : ymd(y2, a2, b2);
@@ -674,12 +679,15 @@ const OWN_CHIP={
   // rankAsOwn: other houses ranked as the venue's own in her order, display only (her decision:
   // Yale's two imprints rank the same).
   "occ-britishart-yale-edu":{short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art",rankAsOwn:["Yale University Press"]},
+  // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin
+  // Gemäldegalerie" (her decision, OCC_CARD).
+  "occ-smb-museum":{short:"Berlin",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
 };
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 // Her names for occasional venues filed under "Occasional", where the store's name is longer.
 const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worcester"};
 // Her names on the cards of occasional venues, where they differ from the short name.
-const OCC_CARD={"occ-mfa-org":"Boston MFA","occ-ngv-vic-gov-au":"National Gallery Victoria"};
+const OCC_CARD={"occ-mfa-org":"Boston MFA","occ-ngv-vic-gov-au":"National Gallery Victoria","occ-smb-museum":"Berlin Gem\u00e4ldegalerie"};
 // Link options for occasional venues under "Occasional" (as linkRead on a MUSEUMS entry).
 // Boston MFA prints the dates on the line above the show's title. NGV writes two-digit
 // years ("4 Sep 26 – 31 Jan 27"; shortYear).
@@ -814,6 +822,22 @@ function readShowPage(res,url,vc){
   const host=hostOf(siteUrlOf(url));
   let{show,site}=splitPageTitle(res&&res.title,host);
   const lines=text.split("\n");
+  // A heading broken over two lines (Berlin: "## Donatello  " then "Inventor of the
+  // Renaissance") is one heading, the page's own name for the show: the tab title's mark
+  // joins its parts when the tab title reads the same, else the scraper's join. Berlin's
+  // tab titles can be misspelt or German, so the heading wins over them.
+  let broken=-1;
+  for(let i=0;i+1<lines.length;i++){
+    const hm=lines[i].match(/^(\s*#{1,6}\s+)(\S.*?)\s{2,}$/);
+    const next=stripMd(lines[i+1]);
+    if(!hm||!next||/^\s*#/.test(lines[i+1]))continue;
+    const name=stripMd(hm[2]),lo=String(show||"").toLowerCase();
+    const sep=lo.startsWith(name.toLowerCase())&&lo.endsWith(next.toLowerCase())?show.slice(name.length,show.length-next.length):"";
+    lines[i]=hm[1]+(sep&&sep.length<=3?name+sep+next:joinTitle(name,next,true));
+    lines[i+1]="";
+    broken=i;
+    break;
+  }
   // A page title the page never prints can be a sentence (Cincinnati, Cagnacci: "Guido
   // Cagnacci’s Death of Cleopatra will be the centerpiece…"): the breadcrumb's last step
   // names the show instead (linkRead.crumb).
@@ -827,6 +851,7 @@ function readShowPage(res,url,vc){
   const cands=[];
   const add=i=>{ if(i>=0&&!cands.includes(i))cands.push(i); };
   add(lines.findIndex(l=>/^\s*#\s+\S/.test(l)));
+  add(broken);
   if(show){
     const fs=foldText(show);
     add(lines.findIndex(l=>/^\s*#{2,3}\s+\S/.test(l)&&foldText(stripMd(l)).includes(fs)));
@@ -857,6 +882,13 @@ function readShowPage(res,url,vc){
       const l=stripMd(lines[k]); if(!l)continue; seen++;
       const r=DATES.findDateRange(dateText(l),{looseSingles:false});
       if(r.start||r.end)return{d:k,range:r};
+      // A range printed over three lines, the middle one only "to" or a dash (Berlin).
+      const nx=[];
+      for(let j=k+1;j<lines.length&&nx.length<2;j++){ const t=stripMd(lines[j]); if(t)nx.push([j,t]); }
+      if(nx.length===2&&/^(?:-|–|—|to|bis|until|till|through|al|au|tot)$/i.test(nx[0][1])){
+        const r3=DATES.findDateRange(dateText(l+" "+nx[0][1]+" "+nx[1][1]),{looseSingles:false});
+        if(r3.start&&r3.end)return{d:k,dEnd:nx[1][0],range:r3};
+      }
     }
     return null;
   };
@@ -864,7 +896,7 @@ function readShowPage(res,url,vc){
   for(const i of cands){ found=datesUnder(i); if(found){ h=i; break; } }
   if(!found)return{ok:false,why:"No dates found under the show’s title."};
   const heading=stripMd(lines[h]);
-  const d=found.d;
+  const d=found.d,dEnd=found.dEnd||found.d;
   let range=found.range;
   // One side only: a full range further down that shares that date completes it. A range
   // ending on another day never does.
@@ -888,6 +920,7 @@ function readShowPage(res,url,vc){
       if(/^\s+[-–—·]\s/.test(rest)||/^\s+exhibitions?\s*$/i.test(rest))base=heading.trim();
     }
   }
+  if(h===broken)base=heading;
   if(lr&&lr.title)base=venueTitle(lines,h,heading,lr,words)||base;
   // A label the venue puts before the show's own name (linkRead.titleDrop).
   if(lr&&lr.titleDrop)base=base.replace(lr.titleDrop,"").trim()||base;
@@ -904,6 +937,7 @@ function readShowPage(res,url,vc){
     for(let k=h+1;k<lines.length;k++){ if(lr.from.test(stripMd(lines[k]))){ from=k+1; break; } }
   }
   for(let k=from;k<lines.length&&raw.length<LINK_RAW_CHARS;k++){
+    if(k>d&&k<=dEnd)continue;
     const own=stripMd(lines[k]);
     // The passage ends at the first line matching linkRead.until (a box for other shows).
     if(lr&&lr.until&&lr.until.test(own))break;
@@ -1097,8 +1131,10 @@ function isShopPlace(u,museumHost,pageShopHost){
 }
 // A section names itself in the plural — one book's page or a blog post is not a
 // section. Words are read with accents folded.
-const SHELF_CATALOGUES=/\bcatalog(?:ue)?s\b|\bcatalogos\b|\bcatalogi\b|\bcataloghi\b|\bkataloge\b/;
-const SHELF_BOOKS=/\bbooks\b|\bpublications\b|\bpublicaciones\b|\bpublicaties\b|\bpubblicazioni\b|\blivres\b|\blibros\b|\bboeken\b|\bbucher\b|\blibri\b/;
+// German joins its words: "Ausstellungskataloge" (Berlin) ends in "kataloge"; "buecher" is
+// "Bücher" in an address.
+const SHELF_CATALOGUES=/\bcatalog(?:ue)?s\b|\bcatalogos\b|\bcatalogi\b|\bcataloghi\b|kataloge\b/;
+const SHELF_BOOKS=/\bbooks\b|\bpublications\b|\bpublicaciones\b|\bpublicaties\b|\bpubblicazioni\b|\blivres\b|\blibros\b|\bboeken\b|\bbu(?:e)?cher\b|\blibri\b/;
 // A section that says it is NOT books ("All Products (not Catalogues)") is not one.
 const SHELF_NOT=/\b(?:not|non|sin|sans|ohne|niet|geen|zonder|except)\b\W+(?:\w+\W+)?(?:catalog|book|boek|libr|livre|public)/;
 // A sale or clearance section holds only some of the books ("Catálogos en
@@ -1131,8 +1167,9 @@ function rankShelves(cands){
   out.mixed=mixed;
   return out;
 }
-// A SHELF OF BOOKS, READ OFF ITS TEXT: book words and prices, both plural.
-const BOOK_WORD=/\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b|\bpages\b|\bcatalog(?:ue|o|us)?s?\b|\bcatalogi\b|\bkataloge?\b|\bbooks?\b|\bboek(?:en)?\b|\blibros?\b|\blivres?\b|\bbuch\b|\btapa (?:dura|blanda)\b/g;
+// A SHELF OF BOOKS, READ OFF ITS TEXT: book words and prices, both plural. German joins
+// its words ("Ausstellungskataloge", Berlin).
+const BOOK_WORD=/\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b|\bpages\b|\bcatalog(?:ue|o|us)?s?\b|\bcatalogi\b|kataloge?\b|\bbooks?\b|\bboek(?:en)?\b|\blibros?\b|\blivres?\b|\bbuch\b|\bbu(?:e)?cher\b|\btapa (?:dura|blanda)\b/g;
 const PRICE=/[$€£]\s?\d|\d[.,]\d{2}\s?(?:€|eur\b|usd\b|gbp\b|\$|£)/g;
 function looksLikeBookShelf(text){
   const t=foldText(text);
@@ -1167,8 +1204,23 @@ async function firstProductIsBook(open,text,host){
 }
 // A page's links on the shop's own site, as menu entries. A long label is read by its first
 // six words: Touchnet adds "The number of products in this category is" to each (Yale).
+// A book's own address, a number then its name inside its section ("/buecher-und-medien/
+// ausstellungskataloge/6442/brancusi", Berlin), is never a section: the section it sits in
+// is taken instead, named by its address alone.
 function menuLinks(text,host){
-  return mdLinks(text).filter(l=>hostOf(l.url)===host).map(l=>({url:l.url,words:l.label.split(/\s+/).slice(0,6).join(" ")+" "+pathWords(l.url)}));
+  const out=[],seen=new Set();
+  for(const l of mdLinks(text)){
+    if(hostOf(l.url)!==host)continue;
+    let c={url:l.url,words:l.label.split(/\s+/).slice(0,6).join(" ")+" "+pathWords(l.url)};
+    try{
+      const x=new URL(l.url), m=x.pathname.match(/^(\/.+\/)\d{3,}\/[^/]+\/?$/);
+      if(m){ const u=x.origin+m[1]; c={url:u,words:pathWords(u)}; }
+    }catch{}
+    const k=normalizeUrlKey(c.url);
+    if(seen.has(k))continue;
+    seen.add(k); out.push(c);
+  }
+  return out;
 }
 // A Shopify section whose page shows no books (drawn by script, out of the connector's
 // copy; Mia): its own product list, read as text. Books when at least two products carry
@@ -1260,7 +1312,9 @@ async function shopElsewhere(urls,museumHost){
     if(!f.ok){ died=f.detail; continue; }
     const t=pageTextOf(f.results);
     const out=mdLinks(t).find(l=>{ const lh=hostOf(l.url); return lh&&baseDomain(lh)!==b&&(SHOP_AWAY_LABEL.test(l.label)||SHOP_HOST.test(lh)||/\.myshopify\.com$/i.test(lh)); });
-    if(out)return{url:out.url,text:t};
+    // A Shop page that hands over the shop itself (Berlin's smb.museum/webshop shows the
+    // shop's front page) links one book first: that book's site is the shop, not the book.
+    if(out)return{url:/\/(?:detail|products?|p|item)\//i.test(out.url)?originOf(out.url):out.url,text:t};
   }
   return{died};
 }
@@ -1269,7 +1323,9 @@ const SHELF_OPENS=2;   // at most two candidates opened to check, then the next 
 // so "Look again" has it without reading the show page twice.
 async function discoverShop(pageShop,museumHost,venueName,turnedDown){
   const no=new Set((turnedDown||[]).map(normalizeUrlKey));
-  let pageShopHost=hostOf(pageShop);
+  // A Shop button on the museum's own site (Berlin's smb.museum/webshop) vouches for that
+  // page, not the whole site: "Online Catalogues & Databases" there is no shop.
+  let pageShopHost=baseDomain(hostOf(pageShop))===baseDomain(museumHost)?"":hostOf(pageShop);
   const place=u=>isShopPlace(u,museumHost,pageShopHost);
   let opens=0, seenText="", died=null;
   const tryCands=async(cands,how,inside)=>{
@@ -5845,7 +5901,7 @@ export default function App(){
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
-          {MUSEUMS.filter(m=>!m.underOcc).map(m=>m.id).concat(Object.keys(OWN_CHIP)).sort((a,b)=>orderOf(a)-orderOf(b)).map(id=><button key={id} onClick={()=>toggleSet(setVenueF,id)} style={chip(venueF.has(id))}>{(MU[id]||OWN_CHIP[id]).short}</button>)}
+          {MUSEUMS.filter(m=>!m.underOcc).map(m=>m.id).concat(Object.keys(OWN_CHIP)).sort((a,b)=>orderOf(a)-orderOf(b)).map(id=><button key={id} onClick={()=>toggleSet(setVenueF,id)} style={chip(venueF.has(id))}>{(x=>x.chip||x.short)(MU[id]||OWN_CHIP[id])}</button>)}
           <button onClick={()=>toggleSet(setVenueF,OCC_CHIP)} style={chip(venueF.has(OCC_CHIP))}>Occasional</button>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>

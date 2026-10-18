@@ -225,13 +225,17 @@ function findDateRangeCore(raw, opts = {}) {
 
   // All-numeric range, its order PROVED from the numbers: a component over 12 decides
   // day-first or month-first for both ends; neither proves it → refused (Uffizi).
-  // Listing cards only (looseSingles) — on a page it read a sidebar's dates.
-  const num = looseSingles && s.match(new RegExp(
-    `\\b(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})${RANGE_SEP}(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})\\b`));
+  // Written with dots on both sides it is day-first, page text included (her decision;
+  // Berlin's "02.09.2022 to 08.01.2023"). Slashes: listing cards only — on a page it read
+  // a sidebar's dates.
+  const dotted = s.match(new RegExp(
+    `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
+  const num = dotted || (looseSingles && s.match(new RegExp(
+    `\\b(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})${RANGE_SEP}(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})\\b`)));
   if (num) {
     const [a1, b1, y1, a2, b2, y2] = [1,2,3,4,5,6].map(i => Number(num[i]));
-    const dayFirst   = a1 > 12 || a2 > 12;
-    const monthFirst = b1 > 12 || b2 > 12;
+    const dayFirst   = !!dotted || a1 > 12 || a2 > 12;
+    const monthFirst = !dotted && (b1 > 12 || b2 > 12);
     if (dayFirst !== monthFirst && plausibleYear(y1) && plausibleYear(y2)) {
       const start = dayFirst ? ymd(y1, b1, a1) : ymd(y1, a1, b1);
       const end   = dayFirst ? ymd(y2, b2, a2) : ymd(y2, a2, b2);
