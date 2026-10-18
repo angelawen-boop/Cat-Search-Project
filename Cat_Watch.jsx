@@ -75,7 +75,7 @@ const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
   "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-gemaeldegalerie-skd-museum","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
-  "occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
+  "occ-museitoscana-cultura-gov-it","occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
   "occ-royalacademy-org-uk","ashmolean","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
 const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); return i<0?1e6:i; };
 MUSEUMS.sort((a,b)=>orderOf(a.id)-orderOf(b.id));
@@ -765,7 +765,9 @@ const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 // The chip a venue's cards sit under: its group's, where it has one.
 const chipKey=id=>(OWN_CHIP[id]||{}).group||id;
 // Her names for occasional venues filed under "Occasional", where the store's name is longer.
-const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worcester"};
+// The Tuscan state museums' site (museitoscana.cultura.gov.it) names itself "Direzione regionale Musei
+// nazionali Toscana"; its cards show "San Marco" (her decision).
+const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worcester","occ-museitoscana-cultura-gov-it":"San Marco"};
 // Her names on the cards of occasional venues, where they differ from the short name.
 const OCC_CARD={"occ-mfa-org":"Boston MFA","occ-ngv-vic-gov-au":"National Gallery Victoria","occ-smb-museum":"Berlin Gem\u00e4ldegalerie","occ-gemaeldegalerie-skd-museum":"Dresden Gem\u00e4ldegalerie"};
 // Link options for occasional venues (as linkRead on a MUSEUMS entry), by the site's id.
@@ -1656,6 +1658,13 @@ function cardOutcome(p,dec){
   if(p.type==="add")return dec.mode==="accept"?"accepted":dec.mode==="never"?"quarantined":"rejected";
   if(dec.mode==="addnew")return"accepted";
   return Object.values(dec.fields||{}).some(v=>v==="accept")?"accepted":"rejected";
+}
+// The venues outside her list with at least one card going in. A venue whose every card is
+// rejected, undecided or quarantined is not asked about its shop (her decision; AL-046).
+function venuesGoingIn(proposals,decisions){
+  const ids=new Set();
+  (proposals||[]).forEach((p,i)=>{ const id=(p.cand||{}).museumId; if(isOcc(id)&&cardOutcome(p,(decisions||{})[i])==="accepted")ids.add(id); });
+  return ids;
 }
 function countDecisions(proposals,decisions){
   let acceptedCount=0,undecidedCount=0,quarantinedCount=0,rejectedCount=0;
@@ -5465,11 +5474,9 @@ export default function App(){
       const next={...prev,[id]:{...prev[id],shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,...shop,confirmed:false,turnedDown}};
       registerOccasional(next); return next; });
   }
-  // The shop screen asks about every venue outside her list met in this Read (or on a
-  // card) whose shop is unconfirmed — whatever she decided about its cards (her decision).
+  // The shop screen asks about a venue outside her list whose shop is unconfirmed (venuesGoingIn).
   function venuesToConfirm(){
-    const ids=new Set(readVenues);
-    (proposals||[]).forEach(p=>{ const id=(p.cand||{}).museumId; if(isOcc(id))ids.add(id); });
+    const ids=venuesGoingIn(proposals,decisions);
     // Confirmed in a FINISHED import only: an answer held in this one stays on
     // the screen after Back, to be changed.
     for(const id of [...ids]) if(!occVenues[id]||(occSaved.current[id]||{}).confirmed)ids.delete(id);

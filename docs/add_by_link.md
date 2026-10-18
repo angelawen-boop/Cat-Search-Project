@@ -16,8 +16,9 @@ meets it.
   box and **Read**, same pop-up, with a progress bar. Links separated any way; a repeat read once. The review
   opens when reading ends; the pop-up waits under it if a link failed.
 - **Then the shop screen** (her design): with a card going in from a venue outside her 27 whose shop is
-  unconfirmed, the review's last button is **Next** → one card per new venue met in the Read: **Confirm · Look
-  again · No shop**, always in that order. **The ledger moves only when every one is answered.** Back returns
+  unconfirmed, the review's last button is **Next** → one card per such venue: **Confirm · Look again · No
+  shop**, always in that order. Only a venue with at least one card going in is asked; one whose every card is
+  rejected, undecided or quarantined is not (her decision; `venuesGoingIn`, AL-046). **The ledger moves only when every one is answered.** Back returns
   to the review. Confirmed once, never asked again.
 - **The ordinary review.** Each link becomes a pro forma row fed to the existing intake: Add / Fill / Change /
   Reject / quarantine all as now.
@@ -152,6 +153,11 @@ fresh Parallel fetches (her decision for Parallel work); only the date phrases a
   "Mir&oacute;"). `decodeEntities`.
 
 ## Venue link rules
+
+**San Marco** (`occ-museitoscana-cultura-gov-it`, her decision): the Tuscan state museums' site names itself
+"Direzione regionale Musei nazionali Toscana"; under "Occasional", first, its cards say "San Marco" (`OCC_SHORT`,
+a name written in — it would also name another Tuscan museum's show on that site). Its titles are the
+press-release headline (her decision). Shop: none (her answer). Proved live: *Beato Angelico*, *Rothko a Firenze*.
 
 **NGA has its own chip** (her decision): National Gallery of Art links (`occ-nga-gov`) are an occasional venue
 in every other way, but sit under an "NG Washington" chip, never "Occasional", and their cards say NG Washington (`OWN_CHIP`;

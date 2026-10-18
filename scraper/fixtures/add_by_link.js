@@ -328,6 +328,23 @@ function runtime() {
     ok(order[order.length - 1] === 'occ-ngv-vic-gov-au' && card['occ-ngv-vic-gov-au'] === 'National Gallery Victoria',
       'AL-038c:  NGV goes last in the Occasional group; its cards say "National Gallery Victoria" (her decision)', JSON.stringify([order[order.length - 1], card['occ-ngv-vic-gov-au']]));
   }
+  // ── AL-046: the shop screen asks only about a venue with a card going in (her decision) ─
+  {
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const going = fn('venuesGoingIn');
+    const SM = 'occ-museitoscana-cultura-gov-it', PS = 'occ-palazzostrozzi-org';
+    const add = id => ({ type: 'add', cand: { museumId: id, title: 't', exUrl: 'https://x/' + id } });
+    const props = [add(SM), add(PS), add(PS), add('met')];
+    const one = [...going(props, { 0: { mode: 'accept' }, 1: { mode: 'reject' } })];
+    ok(one.length === 1 && one[0] === SM, 'AL-046:  one link per venue: San Marco added, Strozzi rejected and undecided → only San Marco asked', JSON.stringify(one));
+    const some = [...going(props, { 0: { mode: 'accept' }, 1: { mode: 'reject' }, 2: { mode: 'accept' }, 3: { mode: 'accept' } })];
+    ok(some.length === 2 && some.includes(PS) && !some.includes('met'), 'AL-046a: two Strozzi links, one skipped, one added → Strozzi still asked; a swept venue never', JSON.stringify(some));
+    const never = [...going(props, { 0: { mode: 'never' }, 1: { mode: 'reject' }, 2: {} })];
+    ok(never.length === 0, 'AL-046b: quarantined, rejected and undecided cards ask about no shop', JSON.stringify(never));
+    const order = fn('VENUE_ORDER'), short = fn('OCC_SHORT');
+    ok(order[order.indexOf('occ-mfa-org') - 1] === SM && short[SM] === 'San Marco',
+      'AL-046c: San Marco (museitoscana.cultura.gov.it) first in the Occasional group, named "San Marco" (her decision)', JSON.stringify([order[order.indexOf('occ-mfa-org') - 1], short[SM]]));
+  }
   // ── AL-031: NGA Souvenirs of the Gilded Age — a doubled colon becomes one ─
   // Live page on docs/link_proof_pages.json; its page title reads "Age:: French".
   {
@@ -645,18 +662,17 @@ function runtime() {
 
   // ── AL-009: the shop screen, between the review and the ledger ───────────
   ok(!/Confirm|Wrong shop|Look again/.test(dialog() ? dialog().textContent : ''), 'AL-009: the import pop-up asks nothing about shops');
-  // Her 4 Oct run: the RA's and the Courtauld's cards were not going in, and
-  // their shops were left off the screen. Every new venue met is asked about.
+  // A venue is asked about only with a card going in (her decision; AL-046): the RA's
+  // one card rejected keeps it off the screen; added back, it is asked.
+  // The RA's own card: the highest box holding only that card's three buttons. (7 Oct:
+  // the old climb stopped at a box of several cards and pressed Manet & Morisot's Reject.)
+  const boxOf = b => { let el = b.parentElement; while (el.parentElement && el.parentElement.querySelectorAll('button').length <= 3) el = el.parentElement; return el; };
+  const raCard = () => buttons(/Add new entry$/).map(boxOf).find(el => el && /Peggy Guggenheim/.test(el.textContent));
+  const raPress = async re => click([...raCard().querySelectorAll('button')].find(b => re.test(b.textContent.trim())));
   {
     const adds = buttons(/Add new entry$/);
     for (const b of adds) await click(b);
-    // The RA's own card: the highest box holding only that card's three
-    // buttons. (7 Oct: the old climb stopped at a box of several cards and
-    // pressed Manet & Morisot's Reject — the rejected link coming back in the
-    // box showed it.)
-    const cardOf = b => { let el = b.parentElement; while (el.parentElement && el.parentElement.querySelectorAll('button').length <= 3) el = el.parentElement; return el; };
-    const raCard = buttons(/Add new entry$/).map(cardOf).find(el => el && /Peggy Guggenheim/.test(el.textContent));
-    await click([...raCard.querySelectorAll('button')].find(b => /Reject$/.test(b.textContent.trim())));
+    await raPress(/Reject$/);
   }
   const ledgerCards = () => win.document.querySelectorAll('article').length;
   const cardsBefore = ledgerCards();
@@ -667,7 +683,7 @@ function runtime() {
   const shopCard = name => [...shops().querySelectorAll('div')].find(d => d.firstChild && d.firstChild.textContent === name && d.querySelector('button'));
   const press = async (name, label) => { const c = shopCard(name); const b = c && [...c.querySelectorAll('button')].find(x => x.textContent === label); if (b) await click(b); return !!b; };
   const footer = () => [...shops().querySelectorAll('button')].pop().textContent;
-  ok(footer() === '6 still to decide' && !!shopCard('Royal Academy of Arts'), 'AL-009c:  six venues to answer — the RA too, its one card rejected — and the ledger button says so', footer());
+  ok(footer() === '5 still to decide' && !shopCard('Royal Academy of Arts'), 'AL-009c:  five venues to answer — not the RA, its one card rejected — and the ledger button says so', footer());
   ok(shops().textContent.includes('Check and approve each shop link.'), 'AL-009c2:  her heading and line');
   {
     const has = (name, u) => shopCard(name).textContent.includes(u);
@@ -677,6 +693,10 @@ function runtime() {
        && has('Museo Nacional Thyssen-Bornemisza', 'https://tienda.museothyssen.org/en/collections/publicaciones-museo'),
       'AL-009c3:  each card shows the section the finder took: Courtauld\'s catalogues (not the reseller\'s shelf), Cleveland\'s 4th result "Exhibition Catalogues", Mauritshuis\'s "Catalogi", Thyssen\'s menu "Museum publications"');
   }
+  await click([...shops().querySelectorAll('button')].find(b => b.textContent === 'Back'));
+  await raPress(/Add new entry$/);
+  await click(buttons(/^Next$/)[0]);
+  ok(footer() === '6 still to decide' && !!shopCard('Royal Academy of Arts'), 'AL-009c4:  the RA\'s card added back, the RA is asked too', footer());
   {
     const order = name => [...shopCard(name).querySelectorAll('button')].map(b => b.textContent).join('|');
     const conf = [...shopCard('Royal Academy of Arts').querySelectorAll('button')].find(b => b.textContent === 'Confirm');
@@ -711,6 +731,11 @@ function runtime() {
   ok(/^✓ No shop$/.test([...shopCard('Royal Academy of Arts').querySelectorAll('button')][2].textContent), 'AL-009j:  No shop is an answer');
   await press('Detroit Institute of Arts Museum', 'No shop');
   await press('Courtauld', 'Confirm'); await press('Cleveland Museum of Art', 'Confirm'); await press('Mauritshuis', 'Confirm');
+  // The RA's card rejected again: off the screen; its answer, given, is kept (Back keeps answers).
+  await click([...shops().querySelectorAll('button')].find(b => b.textContent === 'Back'));
+  await raPress(/Reject$/);
+  await click(buttons(/^Next$/)[0]);
+  ok(!shopCard('Royal Academy of Arts'), 'AL-009j2:  the RA\'s card rejected again, the RA leaves the screen');
   ok(footer() === 'Go ahead and update the ledger', 'AL-009k:  every shop answered, the ledger may move', footer());
   await click([...shops().querySelectorAll('button')].pop());
   ok(!shops() && ledgerCards() > cardsBefore, 'AL-009l:  and does');
