@@ -341,6 +341,14 @@ function runtime() {
     ok(some.length === 2 && some.includes(PS) && !some.includes('met'), 'AL-046a: two Strozzi links, one skipped, one added → Strozzi still asked; a swept venue never', JSON.stringify(some));
     const never = [...going(props, { 0: { mode: 'never' }, 1: { mode: 'reject' }, 2: {} })];
     ok(never.length === 0, 'AL-046b: quarantined, rejected and undecided cards ask about no shop', JSON.stringify(never));
+    const occEntry = fn('occEntry');
+    const sm = occEntry({ id: SM, name: 'Direzione regionale Musei nazionali Toscana', shop: 'none', confirmed: true });
+    ok(sm.name === 'Museo di San Marco' && sm.lookupName === 'Museo di San Marco' && sm.short === 'San Marco',
+      'AL-046d: the lookup calls San Marco "Museo di San Marco", never the regional office the site names (her decision)', JSON.stringify([sm.name, sm.lookupName, sm.short]));
+    const split = fn('splitPageTitle');
+    const gd = split('Van Dyck, the European -', 'palazzoducale.genova.it');
+    ok(gd.show === 'Van Dyck, the European' && split('Show – ', 'x.org').show === 'Show' && split('A - B', 'x.org').show === 'A - B',
+      'AL-047:  Genoa Van Dyck: a page title ending in a separator with no site after it loses the separator; a dash inside a title stays', JSON.stringify(gd));
     const order = fn('VENUE_ORDER'), short = fn('OCC_SHORT');
     ok(order[order.indexOf('occ-mfa-org') - 1] === SM && short[SM] === 'San Marco',
       'AL-046c: San Marco (museitoscana.cultura.gov.it) first in the Occasional group, named "San Marco" (her decision)', JSON.stringify([order[order.indexOf('occ-mfa-org') - 1], short[SM]]));

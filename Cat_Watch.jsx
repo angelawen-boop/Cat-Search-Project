@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "47.3";
+const APP_VERSION = "47.4";
 const APP_VERSION_DATE = "18 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -766,8 +766,10 @@ const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 const chipKey=id=>(OWN_CHIP[id]||{}).group||id;
 // Her names for occasional venues filed under "Occasional", where the store's name is longer.
 // The Tuscan state museums' site (museitoscana.cultura.gov.it) names itself "Direzione regionale Musei
-// nazionali Toscana"; its cards show "San Marco" (her decision).
+// nazionali Toscana"; its cards show "San Marco" and the lookup searches as "Museo di San Marco" (her decision).
 const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worcester","occ-museitoscana-cultura-gov-it":"San Marco"};
+// The venue's full name, for the lookup, where the site's page titles name someone else.
+const OCC_NAME={"occ-museitoscana-cultura-gov-it":"Museo di San Marco"};
 // Her names on the cards of occasional venues, where they differ from the short name.
 const OCC_CARD={"occ-mfa-org":"Boston MFA","occ-ngv-vic-gov-au":"National Gallery Victoria","occ-smb-museum":"Berlin Gem\u00e4ldegalerie","occ-gemaeldegalerie-skd-museum":"Dresden Gem\u00e4ldegalerie"};
 // Link options for occasional venues (as linkRead on a MUSEUMS entry), by the site's id.
@@ -840,7 +842,8 @@ function stripMd(line){
 // Tour - Destination Italy", and that dash belongs to the title.
 function splitPageTitle(t,host){
   // HTML codes in a page title are decoded ("Chagall&#039;s", Mia).
-  const s=decodeEntities(stripMd(t));
+  // A separator with no site after it is dropped ("Van Dyck, the European -", Genoa).
+  const s=decodeEntities(stripMd(t)).replace(/\s+(?:[-–—|]\s*)+$/,"");
   if(!s)return{show:"",site:""};
   // Several bars: the show is named first, the site last ("Venice: Canaletto and
   // His Rivals | Past exhibitions | National Gallery").
@@ -1153,7 +1156,7 @@ function occEntry(v){
   // `short` is her name for the venue's cards, written into the store by a session;
   // the page title's name stands until then.
   const own=OWN_CHIP[v.id]||{};
-  return{id:v.id,short:own.short||OCC_SHORT[v.id]||v.short||v.name,chip:own.chip,card:OCC_CARD[v.id],lookupName:own.lookupName||v.short||v.name,name:(OWN_CHIP[v.id]||{}).name||v.name,occasional:true,english:v.english===false?false:undefined,
+  return{id:v.id,short:own.short||OCC_SHORT[v.id]||v.short||v.name,chip:own.chip,card:OCC_CARD[v.id],lookupName:own.lookupName||OCC_NAME[v.id]||v.short||v.name,name:own.name||OCC_NAME[v.id]||v.name,occasional:true,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
     shopUnknown:!live&&!(v.shop==="none"&&v.confirmed)};
@@ -1173,7 +1176,7 @@ function registerOccasional(map){
 function registerUnseenOccasional(rows){
   for(const r of rows||[]){
     if(!isOcc(r.museumId)||MU[r.museumId])continue;
-    const name=(OWN_CHIP[r.museumId]||{}).name||hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4);
+    const name=(OWN_CHIP[r.museumId]||{}).name||OCC_NAME[r.museumId]||hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4);
     const own=OWN_CHIP[r.museumId]||{};
     MU[r.museumId]={id:r.museumId,short:own.short||OCC_SHORT[r.museumId]||name,chip:own.chip,card:OCC_CARD[r.museumId],lookupName:own.lookupName||name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
     KNOWN_VENUES.add(r.museumId);

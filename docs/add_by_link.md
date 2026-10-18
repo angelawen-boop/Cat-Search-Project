@@ -128,7 +128,7 @@ fresh Parallel fetches (her decision for Parallel work); only the date phrases a
 (`date.test.js`, DS-002). A page with no dates still fails (blank dates are not approved).
 
 - **R1 Site address tail** — a dash tail that is the site's own address is the site, not the title (KHM).
-  `splitPageTitle`.
+  `splitPageTitle`. A separator with no site after it is dropped (Genoa *Van Dyck, the European -*; AL-047).
 - **R2 Heading over tab title** — a tab title that is the heading plus a dash-led tail, or plus
   "Exhibition(s)", gives way to the heading (Acquavella, V&A, MAD, British Museum). `readShowPage`.
 - **R3 Closing-only dates** — "Through …", "Until …", "Closes …", "fino al …", "Now–…", in the shared `dates.js` after
@@ -155,8 +155,9 @@ fresh Parallel fetches (her decision for Parallel work); only the date phrases a
 ## Venue link rules
 
 **San Marco** (`occ-museitoscana-cultura-gov-it`, her decision): the Tuscan state museums' site names itself
-"Direzione regionale Musei nazionali Toscana"; under "Occasional", first, its cards say "San Marco" (`OCC_SHORT`,
-a name written in — it would also name another Tuscan museum's show on that site). Its titles are the
+"Direzione regionale Musei nazionali Toscana"; under "Occasional", first, its cards say "San Marco" (`OCC_SHORT`)
+and the lookup searches as "Museo di San Marco" (`OCC_NAME`; AL-046d). Names written in — they would also name
+another Tuscan museum's show on that site. Its titles are the
 press-release headline (her decision). Shop: none (her answer). Proved live: *Beato Angelico*, *Rothko a Firenze*.
 
 **NGA has its own chip** (her decision): National Gallery of Art links (`occ-nga-gov`) are an occasional venue
