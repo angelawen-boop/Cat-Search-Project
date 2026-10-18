@@ -630,6 +630,21 @@ function capsTitleParts(title) {
   return String(title).split(/(\s*[:–—]\s*)/).map((seg, i) => i % 2 ? seg : titleFromCaps(seg)).join('');
 }
 
+// A run printed as months only ("september 2027 - january 2028", "March – June 2027"): the
+// first day of the opening month to the last day of the closing month. Used only where a
+// venue asks for it (Add by link's monthsOnly; Palazzo Reale Milano, Soutine) — a day is
+// never invented anywhere else. → { start, end, raw } or null.
+function findMonthRange(text) {
+  const s = String(text || '');
+  const m = s.match(new RegExp(`(${MONTH_PATTERN})\\s*(\\d{4})?\\s*(?:-|–|—|to|al|a)\\s*(?:mid-?|metà\\s+)?(${MONTH_PATTERN})\\s*(\\d{4})`, 'i'));
+  if (!m) return null;
+  const m1 = monthNum(m[1]), m2 = monthNum(m[3]), y2 = +m[4];
+  const y1 = m[2] ? +m[2] : (m1 > m2 ? y2 - 1 : y2);
+  if (!m1 || !m2 || !plausibleYear(y1) || !plausibleYear(y2) || y1 * 12 + m1 > y2 * 12 + m2) return null;
+  const last = new Date(Date.UTC(y2, m2, 0)).getUTCDate();
+  return { start: ymd(y1, m1, 1), end: ymd(y2, m2, last), raw: m[0].trim() };
+}
+
 module.exports = {
   MONTHS,
   WEEKDAY_PREFIX_SRC,
@@ -661,4 +676,5 @@ module.exports = {
   titleCase,
   titleFromCaps,
   capsTitleParts,
+  findMonthRange,
 };

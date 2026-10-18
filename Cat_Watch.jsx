@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "48";
+const APP_VERSION = "48.1";
 const APP_VERSION_DATE = "18 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -705,7 +705,22 @@ function titleFromCaps(title) {
 function capsTitleParts(title) {
   return String(title).split(/(\s*[:–—]\s*)/).map((seg, i) => i % 2 ? seg : titleFromCaps(seg)).join('');
 }
-return { findDateRange, findDateRangeInProse, capsTitleParts };
+
+// A run printed as months only ("september 2027 - january 2028", "March – June 2027"): the
+// first day of the opening month to the last day of the closing month. Used only where a
+// venue asks for it (Add by link's monthsOnly; Palazzo Reale Milano, Soutine) — a day is
+// never invented anywhere else. → { start, end, raw } or null.
+function findMonthRange(text) {
+  const s = String(text || '');
+  const m = s.match(new RegExp(`(${MONTH_PATTERN})\\s*(\\d{4})?\\s*(?:-|–|—|to|al|a)\\s*(?:mid-?|metà\\s+)?(${MONTH_PATTERN})\\s*(\\d{4})`, 'i'));
+  if (!m) return null;
+  const m1 = monthNum(m[1]), m2 = monthNum(m[3]), y2 = +m[4];
+  const y1 = m[2] ? +m[2] : (m1 > m2 ? y2 - 1 : y2);
+  if (!m1 || !m2 || !plausibleYear(y1) || !plausibleYear(y2) || y1 * 12 + m1 > y2 * 12 + m2) return null;
+  const last = new Date(Date.UTC(y2, m2, 0)).getUTCDate();
+  return { start: ymd(y1, m1, 1), end: ymd(y2, m2, last), raw: m[0].trim() };
+}
+return { findDateRange, findDateRangeInProse, capsTitleParts, findMonthRange };
 })();
 const SUMMARY_RULES="- Maximum 10 words. The examples average about six.\n- End with a full stop. Avoid colons — the accepted summaries almost never use one.\n- Name the artist or artists the exhibition is built around.\n\nNAME THEM THE WAY A GALLERY-GOER WOULD. Surname alone, unless the surname alone\nwould be ambiguous. Write \"Zurbarán\", not \"Francisco de Zurbarán\". \"Shonibare\",\nnot \"Yinka Shonibare\". \"Velasco\", not \"Mexican artist José María Velasco\". Drop\n\"painter\", \"artist\" and similar labels in front of a name — the reader already\nknows. Full names, honorifics and formal titles read stiff and waste words that\ncould carry meaning instead.\n\nALWAYS WRITE IN ENGLISH, whatever language the raw text is in. Several venues\npublish only in Italian and one only in French; she reads the summaries in\nEnglish. Translating a phrase does not break the traceability rule below — a\ntranslated phrase is still traceable to the text it came from. Keep the\nexhibition's own title in its original language if that is how it is written;\ntranslate the description around it.\n\nTHE RULE THAT MATTERS MOST: every word of your summary must be traceable to a\nphrase in that row's own raw text. If you cannot point to where something came\nfrom, leave it out. In particular:\n\n- Never add an artist, place, medium or date that you happen to know about but the\n  text does not mention.\n- Use a number only if the text states that number. Do not count a list of names\n  and report the total — the page may state a different figure, and the page is\n  right, not your count.\n\nBeing vague is a much smaller failure than being confidently wrong. If the text\nwill only support something general, write something general.\n\nIf the raw text is not a description of an exhibition — a bare link, a curator's\nbiography, ticketing or opening-hours copy, cookie or consent boilerplate, a \"page\nnot found\" message, or empty — answer null for that row. Do not invent one.";
 const EN_PREFIX = 'In English: ';
@@ -788,7 +803,10 @@ const PRM_TAIL=/\s+[-–—]\s+Palazzo Reale,? Milano?$/i;
 // text end there (until, datesUntil; Soutine took the box's first dates).
 const PRM_BOX=/^(?:Current|Upcoming|Past) Exhibitions$|^Mostre (?:in corso|future|passate)$/i;
 const OCC_LINK_READ={"occ-mfa-org":{datesAbove:2},"occ-ngv-vic-gov-au":{shortYear:true},
-  "occ-palazzorealemilano-it":{titleHeading:PRM_TAIL,titleDrop:PRM_TAIL,nameInLines:true,until:PRM_BOX,datesUntil:PRM_BOX},
+  "occ-palazzorealemilano-it":{titleHeading:PRM_TAIL,titleDrop:PRM_TAIL,nameInLines:true,until:PRM_BOX,datesUntil:PRM_BOX,monthsOnly:true,capsTitles:true},
+  // San Marco's pages are press releases: the title is the headline's first sentence, without
+  // "Mostra" (exhibition) or the quotation marks round the name; capitals recased (her decision).
+  "occ-museitoscana-cultura-gov-it":{firstSentence:true,titleDrop:/^Mostra\s+/i,unquote:true,capsTitles:true},
   "occ-pinakothek-der-moderne-de":{datesAbove:1,slashDayFirst:true}};
 // "4 Sep 26" → "4 Sep 2026": a two-digit year after a day and month, for a venue with shortYear.
 function withLongYears(l){
@@ -1009,12 +1027,18 @@ function readShowPage(res,url,vc){
   let h=cands[0],found=null;
   for(const i of cands){ found=datesUnder(i); if(found){ h=i; break; } }
   if(!found){
-    // Only a month and year printed (Soutine: "september 2027 - january 2028"): no day is
-    // ever invented, so said as such.
+    // Only months printed (Soutine: "september 2027 - january 2028"). A venue with
+    // linkRead.monthsOnly takes the first day of the one to the last of the other (her
+    // decision), noted on the approval card; anywhere else no day is invented, said so.
     const h0=cands[0], near=[];
-    for(let k=h0+1;k<lines.length&&near.length<LINK_DATE_LINES;k++){ const l=stripMd(lines[k]); if(!l)continue; if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim()))break; near.push(l); }
-    const mo=near.map(l=>DATES.findDateRange(l,{looseSingles:true})).find(r=>r.shownText);
-    return{ok:false,why:mo?"Only the month and year are published (\u201c"+near.find(l=>l.includes(mo.shownText))+"\u201d), no days.":"No dates found under the show’s title."};
+    for(let k=h0+1;k<lines.length&&near.length<LINK_DATE_LINES;k++){ const l=stripMd(lines[k]); if(!l)continue; if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim()))break; near.push([k,l]); }
+    if(lr&&lr.monthsOnly){
+      for(const [k,l] of near){ const r=DATES.findMonthRange(l); if(r){ h=h0; found={d:k,range:{start:r.start,end:r.end},monthsOnly:l.trim()}; break; } }
+    }
+    if(!found){
+      const mo=near.map(([,l])=>DATES.findDateRange(l,{looseSingles:true})).find(r=>r.shownText);
+      return{ok:false,why:mo?"Only the month and year are published (\u201c"+near.find(([,l])=>l.includes(mo.shownText))[1]+"\u201d), no days.":"No dates found under the show’s title."};
+    }
   }
   const heading=stripMd(lines[h]);
   const d=found.d,dEnd=found.dEnd||found.d;
@@ -1044,7 +1068,12 @@ function readShowPage(res,url,vc){
   if(h===broken||(after>=0&&h===after))base=heading;
   if(lr&&lr.title)base=venueTitle(lines,h,heading,lr,words)||base;
   // A label the venue puts before the show's own name (linkRead.titleDrop).
+  // A venue whose headline runs on past the show's name (linkRead.firstSentence; San Marco's
+  // press releases): its first sentence only.
+  if(lr&&lr.firstSentence)base=base.split(/[.!?](?=\s+\p{Lu})/u)[0].trim()||base;
   if(lr&&lr.titleDrop)base=base.replace(lr.titleDrop,"").trim()||base;
+  // Quotation marks round the whole name (linkRead.unquote; "Mostra “Rothko a Firenze”").
+  if(lr&&lr.unquote)base=base.replace(/^[“"«‘']\s*(.+?)\s*[”"»’']$/u,"$1");
   // A doubled colon is the venue's typo (NGA, Souvenirs of the Gilded Age).
   base=base.replace(/\s*:{2,}/g,":");
   const between=lr&&lr.title?[]:lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l))&&!(lr&&lr.skip&&lr.skip.test(l)));
@@ -1071,7 +1100,7 @@ function readShowPage(res,url,vc){
   // The first line under the heading, for a venue whose subtitle sits there.
   const under=lines.slice(h+1).map(stripMd).find(Boolean)||"";
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:url;
-  return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||(OWN_CHIP[vc]||{}).name||host.replace(/^www\./,""),link};
+  return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||(OWN_CHIP[vc]||{}).name||host.replace(/^www\./,""),link,monthsOnly:found.monthsOnly||""};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -1165,12 +1194,12 @@ function linkReadVenue(url){
 // A venue whose pages also sit on someone else's site, told apart by path: Palazzo Reale
 // Milano's pages on the city council's site (www2.comune.milano.it), saved by her because
 // the site refuses Parallel (docs/add_by_link.md, "Saved pages").
-const SITE_PATH_VENUES=[{host:"www2.comune.milano.it",path:/^\/(?:en|it)\/web\/palazzo-reale-milano\//,id:"occ-palazzorealemilano-it"}];
+const SITE_PATH_VENUES=[{host:"www2.comune.milano.it",path:/^\/(?:en|it)\/web\/palazzo-reale-milano\//,venue:"occ-palazzorealemilano-it"}];
 function siteVenueFor(url){
   let u; try{ u=new URL(siteUrlOf(url)); }catch{ return null; }
   const h=u.hostname.toLowerCase().replace(/^www\./,"");
   const hit=SITE_PATH_VENUES.find(v=>v.host.replace(/^www\./,"")===h&&v.path.test(u.pathname));
-  return hit?hit.id:null;
+  return hit?hit.venue:null;
 }
 
 // A link to one of the swept venues files under it, matched by site from the scraper's
@@ -5561,7 +5590,8 @@ export default function App(){
         tape.row={title,museumId:vc,exUrl:url};
         got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
           summary:a.summary?composeSummary(a.english,a.summary):"",url:page.link,
-          notes:ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")});
+          notes:[page.monthsOnly?"Only the months are published (\u201c"+page.monthsOnly+"\u201d): dates set to the first and last day.":"",
+            ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")].filter(Boolean).join(" ")});
       }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
       finally{
         const failed=fails.length>failsBefore;
