@@ -190,9 +190,9 @@ source link.
   Restorations for an Exhibition* / *Beato Angelico. Restauri per una mostra*, 979-1254633113, 128 pp (Strozzi
   lists it as a "collateral publication"; Marsilio's page for it carries the catalogue's blurb).
 - **Her report (app 47.4):** first lookup no catalogue; Search again three books (Italian right, the other two
-  wrong, no English edition of the right book); a third search dropped the wrong Italian but the English is
-  still wrong. **Unresolved:** the sources above say 979-1254632505 is the right book's English edition — what
-  looks wrong on the card is to be settled with her.
+  wrong); a third search dropped the wrong one. **The English edition on the card (979-1254632505) is right**
+  — settled with her: Amazon's cover carries the Palazzo Strozzi and Marsilio Arte logos; a different cover on
+  one AbeBooks seller's own photo is that seller's picture, not another book.
 - **Proven from the log:** first lookup (L1792314705436brmy) — the read found *Fra Angelico* / Marsilio but
   answered `thisVenue: false` and it was dropped ("Not filed: … not tied to this venue's show"): the Marsilio
   result handed to Claude was cut before the line naming "Palazzo Strozzi and the Museum of San Marco" (it
