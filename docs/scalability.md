@@ -1,8 +1,8 @@
 # Scalability — what grows as the ledger grows, and what to do about it
 
-Her ledger is about 850 exhibitions and nearing 1,000; 2,000 would not surprise
-her. This doc tracks what that means and the work parked for when she decides
-to act. **Nothing here is built.** Open with her before starting any item.
+Her ledger passed 1,000 exhibitions (1,003) and the app now lags (her report); 2,000
+would not surprise her. She has decided to start this work. **Nothing here is built
+yet.** Agree each item with her before starting it.
 
 ## Measured
 

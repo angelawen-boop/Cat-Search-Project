@@ -218,6 +218,11 @@ Faults found are fixed in code (§2.2.2).
 
 #### 2.2.5 Queued next
 
+- **OPEN, next — the ledger's size (her decision to start).** Her ledger passed 1,000 exhibitions
+  (1,003); the app now lags (her report). 2,000 possible. Findings and the two parked items — a
+  faster list, and whether to clear old Cloud Saves — are in `docs/scalability.md`; agree the plan
+  with her before building.
+
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library
   record (978-0847899289) that came tenth should give the English edition (WL-060).
@@ -596,9 +601,6 @@ and were fixed in code, proven live).
 
 Ideas not yet built — none is open work, and none is proposed unless she raises it.
 
-- **The ledger's size** — ~850 exhibitions, nearing 1,000; 2,000 possible. Discussed;
-  findings and two parked items (a faster list; whether to clear old Cloud Saves) in
-  `docs/scalability.md`. Nothing built until she says.
 - **Parked — cards for dismissed exhibitions.** A sweep gives dismissed shows Fill
   and Change cards like any other, unmarked (the intake never reads `interested`).
   Her choice: if her next import brings a bothersome number, build "Dismissed" on
