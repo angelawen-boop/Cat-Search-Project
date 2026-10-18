@@ -122,10 +122,21 @@ source link.
 - **Both in the museum shop, on ONE page**: CEDON's
   [Venezia 500](https://www.museumsshop.cedon.de/Venezia-500/M1054023) has a "Sprache auswählen:
   deutsch / englisch" choice and says "in deutscher oder in englischer Sprache erhältlich".
-- **Wrong today (lookup L1792302063097axpb):** the card holds the English ISBN labelled German (the
-  language read off the German shop page and the short title), so it says no English edition, and
-  the German edition is never found. Must fix: a book's language comes from its own records, never
-  from the shop page's language; a shop page selling two languages holds both editions.
+- **Wrong today (app 47.3; lookup log record L1792302063097axpb, kept in the app's store):** the card
+  holds 978-3777441764 labelled **German**, says "English edition: none proved", and never finds the
+  German edition. Traced:
+  1. Shop step: CEDON's section and its search both list one product "Venezia 500"; the product page
+     (opened whole) prints no ISBN, only "Sprache auswählen: deutsch / englisch".
+  2. Facts round (Claude, call 6) answered `language: "German"`, `title: "Venezia 500"` — read off the
+     German shop page. Nothing in code checks that against the ISBN's own records, though the same
+     results carried them: Amazon.com and Moe's Books list 978-3777441764 as "Venezia 500: The Gentle
+     Revolution of Venetian Painting", and the Rijksmuseum library record says `inLanguage` English.
+  3. The ISBN was read off the results in code; the "Language check" line (`lookupCatalogue`, phase 3)
+     takes Claude's language as said and keeps the short title "Venezia 500" (`titleAsPrinted`).
+  4. The English-edition search (call 5) then looks for an English book OTHER than the one in hand, so
+     finds none; no step looks for a German ISBN, because the book in hand is already "German".
+- **Must fix:** a book's language comes from its ISBN's own records, never from the language of the
+  page it was found on; a shop page with a language choice holds both editions, each looked for.
 
 ### 11. Jacobus Vrel — Munich Alte Pinakothek, 2025 (added later: to fix, picks not yet agreed)
 - English · Hirmer · 978-3777435879 — *Jacobus Vrel: Looking for Clues of an Enigmatic Painter*.
@@ -133,10 +144,20 @@ source link.
 - **Both in the museum shop, on ONE page**: CEDON's
   [Jacobus Vrel](https://www.museumsshop.cedon.de/Jacobus-Vrel/M1051492), the same language choice
   ("in deutscher und englischer Sprache erhältlich").
-- **Wrong today (lookup L1792302083097mica):** the shop page is tied to the German book only, so the
-  English one, found on the web, says "not in the museum shop". Its publisher came out as
-  "s, Munich" (a cut-off name), and the publisher step searched munich50years.com. Must fix: a
-  shop page selling both languages counts as in the shop for both; the publisher name is whole.
+- **Wrong today (app 47.3; lookup log record L1792302083097mica):** two versions found correctly —
+  German from the shop (978-3777435862), English from the web (978-3777435879, proof:
+  chicagoreference.com, "the venue named") — but:
+  1. **English says "not in the museum shop".** The shop's product page (prints no ISBN) is tied to
+     the German book, the shop-step book. Phase 4b (`bookOnShelfAfterWeb`, "looked for again on the
+     shop's list") did not match the English book to that page. Not yet traced which match failed
+     (ISBN cannot, the page prints none; pages agree at 256; the shelf's title is the German one) —
+     a guess, settled by replaying the record.
+  2. **Publisher "s, Munich", proven:** `PUBLISHER_LABEL` has no word end after "publisher", so in
+     "Hirmer Publishers, Munich, 2021" it matches "Publisher" and captures "s, Munich". Two results print
+     that line, so `publisherOnIsbnResults` counts two votes and the coded name beats Claude's correct
+     "Hirmer Publishers". The publisher step then searched "s, Munich" and filed munich50years.com.
+- **Must fix:** a shop page with a language choice counts as in the shop for every edition it offers;
+  `PUBLISHER_LABEL` must not match inside "Publishers"/"Verlagshaus" (a word end after the label).
 
 ## Settled with her
 
