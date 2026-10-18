@@ -241,9 +241,10 @@ contemporary; labels at the edges differ between runs). Her rehearsal in the app
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).
 
-**OPEN — two of the cloud-saving suites** (which two was not recorded) failed again when the whole app
-half ran at once during Add by link work, and passed when run alone. Possibly timing on a busy machine;
-needs investigation.
+**OPEN — `cloud_app.js` and `cloud_two_copies.js` fail when the test machine is crowded** (several
+suites at once): checks that wait for an automatic save (CA-002, CA-005d, CA-006, TC-001) give up after 8
+seconds, and a crowded machine runs the page 5–7 times slower. Reproduced; with a 40-second wait both passed
+under the same crowding. Not a fault in saving. Fix awaiting her go: lengthen the wait in the test.
 
 **OPEN — RB-016 and RB-020** (robots wait, scraper) fail under load: run ten at
 once, RB-016 read 1148–1293ms against 1450 in 5 of 10, RB-020 over
