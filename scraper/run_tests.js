@@ -31,6 +31,9 @@ const ROOT = path.join(__dirname, '..');
 const APP = 'app', SCRAPER = 'scraper', BOTH = [APP, SCRAPER];
 const LINKS = 'links', LOOKUP = 'lookup', SAVING = 'saving', SCREEN = 'screen';
 const GROUPS = [APP, SCRAPER, LINKS, LOOKUP, SAVING, SCREEN];
+// Run one at a time, before the rest, with the machine to itself: the cloud-saving
+// suites wait 8 seconds for a save, and failed only when other suites crowded the machine.
+const ALONE = 'alone';
 // Quick checks every app group runs: the import, and the page opens and draws.
 const EVERY_APP = [APP, LINKS, LOOKUP, SAVING, SCREEN];
 const SUITES = [
@@ -44,10 +47,10 @@ const SUITES = [
   [[APP, LOOKUP], 'node scraper/fixtures/catalogue_route.js'],
   [[APP, LOOKUP], 'node scraper/fixtures/recheck_shop.js'],
   [[APP, LOOKUP], 'node scraper/fixtures/lookup_log.js'],
-  [[APP, SAVING], 'node scraper/fixtures/cloud_ledger.js'],
-  [[APP, SAVING], 'node scraper/fixtures/cloud_app.js'],
-  [[APP, SAVING], 'node scraper/fixtures/cloud_two_copies.js'],
-  [[APP, SAVING], 'node scraper/fixtures/cloud_empty_import.js'],
+  [[APP, SAVING], 'node scraper/fixtures/cloud_ledger.js', ALONE],
+  [[APP, SAVING], 'node scraper/fixtures/cloud_app.js', ALONE],
+  [[APP, SAVING], 'node scraper/fixtures/cloud_two_copies.js', ALONE],
+  [[APP, SAVING], 'node scraper/fixtures/cloud_empty_import.js', ALONE],
   [SCRAPER, 'node scraper/fixtures/summary_pages.js'],
   [SCRAPER, 'node scraper/fixtures/orsay_pages.js'],
   [SCRAPER, 'node scraper/fixtures/pacing_pages.js'],
@@ -75,7 +78,9 @@ if (half && !GROUPS.includes(half)) {
   console.error(`Unknown group "${half}" — use ${GROUPS.join(', ')}, or nothing for both halves.`);
   process.exit(2);
 }
-const picked = SUITES.filter(([tags]) => !half || [].concat(tags).includes(half)).map(([, cmd]) => cmd);
+const chosen = SUITES.filter(([tags]) => !half || [].concat(tags).includes(half));
+const alone = new Set(chosen.filter(([, , how]) => how === ALONE).map(([, cmd]) => cmd));
+const picked = chosen.map(([, cmd]) => cmd);
 
 const branchFile = path.join(ROOT, 'scraper/fixtures/branch_tests.txt');
 const branchSuites = fs.existsSync(branchFile)
@@ -116,10 +121,13 @@ async function main() {
   const worker = async () => {
     while (next < all.length) {
       const i = next++;
+      if (results[i]) continue;
       results[i] = await run(all[i]);
       flush();
     }
   };
+  for (let i = 0; i < all.length; i++) if (alone.has(all[i])) results[i] = await run(all[i]);
+  flush();
   await Promise.all(Array.from({ length: Math.min(jobs, all.length) }, worker));
 
   const last = await run(LAST);

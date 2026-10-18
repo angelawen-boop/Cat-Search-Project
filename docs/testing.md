@@ -28,6 +28,15 @@ the suite, how many times it failed this session, whether it passed when run alo
 why — or "needs investigation" if there is none. If the suite already has an item, update it. Tell her in
 one line that it is recorded.
 
+## Cloud saving and speed
+
+The cloud-saving suites run one at a time, with the machine to themselves (`scraper/run_tests.js`): they
+wait 8 seconds for an automatic save, and failed only when other suites crowded the machine. The 8 seconds
+proves a save happens, not how fast — the app saves 0.6 seconds after the last change. If saving speed is
+ever in doubt, two ways to check (discussed with her, not built): a test that controls the clock and checks
+the save starts at 0.6 seconds, not before; and one timing on her live page, from a change to the "Last
+cloud save" line updating.
+
 ## Live proof pages — testing against the live internet
 
 Work using Parallel (Add by link, the catalogue search) is tested against the live internet, never saved
