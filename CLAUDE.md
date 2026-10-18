@@ -288,6 +288,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 | File | What is in it | Read it when |
 |---|---|---|
 | `docs/catalogue_versions.md` | The catalogue versions: her order, her block layout, the shop line, and the agreed cases | Changing the catalogue lookup's design |
+| `docs/search_engines.md` | Why a book can fail to rank (Correggio); future options: more than 10 results, another engine, Gemini — how and the concerns | She raises search coverage or the search engine |
 
 **Features** — ideas not yet built
 
@@ -553,9 +554,9 @@ and were fixed in code, proven live).
 - **Published at 47.3 — Sammlung Schack (third Munich venue, no shop) and Dresden (chip "Dresden", cards
   "Dresden Gemäldegalerie"; she answers No shop once on its shop screen) by link; Munich titles typed in capitals
   recased (shared `capsTitleParts`, `dates.js`); a house line over the dates read again (Van Dyck, Boucher).
-  Proved live on 105 proof pages; her next links confirm the descriptions and subtitles Claude writes.
+  Proved live on 105 proof pages; her Berlin, Munich and Dresden links are imported (clean).
   `docs/add_by_link.md`, "Munich" and "Dresden". The Städel (Frankfurt) is researched, on hold (her decision):
-  its pages read cleanly; its catalogue shop (liebieghaus.ticketfritz.de, "Städel Publikationen") is found by the
+  its pages read cleanly, her links wait; its catalogue shop (liebieghaus.ticketfritz.de, "Städel Publikationen") is found by the
   finder but shows no books to Parallel, so it ends "Shop found, but not its books section".
 - **Published at 47.2 — Berlin and Munich by link; her next links and lookups there confirm.** Dotted dates
   day first (DS-004), headings over two lines, ranges over three lines, Berlin's shop found (German compounds,
@@ -598,6 +599,10 @@ Ideas not yet built — none is open work, and none is proposed unless she raise
   saying "Couldn't work out the publisher's own website" (Somogy, Hubert Robert).
   It replaces her decision to keep `PUBLISHER_SITES` short and never fill it ahead
   (§4.2); how the list is built is to be agreed with her first.
+- **The search engine** — a search returns 10 results and ranking changes minute to minute; a book that
+  does not rank is missed (her conclusion: roulette; no more search steps). Options, each with how and
+  the concerns, in `docs/search_engines.md`: more results on her keyed connector, another engine
+  (Exa, Tavily, Brave, Firecrawl…), Google's Gemini with search grounding. Nothing built until she says.
 - **Google Drive backup by button** — on the table, never automatic; through a Google Drive
   connector (`docs/app.md`).
 - **Library — purchase tracking and a Library tab** (`docs/library.md`): future consideration, never
