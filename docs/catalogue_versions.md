@@ -182,6 +182,25 @@ source link.
   listing many books, never a site's menu), never across a line break or inside a longer word
   ("Publishers"), and the name it takes stops at the first comma / "ISBN" / price.
 
+### 13. Beato Angelico — San Marco (Florence, with Palazzo Strozzi), 2025–26 (added later: her report, not yet agreed)
+- Italian · Marsilio Arte · 979-1254632499 — *Beato Angelico*, 440 pp (Marsilio's ITA page). English ·
+  Marsilio Arte · 979-1254632505 — *Fra Angelico*, 440/456 pp (Marsilio's ENG page "ENG – ISBN
+  9791254632505"; the Rijksmuseum library: English, translated from Italian; LibroCo "Fra Angelico [English
+  edition]", "Edizione italiana 9791254632499"; Artbook D.A.P.). Not the catalogue: *Fra Angelico.
+  Restorations for an Exhibition* / *Beato Angelico. Restauri per una mostra*, 979-1254633113, 128 pp (Strozzi
+  lists it as a "collateral publication"; Marsilio's page for it carries the catalogue's blurb).
+- **Her report (app 47.4):** first lookup no catalogue; Search again three books (Italian right, the other two
+  wrong, no English edition of the right book); a third search dropped the wrong Italian but the English is
+  still wrong. **Unresolved:** the sources above say 979-1254632505 is the right book's English edition — what
+  looks wrong on the card is to be settled with her.
+- **Proven from the log:** first lookup (L1792314705436brmy) — the read found *Fra Angelico* / Marsilio but
+  answered `thisVenue: false` and it was dropped ("Not filed: … not tied to this venue's show"): the Marsilio
+  result handed to Claude was cut before the line naming "Palazzo Strozzi and the Museum of San Marco" (it
+  ends "ISBN 9791254"). Search again (L1792314758291e049) filed the *Restorations* book as a third version
+  ("Fra Angelico", Italian/English, "the venue named") — its English page drops the subtitle and copies the
+  catalogue's blurb. The third (L1792315089744hdab) kept the two right books. Every search used the
+  press-release headline as the show's title ("BEATO ANGELICO. Una straordinaria mostra dedicata a …").
+
 ## Settled with her
 
 - **Not catalogues, left off** like booklets: a same-titled book by the curator

@@ -165,7 +165,7 @@ approval to build; no code before.
 
 She is noting issues as she uses it, for a later debugging session.
 **OPEN — three cases any search debugging must fix** (her decision; `docs/catalogue_versions.md`,
-cases 10–12): Munich's shop (CEDON) sells the German and English editions on ONE product page with
+cases 10–12; case 13, Beato Angelico, is her report, not yet agreed): Munich's shop (CEDON) sells the German and English editions on ONE product page with
 a language choice. *Venezia 500* holds the English ISBN labelled German and says no English edition;
 *Jacobus Vrel*'s English edition says "not in the museum shop", and its publisher reads "s, Munich"
 (proven: `PUBLISHER_LABEL` matches inside "Publishers"); Dresden's *Paradise on Earth* has the right book
