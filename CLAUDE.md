@@ -32,7 +32,7 @@ is why they live in one repo, on one branch.
   to publish this change in this conversation (republishing in the background can lose unsaved work).
 - **Her report and output first** - update the guide only after you have responded to the rest of her request.
 - **Applying to the scraper and scraper-related work only — test conservatively.** Every page a sweep fetches counts towards the venue's rate limit. Use saved pages first, with no network. Never a blanket re-sweep.
-- **For work not relating to the scraper and which uses Parallel's features — testing is always against the live internet**, ie. pages fetched live through Parallel. Do not test on saved pages and do not invent test pages. A feature keeps a list of where its tests live on the internet — addresses and the signed-off result for each — so any later change is re-checked by fetching that list live — never the whole list again after each small fix in one session, never the whole list for a one-venue rule (her decision; `docs/add_by_link.md`, "Re-checking the proof pages"). Add by link's: `docs/link_proof_pages.json`, checked by `scraper/link_proof_check.js`.
+- **For work not relating to the scraper and which uses Parallel's features — testing is always against the live internet**, ie. pages fetched live through Parallel, never saved or invented pages. How, and what never to re-fetch: `docs/testing.md`.
 - **Raise a past decision by describing the context, not by reference to a date.** She keeps no log and a date tells her nothing. Say it as: "Because of X, you decided Y. Would you like to reconsider? / If this changes your decision, we can do Z." Call it her decision or her judgement call — never a "ruling" or a "rule".
 - **A question gets an answer first.** "Talk to me about X" means discuss; nothing is built until she says.
 - **Any question or challenge in her message means answer only (her decision).** If any part of a message
@@ -73,8 +73,8 @@ is why they live in one repo, on one branch.
   creating, merging or pushing a branch.**
 - **Publishing the app** (version numbers, building, the publish steps): `docs/publishing.md`.
   **Read it before publishing.**
-- **Tests** (which half to run, the suite list, test anchors, JSX validation): `docs/testing.md`.
-  **Read it before running or writing tests.**
+- **Tests** (which group to run for the work in hand, where a failure is recorded, the live proof pages,
+  test anchors, JSX validation): `docs/testing.md`. **Read it before running or writing tests.**
 
 ---
 
@@ -237,7 +237,13 @@ contemporary; labels at the edges differ between runs). Her rehearsal in the app
   (contemporary the likeliest), and does any always-quarantined show slip through? Narrow a group
   only if she says.
 
-#### 2.2.6 Tests that fail under load
+#### 2.2.6 Tests that failed — recorded, not investigated
+
+A session records each failing suite here and does not investigate it (`docs/testing.md`).
+
+**OPEN — two of the cloud-saving suites** (which two was not recorded) failed again when the whole app
+half ran at once during Add by link work, and passed when run alone. Possibly timing on a busy machine;
+needs investigation.
 
 **OPEN — RB-016 and RB-020** (robots wait, scraper) fail under load: run ten at
 once, RB-016 read 1148–1293ms against 1450 in 5 of 10, RB-020 over
@@ -306,7 +312,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 | `docs/doc_rules.md` | How to edit this guide and the side docs, and the rules for code comments and decision history | Editing this guide, a side doc or a code comment |
 | `docs/branches.md` | The branch table and holding a push for another session | Creating, merging or pushing a branch |
 | `docs/publishing.md` | Version numbering, building the app and the publish steps | Publishing the app |
-| `docs/testing.md` | Which half to test, the suite list, test anchors, JSX validation | Running or writing tests |
+| `docs/testing.md` | Which test group to run, where a failure is recorded, the live proof pages, test anchors, JSX validation | Running or writing tests, or re-checking live proof pages |
 
 **Reviews**
 

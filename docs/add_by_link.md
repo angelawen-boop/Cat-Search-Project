@@ -278,17 +278,3 @@ Proof pages for every rule above: `docs/link_proof_pages.json`.
   naming the book or show, catalogue/ISBN/price words, or a link onto the venue's shop come
   first. A link labelled "catalog" onto the venue's shop, in web results, is taken in code
   (`catalogueLinkOn`).
-
-## Re-checking the proof pages
-
-Her decision: proof is always against the live internet; no page text is kept in the repo.
-`docs/link_proof_pages.json` lists each proof page (`url`, `venue`, and the `title`, `start`, `end` signed
-off; `note` where a field is knowingly imperfect). To re-check: fetch every listed address live through
-Parallel (keyed connector only with her yes), save each reply as `{url,title,full_content}` by script, and run
-`node scraper/link_proof_check.js <folder>` (`--all` also fails on a listed page with no reply); exit 1 on any
-difference. Not in `npm test`. A difference is a reader change to sign off (update the list) or a site that
-changed.
-
-**Never (her decision):** re-fetching the whole list after every small fix within one session — the pages
-have not changed in the last hour, only the code has, so re-run the check on the replies already fetched; or
-fetching every listed page for a change that only touches one venue's rule — fetch that venue's pages only.

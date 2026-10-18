@@ -99,9 +99,8 @@ Never take the builder's report on trust.
 - Read its diff against the brief, item by item. Anything missing, extra or out
   of scope goes back to the builder, at most twice; after that, tell her what
   is unresolved.
-- Run the tests yourself: `npm run test:app`, `npm run test:scraper`, or
-  `npm test` when both halves changed. Check the exit code, and grep the output
-  for each new test's name.
+- Run the tests yourself: the group for the work in hand (`docs/testing.md`).
+  Check the exit code, and grep the output for each new test's name.
 - Run the whole-path test yourself, and the undo check on at least one fix:
   undo the fix, the test must fail, put it back.
 - Parallel work: the real case passes on a fresh live fetch, and so does the

@@ -2,11 +2,16 @@
 // printed whole and in list order. Exit code 1 if ANY suite failed; every
 // suite runs either way, so one failure never hides the rest.
 //
-// RUN THE HALF YOU CHANGED (her ruling, 7 Oct) — a plumber does not test the
-// wiring:
-//   npm run test:app       Cat_Watch.jsx, build/ — the app and its lookup
+// RUN ONLY THE GROUP FOR THE WORK IN HAND (docs/testing.md). App-only work was
+// running the scraper suites, and Add by link work the cloud-saving ones, so a
+// session reported failures in suites that had nothing to do with its change.
+//   npm run test:links     Add by link — reading a pasted page, venue link rules
+//   npm run test:lookup    the shop finder and catalogue lookup
+//   npm run test:saving    the cloud ledger, Save and Load
+//   npm run test:screen    the import screen, cards, sorting, display
+//   npm run test:app       the whole app half — once, before publishing
 //   npm run test:scraper   scraper/ — the sweep, its recipes, QC, compression
-//   npm test               both — only when a change touches both halves
+//   npm test               both halves — the shared date reader or summary rules
 // A suite tagged with both halves is where they genuinely meet: the app
 // importing a scraper CSV, the shared date reader and summary rules, Add by
 // link reading the scraper's venue list, compression reading the app's seed.
@@ -14,7 +19,7 @@
 // A suite only one branch has goes in scraper/fixtures/branch_tests.txt on that
 // branch (one command per line) — never in this list. Main never touches that
 // file, so merging main into a branch never clashes over the test list. Those
-// suites run with the app half (today there are none).
+// suites run with every app group (today there are none).
 
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -24,21 +29,25 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 
 const APP = 'app', SCRAPER = 'scraper', BOTH = [APP, SCRAPER];
+const LINKS = 'links', LOOKUP = 'lookup', SAVING = 'saving', SCREEN = 'screen';
+const GROUPS = [APP, SCRAPER, LINKS, LOOKUP, SAVING, SCREEN];
+// Quick checks every app group runs: the import, and the page opens and draws.
+const EVERY_APP = [APP, LINKS, LOOKUP, SAVING, SCREEN];
 const SUITES = [
   [SCRAPER, 'node --test scraper/date.test.js scraper/qc.test.js scraper/sweep_log.test.js scraper/venue_status.test.js scraper/pacing.test.js scraper/sweep_diff.test.js scraper/routine_window.test.js'],
   [BOTH,    'node --test scraper/compress.test.js'],
-  [BOTH,    'node scraper/fixtures/intake_cases.js'],
-  [APP,     'node scraper/fixtures/page_loads.js'],
-  [APP,     'node scraper/fixtures/page_renders.js'],
-  [APP,     'node scraper/fixtures/app_decisions.js'],
-  [APP,     'node scraper/fixtures/catalogue_lookup.js'],
-  [APP,     'node scraper/fixtures/catalogue_route.js'],
-  [APP,     'node scraper/fixtures/recheck_shop.js'],
-  [APP,     'node scraper/fixtures/lookup_log.js'],
-  [APP,     'node scraper/fixtures/cloud_ledger.js'],
-  [APP,     'node scraper/fixtures/cloud_app.js'],
-  [APP,     'node scraper/fixtures/cloud_two_copies.js'],
-  [APP,     'node scraper/fixtures/cloud_empty_import.js'],
+  [[...EVERY_APP, SCRAPER], 'node scraper/fixtures/intake_cases.js'],
+  [EVERY_APP, 'node scraper/fixtures/page_loads.js'],
+  [EVERY_APP, 'node scraper/fixtures/page_renders.js'],
+  [[APP, SCREEN], 'node scraper/fixtures/app_decisions.js'],
+  [[APP, LOOKUP], 'node scraper/fixtures/catalogue_lookup.js'],
+  [[APP, LOOKUP], 'node scraper/fixtures/catalogue_route.js'],
+  [[APP, LOOKUP], 'node scraper/fixtures/recheck_shop.js'],
+  [[APP, LOOKUP], 'node scraper/fixtures/lookup_log.js'],
+  [[APP, SAVING], 'node scraper/fixtures/cloud_ledger.js'],
+  [[APP, SAVING], 'node scraper/fixtures/cloud_app.js'],
+  [[APP, SAVING], 'node scraper/fixtures/cloud_two_copies.js'],
+  [[APP, SAVING], 'node scraper/fixtures/cloud_empty_import.js'],
   [SCRAPER, 'node scraper/fixtures/summary_pages.js'],
   [SCRAPER, 'node scraper/fixtures/orsay_pages.js'],
   [SCRAPER, 'node scraper/fixtures/pacing_pages.js'],
@@ -57,13 +66,13 @@ const SUITES = [
   [SCRAPER, 'node scraper/fixtures/description_pages_oct.js'],
   [SCRAPER, 'node scraper/fixtures/bridge_reuse.js'],
   [SCRAPER, 'node scraper/fixtures/robots_pages.js'],
-  [BOTH,    'node build/sync_shared.js --check'],
-  [BOTH,    'node scraper/fixtures/add_by_link.js'],
+  [[...BOTH, LINKS, LOOKUP], 'node build/sync_shared.js --check'],
+  [[...BOTH, LINKS, LOOKUP], 'node scraper/fixtures/add_by_link.js'],
 ];
 
 const half = process.argv[2];
-if (half && half !== APP && half !== SCRAPER) {
-  console.error(`Unknown half "${half}" — use app, scraper, or nothing for both.`);
+if (half && !GROUPS.includes(half)) {
+  console.error(`Unknown group "${half}" — use ${GROUPS.join(', ')}, or nothing for both halves.`);
   process.exit(2);
 }
 const picked = SUITES.filter(([tags]) => !half || [].concat(tags).includes(half)).map(([, cmd]) => cmd);
