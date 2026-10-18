@@ -55,6 +55,9 @@ site that changed.
   last hour, only the code has, so re-run the check on the replies already fetched;
 - fetch every listed page for a change that only touches one venue's rule — fetch that venue's pages only.
 
+**A site that refuses Parallel** (Pages, saved pages): her saved pages are the proof, kept in
+`docs/link_pages/saved/` and run by `add_by_page.js` (her decision — live proof is impossible there).
+
 **Catalogue search — `docs/lookup_proof_cards.json`**, her nine agreed cases. Checked against her own
 live lookups, not fetched by the session: save the lookup log (`node build/lookup_log.js` says how), then
 `node build/lookup_proof_check.js <saved dir>`; exit 1 on any difference.

@@ -255,6 +255,28 @@ passage is tolerated (her decision).
 
 Proof pages for every rule above: `docs/link_proof_pages.json`.
 
+## Saved pages — the Pages button
+
+For a site that refuses Parallel (her decision; Palazzo Reale Milano's pages on the city council's site,
+`www2.comune.milano.it`, answer Parallel 403). Import offers CSV · Links · Pages. She chooses saved show pages
+(Chrome's `.mht`/`.mhtml` from her phone, or `.html`); the app unpacks each to the text Parallel would give
+(`savedPageReply`: headings as `#`, links as `[text](href)`; the photos and fonts packed in the file
+dropped) and reads it with `readShowPage`, then the same intake as a link. No Parallel, no network.
+
+- **The address** comes from the file (`Snapshot-Content-Location`, else the canonical link); a page that
+  names none is refused, said so.
+- **Behaves as the Links box** (her design): every page chosen at once; listed by title; kept in the page's
+  store as text, one document each (`links_pages/…`), so the list survives a reload; Cancel, a rejected or
+  undecided card put pages back; Clear empties list and store.
+- **Palazzo Reale Milano on the council's site** files under `occ-palazzorealemilano-it` by path
+  (`SITE_PATH_VENUES` — a fixed rule, written in). Its options: the show's heading is the one ending
+  "- Palazzo Reale Milano" or "- Palazzo Reale, Milan" (`titleHeading`, `titleDrop`); dates and text stop at
+  the "Upcoming Exhibitions" box (`datesUntil`, `until` — Soutine took the box's first dates).
+- **Months only** ("september 2027 - january 2028", Soutine): never read as dates (no day is invented);
+  the page stays in the list, saying "Only the month and year are published".
+- **Proof:** her saved pages, kept in `docs/link_pages/saved/` cut to the page itself (her decision: the
+  site refuses Parallel, so live proof is impossible). Tests AP-001–010 (`add_by_page.js`).
+
 ## What links are for, and how far the reader reaches
 
 - **At a swept venue** a link is for shows before the 1 July 2024 lookback, or a venue she

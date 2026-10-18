@@ -419,7 +419,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 47.5 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 48 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -572,6 +572,9 @@ and were fixed in code, proven live).
   Detroit files a show's book in the show's own shop section. Her next lookups settle:
   O'Keeffe found at Detroit? The RA's search (`catalogsearch/result/?q=`, proved live) is stored at its next
   lookup; Mauritshuis and Yale show no priced book on their shelf, so stay shelf-only.
+- **Published at 48 — Pages: a show from a page she saved, for a site that refuses Parallel** (her design;
+  Import → CSV · Links · Pages, behaving as Links). Proved on her two Palazzo Reale Milano pages (council
+  site); her other six pages there confirm. `docs/add_by_link.md`, "Saved pages".
 - **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the
   scraper (her decision); a rule both use (the date reader) stays in `dates.js`. Live
   proof of every link venue: `docs/link_proof_pages.json`.
