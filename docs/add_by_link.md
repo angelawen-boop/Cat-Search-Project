@@ -160,6 +160,13 @@ and the lookup searches as "Museo di San Marco" (`OCC_NAME`; AL-046d). Names wri
 another Tuscan museum's show on that site. Its titles are the
 press-release headline (her decision). Shop: none (her answer). Proved live: *Beato Angelico*, *Rothko a Firenze*.
 
+**Palazzo Ducale Genova** (`occ-palazzoducale-genova-it`) and **Palazzo Reale Milano** (`occ-palazzorealemilano-it`):
+her names, written in (`OCC_SHORT`, `OCC_NAME`) — Genoa's page titles give none, Milan's name the city council;
+second and third under Occasional (her decision). Palazzo Reale Milano's heading is "I Brueghel - Palazzo Reale
+Milano" with the full name on a line below: `titleDrop` plus `nameInLines` (AL-048). Its /en/ pages print the
+show's text in Italian. The city's site (www2.comune.milano.it) refuses Parallel (403) and has no cached or
+archived copies: those links cannot be read.
+
 **NGA has its own chip** (her decision): National Gallery of Art links (`occ-nga-gov`) are an occasional venue
 in every other way, but sit under an "NG Washington" chip, never "Occasional", and their cards say NG Washington (`OWN_CHIP`;
 AL-030). A leading "Exhibition:" is dropped from titles (her ask; *Hubert Robert, 1733–1808*): an `OWN_CHIP`

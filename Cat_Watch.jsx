@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "47.4";
+const APP_VERSION = "47.5";
 const APP_VERSION_DATE = "18 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -75,7 +75,7 @@ const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
   "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-gemaeldegalerie-skd-museum","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
-  "occ-museitoscana-cultura-gov-it","occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
+  "occ-museitoscana-cultura-gov-it","occ-palazzoducale-genova-it","occ-palazzorealemilano-it","occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
   "occ-royalacademy-org-uk","ashmolean","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
 const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); return i<0?1e6:i; };
 MUSEUMS.sort((a,b)=>orderOf(a.id)-orderOf(b.id));
@@ -767,16 +767,22 @@ const chipKey=id=>(OWN_CHIP[id]||{}).group||id;
 // Her names for occasional venues filed under "Occasional", where the store's name is longer.
 // The Tuscan state museums' site (museitoscana.cultura.gov.it) names itself "Direzione regionale Musei
 // nazionali Toscana"; its cards show "San Marco" and the lookup searches as "Museo di San Marco" (her decision).
-const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worcester","occ-museitoscana-cultura-gov-it":"San Marco"};
+// Genoa's page titles give no name, Milan's name the city council (her names, both written in).
+const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worcester","occ-museitoscana-cultura-gov-it":"San Marco",
+  "occ-palazzoducale-genova-it":"Palazzo Ducale Genova","occ-palazzorealemilano-it":"Palazzo Reale Milano"};
 // The venue's full name, for the lookup, where the site's page titles name someone else.
-const OCC_NAME={"occ-museitoscana-cultura-gov-it":"Museo di San Marco"};
+const OCC_NAME={"occ-museitoscana-cultura-gov-it":"Museo di San Marco","occ-palazzoducale-genova-it":"Palazzo Ducale Genova",
+  "occ-palazzorealemilano-it":"Palazzo Reale Milano"};
 // Her names on the cards of occasional venues, where they differ from the short name.
 const OCC_CARD={"occ-mfa-org":"Boston MFA","occ-ngv-vic-gov-au":"National Gallery Victoria","occ-smb-museum":"Berlin Gem\u00e4ldegalerie","occ-gemaeldegalerie-skd-museum":"Dresden Gem\u00e4ldegalerie"};
 // Link options for occasional venues (as linkRead on a MUSEUMS entry), by the site's id.
 // Boston MFA prints the dates on the line above the show's title. NGV writes two-digit
 // years ("4 Sep 26 – 31 Jan 27"; shortYear). The Pinakothek der Moderne's own site prints
-// "10/07/2026 - 04/10/2026" above the title, day first (slashDayFirst).
+// "10/07/2026 - 04/10/2026" above the title, day first (slashDayFirst). Palazzo Reale Milano's
+// heading is the short name plus " - Palazzo Reale Milano", the full name on a line below it
+// (nameInLines: the longest line between title and dates that starts with the short name; AL-048).
 const OCC_LINK_READ={"occ-mfa-org":{datesAbove:2},"occ-ngv-vic-gov-au":{shortYear:true},
+  "occ-palazzorealemilano-it":{titleDrop:/\s+[-–—]\s+Palazzo Reale Milano$/i,nameInLines:true},
   "occ-pinakothek-der-moderne-de":{datesAbove:1,slashDayFirst:true}};
 // "4 Sep 26" → "4 Sep 2026": a two-digit year after a day and month, for a venue with shortYear.
 function withLongYears(l){
@@ -1077,6 +1083,14 @@ function linkTitle(base,subtitle,between){
   const sub=(between||[]).find(l=>k(l)===k(subtitle))||"";
   if(!sub||foldText(base).includes(foldText(sub)))return base;
   return base.replace(/[\s:.—-]+$/,"")+(/^(and|&)\s/.test(sub)?" ":": ")+sub;
+}
+
+// A venue whose full name sits on a line below its heading (linkRead.nameInLines): that line.
+function nameInLines(page,vc){
+  if(!(linkOptions(vc)||{}).nameInLines)return"";
+  const b=foldText(page.base).trim();
+  return (page.between||[]).filter(l=>{ const f=foldText(l).trim(); return f.length>b.length&&f.startsWith(b); })
+    .sort((x,y)=>y.length-x.length)[0]||"";
 }
 
 function linkPrompt(page){
@@ -5413,7 +5427,7 @@ export default function App(){
         // A venue whose subtitle sits under the heading: read by code. A line
         // ending like a sentence is the text, not a subtitle.
         const own=(MU[vc]||{}).subtitleUnderHeading&&page.under&&page.under.length<=120&&!/[.!?]$/.test(page.under)?page.under:"";
-        const lt=linkTitle(page.base,own||a.subtitle,page.between);
+        const lt=nameInLines(page,vc)||linkTitle(page.base,own||a.subtitle,page.between);
         const title=(linkOptions(vc)||{}).capsTitles?DATES.capsTitleParts(lt):lt;
         Object.assign(seen,{venue:vc,answer:a,subtitleUnderHeading:own||null,title});
         tape.row={title,museumId:vc,exUrl:url};

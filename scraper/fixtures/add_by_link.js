@@ -349,9 +349,19 @@ function runtime() {
     const gd = split('Van Dyck, the European -', 'palazzoducale.genova.it');
     ok(gd.show === 'Van Dyck, the European' && split('Show – ', 'x.org').show === 'Show' && split('A - B', 'x.org').show === 'A - B',
       'AL-047:  Genoa Van Dyck: a page title ending in a separator with no site after it loses the separator; a dash inside a title stays', JSON.stringify(gd));
+    const GD = 'occ-palazzoducale-genova-it', PR = 'occ-palazzorealemilano-it';
+    const o2 = fn('VENUE_ORDER'), s2 = fn('OCC_SHORT');
+    ok(o2[o2.indexOf(SM) + 1] === GD && o2[o2.indexOf(SM) + 2] === PR && s2[GD] === 'Palazzo Ducale Genova' && s2[PR] === 'Palazzo Reale Milano',
+      'AL-046e: Palazzo Ducale Genova second and Palazzo Reale Milano third under Occasional, by her names (her decision)', JSON.stringify([o2[o2.indexOf(SM) + 1], o2[o2.indexOf(SM) + 2]]));
+    // Shaped as the live reply (palazzorealemilano.it/en/-/brueghel): heading, short name, full name, dates.
+    const readPage = fn('readShowPage'), nil = fn('nameInLines');
+    const br = readPage({ title: 'I Brueghel - Palazzo Reale Milano - Comune di Milano', full_content: '4. I Brueghel\n\n# I Brueghel - Palazzo Reale Milano\n\n I Brueghel\n\n## I Brueghel. Le origini dei generi pittorici in Europa\n\nfrom 29 Sep 2026 to 31 Jan 2027\n\n# A Palazzo Reale dal 29 settembre 2026 al 31 gennaio 2027 la prima grande esposizione in Italia dedicata a una delle più influenti dinastie artistiche del Rinascimento europeo.\n\nIn programma dal 29 settembre 2026 al 31 gennaio 2027, la mostra accompagna il visitatore in un percorso storico e artistico attraverso oltre 80 opere tra dipinti, disegni e stampe.' }, 'https://www.palazzorealemilano.it/en/-/brueghel', PR);
+    ok(br.ok && nil(br, PR) === 'I Brueghel. Le origini dei generi pittorici in Europa' && br.start === '2026-09-29',
+      'AL-048:  Palazzo Reale Milano Brueghel: the full name below the heading is the title, "- Palazzo Reale Milano" dropped', JSON.stringify([br.base, nil(br, PR), br.start]));
+    ok(nil(br, 'occ-other-org') === '', 'AL-048a: at any other venue the rule does nothing');
     const order = fn('VENUE_ORDER'), short = fn('OCC_SHORT');
-    ok(order[order.indexOf('occ-mfa-org') - 1] === SM && short[SM] === 'San Marco',
-      'AL-046c: San Marco (museitoscana.cultura.gov.it) first in the Occasional group, named "San Marco" (her decision)', JSON.stringify([order[order.indexOf('occ-mfa-org') - 1], short[SM]]));
+    ok(order[order.indexOf('mam') + 1] === SM && short[SM] === 'San Marco',
+      'AL-046c: San Marco (museitoscana.cultura.gov.it) first in the Occasional group, named "San Marco" (her decision)', JSON.stringify([order[order.indexOf('mam') + 1], short[SM]]));
   }
   // ── AL-031: NGA Souvenirs of the Gilded Age — a doubled colon becomes one ─
   // Live page on docs/link_proof_pages.json; its page title reads "Age:: French".
