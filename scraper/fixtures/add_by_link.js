@@ -628,6 +628,8 @@ function runtime() {
     asked.length = 0;
     const m = await A.proveShopSearch(LIVE['https://www.museumsshop.cedon.de/Kataloge/Pinakothek-der-Moderne-Muenchen'], 'https://www.museumsshop.cedon.de/');
     ok(m === 'https://www.museumsshop.cedon.de/search?search=', 'AL-044d:  CEDON\'s search proved at "search?search="; "search?q=", the same page whatever is asked, turned down', m);
+    const front = labels('https://www.smb-webshop.de/', 'www.smb-webshop.de');
+    ok(front[0] === 'Göttinnen und Gattinnen. Frauen im antiken Mythos', 'AL-044f:  a title cut short on the page ("Frauen...") takes the book\'s full title', JSON.stringify(front[0]));
     ok(asked.join() === '8,4', 'AL-044e:  today\'s call unchanged (four searches); the Shopware two only in a second call when it proves nothing', asked.join());
   }
 

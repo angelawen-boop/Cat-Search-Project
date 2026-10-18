@@ -112,7 +112,7 @@ read and what the card links (`siteUrlOf`; AL-037).
 A search is kept only if it finds a book the finder saw (`proveShopSearch`; AL-008k, AL-014); older venues
 work it out at first lookup. **Where those rules found nothing, three fallbacks (her decision, every venue; AL-044):**
 a book whose price sits a few lines below its title link, in its own block (CEDON, Berlin; not a button like "Reset"
-or "Shop now", not an empty basket's "0,00 €"); Shopware's two searches (`search?search=`, `search?sSearch=`) in a
+or "Shop now", not an empty basket's "0,00 €"; a title cut short takes the book's full one); Shopware's two searches (`search?search=`, `search?sSearch=`) in a
 second call, so the first call is unchanged; and the book found in the results by its title when its address differs
 — only on a page for that book alone, so a page that ignores the words (Berlin's home page, CEDON's `search?q=`) proves
 nothing. A section taken on its excerpt is opened once for its books. Venues stored before (`SEARCH_RULE`) are proved

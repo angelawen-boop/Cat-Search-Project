@@ -1334,10 +1334,14 @@ function booksSeenOn(text,host,both){
   }
   if(out.length&&!both)return out;
   const links=[...String(text||"").matchAll(/\[([^\]\[]{3,160})\]\((https?:\/\/[^)\s]+)(?:\s+"[^"]*")?\)/g)].filter(m=>hostOf(m[2])===host);
+  // A title cut short ("Göttinnen und Gattinnen. Frauen...", Berlin) takes its book's longest one.
+  const full=new Map();
+  for(const m of links){ let p=""; try{ p=new URL(m[2]).pathname; }catch{ continue; } const l=stripMd(m[1]).trim(); if(l.length>(full.get(p)||"").length)full.set(p,l); }
   links.forEach((m,i)=>{
     const end=i+1<links.length?links[i+1].index:undefined;
     const block=String(text).slice(m.index+m[0].length,end).split("\n").map(l=>l.trim()).filter(Boolean).slice(0,BLOCK_LINES);
-    if(!BUTTON_LABEL.test(stripMd(m[1]).trim())&&block.some(realPrice))add(m[1],m[2]);
+    let p=""; try{ p=new URL(m[2]).pathname; }catch{}
+    if(!BUTTON_LABEL.test(stripMd(m[1]).trim())&&block.some(realPrice))add(full.get(p)||m[1],m[2]);
   });
   return out;
 }
