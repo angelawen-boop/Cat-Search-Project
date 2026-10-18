@@ -407,7 +407,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 47.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 47.3 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -542,6 +542,13 @@ venue the app has never seen needs a fix about half the time** — the exhibitio
 correctly off the page, the venue's shop is not found, and so on (Mia and Worcester both missed
 and were fixed in code, proven live).
 
+- **Published at 47.3 — Sammlung Schack (third Munich venue, no shop) and Dresden (chip "Dresden", cards
+  "Dresden Gemäldegalerie"; she answers No shop once on its shop screen) by link; Munich titles typed in capitals
+  recased (shared `capsTitleParts`, `dates.js`); a house line over the dates read again (Van Dyck, Boucher).
+  Proved live on 105 proof pages; her next links confirm the descriptions and subtitles Claude writes.
+  `docs/add_by_link.md`, "Munich" and "Dresden". The Städel (Frankfurt) is researched, on hold (her decision):
+  its pages read cleanly; its catalogue shop (liebieghaus.ticketfritz.de, "Städel Publikationen") is found by the
+  finder but shows no books to Parallel, so it ends "Shop found, but not its books section".
 - **Published at 47.2 — Berlin and Munich by link; her next links and lookups there confirm.** Dotted dates
   day first (DS-004), headings over two lines, ranges over three lines, Berlin's shop found (German compounds,
   a book's address stands for its section); chips "Munich Pinakotheken" and "Berlin" after KHM, "Rijks" for
