@@ -255,6 +255,13 @@ passage is tolerated (her decision).
 
 Proof pages for every rule above: `docs/link_proof_pages.json`.
 
+## San Marco's titles
+
+Its pages are press releases (museitoscana.cultura.gov.it). The title is the headline's first sentence,
+without "Mostra" or the quotation marks round the name, capitals recased (her decision; `firstSentence`,
+`titleDrop`, `unquote`, `capsTitles`): *Rothko a Firenze*, *Beato Angelico*. Cards already in her ledger
+change only when their link is read again (a Change card for the title and the description).
+
 ## Saved pages — the Pages button
 
 For a site that refuses Parallel (her decision; Palazzo Reale Milano's pages on the city council's site,
@@ -272,8 +279,12 @@ dropped) and reads it with `readShowPage`, then the same intake as a link. No Pa
   (`SITE_PATH_VENUES` — a fixed rule, written in). Its options: the show's heading is the one ending
   "- Palazzo Reale Milano" or "- Palazzo Reale, Milan" (`titleHeading`, `titleDrop`); dates and text stop at
   the "Upcoming Exhibitions" box (`datesUntil`, `until` — Soutine took the box's first dates).
-- **Months only** ("september 2027 - january 2028", Soutine): never read as dates (no day is invented);
-  the page stays in the list, saying "Only the month and year are published".
+- **Months only** ("september 2027 - january 2028", Soutine): at this venue only (`monthsOnly`), the first
+  day of the opening month to the last of the closing one (her decision: "Jan to Mar" means start of Jan to
+  end of Mar), noted on the approval card only (`findMonthRange`, `dates.js`). Anywhere else a day is never
+  invented: the page stays in the list, saying "Only the month and year are published".
+- **Capitals** recased at this venue (`capsTitles`, her decision): CASORATI → Casorati; a title mixing
+  capitals and ordinary letters in one part (I am LEONOR FINI) stays as typed.
 - **Proof:** her saved pages, kept in `docs/link_pages/saved/` cut to the page itself (her decision: the
   site refuses Parallel, so live proof is impossible). Tests AP-001–010 (`add_by_page.js`).
 
