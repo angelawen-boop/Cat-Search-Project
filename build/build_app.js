@@ -34,7 +34,7 @@
  * reading the page first does not count as viewing it unless every line of the
  * saved file is read, so no read is made.
  *
- *   NEVER REPUBLISH WHILE SHE HAS THE PAGE OPEN — house rule, CLAUDE.md §1.
+ *   Publish only on her say-so; once she has said to publish, do it without asking again (CLAUDE.md §1).
  *   Her ledger lives IN that page until she Exports.
  *
  * Usage:
@@ -163,6 +163,6 @@ console.log('  3. Send the same file again. Refused as "identical content ... re
 console.log('     expected. Send it once more and it goes through.');
 console.log('  4. Push ' + branch + '. If anything else happens, update these lines.');
 console.log('');
-console.log('  NEVER REPUBLISH WHILE SHE HAS THE PAGE OPEN (CLAUDE.md §1). Ask first.');
+console.log('  Publish only on her say-so; once she has said to publish, do it without asking again (CLAUDE.md §1).');
 console.log('  Run `npm run test:app` before publishing: page_renders.js is the only check that');
 console.log('  catches a page which parses and still shows a black screen.');

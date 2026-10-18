@@ -26,7 +26,10 @@ is why they live in one repo, on one branch.
 - **Short and concise.**
 - **Suppress most of thinking output. Work quietly** - surface only what needs her.
 - **Destructive actions need a confirmed backup or an explicit yes.**
-- **Never republish the app before confirming it is safe to do so** - republishing in the background can cause loss of unsaved ledger.
+- **Publishing — her go-ahead is the safety check.** When she says to publish ("u can publish", "publish",
+  "go ahead and publish"), publish at once, even if a screenshot shows the page open or mid-import — she has
+  judged it safe. Do not ask again or warn about unsaved work. Ask before publishing only when she has NOT said
+  to publish this change in this conversation (republishing in the background can lose unsaved work).
 - **Her report and output first** - update the guide only after you have responded to the rest of her request.
 - **Applying to the scraper and scraper-related work only — test conservatively.** Every page a sweep fetches counts towards the venue's rate limit. Use saved pages first, with no network. Never a blanket re-sweep.
 - **For work not relating to the scraper and which uses Parallel's features — testing is always against the live internet**, ie. pages fetched live through Parallel. Do not test on saved pages and do not invent test pages. A feature keeps a list of where its tests live on the internet — addresses and the signed-off result for each — so any later change is re-checked by fetching that list live. Add by link's: `docs/link_proof_pages.json`, checked by `scraper/link_proof_check.js`.
