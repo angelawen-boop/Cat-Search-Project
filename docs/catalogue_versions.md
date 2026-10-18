@@ -159,6 +159,20 @@ source link.
 - **Must fix:** a shop page with a language choice counts as in the shop for every edition it offers;
   `PUBLISHER_LABEL` must not match inside "Publishers"/"Verlagshaus" (a word end after the label).
 
+### 12. Paradise on Earth — Dresden Gemäldegalerie, 2016–17 (added later: to fix)
+- German · Sandstein · 978-3954982523 — *Das Paradies auf Erden: Flämische Landschaften von Bruegel bis
+  Rubens*, 368 pp (the museum's show page gives this ISBN; Stanford, SLUB and AbeBooks agree). No English
+  edition found; no live Sandstein page for it (the museum's link, verlag.sandstein.de, is dead).
+- **Wrong today (app 47.3; lookup log record L1792302725988o8sx):** the right book, but its publisher reads
+  "Gunter Oettel, ISBN: 103944560728, 60 €" — so on the card it looks like another book. Proven, the same
+  bug as case 11: `publisherGroups` counts any result whose text holds the ISBN, and the museum's two
+  "Publikationen" pages (gemaeldegalerie.skd.museum and skd.museum, /ueber-uns/publikationen) list many
+  books, this one among them. On them `PUBLISHER_LABEL` matches "Verlag" in another book's line ("Verlag
+  Gunter Oettel, ISBN: …, 60 €") and takes what follows. Two pages = two votes, so it replaced Claude's
+  correct "Sandstein Verlag" ("Publisher: … from the ISBN's results, replacing …").
+- **Must fix:** a publisher label counts only on the line that holds the ISBN (never anywhere on a page
+  listing many books), and the name it takes stops at the first comma / "ISBN" / price.
+
 ## Settled with her
 
 - **Not catalogues, left off** like booklets: a same-titled book by the curator
