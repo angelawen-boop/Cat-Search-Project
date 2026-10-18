@@ -32,6 +32,9 @@ is why they live in one repo, on one branch.
 - **For work not relating to the scraper and which uses Parallel's features — testing is always against the live internet**, ie. pages fetched live through Parallel. Do not test on saved pages and do not invent test pages. A feature keeps a list of where its tests live on the internet — addresses and the signed-off result for each — so any later change is re-checked by fetching that list live. Add by link's: `docs/link_proof_pages.json`, checked by `scraper/link_proof_check.js`.
 - **Raise a past decision by describing the context, not by reference to a date.** She keeps no log and a date tells her nothing. Say it as: "Because of X, you decided Y. Would you like to reconsider? / If this changes your decision, we can do Z." Call it her decision or her judgement call — never a "ruling" or a "rule".
 - **A question gets an answer first.** "Talk to me about X" means discuss; nothing is built until she says.
+- **Any question or challenge in her message means answer only (her decision).** If any part of a message
+  holds a question or a challenge, do not write, edit or touch any code — answer the questions. A "yes" or
+  "ok" elsewhere in the same message is not a go-ahead.
 - **Respect UI simplicity and specific UI instructions.** Build what she named, nothing added. "Add a copy icon" = an icon, not an icon plus the word "Copy". "Copy this line for case X and Y" = the same line with only the words naming X and Y swapped, never a new, longer line.
 - **Label a guess as exactly that** - say what is not proven and what would be settled by a check.
 - **Never hide a hard-coded answer.** If a fix writes the answer into the app (an address, a value, a
