@@ -73,7 +73,7 @@ const MUSEUMS = [
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
-  "louvre","orsay","jacquemart","mad","rijks","khm","occ-smb-museum","uffizi","dellav","borghese","brera","capo","moma",
+  "louvre","orsay","jacquemart","mad","rijks","khm","occ-pinakothek-de","occ-smb-museum","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
   "occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
   "occ-royalacademy-org-uk","ashmolean","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
@@ -681,6 +681,9 @@ const OWN_CHIP={
   "occ-britishart-yale-edu":{short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art",rankAsOwn:["Yale University Press"]},
   // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin
   // Gemäldegalerie" (her decision, OCC_CARD).
+  // Bayerische Staatsgemäldesammlungen (pinakothek.de): chip "Munich" before Berlin, every
+  // other place "Munich Pinakotheken" (her decision).
+  "occ-pinakothek-de":{short:"Munich Pinakotheken",chip:"Munich",lookupName:"Pinakothek M\u00fcnchen",name:"Pinakotheken M\u00fcnchen"},
   "occ-smb-museum":{short:"Berlin",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
 };
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
@@ -1038,7 +1041,7 @@ function occEntry(v){
   // `short` is her name for the venue's cards, written into the store by a session;
   // the page title's name stands until then.
   const own=OWN_CHIP[v.id]||{};
-  return{id:v.id,short:own.short||OCC_SHORT[v.id]||v.short||v.name,card:OCC_CARD[v.id],lookupName:own.lookupName||v.short||v.name,name:(OWN_CHIP[v.id]||{}).name||v.name,occasional:true,english:v.english===false?false:undefined,
+  return{id:v.id,short:own.short||OCC_SHORT[v.id]||v.short||v.name,chip:own.chip,card:OCC_CARD[v.id],lookupName:own.lookupName||v.short||v.name,name:(OWN_CHIP[v.id]||{}).name||v.name,occasional:true,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
     shopUnknown:!live&&!(v.shop==="none"&&v.confirmed)};
@@ -1060,7 +1063,7 @@ function registerUnseenOccasional(rows){
     if(!isOcc(r.museumId)||MU[r.museumId])continue;
     const name=(OWN_CHIP[r.museumId]||{}).name||hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4);
     const own=OWN_CHIP[r.museumId]||{};
-    MU[r.museumId]={id:r.museumId,short:own.short||OCC_SHORT[r.museumId]||name,card:OCC_CARD[r.museumId],lookupName:own.lookupName||name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
+    MU[r.museumId]={id:r.museumId,short:own.short||OCC_SHORT[r.museumId]||name,chip:own.chip,card:OCC_CARD[r.museumId],lookupName:own.lookupName||name,name,occasional:true,exBase:null,listUrl:null,shopHome:null,shopCatalogues:null,shopSearch:null,shopUnknown:true};
     KNOWN_VENUES.add(r.museumId);
   }
 }

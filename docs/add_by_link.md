@@ -162,6 +162,11 @@ from under the heading.
 "Berlin Gemäldegalerie" (her decision); its shop is searched as "Staatliche Museen zu Berlin" (`OWN_CHIP`,
 `OCC_CARD`). Dates are numbers with dots, day first (DS-004). Eleven pages on the proof list.
 
+**Munich** (Bayerische Staatsgemäldesammlungen, `occ-pinakothek-de`): its own chip "Munich", before Berlin;
+everywhere else "Munich Pinakotheken" (her decision; `chip` on `OWN_CHIP`). Read by the general reader (one
+proof page). **Open: its shop.** Sold by CEDON (`museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen`),
+linked only from the museum's house pages, never a show page: the finder answers "No museum shop found".
+
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her decision: Parallel-only rules
 live in the app, never the scraper). They only tidy what Claude is handed. Options: `title`, `titleDrop` (a
 label before the show's name), `dateLine` (dates from the first line matching, anywhere), `from` / `until`
