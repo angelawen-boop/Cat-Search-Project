@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "47.5";
+const APP_VERSION = "48";
 const APP_VERSION_DATE = "18 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -781,8 +781,14 @@ const OCC_CARD={"occ-mfa-org":"Boston MFA","occ-ngv-vic-gov-au":"National Galler
 // "10/07/2026 - 04/10/2026" above the title, day first (slashDayFirst). Palazzo Reale Milano's
 // heading is the short name plus " - Palazzo Reale Milano", the full name on a line below it
 // (nameInLines: the longest line between title and dates that starts with the short name; AL-048).
+// Its pages on the city council's site open with a "# Navigation" heading and the site's menu;
+// the show's heading is the one ending in the venue's name (titleHeading), "Milano" or "Milan".
+const PRM_TAIL=/\s+[-–—]\s+Palazzo Reale,? Milano?$/i;
+// Its "Upcoming Exhibitions" box lists other shows with their dates: the show's own dates and
+// text end there (until, datesUntil; Soutine took the box's first dates).
+const PRM_BOX=/^(?:Current|Upcoming|Past) Exhibitions$|^Mostre (?:in corso|future|passate)$/i;
 const OCC_LINK_READ={"occ-mfa-org":{datesAbove:2},"occ-ngv-vic-gov-au":{shortYear:true},
-  "occ-palazzorealemilano-it":{titleDrop:/\s+[-–—]\s+Palazzo Reale Milano$/i,nameInLines:true},
+  "occ-palazzorealemilano-it":{titleHeading:PRM_TAIL,titleDrop:PRM_TAIL,nameInLines:true,until:PRM_BOX,datesUntil:PRM_BOX},
   "occ-pinakothek-der-moderne-de":{datesAbove:1,slashDayFirst:true}};
 // "4 Sep 26" → "4 Sep 2026": a two-digit year after a day and month, for a venue with shortYear.
 function withLongYears(l){
@@ -954,6 +960,8 @@ function readShowPage(res,url,vc){
     if(m>=0)after=lines.findIndex((l,k)=>k>m&&/^\s*#{1,6}\s+\S/.test(l));
     add(after);
   }
+  // A venue whose show heading carries a mark of its own (linkRead.titleHeading) tries it first.
+  if(lr&&lr.titleHeading)add(lines.findIndex(l=>/^\s*#{1,6}\s+\S/.test(l)&&lr.titleHeading.test(stripMd(l).trim())));
   add(lines.findIndex(l=>/^\s*#\s+\S/.test(l)));
   add(broken);
   if(show){
@@ -984,6 +992,8 @@ function readShowPage(res,url,vc){
     }
     for(let k=h+1,seen=0;k<lines.length&&seen<LINK_DATE_LINES;k++){
       const l=stripMd(lines[k]); if(!l)continue; seen++;
+      // A venue whose box of other shows sits below (linkRead.datesUntil): never read past it.
+      if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim()))break;
       const r=DATES.findDateRange(dateText(l),{looseSingles:false});
       if(r.start||r.end)return{d:k,range:r};
       // A range printed over three lines, the middle one only "to" or a dash (Berlin).
@@ -998,7 +1008,14 @@ function readShowPage(res,url,vc){
   };
   let h=cands[0],found=null;
   for(const i of cands){ found=datesUnder(i); if(found){ h=i; break; } }
-  if(!found)return{ok:false,why:"No dates found under the show’s title."};
+  if(!found){
+    // Only a month and year printed (Soutine: "september 2027 - january 2028"): no day is
+    // ever invented, so said as such.
+    const h0=cands[0], near=[];
+    for(let k=h0+1;k<lines.length&&near.length<LINK_DATE_LINES;k++){ const l=stripMd(lines[k]); if(!l)continue; if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim()))break; near.push(l); }
+    const mo=near.map(l=>DATES.findDateRange(l,{looseSingles:true})).find(r=>r.shownText);
+    return{ok:false,why:mo?"Only the month and year are published (\u201c"+near.find(l=>l.includes(mo.shownText))+"\u201d), no days.":"No dates found under the show’s title."};
+  }
   const heading=stripMd(lines[h]);
   const d=found.d,dEnd=found.dEnd||found.d;
   let range=found.range;
@@ -1130,7 +1147,7 @@ const HOUSES={
 // The venue a read page files under → {id, line} (line: the house line, not a subtitle),
 // or {id:null, why} for a shared site's page naming none of its houses.
 function linkVenue(url,page){
-  const known=knownVenueFor(url);
+  const known=knownVenueFor(url)||siteVenueFor(url);
   if(known)return{id:known};
   const occ=occVenueId(hostOf(siteUrlOf(url))), h=HOUSES[occ];
   if(!h)return{id:occ};
@@ -1143,7 +1160,17 @@ function linkVenue(url,page){
 // The venue whose link options read a page: a swept venue, or an occasional one with options of its own.
 function linkReadVenue(url){
   const occ=occVenueId(hostOf(siteUrlOf(url)));
-  return knownVenueFor(url)||(ownChip(occ)||OCC_LINK_READ[occ]?occ:null);
+  return knownVenueFor(url)||siteVenueFor(url)||(ownChip(occ)||OCC_LINK_READ[occ]?occ:null);
+}
+// A venue whose pages also sit on someone else's site, told apart by path: Palazzo Reale
+// Milano's pages on the city council's site (www2.comune.milano.it), saved by her because
+// the site refuses Parallel (docs/add_by_link.md, "Saved pages").
+const SITE_PATH_VENUES=[{host:"www2.comune.milano.it",path:/^\/(?:en|it)\/web\/palazzo-reale-milano\//,id:"occ-palazzorealemilano-it"}];
+function siteVenueFor(url){
+  let u; try{ u=new URL(siteUrlOf(url)); }catch{ return null; }
+  const h=u.hostname.toLowerCase().replace(/^www\./,"");
+  const hit=SITE_PATH_VENUES.find(v=>v.host.replace(/^www\./,"")===h&&v.path.test(u.pathname));
+  return hit?hit.id:null;
 }
 
 // A link to one of the swept venues files under it, matched by site from the scraper's
@@ -1207,6 +1234,99 @@ async function writeOccasional(map){
   if(!db)return false;
   try{ await db.doc(OCC_DOC).set({venues:map,updatedAt:new Date().toISOString()}); return true; }catch{ return false; }
 }
+// ── PAGES: a show page she saved (her decision; docs/add_by_link.md, "Saved pages") ──
+// For a site that refuses Parallel. A saved page (.mht/.mhtml from Chrome, or .html) is
+// turned into the reply Parallel gives — {url,title,full_content}, headings as "#",
+// links as [text](href) — and read by readShowPage like any link. Only the page's own
+// text is kept; the photos and fonts packed in the file are dropped.
+function savedPageHtml(text){
+  const t=String(text||"");
+  const b=(t.match(/boundary="?([^";\r\n]+)"?/i)||[])[1];
+  if(!b||!/^\s*(?:From:|MIME-Version:|Snapshot-Content-Location:|Subject:|Date:)/i.test(t))return{html:t,url:""};
+  const url=(t.match(/^Snapshot-Content-Location:\s*(\S+)/mi)||[])[1]||"";
+  for(const part of t.split("--"+b)){
+    const cut=part.search(/\r?\n\r?\n/); if(cut<0)continue;
+    const head=part.slice(0,cut);
+    if(!/^Content-Type:\s*text\/html/mi.test(head))continue;
+    let body=part.slice(cut).replace(/^\r?\n\r?\n/,"");
+    const enc=(head.match(/^Content-Transfer-Encoding:\s*(\S+)/mi)||[])[1]||"";
+    if(/quoted-printable/i.test(enc)){
+      const bytes=[],raw=body.replace(/=\r?\n/g,"");
+      for(let i=0;i<raw.length;i++){
+        if(raw[i]==="="&&/^[0-9A-F]{2}$/i.test(raw.slice(i+1,i+3))){ bytes.push(parseInt(raw.slice(i+1,i+3),16)); i+=2; }
+        else{ const c=raw.charCodeAt(i); if(c<128)bytes.push(c); else bytes.push(...new TextEncoder().encode(raw[i])); }
+      }
+      body=new TextDecoder("utf-8").decode(new Uint8Array(bytes));
+    }else if(/base64/i.test(enc)){
+      body=new TextDecoder("utf-8").decode(Uint8Array.from(atob(body.replace(/\s+/g,"")),c=>c.charCodeAt(0)));
+    }
+    return{html:body,url:url||(head.match(/^Content-Location:\s*(\S+)/mi)||[])[1]||""};
+  }
+  return{html:"",url};
+}
+// parse: html → a Document (the page's own DOMParser; a test hands in jsdom's).
+function savedPageReply(text,parse){
+  const got=savedPageHtml(text);
+  if(!got.html.trim())return{ok:false,why:"The file holds no web page."};
+  const doc=parse(got.html);
+  const meta=sel=>{ const e=doc.querySelector(sel); return e?(e.getAttribute("href")||e.getAttribute("content")||"").trim():""; };
+  const url=got.url||meta('link[rel="canonical"]')||meta('meta[property="og:url"]')||((String(text).match(/saved from url=\(\d+\)(\S+?)\s*-->/i)||[])[1]||"");
+  if(!/^https?:\/\//i.test(url))return{ok:false,why:"The saved page doesn’t say its web address."};
+  for(const e of doc.querySelectorAll("script,style,noscript,svg,template,iframe"))e.remove();
+  const out=[];
+  const BLOCK=/^(?:P|DIV|SECTION|ARTICLE|MAIN|HEADER|FOOTER|NAV|ASIDE|UL|OL|TABLE|TR|DL|DT|DD|FIGURE|FIGCAPTION|BLOCKQUOTE|FORM|FIELDSET)$/;
+  const walk=n=>{
+    if(n.nodeType===3){ out.push(n.textContent.replace(/\s+/g," ")); return; }
+    if(n.nodeType!==1)return;
+    const tag=n.tagName.toUpperCase(), h=tag.match(/^H([1-6])$/);
+    if(tag==="BR"){ out.push("\n"); return; }
+    if(tag==="A"){
+      const href=n.getAttribute("href")||"", txt=n.textContent.replace(/\s+/g," ").trim();
+      let abs=""; try{ abs=new URL(href,url).href; }catch{}
+      if(txt&&/^https?:/i.test(abs)&&!n.querySelector("h1,h2,h3,h4,h5,h6,p,div,li")){ out.push("["+txt+"]("+abs+")"); return; }
+    }
+    if(h||tag==="LI"||BLOCK.test(tag))out.push("\n\n");
+    if(h)out.push("#".repeat(+h[1])+" ");
+    if(tag==="LI")out.push("* ");
+    for(const c of n.childNodes)walk(c);
+    if(h||tag==="LI"||BLOCK.test(tag))out.push("\n\n");
+  };
+  if(doc.body)walk(doc.body);
+  const full=out.join("").split("\n").map(l=>l.replace(/[ \t]+/g," ").trim()).join("\n").replace(/\n{3,}/g,"\n\n").trim();
+  const title=((doc.querySelector("title")||{}).textContent||"").replace(/\s+/g," ").trim();
+  return{ok:true,res:{url,title,full_content:full}};
+}
+// The pages waiting in the Pages list — their text, not the files — kept in the page's
+// store like the Links box (her decision), one document each (the store caps a document).
+const PAGES_COLL="links_pages";
+const pageDocId=u=>{ let h=5381; for(const c of String(normalizeUrlKey(u)||u))h=((h*33)^c.charCodeAt(0))>>>0; return "p"+h.toString(36); };
+async function readPendingPages(){
+  const db=await useCap("db");
+  if(!db)return[];
+  try{
+    const snap=await db.collection(PAGES_COLL).orderBy("at","asc").limit(1000).get();
+    return snap.docs.map(d=>d.data()||{}).filter(p=>p.url&&p.text).map(p=>({url:p.url,title:p.title||"",name:p.name||"",text:p.text}));
+  }catch{ return []; }
+}
+async function writePendingPages(list){
+  const db=await useCap("db");
+  if(!db)return false;
+  try{
+    const keep=new Set(list.map(p=>pageDocId(p.url)));
+    const snap=await db.collection(PAGES_COLL).orderBy("at","asc").limit(1000).get();
+    for(const d of snap.docs) if(!keep.has(d.id))await db.doc(PAGES_COLL+"/"+d.id).delete();
+    const at=Date.now();
+    for(let i=0;i<list.length;i++){ const p=list[i]; await db.doc(PAGES_COLL+"/"+pageDocId(p.url)).set({url:p.url,title:p.title||"",name:p.name||"",text:p.text,at:at+i}); }
+    return true;
+  }catch{ return false; }
+}
+// Pages in a list once each, by address; a later pick of the same page replaces it.
+function mergePages(had,add){
+  const by=new Map();
+  for(const p of [...had,...add])by.set(normalizeUrlKey(p.url)||p.url,p);
+  return [...by.values()];
+}
+
 async function readPendingLinks(){
   const db=await useCap("db");
   if(!db)return"";
@@ -4746,6 +4866,8 @@ export default function App(){
   const[linkNote,setLinkNote]=useState(null);
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
+  const[pages,setPages]=useState([]);   // Pages: saved pages waiting, as text ({url,title,name,text})
+  const pagesFileRef=useRef(null);
   const linksAtRead=useRef(null);   // the links the open review was read from; Cancel import puts them back
   const linkRead=useRef({on:false,stop:false});   // a Read under way; Cancel mid-Read stops it after the link in hand
   const[occVenues,setOccVenues]=useState({});
@@ -4922,6 +5044,7 @@ export default function App(){
     // Add by link: the venues it has met, and links still waiting in the box.
     readOccasional().then(map=>{ occSaved.current=map; registerOccasional(map); setOccVenues(map); });
     readPendingLinks().then(t=>{ if(t)setLinkText(t); });
+    readPendingPages().then(l=>{ if(l.length)setPages(l); });
   },[]);
 
   // Keep the "Last saved ... ago" text and its colour current.
@@ -5371,9 +5494,13 @@ export default function App(){
   // One page read per link, then one model call for the prose; a new venue's
   // shop is found once. Every row then goes through analyzeProForma, the same
   // door as a sweep file. What could not be read stays in the box.
-  async function readLinks(){
-    const urls=linksIn(linkText);
-    if(!urls.length){ setLinkFails([{url:"",why:"No links found in the box."}]); return; }
+  // Pages (saved pages) take the same road, the page's text in place of the fetch;
+  // what could not be read stays in the Pages list.
+  async function readLinks(kind){
+    const fromPages=kind==="pages";
+    const items=fromPages?pages:linksIn(linkText).map(url=>({url}));
+    const urls=items.map(x=>x.url);
+    if(!urls.length){ setLinkFails([{url:"",why:fromPages?"No pages chosen.":"No links found in the box."}]); return; }
     setBusy(true); setLinkNote(null); setLinkFails([]);
     linkRead.current={on:true,stop:false};
     const got=[], fails=[], met=new Set(), looked=new Set();
@@ -5382,12 +5509,13 @@ export default function App(){
       if(linkRead.current.stop)break;
       const url=urls[n];
       setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026"});
+      const item=items[n];
       // Each link's reading is one record in the lookup log: what code read off the
       // page, Claude's answer and the title made from them.
-      const tape=tapeStart("Add by link",{title:url,exUrl:url}), seen={url};
+      const tape=tapeStart(fromPages?"Add by page":"Add by link",{title:url,exUrl:url}), seen={url};
       const failsBefore=fails.length;
       try{
-        const f=await fetchPage(url,"The exhibition's title, dates and description.",null,{full:true});
+        const f=fromPages?{ok:true,results:[{url,title:item.title,full_content:item.text}]}:await fetchPage(url,"The exhibition's title, dates and description.",null,{full:true});
         if(!f.ok){ fails.push({url,why:f.detail}); continue; }
         const res=f.results[0];
         if(!res){
@@ -5446,23 +5574,43 @@ export default function App(){
     linkRead.current={on:false,stop:false};
     if(venuesChanged){ registerOccasional(venues); setOccVenues(venues); }   // held, not stored: see occSaved
     setProg({done:0,total:0,label:""}); setBusy(false); setReadVenues([...met]);
-    const left=fails.map(x=>x.url).join("\n");
-    setLinkText(left); setLinkFails(fails);   // the box is stored when the import finishes
+    const failed=new Set(fails.map(x=>x.url));
+    const left=fails.map(x=>x.url).join("\n"), leftPages=pages.filter(p=>failed.has(p.url));
+    // The box (or list) is stored when the import finishes.
+    if(fromPages)setPages(leftPages); else setLinkText(left);
+    setLinkFails(fails);
     linksAtRead.current=null;
     if(!got.length)return;
     const res=analyzeProForma(proFormaCsv(got),new Set(ignored.map(x=>x.key)),{notePrefix:""});
     if(res.error){ setLinkNote(res.error); return; }
     if(!res.props.length){
       setTally(res.tally||null);
-      writePendingLinks(left);   // nothing to approve: this Read is finished
-      setLinkNote("Read "+got.length+" link"+(got.length===1?"":"s")+", but nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+".");
+      if(fromPages)writePendingPages(leftPages); else writePendingLinks(left);   // nothing to approve: this Read is finished
+      setLinkNote("Read "+got.length+(fromPages?" page":" link")+(got.length===1?"":"s")+", but nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+".");
       return;
     }
     setProposals(res.props); setCoverage([]); setTally(res.tally||null); setSeenInFile(null); setDecisions(topicPresets(res.props));
-    linksAtRead.current=urls;
+    linksAtRead.current=fromPages?{pages:items}:urls;
     // Done with the pop-up — unless a link could not be read: then it stays
     // under the review, its lines waiting for her when the review closes.
     if(!fails.length)setImportMode(null);
+  }
+  // Pages chosen: each file turned into its text now, the file itself never kept. Added to
+  // the list (and the store) at once, as typing fills the Links box.
+  async function pickPages(e){
+    const files=[...(e.target.files||[])]; e.target.value="";
+    if(!files.length)return;
+    const add=[], bad=[];
+    for(const f of files){
+      let r;
+      try{ r=savedPageReply(await f.text(),h=>new DOMParser().parseFromString(h,"text/html")); }
+      catch(err){ r={ok:false,why:"Couldn\u2019t read it ("+String((err&&err.message)||err)+")."}; }
+      if(r.ok)add.push({url:r.res.url,title:r.res.title,name:f.name,text:r.res.full_content});
+      else bad.push({url:"",why:f.name+": "+r.why});
+    }
+    const list=mergePages(pages,add);
+    setPages(list); setLinkFails(bad); setLinkNote(null);
+    if(add.length)writePendingPages(list);
   }
   // The shop screen's answers are held in the working copy and stored when the ledger
   // moves; Cancel import drops them, Back keeps them (her decision). Confirmed in a
@@ -5571,8 +5719,14 @@ export default function App(){
     if(seenInFile)recordSweep(seenInFile);
     else{
       const back=proposals.filter((p,i)=>/^(rejected|undecided)$/.test(cardOutcome(p,decisions[i]))).map(p=>(p.cand||{}).exUrl).filter(Boolean);
-      const box=[...new Set([...linksIn(linkText),...back])].join("\n");
-      setLinkText(box); writePendingLinks(box);
+      if(linksAtRead.current&&linksAtRead.current.pages){
+        const keys=new Set(back.map(u=>normalizeUrlKey(u)));
+        const list=mergePages(pages,linksAtRead.current.pages.filter(p=>keys.has(normalizeUrlKey(p.url))));
+        setPages(list); writePendingPages(list);
+      }else{
+        const box=[...new Set([...linksIn(linkText),...back])].join("\n");
+        setLinkText(box); writePendingLinks(box);
+      }
     }
     linksAtRead.current=null;
     // A new quarantine goes to the store, the copy that survives a Reset; the export
@@ -5595,9 +5749,12 @@ export default function App(){
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqBuyNext(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
-  // Cancel import after a Read puts every link it read back in the box, stored (her decision).
+  // Cancel import after a Read puts every link (or page) it read back in the box (or list), stored (her decision).
   function cancelRefresh(){
-    if(linksAtRead.current){
+    if(linksAtRead.current&&linksAtRead.current.pages){
+      const list=mergePages(pages,linksAtRead.current.pages);
+      setPages(list); writePendingPages(list); linksAtRead.current=null;
+    }else if(linksAtRead.current){
       const box=[...new Set([...linksIn(linkText),...linksAtRead.current])].join("\n");
       setLinkText(box); writePendingLinks(box); linksAtRead.current=null;
     }
@@ -6356,7 +6513,7 @@ export default function App(){
         <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",justifyContent:"center",padding:16}}>
           {/* Sized to what it holds. CSV and Links match Load and Save; the one pressed
               turns green (her design). */}
-          <div style={{background:C.bg,borderRadius:8,...(importMode==="links"?{maxWidth:820,width:"100%"}:{width:"fit-content"}),margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px"}}>
+          <div style={{background:C.bg,borderRadius:8,...(importMode==="links"||importMode==="pages"?{maxWidth:820,width:"100%"}:{width:"fit-content"}),margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px"}}>
             {/* IMPORT NEEDS A LEDGER OPEN: on an empty page it offers only the ways to open
                 one (her design), so an import can never become the whole ledger. */}
             {importMode==="needLedger"&&<div style={{textAlign:"center"}}>
@@ -6368,7 +6525,32 @@ export default function App(){
             </div>}
             {importMode!=="needLedger"&&<div style={{display:"flex",gap:5,justifyContent:"center"}}>
               <button onClick={()=>{setImportMode(null);refreshFileRef.current?.click();}} disabled={busy} style={sBtn}>CSV</button>
-              <button onClick={()=>setImportMode("links")} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>Links</button>
+              <button onClick={()=>{ if(importMode!=="links"){ setLinkFails([]); setLinkNote(null); } setImportMode("links"); }} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>Links</button>
+              <button onClick={()=>{ if(importMode!=="pages"){ setLinkFails([]); setLinkNote(null); } setImportMode("pages"); }} disabled={busy} style={importMode==="pages"?{...pBtn,opacity:1}:sBtn}>Pages</button>
+            </div>}
+            {importMode==="pages"&&<div style={{marginTop:14}}>
+              {/* Pages: saved show pages, read as a link is read. The list works as the Links
+                  box does: "Clear" empties it and the store; what is not read stays. */}
+              <input ref={pagesFileRef} type="file" multiple accept=".mht,.mhtml,.html,.htm,multipart/related,message/rfc822,text/html" onChange={pickPages} style={{display:"none"}}/>
+              <div style={{position:"relative",border:"1px solid "+C.rule,borderRadius:4,background:C.card,padding:"8px 52px 8px 10px",minHeight:60,fontSize:12.5,color:C.ink}}>
+                {pages.length?pages.map(p=><div key={p.url} style={{overflowWrap:"anywhere",lineHeight:1.5}}>{p.title||p.name||p.url}</div>)
+                  :<div style={{color:C.soft}}>No pages chosen.</div>}
+                {pages.length>0&&<button onClick={()=>{ setPages([]); setLinkFails([]); setLinkNote(null); writePendingPages([]); }} disabled={busy}
+                  style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
+              </div>
+              <div style={{display:"flex",justifyContent:"flex-end",gap:5,marginTop:8}}>
+                <button onClick={()=>pagesFileRef.current?.click()} disabled={busy} style={sBtn}>Choose pages</button>
+                <button onClick={()=>readLinks("pages")} disabled={busy||!pages.length} style={pBtn}>Read</button>
+              </div>
+              {busy&&prog.total>0&&<div style={{marginTop:8}}>
+                <div style={{height:4,background:C.rule,borderRadius:2,overflow:"hidden"}}>
+                  <div style={{height:"100%",width:Math.round(100*prog.done/prog.total)+"%",background:C.action}}/></div>
+                <div style={{marginTop:4,fontSize:11,color:C.soft}}>{prog.label}</div>
+              </div>}
+              {linkNote&&<div style={{marginTop:6,fontSize:11.5,color:C.soft,lineHeight:1.45}}>{linkNote}</div>}
+              {linkFails.map((f,i)=>{ const pg=pages.find(p=>p.url===f.url); return <div key={i} style={{marginTop:6,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
+                {f.url?(pg&&(pg.title||pg.name))||f.url:""}{f.url?" \u2014 ":""}{f.why}
+              </div>; })}
             </div>}
             {importMode==="links"&&<div style={{marginTop:14}}>
               {/* "Clear" sits inside the box, top right (her design): one press empties
@@ -6380,7 +6562,7 @@ export default function App(){
                   style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
               </div>
               <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
-                <button onClick={readLinks} disabled={busy} style={pBtn}>Read</button>
+                <button onClick={()=>readLinks("links")} disabled={busy} style={pBtn}>Read</button>
               </div>
               {busy&&prog.total>0&&<div style={{marginTop:8}}>
                 <div style={{height:4,background:C.rule,borderRadius:2,overflow:"hidden"}}>
@@ -6395,7 +6577,7 @@ export default function App(){
             {/* Cancel always answers: a catalogue search also sets busy, and once locked the
                 pop-up out until the search ended (her report). */}
             <div style={{textAlign:"center",marginTop:10}}>
-              <button onClick={()=>{ if(linkRead.current.on){ linkRead.current.stop=true; setProg(p=>({...p,label:"Stopping after this link\u2026"})); return; } if(!proposals)dropHeldVenues(); setImportMode(null); }} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
+              <button onClick={()=>{ if(linkRead.current.on){ linkRead.current.stop=true; setProg(p=>({...p,label:"Stopping after this "+(importMode==="pages"?"page":"link")+"\u2026"})); return; } if(!proposals)dropHeldVenues(); setImportMode(null); }} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
             </div>
           </div>
         </div>

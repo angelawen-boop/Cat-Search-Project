@@ -31,10 +31,10 @@ function fakeStore({ failOnSet } = {}) {
         orderBy(f, d) { field = f; dir = d || 'asc'; return q; },
         limit(k) { n = k; return q; },
         async get() {
-          let out = [...docs.entries()].filter(([p]) => parentOf(p) === c).map(([, s]) => JSON.parse(s));
-          if (field) out.sort((x, y) => (x[field] < y[field] ? -1 : x[field] > y[field] ? 1 : 0) * (dir === 'desc' ? -1 : 1));
+          let out = [...docs.entries()].filter(([p]) => parentOf(p) === c).map(([p, s]) => ({ id: p.split('/').pop(), d: JSON.parse(s) }));
+          if (field) out.sort((x, y) => (x.d[field] < y.d[field] ? -1 : x.d[field] > y.d[field] ? 1 : 0) * (dir === 'desc' ? -1 : 1));
           out = out.slice(0, n);
-          return { docs: out.map(d => ({ data: () => d })), size: out.length };
+          return { docs: out.map(({ id, d }) => ({ id, data: () => d })), size: out.length };
         },
       };
       return q;

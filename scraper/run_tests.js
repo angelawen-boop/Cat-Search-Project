@@ -71,6 +71,7 @@ const SUITES = [
   [SCRAPER, 'node scraper/fixtures/robots_pages.js'],
   [[...BOTH, LINKS, LOOKUP], 'node build/sync_shared.js --check'],
   [[...BOTH, LINKS, LOOKUP], 'node scraper/fixtures/add_by_link.js'],
+  [[APP, LINKS], 'node scraper/fixtures/add_by_page.js'],
 ];
 
 const half = process.argv[2];
