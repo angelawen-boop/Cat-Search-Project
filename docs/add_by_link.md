@@ -288,3 +288,7 @@ Parallel (keyed connector only with her yes), save each reply as `{url,title,ful
 `node scraper/link_proof_check.js <folder>` (`--all` also fails on a listed page with no reply); exit 1 on any
 difference. Not in `npm test`. A difference is a reader change to sign off (update the list) or a site that
 changed.
+
+**Never (her decision):** re-fetching the whole list after every small fix within one session — the pages
+have not changed in the last hour, only the code has, so re-run the check on the replies already fetched; or
+fetching every listed page for a change that only touches one venue's rule — fetch that venue's pages only.
