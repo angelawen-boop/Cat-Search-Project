@@ -14,6 +14,7 @@ const C = require('./compress.js');
 const { venueShape } = require('./qc.js');
 const { VENUES } = require('./sweep_prototype.js');
 const { collect, allRuns, runDate } = require('./venue_status.js');
+const W = require('./routine_window.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 
@@ -50,15 +51,27 @@ test('V-002 a blocked venue is present with no rows, never silently dropped', ()
   assert.ok(morgan && morgan.rows > 0, 'morgan brought rows on 30 Sep and should be credited with them');
 });
 
-test('V-003 a row count is only ever attributed to a run that actually holds it', () => {
+test('V-003 a row count is the known rows as of the run it cites — a routine run plus the older shows before it', () => {
+  // A routine run of a laptop venue reads only recent shows, so the count is that
+  // run's rows plus the older shows the runs before it brought (mad, 15 Oct: 8 + 14
+  // = the full sweep's 22). Rebuilt here from the files, by the shared rule.
+  const runs = allRuns();
+  const read = abs => C.readProForma(path.join(abs, 'sweep.csv'));
   for (const v of collect()) {
     if (v.rows === null) continue;
-    const run = allRuns().find(r => r.name === v.rowsFrom);
-    assert.ok(run, `${v.code} cites run ${v.rowsFrom}, which is not on disk`);
-    const shape = venueShape(C.readProForma(path.join(OUTPUT_DIR, run.rel, 'sweep.csv')));
-    assert.strictEqual(shape.get(v.code).real, v.rows,
-      `${v.code} reports ${v.rows} rows but ${v.rowsFrom} holds ${shape.get(v.code).real}`);
+    const upTo = runs.findIndex(r => r.name === v.rowsFrom);
+    assert.ok(upTo >= 0, `${v.code} cites run ${v.rowsFrom}, which is not on disk`);
+    const cited = runs.slice(0, upTo + 1).map(r => ({ abs: path.join(OUTPUT_DIR, r.rel) }));
+    assert.ok(venueShape(read(cited[upTo].abs)).get(v.code).real > 0, `${v.code}: ${v.rowsFrom} holds no rows of it`);
+    const known = W.knownRows(v.code, cited, abs => { try { return read(abs); } catch { return []; } });
+    assert.strictEqual(v.rows, known.length, `${v.code} reports ${v.rows} rows but its runs up to ${v.rowsFrom} know ${known.length}`);
   }
+});
+
+test('V-003b mad, 15 Oct: a routine run of 8 still counts the full sweep\'s 22', () => {
+  const mad = collect().find(x => x.code === 'mad');
+  if (mad.rowsFrom !== 'run_2026-10-15_230242') return;   // a later mad run supersedes this case
+  assert.strictEqual(mad.rows, 22);
 });
 
 test('V-004 the run cited for rows is never later than the run cited for the attempt', () => {

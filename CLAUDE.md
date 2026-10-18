@@ -250,12 +250,6 @@ is a real fault, not crowding.
 pages read 52ms; passed when run alone, with and without the RB-016 fix (which does not touch the pacer).
 Possibly crowding; needs investigation — a short gap would mean her laptop fetches faster than paced.
 
-**OPEN — V-003** (`venue_status.test.js`) fails on `main`: the test is out of date, not the report. mad's
-22 is right — its last run (`run_2026-10-15_230242`) was a routine sweep that reads only the last six months
-(8 shows), and the report adds the 14 older shows the run before it brought. V-003 was written before the
-routine window and still expects the cited run to hold every row. Fix awaiting her go: V-003 checks the known
-count by the same rule.
-
 ---
 
 ## 3. Where the rest lives
