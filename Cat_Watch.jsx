@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "47.2";
+const APP_VERSION = "47.3";
 const APP_VERSION_DATE = "18 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -73,7 +73,7 @@ const MUSEUMS = [
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
-  "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-smb-museum","uffizi","dellav","borghese","brera","capo","moma",
+  "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-gemaeldegalerie-skd-museum","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
   "occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
   "occ-royalacademy-org-uk","ashmolean","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
@@ -644,7 +644,68 @@ function findDateRangeInProseCore(text, hintYear) {
 function titleCase(str) {
   return str.replace(/([A-Za-z]+)/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase());
 }
-return { findDateRange, findDateRangeInProse };
+
+// ── Titles typed in capitals ──────────────────────────────────────────────────
+/**
+ * A title a venue TYPES in capitals, in ordinary capitals (the Ashmolean, Borghese,
+ * Munich's Pinakotheken by link; docs/scraper.md). Shared with the app, one copy.
+ *
+ * Only a title with no lower-case word is touched: a word of two or more letters, no
+ * digit ("1960s" and "x" are not evidence). Each word: first letter capital, rest small;
+ * small joining words and name particles ("da", "van") stay small unless they open the
+ * title or follow a colon or dash. Roman numerals stay capitals ("Bandō Tamasaburō V").
+ * "20TH-CENTURY" → "20th-Century"; "O'KEEFFE" → "O'Keeffe". A styled name ("Ashmolean
+ * NOW") comes out ordinary.
+ */
+const SMALL_WORDS = new Set(['a', 'an', 'the', 'and', 'or', 'nor', 'but', 'of', 'in', 'on', 'at', 'to', 'for', 'by', 'with', 'from', 'as', 'into', 'over', 'upon', 'via', 'vs', 'x', 'von',
+  'van', 'da', 'de', 'di', 'del', 'della', 'du']);
+const ROMAN = /^(?=[IVXLC]+$)C{0,3}(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
+function titleFromCaps(title) {
+  const t = String(title || '');
+  const words = t.match(/[\p{L}\p{N}]+/gu) || [];
+  const judged = words.filter(w => w.length >= 2 && !/\d/.test(w));
+  if (!judged.length || judged.some(w => w !== w.toUpperCase())) return t;
+  let startOfPhrase = true;
+  // Word positions, so a token can tell whether it ends its phrase.
+  const tokens = t.match(/[\p{L}\p{N}'’]+|[^\p{L}\p{N}'’]+/gu) || [];
+  let at = -1;
+  const lastOfPhrase = () => {
+    for (let k = at + 1; k < tokens.length; k++) {
+      if (/[\p{L}\p{N}]/u.test(tokens[k])) return false;
+      if (/[:–—(]|\s-\s/.test(tokens[k])) return true;
+    }
+    return true;
+  };
+  return t.replace(/[\p{L}\p{N}'’]+|[^\p{L}\p{N}'’]+/gu, tok => {
+    at++;
+    if (!/[\p{L}\p{N}]/u.test(tok)) {
+      if (/[:–—]|\s-\s/.test(tok)) startOfPhrase = true;
+      return tok;
+    }
+    const first = startOfPhrase; startOfPhrase = false;
+    // A numeral stays capitals: "Bandō Tamasaburō V", "Henry VIII and…".
+    // Mid-phrase a single letter is a word, and so are the numeral-shaped
+    // names "LI" and "LIV" ("LI JIN" is Li Jin); at a phrase's end they count.
+    if (ROMAN.test(tok) && tok !== 'I' && (lastOfPhrase() || (tok.length >= 2 && !/^(LI|LIV)$/.test(tok)))) return tok;
+    const low = tok.toLowerCase();
+    if (!first && SMALL_WORDS.has(low)) return low;
+    // Pieces joined by an apostrophe: O'KEEFFE → O'Keeffe, RUSKIN'S → Ruskin's.
+    return low.split(/(['’])/).map((part, i, all) => {
+      if (i === 0) return part.replace(/^(\d*)(\p{L})/u, (m, d, c) => d ? d + c : c.toUpperCase());
+      if (/['’]/.test(part)) return part;
+      return all[0].length === 1 && part.length > 1 ? part[0].toUpperCase() + part.slice(1) : part;
+    }).join('');
+  }).replace(/(^|[-–])(\p{Ll})/gu, (m, d, c) => d === '' ? m : d + c.toUpperCase())
+    .replace(/^(\p{Ll})/u, c => c.toUpperCase());
+}
+
+// Capitals judged per part: a title can type its name in capitals and its subtitle in
+// ordinary letters ("KABUKI KIMONO: Costumes of Bandō Tamasaburō V"), or the reverse
+// ("Rachel Ruysch: NATURE INTO ART").
+function capsTitleParts(title) {
+  return String(title).split(/(\s*[:–—]\s*)/).map((seg, i) => i % 2 ? seg : titleFromCaps(seg)).join('');
+}
+return { findDateRange, findDateRangeInProse, capsTitleParts };
 })();
 const SUMMARY_RULES="- Maximum 10 words. The examples average about six.\n- End with a full stop. Avoid colons — the accepted summaries almost never use one.\n- Name the artist or artists the exhibition is built around.\n\nNAME THEM THE WAY A GALLERY-GOER WOULD. Surname alone, unless the surname alone\nwould be ambiguous. Write \"Zurbarán\", not \"Francisco de Zurbarán\". \"Shonibare\",\nnot \"Yinka Shonibare\". \"Velasco\", not \"Mexican artist José María Velasco\". Drop\n\"painter\", \"artist\" and similar labels in front of a name — the reader already\nknows. Full names, honorifics and formal titles read stiff and waste words that\ncould carry meaning instead.\n\nALWAYS WRITE IN ENGLISH, whatever language the raw text is in. Several venues\npublish only in Italian and one only in French; she reads the summaries in\nEnglish. Translating a phrase does not break the traceability rule below — a\ntranslated phrase is still traceable to the text it came from. Keep the\nexhibition's own title in its original language if that is how it is written;\ntranslate the description around it.\n\nTHE RULE THAT MATTERS MOST: every word of your summary must be traceable to a\nphrase in that row's own raw text. If you cannot point to where something came\nfrom, leave it out. In particular:\n\n- Never add an artist, place, medium or date that you happen to know about but the\n  text does not mention.\n- Use a number only if the text states that number. Do not count a list of names\n  and report the total — the page may state a different figure, and the page is\n  right, not your count.\n\nBeing vague is a much smaller failure than being confidently wrong. If the text\nwill only support something general, write something general.\n\nIf the raw text is not a description of an exhibition — a bare link, a curator's\nbiography, ticketing or opening-hours copy, cookie or consent boilerplate, a \"page\nnot found\" message, or empty — answer null for that row. Do not invent one.";
 const EN_PREFIX = 'In English: ';
@@ -681,15 +742,24 @@ const OWN_CHIP={
   "occ-britishart-yale-edu":{short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art",rankAsOwn:["Yale University Press"]},
   // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin
   // Gemäldegalerie" (her decision, OCC_CARD).
-  // Munich's Alte Pinakothek and Pinakothek der Moderne: two venues, each its own shop, one
-  // chip "Munich Pinakotheken", the Alte first (her decision; `group`). Shops searched in
-  // German (`shopQueries`); CEDON sells for both, its sections named for each house
-  // (`shopNamed`, namesVenue). Which house a show is in: HOUSES.
+  // Munich's Alte Pinakothek, Pinakothek der Moderne and Sammlung Schack: three venues, one
+  // chip "Munich Pinakotheken", the Alte first (her decision; `group`). The Alte and der
+  // Moderne's shops are searched in German (`shopQueries`); CEDON sells for both, its
+  // sections named for each house (`shopNamed`, namesVenue). Schack has no shop of its own
+  // and no CEDON section: it gets no shop settings, so the finder answers "none". Which
+  // house a show is in: HOUSES. Titles typed in capitals are recased (`capsTitles`).
   "occ-alte-pinakothek":{short:"Munich Alte Pinakothek",chip:"Munich Pinakotheken",group:"munich-pinakotheken",lookupName:"Alte Pinakothek",name:"Alte Pinakothek M\u00fcnchen",
-    shopQueries:["Alte Pinakothek M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Alte Pinakothek"},
+    shopQueries:["Alte Pinakothek M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Alte Pinakothek",linkRead:{capsTitles:true}},
   "occ-pinakothek-der-moderne":{short:"Munich der Moderne",chip:"Munich Pinakotheken",group:"munich-pinakotheken",lookupName:"Pinakothek der Moderne",name:"Pinakothek der Moderne M\u00fcnchen",
-    shopQueries:["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Pinakothek der Moderne"},
+    shopQueries:["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Pinakothek der Moderne",linkRead:{capsTitles:true}},
+  "occ-sammlung-schack":{short:"Sammlung Schack",chip:"Munich Pinakotheken",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",linkRead:{capsTitles:true}},
   "occ-smb-museum":{short:"Berlin",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
+  // Dresden's Gemäldegalerie Alte Meister: chip "Dresden", cards "Dresden Gemäldegalerie" (her
+  // decision, OCC_CARD). Its pages open with a short "# " name above every SKD museum's menu;
+  // the show's own heading follows "Active page:" (titleAfter). Dates day first with slashes;
+  // the site line ("Exhibition Site Zwinger") never reaches Claude (her decision; skip).
+  "occ-gemaeldegalerie-skd-museum":{short:"Dresden",lookupName:"Gem\u00e4ldegalerie Alte Meister Dresden",name:"Gem\u00e4ldegalerie Alte Meister",
+    linkRead:{titleAfter:/^Active page:/,slashDayFirst:true,skip:/^(?:Exhibition Site\b|Opening Hours\b|\[Translate to English:\]|\u00a9)/}},
 };
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 // The chip a venue's cards sit under: its group's, where it has one.
@@ -697,7 +767,7 @@ const chipKey=id=>(OWN_CHIP[id]||{}).group||id;
 // Her names for occasional venues filed under "Occasional", where the store's name is longer.
 const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worcester"};
 // Her names on the cards of occasional venues, where they differ from the short name.
-const OCC_CARD={"occ-mfa-org":"Boston MFA","occ-ngv-vic-gov-au":"National Gallery Victoria","occ-smb-museum":"Berlin Gem\u00e4ldegalerie"};
+const OCC_CARD={"occ-mfa-org":"Boston MFA","occ-ngv-vic-gov-au":"National Gallery Victoria","occ-smb-museum":"Berlin Gem\u00e4ldegalerie","occ-gemaeldegalerie-skd-museum":"Dresden Gem\u00e4ldegalerie"};
 // Link options for occasional venues (as linkRead on a MUSEUMS entry), by the site's id.
 // Boston MFA prints the dates on the line above the show's title. NGV writes two-digit
 // years ("4 Sep 26 – 31 Jan 27"; shortYear). The Pinakothek der Moderne's own site prints
@@ -837,12 +907,15 @@ function readShowPage(res,url,vc){
   // A heading broken over two lines (Berlin: "## Donatello  " then "Inventor of the
   // Renaissance") is one heading, the page's own name for the show: the tab title's mark
   // joins its parts when the tab title reads the same, else the scraper's join. Berlin's
-  // tab titles can be misspelt or German, so the heading wins over them.
+  // tab titles can be misspelt or German, so the heading wins over them. A date line is
+  // never the heading's second half (Munich: "### Alte Pinakothek" over the dates).
   let broken=-1;
   for(let i=0;i+1<lines.length;i++){
     const hm=lines[i].match(/^(\s*#{1,6}\s+)(\S.*?)\s{2,}$/);
     const next=stripMd(lines[i+1]);
     if(!hm||!next||/^\s*#/.test(lines[i+1]))continue;
+    const nd=DATES.findDateRange(next,{looseSingles:false});
+    if(nd.start||nd.end)continue;
     const name=stripMd(hm[2]),lo=String(show||"").toLowerCase();
     const sep=lo.startsWith(name.toLowerCase())&&lo.endsWith(next.toLowerCase())?show.slice(name.length,show.length-next.length):"";
     lines[i]=hm[1]+(sep&&sep.length<=3?name+sep+next:joinTitle(name,next,true));
@@ -862,6 +935,14 @@ function readShowPage(res,url,vc){
   const words=l=>foldText(stripMd(l)).replace(/[^a-z0-9]+/g," ").trim();
   const cands=[];
   const add=i=>{ if(i>=0&&!cands.includes(i))cands.push(i); };
+  // A venue whose show heading follows a marker line (linkRead.titleAfter; Dresden's
+  // "Active page:"): that heading is tried first and is the title.
+  let after=-1;
+  if(lr&&lr.titleAfter){
+    const m=lines.findIndex(l=>lr.titleAfter.test(stripMd(l)));
+    if(m>=0)after=lines.findIndex((l,k)=>k>m&&/^\s*#{1,6}\s+\S/.test(l));
+    add(after);
+  }
   add(lines.findIndex(l=>/^\s*#\s+\S/.test(l)));
   add(broken);
   if(show){
@@ -932,13 +1013,13 @@ function readShowPage(res,url,vc){
       if(/^\s+[-–—·]\s/.test(rest)||/^\s+exhibitions?\s*$/i.test(rest))base=heading.trim();
     }
   }
-  if(h===broken)base=heading;
+  if(h===broken||(after>=0&&h===after))base=heading;
   if(lr&&lr.title)base=venueTitle(lines,h,heading,lr,words)||base;
   // A label the venue puts before the show's own name (linkRead.titleDrop).
   if(lr&&lr.titleDrop)base=base.replace(lr.titleDrop,"").trim()||base;
   // A doubled colon is the venue's typo (NGA, Souvenirs of the Gilded Age).
   base=base.replace(/\s*:{2,}/g,":");
-  const between=lr&&lr.title?[]:lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l)));
+  const between=lr&&lr.title?[]:lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l))&&!(lr&&lr.skip&&lr.skip.test(l)));
   const dateLine=decodeEntities(stripMd(lines[d])).replace(/\s+/g," ").trim();
   const keepDateLine=dateLine.length>LINK_DATE_LINE_MAX;
   const headingText=decodeEntities(heading).replace(/\s+/g," ").trim();
@@ -1024,7 +1105,7 @@ function occVenueId(host){
 // house between the show's title and its dates says which ("Alte Pinakothek", "Pinakothek
 // der Moderne | Art"). A house with a site of its own files under that house.
 const HOUSES={
-  "occ-pinakothek-de":[["occ-alte-pinakothek",/^Alte Pinakothek\b/i],["occ-pinakothek-der-moderne",/^Pinakothek der Moderne\b/i]],
+  "occ-pinakothek-de":[["occ-alte-pinakothek",/^Alte Pinakothek\b/i],["occ-pinakothek-der-moderne",/^Pinakothek der Moderne\b/i],["occ-sammlung-schack",/^Sammlung Schack\b/i]],
   "occ-pinakothek-der-moderne-de":"occ-pinakothek-der-moderne",
 };
 // The venue a read page files under → {id, line} (line: the house line, not a subtitle),
@@ -1036,7 +1117,8 @@ function linkVenue(url,page){
   if(!h)return{id:occ};
   if(typeof h==="string")return{id:h};
   for(const l of (page&&page.between)||[]) for(const [id,re] of h) if(re.test(l.trim()))return{id,line:l};
-  return{id:null,why:"The page doesn’t say which museum the show is in ("+h.map(([id])=>OWN_CHIP[id].short).join(" or ")+")."};
+  const names=h.map(([id])=>OWN_CHIP[id].short);
+  return{id:null,why:"The page doesn’t say which museum the show is in ("+names.slice(0,-1).join(", ")+" or "+names[names.length-1]+")."};
 }
 
 // The venue whose link options read a page: a swept venue, or an occasional one with options of its own.
@@ -5306,7 +5388,7 @@ export default function App(){
             looked.add(vc);
             setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+page.site+"\u2019s shop"});
             const pageShop=shopLinkOnPage(oneText(res),host);
-            const shop=await discoverShop(pageShop,host,page.site,had?had.turnedDown:[],vc);
+            const shop=await discoverShop(pageShop,host,(OWN_CHIP[vc]||{}).name||page.site,had?had.turnedDown:[],vc);
             venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:page.site,host,english:had?had.english:undefined,
               shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,
               ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
@@ -5319,7 +5401,8 @@ export default function App(){
         // A venue whose subtitle sits under the heading: read by code. A line
         // ending like a sentence is the text, not a subtitle.
         const own=(MU[vc]||{}).subtitleUnderHeading&&page.under&&page.under.length<=120&&!/[.!?]$/.test(page.under)?page.under:"";
-        const title=linkTitle(page.base,own||a.subtitle,page.between);
+        const lt=linkTitle(page.base,own||a.subtitle,page.between);
+        const title=(linkOptions(vc)||{}).capsTitles?DATES.capsTitleParts(lt):lt;
         Object.assign(seen,{venue:vc,answer:a,subtitleUnderHeading:own||null,title});
         tape.row={title,museumId:vc,exUrl:url};
         got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,

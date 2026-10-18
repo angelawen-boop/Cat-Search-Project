@@ -2074,6 +2074,18 @@ test('BT-001: Borghese titles typed in capitals reach her in ordinary capitals, 
   assert.equal(venueTitle('ng', 'Hello. World'), 'Hello. World');
 });
 
+test('CT-001: titles typed in capitals keep name particles small mid-name; each part judged alone (Munich by link, her decision)', () => {
+  const { titleFromCaps, capsTitleParts } = require('./dates.js');
+  assert.equal(titleFromCaps('FROM GIOTTO TO LEONARDO DA VINCI'), 'From Giotto to Leonardo da Vinci');
+  assert.equal(titleFromCaps('SALOMON VAN RUYSDAEL’S UTRECHT ‘PLOMPETOREN’'), 'Salomon van Ruysdael’s Utrecht ‘Plompetoren’');
+  assert.equal(titleFromCaps('VAN DYCK'), 'Van Dyck');   // a particle opening the title keeps its capital
+  assert.equal(titleFromCaps('FRITZ WINTER’S COSMOS OF THE 1930S AND 1940S'), 'Fritz Winter’s Cosmos of the 1930s and 1940s');
+  assert.equal(capsTitleParts('Rachel Ruysch: NATURE INTO ART'), 'Rachel Ruysch: Nature into Art');
+  assert.equal(capsTitleParts('VERMEER: WOMAN IN BLUE READING A LETTER'), 'Vermeer: Woman in Blue Reading a Letter');
+  assert.equal(capsTitleParts('The night touches the earth'), 'The night touches the earth');   // typed normally: untouched
+  assert.equal(capsTitleParts('Venezia 500<<: The Gentle Revolution of Venetian Painting'), 'Venezia 500<<: The Gentle Revolution of Venetian Painting');
+});
+
 test('AQ-001: Acquavella\'s card line "Acquavella Palm Beach" is the gallery, never part of the title (15 Oct import)', () => {
   const L = placesOf('acq');
   assert.equal(isPlace('Acquavella Palm Beach', L), 'Palm Beach');

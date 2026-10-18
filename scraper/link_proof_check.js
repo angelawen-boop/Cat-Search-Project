@@ -14,7 +14,8 @@
  * Exit 1 on any difference, a reply not on the list, or a page the reader refuses that
  * the list does not expect to fail. --all also fails on a listed page with no reply.
  * The title compared is the reader's own (before any subtitle Claude picks from the
- * lines between title and dates). A page listed with "noDescription" must also give
+ * lines between title and dates), recased as the card shows it at a venue whose titles
+ * are typed in capitals (capsTitles). A page listed with "noDescription" must also give
  * no description. Not part of npm test: it needs live replies.
  */
 'use strict';
@@ -42,7 +43,7 @@ function loadReader() {
   const hook = () => {};
   const React = { createElement() {}, Fragment: null, useState: () => [], useEffect: hook, useMemo: f => f(), useCallback: f => f, useRef: () => ({}) };
   return new Function('React', 'window', 'document', 'localStorage',
-    fs.readFileSync(built, 'utf8') + '\n;return {readShowPage,linkReadVenue,linkVenue};')(React, {}, {}, {});
+    fs.readFileSync(built, 'utf8') + '\n;return {readShowPage,linkReadVenue,linkVenue,linkOptions,capsTitleParts:DATES.capsTitleParts};')(React, {}, {}, {});
 }
 
 function main() {
@@ -64,7 +65,8 @@ function main() {
     const want = byUrl.get(res.url);
     const got = reader.readShowPage(res, res.url, reader.linkReadVenue(res.url));
     const venue = got.ok ? reader.linkVenue(res.url, got).id : null;   // the app's own filing (houses included)
-    const row = got.ok ? { title: got.base, start: got.start, end: got.end, raw: got.raw } : { title: '', start: '', end: '', why: got.why };
+    const caps = venue && (reader.linkOptions(venue) || {}).capsTitles;
+    const row = got.ok ? { title: caps ? reader.capsTitleParts(got.base) : got.base, start: got.start, end: got.end, raw: got.raw } : { title: '', start: '', end: '', why: got.why };
     checked++;
     if (!want) { console.log('DIFF  ' + f + ': ' + res.url + ' is not on the list\n        got   ' + JSON.stringify({ venue, title: row.title, start: row.start, end: row.end })); diffs++; continue; }
     seen.add(res.url);

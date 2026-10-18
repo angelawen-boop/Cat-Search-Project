@@ -450,4 +450,5 @@ Her instruction: no probes for hypothetical problems.
    A venue that tags nothing needs its own answer.
 2. **Titles are recorded in the venue's own letters** (`restoreCase`); a venue
    that types capitals everywhere gets ordinary capitals from code
-   (`capsTitles`). A change of capitals is a Change card, her ruling 23 Sep.
+   (`capsTitles`, `titleFromCaps` in `dates.js`, shared with Add by link; name particles "da",
+   "van", "de", "di" stay small mid-name, CT-001). A change of capitals is a Change card (her decision).

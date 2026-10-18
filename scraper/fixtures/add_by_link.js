@@ -591,8 +591,18 @@ function runtime() {
       'AL-043: a pinakothek.de show files under the house its page names between title and dates', JSON.stringify([alte, mod]));
     ok(linkVenue('https://www.pinakothek-der-moderne.de/en/exhibitions/dana-schutz-trouble-and-appearance/', { between: [] }).id === M,
       'AL-043a:  a show on the Pinakothek der Moderne\'s own site files under it');
-    const none = linkVenue('https://www.pinakothek.de/de/ausstellung/spitzentreffen', { between: ['Sammlung Schack'] });
-    ok(none.id === null && /Munich Alte Pinakothek or Munich der Moderne/.test(none.why), 'AL-043b:  a page naming neither house is a line, never a card', JSON.stringify(none));
+    const none = linkVenue('https://www.pinakothek.de/de/ausstellung/spitzentreffen', { between: ['Museum Brandhorst'] });
+    ok(none.id === null && /Munich Alte Pinakothek, Munich der Moderne or Sammlung Schack/.test(none.why), 'AL-043b:  a page naming none of the houses is a line, never a card', JSON.stringify(none));
+    const S = 'occ-sammlung-schack';
+    const schack = linkVenue('https://www.pinakothek.de/en/exhibition/boecklin-and-schack-a-dialogue-between-artist-and-collector', { between: ['On the 200th Anniversary of Arnold Böcklin’s Birth', 'Sammlung Schack'] });
+    ok(schack.id === S && own[S].short === 'Sammlung Schack' && own[S].group === own[A].group && !own[S].shopQueries && !own[S].shopNamed
+      && order.indexOf(M) + 1 === order.indexOf(S),
+      'AL-043h:  Sammlung Schack files as its own venue under "Munich Pinakotheken", named without "Munich", with no shop settings (the finder answers "none"; her decision)', JSON.stringify(schack));
+    ok([A, M, S].every(id => own[id].linkRead && own[id].linkRead.capsTitles), 'AL-043i:  titles the Munich houses type in capitals are recased');
+    const D = 'occ-gemaeldegalerie-skd-museum', card = fn('OCC_CARD');
+    ok(own[D].short === 'Dresden' && card[D] === 'Dresden Gemäldegalerie' && own[D].linkRead.slashDayFirst && own[D].linkRead.titleAfter.test('Active page: Hopper')
+      && own[D].linkRead.skip.test('Exhibition Site Zwinger') && !own[D].shopQueries,
+      'AL-045:  Dresden: chip "Dresden", cards "Dresden Gemäldegalerie", dates day first, the site line never reaches Claude (her decision)');
     ok(own[A].group === own[M].group && own[A].chip === 'Munich Pinakotheken' && own[A].short === 'Munich Alte Pinakothek'
       && own[M].short === 'Munich der Moderne' && order.indexOf(A) + 1 === order.indexOf(M),
       'AL-043c:  one chip "Munich Pinakotheken", the Alte first; cards "Munich Alte Pinakothek" and "Munich der Moderne"');

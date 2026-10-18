@@ -145,6 +145,8 @@ fresh Parallel fetches (her decision for Parallel work); only the date phrases a
 - **R10 Heading over two lines** — a heading ending in a line break, then a plain line, is one heading and the
   title, over the tab title (Berlin: "## Donatello" / "Inventor of the Renaissance"; its tab titles can be
   misspelt or German). Joined with the tab title's own mark when it reads the same, else as the scraper joins.
+  A date line is never the second half: Munich's "### Alte Pinakothek" over the dates is the house line (*Van
+  Dyck*, *Boucher*).
 - **R11 Range over three lines** — a date, a line holding only "to" or a dash, a date (Berlin).
 - **R7 Clean passage** — a repeated line is kept once; HTML character codes become characters (Acquavella
   "Mir&oacute;"). `decodeEntities`.
@@ -170,13 +172,18 @@ from under the heading.
 "Berlin Gemäldegalerie" (her decision); its shop is searched as "Staatliche Museen zu Berlin" (`OWN_CHIP`,
 `OCC_CARD`). Dates are numbers with dots, day first (DS-004). Eleven pages on the proof list.
 
-**Munich** — two venues, each its own cards and shop, under one chip "Munich Pinakotheken", the Alte first,
+**Munich** — three venues, each its own cards, under one chip "Munich Pinakotheken", the Alte first,
 before Berlin (her decision; `group` on `OWN_CHIP`, `chipKey`): **Munich Alte Pinakothek**
-(`occ-alte-pinakothek`) and **Munich der Moderne** (`occ-pinakothek-der-moderne`). The Neue is left out (her
-decision): its pictures hang in the Alte while it is closed, and their pages name the Alte.
+(`occ-alte-pinakothek`), **Munich der Moderne** (`occ-pinakothek-der-moderne`) and **Sammlung Schack**
+(`occ-sammlung-schack`, her name, no "Munich"). The Neue is left out (her decision): its pictures hang in the
+Alte and Schack while it is closed, and their pages name those. Titles the site types in capitals are recased,
+each part alone (`capsTitles`, the scraper's `capsTitleParts` in `dates.js`; "da", "van" stay small mid-name;
+CT-001). "Venezia 500<<" is the museum's own title.
+- **Sammlung Schack has no shop**: its pages link none and CEDON has no Schack section. It carries no shop
+  settings, so the finder's own search ends at "No museum shop found" (run live). AL-043h.
 - **Which house** (`HOUSES`, `linkVenue`): a pinakothek.de show page prints its house on the line between title
-  and dates ("Alte Pinakothek", "Pinakothek der Moderne | Art"); that line files the show and is never offered as
-  a subtitle. A page naming neither is a line, not a card. The Pinakothek der Moderne's own site files under it;
+  and dates ("Alte Pinakothek", "Pinakothek der Moderne | Art", "Sammlung Schack"); that line files the show and
+  is never offered as a subtitle. A page naming none is a line, not a card. The Pinakothek der Moderne's own site files under it;
   it prints "10/07/2026 - 04/10/2026" above the title, day first (`OCC_LINK_READ` `datesAbove`, `slashDayFirst`).
 - **Shops: CEDON**, a company running several museums' shops, a section per house
   (`museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen`, `…/Pinakothek-der-Moderne-Muenchen`), linked only
@@ -190,11 +197,19 @@ decision): its pictures hang in the Alte while it is closed, and their pages nam
   the live searches with excerpts withheld, so it opened each pick: both sections found, the Dana Schutz page's
   ticket-shop link (`pinakothek.shop`) not taken.
 
+**Dresden** (Gemäldegalerie Alte Meister, `occ-gemaeldegalerie-skd-museum`): its own chip "Dresden", after
+Berlin; cards "Dresden Gemäldegalerie" (her decision; `OWN_CHIP`, `OCC_CARD`). A page opens with a short
+"# Hopper" above every SKD museum's menu; the show's own heading follows "Active page:" and is the title
+(`titleAfter`). Dates "14/04/2022—31/07/2022", day first (`slashDayFirst`). The site line ("Exhibition Site
+Zwinger") never reaches Claude, as passage or subtitle (her decision; `skip`). Shop: shop.skd.museum sells tickets
+and gifts only; the finder says "Shop found, but not its books section" and she answers **No shop** once (her
+decision; lookups go to the web). Three pages on the proof list; AL-045.
+
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her decision: Parallel-only rules
 live in the app, never the scraper). They only tidy what Claude is handed. Options: `title`, `titleDrop` (a
 label before the show's name), `dateLine` (dates from the first line matching, anywhere), `from` / `until`
 (passage starts after / ends at a matching line), `skip` / `skipEntities` / `minLine` (lines left out),
-`cleanLink` (address loses query and fragment), `datesAbove` (dates up to N lines above the heading), `crumb` (title from the breadcrumb when the page never prints its tab title). An
+`cleanLink` (address loses query and fragment), `datesAbove` (dates up to N lines above the heading), `crumb` (title from the breadcrumb when the page never prints its tab title), `titleAfter` (the first heading after a matching line is the title), `capsTitles` (titles typed in capitals recased). `skip` lines are never offered as a subtitle either. An
 occasional venue takes them from `OCC_LINK_READ`; read by `readShowPage`, `venueTitle`. Junk at the end of a
 passage is tolerated (her decision).
 

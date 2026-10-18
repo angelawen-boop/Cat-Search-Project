@@ -1,7 +1,8 @@
 /**
- * dates.js — THE date reader, shared by the scraper and the app (one copy: two parsers
- * drifted apart twice and lost dates). `node build/sync_shared.js` writes everything
- * above module.exports into Cat_Watch.jsx, and `npm test` fails if they differ. Edit
+ * dates.js — THE date reader, and the capitals fixer for titles, shared by the scraper
+ * and the app (one copy: two parsers drifted apart twice and lost dates).
+ * `node build/sync_shared.js` writes everything above module.exports into
+ * Cat_Watch.jsx, and `npm test` fails if they differ. Edit
  * HERE, then run the sync. Pure: nothing above module.exports may use Node.
  * Formats and their reasons: docs/scraper.md §3.
  */
@@ -568,6 +569,67 @@ function titleCase(str) {
   return str.replace(/([A-Za-z]+)/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase());
 }
 
+// ── Titles typed in capitals ──────────────────────────────────────────────────
+/**
+ * A title a venue TYPES in capitals, in ordinary capitals (the Ashmolean, Borghese,
+ * Munich's Pinakotheken by link; docs/scraper.md). Shared with the app, one copy.
+ *
+ * Only a title with no lower-case word is touched: a word of two or more letters, no
+ * digit ("1960s" and "x" are not evidence). Each word: first letter capital, rest small;
+ * small joining words and name particles ("da", "van") stay small unless they open the
+ * title or follow a colon or dash. Roman numerals stay capitals ("Bandō Tamasaburō V").
+ * "20TH-CENTURY" → "20th-Century"; "O'KEEFFE" → "O'Keeffe". A styled name ("Ashmolean
+ * NOW") comes out ordinary.
+ */
+const SMALL_WORDS = new Set(['a', 'an', 'the', 'and', 'or', 'nor', 'but', 'of', 'in', 'on', 'at', 'to', 'for', 'by', 'with', 'from', 'as', 'into', 'over', 'upon', 'via', 'vs', 'x', 'von',
+  'van', 'da', 'de', 'di', 'del', 'della', 'du']);
+const ROMAN = /^(?=[IVXLC]+$)C{0,3}(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
+function titleFromCaps(title) {
+  const t = String(title || '');
+  const words = t.match(/[\p{L}\p{N}]+/gu) || [];
+  const judged = words.filter(w => w.length >= 2 && !/\d/.test(w));
+  if (!judged.length || judged.some(w => w !== w.toUpperCase())) return t;
+  let startOfPhrase = true;
+  // Word positions, so a token can tell whether it ends its phrase.
+  const tokens = t.match(/[\p{L}\p{N}'’]+|[^\p{L}\p{N}'’]+/gu) || [];
+  let at = -1;
+  const lastOfPhrase = () => {
+    for (let k = at + 1; k < tokens.length; k++) {
+      if (/[\p{L}\p{N}]/u.test(tokens[k])) return false;
+      if (/[:–—(]|\s-\s/.test(tokens[k])) return true;
+    }
+    return true;
+  };
+  return t.replace(/[\p{L}\p{N}'’]+|[^\p{L}\p{N}'’]+/gu, tok => {
+    at++;
+    if (!/[\p{L}\p{N}]/u.test(tok)) {
+      if (/[:–—]|\s-\s/.test(tok)) startOfPhrase = true;
+      return tok;
+    }
+    const first = startOfPhrase; startOfPhrase = false;
+    // A numeral stays capitals: "Bandō Tamasaburō V", "Henry VIII and…".
+    // Mid-phrase a single letter is a word, and so are the numeral-shaped
+    // names "LI" and "LIV" ("LI JIN" is Li Jin); at a phrase's end they count.
+    if (ROMAN.test(tok) && tok !== 'I' && (lastOfPhrase() || (tok.length >= 2 && !/^(LI|LIV)$/.test(tok)))) return tok;
+    const low = tok.toLowerCase();
+    if (!first && SMALL_WORDS.has(low)) return low;
+    // Pieces joined by an apostrophe: O'KEEFFE → O'Keeffe, RUSKIN'S → Ruskin's.
+    return low.split(/(['’])/).map((part, i, all) => {
+      if (i === 0) return part.replace(/^(\d*)(\p{L})/u, (m, d, c) => d ? d + c : c.toUpperCase());
+      if (/['’]/.test(part)) return part;
+      return all[0].length === 1 && part.length > 1 ? part[0].toUpperCase() + part.slice(1) : part;
+    }).join('');
+  }).replace(/(^|[-–])(\p{Ll})/gu, (m, d, c) => d === '' ? m : d + c.toUpperCase())
+    .replace(/^(\p{Ll})/u, c => c.toUpperCase());
+}
+
+// Capitals judged per part: a title can type its name in capitals and its subtitle in
+// ordinary letters ("KABUKI KIMONO: Costumes of Bandō Tamasaburō V"), or the reverse
+// ("Rachel Ruysch: NATURE INTO ART").
+function capsTitleParts(title) {
+  return String(title).split(/(\s*[:–—]\s*)/).map((seg, i) => i % 2 ? seg : titleFromCaps(seg)).join('');
+}
+
 module.exports = {
   MONTHS,
   WEEKDAY_PREFIX_SRC,
@@ -597,4 +659,6 @@ module.exports = {
   findDateRangeInProse,
   findDateRangeInProseCore,
   titleCase,
+  titleFromCaps,
+  capsTitleParts,
 };

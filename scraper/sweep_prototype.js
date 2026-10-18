@@ -751,7 +751,7 @@ function rebuildSweepCsv() {
 
 // ── Date helpers — moved to dates.js, 4 Oct 2026 (one copy, shared with the app) ──
 const {
-  MONTHS, WEEKDAY_PREFIX_SRC, ORDINAL_SUFFIX, MONTH_PATTERN, monthNum, ymd, startYearFor, parseMonthDay, RANGE_SEP, WEEKDAY_PREFIX, stripWeekdays, EXTENDED_TO, applyExtension, readDayMonth, precedingDate, extensionNote, dayText, findDateRange, findDateRangeCore, PLAUSIBLE_YEAR_MIN, PLAUSIBLE_YEAR_MAX, plausibleYear, frag, sane, unusableDateText, findDateRangeInProse, findDateRangeInProseCore, titleCase,
+  MONTHS, WEEKDAY_PREFIX_SRC, ORDINAL_SUFFIX, MONTH_PATTERN, monthNum, ymd, startYearFor, parseMonthDay, RANGE_SEP, WEEKDAY_PREFIX, stripWeekdays, EXTENDED_TO, applyExtension, readDayMonth, precedingDate, extensionNote, dayText, findDateRange, findDateRangeCore, PLAUSIBLE_YEAR_MIN, PLAUSIBLE_YEAR_MAX, plausibleYear, frag, sane, unusableDateText, findDateRangeInProse, findDateRangeInProseCore, titleCase, titleFromCaps, capsTitleParts,
 } = require('./dates.js');
 
 function afterLookback(endDateStr, floor = LOOKBACK) {
@@ -4542,60 +4542,6 @@ const VENUE_ORDER = Object.keys(VENUES);
 /**
  * The engine. Every venue goes through this; none has its own copy.
  */
-/**
- * TITLES TYPED IN CAPITALS, turned into ordinary capitals — her ruling, 27 Sep
- * (the Ashmolean). restoreCase() recovers letters a site only DISPLAYS in
- * capitals; this venue TYPES them, on the listing and on the show's own page,
- * so there is nothing to recover and code writes the capitals instead.
- *
- * Only a title with no lower-case word is touched: a word of two or more
- * letters, no digit. "1960s" and "x" (as in "Yukhnovich x Crews-Chubb") are
- * not evidence either way. Each word: first letter capital, rest small;
- * small joining words stay small unless they open the title or follow a colon
- * or dash. Roman numerals stay capitals ("Bandō Tamasaburō V"). "20TH-CENTURY"
- * becomes "20th-Century"; "O'KEEFFE" "O'Keeffe"; "RUSKIN'S" "Ruskin's".
- * It cannot know a styled name ("Ashmolean NOW") — those come out ordinary.
- */
-const SMALL_WORDS = new Set(['a', 'an', 'the', 'and', 'or', 'nor', 'but', 'of', 'in', 'on', 'at', 'to', 'for', 'by', 'with', 'from', 'as', 'into', 'over', 'upon', 'via', 'vs', 'x', 'von']);
-const ROMAN = /^(?=[IVXLC]+$)C{0,3}(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
-function titleFromCaps(title) {
-  const t = String(title || '');
-  const words = t.match(/[\p{L}\p{N}]+/gu) || [];
-  const judged = words.filter(w => w.length >= 2 && !/\d/.test(w));
-  if (!judged.length || judged.some(w => w !== w.toUpperCase())) return t;
-  let startOfPhrase = true;
-  // Word positions, so a token can tell whether it ends its phrase.
-  const tokens = t.match(/[\p{L}\p{N}'’]+|[^\p{L}\p{N}'’]+/gu) || [];
-  let at = -1;
-  const lastOfPhrase = () => {
-    for (let k = at + 1; k < tokens.length; k++) {
-      if (/[\p{L}\p{N}]/u.test(tokens[k])) return false;
-      if (/[:–—(]|\s-\s/.test(tokens[k])) return true;
-    }
-    return true;
-  };
-  return t.replace(/[\p{L}\p{N}'’]+|[^\p{L}\p{N}'’]+/gu, tok => {
-    at++;
-    if (!/[\p{L}\p{N}]/u.test(tok)) {
-      if (/[:–—]|\s-\s/.test(tok)) startOfPhrase = true;
-      return tok;
-    }
-    const first = startOfPhrase; startOfPhrase = false;
-    // A numeral stays capitals: "Bandō Tamasaburō V", "Henry VIII and…".
-    // Mid-phrase a single letter is a word, and so are the numeral-shaped
-    // names "LI" and "LIV" ("LI JIN" is Li Jin); at a phrase's end they count.
-    if (ROMAN.test(tok) && tok !== 'I' && (lastOfPhrase() || (tok.length >= 2 && !/^(LI|LIV)$/.test(tok)))) return tok;
-    const low = tok.toLowerCase();
-    if (!first && SMALL_WORDS.has(low)) return low;
-    // Pieces joined by an apostrophe: O'KEEFFE → O'Keeffe, RUSKIN'S → Ruskin's.
-    return low.split(/(['’])/).map((part, i, all) => {
-      if (i === 0) return part.replace(/^(\d*)(\p{L})/u, (m, d, c) => d ? d + c : c.toUpperCase());
-      if (/['’]/.test(part)) return part;
-      return all[0].length === 1 && part.length > 1 ? part[0].toUpperCase() + part.slice(1) : part;
-    }).join('');
-  }).replace(/(^|[-–])(\p{Ll})/gu, (m, d, c) => d === '' ? m : d + c.toUpperCase())
-    .replace(/^(\p{Ll})/u, c => c.toUpperCase());
-}
 
 /**
  * A venue's typed-capitals title in ordinary capitals (`capsTitles`); with
@@ -5445,11 +5391,8 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
         // A line in another script is the name translated (Li Jin's Chinese
         // title under the English one), not a subtitle.
         const subOk = h && h.sub && h.sub.length <= 150 && /[A-Za-z]/.test(h.sub) && !(d && (d.start || d.end));
-        // Capitals judged per part: a header can type its name in capitals and
-        // its subtitle in ordinary letters in one line ("KABUKI KIMONO:
-        // Costumes of Bandō Tamasaburō V"), which titleFromCaps, judging the
-        // whole line, would leave in capitals.
-        const part = x => vrec.capsTitles ? String(x).split(/(\s*[:–—]\s*)/).map((seg, i) => i % 2 ? seg : titleFromCaps(seg)).join('') : x;
+        // Capitals judged per part (capsTitleParts, dates.js).
+        const part = x => vrec.capsTitles ? capsTitleParts(x) : x;
         const fold = x => String(x).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
         if (h && !subOk && fold(h.name).length > fold(row.title).length && fold(h.name).startsWith(fold(row.title))) {
           const full = part(h.name);
