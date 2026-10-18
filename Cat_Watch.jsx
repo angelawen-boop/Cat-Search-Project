@@ -797,13 +797,15 @@ const OCC_CARD={"occ-mfa-org":"Boston MFA","occ-ngv-vic-gov-au":"National Galler
 // heading is the short name plus " - Palazzo Reale Milano", the full name on a line below it
 // (nameInLines: the longest line between title and dates that starts with the short name; AL-048).
 // Its pages on the city council's site open with a "# Navigation" heading and the site's menu;
-// the show's heading is the one ending in the venue's name (titleHeading), "Milano" or "Milan".
-const PRM_TAIL=/\s+[-–—]\s+Palazzo Reale,? Milano?$/i;
+// the show's heading is the one ending in the venue's name (titleHeading): "Palazzo Reale Milano",
+// "Palazzo Reale, Milan" or "Royal Palace of Milan". Its English pages say "as of" for "to"
+// ("from February 21, 2019 as of June 6, 2019"; Antonello da Messina; asOfTo).
+const PRM_TAIL=/\s+[-–—]\s+(?:Palazzo Reale,? Milano?|Royal Palace of Milan)$/i;
 // Its "Upcoming Exhibitions" box lists other shows with their dates: the show's own dates and
 // text end there (until, datesUntil; Soutine took the box's first dates).
 const PRM_BOX=/^(?:Current|Upcoming|Past) Exhibitions$|^Mostre (?:in corso|future|passate)$/i;
 const OCC_LINK_READ={"occ-mfa-org":{datesAbove:2},"occ-ngv-vic-gov-au":{shortYear:true},
-  "occ-palazzorealemilano-it":{titleHeading:PRM_TAIL,titleDrop:PRM_TAIL,nameInLines:true,until:PRM_BOX,datesUntil:PRM_BOX,monthsOnly:true,capsTitles:true},
+  "occ-palazzorealemilano-it":{titleHeading:PRM_TAIL,titleDrop:PRM_TAIL,nameInLines:true,until:PRM_BOX,datesUntil:PRM_BOX,monthsOnly:true,capsTitles:true,asOfTo:true},
   // San Marco's pages are press releases: the title is the headline's first sentence, without
   // "Mostra" (exhibition) or the quotation marks round the name; capitals recased (her decision).
   "occ-museitoscana-cultura-gov-it":{firstSentence:true,titleDrop:/^Mostra\s+/i,unquote:true,capsTitles:true},
@@ -990,7 +992,7 @@ function readShowPage(res,url,vc){
     add(lines.findIndex(l=>{ const w=words(l); return w.split(" ").length>=2&&w.length<=80&&piece.includes(" "+w+" "); }));
   }
   if(!cands.length)return{ok:false,why:"Couldn’t find the show’s title on the page."};
-  const dateText=l=>lr&&lr.shortYear?withLongYears(l):lr&&lr.slashDayFirst?String(l).replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g,"$1.$2.$3"):l;
+  const dateText=l=>lr&&lr.shortYear?withLongYears(l):lr&&lr.slashDayFirst?String(l).replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g,"$1.$2.$3"):lr&&lr.asOfTo?String(l).replace(/\s+as of\s+/gi," to "):l;
   const datesUnder=h=>{
     // A venue that labels its date line (linkRead.dateLine) is read there, anywhere on the page.
     if(lr&&lr.dateLine){

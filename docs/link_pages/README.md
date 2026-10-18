@@ -25,5 +25,5 @@ product list (`products.json`), the connector's live answer cut to its first eig
 products by code. The shelf page itself comes back as a menu only (AL-033).
 
 `saved/` (18 Oct): HER saved pages from Palazzo Reale Milano's pages on the city council's site, which
-refuses Parallel — Chrome `.mht` files from her phone, cut by code to the page itself (the photos and
+refuses Parallel (Titian, Soutine, Antonello da Messina) — Chrome `.mht` files from her phone, cut by code to the page itself (the photos and
 fonts dropped). The proof for Pages (`scraper/fixtures/add_by_page.js`, AP-).

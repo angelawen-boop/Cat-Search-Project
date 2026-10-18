@@ -277,8 +277,9 @@ dropped) and reads it with `readShowPage`, then the same intake as a link. No Pa
   undecided card put pages back; Clear empties list and store.
 - **Palazzo Reale Milano on the council's site** files under `occ-palazzorealemilano-it` by path
   (`SITE_PATH_VENUES` — a fixed rule, written in). Its options: the show's heading is the one ending
-  "- Palazzo Reale Milano" or "- Palazzo Reale, Milan" (`titleHeading`, `titleDrop`); dates and text stop at
-  the "Upcoming Exhibitions" box (`datesUntil`, `until` — Soutine took the box's first dates).
+  "- Palazzo Reale Milano", "- Palazzo Reale, Milan" or "- Royal Palace of Milan" (`titleHeading`,
+  `titleDrop`); dates and text stop at the "Upcoming Exhibitions" box (`datesUntil`, `until` — Soutine took
+  the box's first dates); its English pages' "as of" reads as "to" (`asOfTo`; Antonello da Messina).
 - **Months only** ("september 2027 - january 2028", Soutine): at this venue only (`monthsOnly`), the first
   day of the opening month to the last of the closing one (her decision: "Jan to Mar" means start of Jan to
   end of Mar), noted on the approval card only (`findMonthRange`, `dates.js`). Anywhere else a day is never

@@ -45,6 +45,7 @@ function ok(cond, m, got) { if (cond) console.log('PASS  ' + m); else { console.
 
 const TITIAN = fs.readFileSync(path.join(SAVED, 'prm_titian.mht'), 'latin1');
 const SOUTINE = fs.readFileSync(path.join(SAVED, 'prm_soutine.mht'), 'latin1');
+const ANTONELLO = fs.readFileSync(path.join(SAVED, 'prm_antonello.mht'), 'latin1');
 const TITIAN_URL = 'https://www2.comune.milano.it/en/web/palazzo-reale-milano/-/tiziano-e-l-immagine-della-donna-nel-cinquecento-veneziano-1';
 const SOUTINE_URL = 'https://www2.comune.milano.it/en/web/palazzo-reale-milano/-/chaim-soutine';
 // A page saved as plain .html, the address in its canonical link (made, to the site's shape).
@@ -123,6 +124,10 @@ const runtime = () => ({
     const md = fn('DATES').findMonthRange;
     ok(md('March – June 2027').end === '2027-06-30' && md('november 2026 - february 2027').end === '2027-02-28' && md('September - January 2027').start === '2026-09-01' && md('from 17 Oct 2026 to 01 Nov 2026') === null,
       'AP-002b:  months to days: the last day of the closing month (Feb 28), a year across new year, a dated range left alone');
+    const a = reply(ANTONELLO, parse);
+    const ar = read(a.res, a.res.url, readVenue(a.res.url));
+    ok(ar.ok && ar.base === 'Antonello da Messina' && ar.start === '2019-02-21' && ar.end === '2019-06-06',
+      'AP-013: Antonello da Messina: "- Royal Palace of Milan" dropped; "from February 21, 2019 as of June 6, 2019" read with "as of" as "to"', JSON.stringify([ar.base, ar.start, ar.end, ar.why]));
     const m = reply(MADE, parse);
     ok(m.ok && m.res.url === MADE_URL, 'AP-003: a page saved as .html: the address from its canonical link', m.ok ? m.res.url : m.why);
     const n = reply(NO_ADDRESS, parse);
