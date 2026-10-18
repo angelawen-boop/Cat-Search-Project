@@ -406,7 +406,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 47.1 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 47.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -541,12 +541,13 @@ venue the app has never seen needs a fix about half the time** — the exhibitio
 correctly off the page, the venue's shop is not found, and so on (Mia and Worcester both missed
 and were fixed in code, proven live).
 
-- **OPEN — on `main`, not yet published (she held publishing): Berlin and Munich by link.** Dotted dates
+- **Published at 47.2 — Berlin and Munich by link; her next links and lookups there confirm.** Dotted dates
   day first (DS-004), headings over two lines, ranges over three lines, Berlin's shop found (German compounds,
   a book's address stands for its section); chips "Munich Pinakotheken" and "Berlin" after KHM, "Rijks" for
   the Rijksmuseum's chip. Munich is two venues (her decision): Munich Alte Pinakothek and Munich der Moderne,
   filed by the house line on the show page, each shop CEDON's section for that house, searched in German —
-  proved live; the Neue left out. `docs/add_by_link.md`, "Munich" and "Berlin".
+  proved live; the Neue left out. Shop searches proved for Berlin, both CEDON houses and the RA (AL-044).
+  `docs/add_by_link.md`, "Munich" and "Berlin".
 - **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).**
   Detroit files a show's book in the show's own shop section. Her next lookups settle:
   O'Keeffe found at Detroit? Did Mauritshuis and the RA get a search?
