@@ -6,7 +6,7 @@
  *   TS-001  drawn with no Claude runtime: says the shelf isn’t available.
  *   TS-002  drawn with a store holding two books and a theme: titles, ISBNs as
  *           xxx-xxxxxxxxxx, the publication line and the four booksellers on screen.
- *   TS-003  the publication line ("Published 2002 · 24 years").
+ *   TS-003  the publication year alone ("2017").
  *   TS-004  a dragged book's new order sits between its new neighbours.
  *   TS-005  by ISBN, with no Open Library record: only results that print the ISBN reach Claude (the live search
  *           for 9780300091519 returned Harry Potter pages); a publisher or year not
@@ -50,7 +50,7 @@ const fail = m => { console.log('FAIL  ' + m); failures++; };
 const pass = m => console.log('PASS  ' + m);
 const check = (ok, m) => ok ? pass(m) : fail(m);
 
-const EXPORTS = ['App', 'publishedLine', 'orderBetween', 'dropOrder', 'lookupIsbn', 'lookupLink',
+const EXPORTS = ['App', 'publishedYear', 'imgBlob', 'orderBetween', 'dropOrder', 'lookupIsbn', 'lookupLink',
   'readOnePage', 'olDate', 'pickCover', 'mhtmlImages', 'isbnMatches', 'fmtIsbn'];
 function load(win) {
   return new Function('React', 'window', 'document', 'localStorage',
@@ -137,11 +137,8 @@ async function render(label, runtime) {
   const now = new Date('2026-10-19T12:00:00');
 
   // TS-003
-  check(S.publishedLine('2002', now) === 'Published 2002 · 24 years', 'TS-003 year only: ' + S.publishedLine('2002', now));
-  check(S.publishedLine('2010-11', now) === 'Published Nov 2010 · 15 years', 'TS-003 month known: ' + S.publishedLine('2010-11', now));
-  check(S.publishedLine('2025-11-02', now) === 'Published Nov 2025 · this year', 'TS-003 under a year: ' + S.publishedLine('2025-11-02', now));
-  check(S.publishedLine('2025', now) === 'Published 2025 · 1 year', 'TS-003 one year: ' + S.publishedLine('2025', now));
-  check(S.publishedLine(null, now) === 'Publication date unknown', 'TS-003 no date');
+  check(S.publishedYear('2002') === '2002' && S.publishedYear('2010-11') === '2010' && S.publishedYear('2008-02-28') === '2008', 'TS-003 the year alone');
+  check(S.publishedYear(null) === null, 'TS-003 no date: nothing shown');
 
   // TS-004
   {
@@ -206,6 +203,11 @@ async function render(label, runtime) {
     check(b && b.url.includes('9783791350622') && b.b64 === 'Q09WRVI=', 'TS-007 else the picture whose address carries the ISBN');
     check(S.pickCover(mht(), doc(null), '9780300091519') === null, 'TS-007 else no cover — never the biggest picture');
     check(S.pickCover('<html></html>', doc(null), '9783791350622') === null, 'TS-007 a plain .html file has no pictures');
+    // Her Clothing Art save: Chrome stored the AVIF cover as raw bytes, not base64.
+    const bin = 'From: <Saved by Blink>\r\nSnapshot-Content-Location: https://www.abebooks.com/servlet/BookDetailsPL?bi=1\r\nContent-Type: multipart/related; boundary="B"\r\n\r\n'
+      + '--B\r\nContent-Type: image/avif\r\nContent-Transfer-Encoding: binary\r\nContent-Location: https://pictures.abebooks.com/isbn/9780300119077-us._SL300_FMavif_.jpg\r\n\r\n\x00\xff\x10AVIF\r\n--B--';
+    const c = S.pickCover(bin, doc(null), '9780300119077');
+    check(c && c.type === 'image/avif' && c.bin === '\x00\xff\x10AVIF', 'TS-007 a raw-bytes AVIF cover is found (her Clothing Art save)');
   }
 
   // TS-009 — the live Open Library record for 9780300121193 (fields cut down).

@@ -5,7 +5,7 @@ import React,{useState,useEffect,useMemo,useCallback,useRef} from "react";
 // and the four booksellers. Its own page with its own store, so Cat Watch's ledger is
 // never touched. What it shares with Cat Watch (ISBNs, the booksellers, saved pages, the
 // connector's messages) is copied in by `node build/sync_shelf.js`.
-const APP_VERSION="2.1";
+const APP_VERSION="2.2";
 const APP_DATE="19 Oct 2026";
 
 // ===== SHARED WITH CAT WATCH — written by `node build/sync_shelf.js`; never edit between these markers. Edit Cat_Watch.jsx, then run it. =====
@@ -327,23 +327,28 @@ async function lookupLink(url,io){
 // A page saved as "Webpage, Single File" (.mhtml) carries its pictures. The cover is the
 // one the page names as its own picture (og:image), else one whose address carries the
 // book's ISBN. Nothing is guessed from size: a banner is often the biggest picture.
-function mhtmlImages(text){
-  const t=String(text||"");
+// `raw` is the file as one character per byte (fileBytes): Chrome stores a picture as
+// base64 or as its raw bytes, and AbeBooks serves its covers as AVIF (her Clothing Art
+// save, 978-0300119077).
+function mhtmlImages(raw){
+  const t=String(raw||"");
   const b=(t.match(/boundary="?([^";\r\n]+)"?/i)||[])[1];
   if(!b)return[];
   const out=[];
   for(const part of t.split("--"+b)){
     const at=part.search(/\r?\n\r?\n/); if(at<0)continue;
     const head=part.slice(0,at);
-    const type=((head.match(/^Content-Type:\s*(image\/(?:jpeg|png|webp|gif))/mi)||[])[1]||"").toLowerCase();
-    if(!type||!/^Content-Transfer-Encoding:\s*base64/mi.test(head))continue;
+    const type=((head.match(/^Content-Type:\s*(image\/(?:jpeg|png|webp|gif|avif))/mi)||[])[1]||"").toLowerCase();
+    const enc=((head.match(/^Content-Transfer-Encoding:\s*(\S+)/mi)||[])[1]||"").toLowerCase();
+    if(!type||(enc!=="base64"&&enc!=="binary"))continue;
     const url=(head.match(/^Content-Location:\s*(\S+)/mi)||[])[1]||"";
-    out.push({url,type,b64:part.slice(at).replace(/\s+/g,"")});
+    const body=part.slice(at).replace(/^\r?\n\r?\n/,"");
+    out.push(enc==="base64"?{url,type,b64:body.replace(/\s+/g,"")}:{url,type,bin:body.replace(/\r?\n$/,"")});
   }
   return out;
 }
-function pickCover(text,doc,isbn){
-  const imgs=mhtmlImages(text);
+function pickCover(raw,doc,isbn){
+  const imgs=mhtmlImages(raw);
   if(!imgs.length)return null;
   const og=doc&&doc.querySelector('meta[property="og:image"],meta[name="og:image"],meta[name="twitter:image"]');
   const want=og?String(og.getAttribute("content")||"").trim():"";
@@ -353,10 +358,16 @@ function pickCover(text,doc,isbn){
   const ten=isbn13to10(isbn||"");
   return imgs.find(i=>isbn&&(i.url.includes(isbn)||(ten&&i.url.includes(ten))))||null;
 }
-function b64Blob(img){
-  const bin=atob(img.b64), u=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+function imgBlob(img){
+  const bin=img.b64!=null?atob(img.b64):img.bin, u=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i)&255;
   return new Blob([u],{type:img.type});
+}
+// The file as one character per byte, so a picture's raw bytes survive.
+async function fileBytes(file){
+  const u=new Uint8Array(await file.arrayBuffer());
+  let s=""; for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));
+  return s;
 }
 // Shrunk to 600 px wide, sharp on a phone and small in the store.
 async function shrinkImage(blob){
@@ -372,15 +383,11 @@ async function shrinkImage(blob){
   }catch{ return blob; }
 }
 
-// ── HOW OLD A BOOK IS ───────────────────────────────────────────────────────
-// Her out-of-print signal: the publication date, and its age in whole years.
-function publishedLine(p,now){
-  const m=String(p||"").match(/^(\d{4})(?:-(\d{2}))?/);
-  if(!m)return"Publication date unknown";
-  const n=now||new Date(), y=+m[1], mo=m[2]?+m[2]:null;
-  const yrs=mo?Math.floor(((n.getFullYear()-y)*12+(n.getMonth()+1-mo))/12):n.getFullYear()-y;
-  const when=(mo?MON3[mo-1]+" ":"")+y;
-  return"Published "+when+" · "+(yrs<=0?"this year":yrs===1?"1 year":yrs+" years");
+// ── WHEN IT WAS PUBLISHED ───────────────────────────────────────────────────
+// Her out-of-print signal: the year alone (her decision: "2017").
+function publishedYear(p){
+  const m=String(p||"").match(/^(\d{4})/);
+  return m?m[1]:null;
 }
 
 // ── ORDER ───────────────────────────────────────────────────────────────────
@@ -410,7 +417,7 @@ async function readAll(db,coll){
   return snap.docs.map(d=>({...(d.data()||{}),_id:d.id}));
 }
 const bookDoc=b=>({isbn13:b.isbn13,title:b.title,publisher:b.publisher||null,published:b.published||null,
-  themes:Array.isArray(b.themes)?b.themes:[],order:Number(b.order)||0,cover:b.cover||null,source:b.source||null,addedAt:b.addedAt||new Date().toISOString()});
+  themes:Array.isArray(b.themes)?b.themes:[],owned:!!b.owned,order:Number(b.order)||0,cover:b.cover||null,source:b.source||null,addedAt:b.addedAt||new Date().toISOString()});
 const coverSrc=b=>b&&b.cover?"/_blob/"+b.cover:null;
 const newId=()=>"t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const hostOf=u=>{ try{ return new URL(u).hostname.replace(/^www\./,""); }catch{ return""; } };
@@ -430,30 +437,72 @@ const CSS=`
 @media (prefers-reduced-motion:no-preference){.ts-card{transition:transform .12s ease}}
 `;
 const SERIF="'Fraunces',Georgia,serif";
+const MONO="ui-monospace,monospace";
 // The shelf's one difference from Cat Watch (her decision): its rose, in place of Cat
-// Watch's accent and action colours, so the two pages tell themselves apart.
-const ROSE={light:{accent:"#8A4559",action:"#8A4559",onAction:"#fff"},dark:{accent:"#D99AAE",action:"#D99AAE",onAction:"#1A1013"}};
+// Watch's accent and action colours, so the two pages tell themselves apart. The
+// Wishlist tag is rose; the Owned tag is Cat Watch's own.
+const ROSE={light:{accent:"#8A4559",action:"#8A4559",onAction:"#fff",wishInk:"#8A4559",wishBg:"#F1E1E6"},
+            dark:{accent:"#D99AAE",action:"#D99AAE",onAction:"#1A1013",wishInk:"#D99AAE",wishBg:"#3A2228"}};
 const label9=C=>({fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2});
 const field=C=>({padding:"7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box",minWidth:0});
-const textBtn=C=>({background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0,fontFamily:"inherit"});
+const textBtn=C=>({background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0,fontFamily:"inherit"});
 const warnBox=C=>({marginTop:8,padding:"7px 11px",background:C.warnBg,border:"1px solid "+C.warnEdge,borderRadius:4,fontSize:11.5,color:C.warnInk,lineHeight:1.45});
 const dialogOuter=C=>({position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",justifyContent:"center",padding:16});
-const dialogInner=C=>({background:C.bg,borderRadius:8,maxWidth:620,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",gap:12,maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 14px",boxSizing:"border-box"});
+const dialogInner=(C,w)=>({background:C.bg,borderRadius:8,maxWidth:w||620,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",gap:12,maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px",boxSizing:"border-box"});
+// Cat Watch's corner tag ("Recently opened", "Owned").
+const tag=(ink,wash)=>({fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:ink,background:wash,padding:"2px 7px",borderRadius:3,whiteSpace:"nowrap"});
+// The booksellers without "AU" (her decision, to save space on the shelf).
+const shopName=n=>n.replace(/ AU$/,"");
 
-function Cover({book,C,big}){
+// The owned mark in a cover's top-right corner; tapping it switches Owned and Wishlist.
+// Four looks for her to choose from; OWNED_MARK is the one the page uses.
+const OWNED_MARK="tick";
+function OwnedMark({kind,owned,C}){
+  const k=kind||OWNED_MARK, on=owned, ring=on?C.owned:"rgba(255,255,255,0.9)";
+  if(k==="bookmark")return(
+    <svg width="20" height="28" viewBox="0 0 20 28" aria-hidden="true" style={{display:"block",filter:"drop-shadow(0 1px 2px rgba(0,0,0,0.35))"}}>
+      <path d="M2 0h16v26l-8-6-8 6z" fill={on?C.owned:"rgba(255,255,255,0.85)"} stroke={on?C.owned:"rgba(0,0,0,0.25)"} strokeWidth="1"/>
+    </svg>);
+  if(k==="ring")return(
+    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style={{display:"block",filter:"drop-shadow(0 1px 2px rgba(0,0,0,0.35))"}}>
+      <circle cx="10" cy="10" r="8" fill={on?C.owned:"rgba(255,255,255,0.35)"} stroke={on?C.owned:"#fff"} strokeWidth="2"/>
+    </svg>);
+  if(k==="tag")return on
+    ?<span style={{...tag(C.owned,C.ownedBg),display:"block",boxShadow:"0 1px 3px rgba(0,0,0,0.3)"}}>Owned</span>
+    :<span style={{...tag(C.wishInk,C.wishBg),display:"block",boxShadow:"0 1px 3px rgba(0,0,0,0.3)",opacity:0.9}}>Wishlist</span>;
+  return(
+    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style={{display:"block",filter:"drop-shadow(0 1px 2px rgba(0,0,0,0.35))"}}>
+      <circle cx="12" cy="12" r="10.5" fill={on?C.owned:"rgba(0,0,0,0.28)"} stroke={ring} strokeWidth="1.5"/>
+      <path d="M7 12.3l3.2 3.2L17 8.7" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity={on?1:0.85}/>
+    </svg>);
+}
+
+function Cover({book,C,big,thumb}){
   const src=coverSrc(book);
   const [bad,setBad]=useState(false);
   useEffect(()=>setBad(false),[src]);
   return(
-    <div style={{width:"100%",maxWidth:big?160:"100%",aspectRatio:"2 / 3",background:C.panel,display:"flex",overflow:"hidden",flexShrink:0,borderRadius:big?3:0}}>
+    <div style={{width:"100%",aspectRatio:"2 / 3",background:C.panel,display:"flex",overflow:"hidden",flexShrink:0,borderRadius:big?3:0}}>
       {src&&!bad
         ?<img src={src} alt={"Cover of "+book.title} onError={()=>setBad(true)} draggable={false} style={{width:"100%",height:"100%",objectFit:"cover",display:"block",pointerEvents:"none"}}/>
+        :thumb?<div style={{flex:1,margin:3,border:"1px solid "+C.rule}}/>
         :<div style={{flex:1,margin:8,padding:10,border:"1px solid "+C.rule,display:"flex",flexDirection:"column",justifyContent:"center",gap:8,textAlign:"center"}}>
-          <span style={{fontFamily:SERIF,fontSize:big?15:16,fontWeight:500,lineHeight:1.2,color:C.ink,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:6,WebkitBoxOrient:"vertical"}}>{book.title}</span>
+          <span style={{fontFamily:SERIF,fontSize:big?14:16,fontWeight:500,lineHeight:1.2,color:C.ink,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:6,WebkitBoxOrient:"vertical"}}>{book.title}</span>
           {book.publisher?<span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft}}>{book.publisher}</span>:null}
         </div>}
     </div>
   );
+}
+
+// Publisher, ISBN and year in Cat Watch's catalogue type: publisher small and grey,
+// the ISBN in its typewriter face, the year as the card's date line.
+function Facts({b,C}){
+  const y=publishedYear(b.published);
+  return(<>
+    {b.publisher?<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{b.publisher}</div>:null}
+    <div style={{fontSize:11.5,fontFamily:MONO,color:C.ink,marginBottom:2}}>ISBN <span style={{whiteSpace:"nowrap"}}>{fmtIsbn(b.isbn13)}</span></div>
+    {y?<div style={{fontSize:11,color:C.soft}}>{y}</div>:null}
+  </>);
 }
 
 function Shops({book,C}){
@@ -461,10 +510,22 @@ function Shops({book,C}){
   return(
     <div className="ts-shops" style={{display:"flex",flexWrap:"wrap",gap:5}}>
       {resellerLinks(book.isbn13,book.title).map(l=>(
-        <a key={l.name} href={l.href} target="_blank" rel="noopener noreferrer" style={lnk} onPointerDown={e=>e.stopPropagation()}>{l.name} {"↗"}</a>
+        <a key={l.name} href={l.href} target="_blank" rel="noopener noreferrer" style={lnk} onPointerDown={e=>e.stopPropagation()}>{shopName(l.name)} {"↗"}</a>
       ))}
     </div>
   );
+}
+
+// Several books in one go, as Cat Watch reads several links: ISBNs or addresses out of
+// the box, one by one.
+const isbnsIn=t=>[...new Set(String(t||"").split(/[\s,;]+/).map(x=>toIsbn13(x)).filter(Boolean))];
+const linksIn=t=>[...new Set(String(t||"").split(/\s+/).filter(x=>/^https?:\/\/\S+$/i.test(x)))];
+// Find in the footer's Remove book: title, publisher or ISBN digits.
+function booksMatching(books,q){
+  const k=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+  const want=k(q).trim(), d=String(q||"").replace(/\D/g,"");
+  if(!want)return[];
+  return books.filter(b=>k(b.title).includes(want)||k(b.publisher).includes(want)||(d.length>=3&&isbnMatches(b,d)));
 }
 
 export default function App(){
@@ -472,13 +533,18 @@ export default function App(){
   const [themes,setThemes]=useState([]);
   const [store,setStore]=useState("loading"); // loading | ready | none | failed
   const [view,setView]=useState("all");
+  const [status,setStatus]=useState(null);       // null | "owned" | "wishlist"
   const [q,setQ]=useState("");
   const [showFind,setShowFind]=useState(false);
   const [msg,setMsg]=useState("");
-  const [adding,setAdding]=useState(null);
+  const [adding,setAdding]=useState(false);
   const [open,setOpen]=useState(null);
+  const [coverFor,setCoverFor]=useState(null);
   const [themeEdit,setThemeEdit]=useState(null); // {mode:"new"|"rename", name}
   const [confirmBox,setConfirmBox]=useState(null); // {title, text, yes, act} — Cat Watch's confirm box
+  const [showRemove,setShowRemove]=useState(false);
+  const [removeQ,setRemoveQ]=useState("");
+  const [themePick,setThemePick]=useState([]);   // books ticked for an empty theme
   const [drag,setDrag]=useState(null);           // {id, x, y, to}
   const [loadFile,setLoadFile]=useState(null);
   // The cloud line: every change is written to the page's store as it is made (her
@@ -547,9 +613,12 @@ export default function App(){
   },[saving]);
 
   const sorted=useMemo(()=>books.slice().sort(byOrder),[books]);
-  const shown=useMemo(()=>sorted.filter(b=>(view==="all"||b.themes.includes(view))&&isbnMatches(b,q)),[sorted,view,q]);
+  const shown=useMemo(()=>sorted.filter(b=>(view==="all"||b.themes.includes(view))
+    &&(!status||(status==="owned")===!!b.owned)&&isbnMatches(b,q)),[sorted,view,status,q]);
   const theme_=themes.find(t=>t.id===view)||null;
+  const themeEmpty=!!theme_&&!books.some(b=>b.themes.includes(theme_.id));
   useEffect(()=>{ if(view!=="all"&&!themes.some(t=>t.id===view))setView("all"); },[themes,view]);
+  useEffect(()=>{ setThemePick([]); },[view]);
 
   // ── DRAG TO REARRANGE ──────────────────────────────────────────────────
   // A mouse drags once it moves; a finger after a short hold, so a swipe still scrolls.
@@ -640,53 +709,40 @@ export default function App(){
       const t={...theme_,name}; setThemes(ts=>ts.map(x=>x.id===t.id?t:x)); setThemeEdit(null); await writeTheme(t);
     }
   }
-
-  // ── ADDING A BOOK ──────────────────────────────────────────────────────
-  const run=useRef(0);
-  const io={search:searchWeb,fetch:fetchPage,ask:askClaude};
-  function startAdd(){ setMsg(""); setAdding({tab:"isbn",isbn:"",link:"",themes:view==="all"?[]:[view],busy:"",why:"",found:null}); }
-  async function find(kind,file){
-    const a=adding; const me=++run.current;
-    setAdding(x=>({...x,busy:kind==="isbn"?"Searching for the ISBN…":kind==="link"?"Reading the page…":"Reading the saved page…",why:"",found:null}));
-    let r, cover=null, noCoverHint=false;
-    if(kind==="isbn"){
-      const isbn=toIsbn13(a.isbn);
-      if(!isbn){ setAdding(x=>({...x,busy:"",why:"That isn’t a valid ISBN. Check the digits (10 or 13)."})); return; }
-      r=await lookupIsbn(isbn,io);
-    }else if(kind==="link"){
-      const url=String(a.link||"").trim();
-      if(!/^https?:\/\/\S+$/i.test(url)){ setAdding(x=>({...x,busy:"",why:"Paste a full web address, starting with https://"})); return; }
-      r=await lookupLink(url,io);
-    }else{
-      let text=""; try{ text=await file.text(); }catch{}
-      const parse=h=>new DOMParser().parseFromString(h,"text/html");
-      const s=savedPageReply(text,parse);
-      if(!s.ok){ setAdding(x=>({...x,busy:"",why:s.why})); return; }
-      r=await readOnePage(s.res,io);
-      if(r.ok){
-        const img=pickCover(text,parse(savedPageHtml(text).html),r.book.isbn13);
-        if(img){ try{ cover=b64Blob(img); }catch{} }
-        noCoverHint=!img&&!mhtmlImages(text).length;
-      }
-    }
-    if(me!==run.current)return;
-    if(!r.ok){ setAdding(x=>({...x,busy:"",why:r.why})); return; }
-    const had=books.find(b=>b.isbn13===r.book.isbn13)||null;
-    setAdding(x=>({...x,busy:"",found:{...r.book,coverBlob:cover,coverUrl:cover?URL.createObjectURL(cover):null,noCoverHint,had}}));
+  async function addPickedToTheme(){
+    const id=theme_&&theme_.id; if(!id)return;
+    for(const b of books.filter(x=>themePick.includes(x.isbn13)))await putBook({...b,themes:[...new Set([...b.themes,id])]});
+    setThemePick([]);
   }
-  async function confirmAdd(){
-    const a=adding, f=a&&a.found; if(!f)return;
-    if(f.had){
-      const themesNow=[...new Set([...f.had.themes,...a.themes])];
-      await putBook({...f.had,themes:themesNow});
-      setAdding(null); setMsg("“"+f.had.title+"” was already on the shelf"+(a.themes.length?"; its themes are updated.":"."));
-      return;
+
+  // ── ADDING BOOKS ───────────────────────────────────────────────────────
+  // Cat Watch's Import, for books: each ISBN, link or saved page is read in turn; what is
+  // found waits in the pop-up, ticked, until Add.
+  const io={search:searchWeb,fetch:fetchPage,ask:askClaude};
+  async function readOne(kind,item){
+    if(kind==="isbn")return lookupIsbn(item,io);
+    if(kind==="links")return lookupLink(item,io);
+    let text="", raw="";
+    try{ text=await item.text(); raw=await fileBytes(item); }catch{}
+    const parse=h=>new DOMParser().parseFromString(h,"text/html");
+    const s=savedPageReply(text,parse);
+    if(!s.ok)return s;
+    const r=await readOnePage(s.res,io);
+    if(!r.ok)return r;
+    const img=pickCover(raw,parse(savedPageHtml(text).html),r.book.isbn13);
+    let coverBlob=null; if(img){ try{ coverBlob=imgBlob(img); }catch{} }
+    return{...r,coverBlob};
+  }
+  async function addFound(found,fileUnder){
+    for(const f of found){
+      const had=books.find(b=>b.isbn13===f.isbn13);
+      if(had){ await putBook({...had,themes:[...new Set([...had.themes,...fileUnder])]}); continue; }
+      const first=sorted[0];
+      const b={isbn13:f.isbn13,title:f.title,publisher:f.publisher,published:f.published,source:f.source,themes:fileUnder,owned:false,
+        order:(first?first.order:0)-1-found.indexOf(f)*0.001,cover:null,addedAt:new Date().toISOString()};
+      await putBook(b);
+      if(f.coverBlob){ const id=await uploadCover(f.coverBlob); if(id)await putBook({...b,cover:id}); }
     }
-    const first=sorted[0];
-    const b={isbn13:f.isbn13,title:f.title,publisher:f.publisher,published:f.published,source:f.source,themes:a.themes,order:first?first.order-1:0,cover:null,addedAt:new Date().toISOString()};
-    setAdding(null);
-    await putBook(b);
-    if(f.coverBlob){ const id=await uploadCover(f.coverBlob); if(id)await putBook({...b,cover:id}); }
   }
   async function uploadCover(blob){
     const assets=await useCap("assets");
@@ -695,11 +751,12 @@ export default function App(){
     catch(e){ setMsg("Couldn’t store the cover ("+String((e&&e.code)||"unknown")+")."); return null; }
   }
   async function setCover(b,blob){
-    if(!blob||!/^image\//.test(blob.type||"")){ setMsg("That isn’t a picture. Use a JPEG, PNG or WebP."); return; }
-    const id=await uploadCover(blob); if(!id)return;
+    if(!blob||!/^image\//.test(blob.type||"")){ setMsg("That isn’t a picture."); return false; }
+    const id=await uploadCover(blob); if(!id)return false;
     const old=b.cover;
     await putBook({...b,cover:id});
     if(old){ try{ const assets=await useCap("assets"); if(assets)await assets.delete(old); }catch{} }
+    return true;
   }
   async function dropCover(b){
     const old=b.cover; await putBook({...b,cover:null});
@@ -743,8 +800,10 @@ export default function App(){
   void exportShelf; void pickLoad; void confirmLoad;
 
   const openBook=open?books.find(b=>b.isbn13===open):null;
+  const coverBook=coverFor?books.find(b=>b.isbn13===coverFor):null;
   const ready=store==="ready";
   const box={background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:18,fontSize:12.5,color:C.soft,lineHeight:1.5};
+  const removeHits=booksMatching(sorted,removeQ);
 
   return(
     <div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.ink,minHeight:"100vh",padding:"20px 16px 60px"}}>
@@ -757,19 +816,19 @@ export default function App(){
           {/* Cat Watch's row: the comfort control, then the way in (where Import sits). */}
           <button onClick={toggleTheme} title={theme==="dark"?"Switch to light":"Switch to dark"}
             style={{...sBtn,marginLeft:"auto",padding:"5px 9px"}}>{theme==="dark"?"☀ Light":"☽ Dark"}</button>
-          <button onClick={startAdd} disabled={!ready} style={{...pBtn,opacity:ready?1:0.4,cursor:ready?"pointer":"not-allowed"}}>Add book</button>
+          <button onClick={()=>{setMsg("");setAdding(true);}} disabled={!ready} style={{...pBtn,opacity:ready?1:0.4,cursor:ready?"pointer":"not-allowed"}}>Add book</button>
         </div>
         {/* The cloud line, as Cat Watch's: green while saving works, the banner when it stops. */}
         {saveState==="failed"?
           <div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
             <span style={{fontSize:17,lineHeight:1.1}}>{"☁"}</span>
-            <span>{"CLOUD COPY NOT SAVING — "+saveErr+(lastSavedAt?" Last cloud save: "+fmtRefresh(lastSavedAt)+" ("+relTime(lastSavedAt)+").":"")+" Reload the page and try again."}</span>
+            <span>{"CLOUD COPY NOT SAVING — "+saveErr+(lastSavedAt?" Last cloud save: "+fmtRefresh(lastSavedAt)+" ("+relTime(lastSavedAt)+").":"")}</span>
           </div>
         :<div style={{marginTop:6,fontSize:11,color:store==="ready"?C.okEdge:C.soft,fontWeight:600}}>
           {"☁ "}{
             store==="loading"?"Opening the shelf…"
             :store==="none"?"The shelf isn’t available in this viewer."
-            :store==="failed"?"The cloud copy didn’t answer. Reload to try again."
+            :store==="failed"?"The cloud copy didn’t answer."
             :saveState==="saving"?"Saving to the cloud…"
             :lastSavedAt?"Last cloud save: "+fmtRefresh(lastSavedAt)+" ("+relTime(lastSavedAt)+")"
             :"Saved in the cloud"
@@ -783,10 +842,11 @@ export default function App(){
         <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",alignItems:"center"}}>
           <span><b style={{color:C.ink}}>{books.length}</b> Books</span>
           <span><b style={{color:C.ink}}>{themes.length}</b> Themes</span>
+          <span><b style={{color:C.owned}}>{books.filter(b=>b.owned).length}</b> Owned</span>
           <button onClick={()=>{ if(showFind)setQ(""); setShowFind(v=>!v); setTimeout(()=>findRef.current&&findRef.current.focus(),100); }} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Find by ISBN" aria-label="Find by ISBN">{"🔍"}</button>
         </div>
         {showFind?<div style={{marginTop:6,position:"relative"}}>
-          <input ref={findRef} id="isbn-find" inputMode="numeric" value={q} onChange={e=>setQ(e.target.value)} placeholder={"Find by ISBN…"} style={{...field(C),width:"100%",paddingRight:30}}/>
+          <input ref={findRef} id="isbn-find" inputMode="numeric" value={q} onChange={e=>setQ(e.target.value)} aria-label="Find by ISBN" style={{...field(C),width:"100%",paddingRight:30}}/>
           {q?<button onClick={()=>{ setQ(""); if(findRef.current)findRef.current.focus(); }} aria-label="Clear search" title="Clear"
             style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:C.soft,fontSize:16,lineHeight:1,cursor:"pointer",padding:"2px 4px"}}>{"×"}</button>:null}
         </div>:null}
@@ -803,9 +863,14 @@ export default function App(){
             <button style={textBtn(C)} onClick={()=>setConfirmBox({title:"Delete “"+theme_.name+"”?",text:"Its books stay on the shelf.",yes:"Delete theme",act:()=>deleteTheme(theme_)})}>Delete</button>
           </span>:null}
         </div>:null}
+        {ready?<div style={{marginTop:7,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
+          <span style={label9(C)}>Status</span>
+          <button style={chip(status==="owned")} aria-pressed={status==="owned"} onClick={()=>setStatus(s=>s==="owned"?null:"owned")}>Owned</button>
+          <button style={chip(status==="wishlist")} aria-pressed={status==="wishlist"} onClick={()=>setStatus(s=>s==="wishlist"?null:"wishlist")}>Wishlist</button>
+        </div>:null}
         {/* Cat Watch's panel under a button (its Save panel): a field, the action, Cancel. */}
         {themeEdit?<form onSubmit={e=>{e.preventDefault();saveThemeEdit();}} style={{marginTop:8,padding:"10px 12px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
-          <input id="theme-name" autoFocus maxLength={60} placeholder="Theme name" value={themeEdit.name} onChange={e=>setThemeEdit({...themeEdit,name:e.target.value})} style={{...field(C),flex:"1 1 220px",padding:"5px 8px"}}/>
+          <input id="theme-name" autoFocus maxLength={60} aria-label="Theme name" value={themeEdit.name} onChange={e=>setThemeEdit({...themeEdit,name:e.target.value})} style={{...field(C),flex:"1 1 220px",padding:"5px 8px"}}/>
           <button type="submit" style={pBtn}>{themeEdit.mode==="new"?"Add theme":"Rename"}</button>
           <button type="button" onClick={()=>setThemeEdit(null)} style={sBtn}>Cancel</button>
         </form>:null}
@@ -814,9 +879,29 @@ export default function App(){
       <main style={{maxWidth:760,margin:"0 auto"}}>
         {store==="loading"?<div style={box}>Opening the shelf{"…"}</div>
         :store==="none"?<div style={box}>The shelf isn{"’"}t available in this viewer.</div>
-        :store==="failed"?<div style={box}>The shelf didn{"’"}t open {"—"} the page{"’"}s store didn{"’"}t answer. Reload to try again.</div>
+        :store==="failed"?<div style={box}>The shelf didn{"’"}t open {"—"} the page{"’"}s store didn{"’"}t answer.</div>
         :!books.length?<div style={box}>No books yet.</div>
-        :!shown.length?<div style={box}>{q?"No book "+(theme_?"under this theme":"on the shelf")+" has an ISBN with those digits.":"No books under this theme yet."}</div>
+        :themeEmpty&&!q&&!status?(
+          // A new theme: tick books already on the shelf to file them under it (her design).
+          <div style={{...box,padding:"14px 16px",color:C.ink}}>
+            <div style={{fontSize:12.5,color:C.soft,marginBottom:8}}>No books under this theme yet.</div>
+            {sorted.map((b,k)=>{ const on=themePick.includes(b.isbn13); return(
+              <div key={b.isbn13} role="button" tabIndex={0} onClick={()=>setThemePick(p=>on?p.filter(x=>x!==b.isbn13):[...p,b.isbn13])}
+                onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setThemePick(p=>on?p.filter(x=>x!==b.isbn13):[...p,b.isbn13]); } }}
+                style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderTop:k?"1px solid "+C.rule:"none",cursor:"pointer"}}>
+                <span style={{flex:"none",width:14,fontSize:13,color:C.ink}}>{on?"●":"○"}</span>
+                <div style={{width:34,flex:"none"}}><Cover book={b} C={C} big thumb/></div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontFamily:SERIF,fontSize:14.5,fontWeight:500,lineHeight:1.3}}>{b.title}</div>
+                  {b.publisher?<div style={{fontSize:11,color:C.soft}}>{b.publisher}</div>:null}
+                </div>
+              </div>);})}
+            <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
+              <button onClick={addPickedToTheme} disabled={!themePick.length} style={{...pBtn,opacity:themePick.length?1:0.4,cursor:themePick.length?"pointer":"not-allowed"}}>Add</button>
+            </div>
+          </div>
+        )
+        :!shown.length?<div style={box}>Nothing matches those filters.</div>
         :(
           <div className="ts-grid">
             {grid.map(b=>(
@@ -826,13 +911,18 @@ export default function App(){
                 onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setOpen(b.isbn13); } }}
                 onContextMenu={e=>{ if(press.current&&press.current.touch)e.preventDefault(); }}
                 style={{background:C.card,border:"1px solid "+C.rule,borderRadius:5,overflow:"hidden",display:"flex",flexDirection:"column",minWidth:0,color:C.ink}}>
-                <Cover book={b} C={C}/>
-                <div style={{padding:"10px 12px 12px",display:"flex",flexDirection:"column",gap:2,minWidth:0}}>
-                  <h3 style={{fontFamily:SERIF,fontSize:15,lineHeight:1.25,fontWeight:500,margin:0,letterSpacing:"-0.01em",overflow:"hidden",display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical"}}>{b.title}</h3>
-                  {b.publisher?<span style={{fontSize:11,color:C.soft,marginTop:2}}>{b.publisher}</span>:null}
-                  <span style={{fontSize:11,color:C.soft,fontVariantNumeric:"tabular-nums"}}>ISBN {fmtIsbn(b.isbn13)}</span>
-                  <span style={{fontSize:11,color:C.ink,fontWeight:600,marginBottom:8}}>{publishedLine(b.published)}</span>
-                  <Shops book={b} C={C}/>
+                <div style={{position:"relative"}}>
+                  <Cover book={b} C={C}/>
+                  <button aria-label={b.owned?"Owned — mark as wishlist":"Wishlist — mark as owned"} aria-pressed={!!b.owned}
+                    onPointerDown={e=>e.stopPropagation()} onClick={e=>{ e.stopPropagation(); putBook({...b,owned:!b.owned}); }}
+                    style={{position:"absolute",top:4,right:4,background:"none",border:"none",padding:4,cursor:"pointer",lineHeight:1}}>
+                    <OwnedMark owned={b.owned} C={C}/>
+                  </button>
+                </div>
+                <div style={{padding:"10px 12px 12px",minWidth:0}}>
+                  <h3 style={{fontFamily:SERIF,fontSize:14.5,lineHeight:1.3,fontWeight:500,margin:"0 0 2px",overflow:"hidden",display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical"}}>{b.title}</h3>
+                  <Facts b={b} C={C}/>
+                  <div style={{marginTop:10}}><Shops book={b} C={C}/></div>
                 </div>
               </article>
             ))}
@@ -841,14 +931,29 @@ export default function App(){
       </main>
       {dragBook&&drag?<div className="ts-float" style={{transform:"translate("+(drag.x-30)+"px,"+(drag.y-40)+"px) rotate(-2deg) scale(1.04)",boxShadow:"0 6px 24px rgba(0,0,0,0.25)"}}><Cover book={dragBook} C={C}/></div>:null}
 
+      {/* Cat Watch's footer line, with its Reset search turned to Remove book (her design):
+          type to find a book, pick it, confirm. */}
+      {ready?<div style={{maxWidth:760,margin:"18px auto 0",paddingTop:10,borderTop:"1px solid "+C.rule,fontSize:10,color:C.soft,lineHeight:1.6,display:"flex",gap:14,flexWrap:"wrap"}}>
+        <button onClick={()=>{ if(showRemove)setRemoveQ(""); setShowRemove(v=>!v); }} style={textBtn(C)}>Remove book</button>
+      </div>:null}
+      {ready&&showRemove?<div style={{maxWidth:760,margin:"6px auto 0",padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,boxSizing:"border-box"}}>
+        <input value={removeQ} onChange={e=>setRemoveQ(e.target.value)} aria-label="Find a book to remove" style={{...field(C),width:"100%"}}/>
+        {removeQ.trim()?(removeHits.length?removeHits.map(b=>(
+          <div key={b.isbn13} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline",marginTop:4}}>
+            <button onClick={()=>setConfirmBox({title:"Remove this book?",yes:"Yes",act:()=>{ removeBook(b); setRemoveQ(""); }})}
+              style={{flex:1,textAlign:"left",background:"none",border:"none",color:C.action,fontSize:12.5,fontFamily:"inherit",textDecoration:"underline",cursor:"pointer",padding:0}}>{b.title}</button>
+          </div>))
+          :<div style={{fontSize:12,color:C.soft,marginTop:8}}>No books match.</div>):null}
+      </div>:null}
       {/* The version, small and grey, as Cat Watch's footer. */}
       <footer style={{maxWidth:760,margin:"28px auto 0",fontSize:10.5,color:C.soft,textAlign:"center"}}>
         Theme Shelf prototype {"·"} version {APP_VERSION} {"·"} {APP_DATE}
       </footer>
 
       {loadFile?<ConfirmBox UI={UI} box={{title:"Load "+loadFile.name+"?",text:"The shelf becomes the file’s "+loadFile.books.length+" books and "+loadFile.themes.length+" themes. The "+books.length+" books on the shelf now are replaced.",yes:"Load",act:confirmLoad}} close={()=>setLoadFile(null)}/>:null}
-      {adding?<AddSheet UI={UI} a={adding} set={setAdding} themes={themes} find={find} confirm={confirmAdd} close={()=>{run.current++;setAdding(null);}}/>:null}
-      {openBook?<BookSheet UI={UI} b={openBook} themes={themes} close={()=>setOpen(null)} put={putBook} setCover={setCover} dropCover={dropCover} ask={setConfirmBox} remove={removeBook}/>:null}
+      {adding?<AddSheet UI={UI} books={books} themes={themes} startThemes={view==="all"?[]:[view]} readOne={readOne} addFound={addFound} close={()=>setAdding(false)}/>:null}
+      {openBook?<BookSheet UI={UI} b={openBook} themes={themes} close={()=>setOpen(null)} put={putBook} onCover={()=>setCoverFor(openBook.isbn13)}/>:null}
+      {coverBook?<CoverSheet UI={UI} b={coverBook} setCover={setCover} dropCover={dropCover} close={()=>setCoverFor(null)}/>:null}
       {confirmBox?<ConfirmBox UI={UI} box={confirmBox} close={()=>setConfirmBox(null)}/>:null}
     </div>
   );
@@ -883,108 +988,170 @@ function ThemePicks({UI,themes,value,onChange}){
   );
 }
 
-function AddSheet({UI,a,set,themes,find,confirm,close}){
+// Cat Watch's Import pop-up, for books (her decision: the same controls). ISBN and Links
+// take a box of several; Pages a list of saved pages. Read goes through them one by one;
+// what is found waits here, ticked, until Add.
+function AddSheet({UI,books,themes,startThemes,readOne,addFound,close}){
   const {C,sBtn,pBtn}=UI;
-  const fileRef=useRef(null);
-  const f=a.found;
-  // As Cat Watch's Import: the three ways in side by side; the one pressed turns green.
-  const tab=(k,label)=><button type="button" onClick={()=>set(x=>({...x,tab:k,why:"",found:null}))} style={a.tab===k?pBtn:sBtn}>{label}</button>;
+  const [tab,setTab]=useState("isbn");
+  const [text,setText]=useState({isbn:"",links:""});
+  const [pages,setPages]=useState([]);
+  const [fileUnder,setFileUnder]=useState(startThemes);
+  const [busy,setBusy]=useState(false);
+  const [prog,setProg]=useState({done:0,total:0,label:""});
+  const [fails,setFails]=useState([]);
+  const [found,setFound]=useState([]);     // {book, coverBlob, coverUrl, picked}
+  const stop=useRef(false);
+  const pagesRef=useRef(null);
+  const textarea={width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"8px 52px 8px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,resize:"vertical",display:"block"};
+  const clearBtn={position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0};
+  async function read(){
+    const items=tab==="isbn"?isbnsIn(text.isbn):tab==="links"?linksIn(text.links):pages;
+    if(!items.length){ setFails([{why:tab==="isbn"?"No ISBN in the box.":tab==="links"?"No link in the box.":"No pages chosen."}]); return; }
+    stop.current=false; setBusy(true); setFails([]);
+    const got=[], bad=[];
+    for(let i=0;i<items.length&&!stop.current;i++){
+      const it=items[i], name=tab==="pages"?it.name:tab==="isbn"?fmtIsbn(it):it;
+      setProg({done:i,total:items.length,label:"Reading "+(i+1)+" of "+items.length+"…"});
+      let r; try{ r=await readOne(tab,it); }catch(e){ r={ok:false,why:String((e&&e.message)||e)}; }
+      if(r.ok&&!got.some(g=>g.book.isbn13===r.book.isbn13)&&!found.some(g=>g.book.isbn13===r.book.isbn13))
+        got.push({book:r.book,coverBlob:r.coverBlob||null,coverUrl:r.coverBlob?URL.createObjectURL(r.coverBlob):null,picked:true});
+      else if(!r.ok)bad.push({name,why:r.why});
+    }
+    setProg({done:0,total:0,label:""}); setBusy(false);
+    setFound(f=>[...f,...got]); setFails(bad);
+    if(tab==="pages")setPages([]); else setText(t=>({...t,[tab]:""}));
+  }
+  async function add(){
+    const picked=found.filter(f=>f.picked).map(f=>({...f.book,coverBlob:f.coverBlob}));
+    close(); await addFound(picked,fileUnder);
+  }
+  const tabBtn=(k,label)=><button onClick={()=>{ if(!busy){ setTab(k); setFails([]); } }} disabled={busy} style={tab===k?pBtn:sBtn}>{label}</button>;
+  const nPicked=found.filter(f=>f.picked).length;
   return(
-    <div style={dialogOuter(C)} onClick={close}>
-      <div role="dialog" aria-label="Add a book" style={dialogInner(C)} onClick={e=>e.stopPropagation()}>
-        <div style={{display:"flex",gap:5,justifyContent:"center"}}>{tab("isbn","ISBN")}{tab("link","Link")}{tab("page","Page")}</div>
-        {a.tab==="isbn"?(
-          <form style={{display:"flex",gap:5,flexWrap:"wrap"}} onSubmit={e=>{e.preventDefault();find("isbn");}}>
-            <input id="add-isbn" autoFocus inputMode="numeric" placeholder="ISBN" value={a.isbn} onChange={e=>set(x=>({...x,isbn:e.target.value}))} style={{...field(C),flex:"1 1 220px"}}/>
-            <button type="submit" disabled={!!a.busy} style={{...pBtn,opacity:a.busy?0.5:1}}>Find</button>
-          </form>
-        ):a.tab==="link"?(
-          <form style={{display:"flex",gap:5,flexWrap:"wrap"}} onSubmit={e=>{e.preventDefault();find("link");}}>
-            <input id="add-link" autoFocus placeholder="https://" value={a.link} onChange={e=>set(x=>({...x,link:e.target.value}))} style={{...field(C),flex:"1 1 220px"}}/>
-            <button type="submit" disabled={!!a.busy} style={{...pBtn,opacity:a.busy?0.5:1}}>Find</button>
-          </form>
-        ):(
-          <div>
-            <input ref={fileRef} id="add-page" type="file" hidden accept=".mht,.mhtml,.html,.htm,multipart/related,message/rfc822,text/html" onChange={e=>{ const file=e.target.files&&e.target.files[0]; e.target.value=""; if(file)find("page",file); }}/>
-            <div style={{display:"flex",justifyContent:"flex-end"}}><button type="button" disabled={!!a.busy} onClick={()=>fileRef.current&&fileRef.current.click()} style={{...pBtn,opacity:a.busy?0.5:1}}>Choose saved page</button></div>
+    <div role="dialog" aria-label="Add book" style={dialogOuter(C)}>
+      <div style={{...dialogInner(C,820),gap:0}}>
+        <div style={{display:"flex",gap:5,justifyContent:"center"}}>{tabBtn("isbn","ISBN")}{tabBtn("links","Links")}{tabBtn("pages","Pages")}</div>
+        {tab!=="pages"?<div style={{marginTop:14}}>
+          <div style={{position:"relative"}}>
+            <textarea value={text[tab]} onChange={e=>setText(t=>({...t,[tab]:e.target.value}))} rows={tab==="isbn"?4:8} disabled={busy} aria-label={tab==="isbn"?"ISBNs":"Links"} inputMode={tab==="isbn"?"numeric":undefined} style={textarea}/>
+            {text[tab].trim()?<button onClick={()=>setText(t=>({...t,[tab]:""}))} disabled={busy} style={clearBtn}>Clear</button>:null}
           </div>
-        )}
-        <div style={{display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
+        </div>:<div style={{marginTop:14}}>
+          <input ref={pagesRef} type="file" multiple accept=".mht,.mhtml,.html,.htm,multipart/related,message/rfc822,text/html" onChange={e=>{ const fs=[...(e.target.files||[])]; e.target.value=""; setPages(p=>[...p,...fs.filter(f=>!p.some(x=>x.name===f.name))]); }} style={{display:"none"}}/>
+          <div style={{position:"relative",border:"1px solid "+C.rule,borderRadius:4,background:C.card,padding:"8px 52px 8px 10px",minHeight:60,fontSize:12.5,color:C.ink,boxSizing:"border-box"}}>
+            {pages.length?pages.map(p=><div key={p.name} style={{overflowWrap:"anywhere",lineHeight:1.5}}>{p.name.replace(/\.mhtml?$|\.html?$/i,"")}</div>)
+              :<div style={{color:C.soft}}>No pages chosen.</div>}
+            {pages.length?<button onClick={()=>setPages([])} disabled={busy} style={clearBtn}>Clear</button>:null}
+          </div>
+        </div>}
+        <div style={{display:"flex",flexWrap:"wrap",gap:5,alignItems:"center",marginTop:10}}>
           <span style={label9(C)}>File under</span>
-          <ThemePicks UI={UI} themes={themes} value={a.themes} onChange={v=>set(x=>({...x,themes:v}))}/>
+          <ThemePicks UI={UI} themes={themes} value={fileUnder} onChange={setFileUnder}/>
         </div>
-        {a.busy?<div style={{fontSize:11,color:C.soft}} role="status">{a.busy}</div>:null}
-        {a.why?<div style={{...warnBox(C),marginTop:0}} role="alert">{a.why}</div>:null}
-        {f?(
-          <div style={{display:"flex",gap:14,flexWrap:"wrap",alignItems:"flex-start",background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:12}}>
-            <div style={{width:100,flexShrink:0}}>
-              {f.coverUrl
-                ?<img src={f.coverUrl} alt={"Cover of "+f.title} style={{width:"100%",display:"block",borderRadius:3}}/>
-                :<Cover book={f} C={C}/>}
-            </div>
-            <div style={{flex:"1 1 200px",display:"flex",flexDirection:"column",gap:3,fontSize:12.5,minWidth:0}}>
-              <div style={{fontFamily:SERIF,fontSize:17,fontWeight:500,lineHeight:1.25}}>{f.title}</div>
-              <span style={{color:C.soft}}>{f.publisher||"Publisher not found"}</span>
-              <span style={{color:C.soft,fontVariantNumeric:"tabular-nums"}}>ISBN {fmtIsbn(f.isbn13)}</span>
-              <span style={{fontWeight:600}}>{publishedLine(f.published)}</span>
-              {f.source?<span style={{fontSize:11,color:C.soft}}>Read from {hostOf(f.source)}</span>:null}
-              {f.noCoverHint?<span style={{fontSize:11,color:C.soft}}>No cover in this file.</span>:null}
-              {f.had?<span style={{fontSize:11,color:C.soft}}>Already on your shelf.</span>:null}
-            </div>
-          </div>
-        ):null}
-        <div style={{display:"flex",gap:5,justifyContent:"flex-end"}}>
-          <button onClick={close} style={sBtn}>{a.busy?"Stop":"Cancel"}</button>
-          {f?<button onClick={confirm} style={pBtn}>{f.had?"Update its themes":"Add to shelf"}</button>:null}
+        <div style={{display:"flex",justifyContent:"flex-end",gap:5,marginTop:8}}>
+          {tab==="pages"?<button onClick={()=>pagesRef.current&&pagesRef.current.click()} disabled={busy} style={sBtn}>Choose pages</button>:null}
+          <button onClick={read} disabled={busy} style={{...pBtn,opacity:busy?0.5:1}}>Read</button>
+        </div>
+        {busy&&prog.total>0?<div style={{marginTop:8}}>
+          <div style={{height:4,background:C.rule,borderRadius:2,overflow:"hidden"}}>
+            <div style={{height:"100%",width:Math.round(100*prog.done/prog.total)+"%",background:C.action}}/></div>
+          <div style={{marginTop:4,fontSize:11,color:C.soft}}>{prog.label}</div>
+        </div>:null}
+        {fails.map((f,i)=><div key={i} style={{marginTop:6,fontSize:11.5,color:C.warnInk,lineHeight:1.4,overflowWrap:"anywhere"}}>{f.name?f.name+" — ":""}{f.why}</div>)}
+        {found.length?<div style={{marginTop:12,background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:"4px 12px"}}>
+          {found.map((f,k)=>{ const had=books.some(b=>b.isbn13===f.book.isbn13); return(
+            <div key={f.book.isbn13} role="button" tabIndex={0} onClick={()=>setFound(l=>l.map(x=>x===f?{...x,picked:!x.picked}:x))}
+              onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setFound(l=>l.map(x=>x===f?{...x,picked:!x.picked}:x)); } }}
+              style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 0",borderTop:k?"1px solid "+C.rule:"none",cursor:"pointer"}}>
+              <span style={{flex:"none",width:14,fontSize:13,lineHeight:1.3,color:C.ink}}>{f.picked?"●":"○"}</span>
+              <div style={{width:44,flex:"none"}}>{f.coverUrl?<img src={f.coverUrl} alt="" style={{width:"100%",display:"block",borderRadius:2}}/>:<Cover book={f.book} C={C} big thumb/>}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:SERIF,fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{f.book.title}</div>
+                <Facts b={f.book} C={C}/>
+                {had?<div style={{marginTop:4}}><span style={tag(C.soft,C.drawer)}>On the shelf</span></div>:null}
+              </div>
+            </div>);})}
+        </div>:null}
+        {found.length?<div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
+          <button onClick={add} disabled={!nPicked||busy} style={{...pBtn,opacity:nPicked&&!busy?1:0.4}}>Add</button>
+        </div>:null}
+        <div style={{textAlign:"center",marginTop:10}}>
+          <button onClick={()=>{ if(busy){ stop.current=true; setProg(p=>({...p,label:"Stopping after this one…"})); return; } close(); }} style={textBtn(C)}>Cancel</button>
         </div>
       </div>
     </div>
   );
 }
 
-function BookSheet({UI,b,themes,close,put,setCover,dropCover,ask,remove}){
-  const {C,sBtn,pBtn}=UI;
-  const fileRef=useRef(null);
-  const onPaste=e=>{
-    const items=[...((e.clipboardData&&e.clipboardData.items)||[])];
-    const it=items.find(i=>i.kind==="file"&&/^image\//.test(i.type));
-    e.preventDefault();
-    if(it)setCover(b,it.getAsFile());
-  };
-  const onDrop=e=>{ e.preventDefault(); const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f)setCover(b,f); };
+function BookSheet({UI,b,themes,close,put,onCover}){
+  const {C,pBtn}=UI;
   return(
     <div style={dialogOuter(C)} onClick={close}>
-      <div role="dialog" aria-label={b.title} style={dialogInner(C)} onClick={e=>e.stopPropagation()} onDragOver={e=>e.preventDefault()} onDrop={onDrop}>
+      <div role="dialog" aria-label={b.title} style={dialogInner(C)} onClick={e=>e.stopPropagation()}>
+        {/* The corner tag, as on Cat Watch's cards. */}
+        <div style={{display:"flex",justifyContent:"flex-end"}}>
+          {b.owned?<span style={tag(C.owned,C.ownedBg)}>Owned</span>:<span style={tag(C.wishInk,C.wishBg)}>Wishlist</span>}
+        </div>
         <div style={{display:"flex",gap:16,flexWrap:"wrap",alignItems:"flex-start"}}>
-          <div style={{width:140,flexShrink:0}}><Cover book={b} C={C} big/></div>
-          <div style={{flex:"1 1 220px",display:"flex",flexDirection:"column",gap:3,fontSize:12.5,minWidth:0}}>
-            <h2 style={{fontFamily:SERIF,fontSize:20,fontWeight:500,lineHeight:1.2,margin:"0 0 4px",letterSpacing:"-0.01em"}}>{b.title}</h2>
-            <span style={{color:C.soft}}>{b.publisher||"Publisher not found"}</span>
-            <span style={{color:C.soft,fontVariantNumeric:"tabular-nums"}}>ISBN {fmtIsbn(b.isbn13)}</span>
-            <span style={{fontWeight:600,marginBottom:8}}>{publishedLine(b.published)}</span>
-            <Shops book={b} C={C}/>
-            {b.source?<a href={b.source} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:C.soft,marginTop:6}}>Read from {hostOf(b.source)}</a>:null}
+          <button onClick={onCover} aria-label={b.cover?"Change cover":"Add cover"} style={{width:140,flexShrink:0,padding:0,border:"none",background:"none",cursor:"pointer",display:"block"}}><Cover book={b} C={C} big/></button>
+          <div style={{flex:"1 1 220px",minWidth:0}}>
+            <h2 style={{fontFamily:SERIF,fontSize:18,lineHeight:1.2,fontWeight:500,margin:"0 0 6px",letterSpacing:"-0.01em"}}>{b.title}</h2>
+            <Facts b={b} C={C}/>
+            <div style={{marginTop:10}}><Shops book={b} C={C}/></div>
           </div>
         </div>
         <div style={{display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
           <span style={label9(C)}>Themes</span>
           <ThemePicks UI={UI} themes={themes} value={b.themes} onChange={v=>put({...b,themes:v})}/>
         </div>
-        <div>
-          <div style={{...label9(C),marginBottom:6}}>Cover</div>
-          <div contentEditable suppressContentEditableWarning onPaste={onPaste} onKeyDown={e=>{ if(!(e.metaKey||e.ctrlKey))e.preventDefault(); }} onInput={e=>{e.currentTarget.textContent="";}} aria-label="Paste a cover here"
-            style={{border:"1px dashed "+C.rule,borderRadius:4,background:C.card,padding:"8px 10px",fontSize:11.5,color:C.soft,minHeight:36,outline:"none",lineHeight:1.5}}>
-            Paste a cover
-          </div>
-          <div style={{display:"flex",gap:10,alignItems:"center",marginTop:6}}>
-            <button onClick={()=>fileRef.current&&fileRef.current.click()} style={sBtn}>Upload a picture</button>
-            <input ref={fileRef} id="cover-file" type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif" onChange={e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(f)setCover(b,f); }}/>
-            {b.cover?<button onClick={()=>dropCover(b)} style={textBtn(C)}>Remove cover</button>:null}
-          </div>
+        <div style={{display:"flex",justifyContent:"flex-end",borderTop:"1px solid "+C.rule,paddingTop:10}}>
+          <button onClick={close} style={pBtn}>Close</button>
         </div>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:"1px solid "+C.rule,paddingTop:10}}>
-          <button onClick={()=>ask({title:"Remove “"+b.title+"”?",text:"It leaves the shelf and every theme.",yes:"Remove",act:()=>remove(b)})} style={textBtn(C)}>Remove book</button>
-          <button onClick={close} style={pBtn}>Done</button>
+      </div>
+    </div>
+  );
+}
+
+// The cover's own pop-up, as a profile picture is changed (her design): Add or Change
+// opens the picture picker; Paste takes a copied picture, and on a computer a picture
+// dropped on it or pasted with the keyboard.
+function CoverSheet({UI,b,setCover,dropCover,close}){
+  const {C,sBtn,pBtn}=UI;
+  const fileRef=useRef(null);
+  const [over,setOver]=useState(false);
+  const [why,setWhy]=useState("");
+  const take=async blob=>{ if(await setCover(b,blob))close(); };
+  useEffect(()=>{
+    const onPaste=e=>{
+      const it=[...((e.clipboardData&&e.clipboardData.items)||[])].find(i=>i.kind==="file"&&/^image\//.test(i.type));
+      if(it){ e.preventDefault(); take(it.getAsFile()); }
+    };
+    window.addEventListener("paste",onPaste);
+    return()=>window.removeEventListener("paste",onPaste);
+  });
+  async function pasteNow(){
+    setWhy("");
+    try{
+      const items=await navigator.clipboard.read();
+      for(const it of items){ const t=it.types.find(x=>/^image\//.test(x)); if(t){ await take(await it.getType(t)); return; } }
+      setWhy("No picture copied.");
+    }catch{ setWhy("This viewer won’t let the page read what you copied."); }
+  }
+  return(
+    <div style={{...dialogOuter(C),zIndex:1100}} onClick={close}>
+      <div role="dialog" aria-label="Cover" style={{...dialogInner(C,420),padding:"18px 20px 14px"}} onClick={e=>e.stopPropagation()}>
+        <button onClick={pasteNow}
+          onDragOver={e=>{ e.preventDefault(); setOver(true); }} onDragLeave={()=>setOver(false)}
+          onDrop={e=>{ e.preventDefault(); setOver(false); const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f)take(f); }}
+          style={{border:"1px dashed "+(over?C.action:C.rule),borderRadius:4,background:over?C.panel:C.card,padding:"26px 10px",fontSize:12.5,color:C.soft,cursor:"pointer",fontFamily:"inherit",width:"100%"}}>Paste</button>
+        {why?<div style={{fontSize:11.5,color:C.warnInk}}>{why}</div>:null}
+        <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif,image/avif" onChange={e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(f)take(f); }}/>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          {b.cover?<button onClick={()=>{ dropCover(b); close(); }} style={textBtn(C)}>Remove</button>:null}
+          <span style={{flex:1}}/>
+          <button onClick={close} style={sBtn}>Cancel</button>
+          <button onClick={()=>fileRef.current&&fileRef.current.click()} style={pBtn}>{b.cover?"Change":"Add"}</button>
         </div>
       </div>
     </div>
