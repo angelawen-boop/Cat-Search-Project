@@ -250,6 +250,13 @@ checks waiting 8 seconds for an automatic save (CA-002, CA-005d, CA-006, TC-001)
 now run alone (her decision; the 8 seconds kept). If one still fails when run alone, record it here — that
 is a real fault, not crowding.
 
+#### 2.2.8 Theme Shelf — prototype 1 published, her review
+
+A separate page for art books by theme, not exhibition (her design): https://claude.ai/artifact/V5jWKh9F8cFqNQek2owyzT,
+source `Theme_Shelf.jsx`, built by `node build/build_shelf.js`. Its ISBN, bookseller and saved-page code is
+Cat Watch's, copied by `build/sync_shelf.js` (checked by `npm test`). **OPEN:** her first adds prove its live
+calls; a saved AbeBooks page, phone drag and the paste box are unproven. `docs/theme_shelf.md`.
+
 ---
 
 ## 3. Where the rest lives
@@ -302,6 +309,12 @@ a session needs lives only behind such a link. Read the one for the work in hand
 | File | What is in it | Read it when |
 |---|---|---|
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
+
+**Theme Shelf** — a separate page: art books by theme
+
+| File | What is in it | Read it when |
+|---|---|---|
+| `docs/theme_shelf.md` | Her design, the store, the ISBN route (Open Library first), covers, what is unproven | Changing Theme Shelf |
 
 **Procedures** — how to do the recurring jobs
 

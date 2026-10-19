@@ -11,6 +11,7 @@
 //   npm run test:screen    the import screen, cards, sorting, display
 //   npm run test:app       the whole app half — once, before publishing
 //   npm run test:scraper   scraper/ — the sweep, its recipes, QC, compression
+//   npm run test:shelf     Theme Shelf, the separate page (docs/theme_shelf.md)
 //   npm test               both halves — the shared date reader or summary rules
 // A suite tagged with both halves is where they genuinely meet: the app
 // importing a scraper CSV, the shared date reader and summary rules, Add by
@@ -29,8 +30,8 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 
 const APP = 'app', SCRAPER = 'scraper', BOTH = [APP, SCRAPER];
-const LINKS = 'links', LOOKUP = 'lookup', SAVING = 'saving', SCREEN = 'screen';
-const GROUPS = [APP, SCRAPER, LINKS, LOOKUP, SAVING, SCREEN];
+const LINKS = 'links', LOOKUP = 'lookup', SAVING = 'saving', SCREEN = 'screen', SHELF = 'shelf';
+const GROUPS = [APP, SCRAPER, LINKS, LOOKUP, SAVING, SCREEN, SHELF];
 // Run one at a time, before the rest, with the machine to itself: the cloud-saving
 // suites wait 8 seconds for a save, and failed only when other suites crowded the machine.
 const ALONE = 'alone';
@@ -73,6 +74,10 @@ const SUITES = [
   [[...BOTH, LINKS, LOOKUP], 'node build/sync_shared.js --check'],
   [[...BOTH, LINKS, LOOKUP], 'node scraper/fixtures/add_by_link.js'],
   [[APP, LINKS], 'node scraper/fixtures/add_by_page.js'],
+  // Theme Shelf copies Cat Watch's ISBN, bookseller and saved-page code, so any app
+  // group checks the copy still matches.
+  [[...EVERY_APP, SHELF], 'node build/sync_shelf.js --check'],
+  [[APP, SHELF], 'node scraper/fixtures/theme_shelf.js'],
 ];
 
 const half = process.argv[2];
