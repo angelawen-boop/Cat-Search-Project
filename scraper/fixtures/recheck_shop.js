@@ -713,6 +713,25 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/Re-check didn’t work — museum shop contents cannot be seen - JS-rendering\./.test(t2), 'B-003a:  Re-check on it says "contents cannot be seen - JS-rendering"', t2.slice(0, 400));
   }
 
+  // ── B-007: MoMA's pop-up as Parallel really returns it — too long to count as empty ──
+  // docs/link_pages/shop_search/moma_popup_live.json, from her Brancusi Re-check (49.2).
+  {
+    const live = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'link_pages', 'shop_search', 'moma_popup_live.json'), 'utf8')).excerpt;
+    script.mcp = (tool, args) => tool === 'web_search'
+      ? { payload: { results: [{ url: 'https://bookseller.test/brancusi', title: 'Brancusi', excerpts: ['Test MoMA Brancusi Show ISBN 9781633451971'] }] } }
+      : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Exhibition Catalogues – MoMA Design Store', excerpts: [live], ...(args.full_content ? { full_content: live } : {}) })) } };
+    script.sample = p => /OWN shop pages, opened directly/.test(p) ? { found: false }
+      : { found: true, thisVenue: true, catalogueTitle: 'Test MoMA Brancusi Show', isbn13: '9781633451971', publisher: 'The Museum of Modern Art', publisherUrl: null, shopUrl: null };
+    await click(button(card(momaRow.title), /Re-check/));
+    const t3 = card(momaRow.title) ? card(momaRow.title).textContent : '';
+    ok(/Re-check didn’t work — museum shop contents cannot be seen - JS-rendering\./.test(t3) && !/not in the museum shop/i.test(t3),
+      'B-007: MoMA’s real pop-up (no price, no product link) reads "contents cannot be seen - JS-rendering", never "not in the museum shop"', t3.slice(0, 400));
+    await click(button(card(momaRow.title), /Search again/));
+    const t4 = card(momaRow.title) ? card(momaRow.title).textContent : '';
+    ok(t4.includes('The museum shop contents cannot be seen - JS-rendering') && !/Not in the museum shop/i.test(t4),
+      'B-007a:  and a fresh lookup says the same', t4.slice(0, 400));
+  }
+
   // ── B-004..B-006: short excerpts are not an empty shelf (her Watteau, 7 Oct) ─
   {
     calls.length = 0;

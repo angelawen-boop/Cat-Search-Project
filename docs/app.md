@@ -259,7 +259,9 @@ Each replaced a real failure. Card wording is in the code.
   empty says "The museum shop contents cannot be seen - JS-rendering"** (`shopState: "script"`; her
   wording, in place of "The museum shop is blocked"; Re-check: "museum shop contents cannot be seen -
   JS-rendering"; B-001, B-003a); the Städel's, whose books Parallel drops, "…- Parallel fault" (`shopState:
-  "parallel"`, a venue rule; FS-001–005, `docs/add_by_link.md`, "Frankfurt") — MoMA's shelf is drawn
+  "parallel"`, a venue rule; FS-001–005, `docs/add_by_link.md`, "Frankfurt"). A read that finds nothing on
+  pages showing no book at all (no price, no product link) reopens them whole; still no books → JS-rendering,
+  never "not in the museum shop" — MoMA's member pop-up is too long to count as empty (her Brancusi; B-007) — MoMA's shelf is drawn
   by script and its search and `products.json` answer 403. Judged on the WHOLE page,
   reopened when excerpts are short; no price anywhere = empty (Watteau), unless the list's
   first product opens as one book with a price (`firstProductIsBook`, Yale's Publications;

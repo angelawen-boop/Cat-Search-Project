@@ -31,3 +31,7 @@ fonts dropped). The proof for Pages (`scraper/fixtures/add_by_page.js`, AP-).
 `shop_search/staedel_shelf_live.json` (19 Oct): the Städel's "Städel Publikationen" section, the keyed
 connector's live answer, saved by script. It stops after the menu ("A- A+"); the books and prices in the
 page's own HTML are missing (FS-, "Parallel fault").
+
+`shop_search/moma_popup_live.json` (19 Oct): MoMA's catalogue shelf as the connector returned it in her
+Brancusi Re-check (lookup log, saved by script) — the "Become a Member" pop-up only, too long to count as an
+empty page (B-007).

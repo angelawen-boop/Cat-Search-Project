@@ -3609,17 +3609,23 @@ async function shopStep(row,io){
   // opened again whole, and the shop is unread only if they are still empty or show
   // no price anywhere.
   let shop=s1;
-  if(s1.results.every(r=>pageIsShell([r]))){
+  // The pages read whole: {whole} with books on them, or the step's answer when none.
+  const readWhole=async()=>{
     const whole=await io.fetch(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
-    if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
+    if(!whole.ok)return{out:{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null}};
     let books=whole.results.filter(r=>!pageIsShell([r])&&SHOP_PRICE.test(oneText(r)));
     // No price on any page: a list of titles is books when its first product is one
     // (firstProductIsBook, Yale's Publications).
     const listed=books.length?null:whole.results.find(r=>!pageIsShell([r]));
     if(listed&&await firstProductIsBook(io.fetch,oneText(listed),dom))books=[listed];
     if(!books.length)
-      return{ran:true,ok:true,blocked:"script",detail:s1.detail+"\n"+whole.detail+"\nThe museum shop’s pages came back with no books on them, so it could not be searched.",data:null};
-    shop={...whole,detail:s1.detail+"\n"+whole.detail+"\nThe shop’s pages, read whole: books on them, none about this show in the excerpts."};
+      return{out:{ran:true,ok:true,blocked:"script",detail:s1.detail+"\n"+whole.detail+"\nThe museum shop’s pages came back with no books on them, so it could not be searched.",data:null}};
+    return{whole};
+  };
+  if(s1.results.every(r=>pageIsShell([r]))){
+    const w=await readWhole();
+    if(w.out)return w.out;
+    shop={...w.whole,detail:s1.detail+"\n"+w.whole.detail+"\nThe shop’s pages, read whole: books on them, none about this show in the excerpts."};
   }
   const r1=await io.read(READ_RULES
     +"\nExhibition: "+title+"\nVenue: "+venue
@@ -3631,6 +3637,14 @@ async function shopStep(row,io){
     +resultsForPrompt(shop.results,6000,{words:[title],dom})+READ_SHAPE);
   let detail=shop.detail+"\n"+r1.detail;
   if(!r1.ok)return{ran:true,ok:false,detail,data:null};
+  // Nothing found on pages that show no book at all — no price, no product link (MoMA's
+  // member pop-up, too long to count as empty): read whole, and with no books on them
+  // the shop could not be seen, never "not in the museum shop" (her decision; B-007).
+  const showsBook=r=>oneText(r).split("\n").some(realPrice)||productLinksOn(oneText(r),hostOf(r.url)).length>0;
+  if(!(r1.data&&r1.data.found)&&shop===s1&&s1.results.every(r=>!showsBook(r))){
+    const w=await readWhole();
+    if(w.out&&w.out.blocked)return w.out;
+  }
   const data={...(r1.data||{})};
   // An ISBN the read gave is taken only if the shop's pages print it (toIsbn13).
   data.isbn13=toIsbn13(data.isbn13,shop.results);
