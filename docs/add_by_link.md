@@ -186,7 +186,7 @@ from under the heading.
 "Berlin Gemäldegalerie" (her decision); its shop is searched as "Staatliche Museen zu Berlin" (`OWN_CHIP`,
 `OCC_CARD`). Dates are numbers with dots, day first (DS-004). Eleven pages on the proof list.
 
-**Munich** — three venues, each its own cards, under one chip "Munich Pinakotheken", the Alte first,
+**Munich** — three venues, each its own cards, under one chip "Munich", the Alte first,
 before Berlin (her decision; `group` on `OWN_CHIP`, `chipKey`): **Munich Alte Pinakothek**
 (`occ-alte-pinakothek`), **Munich der Moderne** (`occ-pinakothek-der-moderne`) and **Sammlung Schack**
 (`occ-sammlung-schack`, her name, no "Munich"). The Neue is left out (her decision): its pictures hang in the
@@ -220,6 +220,15 @@ Berlin; cards "Dresden Gemäldegalerie" (her decision; `OWN_CHIP`, `OCC_CARD`). 
 Zwinger") never reaches Claude, as passage or subtitle (her decision; `skip`). Shop: shop.skd.museum sells tickets
 and gifts only; the finder says "Shop found, but not its books section" and she answers **No shop** once (her
 decision; lookups go to the web). Three pages on the proof list; AL-045.
+
+**Frankfurt** (the Städel, `occ-staedelmuseum-de`): its own chip "Frankfurt", after Dresden; cards "Frankfurt
+Städel" (her decision; `OWN_CHIP`, `OCC_CARD`; AL-049). No pages on the proof list yet. **OPEN — its shop**
+(`liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885`, linked "Kataloge online kaufen" from the
+Städel's Museumsshop page): the books and prices are in the page's own HTML, but Parallel's reading of it
+stops after the menu ("A- A+"), so the finder says "Shop found, but not its books section" — neither
+JS-rendered nor blocked (proved: one keyed fetch beside a direct one). Each book is a line with a quantity
+box, no page of its own. Her wording for it, not built: "The museum shop contents cannot be seen -
+Parallel fault", Re-check the same; needs this venue's shop written into the app.
 
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her decision: Parallel-only rules
 live in the app, never the scraper). They only tidy what Claude is handed. Options: `title`, `titleDrop` (a

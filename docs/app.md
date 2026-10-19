@@ -256,8 +256,9 @@ Each replaced a real failure. Card wording is in the code.
   search it manually. The catalogue is stocked elsewhere."* / *"…The catalogue also does
   not appear to exist elsewhere. Search manually to confirm."* Headline red and bold, the
   rest grey. Blocked (refused every page): KHM, MAM. **A shop whose every page comes back
-  empty is "JS-rendered"** (`shopState: "script"`; her wording, the same line with
-  "JS-rendered" for "blocked", Re-check's line too; B-001, B-003a) — MoMA's shelf is drawn
+  empty says "The museum shop contents cannot be seen - JS-rendering"** (`shopState: "script"`; her
+  wording, in place of "The museum shop is blocked"; Re-check: "museum shop contents cannot be seen -
+  JS-rendering"; B-001, B-003a) — MoMA's shelf is drawn
   by script and its search and `products.json` answer 403. Judged on the WHOLE page,
   reopened when excerpts are short; no price anywhere = empty (Watteau), unless the list's
   first product opens as one book with a price (`firstProductIsBook`, Yale's Publications;

@@ -403,7 +403,7 @@ check('18f: the real sample file starts with every card undecided',
   check('19: the venues are in her order', got.join()===want.join(), {got});
   const chips=['met','ng','occ-nga-gov','frick','morgan','artic','menil',
     'acq','lgd','occ-new-artsmia-org','cincinnati','occ-britishart-yale-edu','brit','tate-britain','wallace','va','occ-nationalgalleries-org',
-    'louvre','orsay','jacquemart','mad','rijks','khm','occ-alte-pinakothek','occ-pinakothek-der-moderne','occ-sammlung-schack','occ-smb-museum','occ-gemaeldegalerie-skd-museum','uffizi','dellav','borghese','brera','capo','moma',
+    'louvre','orsay','jacquemart','mad','rijks','khm','occ-alte-pinakothek','occ-pinakothek-der-moderne','occ-sammlung-schack','occ-smb-museum','occ-gemaeldegalerie-skd-museum','occ-staedelmuseum-de','uffizi','dellav','borghese','brera','capo','moma',
     'tate-modern','mam','occ-museitoscana-cultura-gov-it','occ-palazzoducale-genova-it','occ-palazzorealemilano-it','occ-mfa-org','occ-clevelandart-org','occ-dia-org','occ-archive-worcesterart-org',
     'occ-courtauld-ac-uk','occ-royalacademy-org-uk','ashmolean','occ-museothyssen-org','occ-mauritshuis-nl','occ-ngv-vic-gov-au'];
   check('19c: chips and Sort by Venue follow her list', H.VENUE_ORDER.join()===chips.join(), {got:H.VENUE_ORDER});

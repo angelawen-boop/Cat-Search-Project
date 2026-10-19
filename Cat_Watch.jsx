@@ -73,7 +73,7 @@ const MUSEUMS = [
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
-  "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-gemaeldegalerie-skd-museum","uffizi","dellav","borghese","brera","capo","moma",
+  "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
   "occ-museitoscana-cultura-gov-it","occ-palazzoducale-genova-it","occ-palazzorealemilano-it","occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
   "occ-royalacademy-org-uk","ashmolean","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
@@ -758,16 +758,16 @@ const OWN_CHIP={
   // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin
   // Gemäldegalerie" (her decision, OCC_CARD).
   // Munich's Alte Pinakothek, Pinakothek der Moderne and Sammlung Schack: three venues, one
-  // chip "Munich Pinakotheken", the Alte first (her decision; `group`). The Alte and der
+  // chip "Munich", the Alte first (her decision; `group`). The Alte and der
   // Moderne's shops are searched in German (`shopQueries`); CEDON sells for both, its
   // sections named for each house (`shopNamed`, namesVenue). Schack has no shop of its own
   // and no CEDON section: it gets no shop settings, so the finder answers "none". Which
   // house a show is in: HOUSES. Titles typed in capitals are recased (`capsTitles`).
-  "occ-alte-pinakothek":{short:"Munich Alte Pinakothek",chip:"Munich Pinakotheken",group:"munich-pinakotheken",lookupName:"Alte Pinakothek",name:"Alte Pinakothek M\u00fcnchen",
+  "occ-alte-pinakothek":{short:"Munich Alte Pinakothek",chip:"Munich",group:"munich-pinakotheken",lookupName:"Alte Pinakothek",name:"Alte Pinakothek M\u00fcnchen",
     shopQueries:["Alte Pinakothek M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Alte Pinakothek",linkRead:{capsTitles:true}},
-  "occ-pinakothek-der-moderne":{short:"Munich der Moderne",chip:"Munich Pinakotheken",group:"munich-pinakotheken",lookupName:"Pinakothek der Moderne",name:"Pinakothek der Moderne M\u00fcnchen",
+  "occ-pinakothek-der-moderne":{short:"Munich der Moderne",chip:"Munich",group:"munich-pinakotheken",lookupName:"Pinakothek der Moderne",name:"Pinakothek der Moderne M\u00fcnchen",
     shopQueries:["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Pinakothek der Moderne",linkRead:{capsTitles:true}},
-  "occ-sammlung-schack":{short:"Sammlung Schack",chip:"Munich Pinakotheken",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",linkRead:{capsTitles:true}},
+  "occ-sammlung-schack":{short:"Sammlung Schack",chip:"Munich",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",linkRead:{capsTitles:true}},
   "occ-smb-museum":{short:"Berlin",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
   // Dresden's Gemäldegalerie Alte Meister: chip "Dresden", cards "Dresden Gemäldegalerie" (her
   // decision, OCC_CARD). Its pages open with a short "# " name above every SKD museum's menu;
@@ -775,6 +775,8 @@ const OWN_CHIP={
   // the site line ("Exhibition Site Zwinger") never reaches Claude (her decision; skip).
   "occ-gemaeldegalerie-skd-museum":{short:"Dresden",lookupName:"Gem\u00e4ldegalerie Alte Meister Dresden",name:"Gem\u00e4ldegalerie Alte Meister",
     linkRead:{titleAfter:/^Active page:/,slashDayFirst:true,skip:/^(?:Exhibition Site\b|Opening Hours\b|\[Translate to English:\]|\u00a9)/}},
+  // The Städel (staedelmuseum.de): chip "Frankfurt" after Dresden, cards "Frankfurt Städel" (her decision, OCC_CARD).
+  "occ-staedelmuseum-de":{short:"Frankfurt",lookupName:"St\u00e4del Museum",name:"St\u00e4del Museum"},
 };
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 // The chip a venue's cards sit under: its group's, where it has one.
@@ -789,7 +791,7 @@ const OCC_SHORT={"occ-mfa-org":"Boston","occ-archive-worcesterart-org":"Worceste
 const OCC_NAME={"occ-museitoscana-cultura-gov-it":"Museo di San Marco","occ-palazzoducale-genova-it":"Palazzo Ducale Genova",
   "occ-palazzorealemilano-it":"Palazzo Reale Milano"};
 // Her names on the cards of occasional venues, where they differ from the short name.
-const OCC_CARD={"occ-mfa-org":"Boston MFA","occ-ngv-vic-gov-au":"National Gallery Victoria","occ-smb-museum":"Berlin Gem\u00e4ldegalerie","occ-gemaeldegalerie-skd-museum":"Dresden Gem\u00e4ldegalerie"};
+const OCC_CARD={"occ-mfa-org":"Boston MFA","occ-ngv-vic-gov-au":"National Gallery Victoria","occ-smb-museum":"Berlin Gem\u00e4ldegalerie","occ-gemaeldegalerie-skd-museum":"Dresden Gem\u00e4ldegalerie","occ-staedelmuseum-de":"Frankfurt St\u00e4del"};
 // Link options for occasional venues (as linkRead on a MUSEUMS entry), by the site's id.
 // Boston MFA prints the dates on the line above the show's title. NGV writes two-digit
 // years ("4 Sep 26 – 31 Jan 27"; shortYear). The Pinakothek der Moderne's own site prints
@@ -2965,7 +2967,7 @@ function shopHeadline(shopState,shopChange){
 // A blocked shop says so, in her wording (docs/app.md §1): the headline in the red and
 // weight of "No longer in the museum shop.", the rest grey.
 const SHOP_BLOCKED_HEAD="The museum shop is blocked";
-const SHOP_SCRIPT_HEAD="The museum shop is JS-rendered";
+const SHOP_SCRIPT_HEAD="The museum shop contents cannot be seen - JS-rendering";
 // A shop the lookup could not read: refused, or drawn by script (her wording for each).
 const shopUnread=s=>s==="blocked"||s==="script";
 const shopUnreadHead=s=>s==="script"?SHOP_SCRIPT_HEAD:SHOP_BLOCKED_HEAD;
@@ -3344,8 +3346,8 @@ async function recheckShopCore(found,hooks){
     // A blocked shop is a failed check and changes nothing — except a ticket
     // link, which was wrong whatever the shop says.
     else if(s.blocked)out=ticket
-      ?{ok:true,detail:s.detail,row:{...row,shopState:s.blocked},said:dropped+"Re-check didn’t work — museum shop is "+(s.blocked==="script"?"JS-rendered":"blocked")+"."}
-      :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop is "+(s.blocked==="script"?"JS-rendered":"blocked")+"."};
+      ?{ok:true,detail:s.detail,row:{...row,shopState:s.blocked},said:dropped+"Re-check didn’t work — museum shop "+(s.blocked==="script"?"contents cannot be seen - JS-rendering":"is blocked")+"."}
+      :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop "+(s.blocked==="script"?"contents cannot be seen - JS-rendering":"is blocked")+"."};
     // The shop's book is the picked one only when its ISBN says so; otherwise the picked
     // book is looked for on the list the shop step read, as the lookup does.
     else if(pickedVersion(row)&&!(o.found&&o.isbn13&&[pickedVersion(row).isbn13,pickedVersion(row).alsoIsbn13].includes(o.isbn13))){

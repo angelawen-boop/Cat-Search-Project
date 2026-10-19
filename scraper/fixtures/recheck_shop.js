@@ -704,13 +704,13 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await openTray(momaRow.title);
     await click(button(card(momaRow.title), /Find catalogue/));
     const t = card(momaRow.title) ? card(momaRow.title).textContent : '';
-    ok(t.includes('The museum shop is JS-rendered - search it manually. The catalogue is stocked elsewhere.') && !t.includes('The museum shop is blocked'),
-       'B-001: a shelf with no books on it (drawn by script) reads as JS-rendered, not blocked — her wording', t.slice(0, 300));
+    ok(t.includes('The museum shop contents cannot be seen - JS-rendering - search it manually. The catalogue is stocked elsewhere.') && !t.includes('The museum shop is blocked'),
+       'B-001: a shelf with no books on it (drawn by script) reads "contents cannot be seen - JS-rendering", not blocked — her wording', t.slice(0, 300));
     ok(!/Not in the museum shop/.test(t), 'B-002:   never "Not in the museum shop"');
     ok(!calls.some(x => x.kind === 'sample' && /OWN shop pages, opened directly/.test(x.prompt)), 'B-003:   and Claude is not asked to read the empty shelf');
     await click(button(card(momaRow.title), /Re-check/));
     const t2 = card(momaRow.title) ? card(momaRow.title).textContent : '';
-    ok(/Re-check didn’t work — museum shop is JS-rendered\./.test(t2), 'B-003a:  Re-check on it says the same line, "JS-rendered" for "blocked"', t2.slice(0, 400));
+    ok(/Re-check didn’t work — museum shop contents cannot be seen - JS-rendering\./.test(t2), 'B-003a:  Re-check on it says "contents cannot be seen - JS-rendering"', t2.slice(0, 400));
   }
 
   // ── B-004..B-006: short excerpts are not an empty shelf (her Watteau, 7 Oct) ─

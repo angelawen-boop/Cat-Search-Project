@@ -632,15 +632,18 @@ function runtime() {
     const schack = linkVenue('https://www.pinakothek.de/en/exhibition/boecklin-and-schack-a-dialogue-between-artist-and-collector', { between: ['On the 200th Anniversary of Arnold Böcklin’s Birth', 'Sammlung Schack'] });
     ok(schack.id === S && own[S].short === 'Sammlung Schack' && own[S].group === own[A].group && !own[S].shopQueries && !own[S].shopNamed
       && order.indexOf(M) + 1 === order.indexOf(S),
-      'AL-043h:  Sammlung Schack files as its own venue under "Munich Pinakotheken", named without "Munich", with no shop settings (the finder answers "none"; her decision)', JSON.stringify(schack));
+      'AL-043h:  Sammlung Schack files as its own venue under "Munich", named without "Munich", with no shop settings (the finder answers "none"; her decision)', JSON.stringify(schack));
     ok([A, M, S].every(id => own[id].linkRead && own[id].linkRead.capsTitles), 'AL-043i:  titles the Munich houses type in capitals are recased');
     const D = 'occ-gemaeldegalerie-skd-museum', card = fn('OCC_CARD');
     ok(own[D].short === 'Dresden' && card[D] === 'Dresden Gemäldegalerie' && own[D].linkRead.slashDayFirst && own[D].linkRead.titleAfter.test('Active page: Hopper')
       && own[D].linkRead.skip.test('Exhibition Site Zwinger') && !own[D].shopQueries,
       'AL-045:  Dresden: chip "Dresden", cards "Dresden Gemäldegalerie", dates day first, the site line never reaches Claude (her decision)');
-    ok(own[A].group === own[M].group && own[A].chip === 'Munich Pinakotheken' && own[A].short === 'Munich Alte Pinakothek'
+    const F = 'occ-staedelmuseum-de';
+    ok(fn('occVenueId')('www.staedelmuseum.de') === F && own[F].short === 'Frankfurt' && card[F] === 'Frankfurt Städel' && order.indexOf(D) + 1 === order.indexOf(F),
+      'AL-049:  the Städel: chip "Frankfurt" right after Dresden, cards "Frankfurt Städel" (her decision)');
+    ok(own[A].group === own[M].group && own[A].chip === 'Munich' && own[A].short === 'Munich Alte Pinakothek'
       && own[M].short === 'Munich der Moderne' && order.indexOf(A) + 1 === order.indexOf(M),
-      'AL-043c:  one chip "Munich Pinakotheken", the Alte first; cards "Munich Alte Pinakothek" and "Munich der Moderne"');
+      'AL-043c:  one chip "Munich", the Alte first; cards "Munich Alte Pinakothek" and "Munich der Moderne"');
     ok(/Museumsshop/.test(own[A].shopQueries[0]) && /Museumsshop/.test(own[M].shopQueries[0]), 'AL-043d:  both shops are searched in German');
     const cedon = 'https://www.museumsshop.cedon.de/Kataloge/';
     ok(namesVenue(cedon + 'Alte-Pinakothek-Muenchen', 'Alte Pinakothek') && !namesVenue(cedon + 'Pinakothek-der-Moderne-Muenchen', 'Alte Pinakothek')
@@ -649,7 +652,7 @@ function runtime() {
     ok(!namesVenue('https://www.amazon.de/Alte-Pinakothek-Muenchen/dp/1', 'Alte Pinakothek') && !namesVenue(cedon + 'Alte-Pinakothek-Muenchen', undefined),
       'AL-043f:  only a shop site counts, and only for a venue that names its section');
     const chips = [...win.document.querySelectorAll('button')].map(b => b.textContent.trim()).filter(t => /^Munich/.test(t));
-    ok(chips.join() === 'Munich Pinakotheken', 'AL-043g:  the chip row draws one "Munich Pinakotheken" chip for both', JSON.stringify(chips));
+    ok(chips.join() === 'Munich', 'AL-043g:  the chip row draws one "Munich" chip for both', JSON.stringify(chips));
   }
 
   // ── AL-044: a shop's search proved where the old rules found no book (her decision) ──
