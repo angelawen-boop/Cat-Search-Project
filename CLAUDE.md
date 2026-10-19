@@ -218,10 +218,9 @@ Faults found are fixed in code (§2.2.2).
 
 #### 2.2.5 Queued next
 
-- **OPEN, next — the ledger's size (her decision to start).** Her ledger passed 1,000 exhibitions
-  (1,003); the app now lags (her report). 2,000 possible. Findings and the two parked items — a
-  faster list, and whether to clear old Cloud Saves — are in `docs/scalability.md`; agree the plan
-  with her before building.
+- **The ledger's size (1,003 exhibitions; 2,000 possible).** The faster list is live at 49; her use
+  confirms. **OPEN:** the wait before "Confirm save?" (an option for her), and whether to clear old
+  Cloud Saves — `docs/scalability.md`; agree with her before building.
 
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library
@@ -424,7 +423,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 48.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 49 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

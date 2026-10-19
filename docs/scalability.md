@@ -1,8 +1,8 @@
 # Scalability — what grows as the ledger grows, and what to do about it
 
-Her ledger passed 1,000 exhibitions (1,003) and the app now lags (her report); 2,000
-would not surprise her. She has decided to start this work. **Nothing here is built
-yet.** Agree each item with her before starting it.
+Her ledger passed 1,000 exhibitions (1,003) and the app lagged (her report); 2,000
+would not surprise her. **The faster list is built (49).** The rest: agree each item
+with her before starting it.
 
 ## Measured
 
@@ -18,11 +18,11 @@ year across 28 venues. Her second full sweep's Add count gives the real rate.
 
 | Area | At 2,000 | Why |
 |---|---|---|
-| Main list | **The first pinch.** Lag on typing in search and on any mark, worse on a phone — a guess; untested | The `view` list draws every visible card at once, and no card is memoised, so one tick redraws them all |
+| Main list | Fixed at 49 (below) | Every card was redrawn on any change, and the sort re-worked each row's tier per comparison |
 | Import compare | Fine — well under a second | Each sweep row checks venue first, then title, then dates (`sameExhibition`) |
 | Review pile | Not tied to ledger size | Cards come from what a sweep CHANGED; a reworded description is a Change card |
 | Export / Load | Fine — ~1.3 MB file | |
-| Cloud live ledger | Fine — 2 pieces per save, old pieces deleted | `cloudSaveLive` (branch `claude/ledger-cloud`) |
+| Cloud live ledger | Fine — 2 pieces per save, old pieces deleted | `cloudSaveLive` |
 | **Cloud Saves** | **Grow without end** | Never pruned (her decision); each a whole copy, ~270 KB at 2,000 |
 | Store documents | Fine | Cap 25,000 documents per page |
 | Store total size | **Unknown** | The platform caps it but publishes no number. Full → saves fail with "The page's store is full" (`cloudTrouble`); nothing lost silently |
@@ -32,18 +32,31 @@ Safety does not weaken with size: Export stays her file, Save asks before
 writing fewer exhibitions than the cloud holds, a cut-off save keeps the last
 complete copy, a damaged piece is refused.
 
+## The faster list — built at 49 (her decision)
+
+- **Only the changed card redraws** (`LedgerCard`, memoised; its props held stable in App).
+  The sort works out each row's tier once.
+- **Drawn as she scrolls** (`DRAW_STEP` = 200; LD-001–006): 200 more near the end; a new
+  filter, sort or search starts from the top; Jump to bottom draws the rest first. Her
+  one-venue views are under 200, so they draw whole. Browser find (Ctrl-F) sees only drawn
+  cards; the app's own search sees all.
+- **Save no longer downloads the cloud copy** to read its count before asking the file
+  question: the live record holds the count.
+- **Measured** (`node build/list_timing.js`, 2,000 rows, 784 cards on All venues; ms, before →
+  after; "phone" = CPU ×4): a star 60–165 → 10–20 (phone 240–450 → 30–60); Save-name
+  keystroke 50+ → ~15, one frame (phone ~220 → ~75); clearing a search, phone, up to 2.9 s →
+  ~0.2 s; first draw, phone, 1.8 s → 0.5 s.
+
+**OPEN — the wait before "Confirm save?"** (her report: the most noticeable lag). Before the
+box, Save writes the whole Cloud Save copy, one part after another; the file question waits for
+it, because the cloud copy goes first so a cancelled file cannot take it with it (her design).
+Not measured: the store's speed cannot be timed off her page. Option to put to her: ask the
+file question while the cloud copy is being written. A cancelled file still leaves the copy.
+Her call.
+
 ## Parked — for later action, her call when
 
-1. **Make the list faster** — two changes, same screen, nothing she sees
-   changes:
-   - **Redraw only the card that changed** (memoise each card), so ticking a
-     mark on one card no longer redraws the rest.
-   - **Draw cards as she scrolls** — the first ~200, more as she reaches the
-     bottom.
-   Suggested trigger: before ~1,500 exhibitions, or the first lag she notices.
-   Prove it on a 2,000-row copy of her ledger, timing before and after.
-2. **Cloud Saves: keep every one, or a rule for clearing old ones.** Because
+1. **Cloud Saves: keep every one, or a rule for clearing old ones.** Because
    she wanted every save kept, they are never pruned. Options to put to her:
    keep everything and show how much of the store is used; or keep all recent
-   saves plus one a month after that. Applies on `claude/ledger-cloud` only
-   until the cloud ledger merges.
+   saves plus one a month after that.
