@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "48.2";
+const APP_VERSION = "49";
 const APP_VERSION_DATE = "19 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -4771,8 +4771,112 @@ const PALETTES={
          rejectInk:"#D6B87A",neverInk:"#E0A3A3",star:"#E0B45C",buyNext:"#F0705F",onAction:"#12100E",
          scrim:"rgba(0,0,0,0.6)"},
 };
+// How many ledger cards are drawn at first, and how many more as she scrolls.
+const DRAW_STEP=200;
 // The card's link buttons (Museum shop, Publisher, the bookstores), in a palette's colours.
 const linkButton=C=>({fontSize:11,fontWeight:500,color:C.ink,background:C.card,border:"1px solid "+C.rule,borderRadius:3,padding:"4px 9px",textDecoration:"none",display:"inline-block",whiteSpace:"nowrap"});
+
+// ONE LEDGER CARD. Memoised: a mark redraws only the card it changed, so every prop
+// must keep its identity between renders (act, chip, pBtn, lnk, TH are held stable in App;
+// a venue's MU entry is replaced, never edited, so `mu` changes when its shop does).
+const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,rechecking,lookLabel,said,C,TH,chip,pBtn,lnk,act}){
+  const t=tierFor(r),tier=TH[t],mo=moSince(r.endDate),noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested;
+  const searchingLabel=lookLabel||"Searching\u2026";
+  // Two buttons share one busy row; only the one pressed shows progress.
+  const againLabel=isBusy&&!rechecking?searchingLabel:"Search again";
+  const recheckLabel=isBusy&&rechecking?searchingLabel:"Re-check museum shop";
+  // No shop at all (Borghese, Capodimonte, the Accademia; her decision): no
+  // Re-check button, and the line says only "Venue has no shop."
+  const noShop=!(mu&&(mu.shopSearch||mu.shopHome));
+  // Her version blocks, on a card with two or more versions (versionBlocks); with
+  // nothing picked (a card searched before her order) the card shows no book, no
+  // status lines and only the shop button.
+  const vl=r.looked&&r.hasCatalogue==="yes"?versionBlocks(r):null;
+  const picked=!vl||(Number.isInteger(r.editionPick)&&!!r.editions[r.editionPick]);
+  if(dismissed)return(
+    <article style={{background:C.dim,border:"1px solid "+C.rule,borderLeft:"4px solid "+C.muted,borderRadius:5,padding:"10px 14px",opacity:0.55}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+        <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft}}>{mu?.card||mu?.short}</span>
+        <button onClick={()=>act("restore",r.id)} style={{background:"none",border:"1px solid "+C.action,borderRadius:3,color:C.action,fontSize:10,fontWeight:500,cursor:"pointer",padding:"2px 8px"}}>Restore</button>
+      </div>
+      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,fontWeight:500,marginTop:3,color:C.soft}}>{r.title}</div>
+      <div style={{fontSize:10.5,color:C.muted,marginTop:2}}>{dateRange(r)}</div>
+    </article>
+  );
+  return(
+    <article style={{background:C.card,border:"1px solid "+C.rule,borderLeft:"4px solid "+(noCat?C.muted:isAcq?C.owned:tier.ink),borderRadius:5,overflow:"hidden"}}>
+      <div style={{padding:"12px 14px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
+          <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginTop:2}}>{mu?.card||mu?.short}</span>
+          {/* No "No catalogue" tag (her decision): the corner says how long ago the
+              show closed; the Catalogue button carries the cross. */}
+          {isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:C.ownedBg,padding:"2px 7px",borderRadius:3}}>Owned</span>
+          :<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:tier.ink,background:tier.wash,padding:"2px 7px",borderRadius:3}}>{tier.label}</span>}
+        </div>
+        <div style={{display:"flex",alignItems:"baseline",gap:0,marginTop:5}}>
+          <h3 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:18,lineHeight:1.2,fontWeight:500,margin:0,letterSpacing:"-0.01em",flex:1}}>
+            {r.title}
+            {r.exUrl&&<a href={r.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.action,textDecoration:"none",marginLeft:5,fontSize:13,fontWeight:400}}>{"\u2197"}</a>}
+          </h3>
+          <div style={{display:"flex",gap:8,alignItems:"center",marginLeft:8,flexShrink:0}}>
+            {r.acquiring==="yes"&&(()=>{const k=starInk();return <button onClick={()=>act("toggleBuyNext",r.id)} title={r.buyNext?"Not buying next":"Buy next"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1}}><svg width={k.D} height={k.D} style={{display:"inline-block",verticalAlign:k.v}} aria-hidden="true"><circle cx={k.D/2} cy={k.D/2} r={k.D/2-0.75} fill={r.buyNext?C.buyNext:"none"} stroke={r.buyNext?C.buyNext:C.muted} strokeWidth="1.5"/></svg></button>;})()}
+            <button onClick={()=>act("toggleWatch",r.id)} title={r.watching?"Unwatch":"Watch"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1,color:r.watching?C.star:C.muted}}>{r.watching?"\u2605":"\u2606"}</button>
+            {!isAcq&&<button onClick={()=>act("dismiss",r.id)} title="Not interested" style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:18,lineHeight:1,color:C.muted}}>{"\u00d7"}</button>}
+          </div>
+        </div>
+        <div style={{fontSize:11,color:C.soft,marginTop:3,marginBottom:6}}>{dateRange(r)}</div>
+        {r.summary&&<p style={{fontSize:12.5,lineHeight:1.5,margin:"0 0 8px",color:C.body}}>{r.summary}</p>}
+        {!noCat&&!isAcq&&mo!==null&&mo>0&&(
+          <div style={{margin:"8px 0 6px"}}>
+            <div style={{position:"relative",height:5,background:C.drawer,borderRadius:3}}>
+              <div style={{height:"100%",width:Math.min(100,(mo/12)*100)+"%",background:tier.ink,borderRadius:3}}/>
+              {[3,6].map(k=><span key={k} style={{position:"absolute",left:(k/12*100)+"%",top:-2,width:1,height:10,background:C.soft,opacity:0.5}}/>)}
+            </div>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:8.5,color:C.soft,marginTop:3,letterSpacing:"0.05em"}}><span>CLOSED</span><span>3 MO</span><span>6 MO</span><span>12 MO</span></div>
+          </div>
+        )}
+        {!noCat&&!isAcq&&<div style={{fontSize:11,color:tier.ink,fontWeight:500,marginBottom:8}}>{tier.note}</div>}
+        <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.rule}}>
+          <span style={{fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:C.soft}}>Want the catalogue?</span>
+          <button onClick={()=>act("setAcq",r.id,"yes")} style={chip(r.acquiring==="yes")}>Yes</button>
+          <button onClick={()=>act("setAcq",r.id,"no")} style={chip(r.acquiring==="no")}>No</button>
+          <button onClick={()=>act("setAcq",r.id,"acquired")} style={chip(r.acquiring==="acquired")}>Acquired</button>
+          <button onClick={()=>act("toggleOpen",r.id)} style={{marginLeft:"auto",background:"none",border:"none",color:C.action,fontSize:11,fontWeight:600,cursor:"pointer",padding:"3px 0"}}>
+            {isOpen?"Hide":(r.looked&&r.hasCatalogue==="yes")?"\u2713 Catalogue":(r.looked&&r.hasCatalogue==="no")?"\u2717 Catalogue":"Catalogue"}
+          </button>
+        </div>
+      </div>
+      {isOpen&&(
+        <div style={{background:C.panel,borderTop:"1px solid "+C.rule,padding:"12px 14px"}}>
+          {!r.looked?(
+            <div>
+              <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue search run yet.</p>
+              <button onClick={()=>act("findOneCat",r.id)} disabled={busy} style={{...pBtn,padding:"6px 12px",fontSize:12}}>{isBusy?searchingLabel:"Find catalogue"}</button>
+              {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
+            </div>
+          ):noCat?(
+            <CatalogueNone r={r} mu={mu} C={C} TH={TH} lnk={lnk} actions={<>
+              <div style={{display:"flex",flexWrap:"wrap",gap:14}}>
+                <button onClick={()=>act("findOneCat",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
+                {!noShop&&<button onClick={()=>act("recheckShop",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
+              </div>
+              {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
+              </>}/>
+          ):(
+            <CatalogueBox r={r} mu={mu} C={C} TH={TH} lnk={lnk} isAcq={isAcq} noShop={noShop} vl={vl} picked={picked}
+              onPick={i=>act("setPick",r.id,i)} actions={<>
+              <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:14}}>
+                <button onClick={()=>act("findOneCat",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
+                {!noShop&&<button onClick={()=>act("recheckShop",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
+              </div>
+              {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
+              </>}/>
+          )}
+        </div>
+      )}
+    </article>
+  );
+});
 
 // THE CATALOGUE BOX: a found catalogue in the card's drawer — the shop line, the book (or her
 // version blocks) and the buy buttons. One copy, drawn by the app and by the Catalogue Blocks
@@ -5874,6 +5978,12 @@ export default function App(){
   const toggleBuyNext=id=>commit(rows.map(r=>r.id===id?{...r,buyNext:!r.buyNext}:r));
   // Her pick on a card with several versions (pickRow): the card's book follows it.
   const setPick=(id,i)=>{ const r=rows.find(x=>x.id===id); const next=r&&pickRow(r,i,new Date().toISOString()); if(next&&next!==r)commit(rows.map(x=>x.id===id?next:x)); };
+  // A card's buttons, by name. One function for the life of the page (so LedgerCard can skip
+  // redrawing) that calls this render's handler, which sees the current ledger.
+  const cardActs=useRef(null);
+  cardActs.current={restore,toggleWatch,dismiss,setAcq,toggleBuyNext,setPick,findOneCat,recheckShop,
+    toggleOpen:id=>setOpenCards(o=>({...o,[id]:!o[id]}))};
+  const cardAct=useCallback((name,...a)=>cardActs.current[name](...a),[]);
 
   // AN IMPORT CHECKS THE CLOUD COPY FIRST (guardCloudBeforeReplace), then
   // replaces the screen and arms saving. If the cloud copy differed and could
@@ -5906,7 +6016,8 @@ export default function App(){
     if(saveBusy||!rows.length)return;
     let most=0;
     if(!cloudReadOnly){ const db=await useCap("db");
-      if(db){ try{ const live=(await cloudReadLive(db)).rec; const snap=(await cloudListSnapshots(db,1))[0];
+      // The live record alone carries the count; its parts (the whole ledger) are not read.
+      if(db){ try{ const ls=await db.doc(CLOUD_LIVE_DOC).get(); const live=ls.exists?ls.data():null; const snap=(await cloudListSnapshots(db,1))[0];
         most=Math.max(live?live.rows||0:0,snap?snap.rows||0:0); }catch{} } }
     if(rows.length<most){ setConfirmBox({title:"Save a smaller ledger?",text:"You\u2019re saving "+rows.length+" exhibition"+(rows.length===1?"":"s")+"; your last cloud save has "+most+". Save anyway?",yes:"Save anyway",act:saveNow}); return; }
     saveNow();
@@ -5977,6 +6088,9 @@ export default function App(){
 
   const view=useMemo(()=>{
     const sq=search.toLowerCase().trim();
+    // Each row's tier, worked out once: the sort below asks for it thousands of times.
+    const tiers=new Map();
+    const tierOf=r=>{let t=tiers.get(r);if(t===undefined){t=tierFor(r);tiers.set(r,t);}return t;};
     let out=rows.filter(r=>{
       // The search narrows; it does not end the check, so every other filter applies.
       if(sq&&!(r.title.toLowerCase().includes(sq)||r.summary.toLowerCase().includes(sq)||(MU[r.museumId]?.name||"").toLowerCase().includes(sq)))return false;
@@ -5985,7 +6099,7 @@ export default function App(){
       if(dismissedOnly){ if(r.interested)return false; }
       else if(!r.interested&&!showAll&&!sq)return false;
       if(venueF.size>0&&!venueF.has(chipKey(r.museumId))&&!(venueF.has(OCC_CHIP)&&((isOcc(r.museumId)&&!ownChip(r.museumId))||(MU[r.museumId]||{}).underOcc)))return false;
-      const t=tierFor(r),ts=TIERS[t]?.time||"current";
+      const t=tierOf(r),ts=TIERS[t]?.time||"current";
       if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
       if(watchedF&&!r.watching)return false;
       // Acquiring filters stack as AND across the three axes, OR within an axis.
@@ -6002,7 +6116,7 @@ export default function App(){
       if(sortBy==="venue"){const d=venueRank(a.museumId)-venueRank(b.museumId);if(d!==0)return d;}
       // Date's second tap turns this whole order upside down, Wanted view included.
       const flip=sortBy==="date"&&dateReversed?-1:1;
-      const ta=tierFor(a),tb=tierFor(b);
+      const ta=tierOf(a),tb=tierOf(b);
       if(acqWanted&&(ta==="upcoming")!==(tb==="upcoming"))return flip*(ta==="upcoming"?1:-1); // Wanted view: Announced drops to the bottom (nothing to buy yet)
       const oa=TIERS[ta]?.ord??9,ob=TIERS[tb]?.ord??9;
       if(oa!==ob)return flip*(oa-ob);
@@ -6013,14 +6127,36 @@ export default function App(){
     return out;
   },[rows,sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched,dateReversed]);
 
+  // DRAWN AS SHE SCROLLS: the first DRAW_STEP cards, then DRAW_STEP more each time the end
+  // of the drawn list nears the screen. A new filter, sort or search starts again from the
+  // top (viewToken). Jump to bottom draws the rest first. No IntersectionObserver → all.
+  const viewToken=useMemo(()=>({}),[sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,dateReversed]);
+  const[drawn,setDrawn]=useState({token:null,n:DRAW_STEP});
+  const drawLimit=typeof IntersectionObserver==="undefined"?Infinity:drawn.token===viewToken?drawn.n:DRAW_STEP;
+  const moreRef=useRef(null);
+  const wantBottom=useRef(false);
+  useEffect(()=>{
+    const el=moreRef.current;
+    if(!el)return;
+    const io=new IntersectionObserver(es=>{ if(es.some(e=>e.isIntersecting))setDrawn({token:viewToken,n:drawLimit+DRAW_STEP}); },{rootMargin:"1500px 0px"});
+    io.observe(el);
+    return()=>io.disconnect();
+  },[viewToken,drawLimit,view.length]);
+  useEffect(()=>{ if(wantBottom.current){ wantBottom.current=false; window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"}); } });
+  const jumpToBottom=()=>{
+    if(view.length>drawLimit){ wantBottom.current=true; setDrawn({token:viewToken,n:Infinity}); }
+    else window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"});
+  };
+
   const counts=useMemo(()=>{const c={total:rows.length,dismissed:0,watched:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.watching)c.watched++;if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;if(inClosingWindow(r))c.pressing++;}return c;},[rows]);
 
   const C=PALETTES[theme];
-  const TH=tiersFor(theme);          // the tier colours for THIS theme
-  const chip=on=>({padding:"4px 10px",borderRadius:999,border:"1px solid "+(on?C.ink:C.rule),background:on?C.ink:"transparent",color:on?C.onAction:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap"});
+  // TH, chip, pBtn and lnk keep their identity between renders, so LedgerCard can skip redrawing.
+  const TH=useMemo(()=>tiersFor(theme),[theme]);          // the tier colours for THIS theme
+  const chip=useCallback(on=>({padding:"4px 10px",borderRadius:999,border:"1px solid "+(on?C.ink:C.rule),background:on?C.ink:"transparent",color:on?C.onAction:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap"}),[C]);
   const sBtn={padding:"5px 12px",borderRadius:4,border:"1px solid "+C.rule,background:"transparent",color:C.soft,fontSize:11,fontWeight:500,cursor:"pointer"};
-  const pBtn={...sBtn,background:C.action,color:C.onAction,border:"none",opacity:busy?0.5:1,cursor:busy?"wait":"pointer"};
-  const lnk=linkButton(C);
+  const pBtn=useMemo(()=>({...sBtn,background:C.action,color:C.onAction,border:"none",opacity:busy?0.5:1,cursor:busy?"wait":"pointer"}),[C,busy]);
+  const lnk=useMemo(()=>linkButton(C),[C]);
 
   // ---- Approval-stage render helpers ----
   const decBtn=(active,color)=>({padding:"3px 9px",borderRadius:4,border:"1px solid "+(active?color:C.rule),background:active?color:"transparent",color:active?C.onAction:C.soft,fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"});
@@ -6333,119 +6469,26 @@ export default function App(){
           };
           const BAND_LABEL={add_this:"This import",add_earlier:"Earlier imports",seed:"Original set",ed_this:"This import's edits",ed_earlier:"Earlier edits",ed_never:"Never edited"};
           const bandDivider=(txt)=><div style={{display:"flex",alignItems:"center",gap:8,margin:"2px 2px",color:C.soft}}><div style={{flex:1,height:1,background:C.rule}}/><span style={{fontSize:9.5,letterSpacing:"0.1em",textTransform:"uppercase"}}>{txt}</span><div style={{flex:1,height:1,background:C.rule}}/></div>;
-          return view.map((r,i)=>{
+          return view.slice(0,drawLimit).map((r,i)=>{
           const brk=(pinTouched&&pinnedCount>0&&pinnedCount<view.length&&i===pinnedCount)?bandDivider("Rest of the list"):null;
           let header=null;
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
           const lead=brk||header;
-          const t=tierFor(r),tier=TH[t],mu=MU[r.museumId],mo=moSince(r.endDate),isOpen=openCards[r.id],noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested,isBusy=busyId===r.id;
-          const searchingLabel=lookLabel||"Searching\u2026";
-          // Two buttons share one busy row; only the one pressed shows progress.
-          const againLabel=isBusy&&!rechecking?searchingLabel:"Search again";
-          const recheckLabel=isBusy&&rechecking?searchingLabel:"Re-check museum shop";
-          // No shop at all (Borghese, Capodimonte, the Accademia; her decision): no
-          // Re-check button, and the line says only "Venue has no shop."
-          const noShop=!(MU[r.museumId]&&(MU[r.museumId].shopSearch||MU[r.museumId].shopHome));
-          // Her version blocks, on a card with two or more versions (versionBlocks); with
-          // nothing picked (a card searched before her order) the card shows no book, no
-          // status lines and only the shop button.
-          const vl=r.looked&&r.hasCatalogue==="yes"?versionBlocks(r):null;
-          const picked=!vl||(Number.isInteger(r.editionPick)&&!!r.editions[r.editionPick]);
-          const said=recheckSaid&&recheckSaid.id===r.id?recheckSaid:null;
-          if(dismissed)return(
-            <React.Fragment key={r.id}>{lead}
-            <article style={{background:C.dim,border:"1px solid "+C.rule,borderLeft:"4px solid "+C.muted,borderRadius:5,padding:"10px 14px",opacity:0.55}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
-                <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft}}>{mu?.card||mu?.short}</span>
-                <button onClick={()=>restore(r.id)} style={{background:"none",border:"1px solid "+C.action,borderRadius:3,color:C.action,fontSize:10,fontWeight:500,cursor:"pointer",padding:"2px 8px"}}>Restore</button>
-              </div>
-              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,fontWeight:500,marginTop:3,color:C.soft}}>{r.title}</div>
-              <div style={{fontSize:10.5,color:C.muted,marginTop:2}}>{dateRange(r)}</div>
-            </article>
-            </React.Fragment>
-          );
+          const isBusy=busyId===r.id;
           return(
             <React.Fragment key={r.id}>{lead}
-            <article style={{background:C.card,border:"1px solid "+C.rule,borderLeft:"4px solid "+(noCat?C.muted:isAcq?C.owned:tier.ink),borderRadius:5,overflow:"hidden"}}>
-              <div style={{padding:"12px 14px"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
-                  <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginTop:2}}>{mu?.card||mu?.short}</span>
-                  {/* No "No catalogue" tag (her decision): the corner says how long ago the
-                      show closed; the Catalogue button carries the cross. */}
-                  {isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:C.ownedBg,padding:"2px 7px",borderRadius:3}}>Owned</span>
-                  :<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:tier.ink,background:tier.wash,padding:"2px 7px",borderRadius:3}}>{tier.label}</span>}
-                </div>
-                <div style={{display:"flex",alignItems:"baseline",gap:0,marginTop:5}}>
-                  <h3 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:18,lineHeight:1.2,fontWeight:500,margin:0,letterSpacing:"-0.01em",flex:1}}>
-                    {r.title}
-                    {r.exUrl&&<a href={r.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.action,textDecoration:"none",marginLeft:5,fontSize:13,fontWeight:400}}>{"\u2197"}</a>}
-                  </h3>
-                  <div style={{display:"flex",gap:8,alignItems:"center",marginLeft:8,flexShrink:0}}>
-                    {r.acquiring==="yes"&&(()=>{const k=starInk();return <button onClick={()=>toggleBuyNext(r.id)} title={r.buyNext?"Not buying next":"Buy next"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1}}><svg width={k.D} height={k.D} style={{display:"inline-block",verticalAlign:k.v}} aria-hidden="true"><circle cx={k.D/2} cy={k.D/2} r={k.D/2-0.75} fill={r.buyNext?C.buyNext:"none"} stroke={r.buyNext?C.buyNext:C.muted} strokeWidth="1.5"/></svg></button>;})()}
-                    <button onClick={()=>toggleWatch(r.id)} title={r.watching?"Unwatch":"Watch"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1,color:r.watching?C.star:C.muted}}>{r.watching?"\u2605":"\u2606"}</button>
-                    {!isAcq&&<button onClick={()=>dismiss(r.id)} title="Not interested" style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:18,lineHeight:1,color:C.muted}}>{"\u00d7"}</button>}
-                  </div>
-                </div>
-                <div style={{fontSize:11,color:C.soft,marginTop:3,marginBottom:6}}>{dateRange(r)}</div>
-                {r.summary&&<p style={{fontSize:12.5,lineHeight:1.5,margin:"0 0 8px",color:C.body}}>{r.summary}</p>}
-                {!noCat&&!isAcq&&mo!==null&&mo>0&&(
-                  <div style={{margin:"8px 0 6px"}}>
-                    <div style={{position:"relative",height:5,background:C.drawer,borderRadius:3}}>
-                      <div style={{height:"100%",width:Math.min(100,(mo/12)*100)+"%",background:tier.ink,borderRadius:3}}/>
-                      {[3,6].map(k=><span key={k} style={{position:"absolute",left:(k/12*100)+"%",top:-2,width:1,height:10,background:C.soft,opacity:0.5}}/>)}
-                    </div>
-                    <div style={{display:"flex",justifyContent:"space-between",fontSize:8.5,color:C.soft,marginTop:3,letterSpacing:"0.05em"}}><span>CLOSED</span><span>3 MO</span><span>6 MO</span><span>12 MO</span></div>
-                  </div>
-                )}
-                {!noCat&&!isAcq&&<div style={{fontSize:11,color:tier.ink,fontWeight:500,marginBottom:8}}>{tier.note}</div>}
-                <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.rule}}>
-                  <span style={{fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:C.soft}}>Want the catalogue?</span>
-                  <button onClick={()=>setAcq(r.id,"yes")} style={chip(r.acquiring==="yes")}>Yes</button>
-                  <button onClick={()=>setAcq(r.id,"no")} style={chip(r.acquiring==="no")}>No</button>
-                  <button onClick={()=>setAcq(r.id,"acquired")} style={chip(r.acquiring==="acquired")}>Acquired</button>
-                  <button onClick={()=>setOpenCards(o=>({...o,[r.id]:!o[r.id]}))} style={{marginLeft:"auto",background:"none",border:"none",color:C.action,fontSize:11,fontWeight:600,cursor:"pointer",padding:"3px 0"}}>
-                    {isOpen?"Hide":(r.looked&&r.hasCatalogue==="yes")?"\u2713 Catalogue":(r.looked&&r.hasCatalogue==="no")?"\u2717 Catalogue":"Catalogue"}
-                  </button>
-                </div>
-              </div>
-              {isOpen&&(
-                <div style={{background:C.panel,borderTop:"1px solid "+C.rule,padding:"12px 14px"}}>
-                  {!r.looked?(
-                    <div>
-                      <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue search run yet.</p>
-                      <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{...pBtn,padding:"6px 12px",fontSize:12}}>{isBusy?searchingLabel:"Find catalogue"}</button>
-                      {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
-                    </div>
-                  ):noCat?(
-                    <CatalogueNone r={r} mu={mu} C={C} TH={TH} lnk={lnk} actions={<>
-                      <div style={{display:"flex",flexWrap:"wrap",gap:14}}>
-                        <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
-                        {!noShop&&<button onClick={()=>recheckShop(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
-                      </div>
-                      {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
-                      </>}/>
-                  ):(
-                    <CatalogueBox r={r} mu={mu} C={C} TH={TH} lnk={lnk} isAcq={isAcq} noShop={noShop} vl={vl} picked={picked}
-                      onPick={i=>setPick(r.id,i)} actions={<>
-                      <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:14}}>
-                        <button onClick={()=>findOneCat(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
-                        {!noShop&&<button onClick={()=>recheckShop(r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
-                      </div>
-                      {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
-                      </>}/>
-                  )}
-                </div>
-              )}
-            </article>
+            <LedgerCard r={r} mu={MU[r.museumId]} isOpen={!!openCards[r.id]} isBusy={isBusy} busy={busy} rechecking={isBusy&&rechecking} lookLabel={isBusy?lookLabel:null}
+              said={recheckSaid&&recheckSaid.id===r.id?recheckSaid:null} C={C} TH={TH} chip={chip} pBtn={pBtn} lnk={lnk} act={cardAct}/>
             </React.Fragment>
           );
         });})()}
+        {view.length>drawLimit&&<div ref={moreRef} style={{height:1}}/>}
       </div>
       {/* Top on the left, bottom on the right (her layout), shown once she has scrolled down. */}
       {showTop&&(<>
         <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label="Return to top"
           style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(calc(-100% - 5px))",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>
-        <button onClick={()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"})} aria-label="Jump to bottom"
+        <button onClick={jumpToBottom} aria-label="Jump to bottom"
           style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(5px)",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2193"}</button>
       </>)}
       {undo&&(

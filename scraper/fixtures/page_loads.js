@@ -63,7 +63,7 @@ if (!fs.existsSync(out)) {
 
 const React = {
   createElement: () => ({}), useState: () => [null, () => {}], useEffect: () => {},
-  useMemo: f => f(), useCallback: f => f, useRef: () => ({ current: null }),
+  useMemo: f => f(), useCallback: f => f, useRef: () => ({ current: null }), memo: f => f,
 };
 
 try {
