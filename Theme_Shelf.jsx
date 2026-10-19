@@ -5,7 +5,7 @@ import React,{useState,useEffect,useMemo,useCallback,useRef} from "react";
 // and the four booksellers. Its own page with its own store, so Cat Watch's ledger is
 // never touched. What it shares with Cat Watch (ISBNs, the booksellers, saved pages, the
 // connector's messages) is copied in by `node build/sync_shelf.js`.
-const APP_VERSION="2.1";
+const APP_VERSION="3";
 const APP_DATE="19 Oct 2026";
 
 // ===== SHARED WITH CAT WATCH — written by `node build/sync_shelf.js`; never edit between these markers. Edit Cat_Watch.jsx, then run it. =====
@@ -417,7 +417,7 @@ async function readAll(db,coll){
   return snap.docs.map(d=>({...(d.data()||{}),_id:d.id}));
 }
 const bookDoc=b=>({isbn13:b.isbn13,title:b.title,publisher:b.publisher||null,published:b.published||null,
-  themes:Array.isArray(b.themes)?b.themes:[],mark:b.mark==="wishlist"||b.mark==="owned"?b.mark:(b.owned?"owned":null),order:Number(b.order)||0,cover:b.cover||null,source:b.source||null,addedAt:b.addedAt||new Date().toISOString()});
+  themes:Array.isArray(b.themes)?b.themes:[],mark:b.mark==="wishlist"?"wishlist":"owned",order:Number(b.order)||0,cover:b.cover||null,source:b.source||null,addedAt:b.addedAt||new Date().toISOString()});
 const coverSrc=b=>b&&b.cover?"/_blob/"+b.cover:null;
 const newId=()=>"t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const hostOf=u=>{ try{ return new URL(u).hostname.replace(/^www\./,""); }catch{ return""; } };
@@ -760,7 +760,7 @@ export default function App(){
       const had=books.find(b=>b.isbn13===f.isbn13);
       if(had){ await putBook({...had,themes:[...new Set([...had.themes,...fileUnder])]}); continue; }
       const first=sorted[0];
-      const b={isbn13:f.isbn13,title:f.title,publisher:f.publisher,published:f.published,source:f.source,themes:fileUnder,mark:null,
+      const b={isbn13:f.isbn13,title:f.title,publisher:f.publisher,published:f.published,source:f.source,themes:fileUnder,mark:"owned",
         order:(first?first.order:0)-1-found.indexOf(f)*0.001,cover:null,addedAt:new Date().toISOString()};
       await putBook(b);
       if(f.coverBlob){ const id=await uploadCover(f.coverBlob); if(id)await putBook({...b,cover:id}); }
@@ -865,9 +865,9 @@ export default function App(){
           <span><b style={{color:C.ink}}>{books.length}</b> Books</span>
           <span><b style={{color:C.owned}}>{books.filter(b=>b.mark==="owned").length}</b> Owned</span>
           <span><b style={{color:C.wishInk}}>{books.filter(b=>b.mark==="wishlist").length}</b> Wishlist</span>
-          <span style={{marginLeft:"auto",display:"inline-flex",gap:4}}>
+          <span style={{marginLeft:"auto",display:"inline-flex",gap:8}}>
             {acrossOpts.map(n=><button key={n} onClick={()=>pickAcross(n)} aria-pressed={across===n} aria-label={n==="fit"?"Books with details":n+" across"}
-              style={{...chip(across===n),padding:"2px 8px",fontSize:10.5}}>{n==="fit"?(phone?2:3):n}</button>)}
+              style={{padding:"2px 4px 1px",border:"none",borderBottom:"2px solid "+(across===n?C.ink:"transparent"),background:"transparent",color:across===n?C.ink:C.soft,fontSize:11.5,fontWeight:across===n?600:500,cursor:"pointer",fontFamily:"inherit"}}>{n==="fit"?(phone?2:3):n}</button>)}
           </span>
           <button onClick={()=>{ if(showFind)setQ(""); setShowFind(v=>!v); setTimeout(()=>findRef.current&&findRef.current.focus(),100); }} style={{background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Find by ISBN" aria-label="Find by ISBN">{"🔍"}</button>
         </div>
@@ -941,7 +941,7 @@ export default function App(){
                   :{background:C.card,border:"1px solid "+C.rule,borderRadius:5,overflow:"hidden",display:"flex",flexDirection:"column",minWidth:0,color:C.ink}}>
                 <div style={{position:"relative"}}>
                   <Cover book={b} C={C} small={coversOnly?(phone&&across>=5?8.5:10.5):0}/>
-                  {b.mark==="wishlist"?<span style={{position:"absolute",top:coversOnly?4:8,left:coversOnly?4:8,lineHeight:0}} aria-label="Wishlist"><WishGem C={C} size={coversOnly&&across>=5?14.5:20}/></span>:null}
+                  {b.mark==="wishlist"?<span style={{position:"absolute",top:coversOnly?4:8,right:coversOnly?(across>=5?18:22):29,lineHeight:0}} aria-label="Wishlist"><WishGem C={C} size={coversOnly&&across>=5?14.5:20}/></span>:null}
                   <button aria-label="Menu" onPointerDown={e=>e.stopPropagation()}
                     onClick={e=>{ e.stopPropagation(); const r=e.currentTarget.getBoundingClientRect(); setMenu({id:b.isbn13,top:r.top,right:r.right}); }}
                     style={{position:"absolute",top:coversOnly?1:4,right:coversOnly?0:3,background:"none",border:"none",padding:coversOnly?3:4,cursor:"pointer",lineHeight:0}}>
@@ -983,31 +983,27 @@ export default function App(){
       {adding?<AddSheet UI={UI} books={books} themes={themes} startThemes={view==="all"?[]:[view]} readOne={readOne} addFound={addFound} close={()=>setAdding(false)}/>:null}
       {openBook?<BookSheet UI={UI} b={openBook} themes={themes} close={()=>setOpen(null)} put={putBook} onCover={()=>setCoverFor(openBook.isbn13)}/>:null}
       {menu&&books.some(b=>b.isbn13===menu.id)?<CardMenu UI={UI} at={menu} b={books.find(b=>b.isbn13===menu.id)} close={()=>setMenu(null)}
-        mark={(b,m)=>{ setMenu(null); putBook({...b,mark:b.mark===m?null:m}); }}/>:null}
+        wish={b=>{ setMenu(null); putBook({...b,mark:b.mark==="wishlist"?"owned":"wishlist"}); }}/>:null}
       {coverBook?<CoverSheet UI={UI} b={coverBook} setCover={setCover} dropCover={dropCover} close={()=>setCoverFor(null)}/>:null}
       {confirmBox?<ConfirmBox UI={UI} box={confirmBox} close={()=>setConfirmBox(null)}/>:null}
     </div>
   );
 }
 
-// A card's menu, opened from its three dots and drawn over the card in place (her design).
-// Each line marks the book or, ticked, takes the mark off again.
-function CardMenu({UI,at,b,close,mark}){
+// A card's menu, opened from its three dots and drawn over the card in place (her
+// design), as narrow as its one line. Wishlist marks the book; on a wishlisted book it
+// takes the mark off again.
+function CardMenu({UI,at,b,close,wish}){
   const {C}=UI;
   // Its right edge on the dots, kept inside the screen.
   const vw=typeof window!=="undefined"?window.innerWidth:at.right+8;
-  const W=Math.min(190,vw-16), left=Math.min(Math.max(8,at.right-W),vw-8-W);
-  const row=on=>({display:"flex",alignItems:"center",gap:12,width:"100%",background:"none",border:"none",padding:"10px 14px",fontSize:13,color:C.ink,cursor:"pointer",fontFamily:"inherit",textAlign:"left"});
-  const tick=<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" style={{marginLeft:"auto"}}><path d="M2.5 7.3l2.8 2.8 6-6.3" fill="none" stroke={C.ink} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+  const W=118, left=Math.min(Math.max(8,at.right-W),vw-8-W);
   return(
     <div style={{position:"fixed",inset:0,zIndex:1000}} onClick={close} onPointerDown={e=>e.stopPropagation()}>
       <div role="menu" onClick={e=>e.stopPropagation()}
-        style={{position:"fixed",top:Math.max(8,at.top),left,width:W,background:C.card,border:"1px solid "+C.rule,borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.22)",padding:"4px 0",overflow:"hidden"}}>
-        <button role="menuitemcheckbox" aria-checked={b.mark==="wishlist"} onClick={()=>mark(b,"wishlist")} style={row()}>
-          <WishGem C={C} size={20} ink={C.ink}/>Wishlist{b.mark==="wishlist"?tick:null}</button>
-        <button role="menuitemcheckbox" aria-checked={b.mark==="owned"} onClick={()=>mark(b,"owned")} style={row()}>
-          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style={{flex:"none"}}><path d="M4 3.5h9.5a2 2 0 0 1 2 2V17H6a2 2 0 0 1-2-2Z M4 15a2 2 0 0 1 2-2h9.5" fill="none" stroke={C.ink} strokeWidth="1.3" strokeLinejoin="round"/></svg>
-          Owned{b.mark==="owned"?tick:null}</button>
+        style={{position:"fixed",top:Math.max(8,at.top),left,width:W,background:C.card,border:"1px solid "+C.rule,borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.22)",padding:"2px 0",overflow:"hidden"}}>
+        <button role="menuitem" onClick={()=>wish(b)} style={{display:"flex",alignItems:"center",gap:10,width:"100%",background:"none",border:"none",padding:"9px 12px",fontSize:13,color:C.ink,cursor:"pointer",fontFamily:"inherit",textAlign:"left"}}>
+          <WishGem C={C} size={18} ink={C.ink}/>Wishlist</button>
       </div>
     </div>
   );
@@ -1144,9 +1140,9 @@ function BookSheet({UI,b,themes,close,put,onCover}){
     <div style={dialogOuter(C)} onClick={close}>
       <div role="dialog" aria-label={b.title} style={dialogInner(C)} onClick={e=>e.stopPropagation()}>
         {/* The corner tag, as on Cat Watch's cards. */}
-        {b.mark?<div style={{display:"flex",justifyContent:"flex-end"}}>
+        <div style={{display:"flex",justifyContent:"flex-end"}}>
           {b.mark==="owned"?<span style={tag(C.owned,C.ownedBg)}>Owned</span>:<span style={tag(C.wishInk,C.wishBg)}>Wishlist</span>}
-        </div>:null}
+        </div>
         <div style={{display:"flex",gap:16,flexWrap:"wrap",alignItems:"flex-start"}}>
           <button onClick={onCover} aria-label={b.cover?"Change cover":"Add cover"} style={{width:140,flexShrink:0,padding:0,border:"none",background:"none",cursor:"pointer",display:"block"}}><Cover book={b} C={C} big/></button>
           <div style={{flex:"1 1 220px",minWidth:0}}>
@@ -1170,7 +1166,7 @@ function BookSheet({UI,b,themes,close,put,onCover}){
 }
 
 // The cover's own pop-up, as a profile picture is changed (her design), top to bottom:
-// Remove (once there is a cover), the book-shaped Drag box (a picture dropped on it; a
+// Remove (greyed with no cover), the book-shaped Drag box (a picture dropped on it; a
 // tap or the keyboard pastes a copied one), Load (the picture picker), Cancel.
 function CoverSheet({UI,b,setCover,dropCover,close}){
   const {C,pBtn}=UI;
@@ -1197,7 +1193,7 @@ function CoverSheet({UI,b,setCover,dropCover,close}){
   return(
     <div style={{...dialogOuter(C),zIndex:1100}} onClick={close}>
       <div role="dialog" aria-label="Cover" style={{...dialogInner(C,300),padding:"14px 20px 12px",alignItems:"center"}} onClick={e=>e.stopPropagation()}>
-        {b.cover?<div style={{alignSelf:"stretch"}}><button onClick={()=>{ dropCover(b); close(); }} style={textBtn(C)}>Remove</button></div>:null}
+        <button onClick={()=>{ if(b.cover){ dropCover(b); close(); } }} disabled={!b.cover} style={{...textBtn(C),opacity:b.cover?1:0.4,cursor:b.cover?"pointer":"default"}}>Remove</button>
         <button onClick={pasteNow}
           onDragOver={e=>{ e.preventDefault(); setOver(true); }} onDragLeave={()=>setOver(false)}
           onDrop={e=>{ e.preventDefault(); setOver(false); const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f)take(f); }}
