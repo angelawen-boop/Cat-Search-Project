@@ -47,12 +47,13 @@ complete copy, a damaged piece is refused.
   keystroke 50+ → ~15, one frame (phone ~220 → ~75); clearing a search, phone, up to 2.9 s →
   ~0.2 s; first draw, phone, 1.8 s → 0.5 s.
 
-**OPEN — the wait before "Confirm save?"** (her report: the most noticeable lag). Before the
-box, Save writes the whole Cloud Save copy, one part after another; the file question waits for
-it, because the cloud copy goes first so a cancelled file cannot take it with it (her design).
-Not measured: the store's speed cannot be timed off her page. Option to put to her: ask the
-file question while the cloud copy is being written. A cancelled file still leaves the copy.
-Her call.
+**The wait before "Confirm save?" — fixed at 49.1 (her decision); her next Saves confirm.** Her
+screen recording showed ~1.7 s of "Saving…" while the Cloud Save copy was written, then ~0.45 s
+with the box's "Save file" greyed (Claude's download box, not the app's). The file question now
+opens while the copy is written; a cancelled file still leaves it (CA-008c, CA-008f2–f4).
+
+Her saved files stay plain, indented JSON (~0.9 MB at 1,003 rows; ~0.7 MB unindented; the cloud
+copy is gzipped, ~1/8): she weighed a compressed download and kept them readable (her decision).
 
 ## Parked — for later action, her call when
 
