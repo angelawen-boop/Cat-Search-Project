@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
  * shelf_covers.js — fetch Open Library covers for Theme Shelf books that have none
- * (docs/theme_shelf.md, "Covers"). Run by a session when she asks for covers: the page
+ * (docs/themes.md). Run by a session when she asks for covers: the page
  * cannot load a picture from another site, but a session can fetch one and store it.
  *
  *   1. ArtifactData list, collection "books", out_dir <dir>     (the shelf's books)

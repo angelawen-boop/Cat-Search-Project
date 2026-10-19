@@ -1,7 +1,7 @@
 import React,{useState,useEffect,useMemo,useCallback,useRef} from "react";
 
 // THEME SHELF — art books gathered by theme, not by exhibition (her design;
-// docs/theme_shelf.md). A wishlist: cover, title, ISBN, publisher, when it was published
+// docs/themes.md). A wishlist: cover, title, ISBN, publisher, when it was published
 // and the four booksellers. Its own page with its own store, so Cat Watch's ledger is
 // never touched. What it shares with Cat Watch (ISBNs, the booksellers, saved pages, the
 // connector's messages) is copied in by `node build/sync_shelf.js`.

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * build_shelf.js — turn Theme_Shelf.jsx into the page she opens (docs/theme_shelf.md).
+ * build_shelf.js — turn Theme_Shelf.jsx into the page she opens (docs/themes.md).
  *
  * The same steps as build_app.js, for the shelf's own page: run sync_shelf.js --check
  * (the shared ISBN, bookseller and saved-page code must match Cat Watch's), transpile,

@@ -2,7 +2,7 @@
 /*
  * sync_shelf.js — copy Cat Watch's book mechanics into Theme_Shelf.jsx.
  *
- * WHY THIS EXISTS — Theme Shelf (docs/theme_shelf.md). The shelf is its
+ * WHY THIS EXISTS — Theme Shelf (docs/themes.md). The shelf is its
  * own page, but an ISBN, the four booksellers, a saved page and the connector's
  * failure messages must behave exactly as they do in Cat Watch. A hand copy drifts,
  * so the shelf's copy is WRITTEN by this script, between the SHARED markers, and

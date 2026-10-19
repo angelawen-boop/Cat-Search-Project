@@ -1,6 +1,6 @@
 /**
  * THEME SHELF — does the page draw, and does its code decide what it should?
- * (docs/theme_shelf.md; Theme_Shelf.jsx.)
+ * (docs/themes.md; Theme_Shelf.jsx.)
  *
  * Built the way build/build_shelf.js builds it, then:
  *   TS-001  drawn with no Claude runtime: says the shelf lives with the page.

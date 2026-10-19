@@ -13,7 +13,6 @@ by link work).
 | Saving — the cloud ledger, Save, Load | `npm run test:saving` |
 | The import screen, cards, sorting, display | `npm run test:screen` |
 | The scraper (`scraper/`) — sweep, recipes, QC, compression | `npm run test:scraper` |
-| Theme Shelf (`Theme_Shelf.jsx`, its own page) | `npm run test:shelf` |
 | The shared date reader or summary rules (`dates.js`, `compress_prompt.md`) | `npm test` (both halves) |
 | **Before publishing the app** | `npm run test:app` (the whole app half), once |
 

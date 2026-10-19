@@ -11,7 +11,7 @@
 //   npm run test:screen    the import screen, cards, sorting, display
 //   npm run test:app       the whole app half — once, before publishing
 //   npm run test:scraper   scraper/ — the sweep, its recipes, QC, compression
-//   npm run test:shelf     Theme Shelf, the separate page (docs/theme_shelf.md)
+//   npm run test:shelf     Theme Shelf, the separate page (docs/themes.md)
 //   npm test               both halves — the shared date reader or summary rules
 // A suite tagged with both halves is where they genuinely meet: the app
 // importing a scraper CSV, the shared date reader and summary rules, Add by
