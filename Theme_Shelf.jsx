@@ -5,7 +5,7 @@ import React,{useState,useEffect,useMemo,useCallback,useRef} from "react";
 // and the four booksellers. Its own page with its own store, so Cat Watch's ledger is
 // never touched. What it shares with Cat Watch (ISBNs, the booksellers, saved pages, the
 // connector's messages) is copied in by `node build/sync_shelf.js`.
-const APP_VERSION="2.4";
+const APP_VERSION="2.1";
 const APP_DATE="19 Oct 2026";
 
 // ===== SHARED WITH CAT WATCH — written by `node build/sync_shelf.js`; never edit between these markers. Edit Cat_Watch.jsx, then run it. =====
@@ -417,7 +417,7 @@ async function readAll(db,coll){
   return snap.docs.map(d=>({...(d.data()||{}),_id:d.id}));
 }
 const bookDoc=b=>({isbn13:b.isbn13,title:b.title,publisher:b.publisher||null,published:b.published||null,
-  themes:Array.isArray(b.themes)?b.themes:[],owned:!!b.owned,order:Number(b.order)||0,cover:b.cover||null,source:b.source||null,addedAt:b.addedAt||new Date().toISOString()});
+  themes:Array.isArray(b.themes)?b.themes:[],mark:b.mark==="wishlist"||b.mark==="owned"?b.mark:(b.owned?"owned":null),order:Number(b.order)||0,cover:b.cover||null,source:b.source||null,addedAt:b.addedAt||new Date().toISOString()});
 const coverSrc=b=>b&&b.cover?"/_blob/"+b.cover:null;
 const newId=()=>"t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const hostOf=u=>{ try{ return new URL(u).hostname.replace(/^www\./,""); }catch{ return""; } };
@@ -454,16 +454,24 @@ const tag=(ink,wash)=>({fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTra
 // The booksellers without "AU" (her decision, to save space on the shelf).
 const shopName=n=>n.replace(/ AU$/,"");
 
-// The mark in a cover's top-right corner (her design): a gem's outline, as in Kindle's
-// menu, with no inner lines. Hollow for Wishlist, filled in Cat Watch's Owned purple for
-// Owned; tapping it switches the two.
-function OwnedMark({owned,C,size}){
+// The Wishlist gem (her design, after Kindle's menu): a cut gem with its inner lines.
+// `ink` draws it in the menu; without it, it sits on a cover, white with a dark edge
+// so it reads on a pale tile and a dark cover alike.
+function WishGem({C,size,ink}){
+  const w=size||20, o="M3 9.2 7.6 3.8h8.8L21 9.2 12 20.6Z", l="M3 9.2h18M7.6 3.8 9.8 9.2 12 20.6 14.2 9.2 16.4 3.8M9.8 9.2 12 3.8l2.2 5.4";
+  return(
+    <svg width={w} height={w} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block",flex:"none"}}>
+      {ink?null:<><path d={o} fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="3" strokeLinejoin="round"/><path d={l} fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="2.6" strokeLinejoin="round"/></>}
+      <path d={o} fill="none" stroke={ink||"#fff"} strokeWidth="1.4" strokeLinejoin="round"/>
+      <path d={l} fill="none" stroke={ink||"#fff"} strokeWidth="1.1" strokeLinejoin="round"/>
+    </svg>);
+}
+// The card's three dots, which open its menu in place.
+function Dots({size}){
   const w=size||20;
   return(
-    <svg width={w} height={w} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
-      {/* A dark edge under the white line, so the outline reads on a pale tile and a dark cover alike. */}
-      <path d="M3 9.2 7.6 3.8h8.8L21 9.2 12 20.6Z" fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="3" strokeLinejoin="round"/>
-      <path d="M3 9.2 7.6 3.8h8.8L21 9.2 12 20.6Z" fill={owned?C.owned:"none"} stroke="#fff" strokeWidth="1.5" strokeLinejoin="round"/>
+    <svg width={w} height={w} viewBox="0 0 20 20" aria-hidden="true" style={{display:"block"}}>
+      {[4,10,16].map(y=><circle key={y} cx="10" cy={y} r="1.9" fill="#fff" stroke="rgba(0,0,0,0.55)" strokeWidth="1.2"/>)}
     </svg>);
 }
 
@@ -541,6 +549,7 @@ export default function App(){
   const [adding,setAdding]=useState(false);
   const [open,setOpen]=useState(null);
   const [coverFor,setCoverFor]=useState(null);
+  const [menu,setMenu]=useState(null);           // {id, top, right}: a card's menu, open in place
   const [themeEdit,setThemeEdit]=useState(null); // {mode:"new"|"rename", name}
   const [confirmBox,setConfirmBox]=useState(null); // {title, text, yes, act} — Cat Watch's confirm box
   const [showRemove,setShowRemove]=useState(false);
@@ -582,7 +591,7 @@ export default function App(){
     }catch{}
   },[theme]);
   const C={...PALETTES[theme],...ROSE[theme]};
-  const chip=on=>({padding:"4px 10px",borderRadius:"8px 1px 8px 1px",border:"1px solid "+(on?C.ink:C.rule),background:on?C.ink:"transparent",color:on?PALETTES[theme].onAction:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"inherit"});
+  const chip=on=>({padding:"4px 10px",borderRadius:999,border:"1px solid "+(on?C.ink:C.rule),background:on?C.ink:"transparent",color:on?PALETTES[theme].onAction:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"inherit"});
   const sBtn={padding:"5px 12px",borderRadius:4,border:"1px solid "+C.rule,background:"transparent",color:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",fontFamily:"inherit"};
   const pBtn={...sBtn,background:C.action,color:C.onAction,border:"none"};
   const UI={C,chip,sBtn,pBtn};
@@ -626,7 +635,7 @@ export default function App(){
 
   const sorted=useMemo(()=>books.slice().sort(byOrder),[books]);
   const shown=useMemo(()=>sorted.filter(b=>(view==="all"||b.themes.includes(view))
-    &&(!status||(status==="owned")===!!b.owned)&&isbnMatches(b,q)),[sorted,view,status,q]);
+    &&(!status||b.mark===status)&&isbnMatches(b,q)),[sorted,view,status,q]);
   const theme_=themes.find(t=>t.id===view)||null;
   const libOpen=!!theme_&&libFor===theme_.id;
   const libBooks=theme_?sorted.filter(b=>!b.themes.includes(theme_.id)):[];
@@ -751,7 +760,7 @@ export default function App(){
       const had=books.find(b=>b.isbn13===f.isbn13);
       if(had){ await putBook({...had,themes:[...new Set([...had.themes,...fileUnder])]}); continue; }
       const first=sorted[0];
-      const b={isbn13:f.isbn13,title:f.title,publisher:f.publisher,published:f.published,source:f.source,themes:fileUnder,owned:false,
+      const b={isbn13:f.isbn13,title:f.title,publisher:f.publisher,published:f.published,source:f.source,themes:fileUnder,mark:null,
         order:(first?first.order:0)-1-found.indexOf(f)*0.001,cover:null,addedAt:new Date().toISOString()};
       await putBook(b);
       if(f.coverBlob){ const id=await uploadCover(f.coverBlob); if(id)await putBook({...b,cover:id}); }
@@ -854,8 +863,8 @@ export default function App(){
 
         <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",alignItems:"center"}}>
           <span><b style={{color:C.ink}}>{books.length}</b> Books</span>
-          <span><b style={{color:C.owned}}>{books.filter(b=>b.owned).length}</b> Owned</span>
-          <span><b style={{color:C.wishInk}}>{books.filter(b=>!b.owned).length}</b> Wishlist</span>
+          <span><b style={{color:C.owned}}>{books.filter(b=>b.mark==="owned").length}</b> Owned</span>
+          <span><b style={{color:C.wishInk}}>{books.filter(b=>b.mark==="wishlist").length}</b> Wishlist</span>
           <span style={{marginLeft:"auto",display:"inline-flex",gap:4}}>
             {acrossOpts.map(n=><button key={n} onClick={()=>pickAcross(n)} aria-pressed={across===n} aria-label={n==="fit"?"Books with details":n+" across"}
               style={{...chip(across===n),padding:"2px 8px",fontSize:10.5}}>{n==="fit"?(phone?2:3):n}</button>)}
@@ -932,10 +941,11 @@ export default function App(){
                   :{background:C.card,border:"1px solid "+C.rule,borderRadius:5,overflow:"hidden",display:"flex",flexDirection:"column",minWidth:0,color:C.ink}}>
                 <div style={{position:"relative"}}>
                   <Cover book={b} C={C} small={coversOnly?(phone&&across>=5?8.5:10.5):0}/>
-                  <button aria-label={b.owned?"Owned — mark as wishlist":"Wishlist — mark as owned"} aria-pressed={!!b.owned}
-                    onPointerDown={e=>e.stopPropagation()} onClick={e=>{ e.stopPropagation(); putBook({...b,owned:!b.owned}); }}
-                    style={{position:"absolute",top:coversOnly?1:4,right:coversOnly?1:4,background:"none",border:"none",padding:coversOnly?3:4,cursor:"pointer",lineHeight:1}}>
-                    <OwnedMark owned={b.owned} C={C} size={coversOnly&&across>=5?14.5:20}/>
+                  {b.mark==="wishlist"?<span style={{position:"absolute",top:coversOnly?4:8,left:coversOnly?4:8,lineHeight:0}} aria-label="Wishlist"><WishGem C={C} size={coversOnly&&across>=5?14.5:20}/></span>:null}
+                  <button aria-label="Menu" onPointerDown={e=>e.stopPropagation()}
+                    onClick={e=>{ e.stopPropagation(); const r=e.currentTarget.getBoundingClientRect(); setMenu({id:b.isbn13,top:r.top,right:r.right}); }}
+                    style={{position:"absolute",top:coversOnly?1:4,right:coversOnly?0:3,background:"none",border:"none",padding:coversOnly?3:4,cursor:"pointer",lineHeight:0}}>
+                    <Dots size={coversOnly&&across>=5?15:20}/>
                   </button>
                 </div>
                 {coversOnly?null:<div style={{padding:"10px 12px 12px",minWidth:0}}>
@@ -972,8 +982,33 @@ export default function App(){
       {loadFile?<ConfirmBox UI={UI} box={{title:"Load "+loadFile.name+"?",text:"The shelf becomes the file’s "+loadFile.books.length+" books and "+loadFile.themes.length+" themes. The "+books.length+" books on the shelf now are replaced.",yes:"Load",act:confirmLoad}} close={()=>setLoadFile(null)}/>:null}
       {adding?<AddSheet UI={UI} books={books} themes={themes} startThemes={view==="all"?[]:[view]} readOne={readOne} addFound={addFound} close={()=>setAdding(false)}/>:null}
       {openBook?<BookSheet UI={UI} b={openBook} themes={themes} close={()=>setOpen(null)} put={putBook} onCover={()=>setCoverFor(openBook.isbn13)}/>:null}
+      {menu&&books.some(b=>b.isbn13===menu.id)?<CardMenu UI={UI} at={menu} b={books.find(b=>b.isbn13===menu.id)} close={()=>setMenu(null)}
+        mark={(b,m)=>{ setMenu(null); putBook({...b,mark:b.mark===m?null:m}); }}/>:null}
       {coverBook?<CoverSheet UI={UI} b={coverBook} setCover={setCover} dropCover={dropCover} close={()=>setCoverFor(null)}/>:null}
       {confirmBox?<ConfirmBox UI={UI} box={confirmBox} close={()=>setConfirmBox(null)}/>:null}
+    </div>
+  );
+}
+
+// A card's menu, opened from its three dots and drawn over the card in place (her design).
+// Each line marks the book or, ticked, takes the mark off again.
+function CardMenu({UI,at,b,close,mark}){
+  const {C}=UI;
+  // Its right edge on the dots, kept inside the screen.
+  const vw=typeof window!=="undefined"?window.innerWidth:at.right+8;
+  const W=Math.min(190,vw-16), left=Math.min(Math.max(8,at.right-W),vw-8-W);
+  const row=on=>({display:"flex",alignItems:"center",gap:12,width:"100%",background:"none",border:"none",padding:"10px 14px",fontSize:13,color:C.ink,cursor:"pointer",fontFamily:"inherit",textAlign:"left"});
+  const tick=<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" style={{marginLeft:"auto"}}><path d="M2.5 7.3l2.8 2.8 6-6.3" fill="none" stroke={C.ink} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:1000}} onClick={close} onPointerDown={e=>e.stopPropagation()}>
+      <div role="menu" onClick={e=>e.stopPropagation()}
+        style={{position:"fixed",top:Math.max(8,at.top),left,width:W,background:C.card,border:"1px solid "+C.rule,borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.22)",padding:"4px 0",overflow:"hidden"}}>
+        <button role="menuitemcheckbox" aria-checked={b.mark==="wishlist"} onClick={()=>mark(b,"wishlist")} style={row()}>
+          <WishGem C={C} size={20} ink={C.ink}/>Wishlist{b.mark==="wishlist"?tick:null}</button>
+        <button role="menuitemcheckbox" aria-checked={b.mark==="owned"} onClick={()=>mark(b,"owned")} style={row()}>
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style={{flex:"none"}}><path d="M4 3.5h9.5a2 2 0 0 1 2 2V17H6a2 2 0 0 1-2-2Z M4 15a2 2 0 0 1 2-2h9.5" fill="none" stroke={C.ink} strokeWidth="1.3" strokeLinejoin="round"/></svg>
+          Owned{b.mark==="owned"?tick:null}</button>
+      </div>
     </div>
   );
 }
@@ -1109,9 +1144,9 @@ function BookSheet({UI,b,themes,close,put,onCover}){
     <div style={dialogOuter(C)} onClick={close}>
       <div role="dialog" aria-label={b.title} style={dialogInner(C)} onClick={e=>e.stopPropagation()}>
         {/* The corner tag, as on Cat Watch's cards. */}
-        <div style={{display:"flex",justifyContent:"flex-end"}}>
-          {b.owned?<span style={tag(C.owned,C.ownedBg)}>Owned</span>:<span style={tag(C.wishInk,C.wishBg)}>Wishlist</span>}
-        </div>
+        {b.mark?<div style={{display:"flex",justifyContent:"flex-end"}}>
+          {b.mark==="owned"?<span style={tag(C.owned,C.ownedBg)}>Owned</span>:<span style={tag(C.wishInk,C.wishBg)}>Wishlist</span>}
+        </div>:null}
         <div style={{display:"flex",gap:16,flexWrap:"wrap",alignItems:"flex-start"}}>
           <button onClick={onCover} aria-label={b.cover?"Change cover":"Add cover"} style={{width:140,flexShrink:0,padding:0,border:"none",background:"none",cursor:"pointer",display:"block"}}><Cover book={b} C={C} big/></button>
           <div style={{flex:"1 1 220px",minWidth:0}}>
@@ -1134,10 +1169,9 @@ function BookSheet({UI,b,themes,close,put,onCover}){
   );
 }
 
-// The cover's own pop-up, as a profile picture is changed (her design). Paste is a
-// book-shaped box: tap it to paste a copied picture, or on a computer drop a picture on
-// it or press paste. Add, or Change once there is a cover, is a button that opens the
-// picture picker. Remove sits on the left, away from Cancel, which is centred as in Add book.
+// The cover's own pop-up, as a profile picture is changed (her design), top to bottom:
+// Remove (once there is a cover), the book-shaped Drag box (a picture dropped on it; a
+// tap or the keyboard pastes a copied one), Load (the picture picker), Cancel.
 function CoverSheet({UI,b,setCover,dropCover,close}){
   const {C,pBtn}=UI;
   const fileRef=useRef(null);
@@ -1162,20 +1196,17 @@ function CoverSheet({UI,b,setCover,dropCover,close}){
   }
   return(
     <div style={{...dialogOuter(C),zIndex:1100}} onClick={close}>
-      <div role="dialog" aria-label="Cover" style={{...dialogInner(C,300),padding:"18px 20px 12px",alignItems:"center"}} onClick={e=>e.stopPropagation()}>
+      <div role="dialog" aria-label="Cover" style={{...dialogInner(C,300),padding:"14px 20px 12px",alignItems:"center"}} onClick={e=>e.stopPropagation()}>
+        {b.cover?<div style={{alignSelf:"stretch"}}><button onClick={()=>{ dropCover(b); close(); }} style={textBtn(C)}>Remove</button></div>:null}
         <button onClick={pasteNow}
           onDragOver={e=>{ e.preventDefault(); setOver(true); }} onDragLeave={()=>setOver(false)}
           onDrop={e=>{ e.preventDefault(); setOver(false); const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f)take(f); }}
           style={{width:120,aspectRatio:"2 / 3",border:"1px dashed "+(over?C.action:C.rule),borderRadius:3,background:over?C.panel:C.card,
-            fontSize:12.5,color:C.soft,cursor:"pointer",fontFamily:"inherit",display:"grid",placeItems:"center",padding:0}}>Paste</button>
+            fontSize:12.5,color:C.soft,cursor:"pointer",fontFamily:"inherit",display:"grid",placeItems:"center",padding:0}}>Drag</button>
         {why?<div style={{fontSize:11.5,color:C.warnInk}}>{why}</div>:null}
         <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif,image/avif" onChange={e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(f)take(f); }}/>
-        <button onClick={()=>fileRef.current&&fileRef.current.click()} style={pBtn}>{b.cover?"Change":"Add"}</button>
-        <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"baseline",width:"100%",marginTop:2}}>
-          <span>{b.cover?<button onClick={()=>{ dropCover(b); close(); }} style={textBtn(C)}>Remove</button>:null}</span>
-          <button onClick={close} style={textBtn(C)}>Cancel</button>
-          <span/>
-        </div>
+        <button onClick={()=>fileRef.current&&fileRef.current.click()} style={pBtn}>Load</button>
+        <button onClick={close} style={{...textBtn(C),marginTop:2}}>Cancel</button>
       </div>
     </div>
   );
