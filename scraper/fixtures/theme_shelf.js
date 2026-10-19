@@ -3,7 +3,7 @@
  * (docs/themes.md; Theme_Shelf.jsx.)
  *
  * Built the way build/build_shelf.js builds it, then:
- *   TS-001  drawn with no Claude runtime: says the shelf lives with the page.
+ *   TS-001  drawn with no Claude runtime: says the shelf isn’t available.
  *   TS-002  drawn with a store holding two books and a theme: titles, ISBNs as
  *           xxx-xxxxxxxxxx, the publication line and the four booksellers on screen.
  *   TS-003  the publication line ("Published 2002 · 24 years").
@@ -108,8 +108,8 @@ async function render(label, runtime) {
   // TS-001
   {
     const { text } = await render('TS-001');
-    check(/Your shelf lives with this page/.test(text) && /Theme Shelf prototype/.test(text),
-      'TS-001 with no runtime the page draws and says the shelf lives with the page');
+    check(/The shelf isn’t available in this viewer/.test(text) && /Theme Shelf prototype/.test(text),
+      'TS-001 with no runtime the page draws and says the shelf isn’t available');
   }
   // TS-002
   {

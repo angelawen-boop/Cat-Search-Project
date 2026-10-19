@@ -5,7 +5,7 @@ import React,{useState,useEffect,useMemo,useCallback,useRef} from "react";
 // and the four booksellers. Its own page with its own store, so Cat Watch's ledger is
 // never touched. What it shares with Cat Watch (ISBNs, the booksellers, saved pages, the
 // connector's messages) is copied in by `node build/sync_shelf.js`.
-const APP_VERSION="2";
+const APP_VERSION="2.1";
 const APP_DATE="19 Oct 2026";
 
 // ===== SHARED WITH CAT WATCH — written by `node build/sync_shelf.js`; never edit between these markers. Edit Cat_Watch.jsx, then run it. =====
@@ -768,11 +768,11 @@ export default function App(){
         :<div style={{marginTop:6,fontSize:11,color:store==="ready"?C.okEdge:C.soft,fontWeight:600}}>
           {"☁ "}{
             store==="loading"?"Opening the shelf…"
-            :store==="none"?"The shelf lives with this page — open it from its claude.ai link."
+            :store==="none"?"The shelf isn’t available in this viewer."
             :store==="failed"?"The cloud copy didn’t answer. Reload to try again."
             :saveState==="saving"?"Saving to the cloud…"
-            :lastSavedAt?"Last cloud save: "+fmtRefresh(lastSavedAt)+" ("+relTime(lastSavedAt)+") · every change is saved"
-            :"Saved in the cloud · every change is saved as you make it"
+            :lastSavedAt?"Last cloud save: "+fmtRefresh(lastSavedAt)+" ("+relTime(lastSavedAt)+")"
+            :"Saved in the cloud"
           }
         </div>}
         {msg?<div style={{...warnBox(C),display:"flex",gap:8,alignItems:"baseline"}} role="status">
@@ -783,7 +783,6 @@ export default function App(){
         <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",alignItems:"center"}}>
           <span><b style={{color:C.ink}}>{books.length}</b> Books</span>
           <span><b style={{color:C.ink}}>{themes.length}</b> Themes</span>
-          {books.length>1?<span>Drag a cover to move it</span>:null}
           <button onClick={()=>{ if(showFind)setQ(""); setShowFind(v=>!v); setTimeout(()=>findRef.current&&findRef.current.focus(),100); }} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Find by ISBN" aria-label="Find by ISBN">{"🔍"}</button>
         </div>
         {showFind?<div style={{marginTop:6,position:"relative"}}>
@@ -806,7 +805,7 @@ export default function App(){
         </div>:null}
         {/* Cat Watch's panel under a button (its Save panel): a field, the action, Cancel. */}
         {themeEdit?<form onSubmit={e=>{e.preventDefault();saveThemeEdit();}} style={{marginTop:8,padding:"10px 12px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
-          <input id="theme-name" autoFocus maxLength={60} placeholder={"Theme name — e.g. Fashion in art"} value={themeEdit.name} onChange={e=>setThemeEdit({...themeEdit,name:e.target.value})} style={{...field(C),flex:"1 1 220px",padding:"5px 8px"}}/>
+          <input id="theme-name" autoFocus maxLength={60} placeholder="Theme name" value={themeEdit.name} onChange={e=>setThemeEdit({...themeEdit,name:e.target.value})} style={{...field(C),flex:"1 1 220px",padding:"5px 8px"}}/>
           <button type="submit" style={pBtn}>{themeEdit.mode==="new"?"Add theme":"Rename"}</button>
           <button type="button" onClick={()=>setThemeEdit(null)} style={sBtn}>Cancel</button>
         </form>:null}
@@ -814,15 +813,15 @@ export default function App(){
 
       <main style={{maxWidth:760,margin:"0 auto"}}>
         {store==="loading"?<div style={box}>Opening the shelf{"…"}</div>
-        :store==="none"?<div style={box}>Your shelf lives with this page. Open it from its claude.ai link to see and add books.</div>
+        :store==="none"?<div style={box}>The shelf isn{"’"}t available in this viewer.</div>
         :store==="failed"?<div style={box}>The shelf didn{"’"}t open {"—"} the page{"’"}s store didn{"’"}t answer. Reload to try again.</div>
-        :!books.length?<div style={box}>No books yet. Make a theme with {"“"}+ Theme{"”"}, then Add book {"—"} by its ISBN, a link to its page, or a page you saved.</div>
-        :!shown.length?<div style={box}>{q?"No book "+(theme_?"under this theme":"on the shelf")+" has an ISBN with those digits.":"No books under this theme yet. Open a book and tick the theme, or add one."}</div>
+        :!books.length?<div style={box}>No books yet.</div>
+        :!shown.length?<div style={box}>{q?"No book "+(theme_?"under this theme":"on the shelf")+" has an ISBN with those digits.":"No books under this theme yet."}</div>
         :(
           <div className="ts-grid">
             {grid.map(b=>(
               <article key={b.isbn13} data-book={b.isbn13} className={"ts-card"+(drag&&drag.id===b.isbn13?" ghost":"")}
-                role="button" tabIndex={0} aria-label={b.title} title="Open, or drag to move"
+                role="button" tabIndex={0} aria-label={b.title}
                 onPointerDown={e=>onCardDown(e,b)} onClick={()=>onCardClick(b)}
                 onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setOpen(b.isbn13); } }}
                 onContextMenu={e=>{ if(press.current&&press.current.touch)e.preventDefault(); }}
@@ -874,7 +873,7 @@ function ConfirmBox({UI,box,close}){
 
 function ThemePicks({UI,themes,value,onChange}){
   const {C,chip}=UI;
-  if(!themes.length)return<div style={{fontSize:11.5,color:C.soft}}>No themes yet {"—"} the book goes under All. Make a theme with {"“"}+ Theme{"”"}.</div>;
+  if(!themes.length)return<div style={{fontSize:11.5,color:C.soft}}>No themes yet.</div>;
   return(
     <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
       {themes.map(t=>{ const on=value.includes(t.id); return(
@@ -896,18 +895,17 @@ function AddSheet({UI,a,set,themes,find,confirm,close}){
         <div style={{display:"flex",gap:5,justifyContent:"center"}}>{tab("isbn","ISBN")}{tab("link","Link")}{tab("page","Page")}</div>
         {a.tab==="isbn"?(
           <form style={{display:"flex",gap:5,flexWrap:"wrap"}} onSubmit={e=>{e.preventDefault();find("isbn");}}>
-            <input id="add-isbn" autoFocus inputMode="numeric" placeholder="ISBN, 10 or 13 digits" value={a.isbn} onChange={e=>set(x=>({...x,isbn:e.target.value}))} style={{...field(C),flex:"1 1 220px"}}/>
+            <input id="add-isbn" autoFocus inputMode="numeric" placeholder="ISBN" value={a.isbn} onChange={e=>set(x=>({...x,isbn:e.target.value}))} style={{...field(C),flex:"1 1 220px"}}/>
             <button type="submit" disabled={!!a.busy} style={{...pBtn,opacity:a.busy?0.5:1}}>Find</button>
           </form>
         ):a.tab==="link"?(
           <form style={{display:"flex",gap:5,flexWrap:"wrap"}} onSubmit={e=>{e.preventDefault();find("link");}}>
-            <input id="add-link" autoFocus placeholder={"https:// — a page for the book"} value={a.link} onChange={e=>set(x=>({...x,link:e.target.value}))} style={{...field(C),flex:"1 1 220px"}}/>
+            <input id="add-link" autoFocus placeholder="https://" value={a.link} onChange={e=>set(x=>({...x,link:e.target.value}))} style={{...field(C),flex:"1 1 220px"}}/>
             <button type="submit" disabled={!!a.busy} style={{...pBtn,opacity:a.busy?0.5:1}}>Find</button>
           </form>
         ):(
           <div>
             <input ref={fileRef} id="add-page" type="file" hidden accept=".mht,.mhtml,.html,.htm,multipart/related,message/rfc822,text/html" onChange={e=>{ const file=e.target.files&&e.target.files[0]; e.target.value=""; if(file)find("page",file); }}/>
-            <div style={{fontSize:11.5,color:C.soft,lineHeight:1.5,marginBottom:8}}>For a site that blocks reading, such as AbeBooks: open the book{"’"}s page, then Save Page As {"→"} {"“"}Webpage, Single File{"”"}. That kind of file brings the cover too.</div>
             <div style={{display:"flex",justifyContent:"flex-end"}}><button type="button" disabled={!!a.busy} onClick={()=>fileRef.current&&fileRef.current.click()} style={{...pBtn,opacity:a.busy?0.5:1}}>Choose saved page</button></div>
           </div>
         )}
@@ -930,7 +928,7 @@ function AddSheet({UI,a,set,themes,find,confirm,close}){
               <span style={{color:C.soft,fontVariantNumeric:"tabular-nums"}}>ISBN {fmtIsbn(f.isbn13)}</span>
               <span style={{fontWeight:600}}>{publishedLine(f.published)}</span>
               {f.source?<span style={{fontSize:11,color:C.soft}}>Read from {hostOf(f.source)}</span>:null}
-              {f.noCoverHint?<span style={{fontSize:11,color:C.soft}}>This file holds no pictures. Add a cover from the book{"’"}s panel, or save the page as {"“"}Webpage, Single File{"”"}.</span>:null}
+              {f.noCoverHint?<span style={{fontSize:11,color:C.soft}}>No cover in this file.</span>:null}
               {f.had?<span style={{fontSize:11,color:C.soft}}>Already on your shelf.</span>:null}
             </div>
           </div>
@@ -976,7 +974,7 @@ function BookSheet({UI,b,themes,close,put,setCover,dropCover,ask,remove}){
           <div style={{...label9(C),marginBottom:6}}>Cover</div>
           <div contentEditable suppressContentEditableWarning onPaste={onPaste} onKeyDown={e=>{ if(!(e.metaKey||e.ctrlKey))e.preventDefault(); }} onInput={e=>{e.currentTarget.textContent="";}} aria-label="Paste a cover here"
             style={{border:"1px dashed "+C.rule,borderRadius:4,background:C.card,padding:"8px 10px",fontSize:11.5,color:C.soft,minHeight:36,outline:"none",lineHeight:1.5}}>
-            Copy a cover picture on any website, click here, then paste. Or drop a picture file on this panel.
+            Paste a cover
           </div>
           <div style={{display:"flex",gap:10,alignItems:"center",marginTop:6}}>
             <button onClick={()=>fileRef.current&&fileRef.current.click()} style={sBtn}>Upload a picture</button>
