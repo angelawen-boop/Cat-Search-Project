@@ -38,6 +38,8 @@ is why they live in one repo, on one branch.
 - **Any question or challenge in her message means answer only (her decision).** If any part of a message
   holds a question or a challenge, do not write, edit or touch any code — answer the questions. A "yes" or
   "ok" elsewhere in the same message is not a go-ahead.
+- **No instruction lines on any page** — no how-to sentences, no text inside a box, no line telling her
+  what she already knows (her biggest peeve).
 - **Respect UI simplicity and specific UI instructions.** Build what she named, nothing added. "Add a copy icon" = an icon, not an icon plus the word "Copy". "Copy this line for case X and Y" = the same line with only the words naming X and Y swapped, never a new, longer line.
 - **Label a guess as exactly that** - say what is not proven and what would be settled by a check.
 - **Never hide a hard-coded answer.** If a fix writes the answer into the app (an address, a value, a
@@ -241,6 +243,12 @@ contemporary; labels at the edges differ between runs). Her rehearsal in the app
   (contemporary the likeliest), and does any always-quarantined show slip through? Narrow a group
   only if she says.
 
+#### 2.2.8 Theme Shelf — prototype 3 published, her review
+
+Art books by theme, an extension of Cat Watch on its own page while a prototype; code on
+`claude/theme-shelf`. Where it stands, her design and what is unproven: `docs/themes.md`.
+Read it before any Themes work.
+
 #### 2.2.6 Tests that failed — recorded, not investigated
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).
@@ -302,7 +310,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 | File | What is in it | Read it when |
 |---|---|---|
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
-| `docs/themes.md` | Themes — art books by theme, not exhibition: her design brief and decisions | She raises it, or work on Themes |
+| `docs/themes.md` | Themes — art books by theme: her brief and decisions, and the Theme Shelf prototype as built | Any Themes work |
 
 **Procedures** — how to do the recurring jobs
 
@@ -364,6 +372,8 @@ Each line came from a real failure. Details are in git history and `docs/`.
   shopless until a link was read). **Copy a fixture's reply shape from a live reply, never assume it**, and search
   for every copy of a rule before calling it fixed (the lookup kept its own "books need prices" check).
 - **A search is proved only by a page for that book alone** — a page that ignores the words (a home page, a fixed listing) shows the book too (Berlin, CEDON). Run a venue's whole chain live, not one step: Berlin's cut-short titles showed only then.
+- **A page that extends Cat Watch copies its controls one for one** — placement, wording, layout, pop-ups —
+  not just its colours; render both side by side before showing her (Theme Shelf drew its own look twice).
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose
@@ -625,5 +635,3 @@ Ideas not yet built — none is open work, and none is proposed unless she raise
   connector (`docs/app.md`).
 - **Library — purchase tracking and a Library tab** (`docs/library.md`): future consideration, never
   propose.
-- **Themes — a wishlist of art books by theme, not exhibition** (her design, `docs/themes.md`): kept
-  apart from the ledger; added by ISBN, link or saved page; the publication date as the out-of-print signal.
