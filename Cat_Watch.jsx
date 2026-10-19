@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "49";
+const APP_VERSION = "49.1";
 const APP_VERSION_DATE = "19 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -6006,8 +6006,8 @@ export default function App(){
   }
 
   // Save (her design; docs/app.md §2): the offline file AND, when ticked, the same file in
-  // Cloud Saves — same name and content. The cloud copy goes first, so a cancelled file
-  // cannot take it with it. Each half reports itself; a plain browser download never
+  // Cloud Saves — same name and content. The cloud copy is written while the file question
+  // is open, so a cancelled file cannot take it with it. Each half reports itself; a plain browser download never
   // clears the unsaved state. Never a click-triggered "Saved" tick.
   // SAVE ASKS BEFORE IT SHRINKS THE LEDGER: fewer exhibitions on screen than the
   // cloud copy or the newest Cloud Save holds (her ledger lost to an import onto an
@@ -6034,19 +6034,18 @@ export default function App(){
     }catch(e){ setSaveNote({ok:false,text:"NOT SAVED \u2014 the file couldn\u2019t be built: "+String(e?.message||e)}); return; }
     setSaveBusy(true);
     try{
-      // cloud: null = not asked for; true = kept; a string = why not
-      let cloud=null;
-      if(saveCloud&&!cloudReadOnly){
+      // cloud: null = not asked for; true = kept; a string = why not. Started, not
+      // awaited: the file question opens while the copy is written (her decision).
+      const cloudDone=(async()=>{
+        if(!saveCloud||cloudReadOnly)return null;
         const db=await useCap("db");
-        if(!db)cloud="this viewer can\u2019t reach the page\u2019s store";
-        else{
-          try{
-            await cloudTakeSnapshot(db,data,{label,kind:"manual",rows:rows.length,quarantined:ignored.length,filename,at});
-            cloud=true;
-            if(showSnaps)loadSnaps();
-          }catch(e){ cloud=cloudTrouble(e,"save"); }
-        }
-      }
+        if(!db)return "this viewer can\u2019t reach the page\u2019s store";
+        try{
+          await cloudTakeSnapshot(db,data,{label,kind:"manual",rows:rows.length,quarantined:ignored.length,filename,at});
+          if(showSnaps)loadSnaps();
+          return true;
+        }catch(e){ return cloudTrouble(e,"save"); }
+      })();
       // file: "saved" (the viewer confirmed), "browser" (started, cannot be
       // confirmed), or a string saying why it was not saved.
       // Both routes live in offerFile, shared with Cloud Saves' Download.
@@ -6058,6 +6057,7 @@ export default function App(){
           :"refused ("+String(e?.code||e?.message||e)+")";
         setDebug("Save: the file was not saved \u2014 "+String(e?.code||"")+" "+String(e?.message||e));
       }
+      const cloud=await cloudDone;
       const cloudBit=cloud===true?null:cloud===null?"":"Cloud copy NOT kept \u2014 "+cloud+".";
       let text,ok;
       if(file==="saved"){

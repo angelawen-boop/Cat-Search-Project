@@ -63,8 +63,9 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
   const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>',
     { pretendToBeVisual: true, url: 'https://claude.ai/' });
   const win = dom.window, doc = win.document;
-  const store = fakeStore({ failOnSet: () => breakStore });
+  const store = fakeStore({ failOnSet: () => breakStore, beforeSet: p => (p.startsWith('snapshots') ? holdSnaps : null) });
   let breakStore = false;
+  let holdSnaps = null;   // a promise: Cloud Save writes wait for it, as a slow store would
   const saved = [];
   let declineNext = false;   // the viewer says no to the next file
   win.claude = {
@@ -235,6 +236,19 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     click(button('Save now'));
     ok(await until(() => /Local file saved\. \(cat-watch-ledger-/.test(text()) && saved.length === 4), 'CA-008e: unticked, Save gives the file alone and says only "Local file saved."');
     ok(snapCount() === 4, 'CA-008f: and keeps no cloud copy');
+
+    // 8f2. The file question does not wait for the cloud copy (her decision): with the store
+    //      held back, the file is asked for first; the copy lands after, and the note says both.
+    if (!doc.querySelector('input[placeholder^="Description"]')) click(button('Save'));
+    await until(() => doc.querySelector('input[placeholder^="Description"]'));
+    const tick3 = doc.querySelector('input[type=checkbox]');
+    if (!tick3.checked) { click(tick3); await until(() => tick3.checked); }
+    let release; holdSnaps = new Promise(r => { release = r; });
+    click(button('Save now'));
+    ok(await until(() => saved.length === 5), 'CA-008f2: the file question opens while the cloud copy is still being written');
+    ok(snapCount() === 4, 'CA-008f3: at that moment no new cloud copy has landed', String(snapCount()));
+    release(); holdSnaps = null;
+    ok(await until(() => snapCount() === 5 && /Local file saved\. Extra copy also sent to the cloud\./.test(text())), 'CA-008f4: then the cloud copy lands, and the note says both halves');
 
     // 8g. Load asks nothing while the cloud is saving — the safety copy covers it.
     click(firstUnwatched()); await settle(200);

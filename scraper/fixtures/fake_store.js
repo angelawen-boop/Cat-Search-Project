@@ -2,11 +2,12 @@
  * A stand-in for the page's store, as the platform's db.d.ts describes it:
  * whole-document writes, 256 KiB per document, no transactions, collections
  * that are the documents one path level down. `failOnSet(n, path)` returning
- * true makes the nth write fail, as a dropped connection would.
+ * true makes the nth write fail, as a dropped connection would. `beforeSet(path)` may
+ * return a promise that holds a write back until it resolves, as a slow store would.
  * Used by cloud_ledger.js and cloud_app.js.
  */
 'use strict';
-function fakeStore({ failOnSet } = {}) {
+function fakeStore({ failOnSet, beforeSet } = {}) {
   const docs = new Map();
   let sets = 0;
   const parentOf = p => p.split('/').slice(0, -1).join('/');
@@ -16,6 +17,7 @@ function fakeStore({ failOnSet } = {}) {
       return {
         async get() { const d = docs.get(p); return { exists: !!d, data: () => d && JSON.parse(d) }; },
         async set(obj) {
+          if (beforeSet) await beforeSet(p);
           sets++;
           if (failOnSet && failOnSet(sets, p)) throw { code: 'unavailable', message: 'injected' };
           const s = JSON.stringify(obj);
