@@ -5,7 +5,7 @@ import React,{useState,useEffect,useMemo,useCallback,useRef} from "react";
 // and the four booksellers. Its own page with its own store, so Cat Watch's ledger is
 // never touched. What it shares with Cat Watch (ISBNs, the booksellers, saved pages, the
 // connector's messages) is copied in by `node build/sync_shelf.js`.
-const APP_VERSION="1";
+const APP_VERSION="2";
 const APP_DATE="19 Oct 2026";
 
 // ===== SHARED WITH CAT WATCH — written by `node build/sync_shelf.js`; never edit between these markers. Edit Cat_Watch.jsx, then run it. =====
@@ -141,6 +141,28 @@ function lastJsonObject(text){
   }
   return null;
 }
+const PALETTES={
+  light:{bg:"#E8E4DE",card:"#F5F2ED",ink:"#1E1B18",soft:"#78736C",rule:"#CBC5BB",
+         action:"#2D4A3F",accent:"#A13823",owned:"#7B5EA7",muted:"#B5AFA6",
+         drawer:"#DDD8D0",body:"#3D3730",dim:"#ECEAE6",panel:"#ECE8E1",
+         warnBg:"#F7E4C4",warnEdge:"#B5791A",warnInk:"#6B4A1E",
+         okBg:"#D8EAE4",okEdge:"#2D6B5A",okInk:"#1F4C40",
+         holdBg:"#E8E2D6",ownedBg:"#EDE5F5",
+         rejectInk:"#8A6D3B",neverInk:"#7A4A4A",star:"#B8860B",buyNext:"#C0281E",onAction:"#fff",
+         scrim:"rgba(20,18,16,0.45)"},
+  dark: {bg:"#1A1815",card:"#232019",ink:"#EDE8E0",soft:"#A8A29A",rule:"#3A352E",
+         action:"#5E9E85",accent:"#E2735A",owned:"#B79BE0",muted:"#6A645C",
+         drawer:"#2A2620",body:"#D6D0C6",dim:"#201D18",panel:"#262219",
+         warnBg:"#3A2E14",warnEdge:"#C79A3E",warnInk:"#F0D9A4",
+         okBg:"#16302A",okEdge:"#4E9B80",okInk:"#A6DCC6",
+         holdBg:"#32291C",ownedBg:"#2B2136",
+         rejectInk:"#D6B87A",neverInk:"#E0A3A3",star:"#E0B45C",buyNext:"#F0705F",onAction:"#12100E",
+         scrim:"rgba(0,0,0,0.6)"},
+};
+const linkButton=C=>({fontSize:11,fontWeight:500,color:C.ink,background:C.card,border:"1px solid "+C.rule,borderRadius:3,padding:"4px 9px",textDecoration:"none",display:"inline-block",whiteSpace:"nowrap"});
+const MON3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function fmtRefresh(iso){if(!iso)return"never";const d=new Date(iso);if(isNaN(d))return"never";const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
+function relTime(iso){if(!iso)return null;const d=new Date(iso);if(isNaN(d))return null;const s=Math.max(0,Math.floor((Date.now()-d.getTime())/1000));if(s<60)return"just now";const m=Math.floor(s/60);if(m<60)return m+" minute"+(m===1?"":"s")+" ago";const h=Math.floor(m/60);if(h<24)return h+" hour"+(h===1?"":"s")+" ago";const day=Math.floor(h/24);return day+" day"+(day===1?"":"s")+" ago";}
 // ===== END SHARED =====
 
 // ── THE CONNECTOR AND CLAUDE ────────────────────────────────────────────────
@@ -352,7 +374,6 @@ async function shrinkImage(blob){
 
 // ── HOW OLD A BOOK IS ───────────────────────────────────────────────────────
 // Her out-of-print signal: the publication date, and its age in whole years.
-const MON3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 function publishedLine(p,now){
   const m=String(p||"").match(/^(\d{4})(?:-(\d{2}))?/);
   if(!m)return"Publication date unknown";
@@ -394,80 +415,53 @@ const coverSrc=b=>b&&b.cover?"/_blob/"+b.cover:null;
 const newId=()=>"t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const hostOf=u=>{ try{ return new URL(u).hostname.replace(/^www\./,""); }catch{ return""; } };
 
+
+// ── THE LOOK ────────────────────────────────────────────────────────────────
+// Cat Watch's look throughout (her decision: the shelf is an extension of the app, on
+// its own page only while it is a prototype). Palettes and link buttons are copied in
+// above; the header, buttons, chip rows, pop-ups and footer follow Cat_Watch.jsx.
+// Only what inline styles cannot say lives here: the grid's columns and the drag.
 const CSS=`
-.ts{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.ts *{box-sizing:border-box}
-.ts-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px;margin-bottom:18px}
-.ts-title{font-family:var(--display);font-weight:500;font-style:italic;font-size:2.2rem;line-height:1;margin:0;letter-spacing:.005em;text-wrap:balance}
-.ts-sub{color:var(--muted);font-size:.86rem;margin:6px 0 0}
-.ts-btn{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:7px 14px;cursor:pointer}
-.ts-btn:hover{border-color:var(--muted)}
-.ts-btn:focus-visible,.ts-chip:focus-visible,.ts-card:focus-visible,.ts-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.ts-btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-.ts-btn:disabled{opacity:.5;cursor:default}
-.ts-link{font:inherit;background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
-.ts-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
-.ts-chip{font:inherit;font-size:.88rem;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;display:inline-flex;gap:6px;align-items:baseline}
-.ts-chip .n{color:var(--muted);font-size:.78rem;font-variant-numeric:tabular-nums}
-.ts-chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--ground)}
-.ts-chip[aria-pressed="true"] .n{color:var(--ground);opacity:.75}
-.ts-tools{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:4px 0 22px;font-size:.86rem;color:var(--muted)}
-.ts-input{font:inherit;font-size:.92rem;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:8px 10px;min-width:0}
-.ts-input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.ts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:28px 20px;align-items:start}
-.ts-card{display:flex;flex-direction:column;gap:8px;min-width:0;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab;border-radius:6px}
+.ts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(200px,calc(50% - 6px)),1fr));gap:12px;align-items:start}
+.ts-card{touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab}
 .ts-card.ghost{opacity:.25}
-.ts-cover{width:100%;max-width:100%;aspect-ratio:2/3;border-radius:3px;overflow:hidden;background:var(--paper);box-shadow:0 1px 2px var(--shadow),0 6px 16px var(--shadow);display:flex}
-.ts-cover img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
-.ts-plain{flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;margin:8px;padding:12px;border:1px solid var(--line);text-align:center}
-.ts-plain b{font-family:var(--display);font-style:italic;font-weight:500;font-size:1.06rem;line-height:1.15;color:var(--ink);overflow:hidden;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical}
-.ts-plain span{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.ts-meta{display:flex;flex-direction:column;gap:2px;min-width:0;font-size:.8rem;color:var(--muted)}
-.ts-meta .t{font-size:.9rem;color:var(--ink);font-weight:600;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.ts-meta .isbn{font-variant-numeric:tabular-nums}
-.ts-meta .age{color:var(--ink)}
-.ts-shops{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:.78rem;margin-top:2px}
-.ts-shops a{color:var(--accent);text-decoration:none}
-.ts-shops a:hover{text-decoration:underline}
-.ts-float{position:fixed;left:0;top:0;width:150px;pointer-events:none;z-index:50;transform-origin:20% 20%;opacity:.95}
-.ts-empty{border:1px dashed var(--line);border-radius:10px;padding:28px 20px;color:var(--muted);text-align:center;max-width:560px;margin:20px auto}
-.ts-empty b{color:var(--ink);font-family:var(--display);font-style:italic;font-weight:500;font-size:1.3rem;display:block;margin-bottom:6px}
-.ts-scrim{position:fixed;inset:0;background:var(--scrim);z-index:40;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(24px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 24px max(12px,env(safe-area-inset-left,0px))}
-.ts-sheet{background:var(--ground);color:var(--ink);border-radius:12px;width:100%;max-width:620px;padding:20px;box-shadow:0 12px 40px var(--shadow);display:flex;flex-direction:column;gap:14px}
-.ts-sheet h2{font-family:var(--display);font-style:italic;font-weight:500;font-size:1.6rem;margin:0;line-height:1.15;text-wrap:balance}
-.ts-tabs{display:flex;gap:6px}
-.ts-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.ts-row .ts-input{flex:1 1 220px}
-.ts-note{font-size:.84rem;color:var(--muted);margin:0}
-.ts-err{font-size:.88rem;color:var(--ink);background:var(--warn);border-radius:8px;padding:8px 10px;margin:0}
-.ts-detail{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);gap:18px}
-@media (max-width:480px){.ts-detail{grid-template-columns:minmax(0,1fr)}.ts-detail .ts-cover{max-width:200px}.ts-title{font-size:1.8rem}}
-.ts-facts{display:flex;flex-direction:column;gap:6px;font-size:.9rem;min-width:0}
-.ts-facts .k{color:var(--muted);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase}
-.ts-paste{border:1px dashed var(--line);border-radius:8px;padding:10px;font-size:.84rem;color:var(--muted);min-height:40px;outline:none}
-.ts-paste:focus{border-color:var(--accent);color:var(--ink)}
-.ts-foot{margin-top:40px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:.8rem;color:var(--muted)}
+.ts-card:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.ts-float{position:fixed;left:0;top:0;width:150px;pointer-events:none;z-index:1300;transform-origin:20% 20%;opacity:.95}
 @media (prefers-reduced-motion:no-preference){.ts-card{transition:transform .12s ease}}
 `;
+const SERIF="'Fraunces',Georgia,serif";
+// The shelf's one difference from Cat Watch (her decision): its rose, in place of Cat
+// Watch's accent and action colours, so the two pages tell themselves apart.
+const ROSE={light:{accent:"#8A4559",action:"#8A4559",onAction:"#fff"},dark:{accent:"#D99AAE",action:"#D99AAE",onAction:"#1A1013"}};
+const label9=C=>({fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2});
+const field=C=>({padding:"7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box",minWidth:0});
+const textBtn=C=>({background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0,fontFamily:"inherit"});
+const warnBox=C=>({marginTop:8,padding:"7px 11px",background:C.warnBg,border:"1px solid "+C.warnEdge,borderRadius:4,fontSize:11.5,color:C.warnInk,lineHeight:1.45});
+const dialogOuter=C=>({position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",justifyContent:"center",padding:16});
+const dialogInner=C=>({background:C.bg,borderRadius:8,maxWidth:620,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",gap:12,maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 14px",boxSizing:"border-box"});
 
-function Cover({book,big}){
+function Cover({book,C,big}){
   const src=coverSrc(book);
   const [bad,setBad]=useState(false);
   useEffect(()=>setBad(false),[src]);
   return(
-    <div className="ts-cover" style={big?{maxWidth:180}:null}>
+    <div style={{width:"100%",maxWidth:big?160:"100%",aspectRatio:"2 / 3",background:C.panel,display:"flex",overflow:"hidden",flexShrink:0,borderRadius:big?3:0}}>
       {src&&!bad
-        ?<img src={src} alt={"Cover of "+book.title} onError={()=>setBad(true)} draggable={false}/>
-        :<div className="ts-plain"><b>{book.title}</b>{book.publisher?<span>{book.publisher}</span>:null}</div>}
+        ?<img src={src} alt={"Cover of "+book.title} onError={()=>setBad(true)} draggable={false} style={{width:"100%",height:"100%",objectFit:"cover",display:"block",pointerEvents:"none"}}/>
+        :<div style={{flex:1,margin:8,padding:10,border:"1px solid "+C.rule,display:"flex",flexDirection:"column",justifyContent:"center",gap:8,textAlign:"center"}}>
+          <span style={{fontFamily:SERIF,fontSize:big?15:16,fontWeight:500,lineHeight:1.2,color:C.ink,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:6,WebkitBoxOrient:"vertical"}}>{book.title}</span>
+          {book.publisher?<span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft}}>{book.publisher}</span>:null}
+        </div>}
     </div>
   );
 }
 
-function Shops({book}){
+function Shops({book,C}){
+  const lnk=linkButton(C);
   return(
-    <div className="ts-shops">
+    <div className="ts-shops" style={{display:"flex",flexWrap:"wrap",gap:5}}>
       {resellerLinks(book.isbn13,book.title).map(l=>(
-        <a key={l.name} href={l.href} target="_blank" rel="noopener noreferrer" onPointerDown={e=>e.stopPropagation()}>{l.name}</a>
+        <a key={l.name} href={l.href} target="_blank" rel="noopener noreferrer" style={lnk} onPointerDown={e=>e.stopPropagation()}>{l.name} {"↗"}</a>
       ))}
     </div>
   );
@@ -479,13 +473,41 @@ export default function App(){
   const [store,setStore]=useState("loading"); // loading | ready | none | failed
   const [view,setView]=useState("all");
   const [q,setQ]=useState("");
+  const [showFind,setShowFind]=useState(false);
   const [msg,setMsg]=useState("");
   const [adding,setAdding]=useState(null);
   const [open,setOpen]=useState(null);
-  const [themeEdit,setThemeEdit]=useState(null); // {mode:"new"|"rename"|"delete", name}
+  const [themeEdit,setThemeEdit]=useState(null); // {mode:"new"|"rename", name}
+  const [confirmBox,setConfirmBox]=useState(null); // {title, text, yes, act} — Cat Watch's confirm box
   const [drag,setDrag]=useState(null);           // {id, x, y, to}
   const [loadFile,setLoadFile]=useState(null);
+  // The cloud line: every change is written to the page's store as it is made (her
+  // decision: cloud save only for now). idle | saving | saved | failed.
+  const [saveState,setSaveState]=useState("idle");
+  const [saveErr,setSaveErr]=useState("");
+  const [lastSavedAt,setLastSavedAt]=useState(null);
   const dbRef=useRef(null);
+  const findRef=useRef(null);
+
+  // Light or dark, as Cat Watch does it: remembered on this device, first visit follows the machine.
+  const [theme,setTheme]=useState(()=>{
+    try{ const v=localStorage.getItem("cw-theme"); if(v==="dark"||v==="light")return v; }catch{}
+    try{ if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)return "dark"; }catch{}
+    return "light";
+  });
+  const toggleTheme=()=>setTheme(t=>{ const n=t==="dark"?"light":"dark"; try{ localStorage.setItem("cw-theme",n); }catch{} return n; });
+  useEffect(()=>{
+    try{
+      const d=document.documentElement;
+      d.setAttribute("data-theme",theme); d.style.colorScheme=theme;
+      document.body.style.background=PALETTES[theme].bg; document.body.style.color=PALETTES[theme].ink;
+    }catch{}
+  },[theme]);
+  const C={...PALETTES[theme],...ROSE[theme]};
+  const chip=on=>({padding:"4px 10px",borderRadius:999,border:"1px solid "+(on?C.ink:C.rule),background:on?C.ink:"transparent",color:on?C.onAction:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"inherit"});
+  const sBtn={padding:"5px 12px",borderRadius:4,border:"1px solid "+C.rule,background:"transparent",color:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",fontFamily:"inherit"};
+  const pBtn={...sBtn,background:C.action,color:C.onAction,border:"none"};
+  const UI={C,chip,sBtn,pBtn};
 
   useEffect(()=>{
     let gone=false;
@@ -505,25 +527,28 @@ export default function App(){
     return()=>{gone=true;};
   },[]);
 
+  // One write to the store, reported on the cloud line.
+  const saving=useCallback(async(what,job)=>{
+    setSaveState("saving");
+    try{ await job(); setSaveState("saved"); setLastSavedAt(new Date().toISOString()); setSaveErr(""); return true; }
+    catch(e){ setSaveState("failed"); setSaveErr("couldn’t save "+what+" ("+String((e&&e.code)||(e&&e.message)||"unknown")+")."); return false; }
+  },[]);
   const writeBook=useCallback(async b=>{
     const db=dbRef.current; if(!db)return false;
-    try{ await db.doc(BOOKS+"/"+b.isbn13).set(bookDoc(b)); return true; }
-    catch{ setMsg("Couldn’t save “"+b.title+"” to the shelf. Reload and try again."); return false; }
-  },[]);
+    return saving("“"+b.title+"”",()=>db.doc(BOOKS+"/"+b.isbn13).set(bookDoc(b)));
+  },[saving]);
   const putBook=useCallback(async b=>{
     setBooks(list=>{ const rest=list.filter(x=>x.isbn13!==b.isbn13); return[...rest,b]; });
     return writeBook(b);
   },[writeBook]);
   const writeTheme=useCallback(async t=>{
     const db=dbRef.current; if(!db)return false;
-    try{ await db.doc(THEMES+"/"+t.id).set({name:t.name,order:t.order}); return true; }
-    catch{ setMsg("Couldn’t save the theme. Reload and try again."); return false; }
-  },[]);
+    return saving("the theme “"+t.name+"”",()=>db.doc(THEMES+"/"+t.id).set({name:t.name,order:t.order}));
+  },[saving]);
 
   const sorted=useMemo(()=>books.slice().sort(byOrder),[books]);
   const shown=useMemo(()=>sorted.filter(b=>(view==="all"||b.themes.includes(view))&&isbnMatches(b,q)),[sorted,view,q]);
-  const counts=useMemo(()=>{ const c={}; for(const b of books)for(const t of b.themes)c[t]=(c[t]||0)+1; return c; },[books]);
-  const theme=themes.find(t=>t.id===view)||null;
+  const theme_=themes.find(t=>t.id===view)||null;
   useEffect(()=>{ if(view!=="all"&&!themes.some(t=>t.id===view))setView("all"); },[themes,view]);
 
   // ── DRAG TO REARRANGE ──────────────────────────────────────────────────
@@ -597,24 +622,22 @@ export default function App(){
   const dragBook=drag?books.find(b=>b.isbn13===drag.id):null;
 
   // ── THEMES ─────────────────────────────────────────────────────────────
+  async function deleteTheme(t){
+    const db=dbRef.current;
+    setThemes(ts=>ts.filter(x=>x.id!==t.id)); setView("all"); setThemeEdit(null);
+    for(const b of books.filter(x=>x.themes.includes(t.id)))await putBook({...b,themes:b.themes.filter(x=>x!==t.id)});
+    if(db)await saving("the theme’s removal",()=>db.doc(THEMES+"/"+t.id).delete());
+  }
   async function saveThemeEdit(){
     const te=themeEdit; if(!te)return;
     const name=String(te.name||"").replace(/\s+/g," ").trim();
-    if(te.mode==="delete"){
-      const id=theme.id;
-      const db=dbRef.current;
-      setThemes(ts=>ts.filter(t=>t.id!==id)); setView("all"); setThemeEdit(null);
-      for(const b of books.filter(x=>x.themes.includes(id)))await putBook({...b,themes:b.themes.filter(t=>t!==id)});
-      try{ if(db)await db.doc(THEMES+"/"+id).delete(); }catch{ setMsg("Couldn’t delete the theme. Reload and try again."); }
-      return;
-    }
     if(!name)return;
-    if(themes.some(t=>t.name.toLowerCase()===name.toLowerCase()&&(te.mode==="new"||t.id!==theme.id))){ setMsg("There is already a theme called “"+name+"”."); return; }
+    if(themes.some(t=>t.name.toLowerCase()===name.toLowerCase()&&(te.mode==="new"||t.id!==theme_.id))){ setMsg("There is already a theme called “"+name+"”."); return; }
     if(te.mode==="new"){
       const t={id:newId(),name,order:themes.length?Math.max(...themes.map(x=>x.order))+1:0};
       setThemes(ts=>[...ts,t]); setView(t.id); setThemeEdit(null); await writeTheme(t);
     }else{
-      const t={...theme,name}; setThemes(ts=>ts.map(x=>x.id===t.id?t:x)); setThemeEdit(null); await writeTheme(t);
+      const t={...theme_,name}; setThemes(ts=>ts.map(x=>x.id===t.id?t:x)); setThemeEdit(null); await writeTheme(t);
     }
   }
 
@@ -685,11 +708,14 @@ export default function App(){
   async function removeBook(b){
     setOpen(null);
     setBooks(list=>list.filter(x=>x.isbn13!==b.isbn13));
-    try{ const db=dbRef.current; if(db)await db.doc(BOOKS+"/"+b.isbn13).delete(); }catch{ setMsg("Couldn’t remove it from the store. Reload and try again."); }
+    const db=dbRef.current;
+    if(db)await saving("the removal of “"+b.title+"”",()=>db.doc(BOOKS+"/"+b.isbn13).delete());
     if(b.cover){ try{ const assets=await useCap("assets"); if(assets)await assets.delete(b.cover); }catch{} }
   }
 
-  // ── EXPORT AND LOAD ────────────────────────────────────────────────────
+  // ── EXPORT AND LOAD — not offered for now ──────────────────────────────
+  // Cloud save only for now (her decision), so no button reaches these; kept for when a
+  // file backup comes back.
   async function exportShelf(){
     const dl=await useCap("downloads");
     if(!dl){ setMsg("Export works only from the page’s claude.ai link."); return; }
@@ -714,177 +740,212 @@ export default function App(){
       setMsg("Loaded "+f.books.length+" books from "+f.name+".");
     }catch{ setMsg("Loading stopped part-way. Reload the page and load the file again."); }
   }
+  void exportShelf; void pickLoad; void confirmLoad;
 
   const openBook=open?books.find(b=>b.isbn13===open):null;
-  const loadRef=useRef(null);
+  const ready=store==="ready";
+  const box={background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:18,fontSize:12.5,color:C.soft,lineHeight:1.5};
 
   return(
-    <div className="ts">
+    <div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.ink,minHeight:"100vh",padding:"20px 16px 60px"}}>
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
       <style>{CSS}</style>
-      <header className="ts-head">
-        <div>
-          <h1 className="ts-title">Theme Shelf</h1>
-          <p className="ts-sub">Art books gathered by theme. Drag a cover to rearrange.</p>
+      <header style={{maxWidth:760,margin:"0 auto 14px"}}>
+        <div style={{fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.soft,marginBottom:4}}>Art books · by theme</div>
+        <h1 style={{fontFamily:SERIF,fontSize:36,lineHeight:1,fontWeight:500,margin:0,letterSpacing:"-0.02em"}}>Theme<span style={{color:C.accent}}> shelf</span></h1>
+        <div style={{marginTop:14,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
+          {/* Cat Watch's row: the comfort control, then the way in (where Import sits). */}
+          <button onClick={toggleTheme} title={theme==="dark"?"Switch to light":"Switch to dark"}
+            style={{...sBtn,marginLeft:"auto",padding:"5px 9px"}}>{theme==="dark"?"☀ Light":"☽ Dark"}</button>
+          <button onClick={startAdd} disabled={!ready} style={{...pBtn,opacity:ready?1:0.4,cursor:ready?"pointer":"not-allowed"}}>Add book</button>
         </div>
-        <button className="ts-btn primary" onClick={startAdd} disabled={store!=="ready"}>Add book</button>
+        {/* The cloud line, as Cat Watch's: green while saving works, the banner when it stops. */}
+        {saveState==="failed"?
+          <div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
+            <span style={{fontSize:17,lineHeight:1.1}}>{"☁"}</span>
+            <span>{"CLOUD COPY NOT SAVING — "+saveErr+(lastSavedAt?" Last cloud save: "+fmtRefresh(lastSavedAt)+" ("+relTime(lastSavedAt)+").":"")+" Reload the page and try again."}</span>
+          </div>
+        :<div style={{marginTop:6,fontSize:11,color:store==="ready"?C.okEdge:C.soft,fontWeight:600}}>
+          {"☁ "}{
+            store==="loading"?"Opening the shelf…"
+            :store==="none"?"The shelf lives with this page — open it from its claude.ai link."
+            :store==="failed"?"The cloud copy didn’t answer. Reload to try again."
+            :saveState==="saving"?"Saving to the cloud…"
+            :lastSavedAt?"Last cloud save: "+fmtRefresh(lastSavedAt)+" ("+relTime(lastSavedAt)+") · every change is saved"
+            :"Saved in the cloud · every change is saved as you make it"
+          }
+        </div>}
+        {msg?<div style={{...warnBox(C),display:"flex",gap:8,alignItems:"baseline"}} role="status">
+          <span style={{flex:1}}>{msg}</span>
+          <button onClick={()=>setMsg("")} title="Dismiss" aria-label="Dismiss" style={{background:"none",border:"none",color:C.warnInk,fontSize:14,lineHeight:1,cursor:"pointer",padding:0}}>{"×"}</button>
+        </div>:null}
+
+        <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",alignItems:"center"}}>
+          <span><b style={{color:C.ink}}>{books.length}</b> Books</span>
+          <span><b style={{color:C.ink}}>{themes.length}</b> Themes</span>
+          {books.length>1?<span>Drag a cover to move it</span>:null}
+          <button onClick={()=>{ if(showFind)setQ(""); setShowFind(v=>!v); setTimeout(()=>findRef.current&&findRef.current.focus(),100); }} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Find by ISBN" aria-label="Find by ISBN">{"🔍"}</button>
+        </div>
+        {showFind?<div style={{marginTop:6,position:"relative"}}>
+          <input ref={findRef} id="isbn-find" inputMode="numeric" value={q} onChange={e=>setQ(e.target.value)} placeholder={"Find by ISBN…"} style={{...field(C),width:"100%",paddingRight:30}}/>
+          {q?<button onClick={()=>{ setQ(""); if(findRef.current)findRef.current.focus(); }} aria-label="Clear search" title="Clear"
+            style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:C.soft,fontSize:16,lineHeight:1,cursor:"pointer",padding:"2px 4px"}}>{"×"}</button>:null}
+        </div>:null}
+
+        {ready?<div style={{marginTop:12,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
+          <span style={label9(C)}>Theme</span>
+          <button style={chip(view==="all")} aria-pressed={view==="all"} onClick={()=>{setView("all");setThemeEdit(null);}}>All</button>
+          {themes.map(t=>(
+            <button key={t.id} style={chip(view===t.id)} aria-pressed={view===t.id} onClick={()=>{setView(t.id);setThemeEdit(null);}}>{t.name}</button>
+          ))}
+          <button style={chip(false)} onClick={()=>setThemeEdit({mode:"new",name:""})}>+ Theme</button>
+          {theme_&&!themeEdit?<span style={{display:"inline-flex",gap:12,marginLeft:6}}>
+            <button style={textBtn(C)} onClick={()=>setThemeEdit({mode:"rename",name:theme_.name})}>Rename</button>
+            <button style={textBtn(C)} onClick={()=>setConfirmBox({title:"Delete “"+theme_.name+"”?",text:"Its books stay on the shelf.",yes:"Delete theme",act:()=>deleteTheme(theme_)})}>Delete</button>
+          </span>:null}
+        </div>:null}
+        {/* Cat Watch's panel under a button (its Save panel): a field, the action, Cancel. */}
+        {themeEdit?<form onSubmit={e=>{e.preventDefault();saveThemeEdit();}} style={{marginTop:8,padding:"10px 12px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+          <input id="theme-name" autoFocus maxLength={60} placeholder={"Theme name — e.g. Fashion in art"} value={themeEdit.name} onChange={e=>setThemeEdit({...themeEdit,name:e.target.value})} style={{...field(C),flex:"1 1 220px",padding:"5px 8px"}}/>
+          <button type="submit" style={pBtn}>{themeEdit.mode==="new"?"Add theme":"Rename"}</button>
+          <button type="button" onClick={()=>setThemeEdit(null)} style={sBtn}>Cancel</button>
+        </form>:null}
       </header>
 
-      <nav className="ts-bar" aria-label="Themes">
-        <button className="ts-chip" aria-pressed={view==="all"} onClick={()=>{setView("all");setThemeEdit(null);}}>All <span className="n">{books.length}</span></button>
-        {themes.map(t=>(
-          <button key={t.id} className="ts-chip" aria-pressed={view===t.id} onClick={()=>{setView(t.id);setThemeEdit(null);}}>{t.name} <span className="n">{counts[t.id]||0}</span></button>
-        ))}
-        {store==="ready"?<button className="ts-chip" onClick={()=>setThemeEdit({mode:"new",name:""})}>+ Theme</button>:null}
-      </nav>
+      <main style={{maxWidth:760,margin:"0 auto"}}>
+        {store==="loading"?<div style={box}>Opening the shelf{"…"}</div>
+        :store==="none"?<div style={box}>Your shelf lives with this page. Open it from its claude.ai link to see and add books.</div>
+        :store==="failed"?<div style={box}>The shelf didn{"’"}t open {"—"} the page{"’"}s store didn{"’"}t answer. Reload to try again.</div>
+        :!books.length?<div style={box}>No books yet. Make a theme with {"“"}+ Theme{"”"}, then Add book {"—"} by its ISBN, a link to its page, or a page you saved.</div>
+        :!shown.length?<div style={box}>{q?"No book "+(theme_?"under this theme":"on the shelf")+" has an ISBN with those digits.":"No books under this theme yet. Open a book and tick the theme, or add one."}</div>
+        :(
+          <div className="ts-grid">
+            {grid.map(b=>(
+              <article key={b.isbn13} data-book={b.isbn13} className={"ts-card"+(drag&&drag.id===b.isbn13?" ghost":"")}
+                role="button" tabIndex={0} aria-label={b.title} title="Open, or drag to move"
+                onPointerDown={e=>onCardDown(e,b)} onClick={()=>onCardClick(b)}
+                onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setOpen(b.isbn13); } }}
+                onContextMenu={e=>{ if(press.current&&press.current.touch)e.preventDefault(); }}
+                style={{background:C.card,border:"1px solid "+C.rule,borderRadius:5,overflow:"hidden",display:"flex",flexDirection:"column",minWidth:0,color:C.ink}}>
+                <Cover book={b} C={C}/>
+                <div style={{padding:"10px 12px 12px",display:"flex",flexDirection:"column",gap:2,minWidth:0}}>
+                  <h3 style={{fontFamily:SERIF,fontSize:15,lineHeight:1.25,fontWeight:500,margin:0,letterSpacing:"-0.01em",overflow:"hidden",display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical"}}>{b.title}</h3>
+                  {b.publisher?<span style={{fontSize:11,color:C.soft,marginTop:2}}>{b.publisher}</span>:null}
+                  <span style={{fontSize:11,color:C.soft,fontVariantNumeric:"tabular-nums"}}>ISBN {fmtIsbn(b.isbn13)}</span>
+                  <span style={{fontSize:11,color:C.ink,fontWeight:600,marginBottom:8}}>{publishedLine(b.published)}</span>
+                  <Shops book={b} C={C}/>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </main>
+      {dragBook&&drag?<div className="ts-float" style={{transform:"translate("+(drag.x-30)+"px,"+(drag.y-40)+"px) rotate(-2deg) scale(1.04)",boxShadow:"0 6px 24px rgba(0,0,0,0.25)"}}><Cover book={dragBook} C={C}/></div>:null}
 
-      {themeEdit&&themeEdit.mode!=="delete"?(
-        <form className="ts-row" style={{marginBottom:10}} onSubmit={e=>{e.preventDefault();saveThemeEdit();}}>
-          <input id="theme-name" className="ts-input" autoFocus placeholder="Theme name, e.g. Fashion in art" value={themeEdit.name} onChange={e=>setThemeEdit({...themeEdit,name:e.target.value})} style={{maxWidth:360}}/>
-          <button className="ts-btn primary" type="submit">{themeEdit.mode==="new"?"Add theme":"Rename"}</button>
-          <button className="ts-btn" type="button" onClick={()=>setThemeEdit(null)}>Cancel</button>
-        </form>
-      ):null}
-      {themeEdit&&themeEdit.mode==="delete"&&theme?(
-        <div className="ts-row" style={{marginBottom:10}}>
-          <span>Delete “{theme.name}”? Its books stay on the shelf.</span>
-          <button className="ts-btn primary" onClick={saveThemeEdit}>Delete theme</button>
-          <button className="ts-btn" onClick={()=>setThemeEdit(null)}>Cancel</button>
-        </div>
-      ):null}
-
-      <div className="ts-tools">
-        <label htmlFor="isbn-find">Find by ISBN</label>
-        <input id="isbn-find" className="ts-input" inputMode="numeric" placeholder="978…" value={q} onChange={e=>setQ(e.target.value)} style={{width:180}}/>
-        {theme&&!themeEdit?<span className="ts-row" style={{gap:14}}>
-          <button className="ts-link" onClick={()=>setThemeEdit({mode:"rename",name:theme.name})}>Rename theme</button>
-          <button className="ts-link" onClick={()=>setThemeEdit({mode:"delete"})}>Delete theme</button>
-        </span>:null}
-      </div>
-
-      {msg?<p className="ts-err" role="status" style={{marginBottom:16}}>{msg} <button className="ts-link" onClick={()=>setMsg("")}>Dismiss</button></p>:null}
-
-      {store==="loading"?<div className="ts-empty">Opening your shelf…</div>
-      :store==="none"?<div className="ts-empty"><b>Your shelf lives with this page</b>Open Theme Shelf from its claude.ai link to see and add books.</div>
-      :store==="failed"?<div className="ts-empty"><b>The shelf didn’t open</b>The page’s store didn’t answer. Reload to try again.</div>
-      :!books.length?<div className="ts-empty"><b>No books yet</b>Make a theme with “+ Theme”, then add a book by its ISBN, a link to its page, or a page you saved.</div>
-      :!shown.length?<div className="ts-empty">{q?"No book on "+(theme?"this theme":"the shelf")+" has an ISBN with those digits.":"No books under this theme yet. Open a book and tick the theme, or add one."}</div>
-      :(
-        <div className="ts-grid">
-          {grid.map(b=>(
-            <div key={b.isbn13} data-book={b.isbn13} className={"ts-card"+(drag&&drag.id===b.isbn13?" ghost":"")}
-              role="button" tabIndex={0} aria-label={b.title}
-              onPointerDown={e=>onCardDown(e,b)} onClick={()=>onCardClick(b)}
-              onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setOpen(b.isbn13); } }}
-              onContextMenu={e=>{ if(press.current&&press.current.touch)e.preventDefault(); }}>
-              <Cover book={b}/>
-              <div className="ts-meta">
-                <span className="t">{b.title}</span>
-                {b.publisher?<span>{b.publisher}</span>:null}
-                <span className="isbn">ISBN {fmtIsbn(b.isbn13)}</span>
-                <span className="age">{publishedLine(b.published)}</span>
-                <Shops book={b}/>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      {dragBook&&drag?<div className="ts-float" style={{transform:"translate("+(drag.x-30)+"px,"+(drag.y-40)+"px) rotate(-2deg) scale(1.04)"}}><Cover book={dragBook}/></div>:null}
-
-      <footer className="ts-foot">
-        <button className="ts-link" onClick={exportShelf} disabled={store!=="ready"}>Export</button>
-        <button className="ts-link" onClick={()=>loadRef.current&&loadRef.current.click()} disabled={store!=="ready"}>Load</button>
-        <input ref={loadRef} id="load-file" type="file" accept=".json,application/json" hidden onChange={pickLoad}/>
-        <span>Theme Shelf prototype {APP_VERSION} · {APP_DATE}</span>
+      {/* The version, small and grey, as Cat Watch's footer. */}
+      <footer style={{maxWidth:760,margin:"28px auto 0",fontSize:10.5,color:C.soft,textAlign:"center"}}>
+        Theme Shelf prototype {"·"} version {APP_VERSION} {"·"} {APP_DATE}
       </footer>
 
-      {loadFile?(
-        <div className="ts-scrim" onClick={()=>setLoadFile(null)}>
-          <div className="ts-sheet" onClick={e=>e.stopPropagation()}>
-            <h2>Load {loadFile.name}?</h2>
-            <p className="ts-note">The shelf becomes the file’s {loadFile.books.length} books and {loadFile.themes.length} themes. The {books.length} books on the shelf now are replaced. Export first if you want to keep them.</p>
-            <div className="ts-row"><button className="ts-btn primary" onClick={confirmLoad}>Load</button><button className="ts-btn" onClick={()=>setLoadFile(null)}>Cancel</button></div>
-          </div>
-        </div>
-      ):null}
-
-      {adding?<AddSheet a={adding} set={setAdding} themes={themes} find={find} confirm={confirmAdd} close={()=>{run.current++;setAdding(null);}}/>:null}
-      {openBook?<BookSheet b={openBook} themes={themes} close={()=>setOpen(null)} put={putBook} setCover={setCover} dropCover={dropCover} remove={removeBook}/>:null}
+      {loadFile?<ConfirmBox UI={UI} box={{title:"Load "+loadFile.name+"?",text:"The shelf becomes the file’s "+loadFile.books.length+" books and "+loadFile.themes.length+" themes. The "+books.length+" books on the shelf now are replaced.",yes:"Load",act:confirmLoad}} close={()=>setLoadFile(null)}/>:null}
+      {adding?<AddSheet UI={UI} a={adding} set={setAdding} themes={themes} find={find} confirm={confirmAdd} close={()=>{run.current++;setAdding(null);}}/>:null}
+      {openBook?<BookSheet UI={UI} b={openBook} themes={themes} close={()=>setOpen(null)} put={putBook} setCover={setCover} dropCover={dropCover} ask={setConfirmBox} remove={removeBook}/>:null}
+      {confirmBox?<ConfirmBox UI={UI} box={confirmBox} close={()=>setConfirmBox(null)}/>:null}
     </div>
   );
 }
 
-function ThemePicks({themes,value,onChange}){
-  if(!themes.length)return<p className="ts-note">No themes yet — the book goes under All. Make a theme with “+ Theme”.</p>;
+// Cat Watch's confirm box: a heading, a line, Cancel and the action.
+function ConfirmBox({UI,box,close}){
+  const {C,sBtn,pBtn}=UI;
   return(
-    <div className="ts-bar" style={{margin:0}}>
+    <div style={{position:"fixed",inset:0,background:C.scrim,display:"grid",placeItems:"center",zIndex:1200,padding:16}}>
+      <div role="dialog" aria-label={box.title} style={{background:C.card,border:"1px solid "+C.rule,borderRadius:8,maxWidth:420,padding:"18px 20px",boxShadow:"0 6px 24px rgba(0,0,0,0.25)"}}>
+        <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:8}}>{box.title}</div>
+        {box.text?<div style={{fontSize:12.5,color:C.body,lineHeight:1.5,marginBottom:16}}>{box.text}</div>:<div style={{height:8}}/>}
+        <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+          <button onClick={close} style={sBtn}>Cancel</button>
+          <button onClick={()=>{ const a=box.act; close(); a&&a(); }} style={{...pBtn,background:C.accent}}>{box.yes||"Continue"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ThemePicks({UI,themes,value,onChange}){
+  const {C,chip}=UI;
+  if(!themes.length)return<div style={{fontSize:11.5,color:C.soft}}>No themes yet {"—"} the book goes under All. Make a theme with {"“"}+ Theme{"”"}.</div>;
+  return(
+    <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
       {themes.map(t=>{ const on=value.includes(t.id); return(
-        <button key={t.id} type="button" className="ts-chip" aria-pressed={on} onClick={()=>onChange(on?value.filter(x=>x!==t.id):[...value,t.id])}>{t.name}</button>
+        <button key={t.id} type="button" style={chip(on)} aria-pressed={on} onClick={()=>onChange(on?value.filter(x=>x!==t.id):[...value,t.id])}>{t.name}</button>
       );})}
     </div>
   );
 }
 
-function AddSheet({a,set,themes,find,confirm,close}){
+function AddSheet({UI,a,set,themes,find,confirm,close}){
+  const {C,sBtn,pBtn}=UI;
   const fileRef=useRef(null);
   const f=a.found;
-  const tab=(k,label)=><button type="button" className="ts-chip" aria-pressed={a.tab===k} onClick={()=>set(x=>({...x,tab:k,why:"",found:null}))}>{label}</button>;
+  // As Cat Watch's Import: the three ways in side by side; the one pressed turns green.
+  const tab=(k,label)=><button type="button" onClick={()=>set(x=>({...x,tab:k,why:"",found:null}))} style={a.tab===k?pBtn:sBtn}>{label}</button>;
   return(
-    <div className="ts-scrim" onClick={close}>
-      <div className="ts-sheet" onClick={e=>e.stopPropagation()} role="dialog" aria-label="Add a book">
-        <h2>Add a book</h2>
-        <div className="ts-tabs">{tab("isbn","ISBN")}{tab("link","Link")}{tab("page","Page")}</div>
+    <div style={dialogOuter(C)} onClick={close}>
+      <div role="dialog" aria-label="Add a book" style={dialogInner(C)} onClick={e=>e.stopPropagation()}>
+        <div style={{display:"flex",gap:5,justifyContent:"center"}}>{tab("isbn","ISBN")}{tab("link","Link")}{tab("page","Page")}</div>
         {a.tab==="isbn"?(
-          <form className="ts-row" onSubmit={e=>{e.preventDefault();find("isbn");}}>
-            <input id="add-isbn" className="ts-input" autoFocus inputMode="numeric" placeholder="ISBN, 10 or 13 digits" value={a.isbn} onChange={e=>set(x=>({...x,isbn:e.target.value}))}/>
-            <button className="ts-btn primary" type="submit" disabled={!!a.busy}>Find</button>
+          <form style={{display:"flex",gap:5,flexWrap:"wrap"}} onSubmit={e=>{e.preventDefault();find("isbn");}}>
+            <input id="add-isbn" autoFocus inputMode="numeric" placeholder="ISBN, 10 or 13 digits" value={a.isbn} onChange={e=>set(x=>({...x,isbn:e.target.value}))} style={{...field(C),flex:"1 1 220px"}}/>
+            <button type="submit" disabled={!!a.busy} style={{...pBtn,opacity:a.busy?0.5:1}}>Find</button>
           </form>
         ):a.tab==="link"?(
-          <form className="ts-row" onSubmit={e=>{e.preventDefault();find("link");}}>
-            <input id="add-link" className="ts-input" autoFocus placeholder="https:// a page for the book" value={a.link} onChange={e=>set(x=>({...x,link:e.target.value}))}/>
-            <button className="ts-btn primary" type="submit" disabled={!!a.busy}>Find</button>
+          <form style={{display:"flex",gap:5,flexWrap:"wrap"}} onSubmit={e=>{e.preventDefault();find("link");}}>
+            <input id="add-link" autoFocus placeholder={"https:// — a page for the book"} value={a.link} onChange={e=>set(x=>({...x,link:e.target.value}))} style={{...field(C),flex:"1 1 220px"}}/>
+            <button type="submit" disabled={!!a.busy} style={{...pBtn,opacity:a.busy?0.5:1}}>Find</button>
           </form>
         ):(
-          <div className="ts-row">
-            <button className="ts-btn primary" type="button" disabled={!!a.busy} onClick={()=>fileRef.current&&fileRef.current.click()}>Choose saved page</button>
+          <div>
             <input ref={fileRef} id="add-page" type="file" hidden accept=".mht,.mhtml,.html,.htm,multipart/related,message/rfc822,text/html" onChange={e=>{ const file=e.target.files&&e.target.files[0]; e.target.value=""; if(file)find("page",file); }}/>
-            <p className="ts-note" style={{flexBasis:"100%"}}>For a site that blocks reading, such as AbeBooks: open the book’s page, then Save Page As → “Webpage, Single File”. That kind of file brings the cover too.</p>
+            <div style={{fontSize:11.5,color:C.soft,lineHeight:1.5,marginBottom:8}}>For a site that blocks reading, such as AbeBooks: open the book{"’"}s page, then Save Page As {"→"} {"“"}Webpage, Single File{"”"}. That kind of file brings the cover too.</div>
+            <div style={{display:"flex",justifyContent:"flex-end"}}><button type="button" disabled={!!a.busy} onClick={()=>fileRef.current&&fileRef.current.click()} style={{...pBtn,opacity:a.busy?0.5:1}}>Choose saved page</button></div>
           </div>
         )}
-        <div>
-          <p className="ts-note" style={{marginBottom:6}}>File under</p>
-          <ThemePicks themes={themes} value={a.themes} onChange={v=>set(x=>({...x,themes:v}))}/>
+        <div style={{display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
+          <span style={label9(C)}>File under</span>
+          <ThemePicks UI={UI} themes={themes} value={a.themes} onChange={v=>set(x=>({...x,themes:v}))}/>
         </div>
-        {a.busy?<p className="ts-note" role="status">{a.busy}</p>:null}
-        {a.why?<p className="ts-err" role="alert">{a.why}</p>:null}
+        {a.busy?<div style={{fontSize:11,color:C.soft}} role="status">{a.busy}</div>:null}
+        {a.why?<div style={{...warnBox(C),marginTop:0}} role="alert">{a.why}</div>:null}
         {f?(
-          <div className="ts-detail">
-            <div className="ts-cover" style={{maxWidth:140}}>
-              {f.coverUrl?<img src={f.coverUrl} alt={"Cover of "+f.title}/>:<div className="ts-plain"><b>{f.title}</b></div>}
+          <div style={{display:"flex",gap:14,flexWrap:"wrap",alignItems:"flex-start",background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:12}}>
+            <div style={{width:100,flexShrink:0}}>
+              {f.coverUrl
+                ?<img src={f.coverUrl} alt={"Cover of "+f.title} style={{width:"100%",display:"block",borderRadius:3}}/>
+                :<Cover book={f} C={C}/>}
             </div>
-            <div className="ts-facts">
-              <strong style={{fontSize:"1rem"}}>{f.title}</strong>
-              <span>{f.publisher||"Publisher not found"}</span>
-              <span>ISBN {fmtIsbn(f.isbn13)}</span>
-              <span>{publishedLine(f.published)}</span>
-              {f.source?<span className="ts-note">Read from {hostOf(f.source)}</span>:null}
-              {f.noCoverHint?<span className="ts-note">This file holds no pictures. Add a cover from the book’s panel, or save the page as “Webpage, Single File”.</span>:null}
-              {f.had?<span className="ts-note">Already on your shelf.</span>:null}
-              <div className="ts-row" style={{marginTop:6}}>
-                <button className="ts-btn primary" onClick={confirm}>{f.had?"Update its themes":"Add to shelf"}</button>
-                <button className="ts-btn" onClick={close}>Cancel</button>
-              </div>
+            <div style={{flex:"1 1 200px",display:"flex",flexDirection:"column",gap:3,fontSize:12.5,minWidth:0}}>
+              <div style={{fontFamily:SERIF,fontSize:17,fontWeight:500,lineHeight:1.25}}>{f.title}</div>
+              <span style={{color:C.soft}}>{f.publisher||"Publisher not found"}</span>
+              <span style={{color:C.soft,fontVariantNumeric:"tabular-nums"}}>ISBN {fmtIsbn(f.isbn13)}</span>
+              <span style={{fontWeight:600}}>{publishedLine(f.published)}</span>
+              {f.source?<span style={{fontSize:11,color:C.soft}}>Read from {hostOf(f.source)}</span>:null}
+              {f.noCoverHint?<span style={{fontSize:11,color:C.soft}}>This file holds no pictures. Add a cover from the book{"’"}s panel, or save the page as {"“"}Webpage, Single File{"”"}.</span>:null}
+              {f.had?<span style={{fontSize:11,color:C.soft}}>Already on your shelf.</span>:null}
             </div>
           </div>
-        ):(
-          <div className="ts-row"><button className="ts-btn" onClick={close}>{a.busy?"Stop":"Cancel"}</button></div>
-        )}
+        ):null}
+        <div style={{display:"flex",gap:5,justifyContent:"flex-end"}}>
+          <button onClick={close} style={sBtn}>{a.busy?"Stop":"Cancel"}</button>
+          {f?<button onClick={confirm} style={pBtn}>{f.had?"Update its themes":"Add to shelf"}</button>:null}
+        </div>
       </div>
     </div>
   );
 }
 
-function BookSheet({b,themes,close,put,setCover,dropCover,remove}){
-  const [sure,setSure]=useState(false);
+function BookSheet({UI,b,themes,close,put,setCover,dropCover,ask,remove}){
+  const {C,sBtn,pBtn}=UI;
   const fileRef=useRef(null);
   const onPaste=e=>{
     const items=[...((e.clipboardData&&e.clipboardData.items)||[])];
@@ -894,39 +955,38 @@ function BookSheet({b,themes,close,put,setCover,dropCover,remove}){
   };
   const onDrop=e=>{ e.preventDefault(); const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f)setCover(b,f); };
   return(
-    <div className="ts-scrim" onClick={close}>
-      <div className="ts-sheet" onClick={e=>e.stopPropagation()} role="dialog" aria-label={b.title} onDragOver={e=>e.preventDefault()} onDrop={onDrop}>
-        <div className="ts-detail">
-          <Cover book={b} big/>
-          <div className="ts-facts">
-            <h2>{b.title}</h2>
-            <span>{b.publisher||"Publisher not found"}</span>
-            <span style={{fontVariantNumeric:"tabular-nums"}}>ISBN {fmtIsbn(b.isbn13)}</span>
-            <span>{publishedLine(b.published)}</span>
-            <Shops book={b}/>
-            {b.source?<a className="ts-note" href={b.source} target="_blank" rel="noopener noreferrer" style={{color:"var(--muted)"}}>Read from {hostOf(b.source)}</a>:null}
+    <div style={dialogOuter(C)} onClick={close}>
+      <div role="dialog" aria-label={b.title} style={dialogInner(C)} onClick={e=>e.stopPropagation()} onDragOver={e=>e.preventDefault()} onDrop={onDrop}>
+        <div style={{display:"flex",gap:16,flexWrap:"wrap",alignItems:"flex-start"}}>
+          <div style={{width:140,flexShrink:0}}><Cover book={b} C={C} big/></div>
+          <div style={{flex:"1 1 220px",display:"flex",flexDirection:"column",gap:3,fontSize:12.5,minWidth:0}}>
+            <h2 style={{fontFamily:SERIF,fontSize:20,fontWeight:500,lineHeight:1.2,margin:"0 0 4px",letterSpacing:"-0.01em"}}>{b.title}</h2>
+            <span style={{color:C.soft}}>{b.publisher||"Publisher not found"}</span>
+            <span style={{color:C.soft,fontVariantNumeric:"tabular-nums"}}>ISBN {fmtIsbn(b.isbn13)}</span>
+            <span style={{fontWeight:600,marginBottom:8}}>{publishedLine(b.published)}</span>
+            <Shops book={b} C={C}/>
+            {b.source?<a href={b.source} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:C.soft,marginTop:6}}>Read from {hostOf(b.source)}</a>:null}
           </div>
+        </div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
+          <span style={label9(C)}>Themes</span>
+          <ThemePicks UI={UI} themes={themes} value={b.themes} onChange={v=>put({...b,themes:v})}/>
         </div>
         <div>
-          <p className="ts-note" style={{margin:"0 0 6px"}}>Themes</p>
-          <ThemePicks themes={themes} value={b.themes} onChange={v=>put({...b,themes:v})}/>
-        </div>
-        <div className="ts-facts">
-          <span className="k">Cover</span>
-          <div className="ts-paste" contentEditable suppressContentEditableWarning onPaste={onPaste} onKeyDown={e=>{ if(!(e.metaKey||e.ctrlKey))e.preventDefault(); }} onInput={e=>{e.currentTarget.textContent="";}} aria-label="Paste a cover here">
+          <div style={{...label9(C),marginBottom:6}}>Cover</div>
+          <div contentEditable suppressContentEditableWarning onPaste={onPaste} onKeyDown={e=>{ if(!(e.metaKey||e.ctrlKey))e.preventDefault(); }} onInput={e=>{e.currentTarget.textContent="";}} aria-label="Paste a cover here"
+            style={{border:"1px dashed "+C.rule,borderRadius:4,background:C.card,padding:"8px 10px",fontSize:11.5,color:C.soft,minHeight:36,outline:"none",lineHeight:1.5}}>
             Copy a cover picture on any website, click here, then paste. Or drop a picture file on this panel.
           </div>
-          <div className="ts-row">
-            <button className="ts-btn" onClick={()=>fileRef.current&&fileRef.current.click()}>Upload a picture</button>
+          <div style={{display:"flex",gap:10,alignItems:"center",marginTop:6}}>
+            <button onClick={()=>fileRef.current&&fileRef.current.click()} style={sBtn}>Upload a picture</button>
             <input ref={fileRef} id="cover-file" type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif" onChange={e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(f)setCover(b,f); }}/>
-            {b.cover?<button className="ts-link" onClick={()=>dropCover(b)}>Remove cover</button>:null}
+            {b.cover?<button onClick={()=>dropCover(b)} style={textBtn(C)}>Remove cover</button>:null}
           </div>
         </div>
-        <div className="ts-row" style={{justifyContent:"space-between"}}>
-          {sure
-            ?<span className="ts-row"><span>Remove from the shelf?</span><button className="ts-btn primary" onClick={()=>remove(b)}>Remove</button><button className="ts-btn" onClick={()=>setSure(false)}>Keep</button></span>
-            :<button className="ts-link" onClick={()=>setSure(true)}>Remove book</button>}
-          <button className="ts-btn" onClick={close}>Done</button>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:"1px solid "+C.rule,paddingTop:10}}>
+          <button onClick={()=>ask({title:"Remove “"+b.title+"”?",text:"It leaves the shelf and every theme.",yes:"Remove",act:()=>remove(b)})} style={textBtn(C)}>Remove book</button>
+          <button onClick={close} style={pBtn}>Done</button>
         </div>
       </div>
     </div>

@@ -6,9 +6,8 @@
  * (the shared ISBN, bookseller and saved-page code must match Cat Watch's), transpile,
  * wrap in the shell below, prove it parses, write build/dist/theme_shelf.html.
  *
- * The shell is written here, not copied from Cat Watch: its title, palette and fonts
- * are the shelf's own. Tokens are defined on :root so the page paints its ground
- * before React runs, in both themes.
+ * The shell is written here: Cat Watch's ground and ink, defined on :root so the page
+ * paints before React runs, in both themes. Fonts load from the component, as Cat Watch's do.
  *
  * Usage: node build/build_shelf.js
  */
@@ -48,35 +47,19 @@ const js = fs.readFileSync(built, 'utf8').replace(/\n*$/, '\n')
 try { new Function(js); } catch (e) { die('the built page does not parse — ' + e.message); }
 if (!/function App\(/.test(js)) die('the built page has no App component in it');
 
-// Layout: a bookshelf grid of covers, like a reading app's library, under a row of theme chips.
 const HEAD = `<title>Theme Shelf</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Source+Sans+3:wght@400;600&display=swap">
 <style>
-  /* Watteau's silvery greens for the ground, a faded silk rose for the accent. */
-  :root {
-    --ground: #EDF0EB; --paper: #F8FAF6; --ink: #1E2521; --muted: #5C6962;
-    --line: #CDD5CE; --accent: #8A4559; --on-accent: #FFFFFF; --warn: #F1E3C9;
-    --shadow: rgba(30,37,33,.16); --scrim: rgba(30,37,33,.45);
-    --display: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
-    --body: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  }
+  /* Cat Watch's ground (her decision: the shelf is part of the same app). The component
+     sets data-theme on <html> when it mounts; until then the machine's preference decides. */
+  :root { --ground: #E8E4DE; --ink: #1E1B18; color-scheme: light; }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --ground: #141916; --paper: #1D2420; --ink: #E5EBE6; --muted: #9AA8A0;
-      --line: #2F3A34; --accent: #D99AAE; --on-accent: #1A1013; --warn: #3A3222;
-      --shadow: rgba(0,0,0,.45); --scrim: rgba(0,0,0,.6); color-scheme: dark;
-    }
+    :root:not([data-theme="light"]) { --ground: #1A1815; --ink: #EDE8E0; color-scheme: dark; }
   }
-  :root[data-theme="dark"] {
-    --ground: #141916; --paper: #1D2420; --ink: #E5EBE6; --muted: #9AA8A0;
-    --line: #2F3A34; --accent: #D99AAE; --on-accent: #1A1013; --warn: #3A3222;
-    --shadow: rgba(0,0,0,.45); --scrim: rgba(0,0,0,.6); color-scheme: dark;
-  }
+  :root[data-theme="dark"]  { --ground: #1A1815; --ink: #EDE8E0; color-scheme: dark; }
+  :root[data-theme="light"] { --ground: #E8E4DE; --ink: #1E1B18; color-scheme: light; }
   html, body { min-height: 100%; }
-  body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 </style>
 <div id="root"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>

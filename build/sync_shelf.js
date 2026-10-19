@@ -29,7 +29,10 @@ const CLOSE = '// ===== END SHARED =====';
 
 const NAMES = ['cleanIsbn', 'fmtIsbn', 'isbn10to13', 'isbn13Checks', 'toIsbn13', 'isbn13to10',
   'isbnInText', 'resultText', 'resellerLinks', 'savedPageHtml', 'savedPageReply',
-  'mcpTrouble', 'lastJsonObject'];
+  'mcpTrouble', 'lastJsonObject',
+  // The look: Cat Watch's two palettes, its link buttons and its save-time wording, so the
+  // shelf reads as part of the same app (her decision).
+  'PALETTES', 'linkButton', 'MON3', 'fmtRefresh', 'relTime'];
 
 function die(m) { console.error('sync_shelf: ' + m); process.exit(1); }
 

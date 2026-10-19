@@ -124,7 +124,7 @@ async function render(label, runtime) {
     const { text, links } = await render('TS-002', runtime);
     check(text.includes('Dress in Eighteenth-Century Europe') && text.includes('Fashioning Fashion'), 'TS-002 both books on screen');
     check(text.includes('ISBN 978-0300091519') && text.includes('ISBN 978-3791350622'), 'TS-002 ISBNs shown xxx-xxxxxxxxxx');
-    check(text.includes('Fashion in art 2'), 'TS-002 the theme chip counts its two books');
+    check(text.includes('Fashion in art') && text.includes('2 Books') && text.includes('1 Themes'), 'TS-002 the theme chip and the counts line (2 books, 1 theme)');
     check(text.indexOf('Fashioning Fashion') < text.indexOf('Dress in Eighteenth'), 'TS-002 books in their saved order');
     const names = links.map(l => l.split(' ')[0] + ' ' + l.split(' ')[1]);
     check(['Amazon AU', 'AbeBooks AU', 'Alibris https', 'Booko AU'].every(n => names.some(x => x.startsWith(n.split(' ')[0]))) && links.length === 8,
