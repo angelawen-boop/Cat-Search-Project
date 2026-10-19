@@ -2975,14 +2975,14 @@ function shopHeadline(shopState,shopChange){
 // A blocked shop says so, in her wording (docs/app.md §1): the headline in the red and
 // weight of "No longer in the museum shop.", the rest grey.
 const SHOP_BLOCKED_HEAD="The museum shop is blocked";
-const SHOP_SCRIPT_HEAD="The museum shop contents cannot be seen - JS-rendering";
-const SHOP_PARALLEL_HEAD="The museum shop contents cannot be seen - Parallel fault";
+const SHOP_SCRIPT_HEAD="The museum shop contents cannot be seen — JS-rendering";
+const SHOP_PARALLEL_HEAD="The museum shop contents cannot be seen — Parallel fault";
 // A shop the lookup could not read: refused, drawn by script, or dropped by Parallel (her wording for each).
 const shopUnread=s=>s==="blocked"||s==="script"||s==="parallel";
 const shopUnreadHead=s=>s==="script"?SHOP_SCRIPT_HEAD:s==="parallel"?SHOP_PARALLEL_HEAD:SHOP_BLOCKED_HEAD;
 // Re-check's line for each: "Re-check didn’t work — museum shop " + this.
-const shopUnreadSaid=s=>s==="script"?"contents cannot be seen - JS-rendering":s==="parallel"?"contents cannot be seen - Parallel fault":"is blocked";
-const SHOP_BLOCKED_FOUND_REST=" - search it manually. The catalogue is stocked elsewhere.";
+const shopUnreadSaid=s=>s==="script"?"contents cannot be seen — JS-rendering":s==="parallel"?"contents cannot be seen — Parallel fault":"is blocked";
+const SHOP_BLOCKED_FOUND_REST=" — search it manually. The catalogue is stocked elsewhere.";
 const SHOP_BLOCKED_NONE_REST=". The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
 
 // A ticket is never a catalogue (her decision, KHM Canaletto & Bellotto): a link with
@@ -3186,7 +3186,7 @@ function englishLine(r){
       +b.title+(b.publisher?", "+b.publisher:"")+", ISBN "+fmtIsbn(b.isbn13)+".";
   if(c==="english"&&o&&o.title)return "English edition of \u201c"+o.title+"\u201d"+(o.publisher?" ("+o.publisher+")":"")+".";
   // Her wording; the publisher is printed above, so not again here (her decision).
-  if(c==="publisher")return "No English edition - checked publisher's site and bookshops.";
+  if(c==="publisher")return "No English edition — checked publisher's site and bookshops.";
   if(c==="shops")return "No English edition found in bookshops.";
   if(c==="unknownlang")return "The book\u2019s language couldn\u2019t be confirmed, so no English edition was looked for.";
   if(c==="stopped")return "English edition not checked \u2014 the search stopped part-way. Search again to retry.";
@@ -6539,7 +6539,7 @@ export default function App(){
         {/* Two buttons on the left, no sentence (her decision), spaced like the drawers on the right. */}
         <span style={{display:"flex",gap:14}}>
           <button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset to Seed</button>
-          <button onClick={()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset cards</button>
+          <button onClick={()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset search</button>
         </span>
         <span style={{marginLeft:"auto",display:"flex",gap:14}}>
           {/* Cloud Saves sit beside Quarantine, in the same type, always drawn — a control

@@ -229,7 +229,7 @@ stops after the menu ("A- A+") — neither JS-rendered nor blocked (proved: a ke
 Each book is a line with a quantity box, no page of its own. **Two facts written in, her decision** (the app
 cannot tell a Parallel fault from JS-rendering): the section (`shopCatalogues`, offered on the shop screen for
 her to confirm; AL-049a), and `shopUnseen: "parallel"` — a shop page with no priced line, read whole, says
-"The museum shop contents cannot be seen - Parallel fault", Re-check the same (FS-001–005, on Parallel's live
+"The museum shop contents cannot be seen — Parallel fault", Re-check the same (FS-001–005, on Parallel's live
 answer). Once Parallel returns the books, the shop is read as usual (FS-004); the rule stays until removed.
 
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her decision: Parallel-only rules

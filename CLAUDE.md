@@ -568,7 +568,7 @@ and were fixed in code, proven live).
   cannot be seen - JS-rendering". **Hard-coded, her decision:** the Städel's shop section, and "…- Parallel fault"
   when Parallel brings it back without its books (proved: they are in the page's HTML). The rule stays until
   removed, even once Parallel reads the books. `docs/add_by_link.md`, "Frankfurt"; AL-049, FS-.
-- **Built, not published — MoMA's pop-up reads as "contents cannot be seen - JS-rendering"**, not the false
+- **Built, not published — MoMA's pop-up reads as "contents cannot be seen — JS-rendering"**, not the false
   "not in the museum shop" (her Brancusi Re-check; B-007). Her decision, small fix only; the better fix — finding
   the book's own store.moma.org page when the list can't be seen — waits on the lookup redesign.
 - **Published at 47.2 — Berlin and Munich by link; her next links and lookups there confirm.** Dotted dates

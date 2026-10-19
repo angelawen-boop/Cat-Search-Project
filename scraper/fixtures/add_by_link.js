@@ -647,7 +647,7 @@ function runtime() {
         && own[F].shopUnseen === 'parallel' && calls.length === before,
         'AL-049a:  its shop\'s books section is written in (the finder cannot see its books) and offered for her to confirm, nothing fetched', JSON.stringify(r));
       const head = fn('shopUnreadHead');
-      ok(head('parallel') === 'The museum shop contents cannot be seen - Parallel fault' && head('script') === 'The museum shop contents cannot be seen - JS-rendering'
+      ok(head('parallel') === 'The museum shop contents cannot be seen — Parallel fault' && head('script') === 'The museum shop contents cannot be seen — JS-rendering'
         && head('blocked') === 'The museum shop is blocked', 'AL-049b:  the card\'s three lines for a shop that cannot be read (her wording)');
     }
     ok(own[A].group === own[M].group && own[A].chip === 'Munich' && own[A].short === 'Munich Alte Pinakothek'

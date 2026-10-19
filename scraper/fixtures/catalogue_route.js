@@ -171,7 +171,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       api.SHOP_BLOCKED_FOUND_REST, api.SHOP_BLOCKED_NONE_REST];
     const all = [...pubs, ...eng, ...shop];
     eq(new Set(all).size, all.length, 'CT-001: no sentence is printed by two of the shop, publisher and English lines');
-    ok(eng.filter(x => !/^No English edition - checked publisher's site/.test(x)).every(x => !/publisher’s|home page|section/.test(x)),
+    ok(eng.filter(x => !/^No English edition — checked publisher's site/.test(x)).every(x => !/publisher’s|home page|section/.test(x)),
       'CT-002: the English line never restates the publisher page’s status', JSON.stringify(eng));
   }
 
@@ -368,7 +368,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     let { out, calls, row: r } = await run(row('louvre', 'Test Nature Show'), make());
     eq([r.catalogueTitle, r.isbn13, r.publisher, r.shopState], [OWN, '9782359064612', 'Lienart', 'shop'], 'WL-040: a foreign book — its own title, its ISBN, still in the museum shop');
     eq([r.englishCheck, r.publisherUrl, r.publisherResult], ['publisher', PUB_PAGE, 'product'], 'WL-041:   no English edition, the publisher’s page read and linked');
-    eq(api.englishLine(r), "No English edition - checked publisher's site and bookshops.", 'WL-042:   the card says the publisher’s site was checked, without repeating the publisher printed above');
+    eq(api.englishLine(r), "No English edition — checked publisher's site and bookshops.", 'WL-042:   the card says the publisher’s site was checked, without repeating the publisher printed above');
     ok(!calls.some(c => c.kind === 'sample' && isPageRead(c.prompt)), 'WL-043:   the book’s page read in the facts round’s one read, not on its own');
     eq([out.calls.calls, out.calls.waits], [8, 7], 'WL-044:   8 calls, 7 waits in a row (was 13)');
 
@@ -936,7 +936,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq(f.row.shopState, 'parallel', 'FS-001: the Städel’s section as Parallel returns it (menu, no books) reads "Parallel fault", not JS-rendering', JSON.stringify([f.row.shopState, f.detail]));
     ok(!callsF.some(c => c.kind === 'sample' && /OWN shop pages, opened directly/.test(c.prompt)), 'FS-002:   Claude is not asked to read the shop');
     const rf = await yf.recheckShopRow({ ...f.row, shopState: 'web', shopUrl: null }, { label: () => {} });
-    eq(rf.said, 'Re-check didn’t work — museum shop contents cannot be seen - Parallel fault.', 'FS-003: Re-check says the same, her wording', JSON.stringify(rf.said));
+    eq(rf.said, 'Re-check didn’t work — museum shop contents cannot be seen — Parallel fault.', 'FS-003: Re-check says the same, her wording', JSON.stringify(rf.said));
     const callsG = [];
     const books = live.full_content + '\n\n49,90 €\nMaria Magdalena\nAusstellungskatalog zur Sonderausstellung';
     const yg = lift({ mcp: (tool, args) => tool === 'web_search' ? { payload: { results: [] } } : reply(books)(args), sample: () => ({ found: false }) }, callsG);

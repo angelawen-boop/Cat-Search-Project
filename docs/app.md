@@ -41,7 +41,7 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
 - **Buy next** (her design): on a Yes card, a dot left of the star, drawn
   to the star's measured size (`starInk`) — hollow off, red on. Leaving Yes clears
   it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
-  anywhere.** Closing the search bar or Reset cards empties its box.
+  anywhere.** Closing the search bar or Reset search (once "Reset cards") empties its box.
 - **Per-venue freshness**, two dates, from `swept_at`.
 - **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
   at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.
@@ -256,7 +256,7 @@ Each replaced a real failure. Card wording is in the code.
   search it manually. The catalogue is stocked elsewhere."* / *"…The catalogue also does
   not appear to exist elsewhere. Search manually to confirm."* Headline red and bold, the
   rest grey. Blocked (refused every page): KHM, MAM. **A shop whose every page comes back
-  empty says "The museum shop contents cannot be seen - JS-rendering"** (`shopState: "script"`; her
+  empty says "The museum shop contents cannot be seen — JS-rendering"** (`shopState: "script"`; her
   wording, in place of "The museum shop is blocked"; Re-check: "museum shop contents cannot be seen -
   JS-rendering"; B-001, B-003a); the Städel's, whose books Parallel drops, "…- Parallel fault" (`shopState:
   "parallel"`, a venue rule; FS-001–005, `docs/add_by_link.md`, "Frankfurt"). A read that finds nothing on
