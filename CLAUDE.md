@@ -302,6 +302,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 | File | What is in it | Read it when |
 |---|---|---|
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
+| `docs/themes.md` | Themes — art books by theme, not exhibition: her design brief and decisions | She raises it, or work on Themes |
 
 **Procedures** — how to do the recurring jobs
 
@@ -624,3 +625,5 @@ Ideas not yet built — none is open work, and none is proposed unless she raise
   connector (`docs/app.md`).
 - **Library — purchase tracking and a Library tab** (`docs/library.md`): future consideration, never
   propose.
+- **Themes — a wishlist of art books by theme, not exhibition** (her design, `docs/themes.md`): kept
+  apart from the ledger; added by ISBN, link or saved page; the publication date as the out-of-print signal.
