@@ -5,7 +5,7 @@ import React,{useState,useEffect,useMemo,useCallback,useRef} from "react";
 // and the four booksellers. Its own page with its own store, so Cat Watch's ledger is
 // never touched. What it shares with Cat Watch (ISBNs, the booksellers, saved pages, the
 // connector's messages) is copied in by `node build/sync_shelf.js`.
-const APP_VERSION="2.3";
+const APP_VERSION="2.4";
 const APP_DATE="19 Oct 2026";
 
 // ===== SHARED WITH CAT WATCH — written by `node build/sync_shelf.js`; never edit between these markers. Edit Cat_Watch.jsx, then run it. =====
@@ -441,7 +441,7 @@ const MONO="ui-monospace,monospace";
 // The shelf's one difference from Cat Watch (her decision): its rose, in place of Cat
 // Watch's accent and action colours, so the two pages tell themselves apart. The
 // Wishlist tag is rose; the Owned tag is Cat Watch's own.
-const ROSE={light:{accent:"#8A4559",action:"#8A4559",onAction:"#fff",wishInk:"#8A4559",wishBg:"#F1E1E6"},
+const ROSE={light:{accent:"#B24D6E",action:"#B24D6E",onAction:"#fff",wishInk:"#B24D6E",wishBg:"#F4E1E8"},
             dark:{accent:"#D99AAE",action:"#D99AAE",onAction:"#1A1013",wishInk:"#D99AAE",wishBg:"#3A2228"}};
 const label9=C=>({fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2});
 const field=C=>({padding:"7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box",minWidth:0});
@@ -454,15 +454,25 @@ const tag=(ink,wash)=>({fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTra
 // The booksellers without "AU" (her decision, to save space on the shelf).
 const shopName=n=>n.replace(/ AU$/,"");
 
-// The mark in a cover's top-right corner (her design): a cut gem, as in Kindle's
-// menu. Outlined for Wishlist, filled in Cat Watch's Owned purple for Owned; tapping it
-// switches the two.
+// The mark in a cover's top-right corner (her design): a gem's outline, as in Kindle's
+// menu, with no inner lines. Hollow for Wishlist, filled in Cat Watch's Owned purple for
+// Owned; tapping it switches the two.
 function OwnedMark({owned,C,size}){
-  const w=size||22;
+  const w=size||20;
   return(
-    <svg width={w} height={w} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block",filter:"drop-shadow(0 1px 1.5px rgba(0,0,0,0.45))"}}>
-      <path d="M3 9.2 7.6 3.8h8.8L21 9.2 12 20.6Z" fill={owned?C.owned:"rgba(0,0,0,0.22)"} stroke={owned?"#fff":"rgba(255,255,255,0.95)"} strokeWidth="1.3" strokeLinejoin="round"/>
-      <path d="M3 9.2h18M7.6 3.8 9.8 9.2 12 20.6 14.2 9.2 16.4 3.8M9.8 9.2 12 3.8l2.2 5.4" fill="none" stroke={owned?"#fff":"rgba(255,255,255,0.95)"} strokeWidth="1.1" strokeLinejoin="round"/>
+    <svg width={w} height={w} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
+      {/* A dark edge under the white line, so the outline reads on a pale tile and a dark cover alike. */}
+      <path d="M3 9.2 7.6 3.8h8.8L21 9.2 12 20.6Z" fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="3" strokeLinejoin="round"/>
+      <path d="M3 9.2 7.6 3.8h8.8L21 9.2 12 20.6Z" fill={owned?C.owned:"none"} stroke="#fff" strokeWidth="1.5" strokeLinejoin="round"/>
+    </svg>);
+}
+
+// A tick for what is chosen in a list, as a phone's file picker shows it.
+function PickMark({on,C}){
+  return(
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style={{display:"block",flex:"none"}}>
+      <circle cx="9" cy="9" r="8" fill={on?C.ink:"none"} stroke={on?C.ink:C.soft} strokeWidth="1.4"/>
+      {on?<path d="M5.2 9.3l2.5 2.5 5-5.2" fill="none" stroke={C.bg} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>:null}
     </svg>);
 }
 
@@ -535,7 +545,8 @@ export default function App(){
   const [confirmBox,setConfirmBox]=useState(null); // {title, text, yes, act} — Cat Watch's confirm box
   const [showRemove,setShowRemove]=useState(false);
   const [removeQ,setRemoveQ]=useState("");
-  const [themePick,setThemePick]=useState([]);   // books ticked for an empty theme
+  const [themePick,setThemePick]=useState([]);   // books ticked to add to the theme showing
+  const [libFor,setLibFor]=useState(null);       // the theme whose "Add from library" panel is open
   const [drag,setDrag]=useState(null);           // {id, x, y, to}
   const [loadFile,setLoadFile]=useState(null);
   // The cloud line: every change is written to the page's store as it is made (her
@@ -571,7 +582,7 @@ export default function App(){
     }catch{}
   },[theme]);
   const C={...PALETTES[theme],...ROSE[theme]};
-  const chip=on=>({padding:"4px 10px",borderRadius:999,border:"1px solid "+(on?C.ink:C.rule),background:on?C.ink:"transparent",color:on?PALETTES[theme].onAction:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"inherit"});
+  const chip=on=>({padding:"4px 10px",borderRadius:"8px 1px 8px 1px",border:"1px solid "+(on?C.ink:C.rule),background:on?C.ink:"transparent",color:on?PALETTES[theme].onAction:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"inherit"});
   const sBtn={padding:"5px 12px",borderRadius:4,border:"1px solid "+C.rule,background:"transparent",color:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",fontFamily:"inherit"};
   const pBtn={...sBtn,background:C.action,color:C.onAction,border:"none"};
   const UI={C,chip,sBtn,pBtn};
@@ -617,7 +628,8 @@ export default function App(){
   const shown=useMemo(()=>sorted.filter(b=>(view==="all"||b.themes.includes(view))
     &&(!status||(status==="owned")===!!b.owned)&&isbnMatches(b,q)),[sorted,view,status,q]);
   const theme_=themes.find(t=>t.id===view)||null;
-  const themeEmpty=!!theme_&&!books.some(b=>b.themes.includes(theme_.id));
+  const libOpen=!!theme_&&libFor===theme_.id;
+  const libBooks=theme_?sorted.filter(b=>!b.themes.includes(theme_.id)):[];
   useEffect(()=>{ if(view!=="all"&&!themes.some(t=>t.id===view))setView("all"); },[themes,view]);
   useEffect(()=>{ setThemePick([]); },[view]);
 
@@ -705,15 +717,15 @@ export default function App(){
     if(themes.some(t=>t.name.toLowerCase()===name.toLowerCase()&&(te.mode==="new"||t.id!==theme_.id))){ setMsg("There is already a theme called “"+name+"”."); return; }
     if(te.mode==="new"){
       const t={id:newId(),name,order:themes.length?Math.max(...themes.map(x=>x.order))+1:0};
-      setThemes(ts=>[...ts,t]); setView(t.id); setThemeEdit(null); await writeTheme(t);
+      setThemes(ts=>[...ts,t]); setView(t.id); setThemeEdit(null); if(books.length)setLibFor(t.id); await writeTheme(t);
     }else{
       const t={...theme_,name}; setThemes(ts=>ts.map(x=>x.id===t.id?t:x)); setThemeEdit(null); await writeTheme(t);
     }
   }
   async function addPickedToTheme(){
     const id=theme_&&theme_.id; if(!id)return;
-    for(const b of books.filter(x=>themePick.includes(x.isbn13)))await putBook({...b,themes:[...new Set([...b.themes,id])]});
-    setThemePick([]);
+    const pick=themePick; setThemePick([]); setLibFor(null);
+    for(const b of books.filter(x=>pick.includes(x.isbn13)))await putBook({...b,themes:[...new Set([...b.themes,id])]});
   }
 
   // ── ADDING BOOKS ───────────────────────────────────────────────────────
@@ -864,6 +876,7 @@ export default function App(){
           ))}
           <button style={chip(false)} onClick={()=>setThemeEdit({mode:"new",name:""})}>+ Theme</button>
           {theme_&&!themeEdit?<span style={{display:"inline-flex",gap:12,marginLeft:6}}>
+            <button style={textBtn(C)} onClick={()=>{ setThemePick([]); setLibFor(libOpen?null:theme_.id); }}>Add from library</button>
             <button style={textBtn(C)} onClick={()=>setThemeEdit({mode:"rename",name:theme_.name})}>Rename</button>
             <button style={textBtn(C)} onClick={()=>setConfirmBox({title:"Delete “"+theme_.name+"”?",text:"Its books stay on the shelf.",yes:"Delete theme",act:()=>deleteTheme(theme_)})}>Delete</button>
           </span>:null}
@@ -879,6 +892,25 @@ export default function App(){
           <button type="submit" style={pBtn}>{themeEdit.mode==="new"?"Add theme":"Rename"}</button>
           <button type="button" onClick={()=>setThemeEdit(null)} style={sBtn}>Cancel</button>
         </form>:null}
+        {libOpen?<div style={{marginTop:8,padding:"6px 12px 8px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
+          {libBooks.map((b,k)=>{ const on=themePick.includes(b.isbn13), flip=()=>setThemePick(p=>on?p.filter(x=>x!==b.isbn13):[...p,b.isbn13]); return(
+            <div key={b.isbn13} role="button" tabIndex={0} aria-pressed={on} onClick={flip}
+              onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); flip(); } }}
+              style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderTop:k?"1px solid "+C.rule:"none",cursor:"pointer"}}>
+              <PickMark on={on} C={C}/>
+              <div style={{width:30,flex:"none"}}><Cover book={b} C={C} big thumb/></div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:SERIF,fontSize:14.5,fontWeight:500,lineHeight:1.3}}>{b.title}</div>
+                {b.publisher?<div style={{fontSize:11,color:C.soft}}>{b.publisher}</div>:null}
+              </div>
+            </div>);})}
+          <div style={{display:"flex",justifyContent:"flex-end",marginTop:6}}>
+            <button onClick={addPickedToTheme} disabled={!themePick.length} style={{...pBtn,opacity:themePick.length?1:0.4,cursor:themePick.length?"pointer":"not-allowed"}}>Add</button>
+          </div>
+          <div style={{textAlign:"center",marginTop:6}}>
+            <button onClick={()=>{ setLibFor(null); setThemePick([]); }} style={textBtn(C)}>Cancel</button>
+          </div>
+        </div>:null}
       </header>
 
       <main style={{maxWidth:760,margin:"0 auto"}}>
@@ -886,25 +918,7 @@ export default function App(){
         :store==="none"?<div style={box}>The shelf isn{"’"}t available in this viewer.</div>
         :store==="failed"?<div style={box}>The shelf didn{"’"}t open {"—"} the page{"’"}s store didn{"’"}t answer.</div>
         :!books.length?<div style={box}>No books yet.</div>
-        :themeEmpty&&!q&&!status?(
-          // A new theme: tick books already on the shelf to file them under it (her design).
-          <div style={{...box,padding:"14px 16px",color:C.ink}}>
-            {sorted.map((b,k)=>{ const on=themePick.includes(b.isbn13); return(
-              <div key={b.isbn13} role="button" tabIndex={0} onClick={()=>setThemePick(p=>on?p.filter(x=>x!==b.isbn13):[...p,b.isbn13])}
-                onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setThemePick(p=>on?p.filter(x=>x!==b.isbn13):[...p,b.isbn13]); } }}
-                style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderTop:k?"1px solid "+C.rule:"none",cursor:"pointer"}}>
-                <span style={{flex:"none",width:14,fontSize:13,color:C.ink}}>{on?"●":"○"}</span>
-                <div style={{width:34,flex:"none"}}><Cover book={b} C={C} big thumb/></div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontFamily:SERIF,fontSize:14.5,fontWeight:500,lineHeight:1.3}}>{b.title}</div>
-                  {b.publisher?<div style={{fontSize:11,color:C.soft}}>{b.publisher}</div>:null}
-                </div>
-              </div>);})}
-            <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
-              <button onClick={addPickedToTheme} disabled={!themePick.length} style={{...pBtn,opacity:themePick.length?1:0.4,cursor:themePick.length?"pointer":"not-allowed"}}>Add</button>
-            </div>
-          </div>
-        )
+        :theme_&&!books.some(b=>b.themes.includes(theme_.id))?null
         :!shown.length?<div style={box}>Nothing matches those filters.</div>
         :(
           <div className="ts-grid" style={coversOnly?{gridTemplateColumns:"repeat("+across+",minmax(0,1fr))",gap:across>=7?6:8}:undefined}>
@@ -921,7 +935,7 @@ export default function App(){
                   <button aria-label={b.owned?"Owned — mark as wishlist":"Wishlist — mark as owned"} aria-pressed={!!b.owned}
                     onPointerDown={e=>e.stopPropagation()} onClick={e=>{ e.stopPropagation(); putBook({...b,owned:!b.owned}); }}
                     style={{position:"absolute",top:coversOnly?1:4,right:coversOnly?1:4,background:"none",border:"none",padding:coversOnly?3:4,cursor:"pointer",lineHeight:1}}>
-                    <OwnedMark owned={b.owned} C={C} size={coversOnly&&across>=5?16:22}/>
+                    <OwnedMark owned={b.owned} C={C} size={coversOnly&&across>=5?14.5:20}/>
                   </button>
                 </div>
                 {coversOnly?null:<div style={{padding:"10px 12px 12px",minWidth:0}}>
@@ -1069,7 +1083,7 @@ function AddSheet({UI,books,themes,startThemes,readOne,addFound,close}){
             <div key={f.book.isbn13} role="button" tabIndex={0} onClick={()=>setFound(l=>l.map(x=>x===f?{...x,picked:!x.picked}:x))}
               onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setFound(l=>l.map(x=>x===f?{...x,picked:!x.picked}:x)); } }}
               style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 0",borderTop:k?"1px solid "+C.rule:"none",cursor:"pointer"}}>
-              <span style={{flex:"none",width:14,fontSize:13,lineHeight:1.3,color:C.ink}}>{f.picked?"●":"○"}</span>
+              <PickMark on={f.picked} C={C}/>
               <div style={{width:44,flex:"none"}}>{f.coverUrl?<img src={f.coverUrl} alt="" style={{width:"100%",display:"block",borderRadius:2}}/>:<Cover book={f.book} C={C} big thumb/>}</div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontFamily:SERIF,fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{f.book.title}</div>
@@ -1104,13 +1118,14 @@ function BookSheet({UI,b,themes,close,put,onCover}){
             <h2 style={{fontFamily:SERIF,fontSize:18,lineHeight:1.2,fontWeight:500,margin:"0 0 6px",letterSpacing:"-0.01em"}}>{b.title}</h2>
             <Facts b={b} C={C}/>
             <div style={{marginTop:10}}><Shops book={b} C={C}/></div>
-            {b.source?<div style={{fontSize:11,color:C.soft,marginTop:8}}>Source: <a href={b.source} target="_blank" rel="noopener noreferrer" style={{color:C.soft}}>{hostOf(b.source)}</a></div>:null}
           </div>
         </div>
         <div style={{display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
           <span style={label9(C)}>Themes</span>
           <ThemePicks UI={UI} themes={themes} value={b.themes} onChange={v=>put({...b,themes:v})}/>
         </div>
+        {/* Source is always the last line on the card (her decision). */}
+        {b.source?<div style={{fontSize:11,color:C.soft}}>Source: <a href={b.source} target="_blank" rel="noopener noreferrer" style={{color:C.soft}}>{hostOf(b.source)}</a></div>:null}
         <div style={{display:"flex",justifyContent:"flex-end",borderTop:"1px solid "+C.rule,paddingTop:10}}>
           <button onClick={close} style={pBtn}>Close</button>
         </div>
@@ -1119,12 +1134,12 @@ function BookSheet({UI,b,themes,close,put,onCover}){
   );
 }
 
-// The cover's own pop-up, as a profile picture is changed (her design): two book-shaped
-// tiles of equal weight. Paste takes a copied picture (on a computer, one dropped on it
-// or pasted with the keyboard too); Add, or Change once there is a cover, opens the
-// picture picker.
+// The cover's own pop-up, as a profile picture is changed (her design). Paste is a
+// book-shaped box: tap it to paste a copied picture, or on a computer drop a picture on
+// it or press paste. Add, or Change once there is a cover, is a button that opens the
+// picture picker. Remove sits on the left, away from Cancel, which is centred as in Add book.
 function CoverSheet({UI,b,setCover,dropCover,close}){
-  const {C}=UI;
+  const {C,pBtn}=UI;
   const fileRef=useRef(null);
   const [over,setOver]=useState(false);
   const [why,setWhy]=useState("");
@@ -1145,22 +1160,21 @@ function CoverSheet({UI,b,setCover,dropCover,close}){
       setWhy("No picture copied.");
     }catch{ setWhy("This viewer won\u2019t let the page read what you copied."); }
   }
-  const tile=hot=>({width:132,aspectRatio:"2 / 3",border:"1px dashed "+(hot?C.action:C.rule),borderRadius:4,background:hot?C.panel:C.card,
-    fontSize:12.5,fontWeight:500,color:C.ink,cursor:"pointer",fontFamily:"inherit",display:"grid",placeItems:"center",padding:0});
   return(
     <div style={{...dialogOuter(C),zIndex:1100}} onClick={close}>
-      <div role="dialog" aria-label="Cover" style={{...dialogInner(C,360),padding:"18px 20px 12px",alignItems:"center"}} onClick={e=>e.stopPropagation()}>
-        <div style={{display:"flex",gap:14,justifyContent:"center"}}>
-          <button onClick={pasteNow} style={tile(over)}
-            onDragOver={e=>{ e.preventDefault(); setOver(true); }} onDragLeave={()=>setOver(false)}
-            onDrop={e=>{ e.preventDefault(); setOver(false); const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f)take(f); }}>Paste</button>
-          <button onClick={()=>fileRef.current&&fileRef.current.click()} style={tile(false)}>{b.cover?"Change":"Add"}</button>
-        </div>
+      <div role="dialog" aria-label="Cover" style={{...dialogInner(C,300),padding:"18px 20px 12px",alignItems:"center"}} onClick={e=>e.stopPropagation()}>
+        <button onClick={pasteNow}
+          onDragOver={e=>{ e.preventDefault(); setOver(true); }} onDragLeave={()=>setOver(false)}
+          onDrop={e=>{ e.preventDefault(); setOver(false); const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f)take(f); }}
+          style={{width:120,aspectRatio:"2 / 3",border:"1px dashed "+(over?C.action:C.rule),borderRadius:3,background:over?C.panel:C.card,
+            fontSize:12.5,color:C.soft,cursor:"pointer",fontFamily:"inherit",display:"grid",placeItems:"center",padding:0}}>Paste</button>
         {why?<div style={{fontSize:11.5,color:C.warnInk}}>{why}</div>:null}
         <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif,image/avif" onChange={e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(f)take(f); }}/>
-        <div style={{display:"flex",gap:16,justifyContent:"center"}}>
-          {b.cover?<button onClick={()=>{ dropCover(b); close(); }} style={textBtn(C)}>Remove</button>:null}
+        <button onClick={()=>fileRef.current&&fileRef.current.click()} style={pBtn}>{b.cover?"Change":"Add"}</button>
+        <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"baseline",width:"100%",marginTop:2}}>
+          <span>{b.cover?<button onClick={()=>{ dropCover(b); close(); }} style={textBtn(C)}>Remove</button>:null}</span>
           <button onClick={close} style={textBtn(C)}>Cancel</button>
+          <span/>
         </div>
       </div>
     </div>
