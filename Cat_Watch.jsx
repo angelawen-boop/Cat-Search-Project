@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "49.1";
+const APP_VERSION = "49.2";
 const APP_VERSION_DATE = "19 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -776,7 +776,11 @@ const OWN_CHIP={
   "occ-gemaeldegalerie-skd-museum":{short:"Dresden",lookupName:"Gem\u00e4ldegalerie Alte Meister Dresden",name:"Gem\u00e4ldegalerie Alte Meister",
     linkRead:{titleAfter:/^Active page:/,slashDayFirst:true,skip:/^(?:Exhibition Site\b|Opening Hours\b|\[Translate to English:\]|\u00a9)/}},
   // The Städel (staedelmuseum.de): chip "Frankfurt" after Dresden, cards "Frankfurt Städel" (her decision, OCC_CARD).
-  "occ-staedelmuseum-de":{short:"Frankfurt",lookupName:"St\u00e4del Museum",name:"St\u00e4del Museum"},
+  // Written in, her decision: its shop's books section (the finder cannot see its books), and
+  // `shopUnseen` — its books are in the page's HTML but Parallel drops them, so a shop page
+  // with no priced line reads "Parallel fault" (docs/add_by_link.md, "Frankfurt").
+  "occ-staedelmuseum-de":{short:"Frankfurt",lookupName:"St\u00e4del Museum",name:"St\u00e4del Museum",
+    shopHome:"https://liebieghaus.ticketfritz.de/",shopCatalogues:"https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885",shopUnseen:"parallel"},
 };
 const ownChip=id=>Object.prototype.hasOwnProperty.call(OWN_CHIP,id);
 // The chip a venue's cards sit under: its group's, where it has one.
@@ -1230,7 +1234,7 @@ function occEntry(v){
   // `short` is her name for the venue's cards, written into the store by a session;
   // the page title's name stands until then.
   const own=OWN_CHIP[v.id]||{};
-  return{id:v.id,short:own.short||OCC_SHORT[v.id]||v.short||v.name,chip:own.chip,card:OCC_CARD[v.id],lookupName:own.lookupName||OCC_NAME[v.id]||v.short||v.name,name:own.name||OCC_NAME[v.id]||v.name,occasional:true,english:v.english===false?false:undefined,
+  return{id:v.id,short:own.short||OCC_SHORT[v.id]||v.short||v.name,chip:own.chip,card:OCC_CARD[v.id],lookupName:own.lookupName||OCC_NAME[v.id]||v.short||v.name,name:own.name||OCC_NAME[v.id]||v.name,occasional:true,shopUnseen:own.shopUnseen,english:v.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?v.shopHome||null:null,shopCatalogues:live?v.shopCatalogues||null:null,shopSearch:live?v.shopSearch||null:null,
     shopUnknown:!live&&!(v.shop==="none"&&v.confirmed)};
@@ -1660,6 +1664,9 @@ const SHELF_OPENS=2;   // at most two candidates opened to check, then the next 
 async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId){
   const no=new Set((turnedDown||[]).map(normalizeUrlKey));
   const own=OWN_CHIP[venueId]||{};
+  // A books section written into the venue's rule (the Städel) is offered as found; she confirms it.
+  if(own.shopCatalogues&&!no.has(normalizeUrlKey(own.shopCatalogues)))
+    return{shop:"found",shopHome:own.shopHome||originOf(own.shopCatalogues),shopCatalogues:own.shopCatalogues,shopSearch:null,foundBy:"the venue's rule",finder:3,searchRule:SEARCH_RULE};
   // A Shop button on the museum's own site (Berlin's smb.museum/webshop) vouches for that
   // page, not the whole site: "Online Catalogues & Databases" there is no shop.
   let pageShopHost=baseDomain(hostOf(pageShop))===baseDomain(museumHost)?"":hostOf(pageShop);
@@ -2945,9 +2952,10 @@ function publisherNote(result,hasUrl){
 // none it runs the shop step alone ("Now"). No history kept; a failed check changes
 // nothing. Pre-order counts as in the shop; sold out in any language counts as gone.
 //
-// shopState: "shop" | "gone" | "web" | "none" | "blocked" | "script" | null; "gone" keeps shopUrl.
+// shopState: "shop" | "gone" | "web" | "none" | "blocked" | "script" | "parallel" | null; "gone" keeps shopUrl.
 // "blocked": the shop refused every page opened (KHM). "script": its pages opened with no
-// books on them, drawn by script (MoMA). Either way whether the book is there is
+// books on them, drawn by script (MoMA). "parallel": a venue whose books Parallel drops
+// (`shopUnseen`, the Städel), its pages showing no priced line. Each way whether the book is there is
 // UNKNOWN — never "not in the shop". shopChange: "now" | "back" | null on a "shop" row.
 // A legacy "gone" on a "web" row reads as plain "web".
 
@@ -2968,9 +2976,12 @@ function shopHeadline(shopState,shopChange){
 // weight of "No longer in the museum shop.", the rest grey.
 const SHOP_BLOCKED_HEAD="The museum shop is blocked";
 const SHOP_SCRIPT_HEAD="The museum shop contents cannot be seen - JS-rendering";
-// A shop the lookup could not read: refused, or drawn by script (her wording for each).
-const shopUnread=s=>s==="blocked"||s==="script";
-const shopUnreadHead=s=>s==="script"?SHOP_SCRIPT_HEAD:SHOP_BLOCKED_HEAD;
+const SHOP_PARALLEL_HEAD="The museum shop contents cannot be seen - Parallel fault";
+// A shop the lookup could not read: refused, drawn by script, or dropped by Parallel (her wording for each).
+const shopUnread=s=>s==="blocked"||s==="script"||s==="parallel";
+const shopUnreadHead=s=>s==="script"?SHOP_SCRIPT_HEAD:s==="parallel"?SHOP_PARALLEL_HEAD:SHOP_BLOCKED_HEAD;
+// Re-check's line for each: "Re-check didn’t work — museum shop " + this.
+const shopUnreadSaid=s=>s==="script"?"contents cannot be seen - JS-rendering":s==="parallel"?"contents cannot be seen - Parallel fault":"is blocked";
 const SHOP_BLOCKED_FOUND_REST=" - search it manually. The catalogue is stocked elsewhere.";
 const SHOP_BLOCKED_NONE_REST=". The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
 
@@ -3346,8 +3357,8 @@ async function recheckShopCore(found,hooks){
     // A blocked shop is a failed check and changes nothing — except a ticket
     // link, which was wrong whatever the shop says.
     else if(s.blocked)out=ticket
-      ?{ok:true,detail:s.detail,row:{...row,shopState:s.blocked},said:dropped+"Re-check didn’t work — museum shop "+(s.blocked==="script"?"contents cannot be seen - JS-rendering":"is blocked")+"."}
-      :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop "+(s.blocked==="script"?"contents cannot be seen - JS-rendering":"is blocked")+"."};
+      ?{ok:true,detail:s.detail,row:{...row,shopState:s.blocked},said:dropped+"Re-check didn’t work — museum shop "+shopUnreadSaid(s.blocked)+"."}
+      :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop "+shopUnreadSaid(s.blocked)+"."};
     // The shop's book is the picked one only when its ISBN says so; otherwise the picked
     // book is looked for on the list the shop step read, as the lookup does.
     else if(pickedVersion(row)&&!(o.found&&o.isbn13&&[pickedVersion(row).isbn13,pickedVersion(row).alsoIsbn13].includes(o.isbn13))){
@@ -3542,7 +3553,7 @@ function lookupIo(hooks,opts){
 // A book the shop step found is in the museum shop; its link is filed only when it is
 // on the shop (shopLinkOf) — shopStep has already refused the pages it opened.
 // `seen`: the text the read was given, which an ISBN must appear in (toIsbn13).
-// `blocked`: false, or why the shop step could not read the shop ("blocked" or "script");
+// `blocked`: false, or why the shop step could not read the shop ("blocked", "script" or "parallel");
 // the row says so.
 function settle(row,o,dom,detail,fromShopStage,blocked,seen){
   const link=isTicketLink(o.shopUrl)?null:(o.shopUrl||null);
@@ -3586,6 +3597,14 @@ async function shopStep(row,io){
   if(!s1.results.length&&(s1.errors||[]).length)
     return{ran:true,ok:true,blocked:"blocked",detail:s1.detail+"\nThe museum shop refused every page, so it could not be searched.",data:null};
   if(!s1.results.length)return{ran:true,ok:true,detail:s1.detail,data:null};
+  // A venue whose books Parallel drops (the Städel): no priced line, even read whole, is "parallel".
+  const priced=r=>pageTextOf(r.results).split("\n").some(realPrice);
+  if(mu&&mu.shopUnseen==="parallel"&&!priced(s1)){
+    const whole=await io.fetch(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
+    if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
+    if(!priced(whole))
+      return{ran:true,ok:true,blocked:"parallel",detail:s1.detail+"\n"+whole.detail+"\nParallel brought back this shop’s pages without their books, so it could not be searched.",data:null};
+  }
   // Every page empty: drawn by script (her decision, MoMA Brancusi), "script". But short excerpts are not an empty page (her Watteau): the pages are
   // opened again whole, and the shop is unread only if they are still empty or show
   // no price anywhere.

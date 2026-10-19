@@ -222,13 +222,15 @@ and gifts only; the finder says "Shop found, but not its books section" and she 
 decision; lookups go to the web). Three pages on the proof list; AL-045.
 
 **Frankfurt** (the Städel, `occ-staedelmuseum-de`): its own chip "Frankfurt", after Dresden; cards "Frankfurt
-Städel" (her decision; `OWN_CHIP`, `OCC_CARD`; AL-049). No pages on the proof list yet. **OPEN — its shop**
+Städel" (her decision; `OWN_CHIP`, `OCC_CARD`; AL-049). No pages on the proof list yet. **Its shop**
 (`liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885`, linked "Kataloge online kaufen" from the
 Städel's Museumsshop page): the books and prices are in the page's own HTML, but Parallel's reading of it
-stops after the menu ("A- A+"), so the finder says "Shop found, but not its books section" — neither
-JS-rendered nor blocked (proved: one keyed fetch beside a direct one). Each book is a line with a quantity
-box, no page of its own. Her wording for it, not built: "The museum shop contents cannot be seen -
-Parallel fault", Re-check the same; needs this venue's shop written into the app.
+stops after the menu ("A- A+") — neither JS-rendered nor blocked (proved: a keyed fetch beside a direct one).
+Each book is a line with a quantity box, no page of its own. **Two facts written in, her decision** (the app
+cannot tell a Parallel fault from JS-rendering): the section (`shopCatalogues`, offered on the shop screen for
+her to confirm; AL-049a), and `shopUnseen: "parallel"` — a shop page with no priced line, read whole, says
+"The museum shop contents cannot be seen - Parallel fault", Re-check the same (FS-001–005, on Parallel's live
+answer). Once Parallel returns the books, the shop is read as usual (FS-004); the rule stays until removed.
 
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her decision: Parallel-only rules
 live in the app, never the scraper). They only tidy what Claude is handed. Options: `title`, `titleDrop` (a

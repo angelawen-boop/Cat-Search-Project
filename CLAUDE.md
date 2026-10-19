@@ -423,7 +423,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 49.1 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 49.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -563,11 +563,11 @@ and were fixed in code, proven live).
   recased (shared `capsTitleParts`, `dates.js`); a house line over the dates read again (Van Dyck, Boucher).
   Proved live on 105 proof pages; her Berlin, Munich and Dresden links are imported (clean).
   `docs/add_by_link.md`, "Munich" and "Dresden".
-- **Built, not published — chip "Frankfurt" after Dresden, cards "Frankfurt Städel"; the Munich chip now "Munich";
-  a JS-rendered shop reads "The museum shop contents cannot be seen - JS-rendering"** (her wording; AL-049, B-001).
-  **OPEN — the Städel's shop:** its books are in the page's HTML but Parallel drops them (proved), so the finder
-  ends "Shop found, but not its books section"; her "… - Parallel fault" wording waits on her yes to write its
-  shop into the app. `docs/add_by_link.md`, "Frankfurt".
+- **Published at 49.2 — the Städel by link; her Frankfurt links and lookups confirm.** Chip "Frankfurt" after
+  Dresden, cards "Frankfurt Städel"; the Munich chip "Munich"; a JS-rendered shop reads "The museum shop contents
+  cannot be seen - JS-rendering". **Hard-coded, her decision:** the Städel's shop section, and "…- Parallel fault"
+  when Parallel brings it back without its books (proved: they are in the page's HTML). The rule stays until
+  removed, even once Parallel reads the books. `docs/add_by_link.md`, "Frankfurt"; AL-049, FS-.
 - **Published at 47.2 — Berlin and Munich by link; her next links and lookups there confirm.** Dotted dates
   day first (DS-004), headings over two lines, ranges over three lines, Berlin's shop found (German compounds,
   a book's address stands for its section); chips "Munich" (then "Munich Pinakotheken") and "Berlin" after KHM, "Rijks" for

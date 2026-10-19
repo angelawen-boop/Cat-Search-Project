@@ -641,6 +641,15 @@ function runtime() {
     const F = 'occ-staedelmuseum-de';
     ok(fn('occVenueId')('www.staedelmuseum.de') === F && own[F].short === 'Frankfurt' && card[F] === 'Frankfurt Städel' && order.indexOf(D) + 1 === order.indexOf(F),
       'AL-049:  the Städel: chip "Frankfurt" right after Dresden, cards "Frankfurt Städel" (her decision)');
+    {
+      const before = calls.length, r = await discoverShop('', 'www.staedelmuseum.de', 'Städel Museum', [], F);
+      ok(r.shop === 'found' && r.shopCatalogues === 'https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885'
+        && own[F].shopUnseen === 'parallel' && calls.length === before,
+        'AL-049a:  its shop\'s books section is written in (the finder cannot see its books) and offered for her to confirm, nothing fetched', JSON.stringify(r));
+      const head = fn('shopUnreadHead');
+      ok(head('parallel') === 'The museum shop contents cannot be seen - Parallel fault' && head('script') === 'The museum shop contents cannot be seen - JS-rendering'
+        && head('blocked') === 'The museum shop is blocked', 'AL-049b:  the card\'s three lines for a shop that cannot be read (her wording)');
+    }
     ok(own[A].group === own[M].group && own[A].chip === 'Munich' && own[A].short === 'Munich Alte Pinakothek'
       && own[M].short === 'Munich der Moderne' && order.indexOf(A) + 1 === order.indexOf(M),
       'AL-043c:  one chip "Munich", the Alte first; cards "Munich Alte Pinakothek" and "Munich der Moderne"');

@@ -27,3 +27,7 @@ products by code. The shelf page itself comes back as a menu only (AL-033).
 `saved/` (18 Oct): HER saved pages from Palazzo Reale Milano's pages on the city council's site, which
 refuses Parallel (Titian, Soutine, Antonello da Messina) — Chrome `.mht` files from her phone, cut by code to the page itself (the photos and
 fonts dropped). The proof for Pages (`scraper/fixtures/add_by_page.js`, AP-).
+
+`shop_search/staedel_shelf_live.json` (19 Oct): the Städel's "Städel Publikationen" section, the keyed
+connector's live answer, saved by script. It stops after the menu ("A- A+"); the books and prices in the
+page's own HTML are missing (FS-, "Parallel fault").

@@ -1,0 +1,22 @@
+{
+ "fetched": "2026-10-19",
+ "how": "Parallel Search Key web_fetch, full_content true, objective \"The books in this section of the shop, with their prices.\"",
+ "reply": {
+  "extract_id": "extract_49691d154df48c0e85ee5a2bd51b28c8",
+  "results": [
+   {
+    "url": "https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885",
+    "title": "Städel Publikationen",
+    "publish_date": null,
+    "excerpts": [
+     "# Cookie Hinweis und Einstellungen\n## Datenschutzinformationen\nSie finden diesen Link jederzeit im Footer dieser Seite\n[Datenschutz Link](https://liebieghaus.ticketfritz.de/Home/Privacy)\nAlle akzeptieren Nur Auswahl bestätigen\nZu Deutsch wechseln\nZu Deutsch wechseln\n[Startseite](https://liebieghaus.ticketfritz.de/Home/Index)\n\n...\n\n* [Städel Publikationen](https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885)\n* [Städel Kunstdrucke](https://www.kunstkopie.de/a/frankfurt-staedel-museum.html?utm_source=staedle-museum&utm_medium=kooperation&utm_campaign=kunstkopie%20)\n* [Liebieghaus Tickets](https://liebieghaus.ticketfritz.de/Event/Kachel/tickets/21216)\n* [Liebieghaus Publikationen](https://liebieghaus.ticketfritz.de/Shop/Index/publikationen/3862)"
+    ],
+    "full_content": "### Cookie Hinweis und Einstellungen\n\nUm unsere Webseite für Sie optimal zu gestalten und fortlaufend verbessern zu können, verwenden wir notwendige Cookies. Durch die weitere Nutzung der Webseite stimmen Sie der Verwendung dieser Cookies zu.\n\nSie haben die Möglichkeit Cookies zu deaktivieren, welche für den Betrieb nicht notwendig sind.\n\n#### Notwendige Cookies\n\nDiese Cookies sind erforderlich, um Ihnen das Surfen auf der Webseite und die Nutzung ihrer Funktionen zu ermöglichen, etwa sichere Bereiche der Webseite oder Bereiche mit bezahlten Inhalten zu besuchen. Ohne diese Cookies können von Ihnen gewünschte Dienste (z.B. „passwortloses“ Einloggen und Warenkörbe) nicht angeboten werden. Weil diese Cookies für die Nutzung einer Webseite erforderlich sind, können sie nicht deaktiviert werden, ohne dass die Nutzung der Webseite erheblich beeinträchtigt wird.\n\n#### ASP.NET\\_SessionId\n\nEindeutiger alphanumerischer Schlüssel zum Verwalten der aktuellen Browser Session\n\n#### Cb-accepted\n\nWird verwendet, um den Cookie Banner auszublenden, wenn der Cookie Hinweis akzeptiert wird.\n\n#### Size\n\nDas Size Cookie wird verwendet um die Schriftgröße zu speichern.\n\n#### ASPXAUTH\n\nDas ASPXAUTH Cookie wird verwendet, um festzustellen, ob ein Benutzer authentifiziert ist.\n\n#### PreferredCulture\n\nDas PreferredCulture Cookie speichert die vom User gewählte Sprache der Website.\n\n#### RequestedVerificationToken\n\nDas RequestedVerificationToken Cookie schützt den User vor sogenannten \"Forgery Attacken\".\n\n#### Andere Cookies\n\nDie Analyse-Cookies werden verwendet, um die Qualität unserer Website und ihrer Inhalte zu verbessern. Die folgenden Cookies können je nach Benutzerpräferenz aktiviert/deaktiviert werden.\n\n#### Azure Insight\n\n(ai\\_user/ai\\_session) Wir verwenden Application Insights für Analysezwecke mit der Software Microsoft Application Insights, um statistische Nutzungs- und Telemetriedaten zu sammeln. Der Cookie speichert eine eindeutige Kennung, um Benutzer bei wiederholten Besuchen im Laufe der Zeit wiederzuerkennen.\n\n#### Datenschutzinformationen\n\nSie finden diesen Link jederzeit im Footer dieser Seite  \n[Datenschutz Link](https://liebieghaus.ticketfritz.de/Home/Privacy)\n\nAlle akzeptieren Nur Auswahl bestätigen\n\nZu Deutsch wechseln\n\nZu Deutsch wechseln\n\n[Startseite](https://liebieghaus.ticketfritz.de/Home/Index)\n\n[Warenkorb 0 Artikel 0,00 €](https://liebieghaus.ticketfritz.de/Cart/Index)\n\n[Anmelden](https://liebieghaus.ticketfritz.de/Account/Login)\n\nToggle navigation\n\n* [Städel Publikationen](https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885)\n* [Städel Kunstdrucke](https://www.kunstkopie.de/a/frankfurt-staedel-museum.html?utm_source=staedle-museum&utm_medium=kooperation&utm_campaign=kunstkopie%20)\n* [Liebieghaus Tickets](https://liebieghaus.ticketfritz.de/Event/Kachel/tickets/21216)\n* [Liebieghaus Publikationen](https://liebieghaus.ticketfritz.de/Shop/Index/publikationen/3862)\n* [Gutscheine & mehr](https://liebieghaus.ticketfritz.de/Shop/Index/gutscheine--mehr/44692)\n\nA-\n\nA+"
+   }
+  ],
+  "errors": [],
+  "warnings": null,
+  "metadata": null,
+  "session_id": "session_49691d154df48c0e85ee5a2bd51b28c8"
+ }
+}

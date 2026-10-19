@@ -920,6 +920,35 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq(m.row.shopState, 'script', 'YS-005: a shelf with neither prices nor product links (MoMA’s pop-up) is still JS-rendered', JSON.stringify(m.row.shopState));
   }
 
+  // ── FS-001..FS-005: the Städel — Parallel drops its books (her decision: "Parallel fault") ──
+  // Parallel's live answer for its section: docs/link_pages/shop_search/staedel_shelf_live.json.
+  {
+    const live = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'link_pages', 'shop_search', 'staedel_shelf_live.json'), 'utf8')).reply.results[0];
+    const F = 'occ-staedelmuseum-de', SHELF = 'https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885';
+    const venue = { [F]: { id: F, name: 'Städel Museum', host: 'www.staedelmuseum.de', shop: 'found', confirmed: true, finder: 3,
+      shopHome: 'https://liebieghaus.ticketfritz.de/', shopCatalogues: SHELF, shopSearch: null } };
+    const reply = text => args => ({ payload: { errors: [], results: args.urls.map(u => args.full_content
+      ? { url: u, title: live.title, excerpts: live.excerpts, full_content: text } : { url: u, title: live.title, excerpts: live.excerpts }) } });
+    const callsF = [];
+    const yf = lift({ mcp: (tool, args) => tool === 'web_search' ? { payload: { results: [] } } : reply(live.full_content)(args), sample: () => ({ found: false }) }, callsF);
+    yf.registerOccasional(venue);
+    const f = await yf.lookupCatalogue(row(F, 'Maria Magdalena'), { label: () => {} });
+    eq(f.row.shopState, 'parallel', 'FS-001: the Städel’s section as Parallel returns it (menu, no books) reads "Parallel fault", not JS-rendering', JSON.stringify([f.row.shopState, f.detail]));
+    ok(!callsF.some(c => c.kind === 'sample' && /OWN shop pages, opened directly/.test(c.prompt)), 'FS-002:   Claude is not asked to read the shop');
+    const rf = await yf.recheckShopRow({ ...f.row, shopState: 'web', shopUrl: null }, { label: () => {} });
+    eq(rf.said, 'Re-check didn’t work — museum shop contents cannot be seen - Parallel fault.', 'FS-003: Re-check says the same, her wording', JSON.stringify(rf.said));
+    const callsG = [];
+    const books = live.full_content + '\n\n49,90 €\nMaria Magdalena\nAusstellungskatalog zur Sonderausstellung';
+    const yg = lift({ mcp: (tool, args) => tool === 'web_search' ? { payload: { results: [] } } : reply(books)(args), sample: () => ({ found: false }) }, callsG);
+    yg.registerOccasional(venue);
+    const g = await yg.lookupCatalogue(row(F, 'Maria Magdalena'), { label: () => {} });
+    ok(g.row.shopState !== 'parallel', 'FS-004: once Parallel returns a priced book line there, the shop is read as usual', JSON.stringify(g.row.shopState));
+    const ym = lift({ mcp: (tool, args) => tool === 'web_search' ? { payload: { results: [] } } : reply(live.full_content)(args), sample: () => ({ found: false }) }, []);
+    ym.registerOccasional({ 'occ-britishart-yale-edu': { ...venue[F], id: 'occ-britishart-yale-edu', name: 'Yale Center for British Art', host: 'britishart.yale.edu' } });
+    const mm = await ym.lookupCatalogue(row('occ-britishart-yale-edu', 'Maria Magdalena'), { label: () => {} });
+    ok(mm.row.shopState !== 'parallel', 'FS-005: only the Städel carries the rule: the same page at another venue is never "Parallel fault"', JSON.stringify(mm.row.shopState));
+  }
+
   // ── SB-001..SB-008: the book found on the web, looked for again on the shop's own list
   // (her decision, Yale Constable). The shelf read says "not this show's" — as Claude did
   // live — and the web names the book; every shelf link carrying its title is opened.

@@ -258,7 +258,8 @@ Each replaced a real failure. Card wording is in the code.
   rest grey. Blocked (refused every page): KHM, MAM. **A shop whose every page comes back
   empty says "The museum shop contents cannot be seen - JS-rendering"** (`shopState: "script"`; her
   wording, in place of "The museum shop is blocked"; Re-check: "museum shop contents cannot be seen -
-  JS-rendering"; B-001, B-003a) — MoMA's shelf is drawn
+  JS-rendering"; B-001, B-003a); the Städel's, whose books Parallel drops, "…- Parallel fault" (`shopState:
+  "parallel"`, a venue rule; FS-001–005, `docs/add_by_link.md`, "Frankfurt") — MoMA's shelf is drawn
   by script and its search and `products.json` answer 403. Judged on the WHOLE page,
   reopened when excerpts are short; no price anywhere = empty (Watteau), unless the list's
   first product opens as one book with a price (`firstProductIsBook`, Yale's Publications;
