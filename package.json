@@ -10,8 +10,7 @@
     "test:saving": "node scraper/run_tests.js saving",
     "test:screen": "node scraper/run_tests.js screen",
     "test:app": "node scraper/run_tests.js app",
-    "test:scraper": "node scraper/run_tests.js scraper",
-    "test:shelf": "node scraper/run_tests.js shelf"
+    "test:scraper": "node scraper/run_tests.js scraper"
   },
   "repository": {
     "type": "git",
