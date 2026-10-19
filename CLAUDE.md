@@ -219,7 +219,8 @@ Faults found are fixed in code (§2.2.2).
 #### 2.2.5 Queued next
 
 - **The ledger's size (1,003 exhibitions; 2,000 possible).** The faster list (49) and the quicker
-  "Confirm save?" (49.1) are live; her use confirms. **OPEN:** whether to clear old Cloud Saves — `docs/scalability.md`; agree with her before building.
+  "Confirm save?" (49.1) are live; her use confirms. **OPEN:** a slight stickiness left after "Save now"
+  — she watches it; if it persists, run Save's two store reads at once (her decision). Whether to clear old Cloud Saves — `docs/scalability.md`; agree with her before building.
 
 - **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
   check of Hammershøi — the edition read now sees every result, so the library
