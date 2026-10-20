@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "49.2";
-const APP_VERSION_DATE = "19 Oct 2026";
+const APP_VERSION = "49.3";
+const APP_VERSION_DATE = "20 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
 // Sort by Venue and refresh headings all follow it.
@@ -2166,9 +2166,9 @@ function fmtRefresh(iso){if(!iso)return"never";const d=new Date(iso);if(isNaN(d)
 function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)return a+" \u2014 "+b;if(b)return"until "+b;if(a){const st=new Date(r.startDate+"T00:00:00");const past=!isNaN(st)&&st<=new Date();return(past?"open since ":"opens ")+a;}return"dates unknown";}
 
 // The shop link searches by the EXHIBITION's title (her decision): shops index the
-// show's name; resellers use the ISBN or the book's title. Booko AU: booko.au/<isbn>,
+// show's name; resellers use the ISBN or the book's title. Booko: booko.au/<isbn>,
 // or its title search with no ISBN.
-function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+encodeURIComponent(r.title)});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon AU",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks AU",href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q},{name:"Booko AU",href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
+function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+encodeURIComponent(r.title)});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks",href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q},{name:"Booko",href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
 
 // ── FINDING A CATALOGUE (docs/app.md §1; CLAUDE.md §5.1 "Catalogue lookup") ────
 // The page cannot reach the internet, so searching and reading go through her keyed
@@ -5133,6 +5133,8 @@ export default function App(){
   const[acqHasCat,setAcqHasCat]=useState(false);
   const[acqNoCat,setAcqNoCat]=useState(false);
   const[acqBuyNext,setAcqBuyNext]=useState(false);
+  const[drag,setDrag]=useState(null); // the card being dragged in the Buy next view
+  const dragOn=acqBuyNext&&!readOnly;
   const[showAll,setShowAll]=useState(false);
   const[dismissedOnly,setDismissedOnly]=useState(false);
   const[watchedF,setWatchedF]=useState(false);
@@ -6008,9 +6010,94 @@ export default function App(){
   const undoDismiss=()=>{if(!undo)return;commit(rows.map(r=>r.id===undo.id?{...r,interested:true}:r));setUndo(null);if(undoTimer.current)clearTimeout(undoTimer.current);};
   const restore=id=>commit(rows.map(r=>r.id===id?{...r,interested:true}:r));
   const toggleWatch=id=>commit(rows.map(r=>r.id===id?{...r,watching:!r.watching}:r));
-  // Leaving Yes clears the buy-next dot: it marks a wanted book only.
-  const setAcq=(id,v)=>commit(rows.map(r=>{if(r.id!==id)return r;const a=r.acquiring===v?null:v;return{...r,acquiring:a,buyNext:a==="yes"?!!r.buyNext:false};}));
-  const toggleBuyNext=id=>commit(rows.map(r=>r.id===id?{...r,buyNext:!r.buyNext}:r));
+  // Leaving Yes clears the buy-next dot and its place in her order: it marks a wanted book only.
+  const setAcq=(id,v)=>commit(rows.map(r=>{if(r.id!==id)return r;const a=r.acquiring===v?null:v,bn=a==="yes"&&!!r.buyNext;return{...r,acquiring:a,buyNext:bn,buyRank:bn?(r.buyRank??null):null};}));
+  // A newly marked card goes to the top of her Buy next order (highest buyRank first).
+  const toggleBuyNext=id=>{const top=rows.reduce((m,r)=>r.buyNext&&Number.isFinite(r.buyRank)?Math.max(m,r.buyRank):m,0);
+    commit(rows.map(r=>r.id===id?{...r,buyNext:!r.buyNext,buyRank:r.buyNext?null:top+1}:r));};
+  // A drop in the Buy next view: the card lands before the shown card it was dropped above
+  // (else after the one below it), across every Buy next card, hidden ones included, then
+  // all are renumbered. Not an edit: editedAt is untouched (her decision).
+  const moveBuyNext=(id,beforeId,afterId)=>{
+    const shown=new Map(view.map((r,i)=>[r.id,i])),key=r=>Number.isFinite(r.buyRank)?r.buyRank:-Infinity;
+    const all=rows.filter(r=>r.acquiring==="yes"&&r.buyNext).sort((a,b)=>key(b)-key(a)||(shown.get(a.id)??1e9)-(shown.get(b.id)??1e9)).map(r=>r.id);
+    const order=all.filter(x=>x!==id);let at=beforeId?order.indexOf(beforeId):afterId?order.indexOf(afterId)+1:-1;if(at<0)at=order.length;
+    order.splice(at,0,id);const rank=new Map(order.map((x,i)=>[x,order.length-i]));
+    commit(rows.map(r=>rank.has(r.id)?{...r,buyRank:rank.get(r.id)}:r));};
+  // ── DRAG TO REORDER, BUY NEXT ONLY ──
+  // Touch: hold a card ~0.45s (a buzz where the phone allows), then drag; a swipe before
+  // that scrolls. Mouse: press and move. Buttons, links and version picks keep their taps.
+  const dragGesture=useRef(null);
+  const dragActs=useRef(null);
+  dragActs.current={moveBuyNext};
+  const startDrag=(e,id)=>{
+    if(dragGesture.current||(e.button!==undefined&&e.button>0))return;
+    if(e.target.closest&&e.target.closest("button,a,input,select,textarea,label,[role]"))return;
+    const touch=e.type==="touchstart";
+    if(touch&&e.touches.length!==1)return;
+    const p0=touch?e.touches[0]:e;
+    const g={lifted:false,x:p0.clientX,y:p0.clientY,lastY:p0.clientY,scroll0:window.scrollY,raf:0,timer:0};
+    dragGesture.current=g;
+    const place=()=>{
+      const dy=g.lastY+window.scrollY-(g.y+g.scroll0),r=g.rects[g.from],centre=r.top+r.h/2+dy;
+      g.to=g.rects.filter((q,i)=>i!==g.from&&q.top+q.h/2<centre).length;
+      setDrag(d=>d&&{...d,dy,to:g.to});
+    };
+    const tick=()=>{ // near the screen's top or bottom edge, the page scrolls with her
+      const E=70,H=window.innerHeight,v=g.lastY<E?-(E-g.lastY)/4:g.lastY>H-E?(g.lastY-(H-E))/4:0;
+      if(v){window.scrollBy(0,v);place();}
+      g.raf=requestAnimationFrame(tick);
+    };
+    const lift=()=>{
+      const els=[...document.querySelectorAll("[data-buynext]")];
+      g.ids=els.map(el=>el.getAttribute("data-buynext"));g.from=g.ids.indexOf(id);
+      if(g.from<0)return end();
+      g.rects=els.map(el=>{const b=el.getBoundingClientRect();return{top:b.top+window.scrollY,h:b.height};});
+      g.lifted=true;g.to=g.from;
+      if(touch){try{navigator.vibrate&&navigator.vibrate(25);}catch(_){}}
+      setDrag({id,from:g.from,to:g.from,dy:0,h:g.rects[g.from].h});
+      if(typeof requestAnimationFrame!=="undefined")g.raf=requestAnimationFrame(tick);
+    };
+    const move=ev=>{
+      const p=ev.touches?ev.touches[0]:ev;if(!p)return;
+      if(!g.lifted){
+        const far=Math.hypot(p.clientX-g.x,p.clientY-g.y)>(touch?10:5);
+        if(!far)return;
+        if(touch)return end();
+        lift();if(!g.lifted)return;
+      }
+      if(ev.cancelable)ev.preventDefault();
+      g.lastY=p.clientY;place();
+    };
+    const up=()=>{
+      if(g.lifted){
+        const rest=g.ids.filter(x=>x!==id);
+        dragActs.current.moveBuyNext(id,rest[g.to]||null,g.to>0?rest[g.to-1]:null);
+        // The release is not a click on whatever sits under it.
+        const eat=ev=>{ev.stopPropagation();ev.preventDefault();};
+        window.addEventListener("click",eat,true);setTimeout(()=>window.removeEventListener("click",eat,true),0);
+      }
+      end();
+    };
+    const end=()=>{
+      clearTimeout(g.timer);if(g.raf)cancelAnimationFrame(g.raf);
+      document.removeEventListener(touch?"touchmove":"mousemove",move);
+      document.removeEventListener(touch?"touchend":"mouseup",up);
+      document.removeEventListener("touchcancel",end);
+      dragGesture.current=null;setDrag(null);
+    };
+    document.addEventListener(touch?"touchmove":"mousemove",move);
+    document.addEventListener(touch?"touchend":"mouseup",up);
+    if(touch){document.addEventListener("touchcancel",end);g.timer=setTimeout(lift,450);}
+  };
+  // Once a card is lifted, a finger's move drags it and does not scroll the page. Chrome
+  // lets a move be held back only by a listener in place before the touch begins.
+  useEffect(()=>{
+    if(!dragOn)return;
+    const hold=ev=>{if(dragGesture.current&&dragGesture.current.lifted&&ev.cancelable)ev.preventDefault();};
+    document.addEventListener("touchmove",hold,{passive:false});
+    return()=>document.removeEventListener("touchmove",hold,{passive:false});
+  },[dragOn]);
   // Her pick on a card with several versions (pickRow): the card's book follows it.
   const setPick=(id,i)=>{ const r=rows.find(x=>x.id===id); const next=r&&pickRow(r,i,new Date().toISOString()); if(next&&next!==r)commit(rows.map(x=>x.id===id?next:x)); };
   // A card's buttons, by name. One function for the life of the page (so LedgerCard can skip
@@ -6145,7 +6232,9 @@ export default function App(){
       return true;
     });
     out.sort((a,b)=>{
-      if(pinTouched){const aT=refreshTouched.includes(a.id)?0:1,bT=refreshTouched.includes(b.id)?0:1;if(aT!==bT)return aT-bT;}
+      // Buy next is in her own dragged order; the sort chips and the pinned group step aside.
+      if(acqBuyNext){const ka=Number.isFinite(a.buyRank)?a.buyRank:-Infinity,kb=Number.isFinite(b.buyRank)?b.buyRank:-Infinity;if(ka!==kb)return kb>ka?1:-1;}
+      if(pinTouched&&!acqBuyNext){const aT=refreshTouched.includes(a.id)?0:1,bT=refreshTouched.includes(b.id)?0:1;if(aT!==bT)return aT-bT;}
       if(sortBy==="added"){const d=String(b.addedAt||"").localeCompare(String(a.addedAt||""));if(d!==0)return d;}
       if(sortBy==="edited"){const d=String(b.editedAt||"").localeCompare(String(a.editedAt||""));if(d!==0)return d;if(!a.editedAt&&!b.editedAt){const aH=a.addedAt?1:0,bH=b.addedAt?1:0;if(aH!==bH)return bH-aH;}}
       if(sortBy==="venue"){const d=venueRank(a.museumId)-venueRank(b.museumId);if(d!==0)return d;}
@@ -6458,7 +6547,7 @@ export default function App(){
       <div style={{maxWidth:760,margin:"0 auto 12px",display:"flex",flexDirection:"column",gap:5}}>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Sort</span>
-          {[["date","Date"],["venue","Venue"],["added","Recently added"],["edited","Recently edited"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(sortBy===k&&!pinTouched)}>{l}{k==="date"&&sortBy==="date"&&!pinTouched?(dateReversed?" \u2191":" \u2193"):""}</button>)}
+          {[["date","Date"],["venue","Venue"],["added","Recently added"],["edited","Recently edited"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(sortBy===k&&!pinTouched&&!acqBuyNext)}>{l}{k==="date"&&sortBy==="date"&&!pinTouched&&!acqBuyNext?(dateReversed?" \u2191":" \u2193"):""}</button>)}
           {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{"\u2191 just-refreshed entries shown first"}</span>}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
@@ -6492,9 +6581,9 @@ export default function App(){
       <div style={{maxWidth:760,margin:"0 auto",display:"flex",flexDirection:"column",gap:10}}>
         {view.length===0&&<div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:18,fontSize:12.5,color:C.soft}}>Nothing matches those filters.</div>}
         {(()=>{
-          const pinnedCount=pinTouched?view.filter(x=>refreshTouched.includes(x.id)).length:0;
+          const pinnedCount=pinTouched&&!acqBuyNext?view.filter(x=>refreshTouched.includes(x.id)).length:0;
           // Band headers for the two "recently" sorts (only when not in the post-import pinned snapshot).
-          const bandMode=(!pinTouched&&(sortBy==="added"||sortBy==="edited"))?sortBy:null;
+          const bandMode=(!pinTouched&&!acqBuyNext&&(sortBy==="added"||sortBy==="edited"))?sortBy:null;
           const newestAdd=bandMode==="added"?(view.find(x=>x.addedAt)?.addedAt||null):null;
           const newestEdit=bandMode==="edited"?(view.find(x=>x.editedAt)?.editedAt||null):null;
           const bandOf=(x)=>{
@@ -6510,12 +6599,14 @@ export default function App(){
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
           const lead=brk||header;
           const isBusy=busyId===r.id;
-          return(
-            <React.Fragment key={r.id}>{lead}
-            <LedgerCard r={r} mu={MU[r.museumId]} isOpen={!!openCards[r.id]} isBusy={isBusy} busy={busy} rechecking={isBusy&&rechecking} lookLabel={isBusy?lookLabel:null}
-              said={recheckSaid&&recheckSaid.id===r.id?recheckSaid:null} C={C} TH={TH} chip={chip} pBtn={pBtn} lnk={lnk} act={cardAct}/>
-            </React.Fragment>
-          );
+          const card=<LedgerCard r={r} mu={MU[r.museumId]} isOpen={!!openCards[r.id]} isBusy={isBusy} busy={busy} rechecking={isBusy&&rechecking} lookLabel={isBusy?lookLabel:null}
+              said={recheckSaid&&recheckSaid.id===r.id?recheckSaid:null} C={C} TH={TH} chip={chip} pBtn={pBtn} lnk={lnk} act={cardAct}/>;
+          if(!dragOn)return <React.Fragment key={r.id}>{lead}{card}</React.Fragment>;
+          // The lifted card follows the finger; the cards it passes slide aside by its height.
+          let ds={userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none",cursor:"grab"};
+          if(drag&&r.id===drag.id)ds={...ds,position:"relative",zIndex:5,transform:"translateY("+drag.dy+"px) scale(1.02)",boxShadow:"0 6px 18px rgba(0,0,0,0.28)",borderRadius:5,cursor:"grabbing"};
+          else if(drag){const j=i<drag.from?i:i-1,f=j<drag.to?j:j+1;ds={...ds,transform:"translateY("+((f-i)*(drag.h+10))+"px)",transition:"transform 150ms ease"};}
+          return <div key={r.id} data-buynext={r.id} onMouseDown={e=>startDrag(e,r.id)} onTouchStart={e=>startDrag(e,r.id)} onContextMenu={e=>e.preventDefault()} style={ds}>{card}</div>;
         });})()}
         {view.length>drawLimit&&<div ref={moreRef} style={{height:1}}/>}
       </div>

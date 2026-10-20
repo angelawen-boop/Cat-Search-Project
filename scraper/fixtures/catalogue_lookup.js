@@ -677,12 +677,13 @@ function runtime(answer, log) {
        'C-135: a number in an address with a wrong check digit is not an ISBN');
   }
 
-  // ── C-140 to C-142: the Booko AU button — her shapes, 1 Oct ─────────
+  // ── C-140 to C-142, C-158: the Booko button — her shapes, 1 Oct ─────────
   {
     const api = lift({ document: {}, localStorage: {} });
-    const booko = r => (api.buyLinks(r).find(l => l.name === 'Booko AU') || {}).href;
+    const booko = r => (api.buyLinks(r).find(l => l.name === 'Booko') || {}).href;
     const names = api.buyLinks({ museumId: 'moma', title: 'X', isbn13: '9781633451971' }).map(l => l.name);
-    eq(names[names.length - 1], 'Booko AU', 'C-140: "Booko AU" is the last buy link, after Alibris');
+    eq(names[names.length - 1], 'Booko', 'C-140: "Booko" is the last buy link, after Alibris');
+    eq(names.slice(-4).join(' | '), 'Amazon | AbeBooks | Alibris | Booko', 'C-158: the bookseller buttons carry no "AU" (her decision)');
     eq(booko({ museumId: 'moma', title: 'Brancusi', catalogueTitle: 'Brancusi: The Artist and His Studio', isbn13: '9781633451971' }),
        'https://booko.au/9781633451971', 'C-141: with an ISBN, Booko’s own page for it');
     eq(booko({ museumId: 'moma', title: 'Brancusi', catalogueTitle: 'Brancusi the artist and his studio', isbn13: null }),

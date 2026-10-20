@@ -442,7 +442,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 49.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 49.3 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -471,7 +471,7 @@ reopening, now live — `docs/cloud_storage.md`). Reasoning and the two rejected
 
 ```
 id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
-acquiring, buyNext, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
+acquiring, buyNext, buyRank, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
 publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, addedAt, editedAt
 ```
 
@@ -587,7 +587,7 @@ and were fixed in code, proven live).
   cannot be seen - JS-rendering". **Hard-coded, her decision:** the Städel's shop section, and "…- Parallel fault"
   when Parallel brings it back without its books (proved: they are in the page's HTML). The rule stays until
   removed, even once Parallel reads the books. `docs/add_by_link.md`, "Frankfurt"; AL-049, FS-.
-- **Built, not published (next number 49.3):** MoMA's pop-up reads as "contents cannot be seen — JS-rendering",
+- **Published at 49.3:** MoMA's pop-up reads as "contents cannot be seen — JS-rendering",
   not the false "not in the museum shop" (her Brancusi Re-check; B-007); card lines join phrases with an em
   dash, not " - " (her ask); the footer's "Reset cards" is "Reset search" (RC-002). Her decision on MoMA: small
   fix only; the better fix — finding the book's own store.moma.org page when the list can't be seen — waits on

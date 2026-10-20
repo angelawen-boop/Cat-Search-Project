@@ -486,11 +486,63 @@ async function probablyNotForYou() {
   } finally { await page.close(); }
 }
 
+async function buyNextOrder() {
+  const NAME = 'AD-011 Buy next is in her own dragged order';
+  // Three wanted shows, none yet marked; a fourth wanted show never marked stays out.
+  const L = { rows: ['One', 'Two', 'Three', 'Four'].map(n => show('fx-' + n.toLowerCase(), 'Fixture Buy ' + n,
+    { acquiring: 'yes', buyNext: false })), ignored: [] };
+  const page = await mount({ save: 'ok' });
+  try {
+    await page.loadFile(L);
+    for (const n of ['One', 'Two', 'Three'])
+      await page.click(page.card('Fixture Buy ' + n).querySelector('button[title="Buy next"]'));
+    const chip = [...page.doc.querySelectorAll('button')].find(b => b.textContent.trim() === 'Buy next' && !b.getAttribute('title'));
+    await page.click(chip);
+    const order = () => [...page.doc.querySelectorAll('[data-buynext] article h3')].map(h => h.textContent.replace(/^.*Fixture Buy (\w+).*$/s, '$1')).join(' ');
+    check(NAME + ': a newly marked card goes to the top', order() === 'Three Two One', order());
+    // Lift the top card with the mouse and carry it below the others. jsdom draws every
+    // card at height 0, so any move down lands it last.
+    const top = page.doc.querySelector('[data-buynext] article h3');
+    const ev = (t, el, y) => el.dispatchEvent(new page.win.MouseEvent(t, { bubbles: true, button: 0, clientX: 10, clientY: y }));
+    await act(async () => { ev('mousedown', top, 100); });
+    await act(async () => { ev('mousemove', page.doc, 120); ev('mousemove', page.doc, 160); });
+    await act(async () => { ev('mouseup', page.doc, 160); });
+    await act(async () => { await new Promise(r => setTimeout(r, 5)); });
+    check(NAME + ': a dragged card lands where she drops it', order() === 'Two One Three', order());
+    await page.save();
+    const kept = page.files.length ? JSON.parse(page.files[page.files.length - 1].data).rows : [];
+    check(NAME + ': her order is saved in the ledger, and a drag is not an edit',
+      kept.filter(r => r.buyNext).sort((a, b) => b.buyRank - a.buyRank).map(r => r.title.replace('Fixture Buy ', '')).join(' ') === 'Two One Three'
+      && kept.every(r => !r.editedAt), JSON.stringify(kept.map(r => [r.title, r.buyRank, r.editedAt])));
+    // Touch: a swipe before the hold scrolls and moves nothing; a hold buzzes, then drags.
+    let buzz = 0;
+    page.win.navigator.vibrate = global.navigator.vibrate = () => { buzz++; return true; };
+    const touch = (t, el, y) => { const e = new page.win.Event(t, { bubbles: true, cancelable: true });
+      e.touches = t === 'touchend' ? [] : [{ clientX: 10, clientY: y }]; el.dispatchEvent(e); };
+    const head = () => page.doc.querySelector('[data-buynext] article h3');
+    await act(async () => { touch('touchstart', head(), 100); touch('touchmove', page.doc, 130); touch('touchend', page.doc, 130); });
+    await act(async () => { await new Promise(r => setTimeout(r, 500)); });
+    check(NAME + ': on touch, a swipe before the hold moves nothing', order() === 'Two One Three' && buzz === 0, order());
+    await act(async () => { touch('touchstart', head(), 100); });
+    await act(async () => { await new Promise(r => setTimeout(r, 500)); });
+    await act(async () => { touch('touchmove', page.doc, 140); touch('touchend', page.doc, 140); });
+    await act(async () => { await new Promise(r => setTimeout(r, 5)); });
+    check(NAME + ': on touch, hold then drag moves it, with a buzz', order() === 'One Three Two' && buzz === 1, order() + ', buzz ' + buzz);
+    await page.press('Recently edited');
+    check(NAME + ': the sort chips do not change it', order() === 'One Three Two', order());
+    const no = [...page.card('Fixture Buy Two').querySelectorAll('button')].find(b => b.textContent.trim() === 'No');
+    await page.click(no);
+    check(NAME + ': leaving Yes takes a card out', order() === 'One Three', order());
+    await page.click(chip);
+    check(NAME + ': other views carry no drag', page.doc.querySelectorAll('[data-buynext]').length === 0);
+  } finally { await page.close(); }
+}
+
 (async () => {
   for (const [tag, t] of [['AD-001', resetToSeedAsksFirst], ['AD-002', plainDownloadNeverClearsUnsaved],
                           ['AD-003', buyNextDot], ['AD-004', noStatusLineWithoutLedger], ['AD-005', dismissToast],
                           ['AD-006', oldRowsUntouched], ['AD-007', versionCards], ['AD-008', oneVersionUnchanged],
-                          ['AD-009', probablyNotForYou]]) {
+                          ['AD-009', probablyNotForYou], ['AD-011', buyNextOrder]]) {
     try { await t(); } catch (e) { check(tag + ' ran to the end', false, e && e.message); }
   }
   console.log(failures ? failures + ' failed' : 'her page decisions hold');

@@ -41,7 +41,13 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
 - **Buy next** (her design): on a Yes card, a dot left of the star, drawn
   to the star's measured size (`starInk`) — hollow off, red on. Leaving Yes clears
   it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
-  anywhere.** Closing the search bar or Reset search (once "Reset cards") empties its box.
+  anywhere.** **Her order** (her design): in the Buy next view she holds a card
+  (touch ~0.45s, a buzz on Android where the page is allowed one) or presses it
+  (mouse) and drags it; a swipe before the hold scrolls; buttons and links keep
+  their taps. The order is `buyRank` on the row (highest first; a new dot goes on
+  top; leaving Yes clears it), saved in her ledger; a drag is not an edit. That
+  view ignores the sort chips and dividers; hidden cards keep their places
+  (`moveBuyNext`, `startDrag`; AD-011). Closing the search bar or Reset search (once "Reset cards") empties its box.
 - **Per-venue freshness**, two dates, from `swept_at`.
 - **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
   at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.
@@ -275,7 +281,7 @@ Each replaced a real failure. Card wording is in the code.
 - **Not in the shop** reads "Not in the museum shop — shop link opens the general store."
   at every venue with a shop. A venue with none (`borghese`, `capo`, `dellav`) reads only
   "Venue has no shop.", grey, no shop link, no Re-check; its lookup goes straight to the
-  web. **Booko AU** (last buy link) is `booko.au/<isbn>`, else its title search.
+  web. **Booko** (last buy link; no "AU" on any bookseller button, her decision) is `booko.au/<isbn>`, else its title search.
 - **Read in code before Claude:** a book's link on a shelf (`bookLinkOnShelf`: the one
   link whose words carry the whole catalogue title); the ISBN on a page (`isbnOnPage`:
   exactly one 978/979 labelled ISBN or EAN, valid check digit); the ISBN in web results
