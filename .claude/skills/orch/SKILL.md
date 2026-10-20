@@ -59,7 +59,8 @@ In your scratch area, never committed. It holds:
     finish, failing before the fix and passing after. For Parallel work it is
     run on a fresh live fetch, and the case's address and signed-off result
     join the feature's list of live proof pages (CLAUDE.md §1; Add by link:
-    `docs/link_proof_pages.json`)
+    `docs/link_proof_pages.json`, through `link_proof_check.js --add`, which keeps it only
+    when it shows a rule new at its venue — `docs/testing.md`)
   - single-function tests, named after her case when they protect her decision
   - each new test shown to fail when its fix is undone
 - the proofs (§5) and what the builder must report back

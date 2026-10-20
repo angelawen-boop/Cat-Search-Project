@@ -152,12 +152,13 @@ function main() {
   }
   for (const e of list) delete e._rules;
   if (writeRules || added.length) {
-    fs.writeFileSync(LIST, JSON.stringify(list.concat(added), null, 2) + '\n');
+    // One page per line, as the list is kept.
+    fs.writeFileSync(LIST, '[\n' + list.concat(added).map(e => '  ' + JSON.stringify(e)).join(',\n') + '\n]\n');
     console.log('\nList written' + (added.length ? ': ' + added.length + ' page' + (added.length === 1 ? '' : 's') + ' added' : '') + '.');
   }
   if (rulesMoved) console.log('\n' + rulesMoved + ' listed page' + (rulesMoved === 1 ? '' : 's') + ' now use different rules (not a difference; --write-rules records them).');
   const missing = list.filter(e => !seen.has(e.url));
-  if (missing.length) {
+  if (missing.length && !adding) {
     console.log('\n' + missing.length + ' listed page' + (missing.length === 1 ? '' : 's') + ' with no reply in this folder' + (all ? ' (counted as differences)' : ' (not checked)') + ':');
     for (const e of missing) console.log('  ' + e.url);
     if (all) diffs += missing.length;

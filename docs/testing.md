@@ -44,11 +44,20 @@ or invented pages (her decision). Each feature keeps a list of live addresses wi
 for each. Not part of `npm test`: they need live replies.
 
 **Add by link — `docs/link_proof_pages.json`** (`url`, `venue`, and the `title`, `start`, `end` signed off;
-`note` where a field is knowingly imperfect). Fetch the addresses live through Parallel (the keyed
-connector only with her yes), save each reply as `{url,title,full_content}` by script into a folder in the
-scratchpad, and run `node scraper/link_proof_check.js <folder>` (`--all` also fails on a listed page with
-no reply); exit 1 on any difference. A difference is a reader change to sign off (update the list) or a
-site that changed.
+`note` where a field is knowingly imperfect; `rules`, the reader's rules the page uses). Fetch the addresses
+live through Parallel (the keyed connector only with her yes), save each reply as `{url,title,full_content}`
+by script into a folder in the scratchpad, and run `node scraper/link_proof_check.js <folder>` (`--all` also
+fails on a listed page with no reply); exit 1 on any difference. A difference is a reader change to sign off
+(update the list) or a site that changed. A page whose rules changed is reported, not a difference
+(`--write-rules` records them).
+
+**A page is on the list only for a rule no other listed page at its venue shows** (her decision: one page
+per venue layout, one per unusual thing). The reader names each rule that changed a page's result
+(`readShowPage`'s `rules`: where the title came from, the date line's shape, a label dropped, capitals
+recased…). Add pages only with `--add` on the new replies: it puts a page on the list, as the reader reads
+it now, when it shows a rule new at its venue, and otherwise says it adds nothing — never add by hand. `--cover` prints, per venue, the fewest pages that show every rule there and
+what else could go. A rule the reader cannot see (a site's later fix, a recasing detail) is held by an
+offline test, not a page (AL-031, the date tests).
 
 **Never (her decision):**
 - re-fetch the whole list after every small fix within one session — the pages have not changed in the

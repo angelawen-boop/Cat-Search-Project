@@ -174,7 +174,7 @@ entry can carry `linkRead`, found by `linkReadVenue`. Proved live: five archive 
 `docs/link_proof_pages.json`); descriptions carry menu and caption junk, left alone until it reaches Claude's.
 
 **Mia** (Minneapolis Institute of Art): its own chip "Mia", cards print "MIA" (her decision); the full name and the
-"–– Minneapolis Institute of Art" title tail are dropped (`OWN_CHIP`; AL-032, three pages on the proof list). HTML
+"–– Minneapolis Institute of Art" title tail are dropped (`OWN_CHIP`; AL-032, on the proof list). HTML
 codes in any page title are decoded ("Chagall&#039;s"). **Yale CBA** (Yale Center for British Art, `occ-britishart-yale-edu`): its own chip
 and cards "Yale CBA", after Cincinnati (her decision); the lookup searches by the full name (`OWN_CHIP`; AL-039).
 Its dates carry clock times ("February 7, 2008, 10:00 am ET–Sunday, April 27, 2008, 5:00 pm ET"): the shared date reader drops them (`CLOCK_TIME`, DS-003).
@@ -184,7 +184,7 @@ from under the heading.
 
 **Berlin** (Staatliche Museen zu Berlin, `occ-smb-museum`): its own chip "Berlin", after KHM; cards say
 "Berlin Gemäldegalerie" (her decision); its shop is searched as "Staatliche Museen zu Berlin" (`OWN_CHIP`,
-`OCC_CARD`). Dates are numbers with dots, day first (DS-004). Eleven pages on the proof list.
+`OCC_CARD`). Dates are numbers with dots, day first (DS-004). On the proof list.
 
 **Munich** — three venues, each its own cards, under one chip "Munich", the Alte first,
 before Berlin (her decision; `group` on `OWN_CHIP`, `chipKey`): **Munich Alte Pinakothek**
@@ -209,7 +209,7 @@ CT-001). "Venezia 500<<" is the museum's own title.
   A CEDON book page often sells German and English on one page, with a language choice — the lookup
   does not yet know this (`docs/catalogue_versions.md`, cases 10–11).
   AL-043.
-- Proved live: six show pages on the proof list (both sites, both houses), and the app's own finder run on
+- Proved live: show pages on the proof list (both sites, every house), and the app's own finder run on
   the live searches with excerpts withheld, so it opened each pick: both sections found, the Dana Schutz page's
   ticket-shop link (`pinakothek.shop`) not taken.
 
@@ -219,7 +219,7 @@ Berlin; cards "Dresden Gemäldegalerie" (her decision; `OWN_CHIP`, `OCC_CARD`). 
 (`titleAfter`). Dates "14/04/2022—31/07/2022", day first (`slashDayFirst`). The site line ("Exhibition Site
 Zwinger") never reaches Claude, as passage or subtitle (her decision; `skip`). Shop: shop.skd.museum sells tickets
 and gifts only; the finder says "Shop found, but not its books section" and she answers **No shop** once (her
-decision; lookups go to the web). Three pages on the proof list; AL-045.
+decision; lookups go to the web). On the proof list; AL-045.
 
 **Frankfurt** (the Städel, `occ-staedelmuseum-de`): its own chip "Frankfurt", after Dresden; cards "Frankfurt
 Städel" (her decision; `OWN_CHIP`, `OCC_CARD`; AL-049). No pages on the proof list yet. **Its shop**
