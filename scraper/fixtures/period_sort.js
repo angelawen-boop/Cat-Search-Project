@@ -9,7 +9,7 @@ const rank=k=>H.PERIOD_RANK[k];
 check('PS-001 Italian Renaissance before Northern Renaissance', rank('earlyren')<rank('northern')&&rank('highren')<rank('northern')&&rank('mannerism')<rank('northern'));
 check('PS-001 Italian before Flemish before Dutch', rank('baroque')<rank('flemish')&&rank('flemish')<rank('dutch'));
 check('PS-001 French periods before Britain and 19th-century America', ['classicism','rococo','neoclassicism','impressionism','postimp'].every(k=>rank(k)<rank('victorian')&&rank(k)<rank('american19')));
-check('PS-001 America first after the war, Contemporary last', rank('abex')<rank('postwareu')&&rank('pop')<rank('postwareu')&&rank('contemporary')===H.PERIODS.length-1);
+check('PS-001 America first after the war, Contemporary last of the periods', rank('abex')<rank('postwareu')&&rank('pop')<rank('postwareu')&&rank('contemporary')===rank('surveys')-1);
 check('PS-001 Antiquity first', rank('antiquity')===0);
 
 // Period, then year, then her venue order (two Monet shows of the same year).
@@ -43,6 +43,32 @@ check('PS-006 the label reads name and year', H.periodText({period:'highren',per
 check('PS-006 BC reads as BC', H.periodText({period:'antiquity',periodYear:-450})==='Antiquity · c. 450 BC');
 check('PS-006 no label, no text', H.periodText({})===''&&!H.periodLabelled({period:'highren'}));
 check('PS-006 the prompt lists every period', H.PERIODS.every(p=>H.periodPrompt([]).includes('  '+p.key+' — ')));
+
+// v1.1 (her decisions): the four new groups, response shows last, one artist one group.
+check('PS-007 the four new groups come last, in her order', ['contemporary','surveys','mischistoric','miscmodern','nonwestern'].every((k,j,all)=>j===0||rank(all[j-1])<rank(k))&&rank('nonwestern')===H.PERIODS.length-1);
+check('PS-008 a response show sorts after the rest of its period, whatever its year',
+  H.periodCompare({museumId:'ng',period:'highren',periodYear:1450,periodResponse:true},{museumId:'met',period:'highren',periodYear:1520})>0);
+check('PS-008 a response show still sorts before the next period',
+  H.periodCompare({museumId:'ng',period:'highren',periodYear:1520,periodResponse:true},{museumId:'met',period:'venetian',periodYear:1480})<0);
+const b=H.periodAnswers({labels:[{i:0,period:'mischistoric',year:1950},{i:1,period:'miscmodern',year:1850},{i:2,period:'highren',year:1500,response:true,artist:'David Hockney'},{i:3,period:'impressionism',year:1890,artist:' John Singer Sargent '}]});
+check('PS-009 code sets the stragglers\' group by the 1900 cut-off', b.get(0).period==='miscmodern'&&b.get(1).period==='mischistoric');
+check('PS-009 response and artist are kept', b.get(2).periodResponse===true&&b.get(3).periodResponse===false&&b.get(3).periodArtist==='John Singer Sargent');
+const sg=[
+  {id:'a',museumId:'met',period:'impressionism',periodYear:1890,periodArtist:'John Singer Sargent'},
+  {id:'b',museumId:'met',period:'american19',periodYear:1880,periodArtist:'John Singer Sargent'},
+  {id:'c',museumId:'orsay',period:'impressionism',periodYear:1885,periodArtist:'John Singer Sargent'},
+  {id:'d',museumId:'ng',period:'highren',periodYear:1500,periodResponse:true,periodArtist:'John Singer Sargent'},
+  {id:'e',museumId:'ng',period:'romanticism',periodYear:1830,periodArtist:'J. M. W. Turner'},
+  {id:'f',museumId:'ng',period:'georgian',periodYear:1800,periodArtist:'J.M.W. Turner'},
+];
+const by=H.artistPeriods(sg);
+check('PS-010 one artist, one group: the group most of their shows were given', H.periodOf(sg[1],by)==='impressionism'&&H.periodOf(sg[2],by)==='impressionism');
+check('PS-010 a response show keeps its own group', H.periodOf(sg[3],by)==='highren');
+check('PS-010 a tie goes to the earlier group; names match however dotted', H.periodOf(sg[4],by)==='georgian'&&H.periodOf(sg[5],by)==='georgian');
+check('PS-010 a show with no artist keeps its own group', H.periodOf({period:'gothic',periodYear:1325},by)==='gothic');
+check('PS-011 her line says when every show was labelled', H.labelSummary(80,[{shows:40,labelled:40},{shows:40,labelled:40}]).ok&&H.labelSummary(80,[{shows:40,labelled:40},{shows:40,labelled:40}]).text==='Label: all 80 exhibitions labelled.');
+const ls=H.labelSummary(80,[{shows:40,labelled:40},{shows:40,labelled:0,why:'Claude is rate-limited.'}]);
+check('PS-011 her line says how many were not, and why', !ls.ok&&ls.text==='Label: 40 of 80 exhibitions labelled; 40 not — Claude is rate-limited..'.replace('..','.'), ls.text);
 
 console.log(fails?'\n'+fails+' FAILED':'\nall period checks passed');
 process.exit(fails?1:0);

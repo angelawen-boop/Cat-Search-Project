@@ -53,10 +53,12 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
   const win = dom.window, doc = win.document;
   win.scrollTo = () => {};
   // Claude stands in: every show it is asked about is Baroque, 1650.
-  const asked = [];
+  // failNext: how many questions fail before answering (the retry and her line).
+  const asked = []; let failNext = 0;
   win.claude = { use: async name => name !== 'sample' ? null : { json: async prompt => {
     const shows = prompt.split('Exhibitions:\n')[1].split('\n').filter(Boolean).map(l => JSON.parse(l));
     asked.push(shows.length);
+    if (failNext > 0) { failNext--; throw { code: 'rate_limited', message: 'slow down' }; }
     return { labels: shows.map(x => ({ i: x.i, period: 'baroque', year: 1650 })) };
   } } };
   const globals = ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame',
@@ -100,10 +102,19 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     const trial = ['met','ng','orsay','dellav','va','tate-modern','cincinnati'];
     const unlabelled = rows.filter(x => trial.includes(x.museumId) && !x.period).length;
     const shownAfter = rows.filter(x => trial.includes(x.museumId) && x.interested).length;
+    failNext = 1e6;   // Claude refuses every question: nothing labelled, and her line says so
     click([...doc.querySelectorAll('button')].find(b => b.textContent === 'Label'));
-    await until(() => cards().length === shownAfter);
-    ok(asked.reduce((a, b) => a + b, 0) === unlabelled && asked.every(n => n <= 40),
-      `PR-007: Label asks about every unlabelled show at the trial venues, dismissed included (${unlabelled}), 40 at a time`, asked.join(','));
+    await until(() => /Label: 0 of/.test(doc.body.textContent));
+    ok(doc.body.textContent.includes(`Label: 0 of ${unlabelled} exhibitions labelled; ${unlabelled} not \u2014 Claude is rate-limited.`),
+      'PR-013: a run that fails says how many were not labelled, and why', (doc.body.textContent.match(/Label:[^.]*\./) || [''])[0]);
+    ok(asked.length === 2 * Math.ceil(unlabelled / 40), 'PR-013: each failed batch was asked twice, no more', String(asked.length));
+    asked.length = 0;
+    failNext = 1;   // the first question fails once, then the retry answers
+    click([...doc.querySelectorAll('button')].find(b => b.textContent === 'Label'));
+    await until(() => cards().length === shownAfter && /Label: all/.test(doc.body.textContent));
+    ok(asked.slice(1).reduce((a, b) => a + b, 0) === unlabelled && asked.every(n => n <= 40) && asked[0] === asked[1],
+      `PR-007: Label asks about every unlabelled show at the trial venues, dismissed included (${unlabelled}), 40 at a time; a failed batch is asked again`, asked.join(','));
+    ok(doc.body.textContent.includes(`Label: all ${unlabelled} exhibitions labelled.`), 'PR-012: after a full run her line says every show was labelled');
     ok(cards().length === shownAfter, `PR-008: after Label, Period shows every not-dismissed show at the trial venues (${shownAfter})`, String(cards().length));
     const fin = cards();
     ok(has(fin[fin.length - 1], ng2) && has(fin[0], met2), 'PR-009: a show already labelled keeps its label', fin[0].textContent.slice(0, 40));

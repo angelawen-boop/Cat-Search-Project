@@ -83,7 +83,7 @@ return {
   topicOf,
   isTopicCard,
   topicPresets,
-  PERIODS, PERIOD_RANK, PERIOD_VENUES, periodCompare, periodAnswers, periodPrompt, periodLabelled, periodText,
+  PERIODS, PERIOD_RANK, PERIOD_VENUES, periodCompare, periodAnswers, periodPrompt, periodLabelled, periodText, artistPeriods, periodOf, miscFor, labelSummary,
   MUSEUMS, MU, KNOWN_VENUES, VENUE_ORDER,
 };
 `;

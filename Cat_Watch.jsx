@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "49.2";
-const APP_VERSION_DATE = "19 Oct 2026";
+const APP_VERSION = "1.1";   // the Period test page's own numbering (her name for it), not her app's
+const APP_VERSION_DATE = "20 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
 // Sort by Venue and refresh headings all follow it.
@@ -1831,7 +1831,8 @@ function topicPresets(props){
 // Claude labels each show with one period from this list and one year; code sorts by
 // the list's order, then the year, then her venue order. The list's order is her
 // centre-of-gravity rule: Italy, then the North, then France, then America, a region's
-// periods placed after the dominant region's periods of the same time.
+// periods placed after the dominant region's periods of the same time. The last four
+// groups (her decision) take what fits no period: surveys, stragglers, non-Western art.
 const PERIODS=[
   {key:"antiquity",name:"Antiquity",span:"before c. 400; ancient art from anywhere"},
   {key:"medieval",name:"Byzantine and Early Medieval",span:"c. 400–1150, Romanesque included"},
@@ -1864,6 +1865,10 @@ const PERIODS=[
   {key:"pop",name:"Pop Art and Minimalism",span:"c. 1955–1980"},
   {key:"postwareu",name:"Postwar Europe",span:"c. 1945–1980"},
   {key:"contemporary",name:"Contemporary",span:"c. 1980 to now"},
+  {key:"surveys",name:"Surveys",span:"a show spanning three or more of the periods above"},
+  {key:"mischistoric",name:"Miscellaneous Historic",span:"Western art before 1900 that fits none of the periods above"},
+  {key:"miscmodern",name:"Miscellaneous Modern",span:"Western art from 1900 on that fits none of the periods above"},
+  {key:"nonwestern",name:"Non-Western Art",span:"art from outside the Western tradition that is not ancient"},
 ];
 const PERIOD_RANK=Object.fromEntries(PERIODS.map((p,i)=>[p.key,i]));
 const PERIOD_NAME=Object.fromEntries(PERIODS.map(p=>[p.key,p.name]));
@@ -1874,9 +1879,29 @@ const PERIOD_BATCH=40;
 const periodLabelled=r=>!!(r&&PERIOD_RANK[r.period]!==undefined&&Number.isInteger(r.periodYear));
 const periodYearText=y=>"c. "+(y<0?(-y)+" BC":y);
 const periodText=r=>periodLabelled(r)?PERIOD_NAME[r.period]+" · "+periodYearText(r.periodYear):"";
-// Period order, then the year, then her venue order (her tie rule).
-function periodCompare(a,b){
-  return (PERIOD_RANK[a.period]-PERIOD_RANK[b.period])||(a.periodYear-b.periodYear)||(venueRank(a.museumId)-venueRank(b.museumId));
+// The two stragglers' groups split at 1900 (her cut-off), decided here, not by Claude.
+const miscFor=y=>y<1900?"mischistoric":"miscmodern";
+
+// One artist, one group (her decision): shows about one artist take the group most of
+// them were given; a tie goes to the earlier group. A response show keeps its own.
+const artistKey=a=>String(a||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z]+/g," ").trim();
+function artistPeriods(rows){
+  const tally=new Map();
+  for(const r of rows){
+    if(!periodLabelled(r)||r.periodResponse)continue;
+    const k=artistKey(r.periodArtist); if(!k)continue;
+    const t=tally.get(k)||{}; t[r.period]=(t[r.period]||0)+1; tally.set(k,t);
+  }
+  const out=new Map();
+  for(const [k,t] of tally)out.set(k,Object.keys(t).sort((a,b)=>(t[b]-t[a])||(PERIOD_RANK[a]-PERIOD_RANK[b]))[0]);
+  return out;
+}
+const periodOf=(r,byArtist)=>(!r.periodResponse&&byArtist&&byArtist.get(artistKey(r.periodArtist)))||r.period;
+// Period order; within a period, response shows last (her decision), then the year, then
+// her venue order (her tie rule).
+function periodCompare(a,b,byArtist){
+  return (PERIOD_RANK[periodOf(a,byArtist)]-PERIOD_RANK[periodOf(b,byArtist)])||((a.periodResponse?1:0)-(b.periodResponse?1:0))
+    ||(a.periodYear-b.periodYear)||(venueRank(a.museumId)-venueRank(b.museumId));
 }
 
 // One question for up to PERIOD_BATCH shows; each line carries its index i.
@@ -1890,40 +1915,62 @@ function periodPrompt(shows){
     "Rules:",
     "- Pick by the date and place of the art itself, not the exhibition's theme words.",
     "- Italian art of c. 1400–1600 goes in the Italian periods; Netherlandish, German and French art of that time in Northern Renaissance.",
-    "- Decorative arts, fashion, design, photography, prints and art from outside Europe and America: the period whose dates and region fit best. Ancient art from anywhere: antiquity.",
-    "- A living or recent artist: contemporary, even when the subject is old.",
+    "- A recent artist responding to older art, or a show pairing artists of different periods: the period of the OLDER art, with its year, and response true.",
+    "- A show spanning three or more of the periods (a collection's highlights, a medium across the centuries): surveys, with the midpoint year.",
+    "- Ancient art from anywhere (Egypt, Greece, Rome, Mesopotamia): antiquity.",
+    "- Art from outside the Western tradition that is not ancient (Asian, Islamic, African, Oceanic, Indigenous): nonwestern.",
+    "- Western work that fits none of the periods (photography, folk art, design outside any movement): mischistoric before 1900, miscmodern from 1900. Use these only when no period fits.",
     "",
     "year: one whole number, the year of the art shown (negative for BC). One artist: the middle of the works shown. A show spanning a long stretch: the midpoint of the stretch.",
+    "response: true or false, as above.",
+    "artist: for a show about ONE artist, their full name as usually written (\"John Singer Sargent\"); otherwise \"\".",
     "",
-    "Answer with JSON only, one entry per exhibition: {\"labels\":[{\"i\":0,\"period\":\"highren\",\"year\":1510}]}",
+    "Answer with JSON only, one entry per exhibition: {\"labels\":[{\"i\":0,\"period\":\"highren\",\"year\":1510,\"response\":false,\"artist\":\"Raphael\"}]}",
     "",
     "Exhibitions:",
     ...shows.map(s=>JSON.stringify({i:s.i,venue:s.venue,title:s.title,dates:s.dates,text:String(s.summary||"").replace(/\s+/g," ").slice(0,600)})),
   ].join("\n");
 }
 // Claude's answer, checked: only a listed period and a sensible whole year are kept.
-// Returns a Map from i to {period, periodYear}.
+// Returns a Map from i to {period, periodYear, periodResponse, periodArtist}.
 function periodAnswers(data){
   const out=new Map();
   for(const x of (data&&Array.isArray(data.labels))?data.labels:[]){
-    const i=Number(x&&x.i), y=Number(x&&x.year), k=String((x&&x.period)||"").trim().toLowerCase();
+    const i=Number(x&&x.i), y=Number(x&&x.year);
+    let k=String((x&&x.period)||"").trim().toLowerCase();
     if(!Number.isInteger(i)||PERIOD_RANK[k]===undefined||!Number.isInteger(y)||y<-5000||y>2100)continue;
-    out.set(i,{period:k,periodYear:y});
+    if(k==="mischistoric"||k==="miscmodern")k=miscFor(y);
+    const artist=typeof x.artist==="string"?x.artist.trim().slice(0,120):"";
+    out.set(i,{period:k,periodYear:y,periodResponse:x.response===true,periodArtist:artist});
   }
   return out;
 }
-// Labels shows ({i, venue, title, dates, summary}) in batches; onBatch(done,total) reports
-// progress. Returns {labels: Map i → {period, periodYear}, failed: why or null}.
+// Labels shows ({i, venue, title, dates, summary}) in batches; a batch that fails, or
+// comes back with no label, is asked once more. onBatch(done,total) reports progress.
+// Returns {labels: Map i → label, batches: [{shows, labelled, tries, why}]}.
 async function labelPeriods(shows,onBatch){
-  const labels=new Map(); let failed=null;
+  const labels=new Map(), batches=[];
   for(let n=0;n<shows.length;n+=PERIOD_BATCH){
-    const batch=shows.slice(n,n+PERIOD_BATCH);
-    const ask=await readResults(periodPrompt(batch));
-    if(ask.ok)for(const [i,v] of periodAnswers(ask.data))labels.set(i,v);
-    else failed=ask.detail.replace(/\s+\[.*$/,"");
+    const batch=shows.slice(n,n+PERIOD_BATCH), want=new Set(batch.map(s=>s.i));
+    const b={shows:batch.length,labelled:0,tries:0,why:null};
+    while(b.tries<2&&b.labelled===0){
+      b.tries++;
+      const ask=await readResults(periodPrompt(batch));
+      if(!ask.ok){ b.why=ask.detail.replace(/\s+\[.*$/,""); continue; }
+      for(const [i,v] of periodAnswers(ask.data))if(want.has(i)&&!labels.has(i)){ labels.set(i,v); b.labelled++; }
+      b.why=b.labelled<batch.length?(batch.length-b.labelled)+" left out of Claude’s answer":null;
+    }
+    batches.push(b);
     if(onBatch)onBatch(Math.min(n+PERIOD_BATCH,shows.length),shows.length);
   }
-  return {labels,failed};
+  return {labels,batches};
+}
+// Her line after a Label: all done, or how many were not and why.
+function labelSummary(total,batches){
+  const done=batches.reduce((a,b)=>a+b.labelled,0);
+  if(done===total)return {ok:true,text:"Label: all "+total+" exhibitions labelled."};
+  const whys=[...new Set(batches.filter(b=>b.why).map(b=>b.why.replace(/\.$/,"")))];
+  return {ok:false,text:"Label: "+done+" of "+total+" exhibitions labelled; "+(total-done)+" not — "+whys.join("; ")+"."};
 }
 const periodShow=(i,r)=>({i,venue:(MU[r.museumId]||{}).name||r.museumId,title:r.title,dates:dateRange(r),summary:r.summary});
 
@@ -5125,6 +5172,7 @@ export default function App(){
   const[busyId,setBusyId]=useState(null);
   const[lookLabel,setLookLabel]=useState(null); // the progress line while a lookup or Re-check runs (lookupLabel)
   const[prog,setProg]=useState({done:0,total:0,label:""});
+  const[labelSaid,setLabelSaid]=useState(null);   // the last Label run's line
   // Add by link: one pop-up for CSV and Links, nothing added to the page (her design).
   // importMode: null · "choose" · "links" (the box open below them) · "needLedger" (empty page).
   const[importMode,setImportMode]=useState(null);
@@ -5768,7 +5816,10 @@ export default function App(){
     const shows=[];
     props.forEach((p,i)=>{ if(p.type==="add"&&PERIOD_VENUES.has(p.cand.museumId))shows.push(periodShow(i,p.cand)); });
     if(!shows.length)return;
-    const {labels}=await labelPeriods(shows);
+    const tape=tapeStart("Label import cards",{title:shows.length+" new shows"});
+    const {labels,batches}=await labelPeriods(shows);
+    const said=labelSummary(shows.length,batches);
+    saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
     if(labels.size)setProposals(cur=>cur!==props?cur:props.map((p,i)=>labels.has(i)?{...p,cand:{...p.cand,...labels.get(i)}}:p));
   }
   // Label: every show at a trial venue with no period yet, dismissed ones included.
@@ -5776,14 +5827,24 @@ export default function App(){
   async function labelLedger(){
     if(busy||roStop())return;
     const todo=rows.filter(r=>PERIOD_VENUES.has(r.museumId)&&!periodLabelled(r));
-    if(!todo.length){ setError("Every exhibition at the trial venues has a period."); return; }
-    setBusy(true); setProg({done:0,total:todo.length,label:"Labelling periods\u2026"});
+    if(!todo.length){ setLabelSaid({ok:true,text:"Label: every exhibition at the trial venues already has a period."}); return; }
+    setBusy(true); setLabelSaid(null); setProg({done:0,total:todo.length,label:"Labelling periods\u2026"});
+    // Each run is one record in the lookup log: every question, Claude's answer, each batch's outcome.
+    const tape=tapeStart("Label periods",{title:todo.length+" exhibitions"});
+    let said={ok:false,text:"Label: didn\u2019t finish."}, batches=[];
     try{
-      const {labels,failed}=await labelPeriods(todo.map((r,i)=>periodShow(i,r)),(done,total)=>setProg({done,total,label:"Labelling periods\u2026"}));
-      const byId=new Map(); labels.forEach((v,i)=>byId.set(todo[i].id,v));
+      const res=await labelPeriods(todo.map((r,i)=>periodShow(i,r)),(done,total)=>setProg({done,total,label:"Labelling periods\u2026"}));
+      batches=res.batches;
+      const byId=new Map(); res.labels.forEach((v,i)=>byId.set(todo[i].id,v));
       if(byId.size){ setRows(prev=>prev.map(r=>byId.has(r.id)&&!periodLabelled(r)?{...r,...byId.get(r.id)}:r)); setDirty(true); setSaveNote(null); }
-      setError(byId.size<todo.length?"Labelled "+byId.size+" of "+todo.length+" exhibitions"+(failed?" \u2014 "+failed:"")+".":null);
-    }finally{ setBusy(false); setProg({done:0,total:0,label:""}); }
+      said=labelSummary(todo.length,batches);
+    }catch(e){ said={ok:false,text:"Label: didn\u2019t finish \u2014 "+String((e&&e.message)||e)+"."}; }
+    finally{
+      setLabelSaid(said);
+      setDebug(said.text+"\n"+batches.map((b,j)=>"Batch "+(j+1)+": "+b.labelled+" of "+b.shows+" labelled, "+b.tries+" "+(b.tries===1?"try":"tries")+(b.why?" \u2014 "+b.why:"")).join("\n"));
+      saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
+      setBusy(false); setProg({done:0,total:0,label:""});
+    }
   }
 
   // ── ADD BY LINK — the button's work ────────────────────────────────────────
@@ -5964,7 +6025,7 @@ export default function App(){
   function makeLedgerRow(c,now){
     const base=c.museumId+"-"+normalizeTitle(c.title).replace(/[^a-z0-9]+/g,"").slice(0,50);
     return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
-      ...(periodLabelled(c)?{period:c.period,periodYear:c.periodYear}:{})};
+      ...(periodLabelled(c)?{period:c.period,periodYear:c.periodYear,periodResponse:!!c.periodResponse,periodArtist:c.periodArtist||""}:{})};
   }
 
   // Apply whatever she picked where the stitched file disagreed with itself.
@@ -6249,6 +6310,8 @@ export default function App(){
     }finally{ setSaveBusy(false); }
   }
 
+  // One artist, one group: worked out from every labelled show, dismissed ones included.
+  const byArtist=useMemo(()=>artistPeriods(rows),[rows]);
   const view=useMemo(()=>{
     const sq=search.toLowerCase().trim();
     // Each row's tier, worked out once: the sort below asks for it thousands of times.
@@ -6281,7 +6344,7 @@ export default function App(){
       if(sortBy==="venue"){const d=venueRank(a.museumId)-venueRank(b.museumId);if(d!==0)return d;}
       // A second tap on Date or Period turns this whole order upside down, Wanted view included.
       const flip=(sortBy==="date"||sortBy==="period")&&dateReversed?-1:1;
-      if(sortBy==="period")return flip*periodCompare(a,b);
+      if(sortBy==="period")return flip*periodCompare(a,b,byArtist);
       const ta=tierOf(a),tb=tierOf(b);
       if(acqWanted&&(ta==="upcoming")!==(tb==="upcoming"))return flip*(ta==="upcoming"?1:-1); // Wanted view: Announced drops to the bottom (nothing to buy yet)
       const oa=TIERS[ta]?.ord??9,ob=TIERS[tb]?.ord??9;
@@ -6291,7 +6354,7 @@ export default function App(){
       return flip*db.localeCompare(da);
     });
     return out;
-  },[rows,sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched,dateReversed]);
+  },[rows,byArtist,sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched,dateReversed]);
 
   // DRAWN AS SHE SCROLLS: the first DRAW_STEP cards, then DRAW_STEP more each time the end
   // of the drawn list nears the screen. A new filter, sort or search starts again from the
@@ -6516,6 +6579,7 @@ export default function App(){
           <span>{"QUARANTINE \u2014 "+quarWhy}</span>
         </div>}
         {busy&&prog.total>0&&!importMode&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
+        {labelSaid&&<div style={labelSaid.ok?{marginTop:8,fontSize:11.5,color:C.soft}:{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{labelSaid.text}</div>}
         {readOnly&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink,fontWeight:700}}>{RO_LINE}</div>}
         {error&&error!==RO_LINE&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
         {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>
@@ -6639,7 +6703,7 @@ export default function App(){
           return view.slice(0,drawLimit).map((r,i)=>{
           const brk=(pinTouched&&pinnedCount>0&&pinnedCount<view.length&&i===pinnedCount)?bandDivider("Rest of the list"):null;
           let header=null;
-          if(sortBy==="period"&&!pinTouched&&(i===0||view[i-1].period!==r.period))header=bandDivider(PERIOD_NAME[r.period]);
+          if(sortBy==="period"&&!pinTouched&&(i===0||periodOf(view[i-1],byArtist)!==periodOf(r,byArtist)))header=bandDivider(PERIOD_NAME[periodOf(r,byArtist)]);
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
           const lead=brk||header;
           const isBusy=busyId===r.id;
