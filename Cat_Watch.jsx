@@ -940,12 +940,17 @@ function joinTitle(name,sub,dashAfterColon){
 
 // One page → {ok, base, between, start, end, raw, site, link} or {ok:false, why}.
 // Rules and the cases they came from: docs/add_by_link.md, "The general reader".
-function readShowPage(res,url,vc){
+// `rules`, when given, collects the name of every rule that changed this page's result:
+// the proof list keeps a page only for a rule no other page at its venue shows (docs/testing.md).
+// The app passes none.
+function readShowPage(res,url,vc,rules){
+  const rule=t=>{ if(rules&&!rules.includes(t))rules.push(t); };
   const lr=linkOptions(vc);
   const text=String(oneText(res)||"");
-  if(text.trim().length<SHELL_CHARS)return{ok:false,why:"The page came back empty."};
+  if(text.trim().length<SHELL_CHARS){ rule("fail:empty"); return{ok:false,why:"The page came back empty."}; }
   const host=hostOf(siteUrlOf(url));
   let{show,site}=splitPageTitle(res&&res.title,host);
+  if(site)rule(String(res.title).includes(" | ")?"tab:bars":"tab:site-after-dash");
   const lines=text.split("\n");
   // A heading broken over two lines (Berlin: "## Donatello  " then "Inventor of the
   // Renaissance") is one heading, the page's own name for the show: the tab title's mark
@@ -958,12 +963,13 @@ function readShowPage(res,url,vc){
     const next=stripMd(lines[i+1]);
     if(!hm||!next||/^\s*#/.test(lines[i+1]))continue;
     const nd=DATES.findDateRange(next,{looseSingles:false});
-    if(nd.start||nd.end)continue;
+    if(nd.start||nd.end){ rule("heading:date-line-not-joined"); continue; }
     const name=stripMd(hm[2]),lo=String(show||"").toLowerCase();
     const sep=lo.startsWith(name.toLowerCase())&&lo.endsWith(next.toLowerCase())?show.slice(name.length,show.length-next.length):"";
     lines[i]=hm[1]+(sep&&sep.length<=3?name+sep+next:joinTitle(name,next,true));
     lines[i+1]="";
     broken=i;
+    rule(sep&&sep.length<=3?"heading:two-lines-tab-mark":"heading:two-lines");
     break;
   }
   // A page title the page never prints can be a sentence (Cincinnati, Cagnacci: "Guido
@@ -972,32 +978,32 @@ function readShowPage(res,url,vc){
   if(lr&&lr.crumb&&!(show&&lines.some(l=>foldText(stripMd(l)).includes(foldText(show))))){
     const crumb=lines.map(stripMd).find(l=>/^\s*Home\s*»/.test(l));
     const last=crumb?crumb.split("»").pop().trim():"";
-    if(last)show=last;
+    if(last){ show=last; rule("crumb"); }
   }
   // Candidate title lines, in order; the heading is the first with dates under it.
   const words=l=>foldText(stripMd(l)).replace(/[^a-z0-9]+/g," ").trim();
-  const cands=[];
-  const add=i=>{ if(i>=0&&!cands.includes(i))cands.push(i); };
+  const cands=[],candRule=[];
+  const add=(i,t)=>{ if(i>=0&&!cands.includes(i)){ cands.push(i); candRule.push(t); } };
   // A venue whose show heading follows a marker line (linkRead.titleAfter; Dresden's
   // "Active page:"): that heading is tried first and is the title.
   let after=-1;
   if(lr&&lr.titleAfter){
     const m=lines.findIndex(l=>lr.titleAfter.test(stripMd(l)));
     if(m>=0)after=lines.findIndex((l,k)=>k>m&&/^\s*#{1,6}\s+\S/.test(l));
-    add(after);
+    add(after,"titleAfter");
   }
   // A venue whose show heading carries a mark of its own (linkRead.titleHeading) tries it first.
-  if(lr&&lr.titleHeading)add(lines.findIndex(l=>/^\s*#{1,6}\s+\S/.test(l)&&lr.titleHeading.test(stripMd(l).trim())));
-  add(lines.findIndex(l=>/^\s*#\s+\S/.test(l)));
-  add(broken);
+  if(lr&&lr.titleHeading)add(lines.findIndex(l=>/^\s*#{1,6}\s+\S/.test(l)&&lr.titleHeading.test(stripMd(l).trim())),"titleHeading");
+  add(lines.findIndex(l=>/^\s*#\s+\S/.test(l)),"h1");
+  add(broken,"two-lines");
   if(show){
     const fs=foldText(show);
-    add(lines.findIndex(l=>/^\s*#{2,3}\s+\S/.test(l)&&foldText(stripMd(l)).includes(fs)));
-    add(lines.findIndex(l=>foldText(stripMd(l)).includes(fs)));
+    add(lines.findIndex(l=>/^\s*#{2,3}\s+\S/.test(l)&&foldText(stripMd(l)).includes(fs)),"h2-h3-holds-tab");
+    add(lines.findIndex(l=>foldText(stripMd(l)).includes(fs)),"line-holds-tab");
     const piece=" "+words(show)+" ";
-    add(lines.findIndex(l=>{ const w=words(l); return w.split(" ").length>=2&&w.length<=80&&piece.includes(" "+w+" "); }));
+    add(lines.findIndex(l=>{ const w=words(l); return w.split(" ").length>=2&&w.length<=80&&piece.includes(" "+w+" "); }),"line-inside-tab");
   }
-  if(!cands.length)return{ok:false,why:"Couldn’t find the show’s title on the page."};
+  if(!cands.length){ rule("fail:no-title"); return{ok:false,why:"Couldn’t find the show’s title on the page."}; }
   const dateText=l=>lr&&lr.shortYear?withLongYears(l):lr&&lr.slashDayFirst?String(l).replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g,"$1.$2.$3"):lr&&lr.asOfTo?String(l).replace(/\s+as of\s+/gi," to "):l;
   const datesUnder=h=>{
     // A venue that labels its date line (linkRead.dateLine) is read there, anywhere on the page.
@@ -1005,7 +1011,7 @@ function readShowPage(res,url,vc){
       for(let k=0;k<lines.length;k++){
         const l=stripMd(lines[k]); if(!l||!lr.dateLine.test(l))continue;
         const r=DATES.findDateRange(dateText(l),{looseSingles:false});
-        if(r.start||r.end)return{d:k,range:r};
+        if(r.start||r.end)return{d:k,range:r,via:"dates:dateLine"};
       }
     }
     // A venue that prints the dates above the title (linkRead.datesAbove: how many lines up).
@@ -1013,27 +1019,28 @@ function readShowPage(res,url,vc){
       for(let k=h-1,seen=0;k>=0&&seen<lr.datesAbove;k--){
         const l=stripMd(lines[k]); if(!l)continue; seen++;
         const r=DATES.findDateRange(dateText(l),{looseSingles:false});
-        if(r.start||r.end)return{d:k,range:r};
+        if(r.start||r.end)return{d:k,range:r,via:"dates:above"};
       }
     }
     for(let k=h+1,seen=0;k<lines.length&&seen<LINK_DATE_LINES;k++){
       const l=stripMd(lines[k]); if(!l)continue; seen++;
       // A venue whose box of other shows sits below (linkRead.datesUntil): never read past it.
-      if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim()))break;
+      if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim())){ rule("datesUntil"); break; }
       const r=DATES.findDateRange(dateText(l),{looseSingles:false});
-      if(r.start||r.end)return{d:k,range:r};
+      if(r.start||r.end)return{d:k,range:r,via:"dates:under"};
       // A range printed over three lines, the middle one only "to" or a dash (Berlin).
       const nx=[];
       for(let j=k+1;j<lines.length&&nx.length<2;j++){ const t=stripMd(lines[j]); if(t)nx.push([j,t]); }
       if(nx.length===2&&/^(?:-|–|—|to|bis|until|till|through|al|au|tot)$/i.test(nx[0][1])){
         const r3=DATES.findDateRange(dateText(l+" "+nx[0][1]+" "+nx[1][1]),{looseSingles:false});
-        if(r3.start&&r3.end)return{d:k,dEnd:nx[1][0],range:r3};
+        if(r3.start&&r3.end)return{d:k,dEnd:nx[1][0],range:r3,via:"dates:three-lines"};
       }
     }
     return null;
   };
   let h=cands[0],found=null;
   for(const i of cands){ found=datesUnder(i); if(found){ h=i; break; } }
+  if(found)rule("title:"+candRule[cands.indexOf(h)]+(h===cands[0]?"":"-not-first"));
   if(!found){
     // Only months printed (Soutine: "september 2027 - january 2028"). A venue with
     // linkRead.monthsOnly takes the first day of the one to the last of the other (her
@@ -1041,22 +1048,31 @@ function readShowPage(res,url,vc){
     const h0=cands[0], near=[];
     for(let k=h0+1;k<lines.length&&near.length<LINK_DATE_LINES;k++){ const l=stripMd(lines[k]); if(!l)continue; if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim()))break; near.push([k,l]); }
     if(lr&&lr.monthsOnly){
-      for(const [k,l] of near){ const r=DATES.findMonthRange(l); if(r){ h=h0; found={d:k,range:{start:r.start,end:r.end},monthsOnly:l.trim()}; break; } }
+      for(const [k,l] of near){ const r=DATES.findMonthRange(l); if(r){ h=h0; found={d:k,range:{start:r.start,end:r.end},monthsOnly:l.trim(),via:"dates:monthsOnly"}; rule("title:"+candRule[0]); break; } }
     }
     if(!found){
       const mo=near.map(([,l])=>DATES.findDateRange(l,{looseSingles:true})).find(r=>r.shownText);
+      rule(mo?"fail:months-only":"fail:no-dates");
       return{ok:false,why:mo?"Only the month and year are published (\u201c"+near.find(([,l])=>l.includes(mo.shownText))[1]+"\u201d), no days.":"No dates found under the show’s title."};
     }
   }
   const heading=stripMd(lines[h]);
   const d=found.d,dEnd=found.dEnd||found.d;
   let range=found.range;
+  rule(found.via);
+  // The printed date line's shape, digits and words blanked ("a, a 9, 9, 9:9 a a-…"): a new shape is a new page to keep.
+  if(rules){
+    const shown=decodeEntities(lines.slice(d,dEnd+1).map(stripMd).join(" "));
+    rule("date-shape:"+shown.replace(/\d+/g,"9").replace(/\p{L}+/gu,"a").replace(/\ba(?:\s+a\b)+/g,"a").replace(/\s*[-\u2010-\u2015]\s*/g,"-").replace(/\s+/g," ").trim().slice(0,80));
+    if(range.start&&range.end&&range.start.slice(0,4)!==range.end.slice(0,4)&&(String(range.raw||shown).match(/\b\d{4}\b/g)||[]).length<2)rule("dates:year-worked-out");
+  }
+  if(dateText(lines[d])!==lines[d])rule("dates:venue-rewrite");
   // One side only: a full range further down that shares that date completes it. A range
   // ending on another day never does.
   if(!range.start||!range.end){
     for(let k=d+1;k<lines.length;k++){
       const r=DATES.findDateRange(dateText(stripMd(lines[k])),{looseSingles:false});
-      if(r.start&&r.end&&((range.end&&r.end===range.end)||(range.start&&r.start===range.start))){ range={...range,start:r.start,end:r.end}; break; }
+      if(r.start&&r.end&&((range.end&&r.end===range.end)||(range.start&&r.start===range.start))){ range={...range,start:r.start,end:r.end}; rule("dates:one-side-completed"); break; }
     }
   }
   // The heading is the name when the page title cuts it at a bar inside the name
@@ -1074,33 +1090,38 @@ function readShowPage(res,url,vc){
     }
   }
   if(h===broken||(after>=0&&h===after))base=heading;
-  if(lr&&lr.title)base=venueTitle(lines,h,heading,lr,words)||base;
+  rule(base===show?(base===heading?"name:tab-is-heading":"name:tab"):base===heading?"name:heading":"name:heading-trimmed");
+  if(lr&&lr.title){ const vt=venueTitle(lines,h,heading,lr,words); if(vt&&vt!==base){ base=vt; rule("name:venue-"+lr.title); } }
   // A label the venue puts before the show's own name (linkRead.titleDrop).
   // A venue whose headline runs on past the show's name (linkRead.firstSentence; San Marco's
   // press releases): its first sentence only.
-  if(lr&&lr.firstSentence)base=base.split(/[.!?](?=\s+\p{Lu})/u)[0].trim()||base;
-  if(lr&&lr.titleDrop)base=base.replace(lr.titleDrop,"").trim()||base;
+  if(lr&&lr.firstSentence){ const b=base.split(/[.!?](?=\s+\p{Lu})/u)[0].trim()||base; if(b!==base)rule("firstSentence"); base=b; }
+  if(lr&&lr.titleDrop){ const b=base.replace(lr.titleDrop,"").trim()||base; if(b!==base)rule("titleDrop"); base=b; }
   // Quotation marks round the whole name (linkRead.unquote; "Mostra “Rothko a Firenze”").
-  if(lr&&lr.unquote)base=base.replace(/^[“"«‘']\s*(.+?)\s*[”"»’']$/u,"$1");
+  if(lr&&lr.unquote){ const b=base.replace(/^[“"«‘']\s*(.+?)\s*[”"»’']$/u,"$1"); if(b!==base)rule("unquote"); base=b; }
   // A doubled colon is the venue's typo (NGA, Souvenirs of the Gilded Age).
-  base=base.replace(/\s*:{2,}/g,":");
+  if(/\s*:{2,}/.test(base)){ base=base.replace(/\s*:{2,}/g,":"); rule("doubled-colon"); }
   const between=lr&&lr.title?[]:lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l))&&!(lr&&lr.skip&&lr.skip.test(l)));
+  if(between.length)rule("between");
   const dateLine=decodeEntities(stripMd(lines[d])).replace(/\s+/g," ").trim();
   const keepDateLine=dateLine.length>LINK_DATE_LINE_MAX;
+  if(keepDateLine)rule("date-line-kept");
   const headingText=decodeEntities(heading).replace(/\s+/g," ").trim();
   let raw="";
   const seenLines=new Set();
   let from=h+1;
   if(lr&&lr.from){
-    for(let k=h+1;k<lines.length;k++){ if(lr.from.test(stripMd(lines[k]))){ from=k+1; break; } }
+    for(let k=h+1;k<lines.length;k++){ if(lr.from.test(stripMd(lines[k]))){ from=k+1; rule("from"); break; } }
   }
   for(let k=from;k<lines.length&&raw.length<LINK_RAW_CHARS;k++){
     if(k>d&&k<=dEnd)continue;
     const own=stripMd(lines[k]);
     // The passage ends at the first line matching linkRead.until (a box for other shows).
-    if(lr&&lr.until&&lr.until.test(own))break;
-    if(lr&&((lr.skip&&lr.skip.test(own))||(lr.skipEntities&&/&#?\w+;/.test(own))))continue;
+    if(lr&&lr.until&&lr.until.test(own)){ rule("until"); break; }
+    if(lr&&lr.skip&&lr.skip.test(own)){ rule("skip"); continue; }
+    if(lr&&lr.skipEntities&&/&#?\w+;/.test(own)){ rule("skipEntities"); continue; }
     const l=decodeEntities(own).replace(/\s+/g," ").trim();
+    if(l&&lr&&lr.minLine&&l.length<lr.minLine&&!seenLines.has(l))rule("minLine");
     if(!l||(l===dateLine&&!keepDateLine)||l===headingText||seenLines.has(l)||(lr&&lr.minLine&&l.length<lr.minLine))continue;
     seenLines.add(l);
     raw+=(raw?"\n":"")+l;
@@ -1108,6 +1129,8 @@ function readShowPage(res,url,vc){
   // The first line under the heading, for a venue whose subtitle sits there.
   const under=lines.slice(h+1).map(stripMd).find(Boolean)||"";
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:url;
+  if(link!==url)rule("cleanLink");
+  if(!raw)rule("no-description");
   return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||(OWN_CHIP[vc]||{}).name||host.replace(/^www\./,""),link,monthsOnly:found.monthsOnly||""};
 }
 
