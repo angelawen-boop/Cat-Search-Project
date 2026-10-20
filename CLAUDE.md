@@ -177,6 +177,17 @@ holds its full trace and lookup-log id.
 **Shops tested by her in the app: `brit`, `morgan`, `mad`, `orsay`, `louvre`,
 `moma`.** `uffizi`'s shop sells no books — settled.
 
+- **OPEN — MoMA *Brancusi* still reads "not in the museum shop" (49.3); two faults, her decision pending.**
+  Lookup log L17924993786826e6v. (1) The 49.3 fix (B-007) does not hold live: the shelf's whole page
+  carries the "Become a Member" pop-up's prices (Explore $200, Access $110, Annual Pass $75), so
+  `readWhole` takes it for a shelf of books. B-007's fixture used the short excerpt as the whole page.
+  Proposed: prices inside a membership offer do not count as books (general rule); refit B-007 on the real
+  page from that log. (2) The web search finds the book's own page (`store.moma.org/products/
+  brancusi-the-artist-and-his-studio-hardcover`, "In Stock", $60), but the for-sale read rejects it for
+  "Email When Available" and no Add to cart (likely drawn by script — a guess). Her choice: A — "In Stock"
+  counts as for sale unless sold out or out of stock is also said (general; checked against her agreed
+  cases and the Morgan Tarot first); B — the same for store.moma.org only (a hard-coded venue rule); or
+  leave it for the lookup redesign. (1) finishes her "small fix only" decision on MoMA; (2) goes past it.
 - **OPEN — the publisher step's verdict is not stable.** *Metamorphoses*
   (Hannibal), two fresh lookups, same code: "Publisher's section", then
   "Publisher" (right). Cause unproven — a different candidate page, the page
@@ -587,7 +598,7 @@ and were fixed in code, proven live).
   cannot be seen - JS-rendering". **Hard-coded, her decision:** the Städel's shop section, and "…- Parallel fault"
   when Parallel brings it back without its books (proved: they are in the page's HTML). The rule stays until
   removed, even once Parallel reads the books. `docs/add_by_link.md`, "Frankfurt"; AL-049, FS-.
-- **Published at 49.3:** MoMA's pop-up reads as "contents cannot be seen — JS-rendering",
+- **Published at 49.3** (its MoMA fix does not hold live — §2.2.3): MoMA's pop-up reads as "contents cannot be seen — JS-rendering",
   not the false "not in the museum shop" (her Brancusi Re-check; B-007); card lines join phrases with an em
   dash, not " - " (her ask); the footer's "Reset cards" is "Reset search" (RC-002). Her decision on MoMA: small
   fix only; the better fix — finding the book's own store.moma.org page when the list can't be seen — waits on
