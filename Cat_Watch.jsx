@@ -881,22 +881,26 @@ function stripMd(line){
 function splitPageTitle(t,host){
   // HTML codes in a page title are decoded ("Chagall&#039;s", Mia).
   // A separator with no site after it is dropped ("Van Dyck, the European -", Genoa).
-  const s=decodeEntities(stripMd(t)).replace(/\s+(?:[-–—|]\s*)+$/,"");
+  let s=decodeEntities(stripMd(t)).replace(/\s+(?:[-–—|]\s*)+$/,"");
   if(!s)return{show:"",site:""};
-  // Several bars: the show is named first, the site last ("Venice: Canaletto and
-  // His Rivals | Past exhibitions | National Gallery").
-  const parts=s.split(" | ").map(x=>x.trim()).filter(Boolean);
-  if(parts.length>1)return{show:parts[0],site:parts[parts.length-1]};
-  const m=s.match(/^(.*\S)\s+[-–—]\s+([^-–—]+)$/);
+  // A dash-led tail naming the site ("… – Enfilade"; "… - KHM.at", picked-shows R1).
+  let site="";
+  const m=s.match(/^(.*\S)\s+[-–—]\s+([^-–—|]+)$/);
   if(m){
     const h=foldText(host);
-    // The tail may be the site's own address ("… - KHM.at"): picked-shows R1.
     const flat=x=>foldText(x).replace(/[^a-z0-9]/g,"");
     const bare=h.replace(/^www\./,"");
-    if(foldText(m[2]).split(/[^a-z0-9]+/).some(w=>w.length>=4&&h.includes(w))||flat(m[2])===flat(bare)||flat(m[2])===flat(bare.split(".")[0]))return{show:m[1].trim(),site:m[2].trim()};
+    if(foldText(m[2]).split(/[^a-z0-9]+/).some(w=>w.length>=4&&h.includes(w))||flat(m[2])===flat(bare)||flat(m[2])===flat(bare.split(".")[0])){ s=m[1].trim(); site=m[2].trim(); }
   }
-  return{show:s,site:""};
+  // Several bars: the show is named first, the site last ("Venice: Canaletto and
+  // His Rivals | Past exhibitions | National Gallery"). A blog's label before the show
+  // ("Exhibition | Canaletto and the Art of Venice | Enfilade") is not its name. AL-050.
+  let parts=s.split(" | ").map(x=>x.trim()).filter(Boolean);
+  while(parts.length>1&&TITLE_LABEL.test(parts[0]))parts=parts.slice(1);
+  if(parts.length>1&&!site)return{show:parts[0],site:parts[parts.length-1]};
+  return{show:parts[0]||s,site};
 }
+const TITLE_LABEL=/^(?:exhibitions?|mostra|ausstellung|exposition|exposición|tentoonstelling)$/i;
 
 // The scraper's 2,000-character description cut (her decision). Read from under the
 // show's heading, skipping the date line: some venues print the dates at the foot of
@@ -1107,8 +1111,17 @@ function readShowPage(res,url,vc){
   }
   // The first line under the heading, for a venue whose subtitle sits there.
   const under=lines.slice(h+1).map(stripMd).find(Boolean)||"";
-  const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:url;
-  return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||(OWN_CHIP[vc]||{}).name||host.replace(/^www\./,""),link,monthsOnly:found.monthsOnly||""};
+  const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:dropTracking(url);
+  return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||(OWN_CHIP[vc]||{}).name||host.replace(/^www\./,""),link,monthsOnly:found.monthsOnly||"",dateLine};
+}
+
+// A link's tracking tail (utm_…, fbclid, gclid) is not part of its address. AL-051.
+function dropTracking(url){
+  let u; try{ u=new URL(url); }catch{ return url; }
+  const keys=[...u.searchParams.keys()].filter(k=>/^(?:utm_\w+|fbclid|gclid)$/i.test(k));
+  if(!keys.length)return url;
+  for(const k of keys)u.searchParams.delete(k);
+  return u.href.replace(/\?(?=#|$)/,"");
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -1147,7 +1160,9 @@ function nameInLines(page,vc){
     .sort((x,y)=>y.length-x.length)[0]||"";
 }
 
-function linkPrompt(page){
+// askVenue: a site the app has never seen, which may be someone else's page about a show
+// held elsewhere (a blog, a magazine). Claude names the venue; code files it (heldElsewhere).
+function linkPrompt(page,askVenue){
   const ex=SUMMARY_EXAMPLES.map(e=>"RAW: "+e.raw+"\nACCEPTED SUMMARY: "+e.summary).join("\n\n");
   return "You are reading one museum exhibition page for a personal art-catalogue tracker. Your ONLY output is one JSON object.\n\n"
     +"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
@@ -1159,7 +1174,11 @@ function linkPrompt(page){
     +"\"summary\": the summary, following the rules above — or null if the raw text does not describe an exhibition.\n"
     +(page.between.length?"\"subtitle\": if one of the LINES BETWEEN THE TITLE AND THE DATES is the second part of the exhibition's own name — the part a catalogue's title would carry after the main title — copy that line exactly as written. Otherwise \"\". Never a category (\"Special Exhibition\"), a sponsor, a place, a price or a date.\n":"")
     +"\"english\": the exhibition's title"+(page.between.length?" (with the subtitle you gave, if any)":"")+" in natural English if it is not in English; \"\" if it already is, names aside. Keep every name as written and the title's own full stops. Plain words: no \"In English\", no quotation marks.\n"
-    +"\"englishSpeaking\": true if the museum is in an English-speaking country, false if not.";
+    +"\"englishSpeaking\": true if the museum is in an English-speaking country, false if not."
+    +(askVenue?"\n\"venue\": the museum or gallery that held the exhibition on the dates in this line: "+JSON.stringify(page.dateLine)+" — its name as the page gives it, without the city. \"\" if the page does not say.\n"
+      +"\"venueCity\": that museum's city, \"\" if not known.\n"
+      +"\"venueSite\": that museum's own website, the domain only (\"example.org\"), if you know it; \"\" if not.\n"
+      +"\"venueOwnPage\": true if this page is published by that museum on its own website; false if someone else published it (a blog, a magazine, a newspaper, another organisation).":"");
 }
 
 // What the model said, checked. Wording is not a control.
@@ -1167,7 +1186,26 @@ function linkAnswer(a){
   const o=a&&typeof a==="object"?a:{};
   const str=v=>typeof v==="string"?v.replace(/["“”]/g,"").replace(/\s+/g," ").trim():"";
   return{summary:typeof o.summary==="string"?o.summary.trim():"",subtitle:typeof o.subtitle==="string"?o.subtitle.trim():"",
-    english:str(o.english).replace(/^In English:\s*/i,""),englishSpeaking:o.englishSpeaking!==false};
+    english:str(o.english).replace(/^In English:\s*/i,""),englishSpeaking:o.englishSpeaking!==false,
+    venue:str(o.venue),venueCity:str(o.venueCity),venueSite:str(o.venueSite).toLowerCase(),venueOwnPage:o.venueOwnPage!==false};
+}
+
+// A page about a show held elsewhere → {id, name, host} for the venue Claude named: one of
+// hers by name or site, else a new occasional venue filed under its own site (or its name
+// when Claude knows no site). Null when the page is the venue's own. AL-052.
+function heldElsewhere(a,pageHost){
+  if(!a||!a.venue||a.venueOwnPage)return null;
+  const site=hostOf(/^https?:\/\//i.test(a.venueSite)?a.venueSite:"https://"+a.venueSite).replace(/^www\./,"");
+  const flat=x=>foldText(x).replace(/^the\s+/,"").replace(/[^a-z0-9]+/g," ").trim();
+  // The page's own site names the venue (Claude's "not its own page" misread): not elsewhere.
+  if(site&&baseDomain(site)===baseDomain(pageHost))return null;
+  if(flat(a.venue).split(" ").some(w=>w.length>=4&&foldText(pageHost).includes(w)))return null;
+  const mine=Object.values(MU).find(m=>m&&!m.occasional&&[m.name,m.short].some(x=>x&&flat(x)===flat(a.venue)));
+  const known=mine?mine.id:site?knownVenueFor("https://"+site+"/"):null;
+  if(known)return{id:known,name:MU[known].name,host:site};
+  const occ=Object.values(MU).find(m=>m&&m.occasional&&[m.name,m.short].some(x=>x&&flat(x)===flat(a.venue)));
+  if(occ)return{id:occ.id,name:occ.name,host:site};
+  return{id:site?occVenueId(site):"occ-"+flat(a.venue).replace(/ /g,"-"),name:a.venue,host:site};
 }
 
 function occVenueId(host){
@@ -5703,7 +5741,14 @@ export default function App(){
         seen.venue=vc||null;
         if(!vc){ fails.push({url,why:lv.why}); continue; }
         if(lv.line)page.between=page.between.filter(l=>l!==lv.line);
-        const host=hostOf(siteUrlOf(url));
+        let host=hostOf(siteUrlOf(url));
+        // A site never seen before may be someone else's page about a show held elsewhere:
+        // Claude names the venue, code files it (heldElsewhere; her decision, a last resort).
+        const askVenue=vc===occVenueId(host)&&!venues[vc]&&!MU[vc]&&!OWN_CHIP[vc]&&!OCC_LINK_READ[vc]&&!HOUSES[vc];
+        const ask=await readResults(linkPrompt(page,askVenue));
+        const a=linkAnswer(ask.ok?ask.data:null);
+        const away=askVenue?heldElsewhere(a,host):null;
+        if(away){ vc=away.id; host=away.host; seen.venue=vc; seen.heldElsewhere=away; }
         if(isOcc(vc)){
           met.add(vc);
           const had=venues[vc];
@@ -5712,18 +5757,17 @@ export default function App(){
           // — a miss is never kept as the answer.
           if(!looked.has(vc)&&(!had||(!had.confirmed&&(!(had.finder>=2)||had.shop!=="found")))){
             looked.add(vc);
-            setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+page.site+"\u2019s shop"});
-            const pageShop=shopLinkOnPage(oneText(res),host);
-            const shop=await discoverShop(pageShop,host,(OWN_CHIP[vc]||{}).name||page.site,had?had.turnedDown:[],vc);
-            venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:page.site,host,english:had?had.english:undefined,
+            const name=(OWN_CHIP[vc]||{}).name||(away?away.name:page.site);
+            setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+name+"\u2019s shop"});
+            const pageShop=away?"":shopLinkOnPage(oneText(res),host);
+            const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc);
+            venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:away?away.name:page.site,host,english:had?had.english:undefined,
               shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,
               ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
             venuesChanged=true;
           }
         }
-        const ask=await readResults(linkPrompt(page));
-        const a=linkAnswer(ask.ok?ask.data:null);
-        if(isOcc(vc)&&venues[vc].english===undefined&&ask.ok){ venues={...venues,[vc]:{...venues[vc],english:a.englishSpeaking}}; venuesChanged=true; }
+        if(isOcc(vc)&&venues[vc]&&venues[vc].english===undefined&&ask.ok){ venues={...venues,[vc]:{...venues[vc],english:a.englishSpeaking}}; venuesChanged=true; }
         // A venue whose subtitle sits under the heading: read by code. A line
         // ending like a sentence is the text, not a subtitle.
         const own=(MU[vc]||{}).subtitleUnderHeading&&page.under&&page.under.length<=120&&!/[.!?]$/.test(page.under)?page.under:"";

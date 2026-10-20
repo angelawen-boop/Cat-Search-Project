@@ -300,6 +300,20 @@ dropped) and reads it with `readShowPage`, then the same intake as a link. No Pa
 - **Proof:** her saved pages, kept in `docs/link_pages/saved/` cut to the page itself (her decision: the
   site refuses Parallel, so live proof is impossible). Tests AP-001–010 (`add_by_page.js`).
 
+## Someone else's page — a show held elsewhere
+
+A last resort (her decision): a show so old its venue's page is gone, read off a blog or magazine page
+(her Enfilade link, Canaletto at the Queen's Gallery).
+- **The venue is Claude's to find** (her decision): for a site the app has never seen, Claude is also asked
+  which museum held the show on the date line read, its city and site, and whether the page is that
+  museum's own. Code files it (`heldElsewhere`): one of hers by name or site, else a new Occasional venue
+  under its site (by name when Claude knows none); the shop is looked for under that name. A venue named
+  in the page's own site, or Claude saying it is the museum's own page, keeps today's filing. The site
+  Claude gives is its knowledge, not read off the page. If it keeps getting it wrong, she brings it back.
+- **A label before the show** in the page title ("Exhibition | …") is dropped, and a dash-led site tail
+  read first (`splitPageTitle`, `TITLE_LABEL`). **Tracking tails** (utm_…, fbclid, gclid) leave the link
+  (`dropTracking`). Tests AL-050–052, on her page as Parallel returned it (`docs/link_pages/elsewhere/`).
+
 ## What links are for, and how far the reader reaches
 
 - **At a swept venue** a link is for shows before the 1 July 2024 lookback, or a venue she

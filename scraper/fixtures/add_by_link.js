@@ -198,6 +198,8 @@ function runtime() {
         if (/Rubens/.test(title)) return { summary: 'Rubens restored.', english: '"Rubens. The Restoration of Venus and Cupid"', englishSpeaking: false };
         if (/Hammersh/.test(title)) return { summary: 'First Spanish retrospective of Hammershøi.', english: '', englishSpeaking: false };
         if (/Grand Tour/.test(title)) return { summary: GRAND_SUMMARY, english: '', englishSpeaking: false };
+        if (/venueOwnPage/.test(prompt) && /Canaletto and the Art of Venice/.test(title))
+          return { summary: 'Canaletto and his Venetian contemporaries.', english: '', englishSpeaking: true, venue: 'The Queen\u2019s Gallery, Buckingham Palace', venueCity: 'London', venueSite: 'rct.uk', venueOwnPage: false };
         return { summary: 'A summary of ' + title + '.', english: '', englishSpeaking: true };
       } };
       return null;
@@ -258,6 +260,37 @@ function runtime() {
     const venice = read({ title: 'Venice: Canaletto and His Rivals | Past exhibitions | National Gallery', full_content: '# Venice: Canaletto and His Rivals' + body }, 'https://www.nationalgallery.org.uk/exhibitions/past/venice-canaletto-and-his-rivals');
     ok(duccio.base === 'Art in Dialogue: Duccio | Caro' && venice.base === 'Venice: Canaletto and His Rivals',
       'AL-015a: a bar inside the show\'s own name is kept, read off the page\'s heading; a section name still is not', JSON.stringify([duccio.base, venice.base]));
+  }
+  // ── AL-050–052: someone else's page about a show held elsewhere (her Enfilade link) ─
+  // The page as Parallel returned it to her app (lookup log), and its saved title.
+  {
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const split = fn('splitPageTitle'), read = fn('readShowPage'), away = fn('heldElsewhere'), drop = fn('dropTracking');
+    const host = 'enfilade18thc.com';
+    const a = split('Exhibition | Canaletto and the Art of Venice | Enfilade', host);
+    const b = split('Exhibition | Canaletto and the Art of Venice \u2013 Enfilade', host);
+    ok(a.show === 'Canaletto and the Art of Venice' && a.site === 'Enfilade' && b.show === a.show && b.site === 'Enfilade',
+      'AL-050: a blog\'s "Exhibition |" label is not the show\'s name; the site after a dash or a bar is the site', JSON.stringify([a, b]));
+    const c = split('Exhibition | Canaletto and the Art of Venice', host), d = split('Exhibitions | Tate', 'www.tate.org.uk');
+    ok(c.show === 'Canaletto and the Art of Venice' && d.show === 'Tate', 'AL-050a:  a label with nothing after it but the show drops too', JSON.stringify([c, d]));
+    const enf = JSON.parse(fs.readFileSync(path.join(PAGES, 'elsewhere', 'enfilade_canaletto.json'), 'utf8'));
+    const r = read(enf, enf.url + '?utm_source=chatgpt.com', null);
+    ok(r.ok && r.base === 'Canaletto and the Art of Venice' && r.start === '2017-05-19' && r.end === '2017-11-12',
+      'AL-050b:  Enfilade, Canaletto: titled "Canaletto and the Art of Venice", 19 May to 12 Nov 2017', JSON.stringify([r.base, r.start, r.end, r.why]));
+    ok(r.link === enf.url && /Buckingham Palace, London, 19 May/.test(r.dateLine),
+      'AL-051: the link\'s tracking tail is dropped; the date line read is kept for Claude', JSON.stringify([r.link, r.dateLine]));
+    ok(drop('https://x.org/a?id=3&utm_source=x&fbclid=y#top') === 'https://x.org/a?id=3#top' && drop('https://x.org/a?id=3') === 'https://x.org/a?id=3',
+      'AL-051a:  only utm_…, fbclid and gclid go; the rest of the address stays');
+    const qg = away({ venue: 'The Queen\u2019s Gallery, Buckingham Palace', venueSite: 'rct.uk', venueOwnPage: false }, host);
+    ok(qg && qg.id === 'occ-rct-uk' && qg.name === 'The Queen\u2019s Gallery, Buckingham Palace' && qg.host === 'rct.uk',
+      'AL-052: a show held elsewhere files under the venue Claude names, by its own site', JSON.stringify(qg));
+    const tb = away({ venue: 'Tate Britain', venueSite: '', venueOwnPage: false }, 'someblog.com');
+    const nosite = away({ venue: 'The Queen\u2019s Gallery', venueSite: '', venueOwnPage: false }, host);
+    ok(tb && tb.id === 'tate-britain' && nosite && nosite.id === 'occ-queen-s-gallery',
+      'AL-052a:  one of her venues by name; with no site known, a venue of its own by name', JSON.stringify([tb, nosite]));
+    ok(away({ venue: 'Enfilade', venueSite: '', venueOwnPage: false }, host) === null && away({ venue: 'Queen\u2019s Gallery', venueSite: 'rct.uk', venueOwnPage: true }, host) === null
+      && away({ venue: 'X', venueSite: 'enfilade18thc.com', venueOwnPage: false }, host) === null,
+      'AL-052b:  the venue\'s own page, or a venue named in the page\'s own site, stays where it is');
   }
   // ── AL-016: a link from one of her 28 files under that venue ───────────
   // 7 Oct: her Jacquemart-André links became a new venue — the app knew a venue
@@ -961,6 +994,32 @@ function runtime() {
     const kept = ((store.get('links/pending') || {}).text || '').split('\n').filter(Boolean);
     ok(ledgerCards() === before24 + 1 && kept.length === 8,
       'AL-024: one accepted, one rejected, seven undecided: the ledger gains one, the box keeps the other eight links', JSON.stringify(kept));
+  }
+  // ── AL-052c: her Enfilade link, read: filed under the Queen's Gallery, never the blog ─
+  {
+    const enf = JSON.parse(fs.readFileSync(path.join(PAGES, 'elsewhere', 'enfilade_canaletto.json'), 'utf8'));
+    const pasted = enf.url + '?utm_source=chatgpt.com';
+    P[pasted] = { ...enf, url: pasted }; P[enf.url] = enf;
+    await click(importBtn());
+    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    const box = dialog().querySelector('textarea');
+    await act(async () => { setter.call(box, pasted); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
+    await settle();
+    calls.length = 0;
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await settle(30);
+    const asked = calls.find(c => c.kind === 'sample');
+    ok(asked && /venueOwnPage/.test(asked.prompt) && /Buckingham Palace, London, 19 May/.test(asked.prompt),
+      'AL-052c: a site never seen: Claude is asked which venue held the show, given the date line read');
+    const text = win.document.body.textContent;
+    ok(/The Queen\u2019s Gallery, Buckingham Palace/.test(text) && !/Enfilade/.test(text.replace(/enfilade18thc/g, '')),
+      'AL-052d:  the card files under "The Queen\u2019s Gallery, Buckingham Palace", never "Enfilade"');
+    ok([...win.document.querySelectorAll('div')].some(d => d.textContent === 'Canaletto and the Art of Venice') && !/utm_source/.test(text),
+      'AL-052e:  titled "Canaletto and the Art of Venice"; the link without its tracking tail');
+    const shopAsk = calls.filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries.join(' '));
+    ok(shopAsk.length === 1 && /Queen\u2019s Gallery/.test(shopAsk[0]), 'AL-052f:  the shop looked for is the Queen\u2019s Gallery\'s, not the blog\'s', JSON.stringify(shopAsk));
+    const cancel = buttons(/^Cancel import$/)[0];
+    if (cancel) await click(cancel);
   }
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) fail('React complained: ' + shouted.find(s => /Warning/.test(s)));
   console.log(failures ? '\n' + failures + ' FAILED' : '\nadd_by_link: all passed');
