@@ -134,10 +134,14 @@ const TEST_PAGE = 'https://claude.ai/artifact/CbUv5Fcwt1R3kug7azGNmf';
 const TEST_BRANCH = 'claude/ledger-cloud';
 let branch = '';
 try { branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: ROOT }).toString().trim(); } catch { /* not a checkout */ }
-const forTest = branch === TEST_BRANCH;
-const target = branch === 'main' ? HER_APP : forTest ? TEST_PAGE : null;
+// The Period trial's own test page (her decision: a branch and a test page, never her app).
+const PERIOD_PAGE = 'https://claude.ai/artifact/JeoJyWxJbU9RApY9q4sVni';
+const PERIOD_BRANCH = 'claude/period-sort';
+const forTest = branch === TEST_BRANCH, forPeriod = branch === PERIOD_BRANCH;
+const target = branch === 'main' ? HER_APP : forTest ? TEST_PAGE : forPeriod ? PERIOD_PAGE : null;
 let head = fs.readFileSync(HEAD, 'utf8');
 if (forTest) head = head.replace('<title>Cat Watch</title>', '<title>Cat Watch Cloud Test</title>');
+if (forPeriod) head = head.replace('<title>Cat Watch</title>', '<title>Cat Watch Period Test</title>');
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.writeFileSync(OUT, head + js + fs.readFileSync(TAIL, 'utf8'));
@@ -149,7 +153,7 @@ if (!target) {
   console.log('NOT FOR PUBLISHING: built on "' + (branch || '?') + '". Her app is published from main.');
   process.exit(0);
 }
-console.log((forTest ? 'FOR THE CLOUD TEST PAGE — title set to "Cat Watch Cloud Test".' : 'FOR HER APP.') + ' Publishing is not');
+console.log((forTest ? 'FOR THE CLOUD TEST PAGE — title set to "Cat Watch Cloud Test".' : forPeriod ? 'FOR THE PERIOD TEST PAGE — title set to "Cat Watch Period Test".' : 'FOR HER APP.') + ' Publishing is not');
 console.log('automatable: the service refuses a session that has not viewed the live page. In order:');
 console.log('');
 console.log('  1. Artifact action:"publish" url:"' + target + '" file_path:"build/dist/index.html"');

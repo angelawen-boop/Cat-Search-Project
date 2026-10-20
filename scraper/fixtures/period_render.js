@@ -1,0 +1,131 @@
+/**
+ * THE PERIOD SORT ON THE REAL PAGE (her trial; docs/periods.md). Renders the page in jsdom
+ * on her 24 Sep ledger with periods written onto a few rows, taps Period, and reads the
+ * cards and dividers. Cases PR-001 to PR-005.
+ *
+ *   node scraper/fixtures/period_render.js
+ */
+'use strict';
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { execFileSync } = require('child_process');
+
+const ROOT = path.join(__dirname, '..', '..');
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-period-'));
+const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = React;\n'
+  + fs.readFileSync(path.join(ROOT, 'Cat_Watch.jsx'), 'utf8')
+      .replace(/^import React.*$/m, '')
+      .replace(/^export default function App\(\)\{/m, 'function App(){');
+fs.writeFileSync(path.join(tmp, 'app.tsx'), prepared);
+try {
+  execFileSync('npx', ['tsc', path.join(tmp, 'app.tsx'), '--jsx', 'react', '--target', 'esnext',
+    '--outDir', tmp, '--skipLibCheck', '--allowJs'], { stdio: 'pipe' });
+} catch { /* type errors are expected; the emit is what matters */ }
+const code = fs.readFileSync(path.join(tmp, 'app.js'), 'utf8');
+
+const { JSDOM } = require('jsdom');
+let React, createRoot, act;
+
+let pass = 0, fail = 0;
+const ok = (cond, name, detail) => {
+  if (cond) { pass++; console.log(`PASS  ${name}`); }
+  else { fail++; console.log(`FAIL  ${name}${detail ? ' — ' + detail : ''}`); }
+};
+
+const hers = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs', 'ledger_2026-09-24', 'cat-watch-ledger-2026-09-24-1616.json'), 'utf8'));
+const pick = (venue, interested, n) => hers.rows.filter(r => r.museumId === venue && !!r.interested === interested).slice(0, n);
+const [ng1, ng2] = pick('ng', true, 2);
+const [met1, met2, met3] = pick('met', true, 3);
+const [metGone] = pick('met', false, 1);
+const outside = hers.rows.find(r => r.interested && !['met','ng','orsay','dellav','va','tate-modern','cincinnati'].includes(r.museumId));
+const label = { [ng1.id]: ['highren', 1510], [met1.id]: ['highren', 1510], [ng2.id]: ['antiquity', -300],
+  [met2.id]: ['impressionism', 1875], [metGone.id]: ['highren', 1500], [outside.id]: ['highren', 1505] };
+const rows = hers.rows.map(r => label[r.id] ? { ...r, period: label[r.id][0], periodYear: label[r.id][1] } : r);
+const FILE = JSON.stringify({ ...hers, rows });
+
+const settle = async (ms = 50) => { await new Promise(r => setTimeout(r, ms)); };
+const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now() - t < ms) { if (await fn()) return true; await settle(40); } return false; };
+
+(async () => {
+  const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>',
+    { pretendToBeVisual: true, url: 'https://claude.ai/' });
+  const win = dom.window, doc = win.document;
+  win.scrollTo = () => {};
+  // Claude stands in: every show it is asked about is Baroque, 1650.
+  const asked = [];
+  win.claude = { use: async name => name !== 'sample' ? null : { json: async prompt => {
+    const shows = prompt.split('Exhibitions:\n')[1].split('\n').filter(Boolean).map(l => JSON.parse(l));
+    asked.push(shows.length);
+    return { labels: shows.map(x => ({ i: x.i, period: 'baroque', year: 1650 })) };
+  } } };
+  const globals = ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame',
+    'cancelAnimationFrame', 'MutationObserver', 'Node', 'Element', 'HTMLElement', 'Event',
+    'CustomEvent', 'getComputedStyle', 'FileReader', 'File', 'HTMLInputElement', 'KeyboardEvent', 'MouseEvent'];
+  for (const k of globals) { try { global[k] = win[k]; } catch {} }
+  global.IS_REACT_ACT_ENVIRONMENT = true;
+  React = require('react'); ({ createRoot } = require('react-dom/client')); ({ act } = require('react'));
+  const shouted = [];
+  const realError = console.error;
+  console.error = (...a) => shouted.push(String(a[0]));
+
+  const App = new Function('React', 'window', 'document', 'localStorage', code + '\n;return App;')(React, win, doc, win.localStorage);
+  const root = createRoot(doc.getElementById('root'));
+  await act(async () => { root.render(React.createElement(App)); });
+  await settle();
+  global.IS_REACT_ACT_ENVIRONMENT = false;
+
+  const cards = () => [...doc.querySelectorAll('article')];
+  const click = el => el.dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
+  const has = (el, r) => el.textContent.includes(r.title);
+  try {
+    const input = doc.querySelector('input[type=file][accept=".json"]');
+    Object.defineProperty(input, 'files', { value: [new win.File([FILE], 'ledger.json', { type: 'application/json' })], configurable: true });
+    input.dispatchEvent(new win.Event('change', { bubbles: true }));
+    await until(() => cards().length > 0);
+    const period = [...doc.querySelectorAll('button')].find(b => /^Period/.test(b.textContent));
+    ok(!!period, 'PR-001: the sort row has Period');
+    click(period); await settle(150);
+    const c = cards();
+    ok(c.length === 4, 'PR-002: only labelled, not-dismissed shows at the trial venues (4)', String(c.length));
+    ok(c.length === 4 && has(c[0], ng2) && has(c[1], met1) && has(c[2], ng1) && has(c[3], met2),
+      'PR-003: Antiquity, then High Renaissance (a tie in her venue order: Met before NG), then Impressionism',
+      c.map(x => x.textContent.slice(0, 40)).join(' | '));
+    const text = doc.body.textContent;
+    ok(['Antiquity', 'High Renaissance', 'Impressionism'].every(n => text.includes(n)), 'PR-004: a divider names each period');
+    click([...doc.querySelectorAll('button')].find(b => /^Period/.test(b.textContent))); await settle(150);
+    const r = cards();
+    ok(r.length === 4 && has(r[0], met2) && has(r[3], ng2), 'PR-005: a second tap on Period reverses the order',
+      r.map(x => x.textContent.slice(0, 40)).join(' | '));
+    const trial = ['met','ng','orsay','dellav','va','tate-modern','cincinnati'];
+    const unlabelled = rows.filter(x => trial.includes(x.museumId) && !x.period).length;
+    const shownAfter = rows.filter(x => trial.includes(x.museumId) && x.interested).length;
+    click([...doc.querySelectorAll('button')].find(b => b.textContent === 'Label'));
+    await until(() => cards().length === shownAfter);
+    ok(asked.reduce((a, b) => a + b, 0) === unlabelled && asked.every(n => n <= 40),
+      `PR-007: Label asks about every unlabelled show at the trial venues, dismissed included (${unlabelled}), 40 at a time`, asked.join(','));
+    ok(cards().length === shownAfter, `PR-008: after Label, Period shows every not-dismissed show at the trial venues (${shownAfter})`, String(cards().length));
+    const fin = cards();
+    ok(has(fin[fin.length - 1], ng2) && has(fin[0], met2), 'PR-009: a show already labelled keeps its label', fin[0].textContent.slice(0, 40));
+    const csv = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at\n'
+      + 'met,A Show Nobody Has Seen,2026-11-01,2027-02-01,Paintings of the 1600s.,https://www.metmuseum.org/exhibitions/nobody-has-seen,,2026-10-15\n'
+      + 'artic,Another New Show,2026-11-01,2027-02-01,Prints.,https://www.artic.edu/exhibitions/another-new-show,,2026-10-15\n';
+    const before = asked.length;
+    const csvIn = doc.querySelector('input[type=file][accept=".csv,text/csv"]');
+    Object.defineProperty(csvIn, 'files', { value: [new win.File([csv], 'sweep.csv', { type: 'text/csv' })], configurable: true });
+    csvIn.dispatchEvent(new win.Event('change', { bubbles: true }));
+    await until(() => /Baroque · c\. 1650/.test(doc.body.textContent));
+    ok(asked.length === before + 1 && asked[before] === 1, 'PR-010: an import asks once, about the new show at a trial venue only', asked.slice(before).join(','));
+    const card = [...doc.querySelectorAll('[id^="prop-"]')];
+    ok(card.length === 2 && /Period:\s*Italian Baroque · c\. 1650/.test(card.find(x => x.textContent.includes('Nobody Has Seen')).textContent)
+      && !/Period:/.test(card.find(x => x.textContent.includes('Another New Show')).textContent),
+      'PR-011: the new Met show\'s card shows its period; the Art Institute\'s shows none', card.map(x => x.textContent.slice(0, 200)).join(' | '));
+    ok(!shouted.some(s => /Error|Warning/.test(s)), 'PR-006: nothing written to the console as an error', shouted.slice(0, 2).join(' | '));
+  } catch (e) {
+    fail++; console.log('FAIL  the suite threw: ' + (e && e.stack || e));
+  }
+  console.error = realError;
+  root.unmount();
+  console.log(`\n${pass} passed, ${fail} failed`);
+  process.exit(fail ? 1 : 0);
+})();
