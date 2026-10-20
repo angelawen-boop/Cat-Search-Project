@@ -249,6 +249,12 @@ Art books by theme, an extension of Cat Watch on its own page while a prototype;
 `claude/theme-shelf`. Where it stands, her design and what is unproven: `docs/themes.md`.
 Read it before any Themes work.
 
+#### 2.2.9 Period sort — trial on its test page, her review
+
+Exhibitions in art-period order, with period dividers, for seven trial venues; code on
+`claude/period-sort`, its own test page. Her design, decisions and where it stands: `docs/periods.md`.
+Read it before any Period work.
+
 #### 2.2.6 Tests that failed — recorded, not investigated
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).
@@ -311,6 +317,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 |---|---|---|
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 | `docs/themes.md` | Themes — art books by theme: her brief and decisions, and the Theme Shelf prototype as built | Any Themes work |
+| `docs/periods.md` | The Period sort trial: her design, the period list's order, the test page | Any Period work |
 
 **Procedures** — how to do the recurring jobs
 
