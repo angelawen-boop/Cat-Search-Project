@@ -42,6 +42,20 @@ says. Not open work beyond her review of the trial.
   here and fixed in the labeller (`periodPrompt`, `PERIODS`), so it learns.
 - **Nothing on the main cards** — the dividers only.
 
+## v1.2 (her decisions)
+
+- **Order:** Italy first only where two periods compete (Northern Renaissance after Early, before High
+  Renaissance). New: Late Venetian (Canaletto, Bellotto) after Rococo; Belle Époque and Aestheticism
+  (Sargent, Whistler) after Symbolism; General 19th Century after 19th-century America, in its place in
+  time (not with Miscellaneous, which stays as small as possible).
+- **A movement group takes only shows about that movement or its artists;** other 19th-century shows go
+  to General 19th Century.
+- **A long-span show goes to its heart**, the period most of its works come from; Surveys only when the
+  works spread across the centuries with no heart (five centuries of cats).
+- **Decorative Arts and Architecture** after Surveys, for shows from 1800 on; older ones stay with their
+  period. Claude says the kind; code applies the 1800 cut-off.
+- **Relabel** at the foot of a card's drawer asks Claude again about that one show (PR-014–016).
+
 ## Open — her review of v1.1
 
 v1 labelled well (her estimate 90–95% right) but three whole batches of 40 failed silently (120 shows,

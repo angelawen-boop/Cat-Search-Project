@@ -54,11 +54,13 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
   win.scrollTo = () => {};
   // Claude stands in: every show it is asked about is Baroque, 1650.
   // failNext: how many questions fail before answering (the retry and her line).
-  const asked = []; let failNext = 0;
+  const asked = []; let failNext = 0, relabelNext = false;
   win.claude = { use: async name => name !== 'sample' ? null : { json: async prompt => {
     const shows = prompt.split('Exhibitions:\n')[1].split('\n').filter(Boolean).map(l => JSON.parse(l));
     asked.push(shows.length);
     if (failNext > 0) { failNext--; throw { code: 'rate_limited', message: 'slow down' }; }
+    // A question about one show is a Relabel: it comes back High Renaissance.
+    if (shows.length === 1 && relabelNext) { relabelNext = false; return { labels: [{ i: shows[0].i, period: 'highren', year: 1505 }] }; }
     return { labels: shows.map(x => ({ i: x.i, period: 'baroque', year: 1650 })) };
   } } };
   const globals = ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame',
@@ -118,6 +120,20 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     ok(cards().length === shownAfter, `PR-008: after Label, Period shows every not-dismissed show at the trial venues (${shownAfter})`, String(cards().length));
     const fin = cards();
     ok(has(fin[fin.length - 1], ng2) && has(fin[0], met2), 'PR-009: a show already labelled keeps its label', fin[0].textContent.slice(0, 40));
+    // Relabel, at the foot of a card's drawer, replaces that one show's label.
+    const first = cards()[0], firstTitle = first.querySelector('h3').textContent;
+    click([...first.querySelectorAll('button')].find(b => /Catalogue|Hide/.test(b.textContent)));
+    await until(() => [...cards()[0].querySelectorAll('button')].some(b => b.textContent === 'Relabel'));
+    const rb = [...cards()[0].querySelectorAll('button')].find(b => b.textContent === 'Relabel');
+    ok(!!rb, 'PR-014: the drawer of a trial-venue card has Relabel');
+    relabelNext = true; const nAsked = asked.length;
+    click(rb);
+    await until(() => /Relabelled: High Renaissance/.test(doc.body.textContent));
+    ok(asked.length === nAsked + 1 && asked[nAsked] === 1, 'PR-015: Relabel asks Claude about that one show only', asked.slice(nAsked).join(','));
+    ok(doc.body.textContent.includes('Relabelled: High Renaissance \u00b7 c. 1505.'), 'PR-015: the drawer says the new label');
+    const hr = [...doc.querySelectorAll('span')].some(x => x.textContent === 'High Renaissance');
+    ok(hr && [...doc.querySelectorAll('article h3')].some(h => h.textContent === firstTitle), 'PR-016: the show moves under its new divider', firstTitle);
+
     const csv = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at\n'
       + 'met,A Show Nobody Has Seen,2026-11-01,2027-02-01,Paintings of the 1600s.,https://www.metmuseum.org/exhibitions/nobody-has-seen,,2026-10-15\n'
       + 'artic,Another New Show,2026-11-01,2027-02-01,Prints.,https://www.artic.edu/exhibitions/another-new-show,,2026-10-15\n';

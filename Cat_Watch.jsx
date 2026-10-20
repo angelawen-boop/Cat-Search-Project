@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "1.1";   // the Period test page's own numbering (her name for it), not her app's
+const APP_VERSION = "1.2";   // the Period test page's own numbering (her name for it), not her app's
 const APP_VERSION_DATE = "20 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1831,33 +1831,37 @@ function topicPresets(props){
 // Claude labels each show with one period from this list and one year; code sorts by
 // the list's order, then the year, then her venue order. The list's order is her
 // centre-of-gravity rule: Italy, then the North, then France, then America, a region's
-// periods placed after the dominant region's periods of the same time. The last four
-// groups (her decision) take what fits no period: surveys, stragglers, non-Western art.
+// periods placed after the dominant region's periods of the same time (Italy first only
+// where two compete). The groups after Contemporary (her decision) take what fits no
+// period: surveys, decorative arts and architecture from 1800, stragglers, non-Western art.
 const PERIODS=[
   {key:"antiquity",name:"Antiquity",span:"before c. 400; ancient art from anywhere"},
   {key:"medieval",name:"Byzantine and Early Medieval",span:"c. 400–1150, Romanesque included"},
   {key:"gothic",name:"Gothic",span:"c. 1150–1375"},
   {key:"intlgothic",name:"International Gothic",span:"c. 1375–1425"},
   {key:"earlyren",name:"Early Renaissance",span:"Italy, c. 1400–1490"},
+  {key:"northern",name:"Northern Renaissance",span:"Netherlands, Germany, France, c. 1420–1580 (Van Eyck, Dürer, Bruegel, Holbein)"},
   {key:"highren",name:"High Renaissance",span:"Italy, c. 1490–1530"},
   {key:"venetian",name:"Venetian Renaissance",span:"Venice, c. 1470–1600 (Bellini, Giorgione, Titian, Tintoretto, Veronese)"},
   {key:"mannerism",name:"Mannerism",span:"Italy, c. 1520–1600"},
-  {key:"northern",name:"Northern Renaissance",span:"Netherlands, Germany, France, c. 1420–1580"},
   {key:"baroque",name:"Italian Baroque",span:"c. 1590–1700"},
-  {key:"flemish",name:"Flemish Baroque",span:"c. 1600–1680"},
+  {key:"flemish",name:"Flemish Baroque",span:"c. 1600–1680 (Rubens, Van Dyck, Jordaens)"},
   {key:"dutch",name:"Dutch Golden Age",span:"c. 1600–1700"},
   {key:"spanish",name:"Spanish Golden Age",span:"c. 1580–1700"},
   {key:"classicism",name:"French Classicism",span:"c. 1620–1715 (Poussin, Claude, the age of Louis XIV)"},
-  {key:"rococo",name:"Rococo",span:"c. 1715–1775, 18th-century Venice included"},
+  {key:"rococo",name:"Rococo",span:"c. 1715–1775 (Watteau, Boucher, Fragonard, Tiepolo)"},
+  {key:"latevenetian",name:"Late Venetian",span:"c. 1700–1790: Venetian views and the Grand Tour (Canaletto, Bellotto, Guardi)"},
   {key:"neoclassicism",name:"Neoclassicism",span:"c. 1760–1820"},
   {key:"georgian",name:"Georgian Britain",span:"c. 1720–1830 (Hogarth, Gainsborough, Reynolds, Stubbs)"},
   {key:"romanticism",name:"Romanticism",span:"c. 1800–1850 (Turner, Constable and Goya included)"},
   {key:"realism",name:"Realism",span:"c. 1840–1880, the Barbizon school and the Salon included"},
   {key:"impressionism",name:"Impressionism",span:"c. 1865–1890, Manet and Degas included"},
   {key:"postimp",name:"Post-Impressionism",span:"c. 1885–1905"},
-  {key:"symbolism",name:"Symbolism and Art Nouveau",span:"c. 1880–1910"},
+  {key:"symbolism",name:"Symbolism and Art Nouveau",span:"c. 1880–1910, the Vienna Secession included"},
+  {key:"belleepoque",name:"Belle Époque and Aestheticism",span:"c. 1870–1914 (Sargent, Whistler, Tissot, Boldini)"},
   {key:"victorian",name:"Victorian Britain",span:"c. 1837–1901, the Pre-Raphaelites included"},
   {key:"american19",name:"19th-century America",span:"c. 1820–1910"},
+  {key:"general19",name:"General 19th Century",span:"c. 1800–1900: 19th-century art that is not about one of the movements above"},
   {key:"earlymodern",name:"Early Modernism",span:"c. 1900–1918 (Fauvism, Cubism, Expressionism, Futurism)"},
   {key:"interwar",name:"Interwar Modernism",span:"c. 1918–1945 (Surrealism, Dada, Bauhaus, Art Deco)"},
   {key:"americanmod",name:"American Modernism",span:"c. 1910–1945 (O’Keeffe, Hopper, the Harlem Renaissance)"},
@@ -1865,7 +1869,9 @@ const PERIODS=[
   {key:"pop",name:"Pop Art and Minimalism",span:"c. 1955–1980"},
   {key:"postwareu",name:"Postwar Europe",span:"c. 1945–1980"},
   {key:"contemporary",name:"Contemporary",span:"c. 1980 to now"},
-  {key:"surveys",name:"Surveys",span:"a show spanning three or more of the periods above"},
+  {key:"surveys",name:"Surveys",span:"a show whose works spread across the centuries with no one period at its heart"},
+  {key:"decorative",name:"Decorative Arts",span:"set by code from kind, never picked"},
+  {key:"architecture",name:"Architecture",span:"set by code from kind, never picked"},
   {key:"mischistoric",name:"Miscellaneous Historic",span:"Western art before 1900 that fits none of the periods above"},
   {key:"miscmodern",name:"Miscellaneous Modern",span:"Western art from 1900 on that fits none of the periods above"},
   {key:"nonwestern",name:"Non-Western Art",span:"art from outside the Western tradition that is not ancient"},
@@ -1879,8 +1885,11 @@ const PERIOD_BATCH=40;
 const periodLabelled=r=>!!(r&&PERIOD_RANK[r.period]!==undefined&&Number.isInteger(r.periodYear));
 const periodYearText=y=>"c. "+(y<0?(-y)+" BC":y);
 const periodText=r=>periodLabelled(r)?PERIOD_NAME[r.period]+" · "+periodYearText(r.periodYear):"";
-// The two stragglers' groups split at 1900 (her cut-off), decided here, not by Claude.
+// The two stragglers' groups split at 1900, and decorative arts and architecture leave
+// their period from 1800 (her cut-offs) — decided here, not by Claude.
 const miscFor=y=>y<1900?"mischistoric":"miscmodern";
+const KINDS=new Set(["decorative","architecture"]);
+const PICKABLE=PERIODS.filter(p=>!KINDS.has(p.key));
 
 // One artist, one group (her decision): shows about one artist take the group most of
 // them were given; a tie goes to the earlier group. A response show keeps its own.
@@ -1910,22 +1919,24 @@ function periodPrompt(shows){
     "You are an art historian. For each exhibition below, name the art period of the art it shows, and one year.",
     "",
     "period: the key of ONE period from this list. The list is in its sorting order, not strict date order:",
-    ...PERIODS.map(p=>"  "+p.key+" — "+p.name+" ("+p.span+")"),
+    ...PICKABLE.map(p=>"  "+p.key+" — "+p.name+" ("+p.span+")"),
     "",
     "Rules:",
     "- Pick by the date and place of the art itself, not the exhibition's theme words.",
     "- Italian art of c. 1400–1600 goes in the Italian periods; Netherlandish, German and French art of that time in Northern Renaissance.",
     "- A recent artist responding to older art, or a show pairing artists of different periods: the period of the OLDER art, with its year, and response true.",
-    "- A show spanning three or more of the periods (a collection's highlights, a medium across the centuries): surveys, with the midpoint year.",
+    "- A movement's period only for a show about that movement or its artists. Other 19th-century art: general19.",
+    "- A show spanning a long stretch: the period most of its works come from (its heart), with that period's year. Only when the works spread across the centuries with no one period at its heart: surveys, with the midpoint year.",
     "- Ancient art from anywhere (Egypt, Greece, Rome, Mesopotamia): antiquity.",
     "- Art from outside the Western tradition that is not ancient (Asian, Islamic, African, Oceanic, Indigenous): nonwestern.",
     "- Western work that fits none of the periods (photography, folk art, design outside any movement): mischistoric before 1900, miscmodern from 1900. Use these only when no period fits.",
+    "- kind: \"decorative\" for a show of decorative arts, crafts, design or fashion (ceramics, silver, textiles, wallpaper, furniture, jewellery); \"architecture\" for a show about buildings or their decoration; otherwise \"\". Still give the period as usual.",
     "",
     "year: one whole number, the year of the art shown (negative for BC). One artist: the middle of the works shown. A show spanning a long stretch: the midpoint of the stretch.",
     "response: true or false, as above.",
     "artist: for a show about ONE artist, their full name as usually written (\"John Singer Sargent\"); otherwise \"\".",
     "",
-    "Answer with JSON only, one entry per exhibition: {\"labels\":[{\"i\":0,\"period\":\"highren\",\"year\":1510,\"response\":false,\"artist\":\"Raphael\"}]}",
+    "Answer with JSON only, one entry per exhibition: {\"labels\":[{\"i\":0,\"period\":\"highren\",\"year\":1510,\"response\":false,\"artist\":\"Raphael\",\"kind\":\"\"}]}",
     "",
     "Exhibitions:",
     ...shows.map(s=>JSON.stringify({i:s.i,venue:s.venue,title:s.title,dates:s.dates,text:String(s.summary||"").replace(/\s+/g," ").slice(0,600)})),
@@ -1938,8 +1949,10 @@ function periodAnswers(data){
   for(const x of (data&&Array.isArray(data.labels))?data.labels:[]){
     const i=Number(x&&x.i), y=Number(x&&x.year);
     let k=String((x&&x.period)||"").trim().toLowerCase();
-    if(!Number.isInteger(i)||PERIOD_RANK[k]===undefined||!Number.isInteger(y)||y<-5000||y>2100)continue;
+    if(!Number.isInteger(i)||PERIOD_RANK[k]===undefined||KINDS.has(k)||!Number.isInteger(y)||y<-5000||y>2100)continue;
     if(k==="mischistoric"||k==="miscmodern")k=miscFor(y);
+    const kind=String((x&&x.kind)||"").trim().toLowerCase();
+    if(KINDS.has(kind)&&y>=1800&&k!=="nonwestern")k=kind;
     const artist=typeof x.artist==="string"?x.artist.trim().slice(0,120):"";
     out.set(i,{period:k,periodYear:y,periodResponse:x.response===true,periodArtist:artist});
   }
@@ -4961,7 +4974,7 @@ const linkButton=C=>({fontSize:11,fontWeight:500,color:C.ink,background:C.card,b
 // ONE LEDGER CARD. Memoised: a mark redraws only the card it changed, so every prop
 // must keep its identity between renders (act, chip, pBtn, lnk, TH are held stable in App;
 // a venue's MU entry is replaced, never edited, so `mu` changes when its shop does).
-const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,rechecking,lookLabel,said,C,TH,chip,pBtn,lnk,act}){
+const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,rechecking,lookLabel,said,relabelling,C,TH,chip,pBtn,lnk,act}){
   const t=tierFor(r),tier=TH[t],mo=moSince(r.endDate),noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested;
   const searchingLabel=lookLabel||"Searching\u2026";
   // Two buttons share one busy row; only the one pressed shows progress.
@@ -5054,6 +5067,10 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
               {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
               </>}/>
           )}
+          {/* Relabel, on its own line at the foot of the drawer (her design; the Period trial). */}
+          {PERIOD_VENUES.has(r.museumId)&&<div style={{marginTop:10}}>
+            <button onClick={()=>act("relabel",r.id)} disabled={busy||relabelling} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{relabelling?"Relabelling\u2026":"Relabel"}</button>
+          </div>}
         </div>
       )}
     </article>
@@ -5173,6 +5190,7 @@ export default function App(){
   const[lookLabel,setLookLabel]=useState(null); // the progress line while a lookup or Re-check runs (lookupLabel)
   const[prog,setProg]=useState({done:0,total:0,label:""});
   const[labelSaid,setLabelSaid]=useState(null);   // the last Label run's line
+  const[relabelId,setRelabelId]=useState(null);   // the card a Relabel is asking about
   // Add by link: one pop-up for CSV and Links, nothing added to the page (her design).
   // importMode: null · "choose" · "links" (the box open below them) · "needLedger" (empty page).
   const[importMode,setImportMode]=useState(null);
@@ -5847,6 +5865,27 @@ export default function App(){
     }
   }
 
+  // Relabel (her design): one show asked afresh under the current rules, its label
+  // replaced; what it says shows in that card's drawer. Not an edit of hers: editedAt stays.
+  async function relabel(id){
+    const r=rows.find(x=>x.id===id);
+    if(!r||busy||relabelId||roStop())return;
+    setRelabelId(id); setRecheckSaid(null);
+    const tape=tapeStart("Relabel",r);
+    let said;
+    try{
+      const {labels,batches}=await labelPeriods([periodShow(0,r)]);
+      const v=labels.get(0);
+      if(v){
+        const next=rows.map(x=>x.id===id?{...x,...v}:x);
+        setRows(next); setDirty(true); setSaveNote(null);
+        const nr={...r,...v}, shown=periodOf(nr,artistPeriods(next));
+        said={id,failed:false,text:"Relabelled: "+periodText(nr)+(shown!==nr.period?" \u2014 shown with "+nr.periodArtist+"\u2019s other shows, under "+PERIOD_NAME[shown]:"")+"."};
+      }else said={id,failed:true,text:"Relabel didn\u2019t finish \u2014 "+(batches[0]&&batches[0].why||"no answer")+"."};
+    }catch(e){ said={id,failed:true,text:"Relabel didn\u2019t finish \u2014 "+String((e&&e.message)||e)+"."}; }
+    finally{ setRecheckSaid(said); saveLookupTape(tape,{ok:!said.failed,said:said.text}); setRelabelId(null); }
+  }
+
   // ── ADD BY LINK — the button's work ────────────────────────────────────────
   // One page read per link, then one model call for the prose; a new venue's
   // shop is found once. Every row then goes through analyzeProForma, the same
@@ -6205,7 +6244,7 @@ export default function App(){
   // A card's buttons, by name. One function for the life of the page (so LedgerCard can skip
   // redrawing) that calls this render's handler, which sees the current ledger.
   const cardActs=useRef(null);
-  cardActs.current={restore,toggleWatch,dismiss,setAcq,toggleBuyNext,setPick,findOneCat,recheckShop,
+  cardActs.current={restore,toggleWatch,dismiss,setAcq,toggleBuyNext,setPick,findOneCat,recheckShop,relabel,
     toggleOpen:id=>setOpenCards(o=>({...o,[id]:!o[id]}))};
   const cardAct=useCallback((name,...a)=>cardActs.current[name](...a),[]);
 
@@ -6710,7 +6749,7 @@ export default function App(){
           return(
             <React.Fragment key={r.id}>{lead}
             <LedgerCard r={r} mu={MU[r.museumId]} isOpen={!!openCards[r.id]} isBusy={isBusy} busy={busy} rechecking={isBusy&&rechecking} lookLabel={isBusy?lookLabel:null}
-              said={recheckSaid&&recheckSaid.id===r.id?recheckSaid:null} C={C} TH={TH} chip={chip} pBtn={pBtn} lnk={lnk} act={cardAct}/>
+              said={recheckSaid&&recheckSaid.id===r.id?recheckSaid:null} relabelling={relabelId===r.id} C={C} TH={TH} chip={chip} pBtn={pBtn} lnk={lnk} act={cardAct}/>
             </React.Fragment>
           );
         });})()}

@@ -6,7 +6,8 @@ const check=(name,cond,extra)=>{ console.log((cond?'PASS  ':'FAIL  ')+name); if(
 const rank=k=>H.PERIOD_RANK[k];
 
 // Her centre-of-gravity rule: Italy, then the North, then France, then America.
-check('PS-001 Italian Renaissance before Northern Renaissance', rank('earlyren')<rank('northern')&&rank('highren')<rank('northern')&&rank('mannerism')<rank('northern'));
+check('PS-001 Italy first only where two compete: Early Renaissance, then Northern, then High Renaissance', rank('earlyren')<rank('northern')&&rank('northern')<rank('highren')&&rank('highren')<rank('mannerism'));
+check('PS-001 Late Venetian after Rococo; Belle \u00c9poque after Symbolism; General 19th Century last of the 1800s', rank('rococo')+1===rank('latevenetian')&&rank('symbolism')+1===rank('belleepoque')&&rank('american19')+1===rank('general19')&&rank('general19')+1===rank('earlymodern'));
 check('PS-001 Italian before Flemish before Dutch', rank('baroque')<rank('flemish')&&rank('flemish')<rank('dutch'));
 check('PS-001 French periods before Britain and 19th-century America', ['classicism','rococo','neoclassicism','impressionism','postimp'].every(k=>rank(k)<rank('victorian')&&rank(k)<rank('american19')));
 check('PS-001 America first after the war, Contemporary last of the periods', rank('abex')<rank('postwareu')&&rank('pop')<rank('postwareu')&&rank('contemporary')===rank('surveys')-1);
@@ -17,7 +18,7 @@ const met={museumId:'met',period:'impressionism',periodYear:1900};
 const orsay={museumId:'orsay',period:'impressionism',periodYear:1900};
 const metFirst=H.VENUE_ORDER.indexOf('met')<H.VENUE_ORDER.indexOf('orsay');
 check('PS-002 a tie goes in her venue order', metFirst===(H.periodCompare(met,orsay)<0)&&H.periodCompare(met,orsay)!==0, {met:H.VENUE_ORDER.indexOf('met'),orsay:H.VENUE_ORDER.indexOf('orsay')});
-check('PS-003 the period outranks the year', H.periodCompare({museumId:'met',period:'northern',periodYear:1430},{museumId:'met',period:'highren',periodYear:1510})>0);
+check('PS-003 the period outranks the year', H.periodCompare({museumId:'met',period:'dutch',periodYear:1610},{museumId:'met',period:'baroque',periodYear:1690})>0);
 check('PS-003 the year orders within a period', H.periodCompare({museumId:'met',period:'highren',periodYear:1500},{museumId:'met',period:'highren',periodYear:1520})<0);
 
 // Her seven trial venues.
@@ -42,10 +43,10 @@ check('PS-005 a reply with no labels gives nothing', H.periodAnswers(null).size=
 check('PS-006 the label reads name and year', H.periodText({period:'highren',periodYear:1510})==='High Renaissance · c. 1510');
 check('PS-006 BC reads as BC', H.periodText({period:'antiquity',periodYear:-450})==='Antiquity · c. 450 BC');
 check('PS-006 no label, no text', H.periodText({})===''&&!H.periodLabelled({period:'highren'}));
-check('PS-006 the prompt lists every period', H.PERIODS.every(p=>H.periodPrompt([]).includes('  '+p.key+' — ')));
+check('PS-006 the prompt lists every period Claude may pick, and not the two set by code', H.PERIODS.every(p=>H.periodPrompt([]).includes('  '+p.key+' — ')===!['decorative','architecture'].includes(p.key)));
 
 // v1.1 (her decisions): the four new groups, response shows last, one artist one group.
-check('PS-007 the four new groups come last, in her order', ['contemporary','surveys','mischistoric','miscmodern','nonwestern'].every((k,j,all)=>j===0||rank(all[j-1])<rank(k))&&rank('nonwestern')===H.PERIODS.length-1);
+check('PS-007 the groups after Contemporary, in her order', ['contemporary','surveys','decorative','architecture','mischistoric','miscmodern','nonwestern'].every((k,j,all)=>j===0||rank(all[j-1])+1===rank(k))&&rank('nonwestern')===H.PERIODS.length-1);
 check('PS-008 a response show sorts after the rest of its period, whatever its year',
   H.periodCompare({museumId:'ng',period:'highren',periodYear:1450,periodResponse:true},{museumId:'met',period:'highren',periodYear:1520})>0);
 check('PS-008 a response show still sorts before the next period',
@@ -69,6 +70,19 @@ check('PS-010 a show with no artist keeps its own group', H.periodOf({period:'go
 check('PS-011 her line says when every show was labelled', H.labelSummary(80,[{shows:40,labelled:40},{shows:40,labelled:40}]).ok&&H.labelSummary(80,[{shows:40,labelled:40},{shows:40,labelled:40}]).text==='Label: all 80 exhibitions labelled.');
 const ls=H.labelSummary(80,[{shows:40,labelled:40},{shows:40,labelled:0,why:'Claude is rate-limited.'}]);
 check('PS-011 her line says how many were not, and why', !ls.ok&&ls.text==='Label: 40 of 80 exhibitions labelled; 40 not — Claude is rate-limited..'.replace('..','.'), ls.text);
+
+// v1.2: decorative arts and architecture leave their period from 1800 (her cut-off), set by code.
+const k=H.periodAnswers({labels:[
+  {i:0,period:'general19',year:1850,kind:'decorative'},
+  {i:1,period:'rococo',year:1750,kind:'decorative'},
+  {i:2,period:'general19',year:1870,kind:'architecture'},
+  {i:3,period:'antiquity',year:-500,kind:'decorative'},
+  {i:4,period:'decorative',year:1900},
+  {i:5,period:'nonwestern',year:1850,kind:'decorative'},
+]});
+check('PS-012 decorative arts from 1800 go to Decorative Arts; architecture to Architecture', k.get(0).period==='decorative'&&k.get(2).period==='architecture');
+check('PS-012 before 1800 they stay with their period (Rococo silver, Greek pots)', k.get(1).period==='rococo'&&k.get(3).period==='antiquity');
+check('PS-012 Claude cannot pick the two groups itself; non-Western stays non-Western', !k.has(4)&&k.get(5).period==='nonwestern');
 
 console.log(fails?'\n'+fails+' FAILED':'\nall period checks passed');
 process.exit(fails?1:0);
