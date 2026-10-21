@@ -453,7 +453,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 49.3 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 49.4 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -598,6 +598,11 @@ and were fixed in code, proven live).
   cannot be seen - JS-rendering". **Hard-coded, her decision:** the Städel's shop section, and "…- Parallel fault"
   when Parallel brings it back without its books (proved: they are in the page's HTML). The rule stays until
   removed, even once Parallel reads the books. `docs/add_by_link.md`, "Frankfurt"; AL-049, FS-.
+- **OPEN — published at 49.4: a show on someone else's page** (a blog, when the venue's page is gone — a last
+  resort, her decision). Claude names the museum that held it and code files it there (`heldElsewhere`); a blog's
+  "Exhibition |" label leaves the title. Proved on her Enfilade link offline and on 76 live proof pages; her next
+  such link confirms Claude names the right museum. If it often doesn't, she brings it back to improve the read.
+  `docs/add_by_link.md`, "Someone else's page".
 - **Published at 49.3** (its MoMA fix does not hold live — §2.2.3): MoMA's pop-up reads as "contents cannot be seen — JS-rendering",
   not the false "not in the museum shop" (her Brancusi Re-check; B-007); card lines join phrases with an em
   dash, not " - " (her ask); the footer's "Reset cards" is "Reset search" (RC-002). Her decision on MoMA: small
