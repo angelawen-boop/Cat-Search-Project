@@ -311,8 +311,8 @@ A last resort (her decision): a show so old its venue's page is gone, read off a
   in the page's own site, or Claude saying it is the museum's own page, keeps today's filing. The site
   Claude gives is its knowledge, not read off the page. If it keeps getting it wrong, she brings it back.
 - **A label before the show** in the page title ("Exhibition | …") is dropped, and a dash-led site tail
-  read first (`splitPageTitle`, `TITLE_LABEL`). **Tracking tails** (utm_…, fbclid, gclid) leave the link
-  (`dropTracking`). Tests AL-050–052, on her page as Parallel returned it (`docs/link_pages/elsewhere/`).
+  read first (`splitPageTitle`, `TITLE_LABEL`). **Tracking tails** leave a saved page's link too, as a pasted link's
+  (`withoutTracking`). Tests AL-050–052, on her page as Parallel returned it (`docs/link_pages/elsewhere/`).
 
 ## What links are for, and how far the reader reaches
 

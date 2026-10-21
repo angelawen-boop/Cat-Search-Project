@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "49.3";
-const APP_VERSION_DATE = "20 Oct 2026";
+const APP_VERSION = "49.4";
+const APP_VERSION_DATE = "21 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
 // Sort by Venue and refresh headings all follow it.
@@ -1133,19 +1133,11 @@ function readShowPage(res,url,vc,rules){
   }
   // The first line under the heading, for a venue whose subtitle sits there.
   const under=lines.slice(h+1).map(stripMd).find(Boolean)||"";
-  const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:dropTracking(url);
+  let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
+  const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
   if(!raw)rule("no-description");
   return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||(OWN_CHIP[vc]||{}).name||host.replace(/^www\./,""),link,monthsOnly:found.monthsOnly||"",dateLine};
-}
-
-// A link's tracking tail (utm_…, fbclid, gclid) is not part of its address. AL-051.
-function dropTracking(url){
-  let u; try{ u=new URL(url); }catch{ return url; }
-  const keys=[...u.searchParams.keys()].filter(k=>/^(?:utm_\w+|fbclid|gclid)$/i.test(k));
-  if(!keys.length)return url;
-  for(const k of keys)u.searchParams.delete(k);
-  return u.href.replace(/\?(?=#|$)/,"");
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"

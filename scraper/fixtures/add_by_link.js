@@ -265,7 +265,7 @@ function runtime() {
   // The page as Parallel returned it to her app (lookup log), and its saved title.
   {
     const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
-    const split = fn('splitPageTitle'), read = fn('readShowPage'), away = fn('heldElsewhere'), drop = fn('dropTracking');
+    const split = fn('splitPageTitle'), read = fn('readShowPage'), away = fn('heldElsewhere');
     const host = 'enfilade18thc.com';
     const a = split('Exhibition | Canaletto and the Art of Venice | Enfilade', host);
     const b = split('Exhibition | Canaletto and the Art of Venice \u2013 Enfilade', host);
@@ -279,8 +279,6 @@ function runtime() {
       'AL-050b:  Enfilade, Canaletto: titled "Canaletto and the Art of Venice", 19 May to 12 Nov 2017', JSON.stringify([r.base, r.start, r.end, r.why]));
     ok(r.link === enf.url && /Buckingham Palace, London, 19 May/.test(r.dateLine),
       'AL-051: the link\'s tracking tail is dropped; the date line read is kept for Claude', JSON.stringify([r.link, r.dateLine]));
-    ok(drop('https://x.org/a?id=3&utm_source=x&fbclid=y#top') === 'https://x.org/a?id=3#top' && drop('https://x.org/a?id=3') === 'https://x.org/a?id=3',
-      'AL-051a:  only utm_…, fbclid and gclid go; the rest of the address stays');
     const qg = away({ venue: 'The Queen\u2019s Gallery, Buckingham Palace', venueSite: 'rct.uk', venueOwnPage: false }, host);
     ok(qg && qg.id === 'occ-rct-uk' && qg.name === 'The Queen\u2019s Gallery, Buckingham Palace' && qg.host === 'rct.uk',
       'AL-052: a show held elsewhere files under the venue Claude names, by its own site', JSON.stringify(qg));
