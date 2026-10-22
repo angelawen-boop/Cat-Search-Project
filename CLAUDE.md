@@ -605,8 +605,10 @@ and were fixed in code, proven live).
   removed, even once Parallel reads the books. `docs/add_by_link.md`, "Frankfurt"; AL-049, FS-.
 - **OPEN — published at 49.4: a show on someone else's page** (a blog, when the venue's page is gone — a last
   resort, her decision). Claude names the museum that held it and code files it there (`heldElsewhere`); a blog's
-  "Exhibition |" label leaves the title. Proved on her Enfilade link offline and on 76 live proof pages; her next
-  such link confirms Claude names the right museum. If it often doesn't, she brings it back to improve the read.
+  "Exhibition |" label leaves the title. Her Reynolds links (Enfilade PDF, Meer) still filed under the blog:
+  Claude, sent no address, called them the Wallace's own pages. **Fixed in code, not yet published:** Claude
+  now gets the address and reads the full title on such pages; right on 3 of 3 test reads of her two pages.
+  Her re-read of the two links after publishing confirms. `docs/add_by_link.md`, "Someone else's page".
   `docs/add_by_link.md`, "Someone else's page".
 - **Published at 49.3** (its MoMA fix does not hold live — §2.2.3): MoMA's pop-up reads as "contents cannot be seen — JS-rendering",
   not the false "not in the museum shop" (her Brancusi Re-check; B-007); card lines join phrases with an em

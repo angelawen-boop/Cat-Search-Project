@@ -1190,14 +1190,16 @@ function nameInLines(page,vc){
     .sort((x,y)=>y.length-x.length)[0]||"";
 }
 
-// askVenue: a site the app has never seen (or has stored named only by its address). Claude
-// names the venue that held the show, its full name and her kind of short name (her decision);
-// on someone else's page (a blog, a magazine) code files the show there (heldElsewhere).
+// askVenue: a site the app has never seen (or has stored named only by its address). Claude is
+// given the page's address and names the venue that held the show, its full name and her kind of
+// short name (her decision); on someone else's page (a blog, a magazine) code files the show there
+// (heldElsewhere) and Claude also reads the show's full title (its page title can be anything).
 // Her names for venues, as the style for a new venue's short name.
 const SHORT_NAME_EXAMPLES=()=>Object.values(LINK_VENUES).map(v=>v.card||v.short).filter(Boolean);
-function linkPrompt(page,askVenue){
+function linkPrompt(page,askVenue,url){
   const ex=SUMMARY_EXAMPLES.map(e=>"RAW: "+e.raw+"\nACCEPTED SUMMARY: "+e.summary).join("\n\n");
   return "You are reading one museum exhibition page for a personal art-catalogue tracker. Your ONLY output is one JSON object.\n\n"
+    +(askVenue?"PAGE ADDRESS: "+url+"\n":"")
     +"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
     +(page.between.length?"LINES BETWEEN THE TITLE AND THE DATES: "+JSON.stringify(page.between)+"\n":"")
     +"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"\n\n"
@@ -1211,7 +1213,8 @@ function linkPrompt(page,askVenue){
     +(askVenue?"\n\"venue\": the museum or gallery that held the exhibition on the dates in this line: "+JSON.stringify(page.dateLine)+" — its full name, without the city. \"\" if the page does not say.\n"
       +"\"venueShort\": that museum's name as it would head a card in this tracker, short, in the style of these: "+JSON.stringify(SHORT_NAME_EXAMPLES())+". \"\" if \"venue\" is \"\".\n"
       +"\"venueSite\": that museum's own website, the domain only (\"example.org\"), if you know it; \"\" if not.\n"
-      +"\"venueOwnPage\": true if this page is published by that museum on its own website; false if someone else published it (a blog, a magazine, a newspaper, another organisation).":"");
+      +"\"venueOwnPage\": true if the PAGE ADDRESS is on that museum's own website; false if it is on someone else's site (a blog, a magazine, a newspaper, an aggregator, another organisation), even when the text is the museum's own press release.\n"
+      +"\"title\": the exhibition's full name as the text states it, with its subtitle, copied exactly as written (\"Turner and Constable: Rivals and Originals\"). Never a heading that only names the artist when the text gives the full name, never a label such as \"Exhibition\" or \"Review\", never the site's name.":"");
 }
 
 // What the model said, checked. Wording is not a control.
@@ -1220,7 +1223,8 @@ function linkAnswer(a){
   const str=v=>typeof v==="string"?v.replace(/["“”]/g,"").replace(/\s+/g," ").trim():"";
   return{summary:typeof o.summary==="string"?o.summary.trim():"",subtitle:typeof o.subtitle==="string"?o.subtitle.trim():"",
     english:str(o.english).replace(/^In English:\s*/i,""),englishSpeaking:o.englishSpeaking!==false,
-    venue:str(o.venue),venueShort:str(o.venueShort),venueSite:str(o.venueSite).toLowerCase(),venueOwnPage:o.venueOwnPage!==false};
+    venue:str(o.venue),venueShort:str(o.venueShort),venueSite:str(o.venueSite).toLowerCase(),venueOwnPage:o.venueOwnPage!==false,
+    title:str(o.title)};
 }
 
 // A page about a show held elsewhere → {id, name, host} for the venue Claude named: one of
@@ -5779,7 +5783,7 @@ export default function App(){
         // decision). On someone else's page, code files the show at the venue Claude names
         // (heldElsewhere; her decision, a last resort).
         const askVenue=vc===occVenueId(host)&&!linkEntry(vc)&&(!venues[vc]||namedByAddress(venues[vc]));
-        const ask=await readResults(linkPrompt(page,askVenue));
+        const ask=await readResults(linkPrompt(page,askVenue,url));
         const a=linkAnswer(ask.ok?ask.data:null);
         const away=askVenue?heldElsewhere(a,host):null;
         if(away){ vc=away.id; host=away.host; seen.venue=vc; seen.heldElsewhere=away; }
@@ -5808,7 +5812,8 @@ export default function App(){
         // A venue whose subtitle sits under the heading: read by code. A line
         // ending like a sentence is the text, not a subtitle.
         const own=(MU[vc]||{}).subtitleUnderHeading&&page.under&&page.under.length<=120&&!/[.!?]$/.test(page.under)?page.under:"";
-        const lt=nameInLines(page,vc)||linkTitle(page.base,own||a.subtitle,page.between);
+        // A show held elsewhere takes the title Claude read (someone else's page title can be anything).
+        const lt=(away&&a.title)||nameInLines(page,vc)||linkTitle(page.base,own||a.subtitle,page.between);
         const title=(linkOptions(vc)||{}).capsTitles?DATES.capsTitleParts(lt):lt;
         Object.assign(seen,{venue:vc,answer:a,subtitleUnderHeading:own||null,title});
         tape.row={title,museumId:vc,exUrl:url};

@@ -291,6 +291,19 @@ function runtime() {
     ok(away({ venue: 'Enfilade', venueSite: '', venueOwnPage: false }, host) === null && away({ venue: 'Queen\u2019s Gallery', venueSite: 'rct.uk', venueOwnPage: true }, host) === null
       && away({ venue: 'X', venueSite: 'enfilade18thc.com', venueOwnPage: false }, host) === null,
       'AL-052b:  the venue\'s own page, or a venue named in the page\'s own site, stays where it is');
+    // Her Reynolds links (Enfilade's PDF, Meer): Claude named the Wallace but, sent no address,
+    // called each the museum's own page. It is now given the address and reads the full title.
+    const prompt = fn('linkPrompt'), answer = fn('linkAnswer');
+    const pdf = 'https://enfilade18thc.com/wp-content/uploads/2014/12/joshua-reynolds.pdf';
+    const asked = prompt({ base: 'Joshua Reynolds', between: [], raw: 'x', dateLine: '12 March \u2013 7 June 2015' }, true, pdf);
+    const plain = prompt({ base: 'Joshua Reynolds', between: [], raw: 'x', dateLine: '' }, false, pdf);
+    ok(asked.includes('PAGE ADDRESS: ' + pdf) && /"title":/.test(asked) && /PAGE ADDRESS is on that museum/.test(asked)
+      && !plain.includes('PAGE ADDRESS') && !/"title":/.test(plain),
+      'AL-052g: on a site never seen, Claude is sent the page\'s address and asked the show\'s full title; a known venue\'s prompt is unchanged');
+    const ans = answer({ venue: 'The Wallace Collection', venueSite: 'wallacecollection.org', venueOwnPage: false, title: '\u201cJoshua Reynolds: Experiments in Paint\u201d' });
+    const wal = away(ans, 'enfilade18thc.com');
+    ok(ans.title === 'Joshua Reynolds: Experiments in Paint' && wal && wal.id === 'wallace',
+      'AL-052h:  Reynolds on Enfilade: the title Claude read is kept; the show files under the Wallace', JSON.stringify([ans.title, wal]));
   }
   // ── AL-016: a link from one of her 28 files under that venue ───────────
   // 7 Oct: her Jacquemart-André links became a new venue — the app knew a venue
