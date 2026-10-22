@@ -1060,13 +1060,16 @@ function isCaption(t){
     ||/^(?:\p{Lu}[\p{L}.'’-]*\s+){0,3}\p{Lu}[\p{L}.'’-]*,\s/u.test(s)&&sentencesOf(s).length===1&&s.split(/\s+/).length<=14&&!CAPTION_VERB.test(s);
 }
 // A heading that turns from the show to other matter ends the passage once the show's own text is in:
-// other shows, events, the shop, the press and reviews, the newsletter, sharing, the footer. A box's heading
+// other shows, events, the shop, the press and reviews, the newsletter, sharing, the footer. An online feature's
+// section is passed over to the next heading (Rijksmuseum's "Online special", narrated by Joanna Lumley, between
+// its introduction and its show). A box's heading
 // (tickets, visiting, supporters, curators, films, pictures, the catalogue) ends it only once a fair
 // part of the show's text is in (LINK_BOX_AFTER): below a short introduction the show's text can carry on
 // under a box with no heading of its own (Kunsthaus); below the text, what follows is the page's programme
 // (Alte Pinakothek's tours and participation project).
 const LINK_BOX=/^(?:tickets?|ticket|admission|prices|pricing|(?:opening |museum )?hours|opening times|visit|visitor|visiting|plan your visit|getting here|directions|address|location|access|accessib|membership|members?\b|become a member|curators?|credits|support|supported|sponsor|partners|media partners|in (?:cooperation|collaboration|partnership) with|with (?:generous |additional )?support|exhibition (?:film|guide|catalogue|supporters)|film|videos?|trailer|audio|(?:guided )?tours|führungen|publication|catalogue|images|impressions|(?:photo |image )?gallery|(?:exhibition |key )?highlights|selected works|installation|featured|downloads?|resources|large print)/i;
 const LINK_BOX_AFTER=600;
+const ONLINE_FEATURE=/^online (?:special|tour|exhibition|feature)/i;
 const OTHER_MATTER=/^(?:related|you (?:may|might) also|(?:see )?(?:more|other|further|upcoming|current|past|all) exhibitions|(?:exhibition |related |upcoming )?(?:events?|programmes?|programs?)$|(?:museum )?shop\b|newsletter|sign up|stay (?:in touch|connected)|follow|connect with|share\b|footer|(?:selected )?press\b|reviews?$|what’s on|explore more|discover more|privacy|manage consent|[\w ]*cookies)/i;
 
 // A venue's own link options (its MUSEUMS entry's `linkRead`). Cases: docs/add_by_link.md,
@@ -1382,11 +1385,11 @@ function takePassage(pg){
     if(!own){ cur=null; continue; }
     if(lr&&lr.skip&&lr.skip.test(own)){ rule("skip"); continue; }
     if(lr&&lr.skipEntities&&/&#?\w+;/.test(own)){ rule("skipEntities"); continue; }
-    const t=decodeEntities(own).replace(/\s+/g," ").trim();
+    let t=decodeEntities(own).replace(/\s+/g," ").trim();
     // A line indented under a list item belongs to it; a heading run into a line ("Members only ###
     // A Member's Field Guide", MoMA) is a link to other matter.
     let kind=/^\s{2,}\S/.test(line)&&cur&&cur.kind==="list"?"list":kindOf(line);
-    if(kind==="text"&&/\s#{2,6}\s/.test(line))kind="heading";
+    if(kind==="text"&&/\s#{2,6}\s/.test(line)){ kind="heading"; t=t.replace(/^.*\s#{2,6}\s+/,""); }
     // A lead paragraph set as a heading ("##### In 1938, René Magritte gave a lecture…", KMSKA) is a
     // paragraph; a heading that is a link is a card for other matter.
     if(kind==="heading"&&!/\]\(/.test(line)&&t.split(/\s+/).length>=15&&isProse(t))kind="text";
@@ -1404,13 +1407,15 @@ function takePassage(pg){
     if(a.kind==="text"&&b.kind==="text"&&!/[.!?:;…"”’»)]$/.test(a.text)&&a.text.split(/\s+/).length>=6
       &&(/^\p{Ll}/u.test(b.text)||/(?:\s(?:a|an|the|of|and|or|to|in|for|with|by|from|his|her|its|their|as|at|on)|,)$/i.test(a.text))){ a.text+=" "+b.text; blocks.splice(i+1,1); i--; }
   }
-  let raw="",paras=0;
+  let raw="",paras=0,passOver=false;
   const seen=new Set();
   for(const b of blocks){
     if(raw.length>=LINK_RAW_CHARS)break;
     if(paras>=LINK_PARAGRAPHS){ rule("end:four-paragraphs"); break; }
     const t=b.text;
     // Ends only once the show's own text is in: Getty prints "Related Events" above its description.
+    if(b.kind==="heading"){ passOver=ONLINE_FEATURE.test(t); if(passOver){ rule("skip:online-feature"); continue; } }
+    if(passOver)continue;
     if(b.kind==="heading"||PASSAGE_END.test(t)){
       if(raw&&(OTHER_MATTER.test(t)||PASSAGE_END.test(t))){ rule("end:other-matter"); break; }
       if(raw.length>=LINK_BOX_AFTER&&LINK_BOX.test(t)){ rule("end:box"); break; }

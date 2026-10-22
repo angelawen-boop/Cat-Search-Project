@@ -1159,6 +1159,8 @@ function runtime() {
       && pr.withoutBoilerplate('Bonnard’s works are on view. Open Monday through Saturday from 10:00am to 6:00pm.') === 'Bonnard’s works are on view.'
       && pr.withoutBoilerplate('After his early years as a member in the Nabi group, Bonnard pursued his own path.') === 'After his early years as a member in the Nabi group, Bonnard pursued his own path.',
       'AL-061i:  cookie notices, opening times and the like go by the sentence; a sentence about the show stays (Orsay, Acquavella)');
+    const rijks = page(para(1) + '\n\nRead more about Frans Hals ## Online special ‘Strokes of Genius’\n\nIn Frans Hals: Strokes of Genius, Joanna Lumley takes the visitor to 17th-century Haarlem, where Frans Hals was the go-to painter.\n\n## On view in Amsterdam for the first time\n\n' + para(2));
+    ok(rijks.raw === para(1) + '\n' + para(2), 'AL-061j:  an online feature\'s section is passed over to the next heading (Rijksmuseum\'s "Online special")', JSON.stringify(rijks.raw));
     const byAddr = new Function('React', 'window', 'document', 'localStorage', code + '\n;return namedByAddress;')(React, win, win.document, win.localStorage);
     ok(byAddr({ name: 'kmska.be', host: 'kmska.be' }) && byAddr({ name: 'www.mfa.org', host: 'mfa.org' }) && !byAddr({ name: 'kmska.be', short: 'Antwerp', host: 'kmska.be' })
       && !byAddr({ name: 'Detroit Institute of Arts Museum', host: 'dia.org' }),

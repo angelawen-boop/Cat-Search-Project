@@ -64,7 +64,9 @@ meets it.
    **Tested with Sonnet on 70 live pages** (the app's own code built each question; code scored it): subtitle
    pick right on all 13 pages that print one and none taken on the rest; English title given on every
    non-English title and never on an English one; English-speaking country right on 70; summaries within the
-   rules on 69 by code check (meaning not yet read against each page — CLAUDE.md §5.4 item 0) — Pontormo (Scuderie) said "First major monographic exhibition", "first" not in the text.
+   rules on 69 by code check. **Read for meaning on the clean passages** (every proof page, the new-museum pages,
+   Wallraf, the blog pages): right about the show on all but Pontormo (Scuderie), where Claude writes "first" with no
+   word for it in the text, on two reads of three — open, a code check is her decision.
    A blog page's second question (`elsewherePrompt`): right museum, site and full title on 9 of 9 reads
    (Enfilade Canaletto → rct.uk; her two Reynolds pages → the Wallace, *Joshua Reynolds: Experiments in Paint*).
 5. No note — a link is not a sweep; `swept_at` blank, sweep log untouched.
@@ -219,6 +221,8 @@ sponsor lists, opening hours, captions, event listings and cookie notices reache
   the show's text is in; "Related …" above the text is skipped (Getty). A box's heading (tickets, visiting,
   supporters, films, pictures: `LINK_BOX`) ends it only after 600 characters: Kunsthaus carries its text on below
   its ticket box with no heading; below the Alte Pinakothek's text come its tours.
+- **An online feature's section** ("Online special") is passed over to the next heading: Rijksmuseum's, narrated by
+  Joanna Lumley, sat between its introduction and its show, and Claude described the feature.
 
 Read on every proof page, the 18 new-museum pages off the list, Wallraf, the three blog pages and her three saved
 pages: each passage is the show's own text, nothing else. Known residue, show-related: an event's blurb in the
