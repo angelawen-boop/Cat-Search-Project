@@ -1190,8 +1190,11 @@ function nameInLines(page,vc){
     .sort((x,y)=>y.length-x.length)[0]||"";
 }
 
-// askVenue: a site the app has never seen, which may be someone else's page about a show
-// held elsewhere (a blog, a magazine). Claude names the venue; code files it (heldElsewhere).
+// askVenue: a site the app has never seen (or has stored named only by its address). Claude
+// names the venue that held the show, its full name and her kind of short name (her decision);
+// on someone else's page (a blog, a magazine) code files the show there (heldElsewhere).
+// Her names for venues, as the style for a new venue's short name.
+const SHORT_NAME_EXAMPLES=()=>Object.values(LINK_VENUES).map(v=>v.card||v.short).filter(Boolean);
 function linkPrompt(page,askVenue){
   const ex=SUMMARY_EXAMPLES.map(e=>"RAW: "+e.raw+"\nACCEPTED SUMMARY: "+e.summary).join("\n\n");
   return "You are reading one museum exhibition page for a personal art-catalogue tracker. Your ONLY output is one JSON object.\n\n"
@@ -1205,8 +1208,8 @@ function linkPrompt(page,askVenue){
     +(page.between.length?"\"subtitle\": if one of the LINES BETWEEN THE TITLE AND THE DATES is the second part of the exhibition's own name — the part a catalogue's title would carry after the main title — copy that line exactly as written. Otherwise \"\". Never a category (\"Special Exhibition\"), a sponsor, a place, a price or a date.\n":"")
     +"\"english\": the exhibition's title"+(page.between.length?" (with the subtitle you gave, if any)":"")+" in natural English if it is not in English; \"\" if it already is, names aside. Keep every name as written and the title's own full stops. Plain words: no \"In English\", no quotation marks.\n"
     +"\"englishSpeaking\": true if the museum is in an English-speaking country, false if not."
-    +(askVenue?"\n\"venue\": the museum or gallery that held the exhibition on the dates in this line: "+JSON.stringify(page.dateLine)+" — its name as the page gives it, without the city. \"\" if the page does not say.\n"
-      +"\"venueCity\": that museum's city, \"\" if not known.\n"
+    +(askVenue?"\n\"venue\": the museum or gallery that held the exhibition on the dates in this line: "+JSON.stringify(page.dateLine)+" — its full name, without the city. \"\" if the page does not say.\n"
+      +"\"venueShort\": that museum's name as it would head a card in this tracker, short, in the style of these: "+JSON.stringify(SHORT_NAME_EXAMPLES())+". \"\" if \"venue\" is \"\".\n"
       +"\"venueSite\": that museum's own website, the domain only (\"example.org\"), if you know it; \"\" if not.\n"
       +"\"venueOwnPage\": true if this page is published by that museum on its own website; false if someone else published it (a blog, a magazine, a newspaper, another organisation).":"");
 }
@@ -1217,7 +1220,7 @@ function linkAnswer(a){
   const str=v=>typeof v==="string"?v.replace(/["“”]/g,"").replace(/\s+/g," ").trim():"";
   return{summary:typeof o.summary==="string"?o.summary.trim():"",subtitle:typeof o.subtitle==="string"?o.subtitle.trim():"",
     english:str(o.english).replace(/^In English:\s*/i,""),englishSpeaking:o.englishSpeaking!==false,
-    venue:str(o.venue),venueCity:str(o.venueCity),venueSite:str(o.venueSite).toLowerCase(),venueOwnPage:o.venueOwnPage!==false};
+    venue:str(o.venue),venueShort:str(o.venueShort),venueSite:str(o.venueSite).toLowerCase(),venueOwnPage:o.venueOwnPage!==false};
 }
 
 // A page about a show held elsewhere → {id, name, host} for the venue Claude named: one of
@@ -1306,6 +1309,9 @@ function occVenue(id,v,fallback){
     shopHome:live?s.shopHome||null:null,shopCatalogues:live?s.shopCatalogues||null:null,shopSearch:live?s.shopSearch||null:null,
     shopUnknown:!live&&!(s.shop==="none"&&s.confirmed)};
 }
+// A venue the store holds named only by its address, as every new venue was before Claude named them.
+const namedByAddress=v=>!!v&&!v.short&&bareHost(v.name)===bareHost(v.host);
+const bareHost=h=>String(h||"").toLowerCase().replace(/^www\./,"");
 // The name a venue's shop is looked for under.
 const shopFinderName=(id,stored)=>(linkEntry(id)||{}).name||stored;
 // Every venue a card can be filed under, in VENUE_ORDER; the rest by name.
@@ -5769,13 +5775,16 @@ export default function App(){
         if(!vc){ fails.push({url,why:lv.why}); continue; }
         if(lv.line)page.between=page.between.filter(l=>l!==lv.line);
         let host=hostOf(siteUrlOf(url));
-        // A site never seen before may be someone else's page about a show held elsewhere:
-        // Claude names the venue, code files it (heldElsewhere; her decision, a last resort).
-        const askVenue=vc===occVenueId(host)&&!venues[vc]&&!MU[vc]&&!linkEntry(vc);
+        // A venue not met before (or stored named only by its address): Claude names it (her
+        // decision). On someone else's page, code files the show at the venue Claude names
+        // (heldElsewhere; her decision, a last resort).
+        const askVenue=vc===occVenueId(host)&&!linkEntry(vc)&&(!venues[vc]||namedByAddress(venues[vc]));
         const ask=await readResults(linkPrompt(page,askVenue));
         const a=linkAnswer(ask.ok?ask.data:null);
         const away=askVenue?heldElsewhere(a,host):null;
         if(away){ vc=away.id; host=away.host; seen.venue=vc; seen.heldElsewhere=away; }
+        const named=askVenue&&a.venue?{name:a.venue,short:a.venueShort||a.venue}:null;
+        const fresh=!venues[vc];
         if(isOcc(vc)){
           met.add(vc);
           const had=venues[vc];
@@ -5784,16 +5793,17 @@ export default function App(){
           // — a miss is never kept as the answer.
           if(!looked.has(vc)&&(!had||(!had.confirmed&&(!(had.finder>=2)||had.shop!=="found")))){
             looked.add(vc);
-            const name=shopFinderName(vc,away?away.name:page.site);
+            const name=shopFinderName(vc,had&&!namedByAddress(had)?had.name:named?named.name:page.site);
             setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+name+"\u2019s shop"});
             const pageShop=away?"":shopLinkOnPage(oneText(res),host);
             const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc);
-            venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:away?away.name:page.site,host,english:had?had.english:undefined,
+            venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:named?named.name:page.site,host,english:had?had.english:undefined,
               shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,
               ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
             venuesChanged=true;
           }
         }
+        if(isOcc(vc)&&named&&venues[vc]&&(fresh||namedByAddress(venues[vc]))){ venues={...venues,[vc]:{...venues[vc],name:named.name,short:named.short}}; venuesChanged=true; seen.named=named; }
         if(isOcc(vc)&&venues[vc]&&venues[vc].english===undefined&&ask.ok){ venues={...venues,[vc]:{...venues[vc],english:a.englishSpeaking}}; venuesChanged=true; }
         // A venue whose subtitle sits under the heading: read by code. A line
         // ending like a sentence is the text, not a subtitle.

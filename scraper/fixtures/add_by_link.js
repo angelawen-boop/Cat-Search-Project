@@ -198,6 +198,8 @@ function runtime() {
         if (/Rubens/.test(title)) return { summary: 'Rubens restored.', english: '"Rubens. The Restoration of Venus and Cupid"', englishSpeaking: false };
         if (/Hammersh/.test(title)) return { summary: 'First Spanish retrospective of Hammershøi.', english: '', englishSpeaking: false };
         if (/Grand Tour/.test(title)) return { summary: GRAND_SUMMARY, english: '', englishSpeaking: false };
+        if (/venueOwnPage/.test(prompt) && /Magritte|Folly Beyond Words/.test(title))
+          return { summary: 'Magritte retold.', english: '', englishSpeaking: false, venue: 'Royal Museum of Fine Arts Antwerp', venueShort: 'Antwerp KMSKA', venueSite: 'kmska.be', venueOwnPage: true };
         if (/venueOwnPage/.test(prompt) && /Canaletto and the Art of Venice/.test(title))
           return { summary: 'Canaletto and his Venetian contemporaries.', english: '', englishSpeaking: true, venue: 'The Queen\u2019s Gallery, Buckingham Palace', venueCity: 'London', venueSite: 'rct.uk', venueOwnPage: false };
         return { summary: 'A summary of ' + title + '.', english: '', englishSpeaking: true };
@@ -1018,6 +1020,36 @@ function runtime() {
     ok(shopAsk.length === 1 && /Queen\u2019s Gallery/.test(shopAsk[0]), 'AL-052f:  the shop looked for is the Queen\u2019s Gallery\'s, not the blog\'s', JSON.stringify(shopAsk));
     const cancel = buttons(/^Cancel import$/)[0];
     if (cancel) await click(cancel);
+  }
+  // ── AL-053: a museum never met: Claude names it, once (her decision) ─
+  // Shaped as the live page (kmska.be/en/magritte-la-ligne-de-vie): its tab title names no museum.
+  {
+    const body = '\n\n15 Nov 2025 \u2013 22 Feb 2026\n\nIn 1938, Ren\u00e9 Magritte gave a lecture at the KMSKA on his vision of reality. There, he discussed the origins and development of his art, as well as the history of the Surrealist movement in Belgium. The exhibition is a collaboration between the KMSKA and the Fondation Ren\u00e9 Magritte. Titled La ligne de vie, this lecture would become the most important Magritte ever gave about his own work.';
+    const K1 = 'https://kmska.be/en/magritte-la-ligne-de-vie', K2 = 'https://kmska.be/en/folly-beyond-words-bruegel-and-proverbs-in-art';
+    P[K1] = { url: K1, title: 'Magritte. La ligne de vie ', full_content: '# **Magritte** . La ligne de vie' + body };
+    P[K2] = { url: K2, title: 'Folly Beyond Words. Bruegel and Proverbs in Art', full_content: '# Folly Beyond Words. Bruegel and Proverbs in Art' + body };
+    await click(importBtn());
+    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    const box = dialog().querySelector('textarea');
+    await act(async () => { setter.call(box, K1 + '\n' + K2); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
+    await settle();
+    calls.length = 0;
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await settle(30);
+    const asked = calls.filter(c => c.kind === 'sample').map(c => /"venueShort"/.test(c.prompt));
+    ok(asked.length === 2 && asked[0] && !asked[1], 'AL-053:  a museum never met: Claude is asked its name on the first link only', JSON.stringify(asked));
+    const first = calls.find(c => c.kind === 'sample');
+    ok(first && /"Boston MFA"/.test(first.prompt) && /"Frankfurt St\u00e4del"/.test(first.prompt), 'AL-053a:  her names for venues are the style for the short name');
+    const text = win.document.body.textContent;
+    ok(/Antwerp KMSKA/.test(text) && !/kmska\.be\s*\u00b7/.test(text), 'AL-053b:  its cards are headed "Antwerp KMSKA", never its address', text.slice(text.indexOf('KMSKA') - 60, text.indexOf('KMSKA') + 20));
+    const shopAsk = calls.filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries.join(' '));
+    ok(shopAsk.length >= 1 && /Royal Museum of Fine Arts Antwerp/.test(shopAsk[0]), 'AL-053c:  its shop is looked for under Claude\'s full name', JSON.stringify(shopAsk));
+    const cancel = buttons(/^Cancel import$/)[0];
+    if (cancel) await click(cancel);
+    const byAddr = new Function('React', 'window', 'document', 'localStorage', code + '\n;return namedByAddress;')(React, win, win.document, win.localStorage);
+    ok(byAddr({ name: 'kmska.be', host: 'kmska.be' }) && byAddr({ name: 'www.mfa.org', host: 'mfa.org' }) && !byAddr({ name: 'kmska.be', short: 'Antwerp', host: 'kmska.be' })
+      && !byAddr({ name: 'Detroit Institute of Arts Museum', host: 'dia.org' }),
+      'AL-053d:  a stored venue named only by its address is asked again; one with a real name or her short name never');
   }
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) fail('React complained: ' + shouted.find(s => /Warning/.test(s)));
   console.log(failures ? '\n' + failures + ' FAILED' : '\nadd_by_link: all passed');

@@ -588,6 +588,11 @@ venue the app has never seen needs a fix about half the time** — the exhibitio
 correctly off the page, the venue's shop is not found, and so on (Mia and Worcester both missed
 and were fixed in code, proven live).
 
+- **OPEN — not yet published: one entry per link venue, and Claude names a museum not met before** (her
+  decisions; step 1 of the Add-by-link redesign). Seven name and rule tables folded into `LINK_VENUES`; Claude
+  gives a new venue's full and short name on its first link. Her next link from a new museum confirms the name.
+  Next, agreed: map the reader's venue rules on the proof pages, fold repeats into general rules, measure on
+  20–30 museums never seen. `docs/add_by_link.md`.
 - **Published at 47.3 — Sammlung Schack (third Munich venue, no shop) and Dresden (chip "Dresden", cards
   "Dresden Gemäldegalerie"; she answers No shop once on its shop screen) by link; Munich titles typed in capitals
   recased (shared `capsTitleParts`, `dates.js`); a house line over the dates read again (Van Dyck, Boucher).
