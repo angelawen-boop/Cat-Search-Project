@@ -204,7 +204,13 @@ function runtime() {
           return { venueSite: 'rct.uk', title: 'Canaletto and the Art of Venice' };
         if (/venueOwnPage/.test(prompt) && /Canaletto and the Art of Venice/.test(title))
           return { summary: 'Canaletto and his Venetian contemporaries.', english: '', englishSpeaking: true, venue: 'The Queen\u2019s Gallery, Buckingham Palace', venueCity: 'London', venueCountry: 'United Kingdom', venueOwnPage: false };
-        return { summary: 'A summary of ' + title + '.', english: '', englishSpeaking: true };
+        // AL-062: Pontormo's live answer, a claim its page does not hold, then right when told why; and one never right.
+        if (/^pontormo$/i.test(title)) return /YOUR LAST ANSWER WAS REFUSED/.test(prompt)
+          ? { summary: 'Pontormo\u2019s paintings and drawings.', english: '', englishSpeaking: false }
+          : { summary: 'First major monographic exhibition on Pontormo.', english: '', englishSpeaking: false };
+        if (/^Never Passes$/.test(title)) return { summary: 'The first show of its kind.', english: '', englishSpeaking: false };
+        // Within the ten-word cap, as every answer must be (scraper/answer_check.js).
+        return { summary: 'A summary of ' + String(title).split(/\s+/).slice(0, 6).join(' ') + '.', english: '', englishSpeaking: true };
       } };
       return null;
     },
@@ -1165,7 +1171,33 @@ function runtime() {
     ok(byAddr({ name: 'kmska.be', host: 'kmska.be' }) && byAddr({ name: 'www.mfa.org', host: 'mfa.org' }) && !byAddr({ name: 'kmska.be', short: 'Antwerp', host: 'kmska.be' })
       && !byAddr({ name: 'Detroit Institute of Arts Museum', host: 'dia.org' }),
       'AL-053d:  a stored venue named only by its address is asked again; one with a real name or her short name never');
+  }  // ── AL-062: Claude's description checked as the compressor checks its own (scraper/answer_check.js) ─
+  {
+    const body = '\n\n9 Oct 2026 \u2013 7 Feb 2027\n\nCelebrated alike by scholars, collectors, and the wider public, Pontormo is now the subject of a landmark exhibition dedicated exclusively to his life and artistic achievement. Bringing together the artist\u2019s most important paintings alongside an exceptional selection of drawings, the exhibition offers an unprecedented opportunity to explore the full breadth of his artistic production.\n\n' + '* Instagram\n'.repeat(40);
+    const S1 = 'https://scuderiequirinale.it/en/exhibition/pontormo', S2 = 'https://scuderiequirinale.it/en/exhibition/never-passes';
+    P[S1] = { url: S1, title: 'PONTORMO', full_content: '# Pontormo' + body };
+    P[S2] = { url: S2, title: 'Never Passes', full_content: '# Never Passes' + body.replace('Pontormo is', 'the show is') };
+    await click(importBtn());
+    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    const box = dialog().querySelector('textarea');
+    await act(async () => { setter.call(box, S1 + '\n' + S2); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
+    await settle();
+    calls.length = 0;
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await settle(30);
+    const asks = t => calls.filter(c => c.kind === 'sample' && new RegExp('EXHIBITION TITLE, as the page gives it: "' + t + '"', 'i').test(c.prompt));
+    const p = asks('Pontormo');
+    ok(p.length === 2 && /YOUR LAST ANSWER WAS REFUSED: in the summary, "first" is not in the text/.test(p[1].prompt),
+      'AL-062: a description making a claim its page does not hold ("first", Pontormo) is asked for again, with the reason', JSON.stringify(p.map(c => c.prompt.slice(-160))));
+    const shown = win.document.body.textContent;
+    ok(shown.includes('Pontormo\u2019s paintings and drawings.') && !/First major monographic/.test(shown),
+      'AL-062a:  the answer that passes is the card\'s description', shown.slice(Math.max(0, shown.indexOf('Pontormo') - 40), shown.indexOf('Pontormo') + 200));
+    ok(asks('Never Passes').length === 3 && win.document.body.textContent.includes(S2 + ' \u2014 Claude\u2019s description kept failing its check'),
+      'AL-062b:  one that never passes, asked twice more, leaves the link unread with the reason (her decision)', asks('Never Passes').length);
+    const cancel = buttons(/^Cancel import$/)[0];
+    if (cancel) await click(cancel);
   }
+
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) fail('React complained: ' + shouted.find(s => /Warning/.test(s)));
   console.log(failures ? '\n' + failures + ' FAILED' : '\nadd_by_link: all passed');
   process.exit(failures ? 1 : 0);

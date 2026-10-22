@@ -39,6 +39,7 @@ const EVERY_APP = [APP, LINKS, LOOKUP, SAVING, SCREEN];
 const SUITES = [
   [SCRAPER, 'node --test scraper/date.test.js scraper/qc.test.js scraper/sweep_log.test.js scraper/venue_status.test.js scraper/pacing.test.js scraper/sweep_diff.test.js scraper/routine_window.test.js'],
   [BOTH,    'node --test scraper/compress.test.js'],
+  [[...BOTH, LINKS], 'node --test scraper/answer_check.test.js'],
   [[...EVERY_APP, SCRAPER], 'node scraper/fixtures/intake_cases.js'],
   [EVERY_APP, 'node scraper/fixtures/page_loads.js'],
   [EVERY_APP, 'node scraper/fixtures/page_renders.js'],

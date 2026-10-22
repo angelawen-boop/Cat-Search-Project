@@ -16,6 +16,8 @@
  *   scraper/compress.js        → EN_PREFIX and composeSummary(), which
  *                                 write the "In English: …" line
  *   scraper/boilerplate.js     → BOILERPLATE, the phrases a description drops (Add by link too).
+ *   scraper/answer_check.js    → ANSWER_CHECK, the checks on every description Claude writes
+ *                                 (shape, and claims the page must hold).
  *   compress.js --examples     → SUMMARY_EXAMPLES — only with --examples.
  *   sweep_prototype.js VENUES  → VENUE_SITES: each venue's site (and, where
  *                                 two venues share one, its showPath), so a
@@ -125,13 +127,21 @@ if (i < 0 || j < 0 || j < i) die('Cat_Watch.jsx has no SHARED markers');
 const current = jsx.slice(i + OPEN.length, j);
 const keptExamples = (current.match(/^const SUMMARY_EXAMPLES=.*;$/m) || [])[0];
 const examples = retakeExamples || !keptExamples ? examplesBlock() : keptExamples;
+function answerCheckBlock() {
+  const src = fs.readFileSync(path.join(ROOT, 'scraper', 'answer_check.js'), 'utf8');
+  const start = src.indexOf("'use strict';");
+  const end = src.indexOf('\nmodule.exports');
+  if (start < 0 || end < 0) die('scraper/answer_check.js has lost its \'use strict\' line or its module.exports');
+  // Wrapped so its names (fold, CLAIMS…) cannot collide with the app's.
+  return 'const ANSWER_CHECK=(()=>{\n' + src.slice(start + "'use strict';".length, end).trim() + '\nreturn { MAX_WORDS, validateAnswer, validateEnglish, stringFaults, unsupportedClaims };\n})();';
+}
 function boilerplateBlock() {
   return 'const BOILERPLATE=' + JSON.stringify(require(path.join(ROOT, 'scraper', 'boilerplate.js')).BOILERPLATE) + ';';
 }
-const region = '\n' + [datesBlock(), rulesBlock(), composeBlock(), sitesBlock(), boilerplateBlock(), examples].join('\n') + '\n';
+const region = '\n' + [datesBlock(), rulesBlock(), composeBlock(), sitesBlock(), boilerplateBlock(), answerCheckBlock(), examples].join('\n') + '\n';
 
 if (check) {
-  if (region !== current) die('Cat_Watch.jsx is OUT OF STEP with scraper/dates.js, compress_prompt.md, compress.js or the scraper\'s VENUES — run `node build/sync_shared.js`.');
+  if (region !== current) die('Cat_Watch.jsx is OUT OF STEP with scraper/dates.js, compress_prompt.md, compress.js, answer_check.js or the scraper\'s VENUES — run `node build/sync_shared.js`.');
   console.log('sync_shared: Cat_Watch.jsx matches scraper/dates.js, compress_prompt.md, compress.js and VENUES.');
   process.exit(0);
 }

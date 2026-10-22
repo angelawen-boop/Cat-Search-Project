@@ -94,6 +94,13 @@ description.
 - **A script cannot bind a session** — the handoff is a request. **The output is
   enforced:** `--check` and `--apply` refuse a missing, over-length or malformed
   answer and write nothing.
+- **Every answer is checked by one shared copy, `scraper/answer_check.js`** (her decision), which Add by
+  link runs too (written into the app by `sync_shared`): the shape above, and every claim word ("first",
+  "only", "largest"…, matched in each venue language) and every number in the description on its page.
+  A refused answer is **asked for again with its reason, never edited by hand**; nothing is written until
+  all pass. Cases: Pontormo's "first" (a link); in the imported 15 Oct run, Brera's "25 confiscated
+  paintings" (the page says 52), the Rijksmuseum's "120 works" and "100 highlights" (no number on either
+  page) — imported as swept (her decision: a fix never changes a run already swept). AC- tests.
 - **Process is enforced by a hook:** `.claude/hooks/confirm-subagent.sh` asks
   before any subagent spawns, matching both `Task` and `Agent`, and rewrites the
   approval text to lead with the MODEL and its effort ("SESSION DEFAULT" when

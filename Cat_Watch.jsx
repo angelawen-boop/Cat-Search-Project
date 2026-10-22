@@ -754,6 +754,134 @@ function composeSummary(english, teaser) {
 }
 const VENUE_SITES=[{"id":"met","host":"metmuseum.org"},{"id":"ng","host":"nationalgallery.org.uk"},{"id":"rijks","host":"rijksmuseum.nl"},{"id":"acq","host":"acquavellagalleries.com"},{"id":"lgd","host":"levygorvydayan.com"},{"id":"borghese","host":"galleriaborghese.cultura.gov.it"},{"id":"frick","host":"frick.org"},{"id":"morgan","host":"themorgan.org"},{"id":"menil","host":"menil.org"},{"id":"va","host":"vam.ac.uk"},{"id":"louvre","host":"louvre.fr"},{"id":"capo","host":"capodimonte.cultura.gov.it"},{"id":"uffizi","host":"uffizi.it"},{"id":"brera","host":"pinacotecabrera.org"},{"id":"orsay","host":"musee-orsay.fr"},{"id":"mam","host":"mam.paris.fr"},{"id":"mad","host":"madparis.fr"},{"id":"ashmolean","host":"ashmolean.org"},{"id":"jacquemart","host":"musee-jacquemart-andre.com"},{"id":"khm","host":"khm.at"},{"id":"artic","host":"artic.edu"},{"id":"moma","host":"moma.org"},{"id":"brit","host":"britishmuseum.org"},{"id":"dellav","host":"gallerieaccademia.it"},{"id":"tate-modern","host":"tate.org.uk","path":"/whats-on/tate-modern/"},{"id":"tate-britain","host":"tate.org.uk","path":"/whats-on/tate-britain/"},{"id":"wallace","host":"wallacecollection.org"},{"id":"cincinnati","host":"cincinnatiartmuseum.org"}];
 const BOILERPLATE=["technical storage or access","legitimate purpose of storing preferences","subscriber or user","consent to the use of cookies","we use cookies","this website uses cookies","accept all cookies","privacy policy","sign up to our newsletter","★★","©","admission charge","members go free","free for members","tickets bookable","members enjoy free entry","become a member","tickets for this","no need to book","include entry to the","installation view","courtesy the artist","courtesy of the artist","generously provided by","generously supported by","major funding","leadership support","additional support","support is provided by","supported in part by","entitled to a discount","ticket office","ticket purchase","proof of membership","subscribe to","to stay updated","opening hours","admission is free","book your visit","buy tickets","for visit info","download of this image is authorised","higher image resolution","image licensing policies"];
+const ANSWER_CHECK=(()=>{
+// Measured from all 110 seed summaries: min 3, median 6, max 10, and every one
+// ends with a full stop. The data wins over any number written elsewhere.
+const MAX_WORDS = 10;
+
+const wordCount = s => String(s || '').trim().split(/\s+/).filter(Boolean).length;
+
+/**
+ * Check one supplied string before it is allowed anywhere near the CSV or a card.
+ * An explicit null means "this text is not a curatorial description and I am not
+ * going to invent one" — a recorded decision, not a missing answer.
+ */
+function validateAnswer(text) {
+  if (text === null) return { ok: true, skip: true, text: '' };
+  const s = String(text == null ? '' : text).trim();
+  if (!s) return { ok: false, reason: 'empty' };
+  if (/\n/.test(s)) return { ok: false, reason: 'contains a line break' };
+  // The model is never asked for format: an English title arrives as its own
+  // string, and code writes the "In English:" line.
+  if (/^In English\b/i.test(s)) return { ok: false, reason: 'the description carries an "In English" line — the English title is a separate answer' };
+  const n = wordCount(s);
+  if (n > MAX_WORDS) return { ok: false, reason: `${n} words, cap is ${MAX_WORDS}` };
+  return { ok: true, text: /[.!?]$/.test(s) ? s : s + '.' };
+}
+
+/** An English title as the model returned it: a plain string, or "" when the
+ *  title is already English. Checked, never trusted. */
+function validateEnglish(e) {
+  if (e === '' ) return { ok: true, text: '' };
+  if (typeof e !== 'string') return { ok: false, reason: 'the English title is not a string' };
+  const t = e.trim();
+  if (!t) return { ok: true, text: '' };
+  if (/\n/.test(t)) return { ok: false, reason: 'the English title contains a line break' };
+  if (t.length > 200) return { ok: false, reason: `the English title is ${t.length} characters` };
+  if (/"/.test(t)) return { ok: false, reason: 'the English title contains a straight double quote, which the line uses' };
+  if (/^In English\b/i.test(t)) return { ok: false, reason: 'the English title carries formatting' };
+  return { ok: true, text: t };
+}
+
+/** What a written string must not carry: no full stop, an HTML fragment, a code fence. */
+function stringFaults(s) {
+  const t = String(s || '');
+  const out = [];
+  if (!/[.!?]["”’)]*\s*$/.test(t.trim())) out.push('does not end in a full stop');
+  if (/&[a-z]+;|&#\d+;|<[a-z/]/i.test(t)) out.push('carries an HTML fragment');
+  if (/^\s*```/.test(t)) out.push('carries a code fence');
+  return out;
+}
+
+// Each claim the description may make, and its words in the languages the venues write in (English,
+// Italian, French, German, Dutch, Spanish, Danish, Swedish). The description's word must be one of
+// the English forms; the page must hold any form (a form of two words, "più grande", as a phrase).
+const CLAIMS = [
+  { en: ['first', 'firstever'], page: ['first', 'primo', 'prima', 'primi', 'prime', 'premier', 'première', 'premiers', 'premières', 'erste', 'ersten', 'erster', 'erstes', 'erstmals', 'eerste', 'primer', 'primera', 'primeros', 'primeras', 'første', 'första', 'först'] },
+  { en: ['only'], page: ['only', 'solo', 'sola', 'soltanto', 'unico', 'unica', 'unici', 'uniche', 'seul', 'seule', 'seuls', 'seules', 'uniquement', 'einzige', 'einzigen', 'einziger', 'nur', 'enige', 'alleen', 'único', 'única', 'eneste', 'enda', 'endast'] },
+  { en: ['largest', 'biggest'], page: ['largest', 'biggest', 'più grande', 'piu grande', 'plus grand', 'plus grande', 'größte', 'grösste', 'größten', 'grössten', 'grootste', 'más grande', 'el mayor', 'la mayor', 'største', 'största'] },
+  { en: ['earliest', 'oldest'], page: ['earliest', 'oldest', 'antico', 'antica', 'ancien', 'ancienne', 'älteste', 'ältesten', 'oudste', 'vroegste', 'antiguo', 'antigua', 'ældste', 'äldsta'] },
+  { en: ['greatest'], page: ['greatest', 'grandest', 'più grande', 'piu grande', 'più grandi', 'plus grand', 'plus grands', 'plus grande', 'größte', 'grösste', 'größten', 'grootste', 'el mayor', 'la mayor', 'største', 'största'] },
+  { en: ['last', 'final'], page: ['last', 'final', 'ultimo', 'ultima', 'ultimi', 'dernier', 'dernière', 'derniers', 'letzte', 'letzten', 'laatste', 'último', 'última', 'sidste', 'sista'] },
+  { en: ['unique'], page: ['unique', 'unico', 'unica', 'einzigartig', 'einzigartige', 'uniek', 'único', 'única', 'enestående', 'unik'] },
+  { en: ['never', 'neverbefore'], page: ['never', 'mai', 'jamais', 'nie', 'niemals', 'nooit', 'nunca', 'aldrig'] },
+  { en: ['unprecedented'], page: ['unprecedented', 'precedenti', 'inedito', 'inedita', 'inédit', 'inédite', 'précédent', 'beispiellos', 'beispiellose', 'ongekend', 'ongekende', 'precedentes', 'hidtil'] },
+];
+
+const fold = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+// Words, accents folded, each hyphened word both closed up and in its parts ("first-ever" →
+// "firstever", "first", "ever").
+const wordsOf = s => [...(fold(s).replace(/[-‐–]/g, '').match(/[a-zøæåß]+/g) || []), ...(fold(s).match(/[a-zøæåß]+/g) || [])];
+
+const SMALL = { zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12,
+  thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30, forty: 40,
+  fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+const SCALE = { hundred: 100, thousand: 1000, million: 1000000 };
+// A page's ordinals count as the number they name ("seventeenth century" for a description's "17th").
+const ORDINAL = { second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, seventh: 7, eighth: 8, ninth: 9, tenth: 10, eleventh: 11,
+  twelfth: 12, thirteenth: 13, fourteenth: 14, fifteenth: 15, sixteenth: 16, seventeenth: 17, eighteenth: 18, nineteenth: 19,
+  twentieth: 20, thirtieth: 30, fortieth: 40, fiftieth: 50, sixtieth: 60, seventieth: 70, eightieth: 80, ninetieth: 90, hundredth: 100 };
+// The numbers a text states: figures ("2,000", "1920s", "17th") and English number words ("two
+// thousand", "twenty-first"); with `ordinals`, an ordinal word on its own too ("seventeenth").
+function numbersIn(s, ordinals) {
+  const out = new Set();
+  for (const m of String(s || '').match(/\d[\d,.]*\d|\d/g) || []) {
+    const n = m.replace(/[,.](?=\d{3}\b)/g, '');
+    if (/^\d+$/.test(n)) out.add(Number(n));
+  }
+  const w = fold(s).replace(/-/g, ' ').match(/[a-z]+/g) || [];
+  for (let i = 0; i < w.length; i++) {
+    if (ordinals && w[i] in ORDINAL) { out.add(ORDINAL[w[i]]); continue; }
+    if (ordinals && w[i] === 'first') { out.add(1); continue; }
+    if (!(w[i] in SMALL) || w[i] === 'one') continue;
+    let total = 0, cur = 0, j = i;
+    for (; j < w.length; j++) {
+      if (w[j] in SMALL) cur += SMALL[w[j]];
+      else if (w[j] in SCALE) { cur = (cur || 1) * SCALE[w[j]]; if (SCALE[w[j]] >= 1000) { total += cur; cur = 0; } }
+      else if (w[j] === 'and' && j + 1 < w.length && (w[j + 1] in SMALL)) continue;
+      else if (w[j] in ORDINAL) { cur += ORDINAL[w[j]]; j++; break; }
+      else if (w[j] === 'first') { cur += 1; j++; break; }
+      else break;
+    }
+    out.add(total + cur);
+    i = j - 1;
+  }
+  return out;
+}
+
+/**
+ * The claims and numbers in a description that its page does not hold, each said in words Claude can
+ * act on. `source` is all the page text Claude was given (title included). [] when every one is there.
+ */
+function unsupportedClaims(text, source) {
+  // "Twenty-first" is a number, not the claim "first".
+  const claimText = fold(text).replace(/\b(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)[\s-]+first\b/g, ' ');
+  const said = new Set(wordsOf(claimText)), page = new Set(wordsOf(source)), flat = ' ' + (fold(source).match(/[a-zøæåß]+/g) || []).join(' ') + ' ';
+  const holds = w => / /.test(w) ? flat.includes(' ' + fold(w) + ' ') : page.has(fold(w));
+  const out = [];
+  for (const c of CLAIMS) {
+    const used = c.en.find(w => said.has(w));
+    if (used && !c.page.some(holds)) out.push(`"${used === 'firstever' ? 'first-ever' : used === 'neverbefore' ? 'never-before' : used}" is not in the text`);
+  }
+  const have = numbersIn(source, true);
+  for (const n of numbersIn(text, false)) {
+    // A decade written in full ("1990s") when the page writes it short ("the 90s") is the same claim.
+    if (!have.has(n) && !(n >= 1000 && have.has(n % 100))) out.push(`the number ${n} is not in the text`);
+  }
+  return out;
+}
+return { MAX_WORDS, validateAnswer, validateEnglish, stringFaults, unsupportedClaims };
+})();
 const SUMMARY_EXAMPLES=[{"title":"German Expressionism","raw":"Across Germany’s major cities, a new generation of artists emerged between 1900 and 1918 to change the rules of painting. They were the German Expressionists. Made up of two pioneering groups – Die Brücke (The Bridge) and Der Blaue Reiter (The Blue Rider) – these young artists painted raw emotions on canvas with a new intensity. Die Brücke was formed by a group of self-taught artists. Rebelling against conservative society, they lived and worked together in the bohemian corners of Dresden and other cities, before moving to Berlin, Germany’s rapidly modernising capital. For them, colour became…","summary":"Fifty German Expressionist works."},{"title":"Asian Bronze","raw":"From Shiva and the Buddha to wine casks and weapons. Everything about bronze triggers your senses. For centuries, this material has played a central role in the traditions of Asia. Now you too can experience the beauty of bronze art at last.","summary":"Four thousand years of Asian bronze."},{"title":"Hockney and Piero: A Longer Look","raw":"David Hockney, in his own words, has always been a looker. Throughout his career, Hockney has found inspiration in the work of other artists. He never tires of looking at paintings. For him, there’s magic in it every time, whether that’s enjoying a picture in a gallery or a much-loved poster at home. This very personal show brings together two Hockney paintings, one showing his mother and father and the other depicting his friend, curator Henry Geldzahler. They are displayed with the thread that ties them together, Piero della Francesca’s ‘The Baptism of Christ’. ‘My Parents’ and ‘Looking at…","summary":"Hockney against Piero della Francesca."},{"title":"At Home in the 17th Century","raw":"What was life really like in the 17th century? That’s the museum’s most-asked question. Now, the time has come to find out. At Home in the 17th Century offers an up-close experience of daily life 400 years ago. Immerse yourself in a full day of the 17th century as you walk among the nine diorama-style displays that make up this exhibition — packed with personal stories and unique objects.","summary":"Domestic life with Rembrandt, Hals, Vermeer."},{"title":"José María Velasco","raw":"See the first UK exhibition of Mexico’s much-loved artist, José María Velasco. Velasco, working in Mexico in the 19th century, was a man of many interests. He was fascinated by advances in geology, the archaeology of his home country, the study of local flora, and the increasing presence of industrialisation. He painted the sweeping landscapes of the Valley of Mexico, the home of modern-day Mexico City, with exquisite detail. His impressive panoramic views of the valley reveal allusions to Mexico's historic past and its rapidly modernising present. Velasco was keenly aware of his country’s…","summary":"Mexico's landscape painter."},{"title":"Carel Visser in the Rijksmuseum Gardens","raw":"This summer, the Rijksmuseum Gardens are home to the work of Carel Visser, the most influential Dutch sculptor of the twentieth century. Visser's sculptures, some as tall as eight metres or as long as five metres, come from museums, private collections and public spaces. Now they are brought together for the very first time. Carel Visser (1928–2015) had little affinity with traditional sculptors' materials such as marble, stone or wood. Iron was his great love. With a cutting torch and welding equipment, he shaped his sculptures from steel plates and beams. Stacking, repetition and symmetry…","summary":"Most influential Dutch sculptor of the twentieth century."},{"title":"Millet: Life on the Land","raw":"The sower, the woodcutter, a shepherd girl. These are the subjects that made French artist Jean-Francois Millet famous. Marking the 150th anniversary of his death, this is an opportunity to see some of Millet’s best-loved paintings and drawings. Born into a farming family in Normandy, Millet moved to the village of Barbizon in 1849 where he put the people who spent their life working on the land, often the poorest of the poor in 19th-century France, at the heart of his work. He knew these people and his realistic, unsentimental approach to painting them was completely new. See his iconic…","summary":"The subjects that made Millet famous."},{"title":"Crossings","raw":"Discover how colonial and contemporary perspectives converge in photographs from the Indian subcontinent. Past meets present in the Crossings exhibition.","summary":"Photography from the Indian subcontinent."}];
 // ===== END SHARED =====
 
@@ -1529,6 +1657,32 @@ function linkAnswer(a){
   return{summary:typeof o.summary==="string"?o.summary.trim():"",subtitle:typeof o.subtitle==="string"?o.subtitle.trim():"",
     english:str(o.english).replace(/^In English:\s*/i,""),englishSpeaking:o.englishSpeaking!==false,
     venue:str(o.venue),venueCity:str(o.venueCity),venueCountry:str(o.venueCountry),venueAlso:(Array.isArray(o.venueAlso)?o.venueAlso:[]).map(str).filter(Boolean).slice(0,4),venueShort:str(o.venueShort),venueOwnPage:o.venueOwnPage!==false};
+}
+
+// Claude's answer, checked as the compressor checks its own (ANSWER_CHECK, one copy, shared): the
+// description's shape, and every claim and number in it on the page Claude was given. Returns the
+// faults, said so Claude can fix them; [] when it passes. A null description (the text is not a
+// show's description) is Claude's decision and passes. A failed answer is asked for again
+// (LINK_ASK_AGAIN times); one that never passes leaves the link unread (her decision).
+const LINK_ASK_AGAIN=2;
+function answerFaults(raw,page){
+  const o=raw&&typeof raw==="object"?raw:null;
+  if(!o)return["no answer"];
+  const faults=[];
+  if(o.summary!==null){
+    const v=ANSWER_CHECK.validateAnswer(typeof o.summary==="string"?o.summary:"");
+    if(!v.ok)faults.push("the summary: "+v.reason);
+    else{
+      faults.push(...ANSWER_CHECK.stringFaults(o.summary).map(f=>"the summary "+f));
+      faults.push(...ANSWER_CHECK.unsupportedClaims(o.summary,[page.base,...(page.between||[]),page.raw].join("\n")).map(f=>"in the summary, "+f));
+    }
+  }
+  // The English title as linkAnswer cleans it (quotation marks and an "In English:" opening taken off, AL-006).
+  if(o.english!==undefined){ const e=ANSWER_CHECK.validateEnglish(typeof o.english==="string"?linkAnswer(o).english:o.english); if(!e.ok)faults.push(e.reason); }
+  return faults;
+}
+function askAgainPrompt(prompt,faults){
+  return prompt+"\n\nYOUR LAST ANSWER WAS REFUSED: "+faults.join("; ")+". Answer again, every key, with that fixed. Leave out anything the text does not state.";
 }
 
 // Someone else's page about a show held elsewhere (a blog, a magazine; her decision, a last
@@ -6152,7 +6306,15 @@ export default function App(){
         // (heldElsewhere; her decision, a last resort).
         const askVenue=isOcc(vc)&&needsFacts(venues[vc]);
         const ownSite=vc===occVenueId(host)&&!linkEntry(vc);
-        const ask=await readResults(linkPrompt(page,askVenue,url));
+        const prompt=linkPrompt(page,askVenue,url);
+        let ask=await readResults(prompt);
+        let faults=ask.ok?answerFaults(ask.data,page):[];
+        for(let again=0;faults.length&&again<LINK_ASK_AGAIN;again++){
+          seen.refused=[...(seen.refused||[]),{answer:ask.data,faults}];
+          ask=await readResults(askAgainPrompt(prompt,faults));
+          faults=ask.ok?answerFaults(ask.data,page):[];
+        }
+        if(faults.length){ fails.push({url,why:"Claude\u2019s description kept failing its check ("+faults.join("; ")+")."}); continue; }
         let a=linkAnswer(ask.ok?ask.data:null);
         if(askVenue&&ownSite&&maybeElsewhere(a,host)){ const more=await readResults(elsewherePrompt(page,url,a)); if(more.ok)a={...a,...elsewhereAnswer(more.data)}; }
         const away=askVenue&&ownSite?heldElsewhere(a,host):null;

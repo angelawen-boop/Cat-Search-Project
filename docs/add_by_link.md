@@ -69,7 +69,11 @@ meets it.
    word for it in the text, on two reads of three — open, a code check is her decision.
    A blog page's second question (`elsewherePrompt`): right museum, site and full title on 9 of 9 reads
    (Enfilade Canaletto → rct.uk; her two Reynolds pages → the Wallace, *Joshua Reynolds: Experiments in Paint*).
-5. No note — a link is not a sweep; `swept_at` blank, sweep log untouched.
+5. **Claude's answer checked as the compressor's** (`answerFaults`, the shared `scraper/answer_check.js`):
+   shape, and every claim word and number on the page. A refused answer is asked again with its reason, twice
+   at most (`LINK_ASK_AGAIN`); one that never passes leaves the link unread, the reason on its line (her
+   decision). AL-062.
+6. No note — a link is not a sweep; `swept_at` blank, sweep log untouched.
 
 ## A venue the app has not seen
 

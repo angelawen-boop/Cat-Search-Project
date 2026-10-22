@@ -77,10 +77,9 @@ const COMPRESSED_CSV = 'sweep_compressed.csv';
 const PENDING_JSON   = 'compress_pending.json';
 const ANSWERS_JSON   = 'compress_answers.json';
 
-// Measured from all 110 seed summaries: min 3, median 6, max 10, and every one
-// ends with a full stop. The guide said "12 words" for a long time; her own
-// approved data says otherwise, and the data wins.
-const MAX_WORDS = 10;
+// The checks on every answer — shape, and claims the page must hold — are one copy, shared with
+// Add by link (scraper/answer_check.js).
+const { MAX_WORDS, wordCount, validateAnswer, validateEnglish } = require('./answer_check');
 
 /**
  * Written into `notes` when the model judged the page text not to be a
@@ -509,51 +508,6 @@ function decide(row, prev) {
 }
 
 // ── Answers ──────────────────────────────────────────────────────────────────
-
-const wordCount = s => String(s || '').trim().split(/\s+/).filter(Boolean).length;
-
-/**
- * Check one supplied string before it is allowed anywhere near the CSV.
- *
- * The model can only get the WORDING wrong, and wording is visible on the
- * approval card — but length and shape are mechanical, so they are checked
- * here rather than trusted. A refusal is reported, never silently dropped.
- */
-function validateAnswer(text) {
-  // An explicit null means "this text is not a curatorial description and I am
-  // not going to invent one" — ticketing copy, a bare link, a curator
-  // biography, boilerplate. This is DEF-03's second net, and it is deliberately
-  // NOT the same as a missing answer: a key that is absent means the row was
-  // overlooked and stops everything, while null is a decision that is recorded.
-  // Without it the only way past unusable text is to fabricate a summary, which
-  // is the one thing keeping the raw text in the record exists to prevent.
-  if (text === null) return { ok: true, skip: true, text: '' };
-
-  const s = String(text == null ? '' : text).trim();
-  if (!s) return { ok: false, reason: 'empty' };
-  if (/\n/.test(s)) return { ok: false, reason: 'contains a line break' };
-  // The model is never asked for format: an English title arrives as its own
-  // string, and code writes the "In English:" line.
-  if (/^In English\b/i.test(s)) return { ok: false, reason: 'the description carries an "In English" line — the English title is a separate answer' };
-  const n = wordCount(s);
-  if (n > MAX_WORDS) return { ok: false, reason: `${n} words, cap is ${MAX_WORDS}` };
-  // Her seed set is unanimous on this: all 110 end with a full stop.
-  return { ok: true, text: /[.!?]$/.test(s) ? s : s + '.' };
-}
-
-/** An English title as the model returned it: a plain string, or "" when the
- *  title is already English. Checked, never trusted. */
-function validateEnglish(e) {
-  if (e === '' ) return { ok: true, text: '' };
-  if (typeof e !== 'string') return { ok: false, reason: 'the English title is not a string' };
-  const t = e.trim();
-  if (!t) return { ok: true, text: '' };
-  if (/\n/.test(t)) return { ok: false, reason: 'the English title contains a line break' };
-  if (t.length > 200) return { ok: false, reason: `the English title is ${t.length} characters` };
-  if (/"/.test(t)) return { ok: false, reason: 'the English title contains a straight double quote, which the line uses' };
-  if (/^In English\b/i.test(t)) return { ok: false, reason: 'the English title carries formatting' };
-  return { ok: true, text: t };
-}
 
 /**
  * One answer, as it will be written. `p` is the pending row it answers.

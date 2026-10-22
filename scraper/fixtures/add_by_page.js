@@ -82,7 +82,8 @@ const runtime = () => ({
     if (name === 'mcp') return { callTool: async (server, tool, args) => { fetched.push(args); return { payload: { results: [], errors: [] } }; } };
     if (name === 'sample') return { json: async prompt => {
       const t = (prompt.match(/EXHIBITION TITLE, as the page gives it: (".*")/) || [])[1];
-      return { summary: 'A summary of ' + (t ? JSON.parse(t) : '') + '.', english: '', englishSpeaking: false };
+      // Within the ten-word cap, as every answer must be (scraper/answer_check.js).
+      return { summary: 'A summary of ' + (t ? JSON.parse(t) : '').split(/\s+/).slice(0, 6).join(' ') + '.', english: '', englishSpeaking: false };
     } };
     return null;
   },

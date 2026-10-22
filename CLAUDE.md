@@ -610,8 +610,11 @@ and were fixed in code, proven live).
      rebuilt (her order: cleaning, then Orsay/MoMA, then descriptions):** read by the page's paragraphs, headings and
      lists as the scraper reads markup — the old reader passed menus, funders, hours, captions and cookie notices on
      most pages (`docs/add_by_link.md`, "The passage"; AL-061). Orsay and MoMA's changed passages were junk at the
-     edges moving, now not read. **Still open:** read every description Claude writes against its page, on the clean
-     passages — nothing made up, and right about the show.
+     edges moving, now not read. Every description read against its page: right on all but Pontormo ("first", not on
+     its page) — fixed by one check on every answer Claude writes, shared by the compressor and Add by link
+     (`scraper/answer_check.js`): shape, and claims and numbers on the page; refused → asked again (her decision;
+     `docs/compression.md`, "Enforcement"). It found three wrong numbers in the imported 15 Oct run, left as swept.
+     **Item 0 closed; not published.**
   1. **Claude's other reads, tested with Sonnet calls — not closed (item 0).** On 70 live pages: subtitle pick, English
      title, English-speaking country and a blog page's second question scored right on every page against truth set
      before the answers; one summary said "first" with no word for it in the text (Pontormo). Scripts:

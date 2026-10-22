@@ -15,6 +15,7 @@ const fs = require('fs');
 const path = require('path');
 
 const C = require('./compress.js');
+const A = require('./answer_check.js');
 const QC = require('./qc.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
@@ -413,11 +414,15 @@ function check(dir) {
     const shown = JSON.stringify(v);
     if (!r.ok) { problems.push(`row ${k}: ${r.reason} — ${shown}`); continue; }
     if (r.skip) continue;
-    const strings = typeof v === 'string' ? [v] : [v.summary, v.english].filter(x => typeof x === 'string');
-    if (typeof v === 'string' && !v.trim().endsWith('.')) problems.push(`row ${k}: does not end in a full stop — ${shown}`);
-    if (typeof v === 'object' && typeof v.summary === 'string' && !v.summary.trim().endsWith('.')) problems.push(`row ${k}: does not end in a full stop — ${shown}`);
-    if (strings.some(x => /&[a-z]+;|&#\d+;|<[a-z/]/i.test(x))) problems.push(`row ${k}: carries an HTML fragment — ${shown}`);
-    if (strings.some(x => /^\s*```/.test(x))) problems.push(`row ${k}: carries a code fence — ${shown}`);
+    // The shared checks (scraper/answer_check.js), the same Add by link runs on every description.
+    const summary = typeof v === 'string' ? v : v.summary;
+    if (typeof summary === 'string') {
+      for (const f of A.stringFaults(summary)) problems.push(`row ${k}: ${f} — ${shown}`);
+      // A claim or a number the page does not hold. A retitle row keeps its held description and
+      // asks only for the English title, so there is nothing new to check.
+      if (p.raw) for (const f of A.unsupportedClaims(summary, [p.title, p.raw].join('\n'))) problems.push(`row ${k}: ${f} — ${shown}`);
+    }
+    if (typeof v === 'object' && typeof v.english === 'string') for (const f of A.stringFaults(v.english + '.').filter(f => f !== 'does not end in a full stop')) problems.push(`row ${k}: the English title ${f} — ${shown}`);
   }
 
   // Topic labels: every fresh row asked, each one key from the fixed list.
@@ -443,10 +448,11 @@ function check(dir) {
     say(`\n${problems.length} problem${problems.length === 1 ? '' : 's'} — nothing was written.\n`);
     for (const p of problems.slice(0, 40)) say('  ' + p);
     if (problems.length > 40) say(`  ... and ${problems.length - 40} more`);
-    say('\nFix them in the answers file and check again.');
+    say('\nAsk again for those rows, each with its reason, put the new answers in the file and check again.');
+    say('Never edit a description by hand: a claim the page does not hold is asked again, never cut.');
     return false;
   }
-  say(`All ${got.size} answers pass: every index present, none over ${C.MAX_WORDS} words, no HTML, all ending in a full stop.`);
+  say(`All ${got.size} answers pass: every index present, none over ${C.MAX_WORDS} words, no HTML, all ending in a full stop, every claim and number on its page.`);
   return true;
 }
 
