@@ -1842,7 +1842,12 @@ async function shopElsewhere(urls,museumHost){
     const f=await fetchPage(u,"The link to the museum's online shop.",null,{full:true});
     if(!f.ok){ died=f.detail; continue; }
     const t=pageTextOf(f.results);
-    const out=mdLinks(t).find(l=>{ const lh=hostOf(l.url); return lh&&baseDomain(lh)!==b&&(SHOP_AWAY_LABEL.test(l.label)||SHOP_HOST.test(lh)||/\.myshopify\.com$/i.test(lh)); });
+    const pathOf=x=>{ try{ return new URL(x).pathname; }catch{ return ""; } };
+    // A shop's address on another site counts too (Hamburg's Friends' shop, freunde-der-kunsthalle.de/shop/).
+    const out=mdLinks(t).find(l=>{ const lh=hostOf(l.url); return lh&&baseDomain(lh)!==b&&(SHOP_AWAY_LABEL.test(l.label)||SHOP_HOST.test(lh)||SHOP_PATH.test(pathOf(l.url))||/\.myshopify\.com$/i.test(lh)); });
+    // Else the shop itself on the museum's own site, under its own address (Belvedere's /shop?kategorie=…).
+    const home=out?null:mdLinks(t).find(l=>baseDomain(hostOf(l.url))===b&&SHOP_PATH.test(pathOf(l.url))&&pathOf(l.url)!==path&&!/ticket/i.test(l.url));
+    if(home)return{url:originOf(home.url)+pathOf(home.url).replace(/^\//,""),text:t};
     // A Shop page that hands over the shop itself (Berlin's smb.museum/webshop shows the
     // shop's front page) links one book first: that book's site is the shop, not the book.
     if(out)return{url:/\/(?:detail|products?|p|item)\//i.test(out.url)?originOf(out.url):out.url,text:t};
@@ -1904,7 +1909,8 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId){
   seenText+="\n"+mine.map(r=>r.url).join("\n");
   // A shop page on the museum's own site is the shop's front, never the museum's home page
   // (Belvedere's /en/museum-shop).
-  const rootFor=u=>baseDomain(hostOf(u))===baseDomain(museumHost)&&!SHOP_HOST.test(hostOf(u))?u:shopRootOf(u);
+  const ownPage=u=>!!u&&baseDomain(hostOf(u))===baseDomain(museumHost)&&!SHOP_HOST.test(hostOf(u));
+  const rootFor=u=>ownPage(u)?u:shopRootOf(u), homeOf=u=>ownPage(u)?u:originOf(u);
   let root=pageShop?rootFor(pageShop):mine.length?rootFor(mine[0].url):"";
   opens=0;
   let pick=await tryCands(mine.map(r=>({url:r.url,words:(r.title||"")+" "+pathWords(r.url),proof:(r.excerpts||[]).join("\n"),named:named(r)})),"a search");
@@ -1918,7 +1924,7 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId){
   if(!pick){
     const away=await shopElsewhere([pageShop,...mine.map(r=>r.url)],museumHost);
     if(away.died)died=away.died;
-    if(away.url){ root=shopRootOf(away.url); front=away.url; pageShopHost=hostOf(away.url); seenText+="\n"+away.text; }
+    if(away.url){ root=rootFor(away.url); front=away.url; if(!ownPage(away.url))pageShopHost=hostOf(away.url); seenText+="\n"+away.text; }
   }
   // 2. A Shopify shop's list of its sections.
   if(!pick&&root&&/\/(?:collections|products)\/|\.myshopify\.com/i.test(seenText+"\n"+root)){
@@ -1948,9 +1954,9 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId){
       shopSearch:search||(await proveShopSearch(seen,home))||null,foundBy:pick.how,finder:3,searchRule:SEARCH_RULE};
   }
   // A step that died is not an answer: said as such, not as "nothing found".
-  if(died)return{shop:"failed",shopHome:front||(root?originOf(root):null),why:died,finder:3};
+  if(died)return{shop:"failed",shopHome:front||(root?homeOf(root):null),why:died,finder:3};
   // A shop with no books section is still searched, as KHM's is.
-  return root?{shop:"noshelf",shopHome:front||originOf(root),shopSearch:searchFor(seenText,root)||(await proveShopSearch(seenText,root))||null,finder:3,searchRule:SEARCH_RULE}:{shop:"none",finder:3};
+  return root?{shop:"noshelf",shopHome:front||homeOf(root),shopSearch:searchFor(seenText,root)||(await proveShopSearch(seenText,root))||null,finder:3,searchRule:SEARCH_RULE}:{shop:"none",finder:3};
 }
 
 // One pro forma file, built in memory, so a link goes through the very same
