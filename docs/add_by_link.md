@@ -164,7 +164,9 @@ those 25 read clean before, 25 after, with no proof page worse. Code: `readShowP
   title's extra words are all on it (Poldi Pezzoli); its subtitle after ". " or ": " (KHM *Head and
   Shoulders. Coins in Fashion*). Never its dates, site name or another spelling (MFAH, NPG, Philadelphia).
   A heading of generic words, the site's name, or sharing no word with the page title gives way to it
-  (NGA's "Global Search"). AL-056.
+  (NGA's "Global Search") — unless the page title names the site and the heading does not: then it is the
+  site's own label ("Information: Wallraf-Richartz-Museum") and the heading stays (AL-056a). AL-056.
+- **Tours are never added** (her decision) — a page about a show touring other museums is a title test only.
 - **R2a Generic label** — "Exhibition", "Mostra", "Ausstellung"… before the name leaves it (NGA, San Marco,
   Van Gogh Museum; AL-054).
 - **R2b Capitals** — a title typed wholly in capitals is recased, unless one short word (Scuderie, Albertina,

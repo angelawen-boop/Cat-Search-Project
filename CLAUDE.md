@@ -24,9 +24,9 @@ is why they live in one repo, on one branch.
 
 - **Plain English, ELI5.**
 - **Short and concise.**
-- **Report style (her decision):** a report is a few bullets of results — what is right, what is not, what is
-  unfixed — then the next step in one line. No tables of counts, no method, no file paths.
-- **Suppress most of thinking output. Work quietly** - surface only what needs her.
+- **Report style (her decision):** tell her what matters, in plain words — what changed, what is left and why it is
+  needed — then the next step in one line. Never a tally of right and wrong, no counts, no method, no file paths.
+- **Work quietly (her decision):** no interim output. Report only at the end, or when you must stop to ask her a question.
 - **Destructive actions need a confirmed backup or an explicit yes.**
 - **Publishing — her go-ahead is the safety check.** When she says to publish ("u can publish", "publish",
   "go ahead and publish"), publish at once, even if a screenshot shows the page open or mid-import — she has
@@ -397,6 +397,7 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **A search is proved only by a page for that book alone** — a page that ignores the words (a home page, a fixed listing) shows the book too (Berlin, CEDON). Run a venue's whole chain live, not one step: Berlin's cut-short titles showed only then.
 - **A page that extends Cat Watch copies its controls one for one** — placement, wording, layout, pop-ups —
   not just its colours; render both side by side before showing her (Theme Shelf drew its own look twice).
+- **Never say "it works" before the check that proves it has run** (Wallraf's title fix, said to work before Claude was asked on it). Never guess what she would or would not add: the test pages stand for faults any museum can show.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose
@@ -602,13 +603,14 @@ and were fixed in code, proven live).
   seen, books sections 9 → 11, home page given as the shop 3 → 0, nothing found 7 → 3. `docs/add_by_link.md`.
   **Still to do, in this order (her decision, one at a time, report after each):**
   0. **FIRST — finish items 1 and 2 properly; both were reported done and were not (her decision: previous work
-     fixed before the next item).** (a) The reader takes Wallraf's tab title ("Information: Wallraf-Richartz-Museum",
-     `wallraf.museum/en/exhibitions/now/2026-02-28-japan`) for the show's name, not "Van Gogh & Co. on tour" (its `#`
-     heading) — fix by a shared rule, kept only if no proof page gets worse; the item 1 report said 25 of 25 new museums
-     clean from a count, not from reading each title. (b) Re-check every title of the 25 new museums by reading it
-     against its page. (c) Item 2: re-ask Claude on every page the fix changes, Wallraf included (its question was
-     built on the wrong title and was not scored). (d) Read every description against its page — only the 14 code
-     flagged were; the code check catches words not in the text, not a wrong meaning. Then re-report both, short.
+     fixed before the next item).** Done: Wallraf's title (its tab "Information: Wallraf-Richartz-Museum" no longer
+     beats its heading — shared rule, AL-056a, no proof page worse); every new museum's title read against its page,
+     all right. Wallraf's page is a tour of Japan — she never adds tours (her decision), so it stays a title test only,
+     its dates are not a fault. **Still open:** (c) re-ask Claude on the Wallraf page now its title is right — the
+     check that the summary and subtitle come out right with it (a Sonnet sub-agent call was refused this session: ask
+     her first); (d) read every new museum's description against its page — the code check catches words not in the
+     text, not a wrong meaning. Then report to her, short. Orsay's and MoMA's proof passages now end a few words
+     differently — the live sites changed, not the reader; sign off with `--write-passages` when she agrees.
   1. **Claude's other reads, tested with Sonnet calls — not closed (item 0).** On 70 live pages: subtitle pick, English
      title, English-speaking country and a blog page's second question scored right on every page against truth set
      before the answers; one summary said "first" with no word for it in the text (Pontormo). Scripts:
