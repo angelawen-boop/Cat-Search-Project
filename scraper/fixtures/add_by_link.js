@@ -199,9 +199,11 @@ function runtime() {
         if (/Hammersh/.test(title)) return { summary: 'First Spanish retrospective of Hammershøi.', english: '', englishSpeaking: false };
         if (/Grand Tour/.test(title)) return { summary: GRAND_SUMMARY, english: '', englishSpeaking: false };
         if (/venueOwnPage/.test(prompt) && /Magritte|Folly Beyond Words/.test(title))
-          return { summary: 'Magritte retold.', english: '', englishSpeaking: false, venue: 'Royal Museum of Fine Arts Antwerp', venueShort: 'Antwerp KMSKA', venueSite: 'kmska.be', venueOwnPage: true };
+          return { summary: 'Magritte retold.', english: '', englishSpeaking: false, venue: 'Royal Museum of Fine Arts', venueAlso: ['KMSKA', 'Koninklijk Museum voor Schone Kunsten Antwerpen'], venueCity: 'Antwerp', venueCountry: 'Belgium', venueShort: 'Antwerp KMSKA', venueOwnPage: true };
+        if (/published by someone other than the museum/.test(prompt) && /Canaletto and the Art of Venice/.test(title))
+          return { venueSite: 'rct.uk', title: 'Canaletto and the Art of Venice' };
         if (/venueOwnPage/.test(prompt) && /Canaletto and the Art of Venice/.test(title))
-          return { summary: 'Canaletto and his Venetian contemporaries.', english: '', englishSpeaking: true, venue: 'The Queen\u2019s Gallery, Buckingham Palace', venueCity: 'London', venueSite: 'rct.uk', venueOwnPage: false };
+          return { summary: 'Canaletto and his Venetian contemporaries.', english: '', englishSpeaking: true, venue: 'The Queen\u2019s Gallery, Buckingham Palace', venueCity: 'London', venueCountry: 'United Kingdom', venueOwnPage: false };
         return { summary: 'A summary of ' + title + '.', english: '', englishSpeaking: true };
       } };
       return null;
@@ -293,14 +295,17 @@ function runtime() {
       'AL-052b:  the venue\'s own page, or a venue named in the page\'s own site, stays where it is');
     // Her Reynolds links (Enfilade's PDF, Meer): Claude named the Wallace but, sent no address,
     // called each the museum's own page. It is now given the address and reads the full title.
-    const prompt = fn('linkPrompt'), answer = fn('linkAnswer');
+    const prompt = fn('linkPrompt'), more = fn('elsewherePrompt'), answer = fn('elsewhereAnswer');
     const pdf = 'https://enfilade18thc.com/wp-content/uploads/2014/12/joshua-reynolds.pdf';
     const asked = prompt({ base: 'Joshua Reynolds', between: [], raw: 'x', dateLine: '12 March \u2013 7 June 2015' }, true, pdf);
     const plain = prompt({ base: 'Joshua Reynolds', between: [], raw: 'x', dateLine: '' }, false, pdf);
-    ok(asked.includes('PAGE ADDRESS: ' + pdf) && /"title":/.test(asked) && /PAGE ADDRESS is on that museum/.test(asked)
-      && !plain.includes('PAGE ADDRESS') && !/"title":/.test(plain),
-      'AL-052g: on a site never seen, Claude is sent the page\'s address and asked the show\'s full title; a known venue\'s prompt is unchanged');
-    const ans = answer({ venue: 'The Wallace Collection', venueSite: 'wallacecollection.org', venueOwnPage: false, title: '\u201cJoshua Reynolds: Experiments in Paint\u201d' });
+    const second = more({ base: 'Joshua Reynolds', raw: 'x' }, pdf, { venue: 'The Wallace Collection', venueCity: 'London' });
+    ok(asked.includes('PAGE ADDRESS: ' + pdf) && /PAGE ADDRESS is on that museum/.test(asked) && /"venueCity":/.test(asked) && /"venueCountry":/.test(asked) && /"venueAlso":/.test(asked)
+      && !/"title":/.test(asked) && !/"venueSite":/.test(asked) && !plain.includes('PAGE ADDRESS') && !/"venueOwnPage":/.test(plain),
+      'AL-052g: on a site never seen, Claude is sent the page\'s address and asked the venue, its city and country, and whether the page is its own — nothing only a blog page needs; a known venue\'s prompt is unchanged');
+    ok(second.includes('PAGE ADDRESS: ' + pdf) && /"title":/.test(second) && /"venueSite":/.test(second) && second.includes('The Wallace Collection, London'),
+      'AL-052g2: on someone else\'s page only, a second question: the museum\'s website and the show\'s full title');
+    const ans = { venue: 'The Wallace Collection', venueOwnPage: false, ...answer({ venueSite: 'wallacecollection.org', title: '\u201cJoshua Reynolds: Experiments in Paint\u201d' }) };
     const wal = away(ans, 'enfilade18thc.com');
     ok(ans.title === 'Joshua Reynolds: Experiments in Paint' && wal && wal.id === 'wallace',
       'AL-052h:  Reynolds on Enfilade: the title Claude read is kept; the show files under the Wallace', JSON.stringify([ans.title, wal]));
@@ -1021,9 +1026,10 @@ function runtime() {
     calls.length = 0;
     await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
     await settle(30);
-    const asked = calls.find(c => c.kind === 'sample');
+    const asked = calls.find(c => c.kind === 'sample'), samples = calls.filter(c => c.kind === 'sample');
     ok(asked && /venueOwnPage/.test(asked.prompt) && /Buckingham Palace, London, 19 May/.test(asked.prompt),
       'AL-052c: a site never seen: Claude is asked which venue held the show, given the date line read');
+    ok(samples.length === 2 && /published by someone other than the museum/.test(samples[1].prompt), 'AL-052c2: told it is someone else\'s page, Claude is asked once more (site and title)', samples.length);
     const text = win.document.body.textContent;
     ok(/The Queen\u2019s Gallery, Buckingham Palace/.test(text) && !/Enfilade/.test(text.replace(/enfilade18thc/g, '')),
       'AL-052d:  the card files under "The Queen\u2019s Gallery, Buckingham Palace", never "Enfilade"');
@@ -1050,15 +1056,20 @@ function runtime() {
     await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
     await settle(30);
     const asked = calls.filter(c => c.kind === 'sample').map(c => /"venueShort"/.test(c.prompt));
-    ok(asked.length === 2 && asked[0] && !asked[1], 'AL-053:  a museum never met: Claude is asked its name on the first link only', JSON.stringify(asked));
+    ok(asked.length === 2 && asked[0] && !asked[1], 'AL-053:  a museum never met: Claude is asked its name on the first link only; its own page asks nothing more', JSON.stringify(asked));
     const first = calls.find(c => c.kind === 'sample');
     ok(first && /"Boston MFA"/.test(first.prompt) && /"Frankfurt St\u00e4del"/.test(first.prompt), 'AL-053a:  her names for venues are the style for the short name');
     const text = win.document.body.textContent;
     ok(/Antwerp KMSKA/.test(text) && !/kmska\.be\s*\u00b7/.test(text), 'AL-053b:  its cards are headed "Antwerp KMSKA", never its address', text.slice(text.indexOf('KMSKA') - 60, text.indexOf('KMSKA') + 20));
     const shopAsk = calls.filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries.join(' '));
-    ok(shopAsk.length >= 1 && /Royal Museum of Fine Arts Antwerp/.test(shopAsk[0]), 'AL-053c:  its shop is looked for under Claude\'s full name', JSON.stringify(shopAsk));
+    ok(shopAsk.length >= 1 && /Royal Museum of Fine Arts KMSKA Koninklijk Museum voor Schone Kunsten Antwerpen Belgium shop/.test(shopAsk[0]), 'AL-053c:  its shop is searched under its full name, other names, city and country (her decision; proved live)', JSON.stringify(shopAsk));
     const cancel = buttons(/^Cancel import$/)[0];
     if (cancel) await click(cancel);
+    const sn = new Function('React', 'window', 'document', 'localStorage', code + '\n;return venueSearchName;')(React, win, win.document, win.localStorage);
+    ok(sn('occ-x', { name: 'National Gallery', city: 'London', country: 'United Kingdom' }) === 'National Gallery London United Kingdom'
+      && sn('occ-x', { name: 'Palazzo Reale Milano', city: 'Milan', country: 'Italy' }) === 'Palazzo Reale Milano Italy'
+      && sn('occ-museitoscana-cultura-gov-it', { name: 'Direzione regionale Musei nazionali Toscana' }) === 'Museo di San Marco Florence Italy',
+      'AL-053e:  the search name is long: full name, then city and country where the name lacks them; San Marco by her full name');
     const byAddr = new Function('React', 'window', 'document', 'localStorage', code + '\n;return namedByAddress;')(React, win, win.document, win.localStorage);
     ok(byAddr({ name: 'kmska.be', host: 'kmska.be' }) && byAddr({ name: 'www.mfa.org', host: 'mfa.org' }) && !byAddr({ name: 'kmska.be', short: 'Antwerp', host: 'kmska.be' })
       && !byAddr({ name: 'Detroit Institute of Arts Museum', host: 'dia.org' }),

@@ -590,7 +590,8 @@ and were fixed in code, proven live).
 
 - **OPEN — not yet published: one entry per link venue, and Claude names a museum not met before** (her
   decisions; step 1 of the Add-by-link redesign). Seven name and rule tables folded into `LINK_VENUES`; Claude
-  gives a new venue's full and short name on its first link. Her next link from a new museum confirms the name.
+  gives a new venue's full name, other names, city, country and short card name on its first link; the shop is
+  searched under the long name (proved live on KMSKA, Genoa, San Marco). Her next new museum confirms.
   Next, agreed: map the reader's venue rules on the proof pages, fold repeats into general rules, measure on
   20–30 museums never seen. `docs/add_by_link.md`.
 - **Published at 47.3 — Sammlung Schack (third Munich venue, no shop) and Dresden (chip "Dresden", cards
@@ -607,8 +608,8 @@ and were fixed in code, proven live).
   resort, her decision). Claude names the museum that held it and code files it there (`heldElsewhere`); a blog's
   "Exhibition |" label leaves the title. Her Reynolds links (Enfilade PDF, Meer) still filed under the blog:
   Claude, sent no address, called them the Wallace's own pages. **Fixed in code on `main`, not published (her
-  decision: it goes live with the next publish):** Claude now gets the address and reads the full title on such
-  pages; right on 3 of 3 test reads of her two pages. Her re-read of the two links after that publish confirms.
+  decision: it goes live with the next publish):** Claude now gets the address, and on such pages only a second question
+  asks the museum's site and the full title; right on 3 of 3 test reads of her two pages, on the one-call prompt (the split into a second question is not yet read live). Her re-read of the two links after that publish confirms.
   `docs/add_by_link.md`, "Someone else's page".
 - **Published at 49.3** (its MoMA fix does not hold live — §2.2.3): MoMA's pop-up reads as "contents cannot be seen — JS-rendering",
   not the false "not in the museum shop" (her Brancusi Re-check; B-007); card lines join phrases with an em

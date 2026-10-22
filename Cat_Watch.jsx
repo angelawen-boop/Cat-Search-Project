@@ -766,18 +766,19 @@ const PRM_BOX=/^(?:Current|Upcoming|Past) Exhibitions$|^Mostre (?:in corso|futur
 //   group        venues sharing one chip (Munich)
 //   short        her name for it; `card`: her name on its cards, where that differs
 //   name         its full name; `lookupName`: the name the catalogue lookup searches with
+//   city, country  where it is, for searching its shop (venueSearchName)
 //   sites        other sites its pages sit on, {host, path, line}: `path` a part of a shared
 //                site, `line` the house line naming it on a site several houses share
 //   linkRead     how its pages are read (as on a MUSEUMS entry)
 //   shopHome, shopCatalogues, shopUnseen, shopQueries, shopNamed, rankAsOwn — its shop (below)
 const LINK_VENUES={
-  "occ-nga-gov":{ownChip:true,short:"NG Washington",lookupName:"NGA",linkRead:{titleDrop:/^Exhibition:\s*/i}},
-  "occ-nationalgalleries-org":{ownChip:true,short:"NG Scotland"},
+  "occ-nga-gov":{city:"Washington",country:"USA",ownChip:true,short:"NG Washington",lookupName:"NGA",linkRead:{titleDrop:/^Exhibition:\s*/i}},
+  "occ-nationalgalleries-org":{city:"Edinburgh",country:"Scotland",ownChip:true,short:"NG Scotland"},
   // Mia's page titles end "–– Minneapolis Institute of Art".
-  "occ-new-artsmia-org":{ownChip:true,short:"Mia",lookupName:"Mia",name:"Minneapolis Institute of Art",linkRead:{titleDrop:/\s+[-–—]+\s+Minneapolis Institute of Art$/i}},
+  "occ-new-artsmia-org":{city:"Minneapolis",country:"USA",ownChip:true,short:"Mia",lookupName:"Mia",name:"Minneapolis Institute of Art",linkRead:{titleDrop:/\s+[-–—]+\s+Minneapolis Institute of Art$/i}},
   // rankAsOwn: other houses ranked as the venue's own in her order, display only (her decision:
   // Yale's two imprints rank the same).
-  "occ-britishart-yale-edu":{ownChip:true,short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art",rankAsOwn:["Yale University Press"]},
+  "occ-britishart-yale-edu":{city:"New Haven",country:"USA",ownChip:true,short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art",rankAsOwn:["Yale University Press"]},
   // Munich's Alte Pinakothek, Pinakothek der Moderne and Sammlung Schack: three venues on one
   // site (pinakothek.de), one chip "Munich", the Alte first (her decision). The house line
   // between the show's title and its dates says which ("Pinakothek der Moderne | Art"); der
@@ -786,43 +787,43 @@ const LINK_VENUES={
   // sections named for each house (`shopNamed`, namesVenue). Schack has no shop of its own and
   // no CEDON section: it gets no shop settings, so the finder answers "none". Titles typed in
   // capitals are recased (`capsTitles`).
-  "occ-alte-pinakothek":{ownChip:true,short:"Munich Alte Pinakothek",chip:"Munich",group:"munich-pinakotheken",lookupName:"Alte Pinakothek",name:"Alte Pinakothek M\u00fcnchen",
+  "occ-alte-pinakothek":{city:"Munich",country:"Germany",ownChip:true,short:"Munich Alte Pinakothek",chip:"Munich",group:"munich-pinakotheken",lookupName:"Alte Pinakothek",name:"Alte Pinakothek M\u00fcnchen",
     sites:[{host:"pinakothek.de",line:/^Alte Pinakothek\b/i}],
     shopQueries:["Alte Pinakothek M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Alte Pinakothek",linkRead:{capsTitles:true}},
-  "occ-pinakothek-der-moderne":{ownChip:true,short:"Munich der Moderne",chip:"Munich",group:"munich-pinakotheken",lookupName:"Pinakothek der Moderne",name:"Pinakothek der Moderne M\u00fcnchen",
+  "occ-pinakothek-der-moderne":{city:"Munich",country:"Germany",ownChip:true,short:"Munich der Moderne",chip:"Munich",group:"munich-pinakotheken",lookupName:"Pinakothek der Moderne",name:"Pinakothek der Moderne M\u00fcnchen",
     sites:[{host:"pinakothek.de",line:/^Pinakothek der Moderne\b/i},{host:"pinakothek-der-moderne.de"}],
     shopQueries:["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Pinakothek der Moderne",linkRead:{capsTitles:true,datesAbove:1,slashDayFirst:true}},
-  "occ-sammlung-schack":{ownChip:true,short:"Sammlung Schack",chip:"Munich",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",
+  "occ-sammlung-schack":{city:"Munich",country:"Germany",ownChip:true,short:"Sammlung Schack",chip:"Munich",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",
     sites:[{host:"pinakothek.de",line:/^Sammlung Schack\b/i}],linkRead:{capsTitles:true}},
   // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin Gemäldegalerie" (her decision).
-  "occ-smb-museum":{ownChip:true,short:"Berlin",card:"Berlin Gem\u00e4ldegalerie",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
+  "occ-smb-museum":{city:"Berlin",country:"Germany",ownChip:true,short:"Berlin",card:"Berlin Gem\u00e4ldegalerie",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
   // Dresden's Gemäldegalerie Alte Meister: chip "Dresden", cards "Dresden Gemäldegalerie" (her
   // decision). Its pages open with a short "# " name above every SKD museum's menu; the show's
   // own heading follows "Active page:" (titleAfter). Dates day first with slashes; the site
   // line ("Exhibition Site Zwinger") never reaches Claude (her decision; skip).
-  "occ-gemaeldegalerie-skd-museum":{ownChip:true,short:"Dresden",card:"Dresden Gem\u00e4ldegalerie",lookupName:"Gem\u00e4ldegalerie Alte Meister Dresden",name:"Gem\u00e4ldegalerie Alte Meister",
+  "occ-gemaeldegalerie-skd-museum":{city:"Dresden",country:"Germany",ownChip:true,short:"Dresden",card:"Dresden Gem\u00e4ldegalerie",lookupName:"Gem\u00e4ldegalerie Alte Meister Dresden",name:"Gem\u00e4ldegalerie Alte Meister",
     linkRead:{titleAfter:/^Active page:/,slashDayFirst:true,skip:/^(?:Exhibition Site\b|Opening Hours\b|\[Translate to English:\]|\u00a9)/}},
   // The Städel (staedelmuseum.de): chip "Frankfurt" after Dresden, cards "Frankfurt Städel" (her decision).
   // Written in, her decision: its shop's books section (the finder cannot see its books), and
   // `shopUnseen` — its books are in the page's HTML but Parallel drops them, so a shop page
   // with no priced line reads "Parallel fault" (docs/add_by_link.md, "Frankfurt").
-  "occ-staedelmuseum-de":{ownChip:true,short:"Frankfurt",card:"Frankfurt St\u00e4del",lookupName:"St\u00e4del Museum",name:"St\u00e4del Museum",
+  "occ-staedelmuseum-de":{city:"Frankfurt",country:"Germany",ownChip:true,short:"Frankfurt",card:"Frankfurt St\u00e4del",lookupName:"St\u00e4del Museum",name:"St\u00e4del Museum",
     shopHome:"https://liebieghaus.ticketfritz.de/",shopCatalogues:"https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885",shopUnseen:"parallel"},
   // Under "Occasional". Boston MFA prints the dates on the line above the show's title.
-  "occ-mfa-org":{short:"Boston",card:"Boston MFA",linkRead:{datesAbove:2}},
-  "occ-archive-worcesterart-org":{short:"Worcester"},
+  "occ-mfa-org":{city:"Boston",country:"USA",short:"Boston",card:"Boston MFA",linkRead:{datesAbove:2}},
+  "occ-archive-worcesterart-org":{city:"Worcester, Massachusetts",country:"USA",short:"Worcester"},
   // NGV writes two-digit years ("4 Sep 26 – 31 Jan 27").
-  "occ-ngv-vic-gov-au":{card:"National Gallery Victoria",linkRead:{shortYear:true}},
+  "occ-ngv-vic-gov-au":{city:"Melbourne",country:"Australia",card:"National Gallery Victoria",linkRead:{shortYear:true}},
   // The Tuscan state museums' site names itself "Direzione regionale Musei nazionali Toscana";
   // its cards show "San Marco" and the lookup searches as "Museo di San Marco" (her decision).
   // Its pages are press releases: the title is the headline's first sentence, without "Mostra"
   // (exhibition) or the quotation marks round the name; capitals recased (her decision).
-  "occ-museitoscana-cultura-gov-it":{short:"San Marco",name:"Museo di San Marco",linkRead:{firstSentence:true,titleDrop:/^Mostra\s+/i,unquote:true,capsTitles:true}},
+  "occ-museitoscana-cultura-gov-it":{city:"Florence",country:"Italy",short:"San Marco",name:"Museo di San Marco",linkRead:{firstSentence:true,titleDrop:/^Mostra\s+/i,unquote:true,capsTitles:true}},
   // Genoa's page titles give no name, Milan's name the city council (her names, both written in).
-  "occ-palazzoducale-genova-it":{short:"Palazzo Ducale Genova",name:"Palazzo Ducale Genova"},
+  "occ-palazzoducale-genova-it":{city:"Genoa",country:"Italy",short:"Palazzo Ducale Genova",name:"Palazzo Ducale Genova"},
   // Palazzo Reale Milano's pages also sit on the city council's site, saved by her because that
   // site refuses Parallel (docs/add_by_link.md, "Saved pages").
-  "occ-palazzorealemilano-it":{short:"Palazzo Reale Milano",name:"Palazzo Reale Milano",
+  "occ-palazzorealemilano-it":{city:"Milan",country:"Italy",short:"Palazzo Reale Milano",name:"Palazzo Reale Milano",
     sites:[{host:"www2.comune.milano.it",path:/^\/(?:en|it)\/web\/palazzo-reale-milano\//}],
     linkRead:{titleHeading:PRM_TAIL,titleDrop:PRM_TAIL,nameInLines:true,until:PRM_BOX,datesUntil:PRM_BOX,monthsOnly:true,capsTitles:true,asOfTo:true}},
 };
@@ -1191,9 +1192,9 @@ function nameInLines(page,vc){
 }
 
 // askVenue: a site the app has never seen (or has stored named only by its address). Claude is
-// given the page's address and names the venue that held the show, its full name and her kind of
-// short name (her decision); on someone else's page (a blog, a magazine) code files the show there
-// (heldElsewhere) and Claude also reads the show's full title (its page title can be anything).
+// given the page's address and names the venue that held the show (her decision): its full name
+// and other names, city and country, for searching, and a short card name in her style. Whether the page is
+// the museum's own decides the rest: only someone else's page asks more (elsewherePrompt).
 // Her names for venues, as the style for a new venue's short name.
 const SHORT_NAME_EXAMPLES=()=>Object.values(LINK_VENUES).map(v=>v.card||v.short).filter(Boolean);
 function linkPrompt(page,askVenue,url){
@@ -1210,11 +1211,12 @@ function linkPrompt(page,askVenue,url){
     +(page.between.length?"\"subtitle\": if one of the LINES BETWEEN THE TITLE AND THE DATES is the second part of the exhibition's own name — the part a catalogue's title would carry after the main title — copy that line exactly as written. Otherwise \"\". Never a category (\"Special Exhibition\"), a sponsor, a place, a price or a date.\n":"")
     +"\"english\": the exhibition's title"+(page.between.length?" (with the subtitle you gave, if any)":"")+" in natural English if it is not in English; \"\" if it already is, names aside. Keep every name as written and the title's own full stops. Plain words: no \"In English\", no quotation marks.\n"
     +"\"englishSpeaking\": true if the museum is in an English-speaking country, false if not."
-    +(askVenue?"\n\"venue\": the museum or gallery that held the exhibition on the dates in this line: "+JSON.stringify(page.dateLine)+" — its full name, without the city. \"\" if the page does not say.\n"
-      +"\"venueShort\": that museum's name as it would head a card in this tracker, short, in the style of these: "+JSON.stringify(SHORT_NAME_EXAMPLES())+". \"\" if \"venue\" is \"\".\n"
-      +"\"venueSite\": that museum's own website, the domain only (\"example.org\"), if you know it; \"\" if not.\n"
-      +"\"venueOwnPage\": true if the PAGE ADDRESS is on that museum's own website; false if it is on someone else's site (a blog, a magazine, a newspaper, an aggregator, another organisation), even when the text is the museum's own press release.\n"
-      +"\"title\": the exhibition's full name as the text states it, with its subtitle, copied exactly as written (\"Turner and Constable: Rivals and Originals\"). Never a heading that only names the artist when the text gives the full name, never a label such as \"Exhibition\" or \"Review\", never the site's name.":"");
+    +(askVenue?"\n\"venue\": the museum or gallery that held the exhibition on the dates in this line: "+JSON.stringify(page.dateLine)+" — its full official name, written out (no acronym). \"\" if the page does not say.\n"
+      +"\"venueCity\": that museum's city, in English. \"\" if not known.\n"
+      +"\"venueCountry\": that museum's country, in English. \"\" if not known.\n"
+      +"\"venueAlso\": the other names that museum goes by, as an array of strings: its acronym, its name in its own language (\"KMSKA\", \"Koninklijk Museum voor Schone Kunsten Antwerpen\"). [] if none.\n"
+      +"\"venueShort\": that museum's name as it would head a card in this tracker: short, but enough to tell it from any other museum (\"National Gallery\" alone is not: there are several), in the style of these: "+JSON.stringify(SHORT_NAME_EXAMPLES())+". \"\" if \"venue\" is \"\".\n"
+      +"\"venueOwnPage\": true if the PAGE ADDRESS is on that museum's own website; false if it is on someone else's site (a blog, a magazine, a newspaper, an aggregator, another organisation), even when the text is the museum's own press release.":"");
 }
 
 // What the model said, checked. Wording is not a control.
@@ -1223,26 +1225,48 @@ function linkAnswer(a){
   const str=v=>typeof v==="string"?v.replace(/["“”]/g,"").replace(/\s+/g," ").trim():"";
   return{summary:typeof o.summary==="string"?o.summary.trim():"",subtitle:typeof o.subtitle==="string"?o.subtitle.trim():"",
     english:str(o.english).replace(/^In English:\s*/i,""),englishSpeaking:o.englishSpeaking!==false,
-    venue:str(o.venue),venueShort:str(o.venueShort),venueSite:str(o.venueSite).toLowerCase(),venueOwnPage:o.venueOwnPage!==false,
-    title:str(o.title)};
+    venue:str(o.venue),venueCity:str(o.venueCity),venueCountry:str(o.venueCountry),venueAlso:(Array.isArray(o.venueAlso)?o.venueAlso:[]).map(str).filter(Boolean).slice(0,4),venueShort:str(o.venueShort),venueOwnPage:o.venueOwnPage!==false};
 }
 
+// Someone else's page about a show held elsewhere (a blog, a magazine; her decision, a last
+// resort), asked only once Claude has said so: the museum's own website, to file the show under,
+// and the show's full title, since such a page's title can be anything (Enfilade's PDF was
+// titled "Joshua Reynolds"; AL-052h).
+function elsewherePrompt(page,url,a){
+  return "You are reading a page about a museum exhibition, published by someone other than the museum that held it. Your ONLY output is one JSON object.\n\n"
+    +"PAGE ADDRESS: "+url+"\n"
+    +"THE MUSEUM THAT HELD IT: "+JSON.stringify([a.venue,a.venueCity,a.venueCountry].filter(Boolean).join(", "))+"\n"
+    +"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
+    +"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"\n\n"
+    +"Answer with exactly these keys:\n"
+    +"\"venueSite\": that museum's own website, the domain only (\"example.org\"), if you know it; \"\" if not.\n"
+    +"\"title\": the exhibition's full name as the text states it, with its subtitle, copied exactly as written (\"Turner and Constable: Rivals and Originals\"). Never a heading that only names the artist when the text gives the full name, never a label such as \"Exhibition\" or \"Review\", never the site's name.";
+}
+function elsewhereAnswer(a){
+  const o=a&&typeof a==="object"?a:{};
+  const str=v=>typeof v==="string"?v.replace(/["“”]/g,"").replace(/\s+/g," ").trim():"";
+  return{venueSite:str(o.venueSite).toLowerCase(),title:str(o.title)};
+}
+
+const flatName=x=>foldText(x).replace(/^the\s+/,"").replace(/[^a-z0-9]+/g," ").trim();
+// Claude says the page is not the museum's own, and the page's site is not named for the museum.
+function maybeElsewhere(a,pageHost){
+  return !!(a&&a.venue&&!a.venueOwnPage)&&!flatName(a.venue).split(" ").some(w=>w.length>=4&&foldText(pageHost).includes(w));
+}
 // A page about a show held elsewhere → {id, name, host} for the venue Claude named: one of
 // hers by name or site, else a new occasional venue filed under its own site (or its name
 // when Claude knows no site). Null when the page is the venue's own. AL-052.
 function heldElsewhere(a,pageHost){
-  if(!a||!a.venue||a.venueOwnPage)return null;
-  const site=hostOf(/^https?:\/\//i.test(a.venueSite)?a.venueSite:"https://"+a.venueSite).replace(/^www\./,"");
-  const flat=x=>foldText(x).replace(/^the\s+/,"").replace(/[^a-z0-9]+/g," ").trim();
+  if(!maybeElsewhere(a,pageHost))return null;
+  const site=hostOf(/^https?:\/\//i.test(a.venueSite||"")?a.venueSite:"https://"+(a.venueSite||"")).replace(/^www\./,"");
   // The page's own site names the venue (Claude's "not its own page" misread): not elsewhere.
   if(site&&baseDomain(site)===baseDomain(pageHost))return null;
-  if(flat(a.venue).split(" ").some(w=>w.length>=4&&foldText(pageHost).includes(w)))return null;
-  const mine=Object.values(MU).find(m=>m&&!m.occasional&&[m.name,m.short].some(x=>x&&flat(x)===flat(a.venue)));
+  const mine=Object.values(MU).find(m=>m&&!m.occasional&&[m.name,m.short].some(x=>x&&flatName(x)===flatName(a.venue)));
   const known=mine?mine.id:site?knownVenueFor("https://"+site+"/"):null;
   if(known)return{id:known,name:MU[known].name,host:site};
-  const occ=Object.values(MU).find(m=>m&&m.occasional&&[m.name,m.short].some(x=>x&&flat(x)===flat(a.venue)));
+  const occ=Object.values(MU).find(m=>m&&m.occasional&&[m.name,m.short].some(x=>x&&flatName(x)===flatName(a.venue)));
   if(occ)return{id:occ.id,name:occ.name,host:site};
-  return{id:site?occVenueId(site):"occ-"+flat(a.venue).replace(/ /g,"-"),name:a.venue,host:site};
+  return{id:site?occVenueId(site):"occ-"+flatName(a.venue).replace(/ /g,"-"),name:a.venue,host:site};
 }
 
 function occVenueId(host){
@@ -1316,8 +1340,17 @@ function occVenue(id,v,fallback){
 // A venue the store holds named only by its address, as every new venue was before Claude named them.
 const namedByAddress=v=>!!v&&!v.short&&bareHost(v.name)===bareHost(v.host);
 const bareHost=h=>String(h||"").toLowerCase().replace(/^www\./,"");
-// The name a venue's shop is looked for under.
-const shopFinderName=(id,stored)=>(linkEntry(id)||{}).name||stored;
+// The name a venue's shop is searched under: long and identifying (her decision; three National
+// Galleries in three countries) — its full name, the other names it goes by, its city and its
+// country, each where the words so far lack it. Proved live: "Palazzo Ducale" alone found Venice's;
+// the English name alone found Brussels', "KMSKA" beside it found Antwerp's shop. The card name is
+// the short one (`short`, `card`). `v`: the store's facts, or Claude's.
+function venueSearchName(id,v){
+  const own=linkEntry(id)||{}, s=v||{};
+  let name=String(own.name||s.name||"").trim();
+  for(const x of [...(s.aka||[]),own.city||s.city,own.country||s.country]) if(x&&!foldText(name).includes(foldText(x)))name+=" "+x;
+  return name.trim();
+}
 // Every venue a card can be filed under, in VENUE_ORDER; the rest by name.
 // The review walks THIS, not MUSEUMS, or occasional cards are counted and never drawn.
 function allVenues(){
@@ -5784,10 +5817,11 @@ export default function App(){
         // (heldElsewhere; her decision, a last resort).
         const askVenue=vc===occVenueId(host)&&!linkEntry(vc)&&(!venues[vc]||namedByAddress(venues[vc]));
         const ask=await readResults(linkPrompt(page,askVenue,url));
-        const a=linkAnswer(ask.ok?ask.data:null);
+        let a=linkAnswer(ask.ok?ask.data:null);
+        if(askVenue&&maybeElsewhere(a,host)){ const more=await readResults(elsewherePrompt(page,url,a)); if(more.ok)a={...a,...elsewhereAnswer(more.data)}; }
         const away=askVenue?heldElsewhere(a,host):null;
         if(away){ vc=away.id; host=away.host; seen.venue=vc; seen.heldElsewhere=away; }
-        const named=askVenue&&a.venue?{name:a.venue,short:a.venueShort||a.venue}:null;
+        const named=askVenue&&a.venue?{name:a.venue,short:a.venueShort||a.venue,aka:a.venueAlso,city:a.venueCity,country:a.venueCountry}:null;
         const fresh=!venues[vc];
         if(isOcc(vc)){
           met.add(vc);
@@ -5797,7 +5831,7 @@ export default function App(){
           // — a miss is never kept as the answer.
           if(!looked.has(vc)&&(!had||(!had.confirmed&&(!(had.finder>=2)||had.shop!=="found")))){
             looked.add(vc);
-            const name=shopFinderName(vc,had&&!namedByAddress(had)?had.name:named?named.name:page.site);
+            const name=venueSearchName(vc,had&&!namedByAddress(had)?had:named||{name:page.site});
             setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+name+"\u2019s shop"});
             const pageShop=away?"":shopLinkOnPage(oneText(res),host);
             const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc);
@@ -5807,7 +5841,7 @@ export default function App(){
             venuesChanged=true;
           }
         }
-        if(isOcc(vc)&&named&&venues[vc]&&(fresh||namedByAddress(venues[vc]))){ venues={...venues,[vc]:{...venues[vc],name:named.name,short:named.short}}; venuesChanged=true; seen.named=named; }
+        if(isOcc(vc)&&named&&venues[vc]&&(fresh||namedByAddress(venues[vc]))){ venues={...venues,[vc]:{...venues[vc],...named}}; venuesChanged=true; seen.named=named; }
         if(isOcc(vc)&&venues[vc]&&venues[vc].english===undefined&&ask.ok){ venues={...venues,[vc]:{...venues[vc],english:a.englishSpeaking}}; venuesChanged=true; }
         // A venue whose subtitle sits under the heading: read by code. A line
         // ending like a sentence is the text, not a subtitle.
@@ -5891,7 +5925,7 @@ export default function App(){
     const turnedDown=[...(v.turnedDown||[]),v.shopCatalogues].filter(Boolean);
     setShopLooking(id);
     let shop;
-    try{ shop=await discoverShop(v.pageShop||"",v.host,shopFinderName(v.id,v.name),turnedDown,v.id); }
+    try{ shop=await discoverShop(v.pageShop||"",v.host,venueSearchName(v.id,v),turnedDown,v.id); }
     catch(e){ shop={shop:"failed",why:"Couldn\u2019t look ("+String((e&&e.message)||e)+")."}; }
     setShopLooking(null);
     setOccVenues(prev=>{

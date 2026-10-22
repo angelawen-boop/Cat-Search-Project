@@ -37,10 +37,16 @@ meets it.
   other sites (`sites`: a path on a shared site, a house line), link options, shop settings. What the app
   finds out sits in the store and the entry wins over it (`occVenue`, one function for stored and unseen
   venues). Never a second table for one of these facts.
-- **A venue not met before is named by Claude** (her decision), in the same call as its description, on its
-  first link only: its full name (the shop search and lookup use it) and a short card name in her style (her
-  names in `LINK_VENUES` are the examples). A stored venue named only by its address is asked once more
-  (`namedByAddress`). The tab title's site name, then the address, only when Claude gives none. AL-053.
+- **A venue not met before is named by Claude** (her decision), on its first link only, in the same call as its
+  description: its full name, the other names it goes by (acronym, own-language name), city and country, and a
+  short card name — identifying but short, in her style (her names in `LINK_VENUES` are the examples). A stored
+  venue named only by its address is asked once more (`namedByAddress`). The tab title's site name, then the
+  address, only when Claude gives none. AL-053.
+- **Search name long, card name short** (her decision): the shop search uses the full name, other names, city
+  and country (`venueSearchName`); cards use the short name. Proved live (Parallel, 9 searches): "Palazzo Ducale"
+  alone found Venice's shop; KMSKA's English name alone found the Brussels museums, with "KMSKA" beside it
+  Antwerp's shop; San Marco's regional-office name found no shop, "Museo di San Marco Florence Italy" its
+  bookshop partner. Hand-set venues carry `city` and `country` on their entry (written in).
 - **Store:** `venues/occasional` (venues, shops, her confirmations) and `links/pending` (the box). Both were
   copied into her app's store when the cloud ledger merged. A ledger row whose venue a page's store has not met shows under
   its web address, shop "not found".
@@ -312,12 +318,13 @@ dropped) and reads it with `readShowPage`, then the same intake as a link. No Pa
 A last resort (her decision): a show so old its venue's page is gone, read off a blog or magazine page
 (her Enfilade link, Canaletto at the Queen's Gallery).
 - **The venue is Claude's to find** (her decision): for a site the app has never seen, Claude is sent the
-  page's address and asked which museum held the show on the date line read, its full and short name and site, and whether
-  the address is that museum's own site. Code files it (`heldElsewhere`): one of hers by name or site, else a
-  new Occasional venue under its site (by name when Claude knows none); the shop is looked for under that
-  name. A venue named in the page's own site, or Claude saying it is the museum's own page, keeps today's
-  filing. The site Claude gives is its knowledge, not read off the page. Sent no address, Claude called her
-  Reynolds links (Enfilade's PDF, Meer) the Wallace's own pages (AL-052g).
+  page's address and asked which museum held the show on the date line read, and whether the address is that
+  museum's own site. **Only when it says not** is Claude asked a second question (`elsewherePrompt`): the
+  museum's website and the show's full title — nothing only a blog page needs is asked of a museum's own page
+  (her decision). Code files it (`heldElsewhere`): one of hers by name or site, else a new Occasional venue under
+  its site (by name when Claude knows none). A venue named in the page's own site, or the site Claude gives being
+  the page's own, keeps today's filing. The site Claude gives is its knowledge, not read off the page. Sent no
+  address, Claude called her Reynolds links (Enfilade's PDF, Meer) the Wallace's own pages (AL-052g).
 - **The title is Claude's too on such a page** (her decision): someone else's page title can be anything, so
   a show held elsewhere takes the full name Claude reads from the text (Enfilade's PDF was titled "Joshua
   Reynolds"; AL-052h). The 2,000-character cut applies: she sends pages with the show near the top.
