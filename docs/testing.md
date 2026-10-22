@@ -60,6 +60,11 @@ it now, when it shows a rule new at its venue, and otherwise says it adds nothin
 what else could go. A rule the reader cannot see (a site's later fix, a recasing detail) is held by an
 offline test, not a page (AL-031, the date tests).
 
+**From a script:** the free Parallel server answers a script directly (`https://search.parallel.ai/mcp`, JSON-RPC:
+`initialize`, then `tools/call` `web_fetch` / `web_search`), so replies are saved to files with no retyping. Its free
+tier refuses after about 30 requests; a run waits a minute and retries. Her keyed connector cannot be reached from a
+script.
+
 **Never (her decision):**
 - re-fetch the whole list after every small fix within one session — the pages have not changed in the
   last hour, only the code has, so re-run the check on the replies already fetched;

@@ -590,13 +590,29 @@ venue the app has never seen needs a fix about half the time** — the exhibitio
 correctly off the page, the venue's shop is not found, and so on (Mia and Worcester both missed
 and were fixed in code, proven live).
 
-- **OPEN — not yet published: one entry per link venue, and Claude names a museum not met before** (her
-  decisions; step 1 of the Add-by-link redesign). Seven name and rule tables folded into `LINK_VENUES`; Claude
-  gives a new venue's full name, other names, city, country and short card name on its first link; the shop is
-  searched under the long name (proved live on KMSKA, Genoa, San Marco). Her next new museum confirms.
-  Next, agreed: map the reader's venue rules on the proof pages, fold repeats into general rules, measure on
-  20–30 museums never seen. Once rebuilt, the same Claude test (Sonnet, live proof pages, scored in code) on the
-  description, subtitle and title reads and on a blog page's second question — not yet run. `docs/add_by_link.md`.
+- **OPEN — the Add-by-link redesign, on `main`, not published** (her decisions: rebuilt the scraper's way —
+  shared rules, a venue rule only where needed; Add by link signed off before Add by page, which shares the
+  reader and changes with it). **Done:** one `LINK_VENUES` entry per venue (seven tables folded); Claude names a
+  new venue (full name, other names, city, country, card name) — right on 42 of 42 live pages with Sonnet; the
+  shop searched under the long name; the reader in ten named steps with shared title, date and passage rules
+  (the scraper's boilerplate list shared, `scraper/boilerplate.js`) — on 25 museums never seen, clean reads 13 → 25,
+  no proof page worse, each proof page's passage signed off; the shop finder's shared rules — on 24 museums never
+  seen, books sections 9 → 11, home page given as the shop 3 → 0, nothing found 7 → 3. `docs/add_by_link.md`.
+  **Still to do, in this order (her decision, one at a time, report after each):**
+  1. **Claude's other reads, tested with Sonnet calls** — the description, the subtitle pick, the English title, and
+     a blog page's second question (`elsewherePrompt`). Their wording is unchanged but what Claude is handed changed.
+     Method as for the venue names: the app's own code builds each question from a live page, a fresh Sonnet call
+     answers, code scores it.
+  2. **The shop finder: in steps, and a standing check of its own** (proof pages test only the reader). Split
+     `discoverShop` into named steps as the reader was. The check: a script running the app's finder live, a list of
+     about 18 venues — one per way a shop has been found or missed, her link venues included (Detroit, Cleveland,
+     Thyssen, Worcester, Yale, Berlin, CEDON, the Städel, Schack, and Albertina, Beyeler, Hamburg, Belvedere,
+     Louisiana, Kunsthaus, Petit Palais…) — each with its right shop, the case it guards and the trace of its last
+     good run, so a failure shows the step where it went wrong. Runs only after a shop-finder change (~90 searches).
+  3. **Write the procedure for a new venue that imports badly** into `docs/add_by_link.md`, a pointer here: is it a
+     case other museums will have? Yes → a shared rule, kept only if no proof page gets worse; no → an option on that
+     venue's one entry; then the checks it must pass. Last, after 1 and 2.
+  Then her links after publishing confirm with her own Claude.
 - **Published at 47.3 — Sammlung Schack (third Munich venue, no shop) and Dresden (chip "Dresden", cards
   "Dresden Gemäldegalerie"; she answers No shop once on its shop screen) by link; Munich titles typed in capitals
   recased (shared `capsTitleParts`, `dates.js`); a house line over the dates read again (Van Dyck, Boucher).
