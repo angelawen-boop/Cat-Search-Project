@@ -1571,9 +1571,12 @@ async function writePendingLinks(text){
 // The pick is opened and must read as books with prices, or one of its products as a book
 // with a price (Yale's Publications lists titles only; AL-042). "Look again" skips only the
 // pages she turned down, never the site. Evidence: docs/link_pages/shop_search/.
-const SHOP_WORDS=/^(?:the\s+)?(?:museum\s+|online\s+|gift\s+|book)?(?:shop|store|boutique|tienda|winkel|webshop|museumshop|negozio|librairie|bookshop)(?:\s+online)?$/i;
-const SHOP_HOST=/^(?:shop|store|boutique|tienda|winkel|webshop|bookshop|negozio|museumshop)\.|shop/i;
-const SHOP_PATH=/\/(?:museum-?)?(?:shop|store|boutique|tienda|winkel|webshop|negozio|bookshop)(?:\/|$)/i;
+// One list of words for a shop, in the languages met: a link's label, a host, a path part.
+// Danish "butik" (Louisiana), a name run into "shop" ("KMSKAShop", kmskashop.be) — never "workshop".
+const SHOP_WORD="shop|store|boutique|tienda|winkel|webshop|museumshop|museumsshop|negozio|librairie|bookshop|butik|butikk|kauppa";
+const SHOP_WORDS=new RegExp("^(?:the\\s+)?(?:museum\\s+|online\\s+|gift\\s+|book)?(?:"+SHOP_WORD+")(?:\\s+online)?$|^(?!work)[\\p{L}]{2,}shop$","iu");
+const SHOP_HOST=new RegExp("^(?:"+SHOP_WORD+")\\.|(?<!work)shop|butik","i");
+const SHOP_PATH=new RegExp("\\/(?:[^\\/]*[-_])?(?:museum-?)?(?:"+SHOP_WORD+")(?:[-_][^\\/]*)?(?:\\/|$)|\\/(?!work)[a-z]{2,}shop(?:[-_][^\\/]*)?(?:\\/|$)","i");
 function mdLinks(text){
   const out=[];
   for(const m of String(text||"").matchAll(/\[([^\]]*)\]\((https?:\/\/[^)\s]+)/g))out.push({label:stripMd(m[1]),url:m[2]});
@@ -1899,7 +1902,10 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId){
   const named=r=>!place(r.url)&&namesVenue(r.url,own.shopNamed);
   const mine=(s.results||[]).filter(r=>r&&(place(r.url)||named(r)));
   seenText+="\n"+mine.map(r=>r.url).join("\n");
-  let root=pageShop?shopRootOf(pageShop):mine.length?shopRootOf(mine[0].url):"";
+  // A shop page on the museum's own site is the shop's front, never the museum's home page
+  // (Belvedere's /en/museum-shop).
+  const rootFor=u=>baseDomain(hostOf(u))===baseDomain(museumHost)&&!SHOP_HOST.test(hostOf(u))?u:shopRootOf(u);
+  let root=pageShop?rootFor(pageShop):mine.length?rootFor(mine[0].url):"";
   opens=0;
   let pick=await tryCands(mine.map(r=>({url:r.url,words:(r.title||"")+" "+pathWords(r.url),proof:(r.excerpts||[]).join("\n"),named:named(r)})),"a search");
   // A named section is on the shop company's site: that site is its shop, whatever the page linked.
