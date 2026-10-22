@@ -1660,8 +1660,9 @@ function rankShelves(cands){
 // A SHELF OF BOOKS, READ OFF ITS TEXT: book words and prices, both plural. German joins
 // its words ("Ausstellungskataloge", Berlin).
 const BOOK_WORD=/\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b|\bpages\b|\bcatalog(?:ue|o|us)?s?\b|\bcatalogi\b|kataloge?\b|\bbooks?\b|\bboek(?:en)?\b|\blibros?\b|\blivres?\b|\bbuch\b|\bbu(?:e)?cher\b|\bbok\b|\bbocker\b|\bpublikation(?:en|er)?\b|\bseiten\b|\bsidor\b|\btapa (?:dura|blanda)\b/g;
-// Swiss francs and Scandinavian crowns count too (Beyeler "CHF 45.00", Nationalmuseum "SEK 345").
-const PRICE=/[$€£]\s?\d|\b(?:chf|sek|dkk|nok|kr\.?)\s?\d|\d[.,]\d{2}\s?(?:€|eur\b|usd\b|gbp\b|chf\b|\$|£)|\d\s?(?:sek|dkk|nok|kr)\b/g;
+// Swiss francs and Scandinavian crowns count too (Beyeler "CHF 45.00", Nationalmuseum "SEK 345"), and a
+// currency code before the number (Albertina "EUR 24,90").
+const PRICE=/[$€£]\s?\d|\b(?:chf|sek|dkk|nok|kr\.?|eur|usd|gbp|aud|cad)\s?\d|\d[.,]\d{2}\s?(?:€|eur\b|usd\b|gbp\b|chf\b|\$|£)|\d\s?(?:sek|dkk|nok|kr)\b/g;
 function looksLikeBookShelf(text){
   const t=foldText(text);
   return (t.match(BOOK_WORD)||[]).length>=3&&(t.match(PRICE)||[]).length>=2;
@@ -1908,7 +1909,14 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId){
   const s=await searchWeb("The museum shop's exhibition catalogues or books section of "+(own.shopQueries?own.name:venueName)+".",own.shopQueries||[venueName+" shop exhibition catalogues",venueName+" shop books publications"]);
   if(!s.ok)died=s.detail;
   const named=r=>!place(r.url)&&namesVenue(r.url,own.shopNamed);
-  const mine=(s.results||[]).filter(r=>r&&(place(r.url)||named(r)));
+  let mine=(s.results||[]).filter(r=>r&&(place(r.url)||named(r)));
+  // Nothing shop-like and no Shop link on the show page: one more search, for the shop itself
+  // (Kunsthaus Zürich, Petit Palais: the first search returned only the museum's own pages).
+  if(!mine.length&&!pageShop&&!own.shopQueries){
+    const s2=await searchWeb("The online shop of "+venueName+".",[venueName+" online shop",venueName+" museum shop books"]);
+    if(!s2.ok)died=died||s2.detail;
+    mine=(s2.results||[]).filter(r=>r&&(place(r.url)||named(r)));
+  }
   seenText+="\n"+mine.map(r=>r.url).join("\n");
   // A shop page on the museum's own site is the shop's front, never the museum's home page
   // (Belvedere's /en/museum-shop).
