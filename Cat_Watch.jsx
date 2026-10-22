@@ -1201,6 +1201,7 @@ function linkPrompt(page,askVenue,url){
   const ex=SUMMARY_EXAMPLES.map(e=>"RAW: "+e.raw+"\nACCEPTED SUMMARY: "+e.summary).join("\n\n");
   return "You are reading one museum exhibition page for a personal art-catalogue tracker. Your ONLY output is one JSON object.\n\n"
     +(askVenue?"PAGE ADDRESS: "+url+"\n":"")
+    +(askVenue&&page.dateLine?"THE SHOWING THIS CARD IS FOR, as the page prints it: "+JSON.stringify(page.dateLine)+"\n":"")
     +"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
     +(page.between.length?"LINES BETWEEN THE TITLE AND THE DATES: "+JSON.stringify(page.between)+"\n":"")
     +"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"\n\n"
@@ -1211,7 +1212,7 @@ function linkPrompt(page,askVenue,url){
     +(page.between.length?"\"subtitle\": if one of the LINES BETWEEN THE TITLE AND THE DATES is the second part of the exhibition's own name — the part a catalogue's title would carry after the main title — copy that line exactly as written. Otherwise \"\". Never a category (\"Special Exhibition\"), a sponsor, a place, a price or a date.\n":"")
     +"\"english\": the exhibition's title"+(page.between.length?" (with the subtitle you gave, if any)":"")+" in natural English if it is not in English; \"\" if it already is, names aside. Keep every name as written and the title's own full stops. Plain words: no \"In English\", no quotation marks.\n"
     +"\"englishSpeaking\": true if the museum is in an English-speaking country, false if not."
-    +(askVenue?"\n\"venue\": the museum or gallery that held the exhibition on the dates in this line: "+JSON.stringify(page.dateLine)+" — its full official name, written out (no acronym). \"\" if the page does not say.\n"
+    +(askVenue?"\n\"venue\": the museum or gallery of THE SHOWING THIS CARD IS FOR: the one that line names, even when the text lists other showings or another venue first; if the line names none, the museum that held the exhibition on its dates. The museum itself, not a building, wing or room of it. Its full official name, written out (no acronym). \"\" if the page does not say.\n"
       +"\"venueCity\": that museum's city, in English. \"\" if not known.\n"
       +"\"venueCountry\": that museum's country, in English. \"\" if not known.\n"
       +"\"venueAlso\": the other names that museum goes by, as an array of strings: its acronym, its name in its own language (\"KMSKA\", \"Koninklijk Museum voor Schone Kunsten Antwerpen\"). [] if none.\n"
