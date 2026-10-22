@@ -599,10 +599,11 @@ and were fixed in code, proven live).
   no proof page worse, each proof page's passage signed off; the shop finder's shared rules — on 24 museums never
   seen, books sections 9 → 11, home page given as the shop 3 → 0, nothing found 7 → 3. `docs/add_by_link.md`.
   **Still to do, in this order (her decision, one at a time, report after each):**
-  1. **Claude's other reads, tested with Sonnet calls** — the description, the subtitle pick, the English title, and
-     a blog page's second question (`elsewherePrompt`). Their wording is unchanged but what Claude is handed changed.
-     Method as for the venue names: the app's own code builds each question from a live page, a fresh Sonnet call
-     answers, code scores it.
+  1. **Done — Claude's other reads, tested with Sonnet calls** on 70 live pages: subtitle, English title and the
+     blog page's second question right on every page; one summary said "first" with no word for it in the text
+     (Pontormo). Found on the way: the reader takes Wallraf's tab title ("Information: Wallraf-Richartz-Museum")
+     for the show's name, not "Van Gogh & Co. on tour" — the reader's "25 of 25 clean" was 24 of 25.
+     `docs/add_by_link.md`, "Per link".
   2. **The shop finder: in steps, and a standing check of its own** (proof pages test only the reader). Split
      `discoverShop` into named steps as the reader was. The check: a script running the app's finder live, a list of
      about 18 venues — one per way a shop has been found or missed, her link venues included (Detroit, Cleveland,
