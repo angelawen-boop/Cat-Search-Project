@@ -1090,6 +1090,9 @@ function runtime() {
     ok(mfah.base === 'Frida: The Making of an Icon' && phl.base === 'Van Gogh’s Sunflowers'
       && pp.base === 'The Seduction of Color: Andrea Solario and the Renaissance between Italy and France' && khm.base === 'Head and Shoulders. Coins in Fashion',
       'AL-056: the heading is the name; the page title adds only what the page backs (a subtitle on the line under it, or after ". "), never its dates or another spelling', JSON.stringify([mfah.base, phl.base, pp.base, khm.base]));
+    const wr = rd.readShowPage({ title: 'Information: Wallraf-Richartz-Museum', full_content: '[BACK](https://www.wallraf.museum/en/exhibitions/now/index.php?id=267&L=1 "BACK")\n\n# [Van Gogh & Co. on tour](https://www.wallraf.museum/en/exhibitions/now/index.php?id=1009 "Details")\n\n## [Masterpieces travel through Japan](https://www.wallraf.museum/en/exhibitions/now/index.php?id=1009 "Details")\n\nInformation\n\nThe tour starts at the Utsunomiya Museum of Art (19 April to 21 June 2026).' + fill }, 'https://www.wallraf.museum/en/exhibitions/now/2026-02-28-japan', null);
+    ok(wr.ok && wr.base === 'Van Gogh & Co. on tour',
+      'AL-056a:  a page title naming the site and sharing no word with the heading is the site\'s label; the heading stays the name (Wallraf)', JSON.stringify(wr.base));
     const nm = rd.splitPageTitle('Nationalmuseum | Fantasy and Reality – The Art of Johan Tobias Sergel', 'www.nationalmuseum.se');
     ok(nm.show === 'Fantasy and Reality – The Art of Johan Tobias Sergel' && nm.site === 'Nationalmuseum', 'AL-057: a page title with the site first: the part named for the site is the site', JSON.stringify(nm));
     ok(rd.cardTitle('PONTORMO', 'occ-x') === 'Pontormo' && rd.cardTitle('PICASSO – BACON', 'occ-x') === 'Picasso – Bacon' && rd.cardTitle('KAWS', 'occ-x') === 'KAWS'

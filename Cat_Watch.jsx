@@ -1219,7 +1219,7 @@ function findDates(pg){
 // title gives way to the page title. A title line that is not a heading keeps the page title's
 // show, or the line when it runs on.
 function settleName(pg){
-  const{lr,lines,rule,dateText,h,heading,show,site,broken,after,words}=pg;
+  const{lr,lines,rule,dateText,h,heading,show,site,broken,after,words,host}=pg;
   const flatName=x=>foldText(stripMd(x)).replace(/&/g," and ").replace(/[^a-z0-9]/g,"");
   const nameWords=x=>foldText(stripMd(x)).replace(/&/g," and ").split(/[^a-z0-9]+/).filter(w=>w&&!GENERIC_TITLE_WORDS.has(w));
   const isHeading=/^\s*#{1,6}\s/.test(lines[h])||h===broken||(after>=0&&h===after);
@@ -1227,7 +1227,11 @@ function settleName(pg){
   // A heading over two lines, or after a venue's marker line, is the page's own name whatever the
   // page title says (Berlin's can be German or misspelt).
   const ownHeading=h===broken||(after>=0&&h===after);
-  const headingIsSite=!ownHeading&&(!hw.size||!!(site&&flatName(site)===flatName(heading))||!!(show&&!nameWords(show).some(w=>hw.has(w))));
+  // A page title naming the site and sharing no word with the heading is the site's own label
+  // ("Information: Wallraf-Richartz-Museum"), not the show's name. AL-056a.
+  const namesSite=x=>nameWords(x).some(w=>w.length>=4&&foldText(host||"").includes(w));
+  const tabIsSiteLabel=!!(show&&namesSite(show)&&!namesSite(heading));
+  const headingIsSite=!ownHeading&&(!hw.size||!!(site&&flatName(site)===flatName(heading))||!!(show&&!nameWords(show).some(w=>hw.has(w))&&!tabIsSiteLabel));
   let base;
   if(isHeading&&!headingIsSite){
     base=heading.trim();
