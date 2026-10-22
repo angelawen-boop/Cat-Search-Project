@@ -304,15 +304,19 @@ dropped) and reads it with `readShowPage`, then the same intake as a link. No Pa
 
 A last resort (her decision): a show so old its venue's page is gone, read off a blog or magazine page
 (her Enfilade link, Canaletto at the Queen's Gallery).
-- **The venue is Claude's to find** (her decision): for a site the app has never seen, Claude is also asked
-  which museum held the show on the date line read, its city and site, and whether the page is that
-  museum's own. Code files it (`heldElsewhere`): one of hers by name or site, else a new Occasional venue
-  under its site (by name when Claude knows none); the shop is looked for under that name. A venue named
-  in the page's own site, or Claude saying it is the museum's own page, keeps today's filing. The site
-  Claude gives is its knowledge, not read off the page. If it keeps getting it wrong, she brings it back.
+- **The venue is Claude's to find** (her decision): for a site the app has never seen, Claude is sent the
+  page's address and asked which museum held the show on the date line read, its city and site, and whether
+  the address is that museum's own site. Code files it (`heldElsewhere`): one of hers by name or site, else a
+  new Occasional venue under its site (by name when Claude knows none); the shop is looked for under that
+  name. A venue named in the page's own site, or Claude saying it is the museum's own page, keeps today's
+  filing. The site Claude gives is its knowledge, not read off the page. Sent no address, Claude called her
+  Reynolds links (Enfilade's PDF, Meer) the Wallace's own pages (AL-052g).
+- **The title is Claude's too on such a page** (her decision): someone else's page title can be anything, so
+  a show held elsewhere takes the full name Claude reads from the text (Enfilade's PDF was titled "Joshua
+  Reynolds"; AL-052h). The 2,000-character cut applies: she sends pages with the show near the top.
 - **A label before the show** in the page title ("Exhibition | …") is dropped, and a dash-led site tail
   read first (`splitPageTitle`, `TITLE_LABEL`). **Tracking tails** leave a saved page's link too, as a pasted link's
-  (`withoutTracking`). Tests AL-050–052, on her page as Parallel returned it (`docs/link_pages/elsewhere/`).
+  (`withoutTracking`). Tests AL-050–052, on her pages as Parallel returned them (`docs/link_pages/elsewhere/`).
 
 ## What links are for, and how far the reader reaches
 
