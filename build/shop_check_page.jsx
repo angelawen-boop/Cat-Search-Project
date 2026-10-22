@@ -4,7 +4,7 @@
 //   1. Add by link's Read (readLinks): the show page opened, read, and a new venue's shop
 //      looked for (fetchPage, readShowPage, shopLinkOnPage, discoverShop).
 //   2. Confirm on the New Venue Shops screen: the venue registered as the app registers it
-//      (registerOccasional → occEntry).
+//      (registerOccasional → occVenue).
 //   3. Find catalogue (findOneCat): lookupCatalogue on the show's card, with the app's
 //      hooks (fillShopSearch does nothing for a venue found by finder 3).
 //   4. Re-check museum shop (recheckShop): recheckShopRow on the card the lookup wrote.

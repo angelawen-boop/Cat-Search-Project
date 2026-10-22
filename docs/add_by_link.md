@@ -31,8 +31,16 @@ meets it.
   Cancel import every link the Read took — each stored at once. AL-012c, AL-024.
 - **No lookback cutoff** for anything added by link (her decision).
 - **Chip: one "Occasional"** for every venue added this way (her decision); each venue keeps its own name and
-  shop behind it. A link to a venue already swept files under that venue. **Card names are hers** (`short` in
-  the store, written by a session); the page title's name until she gives one.
+  shop behind it. A link to a venue already swept files under that venue.
+- **One entry per venue — `LINK_VENUES`** (her decision: one place, as `MUSEUMS` is for the swept venues).
+  Everything she decided about a link venue: own chip, group, short and card names, full and lookup names,
+  other sites (`sites`: a path on a shared site, a house line), link options, shop settings. What the app
+  finds out sits in the store and the entry wins over it (`occVenue`, one function for stored and unseen
+  venues). Never a second table for one of these facts.
+- **A venue not met before is named by Claude** (her decision), in the same call as its description, on its
+  first link only: its full name (the shop search and lookup use it) and a short card name in her style (her
+  names in `LINK_VENUES` are the examples). A stored venue named only by its address is asked once more
+  (`namedByAddress`). The tab title's site name, then the address, only when Claude gives none. AL-053.
 - **Store:** `venues/occasional` (venues, shops, her confirmations) and `links/pending` (the box). Both were
   copied into her app's store when the cloud ledger merged. A ledger row whose venue a page's store has not met shows under
   its web address, shop "not found".
@@ -66,7 +74,7 @@ the import finishes.** Code: "FINDING A NEW VENUE'S SHOP SECTION".
 
 **Fixes from the first venues it had never met (proven live, 43.1):**
 - **The venue's own name drives the search.** A site name the reader cannot match to the address (Mia, on
-  new.artsmia.org) left the search finding other museums' shops; a venue rule names it (`OWN_CHIP` `name`),
+  new.artsmia.org) left the search finding other museums' shops; a venue rule names it (`LINK_VENUES` `name`),
   Look again included.
 - **A Shopify section that opens with no books** (Mia's Catalogues shows only its menu) is judged on its
   `products.json`: two priced products, most with a book type (`shopifyShelfIsBooks`; AL-033).
@@ -102,7 +110,7 @@ old finder and never confirmed are looked for again on their next link. Evidence
 `docs/link_pages/shop_search/`.
 
 **NGV writes two-digit years** ("4 Sep 26 – 31 Jan 27"): read as 20YY at NGV only (`shortYear` in
-`OCC_LINK_READ`, `withLongYears`; AL-038). A general rule would read "Jun 23" as a year anywhere. NGV goes
+`LINK_VENUES` `linkRead`, `withLongYears`; AL-038). A general rule would read "Jun 23" as a year anywhere. NGV goes
 last in the Occasional group; its cards say "National Gallery Victoria" (her decision).
 
 **A Wayback Machine copy files under the museum it copied** (her decision; *Sargent and the Sea*, RA 2010):
@@ -155,39 +163,38 @@ fresh Parallel fetches (her decision for Parallel work); only the date phrases a
 ## Venue link rules
 
 **San Marco** (`occ-museitoscana-cultura-gov-it`, her decision): the Tuscan state museums' site names itself
-"Direzione regionale Musei nazionali Toscana"; under "Occasional", first, its cards say "San Marco" (`OCC_SHORT`)
-and the lookup searches as "Museo di San Marco" (`OCC_NAME`; AL-046d). Names written in — they would also name
+"Direzione regionale Musei nazionali Toscana"; under "Occasional", first, its cards say "San Marco" (`short`)
+and the lookup searches as "Museo di San Marco" (`name`; AL-046d). Names written in — they would also name
 another Tuscan museum's show on that site. Its titles are the
 press-release headline (her decision). Shop: none (her answer). Proved live: *Beato Angelico*, *Rothko a Firenze*.
 
 **Palazzo Ducale Genova** (`occ-palazzoducale-genova-it`) and **Palazzo Reale Milano** (`occ-palazzorealemilano-it`):
-her names, written in (`OCC_SHORT`, `OCC_NAME`) — Genoa's page titles give none, Milan's name the city council;
+her names, written in (`LINK_VENUES`) — Genoa's page titles give none, Milan's name the city council;
 second and third under Occasional (her decision). Palazzo Reale Milano's heading is "I Brueghel - Palazzo Reale
 Milano" with the full name on a line below: `titleDrop` plus `nameInLines` (AL-048). Its /en/ pages print the
 show's text in Italian. The city's site (www2.comune.milano.it) refuses Parallel (403) and has no cached or
 archived copies: those links cannot be read.
 
 **NGA has its own chip** (her decision): National Gallery of Art links (`occ-nga-gov`) are an occasional venue
-in every other way, but sit under an "NG Washington" chip, never "Occasional", and their cards say NG Washington (`OWN_CHIP`;
-AL-030). A leading "Exhibition:" is dropped from titles (her ask; *Hubert Robert, 1733–1808*): an `OWN_CHIP`
+in every other way, but sit under an "NG Washington" chip, never "Occasional", and their cards say NG Washington (`LINK_VENUES`;
+AL-030). A leading "Exhibition:" is dropped from titles (her ask; *Hubert Robert, 1733–1808*): an `LINK_VENUES`
 entry can carry `linkRead`, found by `linkReadVenue`. Proved live: five archive pages, title and dates (on
 `docs/link_proof_pages.json`); descriptions carry menu and caption junk, left alone until it reaches Claude's.
 
 **Mia** (Minneapolis Institute of Art): its own chip "Mia", cards print "MIA" (her decision); the full name and the
-"–– Minneapolis Institute of Art" title tail are dropped (`OWN_CHIP`; AL-032, on the proof list). HTML
+"–– Minneapolis Institute of Art" title tail are dropped (`LINK_VENUES`; AL-032, on the proof list). HTML
 codes in any page title are decoded ("Chagall&#039;s"). **Yale CBA** (Yale Center for British Art, `occ-britishart-yale-edu`): its own chip
-and cards "Yale CBA", after Cincinnati (her decision); the lookup searches by the full name (`OWN_CHIP`; AL-039).
+and cards "Yale CBA", after Cincinnati (her decision); the lookup searches by the full name (`LINK_VENUES`; AL-039).
 Its dates carry clock times ("February 7, 2008, 10:00 am ET–Sunday, April 27, 2008, 5:00 pm ET"): the shared date reader drops them (`CLOCK_TIME`, DS-003).
 Its shop: the Publications section on Touchnet (AL-042, above), confirmed in her app; *Constable* filed In the museum shop by phase 4b (SB-, `docs/app.md`). Proved live on the **Yale Shop Check** page, https://claude.ai/artifact/ETa9sqoU2fCfxkW2kHz2et (`node build/shop_check.js`: the app's code whole, the finder, Find catalogue and Re-check run on the case, graded in code). **Jacquemart-André**: the line under the heading is the
 subtitle, read by code (`subtitleUnderHeading`); the dates sit at the page's foot, so the description is read
 from under the heading.
 
 **Berlin** (Staatliche Museen zu Berlin, `occ-smb-museum`): its own chip "Berlin", after KHM; cards say
-"Berlin Gemäldegalerie" (her decision); its shop is searched as "Staatliche Museen zu Berlin" (`OWN_CHIP`,
-`OCC_CARD`). Dates are numbers with dots, day first (DS-004). On the proof list.
+"Berlin Gemäldegalerie" (her decision); its shop is searched as "Staatliche Museen zu Berlin" (`LINK_VENUES`). Dates are numbers with dots, day first (DS-004). On the proof list.
 
 **Munich** — three venues, each its own cards, under one chip "Munich", the Alte first,
-before Berlin (her decision; `group` on `OWN_CHIP`, `chipKey`): **Munich Alte Pinakothek**
+before Berlin (her decision; `group`, `chipKey`): **Munich Alte Pinakothek**
 (`occ-alte-pinakothek`), **Munich der Moderne** (`occ-pinakothek-der-moderne`) and **Sammlung Schack**
 (`occ-sammlung-schack`, her name, no "Munich"). The Neue is left out (her decision): its pictures hang in the
 Alte and Schack while it is closed, and their pages name those. Titles the site types in capitals are recased,
@@ -195,10 +202,10 @@ each part alone (`capsTitles`, the scraper's `capsTitleParts` in `dates.js`; "da
 CT-001). "Venezia 500<<" is the museum's own title.
 - **Sammlung Schack has no shop**: its pages link none and CEDON has no Schack section. It carries no shop
   settings, so the finder's own search ends at "No museum shop found" (run live). AL-043h.
-- **Which house** (`HOUSES`, `linkVenue`): a pinakothek.de show page prints its house on the line between title
+- **Which house** (`sites` with a house `line`, `linkVenue`): a pinakothek.de show page prints its house on the line between title
   and dates ("Alte Pinakothek", "Pinakothek der Moderne | Art", "Sammlung Schack"); that line files the show and
   is never offered as a subtitle. A page naming none is a line, not a card. The Pinakothek der Moderne's own site files under it;
-  it prints "10/07/2026 - 04/10/2026" above the title, day first (`OCC_LINK_READ` `datesAbove`, `slashDayFirst`).
+  it prints "10/07/2026 - 04/10/2026" above the title, day first (`datesAbove`, `slashDayFirst` on der Moderne's entry, read only on its own site).
 - **Shops: CEDON**, a company running several museums' shops, a section per house
   (`museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen`, `…/Pinakothek-der-Moderne-Muenchen`), linked only
   from the museums' house pages. Searched in German, one query per house (`shopQueries`: "<house> München
@@ -214,7 +221,7 @@ CT-001). "Venezia 500<<" is the museum's own title.
   ticket-shop link (`pinakothek.shop`) not taken.
 
 **Dresden** (Gemäldegalerie Alte Meister, `occ-gemaeldegalerie-skd-museum`): its own chip "Dresden", after
-Berlin; cards "Dresden Gemäldegalerie" (her decision; `OWN_CHIP`, `OCC_CARD`). A page opens with a short
+Berlin; cards "Dresden Gemäldegalerie" (her decision; `LINK_VENUES`). A page opens with a short
 "# Hopper" above every SKD museum's menu; the show's own heading follows "Active page:" and is the title
 (`titleAfter`). Dates "14/04/2022—31/07/2022", day first (`slashDayFirst`). The site line ("Exhibition Site
 Zwinger") never reaches Claude, as passage or subtitle (her decision; `skip`). Shop: shop.skd.museum sells tickets
@@ -222,7 +229,7 @@ and gifts only; the finder says "Shop found, but not its books section" and she 
 decision; lookups go to the web). On the proof list; AL-045.
 
 **Frankfurt** (the Städel, `occ-staedelmuseum-de`): its own chip "Frankfurt", after Dresden; cards "Frankfurt
-Städel" (her decision; `OWN_CHIP`, `OCC_CARD`; AL-049). No pages on the proof list yet. **Its shop**
+Städel" (her decision; `LINK_VENUES`; AL-049). No pages on the proof list yet. **Its shop**
 (`liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885`, linked "Kataloge online kaufen" from the
 Städel's Museumsshop page): the books and prices are in the page's own HTML, but Parallel's reading of it
 stops after the menu ("A- A+") — neither JS-rendered nor blocked (proved: a keyed fetch beside a direct one).
@@ -237,7 +244,7 @@ live in the app, never the scraper). They only tidy what Claude is handed. Optio
 label before the show's name), `dateLine` (dates from the first line matching, anywhere), `from` / `until`
 (passage starts after / ends at a matching line), `skip` / `skipEntities` / `minLine` (lines left out),
 `cleanLink` (address loses query and fragment), `datesAbove` (dates up to N lines above the heading), `crumb` (title from the breadcrumb when the page never prints its tab title), `titleAfter` (the first heading after a matching line is the title), `capsTitles` (titles typed in capitals recased). `skip` lines are never offered as a subtitle either. An
-occasional venue takes them from `OCC_LINK_READ`; read by `readShowPage`, `venueTitle`. Junk at the end of a
+occasional venue takes them from its `LINK_VENUES` entry; read by `readShowPage`, `venueTitle`. Junk at the end of a
 passage is tolerated (her decision).
 
 - **met** — dates from the "on view" line (`dateLine`), anywhere on the page: a podcast transcript can push it
@@ -287,7 +294,7 @@ dropped) and reads it with `readShowPage`, then the same intake as a link. No Pa
   store as text, one document each (`links_pages/…`), so the list survives a reload; Cancel, a rejected or
   undecided card put pages back; Clear empties list and store.
 - **Palazzo Reale Milano on the council's site** files under `occ-palazzorealemilano-it` by path
-  (`SITE_PATH_VENUES` — a fixed rule, written in). Its options: the show's heading is the one ending
+  (its `sites` entry — a fixed rule, written in). Its options: the show's heading is the one ending
   "- Palazzo Reale Milano", "- Palazzo Reale, Milan" or "- Royal Palace of Milan" (`titleHeading`,
   `titleDrop`); dates and text stop at the "Upcoming Exhibitions" box (`datesUntil`, `until` — Soutine took
   the box's first dates); its English pages' "as of" reads as "to" (`asOfTo`; Antonello da Messina).
@@ -305,7 +312,7 @@ dropped) and reads it with `readShowPage`, then the same intake as a link. No Pa
 A last resort (her decision): a show so old its venue's page is gone, read off a blog or magazine page
 (her Enfilade link, Canaletto at the Queen's Gallery).
 - **The venue is Claude's to find** (her decision): for a site the app has never seen, Claude is sent the
-  page's address and asked which museum held the show on the date line read, its city and site, and whether
+  page's address and asked which museum held the show on the date line read, its full and short name and site, and whether
   the address is that museum's own site. Code files it (`heldElsewhere`): one of hers by name or site, else a
   new Occasional venue under its site (by name when Claude knows none); the shop is looked for under that
   name. A venue named in the page's own site, or Claude saying it is the museum's own page, keeps today's

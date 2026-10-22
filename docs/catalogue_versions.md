@@ -18,7 +18,7 @@ Find catalogue and drawer, graded in code, each result kept in the page's store.
    venue's own imprint; then English from anyone else (another museum, another showing, an outside
    house — no order between those); then other languages. At a non-English venue English always
    leads. Within each, hardcover, then paperback, then binding not known; otherwise as found. On Yale
-   cards Yale University Press ranks as the Yale Center does (`rankAsOwn` on Yale's `OWN_CHIP` entry,
+   cards Yale University Press ranks as the Yale Center does (`rankAsOwn` on Yale's `LINK_VENUES` entry,
    a venue rule written into the app, display only).
    **The first starts picked** — her decision, replacing the starting-pick rules, so the ● is never
    halfway down the list. Cards searched before this keep their saved ● until a Search again.
