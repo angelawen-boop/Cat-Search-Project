@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "49.4";
+const APP_VERSION = "50";
 const APP_VERSION_DATE = "21 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1677,8 +1677,9 @@ function answerFaults(raw,page){
       faults.push(...ANSWER_CHECK.unsupportedClaims(o.summary,[page.base,...(page.between||[]),page.raw].join("\n")).map(f=>"in the summary, "+f));
     }
   }
-  // The English title as linkAnswer cleans it (quotation marks and an "In English:" opening taken off, AL-006).
-  if(o.english!==undefined){ const e=ANSWER_CHECK.validateEnglish(typeof o.english==="string"?linkAnswer(o).english:o.english); if(!e.ok)faults.push(e.reason); }
+  // The English title as linkAnswer reads it (not a string is none; quotation marks and an "In English:"
+  // opening taken off, AL-006).
+  { const e=ANSWER_CHECK.validateEnglish(linkAnswer(o).english); if(!e.ok)faults.push(e.reason); }
   return faults;
 }
 function askAgainPrompt(prompt,faults){
