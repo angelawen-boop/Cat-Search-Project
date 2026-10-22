@@ -305,9 +305,27 @@ function findDateRangeCore(raw, opts = {}) {
   // Written with dots on both sides it is day-first, page text included (her decision;
   // Berlin's "02.09.2022 to 08.01.2023"). Slashes: listing cards only — on a page it read
   // a sidebar's dates.
+  // Dots with two-digit years on both sides ("11.10.24 - 27.4.25", Louisiana) or the year on the
+  // closing side only ("25.05.–24.11.2024", Kunstmuseum Basel) are day-first too.
+  const dotted2 = s.match(new RegExp(
+    `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})(?![\\d.:])`));
+  if (dotted2) {
+    const r = sane(ymd(2000 + +dotted2[3], dotted2[2], dotted2[1]), ymd(2000 + +dotted2[6], dotted2[5], dotted2[4]), frag(dotted2));
+    if (r.start || r.end) return r;
+  }
+  const dottedOpen = s.match(new RegExp(
+    `\\b(\\d{1,2})\\.(\\d{1,2})\\.?${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
+  if (dottedOpen && plausibleYear(dottedOpen[5])) {
+    const [sDay, sMo, eDay, eMo, endYr] = [1,2,3,4,5].map(i => Number(dottedOpen[i]));
+    if (sMo >= 1 && sMo <= 12 && eMo >= 1 && eMo <= 12) {
+      const r = sane(ymd(startYearFor(sMo, sDay, eMo, eDay, endYr), sMo, sDay), ymd(endYr, eMo, eDay), frag(dottedOpen));
+      if (r.start || r.end) return r;
+    }
+  }
   const dotted = s.match(new RegExp(
     `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
-  const num = dotted || (looseSingles && s.match(new RegExp(
+  // opts.slashes: a show page's own date line, read for a range whose order the numbers prove (Prado).
+  const num = dotted || ((looseSingles || opts.slashes) && s.match(new RegExp(
     `\\b(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})${RANGE_SEP}(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})\\b`)));
   if (num) {
     const [a1, b1, y1, a2, b2, y2] = [1,2,3,4,5,6].map(i => Number(num[i]));
@@ -425,6 +443,10 @@ function findDateRangeCore(raw, opts = {}) {
     const mo = monthNum(m[2]);
     if (mo) return { start: '', end: ymd(m[3], mo, m[1]), raw: frag(m) };
   }
+
+  // The same with a dotted date, day first: "Until 25.10.2026" (Kunsthaus Zürich), "bis 25.10.2026".
+  m = s.match(/\b(?:till|until|through|closes?|closing|bis|fino\s+al)\s+(\d{1,2})\.(\d{1,2})\.(\d{4})\b/i);
+  if (m && plausibleYear(m[3]) && +m[2] >= 1 && +m[2] <= 12) return { start: '', end: ymd(m[3], m[2], m[1]), raw: frag(m) };
 
   // The same, month first: "Through January 10, 2027", "Closes November 15, 2026".
   m = s.match(new RegExp(`\\b(?:(?:till|until|through|thru|closes?|closing)\\s+|now\\s*-\\s*)(${M})\\s+(\\d{1,2}),?\\s*(\\d{4})`, 'i'));
@@ -882,7 +904,7 @@ function stripMd(line){
     .replace(/\*\*|__/g,"")
     .replace(/(^|[^\w])_([^_]+)_(?=[^\w]|$)/g,"$1$2") // _italic_
     .replace(/\\([-*_#.()\[\]|])/g,"$1")              // markdown escapes
-    .replace(/^\s*#{1,6}\s+/,"")
+    .replace(/^\s*(?:#{1,6}\s+)+/,"")           // "# #### Special Loan:" (Frick)
     .replace(/^\s*[*+]\s+/,"")
     .replace(/\s+/g," ")
     .trim();
@@ -915,6 +937,8 @@ function splitPageTitle(t,host){
   return{show:parts[0]||s,site};
 }
 const TITLE_LABEL=/^(?:exhibitions?|mostra|ausstellung|exposition|exposición|tentoonstelling)$/i;
+// Words too general to name a show.
+const GENERIC_TITLE_WORDS=new Set(["exhibition","exhibitions","mostra","ausstellung","exposition","tentoonstelling","the","a","an","and","of"]);
 
 // The scraper's 2,000-character description cut (her decision). Read from under the
 // show's heading, skipping the date line: some venues print the dates at the foot of
@@ -923,6 +947,8 @@ const LINK_RAW_CHARS=2000;
 const LINK_DATE_LINES=60;
 // A date line longer than this is a paragraph that carries the dates; it stays in the passage.
 const LINK_DATE_LINE_MAX=150;
+// How many lines past a one-sided date the reader looks for a full range.
+const LINK_HALF_LOOK=6;
 
 // HTML character codes in page text, named (the HTML 4 set) and numeric: "&ecirc;" → "ê".
 const HTML_ENTITIES=(()=>{
@@ -1024,41 +1050,59 @@ function readShowPage(res,url,vc,rules){
   }
   if(!cands.length){ rule("fail:no-title"); return{ok:false,why:"Couldn’t find the show’s title on the page."}; }
   const dateText=l=>lr&&lr.shortYear?withLongYears(l):lr&&lr.slashDayFirst?String(l).replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g,"$1.$2.$3"):lr&&lr.asOfTo?String(l).replace(/\s+as of\s+/gi," to "):l;
+  // A show page's own date line: page text, so no loose single dates; slashes only where the
+  // numbers prove the order (Prado).
+  const rangeIn=l=>DATES.findDateRange(dateText(l),{looseSingles:false,slashes:true});
+  const datesAboveFor=(h,n,via)=>{
+    for(let k=h-1,seen=0;k>=0&&seen<n;k--){
+      const l=stripMd(lines[k]); if(!l)continue; seen++;
+      const r=rangeIn(l);
+      if(r.start||r.end)return{d:k,range:r,via};
+    }
+    return null;
+  };
   const datesUnder=h=>{
+    // A line giving one side only (a paragraph's "from 12 June 2026") stands only if no full range
+    // follows within a few lines (Van Gogh Museum: the range sits below its introduction).
+    let half=null;
+    const take=x=>{ if(x.range.start&&x.range.end)return x; if(!half)half=x; return null; };
     // A venue that labels its date line (linkRead.dateLine) is read there, anywhere on the page.
     if(lr&&lr.dateLine){
       for(let k=0;k<lines.length;k++){
         const l=stripMd(lines[k]); if(!l||!lr.dateLine.test(l))continue;
-        const r=DATES.findDateRange(dateText(l),{looseSingles:false});
+        const r=rangeIn(l);
         if(r.start||r.end)return{d:k,range:r,via:"dates:dateLine"};
       }
     }
-    // A venue that prints the dates above the title (linkRead.datesAbove: how many lines up).
-    if(lr&&lr.datesAbove){
-      for(let k=h-1,seen=0;k>=0&&seen<lr.datesAbove;k--){
-        const l=stripMd(lines[k]); if(!l)continue; seen++;
-        const r=DATES.findDateRange(dateText(l),{looseSingles:false});
-        if(r.start||r.end)return{d:k,range:r,via:"dates:above"};
-      }
-    }
+    // A venue that prints the dates above the title first (linkRead.datesAbove: how many lines up).
+    if(lr&&lr.datesAbove){ const a=datesAboveFor(h,lr.datesAbove,"dates:above"); if(a)return a; }
     for(let k=h+1,seen=0;k<lines.length&&seen<LINK_DATE_LINES;k++){
       const l=stripMd(lines[k]); if(!l)continue; seen++;
       // A venue whose box of other shows sits below (linkRead.datesUntil): never read past it.
       if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim())){ rule("datesUntil"); break; }
-      const r=DATES.findDateRange(dateText(l),{looseSingles:false});
-      if(r.start||r.end)return{d:k,range:r,via:"dates:under"};
-      // A range printed over three lines, the middle one only "to" or a dash (Berlin).
       const nx=[];
       for(let j=k+1;j<lines.length&&nx.length<2;j++){ const t=stripMd(lines[j]); if(t)nx.push([j,t]); }
+      // Opening and closing dates on two lines, "From 12 June 2026" over "Until 6 September 2026"
+      // (Van Gogh Museum): read together before either alone.
+      if(nx.length&&/^(?:from|vom|von|du|dal|desde)\b/i.test(l)&&/^(?:until|till|to|through|bis|au|al|jusqu|hasta)\b/i.test(nx[0][1])){
+        const r2=rangeIn(l+" "+nx[0][1]);
+        if(r2.start&&r2.end)return{d:k,dEnd:nx[0][0],range:r2,via:"dates:two-lines"};
+      }
+      if(half&&k>half.d+LINK_HALF_LOOK)break;
+      const r=rangeIn(l);
+      if(r.start||r.end){ const t=take({d:k,range:r,via:"dates:under"}); if(t)return t; }
+      // A range printed over three lines, the middle one only "to" or a dash (Berlin).
       if(nx.length===2&&/^(?:-|–|—|to|bis|until|till|through|al|au|tot)$/i.test(nx[0][1])){
-        const r3=DATES.findDateRange(dateText(l+" "+nx[0][1]+" "+nx[1][1]),{looseSingles:false});
+        const r3=rangeIn(l+" "+nx[0][1]+" "+nx[1][1]);
         if(r3.start&&r3.end)return{d:k,dEnd:nx[1][0],range:r3,via:"dates:three-lines"};
       }
     }
-    return null;
+    return half;
   };
   let h=cands[0],found=null;
   for(const i of cands){ found=datesUnder(i); if(found){ h=i; break; } }
+  // None under any candidate: dates printed just above the heading ("Until 25.10.2026", Kunsthaus).
+  if(!found)for(const i of cands){ found=datesAboveFor(i,2,"dates:above-heading"); if(found){ h=i; break; } }
   if(found)rule("title:"+candRule[cands.indexOf(h)]+(h===cands[0]?"":"-not-first"));
   if(!found){
     // Only months printed (Soutine: "september 2027 - january 2028"). A venue with
@@ -1094,21 +1138,39 @@ function readShowPage(res,url,vc,rules){
       if(r.start&&r.end&&((range.end&&r.end===range.end)||(range.start&&r.start===range.start))){ range={...range,start:r.start,end:r.end}; rule("dates:one-side-completed"); break; }
     }
   }
-  // The heading is the name when the page title cuts it at a bar inside the name
-  // ("Art in Dialogue: Duccio | Caro") or wraps it in site words ("Exhibition Giovanni
-  // Bellini in Paris"). A title that runs on past the heading keeps its subtitle
-  // ("Hammershøi. The Eye that Listens"). AL-015.
-  const wrapped=show&&heading&&foldText(show).indexOf(foldText(heading))>0;
-  let base=wrapped?heading:show&&heading.length>show.length&&heading.length<=200&&foldText(heading).startsWith(foldText(show))?heading:(show||heading);
-  // A page title that is the heading plus a dash-led tail or the word "Exhibition" gives way to the heading.
-  if(show&&heading&&base===show){
-    const fh=foldText(heading).replace(/\s+/g," ").trim();
-    if(fh.length>=3&&foldText(show).startsWith(fh)){
-      const rest=show.slice(heading.trim().length);
-      if(/^\s+[-–—·]\s/.test(rest)||/^\s+exhibitions?\s*$/i.test(rest))base=heading.trim();
-    }
+  // The heading is the name, as in the scraper (titleFromPage). The page title adds only what the
+  // page backs: written the same (spacing, quotes and "&" aside), its spelling stands (Tate "90s");
+  // its words past the heading all on the line under the heading, that fuller line joins (Poldi
+  // Pezzoli); the heading then a separator and a subtitle, the page title stands (KHM "Head and
+  // Shoulders. Coins in Fashion"). Never its dates, site name or another spelling (MFAH, NPG,
+  // Philadelphia). A heading that is generic words, the site's name or shares no word with the page
+  // title gives way to the page title. A title line that is not a heading keeps the page title's
+  // show, or the line when it runs on.
+  const flatName=x=>foldText(stripMd(x)).replace(/&/g," and ").replace(/[^a-z0-9]/g,"");
+  const nameWords=x=>foldText(stripMd(x)).replace(/&/g," and ").split(/[^a-z0-9]+/).filter(w=>w&&!GENERIC_TITLE_WORDS.has(w));
+  const isHeading=/^\s*#{1,6}\s/.test(lines[h])||h===broken||(after>=0&&h===after);
+  const hw=new Set(nameWords(heading));
+  // A heading over two lines, or after a venue's marker line, is the page's own name whatever the
+  // page title says (Berlin's can be German or misspelt).
+  const ownHeading=h===broken||(after>=0&&h===after);
+  const headingIsSite=!ownHeading&&(!hw.size||!!(site&&flatName(site)===flatName(heading))||!!(show&&!nameWords(show).some(w=>hw.has(w))));
+  let base;
+  if(isHeading&&!headingIsSite){
+    base=heading.trim();
+    const datedText=x=>{ const r=DATES.findDateRange(dateText(x),{looseSingles:true}); return !!(r.start||r.end)||/^\(?\d{4}\)?$/.test(x.trim()); };
+    const k=lines.findIndex((l,i)=>i>h&&stripMd(l)), next=k>0?decodeEntities(stripMd(lines[k])).trim():"";
+    const nw=new Set(nameWords(next)), extra=show?nameWords(show).filter(w=>!hw.has(w)):[];
+    const rest=show&&flatName(show).startsWith(flatName(heading))?show.slice(show.length-(show.length-heading.length)).replace(/^[^\s.:–—-]*/,""):"";
+    if(ownHeading){ rule("name:heading"); }
+    else if(show&&flatName(show)===flatName(base)){ base=show; rule("name:tab-spelling"); }
+    else if(extra.length&&next&&next.length<=160&&!datedText(next)&&extra.every(w=>nw.has(w))){
+      const joined=joinTitle(base,next);
+      base=flatName(joined)===flatName(show)?show:joined; rule("name:heading-and-line");
+    }else if(show&&/^\s*[.:]\s+\S/.test(rest)&&nameWords(rest).length&&!datedText(rest)&&!(site&&flatName(rest).endsWith(flatName(site)))){ base=show; rule("name:tab-subtitle"); }
+  }else{
+    const wrapped=show&&heading&&foldText(show).indexOf(foldText(heading))>0;
+    base=wrapped?heading:show&&heading.length>show.length&&heading.length<=200&&foldText(heading).startsWith(foldText(show))?heading:(show||heading);
   }
-  if(h===broken||(after>=0&&h===after))base=heading;
   rule(base===show?(base===heading?"name:tab-is-heading":"name:tab"):base===heading?"name:heading":"name:heading-trimmed");
   if(lr&&lr.title){ const vt=venueTitle(lines,h,heading,lr,words); if(vt&&vt!==base){ base=vt; rule("name:venue-"+lr.title); } }
   // A label the venue puts before the show's own name (linkRead.titleDrop).

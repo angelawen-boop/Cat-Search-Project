@@ -229,9 +229,27 @@ function findDateRangeCore(raw, opts = {}) {
   // Written with dots on both sides it is day-first, page text included (her decision;
   // Berlin's "02.09.2022 to 08.01.2023"). Slashes: listing cards only — on a page it read
   // a sidebar's dates.
+  // Dots with two-digit years on both sides ("11.10.24 - 27.4.25", Louisiana) or the year on the
+  // closing side only ("25.05.–24.11.2024", Kunstmuseum Basel) are day-first too.
+  const dotted2 = s.match(new RegExp(
+    `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})(?![\\d.:])`));
+  if (dotted2) {
+    const r = sane(ymd(2000 + +dotted2[3], dotted2[2], dotted2[1]), ymd(2000 + +dotted2[6], dotted2[5], dotted2[4]), frag(dotted2));
+    if (r.start || r.end) return r;
+  }
+  const dottedOpen = s.match(new RegExp(
+    `\\b(\\d{1,2})\\.(\\d{1,2})\\.?${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
+  if (dottedOpen && plausibleYear(dottedOpen[5])) {
+    const [sDay, sMo, eDay, eMo, endYr] = [1,2,3,4,5].map(i => Number(dottedOpen[i]));
+    if (sMo >= 1 && sMo <= 12 && eMo >= 1 && eMo <= 12) {
+      const r = sane(ymd(startYearFor(sMo, sDay, eMo, eDay, endYr), sMo, sDay), ymd(endYr, eMo, eDay), frag(dottedOpen));
+      if (r.start || r.end) return r;
+    }
+  }
   const dotted = s.match(new RegExp(
     `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
-  const num = dotted || (looseSingles && s.match(new RegExp(
+  // opts.slashes: a show page's own date line, read for a range whose order the numbers prove (Prado).
+  const num = dotted || ((looseSingles || opts.slashes) && s.match(new RegExp(
     `\\b(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})${RANGE_SEP}(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})\\b`)));
   if (num) {
     const [a1, b1, y1, a2, b2, y2] = [1,2,3,4,5,6].map(i => Number(num[i]));
@@ -349,6 +367,10 @@ function findDateRangeCore(raw, opts = {}) {
     const mo = monthNum(m[2]);
     if (mo) return { start: '', end: ymd(m[3], mo, m[1]), raw: frag(m) };
   }
+
+  // The same with a dotted date, day first: "Until 25.10.2026" (Kunsthaus Zürich), "bis 25.10.2026".
+  m = s.match(/\b(?:till|until|through|closes?|closing|bis|fino\s+al)\s+(\d{1,2})\.(\d{1,2})\.(\d{4})\b/i);
+  if (m && plausibleYear(m[3]) && +m[2] >= 1 && +m[2] <= 12) return { start: '', end: ymd(m[3], m[2], m[1]), raw: frag(m) };
 
   // The same, month first: "Through January 10, 2027", "Closes November 15, 2026".
   m = s.match(new RegExp(`\\b(?:(?:till|until|through|thru|closes?|closing)\\s+|now\\s*-\\s*)(${M})\\s+(\\d{1,2}),?\\s*(\\d{4})`, 'i'));
