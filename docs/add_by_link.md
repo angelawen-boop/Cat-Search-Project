@@ -64,7 +64,7 @@ meets it.
    **Tested with Sonnet on 70 live pages** (the app's own code built each question; code scored it): subtitle
    pick right on all 13 pages that print one and none taken on the rest; English title given on every
    non-English title and never on an English one; English-speaking country right on 70; summaries within the
-   rules on 69 — Pontormo (Scuderie) said "First major monographic exhibition", "first" not in the text.
+   rules on 69 by code check (meaning not yet read against each page — CLAUDE.md §5.4 item 0) — Pontormo (Scuderie) said "First major monographic exhibition", "first" not in the text.
    A blog page's second question (`elsewherePrompt`): right museum, site and full title on 9 of 9 reads
    (Enfilade Canaletto → rct.uk; her two Reynolds pages → the Wallace, *Joshua Reynolds: Experiments in Paint*).
 5. No note — a link is not a sweep; `swept_at` blank, sweep log untouched.

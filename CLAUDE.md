@@ -24,6 +24,8 @@ is why they live in one repo, on one branch.
 
 - **Plain English, ELI5.**
 - **Short and concise.**
+- **Report style (her decision):** a report is a few bullets of results — what is right, what is not, what is
+  unfixed — then the next step in one line. No tables of counts, no method, no file paths.
 - **Suppress most of thinking output. Work quietly** - surface only what needs her.
 - **Destructive actions need a confirmed backup or an explicit yes.**
 - **Publishing — her go-ahead is the safety check.** When she says to publish ("u can publish", "publish",
@@ -599,11 +601,20 @@ and were fixed in code, proven live).
   no proof page worse, each proof page's passage signed off; the shop finder's shared rules — on 24 museums never
   seen, books sections 9 → 11, home page given as the shop 3 → 0, nothing found 7 → 3. `docs/add_by_link.md`.
   **Still to do, in this order (her decision, one at a time, report after each):**
-  1. **Done — Claude's other reads, tested with Sonnet calls** on 70 live pages: subtitle, English title and the
-     blog page's second question right on every page; one summary said "first" with no word for it in the text
-     (Pontormo). Found on the way: the reader takes Wallraf's tab title ("Information: Wallraf-Richartz-Museum")
-     for the show's name, not "Van Gogh & Co. on tour" — the reader's "25 of 25 clean" was 24 of 25.
-     `docs/add_by_link.md`, "Per link".
+  0. **FIRST — finish items 1 and 2 properly; both were reported done and were not (her decision: previous work
+     fixed before the next item).** (a) The reader takes Wallraf's tab title ("Information: Wallraf-Richartz-Museum",
+     `wallraf.museum/en/exhibitions/now/2026-02-28-japan`) for the show's name, not "Van Gogh & Co. on tour" (its `#`
+     heading) — fix by a shared rule, kept only if no proof page gets worse; the item 1 report said 25 of 25 new museums
+     clean from a count, not from reading each title. (b) Re-check every title of the 25 new museums by reading it
+     against its page. (c) Item 2: re-ask Claude on every page the fix changes, Wallraf included (its question was
+     built on the wrong title and was not scored). (d) Read every description against its page — only the 14 code
+     flagged were; the code check catches words not in the text, not a wrong meaning. Then re-report both, short.
+  1. **Claude's other reads, tested with Sonnet calls — not closed (item 0).** On 70 live pages: subtitle pick, English
+     title, English-speaking country and a blog page's second question scored right on every page against truth set
+     before the answers; one summary said "first" with no word for it in the text (Pontormo). Scripts:
+     `scraper/claude_read_check/` (`fetch.js` live replies through the free Parallel server; `build.js` the app's own
+     `readShowPage` and `linkPrompt` write each question; Sonnet answers each into a file; `score.js` scores with the
+     app's `linkAnswer`/`linkTitle` against `truth.js`; `build2.js`/`score2.js` the second question). `docs/add_by_link.md`, "Per link".
   2. **The shop finder: in steps, and a standing check of its own** (proof pages test only the reader). Split
      `discoverShop` into named steps as the reader was. The check: a script running the app's finder live, a list of
      about 18 venues — one per way a shop has been found or missed, her link venues included (Detroit, Cleveland,
