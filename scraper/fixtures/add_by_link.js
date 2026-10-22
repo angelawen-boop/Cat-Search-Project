@@ -355,9 +355,9 @@ function runtime() {
     const other = read({ title: 'Some show | Elsewhere', full_content: '# Some show' + body }, 'https://example.org/show', null);
     ok(!other.ok, 'AL-038b:  two-digit years are read at NGV only', JSON.stringify([other.start, other.end]));
     const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
-    const order = fn('VENUE_ORDER'), card = fn('OCC_CARD');
-    ok(order[order.length - 1] === 'occ-ngv-vic-gov-au' && card['occ-ngv-vic-gov-au'] === 'National Gallery Victoria',
-      'AL-038c:  NGV goes last in the Occasional group; its cards say "National Gallery Victoria" (her decision)', JSON.stringify([order[order.length - 1], card['occ-ngv-vic-gov-au']]));
+    const order = fn('VENUE_ORDER'), lv = fn('LINK_VENUES');
+    ok(order[order.length - 1] === 'occ-ngv-vic-gov-au' && lv['occ-ngv-vic-gov-au'].card === 'National Gallery Victoria',
+      'AL-038c:  NGV goes last in the Occasional group; its cards say "National Gallery Victoria" (her decision)', JSON.stringify([order[order.length - 1], lv['occ-ngv-vic-gov-au'].card]));
   }
   // ── AL-046: the shop screen asks only about a venue with a card going in (her decision) ─
   {
@@ -372,8 +372,8 @@ function runtime() {
     ok(some.length === 2 && some.includes(PS) && !some.includes('met'), 'AL-046a: two Strozzi links, one skipped, one added → Strozzi still asked; a swept venue never', JSON.stringify(some));
     const never = [...going(props, { 0: { mode: 'never' }, 1: { mode: 'reject' }, 2: {} })];
     ok(never.length === 0, 'AL-046b: quarantined, rejected and undecided cards ask about no shop', JSON.stringify(never));
-    const occEntry = fn('occEntry');
-    const sm = occEntry({ id: SM, name: 'Direzione regionale Musei nazionali Toscana', shop: 'none', confirmed: true });
+    const occVenue = fn('occVenue');
+    const sm = occVenue(SM, { id: SM, name: 'Direzione regionale Musei nazionali Toscana', shop: 'none', confirmed: true });
     ok(sm.name === 'Museo di San Marco' && sm.lookupName === 'Museo di San Marco' && sm.short === 'San Marco',
       'AL-046d: the lookup calls San Marco "Museo di San Marco", never the regional office the site names (her decision)', JSON.stringify([sm.name, sm.lookupName, sm.short]));
     const split = fn('splitPageTitle');
@@ -381,8 +381,8 @@ function runtime() {
     ok(gd.show === 'Van Dyck, the European' && split('Show – ', 'x.org').show === 'Show' && split('A - B', 'x.org').show === 'A - B',
       'AL-047:  Genoa Van Dyck: a page title ending in a separator with no site after it loses the separator; a dash inside a title stays', JSON.stringify(gd));
     const GD = 'occ-palazzoducale-genova-it', PR = 'occ-palazzorealemilano-it';
-    const o2 = fn('VENUE_ORDER'), s2 = fn('OCC_SHORT');
-    ok(o2[o2.indexOf(SM) + 1] === GD && o2[o2.indexOf(SM) + 2] === PR && s2[GD] === 'Palazzo Ducale Genova' && s2[PR] === 'Palazzo Reale Milano',
+    const o2 = fn('VENUE_ORDER'), lv2 = fn('LINK_VENUES'), s2 = id => lv2[id].short;
+    ok(o2[o2.indexOf(SM) + 1] === GD && o2[o2.indexOf(SM) + 2] === PR && s2(GD) === 'Palazzo Ducale Genova' && s2(PR) === 'Palazzo Reale Milano',
       'AL-046e: Palazzo Ducale Genova second and Palazzo Reale Milano third under Occasional, by her names (her decision)', JSON.stringify([o2[o2.indexOf(SM) + 1], o2[o2.indexOf(SM) + 2]]));
     // Shaped as the live reply (palazzorealemilano.it/en/-/brueghel): heading, short name, full name, dates.
     const readPage = fn('readShowPage'), nil = fn('nameInLines');
@@ -390,9 +390,9 @@ function runtime() {
     ok(br.ok && nil(br, PR) === 'I Brueghel. Le origini dei generi pittorici in Europa' && br.start === '2026-09-29',
       'AL-048:  Palazzo Reale Milano Brueghel: the full name below the heading is the title, "- Palazzo Reale Milano" dropped', JSON.stringify([br.base, nil(br, PR), br.start]));
     ok(nil(br, 'occ-other-org') === '', 'AL-048a: at any other venue the rule does nothing');
-    const order = fn('VENUE_ORDER'), short = fn('OCC_SHORT');
-    ok(order[order.indexOf('mam') + 1] === SM && short[SM] === 'San Marco',
-      'AL-046c: San Marco (museitoscana.cultura.gov.it) first in the Occasional group, named "San Marco" (her decision)', JSON.stringify([order[order.indexOf('mam') + 1], short[SM]]));
+    const order = fn('VENUE_ORDER'), short = fn('LINK_VENUES')[SM].short;
+    ok(order[order.indexOf('mam') + 1] === SM && short === 'San Marco',
+      'AL-046c: San Marco (museitoscana.cultura.gov.it) first in the Occasional group, named "San Marco" (her decision)', JSON.stringify([order[order.indexOf('mam') + 1], short]));
   }
   // ── AL-031: NGA Souvenirs of the Gilded Age — a doubled colon becomes one ─
   // Live page on docs/link_proof_pages.json; its page title reads "Age:: French".
@@ -649,7 +649,7 @@ function runtime() {
   // Pages and shop searches are proved live (docs/add_by_link.md, "Munich"); this holds the rules.
   {
     const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
-    const linkVenue = fn('linkVenue'), namesVenue = fn('namesVenue'), own = fn('OWN_CHIP'), order = fn('VENUE_ORDER');
+    const linkVenue = fn('linkVenue'), namesVenue = fn('namesVenue'), own = fn('LINK_VENUES'), order = fn('VENUE_ORDER');
     const A = 'occ-alte-pinakothek', M = 'occ-pinakothek-der-moderne';
     const alte = linkVenue('https://www.pinakothek.de/de/von-turner-bis-van-gogh', { between: ['Meisterwerke der Neuen Pinakothek in der Alten Pinakothek', 'Alte Pinakothek'] });
     const mod = linkVenue('https://www.pinakothek.de/en/exhibition/between-and-beyond', { between: ['INTERSPACES AND TRANSITIONS IN ART SINCE 1960', 'Pinakothek der Moderne | Art'] });
@@ -665,12 +665,12 @@ function runtime() {
       && order.indexOf(M) + 1 === order.indexOf(S),
       'AL-043h:  Sammlung Schack files as its own venue under "Munich", named without "Munich", with no shop settings (the finder answers "none"; her decision)', JSON.stringify(schack));
     ok([A, M, S].every(id => own[id].linkRead && own[id].linkRead.capsTitles), 'AL-043i:  titles the Munich houses type in capitals are recased');
-    const D = 'occ-gemaeldegalerie-skd-museum', card = fn('OCC_CARD');
-    ok(own[D].short === 'Dresden' && card[D] === 'Dresden Gemäldegalerie' && own[D].linkRead.slashDayFirst && own[D].linkRead.titleAfter.test('Active page: Hopper')
+    const D = 'occ-gemaeldegalerie-skd-museum', card = id => own[id].card;
+    ok(own[D].short === 'Dresden' && card(D) === 'Dresden Gemäldegalerie' && own[D].linkRead.slashDayFirst && own[D].linkRead.titleAfter.test('Active page: Hopper')
       && own[D].linkRead.skip.test('Exhibition Site Zwinger') && !own[D].shopQueries,
       'AL-045:  Dresden: chip "Dresden", cards "Dresden Gemäldegalerie", dates day first, the site line never reaches Claude (her decision)');
     const F = 'occ-staedelmuseum-de';
-    ok(fn('occVenueId')('www.staedelmuseum.de') === F && own[F].short === 'Frankfurt' && card[F] === 'Frankfurt Städel' && order.indexOf(D) + 1 === order.indexOf(F),
+    ok(fn('occVenueId')('www.staedelmuseum.de') === F && own[F].short === 'Frankfurt' && card(F) === 'Frankfurt Städel' && order.indexOf(D) + 1 === order.indexOf(F),
       'AL-049:  the Städel: chip "Frankfurt" right after Dresden, cards "Frankfurt Städel" (her decision)');
     {
       const before = calls.length, r = await discoverShop('', 'www.staedelmuseum.de', 'Städel Museum', [], F);
