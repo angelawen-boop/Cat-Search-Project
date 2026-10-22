@@ -458,7 +458,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 49.4 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 50 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -593,7 +593,7 @@ venue the app has never seen needs a fix about half the time** — the exhibitio
 correctly off the page, the venue's shop is not found, and so on (Mia and Worcester both missed
 and were fixed in code, proven live).
 
-- **OPEN — the Add-by-link redesign, on `main`, not published** (her decisions: rebuilt the scraper's way —
+- **OPEN — the Add-by-link redesign, published at 50; her links confirm** (her decisions: rebuilt the scraper's way —
   shared rules, a venue rule only where needed; Add by link signed off before Add by page, which shares the
   reader and changes with it). **Done:** one `LINK_VENUES` entry per venue (seven tables folded); Claude names a
   new venue (full name, other names, city, country, card name) — right on 42 of 42 live pages with Sonnet; the
@@ -614,7 +614,7 @@ and were fixed in code, proven live).
      its page) — fixed by one check on every answer Claude writes, shared by the compressor and Add by link
      (`scraper/answer_check.js`): shape, and claims and numbers on the page; refused → asked again (her decision;
      `docs/compression.md`, "Enforcement"). It found three wrong numbers in the imported 15 Oct run, left as swept.
-     **Item 0 closed; not published.**
+     **Item 0 closed; published at 50.**
   1. **Claude's other reads, tested with Sonnet calls — not closed (item 0).** On 70 live pages: subtitle pick, English
      title, English-speaking country and a blog page's second question scored right on every page against truth set
      before the answers; one summary said "first" with no word for it in the text (Pontormo). Scripts:
@@ -644,9 +644,8 @@ and were fixed in code, proven live).
 - **OPEN — published at 49.4: a show on someone else's page** (a blog, when the venue's page is gone — a last
   resort, her decision). Claude names the museum that held it and code files it there (`heldElsewhere`); a blog's
   "Exhibition |" label leaves the title. Her Reynolds links (Enfilade PDF, Meer) still filed under the blog:
-  Claude, sent no address, called them the Wallace's own pages. **Fixed in code on `main`, not published (her
-  decision: it goes live with the next publish):** Claude now gets the address, and on such pages only a second question
-  asks the museum's site and the full title; right on 3 of 3 test reads of her two pages, on the one-call prompt (the split into a second question is not yet read live). Her re-read of the two links after that publish confirms.
+  Claude, sent no address, called them the Wallace's own pages. **Fixed at 50:** Claude now gets the address, and on such pages only a second question
+  asks the museum's site and the full title; right on 3 of 3 test reads of her two pages, on the one-call prompt (the split into a second question is not yet read live). Her re-read of the two links confirms.
   `docs/add_by_link.md`, "Someone else's page".
 - **Published at 49.3** (its MoMA fix does not hold live — §2.2.3): MoMA's pop-up reads as "contents cannot be seen — JS-rendering",
   not the false "not in the museum shop" (her Brancusi Re-check; B-007); card lines join phrases with an em
