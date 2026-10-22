@@ -595,7 +595,7 @@ and were fixed in code, proven live).
   reader and changes with it). **Done:** one `LINK_VENUES` entry per venue (seven tables folded); Claude names a
   new venue (full name, other names, city, country, card name) — right on 42 of 42 live pages with Sonnet; the
   shop searched under the long name; the reader in ten named steps with shared title, date and passage rules
-  (the scraper's boilerplate list shared, `scraper/boilerplate.js`) — on 25 museums never seen, clean reads 13 → 25,
+  (the scraper's boilerplate list shared, `scraper/boilerplate.js`) — on 25 museums never seen, clean reads 13 → 24 (Wallraf missed),
   no proof page worse, each proof page's passage signed off; the shop finder's shared rules — on 24 museums never
   seen, books sections 9 → 11, home page given as the shop 3 → 0, nothing found 7 → 3. `docs/add_by_link.md`.
   **Still to do, in this order (her decision, one at a time, report after each):**
