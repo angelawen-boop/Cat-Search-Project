@@ -1123,6 +1123,42 @@ function runtime() {
     const getty = ps.readShowPage({ title: 'Ultra-Violet: New Light on Van Gogh\'s Irises | Getty Exhibitions', full_content: '# Ultra-Violet: New Light on Van Gogh’s Irises\n\nOct 1, 2024–Mar 9, 2025\n\nRelated Events\n\nExamine Getty’s much-loved painting, Irises by Vincent van Gogh, from the perspective of modern conservation science. This exhibition shows how the artist worked and how the painting has changed over time. '.repeat(2) + '\n\nRelated Tours\n\nA tour of the Getty Center gardens, every day at noon, with a docent who knows the plants well and loves them.' }, 'https://www.getty.edu/exhibitions/ultra-violet-new-light-on-van-goghs-irises/', null);
     ok(getty.ok && /^Examine Getty/.test(getty.raw) && !/gardens/.test(getty.raw),
       'AL-060b:  "Related …" above the show\'s text is skipped; after it, the passage ends there (Getty)', JSON.stringify(getty.raw.slice(0, 80)));
+    // ── AL-061: the passage read by the page's paragraphs, headings, lists and quotations ─
+    const pr = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {readShowPage,withoutBoilerplate,isCaption,isProse};')(React, win, win.document, win.localStorage);
+    const footer = '\n\n## Follow us\n\n' + '* Instagram\n'.repeat(40);
+    const page = (body, url) => pr.readShowPage({ title: 'Show', full_content: '# Show\n\n12 March – 7 June 2026\n\n' + body + footer }, url || 'https://example.org/show', null);
+    const para = n => 'The exhibition brings together paintings and drawings from collections across Europe, paragraph ' + n + '.';
+    const mad = page('From 10 April to 13 October 2024,\nthe Musée des Arts Décoratifs\nis devoting an exhibition to the birth\nof department stores.');
+    ok(mad.raw === 'From 10 April to 13 October 2024, the Musée des Arts Décoratifs is devoting an exhibition to the birth of department stores.',
+      'AL-061: a paragraph printed a line per few words is one paragraph (Musée des Arts Décoratifs)', JSON.stringify(mad.raw));
+    ok(pr.withoutBoilerplate('The show brings together forty works. Leadership support is provided by an anonymous donor and by Margot and Jeremiah M. Bogert, Elizabeth M. and Jean-Marie R. Eveillard, and The Christian Humann Foundation.') === 'The show brings together forty works.',
+      'AL-061a:  an initial\'s full stop ends no sentence: a funder list goes whole, never its tail (Frick)');
+    const kmska = page('Date:\n\n##### In 1938, René Magritte gave a lecture at the KMSKA on his vision of reality. There, he discussed the origins and development of his art.\n\n' + para(2));
+    ok(/^In 1938, René Magritte/.test(kmska.raw), 'AL-061b:  a lead paragraph set as a heading is a paragraph (KMSKA)', JSON.stringify(kmska.raw.slice(0, 60)));
+    const lists = page(para(1) + '\n\n* 5 of 5 stars\n  \n  > A dazzling, soulful trip\n  > \n  > The Standard\n\n> “A room hung with pictures is a room hung with thoughts.” Joshua Reynolds (1784)\n\n| M | T | W |\n\n' + para(2));
+    ok(lists.raw === para(1) + '\n' + para(2), 'AL-061c:  a list, a quotation or a table is never the show\'s text (British Museum\'s reviews)', JSON.stringify(lists.raw));
+    ok(['Guido Cagnacci\'s The Death of Cleopatra, a painting of a topless woman collapsed onto a red, studded leather chair. A small black snake can be seen coiled around the arm rest',
+        'Francesco di Giorgio (1439–1501), Deposition of Christ from the Cross with a Group of Donors (detail), 1473–74, medium-tin bronze and elevated antimony, Church of Santa Maria del Carmelo, Venice.',
+        'Victor Brauner, Bird Embracing a Woman, 1953. Ceramic plate, 12 3/8 × 12 1/8 × 1 5/8 in. (31.4 × 30.8 × 4.1 cm). The Menil Collection, Houston, Gift of the artist.',
+        'Charcoal drawing of landscape with human and animal figures approaching trees, in brown and gray washes with white highlights.',
+        'Sunbeams or Sunlight. Dust Motes Dancing in the Sunbeams. Strandgade 30', 'Een portret van Thomas William Coke door Pompeo Batoni, uit 1774 te zien in Holkham Hall.'].every(pr.isCaption)
+      && !pr.isCaption('Woo Chong Yung (1898–1989), also known in the United States as C.Y. Woo, was a highly accomplished painter, calligrapher, and poet from Shanghai.')
+      && !pr.isCaption('The centerpiece of the special feature is the oil on canvas Death of Cleopatra (1660-62) on loan from the Pinacoteca de Brera in Milan, Italy.'),
+      'AL-061d:  pictures\' captions and descriptions are not the show\'s text (Cincinnati, Frick, Menil, Morgan, Thyssen, Mauritshuis); a sentence about the show naming a work is');
+    const four = page([1, 2, 3, 4, 5].map(para).join('\n\n'));
+    ok(four.raw.split('\n').length === 4, 'AL-061e:  four paragraphs at most, the scraper\'s cut (her decision)', JSON.stringify(four.raw.split('\n').length));
+    const kh = page('Silent rooms, muted light and minimal shifts within the familiar: Kunsthaus Zürich presents the first exhibition in Switzerland dedicated to Vilhelm Hammershøi.\n\n#### Tickets\n\nAdults CHF 31.– / Concessions CHF 22.–\n\n#### Membership\n\nFree admission plus invitations to all openings and many other benefits!\n\n' + para(2));
+    ok(/^Silent rooms/.test(kh.raw) && kh.raw.endsWith(para(2)) && !/CHF|admission/.test(kh.raw),
+      'AL-061f:  below a short introduction a box (tickets, membership) is passed over and the show\'s text below it read (Kunsthaus)', JSON.stringify(kh.raw));
+    const ven = page([1, 2, 3, 4, 5, 6, 7].map(para).join(' ') + '\n\n## With generous support from\n\n' + para(8) + '\n\n### Events\n\n' + para(9));
+    ok(!/paragraph 8/.test(ven.raw), 'AL-061g:  below a fair part of the show\'s text a box\'s heading ends it (Alte Pinakothek\'s programme)', JSON.stringify(ven.raw.slice(-60)));
+    const pdf = page('The Wallace Collection’s spring exhibition will offer a fresh perspective on the work of a\n\ntowering figure of British painting, Joshua Reynolds.');
+    ok(pdf.raw === 'The Wallace Collection’s spring exhibition will offer a fresh perspective on the work of a towering figure of British painting, Joshua Reynolds.',
+      'AL-061h:  a sentence wrapped over paragraphs a line each is one paragraph (Enfilade\'s PDF)', JSON.stringify(pdf.raw));
+    ok(pr.withoutBoilerplate('Mary Cassatt was a pillar of the impressionist group. You must accept cookies to view youtube content.') === 'Mary Cassatt was a pillar of the impressionist group.'
+      && pr.withoutBoilerplate('Bonnard’s works are on view. Open Monday through Saturday from 10:00am to 6:00pm.') === 'Bonnard’s works are on view.'
+      && pr.withoutBoilerplate('After his early years as a member in the Nabi group, Bonnard pursued his own path.') === 'After his early years as a member in the Nabi group, Bonnard pursued his own path.',
+      'AL-061i:  cookie notices, opening times and the like go by the sentence; a sentence about the show stays (Orsay, Acquavella)');
     const byAddr = new Function('React', 'window', 'document', 'localStorage', code + '\n;return namedByAddress;')(React, win, win.document, win.localStorage);
     ok(byAddr({ name: 'kmska.be', host: 'kmska.be' }) && byAddr({ name: 'www.mfa.org', host: 'mfa.org' }) && !byAddr({ name: 'kmska.be', short: 'Antwerp', host: 'kmska.be' })
       && !byAddr({ name: 'Detroit Institute of Arts Museum', host: 'dia.org' }),

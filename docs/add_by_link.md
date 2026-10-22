@@ -199,16 +199,37 @@ those 25 read clean before, 25 after, with no proof page worse. Code: `readShowP
 
 ## The passage — what Claude is handed to describe
 
-Shared rules first, as titles and dates (her decision), measured on the same 101 pages. A sentence holding
-one of the scraper's boilerplate phrases goes — ticket and admission wording, funders, "©" credits, cookie and
-newsletter notices (`BOILERPLATE`, one copy in `scraper/boilerplate.js`, written into the app by `sync_shared`).
-A short line that is page furniture goes: a ticket or visit label, a price, a floor or level, a photo credit, a
-picture's caption ending on its year (`isFurniture`, `CAPTION`; Louisiana, Kunsthaus, MoMA, Nationalmuseum). The
-passage ends at "Related …", "You may also like", other shows or the newsletter — once 300 characters of the
-show's own text are in (`PASSAGE_END`; Getty prints "Related Events" above its text). What it dropped on the 101
-pages was read line by line: junk only, and a related artwork's text under the Menil's "Related Artworks". Each
-proof page's passage is signed off on the list (first and last 60 characters; `--write-passages`). AL-060.
-Venue rules (`from`, `until`, `skip`, `minLine`) stay where a page's layout is its own.
+Shared rules first, as titles and dates (her decision). The page is read by its structure, as the scraper reads
+markup: the reply keeps paragraphs, headings, lists and quotations, and the reader once threw that away, so menus,
+sponsor lists, opening hours, captions, event listings and cookie notices reached Claude on most pages. Now
+(`takePassage`, AL-061):
+- **Paragraphs:** a paragraph's lines are one paragraph (Musée des Arts Décoratifs prints a line per few words); a
+  sentence wrapped over paragraphs a line each joins up (Enfilade's PDF). A lead paragraph set as a heading is a
+  paragraph (KMSKA).
+- **Never the show's text:** a list, a quotation, a table; a paragraph that is not prose (under eight words, or no
+  sentence that ends: labels, names, logos, addresses, hours); a picture's caption or description (`isCaption`: "(detail)",
+  a size, "Gift of …" with a year, a medium with a year and no verb, "Charcoal drawing of …", a title in capitals);
+  the show's title again; a line shouted in capitals.
+- **Junk sentences** go, a sentence at a time: the scraper's `BOILERPLATE` (one copy, `scraper/boilerplate.js`) and
+  `LINK_JUNK`, what whole-page text carries that the scraper drops by markup — funders, tickets, members' offers,
+  times, visiting and access notes, links' own words, cookie and newsletter notices, credits. An initial's full stop
+  ends no sentence (`sentencesOf`): Frick's funder list once lost its first half and kept its tail.
+- **Where it ends:** four paragraphs or 2,000 characters, the scraper's cut (her decision). A heading for other
+  matter (other shows, events, the shop, press, the newsletter, sharing, the footer: `OTHER_MATTER`) ends it once
+  the show's text is in; "Related …" above the text is skipped (Getty). A box's heading (tickets, visiting,
+  supporters, films, pictures: `LINK_BOX`) ends it only after 600 characters: Kunsthaus carries its text on below
+  its ticket box with no heading; below the Alte Pinakothek's text come its tours.
+
+Read on every proof page, the 18 new-museum pages off the list, Wallraf, the three blog pages and her three saved
+pages: each passage is the show's own text, nothing else. Known residue, show-related: an event's blurb in the
+show's own section (Cincinnati's dance video), a series' blurb (Getty's PST ART). Each proof page's passage is
+signed off on the list (first and last 60 characters; `--write-passages`). Venue rules (`from`, `until`, `skip`,
+`minLine`) stay where a page's layout is its own.
+
+**Orsay and MoMA's changed passages:** the old reader let junk in at the edges, and those edges moved. Orsay's page
+now carries a YouTube cookie notice; with it taken out, the old reader gives the signed-off passage exactly. Whether
+Orsay added it or Parallel now returns it is not known. MoMA's passage ended on a link to a catalogue excerpt, whose
+wording MoMA changed. The new reader reads neither.
 
 ## Venue link rules
 

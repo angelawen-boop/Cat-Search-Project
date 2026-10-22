@@ -113,7 +113,7 @@ const runtime = () => ({
       'AP-001a:  the city council\'s address files under Palazzo Reale Milano, by its path', r.ok && venue(t.res.url, r).id);
     ok(r.ok && r.base === 'Titian and the Image of Women in 16th-Century Venice' && r.start === '2022-02-23' && r.end === '2022-06-05',
       'AP-001b:  title without "- Palazzo Reale, Milan", dates 23 Feb – 5 Jun 2022', JSON.stringify([r.base, r.start, r.end, r.why]));
-    ok(r.ok && /^Tiziano e l'immagine/.test(r.raw) && !/Skip to Content|Tickets and Booking/.test(r.raw) && !/Upcoming Exhibitions|17 October 2026/.test(r.raw),
+    ok(r.ok && /^A large collective on the main Venetian artists/.test(r.raw) &&!/Skip to Content|Tickets and Booking/.test(r.raw) && !/Upcoming Exhibitions|17 October 2026/.test(r.raw),
       'AP-001c:  the text handed to Claude starts at the show, not the site\'s menu, and stops before the box of other shows', r.raw && r.raw.slice(0, 80));
     const s = reply(SOUTINE, parse);
     const sr = read(s.res, s.res.url, readVenue(s.res.url));

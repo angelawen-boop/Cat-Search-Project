@@ -995,10 +995,79 @@ function isFurniture(t){
     ||/\b(?:floor|level)\s+-?\d/i.test(t)||/\bphoto:/i.test(t)||CAPTION.test(t);
 }
 function withoutBoilerplate(t){
-  const bad=x=>{ const low=x.toLowerCase(); return BOILERPLATE.some(b=>low.includes(b)); };
-  if(!bad(t))return t;
-  return t.split(/(?<=[.!?])\s+/).filter(x=>!bad(x)).join(" ").trim();
+  const bad=x=>{ const low=x.toLowerCase(); return BOILERPLATE.some(b=>low.includes(b))||LINK_JUNK.some(r=>r.test(low)); };
+  const parts=sentencesOf(t);
+  if(!parts.some(bad))return t;
+  return parts.filter(x=>!bad(x)).join(" ").trim();
 }
+// A paragraph's sentences. A full stop after an initial or a short abbreviation ("Margot and
+// Jeremiah M. Bogert", "David L. Klein, Jr. Foundation", "c. 1664") does not end one: splitting
+// there left a funder list's tail behind its dropped "support is provided by" (Frick).
+const NOT_A_STOP=/(?:^|[\s(])(?:\p{L}|Mr|Mrs|Ms|Dr|St|Jr|Sr|Inc|Ltd|Co|ca|cf|vol|nos?|pp?|fig|approx|eds?|inv|op)\.$/iu;
+function sentencesOf(t){
+  const s=String(t||""),out=[],re=/[.!?…]["”’»)\]]*\s+(?=["“‘«(\[]?[\p{Lu}\d])/gu;
+  let start=0,m;
+  while((m=re.exec(s))){ if(NOT_A_STOP.test(s.slice(start,m.index+1)))continue; out.push(s.slice(start,m.index+m[0].length).trim()); start=m.index+m[0].length; }
+  out.push(s.slice(start).trim());
+  return out.filter(Boolean);
+}
+// A paragraph reads as prose: eight words or more, and a sentence that ends. A label, a name, a
+// logo, an address, opening hours or a caption with no sentence is not one.
+function isProse(t){
+  const s=String(t||"").trim();
+  return s.split(/\s+/).length>=8&&(sentencesOf(s).length>1||/[.!?…]["”’»)\]]*$/.test(s)&&!NOT_A_STOP.test(s));
+}
+// Sentences whole-page text carries that the scraper drops by the page's structure: funders,
+// tickets, members' offers, opening times, visitor and access notes, links' own words, cookie and
+// newsletter notices, credits. Matched on the lower-cased sentence. Cases: docs/add_by_link.md, "The passage".
+const LINK_JUNK=[
+  /\bmade possible\b/,/\bsponsor\w*/,/^(?:\S+\s+){0,6}(?:is|are|was|were)\s+(?:generously\s+|kindly\s+)?supported by\b/,/^supported by\b/,
+  /\bwith (?:the )?(?:generous |kind |additional )?support (?:of|from)\b/,/\b(?:leadership|major|additional|principal|generous) (?:support|supporters?)\b/,
+  /\bfor (?:their|its|his|her) (?:generous )?support\b/,/\bwith thanks to\b/,/\bindemnity\b/,
+  /\btickets?\b/,/\bfree admission\b|\badmission (?:free|prices?|tickets?)\b|\byour admission\b|\badmission to the exhibition\b|\bgeneral admission\b/,
+  /\bmembers? (?:go|visit|can|enjoy|receive|get|only|preview|mornings?|events?)\b|\bfor members\b|\bmembership\b|\bjoin (?:as a member|today|now)\b/,
+  /\b\d{1,2}(?:[.:]\d{2})?\s?(?:am|pm|a\.m\.|p\.m\.)(?![a-z])/,/\bopen (?:daily|from|until|on|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b|\bopening (?:hours|times)\b|\blast (?:admission|entry|entrance)\b/,
+  /\bwe look forward to welcoming\b/,/\bplease note\b/,/\bvirtual queue\b|\bwait times\b/,/\bthe age of \d/,
+  /\belevators?\b|\bwheelchairs?\b|\bstep-free\b|\blarge[- ]print\b|\bseating is provided\b|\bwelcome cart\b|\baccessible (?:audio|toilets?|entrances?)\b/,
+  /\baudio ?(?:tours?|guides?)\b|\baudioguides?\b/,
+  /\bclick here\b|\bselect to view\b|\blightbox\b|\bopens in a new\b|\bfind out more\b|\bread more\b|\bdownload (?:the|our|a|large)\b|\bshare your feedback\b/,
+  /\bcookies?\b|\bconsent\b|\bdata protection\b|\bprivacy (?:notice|statement|policy)\b|\bexternal provider\b|\bunsubscribe\b|\breceive updates\b|\bin your inbox\b|\bnewsletter\b|\bsign up\b/,
+  /[\w.-]+@[\w-]+\.[a-z]/,/\bphone:|\btel\.?:|\btoll free\b/,/\bcourtesy\b/,/^credits?:/,/\blicensed by\b/,/\bphoto(?:graph)? by\b|\bphoto:/,/\bcopyright\b/,
+  /\bramp\b|\blearn more\b|\bon floor -?\d|\bvisit page\b|\bplease be aware\b|\bsubject to change\b|\badmit(?:tance)?\b|\bstaff will be available\b|\baccessing the (?:gallery|museum|building)\b/,
+  /\blogo\b|\byoutube\b|\bvimeo\b|\byour browser\b|\bunder the (?:patronage|auspices)\b|\bpatrocinio\b|\bcontribution from\b|\bchance to win\b/,
+  /\btarif\b|\b\d+(?:[.,]\d+)?\s?(?:euros?|€)(?![\w])|[£$€]\s?\d|\b(?:chf|eur|usd|gbp|sek|dkk|nok)\s?\d|\bconcessions?\b|\breduced (?:rate|price)\b|\bdiscounts?\b|\bmember benefits\b/,
+  /\byour inbox\b|\byour (?:generosity|donation|gift)\b|\bsubscription\b|\byour \w+ account\b|\bweb ?page\b|\bhow to get to\b|\bview details\b|\bunderwritten\b/,
+  /\b\d{1,2}[.:]\d{2}\s?[-–]\s?\d{1,2}[.:]\d{2}\b|\bmore information\b|\bour \w+ page\b|\bshare your\b/,
+  /\banalytics\b|\bpersonal (?:information|data)\b/,
+  /\btraditional owners\b|\bwe acknowledge\b|\bgroup visits?\b|\bprivate tours?\b|\bexclusive tours?\b|\btime slots?\b|\bprior registration\b|\byour group\b/,/\b(?:view|see|click|explore|find)\b.*\bhere\s*\.?$/
+];
+// A paragraph that is a picture's caption or description, not the show's own text: "(detail)", a
+// work's size, a credit line ("Gift of …", "Bequest of …") with a year, a work in its medium with a
+// year and no verb, a description of a picture ("Charcoal drawing of landscape with …"), or a name
+// then a title in one short verbless sentence ("Johan Tobias Sergel, Self portrait …").
+const CAPTION_VERB=/\b(?:is|are|was|were|has|have|had|will|would|can|could|became|becomes|brings?|presents?|explores?|shows?|features?|offers?|celebrates?|examines?|traces?|reveals?|includes?|focuses|invites?|highlights?|tells?|returns?|marks?|opens?)\b/i;
+const CAPTION_MEDIUM=/\b(?:oil|tempera|acrylic|gouache|watercolou?r|pastel|charcoal|graphite|ink|chalk)\s+(?:on|and)\b|\bon (?:canvas|panel|paper|board|wood|copper|linen|vellum)\b|\b(?:etching|engraving|lithograph|woodcut|aquatint|gelatin silver|albumen print|bronze|marble|terracotta)\b/i;
+const CAPTION_SIZE=/\d+(?:[.,]\d+)?(?:\s+\d\/\d)?\s*[x×]\s*\d+(?:[.,]\d+)?(?:\s+\d\/\d)?\s*(?:cm|mm|in)\b/i;
+const CAPTION_CREDIT=/\b(?:gift of|bequest of|museum purchase|purchased (?:with|from)|accession|museum no\.)/i;
+const PICTURE_OF=/^(?:(?:an?|the|een|ein|eine|un|une|uno|una)\s+)?(?:[\p{L}'’-]+\s+){0,5}(?:painting|drawing|photograph|photo|print|etching|engraving|portrait|portret|sculpture|image|poster|close[- ]up|relief|tapestry|schilderij|gemälde|ritratto|dipinto|tableau)(?:\s+(?:of|van|von|de|di)\b|:)|^(?:affiche|plakat|locandina|cartel)\b/iu;
+// A work named then described as a picture: "Guido Cagnacci's The Death of Cleopatra, a painting of a topless woman …" (Cincinnati).
+const WORK_THEN_PICTURE=/^[^.]{3,120},\s+an?\s+(?:[\p{L}-]+\s+){0,5}(?:painting|drawing|etching|engraving|photograph|print|sculpture|tapestry)\s+of\b/iu;
+function isCaption(t){
+  const s=String(t||"").trim(), year=/\b1[0-9]{3}\b|\b20[0-9]{2}\b/.test(s), first=sentencesOf(s)[0]||s;
+  const big=s.split(/\s+/).filter(w=>/^\p{L}{4,}/u.test(w)), caps=big.filter(w=>/^\p{Lu}/u.test(w)).length;
+  return /\(detail\)|^detail\b|\bdetail,|\bdetail of\b/i.test(s)||WORK_THEN_PICTURE.test(s)||big.length>=3&&s.split(/\s+/).length<=15&&caps/big.length>=0.75&&!CAPTION_VERB.test(s)||CAPTION_SIZE.test(s)||CAPTION_CREDIT.test(s)&&year||CAPTION.test(first.replace(/\.$/,""))
+    ||CAPTION_MEDIUM.test(s)&&year&&!CAPTION_VERB.test(s)||PICTURE_OF.test(s)&&!/\b(?:is|are|was|were|has|have|had|will|would|can|could)\b/i.test(s)
+    ||/^(?:\p{Lu}[\p{L}.'’-]*\s+){0,3}\p{Lu}[\p{L}.'’-]*,\s/u.test(s)&&sentencesOf(s).length===1&&s.split(/\s+/).length<=14&&!CAPTION_VERB.test(s);
+}
+// A heading that turns from the show to other matter ends the passage once the show's own text is in:
+// other shows, events, the shop, the press and reviews, the newsletter, sharing, the footer. A box's heading
+// (tickets, visiting, supporters, curators, films, pictures, the catalogue) ends it only once a fair
+// part of the show's text is in (LINK_BOX_AFTER): below a short introduction the show's text can carry on
+// under a box with no heading of its own (Kunsthaus); below the text, what follows is the page's programme
+// (Alte Pinakothek's tours and participation project).
+const LINK_BOX=/^(?:tickets?|ticket|admission|prices|pricing|(?:opening |museum )?hours|opening times|visit|visitor|visiting|plan your visit|getting here|directions|address|location|access|accessib|membership|members?\b|become a member|curators?|credits|support|supported|sponsor|partners|media partners|in (?:cooperation|collaboration|partnership) with|with (?:generous |additional )?support|exhibition (?:film|guide|catalogue|supporters)|film|videos?|trailer|audio|(?:guided )?tours|führungen|publication|catalogue|images|impressions|(?:photo |image )?gallery|(?:exhibition |key )?highlights|selected works|installation|featured|downloads?|resources|large print)/i;
+const LINK_BOX_AFTER=600;
+const OTHER_MATTER=/^(?:related|you (?:may|might) also|(?:see )?(?:more|other|further|upcoming|current|past|all) exhibitions|(?:exhibition |related |upcoming )?(?:events?|programmes?|programs?)$|(?:museum )?shop\b|newsletter|sign up|stay (?:in touch|connected)|follow|connect with|share\b|footer|(?:selected )?press\b|reviews?$|what’s on|explore more|discover more|privacy|manage consent|[\w ]*cookies)/i;
 
 // A venue's own link options (its MUSEUMS entry's `linkRead`). Cases: docs/add_by_link.md,
 // "Venue link rules".
@@ -1282,38 +1351,90 @@ function offerSubtitleLines(pg){
   if(pg.between.length)pg.rule("between");
 }
 
-// Step 9. The passage handed to Claude: from under the title, up to the 2,000-character cut (her
-// decision), the date line left out unless it is a paragraph; the venue's own start, stop and skip
-// lines, then the shared rules (see THE PASSAGE'S SHARED RULES).
+// Step 9. The passage handed to Claude: the show's own paragraphs from under the title, up to the
+// scraper's cut of four paragraphs or 2,000 characters (her decision), the date line left out unless
+// it is a paragraph; the venue's own start, stop and skip lines, then the shared rules (see THE
+// PASSAGE'S SHARED RULES). The page's text keeps its paragraphs, headings, lists and quotations, and
+// they are read as the scraper reads a page's markup: a paragraph's lines are one paragraph (Musée
+// des Arts Décoratifs prints a line per few words); a list, a quotation or a table is never the
+// show's text (menus, reviews, captions, artists' quotes); a heading turning to other matter ends it.
+const LINK_PARAGRAPHS=4;
 function takePassage(pg){
   const{lr,lines,rule,h,d,dEnd,heading}=pg;
   const dateLine=decodeEntities(stripMd(lines[d])).replace(/\s+/g," ").trim();
   const keepDateLine=dateLine.length>LINK_DATE_LINE_MAX;
   if(keepDateLine)rule("date-line-kept");
   const headingText=decodeEntities(heading).replace(/\s+/g," ").trim();
-  let raw="";
-  const seenLines=new Set();
   let from=h+1;
   if(lr&&lr.from){
     for(let k=h+1;k<lines.length;k++){ if(lr.from.test(stripMd(lines[k]))){ from=k+1; rule("from"); break; } }
   }
-  for(let k=from;k<lines.length&&raw.length<LINK_RAW_CHARS;k++){
-    if(k>d&&k<=dEnd)continue;
-    const own=stripMd(lines[k]);
+  // The page under the title in blocks: a heading; a list, quotation or table; or a paragraph, its
+  // lines joined. A blank line, a heading or a change of kind starts a new block.
+  const blocks=[];
+  let cur=null;
+  const kindOf=l=>/^\s*#{1,6}\s/.test(l)?"heading":/^\s*>/.test(l)?"quote":/^\s*\|/.test(l)?"table":/^\s*(?:[*+-]|\d+\.)\s/.test(l)?"list":"text";
+  for(let k=from;k<lines.length;k++){
+    if(k>d&&k<=dEnd||k===d&&!keepDateLine)continue;
+    const line=lines[k], own=stripMd(line);
     // The passage ends at the first line matching linkRead.until (a box for other shows).
     if(lr&&lr.until&&lr.until.test(own)){ rule("until"); break; }
+    if(!own){ cur=null; continue; }
     if(lr&&lr.skip&&lr.skip.test(own)){ rule("skip"); continue; }
     if(lr&&lr.skipEntities&&/&#?\w+;/.test(own)){ rule("skipEntities"); continue; }
     const t=decodeEntities(own).replace(/\s+/g," ").trim();
+    // A line indented under a list item belongs to it; a heading run into a line ("Members only ###
+    // A Member's Field Guide", MoMA) is a link to other matter.
+    let kind=/^\s{2,}\S/.test(line)&&cur&&cur.kind==="list"?"list":kindOf(line);
+    if(kind==="text"&&/\s#{2,6}\s/.test(line))kind="heading";
+    // A lead paragraph set as a heading ("##### In 1938, René Magritte gave a lecture…", KMSKA) is a
+    // paragraph; a heading that is a link is a card for other matter.
+    if(kind==="heading"&&!/\]\(/.test(line)&&t.split(/\s+/).length>=15&&isProse(t))kind="text";
+    if(kind==="heading"||!cur||cur.kind!==kind||kind==="list"&&/^\s*(?:[*+-]|\d+\.)\s/.test(line)){
+      cur={kind,text:t,k}; blocks.push(cur);
+      if(kind==="heading")cur=null;
+    }else cur.text+=" "+t;
+  }
+  // A sentence wrapped over paragraphs, a line each (a press release's PDF, Enfilade): a paragraph of six
+  // words or more that stops mid-sentence joins the next when that one opens in lower case, or when it
+  // stops on a word no sentence ends on ("the", "of", a comma). A label or a picture's description above
+  // a paragraph stops on neither and stays apart.
+  for(let i=0;i+1<blocks.length;i++){
+    const a=blocks[i],b=blocks[i+1];
+    if(a.kind==="text"&&b.kind==="text"&&!/[.!?:;…"”’»)]$/.test(a.text)&&a.text.split(/\s+/).length>=6
+      &&(/^\p{Ll}/u.test(b.text)||/(?:\s(?:a|an|the|of|and|or|to|in|for|with|by|from|his|her|its|their|as|at|on)|,)$/i.test(a.text))){ a.text+=" "+b.text; blocks.splice(i+1,1); i--; }
+  }
+  let raw="",paras=0;
+  const seen=new Set();
+  for(const b of blocks){
+    if(raw.length>=LINK_RAW_CHARS)break;
+    if(paras>=LINK_PARAGRAPHS){ rule("end:four-paragraphs"); break; }
+    const t=b.text;
     // Ends only once the show's own text is in: Getty prints "Related Events" above its description.
-    if(PASSAGE_END.test(t)){ if(raw.length>=PASSAGE_END_AFTER){ rule("end:furniture"); break; } rule("skip:furniture"); continue; }
+    if(b.kind==="heading"||PASSAGE_END.test(t)){
+      if(raw&&(OTHER_MATTER.test(t)||PASSAGE_END.test(t))){ rule("end:other-matter"); break; }
+      if(raw.length>=LINK_BOX_AFTER&&LINK_BOX.test(t)){ rule("end:box"); break; }
+      continue;
+    }
+    if(b.kind!=="text"){ rule("skip:"+b.kind); continue; }
+    if((t===dateLine&&!keepDateLine)||t===headingText||seen.has(t))continue;
     if(isFurniture(t)){ rule("skip:furniture"); continue; }
+    if(isCaption(t)){ rule("skip:caption"); continue; }
+    // The show's title printed again with a subtitle and no sentence ("Paradise on Earth. Flemish landscape painting from
+    // Bruegel to Rubens", Dresden).
+    if(pg.base&&foldText(t).startsWith(foldText(pg.base))&&t.split(/\s+/).length<=15&&!CAPTION_VERB.test(t)){ rule("skip:title"); continue; }
+    if(!isProse(t)){ rule("skip:not-prose"); continue; }
+    // A line typed in capitals is a heading or a quotation shouted (Rijksmuseum's "THIS IS AN ABSOLUTELY
+    // FABULOUS SHOW…"), not the show's text.
+    const letters=t.replace(/[^\p{L}]/gu,"");
+    if(letters.length>=12&&(t.match(/\p{Lu}/gu)||[]).length/letters.length>0.7){ rule("skip:capitals"); continue; }
     const l=withoutBoilerplate(t);
-    if(t&&l!==t)rule("boilerplate");
-    if(l&&lr&&lr.minLine&&l.length<lr.minLine&&!seenLines.has(l))rule("minLine");
-    if(!l||(l===dateLine&&!keepDateLine)||l===headingText||seenLines.has(l)||(lr&&lr.minLine&&l.length<lr.minLine))continue;
-    seenLines.add(l);
+    if(l!==t)rule("boilerplate");
+    if(!l||!isProse(l)||isCaption(l))continue;
+    if(lr&&lr.minLine&&l.length<lr.minLine){ rule("minLine"); continue; }
+    seen.add(t);
     raw+=(raw?"\n":"")+l;
+    paras++;
   }
   if(!raw)rule("no-description");
   Object.assign(pg,{dateLine,raw});

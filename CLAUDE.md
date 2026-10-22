@@ -606,11 +606,12 @@ and were fixed in code, proven live).
      fixed before the next item).** Done: Wallraf's title (its tab "Information: Wallraf-Richartz-Museum" no longer
      beats its heading — shared rule, AL-056a, no proof page worse); every new museum's title read against its page,
      all right. Wallraf's page is a tour of Japan — she never adds tours (her decision), so it stays a title test only,
-     its dates are not a fault. **Still open:** (c) re-ask Claude on the Wallraf page now its title is right — the
-     check that the summary and subtitle come out right with it (a Sonnet sub-agent call was refused this session: ask
-     her first); (d) read every new museum's description against its page — the code check catches words not in the
-     text, not a wrong meaning. Then report to her, short. Orsay's and MoMA's proof passages now end a few words
-     differently — the live sites changed, not the reader; sign off with `--write-passages` when she agrees.
+     its dates are not a fault. Claude re-asked on Wallraf: title, summary, subtitle and venue right. **The passage
+     rebuilt (her order: cleaning, then Orsay/MoMA, then descriptions):** read by the page's paragraphs, headings and
+     lists as the scraper reads markup — the old reader passed menus, funders, hours, captions and cookie notices on
+     most pages (`docs/add_by_link.md`, "The passage"; AL-061). Orsay and MoMA's changed passages were junk at the
+     edges moving, now not read. **Still open:** read every description Claude writes against its page, on the clean
+     passages — nothing made up, and right about the show.
   1. **Claude's other reads, tested with Sonnet calls — not closed (item 0).** On 70 live pages: subtitle pick, English
      title, English-speaking country and a blog page's second question scored right on every page against truth set
      before the answers; one summary said "first" with no word for it in the text (Pontormo). Scripts:
