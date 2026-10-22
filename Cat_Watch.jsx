@@ -1018,27 +1018,55 @@ function joinTitle(name,sub,dashAfterColon){
   return name+(dashAfterColon&&name.includes(":")?" – ":": ")+sub;
 }
 
-// One page → {ok, base, between, start, end, raw, site, link} or {ok:false, why}.
-// Rules and the cases they came from: docs/add_by_link.md, "The general reader".
-// `rules`, when given, collects the name of every rule that changed this page's result:
-// the proof list keeps a page only for a rule no other page at its venue shows (docs/testing.md).
-// The app passes none.
+// ── THE SHOW PAGE READER ── One engine in steps, as the scraper's: each step reads and writes `pg`,
+// the page being read, and a venue's own options (`pg.lr`, its linkRead) sit in the step they change.
+// Rules and the case behind each: docs/add_by_link.md, "The general reader". `rules`, when given,
+// collects the name of every rule that changed this page's result: the proof list keeps a page only
+// for a rule no other page at its venue shows (docs/testing.md). The app passes none.
+// One page → {ok, base, between, under, start, end, raw, site, link, monthsOnly, dateLine} or {ok:false, why}.
 function readShowPage(res,url,vc,rules){
+  const pg=pageToRead(res,url,vc,rules);
+  if(pg.fail)return pg.fail;
+  joinHeadingOverTwoLines(pg);
+  showFromCrumb(pg);
+  titleCandidates(pg);
+  if(!pg.cands.length){ pg.rule("fail:no-title"); return{ok:false,why:"Couldn’t find the show’s title on the page."}; }
+  const fail=findDates(pg);
+  if(fail)return fail;
+  settleName(pg);
+  finishName(pg);
+  offerSubtitleLines(pg);
+  takePassage(pg);
+  return pageResult(pg);
+}
+
+// Step 1. The page's lines, its page title split into show and site, and the venue's date rewrites.
+function pageToRead(res,url,vc,rules){
   const rule=t=>{ if(rules&&!rules.includes(t))rules.push(t); };
   const lr=linkOptions(vc);
   const text=String(oneText(res)||"");
-  if(text.trim().length<SHELL_CHARS){ rule("fail:empty"); return{ok:false,why:"The page came back empty."}; }
+  if(text.trim().length<SHELL_CHARS){ rule("fail:empty"); return{fail:{ok:false,why:"The page came back empty."}}; }
   const host=hostOf(siteUrlOf(url));
-  let{show,site}=splitPageTitle(res&&res.title,host);
+  const{show,site}=splitPageTitle(res&&res.title,host);
   if(site)rule(String(res.title).includes(" | ")?"tab:bars":"tab:site-after-dash");
   if(TITLE_LABEL.test(decodeEntities(stripMd(res&&res.title)).split(" | ")[0].trim()))rule("tab:label");
-  const lines=text.split("\n");
-  // A heading broken over two lines (Berlin: "## Donatello  " then "Inventor of the
-  // Renaissance") is one heading, the page's own name for the show: the tab title's mark
-  // joins its parts when the tab title reads the same, else the scraper's join. Berlin's
-  // tab titles can be misspelt or German, so the heading wins over them. A date line is
-  // never the heading's second half (Munich: "### Alte Pinakothek" over the dates).
-  let broken=-1;
+  // A venue's own date forms rewritten before reading: two-digit years (shortYear, NGV), slashes day
+  // first (slashDayFirst), "as of" for "to" (asOfTo, Palazzo Reale Milano).
+  const dateText=l=>lr&&lr.shortYear?withLongYears(l):lr&&lr.slashDayFirst?String(l).replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g,"$1.$2.$3"):lr&&lr.asOfTo?String(l).replace(/\s+as of\s+/gi," to "):l;
+  return{res,url,vc,rules,rule,lr,host,show,site,lines:text.split("\n"),dateText,broken:-1,after:-1,
+    words:l=>foldText(stripMd(l)).replace(/[^a-z0-9]+/g," ").trim(),
+    // A show page's own date line: page text, so no loose single dates; slashes only where the
+    // numbers prove the order (Prado).
+    rangeIn:l=>DATES.findDateRange(dateText(l),{looseSingles:false,slashes:true})};
+}
+
+// Step 2. A heading broken over two lines (Berlin: "## Donatello  " then "Inventor of the
+// Renaissance") is one heading, the page's own name for the show: the tab title's mark
+// joins its parts when the tab title reads the same, else the scraper's join. Berlin's
+// tab titles can be misspelt or German, so the heading wins over them. A date line is
+// never the heading's second half (Munich: "### Alte Pinakothek" over the dates).
+function joinHeadingOverTwoLines(pg){
+  const{lines,show,rule}=pg;
   for(let i=0;i+1<lines.length;i++){
     const hm=lines[i].match(/^(\s*#{1,6}\s+)(\S.*?)\s{2,}$/);
     const next=stripMd(lines[i+1]);
@@ -1049,34 +1077,39 @@ function readShowPage(res,url,vc,rules){
     const sep=lo.startsWith(name.toLowerCase())&&lo.endsWith(next.toLowerCase())?show.slice(name.length,show.length-next.length):"";
     lines[i]=hm[1]+(sep&&sep.length<=3?name+sep+next:joinTitle(name,next,true));
     lines[i+1]="";
-    broken=i;
+    pg.broken=i;
     rule(sep&&sep.length<=3?"heading:two-lines-tab-mark":"heading:two-lines");
     break;
   }
-  // A page title the page never prints can be a sentence (Cincinnati, Cagnacci: "Guido
-  // Cagnacci’s Death of Cleopatra will be the centerpiece…"): the breadcrumb's last step
-  // names the show instead (linkRead.crumb).
-  if(lr&&lr.crumb&&!(show&&lines.some(l=>foldText(stripMd(l)).includes(foldText(show))))){
-    const crumb=lines.map(stripMd).find(l=>/^\s*Home\s*»/.test(l));
-    const last=crumb?crumb.split("»").pop().trim():"";
-    if(last){ show=last; rule("crumb"); }
-  }
-  // Candidate title lines, in order; the heading is the first with dates under it.
-  const words=l=>foldText(stripMd(l)).replace(/[^a-z0-9]+/g," ").trim();
+}
+
+// Step 3. A page title the page never prints can be a sentence (Cincinnati, Cagnacci: "Guido
+// Cagnacci’s Death of Cleopatra will be the centerpiece…"): the breadcrumb's last step
+// names the show instead (linkRead.crumb).
+function showFromCrumb(pg){
+  const{lr,lines,show}=pg;
+  if(!(lr&&lr.crumb&&!(show&&lines.some(l=>foldText(stripMd(l)).includes(foldText(show))))))return;
+  const crumb=lines.map(stripMd).find(l=>/^\s*Home\s*»/.test(l));
+  const last=crumb?crumb.split("»").pop().trim():"";
+  if(last){ pg.show=last; pg.rule("crumb"); }
+}
+
+// Step 4. Candidate title lines, in order; the title is the first with dates under it.
+function titleCandidates(pg){
+  const{lr,lines,show,words}=pg;
   const cands=[],candRule=[];
   const add=(i,t)=>{ if(i>=0&&!cands.includes(i)){ cands.push(i); candRule.push(t); } };
   // A venue whose show heading follows a marker line (linkRead.titleAfter; Dresden's
   // "Active page:"): that heading is tried first and is the title.
-  let after=-1;
   if(lr&&lr.titleAfter){
     const m=lines.findIndex(l=>lr.titleAfter.test(stripMd(l)));
-    if(m>=0)after=lines.findIndex((l,k)=>k>m&&/^\s*#{1,6}\s+\S/.test(l));
-    add(after,"titleAfter");
+    if(m>=0)pg.after=lines.findIndex((l,k)=>k>m&&/^\s*#{1,6}\s+\S/.test(l));
+    add(pg.after,"titleAfter");
   }
   // A venue whose show heading carries a mark of its own (linkRead.titleHeading) tries it first.
   if(lr&&lr.titleHeading)add(lines.findIndex(l=>/^\s*#{1,6}\s+\S/.test(l)&&lr.titleHeading.test(stripMd(l).trim())),"titleHeading");
   add(lines.findIndex(l=>/^\s*#\s+\S/.test(l)),"h1");
-  add(broken,"two-lines");
+  add(pg.broken,"two-lines");
   if(show){
     const fs=foldText(show);
     add(lines.findIndex(l=>/^\s*#{2,3}\s+\S/.test(l)&&foldText(stripMd(l)).includes(fs)),"h2-h3-holds-tab");
@@ -1084,11 +1117,13 @@ function readShowPage(res,url,vc,rules){
     const piece=" "+words(show)+" ";
     add(lines.findIndex(l=>{ const w=words(l); return w.split(" ").length>=2&&w.length<=80&&piece.includes(" "+w+" "); }),"line-inside-tab");
   }
-  if(!cands.length){ rule("fail:no-title"); return{ok:false,why:"Couldn’t find the show’s title on the page."}; }
-  const dateText=l=>lr&&lr.shortYear?withLongYears(l):lr&&lr.slashDayFirst?String(l).replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g,"$1.$2.$3"):lr&&lr.asOfTo?String(l).replace(/\s+as of\s+/gi," to "):l;
-  // A show page's own date line: page text, so no loose single dates; slashes only where the
-  // numbers prove the order (Prado).
-  const rangeIn=l=>DATES.findDateRange(dateText(l),{looseSingles:false,slashes:true});
+  pg.cands=cands; pg.candRule=candRule;
+}
+
+// Step 5. The dates: under a title line, else just above it, else months only (a venue's choice).
+// Sets the title line `h`, the date line `d`…`dEnd` and the range; returns a failure, or null.
+function findDates(pg){
+  const{lr,lines,rule,rangeIn,dateText,cands,candRule}=pg;
   const datesAboveFor=(h,n,via)=>{
     for(let k=h-1,seen=0;k>=0&&seen<n;k--){
       const l=stripMd(lines[k]); if(!l)continue; seen++;
@@ -1150,17 +1185,16 @@ function readShowPage(res,url,vc,rules){
     if(!found){
       const mo=near.map(([,l])=>DATES.findDateRange(l,{looseSingles:true})).find(r=>r.shownText);
       rule(mo?"fail:months-only":"fail:no-dates");
-      return{ok:false,why:mo?"Only the month and year are published (\u201c"+near.find(([,l])=>l.includes(mo.shownText))[1]+"\u201d), no days.":"No dates found under the show’s title."};
+      return{ok:false,why:mo?"Only the month and year are published (“"+near.find(([,l])=>l.includes(mo.shownText))[1]+"”), no days.":"No dates found under the show’s title."};
     }
   }
-  const heading=stripMd(lines[h]);
   const d=found.d,dEnd=found.dEnd||found.d;
   let range=found.range;
   rule(found.via);
   // The printed date line's shape, digits and words blanked ("a, a 9, 9, 9:9 a a-…"): a new shape is a new page to keep.
-  if(rules){
+  if(pg.rules){
     const shown=decodeEntities(lines.slice(d,dEnd+1).map(stripMd).join(" "));
-    rule("date-shape:"+shown.replace(/\d+/g,"9").replace(/\p{L}+/gu,"a").replace(/\ba(?:\s+a\b)+/g,"a").replace(/\s*[-\u2010-\u2015]\s*/g,"-").replace(/\s+/g," ").trim().slice(0,80));
+    rule("date-shape:"+shown.replace(/\d+/g,"9").replace(/\p{L}+/gu,"a").replace(/\ba(?:\s+a\b)+/g,"a").replace(/\s*[-‐-―]\s*/g,"-").replace(/\s+/g," ").trim().slice(0,80));
     if(range.start&&range.end&&range.start.slice(0,4)!==range.end.slice(0,4)&&(String(range.raw||shown).match(/\b\d{4}\b/g)||[]).length<2)rule("dates:year-worked-out");
   }
   if(dateText(lines[d])!==lines[d])rule("dates:venue-rewrite");
@@ -1172,14 +1206,20 @@ function readShowPage(res,url,vc,rules){
       if(r.start&&r.end&&((range.end&&r.end===range.end)||(range.start&&r.start===range.start))){ range={...range,start:r.start,end:r.end}; rule("dates:one-side-completed"); break; }
     }
   }
-  // The heading is the name, as in the scraper (titleFromPage). The page title adds only what the
-  // page backs: written the same (spacing, quotes and "&" aside), its spelling stands (Tate "90s");
-  // its words past the heading all on the line under the heading, that fuller line joins (Poldi
-  // Pezzoli); the heading then a separator and a subtitle, the page title stands (KHM "Head and
-  // Shoulders. Coins in Fashion"). Never its dates, site name or another spelling (MFAH, NPG,
-  // Philadelphia). A heading that is generic words, the site's name or shares no word with the page
-  // title gives way to the page title. A title line that is not a heading keeps the page title's
-  // show, or the line when it runs on.
+  Object.assign(pg,{h,found,d,dEnd,range,heading:stripMd(lines[h])});
+  return null;
+}
+
+// Step 6. The name. The heading is the name, as in the scraper (titleFromPage). The page title adds
+// only what the page backs: written the same (spacing, quotes and "&" aside), its spelling stands
+// (Tate "90s"); its words past the heading all on the line under the heading, that fuller line joins
+// (Poldi Pezzoli); the heading then a separator and a subtitle, the page title stands (KHM "Head and
+// Shoulders. Coins in Fashion"). Never its dates, site name or another spelling (MFAH, NPG,
+// Philadelphia). A heading that is generic words, the site's name or shares no word with the page
+// title gives way to the page title. A title line that is not a heading keeps the page title's
+// show, or the line when it runs on.
+function settleName(pg){
+  const{lr,lines,rule,dateText,h,heading,show,site,broken,after,words}=pg;
   const flatName=x=>foldText(stripMd(x)).replace(/&/g," and ").replace(/[^a-z0-9]/g,"");
   const nameWords=x=>foldText(stripMd(x)).replace(/&/g," and ").split(/[^a-z0-9]+/).filter(w=>w&&!GENERIC_TITLE_WORDS.has(w));
   const isHeading=/^\s*#{1,6}\s/.test(lines[h])||h===broken||(after>=0&&h===after);
@@ -1207,21 +1247,42 @@ function readShowPage(res,url,vc,rules){
   }
   rule(base===show?(base===heading?"name:tab-is-heading":"name:tab"):base===heading?"name:heading":"name:heading-trimmed");
   if(lr&&lr.title){ const vt=venueTitle(lines,h,heading,lr,words); if(vt&&vt!==base){ base=vt; rule("name:venue-"+lr.title); } }
+  pg.base=base;
+}
+
+// Step 7. What is not the name comes off it: a generic label (shared), then the venue's own.
+function finishName(pg){
+  const{lr,rule}=pg;
+  let base=pg.base;
   // A generic label before the show's own name: "Exhibition: Hubert Robert" (NGA), "Exhibition
   // Vincent's Path to Fame" (Van Gogh Museum), "Mostra Rothko a Firenze" (San Marco).
   { const b=base.replace(/^(?:exhibitions?|mostra|ausstellung|exposition|exposición|tentoonstelling)\s*[:–—-]?\s+(?=\S)/i,"").trim();
     if(b!==base&&b.split(/\s+/).length>=1&&/\p{L}{2}/u.test(b)){ base=b; rule("label-dropped"); } }
-  // A label the venue puts before the show's own name (linkRead.titleDrop).
   // A venue whose headline runs on past the show's name (linkRead.firstSentence; San Marco's
   // press releases): its first sentence only.
   if(lr&&lr.firstSentence){ const b=base.split(/[.!?](?=\s+\p{Lu})/u)[0].trim()||base; if(b!==base)rule("firstSentence"); base=b; }
+  // A label the venue puts before the show's own name (linkRead.titleDrop).
   if(lr&&lr.titleDrop){ const b=base.replace(lr.titleDrop,"").trim()||base; if(b!==base)rule("titleDrop"); base=b; }
   // Quotation marks round the whole name (linkRead.unquote; "Mostra “Rothko a Firenze”").
   if(lr&&lr.unquote){ const b=base.replace(/^[“"«‘']\s*(.+?)\s*[”"»’']$/u,"$1"); if(b!==base)rule("unquote"); base=b; }
   // A doubled colon is the venue's typo (NGA, Souvenirs of the Gilded Age).
   if(/\s*:{2,}/.test(base)){ base=base.replace(/\s*:{2,}/g,":"); rule("doubled-colon"); }
-  const between=lr&&lr.title?[]:lines.slice(h+1,d>h?d:Math.min(lines.length,h+4)).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l))&&!(lr&&lr.skip&&lr.skip.test(l)));
-  if(between.length)rule("between");
+  pg.base=base;
+}
+
+// Step 8. The short lines between the title and the dates (or the first few under a title whose
+// dates sit above it), offered to Claude as a possible subtitle.
+function offerSubtitleLines(pg){
+  const{lr,lines,h,d,base}=pg;
+  pg.between=lr&&lr.title?[]:lines.slice(h+1,d>h?d:Math.min(lines.length,h+4)).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l))&&!(lr&&lr.skip&&lr.skip.test(l)));
+  if(pg.between.length)pg.rule("between");
+}
+
+// Step 9. The passage handed to Claude: from under the title, up to the 2,000-character cut (her
+// decision), the date line left out unless it is a paragraph; the venue's own start, stop and skip
+// lines, then the shared rules (see THE PASSAGE'S SHARED RULES).
+function takePassage(pg){
+  const{lr,lines,rule,h,d,dEnd,heading}=pg;
   const dateLine=decodeEntities(stripMd(lines[d])).replace(/\s+/g," ").trim();
   const keepDateLine=dateLine.length>LINK_DATE_LINE_MAX;
   if(keepDateLine)rule("date-line-kept");
@@ -1250,13 +1311,20 @@ function readShowPage(res,url,vc,rules){
     seenLines.add(l);
     raw+=(raw?"\n":"")+l;
   }
+  if(!raw)rule("no-description");
+  Object.assign(pg,{dateLine,raw});
+}
+
+// Step 10. The answer: the link without tracking tails (or the venue's query, cleanLink), and the
+// site's name for a venue the app has not met.
+function pageResult(pg){
+  const{lr,url,lines,h,rule,range,found,site,vc,host}=pg;
   // The first line under the heading, for a venue whose subtitle sits there.
   const under=lines.slice(h+1).map(stripMd).find(Boolean)||"";
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  if(!raw)rule("no-description");
-  return{ok:true,base,between,under,start:range.start||"",end:range.end||"",raw:raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,monthsOnly:found.monthsOnly||"",dateLine};
+  return{ok:true,base:pg.base,between:pg.between,under,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,monthsOnly:found.monthsOnly||"",dateLine:pg.dateLine};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
