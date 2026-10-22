@@ -26,6 +26,7 @@
  *   --cover        per venue, the fewest pages that between them show every rule seen
  *                  there (kept), and the rest (cut); the list is not changed
  *   --write-rules  write the replies' rules onto the list
+ *   --write-passages  write each reply's passage (first and last 60 characters) onto the list
  *   --add          put a reply not on the list onto it, as the reader reads it now, only
  *                  when it shows a rule new at its venue; else say it adds nothing
  */
@@ -55,6 +56,13 @@ function loadReader() {
   const React = { createElement() {}, Fragment: null, memo: f => f, useState: () => [], useEffect: hook, useMemo: f => f(), useCallback: f => f, useRef: () => ({}) };
   return new Function('React', 'window', 'document', 'localStorage',
     fs.readFileSync(built, 'utf8') + '\n;return {readShowPage,linkReadVenue,linkVenue,linkOptions,nameInLines,cardTitle};')(React, {}, {}, {});
+}
+
+// The passage handed to Claude, as signed off: its first and last 60 characters, so a junk line
+// creeping in at the top or the end shows (docs/add_by_link.md, "The passage").
+function passageOf(raw) {
+  const t = String(raw || '').replace(/\s+/g, ' ').trim();
+  return t.length <= 120 ? t : t.slice(0, 60) + ' … ' + t.slice(-60);
 }
 
 // One reply read as the card shows it, with the rules it used.
@@ -98,6 +106,7 @@ function main() {
   const dir = args.find(a => !a.startsWith('--'));
   const all = args.includes('--all');
   const covering = args.includes('--cover'), writeRules = args.includes('--write-rules'), adding = args.includes('--add');
+  const writePassages = args.includes('--write-passages');
   if (!dir || !fs.existsSync(dir)) { console.log('usage: node scraper/link_proof_check.js <folder of replies> [--all]'); process.exit(2); }
 
   const list = JSON.parse(fs.readFileSync(LIST, 'utf8'));
@@ -120,7 +129,7 @@ function main() {
       const fresh = rules.filter(t => !shown.has(t));
       if (!fresh.length) { console.log('same  ' + f + '  ' + res.url + '\n        every rule it uses is shown by a listed page at ' + v); continue; }
       console.log('        new at ' + v + ': ' + fresh.join(' '));
-      const e = { url: res.url, venue: v, title: row.title, start: row.start, end: row.end, rules };
+      const e = { url: res.url, venue: v, title: row.title, start: row.start, end: row.end, passage: passageOf(row.raw), rules };
       added.push(e);
       console.log('ADDED ' + f + '  ' + JSON.stringify(e));
       continue;
@@ -132,15 +141,17 @@ function main() {
       console.log('rules ' + f + '  listed: ' + (want.rules.join(' ') || '-') + '\n        now:    ' + (rules.join(' ') || '-'));
     }
     if (writeRules) want.rules = rules;
+    if (writePassages && got.ok) want.passage = passageOf(row.raw);
     want._rules = rules;
     const bad = ['venue', 'title', 'start', 'end'].filter(k => (k === 'venue' ? venue : row[k]) !== want[k]);
     if (!got.ok && want.title) bad.push('why');
     if (want.noDescription && row.raw) bad.push('description');
+    if (want.passage !== undefined && got.ok && passageOf(row.raw) !== want.passage) bad.push('passage');
     if (!bad.length) { console.log('ok    ' + f + '  ' + want.venue + '  ' + (row.start || '-') + ' -> ' + (row.end || '-') + '  ' + row.title); continue; }
     diffs++;
     console.log('DIFF  ' + f + '  (' + bad.join(', ') + ')  ' + res.url);
-    console.log('        list  ' + JSON.stringify({ venue: want.venue, title: want.title, start: want.start, end: want.end }));
-    console.log('        live  ' + JSON.stringify({ venue, title: row.title, start: row.start, end: row.end, ...(row.why ? { why: row.why } : {}), ...(want.noDescription && row.raw ? { description: row.raw.slice(0, 120) } : {}) }));
+    console.log('        list  ' + JSON.stringify({ venue: want.venue, title: want.title, start: want.start, end: want.end, ...(bad.includes('passage') ? { passage: want.passage } : {}) }));
+    console.log('        live  ' + JSON.stringify({ venue, title: row.title, start: row.start, end: row.end, ...(row.why ? { why: row.why } : {}), ...(want.noDescription && row.raw ? { description: row.raw.slice(0, 120) } : {}), ...(bad.includes('passage') ? { passage: passageOf(row.raw) } : {}) }));
   }
 
   if (covering) {
@@ -150,7 +161,7 @@ function main() {
     for (const e of read) console.log((keep.has(e) ? '  keep ' : '  cut  ') + e.venue.padEnd(32) + e.url + (e.note ? '   [' + e.note + ']' : ''));
   }
   for (const e of list) delete e._rules;
-  if (writeRules || added.length) {
+  if (writeRules || writePassages || added.length) {
     // One page per line, as the list is kept.
     fs.writeFileSync(LIST, '[\n' + list.concat(added).map(e => '  ' + JSON.stringify(e)).join(',\n') + '\n]\n');
     console.log('\nList written' + (added.length ? ': ' + added.length + ' page' + (added.length === 1 ? '' : 's') + ' added' : '') + '.');

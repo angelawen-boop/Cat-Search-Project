@@ -1109,6 +1109,17 @@ function runtime() {
       'AL-059b:  a German "Publikationen" section ranks; one book\'s own page never does', JSON.stringify(r.map(x => x.url)));
     ok(sf.notAShop('https://www.petitpalais.paris.fr/sites/default/files/content/images/copie_de_petit_palais_boutique-01.jpg') && sf.notAShop('https://play.google.com/store/apps/details?id=fr.parismusees.petitPalais') && !sf.notAShop('https://shop.kunsthaus.ch/'),
       'AL-059c:  a file or an app store is never the shop');
+    // ── AL-060: the passage's shared rules, on lines copied from live replies ─
+    const ps = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {readShowPage,isFurniture,withoutBoilerplate};')(React, win, win.document, win.localStorage);
+    ok(['Buy Tickets', 'Adults CHF 31.– / Concessions CHF 22.–* incl. Collection & small exhibitions.', 'MoMA, Floor 3, 3 East The Robert B. Menschel Galleries',
+        'Johan Tobias Sergel, detail of Mars and Venus . Photo: Viktor Fordell/Nationalmuseum', 'Anna Atkins, cyanotopi, 1843', 'Free with museum admission'].every(ps.isFurniture)
+      && !ps.isFurniture('Bacon was inspired to become a painter by Picasso’s works.') && !ps.isFurniture('In 1938, René Magritte gave a lecture at the KMSKA.'),
+      'AL-060: ticket and visit labels, prices, floors, photo credits and captions are furniture; a sentence about the show never is');
+    ok(ps.withoutBoilerplate('Frida Kahlo’s art has resonated widely. Major funding is provided by the Kinder Foundation.') === 'Frida Kahlo’s art has resonated widely.',
+      'AL-060a:  a sentence holding one of the scraper\'s boilerplate phrases goes, its neighbour stays (BOILERPLATE, shared)');
+    const getty = ps.readShowPage({ title: 'Ultra-Violet: New Light on Van Gogh\'s Irises | Getty Exhibitions', full_content: '# Ultra-Violet: New Light on Van Gogh’s Irises\n\nOct 1, 2024–Mar 9, 2025\n\nRelated Events\n\nExamine Getty’s much-loved painting, Irises by Vincent van Gogh, from the perspective of modern conservation science. This exhibition shows how the artist worked and how the painting has changed over time. '.repeat(2) + '\n\nRelated Tours\n\nA tour of the Getty Center gardens, every day at noon, with a docent who knows the plants well and loves them.' }, 'https://www.getty.edu/exhibitions/ultra-violet-new-light-on-van-goghs-irises/', null);
+    ok(getty.ok && /^Examine Getty/.test(getty.raw) && !/gardens/.test(getty.raw),
+      'AL-060b:  "Related …" above the show\'s text is skipped; after it, the passage ends there (Getty)', JSON.stringify(getty.raw.slice(0, 80)));
     const byAddr = new Function('React', 'window', 'document', 'localStorage', code + '\n;return namedByAddress;')(React, win, win.document, win.localStorage);
     ok(byAddr({ name: 'kmska.be', host: 'kmska.be' }) && byAddr({ name: 'www.mfa.org', host: 'mfa.org' }) && !byAddr({ name: 'kmska.be', short: 'Antwerp', host: 'kmska.be' })
       && !byAddr({ name: 'Detroit Institute of Arts Museum', host: 'dia.org' }),

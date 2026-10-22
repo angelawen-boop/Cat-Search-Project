@@ -189,6 +189,19 @@ those 25 read clean before, 25 after, with no proof page worse. Code: `readShowP
 - **R7 Clean passage** — a repeated line is kept once; HTML character codes become characters (Acquavella
   "Mir&oacute;"). `decodeEntities`.
 
+## The passage — what Claude is handed to describe
+
+Shared rules first, as titles and dates (her decision), measured on the same 101 pages. A sentence holding
+one of the scraper's boilerplate phrases goes — ticket and admission wording, funders, "©" credits, cookie and
+newsletter notices (`BOILERPLATE`, one copy in `scraper/boilerplate.js`, written into the app by `sync_shared`).
+A short line that is page furniture goes: a ticket or visit label, a price, a floor or level, a photo credit, a
+picture's caption ending on its year (`isFurniture`, `CAPTION`; Louisiana, Kunsthaus, MoMA, Nationalmuseum). The
+passage ends at "Related …", "You may also like", other shows or the newsletter — once 300 characters of the
+show's own text are in (`PASSAGE_END`; Getty prints "Related Events" above its text). What it dropped on the 101
+pages was read line by line: junk only, and a related artwork's text under the Menil's "Related Artworks". Each
+proof page's passage is signed off on the list (first and last 60 characters; `--write-passages`). AL-060.
+Venue rules (`from`, `until`, `skip`, `minLine`) stay where a page's layout is its own.
+
 ## Venue link rules
 
 **San Marco** (`occ-museitoscana-cultura-gov-it`, her decision): the Tuscan state museums' site names itself

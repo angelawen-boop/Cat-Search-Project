@@ -44,7 +44,8 @@ or invented pages (her decision). Each feature keeps a list of live addresses wi
 for each. Not part of `npm test`: they need live replies.
 
 **Add by link — `docs/link_proof_pages.json`** (`url`, `venue`, and the `title`, `start`, `end` signed off;
-`note` where a field is knowingly imperfect; `rules`, the reader's rules the page uses). Fetch the addresses
+`note` where a field is knowingly imperfect; `rules`, the reader's rules the page uses; `passage`, the first and
+last 60 characters of the text handed to Claude). Fetch the addresses
 live through Parallel (the keyed connector only with her yes), save each reply as `{url,title,full_content}`
 by script into a folder in the scratchpad, and run `node scraper/link_proof_check.js <folder>` (`--all` also
 fails on a listed page with no reply); exit 1 on any difference. A difference is a reader change to sign off

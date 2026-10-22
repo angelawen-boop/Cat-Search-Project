@@ -15,6 +15,7 @@
  *                                 two paragraphs about batch-only fields)
  *   scraper/compress.js        → EN_PREFIX and composeSummary(), which
  *                                 write the "In English: …" line
+ *   scraper/boilerplate.js     → BOILERPLATE, the phrases a description drops (Add by link too).
  *   compress.js --examples     → SUMMARY_EXAMPLES — only with --examples.
  *   sweep_prototype.js VENUES  → VENUE_SITES: each venue's site (and, where
  *                                 two venues share one, its showPath), so a
@@ -124,7 +125,10 @@ if (i < 0 || j < 0 || j < i) die('Cat_Watch.jsx has no SHARED markers');
 const current = jsx.slice(i + OPEN.length, j);
 const keptExamples = (current.match(/^const SUMMARY_EXAMPLES=.*;$/m) || [])[0];
 const examples = retakeExamples || !keptExamples ? examplesBlock() : keptExamples;
-const region = '\n' + [datesBlock(), rulesBlock(), composeBlock(), sitesBlock(), examples].join('\n') + '\n';
+function boilerplateBlock() {
+  return 'const BOILERPLATE=' + JSON.stringify(require(path.join(ROOT, 'scraper', 'boilerplate.js')).BOILERPLATE) + ';';
+}
+const region = '\n' + [datesBlock(), rulesBlock(), composeBlock(), sitesBlock(), boilerplateBlock(), examples].join('\n') + '\n';
 
 if (check) {
   if (region !== current) die('Cat_Watch.jsx is OUT OF STEP with scraper/dates.js, compress_prompt.md, compress.js or the scraper\'s VENUES — run `node build/sync_shared.js`.');
