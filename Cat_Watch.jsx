@@ -1592,7 +1592,7 @@ function baseDomain(h){
 }
 // The show page's own link to its shop, as an address; "" when it has none.
 function shopLinkOnPage(text,museumHost){
-  const links=mdLinks(text);
+  const links=mdLinks(text).filter(l=>!notAShop(l.url));
   const named=links.find(l=>SHOP_WORDS.test(l.label));
   if(named)return named.url;
   const byHost=links.find(l=>hostOf(l.url)!==museumHost&&SHOP_HOST.test(hostOf(l.url)));
@@ -1601,9 +1601,15 @@ function shopLinkOnPage(text,museumHost){
 // The museum's own shop: its show page's shop link's site, a shop on the museum's own
 // domain (shop.courtauld.ac.uk, a /shop path), or a shop site carrying the museum's
 // name (diashop.org). A reseller's shelf for the museum is not.
+// A file is never the shop (Petit Palais: a photo of its shop, ".../petit_palais_boutique-01.jpg").
+const isFileUrl=u=>/\.(?:jpe?g|png|gif|webp|svg|pdf|mp4)(?:$|[?#])/i.test(String(u||""));
+// Nor an app store or a social site (Petit Palais's app on play.google.com/store/…).
+const NOT_SHOP_HOST=/(?:^|\.)(?:play\.google|apps\.apple|itunes\.apple|facebook|instagram|twitter|x|tiktok|youtube|linkedin|pinterest|wikipedia)\.[a-z.]+$/i;
+const notAShop=u=>isFileUrl(u)||NOT_SHOP_HOST.test(hostOf(u));
 function isShopPlace(u,museumHost,pageShopHost){
   const h=hostOf(u).replace(/^www\./,"");
   if(!h)return false;
+  if(notAShop(u))return false;
   if(pageShopHost&&h===pageShopHost.replace(/^www\./,""))return true;
   const b=baseDomain(museumHost), hb=baseDomain(h), label=b.split(".")[0], hl=hb.split(".")[0];
   if(hb===b){ let path=""; try{ path=new URL(u).pathname; }catch{} return SHOP_HOST.test(h)||SHOP_PATH.test(path); }
@@ -1848,9 +1854,9 @@ async function shopElsewhere(urls,museumHost){
     const t=pageTextOf(f.results);
     const pathOf=x=>{ try{ return new URL(x).pathname; }catch{ return ""; } };
     // A shop's address on another site counts too (Hamburg's Friends' shop, freunde-der-kunsthalle.de/shop/).
-    const out=mdLinks(t).find(l=>{ const lh=hostOf(l.url); return lh&&baseDomain(lh)!==b&&(SHOP_AWAY_LABEL.test(l.label)||SHOP_HOST.test(lh)||SHOP_PATH.test(pathOf(l.url))||/\.myshopify\.com$/i.test(lh)); });
+    const out=mdLinks(t).find(l=>{ const lh=hostOf(l.url); return lh&&!notAShop(l.url)&&baseDomain(lh)!==b&&(SHOP_AWAY_LABEL.test(l.label)||SHOP_HOST.test(lh)||SHOP_PATH.test(pathOf(l.url))||/\.myshopify\.com$/i.test(lh)); });
     // Else the shop itself on the museum's own site, under its own address (Belvedere's /shop?kategorie=…).
-    const home=out?null:mdLinks(t).find(l=>baseDomain(hostOf(l.url))===b&&SHOP_PATH.test(pathOf(l.url))&&pathOf(l.url)!==path&&!/ticket/i.test(l.url));
+    const home=out?null:mdLinks(t).find(l=>!isFileUrl(l.url)&&baseDomain(hostOf(l.url))===b&&SHOP_PATH.test(pathOf(l.url))&&pathOf(l.url)!==path&&!/ticket/i.test(l.url));
     if(home)return{url:originOf(home.url)+pathOf(home.url).replace(/^\//,""),text:t};
     // A Shop page that hands over the shop itself (Berlin's smb.museum/webshop shows the
     // shop's front page) links one book first: that book's site is the shop, not the book.

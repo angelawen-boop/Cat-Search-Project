@@ -1095,6 +1095,20 @@ function runtime() {
     ok(rd.cardTitle('PONTORMO', 'occ-x') === 'Pontormo' && rd.cardTitle('PICASSO – BACON', 'occ-x') === 'Picasso – Bacon' && rd.cardTitle('KAWS', 'occ-x') === 'KAWS'
       && rd.cardTitle('KMSKA x YOUNG FASHION DESIGNERS', 'occ-x') === 'KMSKA x YOUNG FASHION DESIGNERS',
       'AL-058: a title typed wholly in capitals is recased; one short word and a title mixing cases are left alone');
+    // ── AL-059: the shop finder's shared words, from the new-museum run ─
+    const sf = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {SHOP_PATH,SHOP_WORDS,SHOP_HOST,PRICE,rankShelves,notAShop,foldText};')(React, win, win.document, win.localStorage);
+    const prices = t => (sf.foldText(t).match(sf.PRICE) || []).length;
+    ok(sf.SHOP_PATH.test('/en/museum/louisiana-butik') && sf.SHOP_PATH.test('/en/kmskashop-and-coffee-bar') && !sf.SHOP_PATH.test('/en/workshops') && !sf.SHOP_PATH.test('/en/restoration')
+      && sf.SHOP_WORDS.test('KMSKAShop') && !sf.SHOP_WORDS.test('Workshop') && sf.SHOP_HOST.test('www.kmskashop.be'),
+      'AL-059: shop words in other languages and run into a name (Louisiana "butik", "KMSKAShop"), never "workshop"');
+    ok(prices('Katalog | Tanzbild EUR 24,90 Katalog | Daumier EUR 34,90') === 2 && prices('CHF 45.00 and CHF 38.00') === 2 && prices('SEK 345') === 1,
+      'AL-059a:  prices with the currency code first (Albertina "EUR 24,90") and in francs and crowns count');
+    const r = sf.rankShelves([{ url: 'https://shop.albertina.at/de/produkte/publikationen/', words: 'HIER BLÄTTERN de produkte publikationen' },
+      { url: 'https://www.biderundtanner.ch/buchhandlung/feminismus-buecher/detail/ISBN-9783832166298/Endler', words: 'Das Patriarchat buecher' }]);
+    ok(r.length === 1 && r[0].kind === 'publications' && /publikationen/.test(r[0].url),
+      'AL-059b:  a German "Publikationen" section ranks; one book\'s own page never does', JSON.stringify(r.map(x => x.url)));
+    ok(sf.notAShop('https://www.petitpalais.paris.fr/sites/default/files/content/images/copie_de_petit_palais_boutique-01.jpg') && sf.notAShop('https://play.google.com/store/apps/details?id=fr.parismusees.petitPalais') && !sf.notAShop('https://shop.kunsthaus.ch/'),
+      'AL-059c:  a file or an app store is never the shop');
     const byAddr = new Function('React', 'window', 'document', 'localStorage', code + '\n;return namedByAddress;')(React, win, win.document, win.localStorage);
     ok(byAddr({ name: 'kmska.be', host: 'kmska.be' }) && byAddr({ name: 'www.mfa.org', host: 'mfa.org' }) && !byAddr({ name: 'kmska.be', short: 'Antwerp', host: 'kmska.be' })
       && !byAddr({ name: 'Detroit Institute of Arts Museum', host: 'dia.org' }),

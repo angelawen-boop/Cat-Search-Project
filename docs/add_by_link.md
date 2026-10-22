@@ -65,7 +65,15 @@ meets it.
 
 ## A venue the app has not seen
 
-Name from the page title. Its shop: the **exhibition-catalogues section**, else the museum's publications,
+**Measured on 24 museums never seen** (her decision: the shop finder rebuilt as the reader was): a books section
+found for 9 → 11; the museum's home page given as its shop 3 → 0; nothing found 7 → 3 (Strozzi, Scuderie, Poldi
+Pezzoli — no online shop seen). Shared rules added: one list of shop words in the languages met (Danish "butik",
+a name run into "shop"), German and Scandinavian section words, prices in francs, crowns and with the currency
+code first, one book's page never a section, a file or an app store never the shop, a shop page on the museum's
+own site kept as itself, a shop address on another site followed, and one more search for the shop itself when
+the first finds nothing shop-like. AL-059.
+
+Name: Claude's (above). Its shop: the **exhibition-catalogues section**, else the museum's publications,
 else books — **never the front page, one book, a post, or a section mixing books with other goods** (her
 decision). A mixed section is opened and a books-only section inside it taken. **Nothing found is stored until
 the import finishes.** Code: "FINDING A NEW VENUE'S SHOP SECTION".
