@@ -615,9 +615,9 @@ and were fixed in code, proven live).
      (`scraper/answer_check.js`): shape, and claims and numbers on the page; refused → asked again (her decision;
      `docs/compression.md`, "Enforcement"). It found three wrong numbers in the imported 15 Oct run, left as swept.
      **Item 0 closed; published at 50.**
-  1. **Claude's other reads, tested with Sonnet calls — not closed (item 0).** On 70 live pages: subtitle pick, English
+  1. **Claude's other reads, tested with Sonnet calls — closed.** On 70 live pages: subtitle pick, English
      title, English-speaking country and a blog page's second question scored right on every page against truth set
-     before the answers; one summary said "first" with no word for it in the text (Pontormo). Scripts:
+     before the answers; Pontormo's "first", re-run on 50: caught by the description check, the re-ask clean. Scripts:
      `scraper/claude_read_check/` (`fetch.js` live replies through the free Parallel server; `build.js` the app's own
      `readShowPage` and `linkPrompt` write each question; Sonnet answers each into a file; `score.js` scores with the
      app's `linkAnswer`/`linkTitle` against `truth.js`; `build2.js`/`score2.js` the second question). `docs/add_by_link.md`, "Per link".

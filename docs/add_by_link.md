@@ -66,7 +66,8 @@ meets it.
    non-English title and never on an English one; English-speaking country right on 70; summaries within the
    rules on 69 by code check. **Read for meaning on the clean passages** (every proof page, the new-museum pages,
    Wallraf, the blog pages): right about the show on all but Pontormo (Scuderie), where Claude writes "first" with no
-   word for it in the text, on two reads of three — open, a code check is her decision.
+   word for it in the text, on two reads of three — now caught by the description check and asked again (re-run on 50: one
+   read of three said "first", refused; the re-ask clean).
    A blog page's second question (`elsewherePrompt`): right museum, site and full title on 9 of 9 reads
    (Enfilade Canaletto → rct.uk; her two Reynolds pages → the Wallace, *Joshua Reynolds: Experiments in Paint*).
 5. **Claude's answer checked as the compressor's** (`answerFaults`, the shared `scraper/answer_check.js`):
