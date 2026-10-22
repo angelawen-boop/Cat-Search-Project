@@ -223,6 +223,14 @@ Her decision. This is search logic, kept apart from the display work above: it i
 Stage 1/1b search on `parked` (`docs/handover_search_stage1.md` there), never as a patch on
 today's search on `main`.
 
+### Fault to fix: a link venue is searched under its short card name
+
+For a venue Add by link met (no `lookupName` of her own), the lookup searches under the short card name —
+"Detroit", "Antwerp KMSKA" — not the long name the shop search uses (`occVenue` sets `lookupName` from the
+store's `short`). Her decision: search names are long, card names short. The long name — full name, other
+names, city, country — is built by `venueSearchName` (Add by link); proved live for the shop search (KMSKA's
+English name alone found the Brussels museums; "Palazzo Ducale" alone found Venice's).
+
 ### What the search is for
 
 Find **every catalogue of this exhibition, at any of its showings, whoever printed it** — this

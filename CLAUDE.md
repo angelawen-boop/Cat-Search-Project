@@ -166,6 +166,8 @@ choose → tell, every version kept, her starting-pick rules) and its nine agree
 approval to build; no code before.
 
 She is noting issues as she uses it, for a later debugging session.
+**OPEN — a link venue is searched under its short card name** ("Detroit"), not the long name; any search work
+fixes it (`docs/catalogue_versions.md`, "Fault to fix").
 **OPEN — three cases any search debugging must fix** (her decision; `docs/catalogue_versions.md`,
 cases 10–12; case 13, Beato Angelico, is her report, not yet agreed): Munich's shop (CEDON) sells the German and English editions on ONE product page with
 a language choice. *Venezia 500* holds the English ISBN labelled German and says no English edition;
@@ -593,7 +595,8 @@ and were fixed in code, proven live).
   gives a new venue's full name, other names, city, country and short card name on its first link; the shop is
   searched under the long name (proved live on KMSKA, Genoa, San Marco). Her next new museum confirms.
   Next, agreed: map the reader's venue rules on the proof pages, fold repeats into general rules, measure on
-  20–30 museums never seen. `docs/add_by_link.md`.
+  20–30 museums never seen. Once rebuilt, the same Claude test (Sonnet, live proof pages, scored in code) on the
+  description, subtitle and title reads and on a blog page's second question — not yet run. `docs/add_by_link.md`.
 - **Published at 47.3 — Sammlung Schack (third Munich venue, no shop) and Dresden (chip "Dresden", cards
   "Dresden Gemäldegalerie"; she answers No shop once on its shop screen) by link; Munich titles typed in capitals
   recased (shared `capsTitleParts`, `dates.js`); a house line over the dates read again (Van Dyck, Boucher).
