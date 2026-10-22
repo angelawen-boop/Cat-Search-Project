@@ -1621,8 +1621,8 @@ function namesVenue(u,named){
 // section. Words are read with accents folded.
 // German joins its words: "Ausstellungskataloge" (Berlin) ends in "kataloge"; "buecher" is
 // "Bücher" in an address.
-const SHELF_CATALOGUES=/\bcatalog(?:ue)?s\b|\bcatalogos\b|\bcatalogi\b|\bcataloghi\b|kataloge\b/;
-const SHELF_BOOKS=/\bbooks\b|\bpublications\b|\bpublicaciones\b|\bpublicaties\b|\bpubblicazioni\b|\blivres\b|\blibros\b|\bboeken\b|\bbu(?:e)?cher\b|\blibri\b/;
+const SHELF_CATALOGUES=/\bcatalog(?:ue)?s\b|\bcatalogos\b|\bcatalogi\b|\bcataloghi\b|kataloge\b|\bkataloger\b/;
+const SHELF_BOOKS=/\bbooks\b|\bpublications\b|\bpublicaciones\b|\bpublicaties\b|\bpubblicazioni\b|\bpublikationen\b|\bpublikationer\b|\blivres\b|\blibros\b|\bboeken\b|\bbu(?:e)?cher\b|\blibri\b|\bbocker\b|\bboger\b|\bboker\b/;
 // A section that says it is NOT books ("All Products (not Catalogues)") is not one.
 const SHELF_NOT=/\b(?:not|non|sin|sans|ohne|niet|geen|zonder|except)\b\W+(?:\w+\W+)?(?:catalog|book|boek|libr|livre|public)/;
 // A sale or clearance section holds only some of the books ("Catálogos en
@@ -1631,9 +1631,11 @@ const SHELF_SALE=/\b(?:sale|clearance|offers?|outlet|ofertas?|rebajas|saldi|sold
 // Books and only books (her decision): a section mixing books with other goods
 // ("Books & Stationery") is never the shelf; it is opened for a books-only section
 // inside it. A museum's own publications rank above a general books section.
-const SHELF_PUBS=/\bpublications\b|\bpublicaciones\b|\bpublicaties\b|\bpubblicazioni\b/;
+// German and Scandinavian too: "publikationen" (Albertina, Beyeler), "publikationer", "böcker" (folded "bocker").
+const SHELF_PUBS=/\bpublications\b|\bpublicaciones\b|\bpublicaties\b|\bpubblicazioni\b|\bpublikationen\b|\bpublikationer\b/;
 const SHELF_GOODS=/\b(?:stationery|stationary|gifts?|toys|games|apparel|clothing|jewell?ery|accessories|homeware|home goods|decor|cards|notecards|journals|notebooks|prints|posters|supplies|merch\w*|souvenirs?|papeterie|cadeaux|jouets|regalos|papeleria|juguetes|cadeaus|speelgoed|regali|cartoleria|giochi)\b/;
-const NOT_A_SHELF=/\/(?:products?|p|blogs?|news|journal|articles?|stories|pages|account|cart)\/|[?&]q=|\/search/i;
+// One book's page is not a section (Bider & Tanner's ".../detail/ISBN-978...").
+const NOT_A_SHELF=/\/(?:products?|p|detail|blogs?|news|journal|articles?|stories|pages|account|cart)\/|\/isbn-\d|[?&]q=|\/search/i;
 function pathWords(u){ try{ return decodeURIComponent(new URL(u).pathname).replace(/[-_/.]/g," "); }catch{ return ""; } }
 function isFrontPage(u){ try{ return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/?)?$/i.test(new URL(u).pathname); }catch{ return true; } }
 // Candidates, best first: a catalogues section, then the museum's
@@ -1657,8 +1659,9 @@ function rankShelves(cands){
 }
 // A SHELF OF BOOKS, READ OFF ITS TEXT: book words and prices, both plural. German joins
 // its words ("Ausstellungskataloge", Berlin).
-const BOOK_WORD=/\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b|\bpages\b|\bcatalog(?:ue|o|us)?s?\b|\bcatalogi\b|kataloge?\b|\bbooks?\b|\bboek(?:en)?\b|\blibros?\b|\blivres?\b|\bbuch\b|\bbu(?:e)?cher\b|\btapa (?:dura|blanda)\b/g;
-const PRICE=/[$€£]\s?\d|\d[.,]\d{2}\s?(?:€|eur\b|usd\b|gbp\b|\$|£)/g;
+const BOOK_WORD=/\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b|\bpages\b|\bcatalog(?:ue|o|us)?s?\b|\bcatalogi\b|kataloge?\b|\bbooks?\b|\bboek(?:en)?\b|\blibros?\b|\blivres?\b|\bbuch\b|\bbu(?:e)?cher\b|\bbok\b|\bbocker\b|\bpublikation(?:en|er)?\b|\bseiten\b|\bsidor\b|\btapa (?:dura|blanda)\b/g;
+// Swiss francs and Scandinavian crowns count too (Beyeler "CHF 45.00", Nationalmuseum "SEK 345").
+const PRICE=/[$€£]\s?\d|\b(?:chf|sek|dkk|nok|kr\.?)\s?\d|\d[.,]\d{2}\s?(?:€|eur\b|usd\b|gbp\b|chf\b|\$|£)|\d\s?(?:sek|dkk|nok|kr)\b/g;
 function looksLikeBookShelf(text){
   const t=foldText(text);
   return (t.match(BOOK_WORD)||[]).length>=3&&(t.match(PRICE)||[]).length>=2;
