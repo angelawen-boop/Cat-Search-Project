@@ -135,16 +135,31 @@ once more at their next lookup. Live check, every link venue's shelf: venues the
 new searches proved for the Royal Academy (`catalogsearch/result/?q=`), Berlin (`search?sSearch=`) and both CEDON
 houses (`search?search=`); Yale, Mauritshuis, Thyssen, NGA, NGV and Mia still show no book in their shelf text.
 
-## The general reader — ten rules
+## The general reader — shared rules, venue rules only where needed
 
-From a read of 67 pages at 28 venues. Code: `readShowPage`, `splitPageTitle`, `DATES.findDateRange`. Proved on
-fresh Parallel fetches (her decision for Parallel work); only the date phrases are unit-tested
-(`date.test.js`, DS-002). A page with no dates still fails (blank dates are not approved).
+Built as the scraper is: one shared reader, a venue entry only for what differs (her decision). Rebuilt on
+101 live pages: the 76 proof pages at her venues plus 25 pages from museums the app had never seen — 13 of
+those 25 read clean before, 25 after, with no proof page worse. Code: `readShowPage`, `splitPageTitle`,
+`cardTitle`, `DATES.findDateRange`. Tests: DS-005–006, AL-054–058. A page with no dates still fails.
 
-- **R1 Site address tail** — a dash tail that is the site's own address is the site, not the title (KHM).
-  `splitPageTitle`. A separator with no site after it is dropped (Genoa *Van Dyck, the European -*; AL-047).
-- **R2 Heading over tab title** — a tab title that is the heading plus a dash-led tail, or plus
-  "Exhibition(s)", gives way to the heading (Acquavella, V&A, MAD, British Museum). `readShowPage`.
+- **R1 Site in the page title** — a dash tail that is the site's own address is the site (KHM); a separator
+  with no site after it is dropped (Genoa, AL-047); a bar title with the site first takes the other part
+  (Nationalmuseum, AL-057). `splitPageTitle`.
+- **R2 The heading is the name** — as in the scraper (`titleFromPage`). The page title adds only what the
+  page backs: its spelling when it reads the same (Tate "90s"); the line under the heading when the page
+  title's extra words are all on it (Poldi Pezzoli); its subtitle after ". " or ": " (KHM *Head and
+  Shoulders. Coins in Fashion*). Never its dates, site name or another spelling (MFAH, NPG, Philadelphia).
+  A heading of generic words, the site's name, or sharing no word with the page title gives way to it
+  (NGA's "Global Search"). AL-056.
+- **R2a Generic label** — "Exhibition", "Mostra", "Ausstellung"… before the name leaves it (NGA, San Marco,
+  Van Gogh Museum; AL-054).
+- **R2b Capitals** — a title typed wholly in capitals is recased, unless one short word (Scuderie, Albertina,
+  Borghese; AL-058). `cardTitle`, the same for the app and the proof check.
+- **R12 Date forms** — dotted dates with the year on the closing side only or two-digit years, a dotted
+  closing date (DS-005); a slashed range on the date line when the numbers prove its order (Prado, DS-006).
+- **R13 Dates around the heading** — "From …" over "Until …" read together; a paragraph's one-sided date
+  waits six lines for a full range (Van Gogh Museum, AL-054); with none under any title line, the two lines
+  above the heading (Kunsthaus, Boston, Pinakothek der Moderne; AL-055).
 - **R3 Closing-only dates** — "Through …", "Until …", "Closes …", "fino al …", "Now–…", in the shared `dates.js` after
   the ranges, so a range still wins; the scraper reads them too. DS-002.
 - **R9 One side completed** — a one-sided first date takes a full range further down that shares the date on
@@ -211,7 +226,7 @@ CT-001). "Venezia 500<<" is the museum's own title.
 - **Which house** (`sites` with a house `line`, `linkVenue`): a pinakothek.de show page prints its house on the line between title
   and dates ("Alte Pinakothek", "Pinakothek der Moderne | Art", "Sammlung Schack"); that line files the show and
   is never offered as a subtitle. A page naming none is a line, not a card. The Pinakothek der Moderne's own site files under it;
-  it prints "10/07/2026 - 04/10/2026" above the title, day first (`datesAbove`, `slashDayFirst` on der Moderne's entry, read only on its own site).
+  it prints "10/07/2026 - 04/10/2026" above the title, day first (R13, `slashDayFirst` on der Moderne's entry).
 - **Shops: CEDON**, a company running several museums' shops, a section per house
   (`museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen`, `…/Pinakothek-der-Moderne-Muenchen`), linked only
   from the museums' house pages. Searched in German, one query per house (`shopQueries`: "<house> München
@@ -249,7 +264,7 @@ A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her
 live in the app, never the scraper). They only tidy what Claude is handed. Options: `title`, `titleDrop` (a
 label before the show's name), `dateLine` (dates from the first line matching, anywhere), `from` / `until`
 (passage starts after / ends at a matching line), `skip` / `skipEntities` / `minLine` (lines left out),
-`cleanLink` (address loses query and fragment), `datesAbove` (dates up to N lines above the heading), `crumb` (title from the breadcrumb when the page never prints its tab title), `titleAfter` (the first heading after a matching line is the title), `capsTitles` (titles typed in capitals recased). `skip` lines are never offered as a subtitle either. An
+`cleanLink` (address loses query and fragment), `crumb` (title from the breadcrumb when the page never prints its tab title), `titleAfter` (the first heading after a matching line is the title), `capsTitles` (titles typed in capitals recased). `skip` lines are never offered as a subtitle either. An
 occasional venue takes them from its `LINK_VENUES` entry; read by `readShowPage`, `venueTitle`. Junk at the end of a
 passage is tolerated (her decision).
 
@@ -257,7 +272,7 @@ passage is tolerated (her decision).
   past 60 lines, and an old-layout page prints it above the only line naming the show. *Matisse* (2012) prints
   no dates in its text at all.
 - **Boston MFA** (`occ-mfa-org`, chip "Boston" under "Occasional", cards "Boston MFA", her decision) — dates
-  printed on the line above the title (`datesAbove`). Legacy Illuminated, Degas and Sargent are unchecked
+  printed on the line above the title (R13). Legacy Illuminated, Degas and Sargent are unchecked
   (the free tier refused).
 - **frick** — a leading "Special Loan:" is the Frick's label, not the show's name (`titleDrop`).
 - **menil** — a leading "Collection Close-Up:" dropped (`titleDrop`, her ask).

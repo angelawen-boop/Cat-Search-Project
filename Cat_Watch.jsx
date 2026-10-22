@@ -793,7 +793,7 @@ const PRM_BOX=/^(?:Current|Upcoming|Past) Exhibitions$|^Mostre (?:in corso|futur
 //   linkRead     how its pages are read (as on a MUSEUMS entry)
 //   shopHome, shopCatalogues, shopUnseen, shopQueries, shopNamed, rankAsOwn — its shop (below)
 const LINK_VENUES={
-  "occ-nga-gov":{ownChip:true,short:"NG Washington",lookupName:"NGA",linkRead:{titleDrop:/^Exhibition:\s*/i}},
+  "occ-nga-gov":{ownChip:true,short:"NG Washington",lookupName:"NGA"},
   "occ-nationalgalleries-org":{ownChip:true,short:"NG Scotland"},
   // Mia's page titles end "–– Minneapolis Institute of Art".
   "occ-new-artsmia-org":{ownChip:true,short:"Mia",lookupName:"Mia",name:"Minneapolis Institute of Art",linkRead:{titleDrop:/\s+[-–—]+\s+Minneapolis Institute of Art$/i}},
@@ -813,7 +813,7 @@ const LINK_VENUES={
     shopQueries:["Alte Pinakothek M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Alte Pinakothek",linkRead:{capsTitles:true}},
   "occ-pinakothek-der-moderne":{ownChip:true,short:"Munich der Moderne",chip:"Munich",group:"munich-pinakotheken",lookupName:"Pinakothek der Moderne",name:"Pinakothek der Moderne M\u00fcnchen",
     sites:[{host:"pinakothek.de",line:/^Pinakothek der Moderne\b/i},{host:"pinakothek-der-moderne.de"}],
-    shopQueries:["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Pinakothek der Moderne",linkRead:{capsTitles:true,datesAbove:1,slashDayFirst:true}},
+    shopQueries:["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Pinakothek der Moderne",linkRead:{capsTitles:true,slashDayFirst:true}},
   "occ-sammlung-schack":{ownChip:true,short:"Sammlung Schack",chip:"Munich",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",
     sites:[{host:"pinakothek.de",line:/^Sammlung Schack\b/i}],linkRead:{capsTitles:true}},
   // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin Gemäldegalerie" (her decision).
@@ -831,7 +831,7 @@ const LINK_VENUES={
   "occ-staedelmuseum-de":{ownChip:true,short:"Frankfurt",card:"Frankfurt St\u00e4del",lookupName:"St\u00e4del Museum",name:"St\u00e4del Museum",
     shopHome:"https://liebieghaus.ticketfritz.de/",shopCatalogues:"https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885",shopUnseen:"parallel"},
   // Under "Occasional". Boston MFA prints the dates on the line above the show's title.
-  "occ-mfa-org":{short:"Boston",card:"Boston MFA",linkRead:{datesAbove:2}},
+  "occ-mfa-org":{short:"Boston",card:"Boston MFA"},
   "occ-archive-worcesterart-org":{short:"Worcester"},
   // NGV writes two-digit years ("4 Sep 26 – 31 Jan 27").
   "occ-ngv-vic-gov-au":{card:"National Gallery Victoria",linkRead:{shortYear:true}},
@@ -839,7 +839,7 @@ const LINK_VENUES={
   // its cards show "San Marco" and the lookup searches as "Museo di San Marco" (her decision).
   // Its pages are press releases: the title is the headline's first sentence, without "Mostra"
   // (exhibition) or the quotation marks round the name; capitals recased (her decision).
-  "occ-museitoscana-cultura-gov-it":{short:"San Marco",name:"Museo di San Marco",linkRead:{firstSentence:true,titleDrop:/^Mostra\s+/i,unquote:true,capsTitles:true}},
+  "occ-museitoscana-cultura-gov-it":{short:"San Marco",name:"Museo di San Marco",linkRead:{firstSentence:true,unquote:true,capsTitles:true}},
   // Genoa's page titles give no name, Milan's name the city council (her names, both written in).
   "occ-palazzoducale-genova-it":{short:"Palazzo Ducale Genova",name:"Palazzo Ducale Genova"},
   // Palazzo Reale Milano's pages also sit on the city council's site, saved by her because that
@@ -933,6 +933,9 @@ function splitPageTitle(t,host){
   // ("Exhibition | Canaletto and the Art of Venice | Enfilade") is not its name. AL-050.
   let parts=s.split(" | ").map(x=>x.trim()).filter(Boolean);
   while(parts.length>1&&TITLE_LABEL.test(parts[0]))parts=parts.slice(1);
+  // The site can come first ("Nationalmuseum | Fantasy and Reality – …"): the part named for the site is the site.
+  const namesSite=x=>{ const h=foldText(host); return foldText(x).split(/[^a-z0-9]+/).some(w=>w.length>=4&&h.includes(w)); };
+  if(parts.length>1&&!site&&namesSite(parts[0])&&!namesSite(parts[parts.length-1]))return{show:parts[parts.length-1],site:parts[0]};
   if(parts.length>1&&!site)return{show:parts[0],site:parts[parts.length-1]};
   return{show:parts[0]||s,site};
 }
@@ -976,6 +979,16 @@ function decodeEntities(t){
 
 // A venue's own link options (its MUSEUMS entry's `linkRead`). Cases: docs/add_by_link.md,
 // "Venue link rules".
+// The title as the card shows it: a venue with capsTitles recases each part typed in capitals; any
+// title typed wholly in capitals is recased (Scuderie "PONTORMO", Albertina "PICASSO – BACON"),
+// unless it is one short word (an artist's acronym, "KAWS").
+function cardTitle(t,vc){
+  if((linkOptions(vc)||{}).capsTitles)return DATES.capsTitleParts(t);
+  const s=String(t||"");
+  if(/\p{Ll}/u.test(s)||!/\p{Lu}/u.test(s))return s;
+  const words=s.split(/[^\p{L}]+/u).filter(w=>w.length>=3);
+  return words.length>=2||words.some(w=>w.length>=6)?DATES.capsTitleParts(s):s;
+}
 function linkOptions(vc){ return (vc&&MU[vc]&&MU[vc].linkRead)||(linkEntry(vc)||{}).linkRead||null; }
 function joinTitle(name,sub,dashAfterColon){
   if(/[:.!?]\s*$/.test(name))return name+" "+sub;
@@ -1074,8 +1087,6 @@ function readShowPage(res,url,vc,rules){
         if(r.start||r.end)return{d:k,range:r,via:"dates:dateLine"};
       }
     }
-    // A venue that prints the dates above the title first (linkRead.datesAbove: how many lines up).
-    if(lr&&lr.datesAbove){ const a=datesAboveFor(h,lr.datesAbove,"dates:above"); if(a)return a; }
     for(let k=h+1,seen=0;k<lines.length&&seen<LINK_DATE_LINES;k++){
       const l=stripMd(lines[k]); if(!l)continue; seen++;
       // A venue whose box of other shows sits below (linkRead.datesUntil): never read past it.
@@ -1173,6 +1184,10 @@ function readShowPage(res,url,vc,rules){
   }
   rule(base===show?(base===heading?"name:tab-is-heading":"name:tab"):base===heading?"name:heading":"name:heading-trimmed");
   if(lr&&lr.title){ const vt=venueTitle(lines,h,heading,lr,words); if(vt&&vt!==base){ base=vt; rule("name:venue-"+lr.title); } }
+  // A generic label before the show's own name: "Exhibition: Hubert Robert" (NGA), "Exhibition
+  // Vincent's Path to Fame" (Van Gogh Museum), "Mostra Rothko a Firenze" (San Marco).
+  { const b=base.replace(/^(?:exhibitions?|mostra|ausstellung|exposition|exposición|tentoonstelling)\s*[:–—-]?\s+(?=\S)/i,"").trim();
+    if(b!==base&&b.split(/\s+/).length>=1&&/\p{L}{2}/u.test(b)){ base=b; rule("label-dropped"); } }
   // A label the venue puts before the show's own name (linkRead.titleDrop).
   // A venue whose headline runs on past the show's name (linkRead.firstSentence; San Marco's
   // press releases): its first sentence only.
@@ -1182,7 +1197,7 @@ function readShowPage(res,url,vc,rules){
   if(lr&&lr.unquote){ const b=base.replace(/^[“"«‘']\s*(.+?)\s*[”"»’']$/u,"$1"); if(b!==base)rule("unquote"); base=b; }
   // A doubled colon is the venue's typo (NGA, Souvenirs of the Gilded Age).
   if(/\s*:{2,}/.test(base)){ base=base.replace(/\s*:{2,}/g,":"); rule("doubled-colon"); }
-  const between=lr&&lr.title?[]:lines.slice(h+1,d).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l))&&!(lr&&lr.skip&&lr.skip.test(l)));
+  const between=lr&&lr.title?[]:lines.slice(h+1,d>h?d:Math.min(lines.length,h+4)).map(stripMd).filter(l=>l&&l.length<=120&&!foldText(base).includes(foldText(l))&&!(lr&&lr.skip&&lr.skip.test(l)));
   if(between.length)rule("between");
   const dateLine=decodeEntities(stripMd(lines[d])).replace(/\s+/g," ").trim();
   const keepDateLine=dateLine.length>LINK_DATE_LINE_MAX;
@@ -5917,7 +5932,7 @@ export default function App(){
         const own=(MU[vc]||{}).subtitleUnderHeading&&page.under&&page.under.length<=120&&!/[.!?]$/.test(page.under)?page.under:"";
         // A show held elsewhere takes the title Claude read (someone else's page title can be anything).
         const lt=(away&&a.title)||nameInLines(page,vc)||linkTitle(page.base,own||a.subtitle,page.between);
-        const title=(linkOptions(vc)||{}).capsTitles?DATES.capsTitleParts(lt):lt;
+        const title=cardTitle(lt,vc);
         Object.assign(seen,{venue:vc,answer:a,subtitleUnderHeading:own||null,title});
         tape.row={title,museumId:vc,exUrl:url};
         got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,

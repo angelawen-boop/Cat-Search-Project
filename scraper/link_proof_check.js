@@ -54,7 +54,7 @@ function loadReader() {
   const hook = () => {};
   const React = { createElement() {}, Fragment: null, memo: f => f, useState: () => [], useEffect: hook, useMemo: f => f(), useCallback: f => f, useRef: () => ({}) };
   return new Function('React', 'window', 'document', 'localStorage',
-    fs.readFileSync(built, 'utf8') + '\n;return {readShowPage,linkReadVenue,linkVenue,linkOptions,nameInLines,capsTitleParts:DATES.capsTitleParts};')(React, {}, {}, {});
+    fs.readFileSync(built, 'utf8') + '\n;return {readShowPage,linkReadVenue,linkVenue,linkOptions,nameInLines,cardTitle};')(React, {}, {}, {});
 }
 
 // One reply read as the card shows it, with the rules it used.
@@ -64,12 +64,11 @@ function readReply(reader, res) {
   const filed = got.ok ? reader.linkVenue(res.url, got) : {};
   const venue = got.ok ? filed.id : null;   // the app's own filing (houses included)
   if (filed.line) rules.push('house-line');
-  const caps = venue && (reader.linkOptions(venue) || {}).capsTitles;
   const inLines = got.ok ? reader.nameInLines(got, venue) : '';
   if (inLines) rules.push('nameInLines');
   const base = got.ok ? (inLines || got.base) : '';
-  const title = caps ? reader.capsTitleParts(base) : base;
-  if (caps && title !== base) rules.push('caps-recased');
+  const title = got.ok ? reader.cardTitle(base, venue) : '';
+  if (title !== base) rules.push('caps-recased');
   const row = got.ok ? { title, start: got.start, end: got.end, raw: got.raw } : { title: '', start: '', end: '', why: got.why };
   return { got, venue, row, rules: rules.slice().sort() };
 }

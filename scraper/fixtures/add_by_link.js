@@ -1073,6 +1073,27 @@ function runtime() {
     const nf = new Function('React', 'window', 'document', 'localStorage', code + '\n;return needsFacts;')(React, win, win.document, win.localStorage);
     ok(nf(undefined) && nf({ name: 'Detroit Institute of Arts Museum', short: 'Detroit', host: 'dia.org' }) && !nf({ name: 'Detroit Institute of Arts Museum', short: 'Detroit', host: 'dia.org', city: 'Detroit' }),
       'AL-053f:  a venue Claude has not yet placed (no city) is asked on its next link; once placed, never again');
+    // ── AL-054 to AL-058: the shared reader's rules, on shapes copied from live replies ─
+    const rd = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {readShowPage,cardTitle,splitPageTitle};')(React, win, win.document, win.localStorage);
+    const fill = '\n\n' + 'The exhibition brings together paintings, drawings and documents from collections across Europe and America. '.repeat(5);
+    const vgm = rd.readShowPage({ title: 'Exhibition Vincent’s Path to Fame - Van Gogh Museum', full_content: '# Exhibition Vincent’s Path to Fame\n\nHow did Vincent van Gogh become a world-famous artist? This exhibition explores the vital role his family played. From 12 June 2026.\n\nAll exhibitions\n\n* Exhibition Vincent’s Path to Fame\n* From 12 June 2026\n* Until 6 September 2026' + fill }, 'https://www.vangoghmuseum.nl/en/visit/whats-on/exhibitions/vincents-path-to-fame', null);
+    ok(vgm.ok && vgm.base === 'Vincent’s Path to Fame' && vgm.start === '2026-06-12' && vgm.end === '2026-09-06',
+      'AL-054: Van Gogh Museum: a paragraph\'s half date waits for the From/Until lines below; the "Exhibition" label leaves the title', JSON.stringify([vgm.base, vgm.start, vgm.end]));
+    const kz = rd.readShowPage({ title: 'Vilhelm Hammershøi Zurich – The Eye That Listens | Kunsthaus Zürich – KUNSTHAUS', full_content: 'Until 25.10.2026\n\n# [Vilhelm Hammershøi](https://www.kunsthaus.ch/en/besuch-planen/ausstellungen/vilhelm-hammershoi/)\n\nThe Eye That Listens\n\n[Buy Tickets](https://tickets.kunsthaus.ch/)' + fill }, 'https://www.kunsthaus.ch/en/besuch-planen/ausstellungen/vilhelm-hammershoi/', null);
+    ok(kz.ok && kz.base === 'Vilhelm Hammershøi' && kz.end === '2026-10-25' && kz.between.includes('The Eye That Listens'),
+      'AL-055: Kunsthaus: dates just above the heading are read; the subtitle under it is offered to Claude', JSON.stringify([kz.base, kz.end, kz.between]));
+    const mfah = rd.readShowPage({ title: 'Frida: The Making of an Icon (January 19–May 17, 2026) | The Museum of Fine Arts, Houston', full_content: '# Frida: The Making of an Icon\n\n**Date** January 19–May 17, 2026' + fill }, 'https://www.mfah.org/art/exhibitions/frida-the-making-of-an-icon', null);
+    const phl = rd.readShowPage({ title: 'Van Gogh Sunflowers', full_content: '# Van Gogh’s Sunflowers\n\n## A Symphony in Blue and Yellow\n\n### When\n\nJun 6, 2026 – Oct 11, 2026' + fill }, 'https://www.philamuseum.org/exhibitions/van-gogh-sunflowers', null);
+    const pp = rd.readShowPage({ title: 'The Seduction of Color. Andrea Solario and the Renaissance | Poldi Pezzoli Museum', full_content: '# The Seduction of Color\n\n## Andrea Solario and the Renaissance between Italy and France\n\n###### March 26 — June 30, 2025' + fill }, 'https://museopoldipezzoli.it/en/scopri/mostre-ed-eventi/evento/the-seduction-of-color', null);
+    const khm = rd.readShowPage({ title: 'Head and Shoulders. Coins in Fashion - KHM.at', full_content: '# Head and Shoulders\n\nMünze zu der Ausstellung Kopf und Kragen\n\ndate\\_range since 11. November 2025' + fill }, 'https://www.khm.at/en/exhibitions/head-and-shoulders-coins-in-fashion', null);
+    ok(mfah.base === 'Frida: The Making of an Icon' && phl.base === 'Van Gogh’s Sunflowers'
+      && pp.base === 'The Seduction of Color: Andrea Solario and the Renaissance between Italy and France' && khm.base === 'Head and Shoulders. Coins in Fashion',
+      'AL-056: the heading is the name; the page title adds only what the page backs (a subtitle on the line under it, or after ". "), never its dates or another spelling', JSON.stringify([mfah.base, phl.base, pp.base, khm.base]));
+    const nm = rd.splitPageTitle('Nationalmuseum | Fantasy and Reality – The Art of Johan Tobias Sergel', 'www.nationalmuseum.se');
+    ok(nm.show === 'Fantasy and Reality – The Art of Johan Tobias Sergel' && nm.site === 'Nationalmuseum', 'AL-057: a page title with the site first: the part named for the site is the site', JSON.stringify(nm));
+    ok(rd.cardTitle('PONTORMO', 'occ-x') === 'Pontormo' && rd.cardTitle('PICASSO – BACON', 'occ-x') === 'Picasso – Bacon' && rd.cardTitle('KAWS', 'occ-x') === 'KAWS'
+      && rd.cardTitle('KMSKA x YOUNG FASHION DESIGNERS', 'occ-x') === 'KMSKA x YOUNG FASHION DESIGNERS',
+      'AL-058: a title typed wholly in capitals is recased; one short word and a title mixing cases are left alone');
     const byAddr = new Function('React', 'window', 'document', 'localStorage', code + '\n;return namedByAddress;')(React, win, win.document, win.localStorage);
     ok(byAddr({ name: 'kmska.be', host: 'kmska.be' }) && byAddr({ name: 'www.mfa.org', host: 'mfa.org' }) && !byAddr({ name: 'kmska.be', short: 'Antwerp', host: 'kmska.be' })
       && !byAddr({ name: 'Detroit Institute of Arts Museum', host: 'dia.org' }),

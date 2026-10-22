@@ -2114,3 +2114,20 @@ test('DS-004: numbers with dots are day first, on a page too (Berlin, her decisi
   assert.equal(findDateRange('02/09/2022 to 08/01/2023').start, '');
   assert.equal(findDateRange('02.09.2022 to 08.01.2023 extra', { looseSingles: false }).end, '2023-01-08');
 });
+
+test('DS-005: dotted dates with the year on the closing side only (Kunstmuseum Basel) or two-digit years (Louisiana); a dotted closing date (Kunsthaus)', () => {
+  const b = findDateRange('GEGENWART / 25.05.–24.11.2024 / Curated by Tandazani Dhlakama', { looseSingles: false });
+  assert.equal(b.start, '2024-05-25'); assert.equal(b.end, '2024-11-24');
+  const l = findDateRange('11.10.24 - 27.4.25', { looseSingles: false });
+  assert.equal(l.start, '2024-10-11'); assert.equal(l.end, '2025-04-27');
+  assert.equal(findDateRange('Until 25.10.2026', { looseSingles: false }).end, '2026-10-25');
+  assert.equal(findDateRange('Version 2.0 - 3.1', { looseSingles: false }).start, '');
+  assert.equal(findDateRange('1.2.3 - 4.5.6', { looseSingles: false }).start, '');
+});
+
+test('DS-006: a slashed range on a show page only with opts.slashes, and only when the numbers prove the order (Prado)', () => {
+  const p = findDateRange('Museo Nacional del Prado. Madrid 6/9/2026 - 9/27/2026', { looseSingles: false, slashes: true });
+  assert.equal(p.start, '2026-06-09'); assert.equal(p.end, '2026-09-27');
+  assert.equal(findDateRange('Madrid 6/9/2026 - 9/27/2026', { looseSingles: false }).start, '');
+  assert.equal(findDateRange('02/09/2022 to 08/01/2023', { looseSingles: false, slashes: true }).start, '');
+});
