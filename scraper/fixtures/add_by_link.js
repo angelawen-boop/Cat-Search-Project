@@ -1068,8 +1068,11 @@ function runtime() {
     const sn = new Function('React', 'window', 'document', 'localStorage', code + '\n;return venueSearchName;')(React, win, win.document, win.localStorage);
     ok(sn('occ-x', { name: 'National Gallery', city: 'London', country: 'United Kingdom' }) === 'National Gallery London United Kingdom'
       && sn('occ-x', { name: 'Palazzo Reale Milano', city: 'Milan', country: 'Italy' }) === 'Palazzo Reale Milano Italy'
-      && sn('occ-museitoscana-cultura-gov-it', { name: 'Direzione regionale Musei nazionali Toscana' }) === 'Museo di San Marco Florence Italy',
+      && sn('occ-museitoscana-cultura-gov-it', { name: 'Direzione regionale Musei nazionali Toscana', city: 'Florence', country: 'Italy' }) === 'Museo di San Marco Florence Italy',
       'AL-053e:  the search name is long: full name, then city and country where the name lacks them; San Marco by her full name');
+    const nf = new Function('React', 'window', 'document', 'localStorage', code + '\n;return needsFacts;')(React, win, win.document, win.localStorage);
+    ok(nf(undefined) && nf({ name: 'Detroit Institute of Arts Museum', short: 'Detroit', host: 'dia.org' }) && !nf({ name: 'Detroit Institute of Arts Museum', short: 'Detroit', host: 'dia.org', city: 'Detroit' }),
+      'AL-053f:  a venue Claude has not yet placed (no city) is asked on its next link; once placed, never again');
     const byAddr = new Function('React', 'window', 'document', 'localStorage', code + '\n;return namedByAddress;')(React, win, win.document, win.localStorage);
     ok(byAddr({ name: 'kmska.be', host: 'kmska.be' }) && byAddr({ name: 'www.mfa.org', host: 'mfa.org' }) && !byAddr({ name: 'kmska.be', short: 'Antwerp', host: 'kmska.be' })
       && !byAddr({ name: 'Detroit Institute of Arts Museum', host: 'dia.org' }),

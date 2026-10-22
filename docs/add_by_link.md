@@ -46,7 +46,7 @@ meets it.
   and country (`venueSearchName`); cards use the short name. Proved live (Parallel, 9 searches): "Palazzo Ducale"
   alone found Venice's shop; KMSKA's English name alone found the Brussels museums, with "KMSKA" beside it
   Antwerp's shop; San Marco's regional-office name found no shop, "Museo di San Marco Florence Italy" its
-  bookshop partner. Hand-set venues carry `city` and `country` on their entry (written in).
+  bookshop partner. Nothing is written in: a venue Claude has not yet placed (no city stored, her hand-set ones included) is asked on its next link, her names and rules kept (`needsFacts`). Tested on 42 live pages with Sonnet: right museum, city and country on all 42 (AL-053f).
 - **Store:** `venues/occasional` (venues, shops, her confirmations) and `links/pending` (the box). Both were
   copied into her app's store when the cloud ledger merged. A ledger row whose venue a page's store has not met shows under
   its web address, shop "not found".
@@ -318,7 +318,8 @@ dropped) and reads it with `readShowPage`, then the same intake as a link. No Pa
 A last resort (her decision): a show so old its venue's page is gone, read off a blog or magazine page
 (her Enfilade link, Canaletto at the Queen's Gallery).
 - **The venue is Claude's to find** (her decision): for a site the app has never seen, Claude is sent the
-  page's address and asked which museum held the show on the date line read, and whether the address is that
+  page's address and the date line read, at the top as the showing the card is for (her Enfilade Canaletto page
+  went to Edinburgh, the next showing listed, 9 of 9 reads until it was), and asked which museum that line names, and whether the address is that
   museum's own site. **Only when it says not** is Claude asked a second question (`elsewherePrompt`): the
   museum's website and the show's full title — nothing only a blog page needs is asked of a museum's own page
   (her decision). Code files it (`heldElsewhere`): one of hers by name or site, else a new Occasional venue under
