@@ -72,9 +72,11 @@ async function mount({ save, db = true, starMetrics } = {}) {
     const store = new Map();
     win.claude = {
       use: async name => {
-        if (name === 'db' && db) return { doc: key => ({
+        // A collection reads as empty (the Pages list): a read that throws is now named on the page (SU-001).
+        if (name === 'db' && db) { const none = { orderBy: () => none, limit: () => none, get: async () => ({ docs: [], size: 0 }) };
+          return { doc: key => ({
           get: async () => ({ exists: store.has(key), data: () => store.get(key) }),
-          set: async v => { store.set(key, v); } }) };
+          set: async v => { store.set(key, v); } }), collection: () => none }; }
         if (name === 'downloads') return { save: async f => {
           saves.push(f.filename); files.push(f);
           if (save === 'refuse') { const e = new Error('cancelled'); e.code = 'cancelled'; throw e; }

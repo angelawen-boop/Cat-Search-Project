@@ -1867,12 +1867,22 @@ function registerUnseenOccasional(rows){
   }
 }
 
+// A STORE READ THAT FAILED IS NEVER SHOWN AS "NOTHING THERE", AND NEVER SAVED OVER (her decision: her link
+// venues once came up as bare addresses after a failed read, and the next import would have written the list
+// back with only its new venue). A part of the store that could not be read this opening is named on the page,
+// and its write refuses until the page is opened again. A part that is simply empty is read as empty.
+const STORE_UNREAD=new Set();
+let storeUnreadSeen=()=>{};   // the page's banner, told when a read fails
+function markUnread(what){ STORE_UNREAD.add(what); storeUnreadSeen([...STORE_UNREAD]); }
+const UNREAD_OCC="the link venues", UNREAD_LINKS="the links waiting in the Links box", UNREAD_PAGES="the pages waiting in the Pages list",
+  UNREAD_SWEEPS="the sweep log", UNREAD_QUAR="the quarantine list";
 async function readOccasional(){
   const db=await useCap("db");
-  if(!db)return{};
-  try{ const s=await db.doc(OCC_DOC).get(); return s.exists?((s.data()||{}).venues||{}):{}; }catch{ return {}; }
+  if(!db){ markUnread(UNREAD_OCC); return{}; }
+  try{ const s=await db.doc(OCC_DOC).get(); return s.exists?((s.data()||{}).venues||{}):{}; }catch{ markUnread(UNREAD_OCC); return {}; }
 }
 async function writeOccasional(map){
+  if(STORE_UNREAD.has(UNREAD_OCC))return false;
   const db=await useCap("db");
   if(!db)return false;
   try{ await db.doc(OCC_DOC).set({venues:map,updatedAt:new Date().toISOString()}); return true; }catch{ return false; }
@@ -1945,13 +1955,14 @@ const PAGES_COLL="links_pages";
 const pageDocId=u=>{ let h=5381; for(const c of String(normalizeUrlKey(u)||u))h=((h*33)^c.charCodeAt(0))>>>0; return "p"+h.toString(36); };
 async function readPendingPages(){
   const db=await useCap("db");
-  if(!db)return[];
+  if(!db){ markUnread(UNREAD_PAGES); return[]; }
   try{
     const snap=await db.collection(PAGES_COLL).orderBy("at","asc").limit(1000).get();
     return snap.docs.map(d=>d.data()||{}).filter(p=>p.url&&p.text).map(p=>({url:p.url,title:p.title||"",name:p.name||"",text:p.text}));
-  }catch{ return []; }
+  }catch{ markUnread(UNREAD_PAGES); return []; }
 }
 async function writePendingPages(list){
+  if(STORE_UNREAD.has(UNREAD_PAGES))return false;
   const db=await useCap("db");
   if(!db)return false;
   try{
@@ -1972,10 +1983,11 @@ function mergePages(had,add){
 
 async function readPendingLinks(){
   const db=await useCap("db");
-  if(!db)return"";
-  try{ const s=await db.doc(LINKS_DOC).get(); return s.exists?String((s.data()||{}).text||""):""; }catch{ return ""; }
+  if(!db){ markUnread(UNREAD_LINKS); return""; }
+  try{ const s=await db.doc(LINKS_DOC).get(); return s.exists?String((s.data()||{}).text||""):""; }catch{ markUnread(UNREAD_LINKS); return ""; }
 }
 async function writePendingLinks(text){
+  if(STORE_UNREAD.has(UNREAD_LINKS))return false;
   const db=await useCap("db");
   if(!db)return false;
   try{ await db.doc(LINKS_DOC).set({text:String(text||""),updatedAt:new Date().toISOString()}); return true; }catch{ return false; }
@@ -3223,7 +3235,7 @@ const SWEEP_LOG_DOC = "sweeps/venues";
 // and "could not reach the store" look identical and mean opposite things.
 async function readSweepLog(){
   const db=await useCap("db");
-  if(!db) return {log:{},why:"This page can\u2019t reach its sweep log in this viewer."};
+  if(!db){ markUnread(UNREAD_SWEEPS); return {log:{},why:"This page can\u2019t reach its sweep log in this viewer."}; }
   try{
     const snap=await db.doc(SWEEP_LOG_DOC).get();
     if(!snap.exists) return {log:{},why:null};
@@ -3231,6 +3243,7 @@ async function readSweepLog(){
     const log=(d.venues&&typeof d.venues==="object")?d.venues:{};
     return {log,why:null};
   }catch(e){
+    markUnread(UNREAD_SWEEPS);
     const code=String((e&&e.code)||"");
     if(code==="not_granted") return {log:{},why:"You declined this page access to its sweep log."};
     return {log:{},why:"Couldn\u2019t read the sweep log ("+(code||"unknown")+")."};
@@ -3238,6 +3251,7 @@ async function readSweepLog(){
 }
 
 async function writeSweepLog(next){
+  if(STORE_UNREAD.has(UNREAD_SWEEPS))return false;
   const db=await useCap("db");
   if(!db) return false;
   try{ await db.doc(SWEEP_LOG_DOC).set({venues:next,updatedAt:new Date().toISOString()}); return true; }
@@ -3246,13 +3260,14 @@ async function writeSweepLog(next){
 
 async function readQuarantine(){
   const db=await useCap("db");
-  if(!db) return {map:{},why:"This page can\u2019t reach its quarantine list in this viewer, so nothing is being blocked."};
+  if(!db){ markUnread(UNREAD_QUAR); return {map:{},why:"This page can\u2019t reach its quarantine list in this viewer, so nothing is being blocked."}; }
   try{
     const snap=await db.doc(QUARANTINE_DOC).get();
     if(!snap.exists) return {map:{},why:null};
     const d=snap.data()||{};
     return {map:(d.rows&&typeof d.rows==="object")?d.rows:{},why:null};
   }catch(e){
+    markUnread(UNREAD_QUAR);
     const code=String((e&&e.code)||"");
     if(code==="not_granted") return {map:{},why:"You declined this page access to its quarantine list."};
     return {map:{},why:"Couldn\u2019t read the quarantine list ("+(code||"unknown")+")."};
@@ -3260,6 +3275,7 @@ async function readQuarantine(){
 }
 
 async function writeQuarantine(next){
+  if(STORE_UNREAD.has(UNREAD_QUAR))return false;
   const db=await useCap("db");
   if(!db) return false;
   try{ await db.doc(QUARANTINE_DOC).set({rows:next,updatedAt:new Date().toISOString()}); return true; }
@@ -5860,6 +5876,8 @@ export default function App(){
   // the export carries.
   const[quarantine,setQuarantine]=useState({});
   const[quarWhy,setQuarWhy]=useState(null);
+  const[storeUnread,setStoreUnread]=useState([]);   // parts of the store that could not be read this opening
+  useEffect(()=>{ storeUnreadSeen=setStoreUnread; setStoreUnread([...STORE_UNREAD]); return()=>{ storeUnreadSeen=()=>{}; }; },[]);
   const ignored=useMemo(()=>activeQuarantine(quarantine),[quarantine]);
   const ignoredByVenue=useMemo(()=>{
     const ord=id=>{ const i=MUSEUMS.findIndex(m=>m.id===id); return i<0?MUSEUMS.length:i; };
@@ -7294,6 +7312,11 @@ export default function App(){
         </div>}
         {/* A quarantine that isn't saving is a banner, not a footnote (her decision),
             shown with or without a ledger open. */}
+        {/* A part of the store that could not be read (the quarantine has its own banner). */}
+        {storeUnread.filter(w=>w!==UNREAD_QUAR).length>0&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
+          <span style={{fontSize:17,lineHeight:1.1}}>{"\u26A0"}</span>
+          <span>{"STORE NOT READ \u2014 "+storeUnread.filter(w=>w!==UNREAD_QUAR).join(", ")+" couldn\u2019t be read from this page\u2019s store, so what is shown for them is not the stored copy, and nothing is saved over them until the page is opened again."}</span>
+        </div>}
         {quarWhy&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
           <span style={{fontSize:17,lineHeight:1.1}}>{"\u26A0"}</span>
           <span>{"QUARANTINE \u2014 "+quarWhy}</span>

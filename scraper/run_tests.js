@@ -53,6 +53,7 @@ const SUITES = [
   [[APP, SAVING], 'node scraper/fixtures/cloud_app.js', ALONE],
   [[APP, SAVING], 'node scraper/fixtures/cloud_two_copies.js', ALONE],
   [[APP, SAVING], 'node scraper/fixtures/cloud_empty_import.js', ALONE],
+  [[APP, SAVING], 'node scraper/fixtures/store_unread.js'],
   [SCRAPER, 'node scraper/fixtures/summary_pages.js'],
   [SCRAPER, 'node scraper/fixtures/orsay_pages.js'],
   [SCRAPER, 'node scraper/fixtures/pacing_pages.js'],

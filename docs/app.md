@@ -611,6 +611,13 @@ Her wording and order. The branch code holds the exact strings.
   an import onto the empty page became the whole ledger, and Save wrote that
   2-row ledger as a file and a Cloud Save. `handleSave`, `importMode`
   "needLedger"; `cloud_empty_import.js`, EI-001–007.
+- **A store read that fails is never shown as "nothing there", and never saved over** (her decision). Her link
+  venues once came up as bare web addresses: the open-time read of the link venues failed and was taken as "no
+  venues", and the next import would have written the list back with only its new venue. Now each part of the
+  page's store read on opening — the link venues, the Links box, the Pages list, the sweep log, the quarantine —
+  is named in a "STORE NOT READ" banner when its read fails (the quarantine keeps its own banner), and its write
+  refuses until the page is opened again. A part that is simply empty reads as empty. The ledger's cloud copy
+  keeps its own rules (a Load is her file, the document). `STORE_UNREAD`; `store_unread.js`, SU-001–005.
 - **The amber "not saved to a file" banner is unwired, not deleted**
   (`FILE_UNSAVED_WARNING`) — needed again if the trial fails. Load and Reset ask
   first only while the red banner shows.
