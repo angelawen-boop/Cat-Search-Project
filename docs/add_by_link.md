@@ -147,7 +147,10 @@ section; a section whose page failed is proved by books seen later. AL-073–073
 **Live, 23 Oct, all 18 right:** Albertina, Louisiana (`/en-int/`), Thyssen, KMSKA, Beyeler in English. **Berlin stays
 German though an English shop exists** (`/en/books-und-media/exhibition-catalogues/`): Parallel returns that page and
 the English front page without their books, so nothing proves it; the German section sells the English editions too
-(*Cassirer and the Breakthrough of Impressionism*).
+(*Cassirer and the Breakthrough of Impressionism*). **Known gap (her Belvedere link, 50.3):** an English shop page
+on the museum's own site whose shop link points to the German shop (`belvedere.at/en/museum-shop` → `/shop`) is
+followed into German; the English-version step tries only English front pages, never the English version of the shop
+page itself, and Parallel drops the toggle. Open: CLAUDE.md §5.4, item 2.
 
 **The fault it fixes:** the old finder walked the shop only when the search found nothing usable, and accepted any
 section with books and prices — so Thyssen took "Publications" and Antwerp the whole Dutch "Boeken" when the search

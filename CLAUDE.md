@@ -401,6 +401,9 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **Tell her before any run that takes more than a few minutes, and how long** (her decision). Never leave a
   check running in the background unwatched or start a second over it: four live shop checks ran at once, used up
   the free tier, and stalled for hours while she waited unaware. A stalled run is stopped and reported, never waited on.
+- **A test link goes to her only after it is read live, end to end, the way she will run it** (Louisiana's page never
+  read; Parallel's 202). **A check's right answer must test what the design requires** — Belvedere's "no books
+  section" passed in German under the English-shop design.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose
@@ -637,14 +640,25 @@ and were fixed in code, proven live).
      is none. An English catalogues section it cannot read is offered beside the foreign one on the shop screen; her pick
      reads "The museum shop contents cannot be seen — unconfirmed page problem" (her wording; that scenario only, her
      decision). Design: `docs/add_by_link.md`, "The shop finder — her design" and "The English version".
-     **Where it stands:** all 18 check venues right live (Albertina, Louisiana `/en-int/`, Thyssen in English). Berlin
-     offers its English section beside the German one (offered only when the search turns that page up). Berlin's
-     whole-shop search was not proved on the last live run. The "Shop found, but not its exhibition catalogues section" line is not yet seen on screen.
-     **After publishing, give her test links** (a museum not in her app; Add, Next, read the shop screen, Back,
-     Cancel import — nothing saved): Beyeler, Ruth Asawa (fondationbeyeler.ch/en/exhibitions/ruth-asawa) → its
-     "Exhibition catalogues"; Louisiana, Tracey Emin (louisiana.dk/en/udstilling/tracey-emin/) → its English "Udstillingskataloger" (`/en-int/`); Albertina, Picasso – Bacon (albertina.at/en/exhibitions/picasso-bacon)
-     → its English "Catalogues & Publications"; Belvedere, Asta Gröting (belvedere.at/carlone-contemporary-asta-groeting) → "Shop
-     found, but not its books section" (its online shop sells prints only). Right answers: `docs/shop_check.json`.
+     **Where it stands:** the 18-venue check passed live, but **it is too loose — her test of 50.3 found a fault it
+     passed.** **OPEN — Belvedere stays German** (her link, lookup log L1792752998011063a): the English search found
+     `belvedere.at/en/museum-shop`, whose own shop link points to the German `belvedere.at/shop`, and the app followed
+     it; the English-version step then tried only English FRONT pages (`/en/`…), never the English version of the shop
+     page itself; Parallel drops the page's language toggle. `/en/shop` redirects to the English home page. The
+     English shop's real address is not known — she sees it through the toggle. **Why the check passed:** a venue
+     whose right answer is "no books section" (`shop: null`) passes on ANY non-books answer, whatever address or
+     language — those right answers predate the English design and were not tightened. Fix both (the step and the
+     check's right answers) before any more test links. Berlin offers its English section beside the German one
+     (only when the search turns that page up); its whole-shop search was not proved on the last live run. The "Shop
+     found, but not its exhibition catalogues section" line is not yet seen on screen.
+     **Her test links on 50.3:** Belvedere wrong (above). Louisiana's Tracey Emin page was never read — Parallel
+     answers 202 with no page and has no cached copy, so the finder never ran (the link was handed to her unchecked);
+     `louisiana.dk/en/exhibition/jorn-meets-jorn/` reads → expected `butik.louisiana.dk/en-int/collections/
+     udstillingskataloger`. Beyeler and Albertina: not reported by her (their records are in the lookup log). Right
+     answers: `docs/shop_check.json`.
+     **OPEN, her go-ahead pending — the shorter date note:** `The venue's page shows only "September 2026" for this
+     exhibition's dates — no day.` (her wording; cut after "no day"). The sweep writes the same note word for word
+     (`shownOnlyNote`, `dates.js`), so the sweep's cards change with it.
      **Her confirmed shops in her app are NOT changed** (her decision: no hand edits to store or ledger) — she asks
      a session to amend Thyssen's or Antwerp's shop only if she imports more links there or a lookup misses a
      catalogue.
