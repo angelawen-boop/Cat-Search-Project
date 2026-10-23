@@ -461,7 +461,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 50.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 50.3 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -624,8 +624,7 @@ and were fixed in code, proven live).
      `scraper/claude_read_check/` (`fetch.js` live replies through the free Parallel server; `build.js` the app's own
      `readShowPage` and `linkPrompt` write each question; Sonnet answers each into a file; `score.js` scores with the
      app's `linkAnswer`/`linkTitle` against `truth.js`; `build2.js`/`score2.js` the second question). `docs/add_by_link.md`, "Per link".
-  2. **The shop finder — rebuilt to her design with the store fix below, on `main`, NOT published (50.3 next; publish
-     only on her go-ahead for this state — she held it while work was undecided).** There is ONE right section: a
+  2. **The shop finder — rebuilt to her design with the store fix below, published at 50.3; her test links confirm.** There is ONE right section: a
      search result is taken only if it names itself as the shop's exhibition catalogues; otherwise the shop is walked
      (front page, catalogue and books sections, four pages at most); only when it has none, the museum's publications
      (a books shelf named for the museum counts — KMSKA), then books, and the shop screen says which ("Shop found,
@@ -635,10 +634,12 @@ and were fixed in code, proven live).
      version** (her design — a foreign-language shop must not hide the English one or its English books): the English
      shop searched for first, the plain search only when that finds no shop, never both stacked; landed on a foreign
      shop, its English version through a language link or its English addresses; the foreign section only when there
-     is none. Design: `docs/add_by_link.md`, "The shop finder — her design" and "The English version".
+     is none. An English catalogues section it cannot read is offered beside the foreign one on the shop screen; her pick
+     reads "The museum shop contents cannot be seen — unconfirmed page problem" (her wording; that scenario only, her
+     decision). Design: `docs/add_by_link.md`, "The shop finder — her design" and "The English version".
      **Where it stands:** all 18 check venues right live (Albertina, Louisiana `/en-int/`, Thyssen in English). Berlin
-     stays German: its English shop exists but Parallel returns it without its books (the German one sells the English
-     editions). The "Shop found, but not its exhibition catalogues section" line is not yet seen on screen.
+     offers its English section beside the German one (offered only when the search turns that page up). Berlin's
+     whole-shop search was not proved on the last live run. The "Shop found, but not its exhibition catalogues section" line is not yet seen on screen.
      **After publishing, give her test links** (a museum not in her app; Add, Next, read the shop screen, Back,
      Cancel import — nothing saved): Beyeler, Ruth Asawa (fondationbeyeler.ch/en/exhibitions/ruth-asawa) → its
      "Exhibition catalogues"; Louisiana, Tracey Emin (louisiana.dk/en/udstilling/tracey-emin/) → its English "Udstillingskataloger" (`/en-int/`); Albertina, Picasso – Bacon (albertina.at/en/exhibitions/picasso-bacon)
@@ -654,7 +655,7 @@ and were fixed in code, proven live).
      case other museums will have? Yes → a shared rule, kept only if no proof page gets worse; no → an option on that
      venue's one entry; then the checks it must pass. Last, after 1 and 2.
   Then her links after publishing confirm with her own Claude.
-- **Built, unpublished (50.3) — a store read that fails is named on the page, never saved over** (her decision).
+- **Published at 50.3 — a store read that fails is named on the page, never saved over** (her decision).
   Her link venues once showed as bare web addresses after a failed read on opening, and the next import would have
   written the venue list back with only its new venue. Now the link venues, Links box, Pages list, sweep log and
   quarantine each say "STORE NOT READ" when their read fails, and their writes refuse until the page is opened again.
