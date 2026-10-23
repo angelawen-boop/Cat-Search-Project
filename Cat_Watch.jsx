@@ -910,6 +910,7 @@ const SUMMARY_EXAMPLES=[{"title":"German Expressionism","raw":"Across Germany’
 const OCC_CHIP="occasional";
 const OCC_DOC="venues/occasional";
 const LINKS_DOC="links/pending";
+const PASTES_DOC="links/pastes";
 const isOcc=id=>String(id||"").startsWith("occ-");
 // Palazzo Reale Milano's heading is the short name plus " - Palazzo Reale Milano", the full
 // name on a line below it (nameInLines: the longest line between title and dates that starts
@@ -1764,6 +1765,15 @@ function heldElsewhere(a,pageHost){
   return{id:site?occVenueId(site):"occ-"+flatName(a.venue).replace(/ /g,"-"),name:a.venue,host:site};
 }
 
+// A page on another part of one of her museums' own site (Tate's library, library.tate.org.uk)
+// files under the museum Claude names, when it is one of hers on the same site → its id, or null.
+function ownMuseumNamed(a,pageHost){
+  const said=flatName(a&&a.venue||"");
+  if(!said)return null;
+  const m=Object.values(MU).find(m=>m&&!m.occasional&&[m.name,m.short].some(x=>x&&(said===flatName(x)||said.startsWith(flatName(x)+" "))));
+  return m&&VENUE_SITES.some(v=>v.id===m.id&&baseDomain(v.host)===baseDomain(pageHost))?m.id:null;
+}
+
 function occVenueId(host){
   return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
@@ -1969,6 +1979,34 @@ function mergePages(had,add){
   for(const p of [...had,...add])by.set(normalizeUrlKey(p.url)||p.url,p);
   return [...by.values()];
 }
+
+// Paste: a page's text copied by hand, its link typed beside it (a trial; docs/add_by_link.md,
+// "Pasted pages"). Pasted text has no headings, so the title line is marked as one: a library
+// record's "Title:" line, cut at " / " (who wrote it) with " : " as ": "; else the first line.
+function pastedPageReply(url,text){
+  const u=String(url||"").trim();
+  if(!/^https?:\/\/\S+$/i.test(u))return{ok:false,why:"The link box holds no web address."};
+  const lines=String(text||"").replace(/\r/g,"").split("\n").map(l=>l.replace(/[ \t]+/g," ").trim());
+  if(!lines.some(Boolean))return{ok:false,why:"The text box is empty."};
+  let t=lines.findIndex(l=>/^title\s*:\s*\S/i.test(l)), title;
+  if(t>=0)title=lines[t].replace(/^title\s*:\s*/i,"").split(/\s+\/\s+/)[0].replace(/\s+:\s+/g,": ").replace(/[\s.:;,]+$/,"");
+  else{ t=lines.findIndex(Boolean); title=lines[t]; }
+  lines[t]="# "+title;
+  return{ok:true,res:{url:withoutTracking(u),title,full_content:lines.join("\n")}};
+}
+async function readPendingPastes(){
+  const db=await useCap("db");
+  if(!db)return[];
+  try{ const s=await db.doc(PASTES_DOC).get(); const l=s.exists?(s.data()||{}).items:null; return Array.isArray(l)?l.map(x=>({url:String(x.url||""),text:String(x.text||"")})):[]; }catch{ return []; }
+}
+async function writePendingPastes(items){
+  const db=await useCap("db");
+  if(!db)return false;
+  try{ await db.doc(PASTES_DOC).set({items:items.filter(x=>x.url.trim()||x.text.trim()),updatedAt:new Date().toISOString()}); return true; }catch{ return false; }
+}
+// Two boxes to start, one more each time she asks; boxes she filled are kept.
+const PASTE_BOXES=2;
+const pasteBoxes=items=>{ const l=items.filter(x=>x.url.trim()||x.text.trim()); while(l.length<PASTE_BOXES)l.push({url:"",text:""}); return l; };
 
 async function readPendingLinks(){
   const db=await useCap("db");
@@ -5757,6 +5795,7 @@ export default function App(){
   const[linkNote,setLinkNote]=useState(null);
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
+  const[pastes,setPastes]=useState(pasteBoxes([]));   // Paste: {url,text} boxes, two to start
   const[pages,setPages]=useState([]);   // Pages: saved pages waiting, as text ({url,title,name,text})
   const pagesFileRef=useRef(null);
   const linksAtRead=useRef(null);   // the links the open review was read from; Cancel import puts them back
@@ -5938,7 +5977,11 @@ export default function App(){
     readOccasional().then(map=>{ occSaved.current=map; registerOccasional(map); setOccVenues(map); });
     readPendingLinks().then(t=>{ if(t)setLinkText(t); });
     readPendingPages().then(l=>{ if(l.length)setPages(l); });
+    readPendingPastes().then(l=>{ if(l.length)setPastes(pasteBoxes(l)); });
   },[]);
+  // Pasted boxes are stored as she types, a moment after the last key: copying on a phone
+  // means leaving the page, which can reload it.
+  useEffect(()=>{ if(importMode!=="paste")return; const t=setTimeout(()=>writePendingPastes(pastes),800); return()=>clearTimeout(t); },[pastes,importMode]);
 
   // Keep the "Last saved ... ago" text and its colour current.
   useEffect(()=>{const t=setInterval(()=>setTick(n=>n+1),30000);return()=>clearInterval(t);},[]);
@@ -6390,13 +6433,16 @@ export default function App(){
   // Pages (saved pages) take the same road, the page's text in place of the fetch;
   // what could not be read stays in the Pages list.
   async function readLinks(kind){
-    const fromPages=kind==="pages";
-    const items=fromPages?pages:linksIn(linkText).map(url=>({url}));
+    const fromPasted=kind==="paste", fromPages=kind==="pages"||fromPasted;
+    // Pasted boxes: each turned into a page now; a box that cannot be is a line, never read.
+    const pasteBad=[];
+    const pasted=fromPasted?pastes.filter(x=>x.url.trim()||x.text.trim()).map(x=>{ const r=pastedPageReply(x.url,x.text); if(!r.ok){ pasteBad.push({url:x.url.trim(),why:r.why}); return null; } return{url:r.res.url,title:r.res.title,text:r.res.full_content,box:x}; }).filter(Boolean):[];
+    const items=fromPasted?pasted:fromPages?pages:linksIn(linkText).map(url=>({url}));
     const urls=items.map(x=>x.url);
-    if(!urls.length){ setLinkFails([{url:"",why:fromPages?"No pages chosen.":"No links found in the box."}]); return; }
+    if(!urls.length){ setLinkFails(pasteBad.length?pasteBad:[{url:"",why:fromPasted?"Nothing pasted.":fromPages?"No pages chosen.":"No links found in the box."}]); return; }
     setBusy(true); setLinkNote(null); setLinkFails([]);
     linkRead.current={on:true,stop:false};
-    const got=[], fails=[], met=new Set(), looked=new Set();
+    const got=[], fails=[...pasteBad], met=new Set(), looked=new Set();
     let venues={...occVenues}, venuesChanged=false;
     for(let n=0;n<urls.length;n++){
       if(linkRead.current.stop)break;
@@ -6405,7 +6451,7 @@ export default function App(){
       const item=items[n];
       // Each link's reading is one record in the lookup log: what code read off the
       // page, Claude's answer and the title made from them.
-      const tape=tapeStart(fromPages?"Add by page":"Add by link",{title:url,exUrl:url}), seen={url};
+      const tape=tapeStart(fromPasted?"Add by paste":fromPages?"Add by page":"Add by link",{title:url,exUrl:url}), seen={url};
       const failsBefore=fails.length;
       try{
         const f=fromPages?{ok:true,results:[{url,title:item.title,full_content:item.text}]}:await fetchPage(url,"The exhibition's title, dates and description.",null,{full:true});
@@ -6443,6 +6489,8 @@ export default function App(){
         if(askVenue&&ownSite&&maybeElsewhere(a,host)){ const more=await readResults(elsewherePrompt(page,url,a)); if(more.ok)a={...a,...elsewhereAnswer(more.data)}; }
         const away=askVenue&&ownSite?heldElsewhere(a,host):null;
         if(away){ vc=away.id; host=away.host; seen.venue=vc; seen.heldElsewhere=away; }
+        const ownMuseum=!away&&askVenue?ownMuseumNamed(a,host):null;
+        if(ownMuseum){ vc=ownMuseum; seen.venue=vc; seen.ownMuseum=ownMuseum; }
         const named=askVenue&&a.venue?{name:a.venue,short:a.venueShort||a.venue,aka:a.venueAlso,city:a.venueCity,country:a.venueCountry}:null;
         const fresh=!venues[vc];
         if(isOcc(vc)){
@@ -6494,8 +6542,10 @@ export default function App(){
     setProg({done:0,total:0,label:""}); setBusy(false); setReadVenues([...met]);
     const failed=new Set(fails.map(x=>x.url));
     const left=fails.map(x=>x.url).join("\n"), leftPages=pages.filter(p=>failed.has(p.url));
+    const readBox=new Map(pasted.map(p=>[p.box,p.url]));
+    const leftPastes=pasteBoxes(pastes.filter(x=>(x.url.trim()||x.text.trim())&&(!readBox.has(x)||failed.has(readBox.get(x)))));
     // The box (or list) is stored when the import finishes.
-    if(fromPages)setPages(leftPages); else setLinkText(left);
+    if(fromPasted)setPastes(leftPastes); else if(fromPages)setPages(leftPages); else setLinkText(left);
     setLinkFails(fails);
     linksAtRead.current=null;
     if(!got.length)return;
@@ -6503,12 +6553,12 @@ export default function App(){
     if(res.error){ setLinkNote(res.error); return; }
     if(!res.props.length){
       setTally(res.tally||null);
-      if(fromPages)writePendingPages(leftPages); else writePendingLinks(left);   // nothing to approve: this Read is finished
+      if(fromPasted)writePendingPastes(leftPastes); else if(fromPages)writePendingPages(leftPages); else writePendingLinks(left);   // nothing to approve: this Read is finished
       setLinkNote("Read "+got.length+(fromPages?" page":" link")+(got.length===1?"":"s")+", but nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+".");
       return;
     }
     setProposals(res.props); setCoverage([]); setTally(res.tally||null); setSeenInFile(null); setDecisions(topicPresets(res.props));
-    linksAtRead.current=fromPages?{pages:items}:urls;
+    linksAtRead.current=fromPasted?{pastes:pasted.map(p=>({...p.box,url:p.url}))}:fromPages?{pages:items}:urls;
     // Done with the pop-up — unless a link could not be read: then it stays
     // under the review, its lines waiting for her when the review closes.
     if(!fails.length)setImportMode(null);
@@ -6637,7 +6687,11 @@ export default function App(){
     if(seenInFile)recordSweep(seenInFile);
     else{
       const back=proposals.filter((p,i)=>/^(rejected|undecided)$/.test(cardOutcome(p,decisions[i]))).map(p=>(p.cand||{}).exUrl).filter(Boolean);
-      if(linksAtRead.current&&linksAtRead.current.pages){
+      if(linksAtRead.current&&linksAtRead.current.pastes){
+        const keys=new Set(back.map(u=>normalizeUrlKey(u)));
+        const list=pasteBoxes([...pastes,...linksAtRead.current.pastes.filter(p=>keys.has(normalizeUrlKey(p.url)))]);
+        setPastes(list); writePendingPastes(list);
+      }else if(linksAtRead.current&&linksAtRead.current.pages){
         const keys=new Set(back.map(u=>normalizeUrlKey(u)));
         const list=mergePages(pages,linksAtRead.current.pages.filter(p=>keys.has(normalizeUrlKey(p.url))));
         setPages(list); writePendingPages(list);
@@ -6669,7 +6723,10 @@ export default function App(){
   }
   // Cancel import after a Read puts every link (or page) it read back in the box (or list), stored (her decision).
   function cancelRefresh(){
-    if(linksAtRead.current&&linksAtRead.current.pages){
+    if(linksAtRead.current&&linksAtRead.current.pastes){
+      const list=pasteBoxes([...pastes,...linksAtRead.current.pastes]);
+      setPastes(list); writePendingPastes(list); linksAtRead.current=null;
+    }else if(linksAtRead.current&&linksAtRead.current.pages){
       const list=mergePages(pages,linksAtRead.current.pages);
       setPages(list); writePendingPages(list); linksAtRead.current=null;
     }else if(linksAtRead.current){
@@ -7459,7 +7516,7 @@ export default function App(){
         <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",justifyContent:"center",padding:16}}>
           {/* Sized to what it holds. CSV and Links match Load and Save; the one pressed
               turns green (her design). */}
-          <div style={{background:C.bg,borderRadius:8,...(importMode==="links"||importMode==="pages"?{maxWidth:820,width:"100%"}:{width:"fit-content"}),margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px"}}>
+          <div style={{background:C.bg,borderRadius:8,...(importMode==="links"||importMode==="pages"||importMode==="paste"?{maxWidth:820,width:"100%"}:{width:"fit-content"}),margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px"}}>
             {/* IMPORT NEEDS A LEDGER OPEN: on an empty page it offers only the ways to open
                 one (her design), so an import can never become the whole ledger. */}
             {importMode==="needLedger"&&<div style={{textAlign:"center"}}>
@@ -7473,6 +7530,31 @@ export default function App(){
               <button onClick={()=>{setImportMode(null);refreshFileRef.current?.click();}} disabled={busy} style={sBtn}>CSV</button>
               <button onClick={()=>{ if(importMode!=="links"){ setLinkFails([]); setLinkNote(null); } setImportMode("links"); }} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>Links</button>
               <button onClick={()=>{ if(importMode!=="pages"){ setLinkFails([]); setLinkNote(null); } setImportMode("pages"); }} disabled={busy} style={importMode==="pages"?{...pBtn,opacity:1}:sBtn}>Pages</button>
+              <button onClick={()=>{ if(importMode!=="paste"){ setLinkFails([]); setLinkNote(null); } setImportMode("paste"); }} disabled={busy} style={importMode==="paste"?{...pBtn,opacity:1}:sBtn}>Paste</button>
+            </div>}
+            {importMode==="paste"&&<div style={{marginTop:14}}>
+              {/* Paste: one box per page, the link and the page's text in separate boxes (her design). */}
+              {pastes.map((x,i)=>{
+                const set=(k,v)=>setPastes(l=>l.map((y,j)=>j===i?{...y,[k]:v}:y));
+                const field={width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"6px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,display:"block"};
+                return <div key={i} style={{marginBottom:10}}>
+                  <input value={x.url} onChange={e=>set("url",e.target.value)} disabled={busy} aria-label="Link" inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={field}/>
+                  <textarea value={x.text} onChange={e=>set("text",e.target.value)} disabled={busy} aria-label="Text" rows={5} style={{...field,marginTop:4,resize:"vertical"}}/>
+                </div>;
+              })}
+              <div style={{display:"flex",justifyContent:"flex-end",gap:5}}>
+                <button onClick={()=>setPastes(l=>[...l,{url:"",text:""}])} disabled={busy} aria-label="Add a box" style={sBtn}>+</button>
+                <button onClick={()=>readLinks("paste")} disabled={busy} style={pBtn}>Read</button>
+              </div>
+              {busy&&prog.total>0&&<div style={{marginTop:8}}>
+                <div style={{height:4,background:C.rule,borderRadius:2,overflow:"hidden"}}>
+                  <div style={{height:"100%",width:Math.round(100*prog.done/prog.total)+"%",background:C.action}}/></div>
+                <div style={{marginTop:4,fontSize:11,color:C.soft}}>{prog.label}</div>
+              </div>}
+              {linkNote&&<div style={{marginTop:6,fontSize:11.5,color:C.soft,lineHeight:1.45}}>{linkNote}</div>}
+              {linkFails.map((f,i)=><div key={i} style={{marginTop:6,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
+                {f.url}{f.url?" \u2014 ":""}{f.why}
+              </div>)}
             </div>}
             {importMode==="pages"&&<div style={{marginTop:14}}>
               {/* Pages: saved show pages, read as a link is read. The list works as the Links

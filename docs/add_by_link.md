@@ -472,6 +472,23 @@ dropped) and reads it with `readShowPage`, then the same intake as a link. No Pa
 - **Proof:** her saved pages, kept in `docs/link_pages/saved/` cut to the page itself (her decision: the
   site refuses Parallel, so live proof is impossible). Tests AP-001–010 (`add_by_page.js`).
 
+## Pasted pages — the Paste button (a trial, `claude/paste-import`, unpublished)
+
+For sites that refuse Parallel, where saving each page is slow (her idea; the Tate library's catalogue). Import
+offers CSV · Links · Pages · Paste. One box per page, the link and the page's text in separate boxes (her design:
+pasting both into one box would mix them); two boxes to start, + for more; nothing written inside them. Boxes are
+stored as she types (`links/pastes`), so leaving the page to copy loses nothing. Each box is turned into a page
+(`pastedPageReply`) and read as a saved page is: `readShowPage`, Claude, the same intake. No Parallel.
+
+- **The title:** pasted text has no headings, so one line is marked as the heading: a library record's
+  "Title:" line, cut at " / " (who wrote it), " : " read as ": "; else the first line.
+- **The venue:** a page on another part of one of her museums' own site (library.tate.org.uk) files under the
+  museum Claude names when it is one of hers on that site (`ownMuseumNamed`) — else a new venue for the library.
+- **Proof:** her three pastes, `docs/link_pages/pasted_tate_library.json` (Caro, Turner, Stubbs; the third box
+  opens with Turner's leftover summary, her test of a lazy paste). Tests PS-001–021 (`add_by_paste.js`).
+- **Unproven:** what her own Claude says for Stubbs, whose record holds no description (the passage is empty —
+  most likely no description); whether her Claude names Tate Britain for a library record.
+
 ## Someone else's page — a show held elsewhere
 
 A last resort (her decision): a show so old its venue's page is gone, read off a blog or magazine page

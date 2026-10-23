@@ -35,3 +35,6 @@ page's own HTML are missing (FS-, "Parallel fault").
 `shop_search/moma_popup_live.json` (19 Oct): MoMA's catalogue shelf as the connector returned it in her
 Brancusi Re-check (lookup log, saved by script) — the "Become a Member" pop-up only, too long to count as an
 empty page (B-007).
+
+`pasted_tate_library.json` holds HER three pastes from the Tate library catalogue (link and text, as pasted;
+the third opens with Turner's leftover summary) — the proof for Paste (`add_by_paste.js`, PS-).
