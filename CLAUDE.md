@@ -648,12 +648,9 @@ and were fixed in code, proven live).
      **Her confirmed shops in her app are NOT changed** (her decision: no hand edits to store or ledger) — she asks
      a session to amend Thyssen's or Antwerp's shop only if she imports more links there or a lookup misses a
      catalogue.
-     **OPEN — how the shop check runs (her decision pending).** On the free tier the full live check can stall for
-     hours (she will not put her key in the environment; the script cannot use her connector). Her standing rule:
-     work using Parallel is tested live, never on saved pages. Proposed: saved copies of each shop's replies for the
-     check after each fix (seconds), one live run before publishing. Meanwhile (her decision): after a fix, check only
-     the museums the fix can reach; all of them once before publishing; tell her how long first; a stalled check stops
-     and says so (`docs/testing.md`).
+     **How the shop check runs (her decision):** live only — NO saved copies (proposed and refused). Her key stays
+     out of the environment. After a fix, check only the museums the fix can reach; all of them once before
+     publishing; tell her how long first; a stalled check stops and says so (`docs/testing.md`).
   3. **Write the procedure for a new venue that imports badly** into `docs/add_by_link.md`, a pointer here: is it a
      case other museums will have? Yes → a shared rule, kept only if no proof page gets worse; no → an option on that
      venue's one entry; then the checks it must pass. Last, after 1 and 2.

@@ -38,8 +38,7 @@ not in the environment, so the script cannot spend it).
 - **Tell her how long first.** A clean full run is about half an hour; once the free tier is spent it can refuse for
   hours. **One run at a time, never in the background unwatched; a run that keeps meeting the limit is stopped and
   reported** — never waited on.
-- How the check should run in future (saved replies after each fix, one live run before publishing) is her
-  decision, pending (CLAUDE.md §5.4, item 2).
+- **Live only — never saved copies of the shops' replies** (her decision; proposed and refused).
 
 ## Cloud saving and speed
 
