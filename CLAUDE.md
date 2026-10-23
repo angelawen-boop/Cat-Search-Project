@@ -624,26 +624,25 @@ and were fixed in code, proven live).
      `scraper/claude_read_check/` (`fetch.js` live replies through the free Parallel server; `build.js` the app's own
      `readShowPage` and `linkPrompt` write each question; Sonnet answers each into a file; `score.js` scores with the
      app's `linkAnswer`/`linkTitle` against `truth.js`; `build2.js`/`score2.js` the second question). `docs/add_by_link.md`, "Per link".
-  2. **The shop finder — rebuilt to her design with the store fix below, on `main`, NOT published (50.3 next; her
-     go-ahead to publish is given — publish first thing).** There is ONE right section: a search result is taken only
-     if it names itself as the shop's exhibition catalogues; otherwise the shop is walked (front page, catalogue and
-     books sections, four pages at most); only when it has none, the museum's publications (a books shelf named for
-     the museum counts — KMSKA), then books, and the shop screen says which ("Shop found, but not its exhibition
-     catalogues section — its publications"). An exhibition-catalogues section that also sells the shows' goods counts
-     (her decision; Thyssen's "Exposiciones"). A section whose own page comes back empty counts when the shop shows
-     its books elsewhere, priced (Berlin). Where it can't see the shop's sections it says "Shop found, but not its
-     books section". Design: `docs/add_by_link.md`, "The shop finder — her design".
-     **Where it stands:** the offline tests pass; the walk is proven only live. On the last live run Thyssen, Antwerp,
-     Berlin and the other venues checked were right, except: **Albertina** reached its right section in German
-     (Parallel's copy of its English shop page now lacks its menu) — **her decision pending:** does the German copy
-     count? (its catalogue titles are German, which may make a lookup miss); **Belvedere, Louisiana, Kunsthaus, Petit
-     Palais, Beyeler, Hamburg not re-checked** since the last two fixes (right earlier on this design). The new
-     "Shop found, but not its exhibition catalogues section" line is not yet seen on screen.
+  2. **The shop finder — rebuilt to her design with the store fix below, on `main`, NOT published (50.3 next; publish
+     only on her go-ahead for this state — she held it while work was undecided).** There is ONE right section: a
+     search result is taken only if it names itself as the shop's exhibition catalogues; otherwise the shop is walked
+     (front page, catalogue and books sections, four pages at most); only when it has none, the museum's publications
+     (a books shelf named for the museum counts — KMSKA), then books, and the shop screen says which ("Shop found,
+     but not its exhibition catalogues section — its publications"). An exhibition-catalogues section that also sells
+     the shows' goods counts (her decision; Thyssen's "Exposiciones"). Where it can't see the shop's sections it says
+     "Shop found, but not its books section". **A venue in a country that does not speak English: its shop's English
+     version** (her design — a foreign-language shop must not hide the English one or its English books): the English
+     shop searched for first, the plain search only when that finds no shop, never both stacked; landed on a foreign
+     shop, its English version through a language link or its English addresses; the foreign section only when there
+     is none. Design: `docs/add_by_link.md`, "The shop finder — her design" and "The English version".
+     **Where it stands:** all 18 check venues right live (Albertina, Louisiana `/en-int/`, Thyssen in English). Berlin
+     stays German: its English shop exists but Parallel returns it without its books (the German one sells the English
+     editions). The "Shop found, but not its exhibition catalogues section" line is not yet seen on screen.
      **After publishing, give her test links** (a museum not in her app; Add, Next, read the shop screen, Back,
      Cancel import — nothing saved): Beyeler, Ruth Asawa (fondationbeyeler.ch/en/exhibitions/ruth-asawa) → its
-     "Exhibition catalogues"; Louisiana, Tracey Emin (louisiana.dk/en/udstilling/tracey-emin/) → its
-     "Udstillingskataloger"; Albertina, Picasso – Bacon (albertina.at/en/exhibitions/picasso-bacon) → its
-     Publications (see above); Belvedere, Asta Gröting (belvedere.at/carlone-contemporary-asta-groeting) → "Shop
+     "Exhibition catalogues"; Louisiana, Tracey Emin (louisiana.dk/en/udstilling/tracey-emin/) → its English "Udstillingskataloger" (`/en-int/`); Albertina, Picasso – Bacon (albertina.at/en/exhibitions/picasso-bacon)
+     → its English "Catalogues & Publications"; Belvedere, Asta Gröting (belvedere.at/carlone-contemporary-asta-groeting) → "Shop
      found, but not its books section" (its online shop sells prints only). Right answers: `docs/shop_check.json`.
      **Her confirmed shops in her app are NOT changed** (her decision: no hand edits to store or ledger) — she asks
      a session to amend Thyssen's or Antwerp's shop only if she imports more links there or a lookup misses a
