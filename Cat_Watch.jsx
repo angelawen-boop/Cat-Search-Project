@@ -2542,6 +2542,10 @@ async function walkShop(sf){
     // Next: the best section link seen and not yet walked into.
     const ranked=rankShelves(links.map(c=>({...c,url:firstPageOf(c.url)})),sf.ownName);
     const next=[...ranked,...ranked.mixed].find(c=>!sf.walked.has(normalizeUrlKey(c.url))&&!sf.no.has(normalizeUrlKey(c.url)));
+    // No section link at all on the page linked as the shop (Berlin's "Museen & Sammlungen" page): the shop's own
+    // front page. A page that has sections is never left for the site's root (Yale's shop on Touchnet, AL-042a).
+    const home=originOf(sf.root);
+    if(!next&&pages.length===1&&!ranked.length&&!ranked.mixed.length&&home&&!sf.walked.has(normalizeUrlKey(home))){ page=home; t=await openToWalk(sf,page); continue; }
     if(!next)break;
     page=next.url; t=await openToWalk(sf,page);
   }
