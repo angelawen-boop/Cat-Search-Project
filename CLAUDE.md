@@ -695,6 +695,9 @@ and were fixed in code, proven live).
   site); her other six pages there confirm. `docs/add_by_link.md`, "Saved pages". 48.1 (its months-only
   first-to-last-day rule since removed: the sweep's rule instead); capitals recased there and at San Marco; San Marco titles its headline's first
   sentence (her decisions). 48.2: its "Royal Palace of Milan" pages and their "as of" dates.
+- **OPEN — Paste, a trial on `claude/paste-import`, unpublished** (her idea: a page's text pasted beside its link, for
+  sites that refuse Parallel; one box per page, link and text apart). Her try on a test page decides it.
+  `docs/add_by_link.md`, "Pasted pages".
 - **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the
   scraper (her decision); a rule both use (the date reader) stays in `dates.js`. Live
   proof of every link venue: `docs/link_proof_pages.json`.

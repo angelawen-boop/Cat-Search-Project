@@ -14,6 +14,7 @@ Branches separate in-progress work from known-good work, never components.
 | `claude/ledger-cloud` | The cloud ledger trial — merged into `main`; kept as history |
 | `claude/theme-shelf` | **The Theme Shelf prototype** (`Theme_Shelf.jsx`, its build and tests), kept off `main` until she decides (docs/themes.md) |
 | `claude/period-sort` | **The Period sort trial** (art-period labels, Label, dividers) — its own test page, kept off `main` until she decides (docs/periods.md) |
+| `claude/paste-import` | **The Paste trial** (a page's text pasted beside its link, for sites that refuse Parallel) — unpublished, kept off `main` until she decides (docs/add_by_link.md, "Pasted pages") |
 | `parked` | **The unpublished search work after 43** (catalogue versions as blocks, Stage 1/1b, the live check page's code), from `main` and `claude/ledger-cloud`; also the old abandoned Vasari fix. Never published, never merged back without her say (her decision) |
 | `claude/jsx-stitched-intake`, `claude/blissful-volta-jxj5c0` | Merged into `main`; kept as history |
 | `claude/quiet-user-agent` | Parked, her decision — do not merge or re-open |
