@@ -81,13 +81,9 @@
    "host": "www.museothyssen.org",
    "searchName": "Museo Nacional Thyssen-Bornemisza",
    "pageShop": "https://tienda.museothyssen.org/en",
-   "shop": "https://tienda.museothyssen.org/en/collections/guias-y-catalogos-del-museo",
+   "shop": "https://tienda.museothyssen.org/en/collections/exhibitions",
    "case": "a Shopify shop whose search holds only single books: its list of sections",
-   "truth": "hers; also its exhibitions section (\"Exposiciones: catálogos y guías\"), first in her order, and its publications (\"Catálogos de arte y libros\"), next in her order when the search does not bring the exhibitions section",
-   "also": [
-    "https://tienda.museothyssen.org/en/collections/exhibitions",
-    "https://tienda.museothyssen.org/en/collections/publications"
-   ],
+   "truth": "hers: \"Exposiciones\" (catalogues and guides of its exhibitions); the collection guides once confirmed are wrong by her order, her app keeps them (no hand edits)",
    "lastGood": [
     {
      "step": "search",
@@ -335,12 +331,8 @@
    "searchName": "Koninklijk Museum voor Schone Kunsten Antwerpen KMSKA Belgium",
    "pageShop": "https://kmska.be/en/kmskashop-and-coffee-bar",
    "shop": "https://www.kmskashop.be/en/books/kmska/",
-   "case": "the search ranks the section's page 2 first: kept as page 1",
-   "truth": "hers (the KMSKA books shelf); also the shop's whole books section, \"Boeken en publicaties van het KMSKA\", when the search does not bring hers",
-   "also": [
-    "https://www.kmskashop.be/nl/boeken",
-    "https://www.kmskashop.be/en/books/"
-   ],
+   "case": "the search shows the whole Books section or a later page of the shelf: the walk goes into Books for the museum's own shelf, kept as page 1",
+   "truth": "hers: the KMSKA shelf under Books — the museum's own publications; the shop has no exhibition-catalogues section (its \"Exhibitions\" section unchecked)",
    "lastGood": [
     {
      "step": "search",
@@ -497,12 +489,9 @@
    "host": "louisiana.dk",
    "searchName": "Louisiana Museum of Modern Art Humlebæk Denmark",
    "pageShop": "",
-   "shop": "https://butik.louisiana.dk/en-int/collections/udstillingskataloger",
+   "shop": "https://butik.louisiana.dk/collections/udstillingskataloger",
    "case": "Danish \"butik\"; Scandinavian prices",
    "truth": "session, checked on the live shop: the shop's own site, section Udstillingskataloger",
-   "also": [
-    "https://butik.louisiana.dk/collections/udstillingskataloger"
-   ],
    "lastGood": [
     {
      "step": "search",

@@ -94,6 +94,38 @@ code first, one book's page never a section, a file or an app store never the sh
 own site kept as itself, a shop address on another site followed, and one more search for the shop itself when
 the first finds nothing shop-like. AL-059.
 
+## The shop finder — her design (agreed; being built)
+
+**There is one right section per shop: the finder finds it, or says it could not.** Never "the best of whatever the
+search returned" (her words: you go out for capsicum; if you can't find it you are looking in the wrong place, or it
+doesn't exist). How a person does it, and so how the finder does it:
+1. **Search** "<long museum name> shop exhibition catalogues". A result is taken at once only if it IS the shop's
+   exhibition-catalogues section — its own name (title, label, address words) says exhibitions' catalogues.
+2. **Otherwise walk the shop.** Parallel does not click: each step is a fetch of one address, the page back as
+   text with its links as `[label](address)`; code reads the labels and opens the one named for catalogues. Start
+   at the shop found (its front page, a Shopify shop's section list, its menu), go into a broader section ("Books")
+   when the catalogues may sit inside it. At most **four page opens** after the search. Only when the shop truly
+   has no exhibition-catalogues section: the museum's own publications (a books section named for the museum
+   itself counts — KMSKA's "KMSKA" shelf), then books, then the shop — and the shop screen says which.
+3. **Where it cannot work it says so** ("Shop found, but not its books section"): a menu drawn by script that
+   Parallel gets nearly empty (Hamburg's Friends' shop), a page Parallel cannot fetch (bot check, 202, a "301
+   Moved" notice).
+
+**The fault it fixes:** the old finder walked the shop only when the search found nothing usable, and accepted any
+section with books and prices — so Thyssen took "Publications" and Antwerp the whole Dutch "Boeken" when the search
+happened to show them. **The standing check is strict:** one right answer per venue, never a second.
+
+**Right answers, her decisions:** Thyssen — "Exposiciones" (catalogues and guides of its exhibitions), not the
+collection guides she once confirmed; Antwerp — the KMSKA shelf under Books, as confirmed (its shop's "Catalogus" is
+the whole product list; its "Exhibitions" section looks like goods per show — unchecked). **Confirmed shops in her
+app stay as they are** (her decision: no hand edits to store or ledger); a session amends one only when she asks —
+if she imports more links there or a lookup misses a catalogue.
+
+**History:** the first finder (39) read the shop's menu after one search; her first run picked one book's page (RA)
+and a blog post (Courtauld), and her design that day (39.2) went search-first, the shop's section list and menu only
+when the search found nothing. The plural-section rule added the same day would have fixed both misses on the menu
+route too; the walk is back, now after a strict search.
+
 Name: Claude's (above). Its shop: the **exhibition-catalogues section**, else the museum's publications,
 else books — **never the front page, one book, a post, or a section mixing books with other goods** (her
 decision). A mixed section is opened and a books-only section inside it taken. **Nothing found is stored until

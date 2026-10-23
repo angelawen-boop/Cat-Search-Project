@@ -621,11 +621,26 @@ and were fixed in code, proven live).
      `scraper/claude_read_check/` (`fetch.js` live replies through the free Parallel server; `build.js` the app's own
      `readShowPage` and `linkPrompt` write each question; Sonnet answers each into a file; `score.js` scores with the
      app's `linkAnswer`/`linkTitle` against `truth.js`; `build2.js`/`score2.js` the second question). `docs/add_by_link.md`, "Per link".
-  2. **The shop finder: in steps, and a standing check of its own — built, on `main`, not published.** `discoverShop`
-     runs named steps; `node scraper/shop_check.js` runs the app's finder live on 18 venues (`docs/shop_check.json`:
-     her confirmed shops, and the session's for museums she has not linked), printing a miss beside its last good run.
-     Its first run found faults, fixed as shared rules (`docs/add_by_link.md`, "Found by the standing check"); every
-     venue then right. Thyssen and Antwerp now take a different right section from hers (the search varies).
+  2. **The shop finder — OPEN: the refactor and check are on `main`, not published; now rebuilding to her design.**
+     Done: `discoverShop` in named steps (behaviour unchanged); the standing check `node scraper/shop_check.js` (the
+     app's finder live on 18 venues, `docs/shop_check.json`); shop-reading fixes it found (Danish words, a section
+     under "/products/", Shopify lists past 250, a shop on the museum's sub-address, an empty shop page → its front,
+     page and sort settings off an address). **Her design (agreed; build next): there is ONE right section — the
+     finder finds it or says it could not, never "the best of what the search returned".** (1) Search; take a
+     result only if it IS the exhibition-catalogues section (its own name says so) — done. (2) Otherwise walk the
+     shop: open its front page / section list / menu and follow links named for catalogues, up to FOUR page opens
+     (the search not counted); only when the shop truly has no such section, settle for the museum's own
+     publications, then books, then the shop itself — and say which. A books section named for the museum itself
+     ("KMSKA") is its own publications (new rule). Fault it fixes: today the walk runs only when the search found
+     nothing, and any section with books and prices is accepted. The check goes STRICT: one right answer per
+     venue, no second answers (the "also" entries come out). Right answers (her decisions): Thyssen —
+     "Exposiciones" (catalogues and guides of its exhibitions), not the collection guides she confirmed; Antwerp —
+     the KMSKA shelf under Books, as she confirmed (unchecked: its shop's "Exhibitions" section looks like goods —
+     if it holds catalogues it comes first). **Her confirmed shops in her app are NOT changed** (her decision: no
+     hand edits to store or ledger) — she asks a session to amend Thyssen's or Antwerp's shop only if she imports
+     more links there or a lookup misses a catalogue. Where it can't work, it says "Shop found, but not its books
+     section": menus drawn by script (Hamburg's Friends' shop), pages Parallel cannot fetch. Then publish (50.3).
+     Design and history: `docs/add_by_link.md`, "The shop finder — her design".
   3. **Write the procedure for a new venue that imports badly** into `docs/add_by_link.md`, a pointer here: is it a
      case other museums will have? Yes → a shared rule, kept only if no proof page gets worse; no → an option on that
      venue's one entry; then the checks it must pass. Last, after 1 and 2.
@@ -633,6 +648,9 @@ and were fixed in code, proven live).
 - **Links and Pages follow the sweep's rules wherever the sweep has met the case and she has decided it** (her
   decision): the same code where it can be shared (`dates.js`), never a rule of their own. `docs/add_by_link.md`,
   "The general reader".
+- **Left from her 50 links (her decisions):** two Stuttgart links still meet the site's bot check — she re-reads
+  later or imports them by Pages; Soutine (Palazzo Reale) keeps its made-up first-to-last-day dates — leave it; her
+  next Borghese sweep may bring title Change cards for a capital "E" — expected.
 - **OPEN — fixes from her 50 links (Antwerp, Stuttgart, Borghese), published at 50.1; her links confirm.** Both screens
   show the card name; Antwerp named "Antwerp Fine Arts" (Claude's "KMSKA Antwerp" kept as its example); a shop
   section found on page 2 kept as page 1; an English title in capitals recased; no usable dates (none, months only,
