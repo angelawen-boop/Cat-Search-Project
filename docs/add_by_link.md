@@ -490,10 +490,12 @@ stored as she types (`links/pastes`), so leaving the page to copy loses nothing.
   the title set after `build_app.js`). Published with `sample`, `db`, `downloads` only — the `mcp` grant (Parallel)
   was refused at publish, so Links and catalogue lookups do not work there; Paste needs none of it.
 - **Next iteration (her ask):** a faint "Link" inside each link box (her exception to no words in a box).
-- **Her first try:** Caro, Stubbs and a Turner read right; Stubbs came with no description, as expected. Faults to
-  discuss: a library record writes titles in sentence case ("Turner and the masters", "a celebration"), so a
-  show already in the ledger gets a title Change card; and its link Change card offers the library record in
-  place of the museum's own exhibition page.
+- **Her first try:** Caro, Stubbs and a Turner read right; Stubbs came with no description, as expected. Her
+  decisions on it: titles stay as the record writes them, as the sweep keeps a venue's (sentence case included);
+  a link Change card she rejects herself, a new show takes the pasted link; "Link" for the same field on every
+  card (Change cards say "Exhibition link" today) — to build, with the faint "Link" in each link box.
+- **Before merging:** `ownMuseumNamed` runs on every link read, not only pastes — the live proof pages must show
+  no page worse, or it is limited to pastes; an ordinary exhibition page pasted (no "Title:" line) is untried.
 - **Unproven:** what her own Claude says for Stubbs, whose record holds no description (the passage is empty —
   most likely no description); whether her Claude names Tate Britain for a library record.
 
