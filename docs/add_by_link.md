@@ -476,7 +476,8 @@ dropped) and reads it with `readShowPage`, then the same intake as a link. No Pa
 
 For sites that refuse Parallel, where saving each page is slow (her idea; the Tate library's catalogue). Import
 offers CSV · Links · Pages · Paste. One box per page, the link and the page's text in separate boxes (her design:
-pasting both into one box would mix them); two boxes to start, + for more; nothing written inside them. Boxes are
+pasting both into one box would mix them); two boxes to start, + for more; a faint "Link" in each link box, nothing in the text box; "Clear" in each box and
+"Clear all" above them, styled as the Links box's Clear. Boxes are
 stored as she types (`links/pastes`), so leaving the page to copy loses nothing. Each box is turned into a page
 (`pastedPageReply`) and read as a saved page is: `readShowPage`, Claude, the same intake. No Parallel.
 
@@ -485,23 +486,22 @@ stored as she types (`links/pastes`), so leaving the page to copy loses nothing.
 - **The venue:** a page on another part of one of her museums' own site (library.tate.org.uk) files under the
   museum Claude names when it is one of hers on that site (`ownMuseumNamed`) — else a new venue for the library.
 - **Proof:** her three pastes, `docs/link_pages/pasted_tate_library.json` (Caro, Turner, Stubbs; the third box
-  opens with Turner's leftover summary, her test of a lazy paste). Tests PS-001–021 (`add_by_paste.js`).
+  opens with Turner's leftover summary, her test of a lazy paste); `add_by_paste.js`.
 - **Test page:** https://claude.ai/artifact/Q55UksBeW7CwQm5YzWXTLe (title "Cat Watch Paste Test"; built from this branch,
   the title set after `build_app.js`). Published with `sample`, `db`, `downloads` only — the `mcp` grant (Parallel)
   was refused at publish, so Links and catalogue lookups do not work there; Paste needs none of it.
-- **Her first try:** Caro, Stubbs and a Turner read right; Stubbs came with no description, as expected. Her
-  decisions on it: titles stay as the record writes them, as the sweep keeps a venue's (sentence case included);
-  a link Change card she rejects herself, a new show takes the pasted link.
-- **Her second try:** a Borghese archive page (refuses Parallel, 202), footers pasted too: clean, filed under the
-  Borghese. Ghent (MSK): the title read "closed" (its first line) and empty credit labels reached the passage —
-  left as they are (her decision: Paste is a last resort for pages that are plain text already, a page like
-  Ghent's goes by Pages; no rules invented for pasted text).
-- **Built after:** "Clear" in each box and "Clear all" above them, styled as the Links box's Clear; a faint
-  "Link" in each link box; "Link" for the same field on every card (PS-013, PS-022–023).
-- **Before merging:** `ownMuseumNamed` runs on every link read, not only pastes — the live proof pages must show
-  no page worse, or it is limited to pastes; an ordinary exhibition page pasted (no "Title:" line) is untried.
-- **Unproven:** what her own Claude says for Stubbs, whose record holds no description (the passage is empty —
-  most likely no description); whether her Claude names Tate Britain for a library record.
+- **Her decisions from her tries** (Tate library records, a Borghese archive page with footers pasted: clean):
+  titles stay as the page writes them, as the sweep keeps a venue's (library sentence case included); a link Change
+  card she rejects herself, a new show takes the pasted link; "Link" names that field on every card. Paste is a last
+  resort for pages already plain text — a page like Ghent's (title read as its "closed" notice, empty credit labels
+  in the passage) goes by Pages; no rules invented for pasted text. Stubbs, with no description on its record,
+  comes with none. Tests PS-001–023.
+- **Before merging (her decision, she merges):** `ownMuseumNamed` runs on every link read, not only pastes —
+  "Link import rebuild 4" (the live Add-by-link session) was asked whether the branch clashes with its work or could
+  make a link read worse; no reply yet. If in doubt, do not merge; limiting the rule to pastes is the fallback.
+- **The test page holds the build before** Clear, Clear all and the faint "Link" — republish on her say-so.
+- **Unproven:** the shop finder for a pasted new venue — the same `discoverShop`, but pasted text gives it no shop
+  link off the page; the test page has no Parallel grant, so it never ran there.
 
 ## Someone else's page — a show held elsewhere
 
