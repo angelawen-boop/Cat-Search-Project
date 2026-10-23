@@ -621,12 +621,11 @@ and were fixed in code, proven live).
      `scraper/claude_read_check/` (`fetch.js` live replies through the free Parallel server; `build.js` the app's own
      `readShowPage` and `linkPrompt` write each question; Sonnet answers each into a file; `score.js` scores with the
      app's `linkAnswer`/`linkTitle` against `truth.js`; `build2.js`/`score2.js` the second question). `docs/add_by_link.md`, "Per link".
-  2. **The shop finder: in steps, and a standing check of its own** (proof pages test only the reader). Split
-     `discoverShop` into named steps as the reader was. The check: a script running the app's finder live, a list of
-     about 18 venues — one per way a shop has been found or missed, her link venues included (Detroit, Cleveland,
-     Thyssen, Worcester, Yale, Berlin, CEDON, the Städel, Schack, and Albertina, Beyeler, Hamburg, Belvedere,
-     Louisiana, Kunsthaus, Petit Palais…) — each with its right shop, the case it guards and the trace of its last
-     good run, so a failure shows the step where it went wrong. Runs only after a shop-finder change (~90 searches).
+  2. **The shop finder: in steps, and a standing check of its own — built, on `main`, not published.** `discoverShop`
+     runs named steps; `node scraper/shop_check.js` runs the app's finder live on 18 venues (`docs/shop_check.json`:
+     her confirmed shops, and the session's for museums she has not linked), printing a miss beside its last good run.
+     Its first run found faults, fixed as shared rules (`docs/add_by_link.md`, "Found by the standing check"); every
+     venue then right. Thyssen and Antwerp now take a different right section from hers (the search varies).
   3. **Write the procedure for a new venue that imports badly** into `docs/add_by_link.md`, a pointer here: is it a
      case other museums will have? Yes → a shared rule, kept only if no proof page gets worse; no → an option on that
      venue's one entry; then the checks it must pass. Last, after 1 and 2.

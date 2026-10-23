@@ -1123,10 +1123,20 @@ function runtime() {
     const fp = fn('firstPageOf');
     ok(fp('https://www.kmskashop.be/en/books/kmska/page2.html') === 'https://www.kmskashop.be/en/books/kmska/'
       && fp('https://shop.example.org/catalogues/page/3/') === 'https://shop.example.org/catalogues/'
-      && fp('https://shop.example.org/catalogues?page=2&sort=new') === 'https://shop.example.org/catalogues?sort=new'
+      && fp('https://shop.example.org/catalogues?page=2&sort=new') === 'https://shop.example.org/catalogues'
+      && fp('https://tienda.museothyssen.org/en/collections/publications?sort_by=best-selling') === 'https://tienda.museothyssen.org/en/collections/publications'
       && fp('https://secure.touchnet.net/C21490_ustores/web/store_cat.jsp?page=1') === 'https://secure.touchnet.net/C21490_ustores/web/store_cat.jsp?page=1'
       && fp('https://diashop.org/dia-publications/') === 'https://diashop.org/dia-publications/',
-      'AL-063: a books section the search found on its second page is kept as its first (KMSKA "page2.html"); page 1 and plain addresses untouched');
+      'AL-063: a books section the search found on its second page is kept as its first (KMSKA "page2.html"), without its sort order (Thyssen); page 1 and plain addresses untouched');
+    const rk = fn('rankShelves')([
+      { url: 'https://tienda.museothyssen.org/en/collections/publications', words: 'Catálogos de arte y libros: ediciones especializadas' },
+      { url: 'https://tienda.museothyssen.org/en/collections/exhibitions', words: 'Exposiciones: catálogos y guías de muestras de arte' },
+      { url: 'https://butik.louisiana.dk/collections/books-in-english', words: 'Books in English' },
+      { url: 'https://butik.louisiana.dk/collections/udstillingskataloger', words: 'Udstillingskataloger' },
+      { url: 'https://shop.albertina.at/en/products/publications/', words: 'Catalogues & Publications' },
+      { url: 'https://shop.example.org/products/the-catalogue-of-a-show', words: 'The catalogue of a show' }]).map(r => r.url);
+    ok(rk[0].endsWith('/exhibitions') && rk[1].endsWith('/udstillingskataloger') && rk.includes('https://shop.albertina.at/en/products/publications/') && !rk.some(u => /the-catalogue-of-a-show/.test(u)) && rk[rk.length - 1].endsWith('/books-in-english'),
+      'AL-070: an exhibitions\' catalogues section ranks first (Thyssen "Exposiciones"); Danish "udstillingskataloger" is catalogues; a section under "/products/" is one (Albertina), a product never', JSON.stringify(rk));
     // ── AL-064: a show page with no dates anywhere comes in undated, as the sweep keeps it ─
     const rdd = fn('readShowPage');
     const bourgeois = rdd({ title: 'LOUISE BOURGEOIS. L’INCONSCIO DELLA MEMORIA - Galleria Borghese',

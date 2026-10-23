@@ -28,6 +28,13 @@ the suite, how many times it failed this session, whether it passed when run alo
 why — or "needs investigation" if there is none. If the suite already has an item, update it. Tell her in
 one line that it is recorded.
 
+## The shop finder's standing check
+
+After a change to the shop finder only: `node scraper/shop_check.js` — the app's own finder run live on the venues
+in `docs/shop_check.json`, each against its right shop; exit 1 on a miss, with the finder's steps beside its last
+good run. About five calls a venue, on the free Parallel server (paced). `docs/add_by_link.md`, "A venue the app has
+not seen".
+
 ## Cloud saving and speed
 
 The cloud-saving suites run one at a time, with the machine to themselves (`scraper/run_tests.js`): they

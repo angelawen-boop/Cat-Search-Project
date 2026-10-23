@@ -99,6 +99,18 @@ else books — **never the front page, one book, a post, or a section mixing boo
 decision). A mixed section is opened and a books-only section inside it taken. **Nothing found is stored until
 the import finishes.** Code: "FINDING A NEW VENUE'S SHOP SECTION".
 
+**The finder runs in named steps** (`discoverShop`, as the reader does; each step reads and writes `sf`, the search
+for one venue's shop): the venue's written-in section (`shopFromRule`), the search (`searchForShop`), a books section
+among its results (`pickFromSearch`), the museum's Shop page sending visitors elsewhere (`followShopElsewhere`), a
+Shopify shop's section list (`shopifySectionList`), the shop's menu (`shopMenu`), the answer (`shopResult`). Each
+candidate is proved books-only by `tryShelves`.
+
+**The finder's standing check** (her decision; proof pages test only the reader): `node scraper/shop_check.js` runs
+the app's own finder live, on the free Parallel server, on the venues in `docs/shop_check.json` — one per way a
+shop has been found or missed, each with its right shop (hers where she confirmed it) and the case it guards. A miss
+prints the finder's steps beside its last good run (`--write` keeps a passing run's steps). Run it after a change to
+the shop finder only: about five calls a venue.
+
 1. **One search call, two queries: hers, "<venue> shop exhibition catalogues", and "<venue> shop books
    publications"** — Detroit's "DIA Publications" came back with both, never with hers alone (keyed). Parallel
    does not always rank the section first (Cleveland's was 4th), so code ranks every result: the museum's own
@@ -153,8 +165,19 @@ the venue, its shop and the page title's site name come from the address inside 
 read and what the card links (`siteUrlOf`; AL-037).
 
 **A section found on a later page is kept by its first** (her decision): the search can rank page 2 first, as
-it did KMSKA's ".../books/kmska/page2.html"; "/page2.html", "/page-2", "/page/2/" and "?page=2" are read as page 1
-(`firstPageOf`, AL-063).
+it did KMSKA's ".../books/kmska/page2.html"; "/page2.html", "/page-2", "/page/2/" and "?page=2" are read as page 1,
+and a sort order leaves the address ("?sort_by=best-selling", Thyssen) (`firstPageOf`, AL-063).
+
+**Found by the standing check** (shared rules; AL-070; each live on the venue it came from, no venue on the list worse):
+- **An exhibitions' catalogues section ranks first** among catalogues, her order: Thyssen's "Exposiciones: catálogos y
+  guías" above its collection guides and catalogues (`SHELF_EXHIBITIONS`).
+- **Danish joins its words**: "udstillingskataloger" is catalogues (Louisiana).
+- **A section under "/products/"** — the step after it a section's word — is a section, not a product (Albertina's
+  "/en/products/publications/", "Catalogues & Publications").
+- **A shop on the museum's own sub-address is the shop** (Louisiana's butik.louisiana.dk), not the museum's page about it.
+- **A Shopify list of 250 sections is read on**, up to four pages (Louisiana's "Udstillingskataloger" sits past 250).
+- **A page linked as the shop that comes back empty** ("301 Moved Permanently", Berlin's) gives way to the shop's
+  own front page for its menu.
 
 **Shelf AND whole-shop search, as the 28 (her decision)** — DIA files a show's book in the show's own section.
 A search is kept only if it finds a book the finder saw (`proveShopSearch`; AL-008k, AL-014); older venues
