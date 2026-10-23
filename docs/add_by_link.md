@@ -496,9 +496,12 @@ stored as she types (`links/pastes`), so leaving the page to copy loses nothing.
   resort for pages already plain text — a page like Ghent's (title read as its "closed" notice, empty credit labels
   in the passage) goes by Pages; no rules invented for pasted text. Stubbs, with no description on its record,
   comes with none. Tests PS-001–023.
-- **Before merging (her decision, she merges):** `ownMuseumNamed` runs on every link read, not only pastes —
-  "Link import rebuild 4" (the live Add-by-link session) was asked whether the branch clashes with its work or could
-  make a link read worse; no reply yet. If in doubt, do not merge; limiting the rule to pastes is the fallback.
+- **Before merging (her decision, she merges).** "Link import rebuild 4" answered: no conflict (its work is inside the
+  shop finder), but (1) its advice is to limit `ownMuseumNamed` to pastes — she has not been asked about it for Links,
+  and a link must never move the Ashmolean (`underOcc`) or blur the two Tates (an ashmolean.org link files under
+  `ashmolean` by address before the rule runs — checked in code; a subdomain would too); (2) merge onto main only
+  after its shop-finder commit (AL-072) and, if she approves it, its fix for a failed `readOccasional()` that would
+  let the next apply wipe `venues/occasional` — Paste uses the same apply.
 - **The test page holds the build before** Clear, Clear all and the faint "Link" — republish on her say-so.
 - **Unproven:** the shop finder for a pasted new venue — the same `discoverShop`, but pasted text gives it no shop
   link off the page; the test page has no Parallel grant, so it never ran there.

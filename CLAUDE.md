@@ -698,8 +698,8 @@ and were fixed in code, proven live).
 - **OPEN — Paste, a trial on `claude/paste-import`; she merges it herself, later** (her idea: a page's text pasted beside
   its link — a last resort for pages already plain text; a page like Ghent's goes by Pages, no rules invented for
   pasted text, her decision). Tried by her on its test page (Tate library, Borghese archive: clean). Before any merge,
-  "Link import rebuild 4" must confirm the branch does not clash with its work — asked, no reply yet; if in doubt, no
-  merge (her decision). `docs/add_by_link.md`, "Pasted pages".
+  "Link import rebuild 4" answered: no clash, but limit the venue rule to pastes, and merge only after its pending
+  shop-finder and venue-list fixes; if in doubt, no merge (her decision). `docs/add_by_link.md`, "Pasted pages".
 - **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the
   scraper (her decision); a rule both use (the date reader) stays in `dates.js`. Live
   proof of every link venue: `docs/link_proof_pages.json`.
