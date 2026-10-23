@@ -494,6 +494,11 @@ stored as she types (`links/pastes`), so leaving the page to copy loses nothing.
   decisions on it: titles stay as the record writes them, as the sweep keeps a venue's (sentence case included);
   a link Change card she rejects herself, a new show takes the pasted link; "Link" for the same field on every
   card (Change cards say "Exhibition link" today) — to build, with the faint "Link" in each link box.
+- **Her second try:** a Borghese archive page (refuses Parallel, 202), footers pasted too: clean, filed under the
+  Borghese. Ghent (MSK, new venue): the title read "closed" — the first-line rule took the page's opening-status
+  word; the line above the first date line (past an "Exhibition" label) is the title, to build. Credit labels left
+  with no names ("In collaboration with") reach the passage. Her ask: a Clear in each box and a Clear all, styled
+  and placed as the other import channels' Clear.
 - **Before merging:** `ownMuseumNamed` runs on every link read, not only pastes — the live proof pages must show
   no page worse, or it is limited to pastes; an ordinary exhibition page pasted (no "Title:" line) is untried.
 - **Unproven:** what her own Claude says for Stubbs, whose record holds no description (the passage is empty —
