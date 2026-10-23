@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "50.2";
+const APP_VERSION = "50.3";
 const APP_VERSION_DATE = "23 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -2152,13 +2152,15 @@ function menuLinks(text,host){
 }
 // A Shopify section whose page shows no books (drawn by script, out of the connector's
 // copy; Mia): its own product list, read as text. Books when at least two products carry
-// a price and most carry a book type ("Books", "Art Book", "Catalogue").
-function shopifyShelfIsBooks(text){
+// a price and most carry a book type ("Books", "Art Book", "Catalogue", "Catálogo").
+// The exhibition-catalogues section (`target`) needs only two books: a section named for its exhibitions'
+// catalogues counts even when it also sells those shows' goods (her decision; Thyssen's "Exposiciones").
+function shopifyShelfIsBooks(text,target){
   const t=String(text||"");
-  const types=[...t.matchAll(/"product_type"\s*:\s*"((?:[^"\\]|\\.)*)"/g)].map(m=>m[1]);
+  const types=[...t.matchAll(/"product_type"\s*:\s*"((?:[^"\\]|\\.)*)"/g)].map(m=>foldText(m[1]));
   const prices=(t.match(/"price"\s*:\s*"?\d/g)||[]).length;
-  const bookish=types.filter(x=>/\bbooks?\b|\bcatalog(?:ue|o)?s?\b|\bpublications?\b/i.test(x)).length;
-  return types.length>=2&&prices>=2&&bookish*2>types.length;
+  const bookish=types.filter(x=>/\bbooks?\b|\bcatalog(?:ue|o)?s?\b|\bpublications?\b|\blibros?\b/i.test(x)).length;
+  return types.length>=2&&prices>=2&&(target?bookish>=2:bookish*2>types.length);
 }
 function shopifyProductsUrl(u){
   try{ const x=new URL(u); return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?collections\/[^/]+\/?$/i.test(x.pathname)?x.origin+x.pathname.replace(/\/$/,"")+"/products.json?limit=8":""; }catch{ return ""; }
@@ -2171,9 +2173,10 @@ function shopifySections(text,root){
     const t=(chunk.match(/"title"\s*:\s*"((?:[^"\\]|\\.)*)"/)||[])[1];
     const h=(chunk.match(/"handle"\s*:\s*"([^"]+)"/)||[])[1];
     const n=(chunk.match(/"products_count"\s*:\s*(\d+)/)||[])[1];
+    const id=(chunk.match(/^\s*(\d+)/)||[])[1]||"";
     if(!t||!h||n==="0")continue;
     let title=t; try{ title=JSON.parse('"'+t+'"'); }catch{}
-    out.push({url:root+"collections/"+h,words:title});
+    out.push({url:root+"collections/"+h,words:title,id,handle:h});
   }
   return out;
 }
@@ -2338,7 +2341,7 @@ function shopFinderStart(pageShop,museumHost,venueName,turnedDown,venueId,trace)
   const sf={pageShop,museumHost,venueName,venueId,trace,no:new Set((turnedDown||[]).map(normalizeUrlKey)),own:linkEntry(venueId)||{},
     pageShopHost:baseDomain(hostOf(pageShop))===baseDomain(museumHost)?"":hostOf(pageShop),
     opens:0,seenText:"",died:null,opened:new Set(),mine:[],root:"",front:"",pick:null,best:null,
-    texts:new Map(),failed:new Set(),walked:new Set(),walkOpens:0};
+    texts:new Map(),failed:new Set(),walked:new Set(),walkOpens:0,translated:[]};
   sf.place=u=>isShopPlace(u,museumHost,sf.pageShopHost);
   sf.named=r=>!sf.place(r.url)&&namesVenue(r.url,sf.own.shopNamed);
   // A shop page on the museum's own site is the shop's front, never the museum's home page
@@ -2382,7 +2385,11 @@ async function tryShelves(sf,cands,how,inside){
     const pj=shopifyProductsUrl(c.url);
     if(pj){
       const j=await fetchPage(pj,"The products in this section: titles, types and prices.",null,{full:true});
-      if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results)))return{...c,how};
+      const jt=j.ok?pageTextOf(j.results):"";
+      if(shopifyShelfIsBooks(jt,c.target))return{...c,how};
+      // A section under a translated address ("/en/collections/exhibitions", Thyssen's "exposiciones") lists no
+      // products there: kept for the shop's list of sections, which knows it under its own name.
+      if(c.target&&/"products"\s*:\s*\[\s*\]/.test(jt))sf.translated.push({...c,how});
     }
     if(await firstProductIsBook(fetchPage,t,hostOf(c.url)))return{...c,how};
     sf.failed.add(k);
@@ -2469,7 +2476,18 @@ async function shopifySectionList(sf){
     all.push(...shopifySections(t,sf.root));
     if((t.match(/"handle"\s*:/g)||[]).length<250)break;
   }
-  if(all.length){ sf.opens=0; sf.consider(await tryShelves(sf,all,"the shop's list of sections")); }
+  // The exhibition-catalogues section the search found under a translated address: its number, from its own
+  // ".json", finds it in the list; its products are read under the list's name. The address kept is the one found.
+  for(const c of sf.translated){
+    if(sf.pick||!all.length)break;
+    const cj=await fetchPage(c.url.replace(/\/$/,"")+".json","The section's id and handle.",null,{full:true});
+    const id=cj.ok?(pageTextOf(cj.results).match(/"collection"\s*:\s*\{\s*"id"\s*:\s*(\d+)/)||[])[1]:null;
+    const same=id&&all.find(x=>x.id===id);
+    if(!same)continue;
+    const j=await fetchPage(originOf(sf.root)+"collections/"+same.handle+"/products.json?limit=8","The products in this section: titles, types and prices.",null,{full:true});
+    if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),true))sf.consider(c);
+  }
+  if(all.length&&!sf.pick){ sf.opens=0; sf.consider(await tryShelves(sf,all,"the shop's list of sections")); }
   sf.note("shopify-sections",{pick:sf.pick?sf.pick.url:null,best:sf.best?sf.best.url:null});
 }
 

@@ -94,7 +94,7 @@ code first, one book's page never a section, a file or an app store never the sh
 own site kept as itself, a shop address on another site followed, and one more search for the shop itself when
 the first finds nothing shop-like. AL-059.
 
-## The shop finder — her design (agreed; being built)
+## The shop finder — her design (built, not yet published)
 
 **There is one right section per shop: the finder finds it, or says it could not.** Never "the best of whatever the
 search returned" (her words: you go out for capsicum; if you can't find it you are looking in the wrong place, or it
@@ -110,6 +110,16 @@ doesn't exist). How a person does it, and so how the finder does it:
 3. **Where it cannot work it says so** ("Shop found, but not its books section"): a menu drawn by script that
    Parallel gets nearly empty (Hamburg's Friends' shop), a page Parallel cannot fetch (bot check, 202, a "301
    Moved" notice).
+
+**As built:** a search result is the target only when its name carries both a catalogues word and an exhibitions
+word (or it is the venue's own section on a shop company's site, CEDON); a lesser one is kept as the best so far and
+its shop walked, in English when the search shows the shop's English pages. The walk opens the front page, checks its
+section links (only those ranked above the best so far), then goes into the best section link not yet opened, four
+pages at most. **An exhibition-catalogues section that also sells the shows' goods counts** (her decision: Thyssen's
+"Exposiciones" holds catalogues, posters, socks and mugs) — it needs two priced books, not mostly books; every other
+section stays books-only. A Shopify section under a translated address ("/en/collections/exhibitions") lists no
+products there; its number finds it in the shop's section list ("exposiciones") and it is read there, the address
+found kept. A books shelf whose menu label is the museum's own name is its publications (KMSKA). AL-071.
 
 **The fault it fixes:** the old finder walked the shop only when the search found nothing usable, and accepted any
 section with books and prices — so Thyssen took "Publications" and Antwerp the whole Dutch "Boeken" when the search
