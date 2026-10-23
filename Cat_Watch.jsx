@@ -322,8 +322,10 @@ function findDateRangeCore(raw, opts = {}) {
       if (r.start || r.end) return r;
     }
   }
+  // Two full dotted dates either side of a bar are a range too ("22.05.2008 | 14.08.2008", the
+  // Borghese's archive site).
   const dotted = s.match(new RegExp(
-    `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
+    `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})(?:${RANGE_SEP}|\\s*\\|\\s*)(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
   // opts.slashes: a show page's own date line, read for a range whose order the numbers prove (Prado).
   const num = dotted || ((looseSingles || opts.slashes) && s.match(new RegExp(
     `\\b(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})${RANGE_SEP}(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})\\b`)));
@@ -742,7 +744,11 @@ function findMonthRange(text) {
   const last = new Date(Date.UTC(y2, m2, 0)).getUTCDate();
   return { start: ymd(y1, m1, 1), end: ymd(y2, m2, last), raw: m[0].trim() };
 }
-return { findDateRange, findDateRangeInProse, capsTitleParts, findMonthRange };
+
+// The note on a row with no dates anywhere: the sweep writes it and Add by link copies it word for
+// word (her decision).
+const NO_DATES_NOTE = "No closing date found anywhere on the venue's pages.";
+return { findDateRange, findDateRangeInProse, capsTitleParts, findMonthRange, NO_DATES_NOTE };
 })();
 const SUMMARY_RULES="- Maximum 10 words. The examples average about six.\n- End with a full stop. Avoid colons — the accepted summaries almost never use one.\n- Name the artist or artists the exhibition is built around.\n\nNAME THEM THE WAY A GALLERY-GOER WOULD. Surname alone, unless the surname alone\nwould be ambiguous. Write \"Zurbarán\", not \"Francisco de Zurbarán\". \"Shonibare\",\nnot \"Yinka Shonibare\". \"Velasco\", not \"Mexican artist José María Velasco\". Drop\n\"painter\", \"artist\" and similar labels in front of a name — the reader already\nknows. Full names, honorifics and formal titles read stiff and waste words that\ncould carry meaning instead.\n\nALWAYS WRITE IN ENGLISH, whatever language the raw text is in. Several venues\npublish only in Italian and one only in French; she reads the summaries in\nEnglish. Translating a phrase does not break the traceability rule below — a\ntranslated phrase is still traceable to the text it came from. Keep the\nexhibition's own title in its original language if that is how it is written;\ntranslate the description around it.\n\nTHE RULE THAT MATTERS MOST: every word of your summary must be traceable to a\nphrase in that row's own raw text. If you cannot point to where something came\nfrom, leave it out. In particular:\n\n- Never add an artist, place, medium or date that you happen to know about but the\n  text does not mention.\n- Use a number only if the text states that number. Do not count a list of names\n  and report the total — the page may state a different figure, and the page is\n  right, not your count.\n\nBeing vague is a much smaller failure than being confidently wrong. If the text\nwill only support something general, write something general.\n\nIf the raw text is not a description of an exhibition — a bare link, a curator's\nbiography, ticketing or opening-hours copy, cookie or consent boilerplate, a \"page\nnot found\" message, or empty — answer null for that row. Do not invent one.";
 const EN_PREFIX = 'In English: ';
@@ -916,6 +922,7 @@ const PRM_BOX=/^(?:Current|Upcoming|Past) Exhibitions$|^Mostre (?:in corso|futur
 //   ownChip      a chip of its own, labelled `chip`, else `short`; without it, "Occasional"
 //   group        venues sharing one chip (Munich)
 //   short        her name for it; `card`: her name on its cards, where that differs
+//   notCard      the card name Claude gave before she renamed it: her renames are Claude's examples
 //   name         its full name; `lookupName`: the name the catalogue lookup searches with
 //   sites        other sites its pages sit on, {host, path, line}: `path` a part of a shared
 //                site, `line` the house line naming it on a site several houses share
@@ -1218,12 +1225,19 @@ function joinTitle(name,sub,dashAfterColon){
   return name+(dashAfterColon&&name.includes(":")?" – ":": ")+sub;
 }
 
+// Why a link came back with no page. Parallel answering 202 ("accepted", no page sent) for a page the
+// site serves to anyone (the Borghese's archive site) is Parallel's fault, said as the shop's line says it.
+function pageUnreadWhy(e){
+  if(e&&e.http_status_code===202)return "The page contents cannot be seen \u2014 Parallel fault.";
+  return e?"The museum refused the page ("+String(e.http_status_code||e.error_type||"no reason given")+").":"The page came back empty.";
+}
+
 // ── THE SHOW PAGE READER ── One engine in steps, as the scraper's: each step reads and writes `pg`,
 // the page being read, and a venue's own options (`pg.lr`, its linkRead) sit in the step they change.
 // Rules and the case behind each: docs/add_by_link.md, "The general reader". `rules`, when given,
 // collects the name of every rule that changed this page's result: the proof list keeps a page only
 // for a rule no other page at its venue shows (docs/testing.md). The app passes none.
-// One page → {ok, base, between, under, start, end, raw, site, link, monthsOnly, dateLine} or {ok:false, why}.
+// One page → {ok, base, between, under, start, end, raw, site, link, monthsOnly, noDates, dateLine} or {ok:false, why}.
 function readShowPage(res,url,vc,rules){
   const pg=pageToRead(res,url,vc,rules);
   if(pg.fail)return pg.fail;
@@ -1320,7 +1334,7 @@ function titleCandidates(pg){
   pg.cands=cands; pg.candRule=candRule;
 }
 
-// Step 5. The dates: under a title line, else just above it, else months only (a venue's choice).
+// Step 5. The dates: under a title line, else just above it, else months only (a venue's choice), else none.
 // Sets the title line `h`, the date line `d`…`dEnd` and the range; returns a failure, or null.
 function findDates(pg){
   const{lr,lines,rule,rangeIn,dateText,cands,candRule}=pg;
@@ -1337,6 +1351,10 @@ function findDates(pg){
     // follows within a few lines (Van Gogh Museum: the range sits below its introduction).
     let half=null;
     const take=x=>{ if(x.range.start&&x.range.end)return x; if(!half)half=x; return null; };
+    // Under a top heading, another top heading starts another part of the page: its dates are its own
+    // (the Borghese's archive: "# Insights | 1998 / 2026", the site, over "# Correggio and Antiquity").
+    // A lower heading is not (San Marco's "### Date di apertura" under its "###" title).
+    const top=l=>/^\s*#\s+\S/.test(String(l)), underTop=top(lines[h]);
     // A venue that labels its date line (linkRead.dateLine) is read there, anywhere on the page.
     if(lr&&lr.dateLine){
       for(let k=0;k<lines.length;k++){
@@ -1347,6 +1365,7 @@ function findDates(pg){
     }
     for(let k=h+1,seen=0;k<lines.length&&seen<LINK_DATE_LINES;k++){
       const l=stripMd(lines[k]); if(!l)continue; seen++;
+      if(underTop&&top(lines[k])){ rule("dates:stop-at-heading"); break; }
       // A venue whose box of other shows sits below (linkRead.datesUntil): never read past it.
       if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim())){ rule("datesUntil"); break; }
       const nx=[];
@@ -1384,8 +1403,10 @@ function findDates(pg){
     }
     if(!found){
       const mo=near.map(([,l])=>DATES.findDateRange(l,{looseSingles:true})).find(r=>r.shownText);
-      rule(mo?"fail:months-only":"fail:no-dates");
-      return{ok:false,why:mo?"Only the month and year are published (“"+near.find(([,l])=>l.includes(mo.shownText))[1]+"”), no days.":"No dates found under the show’s title."};
+      if(mo){ rule("fail:months-only"); return{ok:false,why:"Only the month and year are published (“"+near.find(([,l])=>l.includes(mo.shownText))[1]+"”), no days."}; }
+      // No dates at all (the Borghese prints most past shows' dates only in the poster): kept
+      // undated and noted, as the sweep keeps them (her decision).
+      h=h0; found={d:h0,range:{start:"",end:""},noDates:true,via:"dates:none"}; rule("title:"+candRule[0]);
     }
   }
   const d=found.d,dEnd=found.dEnd||found.d;
@@ -1582,7 +1603,7 @@ function pageResult(pg){
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,monthsOnly:found.monthsOnly||"",dateLine:pg.dateLine};
+  return{ok:true,base:pg.base,between:pg.between,under,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,monthsOnly:found.monthsOnly||"",noDates:!!found.noDates,dateLine:found.noDates?"":pg.dateLine};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -1627,6 +1648,9 @@ function nameInLines(page,vc){
 // the museum's own decides the rest: only someone else's page asks more (elsewherePrompt).
 // Her names for venues, as the style for a new venue's short name.
 const SHORT_NAME_EXAMPLES=()=>Object.values(LINK_VENUES).map(v=>v.card||v.short).filter(Boolean);
+// Her renames of Claude's card names (`notCard`), each with the name Claude gave: so Claude learns her style.
+const SHORT_NAME_RENAMES=()=>Object.values(LINK_VENUES).filter(v=>v.notCard&&(v.card||v.short))
+  .map(v=>"for "+JSON.stringify(v.name||v.lookupName||v.short)+": "+JSON.stringify(v.card||v.short)+", not "+JSON.stringify(v.notCard));
 function linkPrompt(page,askVenue,url){
   const ex=SUMMARY_EXAMPLES.map(e=>"RAW: "+e.raw+"\nACCEPTED SUMMARY: "+e.summary).join("\n\n");
   return "You are reading one museum exhibition page for a personal art-catalogue tracker. Your ONLY output is one JSON object.\n\n"
@@ -1646,7 +1670,7 @@ function linkPrompt(page,askVenue,url){
       +"\"venueCity\": that museum's city, in English. \"\" if not known.\n"
       +"\"venueCountry\": that museum's country, in English. \"\" if not known.\n"
       +"\"venueAlso\": the other names that museum goes by, as an array of strings: its acronym, its name in its own language (\"KMSKA\", \"Koninklijk Museum voor Schone Kunsten Antwerpen\"). [] if none.\n"
-      +"\"venueShort\": that museum's name as it would head a card in this tracker: short, but enough to tell it from any other museum (\"National Gallery\" alone is not: there are several), in the style of these: "+JSON.stringify(SHORT_NAME_EXAMPLES())+". \"\" if \"venue\" is \"\".\n"
+      +"\"venueShort\": that museum's name as it would head a card in this tracker: short, but enough to tell it from any other museum (\"National Gallery\" alone is not: there are several), in the style of these: "+JSON.stringify(SHORT_NAME_EXAMPLES())+"."+(SHORT_NAME_RENAMES().length?" Where she renamed the name first given, hers is the style to follow: "+SHORT_NAME_RENAMES().join("; ")+".":"")+" \"\" if \"venue\" is \"\".\n"
       +"\"venueOwnPage\": true if the PAGE ADDRESS is on that museum's own website; false if it is on someone else's site (a blog, a magazine, a newspaper, an aggregator, another organisation), even when the text is the museum's own press release.":"");
 }
 
@@ -2248,6 +2272,17 @@ async function shopElsewhere(urls,museumHost){
 const SHELF_OPENS=2;   // at most two candidates opened to check, then the next step
 // pageShop: the show page's own shop link (shopLinkOnPage), kept on the venue
 // so "Look again" has it without reading the show page twice.
+// A list's later page stands for its first: the section is kept by its first page (KMSKA: the search
+// ranked ".../books/kmska/page2.html" first). "/page2.html", "/page-2", "/page/2/", "?page=2".
+function firstPageOf(u){
+  try{
+    const x=new URL(u);
+    x.pathname=x.pathname.replace(/\/page-?(\d+)(?:\.html?)?\/?$|\/page\/(\d+)\/?$/i,(m,a,b)=>+(a||b)>=2?"/":m);
+    const p=x.searchParams.get("page");
+    if(/^\d+$/.test(p||"")&&+p>=2)x.searchParams.delete("page");
+    return x.toString();
+  }catch{ return u; }
+}
 async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId){
   const no=new Set((turnedDown||[]).map(normalizeUrlKey));
   const own=linkEntry(venueId)||{};
@@ -2261,7 +2296,7 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId){
   let opens=0, seenText="", died=null;
   const opened=new Set();
   const tryCands=async(cands,how,inside)=>{
-    const ranked=rankShelves(cands);
+    const ranked=rankShelves(cands.map(c=>({...c,url:firstPageOf(c.url)})).filter((c,i,a)=>a.findIndex(x=>x.url===c.url)===i));
     for(const c of ranked){
       if(no.has(normalizeUrlKey(c.url)))continue;
       if(c.proof&&looksLikeBookShelf(c.proof))return{...c,how};
@@ -6290,7 +6325,7 @@ export default function App(){
         const res=f.results[0];
         if(!res){
           const e=(f.errors||[])[0];
-          fails.push({url,why:e?"The museum refused the page ("+String(e.http_status_code||e.error_type||"no reason given")+").":"The page came back empty."});
+          fails.push({url,why:pageUnreadWhy(e)});
           continue;
         }
         const page=readShowPage(res,url,linkReadVenue(url));
@@ -6354,8 +6389,8 @@ export default function App(){
         Object.assign(seen,{venue:vc,answer:a,subtitleUnderHeading:own||null,title});
         tape.row={title,museumId:vc,exUrl:url};
         got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
-          summary:a.summary?composeSummary(a.english,a.summary):"",url:page.link,
-          notes:[page.monthsOnly?"Only the months are published (\u201c"+page.monthsOnly+"\u201d): dates set to the first and last day.":"",
+          summary:a.summary?composeSummary(cardTitle(a.english,vc),a.summary):"",url:page.link,
+          notes:[page.noDates?DATES.NO_DATES_NOTE:"",page.monthsOnly?"Only the months are published (\u201c"+page.monthsOnly+"\u201d): dates set to the first and last day.":"",
             ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")].filter(Boolean).join(" ")});
       }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
       finally{
@@ -7563,7 +7598,7 @@ export default function App(){
                         style={{display:"flex",alignItems:"center",gap:8,width:"100%",textAlign:"left",background:"none",
                                 border:"none",borderBottom:"1px solid "+C.rule,padding:"6px 0",marginBottom:8,cursor:"pointer",color:C.accent}}>
                         <span style={{fontSize:10,lineHeight:1,width:10,display:"inline-block",transform:vOpen?"rotate(90deg)":"none",transition:"transform .12s"}}>{"\u25B6"}</span>
-                        <span style={{fontSize:14,letterSpacing:"0.01em",fontWeight:700}}>{m.short}</span>
+                        <span style={{fontSize:14,letterSpacing:"0.01em",fontWeight:700}}>{m.card||m.short}</span>
                         <span style={{fontSize:12,fontWeight:700}}>{"\u00b7"} {grp.length}</span>
                         {/* The undecided count per venue, only where there is work: a
                             closed venue still declares what it holds; a "0" is clutter
@@ -7636,7 +7671,7 @@ export default function App(){
                   :v.shop==="failed"?"Search failed.":"No museum shop found.";
                 const yes=v.confirmed&&v.shop==="found", none=v.confirmed&&v.shop==="none";
                 return <div key={id} style={{paddingTop:12,marginTop:10,borderTop:"1px solid "+C.rule,fontSize:12.5,color:C.ink,lineHeight:1.45}}>
-                  <div style={{fontWeight:600}}>{v.name||id}</div>
+                  <div style={{fontWeight:600}}>{(MU[id]&&(MU[id].card||MU[id].short))||v.short||v.name||id}</div>
                   {link?<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{link}</a>
                     :<div style={{color:C.soft}}>{said}{home&&v.shop==="noshelf"&&<a href={home} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{home}</a>}</div>}
                   <div style={{display:"flex",gap:6,marginTop:6,alignItems:"center",flexWrap:"wrap"}}>

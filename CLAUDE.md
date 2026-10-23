@@ -631,6 +631,12 @@ and were fixed in code, proven live).
      case other museums will have? Yes → a shared rule, kept only if no proof page gets worse; no → an option on that
      venue's one entry; then the checks it must pass. Last, after 1 and 2.
   Then her links after publishing confirm with her own Claude.
+- **OPEN — fixes from her 50 links (Antwerp, Stuttgart, Borghese), on `main`, not published; her links after publishing
+  confirm.** Both screens show the card name; a shop section found on page 2 is kept as page 1; an English title in
+  capitals recased; a page with no dates comes in undated with the sweep's note; "22.05.2008 | 14.08.2008" read; a
+  202 says "contents cannot be seen — Parallel fault"; the Borghese's archive site files under the Borghese through
+  Claude, nothing written in. **Renaming a venue Claude named is a session's job** (her decision: no editing in the
+  app) — the steps, so each rename becomes Claude's example: `docs/add_by_link.md`, "The design", "Renaming a link venue".
 - **Published at 47.3 — Sammlung Schack (third Munich venue, no shop) and Dresden (chip "Dresden", cards
   "Dresden Gemäldegalerie"; she answers No shop once on its shop screen) by link; Munich titles typed in capitals
   recased (shared `capsTitleParts`, `dates.js`); a house line over the dates read again (Van Dyck, Boucher).

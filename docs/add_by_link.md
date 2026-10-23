@@ -25,7 +25,7 @@ meets it.
 - **An import she does not finish keeps NOTHING** — new venues and shops, Confirm / No shop /
   Look again, a CSV's sweep log: all stored when the ledger moves. Cancel import drops them; Back
   keeps them. A file or Read with nothing to propose counts as finished.
-- **A link it cannot read is a line, never a card** — the full link and why (empty page, refused, no dates).
+- **A link it cannot read is a line, never a card** — the full link and why (empty page, refused, Parallel's fault).
   Unread links **stay in the paste box**, stored when the import finishes, until read or cleared ("Clear", inside the box, empties it and the store). **Links come
   back to the box** (her decision): a rejected card's, an undecided card's after a partial apply, and on
   Cancel import every link the Read took — each stored at once. AL-012c, AL-024.
@@ -42,6 +42,13 @@ meets it.
   short card name — identifying but short, in her style (her names in `LINK_VENUES` are the examples). A stored
   venue named only by its address is asked once more (`namedByAddress`). The tab title's site name, then the
   address, only when Claude gives none. AL-053.
+- **The card name shows on both screens** (her decision): the review's venue heading and the shop screen show the
+  name on the venue's cards (`card`, else `short`), never the long search name.
+- **Renaming a link venue Claude named — a session's job, and Claude learns from it** (her decision: no editing in
+  the app). Write the venue's `LINK_VENUES` entry: `name` (Claude's full name), her `card` name (or `short`, for a
+  venue under Occasional), and `notCard` — the card name Claude gave. Every rename goes into Claude's question as
+  "for <full name>: <her name>, not <Claude's>" beside her other names (`SHORT_NAME_RENAMES`, AL-066), so later
+  new venues come closer to her style.
 - **Search name long, card name short** (her decision): the shop search uses the full name, other names, city
   and country (`venueSearchName`); cards use the short name. Proved live (Parallel, 9 searches): "Palazzo Ducale"
   alone found Venice's shop; KMSKA's English name alone found the Brussels museums, with "KMSKA" beside it
@@ -60,7 +67,8 @@ meets it.
    shared, never copied.
 4. **Description by the model** (`modelTier: default`, her decision), same prompt as compression, shared not
    copied. **Any non-English page comes out in English; a non-English title gets its translation at the
-   start** (`In English: "…".`), every language (her decision).
+   start** (`In English: "…".`), every language (her decision). The translation is recased as the title is: Claude translates a title
+   typed in capitals into capitals (Borghese *TITIAN. DIALOGUES OF NATURE AND LOVE*; `cardTitle`, AP-012b).
    **Tested with Sonnet on 70 live pages** (the app's own code built each question; code scored it): subtitle
    pick right on all 13 pages that print one and none taken on the rest; English title given on every
    non-English title and never on an English one; English-speaking country right on 70; summaries within the
@@ -144,6 +152,10 @@ last in the Occasional group; its cards say "National Gallery Victoria" (her dec
 the venue, its shop and the page title's site name come from the address inside the copy; the copy is what is
 read and what the card links (`siteUrlOf`; AL-037).
 
+**A section found on a later page is kept by its first** (her decision): the search can rank page 2 first, as
+it did KMSKA's ".../books/kmska/page2.html"; "/page2.html", "/page-2", "/page/2/" and "?page=2" are read as page 1
+(`firstPageOf`, AL-063).
+
 **Shelf AND whole-shop search, as the 28 (her decision)** — DIA files a show's book in the show's own section.
 A search is kept only if it finds a book the finder saw (`proveShopSearch`; AL-008k, AL-014); older venues
 work it out at first lookup. **Where those rules found nothing, three fallbacks (her decision, every venue; AL-044):**
@@ -161,7 +173,7 @@ houses (`search?search=`); Yale, Mauritshuis, Thyssen, NGA, NGV and Mia still sh
 Built as the scraper is: one shared reader, a venue entry only for what differs (her decision). Rebuilt on
 101 live pages: the 76 proof pages at her venues plus 25 pages from museums the app had never seen — 13 of
 those 25 read clean before, 25 after, with no proof page worse. Code: `readShowPage`, `splitPageTitle`,
-`cardTitle`, `DATES.findDateRange`. Tests: DS-005–006, AL-054–058. A page with no dates still fails.
+`cardTitle`, `DATES.findDateRange`. Tests: DS-005–006, AL-054–058, AL-064–065.
 
 - **R1 Site in the page title** — a dash tail that is the site's own address is the site (KHM); a separator
   with no site after it is dropped (Genoa, AL-047); a bar title with the site first takes the other part
@@ -179,7 +191,15 @@ those 25 read clean before, 25 after, with no proof page worse. Code: `readShowP
 - **R2b Capitals** — a title typed wholly in capitals is recased, unless one short word (Scuderie, Albertina,
   Borghese; AL-058). `cardTitle`, the same for the app and the proof check.
 - **R12 Date forms** — dotted dates with the year on the closing side only or two-digit years, a dotted
-  closing date (DS-005); a slashed range on the date line when the numbers prove its order (Prado, DS-006).
+  closing date (DS-005); a slashed range on the date line when the numbers prove its order (Prado, DS-006);
+  two full dotted dates either side of a bar, "22.05.2008 | 14.08.2008" (the Borghese's archive site, AL-065).
+- **R14 Under a top heading, dates stop at the next top heading** — its dates are its own part of the page (the
+  Borghese's archive: "# Insights | 1998 / 2026", the site, over "# Correggio and Antiquity"; AL-065). A lower
+  heading never stops them (San Marco's "### Date di apertura" under its "###" title).
+- **R15 No dates anywhere** — the page is read, undated, with the sweep's own note "No closing date found
+  anywhere on the venue's pages." (her decision: as the sweep keeps such rows; `DATES.NO_DATES_NOTE`, one copy).
+  The Borghese prints most past shows' dates only in the poster (Louise Bourgeois). Months without days still
+  fail: no day is invented (AL-064, AP-006b).
 - **R13 Dates around the heading** — "From …" over "Until …" read together; a paragraph's one-sided date
   waits six lines for a full range (Van Gogh Museum, AL-054); with none under any title line, the two lines
   above the heading (Kunsthaus, Boston, Pinakothek der Moderne; AL-055).
@@ -406,6 +426,11 @@ A last resort (her decision): a show so old its venue's page is gone, read off a
 - **A label before the show** in the page title ("Exhibition | …") is dropped, and a dash-led site tail
   read first (`splitPageTitle`, `TITLE_LABEL`). **Tracking tails** leave a saved page's link too, as a pasted link's
   (`withoutTracking`). Tests AL-050–052, on her pages as Parallel returned them (`docs/link_pages/elsewhere/`).
+- **The Borghese's archive site, approfondimentimostre.com ("Insights 1998 / 2026")**, files under her Borghese by
+  this route, nothing written in (her decision: test Claude first, hard code only if it fails): on her Correggio
+  page Claude named the Galleria Borghese and the site as not its own, three reads of three. Parallel answers 202
+  for most of its pages though the site serves them to anyone — "The page contents cannot be seen — Parallel
+  fault." (`pageUnreadWhy`, AL-067); those come in by Pages.
 
 ## What links are for, and how far the reader reaches
 

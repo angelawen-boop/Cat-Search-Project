@@ -246,8 +246,10 @@ function findDateRangeCore(raw, opts = {}) {
       if (r.start || r.end) return r;
     }
   }
+  // Two full dotted dates either side of a bar are a range too ("22.05.2008 | 14.08.2008", the
+  // Borghese's archive site).
   const dotted = s.match(new RegExp(
-    `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
+    `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})(?:${RANGE_SEP}|\\s*\\|\\s*)(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
   // opts.slashes: a show page's own date line, read for a range whose order the numbers prove (Prado).
   const num = dotted || ((looseSingles || opts.slashes) && s.match(new RegExp(
     `\\b(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})${RANGE_SEP}(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})\\b`)));
@@ -667,7 +669,12 @@ function findMonthRange(text) {
   return { start: ymd(y1, m1, 1), end: ymd(y2, m2, last), raw: m[0].trim() };
 }
 
+// The note on a row with no dates anywhere: the sweep writes it and Add by link copies it word for
+// word (her decision).
+const NO_DATES_NOTE = "No closing date found anywhere on the venue's pages.";
+
 module.exports = {
+  NO_DATES_NOTE,
   MONTHS,
   WEEKDAY_PREFIX_SRC,
   ORDINAL_SUFFIX,

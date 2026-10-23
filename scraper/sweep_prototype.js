@@ -751,7 +751,7 @@ function rebuildSweepCsv() {
 
 // ── Date helpers — moved to dates.js, 4 Oct 2026 (one copy, shared with the app) ──
 const {
-  MONTHS, WEEKDAY_PREFIX_SRC, ORDINAL_SUFFIX, MONTH_PATTERN, monthNum, ymd, startYearFor, parseMonthDay, RANGE_SEP, WEEKDAY_PREFIX, stripWeekdays, EXTENDED_TO, applyExtension, readDayMonth, precedingDate, extensionNote, dayText, findDateRange, findDateRangeCore, PLAUSIBLE_YEAR_MIN, PLAUSIBLE_YEAR_MAX, plausibleYear, frag, sane, unusableDateText, findDateRangeInProse, findDateRangeInProseCore, titleCase, titleFromCaps, capsTitleParts,
+  MONTHS, WEEKDAY_PREFIX_SRC, ORDINAL_SUFFIX, MONTH_PATTERN, monthNum, ymd, startYearFor, parseMonthDay, RANGE_SEP, WEEKDAY_PREFIX, stripWeekdays, EXTENDED_TO, applyExtension, readDayMonth, precedingDate, extensionNote, dayText, findDateRange, findDateRangeCore, PLAUSIBLE_YEAR_MIN, PLAUSIBLE_YEAR_MAX, plausibleYear, frag, sane, unusableDateText, findDateRangeInProse, findDateRangeInProseCore, titleCase, titleFromCaps, capsTitleParts, NO_DATES_NOTE,
 } = require('./dates.js');
 
 function afterLookback(endDateStr, floor = LOOKBACK) {
@@ -836,7 +836,7 @@ function applyLookback(rows, venueCode, stage) {
         // the honest statement is the narrower one about the closing date.
         row.notes = addNote(row.notes, (row._shownDateText && !row.start_date)
           ? `The venue's page shows only "${row._shownDateText}" for this exhibition's dates — ${row._shownDateWhy || 'no year is published anywhere'}.`
-          : 'No closing date found anywhere on the venue\'s pages.');
+          : NO_DATES_NOTE);
       }
     } else if (!row.start_date && stage === 'final') {
       // A closing date but no opening one. Common: venues print only

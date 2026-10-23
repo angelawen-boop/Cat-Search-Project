@@ -55,7 +55,7 @@ const MADE = '<!doctype html><html><head><title>Made Show - Palazzo Reale Milano
   + '<h1>Made Show - Palazzo Reale Milano</h1><h2>Made Show</h2><p>from 3 March 2027 to 4 July 2027</p>'
   + '<p>' + 'A made exhibition of drawings from the palace collections, shown together for the first time. '.repeat(4) + '</p>'
   + '<h2>Upcoming Exhibitions</h2><p>from 17 Oct 2026 to 01 Nov 2026</p></body></html>';
-// A page with no dates at all (made): it cannot be read, so it stays in the list.
+// A page with no dates at all (made): it comes to a card undated, noted as the sweep notes it (her decision).
 const UNDATED_URL = 'https://www2.comune.milano.it/en/web/palazzo-reale-milano/-/undated-show';
 const UNDATED = '<!doctype html><html><head><title>Undated - Palazzo Reale Milano</title><link rel="canonical" href="' + UNDATED_URL + '"></head>'
   + '<body><h1>Undated - Palazzo Reale Milano</h1><p>' + 'A show with no dates printed anywhere on its page, as some press pages are. '.repeat(16) + '</p></body></html>';
@@ -83,7 +83,8 @@ const runtime = () => ({
     if (name === 'sample') return { json: async prompt => {
       const t = (prompt.match(/EXHIBITION TITLE, as the page gives it: (".*")/) || [])[1];
       // Within the ten-word cap, as every answer must be (scraper/answer_check.js).
-      return { summary: 'A summary of ' + (t ? JSON.parse(t) : '').split(/\s+/).slice(0, 6).join(' ') + '.', english: '', englishSpeaking: false };
+      // CASORATI's English title comes back in capitals, as Claude translates a title typed in them.
+      return { summary: 'A summary of ' + (t ? JSON.parse(t) : '').split(/\s+/).slice(0, 6).join(' ') + '.', english: /CASORATI/.test(t || '') ? 'CASORATI IN ENGLISH' : '', englishSpeaking: false };
     } };
     return null;
   },
@@ -186,18 +187,21 @@ const runtime = () => ({
   ok(JSON.stringify(stored()) === JSON.stringify([SOUTINE_URL, TITIAN_URL, UNDATED_URL].sort()), 'AP-005c:  the list is kept in the page\'s store at once, as text', JSON.stringify(stored()));
   ok(store.docs.get('links_pages/' + fn('pageDocId')(TITIAN_URL)).length < 20000, 'AP-005d:  as the page\'s text only — not the 20 MB file');
 
-  // Read: Titian and Soutine come to cards; the undated page stays in the list, with why.
+  // Read: Titian, Soutine and the undated page come to cards.
   await click(buttons(/^Read$/).pop());
   const cardTitle = t => [...win.document.querySelectorAll('div')].some(d => d.textContent === t);
   ok(cardTitle('Titian and the Image of Women in 16th-Century Venice') && cardTitle('Chaïm Soutine'), 'AP-006: Read: Titian and Soutine come to cards in the review');
   ok(/Only the months are published \(“september 2027 - january 2028”\): dates set to the first and last day\./.test(win.document.body.textContent),
     'AP-006c:  Soutine\'s approval card says only the months are published (her decision: the approval card only)');
   ok(!fetched.length, 'AP-006a:  nothing fetched — no Parallel, no network', fetched.length);
-  ok(/Undated/.test(listed()) && !/Titian|Soutine/.test(listed()) && /No dates found under the show/.test(win.document.body.textContent),
-    'AP-006b:  the undated page, not read, stays in the list with why; the two read left it', listed() + ' / ' + (win.document.body.textContent.match(/Undated - Palazzo Reale Milano — [^.]*\./) || [''])[0]);
+  ok(cardTitle('Undated') && !/Titian|Soutine|Undated/.test(listed()) && /No closing date found anywhere on the venue's pages\./.test(win.document.body.textContent)
+     && !/No dates found under the show/.test(win.document.body.textContent),
+    'AP-006b:  the page with no dates comes to a card, undated, with the sweep\'s own note (her decision); all three left the list', listed());
 
   // Cancel import: every page read goes back to the list (as Links).
   await click(buttons(/^Cancel import$/)[0]);
+  // Every page was read, so the pop-up closed with the review; open the list again.
+  if (!buttons(/^Choose pages$/).length) { await click(buttons(/^Import$/)[0]); await click(buttons(/^Pages$/)[0]); }
   ok(/Titian/.test(listed()) && /Soutine/.test(listed()) && stored().length === 3, 'AP-007: Cancel import puts the pages read back in the list, stored', listed());
 
   // A partial apply: add the made page; reject it, accept Titian → the made page returns.
@@ -207,13 +211,16 @@ const runtime = () => ({
   ok(cardTitle('Casorati'), 'AP-012a:  CASORATI comes to its card as Casorati');
   const cardOf = b => { let el = b.parentElement; while (el.parentElement && el.parentElement.querySelectorAll('button').length <= 3) el = el.parentElement; return el; };
   const adds = buttons(/^Add new entry$/);
-  ok(adds.length === 3, 'AP-008: three pages read, three cards', adds.length);
+  ok(adds.length === 4, 'AP-008: four pages read, four cards', adds.length);
   const cardFor = re => buttons(/^Add new entry$/).find(b => re.test(cardOf(b).textContent));
+  ok(/In English: "Casorati in English\."/.test(cardOf(cardFor(/Casorati/)).textContent),
+    'AP-012b:  an English title Claude gives in capitals is recased as the title is (Borghese "TITIAN. DIALOGUES OF NATURE AND LOVE")', cardOf(cardFor(/Casorati/)).textContent.slice(0, 160));
   await click(cardFor(/Titian/));
   await click([...cardOf(cardFor(/Made Show/)).querySelectorAll('button')].find(b => /Reject$/.test(b.textContent.trim())));
   await click(cardFor(/Casorati/));
+  await click([...cardOf(cardFor(/Undated/)).querySelectorAll('button')].find(b => /Reject$/.test(b.textContent.trim())));
   await click(buttons(/^Go ahead and update the ledger$/)[0]);
-  ok(JSON.stringify(stored()) === JSON.stringify([MADE_URL, UNDATED_URL].sort()), 'AP-008a:  Titian and Casorati imported; the rejected page goes back to the list beside the unread one, stored', JSON.stringify(stored()));
+  ok(JSON.stringify(stored()) === JSON.stringify([MADE_URL, UNDATED_URL].sort()), 'AP-008a:  Titian and Casorati imported; the rejected pages go back to the list, stored', JSON.stringify(stored()));
 
   // Kept across a reload, as the Links box is.
   await act(async () => { root.unmount(); });

@@ -379,7 +379,7 @@ function runtime() {
     const b = read({ title: 'Pierre Bonnard: Designed by India Mahdavi | NGV', full_content: '# Pierre Bonnard\n\n#### Designed by India Mahdavi\n\n**NGV International**\n\n**9 Jun – 7 Oct 23**' + body.slice(body.indexOf('The art')) }, 'https://www.ngv.vic.gov.au/exhibition/pierre-bonnard-archive/', 'occ-ngv-vic-gov-au');
     ok(b.ok && b.start === '2023-06-09' && b.end === '2023-10-07', 'AL-038a:  NGV Pierre Bonnard: the year on the closing side only, "9 Jun – 7 Oct 23"', JSON.stringify([b.start, b.end, b.why]));
     const other = read({ title: 'Some show | Elsewhere', full_content: '# Some show' + body }, 'https://example.org/show', null);
-    ok(!other.ok, 'AL-038b:  two-digit years are read at NGV only', JSON.stringify([other.start, other.end]));
+    ok(!other.start && !other.end, 'AL-038b:  two-digit years are read at NGV only', JSON.stringify([other.start, other.end]));
     const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
     const order = fn('VENUE_ORDER'), lv = fn('LINK_VENUES');
     ok(order[order.length - 1] === 'occ-ngv-vic-gov-au' && lv['occ-ngv-vic-gov-au'].card === 'National Gallery Victoria',
@@ -791,14 +791,14 @@ function runtime() {
        && conf.disabled && order('Courtauld') === 'Confirm|Look again|No shop',
       'AL-009d:  the same three buttons in the same places on every card; Confirm greyed where nothing was found', order('Royal Academy of Arts'));
   }
-  ok(shopCard('Detroit Institute of Arts Museum').textContent.includes('https://diashop.org/dia-publications'), 'AL-009e0:  DIA\'s section shown, to confirm');
+  ok(shopCard('Detroit').textContent.includes('https://diashop.org/dia-publications'), 'AL-009e0:  DIA\'s section shown, to confirm');
   // DIA Publications turned down: "Books & Stationery" is mixed, so it is only
   // looked inside — and holds no other books-only section.
   calls.length = 0;
-  await press('Detroit Institute of Arts Museum', 'Look again'); await settle(10);
-  ok(shopCard('Detroit Institute of Arts Museum').textContent.includes('Shop found, but not its books section: https://diashop.org/')
-     && !shopCard('Detroit Institute of Arts Museum').textContent.includes('dia-museum-book-shop') && fetched('https://diashop.org/dia-museum-book-shop/'),
-    'AL-009e:  Look again never offers a mixed books-and-stationery section; with nothing books-only left it says so and links the shop', shopCard('Detroit Institute of Arts Museum').textContent);
+  await press('Detroit', 'Look again'); await settle(10);
+  ok(shopCard('Detroit').textContent.includes('Shop found, but not its books section: https://diashop.org/')
+     && !shopCard('Detroit').textContent.includes('dia-museum-book-shop') && fetched('https://diashop.org/dia-museum-book-shop/'),
+    'AL-009e:  Look again never offers a mixed books-and-stationery section; with nothing books-only left it says so and links the shop', shopCard('Detroit').textContent);
   await press('Museo Nacional Thyssen-Bornemisza', 'Confirm');
   ok(/^✓ Confirm$/.test([...shopCard('Museo Nacional Thyssen-Bornemisza').querySelectorAll('button')][0].textContent), 'AL-009f0:  Confirm ticks, as "Add new entry" does');
   ok(!(occStored()['occ-museothyssen-org'] || {}).confirmed && footer() === '5 still to decide',
@@ -816,7 +816,7 @@ function runtime() {
     'AL-009i2:  and the shop answers given before Back are still there', footer());
   await press('Royal Academy of Arts', 'No shop');
   ok(/^✓ No shop$/.test([...shopCard('Royal Academy of Arts').querySelectorAll('button')][2].textContent), 'AL-009j:  No shop is an answer');
-  await press('Detroit Institute of Arts Museum', 'No shop');
+  await press('Detroit', 'No shop');
   await press('Courtauld', 'Confirm'); await press('Cleveland Museum of Art', 'Confirm'); await press('Mauritshuis', 'Confirm');
   // The RA's card rejected again: off the screen; its answer, given, is kept (Back keeps answers).
   await click([...shops().querySelectorAll('button')].find(b => b.textContent === 'Back'));
@@ -1118,6 +1118,45 @@ function runtime() {
       'AL-059b:  a German "Publikationen" section ranks; one book\'s own page never does', JSON.stringify(r.map(x => x.url)));
     ok(sf.notAShop('https://www.petitpalais.paris.fr/sites/default/files/content/images/copie_de_petit_palais_boutique-01.jpg') && sf.notAShop('https://play.google.com/store/apps/details?id=fr.parismusees.petitPalais') && !sf.notAShop('https://shop.kunsthaus.ch/'),
       'AL-059c:  a file or an app store is never the shop');
+    // ── AL-063: a shelf found on a later page is kept by its first page ─
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const fp = fn('firstPageOf');
+    ok(fp('https://www.kmskashop.be/en/books/kmska/page2.html') === 'https://www.kmskashop.be/en/books/kmska/'
+      && fp('https://shop.example.org/catalogues/page/3/') === 'https://shop.example.org/catalogues/'
+      && fp('https://shop.example.org/catalogues?page=2&sort=new') === 'https://shop.example.org/catalogues?sort=new'
+      && fp('https://secure.touchnet.net/C21490_ustores/web/store_cat.jsp?page=1') === 'https://secure.touchnet.net/C21490_ustores/web/store_cat.jsp?page=1'
+      && fp('https://diashop.org/dia-publications/') === 'https://diashop.org/dia-publications/',
+      'AL-063: a books section the search found on its second page is kept as its first (KMSKA "page2.html"); page 1 and plain addresses untouched');
+    // ── AL-064: a show page with no dates anywhere comes in undated, as the sweep keeps it ─
+    const rdd = fn('readShowPage');
+    const bourgeois = rdd({ title: 'LOUISE BOURGEOIS. L’INCONSCIO DELLA MEMORIA - Galleria Borghese',
+      full_content: '# LOUISE BOURGEOIS. L’INCONSCIO DELLA MEMORIA\n\n* * *\n\n' + 'Louise Bourgeois. L’inconscio della memoria è la prima mostra dedicata a un’artista contemporanea donna alla Galleria Borghese. '.repeat(4) },
+      'https://galleriaborghese.cultura.gov.it/exhibition/louise-bourgeois-linconscio-della-memoria/', 'borghese');
+    ok(bourgeois.ok && bourgeois.start === '' && bourgeois.end === '' && bourgeois.noDates && bourgeois.dateLine === '' && /^Louise Bourgeois\. L’inconscio/.test(bourgeois.raw),
+      'AL-064: no dates on the page (Borghese prints them in the poster): read, undated, the text handed to Claude (her decision)', JSON.stringify([bourgeois.ok, bourgeois.why, bourgeois.start, bourgeois.raw && bourgeois.raw.slice(0, 30)]));
+    const months = rdd({ title: 'Soutine | Elsewhere', full_content: '# Soutine\n\nseptember 2027 - january 2028\n\n' + 'A show of Soutine’s paintings from collections across Europe and America. '.repeat(8) }, 'https://example.org/soutine', null);
+    ok(!months.ok && /Only the month and year/.test(months.why), 'AL-064a:  months without days are still not read as dates (no day is invented)', months.why);
+    // ── AL-065: two dotted dates either side of a bar are a range (the Borghese's archive site) ─
+    const corr = rdd({ title: 'Correggio and Antiquity-ENG – Approfondimenti Mostre',
+      full_content: '# Correggio and Antiquity\n\n22\\.05.2008 | 14.08.2008\n\n* Exhibition\n* Artworks\n\n## Presentation\n\n' + 'A master of the Emilian Renaissance, Correggio is universally recognised by critics as one of the great protagonists of painting. '.repeat(3) },
+      'https://approfondimentimostre.com/en/correggio-e-lantico-eng/', null);
+    ok(corr.ok && corr.start === '2008-05-22' && corr.end === '2008-08-14' && corr.base === 'Correggio and Antiquity',
+      'AL-065: "22\\.05.2008 | 14.08.2008" read as 22 May to 14 August 2008 (Correggio)', JSON.stringify([corr.base, corr.start, corr.end, corr.why]));
+    // ── AL-067: Parallel's 202 is Parallel's fault, not the museum's ─
+    const why = fn('pageUnreadWhy');
+    ok(why({ error_type: 'network_error', http_status_code: 202 }) === 'The page contents cannot be seen \u2014 Parallel fault.'
+      && why({ error_type: 'http_error', http_status_code: 403 }) === 'The museum refused the page (403).' && why(null) === 'The page came back empty.',
+      'AL-067: a page Parallel answers 202 for says "contents cannot be seen — Parallel fault" (the Borghese\'s archive site serves it to anyone); a 403 is still the museum\'s');
+    // ── AL-066: her renames of Claude's card names are Claude's examples ─
+    {
+      const box = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {LINK_VENUES,linkPrompt};')(React, win, win.document, win.localStorage);
+      const pg = { base: 'Folly Beyond Words', between: [], raw: 'A show about Bruegel and proverbs.', dateLine: '' };
+      const before = box.linkPrompt(pg, true, 'https://kmska.be/en/folly');
+      box.LINK_VENUES['occ-kmska-be'] = { name: 'Koninklijk Museum voor Schone Kunsten Antwerpen', card: 'Antwerp Fine Arts', notCard: 'KMSKA Antwerp' };
+      const after = box.linkPrompt(pg, true, 'https://kmska.be/en/folly');
+      ok(!/renamed/.test(before) && after.includes('for "Koninklijk Museum voor Schone Kunsten Antwerpen": "Antwerp Fine Arts", not "KMSKA Antwerp"') && after.includes('"Antwerp Fine Arts"'),
+        'AL-066: a venue she renamed tells Claude her name and the one it gave; none renamed, the question is unchanged', after.slice(after.indexOf('venueShort'), after.indexOf('venueShort') + 600));
+    }
     // ── AL-060: the passage's shared rules, on lines copied from live replies ─
     const ps = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {readShowPage,isFurniture,withoutBoilerplate};')(React, win, win.document, win.localStorage);
     ok(['Buy Tickets', 'Adults CHF 31.– / Concessions CHF 22.–* incl. Collection & small exhibitions.', 'MoMA, Floor 3, 3 East The Robert B. Menschel Galleries',
