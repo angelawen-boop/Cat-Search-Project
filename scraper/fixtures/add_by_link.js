@@ -1151,6 +1151,12 @@ function runtime() {
     ok(why({ error_type: 'network_error', http_status_code: 202 }) === 'The page contents cannot be seen \u2014 Parallel fault. Import the full saved page.'
       && why({ error_type: 'http_error', http_status_code: 403 }) === 'The museum refused the page (403).' && why(null) === 'The page came back empty.',
       'AL-067: a page Parallel answers 202 for says "contents cannot be seen — Parallel fault" (the Borghese\'s archive site serves it to anyone); a 403 is still the museum\'s');
+    // ── AL-069: a bot check in place of the page is never a show (the sweep's test, shared) ─
+    const anubis = rdd({ title: "Making sure you're not a bot!", full_content: "# Making sure you're not a bot!\n\nLoading...\n\n" + 'You are seeing this because the administrator of this website has set up Anubis to protect the server against the scourge of AI companies aggressively scraping websites. '.repeat(4) },
+      'https://www.staatsgalerie.de/en/exhibitions/archive/giorgio-de-chirico', null);
+    const cf = rdd({ title: 'Just a moment...', full_content: '# Just a moment...\n\n' + 'Checking your browser before accessing the site. '.repeat(12) }, 'https://example.org/show', null);
+    ok(!anubis.ok && anubis.why === 'The venue\u2019s site answered with a bot check instead of the page.' && !cf.ok,
+      'AL-069: a bot check in place of the page (Anubis at the Staatsgalerie, Cloudflare) stays unread with the sweep\'s own words — never an undated card', anubis.why);
     // ── AL-066: her renames of Claude's card names are Claude's examples ─
     {
       const box = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {LINK_VENUES,linkPrompt};')(React, win, win.document, win.localStorage);

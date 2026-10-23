@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "50.1";
+const APP_VERSION = "50.2";
 const APP_VERSION_DATE = "23 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -768,6 +768,7 @@ function composeSummary(english, teaser) {
 }
 const VENUE_SITES=[{"id":"met","host":"metmuseum.org"},{"id":"ng","host":"nationalgallery.org.uk"},{"id":"rijks","host":"rijksmuseum.nl"},{"id":"acq","host":"acquavellagalleries.com"},{"id":"lgd","host":"levygorvydayan.com"},{"id":"borghese","host":"galleriaborghese.cultura.gov.it"},{"id":"frick","host":"frick.org"},{"id":"morgan","host":"themorgan.org"},{"id":"menil","host":"menil.org"},{"id":"va","host":"vam.ac.uk"},{"id":"louvre","host":"louvre.fr"},{"id":"capo","host":"capodimonte.cultura.gov.it"},{"id":"uffizi","host":"uffizi.it"},{"id":"brera","host":"pinacotecabrera.org"},{"id":"orsay","host":"musee-orsay.fr"},{"id":"mam","host":"mam.paris.fr"},{"id":"mad","host":"madparis.fr"},{"id":"ashmolean","host":"ashmolean.org"},{"id":"jacquemart","host":"musee-jacquemart-andre.com"},{"id":"khm","host":"khm.at"},{"id":"artic","host":"artic.edu"},{"id":"moma","host":"moma.org"},{"id":"brit","host":"britishmuseum.org"},{"id":"dellav","host":"gallerieaccademia.it"},{"id":"tate-modern","host":"tate.org.uk","path":"/whats-on/tate-modern/"},{"id":"tate-britain","host":"tate.org.uk","path":"/whats-on/tate-britain/"},{"id":"wallace","host":"wallacecollection.org"},{"id":"cincinnati","host":"cincinnatiartmuseum.org"}];
 const BOILERPLATE=["technical storage or access","legitimate purpose of storing preferences","subscriber or user","consent to the use of cookies","we use cookies","this website uses cookies","accept all cookies","privacy policy","sign up to our newsletter","★★","©","admission charge","members go free","free for members","tickets bookable","members enjoy free entry","become a member","tickets for this","no need to book","include entry to the","installation view","courtesy the artist","courtesy of the artist","generously provided by","generously supported by","major funding","leadership support","additional support","support is provided by","supported in part by","entitled to a discount","ticket office","ticket purchase","proof of membership","subscribe to","to stay updated","opening hours","admission is free","book your visit","buy tickets","for visit info","download of this image is authorised","higher image resolution","image licensing policies"];
+const CHALLENGE_TITLE=/^\s*(just a moment|attention required|performing security verification|access denied|pardon our interruption|one more step|making sure you['’]re not a bot)/i;const BOT_CHECK_SAID="the venue’s site answered with a bot check instead of the page";
 const ANSWER_CHECK=(()=>{
 // Measured from all 110 seed summaries: min 3, median 6, max 10, and every one
 // ends with a full stop. The data wins over any number written elsewhere.
@@ -1275,6 +1276,9 @@ function pageToRead(res,url,vc,rules){
   const lr=linkOptions(vc);
   const text=String(oneText(res)||"");
   if(text.trim().length<SHELL_CHARS){ rule("fail:empty"); return{fail:{ok:false,why:"The page came back empty."}}; }
+  // A bot check in place of the page (the sweep's own test, shared): never read as a show.
+  const head=(text.match(/^\s*#\s+(.+)$/m)||[])[1];
+  if(CHALLENGE_TITLE.test(String(res&&res.title||""))||CHALLENGE_TITLE.test(stripMd(head))){ rule("fail:bot-check"); return{fail:{ok:false,why:BOT_CHECK_SAID.charAt(0).toUpperCase()+BOT_CHECK_SAID.slice(1)+"."}}; }
   const host=hostOf(siteUrlOf(url));
   const{show,site}=splitPageTitle(res&&res.title,host);
   if(site)rule(String(res.title).includes(" | ")?"tab:bars":"tab:site-after-dash");

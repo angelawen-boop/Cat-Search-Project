@@ -458,7 +458,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 50.1 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 50.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -639,7 +639,7 @@ and were fixed in code, proven live).
   section found on page 2 kept as page 1; an English title in capitals recased; no usable dates (none, months only,
   a season) → undated with the sweep's note, the Palazzo Reale months-to-days rule removed; "22.05.2008 |
   14.08.2008" read; a 202 says "…Parallel fault. Import the full saved page."; Borghese titles as the sweep writes
-  them (em dash, small "e"); the Borghese's archive site files under the Borghese through Claude, nothing written in. **Renaming a venue Claude named is a session's job** (her decision: no editing in the
+  them (em dash, small "e"); the Borghese's archive site files under the Borghese through Claude, nothing written in. 50.2: a bot check is never a show (the sweep's test, shared; the Staatsgalerie's Anubis page came in as two undated cards). **Renaming a venue Claude named is a session's job** (her decision: no editing in the
   app) — the steps, so each rename becomes Claude's example: `docs/add_by_link.md`, "The design", "Renaming a link venue".
 - **Published at 47.3 — Sammlung Schack (third Munich venue, no shop) and Dresden (chip "Dresden", cards
   "Dresden Gemäldegalerie"; she answers No shop once on its shop screen) by link; Munich titles typed in capitals

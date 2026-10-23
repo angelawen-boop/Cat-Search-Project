@@ -201,6 +201,10 @@ those 25 read clean before, 25 after, with no proof page worse. Code: `readShowP
 - **R14 Under a top heading, dates stop at the next top heading** — its dates are its own part of the page (the
   Borghese's archive: "# Insights | 1998 / 2026", the site, over "# Correggio and Antiquity"; AL-065). A lower
   heading never stops them (San Marco's "### Date di apertura" under its "###" title).
+- **R16 A bot check is never a show** — a page titled as a bot check ("Just a moment…", Anubis's "Making sure
+  you're not a bot!" at the Staatsgalerie) stays unread with the sweep's words, "The venue's site answered with a bot
+  check instead of the page." — the sweep's own test, one copy (`scraper/bot_check.js`). Without it, R15 let the
+  check in as an undated card (AL-069).
 - **R15 No usable dates** — as the sweep: the page is read and comes in undated, a day never invented. Months
   only, a season or no year: the sweep's note quoting what the page shows, 'The venue's page shows only
   "september 2027" for this exhibition's dates — no day is published, only the month and year.'

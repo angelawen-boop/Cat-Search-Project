@@ -138,7 +138,11 @@ function answerCheckBlock() {
 function boilerplateBlock() {
   return 'const BOILERPLATE=' + JSON.stringify(require(path.join(ROOT, 'scraper', 'boilerplate.js')).BOILERPLATE) + ';';
 }
-const region = '\n' + [datesBlock(), rulesBlock(), composeBlock(), sitesBlock(), boilerplateBlock(), answerCheckBlock(), examples].join('\n') + '\n';
+function botCheckBlock() {
+  const b = require(path.join(ROOT, 'scraper', 'bot_check.js'));
+  return 'const CHALLENGE_TITLE=' + b.CHALLENGE_TITLE.toString() + ';const BOT_CHECK_SAID=' + JSON.stringify(b.BOT_CHECK_SAID) + ';';
+}
+const region = '\n' + [datesBlock(), rulesBlock(), composeBlock(), sitesBlock(), boilerplateBlock(), botCheckBlock(), answerCheckBlock(), examples].join('\n') + '\n';
 
 if (check) {
   if (region !== current) die('Cat_Watch.jsx is OUT OF STEP with scraper/dates.js, compress_prompt.md, compress.js, answer_check.js or the scraper\'s VENUES — run `node build/sync_shared.js`.');

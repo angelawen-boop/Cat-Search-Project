@@ -1438,6 +1438,8 @@ function classifyLoadError(message) {
 
 // The same failure, in words she can act on. These go verbatim onto the
 // approval card, so they state the fact and stop — no advice, no instructions.
+// The titles bot checks put on their own pages, and what is said of one (bot_check.js, shared with Add by link).
+const { CHALLENGE_TITLE, BOT_CHECK_SAID } = require('./bot_check.js');
 const FAILURE_PROSE = {
   TIMEOUT:            'the page did not finish loading in time',
   CONNECTION_TIMEOUT: 'the venue’s server did not answer in time',
@@ -1456,7 +1458,7 @@ const FAILURE_PROSE = {
 
 // Only ever written on her machine — see PACING below. Worded to fit inside
 // "could not be read: <this>. Marker row", which venue_status.js reads whole.
-FAILURE_PROSE.BLOCKED_CHALLENGE = 'the venue’s site answered with a bot check instead of the page';
+FAILURE_PROSE.BLOCKED_CHALLENGE = BOT_CHECK_SAID;
 FAILURE_PROSE.ROBOTS_OFF_LIMITS = 'not asked for, because the venue’s robots.txt marks this address off-limits';
 FAILURE_PROSE.LANE_STOPPED = 'not asked for, because the gatekeeper in front of this site had just refused us and the run stopped asking';
 
@@ -1559,9 +1561,6 @@ function replyLabels(headers, url) {
 }
 const LABELS_LOGGED = new Set();
 
-// The titles bot checks put on their own pages. A check can arrive with a 200,
-// so the status alone would read it as a page.
-const CHALLENGE_TITLE = /^\s*(just a moment|attention required|performing security verification|access denied|pardon our interruption|one more step)/i;
 
 /** An objection is a refusal or a bot check. Null when the page was served. */
 function objectionFrom(status, headers, title) {
