@@ -133,7 +133,8 @@ const SHOPS = {
   'https://shop.artsmia.org/collections/exhibition-catalogues/products.json?limit=8': SEARCH('mia_catalogues_products').full_content,
   'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi': 'Catalogi' + books,
   'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi': 'Boeken & Catalogi' + books,
-  'https://tienda.museothyssen.org/collections.json?limit=250': SEARCH('thyssen_collections').full_content,
+  // Thyssen's English shop: its section list read under its "/en/" (the venue's country does not speak English).
+  'https://tienda.museothyssen.org/en/collections.json?limit=250': SEARCH('thyssen_collections').full_content,
   'https://tienda.museothyssen.org/en/': '[Print on demand](https://tienda.museothyssen.org/en/collections/print-on-demand) [Gifts](https://tienda.museothyssen.org/en/collections/regalos) [Museum publications](https://tienda.museothyssen.org/en/collections/publicaciones-museo) [Posters](https://tienda.museothyssen.org/en/collections/posters)',
   'https://tienda.museothyssen.org/en/collections/publicaciones-museo': 'Museum publications' + books,
   'https://diashop.org/dia-publications': SEARCH('detroit_publications').full_content,
@@ -143,6 +144,21 @@ const SHOPS = {
   // search excerpt gives them; products pens and books alike.
   'https://diashop.org/dia-museum-book-shop/': '# Books & Stationery\n[Notecards & Journals](https://diashop.org/notecards-journals/) [Art Supplies](https://diashop.org/art-supplies/) [Cookbooks](https://diashop.org/cookbooks-1/) [DIA Publications](https://diashop.org/dia-publications/) [Detroit & Michigan](https://diashop.org/detroit-michigan/) [Artist Monographs & Subjects](https://diashop.org/artist-monographs-subjects/) [Gift Books](https://diashop.org/book-gifts/)\n#### [Gold Fountain Pen - Wave](https://diashop.org/gold-fountain-pen-wave/) $26.95\n#### [Fineliners Set of 5](https://diashop.org/fineliners/) $21.95\n#### [Dutch Art in a Global Age](https://diashop.org/dutch-art-in-a-global-age/) $60.00',
 };
+
+// AL-073: a shop's English version, for a venue in a country that does not speak English. Made to the
+// shapes of Albertina's live shop (23 Oct): its German section, whose "Englisch" switch Parallel keeps
+// without its link, and its English front page at "/en/". "Testhaus Berlin": a German shop with no English one.
+const AT = 'https://shop.testmuseum.at/';
+const DE_SHELF = '# Kataloge\nSprache Deutsch Englisch\nKatalog | Tanzbild\nEUR 24,90\nAuf Lager, versandbereit in 1 - 3 Tagen\nKatalog | Honoré Daumier\nEUR 34,90\nAuf Lager, versandbereit in 1 - 3 Tagen\nKatalog | Leiko Ikemura\nEUR 34,90\nAuf Lager, versandbereit in 1 - 3 Tagen\nZu diesem Artikel ist eine weitere Variante vorhanden.\nWir versenden mit unserem Partner der Österreichischen Post!';
+const EN_SHELF = '# Catalogues & Publications\n[Catalogue | Picasso - Bacon](' + AT + 'en/kat-picasso-bacon-e-2026-p4543/)\nEUR 34,90\nIn Stock, usually ships in 1 to 3 days\n[Catalogue | KAWS. Art & Comix](' + AT + 'en/kat-kaws-art-comix-e-2026-p4466/)\nEUR 34,90\nIn Stock, usually ships in 1 to 3 days\n[Catalogue | Richard Prince](' + AT + 'en/kat-richard-prince-e-2026-p4471/)\nEUR 39,90\nIn Stock, usually ships in 1 to 3 days';
+SEARCHES.unshift(
+  [/^Testmuseum Wien English language shop/, { results: [{ url: AT + 'de/produkte/publikationen/', title: 'Kataloge online bestellen', excerpts: [DE_SHELF] }] }],
+  [/^Testhaus Berlin English language shop/, { results: [{ url: 'https://www.testhaus.de/en/visit', title: 'Visit' }] }],
+  [/^Testhaus Berlin shop/, { results: [{ url: 'https://shop.testhaus.de/ausstellungskataloge/', title: 'Ausstellungskataloge', excerpts: ['# Ausstellungskataloge\nKatalog Porträts! 39,00 € Katalog Brancusi 45,00 € Katalog In Lustrous Black 40,00 € In den Warenkorb, Versand und Kosten, mit Lieferung'] }] }]);
+Object.assign(SHOPS, {
+  [AT + 'en/']: '[Logo Albertina](' + AT + 'en/)\nLanguage\n* [Englisch](' + AT + 'en/)\n* [Deutsch](' + AT + 'de/)\n* [Current Exhibitions](' + AT + 'en/current-exhibitions/)\n* [Tickets & Membership](' + AT + 'en/tickets/)\n* [Catalogues & Products](' + AT + 'en/products/)\n    + [Catalogues & Publications](' + AT + 'en/products/publications/)\n    + [Poster](' + AT + 'en/products/poster/)\n## Top-Seller\nPoster - Venice EUR 19,90 In Stock, usually ships in 1 to 3 days\nYour statutory warranty rights. We ship with our partner Österreichische Post! Opening hours: daily from 10 a.m. to 6 p.m. Information about the museum and the shop, delivery and payment, and our privacy policy.',
+  [AT + 'en/products/publications/']: EN_SHELF,
+});
 
 // DIA's own search (BigCommerce) answers only at search.php, with the product
 // the words name — made to the shape of DIA's own link to one
@@ -618,7 +634,7 @@ function runtime() {
   ok(!fetched('https://shop.clevelandart.org/collections/exhibitions') && !fetched('https://shop.courtauld.ac.uk/collections/courtauld-catalogues'),
     'AL-008c:  Courtauld\'s and Cleveland\'s sections proved shelves of books by the search\'s own excerpt — no page opened');
   ok(fetched('https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi'), 'AL-008d:  Mauritshuis: "Catalogi" opened to check, its excerpt being too thin');
-  ok(fetched('https://tienda.museothyssen.org/collections.json?limit=250'), 'AL-008e:  Thyssen: the search found only single books, so the shop\'s section list was read');
+  ok(fetched('https://tienda.museothyssen.org/en/collections.json?limit=250'), 'AL-008e:  Thyssen: the search found only single books, so the shop\'s section list was read — its English one');
   ok(fetched('https://diashop.org/dia-publications') && !fetched('https://diashop.org/dia-museum-book-shop/'),
     'AL-008f:  DIA: "DIA Publications", the 1st result of her keyed search (4 Oct), opened to check; "Books & Stationery" never offered');
   ok(searchedFor(/Detroit/).length === 1 && searchedFor(/Detroit/)[0].args.search_queries[1] === 'Detroit Institute of Arts Museum shop books publications',
@@ -669,6 +685,41 @@ function runtime() {
     const r = await discoverShop('https://archive.worcesterart.org/visit/shop/', 'archive.worcesterart.org', 'Worcester Art Museum', []);
     ok(r.shop === 'found' && r.shopHome === 'https://the-museum-shop-at-wam.myshopify.com/' && r.shopCatalogues === 'https://the-museum-shop-at-wam.myshopify.com/collections/catalogs',
       'AL-034: Worcester: its Shop page\'s "Shop now" is followed to the shop on another site, and its Catalogs section taken', JSON.stringify(r));
+  }
+
+  // ── AL-073: a venue in a country that does not speak English — its shop's English version (her design) ──
+  {
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const lang = fn('pageLanguage'), root = fn('shopRootOf');
+    ok(lang(AT + 'en/products/publications/', '') === 'en' && lang('https://butik.louisiana.dk/en-int/collections/udstillingskataloger', '') === 'en'
+      && lang(AT + 'de/produkte/publikationen/', '') === 'other' && lang('https://shop.testhaus.de/', DE_SHELF) === 'other'
+      && lang('https://shop.testhaus.de/', EN_SHELF + ' Your basket. Delivery and privacy.') === 'en' && lang('https://shop.testhaus.de/', 'Shop') === '',
+      'AL-073: a shop page\'s language: the address\'s language part (Louisiana\'s "/en-int/"), else its words; too few words, not known');
+    ok(root('https://butik.louisiana.dk/en-int/collections/udstillingskataloger') === 'https://butik.louisiana.dk/en-int/' && root(AT + 'de/produkte/publikationen/') === AT + 'de/',
+      'AL-073a:  a shop\'s root keeps its language part, "/en-int/" too');
+    const secs = fn('shopifySections')('{"collections":[{"id":1,"title":"Exhibitions","handle":"exhibitions","description":"\\u003cp\\u003eNo te quedes sin los catálogos y artículos exclusivos de nuestras exposiciones temporales.\\u003c\\/p\\u003e","products_count":49},'
+      + '{"id":2,"title":"Edvard Munch: Archetypes","handle":"edvard-munch-arquetipos","description":"Consigue los catálogos de la exposición de Edvard Munch.","products_count":25}]}', 'https://tienda.museothyssen.org/en/');
+    const rk = fn('rankShelves')(secs);
+    ok(rk.length === 1 && rk[0].url === 'https://tienda.museothyssen.org/en/collections/exhibitions' && rk[0].target,
+      'AL-073f:  a section named only "Exhibitions" is read with its own description — the exhibitions\' catalogues (Thyssen); a show\'s own section by its title alone', JSON.stringify(rk.map(x => x.url)));
+    let before = calls.length;
+    const r = await discoverShop('', 'www.testmuseum.at', 'Testmuseum Wien', [], 'occ-testmuseum-at', null, true);
+    const asked = calls.slice(before).filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries[0]);
+    const tried = calls.slice(before).find(c => c.kind === 'mcp' && c.tool === 'web_fetch' && c.args.urls.includes(AT + 'en-int/'));
+    ok(asked.length === 1 && asked[0] === 'Testmuseum Wien English language shop exhibition catalogues',
+      'AL-073b:  its shop searched for in English first; a shop found, so no other search', JSON.stringify(asked));
+    ok(r.shop === 'found' && r.shopCatalogues === AT + 'en/products/publications/' && !!tried && tried.args.urls[0] === AT + 'en/',
+      'AL-073c:  only its German section found: its English addresses tried in one call, the English front page walked, and its English section taken (Albertina)', JSON.stringify([r, tried && tried.args.urls]));
+    before = calls.length;
+    const b = await discoverShop('', 'www.testhaus.de', 'Testhaus Berlin', [], 'occ-testhaus-de', null, true);
+    const asked2 = calls.slice(before).filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries[0]);
+    ok(asked2.length === 2 && /English language/.test(asked2[0]) && asked2[1] === 'Testhaus Berlin shop exhibition catalogues' && b.shop === 'found' && b.shopCatalogues === 'https://shop.testhaus.de/ausstellungskataloge/',
+      'AL-073d:  the English search finds no shop: the plain search finds its German one; with no English version, the German section stands (Berlin)', JSON.stringify([asked2, b]));
+    before = calls.length;
+    await discoverShop('', 'www.testhaus.de', 'Testhaus Berlin', [], 'occ-testhaus-de');
+    const asked3 = calls.slice(before).filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries[0]);
+    ok(asked3.length === 1 && asked3[0] === 'Testhaus Berlin shop exhibition catalogues' && !calls.slice(before).some(c => c.kind === 'mcp' && c.tool === 'web_fetch' && c.args.urls.length > 1 && c.args.urls.some(u => /\/en-int\//.test(u))),
+      'AL-073e:  a venue in an English-speaking country: the plain search only, no English version looked for', JSON.stringify(asked3));
   }
 
   // ── AL-043: Munich — two houses on one site, each its own venue and shop (her decision) ──
@@ -1069,7 +1120,8 @@ function runtime() {
     const text = win.document.body.textContent;
     ok(/Antwerp Fine Arts/.test(text) && !/Antwerp KMSKA/.test(text) && !/kmska\.be\s*\u00b7/.test(text), 'AL-053b:  its cards are headed by her name, "Antwerp Fine Arts", over Claude\'s "Antwerp KMSKA" — never its address', text.slice(text.indexOf('KMSKA') - 60, text.indexOf('KMSKA') + 20));
     const shopAsk = calls.filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries.join(' '));
-    ok(shopAsk.length >= 1 && /^Koninklijk Museum voor Schone Kunsten Antwerpen KMSKA Belgium shop/.test(shopAsk[0]), 'AL-053c:  its shop is searched under its full name (her entry\'s), other names, city and country (her decision; proved live)', JSON.stringify(shopAsk));
+    ok(shopAsk.length >= 2 && /^Koninklijk Museum voor Schone Kunsten Antwerpen KMSKA Belgium English language shop/.test(shopAsk[0]) && /^Koninklijk Museum voor Schone Kunsten Antwerpen KMSKA Belgium shop/.test(shopAsk[1]),
+      'AL-053c:  its shop is searched under its full name (her entry\'s), other names, city and country (her decision; proved live) — in a country that does not speak English, its English shop first', JSON.stringify(shopAsk));
     const cancel = buttons(/^Cancel import$/)[0];
     if (cancel) await click(cancel);
     const sn = new Function('React', 'window', 'document', 'localStorage', code + '\n;return venueSearchName;')(React, win, win.document, win.localStorage);

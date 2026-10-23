@@ -1,5 +1,5 @@
 {
- "about": "The shop finder's standing check (scraper/shop_check.js). One venue per way a shop has been found or missed. `shop`: the right books section (her confirmed shop for her link venues; for museums she has not linked, the session's, checked on the live shop: `truth`); `also`: other right sections; null: no shop of its own. `lastGood`: the finder's steps on its last good run.",
+ "about": "The shop finder's standing check (scraper/shop_check.js). One venue per way a shop has been found or missed. `shop`: the right books section (her confirmed shop for her link venues; for museums she has not linked, the session's, checked on the live shop: `truth`); `also`: other right sections; null: no shop of its own. `english`: false for a venue in a country that does not speak English — its shop's English version is the right one where it has one (her design). `lastGood`: the finder's steps on its last good run.",
  "venues": [
   {
    "key": "detroit",
@@ -17,17 +17,35 @@
      "shopLike": [
       "https://diashop.org/dia-publications",
       "https://diashop.org/DIA-exhibitions-shop",
-      "https://diashop.org/literature-poetry/",
-      "https://diashop.org/dia-museum-book-shop",
-      "https://diashop.org/artist-monographs-subjects/"
+      "https://diashop.org/",
+      "https://diashop.org/literature-poetry/"
      ],
+     "english": false,
      "again": false,
      "root": "https://diashop.org/",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": "https://diashop.org/dia-publications"
+     "pick": null,
+     "best": "https://diashop.org/dia-publications",
+     "root": "https://diashop.org/"
+    },
+    {
+     "step": "walk",
+     "pages": [
+      "https://diashop.org/",
+      "https://diashop.org/dia-publications",
+      "https://diashop.org/dia-museum-book-shop/",
+      "https://diashop.org/art-museum-childrens-books/"
+     ],
+     "pick": null,
+     "best": "https://diashop.org/dia-publications"
+    },
+    {
+     "step": "settled",
+     "pick": "https://diashop.org/dia-publications",
+     "kind": "publications"
     },
     {
      "step": "result",
@@ -54,17 +72,20 @@
      "shopLike": [
       "https://shop.clevelandart.org/collections/exhibitions",
       "https://shop.clevelandart.org/",
-      "https://shop.clevelandart.org/collections/books",
+      "https://shop.clevelandart.org/collections/exhibitions?page=3",
       "https://shop.clevelandart.org/collections/exhibitions?page=4",
-      "https://shop.clevelandart.org/collections/exhibitions?page=3"
+      "https://shop.clevelandart.org/collections/books"
      ],
+     "english": false,
      "again": false,
      "root": "https://shop.clevelandart.org/",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": "https://shop.clevelandart.org/collections/exhibitions"
+     "pick": "https://shop.clevelandart.org/collections/exhibitions",
+     "best": "https://shop.clevelandart.org/collections/exhibitions",
+     "root": "https://shop.clevelandart.org/"
     },
     {
      "step": "result",
@@ -80,6 +101,7 @@
    "id": "occ-museothyssen-org",
    "host": "www.museothyssen.org",
    "searchName": "Museo Nacional Thyssen-Bornemisza",
+   "english": false,
    "pageShop": "https://tienda.museothyssen.org/en",
    "shop": "https://tienda.museothyssen.org/en/collections/exhibitions",
    "case": "a Shopify shop whose search holds only single books: its list of sections",
@@ -89,26 +111,39 @@
      "step": "search",
      "results": 10,
      "shopLike": [
-      "https://tienda.museothyssen.org/en/collections/publications?sort_by=best-selling",
       "https://tienda.museothyssen.org/en/collections/guias-y-catalogos-del-museo",
+      "https://tienda.museothyssen.org/en/collections/publications?sort_by=best-selling",
+      "https://tienda.museothyssen.org/en/collections/todos-los-libros",
       "https://tienda.museothyssen.org/en/collections/catalogos-en-oferta",
-      "https://tienda.museothyssen.org/en/collections/exhibitions",
-      "https://tienda.museothyssen.org/en/collections/libros-propios-b2b"
+      "https://tienda.museothyssen.org/en"
      ],
+     "english": true,
      "again": false,
      "root": "https://tienda.museothyssen.org/en/",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": "https://tienda.museothyssen.org/en/collections/publications"
+     "pick": null,
+     "best": "https://tienda.museothyssen.org/en/collections/guias-y-catalogos-del-museo",
+     "root": "https://tienda.museothyssen.org/en/"
+    },
+    {
+     "step": "shopify-sections",
+     "pick": "https://tienda.museothyssen.org/en/collections/exhibitions",
+     "best": "https://tienda.museothyssen.org/en/collections/exhibitions"
+    },
+    {
+     "step": "english",
+     "at": "https://tienda.museothyssen.org/en/collections/exhibitions",
+     "already": true
     },
     {
      "step": "result",
      "shop": "found",
-     "shopCatalogues": "https://tienda.museothyssen.org/en/collections/publications",
+     "shopCatalogues": "https://tienda.museothyssen.org/en/collections/exhibitions",
      "shopSearch": "https://tienda.museothyssen.org/search?q=",
-     "foundBy": "a search"
+     "foundBy": "the shop's list of sections"
     }
    ]
   },
@@ -128,13 +163,16 @@
      "shopLike": [
       "https://www.worcesterart.org/visit/shop"
      ],
+     "english": false,
      "again": false,
      "root": "https://archive.worcesterart.org/visit/shop/",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": null
+     "pick": null,
+     "best": null,
+     "root": "https://archive.worcesterart.org/visit/shop/"
     },
     {
      "step": "shop-elsewhere",
@@ -143,7 +181,21 @@
     },
     {
      "step": "shopify-sections",
-     "pick": "https://the-museum-shop-at-wam.myshopify.com/collections/catalogs"
+     "pick": null,
+     "best": "https://the-museum-shop-at-wam.myshopify.com/collections/catalogs"
+    },
+    {
+     "step": "walk",
+     "pages": [
+      "https://the-museum-shop-at-wam.myshopify.com/"
+     ],
+     "pick": null,
+     "best": "https://the-museum-shop-at-wam.myshopify.com/collections/catalogs"
+    },
+    {
+     "step": "settled",
+     "pick": "https://the-museum-shop-at-wam.myshopify.com/collections/catalogs",
+     "kind": "catalogues"
     },
     {
      "step": "result",
@@ -170,13 +222,16 @@
      "shopLike": [
       "https://britishart.yale.edu/museum-shop"
      ],
+     "english": false,
      "again": false,
      "root": "https://britishart.yale.edu/museum-shop",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": null
+     "pick": null,
+     "best": null,
+     "root": "https://britishart.yale.edu/museum-shop"
     },
     {
      "step": "shop-elsewhere",
@@ -184,9 +239,18 @@
      "root": "https://secure.touchnet.net/"
     },
     {
-     "step": "menu",
-     "page": "https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true",
-     "pick": "https://secure.touchnet.net/C20510_ustores/web/store_cat.jsp?STOREID=7&CATID=16&SINGLESTORE=true"
+     "step": "walk",
+     "pages": [
+      "https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true",
+      "https://secure.touchnet.net/C20510_ustores/web/store_cat.jsp?STOREID=7&CATID=16&SINGLESTORE=true"
+     ],
+     "pick": null,
+     "best": "https://secure.touchnet.net/C20510_ustores/web/store_cat.jsp?STOREID=7&CATID=16&SINGLESTORE=true"
+    },
+    {
+     "step": "settled",
+     "pick": "https://secure.touchnet.net/C20510_ustores/web/store_cat.jsp?STOREID=7&CATID=16&SINGLESTORE=true",
+     "kind": "publications"
     },
     {
      "step": "result",
@@ -202,25 +266,28 @@
    "id": "occ-smb-museum",
    "host": "www.smb.museum",
    "searchName": "Staatliche Museen zu Berlin",
+   "english": false,
    "pageShop": "https://www.smb.museum/webshop",
    "shop": "https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/",
    "case": "a Shop button on the museum's own site; German compound section words; a book's address in the menu stands for its section",
-   "truth": "hers",
+   "truth": "hers; an English shop exists (/en/books-und-media/exhibition-catalogues/, 23 Oct) but Parallel returns it without its books, so the German section stands — it sells the English editions too",
    "lastGood": [
     {
      "step": "search",
      "results": 10,
      "shopLike": [
-      "https://www.smb.museum/webshop",
       "https://www.smb-webshop.de/en/books-und-media/exhibition-catalogues/"
      ],
+     "english": true,
      "again": false,
      "root": "https://www.smb.museum/webshop",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": null
+     "pick": null,
+     "best": null,
+     "root": "https://www.smb.museum/webshop"
     },
     {
      "step": "shop-elsewhere",
@@ -228,15 +295,50 @@
      "root": "https://www.smb-webshop.de/"
     },
     {
-     "step": "menu",
-     "page": "https://www.smb-webshop.de/",
+     "step": "walk",
+     "pages": [
+      "https://www.smb-webshop.de/museen-und-sammlungen/",
+      "https://www.smb-webshop.de/"
+     ],
+     "pick": "https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/",
+     "best": "https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/"
+    },
+    {
+     "step": "english",
+     "at": "https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/",
+     "said": "other",
+     "tried": [
+      "https://www.smb-webshop.de/en/",
+      "https://www.smb-webshop.de/en-int/",
+      "https://www.smb-webshop.de/en-gb/",
+      "https://www.smb-webshop.de/en-us/",
+      "https://en.smb-webshop.de/"
+     ],
+     "found": "https://www.smb-webshop.de/en/"
+    },
+    {
+     "step": "shopify-sections",
+     "pick": null,
+     "best": null
+    },
+    {
+     "step": "walk",
+     "pages": [
+      "https://www.smb-webshop.de/en/",
+      "https://www.smb-webshop.de/en/books-und-media/"
+     ],
+     "pick": null,
+     "best": null
+    },
+    {
+     "step": "english-kept-other",
      "pick": "https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/"
     },
     {
      "step": "result",
      "shop": "found",
      "shopCatalogues": "https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/",
-     "shopSearch": null,
+     "shopSearch": "https://www.smb-webshop.de/search?q=",
      "foundBy": "the shop's menu"
     }
    ]
@@ -246,6 +348,7 @@
    "id": "occ-alte-pinakothek",
    "host": "www.pinakothek.de",
    "searchName": "Alte Pinakothek München",
+   "english": false,
    "pageShop": "",
    "shop": "https://www.museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen",
    "case": "a shop company's site selling for several houses (CEDON): only this house's section, searched in German",
@@ -255,15 +358,32 @@
      "step": "search",
      "results": 10,
      "shopLike": [
+      "https://www.museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen?page=2",
       "https://www.museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen"
      ],
+     "english": false,
      "again": false,
      "root": "https://www.museumsshop.cedon.de/",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": "https://www.museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen"
+     "pick": "https://www.museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen",
+     "best": "https://www.museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen",
+     "root": "https://www.museumsshop.cedon.de/"
+    },
+    {
+     "step": "english",
+     "at": "https://www.museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen",
+     "said": "other",
+     "tried": [
+      "https://www.museumsshop.cedon.de/en/",
+      "https://www.museumsshop.cedon.de/en-int/",
+      "https://www.museumsshop.cedon.de/en-gb/",
+      "https://www.museumsshop.cedon.de/en-us/",
+      "https://en.museumsshop.cedon.de/"
+     ],
+     "found": null
     },
     {
      "step": "result",
@@ -279,6 +399,7 @@
    "id": "occ-staedelmuseum-de",
    "host": "www.staedelmuseum.de",
    "searchName": "Städel Museum",
+   "english": false,
    "pageShop": "",
    "shop": "https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885",
    "case": "the section written into the venue's entry (her decision, hard-coded)",
@@ -295,6 +416,7 @@
    "id": "occ-sammlung-schack",
    "host": "www.pinakothek.de",
    "searchName": "Sammlung Schack",
+   "english": false,
    "pageShop": "",
    "shop": null,
    "case": "a house with no shop of its own on a site shared with houses that have one: never another house's section",
@@ -304,13 +426,16 @@
      "step": "search",
      "results": 10,
      "shopLike": [],
+     "english": true,
      "again": true,
      "root": "",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": null
+     "pick": null,
+     "best": null,
+     "root": null
     },
     {
      "step": "shop-elsewhere",
@@ -329,6 +454,7 @@
    "id": "occ-kmska-be",
    "host": "kmska.be",
    "searchName": "Koninklijk Museum voor Schone Kunsten Antwerpen KMSKA Belgium",
+   "english": false,
    "pageShop": "https://kmska.be/en/kmskashop-and-coffee-bar",
    "shop": "https://www.kmskashop.be/en/books/kmska/",
    "case": "the search shows the whole Books section or a later page of the shelf: the walk goes into Books for the museum's own shelf, kept as page 1",
@@ -338,26 +464,73 @@
      "step": "search",
      "results": 10,
      "shopLike": [
-      "https://www.kmskashop.be/en",
+      "https://kmska.be/en/kmskashop-and-coffee-bar",
       "https://www.kmskashop.be/",
-      "https://www.kmskashop.be/nl/catalog",
-      "https://www.kmska.be/en/kmskashop-and-coffee-bar",
-      "https://www.kmskashop.be/nl/boeken"
+      "https://www.kmskashop.be/en"
      ],
+     "english": true,
      "again": false,
      "root": "https://kmska.be/en/kmskashop-and-coffee-bar",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": "https://www.kmskashop.be/nl/boeken"
+     "pick": null,
+     "best": null,
+     "root": "https://kmska.be/en/kmskashop-and-coffee-bar"
+    },
+    {
+     "step": "shop-elsewhere",
+     "front": "https://www.kmskashop.be/nl/",
+     "root": "https://www.kmskashop.be/nl/"
+    },
+    {
+     "step": "walk",
+     "pages": [
+      "https://www.kmskashop.be/nl/",
+      "https://www.kmskashop.be/nl/boeken/",
+      "https://www.kmskashop.be/nl/boeken/kmska/",
+      "https://www.kmskashop.be/nl/boeken/andere/"
+     ],
+     "pick": null,
+     "best": "https://www.kmskashop.be/nl/boeken/kmska/"
+    },
+    {
+     "step": "english",
+     "at": "https://www.kmskashop.be/nl/boeken/kmska/",
+     "said": "other",
+     "tried": [
+      "https://www.kmskashop.be/en/go/category/12072947",
+      "https://www.kmskashop.be/en/",
+      "https://www.kmskashop.be/en-int/",
+      "https://www.kmskashop.be/en-gb/",
+      "https://www.kmskashop.be/en-us/",
+      "https://en.kmskashop.be/"
+     ],
+     "found": "https://www.kmskashop.be/en/go/category/12072947"
+    },
+    {
+     "step": "walk",
+     "pages": [
+      "https://www.kmskashop.be/en/go/category/12072947",
+      "https://www.kmskashop.be/en/books/kmska/",
+      "https://www.kmskashop.be/en/books/",
+      "https://www.kmskashop.be/en/books/others/"
+     ],
+     "pick": null,
+     "best": "https://www.kmskashop.be/en/books/kmska/"
+    },
+    {
+     "step": "settled",
+     "pick": "https://www.kmskashop.be/en/books/kmska/",
+     "kind": "publications"
     },
     {
      "step": "result",
      "shop": "found",
-     "shopCatalogues": "https://www.kmskashop.be/nl/boeken",
+     "shopCatalogues": "https://www.kmskashop.be/en/books/kmska/",
      "shopSearch": null,
-     "foundBy": "a search"
+     "foundBy": "the shop's menu"
     }
    ]
   },
@@ -375,20 +548,22 @@
      "step": "search",
      "results": 10,
      "shopLike": [
-      "https://shop.artsmia.org/collections/exhibition-catalogues/products/mia-collection-handbook",
       "https://shop.artsmia.org/collections/exhibition-catalogues",
-      "https://shop.artsmia.org/collections/mia-book-club",
-      "https://shop.artsmia.org/collections/exhibition-catalogues/products/0adfd74a-1590-11e8-fa42-6a6b85d96ae4",
-      "https://shop.artsmia.org/collections/exhibition-catalogues/products/heartsofourpeople",
-      "https://shop.artsmia.org/collections/books"
+      "https://shop.artsmia.org/collections/exhibition-catalogues/products/mia-collection-handbook",
+      "https://shop.artsmia.org/collections/exhibition-catalogues/products.json?limit=8",
+      "https://shop.artsmia.org/collections/books",
+      "https://shop.artsmia.org/collections/mia-book-club"
      ],
+     "english": false,
      "again": false,
      "root": "https://shop.artsmia.org/",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": "https://shop.artsmia.org/collections/exhibition-catalogues"
+     "pick": "https://shop.artsmia.org/collections/exhibition-catalogues",
+     "best": "https://shop.artsmia.org/collections/exhibition-catalogues",
+     "root": "https://shop.artsmia.org/"
     },
     {
      "step": "result",
@@ -404,6 +579,7 @@
    "id": "occ-albertina-at",
    "host": "www.albertina.at",
    "searchName": "Albertina Museum Vienna Austria",
+   "english": false,
    "pageShop": "",
    "shop": "https://shop.albertina.at/en/products/publications/",
    "case": "prices with the currency code first (\"EUR 24,90\"); German \"Publikationen\"",
@@ -413,15 +589,19 @@
      "step": "search",
      "results": 10,
      "shopLike": [
-      "https://shop.albertina.at/en"
+      "https://shop.albertina.at/en",
+      "https://shop.albertina.at/en/products/albertinaexclusive/"
      ],
+     "english": true,
      "again": false,
      "root": "https://shop.albertina.at/en/",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": null
+     "pick": null,
+     "best": null,
+     "root": "https://shop.albertina.at/en/"
     },
     {
      "step": "shop-elsewhere",
@@ -429,9 +609,29 @@
      "root": "https://shop.albertina.at/en/"
     },
     {
-     "step": "menu",
-     "page": "https://shop.albertina.at/en/",
-     "pick": "https://shop.albertina.at/en/products/publications/"
+     "step": "shopify-sections",
+     "pick": null,
+     "best": null
+    },
+    {
+     "step": "walk",
+     "pages": [
+      "https://shop.albertina.at/en/",
+      "https://shop.albertina.at/en/products/albertinaexclusive/",
+      "https://shop.albertina.at/en/products/publications/"
+     ],
+     "pick": null,
+     "best": "https://shop.albertina.at/en/products/publications/"
+    },
+    {
+     "step": "english",
+     "at": "https://shop.albertina.at/en/products/publications/",
+     "already": true
+    },
+    {
+     "step": "settled",
+     "pick": "https://shop.albertina.at/en/products/publications/",
+     "kind": "catalogues"
     },
     {
      "step": "result",
@@ -447,6 +647,7 @@
    "id": "occ-belvedere-at",
    "host": "www.belvedere.at",
    "searchName": "Belvedere Österreichische Galerie Belvedere Vienna Austria",
+   "english": false,
    "pageShop": "",
    "shop": null,
    "case": "a shop page on the museum's own site is the shop's front, never the home page",
@@ -458,13 +659,16 @@
      "shopLike": [
       "https://www.belvedere.at/en/museum-shop"
      ],
+     "english": true,
      "again": false,
      "root": "https://www.belvedere.at/en/museum-shop",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": null
+     "pick": null,
+     "best": null,
+     "root": "https://www.belvedere.at/en/museum-shop"
     },
     {
      "step": "shop-elsewhere",
@@ -472,8 +676,39 @@
      "root": "https://www.belvedere.at/shop"
     },
     {
-     "step": "menu",
-     "page": "https://www.belvedere.at/shop",
+     "step": "walk",
+     "pages": [
+      "https://www.belvedere.at/shop",
+      "https://www.belvedere.at/",
+      "https://www.belvedere.at/en/museum-shop"
+     ],
+     "pick": null,
+     "best": null
+    },
+    {
+     "step": "english",
+     "at": "https://www.belvedere.at/shop",
+     "said": "other",
+     "tried": [
+      "https://www.belvedere.at/en/",
+      "https://www.belvedere.at/en-int/",
+      "https://www.belvedere.at/en-gb/",
+      "https://www.belvedere.at/en-us/",
+      "https://en.belvedere.at/"
+     ],
+     "found": "https://www.belvedere.at/en/"
+    },
+    {
+     "step": "walk",
+     "pages": [
+      "https://www.belvedere.at/en/",
+      "https://www.belvedere.at/en/museum-shop"
+     ],
+     "pick": null,
+     "best": null
+    },
+    {
+     "step": "english-kept-other",
      "pick": null
     },
     {
@@ -488,10 +723,11 @@
    "id": "occ-louisiana-dk",
    "host": "louisiana.dk",
    "searchName": "Louisiana Museum of Modern Art Humlebæk Denmark",
+   "english": false,
    "pageShop": "",
-   "shop": "https://butik.louisiana.dk/collections/udstillingskataloger",
+   "shop": "https://butik.louisiana.dk/en-int/collections/udstillingskataloger",
    "case": "Danish \"butik\"; Scandinavian prices",
-   "truth": "session, checked on the live shop: the shop's own site, section Udstillingskataloger",
+   "truth": "hers: the shop's English version (/en-int/), English and Danish books on it; was its Danish section",
    "lastGood": [
     {
      "step": "search",
@@ -501,13 +737,16 @@
       "https://louisiana.dk/en/museum/louisiana-butik/",
       "https://butik.louisiana.dk/en-int/collections/louisiana-plakater?srsltid=AU7gw4Xu6zUe2sv0OwA3sZDaMm_TyFpvkBBgv1ufWc0W3HaI-kay0t_F"
      ],
+     "english": true,
      "again": true,
-     "root": "https://butik.louisiana.dk/",
+     "root": "https://butik.louisiana.dk/en-int/",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": null
+     "pick": null,
+     "best": null,
+     "root": "https://butik.louisiana.dk/en-int/"
     },
     {
      "step": "shop-elsewhere",
@@ -516,14 +755,57 @@
     },
     {
      "step": "shopify-sections",
-     "pick": "https://butik.louisiana.dk/collections/udstillingskataloger"
+     "pick": null,
+     "best": "https://butik.louisiana.dk/collections/udstillingskataloger"
+    },
+    {
+     "step": "walk",
+     "pages": [
+      "https://butik.louisiana.dk/"
+     ],
+     "pick": "https://butik.louisiana.dk/collections/udstillingskataloger",
+     "best": "https://butik.louisiana.dk/collections/udstillingskataloger"
+    },
+    {
+     "step": "english",
+     "at": "https://butik.louisiana.dk/collections/udstillingskataloger",
+     "said": "other",
+     "tried": [
+      "https://butik.louisiana.dk/en/",
+      "https://butik.louisiana.dk/en-int/",
+      "https://butik.louisiana.dk/en-gb/",
+      "https://butik.louisiana.dk/en-us/",
+      "https://en.butik.louisiana.dk/"
+     ],
+     "found": "https://butik.louisiana.dk/en-int/"
+    },
+    {
+     "step": "shopify-sections",
+     "pick": null,
+     "best": "https://butik.louisiana.dk/en-int/collections/udstillingskataloger"
+    },
+    {
+     "step": "walk",
+     "pages": [
+      "https://butik.louisiana.dk/en-int/",
+      "https://butik.louisiana.dk/en-int/collections/alle-boger",
+      "https://butik.louisiana.dk/en-int/collections/kunstboger",
+      "https://butik.louisiana.dk/en-int/collections/fotoboger",
+      "https://butik.louisiana.dk/en-int/collections/designboger"
+     ],
+     "pick": null,
+     "best": "https://butik.louisiana.dk/en-int/collections/udstillingskataloger"
+    },
+    {
+     "step": "english-same",
+     "pick": "https://butik.louisiana.dk/en-int/collections/udstillingskataloger"
     },
     {
      "step": "result",
      "shop": "found",
-     "shopCatalogues": "https://butik.louisiana.dk/collections/udstillingskataloger",
+     "shopCatalogues": "https://butik.louisiana.dk/en-int/collections/udstillingskataloger",
      "shopSearch": "https://butik.louisiana.dk/search?q=",
-     "foundBy": "the shop's list of sections"
+     "foundBy": "the shop's menu"
     }
    ]
   },
@@ -532,6 +814,7 @@
    "id": "occ-kunsthaus-ch",
    "host": "www.kunsthaus.ch",
    "searchName": "Kunsthaus Zürich Zurich Switzerland",
+   "english": false,
    "pageShop": "",
    "shop": null,
    "case": "the first search brings only the museum's own pages: one more search for the shop itself",
@@ -541,13 +824,16 @@
      "step": "search",
      "results": 10,
      "shopLike": [],
+     "english": true,
      "again": true,
      "root": "",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": null
+     "pick": null,
+     "best": null,
+     "root": null
     },
     {
      "step": "shop-elsewhere",
@@ -566,6 +852,7 @@
    "id": "occ-petitpalais-paris-fr",
    "host": "www.petitpalais.paris.fr",
    "searchName": "Petit Palais Musée des Beaux-Arts de la Ville de Paris Paris France",
+   "english": false,
    "pageShop": "",
    "shop": null,
    "case": "a file or an app store is never the shop",
@@ -579,13 +866,16 @@
       "http://petitpalais.paris.fr/en/content/bookshop-gift-shop",
       "https://www.petitpalais.paris.fr/preparer-sa-visite/librairie"
      ],
+     "english": true,
      "again": true,
      "root": "https://www.petitpalais.paris.fr/visiter/librairie-boutique",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": null
+     "pick": null,
+     "best": null,
+     "root": "https://www.petitpalais.paris.fr/visiter/librairie-boutique"
     },
     {
      "step": "shop-elsewhere",
@@ -593,8 +883,51 @@
      "root": "https://www.petitpalais.paris.fr/visiter/librairie-boutique"
     },
     {
-     "step": "menu",
-     "page": "https://www.petitpalais.paris.fr/visiter/librairie-boutique",
+     "step": "walk",
+     "pages": [
+      "https://www.petitpalais.paris.fr/visiter/librairie-boutique",
+      "https://www.petitpalais.paris.fr/",
+      "https://www.petitpalais.paris.fr/preparer-sa-visite/librairie",
+      "https://www.petitpalais.paris.fr/publications",
+      "https://www.petitpalais.paris.fr/publications?page=1",
+      "https://www.petitpalais.paris.fr/sites/default/files/liste_non_exhaustive_des_publications_avant_2005.pdf"
+     ],
+     "pick": null,
+     "best": null
+    },
+    {
+     "step": "english",
+     "at": "https://www.petitpalais.paris.fr/visiter/librairie-boutique",
+     "said": "other",
+     "tried": [
+      "https://www.petitpalais.paris.fr/en/",
+      "https://www.petitpalais.paris.fr/en-int/",
+      "https://www.petitpalais.paris.fr/en-gb/",
+      "https://www.petitpalais.paris.fr/en-us/",
+      "https://en.petitpalais.paris.fr/"
+     ],
+     "found": "https://www.petitpalais.paris.fr/en/"
+    },
+    {
+     "step": "shopify-sections",
+     "pick": null,
+     "best": null
+    },
+    {
+     "step": "walk",
+     "pages": [
+      "https://www.petitpalais.paris.fr/en/",
+      "https://www.petitpalais.paris.fr/visiter/librairie-boutique",
+      "https://www.petitpalais.paris.fr/preparer-sa-visite/librairie",
+      "https://www.petitpalais.paris.fr/publications",
+      "https://www.petitpalais.paris.fr/publications?page=1",
+      "https://www.petitpalais.paris.fr/sites/default/files/liste_non_exhaustive_des_publications_avant_2005.pdf"
+     ],
+     "pick": null,
+     "best": null
+    },
+    {
+     "step": "english-kept-other",
      "pick": null
     },
     {
@@ -609,6 +942,7 @@
    "id": "occ-fondationbeyeler-ch",
    "host": "www.fondationbeyeler.ch",
    "searchName": "Fondation Beyeler Riehen Switzerland",
+   "english": false,
    "pageShop": "",
    "shop": "https://shop.fondationbeyeler.ch/en/kategorie/exhibition-catalogues",
    "case": "Swiss prices (\"CHF 45.00\")",
@@ -620,20 +954,25 @@
      "shopLike": [
       "https://shop.fondationbeyeler.ch/en/kategorie/exhibition-catalogues",
       "https://shop.fondationbeyeler.ch/en/kategorie/exhibition-catalogues/?sort=down",
-      "https://shop.fondationbeyeler.ch/en/kategorie/publications",
-      "https://shop.fondationbeyeler.ch/en/kategorie/gallery-catalogues",
       "https://shop.fondationbeyeler.ch/en/kategorie/exhibition-catalogues/?sort=up",
-      "https://shop.fondationbeyeler.ch/en/suche.html?query=Kasimir+Malewitsch",
-      "https://shop.fondationbeyeler.ch/en/kategorie/editions/technique/mistgraph-print",
-      "https://shop.fondationbeyeler.ch/en/artikel/mondrian-evolution-german-33460"
+      "https://shop.fondationbeyeler.ch/en/kategorie/gallery-catalogues",
+      "https://www.fondationbeyeler.ch/en/shop/publications"
      ],
+     "english": true,
      "again": false,
      "root": "https://shop.fondationbeyeler.ch/en/",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": "https://shop.fondationbeyeler.ch/en/kategorie/exhibition-catalogues"
+     "pick": "https://shop.fondationbeyeler.ch/en/kategorie/exhibition-catalogues",
+     "best": "https://shop.fondationbeyeler.ch/en/kategorie/exhibition-catalogues",
+     "root": "https://shop.fondationbeyeler.ch/en/"
+    },
+    {
+     "step": "english",
+     "at": "https://shop.fondationbeyeler.ch/en/kategorie/exhibition-catalogues",
+     "already": true
     },
     {
      "step": "result",
@@ -649,6 +988,7 @@
    "id": "occ-hamburger-kunsthalle-de",
    "host": "www.hamburger-kunsthalle.de",
    "searchName": "Hamburger Kunsthalle Hamburg Germany",
+   "english": false,
    "pageShop": "",
    "shop": "https://freunde-der-kunsthalle.de/shop/kategorie/20",
    "case": "the museum's shop page sends visitors to the Friends' shop; its sections drawn by script",
@@ -661,13 +1001,16 @@
      "shopLike": [
       "https://www.hamburger-kunsthalle.de/en/museum-shop"
      ],
+     "english": true,
      "again": false,
      "root": "https://www.hamburger-kunsthalle.de/en/museum-shop",
      "died": null
     },
     {
      "step": "search-pick",
-     "pick": null
+     "pick": null,
+     "best": null,
+     "root": "https://www.hamburger-kunsthalle.de/en/museum-shop"
     },
     {
      "step": "shop-elsewhere",
@@ -675,8 +1018,37 @@
      "root": "https://freunde-der-kunsthalle.de/"
     },
     {
-     "step": "menu",
-     "page": "https://freunde-der-kunsthalle.de/shop/",
+     "step": "walk",
+     "pages": [
+      "https://freunde-der-kunsthalle.de/shop/",
+      "https://freunde-der-kunsthalle.de/"
+     ],
+     "pick": null,
+     "best": null
+    },
+    {
+     "step": "english",
+     "at": "https://freunde-der-kunsthalle.de/shop/",
+     "said": "other",
+     "tried": [
+      "https://freunde-der-kunsthalle.de/en/",
+      "https://freunde-der-kunsthalle.de/en-int/",
+      "https://freunde-der-kunsthalle.de/en-gb/",
+      "https://freunde-der-kunsthalle.de/en-us/",
+      "https://en.freunde-der-kunsthalle.de/"
+     ],
+     "found": "https://freunde-der-kunsthalle.de/en/"
+    },
+    {
+     "step": "walk",
+     "pages": [
+      "https://freunde-der-kunsthalle.de/en/"
+     ],
+     "pick": null,
+     "best": null
+    },
+    {
+     "step": "english-kept-other",
      "pick": null
     },
     {

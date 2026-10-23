@@ -2062,6 +2062,7 @@ const SHELF_CATALOGUES=/\bcatalog(?:ue)?s\b|\bcatalogos\b|\bcatalogi\b|\bcatalog
 // A section of exhibitions' catalogues, first in her order: "Exposiciones: catálogos y guías" (Thyssen) above its
 // collection guides and catalogues; "Exhibition catalogues" (Beyeler).
 const SHELF_EXHIBITIONS=/\bexhibitions?\b|ausstellung|udstilling|utstallning|tentoonstelling|\bexposicion(?:es)?\b|\bexpositions?\b|\bmostr[ae]\b/;
+const SHELF_EXHIBITIONS_ONLY=/^(?:exhibitions|ausstellungen|udstillinger|utstallningar|tentoonstellingen|exposiciones|expositions|mostre)$/;
 const SHELF_BOOKS=/\bbooks\b|\bpublications\b|\bpublicaciones\b|\bpublicaties\b|\bpubblicazioni\b|\bpublikationen\b|\bpublikationer\b|\blivres\b|\blibros\b|\bboeken\b|\bbu(?:e)?cher\b|\blibri\b|\bbocker\b|\bboger\b|\bboker\b/;
 // A section that says it is NOT books ("All Products (not Catalogues)") is not one.
 const SHELF_NOT=/\b(?:not|non|sin|sans|ohne|niet|geen|zonder|except)\b\W+(?:\w+\W+)?(?:catalog|book|boek|libr|livre|public)/;
@@ -2079,7 +2080,9 @@ const NOT_A_SHELF=/\/(?:products?|p|detail|blogs?|news|journal|articles?|stories
 // …unless the step after "/products/" is itself a section's word (Albertina's "/en/products/publications/").
 const sectionUnderProducts=u=>{ const m=String(u).match(/\/products?\/([^/?#]+)\/?(?:[?#]|$)/i); const w=m?foldText(decodeURIComponent(m[1])).replace(/[-_]/g," "):""; return !!w&&(SHELF_CATALOGUES.test(w)||SHELF_BOOKS.test(w)); };
 function pathWords(u){ try{ return decodeURIComponent(new URL(u).pathname).replace(/[-_/.]/g," "); }catch{ return ""; } }
-function isFrontPage(u){ try{ return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/?)?$/i.test(new URL(u).pathname); }catch{ return true; } }
+// A shop address's language part: "/de/", "/en-gb/", a Shopify market's "/en-int/" (Louisiana).
+const LANG_PART="[a-z]{2}(?:-[a-z]{2,3})?";
+function isFrontPage(u){ try{ return new RegExp("^\\/(?:"+LANG_PART+"\\/?)?$","i").test(new URL(u).pathname); }catch{ return true; } }
 // Candidates, best first: a catalogues section, then the museum's
 // publications, then books; a sale section after all of them. Ties keep the
 // order they came in (the search's own). A books section mixed with other
@@ -2093,11 +2096,13 @@ function rankShelves(cands,ownName){
     if(!c||!c.url||(NOT_A_SHELF.test(c.url)&&!sectionUnderProducts(c.url))||isFrontPage(c.url))return;
     const t=foldText(c.words).replace(/\bgift ?shop\b|\bmuseum stores?\b/g," ");
     if(SHELF_NOT.test(t))return;
-    let kind=SHELF_CATALOGUES.test(t)?"catalogues":SHELF_PUBS.test(t)?"publications":SHELF_BOOKS.test(t)?"books":null;
+    // A section's own description (`about`) names what it holds; "No te quedes sin los catálogos" is no "not".
+    const ta=t+" "+foldText(c.about||"");
+    let kind=SHELF_CATALOGUES.test(ta)?"catalogues":SHELF_PUBS.test(ta)?"publications":SHELF_BOOKS.test(ta)?"books":null;
     if(!kind)return;
     if(kind==="books"&&SHELF_GOODS.test(t)){ mixed.push(c); return; }
     if(kind==="books"&&ownName&&ownName(c.label))kind="publications";
-    const sale=SHELF_SALE.test(t), target=kind==="catalogues"&&!sale&&(SHELF_EXHIBITIONS.test(t)||!!c.named);
+    const sale=SHELF_SALE.test(t), target=kind==="catalogues"&&!sale&&(SHELF_EXHIBITIONS.test(ta)||!!c.named);
     out.push({...c,kind,target,score:({catalogues:3,publications:2,books:1})[kind]+(target?0.5:0)-(sale?2.5:0),n});
   });
   out.sort((a,b)=>b.score-a.score||a.n-b.n);
@@ -2175,7 +2180,7 @@ function shopifyShelfIsBooks(text,target){
   return types.length>=2&&prices>=2&&(target?bookish>=2:bookish*2>types.length);
 }
 function shopifyProductsUrl(u){
-  try{ const x=new URL(u); return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?collections\/[^/]+\/?$/i.test(x.pathname)?x.origin+x.pathname.replace(/\/$/,"")+"/products.json?limit=8":""; }catch{ return ""; }
+  try{ const x=new URL(u); return new RegExp("^\\/(?:"+LANG_PART+"\\/)?collections\\/[^/]+\\/?$","i").test(x.pathname)?x.origin+x.pathname.replace(/\/$/,"")+"/products.json?limit=8":""; }catch{ return ""; }
 }
 // A Shopify shop's sections, read as text (a long list can come back cut short); empty
 // ones skipped; ranked on the TITLE her menu shows, never the handle.
@@ -2188,14 +2193,38 @@ function shopifySections(text,root){
     const id=(chunk.match(/^\s*(\d+)/)||[])[1]||"";
     if(!t||!h||n==="0")continue;
     let title=t; try{ title=JSON.parse('"'+t+'"'); }catch{}
-    out.push({url:root+"collections/"+h,words:title,id,handle:h});
+    // A section named only "Exhibitions" says in its own description what it holds (Thyssen's: "los catálogos y
+    // artículos exclusivos de nuestras exposiciones"). A show's own section is read by its title alone.
+    let about="";
+    if(SHELF_EXHIBITIONS_ONLY.test(foldText(title).trim())){ const d=(chunk.match(/"description"\s*:\s*"((?:[^"\\]|\\.)*)"/)||[])[1]||""; try{ about=JSON.parse('"'+d+'"').replace(/<[^>]*>/g," "); }catch{} }
+    out.push({url:root+"collections/"+h,words:title,about,id,handle:h});
   }
   return out;
 }
 // The shop's root, keeping a language path its own link chose ("/en/").
+function langOf(u){ try{ return ((new URL(u).pathname.match(new RegExp("^\\/("+LANG_PART+")(?:\\/|$)","i"))||[])[1]||"").toLowerCase(); }catch{ return ""; } }
 function shopRootOf(u){
-  try{ const x=new URL(u); const lang=(x.pathname.match(/^\/([a-z]{2}(?:-[a-z]{2})?)(?:\/|$)/i)||[])[1]; return x.origin+"/"+(lang?lang+"/":""); }catch{ return ""; }
+  try{ const x=new URL(u), lang=langOf(u); return x.origin+"/"+(lang?lang+"/":""); }catch{ return ""; }
 }
+// A page's language, for a venue in a country that does not speak English (her design: its shop's
+// English version is the one wanted): the address's language part, an "en." site, else its words —
+// English beats the others by half again ("In Stock" against "Auf Lager", Albertina). "" when too few.
+const EN_WORDS=/\b(?:the|and|of|your|our|with|from|this|are|you|stock|cart|basket|opening hours|shipping|delivery|privacy|books|catalogues?)\b/g;
+const NOT_EN_WORDS=/\b(?:und|der|das|mit|fur|oder|zur|auf|lager|warenkorb|og|til|med|af|kurv|ikke|le|les|du|des|pour|avec|panier|el|los|las|del|con|para|carrito|het|een|voor|winkelwagen|il|della|carrello|och|att|varukorg)\b/g;
+function pageLanguage(url,text){
+  const lang=langOf(url);
+  if(lang)return /^en\b/.test(lang)?"en":"other";
+  if(/^en\./i.test(hostOf(url)))return "en";
+  const t=foldText(stripMd(text)), en=(t.match(EN_WORDS)||[]).length, not=(t.match(NOT_EN_WORDS)||[]).length;
+  if(en+not<5)return "";
+  return en>not*1.5?"en":"other";
+}
+const isEnglishUrl=u=>/^en\b/.test(langOf(u))||/^en\./i.test(hostOf(u));
+// A language link's label: "English", "Englisch" (Albertina), "EN", in the languages met.
+const EN_LABEL=/^(?:en|eng|english|englisch|anglais|ingles|engels|engelsk|engelska|inglese|englanti)$/;
+// The shop's English addresses tried when no language link leads there: Louisiana's English shop is
+// "/en-int/", its "/en/" not found.
+const EN_PATHS=["en/","en-int/","en-gb/","en-us/"];
 // A search address only where the shop's platform says how it searches.
 function searchFor(text,home){
   const o=originOf(home);
@@ -2333,8 +2362,10 @@ function firstPageOf(u){
 // HER DESIGN: there is one right section, the shop's exhibition catalogues. A search result is taken only
 // if it is that section; otherwise the shop is walked for it. Only when the shop has none does the finder
 // settle for the best it saw — the museum's publications, then books — and the shop screen says which.
-async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId,trace){
+// `foreign`: the venue's country does not speak English — its shop's English version is looked for first.
+async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId,trace,foreign){
   const sf=shopFinderStart(pageShop,museumHost,venueName,turnedDown,venueId,trace);
+  sf.foreign=!!foreign;
   const ruled=shopFromRule(sf);
   if(ruled)return ruled;
   await searchForShop(sf);
@@ -2342,6 +2373,7 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId,tra
   await followShopElsewhere(sf);
   await shopifySectionList(sf);
   await walkShop(sf);
+  await englishVersion(sf);
   if(!sf.pick&&sf.best){ sf.pick=sf.best; sf.note("settled",{pick:sf.best.url,kind:sf.best.kind}); }
   return await shopResult(sf);
 }
@@ -2391,9 +2423,11 @@ async function tryShelves(sf,cands,how,inside){
   for(const c of ranked){
     const k=normalizeUrlKey(c.url);
     if(c.score<=above)break;
-    if(sf.no.has(k)||sf.failed.has(k))continue;
+    if(sf.no.has(k))continue;
     if(c.proof&&looksLikeBookShelf(c.proof))return{...c,how};
+    // Proved by books seen since, though its own page failed (Berlin's English section: its books on the front page).
     if(booksUnder(sf,c.url)>=2)return{...c,how};
+    if(sf.failed.has(k))continue;
     let t=sf.texts.get(k);
     if(t==null){
       if(sf.opens>=SHELF_OPENS)return null;
@@ -2436,24 +2470,28 @@ function shopFromRule(sf){
 }
 
 // Step 2. The search: one call, two queries — hers and the books section's (Detroit's "DIA
-// Publications" came back only with both); a venue's own (`shopQueries`) instead. Nothing shop-like
-// and no Shop link on the show page: one more search, for the shop itself (Kunsthaus Zürich, Petit
-// Palais: the first search returned only the museum's own pages).
+// Publications" came back only with both); a venue's own (`shopQueries`) instead. A venue in a country
+// that does not speak English asks for the shop's English version first (her design; Albertina's English
+// shop came first) and, only when that finds no shop, the plain search (Berlin's shop has no English
+// version, and asking for one pushed it out). Nothing shop-like and no Shop link on the show page: one
+// more search, for the shop itself (Kunsthaus Zürich, Petit Palais: the first search returned only the
+// museum's own pages).
 async function searchForShop(sf){
   const{own,venueName,pageShop}=sf;
-  const s=await searchWeb("The museum shop's exhibition catalogues or books section of "+(own.shopQueries?own.name:venueName)+".",own.shopQueries||[venueName+" shop exhibition catalogues",venueName+" shop books publications"]);
-  if(!s.ok)sf.died=s.detail;
-  sf.mine=(s.results||[]).filter(r=>r&&(sf.place(r.url)||sf.named(r)));
-  let again=false;
-  if(!sf.mine.length&&!pageShop&&!own.shopQueries){
-    again=true;
-    const s2=await searchWeb("The online shop of "+venueName+".",[venueName+" online shop",venueName+" museum shop books"]);
-    if(!s2.ok)sf.died=sf.died||s2.detail;
-    sf.mine=(s2.results||[]).filter(r=>r&&(sf.place(r.url)||sf.named(r)));
+  const ask=async(objective,queries)=>{ const s=await searchWeb(objective,queries); if(!s.ok)sf.died=sf.died||s.detail; sf.mine=(s.results||[]).filter(r=>r&&(sf.place(r.url)||sf.named(r))); return s; };
+  let english=false, again=false, s=null;
+  if(sf.foreign&&!own.shopQueries){
+    english=true;
+    s=await ask("The English-language version of the online museum shop of "+venueName+": its exhibition catalogues or books section.",[venueName+" English language shop exhibition catalogues",venueName+" English language shop books publications"]);
   }
+  if(!sf.mine.length)s=await ask("The museum shop's exhibition catalogues or books section of "+(own.shopQueries?own.name:venueName)+".",own.shopQueries||[venueName+" shop exhibition catalogues",venueName+" shop books publications"]);
+  if(!sf.mine.length&&!pageShop&&!own.shopQueries){ again=true; s=await ask("The online shop of "+venueName+".",[venueName+" online shop",venueName+" museum shop books"]); }
+  // Results in two languages: the English one is taken; a shop's pages in another language are dropped.
+  const enHosts=new Set(sf.mine.filter(r=>isEnglishUrl(r.url)).map(r=>hostOf(r.url)));
+  if(sf.foreign)sf.mine=sf.mine.filter(r=>!enHosts.has(hostOf(r.url))||!langOf(r.url)||isEnglishUrl(r.url));
   sf.seenText+="\n"+sf.mine.map(r=>r.url).join("\n");
   sf.root=pageShop?sf.rootFor(pageShop):sf.mine.length?sf.rootFor(sf.mine[0].url):"";
-  sf.note("search",{results:(s.results||[]).length,shopLike:sf.mine.map(r=>r.url),again,root:sf.root,died:sf.died||null});
+  sf.note("search",{results:(s.results||[]).length,shopLike:sf.mine.map(r=>r.url),english,again,root:sf.root,died:sf.died||null});
 }
 
 // Step 3. The search's shop-like results: the exhibition-catalogues section is taken; a lesser books
@@ -2466,7 +2504,7 @@ async function pickFromSearch(sf){
   // A named section is on the shop company's site: that site is its shop, whatever the page linked.
   if(r&&r.named)sf.root=shopRootOf(r.url);
   else if(r&&!sf.ownPage(r.url)){
-    const h=hostOf(r.url), en=sf.mine.map(m=>m.url).find(u=>hostOf(u)===h&&/^\/en(?:-[a-z]{2})?(?:\/|$)/i.test((()=>{ try{ return new URL(u).pathname; }catch{ return ""; } })()));
+    const h=hostOf(r.url), en=sf.mine.map(m=>m.url).find(u=>hostOf(u)===h&&isEnglishUrl(u));
     sf.root=shopRootOf(en||r.url);
   }
   sf.note("search-pick",{pick:sf.pick?sf.pick.url:null,best:sf.best?sf.best.url:null,root:sf.root||null});
@@ -2489,26 +2527,39 @@ async function followShopElsewhere(sf){
 const SHOPIFY_LIST_PAGES=4;
 async function shopifySectionList(sf){
   if(sf.pick||!sf.root||!/\/(?:collections|products)\/|\.myshopify\.com/i.test(sf.seenText+"\n"+sf.root+"\n"+sf.mine.map(r=>r.url).join("\n")))return;
-  const all=[];
-  for(let page=1;page<=SHOPIFY_LIST_PAGES;page++){
-    const f=await fetchPage(originOf(sf.root)+"collections.json?limit=250"+(page>1?"&page="+page:""),"The shop's sections: titles and handles.",null,{full:true});
-    if(!f.ok){ if(page===1)sf.died=f.detail; break; }
-    const t=pageTextOf(f.results);
-    all.push(...shopifySections(t,sf.root));
-    if((t.match(/"handle"\s*:/g)||[]).length<250)break;
-  }
-  // The exhibition-catalogues section the search found under a translated address: its number, from its own
-  // ".json", finds it in the list; its products are read under the list's name. The address kept is the one found.
-  for(const c of sf.translated){
-    if(sf.pick||!all.length)break;
-    const cj=await fetchPage(c.url.replace(/\/$/,"")+".json","The section's id and handle.",null,{full:true});
-    const id=cj.ok?(pageTextOf(cj.results).match(/"collection"\s*:\s*\{\s*"id"\s*:\s*(\d+)/)||[])[1]:null;
-    const same=id&&all.find(x=>x.id===id);
-    if(!same)continue;
-    const j=await fetchPage(originOf(sf.root)+"collections/"+same.handle+"/products.json?limit=8","The products in this section: titles, types and prices.",null,{full:true});
-    if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),true))sf.consider(c);
-  }
+  const listOf=async(base,first)=>{
+    const all=[];
+    for(let page=1;page<=SHOPIFY_LIST_PAGES;page++){
+      const f=await fetchPage(base+"collections.json?limit=250"+(page>1?"&page="+page:""),"The shop's sections: titles and handles.",null,{full:true});
+      if(!f.ok){ if(page===1&&first)sf.died=f.detail; break; }
+      const t=pageTextOf(f.results);
+      all.push(...shopifySections(t,sf.root));
+      if((t.match(/"handle"\s*:/g)||[]).length<250)break;
+    }
+    return all;
+  };
+  // In the shop's own language part: the English shop's list names its sections in English (Thyssen's "/en/").
+  const all=await listOf(shopRootOf(sf.root),true);
   if(all.length&&!sf.pick){ sf.opens=0; sf.consider(await tryShelves(sf,all,"the shop's list of sections")); }
+  // An exhibition-catalogues section under a translated address lists no products there (Thyssen's
+  // "/en/collections/exhibitions"): its number finds it in the shop's own-language list, and its products are
+  // read under that list's name. The section found by the search is numbered by its own ".json". The address
+  // kept is the translated one.
+  if(!sf.pick&&sf.translated.length){
+    const home=langOf(sf.root)?await listOf(originOf(sf.root),false):all;
+    for(const c of sf.translated){
+      if(sf.pick||!home.length)break;
+      let id=c.id;
+      if(!id){
+        const cj=await fetchPage(c.url.replace(/\/$/,"")+".json","The section's id and handle.",null,{full:true});
+        id=cj.ok?(pageTextOf(cj.results).match(/"collection"\s*:\s*\{\s*"id"\s*:\s*(\d+)/)||[])[1]:null;
+      }
+      const same=id&&home.find(x=>x.id===id);
+      if(!same)continue;
+      const j=await fetchPage(originOf(sf.root)+"collections/"+same.handle+"/products.json?limit=8","The products in this section: titles, types and prices.",null,{full:true});
+      if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),true))sf.consider(c);
+    }
+  }
   sf.note("shopify-sections",{pick:sf.pick?sf.pick.url:null,best:sf.best?sf.best.url:null});
 }
 
@@ -2532,7 +2583,7 @@ async function walkShop(sf){
   if(sf.pick||!sf.root)return;
   const host=hostOf(sf.root), links=[], pages=[];
   let page=sf.front||sf.root, t=await openToWalk(sf,page);
-  if(t!=null&&sf.front&&t.trim().length<SHELL_CHARS&&originOf(sf.root)!==sf.front){ page=originOf(sf.root); t=await openToWalk(sf,page); }
+  if(t!=null&&sf.front&&t.trim().length<SHELL_CHARS&&shopRootOf(sf.root)!==sf.front){ page=shopRootOf(sf.root); t=await openToWalk(sf,page); }
   while(t!=null){
     pages.push(page);
     const here=menuLinks(t,host);
@@ -2543,16 +2594,58 @@ async function walkShop(sf){
     const ranked=rankShelves(links.map(c=>({...c,url:firstPageOf(c.url)})),sf.ownName);
     const next=[...ranked,...ranked.mixed].find(c=>!sf.walked.has(normalizeUrlKey(c.url))&&!sf.no.has(normalizeUrlKey(c.url)));
     // No section link at all on the page linked as the shop (Berlin's "Museen & Sammlungen" page): the shop's own
-    // front page. A page that has sections is never left for the site's root (Yale's shop on Touchnet, AL-042a).
-    const home=originOf(sf.root);
+    // front page, in the language it was found in. A page that has sections is never left for the site's root
+    // (Yale's shop on Touchnet, AL-042a).
+    // Its front page came back without its menu (Albertina's English one: shows and products, no sections): another of the shop's pages the
+    // search found, which carries the same menu — never a section mixing books with other goods, which is
+    // only a place to look for a books section (DIA's "Books & Stationery").
+    const home=shopRootOf(sf.root);
     if(!next&&pages.length===1&&!ranked.length&&!ranked.mixed.length&&home&&!sf.walked.has(normalizeUrlKey(home))){ page=home; t=await openToWalk(sf,page); continue; }
+    const mixed=new Set(rankShelves(sf.mine.map(r=>({url:r.url,words:(r.title||"")+" "+pathWords(r.url)}))).mixed.map(c=>c.url));
+    const other=!next&&!ranked.length&&!ranked.mixed.length&&t.trim().length>=SHELL_CHARS&&sf.mine.map(r=>r.url).find(u=>hostOf(u)===host&&!isFrontPage(u)&&!mixed.has(u)&&!sf.walked.has(normalizeUrlKey(u)));
+    if(other){ page=other; t=await openToWalk(sf,page); continue; }
     if(!next)break;
     page=next.url; t=await openToWalk(sf,page);
   }
   sf.note("walk",{pages,pick:sf.pick?sf.pick.url:null,best:sf.best?sf.best.url:null});
 }
 
-// Step 7. The answer: a books section and the shop's search; a step that died (said as such, not as
+// Step 7. The shop's English version, for a venue in a country that does not speak English (her design), when
+// the shop found reads in another language: a language link on its pages, else its English addresses
+// (EN_PATHS, an "en." site), all in one call; the first that reads in English is walked as the shop was. The
+// shop found stands when there is none, or when its English version shows a lesser section (four opens can
+// miss what the other language found).
+async function englishVersion(sf){
+  const at=(sf.pick||sf.best||{}).url||sf.front||sf.root;
+  if(!sf.foreign||!at)return;
+  const host=hostOf(at), own=[...sf.texts].filter(([k])=>hostOf(k)===host).map(([,t])=>t).join("\n");
+  const said=pageLanguage(at,(sf.pick||sf.best||{}).proof||own);
+  if(said==="en"){ sf.note("english",{at,already:true}); return; }
+  const o=originOf(at), bare=host.replace(/^www\./,""), b=baseDomain(host);
+  const links=mdLinks(own).filter(l=>EN_LABEL.test(foldText(l.label).trim())&&baseDomain(hostOf(l.url))===b).map(l=>l.url);
+  const tries=[...new Set([...links,...EN_PATHS.map(p=>o+p),"https://en."+bare+"/"])].filter(u=>normalizeUrlKey(u)!==normalizeUrlKey(at)).slice(0,8);
+  const f=await fetchPage(tries,"The shop's front page and its menu, in English.",null,{full:true});
+  const hit=f.ok?tries.map(u=>({u,r:f.results.find(x=>x&&normalizeUrlKey(x.url)===normalizeUrlKey(u))})).find(({u,r})=>{
+    const t=r?pageTextOf([r]):"";
+    return t.trim().length>=SHELL_CHARS&&!/\b(?:page not found|404|not found)\b/i.test(t.slice(0,400))&&pageLanguage(u,t)==="en";
+  }):null;
+  sf.note("english",{at,said,tried:tries,found:hit?hit.u:null});
+  if(!hit)return;
+  const kept={pick:sf.pick,best:sf.best,root:sf.root,front:sf.front,pageShopHost:sf.pageShopHost,died:sf.died,walked:sf.walked,walkOpens:sf.walkOpens};
+  const text=pageTextOf([hit.r]);
+  Object.assign(sf,{pick:null,best:null,root:shopRootOf(hit.u),front:hit.u,walked:new Set(),walkOpens:0});
+  if(!sf.ownPage(hit.u))sf.pageShopHost=hostOf(hit.u);
+  sf.texts.set(normalizeUrlKey(hit.u),text); sf.seenText+="\n"+text;
+  await shopifySectionList(sf);
+  await walkShop(sf);
+  // The same section in English (Louisiana's "/en-int/collections/udstillingskataloger"), whatever its English label.
+  const was=kept.pick||kept.best, noLang=u=>{ try{ const x=new URL(u); return x.host+x.pathname.replace(new RegExp("^\\/"+LANG_PART+"(?=\\/)","i"),"").replace(/\/$/,""); }catch{ return ""; } };
+  const same=was&&sf.best&&noLang(sf.best.url)===noLang(was.url);
+  if(same){ sf.pick=sf.best=sf.pick&&sf.pick.score>=was.score?sf.pick:{...was,url:firstPageOf(sf.best.url)}; sf.note("english-same",{pick:sf.pick.url}); return; }
+  if(!sf.best||(kept.best&&sf.best.score<kept.best.score)){ Object.assign(sf,kept); sf.note("english-kept-other",{pick:(kept.pick||kept.best||{}).url||null}); }
+}
+
+// Step 8. The answer: a books section and the shop's search; a step that died (said as such, not as
 // "nothing found"); a shop with no books section, still searched as KHM's is; or no shop.
 async function shopResult(sf){
   const{pick,root,front,seenText,died}=sf;
@@ -6559,7 +6652,7 @@ export default function App(){
             const name=venueSearchName(vc,{...(had&&!namedByAddress(had)?had:{name:page.site}),...(named&&(!had||namedByAddress(had))?{name:named.name}:{}),...(named?{aka:named.aka,city:named.city,country:named.country}:{})});
             setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+name+"\u2019s shop"});
             const pageShop=away?"":shopLinkOnPage(oneText(res),host);
-            const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc);
+            const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc,null,(had&&had.english===false)||(ask.ok&&a.englishSpeaking===false));
             venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:named?named.name:page.site,host,english:had?had.english:undefined,
               shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,
               ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
@@ -6653,7 +6746,7 @@ export default function App(){
     const turnedDown=[...(v.turnedDown||[]),v.shopCatalogues].filter(Boolean);
     setShopLooking(id);
     let shop;
-    try{ shop=await discoverShop(v.pageShop||"",v.host,venueSearchName(v.id,v),turnedDown,v.id); }
+    try{ shop=await discoverShop(v.pageShop||"",v.host,venueSearchName(v.id,v),turnedDown,v.id,null,v.english===false); }
     catch(e){ shop={shop:"failed",why:"Couldn\u2019t look ("+String((e&&e.message)||e)+")."}; }
     setShopLooking(null);
     setOccVenues(prev=>{

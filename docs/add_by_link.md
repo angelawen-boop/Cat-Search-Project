@@ -124,8 +124,30 @@ whose own page comes back without its books** (Parallel gave Berlin's "Ausstellu
 counts when the shop shows two of its books elsewhere, priced, under its address (`booksUnder`, AL-072). **A page
 linked as the shop with no section links at all** (Berlin's "Museen & Sammlungen") gives way to the shop's own front
 page — never when the page has sections, so a shop on a shared site is never left for the site's root (Yale, AL-042a).
-**Known:** Parallel's copy of Albertina's English shop page lacks its menu, so the walk reaches the right section in
-German — her decision pending (CLAUDE.md §5.4, item 2).
+**The English version — her design (a foreign-language shop must not hide the English one, nor the English books
+on it).** For a venue in a country that does not speak English (Claude's `englishSpeaking`, kept on the venue):
+1. **Search for the English shop first:** "<name> English language shop exhibition catalogues" (and "…books
+   publications"). Results in two languages: the English one is taken. No separate searches stacked (her decision).
+2. **Landed on a foreign-language shop** (address language part, else its words): look for its English version — a
+   language link on its pages, else its English addresses (`/en/`, `/en-int/`, `/en-gb/`, `/en-us/`, `en.`), all in
+   one call; the first that reads in English is walked as the shop was. The same section in English (same address
+   without its language part, Louisiana) is taken; otherwise the English shop's result stands unless it is a lesser
+   section than the foreign one (four opens can miss).
+3. **The English search finds no shop:** the plain search (Berlin's German shop was pushed out by "English"), then
+   step 2. **No English version:** the foreign-language section stands.
+
+Not a language switcher alone: Louisiana has none (its English shop is `/en-int/`, its `/en/` not found), and
+Parallel keeps Albertina's "Englisch" without its link. Also built with it: a Shopify shop's section list is read in
+the shop's own language part (Thyssen's English list); a section named only "Exhibitions" is read with its own
+description (Thyssen's "los catálogos … de nuestras exposiciones"; a show's own section by its title alone); a
+translated section's products are read under the shop's own-language name; a front page read without its sections
+(Albertina's English one: shows and products only) gives way to another shop page the search found, never a mixed
+section; a section whose page failed is proved by books seen later. AL-073–073f.
+
+**Live, 23 Oct, all 18 right:** Albertina, Louisiana (`/en-int/`), Thyssen, KMSKA, Beyeler in English. **Berlin stays
+German though an English shop exists** (`/en/books-und-media/exhibition-catalogues/`): Parallel returns that page and
+the English front page without their books, so nothing proves it; the German section sells the English editions too
+(*Cassirer and the Breakthrough of Impressionism*).
 
 **The fault it fixes:** the old finder walked the shop only when the search found nothing usable, and accepted any
 section with books and prices — so Thyssen took "Publications" and Antwerp the whole Dutch "Boeken" when the search
