@@ -1067,9 +1067,9 @@ function runtime() {
     const first = calls.find(c => c.kind === 'sample');
     ok(first && /"Boston MFA"/.test(first.prompt) && /"Frankfurt St\u00e4del"/.test(first.prompt), 'AL-053a:  her names for venues are the style for the short name');
     const text = win.document.body.textContent;
-    ok(/Antwerp KMSKA/.test(text) && !/kmska\.be\s*\u00b7/.test(text), 'AL-053b:  its cards are headed "Antwerp KMSKA", never its address', text.slice(text.indexOf('KMSKA') - 60, text.indexOf('KMSKA') + 20));
+    ok(/Antwerp Fine Arts/.test(text) && !/Antwerp KMSKA/.test(text) && !/kmska\.be\s*\u00b7/.test(text), 'AL-053b:  its cards are headed by her name, "Antwerp Fine Arts", over Claude\'s "Antwerp KMSKA" — never its address', text.slice(text.indexOf('KMSKA') - 60, text.indexOf('KMSKA') + 20));
     const shopAsk = calls.filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries.join(' '));
-    ok(shopAsk.length >= 1 && /Royal Museum of Fine Arts KMSKA Koninklijk Museum voor Schone Kunsten Antwerpen Belgium shop/.test(shopAsk[0]), 'AL-053c:  its shop is searched under its full name, other names, city and country (her decision; proved live)', JSON.stringify(shopAsk));
+    ok(shopAsk.length >= 1 && /^Koninklijk Museum voor Schone Kunsten Antwerpen KMSKA Belgium shop/.test(shopAsk[0]), 'AL-053c:  its shop is searched under its full name (her entry\'s), other names, city and country (her decision; proved live)', JSON.stringify(shopAsk));
     const cancel = buttons(/^Cancel import$/)[0];
     if (cancel) await click(cancel);
     const sn = new Function('React', 'window', 'document', 'localStorage', code + '\n;return venueSearchName;')(React, win, win.document, win.localStorage);
@@ -1135,7 +1135,11 @@ function runtime() {
     ok(bourgeois.ok && bourgeois.start === '' && bourgeois.end === '' && bourgeois.noDates && bourgeois.dateLine === '' && /^Louise Bourgeois\. L’inconscio/.test(bourgeois.raw),
       'AL-064: no dates on the page (Borghese prints them in the poster): read, undated, the text handed to Claude (her decision)', JSON.stringify([bourgeois.ok, bourgeois.why, bourgeois.start, bourgeois.raw && bourgeois.raw.slice(0, 30)]));
     const months = rdd({ title: 'Soutine | Elsewhere', full_content: '# Soutine\n\nseptember 2027 - january 2028\n\n' + 'A show of Soutine’s paintings from collections across Europe and America. '.repeat(8) }, 'https://example.org/soutine', null);
-    ok(!months.ok && /Only the month and year/.test(months.why), 'AL-064a:  months without days are still not read as dates (no day is invented)', months.why);
+    ok(months.ok && months.start === '' && months.end === '' && months.shown === 'september 2027',
+      'AL-064a:  months without days: undated, what the page shows kept for the sweep\'s note — no day is invented (her decision: the sweep\'s rules)', JSON.stringify([months.why, months.shown]));
+    const ct = fn('cardTitle');
+    ok(ct('TIZIANO. DIALOGHI DI NATURA E DI AMORE', 'borghese') === 'Tiziano — Dialoghi di Natura e di Amore' && ct('TITIAN. DIALOGUES OF NATURE AND LOVE', 'borghese') === 'Titian — Dialogues of Nature and Love',
+      'AL-068: a Borghese title by link reads as the sweep writes it: the em dash, ordinary capitals, the Italian "e" small (her decisions)', ct('TIZIANO. DIALOGHI DI NATURA E DI AMORE', 'borghese'));
     // ── AL-065: two dotted dates either side of a bar are a range (the Borghese's archive site) ─
     const corr = rdd({ title: 'Correggio and Antiquity-ENG – Approfondimenti Mostre',
       full_content: '# Correggio and Antiquity\n\n22\\.05.2008 | 14.08.2008\n\n* Exhibition\n* Artworks\n\n## Presentation\n\n' + 'A master of the Emilian Renaissance, Correggio is universally recognised by critics as one of the great protagonists of painting. '.repeat(3) },
@@ -1144,7 +1148,7 @@ function runtime() {
       'AL-065: "22\\.05.2008 | 14.08.2008" read as 22 May to 14 August 2008 (Correggio)', JSON.stringify([corr.base, corr.start, corr.end, corr.why]));
     // ── AL-067: Parallel's 202 is Parallel's fault, not the museum's ─
     const why = fn('pageUnreadWhy');
-    ok(why({ error_type: 'network_error', http_status_code: 202 }) === 'The page contents cannot be seen \u2014 Parallel fault.'
+    ok(why({ error_type: 'network_error', http_status_code: 202 }) === 'The page contents cannot be seen \u2014 Parallel fault. Import the full saved page.'
       && why({ error_type: 'http_error', http_status_code: 403 }) === 'The museum refused the page (403).' && why(null) === 'The page came back empty.',
       'AL-067: a page Parallel answers 202 for says "contents cannot be seen — Parallel fault" (the Borghese\'s archive site serves it to anyone); a 403 is still the museum\'s');
     // ── AL-066: her renames of Claude's card names are Claude's examples ─
@@ -1152,10 +1156,10 @@ function runtime() {
       const box = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {LINK_VENUES,linkPrompt};')(React, win, win.document, win.localStorage);
       const pg = { base: 'Folly Beyond Words', between: [], raw: 'A show about Bruegel and proverbs.', dateLine: '' };
       const before = box.linkPrompt(pg, true, 'https://kmska.be/en/folly');
-      box.LINK_VENUES['occ-kmska-be'] = { name: 'Koninklijk Museum voor Schone Kunsten Antwerpen', card: 'Antwerp Fine Arts', notCard: 'KMSKA Antwerp' };
-      const after = box.linkPrompt(pg, true, 'https://kmska.be/en/folly');
-      ok(!/renamed/.test(before) && after.includes('for "Koninklijk Museum voor Schone Kunsten Antwerpen": "Antwerp Fine Arts", not "KMSKA Antwerp"') && after.includes('"Antwerp Fine Arts"'),
-        'AL-066: a venue she renamed tells Claude her name and the one it gave; none renamed, the question is unchanged', after.slice(after.indexOf('venueShort'), after.indexOf('venueShort') + 600));
+      ok(before.includes('for "Koninklijk Museum voor Schone Kunsten Antwerpen": "Antwerp Fine Arts", not "KMSKA Antwerp"') && before.includes('"Antwerp Fine Arts"'),
+        'AL-066: a venue she renamed (Antwerp) tells Claude her name and the one it gave', before.slice(before.indexOf('venueShort'), before.indexOf('venueShort') + 600));
+      for (const v of Object.values(box.LINK_VENUES)) delete v.notCard;
+      ok(!/renamed/.test(box.linkPrompt(pg, true, 'https://kmska.be/en/folly')), 'AL-066a:  none renamed, the question says nothing of renames');
     }
     // ── AL-060: the passage's shared rules, on lines copied from live replies ─
     const ps = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {readShowPage,isFurniture,withoutBoilerplate};')(React, win, win.document, win.localStorage);

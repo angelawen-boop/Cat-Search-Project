@@ -170,7 +170,10 @@ houses (`search?search=`); Yale, Mauritshuis, Thyssen, NGA, NGV and Mia still sh
 
 ## The general reader — shared rules, venue rules only where needed
 
-Built as the scraper is: one shared reader, a venue entry only for what differs (her decision). Rebuilt on
+Built as the scraper is: one shared reader, a venue entry only for what differs (her decision).
+**Where the sweep has already met a case and she has decided how it is handled, Links and Pages follow the
+sweep's rule — the same code where it can be shared (`dates.js`), never a rule of their own** (her decision:
+no reinventing, no inconsistencies). Before writing a reader rule, look for the sweep's. Rebuilt on
 101 live pages: the 76 proof pages at her venues plus 25 pages from museums the app had never seen — 13 of
 those 25 read clean before, 25 after, with no proof page worse. Code: `readShowPage`, `splitPageTitle`,
 `cardTitle`, `DATES.findDateRange`. Tests: DS-005–006, AL-054–058, AL-064–065.
@@ -189,17 +192,21 @@ those 25 read clean before, 25 after, with no proof page worse. Code: `readShowP
 - **R2a Generic label** — "Exhibition", "Mostra", "Ausstellung"… before the name leaves it (NGA, San Marco,
   Van Gogh Museum; AL-054).
 - **R2b Capitals** — a title typed wholly in capitals is recased, unless one short word (Scuderie, Albertina,
-  Borghese; AL-058). `cardTitle`, the same for the app and the proof check.
+  Borghese; AL-058). `cardTitle`, the same for the app and the proof check. A swept venue that types its titles
+  in capitals takes the sweep's own rule (`DATES.sweptVenueTitle`, `SWEPT_CAPS_TITLES` in `dates.js`, one copy):
+  the Borghese's em dash between name and subtitle (AL-068). The Italian "e" stays small, as "di" does.
 - **R12 Date forms** — dotted dates with the year on the closing side only or two-digit years, a dotted
   closing date (DS-005); a slashed range on the date line when the numbers prove its order (Prado, DS-006);
   two full dotted dates either side of a bar, "22.05.2008 | 14.08.2008" (the Borghese's archive site, AL-065).
 - **R14 Under a top heading, dates stop at the next top heading** — its dates are its own part of the page (the
   Borghese's archive: "# Insights | 1998 / 2026", the site, over "# Correggio and Antiquity"; AL-065). A lower
   heading never stops them (San Marco's "### Date di apertura" under its "###" title).
-- **R15 No dates anywhere** — the page is read, undated, with the sweep's own note "No closing date found
-  anywhere on the venue's pages." (her decision: as the sweep keeps such rows; `DATES.NO_DATES_NOTE`, one copy).
-  The Borghese prints most past shows' dates only in the poster (Louise Bourgeois). Months without days still
-  fail: no day is invented (AL-064, AP-006b).
+- **R15 No usable dates** — as the sweep: the page is read and comes in undated, a day never invented. Months
+  only, a season or no year: the sweep's note quoting what the page shows, 'The venue's page shows only
+  "september 2027" for this exhibition's dates — no day is published, only the month and year.'
+  (`DATES.shownOnlyNote`); nothing at all: "No closing date found anywhere on the venue's pages."
+  (`DATES.NO_DATES_NOTE`). One copy of each, the sweep's (`dates.js`). The Borghese prints most past shows'
+  dates only in the poster (Louise Bourgeois). AL-064, AP-002, AP-006b–c.
 - **R13 Dates around the heading** — "From …" over "Until …" read together; a paragraph's one-sided date
   waits six lines for a full range (Van Gogh Museum, AL-054); with none under any title line, the two lines
   above the heading (Kunsthaus, Boston, Pinakothek der Moderne; AL-055).
@@ -398,10 +405,9 @@ dropped) and reads it with `readShowPage`, then the same intake as a link. No Pa
   "- Palazzo Reale Milano", "- Palazzo Reale, Milan" or "- Royal Palace of Milan" (`titleHeading`,
   `titleDrop`); dates and text stop at the "Upcoming Exhibitions" box (`datesUntil`, `until` — Soutine took
   the box's first dates); its English pages' "as of" reads as "to" (`asOfTo`; Antonello da Messina).
-- **Months only** ("september 2027 - january 2028", Soutine): at this venue only (`monthsOnly`), the first
-  day of the opening month to the last of the closing one (her decision: "Jan to Mar" means start of Jan to
-  end of Mar), noted on the approval card only (`findMonthRange`, `dates.js`). Anywhere else a day is never
-  invented: the page stays in the list, saying "Only the month and year are published".
+- **Months only** ("september 2027 - january 2028", Soutine): undated with the sweep's note, as anywhere (R15). The
+  old rule here — first day of the opening month to the last of the closing one — is gone (her decision: it put
+  dates on cards the venue never gave; the sweep never does).
 - **Capitals** recased at this venue (`capsTitles`, her decision): CASORATI → Casorati; a title mixing
   capitals and ordinary letters in one part (I am LEONOR FINI) stays as typed.
 - **Proof:** her saved pages, kept in `docs/link_pages/saved/` cut to the page itself (her decision: the
@@ -430,7 +436,9 @@ A last resort (her decision): a show so old its venue's page is gone, read off a
   this route, nothing written in (her decision: test Claude first, hard code only if it fails): on her Correggio
   page Claude named the Galleria Borghese and the site as not its own, three reads of three. Parallel answers 202
   for most of its pages though the site serves them to anyone — "The page contents cannot be seen — Parallel
-  fault." (`pageUnreadWhy`, AL-067); those come in by Pages.
+  fault. Import the full saved page." (`pageUnreadWhy`, AL-067); those come in by Pages. Her way of working: the
+  Borghese's own page first (title and text, but undated); the archive page by Pages only when the own page
+  lacks what she needs.
 
 ## What links are for, and how far the reader reaches
 

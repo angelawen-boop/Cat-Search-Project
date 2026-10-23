@@ -458,7 +458,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 50 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 50.1 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -631,11 +631,15 @@ and were fixed in code, proven live).
      case other museums will have? Yes → a shared rule, kept only if no proof page gets worse; no → an option on that
      venue's one entry; then the checks it must pass. Last, after 1 and 2.
   Then her links after publishing confirm with her own Claude.
-- **OPEN — fixes from her 50 links (Antwerp, Stuttgart, Borghese), on `main`, not published; her links after publishing
-  confirm.** Both screens show the card name; a shop section found on page 2 is kept as page 1; an English title in
-  capitals recased; a page with no dates comes in undated with the sweep's note; "22.05.2008 | 14.08.2008" read; a
-  202 says "contents cannot be seen — Parallel fault"; the Borghese's archive site files under the Borghese through
-  Claude, nothing written in. **Renaming a venue Claude named is a session's job** (her decision: no editing in the
+- **Links and Pages follow the sweep's rules wherever the sweep has met the case and she has decided it** (her
+  decision): the same code where it can be shared (`dates.js`), never a rule of their own. `docs/add_by_link.md`,
+  "The general reader".
+- **OPEN — fixes from her 50 links (Antwerp, Stuttgart, Borghese), published at 50.1; her links confirm.** Both screens
+  show the card name; Antwerp named "Antwerp Fine Arts" (Claude's "KMSKA Antwerp" kept as its example); a shop
+  section found on page 2 kept as page 1; an English title in capitals recased; no usable dates (none, months only,
+  a season) → undated with the sweep's note, the Palazzo Reale months-to-days rule removed; "22.05.2008 |
+  14.08.2008" read; a 202 says "…Parallel fault. Import the full saved page."; Borghese titles as the sweep writes
+  them (em dash, small "e"); the Borghese's archive site files under the Borghese through Claude, nothing written in. **Renaming a venue Claude named is a session's job** (her decision: no editing in the
   app) — the steps, so each rename becomes Claude's example: `docs/add_by_link.md`, "The design", "Renaming a link venue".
 - **Published at 47.3 — Sammlung Schack (third Munich venue, no shop) and Dresden (chip "Dresden", cards
   "Dresden Gemäldegalerie"; she answers No shop once on its shop screen) by link; Munich titles typed in capitals
@@ -671,8 +675,8 @@ and were fixed in code, proven live).
   lookup; Mauritshuis and Yale show no priced book on their shelf, so stay shelf-only.
 - **Published at 48 — Pages: a show from a page she saved, for a site that refuses Parallel** (her design;
   Import → CSV · Links · Pages, behaving as Links). Proved on her two Palazzo Reale Milano pages (council
-  site); her other six pages there confirm. `docs/add_by_link.md`, "Saved pages". 48.1: months-only dates
-  there read first-to-last day; capitals recased there and at San Marco; San Marco titles its headline's first
+  site); her other six pages there confirm. `docs/add_by_link.md`, "Saved pages". 48.1 (its months-only
+  first-to-last-day rule since removed: the sweep's rule instead); capitals recased there and at San Marco; San Marco titles its headline's first
   sentence (her decisions). 48.2: its "Royal Palace of Milan" pages and their "as of" dates.
 - **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the
   scraper (her decision); a rule both use (the date reader) stays in `dates.js`. Live

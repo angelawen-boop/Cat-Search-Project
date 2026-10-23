@@ -119,13 +119,10 @@ const runtime = () => ({
       'AP-001c:  the text handed to Claude starts at the show, not the site\'s menu, and stops before the box of other shows', r.raw && r.raw.slice(0, 80));
     const s = reply(SOUTINE, parse);
     const sr = read(s.res, s.res.url, readVenue(s.res.url));
-    ok(s.ok && sr.ok && sr.start === '2027-09-01' && sr.end === '2028-01-31' && sr.monthsOnly === 'september 2027 - january 2028',
-      'AP-002: Soutine: only months printed ("september 2027 - january 2028") — 1 Sep 2027 to 31 Jan 2028 (her decision), never another show\'s dates', JSON.stringify([sr.start, sr.end, sr.monthsOnly, sr.why]));
-    const other = read({ url: 'https://example.org/x', title: 'X', full_content: '# X\n\nseptember 2027 - january 2028\n\n' + 'Text about the show. '.repeat(20) }, 'https://example.org/x', null);
-    ok(!other.ok && /Only the month and year are published/.test(other.why), 'AP-002a:  anywhere else months only are not read as dates, and said so', other.why);
-    const md = fn('DATES').findMonthRange;
-    ok(md('March – June 2027').end === '2027-06-30' && md('november 2026 - february 2027').end === '2027-02-28' && md('September - January 2027').start === '2026-09-01' && md('from 17 Oct 2026 to 01 Nov 2026') === null,
-      'AP-002b:  months to days: the last day of the closing month (Feb 28), a year across new year, a dated range left alone');
+    ok(s.ok && sr.ok && sr.start === '' && sr.end === '' && sr.noDates && sr.shown === 'september 2027' && /no day is published/.test(sr.shownWhy),
+      'AP-002: Soutine: only months printed ("september 2027 - january 2028") — undated, what the page shows kept for the sweep\'s note (her decision: the sweep\'s rules, never another show\'s dates)', JSON.stringify([sr.start, sr.end, sr.shown, sr.why]));
+    const other = read({ url: 'https://example.org/x', title: 'X', full_content: '# X\n\nSummer 2027\n\n' + 'Text about the show. '.repeat(20) }, 'https://example.org/x', null);
+    ok(other.ok && other.start === '' && other.shown === 'Summer 2027' && /season/.test(other.shownWhy), 'AP-002a:  a season, likewise, at any venue', JSON.stringify([other.shown, other.why]));
     const a = reply(ANTONELLO, parse);
     const ar = read(a.res, a.res.url, readVenue(a.res.url));
     ok(ar.ok && ar.base === 'Antonello da Messina' && ar.start === '2019-02-21' && ar.end === '2019-06-06',
@@ -191,8 +188,8 @@ const runtime = () => ({
   await click(buttons(/^Read$/).pop());
   const cardTitle = t => [...win.document.querySelectorAll('div')].some(d => d.textContent === t);
   ok(cardTitle('Titian and the Image of Women in 16th-Century Venice') && cardTitle('Chaïm Soutine'), 'AP-006: Read: Titian and Soutine come to cards in the review');
-  ok(/Only the months are published \(“september 2027 - january 2028”\): dates set to the first and last day\./.test(win.document.body.textContent),
-    'AP-006c:  Soutine\'s approval card says only the months are published (her decision: the approval card only)');
+  ok(/The venue's page shows only "september 2027" for this exhibition's dates — no day is published, only the month and year\./.test(win.document.body.textContent),
+    'AP-006c:  Soutine\'s approval card carries the sweep\'s own note, the dates blank (her decision: the sweep\'s rules)');
   ok(!fetched.length, 'AP-006a:  nothing fetched — no Parallel, no network', fetched.length);
   ok(cardTitle('Undated') && !/Titian|Soutine|Undated/.test(listed()) && /No closing date found anywhere on the venue's pages\./.test(win.document.body.textContent)
      && !/No dates found under the show/.test(win.document.body.textContent),

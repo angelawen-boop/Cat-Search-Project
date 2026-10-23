@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "50";
-const APP_VERSION_DATE = "21 Oct 2026";
+const APP_VERSION = "50.1";
+const APP_VERSION_DATE = "23 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
 // Sort by Venue and refresh headings all follow it.
@@ -682,7 +682,7 @@ function titleCase(str) {
  * NOW") comes out ordinary.
  */
 const SMALL_WORDS = new Set(['a', 'an', 'the', 'and', 'or', 'nor', 'but', 'of', 'in', 'on', 'at', 'to', 'for', 'by', 'with', 'from', 'as', 'into', 'over', 'upon', 'via', 'vs', 'x', 'von',
-  'van', 'da', 'de', 'di', 'del', 'della', 'du']);
+  'van', 'da', 'de', 'di', 'del', 'della', 'du', 'e']);
 const ROMAN = /^(?=[IVXLC]+$)C{0,3}(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
 function titleFromCaps(title) {
   const t = String(title || '');
@@ -730,25 +730,33 @@ function capsTitleParts(title) {
   return String(title).split(/(\s*[:–—]\s*)/).map((seg, i) => i % 2 ? seg : titleFromCaps(seg)).join('');
 }
 
-// A run printed as months only ("september 2027 - january 2028", "March – June 2027"): the
-// first day of the opening month to the last day of the closing month. Used only where a
-// venue asks for it (Add by link's monthsOnly; Palazzo Reale Milano, Soutine) — a day is
-// never invented anywhere else. → { start, end, raw } or null.
-function findMonthRange(text) {
-  const s = String(text || '');
-  const m = s.match(new RegExp(`(${MONTH_PATTERN})\\s*(\\d{4})?\\s*(?:-|–|—|to|al|a)\\s*(?:mid-?|metà\\s+)?(${MONTH_PATTERN})\\s*(\\d{4})`, 'i'));
-  if (!m) return null;
-  const m1 = monthNum(m[1]), m2 = monthNum(m[3]), y2 = +m[4];
-  const y1 = m[2] ? +m[2] : (m1 > m2 ? y2 - 1 : y2);
-  if (!m1 || !m2 || !plausibleYear(y1) || !plausibleYear(y2) || y1 * 12 + m1 > y2 * 12 + m2) return null;
-  const last = new Date(Date.UTC(y2, m2, 0)).getUTCDate();
-  return { start: ymd(y1, m1, 1), end: ymd(y2, m2, last), raw: m[0].trim() };
+// The swept venues that type their titles in capitals (her decisions; docs/venues.md): code writes
+// ordinary capitals, and at the Borghese the full stop between name and subtitle becomes an em dash
+// ("Louise Bourgeois — Unconscious Memories"). One copy: the sweep's recipes take it (`capsTitleRule`)
+// and Add by link files the same title for the same venue.
+const SWEPT_CAPS_TITLES = { borghese: { stopToDash: true }, ashmolean: {} };
+function capsTitleRule(code) {
+  const r = SWEPT_CAPS_TITLES[code];
+  return r ? { capsTitles: true, ...(r.stopToDash ? { stopToDash: true } : {}) } : {};
+}
+// A swept venue's title as the sweep writes it: the em dash first where the venue takes one, then
+// ordinary capitals for a title typed wholly in them. Other venues' titles are returned as they are.
+function sweptVenueTitle(code, title) {
+  const r = SWEPT_CAPS_TITLES[code];
+  if (!r || !title) return title;
+  return titleFromCaps(r.stopToDash ? String(title).replace(/\.\s+(?=\S)/g, ' — ') : title);
 }
 
 // The note on a row with no dates anywhere: the sweep writes it and Add by link copies it word for
 // word (her decision).
 const NO_DATES_NOTE = "No closing date found anywhere on the venue's pages.";
-return { findDateRange, findDateRangeInProse, capsTitleParts, findMonthRange, NO_DATES_NOTE };
+// The note on a row whose page prints a date it cannot be read as one (months only, a season, no year):
+// what the page shows, quoted, and why — the dates left blank, a day never invented. One copy, the sweep's
+// and Add by link's.
+function shownOnlyNote(shown, why) {
+  return `The venue's page shows only "${shown}" for this exhibition's dates — ${why || 'no year is published anywhere'}.`;
+}
+return { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, shownOnlyNote, sweptVenueTitle };
 })();
 const SUMMARY_RULES="- Maximum 10 words. The examples average about six.\n- End with a full stop. Avoid colons — the accepted summaries almost never use one.\n- Name the artist or artists the exhibition is built around.\n\nNAME THEM THE WAY A GALLERY-GOER WOULD. Surname alone, unless the surname alone\nwould be ambiguous. Write \"Zurbarán\", not \"Francisco de Zurbarán\". \"Shonibare\",\nnot \"Yinka Shonibare\". \"Velasco\", not \"Mexican artist José María Velasco\". Drop\n\"painter\", \"artist\" and similar labels in front of a name — the reader already\nknows. Full names, honorifics and formal titles read stiff and waste words that\ncould carry meaning instead.\n\nALWAYS WRITE IN ENGLISH, whatever language the raw text is in. Several venues\npublish only in Italian and one only in French; she reads the summaries in\nEnglish. Translating a phrase does not break the traceability rule below — a\ntranslated phrase is still traceable to the text it came from. Keep the\nexhibition's own title in its original language if that is how it is written;\ntranslate the description around it.\n\nTHE RULE THAT MATTERS MOST: every word of your summary must be traceable to a\nphrase in that row's own raw text. If you cannot point to where something came\nfrom, leave it out. In particular:\n\n- Never add an artist, place, medium or date that you happen to know about but the\n  text does not mention.\n- Use a number only if the text states that number. Do not count a list of names\n  and report the total — the page may state a different figure, and the page is\n  right, not your count.\n\nBeing vague is a much smaller failure than being confidently wrong. If the text\nwill only support something general, write something general.\n\nIf the raw text is not a description of an exhibition — a bare link, a curator's\nbiography, ticketing or opening-hours copy, cookie or consent boilerplate, a \"page\nnot found\" message, or empty — answer null for that row. Do not invent one.";
 const EN_PREFIX = 'In English: ';
@@ -971,6 +979,8 @@ const LINK_VENUES={
   "occ-archive-worcesterart-org":{short:"Worcester"},
   // NGV writes two-digit years ("4 Sep 26 – 31 Jan 27").
   "occ-ngv-vic-gov-au":{card:"National Gallery Victoria",linkRead:{shortYear:true}},
+  // Her name, not Claude's "KMSKA Antwerp" (notCard: Claude learns her style from it).
+  "occ-kmska-be":{short:"Antwerp Fine Arts",notCard:"KMSKA Antwerp",name:"Koninklijk Museum voor Schone Kunsten Antwerpen"},
   // The Tuscan state museums' site names itself "Direzione regionale Musei nazionali Toscana";
   // its cards show "San Marco" and the lookup searches as "Museo di San Marco" (her decision).
   // Its pages are press releases: the title is the headline's first sentence, without "Mostra"
@@ -982,7 +992,7 @@ const LINK_VENUES={
   // site refuses Parallel (docs/add_by_link.md, "Saved pages").
   "occ-palazzorealemilano-it":{short:"Palazzo Reale Milano",name:"Palazzo Reale Milano",
     sites:[{host:"www2.comune.milano.it",path:/^\/(?:en|it)\/web\/palazzo-reale-milano\//}],
-    linkRead:{titleHeading:PRM_TAIL,titleDrop:PRM_TAIL,nameInLines:true,until:PRM_BOX,datesUntil:PRM_BOX,monthsOnly:true,capsTitles:true,asOfTo:true}},
+    linkRead:{titleHeading:PRM_TAIL,titleDrop:PRM_TAIL,nameInLines:true,until:PRM_BOX,datesUntil:PRM_BOX,capsTitles:true,asOfTo:true}},
 };
 const linkEntry=id=>Object.prototype.hasOwnProperty.call(LINK_VENUES,id)?LINK_VENUES[id]:null;
 const ownChip=id=>!!(linkEntry(id)||{}).ownChip;
@@ -1213,6 +1223,9 @@ const OTHER_MATTER=/^(?:related|you (?:may|might) also|(?:see )?(?:more|other|fu
 // title typed wholly in capitals is recased (Scuderie "PONTORMO", Albertina "PICASSO – BACON"),
 // unless it is one short word (an artist's acronym, "KAWS").
 function cardTitle(t,vc){
+  // A swept venue's title as the sweep writes it (Borghese's em dash; her decision: the sweep's rules).
+  const swept=DATES.sweptVenueTitle(vc,t);
+  if(swept!==t)return swept;
   if((linkOptions(vc)||{}).capsTitles)return DATES.capsTitleParts(t);
   const s=String(t||"");
   if(/\p{Ll}/u.test(s)||!/\p{Lu}/u.test(s))return s;
@@ -1228,16 +1241,18 @@ function joinTitle(name,sub,dashAfterColon){
 // Why a link came back with no page. Parallel answering 202 ("accepted", no page sent) for a page the
 // site serves to anyone (the Borghese's archive site) is Parallel's fault, said as the shop's line says it.
 function pageUnreadWhy(e){
-  if(e&&e.http_status_code===202)return "The page contents cannot be seen \u2014 Parallel fault.";
+  if(e&&e.http_status_code===202)return "The page contents cannot be seen \u2014 Parallel fault. Import the full saved page.";
   return e?"The museum refused the page ("+String(e.http_status_code||e.error_type||"no reason given")+").":"The page came back empty.";
 }
 
-// ── THE SHOW PAGE READER ── One engine in steps, as the scraper's: each step reads and writes `pg`,
+// ── THE SHOW PAGE READER ── Where the sweep has met a case and she has decided it, this reader follows the
+// sweep's rule, shared code where it can be (dates.js) — never a rule of its own (her decision).
+// One engine in steps, as the scraper's: each step reads and writes `pg`,
 // the page being read, and a venue's own options (`pg.lr`, its linkRead) sit in the step they change.
 // Rules and the case behind each: docs/add_by_link.md, "The general reader". `rules`, when given,
 // collects the name of every rule that changed this page's result: the proof list keeps a page only
 // for a rule no other page at its venue shows (docs/testing.md). The app passes none.
-// One page → {ok, base, between, under, start, end, raw, site, link, monthsOnly, noDates, dateLine} or {ok:false, why}.
+// One page → {ok, base, between, under, start, end, raw, site, link, noDates, shown, shownWhy, dateLine} or {ok:false, why}.
 function readShowPage(res,url,vc,rules){
   const pg=pageToRead(res,url,vc,rules);
   if(pg.fail)return pg.fail;
@@ -1334,7 +1349,7 @@ function titleCandidates(pg){
   pg.cands=cands; pg.candRule=candRule;
 }
 
-// Step 5. The dates: under a title line, else just above it, else months only (a venue's choice), else none.
+// Step 5. The dates: under a title line, else just above it, else none — what the page shows kept for the note.
 // Sets the title line `h`, the date line `d`…`dEnd` and the range; returns a failure, or null.
 function findDates(pg){
   const{lr,lines,rule,rangeIn,dateText,cands,candRule}=pg;
@@ -1393,21 +1408,15 @@ function findDates(pg){
   if(!found)for(const i of cands){ found=datesAboveFor(i,2,"dates:above-heading"); if(found){ h=i; break; } }
   if(found)rule("title:"+candRule[cands.indexOf(h)]+(h===cands[0]?"":"-not-first"));
   if(!found){
-    // Only months printed (Soutine: "september 2027 - january 2028"). A venue with
-    // linkRead.monthsOnly takes the first day of the one to the last of the other (her
-    // decision), noted on the approval card; anywhere else no day is invented, said so.
     const h0=cands[0], near=[];
     for(let k=h0+1;k<lines.length&&near.length<LINK_DATE_LINES;k++){ const l=stripMd(lines[k]); if(!l)continue; if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim()))break; near.push([k,l]); }
-    if(lr&&lr.monthsOnly){
-      for(const [k,l] of near){ const r=DATES.findMonthRange(l); if(r){ h=h0; found={d:k,range:{start:r.start,end:r.end},monthsOnly:l.trim(),via:"dates:monthsOnly"}; rule("title:"+candRule[0]); break; } }
-    }
-    if(!found){
-      const mo=near.map(([,l])=>DATES.findDateRange(l,{looseSingles:true})).find(r=>r.shownText);
-      if(mo){ rule("fail:months-only"); return{ok:false,why:"Only the month and year are published (“"+near.find(([,l])=>l.includes(mo.shownText))[1]+"”), no days."}; }
-      // No dates at all (the Borghese prints most past shows' dates only in the poster): kept
-      // undated and noted, as the sweep keeps them (her decision).
-      h=h0; found={d:h0,range:{start:"",end:""},noDates:true,via:"dates:none"}; rule("title:"+candRule[0]);
-    }
+    // A date the page prints but that is not one (months only, a season, no year), else none at all:
+    // kept undated with the sweep's own note, the dates left blank (her decision: the sweep's rules, a day
+    // never invented). The Borghese prints most past shows' dates only in the poster.
+    const mo=near.map(([k,l])=>({k,r:DATES.findDateRange(dateText(l),{looseSingles:true})})).find(x=>x.r.shownText);
+    h=h0; rule("title:"+candRule[0]);
+    found=mo?{d:mo.k,range:{start:"",end:""},noDates:true,shown:mo.r.shownText,shownWhy:mo.r.shownWhy,via:"dates:shown-only"}
+      :{d:h0,range:{start:"",end:""},noDates:true,via:"dates:none"};
   }
   const d=found.d,dEnd=found.dEnd||found.d;
   let range=found.range;
@@ -1603,7 +1612,7 @@ function pageResult(pg){
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,monthsOnly:found.monthsOnly||"",noDates:!!found.noDates,dateLine:found.noDates?"":pg.dateLine};
+  return{ok:true,base:pg.base,between:pg.between,under,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,noDates:!!found.noDates,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -6390,7 +6399,7 @@ export default function App(){
         tape.row={title,museumId:vc,exUrl:url};
         got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
           summary:a.summary?composeSummary(cardTitle(a.english,vc),a.summary):"",url:page.link,
-          notes:[page.noDates?DATES.NO_DATES_NOTE:"",page.monthsOnly?"Only the months are published (\u201c"+page.monthsOnly+"\u201d): dates set to the first and last day.":"",
+          notes:[page.noDates?(page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):DATES.NO_DATES_NOTE):"",
             ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")].filter(Boolean).join(" ")});
       }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
       finally{

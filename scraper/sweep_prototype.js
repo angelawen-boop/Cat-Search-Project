@@ -751,7 +751,7 @@ function rebuildSweepCsv() {
 
 // ── Date helpers — moved to dates.js, 4 Oct 2026 (one copy, shared with the app) ──
 const {
-  MONTHS, WEEKDAY_PREFIX_SRC, ORDINAL_SUFFIX, MONTH_PATTERN, monthNum, ymd, startYearFor, parseMonthDay, RANGE_SEP, WEEKDAY_PREFIX, stripWeekdays, EXTENDED_TO, applyExtension, readDayMonth, precedingDate, extensionNote, dayText, findDateRange, findDateRangeCore, PLAUSIBLE_YEAR_MIN, PLAUSIBLE_YEAR_MAX, plausibleYear, frag, sane, unusableDateText, findDateRangeInProse, findDateRangeInProseCore, titleCase, titleFromCaps, capsTitleParts, NO_DATES_NOTE,
+  MONTHS, WEEKDAY_PREFIX_SRC, ORDINAL_SUFFIX, MONTH_PATTERN, monthNum, ymd, startYearFor, parseMonthDay, RANGE_SEP, WEEKDAY_PREFIX, stripWeekdays, EXTENDED_TO, applyExtension, readDayMonth, precedingDate, extensionNote, dayText, findDateRange, findDateRangeCore, PLAUSIBLE_YEAR_MIN, PLAUSIBLE_YEAR_MAX, plausibleYear, frag, sane, unusableDateText, findDateRangeInProse, findDateRangeInProseCore, titleCase, titleFromCaps, capsTitleParts, NO_DATES_NOTE, shownOnlyNote, capsTitleRule, sweptVenueTitle,
 } = require('./dates.js');
 
 function afterLookback(endDateStr, floor = LOOKBACK) {
@@ -835,7 +835,7 @@ function applyLookback(rows, venueCode, stage) {
         // when NEITHER date was read. With an opening date already in the row,
         // the honest statement is the narrower one about the closing date.
         row.notes = addNote(row.notes, (row._shownDateText && !row.start_date)
-          ? `The venue's page shows only "${row._shownDateText}" for this exhibition's dates — ${row._shownDateWhy || 'no year is published anywhere'}.`
+          ? shownOnlyNote(row._shownDateText, row._shownDateWhy)
           : NO_DATES_NOTE);
       }
     } else if (!row.start_date && stage === 'final') {
@@ -3657,9 +3657,8 @@ const VENUES = {
     name: 'Galleria Borghese, Rome',
     base: 'https://galleriaborghese.cultura.gov.it',
     // Titles typed in capitals everywhere (docs/borghese_pages/): ordinary capitals by
-    // code, the name/subtitle full stop as an em dash (her decision).
-    capsTitles: true,
-    stopToDash: true,
+    // code, the name/subtitle full stop as an em dash (her decision; dates.js, shared with Add by link).
+    ...capsTitleRule('borghese'),
     pages: [
       { path: '/en/mostre/presenti/', ctx: 'current' },
       { path: '/en/mostre/future/',   ctx: 'upcoming' },
@@ -4058,8 +4057,8 @@ const VENUES = {
     description: '.field-name-field-content p',
     keepBold: true,
     // Titles typed in capitals here (her decision): code writes ordinary capitals
-    // (titleFromCaps).
-    capsTitles: true,
+    // (titleFromCaps; dates.js, shared with Add by link).
+    ...capsTitleRule('ashmolean'),
     // The full name: the page header's name and its subtitle line (the first
     // line of its teaser, above the dates) — see `pageTitle` in the detail pass.
     // A header can name its show in an <h1> instead ("THIS IS WHAT<br>YOU GET").
@@ -4440,8 +4439,7 @@ const VENUE_ORDER = Object.keys(VENUES);
 function venueTitle(code, title) {
   const v = VENUES[code] || {};
   if (!title || title.startsWith('[') || !v.capsTitles) return title;
-  const t = v.stopToDash ? String(title).replace(/\.\s+(?=\S)/g, ' — ') : title;
-  return titleFromCaps(t);
+  return sweptVenueTitle(code, title);
 }
 
 async function scrapeVenue(page, code, opts = {}) {

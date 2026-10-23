@@ -606,7 +606,7 @@ function titleCase(str) {
  * NOW") comes out ordinary.
  */
 const SMALL_WORDS = new Set(['a', 'an', 'the', 'and', 'or', 'nor', 'but', 'of', 'in', 'on', 'at', 'to', 'for', 'by', 'with', 'from', 'as', 'into', 'over', 'upon', 'via', 'vs', 'x', 'von',
-  'van', 'da', 'de', 'di', 'del', 'della', 'du']);
+  'van', 'da', 'de', 'di', 'del', 'della', 'du', 'e']);
 const ROMAN = /^(?=[IVXLC]+$)C{0,3}(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
 function titleFromCaps(title) {
   const t = String(title || '');
@@ -654,27 +654,39 @@ function capsTitleParts(title) {
   return String(title).split(/(\s*[:–—]\s*)/).map((seg, i) => i % 2 ? seg : titleFromCaps(seg)).join('');
 }
 
-// A run printed as months only ("september 2027 - january 2028", "March – June 2027"): the
-// first day of the opening month to the last day of the closing month. Used only where a
-// venue asks for it (Add by link's monthsOnly; Palazzo Reale Milano, Soutine) — a day is
-// never invented anywhere else. → { start, end, raw } or null.
-function findMonthRange(text) {
-  const s = String(text || '');
-  const m = s.match(new RegExp(`(${MONTH_PATTERN})\\s*(\\d{4})?\\s*(?:-|–|—|to|al|a)\\s*(?:mid-?|metà\\s+)?(${MONTH_PATTERN})\\s*(\\d{4})`, 'i'));
-  if (!m) return null;
-  const m1 = monthNum(m[1]), m2 = monthNum(m[3]), y2 = +m[4];
-  const y1 = m[2] ? +m[2] : (m1 > m2 ? y2 - 1 : y2);
-  if (!m1 || !m2 || !plausibleYear(y1) || !plausibleYear(y2) || y1 * 12 + m1 > y2 * 12 + m2) return null;
-  const last = new Date(Date.UTC(y2, m2, 0)).getUTCDate();
-  return { start: ymd(y1, m1, 1), end: ymd(y2, m2, last), raw: m[0].trim() };
+// The swept venues that type their titles in capitals (her decisions; docs/venues.md): code writes
+// ordinary capitals, and at the Borghese the full stop between name and subtitle becomes an em dash
+// ("Louise Bourgeois — Unconscious Memories"). One copy: the sweep's recipes take it (`capsTitleRule`)
+// and Add by link files the same title for the same venue.
+const SWEPT_CAPS_TITLES = { borghese: { stopToDash: true }, ashmolean: {} };
+function capsTitleRule(code) {
+  const r = SWEPT_CAPS_TITLES[code];
+  return r ? { capsTitles: true, ...(r.stopToDash ? { stopToDash: true } : {}) } : {};
+}
+// A swept venue's title as the sweep writes it: the em dash first where the venue takes one, then
+// ordinary capitals for a title typed wholly in them. Other venues' titles are returned as they are.
+function sweptVenueTitle(code, title) {
+  const r = SWEPT_CAPS_TITLES[code];
+  if (!r || !title) return title;
+  return titleFromCaps(r.stopToDash ? String(title).replace(/\.\s+(?=\S)/g, ' — ') : title);
 }
 
 // The note on a row with no dates anywhere: the sweep writes it and Add by link copies it word for
 // word (her decision).
 const NO_DATES_NOTE = "No closing date found anywhere on the venue's pages.";
+// The note on a row whose page prints a date it cannot be read as one (months only, a season, no year):
+// what the page shows, quoted, and why — the dates left blank, a day never invented. One copy, the sweep's
+// and Add by link's.
+function shownOnlyNote(shown, why) {
+  return `The venue's page shows only "${shown}" for this exhibition's dates — ${why || 'no year is published anywhere'}.`;
+}
 
 module.exports = {
   NO_DATES_NOTE,
+  SWEPT_CAPS_TITLES,
+  capsTitleRule,
+  sweptVenueTitle,
+  shownOnlyNote,
   MONTHS,
   WEEKDAY_PREFIX_SRC,
   ORDINAL_SUFFIX,
@@ -705,5 +717,4 @@ module.exports = {
   titleCase,
   titleFromCaps,
   capsTitleParts,
-  findMonthRange,
 };

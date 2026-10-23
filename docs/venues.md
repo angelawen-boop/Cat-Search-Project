@@ -191,7 +191,7 @@ is its only wait.
 - Site moved to `galleriaborghese.cultura.gov.it`; down 8–11 Sep for everyone.
 - **Titles typed in capitals everywhere** (her saves, `docs/borghese_pages/`): code writes
   ordinary capitals and turns the name/subtitle full stop into an em dash (her decision;
-  `capsTitles`, `stopToDash`, BT-001).
+  `SWEPT_CAPS_TITLES` in `dates.js`, shared with Add by link; BT-001, AL-068). The Italian "e" stays small.
 
 ---
 
