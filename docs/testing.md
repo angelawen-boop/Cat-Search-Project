@@ -30,10 +30,16 @@ one line that it is recorded.
 
 ## The shop finder's standing check
 
-After a change to the shop finder only: `node scraper/shop_check.js` — the app's own finder run live on the venues
-in `docs/shop_check.json`, each against its right shop; exit 1 on a miss, with the finder's steps beside its last
-good run. About five calls a venue, on the free Parallel server (paced). `docs/add_by_link.md`, "A venue the app has
-not seen".
+After a change to the shop finder only: `node scraper/shop_check.js <venue keys>` — the app's own finder run live
+on the venues in `docs/shop_check.json`, each against its ONE right shop (strict); exit 1 on a miss, with the
+finder's steps beside its last good run. About five calls a venue, on the free Parallel server (paced; her key is
+not in the environment, so the script cannot spend it).
+- **After a fix: only the venues that fix can reach** (her decision). **All of them once, before publishing.**
+- **Tell her how long first.** A clean full run is about half an hour; once the free tier is spent it can refuse for
+  hours. **One run at a time, never in the background unwatched; a run that keeps meeting the limit is stopped and
+  reported** — never waited on.
+- How the check should run in future (saved replies after each fix, one live run before publishing) is her
+  decision, pending (CLAUDE.md §5.4, item 2).
 
 ## Cloud saving and speed
 

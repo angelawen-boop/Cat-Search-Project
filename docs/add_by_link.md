@@ -119,7 +119,13 @@ pages at most. **An exhibition-catalogues section that also sells the shows' goo
 "Exposiciones" holds catalogues, posters, socks and mugs) — it needs two priced books, not mostly books; every other
 section stays books-only. A Shopify section under a translated address ("/en/collections/exhibitions") lists no
 products there; its number finds it in the shop's section list ("exposiciones") and it is read there, the address
-found kept. A books shelf whose menu label is the museum's own name is its publications (KMSKA). AL-071.
+found kept. A books shelf whose menu label is the museum's own name is its publications (KMSKA). AL-071. **A section
+whose own page comes back without its books** (Parallel gave Berlin's "Ausstellungskataloge" as its footer alone)
+counts when the shop shows two of its books elsewhere, priced, under its address (`booksUnder`, AL-072). **A page
+linked as the shop with no section links at all** (Berlin's "Museen & Sammlungen") gives way to the shop's own front
+page — never when the page has sections, so a shop on a shared site is never left for the site's root (Yale, AL-042a).
+**Known:** Parallel's copy of Albertina's English shop page lacks its menu, so the walk reaches the right section in
+German — her decision pending (CLAUDE.md §5.4, item 2).
 
 **The fault it fixes:** the old finder walked the shop only when the search found nothing usable, and accepted any
 section with books and prices — so Thyssen took "Publications" and Antwerp the whole Dutch "Boeken" when the search

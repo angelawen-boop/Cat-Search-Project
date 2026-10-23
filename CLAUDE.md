@@ -398,6 +398,9 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **A page that extends Cat Watch copies its controls one for one** — placement, wording, layout, pop-ups —
   not just its colours; render both side by side before showing her (Theme Shelf drew its own look twice).
 - **Never say "it works" before the check that proves it has run** (Wallraf's title fix, said to work before Claude was asked on it). Never guess what she would or would not add: the test pages stand for faults any museum can show.
+- **Tell her before any run that takes more than a few minutes, and how long** (her decision). Never leave a
+  check running in the background unwatched or start a second over it: four live shop checks ran at once, used up
+  the free tier, and stalled for hours while she waited unaware. A stalled run is stopped and reported, never waited on.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose
@@ -621,20 +624,48 @@ and were fixed in code, proven live).
      `scraper/claude_read_check/` (`fetch.js` live replies through the free Parallel server; `build.js` the app's own
      `readShowPage` and `linkPrompt` write each question; Sonnet answers each into a file; `score.js` scores with the
      app's `linkAnswer`/`linkTitle` against `truth.js`; `build2.js`/`score2.js` the second question). `docs/add_by_link.md`, "Per link".
-  2. **The shop finder — rebuilt to her design, on `main`, NOT published (50.3 next).** OPEN: Berlin missed once on the last strict run (passed on the run before) — find why, finish the check, then publish and give her test links with their right shops. There is ONE right
-     section: a search result is taken only if it names itself as the shop's exhibition catalogues; otherwise the
-     shop is walked (front page, catalogue and books sections, four pages at most); only when it has none, the
-     museum's publications (a books shelf named for the museum counts — KMSKA), then books, and the shop screen
-     says which. An exhibition-catalogues section that also sells the shows' goods counts (her decision; Thyssen's
-     "Exposiciones"). Where it can't see the shop's sections it says "Shop found, but not its books section". The
-     standing check `node scraper/shop_check.js` is strict (one right answer per venue).
+  2. **The shop finder — rebuilt to her design with the store fix below, on `main`, NOT published (50.3 next; her
+     go-ahead to publish is given — publish first thing).** There is ONE right section: a search result is taken only
+     if it names itself as the shop's exhibition catalogues; otherwise the shop is walked (front page, catalogue and
+     books sections, four pages at most); only when it has none, the museum's publications (a books shelf named for
+     the museum counts — KMSKA), then books, and the shop screen says which ("Shop found, but not its exhibition
+     catalogues section — its publications"). An exhibition-catalogues section that also sells the shows' goods counts
+     (her decision; Thyssen's "Exposiciones"). A section whose own page comes back empty counts when the shop shows
+     its books elsewhere, priced (Berlin). Where it can't see the shop's sections it says "Shop found, but not its
+     books section". Design: `docs/add_by_link.md`, "The shop finder — her design".
+     **Where it stands:** the offline tests pass; the walk is proven only live. On the last live run Thyssen, Antwerp,
+     Berlin and the other venues checked were right, except: **Albertina** reached its right section in German
+     (Parallel's copy of its English shop page now lacks its menu) — **her decision pending:** does the German copy
+     count? (its catalogue titles are German, which may make a lookup miss); **Belvedere, Louisiana, Kunsthaus, Petit
+     Palais, Beyeler, Hamburg not re-checked** since the last two fixes (right earlier on this design). The new
+     "Shop found, but not its exhibition catalogues section" line is not yet seen on screen.
+     **After publishing, give her test links** (a museum not in her app; Add, Next, read the shop screen, Back,
+     Cancel import — nothing saved): Beyeler, Ruth Asawa (fondationbeyeler.ch/en/exhibitions/ruth-asawa) → its
+     "Exhibition catalogues"; Louisiana, Tracey Emin (louisiana.dk/en/udstilling/tracey-emin/) → its
+     "Udstillingskataloger"; Albertina, Picasso – Bacon (albertina.at/en/exhibitions/picasso-bacon) → its
+     Publications (see above); Belvedere, Asta Gröting (belvedere.at/carlone-contemporary-asta-groeting) → "Shop
+     found, but not its books section" (its online shop sells prints only). Right answers: `docs/shop_check.json`.
      **Her confirmed shops in her app are NOT changed** (her decision: no hand edits to store or ledger) — she asks
      a session to amend Thyssen's or Antwerp's shop only if she imports more links there or a lookup misses a
-     catalogue. Design and history: `docs/add_by_link.md`, "The shop finder — her design".
+     catalogue.
+     **OPEN — how the shop check runs (her decision pending).** On the free tier the full live check can stall for
+     hours (she will not put her key in the environment; the script cannot use her connector). Her standing rule:
+     work using Parallel is tested live, never on saved pages. Proposed: saved copies of each shop's replies for the
+     check after each fix (seconds), one live run before publishing. Meanwhile (her decision): after a fix, check only
+     the museums the fix can reach; all of them once before publishing; tell her how long first; a stalled check stops
+     and says so (`docs/testing.md`).
   3. **Write the procedure for a new venue that imports badly** into `docs/add_by_link.md`, a pointer here: is it a
      case other museums will have? Yes → a shared rule, kept only if no proof page gets worse; no → an option on that
      venue's one entry; then the checks it must pass. Last, after 1 and 2.
   Then her links after publishing confirm with her own Claude.
+- **Built, unpublished (50.3) — a store read that fails is named on the page, never saved over** (her decision).
+  Her link venues once showed as bare web addresses after a failed read on opening, and the next import would have
+  written the venue list back with only its new venue. Now the link venues, Links box, Pages list, sweep log and
+  quarantine each say "STORE NOT READ" when their read fails, and their writes refuse until the page is opened again.
+  Tested offline on a stand-in store (SU-001–005); the real store is proved only when a read really fails.
+  `docs/app.md`, "A store read that fails". **The Paste-import session (`claude/paste-import`) holds its merge until
+  this session's work is settled** (her instruction); its rule filing a page under a swept venue by domain would
+  break the Ashmolean's Occasional filing — keep it to pastes or skip `underOcc` venues.
 - **Links and Pages follow the sweep's rules wherever the sweep has met the case and she has decided it** (her
   decision): the same code where it can be shared (`dates.js`), never a rule of their own. `docs/add_by_link.md`,
   "The general reader".
